@@ -93,7 +93,6 @@ func TestCreateName(t *testing.T) {
 
 	app.NameKeeper.InitGenesis(ctx, nameData)
 
-	app.NameKeeper = keeper.NewKeeper(app.AppCodec(), app.GetKey(nametypes.ModuleName), app.GetSubspace(nametypes.ModuleName))
 	handler := name.NewHandler(app.NameKeeper)
 
 	for _, tc := range tests {
@@ -153,7 +152,6 @@ func TestDeleteName(t *testing.T) {
 
 	app.NameKeeper.InitGenesis(ctx, nameData)
 
-	app.NameKeeper = keeper.NewKeeper(app.AppCodec(), app.GetKey(nametypes.ModuleName), app.GetSubspace(nametypes.ModuleName))
 	handler := name.NewHandler(app.NameKeeper)
 
 	for _, tc := range tests {
@@ -192,7 +190,6 @@ func TestModifyName(t *testing.T) {
 	nameData.Params.MaxSegmentLength = 16
 	app.NameKeeper.InitGenesis(ctx, nameData)
 
-	app.NameKeeper = keeper.NewKeeper(app.AppCodec(), app.GetKey(nametypes.ModuleName), app.GetSubspace(nametypes.ModuleName))
 	handler := name.NewHandler(app.NameKeeper)
 	authority := app.NameKeeper.GetAuthority()
 

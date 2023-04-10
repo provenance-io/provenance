@@ -621,7 +621,7 @@ func (s *KeeperTestSuite) TestIncAndDecAddNameAddressLookup() {
 	s.Assert().Nil(bz)
 
 	for i := 1; i <= 100; i++ {
-		s.app.AttributeKeeper.IncAttrNameAddressLookup(s.ctx, attr)
+		s.app.AttributeKeeper.IncAttrNameAddressLookup(s.ctx, attr.Name, attr.GetAddressBytes())
 		bz := store.Get(lookupKey)
 		s.Assert().NotNil(bz)
 		s.Assert().Equal(uint64(i), binary.BigEndian.Uint64(bz))
@@ -634,7 +634,7 @@ func (s *KeeperTestSuite) TestIncAndDecAddNameAddressLookup() {
 		bz := store.Get(lookupKey)
 		s.Assert().NotNil(bz)
 		s.Assert().Equal(uint64(i), binary.BigEndian.Uint64(bz))
-		s.app.AttributeKeeper.DecAttrNameAddressLookup(s.ctx, attr)
+		s.app.AttributeKeeper.DecAttrNameAddressLookup(s.ctx, attr.Name, attr.GetAddressBytes())
 	}
 
 	store = s.ctx.KVStore(s.app.GetKey(types.StoreKey))
@@ -796,4 +796,103 @@ func (s *KeeperTestSuite) TestPopulateAddressAttributeNameTable() {
 	bz = store.Get(lookupKey)
 	s.Assert().NotNil(bz)
 	s.Assert().Equal(uint64(1), binary.BigEndian.Uint64(bz))
+}
+
+func (s *KeeperTestSuite) TestPurgeAttributes() {
+
+	attr := types.Attribute{
+		Name:          "example.attribute",
+		Value:         []byte("0123456789"),
+		Address:       s.user1,
+		AttributeType: types.AttributeType_String,
+	}
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+
+	deletedAttr := types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test"))
+	// Create a name, make an attribute under it, then remove the name leaving an orphan attribute.
+	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "deleted", s.user1Addr, false), "name record should save successfully")
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedAttr, s.user1Addr), "should save successfully")
+	s.Assert().NoError(s.app.NameKeeper.DeleteRecord(s.ctx, "deleted"), "name record should be removed successfully")
+
+	// Create multiple attributes for a address with same name, to test the delete counter
+	deleteCounterName := "deleted2"
+	deletedCounterAttr1 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test1"))
+	deletedCounterAttr2 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test2"))
+	deletedCounterAttr3 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test3"))
+	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, deleteCounterName, s.user1Addr, false), "name record should save successfully")
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr1, s.user1Addr), "should save successfully")
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr2, s.user1Addr), "should save successfully")
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr3, s.user1Addr), "should save successfully")
+
+	cases := []struct {
+		name        string
+		attrName    string
+		accAddr     string
+		beforeCount uint64
+		lookupKey   []byte
+		ownerAddr   sdk.AccAddress
+		errorMsg    string
+	}{
+		{
+			name:      "should fail to delete, cant resolve name wrong owner",
+			attrName:  "example.attribute",
+			ownerAddr: s.user2Addr,
+			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
+		},
+		{
+			name:        "attribute does not exist should no-op",
+			attrName:    "dne",
+			beforeCount: 0,
+			ownerAddr:   s.user1Addr,
+			errorMsg:    "",
+		},
+		{
+			name:        "attribute will be removed without error when name has been removed",
+			attrName:    deletedAttr.Name,
+			beforeCount: 1,
+			lookupKey:   types.AttributeNameAddrKeyPrefix(deletedAttr.Name, deletedAttr.GetAddressBytes()),
+			accAddr:     s.user1,
+			ownerAddr:   s.user1Addr,
+			errorMsg:    "",
+		},
+		{
+			name:        "should successfully delete attribute",
+			attrName:    attr.Name,
+			beforeCount: 1,
+			lookupKey:   types.AttributeNameAddrKeyPrefix(attr.Name, attr.GetAddressBytes()),
+			accAddr:     s.user1,
+			ownerAddr:   s.user1Addr,
+			errorMsg:    "",
+		},
+		{
+			name:        "should successfully delete multiple attributes",
+			attrName:    deleteCounterName,
+			beforeCount: 3,
+			lookupKey:   types.AttributeNameAddrKeyPrefix(deleteCounterName, deletedCounterAttr1.GetAddressBytes()),
+			accAddr:     s.user1,
+			ownerAddr:   s.user1Addr,
+			errorMsg:    "",
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			attrStore := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+			if len(tc.lookupKey) > 0 {
+				count := binary.BigEndian.Uint64(attrStore.Get(tc.lookupKey))
+				s.Assert().Equal(tc.beforeCount, count, "should have correct count in lookup table")
+			}
+			err := s.app.AttributeKeeper.PurgeAttribute(s.ctx, tc.attrName, tc.ownerAddr)
+			if len(tc.errorMsg) > 0 {
+				s.Assert().Error(err)
+				s.Assert().Equal(tc.errorMsg, err.Error())
+			} else {
+				s.Assert().NoError(err)
+				if len(tc.lookupKey) > 0 {
+					s.Assert().False(attrStore.Has(tc.lookupKey), "should not have attribute key after deletion")
+				}
+			}
+		})
+	}
 }
