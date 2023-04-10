@@ -314,8 +314,8 @@ func (k Keeper) associateAuthorizationsForRoles(
 }
 
 // validateProvenanceRole makes sure that:
-// * All parties with the address of a smart contract have the PROVENANCE role.
-// * All parties with the PROVENANCE role have the address of a smart contract.
+//   - All parties with the address of a smart contract have the PROVENANCE role.
+//   - All parties with the PROVENANCE role have the address of a smart contract.
 func (k Keeper) validateProvenanceRole(ctx sdk.Context, parties []*PartyDetails) error {
 	for _, party := range parties {
 		if party.CanBeUsed() {
@@ -339,8 +339,8 @@ func (k Keeper) validateProvenanceRole(ctx sdk.Context, parties []*PartyDetails)
 }
 
 // ValidateScopeValueOwnerUpdate verifies that it's okay for the msg signers to
-// to change a scope's value owner from existing to proposed.
-// If some parties have already been validated (possibly utilizaing authz), they
+// change a scope's value owner from existing to proposed.
+// If some parties have already been validated (possibly utilizing authz), they
 // can be provided in order to prevent an authorization from being used twice during
 // a single Tx.
 func (k Keeper) ValidateScopeValueOwnerUpdate(
