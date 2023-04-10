@@ -5543,7 +5543,8 @@ MsgCreateRootNameResponse defines Msg/CreateRootName response type.
 
 ### MsgDeleteNameRequest
 MsgDeleteNameRequest defines an sdk.Msg type that is used to remove an existing address/name binding.  The binding
-may not have any child names currently bound for this request to be successful.
+may not have any child names currently bound for this request to be successful. All associated attributes on account
+addresses will be deleted.
 
 
 | Field | Type | Label | Description |
