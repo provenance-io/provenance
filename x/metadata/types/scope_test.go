@@ -1140,23 +1140,33 @@ func (s *ScopeTestSuite) TestParty_Equals() {
 	tests := []struct {
 		name string
 		p1   Party
-		p2   Party
+		p2   Partier
 		exp  bool
 	}{
-		{name: "different addresses", p1: Party{Address: "123"}, p2: Party{Address: "456"}, exp: false},
-		{name: "different roles", p1: Party{Role: 1}, p2: Party{Role: 2}, exp: false},
-		{name: "different optional", p1: Party{Optional: true}, p2: Party{Optional: false}, exp: false},
+		{name: "different addresses", p1: Party{Address: "123"}, p2: &Party{Address: "456"}, exp: false},
+		{name: "different roles", p1: Party{Role: 1}, p2: &Party{Role: 2}, exp: false},
+		{name: "different optional", p1: Party{Optional: true}, p2: &Party{Optional: false}, exp: false},
 		{
 			name: "all same",
 			p1:   Party{Address: "1", Role: 1, Optional: true},
-			p2:   Party{Address: "1", Role: 1, Optional: true},
+			p2:   &Party{Address: "1", Role: 1, Optional: true},
+			exp:  true,
+		},
+
+		{name: "other type different addresses", p1: Party{Address: "123"}, p2: &otherParty{address: "456"}, exp: false},
+		{name: "other type different roles", p1: Party{Role: 1}, p2: &otherParty{role: 2}, exp: false},
+		{name: "other type different optional", p1: Party{Optional: true}, p2: &otherParty{optional: false}, exp: false},
+		{
+			name: "other type all same",
+			p1:   Party{Address: "1", Role: 1, Optional: true},
+			p2:   &otherParty{address: "1", role: 1, optional: true},
 			exp:  true,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			actual := tc.p1.Equals(&tc.p2)
+			actual := tc.p1.Equals(tc.p2)
 			s.Assert().Equal(tc.exp, actual, "%v.Equals(%v)", tc.p1, tc.p2)
 		})
 	}
@@ -1166,23 +1176,33 @@ func (s *ScopeTestSuite) TestParty_IsSameAs() {
 	tests := []struct {
 		name string
 		p1   Party
-		p2   Party
+		p2   Partier
 		exp  bool
 	}{
-		{name: "different addresses", p1: Party{Address: "123"}, p2: Party{Address: "456"}, exp: false},
-		{name: "different roles", p1: Party{Role: 1}, p2: Party{Role: 2}, exp: false},
-		{name: "different optional", p1: Party{Optional: true}, p2: Party{Optional: false}, exp: true},
+		{name: "different addresses", p1: Party{Address: "123"}, p2: &Party{Address: "456"}, exp: false},
+		{name: "different roles", p1: Party{Role: 1}, p2: &Party{Role: 2}, exp: false},
+		{name: "different optional", p1: Party{Optional: true}, p2: &Party{Optional: false}, exp: true},
 		{
 			name: "all same",
 			p1:   Party{Address: "1", Role: 1, Optional: true},
-			p2:   Party{Address: "1", Role: 1, Optional: true},
+			p2:   &Party{Address: "1", Role: 1, Optional: true},
+			exp:  true,
+		},
+
+		{name: "other type different addresses", p1: Party{Address: "123"}, p2: &otherParty{address: "456"}, exp: false},
+		{name: "other type different roles", p1: Party{Role: 1}, p2: &otherParty{role: 2}, exp: false},
+		{name: "other type different optional", p1: Party{Optional: true}, p2: &otherParty{optional: false}, exp: true},
+		{
+			name: "other type all same",
+			p1:   Party{Address: "1", Role: 1, Optional: true},
+			p2:   &otherParty{address: "1", role: 1, optional: true},
 			exp:  true,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			actual := tc.p1.IsSameAs(&tc.p2)
+			actual := tc.p1.IsSameAs(tc.p2)
 			s.Assert().Equal(tc.exp, actual, "%v.IsSameAs(%v)", tc.p1, tc.p2)
 		})
 	}
