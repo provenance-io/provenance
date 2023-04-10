@@ -111,7 +111,8 @@ func (m *MsgBindNameResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgBindNameResponse proto.InternalMessageInfo
 
 // MsgDeleteNameRequest defines an sdk.Msg type that is used to remove an existing address/name binding.  The binding
-// may not have any child names currently bound for this request to be successful.
+// may not have any child names currently bound for this request to be successful. All associated attributes on account
+// addresses will be deleted.
 type MsgDeleteNameRequest struct {
 	// The record being removed
 	Record NameRecord `protobuf:"bytes,1,opt,name=record,proto3" json:"record"`
