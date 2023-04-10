@@ -12,6 +12,10 @@ Additionally, several indexes are created to help with linking and iterating ove
     - [MetadataAddress Example Implementations](#metadataaddress-example-implementations)
     - [MetadataAddress General Guidelines](#metadataaddress-general-guidelines)
   - [Indexes](#indexes)
+  - [Signing Requirements](#signing-requirements)
+    - [Scope Value Owner Address Requirements](#scope-value-owner-address-requirements)
+    - [With Party Rollup Required](#with-party-rollup-required)
+    - [Without Party Rollup Required](#without-party-rollup-required)
 
 
 
@@ -71,3 +75,86 @@ The values are always a single byte: `0x01`.
 The general use of them is to create a prefix using the type byte and part 1.
 Then use that prefix to iterate over all keys with that same prefix.
 During iteration, remove the prefix from the current entry's key in order to get the key of the thing to find.
+
+## Signing Requirements
+
+Scopes have a `require_party_rollup` boolean field that dictates most signer requirements for a scope and all it's sessions and records.
+There are also special signer considerations related to a scope's `value_owner_address` field.
+
+### Scope Value Owner Address Requirements
+
+These requirements are applied regardless of a scope's `require_party_rollup` value.
+They are applied when writing new scopes, updating existing scopes, and deleting a scopes.
+
+If a scope with a value owner address is being updated, and the ONLY change is to that value owner address, then ONLY these signer requirements are applied; all other signer requirements are ignored.
+If the value owner address is not changing, these requirements do not apply.
+If the value owner address is changing as well as one or more other fields, these requirements apply as well as the other signer requirements.
+
+* When a value owner address is being set to a marker, at least one of the signers must have deposit permission on that marker.
+* When a value owner address is a marker and is being changed, at least one of the signers must have withdraw permission on that marker.
+* When a value owner address is a non-marker address, and is being changed, that existing address must be one of the signers.
+
+### With Party Rollup Required
+
+When a scope has `require_party_rollup = true`, all session parties must also be listed in the scope owners.
+The use of `optional = true` parties is also allowed.
+The party type's defined in specifications then dictate the signers that are required (in addition to any `optional = false` parties).
+
+For example, if a scope has an `optional = false` `CONTROLLER` (address `A`), and two `optional = true` `SERVICER`s (addresses `B`, and `C`), 
+and a session is being written using a contract spec that requires just a `SERVICER` signature, then to write that session,
+either address `B` or `C` must be a signer (due to the contract spec), and `A` must also sign (because they're `optional = false` in the scope).
+
+#### Writing or Deleting a Scope With Party Rollup
+
+* All roles required by the scope spec must have a party in the owners.
+* If not new:
+  * All required=false existing owners must be signers.
+  * All roles required by the scope spec must have a signer and associated party from the existing scope.
+* Scope value owner address requirements are applied.
+
+#### Writing a Session With Party Rollup
+
+* All proposed session parties must be present in this scope's owners.
+* All `optional = false` scope owners must be signers.
+* If new:
+  * All roles required by the contract spec must have a signer and associated party in the proposed session.
+* If not new:
+  * All roles required by the contract spec must have a signer and associated party in the existing session.
+  * All roles required by the contract spec must have parties in the proposed session.
+  * All `optional = false` existing parties must also be signers.
+
+#### Writing a Record With Party Rollup
+
+* All roles required by the record spec must have a signer and associated party in the session.
+* All `optional = false` scope owners and session parties must be signers.
+* If the record is changing sessions, all `optional = false` previous session parties must be signers.
+
+#### Deleting a Record With Party Rollup
+
+* All roles required by the record spec must have a signer and associated party in the scope.
+* All `optional = false` scope owners must be signers.
+
+### Without Party Rollup Required
+
+When a scope has `require_party_rollup = false`, `optional = true` parties are not allowed in the scope or any of its sessions.
+
+#### Writing or Deleting a Scope Without Party Rollup
+
+* All roles required by the scope spec must have a party in the owners.
+* If not new, all existing owners must sign.
+* Scope value owner address requirements are applied.
+
+#### Writing a Session Without Party Rollup
+
+* All roles required by the contract spec must have a party in the session parties.
+* All scope owners must sign.
+
+#### Writing a Record Without Party Rollup
+
+* All roles required by the record spec must have a party in the session parties.
+* All session parties must sign.
+* If the record is changing to a new session, all previous session parties must sign.
+
+#### Deleting a Record Without Party Rollup
+
+* All scope owners must sign.
