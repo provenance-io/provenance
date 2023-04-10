@@ -565,7 +565,7 @@ func GetPartyAddresses(parties []Party) []string {
 	var rv []string
 	have := make(map[string]bool)
 	for _, party := range parties {
-		if !party.Optional && !have[party.Address] {
+		if !have[party.Address] {
 			rv = append(rv, party.Address)
 			have[party.Address] = true
 		}
