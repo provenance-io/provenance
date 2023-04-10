@@ -491,9 +491,9 @@ func TestParseRecordInput(t *testing.T) {
 	}{
 		{name: "empty", arg: "", expErr: "expected 4 parts, have 1"},
 		{name: "1 part", arg: "one", expErr: "expected 4 parts, have 1"},
-		{name: "2 part", arg: "one,two", expErr: "expected 4 parts, have 2"},
-		{name: "3 part", arg: "one,two,three", expErr: "expected 4 parts, have 3"},
-		{name: "5 part", arg: "one,two,three,four,five", expErr: "expected 4 parts, have 5"},
+		{name: "2 parts", arg: "one,two", expErr: "expected 4 parts, have 2"},
+		{name: "3 parts", arg: "one,two,three", expErr: "expected 4 parts, have 3"},
+		{name: "5 parts", arg: "one,two,three,four,five", expErr: "expected 4 parts, have 5"},
 		{
 			name: "bad status",
 			arg:  "name0,hash0,type0,nope",
@@ -946,6 +946,9 @@ func TestParsePartyTypes(t *testing.T) {
 	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
 	controller := types.PartyType_PARTY_TYPE_CONTROLLER
 	validator := types.PartyType_PARTY_TYPE_VALIDATOR
+
+	// If this fails, update the "one of each" test, then update the expected length here.
+	assert.Len(t, types.PartyType_name, 11, "types.PartyType_name")
 
 	tests := []struct {
 		name   string
