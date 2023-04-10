@@ -294,6 +294,9 @@ func TestParsePartyType(t *testing.T) {
 	controller := types.PartyType_PARTY_TYPE_CONTROLLER
 	validator := types.PartyType_PARTY_TYPE_VALIDATOR
 
+	// If this fails, add some unit tests for the new value(s), then update the expected length here.
+	assert.Len(t, types.PartyType_name, 11, "types.PartyType_name")
+
 	tests := []struct {
 		input  string
 		exp    types.PartyType
@@ -540,6 +543,9 @@ func TestParseRecordInputStatus(t *testing.T) {
 	proposed := types.RecordInputStatus_Proposed
 	record := types.RecordInputStatus_Record
 
+	// If this fails, add some unit tests for the new value(s), then update the expected length here.
+	assert.Len(t, types.RecordInputStatus_name, 3, "types.RecordInputStatus_name")
+
 	tests := []struct {
 		input  string
 		exp    types.RecordInputStatus
@@ -713,6 +719,9 @@ func TestParseResultStatus(t *testing.T) {
 	pass := types.ResultStatus_RESULT_STATUS_PASS
 	skip := types.ResultStatus_RESULT_STATUS_SKIP
 	fail := types.ResultStatus_RESULT_STATUS_FAIL
+
+	// If this fails, add some unit tests for the new value(s), then update the expected length here.
+	assert.Len(t, types.ResultStatus_name, 4, "types.ResultStatus_name")
 
 	tests := []struct {
 		input  string
