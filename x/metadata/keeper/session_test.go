@@ -309,7 +309,7 @@ func (s *SessionKeeperTestSuite) TestValidateWriteSession() {
 				Audit:   nil,
 			},
 			signers:  nil,
-			errorMsg: "parties can only be optional when the scope has require_party_rollup = true",
+			errorMsg: "parties can only be optional when require_party_rollup = true",
 		},
 	}
 
