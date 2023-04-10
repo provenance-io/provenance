@@ -139,7 +139,7 @@ func WriteScopeCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().Bool(FlagRequirePartyRollup, false, "Whether to require party rollup in this scope")
+	cmd.Flags().Bool(FlagRequirePartyRollup, false, "Indicates party rollup is required in this scope")
 	addSignerFlagCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
