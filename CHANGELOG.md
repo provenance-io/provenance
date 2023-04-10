@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Allow markers to be configured to allow forced transfers [#1368](https://github.com/provenance-io/provenance/issues/1368).
 * Publish Provenance Protobuf API as a NPM module [#1449](https://github.com/provenance-io/provenance/issues/1449).
 * Add support for account addresses by attribute name lookup [#1447](https://github.com/provenance-io/provenance/issues/1447).
+* Add allow forced transfers support to creating markers from smart contracts [#1458](https://github.com/provenance-io/provenance/issues/1458).
 * Metadata party rollup and optional parties [#1438](https://github.com/provenance-io/provenance/issues/1438).
 * Repeated roles in a spec require multiple different parties [#1437](https://github.com/provenance-io/provenance/issues/1437).
 * The `PROVENANCE` role can only be used by smart contract addresses, and vice versa [#1381](https://github.com/provenance-io/provenance/issues/1381).
