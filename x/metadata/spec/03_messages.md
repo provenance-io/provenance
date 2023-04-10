@@ -124,7 +124,6 @@ Addresses can be deleted from a scope's data access list using the `DeleteScopeD
 #### Expected failures
 
 This service message is expected to fail if:
-* Any provided address is invalid.
 * Any provided address is not already in the scope's data access list.
 * The `signers` do not have permission to update the scope.
 
@@ -145,6 +144,7 @@ Scope owners can be added to a scope using the `AddScopeOwner` service method.
 
 This service message is expected to fail if:
 * Any new party is invalid.
+* An `optional = true` party is being added to a `require_party_rollup = false` scope.
 * The `signers` do not have permission to update the scope.
 
 ---
@@ -164,9 +164,9 @@ All owner parties with any of the provided addresses will be removed from the sc
 #### Expected failures
 
 This service message is expected to fail if:
-* Any provided `owners` (addresses) are not a party in the scope.
-* The `signers` do not have permission to update the scope.
+* Any provided `owners` (addresses) are not an address in a party in the scope.
 * The resulting scope owners do not meet scope specification requirements.
+* The `signers` do not have permission to update the scope.
 
 ---
 ### Msg/WriteSession
@@ -398,13 +398,15 @@ This service message is expected to fail if:
 ---
 ### Msg/AddContractSpecToScopeSpec
 
+A contract specification can be added to a scope specification using the `AddContractSpecToScopeSpec` service method.
+
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L___-L___
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L386-L406
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L___-L___
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L408-L409
 
 #### Expected failures
 
@@ -419,20 +421,21 @@ This service message is expected to fail if:
 ---
 ### Msg/DeleteContractSpecFromScopeSpec
 
+A contract specification can be removed from a scope specification using the `AddContractSpecToScopeSpec` service method.
+
 #### Request
 
-+++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L___-L___
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L411-L431
 
 #### Response
 
-+++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L___-L___
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/tx.proto#L433-L435
 
 #### Expected failures
 
 This service message is expected to fail if:
 * The `contract_specification_id` is missing or invalid.
 * The `scope_specification_id` is missing or invalid.
-* The contract specification does not exist.
 * The scope specification does not exist.
 * The contract specification is not already allowed in the provided scope specification.
 * One or more of the scope specification `owners` are not `signers`.
