@@ -829,6 +829,16 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 			signers:  []string{s.user1, s.user2},
 			errorMsg: "",
 		},
+		{
+			name:     "should fail to add optional owner to a non-rollup scope",
+			existing: scopeWithOwners(ownerPartyList(s.user1)),
+			proposed: scopeWithOwners([]types.Party{
+				{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER, Optional: false},
+				{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER, Optional: true},
+			}),
+			signers:  []string{s.user1},
+			errorMsg: "parties can only be optional when require_party_rollup = true",
+		},
 	}
 
 	for _, tc := range testCases {
