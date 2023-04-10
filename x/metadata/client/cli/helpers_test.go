@@ -19,8 +19,8 @@ func nameFromInput(arg string) string {
 }
 
 // AssertErrorValue asserts that:
-//  - If errorString is empty, theError must be nil
-//  - If errorString is not empty, theError must equal the errorString.
+//   - If errorString is empty, theError must be nil
+//   - If errorString is not empty, theError must equal the errorString.
 func AssertErrorValue(t *testing.T, theError error, errorString string, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	if len(errorString) > 0 {

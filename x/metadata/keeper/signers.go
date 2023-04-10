@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -277,8 +278,8 @@ func (k Keeper) associateAuthorizations(
 // False is returned if all roles have been fulfilled.
 //
 // This assumes:
-//  - Only roles that haven't yet been fulfilled are provided (e.g. roles = the result of associateRequiredRoles).
-//  - If a party has a signer, it's already been considered (e.g. parties have been run through associateRequiredRoles).
+//   - Only roles that haven't yet been fulfilled are provided (e.g. roles = the result of associateRequiredRoles).
+//   - If a party has a signer, it's already been considered (e.g. parties have been run through associateRequiredRoles).
 func (k Keeper) associateAuthorizationsForRoles(
 	ctx sdk.Context,
 	roles []types.PartyType,

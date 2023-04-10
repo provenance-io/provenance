@@ -70,8 +70,8 @@ func (s *AuthzTestSuite) FreshCtx() sdk.Context {
 }
 
 // AssertErrorValue asserts that:
-//  - If errorString is empty, theError must be nil
-//  - If errorString is not empty, theError must equal the errorString.
+//   - If errorString is empty, theError must be nil
+//   - If errorString is not empty, theError must equal the errorString.
 func AssertErrorValue(t *testing.T, theError error, errorString string, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	if len(errorString) > 0 {
@@ -81,8 +81,8 @@ func AssertErrorValue(t *testing.T, theError error, errorString string, msgAndAr
 }
 
 // AssertErrorValue asserts that:
-//  - If errorString is empty, theError must be nil
-//  - If errorString is not empty, theError must equal the errorString.
+//   - If errorString is empty, theError must be nil
+//   - If errorString is not empty, theError must equal the errorString.
 func (s *AuthzTestSuite) AssertErrorValue(theError error, errorString string, msgAndArgs ...interface{}) bool {
 	s.T().Helper()
 	return AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
