@@ -57,6 +57,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add attribute cli command to query account addresses by attribute name [#1451](https://github.com/provenance-io/provenance/issues/1451).
 * Add removal of attributes from accounts on name deletion [#1410](https://github.com/provenance-io/provenance/issues/1410).
 
+### Deprecated
+
+* The `MsgWriteRecordRequest.parties` field has been deprecated and is ignored. The parties in question are identified by the session [PR 1453](https://github.com/provenance-io/provenance/pull/1453).
+
 ### Bug Fixes
 
 * Fix third party Protobuf workflow checks on Provenance release steps [#1339](https://github.com/provenance-io/provenance/issues/1339)
@@ -73,6 +77,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking
 
 * Removed the `WriteP8eContractSpec` and `P8eMemorializeContract` endpoints [#1402](https://github.com/provenance-io/provenance/issues/1402).
+
+### State Machine Breaking
+
+* The `AddScopeOwner` endpoint now adds a new owner party even if an owner already exists in the scope with that address [PR 1453](https://github.com/provenance-io/provenance/pull/1453).
+  I.e. it no longer updates the role of an existing owner with the same address.
 
 ---
 
