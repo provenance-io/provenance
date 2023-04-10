@@ -43,6 +43,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Allow markers to be configured to allow forced transfers [#1368](https://github.com/provenance-io/provenance/issues/1368).
 * Publish Provenance Protobuf API as a NPM module [#1449](https://github.com/provenance-io/provenance/issues/1449).
 * Add support for account addresses by attribute name lookup [#1447](https://github.com/provenance-io/provenance/issues/1447).
+* Metadata party rollup and optional parties [#1438](https://github.com/provenance-io/provenance/issues/1438).
+* Repeated roles in a spec require multiple different parties [#1437](https://github.com/provenance-io/provenance/issues/1437).
+* The `PROVENANCE` role can only be used by smart contract addresses, and vice versa [#1381](https://github.com/provenance-io/provenance/issues/1381).
 
 ### Improvements
 
@@ -53,7 +56,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Expand the `additional_bindings` gRPC tag to use object form to allow for Typescript transpiling [#1405](https://github.com/provenance-io/provenance/issues/1405).
 * Add attribute cli command to query account addresses by attribute name [#1451](https://github.com/provenance-io/provenance/issues/1451).
 * Add removal of attributes from accounts on name deletion [#1410](https://github.com/provenance-io/provenance/issues/1410).
-
 
 ### Bug Fixes
 
