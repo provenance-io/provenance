@@ -600,18 +600,18 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 			"invalid session, invalid party address",
 			NewSession("my_perfect_session", sessionID, contractSpec, []Party{
 				{Address: "invalidpartyaddress", Role: PartyType_PARTY_TYPE_CUSTODIAN}}, nil),
-			"invalid party on session: invalid party address [invalidpartyaddress]: decoding bech32 failed: invalid separator index -1",
+			"invalid party address [invalidpartyaddress]: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			"invalid session, invalid party type",
 			NewSession("my_perfect_session", sessionID, contractSpec, []Party{
 				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_UNSPECIFIED}}, nil),
-			"invalid party on session: invalid party type for party cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+			"invalid party type for party cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
 		},
 		{
 			"Invalid session, must have at least one party ",
 			NewSession("my_perfect_session", sessionID, contractSpec, []Party{}, nil),
-			"session must have at least one party",
+			"at least one party is required",
 		},
 		{
 			"invalid session, invalid spec id",
