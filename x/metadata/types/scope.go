@@ -75,19 +75,15 @@ func (s Scope) ValidateBasic() error {
 			return fmt.Errorf("invalid value owner address on scope: %w", err)
 		}
 	}
-	if !s.RequirePartyRollup {
-		for _, party := range s.Owners {
-			if party.Optional {
-				return fmt.Errorf("parties can only be optional when require_party_rollup = true")
-			}
-		}
-	}
 	return nil
 }
 
 func (s Scope) ValidateOwnersBasic() error {
 	if err := ValidatePartiesBasic(s.Owners); err != nil {
 		return fmt.Errorf("invalid scope owners: %w", err)
+	}
+	if err := ValidateOptionalParties(s.RequirePartyRollup, s.Owners); err != nil {
+		return err
 	}
 	return nil
 }
@@ -223,13 +219,9 @@ func (s Session) ValidateBasic() error {
 	if prefix != PrefixSession {
 		return fmt.Errorf("invalid session identifier (expected: %s, got %s)", PrefixSession, prefix)
 	}
-	if len(s.Parties) < 1 {
-		return errors.New("session must have at least one party")
-	}
-	for _, p := range s.Parties {
-		if err = p.ValidateBasic(); err != nil {
-			return fmt.Errorf("invalid party on session: %w", err)
-		}
+	err = ValidatePartiesBasic(s.Parties)
+	if err != nil {
+		return err
 	}
 	prefix, err = VerifyMetadataAddressFormat(s.SpecificationId)
 	if err != nil {
@@ -489,6 +481,18 @@ func ValidatePartiesBasic(parties []Party) error {
 		}
 	}
 	return ValidatePartiesAreUnique(parties)
+}
+
+// ValidateOptionalParties validates that, if optional parties aren't allowed, none are provided.
+func ValidateOptionalParties(optAllowed bool, parties []Party) error {
+	if !optAllowed {
+		for _, party := range parties {
+			if party.Optional {
+				return fmt.Errorf("parties can only be optional when require_party_rollup = true")
+			}
+		}
+	}
+	return nil
 }
 
 // String implements stringer interface

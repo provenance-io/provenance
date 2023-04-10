@@ -696,6 +696,123 @@ func (s *ScopeTestSuite) TestMetadataAuditUpdate() {
 	s.Equal("", result.Message)
 }
 
+func (s *ScopeTestSuite) TestValidateOptionalParties() {
+	tests := []struct {
+		name       string
+		optAllowed bool
+		parties    []Party
+		expErr     string
+	}{
+		{
+			name:       "opt allowed nil parties",
+			optAllowed: true,
+			parties:    nil,
+			expErr:     "",
+		},
+		{
+			name:       "opt allowed empty parties",
+			optAllowed: true,
+			parties:    nil,
+			expErr:     "",
+		},
+		{
+			name:       "opt not allowed nil parties",
+			optAllowed: false,
+			parties:    []Party{},
+			expErr:     "",
+		},
+		{
+			name:       "opt not allowed empty parties",
+			optAllowed: false,
+			parties:    []Party{},
+			expErr:     "",
+		},
+		{
+			name:       "opt allowed 1 party required",
+			optAllowed: true,
+			parties:    []Party{{Optional: false}},
+			expErr:     "",
+		},
+		{
+			name:       "opt allowed 1 party optional",
+			optAllowed: true,
+			parties:    []Party{{Optional: true}},
+			expErr:     "",
+		},
+		{
+			name:       "opt not allowed 1 party required",
+			optAllowed: false,
+			parties:    []Party{{Optional: false}},
+			expErr:     "",
+		},
+		{
+			name:       "opt not allowed 1 party optional",
+			optAllowed: false,
+			parties:    []Party{{Optional: true}},
+			expErr:     "parties can only be optional when require_party_rollup = true",
+		},
+		{
+			name:       "opt allowed 2 parties req req",
+			optAllowed: true,
+			parties:    []Party{{Optional: false}, {Optional: false}},
+			expErr:     "",
+		},
+		{
+			name:       "opt allowed 2 parties opt req",
+			optAllowed: true,
+			parties:    []Party{{Optional: true}, {Optional: false}},
+			expErr:     "",
+		},
+		{
+			name:       "opt allowed 2 parties req opt",
+			optAllowed: true,
+			parties:    []Party{{Optional: false}, {Optional: true}},
+			expErr:     "",
+		},
+		{
+			name:       "opt allowed 2 parties opt opt",
+			optAllowed: true,
+			parties:    []Party{{Optional: true}, {Optional: true}},
+			expErr:     "",
+		},
+		{
+			name:       "opt not allowed 2 parties req req",
+			optAllowed: false,
+			parties:    []Party{{Optional: false}, {Optional: false}},
+			expErr:     "",
+		},
+		{
+			name:       "opt not allowed 2 parties opt req",
+			optAllowed: false,
+			parties:    []Party{{Optional: true}, {Optional: false}},
+			expErr:     "parties can only be optional when require_party_rollup = true",
+		},
+		{
+			name:       "opt not allowed 2 parties req opt",
+			optAllowed: false,
+			parties:    []Party{{Optional: false}, {Optional: true}},
+			expErr:     "parties can only be optional when require_party_rollup = true",
+		},
+		{
+			name:       "opt not allowed 2 parties opt opt",
+			optAllowed: false,
+			parties:    []Party{{Optional: true}, {Optional: true}},
+			expErr:     "parties can only be optional when require_party_rollup = true",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := ValidateOptionalParties(tc.optAllowed, tc.parties)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "ValidateOptionalParties")
+			} else {
+				s.Assert().NoError(err, "ValidateOptionalParties")
+			}
+		})
+	}
+}
+
 func (s *ScopeTestSuite) TestEqualParties() {
 	tests := []struct {
 		name     string

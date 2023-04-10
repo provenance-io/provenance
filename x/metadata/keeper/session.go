@@ -134,6 +134,9 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 	if !found {
 		return fmt.Errorf("scope not found for scope id %s", scopeID)
 	}
+	if err = types.ValidateOptionalParties(scope.RequirePartyRollup, proposed.Parties); err != nil {
+		return err
+	}
 
 	contractSpec, found := k.GetContractSpecification(ctx, proposed.SpecificationId)
 	if !found {
