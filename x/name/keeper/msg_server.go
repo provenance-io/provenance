@@ -128,9 +128,16 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 		return nil, sdkerrors.ErrUnauthorized.Wrap("msg sender cannot delete name")
 	}
 	// Delete
-	if err := s.Keeper.DeleteRecord(ctx, name); err != nil {
+	err = s.Keeper.DeleteRecord(ctx, name)
+	if err != nil {
 		ctx.Logger().Error("error deleting name", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	// Remove all attributes from assigned accounts
+	err = s.Keeper.attrKeeper.PurgeAttribute(ctx, name, address)
+	if err != nil {
+		return nil, err
 	}
 
 	// key: modulename+name+unbind
