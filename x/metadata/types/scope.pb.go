@@ -175,12 +175,10 @@ func (m *Scope) GetRequirePartyRollup() bool {
 	return false
 }
 
+// Session defines an execution context against a specific specification instance.
+// The context will have a specification and set of parties involved.
 //
-//A Session is created for an execution context against a specific specification instance
-//
-//The context will have a specification and set of parties involved.  The Session may be updated several
-//times so long as the parties listed are signers on the transaction.  NOTE: When there are no Records within a Scope
-//that reference a Session it is removed.
+// NOTE: When there are no more Records within a Scope that reference a Session, the Session is removed.
 type Session struct {
 	SessionId MetadataAddress `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3,customtype=MetadataAddress" json:"session_id" yaml:"session_id"`
 	// unique id of the contract specification that was used to create this session.

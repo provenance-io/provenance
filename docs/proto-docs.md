@@ -3156,11 +3156,10 @@ Scope defines a root reference for a collection of records owned by one or more 
 <a name="provenance.metadata.v1.Session"></a>
 
 ### Session
-A Session is created for an execution context against a specific specification instance
+Session defines an execution context against a specific specification instance.
+The context will have a specification and set of parties involved.
 
-The context will have a specification and set of parties involved.  The Session may be updated several
-times so long as the parties listed are signers on the transaction.  NOTE: When there are no Records within a Scope
-that reference a Session it is removed.
+NOTE: When there are no more Records within a Scope that reference a Session, the Session is removed.
 
 
 | Field | Type | Label | Description |
