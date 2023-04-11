@@ -151,14 +151,10 @@ func (s *Scope) RemoveOwners(addressesToRemove []string) error {
 	if len(addressesToRemove) == 0 {
 		return nil
 	}
-addressesToRemoveLoop:
 	for _, addr := range addressesToRemove {
-		for _, party := range s.Owners {
-			if addr == party.Address {
-				continue addressesToRemoveLoop
-			}
+		if !s.hasOwnerAddress(addr) {
+			return fmt.Errorf("address does not exist in scope owners: %s", addr)
 		}
-		return fmt.Errorf("address does not exist in scope owners: %s", addr)
 	}
 	newOwners := make([]Party, 0, len(s.Owners))
 ownersLoop:
@@ -172,6 +168,16 @@ ownersLoop:
 	}
 	s.Owners = newOwners
 	return nil
+}
+
+// hasOwnerAddress returns true if this scope has an owner party with the provided address.
+func (s *Scope) hasOwnerAddress(address string) bool {
+	for _, party := range s.Owners {
+		if address == party.Address {
+			return true
+		}
+	}
+	return false
 }
 
 // GetAllOwnerAddresses gets the addresses of all of the owners. Each address can only appear once in the return value.
@@ -459,6 +465,14 @@ func (p Party) ValidateBasic() error {
 
 // ValidatePartiesAreUnique makes sure that no two provided parties are the same.
 func ValidatePartiesAreUnique(parties []Party) error {
+	for i, pi := range parties[:len(parties)-1] {
+		for j := range parties[i+1:] {
+			if pi.IsSameAs(&parties[j]) {
+				return fmt.Errorf("duplicate parties not allowed: address = %s, role = %s, indexes: %d, %d",
+					parties[i].Address, parties[i].Role, i, j)
+			}
+		}
+	}
 	for i := 0; i < len(parties)-1; i++ {
 		for j := i + 1; j < len(parties); j++ {
 			if parties[i].IsSameAs(&parties[j]) {

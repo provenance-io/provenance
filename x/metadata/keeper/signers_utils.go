@@ -187,7 +187,7 @@ func (p *PartyDetails) IsSameAs(p2 types.Partier) bool {
 	return types.SamePartiers(p, p2)
 }
 
-// SignersWrapper is a thing that holds the signers as strings and acc addresses.
+// SignersWrapper stores the signers as strings and acc addresses.
 // One is created by providing the strings. They are then converted to acc addresses
 // if they're needed that way.
 type SignersWrapper struct {

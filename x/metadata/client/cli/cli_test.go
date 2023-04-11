@@ -2354,7 +2354,7 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 			true, "invalid contract specification id prefix at index 0 (expected: contractspec, got scopespec)", &sdk.TxResponse{}, 0,
 		},
 		{
-			name: "should fail to add scope specification unkown party type",
+			name: "should fail to add scope specification unknown party type",
 			cmd:  addCommand,
 			args: []string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),

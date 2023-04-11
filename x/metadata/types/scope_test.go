@@ -359,6 +359,115 @@ func (s *ScopeTestSuite) TestScopeRemoveOwners() {
 	}
 }
 
+func (s *ScopeTestSuite) TestScopeHasOwnerAddress() {
+	pt := func(address string) Party {
+		return Party{Address: address}
+	}
+	ptz := func(parties ...Party) []Party {
+		rv := make([]Party, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+	tests := []struct {
+		name    string
+		scope   Scope
+		address string
+		exp     bool
+	}{
+		{
+			name:    "nil owners",
+			scope:   Scope{Owners: nil},
+			address: "",
+			exp:     false,
+		},
+		{
+			name:    "empty owners",
+			scope:   Scope{Owners: []Party{}},
+			address: "",
+			exp:     false,
+		},
+		{
+			name:    "one owner same address",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: "abc",
+			exp:     true,
+		},
+		{
+			name:    "one owner address has extra space at start",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: " abc",
+			exp:     false,
+		},
+		{
+			name:    "one owner address has extra space at end",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: "abc ",
+			exp:     false,
+		},
+		{
+			name:    "one owner address start same but is shorter",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: "ab",
+			exp:     false,
+		},
+		{
+			name:    "one owner address start same but is longer",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: "abcd",
+			exp:     false,
+		},
+		{
+			name:    "one owner address end same but is shorter",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: "bc",
+			exp:     false,
+		},
+		{
+			name:    "one owner address end same but is longer",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: "aabc",
+			exp:     false,
+		},
+		{
+			name:    "one owner address different case",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: "aBc",
+			exp:     false,
+		},
+		{
+			name:    "three owners no match",
+			scope:   Scope{Owners: ptz(pt("aaa"), pt("bbb"), pt("ccc"))},
+			address: "abc",
+			exp:     false,
+		},
+		{
+			name:    "three owners first matches",
+			scope:   Scope{Owners: ptz(pt("aaa"), pt("bbb"), pt("ccc"))},
+			address: "aaa",
+			exp:     true,
+		},
+		{
+			name:    "three owners second matches",
+			scope:   Scope{Owners: ptz(pt("aaa"), pt("bbb"), pt("ccc"))},
+			address: "bbb",
+			exp:     true,
+		},
+		{
+			name:    "three owners third matches",
+			scope:   Scope{Owners: ptz(pt("aaa"), pt("bbb"), pt("ccc"))},
+			address: "ccc",
+			exp:     true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			actual := tc.scope.hasOwnerAddress(tc.address)
+			s.Assert().Equal(tc.exp, actual, "hasOwnerAddress(%q) on %#v", tc.address, tc.scope)
+		})
+	}
+}
+
 func (s *ScopeTestSuite) TestScopeString() {
 	s.T().Run("scope string", func(t *testing.T) {
 		scopeUUID := uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
@@ -712,13 +821,13 @@ func (s *ScopeTestSuite) TestValidateOptionalParties() {
 		{
 			name:       "opt allowed empty parties",
 			optAllowed: true,
-			parties:    nil,
+			parties:    []Party{},
 			expErr:     "",
 		},
 		{
 			name:       "opt not allowed nil parties",
 			optAllowed: false,
-			parties:    []Party{},
+			parties:    nil,
 			expErr:     "",
 		},
 		{
