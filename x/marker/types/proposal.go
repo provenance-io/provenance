@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 
-	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -47,34 +45,6 @@ func init() {
 	govtypesv1beta1.RegisterProposalType(ProposalTypeWithdrawEscrow)
 	govtypesv1beta1.RegisterProposalType(ProposalTypeSetDenomMetadata)
 }
-
-// NewAddMarkerProposal creates a new proposal
-func NewAddMarkerProposal(
-	title,
-	description string,
-	denom string,
-	totalSupply sdkmath.Int,
-	manager sdk.AccAddress,
-	status MarkerStatus,
-	markerType MarkerType,
-	access []AccessGrant,
-	fixed bool,
-	allowGov bool,
-) *AddMarkerProposal {
-	return &AddMarkerProposal{
-		Title:                  title,
-		Description:            description,
-		Amount:                 sdk.NewCoin(denom, totalSupply),
-		Manager:                manager.String(),
-		Status:                 status,
-		MarkerType:             markerType,
-		AccessList:             access,
-		SupplyFixed:            fixed,
-		AllowGovernanceControl: allowGov,
-	}
-}
-
-// Implements Proposal Interface
 
 // NewSupplyIncreaseProposal creates a new proposal
 func NewSupplyIncreaseProposal(title, description string, amount sdk.Coin, destination string) *SupplyIncreaseProposal {
