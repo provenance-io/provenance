@@ -207,7 +207,7 @@ message MsgSetDenomMetadataResponse {}
 // MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker request type
 message MsgAddFinalizeActivateMarkerRequest {
   cosmos.base.v1beta1.Coin amount = 1
-  [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
   string               manager                  = 3;
   string               from_address             = 4;
   MarkerType           marker_type              = 5;
@@ -241,14 +241,14 @@ message MsgAddMarkerProposalRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   cosmos.base.v1beta1.Coin amount = 1
-  [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
   string               manager                  = 2;
   MarkerStatus         status                   = 3;
   MarkerType           marker_type              = 4;
   repeated AccessGrant access_list              = 5 [(gogoproto.nullable) = false];
   bool                 supply_fixed             = 6;
   bool                 allow_governance_control = 7;
-  string               authority                = 8 [(cosmos_proto.scalar) = "cosmos.AddressString"]; // The signing authority for the request
+  string authority = 8 [(cosmos_proto.scalar) = "cosmos.AddressString"]; // The signing authority for the request
 }
 
 // MsgAddMarkerProposalResponse defines the Msg/AddMarkerProposal response type

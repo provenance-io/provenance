@@ -7,7 +7,6 @@ import "cosmos/base/v1beta1/coin.proto";
 import "provenance/marker/v1/marker.proto";
 import "provenance/marker/v1/accessgrant.proto";
 
-
 option go_package = "github.com/provenance-io/provenance/x/marker/types";
 
 option java_package        = "io.provenance.marker.v1";
@@ -23,7 +22,7 @@ message AddMarkerProposal {
   string description = 2;
 
   cosmos.base.v1beta1.Coin amount = 3
-    [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
   string               manager                  = 4;
   MarkerStatus         status                   = 5;
   MarkerType           marker_type              = 6;
