@@ -882,6 +882,73 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 	require.NoError(t, err, "should allow any valid denom with a min length of two")
 }
 
+func TestAddMarkerProposal(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+
+	validAuthority := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
+	user := testUserAddress("test")
+
+	testCases := []struct {
+		name string
+		prop *types.MsgAddMarkerProposalRequest
+		err  error
+	}{
+		{
+			"add marker - invalid authority",
+			types.NewMsgAddMarkerProposalRequest("test1", sdk.NewInt(100), sdk.AccAddress{}, types.StatusActive, types.MarkerType_Coin, []types.AccessGrant{}, true, true, ""),
+			fmt.Errorf("expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got : expected gov account as only signer for proposal message"),
+		},
+		{
+			"add marker - valid",
+			types.NewMsgAddMarkerProposalRequest("test1", sdk.NewInt(100), sdk.AccAddress{}, types.StatusActive, types.MarkerType_Coin, []types.AccessGrant{}, true, true, validAuthority),
+			nil,
+		},
+		{
+			"add marker - valid restricted marker",
+			types.NewMsgAddMarkerProposalRequest("testrestricted", sdk.NewInt(100), sdk.AccAddress{}, types.StatusActive, types.MarkerType_RestrictedCoin, []types.AccessGrant{}, true, true, validAuthority),
+			nil,
+		},
+		{
+			"add marker - valid no governance",
+			types.NewMsgAddMarkerProposalRequest("testnogov", sdk.NewInt(100), user, types.StatusActive, types.MarkerType_Coin, []types.AccessGrant{}, true, false, validAuthority),
+			nil,
+		},
+		{
+			"add marker - valid finalized",
+			types.NewMsgAddMarkerProposalRequest("pending", sdk.NewInt(100), user, types.StatusFinalized, types.MarkerType_Coin, []types.AccessGrant{}, true, true, validAuthority),
+			nil,
+		},
+		{
+			"add marker - already exists",
+			types.NewMsgAddMarkerProposalRequest("test1", sdk.NewInt(0), sdk.AccAddress{}, types.StatusActive, types.MarkerType_Coin, []types.AccessGrant{}, true, true, validAuthority),
+			fmt.Errorf("test1 marker already exists"),
+		},
+		{
+			"add marker - invalid status",
+			types.NewMsgAddMarkerProposalRequest("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, validAuthority),
+			fmt.Errorf("error invalid marker status undefined"),
+		},
+	}
+
+	for _, tc := range testCases {
+		res, err := server.AddMarkerProposal(ctx, tc.prop)
+		if tc.err == nil {
+			require.NoError(t, err)
+			require.Equal(t, res, res)
+		} else {
+			require.Nil(t, res)
+			require.EqualError(t, err, tc.err.Error())
+		}
+	}
+}
+
+func TestGetAuthority(t *testing.T) {
+	app := simapp.Setup(t)
+	require.Equal(t, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", app.MarkerKeeper.GetAuthority())
+}
+
 func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})

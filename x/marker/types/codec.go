@@ -26,11 +26,11 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgTransferRequest{},
 		&MsgIbcTransferRequest{},
 		&MsgSetDenomMetadataRequest{},
+		&MsgAddMarkerProposalRequest{},
 	)
 
 	registry.RegisterImplementations(
 		(*govtypesv1beta1.Content)(nil),
-		&AddMarkerProposal{},
 		&SupplyIncreaseProposal{},
 		&SupplyDecreaseProposal{},
 		&SetAdministratorProposal{},

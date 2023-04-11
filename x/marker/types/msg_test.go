@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -456,4 +457,44 @@ func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 			require.NoError(t, err)
 		}
 	}
+}
+
+func TestMsgAddMarkerProposalRequestValidateBasic(t *testing.T) {
+
+	testCases := []struct {
+		name string
+		prop *MsgAddMarkerProposalRequest
+		err  error
+	}{
+		{
+			"add marker - undefined status",
+			NewMsgAddMarkerProposalRequest("test1", sdk.NewInt(100), sdk.AccAddress{}, StatusUndefined, MarkerType_Coin, []AccessGrant{}, true, true, ""),
+			ErrInvalidMarkerStatus,
+		},
+		{
+			"add marker - invalid manager",
+			NewMsgAddMarkerProposalRequest("testinvalidmanager", sdk.NewInt(100), sdk.AccAddress{}, StatusProposed, MarkerType_RestrictedCoin, []AccessGrant{}, true, true, ""),
+			fmt.Errorf("marker manager cannot be empty when creating a proposed marker"),
+		},
+		{
+			"add marker - valid",
+			NewMsgAddMarkerProposalRequest("testvalid", sdk.NewInt(100), sdk.AccAddress{}, StatusProposed, MarkerType_RestrictedCoin, []AccessGrant{}, true, true, ""),
+			fmt.Errorf("marker manager cannot be empty when creating a proposed marker"),
+		},
+	}
+
+	for _, tc := range testCases {
+		err := tc.prop.ValidateBasic()
+		if tc.err != nil {
+			require.EqualError(t, err, tc.err.Error())
+		}
+	}
+}
+
+func TestMsgAddMarkerProposalRequestGetSigners(t *testing.T) {
+	authority := sdk.AccAddress("input111111111111111")
+	msg := NewMsgAddMarkerProposalRequest("test2", sdk.NewInt(100), sdk.AccAddress{}, StatusUndefined, MarkerType_Coin, []AccessGrant{}, true, true, authority.String())
+	res := msg.GetSigners()
+	exp := []sdk.AccAddress{authority}
+	require.Equal(t, exp, res, "GetSigners")
 }

@@ -21,6 +21,7 @@ All created/modified state objects specified by each message are defined within 
   - [Msg/AddFinalizeActivateMarkerRequest](#msg-addfinalizeactivatemarkerrequest)
   - [Msg/GrantAllowanceRequest](#msg-grantallowancerequest)
   - [Msg/SupplyIncreaseProposalRequest](#msg-supplyincreaseproposalrequest)
+  - [Msg/AddMarkerPropsalRequest](#msg-setdenommetadatarequest)
 
 
 
@@ -332,3 +333,25 @@ This service message is expected to fail if:
 - The requested supply exceeds the configuration parameter for `MaxTotalSupply`
 
 See also: [Governance: Supply Increase Proposal](./10_governance.md#supply-increase-proposal)
+
+## Msg/AddMarkerProposalRequest
+
+AddMarkerProposalRequest defines a governance proposal to create a new marker.
+
+In a typical add marker situation the `UnrestrictedDenomRegex` parameter would be used to enforce longer denom
+values (preventing users from creating coins with well known symbols such as BTC, ETH, etc).  Markers added
+via governance proposal are only limited by the more generic Coin Validation Denom expression enforced by the
+bank module.
+
+A further difference from the standard add marker flow is that governance proposals to add a marker can directly
+set a marker to the `Active` status with the appropriate minting operations performed immediately.
+
+This request is expected to fail if:
+- The governance proposal format (title, description, etc) is invalid
+- The marker request contains an invalid denom value
+- The marker already exists
+- The amount of coin in circulation could not be set.
+  - There is already coin in circulation [perhaps from genesis] and the configured supply is less than this amount and
+    it is not possible to burn sufficient coin to make the requested supply match actual supply
+- The mint operation fails for any reason (see bank module)
+- Signing authority does not match the gov account

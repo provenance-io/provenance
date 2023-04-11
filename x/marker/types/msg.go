@@ -549,6 +549,11 @@ func (msg MsgAddFinalizeActivateMarkerRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
+func (msg *MsgSupplyIncreaseProposalRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{addr}
+}
+
 func NewMsgSupplyIncreaseProposalRequest(amount sdk.Coin, targetAddress string, authority string) *MsgSupplyIncreaseProposalRequest {
 	return &MsgSupplyIncreaseProposalRequest{
 		Amount:        amount,
@@ -576,7 +581,51 @@ func (msg *MsgSupplyIncreaseProposalRequest) ValidateBasic() error {
 	return nil
 }
 
-func (msg *MsgSupplyIncreaseProposalRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Authority)
+// NewMsgAddMarkerProposalRequest creates a new proposal request to add marker
+func NewMsgAddMarkerProposalRequest(
+	denom string,
+	totalSupply sdkmath.Int,
+	manager sdk.AccAddress,
+	status MarkerStatus,
+	markerType MarkerType,
+	access []AccessGrant,
+	fixed bool,
+	allowGov bool,
+	authority string, //nolint:interfacer
+) *MsgAddMarkerProposalRequest {
+	return &MsgAddMarkerProposalRequest{
+		Amount:                 sdk.NewCoin(denom, totalSupply),
+		Manager:                manager.String(),
+		Status:                 status,
+		MarkerType:             markerType,
+		AccessList:             access,
+		SupplyFixed:            fixed,
+		AllowGovernanceControl: allowGov,
+		Authority:              authority,
+	}
+}
+
+// GetSigners indicates that the message must have been signed by the address provided.
+func (amp MsgAddMarkerProposalRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(amp.Authority)
 	return []sdk.AccAddress{addr}
+}
+
+func (amp MsgAddMarkerProposalRequest) ValidateBasic() error {
+	if amp.Status == StatusUndefined {
+		return ErrInvalidMarkerStatus
+	}
+	// A proposed marker must have a manager assigned to allow updates to be made by the caller.
+	if len(amp.Manager) == 0 && amp.Status == StatusProposed {
+		return fmt.Errorf("marker manager cannot be empty when creating a proposed marker")
+	}
+	testCoin := sdk.Coin{
+		Denom:  amp.Amount.Denom,
+		Amount: amp.Amount.Amount,
+	}
+	if !testCoin.IsValid() {
+		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
+	}
+
+	return nil
 }

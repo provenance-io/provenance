@@ -42,7 +42,7 @@ type MarkerKeeperI interface {
 	// IterateMarker processes all markers with the given handler function.
 	IterateMarkers(sdk.Context, func(types.MarkerAccountI) bool)
 
-	// GetAuthority returns signer of the proposal
+	// GetAuthority returns the signing authority
 	GetAuthority() string
 }
 
@@ -76,6 +76,7 @@ type Keeper struct {
 	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
 
+	// the signing authority for the gov proposals
 	authority string
 
 	markerModuleAddr sdk.AccAddress

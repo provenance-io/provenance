@@ -43,44 +43,26 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestMarkerProposals() {
+	// Add markers for tests
+	validAuthority := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
+	server := markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
+	_, err := server.AddMarkerProposal(s.ctx, markertypes.NewMsgAddMarkerProposalRequest("test1", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true, validAuthority))
+	require.NoError(s.T(), err)
+
+	_, err = server.AddMarkerProposal(s.ctx, markertypes.NewMsgAddMarkerProposalRequest("testnogov", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, false, validAuthority))
+	require.NoError(s.T(), err)
+
+	_, err = server.AddMarkerProposal(s.ctx, markertypes.NewMsgAddMarkerProposalRequest("pending", sdk.NewInt(100), s.accountAddr, markertypes.StatusFinalized, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true, validAuthority))
+	require.NoError(s.T(), err)
+
+	_, err = server.AddMarkerProposal(s.ctx, markertypes.NewMsgAddMarkerProposalRequest("testrestricted", sdk.NewInt(100), s.accountAddr, markertypes.StatusFinalized, markertypes.MarkerType_RestrictedCoin, []markertypes.AccessGrant{}, true, true, validAuthority))
+	require.NoError(s.T(), err)
 
 	testCases := []struct {
 		name string
 		prop govtypesv1beta1.Content
 		err  error
 	}{
-		// ADD MARKER PROPOSALS
-		{
-			"add marker - valid",
-			markertypes.NewAddMarkerProposal("title", "description", "test1", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true),
-			nil,
-		},
-		{
-			"add marker - valid",
-			markertypes.NewAddMarkerProposal("title", "description", "testrestricted", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_RestrictedCoin, []markertypes.AccessGrant{}, true, true),
-			nil,
-		},
-		{
-			"add marker - valid no governance",
-			markertypes.NewAddMarkerProposal("title", "description", "testnogov", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, false),
-			nil,
-		},
-		{
-			"add marker - valid finalized",
-			markertypes.NewAddMarkerProposal("title", "description", "pending", sdk.NewInt(100), s.accountAddr, markertypes.StatusFinalized, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true),
-			nil,
-		},
-		{
-			"add marker - already exists",
-			markertypes.NewAddMarkerProposal("title", "description", "test1", sdk.NewInt(0), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true),
-			fmt.Errorf("test1 marker already exists"),
-		},
-		{
-			"add marker - invalid status",
-			markertypes.NewAddMarkerProposal("title", "description", "test2", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusUndefined, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true),
-			fmt.Errorf("error invalid marker status undefined"),
-		},
-
 		// INCREASE SUPPLY PROPOSALS
 		{
 			"supply increase - valid",
@@ -328,8 +310,6 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 
 			var err error
 			switch c := tc.prop.(type) {
-			case *markertypes.AddMarkerProposal:
-				err = markerkeeper.HandleAddMarkerProposal(s.ctx, s.k, c)
 			case *markertypes.SupplyIncreaseProposal:
 				err = markerkeeper.HandleSupplyIncreaseProposal(s.ctx, s.k, c)
 			case *markertypes.SupplyDecreaseProposal:

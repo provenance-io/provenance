@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/armon/go-metrics"
 
@@ -603,6 +604,60 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 	)
 
 	return &types.MsgAddFinalizeActivateMarkerResponse{}, nil
+}
+
+// AddMarkerProposal can only be submitted via gov proposal
+func (k msgServer) AddMarkerProposal(goCtx context.Context, msg *types.MsgAddMarkerProposalRequest) (*types.MsgAddMarkerProposalResponse, error) {
+	if msg.GetAuthority() != k.Keeper.GetAuthority() {
+		return nil, govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", k.Keeper.GetAuthority(), msg.GetAuthority())
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	addr, err := types.MarkerAddress(msg.Amount.Denom)
+	if err != nil {
+		return nil, err
+	}
+	existing, err := k.GetMarker(ctx, addr)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return nil, fmt.Errorf("%s marker already exists", msg.Amount.Denom)
+	}
+
+	newMarker := types.NewEmptyMarkerAccount(msg.Amount.Denom, msg.Manager, msg.AccessList)
+	newMarker.AllowGovernanceControl = msg.AllowGovernanceControl
+	newMarker.SupplyFixed = msg.SupplyFixed
+	newMarker.MarkerType = msg.MarkerType
+
+	if err := newMarker.SetSupply(msg.Amount); err != nil {
+		return nil, err
+	}
+
+	if err := newMarker.SetStatus(msg.Status); err != nil {
+		return nil, err
+	}
+
+	if err := newMarker.Validate(); err != nil {
+		return nil, err
+	}
+
+	if err := k.AddMarkerAccount(ctx, newMarker); err != nil {
+		return nil, err
+	}
+
+	// active markers should have supply set.
+	if newMarker.Status == types.StatusActive {
+		if err := k.AdjustCirculation(ctx, newMarker, msg.Amount); err != nil {
+			return nil, err
+		}
+	}
+
+	logger := k.Logger(ctx)
+	logger.Info("a new marker was added", "marker", msg.Amount.Denom, "supply", msg.Amount.String())
+
+	return &types.MsgAddMarkerProposalResponse{}, nil
 }
 
 func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgSupplyIncreaseProposalRequest) (*types.MsgSupplyIncreaseProposalResponse, error) {

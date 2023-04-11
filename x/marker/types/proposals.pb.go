@@ -28,6 +28,7 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // AddMarkerProposal defines defines a governance proposal to create a new marker
+// Deprecated since 1.14. Please use MsgAddMarkerProposalRequest.
 type AddMarkerProposal struct {
 	Title                  string                                  `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description            string                                  `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
