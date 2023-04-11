@@ -115,8 +115,6 @@
     - [MsgAddAccessResponse](#provenance.marker.v1.MsgAddAccessResponse)
     - [MsgAddFinalizeActivateMarkerRequest](#provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest)
     - [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse)
-    - [MsgAddMarkerProposalRequest](#provenance.marker.v1.MsgAddMarkerProposalRequest)
-    - [MsgAddMarkerProposalResponse](#provenance.marker.v1.MsgAddMarkerProposalResponse)
     - [MsgAddMarkerRequest](#provenance.marker.v1.MsgAddMarkerRequest)
     - [MsgAddMarkerResponse](#provenance.marker.v1.MsgAddMarkerResponse)
     - [MsgBurnRequest](#provenance.marker.v1.MsgBurnRequest)
@@ -1952,42 +1950,11 @@ MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker r
 
 
 
-<a name="provenance.marker.v1.MsgAddMarkerProposalRequest"></a>
-
-### MsgAddMarkerProposalRequest
-MsgAddMarkerProposalRequest defines the Msg/AddMarkerProposal request type
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `manager` | [string](#string) |  |  |
-| `status` | [MarkerStatus](#provenance.marker.v1.MarkerStatus) |  |  |
-| `marker_type` | [MarkerType](#provenance.marker.v1.MarkerType) |  |  |
-| `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
-| `supply_fixed` | [bool](#bool) |  |  |
-| `allow_governance_control` | [bool](#bool) |  |  |
-| `authority` | [string](#string) |  | The signing authority for the request |
-
-
-
-
-
-
-<a name="provenance.marker.v1.MsgAddMarkerProposalResponse"></a>
-
-### MsgAddMarkerProposalResponse
-MsgAddMarkerProposalResponse defines the Msg/AddMarkerProposal response type
-
-
-
-
-
-
 <a name="provenance.marker.v1.MsgAddMarkerRequest"></a>
 
 ### MsgAddMarkerRequest
-MsgAddMarkerRequest defines the Msg/AddMarker request type
+MsgAddMarkerRequest defines the Msg/AddMarker request type.
+If being provided as a governance proposal, set the from_address to the gov module's account address.
 
 
 | Field | Type | Label | Description |
@@ -2369,7 +2336,6 @@ Msg defines the Marker Msg service.
 | `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
 | `AddFinalizeActivateMarker` | [MsgAddFinalizeActivateMarkerRequest](#provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest) | [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse) | AddFinalizeActivateMarker | |
 | `SupplyIncreaseProposal` | [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest) | [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse) | SupplyIncreaseProposal can only be called via gov proposal | |
-| `AddMarkerProposal` | [MsgAddMarkerProposalRequest](#provenance.marker.v1.MsgAddMarkerProposalRequest) | [MsgAddMarkerProposalResponse](#provenance.marker.v1.MsgAddMarkerProposalResponse) | AddMarkerProposal defines a governance proposal to create a new marker | |
 
  <!-- end services -->
 
