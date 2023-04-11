@@ -254,17 +254,24 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		denom := randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx))
 
-		msg := types.NewMsgAddMarkerProposalRequest(
-			denom,
-			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))),
-			simAccount.Address,              // manager
-			types.MarkerStatus(r.Intn(3)+1), // initial status (proposed, finalized, active)
-			types.MarkerType(r.Intn(2)+1),   // coin or restricted_coin
-			[]types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r)}},
-			r.Intn(2) > 0, // fixed supply
-			r.Intn(2) > 0, // allow gov
-			"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", // signing authority
-		)
+		msg := &types.MsgAddMarkerRequest{
+			Amount: sdk.Coin{
+				Denom:  denom,
+				Amount: sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))),
+			},
+			Manager:                simAccount.Address.String(),
+			FromAddress:            k.GetAuthority(),
+			Status:                 types.MarkerStatus(r.Intn(3) + 1),
+			MarkerType:             types.MarkerType(r.Intn(2) + 1),
+			AccessList:             []types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r)}},
+			SupplyFixed:            r.Intn(2) > 0,
+			AllowGovernanceControl: true,
+			AllowForcedTransfer:    false,
+			RequiredAttributes:     nil,
+		}
+		if msg.Status == types.StatusActive {
+			msg.Manager = ""
+		}
 
 		// Get the governance min deposit needed
 		govMinDep := sdk.NewCoins(args.GK.GetDepositParams(ctx).MinDeposit...)
