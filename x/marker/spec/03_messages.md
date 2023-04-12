@@ -21,7 +21,6 @@ All created/modified state objects specified by each message are defined within 
   - [Msg/AddFinalizeActivateMarkerRequest](#msg-addfinalizeactivatemarkerrequest)
   - [Msg/GrantAllowanceRequest](#msg-grantallowancerequest)
   - [Msg/SupplyIncreaseProposalRequest](#msg-supplyincreaseproposalrequest)
-  - [Msg/AddMarkerPropsalRequest](#msg-setdenommetadatarequest)
 
 
 
@@ -35,10 +34,11 @@ must have a valid supply and denomination value.
 
 +++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L88
 
+
 This service message is expected to fail if:
 - The Denom string:
   - Is already in use by another marker
-  - Does not conform to the "Marker Denom Validation Expression"
+  - Does not conform to the "Marker Denom Validation Expression" (`unrestricted_denom_regex` param)
   - Does not conform to the base coin denom validation expression parameter
 - The supply value:
   - Is less than zero
@@ -51,6 +51,12 @@ This service message is expected to fail if:
 
 The service message will create a marker account object and request the auth module persist it.  No coin will be minted
 or disbursed as a result of adding a marker using this endpoint.
+
+If issued via governance proposal, and has a `from_address` of the governance module account:
+- The marker status can be Active.
+- The `unrestricted_denom_regex` check is not applied. Denoms still need to conform to the base coin denom format though.
+- The marker's `allow_governance_control` flag ignores the `enable_governance` param value, and is set to the provided value.
+- If the marker status is Active, and no `manager` is provided, it is left blank (instead of being populated with the `from_address`).
 
 ## Msg/AddAccessRequest
 
@@ -333,25 +339,3 @@ This service message is expected to fail if:
 - The requested supply exceeds the configuration parameter for `MaxTotalSupply`
 
 See also: [Governance: Supply Increase Proposal](./10_governance.md#supply-increase-proposal)
-
-## Msg/AddMarkerProposalRequest
-
-AddMarkerProposalRequest defines a governance proposal to create a new marker.
-
-In a typical add marker situation the `UnrestrictedDenomRegex` parameter would be used to enforce longer denom
-values (preventing users from creating coins with well known symbols such as BTC, ETH, etc).  Markers added
-via governance proposal are only limited by the more generic Coin Validation Denom expression enforced by the
-bank module.
-
-A further difference from the standard add marker flow is that governance proposals to add a marker can directly
-set a marker to the `Active` status with the appropriate minting operations performed immediately.
-
-This request is expected to fail if:
-- The governance proposal format (title, description, etc) is invalid
-- The marker request contains an invalid denom value
-- The marker already exists
-- The amount of coin in circulation could not be set.
-  - There is already coin in circulation [perhaps from genesis] and the configured supply is less than this amount and
-    it is not possible to burn sufficient coin to make the requested supply match actual supply
-- The mint operation fails for any reason (see bank module)
-- Signing authority does not match the gov account
