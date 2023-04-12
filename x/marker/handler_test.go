@@ -127,9 +127,6 @@ func (s *HandlerTestSuite) TestMsgAddMarkerRequest() {
 	activeStatus := types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{})
 	activeStatus.Status = types.StatusActive
 
-	undefinedStatus := types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{})
-	undefinedStatus.Status = types.StatusUndefined
-
 	cases := []CommonTest{
 		{
 			"should successfully ADD new marker",
@@ -139,17 +136,10 @@ func (s *HandlerTestSuite) TestMsgAddMarkerRequest() {
 			types.NewEventMarkerAdd(denom, "100", "proposed", s.user1, types.MarkerType_Coin.String()),
 		},
 		{
-			"should fail to ADD new marker, validate basic failure",
-			undefinedStatus,
-			[]string{s.user1},
-			"invalid marker status: invalid request",
-			nil,
-		},
-		{
 			"should fail to ADD new marker, invalid status",
 			activeStatus,
 			[]string{s.user1},
-			"a marker can not be created in an ACTIVE status: invalid request",
+			"marker can only be created with a Proposed or Finalized status",
 			nil,
 		},
 		{

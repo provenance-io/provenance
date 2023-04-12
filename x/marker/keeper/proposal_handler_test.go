@@ -44,19 +44,42 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestMarkerProposals() {
 	// Add markers for tests
-	validAuthority := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
+	newMsgAddMarker := func(denom string, manager string, status markertypes.MarkerStatus,
+		markerType markertypes.MarkerType, allowGov bool,
+	) *markertypes.MsgAddMarkerRequest {
+		return &markertypes.MsgAddMarkerRequest{
+			Amount:                 sdk.NewCoin(denom, sdk.NewInt(100)),
+			Manager:                manager,
+			FromAddress:            s.app.MarkerKeeper.GetAuthority(),
+			Status:                 status,
+			MarkerType:             markerType,
+			AccessList:             []markertypes.AccessGrant{},
+			SupplyFixed:            true,
+			AllowGovernanceControl: allowGov,
+			AllowForcedTransfer:    false,
+			RequiredAttributes:     nil,
+		}
+	}
+
+	coin := markertypes.MarkerType_Coin
+	restricted := markertypes.MarkerType_RestrictedCoin
+
+	active := markertypes.StatusActive
+	finalized := markertypes.StatusFinalized
+
 	server := markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
-	_, err := server.AddMarkerProposal(s.ctx, markertypes.NewMsgAddMarkerProposalRequest("test1", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true, validAuthority))
-	require.NoError(s.T(), err)
 
-	_, err = server.AddMarkerProposal(s.ctx, markertypes.NewMsgAddMarkerProposalRequest("testnogov", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, false, validAuthority))
-	require.NoError(s.T(), err)
+	_, err := server.AddMarker(s.ctx, newMsgAddMarker("test1", "", active, coin, true))
+	s.Require().NoError(err, "AddMarker test1")
 
-	_, err = server.AddMarkerProposal(s.ctx, markertypes.NewMsgAddMarkerProposalRequest("pending", sdk.NewInt(100), s.accountAddr, markertypes.StatusFinalized, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true, validAuthority))
-	require.NoError(s.T(), err)
+	_, err = server.AddMarker(s.ctx, newMsgAddMarker("testnogov", "", active, coin, false))
+	s.Require().NoError(err, "AddMarker testnogov")
 
-	_, err = server.AddMarkerProposal(s.ctx, markertypes.NewMsgAddMarkerProposalRequest("testrestricted", sdk.NewInt(100), s.accountAddr, markertypes.StatusFinalized, markertypes.MarkerType_RestrictedCoin, []markertypes.AccessGrant{}, true, true, validAuthority))
-	require.NoError(s.T(), err)
+	_, err = server.AddMarker(s.ctx, newMsgAddMarker("pending", s.accountAddr.String(), finalized, coin, true))
+	s.Require().NoError(err, "AddMarker pending")
+
+	_, err = server.AddMarker(s.ctx, newMsgAddMarker("testrestricted", s.accountAddr.String(), finalized, restricted, true))
+	s.Require().NoError(err, "AddMarker testrestricted")
 
 	testCases := []struct {
 		name string

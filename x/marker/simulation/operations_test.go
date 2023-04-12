@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -164,6 +165,24 @@ func TestSimTestSuite(t *testing.T) {
 // TestSimulateMsgAddMarkerProposal tests the normal scenario of a valid message of type MsgAddMarkerProposalRequest.
 // Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
+	NewMsgAddMarker := func(denom string, totalSupply sdkmath.Int, manager sdk.AccAddress, status types.MarkerStatus,
+		markerType types.MarkerType, access []types.AccessGrant, fixed bool, allowGov bool, authority string,
+	) *types.MsgAddMarkerRequest {
+		return &types.MsgAddMarkerRequest{
+			Amount: sdk.Coin{
+				Denom:  denom,
+				Amount: totalSupply,
+			},
+			Manager:                manager.String(),
+			FromAddress:            authority,
+			Status:                 status,
+			MarkerType:             markerType,
+			AccessList:             access,
+			SupplyFixed:            fixed,
+			AllowGovernanceControl: allowGov,
+		}
+	}
+
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 10)
@@ -210,24 +229,24 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 		{
 			name:            "no spendable coins",
 			sender:          acctZero,
-			msg:             types.NewMsgAddMarkerProposalRequest("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
+			msg:             NewMsgAddMarker("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
 			deposit:         sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 			comment:         "should not matter",
 			expSkip:         true,
 			expOpMsgRoute:   "marker",
-			expOpMsgName:    sdk.MsgTypeURL(&types.MsgAddMarkerProposalRequest{}),
+			expOpMsgName:    sdk.MsgTypeURL(&types.MsgAddMarkerRequest{}),
 			expOpMsgComment: "sender has no spendable coins",
 			expInErr:        nil,
 		},
 		{
 			name:            "not enough coins for deposit",
 			sender:          acctOne,
-			msg:             types.NewMsgAddMarkerProposalRequest("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
+			msg:             NewMsgAddMarker("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
 			deposit:         acctOneBalancePlusOne,
 			comment:         "should not be this",
 			expSkip:         true,
 			expOpMsgRoute:   "marker",
-			expOpMsgName:    sdk.MsgTypeURL(&types.MsgAddMarkerProposalRequest{}),
+			expOpMsgName:    sdk.MsgTypeURL(&types.MsgAddMarkerRequest{}),
 			expOpMsgComment: "sender has insufficient balance to cover deposit",
 			expInErr:        nil,
 		},
@@ -251,7 +270,7 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 				Address: acctOne.Address,
 				ConsKey: accounts[0].ConsKey,
 			},
-			msg:             types.NewMsgAddMarkerProposalRequest("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
+			msg:             NewMsgAddMarker("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
 			deposit:         acctOneBalance,
 			comment:         "this should be ignored",
 			expSkip:         true,
@@ -263,7 +282,7 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 		{
 			name:            "all good",
 			sender:          accounts[1],
-			msg:             types.NewMsgAddMarkerProposalRequest("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusFinalized, types.MarkerType_Coin, []types.AccessGrant{access}, true, true, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"),
+			msg:             NewMsgAddMarker("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusFinalized, types.MarkerType_Coin, []types.AccessGrant{access}, true, true, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"),
 			deposit:         sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 			comment:         "this is a test comment",
 			expSkip:         false,
@@ -317,7 +336,6 @@ func (suite *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 			}
 		})
 	}
-
 }
 
 // getWeightedOpsArgs creates a standard WeightedOpsArgs.
