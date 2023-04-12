@@ -88,6 +88,10 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		return nil, err
 	}
 
+	// If this is via gov prop, just use the provided AllowGovernanceControl value.
+	// Otherwise, if either requested or governance is enabled in params, allow it.
+	allowGovControl := msg.AllowGovernanceControl || (!isGovProp && k.GetEnableGovernance(ctx))
+
 	normalizedReqAttrs, err := k.NormalizeRequiredAttributes(ctx, msg.RequiredAttributes)
 	if err != nil {
 		return nil, err
@@ -101,7 +105,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		msg.Status,
 		msg.MarkerType,
 		msg.SupplyFixed,
-		msg.AllowGovernanceControl || k.GetEnableGovernance(ctx),
+		allowGovControl,
 		msg.AllowForcedTransfer,
 		normalizedReqAttrs,
 	)
