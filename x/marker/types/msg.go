@@ -546,11 +546,6 @@ func (msg MsgAddFinalizeActivateMarkerRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg *MsgSupplyIncreaseProposalRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 func NewMsgSupplyIncreaseProposalRequest(amount sdk.Coin, targetAddress string, authority string) *MsgSupplyIncreaseProposalRequest {
 	return &MsgSupplyIncreaseProposalRequest{
 		Amount:        amount,
@@ -576,4 +571,9 @@ func (msg *MsgSupplyIncreaseProposalRequest) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+func (msg *MsgSupplyIncreaseProposalRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{addr}
 }
