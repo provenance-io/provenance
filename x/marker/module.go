@@ -95,7 +95,15 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule Object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, feegrantKeeper feegrantkeeper.Keeper, govKeeper types.GovKeeper) AppModule {
+func NewAppModule(
+	cdc codec.Codec,
+	keeper keeper.Keeper,
+	accountKeeper authkeeper.AccountKeeper,
+	bankKeeper bankkeeper.Keeper,
+	feegrantKeeper feegrantkeeper.Keeper,
+	govKeeper types.GovKeeper,
+	registry cdctypes.InterfaceRegistry,
+) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -103,6 +111,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeepe
 		bankKeeper:     bankKeeper,
 		feegrantKeeper: feegrantKeeper,
 		govKeeper:      govKeeper,
+		registry:       registry,
 	}
 }
 
