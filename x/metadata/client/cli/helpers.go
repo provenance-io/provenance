@@ -75,17 +75,20 @@ func parseParty(commaDelimitedString string) (rv types.Party, err error) {
 	}
 	rv.Address = parts[0]
 	if len(parts) >= 2 {
-		// Don't change the role from default unless we know it parsed correctly.
+		// The second part should be a role, but secretly allow it to be "opt" when there are exactly 2 parts.
 		rv.Role, err = parsePartyType(parts[1])
 		if err != nil && len(parts) != 2 {
+			// If there aren't exactly 2 parts, the only thing the 2nd part can be is a role, so return the error.
 			return rv, err
 		}
-		// allow for "<address>,opt"
-		var optErr error
-		rv.Optional, optErr = parseOptional(parts[1])
-		if optErr != nil {
-			// If the second (and only) thing wasn't an optional flag either, return the role error.
-			return rv, err
+		if err != nil {
+			// The 2nd part wasn't a role, and we have exactly two parts. Secretly allow it to be an "opt".
+			var optErr error
+			rv.Optional, optErr = parseOptional(parts[1])
+			if optErr != nil {
+				// If the second (and only) thing wasn't an optional flag either, return the role error.
+				return rv, err
+			}
 		}
 	}
 	if len(parts) >= 3 {

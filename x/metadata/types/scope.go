@@ -465,19 +465,11 @@ func (p Party) ValidateBasic() error {
 
 // ValidatePartiesAreUnique makes sure that no two provided parties are the same.
 func ValidatePartiesAreUnique(parties []Party) error {
-	for i, pi := range parties[:len(parties)-1] {
-		for j := range parties[i+1:] {
-			if pi.IsSameAs(&parties[j]) {
-				return fmt.Errorf("duplicate parties not allowed: address = %s, role = %s, indexes: %d, %d",
-					parties[i].Address, parties[i].Role, i, j)
-			}
-		}
-	}
 	for i := 0; i < len(parties)-1; i++ {
 		for j := i + 1; j < len(parties); j++ {
 			if parties[i].IsSameAs(&parties[j]) {
 				return fmt.Errorf("duplicate parties not allowed: address = %s, role = %s, indexes: %d, %d",
-					parties[i].Address, parties[i].Role, i, j)
+					parties[i].Address, parties[i].Role.SimpleString(), i, j)
 			}
 		}
 	}

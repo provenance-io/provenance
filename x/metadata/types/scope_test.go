@@ -805,6 +805,69 @@ func (s *ScopeTestSuite) TestMetadataAuditUpdate() {
 	s.Equal("", result.Message)
 }
 
+func (s *ScopeTestSuite) TestParty_ValidateBasic() {
+	addr := sdk.AccAddress("test").String()
+
+	tests := []struct {
+		name   string
+		party  Party
+		expErr string
+	}{
+		{
+			name:   "good addr good party optional",
+			party:  Party{Address: addr, Role: 3, Optional: true},
+			expErr: "",
+		},
+		{
+			name:   "good addr good party not optional",
+			party:  Party{Address: addr, Role: 3, Optional: false},
+			expErr: "",
+		},
+		{
+			name:   "no address",
+			party:  Party{Address: ""},
+			expErr: "missing party address",
+		},
+		{
+			name:   "bad address",
+			party:  Party{Address: "badbad"},
+			expErr: "invalid party address [badbad]: decoding bech32 failed: invalid bech32 string length 6",
+		},
+		{
+			name:   "negative party type",
+			party:  Party{Address: addr, Role: -10},
+			expErr: "invalid party type for party " + addr,
+		},
+		{
+			name:   "large party type",
+			party:  Party{Address: addr, Role: 123},
+			expErr: "invalid party type for party " + addr,
+		},
+		{
+			name:   "unspecified party type",
+			party:  Party{Address: addr, Role: PartyType_PARTY_TYPE_UNSPECIFIED},
+			expErr: "invalid party type for party " + addr,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orig := tc.party
+			var err error
+			testFunc := func() {
+				err = tc.party.ValidateBasic()
+			}
+			s.Require().NotPanics(testFunc, "ValidateBasic")
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "ValidateBasic")
+			} else {
+				s.Assert().NoError(err, "ValidateBasic")
+			}
+			s.Assert().Equal(orig, tc.party, "party after ValidateBasic")
+		})
+	}
+}
+
 func (s *ScopeTestSuite) TestValidateOptionalParties() {
 	tests := []struct {
 		name       string
@@ -918,6 +981,163 @@ func (s *ScopeTestSuite) TestValidateOptionalParties() {
 			} else {
 				s.Assert().NoError(err, "ValidateOptionalParties")
 			}
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestValidatePartiesAreUnique() {
+	oneCapParty := make([]Party, 1, 1)
+	oneCapParty[0] = Party{Address: "one", Role: 1}
+
+	tests := []struct {
+		name    string
+		parties []Party
+		expErr  string
+	}{
+		{
+			name:    "nil",
+			parties: nil,
+			expErr:  "",
+		},
+		{
+			name:    "empty",
+			parties: []Party{},
+			expErr:  "",
+		},
+		{
+			name:    "one party",
+			parties: []Party{{Address: "abc", Role: 7}},
+			expErr:  "",
+		},
+		{
+			name:    "two parties diff addr",
+			parties: []Party{{Address: "abc", Role: 3}, {Address: "def", Role: 3}},
+			expErr:  "",
+		},
+		{
+			name:    "two parties diff role",
+			parties: []Party{{Address: "abc", Role: 3}, {Address: "abc", Role: 4}},
+			expErr:  "",
+		},
+		{
+			name:    "two parties diff optional",
+			parties: []Party{{Address: "abc", Role: 3, Optional: false}, {Address: "abc", Role: 3, Optional: true}},
+			expErr:  "duplicate parties not allowed: address = abc, role = INVESTOR, indexes: 0, 1",
+		},
+		{
+			name: "five parties unique",
+			parties: []Party{
+				{Address: "abc", Role: 1},
+				{Address: "def", Role: 2},
+				{Address: "ghi", Role: 3},
+				{Address: "abc", Role: 4},
+				{Address: "jkl", Role: 5},
+			},
+			expErr: "",
+		},
+		{
+			name: "five parties not unique",
+			parties: []Party{
+				{Address: "abc", Role: 1},
+				{Address: "def", Role: 2},
+				{Address: "ghi", Role: 3},
+				{Address: "def", Role: 2},
+				{Address: "jkl", Role: 5},
+			},
+			expErr: "duplicate parties not allowed: address = def, role = SERVICER, indexes: 1, 3",
+		},
+		{
+			name:    "one party with capacity = 1",
+			parties: oneCapParty,
+			expErr:  "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var orig []Party
+			if tc.parties != nil {
+				orig = make([]Party, 0, len(tc.parties))
+				orig = append(orig, tc.parties...)
+			}
+			var err error
+			testFunc := func() {
+				err = ValidatePartiesAreUnique(tc.parties)
+			}
+			s.Require().NotPanics(testFunc, "ValidatePartiesAreUnique")
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "ValidatePartiesAreUnique")
+			} else {
+				s.Assert().NoError(err, tc.expErr, "ValidatePartiesAreUnique")
+			}
+			s.Assert().Equal(orig, tc.parties, "parties slice after providing it to ValidatePartiesAreUnique")
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestValidatePartiesBasic() {
+	tests := []struct {
+		name    string
+		parties []Party
+		expErr  string
+	}{
+		{
+			name:    "nil parties",
+			parties: nil,
+			expErr:  "at least one party is required",
+		},
+		{
+			name:    "empty parties",
+			parties: []Party{},
+			expErr:  "at least one party is required",
+		},
+		{
+			name:    "one bad party",
+			parties: []Party{{Address: "", Role: 3}},
+			expErr:  "missing party address",
+		},
+		{
+			name: "not unique",
+			parties: []Party{
+				{Address: sdk.AccAddress("abc").String(), Role: 1},
+				{Address: sdk.AccAddress("def").String(), Role: 2},
+				{Address: sdk.AccAddress("ghi").String(), Role: 3},
+				{Address: sdk.AccAddress("def").String(), Role: 2},
+				{Address: sdk.AccAddress("jkl").String(), Role: 5},
+			},
+			expErr: "duplicate parties not allowed: address = " + sdk.AccAddress("def").String() + ", role = SERVICER, indexes: 1, 3",
+		},
+		{
+			name: "five good parties",
+			parties: []Party{
+				{Address: sdk.AccAddress("abc").String(), Role: 1, Optional: true},
+				{Address: sdk.AccAddress("def").String(), Role: 2, Optional: false},
+				{Address: sdk.AccAddress("ghi").String(), Role: 3, Optional: true},
+				{Address: sdk.AccAddress("abc").String(), Role: 2, Optional: false},
+				{Address: sdk.AccAddress("jkl").String(), Role: 5, Optional: true},
+			},
+			expErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var orig []Party
+			if tc.parties != nil {
+				orig = make([]Party, 0, len(tc.parties))
+				orig = append(orig, tc.parties...)
+			}
+			var err error
+			testFunc := func() {
+				err = ValidatePartiesBasic(tc.parties)
+			}
+			s.Require().NotPanics(testFunc, "ValidatePartiesBasic")
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "ValidatePartiesBasic")
+			} else {
+				s.Assert().NoError(err, tc.expErr, "ValidatePartiesBasic")
+			}
+			s.Assert().Equal(orig, tc.parties, "parties slice after providing it to ValidatePartiesBasic")
 		})
 	}
 }
