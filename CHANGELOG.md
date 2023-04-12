@@ -54,7 +54,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Expand the `additional_bindings` gRPC tag to use object form to allow for Typescript transpiling [#1405](https://github.com/provenance-io/provenance/issues/1405).
 * Add attribute cli command to query account addresses by attribute name [#1451](https://github.com/provenance-io/provenance/issues/1451).
 * Add removal of attributes from accounts on name deletion [#1410](https://github.com/provenance-io/provenance/issues/1410).
-* Migrate `AddMarkerProposal` to v1 message based gov proposal [PR 1321](https://github.com/provenance-io/provenance/pull/1321)
+* Enhance the `AddMarker` endpoint to bypass some validation if issued via governance proposal [PR 1321](https://github.com/provenance-io/provenance/pull/1321).
+  This replaces the old `AddMarkerProposal` governance proposal.
 
 ### Bug Fixes
 
@@ -68,11 +69,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Removed the `WriteP8eContractSpec` and `P8eMemorializeContract` endpoints [#1402](https://github.com/provenance-io/provenance/issues/1402).
 * Removed the `github.com/provenance-io/provenance/x/metadata/types/p8e` proto package [#1402](https://github.com/provenance-io/provenance/issues/1402).
   Users that generate code from the Provenance protos might need to delete their `p8e/` directory.
-* Migrate `AddMarkerProposal` to v1 message based gov proposal [PR 1321](https://github.com/provenance-io/provenance/pull/1321)
+* Removed the `AddMarkerProposal` [PR 1321](https://github.com/provenance-io/provenance/pull/1321).
+  It is replaced by putting a `MsgAddMarker` (with the `from_address` of the gov module account), in a `MsgSubmitProposal`.
 
 ### API Breaking
 
 * Removed the `WriteP8eContractSpec` and `P8eMemorializeContract` endpoints [#1402](https://github.com/provenance-io/provenance/issues/1402).
+* Removed the `AddMarkerProposal` [PR 1321](https://github.com/provenance-io/provenance/pull/1321).
+  It is replaced by putting a `MsgAddMarker` (with the `from_address` of the gov module account), in a `MsgSubmitProposal`.
 
 ---
 
