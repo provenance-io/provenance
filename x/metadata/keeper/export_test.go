@@ -166,6 +166,16 @@ func (k Keeper) IsWasmAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 	return k.isWasmAccount(ctx, addr)
 }
 
+// ValidateAllRequiredSigned is a TEST ONLY exposure of validateAllRequiredSigned.
+func (k Keeper) ValidateAllRequiredSigned(ctx sdk.Context, required []string, msg types.MetadataMsg) ([]*PartyDetails, error) {
+	return k.validateAllRequiredSigned(ctx, required, msg)
+}
+
+// ValidateSmartContractSigners is a TEST ONLY exposure of validateSmartContractSigners.
+func (k Keeper) ValidateSmartContractSigners(ctx sdk.Context, usedSigners map[string]bool, msg types.MetadataMsg) error {
+	return k.validateSmartContractSigners(ctx, usedSigners, msg)
+}
+
 var (
 	// ValidateRolesPresent is a TEST ONLY exposure of validateRolesPresent.
 	ValidateRolesPresent = validateRolesPresent

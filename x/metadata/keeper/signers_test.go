@@ -4286,6 +4286,85 @@ func (s *AuthzTestSuite) TestValidateProvenanceRole() {
 	}
 }
 
+func (s *AuthzTestSuite) TestIsWasmAccount() {
+	tests := []struct {
+		name  string
+		authK *MockAuthKeeper
+		addr  sdk.AccAddress
+		exp   bool
+	}{
+		{
+			name:  "nil addr",
+			authK: NewMockAuthKeeper(),
+			addr:  nil,
+			exp:   false,
+		},
+		{
+			name:  "empty addr",
+			authK: NewMockAuthKeeper(),
+			addr:  sdk.AccAddress{},
+			exp:   false,
+		},
+		{
+			name: "base account sequence 0 no pub key",
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				NewGetAccountCall(sdk.AccAddress("wasm_account"),
+					authtypes.NewBaseAccount(sdk.AccAddress("wasm_account"), nil, 0, 0)),
+			),
+			addr: sdk.AccAddress("wasm_account"),
+			exp:  true,
+		},
+		{
+			name:  "account does not exist",
+			authK: NewMockAuthKeeper(),
+			addr:  sdk.AccAddress("account_doesnt_exist"),
+			exp:   false,
+		},
+		{
+			name: "marker account with sequence 0 and no pub key",
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				NewGetAccountCall(markertypes.MustGetMarkerAddress("bananas"),
+					&markertypes.MarkerAccount{
+						BaseAccount: authtypes.NewBaseAccount(markertypes.MustGetMarkerAddress("bananas"), nil, 0, 0),
+					})),
+			addr: markertypes.MustGetMarkerAddress("bananas"),
+			exp:  false,
+		},
+		{
+			name: "base account sequence 1 no pub key",
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				NewGetAccountCall(sdk.AccAddress("sequence_1"),
+					authtypes.NewBaseAccount(sdk.AccAddress("sequence_1"), nil, 0, 1)),
+			),
+			addr: sdk.AccAddress("sequence_1"),
+			exp:  false,
+		},
+		{
+			name: "base account sequence 0 with pub key",
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				NewGetAccountCall(sdk.AccAddress("with_pub_key"),
+					authtypes.NewBaseAccount(sdk.AccAddress("with_pub_key"), secp256k1.GenPrivKey().PubKey(), 0, 0)),
+			),
+			addr: sdk.AccAddress("with_pub_key"),
+			exp:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			k := s.app.MetadataKeeper
+			origAuthK := k.SetAuthKeeper(tc.authK)
+			defer k.SetAuthKeeper(origAuthK)
+			actual := k.IsWasmAccount(s.FreshCtx(), tc.addr)
+			s.Assert().Equal(tc.exp, actual, "IsWasmAccount")
+		})
+	}
+}
+
+func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
+	s.Fail("test not written")
+}
+
 func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 	acc := func(addr string) sdk.AccAddress {
 		return sdk.AccAddress(addr)
@@ -4406,6 +4485,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 		authKeeper       *MockAuthKeeper
 		authzKeeper      *MockAuthzKeeper
 		expErr           string
+		expUsed          map[string]bool
 		expGetAccount    []*GetAccountCall
 		expGetAuth       []*GetAuthorizationCall
 	}{
@@ -4464,6 +4544,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:           normalMsg(depositAddr),
 			authKeeper:    mockAuthWithMarkers(),
 			expErr:        "",
+			expUsed:       map[string]bool{depositAddr: true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
 		},
 		{
@@ -4482,6 +4563,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:           normalMsg(allAddr),
 			authKeeper:    mockAuthWithMarkers(),
 			expErr:        "",
+			expUsed:       map[string]bool{allAddr: true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
 		},
 		{
@@ -4500,6 +4582,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:           normalMsg(noneAddr, noDepositAddr, depositAddr),
 			authKeeper:    mockAuthWithMarkers(),
 			expErr:        "",
+			expUsed:       map[string]bool{depositAddr: true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
 		},
 		{
@@ -4512,12 +4595,14 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
 		},
 		{
-			name:          "marker to empty 1 signer only withdraw permission",
-			existing:      marker1Addr,
-			proposed:      "",
-			msg:           normalMsg(withdrawAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        "",
+			name:       "marker to empty 1 signer only withdraw permission",
+			existing:   marker1Addr,
+			proposed:   "",
+			msg:        normalMsg(withdrawAddr),
+			authKeeper: mockAuthWithMarkers(),
+			expErr:     "",
+			expUsed:    map[string]bool{withdrawAddr: true},
+
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
 		},
 		{
@@ -4545,6 +4630,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:           normalMsg(allAddr),
 			authKeeper:    mockAuthWithMarkers(),
 			expErr:        "",
+			expUsed:       map[string]bool{allAddr: true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
 		},
 		{
@@ -4563,6 +4649,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:           normalMsg(noneAddr, noWithdrawAddr, withdrawAddr),
 			authKeeper:    mockAuthWithMarkers(),
 			expErr:        "",
+			expUsed:       map[string]bool{withdrawAddr: true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
 		},
 		{
@@ -4611,6 +4698,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:        normalMsg(allAddr),
 			authKeeper: mockAuthWithMarkers(),
 			expErr:     "",
+			expUsed:    map[string]bool{allAddr: true},
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(marker1AddrAcc, marker1),
 				NewGetAccountCall(marker2AddrAcc, marker2),
@@ -4623,6 +4711,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:        normalMsg(depositAddr, withdrawAddr),
 			authKeeper: mockAuthWithMarkers(),
 			expErr:     "",
+			expUsed:    map[string]bool{depositAddr: true, withdrawAddr: true},
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(marker1AddrAcc, marker1),
 				NewGetAccountCall(marker2AddrAcc, marker2),
@@ -4635,6 +4724,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:        normalMsg(withdrawAddr, depositAddr),
 			authKeeper: mockAuthWithMarkers(),
 			expErr:     "",
+			expUsed:    map[string]bool{withdrawAddr: true, depositAddr: true},
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(marker1AddrAcc, marker1),
 				NewGetAccountCall(marker2AddrAcc, marker2),
@@ -4647,6 +4737,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:        normalMsg(withdrawAddr, noneAddr, depositAddr),
 			authKeeper: mockAuthWithMarkers(),
 			expErr:     "",
+			expUsed:    map[string]bool{withdrawAddr: true, depositAddr: true},
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(marker1AddrAcc, marker1),
 				NewGetAccountCall(marker2AddrAcc, marker2),
@@ -4659,6 +4750,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:        normalMsg(withdrawAddr),
 			authKeeper: mockAuthWithMarkers(),
 			expErr:     "",
+			expUsed:    map[string]bool{withdrawAddr: true},
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(marker2AddrAcc, marker2),
 				NewGetAccountCall(acc("something_else"), nil),
@@ -4680,6 +4772,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:           normalMsg(noneAddr, allAddr, "existing_value_owner_string", depositAddr),
 			authKeeper:    NewMockAuthKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{"existing_value_owner_string": true},
 			expGetAccount: []*GetAccountCall{},
 		},
 		{
@@ -4692,6 +4785,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			},
 			authKeeper:    NewMockAuthKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{"existing_value_owner_string": true},
 			expGetAccount: []*GetAccountCall{},
 		},
 		{
@@ -4718,6 +4812,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{accStr("existing"): true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth:    []*GetAuthorizationCall{},
 		},
@@ -4729,6 +4824,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:  NewMockAuthKeeper(),
 			authzKeeper: NewMockAuthzKeeper(),
 			expErr:      "",
+			expUsed:     map[string]bool{accStr("existing"): true},
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(acc("existing"), nil),
 				NewGetAccountCall(acc("proposed"), nil),
@@ -4749,6 +4845,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{noneAddr: true, accStr("existing"): true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth:    []*GetAuthorizationCall{},
 		},
@@ -4766,6 +4863,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{noneAddr: true, accStr("existing"): true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth:    []*GetAuthorizationCall{},
 		},
@@ -4783,6 +4881,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{noneAddr: true, accStr("existing"): true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth:    []*GetAuthorizationCall{},
 		},
@@ -4800,6 +4899,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{noneAddr: true, accStr("existing"): true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth:    []*GetAuthorizationCall{},
 		},
@@ -4817,6 +4917,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{noneAddr: true, accStr("other"): true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth:    []*GetAuthorizationCall{},
 		},
@@ -4834,6 +4935,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{noneAddr: true, accStr("other"): true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth:    []*GetAuthorizationCall{},
 		},
@@ -4851,6 +4953,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:  NewMockAuthKeeper(),
 			authzKeeper: NewMockAuthzKeeper(),
 			expErr:      "",
+			expUsed:     map[string]bool{noneAddr: true, accStr("other"): true},
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(acc("existing"), nil),
 				NewGetAccountCall(acc("proposed"), nil),
@@ -4879,6 +4982,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 				},
 			),
 			expErr:        "",
+			expUsed:       map[string]bool{noneAddr: true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth: []*GetAuthorizationCall{
 				{
@@ -4990,9 +5094,13 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 				s.Require().NotNil(tc.authzKeeper, "expGetAuth defined but test case does not have an authzKeeper defined")
 				tc.authzKeeper.GetAuthorizationCalls = make([]*GetAuthorizationCall, 0, len(tc.expGetAuth))
 			}
+			if tc.expUsed == nil && len(tc.expErr) == 0 {
+				tc.expUsed = make(map[string]bool)
+			}
 
-			err := k.ValidateScopeValueOwnerUpdate(s.FreshCtx(), tc.existing, tc.proposed, tc.validatedParties, tc.msg)
+			used, err := k.ValidateScopeValueOwnerUpdate(s.FreshCtx(), tc.existing, tc.proposed, tc.validatedParties, tc.msg)
 			s.AssertErrorValue(err, tc.expErr, "ValidateScopeValueOwnerUpdate")
+			s.Assert().Equal(tc.expUsed, used, "ValidateScopeValueOwnerUpdate used signatures map")
 
 			if tc.expGetAccount != nil {
 				getAccountCalls := tc.authKeeper.GetAccountCalls
@@ -5007,6 +5115,10 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 }
 
 func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
+	s.Fail("test not written")
+}
+
+func (s *AuthzTestSuite) TestValidateAllRequiredSigned() {
 	ctx := s.FreshCtx()
 
 	// Add a few authorizations
@@ -5218,14 +5330,14 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			actual, err := s.app.MetadataKeeper.ValidateSignersWithoutParties(s.FreshCtx(), tc.owners, tc.msg)
+			actual, err := s.app.MetadataKeeper.ValidateAllRequiredSigned(s.FreshCtx(), tc.owners, tc.msg)
 			AssertErrorValue(t, err, tc.errorMsg, "ValidateSignersWithoutParties unexpected error")
 			assert.Equal(t, tc.exp, actual, "ValidateSignersWithoutParties validated parties")
 		})
 	}
 }
 
-func (s *AuthzTestSuite) TestValidateSignersWithoutParties_CountAuthorizations() {
+func (s *AuthzTestSuite) TestValidateAllRequiredSigned_CountAuthorizations() {
 
 	oneAllowedAuthorizations := int32(1)
 	manyAllowedAuthorizations := int32(10)
@@ -5298,7 +5410,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties_CountAuthorizations()
 				s.Require().NoError(err, "SaveGrant")
 			}
 
-			_, err := s.app.MetadataKeeper.ValidateSignersWithoutParties(ctx, tc.owners, tc.msg)
+			_, err := s.app.MetadataKeeper.ValidateAllRequiredSigned(ctx, tc.owners, tc.msg)
 			s.AssertErrorValue(err, tc.errorMsg, "ValidateSignersWithoutParties error")
 
 			// validate allowedAuthorizations
@@ -5343,7 +5455,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties_CountAuthorizations()
 		msg.Signers = []string{s.user3}
 
 		// Validate signatures. This should also use both count authorizations.
-		_, err = s.app.MetadataKeeper.ValidateSignersWithoutParties(ctx, owners, msg)
+		_, err = s.app.MetadataKeeper.ValidateAllRequiredSigned(ctx, owners, msg)
 		s.Assert().NoError(err, "ValidateSignersWithoutParties")
 
 		// first grant should be deleted because it used its last use.
@@ -5356,81 +5468,6 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties_CountAuthorizations()
 		actual := auth.(*authz.CountAuthorization).AllowedAuthorizations
 		s.Assert().Equal(1, int(actual), "number of uses left on 2 -> 3 authorization")
 	})
-}
-
-func (s *AuthzTestSuite) TestIsWasmAccount() {
-	tests := []struct {
-		name  string
-		authK *MockAuthKeeper
-		addr  sdk.AccAddress
-		exp   bool
-	}{
-		{
-			name:  "nil addr",
-			authK: NewMockAuthKeeper(),
-			addr:  nil,
-			exp:   false,
-		},
-		{
-			name:  "empty addr",
-			authK: NewMockAuthKeeper(),
-			addr:  sdk.AccAddress{},
-			exp:   false,
-		},
-		{
-			name: "base account sequence 0 no pub key",
-			authK: NewMockAuthKeeper().WithGetAccountResults(
-				NewGetAccountCall(sdk.AccAddress("wasm_account"),
-					authtypes.NewBaseAccount(sdk.AccAddress("wasm_account"), nil, 0, 0)),
-			),
-			addr: sdk.AccAddress("wasm_account"),
-			exp:  true,
-		},
-		{
-			name:  "account does not exist",
-			authK: NewMockAuthKeeper(),
-			addr:  sdk.AccAddress("account_doesnt_exist"),
-			exp:   false,
-		},
-		{
-			name: "marker account with sequence 0 and no pub key",
-			authK: NewMockAuthKeeper().WithGetAccountResults(
-				NewGetAccountCall(markertypes.MustGetMarkerAddress("bananas"),
-					&markertypes.MarkerAccount{
-						BaseAccount: authtypes.NewBaseAccount(markertypes.MustGetMarkerAddress("bananas"), nil, 0, 0),
-					})),
-			addr: markertypes.MustGetMarkerAddress("bananas"),
-			exp:  false,
-		},
-		{
-			name: "base account sequence 1 no pub key",
-			authK: NewMockAuthKeeper().WithGetAccountResults(
-				NewGetAccountCall(sdk.AccAddress("sequence_1"),
-					authtypes.NewBaseAccount(sdk.AccAddress("sequence_1"), nil, 0, 1)),
-			),
-			addr: sdk.AccAddress("sequence_1"),
-			exp:  false,
-		},
-		{
-			name: "base account sequence 0 with pub key",
-			authK: NewMockAuthKeeper().WithGetAccountResults(
-				NewGetAccountCall(sdk.AccAddress("with_pub_key"),
-					authtypes.NewBaseAccount(sdk.AccAddress("with_pub_key"), secp256k1.GenPrivKey().PubKey(), 0, 0)),
-			),
-			addr: sdk.AccAddress("with_pub_key"),
-			exp:  false,
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			k := s.app.MetadataKeeper
-			origAuthK := k.SetAuthKeeper(tc.authK)
-			defer k.SetAuthKeeper(origAuthK)
-			actual := k.IsWasmAccount(s.FreshCtx(), tc.addr)
-			s.Assert().Equal(tc.exp, actual, "IsWasmAccount")
-		})
-	}
 }
 
 func TestValidateRolesPresent(t *testing.T) {
@@ -5719,6 +5756,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 		role      markertypes.Access
 		expMarker markertypes.MarkerAccountI
 		expHasAcc bool
+		expSig    string
 	}{
 		{name: "invalid address", addr: "invalid", expMarker: nil},
 		{name: "account does not exist", addr: sdk.AccAddress("does-not-exist").String(), expMarker: nil},
@@ -5753,6 +5791,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Deposit,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user1,
 		},
 		{
 			name:      "is marker with signer 1 and role 2",
@@ -5761,6 +5800,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Withdraw,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user1,
 		},
 		{
 			name:      "is marker with signer 2 but not role",
@@ -5785,6 +5825,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Burn,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user2,
 		},
 		{
 			name:      "is marker with signer 2 and role 2",
@@ -5793,6 +5834,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Mint,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user2,
 		},
 		{
 			name:      "is marker both signers role from first",
@@ -5801,6 +5843,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Withdraw,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user1,
 		},
 		{
 			name:      "is marker both signers role from second",
@@ -5809,6 +5852,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Mint,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user2,
 		},
 		{
 			name:      "is marker both signers neither have role",
@@ -5825,6 +5869,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Withdraw,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user1,
 		},
 		{
 			name:      "is marker two signers second has role",
@@ -5833,14 +5878,16 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Burn,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user2,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			actualMarker, actualHasAcc := s.app.MetadataKeeper.GetMarkerAndCheckAuthority(s.FreshCtx(), tc.addr, tc.signers, tc.role)
+			actualMarker, actualHasAcc, actualSig := s.app.MetadataKeeper.GetMarkerAndCheckAuthority(s.FreshCtx(), tc.addr, tc.signers, tc.role)
 			s.Assert().Equal(tc.expMarker, actualMarker, "GetMarkerAndCheckAuthority marker")
 			s.Assert().Equal(tc.expHasAcc, actualHasAcc, "GetMarkerAndCheckAuthority has access")
+			s.Assert().Equal(tc.expSig, actualSig, "GetMarkerAndCheckAuthority signer")
 		})
 	}
 }

@@ -166,7 +166,7 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		if err = validateRolesPresent(proposed.Parties, contractSpec.PartiesInvolved); err != nil {
 			return err
 		}
-		if _, err = k.ValidateSignersWithoutParties(ctx, scope.GetAllOwnerAddresses(), msg); err != nil {
+		if err = k.ValidateSignersWithoutParties(ctx, scope.GetAllOwnerAddresses(), msg); err != nil {
 			return err
 		}
 	} else {

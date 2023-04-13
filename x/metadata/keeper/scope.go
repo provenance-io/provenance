@@ -292,6 +292,7 @@ func (k Keeper) ValidateWriteScope(
 
 	var err error
 	var validatedParties []*PartyDetails
+	checkSigners := true
 
 	if !onlyChangeIsValueOwner {
 		// Make sure everyone has signed.
@@ -304,9 +305,11 @@ func (k Keeper) ValidateWriteScope(
 				return err
 			}
 			if existing != nil && !existing.Equals(proposed) {
-				if validatedParties, err = k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
+				if validatedParties, err = k.validateAllRequiredSigned(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
 					return err
 				}
+			} else {
+				checkSigners = false
 			}
 		} else {
 			// New:
@@ -323,12 +326,21 @@ func (k Keeper) ValidateWriteScope(
 				if validatedParties, err = k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
 					return err
 				}
+			} else {
+				checkSigners = false
 			}
 		}
 	}
 
-	if err = k.ValidateScopeValueOwnerUpdate(ctx, existingValueOwner, proposed.ValueOwnerAddress, validatedParties, msg); err != nil {
+	usedSigners, err := k.ValidateScopeValueOwnerUpdate(ctx, existingValueOwner, proposed.ValueOwnerAddress, validatedParties, msg)
+	if err != nil {
 		return err
+	}
+
+	if checkSigners {
+		if err = k.validateSmartContractSigners(ctx, usedSigners, msg); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -352,7 +364,7 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 		//   - If not new, all existing owners must sign.
 		//   - Value owner signer restrictions are applied.
 		// We don't care about the first one here.
-		if validatedParties, err = k.ValidateSignersWithoutParties(ctx, scope.GetAllOwnerAddresses(), msg); err != nil {
+		if validatedParties, err = k.validateAllRequiredSigned(ctx, scope.GetAllOwnerAddresses(), msg); err != nil {
 			return err
 		}
 	} else {
@@ -365,7 +377,7 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 		// We don't care about that first one, and only care about the roles one if the spec exists.
 		scopeSpec, found := k.GetScopeSpecification(ctx, scope.SpecificationId)
 		if !found {
-			if validatedParties, err = k.ValidateSignersWithoutParties(ctx, types.GetRequiredPartyAddresses(scope.Owners), msg); err != nil {
+			if validatedParties, err = k.validateAllRequiredSigned(ctx, types.GetRequiredPartyAddresses(scope.Owners), msg); err != nil {
 				return err
 			}
 		} else {
@@ -375,7 +387,12 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 		}
 	}
 
-	if err = k.ValidateScopeValueOwnerUpdate(ctx, scope.ValueOwnerAddress, "", validatedParties, msg); err != nil {
+	usedSigners, err := k.ValidateScopeValueOwnerUpdate(ctx, scope.ValueOwnerAddress, "", validatedParties, msg)
+	if err != nil {
+		return err
+	}
+
+	if err = k.validateSmartContractSigners(ctx, usedSigners, msg); err != nil {
 		return err
 	}
 
@@ -412,7 +429,7 @@ func (k Keeper) ValidateAddScopeDataAccess(
 		//   - Value owner signer restrictions are applied.
 		// We don't care about the first one here since owners aren't changing.
 		// We don't care about the value owner check either since it's not changing.
-		if _, err := k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
+		if err := k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
 			return err
 		}
 	} else {
@@ -464,7 +481,7 @@ dataAccessLoop:
 		//   - Value owner signer restrictions are applied.
 		// We don't care about the first one here since owners aren't changing.
 		// We don't care about the value owner check either since it's not changing.
-		if _, err := k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
+		if err := k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
 			return err
 		}
 	} else {
@@ -514,7 +531,7 @@ func (k Keeper) ValidateUpdateScopeOwners(
 		if err := validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 			return err
 		}
-		if _, err := k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
+		if err := k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
 			return err
 		}
 	} else {

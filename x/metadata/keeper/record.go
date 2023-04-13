@@ -192,7 +192,7 @@ func (k Keeper) ValidateWriteRecord(
 		if oldSession != nil {
 			reqSigs = append(reqSigs, oldSession.GetAllPartyAddresses()...)
 		}
-		if _, err = k.ValidateSignersWithoutParties(ctx, reqSigs, msg); err != nil {
+		if err = k.ValidateSignersWithoutParties(ctx, reqSigs, msg); err != nil {
 			return err
 		}
 	} else {
@@ -329,7 +329,7 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 	case !scope.RequirePartyRollup:
 		// Old:
 		//   - All scope owners must sign.
-		if _, err := k.ValidateSignersWithoutParties(ctx, scope.GetAllOwnerAddresses(), msg); err != nil {
+		if err := k.ValidateSignersWithoutParties(ctx, scope.GetAllOwnerAddresses(), msg); err != nil {
 			return err
 		}
 	default:
@@ -339,7 +339,7 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 		reqSpec, found := k.GetRecordSpecification(ctx, record.SpecificationId)
 		if !found {
 			// If the record spec doesn't exist, only check for optional=false signers.
-			if _, err := k.ValidateSignersWithoutParties(ctx, types.GetRequiredPartyAddresses(scope.Owners), msg); err != nil {
+			if err := k.ValidateSignersWithoutParties(ctx, types.GetRequiredPartyAddresses(scope.Owners), msg); err != nil {
 				return err
 			}
 		} else {
