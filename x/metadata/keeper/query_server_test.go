@@ -109,7 +109,7 @@ func (s *QueryServerTestSuite) TestScopeQuery() {
 
 		scopeUUID := uuid.New()
 		testIDs[i] = types.ScopeMetadataAddress(scopeUUID)
-		ns := types.NewScope(testIDs[i], nil, ownerPartyList(user1), []string{user1}, valueOwner)
+		ns := types.NewScope(testIDs[i], nil, ownerPartyList(user1), []string{user1}, valueOwner, false)
 		app.MetadataKeeper.SetScope(ctx, *ns)
 
 		sessionUUID := uuid.New()
@@ -173,7 +173,7 @@ func (s *QueryServerTestSuite) TestScopeQuery() {
 func (s *QueryServerTestSuite) TestSessionsQuery() {
 	app, ctx, queryClient := s.app, s.ctx, s.queryClient
 
-	scope := types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1)
+	scope := types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1, false)
 	app.MetadataKeeper.SetScope(ctx, *scope)
 
 	session := types.NewSession("name", s.sessionID, s.cSpecID, []types.Party{

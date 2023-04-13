@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -31,19 +30,22 @@ func (k msgServer) WriteScope(
 	msg *types.MsgWriteScopeRequest,
 ) (*types.MsgWriteScopeResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteScope")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
-	existing, _ := k.GetScope(ctx, msg.Scope.ScopeId)
-	if err := k.ValidateScopeUpdate(ctx, existing, msg.Scope, msg.Signers, msg.MsgTypeURL()); err != nil {
+	var existing *types.Scope
+	if e, found := k.GetScope(ctx, msg.Scope.ScopeId); found {
+		existing = &e
+	}
+	if err := k.ValidateWriteScope(ctx, existing, msg); err != nil {
 		return nil, err
 	}
 
 	k.SetScope(ctx, msg.Scope)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScope, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScope, msg.GetSignerStrs()))
 	return types.NewMsgWriteScopeResponse(msg.Scope.ScopeId), nil
 }
 
@@ -52,23 +54,15 @@ func (k msgServer) DeleteScope(
 	msg *types.MsgDeleteScopeRequest,
 ) (*types.MsgDeleteScopeResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScope")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
-	if len(msg.ScopeId) == 0 {
-		return nil, errors.New("scope id cannot be empty")
-	}
-	existing, found := k.GetScope(ctx, msg.ScopeId)
-	if !found {
-		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
-	}
-
-	if err := k.ValidateScopeRemove(ctx, existing, msg.Signers, msg.MsgTypeURL()); err != nil {
+	if err := k.ValidateDeleteScope(ctx, msg); err != nil {
 		return nil, err
 	}
 
 	k.RemoveScope(ctx, msg.ScopeId)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScope, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScope, msg.GetSignerStrs()))
 	return types.NewMsgDeleteScopeResponse(), nil
 }
 
@@ -77,14 +71,14 @@ func (k msgServer) AddScopeDataAccess(
 	msg *types.MsgAddScopeDataAccessRequest,
 ) (*types.MsgAddScopeDataAccessResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "AddScopeDataAccess")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	existing, found := k.GetScope(ctx, msg.ScopeId)
 	if !found {
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
-	if err := k.ValidateScopeAddDataAccess(ctx, msg.DataAccess, existing, msg.Signers, msg.MsgTypeURL()); err != nil {
+	if err := k.ValidateAddScopeDataAccess(ctx, existing, msg); err != nil {
 		return nil, err
 	}
 
@@ -92,7 +86,7 @@ func (k msgServer) AddScopeDataAccess(
 
 	k.SetScope(ctx, existing)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddScopeDataAccess, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddScopeDataAccess, msg.GetSignerStrs()))
 	return types.NewMsgAddScopeDataAccessResponse(), nil
 }
 
@@ -101,14 +95,14 @@ func (k msgServer) DeleteScopeDataAccess(
 	msg *types.MsgDeleteScopeDataAccessRequest,
 ) (*types.MsgDeleteScopeDataAccessResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScopeDataAccess")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	existing, found := k.GetScope(ctx, msg.ScopeId)
 	if !found {
 		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
-	if err := k.ValidateScopeDeleteDataAccess(ctx, msg.DataAccess, existing, msg.Signers, msg.MsgTypeURL()); err != nil {
+	if err := k.ValidateDeleteScopeDataAccess(ctx, existing, msg); err != nil {
 		return nil, err
 	}
 
@@ -116,7 +110,7 @@ func (k msgServer) DeleteScopeDataAccess(
 
 	k.SetScope(ctx, existing)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeDataAccess, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeDataAccess, msg.GetSignerStrs()))
 	return types.NewMsgDeleteScopeDataAccessResponse(), nil
 }
 
@@ -125,7 +119,7 @@ func (k msgServer) AddScopeOwner(
 	msg *types.MsgAddScopeOwnerRequest,
 ) (*types.MsgAddScopeOwnerResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "AddScopeOwner")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
@@ -142,13 +136,13 @@ func (k msgServer) AddScopeOwner(
 		return nil, addErr
 	}
 
-	if err := k.ValidateScopeUpdateOwners(ctx, existing, proposed, msg.Signers, msg.MsgTypeURL()); err != nil {
+	if err := k.ValidateUpdateScopeOwners(ctx, existing, proposed, msg); err != nil {
 		return nil, err
 	}
 
 	k.SetScope(ctx, proposed)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddScopeOwner, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddScopeOwner, msg.GetSignerStrs()))
 	return types.NewMsgAddScopeOwnerResponse(), nil
 }
 
@@ -157,7 +151,7 @@ func (k msgServer) DeleteScopeOwner(
 	msg *types.MsgDeleteScopeOwnerRequest,
 ) (*types.MsgDeleteScopeOwnerResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScopeOwner")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
@@ -174,13 +168,13 @@ func (k msgServer) DeleteScopeOwner(
 		return nil, rmErr
 	}
 
-	if err := k.ValidateScopeUpdateOwners(ctx, existing, proposed, msg.Signers, msg.MsgTypeURL()); err != nil {
+	if err := k.ValidateUpdateScopeOwners(ctx, existing, proposed, msg); err != nil {
 		return nil, err
 	}
 
 	k.SetScope(ctx, proposed)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeOwner, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeOwner, msg.GetSignerStrs()))
 	return types.NewMsgDeleteScopeOwnerResponse(), nil
 }
 
@@ -189,7 +183,7 @@ func (k msgServer) WriteSession(
 	msg *types.MsgWriteSessionRequest,
 ) (*types.MsgWriteSessionResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteSession")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
@@ -200,7 +194,7 @@ func (k msgServer) WriteSession(
 		existing = &e
 		existingAudit = existing.Audit
 	}
-	if err := k.ValidateSessionUpdate(ctx, existing, &msg.Session, msg.Signers, msg.MsgTypeURL()); err != nil {
+	if err := k.ValidateWriteSession(ctx, existing, msg); err != nil {
 		return nil, err
 	}
 
@@ -208,7 +202,7 @@ func (k msgServer) WriteSession(
 
 	k.SetSession(ctx, msg.Session)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteSession, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteSession, msg.GetSignerStrs()))
 	return types.NewMsgWriteSessionResponse(msg.Session.SessionId), nil
 }
 
@@ -217,7 +211,7 @@ func (k msgServer) WriteRecord(
 	msg *types.MsgWriteRecordRequest,
 ) (*types.MsgWriteRecordResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteRecord")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
@@ -233,7 +227,7 @@ func (k msgServer) WriteRecord(
 	if e, found := k.GetRecord(ctx, recordID); found {
 		existing = &e
 	}
-	if err := k.ValidateRecordUpdate(ctx, existing, &msg.Record, msg.Signers, msg.Parties, msg.MsgTypeURL()); err != nil {
+	if err = k.ValidateWriteRecord(ctx, existing, msg); err != nil {
 		return nil, err
 	}
 
@@ -245,7 +239,7 @@ func (k msgServer) WriteRecord(
 		k.RemoveSession(ctx, existing.SessionId)
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteRecord, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteRecord, msg.GetSignerStrs()))
 	return types.NewMsgWriteRecordResponse(recordID), nil
 }
 
@@ -254,16 +248,15 @@ func (k msgServer) DeleteRecord(
 	msg *types.MsgDeleteRecordRequest,
 ) (*types.MsgDeleteRecordResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteRecord")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
-	existing, _ := k.GetRecord(ctx, msg.RecordId)
-	if err := k.ValidateRecordRemove(ctx, existing, msg.RecordId, msg.Signers, msg.MsgTypeURL()); err != nil {
+	if err := k.ValidateDeleteRecord(ctx, msg.RecordId, msg); err != nil {
 		return nil, err
 	}
 
 	k.RemoveRecord(ctx, msg.RecordId)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteRecord, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteRecord, msg.GetSignerStrs()))
 	return types.NewMsgDeleteRecordResponse(), nil
 }
 
@@ -272,7 +265,7 @@ func (k msgServer) WriteScopeSpecification(
 	msg *types.MsgWriteScopeSpecificationRequest,
 ) (*types.MsgWriteScopeSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteScopeSpecification")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
@@ -280,17 +273,17 @@ func (k msgServer) WriteScopeSpecification(
 	var existing *types.ScopeSpecification
 	if e, found := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
-		if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
+		if _, err := k.ValidateSignersWithoutParties(ctx, existing.OwnerAddresses, msg); err != nil {
 			return nil, err
 		}
 	}
-	if err := k.ValidateScopeSpecUpdate(ctx, existing, msg.Specification); err != nil {
+	if err := k.ValidateWriteScopeSpecification(ctx, existing, msg.Specification); err != nil {
 		return nil, err
 	}
 
 	k.SetScopeSpecification(ctx, msg.Specification)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScopeSpecification, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScopeSpecification, msg.GetSignerStrs()))
 	return types.NewMsgWriteScopeSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
@@ -299,13 +292,13 @@ func (k msgServer) DeleteScopeSpecification(
 	msg *types.MsgDeleteScopeSpecificationRequest,
 ) (*types.MsgDeleteScopeSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScopeSpecification")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	existing, found := k.GetScopeSpecification(ctx, msg.SpecificationId)
 	if !found {
 		return nil, fmt.Errorf("scope specification not found with id %s", msg.SpecificationId)
 	}
-	if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
+	if _, err := k.ValidateSignersWithoutParties(ctx, existing.OwnerAddresses, msg); err != nil {
 		return nil, err
 	}
 
@@ -313,7 +306,7 @@ func (k msgServer) DeleteScopeSpecification(
 		return nil, fmt.Errorf("cannot delete scope specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeSpecification, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeSpecification, msg.GetSignerStrs()))
 	return types.NewMsgDeleteScopeSpecificationResponse(), nil
 }
 
@@ -322,7 +315,7 @@ func (k msgServer) WriteContractSpecification(
 	msg *types.MsgWriteContractSpecificationRequest,
 ) (*types.MsgWriteContractSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteContractSpecification")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
@@ -330,17 +323,17 @@ func (k msgServer) WriteContractSpecification(
 	var existing *types.ContractSpecification
 	if e, found := k.GetContractSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
-		if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
+		if _, err := k.ValidateSignersWithoutParties(ctx, existing.OwnerAddresses, msg); err != nil {
 			return nil, err
 		}
 	}
-	if err := k.ValidateContractSpecUpdate(ctx, existing, msg.Specification); err != nil {
+	if err := k.ValidateWriteContractSpecification(ctx, existing, msg.Specification); err != nil {
 		return nil, err
 	}
 
 	k.SetContractSpecification(ctx, msg.Specification)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteContractSpecification, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteContractSpecification, msg.GetSignerStrs()))
 	return types.NewMsgWriteContractSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
@@ -349,13 +342,13 @@ func (k msgServer) DeleteContractSpecification(
 	msg *types.MsgDeleteContractSpecificationRequest,
 ) (*types.MsgDeleteContractSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteContractSpecification")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	existing, found := k.GetContractSpecification(ctx, msg.SpecificationId)
 	if !found {
 		return nil, fmt.Errorf("contract specification not found with id %s", msg.SpecificationId)
 	}
-	if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, existing.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
+	if _, err := k.ValidateSignersWithoutParties(ctx, existing.OwnerAddresses, msg); err != nil {
 		return nil, err
 	}
 
@@ -388,7 +381,7 @@ func (k msgServer) DeleteContractSpecification(
 		return nil, fmt.Errorf("cannot delete contract specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteContractSpecification, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteContractSpecification, msg.GetSignerStrs()))
 	return types.NewMsgDeleteContractSpecificationResponse(), nil
 }
 
@@ -397,7 +390,7 @@ func (k msgServer) AddContractSpecToScopeSpec(
 	msg *types.MsgAddContractSpecToScopeSpecRequest,
 ) (*types.MsgAddContractSpecToScopeSpecResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "AddContractSpecToScopeSpec")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 	_, found := k.GetContractSpecification(ctx, msg.ContractSpecificationId)
 	if !found {
 		return nil, fmt.Errorf("contract specification not found with id %s", msg.ContractSpecificationId)
@@ -407,7 +400,7 @@ func (k msgServer) AddContractSpecToScopeSpec(
 	if !found {
 		return nil, fmt.Errorf("scope specification not found with id %s", msg.ScopeSpecificationId)
 	}
-	if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, scopeSpec.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
+	if _, err := k.ValidateSignersWithoutParties(ctx, scopeSpec.OwnerAddresses, msg); err != nil {
 		return nil, err
 	}
 
@@ -420,7 +413,7 @@ func (k msgServer) AddContractSpecToScopeSpec(
 	scopeSpec.ContractSpecIds = append(scopeSpec.ContractSpecIds, msg.ContractSpecificationId)
 	k.SetScopeSpecification(ctx, scopeSpec)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddContractSpecToScopeSpec, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddContractSpecToScopeSpec, msg.GetSignerStrs()))
 	return types.NewMsgAddContractSpecToScopeSpecResponse(), nil
 }
 
@@ -429,17 +422,12 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 	msg *types.MsgDeleteContractSpecFromScopeSpecRequest,
 ) (*types.MsgDeleteContractSpecFromScopeSpecResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteContractSpecFromScopeSpec")
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	_, found := k.GetContractSpecification(ctx, msg.ContractSpecificationId)
-	if !found {
-		return nil, fmt.Errorf("contract specification not found with id %s", msg.ContractSpecificationId)
-	}
-
+	ctx := UnwrapMetadataContext(goCtx)
 	scopeSpec, found := k.GetScopeSpecification(ctx, msg.ScopeSpecificationId)
 	if !found {
 		return nil, fmt.Errorf("scope specification not found with id %s", msg.ScopeSpecificationId)
 	}
-	if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, scopeSpec.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
+	if _, err := k.ValidateSignersWithoutParties(ctx, scopeSpec.OwnerAddresses, msg); err != nil {
 		return nil, err
 	}
 
@@ -453,13 +441,13 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 		}
 	}
 	if !found {
-		return nil, fmt.Errorf("contract specification %s not found on scope specification id %s", msg.ContractSpecificationId, msg.ScopeSpecificationId)
+		return nil, fmt.Errorf("contract specification %s not found in scope specification %s", msg.ContractSpecificationId, msg.ScopeSpecificationId)
 	}
 
 	scopeSpec.ContractSpecIds = updateContractSpecIds
 	k.SetScopeSpecification(ctx, scopeSpec)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteContractSpecFromScopeSpec, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteContractSpecFromScopeSpec, msg.GetSignerStrs()))
 
 	return types.NewMsgDeleteContractSpecFromScopeSpecResponse(), nil
 }
@@ -469,7 +457,7 @@ func (k msgServer) WriteRecordSpecification(
 	msg *types.MsgWriteRecordSpecificationRequest,
 ) (*types.MsgWriteRecordSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "WriteRecordSpecification")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
@@ -484,7 +472,7 @@ func (k msgServer) WriteRecordSpecification(
 		return nil, fmt.Errorf("contract specification not found with id %s (uuid %s) required for adding or updating record specification with id %s",
 			contractSpecID, contractSpecUUID, msg.Specification.SpecificationId)
 	}
-	if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, contractSpec.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
+	if _, err = k.ValidateSignersWithoutParties(ctx, contractSpec.OwnerAddresses, msg); err != nil {
 		return nil, err
 	}
 
@@ -492,13 +480,13 @@ func (k msgServer) WriteRecordSpecification(
 	if e, found := k.GetRecordSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
 	}
-	if err := k.ValidateRecordSpecUpdate(ctx, existing, msg.Specification); err != nil {
+	if err = k.ValidateWriteRecordSpecification(ctx, existing, msg.Specification); err != nil {
 		return nil, err
 	}
 
 	k.SetRecordSpecification(ctx, msg.Specification)
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteRecordSpecification, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteRecordSpecification, msg.GetSignerStrs()))
 	return types.NewMsgWriteRecordSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
@@ -507,7 +495,7 @@ func (k msgServer) DeleteRecordSpecification(
 	msg *types.MsgDeleteRecordSpecificationRequest,
 ) (*types.MsgDeleteRecordSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteRecordSpecification")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	_, found := k.GetRecordSpecification(ctx, msg.SpecificationId)
 	if !found {
@@ -522,7 +510,7 @@ func (k msgServer) DeleteRecordSpecification(
 		return nil, fmt.Errorf("contract specification not found with id %s required for deleting record specification with id %s",
 			contractSpecID, msg.SpecificationId)
 	}
-	if err := k.ValidateAllOwnersAreSignersWithAuthz(ctx, contractSpec.OwnerAddresses, msg.Signers, msg.MsgTypeURL()); err != nil {
+	if _, err := k.ValidateSignersWithoutParties(ctx, contractSpec.OwnerAddresses, msg); err != nil {
 		return nil, err
 	}
 
@@ -530,7 +518,7 @@ func (k msgServer) DeleteRecordSpecification(
 		return nil, fmt.Errorf("cannot delete record specification with id %s: %w", msg.SpecificationId, err)
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteRecordSpecification, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteRecordSpecification, msg.GetSignerStrs()))
 	return types.NewMsgDeleteRecordSpecificationResponse(), nil
 }
 
@@ -539,7 +527,7 @@ func (k msgServer) BindOSLocator(
 	msg *types.MsgBindOSLocatorRequest,
 ) (*types.MsgBindOSLocatorResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "BindOSLocator")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
 		ctx.Logger().Error("unable to validate message", "err", err)
@@ -563,7 +551,7 @@ func (k msgServer) BindOSLocator(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_BindOSLocator, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_BindOSLocator, msg.GetSignerStrs()))
 	return types.NewMsgBindOSLocatorResponse(msg.Locator), nil
 }
 
@@ -572,7 +560,7 @@ func (k msgServer) DeleteOSLocator(
 	msg *types.MsgDeleteOSLocatorRequest,
 ) (*types.MsgDeleteOSLocatorResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteOSLocator")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
 		ctx.Logger().Error("unable to validate message", "err", err)
@@ -598,7 +586,7 @@ func (k msgServer) DeleteOSLocator(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteOSLocator, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteOSLocator, msg.GetSignerStrs()))
 	return types.NewMsgDeleteOSLocatorResponse(msg.Locator), nil
 }
 
@@ -607,7 +595,7 @@ func (k msgServer) ModifyOSLocator(
 	msg *types.MsgModifyOSLocatorRequest,
 ) (*types.MsgModifyOSLocatorResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "ModifyOSLocator")
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 	// Validate
 	if err := msg.ValidateBasic(); err != nil {
 		ctx.Logger().Error("unable to validate message", "err", err)
@@ -636,6 +624,6 @@ func (k msgServer) ModifyOSLocator(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_ModifyOSLocator, msg.GetSigners()))
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_ModifyOSLocator, msg.GetSignerStrs()))
 	return types.NewMsgModifyOSLocatorResponse(msg.Locator), nil
 }

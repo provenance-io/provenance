@@ -213,13 +213,13 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.contractSpecID = metadatatypes.ContractSpecMetadataAddress(s.contractSpecUUID)
 	s.recordSpecID = metadatatypes.RecordSpecMetadataAddress(s.contractSpecUUID, s.recordName)
 
-	s.scope = *metadatatypes.NewScope(
-		s.scopeID,
-		s.scopeSpecID,
-		ownerPartyList(s.user1AddrStr),
-		[]string{s.user1AddrStr},
-		s.user2AddrStr,
-	)
+	s.scope = metadatatypes.Scope{
+		ScopeId:           s.scopeID,
+		SpecificationId:   s.scopeSpecID,
+		Owners:            ownerPartyList(s.user1AddrStr),
+		DataAccess:        []string{s.user1AddrStr},
+		ValueOwnerAddress: s.user2AddrStr,
+	}
 
 	s.session = *metadatatypes.NewSession(
 		"unit test session",
@@ -293,7 +293,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 		[]metadatatypes.PartyType{metadatatypes.PartyType_PARTY_TYPE_OWNER},
 	)
 
-	s.scopeAsJson = fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"owners\":[{\"address\":\"%s\",\"role\":\"PARTY_TYPE_OWNER\"}],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\"}",
+	s.scopeAsJson = fmt.Sprintf("{\"scope_id\":\"%s\",\"specification_id\":\"%s\",\"owners\":[{\"address\":\"%s\",\"role\":\"PARTY_TYPE_OWNER\",\"optional\":false}],\"data_access\":[\"%s\"],\"value_owner_address\":\"%s\",\"require_party_rollup\":false}",
 		s.scopeID,
 		s.scopeSpecID,
 		s.user1AddrStr,
@@ -304,7 +304,9 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 - %s
 owners:
 - address: %s
+  optional: false
   role: PARTY_TYPE_OWNER
+require_party_rollup: false
 scope_id: %s
 specification_id: %s
 value_owner_address: %s`,
@@ -315,7 +317,7 @@ value_owner_address: %s`,
 		s.user2AddrStr,
 	)
 
-	s.sessionAsJson = fmt.Sprintf("{\"session_id\":\"%s\",\"specification_id\":\"%s\",\"parties\":[{\"address\":\"%s\",\"role\":\"PARTY_TYPE_OWNER\"}],\"name\":\"unit test session\",\"context\":null,\"audit\":{\"created_date\":\"0001-01-01T00:00:00Z\",\"created_by\":\"%s\",\"updated_date\":\"0001-01-01T00:00:00Z\",\"updated_by\":\"\",\"version\":0,\"message\":\"unit testing\"}}",
+	s.sessionAsJson = fmt.Sprintf("{\"session_id\":\"%s\",\"specification_id\":\"%s\",\"parties\":[{\"address\":\"%s\",\"role\":\"PARTY_TYPE_OWNER\",\"optional\":false}],\"name\":\"unit test session\",\"context\":null,\"audit\":{\"created_date\":\"0001-01-01T00:00:00Z\",\"created_by\":\"%s\",\"updated_date\":\"0001-01-01T00:00:00Z\",\"updated_by\":\"\",\"version\":0,\"message\":\"unit testing\"}}",
 		s.sessionID,
 		s.contractSpecID,
 		s.user1AddrStr,
@@ -332,6 +334,7 @@ context: null
 name: unit test session
 parties:
 - address: %s
+  optional: false
   role: PARTY_TYPE_OWNER
 session_id: %s
 specification_id: %s`,
@@ -1996,6 +1999,23 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			false, "", &sdk.TxResponse{}, 0,
 		},
 		{
+			"should successfully add metadata scope with party rollup",
+			cli.WriteScopeCmd(),
+			[]string{
+				scopeID,
+				scopeSpecID,
+				s.accountAddrStr,
+				s.accountAddrStr,
+				s.accountAddrStr,
+				fmt.Sprintf("--%s", cli.FlagRequirePartyRollup),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, "", &sdk.TxResponse{}, 0,
+		},
+		{
 			"should fail to add metadata scope, incorrect scope id",
 			cli.WriteScopeCmd(),
 			[]string{
@@ -2009,7 +2029,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
+			true, "invalid scope id: decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
 		},
 		{
 			"should fail to add metadata scope, incorrect scope spec id",
@@ -2025,7 +2045,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
+			true, "invalid spec id: decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
 		},
 		{
 			"should fail to add metadata scope, validate basic will err on owner format",
@@ -2041,7 +2061,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "invalid scope owners: invalid party address [incorrect1]: decoding bech32 failed: invalid separator index 9", &sdk.TxResponse{}, 0,
+			true, `invalid owners: invalid party "incorrect1,incorrect2": invalid address "incorrect1": decoding bech32 failed: invalid separator index 9`, &sdk.TxResponse{}, 0,
 		},
 		{
 			"should fail to remove metadata scope, invalid scopeid",
@@ -2209,7 +2229,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			false, "", &sdk.TxResponse{}, 0,
 		},
 		{
-			"should fail to metadata scope that no longer exists",
+			"should fail to delete metadata scope that no longer exists",
 			cli.RemoveScopeCmd(),
 			[]string{
 				scopeID,
@@ -2219,6 +2239,45 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, "", &sdk.TxResponse{}, 1,
+		},
+		{
+			name: "should fail to write scope with optional party but without rollup",
+			cmd:  cli.WriteScopeCmd(),
+			args: []string{
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
+				scopeSpecID,
+				fmt.Sprintf("%s,servicer,opt", s.accountAddrStr),
+				s.accountAddrStr,
+				s.accountAddrStr,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    true,
+			expectErrMsg: "parties can only be optional when require_party_rollup = true",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
+			name: "should successfully write scope with optional party and rollup",
+			cmd:  cli.WriteScopeCmd(),
+			args: []string{
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
+				scopeSpecID,
+				fmt.Sprintf("%s,servicer,opt;%s,owner", s.accountAddrStr, s.accountAddrStr),
+				s.accountAddrStr,
+				s.accountAddrStr,
+				fmt.Sprintf("--%s", cli.FlagRequirePartyRollup),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			expectErrMsg: "",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 	}
 
@@ -2293,6 +2352,24 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			true, "invalid contract specification id prefix at index 0 (expected: contractspec, got scopespec)", &sdk.TxResponse{}, 0,
+		},
+		{
+			name: "should fail to add scope specification unknown party type",
+			cmd:  addCommand,
+			args: []string{
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
+				s.accountAddrStr,
+				"badpartytype",
+				s.contractSpecID.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    true,
+			expectErrMsg: `unknown party type: "badpartytype"`,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
 			"should fail to remove scope specification invalid id",
@@ -2504,6 +2581,25 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 			"decoding bech32 failed: invalid separator index -1",
 			&sdk.TxResponse{},
 			0,
+		},
+		{
+			name: "should fail to add contract specification bad party type",
+			cmd:  addCommand,
+			args: []string{
+				metadatatypes.ContractSpecMetadataAddress(uuid.New()).String(),
+				s.accountAddrStr,
+				"badpartytype",
+				"hashvalue",
+				"`myclassname`",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    true,
+			expectErrMsg: `unknown party type: "badpartytype"`,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
 			"should fail to remove contract specification invalid address",
@@ -2784,7 +2880,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				"record1,typename1,hashvalue",
 				"typename",
 				"record",
-				"responsibleparties",
+				"validator",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -2803,7 +2899,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				"record1,typename1,hashvalue",
 				"typename",
 				"record_list",
-				"responsibleparties",
+				"investor",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -2814,6 +2910,26 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 			&sdk.TxResponse{}, 0,
 		},
 		{
+			name: "should fail to add record specification, bad party type",
+			cmd:  cmd,
+			args: []string{
+				metadatatypes.RecordSpecMetadataAddress(uuid.New(), recordName).String(),
+				recordName,
+				"record1,typename1,hashvalue",
+				"typename",
+				"record_list",
+				"badpartytype",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    true,
+			expectErrMsg: `unknown party type: "badpartytype"`,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
 			"should fail to add record specification, validate basic fail",
 			cmd,
 			[]string{
@@ -2822,7 +2938,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				"record1,typename1,hashvalue;record2,typename2,recspec1q5p7xh9vtktyc9ynp25ydq4cycqp3tp7wdplq95fp3gsaylex5npzlhnhp6",
 				"typename",
 				"record",
-				"responsibleparties",
+				"custodian",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -2841,14 +2957,14 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				"record1,typename1;record2,typename2,hashvalue",
 				"typename",
 				"record",
-				"responsibleparties",
+				"originator",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			true,
-			"invalid number of values for input specification: 2",
+			`invalid input specification "record1,typename1": expected 3 parts, have 2`,
 			&sdk.TxResponse{}, 0,
 		},
 		{
@@ -2860,7 +2976,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				"record1,typename1,hashvalue",
 				"typename",
 				"incorrect",
-				"responsibleparties",
+				"servicer,affiliate",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -2879,7 +2995,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				"record1,typename1,hashvalue",
 				"typename",
 				"record",
-				"responsibleparties",
+				"provenance",
 				fmt.Sprintf("--%s=%s", cli.FlagSigners, "incorrect-signer-format"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -3028,7 +3144,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				"input1name,typename1,hashvalue",
 				"typename",
 				"record",
-				"responsibleparties",
+				"owner",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -3119,7 +3235,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "invalid number of values for process: 2",
+			true, `invalid process "hashvalue,methodname": expected 3 parts, have: 2`,
 			&sdk.TxResponse{},
 			0,
 		},
@@ -3140,7 +3256,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "invalid number of values for record input: 3",
+			true, `invalid record input "input1name,typename1,proposed": expected 4 parts, have 3`,
 			&sdk.TxResponse{},
 			0,
 		},
@@ -3161,7 +3277,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "invalid number of values for record output: 1",
+			true, `invalid record output "outputhashvalue": expected 2 parts, have 1`,
 			&sdk.TxResponse{},
 			0,
 		},
@@ -3175,14 +3291,14 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				"processname,hashvalue,methodname",
 				"input1name,hashvalue,typename1,proposed",
 				"outputhashvalue,pass",
-				fmt.Sprintf("%s;%s", userAddress, userAddress),
+				fmt.Sprintf("%s,%s", userAddress, userAddress),
 				contractSpecID.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "invalid number of values for parties: 1",
+			true, fmt.Sprintf(`invalid party "%s,%s": unknown party type: "%s"`, userAddress, userAddress, userAddress),
 			&sdk.TxResponse{},
 			0,
 		},
@@ -3412,6 +3528,24 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 			&sdk.TxResponse{},
 			0,
 		},
+		{
+			name: "invalid party type",
+			cmd:  cmd,
+			args: []string{
+				metadatatypes.SessionMetadataAddress(scopeUUID, uuid.New()).String(),
+				s.contractSpecID.String(),
+				fmt.Sprintf("%s,badpartytype", owner),
+				"somename",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    true,
+			expectErrMsg: `invalid party "` + owner + `,badpartytype": unknown party type: "badpartytype"`,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
 	}
 
 	runTxCmdTestCases(s, testCases)
@@ -3459,7 +3593,7 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 			[]string{
 				scopeID,
 				scopeSpecID,
-				fmt.Sprintf("%s,%s", s.user1AddrStr, s.user2AddrStr),
+				fmt.Sprintf("%s;%s", s.user1AddrStr, s.user2AddrStr),
 				s.user1AddrStr,
 				s.user1AddrStr,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),

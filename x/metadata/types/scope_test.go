@@ -36,90 +36,110 @@ func (s *ScopeTestSuite) SetupSuite() {
 }
 
 func (s *ScopeTestSuite) TestScopeValidateBasic() {
+	ns := func(scopeID, scopeSpecification MetadataAddress, owners []Party, dataAccess []string, valueOwner string) *Scope {
+		return &Scope{
+			ScopeId:            scopeID,
+			SpecificationId:    scopeSpecification,
+			Owners:             owners,
+			DataAccess:         dataAccess,
+			ValueOwnerAddress:  valueOwner,
+			RequirePartyRollup: false,
+		}
+	}
 	tests := []struct {
-		name    string
-		scope   *Scope
-		want    string
-		wantErr bool
+		name  string
+		scope *Scope
+		want  string
 	}{
 		{
 			"valid scope one owner",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
 			"",
-			false,
 		},
 		{
 			"valid scope one owner, one data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{s.Addr}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{s.Addr}, ""),
 			"",
-			false,
 		},
 		{
 			"no owners",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid scope owners: at least one party is required",
-			true,
 		},
 		{
 			"no owners, data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{s.Addr}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{s.Addr}, ""),
 			"invalid scope owners: at least one party is required",
-			true,
 		},
 		{
 			"invalid scope id",
-			NewScope(ScopeSpecMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
+			ns(ScopeSpecMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid scope identifier (expected: scope, got scopespec)",
-			true,
 		},
 		{
 			"invalid scope id - wrong address type",
-			NewScope(MetadataAddress{0x85}, ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
+			ns(MetadataAddress{0x85}, ScopeSpecMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid metadata address type: 133",
-			true,
 		},
 		{
 			"invalid spec id",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()), []Party{}, []string{}, ""),
 			"invalid scope specification identifier (expected: scopespec, got scope)",
-			true,
 		},
 		{
 			"invalid spec id - wrong address type",
-			NewScope(ScopeMetadataAddress(uuid.New()), MetadataAddress{0x85}, []Party{}, []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), MetadataAddress{0x85}, []Party{}, []string{}, ""),
 			"invalid metadata address type: 133",
-			true,
 		},
 		{
 			"invalid owner on scope",
-			NewScope(ScopeMetadataAddress(
-				uuid.New()),
-				ScopeSpecMetadataAddress(uuid.New()),
-				ownerPartyList(":invalid"),
-				[]string{},
-				"",
-			),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(":invalid"), []string{}, ""),
 			"invalid scope owners: invalid party address [:invalid]: decoding bech32 failed: invalid separator index -1",
-			true,
+		},
+		{
+			name: "not rollup with optional party",
+			scope: &Scope{
+				ScopeId:         ScopeMetadataAddress(uuid.New()),
+				SpecificationId: ScopeSpecMetadataAddress(uuid.New()),
+				Owners: []Party{
+					{
+						Address:  sdk.AccAddress("just_a_test_________").String(),
+						Role:     PartyType_PARTY_TYPE_SERVICER,
+						Optional: true,
+					},
+				},
+				DataAccess:         nil,
+				ValueOwnerAddress:  "",
+				RequirePartyRollup: false,
+			},
+			want: "parties can only be optional when require_party_rollup = true",
 		},
 	}
 
-	for _, tt := range tests {
-		tt := tt
-		s.T().Run(tt.name, func(t *testing.T) {
-			err := tt.scope.ValidateBasic()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Scope ValidateBasic error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if tt.wantErr {
-				require.Equal(t, tt.want, err.Error())
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := tc.scope.ValidateBasic()
+			if len(tc.want) > 0 {
+				s.Assert().EqualError(err, tc.want, "ValidateBasic")
+			} else {
+				s.Assert().NoError(err, "ValidateBasic")
 			}
 		})
 	}
 }
 
 func (s *ScopeTestSuite) TestScopeAddAccess() {
+	ns := func(scopeID, scopeSpecification MetadataAddress, owners []Party, dataAccess []string, valueOwner string) *Scope {
+		return &Scope{
+			ScopeId:            scopeID,
+			SpecificationId:    scopeSpecification,
+			Owners:             owners,
+			DataAccess:         dataAccess,
+			ValueOwnerAddress:  valueOwner,
+			RequirePartyRollup: false,
+		}
+	}
+
 	tests := []struct {
 		name       string
 		scope      *Scope
@@ -128,25 +148,25 @@ func (s *ScopeTestSuite) TestScopeAddAccess() {
 	}{
 		{
 			"should successfully add new address to scope data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
 			[]string{"addr1"},
 			[]string{"addr1"},
 		},
 		{
 			"should successfully not add same address twice to data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
 			[]string{"addr1"},
 			[]string{"addr1"},
 		},
 		{
 			"should successfully add new address to data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
 			[]string{"addr2"},
 			[]string{"addr1", "addr2"},
 		},
 		{
 			"should successfully add new address only once to data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
 			[]string{"addr2", "addr2", "addr2"},
 			[]string{"addr1", "addr2"},
 		},
@@ -163,6 +183,17 @@ func (s *ScopeTestSuite) TestScopeAddAccess() {
 }
 
 func (s *ScopeTestSuite) TestScopeRemoveAccess() {
+	ns := func(scopeID, scopeSpecification MetadataAddress, owners []Party, dataAccess []string, valueOwner string) *Scope {
+		return &Scope{
+			ScopeId:            scopeID,
+			SpecificationId:    scopeSpecification,
+			Owners:             owners,
+			DataAccess:         dataAccess,
+			ValueOwnerAddress:  valueOwner,
+			RequirePartyRollup: false,
+		}
+	}
+
 	tests := []struct {
 		name       string
 		scope      *Scope
@@ -171,25 +202,25 @@ func (s *ScopeTestSuite) TestScopeRemoveAccess() {
 	}{
 		{
 			"should successfully remove address from scope data access",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1"}, ""),
 			[]string{"addr1"},
 			[]string{},
 		},
 		{
 			"should successfully remove from a list more with more than one",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1", "addr2"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1", "addr2"}, ""),
 			[]string{"addr2"},
 			[]string{"addr1"},
 		},
 		{
 			"should successfully remove nothing",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{}, ""),
 			[]string{"addr2"},
 			[]string{},
 		},
 		{
 			"should successfully remove address even when repeated in list",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1", "addr2", "addr3"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), ownerPartyList(s.Addr), []string{"addr1", "addr2", "addr3"}, ""),
 			[]string{"addr2", "addr2", "addr2"},
 			[]string{"addr1", "addr3"},
 		},
@@ -206,6 +237,17 @@ func (s *ScopeTestSuite) TestScopeRemoveAccess() {
 }
 
 func (s *ScopeTestSuite) TestScopeAddOwners() {
+	ns := func(scopeID, scopeSpecification MetadataAddress, owners []Party, dataAccess []string, valueOwner string) *Scope {
+		return &Scope{
+			ScopeId:            scopeID,
+			SpecificationId:    scopeSpecification,
+			Owners:             owners,
+			DataAccess:         dataAccess,
+			ValueOwnerAddress:  valueOwner,
+			RequirePartyRollup: false,
+		}
+	}
+
 	user1Owner := Party{Address: s.Addr, Role: PartyType_PARTY_TYPE_OWNER}
 	user1Investor := Party{Address: s.Addr, Role: PartyType_PARTY_TYPE_INVESTOR}
 	user2Affiliate := Party{Address: "addr2", Role: PartyType_PARTY_TYPE_AFFILIATE}
@@ -218,35 +260,28 @@ func (s *ScopeTestSuite) TestScopeAddOwners() {
 	}{
 		{
 			"should successfully update owner address with new role",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{}, ""),
 			[]Party{user1Investor},
-			[]Party{user1Investor},
+			[]Party{user1Owner, user1Investor},
 			"",
 		},
 		{
-			"should fail to add same new owner twice",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
-			[]Party{user1Investor, user1Investor},
-			[]Party{user1Investor},
-			"party already exists with address cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck and role PARTY_TYPE_INVESTOR",
-		},
-		{
 			"should fail to add duplicate owner",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
 			[]Party{user1Owner},
 			[]Party{user1Owner},
 			"party already exists with address cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck and role PARTY_TYPE_OWNER",
 		},
 		{
 			"should successfully add new address to owners",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
 			[]Party{user2Affiliate},
 			[]Party{user1Owner, user2Affiliate},
 			"",
 		},
 		{
 			"should successfully not change the list",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Owner}, []string{"addr1"}, ""),
 			[]Party{},
 			[]Party{user1Owner},
 			"",
@@ -261,12 +296,23 @@ func (s *ScopeTestSuite) TestScopeAddOwners() {
 			} else {
 				require.NoError(t, err, "AddOwners unexpected error")
 			}
-			require.Equal(t, tc.scope.Owners, tc.expected, "new scope owners value")
+			require.Equal(t, tc.expected, tc.scope.Owners, "new scope owners value")
 		})
 	}
 }
 
 func (s *ScopeTestSuite) TestScopeRemoveOwners() {
+	ns := func(scopeID, scopeSpecification MetadataAddress, owners []Party, dataAccess []string, valueOwner string) *Scope {
+		return &Scope{
+			ScopeId:            scopeID,
+			SpecificationId:    scopeSpecification,
+			Owners:             owners,
+			DataAccess:         dataAccess,
+			ValueOwnerAddress:  valueOwner,
+			RequirePartyRollup: false,
+		}
+	}
+
 	user1Owner := ownerPartyList(s.Addr)
 	user1Investor := Party{Address: s.Addr, Role: PartyType_PARTY_TYPE_INVESTOR}
 	user2Affiliate := Party{Address: "addr2", Role: PartyType_PARTY_TYPE_AFFILIATE}
@@ -279,21 +325,21 @@ func (s *ScopeTestSuite) TestScopeRemoveOwners() {
 	}{
 		{
 			"should successfully remove owner by address",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{}, ""),
 			[]string{user1Owner[0].Address},
 			[]Party{},
 			"",
 		},
 		{
 			"should fail to remove any non-existent owner",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), user1Owner, []string{"addr1"}, ""),
 			[]string{"notanowner"},
 			user1Owner,
 			"address does not exist in scope owners: notanowner",
 		},
 		{
 			"should successfully remove owner from list of multiple",
-			NewScope(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Investor, user2Affiliate}, []string{"addr1"}, ""),
+			ns(ScopeMetadataAddress(uuid.New()), ScopeSpecMetadataAddress(uuid.New()), []Party{user1Investor, user2Affiliate}, []string{"addr1"}, ""),
 			[]string{user1Investor.Address},
 			[]Party{user2Affiliate},
 			"",
@@ -313,22 +359,134 @@ func (s *ScopeTestSuite) TestScopeRemoveOwners() {
 	}
 }
 
+func (s *ScopeTestSuite) TestScopeHasOwnerAddress() {
+	pt := func(address string) Party {
+		return Party{Address: address}
+	}
+	ptz := func(parties ...Party) []Party {
+		rv := make([]Party, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+	tests := []struct {
+		name    string
+		scope   Scope
+		address string
+		exp     bool
+	}{
+		{
+			name:    "nil owners",
+			scope:   Scope{Owners: nil},
+			address: "",
+			exp:     false,
+		},
+		{
+			name:    "empty owners",
+			scope:   Scope{Owners: []Party{}},
+			address: "",
+			exp:     false,
+		},
+		{
+			name:    "one owner same address",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: "abc",
+			exp:     true,
+		},
+		{
+			name:    "one owner address has extra space at start",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: " abc",
+			exp:     false,
+		},
+		{
+			name:    "one owner address has extra space at end",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: "abc ",
+			exp:     false,
+		},
+		{
+			name:    "one owner address start same but is shorter",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: "ab",
+			exp:     false,
+		},
+		{
+			name:    "one owner address start same but is longer",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: "abcd",
+			exp:     false,
+		},
+		{
+			name:    "one owner address end same but is shorter",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: "bc",
+			exp:     false,
+		},
+		{
+			name:    "one owner address end same but is longer",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: "aabc",
+			exp:     false,
+		},
+		{
+			name:    "one owner address different case",
+			scope:   Scope{Owners: ptz(pt("abc"))},
+			address: "aBc",
+			exp:     false,
+		},
+		{
+			name:    "three owners no match",
+			scope:   Scope{Owners: ptz(pt("aaa"), pt("bbb"), pt("ccc"))},
+			address: "abc",
+			exp:     false,
+		},
+		{
+			name:    "three owners first matches",
+			scope:   Scope{Owners: ptz(pt("aaa"), pt("bbb"), pt("ccc"))},
+			address: "aaa",
+			exp:     true,
+		},
+		{
+			name:    "three owners second matches",
+			scope:   Scope{Owners: ptz(pt("aaa"), pt("bbb"), pt("ccc"))},
+			address: "bbb",
+			exp:     true,
+		},
+		{
+			name:    "three owners third matches",
+			scope:   Scope{Owners: ptz(pt("aaa"), pt("bbb"), pt("ccc"))},
+			address: "ccc",
+			exp:     true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			actual := tc.scope.hasOwnerAddress(tc.address)
+			s.Assert().Equal(tc.exp, actual, "hasOwnerAddress(%q) on %#v", tc.address, tc.scope)
+		})
+	}
+}
+
 func (s *ScopeTestSuite) TestScopeString() {
 	s.T().Run("scope string", func(t *testing.T) {
 		scopeUUID := uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
 		sessionUUID := uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
-		scope := NewScope(ScopeMetadataAddress(
-			scopeUUID), ScopeSpecMetadataAddress(sessionUUID),
-			ownerPartyList(s.Addr),
-			[]string{},
-			"")
+		scope := &Scope{
+			ScopeId:         ScopeMetadataAddress(scopeUUID),
+			SpecificationId: ScopeSpecMetadataAddress(sessionUUID),
+			Owners:          ownerPartyList(s.Addr),
+			DataAccess:      []string{},
+		}
 		require.Equal(t, `scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
 specification_id: scopespec1qnp9c775ccu5xeaggtmylf0uesvsqyrkq8
 owners:
 - address: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
   role: 5
+  optional: false
 data_access: []
 value_owner_address: ""
+require_party_rollup: false
 `,
 			scope.String())
 	})
@@ -551,18 +709,18 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 			"invalid session, invalid party address",
 			NewSession("my_perfect_session", sessionID, contractSpec, []Party{
 				{Address: "invalidpartyaddress", Role: PartyType_PARTY_TYPE_CUSTODIAN}}, nil),
-			"invalid party on session: invalid party address [invalidpartyaddress]: decoding bech32 failed: invalid separator index -1",
+			"invalid party address [invalidpartyaddress]: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			"invalid session, invalid party type",
 			NewSession("my_perfect_session", sessionID, contractSpec, []Party{
 				{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_UNSPECIFIED}}, nil),
-			"invalid party on session: invalid party type for party cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+			"invalid party type for party cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
 		},
 		{
 			"Invalid session, must have at least one party ",
 			NewSession("my_perfect_session", sessionID, contractSpec, []Party{}, nil),
-			"session must have at least one party",
+			"at least one party is required",
 		},
 		{
 			"invalid session, invalid spec id",
@@ -614,6 +772,7 @@ specification_id: %s
 parties:
 - address: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
   role: 6
+  optional: false
 type: name
 context: []
 audit:
@@ -646,6 +805,343 @@ func (s *ScopeTestSuite) TestMetadataAuditUpdate() {
 	s.Equal("", result.Message)
 }
 
+func (s *ScopeTestSuite) TestParty_ValidateBasic() {
+	addr := sdk.AccAddress("test").String()
+
+	tests := []struct {
+		name   string
+		party  Party
+		expErr string
+	}{
+		{
+			name:   "good addr good party optional",
+			party:  Party{Address: addr, Role: 3, Optional: true},
+			expErr: "",
+		},
+		{
+			name:   "good addr good party not optional",
+			party:  Party{Address: addr, Role: 3, Optional: false},
+			expErr: "",
+		},
+		{
+			name:   "no address",
+			party:  Party{Address: ""},
+			expErr: "missing party address",
+		},
+		{
+			name:   "bad address",
+			party:  Party{Address: "badbad"},
+			expErr: "invalid party address [badbad]: decoding bech32 failed: invalid bech32 string length 6",
+		},
+		{
+			name:   "negative party type",
+			party:  Party{Address: addr, Role: -10},
+			expErr: "invalid party type for party " + addr,
+		},
+		{
+			name:   "large party type",
+			party:  Party{Address: addr, Role: 123},
+			expErr: "invalid party type for party " + addr,
+		},
+		{
+			name:   "unspecified party type",
+			party:  Party{Address: addr, Role: PartyType_PARTY_TYPE_UNSPECIFIED},
+			expErr: "invalid party type for party " + addr,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orig := tc.party
+			var err error
+			testFunc := func() {
+				err = tc.party.ValidateBasic()
+			}
+			s.Require().NotPanics(testFunc, "ValidateBasic")
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "ValidateBasic")
+			} else {
+				s.Assert().NoError(err, "ValidateBasic")
+			}
+			s.Assert().Equal(orig, tc.party, "party after ValidateBasic")
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestValidateOptionalParties() {
+	tests := []struct {
+		name       string
+		optAllowed bool
+		parties    []Party
+		expErr     string
+	}{
+		{
+			name:       "opt allowed nil parties",
+			optAllowed: true,
+			parties:    nil,
+			expErr:     "",
+		},
+		{
+			name:       "opt allowed empty parties",
+			optAllowed: true,
+			parties:    []Party{},
+			expErr:     "",
+		},
+		{
+			name:       "opt not allowed nil parties",
+			optAllowed: false,
+			parties:    nil,
+			expErr:     "",
+		},
+		{
+			name:       "opt not allowed empty parties",
+			optAllowed: false,
+			parties:    []Party{},
+			expErr:     "",
+		},
+		{
+			name:       "opt allowed 1 party required",
+			optAllowed: true,
+			parties:    []Party{{Optional: false}},
+			expErr:     "",
+		},
+		{
+			name:       "opt allowed 1 party optional",
+			optAllowed: true,
+			parties:    []Party{{Optional: true}},
+			expErr:     "",
+		},
+		{
+			name:       "opt not allowed 1 party required",
+			optAllowed: false,
+			parties:    []Party{{Optional: false}},
+			expErr:     "",
+		},
+		{
+			name:       "opt not allowed 1 party optional",
+			optAllowed: false,
+			parties:    []Party{{Optional: true}},
+			expErr:     "parties can only be optional when require_party_rollup = true",
+		},
+		{
+			name:       "opt allowed 2 parties req req",
+			optAllowed: true,
+			parties:    []Party{{Optional: false}, {Optional: false}},
+			expErr:     "",
+		},
+		{
+			name:       "opt allowed 2 parties opt req",
+			optAllowed: true,
+			parties:    []Party{{Optional: true}, {Optional: false}},
+			expErr:     "",
+		},
+		{
+			name:       "opt allowed 2 parties req opt",
+			optAllowed: true,
+			parties:    []Party{{Optional: false}, {Optional: true}},
+			expErr:     "",
+		},
+		{
+			name:       "opt allowed 2 parties opt opt",
+			optAllowed: true,
+			parties:    []Party{{Optional: true}, {Optional: true}},
+			expErr:     "",
+		},
+		{
+			name:       "opt not allowed 2 parties req req",
+			optAllowed: false,
+			parties:    []Party{{Optional: false}, {Optional: false}},
+			expErr:     "",
+		},
+		{
+			name:       "opt not allowed 2 parties opt req",
+			optAllowed: false,
+			parties:    []Party{{Optional: true}, {Optional: false}},
+			expErr:     "parties can only be optional when require_party_rollup = true",
+		},
+		{
+			name:       "opt not allowed 2 parties req opt",
+			optAllowed: false,
+			parties:    []Party{{Optional: false}, {Optional: true}},
+			expErr:     "parties can only be optional when require_party_rollup = true",
+		},
+		{
+			name:       "opt not allowed 2 parties opt opt",
+			optAllowed: false,
+			parties:    []Party{{Optional: true}, {Optional: true}},
+			expErr:     "parties can only be optional when require_party_rollup = true",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := ValidateOptionalParties(tc.optAllowed, tc.parties)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "ValidateOptionalParties")
+			} else {
+				s.Assert().NoError(err, "ValidateOptionalParties")
+			}
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestValidatePartiesAreUnique() {
+	oneCapParty := make([]Party, 1, 1)
+	oneCapParty[0] = Party{Address: "one", Role: 1}
+
+	tests := []struct {
+		name    string
+		parties []Party
+		expErr  string
+	}{
+		{
+			name:    "nil",
+			parties: nil,
+			expErr:  "",
+		},
+		{
+			name:    "empty",
+			parties: []Party{},
+			expErr:  "",
+		},
+		{
+			name:    "one party",
+			parties: []Party{{Address: "abc", Role: 7}},
+			expErr:  "",
+		},
+		{
+			name:    "two parties diff addr",
+			parties: []Party{{Address: "abc", Role: 3}, {Address: "def", Role: 3}},
+			expErr:  "",
+		},
+		{
+			name:    "two parties diff role",
+			parties: []Party{{Address: "abc", Role: 3}, {Address: "abc", Role: 4}},
+			expErr:  "",
+		},
+		{
+			name:    "two parties diff optional",
+			parties: []Party{{Address: "abc", Role: 3, Optional: false}, {Address: "abc", Role: 3, Optional: true}},
+			expErr:  "duplicate parties not allowed: address = abc, role = INVESTOR, indexes: 0, 1",
+		},
+		{
+			name: "five parties unique",
+			parties: []Party{
+				{Address: "abc", Role: 1},
+				{Address: "def", Role: 2},
+				{Address: "ghi", Role: 3},
+				{Address: "abc", Role: 4},
+				{Address: "jkl", Role: 5},
+			},
+			expErr: "",
+		},
+		{
+			name: "five parties not unique",
+			parties: []Party{
+				{Address: "abc", Role: 1},
+				{Address: "def", Role: 2},
+				{Address: "ghi", Role: 3},
+				{Address: "def", Role: 2},
+				{Address: "jkl", Role: 5},
+			},
+			expErr: "duplicate parties not allowed: address = def, role = SERVICER, indexes: 1, 3",
+		},
+		{
+			name:    "one party with capacity = 1",
+			parties: oneCapParty,
+			expErr:  "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var orig []Party
+			if tc.parties != nil {
+				orig = make([]Party, 0, len(tc.parties))
+				orig = append(orig, tc.parties...)
+			}
+			var err error
+			testFunc := func() {
+				err = ValidatePartiesAreUnique(tc.parties)
+			}
+			s.Require().NotPanics(testFunc, "ValidatePartiesAreUnique")
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "ValidatePartiesAreUnique")
+			} else {
+				s.Assert().NoError(err, tc.expErr, "ValidatePartiesAreUnique")
+			}
+			s.Assert().Equal(orig, tc.parties, "parties slice after providing it to ValidatePartiesAreUnique")
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestValidatePartiesBasic() {
+	tests := []struct {
+		name    string
+		parties []Party
+		expErr  string
+	}{
+		{
+			name:    "nil parties",
+			parties: nil,
+			expErr:  "at least one party is required",
+		},
+		{
+			name:    "empty parties",
+			parties: []Party{},
+			expErr:  "at least one party is required",
+		},
+		{
+			name:    "one bad party",
+			parties: []Party{{Address: "", Role: 3}},
+			expErr:  "missing party address",
+		},
+		{
+			name: "not unique",
+			parties: []Party{
+				{Address: sdk.AccAddress("abc").String(), Role: 1},
+				{Address: sdk.AccAddress("def").String(), Role: 2},
+				{Address: sdk.AccAddress("ghi").String(), Role: 3},
+				{Address: sdk.AccAddress("def").String(), Role: 2},
+				{Address: sdk.AccAddress("jkl").String(), Role: 5},
+			},
+			expErr: "duplicate parties not allowed: address = " + sdk.AccAddress("def").String() + ", role = SERVICER, indexes: 1, 3",
+		},
+		{
+			name: "five good parties",
+			parties: []Party{
+				{Address: sdk.AccAddress("abc").String(), Role: 1, Optional: true},
+				{Address: sdk.AccAddress("def").String(), Role: 2, Optional: false},
+				{Address: sdk.AccAddress("ghi").String(), Role: 3, Optional: true},
+				{Address: sdk.AccAddress("abc").String(), Role: 2, Optional: false},
+				{Address: sdk.AccAddress("jkl").String(), Role: 5, Optional: true},
+			},
+			expErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var orig []Party
+			if tc.parties != nil {
+				orig = make([]Party, 0, len(tc.parties))
+				orig = append(orig, tc.parties...)
+			}
+			var err error
+			testFunc := func() {
+				err = ValidatePartiesBasic(tc.parties)
+			}
+			s.Require().NotPanics(testFunc, "ValidatePartiesBasic")
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "ValidatePartiesBasic")
+			} else {
+				s.Assert().NoError(err, tc.expErr, "ValidatePartiesBasic")
+			}
+			s.Assert().Equal(orig, tc.parties, "parties slice after providing it to ValidatePartiesBasic")
+		})
+	}
+}
+
 func (s *ScopeTestSuite) TestEqualParties() {
 	tests := []struct {
 		name     string
@@ -661,68 +1157,86 @@ func (s *ScopeTestSuite) TestEqualParties() {
 		},
 		{
 			name:     "one party in each that is equal",
-			p1:       []Party{{"abc", 3}},
-			p2:       []Party{{"abc", 3}},
+			p1:       []Party{{Address: "abc", Role: 3}},
+			p2:       []Party{{Address: "abc", Role: 3}},
 			expected: true,
 		},
 		{
 			name:     "one party in each different addresses",
-			p1:       []Party{{"abc", 3}},
-			p2:       []Party{{"abcd", 3}},
+			p1:       []Party{{Address: "abc", Role: 3}},
+			p2:       []Party{{Address: "abcd", Role: 3}},
 			expected: false,
 		},
 		{
 			name:     "one party in each different roles",
-			p1:       []Party{{"abc", 3}},
-			p2:       []Party{{"abc", 4}},
+			p1:       []Party{{Address: "abc", Role: 3}},
+			p2:       []Party{{Address: "abc", Role: 4}},
 			expected: false,
 		},
 		{
 			name:     "both have 3 equal elements in same order",
-			p1:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
-			p2:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
+			p1:       []Party{{Address: "abc", Role: 3}, {Address: "def", Role: 4}, {Address: "ghi", Role: 5}},
+			p2:       []Party{{Address: "abc", Role: 3}, {Address: "def", Role: 4}, {Address: "ghi", Role: 5}},
 			expected: true,
 		},
 		{
 			name:     "both have 3 equal elements in different order",
-			p1:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
-			p2:       []Party{{"def", 4}, {"ghi", 5}, {"abc", 3}},
+			p1:       []Party{{Address: "abc", Role: 3}, {Address: "def", Role: 4}, {Address: "ghi", Role: 5}},
+			p2:       []Party{{Address: "def", Role: 4}, {Address: "ghi", Role: 5}, {Address: "abc", Role: 3}},
 			expected: true,
 		},
 		{
 			name:     "one missing from p1",
-			p1:       []Party{{"abc", 3}, {"ghi", 5}},
-			p2:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
+			p1:       []Party{{Address: "abc", Role: 3}, {Address: "ghi", Role: 5}},
+			p2:       []Party{{Address: "abc", Role: 3}, {Address: "def", Role: 4}, {Address: "ghi", Role: 5}},
 			expected: false,
 		},
 		{
 			name:     "one missing from p2",
-			p1:       []Party{{"abc", 3}, {"def", 4}, {"ghi", 5}},
-			p2:       []Party{{"abc", 3}, {"ghi", 5}},
+			p1:       []Party{{Address: "abc", Role: 3}, {Address: "def", Role: 4}, {Address: "ghi", Role: 5}},
+			p2:       []Party{{Address: "abc", Role: 3}, {Address: "ghi", Role: 5}},
 			expected: false,
 		},
 		{
 			name:     "two equal parties reverse order",
-			p1:       []Party{{"aaa", 3}, {"bbb", 5}},
-			p2:       []Party{{"bbb", 5}, {"aaa", 3}},
+			p1:       []Party{{Address: "aaa", Role: 3}, {Address: "bbb", Role: 5}},
+			p2:       []Party{{Address: "bbb", Role: 5}, {Address: "aaa", Role: 3}},
 			expected: true,
 		},
 		{
 			name:     "three equal parties random order",
-			p1:       []Party{{"aaa", 3}, {"bbb", 5}, {"ccc", 4}},
-			p2:       []Party{{"bbb", 5}, {"ccc", 4}, {"aaa", 3}},
+			p1:       []Party{{Address: "aaa", Role: 3}, {Address: "bbb", Role: 5}, {Address: "ccc", Role: 4}},
+			p2:       []Party{{Address: "bbb", Role: 5}, {Address: "ccc", Role: 4}, {Address: "aaa", Role: 3}},
 			expected: true,
 		},
 		{
 			name:     "1 equal and 1 diff addr",
-			p1:       []Party{{"aaa", 3}, {"bba", 4}},
-			p2:       []Party{{"aaa", 3}, {"bbb", 4}},
+			p1:       []Party{{Address: "aaa", Role: 3}, {Address: "bba", Role: 4}},
+			p2:       []Party{{Address: "aaa", Role: 3}, {Address: "bbb", Role: 4}},
 			expected: false,
 		},
 		{
 			name:     "1 equal and 1 diff role",
-			p1:       []Party{{"aaa", 3}, {"bbb", 3}},
-			p2:       []Party{{"aaa", 4}, {"bbb", 3}},
+			p1:       []Party{{Address: "aaa", Role: 3}, {Address: "bbb", Role: 3}},
+			p2:       []Party{{Address: "aaa", Role: 4}, {Address: "bbb", Role: 3}},
+			expected: false,
+		},
+		{
+			name:     "one party different optional",
+			p1:       []Party{{Address: "AAA", Role: 1, Optional: true}},
+			p2:       []Party{{Address: "AAA", Role: 1, Optional: false}},
+			expected: false,
+		},
+		{
+			name:     "two parties first with different optional",
+			p1:       []Party{{Address: "AAA", Role: 1, Optional: true}, {Address: "BBB", Role: 2, Optional: true}},
+			p2:       []Party{{Address: "AAA", Role: 1, Optional: false}, {Address: "BBB", Role: 2, Optional: true}},
+			expected: false,
+		},
+		{
+			name:     "two parties second with different optional",
+			p1:       []Party{{Address: "AAA", Role: 1, Optional: true}, {Address: "BBB", Role: 2, Optional: false}},
+			p2:       []Party{{Address: "AAA", Role: 1, Optional: true}, {Address: "BBB", Role: 2, Optional: true}},
 			expected: false,
 		},
 	}
@@ -737,6 +1251,288 @@ func (s *ScopeTestSuite) TestEqualParties() {
 			assert.Equal(t, tc.expected, actual, "result")
 			assert.Equal(t, op1, tc.p1, "p1")
 			assert.Equal(t, op2, tc.p2, "p2")
+		})
+	}
+}
+
+type otherParty struct {
+	address  string
+	role     PartyType
+	optional bool
+}
+
+var _ Partier = (*otherParty)(nil)
+
+func (p otherParty) GetAddress() string {
+	return p.address
+}
+
+func (p otherParty) GetRole() PartyType {
+	return p.role
+}
+
+func (p otherParty) GetOptional() bool {
+	return p.optional
+}
+
+func (s *ScopeTestSuite) TestEqualPartiers() {
+	aParty := Party{
+		Address:  "123",
+		Role:     88,
+		Optional: true,
+	}
+
+	tests := []struct {
+		name string
+		p1   Partier
+		p2   Partier
+		exp  bool
+	}{
+		{
+			name: "nil nil",
+			p1:   nil,
+			p2:   nil,
+			exp:  true,
+		},
+		{
+			name: "nil party",
+			p1:   nil,
+			p2:   &aParty,
+			exp:  false,
+		},
+		{
+			name: "party nil",
+			p1:   &aParty,
+			p2:   nil,
+			exp:  false,
+		},
+		{
+			name: "same references",
+			p1:   &aParty,
+			p2:   &aParty,
+			exp:  true,
+		},
+		{
+			name: "equal parties same type",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &Party{Address: "333", Role: 3, Optional: false},
+			exp:  true,
+		},
+		{
+			name: "equal parties different types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &otherParty{address: "333", role: 3, optional: false},
+			exp:  true,
+		},
+		{
+			name: "different addresses same types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &Party{Address: "444", Role: 3, Optional: false},
+			exp:  false,
+		},
+		{
+			name: "different roles same types",
+			p1:   &Party{Address: "333", Role: 4, Optional: false},
+			p2:   &Party{Address: "333", Role: 3, Optional: false},
+			exp:  false,
+		},
+		{
+			name: "different optionals same types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &Party{Address: "333", Role: 3, Optional: true},
+			exp:  false,
+		},
+		{
+			name: "different addresses different types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &otherParty{address: "444", role: 3, optional: false},
+			exp:  false,
+		},
+		{
+			name: "different roles different types",
+			p1:   &Party{Address: "333", Role: 4, Optional: false},
+			p2:   &otherParty{address: "333", role: 3, optional: false},
+			exp:  false,
+		},
+		{
+			name: "different optionals different types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &otherParty{address: "333", role: 3, optional: true},
+			exp:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			actual := EqualPartiers(tc.p1, tc.p2)
+			s.Assert().Equal(tc.exp, actual, "EqualPartiers")
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestSamePartiers() {
+	aParty := Party{
+		Address:  "123",
+		Role:     88,
+		Optional: true,
+	}
+
+	tests := []struct {
+		name string
+		p1   Partier
+		p2   Partier
+		exp  bool
+	}{
+		{
+			name: "nil nil",
+			p1:   nil,
+			p2:   nil,
+			exp:  true,
+		},
+		{
+			name: "nil party",
+			p1:   nil,
+			p2:   &aParty,
+			exp:  false,
+		},
+		{
+			name: "party nil",
+			p1:   &aParty,
+			p2:   nil,
+			exp:  false,
+		},
+		{
+			name: "same references",
+			p1:   &aParty,
+			p2:   &aParty,
+			exp:  true,
+		},
+		{
+			name: "equal parties same type",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &Party{Address: "333", Role: 3, Optional: false},
+			exp:  true,
+		},
+		{
+			name: "equal parties different types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &otherParty{address: "333", role: 3, optional: false},
+			exp:  true,
+		},
+		{
+			name: "different addresses same types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &Party{Address: "444", Role: 3, Optional: false},
+			exp:  false,
+		},
+		{
+			name: "different roles same types",
+			p1:   &Party{Address: "333", Role: 4, Optional: false},
+			p2:   &Party{Address: "333", Role: 3, Optional: false},
+			exp:  false,
+		},
+		{
+			name: "different optionals same types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &Party{Address: "333", Role: 3, Optional: true},
+			exp:  true,
+		},
+		{
+			name: "different addresses different types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &otherParty{address: "444", role: 3, optional: false},
+			exp:  false,
+		},
+		{
+			name: "different roles different types",
+			p1:   &Party{Address: "333", Role: 4, Optional: false},
+			p2:   &otherParty{address: "333", role: 3, optional: false},
+			exp:  false,
+		},
+		{
+			name: "different optionals different types",
+			p1:   &Party{Address: "333", Role: 3, Optional: false},
+			p2:   &otherParty{address: "333", role: 3, optional: true},
+			exp:  true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			actual := SamePartiers(tc.p1, tc.p2)
+			s.Assert().Equal(tc.exp, actual, "EqualPartiers")
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestParty_Equals() {
+	tests := []struct {
+		name string
+		p1   Party
+		p2   Partier
+		exp  bool
+	}{
+		{name: "different addresses", p1: Party{Address: "123"}, p2: &Party{Address: "456"}, exp: false},
+		{name: "different roles", p1: Party{Role: 1}, p2: &Party{Role: 2}, exp: false},
+		{name: "different optional", p1: Party{Optional: true}, p2: &Party{Optional: false}, exp: false},
+		{
+			name: "all same",
+			p1:   Party{Address: "1", Role: 1, Optional: true},
+			p2:   &Party{Address: "1", Role: 1, Optional: true},
+			exp:  true,
+		},
+
+		{name: "other type different addresses", p1: Party{Address: "123"}, p2: &otherParty{address: "456"}, exp: false},
+		{name: "other type different roles", p1: Party{Role: 1}, p2: &otherParty{role: 2}, exp: false},
+		{name: "other type different optional", p1: Party{Optional: true}, p2: &otherParty{optional: false}, exp: false},
+		{
+			name: "other type all same",
+			p1:   Party{Address: "1", Role: 1, Optional: true},
+			p2:   &otherParty{address: "1", role: 1, optional: true},
+			exp:  true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			actual := tc.p1.Equals(tc.p2)
+			s.Assert().Equal(tc.exp, actual, "%v.Equals(%v)", tc.p1, tc.p2)
+		})
+	}
+}
+
+func (s *ScopeTestSuite) TestParty_IsSameAs() {
+	tests := []struct {
+		name string
+		p1   Party
+		p2   Partier
+		exp  bool
+	}{
+		{name: "different addresses", p1: Party{Address: "123"}, p2: &Party{Address: "456"}, exp: false},
+		{name: "different roles", p1: Party{Role: 1}, p2: &Party{Role: 2}, exp: false},
+		{name: "different optional", p1: Party{Optional: true}, p2: &Party{Optional: false}, exp: true},
+		{
+			name: "all same",
+			p1:   Party{Address: "1", Role: 1, Optional: true},
+			p2:   &Party{Address: "1", Role: 1, Optional: true},
+			exp:  true,
+		},
+
+		{name: "other type different addresses", p1: Party{Address: "123"}, p2: &otherParty{address: "456"}, exp: false},
+		{name: "other type different roles", p1: Party{Role: 1}, p2: &otherParty{role: 2}, exp: false},
+		{name: "other type different optional", p1: Party{Optional: true}, p2: &otherParty{optional: false}, exp: true},
+		{
+			name: "other type all same",
+			p1:   Party{Address: "1", Role: 1, Optional: true},
+			p2:   &otherParty{address: "1", role: 1, optional: true},
+			exp:  true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			actual := tc.p1.IsSameAs(tc.p2)
+			s.Assert().Equal(tc.exp, actual, "%v.IsSameAs(%v)", tc.p1, tc.p2)
 		})
 	}
 }

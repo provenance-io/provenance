@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -184,7 +183,7 @@ func getMissingScopeIndexValues(required, found *scopeIndexValues) scopeIndexVal
 		return *required
 	}
 	rv.ScopeID = required.ScopeID
-	rv.Addresses = FindMissing(required.Addresses, found.Addresses)
+	rv.Addresses = findMissing(required.Addresses, found.Addresses)
 	if required.ValueOwner != found.ValueOwner {
 		rv.ValueOwner = required.ValueOwner
 	}
@@ -246,21 +245,20 @@ func (k Keeper) indexScope(ctx sdk.Context, newScope, oldScope *types.Scope) {
 	}
 }
 
-// ValidateScopeUpdate checks the current scope and the proposed scope to determine if the the proposed changes are valid
+// ValidateWriteScope checks the current scope and the proposed scope to determine if the proposed changes are valid
 // based on the existing state
-func (k Keeper) ValidateScopeUpdate(
+func (k Keeper) ValidateWriteScope(
 	ctx sdk.Context,
-	existing,
-	proposed types.Scope,
-	signers []string,
-	msgTypeURL string,
+	existing *types.Scope,
+	msg *types.MsgWriteScopeRequest,
 ) error {
+	proposed := msg.Scope
 	if err := proposed.ValidateBasic(); err != nil {
 		return err
 	}
 
 	// IDs must match
-	if len(existing.ScopeId) > 0 {
+	if existing != nil {
 		if !proposed.ScopeId.Equals(existing.ScopeId) {
 			return fmt.Errorf("cannot update scope identifier. expected %s, got %s", existing.ScopeId, proposed.ScopeId)
 		}
@@ -277,185 +275,225 @@ func (k Keeper) ValidateScopeUpdate(
 	if !found {
 		return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
 	}
-	if err := k.ValidateScopeOwners(proposed.Owners, scopeSpec); err != nil {
-		return err
+
+	// Existing owners are not required to sign when the ONLY change is from one value owner to another.
+	// If the value owner wasn't previously set, and is being set now, existing owners must sign.
+	// If anything else is changing, the existing owners must sign.
+	existingValueOwner := ""
+	onlyChangeIsValueOwner := false
+	if existing != nil && len(existing.ValueOwnerAddress) > 0 {
+		existingValueOwner = existing.ValueOwnerAddress
+		// Make a copy of proposed scope and set its value owner to the existing one. If it then
+		// equals the existing scope, then the only change in proposed is to the value owner field.
+		proposedCopy := proposed
+		proposedCopy.ValueOwnerAddress = existing.ValueOwnerAddress
+		onlyChangeIsValueOwner = existing.Equals(proposedCopy)
 	}
 
-	var validatedParties []types.Party
+	var err error
+	var validatedParties []*PartyDetails
 
-	if len(existing.Owners) > 0 {
-		// Existing owners are not required to sign when the ONLY change is from one value owner to another.
-		// If the value owner wasn't previously set, and is being set now, existing owners must sign.
-		// If anything else is changing, the existing owners must sign.
-		proposedCopy := proposed
-		if len(existing.ValueOwnerAddress) > 0 {
-			proposedCopy.ValueOwnerAddress = existing.ValueOwnerAddress
-		}
-		if !existing.Equals(proposedCopy) {
-			if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
+	if !onlyChangeIsValueOwner {
+		// Make sure everyone has signed.
+		if (existing != nil && !existing.RequirePartyRollup) || (existing == nil && !proposed.RequirePartyRollup) {
+			// Old:
+			//   - All roles required by the scope spec must have a party in the owners.
+			//   - If not new, all existing owners must sign.
+			//   - Value owner signer restrictions are applied.
+			if err = validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 				return err
 			}
-			validatedParties = existing.Owners
-		}
-	}
-
-	if err := k.validateScopeUpdateValueOwner(ctx, existing.ValueOwnerAddress, proposed.ValueOwnerAddress, validatedParties, signers, msgTypeURL); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// ValidateScopeRemove checks the current scope and the proposed removal scope to determine if the proposed remove is valid
-// based on the existing state
-func (k Keeper) ValidateScopeRemove(ctx sdk.Context, scope types.Scope, signers []string, msgTypeURL string) error {
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, scope.Owners, signers, msgTypeURL); err != nil {
-		return err
-	}
-
-	if err := k.validateScopeUpdateValueOwner(ctx, scope.ValueOwnerAddress, "", scope.Owners, signers, msgTypeURL); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (k Keeper) validateScopeUpdateValueOwner(
-	ctx sdk.Context,
-	existing,
-	proposed string,
-	validatedParties []types.Party,
-	signers []string,
-	msgTypeURL string,
-) error {
-	// If they're the same, we don't need to do anything.
-	if existing == proposed {
-		return nil
-	}
-	if len(existing) > 0 {
-		isMarker, hasAuth := k.IsMarkerAndHasAuthority(ctx, existing, signers, markertypes.Access_Withdraw)
-		if isMarker {
-			// If the existing is a marker, make sure a signer has withdraw authority on it.
-			if !hasAuth {
-				return fmt.Errorf("missing signature for %s with authority to withdraw/remove existing value owner", existing)
+			if existing != nil && !existing.Equals(proposed) {
+				if validatedParties, err = k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
+					return err
+				}
 			}
 		} else {
-			// If the existing isn't a marker, make sure they're one of the signers.
-			// Not using ValidateAllOwnersAreSignersWithAuthz here because we want a slightly different error message.
-			// Not using ValidateAllPartiesAreSignersWithAuthz here because of the error message and also it wants parties.
-			found := false
-			for _, party := range validatedParties {
-				if existing == party.Address {
-					found = true
-					break
-				}
+			// New:
+			//   - All roles required by the scope spec must have a party in the owners.
+			//   - If not new, all required=false existing owners must be signers.
+			//   - If not new, all roles required by the scope spec must have a signer and
+			//     associated party from the existing scope.
+			//   - Value owner signer restrictions are applied.
+			if err = validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
+				return err
 			}
-			if !found {
-				for _, signer := range signers {
-					if existing == signer {
-						found = true
-						break
-					}
+			// Note: This means that a scope can be initially written without consideration for signers and roles.
+			if existing != nil {
+				if validatedParties, err = k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
+					return err
 				}
-			}
-			if !found {
-				stillMissing, err := k.checkAuthzForMissing(ctx, []string{existing}, signers, msgTypeURL)
-				if err != nil {
-					return fmt.Errorf("error validating signers: %w", err)
-				}
-				if len(stillMissing) == 0 {
-					found = true
-				}
-			}
-			if !found {
-				return fmt.Errorf("missing signature from existing value owner %s", existing)
-			}
-		}
-	}
-	if len(proposed) > 0 {
-		isMarker, hasAuth := k.IsMarkerAndHasAuthority(ctx, proposed, signers, markertypes.Access_Deposit)
-		// If the proposed is a marker, make sure a signer has deposit authority on it.
-		if isMarker && !hasAuth {
-			return fmt.Errorf("no signatures present with authority to add scope to marker %s", proposed)
-		}
-		// If it's not a marker, we don't really care what it's being set to.
-	}
-	return nil
-}
-
-// ValidateScopeAddDataAccess checks the current scope and the proposed
-func (k Keeper) ValidateScopeAddDataAccess(
-	ctx sdk.Context,
-	dataAccessAddrs []string,
-	existing types.Scope,
-	signers []string,
-	msgTypeURL string,
-) error {
-	if len(dataAccessAddrs) < 1 {
-		return fmt.Errorf("data access list cannot be empty")
-	}
-
-	for _, da := range dataAccessAddrs {
-		_, err := sdk.AccAddressFromBech32(da)
-		if err != nil {
-			return fmt.Errorf("failed to decode data access address %s : %w", da, err)
-		}
-		for _, pda := range existing.DataAccess {
-			if da == pda {
-				return fmt.Errorf("address already exists for data access %s", pda)
 			}
 		}
 	}
 
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
+	if err = k.ValidateScopeValueOwnerUpdate(ctx, existingValueOwner, proposed.ValueOwnerAddress, validatedParties, msg); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// ValidateScopeDeleteDataAccess checks the current scope data access and the proposed removed items
-func (k Keeper) ValidateScopeDeleteDataAccess(
-	ctx sdk.Context,
-	dataAccessAddrs []string,
-	existing types.Scope,
-	signers []string,
-	msgTypeURL string,
-) error {
-	if len(dataAccessAddrs) < 1 {
-		return fmt.Errorf("data access list cannot be empty")
+// ValidateDeleteScope checks the current scope and the proposed removal scope to determine if the proposed remove is valid
+// based on the existing state
+func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRequest) error {
+	scope, found := k.GetScope(ctx, msg.ScopeId)
+	if !found {
+		return fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
-	for _, da := range dataAccessAddrs {
-		_, err := sdk.AccAddressFromBech32(da)
-		if err != nil {
-			return fmt.Errorf("failed to decode data access address %s : %w", da, err)
+
+	var err error
+	var validatedParties []*PartyDetails
+
+	// Make sure everyone has signed.
+	if !scope.RequirePartyRollup {
+		// Old:
+		//   - All roles required by the scope spec must have a party in the owners.
+		//   - If not new, all existing owners must sign.
+		//   - Value owner signer restrictions are applied.
+		// We don't care about the first one here.
+		if validatedParties, err = k.ValidateSignersWithoutParties(ctx, scope.GetAllOwnerAddresses(), msg); err != nil {
+			return err
 		}
-		found := false
-		for _, pda := range existing.DataAccess {
-			if da == pda {
-				found = true
-				break
-			}
-		}
+	} else {
+		// New:
+		//   - All roles required by the scope spec must have a party in the owners.
+		//   - If not new, all required=false existing owners must be signers.
+		//   - If not new, all roles required by the scope spec must have a signer and
+		//     associated party from the existing scope.
+		//   - Value owner signer restrictions are applied.
+		// We don't care about that first one, and only care about the roles one if the spec exists.
+		scopeSpec, found := k.GetScopeSpecification(ctx, scope.SpecificationId)
 		if !found {
-			return fmt.Errorf("address does not exist in scope data access: %s", da)
+			if validatedParties, err = k.ValidateSignersWithoutParties(ctx, types.GetRequiredPartyAddresses(scope.Owners), msg); err != nil {
+				return err
+			}
+		} else {
+			if validatedParties, err = k.ValidateSignersWithParties(ctx, scope.Owners, scope.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
+				return err
+			}
 		}
 	}
 
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
+	if err = k.ValidateScopeValueOwnerUpdate(ctx, scope.ValueOwnerAddress, "", validatedParties, msg); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// ValidateScopeUpdateOwners checks the current scopes owners and the proposed update
-func (k Keeper) ValidateScopeUpdateOwners(
+// ValidateAddScopeDataAccess checks the current scope and the proposed
+func (k Keeper) ValidateAddScopeDataAccess(
+	ctx sdk.Context,
+	existing types.Scope,
+	msg *types.MsgAddScopeDataAccessRequest,
+) error {
+	if len(msg.DataAccess) < 1 {
+		return fmt.Errorf("data access list cannot be empty")
+	}
+
+	for _, da := range msg.DataAccess {
+		_, err := sdk.AccAddressFromBech32(da)
+		if err != nil {
+			return fmt.Errorf("failed to decode data access address %s : %w", da, err)
+		}
+		for _, eda := range existing.DataAccess {
+			if da == eda {
+				return fmt.Errorf("address already exists for data access %s", eda)
+			}
+		}
+	}
+
+	// Make sure everyone has signed.
+	if !existing.RequirePartyRollup {
+		// Old:
+		//   - All roles required by the scope spec must have a party in the owners.
+		//   - If not new, all existing owners must sign.
+		//   - Value owner signer restrictions are applied.
+		// We don't care about the first one here since owners aren't changing.
+		// We don't care about the value owner check either since it's not changing.
+		if _, err := k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
+			return err
+		}
+	} else {
+		// New:
+		//   - All roles required by the scope spec must have a party in the owners.
+		//   - If not new, all required=false existing owners must be signers.
+		//   - If not new, all roles required by the scope spec must have a signer and
+		//     associated party from the existing scope.
+		//   - Value owner signer restrictions are applied.
+		// We don't care about the first one here since owners aren't changing.
+		// We don't care about the value owner check either since it's not changing.
+		scopeSpec, found := k.GetScopeSpecification(ctx, existing.SpecificationId)
+		if !found {
+			return fmt.Errorf("scope specification %s not found", existing.SpecificationId)
+		}
+		if _, err := k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ValidateDeleteScopeDataAccess checks the current scope data access and the proposed removed items
+func (k Keeper) ValidateDeleteScopeDataAccess(
+	ctx sdk.Context,
+	existing types.Scope,
+	msg *types.MsgDeleteScopeDataAccessRequest,
+) error {
+	if len(msg.DataAccess) < 1 {
+		return fmt.Errorf("data access list cannot be empty")
+	}
+
+dataAccessLoop:
+	for _, da := range msg.DataAccess {
+		for _, eda := range existing.DataAccess {
+			if da == eda {
+				continue dataAccessLoop
+			}
+		}
+		return fmt.Errorf("address does not exist in scope data access: %s", da)
+	}
+
+	// Make sure everyone has signed.
+	if !existing.RequirePartyRollup {
+		// Old:
+		//   - All roles required by the scope spec must have a party in the owners.
+		//   - If not new, all existing owners must sign.
+		//   - Value owner signer restrictions are applied.
+		// We don't care about the first one here since owners aren't changing.
+		// We don't care about the value owner check either since it's not changing.
+		if _, err := k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
+			return err
+		}
+	} else {
+		// New:
+		//   - All roles required by the scope spec must have a party in the owners.
+		//   - If not new, all required=false existing owners must be signers.
+		//   - If not new, all roles required by the scope spec must have a signer and
+		//     associated party from the existing scope.
+		//   - Value owner signer restrictions are applied.
+		// We don't care about the first one here since owners aren't changing.
+		// We don't care about the value owner check either since it's not changing.
+		scopeSpec, found := k.GetScopeSpecification(ctx, existing.SpecificationId)
+		if !found {
+			return fmt.Errorf("scope specification %s not found", existing.SpecificationId)
+		}
+		if _, err := k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ValidateUpdateScopeOwners checks the current scopes owners and the proposed update
+func (k Keeper) ValidateUpdateScopeOwners(
 	ctx sdk.Context,
 	existing,
 	proposed types.Scope,
-	signers []string,
-	msgTypeURL string,
+	msg types.MetadataMsg,
 ) error {
 	if err := proposed.ValidateOwnersBasic(); err != nil {
 		return err
@@ -465,34 +503,35 @@ func (k Keeper) ValidateScopeUpdateOwners(
 	if !found {
 		return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
 	}
-	if err := k.ValidateScopeOwners(proposed.Owners, scopeSpec); err != nil {
-		return err
-	}
-	if err := k.ValidateAllPartiesAreSignersWithAuthz(ctx, existing.Owners, signers, msgTypeURL); err != nil {
-		return err
-	}
-	return nil
-}
 
-// ValidateScopeOwners is stateful validation for scope owners against a scope specification.
-// This does NOT involve the Scope.ValidateOwnersBasic() function.
-func (k Keeper) ValidateScopeOwners(owners []types.Party, spec types.ScopeSpecification) error {
-	var missingPartyTypes []string
-	for _, pt := range spec.PartiesInvolved {
-		found := false
-		for _, o := range owners {
-			if o.Role == pt {
-				found = true
-				break
-			}
+	// Make sure everyone has signed.
+	if !existing.RequirePartyRollup {
+		// Old:
+		//   - All roles required by the scope spec must have a party in the owners.
+		//   - If not new, all existing owners must sign.
+		//   - Value owner signer restrictions are applied.
+		// The value owner isn't changing so we don't care about that one.
+		if err := validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
+			return err
 		}
-		if !found {
-			// Get the party type without the "PARTY_TYPE_" prefix.
-			missingPartyTypes = append(missingPartyTypes, pt.String()[11:])
+		if _, err := k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
+			return err
+		}
+	} else {
+		// New:
+		//   - All roles required by the scope spec must have a party in the owners.
+		//   - If not new, all required=false existing owners must be signers.
+		//   - If not new, all roles required by the scope spec must have a signer and
+		//     associated party from the existing scope.
+		//   - Value owner signer restrictions are applied.
+		// The value owner isn't changing so we don't care about that one.
+		if err := validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
+			return err
+		}
+		if _, err := k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
+			return err
 		}
 	}
-	if len(missingPartyTypes) > 0 {
-		return fmt.Errorf("missing party type%s required by spec: %v", pluralEnding(len(missingPartyTypes)), missingPartyTypes)
-	}
+
 	return nil
 }
