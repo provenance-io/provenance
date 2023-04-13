@@ -39,16 +39,19 @@ func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sd
 	}
 	switch {
 	case params.WriteScope != nil:
-		return params.WriteScope.Encode()
+		return params.WriteScope.Encode(contract)
 	default:
 		return nil, fmt.Errorf("wasm: invalid metadata encode request: %s", string(msg))
 	}
 }
 
 // Encode creates a MsgAddScopeDataAccessRequest.
-func (params *WriteScope) Encode() ([]sdk.Msg, error) {
+func (params *WriteScope) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
+	// Promote the contract address to first signer
+	signers := promoteSigner(*params, contract)
+
 	// verify the signer addresses are valid
-	for _, addr := range params.Signers {
+	for _, addr := range signers {
 		_, err := sdk.AccAddressFromBech32(addr)
 		if err != nil {
 			return nil, fmt.Errorf("wasm: signer address must be a Bech32 string: %w", err)
@@ -59,7 +62,18 @@ func (params *WriteScope) Encode() ([]sdk.Msg, error) {
 		return nil, err
 	}
 
-	msg := types.NewMsgWriteScopeRequest(*scope, params.Signers)
+	msg := types.NewMsgWriteScopeRequest(*scope, signers)
 
 	return []sdk.Msg{msg}, nil
+}
+
+func promoteSigner(params WriteScope, address sdk.AccAddress) []string {
+	signers := []string{}
+	signers = append(signers, address.String())
+	for _, addr := range params.Signers {
+		if addr != address.String() {
+			signers = append(signers, addr)
+		}
+	}
+	return signers
 }

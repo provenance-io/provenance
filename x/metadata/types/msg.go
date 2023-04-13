@@ -113,6 +113,9 @@ func (msg MsgWriteScopeRequest) ValidateBasic() error {
 	if err := msg.ConvertOptionalFields(); err != nil {
 		return err
 	}
+	if _, found := msg.Scope.GetOwnerIndexWithAddress(msg.Signers[0]); !found {
+		return fmt.Errorf("the first message signer %s is not an owner", msg.Signers[0])
+	}
 	return msg.Scope.ValidateBasic()
 }
 
