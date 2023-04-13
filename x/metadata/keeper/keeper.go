@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -145,11 +144,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 var _ MetadataKeeperI = &Keeper{}
-
-// GetAccount looks up an account by address
-func (k Keeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI {
-	return k.authKeeper.GetAccount(ctx, addr)
-}
 
 // VerifyCorrectOwner to determines whether the signer resolves to the owner of the OSLocator record.
 func (k Keeper) VerifyCorrectOwner(ctx sdk.Context, ownerAddr sdk.AccAddress) bool {
