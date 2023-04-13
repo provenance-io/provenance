@@ -142,6 +142,19 @@ func (s *RecordKeeperTestSuite) TestMetadataRecordIterator() {
 }
 
 func (s *RecordKeeperTestSuite) TestValidateDeleteRecord() {
+	pt := func(addr string, role types.PartyType, opt bool) types.Party {
+		return types.Party{
+			Address:  addr,
+			Role:     role,
+			Optional: opt,
+		}
+	}
+	ptz := func(parties ...types.Party) []types.Party {
+		rv := make([]types.Party, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+
 	ctx := s.FreshCtx()
 	dneScopeUUID := uuid.New()
 	dneSessionUUID := uuid.New()
@@ -243,6 +256,55 @@ func (s *RecordKeeperTestSuite) TestValidateDeleteRecord() {
 	record := newRecord(s.recordName, s.sessionID, s.recordSpecID)
 	s.app.MetadataKeeper.SetRecord(ctx, *record)
 
+	owner := types.PartyType_PARTY_TYPE_OWNER
+	custodian := types.PartyType_PARTY_TYPE_CUSTODIAN
+
+	rollupScopeSpec := types.ScopeSpecification{
+		SpecificationId: types.ScopeSpecMetadataAddress(uuid.New()),
+		Description:     types.NewDescription("rollup_spec", "rollup scope specification", "", ""),
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{custodian},
+		ContractSpecIds: []types.MetadataAddress{s.contractSpecID},
+	}
+	s.app.MetadataKeeper.SetScopeSpecification(ctx, rollupScopeSpec)
+	rollupRecSpec := types.RecordSpecification{
+		SpecificationId:    types.RecordSpecMetadataAddress(s.contractSpecUUID, "rollup_record"),
+		Name:               "rollup_record",
+		Inputs:             []*types.InputSpecification{},
+		TypeName:           "rollup_type_name",
+		ResultType:         types.DefinitionType_DEFINITION_TYPE_RECORD,
+		ResponsibleParties: []types.PartyType{custodian},
+	}
+	s.app.MetadataKeeper.SetRecordSpecification(ctx, rollupRecSpec)
+
+	rollupScope := types.Scope{
+		ScopeId:            types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:    rollupScopeSpec.SpecificationId,
+		Owners:             ptz(pt(s.user1, owner, false), pt(s.user2, custodian, true), pt(user3, custodian, true)),
+		RequirePartyRollup: true,
+	}
+	s.app.MetadataKeeper.SetScope(ctx, rollupScope)
+	rollupRecord := types.Record{
+		Name:            rollupRecSpec.Name,
+		SessionId:       rollupScope.ScopeId.MustGetAsSessionAddress(uuid.New()),
+		Process:         record.Process,
+		Inputs:          record.Inputs,
+		Outputs:         record.Outputs,
+		SpecificationId: rollupRecSpec.SpecificationId,
+	}
+	s.app.MetadataKeeper.SetRecord(ctx, rollupRecord)
+	dneRecordName := "dne_record"
+	dneRollupRecSpecID := types.RecordSpecMetadataAddress(s.contractSpecUUID, dneRecordName)
+	rollupRecordNoSpec := types.Record{
+		Name:            dneRecordName,
+		SessionId:       rollupRecord.SessionId,
+		Process:         record.Process,
+		Inputs:          record.Inputs,
+		Outputs:         record.Outputs,
+		SpecificationId: dneRollupRecSpecID,
+	}
+	s.app.MetadataKeeper.SetRecord(ctx, rollupRecordNoSpec)
+
 	cases := []struct {
 		name       string
 		proposedID types.MetadataAddress
@@ -321,6 +383,36 @@ func (s *RecordKeeperTestSuite) TestValidateDeleteRecord() {
 			signers:    []string{s.user1, user3},
 			expected:   nil,
 		},
+		{
+			name:       "with rollup no rec spec req owner signed",
+			proposedID: rollupRecordNoSpec.GetRecordAddress(),
+			signers:    []string{s.user1},
+			expected:   nil,
+		},
+		{
+			name:       "with rollup no rec spec req owner not signed",
+			proposedID: rollupRecordNoSpec.GetRecordAddress(),
+			signers:    []string{s.user2},
+			expected:   []string{"missing signature:", s.user1},
+		},
+		{
+			name:       "with rollup req owner not signed",
+			proposedID: rollupRecord.GetRecordAddress(),
+			signers:    []string{s.user2},
+			expected:   []string{"missing required signature:", s.user1},
+		},
+		{
+			name:       "with rollup missing signature required by spec",
+			proposedID: rollupRecord.GetRecordAddress(),
+			signers:    []string{s.user1},
+			expected:   []string{"missing signers for roles required by spec:", "CUSTODIAN need 1 have 0"},
+		},
+		{
+			name:       "with rollup has req owner and signature req by spec",
+			proposedID: rollupRecord.GetRecordAddress(),
+			signers:    []string{s.user1, s.user2},
+			expected:   nil,
+		},
 	}
 
 	for _, tc := range cases {
@@ -342,6 +434,19 @@ func (s *RecordKeeperTestSuite) TestValidateDeleteRecord() {
 }
 
 func (s *RecordKeeperTestSuite) TestValidateWriteRecord() {
+	pt := func(addr string, role types.PartyType, opt bool) types.Party {
+		return types.Party{
+			Address:  addr,
+			Role:     role,
+			Optional: opt,
+		}
+	}
+	ptz := func(parties ...types.Party) []types.Party {
+		rv := make([]types.Party, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+
 	ctx := s.FreshCtx()
 	scopeUUID := uuid.New()
 	scopeID := types.ScopeMetadataAddress(scopeUUID)
@@ -410,6 +515,15 @@ func (s *RecordKeeperTestSuite) TestValidateWriteRecord() {
 	)
 	recordSpec2.Inputs = append(recordSpec2.Inputs, inputSpec2)
 	s.app.MetadataKeeper.SetRecordSpecification(ctx, *recordSpec2)
+	recordSpecOtherRole := types.RecordSpecification{
+		SpecificationId:    s.contractSpecID.MustGetAsRecordSpecAddress("other_role"),
+		Name:               "other_role",
+		Inputs:             recordSpec.Inputs,
+		TypeName:           recordSpec.TypeName,
+		ResultType:         recordSpec.ResultType,
+		ResponsibleParties: []types.PartyType{types.PartyType_PARTY_TYPE_INVESTOR},
+	}
+	s.app.MetadataKeeper.SetRecordSpecification(ctx, recordSpecOtherRole)
 
 	process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
 	goodInput := types.NewRecordInput(
@@ -430,6 +544,8 @@ func (s *RecordKeeperTestSuite) TestValidateWriteRecord() {
 		inputSpec.TypeName,
 		types.RecordInputStatus_Proposed,
 	)
+	goodInputs := []types.RecordInput{*goodInput}
+	goodOutputs := []types.RecordOutput{{Hash: "justsomeoutput", Status: types.ResultStatus_RESULT_STATUS_PASS}}
 
 	randomScopeUUID := uuid.New()
 	randomScopeID := types.ScopeMetadataAddress(randomScopeUUID)
@@ -461,7 +577,21 @@ func (s *RecordKeeperTestSuite) TestValidateWriteRecord() {
 		},
 	)
 	s.app.MetadataKeeper.SetSession(ctx, *anotherSession)
-
+	sessionNewOwner := types.NewSession(
+		s.sessionName,
+		anotherSessionID,
+		s.contractSpecID,
+		ownerPartyList(s.user2),
+		&types.AuditFields{
+			CreatedDate: time.Time{},
+			CreatedBy:   s.user2,
+			UpdatedDate: time.Time{},
+			UpdatedBy:   "",
+			Version:     0,
+			Message:     "",
+		},
+	)
+	s.app.MetadataKeeper.SetSession(ctx, *sessionNewOwner)
 	anotherRecord := types.NewRecord(
 		// name string, sessionID MetadataAddress, process Process, inputs []RecordInput, outputs []RecordOutput, specificationID MetadataAddress
 		s.recordName,
@@ -480,6 +610,65 @@ func (s *RecordKeeperTestSuite) TestValidateWriteRecord() {
 	s.app.MetadataKeeper.SetRecord(ctx, *anotherRecord)
 
 	missingRecordID := types.RecordMetadataAddress(uuid.New(), anotherRecord.Name)
+
+	owner := types.PartyType_PARTY_TYPE_OWNER
+	originator := types.PartyType_PARTY_TYPE_ORIGINATOR
+
+	rollupCSpec := types.ContractSpecification{
+		SpecificationId: types.ContractSpecMetadataAddress(uuid.New()),
+		Description:     types.NewDescription("rollup_c_spec", "rollup contract specification", "", ""),
+		OwnerAddresses:  []string{s.user2},
+		PartiesInvolved: []types.PartyType{owner},
+		Source:          contractSpec.Source,
+		ClassName:       contractSpec.ClassName,
+	}
+	s.app.MetadataKeeper.SetContractSpecification(ctx, rollupCSpec)
+	rollupRecSpec := types.RecordSpecification{
+		SpecificationId:    rollupCSpec.SpecificationId.MustGetAsRecordSpecAddress("rollup1"),
+		Name:               "rollup1",
+		Inputs:             []*types.InputSpecification{},
+		TypeName:           recordTypeName,
+		ResultType:         types.DefinitionType_DEFINITION_TYPE_RECORD_LIST,
+		ResponsibleParties: []types.PartyType{originator},
+	}
+	s.app.MetadataKeeper.SetRecordSpecification(ctx, rollupRecSpec)
+	rollupRecSpecAff := types.RecordSpecification{
+		SpecificationId:    rollupCSpec.SpecificationId.MustGetAsRecordSpecAddress("rollup_with_affiliate"),
+		Name:               "rollup_with_affiliate",
+		Inputs:             []*types.InputSpecification{},
+		TypeName:           recordTypeName,
+		ResultType:         types.DefinitionType_DEFINITION_TYPE_RECORD_LIST,
+		ResponsibleParties: []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE},
+	}
+	s.app.MetadataKeeper.SetRecordSpecification(ctx, rollupRecSpecAff)
+
+	user3 := sdk.AccAddress("user_three__________").String()
+	user4 := sdk.AccAddress("user_four___________").String()
+	rollupScope := types.Scope{
+		ScopeId:            types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:    s.scopeSpecID,
+		Owners:             ptz(pt(s.user1, owner, false), pt(s.user2, originator, true), pt(user3, originator, true)),
+		RequirePartyRollup: true,
+	}
+	s.app.MetadataKeeper.SetScope(ctx, rollupScope)
+	rollupSession1 := types.Session{
+		SessionId:       rollupScope.ScopeId.MustGetAsSessionAddress(uuid.New()),
+		SpecificationId: rollupCSpec.SpecificationId,
+		Parties:         ptz(pt(user4, owner, false), pt(s.user2, originator, true)),
+		Name:            "rollup_session_1",
+		Context:         session.Context,
+		Audit:           session.Audit,
+	}
+	s.app.MetadataKeeper.SetSession(ctx, rollupSession1)
+	rollupSession2 := types.Session{
+		SessionId:       rollupScope.ScopeId.MustGetAsSessionAddress(uuid.New()),
+		SpecificationId: rollupCSpec.SpecificationId,
+		Parties:         ptz(pt(user4, owner, false), pt(user3, originator, true)),
+		Name:            "rollup_session_1",
+		Context:         session.Context,
+		Audit:           session.Audit,
+	}
+	s.app.MetadataKeeper.SetSession(ctx, rollupSession2)
 
 	cases := map[string]struct {
 		existing         *types.Record
@@ -708,6 +897,108 @@ func (s *RecordKeeperTestSuite) TestValidateWriteRecord() {
 			partiesInvolved: ownerPartyList(s.user1),
 			errorMsg:        "",
 		},
+		"missing role required by spec": {
+			existing: nil,
+			proposed: &types.Record{
+				Name:            recordSpecOtherRole.Name,
+				SessionId:       sessionID,
+				Process:         *process,
+				Inputs:          goodInputs,
+				Outputs:         goodOutputs,
+				SpecificationId: recordSpecOtherRole.SpecificationId,
+			},
+			signers:  []string{s.user1},
+			errorMsg: "missing roles required by spec: INVESTOR need 1 have 0",
+		},
+		"missing session signature": {
+			existing: nil,
+			proposed: &types.Record{
+				Name:            s.recordName,
+				SessionId:       sessionID,
+				Process:         *process,
+				Inputs:          goodInputs,
+				Outputs:         goodOutputs,
+				SpecificationId: recordSpecID,
+			},
+			signers:  []string{s.user2},
+			errorMsg: "missing signature: " + s.user1,
+		},
+		"missing previous session signature": {
+			existing: &types.Record{
+				Name:            s.recordName,
+				SessionId:       sessionID,
+				Process:         *process,
+				Inputs:          goodInputs,
+				Outputs:         goodOutputs,
+				SpecificationId: recordSpecID,
+			},
+			proposed: &types.Record{
+				Name:            s.recordName,
+				SessionId:       sessionNewOwner.SessionId,
+				Process:         *process,
+				Inputs:          goodInputs,
+				Outputs:         goodOutputs,
+				SpecificationId: recordSpecID,
+			},
+			signers:  []string{s.user2},
+			errorMsg: "missing signature: " + s.user1,
+		},
+		"with rollup missing signature from role required by spec": {
+			proposed: &types.Record{
+				Name:            rollupRecSpec.Name,
+				SessionId:       rollupSession1.SessionId,
+				Process:         *process,
+				Inputs:          goodInputs,
+				Outputs:         goodOutputs,
+				SpecificationId: rollupRecSpec.SpecificationId,
+			},
+			signers:  []string{s.user1, user4, user3},
+			errorMsg: "missing signers for roles required by spec: ORIGINATOR need 1 have 0",
+		},
+		"with rollup missing scope req signature": {
+			proposed: &types.Record{
+				Name:            rollupRecSpec.Name,
+				SessionId:       rollupSession1.SessionId,
+				Process:         *process,
+				Inputs:          goodInputs,
+				Outputs:         goodOutputs,
+				SpecificationId: rollupRecSpec.SpecificationId,
+			},
+			signers:  []string{user4, s.user2},
+			errorMsg: "missing required signature: " + s.user1 + " (OWNER)",
+		},
+		"with rollup missing session req signature": {
+			proposed: &types.Record{
+				Name:            rollupRecSpec.Name,
+				SessionId:       rollupSession1.SessionId,
+				Process:         *process,
+				Inputs:          goodInputs,
+				Outputs:         goodOutputs,
+				SpecificationId: rollupRecSpec.SpecificationId,
+			},
+			signers:  []string{s.user1, s.user2},
+			errorMsg: "missing required signature: " + user4 + " (OWNER)",
+		},
+		"with rollup missing previous session req signature": {
+			existing: &types.Record{
+				Name:            rollupRecSpec.Name,
+				SessionId:       rollupSession1.SessionId,
+				Process:         *process,
+				Inputs:          goodInputs,
+				Outputs:         goodOutputs,
+				SpecificationId: rollupRecSpec.SpecificationId,
+			},
+			proposed: &types.Record{
+				Name:            rollupRecSpec.Name,
+				SessionId:       rollupSession2.SessionId,
+				Process:         *process,
+				Inputs:          goodInputs,
+				Outputs:         goodOutputs,
+				SpecificationId: rollupRecSpec.SpecificationId,
+			},
+			signers:  []string{s.user1, user3},
+			errorMsg: "missing required signature: " + user4 + " (OWNER)",
+		},
 	}
 
 	for name, tc := range cases {
@@ -715,7 +1006,6 @@ func (s *RecordKeeperTestSuite) TestValidateWriteRecord() {
 			msg := &types.MsgWriteRecordRequest{
 				Record:  *tc.proposed,
 				Signers: tc.signers,
-				Parties: tc.partiesInvolved,
 			}
 			err := s.app.MetadataKeeper.ValidateWriteRecord(s.FreshCtx(), tc.existing, msg)
 			if len(tc.errorMsg) != 0 {

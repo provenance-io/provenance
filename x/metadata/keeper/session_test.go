@@ -156,6 +156,19 @@ func (s *SessionKeeperTestSuite) TestSessionIterator() {
 }
 
 func (s *SessionKeeperTestSuite) TestValidateWriteSession() {
+	pt := func(addr string, role types.PartyType, opt bool) types.Party {
+		return types.Party{
+			Address:  addr,
+			Role:     role,
+			Optional: opt,
+		}
+	}
+	ptz := func(parties ...types.Party) []types.Party {
+		rv := make([]types.Party, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+
 	ctx := s.FreshCtx()
 	scope := types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1, false)
 	s.app.MetadataKeeper.SetScope(ctx, *scope)
@@ -171,11 +184,56 @@ func (s *SessionKeeperTestSuite) TestValidateWriteSession() {
 	invalidParties := []types.Party{{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: types.PartyType_PARTY_TYPE_CUSTODIAN}}
 	invalidPartiesSession := types.NewSession("processname", s.sessionID, s.contractSpecID, invalidParties, nil)
 
+	owner := types.PartyType_PARTY_TYPE_OWNER
+	affiliate := types.PartyType_PARTY_TYPE_AFFILIATE
+
 	partiesInvolved := []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE}
 	contractSpec := types.NewContractSpecification(s.contractSpecID, types.NewDescription("name", "desc", "url", "icon"), []string{s.user1}, partiesInvolved, &types.ContractSpecification_Hash{"hash"}, "processname")
 	s.app.MetadataKeeper.SetContractSpecification(ctx, *contractSpec)
+	otherContractSpec := types.NewContractSpecification(types.ContractSpecMetadataAddress(uuid.New()), types.NewDescription("other name", "other desc", "other url", "other icon"), []string{s.user1}, partiesInvolved, &types.ContractSpecification_Hash{"other_hash"}, "other_processname")
+	s.app.MetadataKeeper.SetContractSpecification(ctx, *otherContractSpec)
 	scopeSpec := types.NewScopeSpecification(s.scopeSpecID, nil, []string{s.user1}, partiesInvolved, []types.MetadataAddress{s.contractSpecID})
 	s.app.MetadataKeeper.SetScopeSpecification(ctx, *scopeSpec)
+
+	scopeWOSpec := types.Scope{
+		ScopeId:         types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId: types.ScopeSpecMetadataAddress(uuid.New()),
+		Owners:          ownerPartyList(s.user1),
+	}
+	s.app.MetadataKeeper.SetScope(ctx, scopeWOSpec)
+	sessIDInScopeWOSpec := scopeWOSpec.ScopeId.MustGetAsSessionAddress(uuid.New())
+
+	rollupScopeSpec := types.ScopeSpecification{
+		SpecificationId: types.ScopeSpecMetadataAddress(uuid.New()),
+		Description:     types.NewDescription("tester", "tester desc", "", ""),
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{owner, affiliate},
+		ContractSpecIds: []types.MetadataAddress{s.contractSpecID},
+	}
+	s.app.MetadataKeeper.SetScopeSpecification(ctx, rollupScopeSpec)
+	rollupScopeSpecID := rollupScopeSpec.SpecificationId
+	user3 := sdk.AccAddress("user_3_address______").String()
+	otherUser := sdk.AccAddress("other_user_address__").String()
+
+	rollupScope := types.Scope{
+		ScopeId:            types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:    rollupScopeSpecID,
+		Owners:             ptz(pt(s.user1, owner, false), pt(s.user2, affiliate, true), pt(user3, affiliate, true)),
+		RequirePartyRollup: true,
+	}
+	s.app.MetadataKeeper.SetScope(ctx, rollupScope)
+
+	rollupSessionID := rollupScope.ScopeId.MustGetAsSessionAddress(uuid.New())
+	newRollupSession := func(parties ...types.Party) *types.Session {
+		return &types.Session{
+			SessionId:       rollupSessionID,
+			SpecificationId: validSession.SpecificationId,
+			Parties:         parties,
+			Name:            validSession.Name,
+			Context:         validSession.Context,
+			Audit:           validSession.Audit,
+		}
+	}
 
 	cases := map[string]struct {
 		existing *types.Session
@@ -183,7 +241,7 @@ func (s *SessionKeeperTestSuite) TestValidateWriteSession() {
 		signers  []string
 		errorMsg string
 	}{
-		"invalid session update, existing record does not have scope": {
+		"invalid session update, proposed does not have scope": {
 			existing: nil,
 			proposed: &types.Session{},
 			signers:  []string{s.user1},
@@ -243,6 +301,32 @@ func (s *SessionKeeperTestSuite) TestValidateWriteSession() {
 			proposed: invalidPartiesSession,
 			signers:  []string{s.user1},
 			errorMsg: "missing roles required by spec: AFFILIATE need 1 have 0",
+		},
+		"scope spec not found": {
+			existing: nil,
+			proposed: &types.Session{
+				SessionId:       sessIDInScopeWOSpec,
+				SpecificationId: s.contractSpecID,
+				Parties:         ownerPartyList(s.user1),
+				Name:            validSession.Name,
+				Context:         validSession.Context,
+				Audit:           validSession.Audit,
+			},
+			signers:  []string{s.user1},
+			errorMsg: "scope spec not found with id " + scopeWOSpec.SpecificationId.String(),
+		},
+		"contract spec not allowed in scope spec": {
+			existing: nil,
+			proposed: &types.Session{
+				SessionId:       validSession.SessionId,
+				SpecificationId: otherContractSpec.SpecificationId,
+				Parties:         ownerPartyList(s.user1),
+				Name:            validSession.Name,
+				Context:         validSession.Context,
+				Audit:           validSession.Audit,
+			},
+			signers:  []string{s.user1},
+			errorMsg: "contract spec " + otherContractSpec.SpecificationId.String() + " not listed in scope spec " + scopeSpec.SpecificationId.String(),
 		},
 		"invalid session update, missing required signers": {
 			existing: validSession,
@@ -310,6 +394,42 @@ func (s *SessionKeeperTestSuite) TestValidateWriteSession() {
 			},
 			signers:  nil,
 			errorMsg: "parties can only be optional when require_party_rollup = true",
+		},
+		"with rollup party not in scope": {
+			existing: nil,
+			proposed: newRollupSession(pt(otherUser, affiliate, true)),
+			signers:  []string{s.user1, s.user2},
+			errorMsg: "not all session parties in scope owners: missing party: " + otherUser + " (AFFILIATE)",
+		},
+		"with rollup missing signature from required scope party": {
+			existing: nil,
+			proposed: newRollupSession(pt(s.user2, affiliate, true)),
+			signers:  []string{s.user2},
+			errorMsg: "missing required signature: " + s.user1 + " (OWNER)",
+		},
+		"with rollup not new missing required role": {
+			existing: newRollupSession(pt(s.user2, affiliate, true)),
+			proposed: newRollupSession(pt(s.user1, owner, true)),
+			signers:  []string{s.user1, s.user2},
+			errorMsg: "missing roles required by spec: AFFILIATE need 1 have 0",
+		},
+		"with rollup not new missing signature from required role": {
+			existing: newRollupSession(pt(s.user2, affiliate, true)),
+			proposed: newRollupSession(pt(user3, affiliate, true)),
+			signers:  []string{s.user1},
+			errorMsg: "missing signers for roles required by spec: AFFILIATE need 1 have 0",
+		},
+		"with rollup not new missing signature from required session party": {
+			existing: newRollupSession(pt(s.user2, affiliate, false)),
+			proposed: newRollupSession(pt(user3, affiliate, false)),
+			signers:  []string{s.user1, user3},
+			errorMsg: "missing required signature: " + s.user2 + " (AFFILIATE)",
+		},
+		"with rollup new missing signature from required role": {
+			existing: nil,
+			proposed: newRollupSession(pt(s.user2, affiliate, true)),
+			signers:  []string{s.user1},
+			errorMsg: "missing signers for roles required by spec: AFFILIATE need 1 have 0",
 		},
 	}
 
