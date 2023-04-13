@@ -59,10 +59,14 @@ func TestWriteScopeValidation(t *testing.T) {
 		[]string{"data_accessor"},
 		"value_owner",
 	)
-	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"})
+	var msg = NewMsgWriteScopeRequest(*scope, []string{"data_owner"})
 	err := msg.ValidateBasic()
 	require.EqualError(t, err, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid separator index -1")
 	require.Panics(t, func() { msg.GetSigners() }, "panics due to invalid addresses")
+
+	msg = NewMsgWriteScopeRequest(*scope, []string{"nomatch"})
+	err = msg.ValidateBasic()
+	require.EqualError(t, err, "the first message signer nomatch is not an owner")
 
 	err = msg.Scope.ValidateBasic()
 	require.Error(t, err, "invalid addresses")
