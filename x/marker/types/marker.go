@@ -43,6 +43,7 @@ type MarkerAccountI interface {
 	RevokeAccess(sdk.AccAddress) error
 	GetAccessList() []AccessGrant
 
+	HasAccess(string, Access) bool
 	AddressHasAccess(sdk.AccAddress, Access) bool
 	AddressListForPermission(Access) []sdk.AccAddress
 
@@ -120,15 +121,21 @@ func (ma MarkerAccount) AllowsForcedTransfer() bool {
 	return ma.AllowForcedTransfer
 }
 
-// AddressHasAccess returns true if the provided address has been assigned the provided
+// HasAccess returns true if the provided address has been assigned the provided
 // role within the current MarkerAccount AccessControl
-func (ma *MarkerAccount) AddressHasAccess(addr sdk.AccAddress, role Access) bool {
+func (ma *MarkerAccount) HasAccess(addr string, role Access) bool {
 	for _, g := range ma.AccessControl {
-		if g.Address == addr.String() && g.HasAccess(role) {
+		if g.Address == addr && g.HasAccess(role) {
 			return true
 		}
 	}
 	return false
+}
+
+// AddressHasAccess returns true if the provided address has been assigned the provided
+// role within the current MarkerAccount AccessControl
+func (ma *MarkerAccount) AddressHasAccess(addr sdk.AccAddress, role Access) bool {
+	return ma.HasAccess(addr.String(), role)
 }
 
 // AddressListForPermission returns a list of all addresses with the provided rule within the

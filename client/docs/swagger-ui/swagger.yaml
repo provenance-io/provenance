@@ -38277,6 +38277,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -38292,7 +38296,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -38303,6 +38307,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -38424,6 +38437,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -38480,9 +38497,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -38709,7 +38723,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -39097,6 +39111,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -39112,7 +39130,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -39123,6 +39141,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -39244,6 +39271,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -39300,9 +39331,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -39529,7 +39557,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -39923,6 +39951,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -39938,7 +39970,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -39949,6 +39981,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -40070,6 +40111,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -40126,9 +40171,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -40353,7 +40395,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -40763,7 +40805,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -41856,6 +41898,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -41871,7 +41917,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -41882,6 +41928,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -42003,6 +42058,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -42059,9 +42118,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -42288,7 +42344,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -42667,6 +42723,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -42682,7 +42742,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -42693,6 +42753,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -42814,6 +42883,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -42870,9 +42943,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -43099,7 +43169,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -43512,6 +43582,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -43527,7 +43601,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -43538,6 +43612,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -43659,6 +43742,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -43715,9 +43802,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -43942,7 +44026,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -44346,6 +44430,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -44361,7 +44449,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -44372,6 +44460,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -44493,6 +44590,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -44549,9 +44650,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -44778,7 +44876,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -45191,6 +45289,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -45206,7 +45308,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -45217,6 +45319,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -45338,6 +45449,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -45394,9 +45509,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -45621,7 +45733,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -46025,6 +46137,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -46040,7 +46156,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -46051,6 +46167,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -46172,6 +46297,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -46228,9 +46357,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -46457,7 +46583,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -46855,6 +46981,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -46870,7 +47000,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -46881,6 +47011,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -47002,6 +47141,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -47058,9 +47201,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -47287,7 +47427,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -47700,6 +47840,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -47715,7 +47859,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -47726,6 +47870,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -47847,6 +48000,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -47903,9 +48060,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -48130,7 +48284,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -48486,6 +48640,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -48501,7 +48659,7 @@ paths:
                           items:
                             type: string
                           description: >-
-                            Addessses in this list are authorized to recieve
+                            Addresses in this list are authorized to receive
                             off-chain data associated with this scope.
                         value_owner_address:
                           type: string
@@ -48513,6 +48671,15 @@ paths:
                             are supported for this value.  This attribute may
                             only be changed by the entity indicated once it is
                             set.
+                        require_party_rollup:
+                          type: boolean
+                          format: boolean
+                          description: >-
+                            Whether all parties in this scope and its sessions
+                            must be present in this scope's owners field.
+
+                            This also enables use of optional=true scope owners
+                            and session parties.
                     scope_id_info:
                       description: >-
                         scope_id_info contains information about the id/address
@@ -49724,6 +49891,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -49739,7 +49910,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -49750,6 +49921,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -49871,6 +50051,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -49927,9 +50111,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -50156,7 +50337,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -50550,6 +50731,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -50565,7 +50750,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -50576,6 +50761,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -50697,6 +50891,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -50753,9 +50951,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -50980,7 +51175,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -51384,6 +51579,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -51399,7 +51598,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -51410,6 +51609,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -51531,6 +51739,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -51587,9 +51799,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -51816,7 +52025,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -52214,6 +52423,10 @@ paths:
                               title: >-
                                 PartyType are the different roles parties on a
                                 contract may use
+                            optional:
+                              type: boolean
+                              format: boolean
+                              title: whether this party's signature is optional
                           title: >-
                             A Party is an address with/in a given role
                             associated with a contract
@@ -52229,7 +52442,7 @@ paths:
                         items:
                           type: string
                         description: >-
-                          Addessses in this list are authorized to recieve
+                          Addresses in this list are authorized to receive
                           off-chain data associated with this scope.
                       value_owner_address:
                         type: string
@@ -52240,6 +52453,15 @@ paths:
 
                           are supported for this value.  This attribute may only
                           be changed by the entity indicated once it is set.
+                      require_party_rollup:
+                        type: boolean
+                        format: boolean
+                        description: >-
+                          Whether all parties in this scope and its sessions
+                          must be present in this scope's owners field.
+
+                          This also enables use of optional=true scope owners
+                          and session parties.
                   scope_id_info:
                     description: >-
                       scope_id_info contains information about the id/address of
@@ -52361,6 +52583,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -52417,9 +52643,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -52646,7 +52869,7 @@ paths:
                                   - RESULT_STATUS_UNSPECIFIED:
                                   RESULT_STATUS_UNSPECIFIED indicates an unset
                                   condition
-                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                                   - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                                    - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                                    - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                             title: >-
@@ -52991,6 +53214,10 @@ paths:
                                 title: >-
                                   PartyType are the different roles parties on a
                                   contract may use
+                              optional:
+                                type: boolean
+                                format: boolean
+                                title: whether this party's signature is optional
                             title: >-
                               A Party is an address with/in a given role
                               associated with a contract
@@ -53047,9 +53274,6 @@ paths:
                             AuditFields capture information about the last
                             account to make modifications and when they were
                             made
-                      title: >-
-                        A Session is created for an execution context against a
-                        specific specification instance
                     session_id_info:
                       description: >-
                         session_id_info contains information about the
@@ -82786,6 +83010,10 @@ definitions:
            - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
            - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
         title: PartyType are the different roles parties on a contract may use
+      optional:
+        type: boolean
+        format: boolean
+        title: whether this party's signature is optional
     title: A Party is an address with/in a given role associated with a contract
   provenance.metadata.v1.PartyType:
     type: string
@@ -82948,7 +83176,7 @@ definitions:
               description: >-
                 - RESULT_STATUS_UNSPECIFIED: RESULT_STATUS_UNSPECIFIED indicates
                 an unset condition
-                 - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                 - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                  - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                  - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
           title: RecordOutput encapsulates the output of a process recorded on chain
@@ -83076,7 +83304,7 @@ definitions:
         description: >-
           - RESULT_STATUS_UNSPECIFIED: RESULT_STATUS_UNSPECIFIED indicates an
           unset condition
-           - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+           - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
            - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
            - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
     title: RecordOutput encapsulates the output of a process recorded on chain
@@ -84322,7 +84550,7 @@ definitions:
                   description: >-
                     - RESULT_STATUS_UNSPECIFIED: RESULT_STATUS_UNSPECIFIED
                     indicates an unset condition
-                     - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                     - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                      - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                      - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
               title: >-
@@ -84630,7 +84858,7 @@ definitions:
                         description: >-
                           - RESULT_STATUS_UNSPECIFIED: RESULT_STATUS_UNSPECIFIED
                           indicates an unset condition
-                           - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                           - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                            - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                            - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                     title: >-
@@ -84969,6 +85197,10 @@ definitions:
                       title: >-
                         PartyType are the different roles parties on a contract
                         may use
+                    optional:
+                      type: boolean
+                      format: boolean
+                      title: whether this party's signature is optional
                   title: >-
                     A Party is an address with/in a given role associated with a
                     contract
@@ -84983,7 +85215,7 @@ definitions:
                 items:
                   type: string
                 description: >-
-                  Addessses in this list are authorized to recieve off-chain
+                  Addresses in this list are authorized to receive off-chain
                   data associated with this scope.
               value_owner_address:
                 type: string
@@ -84993,6 +85225,15 @@ definitions:
 
                   are supported for this value.  This attribute may only be
                   changed by the entity indicated once it is set.
+              require_party_rollup:
+                type: boolean
+                format: boolean
+                description: >-
+                  Whether all parties in this scope and its sessions must be
+                  present in this scope's owners field.
+
+                  This also enables use of optional=true scope owners and
+                  session parties.
           scope_id_info:
             description: >-
               scope_id_info contains information about the id/address of the
@@ -85108,6 +85349,10 @@ definitions:
                         title: >-
                           PartyType are the different roles parties on a
                           contract may use
+                      optional:
+                        type: boolean
+                        format: boolean
+                        title: whether this party's signature is optional
                     title: >-
                       A Party is an address with/in a given role associated with
                       a contract
@@ -85157,9 +85402,6 @@ definitions:
                   title: >-
                     AuditFields capture information about the last account to
                     make modifications and when they were made
-              title: >-
-                A Session is created for an execution context against a specific
-                specification instance
             session_id_info:
               description: >-
                 session_id_info contains information about the id/address of the
@@ -85372,7 +85614,7 @@ definitions:
                         description: >-
                           - RESULT_STATUS_UNSPECIFIED: RESULT_STATUS_UNSPECIFIED
                           indicates an unset condition
-                           - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                           - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                            - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                            - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                     title: >-
@@ -85575,7 +85817,7 @@ definitions:
     description: >-
       - RESULT_STATUS_UNSPECIFIED: RESULT_STATUS_UNSPECIFIED indicates an unset
       condition
-       - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+       - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
        - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
        - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
     title: ResultStatus indicates the various states of execution of a record
@@ -85631,6 +85873,10 @@ definitions:
                  - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
                  - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
               title: PartyType are the different roles parties on a contract may use
+            optional:
+              type: boolean
+              format: boolean
+              title: whether this party's signature is optional
           title: >-
             A Party is an address with/in a given role associated with a
             contract
@@ -85645,7 +85891,7 @@ definitions:
         items:
           type: string
         description: >-
-          Addessses in this list are authorized to recieve off-chain data
+          Addresses in this list are authorized to receive off-chain data
           associated with this scope.
       value_owner_address:
         type: string
@@ -85655,6 +85901,15 @@ definitions:
 
           are supported for this value.  This attribute may only be changed by
           the entity indicated once it is set.
+      require_party_rollup:
+        type: boolean
+        format: boolean
+        description: >-
+          Whether all parties in this scope and its sessions must be present in
+          this scope's owners field.
+
+          This also enables use of optional=true scope owners and session
+          parties.
     description: >-
       Scope defines a root reference for a collection of records owned by one or
       more parties.
@@ -85775,6 +86030,10 @@ definitions:
                       title: >-
                         PartyType are the different roles parties on a contract
                         may use
+                    optional:
+                      type: boolean
+                      format: boolean
+                      title: whether this party's signature is optional
                   title: >-
                     A Party is an address with/in a given role associated with a
                     contract
@@ -85789,7 +86048,7 @@ definitions:
                 items:
                   type: string
                 description: >-
-                  Addessses in this list are authorized to recieve off-chain
+                  Addresses in this list are authorized to receive off-chain
                   data associated with this scope.
               value_owner_address:
                 type: string
@@ -85799,6 +86058,15 @@ definitions:
 
                   are supported for this value.  This attribute may only be
                   changed by the entity indicated once it is set.
+              require_party_rollup:
+                type: boolean
+                format: boolean
+                description: >-
+                  Whether all parties in this scope and its sessions must be
+                  present in this scope's owners field.
+
+                  This also enables use of optional=true scope owners and
+                  session parties.
           scope_id_info:
             description: >-
               scope_id_info contains information about the id/address of the
@@ -85914,6 +86182,10 @@ definitions:
                         title: >-
                           PartyType are the different roles parties on a
                           contract may use
+                      optional:
+                        type: boolean
+                        format: boolean
+                        title: whether this party's signature is optional
                     title: >-
                       A Party is an address with/in a given role associated with
                       a contract
@@ -85963,9 +86235,6 @@ definitions:
                   title: >-
                     AuditFields capture information about the last account to
                     make modifications and when they were made
-              title: >-
-                A Session is created for an execution context against a specific
-                specification instance
             session_id_info:
               description: >-
                 session_id_info contains information about the id/address of the
@@ -86178,7 +86447,7 @@ definitions:
                         description: >-
                           - RESULT_STATUS_UNSPECIFIED: RESULT_STATUS_UNSPECIFIED
                           indicates an unset condition
-                           - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                           - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                            - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                            - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                     title: >-
@@ -87387,6 +87656,10 @@ definitions:
                   title: >-
                     PartyType are the different roles parties on a contract may
                     use
+                optional:
+                  type: boolean
+                  format: boolean
+                  title: whether this party's signature is optional
               title: >-
                 A Party is an address with/in a given role associated with a
                 contract
@@ -87401,7 +87674,7 @@ definitions:
             items:
               type: string
             description: >-
-              Addessses in this list are authorized to recieve off-chain data
+              Addresses in this list are authorized to receive off-chain data
               associated with this scope.
           value_owner_address:
             type: string
@@ -87411,6 +87684,15 @@ definitions:
 
               are supported for this value.  This attribute may only be changed
               by the entity indicated once it is set.
+          require_party_rollup:
+            type: boolean
+            format: boolean
+            description: >-
+              Whether all parties in this scope and its sessions must be present
+              in this scope's owners field.
+
+              This also enables use of optional=true scope owners and session
+              parties.
       scope_id_info:
         description: scope_id_info contains information about the id/address of the scope.
         type: object
@@ -87585,6 +87867,10 @@ definitions:
                         title: >-
                           PartyType are the different roles parties on a
                           contract may use
+                      optional:
+                        type: boolean
+                        format: boolean
+                        title: whether this party's signature is optional
                     title: >-
                       A Party is an address with/in a given role associated with
                       a contract
@@ -87599,7 +87885,7 @@ definitions:
                   items:
                     type: string
                   description: >-
-                    Addessses in this list are authorized to recieve off-chain
+                    Addresses in this list are authorized to receive off-chain
                     data associated with this scope.
                 value_owner_address:
                   type: string
@@ -87609,6 +87895,15 @@ definitions:
 
                     are supported for this value.  This attribute may only be
                     changed by the entity indicated once it is set.
+                require_party_rollup:
+                  type: boolean
+                  format: boolean
+                  description: >-
+                    Whether all parties in this scope and its sessions must be
+                    present in this scope's owners field.
+
+                    This also enables use of optional=true scope owners and
+                    session parties.
             scope_id_info:
               description: >-
                 scope_id_info contains information about the id/address of the
@@ -87808,6 +88103,10 @@ definitions:
                  - PARTY_TYPE_CONTROLLER: PARTY_TYPE_CONTROLLER is an entity which controls a specific asset on chain (ie enote)
                  - PARTY_TYPE_VALIDATOR: PARTY_TYPE_VALIDATOR is an entity which validates given assets on chain
               title: PartyType are the different roles parties on a contract may use
+            optional:
+              type: boolean
+              format: boolean
+              title: whether this party's signature is optional
           title: >-
             A Party is an address with/in a given role associated with a
             contract
@@ -87852,16 +88151,14 @@ definitions:
           AuditFields capture information about the last account to make
           modifications and when they were made
     description: >-
-      The context will have a specification and set of parties involved.  The
-      Session may be updated several
+      Session defines an execution context against a specific specification
+      instance.
 
-      times so long as the parties listed are signers on the transaction.  NOTE:
-      When there are no Records within a Scope
+      The context will have a specification and set of parties involved.
 
-      that reference a Session it is removed.
-    title: >-
-      A Session is created for an execution context against a specific
-      specification instance
+
+      NOTE: When there are no more Records within a Scope that reference a
+      Session, the Session is removed.
   provenance.metadata.v1.SessionIdInfo:
     type: object
     properties:
@@ -87967,6 +88264,10 @@ definitions:
                   title: >-
                     PartyType are the different roles parties on a contract may
                     use
+                optional:
+                  type: boolean
+                  format: boolean
+                  title: whether this party's signature is optional
               title: >-
                 A Party is an address with/in a given role associated with a
                 contract
@@ -88014,9 +88315,6 @@ definitions:
             title: >-
               AuditFields capture information about the last account to make
               modifications and when they were made
-        title: >-
-          A Session is created for an execution context against a specific
-          specification instance
       session_id_info:
         description: >-
           session_id_info contains information about the id/address of the
@@ -88232,6 +88530,10 @@ definitions:
                         title: >-
                           PartyType are the different roles parties on a
                           contract may use
+                      optional:
+                        type: boolean
+                        format: boolean
+                        title: whether this party's signature is optional
                     title: >-
                       A Party is an address with/in a given role associated with
                       a contract
@@ -88281,9 +88583,6 @@ definitions:
                   title: >-
                     AuditFields capture information about the last account to
                     make modifications and when they were made
-              title: >-
-                A Session is created for an execution context against a specific
-                specification instance
             session_id_info:
               description: >-
                 session_id_info contains information about the id/address of the
@@ -88577,6 +88876,10 @@ definitions:
                       title: >-
                         PartyType are the different roles parties on a contract
                         may use
+                    optional:
+                      type: boolean
+                      format: boolean
+                      title: whether this party's signature is optional
                   title: >-
                     A Party is an address with/in a given role associated with a
                     contract
@@ -88591,7 +88894,7 @@ definitions:
                 items:
                   type: string
                 description: >-
-                  Addessses in this list are authorized to recieve off-chain
+                  Addresses in this list are authorized to receive off-chain
                   data associated with this scope.
               value_owner_address:
                 type: string
@@ -88601,6 +88904,15 @@ definitions:
 
                   are supported for this value.  This attribute may only be
                   changed by the entity indicated once it is set.
+              require_party_rollup:
+                type: boolean
+                format: boolean
+                description: >-
+                  Whether all parties in this scope and its sessions must be
+                  present in this scope's owners field.
+
+                  This also enables use of optional=true scope owners and
+                  session parties.
           scope_id_info:
             description: >-
               scope_id_info contains information about the id/address of the
@@ -88716,6 +89028,10 @@ definitions:
                         title: >-
                           PartyType are the different roles parties on a
                           contract may use
+                      optional:
+                        type: boolean
+                        format: boolean
+                        title: whether this party's signature is optional
                     title: >-
                       A Party is an address with/in a given role associated with
                       a contract
@@ -88765,9 +89081,6 @@ definitions:
                   title: >-
                     AuditFields capture information about the last account to
                     make modifications and when they were made
-              title: >-
-                A Session is created for an execution context against a specific
-                specification instance
             session_id_info:
               description: >-
                 session_id_info contains information about the id/address of the
@@ -88978,7 +89291,7 @@ definitions:
                         description: >-
                           - RESULT_STATUS_UNSPECIFIED: RESULT_STATUS_UNSPECIFIED
                           indicates an unset condition
-                           - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successfult
+                           - RESULT_STATUS_PASS: RESULT_STATUS_PASS indicates the execution was successful
                            - RESULT_STATUS_SKIP: RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
                            - RESULT_STATUS_FAIL: RESULT_STATUS_FAIL indicates the execution of the condition/consideration failed.
                     title: >-

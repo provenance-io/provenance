@@ -3,12 +3,13 @@ package types
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -22,43 +23,48 @@ func ownerPartyList(addresses ...string) []Party {
 }
 
 func TestWriteScopeRoute(t *testing.T) {
-	var scope = NewScope(
-		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
-		ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		ownerPartyList("data_owner"),
-		[]string{"data_accessor"},
-		"value_owner",
-	)
+	var scope = &Scope{
+		ScopeId:           ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
+		SpecificationId:   ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
+		Owners:            ownerPartyList("data_owner"),
+		DataAccess:        []string{"data_accessor"},
+		ValueOwnerAddress: "value_owner",
+	}
 	var msg = NewMsgWriteScopeRequest(*scope, []string{})
 
 	require.Equal(t, sdk.MsgTypeURL(msg), "/provenance.metadata.v1.MsgWriteScopeRequest")
-	yaml := `scope:
+	expectedYaml := `scope:
   scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
   specification_id: scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3
   owners:
   - address: data_owner
     role: 5
+    optional: false
   data_access:
   - data_accessor
   value_owner_address: value_owner
+  require_party_rollup: false
 signers: []
 scope_uuid: ""
 spec_uuid: ""
 `
-	require.Equal(t, yaml, msg.String())
+	bz, err := yaml.Marshal(msg)
+	require.NoError(t, err, "yaml.Marshal(msg)")
+	assert.Equal(t, expectedYaml, string(bz), "scope as yaml")
 
-	bz, _ := ModuleCdc.MarshalJSON(msg)
-	require.Equal(t, "{\"scope\":{\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"owners\":[{\"address\":\"data_owner\",\"role\":\"PARTY_TYPE_OWNER\"}],\"data_access\":[\"data_accessor\"],\"value_owner_address\":\"value_owner\"},\"signers\":[],\"scope_uuid\":\"\",\"spec_uuid\":\"\"}", string(bz))
+	bz, err = ModuleCdc.MarshalJSON(msg)
+	require.NoError(t, err, "ModuleCdc.MarshalJSON(msg)")
+	assert.Equal(t, "{\"scope\":{\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"owners\":[{\"address\":\"data_owner\",\"role\":\"PARTY_TYPE_OWNER\",\"optional\":false}],\"data_access\":[\"data_accessor\"],\"value_owner_address\":\"value_owner\",\"require_party_rollup\":false},\"signers\":[],\"scope_uuid\":\"\",\"spec_uuid\":\"\"}", string(bz))
 }
 
 func TestWriteScopeValidation(t *testing.T) {
-	var scope = NewScope(
-		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
-		ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		ownerPartyList("data_owner"),
-		[]string{"data_accessor"},
-		"value_owner",
-	)
+	var scope = &Scope{
+		ScopeId:           ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
+		SpecificationId:   ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
+		Owners:            ownerPartyList("data_owner"),
+		DataAccess:        []string{"data_accessor"},
+		ValueOwnerAddress: "value_owner",
+	}
 	var msg = NewMsgWriteScopeRequest(*scope, []string{"data_owner"})
 	err := msg.ValidateBasic()
 	require.EqualError(t, err, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid separator index -1")
@@ -72,24 +78,22 @@ func TestWriteScopeValidation(t *testing.T) {
 	require.Error(t, err, "invalid addresses")
 	require.Equal(t, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid separator index -1", err.Error())
 
-	msg.Scope = *NewScope(
-		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
-		ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		[]Party{},
-		[]string{},
-		"",
-	)
+	msg.Scope = Scope{
+		ScopeId:         ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
+		SpecificationId: ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
+		Owners:          []Party{},
+		DataAccess:      []string{},
+	}
 	err = msg.Scope.ValidateBasic()
 	require.Error(t, err, "no owners")
 	require.Equal(t, "invalid scope owners: at least one party is required", err.Error())
 
-	msg.Scope = *NewScope(
-		ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
-		ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		ownerPartyList("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"),
-		[]string{},
-		"",
-	)
+	msg.Scope = Scope{
+		ScopeId:         ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
+		SpecificationId: ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
+		Owners:          ownerPartyList("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"),
+		DataAccess:      []string{},
+	}
 	msg.Signers = []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}
 	err = msg.Scope.ValidateBasic()
 	require.NoError(t, err, "valid add scope request")
@@ -482,10 +486,8 @@ func TestBindOSLocatorInvalidURI(t *testing.T) {
 	require.Error(t, err)
 }
 
-type MsgTypeURL interface {
-	MsgTypeURL() string
-}
-
+// TestPrintMessageTypeStrings just prints out all the MsgTypeURLs.
+// The output can be copy/pasted into the const area in msg.go
 func TestPrintMessageTypeStrings(t *testing.T) {
 	messageTypes := []sdk.Msg{
 		&MsgWriteScopeRequest{},
@@ -511,14 +513,16 @@ func TestPrintMessageTypeStrings(t *testing.T) {
 		// add  any new messages here
 	}
 
+	fmt.Println("const (")
 	for _, msg := range messageTypes {
-		expected := sdk.MsgTypeURL(msg)
-		// compare to what we currently have in msg.go
-		mtu, ok := msg.(MsgTypeURL)
-		if assert.True(t, ok, "MsgTypeURL function for %s is not defined.", expected) {
-			actual := mtu.MsgTypeURL()
-			assert.Equal(t, expected, actual)
+		varname := fmt.Sprintf("%T", msg)
+		lastDot := strings.LastIndex(varname, ".")
+		if lastDot >= 0 && lastDot+1 < len(varname) {
+			varname = varname[lastDot+1:]
 		}
-		fmt.Println(expected)
+		expected := sdk.MsgTypeURL(msg)
+		// Note: 41 comes from the length of the longest Msg name: MsgDeleteContractSpecFromScopeSpecRequest
+		fmt.Printf("\tTypeURL%-41s = %q\n", varname, expected)
 	}
+	fmt.Println(")")
 }

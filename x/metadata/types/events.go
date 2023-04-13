@@ -4,7 +4,6 @@ import (
 	"github.com/armon/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TelemetryCategory is an enum for metadata telemetry categories.
@@ -123,16 +122,12 @@ const (
 	TxEndpoint_ModifyOSLocator TxEndpoint = "ModifyOSLocator"
 )
 
-func NewEventTxCompleted(endpoint TxEndpoint, signers []sdk.AccAddress) *EventTxCompleted {
-	retval := &EventTxCompleted{
+func NewEventTxCompleted(endpoint TxEndpoint, signers []string) *EventTxCompleted {
+	return &EventTxCompleted{
 		Module:   ModuleName,
 		Endpoint: string(endpoint),
-		Signers:  make([]string, len(signers)),
+		Signers:  signers,
 	}
-	for i, s := range signers {
-		retval.Signers[i] = s.String()
-	}
-	return retval
 }
 
 func NewEventScopeCreated(scopeID MetadataAddress) *EventScopeCreated {

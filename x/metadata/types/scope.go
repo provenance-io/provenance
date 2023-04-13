@@ -23,13 +23,15 @@ func NewScope(
 	owners []Party,
 	dataAccess []string,
 	valueOwner string,
+	requirePartyRollup bool,
 ) *Scope {
 	return &Scope{
-		ScopeId:           scopeID,
-		SpecificationId:   scopeSpecification,
-		Owners:            owners,
-		DataAccess:        dataAccess,
-		ValueOwnerAddress: valueOwner,
+		ScopeId:            scopeID,
+		SpecificationId:    scopeSpecification,
+		Owners:             owners,
+		DataAccess:         dataAccess,
+		ValueOwnerAddress:  valueOwner,
+		RequirePartyRollup: requirePartyRollup,
 	}
 }
 
@@ -38,7 +40,8 @@ func (s Scope) Equals(t Scope) bool {
 		s.SpecificationId.Equals(t.SpecificationId) &&
 		EqualParties(s.Owners, t.Owners) &&
 		equivalentDataAssessors(s.DataAccess, t.DataAccess) &&
-		s.ValueOwnerAddress == t.ValueOwnerAddress
+		s.ValueOwnerAddress == t.ValueOwnerAddress &&
+		s.RequirePartyRollup == t.RequirePartyRollup
 }
 
 // ValidateBasic performs basic format checking of data within a scope
@@ -78,6 +81,9 @@ func (s Scope) ValidateBasic() error {
 func (s Scope) ValidateOwnersBasic() error {
 	if err := ValidatePartiesBasic(s.Owners); err != nil {
 		return fmt.Errorf("invalid scope owners: %w", err)
+	}
+	if err := ValidateOptionalParties(s.RequirePartyRollup, s.Owners); err != nil {
+		return err
 	}
 	return nil
 }
@@ -121,38 +127,21 @@ func (s *Scope) AddDataAccess(addresses []string) {
 	}
 }
 
-// GetOwnerIndexWithAddress gets the index of this scopes owners list that has the provided address,
-// and a boolean for whether or not it's found.
-func (s *Scope) GetOwnerIndexWithAddress(address string) (int, bool) {
-	for i, owner := range s.Owners {
-		if owner.Address == address {
-			return i, true
-		}
-	}
-	return -1, false
-}
-
-// AddOwners will append new owners or overwrite existing if address exists
-// If a scope owner already exists that's equal to a provided owner, an error is returned.
+// AddOwners will add new owners to this scope.
+// If an owner already exists that's equal to a provided owner, an error is returned.
 func (s *Scope) AddOwners(owners []Party) error {
 	if len(owners) == 0 {
 		return nil
 	}
-	newOwners := make([]Party, 0, len(owners))
-	for _, owner := range owners {
-		i, found := s.GetOwnerIndexWithAddress(owner.Address)
-		if found {
-			if s.Owners[i].Equals(owner) {
-				return fmt.Errorf("party already exists with address %s and role %s", owner.Address, owner.Role)
+	for _, newOwner := range owners {
+		for _, scopeOwner := range s.Owners {
+			//nolint:gosec // G601: Implicit memory aliasing okay here since we're not storing the reference anywhere.
+			if newOwner.IsSameAs(&scopeOwner) {
+				return fmt.Errorf("party already exists with address %s and role %s", newOwner.Address, newOwner.Role)
 			}
-			s.Owners[i] = owner
-		} else {
-			newOwners = append(newOwners, owner)
 		}
 	}
-	if len(newOwners) > 0 {
-		s.Owners = append(s.Owners, newOwners...)
-	}
+	s.Owners = append(s.Owners, owners...)
 	return nil
 }
 
@@ -163,25 +152,37 @@ func (s *Scope) RemoveOwners(addressesToRemove []string) error {
 		return nil
 	}
 	for _, addr := range addressesToRemove {
-		if _, found := s.GetOwnerIndexWithAddress(addr); !found {
+		if !s.hasOwnerAddress(addr) {
 			return fmt.Errorf("address does not exist in scope owners: %s", addr)
 		}
 	}
-	ownersLeft := []Party{}
-	for _, existingOwner := range s.Owners {
-		keep := true
+	newOwners := make([]Party, 0, len(s.Owners))
+ownersLoop:
+	for _, owner := range s.Owners {
 		for _, addr := range addressesToRemove {
-			if existingOwner.Address == addr {
-				keep = false
-				break
+			if owner.Address == addr {
+				continue ownersLoop
 			}
 		}
-		if keep {
-			ownersLeft = append(ownersLeft, existingOwner)
+		newOwners = append(newOwners, owner)
+	}
+	s.Owners = newOwners
+	return nil
+}
+
+// hasOwnerAddress returns true if this scope has an owner party with the provided address.
+func (s *Scope) hasOwnerAddress(address string) bool {
+	for _, party := range s.Owners {
+		if address == party.Address {
+			return true
 		}
 	}
-	s.Owners = ownersLeft
-	return nil
+	return false
+}
+
+// GetAllOwnerAddresses gets the addresses of all of the owners. Each address can only appear once in the return value.
+func (s Scope) GetAllOwnerAddresses() []string {
+	return GetPartyAddresses(s.Owners)
 }
 
 // UpdateAudit computes a set of changes to the audit fields based on the existing message.
@@ -224,13 +225,9 @@ func (s Session) ValidateBasic() error {
 	if prefix != PrefixSession {
 		return fmt.Errorf("invalid session identifier (expected: %s, got %s)", PrefixSession, prefix)
 	}
-	if len(s.Parties) < 1 {
-		return errors.New("session must have at least one party")
-	}
-	for _, p := range s.Parties {
-		if err = p.ValidateBasic(); err != nil {
-			return fmt.Errorf("invalid party on session: %w", err)
-		}
+	err = ValidatePartiesBasic(s.Parties)
+	if err != nil {
+		return err
 	}
 	prefix, err = VerifyMetadataAddressFormat(s.SpecificationId)
 	if err != nil {
@@ -250,6 +247,11 @@ func (s Session) ValidateBasic() error {
 func (s Session) String() string {
 	out, _ := yaml.Marshal(s)
 	return string(out)
+}
+
+// GetAllPartyAddresses gets the addresses of all of the parties. Each address can only appear once in the return value.
+func (s Session) GetAllPartyAddresses() []string {
+	return GetPartyAddresses(s.Parties)
 }
 
 // NewRecord creates new instance of Record
@@ -281,7 +283,7 @@ func (r Record) ValidateBasic() error {
 		return fmt.Errorf("invalid record identifier (expected: %s, got %s)", PrefixSession, prefix)
 	}
 	if !r.SpecificationId.Empty() {
-		// For now, we'll allow an empty specification id and set it appropriately during ValidateRecordUpdate if it's missing.
+		// For now, we'll allow an empty specification id and set it appropriately during ValidateWriteRecord if it's missing.
 		// But if we've got it, we should make sure it's okay.
 		specPrefix, e := VerifyMetadataAddressFormat(r.SpecificationId)
 		if e != nil {
@@ -461,21 +463,38 @@ func (p Party) ValidateBasic() error {
 	return nil
 }
 
+// ValidatePartiesAreUnique makes sure that no two provided parties are the same.
+func ValidatePartiesAreUnique(parties []Party) error {
+	for i := 0; i < len(parties)-1; i++ {
+		for j := i + 1; j < len(parties); j++ {
+			if parties[i].IsSameAs(&parties[j]) {
+				return fmt.Errorf("duplicate parties not allowed: address = %s, role = %s, indexes: %d, %d",
+					parties[i].Address, parties[i].Role.SimpleString(), i, j)
+			}
+		}
+	}
+	return nil
+}
+
 // ValidatePartiesBasic validates a required list of parties.
 func ValidatePartiesBasic(parties []Party) error {
 	if len(parties) < 1 {
 		return errors.New("at least one party is required")
 	}
-	for i, p := range parties {
+	for _, p := range parties {
 		if err := p.ValidateBasic(); err != nil {
 			return err
 		}
-		for j, o2 := range parties {
-			if i == j {
-				continue
-			}
-			if p.Equals(o2) {
-				return fmt.Errorf("duplicate owners not allowed: address = %s, role = %s", p.Address, p.Role)
+	}
+	return ValidatePartiesAreUnique(parties)
+}
+
+// ValidateOptionalParties validates that, if optional parties aren't allowed, none are provided.
+func ValidateOptionalParties(optAllowed bool, parties []Party) error {
+	if !optAllowed {
+		for _, party := range parties {
+			if party.Optional {
+				return fmt.Errorf("parties can only be optional when require_party_rollup = true")
 			}
 		}
 	}
@@ -487,13 +506,49 @@ func (p Party) String() string {
 	return fmt.Sprintf("%s - %s", p.Address, p.Role)
 }
 
+// Partier is an interface with the getter methods of a Party.
+type Partier interface {
+	GetAddress() string
+	GetRole() PartyType
+	GetOptional() bool
+}
+
+// EqualPartiers returns true if p1 and p2 are equivalent.
+func EqualPartiers(p1, p2 Partier) bool {
+	if p1 == p2 {
+		return true
+	}
+	if p1 == nil || p2 == nil {
+		return false
+	}
+	return p1.GetAddress() == p2.GetAddress() && p1.GetRole() == p2.GetRole() && p1.GetOptional() == p2.GetOptional()
+}
+
+// SamePartiers returns true if p1 and p2 are have the same address and role.
+func SamePartiers(p1, p2 Partier) bool {
+	if p1 == p2 {
+		return true
+	}
+	if p1 == nil || p2 == nil {
+		return false
+	}
+	return p1.GetAddress() == p2.GetAddress() && p1.GetRole() == p2.GetRole()
+}
+
 // Equals returns true if this party is equal to the provided party.
-func (p Party) Equals(p2 Party) bool {
-	return p.Address == p2.Address && p.Role == p2.Role
+// See also: IsSameAs for a comparison that ignores the Optional field.
+func (p Party) Equals(p2 Partier) bool {
+	return EqualPartiers(&p, p2)
+}
+
+// IsSameAs returns true if this party's address and role are the same as the provided party's.
+// See also: Equals for a more thorough comparison.
+func (p Party) IsSameAs(p2 Partier) bool {
+	return SamePartiers(&p, p2)
 }
 
 // EqualParties returns true if the two provided sets of parties contain the same entries.
-// This assumes that duplicates are not allowed in a party set.
+// This assumes that duplicates are not allowed in a set of parties.
 func EqualParties(p1, p2 []Party) bool {
 	if len(p1) != len(p2) {
 		return false
@@ -501,13 +556,39 @@ func EqualParties(p1, p2 []Party) bool {
 p1Loop:
 	for _, p1p := range p1 {
 		for _, p2p := range p2 {
-			if p1p.Equals(p2p) {
+			//nolint:gosec // G601: Implicit memory aliasing okay here since we're not storing the reference anywhere.
+			if p1p.Equals(&p2p) {
 				continue p1Loop
 			}
 		}
 		return false
 	}
 	return true
+}
+
+// GetPartyAddresses gets the addresses of all of the parties. Each address can only appear once in the return value.
+func GetPartyAddresses(parties []Party) []string {
+	var rv []string
+	have := make(map[string]bool)
+	for _, party := range parties {
+		if !have[party.Address] {
+			rv = append(rv, party.Address)
+			have[party.Address] = true
+		}
+	}
+	return rv
+}
+
+// GetRequiredPartyAddresses gets the addresses of all the required parties.
+// Each address can only appear once in the return value.
+func GetRequiredPartyAddresses(parties []Party) []string {
+	var req []Party
+	for _, party := range parties {
+		if !party.Optional {
+			req = append(req, party)
+		}
+	}
+	return GetPartyAddresses(req)
 }
 
 // equivalentDataAssessors returns true if all the entries in s1 are in s2, and vice versa.

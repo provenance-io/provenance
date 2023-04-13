@@ -106,7 +106,7 @@ func (suite *IntegrationGRPCTestSuite) SetupSuite() {
 	suite.specUUID = uuid.New()
 	suite.specID = types.ScopeSpecMetadataAddress(suite.specUUID)
 
-	suite.scope = *types.NewScope(suite.scopeID, suite.specID, ownerPartyList(suite.user1), []string{suite.user1}, suite.user1)
+	suite.scope = *types.NewScope(suite.scopeID, suite.specID, ownerPartyList(suite.user1), []string{suite.user1}, suite.user1, false)
 	// Configure Genesis data for metadata module
 
 	// add os locator

@@ -31,10 +31,10 @@ A scope is a high-level grouping of information combined with some access contro
 
 Byte Array Length: `17`
 
-| Byte range | Description
-|------------|---
-| 0          | `0x00`
-| 1-16       | UUID of this scope.
+| Byte range | Description         |
+|------------|---------------------|
+| 0          | `0x00`              |
+| 1-16       | UUID of this scope. |
 
 * Field Name: `Scope.scope_id`
 * Bech32 HRP: `"scope"`
@@ -42,7 +42,7 @@ Byte Array Length: `17`
 
 #### Scope Values
 
-+++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/scope.proto#L69-L93
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/scope.proto#L69-L96
 
 ```protobuf
 // Scope defines a root reference for a collection of records owned by one or more parties.
@@ -64,11 +64,14 @@ message Scope {
   // These parties represent top level owners of the records within.  These parties must sign any requests that modify
   // the data within the scope.  These addresses are in union with parties listed on the sessions.
   repeated Party owners = 3 [(gogoproto.nullable) = false];
-  // Addessses in this list are authorized to recieve off-chain data associated with this scope.
+  // Addresses in this list are authorized to receive off-chain data associated with this scope.
   repeated string data_access = 4 [(gogoproto.moretags) = "yaml:\"data_access\""];
   // An address that controls the value associated with this scope.  Standard blockchain accounts and marker accounts
   // are supported for this value.  This attribute may only be changed by the entity indicated once it is set.
   string value_owner_address = 5 [(gogoproto.moretags) = "yaml:\"value_owner_address\""];
+  // Whether all parties in this scope and its sessions must be present in this scope's owners field.
+  // This also enables use of optional=true scope owners and session parties.
+  bool require_party_rollup = 6 [(gogoproto.moretags) = "yaml:\"require_party_rollup\""];
 }
 ```
 
@@ -104,11 +107,11 @@ A session is a grouping of records and the parties in charge of those records.
 
 Byte Array Length: `33`
 
-| Byte range | Description
-|------------|---
-| 0          | `0x01`
-| 1-16       | UUID of the scope that this session is part of
-| 17-32      | UUID of this session
+| Byte range | Description                                    |
+|------------|------------------------------------------------|
+| 0          | `0x01`                                         |
+| 1-16       | UUID of the scope that this session is part of |
+| 17-32      | UUID of this session                           |
 
 * Field Name: `Session.session_id`
 * Bech32 HRP: `"session"`
@@ -116,15 +119,13 @@ Byte Array Length: `33`
 
 #### Session Values
 
-+++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/scope.proto#L95-L122
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/scope.proto#L98-L124
 
 ```protobuf
-/*
-A Session is created for an execution context against a specific specification instance
-The context will have a specification and set of parties involved.  The Session may be updated several
-times so long as the parties listed are signers on the transaction.  NOTE: When there are no Records within a Scope
-that reference a Session it is removed.
-*/
+// Session defines an execution context against a specific specification instance.
+// The context will have a specification and set of parties involved.
+//
+// NOTE: When there are no more Records within a Scope that reference a Session, the Session is removed.
 message Session {
   option (gogoproto.goproto_stringer) = false;
 
@@ -139,12 +140,12 @@ message Session {
     (gogoproto.customtype) = "MetadataAddress",
     (gogoproto.moretags)   = "yaml:\"specification_id\""
   ];
-  // Set of identities that signed this contract
+  // parties is the set of identities that signed this contract
   repeated Party parties = 3 [(gogoproto.nullable) = false];
   // name to associate with this session execution context, typically classname
   string name = 4 [(gogoproto.jsontag) = "type", (gogoproto.moretags) = "yaml:\"type\""];
   // context is a field for storing client specific data associated with a session.
-  google.protobuf.Any context = 5;
+  bytes context = 5;
   // Created by, updated by, timestamps, version number, and related info.
   AuditFields audit = 99 [(gogoproto.moretags) = "yaml:\"audit,omitempty\""];
 }
@@ -170,11 +171,11 @@ It is conceptually similar to the values involved in a method call.
 
 Byte Array Length: `33`
 
-| Byte range | Description
-|------------|---
-| 0          | `0x02`
-| 1-16       | UUID of the scope that this record is part of
-| 17-32      | First 16 bytes of the SHA256 checksum of this record's name
+| Byte range | Description                                                 |
+|------------|-------------------------------------------------------------|
+| 0          | `0x02`                                                      |
+| 1-16       | UUID of the scope that this record is part of               |
+| 17-32      | First 16 bytes of the SHA256 checksum of this record's name |
 
 * Field Name: `Record.record_id`
 * Bech32 HRP: `"record"`
@@ -182,7 +183,7 @@ Byte Array Length: `33`
 
 #### Record Values
 
-+++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/scope.proto#L124-L148
++++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/scope.proto#L126-L150
 
 ```protobuf
 // A record (of fact) is attached to a session or each consideration output from a contract
@@ -234,10 +235,10 @@ They group together contract specifications and define roles that must be involv
 
 Byte Array Length: `17`
 
-| Byte range | Description
-|------------|---
-| 0          | `0x04`
-| 1-16       | UUID of this scope specification
+| Byte range | Description                      |
+|------------|----------------------------------|
+| 0          | `0x04`                           |
+| 1-16       | UUID of this scope specification |
 
 * Field Name: `ScopeSpecification.specification_id`
 * Bech32 HRP: `"scopespec"`
@@ -306,10 +307,10 @@ A contract specification can be part of multiple scope specifications.
 
 Byte Array Length: `17`
 
-| Byte range | Description
-|------------|---
-| 0          | `0x03`
-| 1-16       | UUID of this contract specification
+| Byte range | Description                         |
+|------------|-------------------------------------|
+| 0          | `0x03`                              |
+| 1-16       | UUID of this contract specification |
 
 * Field Name: `ContractSpecification.specification_id`
 * Bech32 HRP: `"contractspec"`
@@ -375,11 +376,11 @@ A record specification is part of exactly one contract specification.
 
 Byte Array Length: `33`
 
-| Byte range | Description
-|------------|---
-| 0          | `0x05`
-| 1-16       | UUID of the contract specification that this record specification is part of
-| 17-32      | First 16 bytes of the SHA256 checksum of this record specification's name
+| Byte range | Description                                                                  |
+|------------|------------------------------------------------------------------------------|
+| 0          | `0x05`                                                                       |
+| 1-16       | UUID of the contract specification that this record specification is part of |
+| 17-32      | First 16 bytes of the SHA256 checksum of this record specification's name    |
 
 * Field Name: `RecordSpecification.specification_id`
 * Bech32 HRP: `"recspec"`
@@ -428,11 +429,11 @@ An object store locator indicates the location of off-chain data.
 
 Byte Array Length: `21`
 
-| Byte range   | Description
-|--------------|---
-| 0            | `0x21`
-| 1            | Owner address length, either `0x14` (20) or `0x20` (32)
-| 2-(21 or 33) | The bytes of the owner address.
+| Byte range   | Description                                             |
+|--------------|---------------------------------------------------------|
+| 0            | `0x21`                                                  |
+| 1            | Owner address length, either `0x14` (20) or `0x20` (32) |
+| 2-(21 or 33) | The bytes of the owner address.                         |
 
 #### Object Store Locator Values
 

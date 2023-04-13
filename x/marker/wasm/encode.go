@@ -44,6 +44,8 @@ type CreateMarkerParams struct {
 	Coin sdk.Coin `json:"coin"`
 	// The marker type
 	Type string `json:"marker_type,omitempty"`
+	// Allow forced transfers
+	AllowForcedTransfer bool `json:"allow_forced_transfer,omitempty"`
 	// list of restricted attributes
 	RestrictedAttributes []string `json:"restricted_attributes,omitempty"`
 }
@@ -175,8 +177,11 @@ func (params *CreateMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 	if err != nil {
 		return nil, fmt.Errorf("wasm: invalid marker type in CreateMarkerParams: %w", err)
 	}
+	if params.AllowForcedTransfer && markerType != types.MarkerType_RestrictedCoin {
+		return nil, fmt.Errorf("wasm: allow_forced_transfer can only be set if marker type is restricted")
+	}
 	msg := types.NewMsgAddMarkerRequest(
-		params.Coin.Denom, params.Coin.Amount, contract, contract, markerType, false, false, false, params.RestrictedAttributes,
+		params.Coin.Denom, params.Coin.Amount, contract, contract, markerType, false, false, params.AllowForcedTransfer, params.RestrictedAttributes,
 	)
 
 	return []sdk.Msg{msg}, nil

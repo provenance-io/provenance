@@ -14,7 +14,7 @@ A `GenericAuthorization` should be used using the message type URLs now document
 ## Code
 
 Grant:
-```aspectj
+```golang
 granter := ... // Bech32 AccAddress
 grantee := ... // Bech32 AccAddress
 a := authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeRequest)
@@ -22,11 +22,11 @@ err := s.app.AuthzKeeper.SaveGrant(s.ctx, grantee, granter, a, now.Add(time.Hour
 ```
 
 Delete:
-```aspectj
+```golang
 err := s.app.AuthzKeeper.DeleteGrant(s.ctx, grantee, granter, types.TypeURLMsgWriteScopeRequest)
 ```
 Revoke:
-```aspectj
+```golang
 granter := ... // Bech32 AccAddress
 grantee := ... // Bech32 AccAddress
 msgRevoke := authz.NewMsgRevoke(granter, grantee, types.TypeURLMsgWriteScopeRequest)
@@ -36,13 +36,13 @@ res, err := s.app.AuthzKeeper.Revoke(s.ctx, msgRevoke)
 ## CLI
 
 Grant:
-```aspectj
-provenanced tx grant <grantee> <authorization> --from <granter>
+```console
+$ provenanced tx authz grant <grantee> <authorization_type> --from <granter>
 ```
 
 Revoke:
-```aspectj
-provenanced tx revoke <grantee> <method-name> --from <granter>
+```console
+$ provenanced tx authz revoke <grantee> <msg-type-url> --from <granter>
 ```
 
 

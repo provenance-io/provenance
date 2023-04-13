@@ -85,20 +85,20 @@ message Scope {
   // These parties represent top level owners of the records within.  These parties must sign any requests that modify
   // the data within the scope.  These addresses are in union with parties listed on the sessions.
   repeated Party owners = 3 [(gogoproto.nullable) = false];
-  // Addessses in this list are authorized to recieve off-chain data associated with this scope.
+  // Addresses in this list are authorized to receive off-chain data associated with this scope.
   repeated string data_access = 4 [(gogoproto.moretags) = "yaml:\"data_access\""];
   // An address that controls the value associated with this scope.  Standard blockchain accounts and marker accounts
   // are supported for this value.  This attribute may only be changed by the entity indicated once it is set.
   string value_owner_address = 5 [(gogoproto.moretags) = "yaml:\"value_owner_address\""];
+  // Whether all parties in this scope and its sessions must be present in this scope's owners field.
+  // This also enables use of optional=true scope owners and session parties.
+  bool require_party_rollup = 6 [(gogoproto.moretags) = "yaml:\"require_party_rollup\""];
 }
 
-/*
-A Session is created for an execution context against a specific specification instance
-
-The context will have a specification and set of parties involved.  The Session may be updated several
-times so long as the parties listed are signers on the transaction.  NOTE: When there are no Records within a Scope
-that reference a Session it is removed.
-*/
+// Session defines an execution context against a specific specification instance.
+// The context will have a specification and set of parties involved.
+//
+// NOTE: When there are no more Records within a Scope that reference a Session, the Session is removed.
 message Session {
   option (gogoproto.goproto_stringer) = false;
 
@@ -207,7 +207,7 @@ message RecordOutput {
 enum ResultStatus {
   // RESULT_STATUS_UNSPECIFIED indicates an unset condition
   RESULT_STATUS_UNSPECIFIED = 0;
-  // RESULT_STATUS_PASS indicates the execution was successfult
+  // RESULT_STATUS_PASS indicates the execution was successful
   RESULT_STATUS_PASS = 1;
   // RESULT_STATUS_SKIP indicates condition/consideration was skipped due to missing inputs or delayed execution
   RESULT_STATUS_SKIP = 2;
@@ -223,6 +223,8 @@ message Party {
   string address = 1;
   // a role for this account within the context of the processes used
   PartyType role = 2;
+  // whether this party's signature is optional
+  bool optional = 3;
 }
 
 // AuditFields capture information about the last account to make modifications and when they were made
