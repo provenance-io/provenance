@@ -323,8 +323,7 @@ func (k Keeper) validateProvenanceRole(ctx sdk.Context, parties []*PartyDetails)
 			// that address that needs to be the smart contract.
 			addr := party.GetAcc()
 			if len(addr) > 0 {
-				account, isBaseAccount := k.GetAccount(ctx, party.GetAcc()).(*authtypes.BaseAccount)
-				isWasmAcct := account != nil && isBaseAccount && account.GetSequence() == uint64(0) && account.GetPubKey() == nil
+				isWasmAcct := k.isWasmAccount(ctx, party.GetAcc())
 				isProvRole := party.GetRole() == types.PartyType_PARTY_TYPE_PROVENANCE
 				if isWasmAcct && !isProvRole {
 					return fmt.Errorf("account %q is a smart contract but does not have the PROVENANCE role", party.GetAddress())
@@ -336,6 +335,16 @@ func (k Keeper) validateProvenanceRole(ctx sdk.Context, parties []*PartyDetails)
 		}
 	}
 	return nil
+}
+
+// isWasmAccount returns true if the provided addr is the address of a smart contract account.
+// A smart contract account is a BaseAccount that exists, has a sequence of 0 and does not have a public key.
+func (k Keeper) isWasmAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
+	if len(addr) == 0 {
+		return false
+	}
+	account, isBaseAccount := k.authKeeper.GetAccount(ctx, addr).(*authtypes.BaseAccount)
+	return account != nil && isBaseAccount && account.GetSequence() == uint64(0) && account.GetPubKey() == nil
 }
 
 // ValidateScopeValueOwnerUpdate verifies that it's okay for the msg signers to

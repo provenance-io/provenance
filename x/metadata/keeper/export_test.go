@@ -161,6 +161,11 @@ func (k Keeper) ValidateProvenanceRole(ctx sdk.Context, parties []*PartyDetails)
 	return k.validateProvenanceRole(ctx, parties)
 }
 
+// IsWasmAccount is a TEST ONLY exposure of isWasmAccount.
+func (k Keeper) IsWasmAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
+	return k.isWasmAccount(ctx, addr)
+}
+
 var (
 	// ValidateRolesPresent is a TEST ONLY exposure of validateRolesPresent.
 	ValidateRolesPresent = validateRolesPresent

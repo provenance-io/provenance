@@ -5358,6 +5358,81 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties_CountAuthorizations()
 	})
 }
 
+func (s *AuthzTestSuite) TestIsWasmAccount() {
+	tests := []struct {
+		name  string
+		authK *MockAuthKeeper
+		addr  sdk.AccAddress
+		exp   bool
+	}{
+		{
+			name:  "nil addr",
+			authK: NewMockAuthKeeper(),
+			addr:  nil,
+			exp:   false,
+		},
+		{
+			name:  "empty addr",
+			authK: NewMockAuthKeeper(),
+			addr:  sdk.AccAddress{},
+			exp:   false,
+		},
+		{
+			name: "base account sequence 0 no pub key",
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				NewGetAccountCall(sdk.AccAddress("wasm_account"),
+					authtypes.NewBaseAccount(sdk.AccAddress("wasm_account"), nil, 0, 0)),
+			),
+			addr: sdk.AccAddress("wasm_account"),
+			exp:  true,
+		},
+		{
+			name:  "account does not exist",
+			authK: NewMockAuthKeeper(),
+			addr:  sdk.AccAddress("account_doesnt_exist"),
+			exp:   false,
+		},
+		{
+			name: "marker account with sequence 0 and no pub key",
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				NewGetAccountCall(markertypes.MustGetMarkerAddress("bananas"),
+					&markertypes.MarkerAccount{
+						BaseAccount: authtypes.NewBaseAccount(markertypes.MustGetMarkerAddress("bananas"), nil, 0, 0),
+					})),
+			addr: markertypes.MustGetMarkerAddress("bananas"),
+			exp:  false,
+		},
+		{
+			name: "base account sequence 1 no pub key",
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				NewGetAccountCall(sdk.AccAddress("sequence_1"),
+					authtypes.NewBaseAccount(sdk.AccAddress("sequence_1"), nil, 0, 1)),
+			),
+			addr: sdk.AccAddress("sequence_1"),
+			exp:  false,
+		},
+		{
+			name: "base account sequence 0 with pub key",
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				NewGetAccountCall(sdk.AccAddress("with_pub_key"),
+					authtypes.NewBaseAccount(sdk.AccAddress("with_pub_key"), secp256k1.GenPrivKey().PubKey(), 0, 0)),
+			),
+			addr: sdk.AccAddress("with_pub_key"),
+			exp:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			k := s.app.MetadataKeeper
+			origAuthK := k.SetAuthKeeper(tc.authK)
+			defer k.SetAuthKeeper(origAuthK)
+			actual := k.IsWasmAccount(s.FreshCtx(), tc.addr)
+			s.Assert().Equal(tc.exp, actual, "IsWasmAccount")
+		})
+	}
+}
+
 func TestValidateRolesPresent(t *testing.T) {
 	// p is a short way to create a Party.
 	p := func(addr string, role types.PartyType) types.Party {
