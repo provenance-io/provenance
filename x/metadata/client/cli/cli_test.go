@@ -2044,7 +2044,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			true, "invalid scope owners: invalid party address [incorrect1]: decoding bech32 failed: invalid separator index 9", &sdk.TxResponse{}, 0,
 		},
 		{
-			"should fail to add metadata scope, validate basic will err on owner format",
+			"should fail to add metadata scope, validate basic will err on missing owner",
 			cli.WriteScopeCmd(),
 			[]string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
