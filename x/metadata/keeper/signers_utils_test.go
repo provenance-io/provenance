@@ -1657,6 +1657,117 @@ func TestPartyDetails_IsSameAs(t *testing.T) {
 	}
 }
 
+func TestGetAllSigners(t *testing.T) {
+	addr := func(str string) sdk.AccAddress {
+		if len(str) == 0 {
+			return nil
+		}
+		return sdk.AccAddress(str)
+	}
+	addrStr := func(str string) string {
+		if len(str) == 0 {
+			return ""
+		}
+		return addr(str).String()
+	}
+	pd := func(address, signer, signerAcc string) *keeper.PartyDetails {
+		return keeper.TestablePartyDetails{
+			Address:   addrStr(address),
+			Signer:    addrStr(signer),
+			SignerAcc: addr(signerAcc),
+		}.Real()
+	}
+	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
+		rv := make([]*keeper.PartyDetails, 0, len(parties))
+		rv = append(rv, parties...)
+		return parties
+	}
+
+	tests := []struct {
+		name    string
+		parties []*keeper.PartyDetails
+		exp     map[string]bool
+	}{
+		{
+			name:    "nil parties",
+			parties: nil,
+			exp:     map[string]bool{},
+		},
+		{
+			name:    "empty parties",
+			parties: pdz(),
+			exp:     map[string]bool{},
+		},
+		{
+			name:    "one party no signer",
+			parties: pdz(pd("addr1", "", "")),
+			exp:     map[string]bool{},
+		},
+		{
+			name:    "one party signer string",
+			parties: pdz(pd("addr1", "signer_string", "")),
+			exp:     map[string]bool{addrStr("signer_string"): true},
+		},
+		{
+			name:    "one party signer acc",
+			parties: pdz(pd("addr1", "", "signer_acc")),
+			exp:     map[string]bool{addrStr("signer_acc"): true},
+		},
+		{
+			name:    "one party both signer string and acc",
+			parties: pdz(pd("addr1", "signer_string", "signer_acc")),
+			exp:     map[string]bool{addrStr("signer_string"): true},
+		},
+		{
+			name:    "two parties neither have signer",
+			parties: pdz(pd("addr1", "", ""), pd("addr2", "", "")),
+			exp:     map[string]bool{},
+		},
+		{
+			name:    "two parties 1st has signer",
+			parties: pdz(pd("addr1", "signer1", ""), pd("addr2", "", "")),
+			exp:     map[string]bool{addrStr("signer1"): true},
+		},
+		{
+			name:    "two parties 2nd has signer",
+			parties: pdz(pd("addr1", "", ""), pd("addr2", "signer2", "")),
+			exp:     map[string]bool{addrStr("signer2"): true},
+		},
+		{
+			name:    "two parties both have different signer",
+			parties: pdz(pd("addr1", "signer1", ""), pd("addr2", "signer2", "")),
+			exp:     map[string]bool{addrStr("signer1"): true, addrStr("signer2"): true},
+		},
+		{
+			name:    "two parties both have same signer",
+			parties: pdz(pd("addr1", "signer1", ""), pd("addr2", "signer1", "")),
+			exp:     map[string]bool{addrStr("signer1"): true},
+		},
+		{
+			name: "five parties, 1 without a signer, 1 with signer str, 1 with same signer acc, 2 with unique signers",
+			parties: pdz(
+				pd("addr1", "signer1", ""),
+				pd("addr2", "", ""),
+				pd("addr3", "", "signer2"),
+				pd("addr4", "", "signer1"),
+				pd("addr5", "signer3", ""),
+			),
+			exp: map[string]bool{
+				addrStr("signer1"): true,
+				addrStr("signer2"): true,
+				addrStr("signer3"): true,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := keeper.GetAllSigners(tc.parties)
+			assert.Equal(t, tc.exp, actual, "GetAllSigners")
+		})
+	}
+}
+
 func TestSignersWrapper(t *testing.T) {
 	addr1Acc := sdk.AccAddress("address_one_________")
 	addr2Acc := sdk.AccAddress("address_one_________")
