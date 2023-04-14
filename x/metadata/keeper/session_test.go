@@ -61,7 +61,9 @@ func (s *SessionKeeperTestSuite) SetupTest() {
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
-	s.app.AccountKeeper.SetAccount(ctx, s.app.AccountKeeper.NewAccountWithAddress(ctx, s.user1Addr))
+	user1Acc := s.app.AccountKeeper.NewAccountWithAddress(ctx, s.user1Addr)
+	s.Require().NoError(user1Acc.SetSequence(1), "user1Acc.SetSequence(1)")
+	s.app.AccountKeeper.SetAccount(ctx, user1Acc)
 
 	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
@@ -186,6 +188,7 @@ func (s *SessionKeeperTestSuite) TestValidateWriteSession() {
 
 	owner := types.PartyType_PARTY_TYPE_OWNER
 	affiliate := types.PartyType_PARTY_TYPE_AFFILIATE
+	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
 
 	partiesInvolved := []types.PartyType{types.PartyType_PARTY_TYPE_AFFILIATE}
 	contractSpec := types.NewContractSpecification(s.contractSpecID, types.NewDescription("name", "desc", "url", "icon"), []string{s.user1}, partiesInvolved, &types.ContractSpecification_Hash{"hash"}, "processname")
@@ -222,11 +225,29 @@ func (s *SessionKeeperTestSuite) TestValidateWriteSession() {
 		RequirePartyRollup: true,
 	}
 	s.app.MetadataKeeper.SetScope(ctx, rollupScope)
+	rollupScopeWProv := types.Scope{
+		ScopeId:            types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:    rollupScopeSpecID,
+		Owners:             ptz(pt(s.user1, owner, false), pt(s.user1, provenance, true), pt(s.user2, affiliate, true)),
+		RequirePartyRollup: true,
+	}
+	s.app.MetadataKeeper.SetScope(ctx, rollupScopeWProv)
 
 	rollupSessionID := rollupScope.ScopeId.MustGetAsSessionAddress(uuid.New())
 	newRollupSession := func(parties ...types.Party) *types.Session {
 		return &types.Session{
 			SessionId:       rollupSessionID,
+			SpecificationId: validSession.SpecificationId,
+			Parties:         parties,
+			Name:            validSession.Name,
+			Context:         validSession.Context,
+			Audit:           validSession.Audit,
+		}
+	}
+	rollupSessionWProvID := rollupScopeWProv.ScopeId.MustGetAsSessionAddress(uuid.New())
+	newRollupSessionWProv := func(parties ...types.Party) *types.Session {
+		return &types.Session{
+			SessionId:       rollupSessionWProvID,
 			SpecificationId: validSession.SpecificationId,
 			Parties:         parties,
 			Name:            validSession.Name,
@@ -430,6 +451,45 @@ func (s *SessionKeeperTestSuite) TestValidateWriteSession() {
 			proposed: newRollupSession(pt(s.user2, affiliate, true)),
 			signers:  []string{s.user1},
 			errorMsg: "missing signers for roles required by spec: AFFILIATE need 1 have 0",
+		},
+		"new with provenance non-smart-contract party": {
+			existing: nil,
+			proposed: &types.Session{
+				SessionId:       types.SessionMetadataAddress(s.scopeUUID, uuid.New()),
+				SpecificationId: s.contractSpecID,
+				Parties:         ptz(pt(s.user1, owner, false), pt(s.user1, provenance, false), pt(s.user2, affiliate, false)),
+				Name:            "withprov",
+			},
+			signers:  []string{s.user1},
+			errorMsg: `account "` + s.user1 + `" has role PROVENANCE but is not a smart contract`,
+		},
+		"updating with provenance non-smart-contract party": {
+			existing: &types.Session{
+				SessionId:       s.sessionID,
+				SpecificationId: s.contractSpecID,
+				Parties:         ptz(pt(s.user1, owner, false), pt(s.user2, affiliate, false)),
+				Name:            "withprov",
+			},
+			proposed: &types.Session{
+				SessionId:       s.sessionID,
+				SpecificationId: s.contractSpecID,
+				Parties:         ptz(pt(s.user1, owner, false), pt(s.user1, provenance, false), pt(s.user2, affiliate, false)),
+				Name:            "withprov",
+			},
+			signers:  []string{s.user1},
+			errorMsg: `account "` + s.user1 + `" has role PROVENANCE but is not a smart contract`,
+		},
+		"with rollup new with provenance non-smart-contract party": {
+			existing: nil,
+			proposed: newRollupSessionWProv(pt(s.user1, owner, false), pt(s.user1, provenance, true), pt(s.user2, affiliate, false)),
+			signers:  []string{s.user1, s.user2},
+			errorMsg: `account "` + s.user1 + `" has role PROVENANCE but is not a smart contract`,
+		},
+		"with rollup updating with provenance non-smart-contract party": {
+			existing: newRollupSessionWProv(pt(s.user1, owner, false), pt(s.user2, affiliate, false)),
+			proposed: newRollupSessionWProv(pt(s.user1, owner, false), pt(s.user1, provenance, true), pt(s.user2, affiliate, false)),
+			signers:  []string{s.user1, s.user2},
+			errorMsg: `account "` + s.user1 + `" has role PROVENANCE but is not a smart contract`,
 		},
 	}
 

@@ -41,6 +41,9 @@ type ScopeKeeperTestSuite struct {
 	user3     string
 	user3Addr sdk.AccAddress
 
+	scUser     string
+	scUserAddr sdk.AccAddress
+
 	scopeUUID uuid.UUID
 	scopeID   types.MetadataAddress
 
@@ -69,6 +72,10 @@ func (s *ScopeKeeperTestSuite) SetupTest() {
 	s.pubkey3 = secp256k1.GenPrivKey().PubKey()
 	s.user3Addr = sdk.AccAddress(s.pubkey3.Address())
 	s.user3 = s.user3Addr.String()
+
+	s.scUserAddr = sdk.AccAddress("smart_contract_addr_")
+	s.scUser = s.scUserAddr.String()
+	s.app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(s.scUserAddr, nil, 0, 0))
 
 	s.scopeUUID = uuid.New()
 	s.scopeID = types.ScopeMetadataAddress(s.scopeUUID)
@@ -227,6 +234,8 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
 	s.app.MetadataKeeper.SetScopeSpecification(ctx, *scopeSpec)
+	scopeSpecSC := types.NewScopeSpecification(types.ScopeSpecMetadataAddress(uuid.New()), nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_PROVENANCE}, []types.MetadataAddress{})
+	s.app.MetadataKeeper.SetScopeSpecification(ctx, *scopeSpecSC)
 
 	scopeID := types.ScopeMetadataAddress(uuid.New())
 	scopeID2 := types.ScopeMetadataAddress(uuid.New())
@@ -242,6 +251,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 		existing *types.Scope
 		proposed types.Scope
 		signers  []string
+		authzK   *MockAuthzKeeper
 		errorMsg string
 	}{
 		{
@@ -503,10 +513,172 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			signers:  []string{s.user2},
 			errorMsg: "",
 		},
+		{
+			name:     "smart contract account is not PROVENANCE role",
+			existing: nil,
+			proposed: types.Scope{
+				ScopeId:            types.ScopeMetadataAddress(uuid.New()),
+				SpecificationId:    scopeSpecID,
+				Owners:             ptz(pt(s.scUser, owner, false)),
+				RequirePartyRollup: false,
+			},
+			signers:  []string{s.scUser},
+			errorMsg: `account "` + s.scUser + `" is a smart contract but does not have the PROVENANCE role`,
+		},
+		{
+			name:     "with rollup smart contract account is not PROVENANCE role",
+			existing: nil,
+			proposed: types.Scope{
+				ScopeId:            types.ScopeMetadataAddress(uuid.New()),
+				SpecificationId:    scopeSpecID,
+				Owners:             ptz(pt(s.scUser, owner, false)),
+				RequirePartyRollup: true,
+			},
+			signers:  []string{s.scUser},
+			errorMsg: `account "` + s.scUser + `" is a smart contract but does not have the PROVENANCE role`,
+		},
+		{
+			name: "only change is value owner signed by smart contract",
+			// Even though the smart contract owns this scope. it shouldn't be allowed to change that value owner.
+			existing: &types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, false)),
+				ValueOwnerAddress: s.user1,
+			},
+			proposed: types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, false)),
+				ValueOwnerAddress: s.scUser,
+			},
+			signers:  []string{s.scUser, s.user1},
+			errorMsg: "smart contract signer " + s.scUser + " is not authorized",
+		},
+		{
+			name: "with rollup only change is value owner signed by smart contract",
+			// Even though the smart contract owns this scope. it shouldn't be allowed to change that value owner.
+			existing: &types.Scope{
+				ScopeId:            scopeID,
+				SpecificationId:    scopeSpecSC.SpecificationId,
+				Owners:             ptz(pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, false)),
+				ValueOwnerAddress:  s.user1,
+				RequirePartyRollup: true,
+			},
+			proposed: types.Scope{
+				ScopeId:            scopeID,
+				SpecificationId:    scopeSpecSC.SpecificationId,
+				Owners:             ptz(pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, false)),
+				ValueOwnerAddress:  s.scUser,
+				RequirePartyRollup: true,
+			},
+			signers:  []string{s.scUser, s.user1},
+			errorMsg: "smart contract signer " + s.scUser + " is not authorized",
+		},
+		{
+			name: "only change is value owner signed by smart contract and authorized",
+			existing: &types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, false)),
+				ValueOwnerAddress: s.user1,
+			},
+			proposed: types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, false)),
+				ValueOwnerAddress: s.scUser,
+			},
+			signers: []string{s.scUser, s.user1},
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: GrantInfo{
+						Granter: s.user1Addr,
+						Grantee: s.scUserAddr,
+						MsgType: types.TypeURLMsgWriteScopeRequest},
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil,
+					},
+				},
+			),
+			errorMsg: "",
+		},
+		{
+			name: "with rollup only change is value owner signed by smart contract",
+			existing: &types.Scope{
+				ScopeId:            scopeID,
+				SpecificationId:    scopeSpecSC.SpecificationId,
+				Owners:             ptz(pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, false)),
+				ValueOwnerAddress:  s.user1,
+				RequirePartyRollup: true,
+			},
+			proposed: types.Scope{
+				ScopeId:            scopeID,
+				SpecificationId:    scopeSpecSC.SpecificationId,
+				Owners:             ptz(pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, false)),
+				ValueOwnerAddress:  s.scUser,
+				RequirePartyRollup: true,
+			},
+			signers: []string{s.scUser, s.user1},
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: GrantInfo{
+						Granter: s.user1Addr,
+						Grantee: s.scUserAddr,
+						MsgType: types.TypeURLMsgWriteScopeRequest},
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil,
+					},
+				},
+			),
+			errorMsg: "",
+		},
+		{
+			name: "only change is smart contract value owner signed by smart contract",
+			existing: &types.Scope{
+				ScopeId:            scopeID,
+				SpecificationId:    scopeSpecSC.SpecificationId,
+				Owners:             ptz(pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, false)),
+				ValueOwnerAddress:  s.scUser,
+				RequirePartyRollup: true,
+			},
+			proposed: types.Scope{
+				ScopeId:            scopeID,
+				SpecificationId:    scopeSpecSC.SpecificationId,
+				Owners:             ptz(pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, false)),
+				ValueOwnerAddress:  s.user1,
+				RequirePartyRollup: true,
+			},
+			signers:  []string{s.scUser},
+			errorMsg: "",
+		},
+		{
+			name: "with rollup only change is smart contract value owner signed by smart contract",
+			existing: &types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, false)),
+				ValueOwnerAddress: s.scUser,
+			},
+			proposed: types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, false)),
+				ValueOwnerAddress: s.user1,
+			},
+			signers:  []string{s.scUser},
+			errorMsg: "",
+		},
 	}
 
 	for _, tc := range cases {
 		s.Run(tc.name, func() {
+			if tc.authzK != nil {
+				origAuthzK := s.app.MetadataKeeper.SetAuthzKeeper(tc.authzK)
+				defer s.app.MetadataKeeper.SetAuthzKeeper(origAuthzK)
+			}
 			msg := &types.MsgWriteScopeRequest{
 				Scope:   tc.proposed,
 				Signers: tc.signers,
@@ -1368,6 +1540,41 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 			existing: rollupScopeWithOwners(pt(s.user1, owner, true), pt(s.user2, omnibus, false)),
 			proposed: rollupScopeWithOwners(pt(s.user1, owner, true), pt(s.user3, omnibus, false)),
 			signers:  []string{s.user1, s.user2},
+			errorMsg: "",
+		},
+		{
+			name:     "smart contract without provenance role added",
+			existing: scopeWithOwners(ownerPartyList(s.user1)),
+			proposed: scopeWithOwners(ownerPartyList(s.user1, s.scUser)),
+			signers:  []string{s.user1},
+			errorMsg: `account "` + s.scUser + `" is a smart contract but does not have the PROVENANCE role`,
+		},
+		{
+			name:     "smart contract without provenance role removed",
+			existing: scopeWithOwners(ownerPartyList(s.user1, s.scUser)),
+			proposed: scopeWithOwners(ownerPartyList(s.user1)),
+			signers:  []string{s.scUser, s.user1},
+			errorMsg: "",
+		},
+		{
+			name:     "smart contract without provenance role removed but wrong signer order",
+			existing: scopeWithOwners(ownerPartyList(s.user1, s.scUser)),
+			proposed: scopeWithOwners(ownerPartyList(s.user1)),
+			signers:  []string{s.user1, s.scUser},
+			errorMsg: "smart contract signer " + s.scUser + " cannot follow non-smart-contract signer",
+		},
+		{
+			name:     "with rollup smart contract without provenance role added",
+			existing: rollupScopeWithOwners(pt(s.user1, owner, false)),
+			proposed: rollupScopeWithOwners(pt(s.user1, owner, false), pt(s.scUser, owner, true)),
+			signers:  []string{s.user1},
+			errorMsg: `account "` + s.scUser + `" is a smart contract but does not have the PROVENANCE role`,
+		},
+		{
+			name:     "with rollup smart contract without provenance role removed",
+			existing: rollupScopeWithOwners(pt(s.user1, owner, false), pt(s.scUser, owner, true)),
+			proposed: rollupScopeWithOwners(pt(s.user1, owner, false)),
+			signers:  []string{s.user1},
 			errorMsg: "",
 		},
 	}

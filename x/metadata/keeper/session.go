@@ -166,7 +166,10 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		if err = validateRolesPresent(proposed.Parties, contractSpec.PartiesInvolved); err != nil {
 			return err
 		}
-		if _, err = k.ValidateSignersWithoutParties(ctx, scope.GetAllOwnerAddresses(), msg); err != nil {
+		if err = k.validateProvenanceRole(ctx, BuildPartyDetails(nil, proposed.Parties)); err != nil {
+			return err
+		}
+		if err = k.ValidateSignersWithoutParties(ctx, scope.GetAllOwnerAddresses(), msg); err != nil {
 			return err
 		}
 	} else {
@@ -184,17 +187,22 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		var availableParties []types.Party
 		var reqParties []types.Party
 		if existing != nil {
+			availableParties = existing.Parties
+			// Providing the existing parties to ValidateSignersWithParties, so we need to check some stuff on proposed.
 			if err = validateRolesPresent(proposed.Parties, contractSpec.PartiesInvolved); err != nil {
 				return err
 			}
-			availableParties = existing.Parties
+			if err = k.validateProvenanceRole(ctx, BuildPartyDetails(nil, proposed.Parties)); err != nil {
+				return err
+			}
 			reqParties = append(reqParties, existing.Parties...)
 		} else {
-			// We don't call validateRolesPresent here because proposed.Parties is being provided to ValidateSignersWithParties.
 			availableParties = proposed.Parties
+			// We don't call validateRolesPresent or validateProvenanceRole here because proposed.Parties is being
+			// provided to ValidateSignersWithParties, which does those.
 		}
 		reqParties = append(reqParties, scope.Owners...)
-		if _, err = k.ValidateSignersWithParties(ctx, reqParties, availableParties, contractSpec.PartiesInvolved, msg); err != nil {
+		if err = k.ValidateSignersWithParties(ctx, reqParties, availableParties, contractSpec.PartiesInvolved, msg); err != nil {
 			return err
 		}
 	}
