@@ -101,7 +101,7 @@ The following are requirements related to smart contract usage of the `x/metadat
 
 * A party with a smart contract address MUST have the `PROVENANCE` role.
 * A party with the `PROVENANCE` role MUST have the address of a smart contract.
-* When a smart contract signs a message, it MUST not have any non-smart-contract signers before it and SHOULD include the invoker address(es) after.
+* When a smart contract signs a message, it MUST be first or have only smart-contract signers before it, and SHOULD include the invoker address(es) after.
 * When a smart contract is a signer, it must either be a party/owner, or have authorizations (via `x/authz`) from all signers after it.
 * If a smart contract is a signer, but not a party, it cannot be the only signer, and cannot be the last signer.
 
