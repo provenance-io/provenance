@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -4507,6 +4508,39 @@ func (s *AuthzTestSuite) TestIsWasmAccount() {
 			s.Assert().Equal(tc.exp, actual, "IsWasmAccount")
 		})
 	}
+
+	// A couple tests that don't use a mock account keeper.
+
+	s.Run("gov module account", func() {
+		ctx := s.FreshCtx()
+		addr := authtypes.NewModuleAddress(govtypes.ModuleName)
+		govModAcct := s.app.AccountKeeper.GetAccount(ctx, addr)
+		s.Assert().NotNil(govModAcct, "gov module account")
+		actual := s.app.MetadataKeeper.IsWasmAccount(ctx, addr)
+		s.Assert().False(actual, "IsWasmAccount(gov module address)")
+	})
+
+	s.Run("marker account", func() {
+		ctx := s.FreshCtx()
+		denom := "testtest"
+		markerAddr := markertypes.MustGetMarkerAddress(denom)
+		err := s.app.MarkerKeeper.AddMarkerAccount(ctx, &markertypes.MarkerAccount{
+			BaseAccount:            authtypes.NewBaseAccount(markerAddr, nil, 0, 0),
+			Manager:                "",
+			AccessControl:          nil,
+			Status:                 markertypes.StatusActive,
+			Denom:                  denom,
+			Supply:                 sdk.OneInt(),
+			MarkerType:             markertypes.MarkerType_Coin,
+			SupplyFixed:            false,
+			AllowGovernanceControl: false,
+			AllowForcedTransfer:    false,
+			RequiredAttributes:     nil,
+		})
+		s.Require().NoError(err, "AddMarkerAccount")
+		actual := s.app.MetadataKeeper.IsWasmAccount(ctx, markerAddr)
+		s.Assert().False(actual, "IsWasmAccount(marker address)")
+	})
 }
 
 func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
