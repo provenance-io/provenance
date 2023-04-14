@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -93,6 +94,178 @@ func TestAuthzTestSuite(t *testing.T) {
 }
 
 func (s *AuthzTestSuite) TestValidateSignersWithParties() {
+	// These tests are pretty light since all it does is call
+	// validateAllRequiredPartiesSigned and validateSmartContractSigners.
+	// The assumption is that those are well tested.
+
+	accStr := func(str string) string {
+		return sdk.AccAddress(str).String()
+	}
+	pt := func(addr string, role types.PartyType, opt bool) types.Party {
+		return types.Party{
+			Address:  accStr(addr),
+			Role:     role,
+			Optional: opt,
+		}
+	}
+	ptz := func(parties ...types.Party) []types.Party {
+		rv := make([]types.Party, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+	normalMsg := func(signers ...string) types.MetadataMsg {
+		rv := &types.MsgWriteScopeRequest{Signers: make([]string, len(signers))}
+		for i, signer := range signers {
+			rv.Signers[i] = accStr(signer)
+		}
+		return rv
+	}
+	normalMsgType := types.TypeURLMsgWriteScopeRequest
+	scGetAccCall := func(addr string) *GetAccountCall {
+		return &GetAccountCall{
+			Addr:   sdk.AccAddress(addr),
+			Result: authtypes.NewBaseAccount(sdk.AccAddress(addr), nil, 0, 0),
+		}
+	}
+
+	owner := types.PartyType_PARTY_TYPE_OWNER
+	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
+
+	tests := []struct {
+		name             string
+		reqParties       []types.Party
+		availableParties []types.Party
+		reqRoles         []types.PartyType
+		msg              types.MetadataMsg
+		authK            *MockAuthKeeper
+		authzK           *MockAuthzKeeper
+		expErr           string
+	}{
+		{
+			name:             "all nil",
+			reqParties:       nil,
+			availableParties: nil,
+			reqRoles:         nil,
+			msg:              normalMsg("signer1"),
+			expErr:           "",
+		},
+		{
+			name:             "all empty",
+			reqParties:       []types.Party{},
+			availableParties: []types.Party{},
+			reqRoles:         []types.PartyType{},
+			msg:              normalMsg("signer1"),
+			expErr:           "",
+		},
+		{
+			name:       "missing sig from required party",
+			reqParties: ptz(pt("req1", owner, false)),
+			msg:        normalMsg("signer1"),
+			expErr:     "missing required signature: " + accStr("req1") + " (OWNER)",
+		},
+		{
+			name:             "missing sig from req role",
+			availableParties: ptz(pt("party1", owner, true), pt("party2", owner, true)),
+			reqRoles:         []types.PartyType{owner},
+			msg:              normalMsg("party3"),
+			expErr:           "missing signers for roles required by spec: OWNER need 1 have 0",
+		},
+		{
+			name:       "provenance role in req parties is not smart contract",
+			reqParties: ptz(pt("prov", provenance, true)),
+			msg:        normalMsg("signer1"),
+			expErr:     "",
+		},
+		{
+			name:             "provenance role in available parties is not smart contract",
+			availableParties: ptz(pt("prov", provenance, true)),
+			msg:              normalMsg("signer1"),
+			expErr:           `account "` + accStr("prov") + `" has role PROVENANCE but is not a smart contract`,
+		},
+		{
+			name:       "smart contract in req parties is not provenance role",
+			reqParties: ptz(pt("sc1", owner, false), pt("user1", owner, false)),
+			msg:        normalMsg("sc1", "user1"),
+			authK:      NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
+			expErr:     "",
+		},
+		{
+			name:             "smart contract in available parties is not provenance role",
+			availableParties: ptz(pt("sc1", owner, false), pt("user1", owner, false)),
+			msg:              normalMsg("sc1", "user1"),
+			authK:            NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
+			expErr:           `account "` + accStr("sc1") + `" is a smart contract but does not have the PROVENANCE role`,
+		},
+		{
+			name:             "smart contract signer not a party",
+			reqParties:       ptz(pt("req1", owner, false)),
+			availableParties: ptz(pt("req1", owner, false)),
+			reqRoles:         []types.PartyType{owner},
+			msg:              normalMsg("sc1", "req1"),
+			authK:            NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
+			expErr:           "smart contract signer " + accStr("sc1") + " is not authorized",
+		},
+		{
+			name:             "smart contract signer is a party",
+			reqParties:       ptz(pt("req1", owner, false)),
+			availableParties: ptz(pt("req1", owner, false), pt("sc1", provenance, true)),
+			reqRoles:         []types.PartyType{owner},
+			msg:              normalMsg("sc1", "req1"),
+			authK:            NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
+			expErr:           "",
+		},
+		{
+			name:             "smart contract signer is last and not a party",
+			reqParties:       ptz(pt("req1", owner, false)),
+			availableParties: ptz(pt("req1", owner, false)),
+			reqRoles:         []types.PartyType{owner},
+			msg:              normalMsg("req1", "sc1"),
+			authK:            NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
+			expErr:           "smart contract signer " + accStr("sc1") + " cannot follow non-smart-contract signer",
+		},
+		{
+			name:             "smart contract and req signed sc not a party but is authorized",
+			reqParties:       ptz(pt("req1", owner, false)),
+			availableParties: ptz(pt("req1", owner, false)),
+			reqRoles:         []types.PartyType{owner},
+			msg:              normalMsg("sc1", "req1"),
+			authK:            NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: GrantInfo{Grantee: sdk.AccAddress("sc1"), Granter: sdk.AccAddress("req1"), MsgType: normalMsgType},
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil,
+					},
+				},
+			),
+			expErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.authK == nil {
+				tc.authK = NewMockAuthKeeper()
+			}
+			if tc.authzK == nil {
+				tc.authzK = NewMockAuthzKeeper()
+			}
+			k := s.app.MetadataKeeper
+			origAuthK := k.SetAuthKeeper(tc.authK)
+			origAuthzK := k.SetAuthzKeeper(tc.authzK)
+			defer func() {
+				k.SetAuthKeeper(origAuthK)
+				k.SetAuthzKeeper(origAuthzK)
+			}()
+
+			err := k.ValidateSignersWithParties(s.FreshCtx(), tc.reqParties, tc.availableParties, tc.reqRoles, tc.msg)
+			s.AssertErrorValue(err, tc.expErr, "ValidateSignersWithParties")
+		})
+	}
+}
+
+func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned() {
 	acc := func(addr string) sdk.AccAddress {
 		if len(addr) == 0 {
 			return nil
@@ -342,17 +515,6 @@ func (s *AuthzTestSuite) TestValidateSignersWithParties() {
 			expErr: "",
 		},
 		{
-			name:             "provenance party not smart contract",
-			reqParties:       nil,
-			availableParties: ptz(pt("party1", provenance, false)),
-			reqRoles:         rz(provenance),
-			msg:              newMsg("party1"),
-			authKeeper:       NewMockAuthKeeper(), // will return nil by default, so no need to mock it specifically.
-			authzKeeper:      NewMockAuthzKeeper(),
-			expParties:       nil,
-			expErr:           fmt.Sprintf("account %q has role PROVENANCE but is not a smart contract", accStr("party1")),
-		},
-		{
 			name:             "non-provenance smart contract account in reqParties ignored",
 			reqParties:       ptz(pt("party1", owner, false)),
 			availableParties: nil,
@@ -376,19 +538,6 @@ func (s *AuthzTestSuite) TestValidateSignersWithParties() {
 			},
 			expErr: "",
 		},
-		{
-			name:             "smart contract not provenance party",
-			reqParties:       nil,
-			availableParties: ptz(pt("party1", owner, false)),
-			reqRoles:         rz(owner),
-			msg:              newMsg("party1"),
-			authKeeper: NewMockAuthKeeper().WithGetAccountResults(
-				NewGetAccountCall(acc("party1"), scAcct("party1")),
-			),
-			authzKeeper: NewMockAuthzKeeper(),
-			expParties:  nil,
-			expErr:      fmt.Sprintf("account %q is a smart contract but does not have the PROVENANCE role", accStr("party1")),
-		},
 	}
 
 	for _, tc := range tests {
@@ -401,14 +550,14 @@ func (s *AuthzTestSuite) TestValidateSignersWithParties() {
 				k.SetAuthzKeeper(origAuthzKeeper)
 			}()
 
-			parties, err := k.ValidateSignersWithParties(s.FreshCtx(), tc.reqParties, tc.availableParties, tc.reqRoles, tc.msg)
+			parties, err := k.ValidateAllRequiredPartiesSigned(s.FreshCtx(), tc.reqParties, tc.availableParties, tc.reqRoles, tc.msg)
 			s.AssertErrorValue(err, tc.expErr, "ValidateSignersWithParties error")
 			s.Assert().Equal(tc.expParties, parties, "ValidateSignersWithParties parties")
 		})
 	}
 }
 
-func (s *AuthzTestSuite) TestValidateSignersWithParties_CountAuthorizations() {
+func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned_CountAuthorizations() {
 	// Two addrs in three parties (1, 1, and 2), and one signer (A),
 	// Two authz count authorizations:
 	//  - granter 1, grantee A, count: 1
@@ -502,7 +651,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithParties_CountAuthorizations() {
 	err = s.app.AuthzKeeper.SaveGrant(ctx, acc(signer), acc(party2), auth2, nil)
 	s.Require().NoError(err, "SaveGrant signer can sign for party2: 2 uses")
 
-	details, err := s.app.MetadataKeeper.ValidateSignersWithParties(ctx, reqParties, availableParties, reqRoles, msg)
+	details, err := s.app.MetadataKeeper.ValidateAllRequiredPartiesSigned(ctx, reqParties, availableParties, reqRoles, msg)
 	s.Require().NoError(err, "ValidateSignersWithParties error")
 	s.Assert().Equal(expDetails, details, "ValidateSignersWithParties party details")
 
@@ -4286,6 +4435,436 @@ func (s *AuthzTestSuite) TestValidateProvenanceRole() {
 	}
 }
 
+func (s *AuthzTestSuite) TestIsWasmAccount() {
+	tests := []struct {
+		name  string
+		authK *MockAuthKeeper
+		addr  sdk.AccAddress
+		exp   bool
+	}{
+		{
+			name:  "nil addr",
+			authK: NewMockAuthKeeper(),
+			addr:  nil,
+			exp:   false,
+		},
+		{
+			name:  "empty addr",
+			authK: NewMockAuthKeeper(),
+			addr:  sdk.AccAddress{},
+			exp:   false,
+		},
+		{
+			name: "base account sequence 0 no pub key",
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				NewGetAccountCall(sdk.AccAddress("wasm_account"),
+					authtypes.NewBaseAccount(sdk.AccAddress("wasm_account"), nil, 0, 0)),
+			),
+			addr: sdk.AccAddress("wasm_account"),
+			exp:  true,
+		},
+		{
+			name:  "account does not exist",
+			authK: NewMockAuthKeeper(),
+			addr:  sdk.AccAddress("account_doesnt_exist"),
+			exp:   false,
+		},
+		{
+			name: "marker account with sequence 0 and no pub key",
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				NewGetAccountCall(markertypes.MustGetMarkerAddress("bananas"),
+					&markertypes.MarkerAccount{
+						BaseAccount: authtypes.NewBaseAccount(markertypes.MustGetMarkerAddress("bananas"), nil, 0, 0),
+					})),
+			addr: markertypes.MustGetMarkerAddress("bananas"),
+			exp:  false,
+		},
+		{
+			name: "base account sequence 1 no pub key",
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				NewGetAccountCall(sdk.AccAddress("sequence_1"),
+					authtypes.NewBaseAccount(sdk.AccAddress("sequence_1"), nil, 0, 1)),
+			),
+			addr: sdk.AccAddress("sequence_1"),
+			exp:  false,
+		},
+		{
+			name: "base account sequence 0 with pub key",
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				NewGetAccountCall(sdk.AccAddress("with_pub_key"),
+					authtypes.NewBaseAccount(sdk.AccAddress("with_pub_key"), secp256k1.GenPrivKey().PubKey(), 0, 0)),
+			),
+			addr: sdk.AccAddress("with_pub_key"),
+			exp:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			k := s.app.MetadataKeeper
+			origAuthK := k.SetAuthKeeper(tc.authK)
+			defer k.SetAuthKeeper(origAuthK)
+			actual := k.IsWasmAccount(s.FreshCtx(), tc.addr)
+			s.Assert().Equal(tc.exp, actual, "IsWasmAccount")
+		})
+	}
+
+	// A couple tests that don't use a mock account keeper.
+
+	s.Run("gov module account", func() {
+		ctx := s.FreshCtx()
+		addr := authtypes.NewModuleAddress(govtypes.ModuleName)
+		govModAcct := s.app.AccountKeeper.GetAccount(ctx, addr)
+		s.Assert().NotNil(govModAcct, "gov module account")
+		actual := s.app.MetadataKeeper.IsWasmAccount(ctx, addr)
+		s.Assert().False(actual, "IsWasmAccount(gov module address)")
+	})
+
+	s.Run("marker account", func() {
+		ctx := s.FreshCtx()
+		denom := "testtest"
+		markerAddr := markertypes.MustGetMarkerAddress(denom)
+		err := s.app.MarkerKeeper.AddMarkerAccount(ctx, &markertypes.MarkerAccount{
+			BaseAccount:            authtypes.NewBaseAccount(markerAddr, nil, 0, 0),
+			Manager:                "",
+			AccessControl:          nil,
+			Status:                 markertypes.StatusActive,
+			Denom:                  denom,
+			Supply:                 sdk.OneInt(),
+			MarkerType:             markertypes.MarkerType_Coin,
+			SupplyFixed:            false,
+			AllowGovernanceControl: false,
+			AllowForcedTransfer:    false,
+			RequiredAttributes:     nil,
+		})
+		s.Require().NoError(err, "AddMarkerAccount")
+		actual := s.app.MetadataKeeper.IsWasmAccount(ctx, markerAddr)
+		s.Assert().False(actual, "IsWasmAccount(marker address)")
+	})
+}
+
+func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
+	acc := func(str string) sdk.AccAddress {
+		return sdk.AccAddress(str)
+	}
+	accStr := func(str string) string {
+		return acc(str).String()
+	}
+	normalMsg := func(signers ...string) types.MetadataMsg {
+		rv := &types.MsgWriteScopeRequest{Signers: make([]string, len(signers))}
+		for i, signer := range signers {
+			rv.Signers[i] = accStr(signer)
+		}
+		return rv
+	}
+	normalMsgType := types.TypeURLMsgWriteScopeRequest
+	gi := func(grantee, granter string) GrantInfo {
+		return GrantInfo{
+			Grantee: acc(grantee),
+			Granter: acc(granter),
+			MsgType: normalMsgType,
+		}
+	}
+	smartAcc := func(addr string) authtypes.AccountI {
+		return authtypes.NewBaseAccount(acc(addr), nil, 0, 0)
+	}
+	smartAccCall := func(addr string) *GetAccountCall {
+		return &GetAccountCall{
+			Addr:   acc(addr),
+			Result: smartAcc(addr),
+		}
+	}
+	userAcc := func(addr string) authtypes.AccountI {
+		return authtypes.NewBaseAccount(acc(addr), nil, 0, 1)
+	}
+	userAccCall := func(addr string) *GetAccountCall {
+		return &GetAccountCall{
+			Addr:   acc(addr),
+			Result: userAcc(addr),
+		}
+	}
+	noAccCall := func(addr string) *GetAccountCall {
+		return &GetAccountCall{Addr: acc(addr)}
+	}
+	authCallRes := func(name, grantee, granter string) *GetAuthorizationCall {
+		return &GetAuthorizationCall{
+			GrantInfo: gi(grantee, granter),
+			Result: GetAuthorizationResult{
+				Auth: NewMockAuthorization(name, authz.AcceptResponse{Accept: true}, nil),
+				Exp:  nil,
+			},
+		}
+	}
+	authCall := func(name, grantee, granter string) GetAuthorizationCall {
+		return *authCallRes(name, grantee, granter)
+	}
+	noAuthCallRes := func(grantee, granter string) *GetAuthorizationCall {
+		return &GetAuthorizationCall{
+			GrantInfo: gi(grantee, granter),
+			Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+		}
+	}
+
+	tests := []struct {
+		name        string
+		usedSigners map[string]bool
+		msg         types.MetadataMsg
+		authK       *MockAuthKeeper
+		authzK      *MockAuthzKeeper
+		expErr      string
+		expGetAcc   []*GetAccountCall
+		expGetAuth  []*GetAuthorizationCall
+	}{
+		{
+			name:   "no signers",
+			msg:    normalMsg(),
+			expErr: "",
+		},
+		{
+			name:      "one signer no account",
+			msg:       normalMsg("signer1"),
+			expErr:    "",
+			expGetAcc: []*GetAccountCall{noAccCall("signer1")},
+		},
+		{
+			name:        "one signer smart contract but in used",
+			usedSigners: map[string]bool{accStr("smart_contract"): true},
+			msg:         normalMsg("smart_contract"),
+			authK:       NewMockAuthKeeper().WithGetAccountResults(smartAccCall("smart_contract")),
+			expErr:      "",
+			expGetAcc:   []*GetAccountCall{smartAccCall("smart_contract")},
+		},
+		{
+			name:      "one smart contract no used",
+			msg:       normalMsg("smart_contract"),
+			authK:     NewMockAuthKeeper().WithGetAccountResults(smartAccCall("smart_contract")),
+			expErr:    "smart contract signer " + accStr("smart_contract") + " cannot be the last signer",
+			expGetAcc: []*GetAccountCall{smartAccCall("smart_contract")},
+		},
+		{
+			name:       "two smart contracts no used",
+			msg:        normalMsg("sc1", "sc2"),
+			authK:      NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1"), smartAccCall("sc2")),
+			expErr:     "smart contract signer " + accStr("sc1") + " is not authorized",
+			expGetAcc:  []*GetAccountCall{smartAccCall("sc1")},
+			expGetAuth: []*GetAuthorizationCall{noAuthCallRes("sc1", "sc2")},
+		},
+		{
+			name:        "two smart contracts last used but first not authorized",
+			usedSigners: map[string]bool{accStr("sc2"): true},
+			msg:         normalMsg("sc1", "sc2"),
+			authK:       NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1"), smartAccCall("sc2")),
+			expErr:      "smart contract signer " + accStr("sc1") + " is not authorized",
+			expGetAcc:   []*GetAccountCall{smartAccCall("sc1")},
+			expGetAuth:  []*GetAuthorizationCall{noAuthCallRes("sc1", "sc2")},
+		},
+		{
+			name:        "two smart contracts both used",
+			usedSigners: map[string]bool{accStr("sc2"): true, accStr("sc1"): true},
+			msg:         normalMsg("sc1", "sc2"),
+			authK:       NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1"), smartAccCall("sc2")),
+			expErr:      "",
+			expGetAcc:   []*GetAccountCall{smartAccCall("sc1"), smartAccCall("sc2")},
+		},
+		{
+			name:       "two smart contracts both authorized by 3rd signer",
+			msg:        normalMsg("sc1", "sc2", "user1"),
+			authK:      NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1")),
+			authzK:     NewMockAuthzKeeper().WithGetAuthorizationResults(authCall("one", "sc1", "user1"), authCall("two", "sc2", "user1")),
+			expErr:     "smart contract signer " + accStr("sc1") + " is not authorized",
+			expGetAcc:  []*GetAccountCall{smartAccCall("sc1")},
+			expGetAuth: []*GetAuthorizationCall{noAuthCallRes("sc1", "sc2")},
+		},
+		{
+			name:  "two smart contracts 1st authorized by 2nd and both authorized by 3rd signer",
+			msg:   normalMsg("sc1", "sc2", "user1"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1")),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				authCall("sc1_user1", "sc1", "user1"),
+				authCall("sc2_user1", "sc2", "user1"),
+				authCall("sc1_sc2", "sc1", "sc2"),
+			),
+			expErr:    "",
+			expGetAcc: []*GetAccountCall{smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1")},
+			expGetAuth: []*GetAuthorizationCall{
+				authCallRes("sc1_sc2", "sc1", "sc2"),
+				authCallRes("sc1_user1", "sc1", "user1"),
+				authCallRes("sc2_user1", "sc2", "user1"),
+			},
+		},
+		{
+			name:        "two smart contracts 1st used 2nd not",
+			usedSigners: map[string]bool{accStr("sc1"): true},
+			msg:         normalMsg("sc1", "sc2", "user1"),
+			authK:       NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1")),
+			expErr:      "smart contract signer " + accStr("sc2") + " is not authorized",
+			expGetAcc:   []*GetAccountCall{smartAccCall("sc1"), smartAccCall("sc2")},
+			expGetAuth:  []*GetAuthorizationCall{noAuthCallRes("sc2", "user1")},
+		},
+		{
+			name:        "two smart contracts 1st used 2nd authorized by 3rd signer",
+			usedSigners: map[string]bool{accStr("sc1"): true},
+			msg:         normalMsg("sc1", "sc2", "user1"),
+			authK:       NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1")),
+			authzK:      NewMockAuthzKeeper().WithGetAuthorizationResults(authCall("one", "sc2", "user1")),
+			expErr:      "",
+			expGetAcc:   []*GetAccountCall{smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1")},
+			expGetAuth:  []*GetAuthorizationCall{authCallRes("one", "sc2", "user1")},
+		},
+		{
+			name: "smart contract then two users both with authorizations",
+			msg:  normalMsg("smart_contract", "user1", "user2"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				smartAccCall("smart_contract"), userAccCall("user1"), userAccCall("user2"),
+			),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				authCall("one", "smart_contract", "user1"),
+				authCall("two", "smart_contract", "user2"),
+			),
+			expErr: "",
+			expGetAcc: []*GetAccountCall{
+				smartAccCall("smart_contract"), userAccCall("user1"), userAccCall("user2"),
+			},
+			expGetAuth: []*GetAuthorizationCall{
+				authCallRes("one", "smart_contract", "user1"),
+				authCallRes("two", "smart_contract", "user2"),
+			},
+		},
+		{
+			name: "smart contract then two users only 1st with authorizations",
+			msg:  normalMsg("smart_contract", "user1", "user2"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				smartAccCall("smart_contract"), userAccCall("user1"), userAccCall("user2"),
+			),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				authCall("one", "smart_contract", "user1"),
+			),
+			expErr:    "smart contract signer " + accStr("smart_contract") + " is not authorized",
+			expGetAcc: []*GetAccountCall{smartAccCall("smart_contract")},
+			expGetAuth: []*GetAuthorizationCall{
+				authCallRes("one", "smart_contract", "user1"),
+				noAuthCallRes("smart_contract", "user2"),
+			},
+		},
+		{
+			name:        "smart contract in used then two users neither with authorizations",
+			usedSigners: map[string]bool{accStr("smart_contract"): true},
+			msg:         normalMsg("smart_contract", "user1", "user2"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				smartAccCall("smart_contract"), userAccCall("user1"), userAccCall("user2"),
+			),
+			expErr: "",
+			expGetAcc: []*GetAccountCall{
+				smartAccCall("smart_contract"), userAccCall("user1"), userAccCall("user2"),
+			},
+		},
+		{
+			name:        "contract user contract user, first in used second with auth",
+			usedSigners: map[string]bool{accStr("sc1"): true},
+			msg:         normalMsg("sc1", "user1", "sc2", "user2"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				smartAccCall("sc1"), userAccCall("user1"), smartAccCall("sc2"), userAccCall("user2"),
+			),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				authCall("two", "sc2", "user2"),
+			),
+			expErr: "smart contract signer " + accStr("sc2") + " cannot follow non-smart-contract signer",
+			expGetAcc: []*GetAccountCall{
+				smartAccCall("sc1"), userAccCall("user1"), smartAccCall("sc2"),
+			},
+		},
+		{
+			name: "contract user contract user, first has auth from users but not other contract",
+			msg:  normalMsg("sc1", "user1", "sc2", "user2"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1"), userAccCall("user2"),
+			),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				authCall("one", "sc1", "user1"),
+				authCall("two", "sc1", "user2"),
+			),
+			expErr:    "smart contract signer " + accStr("sc1") + " is not authorized",
+			expGetAcc: []*GetAccountCall{smartAccCall("sc1")},
+			expGetAuth: []*GetAuthorizationCall{
+				authCallRes("one", "sc1", "user1"),
+				noAuthCallRes("sc1", "sc2"),
+			},
+		},
+		{
+			name:  "error from authorization",
+			msg:   normalMsg("sc1", "user1"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1")),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("sc1", "user1"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("bad", authz.AcceptResponse{Accept: true, Delete: true}, nil),
+						Exp:  nil,
+					},
+				},
+			).WithDeleteGrantResults(DeleteGrantCall{
+				GrantInfo: gi("sc1", "user1"),
+				Result:    errors.New("I'm Sorry Dave, I'm Afraid I Can't Do That."),
+			}),
+			expErr:    "I'm Sorry Dave, I'm Afraid I Can't Do That.",
+			expGetAcc: []*GetAccountCall{smartAccCall("sc1")},
+			expGetAuth: []*GetAuthorizationCall{{
+				GrantInfo: gi("sc1", "user1"),
+				Result: GetAuthorizationResult{
+					Auth: NewMockAuthorization("bad", authz.AcceptResponse{Accept: true, Delete: true}, nil),
+					Exp:  nil,
+				},
+			}},
+		},
+		{
+			name:        "user contract user contract authed only to 1st user",
+			usedSigners: map[string]bool{accStr("user1"): true},
+			msg:         normalMsg("user1", "sc1", "user2"),
+			authK:       NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1")),
+			authzK:      NewMockAuthzKeeper().WithGetAuthorizationResults(authCall("one", "sc1", "user1")),
+			expErr:      "smart contract signer " + accStr("sc1") + " cannot follow non-smart-contract signer",
+			expGetAcc:   []*GetAccountCall{noAccCall("user1"), smartAccCall("sc1")},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.authK == nil {
+				tc.authK = NewMockAuthKeeper()
+			}
+			if tc.authzK == nil {
+				tc.authzK = NewMockAuthzKeeper()
+			}
+			if tc.expGetAuth != nil {
+				for _, auth := range tc.expGetAuth {
+					if auth.Result.Auth != nil {
+						mockAuth, ok := auth.Result.Auth.(*MockAuthorization)
+						if ok && len(mockAuth.AcceptCalls) == 0 {
+							auth.Result.Auth = mockAuth.WithAcceptCalls(tc.msg)
+						}
+					}
+				}
+			}
+			k := s.app.MetadataKeeper
+			origAuthK := k.SetAuthKeeper(tc.authK)
+			origAuthzK := k.SetAuthzKeeper(tc.authzK)
+			defer func() {
+				k.SetAuthKeeper(origAuthK)
+				k.SetAuthzKeeper(origAuthzK)
+			}()
+
+			err := k.ValidateSmartContractSigners(s.FreshCtx(), tc.usedSigners, tc.msg)
+			s.AssertErrorValue(err, tc.expErr, "ValidateSmartContractSigners")
+
+			getAccountCalls := tc.authK.GetAccountCalls
+			s.Assert().Equal(tc.expGetAcc, getAccountCalls, "calls made to GetAccount")
+
+			getAuthCalls := tc.authzK.GetAuthorizationCalls
+			s.Assert().Equal(tc.expGetAuth, getAuthCalls, "calls made to GetAuthorization")
+		})
+	}
+}
+
 func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 	acc := func(addr string) sdk.AccAddress {
 		return sdk.AccAddress(addr)
@@ -4406,6 +4985,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 		authKeeper       *MockAuthKeeper
 		authzKeeper      *MockAuthzKeeper
 		expErr           string
+		expUsed          map[string]bool
 		expGetAccount    []*GetAccountCall
 		expGetAuth       []*GetAuthorizationCall
 	}{
@@ -4464,6 +5044,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:           normalMsg(depositAddr),
 			authKeeper:    mockAuthWithMarkers(),
 			expErr:        "",
+			expUsed:       map[string]bool{depositAddr: true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
 		},
 		{
@@ -4482,6 +5063,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:           normalMsg(allAddr),
 			authKeeper:    mockAuthWithMarkers(),
 			expErr:        "",
+			expUsed:       map[string]bool{allAddr: true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
 		},
 		{
@@ -4500,6 +5082,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:           normalMsg(noneAddr, noDepositAddr, depositAddr),
 			authKeeper:    mockAuthWithMarkers(),
 			expErr:        "",
+			expUsed:       map[string]bool{depositAddr: true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker2AddrAcc, marker2)},
 		},
 		{
@@ -4512,12 +5095,14 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
 		},
 		{
-			name:          "marker to empty 1 signer only withdraw permission",
-			existing:      marker1Addr,
-			proposed:      "",
-			msg:           normalMsg(withdrawAddr),
-			authKeeper:    mockAuthWithMarkers(),
-			expErr:        "",
+			name:       "marker to empty 1 signer only withdraw permission",
+			existing:   marker1Addr,
+			proposed:   "",
+			msg:        normalMsg(withdrawAddr),
+			authKeeper: mockAuthWithMarkers(),
+			expErr:     "",
+			expUsed:    map[string]bool{withdrawAddr: true},
+
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
 		},
 		{
@@ -4545,6 +5130,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:           normalMsg(allAddr),
 			authKeeper:    mockAuthWithMarkers(),
 			expErr:        "",
+			expUsed:       map[string]bool{allAddr: true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
 		},
 		{
@@ -4563,6 +5149,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:           normalMsg(noneAddr, noWithdrawAddr, withdrawAddr),
 			authKeeper:    mockAuthWithMarkers(),
 			expErr:        "",
+			expUsed:       map[string]bool{withdrawAddr: true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(marker1AddrAcc, marker1)},
 		},
 		{
@@ -4611,6 +5198,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:        normalMsg(allAddr),
 			authKeeper: mockAuthWithMarkers(),
 			expErr:     "",
+			expUsed:    map[string]bool{allAddr: true},
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(marker1AddrAcc, marker1),
 				NewGetAccountCall(marker2AddrAcc, marker2),
@@ -4623,6 +5211,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:        normalMsg(depositAddr, withdrawAddr),
 			authKeeper: mockAuthWithMarkers(),
 			expErr:     "",
+			expUsed:    map[string]bool{depositAddr: true, withdrawAddr: true},
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(marker1AddrAcc, marker1),
 				NewGetAccountCall(marker2AddrAcc, marker2),
@@ -4635,6 +5224,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:        normalMsg(withdrawAddr, depositAddr),
 			authKeeper: mockAuthWithMarkers(),
 			expErr:     "",
+			expUsed:    map[string]bool{withdrawAddr: true, depositAddr: true},
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(marker1AddrAcc, marker1),
 				NewGetAccountCall(marker2AddrAcc, marker2),
@@ -4647,6 +5237,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:        normalMsg(withdrawAddr, noneAddr, depositAddr),
 			authKeeper: mockAuthWithMarkers(),
 			expErr:     "",
+			expUsed:    map[string]bool{withdrawAddr: true, depositAddr: true},
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(marker1AddrAcc, marker1),
 				NewGetAccountCall(marker2AddrAcc, marker2),
@@ -4659,6 +5250,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:        normalMsg(withdrawAddr),
 			authKeeper: mockAuthWithMarkers(),
 			expErr:     "",
+			expUsed:    map[string]bool{withdrawAddr: true},
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(marker2AddrAcc, marker2),
 				NewGetAccountCall(acc("something_else"), nil),
@@ -4680,6 +5272,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:           normalMsg(noneAddr, allAddr, "existing_value_owner_string", depositAddr),
 			authKeeper:    NewMockAuthKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{"existing_value_owner_string": true},
 			expGetAccount: []*GetAccountCall{},
 		},
 		{
@@ -4692,6 +5285,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			},
 			authKeeper:    NewMockAuthKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{"existing_value_owner_string": true},
 			expGetAccount: []*GetAccountCall{},
 		},
 		{
@@ -4718,6 +5312,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{accStr("existing"): true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth:    []*GetAuthorizationCall{},
 		},
@@ -4729,6 +5324,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:  NewMockAuthKeeper(),
 			authzKeeper: NewMockAuthzKeeper(),
 			expErr:      "",
+			expUsed:     map[string]bool{accStr("existing"): true},
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(acc("existing"), nil),
 				NewGetAccountCall(acc("proposed"), nil),
@@ -4749,6 +5345,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{noneAddr: true, accStr("existing"): true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth:    []*GetAuthorizationCall{},
 		},
@@ -4766,6 +5363,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{noneAddr: true, accStr("existing"): true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth:    []*GetAuthorizationCall{},
 		},
@@ -4783,6 +5381,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{noneAddr: true, accStr("existing"): true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth:    []*GetAuthorizationCall{},
 		},
@@ -4800,6 +5399,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{noneAddr: true, accStr("existing"): true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth:    []*GetAuthorizationCall{},
 		},
@@ -4817,6 +5417,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{noneAddr: true, accStr("other"): true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth:    []*GetAuthorizationCall{},
 		},
@@ -4834,6 +5435,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
 			expErr:        "",
+			expUsed:       map[string]bool{noneAddr: true, accStr("other"): true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth:    []*GetAuthorizationCall{},
 		},
@@ -4851,6 +5453,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			authKeeper:  NewMockAuthKeeper(),
 			authzKeeper: NewMockAuthzKeeper(),
 			expErr:      "",
+			expUsed:     map[string]bool{noneAddr: true, accStr("other"): true},
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(acc("existing"), nil),
 				NewGetAccountCall(acc("proposed"), nil),
@@ -4879,6 +5482,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 				},
 			),
 			expErr:        "",
+			expUsed:       map[string]bool{noneAddr: true},
 			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
 			expGetAuth: []*GetAuthorizationCall{
 				{
@@ -4990,9 +5594,13 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 				s.Require().NotNil(tc.authzKeeper, "expGetAuth defined but test case does not have an authzKeeper defined")
 				tc.authzKeeper.GetAuthorizationCalls = make([]*GetAuthorizationCall, 0, len(tc.expGetAuth))
 			}
+			if tc.expUsed == nil && len(tc.expErr) == 0 {
+				tc.expUsed = make(map[string]bool)
+			}
 
-			err := k.ValidateScopeValueOwnerUpdate(s.FreshCtx(), tc.existing, tc.proposed, tc.validatedParties, tc.msg)
+			used, err := k.ValidateScopeValueOwnerUpdate(s.FreshCtx(), tc.existing, tc.proposed, tc.validatedParties, tc.msg)
 			s.AssertErrorValue(err, tc.expErr, "ValidateScopeValueOwnerUpdate")
+			s.Assert().Equal(tc.expUsed, used, "ValidateScopeValueOwnerUpdate used signatures map")
 
 			if tc.expGetAccount != nil {
 				getAccountCalls := tc.authKeeper.GetAccountCalls
@@ -5007,6 +5615,89 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 }
 
 func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
+	// These tests are pretty light since all it does is call
+	// validateAllRequiredSigned and validateSmartContractSigners.
+	// The assumption is that those are well tested.
+
+	accStr := func(str string) string {
+		return sdk.AccAddress(str).String()
+	}
+	normalMsg := func(signers ...string) types.MetadataMsg {
+		rv := &types.MsgWriteScopeRequest{Signers: make([]string, len(signers))}
+		for i, signer := range signers {
+			rv.Signers[i] = accStr(signer)
+		}
+		return rv
+	}
+
+	tests := []struct {
+		name  string
+		req   []string
+		msg   types.MetadataMsg
+		authK *MockAuthKeeper
+		exp   string
+	}{
+		{
+			name: "nil req",
+			req:  nil,
+			msg:  normalMsg("signer1"),
+			exp:  "",
+		},
+		{
+			name: "empty req",
+			req:  []string{},
+			msg:  normalMsg("signer1"),
+			exp:  "",
+		},
+		{
+			name: "one req is signer not sc",
+			req:  []string{accStr("signer1")},
+			msg:  normalMsg("signer1"),
+			exp:  "",
+		},
+		{
+			name: "one req is not signer",
+			req:  []string{accStr("req1")},
+			msg:  normalMsg("signer1"),
+			exp:  "missing signature: " + accStr("req1"),
+		},
+		{
+			name: "no req one signer is smart contract",
+			msg:  normalMsg("signer1"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(&GetAccountCall{
+				Addr:   sdk.AccAddress("signer1"),
+				Result: authtypes.NewBaseAccount(sdk.AccAddress("signer1"), nil, 0, 0),
+			}),
+			exp: "smart contract signer " + accStr("signer1") + " cannot be the last signer",
+		},
+		{
+			name: "one req is signer and smart contract",
+			req:  []string{accStr("signer1")},
+			msg:  normalMsg("signer1"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(&GetAccountCall{
+				Addr:   sdk.AccAddress("signer1"),
+				Result: authtypes.NewBaseAccount(sdk.AccAddress("signer1"), nil, 0, 0),
+			}),
+			exp: "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.authK == nil {
+				tc.authK = NewMockAuthKeeper()
+			}
+			k := s.app.MetadataKeeper
+			origAuthK := k.SetAuthKeeper(tc.authK)
+			defer k.SetAuthKeeper(origAuthK)
+
+			err := k.ValidateSignersWithoutParties(s.FreshCtx(), tc.req, tc.msg)
+			s.AssertErrorValue(err, tc.exp, "ValidateSignersWithoutParties")
+		})
+	}
+}
+
+func (s *AuthzTestSuite) TestValidateAllRequiredSigned() {
 	ctx := s.FreshCtx()
 
 	// Add a few authorizations
@@ -5218,14 +5909,14 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
-			actual, err := s.app.MetadataKeeper.ValidateSignersWithoutParties(s.FreshCtx(), tc.owners, tc.msg)
+			actual, err := s.app.MetadataKeeper.ValidateAllRequiredSigned(s.FreshCtx(), tc.owners, tc.msg)
 			AssertErrorValue(t, err, tc.errorMsg, "ValidateSignersWithoutParties unexpected error")
 			assert.Equal(t, tc.exp, actual, "ValidateSignersWithoutParties validated parties")
 		})
 	}
 }
 
-func (s *AuthzTestSuite) TestValidateSignersWithoutParties_CountAuthorizations() {
+func (s *AuthzTestSuite) TestValidateAllRequiredSigned_CountAuthorizations() {
 
 	oneAllowedAuthorizations := int32(1)
 	manyAllowedAuthorizations := int32(10)
@@ -5298,7 +5989,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties_CountAuthorizations()
 				s.Require().NoError(err, "SaveGrant")
 			}
 
-			_, err := s.app.MetadataKeeper.ValidateSignersWithoutParties(ctx, tc.owners, tc.msg)
+			_, err := s.app.MetadataKeeper.ValidateAllRequiredSigned(ctx, tc.owners, tc.msg)
 			s.AssertErrorValue(err, tc.errorMsg, "ValidateSignersWithoutParties error")
 
 			// validate allowedAuthorizations
@@ -5343,7 +6034,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties_CountAuthorizations()
 		msg.Signers = []string{s.user3}
 
 		// Validate signatures. This should also use both count authorizations.
-		_, err = s.app.MetadataKeeper.ValidateSignersWithoutParties(ctx, owners, msg)
+		_, err = s.app.MetadataKeeper.ValidateAllRequiredSigned(ctx, owners, msg)
 		s.Assert().NoError(err, "ValidateSignersWithoutParties")
 
 		// first grant should be deleted because it used its last use.
@@ -5644,6 +6335,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 		role      markertypes.Access
 		expMarker markertypes.MarkerAccountI
 		expHasAcc bool
+		expSig    string
 	}{
 		{name: "invalid address", addr: "invalid", expMarker: nil},
 		{name: "account does not exist", addr: sdk.AccAddress("does-not-exist").String(), expMarker: nil},
@@ -5678,6 +6370,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Deposit,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user1,
 		},
 		{
 			name:      "is marker with signer 1 and role 2",
@@ -5686,6 +6379,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Withdraw,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user1,
 		},
 		{
 			name:      "is marker with signer 2 but not role",
@@ -5710,6 +6404,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Burn,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user2,
 		},
 		{
 			name:      "is marker with signer 2 and role 2",
@@ -5718,6 +6413,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Mint,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user2,
 		},
 		{
 			name:      "is marker both signers role from first",
@@ -5726,6 +6422,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Withdraw,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user1,
 		},
 		{
 			name:      "is marker both signers role from second",
@@ -5734,6 +6431,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Mint,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user2,
 		},
 		{
 			name:      "is marker both signers neither have role",
@@ -5750,6 +6448,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Withdraw,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user1,
 		},
 		{
 			name:      "is marker two signers second has role",
@@ -5758,14 +6457,16 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			role:      markertypes.Access_Burn,
 			expMarker: &marker,
 			expHasAcc: true,
+			expSig:    s.user2,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			actualMarker, actualHasAcc := s.app.MetadataKeeper.GetMarkerAndCheckAuthority(s.FreshCtx(), tc.addr, tc.signers, tc.role)
+			actualMarker, actualHasAcc, actualSig := s.app.MetadataKeeper.GetMarkerAndCheckAuthority(s.FreshCtx(), tc.addr, tc.signers, tc.role)
 			s.Assert().Equal(tc.expMarker, actualMarker, "GetMarkerAndCheckAuthority marker")
 			s.Assert().Equal(tc.expHasAcc, actualHasAcc, "GetMarkerAndCheckAuthority has access")
+			s.Assert().Equal(tc.expSig, actualSig, "GetMarkerAndCheckAuthority signer")
 		})
 	}
 }

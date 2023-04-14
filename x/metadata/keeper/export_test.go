@@ -111,6 +111,16 @@ func (c *AuthzCache) AcceptableMap() map[string]authz.Authorization {
 	return c.acceptable
 }
 
+// ValidateAllRequiredPartiesSigned is a TEST ONLY exposure of validateAllRequiredPartiesSigned.
+func (k Keeper) ValidateAllRequiredPartiesSigned(
+	ctx sdk.Context,
+	reqParties, availableParties []types.Party,
+	reqRoles []types.PartyType,
+	msg types.MetadataMsg,
+) ([]*PartyDetails, error) {
+	return k.validateAllRequiredPartiesSigned(ctx, reqParties, availableParties, reqRoles, msg)
+}
+
 var (
 	// AssociateSigners is a TEST ONLY exposure of associateSigners.
 	AssociateSigners = associateSigners
@@ -159,6 +169,21 @@ func (k Keeper) AssociateAuthorizationsForRoles(
 // ValidateProvenanceRole is a TEST ONLY exposure of validateProvenanceRole.
 func (k Keeper) ValidateProvenanceRole(ctx sdk.Context, parties []*PartyDetails) error {
 	return k.validateProvenanceRole(ctx, parties)
+}
+
+// IsWasmAccount is a TEST ONLY exposure of isWasmAccount.
+func (k Keeper) IsWasmAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
+	return k.isWasmAccount(ctx, addr)
+}
+
+// ValidateAllRequiredSigned is a TEST ONLY exposure of validateAllRequiredSigned.
+func (k Keeper) ValidateAllRequiredSigned(ctx sdk.Context, required []string, msg types.MetadataMsg) ([]*PartyDetails, error) {
+	return k.validateAllRequiredSigned(ctx, required, msg)
+}
+
+// ValidateSmartContractSigners is a TEST ONLY exposure of validateSmartContractSigners.
+func (k Keeper) ValidateSmartContractSigners(ctx sdk.Context, usedSigners map[string]bool, msg types.MetadataMsg) error {
+	return k.validateSmartContractSigners(ctx, usedSigners, msg)
 }
 
 var (

@@ -57,6 +57,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Expand the `additional_bindings` gRPC tag to use object form to allow for Typescript transpiling [#1405](https://github.com/provenance-io/provenance/issues/1405).
 * Add attribute cli command to query account addresses by attribute name [#1451](https://github.com/provenance-io/provenance/issues/1451).
 * Add removal of attributes from accounts on name deletion [#1410](https://github.com/provenance-io/provenance/issues/1410).
+* Enhance ability of smart contracts to use the metadata module [#1280](https://github.com/provenance-io/provenance/issues/1280).
 
 ### Deprecated
 
