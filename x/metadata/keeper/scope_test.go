@@ -1412,8 +1412,15 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 			name:     "smart contract without provenance role removed",
 			existing: scopeWithOwners(ownerPartyList(s.user1, s.scUser)),
 			proposed: scopeWithOwners(ownerPartyList(s.user1)),
-			signers:  []string{s.user1, s.scUser},
+			signers:  []string{s.scUser, s.user1},
 			errorMsg: "",
+		},
+		{
+			name:     "smart contract without provenance role removed but wrong signer order",
+			existing: scopeWithOwners(ownerPartyList(s.user1, s.scUser)),
+			proposed: scopeWithOwners(ownerPartyList(s.user1)),
+			signers:  []string{s.user1, s.scUser},
+			errorMsg: "smart contract signer " + s.scUser + " cannot follow non-smart-contract signer",
 		},
 		{
 			name:     "with rollup smart contract without provenance role added",
