@@ -292,7 +292,6 @@ func (k Keeper) ValidateWriteScope(
 
 	var err error
 	var validatedParties []*PartyDetails
-	checkSigners := true
 
 	if err = validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 		return err
@@ -312,8 +311,6 @@ func (k Keeper) ValidateWriteScope(
 				if validatedParties, err = k.validateAllRequiredSigned(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
 					return err
 				}
-			} else {
-				checkSigners = false
 			}
 		} else {
 			// New:
@@ -327,8 +324,6 @@ func (k Keeper) ValidateWriteScope(
 				if validatedParties, err = k.validateAllRequiredPartiesSigned(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
 					return err
 				}
-			} else {
-				checkSigners = false
 			}
 		}
 	}
@@ -338,10 +333,8 @@ func (k Keeper) ValidateWriteScope(
 		return err
 	}
 
-	if checkSigners {
-		if err = k.validateSmartContractSigners(ctx, usedSigners, msg); err != nil {
-			return err
-		}
+	if err = k.validateSmartContractSigners(ctx, usedSigners, msg); err != nil {
+		return err
 	}
 
 	return nil
