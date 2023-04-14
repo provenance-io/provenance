@@ -44,6 +44,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Publish Provenance Protobuf API as a NPM module [#1449](https://github.com/provenance-io/provenance/issues/1449).
 * Add support for account addresses by attribute name lookup [#1447](https://github.com/provenance-io/provenance/issues/1447).
 * Add allow forced transfers support to creating markers from smart contracts [#1458](https://github.com/provenance-io/provenance/issues/1458).
+* Metadata party rollup and optional parties [#1438](https://github.com/provenance-io/provenance/issues/1438).
+* Repeated roles in a spec require multiple different parties [#1437](https://github.com/provenance-io/provenance/issues/1437).
+* The `PROVENANCE` role can only be used by smart contract addresses, and vice versa [#1381](https://github.com/provenance-io/provenance/issues/1381).
 
 ### Improvements
 
@@ -57,6 +60,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Enhance the `AddMarker` endpoint to bypass some validation if issued via governance proposal [#1358](https://github.com/provenance-io/provenance/pull/1358).
   This replaces the old `AddMarkerProposal` governance proposal.
 
+### Deprecated
+
+* The `MsgWriteRecordRequest.parties` field has been deprecated and is ignored. The parties in question are identified by the session [PR 1453](https://github.com/provenance-io/provenance/pull/1453).
+
 ### Bug Fixes
 
 * Fix third party Protobuf workflow checks on Provenance release steps [#1339](https://github.com/provenance-io/provenance/issues/1339)
@@ -69,6 +76,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Removed the `WriteP8eContractSpec` and `P8eMemorializeContract` endpoints [#1402](https://github.com/provenance-io/provenance/issues/1402).
 * Removed the `github.com/provenance-io/provenance/x/metadata/types/p8e` proto package [#1402](https://github.com/provenance-io/provenance/issues/1402).
   Users that generate code from the Provenance protos might need to delete their `p8e/` directory.
+* The `write-scope` CLI command now takes in `[owners]` as semicolon-delimited parties (instead of comma-delimited `[owner-addresses]`) [PR 1453](https://github.com/provenance-io/provenance/pull/1453).
 * Removed the `AddMarkerProposal` [#1358](https://github.com/provenance-io/provenance/pull/1358).
   It is replaced by putting a `MsgAddMarker` (with the `from_address` of the gov module account), in a `MsgSubmitProposal`.
 
@@ -77,6 +85,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Removed the `WriteP8eContractSpec` and `P8eMemorializeContract` endpoints [#1402](https://github.com/provenance-io/provenance/issues/1402).
 * Removed the `AddMarkerProposal` [#1358](https://github.com/provenance-io/provenance/pull/1358).
   It is replaced by putting a `MsgAddMarker` (with the `from_address` of the gov module account), in a `MsgSubmitProposal`.
+
+### State Machine Breaking
+
+* The `AddScopeOwner` endpoint now adds a new owner party even if an owner already exists in the scope with that address [PR 1453](https://github.com/provenance-io/provenance/pull/1453).
+  I.e. it no longer updates the role of an existing owner with the same address.
 
 ---
 

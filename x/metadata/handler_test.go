@@ -47,14 +47,18 @@ func (s *MetadataHandlerTestSuite) SetupTest() {
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
+	user1Acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr)
+	s.Require().NoError(user1Acc.SetPubKey(s.pubkey1), "SetPubKey user1")
 
 	privKey, _ := secp256r1.GenPrivKey()
 	s.pubkey2 = privKey.PubKey()
 	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
 	s.user2 = s.user2Addr.String()
+	user2Acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr)
+	s.Require().NoError(user2Acc.SetPubKey(s.pubkey1), "SetPubKey user2")
 
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
-	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr))
+	s.app.AccountKeeper.SetAccount(s.ctx, user1Acc)
+	s.app.AccountKeeper.SetAccount(s.ctx, user2Acc)
 }
 
 func TestMetadataHandlerTestSuite(t *testing.T) {
@@ -467,16 +471,16 @@ func (s *MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
 		ClassName:       "someclass",
 	}
 	s.app.MetadataKeeper.SetContractSpecification(s.ctx, cSpec2)
+	cSpecDNE := types.ContractSpecMetadataAddress(uuid.New()) // Does Not Exist.
 	sSpec := types.ScopeSpecification{
 		SpecificationId: types.ScopeSpecMetadataAddress(uuid.New()),
 		Description:     nil,
 		OwnerAddresses:  []string{s.user1},
 		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
-		ContractSpecIds: []types.MetadataAddress{cSpec.SpecificationId, cSpec2.SpecificationId},
+		ContractSpecIds: []types.MetadataAddress{cSpec.SpecificationId, cSpec2.SpecificationId, cSpecDNE},
 	}
 	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, sSpec)
 
-	unknownContractSpecId := types.ContractSpecMetadataAddress(uuid.New())
 	unknownScopeSpecId := types.ScopeSpecMetadataAddress(uuid.New())
 
 	cases := []struct {
@@ -487,11 +491,11 @@ func (s *MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
 		errorMsg       string
 	}{
 		{
-			"fail to delete contract spec from scope spec, cannot find contract spec",
-			unknownContractSpecId,
+			"cannot find contract spec",
+			cSpecDNE,
 			sSpec.SpecificationId,
 			[]string{s.user1},
-			fmt.Sprintf("contract specification not found with id %s", unknownContractSpecId),
+			"",
 		},
 		{
 			"fail to delete contract spec from scope spec, cannot find scope spec",
@@ -512,7 +516,7 @@ func (s *MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
 			cSpec2.SpecificationId,
 			sSpec.SpecificationId,
 			[]string{s.user1},
-			fmt.Sprintf("contract specification %s not found on scope specification id %s", cSpec2.SpecificationId, sSpec.SpecificationId),
+			fmt.Sprintf("contract specification %s not found in scope specification %s", cSpec2.SpecificationId, sSpec.SpecificationId),
 		},
 	}
 
@@ -552,7 +556,7 @@ func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
 	scopeID := types.ScopeMetadataAddress(uuid.New())
-	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "")
+	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "", false)
 	dneScopeID := types.ScopeMetadataAddress(uuid.New())
 	user3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
 
@@ -694,7 +698,7 @@ func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 
 		msgAdd := types.NewMsgAddScopeOwnerRequest(
 			scopeA.ScopeId,
-			[]types.Party{{addrServicer, types.PartyType_PARTY_TYPE_SERVICER}},
+			[]types.Party{{Address: addrServicer, Role: types.PartyType_PARTY_TYPE_SERVICER}},
 			[]string{addrOriginator},
 		)
 
@@ -716,7 +720,7 @@ func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
 	scopeID := types.ScopeMetadataAddress(uuid.New())
-	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "")
+	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "", false)
 	dneScopeID := types.ScopeMetadataAddress(uuid.New())
 	user3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
 

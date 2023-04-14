@@ -136,13 +136,9 @@ func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.Me
 	return nil
 }
 
-// ValidateRecordSpecUpdate full validation of a proposed record spec possibly against an existing one.
-func (k Keeper) ValidateRecordSpecUpdate(ctx sdk.Context, existing *types.RecordSpecification, proposed types.RecordSpecification) error {
-	// Must pass basic validation.
-	if err := proposed.ValidateBasic(); err != nil {
-		return err
-	}
-
+// ValidateWriteRecordSpecification compare the proposed contract spec with the existing to make sure the proposed
+// is valid. This assumes that proposed.ValidateBasic() has been run and did not return an error.
+func (k Keeper) ValidateWriteRecordSpecification(ctx sdk.Context, existing *types.RecordSpecification, proposed types.RecordSpecification) error {
 	if existing != nil {
 		// IDs must match
 		if !proposed.SpecificationId.Equals(existing.SpecificationId) {
@@ -287,7 +283,7 @@ func getMissingContractSpecIndexValues(required, found *contractSpecIndexValues)
 		return *required
 	}
 	rv.SpecificationID = required.SpecificationID
-	rv.OwnerAddresses = FindMissing(required.OwnerAddresses, found.OwnerAddresses)
+	rv.OwnerAddresses = findMissing(required.OwnerAddresses, found.OwnerAddresses)
 	return rv
 }
 
@@ -360,17 +356,13 @@ func (k Keeper) isContractSpecUsed(ctx sdk.Context, contractSpecID types.Metadat
 	return itRecSpecErr != nil || hasUsedRecordSpec
 }
 
-// ValidateContractSpecUpdate full validation of a proposed contract spec possibly against an existing one.
-func (k Keeper) ValidateContractSpecUpdate(ctx sdk.Context, existing *types.ContractSpecification, proposed types.ContractSpecification) error {
+// ValidateWriteContractSpecification compare the proposed contract spec with the existing to make sure the proposed
+// is valid. This assumes that proposed.ValidateBasic() has been run and did not return an error.
+func (k Keeper) ValidateWriteContractSpecification(ctx sdk.Context, existing *types.ContractSpecification, proposed types.ContractSpecification) error {
 	// IDS must match if there's an existing entry
 	if existing != nil && !proposed.SpecificationId.Equals(existing.SpecificationId) {
 		return fmt.Errorf("cannot update contract spec identifier. expected %s, got %s",
 			existing.SpecificationId, proposed.SpecificationId)
-	}
-
-	// Must pass basic validation.
-	if err := proposed.ValidateBasic(); err != nil {
-		return err
 	}
 
 	return nil
@@ -519,9 +511,28 @@ func getMissingScopeSpecIndexValues(required, found *scopeSpecIndexValues) scope
 		return *required
 	}
 	rv.SpecificationID = required.SpecificationID
-	rv.OwnerAddresses = FindMissing(required.OwnerAddresses, found.OwnerAddresses)
+	rv.OwnerAddresses = findMissing(required.OwnerAddresses, found.OwnerAddresses)
 	rv.ContractSpecIDs = FindMissingMdAddr(required.ContractSpecIDs, found.ContractSpecIDs)
 	return rv
+}
+
+// FindMissingMdAddr returns all elements of the required list that are not found in the entries list
+// It is exported only so that it can be unit tested.
+func FindMissingMdAddr(required, entries []types.MetadataAddress) []types.MetadataAddress {
+	retval := []types.MetadataAddress{}
+	for _, req := range required {
+		found := false
+		for _, entry := range entries {
+			if req.Equals(entry) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			retval = append(retval, req)
+		}
+	}
+	return retval
 }
 
 // IndexKeys creates all of the index key byte arrays that this scopeSpecIndexValues represents.
@@ -583,28 +594,48 @@ func (k Keeper) isScopeSpecUsed(ctx sdk.Context, scopeSpecID types.MetadataAddre
 	return err != nil || scopeSpecReferenceFound
 }
 
-// ValidateScopeSpecUpdate - full validation of a scope specification.
-func (k Keeper) ValidateScopeSpecUpdate(ctx sdk.Context, existing *types.ScopeSpecification, proposed types.ScopeSpecification) error {
+// ValidateWriteScopeSpecification compare the proposed scope spec with the existing to make sure the proposed
+// is valid. This assumes that proposed.ValidateBasic() has been run and did not return an error.
+func (k Keeper) ValidateWriteScopeSpecification(ctx sdk.Context, existing *types.ScopeSpecification, proposed types.ScopeSpecification) error {
 	// IDS must match if there's an existing entry
 	if existing != nil && !proposed.SpecificationId.Equals(existing.SpecificationId) {
 		return fmt.Errorf("cannot update scope spec identifier. expected %s, got %s",
 			existing.SpecificationId, proposed.SpecificationId)
 	}
 
-	// Must pass basic validation.
-	if err := proposed.ValidateBasic(); err != nil {
-		return err
-	}
-
+	// Make sure newly added contract spec ids exist.
+	// If the spec is new, gotta check all of the contract spec ids.
+	// Otherwise, we only need to check contract spec ids that are being added.
+	// If they're being removed or were already in the list, we allow them to not exist.
 	store := ctx.KVStore(k.storeKey)
-
-	// Validate the proposed contract spec ids.
-	for _, contractSpecID := range proposed.ContractSpecIds {
-		// Make sure that all contract spec ids exist
+	for _, contractSpecID := range getNewContractSpecIDs(&proposed, existing) {
 		if !store.Has(contractSpecID) {
 			return fmt.Errorf("no contract spec exists with id %s", contractSpecID)
 		}
 	}
 
 	return nil
+}
+
+// getNewContractSpecIDs gets all contract spec ids in proposed that are not in existing.
+func getNewContractSpecIDs(proposed, existing *types.ScopeSpecification) []types.MetadataAddress {
+	if existing == nil || len(existing.ContractSpecIds) == 0 {
+		return proposed.ContractSpecIds
+	}
+	// Prep a map for existing entry lookup.
+	// Doing it this way because some scope specs end up with 1000+ contract specs
+	// which is a lot to process using the nested loops approach.
+	have := make(map[string]bool)
+	for _, id := range existing.ContractSpecIds {
+		// using string(id) here instead of .String() because .String() does extra work that we don't care about here.
+		have[string(id)] = true
+	}
+	var rv []types.MetadataAddress
+	for _, id := range proposed.ContractSpecIds {
+		if !have[string(id)] {
+			rv = append(rv, id)
+		}
+	}
+
+	return rv
 }

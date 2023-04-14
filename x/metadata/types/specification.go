@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 
@@ -374,6 +375,10 @@ func (d Description) String() string {
 func (x PartyType) IsValid() bool {
 	_, ok := PartyType_name[int32(x)]
 	return ok
+}
+
+func (x PartyType) SimpleString() string {
+	return strings.TrimPrefix(x.String(), "PARTY_TYPE_")
 }
 
 // validateURLBasic - Helper function to check if a url string is superficially valid.
