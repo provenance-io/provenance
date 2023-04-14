@@ -41,6 +41,9 @@ type ScopeKeeperTestSuite struct {
 	user3     string
 	user3Addr sdk.AccAddress
 
+	scUser     string
+	scUserAddr sdk.AccAddress
+
 	scopeUUID uuid.UUID
 	scopeID   types.MetadataAddress
 
@@ -69,6 +72,10 @@ func (s *ScopeKeeperTestSuite) SetupTest() {
 	s.pubkey3 = secp256k1.GenPrivKey().PubKey()
 	s.user3Addr = sdk.AccAddress(s.pubkey3.Address())
 	s.user3 = s.user3Addr.String()
+
+	s.scUserAddr = sdk.AccAddress("smart_contract_addr_")
+	s.scUser = s.scUserAddr.String()
+	s.app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(s.scUserAddr, nil, 0, 0))
 
 	s.scopeUUID = uuid.New()
 	s.scopeID = types.ScopeMetadataAddress(s.scopeUUID)
@@ -502,6 +509,30 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			proposed: *rollupScope(scopeID, scopeSpecID, ptz(pt(s.user2, owner, true)), ""),
 			signers:  []string{s.user2},
 			errorMsg: "",
+		},
+		{
+			name:     "smart contract account is not PROVENANCE role",
+			existing: nil,
+			proposed: types.Scope{
+				ScopeId:            types.ScopeMetadataAddress(uuid.New()),
+				SpecificationId:    scopeSpecID,
+				Owners:             ptz(pt(s.scUser, owner, false)),
+				RequirePartyRollup: false,
+			},
+			signers:  []string{s.scUser},
+			errorMsg: `account "` + s.scUser + `" is a smart contract but does not have the PROVENANCE role`,
+		},
+		{
+			name:     "with rollup smart contract account is not PROVENANCE role",
+			existing: nil,
+			proposed: types.Scope{
+				ScopeId:            types.ScopeMetadataAddress(uuid.New()),
+				SpecificationId:    scopeSpecID,
+				Owners:             ptz(pt(s.scUser, owner, false)),
+				RequirePartyRollup: true,
+			},
+			signers:  []string{s.scUser},
+			errorMsg: `account "` + s.scUser + `" is a smart contract but does not have the PROVENANCE role`,
 		},
 	}
 
@@ -1368,6 +1399,34 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
 			existing: rollupScopeWithOwners(pt(s.user1, owner, true), pt(s.user2, omnibus, false)),
 			proposed: rollupScopeWithOwners(pt(s.user1, owner, true), pt(s.user3, omnibus, false)),
 			signers:  []string{s.user1, s.user2},
+			errorMsg: "",
+		},
+		{
+			name:     "smart contract without provenance role added",
+			existing: scopeWithOwners(ownerPartyList(s.user1)),
+			proposed: scopeWithOwners(ownerPartyList(s.user1, s.scUser)),
+			signers:  []string{s.user1},
+			errorMsg: `account "` + s.scUser + `" is a smart contract but does not have the PROVENANCE role`,
+		},
+		{
+			name:     "smart contract without provenance role removed",
+			existing: scopeWithOwners(ownerPartyList(s.user1, s.scUser)),
+			proposed: scopeWithOwners(ownerPartyList(s.user1)),
+			signers:  []string{s.user1, s.scUser},
+			errorMsg: "",
+		},
+		{
+			name:     "with rollup smart contract without provenance role added",
+			existing: rollupScopeWithOwners(pt(s.user1, owner, false)),
+			proposed: rollupScopeWithOwners(pt(s.user1, owner, false), pt(s.scUser, owner, true)),
+			signers:  []string{s.user1},
+			errorMsg: `account "` + s.scUser + `" is a smart contract but does not have the PROVENANCE role`,
+		},
+		{
+			name:     "with rollup smart contract without provenance role removed",
+			existing: rollupScopeWithOwners(pt(s.user1, owner, false), pt(s.scUser, owner, true)),
+			proposed: rollupScopeWithOwners(pt(s.user1, owner, false)),
+			signers:  []string{s.user1},
 			errorMsg: "",
 		},
 	}

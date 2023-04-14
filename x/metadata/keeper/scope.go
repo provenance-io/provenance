@@ -304,6 +304,9 @@ func (k Keeper) ValidateWriteScope(
 			if err = validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 				return err
 			}
+			if err = k.validateProvenanceRole(ctx, BuildPartyDetails(nil, proposed.Owners)); err != nil {
+				return err
+			}
 			if existing != nil && !existing.Equals(proposed) {
 				if validatedParties, err = k.validateAllRequiredSigned(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
 					return err
@@ -319,6 +322,9 @@ func (k Keeper) ValidateWriteScope(
 			//     associated party from the existing scope.
 			//   - Value owner signer restrictions are applied.
 			if err = validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
+				return err
+			}
+			if err = k.validateProvenanceRole(ctx, BuildPartyDetails(nil, proposed.Owners)); err != nil {
 				return err
 			}
 			// Note: This means that a scope can be initially written without consideration for signers and roles.
@@ -531,6 +537,9 @@ func (k Keeper) ValidateUpdateScopeOwners(
 		if err := validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 			return err
 		}
+		if err := k.validateProvenanceRole(ctx, BuildPartyDetails(nil, proposed.Owners)); err != nil {
+			return err
+		}
 		if err := k.ValidateSignersWithoutParties(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
 			return err
 		}
@@ -545,7 +554,14 @@ func (k Keeper) ValidateUpdateScopeOwners(
 		if err := validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 			return err
 		}
-		if err := k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
+		if err := k.validateProvenanceRole(ctx, BuildPartyDetails(nil, proposed.Owners)); err != nil {
+			return err
+		}
+		validatedParties, err := k.validateAllRequiredPartiesSigned(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg)
+		if err != nil {
+			return err
+		}
+		if err = k.validateSmartContractSigners(ctx, GetAllSigners(validatedParties), msg); err != nil {
 			return err
 		}
 	}
