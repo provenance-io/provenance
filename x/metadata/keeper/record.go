@@ -206,7 +206,7 @@ func (k Keeper) ValidateWriteRecord(
 		if oldSession != nil {
 			reqParties = append(reqParties, oldSession.Parties...)
 		}
-		if _, err = k.ValidateSignersWithParties(ctx, reqParties, session.Parties, recSpec.ResponsibleParties, msg); err != nil {
+		if err = k.ValidateSignersWithParties(ctx, reqParties, session.Parties, recSpec.ResponsibleParties, msg); err != nil {
 			return err
 		}
 	}
@@ -343,7 +343,7 @@ func (k Keeper) ValidateDeleteRecord(ctx sdk.Context, proposedID types.MetadataA
 				return err
 			}
 		} else {
-			if _, err := k.ValidateSignersWithParties(ctx, scope.Owners, scope.Owners, reqSpec.ResponsibleParties, msg); err != nil {
+			if err := k.ValidateSignersWithParties(ctx, scope.Owners, scope.Owners, reqSpec.ResponsibleParties, msg); err != nil {
 				return err
 			}
 		}

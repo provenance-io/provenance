@@ -15,8 +15,9 @@ import (
 // ValidateSignersWithParties ensures the following:
 //   - All optional=false reqParties have signed.
 //   - All required roles are present in availableParties and are signers.
-//   - All parties with the PROVENANCE role are a smart contract account.
-//   - All parties with a smart contract account have the PROVENANCE role.
+//   - All available parties with the PROVENANCE role are a smart contract account.
+//   - All available parties with a smart contract account have the PROVENANCE role.
+//   - All signers that are smart contracts are allowed to sign.
 //
 // The x/authz module is utilized to help facilitate signer checking.
 //
@@ -35,11 +36,28 @@ import (
 // signers list are able to fulfill an entry in reqRoles, and each such party can
 // only fulfill one required role entry.
 //
-// Party details are returned containing information on which parties were signers and
-// which were used to fulfill required roles.
-//
 // When parties and roles aren't involved, use ValidateSignersWithoutParties.
 func (k Keeper) ValidateSignersWithParties(
+	ctx sdk.Context,
+	reqParties, availableParties []types.Party,
+	reqRoles []types.PartyType,
+	msg types.MetadataMsg,
+) error {
+	parties, err := k.validateAllRequiredPartiesSigned(ctx, reqParties, availableParties, reqRoles, msg)
+	if err != nil {
+		return err
+	}
+	return k.validateSmartContractSigners(ctx, GetAllSigners(parties), msg)
+}
+
+// validateAllRequiredPartiesSigned ensures the following:
+//   - All optional=false reqParties have signed.
+//   - All required roles are present in availableParties and are signers.
+//   - All parties with the PROVENANCE role are a smart contract account.
+//   - All parties with a smart contract account have the PROVENANCE role.
+//
+// If you call this, you will probably also need to call validateSmartContractSigners on your own.
+func (k Keeper) validateAllRequiredPartiesSigned(
 	ctx sdk.Context,
 	reqParties, availableParties []types.Party,
 	reqRoles []types.PartyType,
@@ -496,6 +514,8 @@ func (k Keeper) ValidateSignersWithoutParties(
 
 // validateAllRequiredSigned ensures that all required addresses are either in the msg signers,
 // or have granted an authorization to someone in the signers.
+//
+// If you call this, you will probably also need to call validateSmartContractSigners on your own.
 func (k Keeper) validateAllRequiredSigned(ctx sdk.Context, required []string, msg types.MetadataMsg) ([]*PartyDetails, error) {
 	details := make([]*PartyDetails, len(required))
 	for i, addr := range required {

@@ -93,6 +93,178 @@ func TestAuthzTestSuite(t *testing.T) {
 }
 
 func (s *AuthzTestSuite) TestValidateSignersWithParties() {
+	// These tests are pretty light since all it does is call
+	// validateAllRequiredPartiesSigned and validateSmartContractSigners.
+	// The assumption is that those are well tested.
+
+	accStr := func(str string) string {
+		return sdk.AccAddress(str).String()
+	}
+	pt := func(addr string, role types.PartyType, opt bool) types.Party {
+		return types.Party{
+			Address:  accStr(addr),
+			Role:     role,
+			Optional: opt,
+		}
+	}
+	ptz := func(parties ...types.Party) []types.Party {
+		rv := make([]types.Party, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+	normalMsg := func(signers ...string) types.MetadataMsg {
+		rv := &types.MsgWriteScopeRequest{Signers: make([]string, len(signers))}
+		for i, signer := range signers {
+			rv.Signers[i] = accStr(signer)
+		}
+		return rv
+	}
+	normalMsgType := types.TypeURLMsgWriteScopeRequest
+	scGetAccCall := func(addr string) *GetAccountCall {
+		return &GetAccountCall{
+			Addr:   sdk.AccAddress(addr),
+			Result: authtypes.NewBaseAccount(sdk.AccAddress(addr), nil, 0, 0),
+		}
+	}
+
+	owner := types.PartyType_PARTY_TYPE_OWNER
+	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
+
+	tests := []struct {
+		name             string
+		reqParties       []types.Party
+		availableParties []types.Party
+		reqRoles         []types.PartyType
+		msg              types.MetadataMsg
+		authK            *MockAuthKeeper
+		authzK           *MockAuthzKeeper
+		expErr           string
+	}{
+		{
+			name:             "all nil",
+			reqParties:       nil,
+			availableParties: nil,
+			reqRoles:         nil,
+			msg:              normalMsg("signer1"),
+			expErr:           "",
+		},
+		{
+			name:             "all empty",
+			reqParties:       []types.Party{},
+			availableParties: []types.Party{},
+			reqRoles:         []types.PartyType{},
+			msg:              normalMsg("signer1"),
+			expErr:           "",
+		},
+		{
+			name:       "missing sig from required party",
+			reqParties: ptz(pt("req1", owner, false)),
+			msg:        normalMsg("signer1"),
+			expErr:     "missing required signature: " + accStr("req1") + " (OWNER)",
+		},
+		{
+			name:             "missing sig from req role",
+			availableParties: ptz(pt("party1", owner, true), pt("party2", owner, true)),
+			reqRoles:         []types.PartyType{owner},
+			msg:              normalMsg("party3"),
+			expErr:           "missing signers for roles required by spec: OWNER need 1 have 0",
+		},
+		{
+			name:       "provenance role in req parties is not smart contract",
+			reqParties: ptz(pt("prov", provenance, true)),
+			msg:        normalMsg("signer1"),
+			expErr:     "",
+		},
+		{
+			name:             "provenance role in available parties is not smart contract",
+			availableParties: ptz(pt("prov", provenance, true)),
+			msg:              normalMsg("signer1"),
+			expErr:           `account "` + accStr("prov") + `" has role PROVENANCE but is not a smart contract`,
+		},
+		{
+			name:       "smart contract in req parties is not provenance role",
+			reqParties: ptz(pt("sc1", owner, false), pt("user1", owner, false)),
+			msg:        normalMsg("sc1", "user1"),
+			authK:      NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
+			expErr:     "",
+		},
+		{
+			name:             "smart contract in available parties is not provenance role",
+			availableParties: ptz(pt("sc1", owner, false), pt("user1", owner, false)),
+			msg:              normalMsg("sc1", "user1"),
+			authK:            NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
+			expErr:           `account "` + accStr("sc1") + `" is a smart contract but does not have the PROVENANCE role`,
+		},
+		{
+			name:             "smart contract signer not a party",
+			reqParties:       ptz(pt("req1", owner, false)),
+			availableParties: ptz(pt("req1", owner, false)),
+			reqRoles:         []types.PartyType{owner},
+			msg:              normalMsg("sc1", "req1"),
+			authK:            NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
+			expErr:           "smart contract signer " + accStr("sc1") + " is not authorized",
+		},
+		{
+			name:             "smart contract signer is a party",
+			reqParties:       ptz(pt("req1", owner, false)),
+			availableParties: ptz(pt("req1", owner, false), pt("sc1", provenance, true)),
+			reqRoles:         []types.PartyType{owner},
+			msg:              normalMsg("sc1", "req1"),
+			authK:            NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
+			expErr:           "",
+		},
+		{
+			name:             "smart contract signer is last and not a party",
+			reqParties:       ptz(pt("req1", owner, false)),
+			availableParties: ptz(pt("req1", owner, false)),
+			reqRoles:         []types.PartyType{owner},
+			msg:              normalMsg("req1", "sc1"),
+			authK:            NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
+			expErr:           "smart contract signer " + accStr("sc1") + " cannot be the last signer",
+		},
+		{
+			name:             "smart contract and req signed sc not a party but is authorized",
+			reqParties:       ptz(pt("req1", owner, false)),
+			availableParties: ptz(pt("req1", owner, false)),
+			reqRoles:         []types.PartyType{owner},
+			msg:              normalMsg("sc1", "req1"),
+			authK:            NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: GrantInfo{Grantee: sdk.AccAddress("sc1"), Granter: sdk.AccAddress("req1"), MsgType: normalMsgType},
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil,
+					},
+				},
+			),
+			expErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.authK == nil {
+				tc.authK = NewMockAuthKeeper()
+			}
+			if tc.authzK == nil {
+				tc.authzK = NewMockAuthzKeeper()
+			}
+			k := s.app.MetadataKeeper
+			origAuthK := k.SetAuthKeeper(tc.authK)
+			origAuthzK := k.SetAuthzKeeper(tc.authzK)
+			defer func() {
+				k.SetAuthKeeper(origAuthK)
+				k.SetAuthzKeeper(origAuthzK)
+			}()
+
+			err := k.ValidateSignersWithParties(s.FreshCtx(), tc.reqParties, tc.availableParties, tc.reqRoles, tc.msg)
+			s.AssertErrorValue(err, tc.expErr, "ValidateSignersWithParties")
+		})
+	}
+}
+
+func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned() {
 	acc := func(addr string) sdk.AccAddress {
 		if len(addr) == 0 {
 			return nil
@@ -401,14 +573,14 @@ func (s *AuthzTestSuite) TestValidateSignersWithParties() {
 				k.SetAuthzKeeper(origAuthzKeeper)
 			}()
 
-			parties, err := k.ValidateSignersWithParties(s.FreshCtx(), tc.reqParties, tc.availableParties, tc.reqRoles, tc.msg)
+			parties, err := k.ValidateAllRequiredPartiesSigned(s.FreshCtx(), tc.reqParties, tc.availableParties, tc.reqRoles, tc.msg)
 			s.AssertErrorValue(err, tc.expErr, "ValidateSignersWithParties error")
 			s.Assert().Equal(tc.expParties, parties, "ValidateSignersWithParties parties")
 		})
 	}
 }
 
-func (s *AuthzTestSuite) TestValidateSignersWithParties_CountAuthorizations() {
+func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned_CountAuthorizations() {
 	// Two addrs in three parties (1, 1, and 2), and one signer (A),
 	// Two authz count authorizations:
 	//  - granter 1, grantee A, count: 1
@@ -502,7 +674,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithParties_CountAuthorizations() {
 	err = s.app.AuthzKeeper.SaveGrant(ctx, acc(signer), acc(party2), auth2, nil)
 	s.Require().NoError(err, "SaveGrant signer can sign for party2: 2 uses")
 
-	details, err := s.app.MetadataKeeper.ValidateSignersWithParties(ctx, reqParties, availableParties, reqRoles, msg)
+	details, err := s.app.MetadataKeeper.ValidateAllRequiredPartiesSigned(ctx, reqParties, availableParties, reqRoles, msg)
 	s.Require().NoError(err, "ValidateSignersWithParties error")
 	s.Assert().Equal(expDetails, details, "ValidateSignersWithParties party details")
 
@@ -5378,6 +5550,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 	// These tests are pretty light since all it does is call
 	// validateAllRequiredSigned and validateSmartContractSigners.
 	// The assumption is that those are well tested.
+
 	accStr := func(str string) string {
 		return sdk.AccAddress(str).String()
 	}

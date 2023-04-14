@@ -111,6 +111,16 @@ func (c *AuthzCache) AcceptableMap() map[string]authz.Authorization {
 	return c.acceptable
 }
 
+// ValidateAllRequiredPartiesSigned is a TEST ONLY exposure of validateAllRequiredPartiesSigned.
+func (k Keeper) ValidateAllRequiredPartiesSigned(
+	ctx sdk.Context,
+	reqParties, availableParties []types.Party,
+	reqRoles []types.PartyType,
+	msg types.MetadataMsg,
+) ([]*PartyDetails, error) {
+	return k.validateAllRequiredPartiesSigned(ctx, reqParties, availableParties, reqRoles, msg)
+}
+
 var (
 	// AssociateSigners is a TEST ONLY exposure of associateSigners.
 	AssociateSigners = associateSigners

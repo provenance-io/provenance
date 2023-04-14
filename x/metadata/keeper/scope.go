@@ -323,7 +323,7 @@ func (k Keeper) ValidateWriteScope(
 			}
 			// Note: This means that a scope can be initially written without consideration for signers and roles.
 			if existing != nil {
-				if validatedParties, err = k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
+				if validatedParties, err = k.validateAllRequiredPartiesSigned(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
 					return err
 				}
 			} else {
@@ -381,7 +381,7 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 				return err
 			}
 		} else {
-			if validatedParties, err = k.ValidateSignersWithParties(ctx, scope.Owners, scope.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
+			if validatedParties, err = k.validateAllRequiredPartiesSigned(ctx, scope.Owners, scope.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
 				return err
 			}
 		}
@@ -445,7 +445,7 @@ func (k Keeper) ValidateAddScopeDataAccess(
 		if !found {
 			return fmt.Errorf("scope specification %s not found", existing.SpecificationId)
 		}
-		if _, err := k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
+		if err := k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
 			return err
 		}
 	}
@@ -497,7 +497,7 @@ dataAccessLoop:
 		if !found {
 			return fmt.Errorf("scope specification %s not found", existing.SpecificationId)
 		}
-		if _, err := k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
+		if err := k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
 			return err
 		}
 	}
@@ -545,7 +545,7 @@ func (k Keeper) ValidateUpdateScopeOwners(
 		if err := validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 			return err
 		}
-		if _, err := k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
+		if err := k.ValidateSignersWithParties(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
 			return err
 		}
 	}
