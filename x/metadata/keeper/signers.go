@@ -372,9 +372,18 @@ func (k Keeper) validateSmartContractSigners(ctx sdk.Context, usedSigners map[st
 	// The wasm encoders (hopefully) put the smart contract as the first signer
 	// followed by other signers. That's why we only check the signers after it.
 	signerAccs := msg.GetSigners()
+	canBeWasm := true
 	for i, signer := range signerAccs {
 		signerStr := signer.String()
-		if usedSigners[signerStr] || !k.isWasmAccount(ctx, signer) {
+		isWasm := k.isWasmAccount(ctx, signer)
+		if isWasm && !canBeWasm {
+			return fmt.Errorf("smart contract signer %s cannot follow non-smart-contract signer", signer)
+		}
+		if !isWasm {
+			canBeWasm = false
+			continue
+		}
+		if usedSigners[signerStr] {
 			continue
 		}
 		// it's a wasm account, and it wasn't used yet.

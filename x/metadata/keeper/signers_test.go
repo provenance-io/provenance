@@ -220,7 +220,7 @@ func (s *AuthzTestSuite) TestValidateSignersWithParties() {
 			reqRoles:         []types.PartyType{owner},
 			msg:              normalMsg("req1", "sc1"),
 			authK:            NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
-			expErr:           "smart contract signer " + accStr("sc1") + " cannot be the last signer",
+			expErr:           "smart contract signer " + accStr("sc1") + " cannot follow non-smart-contract signer",
 		},
 		{
 			name:             "smart contract and req signed sc not a party but is authorized",
@@ -4598,7 +4598,7 @@ func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
 			msg:         normalMsg("smart_contract"),
 			authK:       NewMockAuthKeeper().WithGetAccountResults(smartAccCall("smart_contract")),
 			expErr:      "",
-			expGetAcc:   nil,
+			expGetAcc:   []*GetAccountCall{smartAccCall("smart_contract")},
 		},
 		{
 			name:      "one smart contract no used",
@@ -4614,6 +4614,68 @@ func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
 			expErr:     "smart contract signer " + accStr("sc1") + " is not authorized",
 			expGetAcc:  []*GetAccountCall{smartAccCall("sc1")},
 			expGetAuth: []*GetAuthorizationCall{noAuthCallRes("sc1", "sc2")},
+		},
+		{
+			name:        "two smart contracts last used but first not authorized",
+			usedSigners: map[string]bool{accStr("sc2"): true},
+			msg:         normalMsg("sc1", "sc2"),
+			authK:       NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1"), smartAccCall("sc2")),
+			expErr:      "smart contract signer " + accStr("sc1") + " is not authorized",
+			expGetAcc:   []*GetAccountCall{smartAccCall("sc1")},
+			expGetAuth:  []*GetAuthorizationCall{noAuthCallRes("sc1", "sc2")},
+		},
+		{
+			name:        "two smart contracts both used",
+			usedSigners: map[string]bool{accStr("sc2"): true, accStr("sc1"): true},
+			msg:         normalMsg("sc1", "sc2"),
+			authK:       NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1"), smartAccCall("sc2")),
+			expErr:      "",
+			expGetAcc:   []*GetAccountCall{smartAccCall("sc1"), smartAccCall("sc2")},
+		},
+		{
+			name:       "two smart contracts both authorized by 3rd signer",
+			msg:        normalMsg("sc1", "sc2", "user1"),
+			authK:      NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1")),
+			authzK:     NewMockAuthzKeeper().WithGetAuthorizationResults(authCall("one", "sc1", "user1"), authCall("two", "sc2", "user1")),
+			expErr:     "smart contract signer " + accStr("sc1") + " is not authorized",
+			expGetAcc:  []*GetAccountCall{smartAccCall("sc1")},
+			expGetAuth: []*GetAuthorizationCall{noAuthCallRes("sc1", "sc2")},
+		},
+		{
+			name:  "two smart contracts 1st authorized by 2nd and both authorized by 3rd signer",
+			msg:   normalMsg("sc1", "sc2", "user1"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1")),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				authCall("sc1_user1", "sc1", "user1"),
+				authCall("sc2_user1", "sc2", "user1"),
+				authCall("sc1_sc2", "sc1", "sc2"),
+			),
+			expErr:    "",
+			expGetAcc: []*GetAccountCall{smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1")},
+			expGetAuth: []*GetAuthorizationCall{
+				authCallRes("sc1_sc2", "sc1", "sc2"),
+				authCallRes("sc1_user1", "sc1", "user1"),
+				authCallRes("sc2_user1", "sc2", "user1"),
+			},
+		},
+		{
+			name:        "two smart contracts 1st used 2nd not",
+			usedSigners: map[string]bool{accStr("sc1"): true},
+			msg:         normalMsg("sc1", "sc2", "user1"),
+			authK:       NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1")),
+			expErr:      "smart contract signer " + accStr("sc2") + " is not authorized",
+			expGetAcc:   []*GetAccountCall{smartAccCall("sc1"), smartAccCall("sc2")},
+			expGetAuth:  []*GetAuthorizationCall{noAuthCallRes("sc2", "user1")},
+		},
+		{
+			name:        "two smart contracts 1st used 2nd authorized by 3rd signer",
+			usedSigners: map[string]bool{accStr("sc1"): true},
+			msg:         normalMsg("sc1", "sc2", "user1"),
+			authK:       NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1")),
+			authzK:      NewMockAuthzKeeper().WithGetAuthorizationResults(authCall("one", "sc2", "user1")),
+			expErr:      "",
+			expGetAcc:   []*GetAccountCall{smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1")},
+			expGetAuth:  []*GetAuthorizationCall{authCallRes("one", "sc2", "user1")},
 		},
 		{
 			name: "smart contract then two users both with authorizations",
@@ -4659,7 +4721,7 @@ func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
 			),
 			expErr: "",
 			expGetAcc: []*GetAccountCall{
-				userAccCall("user1"), userAccCall("user2"),
+				smartAccCall("smart_contract"), userAccCall("user1"), userAccCall("user2"),
 			},
 		},
 		{
@@ -4667,17 +4729,14 @@ func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
 			usedSigners: map[string]bool{accStr("sc1"): true},
 			msg:         normalMsg("sc1", "user1", "sc2", "user2"),
 			authK: NewMockAuthKeeper().WithGetAccountResults(
-				smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1"), userAccCall("user2"),
+				smartAccCall("sc1"), userAccCall("user1"), smartAccCall("sc2"), userAccCall("user2"),
 			),
 			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
 				authCall("two", "sc2", "user2"),
 			),
-			expErr: "",
+			expErr: "smart contract signer " + accStr("sc2") + " cannot follow non-smart-contract signer",
 			expGetAcc: []*GetAccountCall{
-				userAccCall("user1"), smartAccCall("sc2"), userAccCall("user2"),
-			},
-			expGetAuth: []*GetAuthorizationCall{
-				authCallRes("two", "sc2", "user2"),
+				smartAccCall("sc1"), userAccCall("user1"), smartAccCall("sc2"),
 			},
 		},
 		{
@@ -4724,14 +4783,13 @@ func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
 			}},
 		},
 		{
-			name:        "user contrac user contract authed only to 1st user",
+			name:        "user contract user contract authed only to 1st user",
 			usedSigners: map[string]bool{accStr("user1"): true},
 			msg:         normalMsg("user1", "sc1", "user2"),
 			authK:       NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1")),
 			authzK:      NewMockAuthzKeeper().WithGetAuthorizationResults(authCall("one", "sc1", "user1")),
-			expErr:      "smart contract signer " + accStr("sc1") + " is not authorized",
-			expGetAcc:   []*GetAccountCall{smartAccCall("sc1")},
-			expGetAuth:  []*GetAuthorizationCall{noAuthCallRes("sc1", "user2")},
+			expErr:      "smart contract signer " + accStr("sc1") + " cannot follow non-smart-contract signer",
+			expGetAcc:   []*GetAccountCall{noAccCall("user1"), smartAccCall("sc1")},
 		},
 	}
 
