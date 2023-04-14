@@ -163,8 +163,8 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	var authData authtypes.GenesisState
 	authData.Params = authtypes.DefaultParams()
 	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddr, nil, 3, 0))
-	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.user1Addr, nil, 4, 0))
-	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.user2Addr, nil, 5, 0))
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.user1Addr, nil, 4, 1))
+	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.user2Addr, nil, 5, 1))
 	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.user3Addr, nil, 6, 0))
 	accounts, err := authtypes.PackAccounts(genAccounts)
 	s.Require().NoError(err)

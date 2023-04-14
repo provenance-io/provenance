@@ -187,6 +187,17 @@ func (p *PartyDetails) IsSameAs(p2 types.Partier) bool {
 	return types.SamePartiers(p, p2)
 }
 
+// GetAllSigners gets a map of bech32 strings to true with a key for each used signer.
+func GetAllSigners(parties []*PartyDetails) map[string]bool {
+	rv := make(map[string]bool)
+	for _, party := range parties {
+		if party.HasSigner() {
+			rv[party.GetSigner()] = true
+		}
+	}
+	return rv
+}
+
 // SignersWrapper stores the signers as strings and acc addresses.
 // One is created by providing the strings. They are then converted to acc addresses
 // if they're needed that way.

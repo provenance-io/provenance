@@ -95,6 +95,16 @@ If the value owner address is changing as well as one or more other fields, thes
 * When a value owner address is a non-marker address, and is being changed, that existing address must be one of the signers.
 * When a value owner address is empty, and is being changed, standard scope signer requirements are also applied even if that's the only change to the scope.
 
+### Smart Contract Requirements
+
+The following are requirements related to smart contract usage of the `x/metadata` module:
+
+* A party with a smart contract address MUST have the `PROVENANCE` role.
+* A party with the `PROVENANCE` role MUST have the address of a smart contract.
+* When a smart contract signs a message, it MUST be first or have only smart-contract signers before it, and SHOULD include the invoker address(es) after.
+* When a smart contract is a signer, it must either be a party/owner, or have authorizations (via `x/authz`) from all signers after it.
+* If a smart contract is a signer, but not a party, it cannot be the only signer, and cannot be the last signer.
+
 ### With Party Rollup Required
 
 When a scope has `require_party_rollup = true`, all session parties must also be listed in the scope owners.
