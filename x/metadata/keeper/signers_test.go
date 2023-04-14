@@ -4362,7 +4362,267 @@ func (s *AuthzTestSuite) TestIsWasmAccount() {
 }
 
 func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
-	s.Fail("test not written")
+	acc := func(str string) sdk.AccAddress {
+		return sdk.AccAddress(str)
+	}
+	accStr := func(str string) string {
+		return acc(str).String()
+	}
+	normalMsg := func(signers ...string) types.MetadataMsg {
+		rv := &types.MsgWriteScopeRequest{Signers: make([]string, len(signers))}
+		for i, signer := range signers {
+			rv.Signers[i] = accStr(signer)
+		}
+		return rv
+	}
+	normalMsgType := types.TypeURLMsgWriteScopeRequest
+	gi := func(grantee, granter string) GrantInfo {
+		return GrantInfo{
+			Grantee: acc(grantee),
+			Granter: acc(granter),
+			MsgType: normalMsgType,
+		}
+	}
+	smartAcc := func(addr string) authtypes.AccountI {
+		return authtypes.NewBaseAccount(acc(addr), nil, 0, 0)
+	}
+	smartAccCall := func(addr string) *GetAccountCall {
+		return &GetAccountCall{
+			Addr:   acc(addr),
+			Result: smartAcc(addr),
+		}
+	}
+	userAcc := func(addr string) authtypes.AccountI {
+		return authtypes.NewBaseAccount(acc(addr), nil, 0, 1)
+	}
+	userAccCall := func(addr string) *GetAccountCall {
+		return &GetAccountCall{
+			Addr:   acc(addr),
+			Result: userAcc(addr),
+		}
+	}
+	noAccCall := func(addr string) *GetAccountCall {
+		return &GetAccountCall{Addr: acc(addr)}
+	}
+	authCallRes := func(name, grantee, granter string) *GetAuthorizationCall {
+		return &GetAuthorizationCall{
+			GrantInfo: gi(grantee, granter),
+			Result: GetAuthorizationResult{
+				Auth: NewMockAuthorization(name, authz.AcceptResponse{Accept: true}, nil),
+				Exp:  nil,
+			},
+		}
+	}
+	authCall := func(name, grantee, granter string) GetAuthorizationCall {
+		return *authCallRes(name, grantee, granter)
+	}
+	noAuthCallRes := func(grantee, granter string) *GetAuthorizationCall {
+		return &GetAuthorizationCall{
+			GrantInfo: gi(grantee, granter),
+			Result:    GetAuthorizationResult{Auth: nil, Exp: nil},
+		}
+	}
+
+	tests := []struct {
+		name        string
+		usedSigners map[string]bool
+		msg         types.MetadataMsg
+		authK       *MockAuthKeeper
+		authzK      *MockAuthzKeeper
+		expErr      string
+		expGetAcc   []*GetAccountCall
+		expGetAuth  []*GetAuthorizationCall
+	}{
+		{
+			name:   "no signers",
+			msg:    normalMsg(),
+			expErr: "",
+		},
+		{
+			name:      "one signer no account",
+			msg:       normalMsg("signer1"),
+			expErr:    "",
+			expGetAcc: []*GetAccountCall{noAccCall("signer1")},
+		},
+		{
+			name:        "one signer smart contract but in used",
+			usedSigners: map[string]bool{accStr("smart_contract"): true},
+			msg:         normalMsg("smart_contract"),
+			authK:       NewMockAuthKeeper().WithGetAccountResults(smartAccCall("smart_contract")),
+			expErr:      "",
+			expGetAcc:   nil,
+		},
+		{
+			name:      "one smart contract no used",
+			msg:       normalMsg("smart_contract"),
+			authK:     NewMockAuthKeeper().WithGetAccountResults(smartAccCall("smart_contract")),
+			expErr:    "smart contract signer " + accStr("smart_contract") + " cannot be the last signer",
+			expGetAcc: []*GetAccountCall{smartAccCall("smart_contract")},
+		},
+		{
+			name:       "two smart contracts no used",
+			msg:        normalMsg("sc1", "sc2"),
+			authK:      NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1"), smartAccCall("sc2")),
+			expErr:     "smart contract signer " + accStr("sc1") + " is not authorized",
+			expGetAcc:  []*GetAccountCall{smartAccCall("sc1")},
+			expGetAuth: []*GetAuthorizationCall{noAuthCallRes("sc1", "sc2")},
+		},
+		{
+			name: "smart contract then two users both with authorizations",
+			msg:  normalMsg("smart_contract", "user1", "user2"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				smartAccCall("smart_contract"), userAccCall("user1"), userAccCall("user2"),
+			),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				authCall("one", "smart_contract", "user1"),
+				authCall("two", "smart_contract", "user2"),
+			),
+			expErr: "",
+			expGetAcc: []*GetAccountCall{
+				smartAccCall("smart_contract"), userAccCall("user1"), userAccCall("user2"),
+			},
+			expGetAuth: []*GetAuthorizationCall{
+				authCallRes("one", "smart_contract", "user1"),
+				authCallRes("two", "smart_contract", "user2"),
+			},
+		},
+		{
+			name: "smart contract then two users only 1st with authorizations",
+			msg:  normalMsg("smart_contract", "user1", "user2"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				smartAccCall("smart_contract"), userAccCall("user1"), userAccCall("user2"),
+			),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				authCall("one", "smart_contract", "user1"),
+			),
+			expErr:    "smart contract signer " + accStr("smart_contract") + " is not authorized",
+			expGetAcc: []*GetAccountCall{smartAccCall("smart_contract")},
+			expGetAuth: []*GetAuthorizationCall{
+				authCallRes("one", "smart_contract", "user1"),
+				noAuthCallRes("smart_contract", "user2"),
+			},
+		},
+		{
+			name:        "smart contract in used then two users neither with authorizations",
+			usedSigners: map[string]bool{accStr("smart_contract"): true},
+			msg:         normalMsg("smart_contract", "user1", "user2"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				smartAccCall("smart_contract"), userAccCall("user1"), userAccCall("user2"),
+			),
+			expErr: "",
+			expGetAcc: []*GetAccountCall{
+				userAccCall("user1"), userAccCall("user2"),
+			},
+		},
+		{
+			name:        "contract user contract user, first in used second with auth",
+			usedSigners: map[string]bool{accStr("sc1"): true},
+			msg:         normalMsg("sc1", "user1", "sc2", "user2"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1"), userAccCall("user2"),
+			),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				authCall("two", "sc2", "user2"),
+			),
+			expErr: "",
+			expGetAcc: []*GetAccountCall{
+				userAccCall("user1"), smartAccCall("sc2"), userAccCall("user2"),
+			},
+			expGetAuth: []*GetAuthorizationCall{
+				authCallRes("two", "sc2", "user2"),
+			},
+		},
+		{
+			name: "contract user contract user, first has auth from users but not other contract",
+			msg:  normalMsg("sc1", "user1", "sc2", "user2"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(
+				smartAccCall("sc1"), smartAccCall("sc2"), userAccCall("user1"), userAccCall("user2"),
+			),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				authCall("one", "sc1", "user1"),
+				authCall("two", "sc1", "user2"),
+			),
+			expErr:    "smart contract signer " + accStr("sc1") + " is not authorized",
+			expGetAcc: []*GetAccountCall{smartAccCall("sc1")},
+			expGetAuth: []*GetAuthorizationCall{
+				authCallRes("one", "sc1", "user1"),
+				noAuthCallRes("sc1", "sc2"),
+			},
+		},
+		{
+			name:  "error from authorization",
+			msg:   normalMsg("sc1", "user1"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1")),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: gi("sc1", "user1"),
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("bad", authz.AcceptResponse{Accept: true, Delete: true}, nil),
+						Exp:  nil,
+					},
+				},
+			).WithDeleteGrantResults(DeleteGrantCall{
+				GrantInfo: gi("sc1", "user1"),
+				Result:    errors.New("I'm Sorry Dave, I'm Afraid I Can't Do That."),
+			}),
+			expErr:    "I'm Sorry Dave, I'm Afraid I Can't Do That.",
+			expGetAcc: []*GetAccountCall{smartAccCall("sc1")},
+			expGetAuth: []*GetAuthorizationCall{{
+				GrantInfo: gi("sc1", "user1"),
+				Result: GetAuthorizationResult{
+					Auth: NewMockAuthorization("bad", authz.AcceptResponse{Accept: true, Delete: true}, nil),
+					Exp:  nil,
+				},
+			}},
+		},
+		{
+			name:        "user contrac user contract authed only to 1st user",
+			usedSigners: map[string]bool{accStr("user1"): true},
+			msg:         normalMsg("user1", "sc1", "user2"),
+			authK:       NewMockAuthKeeper().WithGetAccountResults(smartAccCall("sc1")),
+			authzK:      NewMockAuthzKeeper().WithGetAuthorizationResults(authCall("one", "sc1", "user1")),
+			expErr:      "smart contract signer " + accStr("sc1") + " is not authorized",
+			expGetAcc:   []*GetAccountCall{smartAccCall("sc1")},
+			expGetAuth:  []*GetAuthorizationCall{noAuthCallRes("sc1", "user2")},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.authK == nil {
+				tc.authK = NewMockAuthKeeper()
+			}
+			if tc.authzK == nil {
+				tc.authzK = NewMockAuthzKeeper()
+			}
+			if tc.expGetAuth != nil {
+				for _, auth := range tc.expGetAuth {
+					if auth.Result.Auth != nil {
+						mockAuth, ok := auth.Result.Auth.(*MockAuthorization)
+						if ok && len(mockAuth.AcceptCalls) == 0 {
+							auth.Result.Auth = mockAuth.WithAcceptCalls(tc.msg)
+						}
+					}
+				}
+			}
+			k := s.app.MetadataKeeper
+			origAuthK := k.SetAuthKeeper(tc.authK)
+			origAuthzK := k.SetAuthzKeeper(tc.authzK)
+			defer func() {
+				k.SetAuthKeeper(origAuthK)
+				k.SetAuthzKeeper(origAuthzK)
+			}()
+
+			err := k.ValidateSmartContractSigners(s.FreshCtx(), tc.usedSigners, tc.msg)
+			s.AssertErrorValue(err, tc.expErr, "ValidateSmartContractSigners")
+
+			getAccountCalls := tc.authK.GetAccountCalls
+			s.Assert().Equal(tc.expGetAcc, getAccountCalls, "calls made to GetAccount")
+
+			getAuthCalls := tc.authzK.GetAuthorizationCalls
+			s.Assert().Equal(tc.expGetAuth, getAuthCalls, "calls made to GetAuthorization")
+		})
+	}
 }
 
 func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
@@ -5115,7 +5375,85 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 }
 
 func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
-	s.Fail("test not written")
+	// These tests are pretty light since all it does is call
+	// validateAllRequiredSigned and validateSmartContractSigners.
+	// The assumption is that those are well tested.
+	accStr := func(str string) string {
+		return sdk.AccAddress(str).String()
+	}
+	normalMsg := func(signers ...string) types.MetadataMsg {
+		rv := &types.MsgWriteScopeRequest{Signers: make([]string, len(signers))}
+		for i, signer := range signers {
+			rv.Signers[i] = accStr(signer)
+		}
+		return rv
+	}
+
+	tests := []struct {
+		name  string
+		req   []string
+		msg   types.MetadataMsg
+		authK *MockAuthKeeper
+		exp   string
+	}{
+		{
+			name: "nil req",
+			req:  nil,
+			msg:  normalMsg("signer1"),
+			exp:  "",
+		},
+		{
+			name: "empty req",
+			req:  []string{},
+			msg:  normalMsg("signer1"),
+			exp:  "",
+		},
+		{
+			name: "one req is signer not sc",
+			req:  []string{accStr("signer1")},
+			msg:  normalMsg("signer1"),
+			exp:  "",
+		},
+		{
+			name: "one req is not signer",
+			req:  []string{accStr("req1")},
+			msg:  normalMsg("signer1"),
+			exp:  "missing signature: " + accStr("req1"),
+		},
+		{
+			name: "no req one signer is smart contract",
+			msg:  normalMsg("signer1"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(&GetAccountCall{
+				Addr:   sdk.AccAddress("signer1"),
+				Result: authtypes.NewBaseAccount(sdk.AccAddress("signer1"), nil, 0, 0),
+			}),
+			exp: "smart contract signer " + accStr("signer1") + " cannot be the last signer",
+		},
+		{
+			name: "one req is signer and smart contract",
+			req:  []string{accStr("signer1")},
+			msg:  normalMsg("signer1"),
+			authK: NewMockAuthKeeper().WithGetAccountResults(&GetAccountCall{
+				Addr:   sdk.AccAddress("signer1"),
+				Result: authtypes.NewBaseAccount(sdk.AccAddress("signer1"), nil, 0, 0),
+			}),
+			exp: "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.authK == nil {
+				tc.authK = NewMockAuthKeeper()
+			}
+			k := s.app.MetadataKeeper
+			origAuthK := k.SetAuthKeeper(tc.authK)
+			defer k.SetAuthKeeper(origAuthK)
+
+			err := k.ValidateSignersWithoutParties(s.FreshCtx(), tc.req, tc.msg)
+			s.AssertErrorValue(err, tc.exp, "ValidateSignersWithoutParties")
+		})
+	}
 }
 
 func (s *AuthzTestSuite) TestValidateAllRequiredSigned() {
