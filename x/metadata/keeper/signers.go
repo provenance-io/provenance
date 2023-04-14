@@ -47,6 +47,9 @@ func (k Keeper) ValidateSignersWithParties(
 	if err != nil {
 		return err
 	}
+	if err = k.validateProvenanceRole(ctx, parties); err != nil {
+		return err
+	}
 	return k.validateSmartContractSigners(ctx, GetAllSigners(parties), msg)
 }
 
@@ -87,12 +90,6 @@ func (k Keeper) validateAllRequiredPartiesSigned(
 	}
 	if rolesAreMissing {
 		return nil, fmt.Errorf("missing signers for roles required by spec: %s", missingRolesString(parties, reqRoles))
-	}
-
-	// Make sure all smart contract accounts have the PROVENANCE role,
-	// and all parties with the PROVENANCE role have smart contract accounts.
-	if err = k.validateProvenanceRole(ctx, parties); err != nil {
-		return nil, err
 	}
 
 	return parties, nil

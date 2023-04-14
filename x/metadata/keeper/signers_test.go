@@ -514,17 +514,6 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned() {
 			expErr: "",
 		},
 		{
-			name:             "provenance party not smart contract",
-			reqParties:       nil,
-			availableParties: ptz(pt("party1", provenance, false)),
-			reqRoles:         rz(provenance),
-			msg:              newMsg("party1"),
-			authKeeper:       NewMockAuthKeeper(), // will return nil by default, so no need to mock it specifically.
-			authzKeeper:      NewMockAuthzKeeper(),
-			expParties:       nil,
-			expErr:           fmt.Sprintf("account %q has role PROVENANCE but is not a smart contract", accStr("party1")),
-		},
-		{
 			name:             "non-provenance smart contract account in reqParties ignored",
 			reqParties:       ptz(pt("party1", owner, false)),
 			availableParties: nil,
@@ -547,19 +536,6 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned() {
 				}.Real(),
 			},
 			expErr: "",
-		},
-		{
-			name:             "smart contract not provenance party",
-			reqParties:       nil,
-			availableParties: ptz(pt("party1", owner, false)),
-			reqRoles:         rz(owner),
-			msg:              newMsg("party1"),
-			authKeeper: NewMockAuthKeeper().WithGetAccountResults(
-				NewGetAccountCall(acc("party1"), scAcct("party1")),
-			),
-			authzKeeper: NewMockAuthzKeeper(),
-			expParties:  nil,
-			expErr:      fmt.Sprintf("account %q is a smart contract but does not have the PROVENANCE role", accStr("party1")),
 		},
 	}
 
