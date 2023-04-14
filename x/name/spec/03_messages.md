@@ -2,6 +2,13 @@
 
 In this section we describe the processing of the staking messages and the corresponding updates to the state.
 
+<!-- TOC -->
+  - [MsgBindNameRequest](#msgbindnamerequest)
+  - [MsgDeleteNameRequest](#msgdeletenamerequest)
+  - [MsgModifyNameRequest](#msgmodifynamerequest)
+  - [CreateRootNameProposal](#createrootnameproposal)
+  - [MsgCreateRootNameRequest](#msgcreaterootnamerequest)
+
 ## MsgBindNameRequest
 
 A name record is created using the `MsgBindNameRequest` message.

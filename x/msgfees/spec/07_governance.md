@@ -6,6 +6,11 @@ order: 7
 
 The msgfee module supports addition, update, and deletion of Msg Type which are assessed fees via governance proposal.
 
+<!-- TOC -->
+  - [Add MsgFee Proposal](#add-msgfee-proposal)
+  - [Update MsgFee Proposal](#update-msgfee-proposal)
+  - [Remove MsgFee Proposal](#remove-msgfee-proposal)
+
 
 
 ## Add MsgFee Proposal

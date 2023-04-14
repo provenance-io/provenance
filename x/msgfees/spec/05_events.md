@@ -6,6 +6,12 @@ order: 5
 
 Existing fee event continue to show total fee charged
 
+<!-- TOC -->
+  - [Any Tx](#any-tx)
+  - [Tx with Additional Fee](#tx-with-additional-fee)
+  - [Tx Summary Event](#tx-summary-event)
+  - [Add/Update/Remove Proposal](#addupdateremove-proposal)
+
 ## Any Tx
 
 If a Tx was successful, or if it failed, but the min fee was charged, these two events are emitted:
