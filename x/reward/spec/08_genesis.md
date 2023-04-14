@@ -7,7 +7,7 @@ order: 8
 In this section we describe the processing of the reward messages and the corresponding updates to the state.
 
 <!-- TOC 2 -->
-  - [Msg/GenesisState](#msg-genesisstate)
+  - [Msg/GenesisState](#msggenesisstate)
 
 
 ## Msg/GenesisState
