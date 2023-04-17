@@ -2,6 +2,13 @@
 
 The name module emits the following events:
 
+<!-- TOC -->
+  - [Handlers](#handlers)
+    - [MsgBindNameRequest](#msgbindnamerequest)
+    - [MsgDeleteNameRequest](#msgdeletenamerequest)
+    - [MsgModifyNameRequest](#msgmodifynamerequest)
+    - [CreateRootNameProposal](#createrootnameproposal)
+
 ## Handlers
 
 ### MsgBindNameRequest

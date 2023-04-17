@@ -10,7 +10,7 @@ The msg fees modules manages additional fees that can be applied to tx msgs spec
   - [Adding Custom Additional Fee from Wasm Contract](#adding-custom-additional-fee-from-wasm-contract)
   - [Base Fee](#base-fee)
   - [Total Fees](#total-fees)
-  - [Additional Fee Assessed in Base Denom i.e nhash](#additional-fee-assessed-in-base-denom-i-e-nhash)
+  - [Additional Fee Assessed in Base Denom i.e nhash](#additional-fee-assessed-in-base-denom-ie-nhash)
   - [Authz and Wamsd Messages](#authz-and-wamsd-messages)
   - [Simulation and Calculating the Additional Fee to be Paid](#simulation-and-calculating-the-additional-fee-to-be-paid)
 
