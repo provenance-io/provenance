@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* nothing
+
+---
+
+## [v1.15.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc1) - 2023-04-17
+
 ### Features
 
 * Add support for tokens restricted marker sends with required attributes [#1256](https://github.com/provenance-io/provenance/issues/1256))
@@ -91,6 +97,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * The `AddScopeOwner` endpoint now adds a new owner party even if an owner already exists in the scope with that address [PR 1453](https://github.com/provenance-io/provenance/pull/1453).
   I.e. it no longer updates the role of an existing owner with the same address.
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0-rc1
 
 ---
 
