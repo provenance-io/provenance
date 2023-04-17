@@ -53,6 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Metadata party rollup and optional parties [#1438](https://github.com/provenance-io/provenance/issues/1438).
 * Repeated roles in a spec require multiple different parties [#1437](https://github.com/provenance-io/provenance/issues/1437).
 * The `PROVENANCE` role can only be used by smart contract addresses, and vice versa [#1381](https://github.com/provenance-io/provenance/issues/1381).
+* Add stargate query from wasm support [#1481](https://github.com/provenance-io/provenance/issues/1481).
 
 ### Improvements
 
