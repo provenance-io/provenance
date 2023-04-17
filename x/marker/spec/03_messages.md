@@ -5,22 +5,22 @@ All created/modified state objects specified by each message are defined within 
 [state](./02_state_transitions.md) section.
 
 <!-- TOC 2 2 -->
-  - [Msg/AddMarkerRequest](#msg-addmarkerrequest)
-  - [Msg/AddAccessRequest](#msg-addaccessrequest)
-  - [Msg/DeleteAccessRequest](#msg-deleteaccessrequest)
-  - [Msg/FinalizeRequest](#msg-finalizerequest)
-  - [Msg/ActivateRequest](#msg-activaterequest)
-  - [Msg/CancelRequest](#msg-cancelrequest)
-  - [Msg/DeleteRequest](#msg-deleterequest)
-  - [Msg/MintRequest](#msg-mintrequest)
-  - [Msg/BurnRequest](#msg-burnrequest)
-  - [Msg/WithdrawRequest](#msg-withdrawrequest)
-  - [Msg/TransferRequest](#msg-transferrequest)
-  - [Msg/IbcTransferRequest](#msg-ibctransferrequest)
-  - [Msg/SetDenomMetadataRequest](#msg-setdenommetadatarequest)
-  - [Msg/AddFinalizeActivateMarkerRequest](#msg-addfinalizeactivatemarkerrequest)
-  - [Msg/GrantAllowanceRequest](#msg-grantallowancerequest)
-  - [Msg/SupplyIncreaseProposalRequest](#msg-supplyincreaseproposalrequest)
+  - [Msg/AddMarkerRequest](#msgaddmarkerrequest)
+  - [Msg/AddAccessRequest](#msgaddaccessrequest)
+  - [Msg/DeleteAccessRequest](#msgdeleteaccessrequest)
+  - [Msg/FinalizeRequest](#msgfinalizerequest)
+  - [Msg/ActivateRequest](#msgactivaterequest)
+  - [Msg/CancelRequest](#msgcancelrequest)
+  - [Msg/DeleteRequest](#msgdeleterequest)
+  - [Msg/MintRequest](#msgmintrequest)
+  - [Msg/BurnRequest](#msgburnrequest)
+  - [Msg/WithdrawRequest](#msgwithdrawrequest)
+  - [Msg/TransferRequest](#msgtransferrequest)
+  - [Msg/IbcTransferRequest](#msgibctransferrequest)
+  - [Msg/SetDenomMetadataRequest](#msgsetdenommetadatarequest)
+  - [Msg/AddFinalizeActivateMarkerRequest](#msgaddfinalizeactivatemarkerrequest)
+  - [Msg/GrantAllowanceRequest](#msggrantallowancerequest)
+  - [Msg/SupplyIncreaseProposalRequest](#msgsupplyincreaseproposalrequest)
 
 
 

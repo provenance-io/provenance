@@ -2,7 +2,16 @@
 
 In Provenance a user can pre-authorize another user to transfer a restricted coin, with a specified limit, from their account to any other account.  This authorization can be revoked or modified at a later date.  Also, this ability is only allowed on restricted coins, so the base coin, hash, does not have the ability to do this.
 
-### Overview of how to do this
+<!-- TOC 2 4 -->
+  - [Overview of how to do this](#overview-of-how-to-do-this)
+    - [Practical example on a local node](#practical-example-on-a-local-node)
+      - [Running a local node and adding keys with hash to sign txs](#running-a-local-node-and-adding-keys-with-hash-to-sign-txs)
+      - [Creating a restricted coin](#creating-a-restricted-coin)
+      - [Granting pre-authorization](#granting-pre-authorization)
+      - [Transferring coins](#transferring-coins)
+      - [Revoking pre-authorization](#revoking-pre-authorization)
+
+## Overview of how to do this
 In order to grant authorization for a user to transfer restricted coin, a user can take advantage of the `grant-authz` command on the marker module.  `provenanced tx marker grant-authz --help` can be used in order to view all of the possible flags and inputs.  However, in order for it to run, it is necessary to give this command the address of the user that will be pre-authorized to conduct transfers, the type of action that is pre-authorized which in this case is `transfer`, a transfer-limit, and an address to sign the transaction with using the `--from` flag.
 
 The flag `spend-limit` is used to set the total amount of coin that can be transfered.  Each transfer will deduct from this total until it is exhausted at which point no more transfers can be made. However, the spend limit can be reset by the user doing another pre-authorize transaction.  Note that this new spend limit does not take into account what has already been spent.  So, for example if you grant permissions to transfer 100 coins and 50 are transfered and then you set a new spend limit of 75, that allows the user to now transfer 75 coins.  The previously spent coins are not taken into account with the new spend limit. 

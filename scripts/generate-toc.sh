@@ -84,9 +84,10 @@ generate_toc () {
   | sed -E 's/(#+) (.+)/\1~\2~\2/g' \
   | awk -F "~" \
       '{
-          gsub(/#/,"  ",$1);
-          gsub(/[^[:alnum:]_]+/,"-",$3);
-          gsub(/-+$/,"",$3);
+          gsub(/#/,"  ",$1);              # Change each # to two spaces
+          gsub(/[.\\\/]/,"",$3);          # Delete all periods, backslashes and slashes
+          gsub(/[^[:alnum:]_]+/,"-",$3);  # Convert any number of consecutive non-alpha-numeric or underscore chars into a single dash
+          gsub(/-+$/,"",$3);              # Delete any trailing dashes
           print $1 "- [" $2 "](#" tolower($3) ")";
         }'
 }

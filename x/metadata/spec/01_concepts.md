@@ -14,6 +14,7 @@ Additionally, several indexes are created to help with linking and iterating ove
   - [Indexes](#indexes)
   - [Signing Requirements](#signing-requirements)
     - [Scope Value Owner Address Requirements](#scope-value-owner-address-requirements)
+    - [Smart Contract Requirements](#smart-contract-requirements)
     - [With Party Rollup Required](#with-party-rollup-required)
     - [Without Party Rollup Required](#without-party-rollup-required)
 
