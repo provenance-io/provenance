@@ -70,8 +70,11 @@ message MsgGrantAllowanceRequest {
 // MsgGrantAllowanceResponse defines the Msg/GrantAllowanceResponse response type.
 message MsgGrantAllowanceResponse {}
 
-// MsgAddMarkerRequest defines the Msg/AddMarker request type
+// MsgAddMarkerRequest defines the Msg/AddMarker request type.
+// If being provided as a governance proposal, set the from_address to the gov module's account address.
 message MsgAddMarkerRequest {
+  option (cosmos.msg.v1.signer) = "from_address";
+
   cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
   string               manager                  = 3;

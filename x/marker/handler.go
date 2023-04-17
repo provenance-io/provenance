@@ -64,6 +64,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgAddFinalizeActivateMarkerRequest:
 			res, err := msgServer.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+
 		default:
 			return nil, sdkerrors.ErrUnknownRequest.Wrapf("unrecognized %s message type: %T", types.ModuleName, msg)
 		}
@@ -73,8 +74,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 func NewProposalHandler(k keeper.Keeper) govtypesv1beta1.Handler {
 	return func(ctx sdk.Context, content govtypesv1beta1.Content) error {
 		switch c := content.(type) {
-		case *types.AddMarkerProposal:
-			return keeper.HandleAddMarkerProposal(ctx, k, c)
 		case *types.SupplyIncreaseProposal:
 			return keeper.HandleSupplyIncreaseProposal(ctx, k, c)
 		case *types.SupplyDecreaseProposal:

@@ -882,6 +882,85 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 	require.NoError(t, err, "should allow any valid denom with a min length of two")
 }
 
+func TestAddMarkerViaProposal(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+
+	newMsg := func(denom string, amt math.Int, manager string, status types.MarkerStatus,
+		markerType types.MarkerType, access []types.AccessGrant, allowGov bool,
+	) *types.MsgAddMarkerRequest {
+		return &types.MsgAddMarkerRequest{
+			Amount:                 sdk.NewCoin(denom, amt),
+			Manager:                manager,
+			FromAddress:            app.MarkerKeeper.GetAuthority(),
+			Status:                 status,
+			MarkerType:             markerType,
+			AccessList:             access,
+			SupplyFixed:            true,
+			AllowGovernanceControl: allowGov,
+		}
+	}
+
+	user := testUserAddress("test").String()
+
+	coin := types.MarkerType_Coin
+	restricted := types.MarkerType_RestrictedCoin
+
+	active := types.StatusActive
+	finalized := types.StatusFinalized
+
+	testCases := []struct {
+		name string
+		prop *types.MsgAddMarkerRequest
+		err  error
+	}{
+		{
+			"add marker - valid",
+			newMsg("test1", sdk.NewInt(100), "", active, coin, []types.AccessGrant{}, true),
+			nil,
+		},
+		{
+			"add marker - valid restricted marker",
+			newMsg("testrestricted", sdk.NewInt(100), "", active, restricted, []types.AccessGrant{}, true),
+			nil,
+		},
+		{
+			"add marker - valid no governance",
+			newMsg("testnogov", sdk.NewInt(100), user, active, coin, []types.AccessGrant{}, false),
+			nil,
+		},
+		{
+			"add marker - valid finalized",
+			newMsg("pending", sdk.NewInt(100), user, finalized, coin, []types.AccessGrant{}, true),
+			nil,
+		},
+		{
+			"add marker - already exists",
+			newMsg("test1", sdk.NewInt(0), "", active, coin, []types.AccessGrant{}, true),
+			fmt.Errorf("marker address already exists for cosmos1ku2jzvpkt4ffxxaajyk2r88axk9cr5jqlthcm4: invalid request"),
+		},
+		{
+			"add marker - invalid status",
+			newMsg("test2", sdk.NewInt(100), "", types.StatusUndefined, coin, []types.AccessGrant{}, true),
+			fmt.Errorf("invalid marker status: invalid request"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := server.AddMarker(ctx, tc.prop)
+			if tc.err == nil {
+				require.NoError(t, err)
+				require.Equal(t, res, res)
+			} else {
+				require.Nil(t, res)
+				require.EqualError(t, err, tc.err.Error())
+			}
+		})
+	}
+}
+
 func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})

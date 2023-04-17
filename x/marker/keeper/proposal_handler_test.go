@@ -43,44 +43,49 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestMarkerProposals() {
+	// Add markers for tests
+	newMsgAddMarker := func(denom string, manager string, status markertypes.MarkerStatus,
+		markerType markertypes.MarkerType, allowGov bool,
+	) *markertypes.MsgAddMarkerRequest {
+		return &markertypes.MsgAddMarkerRequest{
+			Amount:                 sdk.NewCoin(denom, sdk.NewInt(100)),
+			Manager:                manager,
+			FromAddress:            s.app.MarkerKeeper.GetAuthority(),
+			Status:                 status,
+			MarkerType:             markerType,
+			AccessList:             []markertypes.AccessGrant{},
+			SupplyFixed:            true,
+			AllowGovernanceControl: allowGov,
+			AllowForcedTransfer:    false,
+			RequiredAttributes:     nil,
+		}
+	}
+
+	coin := markertypes.MarkerType_Coin
+	restricted := markertypes.MarkerType_RestrictedCoin
+
+	active := markertypes.StatusActive
+	finalized := markertypes.StatusFinalized
+
+	server := markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
+
+	_, err := server.AddMarker(s.ctx, newMsgAddMarker("test1", "", active, coin, true))
+	s.Require().NoError(err, "AddMarker test1")
+
+	_, err = server.AddMarker(s.ctx, newMsgAddMarker("testnogov", "", active, coin, false))
+	s.Require().NoError(err, "AddMarker testnogov")
+
+	_, err = server.AddMarker(s.ctx, newMsgAddMarker("pending", s.accountAddr.String(), finalized, coin, true))
+	s.Require().NoError(err, "AddMarker pending")
+
+	_, err = server.AddMarker(s.ctx, newMsgAddMarker("testrestricted", s.accountAddr.String(), finalized, restricted, true))
+	s.Require().NoError(err, "AddMarker testrestricted")
 
 	testCases := []struct {
 		name string
 		prop govtypesv1beta1.Content
 		err  error
 	}{
-		// ADD MARKER PROPOSALS
-		{
-			"add marker - valid",
-			markertypes.NewAddMarkerProposal("title", "description", "test1", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true),
-			nil,
-		},
-		{
-			"add marker - valid",
-			markertypes.NewAddMarkerProposal("title", "description", "testrestricted", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_RestrictedCoin, []markertypes.AccessGrant{}, true, true),
-			nil,
-		},
-		{
-			"add marker - valid no governance",
-			markertypes.NewAddMarkerProposal("title", "description", "testnogov", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, false),
-			nil,
-		},
-		{
-			"add marker - valid finalized",
-			markertypes.NewAddMarkerProposal("title", "description", "pending", sdk.NewInt(100), s.accountAddr, markertypes.StatusFinalized, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true),
-			nil,
-		},
-		{
-			"add marker - already exists",
-			markertypes.NewAddMarkerProposal("title", "description", "test1", sdk.NewInt(0), sdk.AccAddress{}, markertypes.StatusActive, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true),
-			fmt.Errorf("test1 marker already exists"),
-		},
-		{
-			"add marker - invalid status",
-			markertypes.NewAddMarkerProposal("title", "description", "test2", sdk.NewInt(100), sdk.AccAddress{}, markertypes.StatusUndefined, markertypes.MarkerType_Coin, []markertypes.AccessGrant{}, true, true),
-			fmt.Errorf("error invalid marker status undefined"),
-		},
-
 		// INCREASE SUPPLY PROPOSALS
 		{
 			"supply increase - valid",
@@ -328,8 +333,6 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 
 			var err error
 			switch c := tc.prop.(type) {
-			case *markertypes.AddMarkerProposal:
-				err = markerkeeper.HandleAddMarkerProposal(s.ctx, s.k, c)
 			case *markertypes.SupplyIncreaseProposal:
 				err = markerkeeper.HandleSupplyIncreaseProposal(s.ctx, s.k, c)
 			case *markertypes.SupplyDecreaseProposal:

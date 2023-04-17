@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/armon/go-metrics"
 
@@ -60,49 +61,66 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerRequest) (*types.MsgAddMarkerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if msg.Status >= types.StatusActive {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("a marker can not be created in an ACTIVE status")
-	}
+	isGovProp := msg.FromAddress == k.GetAuthority()
 
 	var err error
-	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
-	if err = k.ValidateUnrestictedDenom(ctx, msg.Amount.Denom); err != nil {
-		return nil, err
+	// If this isn't from a gov prop, there's some added restrictions to check.
+	if !isGovProp {
+		// Only Proposed and Finalized statuses are allowed.
+		if msg.Status != types.StatusFinalized && msg.Status != types.StatusProposed {
+			return nil, fmt.Errorf("marker can only be created with a Proposed or Finalized status")
+		}
+		// There's extra restrictions on the denom.
+		if err = k.ValidateUnrestictedDenom(ctx, msg.Amount.Denom); err != nil {
+			return nil, err
+		}
 	}
 
 	addr := types.MustGetMarkerAddress(msg.Amount.Denom)
 	var manager sdk.AccAddress
-	if msg.Manager != "" {
+	switch {
+	case msg.Manager != "":
 		manager, err = sdk.AccAddressFromBech32(msg.Manager)
-	} else {
+	case msg.Status != types.StatusActive:
 		manager, err = sdk.AccAddressFromBech32(msg.FromAddress)
 	}
 	if err != nil {
 		return nil, err
 	}
 
+	// If this is via gov prop, just use the provided AllowGovernanceControl value.
+	// Otherwise, if either requested or governance is enabled in params, allow it.
+	allowGovControl := msg.AllowGovernanceControl || (!isGovProp && k.GetEnableGovernance(ctx))
+
 	normalizedReqAttrs, err := k.NormalizeRequiredAttributes(ctx, msg.RequiredAttributes)
 	if err != nil {
 		return nil, err
 	}
 
-	account := authtypes.NewBaseAccount(addr, nil, 0, 0)
 	ma := types.NewMarkerAccount(
-		account,
+		authtypes.NewBaseAccountWithAddress(addr),
 		sdk.NewCoin(msg.Amount.Denom, msg.Amount.Amount),
 		manager,
 		msg.AccessList,
 		msg.Status,
 		msg.MarkerType,
 		msg.SupplyFixed,
-		msg.AllowGovernanceControl || k.GetEnableGovernance(ctx),
+		allowGovControl,
 		msg.AllowForcedTransfer,
 		normalizedReqAttrs,
 	)
 
-	if err := k.Keeper.AddMarkerAccount(ctx, ma); err != nil {
+	if err = k.Keeper.AddMarkerAccount(ctx, ma); err != nil {
 		ctx.Logger().Error("unable to add marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	// Note: The status can only be Active if this is being done via gov prop.
+	if ma.Status == types.StatusActive {
+		// Active markers should have supply set.
+		if err = k.AdjustCirculation(ctx, ma, msg.Amount); err != nil {
+			return nil, err
+		}
 	}
 
 	ctx.EventManager().EmitEvent(

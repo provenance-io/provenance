@@ -1106,14 +1106,6 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 			true, &sdk.TxResponse{}, 0,
 		},
 		{
-			"add marker proposal",
-			"AddMarker",
-			fmt.Sprintf(`{"title":"test add marker","description":"description","manager":"%s",
-			"amount":{"denom":"testpropmarker","amount":"1"},"status":"MARKER_STATUS_ACTIVE","marker_type":1,
-			"supply_fixed":true,"allow_governance_control":true}`, s.testnet.Validators[0].Address.String()),
-			false, &sdk.TxResponse{}, 0,
-		},
-		{
 			"mint marker proposal",
 			"IncreaseSupply",
 			fmt.Sprintf(`{"title":"test mint marker","description":"description","manager":"%s",

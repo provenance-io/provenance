@@ -67,9 +67,6 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 	if len(msg.Manager) == 0 && msg.Status == StatusProposed {
 		return fmt.Errorf("marker manager cannot be empty when creating a proposed marker")
 	}
-	if msg.Status != StatusFinalized && msg.Status != StatusProposed {
-		return fmt.Errorf("marker can only be created with a Proposed or Finalized status")
-	}
 	testCoin := sdk.Coin{
 		Denom:  msg.Amount.Denom,
 		Amount: msg.Amount.Amount,

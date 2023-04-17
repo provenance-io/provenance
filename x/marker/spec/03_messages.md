@@ -34,10 +34,11 @@ must have a valid supply and denomination value.
 
 +++ https://github.com/provenance-io/provenance/blob/0b005ca855eb0dcda86a87d585e8a021c87d985d/proto/provenance/marker/v1/tx.proto#L88
 
+
 This service message is expected to fail if:
 - The Denom string:
   - Is already in use by another marker
-  - Does not conform to the "Marker Denom Validation Expression"
+  - Does not conform to the "Marker Denom Validation Expression" (`unrestricted_denom_regex` param)
   - Does not conform to the base coin denom validation expression parameter
 - The supply value:
   - Is less than zero
@@ -50,6 +51,12 @@ This service message is expected to fail if:
 
 The service message will create a marker account object and request the auth module persist it.  No coin will be minted
 or disbursed as a result of adding a marker using this endpoint.
+
+If issued via governance proposal, and has a `from_address` of the governance module account:
+- The marker status can be Active.
+- The `unrestricted_denom_regex` check is not applied. Denoms still need to conform to the base coin denom format though.
+- The marker's `allow_governance_control` flag ignores the `enable_governance` param value, and is set to the provided value.
+- If the marker status is Active, and no `manager` is provided, it is left blank (instead of being populated with the `from_address`).
 
 ## Msg/AddAccessRequest
 

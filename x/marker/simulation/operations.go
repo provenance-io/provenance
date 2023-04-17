@@ -5,15 +5,18 @@ import (
 	"math/rand"
 	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
@@ -31,6 +34,8 @@ const (
 	OpWeightMsgAddAccess = "op_weight_msg_add_access"
 	//nolint:gosec // not credentials
 	OpWeightMsgAddActivateFinalizeMarker = "op_weight_msg_add_finalize_activate_marker"
+	//nolint:gosec // not credentials
+	OpWeightMsgAddMarkerProposal = "op_weight_msg_add_marker_proposal"
 )
 
 /*
@@ -49,13 +54,23 @@ SetDenomMetadata
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper,
+	appParams simtypes.AppParams, cdc codec.JSONCodec, protoCodec *codec.ProtoCodec, k keeper.Keeper, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, gk types.GovKeeper,
 ) simulation.WeightedOperations {
+	args := &WeightedOpsArgs{
+		AppParams:  appParams,
+		JSONCodec:  cdc,
+		ProtoCodec: protoCodec,
+		AK:         ak,
+		BK:         bk,
+		GK:         gk,
+	}
+
 	var (
 		weightMsgAddMarker                 int
 		weightMsgChangeStatus              int
 		weightMsgAddAccess                 int
 		weightMsgAddFinalizeActivateMarker int
+		weightMsgAddMarkerProposal         int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgAddMarker, &weightMsgAddMarker, nil,
@@ -82,6 +97,12 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OpWeightMsgAddMarkerProposal, &weightMsgAddMarkerProposal, nil,
+		func(_ *rand.Rand) {
+			weightMsgAddMarkerProposal = simappparams.DefaultWeightMsgAddMarkerProposal
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgAddMarker,
@@ -98,6 +119,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgAddFinalizeActivateMarker,
 			SimulateMsgAddFinalizeActivateMarker(k, ak, bk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgAddMarkerProposal,
+			SimulateMsgAddMarkerProposal(k, args),
 		),
 	}
 }
@@ -219,6 +244,75 @@ func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.Account
 		)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
+	}
+}
+
+func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+		denom := randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx))
+
+		msg := &types.MsgAddMarkerRequest{
+			Amount: sdk.Coin{
+				Denom:  denom,
+				Amount: sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))),
+			},
+			Manager:                simAccount.Address.String(),
+			FromAddress:            k.GetAuthority(),
+			Status:                 types.MarkerStatus(r.Intn(3) + 1),
+			MarkerType:             types.MarkerType(r.Intn(2) + 1),
+			AccessList:             []types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r)}},
+			SupplyFixed:            r.Intn(2) > 0,
+			AllowGovernanceControl: true,
+			AllowForcedTransfer:    false,
+			RequiredAttributes:     nil,
+		}
+		if msg.Status == types.StatusActive {
+			msg.Manager = ""
+		}
+
+		// Get the governance min deposit needed
+		govMinDep := sdk.NewCoins(args.GK.GetDepositParams(ctx).MinDeposit...)
+
+		sender, _ := simtypes.RandomAcc(r, accs)
+
+		msgArgs := &SendGovMsgArgs{
+			WeightedOpsArgs: *args,
+			R:               r,
+			App:             app,
+			Ctx:             ctx,
+			Accs:            accs,
+			ChainID:         chainID,
+			Sender:          sender,
+			Msg:             msg,
+			Deposit:         govMinDep,
+			Comment:         "marker",
+		}
+
+		skip, opMsg, err := SendGovMsg(msgArgs)
+
+		if skip || err != nil {
+			return opMsg, nil, err
+		}
+
+		proposalID, err := args.GK.GetProposalID(ctx)
+		if err != nil {
+			return opMsg, nil, err
+		}
+
+		votingPeriod := args.GK.GetVotingParams(ctx).VotingPeriod
+		fops := make([]simtypes.FutureOperation, len(accs))
+		for i, acct := range accs {
+			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
+			fops[i] = simtypes.FutureOperation{
+				BlockTime: whenVote,
+				Op:        OperationMsgVote(args, acct, proposalID, govtypes.OptionYes, msgArgs.Comment),
+			}
+		}
+
+		return opMsg, fops, nil
 	}
 }
 
@@ -355,4 +449,112 @@ func randomUint64(r *rand.Rand, max uint64) (result uint64) {
 		}
 	}
 	return
+}
+
+// WeightedOpsArgs holds all the args provided to WeightedOperations so that they can be passed on later more easily.
+type WeightedOpsArgs struct {
+	AppParams  simtypes.AppParams
+	JSONCodec  codec.JSONCodec
+	ProtoCodec *codec.ProtoCodec
+	AK         authkeeper.AccountKeeper
+	BK         bankkeeper.Keeper
+	GK         types.GovKeeper
+}
+
+// SendGovMsgArgs holds all the args available and needed for sending a gov msg.
+type SendGovMsgArgs struct {
+	WeightedOpsArgs
+
+	R       *rand.Rand
+	App     *baseapp.BaseApp
+	Ctx     sdk.Context
+	Accs    []simtypes.Account
+	ChainID string
+
+	Sender  simtypes.Account
+	Msg     sdk.Msg
+	Deposit sdk.Coins
+	Comment string
+}
+
+// SendGovMsg sends a msg as a gov prop.
+// It returns whether to skip the rest, an operation message, and any error encountered.
+func SendGovMsg(args *SendGovMsgArgs) (bool, simtypes.OperationMsg, error) {
+	msgType := sdk.MsgTypeURL(args.Msg)
+
+	spendableCoins := args.BK.SpendableCoins(args.Ctx, args.Sender.Address)
+	if spendableCoins.Empty() {
+		return true, simtypes.NoOpMsg(types.ModuleName, msgType, "sender has no spendable coins"), nil
+	}
+
+	_, hasNeg := spendableCoins.SafeSub(args.Deposit...)
+	if hasNeg {
+		return true, simtypes.NoOpMsg(types.ModuleName, msgType, "sender has insufficient balance to cover deposit"), nil
+	}
+
+	msgAny, err := codectypes.NewAnyWithValue(args.Msg)
+	if err != nil {
+		return true, simtypes.NoOpMsg(types.ModuleName, msgType, "wrapping MsgAddMarkerProposalRequest as Any"), err
+	}
+
+	govMsg := &govtypes.MsgSubmitProposal{
+		Messages:       []*codectypes.Any{msgAny},
+		InitialDeposit: args.Deposit,
+		Proposer:       args.Sender.Address.String(),
+		Metadata:       "",
+	}
+
+	txCtx := simulation.OperationInput{
+		R:               args.R,
+		App:             args.App,
+		TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+		Cdc:             args.ProtoCodec,
+		Msg:             govMsg,
+		MsgType:         govMsg.Type(),
+		CoinsSpentInMsg: govMsg.InitialDeposit,
+		Context:         args.Ctx,
+		SimAccount:      args.Sender,
+		AccountKeeper:   args.AK,
+		Bankkeeper:      args.BK,
+		ModuleName:      types.ModuleName,
+	}
+
+	opMsg, _, err := simulation.GenAndDeliverTxWithRandFees(txCtx)
+	if opMsg.Comment == "" {
+		opMsg.Comment = args.Comment
+	}
+
+	return err != nil, opMsg, err
+}
+
+// OperationMsgVote returns an operation that casts a yes vote on a gov prop from an account.
+func OperationMsgVote(args *WeightedOpsArgs, voter simtypes.Account, govPropID uint64, vote govtypes.VoteOption, comment string) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msg := govtypes.NewMsgVote(voter.Address, govPropID, vote, "")
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             args.ProtoCodec,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			CoinsSpentInMsg: sdk.Coins{},
+			Context:         ctx,
+			SimAccount:      voter,
+			AccountKeeper:   args.AK,
+			Bankkeeper:      args.BK,
+			ModuleName:      types.ModuleName,
+		}
+
+		opMsg, fops, err := simulation.GenAndDeliverTxWithRandFees(txCtx)
+		if opMsg.Comment == "" {
+			opMsg.Comment = comment
+		}
+
+		return opMsg, fops, err
+	}
 }
