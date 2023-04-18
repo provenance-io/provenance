@@ -1,13 +1,15 @@
 package antewrapper_test
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"testing"
+
+	"github.com/provenance-io/provenance/internal/antewrapper"
 )
 
 type TestTerminator struct {
