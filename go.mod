@@ -47,7 +47,7 @@ require (
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
-	github.com/CosmWasm/wasmvm v1.1.1 // indirect
+	github.com/CosmWasm/wasmvm v1.1.2 // indirect
 	github.com/Workiva/go-datastructures v1.0.53 // indirect
 	github.com/aws/aws-sdk-go v1.44.122 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -184,7 +184,7 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 // TODO: Required for v1.13.x: Remove this and update the require line above to have the new version once it's out. https://github.com/provenance-io/provenance/issues/1015
 // TODO: This is also required for https://github.com/provenance-io/provenance/issues/1414
-replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-2
+replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-4
 
 // TODO: Required for IBC Transfer Module. Remove this when they patch it to include our changes. https://github.com/provenance-io/provenance/issues/1100
 replace github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.1.0-pio-1
