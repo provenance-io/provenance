@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -147,7 +147,7 @@ Valid Proposal Types (and associated parameters):
 				return err
 			}
 
-			contents, err := ioutil.ReadFile(args[1])
+			contents, err := os.ReadFile(args[1])
 			if err != nil {
 				return err
 			}
