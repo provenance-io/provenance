@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/name"
 	"github.com/provenance-io/provenance/x/name/keeper"
@@ -218,13 +219,13 @@ func TestModifyName(t *testing.T) {
 			expectedEvent: nil,
 		},
 		{
-			name:          "modify name - fails with non existant root record",
+			name:          "modify name - fails with non existent root record",
 			msg:           nametypes.NewMsgModifyNameRequest(authority, "jackthecat", addr1, true),
 			expectedError: sdkerrors.ErrInvalidRequest.Wrap(nametypes.ErrNameNotBound.Error()),
 			expectedEvent: nil,
 		},
 		{
-			name:          "modify name - fails with non existant subdomain record",
+			name:          "modify name - fails with non existent subdomain record",
 			msg:           nametypes.NewMsgModifyNameRequest(authority, "jackthecat.name", addr1, true),
 			expectedError: sdkerrors.ErrInvalidRequest.Wrap(nametypes.ErrNameNotBound.Error()),
 			expectedEvent: nil,

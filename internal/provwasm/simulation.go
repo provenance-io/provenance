@@ -2,8 +2,8 @@ package provwasm
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math/rand"
+	"os"
 	"strings"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
@@ -256,7 +256,7 @@ func SimulateMsgStoreContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKe
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		code, err := ioutil.ReadFile("./sim_contracts/tutorial.wasm")
+		code, err := os.ReadFile("./sim_contracts/tutorial.wasm")
 
 		if err != nil {
 			panic(err)
