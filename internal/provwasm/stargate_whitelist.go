@@ -79,11 +79,9 @@ func init() {
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Attribute", &attributetypes.QueryAttributeResponse{})
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Attributes", &attributetypes.QueryAttributesResponse{})
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Scan", &attributetypes.QueryScanResponse{})
-	setWhitelistedQuery("/provenance.attribute.v1.Query/AttributeAccounts", &attributetypes.QueryAttributeAccountsResponse{})
 
 	// marker
 	setWhitelistedQuery("/provenance.marker.v1.Query/Params", &markertypes.QueryParamsResponse{})
-	setWhitelistedQuery("/provenance.marker.v1.Query/AllMarkers", &markertypes.QueryAllMarkersResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/Marker", &markertypes.QueryMarkerResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/Holding", &markertypes.QueryHoldingResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/Supply", &markertypes.QuerySupplyResponse{})
@@ -94,29 +92,21 @@ func init() {
 	// metadata
 	setWhitelistedQuery("/provenance.metadata.v1.QueryParams", &metadatatypes.QueryParamsResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/Scope", &metadatatypes.ScopeResponse{})
-	setWhitelistedQuery("/provenance.metadata.v1.Query/All", &metadatatypes.ScopesAllResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/Sessions", &metadatatypes.SessionsResponse{})
-	setWhitelistedQuery("/provenance.metadata.v1.Query/SessionsAll", &metadatatypes.SessionsAllResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/Records", &metadatatypes.RecordsResponse{})
-	setWhitelistedQuery("/provenance.metadata.v1.Query/RecordsAll", &metadatatypes.RecordsAllResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/Ownership", &metadatatypes.OwnershipResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/ValueOwnership", &metadatatypes.ValueOwnershipResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/ScopeSpecification", &metadatatypes.ScopeSpecificationResponse{})
-	setWhitelistedQuery("/provenance.metadata.v1.Query/ScopeSpecificationsAll", &metadatatypes.ScopeSpecificationsAllResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/ContractSpecification", &metadatatypes.ContractSpecificationResponse{})
-	setWhitelistedQuery("/provenance.metadata.v1.Query/ContractSpecificationsAll", &metadatatypes.ContractSpecificationsAllResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/RecordSpecificationsForContractSpecification", &metadatatypes.RecordSpecificationsForContractSpecificationResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/RecordSpecification", &metadatatypes.RecordSpecificationResponse{})
-	setWhitelistedQuery("/provenance.metadata.v1.Query/RecordSpecificationsAll", &metadatatypes.RecordSpecificationsAllResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/OSLocatorParams", &metadatatypes.OSLocatorParamsResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/OSLocator", &metadatatypes.OSLocatorResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/OSLocatorsByURI", &metadatatypes.OSLocatorsByURIResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/OSLocatorsByScope", &metadatatypes.OSLocatorsByScopeResponse{})
-	setWhitelistedQuery("/provenance.metadata.v1.Query/OSAllLocators", &metadatatypes.OSAllLocatorsResponse{})
 
 	// msg fee
 	setWhitelistedQuery("/provenance.msgfees.v1.Query/Params", &msgfeestypes.QueryParamsResponse{})
-	setWhitelistedQuery("/provenance.msgfees.v1.Query/AllMsgFees", &msgfeestypes.QueryAllMsgFeesResponse{})
 
 	// name
 	setWhitelistedQuery("/provenance.name.v1.Query/Params", &nametypes.QueryParamsResponse{})
