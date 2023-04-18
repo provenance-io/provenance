@@ -319,7 +319,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Publish
-        uses: provenance-io/npm-publish-action@v1
+        uses: provenance-io/npm-publish-action@v1.1
         with:
           api-version: ${{ needs.build_init.outputs.version }}
           npm-token: ${{ secrets.NPM_TOKEN }}
