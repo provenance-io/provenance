@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -13,6 +14,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
@@ -31,7 +33,7 @@ var stargateWhitelist sync.Map
 // Note: When adding a migration here, we should also add it to the Async ICQ params in the upgrade.
 // In the future we may want to find a better way to keep these in sync
 
-//nolint:staticcheck
+
 func init() {
 	// ibc queries
 	setWhitelistedQuery("/ibc.applications.transfer.v1.Query/DenomTrace", &ibctransfertypes.QueryDenomTraceResponse{})
