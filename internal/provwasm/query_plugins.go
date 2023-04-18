@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
