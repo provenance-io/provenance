@@ -33,7 +33,6 @@ var stargateWhitelist sync.Map
 // Note: When adding a migration here, we should also add it to the Async ICQ params in the upgrade.
 // In the future we may want to find a better way to keep these in sync
 
-
 func init() {
 	// ibc queries
 	setWhitelistedQuery("/ibc.applications.transfer.v1.Query/DenomTrace", &ibctransfertypes.QueryDenomTraceResponse{})
