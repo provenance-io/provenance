@@ -66,6 +66,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Enhance ability of smart contracts to use the metadata module [#1280](https://github.com/provenance-io/provenance/issues/1280).
 * Enhance the `AddMarker` endpoint to bypass some validation if issued via governance proposal [#1358](https://github.com/provenance-io/provenance/pull/1358).
   This replaces the old `AddMarkerProposal` governance proposal.
+* Bump wasmvm to 1.1.2 [#1484](https://github.com/provenance-io/provenance/pull/1358).
 
 ### Deprecated
 
