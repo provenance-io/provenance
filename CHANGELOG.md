@@ -67,6 +67,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Enhance the `AddMarker` endpoint to bypass some validation if issued via governance proposal [#1358](https://github.com/provenance-io/provenance/pull/1358).
   This replaces the old `AddMarkerProposal` governance proposal.
 * Bump wasmvm to 1.1.2 [#1484](https://github.com/provenance-io/provenance/pull/1358).
+* Documented proposing a transaction [#1489](https://github.com/provenance-io/provenance/pull/1489).
 
 ### Deprecated
 
