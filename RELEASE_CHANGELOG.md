@@ -1,4 +1,4 @@
-## [v1.15.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc1) - 2023-04-17
+## [v1.15.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc2) - 2023-04-19
 
 ### Features
 
@@ -10,6 +10,7 @@
 * Metadata party rollup and optional parties [#1438](https://github.com/provenance-io/provenance/issues/1438).
 * Repeated roles in a spec require multiple different parties [#1437](https://github.com/provenance-io/provenance/issues/1437).
 * The `PROVENANCE` role can only be used by smart contract addresses, and vice versa [#1381](https://github.com/provenance-io/provenance/issues/1381).
+* Add stargate query from wasm support [#1481](https://github.com/provenance-io/provenance/issues/1481).
 
 ### Improvements
 
@@ -23,6 +24,8 @@
 * Enhance ability of smart contracts to use the metadata module [#1280](https://github.com/provenance-io/provenance/issues/1280).
 * Enhance the `AddMarker` endpoint to bypass some validation if issued via governance proposal [#1358](https://github.com/provenance-io/provenance/pull/1358).
   This replaces the old `AddMarkerProposal` governance proposal.
+* Bump wasmvm to 1.1.2 [#1484](https://github.com/provenance-io/provenance/pull/1358).
+* Documented proposing a transaction [#1489](https://github.com/provenance-io/provenance/pull/1489).
 
 ### Deprecated
 
@@ -57,5 +60,4 @@
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0-rc1
-
+* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0-rc2
