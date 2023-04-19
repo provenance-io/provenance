@@ -41,7 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
-## [v1.15.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc1) - 2023-04-17
+## [v1.15.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc2) - 2023-04-19
 
 ### Features
 
@@ -101,7 +101,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0-rc1
+* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0-rc2
 
 ---
 
