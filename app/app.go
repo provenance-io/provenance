@@ -536,7 +536,7 @@ func New(
 		wasmConfig,
 		supportedFeatures,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		wasmkeeper.WithQueryPlugins(provwasm.QueryPlugins(querierRegistry)),
+		wasmkeeper.WithQueryPlugins(provwasm.QueryPlugins(querierRegistry, *app.GRPCQueryRouter(), appCodec)),
 		wasmkeeper.WithMessageEncoders(provwasm.MessageEncoders(encoderRegistry, logger)),
 	)
 
