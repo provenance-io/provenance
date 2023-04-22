@@ -29,7 +29,7 @@ func TestSendRestrictionFn(t *testing.T) {
 
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctxWithBypass := keeper.WithMarkerSendRestrictionBypass(ctx, true)
+	ctxWithBypass := types.WithBypass(ctx)
 	owner := sdk.AccAddress("owner_address_______")
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, owner))
 	require.NoError(t, app.NameKeeper.SetNameRecord(ctx, "kyc.provenance.io", owner, false), "SetNameRecord kyc.provenance.io")

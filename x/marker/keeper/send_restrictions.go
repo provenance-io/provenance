@@ -16,7 +16,7 @@ const AddressHasAccessKey = "address_has_access"
 var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
 
 func (k Keeper) SendRestrictionFn(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
-	if HasMarkerSendRestrictionBypass(ctx) {
+	if types.HasBypass(ctx) {
 		return toAddr, nil
 	}
 
@@ -107,24 +107,6 @@ func (k Keeper) NormalizeRequiredAttributes(ctx sdk.Context, requiredAttributes 
 		result[i] = fmt.Sprintf("%s%s", prefix, normalizedAttr)
 	}
 	return result, nil
-}
-
-// HasMarkerSendRestrictionBypass returns the bool value of address has access defaults to false if not set
-func HasMarkerSendRestrictionBypass(ctx sdk.Context) bool {
-	hasAccess := ctx.Value(AddressHasAccessKey)
-	if hasAccess == nil {
-		return false
-	}
-	accessAllowed, success := hasAccess.(bool)
-	if !success {
-		return false
-	}
-	return accessAllowed
-}
-
-// WithMarkerSendRestrictionBypass returns the context with the address has access set used for allowing address to send restricted markers
-func WithMarkerSendRestrictionBypass(ctx sdk.Context, hasAccess bool) sdk.Context {
-	return ctx.WithValue(AddressHasAccessKey, hasAccess)
 }
 
 // MatchAttribute returns true if the provided attr satisfies the reqAttr.

@@ -53,8 +53,7 @@ func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncr
 		if err != nil {
 			return err
 		}
-		ctx = WithMarkerSendRestrictionBypass(ctx, true)
-		if err := k.bankKeeper.SendCoins(ctx, addr, recipient, sdk.NewCoins(c.Amount)); err != nil {
+		if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), addr, recipient, sdk.NewCoins(c.Amount)); err != nil {
 			return err
 		}
 		logger.Info("transferred escrowed coin from marker", "marker", c.Amount.Denom, "amount", c.Amount.String(), "recipient", c.TargetAddress)
@@ -238,8 +237,7 @@ func HandleWithdrawEscrowProposal(ctx sdk.Context, k Keeper, c *types.WithdrawEs
 	if err != nil {
 		return err
 	}
-	ctx = WithMarkerSendRestrictionBypass(ctx, true)
-	if err := k.bankKeeper.SendCoins(ctx, addr, recipient, c.Amount); err != nil {
+	if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), addr, recipient, c.Amount); err != nil {
 		return err
 	}
 	logger := k.Logger(ctx)
