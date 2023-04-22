@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	attrTypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -12,48 +13,76 @@ import (
 
 const AddressHasAccessKey = "address_has_access"
 
-func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
+var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
+
+func (k Keeper) SendRestrictionFn(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 	if HasMarkerSendRestrictionBypass(ctx) {
-		return nil
+		return toAddr, nil
 	}
 
-	caller, err := sdk.AccAddressFromBech32(from)
-	if err != nil {
-		return err
-	}
-	if caller.Equals(k.markerModuleAddr) {
-		return nil
+	for _, coin := range amt {
+		if err := k.validateSendDenom(ctx, fromAddr, toAddr, coin.Denom); err != nil {
+			return nil, err
+		}
 	}
 
+	return toAddr, nil
+}
+
+// validateSendDenom makes sure a send of the given denom is allowed for the given addresses.
+// This is NOT the validation that is needed for the marker Transfer endpoint.
+func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, denom string) error {
 	markerAddr := types.MustGetMarkerAddress(denom)
 	marker, err := k.GetMarker(ctx, markerAddr)
 	if err != nil {
 		return err
 	}
-	if marker == nil { // this should only occur in tests
+	// If there's no marker for the denom, or it's not a restricted marker, there's nothing more to do here.
+	if marker == nil || marker.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return nil
 	}
 
-	if marker.GetMarkerType() != types.MarkerType_RestrictedCoin {
+	// If the from address has authority it is allowed to send to receiver without checking of attributes
+	if marker.AddressHasAccess(fromAddr, types.Access_Transfer) {
 		return nil
 	}
 
-	// if the marker has authority it is allowed to send to receiver without checking of attributes
-	if marker.AddressHasAccess(caller, types.Access_Transfer) {
-		return nil
+	reqAttr := marker.GetRequiredAttributes()
+
+	// If there aren't any required attributes, transfers are only allowed by those with transfer permission.
+	if len(reqAttr) == 0 {
+		return fmt.Errorf("%s does not have transfer permissions", fromAddr.String())
 	}
 
-	if len(marker.GetRequiredAttributes()) == 0 {
-		return fmt.Errorf("%s does not have transfer permissions", caller.String())
-	}
-	contains, err := k.ContainsRequiredAttributes(ctx, marker.GetRequiredAttributes(), to)
+	attributes, err := k.attrKeeper.GetAllAttributesAddr(ctx, toAddr)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not get attributes for %s: %w", toAddr.String(), err)
 	}
-	if !contains {
-		return fmt.Errorf("address %s does not contain the required attributes %v", to, marker.GetRequiredAttributes())
+	missing := findMissingAttributes(reqAttr, attributes)
+	if len(missing) != 0 {
+		pl := ""
+		if len(missing) != 1 {
+			pl = "s"
+		}
+		return fmt.Errorf("address %s does not contain the %q required attribute%s: \"%s\"", toAddr.String(), denom, pl, strings.Join(missing, `", "`))
 	}
 	return nil
+}
+
+// findMissingAttributes returns all entries in required that don't pass
+// MatchAttribute on at least one of the provided attribute names.
+func findMissingAttributes(required []string, attributes []attrTypes.Attribute) []string {
+	var rv []string
+reqLoop:
+	for _, req := range required {
+		for _, attr := range attributes {
+			if MatchAttribute(req, attr.Name) {
+				continue reqLoop
+			}
+		}
+		rv = append(rv, req)
+	}
+	return rv
 }
 
 // NormalizeRequiredAttributes normalizes the required attribute names using name module's Normalize method
@@ -65,9 +94,9 @@ func (k Keeper) NormalizeRequiredAttributes(ctx sdk.Context, requiredAttributes 
 			return nil, fmt.Errorf("required attribute %v length is too long %v : %v ", attr, len(attr), maxLength)
 		}
 
-		// for now just check if required attribute starts with a *
+		// for now just check if required attribute starts with a *.
 		var prefix string
-		if ContainsWildCard(attr) {
+		if strings.HasPrefix(attr, "*.") {
 			prefix = attr[:2]
 			attr = attr[2:]
 		}
@@ -78,32 +107,6 @@ func (k Keeper) NormalizeRequiredAttributes(ctx sdk.Context, requiredAttributes 
 		result[i] = fmt.Sprintf("%s%s", prefix, normalizedAttr)
 	}
 	return result, nil
-}
-
-// ContainsRequiredAttributes retrieves the attributes from address and checks that all required attributes are present
-func (k Keeper) ContainsRequiredAttributes(ctx sdk.Context, requiredAttributes []string, address string) (bool, error) {
-	attributes, err := k.attrKeeper.GetAllAttributes(ctx, address)
-	if err != nil {
-		return false, err
-	}
-	return EnsureAllRequiredAttributesExist(requiredAttributes, attributes), nil
-}
-
-// EnsureAllRequiredAttributesExist checks that all requiredAttributes are in attributes list
-func EnsureAllRequiredAttributesExist(requiredAttributes []string, attributes []attrTypes.Attribute) bool {
-	for _, reqAttr := range requiredAttributes {
-		var match bool
-		for _, attr := range attributes {
-			match = MatchAttribute(reqAttr, attr.Name)
-			if match {
-				break
-			}
-		}
-		if !match {
-			return false
-		}
-	}
-	return true
 }
 
 // HasMarkerSendRestrictionBypass returns the bool value of address has access defaults to false if not set
@@ -124,19 +127,14 @@ func WithMarkerSendRestrictionBypass(ctx sdk.Context, hasAccess bool) sdk.Contex
 	return ctx.WithValue(AddressHasAccessKey, hasAccess)
 }
 
-// MatchAttribute compares required attribute against attribute string
+// MatchAttribute returns true if the provided attr satisfies the reqAttr.
 func MatchAttribute(reqAttr string, attr string) bool {
 	if len(reqAttr) < 1 {
 		return false
 	}
 	if strings.HasPrefix(reqAttr, "*.") {
+		// [1:] because we only want to ignore the '*'; the '.' needs to be part of the check.
 		return strings.HasSuffix(attr, reqAttr[1:])
 	}
 	return reqAttr == attr
-}
-
-// ContainsWildCard checks if attribute starts with wildcard
-func ContainsWildCard(attr string) bool {
-	segs := strings.Split(attr, ".")
-	return len(segs) > 1 && segs[0] == "*"
 }

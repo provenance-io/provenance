@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/provenance-io/provenance/x/marker"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -17,122 +19,320 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-func TestAllowMarkerSend(t *testing.T) {
+func TestSendRestrictionFn(t *testing.T) {
+	c := func(amt int64, denom string) sdk.Coin {
+		return sdk.NewInt64Coin(denom, amt)
+	}
+	cz := func(coins ...sdk.Coin) sdk.Coins {
+		return sdk.NewCoins(coins...)
+	}
+
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	owner, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
-	acct := app.AccountKeeper.NewAccountWithAddress(ctx, owner)
-	app.AccountKeeper.SetAccount(ctx, acct)
-	app.NameKeeper.SetNameRecord(ctx, "kyc.provenance.io", owner, false)
-	app.NameKeeper.SetNameRecord(ctx, "not-kyc.provenance.io", owner, false)
+	ctxWithBypass := keeper.WithMarkerSendRestrictionBypass(ctx, true)
+	owner := sdk.AccAddress("owner_address_______")
+	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, owner))
+	require.NoError(t, app.NameKeeper.SetNameRecord(ctx, "kyc.provenance.io", owner, false), "SetNameRecord kyc.provenance.io")
+	require.NoError(t, app.NameKeeper.SetNameRecord(ctx, "not-kyc.provenance.io", owner, false), "SetNameRecord not-kyc.provenance.io")
 
-	acctWithAttrs := "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
-	app.AttributeKeeper.SetAttribute(ctx,
+	addrWithAttrs := sdk.AccAddress("addr_with_attributes")
+	addrWithAttrsStr := addrWithAttrs.String()
+	require.NoError(t, app.AttributeKeeper.SetAttribute(ctx,
 		attrTypes.Attribute{
 			Name:          "kyc.provenance.io",
 			Value:         []byte("string value"),
-			Address:       acctWithAttrs,
+			Address:       addrWithAttrsStr,
 			AttributeType: attrTypes.AttributeType_String,
 		},
 		owner,
-	)
-	app.AttributeKeeper.SetAttribute(ctx,
+	), "SetAttribute kyc.provenance.io")
+	require.NoError(t, app.AttributeKeeper.SetAttribute(ctx,
 		attrTypes.Attribute{
 			Name:          "not-kyc.provenance.io",
 			Value:         []byte("string value"),
-			Address:       acctWithAttrs,
+			Address:       addrWithAttrsStr,
 			AttributeType: attrTypes.AttributeType_String,
 		},
 		owner,
-	)
-	nrMarkerDenom := "nonrestrictedmarker"
-	nrMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(nrMarkerDenom), nil, 0, 0)
-	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(nrMarkerAcct, sdk.NewInt64Coin(nrMarkerDenom, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_Coin, true, true, false, []string{}))
+	), "SetAttribute not-kyc.provenance.io")
 
-	rMarkerDenom := "restrictedmarkernoreqattributes"
-	rMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom), nil, 1, 0)
-	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{}))
+	addrWithoutAttrs := sdk.AccAddress("addr_without_attribs")
+	addrWithTransfer := sdk.AccAddress("addr_with_transfer__")
 
-	rMarkerDenom2 := "restrictedmarkerreqattributes2"
-	rMarkerAcct2 := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom2), nil, 2, 0)
-	rMarker2 := types.NewMarkerAccount(rMarkerAcct2, sdk.NewInt64Coin(rMarkerDenom2, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{"some.attribute.that.i.require"})
-	app.MarkerKeeper.SetMarker(ctx, rMarker2)
+	coin := types.MarkerType_Coin
+	restricted := types.MarkerType_RestrictedCoin
 
-	rMarkerDenom3 := "restrictedmarkerreqattributes3"
-	rMarkerAcct3 := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom3), nil, 3, 0)
-	rMarker3 := types.NewMarkerAccount(rMarkerAcct3, sdk.NewInt64Coin(rMarkerDenom3, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{"kyc.provenance.io"})
-	app.MarkerKeeper.SetMarker(ctx, rMarker3)
+	acctNum := uint64(0)
+	newMarker := func(denom string, markerType types.MarkerType, reqAttrs []string) *types.MarkerAccount {
+		baseAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(denom), nil, acctNum, 0)
+		acctNum++
+		var access []types.AccessGrant
+		if markerType == restricted {
+			access = []types.AccessGrant{
+				{Address: addrWithTransfer.String(), Permissions: types.AccessList{types.Access_Transfer}},
+			}
+		}
+		rv := types.NewMarkerAccount(
+			baseAcct,
+			sdk.NewInt64Coin(denom, 1000),
+			owner,
+			access,
+			types.StatusFinalized,
+			markerType,
+			true,  // supply fixed
+			true,  // allow gov
+			false, // no force transfer
+			reqAttrs,
+		)
+		app.MarkerKeeper.SetMarker(ctx, rv)
+		return rv
+	}
 
-	rMarkerDenom4 := "restrictedmarkerreqattributes4"
-	rMarkerAcct4 := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom4), nil, 4, 0)
-	rMarker4 := types.NewMarkerAccount(rMarkerAcct4, sdk.NewInt64Coin(rMarkerDenom4, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{"kyc.provenance.io", "not-kyc.provenance.io"})
-	app.MarkerKeeper.SetMarker(ctx, rMarker4)
+	nrDenom := "nonrestrictedmarker"
+	newMarker(nrDenom, coin, nil)
 
-	rMarkerDenom5 := "restrictedmarkerreqattributes5"
-	rMarkerAcct5 := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom5), nil, 5, 0)
-	rMarker5 := types.NewMarkerAccount(rMarkerAcct5, sdk.NewInt64Coin(rMarkerDenom5, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{"kyc.provenance.io", "not-kyc.provenance.io", "foo.provenance.io"})
-	app.MarkerKeeper.SetMarker(ctx, rMarker5)
+	rDenomNoAttr := "restrictedmarkernoreqattributes"
+	newMarker(rDenomNoAttr, restricted, nil)
+
+	rDenom1AttrNoOneHas := "restrictedmarkerreqattributes2"
+	newMarker(rDenom1AttrNoOneHas, restricted, []string{"some.attribute.that.i.require"})
+
+	rDenom1Attr := "restrictedmarkerreqattributes3"
+	newMarker(rDenom1Attr, restricted, []string{"kyc.provenance.io"})
+
+	rDenom2Attrs := "restrictedmarkerreqattributes4"
+	newMarker(rDenom2Attrs, restricted, []string{"kyc.provenance.io", "not-kyc.provenance.io"})
+
+	rDenom3Attrs := "restrictedmarkerreqattributes5"
+	newMarker(rDenom3Attrs, restricted, []string{"kyc.provenance.io", "not-kyc.provenance.io", "foo.provenance.io"})
 
 	testCases := []struct {
-		name          string
-		from          string
-		to            string
-		denom         string
-		expectedError string
+		name   string
+		ctx    *sdk.Context
+		from   sdk.AccAddress
+		to     sdk.AccAddress
+		amt    sdk.Coins
+		expErr string
 	}{
 		{
-			name:          "should succeed - non restricted marker",
-			from:          acct.GetAddress().String(),
-			to:            acctWithAttrs,
-			denom:         nrMarkerDenom,
-			expectedError: "",
+			name:   "unknown denom",
+			from:   owner,
+			to:     addrWithAttrs,
+			amt:    cz(c(1, "unknowncoin")),
+			expErr: "",
 		},
 		{
-			name:          "should fail - restricted marker with empty required attributes and no transfer rights",
-			from:          acct.GetAddress().String(),
-			to:            acctWithAttrs,
-			denom:         rMarkerDenom,
-			expectedError: fmt.Sprintf("%s does not have transfer permissions", acct.GetAddress().String()),
+			name:   "non restricted marker",
+			from:   owner,
+			to:     addrWithAttrs,
+			amt:    cz(c(1, nrDenom)),
+			expErr: "",
 		},
 		{
-			name:          "should fail - restricted marker with required attributes but none match",
-			from:          acct.GetAddress().String(),
-			to:            acctWithAttrs,
-			denom:         rMarkerDenom2,
-			expectedError: fmt.Sprintf("address %s does not contain the required attributes %v", acctWithAttrs, rMarker2.GetRequiredAttributes()),
+			name:   "addr has transfer, denom without attrs",
+			from:   addrWithTransfer,
+			to:     addrWithoutAttrs,
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: "",
 		},
 		{
-			name:          "should succeed - account contains the needed attribute",
-			from:          acct.GetAddress().String(),
-			to:            acctWithAttrs,
-			denom:         rMarkerDenom3,
-			expectedError: "",
+			name:   "addr has transfer, denom with 3 attrs, to has none",
+			from:   addrWithTransfer,
+			to:     addrWithoutAttrs,
+			amt:    cz(c(1, rDenom3Attrs)),
+			expErr: "",
+		},
+		// Untested: GetAllAttributesAddr returns an error. Only happens when store data can't be unmarshalled. Can't do that from here.
+		{
+			name:   "restricted marker with empty required attributes and no transfer rights",
+			from:   owner,
+			to:     addrWithAttrs,
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: fmt.Sprintf("%s does not have transfer permissions", owner.String()),
 		},
 		{
-			name:          "should succeed - account contains the both needed attribute",
-			from:          acct.GetAddress().String(),
-			to:            acctWithAttrs,
-			denom:         rMarkerDenom4,
-			expectedError: "",
+			name: "restricted marker with required attributes but none match",
+			from: owner,
+			to:   addrWithAttrs,
+			amt:  cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: fmt.Sprintf("address %s does not contain the %q required attribute: \"some.attribute.that.i.require\"",
+				addrWithAttrsStr, rDenom1AttrNoOneHas),
+			// This should be the exact same test as the below one, but without a bypass context, so expect an error.
 		},
 		{
-			name:          "should succeed - account contains the both needed attribute",
-			from:          acct.GetAddress().String(),
-			to:            acctWithAttrs,
-			denom:         rMarkerDenom5,
-			expectedError: fmt.Sprintf("address %s does not contain the required attributes %v", acctWithAttrs, rMarker5.GetRequiredAttributes()),
+			// This should be the exact same test as the above one, but with a bypass context, so no error is expected.
+			name:   "with bypass, restricted marker with required attributes but none match",
+			ctx:    &ctxWithBypass,
+			from:   owner,
+			to:     addrWithAttrs,
+			amt:    cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: "",
+		},
+		{
+			name:   "account contains the needed attribute",
+			from:   owner,
+			to:     addrWithAttrs,
+			amt:    cz(c(1, rDenom1Attr)),
+			expErr: "",
+		},
+		{
+			name:   "account contains both needed attributes",
+			from:   owner,
+			to:     addrWithAttrs,
+			amt:    cz(c(1, rDenom2Attrs)),
+			expErr: "",
+		},
+		{
+			name: "account contains 2 of 3 needed attributes",
+			from: owner,
+			to:   addrWithAttrs,
+			amt:  cz(c(1, rDenom3Attrs)),
+			expErr: fmt.Sprintf("address %s does not contain the %q required attribute: \"foo.provenance.io\"",
+				addrWithAttrsStr, rDenom3Attrs),
+		},
+		{
+			name: "account has no attributes, needs 3",
+			from: owner,
+			to:   addrWithoutAttrs,
+			amt:  cz(c(1, rDenom3Attrs)),
+			expErr: fmt.Sprintf("address %s does not contain the %q required attributes: "+
+				"\"kyc.provenance.io\", \"not-kyc.provenance.io\", \"foo.provenance.io\"",
+				addrWithoutAttrs, rDenom3Attrs),
+		},
+		{
+			name:   "account has no attributes, denom not restricted",
+			from:   addrWithTransfer,
+			to:     addrWithoutAttrs,
+			amt:    cz(c(1, nrDenom)),
+			expErr: "",
+		},
+		{
+			name:   "two denoms, unrestricted and has needed attribute",
+			from:   owner,
+			to:     addrWithAttrs,
+			amt:    cz(c(1, nrDenom), c(1, rDenom1Attr)),
+			expErr: "",
+		},
+		{
+			name:   "two denoms, has needed attribute and unrestricted",
+			from:   owner,
+			to:     addrWithAttrs,
+			amt:    cz(c(1, rDenom1Attr), c(1, nrDenom)),
+			expErr: "",
+		},
+		{
+			name: "two denoms, unrestricted and missing attribute",
+			from: owner,
+			to:   addrWithAttrs,
+			amt:  cz(c(1, nrDenom), c(1, rDenom1AttrNoOneHas)),
+			expErr: fmt.Sprintf("address %s does not contain the %q required attribute: \"some.attribute.that.i.require\"",
+				addrWithAttrsStr, rDenom1AttrNoOneHas),
+		},
+		{
+			name: "two denoms, missing attribute and unrestricted",
+			from: owner,
+			to:   addrWithAttrs,
+			amt:  cz(c(1, rDenom1AttrNoOneHas), c(1, nrDenom)),
+			expErr: fmt.Sprintf("address %s does not contain the %q required attribute: \"some.attribute.that.i.require\"",
+				addrWithAttrsStr, rDenom1AttrNoOneHas),
 		},
 	}
-	for _, tc := range testCases {
-		err := app.MarkerKeeper.AllowMarkerSend(ctx, tc.from, tc.to, tc.denom)
-		if len(tc.expectedError) > 0 {
-			assert.NotNil(t, err, tc.name)
-			assert.EqualError(t, err, tc.expectedError, tc.name)
 
-		} else {
-			assert.NoError(t, err, tc.name)
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tCtx := ctx
+			if tc.ctx != nil {
+				tCtx = *tc.ctx
+			}
+			newTo, err := app.MarkerKeeper.SendRestrictionFn(tCtx, tc.from, tc.to, tc.amt)
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr, "SendRestrictionFn error")
+			} else {
+				assert.NoError(t, err, "SendRestrictionFn error")
+				assert.Equal(t, tc.to, newTo, "SendRestrictionFn returned address")
+			}
+		})
 	}
+}
+
+func TestBankSendUsesSendRestrictionFn(t *testing.T) {
+	// This test only checks that the marker SendRestrictionFn is applied during a SendCoins.
+	// Testing of the actual SendRestrictionFn is assumed to be done elsewhere more extensively.
+
+	cz := func(amt int64, denom string) sdk.Coins {
+		return sdk.NewCoins(sdk.NewInt64Coin(denom, amt))
+	}
+
+	markerDenom := "markercoin"
+
+	addrNameOwner := sdk.AccAddress("name_owner__________")
+	addrHasWithdraw := sdk.AccAddress("has_withdraw________")
+	addrHasAttr := sdk.AccAddress("has_attribute_______")
+	addrOther := sdk.AccAddress("other_address_______")
+
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrNameOwner))
+	err := app.NameKeeper.SetNameRecord(ctx, "kyc.provenance.io", addrNameOwner, false)
+	require.NoError(t, err, "SetNameRecord kyc.provenance.io")
+	require.NoError(t, app.AttributeKeeper.SetAttribute(ctx,
+		attrTypes.Attribute{
+			Name:          "kyc.provenance.io",
+			Value:         []byte("string value"),
+			Address:       addrHasAttr.String(),
+			AttributeType: attrTypes.AttributeType_String,
+		},
+		addrNameOwner,
+	), "SetAttribute kyc.provenance.io")
+
+	makeMarkerMsg := &types.MsgAddFinalizeActivateMarkerRequest{
+		Amount:      sdk.NewInt64Coin(markerDenom, 1000),
+		Manager:     addrHasWithdraw.String(),
+		FromAddress: addrHasWithdraw.String(),
+		MarkerType:  types.MarkerType_RestrictedCoin,
+		AccessList: []types.AccessGrant{
+			{Address: addrHasWithdraw.String(), Permissions: types.AccessList{types.Access_Withdraw}},
+		},
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		AllowForcedTransfer:    false,
+		RequiredAttributes:     []string{"kyc.provenance.io"},
+	}
+	markerHandler := marker.NewHandler(app.MarkerKeeper)
+	_, err = markerHandler(ctx, makeMarkerMsg)
+	require.NoError(t, err, "makeMarkerMsg")
+	err = app.MarkerKeeper.WithdrawCoins(ctx, addrHasWithdraw, addrHasAttr, markerDenom, cz(100, markerDenom))
+	require.NoError(t, err, "WithdrawCoins to addrHasTransfer")
+	err = app.MarkerKeeper.WithdrawCoins(ctx, addrHasWithdraw, addrOther, markerDenom, cz(100, markerDenom))
+	require.NoError(t, err, "WithdrawCoins to addrOther")
+
+	// Done with setup.
+	// addrOther and addrHasAttr now each have 100 of the marker denom.
+	// addrHasAttr has the attribute needed to receive the denom, and addrOther does not.
+
+	t.Run("send to address without attributes", func(t *testing.T) {
+		expErr := fmt.Sprintf("address %s does not contain the %q required attribute: \"kyc.provenance.io\"",
+			addrOther, markerDenom)
+		err = app.BankKeeper.SendCoins(ctx, addrHasAttr, addrOther, cz(5, markerDenom))
+		assert.EqualError(t, err, expErr, "SendCoins")
+		expBal := cz(100, markerDenom)
+		hasAttrBal := app.BankKeeper.GetBalance(ctx, addrHasAttr, markerDenom)
+		assert.Equal(t, expBal.String(), hasAttrBal.String(), "GetBalance addrHasAttr")
+		otherBal := app.BankKeeper.GetBalance(ctx, addrOther, markerDenom)
+		assert.Equal(t, expBal.String(), otherBal.String(), "GetBalance addrOther")
+	})
+
+	t.Run("send to address with attributes", func(t *testing.T) {
+		err = app.BankKeeper.SendCoins(ctx, addrOther, addrHasAttr, cz(6, markerDenom))
+		assert.NoError(t, err, "SendCoins")
+		hasAttrExpBal := cz(106, markerDenom)
+		hasAttrBal := app.BankKeeper.GetBalance(ctx, addrHasAttr, markerDenom)
+		assert.Equal(t, hasAttrExpBal.String(), hasAttrBal.String(), "GetBalance addrHasAttr")
+		otherExpBal := cz(94, markerDenom)
+		otherBal := app.BankKeeper.GetBalance(ctx, addrOther, markerDenom)
+		assert.Equal(t, otherExpBal.String(), otherBal.String(), "GetBalance addrOther")
+	})
 }
 
 func TestNormalizeRequiredAttributes(t *testing.T) {
@@ -176,179 +376,17 @@ func TestNormalizeRequiredAttributes(t *testing.T) {
 			expectedError:      "",
 		},
 	}
+
 	for _, tc := range testCases {
-		result, err := app.MarkerKeeper.NormalizeRequiredAttributes(ctx, tc.requiredAttributes)
-		if len(tc.expectedError) > 0 {
-			require.NotNil(t, err)
-			require.EqualError(t, err, tc.expectedError)
-
-		} else {
-			require.NoError(t, err)
-			require.Equal(t, tc.expectedNormalized, result)
-		}
-	}
-}
-
-func TestContainsRequiredAttributes(t *testing.T) {
-	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	owner, _ := sdk.AccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
-	acct := app.AccountKeeper.NewAccountWithAddress(ctx, owner)
-	app.AccountKeeper.SetAccount(ctx, acct)
-	app.NameKeeper.SetNameRecord(ctx, "kyc.provenance.io", owner, false)
-	app.NameKeeper.SetNameRecord(ctx, "not-kyc.provenance.io", owner, false)
-
-	app.AttributeKeeper.SetAttribute(ctx,
-		attrTypes.Attribute{
-			Name:          "kyc.provenance.io",
-			Value:         []byte("string value"),
-			Address:       "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			AttributeType: attrTypes.AttributeType_String,
-		},
-		owner,
-	)
-	app.AttributeKeeper.SetAttribute(ctx,
-		attrTypes.Attribute{
-			Name:          "not-kyc.provenance.io",
-			Value:         []byte("string value"),
-			Address:       "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			AttributeType: attrTypes.AttributeType_String,
-		},
-		owner,
-	)
-	testCases := []struct {
-		name               string
-		requiredAttributes []string
-		address            string
-		expectedResult     bool
-		expectedError      string
-	}{
-		{
-			name:               "should succeed - empty required attrs",
-			requiredAttributes: []string{},
-			address:            "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			expectedResult:     true,
-			expectedError:      "",
-		},
-		{
-			name:               "should succeed - wildcard match",
-			requiredAttributes: []string{"*.io"},
-			address:            "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			expectedResult:     true,
-			expectedError:      "",
-		},
-		{
-			name:               "should succeed - wildcard match 2",
-			requiredAttributes: []string{"*.provenance.io"},
-			address:            "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			expectedResult:     true,
-			expectedError:      "",
-		},
-		{
-			name:               "should succeed - exact match",
-			requiredAttributes: []string{"kyc.provenance.io"},
-			address:            "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			expectedResult:     true,
-			expectedError:      "",
-		},
-		{
-			name:               "should succeed - exact match multiple",
-			requiredAttributes: []string{"kyc.provenance.io", "kyc.provenance.io"},
-			address:            "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			expectedResult:     true,
-			expectedError:      "",
-		},
-		{
-			name:               "should fail - no match for notfound.provenance.io",
-			requiredAttributes: []string{"notfound.provenance.io", "kyc.provenance.io"},
-			address:            "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			expectedResult:     false,
-			expectedError:      "",
-		},
-		{
-			name:               "should succeed - account has no attributes and required attributes empty",
-			requiredAttributes: []string{},
-			address:            "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
-			expectedResult:     true,
-			expectedError:      "",
-		},
-		{
-			name:               "should fail - account has no attributes and required attributes populated",
-			requiredAttributes: []string{"kyc.provenance.io"},
-			address:            "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
-			expectedResult:     false,
-			expectedError:      "",
-		},
-	}
-	for _, tc := range testCases {
-		result, err := app.MarkerKeeper.ContainsRequiredAttributes(ctx, tc.requiredAttributes, tc.address)
-		if len(tc.expectedError) > 0 {
-			assert.NotNil(t, err, tc.name)
-			assert.EqualError(t, err, tc.expectedError, tc.name)
-
-		} else {
-			assert.NoError(t, err, tc.name)
-			assert.Equal(t, tc.expectedResult, result, tc.name)
-		}
-	}
-}
-
-func TestEnsureAllRequiredAttributesExist(t *testing.T) {
-	testCases := []struct {
-		name           string
-		requiredAtts   []string
-		attributes     []attrTypes.Attribute
-		expectedResult bool
-	}{
-		{
-			name:           "should succeed - empty required attrs and attributes",
-			requiredAtts:   []string{},
-			attributes:     []attrTypes.Attribute{},
-			expectedResult: true,
-		},
-		{
-			name:         "should succeed - required with wildcard is contained in attributes",
-			requiredAtts: []string{"*.provenance.io"},
-			attributes: []attrTypes.Attribute{
-				{Name: "kyc.provenance.io"},
-			},
-			expectedResult: true,
-		},
-		{
-			name:         "should succeed - required is contained in attributes",
-			requiredAtts: []string{"kyc.provenance.io"},
-			attributes: []attrTypes.Attribute{
-				{Name: "kyc.provenance.io"},
-			},
-			expectedResult: true,
-		},
-		{
-			name:         "should succeed - multiple attrs and required attrs",
-			requiredAtts: []string{"kyc.provenance.io", "kyc.provenance.com", "kyc.provenance.net"},
-			attributes: []attrTypes.Attribute{
-				{Name: "kyc.provenance.io"},
-				{Name: "kyc.provenance.com"},
-				{Name: "kyc.provenance.net"},
-				{Name: "kyc.provenance.de"},
-			},
-			expectedResult: true,
-		},
-		{
-			name:           "should fail - missing required attr",
-			requiredAtts:   []string{"kyc.provenance.io", "non-kyc.provenance.io"},
-			attributes:     []attrTypes.Attribute{{Name: "kyc.provenance.io"}},
-			expectedResult: false,
-		},
-		{
-			name:           "should fail - missing required attr with wildcard",
-			requiredAtts:   []string{"*.provenance.io", "non-kyc.provenance.io"},
-			attributes:     []attrTypes.Attribute{{Name: "kyc.provenance.io"}},
-			expectedResult: false,
-		},
-	}
-	for _, tc := range testCases {
-		result := keeper.EnsureAllRequiredAttributesExist(tc.requiredAtts, tc.attributes)
-		require.Equal(t, tc.expectedResult, result, fmt.Sprintf("%s", tc.name))
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := app.MarkerKeeper.NormalizeRequiredAttributes(ctx, tc.requiredAttributes)
+			if len(tc.expectedError) > 0 {
+				require.EqualError(t, err, tc.expectedError, "NormalizeRequiredAttributes error")
+			} else {
+				require.NoError(t, err, "NormalizeRequiredAttributes error")
+				require.Equal(t, tc.expectedNormalized, result, "NormalizeRequiredAttributes result")
+			}
+		})
 	}
 }
 
@@ -420,8 +458,11 @@ func TestMatchAttribute(t *testing.T) {
 			expectedResult: false,
 		},
 	}
+
 	for _, tc := range testCases {
-		result := keeper.MatchAttribute(tc.reqAttr, tc.attr)
-		require.Equal(t, tc.expectedResult, result, fmt.Sprintf("%s", tc.name))
+		t.Run(tc.name, func(t *testing.T) {
+			result := keeper.MatchAttribute(tc.reqAttr, tc.attr)
+			require.Equal(t, tc.expectedResult, result, "MatchAttribute")
+		})
 	}
 }

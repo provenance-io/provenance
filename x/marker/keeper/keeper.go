@@ -103,7 +103,7 @@ func NewKeeper(
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return Keeper{
+	rv := Keeper{
 		paramSpace:       paramSpace,
 		authKeeper:       authKeeper,
 		authzKeeper:      authzKeeper,
@@ -117,6 +117,8 @@ func NewKeeper(
 		authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		markerModuleAddr: authtypes.NewModuleAddress(types.CoinPoolName),
 	}
+	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
+	return rv
 }
 
 // Logger returns a module-specific logger.
