@@ -790,8 +790,7 @@ func (s *KeeperTestSuite) TestCreateRewardProgram() {
 		},
 	)
 	err = s.app.RewardKeeper.CreateRewardProgram(s.ctx, invalidAmount)
-	s.Assert().Error(err)
-	s.Assert().True(strings.Contains(err.Error(), "unable to send coin to module reward pool : 999999900000nhash is smaller than 10000000000000nhash: insufficient funds"))
+	s.Assert().ErrorContains(err, "unable to send coin to module reward pool : spendable balance 999999900000nhash is smaller than 10000000000000nhash: insufficient funds")
 }
 
 func (s *KeeperTestSuite) TestRefundRemainingBalance() {
