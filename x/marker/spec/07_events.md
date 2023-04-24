@@ -26,6 +26,7 @@ Fires when a marker is added using the Add Marker Msg.
 | Type                   | Attribute Key         | Attribute Value           |
 | ---------------------- | --------------------- | ------------------------- |
 | EventMarkerAdd         | Denom                 | {denom string}            |
+| EventMarkerAdd         | Address               | {marker  address}         |
 | EventMarkerAdd         | Amount                | {supply amount}           |
 | EventMarkerAdd         | Manager               | {admin account address}   |
 | EventMarkerAdd         | Status                | {current marker status}   |
