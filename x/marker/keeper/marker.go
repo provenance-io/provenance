@@ -728,6 +728,9 @@ func (k Keeper) IbcTransferCoin(
 		}
 	}
 
+	// set context to having access to bypass attribute restriction test
+	ctx = WithMarkerSendRestrictionBypass(ctx, true)
+
 	_, err = k.ibcKeeper.SendTransfer(
 		ctx,
 		sourcePort,
