@@ -1085,6 +1085,7 @@ EventMarkerAdd event emitted when marker is added
 | `status` | [string](#string) |  |  |
 | `manager` | [string](#string) |  |  |
 | `marker_type` | [string](#string) |  |  |
+| `address` | [string](#string) |  |  |
 
 
 
