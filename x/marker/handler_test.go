@@ -133,7 +133,7 @@ func (s *HandlerTestSuite) TestMsgAddMarkerRequest() {
 			types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerAdd(denom, "100", "proposed", s.user1, types.MarkerType_Coin.String()),
+			types.NewEventMarkerAdd(denom, types.MustGetMarkerAddress(denom).String(), "100", "proposed", s.user1, types.MarkerType_Coin.String()),
 		},
 		{
 			"should fail to ADD new marker, invalid status",
@@ -154,14 +154,14 @@ func (s *HandlerTestSuite) TestMsgAddMarkerRequest() {
 			types.NewMsgAddMarkerRequest(denomWithDashPeriod, sdk.NewInt(1000), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerAdd(denomWithDashPeriod, "1000", "proposed", s.user1, types.MarkerType_Coin.String()),
+			types.NewEventMarkerAdd(denomWithDashPeriod, types.MustGetMarkerAddress(denomWithDashPeriod).String(), "1000", "proposed", s.user1, types.MarkerType_Coin.String()),
 		},
 		{
 			"should successfully ADD new marker with required attributes",
 			types.NewMsgAddMarkerRequest(rdenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{"attribute.one.com", "attribute.two.com"}),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerAdd(rdenom, "100", "proposed", s.user1, types.MarkerType_RestrictedCoin.String()),
+			types.NewEventMarkerAdd(rdenom, types.MustGetMarkerAddress(rdenom).String(), "100", "proposed", s.user1, types.MarkerType_RestrictedCoin.String()),
 		},
 	}
 	s.runTests(cases)
@@ -612,14 +612,14 @@ func (s *HandlerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 			msgWithActiveStatus,
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerAdd(denom, "100", "proposed", s.user1, types.MarkerType_Coin.String()),
+			types.NewEventMarkerAdd(denom, types.MustGetMarkerAddress(denom).String(), "100", "proposed", s.user1, types.MarkerType_Coin.String()),
 		},
 		{
 			"should successfully ADD,FINALIZE,ACTIVATE new marker with attributes",
 			msgWithActiveStatusAttr,
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerAdd(rdenom, "100", "proposed", s.user1, types.MarkerType_RestrictedCoin.String()),
+			types.NewEventMarkerAdd(rdenom, types.MustGetMarkerAddress(rdenom).String(), "100", "proposed", s.user1, types.MarkerType_RestrictedCoin.String()),
 		},
 		{
 			"should fail to ADD,FINALIZE,ACTIVATE new marker, validate basic failure",
@@ -640,7 +640,7 @@ func (s *HandlerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 			types.NewMsgAddMarkerRequest(denomWithDashPeriod, sdk.NewInt(1000), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}),
 			[]string{s.user1},
 			"",
-			types.NewEventMarkerAdd(denomWithDashPeriod, "1000", "proposed", s.user1, types.MarkerType_Coin.String()),
+			types.NewEventMarkerAdd(denomWithDashPeriod, types.MustGetMarkerAddress(denomWithDashPeriod).String(), "1000", "proposed", s.user1, types.MarkerType_Coin.String()),
 		},
 		{
 			"should successfully mint denom",

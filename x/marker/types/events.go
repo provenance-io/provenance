@@ -39,9 +39,10 @@ const (
 	EventTelemetryKeyWithdraw string = "withdraw"
 )
 
-func NewEventMarkerAdd(denom string, amount string, status string, manager string, markerType string) *EventMarkerAdd {
+func NewEventMarkerAdd(denom string, address string, amount string, status string, manager string, markerType string) *EventMarkerAdd {
 	return &EventMarkerAdd{
 		Denom:      denom,
+		Address:    address,
 		Amount:     amount,
 		Status:     status,
 		Manager:    manager,

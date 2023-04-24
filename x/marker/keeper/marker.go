@@ -86,6 +86,7 @@ func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) e
 
 	markerAddEvent := types.NewEventMarkerAdd(
 		marker.GetSupply().Denom,
+		marker.GetAddress().String(),
 		marker.GetSupply().Amount.String(),
 		marker.GetStatus().String(),
 		marker.GetManager().String(),
