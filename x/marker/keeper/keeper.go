@@ -82,7 +82,7 @@ type Keeper struct {
 
 	markerModuleAddr sdk.AccAddress
 
-	ibctransferModuleAddr sdk.AccAddress
+	ibcTransferModuleAddr sdk.AccAddress
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -119,7 +119,7 @@ func NewKeeper(
 		cdc:                   cdc,
 		authority:             authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		markerModuleAddr:      authtypes.NewModuleAddress(types.CoinPoolName),
-		ibctransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
+		ibcTransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
 	}
 }
 
