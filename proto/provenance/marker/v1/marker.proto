@@ -99,6 +99,7 @@ message EventMarkerAdd {
   string status      = 3;
   string manager     = 4;
   string marker_type = 5;
+  string address     = 6;
 }
 
 // EventMarkerAddAccess event emitted when marker access is added
