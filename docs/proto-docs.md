@@ -288,6 +288,8 @@
     - [MsgDeleteScopeSpecificationResponse](#provenance.metadata.v1.MsgDeleteScopeSpecificationResponse)
     - [MsgModifyOSLocatorRequest](#provenance.metadata.v1.MsgModifyOSLocatorRequest)
     - [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse)
+    - [MsgUpdateValueOwnersRequest](#provenance.metadata.v1.MsgUpdateValueOwnersRequest)
+    - [MsgUpdateValueOwnersResponse](#provenance.metadata.v1.MsgUpdateValueOwnersResponse)
     - [MsgWriteContractSpecificationRequest](#provenance.metadata.v1.MsgWriteContractSpecificationRequest)
     - [MsgWriteContractSpecificationResponse](#provenance.metadata.v1.MsgWriteContractSpecificationResponse)
     - [MsgWriteRecordRequest](#provenance.metadata.v1.MsgWriteRecordRequest)
@@ -4531,6 +4533,33 @@ MsgModifyOSLocatorResponse is the response type for the Msg/ModifyOSLocator RPC 
 
 
 
+<a name="provenance.metadata.v1.MsgUpdateValueOwnersRequest"></a>
+
+### MsgUpdateValueOwnersRequest
+MsgUpdateValueOwnersRequest is the request to update the value owner addresses in one or more scopes.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_ids` | [bytes](#bytes) | repeated | scope_ids are the scope metadata addresses of all scopes to be updated. |
+| `value_owner_address` | [string](#string) |  | value_owner_address is the address of the new value owner for the provided scopes. |
+| `signers` | [string](#string) | repeated | signers is the list of address of those signing this request. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgUpdateValueOwnersResponse"></a>
+
+### MsgUpdateValueOwnersResponse
+MsgUpdateValueOwnersResponse is the response from updating value owner addresses in one or more scopes.
+
+
+
+
+
+
 <a name="provenance.metadata.v1.MsgWriteContractSpecificationRequest"></a>
 
 ### MsgWriteContractSpecificationRequest
@@ -4763,6 +4792,7 @@ Msg defines the Metadata Msg service.
 | `DeleteScopeDataAccess` | [MsgDeleteScopeDataAccessRequest](#provenance.metadata.v1.MsgDeleteScopeDataAccessRequest) | [MsgDeleteScopeDataAccessResponse](#provenance.metadata.v1.MsgDeleteScopeDataAccessResponse) | DeleteScopeDataAccess removes data access AccAddress from scope | |
 | `AddScopeOwner` | [MsgAddScopeOwnerRequest](#provenance.metadata.v1.MsgAddScopeOwnerRequest) | [MsgAddScopeOwnerResponse](#provenance.metadata.v1.MsgAddScopeOwnerResponse) | AddScopeOwner adds new owner parties to a scope | |
 | `DeleteScopeOwner` | [MsgDeleteScopeOwnerRequest](#provenance.metadata.v1.MsgDeleteScopeOwnerRequest) | [MsgDeleteScopeOwnerResponse](#provenance.metadata.v1.MsgDeleteScopeOwnerResponse) | DeleteScopeOwner removes owner parties (by addresses) from a scope | |
+| `UpdateValueOwners` | [MsgUpdateValueOwnersRequest](#provenance.metadata.v1.MsgUpdateValueOwnersRequest) | [MsgUpdateValueOwnersResponse](#provenance.metadata.v1.MsgUpdateValueOwnersResponse) | UpdateValueOwners sets the value owner of one or more scopes. | |
 | `WriteSession` | [MsgWriteSessionRequest](#provenance.metadata.v1.MsgWriteSessionRequest) | [MsgWriteSessionResponse](#provenance.metadata.v1.MsgWriteSessionResponse) | WriteSession adds or updates a session context. | |
 | `WriteRecord` | [MsgWriteRecordRequest](#provenance.metadata.v1.MsgWriteRecordRequest) | [MsgWriteRecordResponse](#provenance.metadata.v1.MsgWriteRecordResponse) | WriteRecord adds or updates a record. | |
 | `DeleteRecord` | [MsgDeleteRecordRequest](#provenance.metadata.v1.MsgDeleteRecordRequest) | [MsgDeleteRecordResponse](#provenance.metadata.v1.MsgDeleteRecordResponse) | DeleteRecord deletes a record. | |

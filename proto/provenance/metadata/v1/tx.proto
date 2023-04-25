@@ -31,6 +31,9 @@ service Msg {
   // DeleteScopeOwner removes owner parties (by addresses) from a scope
   rpc DeleteScopeOwner(MsgDeleteScopeOwnerRequest) returns (MsgDeleteScopeOwnerResponse);
 
+  // UpdateValueOwners sets the value owner of one or more scopes.
+  rpc UpdateValueOwners(MsgUpdateValueOwnersRequest) returns (MsgUpdateValueOwnersResponse);
+
   // WriteSession adds or updates a session context.
   rpc WriteSession(MsgWriteSessionRequest) returns (MsgWriteSessionResponse);
 
@@ -209,6 +212,27 @@ message MsgDeleteScopeOwnerRequest {
 
 // MsgDeleteScopeOwnerResponse is the response from removing owner AccAddress to scope
 message MsgDeleteScopeOwnerResponse {}
+
+// MsgUpdateValueOwnersRequest is the request to update the value owner addresses in one or more scopes.
+message MsgUpdateValueOwnersRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.goproto_getters)  = false;
+
+  // scope_ids are the scope metadata addresses of all scopes to be updated.
+  repeated bytes scope_ids = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"scope_ids\""
+  ];
+  // value_owner_address is the address of the new value owner for the provided scopes.
+  string value_owner_address = 2 [(gogoproto.moretags) = "yaml:\"value_owner_address\""];
+  // signers is the list of address of those signing this request.
+  repeated string signers = 3;
+}
+
+// MsgUpdateValueOwnersResponse is the response from updating value owner addresses in one or more scopes.
+message MsgUpdateValueOwnersResponse {}
 
 // MsgWriteSessionRequest is the request type for the Msg/WriteSession RPC method.
 message MsgWriteSessionRequest {
