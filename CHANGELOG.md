@@ -37,10 +37,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-### Improvements
-
-* Add marker address to add marker event [#1499](https://github.com/provenance-io/provenance/issues/1499)
-
 ---
 
 ## [v1.15.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc2) - 2023-04-19
@@ -71,6 +67,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   This replaces the old `AddMarkerProposal` governance proposal.
 * Bump wasmvm to 1.1.2 [#1484](https://github.com/provenance-io/provenance/pull/1358).
 * Documented proposing a transaction [#1489](https://github.com/provenance-io/provenance/pull/1489).
+* Add marker address to add marker event [#1499](https://github.com/provenance-io/provenance/issues/1499).
 
 ### Deprecated
 
