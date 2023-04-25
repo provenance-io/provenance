@@ -37,15 +37,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Improvements
+
+* Add marker address to add marker event [#1499](https://github.com/provenance-io/provenance/issues/1499)
 
 ---
 
-## [v1.15.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc1) - 2023-04-17
+## [v1.15.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc2) - 2023-04-19
 
 ### Features
 
-* Add support for tokens restricted marker sends with required attributes [#1256](https://github.com/provenance-io/provenance/issues/1256))
+* Add support for tokens restricted marker sends with required attributes [#1256](https://github.com/provenance-io/provenance/issues/1256)
 * Allow markers to be configured to allow forced transfers [#1368](https://github.com/provenance-io/provenance/issues/1368).
 * Publish Provenance Protobuf API as a NPM module [#1449](https://github.com/provenance-io/provenance/issues/1449).
 * Add support for account addresses by attribute name lookup [#1447](https://github.com/provenance-io/provenance/issues/1447).
@@ -103,7 +105,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0-rc1
+* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0-rc2
 
 ---
 
