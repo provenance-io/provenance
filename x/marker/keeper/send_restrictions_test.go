@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/provenance-io/provenance/x/marker"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -255,7 +256,7 @@ func TestSendRestrictionFn(t *testing.T) {
 	}
 }
 
-func TestBankSendUsesSendRestrictionFn(t *testing.T) {
+func TestBankSendCoinsUsesSendRestrictionFn(t *testing.T) {
 	// This test only checks that the marker SendRestrictionFn is applied during a SendCoins.
 	// Testing of the actual SendRestrictionFn is assumed to be done elsewhere more extensively.
 
@@ -333,6 +334,180 @@ func TestBankSendUsesSendRestrictionFn(t *testing.T) {
 		otherBal := app.BankKeeper.GetBalance(ctx, addrOther, markerDenom)
 		assert.Equal(t, otherExpBal.String(), otherBal.String(), "GetBalance addrOther")
 	})
+}
+
+func TestBankInputOutputCoinsUsesSendRestrictionFn(t *testing.T) {
+	// This test only checks that the marker SendRestrictionFn is applied during a InputOutputCoins.
+	// Testing of the actual SendRestrictionFn is assumed to be done elsewhere more extensively.
+
+	markerDenom := "cowcoin"
+	cz := func(amt int64) sdk.Coins {
+		return sdk.NewCoins(sdk.NewInt64Coin(markerDenom, amt))
+	}
+
+	addrManager := sdk.AccAddress("addrManager_________")
+	addrInput := sdk.AccAddress("addrInput___________")
+	addrOutput1 := sdk.AccAddress("addrOutput1_________")
+	addrOutput2 := sdk.AccAddress("addrOutput2_________")
+	addrWithoutTransfer := sdk.AccAddress("addrWithoutTransfer_")
+	addrWithAttr1 := sdk.AccAddress("addrWithAttr1_______")
+	addrWithAttr2 := sdk.AccAddress("addrWithAttr2_______")
+
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrManager))
+	err := app.NameKeeper.SetNameRecord(ctx, "rando.io", addrManager, false)
+	require.NoError(t, err, "SetNameRecord rando.io")
+	require.NoError(t, app.AttributeKeeper.SetAttribute(ctx,
+		attrTypes.Attribute{
+			Name:          "rando.io",
+			Value:         []byte("random value 1"),
+			Address:       addrWithAttr1.String(),
+			AttributeType: attrTypes.AttributeType_String,
+		},
+		addrManager,
+	), "SetAttribute rando.io on addrWithAttr1")
+	require.NoError(t, app.AttributeKeeper.SetAttribute(ctx,
+		attrTypes.Attribute{
+			Name:          "rando.io",
+			Value:         []byte("random value 2"),
+			Address:       addrWithAttr2.String(),
+			AttributeType: attrTypes.AttributeType_String,
+		},
+		addrManager,
+	), "SetAttribute rando.io on addrWithAttr2")
+
+	makeMarkerMsg := &types.MsgAddFinalizeActivateMarkerRequest{
+		Amount:      sdk.NewInt64Coin(markerDenom, 1000),
+		Manager:     addrManager.String(),
+		FromAddress: addrManager.String(),
+		MarkerType:  types.MarkerType_RestrictedCoin,
+		AccessList: []types.AccessGrant{
+			{Address: addrManager.String(), Permissions: types.AccessList{
+				types.Access_Mint, types.Access_Burn,
+				types.Access_Deposit, types.Access_Withdraw,
+				types.Access_Delete, types.Access_Admin, types.Access_Transfer,
+			}},
+		},
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		AllowForcedTransfer:    false,
+		RequiredAttributes:     []string{"rando.io"},
+	}
+	markerHandler := marker.NewHandler(app.MarkerKeeper)
+	_, err = markerHandler(ctx, makeMarkerMsg)
+	require.NoError(t, err, "MsgAddFinalizeActivateMarkerRequest")
+	err = app.MarkerKeeper.WithdrawCoins(ctx, addrManager, addrManager, markerDenom, cz(100))
+	require.NoError(t, err, "WithdrawCoins to addrInput")
+	err = app.MarkerKeeper.WithdrawCoins(ctx, addrManager, addrInput, markerDenom, cz(100))
+	require.NoError(t, err, "WithdrawCoins to addrInput")
+	err = app.MarkerKeeper.WithdrawCoins(ctx, addrManager, addrWithoutTransfer, markerDenom, cz(100))
+	require.NoError(t, err, "WithdrawCoins to addrWithoutTransfer")
+
+	type expBal struct {
+		name string
+		addr sdk.AccAddress
+		bal  sdk.Coins
+	}
+	newExpBal := func(name string, addr sdk.AccAddress, bal sdk.Coins) expBal {
+		return expBal{
+			name: name,
+			addr: addr,
+			bal:  bal,
+		}
+	}
+	assertBalance := func(t *testing.T, exp expBal) bool {
+		t.Helper()
+		bal := app.BankKeeper.GetBalance(ctx, exp.addr, markerDenom)
+		return assert.Equal(t, exp.bal.String(), bal.String(), "GetBalance %s", exp.name)
+	}
+
+	noAttrErr := func(addr sdk.AccAddress) string {
+		return fmt.Sprintf("address %s does not contain the %q required attribute: %q",
+			addr.String(), markerDenom, "rando.io")
+	}
+
+	tests := []struct {
+		name    string
+		input   banktypes.Input
+		outputs []banktypes.Output
+		expErr  string
+		expBals []expBal
+	}{
+		{
+			name:  "from address with transfer permission",
+			input: banktypes.Input{Address: addrManager.String(), Coins: cz(99)},
+			outputs: []banktypes.Output{
+				{Address: addrOutput1.String(), Coins: cz(33)},
+				{Address: addrOutput2.String(), Coins: cz(66)},
+			},
+			expErr: "",
+			expBals: []expBal{
+				newExpBal("addrManager", addrManager, cz(1)),
+				newExpBal("addrOutput1", addrOutput1, cz(33)),
+				newExpBal("addrOutput2", addrOutput2, cz(66)),
+			},
+		},
+		{
+			name:  "from address without transfer permission",
+			input: banktypes.Input{Address: addrInput.String(), Coins: cz(100)},
+			outputs: []banktypes.Output{
+				{Address: addrOutput1.String(), Coins: cz(60)},
+				{Address: addrOutput2.String(), Coins: cz(40)},
+			},
+			expErr: noAttrErr(addrOutput1),
+			// Note: The input coins are subtracted before running the restriction function.
+			//       Usually this is done in a transaction so the error would roll it back.
+			//       Here, we just skip checking that balance.
+			expBals: []expBal{
+				newExpBal("addrOutput1", addrOutput1, cz(33)), // from previous test
+				newExpBal("addrOutput2", addrOutput2, cz(66)), // from previous test
+			},
+		},
+		{
+			name:  "to addresses with attributes",
+			input: banktypes.Input{Address: addrWithoutTransfer.String(), Coins: cz(77)},
+			outputs: []banktypes.Output{
+				{Address: addrWithAttr1.String(), Coins: cz(33)},
+				{Address: addrWithAttr2.String(), Coins: cz(44)},
+			},
+			expErr: "",
+			expBals: []expBal{
+				newExpBal("addrWithoutTransfer", addrWithoutTransfer, cz(23)),
+				newExpBal("addrWithAttr1", addrWithAttr1, cz(33)),
+				newExpBal("addrWithAttr2", addrWithAttr2, cz(44)),
+			},
+		},
+		{
+			name:  "to one address with and one without",
+			input: banktypes.Input{Address: addrWithoutTransfer.String(), Coins: cz(20)},
+			outputs: []banktypes.Output{
+				{Address: addrWithAttr1.String(), Coins: cz(3)},
+				{Address: addrOutput2.String(), Coins: cz(17)},
+			},
+			expErr: noAttrErr(addrOutput2),
+			// Note: Here too, the input should come out and the first output go through before getting the error.
+			//       Normally, that'd get rolled back because of the error, but we're not in a Tx here.
+			//       So all I'm going to do is check that the last output didn't go through.
+			expBals: []expBal{newExpBal("addrOutput2", addrOutput2, cz(66))}, // from first test.
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err = app.BankKeeper.InputOutputCoins(ctx, tc.input, tc.outputs)
+			if len(tc.expErr) != 0 {
+				assert.EqualError(t, err, tc.expErr, "InputOutputCoins")
+			} else {
+				assert.NoError(t, err, "InputOutputCoins")
+			}
+
+			for _, exp := range tc.expBals {
+				assertBalance(t, exp)
+			}
+		})
+	}
 }
 
 func TestNormalizeRequiredAttributes(t *testing.T) {
