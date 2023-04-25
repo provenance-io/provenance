@@ -15,7 +15,7 @@ chains:
             gas-adjustment: 1.5
             gas-prices: 1905nhash
             debug: false
-            timeout: 10s
+            timeout: 20s
             output-format: json
             sign-mode: direct
     local2:
@@ -29,7 +29,7 @@ chains:
             gas-adjustment: 1.5
             gas-prices: 1905nhash
             debug: false
-            timeout: 10s
+            timeout: 20s
             output-format: json
             sign-mode: direct
 
