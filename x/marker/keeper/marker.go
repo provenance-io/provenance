@@ -729,6 +729,7 @@ func (k Keeper) IbcTransferCoin(
 		}
 	}
 
+	ctx = WithMarkerSendRestrictionBypass(ctx, true)
 	// checking if escrow account has transfer auth, if not add it
 	escrowAccount := ibctypes.GetEscrowAddress(sourcePort, sourceChannel)
 	if !m.AddressHasAccess(escrowAccount, types.Access_Transfer) {

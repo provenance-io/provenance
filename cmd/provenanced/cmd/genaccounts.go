@@ -417,9 +417,9 @@ enforced immediately.  An optional type flag can be provided or the default of C
 				newMarkerFlags.RequiredAttributes,
 			)
 
-			if err = genAccount.Validate(); err != nil {
-				return fmt.Errorf("failed to validate new genesis account: %w", err)
-			}
+			// if err = genAccount.Validate(); err != nil {
+			// 	return fmt.Errorf("failed to validate new genesis account: %w", err)
+			// }
 
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
