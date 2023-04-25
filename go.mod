@@ -9,7 +9,7 @@ require (
 	github.com/CosmWasm/wasmvm v1.1.2
 	github.com/armon/go-metrics v0.4.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
-	github.com/cosmos/cosmos-sdk v0.46.7
+	github.com/cosmos/cosmos-sdk v0.46.10
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-go/v6 v6.1.0
 	github.com/gogo/protobuf v1.3.3
@@ -169,9 +169,8 @@ require (
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-// replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.10-pio-3
-// ../prov-cosmos-sdk should be on branch dwedul/send-restrictions
-replace github.com/cosmos/cosmos-sdk => ../prov-cosmos-sdk
+// TODO: Update this to a release version once one is cut.
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.3-pio-4.0.20230425191906-5c86ba4c899d
 
 // use informal system fork of tendermint in the interim until comet is ready. This matches what the SDK is using.
 replace github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.26
