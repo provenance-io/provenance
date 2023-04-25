@@ -1,6 +1,6 @@
 global:
     api-listen-addr: :5183
-    timeout: 200s
+    timeout: 10s
     memo: ""
     light-cache-size: 20
 chains:
@@ -9,13 +9,13 @@ chains:
         value:
             key: default
             chain-id: testing
-            rpc-addr: http://host.docker.internal:26657
+            rpc-addr: http://192.168.20.2:26657
             account-prefix: tp
             keyring-backend: test
             gas-adjustment: 1.5
             gas-prices: 1905nhash
             debug: false
-            timeout: 200s
+            timeout: 10s
             output-format: json
             sign-mode: direct
     local2:
@@ -23,13 +23,13 @@ chains:
         value:
             key: default
             chain-id: testing2
-            rpc-addr: http://host.docker.internal:36657
+            rpc-addr: http://192.168.20.3:26657
             account-prefix: tp
             keyring-backend: test
             gas-adjustment: 1.5
             gas-prices: 1905nhash
             debug: false
-            timeout: 200s
+            timeout: 10s
             output-format: json
             sign-mode: direct
 
