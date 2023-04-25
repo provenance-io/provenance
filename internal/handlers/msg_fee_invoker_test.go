@@ -61,7 +61,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	s.Require().NoError(err)
 	coins, _, err := feeChargeFn(s.ctx, false)
 
-	s.Require().ErrorContains(err, "spendable balance  is smaller than 1000000nhash: insufficient funds", "feeChargeFn 1")
+	s.Require().ErrorContains(err, "spendable balance 0nhash is smaller than 1000000nhash: insufficient funds", "feeChargeFn 1")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero(), "coins.IsZero() 1")
 
@@ -107,7 +107,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 
 	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(1000000)))), "funding account")
 	coins, _, err := feeChargeFn(s.ctx, false)
-	s.Require().ErrorContains(err, "spendable balance  is smaller than 20000atom: insufficient funds", "feeChargeFn 1")
+	s.Require().ErrorContains(err, "spendable balance 0atom is smaller than 20000atom: insufficient funds", "feeChargeFn 1")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero(), "coins.IsZero() 1")
 
