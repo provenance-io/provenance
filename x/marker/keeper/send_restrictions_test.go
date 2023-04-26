@@ -6,6 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -85,6 +87,20 @@ func TestAllowMarkerSend(t *testing.T) {
 			from:          acct.GetAddress().String(),
 			to:            acctWithAttrs,
 			denom:         nrMarkerDenom,
+			expectedError: "",
+		},
+		{
+			name:          "should succeed - sent from marker module",
+			from:          authtypes.NewModuleAddress(types.CoinPoolName).String(),
+			to:            acctWithAttrs,
+			denom:         rMarkerDenom,
+			expectedError: "",
+		},
+		{
+			name:          "should succeed - sent from ibc transfer module",
+			from:          authtypes.NewModuleAddress(ibctypes.ModuleName).String(),
+			to:            acctWithAttrs,
+			denom:         rMarkerDenom,
 			expectedError: "",
 		},
 		{
