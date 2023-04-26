@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
+	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -726,6 +727,17 @@ func (k Keeper) IbcTransferCoin(
 		if err != nil {
 			return err
 		}
+	}
+
+	ctx = WithMarkerSendRestrictionBypass(ctx, true)
+	// checking if escrow account has transfer auth, if not add it
+	escrowAccount := ibctypes.GetEscrowAddress(sourcePort, sourceChannel)
+	if !m.AddressHasAccess(escrowAccount, types.Access_Transfer) {
+		err = m.GrantAccess(types.NewAccessGrant(escrowAccount, []types.Access{types.Access_Transfer}))
+		if err != nil {
+			return err
+		}
+		k.SetMarker(ctx, m)
 	}
 
 	_, err = k.ibcKeeper.SendTransfer(

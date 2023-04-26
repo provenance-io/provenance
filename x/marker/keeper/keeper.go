@@ -16,6 +16,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
+	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
 	attrkeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -80,6 +81,8 @@ type Keeper struct {
 	authority string
 
 	markerModuleAddr sdk.AccAddress
+
+	ibcTransferModuleAddr sdk.AccAddress
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -104,18 +107,19 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		paramSpace:       paramSpace,
-		authKeeper:       authKeeper,
-		authzKeeper:      authzKeeper,
-		bankKeeper:       bankKeeper,
-		feegrantKeeper:   feegrantKeeper,
-		ibcKeeper:        ibcKeeper,
-		attrKeeper:       attrKeeper,
-		nameKeeper:       nameKeeper,
-		storeKey:         key,
-		cdc:              cdc,
-		authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		markerModuleAddr: authtypes.NewModuleAddress(types.CoinPoolName),
+		paramSpace:            paramSpace,
+		authKeeper:            authKeeper,
+		authzKeeper:           authzKeeper,
+		bankKeeper:            bankKeeper,
+		feegrantKeeper:        feegrantKeeper,
+		ibcKeeper:             ibcKeeper,
+		attrKeeper:            attrKeeper,
+		nameKeeper:            nameKeeper,
+		storeKey:              key,
+		cdc:                   cdc,
+		authority:             authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		markerModuleAddr:      authtypes.NewModuleAddress(types.CoinPoolName),
+		ibcTransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
 	}
 }
 

@@ -21,7 +21,8 @@ func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 	if err != nil {
 		return err
 	}
-	if caller.Equals(k.markerModuleAddr) {
+
+	if caller.Equals(k.markerModuleAddr) || caller.Equals(k.ibcTransferModuleAddr) {
 		return nil
 	}
 
