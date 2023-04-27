@@ -458,7 +458,8 @@ func (k Keeper) ValidateScopeValueOwnerUpdate(
 					// For the value owner address, we only check authz for non smart-contract signers
 					// This prevents Alice from using a smart contract to update Bob's
 					// scope when both have authorized the smart contract to WriteScope.
-					// But it allows Bob to authorize Alice and then use the smart contract to update Alice's scope.
+					// But it allows Bob to authorize Alice and then Alice can update Bob's scope regardless
+					// of whether it's by means of a smart contract.
 					var grantees []sdk.AccAddress
 					for _, signer := range safeBech32ToAccAddresses(signers) {
 						if !k.isWasmAccount(ctx, signer) {
