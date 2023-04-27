@@ -196,7 +196,8 @@ func getAuthzMessageTypeURLs(msgTypeURL string) []string {
 	}
 	switch msgTypeURL {
 	case types.TypeURLMsgAddScopeDataAccessRequest, types.TypeURLMsgDeleteScopeDataAccessRequest,
-		types.TypeURLMsgAddScopeOwnerRequest, types.TypeURLMsgDeleteScopeOwnerRequest:
+		types.TypeURLMsgAddScopeOwnerRequest, types.TypeURLMsgDeleteScopeOwnerRequest,
+		types.TypeURLMsgUpdateValueOwnersRequest:
 		urls = append(urls, types.TypeURLMsgWriteScopeRequest)
 	case types.TypeURLMsgWriteRecordRequest:
 		urls = append(urls, types.TypeURLMsgWriteSessionRequest)
@@ -427,77 +428,124 @@ func (k Keeper) ValidateScopeValueOwnerUpdate(
 	if existing == proposed {
 		return usedSigners, nil
 	}
-	signers := msg.GetSignerStrs()
-	if len(existing) > 0 {
-		marker, hasAuth, accWithAccess := k.GetMarkerAndCheckAuthority(ctx, existing, signers, markertypes.Access_Withdraw)
-		if marker != nil {
-			// If the existing is a marker, make sure a signer has withdraw authority on it.
-			if !hasAuth {
-				return nil, fmt.Errorf("missing signature for %s (%s) with authority to withdraw/remove it as scope value owner", existing, marker.GetDenom())
-			}
-			usedSigners[accWithAccess] = true
-		} else {
-			// If the existing isn't a marker, make sure they're one of the signers or
-			// have an authorization grant for one of the signers.
-			found := false
+	signers := NewSignersWrapper(msg.GetSignerStrs())
 
-			// First just check the list of signers.
-			for _, signer := range signers {
-				if existing == signer {
-					usedSigners[signer] = true
+	newUsedSigners, err := k.validateScopeValueOwnerChangeFromExisting(ctx, existing, validatedParties, signers, msg)
+	if err != nil {
+		return nil, err
+	}
+	usedSigners = appendUsedSigners(usedSigners, newUsedSigners)
+
+	newUsedSigners, err = k.validateScopeValueOwnerChangeToProposed(ctx, proposed, signers)
+	if err != nil {
+		return nil, err
+	}
+	usedSigners = appendUsedSigners(usedSigners, newUsedSigners)
+
+	return usedSigners, nil
+}
+
+// appendUsedSigners updates the provided baseMap to contain the data in toAdd.
+// The baseMap is also returned so that this behaves similar to the standard append function.
+func appendUsedSigners(baseMap map[string]bool, toAdd map[string]bool) map[string]bool {
+	for k, v := range toAdd {
+		baseMap[k] = v || baseMap[k]
+	}
+	return baseMap
+}
+
+// validateScopeValueOwnerChangeFromExisting validates that the provided signers
+// are allowed to change the existing value owner.
+func (k Keeper) validateScopeValueOwnerChangeFromExisting(
+	ctx sdk.Context,
+	existing string,
+	validatedParties []*PartyDetails,
+	signers *SignersWrapper,
+	msg types.MetadataMsg,
+) (map[string]bool, error) {
+	usedSigners := make(map[string]bool)
+	if len(existing) == 0 {
+		return usedSigners, nil
+	}
+	marker, hasAuth, accWithAccess := k.GetMarkerAndCheckAuthority(ctx, existing, signers.Strings(), markertypes.Access_Withdraw)
+	if marker != nil {
+		// If the existing is a marker, make sure a signer has withdraw authority on it.
+		if !hasAuth {
+			return nil, fmt.Errorf("missing signature for %s (%s) with authority to withdraw/remove it as scope value owner", existing, marker.GetDenom())
+		}
+		usedSigners[accWithAccess] = true
+	} else {
+		// If the existing isn't a marker, make sure they're one of the signers or
+		// have an authorization grant for one of the signers.
+		found := false
+
+		// First just check the list of signers.
+		for _, signer := range signers.Strings() {
+			if existing == signer {
+				usedSigners[signer] = true
+				found = true
+				break
+			}
+		}
+
+		// If not yet found, check the validated parties for one with this address
+		// that also has an associated signer.
+		// This way, if it does exist, the authorization is only used once during a single call.
+		if !found {
+			for _, party := range validatedParties {
+				if party.GetAddress() == existing && party.HasSigner() {
+					usedSigners[party.GetSigner()] = true
 					found = true
 					break
 				}
 			}
+		}
 
-			// If not yet found, check the validated parties for one with this address
-			// that also has an associated signer.
-			// This way, if it does exist, the authorization is only used once during a single call.
-			if !found {
-				for _, party := range validatedParties {
-					if party.GetAddress() == existing && party.HasSigner() {
-						usedSigners[party.GetSigner()] = true
-						found = true
-						break
-					}
+		// If still not found, check with authz for help.
+		if !found {
+			// If existing isn't a bech32, we just skip the authz check. Should only happen in unit tests.
+			granter, err := sdk.AccAddressFromBech32(existing)
+			if err == nil {
+				grantees := safeBech32ToAccAddresses(signers.Strings())
+				grantee, err := k.findAuthzGrantee(ctx, granter, grantees, msg)
+				if err != nil {
+					return nil, fmt.Errorf("authz error with existing value owner %q: %w", existing, err)
+				}
+				if len(grantee) > 0 {
+					usedSigners[grantee.String()] = true
+					found = true
 				}
 			}
+		}
 
-			// If still not found, directly check with authz for help.
-			if !found {
-				// If existing isn't a bech32, we just skip the authz check. Should only happen in unit tests.
-				granter, err := sdk.AccAddressFromBech32(existing)
-				if err == nil {
-					grantees := safeBech32ToAccAddresses(signers)
-					grantee, err := k.findAuthzGrantee(ctx, granter, grantees, msg)
-					if err != nil {
-						return nil, fmt.Errorf("authz error with existing value owner %q: %w", existing, err)
-					}
-					if len(grantee) > 0 {
-						usedSigners[grantee.String()] = true
-						found = true
-					}
-				}
-			}
-
-			if !found {
-				return nil, fmt.Errorf("missing signature from existing value owner %s", existing)
-			}
+		if !found {
+			return nil, fmt.Errorf("missing signature from existing value owner %s", existing)
 		}
 	}
 
-	if len(proposed) > 0 {
-		// If the proposed is a marker, make sure a signer has deposit authority on it.
-		marker, hasAuth, signer := k.GetMarkerAndCheckAuthority(ctx, proposed, signers, markertypes.Access_Deposit)
-		if marker != nil && !hasAuth {
-			return nil, fmt.Errorf("missing signature for %s (%s) with authority to deposit/add it as scope value owner", proposed, marker.GetDenom())
-		}
-		if len(signer) > 0 {
-			usedSigners[signer] = true
-		}
-		// If it's not a marker, we don't really care what it's being set to.
-	}
+	return usedSigners, nil
+}
 
+// validateScopeValueOwnerChangeToProposed validates that the provided signers
+// are allowed to set the value owner to the proposed value.
+func (k Keeper) validateScopeValueOwnerChangeToProposed(
+	ctx sdk.Context,
+	proposed string,
+	signers *SignersWrapper,
+) (map[string]bool, error) {
+	usedSigners := make(map[string]bool)
+	if len(proposed) == 0 {
+		return usedSigners, nil
+	}
+	// If the proposed is a marker, make sure a signer has deposit authority on it.
+	marker, hasAuth, signer := k.GetMarkerAndCheckAuthority(ctx, proposed, signers.Strings(), markertypes.Access_Deposit)
+	if marker != nil && !hasAuth {
+		return nil, fmt.Errorf("missing signature for %s (%s) with authority to deposit/add it as scope value owner", proposed, marker.GetDenom())
+	}
+	if len(signer) > 0 {
+		usedSigners[signer] = true
+	}
+	// If it's not a marker, we don't really care what it's being set to.
 	return usedSigners, nil
 }
 

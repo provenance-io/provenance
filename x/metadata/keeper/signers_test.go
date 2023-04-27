@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
@@ -91,6 +92,105 @@ func (s *AuthzTestSuite) AssertErrorValue(theError error, errorString string, ms
 
 func TestAuthzTestSuite(t *testing.T) {
 	suite.Run(t, new(AuthzTestSuite))
+}
+
+func (s *AuthzTestSuite) TestWriteScopeSmartContractAuthz() {
+	// Setup:
+	// Alice and Bob have both granted smart contract "Sam" the ability to WriteScope for them.
+	// They are each the value owner of their own scope.
+	// Alice has also granted Bob the ability to WriteScope for them.
+
+	addrAlice := sdk.AccAddress("addrAlice___________")
+	addrBob := sdk.AccAddress("addrBob_____________")
+	addrSam := sdk.AccAddress("addrSam_____________")
+
+	scopeIDAlice := types.ScopeMetadataAddress(uuid.New())
+	scopeIDBob := types.ScopeMetadataAddress(uuid.New())
+
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+
+	owner := types.PartyType_PARTY_TYPE_OWNER
+
+	newScope := func(scopeID types.MetadataAddress, valueOwner sdk.AccAddress) *types.Scope {
+		return &types.Scope{
+			ScopeId:            scopeID,
+			SpecificationId:    scopeSpecID,
+			Owners:             []types.Party{{Address: valueOwner.String(), Role: owner}},
+			DataAccess:         nil,
+			ValueOwnerAddress:  valueOwner.String(),
+			RequirePartyRollup: false,
+		}
+	}
+
+	newMsg := func(scopeID types.MetadataAddress, valueOwner sdk.AccAddress, signers ...string) *types.MsgWriteScopeRequest {
+		return &types.MsgWriteScopeRequest{
+			Scope:   *newScope(scopeID, valueOwner),
+			Signers: signers,
+		}
+	}
+	msgType := types.TypeURLMsgWriteScopeRequest
+
+	mdKeeper := s.app.MetadataKeeper
+
+	authKeeper := NewMockAuthKeeper().WithGetAccountResults(
+		NewBaseGetAccountCall(addrAlice),
+		NewBaseGetAccountCall(addrBob),
+		NewWasmGetAccountCall(addrSam),
+	)
+	origAuthKeeper := mdKeeper.SetAuthKeeper(authKeeper)
+	defer mdKeeper.SetAuthKeeper(origAuthKeeper)
+
+	authzKeeper := NewMockAuthzKeeper().WithGetAuthorizationResults(
+		NewAcceptedGetAuthorizationCall(addrSam, addrAlice, msgType, "sam as alice"),
+		NewAcceptedGetAuthorizationCall(addrSam, addrBob, msgType, "sam as bob"),
+		NewAcceptedGetAuthorizationCall(addrBob, addrAlice, msgType, "bob as alice"),
+	)
+	origAuthzKeeper := mdKeeper.SetAuthzKeeper(authzKeeper)
+	defer mdKeeper.SetAuthzKeeper(origAuthzKeeper)
+
+	scopeSpec := types.ScopeSpecification{
+		SpecificationId: scopeSpecID,
+		Description:     types.NewDescription("TestWriteScopeSmartContractAuthz", "Just a test spec", "", ""),
+		OwnerAddresses:  []string{addrSam.String()},
+		PartiesInvolved: []types.PartyType{owner},
+		ContractSpecIds: []types.MetadataAddress{types.ContractSpecMetadataAddress(uuid.New())},
+	}
+	mdKeeper.SetScopeSpecification(s.FreshCtx(), scopeSpec)
+
+	tests := []struct {
+		name     string
+		existing *types.Scope
+		msg      *types.MsgWriteScopeRequest
+		exp      string
+	}{
+		// Alice makes a call to the Sam that causes Sam to try to change Bob's Scope's value owner to Alice.
+		// That must fail.
+		{
+			name:     "smart contract updating value owner of wrong scope",
+			existing: newScope(scopeIDBob, addrBob),
+			msg:      newMsg(scopeIDBob, addrAlice, addrSam.String(), addrAlice.String()),
+			exp:      "TODO",
+		},
+
+		// Bob makes a call to Sam to do stuff that causes Sam to try to change Alice's Scope's value owner to Bob.
+		// This should pass because Alice has authorized Bob to WriteScope for them.
+		{
+			name:     "smart contract updating value owner of other scope but invoker is authorized",
+			existing: newScope(scopeIDAlice, addrAlice),
+			msg:      newMsg(scopeIDAlice, addrBob, addrSam.String(), addrBob.String()),
+			exp:      "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			authKeeper.ClearResults()
+			authzKeeper.ClearResults()
+
+			err := mdKeeper.ValidateWriteScope(s.FreshCtx(), tc.existing, tc.msg)
+			s.AssertErrorValue(err, tc.exp, "ValidateWriteScope")
+		})
+	}
 }
 
 func (s *AuthzTestSuite) TestValidateSignersWithParties() {
@@ -2352,6 +2452,10 @@ func TestGetAuthzMessageTypeURLs(t *testing.T) {
 		{
 			url:      types.TypeURLMsgDeleteScopeOwnerRequest,
 			expected: []string{types.TypeURLMsgDeleteScopeOwnerRequest, types.TypeURLMsgWriteScopeRequest},
+		},
+		{
+			url:      types.TypeURLMsgUpdateValueOwnersRequest,
+			expected: []string{types.TypeURLMsgUpdateValueOwnersRequest, types.TypeURLMsgWriteScopeRequest},
 		},
 		boringCase(types.TypeURLMsgWriteSessionRequest),
 		{

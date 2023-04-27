@@ -65,6 +65,13 @@ func (k *MockAuthzKeeper) WithSaveGrantResults(entries ...SaveGrantCall) *MockAu
 	return k
 }
 
+// ClearResults clears previously recorded calls but leaves the desired results intact.
+func (k *MockAuthzKeeper) ClearResults() {
+	k.GetAuthorizationCalls = nil
+	k.DeleteGrantCalls = nil
+	k.SaveGrantCalls = nil
+}
+
 // GrantInfo is a common set of parameters provided to the authz keeper functions we care about.
 type GrantInfo struct {
 	Grantee sdk.AccAddress
@@ -87,6 +94,33 @@ type GetAuthorizationResult struct {
 type GetAuthorizationCall struct {
 	GrantInfo
 	Result GetAuthorizationResult
+}
+
+// NewAcceptedGetAuthorizationCall returns a new GetAuthorizationCall that be accepted.
+func NewAcceptedGetAuthorizationCall(grantee, granter sdk.AccAddress, msgTypeURL, authName string) GetAuthorizationCall {
+	return GetAuthorizationCall{
+		GrantInfo: GrantInfo{
+			Grantee: grantee,
+			Granter: granter,
+			MsgType: msgTypeURL,
+		},
+		Result: GetAuthorizationResult{
+			Auth: &MockAuthorization{
+				Name:              authName,
+				AcceptResponse:    authz.AcceptResponse{Accept: true},
+				AcceptResponseErr: nil,
+				AcceptCalls:       nil,
+			},
+			Exp: nil,
+		},
+	}
+}
+
+// WithAcceptCalls updates the Result.Auth to expect Accept calls for the provided msgs.
+// Panics if the Result.Auth is not a MockAuthorization.
+func (c GetAuthorizationCall) WithAcceptCalls(msgs ...sdk.Msg) GetAuthorizationCall {
+	c.Result.Auth.(*MockAuthorization).WithAcceptCalls(msgs...)
+	return c
 }
 
 // DeleteGrantCall has the inputs of DeleteGrant and the result associated with that input.
@@ -176,6 +210,11 @@ func NewMockAuthKeeper() *MockAuthKeeper {
 	}
 }
 
+// ClearResults clears previously recorded calls but leaves the desired results intact.
+func (k *MockAuthKeeper) ClearResults() {
+	k.GetAccountCalls = nil
+}
+
 // WithGetAccountResults defines results to return from GetAccount in this MockAuthKeeper and also returns it.
 func (k *MockAuthKeeper) WithGetAccountResults(entries ...*GetAccountCall) *MockAuthKeeper {
 	for _, entry := range entries {
@@ -195,6 +234,16 @@ func NewGetAccountCall(addr sdk.AccAddress, result authtypes.AccountI) *GetAccou
 		Addr:   addr,
 		Result: result,
 	}
+}
+
+// NewWasmGetAccountCall returns a new GetAccountCall of an account that will return true from isWasmAccount.
+func NewWasmGetAccountCall(addr sdk.AccAddress) *GetAccountCall {
+	return NewGetAccountCall(addr, authtypes.NewBaseAccount(addr, nil, 0, 0))
+}
+
+// NewBaseGetAccountCall returns a new GetAccountCall for a base account that will return false from isWasmAccount.
+func NewBaseGetAccountCall(addr sdk.AccAddress) *GetAccountCall {
+	return NewGetAccountCall(addr, authtypes.NewBaseAccount(addr, nil, 0, 1))
 }
 
 // Key gets the string to use as a map key for these calls.

@@ -492,6 +492,7 @@ func TestPrintMessageTypeStrings(t *testing.T) {
 		&MsgDeleteScopeDataAccessRequest{},
 		&MsgAddScopeOwnerRequest{},
 		&MsgDeleteScopeOwnerRequest{},
+		&MsgUpdateValueOwnersRequest{},
 		&MsgWriteSessionRequest{},
 		&MsgWriteRecordRequest{},
 		&MsgDeleteRecordRequest{},

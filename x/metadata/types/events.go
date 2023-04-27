@@ -99,6 +99,7 @@ const (
 	TxEndpoint_DeleteScopeDataAccess TxEndpoint = "DeleteScopeDataAccess"
 	TxEndpoint_AddScopeOwner         TxEndpoint = "AddScopeOwner"
 	TxEndpoint_DeleteScopeOwner      TxEndpoint = "DeleteScopeOwner"
+	TxEndpoint_UpdateValueOwners     TxEndpoint = "UpdateValueOwners"
 
 	TxEndpoint_WriteSession TxEndpoint = "WriteSession"
 

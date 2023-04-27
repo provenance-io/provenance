@@ -178,6 +178,33 @@ func (k msgServer) DeleteScopeOwner(
 	return types.NewMsgDeleteScopeOwnerResponse(), nil
 }
 
+func (k msgServer) UpdateValueOwners(
+	goCtx context.Context,
+	msg *types.MsgUpdateValueOwnersRequest,
+) (*types.MsgUpdateValueOwnersResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "UpdateValueOwners")
+	ctx := UnwrapMetadataContext(goCtx)
+
+	scopes := make([]*types.Scope, len(msg.ScopeIds))
+	for i, id := range msg.ScopeIds {
+		scope, found := k.GetScope(ctx, id)
+		if !found {
+			return nil, fmt.Errorf("scope not found with id %s", id)
+		}
+		scopes[i] = &scope
+	}
+
+	err := k.ValidateUpdateValueOwners(ctx, scopes, msg)
+	if err != nil {
+		return nil, err
+	}
+
+	k.SetScopeValueOwners(ctx, scopes, msg.ValueOwnerAddress)
+
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_UpdateValueOwners, msg.GetSignerStrs()))
+	return &types.MsgUpdateValueOwnersResponse{}, nil
+}
+
 func (k msgServer) WriteSession(
 	goCtx context.Context,
 	msg *types.MsgWriteSessionRequest,
