@@ -1,7 +1,7 @@
 #!/bin/bash
 
 RESET_CONFIG="${RESET_CONFIG:-0}"
-VERSION="${VERSION:-v2.1.1}"
+VERSION="${VERSION:-v2.3.1}"
 RELAYER_HOME="${RELAYER_HOME:-$HOME/.relayer}"
 RELAY_CMD="${RELAY_CMD:-rly}"
 RELAYER_CONFIG="$RELAYER_HOME/config/config.yaml"

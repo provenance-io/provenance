@@ -6,6 +6,7 @@
     - [Access Grants](#access-grants)
     - [Fixed Supply vs Floating](#fixed-supply-vs-floating)
     - [Forced Transfers](#forced-transfers)
+	- [Required Attributes](#required-attributes)
   - [Marker Address Cache](#marker-address-cache)
   - [Params](#params)
 
@@ -58,6 +59,10 @@ type MarkerAccount struct {
 
 	// Whether an admin can transfer restricted coins from a 3rd-party account without their signature.
 	AllowForcedTransfer bool
+
+	// list of required attributes on restricted marker in order to send and receive transfers if sender does not have
+	// transfer authority
+	RequiredAttributes []string
 }
 ```
 
@@ -142,6 +147,14 @@ if the marker allows forced transfers, the transfer is allowed. If forced transf
 transfer the marker's coins from another account unless granted permission to do so via `authz`.
 
 Markers with **Coin** type cannot be configured to allow forced transfers.
+
+### Required Attributes
+
+A marker with the **Restricted Coin** type can be configured to allow transfers with a normal `MsgSend` to address that have defined attributes. 
+This can be configured by setting the `required_attributes` array on the Marker.  When a `MsgSend` transaction is executed and the coin type is `restricted`, the `required_attributes` are checked. If the `ToAddress` associated with the `MsgSend` command has **all** the required attributes, the transfer will be executed.
+
+A single wildcard can only be used for the starting name of the required attribute. For example, `*.provenance.io` is a valid wildcard attribute. Invalid wildcard usages include forms such as `*kyc.provenance.io` or `kyc.*.provenance.io`.  Matching will be accepted for any number of child level names, i.e. `one.two.three.provenance.io` and `one.provenance.io` will be accepted for `*.provenance.io`. 
+
 
 ## Marker Address Cache
 
