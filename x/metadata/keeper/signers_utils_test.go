@@ -1657,7 +1657,7 @@ func TestPartyDetails_IsSameAs(t *testing.T) {
 	}
 }
 
-func TestGetAllSigners(t *testing.T) {
+func TestGetUsedSigners(t *testing.T) {
 	addr := func(str string) sdk.AccAddress {
 		if len(str) == 0 {
 			return nil
@@ -1686,7 +1686,7 @@ func TestGetAllSigners(t *testing.T) {
 	tests := []struct {
 		name    string
 		parties []*keeper.PartyDetails
-		exp     map[string]bool
+		exp     keeper.UsedSignersMap
 	}{
 		{
 			name:    "nil parties",
@@ -1762,7 +1762,7 @@ func TestGetAllSigners(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := keeper.GetAllSigners(tc.parties)
+			actual := keeper.GetUsedSigners(tc.parties)
 			assert.Equal(t, tc.exp, actual, "GetAllSigners")
 		})
 	}

@@ -357,11 +357,12 @@ func (k Keeper) ValidateWriteScope(
 		}
 	}
 
-	usedSigners, err := k.ValidateScopeValueOwnerUpdate(ctx, existingValueOwner, proposed.ValueOwnerAddress, validatedParties, msg)
+	usedSigners, err := k.ValidateScopeValueOwnerUpdate(ctx, existingValueOwner, proposed.ValueOwnerAddress, msg)
 	if err != nil {
 		return err
 	}
 
+	usedSigners.AlsoUse(GetUsedSigners(validatedParties))
 	if err = k.validateSmartContractSigners(ctx, usedSigners, msg); err != nil {
 		return err
 	}
@@ -410,11 +411,12 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 		}
 	}
 
-	usedSigners, err := k.ValidateScopeValueOwnerUpdate(ctx, scope.ValueOwnerAddress, "", validatedParties, msg)
+	usedSigners, err := k.ValidateScopeValueOwnerUpdate(ctx, scope.ValueOwnerAddress, "", msg)
 	if err != nil {
 		return err
 	}
 
+	usedSigners.AlsoUse(GetUsedSigners(validatedParties))
 	if err = k.validateSmartContractSigners(ctx, usedSigners, msg); err != nil {
 		return err
 	}
@@ -573,7 +575,7 @@ func (k Keeper) ValidateUpdateScopeOwners(
 		if err != nil {
 			return err
 		}
-		if err = k.validateSmartContractSigners(ctx, GetAllSigners(validatedParties), msg); err != nil {
+		if err = k.validateSmartContractSigners(ctx, GetUsedSigners(validatedParties), msg); err != nil {
 			return err
 		}
 	}
@@ -600,21 +602,22 @@ func (k Keeper) ValidateUpdateValueOwners(
 	}
 
 	signers := NewSignersWrapper(msg.GetSignerStrs())
-	usedSigners := make(map[string]bool)
-	for _, existing := range existingValueOwners {
-		newUsedSigners, err := k.validateScopeValueOwnerChangeFromExisting(ctx, existing, nil, signers, msg)
-		if err != nil {
-			return err
-		}
-		usedSigners = appendUsedSigners(usedSigners, newUsedSigners)
-	}
-
-	newUsedSigners, err := k.validateScopeValueOwnerChangeToProposed(ctx, msg.ValueOwnerAddress, signers)
+	usedSigners, err := k.validateScopeValueOwnerChangeToProposed(ctx, msg.ValueOwnerAddress, signers)
 	if err != nil {
 		return err
 	}
-	usedSigners = appendUsedSigners(usedSigners, newUsedSigners)
 
-	// TODO[1329]: Add the smart contract check.
+	for _, existing := range existingValueOwners {
+		alsoUsedSigners, err := k.validateScopeValueOwnerChangeFromExisting(ctx, existing, signers, msg)
+		if err != nil {
+			return err
+		}
+		usedSigners.AlsoUse(alsoUsedSigners)
+	}
+
+	if err = k.validateSmartContractSigners(ctx, usedSigners, msg); err != nil {
+		return err
+	}
+
 	return nil
 }

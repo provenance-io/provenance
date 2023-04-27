@@ -182,7 +182,7 @@ func (k Keeper) ValidateAllRequiredSigned(ctx sdk.Context, required []string, ms
 }
 
 // ValidateSmartContractSigners is a TEST ONLY exposure of validateSmartContractSigners.
-func (k Keeper) ValidateSmartContractSigners(ctx sdk.Context, usedSigners map[string]bool, msg types.MetadataMsg) error {
+func (k Keeper) ValidateSmartContractSigners(ctx sdk.Context, usedSigners UsedSignersMap, msg types.MetadataMsg) error {
 	return k.validateSmartContractSigners(ctx, usedSigners, msg)
 }
 

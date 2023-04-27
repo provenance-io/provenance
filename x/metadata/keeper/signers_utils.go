@@ -187,12 +187,12 @@ func (p *PartyDetails) IsSameAs(p2 types.Partier) bool {
 	return types.SamePartiers(p, p2)
 }
 
-// GetAllSigners gets a map of bech32 strings to true with a key for each used signer.
-func GetAllSigners(parties []*PartyDetails) map[string]bool {
-	rv := make(map[string]bool)
+// GetUsedSigners gets a map of bech32 strings to true with a key for each used signer.
+func GetUsedSigners(parties []*PartyDetails) UsedSignersMap {
+	rv := make(UsedSignersMap)
 	for _, party := range parties {
 		if party.HasSigner() {
-			rv[party.GetSigner()] = true
+			rv.Use(party.GetSigner())
 		}
 	}
 	return rv
@@ -303,6 +303,35 @@ func GetAuthzCache(ctx sdk.Context) *AuthzCache {
 // This should not be used outside of the Metadata module.
 func UnwrapMetadataContext(goCtx context.Context) sdk.Context {
 	return AddAuthzCacheToContext(sdk.UnwrapSDKContext(goCtx))
+}
+
+// UsedSignersMap is a type for recording that a signer has been used.
+type UsedSignersMap map[string]bool
+
+// NewUsedSignersMap creates a new UsedSignersMap
+func NewUsedSignersMap() UsedSignersMap {
+	return make(UsedSignersMap)
+}
+
+// Use notes that the provided addresses have been used.
+func (m UsedSignersMap) Use(addrs ...string) UsedSignersMap {
+	for _, addr := range addrs {
+		m[addr] = true
+	}
+	return m
+}
+
+// IsUsed returns true if the provided address has been used.
+func (m UsedSignersMap) IsUsed(addr string) bool {
+	return m[addr]
+}
+
+// AlsoUse adds all the entries in the provided UsedSignersMap to this UsedSignersMap.
+func (m UsedSignersMap) AlsoUse(m2 UsedSignersMap) UsedSignersMap {
+	for k := range m2 {
+		m[k] = true
+	}
+	return m
 }
 
 // findMissing returns all elements of the required list that are not found in the entries list.

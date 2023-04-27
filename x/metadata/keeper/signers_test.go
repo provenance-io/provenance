@@ -4729,7 +4729,7 @@ func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
 
 	tests := []struct {
 		name        string
-		usedSigners map[string]bool
+		usedSigners keeper.UsedSignersMap
 		msg         types.MetadataMsg
 		authK       *MockAuthKeeper
 		authzK      *MockAuthzKeeper
@@ -4994,14 +4994,6 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 	accStr := func(addr string) string {
 		return acc(addr).String()
 	}
-	pd := func(address string, acc sdk.AccAddress, signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
-			Address:   address,
-			Acc:       acc,
-			Signer:    signer,
-			SignerAcc: signerAcc,
-		}.Real()
-	}
 
 	withdrawAddrAcc := acc("withdraw_address____")
 	noWithdrawAddrAcc := acc("no_withdraw_address_")
@@ -5099,17 +5091,16 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 	}
 
 	tests := []struct {
-		name             string
-		existing         string
-		proposed         string
-		validatedParties []*keeper.PartyDetails
-		msg              types.MetadataMsg
-		authKeeper       *MockAuthKeeper
-		authzKeeper      *MockAuthzKeeper
-		expErr           string
-		expUsed          map[string]bool
-		expGetAccount    []*GetAccountCall
-		expGetAuth       []*GetAuthorizationCall
+		name          string
+		existing      string
+		proposed      string
+		msg           types.MetadataMsg
+		authKeeper    *MockAuthKeeper
+		authzKeeper   *MockAuthzKeeper
+		expErr        string
+		expUsed       keeper.UsedSignersMap
+		expGetAccount []*GetAccountCall
+		expGetAuth    []*GetAuthorizationCall
 	}{
 		{
 			name:     "both empty",
@@ -5398,14 +5389,9 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			expGetAccount: []*GetAccountCall{},
 		},
 		{
-			name:     "non-bech32 to empty not in signers or validated parties",
-			existing: "existing_value_owner_string",
-			proposed: "",
-			validatedParties: []*keeper.PartyDetails{
-				pd(noneAddr, nil, noneAddr, nil),
-				pd("", allAddrAcc, "", noneAddrAcc),
-				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
-			},
+			name:          "non-bech32 to empty not in signers",
+			existing:      "existing_value_owner_string",
+			proposed:      "",
 			msg:           normalMsg(noneAddr, allAddr, depositAddr),
 			authKeeper:    NewMockAuthKeeper(),
 			authzKeeper:   NewMockAuthzKeeper(),
@@ -5441,15 +5427,9 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			expGetAuth: []*GetAuthorizationCall{},
 		},
 		{
-			name:     "addr to other in validated parties not signer",
-			existing: accStr("existing"),
-			proposed: accStr("proposed"),
-			validatedParties: []*keeper.PartyDetails{
-				pd(noneAddr, nil, noneAddr, nil),
-				pd("", allAddrAcc, "", noneAddrAcc),
-				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
-				pd(accStr("existing"), nil, accStr("other"), nil),
-			},
+			name:        "addr to other not in signer",
+			existing:    accStr("existing"),
+			proposed:    accStr("proposed"),
 			msg:         normalMsg(noneAddr, allAddr, depositAddr),
 			authKeeper:  NewMockAuthKeeper(),
 			authzKeeper: NewMockAuthzKeeper(),
@@ -5468,15 +5448,9 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			},
 		},
 		{
-			name:     "addr to empty with authz",
-			existing: accStr("existing"),
-			proposed: "",
-			validatedParties: []*keeper.PartyDetails{
-				pd(noneAddr, nil, noneAddr, nil),
-				pd("", allAddrAcc, "", noneAddrAcc),
-				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
-				pd(accStr("existing"), nil, "", nil),
-			},
+			name:       "addr to empty with authz",
+			existing:   accStr("existing"),
+			proposed:   "",
 			msg:        normalMsg(allAddr, noneAddr, depositAddr),
 			authKeeper: NewMockAuthKeeper(),
 			authzKeeper: NewMockAuthzKeeper().WithGetAuthorizationResults(
@@ -5513,15 +5487,9 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			},
 		},
 		{
-			name:     "addr to empty not authorized",
-			existing: accStr("existing"),
-			proposed: "",
-			validatedParties: []*keeper.PartyDetails{
-				pd(noneAddr, nil, noneAddr, nil),
-				pd("", allAddrAcc, "", noneAddrAcc),
-				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
-				pd(accStr("existing"), nil, "", nil),
-			},
+			name:        "addr to empty not authorized",
+			existing:    accStr("existing"),
+			proposed:    "",
 			msg:         normalMsg(allAddr, withdrawAddr, depositAddr),
 			authKeeper:  NewMockAuthKeeper(),
 			authzKeeper: NewMockAuthzKeeper(),
@@ -5615,10 +5583,10 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 				tc.authzKeeper.GetAuthorizationCalls = make([]*GetAuthorizationCall, 0, len(tc.expGetAuth))
 			}
 			if tc.expUsed == nil && len(tc.expErr) == 0 {
-				tc.expUsed = make(map[string]bool)
+				tc.expUsed = keeper.NewUsedSignersMap()
 			}
 
-			used, err := k.ValidateScopeValueOwnerUpdate(s.FreshCtx(), tc.existing, tc.proposed, tc.validatedParties, tc.msg)
+			used, err := k.ValidateScopeValueOwnerUpdate(s.FreshCtx(), tc.existing, tc.proposed, tc.msg)
 			s.AssertErrorValue(err, tc.expErr, "ValidateScopeValueOwnerUpdate")
 			s.Assert().Equal(tc.expUsed, used, "ValidateScopeValueOwnerUpdate used signatures map")
 

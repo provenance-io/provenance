@@ -50,7 +50,7 @@ func (k Keeper) ValidateSignersWithParties(
 	if err = k.validateProvenanceRole(ctx, parties); err != nil {
 		return err
 	}
-	return k.validateSmartContractSigners(ctx, GetAllSigners(parties), msg)
+	return k.validateSmartContractSigners(ctx, GetUsedSigners(parties), msg)
 }
 
 // validateAllRequiredPartiesSigned ensures the following:
@@ -367,7 +367,7 @@ func (k Keeper) isWasmAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 // are in the usedSigners map or are authorized by all signers after them.
 // The usedSigners map has bech32 keys and value indicating whether that address was
 // used as a signer in some capacity (e.g. they're a party).
-func (k Keeper) validateSmartContractSigners(ctx sdk.Context, usedSigners map[string]bool, msg types.MetadataMsg) error {
+func (k Keeper) validateSmartContractSigners(ctx sdk.Context, usedSigners UsedSignersMap, msg types.MetadataMsg) error {
 	// When a smart contract is a signer, they must either be used as a signer
 	// already, or must be authorized by all signers after it.
 	// The wasm encoders (hopefully) put the smart contract as the first signer
@@ -384,7 +384,7 @@ func (k Keeper) validateSmartContractSigners(ctx sdk.Context, usedSigners map[st
 			canBeWasm = false
 			continue
 		}
-		if usedSigners[signerStr] {
+		if usedSigners.IsUsed(signerStr) {
 			continue
 		}
 		// it's a wasm account, and it wasn't used yet.
@@ -421,37 +421,24 @@ func (k Keeper) ValidateScopeValueOwnerUpdate(
 	ctx sdk.Context,
 	existing,
 	proposed string,
-	validatedParties []*PartyDetails,
 	msg types.MetadataMsg,
-) (map[string]bool, error) {
-	usedSigners := GetAllSigners(validatedParties)
+) (UsedSignersMap, error) {
 	if existing == proposed {
-		return usedSigners, nil
+		return NewUsedSignersMap(), nil
 	}
 	signers := NewSignersWrapper(msg.GetSignerStrs())
 
-	newUsedSigners, err := k.validateScopeValueOwnerChangeFromExisting(ctx, existing, validatedParties, signers, msg)
+	usedSigners, err := k.validateScopeValueOwnerChangeFromExisting(ctx, existing, signers, msg)
 	if err != nil {
 		return nil, err
 	}
-	usedSigners = appendUsedSigners(usedSigners, newUsedSigners)
 
-	newUsedSigners, err = k.validateScopeValueOwnerChangeToProposed(ctx, proposed, signers)
+	newUsedSigners, err := k.validateScopeValueOwnerChangeToProposed(ctx, proposed, signers)
 	if err != nil {
 		return nil, err
 	}
-	usedSigners = appendUsedSigners(usedSigners, newUsedSigners)
 
-	return usedSigners, nil
-}
-
-// appendUsedSigners updates the provided baseMap to contain the data in toAdd.
-// The baseMap is also returned so that this behaves similar to the standard append function.
-func appendUsedSigners(baseMap map[string]bool, toAdd map[string]bool) map[string]bool {
-	for k, v := range toAdd {
-		baseMap[k] = v || baseMap[k]
-	}
-	return baseMap
+	return usedSigners.AlsoUse(newUsedSigners), nil
 }
 
 // validateScopeValueOwnerChangeFromExisting validates that the provided signers
@@ -459,11 +446,10 @@ func appendUsedSigners(baseMap map[string]bool, toAdd map[string]bool) map[strin
 func (k Keeper) validateScopeValueOwnerChangeFromExisting(
 	ctx sdk.Context,
 	existing string,
-	validatedParties []*PartyDetails,
 	signers *SignersWrapper,
 	msg types.MetadataMsg,
-) (map[string]bool, error) {
-	usedSigners := make(map[string]bool)
+) (UsedSignersMap, error) {
+	usedSigners := NewUsedSignersMap()
 	if len(existing) == 0 {
 		return usedSigners, nil
 	}
@@ -473,7 +459,7 @@ func (k Keeper) validateScopeValueOwnerChangeFromExisting(
 		if !hasAuth {
 			return nil, fmt.Errorf("missing signature for %s (%s) with authority to withdraw/remove it as scope value owner", existing, marker.GetDenom())
 		}
-		usedSigners[accWithAccess] = true
+		usedSigners.Use(accWithAccess)
 	} else {
 		// If the existing isn't a marker, make sure they're one of the signers or
 		// have an authorization grant for one of the signers.
@@ -482,7 +468,7 @@ func (k Keeper) validateScopeValueOwnerChangeFromExisting(
 		// First just check the list of signers.
 		for _, signer := range signers.Strings() {
 			if existing == signer {
-				usedSigners[signer] = true
+				usedSigners.Use(signer)
 				found = true
 				break
 			}
@@ -509,7 +495,7 @@ func (k Keeper) validateScopeValueOwnerChangeFromExisting(
 					return nil, fmt.Errorf("authz error with existing value owner %q: %w", existing, err)
 				}
 				if len(grantee) > 0 {
-					usedSigners[grantee.String()] = true
+					usedSigners.Use(grantee.String())
 					found = true
 				}
 			}
@@ -529,8 +515,8 @@ func (k Keeper) validateScopeValueOwnerChangeToProposed(
 	ctx sdk.Context,
 	proposed string,
 	signers *SignersWrapper,
-) (map[string]bool, error) {
-	usedSigners := make(map[string]bool)
+) (UsedSignersMap, error) {
+	usedSigners := NewUsedSignersMap()
 	if len(proposed) == 0 {
 		return usedSigners, nil
 	}
@@ -540,7 +526,7 @@ func (k Keeper) validateScopeValueOwnerChangeToProposed(
 		return nil, fmt.Errorf("missing signature for %s (%s) with authority to deposit/add it as scope value owner", proposed, marker.GetDenom())
 	}
 	if len(signer) > 0 {
-		usedSigners[signer] = true
+		usedSigners.Use(signer)
 	}
 	// If it's not a marker, we don't really care what it's being set to.
 	return usedSigners, nil
@@ -560,7 +546,7 @@ func (k Keeper) ValidateSignersWithoutParties(
 	if err != nil {
 		return err
 	}
-	return k.validateSmartContractSigners(ctx, GetAllSigners(parties), msg)
+	return k.validateSmartContractSigners(ctx, GetUsedSigners(parties), msg)
 }
 
 // validateAllRequiredSigned ensures that all required addresses are either in the msg signers,
