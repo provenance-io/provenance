@@ -450,25 +450,21 @@ func (k Keeper) ValidateScopeValueOwnerUpdate(
 				}
 			}
 
-			// If not yet found, check the validated parties for one with this address
-			// that also has an associated signer.
-			// This way, if it does exist, the authorization is only used once during a single call.
-			if !found {
-				for _, party := range validatedParties {
-					if party.GetAddress() == existing && party.HasSigner() {
-						usedSigners[party.GetSigner()] = true
-						found = true
-						break
-					}
-				}
-			}
-
 			// If still not found, directly check with authz for help.
 			if !found {
 				// If existing isn't a bech32, we just skip the authz check. Should only happen in unit tests.
 				granter, err := sdk.AccAddressFromBech32(existing)
 				if err == nil {
-					grantees := safeBech32ToAccAddresses(signers)
+					// For the value owner address, we only check authz for non smart-contract signers
+					// This prevents Alice from using a smart contract to update Bob's
+					// scope when both have authorized the smart contract to WriteScope.
+					// But it allows Bob to authorize Alice and then use the smart contract to update Alice's scope.
+					var grantees []sdk.AccAddress
+					for _, signer := range safeBech32ToAccAddresses(signers) {
+						if !k.isWasmAccount(ctx, signer) {
+							grantees = append(grantees, signer)
+						}
+					}
 					grantee, err := k.findAuthzGrantee(ctx, granter, grantees, msg)
 					if err != nil {
 						return nil, fmt.Errorf("authz error with existing value owner %q: %w", existing, err)
