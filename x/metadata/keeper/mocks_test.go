@@ -116,6 +116,21 @@ func NewAcceptedGetAuthorizationCall(grantee, granter sdk.AccAddress, msgTypeURL
 	}
 }
 
+func NewNotFoundGetAuthorizationCall(grantee, granter sdk.AccAddress, msgTypeURL string) *GetAuthorizationCall {
+	return &GetAuthorizationCall{
+		GrantInfo: GrantInfo{
+			Grantee: grantee,
+			Granter: granter,
+			MsgType: msgTypeURL,
+		},
+		Result: GetAuthorizationResult{
+			Auth: nil,
+			Exp:  nil,
+		},
+	}
+
+}
+
 // DeleteGrantCall has the inputs of DeleteGrant and the result associated with that input.
 type DeleteGrantCall struct {
 	GrantInfo
