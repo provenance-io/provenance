@@ -116,6 +116,20 @@ func NewAcceptedGetAuthorizationCall(grantee, granter sdk.AccAddress, msgTypeURL
 	}
 }
 
+func NewNotFoundGetAuthorizationCall(grantee, granter sdk.AccAddress, msgTypeURL string) *GetAuthorizationCall {
+	return &GetAuthorizationCall{
+		GrantInfo: GrantInfo{
+			Grantee: grantee,
+			Granter: granter,
+			MsgType: msgTypeURL,
+		},
+		Result: GetAuthorizationResult{
+			Auth: nil,
+			Exp:  nil,
+		},
+	}
+}
+
 // WithAcceptCalls updates the Result.Auth to expect Accept calls for the provided msgs.
 // Panics if the Result.Auth is not a MockAuthorization.
 func (c GetAuthorizationCall) WithAcceptCalls(msgs ...sdk.Msg) GetAuthorizationCall {

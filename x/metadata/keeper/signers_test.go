@@ -94,7 +94,7 @@ func TestAuthzTestSuite(t *testing.T) {
 	suite.Run(t, new(AuthzTestSuite))
 }
 
-func (s *AuthzTestSuite) TestWriteScopeSmartContractAuthz() {
+func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 	// Setup:
 	// Alice and Bob have both granted smart contract "Sam" the ability to WriteScope for them.
 	// They are each the value owner of their own scope.
@@ -104,27 +104,25 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractAuthz() {
 	addrBob := sdk.AccAddress("addrBob_____________")
 	addrSam := sdk.AccAddress("addrSam_____________")
 
-	scopeIDAlice := types.ScopeMetadataAddress(uuid.New())
-	scopeIDBob := types.ScopeMetadataAddress(uuid.New())
-
+	scopeID := types.ScopeMetadataAddress(uuid.New())
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 
-	owner := types.PartyType_PARTY_TYPE_OWNER
+	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
 
-	newScope := func(scopeID types.MetadataAddress, valueOwner sdk.AccAddress) *types.Scope {
+	newScope := func(valueOwner sdk.AccAddress) *types.Scope {
 		return &types.Scope{
 			ScopeId:            scopeID,
 			SpecificationId:    scopeSpecID,
-			Owners:             []types.Party{{Address: valueOwner.String(), Role: owner}},
+			Owners:             []types.Party{{Address: addrSam.String(), Role: provenance}},
 			DataAccess:         nil,
 			ValueOwnerAddress:  valueOwner.String(),
 			RequirePartyRollup: false,
 		}
 	}
 
-	newMsg := func(scopeID types.MetadataAddress, valueOwner sdk.AccAddress, signers ...string) *types.MsgWriteScopeRequest {
+	newMsg := func(valueOwner sdk.AccAddress, signers ...string) *types.MsgWriteScopeRequest {
 		return &types.MsgWriteScopeRequest{
-			Scope:   *newScope(scopeID, valueOwner),
+			Scope:   *newScope(valueOwner),
 			Signers: signers,
 		}
 	}
@@ -150,9 +148,9 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractAuthz() {
 
 	scopeSpec := types.ScopeSpecification{
 		SpecificationId: scopeSpecID,
-		Description:     types.NewDescription("TestWriteScopeSmartContractAuthz", "Just a test spec", "", ""),
+		Description:     types.NewDescription("TestWriteScopeSmartContractValueOwnerAuthz", "Just a test spec", "", ""),
 		OwnerAddresses:  []string{addrSam.String()},
-		PartiesInvolved: []types.PartyType{owner},
+		PartiesInvolved: []types.PartyType{provenance},
 		ContractSpecIds: []types.MetadataAddress{types.ContractSpecMetadataAddress(uuid.New())},
 	}
 	mdKeeper.SetScopeSpecification(s.FreshCtx(), scopeSpec)
@@ -163,21 +161,41 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractAuthz() {
 		msg      *types.MsgWriteScopeRequest
 		exp      string
 	}{
-		// Alice makes a call to the Sam that causes Sam to try to change Bob's Scope's value owner to Alice.
-		// That must fail.
 		{
+			// Alice makes a call to the Sam that causes Sam to try to change Bob's Scope's value owner to Alice.
+			// That must fail.
 			name:     "smart contract updating value owner of wrong scope",
-			existing: newScope(scopeIDBob, addrBob),
-			msg:      newMsg(scopeIDBob, addrAlice, addrSam.String(), addrAlice.String()),
-			exp:      "TODO",
+			existing: newScope(addrBob),
+			msg:      newMsg(addrAlice, addrSam.String(), addrAlice.String()),
+			exp:      "missing signature from existing value owner " + addrBob.String(),
 		},
-
-		// Bob makes a call to Sam to do stuff that causes Sam to try to change Alice's Scope's value owner to Bob.
-		// This should pass because Alice has authorized Bob to WriteScope for them.
 		{
+			// Bob makes a call to Sam to do stuff that causes Sam to try to change Alice's Scope's value owner to Bob.
+			// This should pass because Alice has authorized Bob to WriteScope for them.
 			name:     "smart contract updating value owner of other scope but invoker is authorized",
-			existing: newScope(scopeIDAlice, addrAlice),
-			msg:      newMsg(scopeIDAlice, addrBob, addrSam.String(), addrBob.String()),
+			existing: newScope(addrAlice),
+			msg:      newMsg(addrBob, addrSam.String(), addrBob.String()),
+			exp:      "",
+		},
+		{
+			// If the value owner is the smart contract, it can be updated to Alice by Alice invoking the smart contract
+			name:     "value owner is smart contract updating to invoker",
+			existing: newScope(addrSam),
+			msg:      newMsg(addrAlice, addrSam.String(), addrAlice.String()),
+			exp:      "",
+		},
+		{
+			// If the value owner is the smart contract, it can be updated to Bob by Alice invoking the smart contract
+			name:     "value owner is smart contract updating to non-invoker",
+			existing: newScope(addrSam),
+			msg:      newMsg(addrBob, addrSam.String(), addrAlice.String()),
+			exp:      "",
+		},
+		{
+			// If the value owner is the smart contract, it can be updated to Alice by Bob invoking the smart contract
+			name:     "value owner is smart contract updating to non-invoker with authz",
+			existing: newScope(addrSam),
+			msg:      newMsg(addrAlice, addrSam.String(), addrBob.String()),
 			exp:      "",
 		},
 	}
@@ -5380,19 +5398,6 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			expGetAccount: []*GetAccountCall{},
 		},
 		{
-			name:     "non-bech32 to empty in validated parties string somehow",
-			existing: "existing_value_owner_string",
-			proposed: "",
-			msg:      normalMsg(noneAddr, allAddr, depositAddr),
-			validatedParties: []*keeper.PartyDetails{
-				pd("existing_value_owner_string", nil, "existing_value_owner_string", nil),
-			},
-			authKeeper:    NewMockAuthKeeper(),
-			expErr:        "",
-			expUsed:       map[string]bool{"existing_value_owner_string": true},
-			expGetAccount: []*GetAccountCall{},
-		},
-		{
 			name:     "non-bech32 to empty not in signers or validated parties",
 			existing: "existing_value_owner_string",
 			proposed: "",
@@ -5436,115 +5441,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			expGetAuth: []*GetAuthorizationCall{},
 		},
 		{
-			name:     "addr to empty in validated parties string string",
-			existing: accStr("existing"),
-			proposed: "",
-			validatedParties: []*keeper.PartyDetails{
-				pd(noneAddr, nil, noneAddr, nil),
-				pd("", allAddrAcc, "", noneAddrAcc),
-				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
-				pd(accStr("existing"), nil, accStr("existing"), nil),
-			},
-			msg:           normalMsg(noneAddr, allAddr, depositAddr),
-			authKeeper:    NewMockAuthKeeper(),
-			authzKeeper:   NewMockAuthzKeeper(),
-			expErr:        "",
-			expUsed:       map[string]bool{noneAddr: true, accStr("existing"): true},
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
-			expGetAuth:    []*GetAuthorizationCall{},
-		},
-		{
-			name:     "addr to empty in validated parties string acc",
-			existing: accStr("existing"),
-			proposed: "",
-			validatedParties: []*keeper.PartyDetails{
-				pd(noneAddr, nil, noneAddr, nil),
-				pd("", allAddrAcc, "", noneAddrAcc),
-				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
-				pd(accStr("existing"), nil, "", acc("existing")),
-			},
-			msg:           normalMsg(noneAddr, allAddr, depositAddr),
-			authKeeper:    NewMockAuthKeeper(),
-			authzKeeper:   NewMockAuthzKeeper(),
-			expErr:        "",
-			expUsed:       map[string]bool{noneAddr: true, accStr("existing"): true},
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
-			expGetAuth:    []*GetAuthorizationCall{},
-		},
-		{
-			name:     "addr to empty in validated parties acc string",
-			existing: accStr("existing"),
-			proposed: "",
-			validatedParties: []*keeper.PartyDetails{
-				pd(noneAddr, nil, noneAddr, nil),
-				pd("", allAddrAcc, "", noneAddrAcc),
-				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
-				pd("", acc("existing"), accStr("existing"), nil),
-			},
-			msg:           normalMsg(noneAddr, allAddr, depositAddr),
-			authKeeper:    NewMockAuthKeeper(),
-			authzKeeper:   NewMockAuthzKeeper(),
-			expErr:        "",
-			expUsed:       map[string]bool{noneAddr: true, accStr("existing"): true},
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
-			expGetAuth:    []*GetAuthorizationCall{},
-		},
-		{
-			name:     "addr to empty in validated parties acc acc",
-			existing: accStr("existing"),
-			proposed: "",
-			validatedParties: []*keeper.PartyDetails{
-				pd(noneAddr, nil, noneAddr, nil),
-				pd("", allAddrAcc, "", noneAddrAcc),
-				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
-				pd("", acc("existing"), "", acc("existing")),
-			},
-			msg:           normalMsg(noneAddr, allAddr, depositAddr),
-			authKeeper:    NewMockAuthKeeper(),
-			authzKeeper:   NewMockAuthzKeeper(),
-			expErr:        "",
-			expUsed:       map[string]bool{noneAddr: true, accStr("existing"): true},
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
-			expGetAuth:    []*GetAuthorizationCall{},
-		},
-		{
-			name:     "addr to empty in validated parties other signer string",
-			existing: accStr("existing"),
-			proposed: "",
-			validatedParties: []*keeper.PartyDetails{
-				pd(noneAddr, nil, noneAddr, nil),
-				pd("", allAddrAcc, "", noneAddrAcc),
-				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
-				pd(accStr("existing"), nil, accStr("other"), nil),
-			},
-			msg:           normalMsg(noneAddr, allAddr, depositAddr),
-			authKeeper:    NewMockAuthKeeper(),
-			authzKeeper:   NewMockAuthzKeeper(),
-			expErr:        "",
-			expUsed:       map[string]bool{noneAddr: true, accStr("other"): true},
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
-			expGetAuth:    []*GetAuthorizationCall{},
-		},
-		{
-			name:     "addr to empty in validated parties other signer acc",
-			existing: accStr("existing"),
-			proposed: "",
-			validatedParties: []*keeper.PartyDetails{
-				pd(noneAddr, nil, noneAddr, nil),
-				pd("", allAddrAcc, "", noneAddrAcc),
-				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
-				pd(accStr("existing"), nil, "", acc("other")),
-			},
-			msg:           normalMsg(noneAddr, allAddr, depositAddr),
-			authKeeper:    NewMockAuthKeeper(),
-			authzKeeper:   NewMockAuthzKeeper(),
-			expErr:        "",
-			expUsed:       map[string]bool{noneAddr: true, accStr("other"): true},
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
-			expGetAuth:    []*GetAuthorizationCall{},
-		},
-		{
-			name:     "addr to other in validated parties",
+			name:     "addr to other in validated parties not signer",
 			existing: accStr("existing"),
 			proposed: accStr("proposed"),
 			validatedParties: []*keeper.PartyDetails{
@@ -5556,13 +5453,19 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 			msg:         normalMsg(noneAddr, allAddr, depositAddr),
 			authKeeper:  NewMockAuthKeeper(),
 			authzKeeper: NewMockAuthzKeeper(),
-			expErr:      "",
-			expUsed:     map[string]bool{noneAddr: true, accStr("other"): true},
+			expErr:      errMissingSig(accStr("existing")),
+			expUsed:     nil,
 			expGetAccount: []*GetAccountCall{
 				NewGetAccountCall(acc("existing"), nil),
-				NewGetAccountCall(acc("proposed"), nil),
+				NewGetAccountCall(noneAddrAcc, nil),
+				NewGetAccountCall(allAddrAcc, nil),
+				NewGetAccountCall(depositAddrAcc, nil),
 			},
-			expGetAuth: []*GetAuthorizationCall{},
+			expGetAuth: []*GetAuthorizationCall{
+				NewNotFoundGetAuthorizationCall(noneAddrAcc, acc("existing"), normalMsgType),
+				NewNotFoundGetAuthorizationCall(allAddrAcc, acc("existing"), normalMsgType),
+				NewNotFoundGetAuthorizationCall(depositAddrAcc, acc("existing"), normalMsgType),
+			},
 		},
 		{
 			name:     "addr to empty with authz",
@@ -5585,9 +5488,14 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 					},
 				},
 			),
-			expErr:        "",
-			expUsed:       map[string]bool{noneAddr: true},
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
+			expErr:  "",
+			expUsed: map[string]bool{noneAddr: true},
+			expGetAccount: []*GetAccountCall{
+				NewGetAccountCall(acc("existing"), nil),
+				NewGetAccountCall(allAddrAcc, nil),
+				NewGetAccountCall(noneAddrAcc, nil),
+				NewGetAccountCall(depositAddrAcc, nil),
+			},
 			expGetAuth: []*GetAuthorizationCall{
 				{
 					GrantInfo: GrantInfo{Grantee: allAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
@@ -5614,11 +5522,16 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 				pd(depositAddr, depositAddrAcc, "", noneAddrAcc),
 				pd(accStr("existing"), nil, "", nil),
 			},
-			msg:           normalMsg(allAddr, withdrawAddr, depositAddr),
-			authKeeper:    NewMockAuthKeeper(),
-			authzKeeper:   NewMockAuthzKeeper(),
-			expErr:        errMissingSig(accStr("existing")),
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
+			msg:         normalMsg(allAddr, withdrawAddr, depositAddr),
+			authKeeper:  NewMockAuthKeeper(),
+			authzKeeper: NewMockAuthzKeeper(),
+			expErr:      errMissingSig(accStr("existing")),
+			expGetAccount: []*GetAccountCall{
+				NewGetAccountCall(acc("existing"), nil),
+				NewGetAccountCall(allAddrAcc, nil),
+				NewGetAccountCall(withdrawAddrAcc, nil),
+				NewGetAccountCall(depositAddrAcc, nil),
+			},
 			expGetAuth: []*GetAuthorizationCall{
 				{
 					GrantInfo: GrantInfo{Grantee: allAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
@@ -5662,8 +5575,11 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 					Result:  errors.New("test error from SaveGrant"),
 				},
 			),
-			expErr:        fmt.Sprintf("authz error with existing value owner %q: %s", accStr("existing"), "test error from SaveGrant"),
-			expGetAccount: []*GetAccountCall{NewGetAccountCall(acc("existing"), nil)},
+			expErr: fmt.Sprintf("authz error with existing value owner %q: %s", accStr("existing"), "test error from SaveGrant"),
+			expGetAccount: []*GetAccountCall{
+				NewGetAccountCall(acc("existing"), nil),
+				NewGetAccountCall(noneAddrAcc, nil),
+			},
 			expGetAuth: []*GetAuthorizationCall{
 				{
 					GrantInfo: GrantInfo{Grantee: noneAddrAcc, Granter: acc("existing"), MsgType: normalMsgType},
