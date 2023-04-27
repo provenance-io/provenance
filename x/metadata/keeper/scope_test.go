@@ -130,6 +130,11 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 	s.Assert().NotNil(scope)
 }
 
+func (s *ScopeKeeperTestSuite) TestSetScopeValueOwners() {
+	// TODO[1329]: Write TestSetScopeValueOwners
+	s.Fail("not yet written")
+}
+
 func (s *ScopeKeeperTestSuite) TestMetadataScopeIterator() {
 	ctx := s.FreshCtx()
 	for i := 1; i <= 10; i++ {
@@ -1707,4 +1712,9 @@ func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
 			assert.False(t, store.Has(unexpected.key), unexpected.name)
 		}
 	})
+}
+
+func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
+	// TODO[1329]: Write TestValidateUpdateValueOwners
+	s.Fail("not yet written")
 }

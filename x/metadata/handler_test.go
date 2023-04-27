@@ -68,6 +68,11 @@ func TestMetadataHandlerTestSuite(t *testing.T) {
 // TODO: WriteScope tests
 // TODO: DeleteScope tests
 
+func (s *MetadataHandlerTestSuite) TestUpdateValueOwners() {
+	// TODO[1329]: Write TestUpdateValueOwners
+	s.Fail("not yet written")
+}
+
 func (s *MetadataHandlerTestSuite) TestWriteSession() {
 	cSpec := types.ContractSpecification{
 		SpecificationId: types.ContractSpecMetadataAddress(uuid.New()),

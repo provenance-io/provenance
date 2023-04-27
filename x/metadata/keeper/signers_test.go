@@ -5602,6 +5602,16 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 	}
 }
 
+func (s *AuthzTestSuite) TestValidateScopeValueOwnerChangeFromExisting() {
+	// TODO[1329]: Write TestValidateScopeValueOwnerChangeFromExisting
+	s.Fail("not yet written")
+}
+
+func (s *AuthzTestSuite) TestValidateScopeValueOwnerChangeToProposed() {
+	// TODO[1329]: Write TestValidateScopeValueOwnerChangeToProposed
+	s.Fail("not yet written")
+}
+
 func (s *AuthzTestSuite) TestValidateSignersWithoutParties() {
 	// These tests are pretty light since all it does is call
 	// validateAllRequiredSigned and validateSmartContractSigners.

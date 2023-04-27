@@ -22,6 +22,11 @@ func ownerPartyList(addresses ...string) []Party {
 	return retval
 }
 
+func TestAllGetSigners(t *testing.T) {
+	// TODO[1329]: Write TestAllGetSigners
+	t.Fatalf("not yet written")
+}
+
 func TestWriteScopeRoute(t *testing.T) {
 	var scope = &Scope{
 		ScopeId:           ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
@@ -327,6 +332,11 @@ func TestDeleteScopeOwnerValidateBasic(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMsgUpdateValueOwnersRequest_ValidateBasic(t *testing.T) {
+	// TODO[1329]: Write TestMsgUpdateValueOwnersRequest_ValidateBasic
+	t.Fatalf("not yet written")
 }
 
 func TestMsgAddContractSpecToScopeSpecRequestValidateBasic(t *testing.T) {

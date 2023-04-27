@@ -186,6 +186,25 @@ func (k Keeper) ValidateSmartContractSigners(ctx sdk.Context, usedSigners UsedSi
 	return k.validateSmartContractSigners(ctx, usedSigners, msg)
 }
 
+// ValidateScopeValueOwnerChangeFromExisting is a TEST ONLY exposure of validateScopeValueOwnerChangeFromExisting.
+func (k Keeper) ValidateScopeValueOwnerChangeFromExisting(
+	ctx sdk.Context,
+	existing string,
+	signers *SignersWrapper,
+	msg types.MetadataMsg,
+) (UsedSignersMap, error) {
+	return k.validateScopeValueOwnerChangeFromExisting(ctx, existing, signers, msg)
+}
+
+// ValidateScopeValueOwnerChangeToProposed is a TEST ONLY exposure of validateScopeValueOwnerChangeToProposed.
+func (k Keeper) ValidateScopeValueOwnerChangeToProposed(
+	ctx sdk.Context,
+	proposed string,
+	signers *SignersWrapper,
+) (UsedSignersMap, error) {
+	return k.validateScopeValueOwnerChangeToProposed(ctx, proposed, signers)
+}
+
 var (
 	// ValidateRolesPresent is a TEST ONLY exposure of validateRolesPresent.
 	ValidateRolesPresent = validateRolesPresent

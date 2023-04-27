@@ -2076,6 +2076,11 @@ func TestUnwrapMetadataContext(t *testing.T) {
 	assert.Empty(t, cache.AcceptableMap(), "cache acceptable map")
 }
 
+func TestUsedSignersMap_AlsoUse(t *testing.T) {
+	// TODO[1329]: Write TestUsedSignersMap_AlsoUse
+	t.Fatalf("not yet written")
+}
+
 type testCaseFindMissing struct {
 	name     string
 	required []string
