@@ -359,8 +359,14 @@ func (k Keeper) isWasmAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 	if len(addr) == 0 {
 		return false
 	}
+	authzCache := GetAuthzCache(ctx)
+	if authzCache.HasIsWasm(addr) {
+		return authzCache.GetIsWasm(addr)
+	}
 	account, isBaseAccount := k.authKeeper.GetAccount(ctx, addr).(*authtypes.BaseAccount)
-	return account != nil && isBaseAccount && account.GetSequence() == uint64(0) && account.GetPubKey() == nil
+	isWasm := account != nil && isBaseAccount && account.GetSequence() == uint64(0) && account.GetPubKey() == nil
+	authzCache.SetIsWasm(addr, isWasm)
+	return isWasm
 }
 
 // validateSmartContractSigners makes sure that any msg signers that are smart contracts

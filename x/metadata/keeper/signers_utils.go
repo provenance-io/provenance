@@ -232,20 +232,32 @@ func authzCacheAcceptableKey(grantee, granter sdk.AccAddress, msgTypeURL string)
 	return string(grantee) + "-" + string(granter) + "-" + msgTypeURL
 }
 
+// authzCacheIsWasmKey creates the key string used in the AuthzCache.known map.
+func authzCacheIsWasmKey(addr sdk.AccAddress) string {
+	return string(addr)
+}
+
 // AuthzCache is a struct that houses a map of authz authorizations that are known to have a passed Accept (and been handled).
 type AuthzCache struct {
 	acceptable map[string]authz.Authorization
+	isWasm     map[string]bool
 }
 
 // NewAuthzCache creates a new AuthzCache.
 func NewAuthzCache() *AuthzCache {
-	return &AuthzCache{acceptable: make(map[string]authz.Authorization)}
+	return &AuthzCache{
+		acceptable: make(map[string]authz.Authorization),
+		isWasm:     make(map[string]bool),
+	}
 }
 
 // Clear deletes all entries from this AuthzCache.
 func (c *AuthzCache) Clear() {
 	for k := range c.acceptable {
 		delete(c.acceptable, k)
+	}
+	for k := range c.isWasm {
+		delete(c.isWasm, k)
 	}
 }
 
@@ -258,6 +270,27 @@ func (c *AuthzCache) SetAcceptable(grantee, granter sdk.AccAddress, msgTypeURL s
 // Returns nil if no such authorization exists.
 func (c *AuthzCache) GetAcceptable(grantee, granter sdk.AccAddress, msgTypeURL string) authz.Authorization {
 	return c.acceptable[authzCacheAcceptableKey(grantee, granter, msgTypeURL)]
+}
+
+// SetIsWasm records whether an account is a wasm account.
+func (c *AuthzCache) SetIsWasm(addr sdk.AccAddress, value bool) {
+	c.isWasm[authzCacheIsWasmKey(addr)] = value
+}
+
+// HasIsWasm returns true if a cached IsWasm value has been recorded for the given address.
+// Use GetIsWasm to get the previously recorded IsWasm value.
+func (c *AuthzCache) HasIsWasm(addr sdk.AccAddress) bool {
+	_, rv := c.isWasm[authzCacheIsWasmKey(addr)]
+	return rv
+}
+
+// GetIsWasm returns true if the address was previously recorded as being a wasm account.
+// Returns false if either:
+//	* The address was previously recorded as NOT being a wasm account.
+//  * The WASM status of the account hasn't yet been recorded.
+// Use HasIsWasm to differentiate the false conditions.
+func (c *AuthzCache) GetIsWasm(addr sdk.AccAddress) bool {
+	return c.isWasm[authzCacheIsWasmKey(addr)]
 }
 
 // authzCacheContextKey is the key used in an sdk.Context to set/get the AuthzCache.

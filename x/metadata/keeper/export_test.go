@@ -102,6 +102,8 @@ func (p *PartyDetails) Copy() *PartyDetails {
 var (
 	// AuthzCacheAcceptableKey is a TEST ONLY exposure of authzCacheAcceptableKey.
 	AuthzCacheAcceptableKey = authzCacheAcceptableKey
+	// AuthzCacheIsWasmKey is a TEST ONLY exposure of authzCacheIsWasmKey.
+	AuthzCacheIsWasmKey = authzCacheIsWasmKey
 	// AuthzCacheContextKey is a TEST ONLY exposure of authzCacheContextKey.
 	AuthzCacheContextKey = authzCacheContextKey
 )
@@ -109,6 +111,11 @@ var (
 // AcceptableMap is a TEST ONLY exposure of the AuthzCache.acceptable map.
 func (c *AuthzCache) AcceptableMap() map[string]authz.Authorization {
 	return c.acceptable
+}
+
+// IsWasmMap is a TEST ONLY exposure of the AuthzCache.isWasm map.
+func (c *AuthzCache) IsWasmMap() map[string]bool {
+	return c.isWasm
 }
 
 // ValidateAllRequiredPartiesSigned is a TEST ONLY exposure of validateAllRequiredPartiesSigned.

@@ -11,7 +11,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -1923,24 +1922,53 @@ func TestAuthzCacheAcceptableKey(t *testing.T) {
 	}
 }
 
+func TestAuthzCacheIsWasmKey(t *testing.T) {
+	tests := []struct {
+		name string
+		str  string
+	}{
+		{name: "20 char addr", str: "20_character_address"},
+		{name: "32 char addr", str: "thirty_two___character___address"},
+		{name: "a space", str: " "},
+		{name: "empty", str: ""},
+		{name: "bytes 0 to 10", str: string([]byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10})},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			addr := sdk.AccAddress(tc.str)
+			actual := keeper.AuthzCacheIsWasmKey(addr)
+			assert.Equal(t, tc.str, actual, "authzCacheIsWasmKey")
+		})
+	}
+}
+
 func TestNewAuthzCache(t *testing.T) {
 	c1 := keeper.NewAuthzCache()
 	c1Type := fmt.Sprintf("%T", c1)
 	c2 := keeper.NewAuthzCache()
+
 	assert.NotNil(t, c1, "NewAuthzCache result")
-	assert.Empty(t, c1.AcceptableMap(), "acceptable map")
 	assert.Equal(t, "*keeper.AuthzCache", c1Type, "type returned by NewAuthzCache")
+	assert.Empty(t, c1.AcceptableMap(), "acceptable map")
+	assert.Empty(t, c1.IsWasmMap(), "isWasm map")
+
 	assert.NotSame(t, c1, c2, "NewAuthzCache twice")
 	assert.NotSame(t, c1.AcceptableMap(), c2.AcceptableMap(), "acceptable maps of two NewAuthzCache")
+	assert.NotSame(t, c1.IsWasmMap(), c2.IsWasmMap(), "isWasm maps of two NewAuthzCache")
 }
 
 func TestAuthzCache_Clear(t *testing.T) {
 	c := keeper.NewAuthzCache()
 	c.AcceptableMap()["key1"] = &authz.CountAuthorization{}
 	c.AcceptableMap()["key2"] = &authz.GenericAuthorization{}
+	c.IsWasmMap()["key3"] = true
+	c.IsWasmMap()["key4"] = false
 	assert.NotEmpty(t, c.AcceptableMap(), "AuthzCache acceptable map before clear")
+	assert.NotEmpty(t, c.IsWasmMap(), "AuthzCache isWasm map before clear")
 	c.Clear()
 	assert.Empty(t, c.AcceptableMap(), "AuthzCache acceptable map after clear")
+	assert.Empty(t, c.IsWasmMap(), "AuthzCache isWasm map after clear")
 }
 
 func TestAuthzCache_SetAcceptable(t *testing.T) {
@@ -1975,6 +2003,111 @@ func TestAuthzCache_GetAcceptable(t *testing.T) {
 
 	notThere := c.GetAcceptable(granter, grantee, msgTypeURL)
 	assert.Nil(t, notThere, "GetAcceptable on an entry that should not exist")
+}
+
+func TestAuthzCache_SetIsWasm(t *testing.T) {
+	c := keeper.NewAuthzCache()
+
+	// These tests will build on eachother using the same AuthzCache.
+	tests := []struct {
+		name  string
+		addr  sdk.AccAddress
+		value bool
+		exp   map[string]bool
+	}{
+		{
+			name:  "new entry true",
+			addr:  sdk.AccAddress("addr_true"),
+			value: true,
+			exp:   map[string]bool{"addr_true": true},
+		},
+		{
+			name:  "new entry false",
+			addr:  sdk.AccAddress("addr_false"),
+			value: false,
+			exp:   map[string]bool{"addr_true": true, "addr_false": false},
+		},
+		{
+			name:  "change true to false",
+			addr:  sdk.AccAddress("addr_true"),
+			value: false,
+			exp:   map[string]bool{"addr_true": false, "addr_false": false},
+		},
+		{
+			name:  "change false to true",
+			addr:  sdk.AccAddress("addr_false"),
+			value: true,
+			exp:   map[string]bool{"addr_true": false, "addr_false": true},
+		},
+		{
+			name:  "nil address",
+			addr:  nil,
+			value: true,
+			exp:   map[string]bool{"addr_true": false, "addr_false": true, "": true},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			c.SetIsWasm(tc.addr, tc.value)
+			m := c.IsWasmMap()
+			assert.Equal(t, tc.exp, m, "isWasm map after SetIsWasm")
+		})
+	}
+}
+
+func TestAuthzCache_HasIsWasm(t *testing.T) {
+	c := keeper.NewAuthzCache()
+	addrTrue := sdk.AccAddress("addrTrue")
+	addrFalse := sdk.AccAddress("addrFalse")
+	addrUnknown := sdk.AccAddress("addrUnknown")
+	c.SetIsWasm(addrTrue, true)
+	c.SetIsWasm(addrFalse, false)
+
+	tests := []struct {
+		name string
+		addr sdk.AccAddress
+		exp  bool
+	}{
+		{name: "known true", addr: addrTrue, exp: true},
+		{name: "known false", addr: addrFalse, exp: true},
+		{name: "unknown", addr: addrUnknown, exp: false},
+		{name: "nil", addr: nil, exp: false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := c.HasIsWasm(tc.addr)
+			assert.Equal(t, tc.exp, actual, "HasIsWasm")
+		})
+	}
+}
+
+func TestAuthzCache_GetIsWasm(t *testing.T) {
+	c := keeper.NewAuthzCache()
+	addrTrue := sdk.AccAddress("addrTrue")
+	addrFalse := sdk.AccAddress("addrFalse")
+	addrUnknown := sdk.AccAddress("addrUnknown")
+	c.SetIsWasm(addrTrue, true)
+	c.SetIsWasm(addrFalse, false)
+
+	tests := []struct {
+		name string
+		addr sdk.AccAddress
+		exp  bool
+	}{
+		{name: "known true", addr: addrTrue, exp: true},
+		{name: "known false", addr: addrFalse, exp: false},
+		{name: "unknown", addr: addrUnknown, exp: false},
+		{name: "nil", addr: nil, exp: false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := c.GetIsWasm(tc.addr)
+			assert.Equal(t, tc.exp, actual, "GetIsWasm")
+		})
+	}
 }
 
 func TestAddAuthzCacheToContext(t *testing.T) {

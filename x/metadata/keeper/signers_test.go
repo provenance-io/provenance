@@ -4663,6 +4663,72 @@ func (s *AuthzTestSuite) TestIsWasmAccount() {
 		actual := s.app.MetadataKeeper.IsWasmAccount(ctx, markerAddr)
 		s.Assert().False(actual, "IsWasmAccount(marker address)")
 	})
+
+	// And a test that the cache is being used.
+	s.Run("known results are cached", func() {
+		wasmAddr := sdk.AccAddress("wasmAddr____________")
+		normalAddr := sdk.AccAddress("normalAddr__________")
+		noAcctAddr := sdk.AccAddress("noAcctAddr__________")
+
+		// Mock auth keeper to return one normal and one wasm account.
+		authKeeper := NewMockAuthKeeper().WithGetAccountResults(
+			NewWasmGetAccountCall(wasmAddr),
+			NewBaseGetAccountCall(normalAddr),
+			NewGetAccountCall(noAcctAddr, nil),
+		)
+
+		mdKeeper := s.app.MetadataKeeper
+		origAuthKeeper := mdKeeper.SetAuthKeeper(authKeeper)
+		defer mdKeeper.SetAuthKeeper(origAuthKeeper)
+
+		isWasmTests := []struct {
+			name string
+			addr sdk.AccAddress
+			exp  bool
+		}{
+			{name: "wasmAddr", addr: wasmAddr, exp: true},
+			{name: "normalAddr", addr: normalAddr, exp: false},
+			{name: "noAcctAddr", addr: noAcctAddr, exp: false},
+		}
+
+		expFirstGetAccountCalls := []*GetAccountCall{
+			NewWasmGetAccountCall(wasmAddr),
+			NewBaseGetAccountCall(normalAddr),
+			NewGetAccountCall(noAcctAddr, nil),
+		}
+
+		// using a single context for all this since that's where things are cached.
+		ctx := s.FreshCtx()
+
+		// Run IsWasmAccount on each address, making sure it returns as expected.
+		for _, tc := range isWasmTests {
+			actual := mdKeeper.IsWasmAccount(ctx, tc.addr)
+			s.Assert().Equal(tc.exp, actual, "IsWasmAccount(%s) 1st time", tc.name)
+		}
+
+		// Make sure the expected GetAccount calls were made.
+		s.Assert().Equal(expFirstGetAccountCalls, authKeeper.GetAccountCalls, "GetAccountCalls after first checks")
+		authKeeper.ClearResults()
+
+		// Make sure they're cached.
+		cache := keeper.GetAuthzCache(ctx)
+		for _, tc := range isWasmTests {
+			hasEntry := cache.HasIsWasm(tc.addr)
+			s.Assert().True(hasEntry, "cache HasIsWasm(%s)", tc.name)
+			isWasm := cache.GetIsWasm(tc.addr)
+			s.Assert().Equal(tc.exp, isWasm, "cache GetIsWasm(%s)", tc.name)
+		}
+
+		// Run IsWasmAccount again on each address, making sure it still returns as expected.
+		for _, tc := range isWasmTests {
+			actual := mdKeeper.IsWasmAccount(ctx, tc.addr)
+			s.Assert().Equal(tc.exp, actual, "IsWasmAccount(%s) 2nd time", tc.name)
+		}
+
+		// Make sure no GetAccount calls were made the second time.
+		secondGetAccountCalls := authKeeper.GetAccountCalls
+		s.Assert().Empty(secondGetAccountCalls, "GetAccountCalls after second checks")
+	})
 }
 
 func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
