@@ -39,6 +39,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * nothing
 
+### Bug Fixes
+
+* Fix authz + smart contract + value owner updates being too permissive [PR 1519](https://github.com/provenance-io/provenance/pull/1519).
+
 ---
 
 ## [v1.15.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc2) - 2023-04-19
