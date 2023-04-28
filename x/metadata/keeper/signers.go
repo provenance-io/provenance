@@ -450,63 +450,54 @@ func (k Keeper) validateScopeValueOwnerChangeFromExisting(
 	msg types.MetadataMsg,
 ) (UsedSignersMap, error) {
 	usedSigners := NewUsedSignersMap()
+
+	// Nothing to check (in here) if the existing is empty.
 	if len(existing) == 0 {
 		return usedSigners, nil
 	}
+
+	// If the existing is a marker, make sure a signer has withdraw authority on it.
 	marker, hasAuth, accWithAccess := k.GetMarkerAndCheckAuthority(ctx, existing, signers.Strings(), markertypes.Access_Withdraw)
 	if marker != nil {
-		// If the existing is a marker, make sure a signer has withdraw authority on it.
 		if !hasAuth {
 			return nil, fmt.Errorf("missing signature for %s (%s) with authority to withdraw/remove it as scope value owner", existing, marker.GetDenom())
 		}
-		usedSigners.Use(accWithAccess)
-	} else {
-		// If the existing isn't a marker, make sure they're one of the signers or
-		// have an authorization grant for one of the signers.
-		found := false
+		return usedSigners.Use(accWithAccess), nil
+	}
 
-		// First just check the list of signers.
-		for _, signer := range signers.Strings() {
-			if existing == signer {
-				usedSigners.Use(signer)
-				found = true
-				break
-			}
-		}
-
-		// If not found, check with authz for help.
-		if !found {
-			// If existing isn't a bech32, we just skip the authz check. Should only happen in unit tests.
-			granter, err := sdk.AccAddressFromBech32(existing)
-			if err == nil {
-				// For the value owner address, we only check authz for non smart-contract signers
-				// This prevents Alice from using a smart contract to update Bob's
-				// scope when both have authorized the smart contract to WriteScope.
-				// But it allows Bob to authorize Alice and then Alice can update Bob's scope regardless
-				// of whether it's by means of a smart contract.
-				var grantees []sdk.AccAddress
-				for _, signer := range signers.Accs() {
-					if !k.isWasmAccount(ctx, signer) {
-						grantees = append(grantees, signer)
-					}
-				}
-				grantee, err := k.findAuthzGrantee(ctx, granter, grantees, msg)
-				if err != nil {
-					return nil, fmt.Errorf("authz error with existing value owner %q: %w", existing, err)
-				}
-				if len(grantee) > 0 {
-					usedSigners.Use(grantee.String())
-					found = true
-				}
-			}
-		}
-
-		if !found {
-			return nil, fmt.Errorf("missing signature from existing value owner %s", existing)
+	// If the existing isn't a marker, make sure they're one of the signers or
+	// have an authorization grant for one of the signers.
+	for _, signer := range signers.Strings() {
+		if existing == signer {
+			return usedSigners.Use(signer), nil
 		}
 	}
 
-	return usedSigners, nil
+	// Not a signer. Check with authz for help.
+	// If existing isn't a bech32, we just skip the authz check. Should only happen in unit tests.
+	granter, err := sdk.AccAddressFromBech32(existing)
+	if err == nil {
+		// For the value owner address, we only check authz for non smart-contract signers
+		// This prevents Alice from using a smart contract to update Bob's
+		// scope when both have authorized the smart contract to WriteScope.
+		// But it allows Bob to authorize Alice and then Alice can update Bob's scope regardless
+		// of whether it's by means of a smart contract.
+		var grantees []sdk.AccAddress
+		for _, signer := range signers.Accs() {
+			if !k.isWasmAccount(ctx, signer) {
+				grantees = append(grantees, signer)
+			}
+		}
+		grantee, err := k.findAuthzGrantee(ctx, granter, grantees, msg)
+		if err != nil {
+			return nil, fmt.Errorf("authz error with existing value owner %q: %w", existing, err)
+		}
+		if len(grantee) > 0 {
+			return usedSigners.Use(grantee.String()), nil
+		}
+	}
+
+	return nil, fmt.Errorf("missing signature from existing value owner %s", existing)
 }
 
 // validateScopeValueOwnerChangeToProposed validates that the provided signers
@@ -517,18 +508,22 @@ func (k Keeper) validateScopeValueOwnerChangeToProposed(
 	signers *SignersWrapper,
 ) (UsedSignersMap, error) {
 	usedSigners := NewUsedSignersMap()
+
+	// Nothing to check if the proposed is empty.
 	if len(proposed) == 0 {
 		return usedSigners, nil
 	}
+
 	// If the proposed is a marker, make sure a signer has deposit authority on it.
-	marker, hasAuth, signer := k.GetMarkerAndCheckAuthority(ctx, proposed, signers.Strings(), markertypes.Access_Deposit)
-	if marker != nil && !hasAuth {
-		return nil, fmt.Errorf("missing signature for %s (%s) with authority to deposit/add it as scope value owner", proposed, marker.GetDenom())
+	marker, hasAuth, accWithAccess := k.GetMarkerAndCheckAuthority(ctx, proposed, signers.Strings(), markertypes.Access_Deposit)
+	if marker != nil {
+		if !hasAuth {
+			return nil, fmt.Errorf("missing signature for %s (%s) with authority to deposit/add it as scope value owner", proposed, marker.GetDenom())
+		}
+		return usedSigners.Use(accWithAccess), nil
 	}
-	if len(signer) > 0 {
-		usedSigners.Use(signer)
-	}
-	// If it's not a marker, we don't really care what it's being set to.
+
+	// If the proposed isn't a marker, we don't really care what it's being set to and no one needs to sign.
 	return usedSigners, nil
 }
 
