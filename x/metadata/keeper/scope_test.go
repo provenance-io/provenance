@@ -1715,6 +1715,188 @@ func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
 }
 
 func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
-	// TODO[1329]: Write TestValidateUpdateValueOwners
-	s.Fail("not yet written")
+	scopeID1 := types.ScopeMetadataAddress(uuid.New())
+	scopeID2 := types.ScopeMetadataAddress(uuid.New())
+	scopeID3 := types.ScopeMetadataAddress(uuid.New())
+	scopeID4 := types.ScopeMetadataAddress(uuid.New())
+
+	addr1 := sdk.AccAddress("addr1_______________")
+	addr2 := sdk.AccAddress("addr2_______________")
+	addr3 := sdk.AccAddress("addr3_______________")
+	addr4 := sdk.AccAddress("addr4_______________")
+	addrWithDeposit := sdk.AccAddress("addrWithDeposit_____")
+	addrSmartContract := sdk.AccAddress("addrSmartContract___")
+
+	addr1Str := addr1.String()
+	addr2Str := addr2.String()
+	addr3Str := addr3.String()
+	addr4Str := addr4.String()
+	addrWithDepositStr := addrWithDeposit.String()
+	addrSmartContractStr := addrSmartContract.String()
+
+	scope := func(scopeID types.MetadataAddress, valueOwner string) *types.Scope {
+		return &types.Scope{
+			ScopeId:           scopeID,
+			ValueOwnerAddress: valueOwner,
+		}
+	}
+
+	msg := func(valueOwner string, signers ...string) *types.MsgUpdateValueOwnersRequest {
+		return &types.MsgUpdateValueOwnersRequest{
+			ValueOwnerAddress: valueOwner,
+			Signers:           signers,
+		}
+	}
+	msgType := types.TypeURLMsgUpdateValueOwnersRequest
+
+	markerDenom := "some.marker"
+	markerAddr := markertypes.MustGetMarkerAddress(markerDenom)
+	markerAddrStr := markerAddr.String()
+	marker := &markertypes.MarkerAccount{
+		BaseAccount: authtypes.NewBaseAccount(markerAddr, nil, 0, 0),
+		Denom:       markerDenom,
+		AccessControl: []markertypes.AccessGrant{
+			{
+				Address:     addrWithDepositStr,
+				Permissions: markertypes.AccessList{markertypes.Access_Deposit},
+			},
+		},
+	}
+
+	missingSig := func(addr string) string {
+		return "missing signature from existing value owner " + addr
+	}
+
+	tests := []struct {
+		name       string
+		scopes     []*types.Scope
+		msg        *types.MsgUpdateValueOwnersRequest
+		authK      *MockAuthKeeper
+		authzK     *MockAuthzKeeper
+		expErr     string
+		expGetAccs []*GetAccountCall
+	}{
+		{
+			name: "one of the scopes does not have an existing value owner",
+			scopes: []*types.Scope{
+				scope(scopeID1, addr1Str), scope(scopeID2, addr1Str),
+				scope(scopeID3, ""), scope(scopeID4, addr1Str),
+			},
+			msg:        msg("", addr1Str),
+			expErr:     "scope " + scopeID3.String() + " does not yet have a value owner",
+			expGetAccs: nil,
+		},
+		{
+			name:   "no signer for proposed",
+			scopes: []*types.Scope{scope(scopeID1, addr1Str)},
+			msg:    msg(markerAddrStr),
+			authK:  NewMockAuthKeeper().WithGetAccountResults(NewGetAccountCall(markerAddr, marker)),
+			expErr: fmt.Sprintf("missing signature for %s (%s) with authority to deposit/add it as scope value owner", markerAddrStr, markerDenom),
+			expGetAccs: []*GetAccountCall{
+				NewGetAccountCall(markerAddr, marker), // checking if proposed is a marker
+			},
+		},
+		{
+			name: "no signer for existing 1 of 3",
+			scopes: []*types.Scope{
+				scope(scopeID1, addr1Str), scope(scopeID2, addr2Str), scope(scopeID3, addr3Str),
+			},
+			msg:    msg("", addr2Str, addr3Str),
+			expErr: missingSig(addr1Str),
+			expGetAccs: []*GetAccountCall{
+				NewGetAccountCall(addr1, nil), // checking if existing is a marker
+				NewGetAccountCall(addr2, nil), // checking if signer is wasm
+				NewGetAccountCall(addr3, nil), // checking if signer is wasm
+			},
+		},
+		{
+			name: "no signer for existing 2 of 3",
+			scopes: []*types.Scope{
+				scope(scopeID1, addr1Str), scope(scopeID2, addr2Str), scope(scopeID3, addr3Str),
+			},
+			msg:    msg("", addr1Str, addr3Str),
+			expErr: missingSig(addr2Str),
+			expGetAccs: []*GetAccountCall{
+				NewGetAccountCall(addr1, nil), // checking if existing is a marker
+				NewGetAccountCall(addr2, nil), // checking if existing is a marker
+				NewGetAccountCall(addr1, nil), // checking if signer is wasm
+				NewGetAccountCall(addr3, nil), // checking if signer is wasm
+			},
+		},
+		{
+			name: "no signer for existing 3 of 3",
+			scopes: []*types.Scope{
+				scope(scopeID1, addr1Str), scope(scopeID2, addr2Str), scope(scopeID3, addr3Str),
+			},
+			msg:    msg("", addr1Str, addr2Str),
+			expErr: missingSig(addr3Str),
+			expGetAccs: []*GetAccountCall{
+				NewGetAccountCall(addr1, nil), // checking if existing is a marker
+				NewGetAccountCall(addr2, nil), // checking if existing is a marker
+				NewGetAccountCall(addr3, nil), // checking if existing is a marker
+				NewGetAccountCall(addr1, nil), // checking if signer is wasm
+				NewGetAccountCall(addr2, nil), // checking if signer is wasm
+			},
+		},
+		{
+			name: "invalid smart contract signer",
+			scopes: []*types.Scope{
+				scope(scopeID1, addr1Str), scope(scopeID2, addr2Str), scope(scopeID3, addr3Str),
+			},
+			msg:    msg(addr4Str, addr1Str, addr2Str, addr3Str, addrSmartContractStr),
+			authK:  NewMockAuthKeeper().WithGetAccountResults(NewWasmGetAccountCall(addrSmartContract)),
+			expErr: "smart contract signer " + addrSmartContractStr + " cannot follow non-smart-contract signer",
+			expGetAccs: []*GetAccountCall{
+				NewGetAccountCall(addr4, nil),            // checking if proposed is a marker
+				NewGetAccountCall(addr1, nil),            // checking if existing is a marker
+				NewGetAccountCall(addr2, nil),            // checking if existing is a marker
+				NewGetAccountCall(addr3, nil),            // checking if existing is a marker
+				NewGetAccountCall(addr1, nil),            // checking if signer is wasm.
+				NewGetAccountCall(addr2, nil),            // checking if signer is wasm.
+				NewGetAccountCall(addr3, nil),            // checking if signer is wasm.
+				NewWasmGetAccountCall(addrSmartContract), // checking if signer is wasm.
+			},
+		},
+		{
+			name: "all scopes have same value owner authz used",
+			scopes: []*types.Scope{
+				scope(scopeID1, addr1Str), scope(scopeID2, addr1Str),
+				scope(scopeID3, addr1Str), scope(scopeID4, addr1Str),
+			},
+			msg:    msg("", addr2Str),
+			expErr: "",
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				NewAcceptedGetAuthorizationCall(addr2, addr1, msgType, "one"),
+			),
+			expGetAccs: []*GetAccountCall{
+				NewGetAccountCall(addr1, nil), // checking if existing is a marker
+				// This one should happen only once for all scopes and other checks in there.
+				NewGetAccountCall(addr2, nil), // checking if signer is wasm
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.authK == nil {
+				tc.authK = NewMockAuthKeeper()
+			}
+			if tc.authzK == nil {
+				tc.authzK = NewMockAuthzKeeper()
+			}
+			mdKeeper := s.app.MetadataKeeper
+			origAuthK := mdKeeper.SetAuthKeeper(tc.authK)
+			origAuthzK := mdKeeper.SetAuthzKeeper(tc.authzK)
+			defer func() {
+				mdKeeper.SetAuthKeeper(origAuthK)
+				mdKeeper.SetAuthzKeeper(origAuthzK)
+			}()
+
+			err := mdKeeper.ValidateUpdateValueOwners(s.FreshCtx(), tc.scopes, tc.msg)
+			AssertErrorValue(s.T(), err, tc.expErr, "ValidateUpdateValueOwners")
+
+			getAccs := tc.authK.GetAccountCalls
+			s.Assert().Equal(tc.expGetAccs, getAccs, "calls made to GetAccount")
+		})
+	}
 }
