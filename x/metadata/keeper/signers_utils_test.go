@@ -2076,9 +2076,128 @@ func TestUnwrapMetadataContext(t *testing.T) {
 	assert.Empty(t, cache.AcceptableMap(), "cache acceptable map")
 }
 
+func TestUsedSignersMap(t *testing.T) g {
+	tests := []struct {
+		name     string
+		actual   keeper.UsedSignersMap
+		expected keeper.UsedSignersMap
+		isUsed   []string
+	}{
+		{
+			name:     "NewUsedSignersMap",
+			actual:   keeper.NewUsedSignersMap(),
+			expected: keeper.UsedSignersMap{},
+		},
+		{
+			name:     "Use with two different addrs",
+			actual:   keeper.NewUsedSignersMap().Use("addr1", "addr2"),
+			expected: keeper.UsedSignersMap{"addr1": true, "addr2": true},
+			isUsed:   []string{"addr1", "addr2"},
+		},
+		{
+			name:     "Use with two same addrs",
+			actual:   keeper.NewUsedSignersMap().Use("addr", "addr"),
+			expected: keeper.UsedSignersMap{"addr": true},
+			isUsed:   []string{"addr"},
+		},
+		{
+			name:     "Use without any addrs",
+			actual:   keeper.NewUsedSignersMap().Use(),
+			expected: keeper.UsedSignersMap{},
+		},
+		{
+			name:     "Use twice different addrs",
+			actual:   keeper.NewUsedSignersMap().Use("addr1").Use("addr2"),
+			expected: keeper.UsedSignersMap{"addr1": true, "addr2": true},
+			isUsed:   []string{"addr1", "addr2"},
+		},
+		{
+			name:     "Use twice same addr",
+			actual:   keeper.NewUsedSignersMap().Use("addr").Use("addr"),
+			expected: keeper.UsedSignersMap{"addr": true},
+			isUsed:   []string{"addr"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.actual)
+		})
+		for _, addr := range tc.isUsed {
+			isUsed := tc.actual.IsUsed(addr)
+			assert.True(t, isUsed, "IsUsed(%q)", addr)
+		}
+	}
+}
+
 func TestUsedSignersMap_AlsoUse(t *testing.T) {
-	// TODO[1329]: Write TestUsedSignersMap_AlsoUse
-	t.Fatalf("not yet written")
+	tests := []struct {
+		name string
+		base keeper.UsedSignersMap
+		m2   keeper.UsedSignersMap
+		exp  keeper.UsedSignersMap
+	}{
+		{
+			name: "two different addrs",
+			base: keeper.NewUsedSignersMap().Use("addr1"),
+			m2:   keeper.NewUsedSignersMap().Use("addr2"),
+			exp:  keeper.UsedSignersMap{"addr1": true, "addr2": true},
+		},
+		{
+			name: "two same addrs",
+			base: keeper.NewUsedSignersMap().Use("addr"),
+			m2:   keeper.NewUsedSignersMap().Use("addr"),
+			exp:  keeper.UsedSignersMap{"addr": true},
+		},
+		{
+			name: "both empty",
+			base: keeper.NewUsedSignersMap(),
+			m2:   keeper.NewUsedSignersMap(),
+			exp:  keeper.UsedSignersMap{},
+		},
+		{
+			name: "base empty",
+			base: keeper.NewUsedSignersMap(),
+			m2:   keeper.NewUsedSignersMap().Use("addr"),
+			exp:  keeper.UsedSignersMap{"addr": true},
+		},
+		{
+			name: "m2 empty",
+			base: keeper.NewUsedSignersMap().Use("addr"),
+			m2:   keeper.NewUsedSignersMap(),
+			exp:  keeper.UsedSignersMap{"addr": true},
+		},
+		{
+			name: "m2 nil",
+			base: keeper.NewUsedSignersMap().Use("addr"),
+			m2:   nil,
+			exp:  keeper.UsedSignersMap{"addr": true},
+		},
+		{
+			name: "each have 3 with 1 common",
+			base: keeper.NewUsedSignersMap().Use("addr1", "addr2", "addr3"),
+			m2:   keeper.NewUsedSignersMap().Use("addr3", "addr4", "addr5"),
+			exp: keeper.UsedSignersMap{
+				"addr1": true,
+				"addr2": true,
+				"addr3": true,
+				"addr4": true,
+				"addr5": true,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual keeper.UsedSignersMap
+			testFunc := func() {
+				actual = tc.base.AlsoUse(tc.m2)
+			}
+			require.NotPanics(t, testFunc, "AlsoUse")
+			assert.Equal(t, tc.exp, actual, "AlsoUse return value")
+			assert.Equal(t, tc.exp, tc.base, "base after AlsoUse")
+		})
+	}
 }
 
 type testCaseFindMissing struct {
