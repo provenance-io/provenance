@@ -360,6 +360,11 @@ func (msg MsgUpdateValueOwnersRequest) ValidateBasic() error {
 	if len(msg.ScopeIds) == 0 {
 		return fmt.Errorf("at least one scope id is required")
 	}
+	for i, scopeID := range msg.ScopeIds {
+		if !scopeID.IsScopeAddress() {
+			return fmt.Errorf("scope id[%d]: %q: invalid scope id", i, scopeID.String())
+		}
+	}
 
 	_, err := sdk.AccAddressFromBech32(msg.ValueOwnerAddress)
 	if err != nil {

@@ -22,9 +22,250 @@ func ownerPartyList(addresses ...string) []Party {
 	return retval
 }
 
-func TestAllGetSigners(t *testing.T) {
-	// TODO[1329]: Write TestAllGetSigners
-	t.Fatalf("not yet written")
+func TestAllMsgsGetSigners(t *testing.T) {
+	addr1 := sdk.AccAddress("addr1_______________")
+	addr2 := sdk.AccAddress("addr2_______________")
+	addr3 := sdk.AccAddress("addr3_______________")
+
+	badAddrStr := "badaddr"
+	badAddrErr := "decoding bech32 failed: invalid bech32 string length 7"
+	emptyAddrErr := "empty address string is not allowed"
+
+	msgMakers := []struct {
+		name    string
+		makeMsg func(signers []string) MetadataMsg
+	}{
+		{
+			name: "MsgWriteScopeRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgWriteScopeRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgDeleteScopeRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgDeleteScopeRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgAddScopeDataAccessRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgAddScopeDataAccessRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgDeleteScopeDataAccessRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgDeleteScopeDataAccessRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgAddScopeOwnerRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgAddScopeOwnerRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgDeleteScopeOwnerRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgDeleteScopeOwnerRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgUpdateValueOwnersRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgUpdateValueOwnersRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgWriteSessionRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgWriteSessionRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgWriteRecordRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgWriteRecordRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgWriteScopeSpecificationRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgWriteScopeSpecificationRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgDeleteScopeSpecificationRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgDeleteScopeSpecificationRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgWriteContractSpecificationRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgWriteContractSpecificationRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgDeleteContractSpecificationRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgDeleteContractSpecificationRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgAddContractSpecToScopeSpecRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgAddContractSpecToScopeSpecRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgDeleteContractSpecFromScopeSpecRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgDeleteContractSpecFromScopeSpecRequest{Signers: signers}
+			},
+		},
+		{
+			name: "MsgWriteRecordSpecificationRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgWriteRecordSpecificationRequest{Signers: signers}
+			},
+		},
+	}
+
+	osLocatorMsgMakers := []struct {
+		name    string
+		makeMsg func(signer string) MetadataMsg
+	}{
+		{
+			name: "MsgBindOSLocatorRequest",
+			makeMsg: func(signer string) MetadataMsg {
+				return &MsgBindOSLocatorRequest{Locator: ObjectStoreLocator{Owner: signer}}
+			},
+		},
+		{
+			name: "MsgDeleteOSLocatorRequest",
+			makeMsg: func(signer string) MetadataMsg {
+				return &MsgDeleteOSLocatorRequest{Locator: ObjectStoreLocator{Owner: signer}}
+			},
+		},
+		{
+			name: "MsgModifyOSLocatorRequest",
+			makeMsg: func(signer string) MetadataMsg {
+				return &MsgModifyOSLocatorRequest{Locator: ObjectStoreLocator{Owner: signer}}
+			},
+		},
+	}
+
+	casesForEachType := []struct {
+		name       string
+		msgSigners []string
+		expSigners []sdk.AccAddress
+		expPanic   string
+	}{
+		{
+			name:       "no signers",
+			msgSigners: []string{},
+			expSigners: []sdk.AccAddress{},
+		},
+		{
+			name:       "one good signer",
+			msgSigners: []string{addr1.String()},
+			expSigners: []sdk.AccAddress{addr1},
+		},
+		{
+			name:       "one bad signer",
+			msgSigners: []string{badAddrStr},
+			expPanic:   badAddrErr,
+		},
+		{
+			name:       "three good signers",
+			msgSigners: []string{addr1.String(), addr2.String(), addr3.String()},
+			expSigners: []sdk.AccAddress{addr1, addr2, addr3},
+		},
+		{
+			name:       "three signers 1st bad",
+			msgSigners: []string{badAddrStr, addr2.String(), addr3.String()},
+			expPanic:   badAddrErr,
+		},
+		{
+			name:       "three signers 2nd bad",
+			msgSigners: []string{addr1.String(), badAddrStr, addr3.String()},
+			expPanic:   badAddrErr,
+		},
+		{
+			name:       "three signers 3rd bad",
+			msgSigners: []string{addr1.String(), addr2.String(), badAddrStr},
+			expPanic:   badAddrErr,
+		},
+	}
+
+	type testCase struct {
+		name           string
+		msg            MetadataMsg
+		expSigners     []sdk.AccAddress
+		expPanic       string
+		expSignersStrs []string
+	}
+
+	var tests []testCase
+
+	for _, msgMaker := range msgMakers {
+		for _, tc := range casesForEachType {
+			tests = append(tests, testCase{
+				name:           msgMaker.name + " " + tc.name,
+				msg:            msgMaker.makeMsg(tc.msgSigners),
+				expSigners:     tc.expSigners,
+				expPanic:       tc.expPanic,
+				expSignersStrs: tc.msgSigners,
+			})
+		}
+	}
+
+	for _, msgMaker := range osLocatorMsgMakers {
+		tests = append(tests, []testCase{
+			{
+				name:           msgMaker.name + " no signer",
+				msg:            msgMaker.makeMsg(""),
+				expPanic:       emptyAddrErr,
+				expSignersStrs: []string{""},
+			},
+			{
+				name:           msgMaker.name + " good signer",
+				msg:            msgMaker.makeMsg(addr1.String()),
+				expSigners:     []sdk.AccAddress{addr1},
+				expSignersStrs: []string{addr1.String()},
+			},
+			{
+				name:           msgMaker.name + " bad signer",
+				msg:            msgMaker.makeMsg(badAddrStr),
+				expPanic:       badAddrErr,
+				expSignersStrs: []string{badAddrStr},
+			},
+		}...)
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var signers []sdk.AccAddress
+			testGetSigners := func() {
+				signers = tc.msg.GetSigners()
+			}
+			if len(tc.expPanic) > 0 {
+				require.PanicsWithError(t, tc.expPanic, testGetSigners, "GetSigners")
+			} else {
+				require.NotPanics(t, testGetSigners, "GetSigners")
+				assert.Equal(t, tc.expSigners, signers, "GetSigners")
+			}
+
+			var signersStrs []string
+			testGetSignerStrs := func() {
+				signersStrs = tc.msg.GetSignerStrs()
+			}
+			require.NotPanics(t, testGetSignerStrs, "GetSignerStrs")
+			assert.Equal(t, tc.expSignersStrs, signersStrs, "GetSignerStrs")
+		})
+	}
 }
 
 func TestWriteScopeRoute(t *testing.T) {
@@ -335,8 +576,159 @@ func TestDeleteScopeOwnerValidateBasic(t *testing.T) {
 }
 
 func TestMsgUpdateValueOwnersRequest_ValidateBasic(t *testing.T) {
-	// TODO[1329]: Write TestMsgUpdateValueOwnersRequest_ValidateBasic
-	t.Fatalf("not yet written")
+	badScopeIDErr := func(i int, id MetadataAddress) string {
+		return fmt.Sprintf("scope id[%d]: %q: invalid scope id", i, id.String())
+	}
+	notAScopeID := ScopeSpecMetadataAddress(uuid.New())
+
+	tests := []struct {
+		name string
+		msg  MsgUpdateValueOwnersRequest
+		exp  string
+	}{
+		{
+			name: "control",
+			msg: MsgUpdateValueOwnersRequest{
+				ScopeIds:          []MetadataAddress{ScopeMetadataAddress(uuid.New())},
+				ValueOwnerAddress: sdk.AccAddress("ValueOwnerAddress___").String(),
+				Signers:           []string{sdk.AccAddress("signer______________").String()},
+			},
+			exp: "",
+		},
+		{
+			name: "no scope ids",
+			msg: MsgUpdateValueOwnersRequest{
+				ScopeIds:          []MetadataAddress{},
+				ValueOwnerAddress: sdk.AccAddress("ValueOwnerAddress___").String(),
+				Signers:           []string{sdk.AccAddress("signer______________").String()},
+			},
+			exp: "at least one scope id is required",
+		},
+		{
+			name: "one bad scope id",
+			msg: MsgUpdateValueOwnersRequest{
+				ScopeIds:          []MetadataAddress{notAScopeID},
+				ValueOwnerAddress: sdk.AccAddress("ValueOwnerAddress___").String(),
+				Signers:           []string{sdk.AccAddress("signer______________").String()},
+			},
+			exp: badScopeIDErr(0, notAScopeID),
+		},
+		{
+			name: "two valid scope ids",
+			msg: MsgUpdateValueOwnersRequest{
+				ScopeIds: []MetadataAddress{
+					ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()),
+				},
+				ValueOwnerAddress: sdk.AccAddress("ValueOwnerAddress___").String(),
+				Signers:           []string{sdk.AccAddress("signer______________").String()},
+			},
+			exp: "",
+		},
+		{
+			name: "two scope ids 1st bad ",
+			msg: MsgUpdateValueOwnersRequest{
+				ScopeIds: []MetadataAddress{
+					notAScopeID, ScopeMetadataAddress(uuid.New()),
+				},
+				ValueOwnerAddress: sdk.AccAddress("ValueOwnerAddress___").String(),
+				Signers:           []string{sdk.AccAddress("signer______________").String()},
+			},
+			exp: badScopeIDErr(0, notAScopeID),
+		},
+		{
+			name: "two scope ids 2nd bad ",
+			msg: MsgUpdateValueOwnersRequest{
+				ScopeIds: []MetadataAddress{
+					ScopeMetadataAddress(uuid.New()), notAScopeID,
+				},
+				ValueOwnerAddress: sdk.AccAddress("ValueOwnerAddress___").String(),
+				Signers:           []string{sdk.AccAddress("signer______________").String()},
+			},
+			exp: badScopeIDErr(1, notAScopeID),
+		},
+		{
+			name: "empty value owner",
+			msg: MsgUpdateValueOwnersRequest{
+				ScopeIds:          []MetadataAddress{ScopeMetadataAddress(uuid.New())},
+				ValueOwnerAddress: "",
+				Signers:           []string{sdk.AccAddress("signer______________").String()},
+			},
+			exp: "invalid value owner address: empty address string is not allowed",
+		},
+		{
+			name: "bad value owner",
+			msg: MsgUpdateValueOwnersRequest{
+				ScopeIds:          []MetadataAddress{ScopeMetadataAddress(uuid.New())},
+				ValueOwnerAddress: "badaddr",
+				Signers:           []string{sdk.AccAddress("signer______________").String()},
+			},
+			exp: "invalid value owner address: decoding bech32 failed: invalid bech32 string length 7",
+		},
+		{
+			name: "no signers",
+			msg: MsgUpdateValueOwnersRequest{
+				ScopeIds:          []MetadataAddress{ScopeMetadataAddress(uuid.New())},
+				ValueOwnerAddress: sdk.AccAddress("ValueOwnerAddress___").String(),
+				Signers:           []string{},
+			},
+			exp: "at least one signer is required",
+		},
+		{
+			name: "one bad signer",
+			msg: MsgUpdateValueOwnersRequest{
+				ScopeIds:          []MetadataAddress{ScopeMetadataAddress(uuid.New())},
+				ValueOwnerAddress: sdk.AccAddress("ValueOwnerAddress___").String(),
+				Signers:           []string{"badsigner"},
+			},
+			// Not expecting an error here. This check is not part of ValidateBasic
+			// because of the assumption that GetSigners() is called ealier and will
+			// panic on a bad signer.
+			exp: "",
+		},
+		{
+			name: "lots of scope ids and signers",
+			msg: MsgUpdateValueOwnersRequest{
+				ScopeIds: []MetadataAddress{
+					ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()),
+					ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()),
+					ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()),
+					ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()),
+					ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()),
+					ScopeMetadataAddress(uuid.New()), ScopeMetadataAddress(uuid.New()),
+				},
+				ValueOwnerAddress: sdk.AccAddress("value_owner_address_").String(),
+				Signers: []string{
+					sdk.AccAddress("signer__0___________").String(),
+					sdk.AccAddress("signer__1___________").String(),
+					sdk.AccAddress("signer__2___________").String(),
+					sdk.AccAddress("signer__3___________").String(),
+					sdk.AccAddress("signer__4___________").String(),
+					sdk.AccAddress("signer__5___________").String(),
+					sdk.AccAddress("signer__6___________").String(),
+					sdk.AccAddress("signer__7___________").String(),
+					sdk.AccAddress("signer__8___________").String(),
+					sdk.AccAddress("signer__9___________").String(),
+					sdk.AccAddress("signer_10___________").String(),
+					sdk.AccAddress("signer_11___________").String(),
+					sdk.AccAddress("signer_12___________").String(),
+					sdk.AccAddress("signer_13___________").String(),
+					sdk.AccAddress("signer_14___________").String(),
+				},
+			},
+			exp: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.exp) > 0 {
+				assert.EqualError(t, err, tc.exp, "ValidateBasic")
+			} else {
+				assert.NoError(t, err, "ValidateBasic")
+			}
+		})
+	}
 }
 
 func TestMsgAddContractSpecToScopeSpecRequestValidateBasic(t *testing.T) {
