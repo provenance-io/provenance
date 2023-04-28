@@ -5603,11 +5603,31 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 }
 
 func (s *AuthzTestSuite) TestValidateScopeValueOwnerChangeFromExisting() {
+
+	// no existing
+	// is marker does not have withdraw
+	// is marker has withdraw
+	// is signer
+	// is 1st of 3 signers
+	// is 2nd of 3 signers
+	// is 3rd of 3 signers
+	// isn't signer isn't bech32
+	// isn't signer but authed a signer
+	// isn't signer but authed smart contract signer
+	// isn't signer no auth
+	// error from authorization
+
 	// TODO[1329]: Write TestValidateScopeValueOwnerChangeFromExisting
 	s.Fail("not yet written")
 }
 
 func (s *AuthzTestSuite) TestValidateScopeValueOwnerChangeToProposed() {
+
+	// no proposed
+	// is marker does not have deposit
+	// is marker has deposit
+	// isn't marker
+
 	// TODO[1329]: Write TestValidateScopeValueOwnerChangeToProposed
 	s.Fail("not yet written")
 }
