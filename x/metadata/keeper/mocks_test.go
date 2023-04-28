@@ -132,9 +132,9 @@ func NewNotFoundGetAuthorizationCall(grantee, granter sdk.AccAddress, msgTypeURL
 
 // WithAcceptCalls updates the Result.Auth to expect Accept calls for the provided msgs.
 // Panics if the Result.Auth is not a MockAuthorization.
-func (c GetAuthorizationCall) WithAcceptCalls(msgs ...sdk.Msg) GetAuthorizationCall {
+func (c GetAuthorizationCall) WithAcceptCalls(msgs ...sdk.Msg) *GetAuthorizationCall {
 	c.Result.Auth.(*MockAuthorization).WithAcceptCalls(msgs...)
-	return c
+	return &c
 }
 
 // DeleteGrantCall has the inputs of DeleteGrant and the result associated with that input.
