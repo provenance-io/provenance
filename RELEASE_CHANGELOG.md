@@ -1,3 +1,17 @@
+## [v1.15.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc3) - 2023-04-28
+
+### Bug Fixes
+
+* Fix authz + smart contract + value owner updates being too permissive [PR 1519](https://github.com/provenance-io/provenance/pull/1519).
+* Fix metadata params query path in stargate whitelist [#1514](https://github.com/provenance-io/provenance/issues/1514)
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0-rc3
+* https://github.com/provenance-io/provenance/compare/v1.15.0-rc2...v1.15.0-rc3
+
+---
+
 ## [v1.15.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc2) - 2023-04-19
 
 ### Features
