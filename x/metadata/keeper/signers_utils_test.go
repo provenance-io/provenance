@@ -2076,7 +2076,7 @@ func TestUnwrapMetadataContext(t *testing.T) {
 	assert.Empty(t, cache.AcceptableMap(), "cache acceptable map")
 }
 
-func TestUsedSignersMap(t *testing.T) g {
+func TestUsedSignersMap(t *testing.T) {
 	tests := []struct {
 		name     string
 		actual   keeper.UsedSignersMap
