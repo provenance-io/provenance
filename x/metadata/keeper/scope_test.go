@@ -88,6 +88,11 @@ func (s *ScopeKeeperTestSuite) FreshCtx() sdk.Context {
 	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{}))
 }
 
+func (s *ScopeKeeperTestSuite) AssertErrorValue(theError error, errorString string, msgAndArgs ...interface{}) bool {
+	s.T().Helper()
+	return AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
+}
+
 func TestScopeKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(ScopeKeeperTestSuite))
 }
@@ -131,8 +136,140 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 }
 
 func (s *ScopeKeeperTestSuite) TestSetScopeValueOwners() {
-	// TODO[1329]: Write TestSetScopeValueOwners
-	s.Fail("not yet written")
+	// Setup
+	// Three scopes, each with different value owners.
+	// 1st has the value owner also in owners.
+	// 2nd has the value owner also in data access.
+	// 3rd does not have the value owner in either data access or owners.
+	// We will call SetScopeValueOwners once to update all three to a new value owner.
+	// We will then do some state checking to make sure things are as expected.
+	addrAlsoOwnerAcc := sdk.AccAddress("addrAlsoOwner_______")
+	addrAlsoDataAccessAcc := sdk.AccAddress("addrAlsoDataAccess__")
+	addrSoloAcc := sdk.AccAddress("addrSolo____________")
+	addrAlsoOwner := addrAlsoOwnerAcc.String()
+	addrAlsoDataAccess := addrAlsoDataAccessAcc.String()
+	addrSolo := addrSoloAcc.String()
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeWOwner := types.Scope{
+		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:   scopeSpecID,
+		Owners:            []types.Party{{Address: addrAlsoOwner, Role: types.PartyType_PARTY_TYPE_OWNER}},
+		DataAccess:        nil,
+		ValueOwnerAddress: addrAlsoOwner,
+	}
+	scopeWDataAccess := types.Scope{
+		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:   scopeSpecID,
+		Owners:            nil,
+		DataAccess:        []string{addrAlsoDataAccess},
+		ValueOwnerAddress: addrAlsoOwner,
+	}
+	scopeSolo := types.Scope{
+		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:   scopeSpecID,
+		Owners:            nil,
+		DataAccess:        nil,
+		ValueOwnerAddress: addrSolo,
+	}
+
+	ctx := s.FreshCtx()
+	mdKeeper := s.app.MetadataKeeper
+	mdKeeper.SetScope(ctx, scopeWOwner)
+	mdKeeper.SetScope(ctx, scopeWDataAccess)
+	mdKeeper.SetScope(ctx, scopeSolo)
+
+	// Get a fresh context without any events.
+	ctx = s.FreshCtx()
+
+	newUpdateEvent := func(scopeID types.MetadataAddress) sdk.Event {
+		tev := types.NewEventScopeUpdated(scopeID)
+		event, err := sdk.TypedEventToEvent(tev)
+		if err != nil {
+			panic(err)
+		}
+		return event
+	}
+
+	scopes := []*types.Scope{&scopeWOwner, &scopeWDataAccess, &scopeSolo}
+	addrNewValueOwnerAcc := sdk.AccAddress("addrNewValueOwner___")
+	addrNewValueOwner := addrNewValueOwnerAcc.String()
+	testFunc := func() {
+		mdKeeper.SetScopeValueOwners(ctx, scopes, addrNewValueOwner)
+	}
+	s.Require().NotPanics(testFunc, "SetScopeValueOwners")
+
+	s.Run("emitted events", func() {
+		expectedEvents := sdk.Events{
+			newUpdateEvent(scopeWOwner.ScopeId),
+			newUpdateEvent(scopeWDataAccess.ScopeId),
+			newUpdateEvent(scopeSolo.ScopeId),
+		}
+		events := ctx.EventManager().Events()
+		s.Assert().Equal(expectedEvents, events, "events emitted during SetScopeValueOwners")
+	})
+
+	tests := []struct {
+		name          string
+		scope         *types.Scope
+		expIndexes    [][]byte
+		expRemIndexes [][]byte
+	}{
+		{
+			name:  "scopeWOwner",
+			scope: &scopeWOwner,
+			expIndexes: [][]byte{
+				types.GetAddressScopeCacheKey(addrAlsoOwnerAcc, scopeWOwner.ScopeId),
+				types.GetAddressScopeCacheKey(addrNewValueOwnerAcc, scopeWOwner.ScopeId),
+				types.GetValueOwnerScopeCacheKey(addrNewValueOwnerAcc, scopeWOwner.ScopeId),
+			},
+			expRemIndexes: [][]byte{
+				types.GetValueOwnerScopeCacheKey(addrAlsoOwnerAcc, scopeWOwner.ScopeId),
+			},
+		},
+		{
+			name:  "scopeWDataAccess",
+			scope: &scopeWDataAccess,
+			expIndexes: [][]byte{
+				types.GetAddressScopeCacheKey(addrAlsoDataAccessAcc, scopeWDataAccess.ScopeId),
+				types.GetAddressScopeCacheKey(addrNewValueOwnerAcc, scopeWDataAccess.ScopeId),
+				types.GetValueOwnerScopeCacheKey(addrNewValueOwnerAcc, scopeWDataAccess.ScopeId),
+			},
+			expRemIndexes: [][]byte{
+				types.GetValueOwnerScopeCacheKey(addrAlsoDataAccessAcc, scopeWOwner.ScopeId),
+			},
+		},
+		{
+			name:  "scopeSolo",
+			scope: &scopeSolo,
+			expIndexes: [][]byte{
+				types.GetAddressScopeCacheKey(addrNewValueOwnerAcc, scopeSolo.ScopeId),
+				types.GetValueOwnerScopeCacheKey(addrNewValueOwnerAcc, scopeSolo.ScopeId),
+			},
+			expRemIndexes: [][]byte{
+				types.GetAddressScopeCacheKey(addrSoloAcc, scopeWDataAccess.ScopeId),
+				types.GetValueOwnerScopeCacheKey(addrSoloAcc, scopeWOwner.ScopeId),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			ctx = s.FreshCtx()
+			newScope, found := mdKeeper.GetScope(ctx, tc.scope.ScopeId)
+			if s.Assert().True(found, "GetScope found") {
+				s.Assert().Equal(addrNewValueOwner, newScope.ValueOwnerAddress, "stored scope's value owner address")
+			}
+			s.Assert().NotEqual(addrNewValueOwner, tc.scope.ValueOwnerAddress, "old scope's value owner address")
+
+			store := ctx.KVStore(mdKeeper.GetStoreKey())
+			for i, exp := range tc.expIndexes {
+				s.Assert().True(store.Has(exp), "expected index [%d]", i)
+			}
+			for i, notExp := range tc.expRemIndexes {
+				s.Assert().False(store.Has(notExp), "expected index to be removed [%d]", i)
+			}
+		})
+	}
 }
 
 func (s *ScopeKeeperTestSuite) TestMetadataScopeIterator() {
@@ -1893,7 +2030,7 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 			}()
 
 			err := mdKeeper.ValidateUpdateValueOwners(s.FreshCtx(), tc.scopes, tc.msg)
-			AssertErrorValue(s.T(), err, tc.expErr, "ValidateUpdateValueOwners")
+			s.AssertErrorValue(err, tc.expErr, "ValidateUpdateValueOwners")
 
 			getAccs := tc.authK.GetAccountCalls
 			s.Assert().Equal(tc.expGetAccs, getAccs, "calls made to GetAccount")

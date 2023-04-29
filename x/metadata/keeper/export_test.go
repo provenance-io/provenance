@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
@@ -9,6 +10,11 @@ import (
 
 // This file is available only to unit tests and exposes private things
 // so that they can be used in unit tests.
+
+// GetStoreKey is a TEST ONLY getter for the keeper's storekey.
+func (k *Keeper) GetStoreKey() storetypes.StoreKey {
+	return k.storeKey
+}
 
 // SetAuthKeeper is a TEST ONLY setter for the keeper's authKeeper.
 // It returns the previously defined AuthKeeper
