@@ -286,8 +286,9 @@ func (c *AuthzCache) HasIsWasm(addr sdk.AccAddress) bool {
 
 // GetIsWasm returns true if the address was previously recorded as being a wasm account.
 // Returns false if either:
-//	* The address was previously recorded as NOT being a wasm account.
-//  * The WASM status of the account hasn't yet been recorded.
+//   - The address was previously recorded as NOT being a wasm account.
+//   - The WASM status of the account hasn't yet been recorded.
+//
 // Use HasIsWasm to differentiate the false conditions.
 func (c *AuthzCache) GetIsWasm(addr sdk.AccAddress) bool {
 	return c.isWasm[authzCacheIsWasmKey(addr)]

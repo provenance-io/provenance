@@ -221,7 +221,7 @@ func (v scopeIndexValues) IndexKeys() [][]byte {
 	if v.ScopeID.Empty() {
 		return nil
 	}
-	var rv [][]byte
+	rv := make([][]byte, 0, len(v.Addresses)+2)
 	for _, addr := range v.Addresses {
 		rv = append(rv, types.GetAddressScopeCacheKey(addr, v.ScopeID))
 	}
@@ -597,6 +597,7 @@ func (k Keeper) ValidateUpdateValueOwners(
 	}
 
 	for _, existing := range existingValueOwners {
+		//nolint:govet // err is shadowed here, and that's okay.
 		alsoUsedSigners, err := k.validateScopeValueOwnerChangeFromExisting(ctx, existing, signers, msg)
 		if err != nil {
 			return err
