@@ -69,8 +69,173 @@ func TestMetadataHandlerTestSuite(t *testing.T) {
 // TODO: DeleteScope tests
 
 func (s *MetadataHandlerTestSuite) TestUpdateValueOwners() {
-	// TODO[1329]: Write TestUpdateValueOwners
-	s.Fail("not yet written")
+	scopeID1 := types.ScopeMetadataAddress(uuid.New())
+	scopeID2 := types.ScopeMetadataAddress(uuid.New())
+	scopeIDNotFound := types.ScopeMetadataAddress(uuid.New())
+
+	scopeID3Diff1 := types.ScopeMetadataAddress(uuid.New())
+	scopeID3Diff2 := types.ScopeMetadataAddress(uuid.New())
+	scopeID3Diff3 := types.ScopeMetadataAddress(uuid.New())
+	scopeID3Same1 := types.ScopeMetadataAddress(uuid.New())
+	scopeID3Same2 := types.ScopeMetadataAddress(uuid.New())
+	scopeID3Same3 := types.ScopeMetadataAddress(uuid.New())
+
+	owner1 := sdk.AccAddress("owner1______________").String()
+	owner2 := sdk.AccAddress("owner2______________").String()
+	owner3Diff1 := sdk.AccAddress("owner3Diff1_________").String()
+	owner3Diff2 := sdk.AccAddress("owner3Diff2_________").String()
+	owner3Diff3 := sdk.AccAddress("owner3Diff3_________").String()
+	owner3Same1 := sdk.AccAddress("owner3Same1_________").String()
+	owner3Same2 := sdk.AccAddress("owner3Same2_________").String()
+	owner3Same3 := sdk.AccAddress("owner3Same3_________").String()
+
+	dataAccess1 := sdk.AccAddress("dataAccess1_________").String()
+	dataAccess2 := sdk.AccAddress("dataAccess2_________").String()
+	dataAccess3Diff1 := sdk.AccAddress("dataAccess3Diff1____").String()
+	dataAccess3Diff2 := sdk.AccAddress("dataAccess3Diff2____").String()
+	dataAccess3Diff3 := sdk.AccAddress("dataAccess3Diff3____").String()
+	dataAccess3Same1 := sdk.AccAddress("dataAccess3Same1____").String()
+	dataAccess3Same2 := sdk.AccAddress("dataAccess3Same2____").String()
+	dataAccess3Same3 := sdk.AccAddress("dataAccess3Same3____").String()
+
+	valueOwner1 := sdk.AccAddress("valueOwner1_________").String()
+	valueOwner2 := sdk.AccAddress("valueOwner2_________").String()
+	valueOwner3Diff1 := sdk.AccAddress("valueOwner3Diff1____").String()
+	valueOwner3Diff2 := sdk.AccAddress("valueOwner3Diff2____").String()
+	valueOwner3Diff3 := sdk.AccAddress("valueOwner3Diff3____").String()
+	valueOwner3Same := sdk.AccAddress("valueOwner3Same_____").String()
+
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	ns := func(scopeID types.MetadataAddress, owner, dataAccess, valueOwner string) types.Scope {
+		return types.Scope{
+			ScopeId:           scopeID,
+			SpecificationId:   scopeSpecID,
+			Owners:            []types.Party{{Address: owner, Role: types.PartyType_PARTY_TYPE_OWNER}},
+			DataAccess:        []string{dataAccess},
+			ValueOwnerAddress: valueOwner,
+		}
+	}
+	ids := func(scopeIDs ...types.MetadataAddress) []types.MetadataAddress {
+		return scopeIDs
+	}
+
+	newValueOwner := sdk.AccAddress("newValueOwner_______").String()
+
+	tests := []struct {
+		name     string
+		starters []types.Scope
+		scopeIDs []types.MetadataAddress
+		signers  []string
+		expErr   string
+	}{
+		{
+			name: "scope 1 of 3 not found",
+			starters: []types.Scope{
+				ns(scopeID1, owner1, dataAccess1, valueOwner1),
+				ns(scopeID2, owner2, dataAccess2, valueOwner2),
+			},
+			scopeIDs: ids(scopeIDNotFound, scopeID1, scopeID2),
+			signers:  []string{valueOwner1, valueOwner2},
+			expErr:   "scope not found with id " + scopeIDNotFound.String(),
+		},
+		{
+			name: "scope 2 of 3 not found",
+			starters: []types.Scope{
+				ns(scopeID1, owner1, dataAccess1, valueOwner1),
+				ns(scopeID2, owner2, dataAccess2, valueOwner2),
+			},
+			scopeIDs: ids(scopeID1, scopeIDNotFound, scopeID2),
+			signers:  []string{valueOwner1, valueOwner2},
+			expErr:   "scope not found with id " + scopeIDNotFound.String(),
+		},
+		{
+			name: "scope 3 of 3 not found",
+			starters: []types.Scope{
+				ns(scopeID1, owner1, dataAccess1, valueOwner1),
+				ns(scopeID2, owner2, dataAccess2, valueOwner2),
+			},
+			scopeIDs: ids(scopeID1, scopeID2, scopeIDNotFound),
+			signers:  []string{valueOwner1, valueOwner2},
+			expErr:   "scope not found with id " + scopeIDNotFound.String(),
+		},
+		{
+			name: "not properly signed",
+			starters: []types.Scope{
+				ns(scopeID1, owner1, dataAccess1, valueOwner1),
+				ns(scopeID2, owner2, dataAccess2, valueOwner2),
+			},
+			scopeIDs: ids(scopeID1, scopeID2),
+			signers:  []string{valueOwner1},
+			expErr:   "missing signature from existing value owner " + valueOwner2,
+		},
+		{
+			name: "1 scope without value owner",
+			starters: []types.Scope{
+				ns(scopeID1, owner1, dataAccess1, ""),
+			},
+			scopeIDs: ids(scopeID1),
+			signers:  []string{owner1},
+			expErr:   "scope " + scopeID1.String() + " does not yet have a value owner",
+		},
+		{
+			name: "1 scope updated",
+			starters: []types.Scope{
+				ns(scopeID1, owner1, dataAccess1, valueOwner1),
+			},
+			scopeIDs: ids(scopeID1),
+			signers:  []string{valueOwner1},
+			expErr:   "",
+		},
+		{
+			name: "3 scopes updated all different",
+			starters: []types.Scope{
+				ns(scopeID3Diff1, owner3Diff1, dataAccess3Diff1, valueOwner3Diff1),
+				ns(scopeID3Diff2, owner3Diff2, dataAccess3Diff2, valueOwner3Diff2),
+				ns(scopeID3Diff3, owner3Diff3, dataAccess3Diff3, valueOwner3Diff3),
+			},
+			scopeIDs: ids(scopeID3Diff1, scopeID3Diff2, scopeID3Diff3),
+			signers:  []string{valueOwner3Diff1, valueOwner3Diff2, valueOwner3Diff3},
+			expErr:   "",
+		},
+		{
+			name: "3 scopes updated all same",
+			starters: []types.Scope{
+				ns(scopeID3Same1, owner3Same1, dataAccess3Same1, valueOwner3Same),
+				ns(scopeID3Same2, owner3Same2, dataAccess3Same2, valueOwner3Same),
+				ns(scopeID3Same3, owner3Same3, dataAccess3Same3, valueOwner3Same),
+			},
+			scopeIDs: ids(scopeID3Same1, scopeID3Same2, scopeID3Same3),
+			signers:  []string{valueOwner3Same},
+			expErr:   "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			for _, scope := range tc.starters {
+				s.app.MetadataKeeper.SetScope(s.ctx, scope)
+				defer s.app.MetadataKeeper.RemoveScope(s.ctx, scope.ScopeId)
+			}
+			msg := types.MsgUpdateValueOwnersRequest{
+				ScopeIds:          tc.scopeIDs,
+				ValueOwnerAddress: newValueOwner,
+				Signers:           tc.signers,
+			}
+			_, err := s.handler(s.ctx, &msg)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "handler(MsgUpdateValueOwnersRequest)")
+			} else {
+				s.Require().NoError(err, "handler(MsgUpdateValueOwnersRequest)")
+
+				for i, scopeID := range tc.scopeIDs {
+					scope, found := s.app.MetadataKeeper.GetScope(s.ctx, scopeID)
+					if s.Assert().True(found, "[%d]GetScope(%s) found bool", i, scopeID) {
+						s.Assert().Equal(newValueOwner, scope.ValueOwnerAddress, "[%d] updated scope's value owner", i)
+					}
+				}
+			}
+		})
+	}
 }
 
 func (s *MetadataHandlerTestSuite) TestWriteSession() {
@@ -159,6 +324,8 @@ func (s *MetadataHandlerTestSuite) TestWriteSession() {
 		})
 	}
 }
+
+// TODO: WriteRecord tests
 
 func (s *MetadataHandlerTestSuite) TestWriteDeleteRecord() {
 	cSpecUUID := uuid.New()
