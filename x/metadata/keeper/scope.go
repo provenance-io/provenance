@@ -138,22 +138,16 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 // SetScopeValueOwners updates the value owner of all the provided scopes and stores each in the kv store.
 func (k Keeper) SetScopeValueOwners(ctx sdk.Context, scopes []*types.Scope, newValueOwner string) {
 	store := ctx.KVStore(k.storeKey)
-	// skipping k.indexScope in here and just using k.updateScopeIndexes in order to save some unnecessary processing.
-	indexesToAdd := getScopeIndexValues(&types.Scope{ValueOwnerAddress: newValueOwner})
 
-	for _, scope := range scopes {
-		indexesToAdd.ScopeID = scope.ScopeId
-		indexesToRemove := getScopeIndexValues(&types.Scope{
-			ScopeId:           scope.ScopeId,
-			ValueOwnerAddress: scope.ValueOwnerAddress,
-		})
+	for _, oldScope := range scopes {
+		// Copy the old scope and update/store the copy.
+		newScope := *oldScope
+		newScope.ValueOwnerAddress = newValueOwner
+		b := k.cdc.MustMarshal(&newScope)
+		store.Set(newScope.ScopeId, b)
+		k.indexScope(store, &newScope, oldScope)
 
-		scope.ValueOwnerAddress = newValueOwner
-		b := k.cdc.MustMarshal(scope)
-		store.Set(scope.ScopeId, b)
-		k.updateScopeIndexes(store, indexesToAdd, indexesToRemove)
-
-		k.EmitEvent(ctx, types.NewEventScopeUpdated(scope.ScopeId))
+		k.EmitEvent(ctx, types.NewEventScopeUpdated(oldScope.ScopeId))
 		defer types.GetIncObjFunc(types.TLType_Scope, types.TLAction_Updated)
 	}
 }
@@ -261,11 +255,6 @@ func (k Keeper) indexScope(store sdk.KVStore, newScope, oldScope *types.Scope) {
 	toAdd := getMissingScopeIndexValues(newScopeIndexValues, oldScopeIndexValues)
 	toRemove := getMissingScopeIndexValues(oldScopeIndexValues, newScopeIndexValues)
 
-	k.updateScopeIndexes(store, toAdd, toRemove)
-}
-
-// updateScopeIndexes stores the provided indexes to add and deletes the provided ones to remove.
-func (k Keeper) updateScopeIndexes(store sdk.KVStore, toAdd, toRemove *scopeIndexValues) {
 	for _, indexKey := range toAdd.IndexKeys() {
 		store.Set(indexKey, []byte{0x01})
 	}
