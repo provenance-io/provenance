@@ -325,8 +325,6 @@ func (s *MetadataHandlerTestSuite) TestWriteSession() {
 	}
 }
 
-// TODO: WriteRecord tests
-
 func (s *MetadataHandlerTestSuite) TestWriteDeleteRecord() {
 	cSpecUUID := uuid.New()
 	cSpec := types.ContractSpecification{
