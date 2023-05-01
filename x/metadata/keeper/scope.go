@@ -289,11 +289,6 @@ func (k Keeper) ValidateWriteScope(
 		return fmt.Errorf("invalid specification id: is not scope specification id: %s", proposed.SpecificationId)
 	}
 
-	scopeSpec, found := k.GetScopeSpecification(ctx, proposed.SpecificationId)
-	if !found {
-		return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
-	}
-
 	// Existing owners are not required to sign when the ONLY change is from one value owner to another.
 	// If the value owner wasn't previously set, and is being set now, existing owners must sign.
 	// If anything else is changing, the existing owners must sign.
@@ -311,14 +306,19 @@ func (k Keeper) ValidateWriteScope(
 	var err error
 	var validatedParties []*PartyDetails
 
-	if err = validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
-		return err
-	}
-	if err = k.validateProvenanceRole(ctx, BuildPartyDetails(nil, proposed.Owners)); err != nil {
-		return err
-	}
-
 	if !onlyChangeIsValueOwner {
+		scopeSpec, found := k.GetScopeSpecification(ctx, proposed.SpecificationId)
+		if !found {
+			return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
+		}
+
+		if err = validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
+			return err
+		}
+		if err = k.validateProvenanceRole(ctx, BuildPartyDetails(nil, proposed.Owners)); err != nil {
+			return err
+		}
+
 		// Make sure everyone has signed.
 		if (existing != nil && !existing.RequirePartyRollup) || (existing == nil && !proposed.RequirePartyRollup) {
 			// Old:

@@ -352,6 +352,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 
 	owner := types.PartyType_PARTY_TYPE_OWNER
 	affiliate := types.PartyType_PARTY_TYPE_AFFILIATE
+	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
 
 	ctx := s.FreshCtx()
 	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
@@ -680,6 +681,29 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			errorMsg: `account "` + s.scUser + `" is a smart contract but does not have the PROVENANCE role`,
 		},
 		{
+			name:     "non-smart contract party has PROVENANCE role",
+			existing: nil,
+			proposed: types.Scope{
+				ScopeId:         scopeID,
+				SpecificationId: scopeSpecID,
+				Owners:          ptz(pt(s.user1, owner, false), pt(s.user2, provenance, false)),
+			},
+			signers:  []string{s.user1, s.user2},
+			errorMsg: "account \"" + s.user2 + "\" has role PROVENANCE but is not a smart contract",
+		},
+		{
+			name:     "with rollup non-smart contract party has PROVENANCE role",
+			existing: nil,
+			proposed: types.Scope{
+				ScopeId:            scopeID,
+				SpecificationId:    scopeSpecID,
+				Owners:             ptz(pt(s.user1, owner, false), pt(s.user2, provenance, true)),
+				RequirePartyRollup: true,
+			},
+			signers:  []string{s.user1, s.user2},
+			errorMsg: "account \"" + s.user2 + "\" has role PROVENANCE but is not a smart contract",
+		},
+		{
 			name: "only change is value owner signed by smart contract",
 			// Even though the smart contract owns this scope. it shouldn't be allowed to change that value owner.
 			existing: &types.Scope{
@@ -811,6 +835,44 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 				ValueOwnerAddress: s.user1,
 			},
 			signers:  []string{s.scUser},
+			errorMsg: "",
+		},
+		{
+			name: "only change is value owner roles not checked with spec",
+			// The spec requires an owner, so this will fail if owners are checked against the spec.
+			// But it shouldn't be checked because the only change is to the value owner.
+			existing: &types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.user1, affiliate, false)),
+				ValueOwnerAddress: s.user1,
+			},
+			proposed: types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.user1, affiliate, false)),
+				ValueOwnerAddress: s.user2,
+			},
+			signers:  []string{s.user1},
+			errorMsg: "",
+		},
+		{
+			name: "only change is value owner provenance roles not checked",
+			// The spec requires an owner, so we have one. But we also have a PROVENANCE party that isn't
+			// a smart contract. That should fail if checked, but shouldn't be checked in this case.
+			existing: &types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.user1, owner, false), pt(s.user1, provenance, false)),
+				ValueOwnerAddress: s.user1,
+			},
+			proposed: types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.user1, owner, false), pt(s.user1, provenance, false)),
+				ValueOwnerAddress: s.user2,
+			},
+			signers:  []string{s.user1},
 			errorMsg: "",
 		},
 	}
