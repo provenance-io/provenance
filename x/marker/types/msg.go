@@ -34,6 +34,7 @@ var (
 	_ sdk.Msg = &MsgGrantAllowanceRequest{}
 	_ sdk.Msg = &MsgAddFinalizeActivateMarkerRequest{}
 	_ sdk.Msg = &MsgSupplyIncreaseProposalRequest{}
+	_ sdk.Msg = &MsgUpdateRequiredAttributesRequest{}
 )
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
@@ -575,5 +576,14 @@ func (msg *MsgSupplyIncreaseProposalRequest) ValidateBasic() error {
 
 func (msg *MsgSupplyIncreaseProposalRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
+	return nil
+}
+
+func (msg *MsgUpdateRequiredAttributesRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.TransferAuthority)
 	return []sdk.AccAddress{addr}
 }
