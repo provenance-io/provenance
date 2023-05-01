@@ -642,3 +642,7 @@ func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgS
 	}
 	return &types.MsgSupplyIncreaseProposalResponse{}, nil
 }
+
+func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.MsgUpdateRequiredAttributesRequest) (*types.MsgUpdateRequiredAttributesResponse, error) {
+	return nil, nil
+}
