@@ -12,8 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-
 	simapp "github.com/provenance-io/provenance/app"
 	attrTypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/marker"
@@ -166,6 +164,20 @@ func TestSendRestrictionFn(t *testing.T) {
 			name:   "with bypass, restricted marker with required attributes but none match",
 			ctx:    &ctxWithBypass,
 			from:   owner,
+			to:     addrWithAttrs,
+			amt:    cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: "",
+		},
+		{
+			name:   "from marker module account",
+			from:   app.MarkerKeeper.GetMarkerModuleAddr(),
+			to:     addrWithAttrs,
+			amt:    cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: "",
+		},
+		{
+			name:   "from ibc transfer module account",
+			from:   app.MarkerKeeper.GetIbcTransferModuleAddr(),
 			to:     addrWithAttrs,
 			amt:    cz(c(1, rDenom1AttrNoOneHas)),
 			expErr: "",
