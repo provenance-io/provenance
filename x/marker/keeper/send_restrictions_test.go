@@ -7,15 +7,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/provenance-io/provenance/x/marker"
-
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	attrTypes "github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/provenance-io/provenance/x/marker"
 	"github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 )

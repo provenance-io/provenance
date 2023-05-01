@@ -20,6 +20,13 @@ func (k Keeper) SendRestrictionFn(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 		return toAddr, nil
 	}
 
+	// In some cases, it might not be possible to add a bypass to the context.
+	// If the send is coming from the marker module (e.g. mint), assume proper validation has already been done.
+	// If it's from the IBC transfer module, also assume proper validation has already been done.
+	if fromAddr.Equals(k.markerModuleAddr) || fromAddr.Equals(k.ibcTransferModuleAddr) {
+		return toAddr, nil
+	}
+
 	for _, coin := range amt {
 		if err := k.validateSendDenom(ctx, fromAddr, toAddr, coin.Denom); err != nil {
 			return nil, err

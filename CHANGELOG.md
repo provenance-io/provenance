@@ -37,9 +37,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-### Improvements
+* nothing
 
-* Add marker address to add marker event [#1499](https://github.com/provenance-io/provenance/issues/1499)
+---
+
+## [v1.15.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc3) - 2023-04-28
+
+### Bug Fixes
+
+* Fix authz + smart contract + value owner updates being too permissive [PR 1519](https://github.com/provenance-io/provenance/pull/1519).
+* Fix metadata params query path in stargate whitelist [#1514](https://github.com/provenance-io/provenance/issues/1514)
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0-rc3
+* https://github.com/provenance-io/provenance/compare/v1.15.0-rc2...v1.15.0-rc3
 
 ---
 
@@ -71,6 +83,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   This replaces the old `AddMarkerProposal` governance proposal.
 * Bump wasmvm to 1.1.2 [#1484](https://github.com/provenance-io/provenance/pull/1358).
 * Documented proposing a transaction [#1489](https://github.com/provenance-io/provenance/pull/1489).
+* Add marker address to add marker event [#1499](https://github.com/provenance-io/provenance/issues/1499).
 
 ### Deprecated
 
@@ -82,6 +95,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix committer email format in third party Protobuf workflow (for [#1339](https://github.com/provenance-io/provenance/issues/1339)) [PR 1385](https://github.com/provenance-io/provenance/pull/1385)
 * Fix `make proto-gen` [PR 1404](https://github.com/provenance-io/provenance/pull/1404).
 * Fix wasmd transactions that are run by gov module [#1414](https://github.com/provenance-io/provenance/issues/1414)
+* Add support for ibc transfers of restricted tokens [#1502](https://github.com/provenance-io/provenance/issues/1502).
 
 ### Client Breaking
 

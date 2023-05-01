@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
+	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -693,7 +694,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	return nil
 }
 
-// IbcTransferCoin transfers restricted coins between to chains when the administrator account holds the transfer
+// IbcTransferCoin transfers restricted coins between two chains when the administrator account holds the transfer
 // access right and the marker type is restricted_coin
 func (k Keeper) IbcTransferCoin(
 	ctx sdk.Context,
@@ -704,7 +705,8 @@ func (k Keeper) IbcTransferCoin(
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
 	memo string,
-	checkRestrictionsHandler ibckeeper.CheckRestrictionsHandler) error {
+	checkRestrictionsHandler ibckeeper.CheckRestrictionsHandler,
+) error {
 	m, err := k.GetMarkerByDenom(ctx, token.Denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", token.Denom, err)
@@ -726,8 +728,18 @@ func (k Keeper) IbcTransferCoin(
 		}
 	}
 
+	// checking if escrow account has transfer auth, if not add it
+	escrowAccount := ibctypes.GetEscrowAddress(sourcePort, sourceChannel)
+	if !m.AddressHasAccess(escrowAccount, types.Access_Transfer) {
+		err = m.GrantAccess(types.NewAccessGrant(escrowAccount, []types.Access{types.Access_Transfer}))
+		if err != nil {
+			return err
+		}
+		k.SetMarker(ctx, m)
+	}
+
 	_, err = k.ibcKeeper.SendTransfer(
-		ctx,
+		types.WithBypass(ctx),
 		sourcePort,
 		sourceChannel,
 		token,
