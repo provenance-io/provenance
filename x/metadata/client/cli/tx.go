@@ -40,6 +40,7 @@ func NewTxCmd() *cobra.Command {
 		RemoveScopeCmd(),
 		AddRemoveScopeDataAccessCmd(),
 		AddRemoveScopeOwnersCmd(),
+		UpdateValueOwnersCmd(),
 
 		BindOsLocatorCmd(),
 		RemoveOsLocatorCmd(),
@@ -140,7 +141,7 @@ func WriteScopeCmd() *cobra.Command {
 	}
 
 	cmd.Flags().Bool(FlagRequirePartyRollup, false, "Indicates party rollup is required in this scope")
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -180,18 +181,19 @@ func RemoveScopeCmd() *cobra.Command {
 		},
 	}
 
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
+// AddRemoveScopeDataAccessCmd creates a command for either adding or removing an address from a scope's data access list.
 func AddRemoveScopeDataAccessCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "scope-data-access {add|remove} [scope-id] [data-access]",
 		Short: "Add or remove a metadata scope data access on to the provenance blockchain",
 		Example: fmt.Sprintf(`$ %[1]s tx metadata scope-data-access add scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42
-									 $ %[1]s tx metadata scope-data-access remove scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42`, version.AppName),
+$ %[1]s tx metadata scope-data-access remove scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42`, version.AppName),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -234,18 +236,19 @@ func AddRemoveScopeDataAccessCmd() *cobra.Command {
 		},
 	}
 
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
+// AddRemoveScopeOwnersCmd creates a command for either adding or removing scope owners.
 func AddRemoveScopeOwnersCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "scope-owners {add|remove} [scope-id] [owner-addresses]",
 		Short: "Add or remove a metadata scope owners on to the provenance blockchain",
 		Example: fmt.Sprintf(`$ %[1]s tx metadata scope-owners add scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42
-									 $ %[1]s tx metadata scope-owners remove scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42`, version.AppName),
+$ %[1]s tx metadata scope-owners remove scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42`, version.AppName),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -293,7 +296,64 @@ func AddRemoveScopeOwnersCmd() *cobra.Command {
 		},
 	}
 
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// UpdateValueOwnersCmd creates a command for updating the value owner of one or more scopes.
+func UpdateValueOwnersCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "update-value-owners <new value owner> <scope id> [<scope id 2> ...]",
+		Aliases: []string{"update-value-owner", "value-owners", "value-owner", "uvo"},
+		Short:   "Update the value owner of one or more scopes.",
+		Example: fmt.Sprintf(`$ %[1]s tx metadata "update-value-owners pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42 scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn scope1qqg3uff00wpy2yuf7xr0rp8aucqs902xhw`,
+			version.AppName),
+		Args: cobra.MinimumNArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			_, err = sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid new value owner %q: %w", args[0], err)
+			}
+
+			scopeIDs := make([]types.MetadataAddress, len(args[1:]))
+			for i, arg := range args[1:] {
+				scopeIDs[i], err = types.MetadataAddressFromBech32(arg)
+				if err == nil && !scopeIDs[i].IsScopeAddress() {
+					err = fmt.Errorf("not a scope identifier")
+				}
+				if err != nil {
+					return fmt.Errorf("invalid scope id %d %q: %w", i+1, arg, err)
+				}
+			}
+
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgUpdateValueOwnersRequest{
+				ScopeIds:          scopeIDs,
+				ValueOwnerAddress: args[0],
+				Signers:           signers,
+			}
+
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -454,7 +514,7 @@ func WriteScopeSpecificationCmd() *cobra.Command {
 		},
 	}
 
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -524,7 +584,7 @@ icon-url           - address to a image to be used as an icon (optional, can onl
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -565,12 +625,13 @@ func AddContractSpecToScopeSpecCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
+// WriteSessionCmd creates a command for writing a session.
 func WriteSessionCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "write-session {session-id|{scope-id|scope-uuid} session-uuid} [contract-spec-id] [parties] [name] [context, optional]",
@@ -697,7 +758,7 @@ ChFIRUxMTyBQUk9WRU5BTkNFIQ==`, version.AppName),
 		},
 	}
 
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -827,12 +888,13 @@ contractspec-name
 		},
 	}
 
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
+// WriteRecordSpecificationCmd creates a commmand for writing a record specification.
 func WriteRecordSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "write-record-specification [specification-id] [name] [input-specifications] [type-name] [result-types] [responsible-parties]",
@@ -898,7 +960,7 @@ owner,originator`, version.AppName),
 		},
 	}
 
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -937,7 +999,7 @@ func RemoveScopeSpecificationCmd() *cobra.Command {
 		},
 	}
 
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -976,7 +1038,7 @@ func RemoveContractSpecificationCmd() *cobra.Command {
 		},
 	}
 
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -1017,7 +1079,7 @@ func RemoveContractSpecFromScopeSpecCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -1052,7 +1114,7 @@ func RemoveRecordCmd() *cobra.Command {
 		},
 	}
 
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -1090,17 +1152,20 @@ func RemoveRecordSpecificationCmd() *cobra.Command {
 		},
 	}
 
-	addSignerFlagCmd(cmd)
+	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
-func addSignerFlagCmd(cmd *cobra.Command) {
+// addSignersFlagToCmd adds the standard --signers flag to a command.
+// See also: parseSigners.
+func addSignersFlagToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagSigners, "", "comma delimited list of bech32 addresses")
 }
 
 // parseSigners checks signers flag for signers, else uses the from address
+// See also: addSignersFlagToCmd
 func parseSigners(cmd *cobra.Command, client *client.Context) ([]string, error) {
 	flagSet := cmd.Flags()
 	if flagSet.Changed(FlagSigners) {

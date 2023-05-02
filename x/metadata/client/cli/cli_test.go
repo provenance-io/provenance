@@ -1905,9 +1905,10 @@ func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 // ---------- tx cmd tests ----------
 
 type txCmdTestCase struct {
-	name         string
-	cmd          *cobra.Command
-	args         []string
+	name string
+	cmd  *cobra.Command
+	args []string
+	// expectErr is only used if len(expectErrMsg) == 0.
 	expectErr    bool
 	expectErrMsg string
 	respType     proto.Message
@@ -2254,7 +2255,6 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: "parties can only be optional when require_party_rollup = true",
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
@@ -2274,7 +2274,6 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
 			expectErrMsg: "",
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
@@ -2282,6 +2281,245 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 	}
 
 	runTxCmdTestCases(s, testCases)
+}
+
+func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
+	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String()
+	scopeID1 := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
+	scopeID2 := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
+	scopeID3 := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
+
+	feeFlag := func(amt int64) string {
+		return fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, amt)).String())
+	}
+	fromFlag := func(addr string) string {
+		return fmt.Sprintf("--%s=%s", flags.FlagFrom, addr)
+	}
+	skipConfFlag := fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation)
+	broadcastBlockFlag := fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock)
+
+	queryTests := func(scope1ValueOwner, scope2ValueOwner, scope3ValueOwner string) []queryCmdTestCase {
+		return []queryCmdTestCase{
+			{
+				name: "scope 1 value owner", args: []string{scopeID1},
+				expectedInOutput: []string{"value_owner_address: " + scope1ValueOwner},
+			},
+			{
+				name: "scope 2 value owner", args: []string{scopeID2},
+				expectedInOutput: []string{"value_owner_address: " + scope2ValueOwner},
+			},
+			{
+				name: "scope 3 value owner", args: []string{scopeID3},
+				expectedInOutput: []string{"value_owner_address: " + scope3ValueOwner},
+			},
+		}
+	}
+	queryCmd := func() *cobra.Command {
+		return cli.GetMetadataScopeCmd()
+	}
+
+	tests := []struct {
+		txs     []txCmdTestCase
+		queries []queryCmdTestCase
+	}{
+		{
+			// Some failures that come from cmd.RunE.
+			txs: []txCmdTestCase{
+				{
+					name: "only 1 arg",
+					cmd:  cli.UpdateValueOwnersCmd(),
+					args: []string{
+						s.user2AddrStr,
+						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					expectErrMsg: "requires at least 2 arg(s), only received 1",
+				},
+				{
+					name: "invalid value owner",
+					cmd:  cli.UpdateValueOwnersCmd(),
+					// <new value owner> <scope id> [<scope id 2> ...]
+					args: []string{
+						"notabech32", scopeID1, scopeID2,
+						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					expectErrMsg: "invalid new value owner \"notabech32\": decoding bech32 failed: invalid separator index -1",
+				},
+				{
+					name: "invalid scope id",
+					cmd:  cli.UpdateValueOwnersCmd(),
+					// <new value owner> <scope id> [<scope id 2> ...]
+					args: []string{
+						s.user1AddrStr, scopeID1, scopeSpecID,
+					},
+					expectErrMsg: fmt.Sprintf("invalid scope id %d %q: %s", 2, scopeSpecID, "not a scope identifier"),
+				},
+				{
+					name: "invalid signers",
+					cmd:  cli.UpdateValueOwnersCmd(),
+					// <new value owner> <scope id> [<scope id 2> ...]
+					args: []string{
+						s.user1AddrStr, scopeID1, scopeID2,
+						"--" + cli.FlagSigners, "notabech32",
+						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					expectErrMsg: "decoding bech32 failed: invalid separator index -1",
+				},
+			},
+		},
+		{
+			// Setup 3 scopes. 1 and 2 have user 1 for value owner, scope 3 has value owner 2.
+			txs: []txCmdTestCase{
+				{
+					name: "setup: write scope spec",
+					cmd:  cli.WriteScopeSpecificationCmd(),
+					// [specification-id] [owner-addresses] [responsible-parties] [contract-specification-ids] [description-name, optional] [description, optional] [website-url, optional] [icon-url, optional]
+					args: []string{
+						scopeSpecID, s.accountAddrStr, "owner", s.contractSpecID.String(),
+						fromFlag(s.accountAddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					respType: &sdk.TxResponse{},
+				},
+				{
+					name: "setup: write scope 1",
+					cmd:  cli.WriteScopeCmd(),
+					// [scope-id] [spec-id] [owners] [data-access] [value-owner-address]
+					args: []string{
+						scopeID1, scopeSpecID,
+						s.accountAddrStr, s.accountAddrStr, s.user1AddrStr,
+						fromFlag(s.accountAddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					respType: &sdk.TxResponse{},
+				},
+				{
+					name: "setup: write scope 2",
+					cmd:  cli.WriteScopeCmd(),
+					// [scope-id] [spec-id] [owners] [data-access] [value-owner-address]
+					args: []string{
+						scopeID2, scopeSpecID,
+						s.accountAddrStr, s.accountAddrStr, s.user1AddrStr,
+						fromFlag(s.accountAddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					respType: &sdk.TxResponse{},
+				},
+				{
+					name: "setup: write scope 3",
+					cmd:  cli.WriteScopeCmd(),
+					// [scope-id] [spec-id] [owners] [data-access] [value-owner-address]
+					args: []string{
+						scopeID3, scopeSpecID,
+						s.accountAddrStr, s.accountAddrStr, s.user2AddrStr,
+						fromFlag(s.accountAddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					respType: &sdk.TxResponse{},
+				},
+			},
+			queries: queryTests(s.user1AddrStr, s.user1AddrStr, s.user2AddrStr),
+		},
+		{
+			// Some failures from the keeper.
+			txs: []txCmdTestCase{
+				{
+					name: "update scopes 1 and 2 with incorrect signer",
+					cmd:  cli.UpdateValueOwnersCmd(),
+					// <new value owner> <scope id> [<scope id 2> ...]
+					args: []string{
+						s.accountAddrStr, scopeID1, scopeID2,
+						fromFlag(s.accountAddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					respType:     &sdk.TxResponse{},
+					expectedCode: 1,
+				},
+				{
+					name: "missing signature from 1 of 3 scopes",
+					cmd:  cli.UpdateValueOwnersCmd(),
+					// <new value owner> <scope id> [<scope id 2> ...]
+					args: []string{
+						s.user2AddrStr, scopeID1, scopeID2, scopeID3,
+						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					respType:     &sdk.TxResponse{},
+					expectedCode: 1,
+				},
+			},
+		},
+		{
+			// A single update of two scopes.
+			txs: []txCmdTestCase{{
+				name: "update scopes 1 and 2 to user 2",
+				cmd:  cli.UpdateValueOwnersCmd(),
+				// <new value owner> <scope id> [<scope id 2> ...]
+				args: []string{
+					s.user2AddrStr, scopeID1, scopeID2,
+					fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+				},
+				respType: &sdk.TxResponse{},
+			}},
+			queries: queryTests(s.user2AddrStr, s.user2AddrStr, s.user2AddrStr),
+		},
+		{
+			// A single update of 3 scopes.
+			txs: []txCmdTestCase{{
+				name: "update scopes 1 2 and 3 to user 3",
+				cmd:  cli.UpdateValueOwnersCmd(),
+				// <new value owner> <scope id> [<scope id 2> ...]
+				args: []string{
+					s.user3AddrStr, scopeID1, scopeID2, scopeID3,
+					fromFlag(s.user2AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+				},
+				respType: &sdk.TxResponse{},
+			}},
+			queries: queryTests(s.user3AddrStr, s.user3AddrStr, s.user3AddrStr),
+		},
+		{
+			// Two updates of two different scopes.
+			txs: []txCmdTestCase{
+				{
+					name: "3: update scope 1 to user 1",
+					cmd:  cli.UpdateValueOwnersCmd(),
+					// <new value owner> <scope id> [<scope id 2> ...]
+					args: []string{
+						s.user1AddrStr, scopeID1,
+						fromFlag(s.user3AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					respType: &sdk.TxResponse{},
+				},
+				{
+					name: "3: update scope 2 to user 2",
+					cmd:  cli.UpdateValueOwnersCmd(),
+					// <new value owner> <scope id> [<scope id 2> ...]
+					args: []string{
+						s.user2AddrStr, scopeID2,
+						fromFlag(s.user3AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					respType: &sdk.TxResponse{},
+				},
+			},
+			queries: queryTests(s.user1AddrStr, s.user2AddrStr, s.user3AddrStr),
+		},
+	}
+
+	for i, tc := range tests {
+		lead := fmt.Sprintf("%d: ", i)
+		for c := range tc.txs {
+			tc.txs[c].name = lead + tc.txs[c].name
+		}
+		for c := range tc.queries {
+			tc.queries[c].name = lead + tc.queries[c].name
+		}
+
+		runTxCmdTestCases(s, tc.txs)
+		if len(tc.queries) > 0 {
+			runQueryCmdTestCases(s, queryCmd, tc.queries)
+		}
+	}
+
+	// If there was a failure, output the user bech32s so it's easier to figure out what went wrong.
+	if s.T().Failed() {
+		s.T().Logf("accountAddrStr: %s", s.accountAddrStr)
+		s.T().Logf("user1AddrStr: %s", s.user1AddrStr)
+		s.T().Logf("user2AddrStr: %s", s.user2AddrStr)
+		s.T().Logf("user3AddrStr: %s", s.user3AddrStr)
+	}
 }
 
 func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
@@ -2366,7 +2604,6 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: `unknown party type: "badpartytype"`,
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
@@ -2596,7 +2833,6 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: `unknown party type: "badpartytype"`,
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
@@ -2924,7 +3160,6 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: `unknown party type: "badpartytype"`,
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
@@ -3541,7 +3776,6 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: `invalid party "` + owner + `,badpartytype": unknown party type: "badpartytype"`,
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
