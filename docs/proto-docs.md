@@ -2292,6 +2292,7 @@ add list
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
 | `remove_required_attributes` | [string](#string) | repeated |  |
 | `add_required_attributes` | [string](#string) | repeated |  |
 | `transfer_authority` | [string](#string) |  | signer of the proposal |

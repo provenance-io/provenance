@@ -644,5 +644,74 @@ func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgS
 }
 
 func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.MsgUpdateRequiredAttributesRequest) (*types.MsgUpdateRequiredAttributesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	m, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, fmt.Errorf("marker not found for %s: %w", msg.Denom, err)
+	}
+
+	caller, err := sdk.AccAddressFromBech32(msg.TransferAuthority)
+	if err != nil {
+		return nil, err
+	}
+
+	isGovProp := msg.TransferAuthority == k.GetAuthority()
+
+	if !isGovProp && !m.AddressHasAccess(caller, types.Access_Transfer) {
+		return nil, fmt.Errorf("caller does not have authority to update required attributes %s", msg.TransferAuthority)
+	}
+
+	removeList, err := k.NormalizeRequiredAttributes(ctx, msg.RemoveRequiredAttributes)
+	if err != nil {
+		return nil, err
+	}
+	addList, err := k.NormalizeRequiredAttributes(ctx, msg.AddRequiredAttributes)
+	if err != nil {
+		return nil, err
+	}
+
+	expectedLen := len(m.GetRequiredAttributes()) - len(removeList)
+	reqAttrs := []string{}
+	for _, ra := range m.GetRequiredAttributes() {
+		found := false
+		for _, cra := range removeList {
+			if cra == ra {
+				found = true
+				break
+			}
+		}
+		if !found {
+			reqAttrs = append(reqAttrs, ra)
+		}
+	}
+	// check to see if there was an entry in remove list that did not exist
+	if len(reqAttrs) != expectedLen {
+		return nil, fmt.Errorf("remove required attributes list had incorrect entries")
+	}
+
+	for _, ra := range addList {
+		found := false
+		for _, add := range reqAttrs {
+			if ra == add {
+				found = true
+				break
+			}
+		}
+		if found {
+			return nil, fmt.Errorf("cannot add duplicate entry to required attributes %s", ra)
+		}
+		reqAttrs = append(reqAttrs, ra)
+	}
+
+	m.SetRequiredAttributes(reqAttrs)
+	k.SetMarker(ctx, m)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
 	return nil, nil
 }

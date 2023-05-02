@@ -52,6 +52,7 @@ type MarkerAccountI interface {
 	AllowsForcedTransfer() bool
 
 	GetRequiredAttributes() []string
+	SetRequiredAttributes([]string)
 }
 
 // NewEmptyMarkerAccount creates a new empty marker account in a Proposed state
@@ -252,6 +253,10 @@ func ValidateRequiredAttributes(requiredAttributes []string) error {
 
 func (ma *MarkerAccount) GetRequiredAttributes() []string {
 	return ma.RequiredAttributes
+}
+
+func (ma *MarkerAccount) SetRequiredAttributes(requiredAttributes []string) {
+	ma.RequiredAttributes = requiredAttributes
 }
 
 // GetPubKey implements authtypes.Account (but there are no public keys associated with the account for signing)
