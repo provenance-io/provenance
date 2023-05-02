@@ -441,3 +441,58 @@ func TestMatchAttribute(t *testing.T) {
 		require.Equal(t, tc.expectedResult, result, fmt.Sprintf("%s", tc.name))
 	}
 }
+
+func TestAddToRequiredAttributes(t *testing.T) {
+	tests := []struct {
+		name          string
+		addList       []string
+		reqAttrs      []string
+		expectedAttrs []string
+		expectedError string
+	}{
+		{
+			name:          "should fail, duplicate value",
+			addList:       []string{"foo", "bar"},
+			reqAttrs:      []string{"foo", "baz"},
+			expectedError: "cannot add duplicate entry to required attributes foo",
+		},
+		{
+			name:          "should succeed, add elements to none empty list",
+			addList:       []string{"qux", "fix"},
+			reqAttrs:      []string{"foo", "bar", "baz"},
+			expectedAttrs: []string{"foo", "bar", "baz", "qux", "fix"},
+		},
+		{
+			name:          "should succeed, add elements to empty list",
+			addList:       []string{"qux", "fix"},
+			reqAttrs:      []string{},
+			expectedAttrs: []string{"qux", "fix"},
+		},
+		{
+			name:          "should succeed, nothing added",
+			addList:       []string{},
+			reqAttrs:      []string{"foo", "bar", "baz"},
+			expectedAttrs: []string{"foo", "bar", "baz"},
+		},
+		{
+			name:          "should succeed, two empty lists",
+			addList:       []string{},
+			reqAttrs:      []string{},
+			expectedAttrs: []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%v", tt.addList), func(t *testing.T) {
+			actualAttrs, err := keeper.AddToRequiredAttributes(tt.addList, tt.reqAttrs)
+			if len(tt.expectedError) == 0 {
+				assert.NoError(t, err, fmt.Sprintf("%s", tt.name))
+				assert.ElementsMatch(t, tt.expectedAttrs, actualAttrs, fmt.Sprintf("%s", tt.name))
+			} else {
+				assert.NotNil(t, err, fmt.Sprintf("%s", tt.name))
+				assert.Equal(t, tt.expectedError, err.Error(), fmt.Sprintf("%s", tt.name))
+				assert.Nil(t, tt.expectedAttrs, fmt.Sprintf("%s", tt.name))
+			}
+		})
+	}
+}

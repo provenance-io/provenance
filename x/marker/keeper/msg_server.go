@@ -689,18 +689,9 @@ func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.Ms
 		return nil, fmt.Errorf("remove required attributes list had incorrect entries")
 	}
 
-	for _, ra := range addList {
-		found := false
-		for _, add := range reqAttrs {
-			if ra == add {
-				found = true
-				break
-			}
-		}
-		if found {
-			return nil, fmt.Errorf("cannot add duplicate entry to required attributes %s", ra)
-		}
-		reqAttrs = append(reqAttrs, ra)
+	reqAttrs, err = AddToRequiredAttributes(reqAttrs, addList)
+	if err != nil {
+		return nil, err
 	}
 
 	m.SetRequiredAttributes(reqAttrs)

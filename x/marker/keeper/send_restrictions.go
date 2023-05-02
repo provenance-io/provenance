@@ -141,3 +141,21 @@ func ContainsWildCard(attr string) bool {
 	segs := strings.Split(attr, ".")
 	return len(segs) > 1 && segs[0] == "*"
 }
+
+// AddToRequiredAttributes add new attributes to current list, errors if attribute already exists
+func AddToRequiredAttributes(currentAttrs []string, addAttrs []string) ([]string, error) {
+	for _, ra := range addAttrs {
+		found := false
+		for _, add := range currentAttrs {
+			if ra == add {
+				found = true
+				break
+			}
+		}
+		if found {
+			return nil, fmt.Errorf("cannot add duplicate entry to required attributes %s", ra)
+		}
+		currentAttrs = append(currentAttrs, ra)
+	}
+	return currentAttrs, nil
+}
