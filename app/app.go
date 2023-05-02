@@ -149,6 +149,9 @@ import (
 	rewardkeeper "github.com/provenance-io/provenance/x/reward/keeper"
 	rewardmodule "github.com/provenance-io/provenance/x/reward/module"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
+	triggerkeeper "github.com/provenance-io/provenance/x/trigger/keeper"
+	triggermodule "github.com/provenance-io/provenance/x/trigger/module"
+	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 
 	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
 )
@@ -205,6 +208,7 @@ var (
 		wasm.AppModuleBasic{},
 		msgfeesmodule.AppModuleBasic{},
 		rewardmodule.AppModuleBasic{},
+		triggermodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -219,9 +223,10 @@ var (
 		icatypes.ModuleName:         nil,
 		ibctransfertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 
-		markertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
-		wasm.ModuleName:        {authtypes.Burner},
-		rewardtypes.ModuleName: nil,
+		markertypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
+		wasm.ModuleName:         {authtypes.Burner},
+		rewardtypes.ModuleName:  nil,
+		triggertypes.ModuleName: nil,
 	}
 )
 
@@ -278,6 +283,7 @@ type App struct {
 	RewardKeeper     rewardkeeper.Keeper
 	QuarantineKeeper quarantinekeeper.Keeper
 	SanctionKeeper   sanctionkeeper.Keeper
+	TriggerKeeper    triggerkeeper.Keeper
 
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	ICAHostKeeper  icahostkeeper.Keeper
@@ -356,6 +362,7 @@ func New(
 		rewardtypes.StoreKey,
 		quarantine.StoreKey,
 		sanction.StoreKey,
+		triggertypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -440,6 +447,7 @@ func New(
 	)
 
 	app.RewardKeeper = rewardkeeper.NewKeeper(appCodec, keys[rewardtypes.StoreKey], app.StakingKeeper, &app.GovKeeper, app.BankKeeper, app.AccountKeeper)
+	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[rewardtypes.StoreKey])
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(
 		keys[authzkeeper.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(), app.AccountKeeper,
@@ -623,6 +631,7 @@ func New(
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
+		triggermodule.NewAppModule(appCodec, app.TriggerKeeper),
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
@@ -646,6 +655,7 @@ func New(
 		markertypes.ModuleName,
 		icatypes.ModuleName,
 		rewardtypes.ModuleName,
+		triggertypes.ModuleName,
 
 		// no-ops
 		authtypes.ModuleName,
@@ -676,6 +686,7 @@ func New(
 		icatypes.ModuleName,
 		group.ModuleName,
 		rewardtypes.ModuleName,
+		triggertypes.ModuleName,
 
 		// no-ops
 		vestingtypes.ModuleName,
@@ -737,6 +748,7 @@ func New(
 		// wasm after ibc transfer
 		wasm.ModuleName,
 		rewardtypes.ModuleName,
+		triggertypes.ModuleName,
 
 		// no-ops
 		paramstypes.ModuleName,
@@ -775,6 +787,7 @@ func New(
 		metadatatypes.ModuleName,
 		nametypes.ModuleName,
 		rewardtypes.ModuleName,
+		triggertypes.ModuleName,
 
 		// Last due to v0.44 issue: https://github.com/cosmos/cosmos-sdk/issues/10591
 		authtypes.ModuleName,
@@ -808,6 +821,7 @@ func New(
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
+		triggermodule.NewAppModule(appCodec, app.TriggerKeeper),
 		provwasm.NewWrapper(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 
 		ibc.NewAppModule(app.IBCKeeper),
@@ -1094,6 +1108,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(msgfeestypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(rewardtypes.ModuleName)
+	paramsKeeper.Subspace(triggertypes.ModuleName)
 
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
