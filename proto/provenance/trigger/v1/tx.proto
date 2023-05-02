@@ -1,0 +1,26 @@
+syntax = "proto3";
+package provenance.trigger.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/trigger/types";
+option java_package        = "io.provenance.trigger.v1";
+option java_multiple_files = true;
+
+// Msg
+service Msg {
+  // CreateTrigger is the RPC endpoint for creating a trigger
+  rpc CreateTrigger(MsgCreateTriggerRequest) returns (MsgCreateTriggerResponse);
+}
+
+// MsgCreateTriggerRequest is the request type for creating a trigger RPC
+message MsgCreateTriggerRequest {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+}
+
+// MsgCreateTriggerResponse is the response type for creating a trigger RPC
+message MsgCreateTriggerResponse {
+  // reward program id that is generated on creation.
+  uint64 id = 1;
+}

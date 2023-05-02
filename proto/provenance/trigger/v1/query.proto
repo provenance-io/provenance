@@ -1,0 +1,30 @@
+syntax = "proto3";
+package provenance.trigger.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "provenance/trigger/v1/trigger.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/trigger/types";
+option java_package        = "io.provenance.trigger.v1";
+option java_multiple_files = true;
+
+// Query defines the gRPC querier service for trigger module.
+service Query {
+  // TriggerByID returns a trigger matching the ID.
+  rpc TriggerByID(QueryTriggerByIDRequest) returns (QueryTriggerByIDResponse) {
+    option (google.api.http).get = "/provenance/trigger/v1/trigger/{id}";
+  }
+}
+
+// QueryTriggerByIDRequest queries for the Trigger with an identifier of id
+message QueryTriggerByIDRequest {
+  // The id of the trigger to query.
+  uint64 id = 1;
+}
+
+// QueryTriggerByIDResponse contains the requested Trigger
+message QueryTriggerByIDResponse {
+  // The trigger object that was queried for.
+  Trigger trigger = 1;
+}

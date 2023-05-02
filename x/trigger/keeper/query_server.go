@@ -1,0 +1,21 @@
+package keeper
+
+import (
+	"context"
+
+	"github.com/provenance-io/provenance/x/trigger/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
+
+var _ types.QueryServer = Keeper{}
+
+// TriggerByID returns a trigger matching the ID.
+func (k Keeper) TriggerByID(ctx context.Context, req *types.QueryTriggerByIDRequest) (*types.QueryTriggerByIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	//sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return &types.QueryTriggerByIDResponse{Trigger: &types.Trigger{}}, nil
+}

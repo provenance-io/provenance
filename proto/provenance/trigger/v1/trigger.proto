@@ -1,0 +1,17 @@
+syntax = "proto3";
+package provenance.trigger.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/trigger/types";
+option java_package        = "io.provenance.trigger.v1";
+option java_multiple_files = true;
+
+// Trigger
+message Trigger {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // An integer to uniquely identify the trigger.
+  uint64 id = 1;
+}

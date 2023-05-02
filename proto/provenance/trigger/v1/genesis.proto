@@ -1,0 +1,18 @@
+syntax = "proto3";
+package provenance.trigger.v1;
+
+import "gogoproto/gogo.proto";
+import "provenance/trigger/v1/trigger.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/trigger/types";
+option java_package        = "io.provenance.trigger.v1";
+option java_multiple_files = true;
+
+// GenesisState defines the trigger module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // Trigger id is the next auto incremented id to be assigned to the next created trigger
+  uint64 trigger_id = 1;
+}

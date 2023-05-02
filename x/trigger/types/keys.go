@@ -1,13 +1,5 @@
 package types
 
-import (
-	"encoding/binary"
-	"fmt"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
-)
-
 const (
 	// ModuleName defines the module name
 	ModuleName = "trigger"

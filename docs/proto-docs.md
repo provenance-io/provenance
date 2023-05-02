@@ -417,6 +417,24 @@
   
     - [Msg](#provenance.reward.v1.Msg)
   
+- [provenance/trigger/v1/trigger.proto](#provenance/trigger/v1/trigger.proto)
+    - [Trigger](#provenance.trigger.v1.Trigger)
+  
+- [provenance/trigger/v1/genesis.proto](#provenance/trigger/v1/genesis.proto)
+    - [GenesisState](#provenance.trigger.v1.GenesisState)
+  
+- [provenance/trigger/v1/query.proto](#provenance/trigger/v1/query.proto)
+    - [QueryTriggerByIDRequest](#provenance.trigger.v1.QueryTriggerByIDRequest)
+    - [QueryTriggerByIDResponse](#provenance.trigger.v1.QueryTriggerByIDResponse)
+  
+    - [Query](#provenance.trigger.v1.Query)
+  
+- [provenance/trigger/v1/tx.proto](#provenance/trigger/v1/tx.proto)
+    - [MsgCreateTriggerRequest](#provenance.trigger.v1.MsgCreateTriggerRequest)
+    - [MsgCreateTriggerResponse](#provenance.trigger.v1.MsgCreateTriggerResponse)
+  
+    - [Msg](#provenance.trigger.v1.Msg)
+  
 - [Scalar Value Types](#scalar-value-types)
 
 
@@ -6258,6 +6276,175 @@ Msg
 | `EndRewardProgram` | [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest) | [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse) | EndRewardProgram is the RPC endpoint for ending a rewards program | |
 | `ClaimRewards` | [MsgClaimRewardsRequest](#provenance.reward.v1.MsgClaimRewardsRequest) | [MsgClaimRewardsResponse](#provenance.reward.v1.MsgClaimRewardsResponse) | ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program | |
 | `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) | ClaimAllRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for the signer of the tx. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/trigger.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/trigger.proto
+
+
+
+<a name="provenance.trigger.v1.Trigger"></a>
+
+### Trigger
+Trigger
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | An integer to uniquely identify the trigger. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/genesis.proto
+
+
+
+<a name="provenance.trigger.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the trigger module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [uint64](#uint64) |  | Trigger id is the next auto incremented id to be assigned to the next created trigger |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/query.proto
+
+
+
+<a name="provenance.trigger.v1.QueryTriggerByIDRequest"></a>
+
+### QueryTriggerByIDRequest
+QueryTriggerByIDRequest queries for the Trigger with an identifier of id
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | The id of the trigger to query. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.QueryTriggerByIDResponse"></a>
+
+### QueryTriggerByIDResponse
+QueryTriggerByIDResponse contains the requested Trigger
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger` | [Trigger](#provenance.trigger.v1.Trigger) |  | The trigger object that was queried for. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.trigger.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service for trigger module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `TriggerByID` | [QueryTriggerByIDRequest](#provenance.trigger.v1.QueryTriggerByIDRequest) | [QueryTriggerByIDResponse](#provenance.trigger.v1.QueryTriggerByIDResponse) | TriggerByID returns a trigger matching the ID. | GET|/provenance/trigger/v1/trigger/{id}|
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/tx.proto
+
+
+
+<a name="provenance.trigger.v1.MsgCreateTriggerRequest"></a>
+
+### MsgCreateTriggerRequest
+MsgCreateTriggerRequest is the request type for creating a trigger RPC
+
+
+
+
+
+
+<a name="provenance.trigger.v1.MsgCreateTriggerResponse"></a>
+
+### MsgCreateTriggerResponse
+MsgCreateTriggerResponse is the response type for creating a trigger RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | reward program id that is generated on creation. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.trigger.v1.Msg"></a>
+
+### Msg
+Msg
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateTrigger` | [MsgCreateTriggerRequest](#provenance.trigger.v1.MsgCreateTriggerRequest) | [MsgCreateTriggerResponse](#provenance.trigger.v1.MsgCreateTriggerResponse) | CreateTrigger is the RPC endpoint for creating a trigger | |
 
  <!-- end services -->
 

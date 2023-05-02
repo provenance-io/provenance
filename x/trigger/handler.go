@@ -1,16 +1,18 @@
-package reward
+package trigger
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/provenance-io/provenance/x/trigger/keeper"
+	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
 // NewHandler returns a handler for reward messages.
 func NewHandler(k keeper.Keeper) sdk.Handler {
-	msgServer := keeper.NewMsgServerImpl(k)
+	//msgServer := keeper.NewMsgServerImpl(k)
 
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		ctx = ctx.WithEventManager(sdk.NewEventManager())
+		//ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
 		/*case *types.MsgCreateRewardProgramRequest:

@@ -1,7 +1,5 @@
 package types
 
-import "fmt"
-
 func NewGenesisState() *GenesisState {
 	return &GenesisState{}
 }
