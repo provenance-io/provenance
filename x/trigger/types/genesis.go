@@ -1,0 +1,18 @@
+package types
+
+import "fmt"
+
+func NewGenesisState() *GenesisState {
+	return &GenesisState{}
+}
+
+// DefaultGenesis returns the default reward genesis state
+func DefaultGenesis() *GenesisState {
+	return NewGenesisState()
+}
+
+// Validate performs basic genesis state validation returning an error upon any
+// failure.
+func (gs GenesisState) Validate() error {
+	return nil
+}
