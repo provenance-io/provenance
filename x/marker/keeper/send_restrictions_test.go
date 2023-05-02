@@ -560,7 +560,6 @@ func TestRemovesFromRequiredAttributes(t *testing.T) {
 			} else {
 				assert.NotNil(t, err)
 				assert.Equal(t, tt.expectedError, err.Error())
-				assert.Nil(t, tt.expectedAttrs)
 			}
 		})
 	}
