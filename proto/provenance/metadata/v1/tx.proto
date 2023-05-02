@@ -34,6 +34,9 @@ service Msg {
   // UpdateValueOwners sets the value owner of one or more scopes.
   rpc UpdateValueOwners(MsgUpdateValueOwnersRequest) returns (MsgUpdateValueOwnersResponse);
 
+  // MigrateValueOwner updates all scopes that have one value owner to have a another value owner.
+  rpc MigrateValueOwner(MsgMigrateValueOwnerRequest) returns (MsgMigrateValueOwnerResponse);
+
   // WriteSession adds or updates a session context.
   rpc WriteSession(MsgWriteSessionRequest) returns (MsgWriteSessionResponse);
 
@@ -227,12 +230,29 @@ message MsgUpdateValueOwnersRequest {
   ];
   // value_owner_address is the address of the new value owner for the provided scopes.
   string value_owner_address = 2 [(gogoproto.moretags) = "yaml:\"value_owner_address\""];
-  // signers is the list of address of those signing this request.
+  // signers is the list of addresses of those signing this request.
   repeated string signers = 3;
 }
 
 // MsgUpdateValueOwnersResponse is the response from updating value owner addresses in one or more scopes.
 message MsgUpdateValueOwnersResponse {}
+
+// MsgMigrateValueOwnerRequest is the request to migrate all scopes with one value owner to another value owner.
+message MsgMigrateValueOwnerRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.goproto_getters)  = false;
+
+  // existing is the value owner address that is being migrated.
+  string existing = 1;
+  // proposed is the new value owner address for all of existing's scopes.
+  string proposed = 2;
+  // signers is the list of addresses of those signing this request.
+  repeated string signers = 3;
+}
+
+// MsgMigrateValueOwnerResponse is the response from migrating a value owner address.
+message MsgMigrateValueOwnerResponse {}
 
 // MsgWriteSessionRequest is the request type for the Msg/WriteSession RPC method.
 message MsgWriteSessionRequest {
