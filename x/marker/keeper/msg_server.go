@@ -645,6 +645,7 @@ func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgS
 
 func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.MsgUpdateRequiredAttributesRequest) (*types.MsgUpdateRequiredAttributesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	m, err := k.GetMarkerByDenom(ctx, msg.Denom)
 	if err != nil {
 		return nil, fmt.Errorf("marker not found for %s: %w", msg.Denom, err)
@@ -656,7 +657,6 @@ func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.Ms
 	}
 
 	isGovProp := msg.TransferAuthority == k.GetAuthority()
-
 	if !isGovProp && !m.AddressHasAccess(caller, types.Access_Transfer) {
 		return nil, fmt.Errorf("caller does not have authority to update required attributes %s", msg.TransferAuthority)
 	}
@@ -670,25 +670,10 @@ func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 
-	expectedLen := len(m.GetRequiredAttributes()) - len(removeList)
-	reqAttrs := []string{}
-	for _, ra := range m.GetRequiredAttributes() {
-		found := false
-		for _, cra := range removeList {
-			if cra == ra {
-				found = true
-				break
-			}
-		}
-		if !found {
-			reqAttrs = append(reqAttrs, ra)
-		}
+	reqAttrs, err := RemovesFromRequiredAttributes(msg.GetAddRequiredAttributes(), removeList)
+	if err != nil {
+		return nil, err
 	}
-	// check to see if there was an entry in remove list that did not exist
-	if len(reqAttrs) != expectedLen {
-		return nil, fmt.Errorf("remove required attributes list had incorrect entries")
-	}
-
 	reqAttrs, err = AddToRequiredAttributes(reqAttrs, addList)
 	if err != nil {
 		return nil, err

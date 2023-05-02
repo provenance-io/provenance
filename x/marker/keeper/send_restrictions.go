@@ -159,3 +159,26 @@ func AddToRequiredAttributes(currentAttrs []string, addAttrs []string) ([]string
 	}
 	return currentAttrs, nil
 }
+
+// RemovesFromRequiredAttributes remove  attributes from current list, errors if attribute does not exists
+func RemovesFromRequiredAttributes(currentAttrs []string, removeAttrs []string) ([]string, error) {
+	expectedLen := len(currentAttrs) - len(removeAttrs)
+	reqAttrs := []string{}
+	for _, ra := range currentAttrs {
+		found := false
+		for _, cra := range removeAttrs {
+			if cra == ra {
+				found = true
+				break
+			}
+		}
+		if !found {
+			reqAttrs = append(reqAttrs, ra)
+		}
+	}
+	// check to see if there was an entry in remove list that did not exist
+	if len(reqAttrs) != expectedLen || expectedLen < 0 {
+		return removeAttrs, fmt.Errorf("remove required attributes list had incorrect entries")
+	}
+	return reqAttrs, nil
+}

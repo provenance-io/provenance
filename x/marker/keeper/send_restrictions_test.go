@@ -483,15 +483,84 @@ func TestAddToRequiredAttributes(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(fmt.Sprintf("%v", tt.addList), func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			actualAttrs, err := keeper.AddToRequiredAttributes(tt.addList, tt.reqAttrs)
 			if len(tt.expectedError) == 0 {
-				assert.NoError(t, err, fmt.Sprintf("%s", tt.name))
-				assert.ElementsMatch(t, tt.expectedAttrs, actualAttrs, fmt.Sprintf("%s", tt.name))
+				assert.NoError(t, err)
+				assert.ElementsMatch(t, tt.expectedAttrs, actualAttrs)
 			} else {
-				assert.NotNil(t, err, fmt.Sprintf("%s", tt.name))
-				assert.Equal(t, tt.expectedError, err.Error(), fmt.Sprintf("%s", tt.name))
-				assert.Nil(t, tt.expectedAttrs, fmt.Sprintf("%s", tt.name))
+				assert.NotNil(t, err)
+				assert.Equal(t, tt.expectedError, err.Error())
+				assert.Nil(t, tt.expectedAttrs)
+			}
+		})
+	}
+}
+
+func TestRemovesFromRequiredAttributes(t *testing.T) {
+	tests := []struct {
+		name          string
+		currentAttrs  []string
+		removeAttrs   []string
+		expectedAttrs []string
+		expectedError string
+	}{
+		{
+			name:          "should succeed, removing a single element",
+			currentAttrs:  []string{"foo", "bar", "baz"},
+			removeAttrs:   []string{"bar"},
+			expectedAttrs: []string{"foo", "baz"},
+		},
+		{
+			name:          "should fail, element doesn't exist",
+			currentAttrs:  []string{"foo", "bar", "baz"},
+			removeAttrs:   []string{"qux"},
+			expectedAttrs: nil,
+			expectedError: "remove required attributes list had incorrect entries",
+		},
+		{
+			name:          "should succeed, removing multiple elements",
+			currentAttrs:  []string{"foo", "bar", "baz"},
+			removeAttrs:   []string{"foo", "baz"},
+			expectedAttrs: []string{"bar"},
+		},
+		{
+			name:          "should succeed, removing no elements",
+			currentAttrs:  []string{"foo", "bar", "baz"},
+			removeAttrs:   []string{},
+			expectedAttrs: []string{"foo", "bar", "baz"},
+		},
+		{
+			name:          "should succeed, remove all elements",
+			currentAttrs:  []string{"foo", "bar", "baz"},
+			removeAttrs:   []string{"baz", "foo", "bar"},
+			expectedAttrs: []string{},
+		},
+		{
+			name:          "should succeed, both empty lists",
+			currentAttrs:  []string{},
+			removeAttrs:   []string{},
+			expectedAttrs: []string{},
+		},
+		{
+			name:          "should fail, trying to remove elements from empty list",
+			currentAttrs:  []string{},
+			removeAttrs:   []string{"blah"},
+			expectedAttrs: []string{},
+			expectedError: "remove required attributes list had incorrect entries",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actualAttrs, err := keeper.RemovesFromRequiredAttributes(tt.currentAttrs, tt.removeAttrs)
+			if len(tt.expectedError) == 0 {
+				assert.NoError(t, err)
+				assert.ElementsMatch(t, tt.expectedAttrs, actualAttrs)
+			} else {
+				assert.NotNil(t, err)
+				assert.Equal(t, tt.expectedError, err.Error())
+				assert.Nil(t, tt.expectedAttrs)
 			}
 		})
 	}
