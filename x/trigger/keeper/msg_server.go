@@ -25,23 +25,18 @@ var _ types.MsgServer = msgServer{}
 func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTriggerRequest) (*types.MsgCreateTriggerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	id, err := s.GetNextTriggerID(ctx)
+	trigger, err := s.NewTriggerWithID(ctx, msg.GetAuthority(), msg.GetEvent(), msg.GetAction())
 	if err != nil {
 		// Throw an error
 		return nil, err
 	}
 
-	trigger := types.NewTrigger(id, msg.GetEvent(), msg.GetAction())
-	err = s.SetTrigger(ctx, trigger)
-	if err != nil {
-		// Throw an error
-		return nil, err
-	}
+	s.SetTrigger(ctx, *trigger)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeTriggerCreated,
-			sdk.NewAttribute(types.AttributeKeyTriggerID, fmt.Sprintf("%d", id)),
+			sdk.NewAttribute(types.AttributeKeyTriggerID, fmt.Sprintf("%d", trigger.GetId())),
 		),
 	)
 

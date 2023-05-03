@@ -6331,6 +6331,7 @@ Trigger
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `id` | [uint64](#uint64) |  | An integer to uniquely identify the trigger. |
+| `owner` | [string](#string) |  | The owner of the Trigger. |
 | `event` | [Event](#provenance.trigger.v1.Event) |  | The event that must be detected for the trigger to fire. |
 | `action` | [google.protobuf.Any](#google.protobuf.Any) |  | The message to run when the trigger fires. |
 

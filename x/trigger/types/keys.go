@@ -1,5 +1,7 @@
 package types
 
+import "encoding/binary"
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "trigger"
@@ -12,15 +14,17 @@ const (
 
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
+
+	TriggerIDKeyLength = 8
 )
 
 var (
 	TriggerKeyPrefix = []byte{0x01}
 )
 
-// GetRewardProgramKey converts a name into key format.
-/*func GetRewardProgramKey(id uint64) []byte {
-	rewardIDBytes := make([]byte, RewardIDKeyLength)
-	binary.BigEndian.PutUint64(rewardIDBytes, id)
-	return append(RewardProgramKeyPrefix, rewardIDBytes...)
-}*/
+// GetTriggerKey converts a trigger into key format.
+func GetTriggerKey(id TriggerID) []byte {
+	triggerIDBytes := make([]byte, TriggerIDKeyLength)
+	binary.BigEndian.PutUint64(triggerIDBytes, id)
+	return append(TriggerKeyPrefix, triggerIDBytes...)
+}
