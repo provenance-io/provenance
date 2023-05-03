@@ -160,7 +160,12 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 }
 
 // SetScopeValueOwners updates the value owner of all the provided scopes and stores each in the kv store.
+//
+// Contract: Each provided scope must not have been modified from its value as read from state.
+// Changing one before providing it to this function can mess up indexing.
 func (k Keeper) SetScopeValueOwners(ctx sdk.Context, scopes []*types.Scope, newValueOwner string) {
+	// Not using SetScope in here to skip the re-reading of each scope.
+	// It's expected that sometimes there will be quite a few (100+) scopes to update, so this will save on gas.
 	store := ctx.KVStore(k.storeKey)
 
 	for _, oldScope := range scopes {
@@ -170,7 +175,6 @@ func (k Keeper) SetScopeValueOwners(ctx sdk.Context, scopes []*types.Scope, newV
 		b := k.cdc.MustMarshal(&newScope)
 		store.Set(newScope.ScopeId, b)
 		k.indexScope(store, &newScope, oldScope)
-
 		k.EmitEvent(ctx, types.NewEventScopeUpdated(oldScope.ScopeId))
 		defer types.GetIncObjFunc(types.TLType_Scope, types.TLAction_Updated)
 	}
