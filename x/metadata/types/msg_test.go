@@ -78,6 +78,12 @@ func TestAllMsgsGetSigners(t *testing.T) {
 			},
 		},
 		{
+			name: "MsgMigrateValueOwnerRequest",
+			makeMsg: func(signers []string) MetadataMsg {
+				return &MsgMigrateValueOwnerRequest{Signers: signers}
+			},
+		},
+		{
 			name: "MsgWriteSessionRequest",
 			makeMsg: func(signers []string) MetadataMsg {
 				return &MsgWriteSessionRequest{Signers: signers}
@@ -714,6 +720,98 @@ func TestMsgUpdateValueOwnersRequest_ValidateBasic(t *testing.T) {
 					sdk.AccAddress("signer_13___________").String(),
 					sdk.AccAddress("signer_14___________").String(),
 				},
+			},
+			exp: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.exp) > 0 {
+				assert.EqualError(t, err, tc.exp, "ValidateBasic")
+			} else {
+				assert.NoError(t, err, "ValidateBasic")
+			}
+		})
+	}
+}
+
+func TestMsgMigrateValueOwnerRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name string
+		msg  MsgMigrateValueOwnerRequest
+		exp  string
+	}{
+		{
+			name: "control",
+			msg: MsgMigrateValueOwnerRequest{
+				Existing: sdk.AccAddress("existing_value_owner").String(),
+				Proposed: sdk.AccAddress("proposed_value_owner").String(),
+				Signers:  []string{"signer1"},
+			},
+			exp: "",
+		},
+		{
+			name: "missing existing",
+			msg: MsgMigrateValueOwnerRequest{
+				Existing: "",
+				Proposed: sdk.AccAddress("proposed_value_owner").String(),
+				Signers:  []string{"signer1"},
+			},
+			exp: "invalid existing value owner address: empty address string is not allowed",
+		},
+		{
+			name: "invalid existing",
+			msg: MsgMigrateValueOwnerRequest{
+				Existing: "notanaddress",
+				Proposed: sdk.AccAddress("proposed_value_owner").String(),
+				Signers:  []string{"signer1"},
+			},
+			exp: "invalid existing value owner address: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "empty proposed",
+			msg: MsgMigrateValueOwnerRequest{
+				Existing: sdk.AccAddress("existing_value_owner").String(),
+				Proposed: "",
+				Signers:  []string{"signer1"},
+			},
+			exp: "invalid proposed value owner address: empty address string is not allowed",
+		},
+		{
+			name: "invalid proposed",
+			msg: MsgMigrateValueOwnerRequest{
+				Existing: sdk.AccAddress("existing_value_owner").String(),
+				Proposed: "notanaddress",
+				Signers:  []string{"signer1"},
+			},
+			exp: "invalid proposed value owner address: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "nil signers",
+			msg: MsgMigrateValueOwnerRequest{
+				Existing: sdk.AccAddress("existing_value_owner").String(),
+				Proposed: sdk.AccAddress("proposed_value_owner").String(),
+				Signers:  nil,
+			},
+			exp: "at least one signer is required",
+		},
+		{
+			name: "empty signers",
+			msg: MsgMigrateValueOwnerRequest{
+				Existing: sdk.AccAddress("existing_value_owner").String(),
+				Proposed: sdk.AccAddress("proposed_value_owner").String(),
+				Signers:  []string{},
+			},
+			exp: "at least one signer is required",
+		},
+		{
+			name: "five signers",
+			msg: MsgMigrateValueOwnerRequest{
+				Existing: sdk.AccAddress("existing_value_owner").String(),
+				Proposed: sdk.AccAddress("proposed_value_owner").String(),
+				Signers:  []string{"signer1", "signer2", "signer3", "signer4", "signer5"},
 			},
 			exp: "",
 		},

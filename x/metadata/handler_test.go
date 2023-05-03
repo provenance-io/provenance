@@ -238,6 +238,106 @@ func (s *MetadataHandlerTestSuite) TestUpdateValueOwners() {
 	}
 }
 
+func (s *MetadataHandlerTestSuite) TestMigrateValueOwner() {
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	storeScope := func(valueOwner string, scopeID types.MetadataAddress) {
+		scope := types.Scope{
+			ScopeId:           scopeID,
+			SpecificationId:   scopeSpecID,
+			Owners:            []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}},
+			ValueOwnerAddress: valueOwner,
+		}
+		s.app.MetadataKeeper.SetScope(s.ctx, scope)
+	}
+	addr := func(str string) string {
+		return sdk.AccAddress(str).String()
+	}
+
+	addrW1 := addr("addrW1______________")
+	addrW3 := addr("addrW3______________")
+
+	scopeID1 := types.ScopeMetadataAddress(uuid.New())
+	scopeID31 := types.ScopeMetadataAddress(uuid.New())
+	scopeID32 := types.ScopeMetadataAddress(uuid.New())
+	scopeID33 := types.ScopeMetadataAddress(uuid.New())
+
+	storeScope(addrW1, scopeID1)
+	storeScope(addrW3, scopeID31)
+	storeScope(addrW3, scopeID32)
+	storeScope(addrW3, scopeID33)
+
+	tests := []struct {
+		name     string
+		msg      *types.MsgMigrateValueOwnerRequest
+		expErr   string
+		scopeIDs []types.MetadataAddress
+	}{
+		{
+			name: "err from IterateScopesForValueOwner",
+			msg: &types.MsgMigrateValueOwnerRequest{
+				Existing: "",
+				Proposed: "doesn't matter",
+				Signers:  []string{"who cares"},
+			},
+			expErr: "cannot iterate over invalid value owner \"\": empty address string is not allowed",
+		},
+		{
+			name: "no scopes",
+			msg: &types.MsgMigrateValueOwnerRequest{
+				Existing: addr("unknown_value_owner_"),
+				Proposed: addr("does_not_matter_____"),
+				Signers:  []string{addr("signer______________")},
+			},
+			expErr: "no scopes found with value owner \"" + addr("unknown_value_owner_") + "\"",
+		},
+		{
+			name: "err from ValidateUpdateValueOwners",
+			msg: &types.MsgMigrateValueOwnerRequest{
+				Existing: addrW1,
+				Proposed: addr("not_for_public_use__"),
+				Signers:  []string{addr("incorrect_signer____")},
+			},
+			expErr: "missing signature from existing value owner " + addrW1,
+		},
+		{
+			name: "1 scope updated",
+			msg: &types.MsgMigrateValueOwnerRequest{
+				Existing: addrW1,
+				Proposed: addr("proposed_value_owner"),
+				Signers:  []string{addrW1},
+			},
+			scopeIDs: []types.MetadataAddress{scopeID1},
+		},
+		{
+			name: "3 scopes updated",
+			msg: &types.MsgMigrateValueOwnerRequest{
+				Existing: addrW3,
+				Proposed: addr("a_longer_proposed_value_owner___"),
+				Signers:  []string{addrW3},
+			},
+			scopeIDs: []types.MetadataAddress{scopeID31, scopeID32, scopeID33},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			_, err := s.handler(s.ctx, tc.msg)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "Metadata hander(%T)", tc.msg)
+			} else {
+				if s.Assert().NoError(err, tc.expErr, "Metadata hander(%T)", tc.msg) {
+					for i, scopeID := range tc.scopeIDs {
+						scope, found := s.app.MetadataKeeper.GetScope(s.ctx, scopeID)
+						s.Assert().True(found, "[%d]: GetScope(%q) found boolean", i, scopeID.String())
+						actual := scope.ValueOwnerAddress
+						s.Assert().Equal(tc.msg.Proposed, actual, "[%d] %q value owner after migrate", i, scopeID.String())
+					}
+				}
+			}
+		})
+	}
+}
+
 func (s *MetadataHandlerTestSuite) TestWriteSession() {
 	cSpec := types.ContractSpecification{
 		SpecificationId: types.ContractSpecMetadataAddress(uuid.New()),

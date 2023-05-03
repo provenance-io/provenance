@@ -194,7 +194,7 @@ func (k msgServer) UpdateValueOwners(
 		scopes[i] = &scope
 	}
 
-	err := k.ValidateUpdateValueOwners(ctx, scopes, msg)
+	err := k.ValidateUpdateValueOwners(ctx, scopes, msg.ValueOwnerAddress, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -203,6 +203,39 @@ func (k msgServer) UpdateValueOwners(
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_UpdateValueOwners, msg.GetSignerStrs()))
 	return &types.MsgUpdateValueOwnersResponse{}, nil
+}
+
+func (k msgServer) MigrateValueOwner(
+	goCtx context.Context,
+	msg *types.MsgMigrateValueOwnerRequest,
+) (*types.MsgMigrateValueOwnerResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "UpdateValueOwners")
+	ctx := UnwrapMetadataContext(goCtx)
+
+	var scopes []*types.Scope
+	err := k.IterateScopesForValueOwner(ctx, msg.Existing, func(scopeID types.MetadataAddress) (stop bool) {
+		scope, found := k.GetScope(ctx, scopeID)
+		if found {
+			scopes = append(scopes, &scope)
+		}
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(scopes) == 0 {
+		return nil, fmt.Errorf("no scopes found with value owner %q", msg.Existing)
+	}
+
+	err = k.ValidateUpdateValueOwners(ctx, scopes, msg.Proposed, msg)
+	if err != nil {
+		return nil, err
+	}
+
+	k.SetScopeValueOwners(ctx, scopes, msg.Proposed)
+
+	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_MigrateValueOwner, msg.GetSignerStrs()))
+	return &types.MsgMigrateValueOwnerResponse{}, nil
 }
 
 func (k msgServer) WriteSession(

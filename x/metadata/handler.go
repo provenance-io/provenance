@@ -37,6 +37,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgUpdateValueOwnersRequest:
 			res, err := msgServer.UpdateValueOwners(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgMigrateValueOwnerRequest:
+			res, err := msgServer.MigrateValueOwner(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgWriteRecordRequest:
 			res, err := msgServer.WriteRecord(sdk.WrapSDKContext(ctx), msg)

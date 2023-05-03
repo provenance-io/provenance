@@ -43,6 +43,30 @@ func (k Keeper) IterateScopesForAddress(ctx sdk.Context, address sdk.AccAddress,
 	return nil
 }
 
+// IterateScopesForValueOwner iterates over all scope ids that have the provided value owner.
+func (k Keeper) IterateScopesForValueOwner(ctx sdk.Context, valueOwner string, handler func(scopeID types.MetadataAddress) (stop bool)) error {
+	addr, err := sdk.AccAddressFromBech32(valueOwner)
+	if err != nil {
+		return fmt.Errorf("cannot iterate over invalid value owner %q: %w", valueOwner, err)
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	prefix := types.GetValueOwnerScopeCacheIteratorPrefix(addr)
+	it := sdk.KVStorePrefixIterator(store, prefix)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		var scopeID types.MetadataAddress
+		if err = scopeID.Unmarshal(it.Key()[len(prefix):]); err != nil {
+			return err
+		}
+		if handler(scopeID) {
+			break
+		}
+	}
+
+	return nil
+}
+
 // IterateScopesForScopeSpec processes scopes associated with the provided scope specification id with the given handler.
 func (k Keeper) IterateScopesForScopeSpec(ctx sdk.Context, scopeSpecID types.MetadataAddress,
 	handler func(scopeID types.MetadataAddress) (stop bool),
@@ -575,7 +599,8 @@ func (k Keeper) ValidateUpdateScopeOwners(
 func (k Keeper) ValidateUpdateValueOwners(
 	ctx sdk.Context,
 	scopes []*types.Scope,
-	msg *types.MsgUpdateValueOwnersRequest,
+	newValueOwner string,
+	msg types.MetadataMsg,
 ) error {
 	var existingValueOwners []string
 	knownValueOwners := make(map[string]bool)
@@ -591,7 +616,7 @@ func (k Keeper) ValidateUpdateValueOwners(
 	}
 
 	signers := NewSignersWrapper(msg.GetSignerStrs())
-	usedSigners, err := k.validateScopeValueOwnerChangeToProposed(ctx, msg.ValueOwnerAddress, signers)
+	usedSigners, err := k.validateScopeValueOwnerChangeToProposed(ctx, newValueOwner, signers)
 	if err != nil {
 		return err
 	}

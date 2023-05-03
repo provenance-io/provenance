@@ -2475,6 +2475,10 @@ func TestGetAuthzMessageTypeURLs(t *testing.T) {
 			url:      types.TypeURLMsgUpdateValueOwnersRequest,
 			expected: []string{types.TypeURLMsgUpdateValueOwnersRequest, types.TypeURLMsgWriteScopeRequest},
 		},
+		{
+			url:      types.TypeURLMsgMigrateValueOwnerRequest,
+			expected: []string{types.TypeURLMsgMigrateValueOwnerRequest, types.TypeURLMsgWriteScopeRequest},
+		},
 		boringCase(types.TypeURLMsgWriteSessionRequest),
 		{
 			url:      types.TypeURLMsgWriteRecordRequest,

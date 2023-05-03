@@ -20,6 +20,7 @@ const (
 	TypeURLMsgAddScopeOwnerRequest                   = "/provenance.metadata.v1.MsgAddScopeOwnerRequest"
 	TypeURLMsgDeleteScopeOwnerRequest                = "/provenance.metadata.v1.MsgDeleteScopeOwnerRequest"
 	TypeURLMsgUpdateValueOwnersRequest               = "/provenance.metadata.v1.MsgUpdateValueOwnersRequest"
+	TypeURLMsgMigrateValueOwnerRequest               = "/provenance.metadata.v1.MsgMigrateValueOwnerRequest"
 	TypeURLMsgWriteSessionRequest                    = "/provenance.metadata.v1.MsgWriteSessionRequest"
 	TypeURLMsgWriteRecordRequest                     = "/provenance.metadata.v1.MsgWriteRecordRequest"
 	TypeURLMsgDeleteRecordRequest                    = "/provenance.metadata.v1.MsgDeleteRecordRequest"
@@ -53,6 +54,7 @@ var (
 	_ MetadataMsg = (*MsgAddScopeOwnerRequest)(nil)
 	_ MetadataMsg = (*MsgDeleteScopeOwnerRequest)(nil)
 	_ MetadataMsg = (*MsgUpdateValueOwnersRequest)(nil)
+	_ MetadataMsg = (*MsgMigrateValueOwnerRequest)(nil)
 	_ MetadataMsg = (*MsgWriteSessionRequest)(nil)
 	_ MetadataMsg = (*MsgWriteRecordRequest)(nil)
 	_ MetadataMsg = (*MsgDeleteRecordRequest)(nil)
@@ -369,6 +371,45 @@ func (msg MsgUpdateValueOwnersRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.ValueOwnerAddress)
 	if err != nil {
 		return fmt.Errorf("invalid value owner address: %w", err)
+	}
+
+	if len(msg.Signers) == 0 {
+		return fmt.Errorf("at least one signer is required")
+	}
+
+	return nil
+}
+
+// ------------------  MsgMigrateValueOwnerRequest  ------------------
+
+// NewMsgMigrateValueOwnerRequest creates a new msg instance
+func NewMsgMigrateValueOwnerRequest(existing, proposed sdk.AccAddress, signers []string) *MsgMigrateValueOwnerRequest {
+	return &MsgMigrateValueOwnerRequest{
+		Existing: existing.String(),
+		Proposed: proposed.String(),
+		Signers:  signers,
+	}
+}
+
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
+func (msg MsgMigrateValueOwnerRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
+func (msg MsgMigrateValueOwnerRequest) GetSignerStrs() []string {
+	return msg.Signers
+}
+
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
+func (msg MsgMigrateValueOwnerRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Existing)
+	if err != nil {
+		return fmt.Errorf("invalid existing value owner address: %w", err)
+	}
+	_, err = sdk.AccAddressFromBech32(msg.Proposed)
+	if err != nil {
+		return fmt.Errorf("invalid proposed value owner address: %w", err)
 	}
 
 	if len(msg.Signers) == 0 {
