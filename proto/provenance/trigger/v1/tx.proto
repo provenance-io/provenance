@@ -26,7 +26,7 @@ message MsgCreateTriggerRequest {
   // The event that must be detected for the trigger to fire.
   Event event = 2 [(gogoproto.nullable) = false];
   // The message to run when the trigger fires.
-  google.protobuf.Any action = 3 [(gogoproto.nullable) = false];
+  google.protobuf.Any action = 3;
 }
 
 // MsgCreateTriggerResponse is the response type for creating a trigger RPC
