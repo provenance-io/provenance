@@ -439,11 +439,7 @@ func (s *ScopeKeeperTestSuite) TestIterateScopesForValueOwner() {
 				err = s.app.MetadataKeeper.IterateScopesForValueOwner(s.FreshCtx(), tc.valueOwner, handler)
 			}
 			s.Require().NotPanics(testFunc, "IterateScopesForValueOwner")
-			if len(tc.expErr) > 0 {
-				s.Assert().EqualError(err, tc.expErr, "IterateScopesForValueOwner")
-			} else {
-				s.Assert().NoError(err, "IterateScopesForValueOwner")
-			}
+			s.AssertErrorValue(err, tc.expErr, "IterateScopesForValueOwner")
 			s.Assert().Equal(tc.expScopeIDs, scopeIDs, "scope ids iterated")
 		})
 	}
