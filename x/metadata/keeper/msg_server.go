@@ -209,7 +209,7 @@ func (k msgServer) MigrateValueOwner(
 	goCtx context.Context,
 	msg *types.MsgMigrateValueOwnerRequest,
 ) (*types.MsgMigrateValueOwnerResponse, error) {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "UpdateValueOwners")
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "MigrateValueOwner")
 	ctx := UnwrapMetadataContext(goCtx)
 
 	var scopes []*types.Scope
