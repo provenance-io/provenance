@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -36,6 +37,13 @@ func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTrig
 		// Throw an error
 		return nil, err
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTriggerCreated,
+			sdk.NewAttribute(types.AttributeKeyTriggerID, fmt.Sprintf("%d", id)),
+		),
+	)
 
 	return &types.MsgCreateTriggerResponse{Id: trigger.GetId()}, nil
 }
