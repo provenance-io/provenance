@@ -590,7 +590,14 @@ func NewMsgUpdateRequiredAttributesRequest(denom string, transferAuthority sdk.A
 }
 
 func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
-	return nil
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return fmt.Errorf(err.Error())
+	}
+	if len(msg.AddRequiredAttributes) == 0 && len(msg.RemoveRequiredAttributes) == 0 {
+		return fmt.Errorf("both add and remove lists cannot be empty")
+	}
+	_, err := sdk.AccAddressFromBech32(msg.TransferAuthority)
+	return err
 }
 
 func (msg *MsgUpdateRequiredAttributesRequest) GetSigners() []sdk.AccAddress {
