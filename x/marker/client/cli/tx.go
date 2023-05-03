@@ -1021,6 +1021,9 @@ func GetCmdUpdateRequiredAttributes() *cobra.Command {
 				if govErr != nil {
 					return govErr
 				}
+				if deposit.Empty() {
+					return fmt.Errorf("deposit for gov proposal was not set.  Use %s flag to set deposit", FlagDeposit)
+				}
 				metadata, govErr := cmd.Flags().GetString(FlagMetadata)
 				if govErr != nil {
 					return fmt.Errorf("name metadata: %w", govErr)
