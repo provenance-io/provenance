@@ -41,6 +41,7 @@ func NewTxCmd() *cobra.Command {
 		AddRemoveScopeDataAccessCmd(),
 		AddRemoveScopeOwnersCmd(),
 		UpdateValueOwnersCmd(),
+		MigrateValueOwnerCmd(),
 
 		BindOsLocatorCmd(),
 		RemoveOsLocatorCmd(),
@@ -306,9 +307,9 @@ $ %[1]s tx metadata scope-owners remove scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn
 func UpdateValueOwnersCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "update-value-owners <new value owner> <scope id> [<scope id 2> ...]",
-		Aliases: []string{"update-value-owner", "value-owners", "value-owner", "uvo"},
+		Aliases: []string{"update-value-owner", "uvo"},
 		Short:   "Update the value owner of one or more scopes.",
-		Example: fmt.Sprintf(`$ %[1]s tx metadata "update-value-owners pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42 scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn scope1qqg3uff00wpy2yuf7xr0rp8aucqs902xhw`,
+		Example: fmt.Sprintf(`$ %[1]s tx metadata update-value-owners pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42 scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn scope1qqg3uff00wpy2yuf7xr0rp8aucqs902xhw`,
 			version.AppName),
 		Args: cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -342,6 +343,56 @@ func UpdateValueOwnersCmd() *cobra.Command {
 				ScopeIds:          scopeIDs,
 				ValueOwnerAddress: args[0],
 				Signers:           signers,
+			}
+
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	addSignersFlagToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// MigrateValueOwnerCmd creates a command for migrating the scopes of one value owner to another.
+func MigrateValueOwnerCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "migrate-value-owner <existing value owner> <proposed value owner>",
+		Aliases: []string{"mvo"},
+		Short:   "Migrate the scopes of one value owner to another.",
+		Example: fmt.Sprintf(`$ %[1]s tx metadata migrate-value-owner pb1sh49f6ze3vn7cdl2amh2gnc70z5mten3dpvr42 pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk`,
+			version.AppName),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			_, err = sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid existing value owner %q: %w", args[0], err)
+			}
+			_, err = sdk.AccAddressFromBech32(args[1])
+			if err != nil {
+				return fmt.Errorf("invalid proposed value owner %q: %w", args[1], err)
+			}
+
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgMigrateValueOwnerRequest{
+				Existing: args[0],
+				Proposed: args[1],
+				Signers:  signers,
 			}
 
 			err = msg.ValidateBasic()

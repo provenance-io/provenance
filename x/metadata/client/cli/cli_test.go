@@ -2283,7 +2283,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 	runTxCmdTestCases(s, testCases)
 }
 
-func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
+func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String()
 	scopeID1 := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
 	scopeID2 := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
@@ -2298,6 +2298,9 @@ func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
 	skipConfFlag := fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation)
 	broadcastBlockFlag := fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock)
 
+	queryCmd := func() *cobra.Command {
+		return cli.GetMetadataScopeCmd()
+	}
 	queryTests := func(scope1ValueOwner, scope2ValueOwner, scope3ValueOwner string) []queryCmdTestCase {
 		return []queryCmdTestCase{
 			{
@@ -2314,9 +2317,6 @@ func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
 			},
 		}
 	}
-	queryCmd := func() *cobra.Command {
-		return cli.GetMetadataScopeCmd()
-	}
 
 	tests := []struct {
 		txs     []txCmdTestCase
@@ -2326,7 +2326,7 @@ func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
 			// Some failures that come from cmd.RunE.
 			txs: []txCmdTestCase{
 				{
-					name: "only 1 arg",
+					name: "update: only 1 arg",
 					cmd:  cli.UpdateValueOwnersCmd(),
 					args: []string{
 						s.user2AddrStr,
@@ -2335,7 +2335,7 @@ func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
 					expectErrMsg: "requires at least 2 arg(s), only received 1",
 				},
 				{
-					name: "invalid value owner",
+					name: "update: invalid value owner",
 					cmd:  cli.UpdateValueOwnersCmd(),
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
@@ -2345,7 +2345,7 @@ func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
 					expectErrMsg: "invalid new value owner \"notabech32\": decoding bech32 failed: invalid separator index -1",
 				},
 				{
-					name: "invalid scope id",
+					name: "update: invalid scope id",
 					cmd:  cli.UpdateValueOwnersCmd(),
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
@@ -2354,11 +2354,60 @@ func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
 					expectErrMsg: fmt.Sprintf("invalid scope id %d %q: %s", 2, scopeSpecID, "not a scope identifier"),
 				},
 				{
-					name: "invalid signers",
+					name: "update: invalid signers",
 					cmd:  cli.UpdateValueOwnersCmd(),
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
 						s.user1AddrStr, scopeID1, scopeID2,
+						"--" + cli.FlagSigners, "notabech32",
+						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					expectErrMsg: "decoding bech32 failed: invalid separator index -1",
+				},
+				{
+					name: "migrate: only 1 arg",
+					cmd:  cli.MigrateValueOwnerCmd(),
+					args: []string{
+						s.user2AddrStr,
+						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					expectErrMsg: "accepts 2 arg(s), received 1",
+				},
+				{
+					name: "migrate: 3 args",
+					cmd:  cli.MigrateValueOwnerCmd(),
+					args: []string{
+						s.user1AddrStr, s.user2AddrStr, s.user3AddrStr,
+						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					expectErrMsg: "accepts 2 arg(s), received 3",
+				},
+				{
+					name: "migrate: invalid existing value owner",
+					cmd:  cli.MigrateValueOwnerCmd(),
+					// <new value owner> <scope id> [<scope id 2> ...]
+					args: []string{
+						"notabech32", s.user2AddrStr,
+						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					expectErrMsg: "invalid existing value owner \"notabech32\": decoding bech32 failed: invalid separator index -1",
+				},
+				{
+					name: "migrate: invalid proposed value owner",
+					cmd:  cli.MigrateValueOwnerCmd(),
+					// <new value owner> <scope id> [<scope id 2> ...]
+					args: []string{
+						s.user2AddrStr, "notabech32",
+						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					expectErrMsg: "invalid proposed value owner \"notabech32\": decoding bech32 failed: invalid separator index -1",
+				},
+				{
+					name: "migrate: invalid signers",
+					cmd:  cli.MigrateValueOwnerCmd(),
+					// <new value owner> <scope id> [<scope id 2> ...]
+					args: []string{
+						s.user1AddrStr, s.user2AddrStr,
 						"--" + cli.FlagSigners, "notabech32",
 						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 					},
@@ -2419,7 +2468,7 @@ func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
 			// Some failures from the keeper.
 			txs: []txCmdTestCase{
 				{
-					name: "update scopes 1 and 2 with incorrect signer",
+					name: "update: incorrect signer",
 					cmd:  cli.UpdateValueOwnersCmd(),
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
@@ -2430,7 +2479,7 @@ func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
 					expectedCode: 1,
 				},
 				{
-					name: "missing signature from 1 of 3 scopes",
+					name: "update: missing signature",
 					cmd:  cli.UpdateValueOwnersCmd(),
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
@@ -2440,12 +2489,23 @@ func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
 					respType:     &sdk.TxResponse{},
 					expectedCode: 1,
 				},
+				{
+					name: "migrate: incorrect signer",
+					cmd:  cli.MigrateValueOwnerCmd(),
+					// <new value owner> <scope id> [<scope id 2> ...]
+					args: []string{
+						s.user1AddrStr, s.user2AddrStr,
+						fromFlag(s.accountAddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+					},
+					respType:     &sdk.TxResponse{},
+					expectedCode: 1,
+				},
 			},
 		},
 		{
 			// A single update of two scopes.
 			txs: []txCmdTestCase{{
-				name: "update scopes 1 and 2 to user 2",
+				name: "update: scopes 1 and 2 to user 2",
 				cmd:  cli.UpdateValueOwnersCmd(),
 				// <new value owner> <scope id> [<scope id 2> ...]
 				args: []string{
@@ -2459,7 +2519,7 @@ func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
 		{
 			// A single update of 3 scopes.
 			txs: []txCmdTestCase{{
-				name: "update scopes 1 2 and 3 to user 3",
+				name: "update: scopes 1 2 and 3 to user 3",
 				cmd:  cli.UpdateValueOwnersCmd(),
 				// <new value owner> <scope id> [<scope id 2> ...]
 				args: []string{
@@ -2474,7 +2534,7 @@ func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
 			// Two updates of two different scopes.
 			txs: []txCmdTestCase{
 				{
-					name: "3: update scope 1 to user 1",
+					name: "update: scope 1 to user 1",
 					cmd:  cli.UpdateValueOwnersCmd(),
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
@@ -2484,7 +2544,7 @@ func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
 					respType: &sdk.TxResponse{},
 				},
 				{
-					name: "3: update scope 2 to user 2",
+					name: "update: scope 2 to user 2",
 					cmd:  cli.UpdateValueOwnersCmd(),
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
@@ -2495,6 +2555,34 @@ func (s *IntegrationCLITestSuite) TestUpdateValueOwnersCmd() {
 				},
 			},
 			queries: queryTests(s.user1AddrStr, s.user2AddrStr, s.user3AddrStr),
+		},
+		{
+			// A single migrate of 1 scope.
+			txs: []txCmdTestCase{{
+				name: "migrate: user 1 scope to user 2",
+				cmd:  cli.MigrateValueOwnerCmd(),
+				// <new value owner> <scope id> [<scope id 2> ...]
+				args: []string{
+					s.user1AddrStr, s.user2AddrStr,
+					fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+				},
+				respType: &sdk.TxResponse{},
+			}},
+			queries: queryTests(s.user2AddrStr, s.user2AddrStr, s.user3AddrStr),
+		},
+		{
+			// A single migrate of 2 scopes.
+			txs: []txCmdTestCase{{
+				name: "migrate: user 2 scopes to user 3",
+				cmd:  cli.MigrateValueOwnerCmd(),
+				// <new value owner> <scope id> [<scope id 2> ...]
+				args: []string{
+					s.user2AddrStr, s.user3AddrStr,
+					fromFlag(s.user2AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
+				},
+				respType: &sdk.TxResponse{},
+			}},
+			queries: queryTests(s.user3AddrStr, s.user3AddrStr, s.user3AddrStr),
 		},
 	}
 
