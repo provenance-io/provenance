@@ -1012,21 +1012,22 @@ func GetCmdUpdateRequiredAttributes() *cobra.Command {
 
 			var msg sdk.Msg
 			if isGov {
-				depositArg, err := cmd.Flags().GetString(FlagDeposit)
-				if err != nil {
-					return err
+				var govErr error
+				depositArg, govErr := cmd.Flags().GetString(FlagDeposit)
+				if govErr != nil {
+					return govErr
 				}
-				deposit, err := sdk.ParseCoinsNormalized(depositArg)
-				if err != nil {
-					return err
+				deposit, govErr := sdk.ParseCoinsNormalized(depositArg)
+				if govErr != nil {
+					return govErr
 				}
-				metadata, err := cmd.Flags().GetString(FlagMetadata)
-				if err != nil {
-					return fmt.Errorf("name metadata: %w", err)
+				metadata, govErr := cmd.Flags().GetString(FlagMetadata)
+				if govErr != nil {
+					return fmt.Errorf("name metadata: %w", govErr)
 				}
-				msg, err = govtypesv1.NewMsgSubmitProposal([]sdk.Msg{req}, deposit, clientCtx.GetFromAddress().String(), metadata)
-				if err != nil {
-					return err
+				msg, govErr = govtypesv1.NewMsgSubmitProposal([]sdk.Msg{req}, deposit, clientCtx.GetFromAddress().String(), metadata)
+				if govErr != nil {
+					return govErr
 				}
 			} else {
 				msg = req
