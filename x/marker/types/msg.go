@@ -579,6 +579,16 @@ func (msg *MsgSupplyIncreaseProposalRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
+// NewMsgUpdateRequiredAttributesRequest creates a MsgUpdateRequiredAttributesRequest
+func NewMsgUpdateRequiredAttributesRequest(denom string, transferAuthority sdk.AccAddress, removeRequiredAttributes, addRequiredAttributes []string) *MsgUpdateRequiredAttributesRequest {
+	return &MsgUpdateRequiredAttributesRequest{
+		Denom:                    denom,
+		TransferAuthority:        transferAuthority.String(),
+		RemoveRequiredAttributes: removeRequiredAttributes,
+		AddRequiredAttributes:    addRequiredAttributes,
+	}
+}
+
 func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
 	return nil
 }

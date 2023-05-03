@@ -650,6 +650,9 @@ func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.Ms
 	if err != nil {
 		return nil, fmt.Errorf("marker not found for %s: %w", msg.Denom, err)
 	}
+	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
+		return nil, fmt.Errorf("marker %s is not a restricted marker", msg.Denom)
+	}
 
 	caller, err := sdk.AccAddressFromBech32(msg.TransferAuthority)
 	if err != nil {
@@ -670,7 +673,7 @@ func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 
-	reqAttrs, err := RemovesFromRequiredAttributes(msg.GetAddRequiredAttributes(), removeList)
+	reqAttrs, err := RemovesFromRequiredAttributes(m.GetRequiredAttributes(), removeList)
 	if err != nil {
 		return nil, err
 	}
@@ -689,5 +692,5 @@ func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.Ms
 		),
 	)
 
-	return nil, nil
+	return &types.MsgUpdateRequiredAttributesResponse{}, nil
 }
