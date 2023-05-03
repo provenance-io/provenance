@@ -945,7 +945,7 @@ contractspec-name
 	return cmd
 }
 
-// WriteRecordSpecificationCmd creates a commmand for writing a record specification.
+// WriteRecordSpecificationCmd creates a command for writing a record specification.
 func WriteRecordSpecificationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "write-record-specification [specification-id] [name] [input-specifications] [type-name] [result-types] [responsible-parties]",
