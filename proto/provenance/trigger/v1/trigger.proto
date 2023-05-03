@@ -2,6 +2,7 @@ syntax = "proto3";
 package provenance.trigger.v1;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/trigger/types";
 option java_package        = "io.provenance.trigger.v1";
@@ -14,4 +15,28 @@ message Trigger {
 
   // An integer to uniquely identify the trigger.
   uint64 id = 1;
+  // The event that must be detected for the trigger to fire.
+  Event event = 2 [(gogoproto.nullable) = false];
+  // The message to run when the trigger fires.
+  google.protobuf.Any action = 3;
+}
+
+message Event {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // The name of the event for a match.
+  string name = 1;
+  // The attributes that must be present for a match.
+  repeated Attribute attributes = 2 [(gogoproto.nullable) = false];
+}
+
+message Attribute {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // The name of the attribute that the event must have to be considered a match.
+  string name = 1;
+  // The value of the attribute that the event must have to be considered a match.
+  string value = 2;
 }

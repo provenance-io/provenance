@@ -418,6 +418,8 @@
     - [Msg](#provenance.reward.v1.Msg)
   
 - [provenance/trigger/v1/trigger.proto](#provenance/trigger/v1/trigger.proto)
+    - [Attribute](#provenance.trigger.v1.Attribute)
+    - [Event](#provenance.trigger.v1.Event)
     - [Trigger](#provenance.trigger.v1.Trigger)
   
 - [provenance/trigger/v1/genesis.proto](#provenance/trigger/v1/genesis.proto)
@@ -6288,6 +6290,38 @@ Msg
 
 
 
+<a name="provenance.trigger.v1.Attribute"></a>
+
+### Attribute
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | The name of the attribute that the event must have to be considered a match. |
+| `value` | [string](#string) |  | The value of the attribute that the event must have to be considered a match. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.Event"></a>
+
+### Event
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | The name of the event for a match. |
+| `attributes` | [Attribute](#provenance.trigger.v1.Attribute) | repeated | The attributes that must be present for a match. |
+
+
+
+
+
+
 <a name="provenance.trigger.v1.Trigger"></a>
 
 ### Trigger
@@ -6297,6 +6331,8 @@ Trigger
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `id` | [uint64](#uint64) |  | An integer to uniquely identify the trigger. |
+| `event` | [Event](#provenance.trigger.v1.Event) |  | The event that must be detected for the trigger to fire. |
+| `action` | [google.protobuf.Any](#google.protobuf.Any) |  | The message to run when the trigger fires. |
 
 
 
@@ -6410,6 +6446,13 @@ Query defines the gRPC querier service for trigger module.
 
 ### MsgCreateTriggerRequest
 MsgCreateTriggerRequest is the request type for creating a trigger RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | The signing authority for the request |
+| `event` | [Event](#provenance.trigger.v1.Event) |  | The event that must be detected for the trigger to fire. |
+| `action` | [google.protobuf.Any](#google.protobuf.Any) |  | The message to run when the trigger fires. |
 
 
 
