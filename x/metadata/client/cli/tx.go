@@ -318,15 +318,17 @@ func UpdateValueOwnersCmd() *cobra.Command {
 				return err
 			}
 
-			_, err = sdk.AccAddressFromBech32(args[0])
+			msg := &types.MsgUpdateValueOwnersRequest{}
+
+			msg.ValueOwnerAddress, err = validateAccAddress(args[0], "new value owner")
 			if err != nil {
-				return fmt.Errorf("invalid new value owner %q: %w", args[0], err)
+				return err
 			}
 
-			scopeIDs := make([]types.MetadataAddress, len(args[1:]))
+			msg.ScopeIds = make([]types.MetadataAddress, len(args[1:]))
 			for i, arg := range args[1:] {
-				scopeIDs[i], err = types.MetadataAddressFromBech32(arg)
-				if err == nil && !scopeIDs[i].IsScopeAddress() {
+				msg.ScopeIds[i], err = types.MetadataAddressFromBech32(arg)
+				if err == nil && !msg.ScopeIds[i].IsScopeAddress() {
 					err = fmt.Errorf("not a scope identifier")
 				}
 				if err != nil {
@@ -334,15 +336,9 @@ func UpdateValueOwnersCmd() *cobra.Command {
 				}
 			}
 
-			signers, err := parseSigners(cmd, &clientCtx)
+			msg.Signers, err = parseSigners(cmd, &clientCtx)
 			if err != nil {
 				return err
-			}
-
-			msg := &types.MsgUpdateValueOwnersRequest{
-				ScopeIds:          scopeIDs,
-				ValueOwnerAddress: args[0],
-				Signers:           signers,
 			}
 
 			err = msg.ValidateBasic()
@@ -375,24 +371,20 @@ func MigrateValueOwnerCmd() *cobra.Command {
 				return err
 			}
 
-			_, err = sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return fmt.Errorf("invalid existing value owner %q: %w", args[0], err)
-			}
-			_, err = sdk.AccAddressFromBech32(args[1])
-			if err != nil {
-				return fmt.Errorf("invalid proposed value owner %q: %w", args[1], err)
-			}
-
-			signers, err := parseSigners(cmd, &clientCtx)
+			msg := &types.MsgMigrateValueOwnerRequest{}
+			msg.Existing, err = validateAccAddress(args[0], "existing value owner")
 			if err != nil {
 				return err
 			}
 
-			msg := &types.MsgMigrateValueOwnerRequest{
-				Existing: args[0],
-				Proposed: args[1],
-				Signers:  signers,
+			msg.Proposed, err = validateAccAddress(args[1], "proposed value owner")
+			if err != nil {
+				return err
+			}
+
+			msg.Signers, err = parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
 			}
 
 			err = msg.ValidateBasic()
@@ -1232,4 +1224,15 @@ func parseSigners(cmd *cobra.Command, client *client.Context) ([]string, error) 
 		return signers, nil
 	}
 	return []string{client.GetFromAddress().String()}, nil
+}
+
+// validateAccAddress makes sure the provided addr is a valid bech32.
+// If not, an error is returned indicating the argName field.
+// If it's valid, it's returned as the first arg.
+func validateAccAddress(addr, argName string) (string, error) {
+	_, err := sdk.AccAddressFromBech32(addr)
+	if err != nil {
+		return "", fmt.Errorf("invalid %s %q: %w", argName, addr, err)
+	}
+	return addr, nil
 }
