@@ -44,7 +44,12 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 		return nil
 	}
 
-	// If the from address has authority it is allowed to send to receiver without checking of attributes
+	// only accounts with deposit access can send coin to escrow account
+	if markerAddr.Equals(toAddr) && !marker.AddressHasAccess(fromAddr, types.Access_Deposit) {
+		return fmt.Errorf("%s does not have deposit access for %s", fromAddr.String(), denom)
+	}
+
+	// If the from address has transfer authority it is allowed to send to receiver without checking of attributes
 	if marker.AddressHasAccess(fromAddr, types.Access_Transfer) {
 		return nil
 	}

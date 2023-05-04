@@ -58,6 +58,7 @@ func TestSendRestrictionFn(t *testing.T) {
 
 	addrWithoutAttrs := sdk.AccAddress("addr_without_attribs")
 	addrWithTransfer := sdk.AccAddress("addr_with_transfer__")
+	addrWithDeposit := sdk.AccAddress("addrWithDeposit_____")
 
 	coin := types.MarkerType_Coin
 	restricted := types.MarkerType_RestrictedCoin
@@ -70,6 +71,7 @@ func TestSendRestrictionFn(t *testing.T) {
 		if markerType == restricted {
 			access = []types.AccessGrant{
 				{Address: addrWithTransfer.String(), Permissions: types.AccessList{types.Access_Transfer}},
+				{Address: addrWithDeposit.String(), Permissions: types.AccessList{types.Access_Deposit}},
 			}
 		}
 		rv := types.NewMarkerAccount(
@@ -92,7 +94,7 @@ func TestSendRestrictionFn(t *testing.T) {
 	newMarker(nrDenom, coin, nil)
 
 	rDenomNoAttr := "restrictedmarkernoreqattributes"
-	newMarker(rDenomNoAttr, restricted, nil)
+	rMarkerNoAttr := newMarker(rDenomNoAttr, restricted, nil)
 
 	rDenom1AttrNoOneHas := "restrictedmarkerreqattributes2"
 	newMarker(rDenom1AttrNoOneHas, restricted, []string{"some.attribute.that.i.require"})
@@ -249,6 +251,20 @@ func TestSendRestrictionFn(t *testing.T) {
 			amt:  cz(c(1, rDenom1AttrNoOneHas), c(1, nrDenom)),
 			expErr: fmt.Sprintf("address %s does not contain the %q required attribute: \"some.attribute.that.i.require\"",
 				addrWithAttrsStr, rDenom1AttrNoOneHas),
+		},
+		{
+			name:   "send to marker from account without deposit",
+			from:   addrWithAttrs,
+			to:     rMarkerNoAttr.GetAddress(),
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: addrWithAttrsStr + " does not have deposit access for " + rDenomNoAttr,
+		},
+		{
+			name:   "send to marker from account with deposit",
+			from:   addrWithDeposit,
+			to:     rMarkerNoAttr.GetAddress(),
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: "",
 		},
 	}
 
