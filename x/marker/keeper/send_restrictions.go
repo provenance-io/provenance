@@ -35,6 +35,11 @@ func (k Keeper) AllowMarkerSend(ctx sdk.Context, from, to, denom string) error {
 		return nil
 	}
 
+	// only accounts with deposit access can send coin to escrow account
+	if to == markerAddr.String() && !marker.AddressHasAccess(caller, types.Access_Deposit) {
+		return fmt.Errorf("%s does not have deposit access for %s", from, denom)
+	}
+
 	if marker.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return nil
 	}
