@@ -91,7 +91,7 @@ func TestSendRestrictionFn(t *testing.T) {
 	}
 
 	nrDenom := "nonrestrictedmarker"
-	newMarker(nrDenom, coin, nil)
+	nrMarker := newMarker(nrDenom, coin, nil)
 
 	rDenomNoAttr := "restrictedmarkernoreqattributes"
 	rMarkerNoAttr := newMarker(rDenomNoAttr, restricted, nil)
@@ -265,6 +265,13 @@ func TestSendRestrictionFn(t *testing.T) {
 			to:     rMarkerNoAttr.GetAddress(),
 			amt:    cz(c(1, rDenomNoAttr)),
 			expErr: "",
+		},
+		{
+			name:   "send to another marker",
+			from:   addrWithDeposit,
+			to:     nrMarker.GetAddress(),
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: "cannot send " + rDenomNoAttr + " to different marker account \"" + nrMarker.GetAddress().String() + "\" (" + nrDenom + ")",
 		},
 	}
 
