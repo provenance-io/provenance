@@ -9,6 +9,7 @@ import (
 func (k Keeper) SetTrigger(ctx sdk.Context, trigger triggertypes.Trigger) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&trigger)
+
 	store.Set(triggertypes.GetTriggerKey(trigger.GetId()), bz)
 }
 
@@ -23,15 +24,15 @@ func (k Keeper) RemoveTrigger(ctx sdk.Context, id triggertypes.TriggerID) bool {
 	return keyExists
 }
 
-// RemoveTrigger Gets a trigger by id
-func (k Keeper) GetTrigger(ctx sdk.Context, id triggertypes.TriggerID) (trigger *triggertypes.Trigger, err error) {
+// GetTrigger Gets a trigger by id
+func (k Keeper) GetTrigger(ctx sdk.Context, id triggertypes.TriggerID) (trigger triggertypes.Trigger, err error) {
 	store := ctx.KVStore(k.storeKey)
 	key := triggertypes.GetTriggerKey(id)
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return trigger, triggertypes.ErrTriggerNotFound
 	}
-	err = k.cdc.Unmarshal(bz, trigger)
+	err = k.cdc.Unmarshal(bz, &trigger)
 	return trigger, err
 }
 
@@ -59,7 +60,7 @@ func (k Keeper) IterateTriggers(ctx sdk.Context, handle func(trigger triggertype
 
 func (k Keeper) GetTriggerID(ctx sdk.Context) (triggerID triggertypes.TriggerID) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(triggertypes.GetTriggerIDKey())
+	bz := store.Get(triggertypes.GetNextTriggerIDKey())
 	if bz == nil {
 		return 1
 	}
@@ -68,16 +69,16 @@ func (k Keeper) GetTriggerID(ctx sdk.Context) (triggerID triggertypes.TriggerID)
 	return triggerID
 }
 
-func (k Keeper) NewTriggerWithID(ctx sdk.Context, owner string, event triggertypes.Event, action *types.Any) (*triggertypes.Trigger, error) {
+func (k Keeper) NewTriggerWithID(ctx sdk.Context, owner string, event triggertypes.Event, action *types.Any) (triggertypes.Trigger, error) {
 	id := k.getNextTriggerID(ctx)
 	trigger := triggertypes.NewTrigger(id, owner, event, action)
-	return &trigger, nil
+	return trigger, nil
 }
 
 func (k Keeper) setTriggerID(ctx sdk.Context, triggerID triggertypes.TriggerID) {
 	store := ctx.KVStore(k.storeKey)
 	bz := triggertypes.GetTriggerIDBytes(triggerID)
-	store.Set(triggertypes.GetTriggerIDKey(), bz)
+	store.Set(triggertypes.GetNextTriggerIDKey(), bz)
 }
 
 func (k Keeper) getNextTriggerID(ctx sdk.Context) (triggerID triggertypes.TriggerID) {

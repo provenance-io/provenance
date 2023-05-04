@@ -23,5 +23,5 @@ func (k Keeper) TriggerByID(ctx context.Context, req *types.QueryTriggerByIDRequ
 		// TODO Return an error here
 		return nil, nil
 	}
-	return &types.QueryTriggerByIDResponse{Trigger: trigger}, nil
+	return &types.QueryTriggerByIDResponse{Trigger: &trigger}, nil
 }

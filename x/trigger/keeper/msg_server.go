@@ -31,7 +31,7 @@ func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTrig
 		return nil, err
 	}
 
-	s.SetTrigger(ctx, *trigger)
+	s.SetTrigger(ctx, trigger)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
