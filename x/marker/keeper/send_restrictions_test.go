@@ -47,6 +47,8 @@ func TestAllowMarkerSend(t *testing.T) {
 		},
 		owner,
 	)
+	acctWithoutDepositAccess := testUserAddress("acctWithoutDepositAccess")
+
 	nrMarkerDenom := "nonrestrictedmarker"
 	nrMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(nrMarkerDenom), nil, 0, 0)
 	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(nrMarkerAcct, sdk.NewInt64Coin(nrMarkerDenom, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_Coin, true, true, false, []string{}))
@@ -74,6 +76,12 @@ func TestAllowMarkerSend(t *testing.T) {
 	rMarkerAcct5 := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom5), nil, 5, 0)
 	rMarker5 := types.NewMarkerAccount(rMarkerAcct5, sdk.NewInt64Coin(rMarkerDenom5, 1000), acct.GetAddress(), nil, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{"kyc.provenance.io", "not-kyc.provenance.io", "foo.provenance.io"})
 	app.MarkerKeeper.SetMarker(ctx, rMarker5)
+
+	dMarkerDenom := "depositaccessdenom"
+	dMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(dMarkerDenom), nil, 5, 0)
+	dMarker := types.NewMarkerAccount(dMarkerAcct, sdk.NewInt64Coin(dMarkerDenom, 1000), acct.GetAddress(),
+		[]types.AccessGrant{*types.NewAccessGrant(owner, []types.Access{types.Access_Deposit})}, types.StatusFinalized, types.MarkerType_Coin, true, true, false, []string{})
+	app.MarkerKeeper.SetMarker(ctx, dMarker)
 
 	testCases := []struct {
 		name          string
@@ -132,11 +140,25 @@ func TestAllowMarkerSend(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			name:          "should succeed - account contains the both needed attribute",
+			name:          "should fail - account does not contain needed attribute",
 			from:          acct.GetAddress().String(),
 			to:            acctWithAttrs,
 			denom:         rMarkerDenom5,
 			expectedError: fmt.Sprintf("address %s does not contain the required attributes %v", acctWithAttrs, rMarker5.GetRequiredAttributes()),
+		},
+		{
+			name:          "should fail - to send marker to escrow without deposit access",
+			from:          acctWithoutDepositAccess.String(),
+			to:            types.MustGetMarkerAddress(dMarkerDenom).String(),
+			denom:         dMarkerDenom,
+			expectedError: fmt.Sprintf("%s does not have deposit access for %v", acctWithoutDepositAccess.String(), dMarkerDenom),
+		},
+		{
+			name:          "should succeed - to send marker to escrow user had deposit rights",
+			from:          acct.GetAddress().String(),
+			to:            types.MustGetMarkerAddress(dMarkerDenom).String(),
+			denom:         dMarkerDenom,
+			expectedError: "",
 		},
 	}
 	for _, tc := range testCases {
