@@ -89,6 +89,9 @@ func (s *ScopeKeeperTestSuite) FreshCtx() sdk.Context {
 	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{}))
 }
 
+// AssertErrorValue asserts that:
+//   - If errorString is empty, theError must be nil
+//   - If errorString is not empty, theError must equal the errorString.
 func (s *ScopeKeeperTestSuite) AssertErrorValue(theError error, errorString string, msgAndArgs ...interface{}) bool {
 	s.T().Helper()
 	return AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
