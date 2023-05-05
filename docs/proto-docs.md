@@ -420,6 +420,7 @@
 - [provenance/trigger/v1/trigger.proto](#provenance/trigger/v1/trigger.proto)
     - [Attribute](#provenance.trigger.v1.Attribute)
     - [Event](#provenance.trigger.v1.Event)
+    - [QueuedTrigger](#provenance.trigger.v1.QueuedTrigger)
     - [Trigger](#provenance.trigger.v1.Trigger)
   
 - [provenance/trigger/v1/genesis.proto](#provenance/trigger/v1/genesis.proto)
@@ -6316,6 +6317,23 @@ Msg
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  | The name of the event for a match. |
 | `attributes` | [Attribute](#provenance.trigger.v1.Attribute) | repeated | The attributes that must be present for a match. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.QueuedTrigger"></a>
+
+### QueuedTrigger
+QueuedTrigger
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `block_height` | [uint64](#uint64) |  | The block height the trigger was detected and queued. |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time the trigger was detected and queued. |
+| `trigger` | [Trigger](#provenance.trigger.v1.Trigger) |  | The trigger that was detected. |
 
 
 

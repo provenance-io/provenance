@@ -4,6 +4,7 @@ package provenance.trigger.v1;
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/trigger/types";
 option java_package        = "io.provenance.trigger.v1";
@@ -22,6 +23,19 @@ message Trigger {
   Event event = 3 [(gogoproto.nullable) = false];
   // The message to run when the trigger fires.
   google.protobuf.Any action = 4;
+}
+
+// QueuedTrigger
+message QueuedTrigger {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // The block height the trigger was detected and queued.
+  uint64 block_height = 1;
+  // The time the trigger was detected and queued.
+  google.protobuf.Timestamp time = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // The trigger that was detected.
+  Trigger trigger = 3 [(gogoproto.nullable) = false];
 }
 
 message Event {
