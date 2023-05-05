@@ -1,24 +1,15 @@
-## [v1.15.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc3) - 2023-04-28
+## [v1.15.0](https://github.com/provenance-io/provenance/releases/tag/v1.15.0) - 2023-05-05
 
-### Bug Fixes
+The Provenance Blockchain v1.15.0 release includes several new features, improvements and bug fixes.
 
-* Fix authz + smart contract + value owner updates being too permissive [PR 1519](https://github.com/provenance-io/provenance/pull/1519).
-* Fix metadata params query path in stargate whitelist [#1514](https://github.com/provenance-io/provenance/issues/1514)
+Restricted markers can now be configured to allow transfers to accounts that have specified attributes. Such funds can be transferred using `MsgSend`. Restricted markers can also be configured to allow forced transfers.
 
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0-rc3
-* https://github.com/provenance-io/provenance/compare/v1.15.0-rc2...v1.15.0-rc3
-
----
-
-## [v1.15.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc2) - 2023-04-19
+The `x/metadata` module has been given added WASM support. Also, now, a specification can require multiple parties with the same role but different addresses. There is also a new, alternative method of party/role/signer validation available. Scopes that require party rollup can contain optional parties and the parties in its sessions must also be noted as owners in the scope. When records are written to such scopes, there must be a signing party for each role required by the specification.
 
 ### Features
 
-* Add support for tokens restricted marker sends with required attributes [#1256](https://github.com/provenance-io/provenance/issues/1256))
+* Add support for tokens restricted marker sends with required attributes [#1256](https://github.com/provenance-io/provenance/issues/1256)
 * Allow markers to be configured to allow forced transfers [#1368](https://github.com/provenance-io/provenance/issues/1368).
-* Publish Provenance Protobuf API as a NPM module [#1449](https://github.com/provenance-io/provenance/issues/1449).
 * Add support for account addresses by attribute name lookup [#1447](https://github.com/provenance-io/provenance/issues/1447).
 * Add allow forced transfers support to creating markers from smart contracts [#1458](https://github.com/provenance-io/provenance/issues/1458).
 * Metadata party rollup and optional parties [#1438](https://github.com/provenance-io/provenance/issues/1438).
@@ -40,6 +31,7 @@
   This replaces the old `AddMarkerProposal` governance proposal.
 * Bump wasmvm to 1.1.2 [#1484](https://github.com/provenance-io/provenance/pull/1358).
 * Documented proposing a transaction [#1489](https://github.com/provenance-io/provenance/pull/1489).
+* Add marker address to add marker event [#1499](https://github.com/provenance-io/provenance/issues/1499).
 
 ### Deprecated
 
@@ -51,6 +43,9 @@
 * Fix committer email format in third party Protobuf workflow (for [#1339](https://github.com/provenance-io/provenance/issues/1339)) [PR 1385](https://github.com/provenance-io/provenance/pull/1385)
 * Fix `make proto-gen` [PR 1404](https://github.com/provenance-io/provenance/pull/1404).
 * Fix wasmd transactions that are run by gov module [#1414](https://github.com/provenance-io/provenance/issues/1414)
+* Add support for ibc transfers of restricted tokens [#1502](https://github.com/provenance-io/provenance/issues/1502).
+* Fix authz + smart contract + value owner updates being too permissive [PR 1519](https://github.com/provenance-io/provenance/pull/1519).
+* Fix metadata params query path in stargate whitelist [#1514](https://github.com/provenance-io/provenance/issues/1514)
 
 ### Client Breaking
 
@@ -74,4 +69,4 @@
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0
