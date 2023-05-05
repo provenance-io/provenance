@@ -43,7 +43,7 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 		}
 	}
 	if toMarker != nil && toMarker.GetMarkerType() == types.MarkerType_RestrictedCoin && !toMarker.AddressHasAccess(fromAddr, types.Access_Deposit) {
-		return fmt.Errorf("%s does not have deposit access for %s (%s)", fromAddr.String(), toAddr, toMarker.GetDenom())
+		return fmt.Errorf("%s does not have deposit access for %s (%s)", fromAddr.String(), toAddr.String(), toMarker.GetDenom())
 	}
 
 	markerAddr := types.MustGetMarkerAddress(denom)
