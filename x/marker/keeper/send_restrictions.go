@@ -34,12 +34,16 @@ func (k Keeper) SendRestrictionFn(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 // validateSendDenom makes sure a send of the given denom is allowed for the given addresses.
 // This is NOT the validation that is needed for the marker Transfer endpoint.
 func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, denom string) error {
-	// If it's being sent to a marker, make sure it's the correct marker.
+	// If it's going to a restricted marker, fromAddr must have deposit access on that marker.
+	var toMarker types.MarkerAccountI
 	if toAcct := k.authKeeper.GetAccount(ctx, toAddr); toAcct != nil {
-		toMarker, isMarker := toAcct.(types.MarkerAccountI)
-		if isMarker && toMarker.GetDenom() != denom {
-			return fmt.Errorf("cannot send %s to different marker account %q (%s)", denom, toAddr.String(), toMarker.GetDenom())
+		toAcctAsMarker, isMarker := toAcct.(types.MarkerAccountI)
+		if isMarker {
+			toMarker = toAcctAsMarker
 		}
+	}
+	if toMarker != nil && toMarker.GetMarkerType() == types.MarkerType_RestrictedCoin && !toMarker.AddressHasAccess(fromAddr, types.Access_Deposit) {
+		return fmt.Errorf("%s does not have deposit access for %s (%s)", fromAddr.String(), toAddr, toMarker.GetDenom())
 	}
 
 	markerAddr := types.MustGetMarkerAddress(denom)
@@ -47,29 +51,22 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 	if err != nil {
 		return err
 	}
+
 	// If there's no marker for the denom, or it's not a restricted marker, there's nothing more to do here.
 	if marker == nil || marker.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return nil
 	}
 
-	// only accounts with deposit access can send coin to escrow account
-	if markerAddr.Equals(toAddr) {
-		if !marker.AddressHasAccess(fromAddr, types.Access_Deposit) {
-			return fmt.Errorf("%s does not have deposit access for %s", fromAddr.String(), denom)
-		}
-		// Going to the escrow account, and they have deposit access. Nothing further to check for this one.
-		return nil
-	}
-
-	// If the from address has transfer authority it is allowed to send to receiver without checking of attributes
+	// If the fromAddr has transfer access, there's nothing left to check.
 	if marker.AddressHasAccess(fromAddr, types.Access_Transfer) {
 		return nil
 	}
 
 	reqAttr := marker.GetRequiredAttributes()
 
-	// If there aren't any required attributes, transfers are only allowed by those with transfer permission.
-	if len(reqAttr) == 0 {
+	// If there aren't any required attributes, or it's going to marker, then
+	// transfers are only allowed by those with transfer permission.
+	if len(reqAttr) == 0 || toMarker != nil {
 		return fmt.Errorf("%s does not have transfer permissions", fromAddr.String())
 	}
 
@@ -85,6 +82,7 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 		}
 		return fmt.Errorf("address %s does not contain the %q required attribute%s: \"%s\"", toAddr.String(), denom, pl, strings.Join(missing, `", "`))
 	}
+
 	return nil
 }
 

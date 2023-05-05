@@ -59,6 +59,7 @@ func TestSendRestrictionFn(t *testing.T) {
 	addrWithoutAttrs := sdk.AccAddress("addr_without_attribs")
 	addrWithTransfer := sdk.AccAddress("addr_with_transfer__")
 	addrWithDeposit := sdk.AccAddress("addrWithDeposit_____")
+	addrWithTranDep := sdk.AccAddress("addrWithTranDep_____")
 
 	coin := types.MarkerType_Coin
 	restricted := types.MarkerType_RestrictedCoin
@@ -72,6 +73,7 @@ func TestSendRestrictionFn(t *testing.T) {
 			access = []types.AccessGrant{
 				{Address: addrWithTransfer.String(), Permissions: types.AccessList{types.Access_Transfer}},
 				{Address: addrWithDeposit.String(), Permissions: types.AccessList{types.Access_Deposit}},
+				{Address: addrWithTranDep.String(), Permissions: types.AccessList{types.Access_Deposit, types.Access_Transfer}},
 			}
 		}
 		rv := types.NewMarkerAccount(
@@ -91,7 +93,7 @@ func TestSendRestrictionFn(t *testing.T) {
 	}
 
 	nrDenom := "nonrestrictedmarker"
-	nrMarker := newMarker(nrDenom, coin, nil)
+	newMarker(nrDenom, coin, nil)
 
 	rDenomNoAttr := "restrictedmarkernoreqattributes"
 	rMarkerNoAttr := newMarker(rDenomNoAttr, restricted, nil)
@@ -100,7 +102,7 @@ func TestSendRestrictionFn(t *testing.T) {
 	newMarker(rDenom1AttrNoOneHas, restricted, []string{"some.attribute.that.i.require"})
 
 	rDenom1Attr := "restrictedmarkerreqattributes3"
-	newMarker(rDenom1Attr, restricted, []string{"kyc.provenance.io"})
+	rMarker1Attr := newMarker(rDenom1Attr, restricted, []string{"kyc.provenance.io"})
 
 	rDenom2Attrs := "restrictedmarkerreqattributes4"
 	newMarker(rDenom2Attrs, restricted, []string{"kyc.provenance.io", "not-kyc.provenance.io"})
@@ -253,25 +255,41 @@ func TestSendRestrictionFn(t *testing.T) {
 				addrWithAttrsStr, rDenom1AttrNoOneHas),
 		},
 		{
-			name:   "send to marker from account without deposit",
-			from:   addrWithAttrs,
-			to:     rMarkerNoAttr.GetAddress(),
-			amt:    cz(c(1, rDenomNoAttr)),
-			expErr: addrWithAttrsStr + " does not have deposit access for " + rDenomNoAttr,
+			name: "send to marker from account without deposit",
+			from: addrWithAttrs,
+			to:   rMarkerNoAttr.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+			expErr: fmt.Sprintf("%s does not have deposit access for %s (%s)",
+				addrWithAttrsStr, rMarkerNoAttr.GetAddress().String(), rDenomNoAttr),
 		},
 		{
-			name:   "send to marker from account with deposit",
+			name:   "send to marker from account with deposit but no transfer",
 			from:   addrWithDeposit,
 			to:     rMarkerNoAttr.GetAddress(),
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: addrWithDeposit.String() + " does not have transfer permissions",
+		},
+		{
+			name: "send to another marker with transfer on denom but no deposit on to",
+			from: addrWithTransfer,
+			to:   rMarker1Attr.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+			expErr: fmt.Sprintf("%s does not have deposit access for %s (%s)",
+				addrWithTransfer, rMarker1Attr.GetAddress().String(), rDenom1Attr),
+		},
+		{
+			name:   "send to another marker without transfer on denom but with deposit on to",
+			from:   addrWithDeposit,
+			to:     rMarker1Attr.GetAddress(),
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: addrWithDeposit.String() + " does not have transfer permissions",
+		},
+		{
+			name:   "send to another marker with transfer on denom and deposit on to",
+			from:   addrWithTranDep,
+			to:     rMarker1Attr.GetAddress(),
 			amt:    cz(c(1, rDenomNoAttr)),
 			expErr: "",
-		},
-		{
-			name:   "send to another marker",
-			from:   addrWithDeposit,
-			to:     nrMarker.GetAddress(),
-			amt:    cz(c(1, rDenomNoAttr)),
-			expErr: "cannot send " + rDenomNoAttr + " to different marker account \"" + nrMarker.GetAddress().String() + "\" (" + nrDenom + ")",
 		},
 	}
 
