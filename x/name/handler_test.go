@@ -17,8 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/name"
 	"github.com/provenance-io/provenance/x/name/keeper"
@@ -201,8 +199,14 @@ func TestModifyName(t *testing.T) {
 		expectedEvent proto.Message
 	}{
 		{
-			name:          "modify name record",
+			name:          "modify name record, via gov ",
 			msg:           nametypes.NewMsgModifyNameRequest(authority, "name", addr1, true),
+			expectedError: nil,
+			expectedEvent: nametypes.NewEventNameUpdate(addr1.String(), "name", true),
+		},
+		{
+			name:          "modify name record, via owner",
+			msg:           nametypes.NewMsgModifyNameRequest(addr1.String(), "name", addr1, true),
 			expectedError: nil,
 			expectedEvent: nametypes.NewEventNameUpdate(addr1.String(), "name", true),
 		},
@@ -233,13 +237,13 @@ func TestModifyName(t *testing.T) {
 		{
 			name:          "modify name - fails with invalid authority",
 			msg:           nametypes.NewMsgModifyNameRequest("jackthecat", "name", addr1, true),
-			expectedError: govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", authority, "jackthecat"),
+			expectedError: sdkerrors.ErrUnauthorized.Wrapf("expected %s or %s got %s", authority, addr1.String(), "jackthecat"),
 			expectedEvent: nil,
 		},
 		{
 			name:          "modify name - fails with empty authority",
 			msg:           nametypes.NewMsgModifyNameRequest("", "name", addr1, true),
-			expectedError: govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", authority, ""),
+			expectedError: sdkerrors.ErrUnauthorized.Wrapf("expected %s or %s got %s", authority, addr1.String(), ""),
 			expectedEvent: nil,
 		},
 	}
