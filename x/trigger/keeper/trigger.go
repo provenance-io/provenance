@@ -3,6 +3,7 @@ package keeper
 import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 

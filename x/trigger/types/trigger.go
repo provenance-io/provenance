@@ -3,8 +3,9 @@ package types
 import (
 	time "time"
 
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	types "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 type TriggerID = uint64

@@ -1,9 +1,11 @@
 package cli
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/provenance-io/provenance/x/trigger/types"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client"
+
+	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
 func GetQueryCmd() *cobra.Command {

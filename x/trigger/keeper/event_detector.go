@@ -1,9 +1,11 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/x/trigger/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
 func (k Keeper) DetectBlockEvents(ctx sdk.Context) {
