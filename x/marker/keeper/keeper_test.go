@@ -1147,12 +1147,12 @@ func TestMsgUpdateRequiredAttributesRequest(t *testing.T) {
 		{
 			name:             "should fail, remove value does not exist",
 			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{"dne.provenance.io"}, []string{}),
-			expectedError:    "remove required attributes list had incorrect entries",
+			expectedError:    `attribute "dne.provenance.io" is already not required`,
 		},
 		{
 			name:             "should fail, cannot add duplicate entries",
 			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{}, []string{"foo.provenance.io"}),
-			expectedError:    "cannot add duplicate entry to required attributes foo.provenance.io",
+			expectedError:    `attribute "foo.provenance.io" is already required`,
 		},
 		{
 			name:             "should succeed, to remove element",
