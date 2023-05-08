@@ -673,11 +673,11 @@ func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 
-	reqAttrs, err := RemovesFromRequiredAttributes(m.GetRequiredAttributes(), removeList)
+	reqAttrs, err := types.RemovesFromRequiredAttributes(m.GetRequiredAttributes(), removeList)
 	if err != nil {
 		return nil, err
 	}
-	reqAttrs, err = AddToRequiredAttributes(reqAttrs, addList)
+	reqAttrs, err = types.AddToRequiredAttributes(reqAttrs, addList)
 	if err != nil {
 		return nil, err
 	}

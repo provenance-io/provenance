@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -279,6 +280,129 @@ func TestMarkerTypeStrings(t *testing.T) {
 			m, err := MarkerTypeFromString(tt.typeString)
 			require.Equal(t, tt.expErr, err)
 			require.Equal(t, tt.expType, m)
+		})
+	}
+}
+
+func TestAddToRequiredAttributes(t *testing.T) {
+	tests := []struct {
+		name          string
+		addList       []string
+		reqAttrs      []string
+		expectedAttrs []string
+		expectedError string
+	}{
+		{
+			name:          "should fail, duplicate value",
+			addList:       []string{"foo", "bar"},
+			reqAttrs:      []string{"foo", "baz"},
+			expectedError: "cannot add duplicate entry to required attributes foo",
+		},
+		{
+			name:          "should succeed, add elements to none empty list",
+			addList:       []string{"qux", "fix"},
+			reqAttrs:      []string{"foo", "bar", "baz"},
+			expectedAttrs: []string{"foo", "bar", "baz", "qux", "fix"},
+		},
+		{
+			name:          "should succeed, add elements to empty list",
+			addList:       []string{"qux", "fix"},
+			reqAttrs:      []string{},
+			expectedAttrs: []string{"qux", "fix"},
+		},
+		{
+			name:          "should succeed, nothing added",
+			addList:       []string{},
+			reqAttrs:      []string{"foo", "bar", "baz"},
+			expectedAttrs: []string{"foo", "bar", "baz"},
+		},
+		{
+			name:          "should succeed, two empty lists",
+			addList:       []string{},
+			reqAttrs:      []string{},
+			expectedAttrs: []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actualAttrs, err := AddToRequiredAttributes(tt.addList, tt.reqAttrs)
+			if len(tt.expectedError) == 0 {
+				assert.NoError(t, err)
+				assert.ElementsMatch(t, tt.expectedAttrs, actualAttrs)
+			} else {
+				assert.NotNil(t, err)
+				assert.Equal(t, tt.expectedError, err.Error())
+				assert.Nil(t, tt.expectedAttrs)
+			}
+		})
+	}
+}
+
+func TestRemovesFromRequiredAttributes(t *testing.T) {
+	tests := []struct {
+		name          string
+		currentAttrs  []string
+		removeAttrs   []string
+		expectedAttrs []string
+		expectedError string
+	}{
+		{
+			name:          "should succeed, removing a single element",
+			currentAttrs:  []string{"foo", "bar", "baz"},
+			removeAttrs:   []string{"bar"},
+			expectedAttrs: []string{"foo", "baz"},
+		},
+		{
+			name:          "should fail, element doesn't exist",
+			currentAttrs:  []string{"foo", "bar", "baz"},
+			removeAttrs:   []string{"qux"},
+			expectedAttrs: nil,
+			expectedError: "remove required attributes list had incorrect entries",
+		},
+		{
+			name:          "should succeed, removing multiple elements",
+			currentAttrs:  []string{"foo", "bar", "baz"},
+			removeAttrs:   []string{"foo", "baz"},
+			expectedAttrs: []string{"bar"},
+		},
+		{
+			name:          "should succeed, removing no elements",
+			currentAttrs:  []string{"foo", "bar", "baz"},
+			removeAttrs:   []string{},
+			expectedAttrs: []string{"foo", "bar", "baz"},
+		},
+		{
+			name:          "should succeed, remove all elements",
+			currentAttrs:  []string{"foo", "bar", "baz"},
+			removeAttrs:   []string{"baz", "foo", "bar"},
+			expectedAttrs: []string{},
+		},
+		{
+			name:          "should succeed, both empty lists",
+			currentAttrs:  []string{},
+			removeAttrs:   []string{},
+			expectedAttrs: []string{},
+		},
+		{
+			name:          "should fail, trying to remove elements from empty list",
+			currentAttrs:  []string{},
+			removeAttrs:   []string{"blah"},
+			expectedAttrs: []string{},
+			expectedError: "remove required attributes list had incorrect entries",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actualAttrs, err := RemovesFromRequiredAttributes(tt.currentAttrs, tt.removeAttrs)
+			if len(tt.expectedError) == 0 {
+				assert.NoError(t, err)
+				assert.ElementsMatch(t, tt.expectedAttrs, actualAttrs)
+			} else {
+				assert.NotNil(t, err)
+				assert.Equal(t, tt.expectedError, err.Error())
+			}
 		})
 	}
 }
