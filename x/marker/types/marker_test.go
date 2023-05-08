@@ -296,7 +296,7 @@ func TestAddToRequiredAttributes(t *testing.T) {
 			name:          "should fail, duplicate value",
 			addList:       []string{"foo", "bar"},
 			reqAttrs:      []string{"foo", "baz"},
-			expectedError: "cannot add duplicate entry to required attributes foo",
+			expectedError: `attribute "foo" is already required`,
 		},
 		{
 			name:          "should succeed, add elements to none empty list",
@@ -358,7 +358,7 @@ func TestRemovesFromRequiredAttributes(t *testing.T) {
 			currentAttrs:  []string{"foo", "bar", "baz"},
 			removeAttrs:   []string{"qux"},
 			expectedAttrs: nil,
-			expectedError: "remove required attributes list had incorrect entries",
+			expectedError: `attribute "qux" is already not required`,
 		},
 		{
 			name:          "should succeed, removing multiple elements",
@@ -389,7 +389,7 @@ func TestRemovesFromRequiredAttributes(t *testing.T) {
 			currentAttrs:  []string{},
 			removeAttrs:   []string{"blah"},
 			expectedAttrs: []string{},
-			expectedError: "remove required attributes list had incorrect entries",
+			expectedError: `attribute "blah" is already not required`,
 		},
 	}
 
