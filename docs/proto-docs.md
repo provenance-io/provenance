@@ -6351,7 +6351,7 @@ Trigger
 | `id` | [uint64](#uint64) |  | An integer to uniquely identify the trigger. |
 | `owner` | [string](#string) |  | The owner of the Trigger. |
 | `event` | [Event](#provenance.trigger.v1.Event) |  | The event that must be detected for the trigger to fire. |
-| `action` | [google.protobuf.Any](#google.protobuf.Any) |  | The message to run when the trigger fires. |
+| `action` | [google.protobuf.Any](#google.protobuf.Any) | repeated | The message to run when the trigger fires. |
 
 
 
@@ -6471,7 +6471,7 @@ MsgCreateTriggerRequest is the request type for creating a trigger RPC
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  | The signing authority for the request |
 | `event` | [Event](#provenance.trigger.v1.Event) |  | The event that must be detected for the trigger to fire. |
-| `action` | [google.protobuf.Any](#google.protobuf.Any) |  | The message to run when the trigger fires. |
+| `action` | [google.protobuf.Any](#google.protobuf.Any) | repeated | The message to run when the trigger fires. |
 
 
 

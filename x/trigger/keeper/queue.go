@@ -10,7 +10,8 @@ import (
 func (k Keeper) QueueTrigger(ctx sdk.Context, trigger types.Trigger) {
 	item := types.NewQueuedTrigger(trigger, ctx.BlockTime(), uint64(ctx.BlockHeight()))
 	length := k.GetQueueLength(ctx)
-	k.SetQueueItem(ctx, length, item)
+	index := k.GetQueueStartIndex(ctx)
+	k.SetQueueItem(ctx, index+length, item)
 	k.SetQueueLength(ctx, length+1)
 }
 

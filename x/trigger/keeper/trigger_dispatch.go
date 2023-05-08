@@ -29,10 +29,10 @@ func (k Keeper) RunTriggers(ctx sdk.Context) {
 	}
 }
 
-func (k Keeper) RunAction(ctx sdk.Context, action *types.Any) error {
+func (k Keeper) RunAction(ctx sdk.Context, action []*types.Any) error {
 	cacheCtx, flush := ctx.CacheContext()
 
-	msgs, err := sdktx.GetMsgs([]*types.Any{action}, "sdk.MsgProposal")
+	msgs, err := sdktx.GetMsgs(action, "RunAction - sdk.MsgCreateTriggerRequest")
 	if err != nil {
 		// TODO Something was wrong with the message
 		return err

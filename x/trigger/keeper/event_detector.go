@@ -44,7 +44,7 @@ func (k Keeper) GetMatchingTriggers(ctx sdk.Context, event abci.Event) (triggers
 		if trigger.Event.Equals(event) {
 			triggers = append(triggers, trigger)
 		}
-		return true, nil
+		return false, nil
 	})
 	if err != nil {
 		// TODO Return error

@@ -21,8 +21,8 @@ message Trigger {
   string owner = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // The event that must be detected for the trigger to fire.
   Event event = 3 [(gogoproto.nullable) = false];
-  // The message to run when the trigger fires.
-  google.protobuf.Any action = 4;
+  // The messages to run when the trigger fires.
+  repeated google.protobuf.Any actions = 4;
 }
 
 // QueuedTrigger

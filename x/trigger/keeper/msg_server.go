@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
@@ -24,6 +25,11 @@ var _ types.MsgServer = msgServer{}
 // CreateTrigger creates new trigger from msg
 func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTriggerRequest) (*types.MsgCreateTriggerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	msgs, err := sdktx.GetMsgs(msg.Action, "RunAction - sdk.MsgCreateTriggerRequest")
+	if len(msgs) == 0 || err != nil {
+		return nil, err
+	}
 
 	trigger, err := s.NewTriggerWithID(ctx, msg.GetAuthority(), msg.GetEvent(), msg.GetAction())
 	if err != nil {
