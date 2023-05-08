@@ -350,7 +350,7 @@ UpdateRequiredAttributesRequest allows signers that have transfer authority or v
 
 This service message is expected to fail if:
 
-- Remove list has a attribute that does not exist in current Required Attributes
+- Remove list has an attribute that does not exist in current Required Attributes
 - Add list has a attribute that already exist in current Required Attributes
 - Attributes cannot be normalized
 - Marker denom cannot be found or is not a restricted marker

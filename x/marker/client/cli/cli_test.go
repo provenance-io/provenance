@@ -1498,22 +1498,6 @@ func (s *IntegrationTestSuite) TestUpdateRequiredAttributesTxCommand() {
 			expectedError: "invalid decimal coin expression: blah",
 		},
 		{
-			name: "should fail, invalid gov proposal deposit denom",
-			cmd:  markercli.GetCmdUpdateRequiredAttributes(),
-			args: []string{
-				"newhotdog",
-				fmt.Sprintf("--%s=%s", markercli.FlagGovProposal, "true"),
-				fmt.Sprintf("--%s=%s", markercli.FlagAdd, "foo.provenance.io"),
-				fmt.Sprintf("--%s=%s", markercli.FlagRemove, "bar.provenance.io"),
-				fmt.Sprintf("--%s=%s", markercli.FlagDeposit, "blah"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			expectedError: "invalid decimal coin expression: blah",
-		},
-		{
 			name: "should succeed, gov proposal should succeed",
 			cmd:  markercli.GetCmdUpdateRequiredAttributes(),
 			args: []string{
@@ -1529,7 +1513,7 @@ func (s *IntegrationTestSuite) TestUpdateRequiredAttributesTxCommand() {
 			},
 		},
 		{
-			name: "should succeed, send regular proposal",
+			name: "should succeed, send regular tx",
 			cmd:  markercli.GetCmdUpdateRequiredAttributes(),
 			args: []string{
 				"newhotdog",

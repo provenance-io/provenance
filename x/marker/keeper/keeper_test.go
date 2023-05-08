@@ -1145,7 +1145,7 @@ func TestMsgUpdateRequiredAttributesRequest(t *testing.T) {
 			expectedError:    "value provided for name is invalid",
 		},
 		{
-			name:             "should fail, remove value does not exist t",
+			name:             "should fail, remove value does not exist",
 			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{"dne.provenance.io"}, []string{}),
 			expectedError:    "remove required attributes list had incorrect entries",
 		},
