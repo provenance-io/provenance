@@ -41,7 +41,12 @@ func (k Keeper) DetectTimeEvents(ctx sdk.Context) {
 
 func (k Keeper) GetMatchingTriggers(ctx sdk.Context, event abci.Event) (triggers []types.Trigger, err error) {
 	err = k.IterateEventListeners(ctx, event.GetType(), func(trigger types.Trigger) (stop bool, err error) {
-		if trigger.Event.Equals(event) {
+
+		// This is where we would get the interface type
+		tempEvent := trigger.Event.GetCachedValue().(types.TriggerEventI)
+		triggerEvent := tempEvent.(*types.TransactionEvent)
+
+		if triggerEvent.Equals(event) {
 			triggers = append(triggers, trigger)
 		}
 		return false, nil

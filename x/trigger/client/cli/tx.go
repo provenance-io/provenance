@@ -35,8 +35,8 @@ func NewTxCmd() *cobra.Command {
 
 func GetCmdAddTrigger() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create [msg.json]",
-		Args:    cobra.ExactArgs(1),
+		Use:     "create [event.json] [msg.json]",
+		Args:    cobra.ExactArgs(2),
 		Aliases: []string{"c"},
 		Short:   "Creates a new trigger",
 		Long:    strings.TrimSpace(`Creates a new trigger.  This will delay the execution of the provided message until the event has occurred`),
@@ -51,21 +51,12 @@ func GetCmdAddTrigger() *cobra.Command {
 				return fmt.Errorf("invalid argument : %s", args[0])
 			}
 
-			event := types.Event{
-				Name: "coin_received",
-				Attributes: []types.Attribute{
-					{
-						Name:  "receiver",
-						Value: "tp10x5m4479rg904m9ytmwxzfth2560x057g52ptz",
-					},
-					{
-						Name:  "amount",
-						Value: "100nhash",
-					},
-				},
+			event, err := parseEvent(clientCtx.Codec, args[0])
+			if err != nil {
+				return fmt.Errorf("unable to parse file : %s", err)
 			}
 
-			msgs, err := parseTransactions(clientCtx.Codec, args[0])
+			msgs, err := parseTransactions(clientCtx.Codec, args[1])
 			if err != nil {
 				return fmt.Errorf("unable to parse file : %s", err)
 			}
@@ -85,9 +76,9 @@ func GetCmdAddTrigger() *cobra.Command {
 	return cmd
 }
 
-type Message struct {
+type Action struct {
 	// Msgs defines a sdk.Msg proto-JSON-encoded as Any.
-	Message json.RawMessage `json:"message,omitempty"`
+	Action json.RawMessage `json:"message,omitempty"`
 }
 
 // parseSubmitProposal reads and parses the proposal.
@@ -97,17 +88,55 @@ func parseTransactions(cdc codec.Codec, path string) ([]sdk.Msg, error) {
 		return nil, err
 	}
 
-	var message Message
-	err = json.Unmarshal(contents, &message)
+	var action Action
+	err = json.Unmarshal(contents, &action)
 	if err != nil {
 		return nil, err
 	}
 
 	var msg sdk.Msg
-	err = cdc.UnmarshalInterfaceJSON(message.Message, &msg)
+	err = cdc.UnmarshalInterfaceJSON(action.Action, &msg)
 	if err != nil {
 		return nil, err
 	}
 
 	return []sdk.Msg{msg}, nil
+}
+
+type TransactionEvent struct {
+	// Msgs defines an array of sdk.Msgs proto-JSON-encoded as Anys.
+	Attributes []Attribute `json:"attributes,omitempty"`
+	Name       string      `json:"name"`
+}
+
+type Attribute struct {
+	// Msgs defines an array of sdk.Msgs proto-JSON-encoded as Anys.
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+// parseSubmitProposal reads and parses the proposal.
+func parseEvent(cdc codec.Codec, path string) (*types.TransactionEvent, error) {
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var event TransactionEvent
+	err = json.Unmarshal(contents, &event)
+	if err != nil {
+		return nil, err
+	}
+
+	newEvent := types.TransactionEvent{
+		Name: event.Name,
+	}
+	for _, attr := range event.Attributes {
+		newEvent.Attributes = append(newEvent.Attributes, types.Attribute{
+			Name:  attr.Name,
+			Value: attr.Value,
+		})
+	}
+
+	return &newEvent, nil
 }

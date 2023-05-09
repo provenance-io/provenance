@@ -4,12 +4,18 @@ import (
 	time "time"
 
 	types "github.com/cosmos/cosmos-sdk/codec/types"
+	proto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type TriggerID = uint64
 
-func NewTrigger(id TriggerID, owner string, event Event, action []*types.Any) Trigger {
+type TriggerEventI interface {
+	proto.Message
+	GetEventPrefix() string
+}
+
+func NewTrigger(id TriggerID, owner string, event *types.Any, action []*types.Any) Trigger {
 	return Trigger{
 		id,
 		owner,
@@ -26,7 +32,7 @@ func NewQueuedTrigger(trigger Trigger, blockTime time.Time, blockHeight uint64) 
 	}
 }
 
-func (e Event) Equals(other abci.Event) bool {
+func (e TransactionEvent) Equals(other abci.Event) bool {
 	if e.Name != other.GetType() {
 		return false
 	}
@@ -59,4 +65,16 @@ func (a Attribute) Equals(other abci.EventAttribute) bool {
 	}
 
 	return true
+}
+
+func (e TransactionEvent) GetEventPrefix() string {
+	return e.Name
+}
+
+func (e BlockHeightEvent) GetEventPrefix() string {
+	return "block-height"
+}
+
+func (e BlockTimeEvent) GetEventPrefix() string {
+	return "block-time"
 }

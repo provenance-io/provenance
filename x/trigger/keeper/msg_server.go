@@ -26,12 +26,19 @@ var _ types.MsgServer = msgServer{}
 func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTriggerRequest) (*types.MsgCreateTriggerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	msgs, err := sdktx.GetMsgs(msg.Action, "RunAction - sdk.MsgCreateTriggerRequest")
+	cachedValue := msg.Event.GetCachedValue()
+	if cachedValue == nil {
+		return nil, fmt.Errorf("cached value does not exist")
+	}
+	event := cachedValue.(types.TriggerEventI)
+	fmt.Printf("Prefix Name is: %s\n", event.GetEventPrefix())
+
+	msgs, err := sdktx.GetMsgs(msg.Actions, "RunAction - sdk.MsgCreateTriggerRequest")
 	if len(msgs) == 0 || err != nil {
 		return nil, err
 	}
 
-	trigger, err := s.NewTriggerWithID(ctx, msg.GetAuthority(), msg.GetEvent(), msg.GetAction())
+	trigger, err := s.NewTriggerWithID(ctx, msg.GetAuthority(), msg.GetEvent(), msg.GetActions())
 	if err != nil {
 		// Throw an error
 		return nil, err

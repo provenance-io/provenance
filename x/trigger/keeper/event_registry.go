@@ -10,13 +10,20 @@ func (k Keeper) SetEventListener(ctx sdk.Context, trigger triggertypes.Trigger) 
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&trigger)
 
-	store.Set(triggertypes.GetEventRegistryKey(trigger.GetEvent().Name, trigger.GetId()), bz)
+	// This is where we would unmarshal into the interface type
+	event := trigger.Event.GetCachedValue().(triggertypes.TriggerEventI)
+
+	store.Set(triggertypes.GetEventRegistryKey(event.GetEventPrefix(), trigger.GetId()), bz)
 }
 
 // RemoveTrigger Removes a trigger from the store
 func (k Keeper) RemoveEventListener(ctx sdk.Context, trigger triggertypes.Trigger) bool {
 	store := ctx.KVStore(k.storeKey)
-	key := triggertypes.GetEventRegistryKey(trigger.GetEvent().Name, trigger.GetId())
+
+	// This is where we would unmarshal into the interface type
+	event := trigger.Event.GetCachedValue().(triggertypes.TriggerEventI)
+
+	key := triggertypes.GetEventRegistryKey(event.GetEventPrefix(), trigger.GetId())
 	keyExists := store.Has(key)
 	if keyExists {
 		store.Delete(key)

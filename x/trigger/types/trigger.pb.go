@@ -36,9 +36,9 @@ type Trigger struct {
 	// The owner of the Trigger.
 	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
 	// The event that must be detected for the trigger to fire.
-	Event Event `protobuf:"bytes,3,opt,name=event,proto3" json:"event"`
-	// The message to run when the trigger fires.
-	Action []*types.Any `protobuf:"bytes,4,rep,name=action,proto3" json:"action,omitempty"`
+	Event *types.Any `protobuf:"bytes,3,opt,name=event,proto3" json:"event,omitempty"`
+	// The messages to run when the trigger fires.
+	Actions []*types.Any `protobuf:"bytes,4,rep,name=actions,proto3" json:"actions,omitempty"`
 }
 
 func (m *Trigger) Reset()         { *m = Trigger{} }
@@ -88,16 +88,16 @@ func (m *Trigger) GetOwner() string {
 	return ""
 }
 
-func (m *Trigger) GetEvent() Event {
+func (m *Trigger) GetEvent() *types.Any {
 	if m != nil {
 		return m.Event
 	}
-	return Event{}
+	return nil
 }
 
-func (m *Trigger) GetAction() []*types.Any {
+func (m *Trigger) GetActions() []*types.Any {
 	if m != nil {
-		return m.Action
+		return m.Actions
 	}
 	return nil
 }
@@ -166,25 +166,21 @@ func (m *QueuedTrigger) GetTrigger() Trigger {
 	return Trigger{}
 }
 
-type Event struct {
-	// The name of the event for a match.
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// The attributes that must be present for a match.
-	Attributes []Attribute `protobuf:"bytes,2,rep,name=attributes,proto3" json:"attributes"`
+type BlockHeightEvent struct {
 }
 
-func (m *Event) Reset()         { *m = Event{} }
-func (m *Event) String() string { return proto.CompactTextString(m) }
-func (*Event) ProtoMessage()    {}
-func (*Event) Descriptor() ([]byte, []int) {
+func (m *BlockHeightEvent) Reset()         { *m = BlockHeightEvent{} }
+func (m *BlockHeightEvent) String() string { return proto.CompactTextString(m) }
+func (*BlockHeightEvent) ProtoMessage()    {}
+func (*BlockHeightEvent) Descriptor() ([]byte, []int) {
 	return fileDescriptor_fe59296a7b42130c, []int{2}
 }
-func (m *Event) XXX_Unmarshal(b []byte) error {
+func (m *BlockHeightEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *Event) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *BlockHeightEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_Event.Marshal(b, m, deterministic)
+		return xxx_messageInfo_BlockHeightEvent.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -194,26 +190,102 @@ func (m *Event) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *Event) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Event.Merge(m, src)
+func (m *BlockHeightEvent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BlockHeightEvent.Merge(m, src)
 }
-func (m *Event) XXX_Size() int {
+func (m *BlockHeightEvent) XXX_Size() int {
 	return m.Size()
 }
-func (m *Event) XXX_DiscardUnknown() {
-	xxx_messageInfo_Event.DiscardUnknown(m)
+func (m *BlockHeightEvent) XXX_DiscardUnknown() {
+	xxx_messageInfo_BlockHeightEvent.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Event proto.InternalMessageInfo
+var xxx_messageInfo_BlockHeightEvent proto.InternalMessageInfo
 
-func (m *Event) GetName() string {
+type BlockTimeEvent struct {
+}
+
+func (m *BlockTimeEvent) Reset()         { *m = BlockTimeEvent{} }
+func (m *BlockTimeEvent) String() string { return proto.CompactTextString(m) }
+func (*BlockTimeEvent) ProtoMessage()    {}
+func (*BlockTimeEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fe59296a7b42130c, []int{3}
+}
+func (m *BlockTimeEvent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BlockTimeEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BlockTimeEvent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BlockTimeEvent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BlockTimeEvent.Merge(m, src)
+}
+func (m *BlockTimeEvent) XXX_Size() int {
+	return m.Size()
+}
+func (m *BlockTimeEvent) XXX_DiscardUnknown() {
+	xxx_messageInfo_BlockTimeEvent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BlockTimeEvent proto.InternalMessageInfo
+
+type TransactionEvent struct {
+	// The name of the event for a match.
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// The attributes that must be present for a match.
+	Attributes []Attribute `protobuf:"bytes,2,rep,name=attributes,proto3" json:"attributes"`
+}
+
+func (m *TransactionEvent) Reset()         { *m = TransactionEvent{} }
+func (m *TransactionEvent) String() string { return proto.CompactTextString(m) }
+func (*TransactionEvent) ProtoMessage()    {}
+func (*TransactionEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fe59296a7b42130c, []int{4}
+}
+func (m *TransactionEvent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TransactionEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TransactionEvent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TransactionEvent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TransactionEvent.Merge(m, src)
+}
+func (m *TransactionEvent) XXX_Size() int {
+	return m.Size()
+}
+func (m *TransactionEvent) XXX_DiscardUnknown() {
+	xxx_messageInfo_TransactionEvent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TransactionEvent proto.InternalMessageInfo
+
+func (m *TransactionEvent) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *Event) GetAttributes() []Attribute {
+func (m *TransactionEvent) GetAttributes() []Attribute {
 	if m != nil {
 		return m.Attributes
 	}
@@ -231,7 +303,7 @@ func (m *Attribute) Reset()         { *m = Attribute{} }
 func (m *Attribute) String() string { return proto.CompactTextString(m) }
 func (*Attribute) ProtoMessage()    {}
 func (*Attribute) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fe59296a7b42130c, []int{3}
+	return fileDescriptor_fe59296a7b42130c, []int{5}
 }
 func (m *Attribute) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -277,7 +349,9 @@ func (m *Attribute) GetValue() string {
 func init() {
 	proto.RegisterType((*Trigger)(nil), "provenance.trigger.v1.Trigger")
 	proto.RegisterType((*QueuedTrigger)(nil), "provenance.trigger.v1.QueuedTrigger")
-	proto.RegisterType((*Event)(nil), "provenance.trigger.v1.Event")
+	proto.RegisterType((*BlockHeightEvent)(nil), "provenance.trigger.v1.BlockHeightEvent")
+	proto.RegisterType((*BlockTimeEvent)(nil), "provenance.trigger.v1.BlockTimeEvent")
+	proto.RegisterType((*TransactionEvent)(nil), "provenance.trigger.v1.TransactionEvent")
 	proto.RegisterType((*Attribute)(nil), "provenance.trigger.v1.Attribute")
 }
 
@@ -286,37 +360,40 @@ func init() {
 }
 
 var fileDescriptor_fe59296a7b42130c = []byte{
-	// 472 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x53, 0x3d, 0x6f, 0xd3, 0x40,
-	0x18, 0xce, 0xa5, 0x49, 0xdb, 0xbc, 0x01, 0x86, 0x53, 0x90, 0xdc, 0x08, 0xd9, 0xa6, 0x2c, 0x19,
-	0xe8, 0x59, 0x4d, 0x97, 0x8a, 0x01, 0x94, 0x48, 0x20, 0x46, 0x30, 0x9d, 0x58, 0x2a, 0x7f, 0x1c,
-	0x97, 0x13, 0xf1, 0x5d, 0x64, 0x9f, 0x0d, 0xf9, 0x17, 0x1d, 0x19, 0xfb, 0x23, 0x10, 0x0b, 0x7f,
-	0xa0, 0x63, 0xc5, 0xc4, 0x04, 0x28, 0x59, 0xf8, 0x19, 0x28, 0x77, 0xe7, 0x26, 0xa2, 0xe9, 0xf6,
-	0x7e, 0x3c, 0xaf, 0x9f, 0x0f, 0xeb, 0xe0, 0xc9, 0x2c, 0x97, 0x15, 0x15, 0x91, 0x48, 0x68, 0xa0,
-	0x72, 0xce, 0x18, 0xcd, 0x83, 0xea, 0xb8, 0x2e, 0xc9, 0x2c, 0x97, 0x4a, 0xe2, 0x87, 0x6b, 0x10,
-	0xa9, 0x37, 0xd5, 0x71, 0xff, 0x20, 0x91, 0x45, 0x26, 0x8b, 0x73, 0x0d, 0x0a, 0x4c, 0x63, 0x2e,
-	0xfa, 0x3d, 0x26, 0x99, 0x34, 0xf3, 0x55, 0x65, 0xa7, 0x07, 0x4c, 0x4a, 0x36, 0xa5, 0x81, 0xee,
-	0xe2, 0xf2, 0x43, 0x10, 0x89, 0xb9, 0x5d, 0x79, 0xff, 0xaf, 0x14, 0xcf, 0x68, 0xa1, 0xa2, 0x6c,
-	0x66, 0x00, 0x87, 0xdf, 0x11, 0xec, 0x9d, 0x19, 0x6e, 0xfc, 0x00, 0x9a, 0x3c, 0x75, 0x90, 0x8f,
-	0x06, 0xad, 0xb0, 0xc9, 0x53, 0x4c, 0xa0, 0x2d, 0x3f, 0x09, 0x9a, 0x3b, 0x4d, 0x1f, 0x0d, 0x3a,
-	0x63, 0xe7, 0xc7, 0xd7, 0xa3, 0x9e, 0x95, 0x33, 0x4a, 0xd3, 0x9c, 0x16, 0xc5, 0x3b, 0x95, 0x73,
-	0xc1, 0x42, 0x03, 0xc3, 0xa7, 0xd0, 0xa6, 0x15, 0x15, 0xca, 0xd9, 0xf1, 0xd1, 0xa0, 0x3b, 0x7c,
-	0x44, 0xb6, 0xfa, 0x23, 0x2f, 0x57, 0x98, 0x71, 0xeb, 0xea, 0x97, 0xd7, 0x08, 0xcd, 0x01, 0x7e,
-	0x0a, 0xbb, 0x51, 0xa2, 0xb8, 0x14, 0x4e, 0xcb, 0xdf, 0x19, 0x74, 0x87, 0x3d, 0x62, 0x74, 0x93,
-	0x5a, 0x37, 0x19, 0x89, 0x79, 0x68, 0x31, 0xcf, 0xf6, 0xbf, 0x5c, 0x7a, 0xe8, 0xef, 0xa5, 0x87,
-	0x0e, 0xbf, 0x21, 0xb8, 0xff, 0xb6, 0xa4, 0x25, 0x4d, 0x6b, 0x0f, 0x8f, 0xe1, 0x5e, 0x3c, 0x95,
-	0xc9, 0xc7, 0xf3, 0x09, 0xe5, 0x6c, 0xa2, 0xac, 0x9b, 0xae, 0x9e, 0xbd, 0xd6, 0x23, 0x7c, 0x0a,
-	0xad, 0x55, 0x0a, 0xda, 0x55, 0x77, 0xd8, 0xbf, 0x45, 0x75, 0x56, 0x47, 0x34, 0xde, 0x5f, 0x69,
-	0xbc, 0xf8, 0xed, 0xa1, 0x50, 0x5f, 0xe0, 0xe7, 0xb0, 0x67, 0x7d, 0x58, 0x8b, 0xee, 0x1d, 0x16,
-	0xad, 0x1a, 0x6b, 0xb2, 0x3e, 0xda, 0x10, 0x9e, 0x41, 0x5b, 0xc7, 0x80, 0x31, 0xb4, 0x44, 0x94,
-	0x51, 0xad, 0xb3, 0x13, 0xea, 0x1a, 0xbf, 0x02, 0x88, 0x94, 0xca, 0x79, 0x5c, 0x2a, 0x5a, 0x38,
-	0x4d, 0x9d, 0x88, 0x7f, 0x07, 0xd3, 0xa8, 0x06, 0x5a, 0xae, 0x8d, 0xcb, 0x0d, 0xba, 0x17, 0xd0,
-	0xb9, 0x01, 0x6e, 0xa5, 0xec, 0x41, 0xbb, 0x8a, 0xa6, 0xa5, 0x09, 0xa5, 0x13, 0x9a, 0x66, 0xfd,
-	0x81, 0x31, 0xbf, 0x5a, 0xb8, 0xe8, 0x7a, 0xe1, 0xa2, 0x3f, 0x0b, 0x17, 0x5d, 0x2c, 0xdd, 0xc6,
-	0xf5, 0xd2, 0x6d, 0xfc, 0x5c, 0xba, 0x0d, 0x70, 0xb8, 0xdc, 0x2e, 0xed, 0x0d, 0x7a, 0x7f, 0xc2,
-	0xb8, 0x9a, 0x94, 0x31, 0x49, 0x64, 0x16, 0xac, 0x31, 0x47, 0x5c, 0x6e, 0x74, 0xc1, 0xe7, 0x9b,
-	0x07, 0xa2, 0xe6, 0x33, 0x5a, 0xc4, 0xbb, 0xfa, 0x47, 0x9c, 0xfc, 0x0b, 0x00, 0x00, 0xff, 0xff,
-	0x22, 0x70, 0x0a, 0xe4, 0x43, 0x03, 0x00, 0x00,
+	// 514 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x53, 0x3f, 0x6f, 0xd3, 0x40,
+	0x1c, 0xcd, 0xa5, 0x0e, 0x69, 0x2e, 0xb4, 0x2a, 0xa7, 0x20, 0x39, 0x19, 0x6c, 0x13, 0x96, 0x48,
+	0x28, 0x67, 0xb5, 0x5d, 0x50, 0x25, 0x40, 0xb1, 0x04, 0x82, 0x0d, 0x4c, 0x26, 0x96, 0xca, 0x7f,
+	0x0e, 0xe7, 0x44, 0x7c, 0x17, 0xd9, 0x67, 0x43, 0x3e, 0x02, 0x5b, 0x47, 0xc6, 0x7e, 0x88, 0x8a,
+	0x0f, 0xc0, 0x54, 0x31, 0x55, 0x4c, 0x4c, 0x80, 0x92, 0x85, 0x8f, 0x81, 0x7c, 0x67, 0x37, 0x11,
+	0x4d, 0x60, 0xbb, 0xdf, 0xef, 0xf7, 0xde, 0xfd, 0xde, 0x7b, 0x67, 0xc3, 0xfb, 0xb3, 0x84, 0xe7,
+	0x84, 0x79, 0x2c, 0x20, 0xb6, 0x48, 0x68, 0x14, 0x91, 0xc4, 0xce, 0x0f, 0xab, 0x23, 0x9e, 0x25,
+	0x5c, 0x70, 0x74, 0x77, 0x05, 0xc2, 0xd5, 0x24, 0x3f, 0xec, 0x75, 0x03, 0x9e, 0xc6, 0x3c, 0x3d,
+	0x95, 0x20, 0x5b, 0x15, 0x8a, 0xd1, 0xeb, 0x44, 0x3c, 0xe2, 0xaa, 0x5f, 0x9c, 0xca, 0x6e, 0x37,
+	0xe2, 0x3c, 0x9a, 0x12, 0x5b, 0x56, 0x7e, 0xf6, 0xd6, 0xf6, 0xd8, 0xbc, 0x1c, 0x99, 0x7f, 0x8f,
+	0x04, 0x8d, 0x49, 0x2a, 0xbc, 0x78, 0xa6, 0x00, 0xfd, 0x2f, 0x00, 0x36, 0xc7, 0x6a, 0x37, 0xda,
+	0x87, 0x75, 0x1a, 0xea, 0xc0, 0x02, 0x03, 0xcd, 0xad, 0xd3, 0x10, 0x61, 0xd8, 0xe0, 0xef, 0x19,
+	0x49, 0xf4, 0xba, 0x05, 0x06, 0x2d, 0x47, 0xff, 0x76, 0x31, 0xec, 0x94, 0x72, 0x46, 0x61, 0x98,
+	0x90, 0x34, 0x7d, 0x2d, 0x12, 0xca, 0x22, 0x57, 0xc1, 0xd0, 0x23, 0xd8, 0x20, 0x39, 0x61, 0x42,
+	0xdf, 0xb1, 0xc0, 0xa0, 0x7d, 0xd4, 0xc1, 0x6a, 0x39, 0xae, 0x96, 0xe3, 0x11, 0x9b, 0x3b, 0x77,
+	0xbe, 0x5e, 0x0c, 0xf7, 0xca, 0x8d, 0x4f, 0x0b, 0xf4, 0x0b, 0x57, 0xb1, 0x10, 0x86, 0x4d, 0x2f,
+	0x10, 0x94, 0xb3, 0x54, 0xd7, 0xac, 0x9d, 0x6d, 0x17, 0xb8, 0x15, 0xe8, 0x64, 0xf7, 0xd3, 0xb9,
+	0x09, 0x7e, 0x9f, 0x9b, 0xa0, 0xff, 0x19, 0xc0, 0xbd, 0x57, 0x19, 0xc9, 0x48, 0x58, 0x59, 0xb9,
+	0x07, 0x6f, 0xfb, 0x53, 0x1e, 0xbc, 0x3b, 0x9d, 0x10, 0x1a, 0x4d, 0x44, 0x69, 0xaa, 0x2d, 0x7b,
+	0xcf, 0x65, 0x0b, 0x3d, 0x84, 0x5a, 0x11, 0x86, 0x34, 0xd7, 0x3e, 0xea, 0xdd, 0xd8, 0x35, 0xae,
+	0x92, 0x72, 0x76, 0x2f, 0x7f, 0x98, 0xb5, 0xb3, 0x9f, 0x26, 0x70, 0x25, 0x03, 0x3d, 0x86, 0xcd,
+	0xf2, 0xb9, 0x4a, 0xa7, 0x06, 0xde, 0xf8, 0x92, 0xb8, 0x54, 0xe3, 0x68, 0xc5, 0x05, 0x6e, 0x45,
+	0x5a, 0x13, 0x3e, 0x84, 0x07, 0xce, 0x4a, 0x92, 0x8c, 0xe3, 0xa4, 0x5b, 0x4d, 0x6f, 0x04, 0xd5,
+	0x7f, 0x00, 0xf7, 0x25, 0xbc, 0x90, 0xf6, 0x5f, 0xf0, 0x47, 0x00, 0x0f, 0xc6, 0x89, 0xc7, 0x52,
+	0x95, 0x97, 0xec, 0x22, 0x04, 0x35, 0xe6, 0xc5, 0x44, 0xe6, 0xd1, 0x72, 0xe5, 0x19, 0x3d, 0x83,
+	0xd0, 0x13, 0x22, 0xa1, 0x7e, 0x26, 0x48, 0xaa, 0xd7, 0x65, 0xf4, 0xd6, 0x16, 0x47, 0xa3, 0x0a,
+	0x58, 0x7a, 0x5a, 0x63, 0xfe, 0x4b, 0xcb, 0x13, 0xd8, 0xba, 0x66, 0x6e, 0xd4, 0xd0, 0x81, 0x8d,
+	0xdc, 0x9b, 0x66, 0xea, 0x35, 0x5a, 0xae, 0x2a, 0x56, 0x41, 0x39, 0xf4, 0x72, 0x61, 0x80, 0xab,
+	0x85, 0x01, 0x7e, 0x2d, 0x0c, 0x70, 0xb6, 0x34, 0x6a, 0x57, 0x4b, 0xa3, 0xf6, 0x7d, 0x69, 0xd4,
+	0xa0, 0x4e, 0xf9, 0x66, 0xad, 0x2f, 0xc1, 0x9b, 0xe3, 0x88, 0x8a, 0x49, 0xe6, 0xe3, 0x80, 0xc7,
+	0xf6, 0x0a, 0x33, 0xa4, 0x7c, 0xad, 0xb2, 0x3f, 0x5c, 0xff, 0xa0, 0x62, 0x3e, 0x23, 0xa9, 0x7f,
+	0x4b, 0x7e, 0x01, 0xc7, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0xe2, 0x4f, 0xec, 0x45, 0xc3, 0x03,
+	0x00, 0x00,
 }
 
 func (this *Trigger) Equal(that interface{}) bool {
@@ -344,14 +421,14 @@ func (this *Trigger) Equal(that interface{}) bool {
 	if this.Owner != that1.Owner {
 		return false
 	}
-	if !this.Event.Equal(&that1.Event) {
+	if !this.Event.Equal(that1.Event) {
 		return false
 	}
-	if len(this.Action) != len(that1.Action) {
+	if len(this.Actions) != len(that1.Actions) {
 		return false
 	}
-	for i := range this.Action {
-		if !this.Action[i].Equal(that1.Action[i]) {
+	for i := range this.Actions {
+		if !this.Actions[i].Equal(that1.Actions[i]) {
 			return false
 		}
 	}
@@ -387,14 +464,56 @@ func (this *QueuedTrigger) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *Event) Equal(that interface{}) bool {
+func (this *BlockHeightEvent) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*Event)
+	that1, ok := that.(*BlockHeightEvent)
 	if !ok {
-		that2, ok := that.(Event)
+		that2, ok := that.(BlockHeightEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	return true
+}
+func (this *BlockTimeEvent) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*BlockTimeEvent)
+	if !ok {
+		that2, ok := that.(BlockTimeEvent)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	return true
+}
+func (this *TransactionEvent) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TransactionEvent)
+	if !ok {
+		that2, ok := that.(TransactionEvent)
 		if ok {
 			that1 = &that2
 		} else {
@@ -466,10 +585,10 @@ func (m *Trigger) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Action) > 0 {
-		for iNdEx := len(m.Action) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Actions) > 0 {
+		for iNdEx := len(m.Actions) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Action[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Actions[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -480,16 +599,18 @@ func (m *Trigger) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x22
 		}
 	}
-	{
-		size, err := m.Event.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
+	if m.Event != nil {
+		{
+			size, err := m.Event.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTrigger(dAtA, i, uint64(size))
 		}
-		i -= size
-		i = encodeVarintTrigger(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x1a
 	if len(m.Owner) > 0 {
 		i -= len(m.Owner)
 		copy(dAtA[i:], m.Owner)
@@ -551,7 +672,7 @@ func (m *QueuedTrigger) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *Event) Marshal() (dAtA []byte, err error) {
+func (m *BlockHeightEvent) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -561,12 +682,58 @@ func (m *Event) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Event) MarshalTo(dAtA []byte) (int, error) {
+func (m *BlockHeightEvent) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *Event) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *BlockHeightEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *BlockTimeEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BlockTimeEvent) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BlockTimeEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *TransactionEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TransactionEvent) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TransactionEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -656,10 +823,12 @@ func (m *Trigger) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTrigger(uint64(l))
 	}
-	l = m.Event.Size()
-	n += 1 + l + sovTrigger(uint64(l))
-	if len(m.Action) > 0 {
-		for _, e := range m.Action {
+	if m.Event != nil {
+		l = m.Event.Size()
+		n += 1 + l + sovTrigger(uint64(l))
+	}
+	if len(m.Actions) > 0 {
+		for _, e := range m.Actions {
 			l = e.Size()
 			n += 1 + l + sovTrigger(uint64(l))
 		}
@@ -683,7 +852,25 @@ func (m *QueuedTrigger) Size() (n int) {
 	return n
 }
 
-func (m *Event) Size() (n int) {
+func (m *BlockHeightEvent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *BlockTimeEvent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *TransactionEvent) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -834,13 +1021,16 @@ func (m *Trigger) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
+			if m.Event == nil {
+				m.Event = &types.Any{}
+			}
 			if err := m.Event.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Actions", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -867,8 +1057,8 @@ func (m *Trigger) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Action = append(m.Action, &types.Any{})
-			if err := m.Action[len(m.Action)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Actions = append(m.Actions, &types.Any{})
+			if err := m.Actions[len(m.Actions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1028,7 +1218,7 @@ func (m *QueuedTrigger) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Event) Unmarshal(dAtA []byte) error {
+func (m *BlockHeightEvent) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1051,10 +1241,110 @@ func (m *Event) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Event: wiretype end group for non-group")
+			return fmt.Errorf("proto: BlockHeightEvent: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Event: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: BlockHeightEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTrigger(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTrigger
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BlockTimeEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTrigger
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BlockTimeEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BlockTimeEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTrigger(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTrigger
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TransactionEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTrigger
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TransactionEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TransactionEvent: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

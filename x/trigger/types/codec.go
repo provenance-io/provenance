@@ -13,6 +13,24 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgCreateTriggerRequest{},
 	)
+
+	registry.RegisterInterface(
+		"provenance.trigger.v1.TransactionEvent",
+		(*TriggerEventI)(nil),
+		&TransactionEvent{},
+	)
+
+	registry.RegisterInterface(
+		"provenance.trigger.v1.BlockHeightEvent",
+		(*TriggerEventI)(nil),
+		&BlockHeightEvent{},
+	)
+
+	registry.RegisterInterface(
+		"provenance.trigger.v1.BlockTimeEvent",
+		(*TriggerEventI)(nil),
+		&BlockTimeEvent{},
+	)
 }
 
 var (

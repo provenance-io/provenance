@@ -19,7 +19,7 @@ func (k Keeper) RunTriggers(ctx sdk.Context) {
 			fmt.Println(("error"))
 		}
 		_ = k.DequeueTrigger(ctx)
-		action := item.GetTrigger().Action
+		action := item.GetTrigger().Actions
 
 		err = k.RunAction(ctx, action)
 		if err != nil {

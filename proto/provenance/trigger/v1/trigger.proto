@@ -20,7 +20,7 @@ message Trigger {
   // The owner of the Trigger.
   string owner = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // The event that must be detected for the trigger to fire.
-  Event event = 3 [(gogoproto.nullable) = false];
+  google.protobuf.Any event = 3 [(cosmos_proto.accepts_interface) = "TriggerEventI"];
   // The messages to run when the trigger fires.
   repeated google.protobuf.Any actions = 4;
 }
@@ -38,9 +38,22 @@ message QueuedTrigger {
   Trigger trigger = 3 [(gogoproto.nullable) = false];
 }
 
-message Event {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
+message BlockHeightEvent {
+  option (gogoproto.equal)                   = true;
+  option (gogoproto.goproto_stringer)        = true;
+  option (cosmos_proto.implements_interface) = "TriggerEventI";
+}
+
+message BlockTimeEvent {
+  option (gogoproto.equal)                   = true;
+  option (gogoproto.goproto_stringer)        = true;
+  option (cosmos_proto.implements_interface) = "TriggerEventI";
+}
+
+message TransactionEvent {
+  option (gogoproto.equal)                   = true;
+  option (gogoproto.goproto_stringer)        = true;
+  option (cosmos_proto.implements_interface) = "TriggerEventI";
 
   // The name of the event for a match.
   string name = 1;

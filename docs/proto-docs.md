@@ -419,8 +419,10 @@
   
 - [provenance/trigger/v1/trigger.proto](#provenance/trigger/v1/trigger.proto)
     - [Attribute](#provenance.trigger.v1.Attribute)
-    - [Event](#provenance.trigger.v1.Event)
+    - [BlockHeightEvent](#provenance.trigger.v1.BlockHeightEvent)
+    - [BlockTimeEvent](#provenance.trigger.v1.BlockTimeEvent)
     - [QueuedTrigger](#provenance.trigger.v1.QueuedTrigger)
+    - [TransactionEvent](#provenance.trigger.v1.TransactionEvent)
     - [Trigger](#provenance.trigger.v1.Trigger)
   
 - [provenance/trigger/v1/genesis.proto](#provenance/trigger/v1/genesis.proto)
@@ -6307,16 +6309,20 @@ Msg
 
 
 
-<a name="provenance.trigger.v1.Event"></a>
+<a name="provenance.trigger.v1.BlockHeightEvent"></a>
 
-### Event
+### BlockHeightEvent
 
 
 
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  | The name of the event for a match. |
-| `attributes` | [Attribute](#provenance.trigger.v1.Attribute) | repeated | The attributes that must be present for a match. |
+
+
+
+
+<a name="provenance.trigger.v1.BlockTimeEvent"></a>
+
+### BlockTimeEvent
+
 
 
 
@@ -6340,6 +6346,22 @@ QueuedTrigger
 
 
 
+<a name="provenance.trigger.v1.TransactionEvent"></a>
+
+### TransactionEvent
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | The name of the event for a match. |
+| `attributes` | [Attribute](#provenance.trigger.v1.Attribute) | repeated | The attributes that must be present for a match. |
+
+
+
+
+
+
 <a name="provenance.trigger.v1.Trigger"></a>
 
 ### Trigger
@@ -6350,8 +6372,8 @@ Trigger
 | ----- | ---- | ----- | ----------- |
 | `id` | [uint64](#uint64) |  | An integer to uniquely identify the trigger. |
 | `owner` | [string](#string) |  | The owner of the Trigger. |
-| `event` | [Event](#provenance.trigger.v1.Event) |  | The event that must be detected for the trigger to fire. |
-| `action` | [google.protobuf.Any](#google.protobuf.Any) | repeated | The message to run when the trigger fires. |
+| `event` | [google.protobuf.Any](#google.protobuf.Any) |  | The event that must be detected for the trigger to fire. |
+| `actions` | [google.protobuf.Any](#google.protobuf.Any) | repeated | The messages to run when the trigger fires. |
 
 
 
@@ -6470,8 +6492,8 @@ MsgCreateTriggerRequest is the request type for creating a trigger RPC
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  | The signing authority for the request |
-| `event` | [Event](#provenance.trigger.v1.Event) |  | The event that must be detected for the trigger to fire. |
-| `action` | [google.protobuf.Any](#google.protobuf.Any) | repeated | The message to run when the trigger fires. |
+| `event` | [google.protobuf.Any](#google.protobuf.Any) |  | The event that must be detected for the trigger to fire. |
+| `actions` | [google.protobuf.Any](#google.protobuf.Any) | repeated | The messages to run when the trigger fires. |
 
 
 
