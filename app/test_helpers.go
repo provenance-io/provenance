@@ -7,12 +7,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/server"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
@@ -80,11 +83,53 @@ func setup(t *testing.T, withGenesis bool, invCheckPeriod uint) (*App, GenesisSt
 	if len(pioconfig.GetProvenanceConfig().FeeDenom) == 0 {
 		pioconfig.SetProvenanceConfig("", 0)
 	}
-	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, encCdc, sdksim.EmptyAppOptions{})
+
+	app := New(loggerMaker(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, encCdc, sdksim.EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}
 	return app, GenesisState{}
+}
+
+// A LoggerMakerFn is a function that makes a logger.
+type LoggerMakerFn func() log.Logger
+
+// loggerMaker is used during app setup for unit test.
+// The default is a no-op logger.
+// There's no way to update the logger after it's provided to New.
+// Using SetLoggerMaker, though, we can enable logging for a unit test that needs help.
+var loggerMaker LoggerMakerFn = log.NewNopLogger
+
+// SetLoggerMaker sets the global loggerMaker variable (used for test setup) and returns what it was before.
+//
+// Example usage: defer SetLoggerMaker(SetLoggerMaker(NewDebugLogger))
+//
+// The inside SetLoggerMaker(NewDebugLogger) is called immediately at that line and it's result is
+// defined as the argument to the outside SetLoggerMaker which is invoked via defer when the function returns.
+// Basically, it temporarily changes the loggerMaker for the duration of the function in question.
+// That line would be added before a call to one of the app setup functions, e.g. SetupWithGenesisRewardsProgram.
+//
+// This function should never be called in any committed code. It's only for test troubleshooting.
+func SetLoggerMaker(newLoggerMaker LoggerMakerFn) LoggerMakerFn {
+	orig := loggerMaker
+	loggerMaker = newLoggerMaker
+	return orig
+}
+
+// NewDebugLogger creates a new logger to stdout with level debug.
+// Standard usage: defer SetLoggerMaker(SetLoggerMaker(NewDebugLogger))
+func NewDebugLogger() log.Logger {
+	lw := zerolog.ConsoleWriter{Out: os.Stdout}
+	logger := zerolog.New(lw).Level(zerolog.DebugLevel).With().Timestamp().Logger()
+	return server.ZeroLogWrapper{Logger: logger}
+}
+
+// NewInfoLogger creates a new logger to stdout with level info.
+// Standard usage: defer SetLoggerMaker(SetLoggerMaker(NewInfoLogger))
+func NewInfoLogger() log.Logger {
+	lw := zerolog.ConsoleWriter{Out: os.Stdout}
+	logger := zerolog.New(lw).Level(zerolog.InfoLevel).With().Timestamp().Logger()
+	return server.ZeroLogWrapper{Logger: logger}
 }
 
 // NewAppWithCustomOptions initializes a new SimApp with custom options.
