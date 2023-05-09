@@ -11,16 +11,20 @@ import (
 )
 
 // ProcessTransactions in the endblock
-func (k Keeper) ProcessTransactions(ctx sdk.Context) {
+func (k Keeper) ProcessTransactions(origCtx sdk.Context) {
 	// Get all Active Reward Programs
-	rewardPrograms, err := k.GetAllActiveRewardPrograms(ctx)
+	rewardPrograms, err := k.GetAllActiveRewardPrograms(origCtx)
 	if err != nil {
-		ctx.Logger().Error(err.Error())
+		origCtx.Logger().Error(err.Error())
 		return
 	}
 
 	// Grant shares for qualifying actions
 	for index := range rewardPrograms {
+		// Because this is designed for the EndBlocker, we don't always have auto-rollback.
+		// We don't partial state recorded if an error is encountered in the middle.
+		// So use a cache context and only write it if there wasn't an error.
+		ctx, writeCtx := origCtx.CacheContext()
 		// Go through all the reward programs
 		actions, err := k.DetectQualifyingActions(ctx, &rewardPrograms[index])
 		if err != nil {
@@ -32,7 +36,10 @@ func (k Keeper) ProcessTransactions(ctx sdk.Context) {
 		err = k.RewardShares(ctx, &rewardPrograms[index], actions)
 		if err != nil {
 			ctx.Logger().Error(err.Error())
+			continue
 		}
+
+		writeCtx()
 	}
 }
 

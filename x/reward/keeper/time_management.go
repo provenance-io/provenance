@@ -19,8 +19,9 @@ func (k Keeper) UpdateUnexpiredRewardsProgram(origCtx sdk.Context) {
 	}
 
 	for index := range rewardPrograms {
-		// There are multiple things that con go wrong. And since this is designed for BeginBlock use, we don't
-		// automatically get rollback on error. So we use a cache context and write that if there aren't any errors.
+		// Because this is designed for the BeginBlocker, we don't always have auto-rollback.
+		// We don't partial state recorded if an error is encountered in the middle.
+		// So use a cache context and only write it if there wasn't an error.
 		ctx, writeCtx := origCtx.CacheContext()
 		switch {
 		case rewardPrograms[index].IsStarting(ctx):
