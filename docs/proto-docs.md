@@ -440,6 +440,7 @@ Attribute holds a typed key/value structure for data associated with an account
 | `value` | [bytes](#bytes) |  | The attribute value. |
 | `attribute_type` | [AttributeType](#provenance.attribute.v1.AttributeType) |  | The attribute value type. |
 | `address` | [string](#string) |  | The address the attribute is bound to |
+| `experation_date` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that an attribute will expire. |
 
 
 
@@ -806,6 +807,7 @@ Attributes may only be set in an account by the account that the attribute name 
 | `attribute_type` | [AttributeType](#provenance.attribute.v1.AttributeType) |  | The attribute value type. |
 | `account` | [string](#string) |  | The account to add the attribute to. |
 | `owner` | [string](#string) |  | The address that the name must resolve to. |
+| `experation_date` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that an attribute will expire. |
 
 
 
