@@ -65,7 +65,7 @@ This message is expected to fail if:
 A name record is modified by proposing the `MsgModifyNameRequest` message.
 
 ```proto
-// MsgModifyNameRequest defines a governance method that is used to update an existing address/name binding.
+// MsgModifyNameRequest defines a method that is used to update an existing address/name binding.
 message MsgModifyNameRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
@@ -79,7 +79,7 @@ message MsgModifyNameRequest {
 This message is expected to fail if:
 - Any components of the request do not pass basic integrity and format checks
 - The record to update does not exist
-- The authority does not match the gov module.
+- The authority does not match the gov module or the name owner.
 
 If successful a name record will be updated with the new address and restriction.
 
