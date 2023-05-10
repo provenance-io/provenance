@@ -80538,6 +80538,9 @@ definitions:
   provenance.attribute.v1.MsgDeleteDistinctAttributeResponse:
     type: object
     description: MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
+  provenance.attribute.v1.MsgUpdateAttributeExpirationResponse:
+    type: object
+    description: MsgUpdateAttributeExpirationResponse defines the Msg/Vote response type.
   provenance.attribute.v1.MsgUpdateAttributeResponse:
     type: object
     description: MsgUpdateAttributeResponse defines the Msg/Vote response type.

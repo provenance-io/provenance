@@ -126,6 +126,10 @@ func (k msgServer) UpdateAttribute(goCtx context.Context, msg *types.MsgUpdateAt
 	return &types.MsgUpdateAttributeResponse{}, nil
 }
 
+func (k msgServer) UpdateAttributeExpiration(goCtx context.Context, msg *types.MsgUpdateAttributeExpirationRequest) (*types.MsgUpdateAttributeExpirationResponse, error) {
+	return nil, nil
+}
+
 func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAttributeRequest) (*types.MsgDeleteAttributeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

@@ -206,6 +206,117 @@ func (m *MsgUpdateAttributeResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateAttributeResponse proto.InternalMessageInfo
 
+// MsgUpdateAttributeExpirationRequest defines an sdk.Msg type that is used to update an existing attribute's expiration
+// date
+type MsgUpdateAttributeExpirationRequest struct {
+	// The attribute name.
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// Time that an attribute will expire.
+	ExpirationDate *time.Time `protobuf:"bytes,2,opt,name=expiration_date,json=expirationDate,proto3,stdtime" json:"expiration_date,omitempty"`
+	// The account to add the attribute to.
+	Account string `protobuf:"bytes,3,opt,name=account,proto3" json:"account,omitempty"`
+	// The address that the name must resolve to.
+	Owner string `protobuf:"bytes,4,opt,name=owner,proto3" json:"owner,omitempty"`
+}
+
+func (m *MsgUpdateAttributeExpirationRequest) Reset()         { *m = MsgUpdateAttributeExpirationRequest{} }
+func (m *MsgUpdateAttributeExpirationRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateAttributeExpirationRequest) ProtoMessage()    {}
+func (*MsgUpdateAttributeExpirationRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5de344c1a12714be, []int{4}
+}
+func (m *MsgUpdateAttributeExpirationRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateAttributeExpirationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateAttributeExpirationRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateAttributeExpirationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateAttributeExpirationRequest.Merge(m, src)
+}
+func (m *MsgUpdateAttributeExpirationRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateAttributeExpirationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateAttributeExpirationRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateAttributeExpirationRequest proto.InternalMessageInfo
+
+func (m *MsgUpdateAttributeExpirationRequest) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *MsgUpdateAttributeExpirationRequest) GetExpirationDate() *time.Time {
+	if m != nil {
+		return m.ExpirationDate
+	}
+	return nil
+}
+
+func (m *MsgUpdateAttributeExpirationRequest) GetAccount() string {
+	if m != nil {
+		return m.Account
+	}
+	return ""
+}
+
+func (m *MsgUpdateAttributeExpirationRequest) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+// MsgUpdateAttributeExpirationResponse defines the Msg/Vote response type.
+type MsgUpdateAttributeExpirationResponse struct {
+}
+
+func (m *MsgUpdateAttributeExpirationResponse) Reset()         { *m = MsgUpdateAttributeExpirationResponse{} }
+func (m *MsgUpdateAttributeExpirationResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateAttributeExpirationResponse) ProtoMessage()    {}
+func (*MsgUpdateAttributeExpirationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5de344c1a12714be, []int{5}
+}
+func (m *MsgUpdateAttributeExpirationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateAttributeExpirationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateAttributeExpirationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateAttributeExpirationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateAttributeExpirationResponse.Merge(m, src)
+}
+func (m *MsgUpdateAttributeExpirationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateAttributeExpirationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateAttributeExpirationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateAttributeExpirationResponse proto.InternalMessageInfo
+
 // MsgDeleteAttributeRequest defines a message to delete an attribute from an account
 // Attributes may only be remove from an account by the account that the attribute name resolves to.
 type MsgDeleteAttributeRequest struct {
@@ -220,7 +331,7 @@ type MsgDeleteAttributeRequest struct {
 func (m *MsgDeleteAttributeRequest) Reset()      { *m = MsgDeleteAttributeRequest{} }
 func (*MsgDeleteAttributeRequest) ProtoMessage() {}
 func (*MsgDeleteAttributeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5de344c1a12714be, []int{4}
+	return fileDescriptor_5de344c1a12714be, []int{6}
 }
 func (m *MsgDeleteAttributeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -257,7 +368,7 @@ func (m *MsgDeleteAttributeResponse) Reset()         { *m = MsgDeleteAttributeRe
 func (m *MsgDeleteAttributeResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgDeleteAttributeResponse) ProtoMessage()    {}
 func (*MsgDeleteAttributeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5de344c1a12714be, []int{5}
+	return fileDescriptor_5de344c1a12714be, []int{7}
 }
 func (m *MsgDeleteAttributeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -302,7 +413,7 @@ type MsgDeleteDistinctAttributeRequest struct {
 func (m *MsgDeleteDistinctAttributeRequest) Reset()      { *m = MsgDeleteDistinctAttributeRequest{} }
 func (*MsgDeleteDistinctAttributeRequest) ProtoMessage() {}
 func (*MsgDeleteDistinctAttributeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5de344c1a12714be, []int{6}
+	return fileDescriptor_5de344c1a12714be, []int{8}
 }
 func (m *MsgDeleteDistinctAttributeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -339,7 +450,7 @@ func (m *MsgDeleteDistinctAttributeResponse) Reset()         { *m = MsgDeleteDis
 func (m *MsgDeleteDistinctAttributeResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgDeleteDistinctAttributeResponse) ProtoMessage()    {}
 func (*MsgDeleteDistinctAttributeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5de344c1a12714be, []int{7}
+	return fileDescriptor_5de344c1a12714be, []int{9}
 }
 func (m *MsgDeleteDistinctAttributeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -373,6 +484,8 @@ func init() {
 	proto.RegisterType((*MsgAddAttributeResponse)(nil), "provenance.attribute.v1.MsgAddAttributeResponse")
 	proto.RegisterType((*MsgUpdateAttributeRequest)(nil), "provenance.attribute.v1.MsgUpdateAttributeRequest")
 	proto.RegisterType((*MsgUpdateAttributeResponse)(nil), "provenance.attribute.v1.MsgUpdateAttributeResponse")
+	proto.RegisterType((*MsgUpdateAttributeExpirationRequest)(nil), "provenance.attribute.v1.MsgUpdateAttributeExpirationRequest")
+	proto.RegisterType((*MsgUpdateAttributeExpirationResponse)(nil), "provenance.attribute.v1.MsgUpdateAttributeExpirationResponse")
 	proto.RegisterType((*MsgDeleteAttributeRequest)(nil), "provenance.attribute.v1.MsgDeleteAttributeRequest")
 	proto.RegisterType((*MsgDeleteAttributeResponse)(nil), "provenance.attribute.v1.MsgDeleteAttributeResponse")
 	proto.RegisterType((*MsgDeleteDistinctAttributeRequest)(nil), "provenance.attribute.v1.MsgDeleteDistinctAttributeRequest")
@@ -382,46 +495,49 @@ func init() {
 func init() { proto.RegisterFile("provenance/attribute/v1/tx.proto", fileDescriptor_5de344c1a12714be) }
 
 var fileDescriptor_5de344c1a12714be = []byte{
-	// 616 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0x3f, 0x6f, 0xd3, 0x40,
-	0x1c, 0xf5, 0x25, 0x69, 0x0a, 0xd7, 0x34, 0x45, 0x47, 0x4b, 0x5c, 0x0b, 0xd9, 0x6e, 0xc4, 0x9f,
-	0x2c, 0xd8, 0x34, 0x15, 0x4b, 0x99, 0x5a, 0x65, 0x8d, 0x84, 0xa2, 0xc2, 0xd0, 0x81, 0xe8, 0x92,
-	0x1c, 0xe6, 0xa4, 0xc4, 0xe7, 0xd8, 0xe7, 0x90, 0x32, 0xb1, 0x20, 0xb1, 0x51, 0x31, 0x31, 0x46,
-	0x7c, 0x9a, 0x8e, 0x1d, 0x19, 0x10, 0xa0, 0x64, 0xe1, 0x1b, 0xb0, 0xa2, 0x9c, 0xe3, 0xc4, 0x4d,
-	0x63, 0x93, 0xc0, 0xe6, 0xdf, 0xf9, 0xdd, 0x7b, 0x2f, 0xef, 0xf9, 0x2e, 0x50, 0x77, 0x5c, 0xd6,
-	0x23, 0x36, 0xb6, 0x9b, 0xc4, 0xc4, 0x9c, 0xbb, 0xb4, 0xe1, 0x73, 0x62, 0xf6, 0xf6, 0x4d, 0xde,
-	0x37, 0x1c, 0x97, 0x71, 0x86, 0x0a, 0x33, 0x84, 0x31, 0x45, 0x18, 0xbd, 0x7d, 0x65, 0xdb, 0x62,
-	0x16, 0x13, 0x18, 0x73, 0xfc, 0x14, 0xc0, 0x15, 0xcd, 0x62, 0xcc, 0x6a, 0x13, 0x53, 0x4c, 0x0d,
-	0xff, 0x95, 0xc9, 0x69, 0x87, 0x78, 0x1c, 0x77, 0x9c, 0x09, 0xe0, 0x61, 0x9c, 0xe2, 0x8c, 0x5c,
-	0x00, 0x8b, 0x5f, 0x52, 0xf0, 0x4e, 0xd5, 0xb3, 0x8e, 0x5a, 0xad, 0xa3, 0xf0, 0x4d, 0x8d, 0x74,
-	0x7d, 0xe2, 0x71, 0x84, 0x60, 0xc6, 0xc6, 0x1d, 0x22, 0x03, 0x1d, 0x94, 0x6e, 0xd6, 0xc4, 0x33,
-	0xda, 0x86, 0x6b, 0x3d, 0xdc, 0xf6, 0x89, 0x9c, 0xd2, 0x41, 0x29, 0x57, 0x0b, 0x06, 0x54, 0x85,
-	0xf9, 0x29, 0x6f, 0x9d, 0x9f, 0x39, 0x44, 0x4e, 0xeb, 0xa0, 0x94, 0x2f, 0x3f, 0x30, 0x62, 0x7e,
-	0x96, 0x31, 0x15, 0x3b, 0x39, 0x73, 0x48, 0x6d, 0x13, 0x47, 0x47, 0x24, 0xc3, 0x75, 0xdc, 0x6c,
-	0x32, 0xdf, 0xe6, 0x72, 0x46, 0x68, 0x87, 0xe3, 0x58, 0x9e, 0xbd, 0xb1, 0x89, 0x2b, 0xaf, 0x89,
-	0xf5, 0x60, 0x40, 0x55, 0xb8, 0x45, 0xfa, 0x0e, 0x75, 0x31, 0xa7, 0xcc, 0xae, 0xb7, 0x30, 0x27,
-	0x72, 0x56, 0x07, 0xa5, 0x8d, 0xb2, 0x62, 0x04, 0x39, 0x19, 0x61, 0x4e, 0xc6, 0x49, 0x98, 0xd3,
-	0xf1, 0x8d, 0x8b, 0xef, 0x1a, 0x38, 0xff, 0xa1, 0x81, 0x5a, 0x7e, 0xb6, 0xb9, 0x82, 0x39, 0x39,
-	0xbc, 0xf5, 0x61, 0xa0, 0x49, 0x9f, 0x07, 0x9a, 0xf4, 0x6b, 0xa0, 0x49, 0xef, 0xbe, 0xe9, 0x52,
-	0x71, 0x17, 0x16, 0xae, 0x65, 0xe4, 0x39, 0xcc, 0xf6, 0x48, 0xf1, 0x77, 0x0a, 0xee, 0x56, 0x3d,
-	0xeb, 0xb9, 0x33, 0x96, 0x5d, 0x2a, 0xc2, 0xfb, 0x30, 0xcf, 0x5c, 0x6a, 0x51, 0x1b, 0xb7, 0xeb,
-	0xd1, 0x2c, 0x37, 0xc3, 0xd5, 0x17, 0x22, 0xd3, 0x3d, 0x98, 0xf3, 0x05, 0xe9, 0x04, 0x94, 0x16,
-	0xa0, 0x8d, 0x60, 0x2d, 0x80, 0xbc, 0x84, 0x85, 0x29, 0xd3, 0x5c, 0xfe, 0x99, 0x95, 0xf2, 0xdf,
-	0x09, 0x69, 0xae, 0x2c, 0xa3, 0x53, 0xb8, 0x33, 0xb1, 0x30, 0xc7, 0xbe, 0xb6, 0x12, 0xfb, 0x6d,
-	0xff, 0x6a, 0x38, 0xf3, 0x1d, 0x67, 0x63, 0x3a, 0x5e, 0x8f, 0x74, 0xbc, 0xa0, 0x94, 0xbb, 0x50,
-	0x59, 0x14, 0xfc, 0xa4, 0x97, 0xae, 0xa8, 0xa5, 0x42, 0xda, 0x64, 0xc9, 0x5a, 0x22, 0x86, 0x52,
-	0x31, 0x86, 0xd2, 0xcb, 0x18, 0xba, 0x26, 0x39, 0x31, 0xf4, 0x11, 0xc0, 0xbd, 0xe9, 0xeb, 0x0a,
-	0xf5, 0x38, 0xb5, 0x9b, 0xfc, 0x3f, 0xce, 0x5c, 0xc4, 0x6f, 0x3a, 0xc6, 0x6f, 0x26, 0xd9, 0xef,
-	0x3d, 0x58, 0x4c, 0x32, 0x14, 0xf8, 0x2e, 0xbf, 0xcf, 0xc0, 0x74, 0xd5, 0xb3, 0x50, 0x17, 0xe6,
-	0xa2, 0x07, 0x00, 0x99, 0xb1, 0xed, 0x2f, 0xbe, 0x4e, 0x94, 0xc7, 0xcb, 0x6f, 0x08, 0xa4, 0xd1,
-	0x5b, 0xb8, 0x35, 0x57, 0x2f, 0x2a, 0x27, 0x91, 0x2c, 0x3e, 0x84, 0xca, 0xc1, 0x4a, 0x7b, 0x66,
-	0xda, 0x73, 0x4d, 0x26, 0x6b, 0x2f, 0xfe, 0xd2, 0x92, 0xb5, 0x63, 0x3e, 0x15, 0xf4, 0x09, 0xc0,
-	0x42, 0x4c, 0x2d, 0xe8, 0xf0, 0xef, 0x84, 0x71, 0x1f, 0x97, 0xf2, 0xf4, 0x9f, 0xf6, 0x06, 0xa6,
-	0x8e, 0x3b, 0x17, 0x43, 0x15, 0x5c, 0x0e, 0x55, 0xf0, 0x73, 0xa8, 0x82, 0xf3, 0x91, 0x2a, 0x5d,
-	0x8e, 0x54, 0xe9, 0xeb, 0x48, 0x95, 0xa0, 0x42, 0x59, 0x1c, 0xf1, 0x33, 0x70, 0xfa, 0xc4, 0xa2,
-	0xfc, 0xb5, 0xdf, 0x30, 0x9a, 0xac, 0x63, 0xce, 0x50, 0x8f, 0x28, 0x8b, 0x4c, 0x66, 0x3f, 0xf2,
-	0x27, 0x35, 0xbe, 0x61, 0xbc, 0x46, 0x56, 0x5c, 0xd9, 0x07, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff,
-	0x8f, 0x92, 0x83, 0x62, 0x3b, 0x07, 0x00, 0x00,
+	// 671 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x56, 0xbf, 0x6f, 0xd3, 0x40,
+	0x14, 0xf6, 0xe5, 0x47, 0x0b, 0xaf, 0x6d, 0x8a, 0x8e, 0x96, 0xb8, 0x16, 0xb2, 0xdd, 0x50, 0x4a,
+	0x16, 0x6c, 0x9a, 0x8a, 0xa5, 0xc0, 0xd0, 0xaa, 0x8c, 0x91, 0x50, 0x54, 0x18, 0x3a, 0x50, 0x39,
+	0xe9, 0x61, 0x2c, 0x25, 0x3e, 0xd7, 0x3e, 0x87, 0x96, 0x89, 0x91, 0x8d, 0x8a, 0xa9, 0x63, 0xc4,
+	0x5f, 0xc1, 0x9f, 0xd0, 0xb1, 0x23, 0x03, 0x02, 0xd4, 0x2e, 0xfc, 0x07, 0xac, 0x28, 0xfe, 0x15,
+	0x37, 0xb1, 0x4d, 0x12, 0x36, 0xbf, 0xbb, 0xef, 0xbe, 0xf7, 0xee, 0x7b, 0xdf, 0x3d, 0x19, 0x64,
+	0xcb, 0xa6, 0x5d, 0x62, 0x6a, 0x66, 0x8b, 0xa8, 0x1a, 0x63, 0xb6, 0xd1, 0x74, 0x19, 0x51, 0xbb,
+	0x1b, 0x2a, 0x3b, 0x56, 0x2c, 0x9b, 0x32, 0x8a, 0xcb, 0x03, 0x84, 0x12, 0x21, 0x94, 0xee, 0x86,
+	0xb0, 0xa4, 0x53, 0x9d, 0x7a, 0x18, 0xb5, 0xff, 0xe5, 0xc3, 0x05, 0x49, 0xa7, 0x54, 0x6f, 0x13,
+	0xd5, 0x8b, 0x9a, 0xee, 0x1b, 0x95, 0x19, 0x1d, 0xe2, 0x30, 0xad, 0x63, 0x05, 0x80, 0x07, 0x69,
+	0x19, 0x07, 0xe4, 0x1e, 0xb0, 0xf2, 0x25, 0x07, 0x77, 0xea, 0x8e, 0xbe, 0x7d, 0x78, 0xb8, 0x1d,
+	0xee, 0x34, 0xc8, 0x91, 0x4b, 0x1c, 0x86, 0x31, 0x14, 0x4c, 0xad, 0x43, 0x78, 0x24, 0xa3, 0xea,
+	0xcd, 0x86, 0xf7, 0x8d, 0x97, 0xa0, 0xd8, 0xd5, 0xda, 0x2e, 0xe1, 0x73, 0x32, 0xaa, 0xce, 0x37,
+	0xfc, 0x00, 0xd7, 0xa1, 0x14, 0xf1, 0x1e, 0xb0, 0x13, 0x8b, 0xf0, 0x79, 0x19, 0x55, 0x4b, 0xb5,
+	0x75, 0x25, 0xe5, 0x5a, 0x4a, 0x94, 0x6c, 0xef, 0xc4, 0x22, 0x8d, 0x05, 0x2d, 0x1e, 0x62, 0x1e,
+	0x66, 0xb5, 0x56, 0x8b, 0xba, 0x26, 0xe3, 0x0b, 0x5e, 0xee, 0x30, 0xec, 0xa7, 0xa7, 0xef, 0x4c,
+	0x62, 0xf3, 0x45, 0x6f, 0xdd, 0x0f, 0x70, 0x1d, 0x16, 0xc9, 0xb1, 0x65, 0xd8, 0x1a, 0x33, 0xa8,
+	0x79, 0x70, 0xa8, 0x31, 0xc2, 0xcf, 0xc8, 0xa8, 0x3a, 0x57, 0x13, 0x14, 0x5f, 0x27, 0x25, 0xd4,
+	0x49, 0xd9, 0x0b, 0x75, 0xda, 0xb9, 0x71, 0xfe, 0x43, 0x42, 0xa7, 0x3f, 0x25, 0xd4, 0x28, 0x0d,
+	0x0e, 0xef, 0x6a, 0x8c, 0x6c, 0xdd, 0xfa, 0xd8, 0x93, 0xb8, 0xb3, 0x9e, 0xc4, 0xfd, 0xee, 0x49,
+	0xdc, 0x87, 0xef, 0x32, 0x57, 0x59, 0x81, 0xf2, 0x88, 0x46, 0x8e, 0x45, 0x4d, 0x87, 0x54, 0xfe,
+	0xe4, 0x60, 0xa5, 0xee, 0xe8, 0x2f, 0xad, 0x7e, 0xda, 0xb1, 0x24, 0xbc, 0x0f, 0x25, 0x6a, 0x1b,
+	0xba, 0x61, 0x6a, 0xed, 0x83, 0xb8, 0x96, 0x0b, 0xe1, 0xea, 0x2b, 0x4f, 0xd3, 0x55, 0x98, 0x77,
+	0x3d, 0xd2, 0x00, 0x94, 0xf7, 0x40, 0x73, 0xfe, 0x9a, 0x0f, 0x79, 0x0d, 0xe5, 0x88, 0x69, 0x48,
+	0xff, 0xc2, 0x44, 0xfa, 0x2f, 0x87, 0x34, 0xd7, 0x96, 0xf1, 0x3e, 0x2c, 0x07, 0x25, 0x0c, 0xb1,
+	0x17, 0x27, 0x62, 0xbf, 0xed, 0x5e, 0x17, 0x67, 0xb8, 0xc7, 0x33, 0x29, 0x3d, 0x9e, 0x8d, 0xf5,
+	0x38, 0xa1, 0x29, 0x77, 0x41, 0x48, 0x12, 0x3e, 0xe8, 0xcb, 0x57, 0x04, 0xf7, 0x46, 0xb7, 0x9f,
+	0x47, 0x9d, 0xce, 0xea, 0x50, 0x82, 0x9f, 0x72, 0xd3, 0xfb, 0x29, 0x7e, 0xd5, 0x7c, 0xca, 0x55,
+	0x0b, 0xb1, 0xab, 0x56, 0xd6, 0x61, 0x2d, 0xbb, 0xf2, 0xe0, 0x8a, 0x47, 0x9e, 0xf3, 0x76, 0x49,
+	0x9b, 0x8c, 0xe9, 0xbc, 0x58, 0x21, 0xb9, 0x94, 0x42, 0xf2, 0xe3, 0x68, 0x3e, 0x92, 0x32, 0x28,
+	0xe8, 0x13, 0x82, 0xd5, 0x68, 0x7b, 0xd7, 0x70, 0x98, 0x61, 0xb6, 0xd8, 0x7f, 0x8c, 0x95, 0x09,
+	0x85, 0x4b, 0xa8, 0x77, 0x0d, 0x2a, 0x59, 0x05, 0xf9, 0x75, 0xd7, 0x7a, 0x45, 0xc8, 0xd7, 0x1d,
+	0x1d, 0x1f, 0xc1, 0x7c, 0xfc, 0x8d, 0x63, 0x35, 0xd5, 0xe0, 0xc9, 0x13, 0x53, 0x78, 0x34, 0xfe,
+	0x01, 0x3f, 0x35, 0x7e, 0x0f, 0x8b, 0x43, 0x8d, 0xc6, 0xb5, 0x2c, 0x92, 0xe4, 0x39, 0x23, 0x6c,
+	0x4e, 0x74, 0x26, 0xc8, 0x7d, 0x86, 0x60, 0x25, 0xd5, 0x65, 0xf8, 0xe9, 0x04, 0x94, 0x23, 0xcf,
+	0x4a, 0x78, 0x36, 0xe5, 0xe9, 0x81, 0x2c, 0x43, 0x26, 0xcb, 0x96, 0x25, 0xf9, 0x11, 0x64, 0xcb,
+	0x92, 0xe2, 0x62, 0xfc, 0x19, 0x41, 0x39, 0xc5, 0x31, 0x78, 0xeb, 0xdf, 0x84, 0x69, 0xbe, 0x17,
+	0x9e, 0x4c, 0x75, 0xd6, 0x2f, 0x6a, 0xa7, 0x73, 0x7e, 0x29, 0xa2, 0x8b, 0x4b, 0x11, 0xfd, 0xba,
+	0x14, 0xd1, 0xe9, 0x95, 0xc8, 0x5d, 0x5c, 0x89, 0xdc, 0xb7, 0x2b, 0x91, 0x03, 0xc1, 0xa0, 0x69,
+	0xc4, 0x2f, 0xd0, 0xfe, 0x63, 0xdd, 0x60, 0x6f, 0xdd, 0xa6, 0xd2, 0xa2, 0x1d, 0x75, 0x80, 0x7a,
+	0x68, 0xd0, 0x58, 0xa4, 0x1e, 0xc7, 0x7e, 0x11, 0xfa, 0xf3, 0xdd, 0x69, 0xce, 0x78, 0x03, 0x6e,
+	0xf3, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xb7, 0xa9, 0x4a, 0xa4, 0xb9, 0x08, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -440,6 +556,8 @@ type MsgClient interface {
 	AddAttribute(ctx context.Context, in *MsgAddAttributeRequest, opts ...grpc.CallOption) (*MsgAddAttributeResponse, error)
 	// UpdateAttribute defines a method to verify a particular invariance.
 	UpdateAttribute(ctx context.Context, in *MsgUpdateAttributeRequest, opts ...grpc.CallOption) (*MsgUpdateAttributeResponse, error)
+	// UpdateAttributeExpiration defines a method to verify a particular invariance.
+	UpdateAttributeExpiration(ctx context.Context, in *MsgUpdateAttributeExpirationRequest, opts ...grpc.CallOption) (*MsgUpdateAttributeExpirationResponse, error)
 	// DeleteAttribute defines a method to verify a particular invariance.
 	DeleteAttribute(ctx context.Context, in *MsgDeleteAttributeRequest, opts ...grpc.CallOption) (*MsgDeleteAttributeResponse, error)
 	// DeleteDistinctAttribute defines a method to verify a particular invariance.
@@ -472,6 +590,15 @@ func (c *msgClient) UpdateAttribute(ctx context.Context, in *MsgUpdateAttributeR
 	return out, nil
 }
 
+func (c *msgClient) UpdateAttributeExpiration(ctx context.Context, in *MsgUpdateAttributeExpirationRequest, opts ...grpc.CallOption) (*MsgUpdateAttributeExpirationResponse, error) {
+	out := new(MsgUpdateAttributeExpirationResponse)
+	err := c.cc.Invoke(ctx, "/provenance.attribute.v1.Msg/UpdateAttributeExpiration", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) DeleteAttribute(ctx context.Context, in *MsgDeleteAttributeRequest, opts ...grpc.CallOption) (*MsgDeleteAttributeResponse, error) {
 	out := new(MsgDeleteAttributeResponse)
 	err := c.cc.Invoke(ctx, "/provenance.attribute.v1.Msg/DeleteAttribute", in, out, opts...)
@@ -496,6 +623,8 @@ type MsgServer interface {
 	AddAttribute(context.Context, *MsgAddAttributeRequest) (*MsgAddAttributeResponse, error)
 	// UpdateAttribute defines a method to verify a particular invariance.
 	UpdateAttribute(context.Context, *MsgUpdateAttributeRequest) (*MsgUpdateAttributeResponse, error)
+	// UpdateAttributeExpiration defines a method to verify a particular invariance.
+	UpdateAttributeExpiration(context.Context, *MsgUpdateAttributeExpirationRequest) (*MsgUpdateAttributeExpirationResponse, error)
 	// DeleteAttribute defines a method to verify a particular invariance.
 	DeleteAttribute(context.Context, *MsgDeleteAttributeRequest) (*MsgDeleteAttributeResponse, error)
 	// DeleteDistinctAttribute defines a method to verify a particular invariance.
@@ -511,6 +640,9 @@ func (*UnimplementedMsgServer) AddAttribute(ctx context.Context, req *MsgAddAttr
 }
 func (*UnimplementedMsgServer) UpdateAttribute(ctx context.Context, req *MsgUpdateAttributeRequest) (*MsgUpdateAttributeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAttribute not implemented")
+}
+func (*UnimplementedMsgServer) UpdateAttributeExpiration(ctx context.Context, req *MsgUpdateAttributeExpirationRequest) (*MsgUpdateAttributeExpirationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAttributeExpiration not implemented")
 }
 func (*UnimplementedMsgServer) DeleteAttribute(ctx context.Context, req *MsgDeleteAttributeRequest) (*MsgDeleteAttributeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAttribute not implemented")
@@ -555,6 +687,24 @@ func _Msg_UpdateAttribute_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UpdateAttribute(ctx, req.(*MsgUpdateAttributeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateAttributeExpiration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateAttributeExpirationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateAttributeExpiration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.attribute.v1.Msg/UpdateAttributeExpiration",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateAttributeExpiration(ctx, req.(*MsgUpdateAttributeExpirationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -606,6 +756,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateAttribute",
 			Handler:    _Msg_UpdateAttribute_Handler,
+		},
+		{
+			MethodName: "UpdateAttributeExpiration",
+			Handler:    _Msg_UpdateAttributeExpiration_Handler,
 		},
 		{
 			MethodName: "DeleteAttribute",
@@ -793,6 +947,83 @@ func (m *MsgUpdateAttributeResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *MsgUpdateAttributeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateAttributeExpirationRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateAttributeExpirationRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateAttributeExpirationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Account) > 0 {
+		i -= len(m.Account)
+		copy(dAtA[i:], m.Account)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Account)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.ExpirationDate != nil {
+		n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.ExpirationDate, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.ExpirationDate):])
+		if err2 != nil {
+			return 0, err2
+		}
+		i -= n2
+		i = encodeVarintTx(dAtA, i, uint64(n2))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateAttributeExpirationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateAttributeExpirationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateAttributeExpirationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1029,6 +1260,40 @@ func (m *MsgUpdateAttributeRequest) Size() (n int) {
 }
 
 func (m *MsgUpdateAttributeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateAttributeExpirationRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.ExpirationDate != nil {
+		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.ExpirationDate)
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Account)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateAttributeExpirationResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1671,6 +1936,238 @@ func (m *MsgUpdateAttributeResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdateAttributeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateAttributeExpirationRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateAttributeExpirationRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateAttributeExpirationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExpirationDate", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ExpirationDate == nil {
+				m.ExpirationDate = new(time.Time)
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.ExpirationDate, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Account", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Account = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateAttributeExpirationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateAttributeExpirationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateAttributeExpirationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

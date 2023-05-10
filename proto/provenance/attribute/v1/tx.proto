@@ -18,6 +18,9 @@ service Msg {
   // UpdateAttribute defines a method to verify a particular invariance.
   rpc UpdateAttribute(MsgUpdateAttributeRequest) returns (MsgUpdateAttributeResponse);
 
+  // UpdateAttributeExpiration defines a method to verify a particular invariance.
+  rpc UpdateAttributeExpiration(MsgUpdateAttributeExpirationRequest) returns (MsgUpdateAttributeExpirationResponse);
+
   // DeleteAttribute defines a method to verify a particular invariance.
   rpc DeleteAttribute(MsgDeleteAttributeRequest) returns (MsgDeleteAttributeResponse);
 
@@ -76,6 +79,22 @@ message MsgUpdateAttributeRequest {
 
 // MsgUpdateAttributeResponse defines the Msg/Vote response type.
 message MsgUpdateAttributeResponse {}
+
+// MsgUpdateAttributeExpirationRequest defines an sdk.Msg type that is used to update an existing attribute's expiration
+// date
+message MsgUpdateAttributeExpirationRequest {
+  // The attribute name.
+  string name = 1;
+  // Time that an attribute will expire.
+  google.protobuf.Timestamp expiration_date = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
+  // The account to add the attribute to.
+  string account = 3;
+  // The address that the name must resolve to.
+  string owner = 4;
+}
+
+// MsgUpdateAttributeExpirationResponse defines the Msg/Vote response type.
+message MsgUpdateAttributeExpirationResponse {}
 
 // MsgDeleteAttributeRequest defines a message to delete an attribute from an account
 // Attributes may only be remove from an account by the account that the attribute name resolves to.
