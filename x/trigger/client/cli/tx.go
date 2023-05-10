@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -29,7 +30,7 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(GetCmdAddTransactionTrigger(), GetCmdAddBlockHeightTrigger())
+	txCmd.AddCommand(GetCmdAddTransactionTrigger(), GetCmdAddBlockHeightTrigger(), GetCmdAddBlockTimeTrigger())
 
 	return txCmd
 }
@@ -111,6 +112,49 @@ func GetCmdAddBlockHeightTrigger() *cobra.Command {
 			msg := types.NewCreateTriggerRequest(
 				callerAddr.String(),
 				&types.BlockHeightEvent{BlockHeight: uint64(height)},
+				msgs,
+			)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func GetCmdAddBlockTimeTrigger() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "create-time-trigger [seconds] [msg.json]",
+		Args:    cobra.ExactArgs(2),
+		Aliases: []string{"tt", "time"},
+		Short:   "Creates a new trigger that fires when a block time is reached",
+		Long:    strings.TrimSpace(`Creates a new trigger.  This will delay the execution of the provided message until the block time event has occurred`),
+		Example: fmt.Sprintf(`$ %[1]s tx trigger create-time-trigger 2006-01-02T15:04:05-04:00 message.json`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			callerAddr := clientCtx.GetFromAddress()
+			if err != nil {
+				return fmt.Errorf("invalid argument : %s", args[0])
+			}
+
+			startTime, err := time.Parse(time.RFC3339, args[0])
+			if err != nil {
+				return fmt.Errorf("unable to parse time (%v) required format is RFC3339 (%v) , %w", args[0], time.RFC3339, err)
+			}
+
+			msgs, err := parseTransactions(clientCtx.Codec, args[1])
+			if err != nil {
+				return fmt.Errorf("unable to parse file : %s", err)
+			}
+			if len(msgs) == 0 {
+				return fmt.Errorf("no actions added to trigger")
+			}
+
+			msg := types.NewCreateTriggerRequest(
+				callerAddr.String(),
+				&types.BlockTimeEvent{Time: startTime},
 				msgs,
 			)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
