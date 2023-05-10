@@ -10,6 +10,24 @@ import (
 	"github.com/provenance-io/provenance/x/reward/types"
 )
 
+// CacheContextWithHistory returns a new Context with the multi-store cached and a new
+// EventManager with existing history. The cached context is written to the context when writeCache
+// is called. Note, events are automatically emitted on the parent context's
+// EventManager when the caller executes the write.
+//
+// This is similar to the ctx.CacheContext() function, but this keeps the history so we can act on it.
+func CacheContextWithHistory(ctx sdk.Context) (cc sdk.Context, writeCache func()) {
+	cms := ctx.MultiStore().CacheMultiStore()
+	cc = ctx.WithMultiStore(cms).WithEventManager(sdk.NewEventManagerWithHistory(ctx.EventManager().GetABCIEventHistory()))
+
+	writeCache = func() {
+		ctx.EventManager().EmitEvents(cc.EventManager().Events())
+		cms.Write()
+	}
+
+	return cc, writeCache
+}
+
 // ProcessTransactions in the endblock
 func (k Keeper) ProcessTransactions(origCtx sdk.Context) {
 	// Get all Active Reward Programs
@@ -24,7 +42,7 @@ func (k Keeper) ProcessTransactions(origCtx sdk.Context) {
 		// Because this is designed for the EndBlocker, we don't always have auto-rollback.
 		// We don't partial state recorded if an error is encountered in the middle.
 		// So use a cache context and only write it if there wasn't an error.
-		ctx, writeCtx := origCtx.CacheContext()
+		ctx, writeCtx := CacheContextWithHistory(origCtx)
 		// Go through all the reward programs
 		actions, err := k.DetectQualifyingActions(ctx, &rewardPrograms[index])
 		if err != nil {
