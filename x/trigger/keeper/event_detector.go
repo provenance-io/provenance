@@ -7,14 +7,19 @@ import (
 )
 
 func (k Keeper) DetectBlockEvents(ctx sdk.Context) {
-	k.DetectTransactionEvents(ctx)
-	k.DetectBlockHeightEvents(ctx)
-	k.DetectTimeEvents(ctx)
+	triggers := k.DetectTransactionEvents(ctx)
+	triggers = append(triggers, k.DetectBlockHeightEvents(ctx)...)
+	triggers = append(triggers, k.DetectTimeEvents(ctx)...)
+
+	for _, trigger := range triggers {
+		// TODO Maybe there is a good way to group these two instructions
+		k.RemoveTrigger(ctx, trigger.GetId())
+		k.RemoveEventListener(ctx, trigger)
+		k.QueueTrigger(ctx, trigger)
+	}
 }
 
-func (k Keeper) DetectTransactionEvents(ctx sdk.Context) {
-	triggers := []types.Trigger{}
-
+func (k Keeper) DetectTransactionEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	for _, event := range ctx.EventManager().GetABCIEventHistory() {
 		matched, err := k.GetMatchingTriggers(ctx, event.GetType(), func(triggerEvent types.TriggerEventI) bool {
 			txEvent := triggerEvent.(*types.TransactionEvent)
@@ -26,15 +31,10 @@ func (k Keeper) DetectTransactionEvents(ctx sdk.Context) {
 		}
 		triggers = append(triggers, matched...)
 	}
-
-	for _, trigger := range triggers {
-		k.RemoveTrigger(ctx, trigger.GetId())
-		k.RemoveEventListener(ctx, trigger)
-		k.QueueTrigger(ctx, trigger)
-	}
+	return
 }
 
-func (k Keeper) DetectBlockHeightEvents(ctx sdk.Context) {
+func (k Keeper) DetectBlockHeightEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	triggers, err := k.GetMatchingTriggers(ctx, types.BLOCK_HEIGHT_PREFIX, func(triggerEvent types.TriggerEventI) bool {
 		blockHeightEvent := triggerEvent.(*types.BlockHeightEvent)
 		return ctx.BlockHeight() >= int64(blockHeightEvent.GetBlockHeight())
@@ -43,15 +43,10 @@ func (k Keeper) DetectBlockHeightEvents(ctx sdk.Context) {
 		// TODO What to do here? There has to be something bad
 		return
 	}
-
-	for _, trigger := range triggers {
-		k.RemoveTrigger(ctx, trigger.GetId())
-		k.RemoveEventListener(ctx, trigger)
-		k.QueueTrigger(ctx, trigger)
-	}
+	return
 }
 
-func (k Keeper) DetectTimeEvents(ctx sdk.Context) {
+func (k Keeper) DetectTimeEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	triggers, err := k.GetMatchingTriggers(ctx, types.BLOCK_TIME_PREFIX, func(triggerEvent types.TriggerEventI) bool {
 		blockTimeEvent := triggerEvent.(*types.BlockTimeEvent)
 		return ctx.BlockTime().Equal(blockTimeEvent.GetTime()) || ctx.BlockTime().After(blockTimeEvent.GetTime())
@@ -60,12 +55,7 @@ func (k Keeper) DetectTimeEvents(ctx sdk.Context) {
 		// TODO What to do here? There has to be something bad
 		return
 	}
-
-	for _, trigger := range triggers {
-		k.RemoveTrigger(ctx, trigger.GetId())
-		k.RemoveEventListener(ctx, trigger)
-		k.QueueTrigger(ctx, trigger)
-	}
+	return
 }
 
 func (k Keeper) GetMatchingTriggers(ctx sdk.Context, prefix string, condition func(types.TriggerEventI) bool) (triggers []types.Trigger, err error) {
