@@ -28,6 +28,8 @@ func (k Keeper) DetectTransactionEvents(ctx sdk.Context) {
 	}
 
 	for _, trigger := range triggers {
+		k.RemoveTrigger(ctx, trigger.GetId())
+		k.RemoveEventListener(ctx, trigger)
 		k.QueueTrigger(ctx, trigger)
 	}
 }
@@ -43,6 +45,8 @@ func (k Keeper) DetectBlockHeightEvents(ctx sdk.Context) {
 	}
 
 	for _, trigger := range triggers {
+		k.RemoveTrigger(ctx, trigger.GetId())
+		k.RemoveEventListener(ctx, trigger)
 		k.QueueTrigger(ctx, trigger)
 	}
 }
@@ -58,6 +62,8 @@ func (k Keeper) DetectTimeEvents(ctx sdk.Context) {
 	}
 
 	for _, trigger := range triggers {
+		k.RemoveTrigger(ctx, trigger.GetId())
+		k.RemoveEventListener(ctx, trigger)
 		k.QueueTrigger(ctx, trigger)
 	}
 }
