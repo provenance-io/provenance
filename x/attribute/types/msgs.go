@@ -13,6 +13,7 @@ import (
 var (
 	_ sdk.Msg = &MsgAddAttributeRequest{}
 	_ sdk.Msg = &MsgUpdateAttributeRequest{}
+	_ sdk.Msg = &MsgUpdateAttributeExpirationRequest{}
 	_ sdk.Msg = &MsgDeleteAttributeRequest{}
 	_ sdk.Msg = &MsgDeleteDistinctAttributeRequest{}
 )
@@ -93,6 +94,29 @@ func (msg MsgUpdateAttributeRequest) GetSigners() []sdk.AccAddress {
 func (msg MsgUpdateAttributeRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
+}
+
+// NewMsgUpdateAttributeRequest creates a new add attribute message
+func NewMsgUpdateAttributeExpirationRequest(account string, owner sdk.AccAddress, name string) *MsgUpdateAttributeExpirationRequest {
+	return &MsgUpdateAttributeExpirationRequest{
+		Account: account,
+		Name:    strings.ToLower(strings.TrimSpace(name)),
+		Owner:   owner.String(),
+	}
+}
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgUpdateAttributeExpirationRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetSigners indicates that the message must have been signed by the name owner.
+func (msg MsgUpdateAttributeExpirationRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Owner)
+	return []sdk.AccAddress{addr}
 }
 
 // NewMsgDeleteAttributeRequest deletes all attributes with specific name

@@ -83,6 +83,8 @@ message MsgUpdateAttributeResponse {}
 // MsgUpdateAttributeExpirationRequest defines an sdk.Msg type that is used to update an existing attribute's expiration
 // date
 message MsgUpdateAttributeExpirationRequest {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.stringer)         = true;
   // The attribute name.
   string name = 1;
   // Time that an attribute will expire.

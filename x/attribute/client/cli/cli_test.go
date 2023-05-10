@@ -312,7 +312,7 @@ func (s *IntegrationTestSuite) TestGetAccountAttributeCmd() {
 		{
 			name:           "should get attribute by name with json output",
 			args:           []string{s.account1Addr.String(), "example.attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String()),
+			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s","expiration_date":null}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String()),
 		},
 		{
 			name: "should get attribute by name with text output",
@@ -321,6 +321,7 @@ func (s *IntegrationTestSuite) TestGetAccountAttributeCmd() {
 attributes:
 - address: %s
   attribute_type: ATTRIBUTE_TYPE_STRING
+  expiration_date: null
   name: example.attribute
   value: ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n
 pagination:
@@ -366,7 +367,7 @@ func (s *IntegrationTestSuite) TestScanAccountAttributesCmd() {
 		{
 			name:           "should get attribute by suffix with json output",
 			args:           []string{s.account1Addr.String(), "attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String()),
+			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s","expiration_date":null}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String()),
 		},
 		{
 			name: "should get attribute by suffix with text output",
@@ -375,6 +376,7 @@ func (s *IntegrationTestSuite) TestScanAccountAttributesCmd() {
 attributes:
 - address: %s
   attribute_type: ATTRIBUTE_TYPE_STRING
+  expiration_date: null
   name: example.attribute
   value: ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n
 pagination:
@@ -420,7 +422,7 @@ func (s *IntegrationTestSuite) TestListAccountAttributesCmd() {
 		{
 			name:           "should list all attributes for account with json output",
 			args:           []string{s.account1Addr.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute.count","value":"Mg==","attribute_type":"ATTRIBUTE_TYPE_INT","address":"%s"},{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String(), s.account1Addr.String()),
+			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute.count","value":"Mg==","attribute_type":"ATTRIBUTE_TYPE_INT","address":"%s","expiration_date":null},{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s","expiration_date":null}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String(), s.account1Addr.String()),
 		},
 		{
 			name: "should list all attributes for account text output",
@@ -429,10 +431,12 @@ func (s *IntegrationTestSuite) TestListAccountAttributesCmd() {
 attributes:
 - address: %s
   attribute_type: ATTRIBUTE_TYPE_INT
+  expiration_date: null
   name: example.attribute.count
   value: Mg==
 - address: %s
   attribute_type: ATTRIBUTE_TYPE_STRING
+  expiration_date: null
   name: example.attribute
   value: ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n
 pagination:
