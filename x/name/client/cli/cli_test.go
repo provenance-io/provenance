@@ -365,7 +365,6 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand() {
 }
 
 func (s *IntegrationTestSuite) TestGetDeleteNameCmd() {
-
 	testCases := []struct {
 		name         string
 		cmd          *cobra.Command
@@ -461,8 +460,8 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 		},
 		{
 			"should modify name",
-			namecli.GetModifyNameProposalCmd(),
-			[]string{"tomodify",
+			namecli.GetModifyNameCmd(),
+			[]string{"tomodify.attribute",
 				s.testnet.Validators[0].Address.String(),
 				"--unrestrict",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -474,7 +473,7 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 		},
 		{
 			"should fail to delete empty name",
-			namecli.GetModifyNameProposalCmd(),
+			namecli.GetModifyNameCmd(),
 			[]string{"",
 				s.testnet.Validators[0].Address.String(),
 				"--unrestrict",
@@ -487,8 +486,8 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 		},
 		{
 			"should fail on invalid owner",
-			namecli.GetModifyNameProposalCmd(),
-			[]string{"tomodify",
+			namecli.GetModifyNameCmd(),
+			[]string{"tomodify.attribute",
 				"",
 				"--unrestrict",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
