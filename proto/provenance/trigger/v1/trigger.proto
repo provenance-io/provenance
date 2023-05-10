@@ -42,12 +42,18 @@ message BlockHeightEvent {
   option (gogoproto.equal)                   = true;
   option (gogoproto.goproto_stringer)        = true;
   option (cosmos_proto.implements_interface) = "TriggerEventI";
+
+  // The height that the trigger should fire at.
+  uint64 block_height = 1;
 }
 
 message BlockTimeEvent {
   option (gogoproto.equal)                   = true;
   option (gogoproto.goproto_stringer)        = true;
   option (cosmos_proto.implements_interface) = "TriggerEventI";
+
+  // The time the trigger should fire at.
+  google.protobuf.Timestamp time = 1 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
 
 message TransactionEvent {

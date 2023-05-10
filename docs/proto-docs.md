@@ -6315,6 +6315,11 @@ Msg
 
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `block_height` | [uint64](#uint64) |  | The height that the trigger should fire at. |
+
+
 
 
 
@@ -6323,6 +6328,11 @@ Msg
 
 ### BlockTimeEvent
 
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time the trigger should fire at. |
 
 
 
