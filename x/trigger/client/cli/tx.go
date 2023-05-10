@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -28,19 +29,19 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(GetCmdAddTrigger())
+	txCmd.AddCommand(GetCmdAddTransactionTrigger(), GetCmdAddBlockHeightTrigger())
 
 	return txCmd
 }
 
-func GetCmdAddTrigger() *cobra.Command {
+func GetCmdAddTransactionTrigger() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create [event.json] [msg.json]",
+		Use:     "create-tx-trigger [event.json] [msg.json]",
 		Args:    cobra.ExactArgs(2),
-		Aliases: []string{"c"},
-		Short:   "Creates a new trigger",
-		Long:    strings.TrimSpace(`Creates a new trigger.  This will delay the execution of the provided message until the event has occurred`),
-		Example: fmt.Sprintf(`$ %[1]s tx trigger create message.json`, version.AppName),
+		Aliases: []string{"tx"},
+		Short:   "Creates a new trigger that fires when a tx event is detected.",
+		Long:    strings.TrimSpace(`Creates a new trigger.  This will delay the execution of the provided message until the tx event has occurred`),
+		Example: fmt.Sprintf(`$ %[1]s tx trigger create-tx-trigger event.json message.json`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -67,6 +68,49 @@ func GetCmdAddTrigger() *cobra.Command {
 			msg := types.NewCreateTriggerRequest(
 				callerAddr.String(),
 				event,
+				msgs,
+			)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func GetCmdAddBlockHeightTrigger() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "create-height-trigger [height] [msg.json]",
+		Args:    cobra.ExactArgs(2),
+		Aliases: []string{"ht", "height"},
+		Short:   "Creates a new trigger that fires when a block height is reached",
+		Long:    strings.TrimSpace(`Creates a new trigger.  This will delay the execution of the provided message until the block height event has occurred`),
+		Example: fmt.Sprintf(`$ %[1]s tx trigger create-height-trigger 500 message.json`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			callerAddr := clientCtx.GetFromAddress()
+			if err != nil {
+				return fmt.Errorf("invalid argument : %s", args[0])
+			}
+
+			height, err := strconv.Atoi(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid argument : %s", args[0])
+			}
+
+			msgs, err := parseTransactions(clientCtx.Codec, args[1])
+			if err != nil {
+				return fmt.Errorf("unable to parse file : %s", err)
+			}
+			if len(msgs) == 0 {
+				return fmt.Errorf("no actions added to trigger")
+			}
+
+			msg := types.NewCreateTriggerRequest(
+				callerAddr.String(),
+				&types.BlockHeightEvent{BlockHeight: uint64(height)},
 				msgs,
 			)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
