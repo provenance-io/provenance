@@ -33097,7 +33097,7 @@ paths:
                     address:
                       type: string
                       title: The address the attribute is bound to
-                    experation_date:
+                    expiration_date:
                       type: string
                       format: date-time
                       description: Time that an attribute will expire.
@@ -33271,7 +33271,7 @@ paths:
                     address:
                       type: string
                       title: The address the attribute is bound to
-                    experation_date:
+                    expiration_date:
                       type: string
                       format: date-time
                       description: Time that an attribute will expire.
@@ -33443,7 +33443,7 @@ paths:
                     address:
                       type: string
                       title: The address the attribute is bound to
-                    experation_date:
+                    expiration_date:
                       type: string
                       format: date-time
                       description: Time that an attribute will expire.
@@ -80239,7 +80239,7 @@ definitions:
       address:
         type: string
         title: The address the attribute is bound to
-      experation_date:
+      expiration_date:
         type: string
         format: date-time
         description: Time that an attribute will expire.
@@ -80349,7 +80349,7 @@ definitions:
             address:
               type: string
               title: The address the attribute is bound to
-            experation_date:
+            expiration_date:
               type: string
               format: date-time
               description: Time that an attribute will expire.
@@ -80419,7 +80419,7 @@ definitions:
             address:
               type: string
               title: The address the attribute is bound to
-            experation_date:
+            expiration_date:
               type: string
               format: date-time
               description: Time that an attribute will expire.
@@ -80501,7 +80501,7 @@ definitions:
             address:
               type: string
               title: The address the attribute is bound to
-            experation_date:
+            expiration_date:
               type: string
               format: date-time
               description: Time that an attribute will expire.

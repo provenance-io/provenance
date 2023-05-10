@@ -39,6 +39,10 @@ func (k msgServer) AddAttribute(goCtx context.Context, msg *types.MsgAddAttribut
 		return nil, err
 	}
 
+	if msg.ExpirationDate != nil && msg.ExpirationDate.UTC().Before(ctx.BlockTime().UTC()) {
+		return nil, fmt.Errorf("attribute expiration date %v is before block time of %v", msg.ExpirationDate.UTC(), ctx.BlockTime().UTC())
+	}
+
 	err = k.Keeper.SetAttribute(ctx, attrib, ownerAddr)
 	if err != nil {
 		return nil, err

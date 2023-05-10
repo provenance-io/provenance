@@ -86,7 +86,7 @@ func (k Keeper) Attributes(c context.Context, req *types.QueryAttributesRequest)
 	return &types.QueryAttributesResponse{Account: req.Account, Attributes: attributes, Pagination: pageRes}, nil
 }
 
-// Scan queries for all attributes on a specied account that have a given suffix in their name
+// Scan queries all attributes associated with a specified account that contain a particular suffix in their name.
 func (k Keeper) Scan(c context.Context, req *types.QueryScanRequest) (*types.QueryScanResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
