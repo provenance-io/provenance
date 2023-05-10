@@ -3,10 +3,10 @@ package params
 // Default simulation operation weights for messages and gov proposals
 const (
 	// Name
-	DefaultWeightMsgBindName            int = 10
-	DefaultWeightMsgDeleteName          int = 5
+	DefaultWeightMsgBindName            int = 15
+	DefaultWeightMsgDeleteName          int = 10
 	DefaultWeightMsgModifyName          int = 5
-	DefaultWeightCreateRootNameProposal int = 5
+	DefaultWeightCreateRootNameProposal int = 10
 	// Attribute
 	DefaultWeightMsgAddAttribute            int = 15
 	DefaultWeightMsgUpdateAttribute         int = 5

@@ -51,6 +51,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}{
 		{simappparams.DefaultWeightMsgBindName, sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{})},
 		{simappparams.DefaultWeightMsgDeleteName, sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{})},
+		{simappparams.DefaultWeightMsgModifyName, sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{})},
 	}
 
 	for i, w := range weightesOps {
@@ -116,6 +117,35 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteName() {
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Record.Address)
 	suite.Require().Equal("deleteme", msg.Record.Name)
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
+	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
+	suite.Require().Len(futureOperations, 0)
+}
+
+// simAccount.Address tests the normal scenario of a valid message of type MsgModifyName.
+// Abonormal scenarios, where the message is created by an errors, are not tested here.
+func (suite *SimTestSuite) TestSimulateMsgModifyName() {
+
+	// setup 3 accounts
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 1)
+	suite.app.NameKeeper.SetNameRecord(suite.ctx, "modifyme", accounts[0].Address, false)
+
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+
+	// execute operation
+	op := simulation.SimulateMsgModifyName(suite.app.NameKeeper, suite.app.AccountKeeper, suite.app.BankKeeper)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
+
+	var msg types.MsgModifyNameRequest
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Record.Address)
+	suite.Require().Equal("modifyme", msg.Record.Name)
 	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
 	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
 	suite.Require().Len(futureOperations, 0)
