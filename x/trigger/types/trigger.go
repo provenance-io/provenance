@@ -10,6 +10,9 @@ import (
 
 type TriggerID = uint64
 
+const BLOCK_HEIGHT_PREFIX = "block-height"
+const BLOCK_TIME_PREFIX = "block-time"
+
 type TriggerEventI interface {
 	proto.Message
 	GetEventPrefix() string
@@ -72,9 +75,9 @@ func (e TransactionEvent) GetEventPrefix() string {
 }
 
 func (e BlockHeightEvent) GetEventPrefix() string {
-	return "block-height"
+	return BLOCK_HEIGHT_PREFIX
 }
 
 func (e BlockTimeEvent) GetEventPrefix() string {
-	return "block-time"
+	return BLOCK_TIME_PREFIX
 }

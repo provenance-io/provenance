@@ -33,7 +33,7 @@ func (k Keeper) DetectTransactionEvents(ctx sdk.Context) {
 }
 
 func (k Keeper) DetectBlockHeightEvents(ctx sdk.Context) {
-	triggers, err := k.GetMatchingTriggers(ctx, "block-height", func(triggerEvent types.TriggerEventI) bool {
+	triggers, err := k.GetMatchingTriggers(ctx, types.BLOCK_HEIGHT_PREFIX, func(triggerEvent types.TriggerEventI) bool {
 		blockHeightEvent := triggerEvent.(*types.BlockHeightEvent)
 		return ctx.BlockHeight() >= int64(blockHeightEvent.GetBlockHeight())
 	})
@@ -48,7 +48,7 @@ func (k Keeper) DetectBlockHeightEvents(ctx sdk.Context) {
 }
 
 func (k Keeper) DetectTimeEvents(ctx sdk.Context) {
-	triggers, err := k.GetMatchingTriggers(ctx, "block-time", func(triggerEvent types.TriggerEventI) bool {
+	triggers, err := k.GetMatchingTriggers(ctx, types.BLOCK_TIME_PREFIX, func(triggerEvent types.TriggerEventI) bool {
 		blockTimeEvent := triggerEvent.(*types.BlockTimeEvent)
 		return ctx.BlockTime().Equal(blockTimeEvent.GetTime()) || ctx.BlockTime().After(blockTimeEvent.GetTime())
 	})
