@@ -37,25 +37,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Improvements
+
+* Add marker deposit access check for sends to marker escrow account [#1525](https://github.com/provenance-io/provenance/issues/1525).
+* Add support for `name` owner to execute `MsgModifyName` transaction [#1536](https://github.com/provenance-io/provenance/issues/1536).
+
+### API Breaking
+
+* Add marker deposit access check for sends to marker escrow account.  Will break any current address that is sending to the 
+marker escrow account if it does not have deposit access.  In order for it to work, deposit access needs to be added.  This can be done using the `MsgAddAccessRequest` tx  [#1525](https://github.com/provenance-io/provenance/issues/1525).
 
 ---
 
-## [v1.15.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc3) - 2023-04-28
-
-### Bug Fixes
-
-* Fix authz + smart contract + value owner updates being too permissive [PR 1519](https://github.com/provenance-io/provenance/pull/1519).
-* Fix metadata params query path in stargate whitelist [#1514](https://github.com/provenance-io/provenance/issues/1514)
-
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0-rc3
-* https://github.com/provenance-io/provenance/compare/v1.15.0-rc2...v1.15.0-rc3
-
----
-
-## [v1.15.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.15.0-rc2) - 2023-04-19
+## [v1.15.0](https://github.com/provenance-io/provenance/releases/tag/v1.15.0) - 2023-05-05
 
 ### Features
 
@@ -96,6 +90,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix `make proto-gen` [PR 1404](https://github.com/provenance-io/provenance/pull/1404).
 * Fix wasmd transactions that are run by gov module [#1414](https://github.com/provenance-io/provenance/issues/1414)
 * Add support for ibc transfers of restricted tokens [#1502](https://github.com/provenance-io/provenance/issues/1502).
+* Fix authz + smart contract + value owner updates being too permissive [PR 1519](https://github.com/provenance-io/provenance/pull/1519).
+* Fix metadata params query path in stargate whitelist [#1514](https://github.com/provenance-io/provenance/issues/1514)
 
 ### Client Breaking
 
@@ -119,7 +115,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0
 
 ---
 
