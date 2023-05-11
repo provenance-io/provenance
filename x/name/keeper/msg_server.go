@@ -164,13 +164,13 @@ func (s msgServer) DeleteName(goCtx context.Context, msg *types.MsgDeleteNameReq
 func (s msgServer) ModifyName(goCtx context.Context, msg *types.MsgModifyNameRequest) (*types.MsgModifyNameResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if msg.GetAuthority() != s.Keeper.GetAuthority() {
-		return nil, govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", s.Keeper.GetAuthority(), msg.GetAuthority())
-	}
-
 	existing, _ := s.Keeper.GetRecordByName(ctx, msg.GetRecord().Name)
 	if existing == nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(types.ErrNameNotBound.Error())
+	}
+
+	if msg.GetAuthority() != s.Keeper.GetAuthority() && msg.GetAuthority() != existing.Address {
+		return nil, sdkerrors.ErrUnauthorized.Wrapf("expected %s or %s got %s", s.Keeper.GetAuthority(), existing.Address, msg.GetAuthority())
 	}
 
 	addr, err := sdk.AccAddressFromBech32(msg.GetRecord().Address)
