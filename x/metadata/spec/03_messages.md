@@ -185,13 +185,13 @@ The value owner address of one or more scopes can be updated using the `UpdateVa
 
 This service message is expected to fail if:
 * The new value owner address is invalid.
-* Any of the provide scope ids are not metadata scope identifiers or do not exist.
+* Any of the provided scope ids are not metadata scope identifiers or do not exist.
 * The signers are not allowed to update the value owner address of a provided scope.
 
 ---
 ### Msg/MigrateValueOwner
 
-All scopes with a given value owner address can be updated to have a new value owner address using the `MigrateValueOwner` endpoint.
+All scopes with a given existing value owner address can be updated to have a new proposed value owner address using the `MigrateValueOwner` endpoint.
 
 #### Request
 
@@ -204,7 +204,7 @@ All scopes with a given value owner address can be updated to have a new value o
 #### Expected failures
 
 This service message is expected to fail if:
-* Either the existing or proposed are not valid bech32 addresses.
+* Either the existing or proposed values are not valid bech32 addresses.
 * The existing address is not a value owner on any scopes.
 * The signers are not allowed to update the value owner address of a scope being updated.
 
