@@ -23,6 +23,8 @@ const (
 	OpWeightMsgBindName = "op_weight_msg_bind_name"
 	//nolint:gosec // not credentials
 	OpWeightMsgDeleteName = "op_weight_msg_delete_name"
+	//nolint:gosec // not credentials
+	OpWeightMsgModifyName = "op_weight_msg_modify_name"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -32,6 +34,7 @@ func WeightedOperations(
 	var (
 		weightMsgBindName   int
 		weightMsgDeleteName int
+		weightMsgModifyName int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgBindName, &weightMsgBindName, nil,
@@ -46,6 +49,12 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OpWeightMsgModifyName, &weightMsgModifyName, nil,
+		func(_ *rand.Rand) {
+			weightMsgModifyName = simappparams.DefaultWeightMsgModifyName
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgBindName,
@@ -54,6 +63,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgDeleteName,
 			SimulateMsgDeleteName(k, ak, bk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgModifyName,
+			SimulateMsgModifyName(k, ak, bk),
 		),
 	}
 }
@@ -123,6 +136,38 @@ func SimulateMsgDeleteName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk ban
 		}
 
 		msg := types.NewMsgDeleteNameRequest(randomRecord)
+
+		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+	}
+}
+
+// SimulateMsgModifyName will dispatch a modify name operation against a random name record
+func SimulateMsgModifyName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+
+		var records []types.NameRecord
+		if err := k.IterateRecords(ctx, types.NameKeyPrefix, func(record types.NameRecord) error {
+			records = append(records, record)
+			return nil
+		}); err != nil {
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "iterator of existing records failed"), nil, err
+		}
+
+		if len(records) == 0 {
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "no name records available to delete"), nil, nil
+		}
+
+		randomRecord := records[r.Intn(len(records))]
+
+		if simAccount.Address.String() != randomRecord.Address {
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "name record does not belong to user"), nil, nil
+		}
+
+		restrict := r.Intn(9) < 4
+		msg := types.NewMsgModifyNameRequest(simAccount.Address.String(), randomRecord.Name, simAccount.Address, restrict)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
 	}
