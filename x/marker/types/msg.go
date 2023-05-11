@@ -84,6 +84,16 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 		return fmt.Errorf("required attributes are reserved for restricted markers")
 	}
 
+	if len(msg.RequiredAttributes) > 0 {
+		seen := make(map[string]bool)
+		for _, str := range msg.RequiredAttributes {
+			if seen[str] {
+				return fmt.Errorf("required attribute list contains duplicate entries")
+			}
+			seen[str] = true
+		}
+	}
+
 	return nil
 }
 
@@ -597,7 +607,9 @@ func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
 		return fmt.Errorf("both add and remove lists cannot be empty")
 	}
 
-	combined := append(msg.AddRequiredAttributes, msg.RemoveRequiredAttributes...)
+	combined := []string{}
+	combined = append(combined, msg.AddRequiredAttributes...)
+	combined = append(combined, msg.RemoveRequiredAttributes...)
 	seen := make(map[string]bool)
 	for _, str := range combined {
 		if seen[str] {
@@ -605,6 +617,7 @@ func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
 		}
 		seen[str] = true
 	}
+
 	_, err := sdk.AccAddressFromBech32(msg.TransferAuthority)
 	return err
 }

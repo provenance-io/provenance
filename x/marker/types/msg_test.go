@@ -233,6 +233,21 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 			),
 			errorMsg: "",
 		},
+		{
+			name: "should fail duplicate entries for req attrs",
+			msg: *NewMsgAddMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_RestrictedCoin,
+				true,
+				true,
+				false,
+				[]string{"foo", "foo"},
+			),
+			errorMsg: "required attribute list contains duplicate entries",
+		},
 	}
 
 	for _, tc := range cases {
