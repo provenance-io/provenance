@@ -169,6 +169,46 @@ This service message is expected to fail if:
 * The `signers` do not have permission to update the scope.
 
 ---
+### Msg/UpdateValueOwners
+
+The value owner address of one or more scopes can be updated using the `UpdateValueOwners` service method.
+
+#### Request
+
++++ https://github.com/provenance-io/provenance/blob/37cdb0c84db7b2f91aef057a606c5ba6aece06a1/proto/provenance/metadata/v1/tx.proto#L219-L235
+
+#### Response
+
++++ https://github.com/provenance-io/provenance/blob/37cdb0c84db7b2f91aef057a606c5ba6aece06a1/proto/provenance/metadata/v1/tx.proto#L237-L238
+
+#### Expected failures
+
+This service message is expected to fail if:
+* The new value owner address is invalid.
+* Any of the provide scope ids are not metadata scope identifiers or do not exist.
+* The signers are not allowed to update the value owner address of a provided scope.
+
+---
+### Msg/MigrateValueOwner
+
+All scopes with a given value owner address can be updated to have a new value owner address using the `MigrateValueOwner` endpoint.
+
+#### Request
+
++++ https://github.com/provenance-io/provenance/blob/37cdb0c84db7b2f91aef057a606c5ba6aece06a1/proto/provenance/metadata/v1/tx.proto#L240-L252
+
+#### Response
+
++++ https://github.com/provenance-io/provenance/blob/37cdb0c84db7b2f91aef057a606c5ba6aece06a1/proto/provenance/metadata/v1/tx.proto#L254-L255
+
+#### Expected failures
+
+This service message is expected to fail if:
+* Either the existing or proposed are not valid bech32 addresses.
+* The existing address is not a value owner on any scopes.
+* The signers are not allowed to update the value owner address of a scope being updated.
+
+---
 ### Msg/WriteSession
 
 A session is created or updated using the `WriteSession` service method.
