@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"testing"
+	"time"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -396,6 +397,114 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 					s.Assert().False(attrStore.Has(types.AttributeNameAddrKeyPrefix(tc.origAttr.Name, tc.origAttr.GetAddressBytes())), "original key should have been removed")
 				}
 				s.Assert().True(attrStore.Has(types.AttributeNameAddrKeyPrefix(tc.updateAttr.Name, tc.updateAttr.GetAddressBytes())), "updated key should have been added")
+			}
+		})
+	}
+
+}
+
+func (s *KeeperTestSuite) TestUpdateAttributeExpiration() {
+	now := time.Now().UTC()
+	attr := types.Attribute{
+		Name:           "example.attribute",
+		Value:          []byte("my-value"),
+		AttributeType:  types.AttributeType_String,
+		ExpirationDate: &now,
+		Address:        s.user1,
+	}
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+
+	cases := []struct {
+		name           string
+		origAttr       types.Attribute
+		expirationDate *time.Time
+		ownerAddr      sdk.AccAddress
+		errorMsg       string
+	}{
+		{
+			name: "should fail to update attribute expiration, validatebasic original attr",
+			origAttr: types.Attribute{
+				Name:          "",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			expirationDate: nil,
+			ownerAddr:      s.user1Addr,
+			errorMsg:       `unable to normalize attribute name "": segment of name is too short`,
+		},
+		{
+			name: "should fail to update attribute expiration, value not found",
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("notfound"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			expirationDate: nil,
+			ownerAddr:      s.user1Addr,
+			errorMsg:       `no attributes updated with name "example.attribute" : value "notfound" : type: ATTRIBUTE_TYPE_STRING`,
+		},
+		{
+			name: "should fail to update attribute expiration, owner not correct",
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			expirationDate: nil,
+			ownerAddr:      s.user2Addr,
+			errorMsg:       fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
+		},
+		{
+			name: "should fail to update attribute expiration, owner not correct",
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			expirationDate: nil,
+			ownerAddr:      s.user2Addr,
+			errorMsg:       fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
+		},
+		{
+			name: "should succeed to update attribute expiration, with nil time",
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			expirationDate: nil,
+			ownerAddr:      s.user1Addr,
+		},
+		{
+			name: "should succeed to update attribute expiration, with non-nil time",
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			expirationDate: &now,
+			ownerAddr:      s.user1Addr,
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+		s.Run(tc.name, func() {
+			err := s.app.AttributeKeeper.UpdateAttributeExpiration(s.ctx, tc.origAttr, tc.expirationDate, tc.ownerAddr)
+			if len(tc.errorMsg) > 0 {
+				s.Assert().Error(err)
+				s.Assert().Equal(tc.errorMsg, err.Error())
+			} else {
+				s.Assert().NoError(err)
+				attrs, err := s.app.AttributeKeeper.GetAttributes(s.ctx, tc.origAttr.Address, tc.origAttr.Name)
+				s.Assert().NoError(err)
+				s.Assert().Len(attrs, 1)
+				s.Assert().Equal(tc.expirationDate, attrs[0].ExpirationDate)
 			}
 		})
 	}

@@ -275,7 +275,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 }
 
 // UpdateAttributeExpiration updates the expiration date on an attribute.
-func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, attribute types.Attribute, expirationDate time.Time, owner sdk.AccAddress,
+func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, attribute types.Attribute, expirationDate *time.Time, owner sdk.AccAddress,
 ) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "update_expiration")
 
@@ -308,7 +308,7 @@ func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, attribute types.Attri
 		if attr.Name == attribute.Name && bytes.Equal(attr.Value, attribute.Value) && attr.AttributeType == attribute.AttributeType {
 			found = true
 			store.Delete(it.Key())
-			attr.ExpirationDate = &expirationDate
+			attr.ExpirationDate = expirationDate
 			bz, err := k.cdc.Marshal(&attr)
 			if err != nil {
 				return err

@@ -145,7 +145,7 @@ func (k msgServer) UpdateAttributeExpiration(goCtx context.Context, msg *types.M
 		return nil, fmt.Errorf("attribute expiration date %v is before block time of %v", msg.ExpirationDate.UTC(), ctx.BlockTime().UTC())
 	}
 
-	err = k.Keeper.UpdateAttributeExpiration(ctx, attribute, *msg.ExpirationDate, ownerAddr)
+	err = k.Keeper.UpdateAttributeExpiration(ctx, attribute, msg.ExpirationDate, ownerAddr)
 
 	return &types.MsgUpdateAttributeExpirationResponse{}, err
 }
