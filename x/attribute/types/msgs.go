@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"strings"
+	time "time"
 
 	"gopkg.in/yaml.v2"
 
@@ -97,11 +98,13 @@ func (msg MsgUpdateAttributeRequest) String() string {
 }
 
 // NewMsgUpdateAttributeRequest creates a new add attribute message
-func NewMsgUpdateAttributeExpirationRequest(account string, owner sdk.AccAddress, name string) *MsgUpdateAttributeExpirationRequest {
+func NewMsgUpdateAttributeExpirationRequest(account, name, value string, expirationDate *time.Time, owner sdk.AccAddress) *MsgUpdateAttributeExpirationRequest {
 	return &MsgUpdateAttributeExpirationRequest{
-		Account: account,
-		Name:    strings.ToLower(strings.TrimSpace(name)),
-		Owner:   owner.String(),
+		Account:        account,
+		Name:           strings.ToLower(strings.TrimSpace(name)),
+		Value:          []byte(value),
+		ExpirationDate: expirationDate,
+		Owner:          owner.String(),
 	}
 }
 
@@ -110,8 +113,18 @@ func (msg MsgUpdateAttributeExpirationRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
 		return err
 	}
-	a := NewAttribute(msg.Name, msg.Account, msg.AttributeType, msg.AttributeValue)
-	return a.ValidateBasic()
+	if strings.TrimSpace(msg.Name) == "" {
+		return fmt.Errorf("invalid name: empty")
+	}
+	if msg.Value == nil {
+		return fmt.Errorf("invalid value: nil")
+	}
+
+	err := ValidateAttributeAddress(msg.Account)
+	if err != nil {
+		return fmt.Errorf("invalid attribute address: %w", err)
+	}
+	return nil
 }
 
 // GetSigners indicates that the message must have been signed by the name owner.

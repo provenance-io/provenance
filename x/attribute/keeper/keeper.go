@@ -305,7 +305,7 @@ func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, attribute types.Attri
 			return err
 		}
 
-		if attr.Name == attribute.Name && bytes.Equal(attr.Value, attribute.Value) && attr.AttributeType == attribute.AttributeType {
+		if attr.Name == attribute.Name && bytes.Equal(attr.Value, attribute.Value) {
 			found = true
 			store.Delete(it.Key())
 			attr.ExpirationDate = expirationDate

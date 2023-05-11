@@ -90,15 +90,13 @@ message MsgUpdateAttributeExpirationRequest {
   // The attribute name.
   string name = 1;
   // The original attribute value.
-  bytes attribute_value = 2;
-  // The original attribute value type.
-  AttributeType attribute_type = 3;
+  bytes value = 2;
   // Time that an attribute will expire.
-  google.protobuf.Timestamp expiration_date = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
+  google.protobuf.Timestamp expiration_date = 3 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
   // The account to add the attribute to.
-  string account = 5;
+  string account = 4;
   // The address that the name must resolve to.
-  string owner = 6;
+  string owner = 5;
 }
 
 // MsgUpdateAttributeExpirationResponse defines the Msg/Vote response type.

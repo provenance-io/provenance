@@ -130,10 +130,9 @@ func (k msgServer) UpdateAttributeExpiration(goCtx context.Context, msg *types.M
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	attribute := types.Attribute{
-		Address:       msg.Account,
-		Name:          msg.Name,
-		AttributeType: msg.AttributeType,
-		Value:         msg.AttributeValue,
+		Address: msg.Account,
+		Name:    msg.Name,
+		Value:   msg.Value,
 	}
 
 	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
@@ -146,8 +145,11 @@ func (k msgServer) UpdateAttributeExpiration(goCtx context.Context, msg *types.M
 	}
 
 	err = k.Keeper.UpdateAttributeExpiration(ctx, attribute, msg.ExpirationDate, ownerAddr)
+	if err != nil {
+		return nil, err
+	}
 
-	return &types.MsgUpdateAttributeExpirationResponse{}, err
+	return &types.MsgUpdateAttributeExpirationResponse{}, nil
 }
 
 func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAttributeRequest) (*types.MsgDeleteAttributeResponse, error) {

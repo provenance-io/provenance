@@ -508,7 +508,6 @@ func (s *KeeperTestSuite) TestUpdateAttributeExpiration() {
 			}
 		})
 	}
-
 }
 
 func (s *KeeperTestSuite) TestDeleteAttribute() {
