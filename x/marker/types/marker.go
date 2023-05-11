@@ -424,8 +424,8 @@ func AddToRequiredAttributes(currentAttrs []string, addAttrs []string) ([]string
 	return currentAttrs, nil
 }
 
-// RemovesFromRequiredAttributes remove  attributes from current list, errors if attribute does not exists
-func RemovesFromRequiredAttributes(currentAttrs []string, removeAttrs []string) ([]string, error) {
+// RemoveFromRequiredAttributes remove  attributes from current list, errors if attribute does not exists
+func RemoveFromRequiredAttributes(currentAttrs []string, removeAttrs []string) ([]string, error) {
 	toRem := make(map[string]bool)
 	for _, ra := range removeAttrs {
 		found := false

@@ -27,6 +27,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -1447,7 +1448,6 @@ func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
 }
 
 func (s *IntegrationTestSuite) TestUpdateRequiredAttributesTxCommand() {
-
 	testCases := []struct {
 		name          string
 		cmd           *cobra.Command
@@ -1467,21 +1467,6 @@ func (s *IntegrationTestSuite) TestUpdateRequiredAttributesTxCommand() {
 			expectedError: "both add and remove lists cannot be empty",
 		},
 		{
-			name: "should fail, invalid gov proposal no deposit set",
-			cmd:  markercli.GetCmdUpdateRequiredAttributes(),
-			args: []string{
-				"newhotdog",
-				fmt.Sprintf("--%s=%s", markercli.FlagGovProposal, "true"),
-				fmt.Sprintf("--%s=%s", markercli.FlagAdd, "foo.provenance.io"),
-				fmt.Sprintf("--%s=%s", markercli.FlagRemove, "bar.provenance.io"),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			expectedError: "deposit for gov proposal was not set.  Use deposit flag to set deposit",
-		},
-		{
 			name: "should fail, invalid gov proposal deposit denom",
 			cmd:  markercli.GetCmdUpdateRequiredAttributes(),
 			args: []string{
@@ -1489,13 +1474,13 @@ func (s *IntegrationTestSuite) TestUpdateRequiredAttributesTxCommand() {
 				fmt.Sprintf("--%s=%s", markercli.FlagGovProposal, "true"),
 				fmt.Sprintf("--%s=%s", markercli.FlagAdd, "foo.provenance.io"),
 				fmt.Sprintf("--%s=%s", markercli.FlagRemove, "bar.provenance.io"),
-				fmt.Sprintf("--%s=%s", markercli.FlagDeposit, "blah"),
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, "blah"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectedError: "invalid decimal coin expression: blah",
+			expectedError: "invalid deposit: invalid decimal coin expression: blah",
 		},
 		{
 			name: "should succeed, gov proposal should succeed",
@@ -1505,7 +1490,7 @@ func (s *IntegrationTestSuite) TestUpdateRequiredAttributesTxCommand() {
 				fmt.Sprintf("--%s=%s", markercli.FlagGovProposal, "true"),
 				fmt.Sprintf("--%s=%s", markercli.FlagAdd, "foo.provenance.io"),
 				fmt.Sprintf("--%s=%s", markercli.FlagRemove, "bar.provenance.io"),
-				fmt.Sprintf("--%s=%s", markercli.FlagDeposit, "100jackthecat"),
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, "100jackthecat"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),

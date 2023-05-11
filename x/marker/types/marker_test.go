@@ -395,7 +395,7 @@ func TestRemovesFromRequiredAttributes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actualAttrs, err := RemovesFromRequiredAttributes(tt.currentAttrs, tt.removeAttrs)
+			actualAttrs, err := RemoveFromRequiredAttributes(tt.currentAttrs, tt.removeAttrs)
 			if len(tt.expectedError) == 0 {
 				assert.NoError(t, err)
 				assert.ElementsMatch(t, tt.expectedAttrs, actualAttrs)

@@ -17,12 +17,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channelutils "github.com/cosmos/ibc-go/v6/modules/core/04-channel/client/utils"
@@ -50,8 +51,6 @@ const (
 	FlagAdd                    = "add"
 	FlagRemove                 = "remove"
 	FlagGovProposal            = "gov-proposal"
-	FlagDeposit                = "deposit"
-	FlagMetadata               = "metadata"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -1013,25 +1012,17 @@ func GetCmdUpdateRequiredAttributes() *cobra.Command {
 			var msg sdk.Msg
 			if isGov {
 				var govErr error
-				depositArg, govErr := cmd.Flags().GetString(FlagDeposit)
+				govMsg, govErr := govcli.ReadGovPropFlags(clientCtx, cmd.Flags())
 				if govErr != nil {
 					return govErr
 				}
-				deposit, govErr := sdk.ParseCoinsNormalized(depositArg)
+				anys, govErr := sdktx.SetMsgs([]sdk.Msg{req})
 				if govErr != nil {
 					return govErr
 				}
-				if deposit.Empty() {
-					return fmt.Errorf("deposit for gov proposal was not set.  Use %s flag to set deposit", FlagDeposit)
-				}
-				metadata, govErr := cmd.Flags().GetString(FlagMetadata)
-				if govErr != nil {
-					return fmt.Errorf("name metadata: %w", govErr)
-				}
-				msg, govErr = govtypesv1.NewMsgSubmitProposal([]sdk.Msg{req}, deposit, clientCtx.GetFromAddress().String(), metadata)
-				if govErr != nil {
-					return govErr
-				}
+
+				govMsg.Messages = anys
+				msg = govMsg
 			} else {
 				msg = req
 			}
@@ -1045,8 +1036,7 @@ func GetCmdUpdateRequiredAttributes() *cobra.Command {
 	cmd.Flags().StringSlice(FlagAdd, []string{}, "comma delimited list of required attributes to be added to restricted marker")
 	cmd.Flags().StringSlice(FlagRemove, []string{}, "comma delimited list of required attributes to be removed from restricted marker")
 	cmd.Flags().Bool(FlagGovProposal, false, "submit required attribute update as a gov proposal")
-	cmd.Flags().String(FlagMetadata, "", "Metadata of proposal")
-	cmd.Flags().String(FlagDeposit, "", "Deposit of proposal")
+	govcli.AddGovPropFlagsToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
