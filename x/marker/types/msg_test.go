@@ -475,13 +475,28 @@ func TestMsgUpdateRequiredAttributesRequestValidateBasic(t *testing.T) {
 		},
 		{
 			name:          "should fail, invalid address",
-			msg:           MsgUpdateRequiredAttributesRequest{Denom: "jackthecat", TransferAuthority: "invalid-addrr", AddRequiredAttributes: []string{"foo.provenance.io"}, RemoveRequiredAttributes: []string{"foo.provenance.io"}},
+			msg:           MsgUpdateRequiredAttributesRequest{Denom: "jackthecat", TransferAuthority: "invalid-addrr", AddRequiredAttributes: []string{"foo.provenance.io"}, RemoveRequiredAttributes: []string{"foo2.provenance.io"}},
 			expectedError: "decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			name:          "should fail, both add and remove list are empty",
 			msg:           *NewMsgUpdateRequiredAttributesRequest("jackthecat", sdk.AccAddress(authority), []string{}, []string{}),
 			expectedError: "both add and remove lists cannot be empty",
+		},
+		{
+			name:          "should fail, combined list has duplicate entries",
+			msg:           *NewMsgUpdateRequiredAttributesRequest("jackthecat", sdk.AccAddress(authority), []string{"foo.provenance.io"}, []string{"foo.provenance.io"}),
+			expectedError: "required attribute lists contain duplicate entries",
+		},
+		{
+			name:          "should fail, add list has duplicate entries",
+			msg:           *NewMsgUpdateRequiredAttributesRequest("jackthecat", sdk.AccAddress(authority), []string{"foo.provenance.io", "foo.provenance.io"}, []string{"foo2.provenance.io"}),
+			expectedError: "required attribute lists contain duplicate entries",
+		},
+		{
+			name:          "should fail, remove list has duplicate entries",
+			msg:           *NewMsgUpdateRequiredAttributesRequest("jackthecat", sdk.AccAddress(authority), []string{"foo.provenance.io"}, []string{"foo2.provenance.io", "foo2.provenance.io"}),
+			expectedError: "required attribute lists contain duplicate entries",
 		},
 		{
 			name: "should succeed",

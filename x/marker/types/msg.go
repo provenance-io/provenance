@@ -596,6 +596,15 @@ func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
 	if len(msg.AddRequiredAttributes) == 0 && len(msg.RemoveRequiredAttributes) == 0 {
 		return fmt.Errorf("both add and remove lists cannot be empty")
 	}
+
+	combined := append(msg.AddRequiredAttributes, msg.RemoveRequiredAttributes...)
+	seen := make(map[string]bool)
+	for _, str := range combined {
+		if seen[str] {
+			return fmt.Errorf("required attribute lists contain duplicate entries")
+		}
+		seen[str] = true
+	}
 	_, err := sdk.AccAddressFromBech32(msg.TransferAuthority)
 	return err
 }
