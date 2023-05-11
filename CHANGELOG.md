@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Add marker deposit access check for sends to marker escrow account [#1525](https://github.com/provenance-io/provenance/issues/1525).
+* Add support for `name` owner to execute `MsgModifyName` transaction [#1536](https://github.com/provenance-io/provenance/issues/1536).
 * Bump Cosmos-SDK to `v0.46.10-pio-4` (from `v0.46.10-pio-3`) for the `SendRestrictionFn` changes [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
 * Switch to using a `SendRestrictionFn` for restricting sends of marker funds [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
 

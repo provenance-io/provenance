@@ -22,6 +22,9 @@ import (
 // The flag for creating unrestricted names
 const flagUnrestricted = "unrestrict"
 
+// The flag to specify that the command should be ran as a gov proposal
+const flagGovProposal = "gov-proposal"
+
 // NewTxCmd is the top-level command for name CLI transactions.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
@@ -34,7 +37,7 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		GetBindNameCmd(),
 		GetDeleteNameCmd(),
-		GetModifyNameProposalCmd(),
+		GetModifyNameCmd(),
 	)
 	return txCmd
 }
@@ -102,24 +105,25 @@ func GetDeleteNameCmd() *cobra.Command {
 	return cmd
 }
 
-func GetModifyNameProposalCmd() *cobra.Command {
+func GetModifyNameCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "modify-name-proposal [name] [new_owner] (--unrestrict) [flags]",
-		Short: "Submit a modify name creation governance proposal",
+		Use:   "modify-name [name] [new_owner] (--unrestrict) [flags]",
+		Short: "Submit a modify name tx",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a modify name governance proposal along with an initial deposit.
+			fmt.Sprintf(`Submit a modify name by name owner or via governance proposal along with an initial deposit.
 
 IMPORTANT: The restricted creation of sub-names will be enabled by default unless the unrestricted flag is included.
-The owner must approve all child name creation unless an alterate owner is provided.
+The owner must approve all child name creation unless an alternate owner is provided.
 
 Example:
-$ %s tx name modify-name-proposal \
+$ %s tx name modify-name \
 	<name> <new_owner> \
 	--unrestrict  \ 
 	--from <address>
 			`,
 				version.AppName)),
-		Args: cobra.ExactArgs(2),
+		Aliases: []string{"m", "mn"},
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -130,36 +134,50 @@ $ %s tx name modify-name-proposal \
 			if err != nil {
 				return err
 			}
-			depositArg, err := cmd.Flags().GetString(FlagDeposit)
+			isGov, err := cmd.Flags().GetBool(flagGovProposal)
 			if err != nil {
 				return err
-			}
-			deposit, err := sdk.ParseCoinsNormalized(depositArg)
-			if err != nil {
-				return err
-			}
-			metadata, err := cmd.Flags().GetString(FlagMetadata)
-			if err != nil {
-				return fmt.Errorf("name metadata: %w", err)
 			}
 
-			content := types.MsgModifyNameRequest{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			var authority sdk.AccAddress
+			if !isGov {
+				authority = clientCtx.GetFromAddress()
+			} else {
+				authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+			}
+
+			modifyMsg := types.MsgModifyNameRequest{
+				Authority: authority.String(),
 				Record:    types.NewNameRecord(strings.ToLower(args[0]), owner, !viper.GetBool(flagUnrestricted)),
 			}
-			if err = content.ValidateBasic(); err != nil {
+
+			var req sdk.Msg
+			if isGov {
+				var govErr error
+				depositArg, govErr := cmd.Flags().GetString(FlagDeposit)
+				if govErr != nil {
+					return govErr
+				}
+				deposit, govErr := sdk.ParseCoinsNormalized(depositArg)
+				if govErr != nil {
+					return govErr
+				}
+				metadata, govErr := cmd.Flags().GetString(FlagMetadata)
+				if govErr != nil {
+					return fmt.Errorf("name metadata: %w", govErr)
+				}
+				req, govErr = govtypesv1.NewMsgSubmitProposal([]sdk.Msg{&modifyMsg}, deposit, clientCtx.GetFromAddress().String(), metadata)
+				if govErr != nil {
+					return govErr
+				}
+			} else {
+				req = &modifyMsg
+			}
+			if err = req.ValidateBasic(); err != nil {
 				return err
 			}
 
-			msg, err := govtypesv1.NewMsgSubmitProposal([]sdk.Msg{&content}, deposit, clientCtx.GetFromAddress().String(), metadata)
-			if err != nil {
-				return err
-			}
-			if err = msg.ValidateBasic(); err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), req)
 		},
 	}
 
@@ -167,6 +185,7 @@ $ %s tx name modify-name-proposal \
 	// proposal flags
 	cmd.Flags().String(FlagMetadata, "", "Metadata of proposal")
 	cmd.Flags().String(FlagDeposit, "", "Deposit of proposal")
+	cmd.Flags().Bool(flagGovProposal, false, "Run transaction as gov proposal")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
