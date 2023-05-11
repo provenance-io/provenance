@@ -893,6 +893,8 @@ date
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  | The attribute name. |
+| `attribute_value` | [bytes](#bytes) |  | The original attribute value. |
+| `attribute_type` | [AttributeType](#provenance.attribute.v1.AttributeType) |  | The original attribute value type. |
 | `expiration_date` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that an attribute will expire. |
 | `account` | [string](#string) |  | The account to add the attribute to. |
 | `owner` | [string](#string) |  | The address that the name must resolve to. |

@@ -110,7 +110,8 @@ func (msg MsgUpdateAttributeExpirationRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
 		return err
 	}
-	return nil
+	a := NewAttribute(msg.Name, msg.Account, msg.AttributeType, msg.AttributeValue)
+	return a.ValidateBasic()
 }
 
 // GetSigners indicates that the message must have been signed by the name owner.

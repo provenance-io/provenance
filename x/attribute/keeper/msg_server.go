@@ -127,7 +127,27 @@ func (k msgServer) UpdateAttribute(goCtx context.Context, msg *types.MsgUpdateAt
 }
 
 func (k msgServer) UpdateAttributeExpiration(goCtx context.Context, msg *types.MsgUpdateAttributeExpirationRequest) (*types.MsgUpdateAttributeExpirationResponse, error) {
-	return nil, nil
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	attribute := types.Attribute{
+		Address:       msg.Account,
+		Name:          msg.Name,
+		AttributeType: msg.AttributeType,
+		Value:         msg.AttributeValue,
+	}
+
+	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.ExpirationDate != nil && msg.ExpirationDate.UTC().Before(ctx.BlockTime().UTC()) {
+		return nil, fmt.Errorf("attribute expiration date %v is before block time of %v", msg.ExpirationDate.UTC(), ctx.BlockTime().UTC())
+	}
+
+	err = k.Keeper.UpdateAttributeExpiration(ctx, attribute, *msg.ExpirationDate, ownerAddr)
+
+	return &types.MsgUpdateAttributeExpirationResponse{}, err
 }
 
 func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAttributeRequest) (*types.MsgDeleteAttributeResponse, error) {

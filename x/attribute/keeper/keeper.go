@@ -192,7 +192,7 @@ func (k Keeper) DecAttrNameAddressLookup(ctx sdk.Context, name string, addrBytes
 	}
 }
 
-// Updates an attribute under the given account. The attribute name must resolve to the given owner address and value must resolve to an existing attribute.
+// UpdateAttribute updates an attribute under the given account. The attribute name must resolve to the given owner address and value must resolve to an existing attribute.
 func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribute, updateAttribute types.Attribute, owner sdk.AccAddress,
 ) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "update")
@@ -270,6 +270,58 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 		errorMessage := "no attributes updated"
 		ctx.Logger().Error(errorMessage, "name", originalAttribute.Name, "value", string(originalAttribute.Value))
 		return fmt.Errorf("%s with name \"%s\" : value \"%s\" : type: %s", errorMessage, originalAttribute.Name, string(originalAttribute.Value), originalAttribute.AttributeType.String())
+	}
+	return nil
+}
+
+// UpdateAttributeExpiration updates the expiration date on an attribute.
+func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, attribute types.Attribute, expirationDate time.Time, owner sdk.AccAddress,
+) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "update_expiration")
+
+	var err error
+
+	normalizedOrigName, err := k.nameKeeper.Normalize(ctx, attribute.Name)
+	if err != nil {
+		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attribute.Name, err)
+	}
+
+	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
+		return fmt.Errorf("no account found for owner address \"%s\"", owner.String())
+	}
+
+	if !k.nameKeeper.ResolvesTo(ctx, attribute.Name, owner) {
+		return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", attribute.Name, owner.String())
+	}
+
+	addrBz := attribute.GetAddressBytes()
+
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(addrBz, normalizedOrigName))
+	var found bool
+	for ; it.Valid(); it.Next() {
+		attr := types.Attribute{}
+		if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
+			return err
+		}
+
+		if attr.Name == attribute.Name && bytes.Equal(attr.Value, attribute.Value) && attr.AttributeType == attribute.AttributeType {
+			found = true
+			store.Delete(it.Key())
+			attr.ExpirationDate = &expirationDate
+			bz, err := k.cdc.Marshal(&attr)
+			if err != nil {
+				return err
+			}
+			updatedKey := types.AddrAttributeKey(addrBz, attr)
+			store.Set(updatedKey, bz)
+			break
+		}
+	}
+	if !found {
+		errorMessage := "no attributes updated"
+		ctx.Logger().Error(errorMessage, "name", attribute.Name, "value", string(attribute.Value))
+		return fmt.Errorf("%s with name \"%s\" : value \"%s\" : type: %s", errorMessage, attribute.Name, string(attribute.Value), attribute.AttributeType.String())
 	}
 	return nil
 }
