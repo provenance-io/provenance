@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* Bump go to `v1.20` (from `v1.18`) [#1539](https://github.com/provenance-io/provenance/issues/1539).
+* Bump go to `1.20` (from `1.18`) [#1539](https://github.com/provenance-io/provenance/issues/1539).
 * Add marker deposit access check for sends to marker escrow account [#1525](https://github.com/provenance-io/provenance/issues/1525).
 * Add support for `name` owner to execute `MsgModifyName` transaction [#1536](https://github.com/provenance-io/provenance/issues/1536).
 
