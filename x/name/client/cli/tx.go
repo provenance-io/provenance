@@ -11,10 +11,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/x/name/types"
 )
@@ -23,7 +24,7 @@ import (
 const flagUnrestricted = "unrestrict"
 
 // The flag to specify that the command should be ran as a gov proposal
-const flagGovProposal = "gov-proposal"
+const FlagGovProposal = "gov-proposal"
 
 // NewTxCmd is the top-level command for name CLI transactions.
 func NewTxCmd() *cobra.Command {
@@ -134,7 +135,7 @@ $ %s tx name modify-name \
 			if err != nil {
 				return err
 			}
-			isGov, err := cmd.Flags().GetBool(flagGovProposal)
+			isGov, err := cmd.Flags().GetBool(FlagGovProposal)
 			if err != nil {
 				return err
 			}
@@ -154,22 +155,16 @@ $ %s tx name modify-name \
 			var req sdk.Msg
 			if isGov {
 				var govErr error
-				depositArg, govErr := cmd.Flags().GetString(FlagDeposit)
+				proposal, govErr := govcli.ReadGovPropFlags(clientCtx, cmd.Flags())
 				if govErr != nil {
 					return govErr
 				}
-				deposit, govErr := sdk.ParseCoinsNormalized(depositArg)
+				anys, govErr := sdktx.SetMsgs([]sdk.Msg{&modifyMsg})
 				if govErr != nil {
 					return govErr
 				}
-				metadata, govErr := cmd.Flags().GetString(FlagMetadata)
-				if govErr != nil {
-					return fmt.Errorf("name metadata: %w", govErr)
-				}
-				req, govErr = govtypesv1.NewMsgSubmitProposal([]sdk.Msg{&modifyMsg}, deposit, clientCtx.GetFromAddress().String(), metadata)
-				if govErr != nil {
-					return govErr
-				}
+				proposal.Messages = anys
+				req = proposal
 			} else {
 				req = &modifyMsg
 			}
@@ -182,10 +177,8 @@ $ %s tx name modify-name \
 	}
 
 	cmd.Flags().BoolP(flagUnrestricted, "u", false, "Allow child name creation by everyone")
-	// proposal flags
-	cmd.Flags().String(FlagMetadata, "", "Metadata of proposal")
-	cmd.Flags().String(FlagDeposit, "", "Deposit of proposal")
-	cmd.Flags().Bool(flagGovProposal, false, "Run transaction as gov proposal")
+	cmd.Flags().Bool(FlagGovProposal, false, "Run transaction as gov proposal")
+	govcli.AddGovPropFlagsToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
