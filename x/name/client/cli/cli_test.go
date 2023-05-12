@@ -465,7 +465,7 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 			cmd:  namecli.GetModifyNameCmd(),
 			args: []string{"tomodify.attribute",
 				s.testnet.Validators[0].Address.String(),
-				"--unrestrict",
+				fmt.Sprintf("--%s", namecli.FlagUnrestricted),
 				fmt.Sprintf("--%s=%s", namecli.FlagGovProposal, "true"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -481,7 +481,7 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 			cmd:  namecli.GetModifyNameCmd(),
 			args: []string{"tomodify.attribute",
 				s.testnet.Validators[0].Address.String(),
-				"--unrestrict",
+				fmt.Sprintf("--%s", namecli.FlagUnrestricted),
 				fmt.Sprintf("--%s=%s", namecli.FlagGovProposal, "true"),
 				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, "invalid"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -498,7 +498,7 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 			cmd:  namecli.GetModifyNameCmd(),
 			args: []string{"tomodify.attribute",
 				s.testnet.Validators[0].Address.String(),
-				"--unrestrict",
+				fmt.Sprintf("--%s", namecli.FlagUnrestricted),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -513,7 +513,7 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 			cmd:  namecli.GetModifyNameCmd(),
 			args: []string{"",
 				s.testnet.Validators[0].Address.String(),
-				"--unrestrict",
+				fmt.Sprintf("--%s", namecli.FlagUnrestricted),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -597,7 +597,6 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 }
 
 func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
-
 	testCases := []struct {
 		name         string
 		cmd          *cobra.Command

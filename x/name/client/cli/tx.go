@@ -21,7 +21,7 @@ import (
 )
 
 // The flag for creating unrestricted names
-const flagUnrestricted = "unrestrict"
+const FlagUnrestricted = "unrestrict"
 
 // The flag to specify that the command should be ran as a gov proposal
 const FlagGovProposal = "gov-proposal"
@@ -63,7 +63,7 @@ func GetBindNameCmd() *cobra.Command {
 				types.NewNameRecord(
 					strings.ToLower(args[0]),
 					address,
-					!viper.GetBool(flagUnrestricted),
+					!viper.GetBool(FlagUnrestricted),
 				),
 				types.NewNameRecord(
 					strings.ToLower(args[2]),
@@ -74,7 +74,7 @@ func GetBindNameCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().BoolP(flagUnrestricted, "u", false, "Allow child name creation by everyone")
+	cmd.Flags().BoolP(FlagUnrestricted, "u", false, "Allow child name creation by everyone")
 
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
@@ -149,7 +149,7 @@ $ %s tx name modify-name \
 
 			modifyMsg := types.MsgModifyNameRequest{
 				Authority: authority.String(),
-				Record:    types.NewNameRecord(strings.ToLower(args[0]), owner, !viper.GetBool(flagUnrestricted)),
+				Record:    types.NewNameRecord(strings.ToLower(args[0]), owner, !viper.GetBool(FlagUnrestricted)),
 			}
 
 			var req sdk.Msg
@@ -176,7 +176,7 @@ $ %s tx name modify-name \
 		},
 	}
 
-	cmd.Flags().BoolP(flagUnrestricted, "u", false, "Allow child name creation by everyone")
+	cmd.Flags().BoolP(FlagUnrestricted, "u", false, "Allow child name creation by everyone")
 	cmd.Flags().Bool(FlagGovProposal, false, "Run transaction as gov proposal")
 	govcli.AddGovPropFlagsToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
