@@ -35,6 +35,7 @@ var (
 	_ sdk.Msg = &MsgAddFinalizeActivateMarkerRequest{}
 	_ sdk.Msg = &MsgSupplyIncreaseProposalRequest{}
 	_ sdk.Msg = &MsgUpdateRequiredAttributesRequest{}
+	_ sdk.Msg = &MsgUpdateForcedTransferRequest{}
 )
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
@@ -624,5 +625,28 @@ func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
 
 func (msg *MsgUpdateRequiredAttributesRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.TransferAuthority)
+	return []sdk.AccAddress{addr}
+}
+
+func NewMsgUpdateForcedTransferRequest(denom string, allowForcedTransfer bool, authority sdk.AccAddress) *MsgUpdateForcedTransferRequest {
+	return &MsgUpdateForcedTransferRequest{
+		Denom:               denom,
+		AllowForcedTransfer: allowForcedTransfer,
+		Authority:           authority.String(),
+	}
+}
+
+func (msg MsgUpdateForcedTransferRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return fmt.Errorf("invalid authority: %w", err)
+	}
+	return nil
+}
+
+func (msg MsgUpdateForcedTransferRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{addr}
 }
