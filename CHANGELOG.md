@@ -39,12 +39,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* Add support to add/remove required attributes for a restricted marker. [#1512](https://github.com/provenance-io/provenance/issues/1512)
 * Add endpoints to update the value owner address of scopes [#1329](https://github.com/provenance-io/provenance/issues/1329).
 
 ### Improvements
 
 * Add marker deposit access check for sends to marker escrow account [#1525](https://github.com/provenance-io/provenance/issues/1525).
 * Add support for `name` owner to execute `MsgModifyName` transaction [#1536](https://github.com/provenance-io/provenance/issues/1536).
+* Add usage of `AddGovPropFlagsToCmd` and `ReadGovPropFlags` cli for `GetModifyNameCmd` [#1542](https://github.com/provenance-io/provenance/issues/1542).
 
 ### API Breaking
 
