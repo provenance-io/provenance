@@ -17,9 +17,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/version"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channelutils "github.com/cosmos/ibc-go/v6/modules/core/04-channel/client/utils"
@@ -44,6 +48,9 @@ const (
 	FlagMemo                   = "memo"
 	FlagRequiredAttributes     = "required-attributes"
 	FlagAllowForceTransfer     = "allow-force-transfer"
+	FlagAdd                    = "add"
+	FlagRemove                 = "remove"
+	FlagGovProposal            = "gov-proposal"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -73,6 +80,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdFeeGrant(),
 		GetIbcTransferTxCmd(),
 		GetCmdAddFinalizeActivateMarker(),
+		GetCmdUpdateRequiredAttributes(),
 	)
 	return txCmd
 }
@@ -954,6 +962,81 @@ with the given supply amount and denomination provided in the coin argument
 		},
 	}
 	AddNewMarkerFlags(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdUpdateRequiredAttributes implements the update required attributes command
+func GetCmdUpdateRequiredAttributes() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "update-required-attributes <denom>",
+		Aliases: []string{"ura"},
+		Args:    cobra.ExactArgs(1),
+		Short:   "Update required attributes on an existing restricted marker",
+		Long: strings.TrimSpace(`Updates the required attributes of an existing restricted marker.
+`),
+		Example: fmt.Sprintf(`$ %s tx marker update-required-attributes hotdogcoin --%s=attr.one,*.attr.two,... --%s=attr.one,*.attr.two,...`,
+			version.AppName,
+			FlagAdd,
+			FlagRemove,
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			addReqValues, err := cmd.Flags().GetStringSlice(FlagAdd)
+			if err != nil {
+				return fmt.Errorf("incorrect value for %s flag.  Accepted: comma delimited list of attributes Error: %w", FlagAdd, err)
+			}
+			removeReqValues, err := cmd.Flags().GetStringSlice(FlagRemove)
+			if err != nil {
+				return fmt.Errorf("incorrect value for %s flag.  Accepted: comma delimited list of attributes Error: %w", FlagRemove, err)
+			}
+
+			isGov, err := cmd.Flags().GetBool(FlagGovProposal)
+			if err != nil {
+				return err
+			}
+
+			var transferAuth sdk.AccAddress
+			if !isGov {
+				transferAuth = clientCtx.GetFromAddress()
+			} else {
+				transferAuth = authtypes.NewModuleAddress(govtypes.ModuleName)
+			}
+
+			req := types.NewMsgUpdateRequiredAttributesRequest(args[0], transferAuth, removeReqValues, addReqValues)
+
+			var msg sdk.Msg
+			if isGov {
+				var govErr error
+				govMsg, govErr := govcli.ReadGovPropFlags(clientCtx, cmd.Flags())
+				if govErr != nil {
+					return govErr
+				}
+				anys, govErr := sdktx.SetMsgs([]sdk.Msg{req})
+				if govErr != nil {
+					return govErr
+				}
+
+				govMsg.Messages = anys
+				msg = govMsg
+			} else {
+				msg = req
+			}
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	cmd.Flags().StringSlice(FlagAdd, []string{}, "comma delimited list of required attributes to be added to restricted marker")
+	cmd.Flags().StringSlice(FlagRemove, []string{}, "comma delimited list of required attributes to be removed from restricted marker")
+	cmd.Flags().Bool(FlagGovProposal, false, "submit required attribute update as a gov proposal")
+	govcli.AddGovPropFlagsToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

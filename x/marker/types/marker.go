@@ -52,6 +52,7 @@ type MarkerAccountI interface {
 	AllowsForcedTransfer() bool
 
 	GetRequiredAttributes() []string
+	SetRequiredAttributes([]string)
 }
 
 // NewEmptyMarkerAccount creates a new empty marker account in a Proposed state
@@ -254,6 +255,10 @@ func (ma *MarkerAccount) GetRequiredAttributes() []string {
 	return ma.RequiredAttributes
 }
 
+func (ma *MarkerAccount) SetRequiredAttributes(requiredAttributes []string) {
+	ma.RequiredAttributes = requiredAttributes
+}
+
 // GetPubKey implements authtypes.Account (but there are no public keys associated with the account for signing)
 func (ma MarkerAccount) GetPubKey() cryptotypes.PubKey {
 	return nil
@@ -404,4 +409,42 @@ func MarkerTypeFromString(str string) (MarkerType, error) {
 	}
 
 	return MarkerType_Unknown, fmt.Errorf("'%s' is not a valid marker status", str)
+}
+
+// AddToRequiredAttributes add new attributes to current list, errors if attribute already exists
+func AddToRequiredAttributes(currentAttrs []string, addAttrs []string) ([]string, error) {
+	for _, aa := range addAttrs {
+		for _, ca := range currentAttrs {
+			if aa == ca {
+				return nil, fmt.Errorf("attribute %q is already required", aa)
+			}
+		}
+		currentAttrs = append(currentAttrs, aa)
+	}
+	return currentAttrs, nil
+}
+
+// RemoveFromRequiredAttributes remove  attributes from current list, errors if attribute does not exists
+func RemoveFromRequiredAttributes(currentAttrs []string, removeAttrs []string) ([]string, error) {
+	toRem := make(map[string]bool)
+	for _, ra := range removeAttrs {
+		found := false
+		for _, ca := range currentAttrs {
+			if ra == ca {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, fmt.Errorf("attribute %q is already not required", ra)
+		}
+		toRem[ra] = true
+	}
+	reqAttrs := make([]string, 0, len(currentAttrs))
+	for _, ca := range currentAttrs {
+		if !toRem[ca] {
+			reqAttrs = append(reqAttrs, ca)
+		}
+	}
+	return reqAttrs, nil
 }

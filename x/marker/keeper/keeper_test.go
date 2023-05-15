@@ -16,6 +16,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -1077,6 +1078,111 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, res, &types.MsgSupplyIncreaseProposalResponse{})
 		}
+	}
+}
+
+func TestMsgUpdateRequiredAttributesRequest(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+
+	transferAuthUser := testUserAddress("test")
+	notTransferAuthUser := testUserAddress("test1")
+
+	notRestrictedMarker := types.NewEmptyMarkerAccount(
+		"not-restricted-marker",
+		transferAuthUser.String(),
+		[]types.AccessGrant{})
+
+	err := app.MarkerKeeper.AddMarkerAccount(ctx, notRestrictedMarker)
+	require.NoError(t, err)
+	reqAttr := []string{"foo.provenance.io", "*.provenance.io", "bar.provenance.io"}
+	rMarkerDenom := "restricted-marker"
+	rMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom), nil, 0, 0)
+	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), transferAuthUser, []types.AccessGrant{{Address: transferAuthUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, reqAttr))
+
+	testCases := []struct {
+		name             string
+		updateMsgRequest types.MsgUpdateRequiredAttributesRequest
+		expectedReqAttr  []string
+		expectedError    string
+	}{
+		{
+			name:             "should fail, cannot find marker",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest("blah", transferAuthUser, []string{}, []string{}),
+			expectedError:    "marker not found for blah: marker blah not found for address: cosmos1psw3a97ywtr595qa4295lw07cz9665hynnfpee",
+		},
+		{
+			name:             "should fail, marker is not restricted",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(notRestrictedMarker.Denom, transferAuthUser, []string{}, []string{}),
+			expectedError:    "marker not-restricted-marker is not a restricted marker",
+		},
+		{
+			name:             "should fail, no transfer authority ",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, notTransferAuthUser, []string{}, []string{}),
+			expectedError:    fmt.Sprintf("caller does not have authority to update required attributes %s", notTransferAuthUser.String()),
+		},
+		{
+			name:             "should succeed, has gov transfer authority",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, authority, []string{}, []string{}),
+			expectedReqAttr:  reqAttr,
+		},
+		{
+			name:             "should succeed, user has transfer auth",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{}, []string{}),
+			expectedReqAttr:  reqAttr,
+		},
+		{
+			name:             "should fail, can not normalize remove list entry",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{"?$#"}, []string{}),
+			expectedError:    "value provided for name is invalid",
+		},
+		{
+			name:             "should fail, can not normalize add list entry",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{}, []string{"?$#"}),
+			expectedError:    "value provided for name is invalid",
+		},
+		{
+			name:             "should fail, remove value does not exist",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{"dne.provenance.io"}, []string{}),
+			expectedError:    `attribute "dne.provenance.io" is already not required`,
+		},
+		{
+			name:             "should fail, cannot add duplicate entries",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{}, []string{"foo.provenance.io"}),
+			expectedError:    `attribute "foo.provenance.io" is already required`,
+		},
+		{
+			name:             "should succeed, to remove element",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{"foo.provenance.io"}, []string{}),
+			expectedReqAttr:  []string{"*.provenance.io", "bar.provenance.io"},
+		},
+		{
+			name:             "should succeed, to add elements",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{}, []string{"foo2.provenance.io", "*.jackthecat.io"}),
+			expectedReqAttr:  []string{"*.provenance.io", "bar.provenance.io", "foo2.provenance.io", "*.jackthecat.io"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := server.UpdateRequiredAttributes(sdk.WrapSDKContext(ctx),
+				&tc.updateMsgRequest)
+
+			if len(tc.expectedError) > 0 {
+				assert.Nil(t, res)
+				assert.EqualError(t, err, tc.expectedError)
+
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, res, &types.MsgUpdateRequiredAttributesResponse{})
+				actualMarker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, tc.updateMsgRequest.Denom)
+				require.NoError(t, err)
+				assert.ElementsMatch(t, tc.expectedReqAttr, actualMarker.GetRequiredAttributes())
+			}
+		})
 	}
 }
 
