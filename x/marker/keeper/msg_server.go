@@ -642,3 +642,55 @@ func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgS
 	}
 	return &types.MsgSupplyIncreaseProposalResponse{}, nil
 }
+
+func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.MsgUpdateRequiredAttributesRequest) (*types.MsgUpdateRequiredAttributesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	m, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, fmt.Errorf("marker not found for %s: %w", msg.Denom, err)
+	}
+	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
+		return nil, fmt.Errorf("marker %s is not a restricted marker", msg.Denom)
+	}
+
+	caller, err := sdk.AccAddressFromBech32(msg.TransferAuthority)
+	if err != nil {
+		return nil, err
+	}
+
+	isGovProp := msg.TransferAuthority == k.GetAuthority()
+	if !isGovProp && !m.AddressHasAccess(caller, types.Access_Transfer) {
+		return nil, fmt.Errorf("caller does not have authority to update required attributes %s", msg.TransferAuthority)
+	}
+
+	removeList, err := k.NormalizeRequiredAttributes(ctx, msg.RemoveRequiredAttributes)
+	if err != nil {
+		return nil, err
+	}
+	addList, err := k.NormalizeRequiredAttributes(ctx, msg.AddRequiredAttributes)
+	if err != nil {
+		return nil, err
+	}
+
+	reqAttrs, err := types.RemoveFromRequiredAttributes(m.GetRequiredAttributes(), removeList)
+	if err != nil {
+		return nil, err
+	}
+	reqAttrs, err = types.AddToRequiredAttributes(reqAttrs, addList)
+	if err != nil {
+		return nil, err
+	}
+
+	m.SetRequiredAttributes(reqAttrs)
+	k.SetMarker(ctx, m)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	return &types.MsgUpdateRequiredAttributesResponse{}, nil
+}

@@ -34,6 +34,7 @@ var (
 	_ sdk.Msg = &MsgGrantAllowanceRequest{}
 	_ sdk.Msg = &MsgAddFinalizeActivateMarkerRequest{}
 	_ sdk.Msg = &MsgSupplyIncreaseProposalRequest{}
+	_ sdk.Msg = &MsgUpdateRequiredAttributesRequest{}
 )
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
@@ -81,6 +82,16 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 
 	if len(msg.RequiredAttributes) > 0 && msg.MarkerType != MarkerType_RestrictedCoin {
 		return fmt.Errorf("required attributes are reserved for restricted markers")
+	}
+
+	if len(msg.RequiredAttributes) > 0 {
+		seen := make(map[string]bool)
+		for _, str := range msg.RequiredAttributes {
+			if seen[str] {
+				return fmt.Errorf("required attribute list contains duplicate entries")
+			}
+			seen[str] = true
+		}
 	}
 
 	return nil
@@ -575,5 +586,43 @@ func (msg *MsgSupplyIncreaseProposalRequest) ValidateBasic() error {
 
 func (msg *MsgSupplyIncreaseProposalRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{addr}
+}
+
+// NewMsgUpdateRequiredAttributesRequest creates a MsgUpdateRequiredAttributesRequest
+func NewMsgUpdateRequiredAttributesRequest(denom string, transferAuthority sdk.AccAddress, removeRequiredAttributes, addRequiredAttributes []string) *MsgUpdateRequiredAttributesRequest {
+	return &MsgUpdateRequiredAttributesRequest{
+		Denom:                    denom,
+		TransferAuthority:        transferAuthority.String(),
+		RemoveRequiredAttributes: removeRequiredAttributes,
+		AddRequiredAttributes:    addRequiredAttributes,
+	}
+}
+
+func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return fmt.Errorf(err.Error())
+	}
+	if len(msg.AddRequiredAttributes) == 0 && len(msg.RemoveRequiredAttributes) == 0 {
+		return fmt.Errorf("both add and remove lists cannot be empty")
+	}
+
+	combined := []string{}
+	combined = append(combined, msg.AddRequiredAttributes...)
+	combined = append(combined, msg.RemoveRequiredAttributes...)
+	seen := make(map[string]bool)
+	for _, str := range combined {
+		if seen[str] {
+			return fmt.Errorf("required attribute lists contain duplicate entries")
+		}
+		seen[str] = true
+	}
+
+	_, err := sdk.AccAddressFromBech32(msg.TransferAuthority)
+	return err
+}
+
+func (msg *MsgUpdateRequiredAttributesRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.TransferAuthority)
 	return []sdk.AccAddress{addr}
 }
