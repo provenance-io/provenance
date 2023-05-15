@@ -233,6 +233,21 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 			),
 			errorMsg: "",
 		},
+		{
+			name: "should fail duplicate entries for req attrs",
+			msg: *NewMsgAddMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_RestrictedCoin,
+				true,
+				true,
+				false,
+				[]string{"foo", "foo"},
+			),
+			errorMsg: "required attribute list contains duplicate entries",
+		},
 	}
 
 	for _, tc := range cases {
@@ -447,13 +462,71 @@ func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		msg := NewMsgSupplyIncreaseProposalRequest(tc.amount, tc.targetAddress, tc.authority)
-		err := msg.ValidateBasic()
+		t.Run(tc.name, func(t *testing.T) {
+			msg := NewMsgSupplyIncreaseProposalRequest(tc.amount, tc.targetAddress, tc.authority)
+			err := msg.ValidateBasic()
 
-		if tc.shouldFail {
-			require.EqualError(t, err, tc.expectedError)
-		} else {
-			require.NoError(t, err)
-		}
+			if tc.shouldFail {
+				assert.EqualError(t, err, tc.expectedError)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgUpdateRequiredAttributesRequestValidateBasic(t *testing.T) {
+	authority := sdk.AccAddress("input111111111111111").String()
+
+	testCases := []struct {
+		name          string
+		msg           MsgUpdateRequiredAttributesRequest
+		expectedError string
+	}{
+		{
+			name:          "should fail, invalid denom",
+			msg:           *NewMsgUpdateRequiredAttributesRequest("#&", sdk.AccAddress(authority), []string{"foo.provenance.io"}, []string{"foo2.provenance.io"}),
+			expectedError: "invalid denom: #&",
+		},
+		{
+			name:          "should fail, invalid address",
+			msg:           MsgUpdateRequiredAttributesRequest{Denom: "jackthecat", TransferAuthority: "invalid-addrr", AddRequiredAttributes: []string{"foo.provenance.io"}, RemoveRequiredAttributes: []string{"foo2.provenance.io"}},
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "should fail, both add and remove list are empty",
+			msg:           *NewMsgUpdateRequiredAttributesRequest("jackthecat", sdk.AccAddress(authority), []string{}, []string{}),
+			expectedError: "both add and remove lists cannot be empty",
+		},
+		{
+			name:          "should fail, combined list has duplicate entries",
+			msg:           *NewMsgUpdateRequiredAttributesRequest("jackthecat", sdk.AccAddress(authority), []string{"foo.provenance.io"}, []string{"foo.provenance.io"}),
+			expectedError: "required attribute lists contain duplicate entries",
+		},
+		{
+			name:          "should fail, add list has duplicate entries",
+			msg:           *NewMsgUpdateRequiredAttributesRequest("jackthecat", sdk.AccAddress(authority), []string{"foo.provenance.io", "foo.provenance.io"}, []string{"foo2.provenance.io"}),
+			expectedError: "required attribute lists contain duplicate entries",
+		},
+		{
+			name:          "should fail, remove list has duplicate entries",
+			msg:           *NewMsgUpdateRequiredAttributesRequest("jackthecat", sdk.AccAddress(authority), []string{"foo.provenance.io"}, []string{"foo2.provenance.io", "foo2.provenance.io"}),
+			expectedError: "required attribute lists contain duplicate entries",
+		},
+		{
+			name: "should succeed",
+			msg:  *NewMsgUpdateRequiredAttributesRequest("jackthecat", sdk.AccAddress(authority), []string{"foo.provenance.io"}, []string{"foo2.provenance.io"}),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.expectedError) > 0 {
+				assert.EqualError(t, err, tc.expectedError)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
 	}
 }
