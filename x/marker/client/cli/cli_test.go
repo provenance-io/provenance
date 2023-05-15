@@ -27,6 +27,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -1441,6 +1442,87 @@ func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestUpdateRequiredAttributesTxCommand() {
+	testCases := []struct {
+		name          string
+		cmd           *cobra.Command
+		args          []string
+		expectedError string
+	}{
+		{
+			name: "should fail, both add and remove lists are empty",
+			cmd:  markercli.GetCmdUpdateRequiredAttributes(),
+			args: []string{
+				"newhotdog",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectedError: "both add and remove lists cannot be empty",
+		},
+		{
+			name: "should fail, invalid gov proposal deposit denom",
+			cmd:  markercli.GetCmdUpdateRequiredAttributes(),
+			args: []string{
+				"newhotdog",
+				fmt.Sprintf("--%s=%s", markercli.FlagGovProposal, "true"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAdd, "foo.provenance.io"),
+				fmt.Sprintf("--%s=%s", markercli.FlagRemove, "bar.provenance.io"),
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, "blah"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectedError: "invalid deposit: invalid decimal coin expression: blah",
+		},
+		{
+			name: "should succeed, gov proposal should succeed",
+			cmd:  markercli.GetCmdUpdateRequiredAttributes(),
+			args: []string{
+				"newhotdog",
+				fmt.Sprintf("--%s=%s", markercli.FlagGovProposal, "true"),
+				fmt.Sprintf("--%s=%s", markercli.FlagAdd, "foo.provenance.io"),
+				fmt.Sprintf("--%s=%s", markercli.FlagRemove, "bar.provenance.io"),
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, "100jackthecat"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+		},
+		{
+			name: "should succeed, send regular tx",
+			cmd:  markercli.GetCmdUpdateRequiredAttributes(),
+			args: []string{
+				"newhotdog",
+				fmt.Sprintf("--%s=%s", markercli.FlagAdd, "foo.provenance.io"),
+				fmt.Sprintf("--%s=%s", markercli.FlagRemove, "bar.provenance.io"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+
+			_, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+			if len(tc.expectedError) > 0 {
+				s.Require().EqualError(err, tc.expectedError)
+			} else {
+				s.Require().NoError(err)
 			}
 		})
 	}

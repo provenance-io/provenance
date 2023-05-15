@@ -81428,6 +81428,11 @@ definitions:
   provenance.marker.v1.MsgTransferResponse:
     type: object
     title: MsgTransferResponse defines the Msg/Transfer response type
+  provenance.marker.v1.MsgUpdateRequiredAttributesResponse:
+    type: object
+    title: >-
+      MsgUpdateRequiredAttributesResponse defines the
+      Msg/MsgUpdateRequiredAttributes response type
   provenance.marker.v1.MsgWithdrawResponse:
     type: object
     title: MsgWithdrawResponse defines the Msg/Withdraw response type
