@@ -17,26 +17,26 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 )
 
-// Compile time interface check.
-var (
-	_ sdk.Msg = &MsgAddMarkerRequest{}
-	_ sdk.Msg = &MsgAddAccessRequest{}
-	_ sdk.Msg = &MsgDeleteAccessRequest{}
-	_ sdk.Msg = &MsgFinalizeRequest{}
-	_ sdk.Msg = &MsgActivateRequest{}
-	_ sdk.Msg = &MsgCancelRequest{}
-	_ sdk.Msg = &MsgDeleteRequest{}
-	_ sdk.Msg = &MsgMintRequest{}
-	_ sdk.Msg = &MsgBurnRequest{}
-	_ sdk.Msg = &MsgWithdrawRequest{}
-	_ sdk.Msg = &MsgTransferRequest{}
-	_ sdk.Msg = &MsgIbcTransferRequest{}
-	_ sdk.Msg = &MsgGrantAllowanceRequest{}
-	_ sdk.Msg = &MsgAddFinalizeActivateMarkerRequest{}
-	_ sdk.Msg = &MsgSupplyIncreaseProposalRequest{}
-	_ sdk.Msg = &MsgUpdateRequiredAttributesRequest{}
-	_ sdk.Msg = &MsgUpdateForcedTransferRequest{}
-)
+// allRequestMsgs defines all the Msg*Request messages.
+var allRequestMsgs = []sdk.Msg{
+	(*MsgAddMarkerRequest)(nil),
+	(*MsgAddAccessRequest)(nil),
+	(*MsgDeleteAccessRequest)(nil),
+	(*MsgFinalizeRequest)(nil),
+	(*MsgActivateRequest)(nil),
+	(*MsgCancelRequest)(nil),
+	(*MsgDeleteRequest)(nil),
+	(*MsgMintRequest)(nil),
+	(*MsgBurnRequest)(nil),
+	(*MsgWithdrawRequest)(nil),
+	(*MsgTransferRequest)(nil),
+	(*MsgIbcTransferRequest)(nil),
+	(*MsgGrantAllowanceRequest)(nil),
+	(*MsgAddFinalizeActivateMarkerRequest)(nil),
+	(*MsgSupplyIncreaseProposalRequest)(nil),
+	(*MsgUpdateRequiredAttributesRequest)(nil),
+	(*MsgUpdateForcedTransferRequest)(nil),
+}
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgAddMarkerRequest(

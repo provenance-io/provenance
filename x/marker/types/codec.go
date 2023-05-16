@@ -1,6 +1,8 @@
 package types
 
 import (
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,21 +14,11 @@ import (
 
 // RegisterInterfaces registers implementations for the tx messages
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgAddMarkerRequest{},
-		&MsgAddAccessRequest{},
-		&MsgDeleteAccessRequest{},
-		&MsgFinalizeRequest{},
-		&MsgActivateRequest{},
-		&MsgCancelRequest{},
-		&MsgDeleteRequest{},
-		&MsgMintRequest{},
-		&MsgBurnRequest{},
-		&MsgWithdrawRequest{},
-		&MsgTransferRequest{},
-		&MsgIbcTransferRequest{},
-		&MsgSetDenomMetadataRequest{},
-	)
+	messages := make([]proto.Message, len(allRequestMsgs))
+	for i, msg := range allRequestMsgs {
+		messages[i] = msg
+	}
+	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
 
 	registry.RegisterImplementations(
 		(*govtypesv1beta1.Content)(nil),
