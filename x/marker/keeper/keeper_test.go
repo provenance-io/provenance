@@ -5,24 +5,23 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-
 	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
@@ -1080,6 +1079,301 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 	}
 }
 
+func TestMsgUpdateRequiredAttributesRequest(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+
+	transferAuthUser := testUserAddress("test")
+	notTransferAuthUser := testUserAddress("test1")
+
+	notRestrictedMarker := types.NewEmptyMarkerAccount(
+		"not-restricted-marker",
+		transferAuthUser.String(),
+		[]types.AccessGrant{})
+
+	err := app.MarkerKeeper.AddMarkerAccount(ctx, notRestrictedMarker)
+	require.NoError(t, err)
+	reqAttr := []string{"foo.provenance.io", "*.provenance.io", "bar.provenance.io"}
+	rMarkerDenom := "restricted-marker"
+	rMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom), nil, 0, 0)
+	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), transferAuthUser, []types.AccessGrant{{Address: transferAuthUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, reqAttr))
+
+	testCases := []struct {
+		name             string
+		updateMsgRequest types.MsgUpdateRequiredAttributesRequest
+		expectedReqAttr  []string
+		expectedError    string
+	}{
+		{
+			name:             "should fail, cannot find marker",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest("blah", transferAuthUser, []string{}, []string{}),
+			expectedError:    "marker not found for blah: marker blah not found for address: cosmos1psw3a97ywtr595qa4295lw07cz9665hynnfpee",
+		},
+		{
+			name:             "should fail, marker is not restricted",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(notRestrictedMarker.Denom, transferAuthUser, []string{}, []string{}),
+			expectedError:    "marker not-restricted-marker is not a restricted marker",
+		},
+		{
+			name:             "should fail, no transfer authority ",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, notTransferAuthUser, []string{}, []string{}),
+			expectedError:    fmt.Sprintf("caller does not have authority to update required attributes %s", notTransferAuthUser.String()),
+		},
+		{
+			name:             "should succeed, has gov transfer authority",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, authority, []string{}, []string{}),
+			expectedReqAttr:  reqAttr,
+		},
+		{
+			name:             "should succeed, user has transfer auth",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{}, []string{}),
+			expectedReqAttr:  reqAttr,
+		},
+		{
+			name:             "should fail, can not normalize remove list entry",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{"?$#"}, []string{}),
+			expectedError:    "value provided for name is invalid",
+		},
+		{
+			name:             "should fail, can not normalize add list entry",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{}, []string{"?$#"}),
+			expectedError:    "value provided for name is invalid",
+		},
+		{
+			name:             "should fail, remove value does not exist",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{"dne.provenance.io"}, []string{}),
+			expectedError:    `attribute "dne.provenance.io" is already not required`,
+		},
+		{
+			name:             "should fail, cannot add duplicate entries",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{}, []string{"foo.provenance.io"}),
+			expectedError:    `attribute "foo.provenance.io" is already required`,
+		},
+		{
+			name:             "should succeed, to remove element",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{"foo.provenance.io"}, []string{}),
+			expectedReqAttr:  []string{"*.provenance.io", "bar.provenance.io"},
+		},
+		{
+			name:             "should succeed, to add elements",
+			updateMsgRequest: *types.NewMsgUpdateRequiredAttributesRequest(rMarkerDenom, transferAuthUser, []string{}, []string{"foo2.provenance.io", "*.jackthecat.io"}),
+			expectedReqAttr:  []string{"*.provenance.io", "bar.provenance.io", "foo2.provenance.io", "*.jackthecat.io"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := server.UpdateRequiredAttributes(sdk.WrapSDKContext(ctx),
+				&tc.updateMsgRequest)
+
+			if len(tc.expectedError) > 0 {
+				assert.Nil(t, res)
+				assert.EqualError(t, err, tc.expectedError)
+
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, res, &types.MsgUpdateRequiredAttributesResponse{})
+				actualMarker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, tc.updateMsgRequest.Denom)
+				require.NoError(t, err)
+				assert.ElementsMatch(t, tc.expectedReqAttr, actualMarker.GetRequiredAttributes())
+			}
+		})
+	}
+}
+
+func TestUpdateForcedTransfer(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+	authority := app.MarkerKeeper.GetAuthority()
+	otherAddr := sdk.AccAddress("otherAccAddr________").String()
+
+	proposed := types.StatusProposed
+	active := types.StatusActive
+	finalized := types.StatusFinalized
+
+	newMarker := func(denom string, status types.MarkerStatus, allowForcedTransfer bool) *types.MarkerAccount {
+		rv := &types.MarkerAccount{
+			BaseAccount: authtypes.NewBaseAccountWithAddress(types.MustGetMarkerAddress(denom)),
+			AccessControl: []types.AccessGrant{
+				{
+					Address: sdk.AccAddress("allAccessAddr_______").String(),
+					Permissions: types.AccessList{
+						types.Access_Mint, types.Access_Burn,
+						types.Access_Deposit, types.Access_Withdraw,
+						types.Access_Delete, types.Access_Admin, types.Access_Transfer,
+					},
+				},
+			},
+			Status:                 status,
+			Denom:                  denom,
+			Supply:                 sdk.NewInt(1000),
+			MarkerType:             types.MarkerType_RestrictedCoin,
+			AllowGovernanceControl: true,
+			AllowForcedTransfer:    allowForcedTransfer,
+		}
+		app.AccountKeeper.NewAccount(ctx, rv.BaseAccount)
+		return rv
+	}
+	newUnMarker := func(denom string) *types.MarkerAccount {
+		rv := newMarker(denom, active, false)
+		rv.AccessControl = nil
+		rv.MarkerType = types.MarkerType_Coin
+		return rv
+	}
+	newNoGovMarker := func(denom string) *types.MarkerAccount {
+		rv := newMarker(denom, active, false)
+		rv.AllowGovernanceControl = false
+		return rv
+	}
+	newMsg := func(denom string, allowForcedTransfer bool) *types.MsgUpdateForcedTransferRequest {
+		return &types.MsgUpdateForcedTransferRequest{
+			Denom:               denom,
+			AllowForcedTransfer: allowForcedTransfer,
+			Authority:           authority,
+		}
+	}
+	markerAddr := func(denom string) string {
+		return types.MustGetMarkerAddress(denom).String()
+	}
+
+	tests := []struct {
+		name       string
+		origMarker types.MarkerAccountI
+		msg        *types.MsgUpdateForcedTransferRequest
+		expErr     string
+	}{
+		{
+			name: "wrong authority",
+			msg: &types.MsgUpdateForcedTransferRequest{
+				Denom:               "somedenom",
+				AllowForcedTransfer: false,
+				Authority:           otherAddr,
+			},
+			expErr: "expected " + authority + " got " + otherAddr + ": expected gov account as only signer for proposal message",
+		},
+		{
+			name:   "marker does not exist",
+			msg:    newMsg("nosuchmarker", false),
+			expErr: "could not get marker for nosuchmarker: marker nosuchmarker not found for address: " + markerAddr("nosuchmarker"),
+		},
+		{
+			name:       "unrestricted coin",
+			origMarker: newUnMarker("unrestrictedcoin"),
+			msg:        newMsg("unrestrictedcoin", true),
+			expErr:     "cannot update forced transfer on unrestricted marker unrestrictedcoin",
+		},
+		{
+			name:       "gov not enabled",
+			origMarker: newNoGovMarker("nogovallowed"),
+			msg:        newMsg("nogovallowed", true),
+			expErr:     "nogovallowed marker does not allow governance control",
+		},
+		{
+			name:       "false not changing",
+			origMarker: newMarker("activefalse", active, false),
+			msg:        newMsg("activefalse", false),
+			expErr:     "marker activefalse already has allow_forced_transfer = false",
+		},
+		{
+			name:       "true not changing",
+			origMarker: newMarker("activetrue", active, true),
+			msg:        newMsg("activetrue", true),
+			expErr:     "marker activetrue already has allow_forced_transfer = true",
+		},
+		{
+			name:       "active true to false",
+			origMarker: newMarker("activetf", active, true),
+			msg:        newMsg("activetf", false),
+			expErr:     "",
+		},
+		{
+			name:       "active false to true",
+			origMarker: newMarker("activeft", active, false),
+			msg:        newMsg("activeft", true),
+			expErr:     "",
+		},
+		{
+			name:       "proposed true to false",
+			origMarker: newMarker("proposedtf", proposed, true),
+			msg:        newMsg("proposedtf", false),
+			expErr:     "",
+		},
+		{
+			name:       "proposed false to true",
+			origMarker: newMarker("proposedft", proposed, false),
+			msg:        newMsg("proposedft", true),
+			expErr:     "",
+		},
+		{
+			name:       "finalized true to false",
+			origMarker: newMarker("finalizedtf", finalized, true),
+			msg:        newMsg("finalizedtf", false),
+			expErr:     "",
+		},
+		{
+			name:       "finalized false to true",
+			origMarker: newMarker("finalizedft", finalized, false),
+			msg:        newMsg("finalizedft", true),
+			expErr:     "",
+		},
+	}
+
+	markerLastSet := make(map[string]string)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.origMarker != nil {
+				denom := tc.origMarker.GetDenom()
+				if len(markerLastSet[denom]) > 0 {
+					t.Logf("WARNING: overwriting %q marker previously defined in test %q.", denom, markerLastSet[denom])
+				}
+				markerLastSet[denom] = tc.name
+				app.MarkerKeeper.SetMarker(ctx, tc.origMarker)
+			}
+
+			em := sdk.NewEventManager()
+			goCtx := sdk.WrapSDKContext(ctx.WithEventManager(em))
+			var res *types.MsgUpdateForcedTransferResponse
+			var err error
+			testFunc := func() {
+				res, err = server.UpdateForcedTransfer(goCtx, tc.msg)
+			}
+
+			require.NotPanics(t, testFunc, "UpdateForcedTransfer")
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr, "UpdateForcedTransfer error")
+				assert.Nil(t, res, "UpdateForcedTransfer response")
+
+				events := em.Events()
+				assert.Empty(t, events, "events emitted during failed UpdateForcedTransfer")
+			} else {
+				require.NoError(t, err, "UpdateForcedTransfer error")
+				assert.Equal(t, res, &types.MsgUpdateForcedTransferResponse{}, "UpdateForcedTransfer response")
+
+				markerNow, err := app.MarkerKeeper.GetMarkerByDenom(ctx, tc.msg.Denom)
+				if assert.NoError(t, err, "GetMarkerByDenom(%q)", tc.msg.Denom) {
+					allowsForcedTransfer := markerNow.AllowsForcedTransfer()
+					assert.Equal(t, tc.msg.AllowForcedTransfer, allowsForcedTransfer, "AllowsForcedTransfer after UpdateForcedTransfer")
+				}
+
+				expEvents := sdk.Events{
+					{
+						Type: sdk.EventTypeMessage,
+						Attributes: []abci.EventAttribute{
+							{Key: []byte(sdk.AttributeKeyModule), Value: []byte(types.ModuleName)},
+						},
+					},
+				}
+				events := em.Events()
+				assert.Equal(t, expEvents, events, "events emitted during UpdateForcedTransfer")
+			}
+		})
+	}
+}
+
 func TestGetAuthority(t *testing.T) {
 	app := simapp.Setup(t)
 	require.Equal(t, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", app.MarkerKeeper.GetAuthority())
@@ -1088,23 +1382,23 @@ func TestGetAuthority(t *testing.T) {
 func TestRemoveIsSendEnabledEntries(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
+	markerAddr := types.MustGetMarkerAddress("testcoin").String()
 
-	err := app.MarkerKeeper.AddMarkerAccount(ctx, &markertypes.MarkerAccount{
+	err := app.MarkerKeeper.AddMarkerAccount(ctx, &types.MarkerAccount{
 		BaseAccount: &authtypes.BaseAccount{
 			Address:       markerAddr,
 			AccountNumber: 23,
 		},
-		AccessControl: []markertypes.AccessGrant{
+		AccessControl: []types.AccessGrant{
 			{
 				Address:     "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
-				Permissions: markertypes.AccessListByNames("deposit,withdraw"),
+				Permissions: types.AccessListByNames("deposit,withdraw"),
 			},
 		},
 		Denom:      "testcoin",
 		Supply:     sdk.NewInt(1000),
-		MarkerType: markertypes.MarkerType_Coin,
-		Status:     markertypes.StatusActive,
+		MarkerType: types.MarkerType_Coin,
+		Status:     types.StatusActive,
 	})
 	require.NoError(t, err, "should have added marker")
 	app.BankKeeper.SetSendEnabled(ctx, "testcoin", false)

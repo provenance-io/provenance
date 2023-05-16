@@ -139,6 +139,10 @@
     - [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse)
     - [MsgTransferRequest](#provenance.marker.v1.MsgTransferRequest)
     - [MsgTransferResponse](#provenance.marker.v1.MsgTransferResponse)
+    - [MsgUpdateForcedTransferRequest](#provenance.marker.v1.MsgUpdateForcedTransferRequest)
+    - [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse)
+    - [MsgUpdateRequiredAttributesRequest](#provenance.marker.v1.MsgUpdateRequiredAttributesRequest)
+    - [MsgUpdateRequiredAttributesResponse](#provenance.marker.v1.MsgUpdateRequiredAttributesResponse)
     - [MsgWithdrawRequest](#provenance.marker.v1.MsgWithdrawRequest)
     - [MsgWithdrawResponse](#provenance.marker.v1.MsgWithdrawResponse)
   
@@ -2280,6 +2284,64 @@ MsgTransferResponse defines the Msg/Transfer response type
 
 
 
+<a name="provenance.marker.v1.MsgUpdateForcedTransferRequest"></a>
+
+### MsgUpdateForcedTransferRequest
+MsgUpdateForcedTransferRequest defines a msg to update the allow_forced_transfer field of a marker.
+It is only usable via governance proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | The denomination of the marker to update. |
+| `allow_forced_transfer` | [bool](#bool) |  | Whether an admin can transfer restricted coins from a 3rd-party account without their signature. |
+| `authority` | [string](#string) |  | The signer of this message. Must be the governance module account address. |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgUpdateForcedTransferResponse"></a>
+
+### MsgUpdateForcedTransferResponse
+MsgUpdateForcedTransferResponse defines the Msg/UpdateForcedTransferResponse response type
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgUpdateRequiredAttributesRequest"></a>
+
+### MsgUpdateRequiredAttributesRequest
+MsgUpdateRequiredAttributesRequest defines a msg to update/add/remove required attributes from a resticted marker
+signer must have transfer authority to change attributes, to update attribute add current to remove list and new to
+add list
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `remove_required_attributes` | [string](#string) | repeated |  |
+| `add_required_attributes` | [string](#string) | repeated |  |
+| `transfer_authority` | [string](#string) |  | signer of the proposal |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgUpdateRequiredAttributesResponse"></a>
+
+### MsgUpdateRequiredAttributesResponse
+MsgUpdateRequiredAttributesResponse defines the Msg/UpdateRequiredAttributes response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgWithdrawRequest"></a>
 
 ### MsgWithdrawRequest
@@ -2337,6 +2399,8 @@ Msg defines the Marker Msg service.
 | `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
 | `AddFinalizeActivateMarker` | [MsgAddFinalizeActivateMarkerRequest](#provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest) | [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse) | AddFinalizeActivateMarker | |
 | `SupplyIncreaseProposal` | [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest) | [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse) | SupplyIncreaseProposal can only be called via gov proposal | |
+| `UpdateRequiredAttributes` | [MsgUpdateRequiredAttributesRequest](#provenance.marker.v1.MsgUpdateRequiredAttributesRequest) | [MsgUpdateRequiredAttributesResponse](#provenance.marker.v1.MsgUpdateRequiredAttributesResponse) | UpdateRequiredAttributes will only succeed if signer has transfer authority | |
+| `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance.marker.v1.MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. | |
 
  <!-- end services -->
 
