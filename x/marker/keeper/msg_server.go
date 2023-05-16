@@ -659,8 +659,12 @@ func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 
-	isGovProp := msg.TransferAuthority == k.GetAuthority()
-	if !isGovProp && !m.AddressHasAccess(caller, types.Access_Transfer) {
+	switch {
+	case msg.TransferAuthority == k.GetAuthority():
+		if !m.HasGovernanceEnabled() {
+			return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
+		}
+	case !m.AddressHasAccess(caller, types.Access_Transfer):
 		return nil, fmt.Errorf("caller does not have authority to update required attributes %s", msg.TransferAuthority)
 	}
 
