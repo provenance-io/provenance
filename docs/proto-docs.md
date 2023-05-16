@@ -419,6 +419,9 @@
   
     - [Msg](#provenance.reward.v1.Msg)
   
+- [provenance/trigger/v1/genesis.proto](#provenance/trigger/v1/genesis.proto)
+    - [GenesisState](#provenance.trigger.v1.GenesisState)
+  
 - [provenance/trigger/v1/trigger.proto](#provenance/trigger/v1/trigger.proto)
     - [Attribute](#provenance.trigger.v1.Attribute)
     - [BlockHeightEvent](#provenance.trigger.v1.BlockHeightEvent)
@@ -426,9 +429,6 @@
     - [QueuedTrigger](#provenance.trigger.v1.QueuedTrigger)
     - [TransactionEvent](#provenance.trigger.v1.TransactionEvent)
     - [Trigger](#provenance.trigger.v1.Trigger)
-  
-- [provenance/trigger/v1/genesis.proto](#provenance/trigger/v1/genesis.proto)
-    - [GenesisState](#provenance.trigger.v1.GenesisState)
   
 - [provenance/trigger/v1/query.proto](#provenance/trigger/v1/query.proto)
     - [QueryTriggerByIDRequest](#provenance.trigger.v1.QueryTriggerByIDRequest)
@@ -6319,6 +6319,37 @@ Msg
 
 
 
+<a name="provenance/trigger/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/genesis.proto
+
+
+
+<a name="provenance.trigger.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the trigger module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [uint64](#uint64) |  | Trigger id is the next auto incremented id to be assigned to the next created trigger |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="provenance/trigger/v1/trigger.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -6329,7 +6360,7 @@ Msg
 <a name="provenance.trigger.v1.Attribute"></a>
 
 ### Attribute
-
+Attribute
 
 
 | Field | Type | Label | Description |
@@ -6345,7 +6376,7 @@ Msg
 <a name="provenance.trigger.v1.BlockHeightEvent"></a>
 
 ### BlockHeightEvent
-
+BlockHeightEvent
 
 
 | Field | Type | Label | Description |
@@ -6360,7 +6391,7 @@ Msg
 <a name="provenance.trigger.v1.BlockTimeEvent"></a>
 
 ### BlockTimeEvent
-
+BlockTimeEvent
 
 
 | Field | Type | Label | Description |
@@ -6392,7 +6423,7 @@ QueuedTrigger
 <a name="provenance.trigger.v1.TransactionEvent"></a>
 
 ### TransactionEvent
-
+TransactionEvent
 
 
 | Field | Type | Label | Description |
@@ -6414,40 +6445,9 @@ Trigger
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `id` | [uint64](#uint64) |  | An integer to uniquely identify the trigger. |
-| `owner` | [string](#string) |  | The owner of the Trigger. |
+| `owner` | [string](#string) |  | The owner of the trigger. |
 | `event` | [google.protobuf.Any](#google.protobuf.Any) |  | The event that must be detected for the trigger to fire. |
 | `actions` | [google.protobuf.Any](#google.protobuf.Any) | repeated | The messages to run when the trigger fires. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="provenance/trigger/v1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/trigger/v1/genesis.proto
-
-
-
-<a name="provenance.trigger.v1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the trigger module's genesis state.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `trigger_id` | [uint64](#uint64) |  | Trigger id is the next auto incremented id to be assigned to the next created trigger |
 
 
 

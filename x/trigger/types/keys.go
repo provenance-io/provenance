@@ -22,15 +22,17 @@ const (
 
 	TriggerIDLength  = 8
 	QueueIndexLength = 8
+	GasLimitLength   = 8
 )
 
 var (
 	TriggerKeyPrefix       = []byte{0x01}
 	EventRegistryKeyPrefix = []byte{0x02}
 	QueueKeyPrefix         = []byte{0x03}
-	NextTriggerIDKey       = []byte{0x04}
-	QueueStartIndexKey     = []byte{0x05}
-	QueueLengthKey         = []byte{0x06}
+	GasLimitKeyPrefix      = []byte{0x04}
+	NextTriggerIDKey       = []byte{0x05}
+	QueueStartIndexKey     = []byte{0x06}
+	QueueLengthKey         = []byte{0x07}
 )
 
 // GetEventRegistryKey converts a trigger into key format.
@@ -61,6 +63,16 @@ func GetTriggerKey(id TriggerID) []byte {
 	binary.BigEndian.PutUint64(triggerIDBytes, id)
 
 	key := TriggerKeyPrefix
+	key = append(key, triggerIDBytes...)
+	return key
+}
+
+// GetGasLimitKey converts a gas limit into key format.
+func GetGasLimitKey(id TriggerID) []byte {
+	triggerIDBytes := make([]byte, TriggerIDLength)
+	binary.BigEndian.PutUint64(triggerIDBytes, id)
+
+	key := GasLimitKeyPrefix
 	key = append(key, triggerIDBytes...)
 	return key
 }
@@ -115,6 +127,17 @@ func GetTriggerIDBytes(triggerID TriggerID) (triggerIDBz []byte) {
 	triggerIDBz = make([]byte, TriggerIDLength)
 	binary.BigEndian.PutUint64(triggerIDBz, triggerID)
 	return
+}
+
+// GetTriggerIDBytes returns the byte representation of the gas limit
+func GetGasLimitBytes(gasLimit uint64) (gasLimitBz []byte) {
+	gasLimitBz = make([]byte, GasLimitLength)
+	binary.BigEndian.PutUint64(gasLimitBz, gasLimit)
+	return
+}
+
+func GetGasLimitFromBytes(bz []byte) (gasLimit uint64) {
+	return binary.BigEndian.Uint64(bz)
 }
 
 // GetEventNameBytes returns a set of bytes that uniquely identifies the given event name

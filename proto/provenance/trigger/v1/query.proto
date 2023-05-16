@@ -1,7 +1,6 @@
 syntax = "proto3";
 package provenance.trigger.v1;
 
-import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "provenance/trigger/v1/trigger.proto";
 

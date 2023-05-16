@@ -70,9 +70,9 @@ func (k Keeper) GetTriggerID(ctx sdk.Context) (triggerID triggertypes.TriggerID)
 	return triggerID
 }
 
-func (k Keeper) NewTriggerWithID(ctx sdk.Context, owner string, event *types.Any, action []*types.Any) (triggertypes.Trigger, error) {
+func (k Keeper) NewTriggerWithID(ctx sdk.Context, owner string, event *types.Any, actions []*types.Any) (triggertypes.Trigger, error) {
 	id := k.getNextTriggerID(ctx)
-	trigger := triggertypes.NewTrigger(id, owner, event, action)
+	trigger := triggertypes.NewTrigger(id, owner, event, actions)
 	return trigger, nil
 }
 

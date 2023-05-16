@@ -2,7 +2,6 @@ syntax = "proto3";
 package provenance.trigger.v1;
 
 import "gogoproto/gogo.proto";
-import "provenance/trigger/v1/trigger.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/trigger/types";
 option java_package        = "io.provenance.trigger.v1";

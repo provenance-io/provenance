@@ -19,9 +19,15 @@ func (k Keeper) RunTriggers(ctx sdk.Context) {
 			fmt.Println(("error"))
 		}
 		_ = k.DequeueTrigger(ctx)
-		action := item.GetTrigger().Actions
+		actions := item.GetTrigger().Actions
+		gasLimit, err := k.GetGasLimit(ctx, item.GetTrigger().Id)
+		if err != nil {
+			// TODO Something went wrong
+			fmt.Println(("error"))
+		}
+		k.RemoveGasLimit(ctx, item.GetTrigger().Id)
 
-		err = k.RunAction(ctx, action)
+		err = k.RunActions(ctx, gasLimit, actions)
 		if err != nil {
 			// TODO We got an issue
 			fmt.Println(("error"))
@@ -29,17 +35,19 @@ func (k Keeper) RunTriggers(ctx sdk.Context) {
 	}
 }
 
-func (k Keeper) RunAction(ctx sdk.Context, action []*types.Any) error {
+func (k Keeper) RunActions(ctx sdk.Context, gasLimit uint64, action []*types.Any) error {
 	cacheCtx, flush := ctx.CacheContext()
+	gasMeter := sdk.NewInfiniteGasMeter()
+	cacheCtx = cacheCtx.WithGasMeter(gasMeter)
 
 	msgs, err := sdktx.GetMsgs(action, "RunAction - sdk.MsgCreateTriggerRequest")
 	if err != nil {
 		// TODO Something was wrong with the message
 		return err
 	}
-	results, err := k.HandleMsgs(cacheCtx, msgs)
+	results, err := k.HandleMsgs(cacheCtx, msgs, gasLimit)
 	if err != nil {
-		// TODO We had a problem handling the message
+		// TODO We had a problem handling one or more of the messages
 		return err
 	}
 
@@ -51,7 +59,7 @@ func (k Keeper) RunAction(ctx sdk.Context, action []*types.Any) error {
 	return nil
 }
 
-func (k Keeper) HandleMsgs(ctx sdk.Context, msgs []sdk.Msg) ([]sdk.Result, error) {
+func (k Keeper) HandleMsgs(ctx sdk.Context, msgs []sdk.Msg, gasLimit uint64) ([]sdk.Result, error) {
 	results := make([]sdk.Result, len(msgs))
 	for i, msg := range msgs {
 		handler := k.router.Handler(msg)
@@ -65,6 +73,10 @@ func (k Keeper) HandleMsgs(ctx sdk.Context, msgs []sdk.Msg) ([]sdk.Result, error
 		// Handler should always return non-nil sdk.Result.
 		if r == nil {
 			return nil, fmt.Errorf("got nil sdk.Result for message %q at position %d", msg, i)
+		}
+
+		if ctx.GasMeter().GasConsumed() > gasLimit {
+			return nil, fmt.Errorf("gas %d exceeded limit %d for message %q at position %d", ctx.GasMeter().GasConsumed(), gasLimit, msg, i)
 		}
 
 		results[i] = *r

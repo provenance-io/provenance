@@ -33,7 +33,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Trigger struct {
 	// An integer to uniquely identify the trigger.
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// The owner of the Trigger.
+	// The owner of the trigger.
 	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
 	// The event that must be detected for the trigger to fire.
 	Event *types.Any `protobuf:"bytes,3,opt,name=event,proto3" json:"event,omitempty"`
@@ -166,6 +166,7 @@ func (m *QueuedTrigger) GetTrigger() Trigger {
 	return Trigger{}
 }
 
+// BlockHeightEvent
 type BlockHeightEvent struct {
 	// The height that the trigger should fire at.
 	BlockHeight uint64 `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
@@ -211,6 +212,7 @@ func (m *BlockHeightEvent) GetBlockHeight() uint64 {
 	return 0
 }
 
+// BlockTimeEvent
 type BlockTimeEvent struct {
 	// The time the trigger should fire at.
 	Time time.Time `protobuf:"bytes,1,opt,name=time,proto3,stdtime" json:"time"`
@@ -256,6 +258,7 @@ func (m *BlockTimeEvent) GetTime() time.Time {
 	return time.Time{}
 }
 
+// TransactionEvent
 type TransactionEvent struct {
 	// The name of the event for a match.
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -310,6 +313,7 @@ func (m *TransactionEvent) GetAttributes() []Attribute {
 	return nil
 }
 
+// Attribute
 type Attribute struct {
 	// The name of the attribute that the event must have to be considered a match.
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`

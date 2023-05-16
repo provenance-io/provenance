@@ -35,6 +35,10 @@ func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTrig
 	s.SetTrigger(ctx, trigger)
 	s.SetEventListener(ctx, trigger)
 
+	// We need to calculate the gas limit here
+	gasLimit := uint64(1)
+	s.SetGasLimit(ctx, trigger.GetId(), gasLimit)
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeTriggerCreated,
