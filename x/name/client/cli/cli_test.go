@@ -19,6 +19,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -365,7 +366,6 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand() {
 }
 
 func (s *IntegrationTestSuite) TestGetDeleteNameCmd() {
-
 	testCases := []struct {
 		name         string
 		cmd          *cobra.Command
@@ -439,64 +439,89 @@ func (s *IntegrationTestSuite) TestGetDeleteNameCmd() {
 }
 
 func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
-
 	testCases := []struct {
 		name         string
 		cmd          *cobra.Command
 		args         []string
-		expectErr    bool
+		errMsg       string
 		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
-			"bind name for modification",
-			namecli.GetBindNameCmd(),
-			[]string{"tomodify", s.testnet.Validators[0].Address.String(), "attribute",
+			name: "bind name for modification",
+			cmd:  namecli.GetBindNameCmd(),
+			args: []string{"tomodify", s.testnet.Validators[0].Address.String(), "attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			errMsg:       "",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"should modify name",
-			namecli.GetModifyNameProposalCmd(),
-			[]string{"tomodify",
+			name: "should modify name, with gov proposal",
+			cmd:  namecli.GetModifyNameCmd(),
+			args: []string{"tomodify.attribute",
 				s.testnet.Validators[0].Address.String(),
-				"--unrestrict",
+				fmt.Sprintf("--%s", namecli.FlagUnrestricted),
+				fmt.Sprintf("--%s=%s", namecli.FlagGovProposal, "true"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			errMsg:       "",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"should fail to delete empty name",
-			namecli.GetModifyNameProposalCmd(),
-			[]string{"",
+			name: "should fail modify name, with gov proposal invalid deposit",
+			cmd:  namecli.GetModifyNameCmd(),
+			args: []string{"tomodify.attribute",
 				s.testnet.Validators[0].Address.String(),
-				"--unrestrict",
+				fmt.Sprintf("--%s", namecli.FlagUnrestricted),
+				fmt.Sprintf("--%s=%s", namecli.FlagGovProposal, "true"),
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, "invalid"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			errMsg:       "invalid deposit: invalid decimal coin expression: invalid",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"should fail on invalid owner",
-			namecli.GetModifyNameProposalCmd(),
-			[]string{"tomodify",
-				"",
-				"--unrestrict",
+			name: "should modify name",
+			cmd:  namecli.GetModifyNameCmd(),
+			args: []string{"tomodify.attribute",
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s", namecli.FlagUnrestricted),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, &sdk.TxResponse{}, 0,
+			errMsg:       "",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
+			name: "should fail to modify name, validate basic failure",
+			cmd:  namecli.GetModifyNameCmd(),
+			args: []string{"",
+				s.testnet.Validators[0].Address.String(),
+				fmt.Sprintf("--%s", namecli.FlagUnrestricted),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			errMsg:       "name cannot be empty",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 	}
 
@@ -506,13 +531,13 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
 
-			if tc.expectErr {
-				s.Require().Error(err)
+			if len(tc.errMsg) > 0 {
+				s.Assert().EqualError(err, tc.errMsg)
 			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Assert().NoError(err)
+				s.Assert().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				s.Assert().Equal(tc.expectedCode, txResp.Code)
 			}
 		})
 	}
@@ -572,7 +597,6 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 }
 
 func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
-
 	testCases := []struct {
 		name         string
 		cmd          *cobra.Command

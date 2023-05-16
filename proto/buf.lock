@@ -5,3 +5,4 @@ deps:
     owner: provenance-io
     repository: third-party
     commit: 444461c963ae4ac8ba0fb851cf88980d
+    digest: shake256:f7c5d9a85eba6fc3675626f49fe06320f4c7ff42537ec69aa382be2cc3801dcef294659e6d97865348204444f1e7d04b8c8f386674ab29c5ae0c7c9cdf3236e5

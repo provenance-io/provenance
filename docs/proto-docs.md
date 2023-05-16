@@ -139,6 +139,8 @@
     - [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse)
     - [MsgTransferRequest](#provenance.marker.v1.MsgTransferRequest)
     - [MsgTransferResponse](#provenance.marker.v1.MsgTransferResponse)
+    - [MsgUpdateRequiredAttributesRequest](#provenance.marker.v1.MsgUpdateRequiredAttributesRequest)
+    - [MsgUpdateRequiredAttributesResponse](#provenance.marker.v1.MsgUpdateRequiredAttributesResponse)
     - [MsgWithdrawRequest](#provenance.marker.v1.MsgWithdrawRequest)
     - [MsgWithdrawResponse](#provenance.marker.v1.MsgWithdrawResponse)
   
@@ -2303,6 +2305,36 @@ MsgTransferResponse defines the Msg/Transfer response type
 
 
 
+<a name="provenance.marker.v1.MsgUpdateRequiredAttributesRequest"></a>
+
+### MsgUpdateRequiredAttributesRequest
+MsgUpdateRequiredAttributesRequest defines a msg to update/add/remove required attributes from a resticted marker
+signer must have transfer authority to change attributes, to update attribute add current to remove list and new to
+add list
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `remove_required_attributes` | [string](#string) | repeated |  |
+| `add_required_attributes` | [string](#string) | repeated |  |
+| `transfer_authority` | [string](#string) |  | signer of the proposal |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgUpdateRequiredAttributesResponse"></a>
+
+### MsgUpdateRequiredAttributesResponse
+MsgUpdateRequiredAttributesResponse defines the Msg/MsgUpdateRequiredAttributes response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgWithdrawRequest"></a>
 
 ### MsgWithdrawRequest
@@ -2360,6 +2392,7 @@ Msg defines the Marker Msg service.
 | `GrantAllowance` | [MsgGrantAllowanceRequest](#provenance.marker.v1.MsgGrantAllowanceRequest) | [MsgGrantAllowanceResponse](#provenance.marker.v1.MsgGrantAllowanceResponse) | GrantAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
 | `AddFinalizeActivateMarker` | [MsgAddFinalizeActivateMarkerRequest](#provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest) | [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse) | AddFinalizeActivateMarker | |
 | `SupplyIncreaseProposal` | [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest) | [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse) | SupplyIncreaseProposal can only be called via gov proposal | |
+| `UpdateRequiredAttributes` | [MsgUpdateRequiredAttributesRequest](#provenance.marker.v1.MsgUpdateRequiredAttributesRequest) | [MsgUpdateRequiredAttributesResponse](#provenance.marker.v1.MsgUpdateRequiredAttributesResponse) | UpdateRequiredAttributes will only succeed if signer has transfer authority | |
 
  <!-- end services -->
 
