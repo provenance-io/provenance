@@ -119,10 +119,10 @@ func NewMsgAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGra
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgAddAccessRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	if err := ValidateGrants(msg.Access...); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	return nil
 }
@@ -144,7 +144,7 @@ func NewDeleteAccessRequest(denom string, admin sdk.AccAddress, removed sdk.AccA
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteAccessRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	_, err := sdk.AccAddressFromBech32(msg.RemovedAddress)
 	return err
@@ -166,7 +166,7 @@ func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeReque
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgFinalizeRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	return nil
 }
@@ -187,7 +187,7 @@ func NewMsgActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateReque
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgActivateRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	return nil
 }
@@ -208,7 +208,7 @@ func NewMsgCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest {
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgCancelRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	return nil
 }
@@ -229,7 +229,7 @@ func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest {
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	return nil
 }
@@ -602,7 +602,7 @@ func NewMsgUpdateRequiredAttributesRequest(denom string, transferAuthority sdk.A
 
 func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	if len(msg.AddRequiredAttributes) == 0 && len(msg.RemoveRequiredAttributes) == 0 {
 		return fmt.Errorf("both add and remove lists cannot be empty")
