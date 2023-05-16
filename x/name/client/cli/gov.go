@@ -93,7 +93,7 @@ $ %s tx gov submit-legacy-proposal \
 				Description: proposalDescr,
 				Name:        strings.ToLower(args[0]),
 				Owner:       proposalOwner,
-				Restricted:  !viper.GetBool(flagUnrestricted),
+				Restricted:  !viper.GetBool(FlagUnrestricted),
 			}
 
 			msg, err := govtypesv1beta1.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
@@ -109,7 +109,7 @@ $ %s tx gov submit-legacy-proposal \
 	}
 
 	cmd.Flags().String(FlagOwner, "", "The owner of the new name, optional (defaults to from address)")
-	cmd.Flags().BoolP(flagUnrestricted, "u", false, "Allow child name creation by everyone")
+	cmd.Flags().BoolP(FlagUnrestricted, "u", false, "Allow child name creation by everyone")
 	// proposal flags
 	cmd.Flags().String(FlagTitle, "", "Title of proposal")
 	cmd.Flags().String(FlagDescription, "", "Description of proposal")

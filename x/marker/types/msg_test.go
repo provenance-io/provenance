@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -529,4 +528,89 @@ func TestMsgUpdateRequiredAttributesRequestValidateBasic(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMsgUpdateForcedTransferRequestValidateBasic(t *testing.T) {
+	goodAuthority := sdk.AccAddress("goodAddr____________").String()
+	goodDenom := "gooddenom"
+	tests := []struct {
+		name string
+		msg  *MsgUpdateForcedTransferRequest
+		exp  string
+	}{
+		{
+			name: "invalid denom",
+			msg: &MsgUpdateForcedTransferRequest{
+				Denom:               "x",
+				AllowForcedTransfer: false,
+				Authority:           goodAuthority,
+			},
+			exp: "invalid denom: x",
+		},
+		{
+			name: "invalid authority",
+			msg: &MsgUpdateForcedTransferRequest{
+				Denom:               goodDenom,
+				AllowForcedTransfer: false,
+				Authority:           "x",
+			},
+			exp: "invalid authority: decoding bech32 failed: invalid bech32 string length 1",
+		},
+		{
+			name: "ok forced transfer true",
+			msg: &MsgUpdateForcedTransferRequest{
+				Denom:               goodDenom,
+				AllowForcedTransfer: true,
+				Authority:           goodAuthority,
+			},
+			exp: "",
+		},
+		{
+			name: "ok forced transfer false",
+			msg: &MsgUpdateForcedTransferRequest{
+				Denom:               goodDenom,
+				AllowForcedTransfer: false,
+				Authority:           goodAuthority,
+			},
+			exp: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.exp) > 0 {
+				assert.EqualError(t, err, tc.exp, "ValidateBasic error")
+			} else {
+				assert.NoError(t, err, tc.exp, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgUpdateForcedTransferRequestGetSigners(t *testing.T) {
+	t.Run("good authority", func(t *testing.T) {
+		msg := MsgUpdateForcedTransferRequest{
+			Authority: sdk.AccAddress("good_address________").String(),
+		}
+		exp := []sdk.AccAddress{sdk.AccAddress("good_address________")}
+
+		var signers []sdk.AccAddress
+		testFunc := func() {
+			signers = msg.GetSigners()
+		}
+		require.NotPanics(t, testFunc, "GetSigners")
+		assert.Equal(t, exp, signers, "GetSigners")
+	})
+
+	t.Run("bad authority", func(t *testing.T) {
+		msg := MsgUpdateForcedTransferRequest{
+			Authority: "bad_address________",
+		}
+
+		testFunc := func() {
+			_ = msg.GetSigners()
+		}
+		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
+	})
 }

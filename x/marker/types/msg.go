@@ -17,25 +17,26 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 )
 
-// Compile time interface check.
-var (
-	_ sdk.Msg = &MsgAddMarkerRequest{}
-	_ sdk.Msg = &MsgAddAccessRequest{}
-	_ sdk.Msg = &MsgDeleteAccessRequest{}
-	_ sdk.Msg = &MsgFinalizeRequest{}
-	_ sdk.Msg = &MsgActivateRequest{}
-	_ sdk.Msg = &MsgCancelRequest{}
-	_ sdk.Msg = &MsgDeleteRequest{}
-	_ sdk.Msg = &MsgMintRequest{}
-	_ sdk.Msg = &MsgBurnRequest{}
-	_ sdk.Msg = &MsgWithdrawRequest{}
-	_ sdk.Msg = &MsgTransferRequest{}
-	_ sdk.Msg = &MsgIbcTransferRequest{}
-	_ sdk.Msg = &MsgGrantAllowanceRequest{}
-	_ sdk.Msg = &MsgAddFinalizeActivateMarkerRequest{}
-	_ sdk.Msg = &MsgSupplyIncreaseProposalRequest{}
-	_ sdk.Msg = &MsgUpdateRequiredAttributesRequest{}
-)
+// allRequestMsgs defines all the Msg*Request messages.
+var allRequestMsgs = []sdk.Msg{
+	(*MsgAddMarkerRequest)(nil),
+	(*MsgAddAccessRequest)(nil),
+	(*MsgDeleteAccessRequest)(nil),
+	(*MsgFinalizeRequest)(nil),
+	(*MsgActivateRequest)(nil),
+	(*MsgCancelRequest)(nil),
+	(*MsgDeleteRequest)(nil),
+	(*MsgMintRequest)(nil),
+	(*MsgBurnRequest)(nil),
+	(*MsgWithdrawRequest)(nil),
+	(*MsgTransferRequest)(nil),
+	(*MsgIbcTransferRequest)(nil),
+	(*MsgGrantAllowanceRequest)(nil),
+	(*MsgAddFinalizeActivateMarkerRequest)(nil),
+	(*MsgSupplyIncreaseProposalRequest)(nil),
+	(*MsgUpdateRequiredAttributesRequest)(nil),
+	(*MsgUpdateForcedTransferRequest)(nil),
+}
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgAddMarkerRequest(
@@ -118,10 +119,10 @@ func NewMsgAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGra
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgAddAccessRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	if err := ValidateGrants(msg.Access...); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	return nil
 }
@@ -143,7 +144,7 @@ func NewDeleteAccessRequest(denom string, admin sdk.AccAddress, removed sdk.AccA
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteAccessRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	_, err := sdk.AccAddressFromBech32(msg.RemovedAddress)
 	return err
@@ -165,7 +166,7 @@ func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeReque
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgFinalizeRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	return nil
 }
@@ -186,7 +187,7 @@ func NewMsgActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateReque
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgActivateRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	return nil
 }
@@ -207,7 +208,7 @@ func NewMsgCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest {
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgCancelRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	return nil
 }
@@ -228,7 +229,7 @@ func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest {
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	return nil
 }
@@ -601,7 +602,7 @@ func NewMsgUpdateRequiredAttributesRequest(denom string, transferAuthority sdk.A
 
 func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	if len(msg.AddRequiredAttributes) == 0 && len(msg.RemoveRequiredAttributes) == 0 {
 		return fmt.Errorf("both add and remove lists cannot be empty")
@@ -624,5 +625,28 @@ func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
 
 func (msg *MsgUpdateRequiredAttributesRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.TransferAuthority)
+	return []sdk.AccAddress{addr}
+}
+
+func NewMsgUpdateForcedTransferRequest(denom string, allowForcedTransfer bool, authority sdk.AccAddress) *MsgUpdateForcedTransferRequest {
+	return &MsgUpdateForcedTransferRequest{
+		Denom:               denom,
+		AllowForcedTransfer: allowForcedTransfer,
+		Authority:           authority.String(),
+	}
+}
+
+func (msg MsgUpdateForcedTransferRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return fmt.Errorf("invalid authority: %w", err)
+	}
+	return nil
+}
+
+func (msg MsgUpdateForcedTransferRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{addr}
 }
