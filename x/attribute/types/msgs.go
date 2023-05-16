@@ -10,14 +10,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Compile time interface checks.
-var (
-	_ sdk.Msg = &MsgAddAttributeRequest{}
-	_ sdk.Msg = &MsgUpdateAttributeRequest{}
-	_ sdk.Msg = &MsgUpdateAttributeExpirationRequest{}
-	_ sdk.Msg = &MsgDeleteAttributeRequest{}
-	_ sdk.Msg = &MsgDeleteDistinctAttributeRequest{}
-)
+// allRequestMsgs defines all the Msg*Request messages.
+var allRequestMsgs = []sdk.Msg{
+	(*MsgAddAttributeRequest)(nil),
+	(*MsgUpdateAttributeRequest)(nil),
+	(*MsgUpdateAttributeExpirationRequest)(nil),
+	(*MsgDeleteAttributeRequest)(nil),
+	(*MsgDeleteDistinctAttributeRequest)(nil),
+}
 
 // NewMsgAddAttributeRequest creates a new add attribute message
 func NewMsgAddAttributeRequest(account string, owner sdk.AccAddress, name string, attributeType AttributeType, value []byte) *MsgAddAttributeRequest {
