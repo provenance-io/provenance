@@ -81,6 +81,7 @@ func NewTxCmd() *cobra.Command {
 		GetIbcTransferTxCmd(),
 		GetCmdAddFinalizeActivateMarker(),
 		GetCmdUpdateRequiredAttributes(),
+		GetCmdUpdateForcedTransfer(),
 	)
 	return txCmd
 }
@@ -1041,6 +1042,39 @@ func GetCmdUpdateRequiredAttributes() *cobra.Command {
 	return cmd
 }
 
+func GetCmdUpdateForcedTransfer() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "update-forced-transfer <denom> {true|false}",
+		Aliases: []string{"uft"},
+		Short:   "Submit a governance proposal to update the allow_forced_transfer field on a restricted marker",
+		Example: fmt.Sprintf("$ %s tx marker update-forced-transfer hotdogcoin true", version.AppName),
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgUpdateForcedTransferRequest(args[0], false, authtypes.NewModuleAddress(govtypes.ModuleName))
+			msg.AllowForcedTransfer, err = ParseBoolStrict(args[1])
+			if err != nil {
+				return err
+			}
+
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+
+			return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	govcli.AddGovPropFlagsToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
 func getPeriodReset(duration int64) time.Time {
 	return time.Now().Add(getPeriod(duration))
 }
@@ -1130,4 +1164,16 @@ func ParseNewMarkerFlags(cmd *cobra.Command) (*NewMarkerFlagValues, error) {
 	}
 
 	return rv, nil
+}
+
+// ParseBoolStrict converts the provided input into a boolean.
+// Valid strings are "true" and "false"; case is ignored.
+func ParseBoolStrict(input string) (bool, error) {
+	switch strings.ToLower(strings.TrimSpace(input)) {
+	case "true":
+		return true, nil
+	case "false":
+		return false, nil
+	}
+	return false, fmt.Errorf("invalid boolean string: %q", input)
 }
