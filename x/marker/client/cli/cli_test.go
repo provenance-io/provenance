@@ -1322,6 +1322,12 @@ func getFormattedExpiration(duration int64) string {
 }
 
 func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
+	getAccessGrantString := func(address sdk.AccAddress, anotherAddress sdk.AccAddress) string {
+		if anotherAddress != nil {
+			return address.String() + ",mint,admin;" + anotherAddress.String() + ",burn"
+		}
+		return address.String() + ",mint,admin;"
+	}
 
 	testCases := []struct {
 		name         string
@@ -1525,16 +1531,6 @@ func (s *IntegrationTestSuite) TestUpdateRequiredAttributesTxCommand() {
 				s.Require().NoError(err)
 			}
 		})
-	}
-}
-
-func getAccessGrantString(address sdk.AccAddress, anotherAddress sdk.AccAddress) string {
-	if anotherAddress != nil {
-		accessGrant := address.String() + ",mint,admin;" + anotherAddress.String() + ",burn"
-		return accessGrant
-	} else {
-		accessGrant := address.String() + ",mint,admin;"
-		return accessGrant
 	}
 }
 
