@@ -50,6 +50,7 @@ type MarkerAccountI interface {
 	HasGovernanceEnabled() bool
 
 	AllowsForcedTransfer() bool
+	SetAllowForcedTransfer(bool)
 
 	GetRequiredAttributes() []string
 	SetRequiredAttributes([]string)
@@ -120,6 +121,10 @@ func (ma MarkerAccount) HasGovernanceEnabled() bool { return ma.AllowGovernanceC
 // AllowsForcedTransfer returns true if force transfer is allowed for this marker.
 func (ma MarkerAccount) AllowsForcedTransfer() bool {
 	return ma.AllowForcedTransfer
+}
+
+func (ma *MarkerAccount) SetAllowForcedTransfer(allowForcedTransfer bool) {
+	ma.AllowForcedTransfer = allowForcedTransfer
 }
 
 // HasAccess returns true if the provided address has been assigned the provided
