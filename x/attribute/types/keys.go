@@ -2,8 +2,10 @@ package types
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"fmt"
 	"strings"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -27,7 +29,8 @@ var (
 	// Legacy amino encoded objects use this key prefix
 	AttributeKeyPrefixAmino      = []byte{0x00}
 	AttributeKeyPrefix           = []byte{0x02}
-	AttributeKeyPrefixAddrLookup = []byte{0x03}
+	AttributeAddrLookupKeyPrefix = []byte{0x03}
+	AttributeExpirationKeyPrefix = []byte{0x04}
 )
 
 // AddrAttributeKey creates a key for an account attribute
@@ -36,6 +39,11 @@ func AddrAttributeKey(addr []byte, attr Attribute) []byte {
 	key = append(key, address.MustLengthPrefix(addr)...)
 	key = append(key, GetNameKeyBytes(attr.Name)...)
 	return append(key, attr.Hash()...)
+}
+
+// AttributeKey creates a key for an account attribute
+func AttributeKey(key []byte) []byte {
+	return append(AttributeKeyPrefix, key...)
 }
 
 // AddrAttributesKeyPrefix returns a prefix key for all attributes on an account
@@ -62,13 +70,13 @@ func AddrStrAttributesNameKeyPrefix(addr string, attributeName string) []byte {
 
 // AttributeNameKeyPrefix returns a prefix key for all addresses with attribute name
 func AttributeNameKeyPrefix(attributeName string) []byte {
-	key := AttributeKeyPrefixAddrLookup
+	key := AttributeAddrLookupKeyPrefix
 	return append(key, GetNameKeyBytes(attributeName)...)
 }
 
 // AttributeNameAddrKeyPrefix returns a prefix key for attribute and address
 func AttributeNameAddrKeyPrefix(attributeName string, addr []byte) []byte {
-	key := AttributeKeyPrefixAddrLookup
+	key := AttributeAddrLookupKeyPrefix
 	key = append(key, GetNameKeyBytes(attributeName)...)
 	return append(key, address.MustLengthPrefix(addr)...)
 }
@@ -92,6 +100,12 @@ func GetNameKeyBytes(name string) []byte {
 	}
 	hash := sha256.Sum256([]byte(attrName))
 	return hash[:]
+}
+
+func GetAttributeExpireTimePrefix(expireTime time.Time) []byte {
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, uint64(expireTime.Unix()))
+	return append(AttributeExpirationKeyPrefix, buf...)
 }
 
 // Reverse the component order of a name for better scan support.

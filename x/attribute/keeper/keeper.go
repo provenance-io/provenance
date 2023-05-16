@@ -482,3 +482,30 @@ func (k Keeper) PopulateAddressAttributeNameTable(ctx sdk.Context) {
 		k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
 	}
 }
+
+func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) {
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, sdk.InclusiveEndBytes(types.GetAttributeExpireTimePrefix(ctx.BlockTime())))
+	defer iterator.Close()
+	count := 1
+	for ; iterator.Valid(); iterator.Next() {
+		attrKey := types.AttributeKey(iterator.Key()[9:])
+		bz := store.Get(attrKey)
+		if bz != nil {
+			var attribute types.Attribute
+			if err := k.cdc.Unmarshal(bz, &attribute); err == nil {
+				k.DecAttrNameAddressLookup(ctx, attribute.Name, attribute.GetAddressBytes())
+				store.Delete(attrKey)
+			} else {
+				ctx.Logger().Error("unable to unmarshal attribute to delete key: %v error: %v", attrKey, err)
+				continue
+			}
+		}
+		store.Delete(iterator.Key())
+		if limit != 0 && count > limit {
+			break
+		}
+		count++
+	}
+}

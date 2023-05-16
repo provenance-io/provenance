@@ -872,7 +872,7 @@ func (s *KeeperTestSuite) TestPopulateAddressAttributeNameTable() {
 
 	// Clear the kv store of all address look up prefixes
 	// This is because the SetAttribute call would have populated it in the test setup
-	it := sdk.KVStorePrefixIterator(store, types.AttributeKeyPrefixAddrLookup)
+	it := sdk.KVStorePrefixIterator(store, types.AttributeAddrLookupKeyPrefix)
 	for ; it.Valid(); it.Next() {
 		store.Delete(it.Key())
 	}
