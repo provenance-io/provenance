@@ -512,10 +512,9 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) {
 				k.DecAttrNameAddressLookup(ctx, attribute.Name, attribute.GetAddressBytes())
 
 				deleteEvent := types.NewEventAttributeExpiredDelete(attribute)
-				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
+				if err = ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
 					ctx.Logger().Error(fmt.Sprintf("failed to emit typed event %v", err))
 				}
-
 			} else {
 				ctx.Logger().Error(fmt.Sprintf("unable to unmarshal attribute to delete key: %v error: %v", attrKey, err))
 				continue
