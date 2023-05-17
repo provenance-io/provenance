@@ -13,10 +13,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/reward/types"
 )
+
+const delegatorAddr = "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"
 
 var (
 	testValidators = []stakingtypes.Validator{}
@@ -58,7 +59,7 @@ func SetupEventHistoryWithDelegates(s *KeeperTestSuite) {
 	}
 	attributes2 := []sdk.Attribute{
 		sdk.NewAttribute("module", "staking"),
-		sdk.NewAttribute("sender", "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+		sdk.NewAttribute("sender", delegatorAddr),
 	}
 	attributes3 := []sdk.Attribute{
 		sdk.NewAttribute("validator", "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun"),
@@ -77,6 +78,74 @@ func SetupEventHistoryWithDelegates(s *KeeperTestSuite) {
 	}
 	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
 	s.ctx = s.ctx.WithEventManager(eventManagerStub)
+}
+
+func (s *KeeperTestSuite) TestProcessTransactions() {
+	now := time.Unix(1681964400, 0) // roughly Provenance Blockchain's 2-year anniversary.
+	curHeader := s.ctx.BlockHeader()
+	curHeader.Time = now
+	s.ctx = s.ctx.WithBlockHeader(curHeader)
+	s.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
+
+	// Create a reward program
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, s.accountAddr,
+		sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000000))), "funding accountAddr")
+	minDel := sdk.NewInt64Coin("nhash", 1)
+	maxDel := sdk.NewInt64Coin("nhash", 40)
+	program := types.NewRewardProgram(
+		"title",
+		"description",
+		1,
+		s.accountAddr.String(),
+		sdk.NewInt64Coin("nhash", 100000),
+		sdk.NewInt64Coin("nhash", 1000),
+		now.Add(1*time.Second),
+		60*60,
+		3,
+		0,
+		0,
+		[]types.QualifyingAction{
+			{
+				Type: &types.QualifyingAction_Delegate{
+					Delegate: &types.ActionDelegate{
+						MinimumActions:               0,
+						MaximumActions:               1,
+						MinimumDelegationAmount:      &minDel,
+						MaximumDelegationAmount:      &maxDel,
+						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+					},
+				},
+			},
+		},
+	)
+	s.Require().NoError(s.app.RewardKeeper.CreateRewardProgram(s.ctx, program), "CreateRewardProgram")
+
+	// Start the reward program.
+	curHeader = s.ctx.BlockHeader()
+	curHeader.Time = program.ProgramStartTime.Add(1 * time.Second)
+	s.ctx = s.ctx.WithBlockHeader(curHeader)
+	s.app.RewardKeeper.UpdateUnexpiredRewardsProgram(s.ctx)
+
+	// make sure the reward program has started.
+	var err error
+	program, err = s.app.RewardKeeper.GetRewardProgram(s.ctx, program.GetId())
+	s.Require().NoError(err, "GetRewardProgram")
+	s.Require().Equal(types.RewardProgram_STATE_STARTED.String(), program.State.String(), "program state")
+
+	// Fake some events and process them.
+	SetupEventHistoryWithDelegates(s)
+	s.Require().NotPanics(func() {
+		s.app.RewardKeeper.ProcessTransactions(s.ctx)
+	}, "ProcessTransactions")
+
+	// Make sure the share was recorded in both the reward account state for the delegator and claim period distribution.
+	state, err := s.app.RewardKeeper.GetRewardAccountState(s.ctx, program.GetId(), program.GetCurrentClaimPeriod(), delegatorAddr)
+	s.Require().NoError(err, "GetRewardAccountState")
+	s.Assert().Equal(1, int(state.SharesEarned), "state.SharesEarned")
+	claimPeriodRewardDistribution, err := s.app.RewardKeeper.GetClaimPeriodRewardDistribution(s.ctx, program.GetCurrentClaimPeriod(), program.GetId())
+	s.Require().NoError(err, "GetClaimPeriodRewardDistribution")
+	s.Assert().Equal(1, int(claimPeriodRewardDistribution.GetTotalShares()), "claimPeriodRewardDistribution.GetTotalShares()")
 }
 
 func (s *KeeperTestSuite) TestIterateABCIEventsWildcard() {
