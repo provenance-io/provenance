@@ -13,10 +13,7 @@ func (k Keeper) DetectBlockEvents(ctx sdk.Context) {
 	triggers = append(triggers, k.DetectTimeEvents(ctx)...)
 
 	for _, trigger := range triggers {
-		// TODO Group
-		k.RemoveTrigger(ctx, trigger.GetId())
-		k.RemoveEventListener(ctx, trigger)
-
+		k.UnregisterTrigger(ctx, trigger)
 		k.QueueTrigger(ctx, trigger)
 	}
 }
@@ -24,14 +21,10 @@ func (k Keeper) DetectBlockEvents(ctx sdk.Context) {
 // DetectTransactionEvents Detects triggers that have been activated by transaction events.
 func (k Keeper) DetectTransactionEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	for _, event := range ctx.EventManager().GetABCIEventHistory() {
-		matched, err := k.GetMatchingTriggers(ctx, event.GetType(), func(triggerEvent types.TriggerEventI) bool {
+		matched := k.GetMatchingTriggers(ctx, event.GetType(), func(triggerEvent types.TriggerEventI) bool {
 			txEvent := triggerEvent.(*types.TransactionEvent)
 			return txEvent.Equals(event)
 		})
-		if err != nil {
-			// TODO What to do here? There has to be something bad
-			return
-		}
 		triggers = append(triggers, matched...)
 	}
 	return
@@ -39,33 +32,25 @@ func (k Keeper) DetectTransactionEvents(ctx sdk.Context) (triggers []types.Trigg
 
 // DetectBlockHeightEvents Detects triggers that have been activated by block height events.
 func (k Keeper) DetectBlockHeightEvents(ctx sdk.Context) (triggers []types.Trigger) {
-	triggers, err := k.GetMatchingTriggers(ctx, types.BLOCK_HEIGHT_PREFIX, func(triggerEvent types.TriggerEventI) bool {
+	triggers = k.GetMatchingTriggers(ctx, types.BLOCK_HEIGHT_PREFIX, func(triggerEvent types.TriggerEventI) bool {
 		blockHeightEvent := triggerEvent.(*types.BlockHeightEvent)
 		return ctx.BlockHeight() >= int64(blockHeightEvent.GetBlockHeight())
 	})
-	if err != nil {
-		// TODO What to do here? There has to be something bad
-		return
-	}
 	return
 }
 
 // DetectTimeEvents Detects triggers that have been activated by block time events.
 func (k Keeper) DetectTimeEvents(ctx sdk.Context) (triggers []types.Trigger) {
-	triggers, err := k.GetMatchingTriggers(ctx, types.BLOCK_TIME_PREFIX, func(triggerEvent types.TriggerEventI) bool {
+	triggers = k.GetMatchingTriggers(ctx, types.BLOCK_TIME_PREFIX, func(triggerEvent types.TriggerEventI) bool {
 		blockTimeEvent := triggerEvent.(*types.BlockTimeEvent)
 		return ctx.BlockTime().Equal(blockTimeEvent.GetTime()) || ctx.BlockTime().After(blockTimeEvent.GetTime())
 	})
-	if err != nil {
-		// TODO What to do here? There has to be something bad
-		return
-	}
 	return
 }
 
 // GetMatchingTriggers Obtains the prefixed triggers that are waiting to be activated and match the supplied condition.
-func (k Keeper) GetMatchingTriggers(ctx sdk.Context, prefix string, condition func(types.TriggerEventI) bool) (triggers []types.Trigger, err error) {
-	err = k.IterateEventListeners(ctx, prefix, func(trigger types.Trigger) (stop bool, err error) {
+func (k Keeper) GetMatchingTriggers(ctx sdk.Context, prefix string, condition func(types.TriggerEventI) bool) (triggers []types.Trigger) {
+	err := k.IterateEventListeners(ctx, prefix, func(trigger types.Trigger) (stop bool, err error) {
 		event := trigger.Event.GetCachedValue().(types.TriggerEventI)
 		if condition(event) {
 			triggers = append(triggers, trigger)
@@ -73,7 +58,7 @@ func (k Keeper) GetMatchingTriggers(ctx sdk.Context, prefix string, condition fu
 		return false, nil
 	})
 	if err != nil {
-		return triggers, err
+		panic("unable to iterate event listeners for matching triggers")
 	}
-	return triggers, err
+	return
 }

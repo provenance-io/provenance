@@ -26,13 +26,12 @@ func (k Keeper) RemoveGasLimit(ctx sdk.Context, id types.TriggerID) bool {
 }
 
 // GetGasLimit Gets a gas limit by id
-func (k Keeper) GetGasLimit(ctx sdk.Context, id types.TriggerID) (gasLimit uint64, err error) {
+func (k Keeper) GetGasLimit(ctx sdk.Context, id types.TriggerID) (gasLimit uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetGasLimitKey(id))
 	if bz == nil {
-		return 0, types.ErrGasLimitNotFound
+		panic("gas limit not found for trigger")
 	}
-
 	gasLimit = types.GetGasLimitFromBytes(bz)
-	return gasLimit, nil
+	return
 }

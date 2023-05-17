@@ -27,7 +27,7 @@ const (
 
 var (
 	TriggerKeyPrefix       = []byte{0x01}
-	EventRegistryKeyPrefix = []byte{0x02}
+	EventListenerKeyPrefix = []byte{0x02}
 	QueueKeyPrefix         = []byte{0x03}
 	GasLimitKeyPrefix      = []byte{0x04}
 	NextTriggerIDKey       = []byte{0x05}
@@ -35,24 +35,24 @@ var (
 	QueueLengthKey         = []byte{0x07}
 )
 
-// GetEventRegistryKey converts an event name and trigger ID into an event registry key format.
-func GetEventRegistryKey(eventName string, id TriggerID) []byte {
+// GetEventListenerKey converts an event name and trigger ID into an event registry key format.
+func GetEventListenerKey(eventName string, id TriggerID) []byte {
 	eventNameBytes := GetEventNameBytes(eventName)
 
 	triggerIDBytes := make([]byte, TriggerIDLength)
 	binary.BigEndian.PutUint64(triggerIDBytes, id)
 
-	key := EventRegistryKeyPrefix
+	key := EventListenerKeyPrefix
 	key = append(key, eventNameBytes...)
 	key = append(key, triggerIDBytes...)
 	return key
 }
 
-// GetEventRegistryPrefix converts an event name into a prefix for event registry.
-func GetEventRegistryPrefix(eventName string) []byte {
+// GetEventListenerPrefix converts an event name into a prefix for event registry.
+func GetEventListenerPrefix(eventName string) []byte {
 	eventNameBytes := GetEventNameBytes(eventName)
 
-	key := EventRegistryKeyPrefix
+	key := EventListenerKeyPrefix
 	key = append(key, eventNameBytes...)
 	return key
 }

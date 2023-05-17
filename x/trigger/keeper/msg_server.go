@@ -27,14 +27,7 @@ func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTrig
 
 	trigger := s.NewTriggerWithID(ctx, msg.GetAuthority(), msg.GetEvent(), msg.GetActions())
 
-	// TODO Group
-	s.SetTrigger(ctx, trigger)
-	s.SetEventListener(ctx, trigger)
-
-	// TODO Group
-	gasLimit := ctx.GasMeter().GasRemaining() - SetGasLimitCost
-	s.SetGasLimit(ctx, trigger.GetId(), gasLimit)
-	ctx.GasMeter().ConsumeGas(gasLimit, "trigger creation")
+	s.RegisterTrigger(ctx, trigger)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

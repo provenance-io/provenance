@@ -16,26 +16,25 @@ func (k Keeper) QueueTrigger(ctx sdk.Context, trigger types.Trigger) {
 }
 
 // QueuePeek Returns the next item to be dequeued.
-func (k Keeper) QueuePeek(ctx sdk.Context) (types.QueuedTrigger, error) {
+func (k Keeper) QueuePeek(ctx sdk.Context) (item types.QueuedTrigger) {
 	if k.QueueIsEmpty(ctx) {
-		return types.QueuedTrigger{}, types.ErrQueueEmpty
+		panic("unable to peek empty queue")
 	}
 	index := k.getQueueStartIndex(ctx)
-	item, err := k.GetQueueItem(ctx, index)
-	return item, err
+	item = k.GetQueueItem(ctx, index)
+	return
 }
 
 // DequeueTrigger Removes the first trigger from the queue and updates the internal counters.
-func (k Keeper) DequeueTrigger(ctx sdk.Context) error {
+func (k Keeper) DequeueTrigger(ctx sdk.Context) {
 	if k.QueueIsEmpty(ctx) {
-		return types.ErrQueueEmpty
+		panic("unable to dequeue from empty queue.")
 	}
 	length := k.getQueueLength(ctx)
 	index := k.getQueueStartIndex(ctx)
 	k.RemoveQueueIndex(ctx, index)
 	k.setQueueStartIndex(ctx, index+1)
 	k.setQueueLength(ctx, length-1)
-	return nil
 }
 
 // QueueIsEmpty Checks if the queue is empty.
@@ -44,15 +43,15 @@ func (k Keeper) QueueIsEmpty(ctx sdk.Context) bool {
 }
 
 // GetQueueItem Gets an item from the queue's store.
-func (k Keeper) GetQueueItem(ctx sdk.Context, index uint64) (trigger types.QueuedTrigger, err error) {
+func (k Keeper) GetQueueItem(ctx sdk.Context, index uint64) (trigger types.QueuedTrigger) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetQueueKey(index)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return trigger, types.ErrQueueIndexNotFound
+		panic("queue index not found")
 	}
-	err = k.cdc.Unmarshal(bz, &trigger)
-	return trigger, err
+	k.cdc.MustUnmarshal(bz, &trigger)
+	return
 }
 
 // SetQueueItem Sets an item in the queue's store.

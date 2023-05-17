@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,4 +37,8 @@ func NewKeeper(
 		cdc:      cdc,
 		router:   router,
 	}
+}
+
+func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }

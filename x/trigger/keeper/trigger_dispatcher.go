@@ -14,54 +14,45 @@ import (
 // ProcessTriggers Reads triggers from queues and attempts to run them.
 func (k Keeper) ProcessTriggers(ctx sdk.Context) {
 	for !k.QueueIsEmpty(ctx) {
-		// TODO Group
-		item, err := k.QueuePeek(ctx)
-		if err != nil {
-			// TODO Error
-			// The queue has an entry but we were unable to dequeue it
-			fmt.Println(("error"))
-		}
+		item := k.QueuePeek(ctx)
 		k.DequeueTrigger(ctx)
 
-		// TODO Group
-		gasLimit, err := k.GetGasLimit(ctx, item.GetTrigger().Id)
-		if err != nil {
-			// TODO Error
-			// The gas limit for this trigger does not exist.
-			fmt.Println(("error"))
-		}
+		gasLimit := k.GetGasLimit(ctx, item.GetTrigger().Id)
 		k.RemoveGasLimit(ctx, item.GetTrigger().Id)
 
 		actions := item.GetTrigger().Actions
-		err = k.RunActions(ctx, gasLimit, actions)
-		if err != nil {
-			// TODO Error
-			// This can either be internal or from a message just failing
-			fmt.Println(("error"))
-		}
+		k.RunActions(ctx, gasLimit, actions)
 	}
 }
 
 // RunActions Runs all the actions and constrains them by gasLimit.
-func (k Keeper) RunActions(ctx sdk.Context, gasLimit uint64, actions []*types.Any) error {
+func (k Keeper) RunActions(ctx sdk.Context, gasLimit uint64, actions []*types.Any) {
 	cacheCtx, flush := ctx.CacheContext()
 	gasMeter := sdk.NewInfiniteGasMeter()
 	cacheCtx = cacheCtx.WithGasMeter(gasMeter)
 
 	msgs, err := sdktx.GetMsgs(actions, "RunActions")
 	if err != nil {
-		return err
+		k.Logger(ctx).Error(
+			"GetMsgs",
+			"actions", actions,
+			"error", err,
+		)
+		return
 	}
 	results, err := k.HandleMsgs(cacheCtx, msgs, gasLimit)
 	if err != nil {
-		return err
+		k.Logger(ctx).Error(
+			"HandleMsgs",
+			"error", err,
+		)
+		return
 	}
 
 	flush()
 	for _, res := range results {
 		ctx.EventManager().EmitEvents(res.GetEvents())
 	}
-	return nil
 }
 
 // HandleMsgs Handles each message and verifies gas limit has not been exceeded.
