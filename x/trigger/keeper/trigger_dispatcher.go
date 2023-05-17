@@ -11,54 +11,60 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
-func (k Keeper) RunTriggers(ctx sdk.Context) {
+// ProcessTriggers Reads triggers from queues and attempts to run them.
+func (k Keeper) ProcessTriggers(ctx sdk.Context) {
 	for !k.QueueIsEmpty(ctx) {
-		item, err := k.Peek(ctx)
+		// TODO Group
+		item, err := k.QueuePeek(ctx)
 		if err != nil {
-			// TODO Something went wrong
+			// TODO Error
+			// The queue has an entry but we were unable to dequeue it
 			fmt.Println(("error"))
 		}
-		_ = k.DequeueTrigger(ctx)
-		actions := item.GetTrigger().Actions
+		k.DequeueTrigger(ctx)
+
+		// TODO Group
 		gasLimit, err := k.GetGasLimit(ctx, item.GetTrigger().Id)
 		if err != nil {
-			// TODO Something went wrong
+			// TODO Error
+			// The gas limit for this trigger does not exist.
 			fmt.Println(("error"))
 		}
 		k.RemoveGasLimit(ctx, item.GetTrigger().Id)
 
+		actions := item.GetTrigger().Actions
 		err = k.RunActions(ctx, gasLimit, actions)
 		if err != nil {
-			// TODO We got an issue
+			// TODO Error
+			// This can either be internal or from a message just failing
 			fmt.Println(("error"))
 		}
 	}
 }
 
-func (k Keeper) RunActions(ctx sdk.Context, gasLimit uint64, action []*types.Any) error {
+// RunActions Runs all the actions and constrains them by gasLimit.
+func (k Keeper) RunActions(ctx sdk.Context, gasLimit uint64, actions []*types.Any) error {
 	cacheCtx, flush := ctx.CacheContext()
 	gasMeter := sdk.NewInfiniteGasMeter()
 	cacheCtx = cacheCtx.WithGasMeter(gasMeter)
 
-	msgs, err := sdktx.GetMsgs(action, "RunAction - sdk.MsgCreateTriggerRequest")
+	msgs, err := sdktx.GetMsgs(actions, "RunActions")
 	if err != nil {
-		// TODO Something was wrong with the message
 		return err
 	}
 	results, err := k.HandleMsgs(cacheCtx, msgs, gasLimit)
 	if err != nil {
-		// TODO We had a problem handling one or more of the messages
 		return err
 	}
 
 	flush()
 	for _, res := range results {
-		// NOTE: The sdk msg handler creates a new EventManager, so events must be correctly propagated back to the current context
 		ctx.EventManager().EmitEvents(res.GetEvents())
 	}
 	return nil
 }
 
+// HandleMsgs Handles each message and verifies gas limit has not been exceeded.
 func (k Keeper) HandleMsgs(ctx sdk.Context, msgs []sdk.Msg, gasLimit uint64) ([]sdk.Result, error) {
 	results := make([]sdk.Result, len(msgs))
 	for i, msg := range msgs {

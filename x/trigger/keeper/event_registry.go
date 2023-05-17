@@ -6,23 +6,18 @@ import (
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
+// SetEventListener Adds the trigger to the event listener store.
 func (k Keeper) SetEventListener(ctx sdk.Context, trigger triggertypes.Trigger) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&trigger)
-
-	// This is where we would unmarshal into the interface type
 	event := trigger.Event.GetCachedValue().(triggertypes.TriggerEventI)
-
 	store.Set(triggertypes.GetEventRegistryKey(event.GetEventPrefix(), trigger.GetId()), bz)
 }
 
-// RemoveTrigger Removes a trigger from the store
+// RemoveEventListener Removes the trigger from the event listener store.
 func (k Keeper) RemoveEventListener(ctx sdk.Context, trigger triggertypes.Trigger) bool {
 	store := ctx.KVStore(k.storeKey)
-
-	// This is where we would unmarshal into the interface type
 	event := trigger.Event.GetCachedValue().(triggertypes.TriggerEventI)
-
 	key := triggertypes.GetEventRegistryKey(event.GetEventPrefix(), trigger.GetId())
 	keyExists := store.Has(key)
 	if keyExists {
@@ -31,7 +26,7 @@ func (k Keeper) RemoveEventListener(ctx sdk.Context, trigger triggertypes.Trigge
 	return keyExists
 }
 
-// GetTrigger Gets a trigger by id
+// GetEventListener Gets the event listener from the store.
 func (k Keeper) GetEventListener(ctx sdk.Context, eventName string, triggerID triggertypes.TriggerID) (trigger triggertypes.Trigger, err error) {
 	store := ctx.KVStore(k.storeKey)
 	key := triggertypes.GetEventRegistryKey(eventName, triggerID)
@@ -43,7 +38,7 @@ func (k Keeper) GetEventListener(ctx sdk.Context, eventName string, triggerID tr
 	return trigger, err
 }
 
-// IterateTriggers Iterates through all the triggers
+// IterateEventListeners Iterates through all the event listeners.
 func (k Keeper) IterateEventListeners(ctx sdk.Context, eventName string, handle func(trigger triggertypes.Trigger) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, triggertypes.GetEventRegistryPrefix(eventName))

@@ -35,7 +35,7 @@ var (
 	QueueLengthKey         = []byte{0x07}
 )
 
-// GetEventRegistryKey converts a trigger into key format.
+// GetEventRegistryKey converts an event name and trigger ID into an event registry key format.
 func GetEventRegistryKey(eventName string, id TriggerID) []byte {
 	eventNameBytes := GetEventNameBytes(eventName)
 
@@ -48,7 +48,7 @@ func GetEventRegistryKey(eventName string, id TriggerID) []byte {
 	return key
 }
 
-// GetEventLookupKey converts a trigger into key format.
+// GetEventRegistryPrefix converts an event name into a prefix for event registry.
 func GetEventRegistryPrefix(eventName string) []byte {
 	eventNameBytes := GetEventNameBytes(eventName)
 
@@ -67,16 +67,7 @@ func GetTriggerKey(id TriggerID) []byte {
 	return key
 }
 
-// GetGasLimitKey converts a gas limit into key format.
-func GetGasLimitKey(id TriggerID) []byte {
-	triggerIDBytes := make([]byte, TriggerIDLength)
-	binary.BigEndian.PutUint64(triggerIDBytes, id)
-
-	key := GasLimitKeyPrefix
-	key = append(key, triggerIDBytes...)
-	return key
-}
-
+// GetNextTriggerIDKey gets the key for getting the next trigger ID.
 func GetNextTriggerIDKey() []byte {
 	return NextTriggerIDKey
 }
@@ -100,7 +91,7 @@ func GetQueueStartIndexKey() []byte {
 	return QueueStartIndexKey
 }
 
-// GetQueueEndIndexKey gets the key for storing the start index
+// GetQueueLengthKey gets the key for storing the queue length
 func GetQueueLengthKey() []byte {
 	return QueueLengthKey
 }
@@ -129,13 +120,24 @@ func GetTriggerIDBytes(triggerID TriggerID) (triggerIDBz []byte) {
 	return
 }
 
-// GetTriggerIDBytes returns the byte representation of the gas limit
+// GetGasLimitKey converts a gas limit into key format.
+func GetGasLimitKey(id TriggerID) []byte {
+	triggerIDBytes := make([]byte, TriggerIDLength)
+	binary.BigEndian.PutUint64(triggerIDBytes, id)
+
+	key := GasLimitKeyPrefix
+	key = append(key, triggerIDBytes...)
+	return key
+}
+
+// GetGasLimitBytes returns the byte representation of the gas limit
 func GetGasLimitBytes(gasLimit uint64) (gasLimitBz []byte) {
 	gasLimitBz = make([]byte, GasLimitLength)
 	binary.BigEndian.PutUint64(gasLimitBz, gasLimit)
 	return
 }
 
+// GetGasLimitFromBytes returns gas limit in uint64 format from a byte array
 func GetGasLimitFromBytes(bz []byte) (gasLimit uint64) {
 	return binary.BigEndian.Uint64(bz)
 }

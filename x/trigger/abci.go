@@ -6,12 +6,12 @@ import (
 	"github.com/provenance-io/provenance/x/trigger/keeper"
 )
 
-// BeginBlocker runs trigger actions
+// BeginBlocker Runs trigger actions.
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
-	k.RunTriggers(ctx)
+	k.ProcessTriggers(ctx)
 }
 
-// EndBlocker detects tx events for triggers
+// EndBlocker Detects tx events for triggers.
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	k.DetectBlockEvents(ctx)
 }

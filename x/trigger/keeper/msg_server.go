@@ -25,18 +25,14 @@ var _ types.MsgServer = msgServer{}
 func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTriggerRequest) (*types.MsgCreateTriggerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	trigger, err := s.NewTriggerWithID(ctx, msg.GetAuthority(), msg.GetEvent(), msg.GetActions())
-	if err != nil {
-		// Throw an error
-		return nil, err
-	}
+	trigger := s.NewTriggerWithID(ctx, msg.GetAuthority(), msg.GetEvent(), msg.GetActions())
 
-	// TODO Maybe we can group these
+	// TODO Group
 	s.SetTrigger(ctx, trigger)
 	s.SetEventListener(ctx, trigger)
 
-	const SET_GAS_LIMIT_COST = 2510
-	gasLimit := ctx.GasMeter().GasRemaining() - SET_GAS_LIMIT_COST
+	// TODO Group
+	gasLimit := ctx.GasMeter().GasRemaining() - SetGasLimitCost
 	s.SetGasLimit(ctx, trigger.GetId(), gasLimit)
 	ctx.GasMeter().ConsumeGas(gasLimit, "trigger creation")
 

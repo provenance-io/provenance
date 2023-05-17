@@ -7,14 +7,14 @@ import (
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
+// SetTrigger Sets the trigger in the store.
 func (k Keeper) SetTrigger(ctx sdk.Context, trigger triggertypes.Trigger) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&trigger)
-
 	store.Set(triggertypes.GetTriggerKey(trigger.GetId()), bz)
 }
 
-// RemoveTrigger Removes a trigger from the store
+// RemoveTrigger Removes a trigger from the store.
 func (k Keeper) RemoveTrigger(ctx sdk.Context, id triggertypes.TriggerID) bool {
 	store := ctx.KVStore(k.storeKey)
 	key := triggertypes.GetTriggerKey(id)
@@ -25,7 +25,7 @@ func (k Keeper) RemoveTrigger(ctx sdk.Context, id triggertypes.TriggerID) bool {
 	return keyExists
 }
 
-// GetTrigger Gets a trigger by id
+// GetTrigger Gets a trigger from the store by id.
 func (k Keeper) GetTrigger(ctx sdk.Context, id triggertypes.TriggerID) (trigger triggertypes.Trigger, err error) {
 	store := ctx.KVStore(k.storeKey)
 	key := triggertypes.GetTriggerKey(id)
@@ -37,7 +37,7 @@ func (k Keeper) GetTrigger(ctx sdk.Context, id triggertypes.TriggerID) (trigger 
 	return trigger, err
 }
 
-// IterateTriggers Iterates through all the triggers
+// IterateTriggers Iterates through all the triggers.
 func (k Keeper) IterateTriggers(ctx sdk.Context, handle func(trigger triggertypes.Trigger) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, triggertypes.TriggerKeyPrefix)
@@ -59,31 +59,34 @@ func (k Keeper) IterateTriggers(ctx sdk.Context, handle func(trigger triggertype
 	return nil
 }
 
-func (k Keeper) GetTriggerID(ctx sdk.Context) (triggerID triggertypes.TriggerID) {
+// getTriggerID Gets the latest trigger ID.
+func (k Keeper) getTriggerID(ctx sdk.Context) (triggerID triggertypes.TriggerID) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(triggertypes.GetNextTriggerIDKey())
 	if bz == nil {
 		return 1
 	}
-
 	triggerID = triggertypes.GetTriggerIDFromBytes(bz)
 	return triggerID
 }
 
-func (k Keeper) NewTriggerWithID(ctx sdk.Context, owner string, event *types.Any, actions []*types.Any) (triggertypes.Trigger, error) {
+// NewTriggerWithID Creates a trigger with the latest ID.
+func (k Keeper) NewTriggerWithID(ctx sdk.Context, owner string, event *types.Any, actions []*types.Any) triggertypes.Trigger {
 	id := k.getNextTriggerID(ctx)
 	trigger := triggertypes.NewTrigger(id, owner, event, actions)
-	return trigger, nil
+	return trigger
 }
 
+// setTriggerID Sets the next trigger ID.
 func (k Keeper) setTriggerID(ctx sdk.Context, triggerID triggertypes.TriggerID) {
 	store := ctx.KVStore(k.storeKey)
 	bz := triggertypes.GetTriggerIDBytes(triggerID)
 	store.Set(triggertypes.GetNextTriggerIDKey(), bz)
 }
 
+// getNextTriggerID Gets the latest trigger ID and updates the next one.
 func (k Keeper) getNextTriggerID(ctx sdk.Context) (triggerID triggertypes.TriggerID) {
-	triggerID = k.GetTriggerID(ctx)
+	triggerID = k.getTriggerID(ctx)
 	k.setTriggerID(ctx, triggerID+1)
 	return
 }

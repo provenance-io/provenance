@@ -6,19 +6,22 @@ import (
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
+// DetectBlockEvents Detects triggers that have been activated by their corresponding events.
 func (k Keeper) DetectBlockEvents(ctx sdk.Context) {
 	triggers := k.DetectTransactionEvents(ctx)
 	triggers = append(triggers, k.DetectBlockHeightEvents(ctx)...)
 	triggers = append(triggers, k.DetectTimeEvents(ctx)...)
 
 	for _, trigger := range triggers {
-		// TODO Maybe there is a good way to group these two instructions
+		// TODO Group
 		k.RemoveTrigger(ctx, trigger.GetId())
 		k.RemoveEventListener(ctx, trigger)
+
 		k.QueueTrigger(ctx, trigger)
 	}
 }
 
+// DetectTransactionEvents Detects triggers that have been activated by transaction events.
 func (k Keeper) DetectTransactionEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	for _, event := range ctx.EventManager().GetABCIEventHistory() {
 		matched, err := k.GetMatchingTriggers(ctx, event.GetType(), func(triggerEvent types.TriggerEventI) bool {
@@ -34,6 +37,7 @@ func (k Keeper) DetectTransactionEvents(ctx sdk.Context) (triggers []types.Trigg
 	return
 }
 
+// DetectBlockHeightEvents Detects triggers that have been activated by block height events.
 func (k Keeper) DetectBlockHeightEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	triggers, err := k.GetMatchingTriggers(ctx, types.BLOCK_HEIGHT_PREFIX, func(triggerEvent types.TriggerEventI) bool {
 		blockHeightEvent := triggerEvent.(*types.BlockHeightEvent)
@@ -46,6 +50,7 @@ func (k Keeper) DetectBlockHeightEvents(ctx sdk.Context) (triggers []types.Trigg
 	return
 }
 
+// DetectTimeEvents Detects triggers that have been activated by block time events.
 func (k Keeper) DetectTimeEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	triggers, err := k.GetMatchingTriggers(ctx, types.BLOCK_TIME_PREFIX, func(triggerEvent types.TriggerEventI) bool {
 		blockTimeEvent := triggerEvent.(*types.BlockTimeEvent)
@@ -58,18 +63,16 @@ func (k Keeper) DetectTimeEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	return
 }
 
+// GetMatchingTriggers Obtains the prefixed triggers that are waiting to be activated and match the supplied condition.
 func (k Keeper) GetMatchingTriggers(ctx sdk.Context, prefix string, condition func(types.TriggerEventI) bool) (triggers []types.Trigger, err error) {
 	err = k.IterateEventListeners(ctx, prefix, func(trigger types.Trigger) (stop bool, err error) {
 		event := trigger.Event.GetCachedValue().(types.TriggerEventI)
-
 		if condition(event) {
 			triggers = append(triggers, trigger)
 		}
-
 		return false, nil
 	})
 	if err != nil {
-		// TODO Return error
 		return triggers, err
 	}
 	return triggers, err
