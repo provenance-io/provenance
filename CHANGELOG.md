@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Add support to add/remove required attributes for a restricted marker. [#1512](https://github.com/provenance-io/provenance/issues/1512)
+* Add trigger module for delayed execution. [#1462](https://github.com/provenance-io/provenance/issues/1462)
 
 ### Improvements
 
