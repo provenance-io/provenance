@@ -1051,7 +1051,13 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr5)))
 	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr5.Name, attr5.GetAddressBytes())))
 
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	s.app.AttributeKeeper.DeleteExpiredAttributes(s.ctx, 0)
+
+	attr1Event := s.ctx.EventManager().Events()[0]
+	attr2Event := s.ctx.EventManager().Events()[1]
+	s.Assert().Equal("provenance.attribute.v1.EventAttributeExpiredDelete", attr1Event.Type)
+	s.Assert().Equal("provenance.attribute.v1.EventAttributeExpiredDelete", attr2Event.Type)
 
 	s.Assert().Nil(store.Get(types.AttributeExpireKey(attr1)))
 	s.Assert().Nil(store.Get(types.AttributeNameAddrKeyPrefix(attr1.Name, attr1.GetAddressBytes())))
