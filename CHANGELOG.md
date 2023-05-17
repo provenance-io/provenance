@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add marker deposit access check for sends to marker escrow account [#1525](https://github.com/provenance-io/provenance/issues/1525).
 * Add support for `name` owner to execute `MsgModifyName` transaction [#1536](https://github.com/provenance-io/provenance/issues/1536).
 * Add usage of `AddGovPropFlagsToCmd` and `ReadGovPropFlags` cli for `GetModifyNameCmd` [#1542](https://github.com/provenance-io/provenance/issues/1542).
+* Create `rust` upgrade handlers [PR 1549](https://github.com/provenance-io/provenance/pull/1549).
 
 ### API Breaking
 
