@@ -12,14 +12,17 @@ import (
 
 type TriggerID = uint64
 
-const BLOCK_HEIGHT_PREFIX = "block-height"
-const BLOCK_TIME_PREFIX = "block-time"
+const (
+	BlockHeightPrefix = "block-height"
+	BlockTimePrefix   = "block-time"
+)
 
 type TriggerEventI interface {
 	proto.Message
 	GetEventPrefix() string
 }
 
+// NewTrigger creates a new trigger.
 func NewTrigger(id TriggerID, owner string, event *types.Any, action []*types.Any) Trigger {
 	return Trigger{
 		id,
@@ -29,6 +32,7 @@ func NewTrigger(id TriggerID, owner string, event *types.Any, action []*types.An
 	}
 }
 
+// NewQueuedTrigger creates a new trigger for queueing.
 func NewQueuedTrigger(trigger Trigger, blockTime time.Time, blockHeight uint64) QueuedTrigger {
 	return QueuedTrigger{
 		Time:        blockTime,
@@ -37,6 +41,7 @@ func NewQueuedTrigger(trigger Trigger, blockTime time.Time, blockHeight uint64) 
 	}
 }
 
+// Equals checks if two TransactionEvents have the same type and attributes.
 func (e TransactionEvent) Equals(other abci.Event) bool {
 	if e.Name != other.GetType() {
 		return false
@@ -60,6 +65,7 @@ func (e TransactionEvent) Equals(other abci.Event) bool {
 	return true
 }
 
+// Equals checks if two Attributes have the same name and matching values.
 func (a Attribute) Equals(other abci.EventAttribute) bool {
 	if a.GetName() != string(other.GetKey()) {
 		return false
@@ -72,16 +78,19 @@ func (a Attribute) Equals(other abci.EventAttribute) bool {
 	return true
 }
 
+// GetEventPrefix gets the prefix for a TransactionEvent.
 func (e TransactionEvent) GetEventPrefix() string {
 	return e.Name
 }
 
+// GetEventPrefix gets the prefix for a BlockHeightEvent.
 func (e BlockHeightEvent) GetEventPrefix() string {
-	return BLOCK_HEIGHT_PREFIX
+	return BlockHeightPrefix
 }
 
+// GetEventPrefix gets the prefix for a BlockTimeEvent.
 func (e BlockTimeEvent) GetEventPrefix() string {
-	return BLOCK_TIME_PREFIX
+	return BlockTimePrefix
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
