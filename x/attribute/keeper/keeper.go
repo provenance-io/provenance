@@ -76,6 +76,14 @@ func (k Keeper) GetAllAttributes(ctx sdk.Context, addr string) ([]types.Attribut
 	return k.prefixScan(ctx, types.AddrStrAttributesKeyPrefix(addr), pred)
 }
 
+// GetAllAttributesAddr gets all attributes for an AccAddress or MetadataAddress.
+func (k Keeper) GetAllAttributesAddr(ctx sdk.Context, addr []byte) ([]types.Attribute, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "get_all")
+
+	pred := func(s string) bool { return true }
+	return k.prefixScan(ctx, types.AddrAttributesKeyPrefix(addr), pred)
+}
+
 // GetAttributes gets all attributes with the given name from an account.
 func (k Keeper) GetAttributes(ctx sdk.Context, addr string, name string) ([]types.Attribute, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "get")
