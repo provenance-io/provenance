@@ -45,6 +45,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Bump go to `1.20` (from `1.18`) [#1539](https://github.com/provenance-io/provenance/issues/1539).
+* Bump golangci-lint to `v1.52.2` (from `v1.48`) [#1539](https://github.com/provenance-io/provenance/issues/1539).
+  * New `make golangci-lint` target created for installing golangci-lint.
+  * New `make golangci-lint-update` target created for installing the current version even if you already have a version installed.
 * Add marker deposit access check for sends to marker escrow account [#1525](https://github.com/provenance-io/provenance/issues/1525).
 * Add support for `name` owner to execute `MsgModifyName` transaction [#1536](https://github.com/provenance-io/provenance/issues/1536).
 * Add usage of `AddGovPropFlagsToCmd` and `ReadGovPropFlags` cli for `GetModifyNameCmd` [#1542](https://github.com/provenance-io/provenance/issues/1542).
