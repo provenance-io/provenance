@@ -6,18 +6,21 @@ import (
 )
 
 const (
-	// The type of event generated when account attributes are added.
+	// EventTypeAttributeAdded emitted when account attributes are added.
 	EventTypeAttributeAdded string = "account_attribute_added"
-	// The type of event generated when account attributes are updated.
+	// EventTypeAttributeUpdated emitted when account attributes are updated.
 	EventTypeAttributeUpdated string = "account_attribute_updated"
-	// The type of event generated when account attributes are removed.
+	// EventTypeAttributeDeleted emitted when account attributes are removed.
 	EventTypeAttributeDeleted string = "account_attribute_deleted"
-	// The type of event generated when a distinct account attribute is deleted.
+	// EventTypeAttributeDistinctDeleted emitted when a distinct account attribute is deleted.
 	EventTypeAttributeDistinctDeleted string = "account_attribute_distinct_deleted"
+	// EventTypeDeletedExpired emitted when attributes have expired and been deleted in begin blocker
+	EventTypeDeletedExpired string = "attribute_deleted_expired"
 
-	AttributeKeyAttribute      string = "attribute"
-	AttributeKeyNameAttribute  string = "attribute_name"
-	AttributeKeyAccountAddress string = "account_address"
+	AttributeKeyAttribute           string = "attribute"
+	AttributeKeyNameAttribute       string = "attribute_name"
+	AttributeKeyAccountAddress      string = "account_address"
+	AttributeKeyTotalExpiredDeleted string = "total_expired_deleted"
 
 	// EventTelemetryKeyAdd add telemetry metrics key
 	EventTelemetryKeyAdd string = "add"
