@@ -9,8 +9,9 @@ import (
 )
 
 var _ sdk.Msg = &MsgCreateTriggerRequest{}
+var _ sdk.Msg = &MsgDestroyTriggerRequest{}
 
-// GetSigners indicates that the message must have been signed by the parent.
+// NewCreateTriggerRequest Creates a new trigger create request
 func NewCreateTriggerRequest(authority string, event TriggerEventI, msgs []sdk.Msg) *MsgCreateTriggerRequest {
 	actions, err := sdktx.SetMsgs(msgs)
 	if err != nil || len(actions) == 0 {
@@ -34,6 +35,15 @@ func NewCreateTriggerRequest(authority string, event TriggerEventI, msgs []sdk.M
 	return m
 }
 
+// NewDestroyTriggerRequest Creates a new trigger destroy request
+func NewDestroyTriggerRequest(authority string, id TriggerID) *MsgDestroyTriggerRequest {
+	msg := &MsgDestroyTriggerRequest{
+		Authority: authority,
+		Id:        id,
+	}
+	return msg
+}
+
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 	return nil
@@ -49,18 +59,6 @@ func (msg MsgCreateTriggerRequest) GetSigners() []sdk.AccAddress {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m Trigger) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	if m.Event != nil {
-		var event TriggerEventI
-		err := unpacker.UnpackAny(m.Event, &event)
-		if err != nil {
-			return err
-		}
-	}
-	return sdktx.UnpackInterfaces(unpacker, m.Actions)
-}
-
-// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgCreateTriggerRequest) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if m.Event != nil {
 		var event TriggerEventI
@@ -72,7 +70,16 @@ func (m MsgCreateTriggerRequest) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 	return sdktx.UnpackInterfaces(unpacker, m.Actions)
 }
 
-// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m QueuedTrigger) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return sdktx.UnpackInterfaces(unpacker, m.Trigger.Actions)
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgDestroyTriggerRequest) ValidateBasic() error {
+	return nil
+}
+
+// GetSigners indicates that the message must have been signed by the parent.
+func (msg MsgDestroyTriggerRequest) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.GetAuthority())
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
 }

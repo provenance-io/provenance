@@ -3,7 +3,9 @@ package types
 import (
 	time "time"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	proto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -80,4 +82,21 @@ func (e BlockHeightEvent) GetEventPrefix() string {
 
 func (e BlockTimeEvent) GetEventPrefix() string {
 	return BLOCK_TIME_PREFIX
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (m Trigger) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	if m.Event != nil {
+		var event TriggerEventI
+		err := unpacker.UnpackAny(m.Event, &event)
+		if err != nil {
+			return err
+		}
+	}
+	return sdktx.UnpackInterfaces(unpacker, m.Actions)
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (m QueuedTrigger) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return sdktx.UnpackInterfaces(unpacker, m.Trigger.Actions)
 }

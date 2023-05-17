@@ -13,6 +13,8 @@ option java_multiple_files = true;
 service Msg {
   // CreateTrigger is the RPC endpoint for creating a trigger
   rpc CreateTrigger(MsgCreateTriggerRequest) returns (MsgCreateTriggerResponse);
+  // DestroyTrigger is the RPC endpoint for creating a trigger
+  rpc DestroyTrigger(MsgDestroyTriggerRequest) returns (MsgDestroyTriggerResponse);
 }
 
 // MsgCreateTriggerRequest is the request type for creating a trigger RPC
@@ -30,6 +32,20 @@ message MsgCreateTriggerRequest {
 
 // MsgCreateTriggerResponse is the response type for creating a trigger RPC
 message MsgCreateTriggerResponse {
-  // reward program id that is generated on creation.
+  // trigger id that is generated on creation.
   uint64 id = 1;
 }
+
+// MsgDestroyTriggerRequest is the request type for creating a trigger RPC
+message MsgDestroyTriggerRequest {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // the id of the trigger to destroy.
+  uint64 id = 1;
+  // The signing authority for the request
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgDestroyTriggerResponse is the response type for creating a trigger RPC
+message MsgDestroyTriggerResponse {}

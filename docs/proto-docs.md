@@ -439,6 +439,8 @@
 - [provenance/trigger/v1/tx.proto](#provenance/trigger/v1/tx.proto)
     - [MsgCreateTriggerRequest](#provenance.trigger.v1.MsgCreateTriggerRequest)
     - [MsgCreateTriggerResponse](#provenance.trigger.v1.MsgCreateTriggerResponse)
+    - [MsgDestroyTriggerRequest](#provenance.trigger.v1.MsgDestroyTriggerRequest)
+    - [MsgDestroyTriggerResponse](#provenance.trigger.v1.MsgDestroyTriggerResponse)
   
     - [Msg](#provenance.trigger.v1.Msg)
   
@@ -6551,7 +6553,33 @@ MsgCreateTriggerResponse is the response type for creating a trigger RPC
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `id` | [uint64](#uint64) |  | reward program id that is generated on creation. |
+| `id` | [uint64](#uint64) |  | trigger id that is generated on creation. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.MsgDestroyTriggerRequest"></a>
+
+### MsgDestroyTriggerRequest
+MsgDestroyTriggerRequest is the request type for creating a trigger RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | the id of the trigger to destroy. |
+| `authority` | [string](#string) |  | The signing authority for the request |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.MsgDestroyTriggerResponse"></a>
+
+### MsgDestroyTriggerResponse
+MsgDestroyTriggerResponse is the response type for creating a trigger RPC
 
 
 
@@ -6572,6 +6600,7 @@ Msg
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `CreateTrigger` | [MsgCreateTriggerRequest](#provenance.trigger.v1.MsgCreateTriggerRequest) | [MsgCreateTriggerResponse](#provenance.trigger.v1.MsgCreateTriggerResponse) | CreateTrigger is the RPC endpoint for creating a trigger | |
+| `DestroyTrigger` | [MsgDestroyTriggerRequest](#provenance.trigger.v1.MsgDestroyTriggerRequest) | [MsgDestroyTriggerResponse](#provenance.trigger.v1.MsgDestroyTriggerResponse) | DestroyTrigger is the RPC endpoint for creating a trigger | |
 
  <!-- end services -->
 

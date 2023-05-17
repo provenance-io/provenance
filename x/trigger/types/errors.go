@@ -11,4 +11,5 @@ var (
 	ErrQueueEmpty              = cerrs.Register(ModuleName, 5, "queue is empty")
 	ErrGasLimitNotFound        = cerrs.Register(ModuleName, 6, "gas limit not found")
 	ErrTriggerGasLimitExceeded = cerrs.Register(ModuleName, 7, "gas limit execeeded for trigger")
+	ErrInvalidTriggerAuthority = cerrs.Register(ModuleName, 8, "signer does not have authority to destroy trigger")
 )

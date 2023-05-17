@@ -26,7 +26,6 @@ func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTrig
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	trigger := s.NewTriggerWithID(ctx, msg.GetAuthority(), msg.GetEvent(), msg.GetActions())
-
 	s.RegisterTrigger(ctx, trigger)
 
 	ctx.EventManager().EmitEvent(
@@ -37,4 +36,27 @@ func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTrig
 	)
 
 	return &types.MsgCreateTriggerResponse{Id: trigger.GetId()}, nil
+}
+
+// DestroyTrigger destroys trigger from msg
+func (s msgServer) DestroyTrigger(goCtx context.Context, msg *types.MsgDestroyTriggerRequest) (*types.MsgDestroyTriggerResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	trigger, err := s.GetTrigger(ctx, msg.GetId())
+	if err != nil {
+		return nil, err
+	}
+	if trigger.GetOwner() != msg.GetAuthority() {
+		return nil, types.ErrInvalidTriggerAuthority
+	}
+	s.UnregisterTrigger(ctx, trigger)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTriggerDestroyed,
+			sdk.NewAttribute(types.AttributeKeyTriggerID, fmt.Sprintf("%d", trigger.GetId())),
+		),
+	)
+
+	return &types.MsgDestroyTriggerResponse{}, nil
 }

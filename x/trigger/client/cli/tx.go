@@ -30,7 +30,7 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(GetCmdAddTransactionTrigger(), GetCmdAddBlockHeightTrigger(), GetCmdAddBlockTimeTrigger())
+	txCmd.AddCommand(GetCmdAddTransactionTrigger(), GetCmdAddBlockHeightTrigger(), GetCmdAddBlockTimeTrigger(), GetCmdDestroyTrigger())
 
 	return txCmd
 }
@@ -49,18 +49,15 @@ func GetCmdAddTransactionTrigger() *cobra.Command {
 				return err
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			if err != nil {
-				return fmt.Errorf("invalid argument : %s", args[0])
-			}
 
 			event, err := parseEvent(clientCtx.Codec, args[0])
 			if err != nil {
-				return fmt.Errorf("unable to parse file : %s", err)
+				return fmt.Errorf("unable to parse event file : %s", err)
 			}
 
 			msgs, err := parseTransactions(clientCtx.Codec, args[1])
 			if err != nil {
-				return fmt.Errorf("unable to parse file : %s", err)
+				return fmt.Errorf("unable to parse msgs file: %s", err)
 			}
 			if len(msgs) == 0 {
 				return fmt.Errorf("no actions added to trigger")
@@ -92,9 +89,6 @@ func GetCmdAddBlockHeightTrigger() *cobra.Command {
 				return err
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			if err != nil {
-				return fmt.Errorf("invalid argument : %s", args[0])
-			}
 
 			height, err := strconv.Atoi(args[0])
 			if err != nil {
@@ -135,9 +129,6 @@ func GetCmdAddBlockTimeTrigger() *cobra.Command {
 				return err
 			}
 			callerAddr := clientCtx.GetFromAddress()
-			if err != nil {
-				return fmt.Errorf("invalid argument : %s", args[0])
-			}
 
 			startTime, err := time.Parse(time.RFC3339, args[0])
 			if err != nil {
@@ -156,6 +147,36 @@ func GetCmdAddBlockTimeTrigger() *cobra.Command {
 				callerAddr.String(),
 				&types.BlockTimeEvent{Time: startTime},
 				msgs,
+			)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func GetCmdDestroyTrigger() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "destroy-trigger [id]",
+		Args:    cobra.ExactArgs(1),
+		Aliases: []string{"destroy", "d"},
+		Short:   "Destroys an existing trigger.",
+		Long:    strings.TrimSpace(`Destroys an existing trigger. The trigger will not be destroyable if it has already been detected.`),
+		Example: fmt.Sprintf(`$ %[1]s tx trigger destroy-trigger 1`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			callerAddr := clientCtx.GetFromAddress()
+			triggerID, err := strconv.Atoi(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid argument : %s", args[0])
+			}
+
+			msg := types.NewDestroyTriggerRequest(
+				callerAddr.String(),
+				uint64(triggerID),
 			)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
