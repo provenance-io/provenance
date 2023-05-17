@@ -25,6 +25,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
+// WriteScope adds or updates a scope.
 func (k msgServer) WriteScope(
 	goCtx context.Context,
 	msg *types.MsgWriteScopeRequest,
@@ -49,6 +50,7 @@ func (k msgServer) WriteScope(
 	return types.NewMsgWriteScopeResponse(msg.Scope.ScopeId), nil
 }
 
+// DeleteScope deletes a scope and all associated Records, Sessions.
 func (k msgServer) DeleteScope(
 	goCtx context.Context,
 	msg *types.MsgDeleteScopeRequest,
@@ -66,6 +68,7 @@ func (k msgServer) DeleteScope(
 	return types.NewMsgDeleteScopeResponse(), nil
 }
 
+// AddScopeDataAccess adds data access AccAddress to scope
 func (k msgServer) AddScopeDataAccess(
 	goCtx context.Context,
 	msg *types.MsgAddScopeDataAccessRequest,
@@ -90,6 +93,7 @@ func (k msgServer) AddScopeDataAccess(
 	return types.NewMsgAddScopeDataAccessResponse(), nil
 }
 
+// DeleteScopeDataAccess removes data access AccAddress from scope
 func (k msgServer) DeleteScopeDataAccess(
 	goCtx context.Context,
 	msg *types.MsgDeleteScopeDataAccessRequest,
@@ -114,6 +118,7 @@ func (k msgServer) DeleteScopeDataAccess(
 	return types.NewMsgDeleteScopeDataAccessResponse(), nil
 }
 
+// AddScopeOwner adds new owner parties to a scope
 func (k msgServer) AddScopeOwner(
 	goCtx context.Context,
 	msg *types.MsgAddScopeOwnerRequest,
@@ -146,6 +151,7 @@ func (k msgServer) AddScopeOwner(
 	return types.NewMsgAddScopeOwnerResponse(), nil
 }
 
+// DeleteScopeOwner removes owner parties (by addresses) from a scope
 func (k msgServer) DeleteScopeOwner(
 	goCtx context.Context,
 	msg *types.MsgDeleteScopeOwnerRequest,
@@ -178,6 +184,7 @@ func (k msgServer) DeleteScopeOwner(
 	return types.NewMsgDeleteScopeOwnerResponse(), nil
 }
 
+// UpdateValueOwners sets the value owner of one or more scopes.
 func (k msgServer) UpdateValueOwners(
 	goCtx context.Context,
 	msg *types.MsgUpdateValueOwnersRequest,
@@ -205,6 +212,7 @@ func (k msgServer) UpdateValueOwners(
 	return &types.MsgUpdateValueOwnersResponse{}, nil
 }
 
+// MigrateValueOwner updates all scopes that have one value owner to have a another value owner.
 func (k msgServer) MigrateValueOwner(
 	goCtx context.Context,
 	msg *types.MsgMigrateValueOwnerRequest,
@@ -238,6 +246,7 @@ func (k msgServer) MigrateValueOwner(
 	return &types.MsgMigrateValueOwnerResponse{}, nil
 }
 
+// WriteSession adds or updates a session context.
 func (k msgServer) WriteSession(
 	goCtx context.Context,
 	msg *types.MsgWriteSessionRequest,
@@ -266,6 +275,7 @@ func (k msgServer) WriteSession(
 	return types.NewMsgWriteSessionResponse(msg.Session.SessionId), nil
 }
 
+// WriteRecord adds or updates a record.
 func (k msgServer) WriteRecord(
 	goCtx context.Context,
 	msg *types.MsgWriteRecordRequest,
@@ -303,6 +313,7 @@ func (k msgServer) WriteRecord(
 	return types.NewMsgWriteRecordResponse(recordID), nil
 }
 
+// DeleteRecord deletes a record.
 func (k msgServer) DeleteRecord(
 	goCtx context.Context,
 	msg *types.MsgDeleteRecordRequest,
@@ -320,6 +331,7 @@ func (k msgServer) DeleteRecord(
 	return types.NewMsgDeleteRecordResponse(), nil
 }
 
+// WriteScopeSpecification adds or updates a scope specification.
 func (k msgServer) WriteScopeSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteScopeSpecificationRequest,
@@ -347,6 +359,7 @@ func (k msgServer) WriteScopeSpecification(
 	return types.NewMsgWriteScopeSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
+// DeleteScopeSpecification deletes a scope specification.
 func (k msgServer) DeleteScopeSpecification(
 	goCtx context.Context,
 	msg *types.MsgDeleteScopeSpecificationRequest,
@@ -370,6 +383,7 @@ func (k msgServer) DeleteScopeSpecification(
 	return types.NewMsgDeleteScopeSpecificationResponse(), nil
 }
 
+// WriteContractSpecification adds or updates a contract specification.
 func (k msgServer) WriteContractSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteContractSpecificationRequest,
@@ -397,6 +411,7 @@ func (k msgServer) WriteContractSpecification(
 	return types.NewMsgWriteContractSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
+// DeleteContractSpecification deletes a contract specification.
 func (k msgServer) DeleteContractSpecification(
 	goCtx context.Context,
 	msg *types.MsgDeleteContractSpecificationRequest,
@@ -445,6 +460,7 @@ func (k msgServer) DeleteContractSpecification(
 	return types.NewMsgDeleteContractSpecificationResponse(), nil
 }
 
+// AddContractSpecToScopeSpec adds contract specification to a scope specification.
 func (k msgServer) AddContractSpecToScopeSpec(
 	goCtx context.Context,
 	msg *types.MsgAddContractSpecToScopeSpecRequest,
@@ -477,6 +493,7 @@ func (k msgServer) AddContractSpecToScopeSpec(
 	return types.NewMsgAddContractSpecToScopeSpecResponse(), nil
 }
 
+// DeleteContractSpecFromScopeSpec deletes a contract specification from a scope specification.
 func (k msgServer) DeleteContractSpecFromScopeSpec(
 	goCtx context.Context,
 	msg *types.MsgDeleteContractSpecFromScopeSpecRequest,
@@ -512,6 +529,7 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 	return types.NewMsgDeleteContractSpecFromScopeSpecResponse(), nil
 }
 
+// WriteRecordSpecification adds or updates a record specification.
 func (k msgServer) WriteRecordSpecification(
 	goCtx context.Context,
 	msg *types.MsgWriteRecordSpecificationRequest,
@@ -550,6 +568,7 @@ func (k msgServer) WriteRecordSpecification(
 	return types.NewMsgWriteRecordSpecificationResponse(msg.Specification.SpecificationId), nil
 }
 
+// DeleteRecordSpecification deletes a record specification.
 func (k msgServer) DeleteRecordSpecification(
 	goCtx context.Context,
 	msg *types.MsgDeleteRecordSpecificationRequest,
@@ -582,6 +601,7 @@ func (k msgServer) DeleteRecordSpecification(
 	return types.NewMsgDeleteRecordSpecificationResponse(), nil
 }
 
+// BindOSLocator binds an owner address to a uri.
 func (k msgServer) BindOSLocator(
 	goCtx context.Context,
 	msg *types.MsgBindOSLocatorRequest,
@@ -615,6 +635,7 @@ func (k msgServer) BindOSLocator(
 	return types.NewMsgBindOSLocatorResponse(msg.Locator), nil
 }
 
+// DeleteOSLocator deletes an existing ObjectStoreLocator record.
 func (k msgServer) DeleteOSLocator(
 	goCtx context.Context,
 	msg *types.MsgDeleteOSLocatorRequest,
@@ -650,6 +671,7 @@ func (k msgServer) DeleteOSLocator(
 	return types.NewMsgDeleteOSLocatorResponse(msg.Locator), nil
 }
 
+// ModifyOSLocator updates an ObjectStoreLocator record by the current owner.
 func (k msgServer) ModifyOSLocator(
 	goCtx context.Context,
 	msg *types.MsgModifyOSLocatorRequest,
