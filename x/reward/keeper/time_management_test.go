@@ -1,11 +1,13 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/provenance-io/provenance/x/reward/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (s *KeeperTestSuite) TestStartRewardProgram() {
@@ -923,7 +925,8 @@ func (s *KeeperTestSuite) TestUpdate() {
 	beforeBalance := s.app.BankKeeper.GetBalance(s.ctx, addr, "nhash")
 
 	// We call update
-	s.app.RewardKeeper.UpdateUnexpiredRewardsProgram(s.ctx)
+	em := sdk.NewEventManager()
+	s.app.RewardKeeper.UpdateUnexpiredRewardsProgram(s.ctx.WithEventManager(em))
 
 	afterBalance := s.app.BankKeeper.GetBalance(s.ctx, addr, "nhash")
 	notStarted, _ = s.app.RewardKeeper.GetRewardProgram(s.ctx, notStarted.Id)
@@ -950,4 +953,58 @@ func (s *KeeperTestSuite) TestUpdate() {
 
 	s.Assert().Equal(expiring.State, types.RewardProgram_STATE_EXPIRED, "should be in expired state")
 	s.Assert().Equal(beforeBalance.Add(remainingBalance), afterBalance, "balance should be refunded")
+
+	attr := func(key, value string) abci.EventAttribute {
+		return abci.EventAttribute{
+			Key:   []byte(key),
+			Value: []byte(value),
+		}
+	}
+	newEvent := func(typeName string, attributes ...abci.EventAttribute) sdk.Event {
+		return sdk.Event{
+			Type:       typeName,
+			Attributes: attributes,
+		}
+	}
+	iStr := func(i uint64) string {
+		return fmt.Sprintf("%d", i)
+	}
+
+	moduleAddr := authtypes.NewModuleAddress(types.ModuleName).String()
+	expAddr := expiring.DistributeFromAddress
+	amount := "100000nhash"
+	expectedEvents := sdk.Events{
+		newEvent("reward_program_started", attr("reward_program_id", iStr(starting.Id))),
+		newEvent("reward_program_finished", attr("reward_program_id", iStr(ending.Id))),
+		newEvent("reward_program_finished", attr("reward_program_id", iStr(timeout.Id))),
+		newEvent("coin_spent", attr("spender", moduleAddr), attr("amount", amount)),
+		newEvent("coin_received", attr("receiver", expAddr), attr("amount", amount)),
+		newEvent("transfer", attr("recipient", expAddr), attr("sender", moduleAddr), attr("amount", amount)),
+		newEvent("message", attr("sender", moduleAddr)),
+		newEvent("reward_program_expired", attr("reward_program_id", iStr(expiring.Id))),
+	}
+	expectedEventsStrs := EventsStrings(expectedEvents)
+
+	actualEvents := em.Events()
+	actualEventsStrs := EventsStrings(actualEvents)
+	if !s.Assert().Equal(expectedEventsStrs, actualEventsStrs, "events emitted during UpdateUnexpiredRewardsProgram") {
+		s.T().Logf("Expected Events:\n%s", expectedEventsStrs)
+		s.T().Logf("Actual Events:\n%s", actualEventsStrs)
+	}
+}
+
+// EventsStrings converts the events into a slice of strings; one string per attribute.
+// These are handy for comparing actual/expected events using .Equals. The failure messages are easier to understand.
+func EventsStrings(events sdk.Events) []string {
+	rv := []string{}
+	for i, event := range events {
+		for j, attr := range event.Attributes {
+			indexed := ""
+			if attr.Index {
+				indexed = " (indexed)"
+			}
+			rv = append(rv, fmt.Sprintf("[%d]%s[%d]: %q = %q%s", i, event.Type, j, string(attr.Key), string(attr.Value), indexed))
+		}
+	}
+	return rv
 }

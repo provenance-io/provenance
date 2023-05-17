@@ -10,15 +10,19 @@ import (
 )
 
 // UpdateUnexpiredRewardsProgram called from begin blocker, starts/ends or expires rewards programs.
-func (k Keeper) UpdateUnexpiredRewardsProgram(ctx sdk.Context) {
-	rewardPrograms, err := k.GetAllUnexpiredRewardPrograms(ctx)
+func (k Keeper) UpdateUnexpiredRewardsProgram(origCtx sdk.Context) {
+	rewardPrograms, err := k.GetAllUnexpiredRewardPrograms(origCtx)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("error iterating reward programs: %v ", err))
+		origCtx.Logger().Error(fmt.Sprintf("error iterating reward programs: %v ", err))
 		// called from the beginblocker, not much we can do here but return
 		return
 	}
 
 	for index := range rewardPrograms {
+		// Because this is designed for the BeginBlocker, we don't always have auto-rollback.
+		// We don't partial state recorded if an error is encountered in the middle.
+		// So use a cache context and only write it if there wasn't an error.
+		ctx, writeCtx := origCtx.CacheContext()
 		switch {
 		case rewardPrograms[index].IsStarting(ctx):
 			err = k.StartRewardProgram(ctx, &rewardPrograms[index])
@@ -40,6 +44,7 @@ func (k Keeper) UpdateUnexpiredRewardsProgram(ctx sdk.Context) {
 			}
 		}
 		k.SetRewardProgram(ctx, rewardPrograms[index])
+		writeCtx()
 	}
 }
 

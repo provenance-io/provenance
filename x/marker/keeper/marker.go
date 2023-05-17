@@ -218,8 +218,7 @@ func (k Keeper) WithdrawCoins(
 		recipient = caller
 	}
 
-	ctx = WithMarkerSendRestrictionBypass(ctx, true)
-	if err := k.bankKeeper.SendCoins(ctx, m.GetAddress(), recipient, coins); err != nil {
+	if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), m.GetAddress(), recipient, coins); err != nil {
 		return err
 	}
 
@@ -336,7 +335,7 @@ func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, 
 	if desiredSupply.Denom != marker.GetDenom() {
 		return fmt.Errorf("invalid denom for desired supply")
 	}
-	ctx = WithMarkerSendRestrictionBypass(ctx, true)
+	ctx = types.WithBypass(ctx)
 	if desiredSupply.Amount.GT(currentSupply) { // not enough coin in circulation, mint more.
 		offset := sdk.NewCoin(marker.GetDenom(), desiredSupply.Amount.Sub(currentSupply))
 		ctx.Logger().Info(
@@ -676,9 +675,8 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		return fmt.Errorf("%s is not allowed to receive funds", to)
 	}
 	// set context to having access to bypass attribute restriction test
-	ctx = WithMarkerSendRestrictionBypass(ctx, true)
 	// send the coins between accounts (does not check send_enabled on coin denom)
-	if err = k.bankKeeper.SendCoins(ctx, from, to, sdk.NewCoins(amount)); err != nil {
+	if err = k.bankKeeper.SendCoins(types.WithBypass(ctx), from, to, sdk.NewCoins(amount)); err != nil {
 		return err
 	}
 
@@ -696,7 +694,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	return nil
 }
 
-// IbcTransferCoin transfers restricted coins between to chains when the administrator account holds the transfer
+// IbcTransferCoin transfers restricted coins between two chains when the administrator account holds the transfer
 // access right and the marker type is restricted_coin
 func (k Keeper) IbcTransferCoin(
 	ctx sdk.Context,
@@ -707,7 +705,8 @@ func (k Keeper) IbcTransferCoin(
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
 	memo string,
-	checkRestrictionsHandler ibckeeper.CheckRestrictionsHandler) error {
+	checkRestrictionsHandler ibckeeper.CheckRestrictionsHandler,
+) error {
 	m, err := k.GetMarkerByDenom(ctx, token.Denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", token.Denom, err)
@@ -729,7 +728,6 @@ func (k Keeper) IbcTransferCoin(
 		}
 	}
 
-	ctx = WithMarkerSendRestrictionBypass(ctx, true)
 	// checking if escrow account has transfer auth, if not add it
 	escrowAccount := ibctypes.GetEscrowAddress(sourcePort, sourceChannel)
 	if !m.AddressHasAccess(escrowAccount, types.Access_Transfer) {
@@ -741,7 +739,7 @@ func (k Keeper) IbcTransferCoin(
 	}
 
 	_, err = k.ibcKeeper.SendTransfer(
-		ctx,
+		types.WithBypass(ctx),
 		sourcePort,
 		sourceChannel,
 		token,

@@ -117,8 +117,7 @@ func (s *TestSuite) TestDeductFeesDistributions() {
 	acct := cosmosauthtypes.NewBaseAccount(addrs[0], priv.PubKey(), 0, 0)
 
 	err = app.MsgFeesKeeper.DeductFeesDistributions(app.BankKeeper, ctx, acct, remainingCoins, feeDist)
-	s.Assert().Error(err)
-	s.Assert().Equal("0jackthecat is smaller than 10jackthecat: insufficient funds: insufficient funds", err.Error())
+	s.Assert().ErrorContains(err, "spendable balance 0jackthecat is smaller than 10jackthecat: insufficient funds")
 
 	feeDist = make(map[string]sdk.Coins)
 	feeDist["not-an-address"] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))
@@ -129,8 +128,7 @@ func (s *TestSuite) TestDeductFeesDistributions() {
 	feeDist = make(map[string]sdk.Coins)
 	feeDist[addrs[0].String()] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))
 	err = app.MsgFeesKeeper.DeductFeesDistributions(app.BankKeeper, ctx, acct, remainingCoins, feeDist)
-	s.Assert().Error(err)
-	s.Assert().Equal("0jackthecat is smaller than 10jackthecat: insufficient funds: insufficient funds", err.Error())
+	s.Assert().ErrorContains(err, "spendable balance 0jackthecat is smaller than 10jackthecat: insufficient funds")
 
 	// Account has enough funds to pay account, but not enough to sweep remaining coins
 	s.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))), "initial fund")
@@ -138,8 +136,7 @@ func (s *TestSuite) TestDeductFeesDistributions() {
 	feeDist[addrs[1].String()] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))
 	remainingCoins = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 11))
 	err = app.MsgFeesKeeper.DeductFeesDistributions(app.BankKeeper, ctx, acct, remainingCoins, feeDist)
-	s.Assert().Error(err)
-	s.Assert().Equal("0jackthecat is smaller than 1jackthecat: insufficient funds: insufficient funds", err.Error())
+	s.Assert().ErrorContains(err, "spendable balance 0jackthecat is smaller than 1jackthecat: insufficient funds")
 	balances = app.BankKeeper.GetAllBalances(ctx, acct.GetAddress())
 	s.Assert().Equal(balances.String(), stakeCoin.String())
 	balances = app.BankKeeper.GetAllBalances(ctx, addrs[1])
