@@ -89,4 +89,13 @@ tools-clean:
 	rm -f $(STATIK) $(GOLANGCI_LINT) $(RUNSIM)
 	rm -f proto-tools-stamp tools-stamp
 
-.PHONY: tools-clean statik runsim
+# If you change this version, be sure to also change it in .github/workflows/lint.yml.
+GOLANGCI_LINT_VERSION = v1.52.2
+golangci-lint: $(GOLANGCI_LINT)
+$(GOLANGCI_LINT):
+	@$(MAKE) golangci-lint-update
+golangci-lint-update:
+	@echo "Installing golangci-lint $(GOLANGCI_LINT_VERSION) ..."
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(TOOLS_DESTDIR) $(GOLANGCI_LINT_VERSION)
+
+.PHONY: tools-clean statik runsim golangci-lint golangci-lint-update

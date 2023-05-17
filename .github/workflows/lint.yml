@@ -33,8 +33,8 @@ jobs:
       - uses: golangci/golangci-lint-action@v3.4.0
         if: env.GIT_DIFF
         with:
-          # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
-          version: v1.52
+          # If you change this version, be sure to also change it in contrib/devtools/Makefile.
+          version: v1.52.2
           args: --timeout 10m --out-${NO_FUTURE}format colored-line-number
           github-token: ${{ secrets.github_token }}
       - name: No Now Usage
