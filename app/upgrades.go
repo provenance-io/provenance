@@ -196,8 +196,6 @@ func AddGovV1SubmitFee(ctx sdk.Context, app *App) {
 	// At the time of writing this, SetMsgFee always returns nil.
 	_ = app.MsgFeesKeeper.SetMsgFee(ctx, *fee)
 	ctx.Logger().Info(fmt.Sprintf("Successfully set fee for %q with amount %q.", fee.MsgTypeUrl, fee.AdditionalFee.String()))
-
-	return
 }
 
 // RemoveP8eMemorializeContractFee removes the message fee for the now-non-existent MsgP8eMemorializeContractRequest.
