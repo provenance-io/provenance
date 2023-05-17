@@ -55,11 +55,12 @@ enum AttributeType {
 
 // EventAttributeAdd event emitted when attribute is added
 message EventAttributeAdd {
-  string name    = 1;
-  string value   = 2;
-  string type    = 3;
-  string account = 4;
-  string owner   = 5;
+  string name       = 1;
+  string value      = 2;
+  string type       = 3;
+  string account    = 4;
+  string owner      = 5;
+  string expiration = 6;
 }
 
 // EventAttributeUpdate event emitted when attribute is updated
@@ -71,6 +72,16 @@ message EventAttributeUpdate {
   string update_type    = 5;
   string account        = 6;
   string owner          = 7;
+}
+
+// EventAttributeExpirationUpdate event emitted when attribute expiration is updated
+message EventAttributeExpirationUpdate {
+  string name                = 1;
+  string value               = 2;
+  string account             = 3;
+  string owner               = 4;
+  string original_expiration = 5;
+  string update_expiration   = 6;
 }
 
 // EventAttributeDelete event emitted when attribute is deleted
@@ -87,4 +98,13 @@ message EventAttributeDistinctDelete {
   string attribute_type = 3;
   string account        = 4;
   string owner          = 5;
+}
+
+// EventAttributeExpiredDelete event emitted when attribute has expired and been deleted in BeginBlocker
+message EventAttributeExpiredDelete {
+  string name           = 1;
+  string value          = 2;
+  string attribute_type = 3;
+  string account        = 4;
+  string expiration     = 5;
 }

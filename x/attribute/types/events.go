@@ -1,6 +1,9 @@
 package types
 
-import "encoding/base64"
+import (
+	"encoding/base64"
+	time "time"
+)
 
 const (
 	// The type of event generated when account attributes are added.
@@ -39,12 +42,17 @@ const (
 )
 
 func NewEventAttributeAdd(attribute Attribute, owner string) *EventAttributeAdd {
+	var expirationDate string
+	if attribute.ExpirationDate != nil {
+		expirationDate = attribute.ExpirationDate.String()
+	}
 	return &EventAttributeAdd{
-		Name:    attribute.Name,
-		Value:   base64.StdEncoding.EncodeToString(attribute.GetValue()),
-		Type:    attribute.AttributeType.String(),
-		Account: attribute.Address,
-		Owner:   owner,
+		Name:       attribute.Name,
+		Value:      base64.StdEncoding.EncodeToString(attribute.GetValue()),
+		Type:       attribute.AttributeType.String(),
+		Account:    attribute.Address,
+		Owner:      owner,
+		Expiration: expirationDate,
 	}
 }
 
@@ -57,6 +65,24 @@ func NewEventAttributeUpdate(originalAttribute Attribute, updateAttribute Attrib
 		UpdateType:    updateAttribute.AttributeType.String(),
 		Account:       originalAttribute.Address,
 		Owner:         owner,
+	}
+}
+
+func NewEventAttributeExpirationUpdate(attribute Attribute, originalExpiration *time.Time, owner string) *EventAttributeExpirationUpdate {
+	var original, updated string
+	if attribute.ExpirationDate != nil {
+		updated = attribute.ExpirationDate.String()
+	}
+	if originalExpiration != nil {
+		original = originalExpiration.String()
+	}
+	return &EventAttributeExpirationUpdate{
+		Name:               attribute.Name,
+		Value:              base64.StdEncoding.EncodeToString(attribute.GetValue()),
+		Account:            attribute.Address,
+		Owner:              owner,
+		OriginalExpiration: original,
+		UpdateExpiration:   updated,
 	}
 }
 
@@ -74,5 +100,19 @@ func NewEventDistinctAttributeDelete(name string, value string, account string, 
 		Value:   value,
 		Owner:   owner,
 		Account: account,
+	}
+}
+
+func NewEventAttributeExpiredDelete(attribute Attribute) *EventAttributeExpiredDelete {
+	var expiredTime string
+	if attribute.ExpirationDate != nil {
+		expiredTime = attribute.ExpirationDate.String()
+	}
+
+	return &EventAttributeExpiredDelete{
+		Name:       attribute.Name,
+		Value:      base64.StdEncoding.EncodeToString(attribute.GetValue()),
+		Account:    attribute.Address,
+		Expiration: expiredTime,
 	}
 }

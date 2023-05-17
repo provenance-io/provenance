@@ -9,6 +9,8 @@
     - [EventAttributeAdd](#provenance.attribute.v1.EventAttributeAdd)
     - [EventAttributeDelete](#provenance.attribute.v1.EventAttributeDelete)
     - [EventAttributeDistinctDelete](#provenance.attribute.v1.EventAttributeDistinctDelete)
+    - [EventAttributeExpirationUpdate](#provenance.attribute.v1.EventAttributeExpirationUpdate)
+    - [EventAttributeExpiredDelete](#provenance.attribute.v1.EventAttributeExpiredDelete)
     - [EventAttributeUpdate](#provenance.attribute.v1.EventAttributeUpdate)
     - [Params](#provenance.attribute.v1.Params)
   
@@ -466,6 +468,7 @@ EventAttributeAdd event emitted when attribute is added
 | `type` | [string](#string) |  |  |
 | `account` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
+| `expiration` | [string](#string) |  |  |
 
 
 
@@ -502,6 +505,45 @@ EventAttributeDistinctDelete event emitted when attribute is deleted with matchi
 | `attribute_type` | [string](#string) |  |  |
 | `account` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.EventAttributeExpirationUpdate"></a>
+
+### EventAttributeExpirationUpdate
+EventAttributeExpirationUpdate event emitted when attribute expiration is updated
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `value` | [string](#string) |  |  |
+| `account` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+| `original_expiration` | [string](#string) |  |  |
+| `update_expiration` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.EventAttributeExpiredDelete"></a>
+
+### EventAttributeExpiredDelete
+EventAttributeExpiredDelete event emitted when attribute has expired and been deleted in BeginBlocker
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `value` | [string](#string) |  |  |
+| `attribute_type` | [string](#string) |  |  |
+| `account` | [string](#string) |  |  |
+| `expiration` | [string](#string) |  |  |
 
 
 

@@ -156,6 +156,10 @@ func (k Keeper) SetAttribute(
 	store.Set(key, bz)
 	k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
 
+	if attr.ExpirationDate != nil {
+		store.Set(types.AttributeExpireKey(attr), []byte{})
+	}
+
 	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
 	if err := ctx.EventManager().EmitTypedEvent(attributeAddEvent); err != nil {
 		return err
@@ -308,6 +312,7 @@ func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, attribute types.Attri
 		if attr.Name == attribute.Name && bytes.Equal(attr.Value, attribute.Value) {
 			found = true
 			store.Delete(it.Key())
+			originalExpiration := attr.ExpirationDate
 			attr.ExpirationDate = expirationDate
 			bz, err := k.cdc.Marshal(&attr)
 			if err != nil {
@@ -315,6 +320,12 @@ func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, attribute types.Attri
 			}
 			updatedKey := types.AddrAttributeKey(addrBz, attr)
 			store.Set(updatedKey, bz)
+
+			attributeExpirationUpdateEvent := types.NewEventAttributeExpirationUpdate(attr, originalExpiration, owner.String())
+			if err := ctx.EventManager().EmitTypedEvent(attributeExpirationUpdateEvent); err != nil {
+				return err
+			}
+
 			break
 		}
 	}
@@ -486,7 +497,7 @@ func (k Keeper) PopulateAddressAttributeNameTable(ctx sdk.Context) {
 func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, sdk.InclusiveEndBytes(types.GetAttributeExpireTimePrefix(ctx.BlockTime())))
+	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, types.GetAttributeExpireTimePrefix(ctx.BlockTime()))
 	defer iterator.Close()
 	count := 1
 	for ; iterator.Valid(); iterator.Next() {
@@ -495,13 +506,23 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) {
 		if bz != nil {
 			var attribute types.Attribute
 			if err := k.cdc.Unmarshal(bz, &attribute); err == nil {
-				k.DecAttrNameAddressLookup(ctx, attribute.Name, attribute.GetAddressBytes())
+				// delete attribute from store
 				store.Delete(attrKey)
+				// dec name to address lookup table count
+				k.DecAttrNameAddressLookup(ctx, attribute.Name, attribute.GetAddressBytes())
+
+				deleteEvent := types.NewEventAttributeExpiredDelete(attribute)
+				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
+					ctx.Logger().Error(fmt.Sprintf("failed to emit typed event %v", err))
+				}
+
 			} else {
-				ctx.Logger().Error("unable to unmarshal attribute to delete key: %v error: %v", attrKey, err)
+				ctx.Logger().Error(fmt.Sprintf("unable to unmarshal attribute to delete key: %v error: %v", attrKey, err))
 				continue
 			}
 		}
+
+		// delete the expiration lookup
 		store.Delete(iterator.Key())
 		if limit != 0 && count > limit {
 			break

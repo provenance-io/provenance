@@ -153,7 +153,9 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // BeginBlock returns the begin blocker for the attribute module.
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
+func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
+	BeginBlocker(ctx, am.keeper)
+}
 
 // EndBlock returns the end blocker for the attribute module. It returns no validator
 // updates.

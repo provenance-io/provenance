@@ -27,6 +27,8 @@ type KeeperTestSuite struct {
 	app *app.App
 	ctx sdk.Context
 
+	startBlockTime time.Time
+
 	pubkey1   cryptotypes.PubKey
 	user1     string
 	user1Addr sdk.AccAddress
@@ -43,7 +45,8 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(s.T())
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	s.startBlockTime = time.Now()
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: s.startBlockTime})
 	s.app = app
 	s.ctx = ctx
 
@@ -1003,4 +1006,63 @@ func (s *KeeperTestSuite) TestPurgeAttributes() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	past := s.startBlockTime.Add(2 - time.Hour)
+	future := s.startBlockTime.Add(time.Hour)
+
+	// Create a name, make an attribute under it, then remove the name leaving an orphan attribute.
+	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "one.expire.testing", s.user1Addr, false), "name record should save successfully")
+	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "two.expire.testing", s.user1Addr, false), "name record should save successfully")
+	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "three.expire.testing", s.user1Addr, false), "name record should save successfully")
+	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "four.expire.testing", s.user1Addr, false), "name record should save successfully")
+	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "five.expire.testing", s.user1Addr, false), "name record should save successfully")
+
+	// Assuming you have types.AttributeKey and types.Attribute in scope
+	attr1 := types.NewAttribute("one.expire.testing", s.user1, types.AttributeType_String, []byte("test1"))
+	attr1.ExpirationDate = &past
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr1, s.user1Addr))
+	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr1)))
+	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr1.Name, attr1.GetAddressBytes())))
+
+	attr2 := types.NewAttribute("two.expire.testing", s.user1, types.AttributeType_String, []byte("test2"))
+	attr2.ExpirationDate = &past
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr2, s.user1Addr))
+	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr2)))
+	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr2.Name, attr2.GetAddressBytes())))
+
+	attr3 := types.NewAttribute("three.expire.testing", s.user1, types.AttributeType_String, []byte("test3"))
+	attr3.ExpirationDate = &s.startBlockTime
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr3, s.user1Addr))
+	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr3)))
+	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr3.Name, attr3.GetAddressBytes())))
+
+	attr4 := types.NewAttribute("four.expire.testing", s.user1, types.AttributeType_String, []byte("test4"))
+	attr4.ExpirationDate = &future
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr4, s.user1Addr))
+	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr4)))
+	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr4.Name, attr4.GetAddressBytes())))
+
+	attr5 := types.NewAttribute("five.expire.testing", s.user1, types.AttributeType_String, []byte("test5"))
+	attr5.ExpirationDate = &future
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr5, s.user1Addr))
+	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr5)))
+	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr5.Name, attr5.GetAddressBytes())))
+
+	s.app.AttributeKeeper.DeleteExpiredAttributes(s.ctx, 0)
+
+	s.Assert().Nil(store.Get(types.AttributeExpireKey(attr1)))
+	s.Assert().Nil(store.Get(types.AttributeNameAddrKeyPrefix(attr1.Name, attr1.GetAddressBytes())))
+	s.Assert().Nil(store.Get(types.AttributeExpireKey(attr2)))
+	s.Assert().Nil(store.Get(types.AttributeNameAddrKeyPrefix(attr2.Name, attr2.GetAddressBytes())))
+
+	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr3)))
+	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr3.Name, attr3.GetAddressBytes())))
+
+	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr4)))
+	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr4.Name, attr4.GetAddressBytes())))
+	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr5)))
+	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr5.Name, attr5.GetAddressBytes())))
 }

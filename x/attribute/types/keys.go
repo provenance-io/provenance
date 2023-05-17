@@ -46,6 +46,13 @@ func AttributeKey(key []byte) []byte {
 	return append(AttributeKeyPrefix, key...)
 }
 
+func AttributeExpireKey(attr Attribute) []byte {
+	key := GetAttributeExpireTimePrefix(*attr.ExpirationDate)
+	key = append(key, address.MustLengthPrefix(attr.GetAddressBytes())...)
+	key = append(key, GetNameKeyBytes(attr.Name)...)
+	return append(key, attr.Hash()...)
+}
+
 // AddrAttributesKeyPrefix returns a prefix key for all attributes on an account
 func AddrAttributesKeyPrefix(addr []byte) []byte {
 	return append(AttributeKeyPrefix, address.MustLengthPrefix(addr)...)
