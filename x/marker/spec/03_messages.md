@@ -339,3 +339,18 @@ This service message is expected to fail if:
 - The requested supply exceeds the configuration parameter for `MaxTotalSupply`
 
 See also: [Governance: Supply Increase Proposal](./10_governance.md#supply-increase-proposal)
+
+## Msg/UpdateRequiredAttributesRequest
+
+UpdateRequiredAttributesRequest allows signers that have transfer authority or via gov proposal to add and remove required attributes from a restricted marker.
+
++++ https://github.com/provenance-io/provenance/blob/31384f9d76f7c569a118d120c8d3e6ffbbd0f50c/proto/provenance/marker/v1/tx.proto#L242-253
+
++++ https://github.com/provenance-io/provenance/blob/31384f9d76f7c569a118d120c8d3e6ffbbd0f50c/proto/provenance/marker/v1/tx.proto#L255-256
+
+This service message is expected to fail if:
+
+- Remove list has an attribute that does not exist in current Required Attributes
+- Add list has an attribute that already exist in current Required Attributes
+- Attributes cannot be normalized
+- Marker denom cannot be found or is not a restricted marker

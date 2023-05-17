@@ -642,3 +642,95 @@ func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgS
 	}
 	return &types.MsgSupplyIncreaseProposalResponse{}, nil
 }
+
+func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.MsgUpdateRequiredAttributesRequest) (*types.MsgUpdateRequiredAttributesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	m, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, fmt.Errorf("marker not found for %s: %w", msg.Denom, err)
+	}
+	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
+		return nil, fmt.Errorf("marker %s is not a restricted marker", msg.Denom)
+	}
+
+	caller, err := sdk.AccAddressFromBech32(msg.TransferAuthority)
+	if err != nil {
+		return nil, err
+	}
+
+	switch {
+	case msg.TransferAuthority == k.GetAuthority():
+		if !m.HasGovernanceEnabled() {
+			return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
+		}
+	case !m.AddressHasAccess(caller, types.Access_Transfer):
+		return nil, fmt.Errorf("caller does not have authority to update required attributes %s", msg.TransferAuthority)
+	}
+
+	removeList, err := k.NormalizeRequiredAttributes(ctx, msg.RemoveRequiredAttributes)
+	if err != nil {
+		return nil, err
+	}
+	addList, err := k.NormalizeRequiredAttributes(ctx, msg.AddRequiredAttributes)
+	if err != nil {
+		return nil, err
+	}
+
+	reqAttrs, err := types.RemoveFromRequiredAttributes(m.GetRequiredAttributes(), removeList)
+	if err != nil {
+		return nil, err
+	}
+	reqAttrs, err = types.AddToRequiredAttributes(reqAttrs, addList)
+	if err != nil {
+		return nil, err
+	}
+
+	m.SetRequiredAttributes(reqAttrs)
+	k.SetMarker(ctx, m)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	return &types.MsgUpdateRequiredAttributesResponse{}, nil
+}
+
+func (k msgServer) UpdateForcedTransfer(goCtx context.Context, msg *types.MsgUpdateForcedTransferRequest) (*types.MsgUpdateForcedTransferResponse, error) {
+	if msg.Authority != k.GetAuthority() {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, fmt.Errorf("could not get marker for %s: %w", msg.Denom, err)
+	}
+
+	if marker.GetMarkerType() != types.MarkerType_RestrictedCoin {
+		return nil, fmt.Errorf("cannot update forced transfer on unrestricted marker %s", msg.Denom)
+	}
+
+	if !marker.HasGovernanceEnabled() {
+		return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
+	}
+
+	if marker.AllowsForcedTransfer() == msg.AllowForcedTransfer {
+		return nil, fmt.Errorf("marker %s already has allow_forced_transfer = %t", msg.Denom, msg.AllowForcedTransfer)
+	}
+
+	marker.SetAllowForcedTransfer(msg.AllowForcedTransfer)
+	k.SetMarker(ctx, marker)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	return &types.MsgUpdateForcedTransferResponse{}, nil
+}
