@@ -59,15 +59,15 @@ func (msg MsgCreateTriggerRequest) GetSigners() []sdk.AccAddress {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgCreateTriggerRequest) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	if m.Event != nil {
+func (msg MsgCreateTriggerRequest) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	if msg.Event != nil {
 		var event TriggerEventI
-		err := unpacker.UnpackAny(m.Event, &event)
+		err := unpacker.UnpackAny(msg.Event, &event)
 		if err != nil {
 			return err
 		}
 	}
-	return sdktx.UnpackInterfaces(unpacker, m.Actions)
+	return sdktx.UnpackInterfaces(unpacker, msg.Actions)
 }
 
 // ValidateBasic runs stateless validation checks on the message.

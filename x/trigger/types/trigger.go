@@ -3,11 +3,12 @@ package types
 import (
 	time "time"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
-	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	proto "github.com/gogo/protobuf/proto"
+
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 type TriggerID = uint64
@@ -23,7 +24,7 @@ type TriggerEventI interface {
 }
 
 // NewTrigger creates a new trigger.
-func NewTrigger(id TriggerID, owner string, event *types.Any, action []*types.Any) Trigger {
+func NewTrigger(id TriggerID, owner string, event *codectypes.Any, action []*codectypes.Any) Trigger {
 	return Trigger{
 		id,
 		owner,

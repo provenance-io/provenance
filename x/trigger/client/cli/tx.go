@@ -50,14 +50,14 @@ func GetCmdAddTransactionTrigger() *cobra.Command {
 			}
 			callerAddr := clientCtx.GetFromAddress()
 
-			event, err := parseEvent(clientCtx.Codec, args[0])
+			event, err := parseEvent(args[0])
 			if err != nil {
-				return fmt.Errorf("unable to parse event file : %s", err)
+				return fmt.Errorf("unable to parse event file : %w", err)
 			}
 
 			msgs, err := parseTransactions(clientCtx.Codec, args[1])
 			if err != nil {
-				return fmt.Errorf("unable to parse msgs file: %s", err)
+				return fmt.Errorf("unable to parse msgs file: %w", err)
 			}
 			if len(msgs) == 0 {
 				return fmt.Errorf("no actions added to trigger")
@@ -97,7 +97,7 @@ func GetCmdAddBlockHeightTrigger() *cobra.Command {
 
 			msgs, err := parseTransactions(clientCtx.Codec, args[1])
 			if err != nil {
-				return fmt.Errorf("unable to parse file : %s", err)
+				return fmt.Errorf("unable to parse file : %w", err)
 			}
 			if len(msgs) == 0 {
 				return fmt.Errorf("no actions added to trigger")
@@ -137,7 +137,7 @@ func GetCmdAddBlockTimeTrigger() *cobra.Command {
 
 			msgs, err := parseTransactions(clientCtx.Codec, args[1])
 			if err != nil {
-				return fmt.Errorf("unable to parse file : %s", err)
+				return fmt.Errorf("unable to parse file : %w", err)
 			}
 			if len(msgs) == 0 {
 				return fmt.Errorf("no actions added to trigger")
@@ -224,8 +224,8 @@ type Attribute struct {
 	Value string `json:"value"`
 }
 
-// parseSubmitProposal reads and parses the proposal.
-func parseEvent(cdc codec.Codec, path string) (*types.TransactionEvent, error) {
+// parseEvent reads and parses the transaction event.
+func parseEvent(path string) (*types.TransactionEvent, error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
