@@ -162,10 +162,7 @@ func (m *Migrator) Initialize() error {
 	if err = m.ValidateBasic(); err != nil {
 		return err
 	}
-	if err = m.ReadSourceDataDir(); err != nil {
-		return err
-	}
-	return nil
+	return m.ReadSourceDataDir()
 }
 
 // ApplyDefaults fills in the defaults that it can, for values that aren't set yet.

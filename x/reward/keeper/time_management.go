@@ -236,7 +236,7 @@ func (k Keeper) CalculateRewardClaimPeriodRewards(ctx sdk.Context, maxReward sdk
 }
 
 // CalculateParticipantReward for each address/participant
-func (k Keeper) CalculateParticipantReward(ctx sdk.Context, shares int64, totalShares int64, claimRewardPool sdk.Coin, maxReward sdk.Coin) sdk.Coin {
+func (k Keeper) CalculateParticipantReward(_ sdk.Context, shares int64, totalShares int64, claimRewardPool sdk.Coin, maxReward sdk.Coin) sdk.Coin {
 	numerator := sdk.NewDec(shares)
 	denom := sdk.NewDec(totalShares)
 

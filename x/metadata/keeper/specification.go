@@ -138,7 +138,7 @@ func (k Keeper) RemoveRecordSpecification(ctx sdk.Context, recordSpecID types.Me
 
 // ValidateWriteRecordSpecification compare the proposed contract spec with the existing to make sure the proposed
 // is valid. This assumes that proposed.ValidateBasic() has been run and did not return an error.
-func (k Keeper) ValidateWriteRecordSpecification(ctx sdk.Context, existing *types.RecordSpecification, proposed types.RecordSpecification) error {
+func (k Keeper) ValidateWriteRecordSpecification(_ sdk.Context, existing *types.RecordSpecification, proposed types.RecordSpecification) error {
 	if existing != nil {
 		// IDs must match
 		if !proposed.SpecificationId.Equals(existing.SpecificationId) {
@@ -155,7 +155,7 @@ func (k Keeper) ValidateWriteRecordSpecification(ctx sdk.Context, existing *type
 	return nil
 }
 
-func (k Keeper) isRecordSpecUsed(ctx sdk.Context, recordSpecID types.MetadataAddress) bool {
+func (k Keeper) isRecordSpecUsed(_ sdk.Context, _ types.MetadataAddress) bool {
 	// TODO: Check for records created from this spec.
 	return false
 }
@@ -358,7 +358,7 @@ func (k Keeper) isContractSpecUsed(ctx sdk.Context, contractSpecID types.Metadat
 
 // ValidateWriteContractSpecification compare the proposed contract spec with the existing to make sure the proposed
 // is valid. This assumes that proposed.ValidateBasic() has been run and did not return an error.
-func (k Keeper) ValidateWriteContractSpecification(ctx sdk.Context, existing *types.ContractSpecification, proposed types.ContractSpecification) error {
+func (k Keeper) ValidateWriteContractSpecification(_ sdk.Context, existing *types.ContractSpecification, proposed types.ContractSpecification) error {
 	// IDS must match if there's an existing entry
 	if existing != nil && !proposed.SpecificationId.Equals(existing.SpecificationId) {
 		return fmt.Errorf("cannot update contract spec identifier. expected %s, got %s",

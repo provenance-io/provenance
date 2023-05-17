@@ -86,7 +86,7 @@ func (pw Wrapper) ProposalContents(simState module.SimulationState) []simtypes.W
 }
 
 // RandomizedParams returns empty list as the params don't change
-func (pw Wrapper) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+func (pw Wrapper) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{}
 }
 
@@ -96,7 +96,7 @@ func (pw Wrapper) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
 // WeightedOperations returns the all the provwasm operations with their respective weights.
-func (pw Wrapper) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+func (pw Wrapper) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	count := 0
 	return []simtypes.WeightedOperation{
 		simulation.NewWeightedOperation(
@@ -338,7 +338,7 @@ func SimulateMsgInstantiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.
 	}
 }
 
-func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, node, consumer simtypes.Account, contractAddr string) simtypes.Operation {
+func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, _, consumer simtypes.Account, contractAddr string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
