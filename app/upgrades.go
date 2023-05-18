@@ -14,26 +14,33 @@ import (
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-var (
-	noopHandler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
-		ctx.Logger().Info("Applying no-op upgrade plan for release " + plan.Name)
-		return versionMap, nil
-	}
-)
-
-type appUpgradeHandler = func(sdk.Context, *App, upgradetypes.Plan) (module.VersionMap, error)
-
 // appUpgrade is an internal structure for defining all things for an upgrade.
 type appUpgrade struct {
-	Added   []string
+	// Added contains names of modules being added during an upgrade.
+	Added []string
+	// Deleted contains names of modules being removed during an upgrade.
 	Deleted []string
+	// Renamed contains info on modules being renamed during an upgrade.
 	Renamed []storetypes.StoreRename
-	Handler appUpgradeHandler
+	// Handler is a function to execute during an upgrade.
+	Handler func(sdk.Context, *App, module.VersionMap) (module.VersionMap, error)
 }
 
-var handlers = map[string]appUpgrade{
+// upgrades is where we define things that need to happen during an upgrade.
+// If no Handler is defined for an entry, a no-op upgrade handler is still registered.
+// If there's nothing that needs to be done for an upgrade, there still needs to be an
+// entry in this map, but it can just be {}.
+//
+// On the same line as the key, there should be a comment indicating the software version.
+// Entries currently in use (e.g. on mainnet or testnet) cannot be deleted.
+// Entries should be in chronological order, earliest first. E.g. quicksilver-rc1 went to
+// testnet first, then quicksilver-rc2 went to testnet, then quicksilver went to mainnet.
+//
+// If something is happening in the rc upgrade(s) that isn't being applied in the non-rc,
+// or vice versa, please add comments explaining why in both entries.
+var upgrades = map[string]appUpgrade{
 	"quicksilver-rc1": { // upgrade for v1.15.0-rc2
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
+		Handler: func(ctx sdk.Context, app *App, _ module.VersionMap) (module.VersionMap, error) {
 			app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
 			app.AttributeKeeper.PopulateAddressAttributeNameTable(ctx)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
@@ -43,7 +50,7 @@ var handlers = map[string]appUpgrade{
 	},
 	"quicksilver-rc2": {}, // upgrade for v1.15.0-rc3
 	"quicksilver": { // upgrade for v1.15.0
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
+		Handler: func(ctx sdk.Context, app *App, _ module.VersionMap) (module.VersionMap, error) {
 			app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
 			app.AttributeKeeper.PopulateAddressAttributeNameTable(ctx)
 			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
@@ -52,55 +59,61 @@ var handlers = map[string]appUpgrade{
 		},
 	},
 	"rust-rc1": { // upgrade for v1.16.0-rc1,
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
-			versionMap, err := runModuleMigrations(ctx, app)
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
 				return nil, err
 			}
 
-			// We only need to call AddGovV1SubmitFee on testnet.
-			AddGovV1SubmitFee(ctx, app)
+			// We only need to call addGovV1SubmitFee on testnet.
+			addGovV1SubmitFee(ctx, app)
 
-			RemoveP8eMemorializeContractFee(ctx, app)
+			removeP8eMemorializeContractFee(ctx, app)
 
-			return versionMap, nil
+			return vm, nil
 		},
 	},
 	"rust": { // upgrade for v1.16.0,
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
-			versionMap, err := runModuleMigrations(ctx, app)
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
 				return nil, err
 			}
 
-			// No need to call AddGovV1SubmitFee in here as mainnet already has it defined.
+			// No need to call addGovV1SubmitFee in here as mainnet already has it defined.
 
-			RemoveP8eMemorializeContractFee(ctx, app)
+			removeP8eMemorializeContractFee(ctx, app)
 
-			return versionMap, nil
+			return vm, nil
 		},
 	},
 	// TODO - Add new upgrade definitions here.
 }
 
-// InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the handlers map.
+// InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the upgrades map.
 func InstallCustomUpgradeHandlers(app *App) {
 	// Register all explicit appUpgrades
-	for name, upgrade := range handlers {
+	for name, upgrade := range upgrades {
 		// If the handler has been defined, add it here, otherwise, use no-op.
 		var handler upgradetypes.UpgradeHandler
 		if upgrade.Handler == nil {
-			handler = noopHandler
+			handler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
+				ctx.Logger().Info(fmt.Sprintf("Applying no-op upgrade to %q", plan.Name))
+				return versionMap, nil
+			}
 		} else {
 			ref := upgrade
-			handler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
-				vM, err := ref.Handler(ctx, app, plan)
+			handler = func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+				ctx.Logger().Info(fmt.Sprintf("Starting upgrade to %q", plan.Name), "version-map", vm)
+				newVM, err := ref.Handler(ctx, app, vm)
 				if err != nil {
-					ctx.Logger().Info(fmt.Sprintf("Failed to upgrade to: %s with err: %v", plan.Name, err))
+					ctx.Logger().Error(fmt.Sprintf("Failed to upgrade to %q", plan.Name), "error", err)
 				} else {
-					ctx.Logger().Info(fmt.Sprintf("Successfully upgraded to: %s with version map: %v", plan.Name, vM))
+					ctx.Logger().Info(fmt.Sprintf("Successfully upgraded to %q", plan.Name), "version-map", newVM)
 				}
-				return vM, err
+				return newVM, err
 			}
 		}
 		app.UpgradeKeeper.SetUpgradeHandler(name, handler)
@@ -110,7 +123,7 @@ func InstallCustomUpgradeHandlers(app *App) {
 // GetUpgradeStoreLoader creates an StoreLoader for use in an upgrade.
 // Returns nil if no upgrade info is found or the upgrade doesn't need a store loader.
 func GetUpgradeStoreLoader(app *App, info upgradetypes.Plan) baseapp.StoreLoader {
-	upgrade, found := handlers[info.Name]
+	upgrade, found := upgrades[info.Name]
 	if !found {
 		return nil
 	}
@@ -143,26 +156,24 @@ func GetUpgradeStoreLoader(app *App, info upgradetypes.Plan) baseapp.StoreLoader
 //
 // If state is updated prior to this migration, you run the risk of writing state using
 // a new format when the migration is expecting all state to be in the old format.
-func runModuleMigrations(ctx sdk.Context, app *App) (module.VersionMap, error) {
-	// Even if this function is no longer called, do not delete it. Keep it around for the next time it's needed.m
+func runModuleMigrations(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+	// Even if this function is no longer called, do not delete it. Keep it around for the next time it's needed.
 	ctx.Logger().Info("Starting module migrations. This may take a significant amount of time to complete. Do not restart node.")
-	versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-	var err error
-	versionMap, err = app.mm.RunMigrations(ctx, app.configurator, versionMap)
+	newVM, err := app.mm.RunMigrations(ctx, app.configurator, vm)
 	if err != nil {
 		ctx.Logger().Error("Module migrations encountered an error.", "error", err)
 		return nil, err
 	}
 	ctx.Logger().Info("Module migrations completed.")
-	return versionMap, nil
+	return newVM, nil
 }
 
 // Create a use of runModuleMigrations so that the linter neither complains about it not being used,
 // nor complains about a nolint:unused directive that isn't needed because the function is used.
 var _ = runModuleMigrations
 
-// AddGovV1SubmitFee adds a msg-fee for the gov v1 MsgSubmitProposal if there isn't one yet.
-func AddGovV1SubmitFee(ctx sdk.Context, app *App) {
+// addGovV1SubmitFee adds a msg-fee for the gov v1 MsgSubmitProposal if there isn't one yet.
+func addGovV1SubmitFee(ctx sdk.Context, app *App) {
 	typeURL := sdk.MsgTypeURL(&govtypesv1.MsgSubmitProposal{})
 
 	ctx.Logger().Info(fmt.Sprintf("Creating message fee for %q if it doesn't already exist.", typeURL))
@@ -198,8 +209,8 @@ func AddGovV1SubmitFee(ctx sdk.Context, app *App) {
 	ctx.Logger().Info(fmt.Sprintf("Successfully set fee for %q with amount %q.", fee.MsgTypeUrl, fee.AdditionalFee.String()))
 }
 
-// RemoveP8eMemorializeContractFee removes the message fee for the now-non-existent MsgP8eMemorializeContractRequest.
-func RemoveP8eMemorializeContractFee(ctx sdk.Context, app *App) {
+// removeP8eMemorializeContractFee removes the message fee for the now-non-existent MsgP8eMemorializeContractRequest.
+func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
 	typeURL := "/provenance.metadata.v1.MsgP8eMemorializeContractRequest"
 
 	ctx.Logger().Info(fmt.Sprintf("Removing message fee for %q if one exists.", typeURL))
