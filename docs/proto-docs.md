@@ -419,6 +419,10 @@
   
     - [Msg](#provenance.reward.v1.Msg)
   
+- [provenance/trigger/v1/event.proto](#provenance/trigger/v1/event.proto)
+    - [EventTriggerCreated](#provenance.trigger.v1.EventTriggerCreated)
+    - [EventTriggerDestroyed](#provenance.trigger.v1.EventTriggerDestroyed)
+  
 - [provenance/trigger/v1/genesis.proto](#provenance/trigger/v1/genesis.proto)
     - [GenesisState](#provenance.trigger.v1.GenesisState)
   
@@ -6318,6 +6322,52 @@ Msg
 | `EndRewardProgram` | [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest) | [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse) | EndRewardProgram is the RPC endpoint for ending a rewards program | |
 | `ClaimRewards` | [MsgClaimRewardsRequest](#provenance.reward.v1.MsgClaimRewardsRequest) | [MsgClaimRewardsResponse](#provenance.reward.v1.MsgClaimRewardsResponse) | ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program | |
 | `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) | ClaimAllRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for the signer of the tx. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/event.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/event.proto
+
+
+
+<a name="provenance.trigger.v1.EventTriggerCreated"></a>
+
+### EventTriggerCreated
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [string](#string) |  | id is a unique identifier of the trigger |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.EventTriggerDestroyed"></a>
+
+### EventTriggerDestroyed
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [string](#string) |  | id is a unique identifier of the trigger |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
 
  <!-- end services -->
 

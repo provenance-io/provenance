@@ -28,12 +28,12 @@ func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTrig
 	trigger := s.NewTriggerWithID(ctx, msg.GetAuthority(), msg.GetEvent(), msg.GetActions())
 	s.RegisterTrigger(ctx, trigger)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeTriggerCreated,
-			sdk.NewAttribute(types.AttributeKeyTriggerID, fmt.Sprintf("%d", trigger.GetId())),
-		),
-	)
+	err := ctx.EventManager().EmitTypedEvent(&types.EventTriggerCreated{
+		TriggerId: fmt.Sprintf("%d", trigger.GetId()),
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.MsgCreateTriggerResponse{Id: trigger.GetId()}, nil
 }
@@ -51,12 +51,12 @@ func (s msgServer) DestroyTrigger(goCtx context.Context, msg *types.MsgDestroyTr
 	}
 	s.UnregisterTrigger(ctx, trigger)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeTriggerDestroyed,
-			sdk.NewAttribute(types.AttributeKeyTriggerID, fmt.Sprintf("%d", trigger.GetId())),
-		),
-	)
+	err = ctx.EventManager().EmitTypedEvent(&types.EventTriggerDestroyed{
+		TriggerId: fmt.Sprintf("%d", trigger.GetId()),
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.MsgDestroyTriggerResponse{}, nil
 }
