@@ -1,0 +1,17 @@
+syntax = "proto3";
+package provenance.trigger.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/trigger/types";
+
+option java_package        = "io.provenance.trigger.v1";
+option java_multiple_files = true;
+
+message EventTriggerCreated {
+  // id is a unique identifier of the trigger
+  string trigger_id = 1;
+}
+
+message EventTriggerDestroyed {
+  // id is a unique identifier of the trigger
+  string trigger_id = 1;
+}
