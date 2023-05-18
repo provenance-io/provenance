@@ -98,7 +98,7 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 // NewUpdateAccountAttributeCmd creates a command for adding an account attributes.
 func NewUpdateAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "update [name] [address] [original-type] [original-value] [update-type] [update-value]",
+		Use:     "update <name> <address> <original-type> <original-value> <update-type> <update-value>",
 		Aliases: []string{"u"},
 		Short:   "Update an account attribute on the provenance blockchain",
 		Example: fmt.Sprintf(`$ %s tx attribute update "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" "int" 100`, version.AppName),
@@ -169,7 +169,7 @@ func encodeAttributeValue(value string, attrType types.AttributeType) ([]byte, e
 // NewDeleteDistinctAccountAttributeCmd creates a command for removing account attributes with specific name value.
 func NewDeleteDistinctAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "delete-distinct [name] [address] [type] [value]",
+		Use:     "delete-distinct <name> <address> <type> <value>",
 		Aliases: []string{"dd"},
 		Short:   "Delete an account attribute with specific name and value the provenance blockchain",
 		Example: fmt.Sprintf(`$ %s tx attribute delete-distinct "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value"`, version.AppName),
@@ -205,7 +205,7 @@ func NewDeleteDistinctAccountAttributeCmd() *cobra.Command {
 // NewDeleteAccountAttributeCmd creates a command for removing account attributes.
 func NewDeleteAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "delete [name] [address]",
+		Use:     "delete <name> <address>",
 		Aliases: []string{"d"},
 		Short:   "Delete an account attribute from the provenance blockchain",
 		Example: fmt.Sprintf(`$ %s tx attribute delete "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx`, version.AppName),

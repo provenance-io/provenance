@@ -68,7 +68,7 @@ func GetAttributeParamsCmd() *cobra.Command {
 // GetAccountAttributeCmd gets all account attributes by name.
 func GetAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get [address] [name]",
+		Use:   "get <address> <name>",
 		Short: "Get account attributes by name",
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`
@@ -114,7 +114,7 @@ func GetAccountAttributeCmd() *cobra.Command {
 // ListAccountAttributesCmd gets all account attributes.
 func ListAccountAttributesCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list [address]",
+		Use:   "list <address>",
 		Short: "Get all account attributes",
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`
@@ -158,7 +158,7 @@ func ListAccountAttributesCmd() *cobra.Command {
 // ScanAccountAttributesCmd gets account attributes by name suffix.
 func ScanAccountAttributesCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "scan [address] [suffix]",
+		Use:   "scan <address> <suffix>",
 		Short: "Scan account attributes by name suffix",
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`
@@ -217,7 +217,7 @@ func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
 // GetAttributeAccountsCmd gets account addresses with attribute name
 func GetAttributeAccountsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "accounts [name]",
+		Use:   "accounts <name>",
 		Short: "List account addresses that have attributes with name",
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`
