@@ -218,7 +218,7 @@ func (s *UpgradeTestSuite) TestKeysInHandlersMap() {
 
 	s.Run("non rc exists for each color", func() {
 		// If an rc entry for a color exists, the non-rc entry needs to exist too.
-		// That way, the mainnet upgrade handler isn't forgotten, and is harder to
+		// That way, the mainnet upgrade handler is harder to
 		// forget about as the rc entries are being written.
 		for _, color := range colors {
 			s.Assert().Contains(handlerKeys, color, "non-rc entry for %s in %q", color, handlerKeys)
