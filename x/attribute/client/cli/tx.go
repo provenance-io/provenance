@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -37,13 +38,14 @@ func NewTxCmd() *cobra.Command {
 // NewAddAccountAttributeCmd creates a command for adding an account attributes.
 func NewAddAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "add [name] [address] [type] [value]",
+		Use:     "add <name> <address> <type> <value> [expire-time]",
 		Aliases: []string{"a"},
 		Short:   "Add an account attribute to the provenance blockchain",
 		Long: fmt.Sprintf(`Note: the attribute name must have already been created through the name module.  
 Refer to %s tx name bind --help for more information on how to do this.`, version.AppName),
-		Args:    cobra.ExactArgs(4),
-		Example: fmt.Sprintf(`$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value"`, version.AppName),
+		Args: cobra.RangeArgs(4, 5),
+		Example: fmt.Sprintf(`$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value"
+		$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" 2050-01-15T00:00:00Z`, version.AppName, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -74,6 +76,16 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 				attributeType,
 				value,
 			)
+
+			var expireTime *time.Time
+			if len(args) == 5 {
+				expireTime, err := time.Parse(time.RFC3339, args[4])
+				if err != nil {
+					return fmt.Errorf("unable to parse time (%v) required format is RFC3339 (%v) , %w", expireTime, time.RFC3339, err)
+				}
+			}
+			msg.ExpirationDate = expireTime
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -212,6 +224,48 @@ func NewDeleteAccountAttributeCmd() *cobra.Command {
 				args[1],
 				clientCtx.GetFromAddress(),
 				args[0],
+			)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewUpdateAccountAttributeExpirationCmd creates a command for updating account attributes expirations
+func NewUpdateAccountAttributeExpirationCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "update-expiration <name> <address> <value> [expiration-date]",
+		Aliases: []string{"ue"},
+		Short:   "Updates an attribute's expiration date on the provenance blockchain",
+		Example: fmt.Sprintf(`$ %s tx attribute update-expiration "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "attribute value" 2050-01-15T00:00:00Z
+$ %s tx attribute update-expiration "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "attribute value"`, version.AppName, version.AppName),
+		Args: cobra.RangeArgs(3, 4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			err = types.ValidateAttributeAddress(args[1])
+			if err != nil {
+				return fmt.Errorf("invalid address: %w", err)
+			}
+			var expireTime *time.Time
+			if len(args) == 4 {
+				expireTime, err := time.Parse(time.RFC3339, args[3])
+				if err != nil {
+					return fmt.Errorf("unable to parse time (%v) required format is RFC3339 (%v) , %w", expireTime, time.RFC3339, err)
+				}
+			}
+			msg := types.NewMsgUpdateAttributeExpirationRequest(
+				args[1],
+				args[0],
+				args[2],
+				expireTime,
+				clientCtx.GetFromAddress(),
 			)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

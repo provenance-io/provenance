@@ -562,6 +562,42 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 			expectedCode: 0,
 		},
 		{
+			name: "set attribute, invalid expiration",
+			cmd:  cli.NewAddAccountAttributeCmd(),
+			args: []string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"string",
+				"test value with expiration",
+				"foo",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    true,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
+			name: "set attribute, invalid expiration",
+			cmd:  cli.NewAddAccountAttributeCmd(),
+			args: []string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"string",
+				"test value with expiration",
+				"2050-01-15T00:00:00Z",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
 			name: "set attribute, invalid bech32 address",
 			cmd:  cli.NewAddAccountAttributeCmd(),
 			args: []string{
@@ -1200,4 +1236,130 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 			require.NotEqual(t, results[i-1], results[i], "no two attributes should be equal here")
 		}
 	})
+}
+
+func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
+
+	testCases := []struct {
+		name         string
+		cmd          *cobra.Command
+		args         []string
+		expectErr    string
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			name: "bind a new attribute name for delete testing",
+			cmd:  namecli.GetBindNameCmd(),
+			args: []string{
+				"expiration",
+				s.testnet.Validators[0].Address.String(),
+				"attribute",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
+			name: "add new attribute for updating expire date testing",
+			cmd:  cli.NewAddAccountAttributeCmd(),
+			args: []string{
+				"expiration.attribute",
+				s.account2Addr.String(),
+				"string",
+				"test value",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
+			name: "update expire date, should fail incorrect address",
+			cmd:  cli.NewUpdateAccountAttributeExpirationCmd(),
+			args: []string{
+				"expiration.attribute",
+				"not-a-address",
+				"string",
+				"test value",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    `invalid address: must be either an account address or scope metadata address: "not-a-address"`,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
+			name: "update expire date, should fail incorrect date",
+			cmd:  cli.NewUpdateAccountAttributeExpirationCmd(),
+			args: []string{
+				"expiration.attribute",
+				s.account2Addr.String(),
+				"string",
+				"test value",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    `unable to parse time (0001-01-01 00:00:00 +0000 UTC) required format is RFC3339 (2006-01-02T15:04:05Z07:00) , parsing time "test value" as "2006-01-02T15:04:05Z07:00": cannot parse "test value" as "2006"`,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
+			name: "update expire date, should succeed",
+			cmd:  cli.NewUpdateAccountAttributeExpirationCmd(),
+			args: []string{
+				"expiration.attribute",
+				s.account2Addr.String(),
+				"test value",
+				"2050-01-15T00:00:00Z",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
+			name: "update expire date, should succeed removes expiration",
+			cmd:  cli.NewUpdateAccountAttributeExpirationCmd(),
+			args: []string{
+				"expiration.attribute",
+				s.account2Addr.String(),
+				"test value",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+
+			if len(tc.expectErr) > 0 {
+				s.Require().EqualError(err, tc.expectErr)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
 }
