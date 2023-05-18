@@ -1,7 +1,9 @@
 syntax = "proto3";
 package provenance.trigger.v1;
 
+import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "provenance/trigger/v1/trigger.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/trigger/types";
@@ -12,18 +14,36 @@ option java_multiple_files = true;
 service Query {
   // TriggerByID returns a trigger matching the ID.
   rpc TriggerByID(QueryTriggerByIDRequest) returns (QueryTriggerByIDResponse) {
-    option (google.api.http).get = "/provenance/trigger/v1/trigger/{id}";
+    option (google.api.http).get = "/provenance/trigger/v1/triggers/{id}";
+  }
+  // Triggers returns the list of triggers.
+  rpc Triggers(QueryTriggersRequest) returns (QueryTriggersResponse) {
+    option (google.api.http).get = "/provenance/rewards/v1/triggers";
   }
 }
 
-// QueryTriggerByIDRequest queries for the Trigger with an identifier of id
+// QueryTriggerByIDRequest queries for the Trigger with an identifier of id.
 message QueryTriggerByIDRequest {
   // The id of the trigger to query.
   uint64 id = 1;
 }
 
-// QueryTriggerByIDResponse contains the requested Trigger
+// QueryTriggerByIDResponse contains the requested Trigger.
 message QueryTriggerByIDResponse {
   // The trigger object that was queried for.
   Trigger trigger = 1;
+}
+
+// QueryTriggersRequest queries for all triggers.
+message QueryTriggersRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryTriggersResponse contains the list of Triggers.
+message QueryTriggersResponse {
+  // List of Trigger objects.
+  repeated Trigger triggers = 1 [(gogoproto.nullable) = false];
+  // pagination defines an optional pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }

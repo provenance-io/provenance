@@ -433,6 +433,8 @@
 - [provenance/trigger/v1/query.proto](#provenance/trigger/v1/query.proto)
     - [QueryTriggerByIDRequest](#provenance.trigger.v1.QueryTriggerByIDRequest)
     - [QueryTriggerByIDResponse](#provenance.trigger.v1.QueryTriggerByIDResponse)
+    - [QueryTriggersRequest](#provenance.trigger.v1.QueryTriggersRequest)
+    - [QueryTriggersResponse](#provenance.trigger.v1.QueryTriggersResponse)
   
     - [Query](#provenance.trigger.v1.Query)
   
@@ -6475,7 +6477,7 @@ Trigger
 <a name="provenance.trigger.v1.QueryTriggerByIDRequest"></a>
 
 ### QueryTriggerByIDRequest
-QueryTriggerByIDRequest queries for the Trigger with an identifier of id
+QueryTriggerByIDRequest queries for the Trigger with an identifier of id.
 
 
 | Field | Type | Label | Description |
@@ -6490,12 +6492,43 @@ QueryTriggerByIDRequest queries for the Trigger with an identifier of id
 <a name="provenance.trigger.v1.QueryTriggerByIDResponse"></a>
 
 ### QueryTriggerByIDResponse
-QueryTriggerByIDResponse contains the requested Trigger
+QueryTriggerByIDResponse contains the requested Trigger.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `trigger` | [Trigger](#provenance.trigger.v1.Trigger) |  | The trigger object that was queried for. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.QueryTriggersRequest"></a>
+
+### QueryTriggersRequest
+QueryTriggersRequest queries for all triggers.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.QueryTriggersResponse"></a>
+
+### QueryTriggersResponse
+QueryTriggersResponse contains the list of Triggers.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `triggers` | [Trigger](#provenance.trigger.v1.Trigger) | repeated | List of Trigger objects. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the response. |
 
 
 
@@ -6515,7 +6548,8 @@ Query defines the gRPC querier service for trigger module.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `TriggerByID` | [QueryTriggerByIDRequest](#provenance.trigger.v1.QueryTriggerByIDRequest) | [QueryTriggerByIDResponse](#provenance.trigger.v1.QueryTriggerByIDResponse) | TriggerByID returns a trigger matching the ID. | GET|/provenance/trigger/v1/trigger/{id}|
+| `TriggerByID` | [QueryTriggerByIDRequest](#provenance.trigger.v1.QueryTriggerByIDRequest) | [QueryTriggerByIDResponse](#provenance.trigger.v1.QueryTriggerByIDResponse) | TriggerByID returns a trigger matching the ID. | GET|/provenance/trigger/v1/triggers/{id}|
+| `Triggers` | [QueryTriggersRequest](#provenance.trigger.v1.QueryTriggersRequest) | [QueryTriggersResponse](#provenance.trigger.v1.QueryTriggersResponse) | Triggers returns the list of triggers. | GET|/provenance/rewards/v1/triggers|
 
  <!-- end services -->
 
