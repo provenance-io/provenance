@@ -36,17 +36,26 @@ var (
 // AddrAttributeKey creates a key for an account attribute
 func AddrAttributeKey(addr []byte, attr Attribute) []byte {
 	key := AttributeKeyPrefix
-	key = append(key, address.MustLengthPrefix(addr)...)
+	return append(key, AddrAttributeKeySuffix(addr, attr)...)
+}
+
+// AddrAttributeKeySuffix returns attribute key without AttributeKeyPrefix
+func AddrAttributeKeySuffix(addr []byte, attr Attribute) []byte {
+	key := address.MustLengthPrefix(addr)
 	key = append(key, GetNameKeyBytes(attr.Name)...)
 	return append(key, attr.Hash()...)
 }
 
-// AttributeKey creates a key for an account attribute
-func AttributeKey(key []byte) []byte {
-	return append(AttributeKeyPrefix, key...)
+// GetAddrAttributeKeyFromExpireKey returns the AddrAttribute key from attribute expiration key
+func GetAddrAttributeKeyFromExpireKey(key []byte) []byte {
+	return append(AttributeKeyPrefix, key[9:]...)
 }
 
+// AttributeExpireKey returns a key for expiration [AttributeExpirationKeyPrefix][epoch][AccAddress bytes][name hash][attribute hash]
 func AttributeExpireKey(attr Attribute) []byte {
+	if attr.ExpirationDate == nil {
+		return nil
+	}
 	key := GetAttributeExpireTimePrefix(*attr.ExpirationDate)
 	key = append(key, address.MustLengthPrefix(attr.GetAddressBytes())...)
 	key = append(key, GetNameKeyBytes(attr.Name)...)
@@ -109,6 +118,7 @@ func GetNameKeyBytes(name string) []byte {
 	return hash[:]
 }
 
+// GetAttributeExpireTimePrefix returns a prefix for expired time [AttributeExpirationKeyPrefix][epoch]
 func GetAttributeExpireTimePrefix(expireTime time.Time) []byte {
 	buf := make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, uint64(expireTime.Unix()))

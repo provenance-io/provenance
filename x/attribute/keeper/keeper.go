@@ -163,10 +163,7 @@ func (k Keeper) SetAttribute(
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
 	k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
-
-	if attr.ExpirationDate != nil {
-		store.Set(types.AttributeExpireKey(attr), []byte{})
-	}
+	k.AddAttributeExpireLookup(ctx, attr)
 
 	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
 	if err := ctx.EventManager().EmitTypedEvent(attributeAddEvent); err != nil {
@@ -320,6 +317,8 @@ func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, attribute types.Attri
 		if attr.Name == attribute.Name && bytes.Equal(attr.Value, attribute.Value) {
 			found = true
 			store.Delete(it.Key())
+			k.DeleteAttributeExpireLookup(ctx, attr)
+
 			originalExpiration := attr.ExpirationDate
 			attr.ExpirationDate = expirationDate
 			bz, err := k.cdc.Marshal(&attr)
@@ -509,7 +508,7 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 	defer iterator.Close()
 	count := 0
 	for ; iterator.Valid(); iterator.Next() {
-		attrKey := types.AttributeKey(iterator.Key()[9:])
+		attrKey := types.GetAddrAttributeKeyFromExpireKey(iterator.Key())
 		bz := store.Get(attrKey)
 		if bz != nil {
 			var attribute types.Attribute
@@ -537,4 +536,20 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 		}
 	}
 	return count
+}
+
+// AddAttributeExpireLookup safely adds attribute expire key to store, if expire date exists, else no-op
+func (k Keeper) AddAttributeExpireLookup(ctx sdk.Context, attr types.Attribute) {
+	expireKey := types.AttributeExpireKey(attr)
+	if expireKey != nil {
+		ctx.KVStore(k.storeKey).Set(expireKey, []byte{})
+	}
+}
+
+// DeleteAttributeExpireLookup safely removes attribute expire key to store if expire date exists, else no-op
+func (k Keeper) DeleteAttributeExpireLookup(ctx sdk.Context, attr types.Attribute) {
+	expireKey := types.AttributeExpireKey(attr)
+	if expireKey != nil {
+		ctx.KVStore(k.storeKey).Delete(expireKey)
+	}
 }
