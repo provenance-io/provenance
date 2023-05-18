@@ -48,7 +48,7 @@ jobs:
           echo "Setting output: go-cache-key-hash=$go_cache_key_hash"
           echo "go-cache-key-hash=$go_cache_key_hash" >> "$GITHUB_OUTPUT"
     outputs:
-      go-version: 1.20
+      go-version: '1.20'
       should-run: ${{ env.GIT_DIFF }}
       file-prefix: ${{ steps.def-vars.outputs.file-prefix }}
       db-cache-key-suffix: sims-db3-${{ steps.def-vars.outputs.db-cache-key-hash }}
