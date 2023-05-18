@@ -3,19 +3,20 @@ package keeper_test
 import (
 	"encoding/binary"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/stretchr/testify/suite"
 
-	"github.com/provenance-io/provenance/app"
-	simapp "github.com/provenance-io/provenance/app"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
 
+	"github.com/provenance-io/provenance/app"
+	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/attribute/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -700,22 +701,97 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 }
 
 func (s *KeeperTestSuite) TestGetAllAttributes() {
-	attributes, err := s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1)
-	s.Assert().NoError(err)
-	s.Assert().Equal(0, len(attributes))
+	s.runGetAllAttributesTests("GetAllAttributes", func() ([]types.Attribute, error) {
+		return s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1)
+	})
+}
 
-	attr := types.Attribute{
-		Name:          "example.attribute",
-		Value:         []byte("0123456789"),
-		Address:       s.user1,
-		AttributeType: types.AttributeType_String,
+func (s *KeeperTestSuite) TestGetAllAttributesAddr() {
+	s.runGetAllAttributesTests("GetAllAttributesAddr", func() ([]types.Attribute, error) {
+		return s.app.AttributeKeeper.GetAllAttributesAddr(s.ctx, s.user1Addr)
+	})
+}
+
+func (s *KeeperTestSuite) runGetAllAttributesTests(funcName string, attrGetter func() ([]types.Attribute, error)) {
+	attrs := make([]types.Attribute, 10)
+	for i := range attrs {
+		attrs[i] = types.Attribute{
+			Name:          fmt.Sprintf("example%d.attribute", i),
+			Value:         []byte(strings.Repeat(fmt.Sprintf("%d", i), 10)),
+			Address:       s.user1,
+			AttributeType: types.AttributeType_String,
+		}
 	}
-	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
-	attributes, err = s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1)
-	s.Assert().NoError(err)
-	s.Assert().Equal(attr.Name, attributes[0].Name)
-	s.Assert().Equal(attr.Address, attributes[0].Address)
-	s.Assert().Equal(attr.Value, attributes[0].Value)
+	attrsSetUp := uint(0)
+	// Attributes are keyed using a hash of the name. So they aren't in alphabetical order.
+	// The order should never change, though, unless their name changes.
+	attrStoreOrder := []uint{2, 7, 9, 6, 8, 1, 3, 5, 0, 4}
+	getExpAttrs := func(count uint) []types.Attribute {
+		// providing a count instead of just using attrsSetUp so that the size is dictated by the test.
+		var rv []types.Attribute
+		for _, i := range attrStoreOrder {
+			if i < count {
+				rv = append(rv, attrs[i])
+			}
+		}
+		return rv
+	}
+
+	// These tests build on each other. A setup failure in one will all the rest to fail.
+	// So, if a failure happens during setup for a test, fail that test, then skip the rest.
+	// But if a non-setup failure happens in a test, we still want the rest to run.
+	setupFailed := false
+	reqNoErrorSetup := func(t *testing.T, err error, msgAndArgs ...interface{}) {
+		if !s.Assert().NoError(err, msgAndArgs...) {
+			setupFailed = true
+			t.FailNow()
+		}
+	}
+
+	tests := []struct {
+		name  string
+		count uint // The count cannot decrease from one test case to the next.
+	}{
+		{name: "no attributes set", count: 0},
+		{name: "1 attribute", count: 1},
+		{name: "2 attributes", count: 2},
+		{name: "5 attributes", count: 5},
+		{name: "5 attributes 2nd time", count: 5},
+		{name: "10 attributes", count: 10},
+		{name: "10 attributes 2nd time", count: 10},
+		{name: "10 attributes 3rd time", count: 10},
+		{name: "10 attributes 4th time", count: 10},
+		{name: "10 attributes 5th time", count: 10},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if setupFailed {
+				s.T().Skipf("skipping due to a setup failure in a previous test")
+			}
+			if tc.count > uint(len(attrs)) {
+				s.FailNowf("Invalid test case.",
+					"Not enough test attributes defined.\n\tcount: %3d\n\tmax:   %3d", tc.count, len(attrs))
+			}
+			for attrsSetUp < tc.count {
+				err := s.app.NameKeeper.SetNameRecord(s.ctx, attrs[attrsSetUp].Name, s.user1Addr, false)
+				reqNoErrorSetup(s.T(), err, "SetNameRecord attrs[%d]", attrsSetUp)
+				err = s.app.AttributeKeeper.SetAttribute(s.ctx, attrs[attrsSetUp], s.user1Addr)
+				reqNoErrorSetup(s.T(), err, "SetAttribute attrs[%d]", attrsSetUp)
+				attrsSetUp++
+			}
+			if attrsSetUp > tc.count {
+				// Not doing a setup failure here because this error might not cause tests after it to fail.
+				s.FailNowf("Invalid test case ordering.",
+					"Test case count cannot decrease.\n\tcount: %3d\n\tmin:   %3d", tc.count, attrsSetUp)
+			}
+
+			expAttrs := getExpAttrs(tc.count)
+			attributes, err := attrGetter()
+			s.Assert().NoError(err, "%s error", funcName)
+			s.Assert().Equal(expAttrs, attributes, "%s attributes", funcName)
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestIncAndDecAddNameAddressLookup() {

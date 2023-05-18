@@ -106,7 +106,7 @@ func NewKeeper(
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return Keeper{
+	rv := Keeper{
 		paramSpace:            paramSpace,
 		authKeeper:            authKeeper,
 		authzKeeper:           authzKeeper,
@@ -121,6 +121,8 @@ func NewKeeper(
 		markerModuleAddr:      authtypes.NewModuleAddress(types.CoinPoolName),
 		ibcTransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
 	}
+	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
+	return rv
 }
 
 // Logger returns a module-specific logger.
