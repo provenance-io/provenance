@@ -1013,14 +1013,12 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	past := s.startBlockTime.Add(2 - time.Hour)
 	future := s.startBlockTime.Add(time.Hour)
 
-	// Create a name, make an attribute under it, then remove the name leaving an orphan attribute.
 	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "one.expire.testing", s.user1Addr, false), "name record should save successfully")
 	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "two.expire.testing", s.user1Addr, false), "name record should save successfully")
 	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "three.expire.testing", s.user1Addr, false), "name record should save successfully")
 	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "four.expire.testing", s.user1Addr, false), "name record should save successfully")
 	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "five.expire.testing", s.user1Addr, false), "name record should save successfully")
 
-	// Assuming you have types.AttributeKey and types.Attribute in scope
 	attr1 := types.NewAttribute("one.expire.testing", s.user1, types.AttributeType_String, []byte("test1"))
 	attr1.ExpirationDate = &past
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr1, s.user1Addr))
