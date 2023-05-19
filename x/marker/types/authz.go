@@ -25,7 +25,7 @@ func (a MarkerTransferAuthorization) MsgTypeURL() string {
 }
 
 // Accept implements Authorization.Accept.
-func (a MarkerTransferAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
+func (a MarkerTransferAuthorization) Accept(_ sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
 	switch msg := msg.(type) {
 	case *MsgTransferRequest:
 		toAddress := msg.ToAddress

@@ -42,7 +42,7 @@ type AppModuleBasic struct {
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
 // RegisterLegacyAminoCodec registers the account module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {
 }
 
 // DefaultGenesis returns the default genesis state.
@@ -51,7 +51,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the marker module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -136,7 +136,7 @@ func (am AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns no sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
@@ -182,7 +182,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // ProposalContents returns all the marker content functions used to
 // simulate marker governance proposals.
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
 	return simulation.ProposalContents(am.keeper)
 }
 
@@ -192,7 +192,7 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for marker module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

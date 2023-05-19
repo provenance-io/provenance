@@ -39,11 +39,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	}
 
 	// Read the configs into viper and the contexts.
-	if err := LoadConfigFromFiles(cmd); err != nil {
-		return err
-	}
-
-	return nil
+	return LoadConfigFromFiles(cmd)
 }
 
 // Binds viper flags using the PIO ENV prefix.

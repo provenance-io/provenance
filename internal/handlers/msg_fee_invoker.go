@@ -31,7 +31,7 @@ func NewMsgFeeInvoker(bankKeeper bankkeeper.Keeper, accountKeeper msgfeestypes.A
 	}
 }
 
-func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, simulate bool) (sdk.Coins, sdk.Events, error) {
+func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, _ bool) (sdk.Coins, sdk.Events, error) {
 	chargedFees := sdk.Coins{}
 	eventsToReturn := sdk.Events{}
 
