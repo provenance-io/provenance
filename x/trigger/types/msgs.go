@@ -59,6 +59,16 @@ func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 	if err = event.Validate(); err != nil {
 		return err
 	}
+	msgs, err := sdktx.GetMsgs(msg.Actions, "MsgCreateTriggerRequest - ValidateBasic")
+	if err != nil {
+		return err
+	}
+
+	for idx, msg := range msgs {
+		if err := msg.ValidateBasic(); err != nil {
+			return fmt.Errorf("msg: %d, err: %w", idx, err)
+		}
+	}
 	return nil
 }
 
