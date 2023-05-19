@@ -176,8 +176,8 @@ func (k Keeper) SetScopeValueOwners(ctx sdk.Context, scopes []*types.Scope, newV
 		store.Set(newScope.ScopeId, b)
 		k.indexScope(store, &newScope, oldScope)
 		k.EmitEvent(ctx, types.NewEventScopeUpdated(oldScope.ScopeId))
-		defer types.GetIncObjFunc(types.TLType_Scope, types.TLAction_Updated)
 	}
+	types.GetIncObjFuncN(types.TLType_Scope, types.TLAction_Updated, len(scopes))()
 }
 
 // scopeIndexValues is a struct containing the values used to index a scope.
@@ -618,7 +618,6 @@ func (k Keeper) ValidateUpdateValueOwners(
 	}
 
 	for _, existing := range existingValueOwners {
-		//nolint:govet // err is shadowed here, and that's okay.
 		alsoUsedSigners, err := k.validateScopeValueOwnerChangeFromExisting(ctx, existing, signers, msg)
 		if err != nil {
 			return err
@@ -626,9 +625,5 @@ func (k Keeper) ValidateUpdateValueOwners(
 		usedSigners.AlsoUse(alsoUsedSigners)
 	}
 
-	if err = k.validateSmartContractSigners(ctx, usedSigners, msg); err != nil {
-		return err
-	}
-
-	return nil
+	return k.validateSmartContractSigners(ctx, usedSigners, msg)
 }
