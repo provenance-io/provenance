@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/google/uuid"
@@ -88,6 +89,14 @@ func (s *ScopeKeeperTestSuite) FreshCtx() sdk.Context {
 	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{}))
 }
 
+// AssertErrorValue asserts that:
+//   - If errorString is empty, theError must be nil
+//   - If errorString is not empty, theError must equal the errorString.
+func (s *ScopeKeeperTestSuite) AssertErrorValue(theError error, errorString string, msgAndArgs ...interface{}) bool {
+	s.T().Helper()
+	return AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
+}
+
 func TestScopeKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(ScopeKeeperTestSuite))
 }
@@ -128,6 +137,143 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 	scope, found = s.app.MetadataKeeper.GetScope(ctx, s.scopeID)
 	s.Assert().False(found)
 	s.Assert().NotNil(scope)
+}
+
+func (s *ScopeKeeperTestSuite) TestSetScopeValueOwners() {
+	// Setup
+	// Three scopes, each with different value owners.
+	// 1st has the value owner also in owners.
+	// 2nd has the value owner also in data access.
+	// 3rd does not have the value owner in either data access or owners.
+	// We will call SetScopeValueOwners once to update all three to a new value owner.
+	// We will then do some state checking to make sure things are as expected.
+	addrAlsoOwnerAcc := sdk.AccAddress("addrAlsoOwner_______")
+	addrAlsoDataAccessAcc := sdk.AccAddress("addrAlsoDataAccess__")
+	addrSoloAcc := sdk.AccAddress("addrSolo____________")
+	addrAlsoOwner := addrAlsoOwnerAcc.String()
+	addrAlsoDataAccess := addrAlsoDataAccessAcc.String()
+	addrSolo := addrSoloAcc.String()
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeWOwner := types.Scope{
+		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:   scopeSpecID,
+		Owners:            []types.Party{{Address: addrAlsoOwner, Role: types.PartyType_PARTY_TYPE_OWNER}},
+		DataAccess:        nil,
+		ValueOwnerAddress: addrAlsoOwner,
+	}
+	scopeWDataAccess := types.Scope{
+		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:   scopeSpecID,
+		Owners:            nil,
+		DataAccess:        []string{addrAlsoDataAccess},
+		ValueOwnerAddress: addrAlsoOwner,
+	}
+	scopeSolo := types.Scope{
+		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:   scopeSpecID,
+		Owners:            nil,
+		DataAccess:        nil,
+		ValueOwnerAddress: addrSolo,
+	}
+
+	ctx := s.FreshCtx()
+	mdKeeper := s.app.MetadataKeeper
+	mdKeeper.SetScope(ctx, scopeWOwner)
+	mdKeeper.SetScope(ctx, scopeWDataAccess)
+	mdKeeper.SetScope(ctx, scopeSolo)
+
+	// Get a fresh context without any events.
+	ctx = s.FreshCtx()
+
+	newUpdateEvent := func(scopeID types.MetadataAddress) sdk.Event {
+		tev := types.NewEventScopeUpdated(scopeID)
+		event, err := sdk.TypedEventToEvent(tev)
+		if err != nil {
+			panic(err)
+		}
+		return event
+	}
+
+	scopes := []*types.Scope{&scopeWOwner, &scopeWDataAccess, &scopeSolo}
+	addrNewValueOwnerAcc := sdk.AccAddress("addrNewValueOwner___")
+	addrNewValueOwner := addrNewValueOwnerAcc.String()
+	testFunc := func() {
+		mdKeeper.SetScopeValueOwners(ctx, scopes, addrNewValueOwner)
+	}
+	s.Require().NotPanics(testFunc, "SetScopeValueOwners")
+
+	s.Run("emitted events", func() {
+		expectedEvents := sdk.Events{
+			newUpdateEvent(scopeWOwner.ScopeId),
+			newUpdateEvent(scopeWDataAccess.ScopeId),
+			newUpdateEvent(scopeSolo.ScopeId),
+		}
+		events := ctx.EventManager().Events()
+		s.Assert().Equal(expectedEvents, events, "events emitted during SetScopeValueOwners")
+	})
+
+	tests := []struct {
+		name          string
+		scope         *types.Scope
+		expIndexes    [][]byte
+		expRemIndexes [][]byte
+	}{
+		{
+			name:  "scopeWOwner",
+			scope: &scopeWOwner,
+			expIndexes: [][]byte{
+				types.GetAddressScopeCacheKey(addrAlsoOwnerAcc, scopeWOwner.ScopeId),
+				types.GetAddressScopeCacheKey(addrNewValueOwnerAcc, scopeWOwner.ScopeId),
+				types.GetValueOwnerScopeCacheKey(addrNewValueOwnerAcc, scopeWOwner.ScopeId),
+			},
+			expRemIndexes: [][]byte{
+				types.GetValueOwnerScopeCacheKey(addrAlsoOwnerAcc, scopeWOwner.ScopeId),
+			},
+		},
+		{
+			name:  "scopeWDataAccess",
+			scope: &scopeWDataAccess,
+			expIndexes: [][]byte{
+				types.GetAddressScopeCacheKey(addrAlsoDataAccessAcc, scopeWDataAccess.ScopeId),
+				types.GetAddressScopeCacheKey(addrNewValueOwnerAcc, scopeWDataAccess.ScopeId),
+				types.GetValueOwnerScopeCacheKey(addrNewValueOwnerAcc, scopeWDataAccess.ScopeId),
+			},
+			expRemIndexes: [][]byte{
+				types.GetValueOwnerScopeCacheKey(addrAlsoDataAccessAcc, scopeWOwner.ScopeId),
+			},
+		},
+		{
+			name:  "scopeSolo",
+			scope: &scopeSolo,
+			expIndexes: [][]byte{
+				types.GetAddressScopeCacheKey(addrNewValueOwnerAcc, scopeSolo.ScopeId),
+				types.GetValueOwnerScopeCacheKey(addrNewValueOwnerAcc, scopeSolo.ScopeId),
+			},
+			expRemIndexes: [][]byte{
+				types.GetAddressScopeCacheKey(addrSoloAcc, scopeWDataAccess.ScopeId),
+				types.GetValueOwnerScopeCacheKey(addrSoloAcc, scopeWOwner.ScopeId),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			ctx = s.FreshCtx()
+			newScope, found := mdKeeper.GetScope(ctx, tc.scope.ScopeId)
+			if s.Assert().True(found, "GetScope found") {
+				s.Assert().Equal(addrNewValueOwner, newScope.ValueOwnerAddress, "stored scope's value owner address")
+			}
+			s.Assert().NotEqual(addrNewValueOwner, tc.scope.ValueOwnerAddress, "old scope's value owner address")
+
+			store := ctx.KVStore(mdKeeper.GetStoreKey())
+			for i, exp := range tc.expIndexes {
+				s.Assert().True(store.Has(exp), "expected index [%d]", i)
+			}
+			for i, notExp := range tc.expRemIndexes {
+				s.Assert().False(store.Has(notExp), "expected index to be removed [%d]", i)
+			}
+		})
+	}
 }
 
 func (s *ScopeKeeperTestSuite) TestMetadataScopeIterator() {
@@ -175,6 +321,133 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeIterator() {
 	s.Assert().Equal(5, count, "number of scopes iterated with early stop")
 }
 
+func (s *ScopeKeeperTestSuite) TestIterateScopesForValueOwner() {
+	ownerAddr := sdk.AccAddress("ownerAddr___________").String()
+	valueOwnerW0 := sdk.AccAddress("valueOwnerW0________").String()
+	valueOwnerW1 := sdk.AccAddress("valueOwnerW1________").String()
+	valueOwnerW5 := sdk.AccAddress("valueOwnerW5________").String()
+	valueOwnerWBadIndexAcc := sdk.AccAddress("valueOwnerWBadIndex_")
+	valueOwnerWBadIndex := valueOwnerWBadIndexAcc.String()
+
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeIDW1 := types.ScopeMetadataAddress(uuid.New())
+	scopeIDW51 := types.ScopeMetadataAddress(uuid.New())
+	scopeIDW52 := types.ScopeMetadataAddress(uuid.New())
+	scopeIDW53 := types.ScopeMetadataAddress(uuid.New())
+	scopeIDW54 := types.ScopeMetadataAddress(uuid.New())
+	scopeIDW55 := types.ScopeMetadataAddress(uuid.New())
+
+	scopeIDs5 := []types.MetadataAddress{
+		scopeIDW51, scopeIDW52, scopeIDW53, scopeIDW54, scopeIDW55,
+	}
+	sort.Slice(scopeIDs5, func(i, j int) bool {
+		return scopeIDs5[i].Compare(scopeIDs5[j]) < 0
+	})
+
+	ctx := s.FreshCtx()
+	storeScope := func(valueOwner string, scopeID types.MetadataAddress) {
+		scope := types.Scope{
+			ScopeId:           scopeID,
+			SpecificationId:   scopeSpecID,
+			Owners:            []types.Party{{Address: ownerAddr, Role: types.PartyType_PARTY_TYPE_OWNER}},
+			ValueOwnerAddress: valueOwner,
+		}
+		s.app.MetadataKeeper.SetScope(ctx, scope)
+	}
+
+	storeScope(valueOwnerW1, scopeIDW1)
+	storeScope(valueOwnerW5, scopeIDW51)
+	storeScope(valueOwnerW5, scopeIDW52)
+	storeScope(valueOwnerW5, scopeIDW53)
+	storeScope(valueOwnerW5, scopeIDW54)
+	storeScope(valueOwnerW5, scopeIDW55)
+
+	badMetadataAddress := types.ScopeMetadataAddress(uuid.New())
+	badMetadataAddress[0] = 186 // = 0xBA
+	badIndexKey := types.GetValueOwnerScopeCacheKey(valueOwnerWBadIndexAcc, badMetadataAddress)
+	ctx.KVStore(s.app.MetadataKeeper.GetStoreKey()).Set(badIndexKey, []byte{0x01})
+
+	tests := []struct {
+		name        string
+		valueOwner  string
+		stopAfter   int
+		expScopeIDs []types.MetadataAddress
+		expErr      string
+	}{
+		{
+			name:       "empty value owner",
+			valueOwner: "",
+			expErr:     "cannot iterate over invalid value owner \"\": empty address string is not allowed",
+		},
+		{
+			name:       "invalid value owner",
+			valueOwner: "notanaddress",
+			expErr:     "cannot iterate over invalid value owner \"notanaddress\": decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:       "error unmarshalling scope id",
+			valueOwner: valueOwnerWBadIndex,
+			expErr:     "invalid metadata address type: 186",
+		},
+		{
+			name:        "no scopes",
+			valueOwner:  valueOwnerW0,
+			expScopeIDs: nil,
+		},
+		{
+			name:        "1 scope",
+			valueOwner:  valueOwnerW1,
+			expScopeIDs: []types.MetadataAddress{scopeIDW1},
+		},
+		{
+			name:        "1 scope stop after",
+			valueOwner:  valueOwnerW1,
+			stopAfter:   1,
+			expScopeIDs: []types.MetadataAddress{scopeIDW1},
+		},
+		{
+			name:        "5 scopes",
+			valueOwner:  valueOwnerW5,
+			expScopeIDs: scopeIDs5,
+		},
+		{
+			name:        "5 scopes stop after 1",
+			valueOwner:  valueOwnerW5,
+			stopAfter:   1,
+			expScopeIDs: scopeIDs5[0:1],
+		},
+		{
+			name:        "5 scopes stop after 3",
+			valueOwner:  valueOwnerW5,
+			stopAfter:   3,
+			expScopeIDs: scopeIDs5[0:3],
+		},
+		{
+			name:        "5 scopes stop after 5",
+			valueOwner:  valueOwnerW5,
+			stopAfter:   5,
+			expScopeIDs: scopeIDs5[0:5],
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var scopeIDs []types.MetadataAddress
+			handler := func(scopeID types.MetadataAddress) bool {
+				scopeIDs = append(scopeIDs, scopeID)
+				return tc.stopAfter > 0 && len(scopeIDs) >= tc.stopAfter
+			}
+			var err error
+			testFunc := func() {
+				err = s.app.MetadataKeeper.IterateScopesForValueOwner(s.FreshCtx(), tc.valueOwner, handler)
+			}
+			s.Require().NotPanics(testFunc, "IterateScopesForValueOwner")
+			s.AssertErrorValue(err, tc.expErr, "IterateScopesForValueOwner")
+			s.Assert().Equal(tc.expScopeIDs, scopeIDs, "scope ids iterated")
+		})
+	}
+}
+
 func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 	ns := func(scopeID, scopeSpecification types.MetadataAddress, owners []types.Party, dataAccess []string, valueOwner string) *types.Scope {
 		return &types.Scope{
@@ -210,6 +483,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 
 	owner := types.PartyType_PARTY_TYPE_OWNER
 	affiliate := types.PartyType_PARTY_TYPE_AFFILIATE
+	provenance := types.PartyType_PARTY_TYPE_PROVENANCE
 
 	ctx := s.FreshCtx()
 	markerAddr := markertypes.MustGetMarkerAddress("testcoin").String()
@@ -538,6 +812,29 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			errorMsg: `account "` + s.scUser + `" is a smart contract but does not have the PROVENANCE role`,
 		},
 		{
+			name:     "non-smart contract party has PROVENANCE role",
+			existing: nil,
+			proposed: types.Scope{
+				ScopeId:         scopeID,
+				SpecificationId: scopeSpecID,
+				Owners:          ptz(pt(s.user1, owner, false), pt(s.user2, provenance, false)),
+			},
+			signers:  []string{s.user1, s.user2},
+			errorMsg: "account \"" + s.user2 + "\" has role PROVENANCE but is not a smart contract",
+		},
+		{
+			name:     "with rollup non-smart contract party has PROVENANCE role",
+			existing: nil,
+			proposed: types.Scope{
+				ScopeId:            scopeID,
+				SpecificationId:    scopeSpecID,
+				Owners:             ptz(pt(s.user1, owner, false), pt(s.user2, provenance, true)),
+				RequirePartyRollup: true,
+			},
+			signers:  []string{s.user1, s.user2},
+			errorMsg: "account \"" + s.user2 + "\" has role PROVENANCE but is not a smart contract",
+		},
+		{
 			name: "only change is value owner signed by smart contract",
 			// Even though the smart contract owns this scope. it shouldn't be allowed to change that value owner.
 			existing: &types.Scope{
@@ -669,6 +966,44 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 				ValueOwnerAddress: s.user1,
 			},
 			signers:  []string{s.scUser},
+			errorMsg: "",
+		},
+		{
+			name: "only change is value owner roles not checked with spec",
+			// The spec requires an owner, so this will fail if owners are checked against the spec.
+			// But it shouldn't be checked because the only change is to the value owner.
+			existing: &types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.user1, affiliate, false)),
+				ValueOwnerAddress: s.user1,
+			},
+			proposed: types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.user1, affiliate, false)),
+				ValueOwnerAddress: s.user2,
+			},
+			signers:  []string{s.user1},
+			errorMsg: "",
+		},
+		{
+			name: "only change is value owner provenance roles not checked",
+			// The spec requires an owner, so we have one. But we also have a PROVENANCE party that isn't
+			// a smart contract. That should fail if checked, but shouldn't be checked in this case.
+			existing: &types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.user1, owner, false), pt(s.user1, provenance, false)),
+				ValueOwnerAddress: s.user1,
+			},
+			proposed: types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.user1, owner, false), pt(s.user1, provenance, false)),
+				ValueOwnerAddress: s.user2,
+			},
+			signers:  []string{s.user1},
 			errorMsg: "",
 		},
 	}
@@ -1707,4 +2042,217 @@ func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
 			assert.False(t, store.Has(unexpected.key), unexpected.name)
 		}
 	})
+}
+
+func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
+	scopeID1 := types.ScopeMetadataAddress(uuid.New())
+	scopeID2 := types.ScopeMetadataAddress(uuid.New())
+	scopeID3 := types.ScopeMetadataAddress(uuid.New())
+	scopeID4 := types.ScopeMetadataAddress(uuid.New())
+
+	addr1 := sdk.AccAddress("addr1_______________")
+	addr2 := sdk.AccAddress("addr2_______________")
+	addr3 := sdk.AccAddress("addr3_______________")
+	addr4 := sdk.AccAddress("addr4_______________")
+	addrWithDeposit := sdk.AccAddress("addrWithDeposit_____")
+	addrSmartContract := sdk.AccAddress("addrSmartContract___")
+
+	addr1Str := addr1.String()
+	addr2Str := addr2.String()
+	addr3Str := addr3.String()
+	addr4Str := addr4.String()
+	addrWithDepositStr := addrWithDeposit.String()
+	addrSmartContractStr := addrSmartContract.String()
+
+	scope := func(scopeID types.MetadataAddress, valueOwner string) *types.Scope {
+		return &types.Scope{
+			ScopeId:           scopeID,
+			ValueOwnerAddress: valueOwner,
+		}
+	}
+
+	msg := func(signers ...string) *types.MsgUpdateValueOwnersRequest {
+		return &types.MsgUpdateValueOwnersRequest{
+			Signers: signers,
+		}
+	}
+	msgType := types.TypeURLMsgUpdateValueOwnersRequest
+
+	markerDenom := "some.marker"
+	markerAddr := markertypes.MustGetMarkerAddress(markerDenom)
+	markerAddrStr := markerAddr.String()
+	marker := &markertypes.MarkerAccount{
+		BaseAccount: authtypes.NewBaseAccount(markerAddr, nil, 0, 0),
+		Denom:       markerDenom,
+		AccessControl: []markertypes.AccessGrant{
+			{
+				Address:     addrWithDepositStr,
+				Permissions: markertypes.AccessList{markertypes.Access_Deposit},
+			},
+		},
+	}
+
+	missingSig := func(addr string) string {
+		return "missing signature from existing value owner " + addr
+	}
+
+	tests := []struct {
+		name          string
+		scopes        []*types.Scope
+		newValueOwner string
+		msg           types.MetadataMsg
+		authK         *MockAuthKeeper
+		authzK        *MockAuthzKeeper
+		expErr        string
+		expGetAccs    []*GetAccountCall
+	}{
+		{
+			name: "one of the scopes does not have an existing value owner",
+			scopes: []*types.Scope{
+				scope(scopeID1, addr1Str), scope(scopeID2, addr1Str),
+				scope(scopeID3, ""), scope(scopeID4, addr1Str),
+			},
+			newValueOwner: addr1Str,
+			msg:           msg(addr1Str),
+			expErr:        "scope " + scopeID3.String() + " does not yet have a value owner",
+			expGetAccs:    nil,
+		},
+		{
+			name:          "no signer for proposed",
+			scopes:        []*types.Scope{scope(scopeID1, addr1Str)},
+			newValueOwner: markerAddrStr,
+			msg:           msg(),
+			authK:         NewMockAuthKeeper().WithGetAccountResults(NewGetAccountCall(markerAddr, marker)),
+			expErr:        fmt.Sprintf("missing signature for %s (%s) with authority to deposit/add it as scope value owner", markerAddrStr, markerDenom),
+			expGetAccs: []*GetAccountCall{
+				NewGetAccountCall(markerAddr, marker), // checking if proposed is a marker
+			},
+		},
+		{
+			name: "no signer for existing 1 of 3",
+			scopes: []*types.Scope{
+				scope(scopeID1, addr1Str), scope(scopeID2, addr2Str), scope(scopeID3, addr3Str),
+			},
+			newValueOwner: "",
+			msg:           msg(addr2Str, addr3Str),
+			expErr:        missingSig(addr1Str),
+			expGetAccs: []*GetAccountCall{
+				NewGetAccountCall(addr1, nil), // checking if existing is a marker
+				NewGetAccountCall(addr2, nil), // checking if signer is wasm
+				NewGetAccountCall(addr3, nil), // checking if signer is wasm
+			},
+		},
+		{
+			name: "no signer for existing 2 of 3",
+			scopes: []*types.Scope{
+				scope(scopeID1, addr1Str), scope(scopeID2, addr2Str), scope(scopeID3, addr3Str),
+			},
+			newValueOwner: "",
+			msg:           msg(addr1Str, addr3Str),
+			expErr:        missingSig(addr2Str),
+			expGetAccs: []*GetAccountCall{
+				NewGetAccountCall(addr1, nil), // checking if existing is a marker
+				NewGetAccountCall(addr2, nil), // checking if existing is a marker
+				NewGetAccountCall(addr1, nil), // checking if signer is wasm
+				NewGetAccountCall(addr3, nil), // checking if signer is wasm
+			},
+		},
+		{
+			name: "no signer for existing 3 of 3",
+			scopes: []*types.Scope{
+				scope(scopeID1, addr1Str), scope(scopeID2, addr2Str), scope(scopeID3, addr3Str),
+			},
+			newValueOwner: "",
+			msg:           msg(addr1Str, addr2Str),
+			expErr:        missingSig(addr3Str),
+			expGetAccs: []*GetAccountCall{
+				NewGetAccountCall(addr1, nil), // checking if existing is a marker
+				NewGetAccountCall(addr2, nil), // checking if existing is a marker
+				NewGetAccountCall(addr3, nil), // checking if existing is a marker
+				NewGetAccountCall(addr1, nil), // checking if signer is wasm
+				NewGetAccountCall(addr2, nil), // checking if signer is wasm
+			},
+		},
+		{
+			name: "invalid smart contract signer",
+			scopes: []*types.Scope{
+				scope(scopeID1, addr1Str), scope(scopeID2, addr2Str), scope(scopeID3, addr3Str),
+			},
+			newValueOwner: addr4Str,
+			msg:           msg(addr1Str, addr2Str, addr3Str, addrSmartContractStr),
+			authK:         NewMockAuthKeeper().WithGetAccountResults(NewWasmGetAccountCall(addrSmartContract)),
+			expErr:        "smart contract signer " + addrSmartContractStr + " cannot follow non-smart-contract signer",
+			expGetAccs: []*GetAccountCall{
+				NewGetAccountCall(addr4, nil),            // checking if proposed is a marker
+				NewGetAccountCall(addr1, nil),            // checking if existing is a marker
+				NewGetAccountCall(addr2, nil),            // checking if existing is a marker
+				NewGetAccountCall(addr3, nil),            // checking if existing is a marker
+				NewGetAccountCall(addr1, nil),            // checking if signer is wasm.
+				NewGetAccountCall(addr2, nil),            // checking if signer is wasm.
+				NewGetAccountCall(addr3, nil),            // checking if signer is wasm.
+				NewWasmGetAccountCall(addrSmartContract), // checking if signer is wasm.
+			},
+		},
+		{
+			name: "all scopes have same value owner authz used",
+			scopes: []*types.Scope{
+				scope(scopeID1, addr1Str), scope(scopeID2, addr1Str),
+				scope(scopeID3, addr1Str), scope(scopeID4, addr1Str),
+			},
+			newValueOwner: "",
+			msg:           msg(addr2Str),
+			expErr:        "",
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				NewAcceptedGetAuthorizationCall(addr2, addr1, msgType, "one"),
+			),
+			expGetAccs: []*GetAccountCall{
+				NewGetAccountCall(addr1, nil), // checking if existing is a marker
+				// This one should happen only once for all scopes and other checks in there.
+				NewGetAccountCall(addr2, nil), // checking if signer is wasm
+			},
+		},
+		{
+			name:          "okay with a MsgMigrateValueOwnerRequest and authz",
+			scopes:        []*types.Scope{scope(scopeID1, addr1Str)},
+			newValueOwner: addr2Str,
+			msg: &types.MsgMigrateValueOwnerRequest{
+				Existing: addr1Str,
+				Proposed: addr2Str,
+				Signers:  []string{addr3Str},
+			},
+			expErr: "",
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				NewAcceptedGetAuthorizationCall(addr3, addr1, types.TypeURLMsgMigrateValueOwnerRequest, "one"),
+			),
+			expGetAccs: []*GetAccountCall{
+				NewGetAccountCall(addr2, nil), // checking if proposed is a marker
+				NewGetAccountCall(addr1, nil), // checking if existing is a marker
+				NewGetAccountCall(addr3, nil), // checking if signer is wasm
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.authK == nil {
+				tc.authK = NewMockAuthKeeper()
+			}
+			if tc.authzK == nil {
+				tc.authzK = NewMockAuthzKeeper()
+			}
+			mdKeeper := s.app.MetadataKeeper
+			origAuthK := mdKeeper.SetAuthKeeper(tc.authK)
+			origAuthzK := mdKeeper.SetAuthzKeeper(tc.authzK)
+			defer func() {
+				mdKeeper.SetAuthKeeper(origAuthK)
+				mdKeeper.SetAuthzKeeper(origAuthzK)
+			}()
+
+			err := mdKeeper.ValidateUpdateValueOwners(s.FreshCtx(), tc.scopes, tc.newValueOwner, tc.msg)
+			s.AssertErrorValue(err, tc.expErr, "ValidateUpdateValueOwners")
+
+			getAccs := tc.authK.GetAccountCalls
+			s.Assert().Equal(tc.expGetAccs, getAccs, "calls made to GetAccount")
+		})
+	}
 }

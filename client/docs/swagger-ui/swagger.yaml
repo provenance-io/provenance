@@ -89762,6 +89762,11 @@ definitions:
     description: >-
       MsgDeleteScopeSpecificationResponse is the response type for the
       Msg/DeleteScopeSpecification RPC method.
+  provenance.metadata.v1.MsgMigrateValueOwnerResponse:
+    type: object
+    description: >-
+      MsgMigrateValueOwnerResponse is the response from migrating a value owner
+      address.
   provenance.metadata.v1.MsgModifyOSLocatorResponse:
     type: object
     properties:
@@ -89785,6 +89790,11 @@ definitions:
     description: >-
       MsgModifyOSLocatorResponse is the response type for the
       Msg/ModifyOSLocator RPC method.
+  provenance.metadata.v1.MsgUpdateValueOwnersResponse:
+    type: object
+    description: >-
+      MsgUpdateValueOwnersResponse is the response from updating value owner
+      addresses in one or more scopes.
   provenance.metadata.v1.MsgWriteContractSpecificationResponse:
     type: object
     properties:
