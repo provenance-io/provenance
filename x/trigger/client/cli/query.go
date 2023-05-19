@@ -17,6 +17,7 @@ import (
 
 var cmdStart = fmt.Sprintf("%s query trigger", version.AppName)
 
+// GetQueryCmd is the top-level command for trigger CLI queries.
 func GetQueryCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -29,11 +30,12 @@ func GetQueryCmd() *cobra.Command {
 	return queryCmd
 }
 
+// GetTriggersCmd queries for one trigger by id or all depending on the input
 func GetTriggersCmd() *cobra.Command {
 	const all = "all"
 	cmd := &cobra.Command{
-		Use:     "trigger {trigger_id|\"all\"}",
-		Aliases: []string{"t", "trig"},
+		Use:     "list {trigger_id|\"all\"}",
+		Aliases: []string{"ls", "l"},
 		Short:   "Query the current triggers",
 		Long: fmt.Sprintf(`%[1]s trigger {trigger_id} - gets the trigger for a given id.
 %[1]s reward-program all - gets all the triggers`, cmdStart),
@@ -50,7 +52,7 @@ func GetTriggersCmd() *cobra.Command {
 			var request types.QueryTriggersRequest
 			arg0 := strings.TrimSpace(args[0])
 			if arg0 != all {
-				return outputTriggerByID(clientCtx, queryClient, arg0)
+				return queryTriggerByID(clientCtx, queryClient, arg0)
 			}
 
 			var response *types.QueryTriggersResponse
@@ -69,7 +71,8 @@ func GetTriggersCmd() *cobra.Command {
 	return cmd
 }
 
-func outputTriggerByID(client client.Context, queryClient types.QueryClient, arg string) error {
+// queryTriggerByID queries for one trigger by id.
+func queryTriggerByID(client client.Context, queryClient types.QueryClient, arg string) error {
 	triggerID, err := strconv.Atoi(arg)
 	if err != nil {
 		return fmt.Errorf("invalid argument arg : %s", arg)

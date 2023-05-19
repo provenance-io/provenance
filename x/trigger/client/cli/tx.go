@@ -20,6 +20,7 @@ import (
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
+// NewTxCmd is the top-level command for trigger CLI transactions.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -35,6 +36,7 @@ func NewTxCmd() *cobra.Command {
 	return txCmd
 }
 
+// GetCmdAddTransactionTrigger is a command to add a trigger for a transaction event.
 func GetCmdAddTransactionTrigger() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "create-tx-trigger [event.json] [msg.json]",
@@ -52,12 +54,12 @@ func GetCmdAddTransactionTrigger() *cobra.Command {
 
 			event, err := parseEvent(args[0])
 			if err != nil {
-				return fmt.Errorf("unable to parse event file : %w", err)
+				return fmt.Errorf("unable to parse event file %s: %w", args[0], err)
 			}
 
 			msgs, err := parseTransactions(clientCtx.Codec, args[1])
 			if err != nil {
-				return fmt.Errorf("unable to parse msgs file: %w", err)
+				return fmt.Errorf("unable to parse msgs file %s: %w", args[1], err)
 			}
 			if len(msgs) == 0 {
 				return fmt.Errorf("no actions added to trigger")
@@ -75,6 +77,7 @@ func GetCmdAddTransactionTrigger() *cobra.Command {
 	return cmd
 }
 
+// GetCmdAddBlockHeightTrigger is a command to add a trigger for a block height event.
 func GetCmdAddBlockHeightTrigger() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "create-height-trigger [height] [msg.json]",
@@ -92,12 +95,12 @@ func GetCmdAddBlockHeightTrigger() *cobra.Command {
 
 			height, err := strconv.Atoi(args[0])
 			if err != nil {
-				return fmt.Errorf("invalid argument : %s", args[0])
+				return fmt.Errorf("invalid block height : %s", args[0])
 			}
 
 			msgs, err := parseTransactions(clientCtx.Codec, args[1])
 			if err != nil {
-				return fmt.Errorf("unable to parse file : %w", err)
+				return fmt.Errorf("unable to parse file %s : %w", args[1], err)
 			}
 			if len(msgs) == 0 {
 				return fmt.Errorf("no actions added to trigger")
@@ -115,6 +118,7 @@ func GetCmdAddBlockHeightTrigger() *cobra.Command {
 	return cmd
 }
 
+// GetCmdAddBlockTimeTrigger is a command to add a trigger for a block time event.
 func GetCmdAddBlockTimeTrigger() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "create-time-trigger [seconds] [msg.json]",
@@ -137,7 +141,7 @@ func GetCmdAddBlockTimeTrigger() *cobra.Command {
 
 			msgs, err := parseTransactions(clientCtx.Codec, args[1])
 			if err != nil {
-				return fmt.Errorf("unable to parse file : %w", err)
+				return fmt.Errorf("unable to parse file %s : %w", args[1], err)
 			}
 			if len(msgs) == 0 {
 				return fmt.Errorf("no actions added to trigger")
@@ -155,6 +159,7 @@ func GetCmdAddBlockTimeTrigger() *cobra.Command {
 	return cmd
 }
 
+// GetCmdDestroyTrigger is a command to destroy an existing trigger.
 func GetCmdDestroyTrigger() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "destroy-trigger [id]",
@@ -171,7 +176,7 @@ func GetCmdDestroyTrigger() *cobra.Command {
 			callerAddr := clientCtx.GetFromAddress()
 			triggerID, err := strconv.Atoi(args[0])
 			if err != nil {
-				return fmt.Errorf("invalid argument : %s", args[0])
+				return fmt.Errorf("invalid trigger id : %s", args[0])
 			}
 
 			msg := types.NewDestroyTriggerRequest(
@@ -185,19 +190,14 @@ func GetCmdDestroyTrigger() *cobra.Command {
 	return cmd
 }
 
-type Action struct {
-	// Msgs defines a sdk.Msg proto-JSON-encoded as Any.
-	Action json.RawMessage `json:"message,omitempty"`
-}
-
-// parseSubmitProposal reads and parses the proposal.
+// parseTransactions reads and parses the message.
 func parseTransactions(cdc codec.Codec, path string) ([]sdk.Msg, error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	var action Action
+	var action ParsedAction
 	err = json.Unmarshal(contents, &action)
 	if err != nil {
 		return nil, err
@@ -212,26 +212,14 @@ func parseTransactions(cdc codec.Codec, path string) ([]sdk.Msg, error) {
 	return []sdk.Msg{msg}, nil
 }
 
-type TransactionEvent struct {
-	// Msgs defines an array of sdk.Msgs proto-JSON-encoded as Anys.
-	Attributes []Attribute `json:"attributes,omitempty"`
-	Name       string      `json:"name"`
-}
-
-type Attribute struct {
-	// Msgs defines an array of sdk.Msgs proto-JSON-encoded as Anys.
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
-// parseEvent reads and parses the transaction event.
+// parseEvent reads and parses the transaction event from a file.
 func parseEvent(path string) (*types.TransactionEvent, error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	var event TransactionEvent
+	var event ParsedTransactionEvent
 	err = json.Unmarshal(contents, &event)
 	if err != nil {
 		return nil, err
@@ -248,4 +236,26 @@ func parseEvent(path string) (*types.TransactionEvent, error) {
 	}
 
 	return &newEvent, nil
+}
+
+// ParsedAction is the deserialized form of the inputted JSON formatted sdk.Msg.
+type ParsedAction struct {
+	// Action defines a sdk.Msg proto-JSON-encoded as Any.
+	Action json.RawMessage `json:"message,omitempty"`
+}
+
+// ParsedTransactionEvent is the deserialized form of the inputted JSON formatted transaction event.
+type ParsedTransactionEvent struct {
+	// Attributes defines an array of ParsedAttribute.
+	Attributes []ParsedAttribute `json:"attributes,omitempty"`
+	// The name/type of the event.
+	Name string `json:"name"`
+}
+
+// ParsedTransactionEvent is the deserialized form of the inputted JSON formatted transaction event's attribute.
+type ParsedAttribute struct {
+	// The name of the attribute.
+	Name string `json:"name"`
+	// The value of the attribute.
+	Value string `json:"value"`
 }
