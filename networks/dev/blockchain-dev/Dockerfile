@@ -2,7 +2,7 @@
 # Use `make docker-build-dev` to build or `make devnet-start` to
 # start the test network and `make devnet-stop` to stop it.
 
-FROM golang:1.18-bullseye as build-x86_64
+FROM golang:1.20-bullseye as build-x86_64
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
 RUN apt-get update && apt-get upgrade -y
@@ -48,7 +48,7 @@ CMD ["start"]
 
 
 ## Build provenance for ARM
-FROM golang:1.18-bullseye as build-arm64
+FROM golang:1.20-bullseye as build-arm64
 WORKDIR /go/src/github.com/provenance-io/provenance
 ENV GOPRIVATE=github.com/provenance-io
 RUN apt-get update && apt-get upgrade -y

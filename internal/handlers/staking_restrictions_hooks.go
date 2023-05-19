@@ -55,7 +55,7 @@ func NewStakingRestrictionHooks(k *stakingkeeper.Keeper, opts RestrictionOptions
 }
 
 // Verifies that the delegation would not cause the validator's voting power to exceed our staking distribution limits
-func (h StakingRestrictionHooks) AfterDelegationModified(ctx sdktypes.Context, delAddr sdktypes.AccAddress, valAddr sdktypes.ValAddress) error {
+func (h StakingRestrictionHooks) AfterDelegationModified(ctx sdktypes.Context, _ sdktypes.AccAddress, valAddr sdktypes.ValAddress) error {
 	valCount := len(h.k.GetLastValidators(ctx))
 
 	// do not bother with limits on networks this small (or under simulation).
@@ -82,8 +82,7 @@ func (h StakingRestrictionHooks) AfterDelegationModified(ctx sdktypes.Context, d
 
 		// if the power of this validator is increasing and it is over the maximum bonded token amount then we error out this transaction.
 		if power > oldPower && validator.GetBondedTokens().GT(maxBond) {
-			return sdkerrors.Wrapf(
-				sdkerrors.ErrInvalidRequest,
+			return sdkerrors.ErrInvalidRequest.Wrapf(
 				"validator bonded tokens of %d exceeds max of %d (%.1f%%) for %d validators",
 				currentBond.BigInt(),
 				maxBond.BigInt(),
@@ -97,7 +96,7 @@ func (h StakingRestrictionHooks) AfterDelegationModified(ctx sdktypes.Context, d
 }
 
 // Implements sdktypes.ValidatorHooks
-func (h StakingRestrictionHooks) BeforeDelegationCreated(ctx sdktypes.Context, _ sdktypes.AccAddress, _ sdktypes.ValAddress) error {
+func (h StakingRestrictionHooks) BeforeDelegationCreated(_ sdktypes.Context, _ sdktypes.AccAddress, _ sdktypes.ValAddress) error {
 	return nil
 }
 
@@ -112,7 +111,7 @@ func (h StakingRestrictionHooks) AfterValidatorRemoved(_ sdktypes.Context, _ sdk
 }
 
 // Implements sdktypes.ValidatorHooks
-func (h StakingRestrictionHooks) AfterValidatorCreated(_ sdktypes.Context, valAddr sdktypes.ValAddress) error {
+func (h StakingRestrictionHooks) AfterValidatorCreated(_ sdktypes.Context, _ sdktypes.ValAddress) error {
 	return nil
 }
 

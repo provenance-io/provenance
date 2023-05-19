@@ -270,12 +270,12 @@ func (ma MarkerAccount) GetPubKey() cryptotypes.PubKey {
 }
 
 // SetPubKey implements authtypes.Account (but there are no public keys associated with the account for signing)
-func (ma *MarkerAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
+func (ma *MarkerAccount) SetPubKey(_ cryptotypes.PubKey) error {
 	return fmt.Errorf("not supported for marker accounts")
 }
 
 // SetSequence implements authtypes.Account (but you can't set a sequence as you can't sign tx for this account)
-func (ma *MarkerAccount) SetSequence(seq uint64) error {
+func (ma *MarkerAccount) SetSequence(_ uint64) error {
 	return fmt.Errorf("not supported for marker accounts")
 }
 

@@ -52,7 +52,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // RegisterLegacyAminoCodec registers the reward module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers the reward module's interface types
@@ -67,7 +67,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the reward module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return cerrs.Wrapf(err, "failed to unmarshal %q genesis state", types.ModuleName)
@@ -121,13 +121,13 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // ProposalContents returns content functions used to simulate governance proposals.
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
 	// currently no gov proposals exist
 	return nil
 }
 
 // RandomizedParams returns randomized module parameters for param change proposals.
-func (am AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 	// currently no module params exist
 	return nil
 }
@@ -161,7 +161,7 @@ func (am AppModule) Route() sdk.Route {
 func (AppModule) QuerierRoute() string { return "" }
 
 // LegacyQuerierHandler returns the reward module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
@@ -186,7 +186,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock is the `BeginBlocker` function run at the beginning of each block to
 // process rewards module updates.
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
+func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	rewardModule.BeginBlocker(ctx, am.keeper)
 }
 

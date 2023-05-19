@@ -99,11 +99,7 @@ func (k Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress,
 
 	nameBoundEvent := types.NewEventNameBound(addr.String(), name, restrict)
 
-	if err := ctx.EventManager().EmitTypedEvent(nameBoundEvent); err != nil {
-		return err
-	}
-
-	return nil
+	return ctx.EventManager().EmitTypedEvent(nameBoundEvent)
 }
 
 // UpdateNameRecord updates the owner address and restricted flag on a name.
@@ -122,11 +118,7 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 
 	nameUpdateEvent := types.NewEventNameUpdate(addr.String(), name, restrict)
 
-	if err := ctx.EventManager().EmitTypedEvent(nameUpdateEvent); err != nil {
-		return err
-	}
-
-	return nil
+	return ctx.EventManager().EmitTypedEvent(nameUpdateEvent)
 }
 
 // GetRecordByName resolves a record by name.
@@ -212,11 +204,7 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 
 	nameUnboundEvent := types.NewEventNameUnbound(record.Address, name, record.Restricted)
 
-	if err := ctx.EventManager().EmitTypedEvent(nameUnboundEvent); err != nil {
-		return err
-	}
-
-	return nil
+	return ctx.EventManager().EmitTypedEvent(nameUnboundEvent)
 }
 
 // IterateRecords iterates over all the stored name records and passes them to a callback function.

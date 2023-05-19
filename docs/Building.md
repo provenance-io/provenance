@@ -21,7 +21,7 @@ Built executables are placed in the `build/` directory.
 
 ### Go
 
-Building `provenanced` requires [Go 1.18+](https://golang.org/dl/) (or higher).
+Building `provenanced` requires [Go 1.20+](https://golang.org/dl/) (or higher).
 
 ### CLevelDB
 

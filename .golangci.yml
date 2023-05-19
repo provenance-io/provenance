@@ -7,7 +7,6 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - deadcode
     - depguard
     - dogsled
     - errcheck
@@ -34,7 +33,6 @@ linters:
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
 
 issues:

@@ -251,7 +251,7 @@ func getGovVoteMsgURLs() []string {
 	return govVoteMsgURLs
 }
 
-func (v *VoteActionBuilder) AddEvent(eventType string, attributes *map[string][]byte) error {
+func (v *VoteActionBuilder) AddEvent(_ string, attributes *map[string][]byte) error {
 	if _, ok := (*attributes)[sdk.AttributeKeyModule]; ok {
 		address := (*attributes)[banktypes.AttributeKeySender]
 		address, err := sdk.AccAddressFromBech32(string(address))

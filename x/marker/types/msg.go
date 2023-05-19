@@ -121,10 +121,7 @@ func (msg MsgAddAccessRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return err
 	}
-	if err := ValidateGrants(msg.Access...); err != nil {
-		return err
-	}
-	return nil
+	return ValidateGrants(msg.Access...)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -165,10 +162,7 @@ func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeReque
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgFinalizeRequest) ValidateBasic() error {
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return err
-	}
-	return nil
+	return sdk.ValidateDenom(msg.Denom)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -186,10 +180,7 @@ func NewMsgActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateReque
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgActivateRequest) ValidateBasic() error {
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return err
-	}
-	return nil
+	return sdk.ValidateDenom(msg.Denom)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -207,10 +198,7 @@ func NewMsgCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest {
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgCancelRequest) ValidateBasic() error {
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return err
-	}
-	return nil
+	return sdk.ValidateDenom(msg.Denom)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -228,10 +216,7 @@ func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest {
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteRequest) ValidateBasic() error {
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return err
-	}
-	return nil
+	return sdk.ValidateDenom(msg.Denom)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.

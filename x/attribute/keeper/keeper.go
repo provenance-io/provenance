@@ -170,11 +170,8 @@ func (k Keeper) SetAttribute(
 	k.AddAttributeExpireLookup(ctx, attr)
 
 	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
-	if err := ctx.EventManager().EmitTypedEvent(attributeAddEvent); err != nil {
-		return err
-	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(attributeAddEvent)
 }
 
 // IncAttrNameAddressLookup increments the count of name to address lookups
