@@ -263,6 +263,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			found = true
 			store.Delete(it.Key())
 			k.DecAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+			k.DeleteAttributeExpireLookup(ctx, attr)
 
 			bz, err := k.cdc.Marshal(&updateAttribute)
 			if err != nil {
@@ -271,6 +272,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			updatedKey := types.AddrAttributeKey(addrBz, updateAttribute)
 			store.Set(updatedKey, bz)
 			k.IncAttrNameAddressLookup(ctx, updateAttribute.Name, updateAttribute.GetAddressBytes())
+			k.AddAttributeExpireLookup(ctx, attr)
 
 			attributeUpdateEvent := types.NewEventAttributeUpdate(originalAttribute, updateAttribute, owner.String())
 			if err := ctx.EventManager().EmitTypedEvent(attributeUpdateEvent); err != nil {
@@ -335,6 +337,7 @@ func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, attribute types.Attri
 			}
 			updatedKey := types.AddrAttributeKey(addrBz, attr)
 			store.Set(updatedKey, bz)
+			k.AddAttributeExpireLookup(ctx, attr)
 
 			attributeExpirationUpdateEvent := types.NewEventAttributeExpirationUpdate(attr, originalExpiration, owner.String())
 			if err := ctx.EventManager().EmitTypedEvent(attributeExpirationUpdateEvent); err != nil {
@@ -400,6 +403,8 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 			count++
 			store.Delete(it.Key())
 			k.DecAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+			k.DeleteAttributeExpireLookup(ctx, attr)
+
 			if !deleteDistinct {
 				deleteEvent := types.NewEventAttributeDelete(name, addr, owner.String())
 				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
