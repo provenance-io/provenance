@@ -53,6 +53,14 @@ func (gs GenesisState) Validate() error {
 		if trigger.GetId() > gs.TriggerId {
 			return fmt.Errorf("trigger id is invalid and cannot exceed %d", gs.TriggerId)
 		}
+
+		event, err := trigger.GetTriggerEventI()
+		if err != nil {
+			return err
+		}
+		if err = event.Validate(); err != nil {
+			return err
+		}
 	}
 
 	return nil
