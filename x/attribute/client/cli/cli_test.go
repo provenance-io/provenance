@@ -588,7 +588,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 			expectedCode: 0,
 		},
 		{
-			name: "set attribute, invalid expiration",
+			name: "set attribute, valid expiration",
 			cmd:  cli.NewAddAccountAttributeCmd(),
 			args: []string{
 				"txtest.attribute",
