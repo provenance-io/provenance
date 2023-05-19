@@ -11,7 +11,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -1657,7 +1656,7 @@ func TestPartyDetails_IsSameAs(t *testing.T) {
 	}
 }
 
-func TestGetAllSigners(t *testing.T) {
+func TestGetUsedSigners(t *testing.T) {
 	addr := func(str string) sdk.AccAddress {
 		if len(str) == 0 {
 			return nil
@@ -1686,7 +1685,7 @@ func TestGetAllSigners(t *testing.T) {
 	tests := []struct {
 		name    string
 		parties []*keeper.PartyDetails
-		exp     map[string]bool
+		exp     keeper.UsedSignersMap
 	}{
 		{
 			name:    "nil parties",
@@ -1762,7 +1761,7 @@ func TestGetAllSigners(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := keeper.GetAllSigners(tc.parties)
+			actual := keeper.GetUsedSigners(tc.parties)
 			assert.Equal(t, tc.exp, actual, "GetAllSigners")
 		})
 	}
@@ -1923,24 +1922,53 @@ func TestAuthzCacheAcceptableKey(t *testing.T) {
 	}
 }
 
+func TestAuthzCacheIsWasmKey(t *testing.T) {
+	tests := []struct {
+		name string
+		str  string
+	}{
+		{name: "20 char addr", str: "20_character_address"},
+		{name: "32 char addr", str: "thirty_two___character___address"},
+		{name: "a space", str: " "},
+		{name: "empty", str: ""},
+		{name: "bytes 0 to 10", str: string([]byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10})},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			addr := sdk.AccAddress(tc.str)
+			actual := keeper.AuthzCacheIsWasmKey(addr)
+			assert.Equal(t, tc.str, actual, "authzCacheIsWasmKey")
+		})
+	}
+}
+
 func TestNewAuthzCache(t *testing.T) {
 	c1 := keeper.NewAuthzCache()
 	c1Type := fmt.Sprintf("%T", c1)
 	c2 := keeper.NewAuthzCache()
+
 	assert.NotNil(t, c1, "NewAuthzCache result")
-	assert.Empty(t, c1.AcceptableMap(), "acceptable map")
 	assert.Equal(t, "*keeper.AuthzCache", c1Type, "type returned by NewAuthzCache")
+	assert.Empty(t, c1.AcceptableMap(), "acceptable map")
+	assert.Empty(t, c1.IsWasmMap(), "isWasm map")
+
 	assert.NotSame(t, c1, c2, "NewAuthzCache twice")
 	assert.NotSame(t, c1.AcceptableMap(), c2.AcceptableMap(), "acceptable maps of two NewAuthzCache")
+	assert.NotSame(t, c1.IsWasmMap(), c2.IsWasmMap(), "isWasm maps of two NewAuthzCache")
 }
 
 func TestAuthzCache_Clear(t *testing.T) {
 	c := keeper.NewAuthzCache()
 	c.AcceptableMap()["key1"] = &authz.CountAuthorization{}
 	c.AcceptableMap()["key2"] = &authz.GenericAuthorization{}
+	c.IsWasmMap()["key3"] = true
+	c.IsWasmMap()["key4"] = false
 	assert.NotEmpty(t, c.AcceptableMap(), "AuthzCache acceptable map before clear")
+	assert.NotEmpty(t, c.IsWasmMap(), "AuthzCache isWasm map before clear")
 	c.Clear()
 	assert.Empty(t, c.AcceptableMap(), "AuthzCache acceptable map after clear")
+	assert.Empty(t, c.IsWasmMap(), "AuthzCache isWasm map after clear")
 }
 
 func TestAuthzCache_SetAcceptable(t *testing.T) {
@@ -1975,6 +2003,111 @@ func TestAuthzCache_GetAcceptable(t *testing.T) {
 
 	notThere := c.GetAcceptable(granter, grantee, msgTypeURL)
 	assert.Nil(t, notThere, "GetAcceptable on an entry that should not exist")
+}
+
+func TestAuthzCache_SetIsWasm(t *testing.T) {
+	c := keeper.NewAuthzCache()
+
+	// These tests will build on eachother using the same AuthzCache.
+	tests := []struct {
+		name  string
+		addr  sdk.AccAddress
+		value bool
+		exp   map[string]bool
+	}{
+		{
+			name:  "new entry true",
+			addr:  sdk.AccAddress("addr_true"),
+			value: true,
+			exp:   map[string]bool{"addr_true": true},
+		},
+		{
+			name:  "new entry false",
+			addr:  sdk.AccAddress("addr_false"),
+			value: false,
+			exp:   map[string]bool{"addr_true": true, "addr_false": false},
+		},
+		{
+			name:  "change true to false",
+			addr:  sdk.AccAddress("addr_true"),
+			value: false,
+			exp:   map[string]bool{"addr_true": false, "addr_false": false},
+		},
+		{
+			name:  "change false to true",
+			addr:  sdk.AccAddress("addr_false"),
+			value: true,
+			exp:   map[string]bool{"addr_true": false, "addr_false": true},
+		},
+		{
+			name:  "nil address",
+			addr:  nil,
+			value: true,
+			exp:   map[string]bool{"addr_true": false, "addr_false": true, "": true},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			c.SetIsWasm(tc.addr, tc.value)
+			m := c.IsWasmMap()
+			assert.Equal(t, tc.exp, m, "isWasm map after SetIsWasm")
+		})
+	}
+}
+
+func TestAuthzCache_HasIsWasm(t *testing.T) {
+	c := keeper.NewAuthzCache()
+	addrTrue := sdk.AccAddress("addrTrue")
+	addrFalse := sdk.AccAddress("addrFalse")
+	addrUnknown := sdk.AccAddress("addrUnknown")
+	c.SetIsWasm(addrTrue, true)
+	c.SetIsWasm(addrFalse, false)
+
+	tests := []struct {
+		name string
+		addr sdk.AccAddress
+		exp  bool
+	}{
+		{name: "known true", addr: addrTrue, exp: true},
+		{name: "known false", addr: addrFalse, exp: true},
+		{name: "unknown", addr: addrUnknown, exp: false},
+		{name: "nil", addr: nil, exp: false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := c.HasIsWasm(tc.addr)
+			assert.Equal(t, tc.exp, actual, "HasIsWasm")
+		})
+	}
+}
+
+func TestAuthzCache_GetIsWasm(t *testing.T) {
+	c := keeper.NewAuthzCache()
+	addrTrue := sdk.AccAddress("addrTrue")
+	addrFalse := sdk.AccAddress("addrFalse")
+	addrUnknown := sdk.AccAddress("addrUnknown")
+	c.SetIsWasm(addrTrue, true)
+	c.SetIsWasm(addrFalse, false)
+
+	tests := []struct {
+		name string
+		addr sdk.AccAddress
+		exp  bool
+	}{
+		{name: "known true", addr: addrTrue, exp: true},
+		{name: "known false", addr: addrFalse, exp: false},
+		{name: "unknown", addr: addrUnknown, exp: false},
+		{name: "nil", addr: nil, exp: false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := c.GetIsWasm(tc.addr)
+			assert.Equal(t, tc.exp, actual, "GetIsWasm")
+		})
+	}
 }
 
 func TestAddAuthzCacheToContext(t *testing.T) {
@@ -2074,6 +2207,130 @@ func TestUnwrapMetadataContext(t *testing.T) {
 	require.NotPanics(t, testGet, "GetAuthzCache")
 	assert.NotNil(t, cache, "cache returned by GetAuthzCache")
 	assert.Empty(t, cache.AcceptableMap(), "cache acceptable map")
+}
+
+func TestUsedSignersMap(t *testing.T) {
+	tests := []struct {
+		name     string
+		actual   keeper.UsedSignersMap
+		expected keeper.UsedSignersMap
+		isUsed   []string
+	}{
+		{
+			name:     "NewUsedSignersMap",
+			actual:   keeper.NewUsedSignersMap(),
+			expected: keeper.UsedSignersMap{},
+		},
+		{
+			name:     "Use with two different addrs",
+			actual:   keeper.NewUsedSignersMap().Use("addr1", "addr2"),
+			expected: keeper.UsedSignersMap{"addr1": true, "addr2": true},
+			isUsed:   []string{"addr1", "addr2"},
+		},
+		{
+			name:     "Use with two same addrs",
+			actual:   keeper.NewUsedSignersMap().Use("addr", "addr"),
+			expected: keeper.UsedSignersMap{"addr": true},
+			isUsed:   []string{"addr"},
+		},
+		{
+			name:     "Use without any addrs",
+			actual:   keeper.NewUsedSignersMap().Use(),
+			expected: keeper.UsedSignersMap{},
+		},
+		{
+			name:     "Use twice different addrs",
+			actual:   keeper.NewUsedSignersMap().Use("addr1").Use("addr2"),
+			expected: keeper.UsedSignersMap{"addr1": true, "addr2": true},
+			isUsed:   []string{"addr1", "addr2"},
+		},
+		{
+			name:     "Use twice same addr",
+			actual:   keeper.NewUsedSignersMap().Use("addr").Use("addr"),
+			expected: keeper.UsedSignersMap{"addr": true},
+			isUsed:   []string{"addr"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.actual)
+		})
+		for _, addr := range tc.isUsed {
+			isUsed := tc.actual.IsUsed(addr)
+			assert.True(t, isUsed, "IsUsed(%q)", addr)
+		}
+	}
+}
+
+func TestUsedSignersMap_AlsoUse(t *testing.T) {
+	tests := []struct {
+		name string
+		base keeper.UsedSignersMap
+		m2   keeper.UsedSignersMap
+		exp  keeper.UsedSignersMap
+	}{
+		{
+			name: "two different addrs",
+			base: keeper.NewUsedSignersMap().Use("addr1"),
+			m2:   keeper.NewUsedSignersMap().Use("addr2"),
+			exp:  keeper.UsedSignersMap{"addr1": true, "addr2": true},
+		},
+		{
+			name: "two same addrs",
+			base: keeper.NewUsedSignersMap().Use("addr"),
+			m2:   keeper.NewUsedSignersMap().Use("addr"),
+			exp:  keeper.UsedSignersMap{"addr": true},
+		},
+		{
+			name: "both empty",
+			base: keeper.NewUsedSignersMap(),
+			m2:   keeper.NewUsedSignersMap(),
+			exp:  keeper.UsedSignersMap{},
+		},
+		{
+			name: "base empty",
+			base: keeper.NewUsedSignersMap(),
+			m2:   keeper.NewUsedSignersMap().Use("addr"),
+			exp:  keeper.UsedSignersMap{"addr": true},
+		},
+		{
+			name: "m2 empty",
+			base: keeper.NewUsedSignersMap().Use("addr"),
+			m2:   keeper.NewUsedSignersMap(),
+			exp:  keeper.UsedSignersMap{"addr": true},
+		},
+		{
+			name: "m2 nil",
+			base: keeper.NewUsedSignersMap().Use("addr"),
+			m2:   nil,
+			exp:  keeper.UsedSignersMap{"addr": true},
+		},
+		{
+			name: "each have 3 with 1 common",
+			base: keeper.NewUsedSignersMap().Use("addr1", "addr2", "addr3"),
+			m2:   keeper.NewUsedSignersMap().Use("addr3", "addr4", "addr5"),
+			exp: keeper.UsedSignersMap{
+				"addr1": true,
+				"addr2": true,
+				"addr3": true,
+				"addr4": true,
+				"addr5": true,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual keeper.UsedSignersMap
+			testFunc := func() {
+				actual = tc.base.AlsoUse(tc.m2)
+			}
+			require.NotPanics(t, testFunc, "AlsoUse")
+			assert.Equal(t, tc.exp, actual, "AlsoUse return value")
+			assert.Equal(t, tc.exp, tc.base, "base after AlsoUse")
+		})
+	}
 }
 
 type testCaseFindMissing struct {
