@@ -76,6 +76,7 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) TestSetAttribute() {
+	past := time.Now().Add(2 - time.Hour)
 
 	cases := []struct {
 		name        string
@@ -130,6 +131,18 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 			},
 			ownerAddr: s.user1Addr,
 			errorMsg:  "invalid name: empty",
+		},
+		{
+			name: "should fail due to check expiration date",
+			attr: types.Attribute{
+				Name:           "example.attribute",
+				Value:          []byte("01234567891"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: &past,
+			},
+			ownerAddr: s.user1Addr,
+			errorMsg:  fmt.Sprintf("attribute expiration date %v is before block time of %v", past.UTC(), s.ctx.BlockTime().UTC()),
 		},
 		{
 			name: "should fail due to attribute length too long",
@@ -409,6 +422,7 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 
 func (s *KeeperTestSuite) TestUpdateAttributeExpiration() {
 	now := time.Now().UTC()
+	past := now.Add(2 - time.Hour)
 	attr := types.Attribute{
 		Name:           "example.attribute",
 		Value:          []byte("my-value"),
@@ -472,6 +486,18 @@ func (s *KeeperTestSuite) TestUpdateAttributeExpiration() {
 			expirationDate: nil,
 			ownerAddr:      s.user2Addr,
 			errorMsg:       fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
+		},
+		{
+			name: "should fail to update attribute expiration, time in the past",
+			origAttr: types.Attribute{
+				Name:          "example.attribute",
+				Value:         []byte("my-value"),
+				Address:       s.user1,
+				AttributeType: types.AttributeType_String,
+			},
+			errorMsg:       fmt.Sprintf("attribute expiration date %v is before block time of %v", past.UTC(), s.ctx.BlockTime().UTC()),
+			expirationDate: &past,
+			ownerAddr:      s.user1Addr,
 		},
 		{
 			name: "should succeed to update attribute expiration, with nil time",
