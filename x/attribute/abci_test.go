@@ -38,11 +38,11 @@ func TestBeginBlockDeletionOfExpired(t *testing.T) {
 	require.NoError(t, app.NameKeeper.SetNameRecord(ctx, "one.expire.testing", user1Addr, false), "name record should save successfully")
 	require.NoError(t, app.NameKeeper.SetNameRecord(ctx, "two.expire.testing", user1Addr, false), "name record should save successfully")
 
-	attr1 := types.NewAttribute("one.expire.testing", user1, types.AttributeType_String, []byte("test1"))
+	attr1 := types.NewAttribute("one.expire.testing", user1, types.AttributeType_String, []byte("test1"), nil)
 	attr1.ExpirationDate = &past
 	require.NoError(t, app.AttributeKeeper.SetAttribute(ctx, attr1, user1Addr))
 
-	attr2 := types.NewAttribute("two.expire.testing", user1, types.AttributeType_String, []byte("test2"))
+	attr2 := types.NewAttribute("two.expire.testing", user1, types.AttributeType_String, []byte("test2"), nil)
 	attr2.ExpirationDate = &past
 	require.NoError(t, app.AttributeKeeper.SetAttribute(ctx, attr2, user1Addr))
 

@@ -38,7 +38,7 @@ func (msg MsgAddAttributeRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
 		return err
 	}
-	a := NewAttribute(msg.Name, msg.Account, msg.AttributeType, msg.Value)
+	a := NewAttribute(msg.Name, msg.Account, msg.AttributeType, msg.Value, msg.ExpirationDate)
 	return a.ValidateBasic()
 }
 
@@ -78,7 +78,7 @@ func (msg MsgUpdateAttributeRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
 		return err
 	}
-	a := NewAttribute(msg.Name, msg.Account, msg.UpdateAttributeType, msg.UpdateValue)
+	a := NewAttribute(msg.Name, msg.Account, msg.UpdateAttributeType, msg.UpdateValue, nil)
 	return a.ValidateBasic()
 }
 

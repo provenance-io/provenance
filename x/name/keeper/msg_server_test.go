@@ -114,7 +114,7 @@ func (s *MsgServerTestSuite) TestDeleteNameRemovingAttributeAccounts() {
 	attrAccounts := make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
 		attrAccounts[i] = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrtypes.NewAttribute(name, attrAccounts[i].String(), attrtypes.AttributeType_String, []byte(attrAccounts[i].String())), s.owner1Addr))
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrtypes.NewAttribute(name, attrAccounts[i].String(), attrtypes.AttributeType_String, []byte(attrAccounts[i].String()), nil), s.owner1Addr))
 		attrStore := s.ctx.KVStore(s.app.GetKey(attrtypes.StoreKey))
 		key := attrtypes.AttributeNameAddrKeyPrefix(name, attrAccounts[i])
 		address, _ := attrtypes.GetAddressFromKey(key)

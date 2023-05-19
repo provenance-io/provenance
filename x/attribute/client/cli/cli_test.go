@@ -140,26 +140,34 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			"example.attribute",
 			s.account1Str,
 			attributetypes.AttributeType_String,
-			[]byte("example attribute value string")))
+			[]byte("example attribute value string"),
+			nil,
+		))
 	attributeData.Attributes = append(attributeData.Attributes,
 		attributetypes.NewAttribute(
 			"example.attribute.count",
 			s.account1Str,
 			attributetypes.AttributeType_Int,
-			[]byte("2")))
+			[]byte("2"),
+			nil,
+		))
 	for i := 0; i < s.accAttrCount; i++ {
 		attributeData.Attributes = append(attributeData.Attributes,
 			attributetypes.NewAttribute(
 				fmt.Sprintf("example.attribute.%s", toWritten(i)),
 				s.account3Str,
 				attributetypes.AttributeType_Int,
-				[]byte(fmt.Sprintf("%d", i))))
+				[]byte(fmt.Sprintf("%d", i)),
+				nil,
+			))
 		attributeData.Attributes = append(attributeData.Attributes,
 			attributetypes.NewAttribute(
 				"example.attribute.overload",
 				s.account4Str,
 				attributetypes.AttributeType_String,
-				[]byte(toWritten(i))))
+				[]byte(toWritten(i)),
+				nil,
+			))
 	}
 	attributeData.Params.MaxValueLength = 128
 	attributeDataBz, err := cfg.Codec.MarshalJSON(&attributeData)

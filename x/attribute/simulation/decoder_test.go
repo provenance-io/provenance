@@ -17,7 +17,7 @@ func TestDecodeStore(t *testing.T) {
 	cdc := app.MakeEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
-	testAttributeRecord := types.NewAttribute("test", "", types.AttributeType_Int, []byte{1})
+	testAttributeRecord := types.NewAttribute("test", "", types.AttributeType_Int, []byte{1}, nil)
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
