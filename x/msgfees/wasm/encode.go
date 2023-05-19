@@ -35,7 +35,7 @@ type AssessCustomFeeParams struct {
 }
 
 // Encoder returns a smart contract message encoder for the name module.
-func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sdk.Msg, error) {
+func Encoder(contract sdk.AccAddress, msg json.RawMessage, _ string) ([]sdk.Msg, error) {
 	wrapper := struct {
 		Params *MsgFeesMsgParams `json:"msgfees"`
 	}{}
@@ -55,7 +55,7 @@ func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sd
 }
 
 // Encode creates a MsgAssessCustomMsgFeeRequest.
-func (params *AssessCustomFeeParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
+func (params *AssessCustomFeeParams) Encode(_ sdk.AccAddress) ([]sdk.Msg, error) {
 	// Create message request
 	msg := types.NewMsgAssessCustomMsgFeeRequest(params.Name, params.Amount, params.Recipient, params.From, params.RecipientBasisPoints)
 	err := msg.ValidateBasic()

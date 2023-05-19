@@ -90,7 +90,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgAddAttribute will add an attribute under an account with a random type.
-func SimulateMsgAddAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) simtypes.Operation {
+func SimulateMsgAddAttribute(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {

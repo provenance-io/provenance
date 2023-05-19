@@ -88,11 +88,8 @@ Migration process:
 			if err := client.SetCmdClientContext(command, clientCtx); err != nil {
 				return err
 			}
-			if err := config.InterceptConfigsPreRunHandler(command); err != nil {
-				return err
-			}
 
-			return nil
+			return config.InterceptConfigsPreRunHandler(command)
 		},
 		RunE: func(command *cobra.Command, args []string) error {
 			batchSizeMB, err := command.Flags().GetUint(FlagBatchSize)

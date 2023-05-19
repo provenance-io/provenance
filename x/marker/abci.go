@@ -15,7 +15,7 @@ import (
 )
 
 // BeginBlocker returns the begin blocker for the marker module.
-func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper, bk bankkeeper.Keeper) {
+func BeginBlocker(ctx sdk.Context, _ abci.RequestBeginBlock, k keeper.Keeper, bk bankkeeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	// Iterate through all marker accounts and check for supply above or below expected targets.
 	var err error

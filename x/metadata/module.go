@@ -49,7 +49,7 @@ type AppModuleBasic struct {
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
 // RegisterLegacyAminoCodec registers the metadata module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {
 }
 
 // DefaultGenesis returns the default genesis state.
@@ -58,7 +58,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the metadata module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -117,7 +117,7 @@ func (am AppModule) Route() sdk.Route {
 }
 
 // RegisterInvariants does not register any invariants for the metadata module
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {
 }
 
 // QuerierRoute returns the query route for this module.
@@ -126,7 +126,7 @@ func (am AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns no sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
@@ -151,7 +151,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // BeginBlock returns the begin blocker for the metadata module.
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
+func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock returns the end blocker for the metadata module. It returns no validator
 // updates.
@@ -168,22 +168,22 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // ProposalContents returns all the metadata content functions used to
 // simulate metadata governance proposals.
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{} // simulation.ProposalContents(am.keeper)
 }
 
 // RandomizedParams creates randomized metadata param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{} // simulation.ParamChanges(r)
 }
 
 // RegisterStoreDecoder registers a decoder for metadata module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the metadata module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	// return simulation.WeightedOperations(
 	//	simState.AppParams, simState.Cdc, am.keeper, simState.Contents,
 	// )

@@ -380,11 +380,7 @@ func (k Keeper) ValidateWriteScope(
 	}
 
 	usedSigners.AlsoUse(GetUsedSigners(validatedParties))
-	if err = k.validateSmartContractSigners(ctx, usedSigners, msg); err != nil {
-		return err
-	}
-
-	return nil
+	return k.validateSmartContractSigners(ctx, usedSigners, msg)
 }
 
 // ValidateDeleteScope checks the current scope and the proposed removal scope to determine if the proposed remove is valid
@@ -434,11 +430,7 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 	}
 
 	usedSigners.AlsoUse(GetUsedSigners(validatedParties))
-	if err = k.validateSmartContractSigners(ctx, usedSigners, msg); err != nil {
-		return err
-	}
-
-	return nil
+	return k.validateSmartContractSigners(ctx, usedSigners, msg)
 }
 
 // ValidateAddScopeDataAccess checks the current scope and the proposed

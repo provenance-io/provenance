@@ -222,7 +222,7 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 
 // ValidateAuditUpdate ensure that a given reference to audit fields represents no changes to
 // existing audit field data.  NOTE: A nil proposed is considered "no update" and not an attempt to unset.
-func (k Keeper) ValidateAuditUpdate(ctx sdk.Context, existing, proposed *types.AuditFields) error {
+func (k Keeper) ValidateAuditUpdate(_ sdk.Context, existing, proposed *types.AuditFields) error {
 	if proposed == nil {
 		return nil
 	}
