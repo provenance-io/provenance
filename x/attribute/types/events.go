@@ -10,6 +10,8 @@ const (
 	EventTypeAttributeAdded string = "account_attribute_added"
 	// EventTypeAttributeUpdated emitted when account attributes are updated.
 	EventTypeAttributeUpdated string = "account_attribute_updated"
+	// EventTypeAttributeUpdated emitted when a attribute's expiration date is updated.
+	EventTypeAttributeExpirationUpdated string = "account_attribute_expiration_updated"
 	// EventTypeAttributeDeleted emitted when account attributes are removed.
 	EventTypeAttributeDeleted string = "account_attribute_deleted"
 	// EventTypeAttributeDistinctDeleted emitted when a distinct account attribute is deleted.
@@ -85,7 +87,7 @@ func NewEventAttributeExpirationUpdate(attribute Attribute, originalExpiration *
 		Account:            attribute.Address,
 		Owner:              owner,
 		OriginalExpiration: original,
-		UpdateExpiration:   updated,
+		UpdatedExpiration:  updated,
 	}
 }
 
@@ -114,7 +116,7 @@ func NewEventAttributeExpiredDelete(attribute Attribute) *EventAttributeExpiredD
 
 	return &EventAttributeExpiredDelete{
 		Name:       attribute.Name,
-		Value:      base64.StdEncoding.EncodeToString(attribute.GetValue()),
+		ValueHash:  string(attribute.Hash()),
 		Account:    attribute.Address,
 		Expiration: expiredTime,
 	}

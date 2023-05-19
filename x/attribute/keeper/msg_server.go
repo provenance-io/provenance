@@ -149,6 +149,14 @@ func (k msgServer) UpdateAttributeExpiration(goCtx context.Context, msg *types.M
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeAttributeExpirationUpdated,
+			sdk.NewAttribute(types.AttributeKeyNameAttribute, msg.Name),
+			sdk.NewAttribute(types.AttributeKeyAccountAddress, msg.Account),
+		),
+	)
+
 	return &types.MsgUpdateAttributeExpirationResponse{}, nil
 }
 

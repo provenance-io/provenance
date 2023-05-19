@@ -524,7 +524,7 @@ EventAttributeExpirationUpdate event emitted when attribute expiration is update
 | `account` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
 | `original_expiration` | [string](#string) |  |  |
-| `update_expiration` | [string](#string) |  |  |
+| `updated_expiration` | [string](#string) |  |  |
 
 
 
@@ -540,7 +540,7 @@ EventAttributeExpiredDelete event emitted when attribute has expired and been de
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  |  |
-| `value` | [string](#string) |  |  |
+| `value_hash` | [string](#string) |  |  |
 | `attribute_type` | [string](#string) |  |  |
 | `account` | [string](#string) |  |  |
 | `expiration` | [string](#string) |  |  |

@@ -1089,6 +1089,7 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	past := s.startBlockTime.Add(2 - time.Hour)
 	future := s.startBlockTime.Add(time.Hour)
 
+	s.ctx = s.ctx.WithBlockTime(past)
 	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "one.expire.testing", s.user1Addr, false), "name record should save successfully")
 	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "two.expire.testing", s.user1Addr, false), "name record should save successfully")
 	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "three.expire.testing", s.user1Addr, false), "name record should save successfully")
@@ -1125,7 +1126,7 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr5)))
 	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr5.Name, attr5.GetAddressBytes())))
 
-	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager()).WithBlockTime(s.startBlockTime)
 	s.app.AttributeKeeper.DeleteExpiredAttributes(s.ctx, 0)
 
 	attr1Event := s.ctx.EventManager().Events()[0]

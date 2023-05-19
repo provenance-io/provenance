@@ -128,6 +128,10 @@ func (k Keeper) SetAttribute(
 ) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "set")
 
+	if attr.ExpirationDate != nil && attr.ExpirationDate.Unix() < ctx.BlockTime().Unix() {
+		return fmt.Errorf("attribute expiration date %v is before block time of %v", attr.ExpirationDate.UTC(), ctx.BlockTime().UTC())
+	}
+
 	// Ensure attribute is valid
 	if err := attr.ValidateBasic(); err != nil {
 		return err
@@ -315,6 +319,10 @@ func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, attribute types.Attri
 		}
 
 		if attr.Name == attribute.Name && bytes.Equal(attr.Value, attribute.Value) {
+			if expirationDate != nil && expirationDate.Unix() < ctx.BlockTime().Unix() {
+				return fmt.Errorf("attribute expiration date %v is before block time of %v", expirationDate.UTC(), ctx.BlockTime().UTC())
+			}
+
 			found = true
 			store.Delete(it.Key())
 			k.DeleteAttributeExpireLookup(ctx, attr)
@@ -527,6 +535,7 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 				count++
 			} else {
 				ctx.Logger().Error(fmt.Sprintf("unable to unmarshal attribute to delete key: %v error: %v", attrKey, err))
+				store.Delete(iterator.Key())
 				continue
 			}
 		}
