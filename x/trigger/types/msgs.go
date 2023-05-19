@@ -46,6 +46,19 @@ func NewDestroyTriggerRequest(authority string, id TriggerID) *MsgDestroyTrigger
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgCreateTriggerRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return fmt.Errorf("invalid address for trigger authority from address: %w", err)
+	}
+	if len(msg.Actions) == 0 {
+		return fmt.Errorf("trigger must contain actions")
+	}
+	event, err := msg.GetTriggerEventI()
+	if err != nil {
+		return err
+	}
+	if err = event.Validate(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -70,8 +83,24 @@ func (msg MsgCreateTriggerRequest) UnpackInterfaces(unpacker codectypes.AnyUnpac
 	return sdktx.UnpackInterfaces(unpacker, msg.Actions)
 }
 
+// GetTriggerEventI returns unpacked TriggerEvent
+func (msg MsgCreateTriggerRequest) GetTriggerEventI() (TriggerEventI, error) {
+	event, ok := msg.GetEvent().GetCachedValue().(TriggerEventI)
+	if !ok {
+		return nil, ErrNoTriggerEvent.Wrap("failed to get event")
+	}
+
+	return event, nil
+}
+
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDestroyTriggerRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return fmt.Errorf("invalid address for trigger authority from address: %w", err)
+	}
+	if msg.Id == 0 {
+		return fmt.Errorf("invalid id for trigger")
+	}
 	return nil
 }
 

@@ -1,6 +1,8 @@
 package types
 
 import (
+	fmt "fmt"
+	"strings"
 	time "time"
 
 	proto "github.com/gogo/protobuf/proto"
@@ -21,6 +23,7 @@ const (
 type TriggerEventI interface {
 	proto.Message
 	GetEventPrefix() string
+	Validate() error
 }
 
 // NewTrigger creates a new trigger.
@@ -84,14 +87,37 @@ func (e TransactionEvent) GetEventPrefix() string {
 	return e.Name
 }
 
+// Validate checks if the event data is valid.
+func (e TransactionEvent) Validate() error {
+	if strings.TrimSpace(e.Name) == "" {
+		return fmt.Errorf("empty event name")
+	}
+	for _, attribute := range e.Attributes {
+		if strings.TrimSpace(attribute.Name) == "" {
+			return fmt.Errorf("empty attribute name")
+		}
+	}
+	return nil
+}
+
 // GetEventPrefix gets the prefix for a BlockHeightEvent.
 func (e BlockHeightEvent) GetEventPrefix() string {
 	return BlockHeightPrefix
 }
 
+// Validate checks if the event data is valid.
+func (e BlockHeightEvent) Validate() error {
+	return nil
+}
+
 // GetEventPrefix gets the prefix for a BlockTimeEvent.
 func (e BlockTimeEvent) GetEventPrefix() string {
 	return BlockTimePrefix
+}
+
+// Validate checks if the event data is valid.
+func (e BlockTimeEvent) Validate() error {
+	return nil
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -109,4 +135,14 @@ func (m Trigger) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m QueuedTrigger) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return sdktx.UnpackInterfaces(unpacker, m.Trigger.Actions)
+}
+
+// GetTriggerEventI returns unpacked TriggerEvent
+func (m Trigger) GetTriggerEventI() (TriggerEventI, error) {
+	event, ok := m.GetEvent().GetCachedValue().(TriggerEventI)
+	if !ok {
+		return nil, ErrNoTriggerEvent.Wrap("failed to get event")
+	}
+
+	return event, nil
 }

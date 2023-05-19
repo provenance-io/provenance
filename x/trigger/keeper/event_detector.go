@@ -51,7 +51,7 @@ func (k Keeper) DetectTimeEvents(ctx sdk.Context) (triggers []types.Trigger) {
 // GetMatchingTriggers Obtains the prefixed triggers that are waiting to be activated and match the supplied condition.
 func (k Keeper) GetMatchingTriggers(ctx sdk.Context, prefix string, condition func(types.TriggerEventI) bool) (triggers []types.Trigger) {
 	err := k.IterateEventListeners(ctx, prefix, func(trigger types.Trigger) (stop bool, err error) {
-		event := trigger.Event.GetCachedValue().(types.TriggerEventI)
+		event, _ := trigger.GetTriggerEventI()
 		if condition(event) {
 			triggers = append(triggers, trigger)
 		}

@@ -10,14 +10,14 @@ import (
 func (k Keeper) SetEventListener(ctx sdk.Context, trigger triggertypes.Trigger) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&trigger)
-	event := trigger.Event.GetCachedValue().(triggertypes.TriggerEventI)
+	event, _ := trigger.GetTriggerEventI()
 	store.Set(triggertypes.GetEventListenerKey(event.GetEventPrefix(), trigger.GetId()), bz)
 }
 
 // RemoveEventListener Removes the trigger from the event listener store.
 func (k Keeper) RemoveEventListener(ctx sdk.Context, trigger triggertypes.Trigger) bool {
 	store := ctx.KVStore(k.storeKey)
-	event := trigger.Event.GetCachedValue().(triggertypes.TriggerEventI)
+	event, _ := trigger.GetTriggerEventI()
 	key := triggertypes.GetEventListenerKey(event.GetEventPrefix(), trigger.GetId())
 	keyExists := store.Has(key)
 	if keyExists {

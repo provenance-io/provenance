@@ -11,7 +11,7 @@ import (
 
 // RandomizedGenState generates a random GenesisState for distribution
 func RandomizedGenState(simState *module.SimulationState) {
-	triggers := types.NewGenesisState()
+	triggers := types.DefaultGenesis()
 
 	bz, err := json.MarshalIndent(&triggers, "", " ")
 	if err != nil {
