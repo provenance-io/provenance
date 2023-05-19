@@ -36,3 +36,31 @@ func (k Keeper) GetGasLimit(ctx sdk.Context, id types.TriggerID) (gasLimit uint6
 	gasLimit = types.GetGasLimitFromBytes(bz)
 	return
 }
+
+// IterateGasLimits Iterates through all the gas limits.
+func (k Keeper) IterateGasLimits(ctx sdk.Context, handle func(gasLimit uint64) (stop bool, err error)) error {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.GasLimitKeyPrefix)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		record := types.GetGasLimitFromBytes(iterator.Value())
+		stop, err := handle(record)
+		if err != nil {
+			return err
+		}
+		if stop {
+			break
+		}
+	}
+	return nil
+}
+
+// GetAllGasLimits Gets all the gas limits within the store.
+func (k Keeper) GetAllGasLimits(ctx sdk.Context) (gasLimits []uint64, err error) {
+	err = k.IterateGasLimits(ctx, func(gasLimit uint64) (stop bool, err error) {
+		gasLimits = append(gasLimits, gasLimit)
+		return false, nil
+	})
+	return
+}

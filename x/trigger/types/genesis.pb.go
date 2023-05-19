@@ -27,6 +27,14 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type GenesisState struct {
 	// Trigger id is the next auto incremented id to be assigned to the next created trigger
 	TriggerId uint64 `protobuf:"varint,1,opt,name=trigger_id,json=triggerId,proto3" json:"trigger_id,omitempty"`
+	// Queue start is the starting index of the queue.
+	QueueStart uint64 `protobuf:"varint,2,opt,name=queue_start,json=queueStart,proto3" json:"queue_start,omitempty"`
+	// Triggers to initially start with.
+	Triggers []Trigger `protobuf:"bytes,3,rep,name=triggers,proto3" json:"triggers"`
+	// Gas limits for triggers to initially start with.
+	GasLimits []uint64 `protobuf:"varint,4,rep,packed,name=gas_limits,json=gasLimits,proto3" json:"gas_limits,omitempty"`
+	// Triggers to initially start with in the queue.
+	QueuedTriggers []QueuedTrigger `protobuf:"bytes,5,rep,name=queued_triggers,json=queuedTriggers,proto3" json:"queued_triggers"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -71,20 +79,27 @@ func init() {
 }
 
 var fileDescriptor_5e92f7d1706d41c9 = []byte{
-	// 198 bytes of a gzipped FileDescriptorProto
+	// 314 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x2e, 0x28, 0xca, 0x2f,
 	0x4b, 0xcd, 0x4b, 0xcc, 0x4b, 0x4e, 0xd5, 0x2f, 0x29, 0xca, 0x4c, 0x4f, 0x4f, 0x2d, 0xd2, 0x2f,
 	0x33, 0xd4, 0x4f, 0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17,
 	0x12, 0x45, 0x28, 0xd2, 0x83, 0x2a, 0xd2, 0x2b, 0x33, 0x94, 0x12, 0x49, 0xcf, 0x4f, 0xcf, 0x07,
-	0xab, 0xd0, 0x07, 0xb1, 0x20, 0x8a, 0x95, 0xcc, 0xb9, 0x78, 0xdc, 0x21, 0xba, 0x83, 0x4b, 0x12,
-	0x4b, 0x52, 0x85, 0x64, 0xb9, 0xb8, 0xa0, 0x7a, 0xe2, 0x33, 0x53, 0x24, 0x18, 0x15, 0x18, 0x35,
-	0x58, 0x82, 0x38, 0xa1, 0x22, 0x9e, 0x29, 0x56, 0x1c, 0x1d, 0x0b, 0xe4, 0x19, 0x5e, 0x2c, 0x90,
-	0x67, 0x70, 0xca, 0x3c, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18,
-	0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x06, 0x2e, 0x89, 0x4c,
-	0xb0, 0xe1, 0x98, 0x4e, 0x08, 0x60, 0x8c, 0x32, 0x4e, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2, 0x4b,
-	0xce, 0xcf, 0xd5, 0x47, 0xa8, 0xd1, 0xcd, 0xcc, 0x47, 0xe2, 0xe9, 0x57, 0xc0, 0xfd, 0x56, 0x52,
-	0x59, 0x90, 0x5a, 0x9c, 0xc4, 0x06, 0x76, 0xaa, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x22, 0xdf,
-	0x50, 0x7d, 0xfe, 0x00, 0x00, 0x00,
+	0xab, 0xd0, 0x07, 0xb1, 0x20, 0x8a, 0xa5, 0x70, 0x98, 0x08, 0xd3, 0x07, 0x56, 0xa4, 0xd4, 0xc7,
+	0xc4, 0xc5, 0xe3, 0x0e, 0xb1, 0x23, 0xb8, 0x24, 0xb1, 0x24, 0x55, 0x48, 0x96, 0x8b, 0x0b, 0xaa,
+	0x22, 0x3e, 0x33, 0x45, 0x82, 0x51, 0x81, 0x51, 0x83, 0x25, 0x88, 0x13, 0x2a, 0xe2, 0x99, 0x22,
+	0x24, 0xcf, 0xc5, 0x5d, 0x58, 0x9a, 0x5a, 0x9a, 0x1a, 0x5f, 0x5c, 0x92, 0x58, 0x54, 0x22, 0xc1,
+	0x04, 0x96, 0xe7, 0x02, 0x0b, 0x05, 0x83, 0x44, 0x84, 0x1c, 0xb8, 0x38, 0xa0, 0xaa, 0x8b, 0x25,
+	0x98, 0x15, 0x98, 0x35, 0xb8, 0x8d, 0xe4, 0xf4, 0xb0, 0xba, 0x5a, 0x2f, 0x04, 0xc2, 0x74, 0x62,
+	0x39, 0x71, 0x4f, 0x9e, 0x21, 0x08, 0xae, 0x0b, 0xe4, 0x82, 0xf4, 0xc4, 0xe2, 0xf8, 0x9c, 0xcc,
+	0xdc, 0xcc, 0x92, 0x62, 0x09, 0x16, 0x05, 0x66, 0x90, 0x0b, 0xd2, 0x13, 0x8b, 0x7d, 0xc0, 0x02,
+	0x42, 0xc1, 0x5c, 0xfc, 0x60, 0xeb, 0x52, 0xe2, 0xe1, 0xf6, 0xb0, 0x82, 0xed, 0x51, 0xc1, 0x61,
+	0x4f, 0x20, 0x58, 0x35, 0xaa, 0x6d, 0x7c, 0x85, 0xc8, 0x82, 0xc5, 0x56, 0x1c, 0x1d, 0x0b, 0xe4,
+	0x19, 0x5e, 0x2c, 0x90, 0x67, 0x70, 0xca, 0x3c, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6,
+	0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39,
+	0x06, 0x2e, 0x89, 0xcc, 0x7c, 0xec, 0x36, 0x04, 0x30, 0x46, 0x19, 0xa7, 0x67, 0x96, 0x64, 0x94,
+	0x26, 0xe9, 0x25, 0xe7, 0xe7, 0xea, 0x23, 0xd4, 0xe8, 0x66, 0xe6, 0x23, 0xf1, 0xf4, 0x2b, 0xe0,
+	0xd1, 0x50, 0x52, 0x59, 0x90, 0x5a, 0x9c, 0xc4, 0x06, 0x8e, 0x02, 0x63, 0x40, 0x00, 0x00, 0x00,
+	0xff, 0xff, 0x35, 0x24, 0x67, 0xb5, 0xfb, 0x01, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -107,6 +122,57 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.QueuedTriggers) > 0 {
+		for iNdEx := len(m.QueuedTriggers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.QueuedTriggers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.GasLimits) > 0 {
+		dAtA2 := make([]byte, len(m.GasLimits)*10)
+		var j1 int
+		for _, num := range m.GasLimits {
+			for num >= 1<<7 {
+				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j1++
+			}
+			dAtA2[j1] = uint8(num)
+			j1++
+		}
+		i -= j1
+		copy(dAtA[i:], dAtA2[:j1])
+		i = encodeVarintGenesis(dAtA, i, uint64(j1))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Triggers) > 0 {
+		for iNdEx := len(m.Triggers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Triggers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if m.QueueStart != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.QueueStart))
+		i--
+		dAtA[i] = 0x10
+	}
 	if m.TriggerId != 0 {
 		i = encodeVarintGenesis(dAtA, i, uint64(m.TriggerId))
 		i--
@@ -134,6 +200,28 @@ func (m *GenesisState) Size() (n int) {
 	_ = l
 	if m.TriggerId != 0 {
 		n += 1 + sovGenesis(uint64(m.TriggerId))
+	}
+	if m.QueueStart != 0 {
+		n += 1 + sovGenesis(uint64(m.QueueStart))
+	}
+	if len(m.Triggers) > 0 {
+		for _, e := range m.Triggers {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.GasLimits) > 0 {
+		l = 0
+		for _, e := range m.GasLimits {
+			l += sovGenesis(uint64(e))
+		}
+		n += 1 + sovGenesis(uint64(l)) + l
+	}
+	if len(m.QueuedTriggers) > 0 {
+		for _, e := range m.QueuedTriggers {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
 	}
 	return n
 }
@@ -192,6 +280,169 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QueueStart", wireType)
+			}
+			m.QueueStart = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.QueueStart |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Triggers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Triggers = append(m.Triggers, Trigger{})
+			if err := m.Triggers[len(m.Triggers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowGenesis
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.GasLimits = append(m.GasLimits, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowGenesis
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthGenesis
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthGenesis
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.GasLimits) == 0 {
+					m.GasLimits = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowGenesis
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.GasLimits = append(m.GasLimits, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field GasLimits", wireType)
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QueuedTriggers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QueuedTriggers = append(m.QueuedTriggers, QueuedTrigger{})
+			if err := m.QueuedTriggers[len(m.QueuedTriggers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGenesis(dAtA[iNdEx:])

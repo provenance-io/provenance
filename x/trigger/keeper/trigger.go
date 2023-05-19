@@ -59,6 +59,15 @@ func (k Keeper) IterateTriggers(ctx sdk.Context, handle func(trigger triggertype
 	return nil
 }
 
+// GetAllTriggers Gets all the triggers within the store.
+func (k Keeper) GetAllTriggers(ctx sdk.Context) (triggers []triggertypes.Trigger, err error) {
+	err = k.IterateTriggers(ctx, func(trigger triggertypes.Trigger) (stop bool, err error) {
+		triggers = append(triggers, trigger)
+		return false, nil
+	})
+	return
+}
+
 // getTriggerID Gets the latest trigger ID.
 func (k Keeper) getTriggerID(ctx sdk.Context) (triggerID triggertypes.TriggerID) {
 	store := ctx.KVStore(k.storeKey)

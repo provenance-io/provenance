@@ -423,9 +423,6 @@
     - [EventTriggerCreated](#provenance.trigger.v1.EventTriggerCreated)
     - [EventTriggerDestroyed](#provenance.trigger.v1.EventTriggerDestroyed)
   
-- [provenance/trigger/v1/genesis.proto](#provenance/trigger/v1/genesis.proto)
-    - [GenesisState](#provenance.trigger.v1.GenesisState)
-  
 - [provenance/trigger/v1/trigger.proto](#provenance/trigger/v1/trigger.proto)
     - [Attribute](#provenance.trigger.v1.Attribute)
     - [BlockHeightEvent](#provenance.trigger.v1.BlockHeightEvent)
@@ -433,6 +430,9 @@
     - [QueuedTrigger](#provenance.trigger.v1.QueuedTrigger)
     - [TransactionEvent](#provenance.trigger.v1.TransactionEvent)
     - [Trigger](#provenance.trigger.v1.Trigger)
+  
+- [provenance/trigger/v1/genesis.proto](#provenance/trigger/v1/genesis.proto)
+    - [GenesisState](#provenance.trigger.v1.GenesisState)
   
 - [provenance/trigger/v1/query.proto](#provenance/trigger/v1/query.proto)
     - [QueryTriggerByIDRequest](#provenance.trigger.v1.QueryTriggerByIDRequest)
@@ -6373,37 +6373,6 @@ Msg
 
 
 
-<a name="provenance/trigger/v1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/trigger/v1/genesis.proto
-
-
-
-<a name="provenance.trigger.v1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the trigger module's genesis state.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `trigger_id` | [uint64](#uint64) |  | Trigger id is the next auto incremented id to be assigned to the next created trigger |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
 <a name="provenance/trigger/v1/trigger.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -6502,6 +6471,41 @@ Trigger
 | `owner` | [string](#string) |  | The owner of the trigger. |
 | `event` | [google.protobuf.Any](#google.protobuf.Any) |  | The event that must be detected for the trigger to fire. |
 | `actions` | [google.protobuf.Any](#google.protobuf.Any) | repeated | The messages to run when the trigger fires. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/genesis.proto
+
+
+
+<a name="provenance.trigger.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the trigger module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [uint64](#uint64) |  | Trigger id is the next auto incremented id to be assigned to the next created trigger |
+| `queue_start` | [uint64](#uint64) |  | Queue start is the starting index of the queue. |
+| `triggers` | [Trigger](#provenance.trigger.v1.Trigger) | repeated | Triggers to initially start with. |
+| `gas_limits` | [uint64](#uint64) | repeated | Gas limits for triggers to initially start with. |
+| `queued_triggers` | [QueuedTrigger](#provenance.trigger.v1.QueuedTrigger) | repeated | Triggers to initially start with in the queue. |
 
 
 

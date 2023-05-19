@@ -2,6 +2,7 @@ syntax = "proto3";
 package provenance.trigger.v1;
 
 import "gogoproto/gogo.proto";
+import "provenance/trigger/v1/trigger.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/trigger/types";
 option java_package        = "io.provenance.trigger.v1";
@@ -14,4 +15,16 @@ message GenesisState {
 
   // Trigger id is the next auto incremented id to be assigned to the next created trigger
   uint64 trigger_id = 1;
+
+  // Queue start is the starting index of the queue.
+  uint64 queue_start = 2;
+
+  // Triggers to initially start with.
+  repeated Trigger triggers = 3 [(gogoproto.nullable) = false];
+
+  // Gas limits for triggers to initially start with.
+  repeated uint64 gas_limits = 4;
+
+  // Triggers to initially start with in the queue.
+  repeated QueuedTrigger queued_triggers = 5 [(gogoproto.nullable) = false];
 }
