@@ -543,8 +543,6 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 				count++
 			} else {
 				ctx.Logger().Error(fmt.Sprintf("unable to unmarshal attribute to delete key: %v error: %v", attrKey, err))
-				store.Delete(iterator.Key())
-				continue
 			}
 		}
 
