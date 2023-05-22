@@ -13,7 +13,7 @@ import (
 var _ types.QueryServer = Keeper{}
 
 // Params queries params of distribution module
-func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	var params types.Params
 	k.paramSpace.GetParamSet(ctx, &params)

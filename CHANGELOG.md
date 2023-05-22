@@ -41,17 +41,27 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add support to add/remove required attributes for a restricted marker. [#1512](https://github.com/provenance-io/provenance/issues/1512)
 * Add trigger module for delayed execution. [#1462](https://github.com/provenance-io/provenance/issues/1462)
+* Add support to update the `allow_forced_transfer` field of a restricted marker [#1545](https://github.com/provenance-io/provenance/issues/1545).
+* Add endpoints to update the value owner address of scopes [#1329](https://github.com/provenance-io/provenance/issues/1329).
 
 ### Improvements
 
+* Bump go to `1.20` (from `1.18`) [#1539](https://github.com/provenance-io/provenance/issues/1539).
+* Bump golangci-lint to `v1.52.2` (from `v1.48`) [#1539](https://github.com/provenance-io/provenance/issues/1539).
+  * New `make golangci-lint` target created for installing golangci-lint.
+  * New `make golangci-lint-update` target created for installing the current version even if you already have a version installed.
 * Add marker deposit access check for sends to marker escrow account [#1525](https://github.com/provenance-io/provenance/issues/1525).
 * Add support for `name` owner to execute `MsgModifyName` transaction [#1536](https://github.com/provenance-io/provenance/issues/1536).
 * Add usage of `AddGovPropFlagsToCmd` and `ReadGovPropFlags` cli for `GetModifyNameCmd` [#1542](https://github.com/provenance-io/provenance/issues/1542).
+* Bump Cosmos-SDK to `v0.46.10-pio-4` (from `v0.46.10-pio-3`) for the `SendRestrictionFn` changes [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
+* Switch to using a `SendRestrictionFn` for restricting sends of marker funds [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
+* Create `rust` upgrade handlers [PR 1549](https://github.com/provenance-io/provenance/pull/1549).
 
 ### API Breaking
 
-* Add marker deposit access check for sends to marker escrow account.  Will break any current address that is sending to the 
+* Add marker deposit access check for sends to marker escrow account.  Will break any current address that is sending to the
 marker escrow account if it does not have deposit access.  In order for it to work, deposit access needs to be added.  This can be done using the `MsgAddAccessRequest` tx  [#1525](https://github.com/provenance-io/provenance/issues/1525).
+* `MsgMultiSend` is now limited to a single `Input` [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
 
 ---
 

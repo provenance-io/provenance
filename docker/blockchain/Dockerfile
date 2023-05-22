@@ -1,4 +1,4 @@
-FROM golang:1.18-bullseye as build
+FROM golang:1.20-bullseye as build
 ARG VERSION
 ARG ARCH=x86_64
 

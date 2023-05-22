@@ -1,15 +1,15 @@
 module github.com/provenance-io/provenance
 
-go 1.18
+go 1.20
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7
-	cosmossdk.io/math v1.0.0
+	cosmossdk.io/math v1.0.1
 	github.com/CosmWasm/wasmd v0.29.0
 	github.com/CosmWasm/wasmvm v1.1.2
 	github.com/armon/go-metrics v0.4.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
-	github.com/cosmos/cosmos-sdk v0.46.7
+	github.com/cosmos/cosmos-sdk v0.46.10
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-go/v6 v6.1.0
 	github.com/gogo/protobuf v1.3.3
@@ -22,11 +22,11 @@ require (
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
 	github.com/rs/zerolog v1.29.1
-	github.com/spf13/cast v1.5.0
+	github.com/spf13/cast v1.5.1
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.15.0
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	github.com/tendermint/tendermint v0.34.26
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db
@@ -169,7 +169,7 @@ require (
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.10-pio-3
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.10-pio-4
 
 // use informal system fork of tendermint in the interim until comet is ready. This matches what the SDK is using.
 replace github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.26

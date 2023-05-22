@@ -55,7 +55,7 @@ type ModifyNameParams struct {
 }
 
 // Encoder returns a smart contract message encoder for the name module.
-func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sdk.Msg, error) {
+func Encoder(contract sdk.AccAddress, msg json.RawMessage, _ string) ([]sdk.Msg, error) {
 	wrapper := struct {
 		Params *NameMsgParams `json:"name"`
 	}{}
@@ -106,7 +106,7 @@ func (params *DeleteNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, erro
 }
 
 // Encode creates a MsgModifyNameRequest.
-func (params *ModifyNameParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, error) {
+func (params *ModifyNameParams) Encode(_ sdk.AccAddress) ([]sdk.Msg, error) {
 	address, err := sdk.AccAddressFromBech32(params.Address)
 	if err != nil {
 		return nil, fmt.Errorf("wasm: invalid bind address: %w", err)

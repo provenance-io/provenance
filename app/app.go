@@ -481,7 +481,6 @@ func New(
 	app.MarkerKeeper = markerkeeper.NewKeeper(
 		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper, app.TransferKeeper, app.AttributeKeeper, app.NameKeeper,
 	)
-	app.BankKeeper.SetSendRestrictionsFunc(app.MarkerKeeper.AllowMarkerSend)
 
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
 		return pioMsgFeesRouter.Handler(msg)
@@ -1069,7 +1068,7 @@ func (app *App) RegisterStreamingServices(appOpts servertypes.AppOptions) {
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
-func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
+func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router) {
 	statikFS, err := fs.New()
 	if err != nil {
 		panic(err)

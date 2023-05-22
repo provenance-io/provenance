@@ -139,6 +139,8 @@
     - [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse)
     - [MsgTransferRequest](#provenance.marker.v1.MsgTransferRequest)
     - [MsgTransferResponse](#provenance.marker.v1.MsgTransferResponse)
+    - [MsgUpdateForcedTransferRequest](#provenance.marker.v1.MsgUpdateForcedTransferRequest)
+    - [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse)
     - [MsgUpdateRequiredAttributesRequest](#provenance.marker.v1.MsgUpdateRequiredAttributesRequest)
     - [MsgUpdateRequiredAttributesResponse](#provenance.marker.v1.MsgUpdateRequiredAttributesResponse)
     - [MsgWithdrawRequest](#provenance.marker.v1.MsgWithdrawRequest)
@@ -288,8 +290,12 @@
     - [MsgDeleteScopeResponse](#provenance.metadata.v1.MsgDeleteScopeResponse)
     - [MsgDeleteScopeSpecificationRequest](#provenance.metadata.v1.MsgDeleteScopeSpecificationRequest)
     - [MsgDeleteScopeSpecificationResponse](#provenance.metadata.v1.MsgDeleteScopeSpecificationResponse)
+    - [MsgMigrateValueOwnerRequest](#provenance.metadata.v1.MsgMigrateValueOwnerRequest)
+    - [MsgMigrateValueOwnerResponse](#provenance.metadata.v1.MsgMigrateValueOwnerResponse)
     - [MsgModifyOSLocatorRequest](#provenance.metadata.v1.MsgModifyOSLocatorRequest)
     - [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse)
+    - [MsgUpdateValueOwnersRequest](#provenance.metadata.v1.MsgUpdateValueOwnersRequest)
+    - [MsgUpdateValueOwnersResponse](#provenance.metadata.v1.MsgUpdateValueOwnersResponse)
     - [MsgWriteContractSpecificationRequest](#provenance.metadata.v1.MsgWriteContractSpecificationRequest)
     - [MsgWriteContractSpecificationResponse](#provenance.metadata.v1.MsgWriteContractSpecificationResponse)
     - [MsgWriteRecordRequest](#provenance.metadata.v1.MsgWriteRecordRequest)
@@ -2313,6 +2319,34 @@ MsgTransferResponse defines the Msg/Transfer response type
 
 
 
+<a name="provenance.marker.v1.MsgUpdateForcedTransferRequest"></a>
+
+### MsgUpdateForcedTransferRequest
+MsgUpdateForcedTransferRequest defines a msg to update the allow_forced_transfer field of a marker.
+It is only usable via governance proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | The denomination of the marker to update. |
+| `allow_forced_transfer` | [bool](#bool) |  | Whether an admin can transfer restricted coins from a 3rd-party account without their signature. |
+| `authority` | [string](#string) |  | The signer of this message. Must be the governance module account address. |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgUpdateForcedTransferResponse"></a>
+
+### MsgUpdateForcedTransferResponse
+MsgUpdateForcedTransferResponse defines the Msg/UpdateForcedTransferResponse response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgUpdateRequiredAttributesRequest"></a>
 
 ### MsgUpdateRequiredAttributesRequest
@@ -2336,7 +2370,7 @@ add list
 <a name="provenance.marker.v1.MsgUpdateRequiredAttributesResponse"></a>
 
 ### MsgUpdateRequiredAttributesResponse
-MsgUpdateRequiredAttributesResponse defines the Msg/MsgUpdateRequiredAttributes response type
+MsgUpdateRequiredAttributesResponse defines the Msg/UpdateRequiredAttributes response type
 
 
 
@@ -2401,6 +2435,7 @@ Msg defines the Marker Msg service.
 | `AddFinalizeActivateMarker` | [MsgAddFinalizeActivateMarkerRequest](#provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest) | [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse) | AddFinalizeActivateMarker | |
 | `SupplyIncreaseProposal` | [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest) | [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse) | SupplyIncreaseProposal can only be called via gov proposal | |
 | `UpdateRequiredAttributes` | [MsgUpdateRequiredAttributesRequest](#provenance.marker.v1.MsgUpdateRequiredAttributesRequest) | [MsgUpdateRequiredAttributesResponse](#provenance.marker.v1.MsgUpdateRequiredAttributesResponse) | UpdateRequiredAttributes will only succeed if signer has transfer authority | |
+| `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance.marker.v1.MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. | |
 
  <!-- end services -->
 
@@ -4565,6 +4600,33 @@ MsgDeleteScopeSpecificationResponse is the response type for the Msg/DeleteScope
 
 
 
+<a name="provenance.metadata.v1.MsgMigrateValueOwnerRequest"></a>
+
+### MsgMigrateValueOwnerRequest
+MsgMigrateValueOwnerRequest is the request to migrate all scopes with one value owner to another value owner.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `existing` | [string](#string) |  | existing is the value owner address that is being migrated. |
+| `proposed` | [string](#string) |  | proposed is the new value owner address for all of existing's scopes. |
+| `signers` | [string](#string) | repeated | signers is the list of addresses of those signing this request. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgMigrateValueOwnerResponse"></a>
+
+### MsgMigrateValueOwnerResponse
+MsgMigrateValueOwnerResponse is the response from migrating a value owner address.
+
+
+
+
+
+
 <a name="provenance.metadata.v1.MsgModifyOSLocatorRequest"></a>
 
 ### MsgModifyOSLocatorRequest
@@ -4589,6 +4651,33 @@ MsgModifyOSLocatorResponse is the response type for the Msg/ModifyOSLocator RPC 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `locator` | [ObjectStoreLocator](#provenance.metadata.v1.ObjectStoreLocator) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgUpdateValueOwnersRequest"></a>
+
+### MsgUpdateValueOwnersRequest
+MsgUpdateValueOwnersRequest is the request to update the value owner addresses in one or more scopes.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_ids` | [bytes](#bytes) | repeated | scope_ids are the scope metadata addresses of all scopes to be updated. |
+| `value_owner_address` | [string](#string) |  | value_owner_address is the address of the new value owner for the provided scopes. |
+| `signers` | [string](#string) | repeated | signers is the list of addresses of those signing this request. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgUpdateValueOwnersResponse"></a>
+
+### MsgUpdateValueOwnersResponse
+MsgUpdateValueOwnersResponse is the response from updating value owner addresses in one or more scopes.
 
 
 
@@ -4827,6 +4916,8 @@ Msg defines the Metadata Msg service.
 | `DeleteScopeDataAccess` | [MsgDeleteScopeDataAccessRequest](#provenance.metadata.v1.MsgDeleteScopeDataAccessRequest) | [MsgDeleteScopeDataAccessResponse](#provenance.metadata.v1.MsgDeleteScopeDataAccessResponse) | DeleteScopeDataAccess removes data access AccAddress from scope | |
 | `AddScopeOwner` | [MsgAddScopeOwnerRequest](#provenance.metadata.v1.MsgAddScopeOwnerRequest) | [MsgAddScopeOwnerResponse](#provenance.metadata.v1.MsgAddScopeOwnerResponse) | AddScopeOwner adds new owner parties to a scope | |
 | `DeleteScopeOwner` | [MsgDeleteScopeOwnerRequest](#provenance.metadata.v1.MsgDeleteScopeOwnerRequest) | [MsgDeleteScopeOwnerResponse](#provenance.metadata.v1.MsgDeleteScopeOwnerResponse) | DeleteScopeOwner removes owner parties (by addresses) from a scope | |
+| `UpdateValueOwners` | [MsgUpdateValueOwnersRequest](#provenance.metadata.v1.MsgUpdateValueOwnersRequest) | [MsgUpdateValueOwnersResponse](#provenance.metadata.v1.MsgUpdateValueOwnersResponse) | UpdateValueOwners sets the value owner of one or more scopes. | |
+| `MigrateValueOwner` | [MsgMigrateValueOwnerRequest](#provenance.metadata.v1.MsgMigrateValueOwnerRequest) | [MsgMigrateValueOwnerResponse](#provenance.metadata.v1.MsgMigrateValueOwnerResponse) | MigrateValueOwner updates all scopes that have one value owner to have a another value owner. | |
 | `WriteSession` | [MsgWriteSessionRequest](#provenance.metadata.v1.MsgWriteSessionRequest) | [MsgWriteSessionResponse](#provenance.metadata.v1.MsgWriteSessionResponse) | WriteSession adds or updates a session context. | |
 | `WriteRecord` | [MsgWriteRecordRequest](#provenance.metadata.v1.MsgWriteRecordRequest) | [MsgWriteRecordResponse](#provenance.metadata.v1.MsgWriteRecordResponse) | WriteRecord adds or updates a record. | |
 | `DeleteRecord` | [MsgDeleteRecordRequest](#provenance.metadata.v1.MsgDeleteRecordRequest) | [MsgDeleteRecordResponse](#provenance.metadata.v1.MsgDeleteRecordResponse) | DeleteRecord deletes a record. | |
