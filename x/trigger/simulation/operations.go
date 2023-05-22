@@ -10,7 +10,7 @@ import (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper,
+	_ simtypes.AppParams, _ codec.JSONCodec, _ keeper.Keeper,
 ) simulation.WeightedOperations {
 	return simulation.WeightedOperations{}
 }

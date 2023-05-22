@@ -45,7 +45,7 @@ func (gs GenesisState) Validate() error {
 		}
 
 		for idx, msg := range msgs {
-			if err := msg.ValidateBasic(); err != nil {
+			if err = msg.ValidateBasic(); err != nil {
 				return fmt.Errorf("msg: %d, err: %w", idx, err)
 			}
 		}
