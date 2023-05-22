@@ -353,8 +353,6 @@ pagination:
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.GetAccountAttributeCmd()
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -408,8 +406,6 @@ pagination:
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.ScanAccountAttributesCmd()
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -454,8 +450,6 @@ pagination:
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.ListAccountAttributesCmd()
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -486,8 +480,6 @@ func (s *IntegrationTestSuite) TestGetAttributeParamsCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.GetAttributeParamsCmd()
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -513,8 +505,6 @@ func (s *IntegrationTestSuite) TestAttributeAccountsCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.GetAttributeAccountsCmd()
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -659,7 +649,6 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
@@ -817,7 +806,6 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
@@ -931,7 +919,6 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
@@ -1024,7 +1011,6 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
@@ -1348,7 +1334,6 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)

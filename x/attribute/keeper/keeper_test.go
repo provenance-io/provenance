@@ -76,7 +76,7 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) TestSetAttribute() {
-	past := time.Now().Add(2 - time.Hour)
+	past := time.Now().Add(-2 * time.Hour)
 
 	cases := []struct {
 		name        string
@@ -190,8 +190,6 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 		},
 	}
 	for _, tc := range cases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			err := s.app.AttributeKeeper.SetAttribute(s.ctx, tc.attr, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
@@ -400,8 +398,6 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 		},
 	}
 	for _, tc := range cases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			err := s.app.AttributeKeeper.UpdateAttribute(s.ctx, tc.origAttr, tc.updateAttr, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
@@ -522,7 +518,6 @@ func (s *KeeperTestSuite) TestUpdateAttributeExpiration() {
 		},
 	}
 	for _, tc := range cases {
-		tc := tc
 		s.Run(tc.name, func() {
 			err := s.app.AttributeKeeper.UpdateAttributeExpiration(s.ctx, tc.updateAttr, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
@@ -615,8 +610,6 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		},
 	}
 	for _, tc := range cases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			attrStore := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
 			if len(tc.lookupKey) > 0 {
@@ -704,8 +697,6 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 		},
 	}
 	for _, tc := range cases {
-		tc := tc
-
 		s.Run(tc.testName, func() {
 			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, &tc.value, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
@@ -1087,8 +1078,6 @@ func (s *KeeperTestSuite) TestPurgeAttributes() {
 		},
 	}
 	for _, tc := range cases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			attrStore := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
 			if len(tc.lookupKey) > 0 {
