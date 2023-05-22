@@ -32923,6 +32923,54 @@ paths:
           type: boolean
       tags:
         - Query
+  '/provenance/attribute/v1/accountdata/{account}':
+    get:
+      summary: AccountData returns the accountdata for a specified account.
+      operationId: AccountData
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              value:
+                type: string
+                description: >-
+                  value is the accountdata attribute value for the requested
+                  account.
+            description: >-
+              QueryAccountDataResponse is the response type for the
+              Query/AccountData method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: account
+          description: account is the bech32 address of the account to get the data for
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   '/provenance/attribute/v1/accounts/{attribute_name}':
     get:
       summary: AttributeAccounts queries accounts on a given attribute name
@@ -32959,7 +33007,7 @@ paths:
                       was set, its value is undefined otherwise
             description: >-
               QueryAttributeAccountsResponse is the response type for the
-              Query/AccountsByAttribute method.
+              Query/AttributeAccounts method.
         default:
           description: An unexpected error response
           schema:
@@ -33120,9 +33168,7 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-            description: >-
-              QueryScanResponse is the response type for the Query/Attribute
-              method.
+            description: QueryScanResponse is the response type for the Query/Scan method.
         default:
           description: An unexpected error response
           schema:
@@ -33460,7 +33506,7 @@ paths:
                       was set, its value is undefined otherwise
             description: >-
               QueryAttributesResponse is the response type for the
-              Query/Attribute method.
+              Query/Attributes method.
         default:
           description: An unexpected error response
           schema:
@@ -80263,6 +80309,15 @@ definitions:
         format: int64
         title: maximum length of data to allow in an attribute value
     description: Params defines the set of params for the attribute module.
+  provenance.attribute.v1.QueryAccountDataResponse:
+    type: object
+    properties:
+      value:
+        type: string
+        description: value is the accountdata attribute value for the requested account.
+    description: >-
+      QueryAccountDataResponse is the response type for the Query/AccountData
+      method.
   provenance.attribute.v1.QueryAttributeAccountsResponse:
     type: object
     properties:
@@ -80292,7 +80347,7 @@ definitions:
               was set, its value is undefined otherwise
     description: >-
       QueryAttributeAccountsResponse is the response type for the
-      Query/AccountsByAttribute method.
+      Query/AttributeAccounts method.
   provenance.attribute.v1.QueryAttributeResponse:
     type: object
     properties:
@@ -80423,7 +80478,7 @@ definitions:
 
               was set, its value is undefined otherwise
     description: >-
-      QueryAttributesResponse is the response type for the Query/Attribute
+      QueryAttributesResponse is the response type for the Query/Attributes
       method.
   provenance.attribute.v1.QueryParamsResponse:
     type: object
@@ -80500,7 +80555,7 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-    description: QueryScanResponse is the response type for the Query/Attribute method.
+    description: QueryScanResponse is the response type for the Query/Scan method.
   provenance.attribute.v1.MsgAddAttributeResponse:
     type: object
     description: MsgAddAttributeResponse defines the Msg/AddAttribute response type.

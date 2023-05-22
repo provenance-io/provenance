@@ -18,6 +18,8 @@
     - [GenesisState](#provenance.attribute.v1.GenesisState)
   
 - [provenance/attribute/v1/query.proto](#provenance/attribute/v1/query.proto)
+    - [QueryAccountDataRequest](#provenance.attribute.v1.QueryAccountDataRequest)
+    - [QueryAccountDataResponse](#provenance.attribute.v1.QueryAccountDataResponse)
     - [QueryAttributeAccountsRequest](#provenance.attribute.v1.QueryAttributeAccountsRequest)
     - [QueryAttributeAccountsResponse](#provenance.attribute.v1.QueryAttributeAccountsResponse)
     - [QueryAttributeRequest](#provenance.attribute.v1.QueryAttributeRequest)
@@ -614,10 +616,40 @@ GenesisState defines the attribute module's genesis state.
 
 
 
+<a name="provenance.attribute.v1.QueryAccountDataRequest"></a>
+
+### QueryAccountDataRequest
+QueryAccountDataRequest is the request type for the Query/AccountData method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address of the account to get the data for |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.QueryAccountDataResponse"></a>
+
+### QueryAccountDataResponse
+QueryAccountDataResponse is the response type for the Query/AccountData method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  | value is the accountdata attribute value for the requested account. |
+
+
+
+
+
+
 <a name="provenance.attribute.v1.QueryAttributeAccountsRequest"></a>
 
 ### QueryAttributeAccountsRequest
-QueryAttributeAccountsRequest is the response type for the Query/AccountsByAttribute method.
+QueryAttributeAccountsRequest is the request type for the Query/AttributeAccounts method.
 
 
 | Field | Type | Label | Description |
@@ -633,7 +665,7 @@ QueryAttributeAccountsRequest is the response type for the Query/AccountsByAttri
 <a name="provenance.attribute.v1.QueryAttributeAccountsResponse"></a>
 
 ### QueryAttributeAccountsResponse
-QueryAttributeAccountsResponse is the response type for the Query/AccountsByAttribute method.
+QueryAttributeAccountsResponse is the response type for the Query/AttributeAccounts method.
 
 
 | Field | Type | Label | Description |
@@ -699,7 +731,7 @@ QueryAttributesRequest is the request type for the Query/Attributes method.
 <a name="provenance.attribute.v1.QueryAttributesResponse"></a>
 
 ### QueryAttributesResponse
-QueryAttributesResponse is the response type for the Query/Attribute method.
+QueryAttributesResponse is the response type for the Query/Attributes method.
 
 
 | Field | Type | Label | Description |
@@ -741,7 +773,7 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 <a name="provenance.attribute.v1.QueryScanRequest"></a>
 
 ### QueryScanRequest
-QueryScanRequest is the request type for the Query/Scan account attributes method.
+QueryScanRequest is the request type for the Query/Scan method.
 
 
 | Field | Type | Label | Description |
@@ -758,7 +790,7 @@ QueryScanRequest is the request type for the Query/Scan account attributes metho
 <a name="provenance.attribute.v1.QueryScanResponse"></a>
 
 ### QueryScanResponse
-QueryScanResponse is the response type for the Query/Attribute method.
+QueryScanResponse is the response type for the Query/Scan method.
 
 
 | Field | Type | Label | Description |
@@ -790,6 +822,7 @@ Query defines the gRPC querier service for attribute module.
 | `Attributes` | [QueryAttributesRequest](#provenance.attribute.v1.QueryAttributesRequest) | [QueryAttributesResponse](#provenance.attribute.v1.QueryAttributesResponse) | Attributes queries attributes on a given account (address) for any defined attributes | GET|/provenance/attribute/v1/attributes/{account}|
 | `Scan` | [QueryScanRequest](#provenance.attribute.v1.QueryScanRequest) | [QueryScanResponse](#provenance.attribute.v1.QueryScanResponse) | Scan queries attributes on a given account (address) for any that match the provided suffix | GET|/provenance/attribute/v1/attribute/{account}/scan/{suffix}|
 | `AttributeAccounts` | [QueryAttributeAccountsRequest](#provenance.attribute.v1.QueryAttributeAccountsRequest) | [QueryAttributeAccountsResponse](#provenance.attribute.v1.QueryAttributeAccountsResponse) | AttributeAccounts queries accounts on a given attribute name | GET|/provenance/attribute/v1/accounts/{attribute_name}|
+| `AccountData` | [QueryAccountDataRequest](#provenance.attribute.v1.QueryAccountDataRequest) | [QueryAccountDataResponse](#provenance.attribute.v1.QueryAccountDataResponse) | AccountData returns the accountdata for a specified account. | GET|/provenance/attribute/v1/accountdata/{account}|
 
  <!-- end services -->
 

@@ -37,6 +37,11 @@ service Query {
   rpc AttributeAccounts(QueryAttributeAccountsRequest) returns (QueryAttributeAccountsResponse) {
     option (google.api.http).get = "/provenance/attribute/v1/accounts/{attribute_name}";
   }
+
+  // AccountData returns the accountdata for a specified account.
+  rpc AccountData(QueryAccountDataRequest) returns (QueryAccountDataResponse) {
+    option (google.api.http).get = "/provenance/attribute/v1/accountdata/{account}";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -84,7 +89,7 @@ message QueryAttributesRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// QueryAttributesResponse is the response type for the Query/Attribute method.
+// QueryAttributesResponse is the response type for the Query/Attributes method.
 message QueryAttributesResponse {
   // a string containing the address of the account the attributes are assigned to=
   string account = 1;
@@ -94,7 +99,7 @@ message QueryAttributesResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
-// QueryScanRequest is the request type for the Query/Scan account attributes method.
+// QueryScanRequest is the request type for the Query/Scan method.
 message QueryScanRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -109,7 +114,7 @@ message QueryScanRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
-// QueryScanResponse is the response type for the Query/Attribute method.
+// QueryScanResponse is the response type for the Query/Scan method.
 message QueryScanResponse {
   // a string containing the address of the account the attributes are assigned to=
   string account = 1;
@@ -119,7 +124,7 @@ message QueryScanResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
-// QueryAttributeAccountsRequest is the response type for the Query/AccountsByAttribute method.
+// QueryAttributeAccountsRequest is the request type for the Query/AttributeAccounts method.
 message QueryAttributeAccountsRequest {
   // name is the attribute name to query for
   string attribute_name = 1;
@@ -128,11 +133,23 @@ message QueryAttributeAccountsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
-// QueryAttributeAccountsResponse is the response type for the Query/AccountsByAttribute method.
+// QueryAttributeAccountsResponse is the response type for the Query/AttributeAccounts method.
 message QueryAttributeAccountsResponse {
   // list of account addresses that have attributes of request name
   repeated string accounts = 1;
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryAccountDataRequest is the request type for the Query/AccountData method.
+message QueryAccountDataRequest {
+  // account is the bech32 address of the account to get the data for
+  string account = 1;
+}
+
+// QueryAccountDataResponse is the response type for the Query/AccountData method.
+message QueryAccountDataResponse {
+  // value is the accountdata attribute value for the requested account.
+  string value = 1;
 }
