@@ -26,14 +26,14 @@ func TestBeginBlockDeletionOfExpired(t *testing.T) {
 
 	app = simapp.Setup(t)
 	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx = ctx.WithBlockHeight(1).WithBlockTime(now.Add(3 - time.Hour))
+	ctx = ctx.WithBlockTime(now.Add(-3 * time.Hour))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, user1Addr))
 
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	attribute.BeginBlocker(ctx, app.AttributeKeeper)
 	assert.Empty(t, ctx.EventManager().Events())
 
-	past := now.Add(2 - time.Hour)
+	past := now.Add(-2 * time.Hour)
 
 	require.NoError(t, app.NameKeeper.SetNameRecord(ctx, "one.expire.testing", user1Addr, false), "name record should save successfully")
 	require.NoError(t, app.NameKeeper.SetNameRecord(ctx, "two.expire.testing", user1Addr, false), "name record should save successfully")
