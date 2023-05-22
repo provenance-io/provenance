@@ -47,11 +47,13 @@ PIO_TESTNET="${PIO_TESTNET:-true}"
 PIO_KEYRING_BACKEND="${PIO_KEYRING_BACKEND:-test}"
 PIO_CHAIN_ID="${PIO_CHAIN_ID:-testing}"
 SHOW_START="${SHOW_START:-true}"
+attr_mod_acct='pb14y4l6qky2zhsxcx7540ejqvtye7fr66dczq2f9'
 
 # When the PROV_CMD is a docker thing, env vars don't get passed.
 # So just always provide the needed ones as args.
 if [ "$PIO_TESTNET" == 'true' ]; then
     PROV_CMD="$PROV_CMD -t"
+    attr_mod_acct='tp14y4l6qky2zhsxcx7540ejqvtye7fr66dtf9xt0'
 fi
 PROV_CMD="$PROV_CMD --home $PIO_HOME"
 arg_chain_id="--chain-id=$PIO_CHAIN_ID"
@@ -76,6 +78,7 @@ $PROV_CMD add-genesis-root-name validator pio $arg_keyring
 $PROV_CMD add-genesis-root-name validator pb --restrict=false $arg_keyring
 $PROV_CMD add-genesis-root-name validator io --restrict $arg_keyring
 $PROV_CMD add-genesis-root-name validator provenance $arg_keyring
+$PROV_CMD add-genesis-root-name "$attr_mod_acct" accountdata $arg_keyring
 $PROV_CMD add-genesis-account validator "100000000000000000000$DENOM" $arg_keyring
 $PROV_CMD gentx validator "1000000000000000$DENOM" $arg_chain_id $arg_keyring
 $PROV_CMD add-genesis-marker "100000000000000000000$DENOM" \
