@@ -448,7 +448,7 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 			name:      "no keys will be deleted with unknown name",
 			attrName:  "dne",
 			ownerAddr: s.user1Addr,
-			errorMsg:  "no keys deleted with name dne",
+			errorMsg:  `no keys deleted with name "dne"`,
 		},
 		{
 			name:        "attribute will be removed without error when name has been removed",
@@ -538,7 +538,7 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			name:      "dne",
 			value:     []byte("123456789"),
 			ownerAddr: s.user1Addr,
-			errorMsg:  "no keys deleted with name dne value 123456789",
+			errorMsg:  `no keys deleted with name "dne" and value "123456789"`,
 		},
 		{
 			testName:     "should successfully delete attribute",
@@ -555,7 +555,7 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			value:     []byte("123456789"),
 			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
-			errorMsg:  "no keys deleted with name example.attribute value 123456789",
+			errorMsg:  `no keys deleted with name "example.attribute" and value "123456789"`,
 		},
 		{
 			testName:     "should successfully delete attribute, with same key but different value",

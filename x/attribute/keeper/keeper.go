@@ -272,9 +272,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 		}
 	}
 	if !found {
-		errorMessage := "no attributes updated"
-		ctx.Logger().Error(errorMessage, "name", originalAttribute.Name, "value", string(originalAttribute.Value))
-		return fmt.Errorf("%s with name \"%s\" : value \"%s\" : type: %s", errorMessage, originalAttribute.Name, string(originalAttribute.Value), originalAttribute.AttributeType.String())
+		return fmt.Errorf("no attributes updated with name %q : value %+q : type: %s", originalAttribute.Name, string(originalAttribute.Value), originalAttribute.AttributeType.String())
 	}
 	return nil
 }
@@ -340,14 +338,14 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 			}
 		}
 	}
-	errm := "no keys deleted"
-	if count == 0 && deleteDistinct {
-		ctx.Logger().Error(errm, "name", name, "value")
-		return fmt.Errorf("%s with name %s value %s", errm, name, string(*value))
-	} else if count == 0 && !deleteDistinct {
-		ctx.Logger().Error(errm, "name", name)
-		return fmt.Errorf("%s with name %s", errm, name)
+
+	if count == 0 {
+		if deleteDistinct {
+			return fmt.Errorf("no keys deleted with name %q and value %+q", name, string(*value))
+		}
+		return fmt.Errorf("no keys deleted with name %q", name)
 	}
+
 	return nil
 }
 
