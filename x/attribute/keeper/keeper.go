@@ -270,7 +270,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			updatedKey := types.AddrAttributeKey(addrBz, updateAttribute)
 			store.Set(updatedKey, bz)
 			k.IncAttrNameAddressLookup(ctx, updateAttribute.Name, updateAttribute.GetAddressBytes())
-			k.addAttributeExpireLookup(store, attr)
+			k.addAttributeExpireLookup(store, updateAttribute)
 
 			attributeUpdateEvent := types.NewEventAttributeUpdate(originalAttribute, updateAttribute, owner.String())
 			if err := ctx.EventManager().EmitTypedEvent(attributeUpdateEvent); err != nil {
@@ -536,7 +536,7 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 				// dec name to address lookup table count
 				k.DecAttrNameAddressLookup(ctx, attribute.Name, attribute.GetAddressBytes())
 
-				deleteExpirationEvent := types.NewEventAttributeExpiredDelete(attribute)
+				deleteExpirationEvent := types.NewEventAttributeExpired(attribute)
 				if err = ctx.EventManager().EmitTypedEvent(deleteExpirationEvent); err != nil {
 					ctx.Logger().Error(fmt.Sprintf("failed to emit typed event %v", err))
 				}

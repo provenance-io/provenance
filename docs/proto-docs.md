@@ -10,7 +10,7 @@
     - [EventAttributeDelete](#provenance.attribute.v1.EventAttributeDelete)
     - [EventAttributeDistinctDelete](#provenance.attribute.v1.EventAttributeDistinctDelete)
     - [EventAttributeExpirationUpdate](#provenance.attribute.v1.EventAttributeExpirationUpdate)
-    - [EventAttributeExpiredDelete](#provenance.attribute.v1.EventAttributeExpiredDelete)
+    - [EventAttributeExpired](#provenance.attribute.v1.EventAttributeExpired)
     - [EventAttributeUpdate](#provenance.attribute.v1.EventAttributeUpdate)
     - [Params](#provenance.attribute.v1.Params)
   
@@ -531,10 +531,10 @@ EventAttributeExpirationUpdate event emitted when attribute expiration is update
 
 
 
-<a name="provenance.attribute.v1.EventAttributeExpiredDelete"></a>
+<a name="provenance.attribute.v1.EventAttributeExpired"></a>
 
-### EventAttributeExpiredDelete
-EventAttributeExpiredDelete event emitted when attribute has expired and been deleted in BeginBlocker
+### EventAttributeExpired
+EventAttributeExpired event emitted when attribute has expired and been deleted in BeginBlocker
 
 
 | Field | Type | Label | Description |

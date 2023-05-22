@@ -100,8 +100,8 @@ message EventAttributeDistinctDelete {
   string owner          = 5;
 }
 
-// EventAttributeExpiredDelete event emitted when attribute has expired and been deleted in BeginBlocker
-message EventAttributeExpiredDelete {
+// EventAttributeExpired event emitted when attribute has expired and been deleted in BeginBlocker
+message EventAttributeExpired {
   string name           = 1;
   string value_hash     = 2;
   string attribute_type = 3;

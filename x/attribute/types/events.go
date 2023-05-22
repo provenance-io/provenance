@@ -108,13 +108,13 @@ func NewEventDistinctAttributeDelete(name string, value string, account string, 
 	}
 }
 
-func NewEventAttributeExpiredDelete(attribute Attribute) *EventAttributeExpiredDelete {
+func NewEventAttributeExpired(attribute Attribute) *EventAttributeExpired {
 	var expiredTime string
 	if attribute.ExpirationDate != nil {
 		expiredTime = attribute.ExpirationDate.String()
 	}
 
-	return &EventAttributeExpiredDelete{
+	return &EventAttributeExpired{
 		Name:       attribute.Name,
 		ValueHash:  string(attribute.Hash()),
 		Account:    attribute.Address,
