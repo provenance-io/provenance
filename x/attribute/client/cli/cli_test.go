@@ -1253,7 +1253,6 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 		cmd          *cobra.Command
 		args         []string
 		expectErr    string
-		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
@@ -1268,7 +1267,6 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -1284,7 +1282,6 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -1301,7 +1298,6 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			expectErr:    `invalid address: must be either an account address or scope metadata address: "not-a-address"`,
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -1318,7 +1314,6 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			expectErr:    `unable to parse time (0001-01-01 00:00:00 +0000 UTC) required format is RFC3339 (2006-01-02T15:04:05Z07:00) , parsing time "test value" as "2006-01-02T15:04:05Z07:00": cannot parse "test value" as "2006"`,
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -1334,7 +1329,6 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -1349,7 +1343,6 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 	}
@@ -1363,10 +1356,10 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 			if len(tc.expectErr) > 0 {
 				s.Require().EqualError(err, tc.expectErr)
 			} else {
+				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().Equal(tc.expectedCode, response.Code)
 			}
 		})
 	}
