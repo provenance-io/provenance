@@ -1313,7 +1313,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    `unable to parse time (0001-01-01 00:00:00 +0000 UTC) required format is RFC3339 (2006-01-02T15:04:05Z07:00) , parsing time "test value" as "2006-01-02T15:04:05Z07:00": cannot parse "test value" as "2006"`,
+			expectErr:    `unable to parse time "test value" required format is RFC3339 (2006-01-02T15:04:05Z07:00): parsing time "test value" as "2006-01-02T15:04:05Z07:00": cannot parse "test value" as "2006"`,
 			expectedCode: 0,
 		},
 		{
@@ -1357,9 +1357,9 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				s.Require().EqualError(err, tc.expectErr)
 			} else {
 				var response sdk.TxResponse
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Require().Equal(tc.expectedCode, response.Code)
+				s.Assert().NoError(err)
+				s.Assert().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Assert().Equal(tc.expectedCode, response.Code)
 			}
 		})
 	}

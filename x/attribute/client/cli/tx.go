@@ -77,14 +77,13 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 				value,
 			)
 
-			var expireTime *time.Time
 			if len(args) == 5 {
 				expireTime, err := time.Parse(time.RFC3339, args[4])
 				if err != nil {
-					return fmt.Errorf("unable to parse time (%v) required format is RFC3339 (%v) , %w", expireTime, time.RFC3339, err)
+					return fmt.Errorf("unable to parse time %q required format is RFC3339 (%v): %w", args[4], time.RFC3339, err)
 				}
+				msg.ExpirationDate = &expireTime
 			}
-			msg.ExpirationDate = expireTime
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -255,10 +254,11 @@ $ %s tx attribute update-expiration "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7j
 			}
 			var expireTime *time.Time
 			if len(args) == 4 {
-				expireTime, err := time.Parse(time.RFC3339, args[3])
+				parsedTime, err := time.Parse(time.RFC3339, args[3])
 				if err != nil {
-					return fmt.Errorf("unable to parse time (%v) required format is RFC3339 (%v) , %w", expireTime, time.RFC3339, err)
+					return fmt.Errorf("unable to parse time %q required format is RFC3339 (%v): %w", args[3], time.RFC3339, err)
 				}
+				expireTime = &parsedTime
 			}
 			msg := types.NewMsgUpdateAttributeExpirationRequest(
 				args[1],

@@ -422,7 +422,7 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 
 func (s *KeeperTestSuite) TestUpdateAttributeExpiration() {
 	now := time.Now().UTC()
-	past := now.Add(2 - time.Hour)
+	past := now.Add(-2 * time.Hour)
 	attr := types.Attribute{
 		Name:           "example.attribute",
 		Value:          []byte("my-value"),
@@ -433,108 +433,107 @@ func (s *KeeperTestSuite) TestUpdateAttributeExpiration() {
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 
 	cases := []struct {
-		name           string
-		origAttr       types.Attribute
-		expirationDate *time.Time
-		ownerAddr      sdk.AccAddress
-		errorMsg       string
+		name       string
+		updateAttr types.Attribute
+		ownerAddr  sdk.AccAddress
+		errorMsg   string
 	}{
 		{
 			name: "should fail to update attribute expiration, validatebasic original attr",
-			origAttr: types.Attribute{
-				Name:          "",
-				Value:         []byte("my-value"),
-				Address:       s.user1,
-				AttributeType: types.AttributeType_String,
+			updateAttr: types.Attribute{
+				Name:           "",
+				Value:          []byte("my-value"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: nil,
 			},
-			expirationDate: nil,
-			ownerAddr:      s.user1Addr,
-			errorMsg:       `unable to normalize attribute name "": segment of name is too short`,
+			ownerAddr: s.user1Addr,
+			errorMsg:  `unable to normalize attribute name "": segment of name is too short`,
 		},
 		{
 			name: "should fail to update attribute expiration, value not found",
-			origAttr: types.Attribute{
-				Name:          "example.attribute",
-				Value:         []byte("notfound"),
-				Address:       s.user1,
-				AttributeType: types.AttributeType_String,
+			updateAttr: types.Attribute{
+				Name:           "example.attribute",
+				Value:          []byte("notfound"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: nil,
 			},
-			expirationDate: nil,
-			ownerAddr:      s.user1Addr,
-			errorMsg:       `no attributes updated with name "example.attribute" : value "notfound" : type: ATTRIBUTE_TYPE_STRING`,
+			ownerAddr: s.user1Addr,
+			errorMsg:  `no attributes updated with name "example.attribute" : value "notfound" : type: ATTRIBUTE_TYPE_STRING`,
 		},
 		{
 			name: "should fail to update attribute expiration, owner not correct",
-			origAttr: types.Attribute{
-				Name:          "example.attribute",
-				Value:         []byte("my-value"),
-				Address:       s.user1,
-				AttributeType: types.AttributeType_String,
+			updateAttr: types.Attribute{
+				Name:           "example.attribute",
+				Value:          []byte("my-value"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: nil,
 			},
-			expirationDate: nil,
-			ownerAddr:      s.user2Addr,
-			errorMsg:       fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
+			ownerAddr: s.user2Addr,
+			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
 		},
 		{
 			name: "should fail to update attribute expiration, owner not correct",
-			origAttr: types.Attribute{
-				Name:          "example.attribute",
-				Value:         []byte("my-value"),
-				Address:       s.user1,
-				AttributeType: types.AttributeType_String,
+			updateAttr: types.Attribute{
+				Name:           "example.attribute",
+				Value:          []byte("my-value"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: nil,
 			},
-			expirationDate: nil,
-			ownerAddr:      s.user2Addr,
-			errorMsg:       fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
+			ownerAddr: s.user2Addr,
+			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
 		},
 		{
 			name: "should fail to update attribute expiration, time in the past",
-			origAttr: types.Attribute{
-				Name:          "example.attribute",
-				Value:         []byte("my-value"),
-				Address:       s.user1,
-				AttributeType: types.AttributeType_String,
+			updateAttr: types.Attribute{
+				Name:           "example.attribute",
+				Value:          []byte("my-value"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: &past,
 			},
-			errorMsg:       fmt.Sprintf("attribute expiration date %v is before block time of %v", past.UTC(), s.ctx.BlockTime().UTC()),
-			expirationDate: &past,
-			ownerAddr:      s.user1Addr,
+			errorMsg:  fmt.Sprintf("attribute expiration date %v is before block time of %v", past.UTC(), s.ctx.BlockTime().UTC()),
+			ownerAddr: s.user1Addr,
 		},
 		{
 			name: "should succeed to update attribute expiration, with nil time",
-			origAttr: types.Attribute{
-				Name:          "example.attribute",
-				Value:         []byte("my-value"),
-				Address:       s.user1,
-				AttributeType: types.AttributeType_String,
+			updateAttr: types.Attribute{
+				Name:           "example.attribute",
+				Value:          []byte("my-value"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: nil,
 			},
-			expirationDate: nil,
-			ownerAddr:      s.user1Addr,
+			ownerAddr: s.user1Addr,
 		},
 		{
 			name: "should succeed to update attribute expiration, with non-nil time",
-			origAttr: types.Attribute{
-				Name:          "example.attribute",
-				Value:         []byte("my-value"),
-				Address:       s.user1,
-				AttributeType: types.AttributeType_String,
+			updateAttr: types.Attribute{
+				Name:           "example.attribute",
+				Value:          []byte("my-value"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: &now,
 			},
-			expirationDate: &now,
-			ownerAddr:      s.user1Addr,
+			ownerAddr: s.user1Addr,
 		},
 	}
 	for _, tc := range cases {
 		tc := tc
 		s.Run(tc.name, func() {
-			err := s.app.AttributeKeeper.UpdateAttributeExpiration(s.ctx, tc.origAttr, tc.expirationDate, tc.ownerAddr)
+			err := s.app.AttributeKeeper.UpdateAttributeExpiration(s.ctx, tc.updateAttr, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
 				s.Assert().Error(err)
 				s.Assert().Equal(tc.errorMsg, err.Error())
 			} else {
 				s.Assert().NoError(err)
-				attrs, err := s.app.AttributeKeeper.GetAttributes(s.ctx, tc.origAttr.Address, tc.origAttr.Name)
+				attrs, err := s.app.AttributeKeeper.GetAttributes(s.ctx, tc.updateAttr.Address, tc.updateAttr.Name)
 				s.Assert().NoError(err)
 				s.Assert().Len(attrs, 1)
-				s.Assert().Equal(tc.expirationDate, attrs[0].ExpirationDate)
+				s.Assert().Equal(tc.updateAttr.ExpirationDate, attrs[0].ExpirationDate)
 			}
 		})
 	}

@@ -27,20 +27,21 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) AddAttribute(goCtx context.Context, msg *types.MsgAddAttributeRequest) (*types.MsgAddAttributeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	attrib := types.Attribute{
-		Address:       msg.Account,
-		Name:          msg.Name,
-		AttributeType: msg.AttributeType,
-		Value:         msg.Value,
-	}
+	attrib := types.NewAttribute(
+		msg.Name,
+		msg.Account,
+		msg.AttributeType,
+		msg.Value,
+		msg.ExpirationDate,
+	)
 
 	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		return nil, err
 	}
 
-	if msg.ExpirationDate != nil && msg.ExpirationDate.Unix() < ctx.BlockTime().Unix() {
-		return nil, fmt.Errorf("attribute expiration date %v is before block time of %v", msg.ExpirationDate.UTC(), ctx.BlockTime().UTC())
+	if err := k.ValidateExpirationDate(ctx, attrib); err != nil {
+		return nil, err
 	}
 
 	err = k.Keeper.SetAttribute(ctx, attrib, ownerAddr)
@@ -130,9 +131,10 @@ func (k msgServer) UpdateAttributeExpiration(goCtx context.Context, msg *types.M
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	attribute := types.Attribute{
-		Address: msg.Account,
-		Name:    msg.Name,
-		Value:   msg.Value,
+		Address:        msg.Account,
+		Name:           msg.Name,
+		Value:          msg.Value,
+		ExpirationDate: msg.ExpirationDate,
 	}
 
 	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
@@ -140,11 +142,11 @@ func (k msgServer) UpdateAttributeExpiration(goCtx context.Context, msg *types.M
 		return nil, err
 	}
 
-	if msg.ExpirationDate != nil && msg.ExpirationDate.Unix() < ctx.BlockTime().Unix() {
-		return nil, fmt.Errorf("attribute expiration date %v is before block time of %v", msg.ExpirationDate.UTC(), ctx.BlockTime().UTC())
+	if err := k.ValidateExpirationDate(ctx, attribute); err != nil {
+		return nil, err
 	}
 
-	err = k.Keeper.UpdateAttributeExpiration(ctx, attribute, msg.ExpirationDate, ownerAddr)
+	err = k.Keeper.UpdateAttributeExpiration(ctx, attribute, ownerAddr)
 	if err != nil {
 		return nil, err
 	}
