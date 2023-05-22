@@ -9,13 +9,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Compile time interface checks.
-var (
-	_ sdk.Msg = &MsgAddAttributeRequest{}
-	_ sdk.Msg = &MsgUpdateAttributeRequest{}
-	_ sdk.Msg = &MsgDeleteAttributeRequest{}
-	_ sdk.Msg = &MsgDeleteDistinctAttributeRequest{}
-)
+// allRequestMsgs defines all the Msg*Request messages.
+var allRequestMsgs = []sdk.Msg{
+	(*MsgAddAttributeRequest)(nil),
+	(*MsgUpdateAttributeRequest)(nil),
+	(*MsgDeleteAttributeRequest)(nil),
+	(*MsgDeleteDistinctAttributeRequest)(nil),
+	(*MsgSetAccountDataRequest)(nil),
+}
 
 // NewMsgAddAttributeRequest creates a new add attribute message
 func NewMsgAddAttributeRequest(account string, owner sdk.AccAddress, name string, attributeType AttributeType, value []byte) *MsgAddAttributeRequest {
@@ -178,5 +179,19 @@ func (msg MsgDeleteDistinctAttributeRequest) GetSigners() []sdk.AccAddress {
 	if err != nil {
 		panic(fmt.Errorf("invalid owner value on message: %w", err))
 	}
+	return []sdk.AccAddress{addr}
+}
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgSetAccountDataRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Account); err != nil {
+		return fmt.Errorf("invalid account: %w", err)
+	}
+	return nil
+}
+
+// GetSigners indicates that the message must have been signed by the account.
+func (msg MsgSetAccountDataRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Account)
 	return []sdk.AccAddress{addr}
 }
