@@ -19,6 +19,7 @@ func TestGetEventListenerKey(t *testing.T) {
 	assert.EqualValues(t, GetEventNameBytes("event"), key2[1:33])
 	assert.EqualValues(t, uint64(1), uint64(binary.BigEndian.Uint64(key1[33:41])))
 	assert.EqualValues(t, uint64(0), uint64(binary.BigEndian.Uint64(key2[33:41])))
+	assert.Panics(t, func() { GetEventListenerKey("", 0) })
 }
 
 func TestGetEventListenerPrefix(t *testing.T) {
@@ -89,4 +90,5 @@ func TestGetEventNameBytes(t *testing.T) {
 
 	assert.EqualValues(t, expectedBytes, bytes)
 	assert.EqualValues(t, expectedBytes, bytes2)
+	assert.Panics(t, func() { GetEventNameBytes("") })
 }
