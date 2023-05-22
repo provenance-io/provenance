@@ -167,7 +167,7 @@ func (k Keeper) SetAttribute(
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
 	k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
-	k.AddAttributeExpireLookup(ctx, attr)
+	k.addAttributeExpireLookup(store, attr)
 
 	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
 
@@ -261,7 +261,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			found = true
 			store.Delete(it.Key())
 			k.DecAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
-			k.DeleteAttributeExpireLookup(ctx, attr)
+			k.deleteAttributeExpireLookup(store, attr)
 
 			bz, err := k.cdc.Marshal(&updateAttribute)
 			if err != nil {
@@ -270,7 +270,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			updatedKey := types.AddrAttributeKey(addrBz, updateAttribute)
 			store.Set(updatedKey, bz)
 			k.IncAttrNameAddressLookup(ctx, updateAttribute.Name, updateAttribute.GetAddressBytes())
-			k.AddAttributeExpireLookup(ctx, attr)
+			k.addAttributeExpireLookup(store, attr)
 
 			attributeUpdateEvent := types.NewEventAttributeUpdate(originalAttribute, updateAttribute, owner.String())
 			if err := ctx.EventManager().EmitTypedEvent(attributeUpdateEvent); err != nil {
@@ -326,7 +326,7 @@ func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, updateAttribute types
 
 			found = true
 			store.Delete(it.Key())
-			k.DeleteAttributeExpireLookup(ctx, attr)
+			k.deleteAttributeExpireLookup(store, attr)
 
 			originalExpiration := attr.ExpirationDate
 			attr.ExpirationDate = updateAttribute.ExpirationDate
@@ -336,7 +336,7 @@ func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, updateAttribute types
 			}
 			updatedKey := types.AddrAttributeKey(addrBz, attr)
 			store.Set(updatedKey, bz)
-			k.AddAttributeExpireLookup(ctx, attr)
+			k.addAttributeExpireLookup(store, attr)
 
 			attributeExpirationUpdateEvent := types.NewEventAttributeExpirationUpdate(attr, originalExpiration, owner.String())
 			if err := ctx.EventManager().EmitTypedEvent(attributeExpirationUpdateEvent); err != nil {
@@ -404,7 +404,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 			count++
 			store.Delete(it.Key())
 			k.DecAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
-			k.DeleteAttributeExpireLookup(ctx, attr)
+			k.deleteAttributeExpireLookup(store, attr)
 
 			if !deleteDistinct {
 				deleteEvent := types.NewEventAttributeDelete(name, addr, owner.String())
@@ -555,22 +555,23 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 	return count
 }
 
-// AddAttributeExpireLookup safely adds attribute expire key to store, if expire date exists, else no-op
-func (k Keeper) AddAttributeExpireLookup(ctx sdk.Context, attr types.Attribute) {
+// addAttributeExpireLookup safely adds attribute expire key to store, if expire date exists, else no-op
+func (k Keeper) addAttributeExpireLookup(store sdk.KVStore, attr types.Attribute) {
 	expireKey := types.AttributeExpireKey(attr)
 	if expireKey != nil {
-		ctx.KVStore(k.storeKey).Set(expireKey, []byte{})
+		store.Set(expireKey, []byte{})
 	}
 }
 
-// DeleteAttributeExpireLookup safely removes attribute expire key from store if expire date exists, else no-op
-func (k Keeper) DeleteAttributeExpireLookup(ctx sdk.Context, attr types.Attribute) {
+// deleteAttributeExpireLookup safely removes attribute expire key from store if expire date exists, else no-op
+func (k Keeper) deleteAttributeExpireLookup(store sdk.KVStore, attr types.Attribute) {
 	expireKey := types.AttributeExpireKey(attr)
 	if expireKey != nil {
-		ctx.KVStore(k.storeKey).Delete(expireKey)
+		store.Delete(expireKey)
 	}
 }
 
+// ValidateExpirationDate returns error if attribute has an expiration date that is in the past of current block time
 func (k Keeper) ValidateExpirationDate(ctx sdk.Context, attr types.Attribute) error {
 	if attr.ExpirationDate != nil && attr.ExpirationDate.Unix() < ctx.BlockTime().Unix() {
 		return fmt.Errorf("attribute expiration date %v is before block time of %v", attr.ExpirationDate.UTC(), ctx.BlockTime().UTC())
