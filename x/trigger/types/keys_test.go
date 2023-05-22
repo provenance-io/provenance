@@ -69,6 +69,9 @@ func TestGetTriggerIDToAndFromBytes(t *testing.T) {
 }
 
 func TestGetGasLimitKey(t *testing.T) {
+	key := GetGasLimitKey(1)
+	assert.EqualValues(t, GasLimitKeyPrefix, key[0:1])
+	assert.EqualValues(t, uint64(1), uint64(binary.BigEndian.Uint64(key[1:9])))
 }
 
 func TestGetGasLimitToAndFromBytes(t *testing.T) {
