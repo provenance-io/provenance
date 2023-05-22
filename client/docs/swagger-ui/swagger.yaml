@@ -80503,16 +80503,21 @@ definitions:
     description: QueryScanResponse is the response type for the Query/Attribute method.
   provenance.attribute.v1.MsgAddAttributeResponse:
     type: object
-    description: MsgAddAttributeResponse defines the Msg/Vote response type.
+    description: MsgAddAttributeResponse defines the Msg/AddAttribute response type.
   provenance.attribute.v1.MsgDeleteAttributeResponse:
     type: object
-    description: MsgDeleteAttributeResponse defines the Msg/Vote response type.
+    description: MsgDeleteAttributeResponse defines the Msg/DeleteAttribute response type.
   provenance.attribute.v1.MsgDeleteDistinctAttributeResponse:
     type: object
-    description: MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
+    description: >-
+      MsgDeleteDistinctAttributeResponse defines the Msg/DeleteDistinctAttribute
+      response type.
+  provenance.attribute.v1.MsgSetAccountDataResponse:
+    type: object
+    description: MsgSetAccountDataResponse defines the Msg/SetAccountData response type.
   provenance.attribute.v1.MsgUpdateAttributeResponse:
     type: object
-    description: MsgUpdateAttributeResponse defines the Msg/Vote response type.
+    description: MsgUpdateAttributeResponse defines the Msg/UpdateAttribute response type.
   provenance.marker.v1.Access:
     type: string
     enum:

@@ -38,6 +38,8 @@
     - [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse)
     - [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest)
     - [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse)
+    - [MsgSetAccountDataRequest](#provenance.attribute.v1.MsgSetAccountDataRequest)
+    - [MsgSetAccountDataResponse](#provenance.attribute.v1.MsgSetAccountDataResponse)
     - [MsgUpdateAttributeRequest](#provenance.attribute.v1.MsgUpdateAttributeRequest)
     - [MsgUpdateAttributeResponse](#provenance.attribute.v1.MsgUpdateAttributeResponse)
   
@@ -803,7 +805,7 @@ Query defines the gRPC querier service for attribute module.
 <a name="provenance.attribute.v1.MsgAddAttributeRequest"></a>
 
 ### MsgAddAttributeRequest
-MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account
+MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account.
 Attributes may only be set in an account by the account that the attribute name resolves to.
 
 
@@ -823,7 +825,7 @@ Attributes may only be set in an account by the account that the attribute name 
 <a name="provenance.attribute.v1.MsgAddAttributeResponse"></a>
 
 ### MsgAddAttributeResponse
-MsgAddAttributeResponse defines the Msg/Vote response type.
+MsgAddAttributeResponse defines the Msg/AddAttribute response type.
 
 
 
@@ -833,8 +835,8 @@ MsgAddAttributeResponse defines the Msg/Vote response type.
 <a name="provenance.attribute.v1.MsgDeleteAttributeRequest"></a>
 
 ### MsgDeleteAttributeRequest
-MsgDeleteAttributeRequest defines a message to delete an attribute from an account
-Attributes may only be remove from an account by the account that the attribute name resolves to.
+MsgDeleteAttributeRequest defines a message to delete an attribute from an account.
+Attributes may only be removed from an account by the account that the attribute name resolves to.
 
 
 | Field | Type | Label | Description |
@@ -851,7 +853,7 @@ Attributes may only be remove from an account by the account that the attribute 
 <a name="provenance.attribute.v1.MsgDeleteAttributeResponse"></a>
 
 ### MsgDeleteAttributeResponse
-MsgDeleteAttributeResponse defines the Msg/Vote response type.
+MsgDeleteAttributeResponse defines the Msg/DeleteAttribute response type.
 
 
 
@@ -862,7 +864,7 @@ MsgDeleteAttributeResponse defines the Msg/Vote response type.
 
 ### MsgDeleteDistinctAttributeRequest
 MsgDeleteDistinctAttributeRequest defines a message to delete an attribute with matching name, value, and type from
-an account Attributes may only be remove from an account by the account that the attribute name resolves to.
+an account. Attributes may only be removed from an account by the account that the attribute name resolves to.
 
 
 | Field | Type | Label | Description |
@@ -880,7 +882,33 @@ an account Attributes may only be remove from an account by the account that the
 <a name="provenance.attribute.v1.MsgDeleteDistinctAttributeResponse"></a>
 
 ### MsgDeleteDistinctAttributeResponse
-MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
+MsgDeleteDistinctAttributeResponse defines the Msg/DeleteDistinctAttribute response type.
+
+
+
+
+
+
+<a name="provenance.attribute.v1.MsgSetAccountDataRequest"></a>
+
+### MsgSetAccountDataRequest
+MsgSetAccountDataRequest defines a message to set an account's accountdata attribute.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  |  |
+| `account` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.MsgSetAccountDataResponse"></a>
+
+### MsgSetAccountDataResponse
+MsgSetAccountDataResponse defines the Msg/SetAccountData response type.
 
 
 
@@ -890,7 +918,7 @@ MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
 <a name="provenance.attribute.v1.MsgUpdateAttributeRequest"></a>
 
 ### MsgUpdateAttributeRequest
-MsgUpdateAttributeRequest defines an sdk.Msg type that is used to update an existing attribute to an account
+MsgUpdateAttributeRequest defines an sdk.Msg type that is used to update an existing attribute to an account.
 Attributes may only be set in an account by the account that the attribute name resolves to.
 
 
@@ -912,7 +940,7 @@ Attributes may only be set in an account by the account that the attribute name 
 <a name="provenance.attribute.v1.MsgUpdateAttributeResponse"></a>
 
 ### MsgUpdateAttributeResponse
-MsgUpdateAttributeResponse defines the Msg/Vote response type.
+MsgUpdateAttributeResponse defines the Msg/UpdateAttribute response type.
 
 
 
@@ -936,6 +964,7 @@ Msg defines the attribute module Msg service.
 | `UpdateAttribute` | [MsgUpdateAttributeRequest](#provenance.attribute.v1.MsgUpdateAttributeRequest) | [MsgUpdateAttributeResponse](#provenance.attribute.v1.MsgUpdateAttributeResponse) | UpdateAttribute defines a method to verify a particular invariance. | |
 | `DeleteAttribute` | [MsgDeleteAttributeRequest](#provenance.attribute.v1.MsgDeleteAttributeRequest) | [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse) | DeleteAttribute defines a method to verify a particular invariance. | |
 | `DeleteDistinctAttribute` | [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest) | [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse) | DeleteDistinctAttribute defines a method to verify a particular invariance. | |
+| `SetAccountData` | [MsgSetAccountDataRequest](#provenance.attribute.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.attribute.v1.MsgSetAccountDataResponse) | SetAccountData defines a method for setting an account's accountdata attribute. | |
 
  <!-- end services -->
 

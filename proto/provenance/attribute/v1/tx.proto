@@ -6,6 +6,7 @@ option go_package = "github.com/provenance-io/provenance/x/attribute/types";
 option java_package        = "io.provenance.attribute.v1";
 option java_multiple_files = true;
 
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 import "provenance/attribute/v1/attribute.proto";
 
@@ -22,9 +23,12 @@ service Msg {
 
   // DeleteDistinctAttribute defines a method to verify a particular invariance.
   rpc DeleteDistinctAttribute(MsgDeleteDistinctAttributeRequest) returns (MsgDeleteDistinctAttributeResponse);
+
+  // SetAccountData defines a method for setting an account's accountdata attribute.
+  rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
 }
 
-// MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account
+// MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account.
 // Attributes may only be set in an account by the account that the attribute name resolves to.
 message MsgAddAttributeRequest {
   option (gogoproto.equal)            = false;
@@ -44,10 +48,10 @@ message MsgAddAttributeRequest {
   string owner = 5;
 }
 
-// MsgAddAttributeResponse defines the Msg/Vote response type.
+// MsgAddAttributeResponse defines the Msg/AddAttribute response type.
 message MsgAddAttributeResponse {}
 
-// MsgUpdateAttributeRequest defines an sdk.Msg type that is used to update an existing attribute to an account
+// MsgUpdateAttributeRequest defines an sdk.Msg type that is used to update an existing attribute to an account.
 // Attributes may only be set in an account by the account that the attribute name resolves to.
 message MsgUpdateAttributeRequest {
   option (gogoproto.equal)            = false;
@@ -71,11 +75,11 @@ message MsgUpdateAttributeRequest {
   string owner = 7;
 }
 
-// MsgUpdateAttributeResponse defines the Msg/Vote response type.
+// MsgUpdateAttributeResponse defines the Msg/UpdateAttribute response type.
 message MsgUpdateAttributeResponse {}
 
-// MsgDeleteAttributeRequest defines a message to delete an attribute from an account
-// Attributes may only be remove from an account by the account that the attribute name resolves to.
+// MsgDeleteAttributeRequest defines a message to delete an attribute from an account.
+// Attributes may only be removed from an account by the account that the attribute name resolves to.
 message MsgDeleteAttributeRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -90,11 +94,11 @@ message MsgDeleteAttributeRequest {
   string owner = 3;
 }
 
-// MsgDeleteAttributeResponse defines the Msg/Vote response type.
+// MsgDeleteAttributeResponse defines the Msg/DeleteAttribute response type.
 message MsgDeleteAttributeResponse {}
 
 // MsgDeleteDistinctAttributeRequest defines a message to delete an attribute with matching name, value, and type from
-// an account Attributes may only be remove from an account by the account that the attribute name resolves to.
+// an account. Attributes may only be removed from an account by the account that the attribute name resolves to.
 message MsgDeleteDistinctAttributeRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
@@ -111,5 +115,16 @@ message MsgDeleteDistinctAttributeRequest {
   string owner = 4;
 }
 
-// MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
+// MsgDeleteDistinctAttributeResponse defines the Msg/DeleteDistinctAttribute response type.
 message MsgDeleteDistinctAttributeResponse {}
+
+// MsgSetAccountDataRequest defines a message to set an account's accountdata attribute.
+message MsgSetAccountDataRequest {
+  option (cosmos.msg.v1.signer) = "account";
+
+  string value   = 1;
+  string account = 2;
+}
+
+// MsgSetAccountDataResponse defines the Msg/SetAccountData response type.
+message MsgSetAccountDataResponse {}
