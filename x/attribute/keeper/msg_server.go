@@ -40,7 +40,7 @@ func (k msgServer) AddAttribute(goCtx context.Context, msg *types.MsgAddAttribut
 		return nil, err
 	}
 
-	if err := k.ValidateExpirationDate(ctx, attrib); err != nil {
+	if err = k.ValidateExpirationDate(ctx, attrib); err != nil {
 		return nil, err
 	}
 
@@ -142,7 +142,7 @@ func (k msgServer) UpdateAttributeExpiration(goCtx context.Context, msg *types.M
 		return nil, err
 	}
 
-	if err := k.ValidateExpirationDate(ctx, attribute); err != nil {
+	if err = k.ValidateExpirationDate(ctx, attribute); err != nil {
 		return nil, err
 	}
 

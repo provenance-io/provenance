@@ -1239,7 +1239,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 		cmd          *cobra.Command
 		args         []string
 		expectErr    string
-		expectedCode uint32
+		expectedCode int32
 	}{
 		{
 			name: "bind a new attribute name for delete testing",
@@ -1283,8 +1283,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    `invalid address: must be either an account address or scope metadata address: "not-a-address"`,
-			expectedCode: 0,
+			expectErr: `invalid address: must be either an account address or scope metadata address: "not-a-address"`,
 		},
 		{
 			name: "update expire date, should fail incorrect date",
@@ -1299,8 +1298,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    `unable to parse time "test value" required format is RFC3339 (2006-01-02T15:04:05Z07:00): parsing time "test value" as "2006-01-02T15:04:05Z07:00": cannot parse "test value" as "2006"`,
-			expectedCode: 0,
+			expectErr: `unable to parse time "test value" required format is RFC3339 (2006-01-02T15:04:05Z07:00): parsing time "test value" as "2006-01-02T15:04:05Z07:00": cannot parse "test value" as "2006"`,
 		},
 		{
 			name: "update expire date, should succeed",
