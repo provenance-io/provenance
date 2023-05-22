@@ -1,6 +1,8 @@
 package types
 
 import (
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,30 +11,11 @@ import (
 
 // RegisterInterfaces registers implementations for the tx messages
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgWriteScopeRequest{},
-		&MsgDeleteScopeRequest{},
-		&MsgAddScopeDataAccessRequest{},
-		&MsgDeleteScopeDataAccessRequest{},
-		&MsgAddScopeOwnerRequest{},
-		&MsgDeleteScopeOwnerRequest{},
-		&MsgWriteSessionRequest{},
-		&MsgWriteRecordRequest{},
-		&MsgDeleteRecordRequest{},
-
-		&MsgWriteScopeSpecificationRequest{},
-		&MsgDeleteScopeSpecificationRequest{},
-		&MsgWriteContractSpecificationRequest{},
-		&MsgDeleteContractSpecificationRequest{},
-		&MsgAddContractSpecToScopeSpecRequest{},
-		&MsgDeleteContractSpecFromScopeSpecRequest{},
-		&MsgWriteRecordSpecificationRequest{},
-		&MsgDeleteRecordSpecificationRequest{},
-
-		&MsgBindOSLocatorRequest{},
-		&MsgModifyOSLocatorRequest{},
-		&MsgDeleteOSLocatorRequest{},
-	)
+	messages := make([]proto.Message, len(allRequestMsgs))
+	for i, msg := range allRequestMsgs {
+		messages[i] = msg
+	}
+	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
