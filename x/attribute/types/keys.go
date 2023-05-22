@@ -21,6 +21,8 @@ const (
 
 	// QuerierRoute is the querier route for account
 	QuerierRoute = ModuleName
+
+	AccountDataName = "accountdata"
 )
 
 var (

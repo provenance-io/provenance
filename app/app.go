@@ -219,9 +219,10 @@ var (
 		icatypes.ModuleName:         nil,
 		ibctransfertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 
-		markertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
-		wasm.ModuleName:        {authtypes.Burner},
-		rewardtypes.ModuleName: nil,
+		attributetypes.ModuleName: nil,
+		markertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		wasm.ModuleName:           {authtypes.Burner},
+		rewardtypes.ModuleName:    nil,
 	}
 )
 

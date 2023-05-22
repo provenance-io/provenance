@@ -12,6 +12,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -232,6 +234,7 @@ func (s *UpgradeTestSuite) TestRustRC1() {
 
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		`INF Setting "accountdata" name record.`,
 		`INF Creating message fee for "/cosmos.gov.v1.MsgSubmitProposal" if it doesn't already exist.`,
 		`INF Removing message fee for "/provenance.metadata.v1.MsgP8eMemorializeContractRequest" if one exists.`,
 	}
@@ -246,6 +249,7 @@ func (s *UpgradeTestSuite) TestRust() {
 
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		`INF Setting "accountdata" name record.`,
 		`INF Removing message fee for "/provenance.metadata.v1.MsgP8eMemorializeContractRequest" if one exists.`,
 	}
 	expNotInLog := []string{
@@ -416,6 +420,148 @@ func (s *UpgradeTestSuite) TestRemoveP8eMemorializeContractFee() {
 			fee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, typeURL)
 			s.Require().NoError(err, "GetMsgFee(%q) error", typeURL)
 			s.Require().Nil(fee, "GetMsgFee(%q) value", typeURL)
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestSetAccountDataNameRecord() {
+	recordName := attributetypes.AccountDataName
+	// This is automatically added to all expInLog slices.
+	startMsg := `Setting "` + recordName + `" name record.`
+	// This is automatically added to expInLog for tests that expect an error.
+	errMsg := `Error setting "` + recordName + `" name record.`
+
+	attrModAccAddr := "cosmos14y4l6qky2zhsxcx7540ejqvtye7fr66d3vt0ye"
+	otherAddr := "cosmos1da6xsetjtaskgerjv4ehxh6lta047h6l3cc9z2" // sdk.AccAddress("other_address_______").String()
+
+	nr := func(addr string, rest bool) *nametypes.NameRecord {
+		return &nametypes.NameRecord{
+			Name:       "", // Field not used below anyway.
+			Address:    addr,
+			Restricted: rest,
+		}
+	}
+
+	tests := []struct {
+		name        string
+		existing    *nametypes.NameRecord // The Name field is ignored in this.
+		expErr      string
+		expInLog    []string
+		expNotInLog []string
+	}{
+		{
+			name: "name doesn't exist yet",
+			expInLog: []string{
+				`Successfully set "` + recordName + `" name record.`,
+			},
+		},
+		{
+			name:     "existing is as needed",
+			existing: nr(attrModAccAddr, true),
+			expInLog: []string{
+				`The "` + recordName + `" name record already exists as needed. Nothing to do.`,
+			},
+		},
+		{
+			name:     "existing is unrestricted",
+			existing: nr(attrModAccAddr, false),
+			expInLog: []string{
+				`Existing "` + recordName + `" name record is not restricted. It will be updated to be restricted.`,
+				`Updating existing "` + recordName + `" name record.`,
+				`Successfully updated "` + recordName + `" name record.`,
+			},
+			expNotInLog: []string{
+				`It will be updated to the attribute module account address "` + attrModAccAddr + `"`,
+			},
+		},
+		{
+			name:     "existing has different address",
+			existing: nr(otherAddr, true),
+			expInLog: []string{
+				`Existing "` + recordName + `" name record has address "` + otherAddr + `". It will be updated to the attribute module account address "` + attrModAccAddr + `"`,
+				`Updating existing "` + recordName + `" name record.`,
+				`Successfully updated "` + recordName + `" name record.`,
+			},
+			expNotInLog: []string{
+				`Existing "` + recordName + `" name record is not restricted. It will be updated to be restricted.`,
+			},
+		},
+		{
+			name:     "existing is unrestricted and has different address",
+			existing: nr(otherAddr, false),
+			expInLog: []string{
+				`Existing "` + recordName + `" name record is not restricted. It will be updated to be restricted.`,
+				`Existing "` + recordName + `" name record has address "` + otherAddr + `". It will be updated to the attribute module account address "` + attrModAccAddr + `"`,
+				`Updating existing "` + recordName + `" name record.`,
+				`Successfully updated "` + recordName + `" name record.`,
+			},
+		},
+		// The following test cases are omitted due to the extensive effort it'd take to trigger them.
+		//	SetNameRecord returns error
+		//	GetRecordByName returns error
+		//	UpdateNameRecord returns error
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// If the name record already exists, delete it now.
+			if s.app.NameKeeper.NameExists(s.ctx, recordName) {
+				err := s.app.NameKeeper.DeleteRecord(s.ctx, recordName)
+				s.Require().NoError(err, "DeleteRecord")
+			}
+
+			// Now, if the test calls for an existing entry, create it.
+			if tc.existing != nil {
+				exiAddr, err := sdk.AccAddressFromBech32(tc.existing.Address)
+				s.Require().NoError(err, "converting %q to AccAddress", tc.existing.Address)
+				err = s.app.NameKeeper.SetNameRecord(s.ctx, recordName, exiAddr, tc.existing.Restricted)
+				s.Require().NoError(err, "SetNameRecord")
+			}
+
+			// Define what's expected/not expected in the log.
+			expInLog := append([]string{startMsg}, tc.expInLog...)
+			expNotInLog := make([]string, len(tc.expNotInLog), len(tc.expNotInLog)+1)
+			copy(expNotInLog, tc.expNotInLog)
+			if len(tc.expErr) > 0 {
+				expInLog = append(expInLog, errMsg)
+			} else {
+				expNotInLog = append(expNotInLog, errMsg)
+			}
+
+			// Call setAccountDataNameRecord, making sure it doesn't panic and copy log output to test output.
+			s.logBuffer.Reset()
+			var err error
+			testFunc := func() {
+				err = setAccountDataNameRecord(s.ctx, s.app)
+			}
+			s.Require().NotPanics(testFunc, "setAccountDataNameRecord")
+			logOutput := s.logBuffer.String()
+			s.T().Logf("setAccountDataNameRecord log output:\n%s", logOutput)
+
+			// Require the error to be as expected before checking other parts.
+			if len(tc.expErr) > 0 {
+				s.Require().EqualError(err, tc.expErr, "setAccountDataNameRecord error")
+			} else {
+				s.Require().NoError(err, "setAccountDataNameRecord error")
+			}
+
+			// Make sure the log output is as expected.
+			for _, exp := range tc.expInLog {
+				s.Assert().Contains(logOutput, exp, "setAccountDataNameRecord log output")
+			}
+			for _, unexp := range expNotInLog {
+				s.Assert().NotContains(logOutput, unexp, "setAccountDataNameRecord log output")
+			}
+
+			// Make sure the name record exists as needed.
+			if len(tc.expErr) > 0 {
+				nameRecord, err := s.app.NameKeeper.GetRecordByName(s.ctx, recordName)
+				if s.Assert().NoError(err, "GetRecordByName after setAccountDataNameRecord") {
+					s.Assert().Equal(recordName, nameRecord.Name, "NameRecord.Name after setAccountDataNameRecord")
+					s.Assert().Equal(attrModAccAddr, nameRecord.Address, "NameRecord.Address after setAccountDataNameRecord")
+					s.Assert().True(nameRecord.Restricted, "NameRecord.Restricted after setAccountDataNameRecord")
+				}
+			}
 		})
 	}
 }
