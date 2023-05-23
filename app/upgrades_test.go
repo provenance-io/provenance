@@ -12,8 +12,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
-	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
-	nametypes "github.com/provenance-io/provenance/x/name/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -21,7 +19,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
+	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 type UpgradeTestSuite struct {
@@ -424,6 +425,59 @@ func (s *UpgradeTestSuite) TestRemoveP8eMemorializeContractFee() {
 	}
 }
 
+type mockNameKeeper struct {
+	Parent                namekeeper.Keeper
+	SetNameRecordError    string
+	GetRecordNameError    string
+	UpdateNameRecordError string
+}
+
+var _ nameKeeper = (*mockNameKeeper)(nil)
+
+func (s *UpgradeTestSuite) newMockNameKeeper() *mockNameKeeper {
+	return &mockNameKeeper{Parent: s.app.NameKeeper}
+}
+
+func (k *mockNameKeeper) WithSetNameRecordError(err string) *mockNameKeeper {
+	k.SetNameRecordError = err
+	return k
+}
+
+func (k *mockNameKeeper) WithGetRecordNameError(err string) *mockNameKeeper {
+	k.GetRecordNameError = err
+	return k
+}
+
+func (k *mockNameKeeper) WithUpdateNameRecord(err string) *mockNameKeeper {
+	k.UpdateNameRecordError = err
+	return k
+}
+
+func (k *mockNameKeeper) NameExists(ctx sdk.Context, name string) bool {
+	return k.Parent.NameExists(ctx, name)
+}
+
+func (k *mockNameKeeper) GetRecordByName(ctx sdk.Context, name string) (record *nametypes.NameRecord, err error) {
+	if len(k.GetRecordNameError) > 0 {
+		return nil, errors.New(k.GetRecordNameError)
+	}
+	return k.Parent.GetRecordByName(ctx, name)
+}
+
+func (k *mockNameKeeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error {
+	if len(k.SetNameRecordError) > 0 {
+		return errors.New(k.SetNameRecordError)
+	}
+	return k.Parent.SetNameRecord(ctx, name, addr, restrict)
+}
+
+func (k *mockNameKeeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error {
+	if len(k.UpdateNameRecordError) > 0 {
+		return errors.New(k.UpdateNameRecordError)
+	}
+	return k.Parent.UpdateNameRecord(ctx, name, addr, restrict)
+}
+
 func (s *UpgradeTestSuite) TestSetAccountDataNameRecord() {
 	recordName := attributetypes.AccountDataName
 	// This is automatically added to all expInLog slices.
@@ -445,22 +499,32 @@ func (s *UpgradeTestSuite) TestSetAccountDataNameRecord() {
 	tests := []struct {
 		name        string
 		existing    *nametypes.NameRecord // The Name field is ignored in this.
+		nameK       *mockNameKeeper
 		expErr      string
 		expInLog    []string
 		expNotInLog []string
 	}{
 		{
-			name: "name doesn't exist yet",
-			expInLog: []string{
-				`Successfully set "` + recordName + `" name record.`,
-			},
+			name:     "name doesn't exist yet",
+			expInLog: []string{`Successfully set "` + recordName + `" name record.`},
+		},
+		{
+			name:        "name doesn't exist yet but error writing it",
+			nameK:       s.newMockNameKeeper().WithSetNameRecordError("no writo for you-oh"),
+			expErr:      "no writo for you-oh",
+			expNotInLog: []string{`Successfully set "` + recordName + `" name record.`},
+		},
+		{
+			name:        "already exists but error getting it",
+			existing:    nr(attrModAccAddr, true),
+			nameK:       s.newMockNameKeeper().WithGetRecordNameError("cannot get that thing for you"),
+			expErr:      "cannot get that thing for you",
+			expNotInLog: []string{`The "` + recordName + `" name record already exists as needed. Nothing to do.`},
 		},
 		{
 			name:     "existing is as needed",
 			existing: nr(attrModAccAddr, true),
-			expInLog: []string{
-				`The "` + recordName + `" name record already exists as needed. Nothing to do.`,
-			},
+			expInLog: []string{`The "` + recordName + `" name record already exists as needed. Nothing to do.`},
 		},
 		{
 			name:     "existing is unrestricted",
@@ -496,10 +560,18 @@ func (s *UpgradeTestSuite) TestSetAccountDataNameRecord() {
 				`Successfully updated "` + recordName + `" name record.`,
 			},
 		},
-		// The following test cases are omitted due to the extensive effort it'd take to trigger them.
-		//	SetNameRecord returns error
-		//	GetRecordByName returns error
-		//	UpdateNameRecord returns error
+		{
+			name:     "existing needs update but error updating it",
+			existing: nr(otherAddr, false),
+			nameK:    s.newMockNameKeeper().WithUpdateNameRecord("that update is not going to be allowed here"),
+			expErr:   "that update is not going to be allowed here",
+			expInLog: []string{
+				`Existing "` + recordName + `" name record is not restricted. It will be updated to be restricted.`,
+				`Existing "` + recordName + `" name record has address "` + otherAddr + `". It will be updated to the attribute module account address "` + attrModAccAddr + `"`,
+				`Updating existing "` + recordName + `" name record.`,
+			},
+			expNotInLog: []string{`Successfully updated "` + recordName + `" name record.`},
+		},
 	}
 
 	for _, tc := range tests {
@@ -523,16 +595,22 @@ func (s *UpgradeTestSuite) TestSetAccountDataNameRecord() {
 			expNotInLog := make([]string, len(tc.expNotInLog), len(tc.expNotInLog)+1)
 			copy(expNotInLog, tc.expNotInLog)
 			if len(tc.expErr) > 0 {
-				expInLog = append(expInLog, errMsg)
+				expInLog = append(expInLog, fmt.Sprintf("ERR %s error=%q", errMsg, tc.expErr))
 			} else {
 				expNotInLog = append(expNotInLog, errMsg)
+			}
+
+			// Use the mock name keeper if one is defined, otherwise, use the normal one.
+			var nameK nameKeeper = s.app.NameKeeper
+			if tc.nameK != nil {
+				nameK = tc.nameK
 			}
 
 			// Call setAccountDataNameRecord, making sure it doesn't panic and copy log output to test output.
 			s.logBuffer.Reset()
 			var err error
 			testFunc := func() {
-				err = setAccountDataNameRecord(s.ctx, s.app)
+				err = setAccountDataNameRecord(s.ctx, s.app.AccountKeeper, nameK)
 			}
 			s.Require().NotPanics(testFunc, "setAccountDataNameRecord")
 			logOutput := s.logBuffer.String()
@@ -554,7 +632,7 @@ func (s *UpgradeTestSuite) TestSetAccountDataNameRecord() {
 			}
 
 			// Make sure the name record exists as needed.
-			if len(tc.expErr) > 0 {
+			if len(tc.expErr) == 0 {
 				nameRecord, err := s.app.NameKeeper.GetRecordByName(s.ctx, recordName)
 				if s.Assert().NoError(err, "GetRecordByName after setAccountDataNameRecord") {
 					s.Assert().Equal(recordName, nameRecord.Name, "NameRecord.Name after setAccountDataNameRecord")
