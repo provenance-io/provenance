@@ -12,6 +12,26 @@ option go_package = "github.com/provenance-io/provenance/x/marker/types";
 option java_package        = "io.provenance.marker.v1";
 option java_multiple_files = true;
 
+// AddMarkerProposal is deprecated and can no longer be used.
+// Deprecated: This message is no longer usable. It is only still included for
+// backwards compatibility (e.g. looking up old governance proposals).
+// It is replaced by providing a MsgAddMarkerRequest in a governance proposal.
+message AddMarkerProposal {
+  option (gogoproto.equal) = true;
+
+  string title       = 1;
+  string description = 2;
+
+  cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+  string               manager                  = 4;
+  MarkerStatus         status                   = 5;
+  MarkerType           marker_type              = 6;
+  repeated AccessGrant access_list              = 7 [(gogoproto.nullable) = false];
+  bool                 supply_fixed             = 8;
+  bool                 allow_governance_control = 9;
+}
+
 // SupplyIncreaseProposal defines a governance proposal to administer a marker and increase total supply of the marker
 // through minting coin and placing it within the marker or assigning it directly to an account
 message SupplyIncreaseProposal {

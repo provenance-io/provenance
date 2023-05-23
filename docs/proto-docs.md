@@ -76,6 +76,7 @@
     - [GenesisState](#provenance.marker.v1.GenesisState)
   
 - [provenance/marker/v1/proposals.proto](#provenance/marker/v1/proposals.proto)
+    - [AddMarkerProposal](#provenance.marker.v1.AddMarkerProposal)
     - [ChangeStatusProposal](#provenance.marker.v1.ChangeStatusProposal)
     - [RemoveAdministratorProposal](#provenance.marker.v1.RemoveAdministratorProposal)
     - [SetAdministratorProposal](#provenance.marker.v1.SetAdministratorProposal)
@@ -1390,6 +1391,32 @@ GenesisState defines the account module's genesis state.
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/marker/v1/proposals.proto
+
+
+
+<a name="provenance.marker.v1.AddMarkerProposal"></a>
+
+### AddMarkerProposal
+AddMarkerProposal is deprecated and can no longer be used.
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by providing a MsgAddMarkerRequest in a governance proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `manager` | [string](#string) |  |  |
+| `status` | [MarkerStatus](#provenance.marker.v1.MarkerStatus) |  |  |
+| `marker_type` | [MarkerType](#provenance.marker.v1.MarkerType) |  |  |
+| `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
+| `supply_fixed` | [bool](#bool) |  |  |
+| `allow_governance_control` | [bool](#bool) |  |  |
+
+
+
 
 
 
