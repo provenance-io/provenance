@@ -481,6 +481,11 @@ func (k Keeper) prefixScan(ctx sdk.Context, prefix []byte, f namePred) (attrs []
 
 // A genesis helper that imports attribute state without owner checks.
 func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
+	if err := k.ValidateExpirationDate(ctx, attr); err != nil {
+		// don't return error, this will ensure this attribute is skipped since it is expired
+		return nil
+	}
+
 	// Ensure attribute is valid
 	err := attr.ValidateBasic()
 	if err != nil {
