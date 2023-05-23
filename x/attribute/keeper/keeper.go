@@ -500,6 +500,7 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
 	k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+	k.addAttributeExpireLookup(store, attr)
 	return nil
 }
 
