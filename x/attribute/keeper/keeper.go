@@ -13,6 +13,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/attribute/types"
@@ -34,8 +35,10 @@ type Keeper struct {
 	// Key to access the key-value store from sdk.Context.
 	storeKey storetypes.StoreKey
 
-	// The codec codec for binary encoding/decoding.
+	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
+
+	modAddr sdk.AccAddress
 }
 
 // NewKeeper returns an attribute keeper. It handles:
@@ -58,6 +61,7 @@ func NewKeeper(
 		authKeeper: authKeeper,
 		nameKeeper: nameKeeper,
 		cdc:        cdc,
+		modAddr:    authtypes.NewModuleAddress(types.ModuleName),
 	}
 	nameKeeper.SetAttributeKeeper(keeper)
 	return keeper
@@ -98,7 +102,7 @@ func (k Keeper) GetAttributes(ctx sdk.Context, addr string, name string) ([]type
 
 // IterateRecords iterates over all the stored attribute records and passes them to a callback function.
 func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) error {
-	// Init a attribute record iterator
+	// Init an attribute record iterator
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
@@ -122,7 +126,7 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) e
 	return nil
 }
 
-// Stores an attribute under the given account. The attribute name must resolve to the given owner address.
+// SetAttribute stores an attribute under the given account. The attribute name must resolve to the given owner address.
 func (k Keeper) SetAttribute(
 	ctx sdk.Context, attr types.Attribute, owner sdk.AccAddress,
 ) error {
@@ -197,7 +201,7 @@ func (k Keeper) DecAttrNameAddressLookup(ctx sdk.Context, name string, addrBytes
 	}
 }
 
-// Updates an attribute under the given account. The attribute name must resolve to the given owner address and value must resolve to an existing attribute.
+// UpdateAttribute updates an attribute under the given account. The attribute name must resolve to the given owner address and value must resolve to an existing attribute.
 func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribute, updateAttribute types.Attribute, owner sdk.AccAddress,
 ) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "update")
@@ -432,4 +436,48 @@ func (k Keeper) PopulateAddressAttributeNameTable(ctx sdk.Context) {
 		}
 		k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
 	}
+}
+
+// GetAccountData gets the value of the special accountdata attribute for the given address.
+func (k Keeper) GetAccountData(ctx sdk.Context, addr string) (string, error) {
+	attrs, err := k.GetAttributes(ctx, addr, types.AccountDataName)
+	if err != nil {
+		return "", fmt.Errorf("error finding %s for %q: %w", types.AccountDataName, addr, err)
+	}
+	// There should only ever be 0 or 1 entries. If there's more, just ignore the rest.
+	if len(attrs) == 0 {
+		return "", nil
+	}
+	return string(attrs[0].Value), nil
+}
+
+// SetAccountData sets/updates the value of the special accountdata attribute for a given address.
+func (k Keeper) SetAccountData(ctx sdk.Context, addr string, value string) error {
+	// Delete anything that might already be there.
+	existings, err := k.GetAttributes(ctx, addr, types.AccountDataName)
+	if err != nil {
+		return fmt.Errorf("could not look up existing %s for %q: %w", types.AccountDataName, addr, err)
+	}
+	if len(existings) > 0 {
+		err = k.DeleteAttribute(ctx, addr, types.AccountDataName, nil, k.modAddr)
+		if err != nil {
+			return fmt.Errorf("could not delete existing %s for %q: %w", types.AccountDataName, addr, err)
+		}
+	}
+
+	// Just leave it deleted if the new value is an empty string.
+	if len(value) > 0 {
+		attr := types.Attribute{
+			Name:          types.AccountDataName,
+			Value:         []byte(value),
+			AttributeType: types.AttributeType_String,
+			Address:       addr,
+		}
+		err = k.SetAttribute(ctx, attr, k.modAddr)
+		if err != nil {
+			return fmt.Errorf("could not set %s for %q: %w", types.AccountDataName, addr, err)
+		}
+	}
+
+	return nil
 }
