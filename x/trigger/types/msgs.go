@@ -14,23 +14,22 @@ var _ sdk.Msg = &MsgDestroyTriggerRequest{}
 // NewCreateTriggerRequest Creates a new trigger create request
 func NewCreateTriggerRequest(authority string, event TriggerEventI, msgs []sdk.Msg) *MsgCreateTriggerRequest {
 	actions, err := sdktx.SetMsgs(msgs)
-	if err != nil || len(actions) == 0 {
-		fmt.Printf("unable to set messages : %s\n", err)
+	if err != nil {
+		fmt.Printf("unable to set messages: %s\n", err)
 		return nil
 	}
 
-	// This is where we would convert the TriggerEventI into Any
-	eventAny, err := codectypes.NewAnyWithValue(event)
+	eventAny, _ := codectypes.NewAnyWithValue(event)
 	if err != nil {
-		fmt.Printf("unable to set messages : %s\n", err)
+		fmt.Printf("unable to set event: %s\n", err)
 		return nil
 	}
 
 	m := &MsgCreateTriggerRequest{
 		Authority: authority,
 		Event:     eventAny,
+		Actions:   actions,
 	}
-	m.Actions = actions
 
 	return m
 }
@@ -74,11 +73,7 @@ func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 
 // GetSigners indicates that the message must have been signed by the parent.
 func (msg MsgCreateTriggerRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.GetAuthority())
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.GetAuthority())}
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -95,6 +90,9 @@ func (msg MsgCreateTriggerRequest) UnpackInterfaces(unpacker codectypes.AnyUnpac
 
 // GetTriggerEventI returns unpacked TriggerEvent
 func (msg MsgCreateTriggerRequest) GetTriggerEventI() (TriggerEventI, error) {
+	if msg.GetEvent() == nil {
+		return nil, ErrNoTriggerEvent.Wrap("failed to get event")
+	}
 	event, ok := msg.GetEvent().GetCachedValue().(TriggerEventI)
 	if !ok {
 		return nil, ErrNoTriggerEvent.Wrap("failed to get event")
@@ -116,9 +114,5 @@ func (msg MsgDestroyTriggerRequest) ValidateBasic() error {
 
 // GetSigners indicates that the message must have been signed by the parent.
 func (msg MsgDestroyTriggerRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.GetAuthority())
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.GetAuthority())}
 }
