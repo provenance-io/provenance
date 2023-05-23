@@ -68,10 +68,19 @@ var allRequestMsgs = []MetadataMsg{
 	(*MsgWriteRecordSpecificationRequest)(nil),
 	(*MsgDeleteRecordSpecificationRequest)(nil),
 
+	// omitting MsgWriteP8EContractSpecRequest and MsgP8EMemorializeContractRequest
+	// since they're deprecated and no longer usable.
+
 	(*MsgBindOSLocatorRequest)(nil),
 	(*MsgDeleteOSLocatorRequest)(nil),
 	(*MsgModifyOSLocatorRequest)(nil),
 }
+
+// We still need these deprecated messages to be sdk.Msg for the codec.
+var (
+	_ sdk.Msg = (*MsgWriteP8EContractSpecRequest)(nil)
+	_ sdk.Msg = (*MsgP8EMemorializeContractRequest)(nil)
+)
 
 // stringsToAccAddresses converts an array of strings into an array of Acc Addresses.
 // Panics if it can't convert one.
@@ -855,6 +864,26 @@ func (msg MsgDeleteRecordSpecificationRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return nil
+}
+
+// ------------------  MsgWriteP8EContractSpecRequest  ------------------
+
+func (msg MsgWriteP8EContractSpecRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+func (msg MsgWriteP8EContractSpecRequest) ValidateBasic() error {
+	return errors.New("deprecated and unusable")
+}
+
+// ------------------  MsgP8EMemorializeContractRequest  ------------------
+
+func (msg MsgP8EMemorializeContractRequest) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Invoker)}
+}
+
+func (msg MsgP8EMemorializeContractRequest) ValidateBasic() error {
+	return errors.New("deprecated and unusable")
 }
 
 // ------------------  MsgBindOSLocatorRequest  ------------------
