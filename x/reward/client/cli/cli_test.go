@@ -738,7 +738,7 @@ func (s *IntegrationTestSuite) TestTxClaimReward() {
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.Assert().NoError(marshalErr)
-				s.Assert().Equal(int(tc.expectedCode), int(response.Code))
+				s.Assert().Equal(tc.expectedCode, response.Code)
 			}
 		})
 	}

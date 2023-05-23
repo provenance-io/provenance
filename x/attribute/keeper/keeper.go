@@ -517,13 +517,18 @@ func (k Keeper) PopulateAddressAttributeNameTable(ctx sdk.Context) {
 // DeleteExpiredAttributes find and delete expired attributes returns the total deleted
 // limit sets the max amount to delete in a call, 0 for not limit
 func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
+	expirationKeys := [][]byte{}
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, types.GetAttributeExpireTimePrefix(ctx.BlockTime()))
-	defer iterator.Close()
-	count := 0
 	for ; iterator.Valid(); iterator.Next() {
-		attrKey := types.GetAddrAttributeKeyFromExpireKey(iterator.Key())
+		expirationKeys = append(expirationKeys, iterator.Key())
+	}
+	iterator.Close()
+
+	count := 0
+	for _, expirationKey := range expirationKeys {
+		attrKey := types.GetAddrAttributeKeyFromExpireKey(expirationKey)
 		bz := store.Get(attrKey)
 		if bz != nil {
 			var attribute types.Attribute
@@ -544,7 +549,7 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 		}
 
 		// delete the expiration lookup key
-		store.Delete(iterator.Key())
+		store.Delete(expirationKey)
 		if limit != 0 && count >= limit {
 			break
 		}
