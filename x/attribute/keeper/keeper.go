@@ -451,7 +451,8 @@ func (k Keeper) GetAccountData(ctx sdk.Context, addr string) (string, error) {
 	return string(attrs[0].Value), nil
 }
 
-// SetAccountData sets/updates the value of the special accountdata attribute for a given address.
+// SetAccountData sets/updates/deletes the value of the special accountdata attribute for a given address.
+// An error is only returned if the account data cannot be set as requested.
 func (k Keeper) SetAccountData(ctx sdk.Context, addr string, value string) error {
 	// Delete anything that might already be there.
 	existings, err := k.GetAttributes(ctx, addr, types.AccountDataName)
