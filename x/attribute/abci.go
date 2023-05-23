@@ -20,7 +20,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 				"beginblock",
 				sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 				sdk.NewAttribute(sdk.AttributeKeyAction, types.EventTypeDeletedExpired),
-				sdk.NewAttribute(types.AttributeKeyTotalExpiredDeleted, strconv.Itoa(deleted)),
+				sdk.NewAttribute(types.AttributeKeyTotalExpired, strconv.Itoa(deleted)),
 			),
 		)
 	}

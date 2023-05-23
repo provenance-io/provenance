@@ -19,10 +19,10 @@ const (
 	// EventTypeDeletedExpired emitted when attributes have expired and been deleted in begin blocker
 	EventTypeDeletedExpired string = "attribute_deleted_expired"
 
-	AttributeKeyAttribute           string = "attribute"
-	AttributeKeyNameAttribute       string = "attribute_name"
-	AttributeKeyAccountAddress      string = "account_address"
-	AttributeKeyTotalExpiredDeleted string = "total_expired_deleted"
+	AttributeKeyAttribute      string = "attribute"
+	AttributeKeyNameAttribute  string = "attribute_name"
+	AttributeKeyAccountAddress string = "account_address"
+	AttributeKeyTotalExpired   string = "total_expired_deleted"
 
 	// EventTelemetryKeyAdd add telemetry metrics key
 	EventTelemetryKeyAdd string = "add"

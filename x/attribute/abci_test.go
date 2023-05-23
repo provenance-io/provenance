@@ -56,7 +56,7 @@ func TestBeginBlockDeletionOfExpired(t *testing.T) {
 	assert.Equal(t, types.ModuleName, string(events[2].Attributes[0].Value))
 	assert.Equal(t, sdk.AttributeKeyAction, string(events[2].Attributes[1].Key))
 	assert.Equal(t, types.EventTypeDeletedExpired, string(events[2].Attributes[1].Value))
-	assert.Equal(t, types.AttributeKeyTotalExpiredDeleted, string(events[2].Attributes[2].Key))
+	assert.Equal(t, types.AttributeKeyTotalExpired, string(events[2].Attributes[2].Key))
 	assert.Equal(t, "2", string(events[2].Attributes[2].Value))
 
 }

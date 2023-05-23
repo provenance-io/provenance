@@ -115,9 +115,10 @@ func GetNameKeyBytes(name string) []byte {
 
 // GetAttributeExpireTimePrefix returns a prefix for expired time [AttributeExpirationKeyPrefix][epoch]
 func GetAttributeExpireTimePrefix(expireTime time.Time) []byte {
-	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, uint64(expireTime.Unix()))
-	return append(AttributeExpirationKeyPrefix, buf...)
+	key := AttributeExpirationKeyPrefix
+	expireTimeBz := make([]byte, 8)
+	binary.BigEndian.PutUint64(expireTimeBz, uint64(expireTime.Unix()))
+	return append(key, expireTimeBz...)
 }
 
 // Reverse the component order of a name for better scan support.
