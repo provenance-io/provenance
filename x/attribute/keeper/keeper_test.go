@@ -522,7 +522,7 @@ func (s *KeeperTestSuite) TestUpdateAttributeExpiration() {
 			err := s.app.AttributeKeeper.UpdateAttributeExpiration(s.ctx, tc.updateAttr, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
 				s.Assert().Error(err)
-				s.Assert().Equal(tc.errorMsg, err.Error())
+				s.Assert().EqualError(err, tc.errorMsg, "UpdateAttributeExpiration")
 			} else {
 				s.Assert().NoError(err, "UpdateAttributeExpiration")
 				attrs, err := s.app.AttributeKeeper.GetAttributes(s.ctx, tc.updateAttr.Address, tc.updateAttr.Name)
