@@ -1342,7 +1342,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				var response sdk.TxResponse
 				s.Assert().NoError(err)
 				s.Assert().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Assert().Equal(tc.expectedCode, response.Code)
+				s.Assert().Equal(tc.expectedCode, int32(response.Code), "")
 			}
 		})
 	}
