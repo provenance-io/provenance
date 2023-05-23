@@ -17,6 +17,7 @@ option java_multiple_files = true;
 // backwards compatibility (e.g. looking up old governance proposals).
 // It is replaced by providing a MsgAddMarkerRequest in a governance proposal.
 message AddMarkerProposal {
+  option deprecated        = true;
   option (gogoproto.equal) = true;
 
   string title       = 1;
