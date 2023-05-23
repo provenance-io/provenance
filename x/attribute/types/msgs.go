@@ -184,6 +184,7 @@ func (msg MsgDeleteDistinctAttributeRequest) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgSetAccountDataRequest) ValidateBasic() error {
+	// This message is only for regular account addresses. No need to allow for scopes or others.
 	if _, err := sdk.AccAddressFromBech32(msg.Account); err != nil {
 		return fmt.Errorf("invalid account: %w", err)
 	}
