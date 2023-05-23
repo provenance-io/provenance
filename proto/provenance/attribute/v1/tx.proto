@@ -24,7 +24,7 @@ service Msg {
   // DeleteDistinctAttribute defines a method to verify a particular invariance.
   rpc DeleteDistinctAttribute(MsgDeleteDistinctAttributeRequest) returns (MsgDeleteDistinctAttributeResponse);
 
-  // SetAccountData defines a method for setting an account's accountdata attribute.
+  // SetAccountData defines a method for setting/updating an account's accountdata attribute.
   rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
 }
 

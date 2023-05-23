@@ -6,6 +6,7 @@
 
 - [provenance/attribute/v1/attribute.proto](#provenance/attribute/v1/attribute.proto)
     - [Attribute](#provenance.attribute.v1.Attribute)
+    - [EventAccountDataUpdated](#provenance.attribute.v1.EventAccountDataUpdated)
     - [EventAttributeAdd](#provenance.attribute.v1.EventAttributeAdd)
     - [EventAttributeDelete](#provenance.attribute.v1.EventAttributeDelete)
     - [EventAttributeDistinctDelete](#provenance.attribute.v1.EventAttributeDistinctDelete)
@@ -452,6 +453,21 @@ Attribute holds a typed key/value structure for data associated with an account
 | `value` | [bytes](#bytes) |  | The attribute value. |
 | `attribute_type` | [AttributeType](#provenance.attribute.v1.AttributeType) |  | The attribute value type. |
 | `address` | [string](#string) |  | The address the attribute is bound to |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.EventAccountDataUpdated"></a>
+
+### EventAccountDataUpdated
+EventAccountDataUpdated event emitted when accountdata is set, updated, or deleted.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  |  |
 
 
 
@@ -997,7 +1013,7 @@ Msg defines the attribute module Msg service.
 | `UpdateAttribute` | [MsgUpdateAttributeRequest](#provenance.attribute.v1.MsgUpdateAttributeRequest) | [MsgUpdateAttributeResponse](#provenance.attribute.v1.MsgUpdateAttributeResponse) | UpdateAttribute defines a method to verify a particular invariance. | |
 | `DeleteAttribute` | [MsgDeleteAttributeRequest](#provenance.attribute.v1.MsgDeleteAttributeRequest) | [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse) | DeleteAttribute defines a method to verify a particular invariance. | |
 | `DeleteDistinctAttribute` | [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest) | [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse) | DeleteDistinctAttribute defines a method to verify a particular invariance. | |
-| `SetAccountData` | [MsgSetAccountDataRequest](#provenance.attribute.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.attribute.v1.MsgSetAccountDataResponse) | SetAccountData defines a method for setting an account's accountdata attribute. | |
+| `SetAccountData` | [MsgSetAccountDataRequest](#provenance.attribute.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.attribute.v1.MsgSetAccountDataResponse) | SetAccountData defines a method for setting/updating an account's accountdata attribute. | |
 
  <!-- end services -->
 

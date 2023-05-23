@@ -531,7 +531,7 @@ type MsgClient interface {
 	DeleteAttribute(ctx context.Context, in *MsgDeleteAttributeRequest, opts ...grpc.CallOption) (*MsgDeleteAttributeResponse, error)
 	// DeleteDistinctAttribute defines a method to verify a particular invariance.
 	DeleteDistinctAttribute(ctx context.Context, in *MsgDeleteDistinctAttributeRequest, opts ...grpc.CallOption) (*MsgDeleteDistinctAttributeResponse, error)
-	// SetAccountData defines a method for setting an account's accountdata attribute.
+	// SetAccountData defines a method for setting/updating an account's accountdata attribute.
 	SetAccountData(ctx context.Context, in *MsgSetAccountDataRequest, opts ...grpc.CallOption) (*MsgSetAccountDataResponse, error)
 }
 
@@ -598,7 +598,7 @@ type MsgServer interface {
 	DeleteAttribute(context.Context, *MsgDeleteAttributeRequest) (*MsgDeleteAttributeResponse, error)
 	// DeleteDistinctAttribute defines a method to verify a particular invariance.
 	DeleteDistinctAttribute(context.Context, *MsgDeleteDistinctAttributeRequest) (*MsgDeleteDistinctAttributeResponse, error)
-	// SetAccountData defines a method for setting an account's accountdata attribute.
+	// SetAccountData defines a method for setting/updating an account's accountdata attribute.
 	SetAccountData(context.Context, *MsgSetAccountDataRequest) (*MsgSetAccountDataResponse, error)
 }
 

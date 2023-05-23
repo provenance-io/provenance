@@ -205,7 +205,7 @@ func (k msgServer) DeleteDistinctAttribute(goCtx context.Context, msg *types.Msg
 	return &types.MsgDeleteDistinctAttributeResponse{}, nil
 }
 
-// SetAccountData defines a method for setting an account's accountdata attribute.
+// SetAccountData defines a method for setting/updating an account's accountdata attribute.
 func (k msgServer) SetAccountData(goCtx context.Context, msg *types.MsgSetAccountDataRequest) (*types.MsgSetAccountDataResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

@@ -479,5 +479,5 @@ func (k Keeper) SetAccountData(ctx sdk.Context, addr string, value string) error
 		}
 	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(&types.EventAccountDataUpdated{Account: addr})
 }
