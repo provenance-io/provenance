@@ -35,13 +35,7 @@ var (
 
 // AddrAttributeKey creates a key for an account attribute
 func AddrAttributeKey(addr []byte, attr Attribute) []byte {
-	key := AttributeKeyPrefix
-	return append(key, AddrAttributeKeySuffix(addr, attr)...)
-}
-
-// AddrAttributeKeySuffix returns attribute key without AttributeKeyPrefix
-func AddrAttributeKeySuffix(addr []byte, attr Attribute) []byte {
-	key := address.MustLengthPrefix(addr)
+	key := append(AttributeKeyPrefix, address.MustLengthPrefix(addr)...)
 	key = append(key, GetNameKeyBytes(attr.Name)...)
 	return append(key, attr.Hash()...)
 }

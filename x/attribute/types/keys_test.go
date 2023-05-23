@@ -34,21 +34,6 @@ func TestAddrAttributeKey(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func TestAddrAttributeKeySuffix(t *testing.T) {
-	attr1 := Attribute{
-		Name:          "long.address.name",
-		Value:         []byte("0123456789"),
-		Address:       "cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4",
-		AttributeType: AttributeType_String,
-	}
-	actual := AddrAttributeKeySuffix(attr1.GetAddressBytes(), attr1)
-	expected := address.MustLengthPrefix(attr1.GetAddressBytes())
-	expected = append(expected, GetNameKeyBytes(attr1.Name)...)
-	expected = append(expected, attr1.Hash()...)
-
-	assert.Equal(t, expected, actual)
-}
-
 func TestGetAddrAttributeKeyFromExpireKey(t *testing.T) {
 	now := time.Now()
 	attr1 := Attribute{
@@ -80,7 +65,9 @@ func TestAttributeExpireKey(t *testing.T) {
 	binary.BigEndian.PutUint64(epochBytes, uint64(attr1.ExpirationDate.Unix()))
 	expected := AttributeExpirationKeyPrefix
 	expected = append(expected, epochBytes...)
-	expected = append(expected, AddrAttributeKeySuffix(attr1.GetAddressBytes(), attr1)...)
+	expected = append(expected, address.MustLengthPrefix(attr1.GetAddressBytes())...)
+	expected = append(expected, GetNameKeyBytes(attr1.Name)...)
+	expected = append(expected, attr1.Hash()...)
 	assert.Equal(t, expected, actual)
 
 	attr1.ExpirationDate = nil

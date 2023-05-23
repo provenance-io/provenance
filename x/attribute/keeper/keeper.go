@@ -292,12 +292,16 @@ func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, updateAttribute types
 ) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "update_expiration")
 
-	var err error
+	if err := k.ValidateExpirationDate(ctx, updateAttribute); err != nil {
+		return err
+	}
 
+	var err error
 	normalizedOrigName, err := k.nameKeeper.Normalize(ctx, updateAttribute.Name)
 	if err != nil {
 		return fmt.Errorf("unable to normalize attribute name %q: %w", updateAttribute.Name, err)
 	}
+	updateAttribute.Name = normalizedOrigName
 
 	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
 		return fmt.Errorf("no account found for owner address %q", owner.String())
@@ -307,50 +311,37 @@ func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, updateAttribute types
 		return fmt.Errorf("%q does not resolve to address %q", updateAttribute.Name, owner.String())
 	}
 
-	addrBz := updateAttribute.GetAddressBytes()
-
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(addrBz, normalizedOrigName))
-	defer it.Close()
-	var found bool
-	for ; it.Valid(); it.Next() {
+	attrKey := types.AddrAttributeKey(updateAttribute.GetAddressBytes(), updateAttribute)
+	currentAttr := store.Get(attrKey)
+	if currentAttr != nil {
 		attr := types.Attribute{}
-		if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
+		if err := k.cdc.Unmarshal(currentAttr, &attr); err != nil {
 			return err
 		}
 
-		if attr.Name == updateAttribute.Name && bytes.Equal(attr.Value, updateAttribute.Value) {
-			if err := k.ValidateExpirationDate(ctx, updateAttribute); err != nil {
-				return err
-			}
+		k.deleteAttributeExpireLookup(store, attr)
 
-			found = true
-			store.Delete(it.Key())
-			k.deleteAttributeExpireLookup(store, attr)
-
-			originalExpiration := attr.ExpirationDate
-			attr.ExpirationDate = updateAttribute.ExpirationDate
-			bz, err := k.cdc.Marshal(&attr)
-			if err != nil {
-				return err
-			}
-			updatedKey := types.AddrAttributeKey(addrBz, attr)
-			store.Set(updatedKey, bz)
-			k.addAttributeExpireLookup(store, attr)
-
-			attributeExpirationUpdateEvent := types.NewEventAttributeExpirationUpdate(attr, originalExpiration, owner.String())
-			if err := ctx.EventManager().EmitTypedEvent(attributeExpirationUpdateEvent); err != nil {
-				return err
-			}
-
-			break
+		originalExpiration := attr.ExpirationDate
+		attr.ExpirationDate = updateAttribute.ExpirationDate
+		bz, err := k.cdc.Marshal(&attr)
+		if err != nil {
+			return err
 		}
-	}
-	if !found {
+		store.Set(attrKey, bz)
+
+		k.addAttributeExpireLookup(store, attr)
+
+		attributeExpirationUpdateEvent := types.NewEventAttributeExpirationUpdate(attr, originalExpiration, owner.String())
+		if err := ctx.EventManager().EmitTypedEvent(attributeExpirationUpdateEvent); err != nil {
+			return err
+		}
+	} else {
 		errorMessage := "no attributes updated"
 		ctx.Logger().Error(errorMessage, "name", updateAttribute.Name, "value", string(updateAttribute.Value))
 		return fmt.Errorf("%s with name %q : value %q : type: %s", errorMessage, updateAttribute.Name, string(updateAttribute.Value), updateAttribute.AttributeType.String())
 	}
+
 	return nil
 }
 
