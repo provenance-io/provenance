@@ -527,8 +527,8 @@ func (s *KeeperTestSuite) TestUpdateAttributeExpiration() {
 				s.Assert().NoError(err, "UpdateAttributeExpiration")
 				attrs, err := s.app.AttributeKeeper.GetAttributes(s.ctx, tc.updateAttr.Address, tc.updateAttr.Name)
 				s.Assert().NoError(err, "GetAttributes(%q, %q)", tc.updateAttr.Address, tc.updateAttr.Name)
-				s.Assert().Len(attrs, 1)
-				s.Assert().Equal(tc.updateAttr.ExpirationDate, attrs[0].ExpirationDate)
+				s.Assert().Len(attrs, 1, "number of attributes returned by GetAttributes")
+				s.Assert().Equal(tc.updateAttr.ExpirationDate, attrs[0].ExpirationDate, "expiration date of attribute returned by GetAttributes")
 			}
 		})
 	}
