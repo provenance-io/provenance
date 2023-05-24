@@ -240,21 +240,22 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 		return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", updateAttribute.Name, owner.String())
 	}
 
-	addrBz := originalAttribute.GetAddressBytes()
-
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(addrBz, normalizedOrigName))
+	addrBz := originalAttribute.GetAddressBytes()
+	attrKey := types.AddrAttributeKey(addrBz, originalAttribute)
+	currentAttr := store.Get(attrKey)
+
 	var found bool
-	for ; it.Valid(); it.Next() {
+	if currentAttr != nil {
 		attr := types.Attribute{}
-		if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
+		if err := k.cdc.Unmarshal(currentAttr, &attr); err != nil {
 			return err
 		}
 
-		if attr.Name == updateAttribute.Name && bytes.Equal(attr.Value, originalAttribute.Value) && attr.AttributeType == originalAttribute.AttributeType {
+		if attr.AttributeType == originalAttribute.AttributeType {
 			found = true
-			store.Delete(it.Key())
-			k.DecAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+			store.Delete(attrKey)
+			k.DecAttrNameAddressLookup(ctx, attr.Name, addrBz)
 
 			bz, err := k.cdc.Marshal(&updateAttribute)
 			if err != nil {
@@ -268,7 +269,6 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			if err := ctx.EventManager().EmitTypedEvent(attributeUpdateEvent); err != nil {
 				return err
 			}
-			break
 		}
 	}
 	if !found {
@@ -316,7 +316,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 
 	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, types.AddrStrAttributesNameKeyPrefix(addr, name))
-	var count int
+	attrToDelete := []types.Attribute{} // do delete logic outside of iterator
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
 		if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
@@ -324,22 +324,29 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 		}
 
 		if attr.Name == name && (!deleteDistinct || bytes.Equal(*value, attr.Value)) {
-			count++
-			store.Delete(it.Key())
-			k.DecAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
-			if !deleteDistinct {
-				deleteEvent := types.NewEventAttributeDelete(name, addr, owner.String())
-				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
-					return err
-				}
-			} else {
-				deleteEvent := types.NewEventDistinctAttributeDelete(name, string(*value), addr, owner.String())
-				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
-					return err
-				}
+			attrToDelete = append(attrToDelete, attr)
+		}
+	}
+	it.Close()
+
+	var count int
+	for _, attr := range attrToDelete {
+		addrBz := attr.GetAddressBytes()
+		store.Delete(types.AddrAttributeKey(addrBz, attr))
+		k.DecAttrNameAddressLookup(ctx, attr.Name, addrBz)
+		if !deleteDistinct {
+			deleteEvent := types.NewEventAttributeDelete(name, addr, owner.String())
+			if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
+				return err
+			}
+		} else {
+			deleteEvent := types.NewEventDistinctAttributeDelete(name, string(*value), addr, owner.String())
+			if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
+				return err
 			}
 		}
 	}
+
 	errm := "no keys deleted"
 	if count == 0 && deleteDistinct {
 		ctx.Logger().Error(errm, "name", name, "value")
