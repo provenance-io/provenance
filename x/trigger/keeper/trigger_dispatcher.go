@@ -17,8 +17,9 @@ func (k Keeper) ProcessTriggers(ctx sdk.Context) {
 		item := k.QueuePeek(ctx)
 		k.Dequeue(ctx)
 
-		gasLimit := k.GetGasLimit(ctx, item.GetTrigger().Id)
-		k.RemoveGasLimit(ctx, item.GetTrigger().Id)
+		triggerID := item.GetTrigger().Id
+		gasLimit := k.GetGasLimit(ctx, triggerID)
+		k.RemoveGasLimit(ctx, triggerID)
 
 		actions := item.GetTrigger().Actions
 		k.RunActions(ctx, gasLimit, actions)
