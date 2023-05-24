@@ -68,17 +68,6 @@ func (k Keeper) GetAllTriggers(ctx sdk.Context) (triggers []triggertypes.Trigger
 	return
 }
 
-// getTriggerID Gets the latest trigger ID.
-func (k Keeper) getTriggerID(ctx sdk.Context) (triggerID triggertypes.TriggerID) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(triggertypes.GetNextTriggerIDKey())
-	if bz == nil {
-		return 1
-	}
-	triggerID = triggertypes.GetTriggerIDFromBytes(bz)
-	return triggerID
-}
-
 // NewTriggerWithID Creates a trigger with the latest ID.
 func (k Keeper) NewTriggerWithID(ctx sdk.Context, owner string, event *types.Any, actions []*types.Any) triggertypes.Trigger {
 	id := k.getNextTriggerID(ctx)
@@ -98,4 +87,15 @@ func (k Keeper) getNextTriggerID(ctx sdk.Context) (triggerID triggertypes.Trigge
 	triggerID = k.getTriggerID(ctx)
 	k.setTriggerID(ctx, triggerID+1)
 	return
+}
+
+// getTriggerID Gets the latest trigger ID.
+func (k Keeper) getTriggerID(ctx sdk.Context) (triggerID triggertypes.TriggerID) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(triggertypes.GetNextTriggerIDKey())
+	if bz == nil {
+		return 1
+	}
+	triggerID = triggertypes.GetTriggerIDFromBytes(bz)
+	return triggerID
 }
