@@ -329,7 +329,6 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 	}
 	it.Close()
 
-	var count int
 	for _, attr := range attrToDelete {
 		addrBz := attr.GetAddressBytes()
 		store.Delete(types.AddrAttributeKey(addrBz, attr))
@@ -348,10 +347,10 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 	}
 
 	errm := "no keys deleted"
-	if count == 0 && deleteDistinct {
+	if len(attrToDelete) == 0 && deleteDistinct {
 		ctx.Logger().Error(errm, "name", name, "value")
 		return fmt.Errorf("%s with name %s value %s", errm, name, string(*value))
-	} else if count == 0 && !deleteDistinct {
+	} else if len(attrToDelete) == 0 && !deleteDistinct {
 		ctx.Logger().Error(errm, "name", name)
 		return fmt.Errorf("%s with name %s", errm, name)
 	}
@@ -376,10 +375,15 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 		return err
 	}
 	for _, acct := range accts {
+		attrToDelete := [][]byte{}
 		store := ctx.KVStore(k.storeKey)
 		it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acct, name))
 		for ; it.Valid(); it.Next() {
-			store.Delete(it.Key())
+			attrToDelete = append(attrToDelete, it.Key())
+		}
+		it.Close()
+		for _, key := range attrToDelete {
+			store.Delete(key)
 			k.DecAttrNameAddressLookup(ctx, name, acct)
 		}
 	}
