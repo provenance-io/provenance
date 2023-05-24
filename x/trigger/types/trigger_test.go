@@ -175,7 +175,7 @@ func TestTransactionEventValidate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res := tc.event.Validate()
 			if len(tc.err) > 0 {
-				assert.Errorf(t, res, tc.err)
+				assert.ErrorContains(t, res, tc.err)
 			} else {
 				assert.NoError(t, res)
 			}

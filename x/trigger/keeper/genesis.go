@@ -38,14 +38,15 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	k.setTriggerID(ctx, data.TriggerId)
 	k.setQueueStartIndex(ctx, data.QueueStart)
 
+	for _, gasLimit := range data.GasLimits {
+		k.SetGasLimit(ctx, gasLimit.TriggerId, gasLimit.Amount)
+	}
+
 	for _, queuedTrigger := range data.QueuedTriggers {
 		k.Enqueue(ctx, queuedTrigger)
 	}
 
-	for i := range data.Triggers {
-		trigger := data.Triggers[i]
-		gasLimit := data.GasLimits[i]
+	for _, trigger := range data.Triggers {
 		k.SetTrigger(ctx, trigger)
-		k.SetGasLimit(ctx, trigger.GetId(), gasLimit)
 	}
 }

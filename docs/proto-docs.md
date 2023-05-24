@@ -438,6 +438,7 @@
     - [Trigger](#provenance.trigger.v1.Trigger)
   
 - [provenance/trigger/v1/genesis.proto](#provenance/trigger/v1/genesis.proto)
+    - [GasLimit](#provenance.trigger.v1.GasLimit)
     - [GenesisState](#provenance.trigger.v1.GenesisState)
   
 - [provenance/trigger/v1/query.proto](#provenance/trigger/v1/query.proto)
@@ -6584,6 +6585,22 @@ Trigger
 
 
 
+<a name="provenance.trigger.v1.GasLimit"></a>
+
+### GasLimit
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [uint64](#uint64) |  | Trigger id is the next auto incremented id to be assigned to the next created trigger |
+| `amount` | [uint64](#uint64) |  | The maximum amount of gas that the trigger can use. |
+
+
+
+
+
+
 <a name="provenance.trigger.v1.GenesisState"></a>
 
 ### GenesisState
@@ -6595,7 +6612,7 @@ GenesisState defines the trigger module's genesis state.
 | `trigger_id` | [uint64](#uint64) |  | Trigger id is the next auto incremented id to be assigned to the next created trigger |
 | `queue_start` | [uint64](#uint64) |  | Queue start is the starting index of the queue. |
 | `triggers` | [Trigger](#provenance.trigger.v1.Trigger) | repeated | Triggers to initially start with. |
-| `gas_limits` | [uint64](#uint64) | repeated | Gas limits for triggers to initially start with. |
+| `gas_limits` | [GasLimit](#provenance.trigger.v1.GasLimit) | repeated | Maximum amount of gas that the triggers can use. |
 | `queued_triggers` | [QueuedTrigger](#provenance.trigger.v1.QueuedTrigger) | repeated | Triggers to initially start with in the queue. |
 
 

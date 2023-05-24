@@ -22,9 +22,16 @@ message GenesisState {
   // Triggers to initially start with.
   repeated Trigger triggers = 3 [(gogoproto.nullable) = false];
 
-  // Gas limits for triggers to initially start with.
-  repeated uint64 gas_limits = 4;
+  // Maximum amount of gas that the triggers can use.
+  repeated GasLimit gas_limits = 4 [(gogoproto.nullable) = false];
 
   // Triggers to initially start with in the queue.
   repeated QueuedTrigger queued_triggers = 5 [(gogoproto.nullable) = false];
+}
+
+message GasLimit {
+  // Trigger id is the next auto incremented id to be assigned to the next created trigger
+  uint64 trigger_id = 1;
+  // The maximum amount of gas that the trigger can use.
+  uint64 amount = 2;
 }

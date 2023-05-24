@@ -87,7 +87,7 @@ func TestMsgCreateTriggerRequestValidateBasic(t *testing.T) {
 			msg := NewCreateTriggerRequest(tc.authority, tc.event, tc.msgs)
 			err := msg.ValidateBasic()
 			if len(tc.err) > 0 {
-				assert.Errorf(t, err, tc.err)
+				assert.ErrorContains(t, err, tc.err)
 			} else {
 				assert.NoError(t, err)
 			}
