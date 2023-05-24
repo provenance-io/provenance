@@ -30,6 +30,7 @@ func NewTxCmd() *cobra.Command {
 		NewUpdateAccountAttributeCmd(),
 		NewDeleteDistinctAccountAttributeCmd(),
 		NewDeleteAccountAttributeCmd(),
+		NewSetAccountDataCmd(),
 	)
 	return txCmd
 }
@@ -217,6 +218,43 @@ func NewDeleteAccountAttributeCmd() *cobra.Command {
 		},
 	}
 
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewSetAccountDataCmd creates a command for setting account data.
+func NewSetAccountDataCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "account-data " + AccountDataFlagsUse,
+		Aliases: []string{"accountdata", "ad"},
+		Short:   "Set an account's data to either the value provided or the contents of the file provided",
+		Example: fmt.Sprintf(`$ %[1]s tx attribute account-data --%s "This is some account data."
+$ %[1]s tx attribute account-data --%s account-data.json
+$ %[1]s tx attribute account-data --%s
+`,
+			version.AppName, flagValue, flagFile, flagDelete),
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgSetAccountDataRequest{
+				Account: clientCtx.GetFromAddress().String(),
+			}
+
+			msg.Value, err = ReadAccountDataFlags(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	AddAccountDataFlagsToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
