@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
@@ -53,12 +55,15 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.CreateAccounts(4)
 	s.handler = trigger.NewHandler(s.app.TriggerKeeper)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now().UTC()})
+	s.ctx = s.ctx.WithBlockHeight(100)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.TriggerKeeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
 
 	s.SetupEventHistory()
+
+	s.ctx = s.ctx.WithGasMeter(sdk.NewGasMeter(999999999999))
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -86,4 +91,10 @@ func (s *KeeperTestSuite) SetupEventHistory() {
 	}
 	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
 	s.ctx = s.ctx.WithEventManager(eventManagerStub)
+}
+
+func (s *KeeperTestSuite) CreateTrigger(id uint64, owner string, event types.TriggerEventI, action sdk.Msg) types.Trigger {
+	actions, _ := sdktx.SetMsgs([]sdk.Msg{action})
+	any, _ := codectypes.NewAnyWithValue(event)
+	return types.NewTrigger(id, owner, any, actions)
 }

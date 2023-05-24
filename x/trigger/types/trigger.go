@@ -134,6 +134,13 @@ func (m Trigger) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m QueuedTrigger) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	if m.Trigger.Event != nil {
+		var event TriggerEventI
+		err := unpacker.UnpackAny(m.Trigger.Event, &event)
+		if err != nil {
+			return err
+		}
+	}
 	return sdktx.UnpackInterfaces(unpacker, m.Trigger.Actions)
 }
 

@@ -6,7 +6,7 @@ import (
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
-const SetGasLimitCost = 2510
+const SetGasLimitCost uint64 = 2510
 
 // SetGasLimit Sets a gas limit for a trigger
 func (k Keeper) SetGasLimit(ctx sdk.Context, id types.TriggerID, gasLimit uint64) {
