@@ -15,7 +15,6 @@ import (
 	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
-	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 )
 
 // Handler is a handler function for use with IterateRecords.
@@ -64,7 +63,7 @@ type Keeper struct {
 	// To access attributes for addresses
 	attrKeeper types.AttrKeeper
 	// To access names and normalize required attributes
-	nameKeeper namekeeper.Keeper
+	nameKeeper types.NameKeeper
 
 	// Key to access the key-value store from sdk.Context.
 	storeKey storetypes.StoreKey
@@ -95,7 +94,7 @@ func NewKeeper(
 	feegrantKeeper types.FeeGrantKeeper,
 	ibcKeeper ibckeeper.Keeper,
 	attrKeeper types.AttrKeeper,
-	nameKeeper namekeeper.Keeper,
+	nameKeeper types.NameKeeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())

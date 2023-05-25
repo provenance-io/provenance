@@ -79,3 +79,8 @@ type AttrKeeper interface {
 	GetMaxValueLength(ctx sdk.Context) uint32
 	GetAllAttributesAddr(ctx sdk.Context, addr []byte) ([]attrtypes.Attribute, error)
 }
+
+// NameKeeper defines the name keeper functionality needed by the marker module.
+type NameKeeper interface {
+	Normalize(ctx sdk.Context, name string) (string, error)
+}
