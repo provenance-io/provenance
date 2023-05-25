@@ -17,6 +17,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 			panic(err)
 		}
 	}
+
+	k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
 // ExportGenesis exports the current keeper state of the attribute module.
