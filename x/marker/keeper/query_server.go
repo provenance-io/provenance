@@ -160,3 +160,9 @@ func (k Keeper) DenomMetadata(c context.Context, req *types.QueryDenomMetadataRe
 
 	return &types.QueryDenomMetadataResponse{Metadata: metadata}, nil
 }
+
+// AccountData query for access records on an account
+func (k Keeper) AccountData(c context.Context, req *types.QueryAccountDataRequest) (*types.QueryAccountDataResponse, error) {
+	_, _ = c, req
+	panic("not implemented yet: SetAccountData")
+}

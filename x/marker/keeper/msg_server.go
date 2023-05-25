@@ -623,6 +623,7 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 	return &types.MsgAddFinalizeActivateMarkerResponse{}, nil
 }
 
+// SupplyIncreaseProposal can only be called via gov proposal
 func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgSupplyIncreaseProposalRequest) (*types.MsgSupplyIncreaseProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -643,6 +644,7 @@ func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgS
 	return &types.MsgSupplyIncreaseProposalResponse{}, nil
 }
 
+// UpdateRequiredAttributes will only succeed if signer has transfer authority
 func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.MsgUpdateRequiredAttributesRequest) (*types.MsgUpdateRequiredAttributesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -699,6 +701,7 @@ func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.Ms
 	return &types.MsgUpdateRequiredAttributesResponse{}, nil
 }
 
+// UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal.
 func (k msgServer) UpdateForcedTransfer(goCtx context.Context, msg *types.MsgUpdateForcedTransferRequest) (*types.MsgUpdateForcedTransferResponse, error) {
 	if msg.Authority != k.GetAuthority() {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
@@ -733,4 +736,10 @@ func (k msgServer) UpdateForcedTransfer(goCtx context.Context, msg *types.MsgUpd
 	)
 
 	return &types.MsgUpdateForcedTransferResponse{}, nil
+}
+
+// SetAccountData sets the accountdata for a denom. Signer must have deposit authority.
+func (k msgServer) SetAccountData(goCtx context.Context, msg *types.MsgSetAccountDataRequest) (*types.MsgSetAccountDataResponse, error) {
+	_, _ = goCtx, msg
+	panic("not implemented yet: SetAccountData")
 }
