@@ -8,9 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -56,7 +54,7 @@ type Keeper struct {
 	authKeeper types.AccountKeeper
 
 	// To check whether accounts exist for addresses.
-	authzKeeper authzkeeper.Keeper
+	authzKeeper types.AuthzKeeper
 
 	// To handle movement of coin between accounts and check total supply
 	bankKeeper bankkeeper.Keeper
@@ -94,9 +92,9 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	key storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
-	authKeeper authkeeper.AccountKeeper,
+	authKeeper types.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
-	authzKeeper authzkeeper.Keeper,
+	authzKeeper types.AuthzKeeper,
 	feegrantKeeper feegrantkeeper.Keeper,
 	ibcKeeper ibckeeper.Keeper,
 	attrKeeper attrkeeper.Keeper,

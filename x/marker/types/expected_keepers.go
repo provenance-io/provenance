@@ -1,13 +1,16 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-// AccountKeeper defines the expected account keeper (noalias)
+// AccountKeeper defines the auth/account functionality needed by the marker keeper.
 type AccountKeeper interface {
 	GetAllAccounts(ctx sdk.Context) (accounts []authtypes.AccountI)
 	GetNextAccountNumber(ctx sdk.Context) uint64
@@ -15,6 +18,13 @@ type AccountKeeper interface {
 	SetAccount(sdk.Context, authtypes.AccountI)
 	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
 	RemoveAccount(ctx sdk.Context, acc authtypes.AccountI)
+}
+
+// AuthzKeeper defines the authz functionality needed by the marker keeper.
+type AuthzKeeper interface {
+	GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time)
+	DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error
+	SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error
 }
 
 // BankKeeper defines the expected bank keeper (keeper, sendkeeper, viewkeeper) (noalias)
