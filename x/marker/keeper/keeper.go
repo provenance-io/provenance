@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
@@ -60,7 +59,7 @@ type Keeper struct {
 	bankKeeper bankkeeper.Keeper
 
 	// To pass through grant creation for callers with admin access on a marker.
-	feegrantKeeper feegrantkeeper.Keeper
+	feegrantKeeper types.FeeGrantKeeper
 
 	ibcKeeper ibckeeper.Keeper
 
@@ -95,7 +94,7 @@ func NewKeeper(
 	authKeeper types.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
 	authzKeeper types.AuthzKeeper,
-	feegrantKeeper feegrantkeeper.Keeper,
+	feegrantKeeper types.FeeGrantKeeper,
 	ibcKeeper ibckeeper.Keeper,
 	attrKeeper attrkeeper.Keeper,
 	nameKeeper namekeeper.Keeper,
