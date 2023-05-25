@@ -9,7 +9,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
@@ -56,7 +55,7 @@ type Keeper struct {
 	authzKeeper types.AuthzKeeper
 
 	// To handle movement of coin between accounts and check total supply
-	bankKeeper bankkeeper.Keeper
+	bankKeeper types.BankKeeper
 
 	// To pass through grant creation for callers with admin access on a marker.
 	feegrantKeeper types.FeeGrantKeeper
@@ -92,7 +91,7 @@ func NewKeeper(
 	key storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
 	authKeeper types.AccountKeeper,
-	bankKeeper bankkeeper.Keeper,
+	bankKeeper types.BankKeeper,
 	authzKeeper types.AuthzKeeper,
 	feegrantKeeper types.FeeGrantKeeper,
 	ibcKeeper ibckeeper.Keeper,

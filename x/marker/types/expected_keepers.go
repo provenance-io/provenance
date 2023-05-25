@@ -1,12 +1,13 @@
 package types
 
 import (
+	"context"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -30,42 +31,32 @@ type AuthzKeeper interface {
 
 // BankKeeper defines the expected bank keeper (keeper, sendkeeper, viewkeeper) (noalias)
 type BankKeeper interface {
-	//
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-
-	// Used in the Get all marker Holders Query function
-	IterateAllBalances(ctx sdk.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
-
-	// Required for moving coins between Marker Module account and marker accounts
-	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
-
-	// Used by RESTRICTED_COIN markers for transfer between accounts.
-	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
-
-	// used for unit-test only.
-	SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error
-
-	// These two Params methods are required for controlling SendEnabled flags.
-	GetParams(ctx sdk.Context) types.Params
-	SetParams(ctx sdk.Context, params types.Params)
-
-	SendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
-	SendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
-
-	BlockedAddr(addr sdk.AccAddress) bool
-
-	// Keeper ---------
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
+	DenomOwners(goCtx context.Context, req *banktypes.QueryDenomOwnersRequest) (*banktypes.QueryDenomOwnersResponse, error)
 
-	GetDenomMetaData(ctx sdk.Context, denom string) types.Metadata
-	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
-	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
-
+	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+
+	AppendSendRestriction(restriction banktypes.SendRestrictionFn)
+	BlockedAddr(addr sdk.AccAddress) bool
+
+	GetDenomMetaData(ctx sdk.Context, denom string) (banktypes.Metadata, bool)
+	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
+
+	// TODO: Delete the below entries when no longer needed.
+
+	// IterateAllBalances only used in GetAllMarkerHolders used by the unneeded querier.
+	// The Holding query just uses the DenomOwners query endpoint.
+	IterateAllBalances(ctx sdk.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
+	// GetAllSendEnabledEntries only needed by RemoveIsSendEnabledEntries in the quicksilver upgrade.
+	GetAllSendEnabledEntries(ctx sdk.Context) []banktypes.SendEnabled
+	// DeleteSendEnabled only needed by RemoveIsSendEnabledEntries in the quicksilver upgrade.
+	DeleteSendEnabled(ctx sdk.Context, denom string)
 }
 
 type FeeGrantKeeper interface {
