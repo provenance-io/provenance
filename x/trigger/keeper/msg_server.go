@@ -50,6 +50,7 @@ func (s msgServer) DestroyTrigger(goCtx context.Context, msg *types.MsgDestroyTr
 		return nil, types.ErrInvalidTriggerAuthority
 	}
 	s.UnregisterTrigger(ctx, trigger)
+	// TODO - We need to remove gas for it
 
 	err = ctx.EventManager().EmitTypedEvent(&types.EventTriggerDestroyed{
 		TriggerId: fmt.Sprintf("%d", trigger.GetId()),
