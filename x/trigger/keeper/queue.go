@@ -18,7 +18,7 @@ func (k Keeper) QueuePeek(ctx sdk.Context) (item types.QueuedTrigger) {
 		panic("unable to peek empty queue")
 	}
 	index := k.getQueueStartIndex(ctx)
-	item = k.GetQueueItem(ctx, index)
+	item = k.getQueueItem(ctx, index)
 	return
 }
 
@@ -26,7 +26,7 @@ func (k Keeper) QueuePeek(ctx sdk.Context) (item types.QueuedTrigger) {
 func (k Keeper) Enqueue(ctx sdk.Context, item types.QueuedTrigger) {
 	length := k.getQueueLength(ctx)
 	index := k.getQueueStartIndex(ctx)
-	k.SetQueueItem(ctx, index+length, item)
+	k.setQueueItem(ctx, index+length, item)
 	k.setQueueLength(ctx, length+1)
 }
 
@@ -37,7 +37,7 @@ func (k Keeper) Dequeue(ctx sdk.Context) {
 	}
 	length := k.getQueueLength(ctx)
 	index := k.getQueueStartIndex(ctx)
-	k.RemoveQueueIndex(ctx, index)
+	k.removeQueueIndex(ctx, index)
 	k.setQueueStartIndex(ctx, index+1)
 	k.setQueueLength(ctx, length-1)
 }
@@ -47,8 +47,17 @@ func (k Keeper) QueueIsEmpty(ctx sdk.Context) bool {
 	return k.getQueueLength(ctx) == 0
 }
 
-// GetQueueItem Gets an item from the queue's store.
-func (k Keeper) GetQueueItem(ctx sdk.Context, index uint64) (trigger types.QueuedTrigger) {
+// GetAllQueueItems Gets all the queue items within the store.
+func (k Keeper) GetAllQueueItems(ctx sdk.Context) (items []types.QueuedTrigger, err error) {
+	err = k.iterateQueue(ctx, func(item types.QueuedTrigger) (stop bool, err error) {
+		items = append(items, item)
+		return false, nil
+	})
+	return
+}
+
+// getQueueItem Gets an item from the queue's store.
+func (k Keeper) getQueueItem(ctx sdk.Context, index uint64) (trigger types.QueuedTrigger) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetQueueKey(index)
 	bz := store.Get(key)
@@ -59,15 +68,15 @@ func (k Keeper) GetQueueItem(ctx sdk.Context, index uint64) (trigger types.Queue
 	return
 }
 
-// SetQueueItem Sets an item in the queue's store.
-func (k Keeper) SetQueueItem(ctx sdk.Context, index uint64, item types.QueuedTrigger) {
+// setQueueItem Sets an item in the queue's store.
+func (k Keeper) setQueueItem(ctx sdk.Context, index uint64, item types.QueuedTrigger) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&item)
 	store.Set(types.GetQueueKey(index), bz)
 }
 
-// RemoveQueueIndex Removes the queue's index from the store.
-func (k Keeper) RemoveQueueIndex(ctx sdk.Context, index uint64) bool {
+// removeQueueIndex Removes the queue's index from the store.
+func (k Keeper) removeQueueIndex(ctx sdk.Context, index uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetQueueKey(index)
 	keyExists := store.Has(key)
@@ -77,8 +86,8 @@ func (k Keeper) RemoveQueueIndex(ctx sdk.Context, index uint64) bool {
 	return keyExists
 }
 
-// IterateQueue Iterates through all the queue items.
-func (k Keeper) IterateQueue(ctx sdk.Context, handle func(trigger types.QueuedTrigger) (stop bool, err error)) error {
+// iterateQueue Iterates through all the queue items.
+func (k Keeper) iterateQueue(ctx sdk.Context, handle func(trigger types.QueuedTrigger) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.QueueKeyPrefix)
 
@@ -97,15 +106,6 @@ func (k Keeper) IterateQueue(ctx sdk.Context, handle func(trigger types.QueuedTr
 		}
 	}
 	return nil
-}
-
-// GetAllQueueItems Gets all the queue items within the store.
-func (k Keeper) GetAllQueueItems(ctx sdk.Context) (items []types.QueuedTrigger, err error) {
-	err = k.IterateQueue(ctx, func(item types.QueuedTrigger) (stop bool, err error) {
-		items = append(items, item)
-		return false, nil
-	})
-	return
 }
 
 // getQueueStartIndex Gets the starting index of the queue in the store.
