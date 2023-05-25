@@ -22,12 +22,12 @@ func (k Keeper) ProcessTriggers(ctx sdk.Context) {
 		k.RemoveGasLimit(ctx, triggerID)
 
 		actions := item.GetTrigger().Actions
-		k.RunActions(ctx, gasLimit, actions)
+		k.runActions(ctx, gasLimit, actions)
 	}
 }
 
 // RunActions Runs all the actions and constrains them by gasLimit.
-func (k Keeper) RunActions(ctx sdk.Context, gasLimit uint64, actions []*types.Any) {
+func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*types.Any) {
 	cacheCtx, flush := ctx.CacheContext()
 	gasMeter := sdk.NewInfiniteGasMeter()
 	cacheCtx = cacheCtx.WithGasMeter(gasMeter)
@@ -41,7 +41,7 @@ func (k Keeper) RunActions(ctx sdk.Context, gasLimit uint64, actions []*types.An
 		)
 		return
 	}
-	results, err := k.HandleMsgs(cacheCtx, msgs, gasLimit)
+	results, err := k.handleMsgs(cacheCtx, msgs, gasLimit)
 	if err != nil {
 		k.Logger(ctx).Error(
 			"HandleMsgs",
@@ -56,8 +56,8 @@ func (k Keeper) RunActions(ctx sdk.Context, gasLimit uint64, actions []*types.An
 	}
 }
 
-// HandleMsgs Handles each message and verifies gas limit has not been exceeded.
-func (k Keeper) HandleMsgs(ctx sdk.Context, msgs []sdk.Msg, gasLimit uint64) ([]sdk.Result, error) {
+// handleMsgs Handles each message and verifies gas limit has not been exceeded.
+func (k Keeper) handleMsgs(ctx sdk.Context, msgs []sdk.Msg, gasLimit uint64) ([]sdk.Result, error) {
 	results := make([]sdk.Result, len(msgs))
 	for i, msg := range msgs {
 		handler := k.router.Handler(msg)
