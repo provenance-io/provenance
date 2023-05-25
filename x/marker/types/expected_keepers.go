@@ -66,13 +66,10 @@ type FeeGrantKeeper interface {
 	GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error
 }
 
-// GovKeeper defines the gov functionality needed from within the gov module.
-type GovKeeper interface {
-	GetProposal(ctx sdk.Context, proposalID uint64) (govtypes.Proposal, bool)
-	GetDepositParams(ctx sdk.Context) govtypes.DepositParams
-	GetVotingParams(ctx sdk.Context) govtypes.VotingParams
-	GetProposalID(ctx sdk.Context) (uint64, error)
-}
+// Note: There is no IBCKeeper interface in here.
+// The SendTransfer function takes in a checkRestrictionsHandler. That is defined in the
+// ibc keeper package. Furthermore, checkRestrictionsHandler takes in an IBC Keeper anyway.
+// So there's no way to remove the dependency on that ibc keeper package.
 
 // AttrKeeper defines the attribute functionality needed by the marker module.
 type AttrKeeper interface {
@@ -83,4 +80,12 @@ type AttrKeeper interface {
 // NameKeeper defines the name keeper functionality needed by the marker module.
 type NameKeeper interface {
 	Normalize(ctx sdk.Context, name string) (string, error)
+}
+
+// GovKeeper defines the gov functionality needed by the marker module sims.
+type GovKeeper interface {
+	GetProposal(ctx sdk.Context, proposalID uint64) (govtypes.Proposal, bool)
+	GetDepositParams(ctx sdk.Context) govtypes.DepositParams
+	GetVotingParams(ctx sdk.Context) govtypes.VotingParams
+	GetProposalID(ctx sdk.Context) (uint64, error)
 }
