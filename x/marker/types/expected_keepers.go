@@ -75,6 +75,8 @@ type FeeGrantKeeper interface {
 type AttrKeeper interface {
 	GetMaxValueLength(ctx sdk.Context) uint32
 	GetAllAttributesAddr(ctx sdk.Context, addr []byte) ([]attrtypes.Attribute, error)
+	GetAccountData(ctx sdk.Context, addr string) (string, error)
+	SetAccountData(ctx sdk.Context, addr string, value string) error
 }
 
 // NameKeeper defines the name keeper functionality needed by the marker module.

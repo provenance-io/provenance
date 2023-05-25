@@ -740,6 +740,27 @@ func (k msgServer) UpdateForcedTransfer(goCtx context.Context, msg *types.MsgUpd
 
 // SetAccountData sets the accountdata for a denom. Signer must have deposit authority.
 func (k msgServer) SetAccountData(goCtx context.Context, msg *types.MsgSetAccountDataRequest) (*types.MsgSetAccountDataResponse, error) {
-	_, _ = goCtx, msg
-	panic("not implemented yet: SetAccountData")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, fmt.Errorf("could not get %s marker: %w", msg.Denom, err)
+	}
+
+	if msg.Signer == k.GetAuthority() {
+		if !marker.HasGovernanceEnabled() {
+			return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
+		}
+	} else {
+		if !marker.HasAccess(msg.Signer, types.Access_Deposit) {
+			return nil, fmt.Errorf("%s does not have deposit access for %s marker", msg.Signer, msg.Denom)
+		}
+	}
+
+	err = k.attrKeeper.SetAccountData(ctx, marker.GetAddress().String(), msg.Value)
+	if err != nil {
+		return nil, fmt.Errorf("error setting %s account data: %w", msg.Denom, err)
+	}
+
+	return &types.MsgSetAccountDataResponse{}, nil
 }
