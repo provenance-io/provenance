@@ -93,6 +93,8 @@
     - [Balance](#provenance.marker.v1.Balance)
     - [QueryAccessRequest](#provenance.marker.v1.QueryAccessRequest)
     - [QueryAccessResponse](#provenance.marker.v1.QueryAccessResponse)
+    - [QueryAccountDataRequest](#provenance.marker.v1.QueryAccountDataRequest)
+    - [QueryAccountDataResponse](#provenance.marker.v1.QueryAccountDataResponse)
     - [QueryAllMarkersRequest](#provenance.marker.v1.QueryAllMarkersRequest)
     - [QueryAllMarkersResponse](#provenance.marker.v1.QueryAllMarkersResponse)
     - [QueryDenomMetadataRequest](#provenance.marker.v1.QueryDenomMetadataRequest)
@@ -138,6 +140,8 @@
     - [MsgIbcTransferResponse](#provenance.marker.v1.MsgIbcTransferResponse)
     - [MsgMintRequest](#provenance.marker.v1.MsgMintRequest)
     - [MsgMintResponse](#provenance.marker.v1.MsgMintResponse)
+    - [MsgSetAccountDataRequest](#provenance.marker.v1.MsgSetAccountDataRequest)
+    - [MsgSetAccountDataResponse](#provenance.marker.v1.MsgSetAccountDataResponse)
     - [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest)
     - [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse)
     - [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest)
@@ -1662,6 +1666,36 @@ QueryAccessResponse is the response type for the Query/MarkerAccess method.
 
 
 
+<a name="provenance.marker.v1.QueryAccountDataRequest"></a>
+
+### QueryAccountDataRequest
+QueryAccountDataRequest is the request type for the Query/AccountData
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | The denomination to look up. |
+
+
+
+
+
+
+<a name="provenance.marker.v1.QueryAccountDataResponse"></a>
+
+### QueryAccountDataResponse
+QueryAccountDataResponse is the response type for the Query/AccountData
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  | The accountdata for the requested denom. |
+
+
+
+
+
+
 <a name="provenance.marker.v1.QueryAllMarkersRequest"></a>
 
 ### QueryAllMarkersRequest
@@ -1892,6 +1926,7 @@ Query defines the gRPC querier service for marker module.
 | `Escrow` | [QueryEscrowRequest](#provenance.marker.v1.QueryEscrowRequest) | [QueryEscrowResponse](#provenance.marker.v1.QueryEscrowResponse) | query for coins on a marker account | GET|/provenance/marker/v1/escrow/{id}|
 | `Access` | [QueryAccessRequest](#provenance.marker.v1.QueryAccessRequest) | [QueryAccessResponse](#provenance.marker.v1.QueryAccessResponse) | query for access records on an account | GET|/provenance/marker/v1/accesscontrol/{id}|
 | `DenomMetadata` | [QueryDenomMetadataRequest](#provenance.marker.v1.QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#provenance.marker.v1.QueryDenomMetadataResponse) | query for access records on an account | GET|/provenance/marker/v1/getdenommetadata/{denom}|
+| `AccountData` | [QueryAccountDataRequest](#provenance.marker.v1.QueryAccountDataRequest) | [QueryAccountDataResponse](#provenance.marker.v1.QueryAccountDataResponse) | query for account data associated with a denom | GET|/provenance/marker/v1/accountdata/{denom}|
 
  <!-- end services -->
 
@@ -2284,6 +2319,34 @@ MsgMintResponse defines the Msg/Mint response type
 
 
 
+<a name="provenance.marker.v1.MsgSetAccountDataRequest"></a>
+
+### MsgSetAccountDataRequest
+MsgSetAccountDataRequest defines a msg to set/update/delete the account data for a marker.
+Signer must have deposit authority or be a gov proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | The denomination of the marker to update. |
+| `value` | [string](#string) |  | The desired accountdata value. |
+| `signer` | [string](#string) |  | The signer of this message. Must have deposit authority or be the governance module account address. |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgSetAccountDataResponse"></a>
+
+### MsgSetAccountDataResponse
+MsgSetAccountDataResponse defines the Msg/SetAccountData response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgSetDenomMetadataRequest"></a>
 
 ### MsgSetDenomMetadataRequest
@@ -2387,7 +2450,7 @@ It is only usable via governance proposal.
 <a name="provenance.marker.v1.MsgUpdateForcedTransferResponse"></a>
 
 ### MsgUpdateForcedTransferResponse
-MsgUpdateForcedTransferResponse defines the Msg/UpdateForcedTransferResponse response type
+MsgUpdateForcedTransferResponse defines the Msg/UpdateForcedTransfer response type
 
 
 
@@ -2483,6 +2546,7 @@ Msg defines the Marker Msg service.
 | `SupplyIncreaseProposal` | [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest) | [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse) | SupplyIncreaseProposal can only be called via gov proposal | |
 | `UpdateRequiredAttributes` | [MsgUpdateRequiredAttributesRequest](#provenance.marker.v1.MsgUpdateRequiredAttributesRequest) | [MsgUpdateRequiredAttributesResponse](#provenance.marker.v1.MsgUpdateRequiredAttributesResponse) | UpdateRequiredAttributes will only succeed if signer has transfer authority | |
 | `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance.marker.v1.MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. | |
+| `SetAccountData` | [MsgSetAccountDataRequest](#provenance.marker.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.marker.v1.MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. | |
 
  <!-- end services -->
 

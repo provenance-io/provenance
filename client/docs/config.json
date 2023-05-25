@@ -33,7 +33,8 @@
       "operationIds": {
         "rename": {
           "Params": "MarkerParams",
-          "DenomMetadata": "MarkerDenomMetadata"
+          "DenomMetadata": "MarkerDenomMetadata",
+          "AccountData": "MarkerAccountData"
         }
       }
     },
