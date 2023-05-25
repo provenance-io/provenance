@@ -10,6 +10,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 )
 
 // AccountKeeper defines the auth/account functionality needed by the marker keeper.
@@ -29,7 +31,7 @@ type AuthzKeeper interface {
 	SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error
 }
 
-// BankKeeper defines the expected bank keeper (keeper, sendkeeper, viewkeeper) (noalias)
+// BankKeeper defines the bank functionality needed by the marker module.
 type BankKeeper interface {
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
@@ -59,6 +61,7 @@ type BankKeeper interface {
 	DeleteSendEnabled(ctx sdk.Context, denom string)
 }
 
+// FeeGrantKeeper defines the fee-grant functionality needed by the marker module.
 type FeeGrantKeeper interface {
 	GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error
 }
@@ -69,4 +72,10 @@ type GovKeeper interface {
 	GetDepositParams(ctx sdk.Context) govtypes.DepositParams
 	GetVotingParams(ctx sdk.Context) govtypes.VotingParams
 	GetProposalID(ctx sdk.Context) (uint64, error)
+}
+
+// AttrKeeper defines the attribute functionality needed by the marker module.
+type AttrKeeper interface {
+	GetMaxValueLength(ctx sdk.Context) uint32
+	GetAllAttributesAddr(ctx sdk.Context, addr []byte) ([]attrtypes.Attribute, error)
 }

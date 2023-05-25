@@ -14,7 +14,6 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
-	attrkeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 )
@@ -63,7 +62,7 @@ type Keeper struct {
 	ibcKeeper ibckeeper.Keeper
 
 	// To access attributes for addresses
-	attrKeeper attrkeeper.Keeper
+	attrKeeper types.AttrKeeper
 	// To access names and normalize required attributes
 	nameKeeper namekeeper.Keeper
 
@@ -95,7 +94,7 @@ func NewKeeper(
 	authzKeeper types.AuthzKeeper,
 	feegrantKeeper types.FeeGrantKeeper,
 	ibcKeeper ibckeeper.Keeper,
-	attrKeeper attrkeeper.Keeper,
+	attrKeeper types.AttrKeeper,
 	nameKeeper namekeeper.Keeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
