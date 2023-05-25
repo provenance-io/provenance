@@ -16,7 +16,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,24 +36,33 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     testnet.Config
-	testnet *testnet.Network
+	cfg        testnet.Config
+	testnet    *testnet.Network
+	keyring    keyring.Keyring
+	keyringDir string
+
+	accountAddresses []sdk.AccAddress
 
 	account1Addr sdk.AccAddress
-	account1Key  *secp256k1.PrivKey
 	account1Str  string
 
 	account2Addr sdk.AccAddress
-	account2Key  *secp256k1.PrivKey
 	account2Str  string
 
 	account3Addr sdk.AccAddress
-	account3Key  *secp256k1.PrivKey
 	account3Str  string
 
 	account4Addr sdk.AccAddress
-	account4Key  *secp256k1.PrivKey
 	account4Str  string
+
+	account5Addr sdk.AccAddress
+	account5Str  string
+
+	account6Addr sdk.AccAddress
+	account6Str  string
+
+	account7Addr sdk.AccAddress
+	account7Str  string
 
 	accAttrCount int
 }
@@ -61,75 +71,108 @@ func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
+// Generate a number of accounts with keyring entries.
+// To use these, do .WithKeyring(s.keyring) when getting the client context.
+func (s *IntegrationTestSuite) generateKeyringAndAccounts(number int) {
+	path := hd.CreateHDPath(118, 0, 0).String()
+	s.keyringDir = s.T().TempDir()
+	var err error
+	s.keyring, err = keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
+	s.Require().NoError(err, "creating keyring")
+
+	s.accountAddresses = make([]sdk.AccAddress, number)
+	for i := range s.accountAddresses {
+		keyID := fmt.Sprintf("test_key%v", i+1)
+		info, _, err := s.keyring.NewMnemonic(keyID, keyring.English, path, "", hd.Secp256k1)
+		s.Require().NoError(err, "NewMnemonic(%q)", keyID)
+		addr, err := info.GetAddress()
+		s.Require().NoError(err, "getting keyring address")
+		s.accountAddresses[i] = addr
+	}
+}
+
 func (s *IntegrationTestSuite) SetupSuite() {
-	pioconfig.SetProvenanceConfig("", 0)
-	s.account1Key = secp256k1.GenPrivKeyFromSecret([]byte("acc1"))
-	addr1, err1 := sdk.AccAddressFromHexUnsafe(s.account1Key.PubKey().Address().String())
-	s.Require().NoError(err1)
-	s.account1Addr = addr1
-	s.account1Str = addr1.String()
-
-	s.account2Key = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr2, err2 := sdk.AccAddressFromHexUnsafe(s.account2Key.PubKey().Address().String())
-	s.Require().NoError(err2)
-	s.account2Addr = addr2
-	s.account2Str = addr2.String()
-
-	s.account3Key = secp256k1.GenPrivKeyFromSecret([]byte("acc3"))
-	addr3, err3 := sdk.AccAddressFromHexUnsafe(s.account3Key.PubKey().Address().String())
-	s.Require().NoError(err3)
-	s.account3Addr = addr3
-	s.account3Str = addr3.String()
-
-	s.account4Key = secp256k1.GenPrivKeyFromSecret([]byte("acc4"))
-	addr4, err4 := sdk.AccAddressFromHexUnsafe(s.account4Key.PubKey().Address().String())
-	s.Require().NoError(err4)
-	s.account4Addr = addr4
-	s.account4Str = addr4.String()
-
-	s.accAttrCount = 500
-
 	s.T().Log("setting up integration test suite")
 
-	cfg := testutil.DefaultTestNetworkConfig()
+	pioconfig.SetProvenanceConfig("", 0)
+	s.cfg = testutil.DefaultTestNetworkConfig()
+	s.cfg.NumValidators = 1
+	s.generateKeyringAndAccounts(7)
 
-	genesisState := cfg.GenesisState
-	cfg.NumValidators = 1
+	s.account1Addr = s.accountAddresses[0]
+	s.account1Str = s.account1Addr.String()
+	s.account2Addr = s.accountAddresses[1]
+	s.account2Str = s.account2Addr.String()
+	s.account3Addr = s.accountAddresses[2]
+	s.account3Str = s.account3Addr.String()
+	s.account4Addr = s.accountAddresses[3]
+	s.account4Str = s.account4Addr.String()
+	s.account5Addr = s.accountAddresses[4]
+	s.account5Str = s.account5Addr.String()
+	s.account6Addr = s.accountAddresses[5]
+	s.account6Str = s.account6Addr.String()
+	s.account7Addr = s.accountAddresses[6]
+	s.account7Str = s.account7Addr.String()
+
+	genesisState := s.cfg.GenesisState
 
 	// Configure Genesis data for name module
+	attrModAddr := authtypes.NewModuleAddress(attributetypes.ModuleName)
 	var nameData nametypes.GenesisState
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("attribute", s.account1Addr, false))
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.attribute", s.account1Addr, false))
+	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord(attributetypes.AccountDataName, attrModAddr, true))
 	nameData.Params.AllowUnrestrictedNames = false
 	nameData.Params.MaxNameLevels = 3
 	nameData.Params.MinSegmentLength = 3
 	nameData.Params.MaxSegmentLength = 12
-	nameDataBz, err := cfg.Codec.MarshalJSON(&nameData)
+	nameDataBz, err := s.cfg.Codec.MarshalJSON(&nameData)
 	s.Require().NoError(err)
 	genesisState[nametypes.ModuleName] = nameDataBz
 
 	var authData authtypes.GenesisState
-	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authData))
-	genAccount, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
+	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[authtypes.ModuleName], &authData))
+	genAccount1, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
 		Address:       s.account1Str,
 		AccountNumber: 1,
 		Sequence:      0,
 	})
-	s.Require().NoError(err)
-	authData.Accounts = append(authData.Accounts, genAccount)
-	authDataBz, err := cfg.Codec.MarshalJSON(&authData)
+	s.Require().NoError(err, "NewAnyWithValue genAccount1")
+	genAccount5, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
+		Address:       s.account5Str,
+		AccountNumber: 2,
+		Sequence:      0,
+	})
+	s.Require().NoError(err, "NewAnyWithValue genAccount5")
+	genAccount6, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
+		Address:       s.account6Str,
+		AccountNumber: 3,
+		Sequence:      0,
+	})
+	s.Require().NoError(err, "NewAnyWithValue genAccount6")
+	genAccount7, err := codectypes.NewAnyWithValue(&authtypes.BaseAccount{
+		Address:       s.account7Str,
+		AccountNumber: 4,
+		Sequence:      0,
+	})
+	s.Require().NoError(err, "NewAnyWithValue genAccount7")
+	authData.Accounts = append(authData.Accounts, genAccount1, genAccount5, genAccount6, genAccount7)
+	authDataBz, err := s.cfg.Codec.MarshalJSON(&authData)
 	s.Require().NoError(err)
 	genesisState[authtypes.ModuleName] = authDataBz
 
 	balances := sdk.NewCoins(
-		sdk.NewCoin(cfg.BondDenom, cfg.AccountTokens),
-	)
+		sdk.NewCoin(s.cfg.BondDenom, s.cfg.AccountTokens),
+	).Sort()
 	var bankData banktypes.GenesisState
-	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[banktypes.ModuleName], &bankData))
-	genBank := banktypes.Balance{Address: s.account1Str, Coins: balances.Sort()}
-	s.Require().NoError(err)
-	bankData.Balances = append(bankData.Balances, genBank)
-	bankDataBz, err := cfg.Codec.MarshalJSON(&bankData)
+	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[banktypes.ModuleName], &bankData))
+	bankData.Balances = append(bankData.Balances,
+		banktypes.Balance{Address: s.account1Str, Coins: balances},
+		banktypes.Balance{Address: s.account5Str, Coins: balances},
+		banktypes.Balance{Address: s.account6Str, Coins: balances},
+		banktypes.Balance{Address: s.account7Str, Coins: balances},
+	)
+	bankDataBz, err := s.cfg.Codec.MarshalJSON(&bankData)
 	s.Require().NoError(err)
 	genesisState[banktypes.ModuleName] = bankDataBz
 
@@ -140,37 +183,47 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			"example.attribute",
 			s.account1Str,
 			attributetypes.AttributeType_String,
-			[]byte("example attribute value string")))
-	attributeData.Attributes = append(attributeData.Attributes,
+			[]byte("example attribute value string")),
 		attributetypes.NewAttribute(
 			"example.attribute.count",
 			s.account1Str,
 			attributetypes.AttributeType_Int,
-			[]byte("2")))
+			[]byte("2")),
+		attributetypes.NewAttribute(
+			attributetypes.AccountDataName,
+			s.account1Str,
+			attributetypes.AttributeType_String,
+			[]byte("accountdata set at genesis")),
+		attributetypes.NewAttribute(
+			attributetypes.AccountDataName,
+			s.account7Str,
+			attributetypes.AttributeType_String,
+			[]byte("more accountdata set at genesis")),
+	)
+	s.accAttrCount = 500
 	for i := 0; i < s.accAttrCount; i++ {
 		attributeData.Attributes = append(attributeData.Attributes,
 			attributetypes.NewAttribute(
 				fmt.Sprintf("example.attribute.%s", toWritten(i)),
 				s.account3Str,
 				attributetypes.AttributeType_Int,
-				[]byte(fmt.Sprintf("%d", i))))
-		attributeData.Attributes = append(attributeData.Attributes,
+				[]byte(fmt.Sprintf("%d", i))),
 			attributetypes.NewAttribute(
 				"example.attribute.overload",
 				s.account4Str,
 				attributetypes.AttributeType_String,
-				[]byte(toWritten(i))))
+				[]byte(toWritten(i))),
+		)
 	}
 	attributeData.Params.MaxValueLength = 128
-	attributeDataBz, err := cfg.Codec.MarshalJSON(&attributeData)
+	attributeDataBz, err := s.cfg.Codec.MarshalJSON(&attributeData)
 	s.Require().NoError(err)
 	genesisState[attributetypes.ModuleName] = attributeDataBz
 
-	cfg.GenesisState = genesisState
+	s.cfg.GenesisState = genesisState
 
-	s.cfg = cfg
-	cfg.ChainID = antewrapper.SimAppChainID
-	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
+	s.cfg.ChainID = antewrapper.SimAppChainID
+	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "creating testnet")
 
 	_, err = s.testnet.WaitForHeight(1)
@@ -420,24 +473,29 @@ func (s *IntegrationTestSuite) TestListAccountAttributesCmd() {
 		{
 			name:           "should list all attributes for account with json output",
 			args:           []string{s.account1Addr.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute.count","value":"Mg==","attribute_type":"ATTRIBUTE_TYPE_INT","address":"%s"},{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String(), s.account1Addr.String()),
+			expectedOutput: fmt.Sprintf(`{"account":"%[1]s","attributes":[{"name":"example.attribute.count","value":"Mg==","attribute_type":"ATTRIBUTE_TYPE_INT","address":"%[1]s"},{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%[1]s"},{"name":"accountdata","value":"YWNjb3VudGRhdGEgc2V0IGF0IGdlbmVzaXM=","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%[1]s"}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String()),
 		},
 		{
 			name: "should list all attributes for account text output",
 			args: []string{s.account1Addr.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			expectedOutput: fmt.Sprintf(`account: %s
+			expectedOutput: fmt.Sprintf(`account: %[1]s
 attributes:
-- address: %s
+- address: %[1]s
   attribute_type: ATTRIBUTE_TYPE_INT
   name: example.attribute.count
   value: Mg==
-- address: %s
+- address: %[1]s
   attribute_type: ATTRIBUTE_TYPE_STRING
   name: example.attribute
   value: ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n
+- address: %[1]s
+  attribute_type: ATTRIBUTE_TYPE_STRING
+  name: accountdata
+  value: YWNjb3VudGRhdGEgc2V0IGF0IGdlbmVzaXM=
 pagination:
   next_key: null
-  total: "0"`, s.account1Addr.String(), s.account1Addr.String(), s.account1Addr.String()),
+  total: "0"`,
+				s.account1Addr.String()),
 		},
 	}
 
@@ -623,6 +681,164 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestAccountDataCmds() {
+	jsonOut := "--" + tmcli.OutputFlag + "=json"
+	txFlags := func(from string, firstArgs ...string) []string {
+		return append(firstArgs,
+			"--"+flags.FlagFrom, from,
+			"--"+flags.FlagSkipConfirmation,
+			"--"+flags.FlagBroadcastMode, flags.BroadcastBlock,
+			"--"+flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			jsonOut,
+		)
+	}
+	queryFlags := func(args ...string) []string {
+		return append(args, jsonOut)
+	}
+
+	tests := []struct {
+		name      string
+		cmd       *cobra.Command
+		args      []string
+		expErr    string
+		respType  proto.Message // Don't set if the command should error before sending anything.
+		expResp   proto.Message // Only applicable if respType is neither nil nor a *sdk.TxResponse.
+		expCode   int           // Only applicable if respType is a *sdk.TxResponse.
+		expRawLog string        // Only applicable if respType is a *sdk.TxResponse. Ignored if "".
+	}{
+		{
+			name:     "query account-data account1",
+			cmd:      cli.GetQueryCmd(),
+			args:     queryFlags("account-data", s.account1Str),
+			respType: &attributetypes.QueryAccountDataResponse{},
+			expResp:  &attributetypes.QueryAccountDataResponse{Value: "accountdata set at genesis"},
+		},
+		{
+			name:     "query accountdata account7",
+			cmd:      cli.GetQueryCmd(),
+			args:     queryFlags("accountdata", s.account7Str),
+			respType: &attributetypes.QueryAccountDataResponse{},
+			expResp:  &attributetypes.QueryAccountDataResponse{Value: "more accountdata set at genesis"},
+		},
+		{
+			name:     "query ad account7",
+			cmd:      cli.GetQueryCmd(),
+			args:     queryFlags("ad", s.account7Str),
+			respType: &attributetypes.QueryAccountDataResponse{},
+			expResp:  &attributetypes.QueryAccountDataResponse{Value: "more accountdata set at genesis"},
+		},
+		{
+			name:     "query account-data account5 (not yet set)",
+			cmd:      cli.GetQueryCmd(),
+			args:     queryFlags("account-data", s.account5Str),
+			respType: &attributetypes.QueryAccountDataResponse{},
+			expResp:  &attributetypes.QueryAccountDataResponse{Value: ""},
+		},
+		{
+			name:   "tx account-data account5 but no value flags provided",
+			cmd:    cli.NewTxCmd(),
+			args:   txFlags(s.account5Str, "account-data"),
+			expErr: "exactly one of these must be provided: {--value <value>|--file <file>|--delete}",
+		},
+		{
+			name:     "tx account-data account5",
+			cmd:      cli.NewTxCmd(),
+			args:     txFlags(s.account5Str, "account-data", "--value", "This is account2's account data."),
+			respType: &sdk.TxResponse{},
+			expCode:  0,
+		},
+		{
+			name:     "query account-data account5 after set",
+			cmd:      cli.GetQueryCmd(),
+			args:     queryFlags("account-data", s.account5Str),
+			respType: &attributetypes.QueryAccountDataResponse{},
+			expResp:  &attributetypes.QueryAccountDataResponse{Value: "This is account2's account data."},
+		},
+		{
+			name:     "tx accountdata account7 overwrite",
+			cmd:      cli.NewTxCmd(),
+			args:     txFlags(s.account7Str, "accountdata", "--value", "This is account7's new account data."),
+			respType: &sdk.TxResponse{},
+			expCode:  0,
+		},
+		{
+			name:     "query account-data account7 after overwrite",
+			cmd:      cli.GetQueryCmd(),
+			args:     queryFlags("account-data", s.account7Str),
+			respType: &attributetypes.QueryAccountDataResponse{},
+			expResp:  &attributetypes.QueryAccountDataResponse{Value: "This is account7's new account data."},
+		},
+		{
+			name:     "tx ad account5 delete",
+			cmd:      cli.NewTxCmd(),
+			args:     txFlags(s.account5Str, "ad", "--delete"),
+			respType: &sdk.TxResponse{},
+			expCode:  0,
+		},
+		{
+			name:     "query account-data account5 after delete",
+			cmd:      cli.GetQueryCmd(),
+			args:     queryFlags("account-data", s.account5Str),
+			respType: &attributetypes.QueryAccountDataResponse{},
+			expResp:  &attributetypes.QueryAccountDataResponse{Value: ""},
+		},
+		{
+			name: "tx account-data account6 value too long",
+			cmd:  cli.NewTxCmd(),
+			// From SetupSuite: attributeData.Params.MaxValueLength = 128.
+			args: txFlags(s.account6Str, "account-data", "--value",
+				strings.Join([]string{
+					"This value is going to be way too long.",                                  // 39 chars
+					"It just has too many characters in it.",                                   // 38 chars
+					"And I'm not talking about characters like Mickey Mouse or Darkwing Duck.", // 72 chars
+					"I'm not even talking about Howard the Duck.",                              // 43 chars
+					"Look. this thing is just way too long.",                                   // 38 chars
+				}, "\n"), // 39 + 38 + 72 + 43 + 38 + 4 newlines = 234 characters total.
+			),
+			respType: &sdk.TxResponse{},
+			expCode:  1,
+			expRawLog: "failed to execute message; message index: 0: " +
+				`could not set accountdata for "` + s.account6Str + `": attribute value length of 234 exceeds max length 128`,
+		},
+		{
+			name:     "query account-data account6 after failed set",
+			cmd:      cli.GetQueryCmd(),
+			args:     queryFlags("account-data", s.account6Str),
+			respType: &attributetypes.QueryAccountDataResponse{},
+			expResp:  &attributetypes.QueryAccountDataResponse{Value: ""},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx.WithKeyring(s.keyring)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+			outBz := out.Bytes()
+			outStr := string(outBz)
+			s.T().Logf("Args: %q\nOutput:\n%s", tc.args, outStr)
+			if len(tc.expErr) > 0 {
+				s.Require().EqualError(err, tc.expErr, "cmd execution error")
+				s.Require().Contains(outStr, tc.expErr, "cmd output")
+			} else {
+				s.Require().NoError(err, "cmd execution error")
+			}
+
+			if tc.respType != nil {
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(outBz, tc.respType), "marshalling output to %T", tc.respType)
+				txResp, isTxResp := tc.respType.(*sdk.TxResponse)
+				if isTxResp {
+					s.Assert().Equal(tc.expCode, int(txResp.Code), "TxResponse code")
+					if len(tc.expRawLog) > 0 {
+						s.Assert().Equal(tc.expRawLog, txResp.RawLog, "txResp.RawLog")
+					}
+				} else {
+					s.Assert().Equal(tc.expResp, tc.respType, "command response")
+				}
 			}
 		})
 	}
