@@ -9,10 +9,12 @@ import (
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	IterateAccounts(ctx sdk.Context, process func(authtypes.AccountI) (stop bool))
+	GetAllAccounts(ctx sdk.Context) (accounts []authtypes.AccountI)
+	GetNextAccountNumber(ctx sdk.Context) uint64
 	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
 	SetAccount(sdk.Context, authtypes.AccountI)
 	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
+	RemoveAccount(ctx sdk.Context, acc authtypes.AccountI)
 }
 
 // BankKeeper defines the expected bank keeper (keeper, sendkeeper, viewkeeper) (noalias)

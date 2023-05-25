@@ -53,7 +53,7 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 
 	// To check whether accounts exist for addresses.
-	authKeeper authkeeper.AccountKeeper
+	authKeeper types.AccountKeeper
 
 	// To check whether accounts exist for addresses.
 	authzKeeper authzkeeper.Keeper
