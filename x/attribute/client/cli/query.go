@@ -2,12 +2,10 @@ package cli
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -86,7 +84,7 @@ func GetAccountAttributeCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -132,7 +130,7 @@ func ListAccountAttributesCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -176,7 +174,7 @@ func ScanAccountAttributesCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -201,20 +199,6 @@ func ScanAccountAttributesCmd() *cobra.Command {
 	return cmd
 }
 
-// sdk ReadPageRequest expects binary but we encoded to base64 in our marshaller
-func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
-	encoded, err := flagSet.GetString(flags.FlagPageKey)
-	if err != nil {
-		panic(err.Error())
-	}
-	raw, err := base64.StdEncoding.DecodeString(encoded)
-	if err != nil {
-		panic(err.Error())
-	}
-	_ = flagSet.Set(flags.FlagPageKey, string(raw))
-	return flagSet
-}
-
 // GetAttributeAccountsCmd gets account addresses with attribute name
 func GetAttributeAccountsCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -235,7 +219,7 @@ func GetAttributeAccountsCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
