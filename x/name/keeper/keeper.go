@@ -18,9 +18,6 @@ import (
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
-// Handler is a name record handler function for use with IterateRecords.
-type Handler func(record types.NameRecord) error
-
 // Keeper defines the name module Keeper
 type Keeper struct {
 	// The reference to the Paramstore to get and set account specific params
@@ -208,7 +205,7 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 }
 
 // IterateRecords iterates over all the stored name records and passes them to a callback function.
-func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) error {
+func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(record types.NameRecord) error) error {
 	// Init a name record iterator
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
