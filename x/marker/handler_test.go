@@ -633,14 +633,6 @@ func (s *HandlerTestSuite) TestMsgSetAccountDataRequest() {
 			},
 			errorMsg: s.user1 + " does not have deposit access for " + denomR + " marker",
 		},
-		{
-			name: "blah blah blah (delete me)",
-			msg: &types.MsgSetAccountDataRequest{
-				Denom:  denomR,
-				Value:  "This is some restricted coin data. This won't get used though.",
-				Signer: s.user1,
-			},
-		},
 	}
 	s.runTests(tests)
 }
