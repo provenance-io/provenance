@@ -48,5 +48,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 
 	for _, trigger := range data.Triggers {
 		k.SetTrigger(ctx, trigger)
+		k.SetEventListener(ctx, trigger)
 	}
 }
