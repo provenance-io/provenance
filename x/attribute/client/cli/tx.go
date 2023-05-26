@@ -233,7 +233,7 @@ func NewSetAccountDataCmd() *cobra.Command {
 $ %[1]s tx attribute account-data --%s account-data.json
 $ %[1]s tx attribute account-data --%s
 `,
-			version.AppName, flagValue, flagFile, flagDelete),
+			version.AppName, FlagValue, FlagFile, FlagDelete),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)

@@ -10,18 +10,18 @@ import (
 )
 
 const (
-	// flagValue is a flag name for defining a value.
-	flagValue = "value"
+	// FlagValue is a flag name for defining a value.
+	FlagValue = "value"
 	// flagValueUse is a use string for the value flag.
-	flagValueUse = "--" + flagValue + " <value>"
-	// flagFile is a flag name for defining a file.
-	flagFile = "file"
+	flagValueUse = "--" + FlagValue + " <value>"
+	// FlagFile is a flag name for defining a file.
+	FlagFile = "file"
 	// flagFileUse is a use string for the file flag.
-	flagFileUse = "--" + flagFile + " <file>"
-	// flagDelete is a flag name for deleting something.
-	flagDelete = "delete"
+	flagFileUse = "--" + FlagFile + " <file>"
+	// FlagDelete is a flag name for deleting something.
+	FlagDelete = "delete"
 	// flagDeleteUse is a use string for the delete flag.
-	flagDeleteUse = "--" + flagDelete
+	flagDeleteUse = "--" + FlagDelete
 
 	// AccountDataFlagsUse is a use string for the mutually exclusive account data flags.
 	AccountDataFlagsUse = "{" + flagValueUse + "|" + flagFileUse + "|" + flagDeleteUse + "}"
@@ -30,24 +30,24 @@ const (
 // AddAccountDataFlagsToCmd adds flags to a command for providing account data.
 // See also: ReadAccountDataFlags
 func AddAccountDataFlagsToCmd(cmd *cobra.Command) {
-	cmd.Flags().String(flagValue, "", "The value to set the account data to")
-	cmd.Flags().String(flagFile, "", "A file containing the value to set the account data to")
-	cmd.Flags().Bool(flagDelete, false, "The account data should be deleted")
+	cmd.Flags().String(FlagValue, "", "The value to set the account data to")
+	cmd.Flags().String(FlagFile, "", "A file containing the value to set the account data to")
+	cmd.Flags().Bool(FlagDelete, false, "The account data should be deleted")
 }
 
 // ReadAccountDataFlags parses the account data flags and returns the desired account data value.
 // See also: AddAccountDataFlagsToCmd
 func ReadAccountDataFlags(flagSet *flag.FlagSet) (string, error) {
 	// Read all the flag values.
-	value, err := flagSet.GetString(flagValue)
+	value, err := flagSet.GetString(FlagValue)
 	if err != nil {
 		return "", fmt.Errorf("failed to read %s flag: %w", flagValueUse, err)
 	}
-	file, err := flagSet.GetString(flagFile)
+	file, err := flagSet.GetString(FlagFile)
 	if err != nil {
 		return "", fmt.Errorf("failed to read %s flag: %w", flagFileUse, err)
 	}
-	deleteValue, err := flagSet.GetBool(flagDelete)
+	deleteValue, err := flagSet.GetBool(FlagDelete)
 	if err != nil {
 		return "", fmt.Errorf("failed to read %s flag: %w", flagDeleteUse, err)
 	}
@@ -83,7 +83,7 @@ func ReadAccountDataFlags(flagSet *flag.FlagSet) (string, error) {
 
 	bz, err := os.ReadFile(file)
 	if err != nil {
-		return "", fmt.Errorf("failed to read value from --%s: %w", flagFile, err)
+		return "", fmt.Errorf("failed to read value from --%s: %w", FlagFile, err)
 	}
 	return string(bz), nil
 }
