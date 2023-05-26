@@ -1,7 +1,9 @@
 package simulation_test
 
 import (
+	"bytes"
 	"math/rand"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -16,7 +18,7 @@ import (
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/name/simulation"
-	types "github.com/provenance-io/provenance/x/name/types"
+	"github.com/provenance-io/provenance/x/name/types"
 )
 
 type SimTestSuite struct {
@@ -31,12 +33,31 @@ func (s *SimTestSuite) SetupTest() {
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 }
 
+// LogOperationMsg logs all fields of the provided operationMsg.
 func (s *SimTestSuite) LogOperationMsg(operationMsg simtypes.OperationMsg) {
-	s.T().Logf("operationMsg.Route: %q", operationMsg.Route)
-	s.T().Logf("operationMsg.Name: %q", operationMsg.Name)
-	s.T().Logf("operationMsg.Comment: %q", operationMsg.Comment)
-	s.T().Logf("operationMsg.Comment: %t", operationMsg.OK)
-	s.T().Logf("operationMsg.Msg:\n%q", string(operationMsg.Msg))
+	msgFmt := "%s"
+	if len(bytes.TrimSpace(operationMsg.Msg)) == 0 {
+		msgFmt = "    %q"
+	}
+	fmtLines := []string{
+		"operationMsg.Route:   %q",
+		"operationMsg.Name:    %q",
+		"operationMsg.Comment: %q",
+		"operationMsg.OK:      %t",
+		"operationMsg.Msg: " + msgFmt,
+	}
+	s.T().Logf(strings.Join(fmtLines, "\n"),
+		operationMsg.Route, operationMsg.Name, operationMsg.Comment, operationMsg.OK, string(operationMsg.Msg),
+	)
+}
+
+// LogIfError logs an error if it's not nil.
+// The error is automatically added to the format and args.
+func (s *SimTestSuite) LogIfError(err error, format string, args ...interface{}) {
+	if err != nil {
+		args = append(args, err)
+		s.T().Logf(format+": %v", args)
+	}
 }
 
 func (s *SimTestSuite) TestWeightedOperations() {
@@ -95,7 +116,9 @@ func (s *SimTestSuite) TestSimulateMsgBindName() {
 	src := rand.NewSource(1)
 	r := rand.New(src)
 	accounts := s.getTestingAccounts(r, 3)
-	s.app.NameKeeper.SetNameRecord(s.ctx, "provenance", accounts[0].Address, false)
+
+	name := "provenance"
+	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q)", name)
 
 	// begin a new block
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
@@ -103,7 +126,7 @@ func (s *SimTestSuite) TestSimulateMsgBindName() {
 	// execute operation
 	op := simulation.SimulateMsgBindName(s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
-	s.Require().NoError(err)
+	s.Require().NoError(err, "SimulateMsgBindName op(...) error")
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgBindNameRequest
@@ -125,7 +148,9 @@ func (s *SimTestSuite) TestSimulateMsgDeleteName() {
 	src := rand.NewSource(1)
 	r := rand.New(src)
 	accounts := s.getTestingAccounts(r, 1)
-	s.app.NameKeeper.SetNameRecord(s.ctx, "deleteme", accounts[0].Address, false)
+
+	name := "deleteme"
+	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q)", name)
 
 	// begin a new block
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
@@ -133,7 +158,7 @@ func (s *SimTestSuite) TestSimulateMsgDeleteName() {
 	// execute operation
 	op := simulation.SimulateMsgDeleteName(s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
-	s.Require().NoError(err)
+	s.Require().NoError(err, "SimulateMsgDeleteName op(...) error")
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgDeleteNameRequest
@@ -141,7 +166,7 @@ func (s *SimTestSuite) TestSimulateMsgDeleteName() {
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Record.Address, "msg.Record.Address")
-	s.Assert().Equal("deleteme", msg.Record.Name, "msg.Record.Name")
+	s.Assert().Equal(name, msg.Record.Name, "msg.Record.Name")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
@@ -155,7 +180,9 @@ func (s *SimTestSuite) TestSimulateMsgModifyName() {
 	src := rand.NewSource(1)
 	r := rand.New(src)
 	accounts := s.getTestingAccounts(r, 1)
-	s.app.NameKeeper.SetNameRecord(s.ctx, "modifyme", accounts[0].Address, false)
+
+	name := "modifyme"
+	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q)", name)
 
 	// begin a new block
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
@@ -163,7 +190,7 @@ func (s *SimTestSuite) TestSimulateMsgModifyName() {
 	// execute operation
 	op := simulation.SimulateMsgModifyName(s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
-	s.Require().NoError(err, "op(...) error")
+	s.Require().NoError(err, "SimulateMsgModifyName op(...) error")
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgModifyNameRequest
@@ -171,7 +198,7 @@ func (s *SimTestSuite) TestSimulateMsgModifyName() {
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Record.Address, "msg.Record.Address")
-	s.Assert().Equal("modifyme", msg.Record.Name, "msg.Record.Name")
+	s.Assert().Equal(name, msg.Record.Name, "msg.Record.Name")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
@@ -184,11 +211,11 @@ func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Accoun
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
-	for _, account := range accounts {
+	for i, account := range accounts {
 		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
 		s.app.AccountKeeper.SetAccount(s.ctx, acc)
 		err := testutil.FundAccount(s.app.BankKeeper, s.ctx, account.Address, initCoins)
-		s.Require().NoError(err)
+		s.Require().NoError(err, "[%d]: FundAccount", i)
 	}
 
 	return accounts
