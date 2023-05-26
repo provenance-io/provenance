@@ -42,10 +42,8 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(s.T())
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	s.app = app
-	s.ctx = ctx
+	s.app = simapp.Setup(s.T())
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
@@ -63,11 +61,11 @@ func (s *KeeperTestSuite) SetupTest() {
 	nameData.Params.MinSegmentLength = 3
 	nameData.Params.MaxSegmentLength = 12
 
-	app.NameKeeper.InitGenesis(ctx, nameData)
+	s.app.NameKeeper.InitGenesis(s.ctx, nameData)
 
-	params := app.AttributeKeeper.GetParams(ctx)
+	params := s.app.AttributeKeeper.GetParams(s.ctx)
 	params.MaxValueLength = 10
-	app.AttributeKeeper.SetParams(ctx, params)
+	s.app.AttributeKeeper.SetParams(s.ctx, params)
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 }
 
@@ -814,7 +812,6 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 		s.Require().NoError(err)
 		s.Require().Equal(1, len(records))
 	})
-
 }
 
 func (s *KeeperTestSuite) TestPopulateAddressAttributeNameTable() {
@@ -1007,23 +1004,11 @@ func (s *KeeperTestSuite) TestGetAccountData() {
 		Address:       withTwoAddr,
 	}
 
-	s.Run("error getting attributes", func() {
-		// The only way I could think to make this happen is to call it before the name record has been set.
-		expErr := `error finding accountdata for "` + withoutAddr + `": no address bound to name`
-
-		val, err := s.app.AttributeKeeper.GetAccountData(s.ctx, withoutAddr)
-		s.Assert().EqualErrorf(err, expErr, "GetAccountData error")
-		s.Assert().Empty(val, "GetAccountData value")
-	})
-
 	// Use GetModuleAccount to ensure that the account exists.
 	attrModAcc := s.app.AccountKeeper.GetModuleAccount(s.ctx, types.ModuleName)
 	attrModAddr := attrModAcc.GetAddress()
 
-	err := s.app.NameKeeper.SetNameRecord(s.ctx, types.AccountDataName, attrModAddr, true)
-	s.Require().NoError(err, "SetNameRecord(%q)", types.AccountDataName)
-
-	err = s.app.AttributeKeeper.SetAttribute(s.ctx, withOneAttr, attrModAddr)
+	err := s.app.AttributeKeeper.SetAttribute(s.ctx, withOneAttr, attrModAddr)
 	s.Require().NoError(err, "SetAttribute withOneAttr")
 	err = s.app.AttributeKeeper.SetAttribute(s.ctx, withTwoAttr1, attrModAddr)
 	s.Require().NoError(err, "SetAttribute withTwoAttr1")
@@ -1033,29 +1018,34 @@ func (s *KeeperTestSuite) TestGetAccountData() {
 	tests := []struct {
 		name   string
 		addr   string
+		nameK  *mockNameKeeper
 		expVal string
+		expErr string
 	}{
+		{name: "no data exists", addr: withoutAddr},
+		{name: "one entry", addr: withOneAddr, expVal: withOneVal},
+		// Which of these it is depends on how they hash, and withTwoVal1 hashes lower than 2.
+		{name: "two entries", addr: withTwoAddr, expVal: withTwoVal1},
 		{
-			name:   "no data exists",
-			addr:   withoutAddr,
-			expVal: "",
-		},
-		{
-			name:   "one entry",
+			name:   "error getting account attributes",
 			addr:   withOneAddr,
-			expVal: withOneVal,
-		},
-		{
-			name:   "two entries",
-			addr:   withTwoAddr,
-			expVal: withTwoVal1, // Which of these it is depends on how they hash, and this one hashes lower.
+			nameK:  newMockNameKeeper(&s.app.NameKeeper).WithGetRecordByNameError("injected error"),
+			expErr: `error finding ` + types.AccountDataName + ` for "` + withOneAddr + `": injected error`,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			val, err := s.app.AttributeKeeper.GetAccountData(s.ctx, tc.addr)
-			s.Assert().NoError(err, "GetAccountData error")
+			attrKeeper := s.app.AttributeKeeper
+			if tc.nameK != nil {
+				attrKeeper = attrKeeper.WithNameKeeper(tc.nameK)
+			}
+			val, err := attrKeeper.GetAccountData(s.ctx, tc.addr)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualErrorf(err, tc.expErr, "GetAccountData error")
+			} else {
+				s.Assert().NoError(err, "GetAccountData error")
+			}
 			s.Assert().Equal(tc.expVal, val, "GetAccountData value")
 		})
 	}
@@ -1096,10 +1086,7 @@ func (s *KeeperTestSuite) TestSetAccountData() {
 	attrModAcc := s.app.AccountKeeper.GetModuleAccount(s.ctx, types.ModuleName)
 	attrModAddr := attrModAcc.GetAddress()
 
-	err := s.app.NameKeeper.SetNameRecord(s.ctx, types.AccountDataName, attrModAddr, true)
-	s.Require().NoError(err, "SetNameRecord(%q)", types.AccountDataName)
-
-	err = s.app.AttributeKeeper.SetAttribute(s.ctx, alreadyHasOneAttr, attrModAddr)
+	err := s.app.AttributeKeeper.SetAttribute(s.ctx, alreadyHasOneAttr, attrModAddr)
 	s.Require().NoError(err, "SetAttribute alreadyHasOneAttr")
 	err = s.app.AttributeKeeper.SetAttribute(s.ctx, alreadyHasTwoAttr1, attrModAddr)
 	s.Require().NoError(err, "SetAttribute alreadyHasTwoAttr1")

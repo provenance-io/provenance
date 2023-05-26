@@ -7,14 +7,13 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
-	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -69,7 +68,7 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			err = setAccountDataNameRecord(ctx, app.AccountKeeper, app.NameKeeper)
+			err = setAccountDataNameRecord(ctx, app.AccountKeeper, &app.NameKeeper)
 			if err != nil {
 				return nil, err
 			}
@@ -90,7 +89,7 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			err = setAccountDataNameRecord(ctx, app.AccountKeeper, app.NameKeeper)
+			err = setAccountDataNameRecord(ctx, app.AccountKeeper, &app.NameKeeper)
 			if err != nil {
 				return nil, err
 			}
@@ -239,69 +238,8 @@ func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
 	}
 }
 
-// accountKeeper is the account keeper methods needed in setAccountDataNameRecord
-type accountKeeper interface {
-	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
-}
-
-// nameKeeper is the name keeper methods needed in setAccountDataNameRecord
-type nameKeeper interface {
-	NameExists(ctx sdk.Context, name string) bool
-	GetRecordByName(ctx sdk.Context, name string) (record *nametypes.NameRecord, err error)
-	SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error
-	UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error
-}
-
 // setAccountDataNameRecord makes sure the account data name record exists, is restricted,
 // and is owned by the attribute module. An error is returned if it fails to make it so.
-func setAccountDataNameRecord(ctx sdk.Context, accountK accountKeeper, nameK nameKeeper) (err error) {
-	defer func() {
-		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("Error setting %q name record.", attributetypes.AccountDataName), "error", err)
-		}
-	}()
-	ctx.Logger().Info(fmt.Sprintf("Setting %q name record.", attributetypes.AccountDataName))
-
-	// Make sure that the module account exists and get its address. GetModuleAccount creates it if it doesn't exist.
-	attrModAcc := accountK.GetModuleAccount(ctx, attributetypes.ModuleName)
-	attrModAccAddr := attrModAcc.GetAddress()
-
-	// If the name doesn't exist yet, create it and we're done here.
-	if !nameK.NameExists(ctx, attributetypes.AccountDataName) {
-		err = nameK.SetNameRecord(ctx, attributetypes.AccountDataName, attrModAccAddr, true)
-		if err != nil {
-			return err
-		}
-		ctx.Logger().Info(fmt.Sprintf("Successfully set %q name record.", attributetypes.AccountDataName))
-		return nil
-	}
-
-	// If it already exists, but has a different address or isn't restricted, update it to what we want it to be.
-	existing, err := nameK.GetRecordByName(ctx, attributetypes.AccountDataName)
-	if err != nil {
-		return err
-	}
-	updateNeeded := false
-	if !existing.Restricted {
-		updateNeeded = true
-		ctx.Logger().Info(fmt.Sprintf("Existing %q name record is not restricted. It will be updated to be restricted.", attributetypes.AccountDataName))
-	}
-	attrModAccAddrStr := attrModAccAddr.String()
-	if existing.Address != attrModAccAddrStr {
-		updateNeeded = true
-		ctx.Logger().Info(fmt.Sprintf("Existing %q name record has address %q. It will be updated to the attribute module account address %q",
-			attributetypes.AccountDataName, existing.Address, attrModAccAddrStr))
-	}
-	if !updateNeeded {
-		ctx.Logger().Info(fmt.Sprintf("The %q name record already exists as needed. Nothing to do.", attributetypes.AccountDataName))
-		return nil
-	}
-	ctx.Logger().Info(fmt.Sprintf("Updating existing %q name record.", attributetypes.AccountDataName))
-	err = nameK.UpdateNameRecord(ctx, attributetypes.AccountDataName, attrModAccAddr, true)
-	if err != nil {
-		return err
-	}
-
-	ctx.Logger().Info(fmt.Sprintf("Successfully updated %q name record.", attributetypes.AccountDataName))
-	return nil
+func setAccountDataNameRecord(ctx sdk.Context, accountK attributetypes.AccountKeeper, nameK attributetypes.NameKeeper) (err error) {
+	return attributekeeper.EnsureModuleAccountAndAccountDataNameRecord(ctx, accountK, nameK)
 }

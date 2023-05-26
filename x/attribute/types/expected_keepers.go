@@ -20,4 +20,7 @@ type NameKeeper interface {
 	GetRecordByName(ctx sdk.Context, name string) (record *nametypes.NameRecord, err error)
 	NameExists(ctx sdk.Context, name string) bool
 	SetAttributeKeeper(attrKeeper nametypes.AttributeKeeper)
+	SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error
+	UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error
+	IterateRecords(ctx sdk.Context, prefix []byte, handle func(nametypes.NameRecord) error) error
 }
