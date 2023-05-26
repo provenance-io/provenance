@@ -43,28 +43,39 @@ type MetadataMsg interface {
 	GetSignerStrs() []string
 }
 
-// Compile time interface checks.
+// allRequestMsgs defines all the Msg*Request messages.
+var allRequestMsgs = []MetadataMsg{
+	(*MsgWriteScopeRequest)(nil),
+	(*MsgDeleteScopeRequest)(nil),
+	(*MsgAddScopeDataAccessRequest)(nil),
+	(*MsgDeleteScopeDataAccessRequest)(nil),
+	(*MsgAddScopeOwnerRequest)(nil),
+	(*MsgDeleteScopeOwnerRequest)(nil),
+	(*MsgWriteSessionRequest)(nil),
+	(*MsgWriteRecordRequest)(nil),
+	(*MsgDeleteRecordRequest)(nil),
+
+	(*MsgWriteScopeSpecificationRequest)(nil),
+	(*MsgDeleteScopeSpecificationRequest)(nil),
+	(*MsgWriteContractSpecificationRequest)(nil),
+	(*MsgDeleteContractSpecificationRequest)(nil),
+	(*MsgAddContractSpecToScopeSpecRequest)(nil),
+	(*MsgDeleteContractSpecFromScopeSpecRequest)(nil),
+	(*MsgWriteRecordSpecificationRequest)(nil),
+	(*MsgDeleteRecordSpecificationRequest)(nil),
+
+	// omitting MsgWriteP8EContractSpecRequest and MsgP8EMemorializeContractRequest
+	// since they're deprecated and no longer usable.
+
+	(*MsgBindOSLocatorRequest)(nil),
+	(*MsgDeleteOSLocatorRequest)(nil),
+	(*MsgModifyOSLocatorRequest)(nil),
+}
+
+// We still need these deprecated messages to be sdk.Msg for the codec.
 var (
-	_ MetadataMsg = (*MsgWriteScopeRequest)(nil)
-	_ MetadataMsg = (*MsgDeleteScopeRequest)(nil)
-	_ MetadataMsg = (*MsgAddScopeDataAccessRequest)(nil)
-	_ MetadataMsg = (*MsgDeleteScopeDataAccessRequest)(nil)
-	_ MetadataMsg = (*MsgAddScopeOwnerRequest)(nil)
-	_ MetadataMsg = (*MsgDeleteScopeOwnerRequest)(nil)
-	_ MetadataMsg = (*MsgWriteSessionRequest)(nil)
-	_ MetadataMsg = (*MsgWriteRecordRequest)(nil)
-	_ MetadataMsg = (*MsgDeleteRecordRequest)(nil)
-	_ MetadataMsg = (*MsgWriteScopeSpecificationRequest)(nil)
-	_ MetadataMsg = (*MsgDeleteScopeSpecificationRequest)(nil)
-	_ MetadataMsg = (*MsgWriteContractSpecificationRequest)(nil)
-	_ MetadataMsg = (*MsgDeleteContractSpecificationRequest)(nil)
-	_ MetadataMsg = (*MsgAddContractSpecToScopeSpecRequest)(nil)
-	_ MetadataMsg = (*MsgDeleteContractSpecFromScopeSpecRequest)(nil)
-	_ MetadataMsg = (*MsgWriteRecordSpecificationRequest)(nil)
-	_ MetadataMsg = (*MsgDeleteRecordSpecificationRequest)(nil)
-	_ MetadataMsg = (*MsgBindOSLocatorRequest)(nil)
-	_ MetadataMsg = (*MsgDeleteOSLocatorRequest)(nil)
-	_ MetadataMsg = (*MsgModifyOSLocatorRequest)(nil)
+	_ sdk.Msg = (*MsgWriteP8EContractSpecRequest)(nil)
+	_ sdk.Msg = (*MsgP8EMemorializeContractRequest)(nil)
 )
 
 // stringsToAccAddresses converts an array of strings into an array of Acc Addresses.
@@ -766,6 +777,26 @@ func (msg MsgDeleteRecordSpecificationRequest) ValidateBasic() error {
 		return fmt.Errorf("at least one signer is required")
 	}
 	return nil
+}
+
+// ------------------  MsgWriteP8EContractSpecRequest  ------------------
+
+func (msg MsgWriteP8EContractSpecRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+func (msg MsgWriteP8EContractSpecRequest) ValidateBasic() error {
+	return errors.New("deprecated and unusable")
+}
+
+// ------------------  MsgP8EMemorializeContractRequest  ------------------
+
+func (msg MsgP8EMemorializeContractRequest) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Invoker)}
+}
+
+func (msg MsgP8EMemorializeContractRequest) ValidateBasic() error {
+	return errors.New("deprecated and unusable")
 }
 
 // ------------------  MsgBindOSLocatorRequest  ------------------

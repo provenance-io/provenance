@@ -4,6 +4,7 @@ package provenance.metadata.v1;
 import "gogoproto/gogo.proto";
 import "provenance/metadata/v1/metadata.proto";
 import "provenance/metadata/v1/objectstore.proto";
+import "provenance/metadata/v1/p8e/p8e.proto";
 import "provenance/metadata/v1/scope.proto";
 import "provenance/metadata/v1/specification.proto";
 
@@ -535,4 +536,46 @@ message MsgModifyOSLocatorRequest {
 // MsgModifyOSLocatorResponse is the response type for the Msg/ModifyOSLocator RPC method.
 message MsgModifyOSLocatorResponse {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgWriteP8eContractSpecRequest has been deprecated and is no longer usable.
+// Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+message MsgWriteP8eContractSpecRequest {
+  option deprecated                  = true;
+  option (gogoproto.goproto_getters) = false;
+  p8e.ContractSpec contractspec      = 1 [(gogoproto.nullable) = false];
+  repeated string  signers           = 2;
+}
+
+// MsgWriteP8eContractSpecResponse  has been deprecated and is no longer usable.
+// Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+message MsgWriteP8eContractSpecResponse {
+  option deprecated                               = true;
+  option (gogoproto.goproto_getters)              = false;
+  ContractSpecIdInfo        contract_spec_id_info = 1 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
+  repeated RecordSpecIdInfo record_spec_id_infos  = 2 [(gogoproto.moretags) = "yaml:\"record_spec_id_infos\""];
+}
+
+// MsgP8eMemorializeContractRequest  has been deprecated and is no longer usable.
+// Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+message MsgP8eMemorializeContractRequest {
+  option deprecated                                              = true;
+  option (gogoproto.goproto_getters)                             = false;
+  string                                  scope_id               = 1;
+  string                                  group_id               = 2;
+  string                                  scope_specification_id = 3;
+  provenance.metadata.v1.p8e.Recitals     recitals               = 4;
+  provenance.metadata.v1.p8e.Contract     contract               = 5;
+  provenance.metadata.v1.p8e.SignatureSet signatures             = 6;
+  string                                  invoker                = 7;
+}
+
+// MsgP8eMemorializeContractResponse  has been deprecated and is no longer usable.
+// Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+message MsgP8eMemorializeContractResponse {
+  option deprecated                     = true;
+  option (gogoproto.goproto_getters)    = false;
+  ScopeIdInfo           scope_id_info   = 1 [(gogoproto.moretags) = "yaml:\"scope_id_info\""];
+  SessionIdInfo         session_id_info = 2 [(gogoproto.moretags) = "yaml:\"session_id_info\""];
+  repeated RecordIdInfo record_id_infos = 3 [(gogoproto.moretags) = "yaml:\"record_id_infos\""];
 }
