@@ -2,12 +2,10 @@ package cli
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -33,6 +31,7 @@ func GetQueryCmd() *cobra.Command {
 		MarkerAccessCmd(),
 		MarkerEscrowCmd(),
 		MarkerSupplyCmd(),
+		AccountDataCmd(),
 	)
 	return queryCmd
 }
@@ -81,7 +80,7 @@ func AllMarkersCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -128,7 +127,7 @@ func AllHoldersCmd() *cobra.Command {
 			}
 			id := strings.ToLower(strings.TrimSpace(args[0]))
 			queryClient := types.NewQueryClient(clientCtx)
-			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -273,16 +272,32 @@ func MarkerSupplyCmd() *cobra.Command {
 	return cmd
 }
 
-// sdk ReadPageRequest expects binary but we encoded to base64 in our marshaller
-func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
-	encoded, err := flagSet.GetString(flags.FlagPageKey)
-	if err != nil {
-		panic(err.Error())
+// AccountDataCmd is the CLI command for querying account data for a marker.
+func AccountDataCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "account-data denom",
+		Short:   "Get a marker's account data",
+		Aliases: []string{"accountdata", "ad"},
+		Example: fmt.Sprintf(`$ %s query marker account-data nhash`, version.AppName),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			denom := strings.TrimSpace(args[0])
+
+			req := &types.QueryAccountDataRequest{Denom: denom}
+			resp, err := queryClient.AccountData(cmd.Context(), req)
+			if err != nil {
+				return fmt.Errorf("failed to query account data for marker %q: %w", denom, err)
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
 	}
-	raw, err := base64.StdEncoding.DecodeString(encoded)
-	if err != nil {
-		panic(err.Error())
-	}
-	_ = flagSet.Set(flags.FlagPageKey, string(raw))
-	return flagSet
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
