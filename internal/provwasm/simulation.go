@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markersim "github.com/provenance-io/provenance/x/marker/simulation"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
@@ -123,7 +124,7 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 
 		var parent nametypes.NameRecord
 		err := nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
-			if len(record.Address) > 0 && !strings.Contains(record.Name, ".") {
+			if len(record.Address) > 0 && !strings.Contains(record.Name, ".") && record.Name != attrtypes.AccountDataName {
 				parent = record
 			}
 
