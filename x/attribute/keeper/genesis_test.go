@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -30,6 +29,10 @@ type GenesisTestSuite struct {
 	logBuffer bytes.Buffer
 }
 
+func TestGenesisTestSuite(t *testing.T) {
+	suite.Run(t, new(GenesisTestSuite))
+}
+
 func (s *GenesisTestSuite) SetupSuite() {
 	// Alert: This function is SetupSuite. That means all tests in here
 	// will use the same app with the same store and data.
@@ -51,86 +54,9 @@ func (s *GenesisTestSuite) SetupSuite() {
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 }
 
-func TestGenesisTestSuite(t *testing.T) {
-	suite.Run(t, new(GenesisTestSuite))
-}
-
-// mockNameKeeper is a not-really-mocked name keeper for use in the
-// genesis tests. It just allows injection of errors for a few endpoints.
-type mockNameKeeper struct {
-	Parent                types.NameKeeper
-	SetNameRecordError    string
-	GetRecordByNameError  string
-	UpdateNameRecordError string
-}
-
-var _ types.NameKeeper = (*mockNameKeeper)(nil)
-
-func newMockNameKeeper(parent types.NameKeeper) *mockNameKeeper {
-	return &mockNameKeeper{Parent: parent}
-}
-
+// newMockNameKeeper creates a mockNameKeeper backed by this suite's app's name keeper.
 func (s *GenesisTestSuite) newMockNameKeeper() *mockNameKeeper {
 	return newMockNameKeeper(&s.app.NameKeeper)
-}
-
-func (k *mockNameKeeper) WithSetNameRecordError(err string) *mockNameKeeper {
-	k.SetNameRecordError = err
-	return k
-}
-
-func (k *mockNameKeeper) WithGetRecordByNameError(err string) *mockNameKeeper {
-	k.GetRecordByNameError = err
-	return k
-}
-
-func (k *mockNameKeeper) WithUpdateNameRecordError(err string) *mockNameKeeper {
-	k.UpdateNameRecordError = err
-	return k
-}
-
-// NameExists calls the parent's NameExists function.
-func (k *mockNameKeeper) NameExists(ctx sdk.Context, name string) bool {
-	return k.Parent.NameExists(ctx, name)
-}
-
-// GetRecordByName returns an error if desired, otherwise calls parent's GetRecordByName function.
-func (k *mockNameKeeper) GetRecordByName(ctx sdk.Context, name string) (record *nametypes.NameRecord, err error) {
-	if len(k.GetRecordByNameError) > 0 {
-		return nil, errors.New(k.GetRecordByNameError)
-	}
-	return k.Parent.GetRecordByName(ctx, name)
-}
-
-// SetNameRecord returns an error if desired, otherwise calls parent's SetNameRecord function.
-func (k *mockNameKeeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error {
-	if len(k.SetNameRecordError) > 0 {
-		return errors.New(k.SetNameRecordError)
-	}
-	return k.Parent.SetNameRecord(ctx, name, addr, restrict)
-}
-
-// UpdateNameRecord returns an error if desired, otherwise calls parent's UpdateNameRecord function.
-func (k *mockNameKeeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error {
-	if len(k.UpdateNameRecordError) > 0 {
-		return errors.New(k.UpdateNameRecordError)
-	}
-	return k.Parent.UpdateNameRecord(ctx, name, addr, restrict)
-}
-
-// ResolvesTo calls the parent's ResolvesTo function.
-func (k *mockNameKeeper) ResolvesTo(ctx sdk.Context, name string, addr sdk.AccAddress) bool {
-	return k.Parent.ResolvesTo(ctx, name, addr)
-}
-
-// Normalize calls the parent's Normalize function.
-func (k *mockNameKeeper) Normalize(ctx sdk.Context, name string) (string, error) {
-	return k.Parent.Normalize(ctx, name)
-}
-
-// SetAttributeKeeper calls the parent's SetAttributeKeeper function.
-func (k *mockNameKeeper) SetAttributeKeeper(attrKeeper nametypes.AttributeKeeper) {
-	k.Parent.SetAttributeKeeper(attrKeeper)
 }
 
 func (s *GenesisTestSuite) TestInitGenesisModAcctAndNameRecord() {
