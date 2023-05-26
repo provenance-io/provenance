@@ -9,6 +9,8 @@
     - [EventAttributeAdd](#provenance.attribute.v1.EventAttributeAdd)
     - [EventAttributeDelete](#provenance.attribute.v1.EventAttributeDelete)
     - [EventAttributeDistinctDelete](#provenance.attribute.v1.EventAttributeDistinctDelete)
+    - [EventAttributeExpirationUpdate](#provenance.attribute.v1.EventAttributeExpirationUpdate)
+    - [EventAttributeExpired](#provenance.attribute.v1.EventAttributeExpired)
     - [EventAttributeUpdate](#provenance.attribute.v1.EventAttributeUpdate)
     - [Params](#provenance.attribute.v1.Params)
   
@@ -38,6 +40,8 @@
     - [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse)
     - [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest)
     - [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse)
+    - [MsgUpdateAttributeExpirationRequest](#provenance.attribute.v1.MsgUpdateAttributeExpirationRequest)
+    - [MsgUpdateAttributeExpirationResponse](#provenance.attribute.v1.MsgUpdateAttributeExpirationResponse)
     - [MsgUpdateAttributeRequest](#provenance.attribute.v1.MsgUpdateAttributeRequest)
     - [MsgUpdateAttributeResponse](#provenance.attribute.v1.MsgUpdateAttributeResponse)
   
@@ -482,6 +486,7 @@ Attribute holds a typed key/value structure for data associated with an account
 | `value` | [bytes](#bytes) |  | The attribute value. |
 | `attribute_type` | [AttributeType](#provenance.attribute.v1.AttributeType) |  | The attribute value type. |
 | `address` | [string](#string) |  | The address the attribute is bound to |
+| `expiration_date` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that an attribute will expire. |
 
 
 
@@ -501,6 +506,7 @@ EventAttributeAdd event emitted when attribute is added
 | `type` | [string](#string) |  |  |
 | `account` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
+| `expiration` | [string](#string) |  |  |
 
 
 
@@ -537,6 +543,45 @@ EventAttributeDistinctDelete event emitted when attribute is deleted with matchi
 | `attribute_type` | [string](#string) |  |  |
 | `account` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.EventAttributeExpirationUpdate"></a>
+
+### EventAttributeExpirationUpdate
+EventAttributeExpirationUpdate event emitted when attribute expiration is updated
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `value` | [string](#string) |  |  |
+| `account` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+| `original_expiration` | [string](#string) |  |  |
+| `updated_expiration` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.EventAttributeExpired"></a>
+
+### EventAttributeExpired
+EventAttributeExpired event emitted when attribute has expired and been deleted in BeginBlocker
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `value_hash` | [string](#string) |  |  |
+| `attribute_type` | [string](#string) |  |  |
+| `account` | [string](#string) |  |  |
+| `expiration` | [string](#string) |  |  |
 
 
 
@@ -848,6 +893,7 @@ Attributes may only be set in an account by the account that the attribute name 
 | `attribute_type` | [AttributeType](#provenance.attribute.v1.AttributeType) |  | The attribute value type. |
 | `account` | [string](#string) |  | The account to add the attribute to. |
 | `owner` | [string](#string) |  | The address that the name must resolve to. |
+| `expiration_date` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that an attribute will expire. |
 
 
 
@@ -921,6 +967,36 @@ MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
 
 
 
+<a name="provenance.attribute.v1.MsgUpdateAttributeExpirationRequest"></a>
+
+### MsgUpdateAttributeExpirationRequest
+MsgUpdateAttributeExpirationRequest defines an sdk.Msg type that is used to update an existing attribute's expiration
+date
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | The attribute name. |
+| `value` | [bytes](#bytes) |  | The original attribute value. |
+| `expiration_date` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that an attribute will expire. |
+| `account` | [string](#string) |  | The account to add the attribute to. |
+| `owner` | [string](#string) |  | The address that the name must resolve to. |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.MsgUpdateAttributeExpirationResponse"></a>
+
+### MsgUpdateAttributeExpirationResponse
+MsgUpdateAttributeExpirationResponse defines the Msg/Vote response type.
+
+
+
+
+
+
 <a name="provenance.attribute.v1.MsgUpdateAttributeRequest"></a>
 
 ### MsgUpdateAttributeRequest
@@ -968,6 +1044,7 @@ Msg defines the attribute module Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `AddAttribute` | [MsgAddAttributeRequest](#provenance.attribute.v1.MsgAddAttributeRequest) | [MsgAddAttributeResponse](#provenance.attribute.v1.MsgAddAttributeResponse) | AddAttribute defines a method to verify a particular invariance. | |
 | `UpdateAttribute` | [MsgUpdateAttributeRequest](#provenance.attribute.v1.MsgUpdateAttributeRequest) | [MsgUpdateAttributeResponse](#provenance.attribute.v1.MsgUpdateAttributeResponse) | UpdateAttribute defines a method to verify a particular invariance. | |
+| `UpdateAttributeExpiration` | [MsgUpdateAttributeExpirationRequest](#provenance.attribute.v1.MsgUpdateAttributeExpirationRequest) | [MsgUpdateAttributeExpirationResponse](#provenance.attribute.v1.MsgUpdateAttributeExpirationResponse) | UpdateAttributeExpiration defines a method to verify a particular invariance. | |
 | `DeleteAttribute` | [MsgDeleteAttributeRequest](#provenance.attribute.v1.MsgDeleteAttributeRequest) | [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse) | DeleteAttribute defines a method to verify a particular invariance. | |
 | `DeleteDistinctAttribute` | [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest) | [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse) | DeleteDistinctAttribute defines a method to verify a particular invariance. | |
 

@@ -644,6 +644,7 @@ func New(
 		ibchost.ModuleName,
 		markertypes.ModuleName,
 		icatypes.ModuleName,
+		attributetypes.ModuleName,
 		rewardtypes.ModuleName,
 
 		// no-ops
@@ -661,7 +662,6 @@ func New(
 		wasm.ModuleName,
 		ibctransfertypes.ModuleName,
 		nametypes.ModuleName,
-		attributetypes.ModuleName,
 		vestingtypes.ModuleName,
 		quarantine.ModuleName,
 		sanction.ModuleName,

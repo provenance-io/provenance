@@ -3,6 +3,7 @@ package simulation_test
 import (
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -86,7 +87,7 @@ func (suite *SimTestSuite) TestSimulateMsgAddAttribute() {
 
 	var msg types.MsgAddAttributeRequest
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-	suite.Require().True(operationMsg.OK)
+	suite.Require().True(operationMsg.OK, "MsgAddAttributeRequest failed %v", operationMsg.Comment)
 	suite.Require().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Account)
 	suite.Require().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Owner)
 	suite.Require().Equal("example.provenance", msg.Name)
@@ -103,11 +104,12 @@ func (suite *SimTestSuite) TestSimulateMsgUpdateAttribute() {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
+	expireTime := GenerateRandomTime(1)
 	suite.app.NameKeeper.SetNameRecord(suite.ctx, "example.provenance", accounts[0].Address, false)
-	suite.app.AttributeKeeper.SetAttribute(suite.ctx, types.NewAttribute("example.provenance", accounts[1].Address.String(), types.AttributeType_String, []byte("test")), accounts[0].Address)
+	suite.app.AttributeKeeper.SetAttribute(suite.ctx, types.NewAttribute("example.provenance", accounts[1].Address.String(), types.AttributeType_String, []byte("test"), &expireTime), accounts[0].Address)
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash, Time: time.Now()}})
 
 	// execute operation
 	op := simulation.SimulateMsgUpdateAttribute(suite.app.AttributeKeeper, suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.NameKeeper)
@@ -117,7 +119,7 @@ func (suite *SimTestSuite) TestSimulateMsgUpdateAttribute() {
 	var msg types.MsgUpdateAttributeRequest
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
-	suite.Require().True(operationMsg.OK)
+	suite.Require().True(operationMsg.OK, "MsgUpdateAttributeRequest failed %v", operationMsg.Comment)
 	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
 	suite.Require().Equal("example.provenance", msg.Name)
 	suite.Require().Equal(accounts[0].Address.String(), msg.Owner)
@@ -132,11 +134,12 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteAttribute() {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
+	expireTime := GenerateRandomTime(1)
 	suite.app.NameKeeper.SetNameRecord(suite.ctx, "example.provenance", accounts[0].Address, false)
-	suite.app.AttributeKeeper.SetAttribute(suite.ctx, types.NewAttribute("example.provenance", accounts[1].Address.String(), types.AttributeType_String, []byte("test")), accounts[0].Address)
+	suite.app.AttributeKeeper.SetAttribute(suite.ctx, types.NewAttribute("example.provenance", accounts[1].Address.String(), types.AttributeType_String, []byte("test"), &expireTime), accounts[0].Address)
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash, Time: time.Now()}})
 
 	// execute operation
 	op := simulation.SimulateMsgDeleteAttribute(suite.app.AttributeKeeper, suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.NameKeeper)
@@ -146,7 +149,7 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteAttribute() {
 	var msg types.MsgDeleteAttributeRequest
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
-	suite.Require().True(operationMsg.OK)
+	suite.Require().True(operationMsg.OK, "MsgDeleteAttributeRequest failed %v", operationMsg.Comment)
 	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
 	suite.Require().Equal("example.provenance", msg.Name)
 	suite.Require().Equal(accounts[0].Address.String(), msg.Owner)
@@ -162,11 +165,13 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteDistinctAttribute() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
+	expireTime := GenerateRandomTime(1)
+
 	suite.app.NameKeeper.SetNameRecord(suite.ctx, "example.provenance", accounts[0].Address, false)
-	suite.app.AttributeKeeper.SetAttribute(suite.ctx, types.NewAttribute("example.provenance", accounts[1].Address.String(), types.AttributeType_String, []byte("test")), accounts[0].Address)
+	suite.app.AttributeKeeper.SetAttribute(suite.ctx, types.NewAttribute("example.provenance", accounts[1].Address.String(), types.AttributeType_String, []byte("test"), &expireTime), accounts[0].Address)
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash, Time: time.Now()}})
 
 	// execute operation
 	op := simulation.SimulateMsgDeleteDistinctAttribute(suite.app.AttributeKeeper, suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.NameKeeper)
@@ -176,7 +181,7 @@ func (suite *SimTestSuite) TestSimulateMsgDeleteDistinctAttribute() {
 	var msg types.MsgDeleteDistinctAttributeRequest
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
-	suite.Require().True(operationMsg.OK)
+	suite.Require().True(operationMsg.OK, "MsgDeleteDistinctAttributeRequest failed %v", operationMsg.Comment)
 	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
 	suite.Require().Equal("example.provenance", msg.Name)
 	suite.Require().Equal(accounts[0].Address.String(), msg.Owner)
@@ -200,6 +205,18 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	}
 
 	return accounts
+}
+
+func GenerateRandomTime(minHours int) time.Time {
+	currentTime := time.Now()
+
+	// Generate a random duration between minHours and 2*minHours
+	randomDuration := time.Duration(rand.Intn(minHours) + minHours)
+
+	// Generate a random time by adding the random duration to the current time
+	randomTime := currentTime.Add(randomDuration)
+
+	return randomTime
 }
 
 func TestSimTestSuite(t *testing.T) {

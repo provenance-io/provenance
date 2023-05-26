@@ -140,26 +140,34 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			"example.attribute",
 			s.account1Str,
 			attributetypes.AttributeType_String,
-			[]byte("example attribute value string")))
+			[]byte("example attribute value string"),
+			nil,
+		))
 	attributeData.Attributes = append(attributeData.Attributes,
 		attributetypes.NewAttribute(
 			"example.attribute.count",
 			s.account1Str,
 			attributetypes.AttributeType_Int,
-			[]byte("2")))
+			[]byte("2"),
+			nil,
+		))
 	for i := 0; i < s.accAttrCount; i++ {
 		attributeData.Attributes = append(attributeData.Attributes,
 			attributetypes.NewAttribute(
 				fmt.Sprintf("example.attribute.%s", toWritten(i)),
 				s.account3Str,
 				attributetypes.AttributeType_Int,
-				[]byte(fmt.Sprintf("%d", i))))
+				[]byte(fmt.Sprintf("%d", i)),
+				nil,
+			))
 		attributeData.Attributes = append(attributeData.Attributes,
 			attributetypes.NewAttribute(
 				"example.attribute.overload",
 				s.account4Str,
 				attributetypes.AttributeType_String,
-				[]byte(toWritten(i))))
+				[]byte(toWritten(i)),
+				nil,
+			))
 	}
 	attributeData.Params.MaxValueLength = 128
 	attributeDataBz, err := cfg.Codec.MarshalJSON(&attributeData)
@@ -312,7 +320,7 @@ func (s *IntegrationTestSuite) TestGetAccountAttributeCmd() {
 		{
 			name:           "should get attribute by name with json output",
 			args:           []string{s.account1Addr.String(), "example.attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String()),
+			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s","expiration_date":null}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String()),
 		},
 		{
 			name: "should get attribute by name with text output",
@@ -321,6 +329,7 @@ func (s *IntegrationTestSuite) TestGetAccountAttributeCmd() {
 attributes:
 - address: %s
   attribute_type: ATTRIBUTE_TYPE_STRING
+  expiration_date: null
   name: example.attribute
   value: ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n
 pagination:
@@ -344,8 +353,6 @@ pagination:
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.GetAccountAttributeCmd()
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -366,7 +373,7 @@ func (s *IntegrationTestSuite) TestScanAccountAttributesCmd() {
 		{
 			name:           "should get attribute by suffix with json output",
 			args:           []string{s.account1Addr.String(), "attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String()),
+			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s","expiration_date":null}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String()),
 		},
 		{
 			name: "should get attribute by suffix with text output",
@@ -375,6 +382,7 @@ func (s *IntegrationTestSuite) TestScanAccountAttributesCmd() {
 attributes:
 - address: %s
   attribute_type: ATTRIBUTE_TYPE_STRING
+  expiration_date: null
   name: example.attribute
   value: ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n
 pagination:
@@ -398,8 +406,6 @@ pagination:
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.ScanAccountAttributesCmd()
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -420,7 +426,7 @@ func (s *IntegrationTestSuite) TestListAccountAttributesCmd() {
 		{
 			name:           "should list all attributes for account with json output",
 			args:           []string{s.account1Addr.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute.count","value":"Mg==","attribute_type":"ATTRIBUTE_TYPE_INT","address":"%s"},{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s"}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String(), s.account1Addr.String()),
+			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute.count","value":"Mg==","attribute_type":"ATTRIBUTE_TYPE_INT","address":"%s","expiration_date":null},{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s","expiration_date":null}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String(), s.account1Addr.String()),
 		},
 		{
 			name: "should list all attributes for account text output",
@@ -429,10 +435,12 @@ func (s *IntegrationTestSuite) TestListAccountAttributesCmd() {
 attributes:
 - address: %s
   attribute_type: ATTRIBUTE_TYPE_INT
+  expiration_date: null
   name: example.attribute.count
   value: Mg==
 - address: %s
   attribute_type: ATTRIBUTE_TYPE_STRING
+  expiration_date: null
   name: example.attribute
   value: ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n
 pagination:
@@ -442,8 +450,6 @@ pagination:
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.ListAccountAttributesCmd()
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -474,8 +480,6 @@ func (s *IntegrationTestSuite) TestGetAttributeParamsCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.GetAttributeParamsCmd()
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -501,8 +505,6 @@ func (s *IntegrationTestSuite) TestAttributeAccountsCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.GetAttributeAccountsCmd()
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -548,6 +550,42 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				s.testnet.Validators[0].Address.String(),
 				"string",
 				"test value",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
+			name: "set attribute, invalid expiration",
+			cmd:  cli.NewAddAccountAttributeCmd(),
+			args: []string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"string",
+				"test value with expiration",
+				"foo",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    true,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
+			name: "set attribute, valid expiration",
+			cmd:  cli.NewAddAccountAttributeCmd(),
+			args: []string{
+				"txtest.attribute",
+				s.testnet.Validators[0].Address.String(),
+				"string",
+				"test value with expiration",
+				"2050-01-15T00:00:00Z",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -611,7 +649,6 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
@@ -769,7 +806,6 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
@@ -883,7 +919,6 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
@@ -976,7 +1011,6 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
@@ -1196,4 +1230,120 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 			require.NotEqual(t, results[i-1], results[i], "no two attributes should be equal here")
 		}
 	})
+}
+
+func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
+
+	testCases := []struct {
+		name         string
+		cmd          *cobra.Command
+		args         []string
+		expectErr    string
+		expectedCode int32
+	}{
+		{
+			name: "bind a new attribute name for delete testing",
+			cmd:  namecli.GetBindNameCmd(),
+			args: []string{
+				"expiration",
+				s.testnet.Validators[0].Address.String(),
+				"attribute",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectedCode: 0,
+		},
+		{
+			name: "add new attribute for updating expire date testing",
+			cmd:  cli.NewAddAccountAttributeCmd(),
+			args: []string{
+				"expiration.attribute",
+				s.account2Addr.String(),
+				"string",
+				"test value",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectedCode: 0,
+		},
+		{
+			name: "update expire date, should fail incorrect address",
+			cmd:  cli.NewUpdateAccountAttributeExpirationCmd(),
+			args: []string{
+				"expiration.attribute",
+				"not-a-address",
+				"string",
+				"test value",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr: `invalid address: must be either an account address or scope metadata address: "not-a-address"`,
+		},
+		{
+			name: "update expire date, should fail incorrect date",
+			cmd:  cli.NewUpdateAccountAttributeExpirationCmd(),
+			args: []string{
+				"expiration.attribute",
+				s.account2Addr.String(),
+				"string",
+				"test value",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr: `unable to parse time "test value" required format is RFC3339 (2006-01-02T15:04:05Z07:00): parsing time "test value" as "2006-01-02T15:04:05Z07:00": cannot parse "test value" as "2006"`,
+		},
+		{
+			name: "update expire date, should succeed",
+			cmd:  cli.NewUpdateAccountAttributeExpirationCmd(),
+			args: []string{
+				"expiration.attribute",
+				s.account2Addr.String(),
+				"test value",
+				"2050-01-15T00:00:00Z",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectedCode: 0,
+		},
+		{
+			name: "update expire date, should succeed removes expiration",
+			cmd:  cli.NewUpdateAccountAttributeExpirationCmd(),
+			args: []string{
+				"expiration.attribute",
+				s.account2Addr.String(),
+				"test value",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+
+			if len(tc.expectErr) > 0 {
+				s.Require().EqualError(err, tc.expectErr)
+			} else {
+				var response sdk.TxResponse
+				s.Assert().NoError(err)
+				s.Assert().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Assert().Equal(tc.expectedCode, int32(response.Code), "")
+			}
+		})
+	}
 }

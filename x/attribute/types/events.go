@@ -1,20 +1,28 @@
 package types
 
-import "encoding/base64"
+import (
+	"encoding/base64"
+	time "time"
+)
 
 const (
-	// The type of event generated when account attributes are added.
+	// EventTypeAttributeAdded emitted when account attributes are added.
 	EventTypeAttributeAdded string = "account_attribute_added"
-	// The type of event generated when account attributes are updated.
+	// EventTypeAttributeUpdated emitted when account attributes are updated.
 	EventTypeAttributeUpdated string = "account_attribute_updated"
-	// The type of event generated when account attributes are removed.
+	// EventTypeAttributeUpdated emitted when a attribute's expiration date is updated.
+	EventTypeAttributeExpirationUpdated string = "account_attribute_expiration_updated"
+	// EventTypeAttributeDeleted emitted when account attributes are removed.
 	EventTypeAttributeDeleted string = "account_attribute_deleted"
-	// The type of event generated when a distinct account attribute is deleted.
+	// EventTypeAttributeDistinctDeleted emitted when a distinct account attribute is deleted.
 	EventTypeAttributeDistinctDeleted string = "account_attribute_distinct_deleted"
+	// EventTypeDeletedExpired emitted when attributes have expired and been deleted in begin blocker
+	EventTypeDeletedExpired string = "attribute_deleted_expired"
 
 	AttributeKeyAttribute      string = "attribute"
 	AttributeKeyNameAttribute  string = "attribute_name"
 	AttributeKeyAccountAddress string = "account_address"
+	AttributeKeyTotalExpired   string = "total_expired_deleted"
 
 	// EventTelemetryKeyAdd add telemetry metrics key
 	EventTelemetryKeyAdd string = "add"
@@ -39,12 +47,17 @@ const (
 )
 
 func NewEventAttributeAdd(attribute Attribute, owner string) *EventAttributeAdd {
+	var expirationDate string
+	if attribute.ExpirationDate != nil {
+		expirationDate = attribute.ExpirationDate.String()
+	}
 	return &EventAttributeAdd{
-		Name:    attribute.Name,
-		Value:   base64.StdEncoding.EncodeToString(attribute.GetValue()),
-		Type:    attribute.AttributeType.String(),
-		Account: attribute.Address,
-		Owner:   owner,
+		Name:       attribute.Name,
+		Value:      base64.StdEncoding.EncodeToString(attribute.GetValue()),
+		Type:       attribute.AttributeType.String(),
+		Account:    attribute.Address,
+		Owner:      owner,
+		Expiration: expirationDate,
 	}
 }
 
@@ -57,6 +70,24 @@ func NewEventAttributeUpdate(originalAttribute Attribute, updateAttribute Attrib
 		UpdateType:    updateAttribute.AttributeType.String(),
 		Account:       originalAttribute.Address,
 		Owner:         owner,
+	}
+}
+
+func NewEventAttributeExpirationUpdate(attribute Attribute, originalExpiration *time.Time, owner string) *EventAttributeExpirationUpdate {
+	var original, updated string
+	if attribute.ExpirationDate != nil {
+		updated = attribute.ExpirationDate.String()
+	}
+	if originalExpiration != nil {
+		original = originalExpiration.String()
+	}
+	return &EventAttributeExpirationUpdate{
+		Name:               attribute.Name,
+		Value:              base64.StdEncoding.EncodeToString(attribute.GetValue()),
+		Account:            attribute.Address,
+		Owner:              owner,
+		OriginalExpiration: original,
+		UpdatedExpiration:  updated,
 	}
 }
 
@@ -74,5 +105,19 @@ func NewEventDistinctAttributeDelete(name string, value string, account string, 
 		Value:   value,
 		Owner:   owner,
 		Account: account,
+	}
+}
+
+func NewEventAttributeExpired(attribute Attribute) *EventAttributeExpired {
+	var expiredTime string
+	if attribute.ExpirationDate != nil {
+		expiredTime = attribute.ExpirationDate.String()
+	}
+
+	return &EventAttributeExpired{
+		Name:       attribute.Name,
+		ValueHash:  string(attribute.Hash()),
+		Account:    attribute.Address,
+		Expiration: expiredTime,
 	}
 }
