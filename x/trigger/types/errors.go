@@ -13,4 +13,6 @@ var (
 	ErrTriggerGasLimitExceeded = cerrs.Register(ModuleName, 7, "gas limit execeeded for trigger")
 	ErrInvalidTriggerAuthority = cerrs.Register(ModuleName, 8, "signer does not have authority to destroy trigger")
 	ErrNoTriggerEvent          = cerrs.Register(ModuleName, 9, "trigger does not have event")
+	ErrInvalidBlockHeight      = cerrs.Register(ModuleName, 10, "block height has already passed")
+	ErrInvalidBlockTime        = cerrs.Register(ModuleName, 11, "block time has already passed")
 )

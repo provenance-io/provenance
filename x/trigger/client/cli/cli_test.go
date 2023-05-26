@@ -7,10 +7,12 @@ import (
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -282,6 +284,77 @@ func (s *IntegrationTestSuite) TestQueryTriggers() {
 					triggerIDs = append(triggerIDs, rp.Id)
 				}
 				s.ElementsMatch(tc.expectedIds, triggerIDs)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		expectedIds  []uint64
+	}{
+		{
+			name: "create block height trigger",
+			args: []string{
+				"900",
+			},
+			expectErrMsg: "",
+			expectedCode: 0,
+			expectedIds:  []uint64{7},
+		},
+		/*{
+			name: "create invalid block height trigger for past block",
+			args: []string{
+				"1",
+			},
+			expectErrMsg: "",
+			expectedCode: types.ErrInvalidBlockHeight.ABCICode(),
+			expectedIds:  []uint64{},
+		},*/
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.network.Validators[0].ClientCtx
+
+			message := fmt.Sprintf(`
+			{
+				"message": {
+					"@type": "/cosmos.bank.v1beta1.MsgSend",
+					"from_address": "%s",
+					"to_address": "%s",
+					"amount": [
+						{
+							"denom": "nhash",
+							"amount": "10"
+						}
+					]
+				}
+			}`, s.accountAddresses[0].String(), s.accountAddresses[1].String())
+			messageFile := sdktestutil.WriteToNewTempFile(s.T(), message)
+
+			args := []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.network.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			}
+			tc.args = append(tc.args, messageFile.Name())
+			tc.args = append(tc.args, args...)
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddBlockHeightTrigger(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			var response sdk.TxResponse
+			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
+			if len(tc.expectErrMsg) > 0 {
+				s.Assert().EqualError(err, tc.expectErrMsg)
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().NoError(marshalErr, out.String())
 			}
 		})
 	}
