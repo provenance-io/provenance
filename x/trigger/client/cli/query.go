@@ -2,11 +2,13 @@ package cli
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -55,6 +57,12 @@ func GetTriggersCmd() *cobra.Command {
 				return queryTriggerByID(clientCtx, queryClient, arg0)
 			}
 
+			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			if err != nil {
+				return err
+			}
+			request.Pagination = pageReq
+
 			var response *types.QueryTriggersResponse
 			if response, err = queryClient.Triggers(
 				context.Background(),
@@ -91,4 +99,18 @@ func queryTriggerByID(client client.Context, queryClient types.QueryClient, arg 
 	}
 
 	return client.PrintProto(response)
+}
+
+// sdk ReadPageRequest expects binary, but we encoded to base64 in our marshaller
+func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
+	encoded, err := flagSet.GetString(flags.FlagPageKey)
+	if err != nil {
+		panic(err.Error())
+	}
+	raw, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		panic(err.Error())
+	}
+	_ = flagSet.Set(flags.FlagPageKey, string(raw))
+	return flagSet
 }
