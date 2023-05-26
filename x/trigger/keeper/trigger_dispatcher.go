@@ -13,6 +13,9 @@ import (
 
 // ProcessTriggers Reads triggers from queues and attempts to run them.
 func (k Keeper) ProcessTriggers(ctx sdk.Context) {
+	// TODO - We have to resolve a big issue which is how much gas to allocate for the begin block?
+	// Maybe instead of how many items. It's how much gas, and we use GetGasLimit to decide if we should pull another
+	// This would make the most sense because otherwise what's the point of just taking x items from the queue?
 	for !k.QueueIsEmpty(ctx) {
 		item := k.QueuePeek(ctx)
 		k.Dequeue(ctx)
