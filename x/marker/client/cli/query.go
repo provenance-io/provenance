@@ -289,7 +289,7 @@ func AccountDataCmd() *cobra.Command {
 			denom := strings.TrimSpace(args[0])
 
 			req := &types.QueryAccountDataRequest{Denom: denom}
-			resp, err := queryClient.AccountData(cmd.Context(), req)
+			resp, err := queryClient.AccountData(context.Background(), req)
 			if err != nil {
 				return fmt.Errorf("failed to query account data for marker %q: %w", denom, err)
 			}
