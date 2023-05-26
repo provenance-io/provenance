@@ -3,6 +3,7 @@ package types
 import (
 	fmt "fmt"
 
+	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
@@ -82,5 +83,22 @@ func (gs GenesisState) Validate() error {
 		triggerMap[trigger.GetId()] = true
 	}
 
+	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (gs GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, t := range gs.Triggers {
+		err := t.UnpackInterfaces(unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	for _, q := range gs.QueuedTriggers {
+		err := q.UnpackInterfaces(unpacker)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
