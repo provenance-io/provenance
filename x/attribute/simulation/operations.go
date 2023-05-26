@@ -16,8 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
-	keeper "github.com/provenance-io/provenance/x/attribute/keeper"
-	types "github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/provenance-io/provenance/x/attribute/keeper"
+	"github.com/provenance-io/provenance/x/attribute/types"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
@@ -94,25 +94,12 @@ func SimulateMsgAddAttribute(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		var records []nametypes.NameRecord
-		if err := nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
-			records = append(records, record)
-			return nil
-		}); err != nil {
+		randomRecord, simAccount, found, err := getRandomNameRecord(r, ctx, &nk, accs)
+		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "iterator of existing name records failed"), nil, err
 		}
-
-		if len(records) == 0 {
+		if !found {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "no name records available to create under"), nil, nil
-		}
-
-		found := false
-		var simAccount simtypes.Account
-		var randomRecord nametypes.NameRecord
-
-		for !found {
-			randomRecord = records[r.Intn(len(records))]
-			simAccount, found = simtypes.FindAccount(accs, mustGetAddress(randomRecord.Address))
 		}
 
 		t := types.AttributeType(r.Intn(9))
@@ -133,34 +120,18 @@ func SimulateMsgUpdateAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		var attributes []types.Attribute
-		if err := k.IterateRecords(ctx, types.AttributeKeyPrefix, func(attribute types.Attribute) error {
-			attributes = append(attributes, attribute)
-			return nil
-		}); err != nil {
+		randomAttribute, simAccount, found, err := getRandomAttribute(r, ctx, k, &nk, accs)
+		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), "iterator of existing attributes failed"), nil, err
 		}
-
-		if len(attributes) == 0 {
+		if !found {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), "no attributes available to delete"), nil, nil
 		}
 
-		randomAttribute := attributes[r.Intn(len(attributes))]
-
-		// the name associated with this attribute may no longer exist so use the attribute account as a backup account for "owner"
-		var ownerAddress string
-		nr, err := nk.GetRecordByName(ctx, randomAttribute.Name)
-		if err == nil {
-			ownerAddress = nr.Address
-		} else {
-			ownerAddress = randomAttribute.Address
-		}
-
 		t := types.AttributeType(r.Intn(9))
-		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(ownerAddress))
 		msg := types.NewMsgUpdateAttributeRequest(
 			randomAttribute.GetAddress(),
-			mustGetAddress(ownerAddress),
+			simAccount.Address,
 			randomAttribute.Name,
 			randomAttribute.Value,
 			getRandomValueOfType(r, t),
@@ -177,31 +148,15 @@ func SimulateMsgDeleteAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		var attributes []types.Attribute
-		if err := k.IterateRecords(ctx, types.AttributeKeyPrefix, func(attribute types.Attribute) error {
-			attributes = append(attributes, attribute)
-			return nil
-		}); err != nil {
+		randomAttribute, simAccount, found, err := getRandomAttribute(r, ctx, k, &nk, accs)
+		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), "iterator of existing attributes failed"), nil, err
 		}
-
-		if len(attributes) == 0 {
+		if !found {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), "no attributes available to delete"), nil, nil
 		}
 
-		randomAttribute := attributes[r.Intn(len(attributes))]
-
-		// the name associated with this attribute may no longer exist so use the attribute account as a backup account for "owner"
-		var ownerAddress string
-		nr, err := nk.GetRecordByName(ctx, randomAttribute.Name)
-		if err == nil {
-			ownerAddress = nr.Address
-		} else {
-			ownerAddress = randomAttribute.Address
-		}
-
-		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(ownerAddress))
-		msg := types.NewMsgDeleteAttributeRequest(randomAttribute.Address, mustGetAddress(ownerAddress), randomAttribute.Name)
+		msg := types.NewMsgDeleteAttributeRequest(randomAttribute.Address, simAccount.Address, randomAttribute.Name)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
 	}
@@ -212,31 +167,15 @@ func SimulateMsgDeleteDistinctAttribute(k keeper.Keeper, ak authkeeper.AccountKe
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		var attributes []types.Attribute
-		if err := k.IterateRecords(ctx, types.AttributeKeyPrefix, func(attribute types.Attribute) error {
-			attributes = append(attributes, attribute)
-			return nil
-		}); err != nil {
+		randomAttribute, simAccount, found, err := getRandomAttribute(r, ctx, k, &nk, accs)
+		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), "iterator of existing attributes failed"), nil, err
 		}
-
-		if len(attributes) == 0 {
+		if !found {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), "no attributes available to delete distinct"), nil, nil
 		}
 
-		randomAttribute := attributes[r.Intn(len(attributes))]
-
-		// the name associated with this attribute may no longer exist so use the attribute account as a backup account for "owner"
-		var ownerAddress string
-		nr, err := nk.GetRecordByName(ctx, randomAttribute.Name)
-		if err == nil {
-			ownerAddress = nr.Address
-		} else {
-			ownerAddress = randomAttribute.Address
-		}
-
-		simAccount, _ := simtypes.FindAccount(accs, mustGetAddress(ownerAddress))
-		msg := types.NewMsgDeleteDistinctAttributeRequest(randomAttribute.Address, mustGetAddress(ownerAddress), randomAttribute.Name, randomAttribute.Value)
+		msg := types.NewMsgDeleteDistinctAttributeRequest(randomAttribute.Address, simAccount.Address, randomAttribute.Name, randomAttribute.Value)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
 	}
@@ -263,14 +202,6 @@ func getRandomValueOfType(r *rand.Rand, t types.AttributeType) []byte {
 		return nil
 	}
 	return nil
-}
-
-func mustGetAddress(addr string) sdk.AccAddress {
-	a, err := sdk.AccAddressFromBech32(addr)
-	if err != nil {
-		panic(err)
-	}
-	return a
 }
 
 // Dispatch sends an operation to the chain using a given account/funds on account for fees.  Failures on the server side
@@ -319,4 +250,64 @@ func Dispatch(
 	}
 
 	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), nil, nil
+}
+
+// getRandomNameRecord finds a random name record owned by a known account.
+// An error is only returned if there was a problem iterating records.
+func getRandomNameRecord(r *rand.Rand, ctx sdk.Context, nk types.NameKeeper, accs []simtypes.Account) (nametypes.NameRecord, simtypes.Account, bool, error) {
+	var randomRecord nametypes.NameRecord
+	var simAccount simtypes.Account
+
+	var records []nametypes.NameRecord
+	err := nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
+		records = append(records, record)
+		return nil
+	})
+	if err != nil || len(records) == 0 {
+		return randomRecord, simAccount, false, err
+	}
+
+	r.Shuffle(len(records), func(i, j int) {
+		records[i], records[j] = records[j], records[i]
+	})
+
+	found := false
+	for i := 0; i < len(records) && !found; i++ {
+		randomRecord = records[i]
+		simAccount, found = simtypes.FindAccount(accs, sdk.MustAccAddressFromBech32(randomRecord.Address))
+	}
+
+	return randomRecord, simAccount, found, nil
+}
+
+// getRandomAttribute finds a random attribute owned by a known account.
+// An error is only returned if there was a problem iterating records.
+// The sim account returned is the one that owns the name record for the attribute.
+func getRandomAttribute(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, nk types.NameKeeper, accs []simtypes.Account) (types.Attribute, simtypes.Account, bool, error) {
+	var randomAttribute types.Attribute
+	var simAccount simtypes.Account
+
+	var attrs []types.Attribute
+	err := k.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record types.Attribute) error {
+		attrs = append(attrs, record)
+		return nil
+	})
+	if err != nil || len(attrs) == 0 {
+		return randomAttribute, simAccount, false, err
+	}
+
+	r.Shuffle(len(attrs), func(i, j int) {
+		attrs[i], attrs[j] = attrs[j], attrs[i]
+	})
+
+	found := false
+	for i := 0; i < len(attrs) && !found; i++ {
+		randomAttribute = attrs[i]
+		nr, err := nk.GetRecordByName(ctx, randomAttribute.Name)
+		if err == nil {
+			simAccount, found = simtypes.FindAccount(accs, sdk.MustAccAddressFromBech32(nr.Address))
+		}
+	}
+
+	return randomAttribute, simAccount, found, nil
 }
