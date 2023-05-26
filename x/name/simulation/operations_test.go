@@ -149,7 +149,9 @@ func (s *SimTestSuite) TestSimulateMsgDeleteName() {
 	r := rand.New(src)
 	accounts := s.getTestingAccounts(r, 1)
 
-	name := "deleteme"
+	rootname := "deletemeroot"
+	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, rootname, accounts[0].Address, false), "SetNameRecord(%q)", rootname)
+	name := "deleteme.deletemeroot"
 	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q)", name)
 
 	// begin a new block

@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"math/rand"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -76,7 +77,7 @@ func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankk
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		parentRecord, parentOwner, found, err := getRandomRecord(r, ctx, k, accs)
+		parentRecord, parentOwner, found, err := getRandomRecord(r, ctx, k, accs, true)
 		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "iterator of existing records failed"), nil, err
 		}
@@ -102,7 +103,7 @@ func SimulateMsgDeleteName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk ban
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		randomRecord, simAccount, found, err := getRandomRecord(r, ctx, k, accs)
+		randomRecord, simAccount, found, err := getRandomRecord(r, ctx, k, accs, false)
 		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "iterator of existing records failed"), nil, err
 		}
@@ -121,7 +122,7 @@ func SimulateMsgModifyName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk ban
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		randomRecord, simAccount, found, err := getRandomRecord(r, ctx, k, accs)
+		randomRecord, simAccount, found, err := getRandomRecord(r, ctx, k, accs, true)
 		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "iterator of existing records failed"), nil, err
 		}
@@ -187,13 +188,15 @@ func Dispatch(
 
 // getRandomRecord finds a random record owned by a known account.
 // An error is only returned if there was a problem iterating records.
-func getRandomRecord(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, accs []simtypes.Account) (types.NameRecord, simtypes.Account, bool, error) {
+func getRandomRecord(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, accs []simtypes.Account, rootOK bool) (types.NameRecord, simtypes.Account, bool, error) {
 	var randomRecord types.NameRecord
 	var simAccount simtypes.Account
 
 	var records []types.NameRecord
 	err := k.IterateRecords(ctx, types.NameKeyPrefix, func(record types.NameRecord) error {
-		records = append(records, record)
+		if rootOK || strings.Contains(record.Name, ".") {
+			records = append(records, record)
+		}
 		return nil
 	})
 	if err != nil || len(records) == 0 {
