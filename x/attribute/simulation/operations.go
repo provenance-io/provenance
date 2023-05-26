@@ -287,22 +287,22 @@ func getRandomAttribute(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, nk types
 	var randomAttribute types.Attribute
 	var simAccount simtypes.Account
 
-	var attrs []types.Attribute
-	err := k.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record types.Attribute) error {
-		attrs = append(attrs, record)
+	var attributes []types.Attribute
+	err := k.IterateRecords(ctx, types.AttributeKeyPrefix, func(attribute types.Attribute) error {
+		attributes = append(attributes, attribute)
 		return nil
 	})
-	if err != nil || len(attrs) == 0 {
+	if err != nil || len(attributes) == 0 {
 		return randomAttribute, simAccount, false, err
 	}
 
-	r.Shuffle(len(attrs), func(i, j int) {
-		attrs[i], attrs[j] = attrs[j], attrs[i]
+	r.Shuffle(len(attributes), func(i, j int) {
+		attributes[i], attributes[j] = attributes[j], attributes[i]
 	})
 
 	found := false
-	for i := 0; i < len(attrs) && !found; i++ {
-		randomAttribute = attrs[i]
+	for i := 0; i < len(attributes) && !found; i++ {
+		randomAttribute = attributes[i]
 		nr, err := nk.GetRecordByName(ctx, randomAttribute.Name)
 		if err == nil {
 			simAccount, found = simtypes.FindAccount(accs, sdk.MustAccAddressFromBech32(nr.Address))
