@@ -57,6 +57,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Switch to using a `SendRestrictionFn` for restricting sends of marker funds [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
 * Create `rust` upgrade handlers [PR 1549](https://github.com/provenance-io/provenance/pull/1549).
 
+### Bug Fixes
+
+* Bring back some proto messages that were deleted but still needed for historical queries [#1554](https://github.com/provenance-io/provenance/issues/1554).
+
 ### API Breaking
 
 * Add marker deposit access check for sends to marker escrow account.  Will break any current address that is sending to the
