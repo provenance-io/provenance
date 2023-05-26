@@ -11,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -82,10 +84,8 @@ func (s *KeeperTestSuite) TestSetup() {
 		s.Require().Equal(uint32(2), p.MinSegmentLength)
 		s.Require().Equal(uint32(16), p.MaxSegmentLength)
 	})
-	gen := s.app.NameKeeper.ExportGenesis(s.ctx)
-	out, err := yaml.Marshal(gen)
-	s.Require().NoError(err)
-	s.Require().Equal(fmt.Sprintf(`params:
+
+	expOut := fmt.Sprintf(`params:
   maxsegmentlength: 16
   minsegmentlength: 2
   maxnamelevels: 16
@@ -97,7 +97,16 @@ bindings:
 - name: example.name
   address: %[1]s
   restricted: false
-`, s.user1Addr.String()), string(out))
+- name: %[2]s
+  address: %[3]s
+  restricted: true
+`,
+		s.user1Addr.String(), attrtypes.AccountDataName, authtypes.NewModuleAddress(attrtypes.ModuleName).String())
+
+	gen := s.app.NameKeeper.ExportGenesis(s.ctx)
+	out, err := yaml.Marshal(gen)
+	s.Require().NoError(err)
+	s.Require().Equal(expOut, string(out))
 }
 
 func (s *KeeperTestSuite) TestNameNormalization() {
@@ -304,6 +313,11 @@ func (s *KeeperTestSuite) TestGetAuthority() {
 
 func (s *KeeperTestSuite) TestIterateRecord() {
 	s.Run("iterate name's", func() {
+		expRecords := nametypes.NameRecords{
+			nametypes.NewNameRecord("name", s.user1Addr, false),
+			nametypes.NewNameRecord("example.name", s.user1Addr, false),
+			nametypes.NewNameRecord(attrtypes.AccountDataName, authtypes.NewModuleAddress(attrtypes.ModuleName), true),
+		}
 		records := nametypes.NameRecords{}
 		// Callback func that adds records to genesis state.
 		appendToRecords := func(record nametypes.NameRecord) error {
@@ -312,8 +326,8 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 		}
 		// Collect and return genesis state.
 		err := s.app.NameKeeper.IterateRecords(s.ctx, nametypes.NameKeyPrefix, appendToRecords)
-		s.Require().NoError(err)
-		s.Require().Equal(2, len(records))
+		s.Require().NoError(err, "IterateRecords error")
+		s.Require().Equal(expRecords, records, "records iterated over")
 	})
 
 }
