@@ -10,7 +10,6 @@ import (
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -71,6 +70,8 @@ var upgrades = map[string]appUpgrade{
 
 			removeP8eMemorializeContractFee(ctx, app)
 
+			fixNameIndexEntries(ctx, app)
+
 			return vm, nil
 		},
 	},
@@ -85,6 +86,8 @@ var upgrades = map[string]appUpgrade{
 			// No need to call addGovV1SubmitFee in here as mainnet already has it defined.
 
 			removeP8eMemorializeContractFee(ctx, app)
+
+			fixNameIndexEntries(ctx, app)
 
 			return vm, nil
 		},
@@ -224,4 +227,11 @@ func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
 	} else {
 		ctx.Logger().Info(fmt.Sprintf("Successfully removed message fee for %q with amount %q.", fee.MsgTypeUrl, fee.AdditionalFee.String()))
 	}
+}
+
+// fixNameIndexEntries fixes the name module's address to name index entries.
+func fixNameIndexEntries(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Fixing name module store index entries.")
+	app.NameKeeper.DeleteInvalidAddressIndexEntries(ctx)
+	ctx.Logger().Info("Done fixing name module store index entries.")
 }

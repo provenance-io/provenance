@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"bytes"
+	"fmt"
 	"strings"
 	"unicode"
 
@@ -340,4 +342,67 @@ func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, res
 
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// DeleteInvalidAddressIndexEntries is only for the rust upgrade. It goes over all the address -> name entries and
+// deletes any that are no longer accurate.
+func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
+	logger := k.Logger(ctx)
+	logger.Info("Checking address -> name index entries.")
+
+	keepCount := 0
+	var toDelete [][]byte
+
+	extractNameKey := func(key []byte) []byte {
+		// byte 1 is the type byte (0x05), it's ignored here.
+		// The 2nd byte is the length of the address that immediately follows it.
+		// The name key starts directly after the address, and is the rest of the key.
+		addrLen := int(key[1])
+		nameKeyStart := addrLen + 2
+		return key[nameKeyStart:]
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.AddressKeyPrefix)
+	defer func() {
+		if iter != nil {
+			iter.Close()
+		}
+	}()
+
+	for ; iter.Valid(); iter.Next() {
+		// If the key points to a non-existent name, delete it.
+		key := iter.Key()
+		nameKey := extractNameKey(key)
+		if !store.Has(nameKey) {
+			toDelete = append(toDelete, key)
+			continue
+		}
+
+		// If the index value and main value are different, delete the index.
+		indValBz := iter.Value()
+		mainValBz := store.Get(nameKey)
+		if !bytes.Equal(indValBz, mainValBz) {
+			toDelete = append(toDelete, key)
+			continue
+		}
+
+		keepCount++
+	}
+
+	iter.Close()
+	iter = nil
+
+	if len(toDelete) == 0 {
+		logger.Info(fmt.Sprintf("Done checking address -> name index entries. All %d entries are valid", keepCount))
+		return
+	}
+
+	logger.Info(fmt.Sprintf("Found %d invalid address -> name index entries. Deleting them now.", len(toDelete)))
+
+	for _, key := range toDelete {
+		store.Delete(key)
+	}
+
+	logger.Info(fmt.Sprintf("Done checking address -> name index entries. Deleted %d invalid entries and kept %d valid entries.", len(toDelete), keepCount))
 }
