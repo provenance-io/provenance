@@ -1003,8 +1003,8 @@ github.com/prometheus/procfs v0.8.0/go.mod h1:z7EfXMXOkbkqb9IINtpCn86r/to3BnA0ua
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
 github.com/provenance-io/cosmos-sdk v0.46.10-pio-4 h1:LGLvhBngzXrNS6Q1sOqrqRMTuVbI76LK9VLxsHAuZ1Q=
 github.com/provenance-io/cosmos-sdk v0.46.10-pio-4/go.mod h1:bBmYwqCTndsFE+QQs2zdIoZ3f86jEi0BmDVm6unmf3k=
-github.com/provenance-io/ibc-go/v6 v6.1.0-pio-1 h1:2R9CS/FFGaOoPsdH+/8u+voFNmZqqkD6NuKsmnxMXLo=
-github.com/provenance-io/ibc-go/v6 v6.1.0-pio-1/go.mod h1:CY3zh2HLfetRiW8LY6kVHMATe90Wj/UOoY8T6cuB0is=
+github.com/provenance-io/ibc-go/v6 v6.1.1-pio-1 h1:jeNhAAkH7wxi0jnVo/vLtlaURU9ghCITiGF0Jzqjf7o=
+github.com/provenance-io/ibc-go/v6 v6.1.1-pio-1/go.mod h1:NL17FpFAaWjRFVb1T7LUKuOoMSsATPpu+Icc4zL5/Ik=
 github.com/provenance-io/wasmd v0.30.0-pio-4 h1:tZzcqevPu8UoyW8wexN0F2cwS3WL+GmAsZcCcHZ+Vp8=
 github.com/provenance-io/wasmd v0.30.0-pio-4/go.mod h1:wEMWibeuAK2iboddVly0iVyPDRnHJJen7hf8shsFNtI=
 github.com/rakyll/statik v0.1.7 h1:OF3QCZUuyPxuGEP7B4ypUa7sB/iHtqOTDYZXGM8KOdQ=

@@ -11,7 +11,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.46.10
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/ibc-go/v6 v6.1.0
+	github.com/cosmos/ibc-go/v6 v6.1.1
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.0
@@ -187,4 +187,4 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-4
 
 // TODO: Required for IBC Transfer Module. Remove this when they patch it to include our changes. https://github.com/provenance-io/provenance/issues/1100
-replace github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.1.0-pio-1
+replace github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.1.1-pio-1
