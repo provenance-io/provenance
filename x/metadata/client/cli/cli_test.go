@@ -1934,9 +1934,8 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 				require.NoError(t, umErr, "%s UnmarshalJSON error", cmdName)
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				assert.Equal(t, tc.expectedCode, txResp.Code, "%s response code", cmdName)
-				// Note: If the above is failing because a 0 is expected, but it's getting a 1,
-				//       it might mean that the keeper method is returning an error.
+				assert.Equal(t, int32(tc.expectedCode), int32(txResp.Code), "%s response code", cmdName)
+				// Note: If the above is failing because a 0 is expected, it might mean that the keeper method is returning an error.
 
 				if t.Failed() {
 					t.Logf("tx:\n%v\n", txResp)
@@ -2239,7 +2238,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 1,
+			false, "", &sdk.TxResponse{}, 18,
 		},
 		{
 			name: "should fail to write scope with optional party but without rollup",
@@ -3177,9 +3176,9 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 	specificationID := metadatatypes.RecordSpecMetadataAddress(contractSpecUUID, recordName)
 	testCases := []txCmdTestCase{
 		{
-			"setup test with a record specification owned by signer",
-			addConractSpecCmd,
-			[]string{
+			name: "setup test with a record specification owned by signer",
+			cmd:  addConractSpecCmd,
+			args: []string{
 				contractSpecID.String(),
 				s.accountAddrStr,
 				"owner",
@@ -3190,15 +3189,15 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			0,
+			expectErr:    false,
+			expectErrMsg: "",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"should successfully add record specification",
-			cmd,
-			[]string{
+			name: "should successfully add record specification",
+			cmd:  cmd,
+			args: []string{
 				specificationID.String(),
 				recordName,
 				"record1,typename1,hashvalue",
@@ -3210,14 +3209,15 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{}, 0,
+			expectErr:    false,
+			expectErrMsg: "",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"should successfully add record specification",
-			cmd,
-			[]string{
+			name: "should successfully add record specification",
+			cmd:  cmd,
+			args: []string{
 				specificationID.String(),
 				recordName,
 				"record1,typename1,hashvalue",
@@ -3229,9 +3229,10 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{}, 0,
+			expectErr:    false,
+			expectErrMsg: "",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
 			name: "should fail to add record specification, bad party type",
@@ -3248,14 +3249,15 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
+			expectErr:    true,
 			expectErrMsg: `unknown party type: "badpartytype"`,
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
-			"should fail to add record specification, validate basic fail",
-			cmd,
-			[]string{
+			name: "should fail to add record specification, validate basic fail",
+			cmd:  cmd,
+			args: []string{
 				specificationID.String(),
 				"",
 				"record1,typename1,hashvalue;record2,typename2,recspec1q5p7xh9vtktyc9ynp25ydq4cycqp3tp7wdplq95fp3gsaylex5npzlhnhp6",
@@ -3267,14 +3269,15 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			"record specification name cannot be empty",
-			&sdk.TxResponse{}, 0,
+			expectErr:    true,
+			expectErrMsg: "record specification name cannot be empty",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"should fail to add record specification, fail parsing inputs too few values",
-			cmd,
-			[]string{
+			name: "should fail to add record specification, fail parsing inputs too few values",
+			cmd:  cmd,
+			args: []string{
 				specificationID.String(),
 				recordName,
 				"record1,typename1;record2,typename2,hashvalue",
@@ -3286,14 +3289,15 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			`invalid input specification "record1,typename1": expected 3 parts, have 2`,
-			&sdk.TxResponse{}, 0,
+			expectErr:    true,
+			expectErrMsg: `invalid input specification "record1,typename1": expected 3 parts, have 2`,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"should fail to add record specification, incorrect result type",
-			cmd,
-			[]string{
+			name: "should fail to add record specification, incorrect result type",
+			cmd:  cmd,
+			args: []string{
 				specificationID.String(),
 				recordName,
 				"record1,typename1,hashvalue",
@@ -3305,14 +3309,15 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			"record specification result type cannot be unspecified",
-			&sdk.TxResponse{}, 0,
+			expectErr:    true,
+			expectErrMsg: "record specification result type cannot be unspecified",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"should fail to add record specification, incorrect signer format",
-			cmd,
-			[]string{
+			name: "should fail to add record specification, incorrect signer format",
+			cmd:  cmd,
+			args: []string{
 				specificationID.String(),
 				recordName,
 				"record1,typename1,hashvalue",
@@ -3325,42 +3330,45 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			"decoding bech32 failed: invalid separator index -1",
-			&sdk.TxResponse{}, 0,
+			expectErr:    true,
+			expectErrMsg: "decoding bech32 failed: invalid separator index -1",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"should fail to delete record specification, incorrect id",
-			deleteRecordSpecCmd,
-			[]string{
+			name: "should fail to delete record specification, incorrect id",
+			cmd:  deleteRecordSpecCmd,
+			args: []string{
 				"incorrect-id",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			"decoding bech32 failed: invalid separator index -1",
-			&sdk.TxResponse{}, 0,
+			expectErr:    true,
+			expectErrMsg: "decoding bech32 failed: invalid separator index -1",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"should fail to delete record specification, not a record specification",
-			deleteRecordSpecCmd,
-			[]string{
+			name: "should fail to delete record specification, not a record specification",
+			cmd:  deleteRecordSpecCmd,
+			args: []string{
 				contractSpecID.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			fmt.Sprintf("invalid contract specification id: %v", contractSpecID.String()),
-			&sdk.TxResponse{}, 0,
+			expectErr:    true,
+			expectErrMsg: fmt.Sprintf("invalid contract specification id: %v", contractSpecID.String()),
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"should successfully delete record specification",
-			deleteRecordSpecCmd,
-			[]string{
+			name: "should successfully delete record specification",
+			cmd:  deleteRecordSpecCmd,
+			args: []string{
 				specificationID.String(),
 				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.accountAddrStr),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -3368,14 +3376,15 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{}, 0,
+			expectErr:    false,
+			expectErrMsg: "",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"should fail to delete record specification that does not exist",
-			deleteRecordSpecCmd,
-			[]string{
+			name: "should fail to delete record specification that does not exist",
+			cmd:  deleteRecordSpecCmd,
+			args: []string{
 				specificationID.String(),
 				fmt.Sprintf("--%s=%s", cli.FlagSigners, s.accountAddrStr),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -3383,9 +3392,10 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{}, 1,
+			expectErr:    false,
+			expectErrMsg: "",
+			respType:     &sdk.TxResponse{},
+			expectedCode: 38,
 		},
 	}
 
