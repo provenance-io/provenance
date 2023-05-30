@@ -102,6 +102,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.CreateTrigger(2, s.accountAddresses[1].String(), &triggertypes.BlockHeightEvent{BlockHeight: 100}, &triggertypes.MsgDestroyTriggerRequest{Id: 4, Authority: s.accountAddresses[1].String()}),
 		s.CreateTrigger(3, s.accountAddresses[0].String(), &triggertypes.BlockHeightEvent{BlockHeight: 1000}, &triggertypes.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 		s.CreateTrigger(4, s.accountAddresses[1].String(), &triggertypes.BlockHeightEvent{BlockHeight: 1000}, &triggertypes.MsgDestroyTriggerRequest{Id: 2, Authority: s.accountAddresses[1].String()}),
+		s.CreateTrigger(7, s.accountAddresses[0].String(), &triggertypes.BlockHeightEvent{BlockHeight: 1000}, &triggertypes.MsgDestroyTriggerRequest{Id: 2, Authority: s.accountAddresses[1].String()}),
 	}
 	s.gasLimits = []triggertypes.GasLimit{
 		{
@@ -126,6 +127,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		},
 		{
 			TriggerId: 6,
+			Amount:    20000,
+		},
+		{
+			TriggerId: 7,
 			Amount:    20000,
 		},
 	}
@@ -304,7 +309,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			fileContent:  "",
 			expectErrMsg: "",
 			expectedCode: 0,
-			expectedIds:  []uint64{7},
+			expectedIds:  []uint64{8},
 		},
 		{
 			name:         "create invalid block height trigger for past block",
@@ -314,30 +319,72 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			expectedCode: types.ErrInvalidBlockHeight.ABCICode(),
 			expectedIds:  []uint64{},
 		},
-		/*{
-			name:             "invalid file format",
-			height:           "1",
-			fileContent: "",
-			expectErrMsg:     "",
-			expectedCode:     0,
-			expectedIds:      []uint64{7},
-		},*/
-		/*{
-			name:             "invalid message format",
-			height:           "1",
-			fileContent: "",
-			expectErrMsg:     "",
-			expectedCode:     0,
-			expectedIds:      []uint64{7},
-		},*/
-		/*{
-			name:             "unsupported action",
-			height:           "1",
-			fileContent: "",
-			expectErrMsg:     "",
-			expectedCode:     0,
-			expectedIds:      []uint64{7},
-		},*/
+		{
+			name:         "invalid file format",
+			height:       "1",
+			fileContent:  "abc",
+			expectErrMsg: "unable to parse message file",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
+		{
+			name:         "bad height",
+			height:       "abc",
+			fileContent:  "",
+			expectErrMsg: "invalid block height: abc",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
+		{
+			name:         "invalid message format",
+			height:       "1",
+			fileContent:  "{\"message\": {}}",
+			expectErrMsg: "unable to parse message file",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
+		{
+			name:   "unsupported action",
+			height: "1000",
+			fileContent: fmt.Sprintf(`
+			{
+				"message": {
+					"@type": "/cosmos.bank.v1beta1.InvalidMessageSend",
+					"from_address": "%s",
+					"to_address": "%s",
+					"amount": [
+						{
+							"denom": "nhash",
+							"amount": "10"
+						}
+					]
+				}
+			}`, s.accountAddresses[0].String(), s.accountAddresses[1].String()),
+			expectErrMsg: "unable to parse message file",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
+		{
+			name:   "invalid internal message data",
+			height: "1000",
+			fileContent: fmt.Sprintf(`
+			{
+				"message": {
+					"@type": "/cosmos.bank.v1beta1.InvalidMessageSend",
+					"from_address": "%s",
+					"to_address": "%s",
+					"amount": [
+						{
+							"denom": "nhash",
+							"amount": "10"
+						}
+					]
+				}
+			}`, "abc", s.accountAddresses[1].String()),
+			expectErrMsg: "unable to parse message file",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -381,6 +428,380 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			args = append(args, flags...)
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddBlockHeightTrigger(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			var response sdk.TxResponse
+			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
+			if len(tc.expectErrMsg) > 0 {
+				s.Assert().EqualError(err, tc.expectErrMsg)
+				s.Assert().Equal(tc.expectedCode, response.Code)
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().NoError(marshalErr, out.String())
+				s.Assert().Equal(tc.expectedCode, response.Code)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
+	testCases := []struct {
+		name         string
+		fileContent  string
+		txEvent      string
+		expectErrMsg string
+		expectedCode uint32
+		expectedIds  []uint64
+	}{
+		{
+			name:         "create transaction trigger",
+			fileContent:  "",
+			txEvent:      "",
+			expectErrMsg: "",
+			expectedCode: 0,
+			expectedIds:  []uint64{8},
+		},
+		{
+			name:         "invalid tx event content",
+			fileContent:  "",
+			txEvent:      "abc",
+			expectErrMsg: "unable to parse event file",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
+		{
+			name:         "invalid file format",
+			fileContent:  "abc",
+			txEvent:      "",
+			expectErrMsg: "unable to parse message file",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
+		{
+			name:         "invalid message format",
+			fileContent:  "{\"message\": {}}",
+			txEvent:      "",
+			expectErrMsg: "unable to parse message file",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
+		{
+			name:    "unsupported action",
+			txEvent: "",
+			fileContent: fmt.Sprintf(`
+			{
+				"message": {
+					"@type": "/cosmos.bank.v1beta1.InvalidMessageSend",
+					"from_address": "%s",
+					"to_address": "%s",
+					"amount": [
+						{
+							"denom": "nhash",
+							"amount": "10"
+						}
+					]
+				}
+			}`, s.accountAddresses[0].String(), s.accountAddresses[1].String()),
+			expectErrMsg: "unable to parse message file",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
+		{
+			name:    "invalid internal message data",
+			txEvent: "",
+			fileContent: fmt.Sprintf(`
+			{
+				"message": {
+					"@type": "/cosmos.bank.v1beta1.InvalidMessageSend",
+					"from_address": "%s",
+					"to_address": "%s",
+					"amount": [
+						{
+							"denom": "nhash",
+							"amount": "10"
+						}
+					]
+				}
+			}`, "abc", s.accountAddresses[1].String()),
+			expectErrMsg: "unable to parse message file",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.network.Validators[0].ClientCtx
+
+			var message string
+			if len(tc.fileContent) == 0 {
+				message = fmt.Sprintf(`
+				{
+					"message": {
+						"@type": "/cosmos.bank.v1beta1.MsgSend",
+						"from_address": "%s",
+						"to_address": "%s",
+						"amount": [
+							{
+								"denom": "nhash",
+								"amount": "10"
+							}
+						]
+					}
+				}`, s.accountAddresses[0].String(), s.accountAddresses[1].String())
+			} else {
+				message = tc.fileContent
+			}
+			messageFile := sdktestutil.WriteToNewTempFile(s.T(), message)
+
+			var txEvent string
+			if len(tc.txEvent) == 0 {
+				txEvent = fmt.Sprintf(`
+				{
+					"name": "coin_received",
+					"attributes": [
+						{
+							"name": "receiver",
+							"value": "%s"
+						},
+						{
+							"name": "amount",
+							"value": "100nhash"
+						}
+					]
+				}
+				`, s.accountAddresses[0].String())
+			} else {
+				txEvent = tc.txEvent
+			}
+			txEventFile := sdktestutil.WriteToNewTempFile(s.T(), txEvent)
+
+			args := []string{
+				txEventFile.Name(),
+				messageFile.Name(),
+			}
+			flags := []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.network.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			}
+			args = append(args, flags...)
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddTransactionTrigger(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			var response sdk.TxResponse
+			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
+			if len(tc.expectErrMsg) > 0 {
+				s.Assert().EqualError(err, tc.expectErrMsg)
+				s.Assert().Equal(tc.expectedCode, response.Code)
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().NoError(marshalErr, out.String())
+				s.Assert().Equal(tc.expectedCode, response.Code)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
+	testCases := []struct {
+		name         string
+		blockTime    string
+		fileContent  string
+		expectErrMsg string
+		expectedCode uint32
+		expectedIds  []uint64
+	}{
+		{
+			name:         "create block time trigger",
+			blockTime:    "2100-05-19T13:49:00-04:00",
+			fileContent:  "",
+			expectErrMsg: "",
+			expectedCode: 0,
+			expectedIds:  []uint64{8},
+		},
+		{
+			name:         "create invalid block time trigger for past block",
+			blockTime:    "2000-05-19T13:49:00-04:00",
+			fileContent:  "",
+			expectErrMsg: "",
+			expectedCode: types.ErrInvalidBlockTime.ABCICode(),
+			expectedIds:  []uint64{},
+		},
+		{
+			name:         "invalid file format",
+			blockTime:    "2100-05-19T13:49:00-04:00",
+			fileContent:  "abc",
+			expectErrMsg: "unable to parse message file",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
+		{
+			name:         "invalid bad time",
+			blockTime:    "abc",
+			fileContent:  "",
+			expectErrMsg: "unable to parse time (abc) required format is RFC3339 (2006-01-02T15:04:05Z07:00) , parsing time \"abc\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"abc\" as \"2006\"",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
+		{
+			name:         "invalid message format",
+			blockTime:    "2100-05-19T13:49:00-04:00",
+			fileContent:  "{\"message\": {}}",
+			expectErrMsg: "unable to parse message file",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
+		{
+			name:      "unsupported action",
+			blockTime: "2100-05-19T13:49:00-04:00",
+			fileContent: fmt.Sprintf(`
+			{
+				"message": {
+					"@type": "/cosmos.bank.v1beta1.InvalidMessageSend",
+					"from_address": "%s",
+					"to_address": "%s",
+					"amount": [
+						{
+							"denom": "nhash",
+							"amount": "10"
+						}
+					]
+				}
+			}`, s.accountAddresses[0].String(), s.accountAddresses[1].String()),
+			expectErrMsg: "unable to parse message file",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
+		{
+			name:      "invalid internal message data",
+			blockTime: "2100-05-19T13:49:00-04:00",
+			fileContent: fmt.Sprintf(`
+			{
+				"message": {
+					"@type": "/cosmos.bank.v1beta1.InvalidMessageSend",
+					"from_address": "%s",
+					"to_address": "%s",
+					"amount": [
+						{
+							"denom": "nhash",
+							"amount": "10"
+						}
+					]
+				}
+			}`, "abc", s.accountAddresses[1].String()),
+			expectErrMsg: "unable to parse message file",
+			expectedCode: 0,
+			expectedIds:  []uint64{},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.network.Validators[0].ClientCtx
+
+			var message string
+			if len(tc.fileContent) == 0 {
+				message = fmt.Sprintf(`
+				{
+					"message": {
+						"@type": "/cosmos.bank.v1beta1.MsgSend",
+						"from_address": "%s",
+						"to_address": "%s",
+						"amount": [
+							{
+								"denom": "nhash",
+								"amount": "10"
+							}
+						]
+					}
+				}`, s.accountAddresses[0].String(), s.accountAddresses[1].String())
+			} else {
+				message = tc.fileContent
+			}
+
+			messageFile := sdktestutil.WriteToNewTempFile(s.T(), message)
+
+			args := []string{
+				tc.blockTime,
+				messageFile.Name(),
+			}
+			flags := []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			}
+			args = append(args, flags...)
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddBlockTimeTrigger(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			var response sdk.TxResponse
+			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
+			if len(tc.expectErrMsg) > 0 {
+				s.Assert().EqualError(err, tc.expectErrMsg)
+				s.Assert().Equal(tc.expectedCode, response.Code)
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().NoError(marshalErr, out.String())
+				s.Assert().Equal(tc.expectedCode, response.Code)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestDestroyTrigger() {
+	testCases := []struct {
+		name         string
+		triggerID    string
+		expectErrMsg string
+		expectedCode uint32
+	}{
+		{
+			name:         "valid - destroy trigger",
+			triggerID:    "7",
+			expectErrMsg: "",
+			expectedCode: 0,
+		},
+		{
+			name:         "invalid - unable to destroy trigger created by someone else",
+			triggerID:    "2",
+			expectErrMsg: "",
+			expectedCode: types.ErrInvalidTriggerAuthority.ABCICode(),
+		},
+		{
+			name:         "invalid - trigger id does not exist",
+			triggerID:    "999",
+			expectErrMsg: "",
+			expectedCode: types.ErrTriggerNotFound.ABCICode(),
+		},
+		{
+			name:         "invalid - trigger id format",
+			triggerID:    "abc",
+			expectErrMsg: "invalid trigger id: abc",
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+
+			args := []string{
+				tc.triggerID,
+			}
+			flags := []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			}
+			args = append(args, flags...)
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdDestroyTrigger(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {

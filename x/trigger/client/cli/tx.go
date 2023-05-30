@@ -54,12 +54,12 @@ func GetCmdAddTransactionTrigger() *cobra.Command {
 
 			event, err := parseEvent(args[0])
 			if err != nil {
-				return fmt.Errorf("unable to parse event file %s: %w", args[0], err)
+				return fmt.Errorf("unable to parse event file")
 			}
 
 			msgs, err := parseTransactions(clientCtx.Codec, args[1])
 			if err != nil {
-				return fmt.Errorf("unable to parse msgs file %s: %w", args[1], err)
+				return fmt.Errorf("unable to parse message file")
 			}
 			if len(msgs) == 0 {
 				return fmt.Errorf("no actions added to trigger")
@@ -95,12 +95,12 @@ func GetCmdAddBlockHeightTrigger() *cobra.Command {
 
 			height, err := strconv.Atoi(args[0])
 			if err != nil {
-				return fmt.Errorf("invalid block height : %s", args[0])
+				return fmt.Errorf("invalid block height: %s", args[0])
 			}
 
 			msgs, err := parseTransactions(clientCtx.Codec, args[1])
 			if err != nil {
-				return fmt.Errorf("unable to parse file %s : %w", args[1], err)
+				return fmt.Errorf("unable to parse message file")
 			}
 			if len(msgs) == 0 {
 				return fmt.Errorf("no actions added to trigger")
@@ -141,7 +141,7 @@ func GetCmdAddBlockTimeTrigger() *cobra.Command {
 
 			msgs, err := parseTransactions(clientCtx.Codec, args[1])
 			if err != nil {
-				return fmt.Errorf("unable to parse file %s : %w", args[1], err)
+				return fmt.Errorf("unable to parse message file")
 			}
 			if len(msgs) == 0 {
 				return fmt.Errorf("no actions added to trigger")
@@ -176,7 +176,7 @@ func GetCmdDestroyTrigger() *cobra.Command {
 			callerAddr := clientCtx.GetFromAddress()
 			triggerID, err := strconv.Atoi(args[0])
 			if err != nil {
-				return fmt.Errorf("invalid trigger id : %s", args[0])
+				return fmt.Errorf("invalid trigger id: %s", args[0])
 			}
 
 			msg := types.NewDestroyTriggerRequest(
