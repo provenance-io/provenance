@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add support to add/remove required attributes for a restricted marker. [#1512](https://github.com/provenance-io/provenance/issues/1512)
 * Add support to update the `allow_forced_transfer` field of a restricted marker [#1545](https://github.com/provenance-io/provenance/issues/1545).
+* Add expiration date value to `attribute` [#1435](https://github.com/provenance-io/provenance/issues/1435).
 * Add endpoints to update the value owner address of scopes [#1329](https://github.com/provenance-io/provenance/issues/1329).
 
 ### Improvements
@@ -56,6 +57,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Switch to using a `SendRestrictionFn` for restricting sends of marker funds [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
 * Create `rust` upgrade handlers [PR 1549](https://github.com/provenance-io/provenance/pull/1549).
 * Remove mutation of store from `attribute` keeper iterators [#1557](https://github.com/provenance-io/provenance/issues/1557).
+
+### Bug Fixes
+
+* Bring back some proto messages that were deleted but still needed for historical queries [#1554](https://github.com/provenance-io/provenance/issues/1554).
 
 ### API Breaking
 

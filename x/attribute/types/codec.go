@@ -1,6 +1,8 @@
 package types
 
 import (
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,13 +10,11 @@ import (
 )
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgAddAttributeRequest{},
-		&MsgUpdateAttributeRequest{},
-		&MsgDeleteAttributeRequest{},
-		&MsgDeleteDistinctAttributeRequest{},
-	)
-
+	messages := make([]proto.Message, len(allRequestMsgs))
+	for i, msg := range allRequestMsgs {
+		messages[i] = msg
+	}
+	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 

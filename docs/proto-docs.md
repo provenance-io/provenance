@@ -9,6 +9,8 @@
     - [EventAttributeAdd](#provenance.attribute.v1.EventAttributeAdd)
     - [EventAttributeDelete](#provenance.attribute.v1.EventAttributeDelete)
     - [EventAttributeDistinctDelete](#provenance.attribute.v1.EventAttributeDistinctDelete)
+    - [EventAttributeExpirationUpdate](#provenance.attribute.v1.EventAttributeExpirationUpdate)
+    - [EventAttributeExpired](#provenance.attribute.v1.EventAttributeExpired)
     - [EventAttributeUpdate](#provenance.attribute.v1.EventAttributeUpdate)
     - [Params](#provenance.attribute.v1.Params)
   
@@ -38,6 +40,8 @@
     - [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse)
     - [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest)
     - [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse)
+    - [MsgUpdateAttributeExpirationRequest](#provenance.attribute.v1.MsgUpdateAttributeExpirationRequest)
+    - [MsgUpdateAttributeExpirationResponse](#provenance.attribute.v1.MsgUpdateAttributeExpirationResponse)
     - [MsgUpdateAttributeRequest](#provenance.attribute.v1.MsgUpdateAttributeRequest)
     - [MsgUpdateAttributeResponse](#provenance.attribute.v1.MsgUpdateAttributeResponse)
   
@@ -76,6 +80,7 @@
     - [GenesisState](#provenance.marker.v1.GenesisState)
   
 - [provenance/marker/v1/proposals.proto](#provenance/marker/v1/proposals.proto)
+    - [AddMarkerProposal](#provenance.marker.v1.AddMarkerProposal)
     - [ChangeStatusProposal](#provenance.marker.v1.ChangeStatusProposal)
     - [RemoveAdministratorProposal](#provenance.marker.v1.RemoveAdministratorProposal)
     - [SetAdministratorProposal](#provenance.marker.v1.SetAdministratorProposal)
@@ -211,6 +216,35 @@
 - [provenance/metadata/v1/genesis.proto](#provenance/metadata/v1/genesis.proto)
     - [GenesisState](#provenance.metadata.v1.GenesisState)
   
+- [provenance/metadata/v1/p8e/p8e.proto](#provenance/metadata/v1/p8e/p8e.proto)
+    - [Condition](#provenance.metadata.v1.p8e.Condition)
+    - [ConditionSpec](#provenance.metadata.v1.p8e.ConditionSpec)
+    - [Consideration](#provenance.metadata.v1.p8e.Consideration)
+    - [ConsiderationSpec](#provenance.metadata.v1.p8e.ConsiderationSpec)
+    - [Contract](#provenance.metadata.v1.p8e.Contract)
+    - [ContractSpec](#provenance.metadata.v1.p8e.ContractSpec)
+    - [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec)
+    - [ExecutionResult](#provenance.metadata.v1.p8e.ExecutionResult)
+    - [Fact](#provenance.metadata.v1.p8e.Fact)
+    - [Location](#provenance.metadata.v1.p8e.Location)
+    - [OutputSpec](#provenance.metadata.v1.p8e.OutputSpec)
+    - [ProposedFact](#provenance.metadata.v1.p8e.ProposedFact)
+    - [ProvenanceReference](#provenance.metadata.v1.p8e.ProvenanceReference)
+    - [PublicKey](#provenance.metadata.v1.p8e.PublicKey)
+    - [Recital](#provenance.metadata.v1.p8e.Recital)
+    - [Recitals](#provenance.metadata.v1.p8e.Recitals)
+    - [Signature](#provenance.metadata.v1.p8e.Signature)
+    - [SignatureSet](#provenance.metadata.v1.p8e.SignatureSet)
+    - [SigningAndEncryptionPublicKeys](#provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys)
+    - [Timestamp](#provenance.metadata.v1.p8e.Timestamp)
+    - [UUID](#provenance.metadata.v1.p8e.UUID)
+  
+    - [DefinitionSpecType](#provenance.metadata.v1.p8e.DefinitionSpecType)
+    - [ExecutionResultType](#provenance.metadata.v1.p8e.ExecutionResultType)
+    - [PartyType](#provenance.metadata.v1.p8e.PartyType)
+    - [PublicKeyCurve](#provenance.metadata.v1.p8e.PublicKeyCurve)
+    - [PublicKeyType](#provenance.metadata.v1.p8e.PublicKeyType)
+  
 - [provenance/metadata/v1/query.proto](#provenance/metadata/v1/query.proto)
     - [ContractSpecificationRequest](#provenance.metadata.v1.ContractSpecificationRequest)
     - [ContractSpecificationResponse](#provenance.metadata.v1.ContractSpecificationResponse)
@@ -294,10 +328,14 @@
     - [MsgMigrateValueOwnerResponse](#provenance.metadata.v1.MsgMigrateValueOwnerResponse)
     - [MsgModifyOSLocatorRequest](#provenance.metadata.v1.MsgModifyOSLocatorRequest)
     - [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse)
+    - [MsgP8eMemorializeContractRequest](#provenance.metadata.v1.MsgP8eMemorializeContractRequest)
+    - [MsgP8eMemorializeContractResponse](#provenance.metadata.v1.MsgP8eMemorializeContractResponse)
     - [MsgUpdateValueOwnersRequest](#provenance.metadata.v1.MsgUpdateValueOwnersRequest)
     - [MsgUpdateValueOwnersResponse](#provenance.metadata.v1.MsgUpdateValueOwnersResponse)
     - [MsgWriteContractSpecificationRequest](#provenance.metadata.v1.MsgWriteContractSpecificationRequest)
     - [MsgWriteContractSpecificationResponse](#provenance.metadata.v1.MsgWriteContractSpecificationResponse)
+    - [MsgWriteP8eContractSpecRequest](#provenance.metadata.v1.MsgWriteP8eContractSpecRequest)
+    - [MsgWriteP8eContractSpecResponse](#provenance.metadata.v1.MsgWriteP8eContractSpecResponse)
     - [MsgWriteRecordRequest](#provenance.metadata.v1.MsgWriteRecordRequest)
     - [MsgWriteRecordResponse](#provenance.metadata.v1.MsgWriteRecordResponse)
     - [MsgWriteRecordSpecificationRequest](#provenance.metadata.v1.MsgWriteRecordSpecificationRequest)
@@ -448,6 +486,7 @@ Attribute holds a typed key/value structure for data associated with an account
 | `value` | [bytes](#bytes) |  | The attribute value. |
 | `attribute_type` | [AttributeType](#provenance.attribute.v1.AttributeType) |  | The attribute value type. |
 | `address` | [string](#string) |  | The address the attribute is bound to |
+| `expiration_date` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that an attribute will expire. |
 
 
 
@@ -467,6 +506,7 @@ EventAttributeAdd event emitted when attribute is added
 | `type` | [string](#string) |  |  |
 | `account` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
+| `expiration` | [string](#string) |  |  |
 
 
 
@@ -503,6 +543,45 @@ EventAttributeDistinctDelete event emitted when attribute is deleted with matchi
 | `attribute_type` | [string](#string) |  |  |
 | `account` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.EventAttributeExpirationUpdate"></a>
+
+### EventAttributeExpirationUpdate
+EventAttributeExpirationUpdate event emitted when attribute expiration is updated
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `value` | [string](#string) |  |  |
+| `account` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+| `original_expiration` | [string](#string) |  |  |
+| `updated_expiration` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.EventAttributeExpired"></a>
+
+### EventAttributeExpired
+EventAttributeExpired event emitted when attribute has expired and been deleted in BeginBlocker
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `value_hash` | [string](#string) |  |  |
+| `attribute_type` | [string](#string) |  |  |
+| `account` | [string](#string) |  |  |
+| `expiration` | [string](#string) |  |  |
 
 
 
@@ -814,6 +893,7 @@ Attributes may only be set in an account by the account that the attribute name 
 | `attribute_type` | [AttributeType](#provenance.attribute.v1.AttributeType) |  | The attribute value type. |
 | `account` | [string](#string) |  | The account to add the attribute to. |
 | `owner` | [string](#string) |  | The address that the name must resolve to. |
+| `expiration_date` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that an attribute will expire. |
 
 
 
@@ -887,6 +967,36 @@ MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
 
 
 
+<a name="provenance.attribute.v1.MsgUpdateAttributeExpirationRequest"></a>
+
+### MsgUpdateAttributeExpirationRequest
+MsgUpdateAttributeExpirationRequest defines an sdk.Msg type that is used to update an existing attribute's expiration
+date
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | The attribute name. |
+| `value` | [bytes](#bytes) |  | The original attribute value. |
+| `expiration_date` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that an attribute will expire. |
+| `account` | [string](#string) |  | The account to add the attribute to. |
+| `owner` | [string](#string) |  | The address that the name must resolve to. |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.MsgUpdateAttributeExpirationResponse"></a>
+
+### MsgUpdateAttributeExpirationResponse
+MsgUpdateAttributeExpirationResponse defines the Msg/Vote response type.
+
+
+
+
+
+
 <a name="provenance.attribute.v1.MsgUpdateAttributeRequest"></a>
 
 ### MsgUpdateAttributeRequest
@@ -934,6 +1044,7 @@ Msg defines the attribute module Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `AddAttribute` | [MsgAddAttributeRequest](#provenance.attribute.v1.MsgAddAttributeRequest) | [MsgAddAttributeResponse](#provenance.attribute.v1.MsgAddAttributeResponse) | AddAttribute defines a method to verify a particular invariance. | |
 | `UpdateAttribute` | [MsgUpdateAttributeRequest](#provenance.attribute.v1.MsgUpdateAttributeRequest) | [MsgUpdateAttributeResponse](#provenance.attribute.v1.MsgUpdateAttributeResponse) | UpdateAttribute defines a method to verify a particular invariance. | |
+| `UpdateAttributeExpiration` | [MsgUpdateAttributeExpirationRequest](#provenance.attribute.v1.MsgUpdateAttributeExpirationRequest) | [MsgUpdateAttributeExpirationResponse](#provenance.attribute.v1.MsgUpdateAttributeExpirationResponse) | UpdateAttributeExpiration defines a method to verify a particular invariance. | |
 | `DeleteAttribute` | [MsgDeleteAttributeRequest](#provenance.attribute.v1.MsgDeleteAttributeRequest) | [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse) | DeleteAttribute defines a method to verify a particular invariance. | |
 | `DeleteDistinctAttribute` | [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest) | [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse) | DeleteDistinctAttribute defines a method to verify a particular invariance. | |
 
@@ -1390,6 +1501,32 @@ GenesisState defines the account module's genesis state.
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/marker/v1/proposals.proto
+
+
+
+<a name="provenance.marker.v1.AddMarkerProposal"></a>
+
+### AddMarkerProposal
+AddMarkerProposal is deprecated and can no longer be used.
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by providing a MsgAddMarkerRequest in a governance proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `manager` | [string](#string) |  |  |
+| `status` | [MarkerStatus](#provenance.marker.v1.MarkerStatus) |  |  |
+| `marker_type` | [MarkerType](#provenance.marker.v1.MarkerType) |  |  |
+| `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
+| `supply_fixed` | [bool](#bool) |  |  |
+| `allow_governance_control` | [bool](#bool) |  |  |
+
+
+
 
 
 
@@ -3345,6 +3482,454 @@ GenesisState defines the account module's genesis state.
 
 
 
+<a name="provenance/metadata/v1/p8e/p8e.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/metadata/v1/p8e/p8e.proto
+
+
+
+<a name="provenance.metadata.v1.p8e.Condition"></a>
+
+### Condition
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `condition_name` | [string](#string) |  |  |
+| `result` | [ExecutionResult](#provenance.metadata.v1.p8e.ExecutionResult) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.ConditionSpec"></a>
+
+### ConditionSpec
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `func_name` | [string](#string) |  |  |
+| `input_specs` | [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec) | repeated |  |
+| `output_spec` | [OutputSpec](#provenance.metadata.v1.p8e.OutputSpec) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Consideration"></a>
+
+### Consideration
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `consideration_name` | [string](#string) |  |  |
+| `inputs` | [ProposedFact](#provenance.metadata.v1.p8e.ProposedFact) | repeated |  |
+| `result` | [ExecutionResult](#provenance.metadata.v1.p8e.ExecutionResult) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.ConsiderationSpec"></a>
+
+### ConsiderationSpec
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `func_name` | [string](#string) |  |  |
+| `responsible_party` | [PartyType](#provenance.metadata.v1.p8e.PartyType) |  |  |
+| `input_specs` | [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec) | repeated |  |
+| `output_spec` | [OutputSpec](#provenance.metadata.v1.p8e.OutputSpec) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Contract"></a>
+
+### Contract
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `definition` | [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec) |  |  |
+| `spec` | [Fact](#provenance.metadata.v1.p8e.Fact) |  |  |
+| `invoker` | [SigningAndEncryptionPublicKeys](#provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys) |  |  |
+| `inputs` | [Fact](#provenance.metadata.v1.p8e.Fact) | repeated |  |
+| `conditions` | [Condition](#provenance.metadata.v1.p8e.Condition) | repeated | **Deprecated.**  |
+| `considerations` | [Consideration](#provenance.metadata.v1.p8e.Consideration) | repeated |  |
+| `recitals` | [Recital](#provenance.metadata.v1.p8e.Recital) | repeated |  |
+| `times_executed` | [int32](#int32) |  |  |
+| `start_time` | [Timestamp](#provenance.metadata.v1.p8e.Timestamp) |  |  |
+| `context` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.ContractSpec"></a>
+
+### ContractSpec
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `definition` | [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec) |  |  |
+| `input_specs` | [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec) | repeated |  |
+| `parties_involved` | [PartyType](#provenance.metadata.v1.p8e.PartyType) | repeated |  |
+| `condition_specs` | [ConditionSpec](#provenance.metadata.v1.p8e.ConditionSpec) | repeated |  |
+| `consideration_specs` | [ConsiderationSpec](#provenance.metadata.v1.p8e.ConsiderationSpec) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.DefinitionSpec"></a>
+
+### DefinitionSpec
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `resource_location` | [Location](#provenance.metadata.v1.p8e.Location) |  |  |
+| `signature` | [Signature](#provenance.metadata.v1.p8e.Signature) |  |  |
+| `type` | [DefinitionSpecType](#provenance.metadata.v1.p8e.DefinitionSpecType) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.ExecutionResult"></a>
+
+### ExecutionResult
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `output` | [ProposedFact](#provenance.metadata.v1.p8e.ProposedFact) |  |  |
+| `result` | [ExecutionResultType](#provenance.metadata.v1.p8e.ExecutionResultType) |  |  |
+| `recorded_at` | [Timestamp](#provenance.metadata.v1.p8e.Timestamp) |  |  |
+| `error_message` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Fact"></a>
+
+### Fact
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `data_location` | [Location](#provenance.metadata.v1.p8e.Location) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Location"></a>
+
+### Location
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ref` | [ProvenanceReference](#provenance.metadata.v1.p8e.ProvenanceReference) |  |  |
+| `classname` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.OutputSpec"></a>
+
+### OutputSpec
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `spec` | [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.ProposedFact"></a>
+
+### ProposedFact
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `hash` | [string](#string) |  |  |
+| `classname` | [string](#string) |  |  |
+| `ancestor` | [ProvenanceReference](#provenance.metadata.v1.p8e.ProvenanceReference) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.ProvenanceReference"></a>
+
+### ProvenanceReference
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_uuid` | [UUID](#provenance.metadata.v1.p8e.UUID) |  |  |
+| `group_uuid` | [UUID](#provenance.metadata.v1.p8e.UUID) |  |  |
+| `hash` | [string](#string) |  |  |
+| `name` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.PublicKey"></a>
+
+### PublicKey
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `public_key_bytes` | [bytes](#bytes) |  |  |
+| `type` | [PublicKeyType](#provenance.metadata.v1.p8e.PublicKeyType) |  |  |
+| `curve` | [PublicKeyCurve](#provenance.metadata.v1.p8e.PublicKeyCurve) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Recital"></a>
+
+### Recital
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `signer_role` | [PartyType](#provenance.metadata.v1.p8e.PartyType) |  |  |
+| `signer` | [SigningAndEncryptionPublicKeys](#provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys) |  |  |
+| `address` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Recitals"></a>
+
+### Recitals
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `parties` | [Recital](#provenance.metadata.v1.p8e.Recital) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Signature"></a>
+
+### Signature
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `algo` | [string](#string) |  |  |
+| `provider` | [string](#string) |  |  |
+| `signature` | [string](#string) |  |  |
+| `signer` | [SigningAndEncryptionPublicKeys](#provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.SignatureSet"></a>
+
+### SignatureSet
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `signatures` | [Signature](#provenance.metadata.v1.p8e.Signature) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys"></a>
+
+### SigningAndEncryptionPublicKeys
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `signing_public_key` | [PublicKey](#provenance.metadata.v1.p8e.PublicKey) |  |  |
+| `encryption_public_key` | [PublicKey](#provenance.metadata.v1.p8e.PublicKey) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Timestamp"></a>
+
+### Timestamp
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `seconds` | [int64](#int64) |  |  |
+| `nanos` | [int32](#int32) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.UUID"></a>
+
+### UUID
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance.metadata.v1.p8e.DefinitionSpecType"></a>
+
+### DefinitionSpecType
+Deprecated: Do not use.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| DEFINITION_SPEC_TYPE_UNKNOWN | 0 | Deprecated: Do not use. |
+| DEFINITION_SPEC_TYPE_PROPOSED | 1 | Deprecated: Do not use. |
+| DEFINITION_SPEC_TYPE_FACT | 2 | Deprecated: Do not use. |
+| DEFINITION_SPEC_TYPE_FACT_LIST | 3 | Deprecated: Do not use. |
+
+
+
+<a name="provenance.metadata.v1.p8e.ExecutionResultType"></a>
+
+### ExecutionResultType
+Deprecated: Do not use.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| RESULT_TYPE_UNKNOWN | 0 | Deprecated: Do not use. |
+| RESULT_TYPE_PASS | 1 | Deprecated: Do not use. |
+| RESULT_TYPE_SKIP | 2 | Deprecated: Do not use. |
+| RESULT_TYPE_FAIL | 3 | Deprecated: Do not use. |
+
+
+
+<a name="provenance.metadata.v1.p8e.PartyType"></a>
+
+### PartyType
+Deprecated: Do not use.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| PARTY_TYPE_UNKNOWN | 0 | Deprecated: Do not use. |
+| PARTY_TYPE_ORIGINATOR | 1 | Deprecated: Do not use. |
+| PARTY_TYPE_SERVICER | 2 | Deprecated: Do not use. |
+| PARTY_TYPE_INVESTOR | 3 | Deprecated: Do not use. |
+| PARTY_TYPE_CUSTODIAN | 4 | Deprecated: Do not use. |
+| PARTY_TYPE_OWNER | 5 | Deprecated: Do not use. |
+| PARTY_TYPE_AFFILIATE | 6 | Deprecated: Do not use. |
+| PARTY_TYPE_OMNIBUS | 7 | Deprecated: Do not use. |
+| PARTY_TYPE_PROVENANCE | 8 | Deprecated: Do not use. |
+| PARTY_TYPE_MARKER | 9 | Deprecated: Do not use. |
+| PARTY_TYPE_CONTROLLER | 10 | Deprecated: Do not use. |
+| PARTY_TYPE_VALIDATOR | 11 | Deprecated: Do not use. |
+
+
+
+<a name="provenance.metadata.v1.p8e.PublicKeyCurve"></a>
+
+### PublicKeyCurve
+Deprecated: Do not use.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| SECP256K1 | 0 | Deprecated: Do not use. |
+| P256 | 1 | Deprecated: Do not use. |
+
+
+
+<a name="provenance.metadata.v1.p8e.PublicKeyType"></a>
+
+### PublicKeyType
+Deprecated: Do not use.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| ELLIPTIC | 0 | Deprecated: Do not use. |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="provenance/metadata/v1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -4626,6 +5211,46 @@ MsgModifyOSLocatorResponse is the response type for the Msg/ModifyOSLocator RPC 
 
 
 
+<a name="provenance.metadata.v1.MsgP8eMemorializeContractRequest"></a>
+
+### MsgP8eMemorializeContractRequest
+MsgP8eMemorializeContractRequest  has been deprecated and is no longer usable.
+Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_id` | [string](#string) |  |  |
+| `group_id` | [string](#string) |  |  |
+| `scope_specification_id` | [string](#string) |  |  |
+| `recitals` | [p8e.Recitals](#provenance.metadata.v1.p8e.Recitals) |  |  |
+| `contract` | [p8e.Contract](#provenance.metadata.v1.p8e.Contract) |  |  |
+| `signatures` | [p8e.SignatureSet](#provenance.metadata.v1.p8e.SignatureSet) |  |  |
+| `invoker` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgP8eMemorializeContractResponse"></a>
+
+### MsgP8eMemorializeContractResponse
+MsgP8eMemorializeContractResponse  has been deprecated and is no longer usable.
+Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_id_info` | [ScopeIdInfo](#provenance.metadata.v1.ScopeIdInfo) |  |  |
+| `session_id_info` | [SessionIdInfo](#provenance.metadata.v1.SessionIdInfo) |  |  |
+| `record_id_infos` | [RecordIdInfo](#provenance.metadata.v1.RecordIdInfo) | repeated |  |
+
+
+
+
+
+
 <a name="provenance.metadata.v1.MsgUpdateValueOwnersRequest"></a>
 
 ### MsgUpdateValueOwnersRequest
@@ -4679,6 +5304,40 @@ MsgWriteContractSpecificationResponse is the response type for the Msg/WriteCont
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `contract_spec_id_info` | [ContractSpecIdInfo](#provenance.metadata.v1.ContractSpecIdInfo) |  | contract_spec_id_info contains information about the id/address of the contract specification that was added or updated. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgWriteP8eContractSpecRequest"></a>
+
+### MsgWriteP8eContractSpecRequest
+MsgWriteP8eContractSpecRequest has been deprecated and is no longer usable.
+Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contractspec` | [p8e.ContractSpec](#provenance.metadata.v1.p8e.ContractSpec) |  |  |
+| `signers` | [string](#string) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgWriteP8eContractSpecResponse"></a>
+
+### MsgWriteP8eContractSpecResponse
+MsgWriteP8eContractSpecResponse  has been deprecated and is no longer usable.
+Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contract_spec_id_info` | [ContractSpecIdInfo](#provenance.metadata.v1.ContractSpecIdInfo) |  |  |
+| `record_spec_id_infos` | [RecordSpecIdInfo](#provenance.metadata.v1.RecordSpecIdInfo) | repeated |  |
 
 
 

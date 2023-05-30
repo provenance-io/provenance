@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,6 +28,7 @@ const (
 )
 
 var (
+	_ govtypesv1beta1.Content = &AddMarkerProposal{}
 	_ govtypesv1beta1.Content = &SupplyIncreaseProposal{}
 	_ govtypesv1beta1.Content = &SupplyDecreaseProposal{}
 	_ govtypesv1beta1.Content = &SetAdministratorProposal{}
@@ -37,6 +39,7 @@ var (
 )
 
 func init() {
+	// Not registering AddMarkerProposal since it's no longer usable.
 	govtypesv1beta1.RegisterProposalType(ProposalTypeIncreaseSupply)
 	govtypesv1beta1.RegisterProposalType(ProposalTypeDecreaseSupply)
 	govtypesv1beta1.RegisterProposalType(ProposalTypeSetAdministrator)
@@ -44,6 +47,12 @@ func init() {
 	govtypesv1beta1.RegisterProposalType(ProposalTypeChangeStatus)
 	govtypesv1beta1.RegisterProposalType(ProposalTypeWithdrawEscrow)
 	govtypesv1beta1.RegisterProposalType(ProposalTypeSetDenomMetadata)
+}
+
+func (p AddMarkerProposal) ProposalRoute() string { return RouterKey }
+func (p AddMarkerProposal) ProposalType() string  { return "AddMarker" }
+func (p AddMarkerProposal) ValidateBasic() error {
+	return errors.New("deprecated and unusable")
 }
 
 // NewSupplyIncreaseProposal creates a new proposal

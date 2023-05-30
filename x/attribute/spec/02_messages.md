@@ -71,6 +71,8 @@ message MsgUpdateAttributeRequest {
   string account = 6;
   // The address that the name must resolve to.
   string owner = 7;
+  // Time that an attribute will expire.
+  google.protobuf.Timestamp expiration_date = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
 }
 ```
 
@@ -140,3 +142,35 @@ This message is expected to fail if:
 - The owner account does not exist
 - The name does not resolve to the owner address
 - The attribute does not exist
+
+## MsgUpdateAttributeExpirationRequest
+
+The update attribute expiration request method updates the attribute's expiration date.
+
+```proto
+// MsgUpdateAttributeExpirationRequest defines an sdk.Msg type that is used to update an existing attribute's expiration
+// date
+message MsgUpdateAttributeExpirationRequest {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.stringer)         = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  // The attribute name.
+  string name = 1;
+  // The original attribute value.
+  bytes value = 2;
+  // Time that an attribute will expire.
+  google.protobuf.Timestamp expiration_date = 3 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
+  // The account to add the attribute to.
+  string account = 4;
+  // The address that the name must resolve to.
+  string owner = 5;
+}
+```
+
+This message is expected to fail if:
+- Any components of the request do not pass basic integrity and format checks
+- The owner account does not exist
+- The name does not resolve to the owner address
+- The attribute does not exist
+- The expiration date is before current block height
