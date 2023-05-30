@@ -10,6 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
@@ -24,6 +25,7 @@ type TriggerEventI interface {
 	proto.Message
 	GetEventPrefix() string
 	Validate() error
+	ValidateContext(ctx sdk.Context) error
 }
 
 // NewTrigger creates a new trigger.
@@ -100,6 +102,11 @@ func (e TransactionEvent) Validate() error {
 	return nil
 }
 
+// Validate checks if this event is valid with the current context.
+func (e TransactionEvent) ValidateContext(ctx sdk.Context) error {
+	return nil
+}
+
 // GetEventPrefix gets the prefix for a BlockHeightEvent.
 func (e BlockHeightEvent) GetEventPrefix() string {
 	return BlockHeightPrefix
@@ -110,6 +117,14 @@ func (e BlockHeightEvent) Validate() error {
 	return nil
 }
 
+// Validate checks if this event is valid with the current context.
+func (e BlockHeightEvent) ValidateContext(ctx sdk.Context) error {
+	if e.BlockHeight <= uint64(ctx.BlockHeight()) {
+		return ErrInvalidBlockHeight
+	}
+	return nil
+}
+
 // GetEventPrefix gets the prefix for a BlockTimeEvent.
 func (e BlockTimeEvent) GetEventPrefix() string {
 	return BlockTimePrefix
@@ -117,6 +132,14 @@ func (e BlockTimeEvent) GetEventPrefix() string {
 
 // Validate checks if the event data is valid.
 func (e BlockTimeEvent) Validate() error {
+	return nil
+}
+
+// Validate checks if this event is valid with the current context.
+func (e BlockTimeEvent) ValidateContext(ctx sdk.Context) error {
+	if e.Time.Equal(ctx.BlockTime()) || e.Time.Before(ctx.BlockTime()) {
+		return ErrInvalidBlockTime
+	}
 	return nil
 }
 

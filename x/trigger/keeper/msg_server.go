@@ -25,10 +25,19 @@ var _ types.MsgServer = msgServer{}
 func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTriggerRequest) (*types.MsgCreateTriggerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	// Can we move these into a separate function
+	event, err := msg.GetTriggerEventI()
+	if err != nil {
+		// Internal error
+	}
+	if err := event.ValidateContext(ctx); err != nil {
+		return nil, err
+	}
+
 	trigger := s.NewTriggerWithID(ctx, msg.GetAuthority(), msg.GetEvent(), msg.GetActions())
 	s.RegisterTrigger(ctx, trigger)
 
-	err := ctx.EventManager().EmitTypedEvent(&types.EventTriggerCreated{
+	err = ctx.EventManager().EmitTypedEvent(&types.EventTriggerCreated{
 		TriggerId: fmt.Sprintf("%d", trigger.GetId()),
 	})
 	if err != nil {

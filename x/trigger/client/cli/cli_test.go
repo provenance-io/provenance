@@ -292,28 +292,51 @@ func (s *IntegrationTestSuite) TestQueryTriggers() {
 func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 	testCases := []struct {
 		name         string
-		args         []string
+		height       string
+		fileContent  string
 		expectErrMsg string
 		expectedCode uint32
 		expectedIds  []uint64
 	}{
 		{
-			name: "create block height trigger",
-			args: []string{
-				"900",
-			},
+			name:         "create block height trigger",
+			height:       "900",
+			fileContent:  "",
 			expectErrMsg: "",
 			expectedCode: 0,
 			expectedIds:  []uint64{7},
 		},
-		/*{
-			name: "create invalid block height trigger for past block",
-			args: []string{
-				"1",
-			},
+		{
+			name:         "create invalid block height trigger for past block",
+			height:       "1",
+			fileContent:  "",
 			expectErrMsg: "",
 			expectedCode: types.ErrInvalidBlockHeight.ABCICode(),
 			expectedIds:  []uint64{},
+		},
+		/*{
+			name:             "invalid file format",
+			height:           "1",
+			fileContent: "",
+			expectErrMsg:     "",
+			expectedCode:     0,
+			expectedIds:      []uint64{7},
+		},*/
+		/*{
+			name:             "invalid message format",
+			height:           "1",
+			fileContent: "",
+			expectErrMsg:     "",
+			expectedCode:     0,
+			expectedIds:      []uint64{7},
+		},*/
+		/*{
+			name:             "unsupported action",
+			height:           "1",
+			fileContent: "",
+			expectErrMsg:     "",
+			expectedCode:     0,
+			expectedIds:      []uint64{7},
 		},*/
 	}
 
@@ -323,38 +346,50 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
 
-			message := fmt.Sprintf(`
-			{
-				"message": {
-					"@type": "/cosmos.bank.v1beta1.MsgSend",
-					"from_address": "%s",
-					"to_address": "%s",
-					"amount": [
-						{
-							"denom": "nhash",
-							"amount": "10"
-						}
-					]
-				}
-			}`, s.accountAddresses[0].String(), s.accountAddresses[1].String())
+			var message string
+			if len(tc.fileContent) == 0 {
+				message = fmt.Sprintf(`
+				{
+					"message": {
+						"@type": "/cosmos.bank.v1beta1.MsgSend",
+						"from_address": "%s",
+						"to_address": "%s",
+						"amount": [
+							{
+								"denom": "nhash",
+								"amount": "10"
+							}
+						]
+					}
+				}`, s.accountAddresses[0].String(), s.accountAddresses[1].String())
+			} else {
+				message = tc.fileContent
+			}
+
 			messageFile := sdktestutil.WriteToNewTempFile(s.T(), message)
 
 			args := []string{
+				tc.height,
+				messageFile.Name(),
+			}
+			flags := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.network.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			}
-			tc.args = append(tc.args, messageFile.Name())
-			tc.args = append(tc.args, args...)
+			args = append(args, flags...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddBlockHeightTrigger(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddBlockHeightTrigger(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg)
+				s.Assert().Equal(tc.expectedCode, response.Code)
 			} else {
 				s.Assert().NoError(err)
 				s.Assert().NoError(marshalErr, out.String())
+				s.Assert().Equal(tc.expectedCode, response.Code)
 			}
 		})
 	}

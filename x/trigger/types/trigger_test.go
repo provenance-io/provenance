@@ -9,6 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func TestNewTrigger(t *testing.T) {
@@ -171,9 +173,113 @@ func TestTransactionEventValidate(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		tc.event.Validate()
 		t.Run(tc.name, func(t *testing.T) {
 			res := tc.event.Validate()
+			if len(tc.err) > 0 {
+				assert.ErrorContains(t, res, tc.err)
+			} else {
+				assert.NoError(t, res)
+			}
+		})
+	}
+}
+
+func TestTransactionEventValidateContext(t *testing.T) {
+	ctx := sdk.NewContext(nil, tmproto.Header{Time: time.Now().UTC()}, false, nil)
+	ctx = ctx.WithBlockHeight(100)
+
+	tests := []struct {
+		name  string
+		event TransactionEvent
+		err   string
+	}{
+		{
+			name:  "valid - transaction event should always succeed",
+			event: TransactionEvent{Name: "event", Attributes: []Attribute{}},
+			err:   "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			res := tc.event.ValidateContext(ctx)
+			if len(tc.err) > 0 {
+				assert.ErrorContains(t, res, tc.err)
+			} else {
+				assert.NoError(t, res)
+			}
+		})
+	}
+}
+
+func TestBlockHeightEventValidateContext(t *testing.T) {
+	ctx := sdk.NewContext(nil, tmproto.Header{Time: time.Now().UTC()}, false, nil)
+	ctx = ctx.WithBlockHeight(100)
+
+	tests := []struct {
+		name  string
+		event BlockHeightEvent
+		err   string
+	}{
+		{
+			name:  "valid - block height event should be valid for future heights",
+			event: BlockHeightEvent{BlockHeight: 101},
+			err:   "",
+		},
+		{
+			name:  "valid - block height event should be invalid for current height",
+			event: BlockHeightEvent{BlockHeight: 100},
+			err:   ErrInvalidBlockHeight.Error(),
+		},
+		{
+			name:  "valid - block height event should be invalid for past height",
+			event: BlockHeightEvent{BlockHeight: 99},
+			err:   ErrInvalidBlockHeight.Error(),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			res := tc.event.ValidateContext(ctx)
+			if len(tc.err) > 0 {
+				assert.ErrorContains(t, res, tc.err)
+			} else {
+				assert.NoError(t, res)
+			}
+		})
+	}
+}
+
+func TestBlockTimeEventValidateContext(t *testing.T) {
+	now := time.Now().UTC()
+	ctx := sdk.NewContext(nil, tmproto.Header{Time: now}, false, nil)
+	ctx = ctx.WithBlockHeight(100)
+
+	tests := []struct {
+		name  string
+		event BlockTimeEvent
+		err   string
+	}{
+		{
+			name:  "valid - block height event should be valid for future time",
+			event: BlockTimeEvent{now.Add(time.Hour)},
+			err:   "",
+		},
+		{
+			name:  "invalid - block height event should be invalid for current height",
+			event: BlockTimeEvent{now},
+			err:   ErrInvalidBlockTime.Error(),
+		},
+		{
+			name:  "invalid - block height event should be invalid for past height",
+			event: BlockTimeEvent{now.Add(-time.Hour)},
+			err:   ErrInvalidBlockTime.Error(),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			res := tc.event.ValidateContext(ctx)
 			if len(tc.err) > 0 {
 				assert.ErrorContains(t, res, tc.err)
 			} else {
