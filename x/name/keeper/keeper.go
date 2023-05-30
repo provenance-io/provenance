@@ -112,6 +112,31 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 		return types.ErrInvalidAddress.Wrap(err.Error())
 	}
 
+	// If there's an existing record, and the address is changing, we need to
+	// delete the existing address -> name index entry. If there's an error getting
+	// it, we don't really care; either it doesn't exist or the same error will
+	// come up again later (when we add the new record).
+	existing, _ := k.GetRecordByName(ctx, name)
+	if existing != nil && existing.Address != addr.String() {
+		var oldAddr sdk.AccAddress
+		var oldNameKeyPre, oldAddrKey []byte
+		oldAddr, err = sdk.AccAddressFromBech32(existing.Address)
+		if err != nil {
+			return types.ErrInvalidAddress.Wrapf("invalid existing %s record address: %v", name, err)
+		}
+		oldNameKeyPre, err = types.GetNameKeyPrefix(name)
+		if err != nil {
+			return err
+		}
+		oldAddrKey, err = types.GetAddressKeyPrefix(oldAddr)
+		if err != nil {
+			return types.ErrInvalidAddress.Wrapf("invalid existing %s record address format: %v", name, err)
+		}
+		oldAddrKey = append(oldAddrKey, oldNameKeyPre...)
+		store := ctx.KVStore(k.storeKey)
+		store.Delete(oldAddrKey)
+	}
+
 	if err = k.addRecord(ctx, name, addr, restrict, true); err != nil {
 		return err
 	}
