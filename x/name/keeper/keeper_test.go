@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
@@ -266,9 +265,42 @@ func (s *KeeperTestSuite) TestDeleteRecord() {
 }
 
 func (s *KeeperTestSuite) TestModifyRecord() {
+	jackthecat := "jackthecat"
 	s.Run("update adds new name", func() {
-		err := s.app.NameKeeper.UpdateNameRecord(s.ctx, "jackthecat", s.user2Addr, true)
-		s.Require().NoError(err)
+		err := s.app.NameKeeper.UpdateNameRecord(s.ctx, jackthecat, s.user2Addr, true)
+		s.Require().NoError(err, "UpdateNameRecord(%q, user2)", jackthecat)
+		isUser2 := s.app.NameKeeper.ResolvesTo(s.ctx, jackthecat, s.user2Addr)
+		s.Assert().True(isUser2, "ResolvesTo(%q, user2)", jackthecat)
+
+		expUser2Recs := nametypes.NameRecords{
+			{Name: jackthecat, Address: s.user2Addr.String(), Restricted: true},
+		}
+		addr2Recs, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, s.user2Addr)
+		s.Require().NoError(err, "GetRecordsByAddress(user2)")
+		s.Assert().Equal(expUser2Recs, addr2Recs, "GetRecordsByAddress(user2)")
+
+	})
+	s.Run("update to new owner", func() {
+		err := s.app.NameKeeper.UpdateNameRecord(s.ctx, jackthecat, s.user1Addr, true)
+		s.Require().NoError(err, "UpdateNameRecord(%q, user1)", jackthecat)
+		isUser1 := s.app.NameKeeper.ResolvesTo(s.ctx, jackthecat, s.user1Addr)
+		s.Assert().True(isUser1, "ResolvesTo(%q, user1)", jackthecat)
+		isUser2 := s.app.NameKeeper.ResolvesTo(s.ctx, jackthecat, s.user2Addr)
+		s.Assert().False(isUser2, "ResolvesTo(%q, user2)", jackthecat)
+
+		expUser1Recs := nametypes.NameRecords{
+			{Name: jackthecat, Address: s.user1Addr.String(), Restricted: true},
+			{Name: "name", Address: s.user1Addr.String(), Restricted: false},
+			{Name: "example.name", Address: s.user1Addr.String(), Restricted: false},
+		}
+		addr1Recs, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, s.user1Addr)
+		s.Require().NoError(err, "GetRecordsByAddress(user1)")
+		s.Assert().Equal(expUser1Recs, addr1Recs, "GetRecordsByAddress(user1)")
+
+		expUser2Recs := nametypes.NameRecords{}
+		addr2Recs, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, s.user2Addr)
+		s.Require().NoError(err, "GetRecordsByAddress(user2)")
+		s.Assert().Equal(expUser2Recs, addr2Recs, "GetRecordsByAddress(user2)")
 	})
 	s.Run("update has invalid address", func() {
 		err := s.app.NameKeeper.UpdateNameRecord(s.ctx, "jackthecat", sdk.AccAddress{}, true)
