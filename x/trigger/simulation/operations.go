@@ -7,13 +7,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/trigger/keeper"
@@ -22,8 +22,10 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgCreateTrigger  = "op_weight_create_trigger"
-	OpWeightMsgDestroyTrigger = "op_weight_destroy_trigger"
+	//nolint:gosec // not credentials
+	OpWeightMsgCreateTrigger = "op_weight_msg_create_trigger"
+	//nolint:gosec // not credentials
+	OpWeightMsgDestroyTrigger = "op_weight_msg_destroy_trigger"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -59,7 +61,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgCreateTrigger sends a MsgCreateTriggerRequest.
-func SimulateMsgCreateTrigger(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgCreateTrigger(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {

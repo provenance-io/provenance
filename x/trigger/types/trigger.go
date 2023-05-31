@@ -103,7 +103,7 @@ func (e TransactionEvent) Validate() error {
 }
 
 // Validate checks if this event is valid with the current context.
-func (e TransactionEvent) ValidateContext(ctx sdk.Context) error {
+func (e TransactionEvent) ValidateContext(_ sdk.Context) error {
 	return nil
 }
 

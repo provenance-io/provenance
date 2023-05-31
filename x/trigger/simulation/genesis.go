@@ -63,7 +63,7 @@ func GetRandomTrigger(r *rand.Rand, simState *module.SimulationState) types.Trig
 }
 
 // GetRandomQueuedTrigger returns a random queued trigger
-func GetRandomQueuedTrigger(r *rand.Rand, simState *module.SimulationState) types.QueuedTrigger {
+func GetRandomQueuedTrigger(_ *rand.Rand, simState *module.SimulationState) types.QueuedTrigger {
 	var event types.TriggerEventI = &types.BlockHeightEvent{BlockHeight: 100000}
 	var action sdk.Msg = &banktypes.MsgSend{
 		FromAddress: simState.Accounts[0].Address.String(),

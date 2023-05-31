@@ -25,12 +25,11 @@ var _ types.MsgServer = msgServer{}
 func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTriggerRequest) (*types.MsgCreateTriggerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Can we move these into a separate function
 	event, err := msg.GetTriggerEventI()
 	if err != nil {
-		// Internal error
+		return nil, err
 	}
-	if err := event.ValidateContext(ctx); err != nil {
+	if err = event.ValidateContext(ctx); err != nil {
 		return nil, err
 	}
 
