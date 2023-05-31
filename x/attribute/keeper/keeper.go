@@ -462,16 +462,10 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 
 func (k Keeper) getAccountsToDelete(store sdk.KVStore, acctAddr sdk.AccAddress, attributeName string) (attrToDelete [][]byte) {
 	it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acctAddr, attributeName))
-	defer func() {
-		if it != nil {
-			it.Close()
-		}
-	}()
+	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		attrToDelete = append(attrToDelete, it.Key())
 	}
-	it.Close()
-	it = nil
 	return
 }
 
