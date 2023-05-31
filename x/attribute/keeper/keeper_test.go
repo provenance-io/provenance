@@ -667,7 +667,7 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			name:      "dne",
 			value:     []byte("123456789"),
 			ownerAddr: s.user1Addr,
-			errorMsg:  "no keys deleted with name dne value 123456789",
+			errorMsg:  `no keys deleted with name dne value "123456789"`,
 		},
 		{
 			testName:     "should successfully delete attribute",
@@ -684,7 +684,7 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			value:     []byte("123456789"),
 			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
-			errorMsg:  "no keys deleted with name example.attribute value 123456789",
+			errorMsg:  `no keys deleted with name example.attribute value "123456789"`,
 		},
 		{
 			testName:     "should successfully delete attribute, with same key but different value",
