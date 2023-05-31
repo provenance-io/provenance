@@ -424,7 +424,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 	errm := "no keys deleted"
 	if len(attrToDelete) == 0 && deleteDistinct {
 		ctx.Logger().Error(errm, "name", name, "value")
-		return fmt.Errorf("%s with name %s value %s", errm, name, string(*value))
+		return fmt.Errorf("%s with name %s value %q", errm, name, string(*value))
 	} else if len(attrToDelete) == 0 && !deleteDistinct {
 		ctx.Logger().Error(errm, "name", name)
 		return fmt.Errorf("%s with name %s", errm, name)
