@@ -57,6 +57,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Switch to using a `SendRestrictionFn` for restricting sends of marker funds [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
 * Create `rust` upgrade handlers [PR 1549](https://github.com/provenance-io/provenance/pull/1549).
 * Remove mutation of store from `attribute` keeper iterators [#1557](https://github.com/provenance-io/provenance/issues/1557).
+* Bumped ibc-go to 6.1.1 [#1563](https://github.com/provenance-io/provenance/pull/1563).
 
 ### Bug Fixes
 
