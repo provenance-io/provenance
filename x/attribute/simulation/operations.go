@@ -32,6 +32,8 @@ const (
 	OpWeightMsgDeleteAttribute = "op_weight_msg_delete_attribute"
 	//nolint:gosec // not credentials
 	OpWeightMsgDeleteDistinctAttribute = "op_weight_msg_delete_distinct_attribute"
+	//nolint:gosec // not credentials
+	OpWeightMsgSetAccountData = "op_weight_msg_set_account_data"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -43,6 +45,7 @@ func WeightedOperations(
 		weightMsgUpdateAttribute         int
 		weightMsgDeleteAttribute         int
 		weightMsgDeleteDistinctAttribute int
+		weightMsgSetAccountDataRequest   int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgAddAttribute, &weightMsgAddAttribute, nil,
@@ -69,6 +72,12 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OpWeightMsgSetAccountData, &weightMsgSetAccountDataRequest, nil,
+		func(_ *rand.Rand) {
+			weightMsgSetAccountDataRequest = simappparams.DefaultWeightMsgSetAccountData
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgAddAttribute,
@@ -85,6 +94,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgDeleteDistinctAttribute,
 			SimulateMsgDeleteDistinctAttribute(k, ak, bk, nk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgSetAccountDataRequest,
+			SimulateMsgSetAccountData(k, ak, bk),
 		),
 	}
 }
@@ -181,6 +194,31 @@ func SimulateMsgDeleteDistinctAttribute(k keeper.Keeper, ak authkeeper.AccountKe
 	}
 }
 
+// SimulateMsgSetAccountData will dispatch a set account data operation for a random account.
+func SimulateMsgSetAccountData(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		// 1 in 10 chance that the value stays "".
+		// 9 in 10 chance that it will be between 1 and MaxValueLen characters.
+		value := ""
+		if r.Intn(10) != 0 {
+			attrParams := k.GetParams(ctx)
+			strLen := r.Intn(int(attrParams.MaxValueLength)) + 1
+			value = simtypes.RandStringOfLength(r, strLen)
+		}
+
+		acc, _ := simtypes.RandomAcc(r, accs)
+
+		msg := &types.MsgSetAccountDataRequest{
+			Value:   value,
+			Account: acc.Address.String(),
+		}
+
+		return Dispatch(r, app, ctx, ak, bk, acc, chainID, msg)
+	}
+}
+
 func getRandomValueOfType(r *rand.Rand, t types.AttributeType) []byte {
 	switch t {
 	case types.AttributeType_Int:
@@ -255,59 +293,55 @@ func Dispatch(
 // getRandomNameRecord finds a random name record owned by a known account.
 // An error is only returned if there was a problem iterating records.
 func getRandomNameRecord(r *rand.Rand, ctx sdk.Context, nk types.NameKeeper, accs []simtypes.Account) (nametypes.NameRecord, simtypes.Account, bool, error) {
-	var randomRecord nametypes.NameRecord
-	var simAccount simtypes.Account
-
 	var records []nametypes.NameRecord
 	err := nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
 		records = append(records, record)
 		return nil
 	})
 	if err != nil || len(records) == 0 {
-		return randomRecord, simAccount, false, err
+		return nametypes.NameRecord{}, simtypes.Account{}, false, err
 	}
 
 	r.Shuffle(len(records), func(i, j int) {
 		records[i], records[j] = records[j], records[i]
 	})
 
-	found := false
-	for i := 0; i < len(records) && !found; i++ {
-		randomRecord = records[i]
-		simAccount, found = simtypes.FindAccount(accs, sdk.MustAccAddressFromBech32(randomRecord.Address))
+	for _, record := range records {
+		simAccount, found := simtypes.FindAccount(accs, sdk.MustAccAddressFromBech32(record.Address))
+		if found {
+			return record, simAccount, true, nil
+		}
 	}
 
-	return randomRecord, simAccount, found, nil
+	return nametypes.NameRecord{}, simtypes.Account{}, false, nil
 }
 
 // getRandomAttribute finds a random attribute owned by a known account.
 // An error is only returned if there was a problem iterating records.
 // The sim account returned is the one that owns the name record for the attribute.
 func getRandomAttribute(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, nk types.NameKeeper, accs []simtypes.Account) (types.Attribute, simtypes.Account, bool, error) {
-	var randomAttribute types.Attribute
-	var simAccount simtypes.Account
-
 	var attributes []types.Attribute
 	err := k.IterateRecords(ctx, types.AttributeKeyPrefix, func(attribute types.Attribute) error {
 		attributes = append(attributes, attribute)
 		return nil
 	})
 	if err != nil || len(attributes) == 0 {
-		return randomAttribute, simAccount, false, err
+		return types.Attribute{}, simtypes.Account{}, false, err
 	}
 
 	r.Shuffle(len(attributes), func(i, j int) {
 		attributes[i], attributes[j] = attributes[j], attributes[i]
 	})
 
-	found := false
-	for i := 0; i < len(attributes) && !found; i++ {
-		randomAttribute = attributes[i]
-		nr, err := nk.GetRecordByName(ctx, randomAttribute.Name)
+	for _, attr := range attributes {
+		nr, err := nk.GetRecordByName(ctx, attr.Name)
 		if err == nil {
-			simAccount, found = simtypes.FindAccount(accs, sdk.MustAccAddressFromBech32(nr.Address))
+			simAccount, found := simtypes.FindAccount(accs, sdk.MustAccAddressFromBech32(nr.Address))
+			if found {
+				return attr, simAccount, true, nil
+			}
 		}
 	}
 
-	return randomAttribute, simAccount, found, nil
+	return types.Attribute{}, simtypes.Account{}, false, nil
 }
