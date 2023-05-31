@@ -449,21 +449,30 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 	if err != nil {
 		return err
 	}
+	store := ctx.KVStore(k.storeKey)
 	for _, acct := range accts {
-		attrToDelete := [][]byte{}
-		store := ctx.KVStore(k.storeKey)
-		it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acct, name))
-		for ; it.Valid(); it.Next() {
-			attrToDelete = append(attrToDelete, it.Key())
-		}
-		it.Close()
+		attrToDelete := k.getAccountsToDelete(store, acct, name)
 		for _, key := range attrToDelete {
 			store.Delete(key)
 			k.DecAttrNameAddressLookup(ctx, name, acct)
 		}
-		it.Close()
 	}
 	return nil
+}
+
+func (k Keeper) getAccountsToDelete(store sdk.KVStore, acctAddr sdk.AccAddress, attributeName string) (attrToDelete [][]byte) {
+	it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acctAddr, attributeName))
+	defer func() {
+		if it != nil {
+			it.Close()
+		}
+	}()
+	for ; it.Valid(); it.Next() {
+		attrToDelete = append(attrToDelete, it.Key())
+	}
+	it.Close()
+	it = nil
+	return
 }
 
 // A predicate function for matching names
