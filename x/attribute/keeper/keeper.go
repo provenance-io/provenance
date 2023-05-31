@@ -451,7 +451,7 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 	}
 	store := ctx.KVStore(k.storeKey)
 	for _, acct := range accts {
-		attrToDelete := k.getAccountsToDelete(store, acct, name)
+		attrToDelete := k.getAccountAttributesByName(store, acct, name)
 		for _, key := range attrToDelete {
 			store.Delete(key)
 			k.DecAttrNameAddressLookup(ctx, name, acct)
@@ -460,11 +460,12 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 	return nil
 }
 
-func (k Keeper) getAccountsToDelete(store sdk.KVStore, acctAddr sdk.AccAddress, attributeName string) (attrToDelete [][]byte) {
+// getAccountAttributesByName returns an list of attribute keys for the an account and attribute name
+func (k Keeper) getAccountAttributesByName(store sdk.KVStore, acctAddr sdk.AccAddress, attributeName string) (attributeKeys [][]byte) {
 	it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acctAddr, attributeName))
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
-		attrToDelete = append(attrToDelete, it.Key())
+		attributeKeys = append(attributeKeys, it.Key())
 	}
 	return
 }
