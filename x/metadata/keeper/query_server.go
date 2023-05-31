@@ -129,7 +129,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 	}
 
 	if err != nil {
-		return &retval, sdkerrors.ErrJSONUnmarshal.Wrap(err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	return &retval, nil
@@ -168,7 +168,7 @@ func (k Keeper) ScopesAll(c context.Context, req *types.ScopesAllRequest) (*type
 		return nil // Still want to move on to the next.
 	})
 	if err != nil {
-		return &retval, sdkerrors.ErrJSONUnmarshal.Wrap(err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	retval.Pagination = pageRes
 	return &retval, nil
@@ -356,7 +356,7 @@ func (k Keeper) SessionsAll(c context.Context, req *types.SessionsAllRequest) (*
 		return nil // Still want to move on to the next.
 	})
 	if err != nil {
-		return &retval, sdkerrors.ErrJSONUnmarshal.Wrap(err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	retval.Pagination = pageRes
 	return &retval, nil
@@ -532,7 +532,7 @@ func (k Keeper) RecordsAll(c context.Context, req *types.RecordsAllRequest) (*ty
 		return nil // Still want to move on to the next.
 	})
 	if err != nil {
-		return &retval, sdkerrors.ErrJSONUnmarshal.Wrap(err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	retval.Pagination = pageRes
 	return &retval, nil
@@ -713,7 +713,7 @@ func (k Keeper) ScopeSpecificationsAll(c context.Context, req *types.ScopeSpecif
 		return nil // Still want to move on to the next.
 	})
 	if err != nil {
-		return &retval, sdkerrors.ErrJSONUnmarshal.Wrap(err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	retval.Pagination = pageRes
 	return &retval, nil
@@ -790,7 +790,7 @@ func (k Keeper) ContractSpecificationsAll(c context.Context, req *types.Contract
 		return nil // Still want to move on to the next.
 	})
 	if err != nil {
-		return &retval, sdkerrors.ErrJSONUnmarshal.Wrap(err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	retval.Pagination = pageRes
 	return &retval, nil
@@ -897,7 +897,7 @@ func (k Keeper) RecordSpecificationsAll(c context.Context, req *types.RecordSpec
 		return nil // Still want to move on to the next.
 	})
 	if err != nil {
-		return &retval, sdkerrors.ErrJSONUnmarshal.Wrap(err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	retval.Pagination = pageRes
 	return &retval, nil
