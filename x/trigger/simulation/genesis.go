@@ -31,32 +31,31 @@ func QueueStartFn(r *rand.Rand) uint64 {
 }
 
 // GetRandomTrigger returns a random event
-func GetRandomEvent(r *rand.Rand, simState *module.SimulationState) types.TriggerEventI {
+func GetRandomEvent(r *rand.Rand, now time.Time) types.TriggerEventI {
 	rand := simtypes.RandIntBetween(r, 0, 1)
 	if rand > 0 {
 		height := uint64(simtypes.RandIntBetween(r, 100000, 200000))
 		return &types.BlockHeightEvent{BlockHeight: height}
 	}
-	now := simState.GenTimestamp
 	randTime := now.Add(time.Hour * time.Duration(simtypes.RandIntBetween(r, 1, 10)))
 	return &types.BlockTimeEvent{Time: randTime}
 }
 
 // GetRandomAction returns a random action
-func GetRandomAction(r *rand.Rand, simState *module.SimulationState) sdk.Msg {
+func GetRandomAction(r *rand.Rand, from string, to string) sdk.Msg {
 	amount := int64(simtypes.RandIntBetween(r, 100, 1000))
-	account := int64(simtypes.RandIntBetween(r, 1, 2))
 	return &banktypes.MsgSend{
-		FromAddress: simState.Accounts[0].Address.String(),
-		ToAddress:   simState.Accounts[account].Address.String(),
+		FromAddress: from,
+		ToAddress:   to,
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, amount)),
 	}
 }
 
 // GetRandomTrigger returns a random trigger
 func GetRandomTrigger(r *rand.Rand, simState *module.SimulationState) types.Trigger {
-	event := GetRandomEvent(r, simState)
-	action := GetRandomAction(r, simState)
+	account := int64(simtypes.RandIntBetween(r, 1, 2))
+	event := GetRandomEvent(r, simState.GenTimestamp.UTC())
+	action := GetRandomAction(r, simState.Accounts[0].Address.String(), simState.Accounts[account].Address.String())
 
 	actions, _ := sdktx.SetMsgs([]sdk.Msg{action})
 	anyEvent, _ := codectypes.NewAnyWithValue(event)
