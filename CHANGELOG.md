@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+* Bumped ibc-go to 6.1.1 [PR 1563](https://github.com/provenance-io/provenance/pull/1563).
+
 ### Bug Fixes
 
 * Bring back some proto messages that were deleted but still needed for historical queries [#1554](https://github.com/provenance-io/provenance/issues/1554).
