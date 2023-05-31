@@ -33145,6 +33145,10 @@ paths:
                     address:
                       type: string
                       title: The address the attribute is bound to
+                    expiration_date:
+                      type: string
+                      format: date-time
+                      description: Time that an attribute will expire.
                   title: >-
                     Attribute holds a typed key/value structure for data
                     associated with an account
@@ -33313,6 +33317,10 @@ paths:
                     address:
                       type: string
                       title: The address the attribute is bound to
+                    expiration_date:
+                      type: string
+                      format: date-time
+                      description: Time that an attribute will expire.
                   title: >-
                     Attribute holds a typed key/value structure for data
                     associated with an account
@@ -33481,6 +33489,10 @@ paths:
                     address:
                       type: string
                       title: The address the attribute is bound to
+                    expiration_date:
+                      type: string
+                      format: date-time
+                      description: Time that an attribute will expire.
                   title: >-
                     Attribute holds a typed key/value structure for data
                     associated with an account
@@ -80486,6 +80498,10 @@ definitions:
       address:
         type: string
         title: The address the attribute is bound to
+      expiration_date:
+        type: string
+        format: date-time
+        description: Time that an attribute will expire.
     title: >-
       Attribute holds a typed key/value structure for data associated with an
       account
@@ -80601,6 +80617,10 @@ definitions:
             address:
               type: string
               title: The address the attribute is bound to
+            expiration_date:
+              type: string
+              format: date-time
+              description: Time that an attribute will expire.
           title: >-
             Attribute holds a typed key/value structure for data associated with
             an account
@@ -80667,6 +80687,10 @@ definitions:
             address:
               type: string
               title: The address the attribute is bound to
+            expiration_date:
+              type: string
+              format: date-time
+              description: Time that an attribute will expire.
           title: >-
             Attribute holds a typed key/value structure for data associated with
             an account
@@ -80745,6 +80769,10 @@ definitions:
             address:
               type: string
               title: The address the attribute is bound to
+            expiration_date:
+              type: string
+              format: date-time
+              description: Time that an attribute will expire.
           title: >-
             Attribute holds a typed key/value structure for data associated with
             an account
@@ -80783,6 +80811,9 @@ definitions:
   provenance.attribute.v1.MsgSetAccountDataResponse:
     type: object
     description: MsgSetAccountDataResponse defines the Msg/SetAccountData response type.
+  provenance.attribute.v1.MsgUpdateAttributeExpirationResponse:
+    type: object
+    description: MsgUpdateAttributeExpirationResponse defines the Msg/Vote response type.
   provenance.attribute.v1.MsgUpdateAttributeResponse:
     type: object
     description: MsgUpdateAttributeResponse defines the Msg/UpdateAttribute response type.

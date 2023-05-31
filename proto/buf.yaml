@@ -39,4 +39,7 @@ lint:
     - proofs.proto
   ignore_only:
     ENUM_ZERO_VALUE_SUFFIX:
+      - provenance/metadata/v1/p8e/p8e.proto
       - provenance/marker/v1/si.proto
+    ENUM_VALUE_PREFIX:
+      - provenance/metadata/v1/p8e/p8e.proto

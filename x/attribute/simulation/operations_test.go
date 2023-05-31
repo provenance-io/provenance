@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -152,11 +153,12 @@ func (s *SimTestSuite) TestSimulateMsgUpdateAttribute() {
 
 	name := "example.provenance"
 	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q) error", name)
-	attr := types.NewAttribute(name, accounts[1].Address.String(), types.AttributeType_String, []byte("test"))
+	expireTime := GenerateRandomTime(1)
+	attr := types.NewAttribute(name, accounts[1].Address.String(), types.AttributeType_String, []byte("test"), &expireTime)
 	s.LogIfError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, accounts[0].Address), "SetAttribute(%q) error", name)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}})
 
 	// execute operation
 	op := simulation.SimulateMsgUpdateAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
@@ -181,13 +183,14 @@ func (s *SimTestSuite) TestSimulateMsgDeleteAttribute() {
 	src := rand.NewSource(1)
 	r := rand.New(src)
 	accounts := s.getTestingAccounts(r, 3)
+	expireTime := GenerateRandomTime(1)
 
 	name := "example.provenance"
 	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q) error", name)
-	attr := types.NewAttribute(name, accounts[1].Address.String(), types.AttributeType_String, []byte("test"))
+	attr := types.NewAttribute(name, accounts[1].Address.String(), types.AttributeType_String, []byte("test"), &expireTime)
 	s.LogIfError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, accounts[0].Address), "SetAttribute(%q) error", name)
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}})
 
 	// execute operation
 	op := simulation.SimulateMsgDeleteAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
@@ -214,12 +217,13 @@ func (s *SimTestSuite) TestSimulateMsgDeleteDistinctAttribute() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	name := "example.provenance"
+	expireTime := GenerateRandomTime(1)
 	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q) error", name)
-	attr := types.NewAttribute(name, accounts[1].Address.String(), types.AttributeType_String, []byte("test"))
+	attr := types.NewAttribute(name, accounts[1].Address.String(), types.AttributeType_String, []byte("test"), &expireTime)
 	s.LogIfError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, accounts[0].Address), "SetAttribute(%q) error", name)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}})
 
 	// execute operation
 	op := simulation.SimulateMsgDeleteDistinctAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
@@ -254,6 +258,18 @@ func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Accoun
 	}
 
 	return accounts
+}
+
+func GenerateRandomTime(minHours int) time.Time {
+	currentTime := time.Now()
+
+	// Generate a random duration between minHours and 2*minHours
+	randomDuration := time.Duration(rand.Intn(minHours) + minHours)
+
+	// Generate a random time by adding the random duration to the current time
+	randomTime := currentTime.Add(randomDuration)
+
+	return randomTime
 }
 
 func TestSimTestSuite(t *testing.T) {

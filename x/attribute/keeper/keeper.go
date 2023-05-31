@@ -132,6 +132,10 @@ func (k Keeper) SetAttribute(
 ) error {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "set")
 
+	if err := k.ValidateExpirationDate(ctx, attr); err != nil {
+		return err
+	}
+
 	// Ensure attribute is valid
 	if err := attr.ValidateBasic(); err != nil {
 		return err
@@ -145,16 +149,16 @@ func (k Keeper) SetAttribute(
 
 	normalizedName, err := k.nameKeeper.Normalize(ctx, attr.Name)
 	if err != nil {
-		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attr.Name, err)
+		return fmt.Errorf("unable to normalize attribute name %q: %w", attr.Name, err)
 	}
 	attr.Name = normalizedName
 	// Verify an account exists for the given owner address
 	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
-		return fmt.Errorf("no account found for owner address \"%s\"", owner.String())
+		return fmt.Errorf("no account found for owner address %q", owner.String())
 	}
 	// Verify name resolves to owner
 	if !k.nameKeeper.ResolvesTo(ctx, attr.Name, owner) {
-		return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", attr.Name, owner.String())
+		return fmt.Errorf("%q does not resolve to address %q", attr.Name, owner.String())
 	}
 	// Store the sanitized account attribute
 	bz, err := k.cdc.Marshal(&attr)
@@ -167,6 +171,7 @@ func (k Keeper) SetAttribute(
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
 	k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+	k.addAttributeExpireLookup(store, attr)
 
 	attributeAddEvent := types.NewEventAttributeAdd(attr, owner.String())
 
@@ -222,12 +227,12 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 
 	normalizedName, err := k.nameKeeper.Normalize(ctx, updateAttribute.Name)
 	if err != nil {
-		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", updateAttribute.Name, err)
+		return fmt.Errorf("unable to normalize attribute name %q: %w", updateAttribute.Name, err)
 	}
 
 	normalizedOrigName, err := k.nameKeeper.Normalize(ctx, originalAttribute.Name)
 	if err != nil {
-		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", originalAttribute.Name, err)
+		return fmt.Errorf("unable to normalize attribute name %q: %w", originalAttribute.Name, err)
 	}
 
 	if normalizedName != normalizedOrigName {
@@ -237,17 +242,18 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 	updateAttribute.Name = normalizedName
 
 	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
-		return fmt.Errorf("no account found for owner address \"%s\"", owner.String())
+		return fmt.Errorf("no account found for owner address %q", owner.String())
 	}
 
 	if !k.nameKeeper.ResolvesTo(ctx, updateAttribute.Name, owner) {
-		return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", updateAttribute.Name, owner.String())
+		return fmt.Errorf("%q does not resolve to address %q", updateAttribute.Name, owner.String())
 	}
 
 	addrBz := originalAttribute.GetAddressBytes()
 
 	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(addrBz, normalizedOrigName))
+	defer it.Close()
 	var found bool
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
@@ -259,6 +265,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			found = true
 			store.Delete(it.Key())
 			k.DecAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+			k.deleteAttributeExpireLookup(store, attr)
 
 			bz, err := k.cdc.Marshal(&updateAttribute)
 			if err != nil {
@@ -267,6 +274,7 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			updatedKey := types.AddrAttributeKey(addrBz, updateAttribute)
 			store.Set(updatedKey, bz)
 			k.IncAttrNameAddressLookup(ctx, updateAttribute.Name, updateAttribute.GetAddressBytes())
+			k.addAttributeExpireLookup(store, updateAttribute)
 
 			attributeUpdateEvent := types.NewEventAttributeUpdate(originalAttribute, updateAttribute, owner.String())
 			if err := ctx.EventManager().EmitTypedEvent(attributeUpdateEvent); err != nil {
@@ -276,8 +284,66 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 		}
 	}
 	if !found {
-		return fmt.Errorf("no attributes updated with name %q : value %+q : type: %s", originalAttribute.Name, string(originalAttribute.Value), originalAttribute.AttributeType.String())
+		return fmt.Errorf("no attributes updated with name %q : value %q : type: %s", originalAttribute.Name, string(originalAttribute.Value), originalAttribute.AttributeType.String())
 	}
+	return nil
+}
+
+// UpdateAttributeExpiration updates the expiration date on an attribute.
+func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, updateAttribute types.Attribute, owner sdk.AccAddress,
+) error {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "update_expiration")
+
+	if err := k.ValidateExpirationDate(ctx, updateAttribute); err != nil {
+		return err
+	}
+
+	var err error
+	normalizedOrigName, err := k.nameKeeper.Normalize(ctx, updateAttribute.Name)
+	if err != nil {
+		return fmt.Errorf("unable to normalize attribute name %q: %w", updateAttribute.Name, err)
+	}
+	updateAttribute.Name = normalizedOrigName
+
+	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
+		return fmt.Errorf("no account found for owner address %q", owner.String())
+	}
+
+	if !k.nameKeeper.ResolvesTo(ctx, updateAttribute.Name, owner) {
+		return fmt.Errorf("%q does not resolve to address %q", updateAttribute.Name, owner.String())
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	attrKey := types.AddrAttributeKey(updateAttribute.GetAddressBytes(), updateAttribute)
+	currentAttr := store.Get(attrKey)
+	if currentAttr != nil {
+		attr := types.Attribute{}
+		if err := k.cdc.Unmarshal(currentAttr, &attr); err != nil {
+			return err
+		}
+
+		k.deleteAttributeExpireLookup(store, attr)
+
+		originalExpiration := attr.ExpirationDate
+		attr.ExpirationDate = updateAttribute.ExpirationDate
+		bz, err := k.cdc.Marshal(&attr)
+		if err != nil {
+			return err
+		}
+		store.Set(attrKey, bz)
+
+		k.addAttributeExpireLookup(store, attr)
+
+		attributeExpirationUpdateEvent := types.NewEventAttributeExpirationUpdate(attr, originalExpiration, owner.String())
+		if err := ctx.EventManager().EmitTypedEvent(attributeExpirationUpdateEvent); err != nil {
+			return err
+		}
+	} else {
+		errorMessage := "no attributes updated"
+		ctx.Logger().Error(errorMessage, "name", updateAttribute.Name, "value", string(updateAttribute.Value))
+		return fmt.Errorf("%s with name %q : value %q : type: %s", errorMessage, updateAttribute.Name, string(updateAttribute.Value), updateAttribute.AttributeType.String())
+	}
+
 	return nil
 }
 
@@ -286,6 +352,7 @@ func (k Keeper) AccountsByAttribute(ctx sdk.Context, name string) (addresses []s
 	store := ctx.KVStore(k.storeKey)
 	keyPrefix := types.AttributeNameKeyPrefix(name)
 	it := sdk.KVStorePrefixIterator(store, keyPrefix)
+	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		addressBytes, err := types.GetAddressFromKey(it.Key())
 		if err != nil {
@@ -306,18 +373,19 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 	}
 
 	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
-		return fmt.Errorf("no account found for owner address \"%s\"", owner.String())
+		return fmt.Errorf("no account found for owner address %q", owner.String())
 	}
 
 	if !k.nameKeeper.ResolvesTo(ctx, name, owner) {
 		if k.nameKeeper.NameExists(ctx, name) {
-			return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", name, owner.String())
+			return fmt.Errorf("%q does not resolve to address %q", name, owner.String())
 		}
 		// else name does not exist (anymore) so we can't enforce permission check on delete here, proceed.
 	}
 
 	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, types.AddrStrAttributesNameKeyPrefix(addr, name))
+	defer it.Close()
 	var count int
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
@@ -329,6 +397,8 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 			count++
 			store.Delete(it.Key())
 			k.DecAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+			k.deleteAttributeExpireLookup(store, attr)
+
 			if !deleteDistinct {
 				deleteEvent := types.NewEventAttributeDelete(name, addr, owner.String())
 				if err := ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
@@ -356,12 +426,12 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 // PurgeAttribute removes attributes under the given account from the state store.
 func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddress) error {
 	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
-		return fmt.Errorf("no account found for owner address \"%s\"", owner.String())
+		return fmt.Errorf("no account found for owner address %q", owner.String())
 	}
 
 	if !k.nameKeeper.ResolvesTo(ctx, name, owner) {
 		if k.nameKeeper.NameExists(ctx, name) {
-			return fmt.Errorf("\"%s\" does not resolve to address \"%s\"", name, owner.String())
+			return fmt.Errorf("%q does not resolve to address %q", name, owner.String())
 		}
 		// else name does not exist (anymore) so we can't enforce permission check on delete here, proceed.
 	}
@@ -377,6 +447,7 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 			store.Delete(it.Key())
 			k.DecAttrNameAddressLookup(ctx, name, acct)
 		}
+		it.Close()
 	}
 	return nil
 }
@@ -388,6 +459,7 @@ type namePred = func(string) bool
 func (k Keeper) prefixScan(ctx sdk.Context, prefix []byte, f namePred) (attrs []types.Attribute, err error) {
 	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, prefix)
+	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}
 		if err = k.cdc.Unmarshal(it.Value(), &attr); err != nil {
@@ -402,6 +474,11 @@ func (k Keeper) prefixScan(ctx sdk.Context, prefix []byte, f namePred) (attrs []
 
 // A genesis helper that imports attribute state without owner checks.
 func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
+	if err := k.ValidateExpirationDate(ctx, attr); err != nil {
+		// don't return error, this will ensure this attribute is skipped since it is expired
+		return nil
+	}
+
 	// Ensure attribute is valid
 	err := attr.ValidateBasic()
 	if err != nil {
@@ -410,7 +487,7 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	// Ensure name is stored in normalized format.
 	attrNameOrig := attr.Name
 	if attr.Name, err = k.nameKeeper.Normalize(ctx, attr.Name); err != nil {
-		return fmt.Errorf("unable to normalize attribute name \"%s\": %w", attrNameOrig, err)
+		return fmt.Errorf("unable to normalize attribute name %q: %w", attrNameOrig, err)
 	}
 	// Store the sanitized account attribute
 	bz, err := k.cdc.Marshal(&attr)
@@ -421,6 +498,7 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
 	k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+	k.addAttributeExpireLookup(store, attr)
 	return nil
 }
 
@@ -436,6 +514,73 @@ func (k Keeper) PopulateAddressAttributeNameTable(ctx sdk.Context) {
 		}
 		k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
 	}
+}
+
+// DeleteExpiredAttributes find and delete expired attributes returns the total deleted
+// limit sets the max amount to delete in a call, 0 for not limit
+func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
+	expirationKeys := [][]byte{}
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, types.GetAttributeExpireTimePrefix(ctx.BlockTime()))
+	for ; iterator.Valid(); iterator.Next() {
+		expirationKeys = append(expirationKeys, iterator.Key())
+	}
+	iterator.Close()
+
+	count := 0
+	for _, expirationKey := range expirationKeys {
+		attrKey := types.GetAddrAttributeKeyFromExpireKey(expirationKey)
+		bz := store.Get(attrKey)
+		if bz != nil {
+			var attribute types.Attribute
+			if err := k.cdc.Unmarshal(bz, &attribute); err == nil {
+				// delete attribute from store
+				store.Delete(attrKey)
+				// dec name to address lookup table count
+				k.DecAttrNameAddressLookup(ctx, attribute.Name, attribute.GetAddressBytes())
+
+				deleteExpirationEvent := types.NewEventAttributeExpired(attribute)
+				if err = ctx.EventManager().EmitTypedEvent(deleteExpirationEvent); err != nil {
+					ctx.Logger().Error(fmt.Sprintf("failed to emit typed event %v", err))
+				}
+				count++
+			} else {
+				ctx.Logger().Error(fmt.Sprintf("unable to unmarshal attribute to delete key: %v error: %v", attrKey, err))
+			}
+		}
+
+		// delete the expiration lookup key
+		store.Delete(expirationKey)
+		if limit != 0 && count >= limit {
+			break
+		}
+	}
+	return count
+}
+
+// addAttributeExpireLookup safely adds attribute expire key to store, if expire date exists, else no-op
+func (k Keeper) addAttributeExpireLookup(store sdk.KVStore, attr types.Attribute) {
+	expireKey := types.AttributeExpireKey(attr)
+	if expireKey != nil {
+		store.Set(expireKey, []byte{})
+	}
+}
+
+// deleteAttributeExpireLookup safely removes attribute expire key from store if expire date exists, else no-op
+func (k Keeper) deleteAttributeExpireLookup(store sdk.KVStore, attr types.Attribute) {
+	expireKey := types.AttributeExpireKey(attr)
+	if expireKey != nil {
+		store.Delete(expireKey)
+	}
+}
+
+// ValidateExpirationDate returns error if attribute has an expiration date that is in the past of current block time
+func (k Keeper) ValidateExpirationDate(ctx sdk.Context, attr types.Attribute) error {
+	if attr.ExpirationDate != nil && attr.ExpirationDate.Unix() < ctx.BlockTime().Unix() {
+		return fmt.Errorf("attribute expiration date %v is before block time of %v", attr.ExpirationDate.UTC(), ctx.BlockTime().UTC())
+	}
+	return nil
 }
 
 // GetAccountData gets the value of the special accountdata attribute for the given address.

@@ -8,6 +8,7 @@ option java_multiple_files = true;
 
 import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 import "provenance/attribute/v1/attribute.proto";
 
 // Msg defines the attribute module Msg service.
@@ -17,6 +18,9 @@ service Msg {
 
   // UpdateAttribute defines a method to verify a particular invariance.
   rpc UpdateAttribute(MsgUpdateAttributeRequest) returns (MsgUpdateAttributeResponse);
+
+  // UpdateAttributeExpiration defines a method to verify a particular invariance.
+  rpc UpdateAttributeExpiration(MsgUpdateAttributeExpirationRequest) returns (MsgUpdateAttributeExpirationResponse);
 
   // DeleteAttribute defines a method to verify a particular invariance.
   rpc DeleteAttribute(MsgDeleteAttributeRequest) returns (MsgDeleteAttributeResponse);
@@ -46,6 +50,8 @@ message MsgAddAttributeRequest {
   string account = 4;
   // The address that the name must resolve to.
   string owner = 5;
+  // Time that an attribute will expire.
+  google.protobuf.Timestamp expiration_date = 6 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
 }
 
 // MsgAddAttributeResponse defines the Msg/AddAttribute response type.
@@ -78,7 +84,29 @@ message MsgUpdateAttributeRequest {
 // MsgUpdateAttributeResponse defines the Msg/UpdateAttribute response type.
 message MsgUpdateAttributeResponse {}
 
-// MsgDeleteAttributeRequest defines a message to delete an attribute from an account.
+// MsgUpdateAttributeExpirationRequest defines an sdk.Msg type that is used to update an existing attribute's expiration
+// date
+message MsgUpdateAttributeExpirationRequest {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.stringer)         = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  // The attribute name.
+  string name = 1;
+  // The original attribute value.
+  bytes value = 2;
+  // Time that an attribute will expire.
+  google.protobuf.Timestamp expiration_date = 3 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
+  // The account to add the attribute to.
+  string account = 4;
+  // The address that the name must resolve to.
+  string owner = 5;
+}
+
+// MsgUpdateAttributeExpirationResponse defines the Msg/Vote response type.
+message MsgUpdateAttributeExpirationResponse {}
+
+// MsgDeleteAttributeRequest defines a message to delete an attribute from an account
 // Attributes may only be removed from an account by the account that the attribute name resolves to.
 message MsgDeleteAttributeRequest {
   option (gogoproto.equal)            = false;

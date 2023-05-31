@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -27,6 +28,8 @@ type KeeperTestSuite struct {
 	app *app.App
 	ctx sdk.Context
 
+	startBlockTime time.Time
+
 	pubkey1   cryptotypes.PubKey
 	user1     string
 	user1Addr sdk.AccAddress
@@ -43,7 +46,8 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.startBlockTime = time.Now()
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: s.startBlockTime})
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
@@ -70,6 +74,7 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) TestSetAttribute() {
+	past := time.Now().Add(-2 * time.Hour)
 
 	cases := []struct {
 		name        string
@@ -126,6 +131,18 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 			errorMsg:  "invalid name: empty",
 		},
 		{
+			name: "should fail due to check expiration date",
+			attr: types.Attribute{
+				Name:           "example.attribute",
+				Value:          []byte("01234567891"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: &past,
+			},
+			ownerAddr: s.user1Addr,
+			errorMsg:  fmt.Sprintf("attribute expiration date %v is before block time of %v", past.UTC(), s.ctx.BlockTime().UTC()),
+		},
+		{
 			name: "should fail due to attribute length too long",
 			attr: types.Attribute{
 				Name:          "name",
@@ -171,8 +188,6 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 		},
 	}
 	for _, tc := range cases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			err := s.app.AttributeKeeper.SetAttribute(s.ctx, tc.attr, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
@@ -381,8 +396,6 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 		},
 	}
 	for _, tc := range cases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			err := s.app.AttributeKeeper.UpdateAttribute(s.ctx, tc.origAttr, tc.updateAttr, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
@@ -401,6 +414,124 @@ func (s *KeeperTestSuite) TestUpdateAttribute() {
 
 }
 
+func (s *KeeperTestSuite) TestUpdateAttributeExpiration() {
+	now := time.Now().UTC()
+	past := now.Add(-2 * time.Hour)
+	attr := types.Attribute{
+		Name:           "example.attribute",
+		Value:          []byte("my-value"),
+		AttributeType:  types.AttributeType_String,
+		ExpirationDate: &now,
+		Address:        s.user1,
+	}
+	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+
+	cases := []struct {
+		name       string
+		updateAttr types.Attribute
+		ownerAddr  sdk.AccAddress
+		errorMsg   string
+	}{
+		{
+			name: "should fail to update attribute expiration, validatebasic original attr",
+			updateAttr: types.Attribute{
+				Name:           "",
+				Value:          []byte("my-value"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: nil,
+			},
+			ownerAddr: s.user1Addr,
+			errorMsg:  `unable to normalize attribute name "": segment of name is too short`,
+		},
+		{
+			name: "should fail to update attribute expiration, value not found",
+			updateAttr: types.Attribute{
+				Name:           "example.attribute",
+				Value:          []byte("notfound"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: nil,
+			},
+			ownerAddr: s.user1Addr,
+			errorMsg:  `no attributes updated with name "example.attribute" : value "notfound" : type: ATTRIBUTE_TYPE_STRING`,
+		},
+		{
+			name: "should fail to update attribute expiration, owner not correct",
+			updateAttr: types.Attribute{
+				Name:           "example.attribute",
+				Value:          []byte("my-value"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: nil,
+			},
+			ownerAddr: s.user2Addr,
+			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
+		},
+		{
+			name: "should fail to update attribute expiration, owner not correct",
+			updateAttr: types.Attribute{
+				Name:           "example.attribute",
+				Value:          []byte("my-value"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: nil,
+			},
+			ownerAddr: s.user2Addr,
+			errorMsg:  fmt.Sprintf("no account found for owner address \"%s\"", s.user2Addr),
+		},
+		{
+			name: "should fail to update attribute expiration, time in the past",
+			updateAttr: types.Attribute{
+				Name:           "example.attribute",
+				Value:          []byte("my-value"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: &past,
+			},
+			errorMsg:  fmt.Sprintf("attribute expiration date %v is before block time of %v", past.UTC(), s.ctx.BlockTime().UTC()),
+			ownerAddr: s.user1Addr,
+		},
+		{
+			name: "should succeed to update attribute expiration, with nil time",
+			updateAttr: types.Attribute{
+				Name:           "example.attribute",
+				Value:          []byte("my-value"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: nil,
+			},
+			ownerAddr: s.user1Addr,
+		},
+		{
+			name: "should succeed to update attribute expiration, with non-nil time",
+			updateAttr: types.Attribute{
+				Name:           "example.attribute",
+				Value:          []byte("my-value"),
+				Address:        s.user1,
+				AttributeType:  types.AttributeType_String,
+				ExpirationDate: &now,
+			},
+			ownerAddr: s.user1Addr,
+		},
+	}
+	for _, tc := range cases {
+		s.Run(tc.name, func() {
+			err := s.app.AttributeKeeper.UpdateAttributeExpiration(s.ctx, tc.updateAttr, tc.ownerAddr)
+			if len(tc.errorMsg) > 0 {
+				s.Assert().Error(err)
+				s.Assert().EqualError(err, tc.errorMsg, "UpdateAttributeExpiration")
+			} else {
+				s.Assert().NoError(err, "UpdateAttributeExpiration")
+				attrs, err := s.app.AttributeKeeper.GetAttributes(s.ctx, tc.updateAttr.Address, tc.updateAttr.Name)
+				s.Assert().NoError(err, "GetAttributes(%q, %q)", tc.updateAttr.Address, tc.updateAttr.Name)
+				s.Assert().Len(attrs, 1, "number of attributes returned by GetAttributes")
+				s.Assert().Equal(tc.updateAttr.ExpirationDate, attrs[0].ExpirationDate, "expiration date of attribute returned by GetAttributes")
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestDeleteAttribute() {
 
 	attr := types.Attribute{
@@ -409,23 +540,23 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		Address:       s.user1,
 		AttributeType: types.AttributeType_String,
 	}
-	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 
-	deletedAttr := types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test"))
+	deletedAttr := types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test"), nil)
 	// Create a name, make an attribute under it, then remove the name leaving an orphan attribute.
-	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "deleted", s.user1Addr, false), "name record should save successfully")
-	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedAttr, s.user1Addr), "should save successfully")
-	s.Assert().NoError(s.app.NameKeeper.DeleteRecord(s.ctx, "deleted"), "name record should be removed successfully")
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "deleted", s.user1Addr, false), "name record should save successfully")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedAttr, s.user1Addr), "should save successfully")
+	s.Require().NoError(s.app.NameKeeper.DeleteRecord(s.ctx, "deleted"), "name record should be removed successfully")
 
 	// Create multiple attributes for a address with same name, to test the delete counter
 	deleteCounterName := "deleted2"
-	deletedCounterAttr1 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test1"))
-	deletedCounterAttr2 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test2"))
-	deletedCounterAttr3 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test3"))
-	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, deleteCounterName, s.user1Addr, false), "name record should save successfully")
-	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr1, s.user1Addr), "should save successfully")
-	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr2, s.user1Addr), "should save successfully")
-	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr3, s.user1Addr), "should save successfully")
+	deletedCounterAttr1 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test1"), nil)
+	deletedCounterAttr2 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test2"), nil)
+	deletedCounterAttr3 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test3"), nil)
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, deleteCounterName, s.user1Addr, false), "name record should save successfully")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr1, s.user1Addr), "should save successfully")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr2, s.user1Addr), "should save successfully")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr3, s.user1Addr), "should save successfully")
 
 	cases := []struct {
 		name        string
@@ -477,8 +608,6 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 		},
 	}
 	for _, tc := range cases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			attrStore := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
 			if len(tc.lookupKey) > 0 {
@@ -566,8 +695,6 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 		},
 	}
 	for _, tc := range cases {
-		tc := tc
-
 		s.Run(tc.testName, func() {
 			err := s.app.AttributeKeeper.DeleteAttribute(s.ctx, tc.accAddr, tc.name, &tc.value, tc.ownerAddr)
 			if len(tc.errorMsg) > 0 {
@@ -818,10 +945,10 @@ func (s *KeeperTestSuite) TestPopulateAddressAttributeNameTable() {
 	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
 
 	example1Attr := "example.one"
-	exampleAttr1 := types.NewAttribute(example1Attr, s.user1, types.AttributeType_String, []byte("test1"))
-	exampleAttr2 := types.NewAttribute(example1Attr, s.user1, types.AttributeType_String, []byte("test2"))
-	exampleAttr3 := types.NewAttribute(example1Attr, s.user1, types.AttributeType_String, []byte("test3"))
-	exampleAttr4 := types.NewAttribute(example1Attr, s.user2, types.AttributeType_String, []byte("test4"))
+	exampleAttr1 := types.NewAttribute(example1Attr, s.user1, types.AttributeType_String, []byte("test1"), nil)
+	exampleAttr2 := types.NewAttribute(example1Attr, s.user1, types.AttributeType_String, []byte("test2"), nil)
+	exampleAttr3 := types.NewAttribute(example1Attr, s.user1, types.AttributeType_String, []byte("test3"), nil)
+	exampleAttr4 := types.NewAttribute(example1Attr, s.user2, types.AttributeType_String, []byte("test4"), nil)
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, example1Attr, s.user1Addr, false), "name record should save successfully")
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, exampleAttr1, s.user1Addr), "should save successfully")
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, exampleAttr2, s.user1Addr), "should save successfully")
@@ -829,15 +956,15 @@ func (s *KeeperTestSuite) TestPopulateAddressAttributeNameTable() {
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, exampleAttr4, s.user1Addr), "should save successfully")
 
 	example2Attr := "example.two"
-	example2Attr1 := types.NewAttribute(example2Attr, s.user1, types.AttributeType_String, []byte("test1"))
-	example2Attr2 := types.NewAttribute(example2Attr, s.user2, types.AttributeType_String, []byte("test2"))
+	example2Attr1 := types.NewAttribute(example2Attr, s.user1, types.AttributeType_String, []byte("test1"), nil)
+	example2Attr2 := types.NewAttribute(example2Attr, s.user2, types.AttributeType_String, []byte("test2"), nil)
 	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, example2Attr, s.user1Addr, false), "name record should save successfully")
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, example2Attr1, s.user1Addr), "should save successfully")
 	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, example2Attr2, s.user1Addr), "should save successfully")
 
 	// Clear the kv store of all address look up prefixes
 	// This is because the SetAttribute call would have populated it in the test setup
-	it := sdk.KVStorePrefixIterator(store, types.AttributeKeyPrefixAddrLookup)
+	it := sdk.KVStorePrefixIterator(store, types.AttributeAddrLookupKeyPrefix)
 	for ; it.Valid(); it.Next() {
 		store.Delete(it.Key())
 	}
@@ -881,7 +1008,7 @@ func (s *KeeperTestSuite) TestPurgeAttributes() {
 	}
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 
-	deletedAttr := types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test"))
+	deletedAttr := types.NewAttribute("deleted", s.user1, types.AttributeType_String, []byte("test"), nil)
 	// Create a name, make an attribute under it, then remove the name leaving an orphan attribute.
 	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "deleted", s.user1Addr, false), "name record should save successfully")
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedAttr, s.user1Addr), "should save successfully")
@@ -889,9 +1016,9 @@ func (s *KeeperTestSuite) TestPurgeAttributes() {
 
 	// Create multiple attributes for a address with same name, to test the delete counter
 	deleteCounterName := "deleted2"
-	deletedCounterAttr1 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test1"))
-	deletedCounterAttr2 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test2"))
-	deletedCounterAttr3 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test3"))
+	deletedCounterAttr1 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test1"), nil)
+	deletedCounterAttr2 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test2"), nil)
+	deletedCounterAttr3 := types.NewAttribute(deleteCounterName, s.user1, types.AttributeType_String, []byte("test3"), nil)
 	s.Assert().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, deleteCounterName, s.user1Addr, false), "name record should save successfully")
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr1, s.user1Addr), "should save successfully")
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, deletedCounterAttr2, s.user1Addr), "should save successfully")
@@ -948,8 +1075,6 @@ func (s *KeeperTestSuite) TestPurgeAttributes() {
 		},
 	}
 	for _, tc := range cases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			attrStore := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
 			if len(tc.lookupKey) > 0 {
@@ -968,6 +1093,70 @@ func (s *KeeperTestSuite) TestPurgeAttributes() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	past := s.startBlockTime.Add(-2 * time.Hour)
+	future := s.startBlockTime.Add(time.Hour)
+
+	s.ctx = s.ctx.WithBlockTime(past)
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "one.expire.testing", s.user1Addr, false), "SetNameRecord one.expire.testing")
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "two.expire.testing", s.user1Addr, false), "SetNameRecord two.expire.testing")
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "three.expire.testing", s.user1Addr, false), "SetNameRecord three.expire.testing")
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "four.expire.testing", s.user1Addr, false), "SetNameRecord four.expire.testing")
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "five.expire.testing", s.user1Addr, false), "SetNameRecord five.expire.testing")
+
+	attr1 := types.NewAttribute("one.expire.testing", s.user1, types.AttributeType_String, []byte("test1"), nil)
+	attr1.ExpirationDate = &past
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr1, s.user1Addr), "SetAttribute attr1")
+	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr1)), "store.Get attr1 AttributeExpireKey")
+	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr1.Name, attr1.GetAddressBytes())), "store.Get attr1 AttributeNameAddrKeyPrefix")
+
+	attr2 := types.NewAttribute("two.expire.testing", s.user1, types.AttributeType_String, []byte("test2"), nil)
+	attr2.ExpirationDate = &past
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr2, s.user1Addr), "SetAttribute attr2")
+	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr2)), "store.Get attr2 AttributeExpireKey")
+	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr2.Name, attr2.GetAddressBytes())), "store.Get attr2 AttributeNameAddrKeyPrefix")
+
+	attr3 := types.NewAttribute("three.expire.testing", s.user1, types.AttributeType_String, []byte("test3"), nil)
+	attr3.ExpirationDate = &s.startBlockTime
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr3, s.user1Addr), "SetAttribute attr3")
+	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr3)), "store.Get attr3 AttributeExpireKey")
+	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr3.Name, attr3.GetAddressBytes())), "store.Get attr3 AttributeNameAddrKeyPrefix")
+
+	attr4 := types.NewAttribute("four.expire.testing", s.user1, types.AttributeType_String, []byte("test4"), nil)
+	attr4.ExpirationDate = &future
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr4, s.user1Addr), "SetAttribute attr4")
+	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr4)), "store.Get attr4 AttributeExpireKey")
+	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr4.Name, attr4.GetAddressBytes())), "store.Get attr4 AttributeNameAddrKeyPrefix")
+
+	attr5 := types.NewAttribute("five.expire.testing", s.user1, types.AttributeType_String, []byte("test5"), nil)
+	attr5.ExpirationDate = &future
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr5, s.user1Addr), "SetAttribute attr5")
+	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr5)), "store.Get attr5 AttributeExpireKey")
+	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr5.Name, attr5.GetAddressBytes())), "store.Get attr5 AttributeNameAddrKeyPrefix")
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager()).WithBlockTime(s.startBlockTime)
+	s.app.AttributeKeeper.DeleteExpiredAttributes(s.ctx, 0)
+
+	attr1Event := s.ctx.EventManager().Events()[0]
+	attr2Event := s.ctx.EventManager().Events()[1]
+	s.Assert().Equal("provenance.attribute.v1.EventAttributeExpired", attr1Event.Type)
+	s.Assert().Equal("provenance.attribute.v1.EventAttributeExpired", attr2Event.Type)
+
+	s.Assert().Nil(store.Get(types.AttributeExpireKey(attr1)), "store.Get attr1 AttributeExpireKey")
+	s.Assert().Nil(store.Get(types.AttributeNameAddrKeyPrefix(attr1.Name, attr1.GetAddressBytes())), "store.Get attr1 AttributeNameAddrKeyPrefix")
+	s.Assert().Nil(store.Get(types.AttributeExpireKey(attr2)), "store.Get attr2 AttributeExpireKey")
+	s.Assert().Nil(store.Get(types.AttributeNameAddrKeyPrefix(attr2.Name, attr2.GetAddressBytes())), "store.Get attr2 AttributeNameAddrKeyPrefix")
+
+	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr3)), "store.Get attr3 AttributeExpireKey")
+	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr3.Name, attr3.GetAddressBytes())), "store.Get attr3 AttributeNameAddrKeyPrefix")
+
+	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr4)), "store.Get attr4 AttributeExpireKey")
+	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr4.Name, attr4.GetAddressBytes())), "store.Get attr4 AttributeNameAddrKeyPrefix")
+	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr5)), "store.Get attr5 AttributeExpireKey")
+	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr5.Name, attr5.GetAddressBytes())), "store.Get attr5 AttributeNameAddrKeyPrefix")
 }
 
 func (s *KeeperTestSuite) TestGetAccountData() {
