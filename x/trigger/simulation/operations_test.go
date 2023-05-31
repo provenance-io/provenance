@@ -8,8 +8,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
@@ -87,6 +89,39 @@ func (s *SimTestSuite) TestSimulateMsgCreateTrigger() {
 	s.Require().True(operationMsg.OK, operationMsg.String())
 	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
 	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
+	s.Require().Len(futureOperations, 0)
+}
+
+func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
+
+	// setup 3 accounts
+	source := rand.NewSource(1)
+	r := rand.New(source)
+	accounts := s.getTestingAccounts(r, 3)
+
+	actions, _ := sdktx.SetMsgs([]sdk.Msg{simulation.GetRandomAction(r, accounts[0].Address.String(), accounts[1].Address.String())})
+	anyEvent, _ := codectypes.NewAnyWithValue(simulation.GetRandomEvent(r, s.ctx.BlockTime()))
+	trigger := types.NewTrigger(1000, accounts[0].Address.String(), anyEvent, actions)
+	s.app.TriggerKeeper.SetTrigger(s.ctx, trigger)
+	s.app.TriggerKeeper.SetEventListener(s.ctx, trigger)
+	s.app.TriggerKeeper.SetGasLimit(s.ctx, trigger.GetId(), 1000)
+
+	// begin a new block
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+
+	// execute operation
+	op := simulation.SimulateMsgDestroyTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
+	s.Require().NoError(err)
+
+	var msg types.MsgDestroyTriggerRequest
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+
+	s.Require().True(operationMsg.OK, operationMsg.String())
+	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
+	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
+	s.Require().Equal(uint64(1000), msg.GetId())
+	s.Require().Equal(accounts[0].Address.String(), msg.GetAuthority())
 	s.Require().Len(futureOperations, 0)
 }
 
