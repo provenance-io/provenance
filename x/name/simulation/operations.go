@@ -208,9 +208,11 @@ func getRandomRecord(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, accs []simt
 	})
 
 	found := false
-	for i := 0; i < len(records) && !found; i++ {
-		randomRecord = records[i]
+	for _, randomRecord = range records {
 		simAccount, found = simtypes.FindAccount(accs, sdk.MustAccAddressFromBech32(randomRecord.Address))
+		if found {
+			break
+		}
 	}
 
 	return randomRecord, simAccount, found, nil
