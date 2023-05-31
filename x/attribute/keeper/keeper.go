@@ -382,11 +382,17 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.AddrStrAttributesNameKeyPrefix(addr, name))
+	iter := sdk.KVStorePrefixIterator(store, types.AddrStrAttributesNameKeyPrefix(addr, name))
+	defer func() {
+		if iter != nil {
+			iter.Close()
+		}
+	}()
+
 	attrToDelete := []types.Attribute{} // do delete logic outside of iterator
-	for ; it.Valid(); it.Next() {
+	for ; iter.Valid(); iter.Next() {
 		attr := types.Attribute{}
-		if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
+		if err := k.cdc.Unmarshal(iter.Value(), &attr); err != nil {
 			return err
 		}
 
@@ -394,7 +400,8 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 			attrToDelete = append(attrToDelete, attr)
 		}
 	}
-	it.Close()
+	iter.Close()
+	iter = nil
 
 	for _, attr := range attrToDelete {
 		addrBz := attr.GetAddressBytes()
