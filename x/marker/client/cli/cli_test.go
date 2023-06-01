@@ -33,6 +33,8 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	"github.com/provenance-io/provenance/x/marker/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -266,6 +268,20 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	markerDataBz, err := cfg.Codec.MarshalJSON(&markerData)
 	s.Require().NoError(err)
 	genesisState[markertypes.ModuleName] = markerDataBz
+
+	// Pre-define an accountdata entry
+	attrData := attrtypes.DefaultGenesisState()
+	attrData.Attributes = append(attrData.Attributes,
+		attrtypes.Attribute{
+			Name:          attrtypes.AccountDataName,
+			Value:         []byte("Do not sell this coin."),
+			AttributeType: attrtypes.AttributeType_String,
+			Address:       markerData.Markers[5].Address, // Should be hodlercoin's address.
+		},
+	)
+	attrDataBz, err := cfg.Codec.MarshalJSON(attrData)
+	s.Require().NoError(err, "MarshalJSON(attrData)")
+	genesisState[attrtypes.ModuleName] = attrDataBz
 
 	cfg.GenesisState = genesisState
 	cfg.ChainID = antewrapper.SimAppChainID
@@ -529,6 +545,12 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			},
 			fmt.Sprintf("amount:\n  amount: \"%s\"\n  denom: %s", s.cfg.BondedTokens.Mul(sdk.NewInt(int64(s.cfg.NumValidators))), s.cfg.BondDenom),
 		},
+		{
+			name:           "account data",
+			cmd:            markercli.AccountDataCmd(),
+			args:           []string{"hodlercoin"},
+			expectedOutput: "value: Do not sell this coin.",
+		},
 	}
 	for _, tc := range testCases {
 		tc := tc
@@ -647,7 +669,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			[]string{
 				s.testnet.Validators[0].Address.String(),
 				"hotdog",
-				"mint,burn,transfer,withdraw",
+				"mint,burn,transfer,withdraw,deposit",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -859,6 +881,21 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
+			name: "set account data",
+			cmd:  markercli.GetCmdSetAccountData(),
+			args: []string{
+				"hotdog",
+				fmt.Sprintf("--%s", attrcli.FlagValue), "Not as good as corndog.",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
 			"remove access",
 			markercli.GetCmdDeleteAccess(),
 			[]string{
@@ -870,6 +907,22 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			name: "set account data via gov prop",
+			cmd:  markercli.GetCmdSetAccountData(),
+			args: []string{
+				"hotdog",
+				fmt.Sprintf("--%s", attrcli.FlagValue), "Better than corndog.",
+				fmt.Sprintf("--%s", markercli.FlagGovProposal),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 	}
 
