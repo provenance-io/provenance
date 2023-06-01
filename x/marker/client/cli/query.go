@@ -275,7 +275,7 @@ func MarkerSupplyCmd() *cobra.Command {
 // AccountDataCmd is the CLI command for querying account data for a marker.
 func AccountDataCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "account-data denom",
+		Use:     "account-data <denom>",
 		Short:   "Get a marker's account data",
 		Aliases: []string{"accountdata", "ad"},
 		Example: fmt.Sprintf(`$ %s query marker account-data nhash`, version.AppName),
