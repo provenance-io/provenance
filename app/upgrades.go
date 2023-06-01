@@ -86,6 +86,8 @@ var upgrades = map[string]appUpgrade{
 
 			removeP8eMemorializeContractFee(ctx, app)
 
+			removeInactiveValidators(ctx, app, 21)
+
 			return vm, nil
 		},
 	},
@@ -224,4 +226,36 @@ func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
 	} else {
 		ctx.Logger().Info(fmt.Sprintf("Successfully removed message fee for %q with amount %q.", fee.MsgTypeUrl, fee.AdditionalFee.String()))
 	}
+}
+
+// removeInactiveValidators unbonds all delegations from inactive validators, triggering their removal from the validator set.
+func removeInactiveValidators(ctx sdk.Context, app *App, inActiveDays int) {
+	ctx.Logger().Info(fmt.Sprintf("removing any validator that has been inactive (unbonded) for %d days", inActiveDays))
+	removalCount := 0
+	validators := app.StakingKeeper.GetAllValidators(ctx)
+	for _, validator := range validators {
+		if validator.IsUnbonded() {
+			duration := validator.UnbondingTime.Sub(ctx.BlockTime())
+			days := int(duration.Hours() / 24)
+			if days >= inActiveDays {
+				ctx.Logger().Info(fmt.Sprintf("validator %v has been inactive (unbonded) for %d days and will be removed", validator.OperatorAddress, days))
+				valAddress, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
+				if err != nil {
+					panic(err)
+				}
+				delegations := app.StakingKeeper.GetValidatorDelegations(ctx, valAddress)
+				for _, delegation := range delegations {
+					ctx.Logger().Info(fmt.Sprintf("unbonding delegator %v from validator %v of all shares (%v)", delegation.DelegatorAddress, validator.OperatorAddress, delegation.GetShares()))
+					// unbonding all of a delegators shares, method will remove validator from set once all  have been removed.
+					_, err := app.StakingKeeper.Unbond(ctx, delegation.GetDelegatorAddr(), valAddress, delegation.GetShares())
+					if err != nil {
+						panic(err)
+					}
+
+				}
+				removalCount++
+			}
+		}
+	}
+	ctx.Logger().Info(fmt.Sprintf("a total of %d inactive (unbonded) validators have been removed", removalCount))
 }
