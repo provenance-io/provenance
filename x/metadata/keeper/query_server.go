@@ -3,18 +3,16 @@ package keeper
 import (
 	"context"
 	b64 "encoding/base64"
-	"errors"
 	"fmt"
 	"net/url"
 	"time"
 
 	"github.com/google/uuid"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -38,7 +36,7 @@ func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "Scope")
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("empty request")
 	}
 
 	retval := types.ScopeResponse{Request: req}
@@ -48,27 +46,27 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 		var err error
 		scopeAddr, err = ParseScopeID(req.ScopeId)
 		if err != nil {
-			return &retval, status.Error(codes.InvalidArgument, err.Error())
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
 		}
 	}
 	if len(req.SessionAddr) > 0 {
 		var err error
 		sessionAddr, err = ParseSessionAddr(req.SessionAddr)
 		if err != nil {
-			return &retval, status.Error(codes.InvalidArgument, err.Error())
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
 		}
 		// ParseSessionAddr if this would fail.
 		scopeAddr2 := sessionAddr.MustGetAsScopeAddress()
 		if scopeAddr.Empty() {
 			scopeAddr = scopeAddr2
 		} else if !scopeAddr.Equals(scopeAddr2) {
-			return &retval, status.Errorf(codes.InvalidArgument, "session %s is not in scope %s", sessionAddr, scopeAddr)
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("session %s is not in scope %s", sessionAddr, scopeAddr)
 		}
 	}
 	if len(req.RecordAddr) > 0 {
 		recordAddr, err := ParseRecordAddr(req.RecordAddr)
 		if err != nil {
-			return &retval, status.Error(codes.InvalidArgument, err.Error())
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
 		}
 		// ParseRecordAddr if this would fail.
 		scopeAddr2 := recordAddr.MustGetAsScopeAddress()
@@ -77,17 +75,17 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 			// This assumes that we have checked and set scopeAddr while processing the sessionAddr.
 			scopeAddr3 := sessionAddr.MustGetAsScopeAddress()
 			if !scopeAddr2.Equals(scopeAddr3) {
-				return &retval, status.Errorf(codes.InvalidArgument, "session %s and record %s are not associated with the same scope", sessionAddr, recordAddr)
+				return &retval, sdkerrors.ErrInvalidRequest.Wrapf("session %s and record %s are not associated with the same scope", sessionAddr, recordAddr)
 			}
 		case scopeAddr.Empty():
 			scopeAddr = scopeAddr2
 		case !scopeAddr.Equals(scopeAddr2):
-			return &retval, status.Errorf(codes.InvalidArgument, "session %s is not part of scope %s", recordAddr, scopeAddr)
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("session %s is not part of scope %s", recordAddr, scopeAddr)
 		}
 	}
 
 	if scopeAddr.Empty() {
-		return &retval, status.Error(codes.InvalidArgument, "empty request parameters")
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("empty request parameters")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -131,7 +129,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 	}
 
 	if err != nil {
-		return &retval, status.Error(codes.Unavailable, err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	return &retval, nil
@@ -170,7 +168,7 @@ func (k Keeper) ScopesAll(c context.Context, req *types.ScopesAllRequest) (*type
 		return nil // Still want to move on to the next.
 	})
 	if err != nil {
-		return &retval, status.Error(codes.Unavailable, err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	retval.Pagination = pageRes
 	return &retval, nil
@@ -180,7 +178,7 @@ func (k Keeper) ScopesAll(c context.Context, req *types.ScopesAllRequest) (*type
 func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.SessionsResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "Sessions")
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("empty request")
 	}
 
 	retval := types.SessionsResponse{Request: req}
@@ -193,20 +191,20 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 		var err error
 		scopeAddr, err = ParseScopeID(req.ScopeId)
 		if err != nil {
-			return &retval, status.Error(codes.InvalidArgument, err.Error())
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
 		}
 	}
 	if len(req.RecordAddr) > 0 {
 		var err error
 		recordAddr, err = ParseRecordAddr(req.RecordAddr)
 		if err != nil {
-			return &retval, status.Error(codes.InvalidArgument, err.Error())
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
 		}
 		scopeAddr2 := recordAddr.MustGetAsScopeAddress()
 		if scopeAddr.Empty() {
 			scopeAddr = scopeAddr2
 		} else if !scopeAddr.Equals(scopeAddr2) {
-			return &retval, status.Errorf(codes.InvalidArgument, "record %s is not part of scope %s", recordAddr, scopeAddr)
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("record %s is not part of scope %s", recordAddr, scopeAddr)
 		}
 	}
 	if len(req.SessionId) > 0 {
@@ -217,7 +215,7 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 		}
 		sessionAddr, err = ParseSessionID(scopeIDForParsing, req.SessionId)
 		if err != nil {
-			return &retval, status.Error(codes.InvalidArgument, err.Error())
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
 		}
 		// ParseSessionID ensures that this will not return an error.
 		scopeAddr2 := sessionAddr.MustGetAsScopeAddress()
@@ -226,25 +224,25 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 			// This assumes that we have checked and set scopeAddr while processing the recordAddr.
 			scopeAddr3 := recordAddr.MustGetAsScopeAddress()
 			if !scopeAddr2.Equals(scopeAddr3) {
-				return &retval, status.Errorf(codes.InvalidArgument, "session %s and record %s are not associated with the same scope", sessionAddr, recordAddr)
+				return &retval, sdkerrors.ErrInvalidRequest.Wrapf("session %s and record %s are not associated with the same scope", sessionAddr, recordAddr)
 			}
 		case scopeAddr.Empty():
 			scopeAddr = scopeAddr2
 		case !scopeAddr.Equals(scopeAddr2):
-			return &retval, status.Errorf(codes.InvalidArgument, "session %s is not part of scope %s", recordAddr, scopeAddr)
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("session %s is not part of scope %s", recordAddr, scopeAddr)
 		}
 	}
 	if len(req.RecordName) > 0 {
 		if scopeAddr.Empty() {
 			// assumes scopeAddr is set previously while parsing other input.
-			return &retval, status.Error(codes.InvalidArgument, "a scope is required to look up sessions by record name")
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("a scope is required to look up sessions by record name")
 		}
 		// We know that scopeAddr is legit, and that we have a name. So this won't give an error.
 		recordAddr2 := scopeAddr.MustGetAsRecordAddress(req.RecordName)
 		if recordAddr.Empty() {
 			recordAddr = recordAddr2
 		} else if !recordAddr.Equals(recordAddr2) {
-			return &retval, status.Errorf(codes.InvalidArgument, "record %s does not have name %s", recordAddr, req.RecordName)
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("record %s does not have name %s", recordAddr, req.RecordName)
 		}
 	}
 
@@ -254,10 +252,10 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 		record, found := k.GetRecord(ctx, recordAddr)
 		switch {
 		case !found:
-			return &retval, status.Errorf(codes.InvalidArgument, "record %s does not exist", recordAddr)
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("record %s does not exist", recordAddr)
 		case !sessionAddr.Empty():
 			if !sessionAddr.Equals(record.SessionId) {
-				return &retval, status.Errorf(codes.InvalidArgument, "record %s belongs to session %s (not %s)",
+				return &retval, sdkerrors.ErrInvalidRequest.Wrapf("record %s belongs to session %s (not %s)",
 					recordAddr, record.SessionId, sessionAddr)
 			}
 		default:
@@ -280,10 +278,10 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 			return false
 		})
 		if itErr != nil {
-			return &retval, status.Error(codes.Unavailable, fmt.Sprintf("error getting sessions for scope with address %s", scopeAddr))
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf(fmt.Sprintf("error getting sessions for scope with address %s", scopeAddr))
 		}
 	default:
-		return &retval, status.Error(codes.InvalidArgument, "empty request parameters")
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("empty request parameters")
 	}
 
 	if req.IncludeScope {
@@ -318,7 +316,7 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 			return false
 		})
 		if err != nil {
-			return &retval, status.Errorf(codes.Unavailable, "error iterating scope [%s] records: %s", scopeAddr, err.Error())
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("error iterating scope [%s] records: %s", scopeAddr, err.Error())
 		}
 	}
 
@@ -358,7 +356,7 @@ func (k Keeper) SessionsAll(c context.Context, req *types.SessionsAllRequest) (*
 		return nil // Still want to move on to the next.
 	})
 	if err != nil {
-		return &retval, status.Error(codes.Unavailable, err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	retval.Pagination = pageRes
 	return &retval, nil
@@ -368,7 +366,7 @@ func (k Keeper) SessionsAll(c context.Context, req *types.SessionsAllRequest) (*
 func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.RecordsResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "Records")
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("empty request")
 	}
 
 	retval := types.RecordsResponse{Request: req}
@@ -380,27 +378,27 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 		var err error
 		scopeAddr, err = ParseScopeID(req.ScopeId)
 		if err != nil {
-			return &retval, status.Error(codes.InvalidArgument, err.Error())
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
 		}
 	}
 	if len(req.RecordAddr) > 0 {
 		var err error
 		recordAddr, err = ParseRecordAddr(req.RecordAddr)
 		if err != nil {
-			return &retval, status.Error(codes.InvalidArgument, err.Error())
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
 		}
 		scopeAddr2 := recordAddr.MustGetAsScopeAddress()
 		if scopeAddr.Empty() {
 			scopeAddr = scopeAddr2
 		} else if !scopeAddr.Equals(scopeAddr2) {
-			return &retval, status.Errorf(codes.InvalidArgument, "record %s is not part of scope %s", recordAddr, scopeAddr)
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("record %s is not part of scope %s", recordAddr, scopeAddr)
 		}
 	}
 	if len(req.SessionId) > 0 {
 		var err error
 		sessionAddr, err = ParseSessionID(req.ScopeId, req.SessionId)
 		if err != nil {
-			return &retval, status.Error(codes.InvalidArgument, err.Error())
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
 		}
 		// ParseSessionID ensures that this will not return an error.
 		scopeAddr2 := sessionAddr.MustGetAsScopeAddress()
@@ -409,25 +407,25 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 			// This assumes that we have checked and set scopeAddr while processing the recordAddr.
 			scopeAddr3 := recordAddr.MustGetAsScopeAddress()
 			if !scopeAddr2.Equals(scopeAddr3) {
-				return &retval, status.Errorf(codes.InvalidArgument, "session %s and record %s are not associated with the same scope", sessionAddr, recordAddr)
+				return &retval, sdkerrors.ErrInvalidRequest.Wrapf("session %s and record %s are not associated with the same scope", sessionAddr, recordAddr)
 			}
 		case scopeAddr.Empty():
 			scopeAddr = scopeAddr2
 		case !scopeAddr.Equals(scopeAddr2):
-			return &retval, status.Errorf(codes.InvalidArgument, "session %s is not part of scope %s", recordAddr, scopeAddr)
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("session %s is not part of scope %s", recordAddr, scopeAddr)
 		}
 	}
 	if len(req.Name) > 0 {
 		if scopeAddr.Empty() {
 			// assumes scopeAddr is set previously while parsing other input.
-			return &retval, status.Error(codes.InvalidArgument, "a scope or session is required to look up records by name")
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("a scope or session is required to look up records by name")
 		}
 		// We know that scopeAddr is legit, and that we have a name. So this won't give an error.
 		recordAddr2 := scopeAddr.MustGetAsRecordAddress(req.Name)
 		if recordAddr.Empty() {
 			recordAddr = recordAddr2
 		} else if !recordAddr.Equals(recordAddr2) {
-			return &retval, status.Errorf(codes.InvalidArgument, "record %s does not have name %s", recordAddr, req.Name)
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("record %s does not have name %s", recordAddr, req.Name)
 		}
 	}
 
@@ -446,7 +444,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 		var err error
 		records, err = k.GetRecords(ctx, scopeAddr, req.Name)
 		if err != nil {
-			return &retval, status.Error(codes.InvalidArgument, err.Error())
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
 		}
 		// Wrap (and possibly filter) the records and add them to the return value.
 		if len(records) > 0 {
@@ -458,7 +456,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 			}
 		}
 	default:
-		return &retval, status.Error(codes.InvalidArgument, "empty request parameters")
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("empty request parameters")
 	}
 
 	if req.IncludeScope {
@@ -534,7 +532,7 @@ func (k Keeper) RecordsAll(c context.Context, req *types.RecordsAllRequest) (*ty
 		return nil // Still want to move on to the next.
 	})
 	if err != nil {
-		return &retval, status.Error(codes.Unavailable, err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	retval.Pagination = pageRes
 	return &retval, nil
@@ -544,18 +542,18 @@ func (k Keeper) RecordsAll(c context.Context, req *types.RecordsAllRequest) (*ty
 func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*types.OwnershipResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "Ownership")
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("empty request")
 	}
 
 	retval := types.OwnershipResponse{Request: req}
 
 	if req.Address == "" {
-		return &retval, status.Error(codes.InvalidArgument, "address cannot be empty")
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("address cannot be empty")
 	}
 
 	addr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("invalid address: %s", err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -575,7 +573,7 @@ func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*type
 		return nil
 	})
 	if err != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("paginate: %v", err)
 	}
 	retval.Pagination = pageRes
 
@@ -586,18 +584,18 @@ func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*type
 func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipRequest) (*types.ValueOwnershipResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "ValueOwnership")
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("empty request")
 	}
 
 	retval := types.ValueOwnershipResponse{Request: req}
 
 	if req.Address == "" {
-		return &retval, status.Error(codes.InvalidArgument, "address cannot be empty")
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("address cannot be empty")
 	}
 
 	addr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("invalid address: %s", err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -617,7 +615,7 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 		return nil
 	})
 	if err != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("paginate: %v", err)
 	}
 	retval.Pagination = pageRes
 	return &retval, nil
@@ -627,18 +625,18 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificationRequest) (*types.ScopeSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "ScopeSpecification")
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("empty request")
 	}
 
 	retval := types.ScopeSpecificationResponse{Request: req}
 
 	if len(req.SpecificationId) == 0 {
-		return &retval, status.Error(codes.InvalidArgument, "specification id cannot be empty")
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("specification id cannot be empty")
 	}
 
 	specAddr, err := ParseScopeSpecID(req.SpecificationId)
 	if err != nil {
-		return &retval, status.Error(codes.InvalidArgument, err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -715,7 +713,7 @@ func (k Keeper) ScopeSpecificationsAll(c context.Context, req *types.ScopeSpecif
 		return nil // Still want to move on to the next.
 	})
 	if err != nil {
-		return &retval, status.Error(codes.Unavailable, err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	retval.Pagination = pageRes
 	return &retval, nil
@@ -725,18 +723,18 @@ func (k Keeper) ScopeSpecificationsAll(c context.Context, req *types.ScopeSpecif
 func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpecificationRequest) (*types.ContractSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "ContractSpecification")
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("empty request")
 	}
 
 	retval := types.ContractSpecificationResponse{Request: req}
 
 	if len(req.SpecificationId) == 0 {
-		return &retval, status.Error(codes.InvalidArgument, "specification id cannot be empty")
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("specification id cannot be empty")
 	}
 
 	specAddr, addrErr := ParseContractSpecID(req.SpecificationId)
 	if addrErr != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "invalid specification id: %s", addrErr.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("invalid specification id: %s", addrErr.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -750,7 +748,7 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 	if req.IncludeRecordSpecs {
 		recSpecs, err := k.GetRecordSpecificationsForContractSpecificationID(ctx, specAddr)
 		if err != nil {
-			return &retval, status.Errorf(codes.Unavailable, "error getting record specifications for contract spec %s: %s",
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("error getting record specifications for contract spec %s: %s",
 				specAddr, err.Error())
 		}
 		retval.RecordSpecifications = types.WrapRecordSpecs(recSpecs)
@@ -792,7 +790,7 @@ func (k Keeper) ContractSpecificationsAll(c context.Context, req *types.Contract
 		return nil // Still want to move on to the next.
 	})
 	if err != nil {
-		return &retval, status.Error(codes.Unavailable, err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	retval.Pagination = pageRes
 	return &retval, nil
@@ -805,21 +803,21 @@ func (k Keeper) RecordSpecificationsForContractSpecification(
 ) (*types.RecordSpecificationsForContractSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "RecordSpecificationsForContractSpecification")
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("empty request")
 	}
 
 	retval := types.RecordSpecificationsForContractSpecificationResponse{Request: req}
 
 	if len(req.SpecificationId) == 0 {
-		return &retval, status.Error(codes.InvalidArgument, "contract specification id cannot be empty")
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("contract specification id cannot be empty")
 	}
 	contractSpecAddr, cSpecAddrErr := ParseContractSpecID(req.SpecificationId)
 	if cSpecAddrErr != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "invalid specification id: %s", cSpecAddrErr.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("invalid specification id: %s", cSpecAddrErr.Error())
 	}
 	contractSpecUUID, cSpecUUIDErr := contractSpecAddr.ContractSpecUUID()
 	if cSpecUUIDErr != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "could not extract contract spec uuid: %s", cSpecUUIDErr.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("could not extract contract spec uuid: %s", cSpecUUIDErr.Error())
 	}
 
 	retval.ContractSpecificationAddr = contractSpecAddr.String()
@@ -828,7 +826,7 @@ func (k Keeper) RecordSpecificationsForContractSpecification(
 	ctx := sdk.UnwrapSDKContext(c)
 	recSpecs, err := k.GetRecordSpecificationsForContractSpecificationID(ctx, contractSpecAddr)
 	if err != nil {
-		return &retval, status.Errorf(codes.Unavailable, "error getting record specifications for contract spec %s: %s",
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("error getting record specifications for contract spec %s: %s",
 			contractSpecAddr, err.Error())
 	}
 
@@ -841,18 +839,18 @@ func (k Keeper) RecordSpecificationsForContractSpecification(
 func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecificationRequest) (*types.RecordSpecificationResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "RecordSpecification")
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("empty request")
 	}
 
 	retval := types.RecordSpecificationResponse{Request: req}
 
 	if len(req.SpecificationId) == 0 {
-		return &retval, status.Error(codes.InvalidArgument, "specification id cannot be empty")
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("specification id cannot be empty")
 	}
 
 	recSpecAddr, recSpecAddrErr := ParseRecordSpecID(req.SpecificationId, req.Name)
 	if recSpecAddrErr != nil {
-		return &retval, status.Errorf(codes.InvalidArgument, "invalid input: %s", recSpecAddrErr.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("invalid input: %s", recSpecAddrErr.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -899,7 +897,7 @@ func (k Keeper) RecordSpecificationsAll(c context.Context, req *types.RecordSpec
 		return nil // Still want to move on to the next.
 	})
 	if err != nil {
-		return &retval, status.Error(codes.Unavailable, err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	retval.Pagination = pageRes
 	return &retval, nil
@@ -917,7 +915,7 @@ func (k Keeper) OSLocatorParams(c context.Context, request *types.OSLocatorParam
 func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*types.OSLocatorResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSLocator")
 	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("empty request")
 	}
 
 	retval := types.OSLocatorResponse{Request: request}
@@ -941,7 +939,7 @@ func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsBy
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSLocatorsByURI")
 	retval := types.OSLocatorsByURIResponse{Request: request}
 	if request == nil {
-		return &retval, status.Error(codes.InvalidArgument, "empty request")
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("empty request")
 	}
 
 	var sDec []byte
@@ -983,19 +981,19 @@ func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsBy
 func (k Keeper) OSLocatorsByScope(ctx context.Context, request *types.OSLocatorsByScopeRequest) (*types.OSLocatorsByScopeResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSLocatorsByScope")
 	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("empty request")
 	}
 
 	retval := types.OSLocatorsByScopeResponse{Request: request}
 
 	ctxSDK := sdk.UnwrapSDKContext(ctx)
 	if request.ScopeId == "" {
-		return &retval, status.Error(codes.InvalidArgument, "scope id cannot be empty")
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("scope id cannot be empty")
 	}
 
 	locators, err := k.GetOSLocatorByScope(ctxSDK, request.ScopeId)
 	if err != nil {
-		return &retval, status.Error(codes.InvalidArgument, err.Error())
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
 	}
 	retval.Locators = locators
 
@@ -1006,7 +1004,7 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsR
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSAllLocators")
 	retval := types.OSAllLocatorsResponse{Request: request}
 	if request == nil {
-		return &retval, status.Error(codes.InvalidArgument, "empty request")
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("empty request")
 	}
 
 	osLocatorStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.OSLocatorAddressKeyPrefix)
@@ -1161,7 +1159,7 @@ func ParseRecordSpecID(specID string, name string) (types.MetadataAddress, error
 		}
 		if addr.IsContractSpecificationAddress() {
 			if len(name) == 0 {
-				return types.MetadataAddress{}, errors.New("a name is required when providing a contract spec address")
+				return types.MetadataAddress{}, sdkerrors.ErrInvalidRequest.Wrapf("a name is required when providing a contract spec address")
 			}
 			return addr.AsRecordSpecAddress(name)
 		}
@@ -1173,7 +1171,7 @@ func ParseRecordSpecID(specID string, name string) (types.MetadataAddress, error
 			specID, addrErr, uidErr) //nolint:errorlint // Can't wrap two errors at once.
 	}
 	if len(name) == 0 {
-		return types.MetadataAddress{}, errors.New("a name is required when providing a uuid")
+		return types.MetadataAddress{}, sdkerrors.ErrInvalidRequest.Wrapf("a name is required when providing a uuid")
 	}
 	return types.RecordSpecMetadataAddress(uid, name), nil
 }

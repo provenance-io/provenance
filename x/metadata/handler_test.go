@@ -136,7 +136,7 @@ func (s *MetadataHandlerTestSuite) TestUpdateValueOwners() {
 			},
 			scopeIDs: ids(scopeIDNotFound, scopeID1, scopeID2),
 			signers:  []string{valueOwner1, valueOwner2},
-			expErr:   "scope not found with id " + scopeIDNotFound.String(),
+			expErr:   "scope not found with id " + scopeIDNotFound.String() + ": not found",
 		},
 		{
 			name: "scope 2 of 3 not found",
@@ -146,7 +146,7 @@ func (s *MetadataHandlerTestSuite) TestUpdateValueOwners() {
 			},
 			scopeIDs: ids(scopeID1, scopeIDNotFound, scopeID2),
 			signers:  []string{valueOwner1, valueOwner2},
-			expErr:   "scope not found with id " + scopeIDNotFound.String(),
+			expErr:   "scope not found with id " + scopeIDNotFound.String() + ": not found",
 		},
 		{
 			name: "scope 3 of 3 not found",
@@ -156,7 +156,7 @@ func (s *MetadataHandlerTestSuite) TestUpdateValueOwners() {
 			},
 			scopeIDs: ids(scopeID1, scopeID2, scopeIDNotFound),
 			signers:  []string{valueOwner1, valueOwner2},
-			expErr:   "scope not found with id " + scopeIDNotFound.String(),
+			expErr:   "scope not found with id " + scopeIDNotFound.String() + ": not found",
 		},
 		{
 			name: "not properly signed",
@@ -166,7 +166,7 @@ func (s *MetadataHandlerTestSuite) TestUpdateValueOwners() {
 			},
 			scopeIDs: ids(scopeID1, scopeID2),
 			signers:  []string{valueOwner1},
-			expErr:   "missing signature from existing value owner " + valueOwner2,
+			expErr:   "missing signature from existing value owner " + valueOwner2 + ": invalid request",
 		},
 		{
 			name: "1 scope without value owner",
@@ -175,7 +175,7 @@ func (s *MetadataHandlerTestSuite) TestUpdateValueOwners() {
 			},
 			scopeIDs: ids(scopeID1),
 			signers:  []string{owner1},
-			expErr:   "scope " + scopeID1.String() + " does not yet have a value owner",
+			expErr:   "scope " + scopeID1.String() + " does not yet have a value owner: invalid request",
 		},
 		{
 			name: "1 scope updated",
@@ -279,7 +279,7 @@ func (s *MetadataHandlerTestSuite) TestMigrateValueOwner() {
 				Proposed: "doesn't matter",
 				Signers:  []string{"who cares"},
 			},
-			expErr: "cannot iterate over invalid value owner \"\": empty address string is not allowed",
+			expErr: "cannot iterate over invalid value owner \"\": empty address string is not allowed: invalid request",
 		},
 		{
 			name: "no scopes",
@@ -288,7 +288,7 @@ func (s *MetadataHandlerTestSuite) TestMigrateValueOwner() {
 				Proposed: addr("does_not_matter_____"),
 				Signers:  []string{addr("signer______________")},
 			},
-			expErr: "no scopes found with value owner \"" + addr("unknown_value_owner_") + "\"",
+			expErr: "no scopes found with value owner \"" + addr("unknown_value_owner_") + "\": not found",
 		},
 		{
 			name: "err from ValidateUpdateValueOwners",
@@ -297,7 +297,7 @@ func (s *MetadataHandlerTestSuite) TestMigrateValueOwner() {
 				Proposed: addr("not_for_public_use__"),
 				Signers:  []string{addr("incorrect_signer____")},
 			},
-			expErr: "missing signature from existing value owner " + addrW1,
+			expErr: "missing signature from existing value owner " + addrW1 + ": invalid request",
 		},
 		{
 			name: "1 scope updated",
@@ -680,21 +680,21 @@ func (s *MetadataHandlerTestSuite) TestAddContractSpecToScopeSpec() {
 			unknownContractSpecId,
 			sSpec.SpecificationId,
 			[]string{s.user1},
-			fmt.Sprintf("contract specification not found with id %s", unknownContractSpecId),
+			fmt.Sprintf("contract specification not found with id %s: not found", unknownContractSpecId),
 		},
 		{
 			"fail to add contract spec, cannot find scope spec",
 			cSpec2.SpecificationId,
 			unknownScopeSpecId,
 			[]string{s.user1},
-			fmt.Sprintf("scope specification not found with id %s", unknownScopeSpecId),
+			fmt.Sprintf("scope specification not found with id %s: not found", unknownScopeSpecId),
 		},
 		{
 			"fail to add contract spec, scope spec already has contract spec",
 			cSpec.SpecificationId,
 			sSpec.SpecificationId,
 			[]string{s.user1},
-			fmt.Sprintf("scope spec %s already contains contract spec %s", sSpec.SpecificationId, cSpec.SpecificationId),
+			fmt.Sprintf("scope spec %s already contains contract spec %s: invalid request", sSpec.SpecificationId, cSpec.SpecificationId),
 		},
 		{
 			"should successfully add contract spec to scope spec",
@@ -772,7 +772,7 @@ func (s *MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
 			cSpec2.SpecificationId,
 			unknownScopeSpecId,
 			[]string{s.user1},
-			fmt.Sprintf("scope specification not found with id %s", unknownScopeSpecId),
+			fmt.Sprintf("scope specification not found with id %s: not found", unknownScopeSpecId),
 		},
 		{
 			"should succeed to add contract spec to scope spec",
@@ -786,7 +786,7 @@ func (s *MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
 			cSpec2.SpecificationId,
 			sSpec.SpecificationId,
 			[]string{s.user1},
-			fmt.Sprintf("contract specification %s not found in scope specification %s", cSpec2.SpecificationId, sSpec.SpecificationId),
+			fmt.Sprintf("contract specification %s not found in scope specification %s: not found", cSpec2.SpecificationId, sSpec.SpecificationId),
 		},
 	}
 
@@ -852,13 +852,13 @@ func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 			"should fail to ADD owners, msg validate basic failure",
 			types.NewMsgAddScopeOwnerRequest(scopeID, []types.Party{}, []string{s.user1}),
 			[]string{s.user1},
-			"invalid owners: at least one party is required",
+			"invalid owners: at least one party is required: invalid request",
 		},
 		{
 			"should fail to ADD owners, can not find scope",
 			types.NewMsgAddScopeOwnerRequest(dneScopeID, []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
 			[]string{s.user1},
-			fmt.Sprintf("scope not found with id %s", dneScopeID),
+			fmt.Sprintf("scope not found with id %s: not found", dneScopeID),
 		},
 		{
 			"should fail to ADD owners, validate add failure",
@@ -876,13 +876,13 @@ func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 			"should fail to DELETE owners, msg validate basic failure",
 			types.NewMsgDeleteScopeOwnerRequest(scopeID, []string{}, []string{s.user1, s.user2}),
 			[]string{s.user1},
-			"at least one owner address is required",
+			"at least one owner address is required: invalid request",
 		},
 		{
 			"should fail to DELETE owners, validate add failure",
 			types.NewMsgDeleteScopeOwnerRequest(dneScopeID, []string{s.user1}, []string{s.user1, s.user2}),
 			[]string{s.user1},
-			fmt.Sprintf("scope not found with id %s", dneScopeID),
+			fmt.Sprintf("scope not found with id %s: not found", dneScopeID),
 		},
 		{
 			"should fail to DELETE owners, validate add failure",
@@ -1016,19 +1016,19 @@ func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 			"should fail to ADD address to data access, msg validate basic failure",
 			types.NewMsgAddScopeDataAccessRequest(scopeID, []string{}, []string{s.user1}),
 			[]string{s.user1},
-			"data access list cannot be empty",
+			"data access list cannot be empty: invalid request",
 		},
 		{
 			"should fail to ADD address to data access, validate add failure",
 			types.NewMsgAddScopeDataAccessRequest(dneScopeID, []string{s.user1}, []string{s.user1}),
 			[]string{s.user1},
-			fmt.Sprintf("scope not found with id %s", dneScopeID),
+			fmt.Sprintf("scope not found with id %s: not found", dneScopeID),
 		},
 		{
 			"should fail to ADD address to data access, validate add failure",
 			types.NewMsgAddScopeDataAccessRequest(scopeID, []string{s.user1}, []string{s.user1}),
 			[]string{s.user1},
-			fmt.Sprintf("address already exists for data access %s", s.user1),
+			fmt.Sprintf("address already exists for data access %s: invalid request", s.user1),
 		},
 		{
 			"should successfully ADD address to data access",
@@ -1040,19 +1040,19 @@ func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 			"should fail to DELETE address from data access, msg validate basic failure",
 			types.NewMsgDeleteScopeDataAccessRequest(scopeID, []string{}, []string{s.user1}),
 			[]string{s.user1},
-			"data access list cannot be empty",
+			"data access list cannot be empty: invalid request",
 		},
 		{
 			"should fail to DELETE address from data access, validate add failure",
 			types.NewMsgDeleteScopeDataAccessRequest(dneScopeID, []string{s.user1}, []string{s.user1}),
 			[]string{s.user1},
-			fmt.Sprintf("scope not found with id %s", dneScopeID),
+			fmt.Sprintf("scope not found with id %s: not found", dneScopeID),
 		},
 		{
 			"should fail to DELETE address from data access, validate add failure",
 			types.NewMsgDeleteScopeDataAccessRequest(scopeID, []string{user3}, []string{s.user1}),
 			[]string{s.user1},
-			fmt.Sprintf("address does not exist in scope data access: %s", user3),
+			fmt.Sprintf("address does not exist in scope data access: %s: invalid request", user3),
 		},
 		{
 			"should successfully DELETE address from data access",
