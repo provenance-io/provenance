@@ -30,6 +30,8 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -68,6 +70,8 @@ type IntegrationCLITestSuite struct {
 
 	scopeAsJson string
 	scopeAsText string
+
+	scopeIDWithData metadatatypes.MetadataAddress
 
 	session     metadatatypes.Session
 	sessionUUID uuid.UUID
@@ -465,9 +469,25 @@ owner: %s`,
 	s.Require().NoError(err)
 	genesisState[metadatatypes.ModuleName] = metadataDataBz
 
+	// Set some account data on a scope. It should be fine even though the scope doesn't actually exist.
+	s.scopeIDWithData = metadatatypes.ScopeMetadataAddress(uuid.MustParse("A11E57A6-7D51-4C43-91F9-AD1F4D16FA35"))
+	attrData := attrtypes.DefaultGenesisState()
+	attrData.Attributes = append(attrData.Attributes,
+		attrtypes.Attribute{
+			Name:          attrtypes.AccountDataName,
+			Value:         []byte("This is some scope account data."),
+			AttributeType: attrtypes.AttributeType_String,
+			Address:       s.scopeIDWithData.String(),
+		},
+	)
+	attrDataBz, err := cfg.Codec.MarshalJSON(attrData)
+	s.Require().NoError(err, "MarshalJSON(attrData)")
+	genesisState[attrtypes.ModuleName] = attrDataBz
+
 	cfg.GenesisState = genesisState
 
 	cfg.ChainID = antewrapper.SimAppChainID
+	cfg.TimeoutCommit = 500 * time.Millisecond
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err, "creating testnet")
 
@@ -1902,6 +1922,26 @@ func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 	runQueryCmdTestCases(s, cmd, testCases)
 }
 
+func (s *IntegrationCLITestSuite) TestGetAccountDataCmd() {
+	cmd := func() *cobra.Command { return cli.GetAccountDataCmd() }
+
+	tests := []queryCmdTestCase{
+		{
+			name:             "invalid address",
+			args:             []string{"notanaddr"},
+			expectedError:    `invalid metadata address "notanaddr": decoding bech32 failed: invalid separator index -1`,
+			expectedInOutput: []string{`invalid metadata address "notanaddr"`},
+		},
+		{
+			name:             "data returned",
+			args:             []string{s.scopeIDWithData.String()},
+			expectedInOutput: []string{"value: This is some scope account data."},
+		},
+	}
+
+	runQueryCmdTestCases(s, cmd, tests)
+}
+
 // ---------- tx cmd tests ----------
 
 type txCmdTestCase struct {
@@ -1916,12 +1956,19 @@ type txCmdTestCase struct {
 }
 
 func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
+	s.T().Helper()
 	for _, tc := range testCases {
-		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			cmdName := tc.cmd.Name()
+			var outBz []byte
+			defer func() {
+				if t.Failed() {
+					t.Logf("Command: %s\nArgs: %q\nOutput:\n%s", cmdName, tc.args, string(outBz))
+				}
+			}()
 			clientCtx := s.getClientCtx()
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+			outBz = out.Bytes()
 
 			if len(tc.expectErrMsg) > 0 {
 				require.EqualError(t, err, tc.expectErrMsg, "%s expected error message", cmdName)
@@ -1930,16 +1977,14 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 			} else {
 				require.NoError(t, err, "%s unexpected error", cmdName)
 
-				umErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType)
+				umErr := clientCtx.Codec.UnmarshalJSON(outBz, tc.respType)
 				require.NoError(t, umErr, "%s UnmarshalJSON error", cmdName)
 
-				txResp := tc.respType.(*sdk.TxResponse)
-				assert.Equal(t, tc.expectedCode, txResp.Code, "%s response code", cmdName)
-				// Note: If the above is failing because a 0 is expected, but it's getting a 1,
-				//       it might mean that the keeper method is returning an error.
-
-				if t.Failed() {
-					t.Logf("tx:\n%v\n", txResp)
+				txResp, isTxResp := tc.respType.(*sdk.TxResponse)
+				if isTxResp && !assert.Equal(t, int(tc.expectedCode), int(txResp.Code), "%s response code", cmdName) {
+					// Note: If the above is failing because a 0 is expected, but it's getting a 1,
+					//       it might mean that the keeper method is returning an error.
+					t.Logf("txResp:\n%v", txResp)
 				}
 			}
 		})
@@ -2362,7 +2407,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 						"--" + cli.FlagSigners, "notabech32",
 						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 					},
-					expectErrMsg: "decoding bech32 failed: invalid separator index -1",
+					expectErrMsg: "invalid signer address \"notabech32\": decoding bech32 failed: invalid separator index -1",
 				},
 				{
 					name: "migrate: only 1 arg",
@@ -2411,7 +2456,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 						"--" + cli.FlagSigners, "notabech32",
 						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 					},
-					expectErrMsg: "decoding bech32 failed: invalid separator index -1",
+					expectErrMsg: "invalid signer address \"notabech32\": decoding bech32 failed: invalid separator index -1",
 				},
 			},
 		},
@@ -3326,7 +3371,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			true,
-			"decoding bech32 failed: invalid separator index -1",
+			"invalid signer address \"incorrect-signer-format\": decoding bech32 failed: invalid separator index -1",
 			&sdk.TxResponse{}, 0,
 		},
 		{
@@ -3871,6 +3916,116 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 	}
 
 	runTxCmdTestCases(s, testCases)
+}
+
+func (s *IntegrationCLITestSuite) TestSetAccountDataCmd() {
+	cmd := func() *cobra.Command {
+		return cli.SetAccountDataCmd()
+	}
+
+	scopeUUID := uuid.New()
+	scopeID := metadatatypes.ScopeMetadataAddress(scopeUUID)
+	scopeIDStr := scopeID.String()
+
+	stdFlagsPlus := func(args ...string) []string {
+		return append(args,
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		)
+	}
+
+	writeScopeCmd := cli.WriteScopeCmd()
+	ctx := s.getClientCtx()
+	out, err := clitestutil.ExecTestCLICmd(
+		ctx,
+		writeScopeCmd,
+		stdFlagsPlus(
+			scopeID.String(),
+			s.scopeSpecID.String(),
+			s.accountAddrStr,
+			s.accountAddrStr,
+			s.accountAddrStr,
+		),
+	)
+	require.NoError(s.T(), err, "adding base scope")
+	scopeResp := sdk.TxResponse{}
+	umErr := ctx.Codec.UnmarshalJSON(out.Bytes(), &scopeResp)
+	require.NoError(s.T(), umErr, "%s UnmarshalJSON error", writeScopeCmd.Name())
+	if !s.Assert().Equal(0, int(scopeResp.Code), "write scope response code") {
+		s.T().Logf("tx response:\n%v", scopeResp)
+		s.T().FailNow()
+	}
+
+	tests := []txCmdTestCase{
+		{
+			name:         "invalid address",
+			cmd:          cmd(),
+			args:         stdFlagsPlus("notanaddr"),
+			expectErrMsg: `invalid metadata address "notanaddr": decoding bech32 failed: invalid separator index -1`,
+		},
+		{
+			name:         "no value",
+			cmd:          cmd(),
+			args:         stdFlagsPlus(scopeIDStr),
+			expectErrMsg: "exactly one of these must be provided: " + attrcli.AccountDataFlagsUse,
+		},
+		{
+			name: "invalid signers",
+			cmd:  cmd(),
+			args: stdFlagsPlus(
+				scopeIDStr,
+				"--"+attrcli.FlagValue, "Some new value.",
+				"--"+cli.FlagSigners, s.accountAddrStr+",notanaddr",
+			),
+			expectErrMsg: "invalid signer address \"notanaddr\": decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "incorrect signer",
+			cmd:  cmd(),
+			args: []string{
+				scopeIDStr,
+				"--" + attrcli.FlagValue, "Some new value.",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user1AddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			respType:     &sdk.TxResponse{},
+			expectedCode: 18,
+		},
+		{
+			name: "all okay",
+			cmd:  cmd(),
+			args: stdFlagsPlus(
+				scopeIDStr,
+				"--"+attrcli.FlagValue, "This is the account data for a test scope.",
+			),
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+	}
+
+	runTxCmdTestCases(s, tests)
+
+	// Now look up what we just set to make sure it got set.
+	runQueryCmdTestCases(s, func() *cobra.Command { return cli.GetAccountDataCmd() },
+		[]queryCmdTestCase{
+			{
+				name:             "using metadata query command",
+				args:             []string{scopeIDStr},
+				expectedInOutput: []string{"value: This is the account data for a test scope."},
+			},
+		})
+	runQueryCmdTestCases(s, func() *cobra.Command { return attrcli.GetAccountDataCmd() },
+		[]queryCmdTestCase{
+			{
+				name:             "using attribute query command",
+				args:             []string{scopeIDStr},
+				expectedInOutput: []string{"value: This is the account data for a test scope."},
+			},
+		})
 }
 
 // ---------- tx cmd CountAuthorization tests ----------

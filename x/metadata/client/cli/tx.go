@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -63,6 +64,8 @@ func NewTxCmd() *cobra.Command {
 
 		WriteRecordCmd(),
 		RemoveRecordCmd(),
+
+		SetAccountDataCmd(),
 	)
 
 	return txCmd
@@ -1201,6 +1204,52 @@ func RemoveRecordSpecificationCmd() *cobra.Command {
 	return cmd
 }
 
+// SetAccountDataCmd creates a command for setting account data for a metadata address.
+func SetAccountDataCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "account-data <address> " + attrcli.AccountDataFlagsUse,
+		Aliases: []string{"accountdata", "ad"},
+		Short:   "Set a metadata address' account data to either the value provided or the contents of the file provided",
+		Example: fmt.Sprintf(`$ %[1]s tx metadata account-data %[2]s --%[3]s "This is some account data."
+$ %[1]s tx metadata account-data %[2]s --%[4]s account-data.json
+$ %[1]s tx metadata account-data %[2]s --%[5]s
+`,
+			version.AppName, "scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn", attrcli.FlagValue, attrcli.FlagFile, attrcli.FlagDelete),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgSetAccountDataRequest{}
+
+			msg.MetadataAddr, err = types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid metadata address %q: %w", args[0], err)
+			}
+
+			msg.Value, err = attrcli.ReadAccountDataFlags(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			msg.Signers, err = parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	attrcli.AddAccountDataFlagsToCmd(cmd)
+	addSignersFlagToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // addSignersFlagToCmd adds the standard --signers flag to a command.
 // See also: parseSigners.
 func addSignersFlagToCmd(cmd *cobra.Command) {
@@ -1213,15 +1262,16 @@ func parseSigners(cmd *cobra.Command, client *client.Context) ([]string, error) 
 	flagSet := cmd.Flags()
 	if flagSet.Changed(FlagSigners) {
 		signerList, _ := flagSet.GetString(FlagSigners)
-		signers := strings.Split(signerList, ",")
-		for _, signer := range signers {
-			_, err := sdk.AccAddressFromBech32(signer)
-			if err != nil {
-				fmt.Printf("signer address must be a Bech32 string: %v", err)
-				return nil, err
+		if len(signerList) > 0 {
+			signers := strings.Split(signerList, ",")
+			for _, signer := range signers {
+				_, err := sdk.AccAddressFromBech32(signer)
+				if err != nil {
+					return nil, fmt.Errorf("invalid signer address %q: %w", signer, err)
+				}
 			}
+			return signers, nil
 		}
-		return signers, nil
 	}
 	return []string{client.GetFromAddress().String()}, nil
 }

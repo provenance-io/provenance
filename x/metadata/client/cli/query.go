@@ -54,6 +54,7 @@ func GetQueryCmd() *cobra.Command {
 		GetOwnershipCmd(),
 		GetValueOwnershipCmd(),
 		GetOSLocatorCmd(),
+		GetAccountDataCmd(),
 	)
 	return queryCmd
 }
@@ -577,6 +578,41 @@ func GetOSLocatorCmd() *cobra.Command {
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "locators (all)")
 
+	return cmd
+}
+
+// GetAccountDataCmd is the CLI command for querying account data for metadata.
+func GetAccountDataCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "account-data <address>",
+		Short:   "Get the account data for a metadata address",
+		Aliases: []string{"accountdata", "ad"},
+		Example: fmt.Sprintf(`$ %s account-data scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`, cmdStart),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			req := &types.AccountDataRequest{}
+
+			req.MetadataAddr, err = types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid metadata address %q: %w", args[0], err)
+			}
+
+			resp, err := queryClient.AccountData(context.Background(), req)
+			if err != nil {
+				return fmt.Errorf("failed to query account data for metadata address %q: %w", args[0], err)
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 
