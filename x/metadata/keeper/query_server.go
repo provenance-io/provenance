@@ -1026,6 +1026,25 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsR
 	return &retval, nil
 }
 
+func (k Keeper) AccountData(c context.Context, req *types.AccountDataRequest) (*types.AccountDataResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	if !req.MetadataAddr.IsScopeAddress() {
+		return nil, status.Error(codes.InvalidArgument, "metadata address is not a scope id")
+	}
+
+	value, err := k.attrKeeper.GetAccountData(ctx, req.MetadataAddr.String())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	return &types.AccountDataResponse{Value: value}, nil
+}
+
 func IsBase64(s string) bool {
 	_, err := b64.StdEncoding.DecodeString(s)
 	return err == nil

@@ -461,7 +461,7 @@ func New(
 	)
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(
-		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper, app.AuthzKeeper,
+		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper,
 	)
 
 	app.NameKeeper = namekeeper.NewKeeper(

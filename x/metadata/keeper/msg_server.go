@@ -709,3 +709,22 @@ func (k msgServer) ModifyOSLocator(
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_ModifyOSLocator, msg.GetSignerStrs()))
 	return types.NewMsgModifyOSLocatorResponse(msg.Locator), nil
 }
+
+// SetAccountData associates some basic data with a metadata address.
+// Currently, only scope ids are supported.
+func (k msgServer) SetAccountData(
+	goCtx context.Context,
+	msg *types.MsgSetAccountDataRequest,
+) (*types.MsgSetAccountDataResponse, error) {
+	ctx := UnwrapMetadataContext(goCtx)
+
+	if err := k.ValidateSetAccountData(ctx, msg); err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	if err := k.attrKeeper.SetAccountData(ctx, msg.MetadataAddr.String(), msg.Value); err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	return &types.MsgSetAccountDataResponse{}, nil
+}
