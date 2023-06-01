@@ -210,6 +210,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.cfg.GenesisState = genesisState
 
 	s.cfg.ChainID = antewrapper.SimAppChainID
+	s.cfg.TimeoutCommit = 500 * time.Millisecond
 
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "network.New")

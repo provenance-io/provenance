@@ -285,6 +285,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	cfg.GenesisState = genesisState
 	cfg.ChainID = antewrapper.SimAppChainID
+	cfg.TimeoutCommit = 500 * time.Millisecond
 
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err, "creating testnet")
