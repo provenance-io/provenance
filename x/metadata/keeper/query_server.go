@@ -1026,18 +1026,18 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsR
 
 func (k Keeper) AccountData(c context.Context, req *types.AccountDataRequest) (*types.AccountDataResponse, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
 	if !req.MetadataAddr.IsScopeAddress() {
-		return nil, status.Error(codes.InvalidArgument, "metadata address is not a scope id")
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("metadata address is not a scope id")
 	}
 
 	value, err := k.attrKeeper.GetAccountData(ctx, req.MetadataAddr.String())
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	return &types.AccountDataResponse{Value: value}, nil
