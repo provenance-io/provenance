@@ -607,8 +607,7 @@ func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmdGen func() *cobra.Comma
 				}
 				require.Contains(t, actualError, tc.expectedError, "expected error")
 				// Something deep down is double wrapping the errors.
-				// E.g. "foo: invalid request" has become
-				// "foo: invalid request"
+				// E.g. "foo: invalid request" has become "foo: invalid request: invalid request"
 				// So we changed from the "Equal" test below to the "Contains" test above.
 				// If you're bored, maybe try swapping back to see if things have been fixed.
 				//require.Equal(t, tc.expectedError, actualError, "expected error")
@@ -1945,13 +1944,11 @@ func (s *IntegrationCLITestSuite) TestGetAccountDataCmd() {
 // ---------- tx cmd tests ----------
 
 type txCmdTestCase struct {
-	name string
-	cmd  *cobra.Command
-	args []string
-	// expectErr is only used if len(expectErrMsg) == 0.
-	expectErr    bool
+	name         string
+	cmd          *cobra.Command
+	args         []string
 	expectErrMsg string
-	respType     proto.Message
+	respType     proto.Message // You only need to define this if you're expecting something other than a TxResponse.
 	expectedCode uint32
 }
 
@@ -1972,11 +1969,12 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 
 			if len(tc.expectErrMsg) > 0 {
 				require.EqualError(t, err, tc.expectErrMsg, "%s expected error message", cmdName)
-			} else if tc.expectErr {
-				require.Error(t, err, "%s expected error", cmdName)
 			} else {
 				require.NoError(t, err, "%s unexpected error", cmdName)
 
+				if tc.respType == nil {
+					tc.respType = &sdk.TxResponse{}
+				}
 				umErr := clientCtx.Codec.UnmarshalJSON(outBz, tc.respType)
 				require.NoError(t, umErr, "%s UnmarshalJSON error", cmdName)
 
@@ -1991,14 +1989,13 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 }
 
 func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
-
 	scopeID := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
 	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String()
 	testCases := []txCmdTestCase{
 		{
-			"should successfully add scope specification for test setup",
-			cli.WriteScopeSpecificationCmd(),
-			[]string{
+			name: "should successfully add scope specification for test setup",
+			cmd:  cli.WriteScopeSpecificationCmd(),
+			args: []string{
 				scopeSpecID,
 				s.accountAddrStr,
 				"owner",
@@ -2008,12 +2005,12 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 0,
+			expectedCode: 0,
 		},
 		{
-			"should successfully add metadata scope",
-			cli.WriteScopeCmd(),
-			[]string{
+			name: "should successfully add metadata scope",
+			cmd:  cli.WriteScopeCmd(),
+			args: []string{
 				scopeID,
 				scopeSpecID,
 				s.accountAddrStr,
@@ -2024,12 +2021,12 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 0,
+			expectedCode: 0,
 		},
 		{
-			"should successfully add metadata scope with signers flag",
-			cli.WriteScopeCmd(),
-			[]string{
+			name: "should successfully add metadata scope with signers flag",
+			cmd:  cli.WriteScopeCmd(),
+			args: []string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				scopeSpecID,
 				s.user1AddrStr,
@@ -2041,12 +2038,12 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 0,
+			expectedCode: 0,
 		},
 		{
-			"should successfully add metadata scope with party rollup",
-			cli.WriteScopeCmd(),
-			[]string{
+			name: "should successfully add metadata scope with party rollup",
+			cmd:  cli.WriteScopeCmd(),
+			args: []string{
 				scopeID,
 				scopeSpecID,
 				s.accountAddrStr,
@@ -2058,12 +2055,12 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 0,
+			expectedCode: 0,
 		},
 		{
-			"should fail to add metadata scope, incorrect scope id",
-			cli.WriteScopeCmd(),
-			[]string{
+			name: "should fail to add metadata scope, incorrect scope id",
+			cmd:  cli.WriteScopeCmd(),
+			args: []string{
 				"not-a-uuid",
 				metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String(),
 				s.user1AddrStr,
@@ -2074,12 +2071,12 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "invalid scope id: decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
+			expectErrMsg: "invalid scope id: decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"should fail to add metadata scope, incorrect scope spec id",
-			cli.WriteScopeCmd(),
-			[]string{
+			name: "should fail to add metadata scope, incorrect scope spec id",
+			cmd:  cli.WriteScopeCmd(),
+			args: []string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				"not-a-uuid",
 				s.user1AddrStr,
@@ -2090,12 +2087,12 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "invalid spec id: decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
+			expectErrMsg: "invalid spec id: decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"should fail to add metadata scope, validate basic will err on owner format",
-			cli.WriteScopeCmd(),
-			[]string{
+			name: "should fail to add metadata scope, validate basic will err on owner format",
+			cmd:  cli.WriteScopeCmd(),
+			args: []string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String(),
 				"incorrect1,incorrect2",
@@ -2106,24 +2103,24 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, `invalid owners: invalid party "incorrect1,incorrect2": invalid address "incorrect1": decoding bech32 failed: invalid separator index 9`, &sdk.TxResponse{}, 0,
+			expectErrMsg: `invalid owners: invalid party "incorrect1,incorrect2": invalid address "incorrect1": decoding bech32 failed: invalid separator index 9`,
 		},
 		{
-			"should fail to remove metadata scope, invalid scopeid",
-			cli.RemoveScopeCmd(),
-			[]string{
+			name: "should fail to remove metadata scope, invalid scopeid",
+			cmd:  cli.RemoveScopeCmd(),
+			args: []string{
 				"not-valid",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
+			expectErrMsg: "decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"should fail to add/remove metadata scope data access, invalid scopeid",
-			cli.AddRemoveScopeDataAccessCmd(),
-			[]string{
+			name: "should fail to add/remove metadata scope data access, invalid scopeid",
+			cmd:  cli.AddRemoveScopeDataAccessCmd(),
+			args: []string{
 				"add",
 				"not-valid",
 				s.user2AddrStr,
@@ -2132,12 +2129,12 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
+			expectErrMsg: "decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"should fail to add/remove metadata scope data access, invalid command requires add or remove",
-			cli.AddRemoveScopeDataAccessCmd(),
-			[]string{
+			name: "should fail to add/remove metadata scope data access, invalid command requires add or remove",
+			cmd:  cli.AddRemoveScopeDataAccessCmd(),
+			args: []string{
 				"notaddorremove",
 				scopeID,
 				s.user2AddrStr,
@@ -2146,12 +2143,12 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "incorrect command notaddorremove : required remove or update", &sdk.TxResponse{}, 0,
+			expectErrMsg: "incorrect command notaddorremove : required remove or update",
 		},
 		{
-			"should fail to add/remove metadata scope data access, not a scope id",
-			cli.AddRemoveScopeDataAccessCmd(),
-			[]string{
+			name: "should fail to add/remove metadata scope data access, not a scope id",
+			cmd:  cli.AddRemoveScopeDataAccessCmd(),
+			args: []string{
 				"add",
 				scopeSpecID,
 				s.user2AddrStr,
@@ -2160,12 +2157,12 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, fmt.Sprintf("meta address is not a scope: %s", scopeSpecID), &sdk.TxResponse{}, 0,
+			expectErrMsg: fmt.Sprintf("meta address is not a scope: %s", scopeSpecID),
 		},
 		{
-			"should fail to add/remove metadata scope data access, validatebasic fails",
-			cli.AddRemoveScopeDataAccessCmd(),
-			[]string{
+			name: "should fail to add/remove metadata scope data access, validatebasic fails",
+			cmd:  cli.AddRemoveScopeDataAccessCmd(),
+			args: []string{
 				"add",
 				scopeID,
 				"notauser",
@@ -2174,12 +2171,12 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "data access address is invalid: notauser", &sdk.TxResponse{}, 0,
+			expectErrMsg: "data access address is invalid: notauser",
 		},
 		{
-			"should successfully add metadata scope data access",
-			cli.AddRemoveScopeDataAccessCmd(),
-			[]string{
+			name: "should successfully add metadata scope data access",
+			cmd:  cli.AddRemoveScopeDataAccessCmd(),
+			args: []string{
 				"add",
 				scopeID,
 				s.user1AddrStr,
@@ -2188,12 +2185,12 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 0,
+			expectedCode: 0,
 		},
 		{
-			"should successfully remove metadata scope data access",
-			cli.AddRemoveScopeDataAccessCmd(),
-			[]string{
+			name: "should successfully remove metadata scope data access",
+			cmd:  cli.AddRemoveScopeDataAccessCmd(),
+			args: []string{
 				"remove",
 				scopeID,
 				s.user1AddrStr,
@@ -2202,13 +2199,13 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 0,
+			expectedCode: 0,
 		},
 
 		{
-			"should fail to add/remove metadata scope owners, invalid scopeid",
-			cli.AddRemoveScopeOwnersCmd(),
-			[]string{
+			name: "should fail to add/remove metadata scope owners, invalid scopeid",
+			cmd:  cli.AddRemoveScopeOwnersCmd(),
+			args: []string{
 				"add",
 				"not-valid",
 				s.user2AddrStr,
@@ -2217,12 +2214,12 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
+			expectErrMsg: "decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"should fail to add/remove metadata scope owner, invalid command requires add or remove",
-			cli.AddRemoveScopeOwnersCmd(),
-			[]string{
+			name: "should fail to add/remove metadata scope owner, invalid command requires add or remove",
+			cmd:  cli.AddRemoveScopeOwnersCmd(),
+			args: []string{
 				"notaddorremove",
 				scopeID,
 				s.user2AddrStr,
@@ -2231,12 +2228,12 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "incorrect command notaddorremove : required remove or update", &sdk.TxResponse{}, 0,
+			expectErrMsg: "incorrect command notaddorremove : required remove or update",
 		},
 		{
-			"should fail to add/remove metadata scope owner, not a scope id",
-			cli.AddRemoveScopeOwnersCmd(),
-			[]string{
+			name: "should fail to add/remove metadata scope owner, not a scope id",
+			cmd:  cli.AddRemoveScopeOwnersCmd(),
+			args: []string{
 				"add",
 				scopeSpecID,
 				s.user2AddrStr,
@@ -2245,12 +2242,12 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, fmt.Sprintf("meta address is not a scope: %s", scopeSpecID), &sdk.TxResponse{}, 0,
+			expectErrMsg: fmt.Sprintf("meta address is not a scope: %s", scopeSpecID),
 		},
 		{
-			"should fail to add/remove metadata scope owner, validatebasic fails",
-			cli.AddRemoveScopeOwnersCmd(),
-			[]string{
+			name: "should fail to add/remove metadata scope owner, validatebasic fails",
+			cmd:  cli.AddRemoveScopeOwnersCmd(),
+			args: []string{
 				"add",
 				scopeID,
 				"notauser",
@@ -2259,31 +2256,31 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "invalid owners: invalid party address [notauser]: decoding bech32 failed: invalid separator index -1", &sdk.TxResponse{}, 0,
+			expectErrMsg: "invalid owners: invalid party address [notauser]: decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"should successfully remove metadata scope",
-			cli.RemoveScopeCmd(),
-			[]string{
+			name: "should successfully remove metadata scope",
+			cmd:  cli.RemoveScopeCmd(),
+			args: []string{
 				scopeID,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 0,
+			expectedCode: 0,
 		},
 		{
-			"should fail to delete metadata scope that no longer exists",
-			cli.RemoveScopeCmd(),
-			[]string{
+			name: "should fail to delete metadata scope that no longer exists",
+			cmd:  cli.RemoveScopeCmd(),
+			args: []string{
 				scopeID,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 18,
+			expectedCode: 18,
 		},
 		{
 			name: "should fail to write scope with optional party but without rollup",
@@ -2300,8 +2297,6 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			expectErrMsg: "parties can only be optional when require_party_rollup = true",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should successfully write scope with optional party and rollup",
@@ -2319,7 +2314,6 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 	}
@@ -2470,7 +2464,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 						scopeSpecID, s.accountAddrStr, "owner", s.contractSpecID.String(),
 						fromFlag(s.accountAddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 					},
-					respType: &sdk.TxResponse{},
+					expectedCode: 0,
 				},
 				{
 					name: "setup: write scope 1",
@@ -2481,7 +2475,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 						s.accountAddrStr, s.accountAddrStr, s.user1AddrStr,
 						fromFlag(s.accountAddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 					},
-					respType: &sdk.TxResponse{},
+					expectedCode: 0,
 				},
 				{
 					name: "setup: write scope 2",
@@ -2492,7 +2486,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 						s.accountAddrStr, s.accountAddrStr, s.user1AddrStr,
 						fromFlag(s.accountAddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 					},
-					respType: &sdk.TxResponse{},
+					expectedCode: 0,
 				},
 				{
 					name: "setup: write scope 3",
@@ -2503,7 +2497,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 						s.accountAddrStr, s.accountAddrStr, s.user2AddrStr,
 						fromFlag(s.accountAddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 					},
-					respType: &sdk.TxResponse{},
+					expectedCode: 0,
 				},
 			},
 			queries: queryTests(s.user1AddrStr, s.user1AddrStr, s.user2AddrStr),
@@ -2519,7 +2513,6 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 						s.accountAddrStr, scopeID1, scopeID2,
 						fromFlag(s.accountAddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 					},
-					respType:     &sdk.TxResponse{},
 					expectedCode: 18,
 				},
 				{
@@ -2530,7 +2523,6 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 						s.user2AddrStr, scopeID1, scopeID2, scopeID3,
 						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 					},
-					respType:     &sdk.TxResponse{},
 					expectedCode: 18,
 				},
 				{
@@ -2541,7 +2533,6 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 						s.user1AddrStr, s.user2AddrStr,
 						fromFlag(s.accountAddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 					},
-					respType:     &sdk.TxResponse{},
 					expectedCode: 18,
 				},
 			},
@@ -2556,7 +2547,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 					s.user2AddrStr, scopeID1, scopeID2,
 					fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 				},
-				respType: &sdk.TxResponse{},
+				expectedCode: 0,
 			}},
 			queries: queryTests(s.user2AddrStr, s.user2AddrStr, s.user2AddrStr),
 		},
@@ -2570,7 +2561,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 					s.user3AddrStr, scopeID1, scopeID2, scopeID3,
 					fromFlag(s.user2AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 				},
-				respType: &sdk.TxResponse{},
+				expectedCode: 0,
 			}},
 			queries: queryTests(s.user3AddrStr, s.user3AddrStr, s.user3AddrStr),
 		},
@@ -2585,7 +2576,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 						s.user1AddrStr, scopeID1,
 						fromFlag(s.user3AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 					},
-					respType: &sdk.TxResponse{},
+					expectedCode: 0,
 				},
 				{
 					name: "update: scope 2 to user 2",
@@ -2595,7 +2586,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 						s.user2AddrStr, scopeID2,
 						fromFlag(s.user3AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 					},
-					respType: &sdk.TxResponse{},
+					expectedCode: 0,
 				},
 			},
 			queries: queryTests(s.user1AddrStr, s.user2AddrStr, s.user3AddrStr),
@@ -2610,7 +2601,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 					s.user1AddrStr, s.user2AddrStr,
 					fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 				},
-				respType: &sdk.TxResponse{},
+				expectedCode: 0,
 			}},
 			queries: queryTests(s.user2AddrStr, s.user2AddrStr, s.user3AddrStr),
 		},
@@ -2624,7 +2615,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 					s.user2AddrStr, s.user3AddrStr,
 					fromFlag(s.user2AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
 				},
-				respType: &sdk.TxResponse{},
+				expectedCode: 0,
 			}},
 			queries: queryTests(s.user3AddrStr, s.user3AddrStr, s.user3AddrStr),
 		},
@@ -2672,9 +2663,6 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -2694,9 +2682,6 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -2712,10 +2697,7 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: "decoding bech32 failed: invalid bech32 string length 7",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should fail to add scope specification validate basic error",
@@ -2730,10 +2712,7 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: "invalid contract specification id prefix at index 0 (expected: contractspec, got scopespec)",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should fail to add scope specification unknown party type",
@@ -2748,10 +2727,7 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: `unknown party type: "badpartytype"`,
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should fail to remove scope specification invalid id",
@@ -2763,10 +2739,7 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: "decoding bech32 failed: invalid separator index -1",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should successfully remove scope specification",
@@ -2778,9 +2751,6 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -2793,9 +2763,6 @@ func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 38,
 		},
 	}
@@ -2809,9 +2776,9 @@ func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 
 	testCases := []txCmdTestCase{
 		{
-			"Should successfully add os locator",
-			cli.BindOsLocatorCmd(),
-			[]string{
+			name: "Should successfully add os locator",
+			cmd:  cli.BindOsLocatorCmd(),
+			args: []string{
 				s.accountAddrStr,
 				userURI,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -2819,12 +2786,12 @@ func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 0,
+			expectedCode: 0,
 		},
 		{
-			"Should successfully Modify os locator",
-			cli.ModifyOsLocatorCmd(),
-			[]string{
+			name: "Should successfully Modify os locator",
+			cmd:  cli.ModifyOsLocatorCmd(),
+			args: []string{
 				s.accountAddrStr,
 				userURIMod,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -2832,12 +2799,12 @@ func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 0,
+			expectedCode: 0,
 		},
 		{
-			"Should successfully delete os locator",
-			cli.RemoveOsLocatorCmd(),
-			[]string{
+			name: "Should successfully delete os locator",
+			cmd:  cli.RemoveOsLocatorCmd(),
+			args: []string{
 				s.accountAddrStr,
 				userURIMod,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -2845,7 +2812,7 @@ func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 0,
+			expectedCode: 0,
 		},
 	}
 
@@ -2872,9 +2839,6 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -2892,9 +2856,6 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -2911,9 +2872,6 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -2934,9 +2892,6 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -2949,9 +2904,6 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -2968,10 +2920,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: "decoding bech32 failed: invalid separator index -1",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should fail to add contract specification bad party type",
@@ -2987,10 +2936,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: `unknown party type: "badpartytype"`,
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should fail to remove contract specification invalid address",
@@ -3002,10 +2948,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: "decoding bech32 failed: invalid separator index -1",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should fail to remove contract that no longer exists",
@@ -3017,9 +2960,6 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 38,
 		},
 	}
@@ -3036,9 +2976,9 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 
 	testCases := []txCmdTestCase{
 		{
-			"should successfully add contract specification for test initialization",
-			cli.WriteContractSpecificationCmd(),
-			[]string{
+			name: "should successfully add contract specification for test initialization",
+			cmd:  cli.WriteContractSpecificationCmd(),
+			args: []string{
 				specificationID.String(),
 				s.accountAddrStr,
 				"owner",
@@ -3049,15 +2989,12 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			0,
+			expectedCode: 0,
 		},
 		{
-			"should successfully add scope specification for test setup",
-			cli.WriteScopeSpecificationCmd(),
-			[]string{
+			name: "should successfully add scope specification for test setup",
+			cmd:  cli.WriteScopeSpecificationCmd(),
+			args: []string{
 				scopeSpecID.String(),
 				s.accountAddrStr,
 				"owner",
@@ -3067,12 +3004,12 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 0,
+			expectedCode: 0,
 		},
 		{
-			"should fail to add contract spec to scope spec, invalid contract spec id",
-			addCommand,
-			[]string{
+			name: "should fail to add contract spec to scope spec, invalid contract spec id",
+			cmd:  addCommand,
+			args: []string{
 				"invalid-contract-specid",
 				scopeSpecID.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -3080,15 +3017,12 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			"invalid contract specification id : invalid-contract-specid",
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: "invalid contract specification id : invalid-contract-specid",
 		},
 		{
-			"should fail to add contract spec to scope spec, not a contract spec id",
-			addCommand,
-			[]string{
+			name: "should fail to add contract spec to scope spec, not a contract spec id",
+			cmd:  addCommand,
+			args: []string{
 				scopeSpecID.String(),
 				scopeSpecID.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -3096,15 +3030,12 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			fmt.Sprintf("invalid contract specification id : %s", scopeSpecID.String()),
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: fmt.Sprintf("invalid contract specification id : %s", scopeSpecID.String()),
 		},
 		{
-			"should fail to add contract spec to scope spec, invalid scope spec id",
-			addCommand,
-			[]string{
+			name: "should fail to add contract spec to scope spec, invalid scope spec id",
+			cmd:  addCommand,
+			args: []string{
 				specificationID.String(),
 				"invalid-scope-spec-id",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -3112,15 +3043,12 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			"invalid scope specification id : invalid-scope-spec-id",
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: "invalid scope specification id : invalid-scope-spec-id",
 		},
 		{
-			"should fail to add contract spec to scope spec, not a scope spec",
-			addCommand,
-			[]string{
+			name: "should fail to add contract spec to scope spec, not a scope spec",
+			cmd:  addCommand,
+			args: []string{
 				specificationID.String(),
 				specificationID.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -3128,15 +3056,12 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			fmt.Sprintf("invalid scope specification id : %s", specificationID.String()),
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: fmt.Sprintf("invalid scope specification id : %s", specificationID.String()),
 		},
 		{
-			"should successfully add contract spec to scope spec",
-			addCommand,
-			[]string{
+			name: "should successfully add contract spec to scope spec",
+			cmd:  addCommand,
+			args: []string{
 				specificationID.String(),
 				scopeSpecID.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -3144,15 +3069,12 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			0,
+			expectedCode: 0,
 		},
 		{
-			"should fail to remove contract spec to scope spec, invalid contract spec id",
-			removeCommand,
-			[]string{
+			name: "should fail to remove contract spec to scope spec, invalid contract spec id",
+			cmd:  removeCommand,
+			args: []string{
 				"invalid-contract-specid",
 				scopeSpecID.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -3160,15 +3082,12 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			"invalid contract specification id : invalid-contract-specid",
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: "invalid contract specification id : invalid-contract-specid",
 		},
 		{
-			"should fail to remove contract spec to scope spec, not a contract spec id",
-			removeCommand,
-			[]string{
+			name: "should fail to remove contract spec to scope spec, not a contract spec id",
+			cmd:  removeCommand,
+			args: []string{
 				scopeSpecID.String(),
 				scopeSpecID.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -3176,15 +3095,12 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			fmt.Sprintf("invalid contract specification id : %s", scopeSpecID.String()),
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: fmt.Sprintf("invalid contract specification id : %s", scopeSpecID.String()),
 		},
 		{
-			"should fail to remove contract spec to scope spec, invalid scope spec id",
-			removeCommand,
-			[]string{
+			name: "should fail to remove contract spec to scope spec, invalid scope spec id",
+			cmd:  removeCommand,
+			args: []string{
 				specificationID.String(),
 				"invalid-scope-spec-id",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -3192,15 +3108,12 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			"invalid scope specification id : invalid-scope-spec-id",
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: "invalid scope specification id : invalid-scope-spec-id",
 		},
 		{
-			"should fail to remove contract spec to scope spec, not a scope spec id",
-			removeCommand,
-			[]string{
+			name: "should fail to remove contract spec to scope spec, not a scope spec id",
+			cmd:  removeCommand,
+			args: []string{
 				specificationID.String(),
 				specificationID.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -3208,15 +3121,12 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			fmt.Sprintf("invalid scope specification id : %s", specificationID.String()),
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: fmt.Sprintf("invalid scope specification id : %s", specificationID.String()),
 		},
 		{
-			"should successfully remove contract spec to scope spec",
-			removeCommand,
-			[]string{
+			name: "should successfully remove contract spec to scope spec",
+			cmd:  removeCommand,
+			args: []string{
 				specificationID.String(),
 				scopeSpecID.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -3224,10 +3134,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			0,
+			expectedCode: 0,
 		},
 	}
 
@@ -3257,9 +3164,6 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -3277,9 +3181,6 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -3297,9 +3198,6 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -3317,10 +3215,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: `unknown party type: "badpartytype"`,
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should fail to add record specification, validate basic fail",
@@ -3337,10 +3232,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: "record specification name cannot be empty",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should fail to add record specification, fail parsing inputs too few values",
@@ -3357,10 +3249,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: `invalid input specification "record1,typename1": expected 3 parts, have 2`,
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should fail to add record specification, incorrect result type",
@@ -3377,10 +3266,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: "record specification result type cannot be unspecified",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should fail to add record specification, incorrect signer format",
@@ -3399,8 +3285,6 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			expectErrMsg: "invalid signer address \"incorrect-signer-format\": decoding bech32 failed: invalid separator index -1",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should fail to delete record specification, incorrect id",
@@ -3412,10 +3296,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: "decoding bech32 failed: invalid separator index -1",
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should fail to delete record specification, not a record specification",
@@ -3427,10 +3308,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: fmt.Sprintf("invalid contract specification id: %v", contractSpecID.String()),
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 		{
 			name: "should successfully delete record specification",
@@ -3443,9 +3321,6 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -3459,9 +3334,6 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 38,
 		},
 	}
@@ -3486,9 +3358,9 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 
 	testCases := []txCmdTestCase{
 		{
-			"should successfully add contract specification with resource hash for test setup",
-			cli.WriteContractSpecificationCmd(),
-			[]string{
+			name: "should successfully add contract specification with resource hash for test setup",
+			cmd:  cli.WriteContractSpecificationCmd(),
+			args: []string{
 				contractSpecID.String(),
 				userAddress,
 				"owner",
@@ -3499,15 +3371,12 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			0,
+			expectedCode: 0,
 		},
 		{
-			"should successfully add scope specification for test setup",
-			cli.WriteScopeSpecificationCmd(),
-			[]string{
+			name: "should successfully add scope specification for test setup",
+			cmd:  cli.WriteScopeSpecificationCmd(),
+			args: []string{
 				scopeSpecID.String(),
 				userAddress,
 				"owner",
@@ -3517,12 +3386,12 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 0,
+			expectedCode: 0,
 		},
 		{
-			"should successfully add metadata scope for test setup",
-			cli.WriteScopeCmd(),
-			[]string{
+			name: "should successfully add metadata scope for test setup",
+			cmd:  cli.WriteScopeCmd(),
+			args: []string{
 				scopeID.String(),
 				scopeSpecID.String(),
 				userAddress,
@@ -3533,12 +3402,12 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "", &sdk.TxResponse{}, 0,
+			expectedCode: 0,
 		},
 		{
-			"should successfully add record specification for test setup",
-			cli.WriteRecordSpecificationCmd(),
-			[]string{
+			name: "should successfully add record specification for test setup",
+			cmd:  cli.WriteRecordSpecificationCmd(),
+			args: []string{
 				recSpecID.String(),
 				recordName,
 				"input1name,typename1,hashvalue",
@@ -3550,14 +3419,12 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{}, 0,
+			expectedCode: 0,
 		},
 		{
-			"should successfully add record with and create new session",
-			addRecordCmd,
-			[]string{
+			name: "should successfully add record with and create new session",
+			cmd:  addRecordCmd,
+			args: []string{
 				scopeID.String(),
 				recSpecID.String(),
 				recordName,
@@ -3571,15 +3438,12 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			0,
+			expectedCode: 0,
 		},
 		{
-			"should fail to add record incorrect scope id format",
-			addRecordCmd,
-			[]string{
+			name: "should fail to add record incorrect scope id format",
+			cmd:  addRecordCmd,
+			args: []string{
 				"not-a-scope-id",
 				recSpecID.String(),
 				recordName,
@@ -3593,14 +3457,12 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid separator index -1",
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: "decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"should fail to add record incorrect record id format",
-			addRecordCmd,
-			[]string{
+			name: "should fail to add record incorrect record id format",
+			cmd:  addRecordCmd,
+			args: []string{
 				scopeID.String(),
 				"not-a-record-id",
 				recordName,
@@ -3614,14 +3476,12 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, "decoding bech32 failed: invalid separator index -1",
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: "decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"should fail to add record incorrect process format",
-			addRecordCmd,
-			[]string{
+			name: "should fail to add record incorrect process format",
+			cmd:  addRecordCmd,
+			args: []string{
 				scopeID.String(),
 				recSpecID.String(),
 				recordName,
@@ -3635,14 +3495,12 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, `invalid process "hashvalue,methodname": expected 3 parts, have: 2`,
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: `invalid process "hashvalue,methodname": expected 3 parts, have: 2`,
 		},
 		{
-			"should fail to add record incorrect record inputs format",
-			addRecordCmd,
-			[]string{
+			name: "should fail to add record incorrect record inputs format",
+			cmd:  addRecordCmd,
+			args: []string{
 				scopeID.String(),
 				recSpecID.String(),
 				recordName,
@@ -3656,14 +3514,12 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, `invalid record input "input1name,typename1,proposed": expected 4 parts, have 3`,
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: `invalid record input "input1name,typename1,proposed": expected 4 parts, have 3`,
 		},
 		{
-			"should fail to add record incorrect record output format",
-			addRecordCmd,
-			[]string{
+			name: "should fail to add record incorrect record output format",
+			cmd:  addRecordCmd,
+			args: []string{
 				scopeID.String(),
 				recSpecID.String(),
 				recordName,
@@ -3677,14 +3533,12 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, `invalid record output "outputhashvalue": expected 2 parts, have 1`,
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: `invalid record output "outputhashvalue": expected 2 parts, have 1`,
 		},
 		{
-			"should fail to add record incorrect parties involved format",
-			addRecordCmd,
-			[]string{
+			name: "should fail to add record incorrect parties involved format",
+			cmd:  addRecordCmd,
+			args: []string{
 				scopeID.String(),
 				recSpecID.String(),
 				recordName,
@@ -3698,14 +3552,12 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, fmt.Sprintf(`invalid party "%s,%s": unknown party type: "%s"`, userAddress, userAddress, userAddress),
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: fmt.Sprintf(`invalid party "%s,%s": unknown party type: "%s"`, userAddress, userAddress, userAddress),
 		},
 		{
-			"should fail to add record incorrect contract or session id format",
-			addRecordCmd,
-			[]string{
+			name: "should fail to add record incorrect contract or session id format",
+			cmd:  addRecordCmd,
+			args: []string{
 				scopeID.String(),
 				recSpecID.String(),
 				recordName,
@@ -3719,23 +3571,19 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, fmt.Sprintf("id must be a contract or session id: %s", scopeID.String()),
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: fmt.Sprintf("id must be a contract or session id: %s", scopeID.String()),
 		},
 		{
-			"should successfully remove record",
-			cli.RemoveRecordCmd(),
-			[]string{
+			name: "should successfully remove record",
+			cmd:  cli.RemoveRecordCmd(),
+			args: []string{
 				recordId.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, "",
-			&sdk.TxResponse{},
-			0,
+			expectedCode: 0,
 		},
 	}
 	runTxCmdTestCases(s, testCases)
@@ -3777,9 +3625,9 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 
 	testCases := []txCmdTestCase{
 		{
-			"session-id no context",
-			cmd,
-			[]string{
+			name: "session-id no context",
+			cmd:  cmd,
+			args: []string{
 				metadatatypes.SessionMetadataAddress(scopeUUID, uuid.New()).String(),
 				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
@@ -3787,15 +3635,12 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			0,
+			expectedCode: 0,
 		},
 		{
-			"scope-id session-uuid no context",
-			cmd,
-			[]string{
+			name: "scope-id session-uuid no context",
+			cmd:  cmd,
+			args: []string{
 				scopeID.String(),
 				uuid.New().String(),
 				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
@@ -3804,15 +3649,12 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			0,
+			expectedCode: 0,
 		},
 		{
-			"scope-uuid session-uuid no context",
-			cmd,
-			[]string{
+			name: "scope-uuid session-uuid no context",
+			cmd:  cmd,
+			args: []string{
 				scopeUUID.String(),
 				uuid.New().String(),
 				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
@@ -3821,15 +3663,12 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			0,
+			expectedCode: 0,
 		},
 		{
-			"session-id with context",
-			cmd,
-			[]string{
+			name: "session-id with context",
+			cmd:  cmd,
+			args: []string{
 				metadatatypes.SessionMetadataAddress(scopeUUID, uuid.New()).String(),
 				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
 				"ChFIRUxMTyBQUk9WRU5BTkNFIQ==",
@@ -3838,15 +3677,12 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			0,
+			expectedCode: 0,
 		},
 		{
-			"scope-id session-uuid with context",
-			cmd,
-			[]string{
+			name: "scope-id session-uuid with context",
+			cmd:  cmd,
+			args: []string{
 				scopeID.String(),
 				uuid.New().String(),
 				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
@@ -3856,15 +3692,12 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			0,
+			expectedCode: 0,
 		},
 		{
-			"scope-uuid session-uuid with context",
-			cmd,
-			[]string{
+			name: "scope-uuid session-uuid with context",
+			cmd:  cmd,
+			args: []string{
 				scopeUUID.String(),
 				uuid.New().String(),
 				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
@@ -3874,15 +3707,12 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			0,
+			expectedCode: 0,
 		},
 		{
-			"wrong id type",
-			cmd,
-			[]string{
+			name: "wrong id type",
+			cmd:  cmd,
+			args: []string{
 				s.scopeSpecID.String(),
 				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
@@ -3890,15 +3720,12 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			fmt.Sprintf("invalid address type in argument [%s]", s.scopeSpecID),
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: fmt.Sprintf("invalid address type in argument [%s]", s.scopeSpecID),
 		},
 		{
-			"invalid first argument",
-			cmd,
-			[]string{
+			name: "invalid first argument",
+			cmd:  cmd,
+			args: []string{
 				"invalid",
 				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, sender),
@@ -3906,15 +3733,12 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true,
-			fmt.Sprintf("argument [%s] is neither a bech32 address (%s) nor UUID (%s)", "invalid", "decoding bech32 failed: invalid bech32 string length 7", "invalid UUID length: 7"),
-			&sdk.TxResponse{},
-			0,
+			expectErrMsg: fmt.Sprintf("argument [%s] is neither a bech32 address (%s) nor UUID (%s)", "invalid", "decoding bech32 failed: invalid bech32 string length 7", "invalid UUID length: 7"),
 		},
 		{
-			"session-id with different context",
-			cmd,
-			[]string{
+			name: "session-id with different context",
+			cmd:  cmd,
+			args: []string{
 				metadatatypes.SessionMetadataAddress(scopeUUID, uuid.New()).String(),
 				s.contractSpecID.String(), fmt.Sprintf("%s,owner", owner), "somename",
 				"SEVMTE8gUFJPVkVOQU5DRSEK",
@@ -3923,10 +3747,7 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			"",
-			&sdk.TxResponse{},
-			0,
+			expectedCode: 0,
 		},
 		{
 			name: "invalid party type",
@@ -3941,10 +3762,7 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    true,
 			expectErrMsg: `invalid party "` + owner + `,badpartytype": unknown party type: "badpartytype"`,
-			respType:     &sdk.TxResponse{},
-			expectedCode: 0,
 		},
 	}
 
@@ -4025,7 +3843,6 @@ func (s *IntegrationCLITestSuite) TestSetAccountDataCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			respType:     &sdk.TxResponse{},
 			expectedCode: 18,
 		},
 		{
@@ -4035,7 +3852,6 @@ func (s *IntegrationCLITestSuite) TestSetAccountDataCmd() {
 				scopeIDStr,
 				"--"+attrcli.FlagValue, "This is the account data for a test scope.",
 			),
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 	}
@@ -4095,9 +3911,6 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -4114,9 +3927,6 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -4132,9 +3942,6 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -4147,9 +3954,6 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 18,
 		},
 		{
@@ -4165,9 +3969,6 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 		{
@@ -4180,9 +3981,6 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			expectErr:    false,
-			expectErrMsg: "",
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
 	}
