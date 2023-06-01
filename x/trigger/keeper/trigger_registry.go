@@ -12,8 +12,11 @@ func (k Keeper) RegisterTrigger(ctx sdk.Context, trigger triggertypes.Trigger) {
 	k.SetEventListener(ctx, trigger)
 
 	// We manually calculate gasRemaining because .GasRemaining() does not work properly with InfiniteGasMeter
-	gasRemaining := ctx.GasMeter().Limit() - ctx.GasMeter().GasConsumedToLimit()
-	gasLimit := gasRemaining - SetGasLimitCost
+	//gasRemaining := ctx.GasMeter().Limit() - ctx.GasMeter().GasConsumedToLimit()
+	gasLimit := ctx.GasMeter().GasRemaining() - SetGasLimitCost
+	if gasLimit > MaximumTriggerGas {
+		gasLimit = MaximumTriggerGas
+	}
 	k.SetGasLimit(ctx, trigger.GetId(), gasLimit)
 	ctx.GasMeter().ConsumeGas(gasLimit, "trigger creation")
 }

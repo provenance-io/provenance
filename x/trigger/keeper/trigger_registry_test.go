@@ -21,7 +21,7 @@ func (s *KeeperTestSuite) TestRegisterTrigger() {
 			name:     "valid - register with infinite gas meter",
 			meter:    sdk.NewInfiniteGasMeter(),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
-			expected: 18446744073709531725,
+			expected: 2000000,
 			panics:   false,
 		},
 		{
@@ -42,14 +42,14 @@ func (s *KeeperTestSuite) TestRegisterTrigger() {
 			name:     "valid - register with gas",
 			meter:    sdk.NewGasMeter(9999999999),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
-			expected: 9999980109,
+			expected: 2000000,
 			panics:   false,
 		},
 		{
 			name:     "valid - register with maximum gas",
 			meter:    sdk.NewGasMeter(math.MaxUint64),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
-			expected: 18446744073709531725,
+			expected: 2000000,
 			panics:   false,
 		},
 	}
@@ -109,7 +109,7 @@ func (s *KeeperTestSuite) TestUnregisterTrigger() {
 		s.Run(tc.name, func() {
 			if tc.exists {
 				s.app.TriggerKeeper.RegisterTrigger(s.ctx, tc.trigger)
-				s.ctx.GasMeter().RefundGas(9999999999, "testing")
+				s.ctx.GasMeter().RefundGas(s.ctx.GasMeter().GasConsumed(), "testing")
 			}
 			s.app.TriggerKeeper.UnregisterTrigger(s.ctx, tc.trigger)
 

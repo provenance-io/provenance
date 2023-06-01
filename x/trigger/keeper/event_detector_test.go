@@ -192,7 +192,7 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 				any, _ := codectypes.NewAnyWithValue(event)
 				trigger := s.app.TriggerKeeper.NewTriggerWithID(s.ctx, s.accountAddresses[0].String(), any, actions)
 				s.app.TriggerKeeper.RegisterTrigger(s.ctx, trigger)
-				s.ctx.GasMeter().RefundGas(999999999999, "testing")
+				s.ctx.GasMeter().RefundGas(s.ctx.GasMeter().GasConsumed(), "testing")
 				registered = append(registered, trigger)
 			}
 

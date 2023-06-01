@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) TestCreateTrigger() {
 				_, err = s.app.TriggerKeeper.GetTrigger(s.ctx, tc.expectedId)
 				s.NoError(err)
 				gasLimit := s.app.TriggerKeeper.GetGasLimit(s.ctx, tc.expectedId)
-				s.Equal(uint64(9999976752), gasLimit)
+				s.Equal(uint64(2000000), gasLimit)
 			} else {
 				s.ErrorContains(err, tc.err)
 			}

@@ -7,6 +7,7 @@ import (
 )
 
 const SetGasLimitCost uint64 = 2510
+const MaximumTriggerGas uint64 = 2000000
 
 // SetGasLimit Sets a gas limit for a trigger
 func (k Keeper) SetGasLimit(ctx sdk.Context, id types.TriggerID, gasLimit uint64) {

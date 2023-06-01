@@ -180,7 +180,7 @@ func (s *KeeperTestSuite) TestProcessActions() {
 		s.Run(tc.name, func() {
 			for _, trigger := range tc.existing {
 				s.app.TriggerKeeper.RegisterTrigger(s.ctx, trigger)
-				s.ctx.GasMeter().RefundGas(999999999999, "testing")
+				s.ctx.GasMeter().RefundGas(s.ctx.GasMeter().GasConsumed(), "testing")
 			}
 
 			for i, item := range tc.queue {
