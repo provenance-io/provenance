@@ -19,7 +19,7 @@ func NewCreateTriggerRequest(authority string, event TriggerEventI, msgs []sdk.M
 		return nil
 	}
 
-	eventAny, _ := codectypes.NewAnyWithValue(event)
+	eventAny, err := codectypes.NewAnyWithValue(event)
 	if err != nil {
 		fmt.Printf("unable to set event: %s\n", err)
 		return nil

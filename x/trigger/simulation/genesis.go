@@ -1,6 +1,8 @@
 package simulation
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -30,15 +32,15 @@ func QueueStartFn(r *rand.Rand) uint64 {
 	return uint64(simtypes.RandIntBetween(r, 0, 10000000000))
 }
 
-// GetRandomTrigger returns a random event
+// GetRandomEvent returns a random event
 func GetRandomEvent(r *rand.Rand, now time.Time) types.TriggerEventI {
 	rand := simtypes.RandIntBetween(r, 0, 1)
 	if rand > 0 {
-		height := uint64(simtypes.RandIntBetween(r, 100000, 200000))
-		return &types.BlockHeightEvent{BlockHeight: height}
+		randTime := now.Add(time.Hour * time.Duration(simtypes.RandIntBetween(r, 1, 10)))
+		return &types.BlockTimeEvent{Time: randTime.UTC()}
 	}
-	randTime := now.Add(time.Hour * time.Duration(simtypes.RandIntBetween(r, 1, 10)))
-	return &types.BlockTimeEvent{Time: randTime.UTC()}
+	height := uint64(simtypes.RandIntBetween(r, 100000, 200000))
+	return &types.BlockHeightEvent{BlockHeight: height}
 }
 
 // GetRandomAction returns a random action
@@ -127,12 +129,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 		})
 	}
 
-	// This is for params
-	/*bz, err := json.MarshalIndent(&triggers, "", " ")
+	genesis := types.NewGenesisState(triggerID, queueStart, triggers, gasLimits, queuedTriggers)
+	bz, err := json.MarshalIndent(&genesis, "", " ")
 	if err != nil {
 		panic(err)
-	}*/
-
-	genesis := types.NewGenesisState(triggerID, queueStart, triggers, gasLimits, queuedTriggers)
+	}
+	fmt.Printf("Selected randomly generated triggers:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(genesis)
 }
