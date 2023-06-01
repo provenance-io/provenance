@@ -36274,6 +36274,57 @@ paths:
           type: string
       tags:
         - Query
+  '/provenance/metadata/v1/accountdata/{metadata_addr}':
+    get:
+      summary: |-
+        AccountData gets the account data associated with a metadata address.
+        Currently, only scope ids are supported.
+      operationId: MetadataAccountData
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              value:
+                type: string
+                description: The accountdata for the requested metadata address.
+            description: >-
+              AccountDataResponse is the response type for the Query/AccountData
+              RPC method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: metadata_addr
+          description: |-
+            The metadata address to look up.
+            Currently, only scope ids are supported.
+          in: path
+          required: true
+          type: string
+          format: byte
+      tags:
+        - Query
   '/provenance/metadata/v1/contractspec/{specification_id}':
     get:
       summary: >-
@@ -81724,6 +81775,15 @@ definitions:
   provenance.marker.v1.MsgWithdrawResponse:
     type: object
     title: MsgWithdrawResponse defines the Msg/Withdraw response type
+  provenance.metadata.v1.AccountDataResponse:
+    type: object
+    properties:
+      value:
+        type: string
+        description: The accountdata for the requested metadata address.
+    description: >-
+      AccountDataResponse is the response type for the Query/AccountData RPC
+      method.
   provenance.metadata.v1.AuditFields:
     type: object
     properties:
@@ -90104,6 +90164,11 @@ definitions:
     description: >-
       MsgModifyOSLocatorResponse is the response type for the
       Msg/ModifyOSLocator RPC method.
+  provenance.metadata.v1.MsgSetAccountDataResponse:
+    type: object
+    description: >-
+      MsgSetAccountDataResponse is the response from setting/updating/deleting a
+      scope's account data.
   provenance.metadata.v1.MsgUpdateValueOwnersResponse:
     type: object
     description: >-

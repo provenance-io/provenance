@@ -255,6 +255,8 @@
     - [PublicKeyType](#provenance.metadata.v1.p8e.PublicKeyType)
   
 - [provenance/metadata/v1/query.proto](#provenance/metadata/v1/query.proto)
+    - [AccountDataRequest](#provenance.metadata.v1.AccountDataRequest)
+    - [AccountDataResponse](#provenance.metadata.v1.AccountDataResponse)
     - [ContractSpecificationRequest](#provenance.metadata.v1.ContractSpecificationRequest)
     - [ContractSpecificationResponse](#provenance.metadata.v1.ContractSpecificationResponse)
     - [ContractSpecificationWrapper](#provenance.metadata.v1.ContractSpecificationWrapper)
@@ -339,6 +341,8 @@
     - [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse)
     - [MsgP8eMemorializeContractRequest](#provenance.metadata.v1.MsgP8eMemorializeContractRequest)
     - [MsgP8eMemorializeContractResponse](#provenance.metadata.v1.MsgP8eMemorializeContractResponse)
+    - [MsgSetAccountDataRequest](#provenance.metadata.v1.MsgSetAccountDataRequest)
+    - [MsgSetAccountDataResponse](#provenance.metadata.v1.MsgSetAccountDataResponse)
     - [MsgUpdateValueOwnersRequest](#provenance.metadata.v1.MsgUpdateValueOwnersRequest)
     - [MsgUpdateValueOwnersResponse](#provenance.metadata.v1.MsgUpdateValueOwnersResponse)
     - [MsgWriteContractSpecificationRequest](#provenance.metadata.v1.MsgWriteContractSpecificationRequest)
@@ -4079,6 +4083,36 @@ Deprecated: Do not use.
 
 
 
+<a name="provenance.metadata.v1.AccountDataRequest"></a>
+
+### AccountDataRequest
+AccountDataRequest is the request type for the Query/AccountData RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `metadata_addr` | [bytes](#bytes) |  | The metadata address to look up. Currently, only scope ids are supported. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.AccountDataResponse"></a>
+
+### AccountDataResponse
+AccountDataResponse is the response type for the Query/AccountData RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  | The accountdata for the requested metadata address. |
+
+
+
+
+
+
 <a name="provenance.metadata.v1.ContractSpecificationRequest"></a>
 
 ### ContractSpecificationRequest
@@ -4931,6 +4965,7 @@ The specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e606
 | `OSLocatorsByURI` | [OSLocatorsByURIRequest](#provenance.metadata.v1.OSLocatorsByURIRequest) | [OSLocatorsByURIResponse](#provenance.metadata.v1.OSLocatorsByURIResponse) | OSLocatorsByURI returns all ObjectStoreLocator entries for a locator uri. | GET|/provenance/metadata/v1/locator/uri/{uri}|
 | `OSLocatorsByScope` | [OSLocatorsByScopeRequest](#provenance.metadata.v1.OSLocatorsByScopeRequest) | [OSLocatorsByScopeResponse](#provenance.metadata.v1.OSLocatorsByScopeResponse) | OSLocatorsByScope returns all ObjectStoreLocator entries for a for all signer's present in the specified scope. | GET|/provenance/metadata/v1/locator/scope/{scope_id}|
 | `OSAllLocators` | [OSAllLocatorsRequest](#provenance.metadata.v1.OSAllLocatorsRequest) | [OSAllLocatorsResponse](#provenance.metadata.v1.OSAllLocatorsResponse) | OSAllLocators returns all ObjectStoreLocator entries. | GET|/provenance/metadata/v1/locators/all|
+| `AccountData` | [AccountDataRequest](#provenance.metadata.v1.AccountDataRequest) | [AccountDataResponse](#provenance.metadata.v1.AccountDataResponse) | AccountData gets the account data associated with a metadata address. Currently, only scope ids are supported. | GET|/provenance/metadata/v1/accountdata/{metadata_addr}|
 
  <!-- end services -->
 
@@ -5393,6 +5428,33 @@ Deprecated: This message is no longer part of any endpoint and cannot be used fo
 
 
 
+<a name="provenance.metadata.v1.MsgSetAccountDataRequest"></a>
+
+### MsgSetAccountDataRequest
+MsgSetAccountDataRequest is the request to set/update/delete a scope's account data.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `metadata_addr` | [bytes](#bytes) |  | The identifier to associate the data with. Currently, only scope ids are supported. |
+| `value` | [string](#string) |  | The desired accountdata value. |
+| `signers` | [string](#string) | repeated | The signers of this message. Must fulfill owner requirements of the scope. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgSetAccountDataResponse"></a>
+
+### MsgSetAccountDataResponse
+MsgSetAccountDataResponse is the response from setting/updating/deleting a scope's account data.
+
+
+
+
+
+
 <a name="provenance.metadata.v1.MsgUpdateValueOwnersRequest"></a>
 
 ### MsgUpdateValueOwnersRequest
@@ -5702,6 +5764,7 @@ Msg defines the Metadata Msg service.
 | `BindOSLocator` | [MsgBindOSLocatorRequest](#provenance.metadata.v1.MsgBindOSLocatorRequest) | [MsgBindOSLocatorResponse](#provenance.metadata.v1.MsgBindOSLocatorResponse) | BindOSLocator binds an owner address to a uri. | |
 | `DeleteOSLocator` | [MsgDeleteOSLocatorRequest](#provenance.metadata.v1.MsgDeleteOSLocatorRequest) | [MsgDeleteOSLocatorResponse](#provenance.metadata.v1.MsgDeleteOSLocatorResponse) | DeleteOSLocator deletes an existing ObjectStoreLocator record. | |
 | `ModifyOSLocator` | [MsgModifyOSLocatorRequest](#provenance.metadata.v1.MsgModifyOSLocatorRequest) | [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse) | ModifyOSLocator updates an ObjectStoreLocator record by the current owner. | |
+| `SetAccountData` | [MsgSetAccountDataRequest](#provenance.metadata.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.metadata.v1.MsgSetAccountDataResponse) | SetAccountData associates some basic data with a metadata address. Currently, only scope ids are supported. | |
 
  <!-- end services -->
 

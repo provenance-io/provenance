@@ -45,7 +45,8 @@
       "url": "./tmp-swagger-gen/provenance/metadata/v1/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "MetadataParams"
+          "Params": "MetadataParams",
+          "AccountData": "MetadataAccountData"
         }
       }
     },
