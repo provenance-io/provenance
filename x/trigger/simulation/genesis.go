@@ -57,8 +57,14 @@ func GetRandomTrigger(r *rand.Rand, simState *module.SimulationState) types.Trig
 	event := GetRandomEvent(r, simState.GenTimestamp.UTC())
 	action := GetRandomAction(r, simState.Accounts[0].Address.String(), simState.Accounts[account].Address.String())
 
-	actions, _ := sdktx.SetMsgs([]sdk.Msg{action})
-	anyEvent, _ := codectypes.NewAnyWithValue(event)
+	actions, err := sdktx.SetMsgs([]sdk.Msg{action})
+	if err != nil {
+		panic("SetMsgs failed for GetRandomTrigger")
+	}
+	anyEvent, err := codectypes.NewAnyWithValue(event)
+	if err != nil {
+		panic("NewAnyWithValue failed for GetRandomTrigger")
+	}
 	return types.NewTrigger(1, simState.Accounts[0].Address.String(), anyEvent, actions)
 }
 
@@ -71,8 +77,14 @@ func GetRandomQueuedTrigger(_ *rand.Rand, simState *module.SimulationState) type
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, 100)),
 	}
 
-	actions, _ := sdktx.SetMsgs([]sdk.Msg{action})
-	anyEvent, _ := codectypes.NewAnyWithValue(event)
+	actions, err := sdktx.SetMsgs([]sdk.Msg{action})
+	if err != nil {
+		panic("SetMsgs failed for GetRandomQueuedTrigger")
+	}
+	anyEvent, err := codectypes.NewAnyWithValue(event)
+	if err != nil {
+		panic("NewAnyWithValue failed for GetRandomQueuedTrigger")
+	}
 	trigger := types.NewTrigger(2, simState.Accounts[0].Address.String(), anyEvent, actions)
 
 	now := simState.GenTimestamp

@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"math/rand"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -65,7 +64,7 @@ func SimulateMsgCreateTrigger(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk 
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		now := time.Now().UTC()
+		now := ctx.BlockTime()
 		from, _ := simtypes.RandomAcc(r, accs)
 		to, _ := simtypes.RandomAcc(r, accs)
 		for to.Equals(from) {
