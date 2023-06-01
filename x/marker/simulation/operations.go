@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -36,6 +35,8 @@ const (
 	OpWeightMsgAddActivateFinalizeMarker = "op_weight_msg_add_finalize_activate_marker"
 	//nolint:gosec // not credentials
 	OpWeightMsgAddMarkerProposal = "op_weight_msg_add_marker_proposal"
+	//nolint:gosec // not credentials
+	OpWeightMsgSetAccountData = "op_weight_msg_set_account_data"
 )
 
 /*
@@ -54,7 +55,8 @@ SetDenomMetadata
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, protoCodec *codec.ProtoCodec, k keeper.Keeper, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, gk types.GovKeeper,
+	appParams simtypes.AppParams, cdc codec.JSONCodec, protoCodec *codec.ProtoCodec,
+	k keeper.Keeper, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, gk types.GovKeeper, attrk types.AttrKeeper,
 ) simulation.WeightedOperations {
 	args := &WeightedOpsArgs{
 		AppParams:  appParams,
@@ -63,6 +65,7 @@ func WeightedOperations(
 		AK:         ak,
 		BK:         bk,
 		GK:         gk,
+		AttrK:      attrk,
 	}
 
 	var (
@@ -71,6 +74,7 @@ func WeightedOperations(
 		weightMsgAddAccess                 int
 		weightMsgAddFinalizeActivateMarker int
 		weightMsgAddMarkerProposal         int
+		weightMsgSetAccountData            int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgAddMarker, &weightMsgAddMarker, nil,
@@ -103,6 +107,12 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OpWeightMsgSetAccountData, &weightMsgSetAccountData, nil,
+		func(_ *rand.Rand) {
+			weightMsgSetAccountData = simappparams.DefaultWeightMsgSetAccountData
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgAddMarker,
@@ -123,6 +133,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgAddMarkerProposal,
 			SimulateMsgAddMarkerProposal(k, args),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgSetAccountData,
+			SimulateMsgSetAccountData(k, args),
 		),
 	}
 }
@@ -316,6 +330,32 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 	}
 }
 
+func SimulateMsgSetAccountData(k keeper.Keeper, args *WeightedOpsArgs) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msg := &types.MsgSetAccountDataRequest{}
+
+		marker, signer := randomMarkerWithAccessSigner(r, ctx, k, accs, types.Access_Deposit)
+		if marker == nil {
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to find marker with a deposit signer"), nil, nil
+		}
+
+		msg.Denom = marker.GetDenom()
+		msg.Signer = signer.Address.String()
+
+		// 1 in 10 chance that the value stays "".
+		// 9 in 10 chance that it will be between 1 and MaxValueLen characters.
+		if r.Intn(10) != 0 {
+			maxLen := args.AttrK.GetMaxValueLength(ctx)
+			strLen := r.Intn(int(maxLen)) + 1
+			msg.Value = simtypes.RandStringOfLength(r, strLen)
+		}
+
+		return Dispatch(r, app, ctx, args.AK, args.BK, signer, chainID, msg, nil)
+	}
+}
+
 // Dispatch sends an operation to the chain using a given account/funds on account for fees.  Failures on the server side
 // are handled as no-op msg operations with the error string as the status/response.
 func Dispatch(
@@ -409,7 +449,7 @@ func randomAccessGrants(r *rand.Rand, accs []simtypes.Account, limit int) (grant
 
 // builds a list of access rights with a 50:50 chance of including each one
 func randomAccessTypes(r *rand.Rand) (result []types.Access) {
-	access := []string{"mint", "burn", "deposit", "withdraw", "delete", "admin"}
+	access := []string{"mint", "burn", "deposit", "withdraw", "delete", "admin", "transfer"}
 	for i := 0; i < len(access); i++ {
 		if r.Intn(10) < 4 {
 			result = append(result, types.AccessByName(access[i]))
@@ -429,6 +469,41 @@ func randomMarker(r *rand.Rand, ctx sdk.Context, k keeper.Keeper) types.MarkerAc
 	}
 	idx := r.Intn(len(markers))
 	return markers[idx]
+}
+
+func randomMarkerWithAccessSigner(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, accs []simtypes.Account, access types.Access) (types.MarkerAccountI, simtypes.Account) {
+	var markers []types.MarkerAccountI
+	k.IterateMarkers(ctx, func(marker types.MarkerAccountI) (stop bool) {
+		markers = append(markers, marker)
+		return false
+	})
+	if len(markers) == 0 {
+		return nil, simtypes.Account{}
+	}
+
+	r.Shuffle(len(markers), func(i, j int) {
+		markers[i], markers[j] = markers[j], markers[i]
+	})
+
+	for _, marker := range markers {
+		addrsWithDeposit := marker.AddressListForPermission(access)
+		if len(addrsWithDeposit) == 0 {
+			continue
+		}
+
+		r.Shuffle(len(addrsWithDeposit), func(i, j int) {
+			addrsWithDeposit[i], addrsWithDeposit[j] = addrsWithDeposit[j], addrsWithDeposit[i]
+		})
+
+		for _, addr := range addrsWithDeposit {
+			acc, found := simtypes.FindAccount(accs, addr)
+			if found {
+				return marker, acc
+			}
+		}
+	}
+
+	return nil, simtypes.Account{}
 }
 
 func randomInt63(r *rand.Rand, max int64) (result int64) {
@@ -459,6 +534,7 @@ type WeightedOpsArgs struct {
 	AK         authkeeper.AccountKeeper
 	BK         bankkeeper.Keeper
 	GK         types.GovKeeper
+	AttrK      types.AttrKeeper
 }
 
 // SendGovMsgArgs holds all the args available and needed for sending a gov msg.
