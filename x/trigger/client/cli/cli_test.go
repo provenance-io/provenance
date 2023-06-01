@@ -217,7 +217,7 @@ func (s *IntegrationTestSuite) TestQueryTriggers() {
 			byId:         false,
 			expectErrMsg: "",
 			expectedCode: 0,
-			expectedIds:  []uint64{1, 2},
+			expectedIds:  []uint64{1, 2, 8, 9},
 		},
 		{
 			name: "query paginate with limit 1",
@@ -241,7 +241,7 @@ func (s *IntegrationTestSuite) TestQueryTriggers() {
 			byId:         false,
 			expectErrMsg: "",
 			expectedCode: 0,
-			expectedIds:  []uint64{1, 2},
+			expectedIds:  []uint64{1, 2, 8, 9},
 		},
 		{
 			name: "query trigger by id",
@@ -391,7 +391,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			clientCtx := s.network.Validators[0].ClientCtx
+			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
 			var message string
 			if len(tc.fileContent) == 0 {
@@ -420,7 +420,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 				messageFile.Name(),
 			}
 			flags := []string{
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.network.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -531,7 +531,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			clientCtx := s.network.Validators[0].ClientCtx
+			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
 			var message string
 			if len(tc.fileContent) == 0 {
@@ -581,7 +581,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 				messageFile.Name(),
 			}
 			flags := []string{
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.network.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -700,7 +700,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			clientCtx := s.network.Validators[0].ClientCtx
+			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
 			var message string
 			if len(tc.fileContent) == 0 {
@@ -757,30 +757,35 @@ func (s *IntegrationTestSuite) TestDestroyTrigger() {
 		triggerID    string
 		expectErrMsg string
 		expectedCode uint32
+		signer       string
 	}{
 		{
 			name:         "valid - destroy trigger",
 			triggerID:    "7",
 			expectErrMsg: "",
 			expectedCode: 0,
+			signer:       s.accountAddresses[0].String(),
 		},
 		{
 			name:         "invalid - unable to destroy trigger created by someone else",
 			triggerID:    "2",
 			expectErrMsg: "",
 			expectedCode: types.ErrInvalidTriggerAuthority.ABCICode(),
+			signer:       s.accountAddresses[0].String(),
 		},
 		{
 			name:         "invalid - trigger id does not exist",
 			triggerID:    "999",
 			expectErrMsg: "",
 			expectedCode: types.ErrTriggerNotFound.ABCICode(),
+			signer:       s.accountAddresses[0].String(),
 		},
 		{
 			name:         "invalid - trigger id format",
 			triggerID:    "abc",
 			expectErrMsg: "invalid trigger id: abc",
 			expectedCode: 0,
+			signer:       s.accountAddresses[0].String(),
 		},
 	}
 
@@ -788,13 +793,14 @@ func (s *IntegrationTestSuite) TestDestroyTrigger() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+
 			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
 			args := []string{
 				tc.triggerID,
 			}
 			flags := []string{
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
