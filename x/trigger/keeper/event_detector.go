@@ -49,7 +49,7 @@ func (k Keeper) detectBlockHeightEvents(ctx sdk.Context) (triggers []types.Trigg
 func (k Keeper) detectTimeEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	triggers = k.getMatchingTriggers(ctx, types.BlockTimePrefix, func(_ types.Trigger, triggerEvent types.TriggerEventI) bool {
 		blockTimeEvent := triggerEvent.(*types.BlockTimeEvent)
-		return ctx.BlockTime().Equal(blockTimeEvent.GetTime()) || ctx.BlockTime().After(blockTimeEvent.GetTime())
+		return ctx.BlockTime().UTC().Equal(blockTimeEvent.GetTime().UTC()) || ctx.BlockTime().UTC().After(blockTimeEvent.GetTime().UTC())
 	})
 	return
 }

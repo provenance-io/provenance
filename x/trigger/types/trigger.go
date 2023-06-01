@@ -137,7 +137,7 @@ func (e BlockTimeEvent) Validate() error {
 
 // Validate checks if this event is valid with the current context.
 func (e BlockTimeEvent) ValidateContext(ctx sdk.Context) error {
-	if e.Time.Equal(ctx.BlockTime()) || e.Time.Before(ctx.BlockTime()) {
+	if e.Time.UTC().Equal(ctx.BlockTime().UTC()) || e.Time.Before(ctx.BlockTime().UTC()) {
 		return ErrInvalidBlockTime
 	}
 	return nil

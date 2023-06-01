@@ -149,7 +149,7 @@ func GetCmdAddBlockTimeTrigger() *cobra.Command {
 
 			msg := types.NewCreateTriggerRequest(
 				callerAddr.String(),
-				&types.BlockTimeEvent{Time: startTime},
+				&types.BlockTimeEvent{Time: startTime.UTC()},
 				msgs,
 			)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

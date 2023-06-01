@@ -38,7 +38,7 @@ func GetRandomEvent(r *rand.Rand, now time.Time) types.TriggerEventI {
 		return &types.BlockHeightEvent{BlockHeight: height}
 	}
 	randTime := now.Add(time.Hour * time.Duration(simtypes.RandIntBetween(r, 1, 10)))
-	return &types.BlockTimeEvent{Time: randTime}
+	return &types.BlockTimeEvent{Time: randTime.UTC()}
 }
 
 // GetRandomAction returns a random action

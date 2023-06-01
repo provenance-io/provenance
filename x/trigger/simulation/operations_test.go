@@ -100,7 +100,7 @@ func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	actions, _ := sdktx.SetMsgs([]sdk.Msg{simulation.GetRandomAction(r, accounts[0].Address.String(), accounts[1].Address.String())})
-	anyEvent, _ := codectypes.NewAnyWithValue(simulation.GetRandomEvent(r, s.ctx.BlockTime()))
+	anyEvent, _ := codectypes.NewAnyWithValue(simulation.GetRandomEvent(r, s.ctx.BlockTime().UTC()))
 	trigger := types.NewTrigger(1000, accounts[0].Address.String(), anyEvent, actions)
 	s.app.TriggerKeeper.SetTrigger(s.ctx, trigger)
 	s.app.TriggerKeeper.SetEventListener(s.ctx, trigger)

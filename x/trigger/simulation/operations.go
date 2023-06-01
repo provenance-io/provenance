@@ -65,7 +65,7 @@ func SimulateMsgCreateTrigger(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk 
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		now := time.Now()
+		now := time.Now().UTC()
 		from, _ := simtypes.RandomAcc(r, accs)
 		to, _ := simtypes.RandomAcc(r, accs)
 		for to.Equals(from) {
