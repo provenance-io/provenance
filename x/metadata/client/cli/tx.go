@@ -13,8 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 
+	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
