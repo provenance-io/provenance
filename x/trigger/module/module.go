@@ -39,7 +39,7 @@ type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
-// Name returns the reward module's name.
+// Name returns the trigger module's name.
 func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
@@ -55,18 +55,18 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {
 }
 
-// RegisterInterfaces registers the reward module's interface types
+// RegisterInterfaces registers the trigger module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
-// DefaultGenesis returns default genesis state as raw bytes for the reward
+// DefaultGenesis returns default genesis state as raw bytes for the trigger
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
-// ValidateGenesis performs genesis state validation for the reward module.
+// ValidateGenesis performs genesis state validation for the trigger module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
@@ -76,23 +76,23 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ sdkclient.TxEncodin
 	return data.Validate()
 }
 
-// RegisterRESTRoutes registers the REST routes for the reward module.
+// RegisterRESTRoutes registers the REST routes for the trigger module.
 // Deprecated: RegisterRESTRoutes is deprecated.
 func (AppModuleBasic) RegisterRESTRoutes(_ sdkclient.Context, _ *mux.Router) {}
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the reward module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the trigger module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
-// GetQueryCmd returns the cli query commands for the reward module
+// GetQueryCmd returns the cli query commands for the trigger module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
-// GetTxCmd returns the transaction commands for the reward module
+// GetTxCmd returns the transaction commands for the trigger module
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
 }
@@ -115,7 +115,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeepe
 	}
 }
 
-// GenerateGenesisState creates a randomized GenState of the rewards module.
+// GenerateGenesisState creates a randomized GenState of the trigger module.
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
@@ -144,7 +144,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 }
 
-// Name returns the reward module's name.
+// Name returns the trigger module's name.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
@@ -152,7 +152,7 @@ func (AppModule) Name() string {
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the reward module.
+// Deprecated: Route returns the message routing key for the trigger module.
 func (am AppModule) Route() sdk.Route {
 	return sdk.NewRoute(types.RouterKey, triggerModule.NewHandler(am.keeper))
 }
@@ -160,12 +160,12 @@ func (am AppModule) Route() sdk.Route {
 // QuerierRoute returns the route we respond to for abci queries
 func (AppModule) QuerierRoute() string { return "" }
 
-// LegacyQuerierHandler returns the reward module sdk.Querier.
+// LegacyQuerierHandler returns the trigger module sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
-// InitGenesis performs genesis initialization for the reward module. It returns
+// InitGenesis performs genesis initialization for the trigger module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
@@ -174,7 +174,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the reward
+// ExportGenesis returns the exported genesis state as raw bytes for the trigger
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
@@ -185,7 +185,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock is the `BeginBlocker` function run at the beginning of each block to
-// process rewards module updates.
+// process trigger module updates.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	triggerModule.BeginBlocker(ctx, am.keeper)
 }

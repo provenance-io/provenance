@@ -40,10 +40,10 @@ func GetTriggersCmd() *cobra.Command {
 		Aliases: []string{"ls", "l"},
 		Short:   "Query the current triggers",
 		Long: fmt.Sprintf(`%[1]s trigger {trigger_id} - gets the trigger for a given id.
-%[1]s reward-program all - gets all the triggers`, cmdStart),
+%[1]s list all - gets all the triggers`, cmdStart),
 		Args: cobra.ExactArgs(1),
 		Example: fmt.Sprintf(`%[1]s trigger 1
-%[1]s trigger all`, cmdStart),
+%[1]s list all`, cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {

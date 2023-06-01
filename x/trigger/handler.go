@@ -8,7 +8,7 @@ import (
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
-// NewHandler returns a handler for reward messages.
+// NewHandler returns a handler for trigger messages.
 func NewHandler(k keeper.Keeper) sdk.Handler {
 	msgServer := keeper.NewMsgServerImpl(k)
 

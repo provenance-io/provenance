@@ -7088,7 +7088,7 @@ Msg
 <a name="provenance.trigger.v1.EventTriggerCreated"></a>
 
 ### EventTriggerCreated
-
+EventTriggerCreated is an event for when a trigger is created
 
 
 | Field | Type | Label | Description |
@@ -7103,7 +7103,7 @@ Msg
 <a name="provenance.trigger.v1.EventTriggerDestroyed"></a>
 
 ### EventTriggerDestroyed
-
+EventTriggerDestroyed is an event for when a trigger is destroyed
 
 
 | Field | Type | Label | Description |
@@ -7247,7 +7247,7 @@ Trigger
 <a name="provenance.trigger.v1.GasLimit"></a>
 
 ### GasLimit
-
+GasLimit defines the trigger module's grouping of a trigger and a gas limit
 
 
 | Field | Type | Label | Description |
@@ -7370,7 +7370,7 @@ Query defines the gRPC querier service for trigger module.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `TriggerByID` | [QueryTriggerByIDRequest](#provenance.trigger.v1.QueryTriggerByIDRequest) | [QueryTriggerByIDResponse](#provenance.trigger.v1.QueryTriggerByIDResponse) | TriggerByID returns a trigger matching the ID. | GET|/provenance/trigger/v1/triggers/{id}|
-| `Triggers` | [QueryTriggersRequest](#provenance.trigger.v1.QueryTriggersRequest) | [QueryTriggersResponse](#provenance.trigger.v1.QueryTriggersResponse) | Triggers returns the list of triggers. | GET|/provenance/rewards/v1/triggers|
+| `Triggers` | [QueryTriggersRequest](#provenance.trigger.v1.QueryTriggersRequest) | [QueryTriggersResponse](#provenance.trigger.v1.QueryTriggersResponse) | Triggers returns the list of triggers. | GET|/provenance/trigger/v1/triggers|
 
  <!-- end services -->
 

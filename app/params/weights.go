@@ -31,4 +31,7 @@ const (
 	// Rewards
 	DefaultWeightSubmitCreateRewards int = 95
 	DefaultWeightSubmitEndRewards    int = 5
+	// Trigger
+	DefaultWeightSubmitCreateTrigger  int = 95
+	DefaultWeightSubmitDestroyTrigger int = 5
 )

@@ -18,7 +18,7 @@ service Query {
   }
   // Triggers returns the list of triggers.
   rpc Triggers(QueryTriggersRequest) returns (QueryTriggersResponse) {
-    option (google.api.http).get = "/provenance/rewards/v1/triggers";
+    option (google.api.http).get = "/provenance/trigger/v1/triggers";
   }
 }
 

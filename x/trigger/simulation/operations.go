@@ -38,12 +38,12 @@ func WeightedOperations(
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateTrigger, &weightMsgCreateTrigger, nil,
 		func(_ *rand.Rand) {
-			weightMsgCreateTrigger = simappparams.DefaultWeightSubmitCreateRewards
+			weightMsgCreateTrigger = simappparams.DefaultWeightSubmitCreateTrigger
 		},
 	)
 	appParams.GetOrGenerate(cdc, OpWeightMsgDestroyTrigger, &weightMsgDestroyTrigger, nil,
 		func(_ *rand.Rand) {
-			weightMsgDestroyTrigger = simappparams.DefaultWeightSubmitEndRewards
+			weightMsgDestroyTrigger = simappparams.DefaultWeightSubmitDestroyTrigger
 		},
 	)
 
@@ -95,7 +95,7 @@ func SimulateMsgDestroyTrigger(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk
 		}
 		simAccount, found = simtypes.FindAccount(accs, addr)
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), "creator of rewards program account does not exist"), nil, nil
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), "creator of trigger does not exist"), nil, nil
 		}
 		msg := types.NewDestroyTriggerRequest(trigger.GetOwner(), trigger.GetId())
 		return Dispatch(r, app, ctx, simAccount, chainID, msg, ak, bk, nil)

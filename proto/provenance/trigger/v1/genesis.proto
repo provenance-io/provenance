@@ -29,6 +29,7 @@ message GenesisState {
   repeated QueuedTrigger queued_triggers = 5 [(gogoproto.nullable) = false];
 }
 
+// GasLimit defines the trigger module's grouping of a trigger and a gas limit
 message GasLimit {
   // Trigger id is the next auto incremented id to be assigned to the next created trigger
   uint64 trigger_id = 1;

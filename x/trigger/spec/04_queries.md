@@ -3,15 +3,16 @@ order: 4
 -->
 
 # Trigger Queries
-In this section we describe the queries available for looking up rewards information.
+In this section we describe the queries available for looking up trigger information.
 
 <!-- TOC 3 -->
+- [Trigger Queries](#trigger-queries)
   - [Query Trigger By ID](#query-trigger-by-id)
     - [Request](#request)
     - [Response](#response)
   - [Query Triggers](#query-triggers)
-    - [Request](#request)
-    - [Response](#response)
+    - [Request](#request-1)
+    - [Response](#response-1)
 
 
 ---

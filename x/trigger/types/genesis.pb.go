@@ -70,6 +70,7 @@ func (m *GenesisState) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GenesisState proto.InternalMessageInfo
 
+// GasLimit defines the trigger module's grouping of a trigger and a gas limit
 type GasLimit struct {
 	// Trigger id is the next auto incremented id to be assigned to the next created trigger
 	TriggerId uint64 `protobuf:"varint,1,opt,name=trigger_id,json=triggerId,proto3" json:"trigger_id,omitempty"`
