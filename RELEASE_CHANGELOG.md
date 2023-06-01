@@ -1,72 +1,27 @@
+## [v1.15.1](https://github.com/provenance-io/provenance/releases/tag/v1.15.1) - 2023-06-01
+
+Provenance blockchain version `v1.15.1` is a state-compatible upgrade to `v1.15.0`. Users are encouraged to upgrade to `v1.15.1` at their earliest convenience.
+
+This version updates the IBC module to address an unlikely (but possible) security issue. It also returns some protobuf messages so that the governance proposals query can work again.
+
+### Improvements
+
+* Bumped ibc-go to 6.1.1 [PR 1563](https://github.com/provenance-io/provenance/pull/1563).
+
+### Bug Fixes
+
+* Bring back some proto messages that were deleted but still needed for historical queries [#1554](https://github.com/provenance-io/provenance/issues/1554).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.15.0...v1.15.1
+
+---
+
 ## [v1.15.0](https://github.com/provenance-io/provenance/releases/tag/v1.15.0) - 2023-05-05
-
-The Provenance Blockchain v1.15.0 release includes several new features, improvements and bug fixes.
-
-Restricted markers can now be configured to allow transfers to accounts that have specified attributes. Such funds can be transferred using `MsgSend`. Restricted markers can also be configured to allow forced transfers.
-
-The `x/metadata` module has been given added WASM support. Also, now, a specification can require multiple parties with the same role but different addresses. There is also a new, alternative method of party/role/signer validation available. Scopes that require party rollup can contain optional parties and the parties in its sessions must also be noted as owners in the scope. When records are written to such scopes, there must be a signing party for each role required by the specification.
 
 ### Features
 
 * Add support for tokens restricted marker sends with required attributes [#1256](https://github.com/provenance-io/provenance/issues/1256)
 * Allow markers to be configured to allow forced transfers [#1368](https://github.com/provenance-io/provenance/issues/1368).
-* Add support for account addresses by attribute name lookup [#1447](https://github.com/provenance-io/provenance/issues/1447).
-* Add allow forced transfers support to creating markers from smart contracts [#1458](https://github.com/provenance-io/provenance/issues/1458).
-* Metadata party rollup and optional parties [#1438](https://github.com/provenance-io/provenance/issues/1438).
-* Repeated roles in a spec require multiple different parties [#1437](https://github.com/provenance-io/provenance/issues/1437).
-* The `PROVENANCE` role can only be used by smart contract addresses, and vice versa [#1381](https://github.com/provenance-io/provenance/issues/1381).
-* Add stargate query from wasm support [#1481](https://github.com/provenance-io/provenance/issues/1481).
-
-### Improvements
-
-* Add the `gci` linter that enforces import group ordering. Create a 'lint-fix' make target [PR 1366](https://github.com/provenance-io/provenance/pull/1366).
-* Add gRPC query to get all contract specs and record specs for a scope spec [#677](https://github.com/provenance-io/provenance/issues/677).
-* Disable `cleveldb` and `badgerdb` by default [#1411](https://github.com/provenance-io/provenance/issues/1411).
-  Official builds still have `cleveldb` support though.
-* Expand the `additional_bindings` gRPC tag to use object form to allow for Typescript transpiling [#1405](https://github.com/provenance-io/provenance/issues/1405).
-* Add attribute cli command to query account addresses by attribute name [#1451](https://github.com/provenance-io/provenance/issues/1451).
-* Add removal of attributes from accounts on name deletion [#1410](https://github.com/provenance-io/provenance/issues/1410).
-* Enhance ability of smart contracts to use the metadata module [#1280](https://github.com/provenance-io/provenance/issues/1280).
-* Enhance the `AddMarker` endpoint to bypass some validation if issued via governance proposal [#1358](https://github.com/provenance-io/provenance/pull/1358).
-  This replaces the old `AddMarkerProposal` governance proposal.
-* Bump wasmvm to 1.1.2 [#1484](https://github.com/provenance-io/provenance/pull/1358).
-* Documented proposing a transaction [#1489](https://github.com/provenance-io/provenance/pull/1489).
-* Add marker address to add marker event [#1499](https://github.com/provenance-io/provenance/issues/1499).
-
-### Deprecated
-
-* The `MsgWriteRecordRequest.parties` field has been deprecated and is ignored. The parties in question are identified by the session [PR 1453](https://github.com/provenance-io/provenance/pull/1453).
-
-### Bug Fixes
-
-* Fix third party Protobuf workflow checks on Provenance release steps [#1339](https://github.com/provenance-io/provenance/issues/1339)
-* Fix committer email format in third party Protobuf workflow (for [#1339](https://github.com/provenance-io/provenance/issues/1339)) [PR 1385](https://github.com/provenance-io/provenance/pull/1385)
-* Fix `make proto-gen` [PR 1404](https://github.com/provenance-io/provenance/pull/1404).
-* Fix wasmd transactions that are run by gov module [#1414](https://github.com/provenance-io/provenance/issues/1414)
-* Add support for ibc transfers of restricted tokens [#1502](https://github.com/provenance-io/provenance/issues/1502).
-* Fix authz + smart contract + value owner updates being too permissive [PR 1519](https://github.com/provenance-io/provenance/pull/1519).
-* Fix metadata params query path in stargate whitelist [#1514](https://github.com/provenance-io/provenance/issues/1514)
-
-### Client Breaking
-
-* Removed the `WriteP8eContractSpec` and `P8eMemorializeContract` endpoints [#1402](https://github.com/provenance-io/provenance/issues/1402).
-* Removed the `github.com/provenance-io/provenance/x/metadata/types/p8e` proto package [#1402](https://github.com/provenance-io/provenance/issues/1402).
-  Users that generate code from the Provenance protos might need to delete their `p8e/` directory.
-* The `write-scope` CLI command now takes in `[owners]` as semicolon-delimited parties (instead of comma-delimited `[owner-addresses]`) [PR 1453](https://github.com/provenance-io/provenance/pull/1453).
-* Removed the `AddMarkerProposal` [#1358](https://github.com/provenance-io/provenance/pull/1358).
-  It is replaced by putting a `MsgAddMarker` (with the `from_address` of the gov module account), in a `MsgSubmitProposal`.
-
-### API Breaking
-
-* Removed the `WriteP8eContractSpec` and `P8eMemorializeContract` endpoints [#1402](https://github.com/provenance-io/provenance/issues/1402).
-* Removed the `AddMarkerProposal` [#1358](https://github.com/provenance-io/provenance/pull/1358).
-  It is replaced by putting a `MsgAddMarker` (with the `from_address` of the gov module account), in a `MsgSubmitProposal`.
-
-### State Machine Breaking
-
-* The `AddScopeOwner` endpoint now adds a new owner party even if an owner already exists in the scope with that address [PR 1453](https://github.com/provenance-io/provenance/pull/1453).
-  I.e. it no longer updates the role of an existing owner with the same address.
-
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.14.1...v1.15.0
+* Publish Provenance Protobuf API as a NPM module [#1449](https://github.com/provenance-io/provenance/issues/1449).
