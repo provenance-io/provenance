@@ -16,6 +16,11 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		messages[i] = msg
 	}
 	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
+
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		(*MsgWriteP8EContractSpecRequest)(nil),
+		(*MsgP8EMemorializeContractRequest)(nil),
+	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 

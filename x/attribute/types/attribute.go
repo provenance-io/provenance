@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"net/url"
 	"strings"
+	time "time"
 
 	"github.com/google/uuid"
 
@@ -18,17 +19,18 @@ import (
 )
 
 // NewAttribute creates a new instance of an Attribute
-func NewAttribute(name string, address string, attrType AttributeType, value []byte) Attribute {
+func NewAttribute(name string, address string, attrType AttributeType, value []byte, expirationDate *time.Time) Attribute {
 	// Ensure string type values are trimmed.
 	if attrType != AttributeType_Bytes && attrType != AttributeType_Proto {
 		trimmed := strings.TrimSpace(string(value))
 		value = []byte(trimmed)
 	}
 	return Attribute{
-		Name:          name,
-		Address:       address,
-		AttributeType: attrType,
-		Value:         value,
+		Name:           name,
+		Address:        address,
+		AttributeType:  attrType,
+		Value:          value,
+		ExpirationDate: expirationDate,
 	}
 }
 

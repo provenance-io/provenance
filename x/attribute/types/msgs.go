@@ -3,19 +3,21 @@ package types
 import (
 	"fmt"
 	"strings"
+	time "time"
 
 	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Compile time interface checks.
-var (
-	_ sdk.Msg = &MsgAddAttributeRequest{}
-	_ sdk.Msg = &MsgUpdateAttributeRequest{}
-	_ sdk.Msg = &MsgDeleteAttributeRequest{}
-	_ sdk.Msg = &MsgDeleteDistinctAttributeRequest{}
-)
+// allRequestMsgs defines all the Msg*Request messages.
+var allRequestMsgs = []sdk.Msg{
+	(*MsgAddAttributeRequest)(nil),
+	(*MsgUpdateAttributeRequest)(nil),
+	(*MsgUpdateAttributeExpirationRequest)(nil),
+	(*MsgDeleteAttributeRequest)(nil),
+	(*MsgDeleteDistinctAttributeRequest)(nil),
+}
 
 // NewMsgAddAttributeRequest creates a new add attribute message
 func NewMsgAddAttributeRequest(account string, owner sdk.AccAddress, name string, attributeType AttributeType, value []byte) *MsgAddAttributeRequest {
@@ -36,7 +38,7 @@ func (msg MsgAddAttributeRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
 		return err
 	}
-	a := NewAttribute(msg.Name, msg.Account, msg.AttributeType, msg.Value)
+	a := NewAttribute(msg.Name, msg.Account, msg.AttributeType, msg.Value, msg.ExpirationDate)
 	return a.ValidateBasic()
 }
 
@@ -76,7 +78,7 @@ func (msg MsgUpdateAttributeRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
 		return err
 	}
-	a := NewAttribute(msg.Name, msg.Account, msg.UpdateAttributeType, msg.UpdateValue)
+	a := NewAttribute(msg.Name, msg.Account, msg.UpdateAttributeType, msg.UpdateValue, nil)
 	return a.ValidateBasic()
 }
 
@@ -93,6 +95,42 @@ func (msg MsgUpdateAttributeRequest) GetSigners() []sdk.AccAddress {
 func (msg MsgUpdateAttributeRequest) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
+}
+
+// NewMsgUpdateAttributeRequest creates a new add attribute message
+func NewMsgUpdateAttributeExpirationRequest(account, name, value string, expirationDate *time.Time, owner sdk.AccAddress) *MsgUpdateAttributeExpirationRequest {
+	return &MsgUpdateAttributeExpirationRequest{
+		Account:        account,
+		Name:           strings.ToLower(strings.TrimSpace(name)),
+		Value:          []byte(value),
+		ExpirationDate: expirationDate,
+		Owner:          owner.String(),
+	}
+}
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgUpdateAttributeExpirationRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
+		return err
+	}
+	if strings.TrimSpace(msg.Name) == "" {
+		return fmt.Errorf("invalid name: empty")
+	}
+	if msg.Value == nil {
+		return fmt.Errorf("invalid value: nil")
+	}
+
+	err := ValidateAttributeAddress(msg.Account)
+	if err != nil {
+		return fmt.Errorf("invalid attribute address: %w", err)
+	}
+	return nil
+}
+
+// GetSigners indicates that the message must have been signed by the name owner.
+func (msg MsgUpdateAttributeExpirationRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Owner)
+	return []sdk.AccAddress{addr}
 }
 
 // NewMsgDeleteAttributeRequest deletes all attributes with specific name

@@ -265,7 +265,7 @@ func TestAppImportExport(t *testing.T) {
 
 		{app.keys[markertypes.StoreKey], newApp.keys[markertypes.StoreKey], [][]byte{}},
 		{app.keys[msgfeetype.StoreKey], newApp.keys[msgfeetype.StoreKey], [][]byte{}},
-		{app.keys[attributetypes.StoreKey], newApp.keys[attributetypes.StoreKey], [][]byte{attributetypes.AttributeKeyPrefixAddrLookup}},
+		{app.keys[attributetypes.StoreKey], newApp.keys[attributetypes.StoreKey], [][]byte{attributetypes.AttributeAddrLookupKeyPrefix}},
 		{app.keys[nametypes.StoreKey], newApp.keys[nametypes.StoreKey], [][]byte{}},
 		{app.keys[metadatatypes.StoreKey], newApp.keys[metadatatypes.StoreKey], [][]byte{}},
 	}

@@ -77,7 +77,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			"example.attribute",
 			s.accountStr,
 			attributetypes.AttributeType_String,
-			[]byte("example attribute value string")))
+			[]byte("example attribute value string"),
+			nil,
+		))
 	accountData.Params.MaxValueLength = 32
 	accountDataBz, err := cfg.Codec.MarshalJSON(&accountData)
 	s.Require().NoError(err)
@@ -132,7 +134,9 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 					attributetypes.NewAttribute("example.attribute",
 						s.accountStr,
 						attributetypes.AttributeType_String,
-						[]byte("example attribute value string")),
+						[]byte("example attribute value string"),
+						nil,
+					),
 				},
 				Pagination: &query.PageResponse{NextKey: nil, Total: 1},
 			},
@@ -149,7 +153,9 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 					attributetypes.NewAttribute("example.attribute",
 						s.accountStr,
 						attributetypes.AttributeType_String,
-						[]byte("example attribute value string")),
+						[]byte("example attribute value string"),
+						nil,
+					),
 				},
 				Pagination: &query.PageResponse{NextKey: nil, Total: 1},
 			},
@@ -178,7 +184,9 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 					attributetypes.NewAttribute("example.attribute",
 						s.accountStr,
 						attributetypes.AttributeType_String,
-						[]byte("example attribute value string")),
+						[]byte("example attribute value string"),
+						nil,
+					),
 				},
 				Pagination: &query.PageResponse{NextKey: nil, Total: 1},
 			},
@@ -198,8 +206,6 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
