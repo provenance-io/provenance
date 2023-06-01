@@ -586,10 +586,10 @@ func (s *IntegrationCLITestSuite) getClientCtxWithoutKeyring() client.Context {
 // ---------- query cmd tests ----------
 
 type queryCmdTestCase struct {
-	name             string
-	args             []string
-	expectedError    string
-	expectedInOutput []string
+	name   string
+	args   []string
+	expErr string
+	expOut []string
 }
 
 func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmdGen func() *cobra.Command, testCases []queryCmdTestCase) {
@@ -597,28 +597,31 @@ func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmdGen func() *cobra.Comma
 	// carry over between tests on the same command.
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			clientCtx := s.getClientCtxWithoutKeyring()
 			cmd := cmdGen()
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if len(tc.expectedError) > 0 {
-				actualError := ""
-				if err != nil {
-					actualError = err.Error()
+			cmdName := cmd.Name()
+			var outStr string
+			defer func() {
+				if t.Failed() {
+					t.Logf("Command: %s\nArgs: %q\nOutput:\n%s", cmdName, tc.args, outStr)
 				}
-				require.Contains(t, actualError, tc.expectedError, "expected error")
+			}()
+
+			clientCtx := s.getClientCtxWithoutKeyring()
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			outStr = out.String()
+
+			if len(tc.expErr) > 0 {
+				require.ErrorContains(t, err, tc.expErr, "%s error", cmdName)
 				// Something deep down is double wrapping the errors.
 				// E.g. "foo: invalid request" has become "foo: invalid request: invalid request"
 				// So we changed from the "Equal" test below to the "Contains" test above.
 				// If you're bored, maybe try swapping back to see if things have been fixed.
-				//require.Equal(t, tc.expectedError, actualError, "expected error")
+				//require.EqualError(t, err, tc.expErr, "%s error", cmdName)
 			} else {
-				require.NoErrorf(t, err, "unexpected error: %s", err)
+				require.NoErrorf(t, err, "%s error", cmdName)
 			}
-			if err == nil {
-				result := strings.TrimSpace(out.String())
-				for _, exp := range tc.expectedInOutput {
-					assert.Contains(t, result, exp)
-				}
+			for _, exp := range tc.expOut {
+				assert.Contains(t, outStr, exp, "%s command output", cmdName)
 			}
 		})
 	}
@@ -629,40 +632,34 @@ func (s *IntegrationCLITestSuite) TestGetMetadataParamsCmd() {
 
 	testCases := []queryCmdTestCase{
 		{
-			"get params as json output",
-			[]string{s.asJson},
-			"",
-			[]string{"\"params\":{}"},
+			name:   "get params as json output",
+			args:   []string{s.asJson},
+			expOut: []string{"\"params\":{}"},
 		},
 		{
-			"get params as text output",
-			[]string{s.asText},
-			"",
-			[]string{"params: {}"},
+			name:   "get params as text output",
+			args:   []string{s.asText},
+			expOut: []string{"params: {}"},
 		},
 		{
-			"get params - invalid args",
-			[]string{"bad-arg"},
-			"unknown argument: bad-arg",
-			[]string{},
+			name:   "get params - invalid args",
+			args:   []string{"bad-arg"},
+			expErr: "unknown argument: bad-arg",
 		},
 		{
-			"get params as json output including request",
-			[]string{s.asJson, s.includeRequest},
-			"",
-			[]string{"\"params\":{}", "\"request\":{}"},
+			name:   "get params as json output including request",
+			args:   []string{s.asJson, s.includeRequest},
+			expOut: []string{"\"params\":{}", "\"request\":{}"},
 		},
 		{
-			"get locator params as json",
-			[]string{"locator", s.asJson},
-			"",
-			[]string{"\"params\":{", "\"max_uri_length\":2048"},
+			name:   "get locator params as json",
+			args:   []string{"locator", s.asJson},
+			expOut: []string{"\"params\":{", "\"max_uri_length\":2048"},
 		},
 		{
-			"get locator params as text including request",
-			[]string{"locator", s.asText, s.includeRequest},
-			"",
-			[]string{"params:", "max_uri_length: 2048", "request: {}"},
+			name:   "get locator params as text including request",
+			args:   []string{"locator", s.asText, s.includeRequest},
+			expOut: []string{"params:", "max_uri_length: 2048", "request: {}"},
 		},
 	}
 
@@ -674,142 +671,119 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 
 	testCases := []queryCmdTestCase{
 		{
-			"get metadata by id - scope id as json",
-			[]string{s.scopeID.String(), s.asJson},
-			"",
-			[]string{s.scopeAsJson},
+			name:   "get metadata by id - scope id as json",
+			args:   []string{s.scopeID.String(), s.asJson},
+			expOut: []string{s.scopeAsJson},
 		},
 		{
-			"get metadata by id - scope id as text",
-			[]string{s.scopeID.String(), s.asText},
-			"",
-			[]string{indent(s.scopeAsText, 4)},
+			name:   "get metadata by id - scope id as text",
+			args:   []string{s.scopeID.String(), s.asText},
+			expOut: []string{indent(s.scopeAsText, 4)},
 		},
 		{
-			"get metadata by id - scope id does not exist",
-			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"",
-			[]string{"scope: null", "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			name:   "get metadata by id - scope id does not exist",
+			args:   []string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			expOut: []string{"scope: null", "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
 		},
 		{
-			"get metadata by id - session id as json",
-			[]string{s.sessionID.String(), s.asJson},
-			"",
-			[]string{s.sessionAsJson},
+			name:   "get metadata by id - session id as json",
+			args:   []string{s.sessionID.String(), s.asJson},
+			expOut: []string{s.sessionAsJson},
 		},
 		{
-			"get metadata by id - session id as text",
-			[]string{s.sessionID.String(), s.asText},
-			"",
-			[]string{indent(s.sessionAsText, 4)},
+			name:   "get metadata by id - session id as text",
+			args:   []string{s.sessionID.String(), s.asText},
+			expOut: []string{indent(s.sessionAsText, 4)},
 		},
 		{
-			"get metadata by id - session id does not exist",
-			[]string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
-			"",
-			[]string{"session: null", "session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
+			name:   "get metadata by id - session id does not exist",
+			args:   []string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
+			expOut: []string{"session: null", "session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
 		},
 		{
-			"get metadata by id - record id as json",
-			[]string{s.recordID.String(), s.asJson},
-			"",
-			[]string{s.recordAsJson},
+			name:   "get metadata by id - record id as json",
+			args:   []string{s.recordID.String(), s.asJson},
+			expOut: []string{s.recordAsJson},
 		},
 		{
-			"get metadata by id - record id as text",
-			[]string{s.recordID.String(), s.asText},
-			"",
-			[]string{indent(s.recordAsText, 4)},
+			name:   "get metadata by id - record id as text",
+			args:   []string{s.recordID.String(), s.asText},
+			expOut: []string{indent(s.recordAsText, 4)},
 		},
 		{
-			"get metadata by id - record id does not exist",
-			[]string{"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
-			"",
-			[]string{"record: null", "record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
+			name:   "get metadata by id - record id does not exist",
+			args:   []string{"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
+			expOut: []string{"record: null", "record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
 		},
 		{
-			"get metadata by id - scope spec id as json",
-			[]string{s.scopeSpecID.String(), s.asJson},
-			"",
-			[]string{s.scopeSpecAsJson},
+			name:   "get metadata by id - scope spec id as json",
+			args:   []string{s.scopeSpecID.String(), s.asJson},
+			expOut: []string{s.scopeSpecAsJson},
 		},
 		{
-			"get metadata by id - scope spec id as text",
-			[]string{s.scopeSpecID.String(), s.asText},
-			"",
-			[]string{indent(s.scopeSpecAsText, 4)},
+			name:   "get metadata by id - scope spec id as text",
+			args:   []string{s.scopeSpecID.String(), s.asText},
+			expOut: []string{indent(s.scopeSpecAsText, 4)},
 		},
 		{
-			"get metadata by id - scope spec id does not exist",
-			[]string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
-			"",
-			[]string{"specification: null", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
+			name:   "get metadata by id - scope spec id does not exist",
+			args:   []string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
+			expOut: []string{"specification: null", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
 		},
 		{
-			"get metadata by id - contract spec id as json",
-			[]string{s.contractSpecID.String(), s.asJson},
-			"",
-			[]string{s.contractSpecAsJson},
+			name:   "get metadata by id - contract spec id as json",
+			args:   []string{s.contractSpecID.String(), s.asJson},
+			expOut: []string{s.contractSpecAsJson},
 		},
 		{
-			"get metadata by id - contract spec id as text",
-			[]string{s.contractSpecID.String(), s.asText},
-			"",
-			[]string{indent(s.contractSpecAsText, 4)},
+			name:   "get metadata by id - contract spec id as text",
+			args:   []string{s.contractSpecID.String(), s.asText},
+			expOut: []string{indent(s.contractSpecAsText, 4)},
 		},
 		{
-			"get metadata by id - contract spec id does not exist",
-			[]string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
-			"",
-			[]string{"specification: null", "contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
+			name:   "get metadata by id - contract spec id does not exist",
+			args:   []string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
+			expOut: []string{"specification: null", "contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
 		},
 		{
-			"get metadata by id - record spec id as json",
-			[]string{s.recordSpecID.String(), s.asJson},
-			"",
-			[]string{s.recordSpecAsJson},
+			name:   "get metadata by id - record spec id as json",
+			args:   []string{s.recordSpecID.String(), s.asJson},
+			expOut: []string{s.recordSpecAsJson},
 		},
 		{
-			"get metadata by id - record spec id as text",
-			[]string{s.recordSpecID.String(), s.asText},
-			"",
-			[]string{indent(s.recordSpecAsText, 4)},
+			name:   "get metadata by id - record spec id as text",
+			args:   []string{s.recordSpecID.String(), s.asText},
+			expOut: []string{indent(s.recordSpecAsText, 4)},
 		},
 		{
-			"get metadata by id - record spec id does not exist",
-			[]string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
-			"",
-			[]string{"specification: null", "recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
+			name:   "get metadata by id - record spec id does not exist",
+			args:   []string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
+			expOut: []string{"specification: null", "recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
 		},
 		{
-			"get metadata by id - bad prefix",
-			[]string{"foo1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"decoding bech32 failed: invalid checksum (expected kzwk8c got xlkwel)",
-			[]string{},
+			name:   "get metadata by id - bad prefix",
+			args:   []string{"foo1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			expErr: "decoding bech32 failed: invalid checksum (expected kzwk8c got xlkwel)",
 		},
 		{
-			"get metadata by id - no args",
-			[]string{},
-			"accepts 1 arg(s), received 0",
-			[]string{},
+			name:   "get metadata by id - no args",
+			args:   []string{},
+			expErr: "accepts 1 arg(s), received 0",
 		},
 		{
-			"get metadata by id - two args",
-			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
-			"accepts 1 arg(s), received 2",
-			[]string{},
+			name:   "get metadata by id - two args",
+			args:   []string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
+			expErr: "accepts 1 arg(s), received 2",
 		},
 		{
-			"get metadata by id - uuid",
-			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
-			"decoding bech32 failed: invalid separator index 32",
-			[]string{},
+			name:   "get metadata by id - uuid",
+			args:   []string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
+			expErr: "decoding bech32 failed: invalid separator index 32",
 		},
 		{
-			"get metadata by id - bad arg",
-			[]string{"not-an-id"},
-			"decoding bech32 failed: invalid separator index -1",
-			[]string{},
+			name:   "get metadata by id - bad arg",
+			args:   []string{"not-an-id"},
+			expErr: "decoding bech32 failed: invalid separator index -1",
 		},
 	}
 
@@ -836,20 +810,18 @@ func (s *IntegrationCLITestSuite) TestGetMetadataGetAllCmd() {
 	addTestCases := func(bases []string, asText []string, asJson []string) {
 		for bi, base := range bases {
 			for ni, name := range []string{base, strings.ToUpper(base), alternateCase(base, true), alternateCase(base, false)} {
-				testCases = append(testCases,
-					queryCmdTestCase{
-						testName(bases[0], bi, ni, name, "as text"),
-						[]string{name, s.asText},
-						"",
-						asText,
+				testCases = append(testCases, []queryCmdTestCase{
+					{
+						name:   testName(bases[0], bi, ni, name, "as text"),
+						args:   []string{name, s.asText},
+						expOut: asText,
 					},
-					queryCmdTestCase{
-						testName(bases[0], bi, ni, name, "as json"),
-						[]string{name, s.asJson},
-						"",
-						asJson,
+					{
+						name:   testName(bases[0], bi, ni, name, "as json"),
+						args:   []string{name, s.asJson},
+						expOut: asJson,
 					},
-				)
+				}...)
 			}
 		}
 	}
@@ -870,72 +842,63 @@ func (s *IntegrationCLITestSuite) TestGetMetadataGetAllCmd() {
 	addTestCases([]string{"records", "record", "recs", "rec"}, []string{indentedRecordText}, []string{s.recordAsJson})
 
 	addTestCases(makeSpecInputs("scope"), []string{indentedScopeSpecText}, []string{s.scopeSpecAsJson})
-	testCases = append(testCases,
-		queryCmdTestCase{
-			"all scopespecs spaced args 1 scope specs as text",
-			[]string{"scope", "specs", s.asText},
-			"",
-			[]string{indentedScopeSpecText},
+	testCases = append(testCases, []queryCmdTestCase{
+		{
+			name:   "all scopespecs spaced args 1 scope specs as text",
+			args:   []string{"scope", "specs", s.asText},
+			expOut: []string{indentedScopeSpecText},
 		},
-		queryCmdTestCase{
-			"all scopespecs spaced args 2 scope specification as json",
-			[]string{"scope", "specification", s.asJson},
-			"",
-			[]string{s.scopeSpecAsJson},
+		{
+			name:   "all scopespecs spaced args 2 scope specification as json",
+			args:   []string{"scope", "specification", s.asJson},
+			expOut: []string{s.scopeSpecAsJson},
 		},
-		queryCmdTestCase{
-			"all scopespecs spaced args 3 scop espec as json",
-			[]string{"scop", "espec", s.asJson},
-			"",
-			[]string{s.scopeSpecAsJson},
+		{
+			name:   "all scopespecs spaced args 3 scop espec as json",
+			args:   []string{"scop", "espec", s.asJson},
+			expOut: []string{s.scopeSpecAsJson},
 		},
-	)
+	}...)
 
 	cSpecInputs := makeSpecInputs("contract")
 	cSpecInputs = append(cSpecInputs, "cspecs", "cspec", "c-specs", "c-spec", "c specs", "c spec")
 	addTestCases(cSpecInputs, []string{indentedContractSpecText}, []string{s.contractSpecAsJson})
-	testCases = append(testCases,
-		queryCmdTestCase{
-			"all contractspecs spaced args 1 contract specs as text",
-			[]string{"contract", "specs", s.asText},
-			"",
-			[]string{indentedContractSpecText},
+	testCases = append(testCases, []queryCmdTestCase{
+		{
+			name:   "all contractspecs spaced args 1 contract specs as text",
+			args:   []string{"contract", "specs", s.asText},
+			expOut: []string{indentedContractSpecText},
 		},
-		queryCmdTestCase{
-			"all contractspecs spaced args 2 contract specification as json",
-			[]string{"contract", "specification", s.asJson},
-			"",
-			[]string{s.contractSpecAsJson},
+		{
+			name:   "all contractspecs spaced args 2 contract specification as json",
+			args:   []string{"contract", "specification", s.asJson},
+			expOut: []string{s.contractSpecAsJson},
 		},
-		queryCmdTestCase{
-			"all contractspecs spaced args 3 cs pec as json",
-			[]string{"cs", "pec", s.asJson},
-			"",
-			[]string{s.contractSpecAsJson},
+		{
+			name:   "all contractspecs spaced args 3 cs pec as json",
+			args:   []string{"cs", "pec", s.asJson},
+			expOut: []string{s.contractSpecAsJson},
 		},
-	)
+	}...)
 
 	addTestCases(makeSpecInputs("record", "rec"), []string{indentedRecordSpecText}, []string{s.recordSpecAsJson})
-	testCases = append(testCases,
-		queryCmdTestCase{
-			"all recordspecs spaced args 1 record specs as text",
-			[]string{"record", "specs", s.asText},
-			"",
-			[]string{indentedRecordSpecText},
+	testCases = append(testCases, []queryCmdTestCase{
+		{
+			name:   "all recordspecs spaced args 1 record specs as text",
+			args:   []string{"record", "specs", s.asText},
+			expOut: []string{indentedRecordSpecText},
 		},
-		queryCmdTestCase{
-			"all recordspecs spaced args 2 record specification as json",
-			[]string{"record", "specification", s.asJson},
-			"",
-			[]string{s.recordSpecAsJson},
+		{
+			name:   "all recordspecs spaced args 2 record specification as json",
+			args:   []string{"record", "specification", s.asJson},
+			expOut: []string{s.recordSpecAsJson},
 		},
-		queryCmdTestCase{
-			"all recordspecs spaced args 3 recor dspec as json",
-			[]string{"recor", "dspec", s.asJson},
-			"",
-			[]string{s.recordSpecAsJson},
+		{
+			name:   "all recordspecs spaced args 3 recor dspec as json",
+			args:   []string{"recor", "dspec", s.asJson},
+			expOut: []string{s.recordSpecAsJson},
 		},
-	)
+	}...)
 
 	addTestCases(
 		[]string{"locators", "locator", "locs", "loc"},
@@ -943,26 +906,23 @@ func (s *IntegrationCLITestSuite) TestGetMetadataGetAllCmd() {
 		[]string{s.objectLocator1AsJson, s.objectLocator2AsJson},
 	)
 
-	testCases = append(testCases,
-		queryCmdTestCase{
-			"unknown type",
-			[]string{"scoops"},
-			"unknown entry type: scoops",
-			[]string{},
+	testCases = append(testCases, []queryCmdTestCase{
+		{
+			name:   "unknown type",
+			args:   []string{"scoops"},
+			expErr: "unknown entry type: scoops",
 		},
-		queryCmdTestCase{
-			"unknown type many args",
-			[]string{"r", "e", "d", "o", "r", "k", "   ", "sp", "o", "rk"},
-			"unknown entry type: redorksporks",
-			[]string{},
+		{
+			name:   "unknown type many args",
+			args:   []string{"r", "e", "d", "o", "r", "k", "   ", "sp", "o", "rk"},
+			expErr: "unknown entry type: redorksporks",
 		},
-		queryCmdTestCase{
-			"no args",
-			[]string{},
-			"requires at least 1 arg(s), only received 0",
-			[]string{},
+		{
+			name:   "no args",
+			args:   []string{},
+			expErr: "requires at least 1 arg(s), only received 0",
 		},
-	)
+	}...)
 
 	runQueryCmdTestCases(s, cmd, testCases)
 }
@@ -974,76 +934,64 @@ func (s *IntegrationCLITestSuite) TestGetMetadataScopeCmd() {
 
 	testCases := []queryCmdTestCase{
 		{
-			"get scope by metadata scope id as json output",
-			[]string{s.scopeID.String(), s.asJson},
-			"",
-			[]string{s.scopeAsJson},
+			name:   "get scope by metadata scope id as json output",
+			args:   []string{s.scopeID.String(), s.asJson},
+			expOut: []string{s.scopeAsJson},
 		},
 		{
-			"get scope by metadata scope id as text output",
-			[]string{s.scopeID.String(), s.asText},
-			"",
-			[]string{indentedScopeText},
+			name:   "get scope by metadata scope id as text output",
+			args:   []string{s.scopeID.String(), s.asText},
+			expOut: []string{indentedScopeText},
 		},
 		{
-			"get scope by uuid as json output",
-			[]string{s.scopeUUID.String(), s.asJson},
-			"",
-			[]string{s.scopeAsJson},
+			name:   "get scope by uuid as json output",
+			args:   []string{s.scopeUUID.String(), s.asJson},
+			expOut: []string{s.scopeAsJson},
 		},
 		{
-			"get scope by uuid as text output",
-			[]string{s.scopeUUID.String(), s.asText},
-			"",
-			[]string{indentedScopeText},
+			name:   "get scope by uuid as text output",
+			args:   []string{s.scopeUUID.String(), s.asText},
+			expOut: []string{indentedScopeText},
 		},
 		{
-			"get scope by metadata session id as json output",
-			[]string{s.sessionID.String(), s.asJson},
-			"",
-			[]string{s.scopeAsJson},
+			name:   "get scope by metadata session id as json output",
+			args:   []string{s.sessionID.String(), s.asJson},
+			expOut: []string{s.scopeAsJson},
 		},
 		{
-			"get scope by metadata session id as text output",
-			[]string{s.sessionID.String(), s.asText},
-			"",
-			[]string{indentedScopeText},
+			name:   "get scope by metadata session id as text output",
+			args:   []string{s.sessionID.String(), s.asText},
+			expOut: []string{indentedScopeText},
 		},
 		{
-			"get scope by metadata record id as json output",
-			[]string{s.recordID.String(), s.asJson},
-			"",
-			[]string{s.scopeAsJson},
+			name:   "get scope by metadata record id as json output",
+			args:   []string{s.recordID.String(), s.asJson},
+			expOut: []string{s.scopeAsJson},
 		},
 		{
-			"get scope by metadata record id as text output",
-			[]string{s.recordID.String(), s.asText},
-			"",
-			[]string{indentedScopeText},
+			name:   "get scope by metadata record id as text output",
+			args:   []string{s.recordID.String(), s.asText},
+			expOut: []string{indentedScopeText},
 		},
 		{
-			"get scope by metadata id - does not exist",
-			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", s.asText},
-			"",
-			[]string{"scope: null", "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			name:   "get scope by metadata id - does not exist",
+			args:   []string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", s.asText},
+			expOut: []string{"scope: null", "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
 		},
 		{
-			"get scope by uuid - does not exist",
-			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0", s.asText},
-			"",
-			[]string{"scope: null", "91978ba2-5f35-459a-86a7-feca1b0512e0"},
+			name:   "get scope by uuid - does not exist",
+			args:   []string{"91978ba2-5f35-459a-86a7-feca1b0512e0", s.asText},
+			expOut: []string{"scope: null", "91978ba2-5f35-459a-86a7-feca1b0512e0"},
 		},
 		{
-			"get scope bad input",
-			[]string{"not-a-valid-arg", s.asText},
-			"could not parse [not-a-valid-arg] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 15): invalid request",
-			[]string{},
+			name:   "get scope bad input",
+			args:   []string{"not-a-valid-arg", s.asText},
+			expErr: "could not parse [not-a-valid-arg] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 15): invalid request",
 		},
 		{
-			"get scope no args",
-			[]string{},
-			"accepts 1 arg(s), received 0",
-			[]string{},
+			name:   "get scope no args",
+			args:   []string{},
+			expErr: "accepts 1 arg(s), received 0",
 		},
 	}
 
@@ -1058,220 +1006,185 @@ func (s *IntegrationCLITestSuite) TestGetMetadataSessionCmd() {
 
 	testCases := []queryCmdTestCase{
 		{
-			"session from session id as json",
-			[]string{s.sessionID.String(), s.asJson},
-			"",
-			[]string{s.sessionAsJson},
+			name:   "session from session id as json",
+			args:   []string{s.sessionID.String(), s.asJson},
+			expOut: []string{s.sessionAsJson},
 		},
 		{
-			"session from session id as text",
-			[]string{s.sessionID.String(), s.asText},
-			"",
-			[]string{indentedSessionText},
+			name:   "session from session id as text",
+			args:   []string{s.sessionID.String(), s.asText},
+			expOut: []string{indentedSessionText},
 		},
 		{
-			"session id does not exist",
-			[]string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
-			"",
-			[]string{"session: null", "session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
+			name:   "session id does not exist",
+			args:   []string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
+			expOut: []string{"session: null", "session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
 		},
 		{
-			"sessions from scope id as json",
-			[]string{s.scopeID.String(), s.asJson},
-			"",
-			[]string{s.sessionAsJson},
+			name:   "sessions from scope id as json",
+			args:   []string{s.scopeID.String(), s.asJson},
+			expOut: []string{s.sessionAsJson},
 		},
 		{
-			"sessions from scope id as text",
-			[]string{s.scopeID.String(), s.asText},
-			"",
-			[]string{indentedSessionText},
+			name:   "sessions from scope id as text",
+			args:   []string{s.scopeID.String(), s.asText},
+			expOut: []string{indentedSessionText},
 		},
 		{
-			"scope id does not exist",
-			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"no sessions found",
-			[]string{},
+			name:   "scope id does not exist",
+			args:   []string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			expErr: "no sessions found",
 		},
 		{
-			"sessions from scope uuid as json",
-			[]string{s.scopeUUID.String(), s.asJson},
-			"",
-			[]string{s.sessionAsJson},
+			name:   "sessions from scope uuid as json",
+			args:   []string{s.scopeUUID.String(), s.asJson},
+			expOut: []string{s.sessionAsJson},
 		},
 		{
-			"sessions from scope uuid as text",
-			[]string{s.scopeUUID.String(), s.asText},
-			"",
-			[]string{indentedSessionText},
+			name:   "sessions from scope uuid as text",
+			args:   []string{s.scopeUUID.String(), s.asText},
+			expOut: []string{indentedSessionText},
 		},
 		{
-			"scope uuid does not exist",
-			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
-			"no sessions found",
-			[]string{},
+			name:   "scope uuid does not exist",
+			args:   []string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
+			expErr: "no sessions found",
 		},
 		{
-			"session from scope uuid and session uuid as json",
-			[]string{s.scopeUUID.String(), s.sessionUUID.String(), s.asJson},
-			"",
-			[]string{s.sessionAsJson},
+			name:   "session from scope uuid and session uuid as json",
+			args:   []string{s.scopeUUID.String(), s.sessionUUID.String(), s.asJson},
+			expOut: []string{s.sessionAsJson},
 		},
 		{
-			"session from scope uuid and session uuid as text",
-			[]string{s.scopeUUID.String(), s.sessionUUID.String(), s.asText},
-			"",
-			[]string{indentedSessionText},
+			name:   "session from scope uuid and session uuid as text",
+			args:   []string{s.scopeUUID.String(), s.sessionUUID.String(), s.asText},
+			expOut: []string{indentedSessionText},
 		},
 		{
-			"scope uuid and session uuid but scope does not exist",
-			[]string{notAUsedUUID.String(), s.sessionUUID.String()},
-			"",
-			[]string{"session:", "session: null"},
+			name:   "scope uuid and session uuid but scope does not exist",
+			args:   []string{notAUsedUUID.String(), s.sessionUUID.String()},
+			expOut: []string{"session:", "session: null"},
 		},
 		{
-			"scope uuid and session uuid and scope exists but session uuid does not exist",
-			[]string{s.scopeUUID.String(), "5803f8bc-6067-4eb5-951f-2121671c2ec0"},
-			"",
-			[]string{"session:", "session: null"},
+			name:   "scope uuid and session uuid and scope exists but session uuid does not exist",
+			args:   []string{s.scopeUUID.String(), "5803f8bc-6067-4eb5-951f-2121671c2ec0"},
+			expOut: []string{"session:", "session: null"},
 		},
 		{
-			"session from scope id and session uuid as text",
-			[]string{s.scopeID.String(), s.sessionUUID.String(), s.asText},
-			"",
-			[]string{indentedSessionText},
+			name:   "session from scope id and session uuid as text",
+			args:   []string{s.scopeID.String(), s.sessionUUID.String(), s.asText},
+			expOut: []string{indentedSessionText},
 		},
 		{
-			"session from scope id and session uuid as json",
-			[]string{s.scopeID.String(), s.sessionUUID.String(), s.asJson},
-			"",
-			[]string{s.sessionAsJson},
+			name:   "session from scope id and session uuid as json",
+			args:   []string{s.scopeID.String(), s.sessionUUID.String(), s.asJson},
+			expOut: []string{s.sessionAsJson},
 		},
 		{
-			"scope id and session uuid but scope id does not exist",
-			[]string{metadatatypes.ScopeMetadataAddress(notAUsedUUID).String(), s.sessionUUID.String()},
-			"",
-			[]string{"session:", "session: null"},
+			name:   "scope id and session uuid but scope id does not exist",
+			args:   []string{metadatatypes.ScopeMetadataAddress(notAUsedUUID).String(), s.sessionUUID.String()},
+			expOut: []string{"session:", "session: null"},
 		},
 		{
-			"scope id and session uuid and scope id exists but session uuid does not",
-			[]string{s.scopeID.String(), notAUsedUUID.String()},
-			"",
-			[]string{"session:", "session: null"},
+			name:   "scope id and session uuid and scope id exists but session uuid does not",
+			args:   []string{s.scopeID.String(), notAUsedUUID.String()},
+			expOut: []string{"session:", "session: null"},
 		},
 		{
-			"session from scope id and record name as text",
-			[]string{s.scopeID.String(), s.recordName, s.asText},
-			"",
-			[]string{indentedSessionText},
+			name:   "session from scope id and record name as text",
+			args:   []string{s.scopeID.String(), s.recordName, s.asText},
+			expOut: []string{indentedSessionText},
 		},
 		{
-			"session from scope id and record name as json",
-			[]string{s.scopeID.String(), s.recordName, s.asJson},
-			"",
-			[]string{s.sessionAsJson},
+			name:   "session from scope id and record name as json",
+			args:   []string{s.scopeID.String(), s.recordName, s.asJson},
+			expOut: []string{s.sessionAsJson},
 		},
 		{
-			"scope id and record name but scope id does not exist",
-			[]string{metadatatypes.ScopeMetadataAddress(notAUsedUUID).String(), s.recordName},
-			fmt.Sprintf("record %s does not exist: invalid request",
+			name: "scope id and record name but scope id does not exist",
+			args: []string{metadatatypes.ScopeMetadataAddress(notAUsedUUID).String(), s.recordName},
+			expErr: fmt.Sprintf("record %s does not exist: invalid request",
 				metadatatypes.RecordMetadataAddress(notAUsedUUID, s.recordName)),
-			[]string{},
 		},
 		{
-			"scope id and record name and scope id exists but record does not",
-			[]string{s.scopeID.String(), "not-a-record-name-that-exists"},
-			fmt.Sprintf("record %s does not exist: invalid request",
+			name: "scope id and record name and scope id exists but record does not",
+			args: []string{s.scopeID.String(), "not-a-record-name-that-exists"},
+			expErr: fmt.Sprintf("record %s does not exist: invalid request",
 				metadatatypes.RecordMetadataAddress(s.scopeUUID, "not-a-record-name-that-exists")),
-			[]string{},
 		},
 		{
-			"session from scope uuid and record name as text",
-			[]string{s.scopeUUID.String(), s.recordName, s.asText},
-			"",
-			[]string{indentedSessionText},
+			name:   "session from scope uuid and record name as text",
+			args:   []string{s.scopeUUID.String(), s.recordName, s.asText},
+			expOut: []string{indentedSessionText},
 		},
 		{
-			"session from scope uuid and record name as json",
-			[]string{s.scopeUUID.String(), s.recordName, s.asJson},
-			"",
-			[]string{s.sessionAsJson},
+			name:   "session from scope uuid and record name as json",
+			args:   []string{s.scopeUUID.String(), s.recordName, s.asJson},
+			expOut: []string{s.sessionAsJson},
 		},
 		{
-			"scope uuid and record name but scope uuid does not exist",
-			[]string{notAUsedUUID.String(), s.recordName},
-			fmt.Sprintf("record %s does not exist: invalid request",
+			name: "scope uuid and record name but scope uuid does not exist",
+			args: []string{notAUsedUUID.String(), s.recordName},
+			expErr: fmt.Sprintf("record %s does not exist: invalid request",
 				metadatatypes.RecordMetadataAddress(notAUsedUUID, s.recordName)),
-			[]string{},
 		},
 		{
-			"scope uuid and record name and scope uuid exists but record does not",
-			[]string{s.scopeUUID.String(), "not-a-record"},
-			fmt.Sprintf("record %s does not exist: invalid request",
+			name: "scope uuid and record name and scope uuid exists but record does not",
+			args: []string{s.scopeUUID.String(), "not-a-record"},
+			expErr: fmt.Sprintf("record %s does not exist: invalid request",
 				metadatatypes.RecordMetadataAddress(s.scopeUUID, "not-a-record")),
-			[]string{},
 		},
 		{
-			"session from record id as text",
-			[]string{s.recordID.String(), s.asText},
-			"",
-			[]string{indentedSessionText},
+			name:   "session from record id as text",
+			args:   []string{s.recordID.String(), s.asText},
+			expOut: []string{indentedSessionText},
 		},
 		{
-			"session from record id as json",
-			[]string{s.recordID.String(), s.asJson},
-			"",
-			[]string{s.sessionAsJson},
+			name:   "session from record id as json",
+			args:   []string{s.recordID.String(), s.asJson},
+			expOut: []string{s.sessionAsJson},
 		},
 		{
-			"record id but scope does not exist",
-			[]string{metadatatypes.RecordMetadataAddress(notAUsedUUID, s.recordName).String()},
-			fmt.Sprintf("record %s does not exist: invalid request",
+			name: "record id but scope does not exist",
+			args: []string{metadatatypes.RecordMetadataAddress(notAUsedUUID, s.recordName).String()},
+			expErr: fmt.Sprintf("record %s does not exist: invalid request",
 				metadatatypes.RecordMetadataAddress(notAUsedUUID, s.recordName)),
-			[]string{},
 		},
 		{
-			"record id in existing scope but record does not exist",
-			[]string{metadatatypes.RecordMetadataAddress(s.scopeUUID, "not-a-record-name").String()},
-			fmt.Sprintf("record %s does not exist: invalid request",
+			name: "record id in existing scope but record does not exist",
+			args: []string{metadatatypes.RecordMetadataAddress(s.scopeUUID, "not-a-record-name").String()},
+			expErr: fmt.Sprintf("record %s does not exist: invalid request",
 				metadatatypes.RecordMetadataAddress(s.scopeUUID, "not-a-record-name")),
-			[]string{},
 		},
 		{
-			"sessions all as text",
-			[]string{"all", s.asText},
-			"",
-			[]string{indentedSessionText},
+			name:   "sessions all as text",
+			args:   []string{"all", s.asText},
+			expOut: []string{indentedSessionText},
 		},
 		{
-			"sessions all as json",
-			[]string{"all", s.asJson},
-			"",
-			[]string{s.sessionAsJson},
+			name:   "sessions all as json",
+			args:   []string{"all", s.asJson},
+			expOut: []string{s.sessionAsJson},
 		},
 		{
-			"bad prefix",
-			[]string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
-			"address [scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m] is not a scope address: invalid request",
-			[]string{},
+			name:   "bad prefix",
+			args:   []string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
+			expErr: "address [scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m] is not a scope address: invalid request",
 		},
 		{
-			"bad arg 1",
-			[]string{"bad"},
-			"could not parse [bad] into either a scope address (decoding bech32 failed: invalid bech32 string length 3) or uuid (invalid UUID length: 3): invalid request",
-			[]string{},
+			name:   "bad arg 1",
+			args:   []string{"bad"},
+			expErr: "could not parse [bad] into either a scope address (decoding bech32 failed: invalid bech32 string length 3) or uuid (invalid UUID length: 3): invalid request",
 		},
 		{
-			"3 args",
-			[]string{s.scopeUUID.String(), s.sessionID.String(), s.recordName},
-			"accepts between 1 and 2 arg(s), received 3",
-			[]string{},
+			name:   "3 args",
+			args:   []string{s.scopeUUID.String(), s.sessionID.String(), s.recordName},
+			expErr: "accepts between 1 and 2 arg(s), received 3",
 		},
 		{
-			"no args",
-			[]string{},
-			"accepts between 1 and 2 arg(s), received 0",
-			[]string{},
+			name:   "no args",
+			args:   []string{},
+			expErr: "accepts between 1 and 2 arg(s), received 0",
 		},
 	}
 
@@ -1283,124 +1196,104 @@ func (s *IntegrationCLITestSuite) TestGetMetadataRecordCmd() {
 
 	testCases := []queryCmdTestCase{
 		{
-			"record from record id as json",
-			[]string{s.recordID.String(), s.asJson},
-			"",
-			[]string{s.recordAsJson},
+			name:   "record from record id as json",
+			args:   []string{s.recordID.String(), s.asJson},
+			expOut: []string{s.recordAsJson},
 		},
 		{
-			"record from record id as text",
-			[]string{s.recordID.String(), s.asText},
-			"",
-			[]string{indent(s.recordAsText, 4)},
+			name:   "record from record id as text",
+			args:   []string{s.recordID.String(), s.asText},
+			expOut: []string{indent(s.recordAsText, 4)},
 		},
 		{
-			"record id does not exist",
-			[]string{"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
-			"",
-			[]string{"records:", "record: null", "record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
+			name:   "record id does not exist",
+			args:   []string{"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
+			expOut: []string{"records:", "record: null", "record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
 		},
 		{
-			"records from session id as json",
-			[]string{s.sessionID.String(), s.asJson},
-			"",
-			[]string{s.recordAsJson},
+			name:   "records from session id as json",
+			args:   []string{s.sessionID.String(), s.asJson},
+			expOut: []string{s.recordAsJson},
 		},
 		{
-			"records from session id as text",
-			[]string{s.sessionID.String(), s.asText},
-			"",
-			[]string{indent(s.recordAsText, 4)},
+			name:   "records from session id as text",
+			args:   []string{s.sessionID.String(), s.asText},
+			expOut: []string{indent(s.recordAsText, 4)},
 		},
 		{
-			"session id does not exist",
-			[]string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
-			"",
-			[]string{"records: []"},
+			name:   "session id does not exist",
+			args:   []string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
+			expOut: []string{"records: []"},
 		},
 		{
-			"records from scope id as json",
-			[]string{s.scopeID.String(), s.asJson},
-			"",
-			[]string{s.recordAsJson},
+			name:   "records from scope id as json",
+			args:   []string{s.scopeID.String(), s.asJson},
+			expOut: []string{s.recordAsJson},
 		},
 		{
-			"records from scope id as text",
-			[]string{s.scopeID.String(), s.asText},
-			"",
-			[]string{indent(s.recordAsText, 4)},
+			name:   "records from scope id as text",
+			args:   []string{s.scopeID.String(), s.asText},
+			expOut: []string{indent(s.recordAsText, 4)},
 		},
 		{
-			"scope id does not exist",
-			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"",
-			[]string{"records: []"},
+			name:   "scope id does not exist",
+			args:   []string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			expOut: []string{"records: []"},
 		},
 		{
-			"records from scope uuid as json",
-			[]string{s.scopeUUID.String(), s.asJson},
-			"",
-			[]string{s.recordAsJson},
+			name:   "records from scope uuid as json",
+			args:   []string{s.scopeUUID.String(), s.asJson},
+			expOut: []string{s.recordAsJson},
 		},
 		{
-			"records from scope uuid as text",
-			[]string{s.scopeUUID.String(), s.asText},
-			"",
-			[]string{indent(s.recordAsText, 4)},
+			name:   "records from scope uuid as text",
+			args:   []string{s.scopeUUID.String(), s.asText},
+			expOut: []string{indent(s.recordAsText, 4)},
 		},
 		{
-			"scope uuid does not exist",
-			[]string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
-			"",
-			[]string{"records: []"},
+			name:   "scope uuid does not exist",
+			args:   []string{"91978ba2-5f35-459a-86a7-feca1b0512e0"},
+			expOut: []string{"records: []"},
 		},
 		{
-			"record from scope uuid and record name as json",
-			[]string{s.scopeUUID.String(), s.recordName, s.asJson},
-			"",
-			[]string{s.recordAsJson},
+			name:   "record from scope uuid and record name as json",
+			args:   []string{s.scopeUUID.String(), s.recordName, s.asJson},
+			expOut: []string{s.recordAsJson},
 		},
 		{
-			"record from scope uuid and record name as text",
-			[]string{s.scopeUUID.String(), s.recordName, s.asText},
-			"",
-			[]string{indent(s.recordAsText, 4)},
+			name:   "record from scope uuid and record name as text",
+			args:   []string{s.scopeUUID.String(), s.recordName, s.asText},
+			expOut: []string{indent(s.recordAsText, 4)},
 		},
 		{
-			"scope uuid exists but record name does not",
-			[]string{s.scopeUUID.String(), "nope"},
-			"",
-			[]string{"record: null"},
+			name:   "scope uuid exists but record name does not",
+			args:   []string{s.scopeUUID.String(), "nope"},
+			expOut: []string{"record: null"},
 		},
 		{
-			"bad prefix",
-			[]string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
-			"address [contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn] is not a scope address: invalid request",
-			[]string{},
+			name:   "bad prefix",
+			args:   []string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
+			expErr: "address [contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn] is not a scope address: invalid request",
 		},
 		{
-			"bad arg 1",
-			[]string{"badbad"},
-			"could not parse [badbad] into either a scope address (decoding bech32 failed: invalid bech32 string length 6) or uuid (invalid UUID length: 6): invalid request",
-			[]string{},
+			name:   "bad arg 1",
+			args:   []string{"badbad"},
+			expErr: "could not parse [badbad] into either a scope address (decoding bech32 failed: invalid bech32 string length 6) or uuid (invalid UUID length: 6): invalid request",
 		},
 		{
-			"uuid arg 1 and whitespace args 2 and 3 as json",
-			[]string{s.scopeUUID.String(), "  ", " ", s.asJson},
-			"",
-			[]string{s.recordAsJson},
+			name:   "uuid arg 1 and whitespace args 2 and 3 as json",
+			args:   []string{s.scopeUUID.String(), "  ", " ", s.asJson},
+			expOut: []string{s.recordAsJson},
 		},
 		{
-			"uuid arg 1 and whitespace args 2 and 3 as text",
-			[]string{s.scopeUUID.String(), "  ", " ", s.asText},
-			"",
-			[]string{indent(s.recordAsText, 4)},
+			name:   "uuid arg 1 and whitespace args 2 and 3 as text",
+			args:   []string{s.scopeUUID.String(), "  ", " ", s.asText},
+			expOut: []string{indent(s.recordAsText, 4)},
 		},
 		{
-			"no args",
-			[]string{},
-			"requires at least 1 arg(s), only received 0",
-			[]string{""},
+			name:   "no args",
+			args:   []string{},
+			expErr: "requires at least 1 arg(s), only received 0",
 		},
 	}
 
@@ -1412,64 +1305,54 @@ func (s *IntegrationCLITestSuite) TestGetMetadataScopeSpecCmd() {
 
 	testCases := []queryCmdTestCase{
 		{
-			"scope spec from scope spec id as json",
-			[]string{s.scopeSpecID.String(), s.asJson},
-			"",
-			[]string{s.scopeSpecAsJson},
+			name:   "scope spec from scope spec id as json",
+			args:   []string{s.scopeSpecID.String(), s.asJson},
+			expOut: []string{s.scopeSpecAsJson},
 		},
 		{
-			"scope spec from scope spec id as text",
-			[]string{s.scopeSpecID.String(), s.asText},
-			"",
-			[]string{indent(s.scopeSpecAsText, 4)},
+			name:   "scope spec from scope spec id as text",
+			args:   []string{s.scopeSpecID.String(), s.asText},
+			expOut: []string{indent(s.scopeSpecAsText, 4)},
 		},
 		{
-			"scope spec id bad prefix",
-			[]string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			"address [scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel] is not a scope spec address: invalid request",
-			[]string{},
+			name:   "scope spec id bad prefix",
+			args:   []string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			expErr: "address [scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel] is not a scope spec address: invalid request",
 		},
 		{
-			"scope spec id does not exist",
-			[]string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
-			"",
-			[]string{"specification: null", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
+			name:   "scope spec id does not exist",
+			args:   []string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
+			expOut: []string{"specification: null", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
 		},
 		{
-			"scope spec from scope spec uuid as json",
-			[]string{s.scopeSpecUUID.String(), s.asJson},
-			"",
-			[]string{s.scopeSpecAsJson},
+			name:   "scope spec from scope spec uuid as json",
+			args:   []string{s.scopeSpecUUID.String(), s.asJson},
+			expOut: []string{s.scopeSpecAsJson},
 		},
 		{
-			"scope spec from scope spec uuid as text",
-			[]string{s.scopeSpecUUID.String(), s.asText},
-			"",
-			[]string{indent(s.scopeSpecAsText, 4)},
+			name:   "scope spec from scope spec uuid as text",
+			args:   []string{s.scopeSpecUUID.String(), s.asText},
+			expOut: []string{indent(s.scopeSpecAsText, 4)},
 		},
 		{
-			"scope spec uuid does not exist",
-			[]string{"dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"},
-			"",
-			[]string{"specification: null", "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"},
+			name:   "scope spec uuid does not exist",
+			args:   []string{"dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"},
+			expOut: []string{"specification: null", "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2"},
 		},
 		{
-			"bad arg",
-			[]string{"reallybad"},
-			"could not parse [reallybad] into either a scope spec address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 9): invalid request",
-			[]string{},
+			name:   "bad arg",
+			args:   []string{"reallybad"},
+			expErr: "could not parse [reallybad] into either a scope spec address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 9): invalid request",
 		},
 		{
-			"two args",
-			[]string{"arg1", "arg2"},
-			"accepts 1 arg(s), received 2",
-			[]string{},
+			name:   "two args",
+			args:   []string{"arg1", "arg2"},
+			expErr: "accepts 1 arg(s), received 2",
 		},
 		{
-			"no args",
-			[]string{},
-			"accepts 1 arg(s), received 0",
-			[]string{},
+			name:   "no args",
+			args:   []string{},
+			expErr: "accepts 1 arg(s), received 0",
 		},
 	}
 
@@ -1481,82 +1364,69 @@ func (s *IntegrationCLITestSuite) TestGetMetadataContractSpecCmd() {
 
 	testCases := []queryCmdTestCase{
 		{
-			"contract spec from contract spec id as json",
-			[]string{s.contractSpecID.String(), s.asJson},
-			"",
-			[]string{s.contractSpecAsJson},
+			name:   "contract spec from contract spec id as json",
+			args:   []string{s.contractSpecID.String(), s.asJson},
+			expOut: []string{s.contractSpecAsJson},
 		},
 		{
-			"contract spec from contract spec id as text",
-			[]string{s.contractSpecID.String(), s.asText},
-			"",
-			[]string{indent(s.contractSpecAsText, 4)},
+			name:   "contract spec from contract spec id as text",
+			args:   []string{s.contractSpecID.String(), s.asText},
+			expOut: []string{indent(s.contractSpecAsText, 4)},
 		},
 		{
-			"contract spec id does not exist",
-			[]string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
-			"",
-			[]string{"specification: null", "contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
+			name:   "contract spec id does not exist",
+			args:   []string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
+			expOut: []string{"specification: null", "contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
 		},
 		{
-			"contract spec from contract spec uuid as json",
-			[]string{s.contractSpecUUID.String(), s.asJson},
-			"",
-			[]string{s.contractSpecAsJson},
+			name:   "contract spec from contract spec uuid as json",
+			args:   []string{s.contractSpecUUID.String(), s.asJson},
+			expOut: []string{s.contractSpecAsJson},
 		},
 		{
-			"contract spec from contract spec uuid as text",
-			[]string{s.contractSpecUUID.String(), s.asText},
-			"",
-			[]string{indent(s.contractSpecAsText, 4)},
+			name:   "contract spec from contract spec uuid as text",
+			args:   []string{s.contractSpecUUID.String(), s.asText},
+			expOut: []string{indent(s.contractSpecAsText, 4)},
 		},
 		{
-			"contract spec uuid does not exist",
-			[]string{"def6bc0a-c9dd-4874-948f-5206e6060a84"},
-			"",
-			[]string{"specification: null", "def6bc0a-c9dd-4874-948f-5206e6060a84"},
+			name:   "contract spec uuid does not exist",
+			args:   []string{"def6bc0a-c9dd-4874-948f-5206e6060a84"},
+			expOut: []string{"specification: null", "def6bc0a-c9dd-4874-948f-5206e6060a84"},
 		},
 		{
-			"contract spec from record spec id as json",
-			[]string{s.recordSpecID.String(), s.asJson},
-			"",
-			[]string{s.contractSpecAsJson},
+			name:   "contract spec from record spec id as json",
+			args:   []string{s.recordSpecID.String(), s.asJson},
+			expOut: []string{s.contractSpecAsJson},
 		},
 		{
-			"contract spec from record spec id as text",
-			[]string{s.recordSpecID.String(), s.asText},
-			"",
-			[]string{indent(s.contractSpecAsText, 4)},
+			name:   "contract spec from record spec id as text",
+			args:   []string{s.recordSpecID.String(), s.asText},
+			expOut: []string{indent(s.contractSpecAsText, 4)},
 		},
 		{
-			"record spec id does not exist",
-			[]string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
-			"",
-			[]string{"specification: null"},
+			name:   "record spec id does not exist",
+			args:   []string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
+			expOut: []string{"specification: null"},
 		},
 		{
-			"bad prefix",
-			[]string{"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
-			"invalid specification id: address [record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3] is not a contract spec address: invalid request",
-			[]string{},
+			name:   "bad prefix",
+			args:   []string{"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
+			expErr: "invalid specification id: address [record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3] is not a contract spec address: invalid request",
 		},
 		{
-			"bad arg",
-			[]string{"badbadarg"},
-			"invalid specification id: could not parse [badbadarg] into either a contract spec address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 9): invalid request",
-			[]string{},
+			name:   "bad arg",
+			args:   []string{"badbadarg"},
+			expErr: "invalid specification id: could not parse [badbadarg] into either a contract spec address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 9): invalid request",
 		},
 		{
-			"two args",
-			[]string{"arg1", "arg2"},
-			"accepts 1 arg(s), received 2",
-			[]string{},
+			name:   "two args",
+			args:   []string{"arg1", "arg2"},
+			expErr: "accepts 1 arg(s), received 2",
 		},
 		{
-			"no args",
-			[]string{},
-			"accepts 1 arg(s), received 0",
-			[]string{},
+			name:   "no args",
+			args:   []string{},
+			expErr: "accepts 1 arg(s), received 0",
 		},
 	}
 
@@ -1568,100 +1438,84 @@ func (s *IntegrationCLITestSuite) TestGetMetadataRecordSpecCmd() {
 
 	testCases := []queryCmdTestCase{
 		{
-			"record spec from rec spec id as json",
-			[]string{s.recordSpecID.String(), s.asJson},
-			"",
-			[]string{s.recordSpecAsJson},
+			name:   "record spec from rec spec id as json",
+			args:   []string{s.recordSpecID.String(), s.asJson},
+			expOut: []string{s.recordSpecAsJson},
 		},
 		{
-			"record spec from rec spec id as text",
-			[]string{s.recordSpecID.String(), s.asText},
-			"",
-			[]string{indent(s.recordSpecAsText, 4)},
+			name:   "record spec from rec spec id as text",
+			args:   []string{s.recordSpecID.String(), s.asText},
+			expOut: []string{indent(s.recordSpecAsText, 4)},
 		},
 		{
-			"rec spec id does not exist",
-			[]string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
-			"",
-			[]string{"record_specifications: []"},
+			name:   "rec spec id does not exist",
+			args:   []string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
+			expOut: []string{"record_specifications: []"},
 		},
 		{
-			"record specs from contract spec id as json",
-			[]string{s.contractSpecID.String(), s.asJson},
-			"",
-			[]string{s.recordSpecAsJson},
+			name:   "record specs from contract spec id as json",
+			args:   []string{s.contractSpecID.String(), s.asJson},
+			expOut: []string{s.recordSpecAsJson},
 		},
 		{
-			"record specs from contract spec id as text",
-			[]string{s.contractSpecID.String(), s.asText},
-			"",
-			[]string{indent(s.recordSpecAsText, 4)},
+			name:   "record specs from contract spec id as text",
+			args:   []string{s.contractSpecID.String(), s.asText},
+			expOut: []string{indent(s.recordSpecAsText, 4)},
 		},
 		{
-			"contract spec id does not exist",
-			[]string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
-			"",
-			[]string{"record_specifications: []", "contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
+			name:   "contract spec id does not exist",
+			args:   []string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
+			expOut: []string{"record_specifications: []", "contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
 		},
 		{
-			"record specs from contract spec uuid as json",
-			[]string{s.contractSpecUUID.String(), s.asJson},
-			"",
-			[]string{s.recordSpecAsJson},
+			name:   "record specs from contract spec uuid as json",
+			args:   []string{s.contractSpecUUID.String(), s.asJson},
+			expOut: []string{s.recordSpecAsJson},
 		},
 		{
-			"record specs from contract spec uuid as text",
-			[]string{s.contractSpecUUID.String(), s.asText},
-			"",
-			[]string{indent(s.recordSpecAsText, 4)},
+			name:   "record specs from contract spec uuid as text",
+			args:   []string{s.contractSpecUUID.String(), s.asText},
+			expOut: []string{indent(s.recordSpecAsText, 4)},
 		},
 		{
-			"contract spec uuid does not exist",
-			[]string{"def6bc0a-c9dd-4874-948f-5206e6060a84"},
-			"",
-			[]string{"record_specifications: []", "def6bc0a-c9dd-4874-948f-5206e6060a84"},
+			name:   "contract spec uuid does not exist",
+			args:   []string{"def6bc0a-c9dd-4874-948f-5206e6060a84"},
+			expOut: []string{"record_specifications: []", "def6bc0a-c9dd-4874-948f-5206e6060a84"},
 		},
 		{
-			"record spec from contract spec uuid and record spec name as json",
-			[]string{s.contractSpecUUID.String(), s.recordName, s.asJson},
-			"",
-			[]string{s.recordSpecAsJson},
+			name:   "record spec from contract spec uuid and record spec name as json",
+			args:   []string{s.contractSpecUUID.String(), s.recordName, s.asJson},
+			expOut: []string{s.recordSpecAsJson},
 		},
 		{
-			"record spec from contract spec uuid and record spec name as text",
-			[]string{s.contractSpecUUID.String(), s.recordName, s.asText},
-			"",
-			[]string{indent(s.recordSpecAsText, 4)},
+			name:   "record spec from contract spec uuid and record spec name as text",
+			args:   []string{s.contractSpecUUID.String(), s.recordName, s.asText},
+			expOut: []string{indent(s.recordSpecAsText, 4)},
 		},
 		{
-			"contract spec uuid exists record spec name does not",
-			[]string{s.contractSpecUUID.String(), s.contractSpecUUID.String()},
-			"",
-			[]string{"specification: null", s.contractSpecUUID.String()},
+			name:   "contract spec uuid exists record spec name does not",
+			args:   []string{s.contractSpecUUID.String(), s.contractSpecUUID.String()},
+			expOut: []string{"specification: null", s.contractSpecUUID.String()},
 		},
 		{
-			"record specs from contract spec uuid and only whitespace name args",
-			[]string{s.contractSpecUUID.String(), "   ", " ", "      "},
-			"",
-			[]string{indent(s.recordSpecAsText, 4)},
+			name:   "record specs from contract spec uuid and only whitespace name args",
+			args:   []string{s.contractSpecUUID.String(), "   ", " ", "      "},
+			expOut: []string{indent(s.recordSpecAsText, 4)},
 		},
 		{
-			"bad prefix",
-			[]string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
-			"invalid specification id: address [session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr] is not a contract spec address: invalid request",
-			[]string{},
+			name:   "bad prefix",
+			args:   []string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
+			expErr: "invalid specification id: address [session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr] is not a contract spec address: invalid request",
 		},
 		{
-			"bad arg 1",
-			[]string{"not-gonna-parse"},
-			"invalid specification id: could not parse [not-gonna-parse] into either a contract spec address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 15): invalid request",
-			[]string{},
+			name:   "bad arg 1",
+			args:   []string{"not-gonna-parse"},
+			expErr: "invalid specification id: could not parse [not-gonna-parse] into either a contract spec address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 15): invalid request",
 		},
 		{
-			"no args",
-			[]string{s.asJson},
-			"requires at least 1 arg(s), only received 0",
-			[]string{},
+			name:   "no args",
+			args:   []string{s.asJson},
+			expErr: "requires at least 1 arg(s), only received 0",
 		},
 	}
 
@@ -1684,43 +1538,37 @@ func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
 
 	testCases := []queryCmdTestCase{
 		{
-			"scopes as json",
-			[]string{s.user1AddrStr, s.asJson},
-			"",
-			[]string{
+			name: "scopes as json",
+			args: []string{s.user1AddrStr, s.asJson},
+			expOut: []string{
 				fmt.Sprintf("\"scope_uuids\":[\"%s\"]", s.scopeUUID),
 				"\"pagination\":{\"next_key\":null,\"total\":\"0\"}",
 			},
 		},
 		{
-			"scopes as text",
-			[]string{s.user1AddrStr, s.asText},
-			"",
-			[]string{scopeUUIDsText, paginationText},
+			name:   "scopes as text",
+			args:   []string{s.user1AddrStr, s.asText},
+			expOut: []string{scopeUUIDsText, paginationText},
 		},
 		{
-			"scope through value owner",
-			[]string{s.user2AddrStr},
-			"",
-			[]string{scopeUUIDsText},
+			name:   "scope through value owner",
+			args:   []string{s.user2AddrStr},
+			expOut: []string{scopeUUIDsText},
 		},
 		{
-			"no result",
-			[]string{newUser},
-			"",
-			[]string{"scope_uuids: []", "total: \"0\""},
+			name:   "no result",
+			args:   []string{newUser},
+			expOut: []string{"scope_uuids: []", "total: \"0\""},
 		},
 		{
-			"two args",
-			[]string{s.user1AddrStr, s.user2AddrStr},
-			"accepts 1 arg(s), received 2",
-			[]string{},
+			name:   "two args",
+			args:   []string{s.user1AddrStr, s.user2AddrStr},
+			expErr: "accepts 1 arg(s), received 2",
 		},
 		{
-			"no args",
-			[]string{},
-			"accepts 1 arg(s), received 0",
-			[]string{},
+			name:   "no args",
+			args:   []string{},
+			expErr: "accepts 1 arg(s), received 0",
 		},
 	}
 
@@ -1741,37 +1589,32 @@ func (s *IntegrationCLITestSuite) TestGetValueOwnershipCmd() {
 
 	testCases := []queryCmdTestCase{
 		{
-			"as json",
-			[]string{s.user2AddrStr, s.asJson},
-			"",
-			[]string{
+			name: "as json",
+			args: []string{s.user2AddrStr, s.asJson},
+			expOut: []string{
 				fmt.Sprintf("\"scope_uuids\":[\"%s\"]", s.scopeUUID),
 				"\"pagination\":{\"next_key\":null,\"total\":\"0\"}",
 			},
 		},
 		{
-			"as text",
-			[]string{s.user2AddrStr, s.asText},
-			"",
-			[]string{scopeUUIDsText, paginationText},
+			name:   "as text",
+			args:   []string{s.user2AddrStr, s.asText},
+			expOut: []string{scopeUUIDsText, paginationText},
 		},
 		{
-			"no result",
-			[]string{s.user1AddrStr},
-			"",
-			[]string{"scope_uuids: []", "total: \"0\""},
+			name:   "no result",
+			args:   []string{s.user1AddrStr},
+			expOut: []string{"scope_uuids: []", "total: \"0\""},
 		},
 		{
-			"two args",
-			[]string{s.user1AddrStr, s.user2AddrStr},
-			"accepts 1 arg(s), received 2",
-			[]string{},
+			name:   "two args",
+			args:   []string{s.user1AddrStr, s.user2AddrStr},
+			expErr: "accepts 1 arg(s), received 2",
 		},
 		{
-			"no args",
-			[]string{},
-			"accepts 1 arg(s), received 0",
-			[]string{},
+			name:   "no args",
+			args:   []string{},
+			expErr: "accepts 1 arg(s), received 0",
 		},
 	}
 
@@ -1789,132 +1632,112 @@ func (s *IntegrationCLITestSuite) TestGetOSLocatorCmd() {
 
 	testCases := []queryCmdTestCase{
 		{
-			"params as text",
-			[]string{"params", s.asText},
-			"",
-			[]string{
+			name: "params as text",
+			args: []string{"params", s.asText},
+			expOut: []string{
 				"params:",
 				fmt.Sprintf("max_uri_length: %d", metadatatypes.DefaultMaxURILength),
 			},
 		},
 		{
-			"params as json",
-			[]string{"params", s.asJson},
-			"",
-			[]string{
+			name: "params as json",
+			args: []string{"params", s.asJson},
+			expOut: []string{
 				"\"params\":{",
 				fmt.Sprintf("\"max_uri_length\":%d", metadatatypes.DefaultMaxURILength),
 			},
 		},
 		{
-			"all as text",
-			[]string{"all", s.asText},
-			"",
-			[]string{listEntryLocator1, listEntryLocator2},
+			name:   "all as text",
+			args:   []string{"all", s.asText},
+			expOut: []string{listEntryLocator1, listEntryLocator2},
 		},
 		{
-			"all as json",
-			[]string{"all", s.asJson},
-			"",
-			[]string{s.objectLocator1AsJson, s.objectLocator2AsJson},
+			name:   "all as json",
+			args:   []string{"all", s.asJson},
+			expOut: []string{s.objectLocator1AsJson, s.objectLocator2AsJson},
 		},
 		{
-			"by owner locator 1 as text",
-			[]string{s.user1AddrStr, s.asText},
-			"",
-			[]string{indentedLocator1Text},
+			name:   "by owner locator 1 as text",
+			args:   []string{s.user1AddrStr, s.asText},
+			expOut: []string{indentedLocator1Text},
 		},
 		{
-			"by owner locator 1 as json",
-			[]string{s.user1AddrStr, s.asJson},
-			"",
-			[]string{s.objectLocator1AsJson},
+			name:   "by owner locator 1 as json",
+			args:   []string{s.user1AddrStr, s.asJson},
+			expOut: []string{s.objectLocator1AsJson},
 		},
 		{
-			"by owner locator 2 as text",
-			[]string{s.user2AddrStr, s.asText},
-			"",
-			[]string{indentedLocator2Text},
+			name:   "by owner locator 2 as text",
+			args:   []string{s.user2AddrStr, s.asText},
+			expOut: []string{indentedLocator2Text},
 		},
 		{
-			"by owner locator 2 as json",
-			[]string{s.user2AddrStr, s.asJson},
-			"",
-			[]string{s.objectLocator2AsJson},
+			name:   "by owner locator 2 as json",
+			args:   []string{s.user2AddrStr, s.asJson},
+			expOut: []string{s.objectLocator2AsJson},
 		},
 		{
-			"by owner unknown owner",
-			[]string{s.userOtherAddr.String()},
-			"no locator bound to address: unknown request",
-			[]string{""},
+			name:   "by owner unknown owner",
+			args:   []string{s.userOtherAddr.String()},
+			expErr: "no locator bound to address: unknown request",
 		},
 		{
-			"by scope id as text",
-			[]string{s.scopeID.String(), s.asText},
-			"",
-			[]string{listEntryLocator1},
+			name:   "by scope id as text",
+			args:   []string{s.scopeID.String(), s.asText},
+			expOut: []string{listEntryLocator1},
 		},
 		{
-			"by scope id as json",
-			[]string{s.scopeID.String(), s.asJson},
-			"",
-			[]string{s.objectLocator1AsJson},
+			name:   "by scope id as json",
+			args:   []string{s.scopeID.String(), s.asJson},
+			expOut: []string{s.objectLocator1AsJson},
 		},
 		{
-			"by scope id unknown scope id",
-			[]string{metadatatypes.ScopeMetadataAddress(unknownUUID).String()},
-			fmt.Sprintf("scope [%s] not found: invalid request",
+			name: "by scope id unknown scope id",
+			args: []string{metadatatypes.ScopeMetadataAddress(unknownUUID).String()},
+			expErr: fmt.Sprintf("scope [%s] not found: invalid request",
 				metadatatypes.ScopeMetadataAddress(unknownUUID)),
-			[]string{s.objectLocator1AsJson},
 		},
 		{
-			"by scope uuid as text",
-			[]string{s.scopeUUID.String(), s.asText},
-			"",
-			[]string{listEntryLocator1},
+			name:   "by scope uuid as text",
+			args:   []string{s.scopeUUID.String(), s.asText},
+			expOut: []string{listEntryLocator1},
 		},
 		{
-			"by scope uuid as json",
-			[]string{s.scopeUUID.String(), s.asJson},
-			"",
-			[]string{s.objectLocator1AsJson},
+			name:   "by scope uuid as json",
+			args:   []string{s.scopeUUID.String(), s.asJson},
+			expOut: []string{s.objectLocator1AsJson},
 		},
 		{
-			"by scope uuid unknown scope uuid",
-			[]string{unknownUUID.String()},
-			fmt.Sprintf("scope [%s] not found: invalid request",
+			name: "by scope uuid unknown scope uuid",
+			args: []string{unknownUUID.String()},
+			expErr: fmt.Sprintf("scope [%s] not found: invalid request",
 				unknownUUID),
-			[]string{s.objectLocator1AsJson},
 		},
 		{
-			"by uri locator 1 as text",
-			[]string{s.uri1, s.asText},
-			"",
-			[]string{listEntryLocator1},
+			name:   "by uri locator 1 as text",
+			args:   []string{s.uri1, s.asText},
+			expOut: []string{listEntryLocator1},
 		},
 		{
-			"by uri locator 1 as json",
-			[]string{s.uri1, s.asJson},
-			"",
-			[]string{s.objectLocator1AsJson},
+			name:   "by uri locator 1 as json",
+			args:   []string{s.uri1, s.asJson},
+			expOut: []string{s.objectLocator1AsJson},
 		},
 		{
-			"by uri locator 2 as text",
-			[]string{s.uri2, s.asText},
-			"",
-			[]string{listEntryLocator2},
+			name:   "by uri locator 2 as text",
+			args:   []string{s.uri2, s.asText},
+			expOut: []string{listEntryLocator2},
 		},
 		{
-			"by uri locator 2 as json",
-			[]string{s.uri2, s.asJson},
-			"",
-			[]string{s.objectLocator2AsJson},
+			name:   "by uri locator 2 as json",
+			args:   []string{s.uri2, s.asJson},
+			expOut: []string{s.objectLocator2AsJson},
 		},
 		{
-			"by uri unknown uri",
-			[]string{"http://not-an-entry.corn"},
-			"No records found.: unknown request",
-			[]string{},
+			name:   "by uri unknown uri",
+			args:   []string{"http://not-an-entry.corn"},
+			expErr: "No records found.: unknown request",
 		},
 	}
 
@@ -1926,15 +1749,15 @@ func (s *IntegrationCLITestSuite) TestGetAccountDataCmd() {
 
 	tests := []queryCmdTestCase{
 		{
-			name:             "invalid address",
-			args:             []string{"notanaddr"},
-			expectedError:    `invalid metadata address "notanaddr": decoding bech32 failed: invalid separator index -1`,
-			expectedInOutput: []string{`invalid metadata address "notanaddr"`},
+			name:   "invalid address",
+			args:   []string{"notanaddr"},
+			expErr: `invalid metadata address "notanaddr": decoding bech32 failed: invalid separator index -1`,
+			expOut: []string{`invalid metadata address "notanaddr"`},
 		},
 		{
-			name:             "data returned",
-			args:             []string{s.scopeIDWithData.String()},
-			expectedInOutput: []string{"value: This is some scope account data."},
+			name:   "data returned",
+			args:   []string{s.scopeIDWithData.String()},
+			expOut: []string{"value: This is some scope account data."},
 		},
 	}
 
@@ -2342,16 +2165,19 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 	queryTests := func(scope1ValueOwner, scope2ValueOwner, scope3ValueOwner string) []queryCmdTestCase {
 		return []queryCmdTestCase{
 			{
-				name: "scope 1 value owner", args: []string{scopeID1},
-				expectedInOutput: []string{"value_owner_address: " + scope1ValueOwner},
+				name:   "scope 1 value owner",
+				args:   []string{scopeID1},
+				expOut: []string{"value_owner_address: " + scope1ValueOwner},
 			},
 			{
-				name: "scope 2 value owner", args: []string{scopeID2},
-				expectedInOutput: []string{"value_owner_address: " + scope2ValueOwner},
+				name:   "scope 2 value owner",
+				args:   []string{scopeID2},
+				expOut: []string{"value_owner_address: " + scope2ValueOwner},
 			},
 			{
-				name: "scope 3 value owner", args: []string{scopeID3},
-				expectedInOutput: []string{"value_owner_address: " + scope3ValueOwner},
+				name:   "scope 3 value owner",
+				args:   []string{scopeID3},
+				expOut: []string{"value_owner_address: " + scope3ValueOwner},
 			},
 		}
 	}
@@ -3862,17 +3688,17 @@ func (s *IntegrationCLITestSuite) TestSetAccountDataCmd() {
 	runQueryCmdTestCases(s, func() *cobra.Command { return cli.GetAccountDataCmd() },
 		[]queryCmdTestCase{
 			{
-				name:             "using metadata query command",
-				args:             []string{scopeIDStr},
-				expectedInOutput: []string{"value: This is the account data for a test scope."},
+				name:   "using metadata query command",
+				args:   []string{scopeIDStr},
+				expOut: []string{"value: This is the account data for a test scope."},
 			},
 		})
 	runQueryCmdTestCases(s, func() *cobra.Command { return attrcli.GetAccountDataCmd() },
 		[]queryCmdTestCase{
 			{
-				name:             "using attribute query command",
-				args:             []string{scopeIDStr},
-				expectedInOutput: []string{"value: This is the account data for a test scope."},
+				name:   "using attribute query command",
+				args:   []string{scopeIDStr},
+				expOut: []string{"value: This is the account data for a test scope."},
 			},
 		})
 }
