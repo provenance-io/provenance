@@ -37,6 +37,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 
 	k.setTriggerID(ctx, data.TriggerId)
 	k.setQueueStartIndex(ctx, data.QueueStart)
+	if len(data.QueuedTriggers) == 0 {
+		k.setQueueLength(ctx, 0)
+	}
 
 	for _, gasLimit := range data.GasLimits {
 		k.SetGasLimit(ctx, gasLimit.TriggerId, gasLimit.Amount)
