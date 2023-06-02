@@ -12,6 +12,10 @@ func (s *KeeperTestSuite) TestProcessActions() {
 	owner := s.accountAddresses[0].String()
 	trigger1 := s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner})
 	trigger2 := s.CreateTrigger(2, owner, &types.BlockHeightEvent{BlockHeight: 130}, &types.MsgDestroyTriggerRequest{Id: 101, Authority: owner})
+	trigger3 := s.CreateTrigger(4, owner, &types.BlockHeightEvent{BlockHeight: 130}, &types.MsgDestroyTriggerRequest{Id: 104, Authority: owner})
+	trigger4 := s.CreateTrigger(5, owner, &types.BlockHeightEvent{BlockHeight: 130}, &types.MsgDestroyTriggerRequest{Id: 105, Authority: owner})
+	trigger5 := s.CreateTrigger(6, owner, &types.BlockHeightEvent{BlockHeight: 130}, &types.MsgDestroyTriggerRequest{Id: 106, Authority: owner})
+	trigger6 := s.CreateTrigger(7, owner, &types.BlockHeightEvent{BlockHeight: 130}, &types.MsgDestroyTriggerRequest{Id: 107, Authority: owner})
 	emptyTrigger := s.CreateTrigger(3, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 102, Authority: owner})
 	emptyTrigger.Actions = []*codectypes.Any{}
 	multiActionTrigger := s.CreateTrigger(4, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 103, Authority: owner})
@@ -56,7 +60,7 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     trigger1,
 				},
 			},
-			gas:      []uint64{9999999999},
+			gas:      []uint64{2000000},
 			expected: []types.Trigger(nil),
 			events:   []sdk.Event{event1},
 		},
@@ -85,7 +89,7 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     emptyTrigger,
 				},
 			},
-			gas:      []uint64{9999999999},
+			gas:      []uint64{2000000},
 			expected: []types.Trigger(nil),
 			events:   []sdk.Event{},
 		},
@@ -100,7 +104,7 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     multiActionTrigger,
 				},
 			},
-			gas:      []uint64{9999999999},
+			gas:      []uint64{2000000},
 			expected: []types.Trigger(nil),
 			events:   []sdk.Event{event1, event2},
 		},
@@ -120,9 +124,69 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     trigger2,
 				},
 			},
-			gas:      []uint64{9999999999, 9999999999},
+			gas:      []uint64{1000000, 1000000},
 			expected: []types.Trigger(nil),
 			events:   []sdk.Event{event1, event2},
+		},
+		{
+			name:     "valid - limit multiple triggers in queue by gas",
+			panics:   false,
+			existing: []types.Trigger{existing1, existing2},
+			queue: []types.QueuedTrigger{
+				{
+					BlockHeight: uint64(s.ctx.BlockHeight()),
+					Time:        s.ctx.BlockTime(),
+					Trigger:     trigger1,
+				},
+				{
+					BlockHeight: uint64(s.ctx.BlockHeight()),
+					Time:        s.ctx.BlockTime(),
+					Trigger:     trigger2,
+				},
+			},
+			gas:      []uint64{2000000, 1000000},
+			expected: []types.Trigger{existing2},
+			events:   []sdk.Event{event1},
+		},
+		{
+			name:     "valid - limit multiple triggers in queue",
+			panics:   false,
+			existing: []types.Trigger{existing1, existing2},
+			queue: []types.QueuedTrigger{
+				{
+					BlockHeight: uint64(s.ctx.BlockHeight()),
+					Time:        s.ctx.BlockTime(),
+					Trigger:     trigger1,
+				},
+				{
+					BlockHeight: uint64(s.ctx.BlockHeight()),
+					Time:        s.ctx.BlockTime(),
+					Trigger:     trigger3,
+				},
+				{
+					BlockHeight: uint64(s.ctx.BlockHeight()),
+					Time:        s.ctx.BlockTime(),
+					Trigger:     trigger4,
+				},
+				{
+					BlockHeight: uint64(s.ctx.BlockHeight()),
+					Time:        s.ctx.BlockTime(),
+					Trigger:     trigger5,
+				},
+				{
+					BlockHeight: uint64(s.ctx.BlockHeight()),
+					Time:        s.ctx.BlockTime(),
+					Trigger:     trigger6,
+				},
+				{
+					BlockHeight: uint64(s.ctx.BlockHeight()),
+					Time:        s.ctx.BlockTime(),
+					Trigger:     trigger2,
+				},
+			},
+			gas:      []uint64{100000, 100000, 100000, 100000, 100000, 100000},
+			expected: []types.Trigger{existing2},
+			events:   []sdk.Event{event1},
 		},
 		{
 			name:     "invalid - trigger with single action runs out of gas",
@@ -170,7 +234,7 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     trigger2,
 				},
 			},
-			gas:      []uint64{1, 9999999999},
+			gas:      []uint64{1, 1000000},
 			expected: []types.Trigger{existing1},
 			events:   []sdk.Event{event2},
 		},
@@ -202,8 +266,17 @@ func (s *KeeperTestSuite) TestProcessActions() {
 				s.NoError(err)
 				s.Equal(tc.expected, remaining)
 
+				for _, trigger := range remaining {
+					s.app.TriggerKeeper.UnregisterTrigger(s.ctx, trigger)
+					s.app.TriggerKeeper.RemoveGasLimit(s.ctx, trigger.Id)
+				}
+
 				events := s.ctx.EventManager().Events()
 				s.Equal(tc.events, events)
+			}
+
+			for !s.app.TriggerKeeper.QueueIsEmpty(s.ctx) {
+				s.app.TriggerKeeper.Dequeue(s.ctx)
 			}
 		})
 	}

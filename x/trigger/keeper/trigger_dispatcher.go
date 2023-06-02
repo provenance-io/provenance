@@ -11,17 +11,28 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
+const (
+	MaximumActions  uint64 = 5
+	MaximumQueueGas uint64 = 2000000
+)
+
 // ProcessTriggers Reads triggers from queues and attempts to run them.
 func (k Keeper) ProcessTriggers(ctx sdk.Context) {
-	// TODO - We have to resolve a big issue which is how much gas to allocate for the begin block?
-	// Maybe instead of how many items. It's how much gas, and we use GetGasLimit to decide if we should pull another
-	// This would make the most sense because otherwise what's the point of just taking x items from the queue?
-	for !k.QueueIsEmpty(ctx) {
-		item := k.QueuePeek(ctx)
-		k.Dequeue(ctx)
+	var actionsProcessed uint64
+	var gasUsed uint64
 
+	for !k.QueueIsEmpty(ctx) && actionsProcessed < MaximumActions {
+		item := k.QueuePeek(ctx)
 		triggerID := item.GetTrigger().Id
 		gasLimit := k.GetGasLimit(ctx, triggerID)
+
+		if gasLimit+gasUsed > MaximumQueueGas {
+			return
+		}
+		actionsProcessed++
+		gasUsed += gasLimit
+
+		k.Dequeue(ctx)
 		k.RemoveGasLimit(ctx, triggerID)
 
 		actions := item.GetTrigger().Actions

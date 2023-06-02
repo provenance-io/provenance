@@ -6,8 +6,10 @@ import (
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
-const SetGasLimitCost uint64 = 2510
-const MaximumTriggerGas uint64 = 2000000
+const (
+	SetGasLimitCost   uint64 = 2510
+	MaximumTriggerGas uint64 = 2000000
+)
 
 // SetGasLimit Sets a gas limit for a trigger
 func (k Keeper) SetGasLimit(ctx sdk.Context, id types.TriggerID, gasLimit uint64) {
@@ -32,6 +34,7 @@ func (k Keeper) GetGasLimit(ctx sdk.Context, id types.TriggerID) (gasLimit uint6
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetGasLimitKey(id))
 	if bz == nil {
+		// Something is seriously wrong because every trigger should have a gas limit
 		panic("gas limit not found for trigger")
 	}
 	gasLimit = types.GetGasLimitFromBytes(bz)
