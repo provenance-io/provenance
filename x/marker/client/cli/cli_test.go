@@ -29,6 +29,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -941,6 +942,62 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+
+	// Now check some stuff to make sure it actually happened.
+
+	checks := []struct {
+		name   string
+		cmd    *cobra.Command
+		args   []string
+		expOut []string
+	}{
+		{
+			name:   "get account data with marker command",
+			cmd:    markercli.AccountDataCmd(),
+			args:   []string{"hotdog"},
+			expOut: []string{"value: Not as good as corndog."},
+		},
+		{
+			name:   "get account data with attribute command",
+			cmd:    attrcli.GetAccountDataCmd(),
+			args:   []string{markertypes.MustGetMarkerAddress("hotdog").String()},
+			expOut: []string{"value: Not as good as corndog."},
+		},
+		{
+			name: "gov prop created for account data",
+			cmd:  govcli.GetCmdQueryProposals(),
+			expOut: []string{
+				"'@type': /provenance.marker.v1.MsgSetAccountDataRequest",
+				"denom: hotdog",
+				"signer: " + authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				"value: Better than corndog.",
+			},
+		},
+	}
+
+	for _, check := range checks {
+		s.Run(check.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			cmdName := check.cmd.Name()
+			var outStr string
+			defer func() {
+				if s.T().Failed() {
+					s.T().Logf("Command: %s\nArgs: %q\nOutput:\n%s", cmdName, check.args, outStr)
+				}
+			}()
+
+			if check.args == nil {
+				check.args = []string{}
+			}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, check.cmd, check.args)
+			outStr = out.String()
+			s.Require().NoError(err, "ExecTestCLICmd %s command", cmdName)
+			for _, exp := range check.expOut {
+				s.Assert().Contains(outStr, exp, "%s command output", cmdName)
 			}
 		})
 	}
