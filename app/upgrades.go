@@ -235,7 +235,7 @@ func removeInactiveValidators(ctx sdk.Context, app *App, inActiveDays int) {
 	validators := app.StakingKeeper.GetAllValidators(ctx)
 	for _, validator := range validators {
 		if validator.IsUnbonded() {
-			duration := validator.UnbondingTime.Sub(ctx.BlockTime())
+			duration := ctx.BlockTime().Sub(validator.UnbondingTime)
 			days := int(duration.Hours() / 24)
 			if days >= inActiveDays {
 				ctx.Logger().Info(fmt.Sprintf("validator %v has been inactive (unbonded) for %d days and will be removed", validator.OperatorAddress, days))
