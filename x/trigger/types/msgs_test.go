@@ -172,13 +172,20 @@ func TestMsgCreateTriggerRequestGetTriggerEventI(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := NewCreateTriggerRequest(tc.authority, tc.event, tc.msgs)
+			event := tc.event
+			if event == nil {
+				event = &BlockHeightEvent{}
+			}
+			msg := NewCreateTriggerRequest(tc.authority, event, tc.msgs)
+			if tc.event == nil {
+				msg.Event = nil
+			}
 			err := msg.UnpackInterfaces(cdc)
 			assert.NoError(t, err)
-			event, err := msg.GetTriggerEventI()
+			triggerEvent, err := msg.GetTriggerEventI()
 			if tc.err == nil {
 				assert.NoError(t, err)
-				assert.Equal(t, tc.event, event)
+				assert.Equal(t, tc.event, triggerEvent)
 			} else {
 				assert.Error(t, tc.err, err)
 			}

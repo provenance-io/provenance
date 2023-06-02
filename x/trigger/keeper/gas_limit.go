@@ -46,7 +46,7 @@ func (k Keeper) IterateGasLimits(ctx sdk.Context, handle func(gasLimit types.Gas
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.GetGasLimitFromBytes(iterator.Value())
-		key := types.GetTriggerIDFromBytes(iterator.Key())
+		key := types.GetTriggerIDFromBytes(iterator.Key()[1:])
 		stop, err := handle(types.GasLimit{TriggerId: key, Amount: record})
 		if err != nil {
 			return err

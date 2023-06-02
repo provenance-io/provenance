@@ -91,13 +91,13 @@ func (s *KeeperTestSuite) TestIterateGasLimits() {
 		name      string
 		shortStop bool
 		add       []types.GasLimit
-		count     uint64
+		expected  []uint64
 	}{
 		{
 			name:      "valid - no gas limits",
 			shortStop: false,
 			add:       []types.GasLimit{},
-			count:     0,
+			expected:  []uint64{},
 		},
 		{
 			name:      "valid - one gas limit",
@@ -108,7 +108,7 @@ func (s *KeeperTestSuite) TestIterateGasLimits() {
 					Amount:    5,
 				},
 			},
-			count: 1,
+			expected: []uint64{1},
 		},
 		{
 			name:      "valid - multiple gas limits",
@@ -123,28 +123,29 @@ func (s *KeeperTestSuite) TestIterateGasLimits() {
 					Amount:    7,
 				},
 			},
-			count: 2,
+			expected: []uint64{1, 2},
 		},
 		{
 			name:      "valid - do not iterate through all",
 			shortStop: true,
 			add:       []types.GasLimit{},
-			count:     1,
+			expected:  []uint64{1},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			count := uint64(0)
 			for _, gasLimit := range tc.add {
 				s.app.TriggerKeeper.SetGasLimit(s.ctx, gasLimit.TriggerId, gasLimit.Amount)
 			}
+			ids := []uint64{}
 			err := s.app.TriggerKeeper.IterateGasLimits(s.ctx, func(gasLimit types.GasLimit) (stop bool, err error) {
-				count += 1
+
+				ids = append(ids, gasLimit.TriggerId)
 				return tc.shortStop, nil
 			})
 			s.NoError(err)
-			s.Equal(tc.count, count)
+			s.Equal(tc.expected, ids)
 		})
 	}
 }
