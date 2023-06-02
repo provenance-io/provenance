@@ -485,7 +485,7 @@ func New(
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
 		return pioMsgFeesRouter.Handler(msg)
 	})
-	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[rewardtypes.StoreKey], pioMessageRouter)
+	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], pioMessageRouter)
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec, keys[icahosttypes.StoreKey], app.GetSubspace(icahosttypes.SubModuleName),
 		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,

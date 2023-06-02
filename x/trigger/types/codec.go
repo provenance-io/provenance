@@ -15,6 +15,13 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgDestroyTriggerRequest{},
 	)
 
+	registry.RegisterImplementations(
+		(*TriggerEventI)(nil),
+		&TransactionEvent{},
+		&BlockHeightEvent{},
+		&BlockTimeEvent{},
+	)
+
 	registry.RegisterInterface(
 		"provenance.trigger.v1.TransactionEvent",
 		(*TriggerEventI)(nil),

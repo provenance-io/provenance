@@ -51,6 +51,7 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
 func init() {
@@ -268,6 +269,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[attributetypes.StoreKey], newApp.keys[attributetypes.StoreKey], [][]byte{attributetypes.AttributeAddrLookupKeyPrefix}},
 		{app.keys[nametypes.StoreKey], newApp.keys[nametypes.StoreKey], [][]byte{}},
 		{app.keys[metadatatypes.StoreKey], newApp.keys[metadatatypes.StoreKey], [][]byte{}},
+		{app.keys[triggertypes.StoreKey], newApp.keys[triggertypes.StoreKey], [][]byte{}},
 	}
 
 	for _, skp := range storeKeysPrefixes {

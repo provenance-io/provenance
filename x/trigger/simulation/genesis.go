@@ -130,10 +130,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 	}
 
 	genesis := types.NewGenesisState(triggerID, queueStart, triggers, gasLimits, queuedTriggers)
-	bz, err := json.MarshalIndent(&genesis, "", " ")
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(genesis)
+
+	bz, err := json.MarshalIndent(simState.GenState[types.ModuleName], "", " ")
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("Selected randomly generated triggers:\n%s\n", bz)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(genesis)
 }
