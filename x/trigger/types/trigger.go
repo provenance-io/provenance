@@ -28,6 +28,10 @@ type TriggerEventI interface {
 	ValidateContext(ctx sdk.Context) error
 }
 
+var _ TriggerEventI = &TransactionEvent{}
+var _ TriggerEventI = &BlockHeightEvent{}
+var _ TriggerEventI = &BlockTimeEvent{}
+
 // NewTrigger creates a new trigger.
 func NewTrigger(id TriggerID, owner string, event *codectypes.Any, action []*codectypes.Any) Trigger {
 	return Trigger{
