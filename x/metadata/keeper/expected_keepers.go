@@ -22,7 +22,6 @@ type AuthzKeeper interface {
 
 // AttrKeeper defines the attribute functionality needed by the metadata module.
 type AttrKeeper interface {
-	GetMaxValueLength(ctx sdk.Context) uint32
 	GetAccountData(ctx sdk.Context, addr string) (string, error)
 	SetAccountData(ctx sdk.Context, addr string, value string) error
 }

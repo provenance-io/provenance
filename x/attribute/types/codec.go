@@ -15,7 +15,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		messages[i] = msg
 	}
 	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
-
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 

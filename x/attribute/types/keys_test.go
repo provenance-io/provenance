@@ -16,7 +16,7 @@ import (
 
 func TestModuleAddresses(t *testing.T) {
 	// This test is primarily just to know what the bech32 strings are for the attribute
-	// module account so that they can be used in scripts/initialize.sh and unit tests.
+	// module account so that they can be used/found as needed.
 
 	// Get the attribute module address bytes so we can make bech32 strings of it with various HRPs.
 	moduleAddr := authtypes.NewModuleAddress(ModuleName)
