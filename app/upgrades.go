@@ -86,7 +86,7 @@ var upgrades = map[string]appUpgrade{
 
 			removeP8eMemorializeContractFee(ctx, app)
 
-			removeInactiveValidators(ctx, app, 21)
+			removeInactiveValidators(ctx, app)
 
 			return vm, nil
 		},
@@ -229,15 +229,15 @@ func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
 }
 
 // removeInactiveValidators unbonds all delegations from inactive validators, triggering their removal from the validator set.
-func removeInactiveValidators(ctx sdk.Context, app *App, inActiveDays int) {
+func removeInactiveValidators(ctx sdk.Context, app *App) {
 	ctx.Logger().Info(fmt.Sprintf("removing any validator that has been inactive (unbonded) for %d days", inActiveDays))
 	removalCount := 0
+	unbondingTimeParam := app.StakingKeeper.GetParams(ctx).UnbondingTime
 	validators := app.StakingKeeper.GetAllValidators(ctx)
 	for _, validator := range validators {
 		if validator.IsUnbonded() {
-			duration := ctx.BlockTime().Sub(validator.UnbondingTime)
-			days := int(duration.Hours() / 24)
-			if days >= inActiveDays {
+			inActiveDuration := ctx.BlockTime().Sub(validator.UnbondingTime)
+			if inActiveDuration >= unbondingTimeParam {
 				ctx.Logger().Info(fmt.Sprintf("validator %v has been inactive (unbonded) for %d days and will be removed", validator.OperatorAddress, days))
 				valAddress, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 				if err != nil {
