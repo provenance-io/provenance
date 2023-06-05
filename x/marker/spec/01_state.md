@@ -6,7 +6,7 @@
     - [Access Grants](#access-grants)
     - [Fixed Supply vs Floating](#fixed-supply-vs-floating)
     - [Forced Transfers](#forced-transfers)
-	- [Required Attributes](#required-attributes)
+    - [Required Attributes](#required-attributes)
   - [Marker Address Cache](#marker-address-cache)
   - [Params](#params)
 
