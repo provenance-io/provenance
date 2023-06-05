@@ -229,7 +229,7 @@ func SimulateMsgAddAccess(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 		if !m.GetManager().Equals(sdk.AccAddress{}) {
 			simAccount, _ = simtypes.FindAccount(accs, m.GetManager())
 		}
-		grants := randomAccessGrants(r, accs, 100)
+		grants := randomAccessGrants(r, accs, 100, m.GetMarkerType())
 		msg := types.NewMsgAddAccessRequest(m.GetDenom(), simAccount.Address, grants[0])
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
 	}
@@ -243,16 +243,17 @@ func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.Account
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		mgrAccount, _ := simtypes.RandomAcc(r, accs)
 		denom := randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx))
+		markerType := types.MarkerType(r.Intn(2) + 1) // coin or restricted_coin
 		// random access grants
-		grants := randomAccessGrants(r, accs, 100)
+		grants := randomAccessGrants(r, accs, 100, markerType)
 		msg := types.NewMsgAddFinalizeActivateMarkerRequest(
 			denom,
 			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))),
 			simAccount.Address,
 			mgrAccount.Address,
-			types.MarkerType(r.Intn(2)+1), // coin or restricted_coin
-			r.Intn(2) > 0,                 // fixed supply
-			r.Intn(2) > 0,                 // allow gov            // allow forced transfer
+			markerType,
+			r.Intn(2) > 0, // fixed supply
+			r.Intn(2) > 0, // allow gov            // allow forced transfer
 			r.Intn(2) > 0,
 			[]string{},
 			grants,
@@ -269,6 +270,8 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		denom := randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx))
 
+		markerStatus := types.MarkerStatus(r.Intn(3) + 1)
+		markerType := types.MarkerType(r.Intn(2) + 1)
 		msg := &types.MsgAddMarkerRequest{
 			Amount: sdk.Coin{
 				Denom:  denom,
@@ -276,9 +279,9 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 			},
 			Manager:                simAccount.Address.String(),
 			FromAddress:            k.GetAuthority(),
-			Status:                 types.MarkerStatus(r.Intn(3) + 1),
-			MarkerType:             types.MarkerType(r.Intn(2) + 1),
-			AccessList:             []types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r)}},
+			Status:                 markerStatus,
+			MarkerType:             markerType,
+			AccessList:             []types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r, markerType)}},
 			SupplyFixed:            r.Intn(2) > 0,
 			AllowGovernanceControl: true,
 			AllowForcedTransfer:    false,
@@ -433,7 +436,7 @@ func randomUnrestrictedDenom(r *rand.Rand, unrestrictedDenomExp string) string {
 }
 
 // build
-func randomAccessGrants(r *rand.Rand, accs []simtypes.Account, limit int) (grants []types.AccessGrant) {
+func randomAccessGrants(r *rand.Rand, accs []simtypes.Account, limit int, markerType types.MarkerType) (grants []types.AccessGrant) {
 	// select random number of accounts ...
 	for i := 0; i < len(accs); i++ {
 		if r.Intn(10) < 3 {
@@ -443,14 +446,17 @@ func randomAccessGrants(r *rand.Rand, accs []simtypes.Account, limit int) (grant
 			return
 		}
 		// for each of the accounts selected .. add a random set of permissions.
-		grants = append(grants, *types.NewAccessGrant(accs[i].Address, randomAccessTypes(r)))
+		grants = append(grants, *types.NewAccessGrant(accs[i].Address, randomAccessTypes(r, markerType)))
 	}
 	return
 }
 
 // builds a list of access rights with a 50:50 chance of including each one
-func randomAccessTypes(r *rand.Rand) (result []types.Access) {
-	access := []string{"mint", "burn", "deposit", "withdraw", "delete", "admin", "transfer"}
+func randomAccessTypes(r *rand.Rand, markerType types.MarkerType) (result []types.Access) {
+	access := []string{"mint", "burn", "deposit", "withdraw", "delete", "admin"}
+	if markerType == types.MarkerType_RestrictedCoin {
+		access = append(access, "transfer")
+	}
 	for i := 0; i < len(access); i++ {
 		if r.Intn(10) < 4 {
 			result = append(result, types.AccessByName(access[i]))

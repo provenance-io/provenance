@@ -119,7 +119,7 @@ func SimulateCreateSetAdministratorProposalContent(k keeper.Keeper) simtypes.Con
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
 			m.GetDenom(),
-			randomAccessGrants(r, accs, 2),
+			randomAccessGrants(r, accs, 2, m.GetMarkerType()),
 		)
 	}
 }
