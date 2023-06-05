@@ -234,6 +234,7 @@ func (s *UpgradeTestSuite) TestRustRC1() {
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		`INF Creating message fee for "/cosmos.gov.v1.MsgSubmitProposal" if it doesn't already exist.`,
 		`INF Removing message fee for "/provenance.metadata.v1.MsgP8eMemorializeContractRequest" if one exists.`,
+		"INF Fixing name module store index entries.",
 	}
 
 	s.AssertUpgradeHandlerLogs("rust-rc1", expInLog, nil)
@@ -247,6 +248,7 @@ func (s *UpgradeTestSuite) TestRust() {
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		`INF Removing message fee for "/provenance.metadata.v1.MsgP8eMemorializeContractRequest" if one exists.`,
+		"INF Fixing name module store index entries.",
 	}
 	expNotInLog := []string{
 		`Creating message fee for "/cosmos.gov.v1.MsgSubmitProposal" if it doesn't already exist.`,
