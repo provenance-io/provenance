@@ -344,7 +344,7 @@ func Dispatch(
 	if sdk.MsgTypeURL(msg) == "/provenance.marker.v1.MsgAddMarkerRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
 		err = testutil.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 			Denom:  "stake",
-			Amount: sdk.NewInt(1_000_000_000_000_000),
+			Amount: sdk.NewInt(100_000_000_000_000),
 		}))
 		fees = fees.Add(sdk.Coin{
 			Denom:  "stake",
