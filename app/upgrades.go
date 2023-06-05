@@ -232,18 +232,17 @@ func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
 	}
 }
 
-<<<<<<< HEAD
 // removeInactiveValidators unbonds all delegations from inactive validators, triggering their removal from the validator set.
 func removeInactiveValidators(ctx sdk.Context, app *App) {
-	ctx.Logger().Info(fmt.Sprintf("removing any validator that has been inactive (unbonded) for %d days", inActiveDays))
-	removalCount := 0
 	unbondingTimeParam := app.StakingKeeper.GetParams(ctx).UnbondingTime
+	ctx.Logger().Info(fmt.Sprintf("removing any validator that has been inactive (unbonded) for %d hours", int64(unbondingTimeParam.Hours()/24)))
+	removalCount := 0
 	validators := app.StakingKeeper.GetAllValidators(ctx)
 	for _, validator := range validators {
 		if validator.IsUnbonded() {
 			inActiveDuration := ctx.BlockTime().Sub(validator.UnbondingTime)
 			if inActiveDuration >= unbondingTimeParam {
-				ctx.Logger().Info(fmt.Sprintf("validator %v has been inactive (unbonded) for %d days and will be removed", validator.OperatorAddress, days))
+				ctx.Logger().Info(fmt.Sprintf("validator %v has been inactive (unbonded) for %d days and will be removed", validator.OperatorAddress, int64(inActiveDuration.Hours()/24)))
 				valAddress, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 				if err != nil {
 					panic(err)
@@ -263,11 +262,11 @@ func removeInactiveValidators(ctx sdk.Context, app *App) {
 		}
 	}
 	ctx.Logger().Info(fmt.Sprintf("a total of %d inactive (unbonded) validators have been removed", removalCount))
-=======
+}
+
 // fixNameIndexEntries fixes the name module's address to name index entries.
 func fixNameIndexEntries(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Fixing name module store index entries.")
 	app.NameKeeper.DeleteInvalidAddressIndexEntries(ctx)
 	ctx.Logger().Info("Done fixing name module store index entries.")
->>>>>>> main
 }
