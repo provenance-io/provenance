@@ -32,8 +32,8 @@ func TestDecodeStore(t *testing.T) {
 		name        string
 		expectedLog string
 	}{
-		{"Name Record", fmt.Sprintf("%v\n%v", testNameRecord, testNameRecord)},
-		{"Address Cache", fmt.Sprintf("%v\n%v", testNameRecord, testNameRecord)},
+		{"Name Record", fmt.Sprintf("Name: A:[%v], B:[%v]\n", testNameRecord, testNameRecord)},
+		{"Address Cache", fmt.Sprintf("Addr: A:[%v], B:[%v]\n", testNameRecord, testNameRecord)},
 		{"other", ""},
 	}
 

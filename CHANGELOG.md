@@ -56,17 +56,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump Cosmos-SDK to `v0.46.10-pio-4` (from `v0.46.10-pio-3`) for the `SendRestrictionFn` changes [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
 * Switch to using a `SendRestrictionFn` for restricting sends of marker funds [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
 * Create `rust` upgrade handlers [PR 1549](https://github.com/provenance-io/provenance/pull/1549).
+* Remove mutation of store from `attribute` keeper iterators [#1557](https://github.com/provenance-io/provenance/issues/1557).
 * Bumped ibc-go to 6.1.1 [#1563](https://github.com/provenance-io/provenance/pull/1563).
 
 ### Bug Fixes
 
 * Bring back some proto messages that were deleted but still needed for historical queries [#1554](https://github.com/provenance-io/provenance/issues/1554).
+* Fix the `MsgModifyNameRequest` endpoint to properly clean up old index data [PR 1565](https://github.com/provenance-io/provenance/pull/1565).
 
 ### API Breaking
 
 * Add marker deposit access check for sends to marker escrow account.  Will break any current address that is sending to the
 marker escrow account if it does not have deposit access.  In order for it to work, deposit access needs to be added.  This can be done using the `MsgAddAccessRequest` tx  [#1525](https://github.com/provenance-io/provenance/issues/1525).
 * `MsgMultiSend` is now limited to a single `Input` [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
+* SDK errors returned from Metadata module endpoints [#978](https://github.com/provenance-io/provenance/issues/978).
 
 ---
 

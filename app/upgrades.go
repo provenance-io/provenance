@@ -71,6 +71,8 @@ var upgrades = map[string]appUpgrade{
 
 			removeP8eMemorializeContractFee(ctx, app)
 
+			fixNameIndexEntries(ctx, app)
+
 			return vm, nil
 		},
 	},
@@ -87,6 +89,8 @@ var upgrades = map[string]appUpgrade{
 			removeP8eMemorializeContractFee(ctx, app)
 
 			removeInactiveValidators(ctx, app)
+
+			fixNameIndexEntries(ctx, app)
 
 			return vm, nil
 		},
@@ -228,6 +232,7 @@ func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
 	}
 }
 
+<<<<<<< HEAD
 // removeInactiveValidators unbonds all delegations from inactive validators, triggering their removal from the validator set.
 func removeInactiveValidators(ctx sdk.Context, app *App) {
 	ctx.Logger().Info(fmt.Sprintf("removing any validator that has been inactive (unbonded) for %d days", inActiveDays))
@@ -258,4 +263,11 @@ func removeInactiveValidators(ctx sdk.Context, app *App) {
 		}
 	}
 	ctx.Logger().Info(fmt.Sprintf("a total of %d inactive (unbonded) validators have been removed", removalCount))
+=======
+// fixNameIndexEntries fixes the name module's address to name index entries.
+func fixNameIndexEntries(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Fixing name module store index entries.")
+	app.NameKeeper.DeleteInvalidAddressIndexEntries(ctx)
+	ctx.Logger().Info("Done fixing name module store index entries.")
+>>>>>>> main
 }
