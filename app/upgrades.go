@@ -12,6 +12,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
+	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -92,6 +93,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
+		Added: []string{triggertypes.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
 }
