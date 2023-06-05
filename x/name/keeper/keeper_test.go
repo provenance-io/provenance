@@ -451,6 +451,7 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 		{Name: "sub.one", Address: addr1.String()},
 		{Name: "two", Address: addr2.String()},
 		{Name: "sub.two", Address: addr2.String()},
+		{Name: attrtypes.AccountDataName, Address: authtypes.NewModuleAddress(attrtypes.ModuleName).String(), Restricted: true},
 	}
 
 	// For these, all we care about are the names.
