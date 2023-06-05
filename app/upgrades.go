@@ -255,7 +255,6 @@ func removeInactiveValidators(ctx sdk.Context, app *App) {
 					if err != nil {
 						panic(err)
 					}
-
 				}
 				removalCount++
 			}
