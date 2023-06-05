@@ -19,18 +19,18 @@ const (
 // ProcessTriggers Reads triggers from queues and attempts to run them.
 func (k Keeper) ProcessTriggers(ctx sdk.Context) {
 	var actionsProcessed uint64
-	var gasUsed uint64
+	var gasConsumed uint64
 
 	for !k.QueueIsEmpty(ctx) && actionsProcessed < MaximumActions {
 		item := k.QueuePeek(ctx)
 		triggerID := item.GetTrigger().Id
 		gasLimit := k.GetGasLimit(ctx, triggerID)
 
-		if gasLimit+gasUsed > MaximumQueueGas {
+		if gasLimit+gasConsumed > MaximumQueueGas {
 			return
 		}
 		actionsProcessed++
-		gasUsed += gasLimit
+		gasConsumed += gasLimit
 
 		k.Dequeue(ctx)
 		k.RemoveGasLimit(ctx, triggerID)
