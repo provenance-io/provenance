@@ -2,13 +2,11 @@ package cli
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -36,7 +34,7 @@ func GetQueryCmd() *cobra.Command {
 func GetTriggersCmd() *cobra.Command {
 	const all = "all"
 	cmd := &cobra.Command{
-		Use:     "list {trigger_id|\"all\"}",
+		Use:     "list {<trigger_id>|all}",
 		Aliases: []string{"ls", "l"},
 		Short:   "Query the current triggers",
 		Long: fmt.Sprintf(`%[1]s trigger {trigger_id} - gets the trigger for a given id.
@@ -51,23 +49,23 @@ func GetTriggersCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			var request types.QueryTriggersRequest
 			arg0 := strings.TrimSpace(args[0])
 			if arg0 != all {
 				return queryTriggerByID(clientCtx, queryClient, arg0)
 			}
 
-			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			var request types.QueryTriggersRequest
+			request.Pagination, err = client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
-			request.Pagination = pageReq
 
 			var response *types.QueryTriggersResponse
-			if response, err = queryClient.Triggers(
+			response, err = queryClient.Triggers(
 				context.Background(),
 				&request,
-			); err != nil {
+			)
+			if err != nil {
 				return fmt.Errorf("failed to query triggers: %w", err)
 			}
 
@@ -87,10 +85,11 @@ func queryTriggerByID(client client.Context, queryClient types.QueryClient, arg 
 	}
 
 	var response *types.QueryTriggerByIDResponse
-	if response, err = queryClient.TriggerByID(
+	response, err = queryClient.TriggerByID(
 		context.Background(),
 		&types.QueryTriggerByIDRequest{Id: uint64(triggerID)},
-	); err != nil {
+	)
+	if err != nil {
 		return fmt.Errorf("failed to query trigger %d: %w", triggerID, err)
 	}
 
@@ -99,18 +98,4 @@ func queryTriggerByID(client client.Context, queryClient types.QueryClient, arg 
 	}
 
 	return client.PrintProto(response)
-}
-
-// sdk ReadPageRequest expects binary, but we encoded to base64 in our marshaller
-func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
-	encoded, err := flagSet.GetString(flags.FlagPageKey)
-	if err != nil {
-		panic(err.Error())
-	}
-	raw, err := base64.StdEncoding.DecodeString(encoded)
-	if err != nil {
-		panic(err.Error())
-	}
-	_ = flagSet.Set(flags.FlagPageKey, string(raw))
-	return flagSet
 }
