@@ -31,7 +31,7 @@ message GenesisState {
 
 // GasLimit defines the trigger module's grouping of a trigger and a gas limit
 message GasLimit {
-  // Trigger id is the next auto incremented id to be assigned to the next created trigger
+  // The identifier of the trigger this GasLimit belongs to.
   uint64 trigger_id = 1;
   // The maximum amount of gas that the trigger can use.
   uint64 amount = 2;

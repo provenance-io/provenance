@@ -24,7 +24,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // EventTriggerCreated is an event for when a trigger is created
 type EventTriggerCreated struct {
-	// id is a unique identifier of the trigger
+	// trigger_id is a unique identifier of the trigger
 	TriggerId string `protobuf:"bytes,1,opt,name=trigger_id,json=triggerId,proto3" json:"trigger_id,omitempty"`
 }
 
@@ -70,7 +70,7 @@ func (m *EventTriggerCreated) GetTriggerId() string {
 
 // EventTriggerDestroyed is an event for when a trigger is destroyed
 type EventTriggerDestroyed struct {
-	// id is a unique identifier of the trigger
+	// trigger_id is a unique identifier of the trigger
 	TriggerId string `protobuf:"bytes,1,opt,name=trigger_id,json=triggerId,proto3" json:"trigger_id,omitempty"`
 }
 

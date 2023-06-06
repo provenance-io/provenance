@@ -7093,7 +7093,7 @@ EventTriggerCreated is an event for when a trigger is created
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `trigger_id` | [string](#string) |  | id is a unique identifier of the trigger |
+| `trigger_id` | [string](#string) |  | trigger_id is a unique identifier of the trigger |
 
 
 
@@ -7108,7 +7108,7 @@ EventTriggerDestroyed is an event for when a trigger is destroyed
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `trigger_id` | [string](#string) |  | id is a unique identifier of the trigger |
+| `trigger_id` | [string](#string) |  | trigger_id is a unique identifier of the trigger |
 
 
 
@@ -7252,7 +7252,7 @@ GasLimit defines the trigger module's grouping of a trigger and a gas limit
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `trigger_id` | [uint64](#uint64) |  | Trigger id is the next auto incremented id to be assigned to the next created trigger |
+| `trigger_id` | [uint64](#uint64) |  | The identifier of the trigger this GasLimit belongs to. |
 | `amount` | [uint64](#uint64) |  | The maximum amount of gas that the trigger can use. |
 
 
