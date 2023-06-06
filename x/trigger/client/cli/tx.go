@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
@@ -62,7 +61,7 @@ func GetCmdAddTransactionTrigger() *cobra.Command {
 				return fmt.Errorf("unable to parse event file: %w", err)
 			}
 
-			msgs, err := parseMessages(clientCtx.Codec, args[1])
+			msgs, err := parseMessages(args[1])
 			if err != nil {
 				return fmt.Errorf("unable to parse message file: %w", err)
 			}
@@ -103,7 +102,7 @@ func GetCmdAddBlockHeightTrigger() *cobra.Command {
 				return fmt.Errorf("invalid block height: %s", args[0])
 			}
 
-			msgs, err := parseMessages(clientCtx.Codec, args[1])
+			msgs, err := parseMessages(args[1])
 			if err != nil {
 				return fmt.Errorf("unable to parse message file: %w", err)
 			}
@@ -144,7 +143,7 @@ func GetCmdAddBlockTimeTrigger() *cobra.Command {
 				return fmt.Errorf("unable to parse time (%v) required format is RFC3339 (%v): %w", args[0], time.RFC3339, err)
 			}
 
-			msgs, err := parseMessages(clientCtx.Codec, args[1])
+			msgs, err := parseMessages(args[1])
 			if err != nil {
 				return fmt.Errorf("unable to parse message file: %w", err)
 			}
@@ -196,25 +195,19 @@ func GetCmdDestroyTrigger() *cobra.Command {
 }
 
 // parseMessages reads and parses the message.
-func parseMessages(cdc codec.Codec, path string) ([]sdk.Msg, error) {
+func parseMessages(path string) ([]sdk.Msg, error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	var action ParsedAction
+	var action sdk.Msg
 	err = json.Unmarshal(contents, &action)
 	if err != nil {
 		return nil, err
 	}
 
-	var msg sdk.Msg
-	err = cdc.UnmarshalInterfaceJSON(action.Action, &msg)
-	if err != nil {
-		return nil, err
-	}
-
-	return []sdk.Msg{msg}, nil
+	return []sdk.Msg{action}, nil
 }
 
 // parseEvent reads and parses the transaction event from a file.
@@ -224,43 +217,17 @@ func parseEvent(path string) (*types.TransactionEvent, error) {
 		return nil, err
 	}
 
-	var event ParsedTransactionEvent
+	var event types.TransactionEvent
 	err = json.Unmarshal(contents, &event)
 	if err != nil {
 		return nil, err
 	}
 
-	newEvent := types.TransactionEvent{
-		Name: event.Name,
-	}
-	for _, attr := range event.Attributes {
-		newEvent.Attributes = append(newEvent.Attributes, types.Attribute{
-			Name:  attr.Name,
-			Value: attr.Value,
-		})
-	}
-
-	return &newEvent, nil
+	return &event, nil
 }
 
 // ParsedAction is the deserialized form of the inputted JSON formatted sdk.Msg.
 type ParsedAction struct {
 	// Action defines a sdk.Msg proto-JSON-encoded as Any.
 	Action json.RawMessage `json:"message,omitempty"`
-}
-
-// ParsedTransactionEvent is the deserialized form of the inputted JSON formatted transaction event.
-type ParsedTransactionEvent struct {
-	// Attributes defines an array of ParsedAttribute.
-	Attributes []ParsedAttribute `json:"attributes,omitempty"`
-	// The name/type of the event.
-	Name string `json:"name"`
-}
-
-// ParsedTransactionEvent is the deserialized form of the inputted JSON formatted transaction event's attribute.
-type ParsedAttribute struct {
-	// The name of the attribute.
-	Name string `json:"name"`
-	// The value of the attribute.
-	Value string `json:"value"`
 }
