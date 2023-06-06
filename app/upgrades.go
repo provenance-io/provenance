@@ -76,6 +76,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
+		Added: []string{triggertypes.ModuleName},
 	},
 	"rust": { // upgrade for v1.16.0,
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
