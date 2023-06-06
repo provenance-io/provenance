@@ -194,18 +194,16 @@ func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 				return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "manager account does not exist"), nil, nil
 			}
 		case types.StatusActive:
-			accounts := m.AddressListForPermission(types.Access_Delete)
-			if len(accounts) < 1 {
+			simAccount, found = randomAccWithAccess(r, m, accs, types.Access_Delete)
+			if !found {
 				return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgCancelRequest{}), sdk.MsgTypeURL(&types.MsgCancelRequest{}), "no account has cancel access"), nil, nil
 			}
-			simAccount, _ = simtypes.FindAccount(accs, accounts[0])
 			msg = types.NewMsgCancelRequest(m.GetDenom(), simAccount.Address)
 		case types.StatusCancelled:
-			accounts := m.AddressListForPermission(types.Access_Delete)
-			if len(accounts) < 1 {
+			simAccount, found = randomAccWithAccess(r, m, accs, types.Access_Delete)
+			if !found {
 				return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteRequest{}), sdk.MsgTypeURL(&types.MsgDeleteRequest{}), "no account has delete access"), nil, nil
 			}
-			simAccount, _ = simtypes.FindAccount(accs, accounts[0])
 			msg = types.NewMsgDeleteRequest(m.GetDenom(), simAccount.Address)
 		case types.StatusDestroyed:
 			return simtypes.NoOpMsg(types.ModuleName, "ChangeStatus", "marker status is destroyed"), nil, nil
@@ -253,11 +251,15 @@ func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.Account
 			mgrAccount.Address,
 			markerType,
 			r.Intn(2) > 0, // fixed supply
-			r.Intn(2) > 0, // allow gov            // allow forced transfer
-			r.Intn(2) > 0,
+			r.Intn(2) > 0, // allow gov
+			r.Intn(2) > 0, // allow forced transfer
 			[]string{},
 			grants,
 		)
+
+		if msg.MarkerType != types.MarkerType_RestrictedCoin {
+			msg.AllowForcedTransfer = false
+		}
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
 	}
@@ -284,11 +286,14 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 			AccessList:             []types.AccessGrant{{Address: simAccount.Address.String(), Permissions: randomAccessTypes(r, markerType)}},
 			SupplyFixed:            r.Intn(2) > 0,
 			AllowGovernanceControl: true,
-			AllowForcedTransfer:    false,
+			AllowForcedTransfer:    r.Intn(2) > 0,
 			RequiredAttributes:     nil,
 		}
 		if msg.Status == types.StatusActive {
 			msg.Manager = ""
+		}
+		if msg.MarkerType != types.MarkerType_RestrictedCoin {
+			msg.AllowForcedTransfer = false
 		}
 
 		// Get the governance min deposit needed
@@ -351,7 +356,10 @@ func SimulateMsgSetAccountData(k keeper.Keeper, args *WeightedOpsArgs) simtypes.
 		// 1 in 10 chance that the value stays "".
 		// 9 in 10 chance that it will be between 1 and MaxValueLen characters.
 		if r.Intn(10) != 0 {
-			maxLen := args.AttrK.GetMaxValueLength(ctx)
+			maxLen := uint(args.AttrK.GetMaxValueLength(ctx))
+			if maxLen > 500 {
+				maxLen = 500
+			}
 			strLen := r.Intn(int(maxLen)) + 1
 			msg.Value = simtypes.RandStringOfLength(r, strLen)
 		}
@@ -388,15 +396,15 @@ func Dispatch(
 	if sdk.MsgTypeURL(msg) == "/provenance.marker.v1.MsgAddMarkerRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
 		err = testutil.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 			Denom:  "stake",
-			Amount: sdk.NewInt(1_000_000_000_000_000),
+			Amount: sdk.NewInt(100_000_000_000_000),
 		}))
+		if err != nil {
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to fund account with additional fee"), nil, err
+		}
 		fees = fees.Add(sdk.Coin{
 			Denom:  "stake",
 			Amount: sdk.NewInt(100_000_000_000_000),
 		})
-		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to fund account with additional fee"), nil, err
-		}
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -435,23 +443,24 @@ func randomUnrestrictedDenom(r *rand.Rand, unrestrictedDenomExp string) string {
 	return simtypes.RandStringOfLength(r, int(randomInt63(r, max-min)+min))
 }
 
-// build
+// randomAccessGrants generates random access grants for randomly selected accounts.
+// Each account has a 30% chance of being chosen with a max of limit.
 func randomAccessGrants(r *rand.Rand, accs []simtypes.Account, limit int, markerType types.MarkerType) (grants []types.AccessGrant) {
 	// select random number of accounts ...
 	for i := 0; i < len(accs); i++ {
 		if r.Intn(10) < 3 {
 			continue
 		}
-		if i >= limit {
+		// for each of the accounts selected, add a random set of permissions.
+		grants = append(grants, *types.NewAccessGrant(accs[i].Address, randomAccessTypes(r, markerType)))
+		if len(grants) >= limit {
 			return
 		}
-		// for each of the accounts selected .. add a random set of permissions.
-		grants = append(grants, *types.NewAccessGrant(accs[i].Address, randomAccessTypes(r, markerType)))
 	}
 	return
 }
 
-// builds a list of access rights with a 50:50 chance of including each one
+// randomAccessTypes builds a list of access rights with a 40% chance of including each one
 func randomAccessTypes(r *rand.Rand, markerType types.MarkerType) (result []types.Access) {
 	access := []string{"mint", "burn", "deposit", "withdraw", "delete", "admin"}
 	if markerType == types.MarkerType_RestrictedCoin {
@@ -493,24 +502,34 @@ func randomMarkerWithAccessSigner(r *rand.Rand, ctx sdk.Context, k keeper.Keeper
 	})
 
 	for _, marker := range markers {
-		addrsWithDeposit := marker.AddressListForPermission(access)
-		if len(addrsWithDeposit) == 0 {
-			continue
-		}
-
-		r.Shuffle(len(addrsWithDeposit), func(i, j int) {
-			addrsWithDeposit[i], addrsWithDeposit[j] = addrsWithDeposit[j], addrsWithDeposit[i]
-		})
-
-		for _, addr := range addrsWithDeposit {
-			acc, found := simtypes.FindAccount(accs, addr)
-			if found {
-				return marker, acc
-			}
+		acc, found := randomAccWithAccess(r, marker, accs, access)
+		if found {
+			return marker, acc
 		}
 	}
 
 	return nil, simtypes.Account{}
+}
+
+func randomAccWithAccess(r *rand.Rand, marker types.MarkerAccountI, accs []simtypes.Account, access types.Access) (simtypes.Account, bool) {
+	addrs := marker.AddressListForPermission(access)
+
+	if len(addrs) == 0 {
+		return simtypes.Account{}, false
+	}
+
+	r.Shuffle(len(addrs), func(i, j int) {
+		addrs[i], addrs[j] = addrs[j], addrs[i]
+	})
+
+	for _, addr := range addrs {
+		acc, found := simtypes.FindAccount(accs, addr)
+		if found {
+			return acc, true
+		}
+	}
+
+	return simtypes.Account{}, false
 }
 
 func randomInt63(r *rand.Rand, max int64) (result int64) {
@@ -520,17 +539,25 @@ func randomInt63(r *rand.Rand, max int64) (result int64) {
 	return r.Int63n(max)
 }
 
-func randomUint64(r *rand.Rand, max uint64) (result uint64) {
+// randomUint64 gets a random uint64 between 0 and max (inclusive): [0, max].
+func randomUint64(r *rand.Rand, max uint64) uint64 {
 	if max == 0 {
 		return 0
 	}
-	for {
-		result = r.Uint64()
-		if result < max {
-			break
-		}
+	// Max int64 is 9,223,372,036,854,775,807.
+	// If the provided max is less than that, we'll just use r.Int63n.
+	// Otherwise, we'll use an infinite loop until r.Uint64() returns something small enough.
+	// This way, if the max is small (e.g. 2), we don't sit in this loop forever.
+	if max < 9_223_372_036_854_775_807 {
+		// Using max+1 because we want max to be possible.
+		return uint64(r.Int63n(int64(max + 1)))
 	}
-	return
+	// Not using modulo here because that increases the chances of the low numbers and reduces the chances of bigger ones.
+	result := r.Uint64()
+	for result > max {
+		result = r.Uint64()
+	}
+	return result
 }
 
 // WeightedOpsArgs holds all the args provided to WeightedOperations so that they can be passed on later more easily.
