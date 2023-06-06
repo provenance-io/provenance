@@ -31,7 +31,12 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(GetCmdAddTransactionTrigger(), GetCmdAddBlockHeightTrigger(), GetCmdAddBlockTimeTrigger(), GetCmdDestroyTrigger())
+	txCmd.AddCommand(
+		GetCmdAddTransactionTrigger(),
+		GetCmdAddBlockHeightTrigger(),
+		GetCmdAddBlockTimeTrigger(),
+		GetCmdDestroyTrigger(),
+	)
 
 	return txCmd
 }
@@ -39,7 +44,7 @@ func NewTxCmd() *cobra.Command {
 // GetCmdAddTransactionTrigger is a command to add a trigger for a transaction event.
 func GetCmdAddTransactionTrigger() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create-tx-trigger [event.json] [msg.json]",
+		Use:     "create-tx-trigger <event.json> <msg.json>",
 		Args:    cobra.ExactArgs(2),
 		Aliases: []string{"tx"},
 		Short:   "Creates a new trigger that fires when a tx event is detected.",
@@ -54,12 +59,12 @@ func GetCmdAddTransactionTrigger() *cobra.Command {
 
 			event, err := parseEvent(args[0])
 			if err != nil {
-				return fmt.Errorf("unable to parse event file")
+				return fmt.Errorf("unable to parse event file: %w", err)
 			}
 
-			msgs, err := parseTransactions(clientCtx.Codec, args[1])
+			msgs, err := parseMessages(clientCtx.Codec, args[1])
 			if err != nil {
-				return fmt.Errorf("unable to parse message file")
+				return fmt.Errorf("unable to parse message file: %w", err)
 			}
 			if len(msgs) == 0 {
 				return fmt.Errorf("no actions added to trigger")
@@ -80,7 +85,7 @@ func GetCmdAddTransactionTrigger() *cobra.Command {
 // GetCmdAddBlockHeightTrigger is a command to add a trigger for a block height event.
 func GetCmdAddBlockHeightTrigger() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create-height-trigger [height] [msg.json]",
+		Use:     "create-height-trigger <height> <msg.json>",
 		Args:    cobra.ExactArgs(2),
 		Aliases: []string{"ht", "height"},
 		Short:   "Creates a new trigger that fires when a block height is reached",
@@ -98,9 +103,9 @@ func GetCmdAddBlockHeightTrigger() *cobra.Command {
 				return fmt.Errorf("invalid block height: %s", args[0])
 			}
 
-			msgs, err := parseTransactions(clientCtx.Codec, args[1])
+			msgs, err := parseMessages(clientCtx.Codec, args[1])
 			if err != nil {
-				return fmt.Errorf("unable to parse message file")
+				return fmt.Errorf("unable to parse message file: %w", err)
 			}
 			if len(msgs) == 0 {
 				return fmt.Errorf("no actions added to trigger")
@@ -121,7 +126,7 @@ func GetCmdAddBlockHeightTrigger() *cobra.Command {
 // GetCmdAddBlockTimeTrigger is a command to add a trigger for a block time event.
 func GetCmdAddBlockTimeTrigger() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create-time-trigger [seconds] [msg.json]",
+		Use:     "create-time-trigger <seconds> <msg.json>",
 		Args:    cobra.ExactArgs(2),
 		Aliases: []string{"tt", "time"},
 		Short:   "Creates a new trigger that fires when a block time is reached",
@@ -136,12 +141,12 @@ func GetCmdAddBlockTimeTrigger() *cobra.Command {
 
 			startTime, err := time.Parse(time.RFC3339, args[0])
 			if err != nil {
-				return fmt.Errorf("unable to parse time (%v) required format is RFC3339 (%v) , %w", args[0], time.RFC3339, err)
+				return fmt.Errorf("unable to parse time (%v) required format is RFC3339 (%v): %w", args[0], time.RFC3339, err)
 			}
 
-			msgs, err := parseTransactions(clientCtx.Codec, args[1])
+			msgs, err := parseMessages(clientCtx.Codec, args[1])
 			if err != nil {
-				return fmt.Errorf("unable to parse message file")
+				return fmt.Errorf("unable to parse message file: %w", err)
 			}
 			if len(msgs) == 0 {
 				return fmt.Errorf("no actions added to trigger")
@@ -162,7 +167,7 @@ func GetCmdAddBlockTimeTrigger() *cobra.Command {
 // GetCmdDestroyTrigger is a command to destroy an existing trigger.
 func GetCmdDestroyTrigger() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "destroy-trigger [id]",
+		Use:     "destroy-trigger <id>",
 		Args:    cobra.ExactArgs(1),
 		Aliases: []string{"destroy", "d"},
 		Short:   "Destroys an existing trigger.",
@@ -176,7 +181,7 @@ func GetCmdDestroyTrigger() *cobra.Command {
 			callerAddr := clientCtx.GetFromAddress()
 			triggerID, err := strconv.Atoi(args[0])
 			if err != nil {
-				return fmt.Errorf("invalid trigger id: %s", args[0])
+				return fmt.Errorf("invalid trigger id %q: %w", args[0], err)
 			}
 
 			msg := types.NewDestroyTriggerRequest(
@@ -190,8 +195,8 @@ func GetCmdDestroyTrigger() *cobra.Command {
 	return cmd
 }
 
-// parseTransactions reads and parses the message.
-func parseTransactions(cdc codec.Codec, path string) ([]sdk.Msg, error) {
+// parseMessages reads and parses the message.
+func parseMessages(cdc codec.Codec, path string) ([]sdk.Msg, error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err

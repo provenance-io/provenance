@@ -26,7 +26,9 @@ func GetQueryCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	queryCmd.AddCommand(GetTriggersCmd())
+	queryCmd.AddCommand(
+		GetTriggersCmd(),
+	)
 	return queryCmd
 }
 
