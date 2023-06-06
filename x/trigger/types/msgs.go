@@ -95,7 +95,7 @@ func (msg MsgCreateTriggerRequest) GetTriggerEventI() (TriggerEventI, error) {
 	}
 	event, ok := msg.GetEvent().GetCachedValue().(TriggerEventI)
 	if !ok {
-		return nil, ErrNoTriggerEvent.Wrap("failed to get event")
+		return nil, ErrNoTriggerEvent.Wrap("event is nil")
 	}
 
 	return event, nil

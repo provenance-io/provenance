@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/trigger/types"
@@ -64,7 +66,7 @@ func (k Keeper) getMatchingTriggers(ctx sdk.Context, prefix string, condition fu
 		return false, nil
 	})
 	if err != nil {
-		panic("unable to iterate event listeners for matching triggers")
+		panic(fmt.Errorf("unable to iterate event listeners for matching triggers"))
 	}
 	return
 }

@@ -37,13 +37,10 @@ var (
 
 // GetEventListenerKey converts an event name and trigger ID into an event registry key format.
 func GetEventListenerKey(eventName string, id TriggerID) []byte {
-	eventNameBytes := GetEventNameBytes(eventName)
-
 	triggerIDBytes := make([]byte, TriggerIDLength)
 	binary.BigEndian.PutUint64(triggerIDBytes, id)
 
-	key := EventListenerKeyPrefix
-	key = append(key, eventNameBytes...)
+	key := GetEventListenerPrefix(eventName)
 	key = append(key, triggerIDBytes...)
 	return key
 }
