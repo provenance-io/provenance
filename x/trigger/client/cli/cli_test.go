@@ -323,7 +323,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			name:         "invalid file format",
 			height:       "1",
 			fileContent:  "abc",
-			expectErrMsg: "unable to parse message file",
+			expectErrMsg: "unable to parse message file: invalid character 'a' looking for beginning of value",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
@@ -339,7 +339,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			name:         "invalid message format",
 			height:       "1",
 			fileContent:  "{\"message\": {}}",
-			expectErrMsg: "unable to parse message file",
+			expectErrMsg: "unable to parse message file: Any JSON doesn't have '@type'",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
@@ -360,7 +360,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 					]
 				}
 			}`, s.accountAddresses[0].String(), s.accountAddresses[1].String()),
-			expectErrMsg: "unable to parse message file",
+			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
@@ -381,7 +381,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 					]
 				}
 			}`, "abc", s.accountAddresses[1].String()),
-			expectErrMsg: "unable to parse message file",
+			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
@@ -463,7 +463,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			name:         "invalid tx event content",
 			fileContent:  "",
 			txEvent:      "abc",
-			expectErrMsg: "unable to parse event file",
+			expectErrMsg: "unable to parse event file: invalid character 'a' looking for beginning of value",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
@@ -471,7 +471,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			name:         "invalid file format",
 			fileContent:  "abc",
 			txEvent:      "",
-			expectErrMsg: "unable to parse message file",
+			expectErrMsg: "unable to parse message file: invalid character 'a' looking for beginning of value",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
@@ -479,7 +479,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			name:         "invalid message format",
 			fileContent:  "{\"message\": {}}",
 			txEvent:      "",
-			expectErrMsg: "unable to parse message file",
+			expectErrMsg: "unable to parse message file: Any JSON doesn't have '@type'",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
@@ -500,7 +500,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 					]
 				}
 			}`, s.accountAddresses[0].String(), s.accountAddresses[1].String()),
-			expectErrMsg: "unable to parse message file",
+			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
@@ -521,7 +521,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 					]
 				}
 			}`, "abc", s.accountAddresses[1].String()),
-			expectErrMsg: "unable to parse message file",
+			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
@@ -632,7 +632,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			name:         "invalid file format",
 			blockTime:    "2100-05-19T13:49:00-04:00",
 			fileContent:  "abc",
-			expectErrMsg: "unable to parse message file",
+			expectErrMsg: "unable to parse message file: invalid character 'a' looking for beginning of value",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
@@ -640,7 +640,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			name:         "invalid bad time",
 			blockTime:    "abc",
 			fileContent:  "",
-			expectErrMsg: "unable to parse time (abc) required format is RFC3339 (2006-01-02T15:04:05Z07:00) , parsing time \"abc\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"abc\" as \"2006\"",
+			expectErrMsg: "unable to parse time (abc) required format is RFC3339 (2006-01-02T15:04:05Z07:00): parsing time \"abc\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"abc\" as \"2006\"",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
@@ -648,7 +648,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			name:         "invalid message format",
 			blockTime:    "2100-05-19T13:49:00-04:00",
 			fileContent:  "{\"message\": {}}",
-			expectErrMsg: "unable to parse message file",
+			expectErrMsg: "unable to parse message file: Any JSON doesn't have '@type'",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
@@ -669,7 +669,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 					]
 				}
 			}`, s.accountAddresses[0].String(), s.accountAddresses[1].String()),
-			expectErrMsg: "unable to parse message file",
+			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
@@ -690,7 +690,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 					]
 				}
 			}`, "abc", s.accountAddresses[1].String()),
-			expectErrMsg: "unable to parse message file",
+			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
@@ -783,7 +783,7 @@ func (s *IntegrationTestSuite) TestDestroyTrigger() {
 		{
 			name:         "invalid - trigger id format",
 			triggerID:    "abc",
-			expectErrMsg: "invalid trigger id: abc",
+			expectErrMsg: "invalid trigger id \"abc\": strconv.Atoi: parsing \"abc\": invalid syntax",
 			expectedCode: 0,
 			signer:       s.accountAddresses[0].String(),
 		},
