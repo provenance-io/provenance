@@ -109,14 +109,13 @@ func (k Keeper) iterateQueue(ctx sdk.Context, handle func(trigger types.QueuedTr
 }
 
 // getQueueStartIndex Gets the starting index of the queue in the store.
-func (k Keeper) getQueueStartIndex(ctx sdk.Context) (index uint64) {
+func (k Keeper) getQueueStartIndex(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetQueueStartIndexKey())
 	if bz == nil {
 		return 0
 	}
-	index = types.GetQueueIndexFromBytes(bz)
-	return index
+	return types.GetQueueIndexFromBytes(bz)
 }
 
 // setQueueStartIndex Sets the starting index of the queue in the store.
@@ -127,14 +126,13 @@ func (k Keeper) setQueueStartIndex(ctx sdk.Context, index uint64) {
 }
 
 // getQueueLength Gets the length of the queue in the store.
-func (k Keeper) getQueueLength(ctx sdk.Context) (length uint64) {
+func (k Keeper) getQueueLength(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetQueueLengthKey())
 	if bz == nil {
 		return 0
 	}
-	length = types.GetQueueIndexFromBytes(bz)
-	return length
+	return types.GetQueueIndexFromBytes(bz)
 }
 
 // setQueueLength Sets the length of the queue in the store.
