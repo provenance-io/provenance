@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
@@ -15,9 +16,13 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -29,6 +34,8 @@ type UpgradeTestSuite struct {
 	ctx sdk.Context
 
 	logBuffer bytes.Buffer
+
+	startTime time.Time
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
@@ -53,7 +60,8 @@ func (s *UpgradeTestSuite) SetupSuite() {
 	defer SetLoggerMaker(SetLoggerMaker(bufferedLoggerMaker))
 	s.app = Setup(s.T())
 	s.logBuffer.Reset()
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.startTime = time.Now()
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: s.startTime})
 }
 
 // AssertUpgradeHandlerLogs runs the Handler of the provided key and asserts that
@@ -419,5 +427,126 @@ func (s *UpgradeTestSuite) TestRemoveP8eMemorializeContractFee() {
 			s.Require().NoError(err, "GetMsgFee(%q) error", typeURL)
 			s.Require().Nil(fee, "GetMsgFee(%q) value", typeURL)
 		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestRemoveInactiveValidators() {
+	key := secp256k1.GenPrivKey()
+	pub := key.PubKey()
+	addr1 := sdk.AccAddress(pub.Address())
+	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.Coins{sdk.NewInt64Coin("stake", 1000000)})
+	key2 := secp256k1.GenPrivKey()
+	pub2 := key2.PubKey()
+	addr2 := sdk.AccAddress(pub2.Address())
+	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr2, sdk.Coins{sdk.NewInt64Coin("stake", 1000000)})
+
+	expectedLogLines := []string{
+		"INF removing any validator that has been inactive (unbonded) for 21 hours",
+		"INF a total of 0 inactive (unbonded) validators have been removed",
+	}
+	validators := s.app.StakingKeeper.GetAllValidators(s.ctx)
+	s.Require().Equal(1, len(validators), "should have one validator, original validator made on test setup")
+
+	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
+
+	unbondedVal := s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
+	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+	s.Assert().Equal(2, len(validators), "should two validators, one bonded and one unbonded")
+	expectedLogLines = []string{"INF removing any validator that has been inactive (unbonded) for 21 hours",
+		fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal.OperatorAddress, 30),
+		"INF a total of 1 inactive (unbonded) validators have been removed"}
+	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
+	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+	s.Assert().Equal(1, len(validators), "should have removed the unbonded delegator")
+
+	// single unbonded validator with 1 delegations
+	coin := sdk.NewInt64Coin("stake", 10000)
+	unbondedVal = s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
+	_, err := s.app.StakingKeeper.Delegate(s.ctx, sdk.AccAddress(addr1), coin.Amount, types.Unbonded, unbondedVal, true)
+	s.Require().NoError(err)
+	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+	s.Assert().Equal(2, len(validators), "should two validators, one bonded and one unbonded")
+	expectedLogLines = []string{"INF removing any validator that has been inactive (unbonded) for 21 hours",
+		fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal.OperatorAddress, 30),
+		"INF a total of 1 inactive (unbonded) validators have been removed"}
+	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
+	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+	s.Assert().Equal(1, len(validators), "should have removed the unbonded delegator")
+
+	// single unbonded validator with 2 delegations
+	unbondedVal = s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
+	_, err = s.app.StakingKeeper.Delegate(s.ctx, sdk.AccAddress(addr1), coin.Amount, types.Unbonded, unbondedVal, true)
+	s.Require().NoError(err)
+	unbondedVal, found := s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal.GetOperator())
+	s.Require().True(found)
+	s.Require().Equal(sdk.NewDec(10_000), unbondedVal.DelegatorShares)
+	_, err = s.app.StakingKeeper.Delegate(s.ctx, sdk.AccAddress(addr2), coin.Amount, types.Unbonded, unbondedVal, true)
+	s.Require().NoError(err)
+	unbondedVal, found = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal.GetOperator())
+	s.Require().True(found)
+	s.Require().Equal(sdk.NewDec(20_000), unbondedVal.DelegatorShares)
+	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+	s.Assert().Equal(2, len(validators), "should two validators, one bonded and one unbonded")
+	expectedLogLines = []string{"INF removing any validator that has been inactive (unbonded) for 21 hours",
+		fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal.OperatorAddress, 30),
+		"INF a total of 1 inactive (unbonded) validators have been removed"}
+	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
+	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+	s.Assert().Equal(1, len(validators), "should have removed the unbonded delegator")
+
+	// 2 unbonded validators with delegations
+	unbondedVal = s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
+	_, err = s.app.StakingKeeper.Delegate(s.ctx, sdk.AccAddress(addr1), coin.Amount, types.Unbonded, unbondedVal, true)
+	s.Require().NoError(err)
+	unbondedVal, found = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal.GetOperator())
+	s.Require().True(found)
+	_, err = s.app.StakingKeeper.Delegate(s.ctx, sdk.AccAddress(addr2), coin.Amount, types.Unbonded, unbondedVal, true)
+	s.Require().NoError(err)
+	unbondedVal2 := s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
+	_, err = s.app.StakingKeeper.Delegate(s.ctx, sdk.AccAddress(addr1), coin.Amount, types.Unbonded, unbondedVal2, true)
+	s.Require().NoError(err)
+	unbondedVal2, found = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal2.GetOperator())
+	s.Require().True(found)
+	_, err = s.app.StakingKeeper.Delegate(s.ctx, sdk.AccAddress(addr2), coin.Amount, types.Unbonded, unbondedVal2, true)
+	s.Require().NoError(err)
+	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+	s.Assert().Equal(3, len(validators), "should two validators, one bonded and one unbonded")
+	expectedLogLines = []string{
+		"INF removing any validator that has been inactive (unbonded) for 21 hours",
+		fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal.OperatorAddress, 30),
+		fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal2.OperatorAddress, 30),
+		"INF a total of 2 inactive (unbonded) validators have been removed",
+	}
+	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
+	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+	s.Assert().Equal(1, len(validators), "should have removed the unbonded delegator")
+
+}
+
+func (s *UpgradeTestSuite) CreateValidator(unbondedTime time.Time, status stakingtypes.BondStatus) stakingtypes.Validator {
+	key := secp256k1.GenPrivKey()
+	pub := key.PubKey()
+	addr := sdk.AccAddress(pub.Address())
+	valAddr := sdk.ValAddress(addr)
+	validator, err := stakingtypes.NewValidator(valAddr, pub, stakingtypes.NewDescription(valAddr.String(), "", "", "", ""))
+	s.Require().NoError(err)
+	validator.UnbondingTime = unbondedTime
+	validator.Status = status
+	s.app.StakingKeeper.SetValidator(s.ctx, validator)
+	err = s.app.StakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
+	s.Require().NoError(err)
+	err = s.app.StakingKeeper.AfterValidatorCreated(s.ctx, validator.GetOperator())
+	s.Require().NoError(err)
+	return validator
+}
+
+func (s *UpgradeTestSuite) ExecuteAndAssertLogs(delegate func(ctx sdk.Context, app *App), expectedLogs []string) {
+	s.logBuffer.Reset()
+	delegate(s.ctx, s.app)
+	logOutput := s.logBuffer.String()
+
+	logLines := strings.Split(logOutput, "\n")
+	for _, expectedLine := range expectedLogs {
+		s.Assert().Contains(logLines, expectedLine, "Expecting: %q", expectedLine)
 	}
 }

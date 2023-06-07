@@ -256,6 +256,10 @@ func removeInactiveValidators(ctx sdk.Context, app *App) {
 						panic(err)
 					}
 				}
+				// this should probably never be true, an unbonded delegator will be removed when the last delegator has called Unbond
+				if len(delegations) == 0 && validator.DelegatorShares.IsZero() {
+					app.StakingKeeper.RemoveValidator(ctx, valAddress)
+				}
 				removalCount++
 			}
 		}
