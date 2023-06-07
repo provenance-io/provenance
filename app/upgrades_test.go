@@ -431,15 +431,10 @@ func (s *UpgradeTestSuite) TestRemoveP8eMemorializeContractFee() {
 }
 
 func (s *UpgradeTestSuite) TestRemoveInactiveValidators() {
-	key := secp256k1.GenPrivKey()
-	pub := key.PubKey()
-	addr1 := sdk.AccAddress(pub.Address())
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.Coins{sdk.NewInt64Coin("stake", 1000000)})
-	key2 := secp256k1.GenPrivKey()
-	pub2 := key2.PubKey()
-	addr2 := sdk.AccAddress(pub2.Address())
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr2, sdk.Coins{sdk.NewInt64Coin("stake", 1000000)})
+	addr1 := s.CreateAndFundAccount()
+	addr2 := s.CreateAndFundAccount()
 
+	// run with just one bonded validator
 	expectedLogLines := []string{
 		"INF removing any validator that has been inactive (unbonded) for 21 hours",
 		"INF a total of 0 inactive (unbonded) validators have been removed",
@@ -449,6 +444,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidators() {
 
 	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
 
+	// create a unbonded validator with out delegators...this case should not happen irl (or from what I can see)
 	unbondedVal := s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
 	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
 	s.Assert().Equal(2, len(validators), "should two validators, one bonded and one unbonded")
@@ -462,8 +458,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidators() {
 	// single unbonded validator with 1 delegations
 	coin := sdk.NewInt64Coin("stake", 10000)
 	unbondedVal = s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
-	_, err := s.app.StakingKeeper.Delegate(s.ctx, sdk.AccAddress(addr1), coin.Amount, types.Unbonded, unbondedVal, true)
-	s.Require().NoError(err)
+	s.DelegateToValidator(unbondedVal.GetOperator(), sdk.AccAddress(addr1), coin)
 	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
 	s.Assert().Equal(2, len(validators), "should two validators, one bonded and one unbonded")
 	expectedLogLines = []string{"INF removing any validator that has been inactive (unbonded) for 21 hours",
@@ -475,16 +470,12 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidators() {
 
 	// single unbonded validator with 2 delegations
 	unbondedVal = s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
-	_, err = s.app.StakingKeeper.Delegate(s.ctx, sdk.AccAddress(addr1), coin.Amount, types.Unbonded, unbondedVal, true)
-	s.Require().NoError(err)
-	unbondedVal, found := s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal.GetOperator())
-	s.Require().True(found)
-	s.Require().Equal(sdk.NewDec(10_000), unbondedVal.DelegatorShares)
-	_, err = s.app.StakingKeeper.Delegate(s.ctx, sdk.AccAddress(addr2), coin.Amount, types.Unbonded, unbondedVal, true)
-	s.Require().NoError(err)
-	unbondedVal, found = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal.GetOperator())
-	s.Require().True(found)
+	s.DelegateToValidator(unbondedVal.GetOperator(), sdk.AccAddress(addr1), coin)
+	s.DelegateToValidator(unbondedVal.GetOperator(), sdk.AccAddress(addr2), coin)
+
+	unbondedVal, _ = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal.GetOperator())
 	s.Require().Equal(sdk.NewDec(20_000), unbondedVal.DelegatorShares)
+
 	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
 	s.Assert().Equal(2, len(validators), "should two validators, one bonded and one unbonded")
 	expectedLogLines = []string{"INF removing any validator that has been inactive (unbonded) for 21 hours",
@@ -496,19 +487,17 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidators() {
 
 	// 2 unbonded validators with delegations
 	unbondedVal = s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
-	_, err = s.app.StakingKeeper.Delegate(s.ctx, sdk.AccAddress(addr1), coin.Amount, types.Unbonded, unbondedVal, true)
-	s.Require().NoError(err)
-	unbondedVal, found = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal.GetOperator())
-	s.Require().True(found)
-	_, err = s.app.StakingKeeper.Delegate(s.ctx, sdk.AccAddress(addr2), coin.Amount, types.Unbonded, unbondedVal, true)
-	s.Require().NoError(err)
+	s.DelegateToValidator(unbondedVal.GetOperator(), sdk.AccAddress(addr1), coin)
+	s.DelegateToValidator(unbondedVal.GetOperator(), sdk.AccAddress(addr2), coin)
+
+	unbondedVal, _ = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal.GetOperator())
+	s.Require().Equal(sdk.NewDec(20_000), unbondedVal.DelegatorShares, "shares should have updated")
 	unbondedVal2 := s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
-	_, err = s.app.StakingKeeper.Delegate(s.ctx, sdk.AccAddress(addr1), coin.Amount, types.Unbonded, unbondedVal2, true)
-	s.Require().NoError(err)
-	unbondedVal2, found = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal2.GetOperator())
-	s.Require().True(found)
-	_, err = s.app.StakingKeeper.Delegate(s.ctx, sdk.AccAddress(addr2), coin.Amount, types.Unbonded, unbondedVal2, true)
-	s.Require().NoError(err)
+	s.DelegateToValidator(unbondedVal2.GetOperator(), sdk.AccAddress(addr1), coin)
+	s.DelegateToValidator(unbondedVal2.GetOperator(), sdk.AccAddress(addr2), coin)
+	unbondedVal, _ = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal2.GetOperator())
+	s.Require().Equal(sdk.NewDec(20_000), unbondedVal2.DelegatorShares, "shares should have updated")
+
 	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
 	s.Assert().Equal(3, len(validators), "should two validators, one bonded and one unbonded")
 	expectedLogLines = []string{
@@ -520,7 +509,14 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidators() {
 	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
 	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
 	s.Assert().Equal(1, len(validators), "should have removed the unbonded delegator")
+}
 
+func (s *UpgradeTestSuite) CreateAndFundAccount() sdk.AccAddress {
+	key2 := secp256k1.GenPrivKey()
+	pub2 := key2.PubKey()
+	addr2 := sdk.AccAddress(pub2.Address())
+	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr2, sdk.Coins{sdk.NewInt64Coin("stake", 1000000)})
+	return addr2
 }
 
 func (s *UpgradeTestSuite) CreateValidator(unbondedTime time.Time, status stakingtypes.BondStatus) stakingtypes.Validator {
@@ -529,15 +525,22 @@ func (s *UpgradeTestSuite) CreateValidator(unbondedTime time.Time, status stakin
 	addr := sdk.AccAddress(pub.Address())
 	valAddr := sdk.ValAddress(addr)
 	validator, err := stakingtypes.NewValidator(valAddr, pub, stakingtypes.NewDescription(valAddr.String(), "", "", "", ""))
-	s.Require().NoError(err)
+	s.Require().NoError(err, "could not init new validator")
 	validator.UnbondingTime = unbondedTime
 	validator.Status = status
 	s.app.StakingKeeper.SetValidator(s.ctx, validator)
 	err = s.app.StakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "could not SetValidatorByConsAddr ")
 	err = s.app.StakingKeeper.AfterValidatorCreated(s.ctx, validator.GetOperator())
-	s.Require().NoError(err)
+	s.Require().NoError(err, "could not AfterValidatorCreated")
 	return validator
+}
+
+func (s *UpgradeTestSuite) DelegateToValidator(valAddress sdk.ValAddress, delegatorAddress sdk.AccAddress, coin sdk.Coin) {
+	validator, found := s.app.StakingKeeper.GetValidator(s.ctx, valAddress)
+	s.Require().True(found, "validator does not exist, cannot delegate address: %v", valAddress.String())
+	_, err := s.app.StakingKeeper.Delegate(s.ctx, delegatorAddress, coin.Amount, types.Unbonded, validator, true)
+	s.Require().NoError(err, "error delegating to validator %v from %v", valAddress.String(), delegatorAddress.String())
 }
 
 func (s *UpgradeTestSuite) ExecuteAndAssertLogs(delegate func(ctx sdk.Context, app *App), expectedLogs []string) {
