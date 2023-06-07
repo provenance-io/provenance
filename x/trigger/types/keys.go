@@ -94,7 +94,7 @@ func GetQueueLengthKey() []byte {
 }
 
 // GetQueueIndexFromBytes returns the index in uint64 format from a byte array
-func GetQueueIndexFromBytes(bz []byte) (start uint64) {
+func GetQueueIndexFromBytes(bz []byte) uint64 {
 	return binary.BigEndian.Uint64(bz)
 }
 
@@ -106,7 +106,7 @@ func GetQueueIndexBytes(index uint64) (queueIndexBz []byte) {
 }
 
 // GetTriggerIDFromBytes returns triggerID in uint64 format from a byte array
-func GetTriggerIDFromBytes(bz []byte) (triggerID TriggerID) {
+func GetTriggerIDFromBytes(bz []byte) TriggerID {
 	return binary.BigEndian.Uint64(bz)
 }
 
@@ -135,7 +135,7 @@ func GetGasLimitBytes(gasLimit uint64) (gasLimitBz []byte) {
 }
 
 // GetGasLimitFromBytes returns gas limit in uint64 format from a byte array
-func GetGasLimitFromBytes(bz []byte) (gasLimit uint64) {
+func GetGasLimitFromBytes(bz []byte) uint64 {
 	return binary.BigEndian.Uint64(bz)
 }
 
