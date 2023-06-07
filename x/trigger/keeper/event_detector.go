@@ -66,7 +66,7 @@ func (k Keeper) getMatchingTriggers(ctx sdk.Context, prefix string, condition fu
 		return false, nil
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to iterate event listeners for matching triggers"))
+		panic(fmt.Errorf("unable to iterate event listeners for matching triggers: %w", err))
 	}
 	return
 }

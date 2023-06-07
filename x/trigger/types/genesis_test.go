@@ -49,6 +49,18 @@ func TestGenesisStateValidate(t *testing.T) {
 			err:    "",
 		},
 		{
+			name: "valid - nil slices",
+			state: &GenesisState{
+				TriggerId:      1,
+				QueueStart:     1,
+				GasLimits:      nil,
+				Triggers:       nil,
+				QueuedTriggers: nil,
+			},
+			modify: nil,
+			err:    "",
+		},
+		{
 			name: "invalid - trigger id cannot be zero",
 			state: &GenesisState{
 				TriggerId:      0,
@@ -269,6 +281,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			if len(tc.err) > 0 {
 				assert.ErrorContains(t, res, tc.err)
 			} else {
+				assert.NoError(t, res)
 				assert.Nil(t, res)
 			}
 		})
