@@ -331,14 +331,14 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			name:         "bad height",
 			height:       "abc",
 			fileContent:  "",
-			expectErrMsg: "invalid block height: abc",
+			expectErrMsg: "invalid block height \"abc\": strconv.Atoi: parsing \"abc\": invalid syntax",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
 		},
 		{
 			name:         "invalid message format",
 			height:       "1",
-			fileContent:  "{\"message\": {}}",
+			fileContent:  "{}",
 			expectErrMsg: "unable to parse message file: Any JSON doesn't have '@type'",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
@@ -348,7 +348,6 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			height: "1000",
 			fileContent: fmt.Sprintf(`
 			{
-				"message": {
 					"@type": "/cosmos.bank.v1beta1.InvalidMessageSend",
 					"from_address": "%s",
 					"to_address": "%s",
@@ -358,7 +357,6 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 							"amount": "10"
 						}
 					]
-				}
 			}`, s.accountAddresses[0].String(), s.accountAddresses[1].String()),
 			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
@@ -369,7 +367,6 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			height: "1000",
 			fileContent: fmt.Sprintf(`
 			{
-				"message": {
 					"@type": "/cosmos.bank.v1beta1.InvalidMessageSend",
 					"from_address": "%s",
 					"to_address": "%s",
@@ -379,7 +376,6 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 							"amount": "10"
 						}
 					]
-				}
 			}`, "abc", s.accountAddresses[1].String()),
 			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
@@ -397,7 +393,6 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			if len(tc.fileContent) == 0 {
 				message = fmt.Sprintf(`
 				{
-					"message": {
 						"@type": "/cosmos.bank.v1beta1.MsgSend",
 						"from_address": "%s",
 						"to_address": "%s",
@@ -407,7 +402,6 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 								"amount": "10"
 							}
 						]
-					}
 				}`, s.accountAddresses[0].String(), s.accountAddresses[1].String())
 			} else {
 				message = tc.fileContent
@@ -477,7 +471,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 		},
 		{
 			name:         "invalid message format",
-			fileContent:  "{\"message\": {}}",
+			fileContent:  "{}",
 			txEvent:      "",
 			expectErrMsg: "unable to parse message file: Any JSON doesn't have '@type'",
 			expectedCode: 0,
@@ -488,7 +482,6 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			txEvent: "",
 			fileContent: fmt.Sprintf(`
 			{
-				"message": {
 					"@type": "/cosmos.bank.v1beta1.InvalidMessageSend",
 					"from_address": "%s",
 					"to_address": "%s",
@@ -498,7 +491,6 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 							"amount": "10"
 						}
 					]
-				}
 			}`, s.accountAddresses[0].String(), s.accountAddresses[1].String()),
 			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
@@ -509,7 +501,6 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			txEvent: "",
 			fileContent: fmt.Sprintf(`
 			{
-				"message": {
 					"@type": "/cosmos.bank.v1beta1.InvalidMessageSend",
 					"from_address": "%s",
 					"to_address": "%s",
@@ -519,7 +510,6 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 							"amount": "10"
 						}
 					]
-				}
 			}`, "abc", s.accountAddresses[1].String()),
 			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
@@ -537,7 +527,6 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			if len(tc.fileContent) == 0 {
 				message = fmt.Sprintf(`
 				{
-					"message": {
 						"@type": "/cosmos.bank.v1beta1.MsgSend",
 						"from_address": "%s",
 						"to_address": "%s",
@@ -547,7 +536,6 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 								"amount": "10"
 							}
 						]
-					}
 				}`, s.accountAddresses[0].String(), s.accountAddresses[1].String())
 			} else {
 				message = tc.fileContent
@@ -647,7 +635,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 		{
 			name:         "invalid message format",
 			blockTime:    "2100-05-19T13:49:00-04:00",
-			fileContent:  "{\"message\": {}}",
+			fileContent:  "{}",
 			expectErrMsg: "unable to parse message file: Any JSON doesn't have '@type'",
 			expectedCode: 0,
 			expectedIds:  []uint64{},
@@ -657,7 +645,6 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			blockTime: "2100-05-19T13:49:00-04:00",
 			fileContent: fmt.Sprintf(`
 			{
-				"message": {
 					"@type": "/cosmos.bank.v1beta1.InvalidMessageSend",
 					"from_address": "%s",
 					"to_address": "%s",
@@ -667,7 +654,6 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 							"amount": "10"
 						}
 					]
-				}
 			}`, s.accountAddresses[0].String(), s.accountAddresses[1].String()),
 			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
@@ -678,7 +664,6 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			blockTime: "2100-05-19T13:49:00-04:00",
 			fileContent: fmt.Sprintf(`
 			{
-				"message": {
 					"@type": "/cosmos.bank.v1beta1.InvalidMessageSend",
 					"from_address": "%s",
 					"to_address": "%s",
@@ -688,7 +673,6 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 							"amount": "10"
 						}
 					]
-				}
 			}`, "abc", s.accountAddresses[1].String()),
 			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
@@ -706,7 +690,6 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			if len(tc.fileContent) == 0 {
 				message = fmt.Sprintf(`
 				{
-					"message": {
 						"@type": "/cosmos.bank.v1beta1.MsgSend",
 						"from_address": "%s",
 						"to_address": "%s",
@@ -716,7 +699,6 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 								"amount": "10"
 							}
 						]
-					}
 				}`, s.accountAddresses[0].String(), s.accountAddresses[1].String())
 			} else {
 				message = tc.fileContent

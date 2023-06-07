@@ -202,14 +202,8 @@ func parseMessages(cdc codec.Codec, path string) ([]sdk.Msg, error) {
 		return nil, err
 	}
 
-	var action ParsedAction
-	err = json.Unmarshal(contents, &action)
-	if err != nil {
-		return nil, err
-	}
-
 	var msg sdk.Msg
-	err = cdc.UnmarshalInterfaceJSON(action.Action, &msg)
+	err = cdc.UnmarshalInterfaceJSON(contents, &msg)
 	if err != nil {
 		return nil, err
 	}
@@ -231,10 +225,4 @@ func parseEvent(path string) (*types.TransactionEvent, error) {
 	}
 
 	return &event, nil
-}
-
-// ParsedAction is the deserialized form of the inputted JSON formatted sdk.Msg.
-type ParsedAction struct {
-	// Action defines a sdk.Msg proto-JSON-encoded as Any.
-	Action json.RawMessage `json:"message,omitempty"`
 }
