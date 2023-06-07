@@ -132,7 +132,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			modify: func(gs *GenesisState) {
 				gs.Triggers[0].Actions = badRequest.Actions
 			},
-			err: "empty address string is not allowed",
+			err: "msg: 0, err: invalid address for trigger authority from address: empty address string is not allowed",
 		},
 		{
 			name: "invalid - A trigger's id cannot exceed state trigger id",
@@ -162,7 +162,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			modify: func(gs *GenesisState) {
 				gs.QueuedTriggers[0].Trigger.Actions = badRequest.Actions
 			},
-			err: "empty address string is not allowed",
+			err: "msg: 0, err: invalid address for trigger authority from address: empty address string is not allowed",
 		},
 		{
 			name: "invalid - A queued trigger's id cannot exceed state trigger id",
@@ -279,7 +279,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			}
 			res := tc.state.Validate()
 			if len(tc.err) > 0 {
-				assert.ErrorContains(t, res, tc.err)
+				assert.EqualError(t, res, tc.err)
 			} else {
 				assert.NoError(t, res)
 				assert.Nil(t, res)

@@ -81,7 +81,7 @@ func (s *KeeperTestSuite) TestGetAndSetTrigger() {
 			trigger, err := s.app.TriggerKeeper.GetTrigger(s.ctx, tc.id)
 			if len(tc.err) > 0 {
 				s.Error(err)
-				s.ErrorContains(err, tc.err)
+				s.EqualError(err, tc.err)
 				s.Equal(uint64(0), trigger.Id)
 			} else {
 				s.NoError(err)

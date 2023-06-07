@@ -71,7 +71,7 @@ func TestMsgCreateTriggerRequestValidateBasic(t *testing.T) {
 			authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 			event:     &BlockHeightEvent{},
 			msgs:      []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"}},
-			err:       "invalid id for trigger",
+			err:       "msg: 0, err: invalid id for trigger",
 		},
 		{
 			name:      "invalid - event validation failed",
@@ -87,7 +87,7 @@ func TestMsgCreateTriggerRequestValidateBasic(t *testing.T) {
 			msg := NewCreateTriggerRequest(tc.authority, tc.event, tc.msgs)
 			err := msg.ValidateBasic()
 			if len(tc.err) > 0 {
-				assert.ErrorContains(t, err, tc.err)
+				assert.EqualError(t, err, tc.err)
 			} else {
 				assert.NoError(t, err)
 			}

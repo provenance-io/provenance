@@ -40,7 +40,7 @@ func (s *KeeperTestSuite) TestCreateTrigger() {
 			s.ctx = s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999))
 
 			if len(tc.err) == 0 {
-				s.NoError(err)
+				s.NoError(err, "handler should not throw an error")
 				resultEvent, _ := sdk.TypedEventToEvent(&types.EventTriggerCreated{
 					TriggerId: fmt.Sprintf("%d", tc.expectedId),
 				})
@@ -52,7 +52,7 @@ func (s *KeeperTestSuite) TestCreateTrigger() {
 				gasLimit := s.app.TriggerKeeper.GetGasLimit(s.ctx, tc.expectedId)
 				s.Equal(uint64(2000000), gasLimit)
 			} else {
-				s.ErrorContains(err, tc.err)
+				s.EqualError(err, tc.err)
 			}
 
 		})
@@ -123,7 +123,7 @@ func (s *KeeperTestSuite) TestDestroyTrigger() {
 					s.app.TriggerKeeper.GetGasLimit(s.ctx, tc.request.GetId())
 				})
 			} else {
-				s.ErrorContains(err, tc.err)
+				s.EqualError(err, tc.err)
 			}
 
 		})

@@ -51,7 +51,7 @@ func (s *KeeperTestSuite) TestTriggerByID() {
 			request := types.QueryTriggerByIDRequest{Id: tc.triggerID}
 			response, err := queryClient.TriggerByID(s.ctx.Context(), &request)
 			if len(tc.err) > 0 {
-				s.ErrorContains(err, tc.err)
+				s.EqualError(err, tc.err)
 			} else {
 				s.Assert().Nil(err)
 				s.Assert().Equal(tc.expected.Id, response.Trigger.Id)

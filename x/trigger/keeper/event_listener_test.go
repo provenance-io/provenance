@@ -49,7 +49,7 @@ func (s *KeeperTestSuite) TestGetAndSetEventListener() {
 			listener, err := s.app.TriggerKeeper.GetEventListener(s.ctx, tc.prefix, tc.id)
 			if len(tc.err) > 0 {
 				s.Error(err)
-				s.ErrorContains(err, tc.err)
+				s.EqualError(err, tc.err)
 				s.Equal(uint64(0), listener.Id)
 			} else {
 				s.NoError(err)

@@ -176,7 +176,7 @@ func TestTransactionEventValidate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res := tc.event.Validate()
 			if len(tc.err) > 0 {
-				assert.ErrorContains(t, res, tc.err)
+				assert.EqualError(t, res, tc.err)
 			} else {
 				assert.NoError(t, res)
 			}
@@ -204,7 +204,7 @@ func TestTransactionEventValidateContext(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res := tc.event.ValidateContext(ctx)
 			if len(tc.err) > 0 {
-				assert.ErrorContains(t, res, tc.err)
+				assert.EqualError(t, res, tc.err)
 			} else {
 				assert.NoError(t, res)
 			}
@@ -242,7 +242,7 @@ func TestBlockHeightEventValidateContext(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res := tc.event.ValidateContext(ctx)
 			if len(tc.err) > 0 {
-				assert.ErrorContains(t, res, tc.err)
+				assert.EqualError(t, res, tc.err)
 			} else {
 				assert.NoError(t, res)
 			}
@@ -281,7 +281,7 @@ func TestBlockTimeEventValidateContext(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res := tc.event.ValidateContext(ctx)
 			if len(tc.err) > 0 {
-				assert.ErrorContains(t, res, tc.err)
+				assert.EqualError(t, res, tc.err)
 			} else {
 				assert.NoError(t, res)
 			}
