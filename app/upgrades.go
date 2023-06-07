@@ -250,7 +250,7 @@ func removeInactiveValidators(ctx sdk.Context, app *App) {
 				delegations := app.StakingKeeper.GetValidatorDelegations(ctx, valAddress)
 				for _, delegation := range delegations {
 					ctx.Logger().Info(fmt.Sprintf("unbonding delegator %v from validator %v of all shares (%v)", delegation.DelegatorAddress, validator.OperatorAddress, delegation.GetShares()))
-					// unbonding all of a delegators shares, method will remove validator from set once all  have been removed.
+					// unbonding all of a delegators shares, method will remove validator from set once all have been removed.
 					_, err := app.StakingKeeper.Unbond(ctx, delegation.GetDelegatorAddr(), valAddress, delegation.GetShares())
 					if err != nil {
 						panic(err)
