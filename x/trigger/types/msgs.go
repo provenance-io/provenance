@@ -34,15 +34,6 @@ func NewCreateTriggerRequest(authority string, event TriggerEventI, msgs []sdk.M
 	return m
 }
 
-// NewDestroyTriggerRequest Creates a new trigger destroy request
-func NewDestroyTriggerRequest(authority string, id TriggerID) *MsgDestroyTriggerRequest {
-	msg := &MsgDestroyTriggerRequest{
-		Authority: authority,
-		Id:        id,
-	}
-	return msg
-}
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
@@ -58,12 +49,12 @@ func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 	if err = event.Validate(); err != nil {
 		return err
 	}
-	msgs, err := sdktx.GetMsgs(msg.Actions, "MsgCreateTriggerRequest - ValidateBasic")
+	actions, err := sdktx.GetMsgs(msg.Actions, "MsgCreateTriggerRequest - ValidateBasic")
 	if err != nil {
 		return err
 	}
 
-	for idx, msg := range msgs {
+	for idx, msg := range actions {
 		if err := msg.ValidateBasic(); err != nil {
 			return fmt.Errorf("msg: %d, err: %w", idx, err)
 		}
@@ -91,14 +82,23 @@ func (msg MsgCreateTriggerRequest) UnpackInterfaces(unpacker codectypes.AnyUnpac
 // GetTriggerEventI returns unpacked TriggerEvent
 func (msg MsgCreateTriggerRequest) GetTriggerEventI() (TriggerEventI, error) {
 	if msg.GetEvent() == nil {
-		return nil, ErrNoTriggerEvent.Wrap("failed to get event")
+		return nil, ErrNoTriggerEvent.Wrap("event is nil")
 	}
 	event, ok := msg.GetEvent().GetCachedValue().(TriggerEventI)
 	if !ok {
-		return nil, ErrNoTriggerEvent.Wrap("event is nil")
+		return nil, ErrNoTriggerEvent.Wrap("event is not a TriggerEventI")
 	}
 
 	return event, nil
+}
+
+// NewDestroyTriggerRequest Creates a new trigger destroy request
+func NewDestroyTriggerRequest(authority string, id TriggerID) *MsgDestroyTriggerRequest {
+	msg := &MsgDestroyTriggerRequest{
+		Authority: authority,
+		Id:        id,
+	}
+	return msg
 }
 
 // ValidateBasic runs stateless validation checks on the message.
