@@ -100,7 +100,7 @@ func GetCmdAddBlockHeightTrigger() *cobra.Command {
 
 			height, err := strconv.Atoi(args[0])
 			if err != nil {
-				return fmt.Errorf("invalid block height: %s", args[0])
+				return fmt.Errorf("invalid block height %q: %w", args[0], err)
 			}
 
 			msgs, err := parseMessages(clientCtx.Codec, args[1])
@@ -224,43 +224,17 @@ func parseEvent(path string) (*types.TransactionEvent, error) {
 		return nil, err
 	}
 
-	var event ParsedTransactionEvent
+	var event types.TransactionEvent
 	err = json.Unmarshal(contents, &event)
 	if err != nil {
 		return nil, err
 	}
 
-	newEvent := types.TransactionEvent{
-		Name: event.Name,
-	}
-	for _, attr := range event.Attributes {
-		newEvent.Attributes = append(newEvent.Attributes, types.Attribute{
-			Name:  attr.Name,
-			Value: attr.Value,
-		})
-	}
-
-	return &newEvent, nil
+	return &event, nil
 }
 
 // ParsedAction is the deserialized form of the inputted JSON formatted sdk.Msg.
 type ParsedAction struct {
 	// Action defines a sdk.Msg proto-JSON-encoded as Any.
 	Action json.RawMessage `json:"message,omitempty"`
-}
-
-// ParsedTransactionEvent is the deserialized form of the inputted JSON formatted transaction event.
-type ParsedTransactionEvent struct {
-	// Attributes defines an array of ParsedAttribute.
-	Attributes []ParsedAttribute `json:"attributes,omitempty"`
-	// The name/type of the event.
-	Name string `json:"name"`
-}
-
-// ParsedTransactionEvent is the deserialized form of the inputted JSON formatted transaction event's attribute.
-type ParsedAttribute struct {
-	// The name of the attribute.
-	Name string `json:"name"`
-	// The value of the attribute.
-	Value string `json:"value"`
 }
