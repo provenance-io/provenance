@@ -32,25 +32,6 @@ var _ TriggerEventI = &TransactionEvent{}
 var _ TriggerEventI = &BlockHeightEvent{}
 var _ TriggerEventI = &BlockTimeEvent{}
 
-// NewTrigger creates a new trigger.
-func NewTrigger(id TriggerID, owner string, event *codectypes.Any, action []*codectypes.Any) Trigger {
-	return Trigger{
-		id,
-		owner,
-		event,
-		action,
-	}
-}
-
-// NewQueuedTrigger creates a new trigger for queueing.
-func NewQueuedTrigger(trigger Trigger, blockTime time.Time, blockHeight uint64) QueuedTrigger {
-	return QueuedTrigger{
-		Time:        blockTime,
-		BlockHeight: blockHeight,
-		Trigger:     trigger,
-	}
-}
-
 // Matches checks if two TransactionEvents have the same type and matching attributes.
 func (e TransactionEvent) Matches(other abci.Event) bool {
 	if e.Name != other.GetType() {
@@ -147,6 +128,16 @@ func (e BlockTimeEvent) ValidateContext(ctx sdk.Context) error {
 	return nil
 }
 
+// NewTrigger creates a new trigger.
+func NewTrigger(id TriggerID, owner string, event *codectypes.Any, action []*codectypes.Any) Trigger {
+	return Trigger{
+		id,
+		owner,
+		event,
+		action,
+	}
+}
+
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m Trigger) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if m.Event != nil {
@@ -157,6 +148,15 @@ func (m Trigger) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 		}
 	}
 	return sdktx.UnpackInterfaces(unpacker, m.Actions)
+}
+
+// NewQueuedTrigger creates a new trigger for queueing.
+func NewQueuedTrigger(trigger Trigger, blockTime time.Time, blockHeight uint64) QueuedTrigger {
+	return QueuedTrigger{
+		Time:        blockTime,
+		BlockHeight: blockHeight,
+		Trigger:     trigger,
+	}
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
