@@ -46,13 +46,13 @@ func (s *KeeperTestSuite) TestCreateTrigger() {
 				})
 				s.Equal(sdk.Events{resultEvent}, result.GetEvents())
 				_, err = s.app.TriggerKeeper.GetEventListener(s.ctx, event.GetEventPrefix(), tc.expectedId)
-				s.NoError(err)
+				s.NoError(err, "event listener should exist")
 				_, err = s.app.TriggerKeeper.GetTrigger(s.ctx, tc.expectedId)
-				s.NoError(err)
+				s.NoError(err, "trigger should exist")
 				gasLimit := s.app.TriggerKeeper.GetGasLimit(s.ctx, tc.expectedId)
-				s.Equal(uint64(2000000), gasLimit)
+				s.Equal(uint64(2000000), gasLimit, "gas limit should be set for trigger")
 			} else {
-				s.EqualError(err, tc.err)
+				s.EqualError(err, tc.err, "handler should throw an error")
 			}
 
 		})
@@ -110,20 +110,20 @@ func (s *KeeperTestSuite) TestDestroyTrigger() {
 			s.ctx = s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999))
 
 			if len(tc.err) == 0 {
-				s.NoError(err)
+				s.NoError(err, "handler should not throw an error")
 				resultEvent, _ := sdk.TypedEventToEvent(&types.EventTriggerDestroyed{
 					TriggerId: fmt.Sprintf("%d", tc.request.GetId()),
 				})
-				s.Equal(sdk.Events{resultEvent}, result.GetEvents())
+				s.Equal(sdk.Events{resultEvent}, result.GetEvents(), "result events should match")
 				_, err = s.app.TriggerKeeper.GetEventListener(s.ctx, event.GetEventPrefix(), tc.request.GetId())
-				s.Error(err)
+				s.Error(err, "event listener should no longer exist")
 				_, err = s.app.TriggerKeeper.GetTrigger(s.ctx, tc.request.GetId())
-				s.Error(err)
+				s.Error(err, "trigger should no longer exist")
 				s.Panics(func() {
 					s.app.TriggerKeeper.GetGasLimit(s.ctx, tc.request.GetId())
-				})
+				}, "gas limit should not exist")
 			} else {
-				s.EqualError(err, tc.err)
+				s.EqualError(err, tc.err, "handler should throw error and match")
 			}
 
 		})
