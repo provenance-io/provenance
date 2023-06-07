@@ -13,13 +13,13 @@ func (k Keeper) QueueTrigger(ctx sdk.Context, trigger types.Trigger) {
 }
 
 // QueuePeek Returns the next item to be dequeued.
-func (k Keeper) QueuePeek(ctx sdk.Context) (item types.QueuedTrigger) {
+func (k Keeper) QueuePeek(ctx sdk.Context) *types.QueuedTrigger {
 	if k.QueueIsEmpty(ctx) {
-		panic("unable to peek empty queue")
+		return nil
 	}
 	index := k.getQueueStartIndex(ctx)
-	item = k.getQueueItem(ctx, index)
-	return
+	item := k.getQueueItem(ctx, index)
+	return &item
 }
 
 // Enqueue Adds an item to the end of the queue and adjusts the internal counters.

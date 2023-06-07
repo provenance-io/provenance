@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -57,7 +56,7 @@ func (k Keeper) Triggers(ctx context.Context, req *types.QueryTriggersRequest) (
 	})
 
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, fmt.Sprintf("unable to query all triggers: %v", err))
+		return nil, status.Errorf(codes.Internal, "unable to query all triggers: %v", err)
 	}
 	response.Pagination = pageResponse
 

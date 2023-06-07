@@ -35,7 +35,7 @@ func (s *KeeperTestSuite) TestQueueTrigger() {
 			}
 			for _, expected := range tc.expected {
 				item := s.app.TriggerKeeper.QueuePeek(s.ctx)
-				s.Equal(expected, item)
+				s.Equal(expected, *item)
 				s.app.TriggerKeeper.Dequeue(s.ctx)
 			}
 		})
@@ -82,14 +82,8 @@ func (s *KeeperTestSuite) TestQueuePeek() {
 				s.app.TriggerKeeper.QueueTrigger(s.ctx, trigger)
 			}
 
-			if tc.expected == nil {
-				s.Panics(func() {
-					s.app.TriggerKeeper.QueuePeek(s.ctx)
-				})
-			} else {
-				item := s.app.TriggerKeeper.QueuePeek(s.ctx)
-				s.Equal(tc.expected, &item)
-			}
+			item := s.app.TriggerKeeper.QueuePeek(s.ctx)
+			s.Equal(tc.expected, item)
 
 			for range tc.triggers {
 				s.app.TriggerKeeper.Dequeue(s.ctx)
