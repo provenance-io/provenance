@@ -35,7 +35,7 @@ func (gs GenesisState) Validate() error {
 		return fmt.Errorf("gas limit list length must match sum of triggers and queued triggers length")
 	}
 
-	triggers := gs.Triggers
+	triggers := append([]Trigger{}, gs.Triggers...)
 	for _, queuedTrigger := range gs.QueuedTriggers {
 		triggers = append(triggers, queuedTrigger.GetTrigger())
 	}
