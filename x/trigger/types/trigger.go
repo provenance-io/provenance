@@ -51,8 +51,8 @@ func NewQueuedTrigger(trigger Trigger, blockTime time.Time, blockHeight uint64) 
 	}
 }
 
-// Equals checks if two TransactionEvents have the same type and attributes.
-func (e TransactionEvent) Equals(other abci.Event) bool {
+// Matches checks if two TransactionEvents have the same type and matching attributes.
+func (e TransactionEvent) Matches(other abci.Event) bool {
 	if e.Name != other.GetType() {
 		return false
 	}
@@ -61,7 +61,7 @@ func (e TransactionEvent) Equals(other abci.Event) bool {
 		hasAttribute := false
 
 		for _, otherAttr := range other.Attributes {
-			if attr.Equals(otherAttr) {
+			if attr.Matches(otherAttr) {
 				hasAttribute = true
 				break
 			}
@@ -75,8 +75,8 @@ func (e TransactionEvent) Equals(other abci.Event) bool {
 	return true
 }
 
-// Equals checks if two Attributes have the same name and matching values.
-func (a Attribute) Equals(other abci.EventAttribute) bool {
+// Matches checks if two Attributes have the same name and an equal value if one is specified.
+func (a Attribute) Matches(other abci.EventAttribute) bool {
 	if a.GetName() != string(other.GetKey()) {
 		return false
 	}

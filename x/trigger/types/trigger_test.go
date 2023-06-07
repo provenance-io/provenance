@@ -43,7 +43,7 @@ func TestNewQueuedTrigger(t *testing.T) {
 	assert.Equal(t, uint64(1), queuedTrigger.BlockHeight)
 }
 
-func TestTransactionEventEquals(t *testing.T) {
+func TestTransactionEventMatches(t *testing.T) {
 	tests := []struct {
 		name        string
 		event       TransactionEvent
@@ -90,12 +90,12 @@ func TestTransactionEventEquals(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.shouldMatch, tc.event.Equals(tc.event2))
+			assert.Equal(t, tc.shouldMatch, tc.event.Matches(tc.event2))
 		})
 	}
 }
 
-func TestAttributeEquals(t *testing.T) {
+func TestAttributeMatches(t *testing.T) {
 	tests := []struct {
 		name        string
 		attr1       Attribute
@@ -129,7 +129,7 @@ func TestAttributeEquals(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		assert.Equal(t, tc.shouldMatch, tc.attr1.Equals(tc.attr2))
+		assert.Equal(t, tc.shouldMatch, tc.attr1.Matches(tc.attr2))
 		t.Run(tc.name, func(t *testing.T) {})
 	}
 }

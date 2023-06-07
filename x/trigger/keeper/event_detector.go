@@ -29,7 +29,7 @@ func (k Keeper) detectTransactionEvents(ctx sdk.Context) (triggers []types.Trigg
 				return false
 			}
 			txEvent := triggerEvent.(*types.TransactionEvent)
-			detected := txEvent.Equals(event)
+			detected := txEvent.Matches(event)
 			detectedTriggers[trigger.Id] = detected
 			return detected
 		})
