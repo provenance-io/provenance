@@ -78,9 +78,16 @@ func (s *SimTestSuite) TestSimulateMsgCreateTrigger() {
 	// begin a new block
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
-	// execute operation
+	// bad operation
 	op := simulation.SimulateMsgCreateTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
-	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, []simtypes.Account{accounts[0]}, "")
+	s.Require().Equal(operationMsg, simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), "cannot choose 2 accounts because there are only 1"))
+	s.Require().Nil(futureOperations)
+	s.Require().Nil(err)
+
+	// execute operation
+	op = simulation.SimulateMsgCreateTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	operationMsg, futureOperations, err = op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err)
 
 	var msg types.MsgCreateTriggerRequest
@@ -98,6 +105,90 @@ func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
 	source := rand.NewSource(1)
 	r := rand.New(source)
 	accounts := s.getTestingAccounts(r, 3)
+
+	actions, _ := sdktx.SetMsgs([]sdk.Msg{simulation.NewRandomAction(r, accounts[0].Address.String(), accounts[1].Address.String())})
+	anyEvent, _ := codectypes.NewAnyWithValue(simulation.NewRandomEvent(r, s.ctx.BlockTime().UTC()))
+	trigger := types.NewTrigger(1000, accounts[0].Address.String(), anyEvent, actions)
+	s.app.TriggerKeeper.SetTrigger(s.ctx, trigger)
+	s.app.TriggerKeeper.SetEventListener(s.ctx, trigger)
+	s.app.TriggerKeeper.SetGasLimit(s.ctx, trigger.GetId(), 1000)
+
+	// begin a new block
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+
+	// execute operation
+	op := simulation.SimulateMsgDestroyTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
+	s.Require().NoError(err)
+
+	var msg types.MsgDestroyTriggerRequest
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+
+	s.Require().True(operationMsg.OK, operationMsg.String())
+	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
+	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
+	s.Require().Equal(uint64(1000), msg.GetId())
+	s.Require().Equal(accounts[0].Address.String(), msg.GetAuthority())
+	s.Require().Len(futureOperations, 0)
+}
+
+func (s *SimTestSuite) TestRandomAccs() {
+	source := rand.NewSource(1)
+	r := rand.New(source)
+	accounts := s.getTestingAccounts(r, 3)
+
+	tests := []struct {
+		name     string
+		accs     []simtypes.Account
+		expected []simtypes.Account
+		count    uint64
+		err      string
+	}{
+		{
+			name:     "valid - return nothing when count is 0",
+			accs:     []simtypes.Account{},
+			expected: []simtypes.Account{},
+			count:    0,
+		},
+		{
+			name:     "valid - return 1 when count is 1",
+			accs:     []simtypes.Account{accounts[0]},
+			expected: []simtypes.Account{accounts[0]},
+			count:    1,
+		},
+		{
+			name:     "valid - return multiple when count greater than 1",
+			accs:     []simtypes.Account{accounts[0], accounts[1]},
+			expected: []simtypes.Account{accounts[1], accounts[0]},
+			count:    2,
+		},
+		{
+			name:     "valid - return is limited by count",
+			accs:     []simtypes.Account{accounts[0], accounts[1], accounts[2]},
+			expected: []simtypes.Account{accounts[1]},
+			count:    1,
+		},
+		{
+			name:     "invalid - return error when count is greater than length",
+			accs:     []simtypes.Account{accounts[0], accounts[1]},
+			expected: []simtypes.Account{},
+			count:    3,
+			err:      "cannot choose 3 accounts because there are only 2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			raccs, err := simulation.RandomAccs(r, tc.accs, tc.count)
+			if len(tc.err) == 0 {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expected, raccs)
+			} else {
+				s.Require().Error(err)
+				s.Require().EqualError(err, tc.err)
+			}
+		})
+	}
 
 	actions, _ := sdktx.SetMsgs([]sdk.Msg{simulation.NewRandomAction(r, accounts[0].Address.String(), accounts[1].Address.String())})
 	anyEvent, _ := codectypes.NewAnyWithValue(simulation.NewRandomEvent(r, s.ctx.BlockTime().UTC()))

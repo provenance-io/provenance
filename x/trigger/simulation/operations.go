@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -65,11 +66,12 @@ func SimulateMsgCreateTrigger(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk 
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		now := ctx.BlockTime()
-		from, _ := simtypes.RandomAcc(r, accs)
-		to, _ := simtypes.RandomAcc(r, accs)
-		for to.Equals(from) {
-			to, _ = simtypes.RandomAcc(r, accs)
+		raccs, err := RandomAccs(r, accs, 2)
+		if err != nil {
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), err.Error()), nil, nil
 		}
+		from := raccs[0]
+		to := raccs[1]
 
 		msg := types.NewCreateTriggerRequest(from.Address.String(), NewRandomEvent(r, now), []sdk.Msg{NewRandomAction(r, from.Address.String(), to.Address.String())})
 
@@ -86,14 +88,12 @@ func SimulateMsgDestroyTrigger(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk
 		if trigger == nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), "unable to find a valid trigger"), nil, nil
 		}
-		var simAccount simtypes.Account
-		var found bool
 		addr, err := sdk.AccAddressFromBech32(trigger.Owner)
 		if err != nil {
 			// should not be possible and panic on the test
 			panic(err)
 		}
-		simAccount, found = simtypes.FindAccount(accs, addr)
+		simAccount, found := simtypes.FindAccount(accs, addr)
 		if !found {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), "creator of trigger does not exist"), nil, nil
 		}
@@ -168,4 +168,16 @@ func randomTrigger(r *rand.Rand, ctx sdk.Context, k keeper.Keeper) *types.Trigge
 	}
 	idx := r.Intn(len(triggers))
 	return &triggers[idx]
+}
+
+func RandomAccs(r *rand.Rand, accs []simtypes.Account, count uint64) ([]simtypes.Account, error) {
+	if uint64(len(accs)) < count {
+		return nil, fmt.Errorf("cannot choose %d accounts because there are only %d", count, len(accs))
+	}
+	raccs := make([]simtypes.Account, 0, len(accs))
+	raccs = append(raccs, accs...)
+	r.Shuffle(len(raccs), func(i, j int) {
+		raccs[i], raccs[j] = raccs[j], raccs[i]
+	})
+	return raccs[:count], nil
 }

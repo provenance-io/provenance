@@ -61,15 +61,12 @@ func NewRandomAction(r *rand.Rand, from string, to string) sdk.Msg {
 
 // NewRandomTrigger returns a random trigger
 func NewRandomTrigger(r *rand.Rand, simState *module.SimulationState, accs []simtypes.Account, id types.TriggerID) types.Trigger {
-	if len(accs) < 2 {
-		panic("must include more than one account in NewRandomTrigger")
+	raccs, err := RandomAccs(r, accs, 2)
+	if err != nil {
+		panic(fmt.Sprintf("NewRandomTrigger failed: %v", err))
 	}
-
-	r.Shuffle(len(accs), func(i, j int) {
-		accs[i], accs[j] = accs[j], accs[i]
-	})
 	event := NewRandomEvent(r, simState.GenTimestamp.UTC())
-	action := NewRandomAction(r, accs[0].Address.String(), accs[1].Address.String())
+	action := NewRandomAction(r, raccs[0].Address.String(), raccs[1].Address.String())
 
 	actions, err := sdktx.SetMsgs([]sdk.Msg{action})
 	if err != nil {
@@ -80,20 +77,17 @@ func NewRandomTrigger(r *rand.Rand, simState *module.SimulationState, accs []sim
 		panic("NewAnyWithValue failed for NewRandomTrigger")
 	}
 
-	return types.NewTrigger(id, accs[0].Address.String(), anyEvent, actions)
+	return types.NewTrigger(id, raccs[0].Address.String(), anyEvent, actions)
 }
 
 // NewRandomQueuedTrigger returns a random queued trigger
 func NewRandomQueuedTrigger(r *rand.Rand, simState *module.SimulationState, accs []simtypes.Account, id types.TriggerID) types.QueuedTrigger {
-	if len(accs) < 2 {
-		panic("must include more than one account in NewRandomTrigger")
+	raccs, err := RandomAccs(r, accs, 2)
+	if err != nil {
+		panic(fmt.Sprintf("NewRandomQueuedTrigger failed: %v", err))
 	}
-
-	r.Shuffle(len(accs), func(i, j int) {
-		accs[i], accs[j] = accs[j], accs[i]
-	})
 	var event types.TriggerEventI = &types.BlockHeightEvent{BlockHeight: 0}
-	action := NewRandomAction(r, accs[0].Address.String(), accs[1].Address.String())
+	action := NewRandomAction(r, raccs[0].Address.String(), raccs[1].Address.String())
 
 	actions, err := sdktx.SetMsgs([]sdk.Msg{action})
 	if err != nil {
@@ -103,8 +97,8 @@ func NewRandomQueuedTrigger(r *rand.Rand, simState *module.SimulationState, accs
 	if err != nil {
 		panic("NewAnyWithValue failed for NewRandomQueuedTrigger")
 	}
-	// TODO Probably want a random id
-	trigger := types.NewTrigger(id, simState.Accounts[0].Address.String(), anyEvent, actions)
+
+	trigger := types.NewTrigger(id, raccs[0].Address.String(), anyEvent, actions)
 
 	now := simState.GenTimestamp
 
