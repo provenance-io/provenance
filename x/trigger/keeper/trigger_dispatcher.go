@@ -84,11 +84,11 @@ func (k Keeper) handleMsgs(ctx sdk.Context, msgs []sdk.Msg, gasLimit uint64) ([]
 		}
 		// Handler should always return non-nil sdk.Result.
 		if r == nil {
-			return nil, fmt.Errorf("got nil sdk.Result for message %q at position %d", msg, i)
+			return nil, fmt.Errorf("got nil sdk.Result for message %q at position %d", sdk.MsgTypeURL(msg), i)
 		}
 
 		if ctx.GasMeter().GasConsumed() > gasLimit {
-			return nil, fmt.Errorf("gas %d exceeded limit %d for message %q at position %d", ctx.GasMeter().GasConsumed(), gasLimit, msg, i)
+			return nil, fmt.Errorf("gas %d exceeded limit %d for message %q at position %d", ctx.GasMeter().GasConsumed(), gasLimit, sdk.MsgTypeURL(msg), i)
 		}
 
 		results[i] = *r
