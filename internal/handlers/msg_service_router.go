@@ -25,6 +25,7 @@ type PioMsgServiceRouter struct {
 	routes            map[string]MsgServiceHandler
 	msgFeesKeeper     msgfeeskeeper.Keeper
 	decoder           sdk.TxDecoder
+	circuitBreaker    baseapp.CircuitBreaker
 }
 
 var _ gogogrpc.Server = &PioMsgServiceRouter{}
@@ -40,6 +41,10 @@ func NewPioMsgServiceRouter(decoder sdk.TxDecoder) *PioMsgServiceRouter {
 
 // MsgServiceHandler defines a function type which handles Msg service message.
 type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
+
+func (msr *PioMsgServiceRouter) SetCircuit(cb baseapp.CircuitBreaker) {
+	msr.circuitBreaker = cb
+}
 
 // Handler returns the MsgServiceHandler for a given msg or nil if not found.
 func (msr *PioMsgServiceRouter) Handler(msg sdk.Msg) MsgServiceHandler {
@@ -137,6 +142,20 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 
 			if err = req.ValidateBasic(); err != nil {
 				return nil, err
+			}
+
+			if msr.circuitBreaker != nil {
+				msgURL := sdk.MsgTypeURL(req)
+
+				var isAllowed bool
+				isAllowed, err = msr.circuitBreaker.IsAllowed(ctx, msgURL)
+				if err != nil {
+					return nil, err
+				}
+
+				if !isAllowed {
+					return nil, fmt.Errorf("circuit breaker disables execution of this message: %s", msgURL)
+				}
 			}
 
 			// Call the method handler from the service description with the handler object.
