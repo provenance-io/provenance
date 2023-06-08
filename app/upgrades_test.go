@@ -442,7 +442,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidators() {
 		"INF removing any validator that has been inactive (unbonded) for 21 hours",
 		"INF a total of 0 inactive (unbonded) validators have been removed",
 	}
-	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
+	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines, nil)
 
 	// create a unbonded validator with out delegators...this case should not happen irl (or from what I can see)
 	unbondedVal1 := s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
@@ -454,7 +454,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidators() {
 		fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal1.OperatorAddress, 30),
 		"INF a total of 1 inactive (unbonded) validators have been removed",
 	}
-	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
+	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines, nil)
 
 	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
 	s.Assert().Equal(1, len(validators), "should have removed the unbonded delegator")
@@ -474,7 +474,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidators() {
 		fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr1.String(), unbondedVal1.OperatorAddress, sdk.NewDec(coin.Amount.Int64())),
 		"INF a total of 1 inactive (unbonded) validators have been removed",
 	}
-	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
+	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines, nil)
 
 	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
 	s.Assert().Equal(1, len(validators), "should have removed the unbonded delegator")
@@ -500,7 +500,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidators() {
 		"INF removing any validator that has been inactive (unbonded) for 21 hours",
 		fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal1.OperatorAddress, 30),
 		"INF a total of 1 inactive (unbonded) validators have been removed"}
-	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
+	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines, nil)
 
 	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
 	s.Assert().Equal(1, len(validators), "should have removed the unbonded delegator")
@@ -537,7 +537,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidators() {
 		fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr2.String(), unbondedVal2.OperatorAddress, sdk.NewDec(coin.Amount.Int64())),
 		"INF a total of 2 inactive (unbonded) validators have been removed",
 	}
-	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
+	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines, nil)
 
 	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
 	s.Assert().Equal(1, len(validators), "should have removed the unbonded delegator")
@@ -570,7 +570,12 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidators() {
 		fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr2.String(), unbondedVal1.OperatorAddress, sdk.NewDec(coin.Amount.Int64())),
 		"INF a total of 1 inactive (unbonded) validators have been removed",
 	}
-	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
+	notExpectedLogLines := []string{
+		fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal2.OperatorAddress, 20),
+		fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr1.String(), unbondedVal2.OperatorAddress, sdk.NewDec(coin.Amount.Int64())),
+		fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr2.String(), unbondedVal2.OperatorAddress, sdk.NewDec(coin.Amount.Int64())),
+	}
+	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines, notExpectedLogLines)
 
 	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
 	s.Assert().Equal(2, len(validators), "should have removed the unbonded delegator")
@@ -616,7 +621,7 @@ func (s *UpgradeTestSuite) DelegateToValidator(valAddress sdk.ValAddress, delega
 	s.Require().NoError(err, "error delegating to validator %v from %v", valAddress.String(), delegatorAddress.String())
 }
 
-func (s *UpgradeTestSuite) ExecuteAndAssertLogs(delegate func(ctx sdk.Context, app *App), expectedLogs []string) {
+func (s *UpgradeTestSuite) ExecuteAndAssertLogs(delegate func(ctx sdk.Context, app *App), expectedLogs []string, notExpectedLogs []string) {
 	s.logBuffer.Reset()
 	delegate(s.ctx, s.app)
 	logOutput := s.logBuffer.String()
@@ -624,5 +629,9 @@ func (s *UpgradeTestSuite) ExecuteAndAssertLogs(delegate func(ctx sdk.Context, a
 	logLines := strings.Split(logOutput, "\n")
 	for _, expectedLine := range expectedLogs {
 		s.Assert().Contains(logLines, expectedLine, "Expecting: %q", expectedLine)
+	}
+
+	for _, unexpectedLine := range notExpectedLogs {
+		s.Assert().NotContains(logLines, unexpectedLine, "Not Expecting: %q", unexpectedLine)
 	}
 }
