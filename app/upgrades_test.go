@@ -492,23 +492,47 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidators() {
 
 	unbondedVal, _ = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal.GetOperator())
 	s.Require().Equal(sdk.NewDec(20_000), unbondedVal.DelegatorShares, "shares should have updated")
-	unbondedVal2 := s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
+	unbondedVal2 := s.CreateValidator(s.startTime.Add(-29*24*time.Hour), stakingtypes.Unbonded)
 	s.DelegateToValidator(unbondedVal2.GetOperator(), sdk.AccAddress(addr1), coin)
 	s.DelegateToValidator(unbondedVal2.GetOperator(), sdk.AccAddress(addr2), coin)
-	unbondedVal, _ = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal2.GetOperator())
+	unbondedVal2, _ = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal2.GetOperator())
 	s.Require().Equal(sdk.NewDec(20_000), unbondedVal2.DelegatorShares, "shares should have updated")
 
 	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
-	s.Assert().Equal(3, len(validators), "should two validators, one bonded and one unbonded")
+	s.Require().Equal(3, len(validators), "should two validators, one bonded and one unbonded")
 	expectedLogLines = []string{
 		"INF removing any validator that has been inactive (unbonded) for 21 hours",
 		fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal.OperatorAddress, 30),
-		fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal2.OperatorAddress, 30),
+		fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal2.OperatorAddress, 29),
 		"INF a total of 2 inactive (unbonded) validators have been removed",
 	}
 	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
 	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
 	s.Assert().Equal(1, len(validators), "should have removed the unbonded delegator")
+
+	// 2 unbonded validators with delegations
+	unbondedVal = s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
+	s.DelegateToValidator(unbondedVal.GetOperator(), sdk.AccAddress(addr1), coin)
+	s.DelegateToValidator(unbondedVal.GetOperator(), sdk.AccAddress(addr2), coin)
+
+	// 2 unbonded validators, 1 under the inactive day count, should only remove both
+	unbondedVal, _ = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal.GetOperator())
+	s.Require().Equal(sdk.NewDec(20_000), unbondedVal.DelegatorShares, "shares should have updated")
+	unbondedVal2 = s.CreateValidator(s.startTime.Add(-20*24*time.Hour), stakingtypes.Unbonded)
+	s.DelegateToValidator(unbondedVal2.GetOperator(), sdk.AccAddress(addr1), coin)
+	unbondedVal2, _ = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal2.GetOperator())
+	s.Require().Equal(sdk.NewDec(10_000), unbondedVal2.DelegatorShares, "shares should have updated")
+
+	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+	s.Require().Equal(3, len(validators), "should two validators, one bonded and one unbonded")
+	expectedLogLines = []string{
+		"INF removing any validator that has been inactive (unbonded) for 21 hours",
+		fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal.OperatorAddress, 30),
+		"INF a total of 1 inactive (unbonded) validators have been removed",
+	}
+	s.ExecuteAndAssertLogs(removeInactiveValidators, expectedLogLines)
+	validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+	s.Assert().Equal(2, len(validators), "should have removed the unbonded delegator")
 }
 
 func (s *UpgradeTestSuite) CreateAndFundAccount() sdk.AccAddress {
