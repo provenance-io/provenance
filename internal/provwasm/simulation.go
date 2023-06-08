@@ -116,27 +116,28 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 		}
 		*count++
 
-		node := accs[0]
-		consumer := accs[1]
-		feebucket := accs[2]
-		merchant := accs[3]
-
-		var parent nametypes.NameRecord
-		err := nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
-			if len(record.Address) > 0 && !strings.Contains(record.Name, ".") {
-				parent = record
-			}
-
-			return nil
-		})
-
+		parent, node, found, err := getRandomRootNameRecord(r, ctx, nk, accs)
 		if err != nil {
 			panic(err)
 		}
-
-		if len(parent.Name) == 0 {
-			panic("no records")
+		if !found {
+			panic("no root name records")
 		}
+
+		accI := 0
+		for i, acc := range accs {
+			if node.Address.Equals(acc.Address) {
+				accI = i
+				break
+			}
+		}
+		nextAccI := func() int {
+			accI = (accI + 1) % len(accs)
+			return accI
+		}
+		consumer := accs[nextAccI()]
+		feebucket := accs[nextAccI()]
+		merchant := accs[nextAccI()]
 
 		msg := nametypes.NewMsgBindNameRequest(
 			nametypes.NewNameRecord(
@@ -147,7 +148,7 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 
 		op, future, err2 := namesim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg)
 
-		name := parent.Name
+		name := namePrefix + "." + parent.Name
 
 		future = append(future, simtypes.FutureOperation{Op: SimulateMsgAddMarker(ak, bk, nk, node, feebucket, merchant, consumer, name), BlockHeight: int(ctx.BlockHeight()) + 1})
 
@@ -155,7 +156,6 @@ func SimulateMsgBindName(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk 
 	}
 }
 
-// SimulateMsgAddMarker will bind a NAME under an existing name
 func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -283,6 +283,9 @@ func SimulateMsgInstantiateContract(ak authkeeper.AccountKeeperI, bk bankkeeper.
 
 		if err != nil || record.Address == "" {
 			return simtypes.NoOpMsg("provwasm", "", "name record has been removed"), nil, nil
+		}
+		if record.Address != node.Address.String() {
+			return simtypes.NoOpMsg("provwasm", "", "name record owner has been changed"), nil, nil
 		}
 
 		m := fmt.Sprintf(`{ "contract_name": "%s.%s", "purchase_denom": "%s", "merchant_address": "%s", "fee_percent": "0.10" }`, label, name, denom, merchant.Address.String())
@@ -415,4 +418,36 @@ func Dispatch(
 	}
 
 	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, sdkResponse, nil
+}
+
+// getRandomRootNameRecord finds a random root name record owned by a known account.
+// An error is only returned if there was a problem iterating records.
+func getRandomRootNameRecord(r *rand.Rand, ctx sdk.Context, nk namekeeper.Keeper, accs []simtypes.Account) (nametypes.NameRecord, simtypes.Account, bool, error) {
+	var randomRecord nametypes.NameRecord
+	var simAccount simtypes.Account
+
+	var records []nametypes.NameRecord
+	err := nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
+		if len(record.Address) > 0 && !strings.Contains(record.Name, ".") {
+			records = append(records, record)
+		}
+		return nil
+	})
+	if err != nil || len(records) == 0 {
+		return randomRecord, simAccount, false, err
+	}
+
+	r.Shuffle(len(records), func(i, j int) {
+		records[i], records[j] = records[j], records[i]
+	})
+
+	found := false
+	for _, randomRecord = range records {
+		simAccount, found = simtypes.FindAccount(accs, sdk.MustAccAddressFromBech32(randomRecord.Address))
+		if found {
+			break
+		}
+	}
+
+	return randomRecord, simAccount, found, nil
 }
