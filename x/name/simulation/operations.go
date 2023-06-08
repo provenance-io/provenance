@@ -86,6 +86,9 @@ func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankk
 		}
 
 		newRecordName := simtypes.RandStringOfLength(r, r.Intn(10)+2)
+		for uint32(strings.Count(newRecordName, ".")) > k.GetMaxSegmentLength(ctx) {
+			newRecordName = simtypes.RandStringOfLength(r, r.Intn(10)+2)
+		}
 		newRecordOwner := parentOwner
 		if !parentRecord.Restricted {
 			newRecordOwner, _ = simtypes.RandomAcc(r, accs)
