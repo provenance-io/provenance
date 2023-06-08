@@ -22,29 +22,35 @@ const (
 	QueueStart = "queue_start"
 )
 
-// TriggerIDFn randomized MinActions
-func TriggerIDFn(r *rand.Rand) uint64 {
-	return uint64(simtypes.RandIntBetween(r, 2, 10000000000))
+// TriggerIDStartFn randomized starting trigger id
+func TriggerIDStartFn(r *rand.Rand) uint64 {
+	return uint64(simtypes.RandIntBetween(r, 1, 10000000000))
 }
 
-// QueueStartFn randomized MinActions
+// QueueStartFn randomized Queue Start Index
 func QueueStartFn(r *rand.Rand) uint64 {
-	return uint64(simtypes.RandIntBetween(r, 0, 10000000000))
+	return uint64(r.Intn(10000000000))
 }
 
-// GetRandomEvent returns a random event
-func GetRandomEvent(r *rand.Rand, now time.Time) types.TriggerEventI {
-	rand := simtypes.RandIntBetween(r, 0, 1)
-	if rand > 0 {
-		randTime := now.Add(time.Hour * time.Duration(simtypes.RandIntBetween(r, 1, 10)))
+// NewRandomGasLimit randomized Gas Limit
+func NewRandomGasLimit(r *rand.Rand) uint64 {
+	return uint64(r.Intn(1000000))
+}
+
+// NewRandomEvent returns a random event
+func NewRandomEvent(r *rand.Rand, now time.Time) types.TriggerEventI {
+	if r.Intn(2) > 0 {
+		minimumTime := int(time.Second * 10)
+		maximumTime := int(time.Minute * 5)
+		randTime := now.Add(time.Duration(simtypes.RandIntBetween(r, minimumTime, maximumTime)))
 		return &types.BlockTimeEvent{Time: randTime.UTC()}
 	}
-	height := uint64(simtypes.RandIntBetween(r, 100000, 200000))
+	height := uint64(simtypes.RandIntBetween(r, 10, 150))
 	return &types.BlockHeightEvent{BlockHeight: height}
 }
 
-// GetRandomAction returns a random action
-func GetRandomAction(r *rand.Rand, from string, to string) sdk.Msg {
+// NewRandomAction returns a random action
+func NewRandomAction(r *rand.Rand, from string, to string) sdk.Msg {
 	amount := int64(simtypes.RandIntBetween(r, 100, 1000))
 	return &banktypes.MsgSend{
 		FromAddress: from,
@@ -53,41 +59,52 @@ func GetRandomAction(r *rand.Rand, from string, to string) sdk.Msg {
 	}
 }
 
-// GetRandomTrigger returns a random trigger
-func GetRandomTrigger(r *rand.Rand, simState *module.SimulationState) types.Trigger {
-	account := int64(simtypes.RandIntBetween(r, 1, 2))
-	event := GetRandomEvent(r, simState.GenTimestamp.UTC())
-	action := GetRandomAction(r, simState.Accounts[0].Address.String(), simState.Accounts[account].Address.String())
+// NewRandomTrigger returns a random trigger
+func NewRandomTrigger(r *rand.Rand, simState *module.SimulationState, accs []simtypes.Account, id types.TriggerID) types.Trigger {
+	if len(accs) < 2 {
+		panic("must include more than one account in NewRandomTrigger")
+	}
+
+	r.Shuffle(len(accs), func(i, j int) {
+		accs[i], accs[j] = accs[j], accs[i]
+	})
+	event := NewRandomEvent(r, simState.GenTimestamp.UTC())
+	action := NewRandomAction(r, accs[0].Address.String(), accs[1].Address.String())
 
 	actions, err := sdktx.SetMsgs([]sdk.Msg{action})
 	if err != nil {
-		panic("SetMsgs failed for GetRandomTrigger")
+		panic("SetMsgs failed for NewRandomTrigger")
 	}
 	anyEvent, err := codectypes.NewAnyWithValue(event)
 	if err != nil {
-		panic("NewAnyWithValue failed for GetRandomTrigger")
+		panic("NewAnyWithValue failed for NewRandomTrigger")
 	}
-	return types.NewTrigger(1, simState.Accounts[0].Address.String(), anyEvent, actions)
+
+	return types.NewTrigger(id, accs[0].Address.String(), anyEvent, actions)
 }
 
-// GetRandomQueuedTrigger returns a random queued trigger
-func GetRandomQueuedTrigger(_ *rand.Rand, simState *module.SimulationState) types.QueuedTrigger {
-	var event types.TriggerEventI = &types.BlockHeightEvent{BlockHeight: 100000}
-	var action sdk.Msg = &banktypes.MsgSend{
-		FromAddress: simState.Accounts[0].Address.String(),
-		ToAddress:   simState.Accounts[1].Address.String(),
-		Amount:      sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, 100)),
+// NewRandomQueuedTrigger returns a random queued trigger
+func NewRandomQueuedTrigger(r *rand.Rand, simState *module.SimulationState, accs []simtypes.Account, id types.TriggerID) types.QueuedTrigger {
+	if len(accs) < 2 {
+		panic("must include more than one account in NewRandomTrigger")
 	}
+
+	r.Shuffle(len(accs), func(i, j int) {
+		accs[i], accs[j] = accs[j], accs[i]
+	})
+	var event types.TriggerEventI = &types.BlockHeightEvent{BlockHeight: 0}
+	action := NewRandomAction(r, accs[0].Address.String(), accs[1].Address.String())
 
 	actions, err := sdktx.SetMsgs([]sdk.Msg{action})
 	if err != nil {
-		panic("SetMsgs failed for GetRandomQueuedTrigger")
+		panic("SetMsgs failed for NewRandomQueuedTrigger")
 	}
 	anyEvent, err := codectypes.NewAnyWithValue(event)
 	if err != nil {
-		panic("NewAnyWithValue failed for GetRandomQueuedTrigger")
+		panic("NewAnyWithValue failed for NewRandomQueuedTrigger")
 	}
-	trigger := types.NewTrigger(2, simState.Accounts[0].Address.String(), anyEvent, actions)
+	// TODO Probably want a random id
+	trigger := types.NewTrigger(id, simState.Accounts[0].Address.String(), anyEvent, actions)
 
 	now := simState.GenTimestamp
 
@@ -99,7 +116,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var triggerID uint64
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, TriggerID, &triggerID, simState.Rand,
-		func(r *rand.Rand) { triggerID = TriggerIDFn(r) },
+		func(r *rand.Rand) { triggerID = TriggerIDStartFn(r) },
 	)
 
 	var queueStart uint64
@@ -108,24 +125,28 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { queueStart = QueueStartFn(r) },
 	)
 
-	triggers := []types.Trigger{
-		GetRandomTrigger(simState.Rand, simState),
+	triggers := make([]types.Trigger, simState.Rand.Intn(5))
+	for i := range triggers {
+		triggers[i] = NewRandomTrigger(simState.Rand, simState, simState.Accounts, triggerID)
+		triggerID++
 	}
-	queuedTriggers := []types.QueuedTrigger{
-		GetRandomQueuedTrigger(simState.Rand, simState),
+	queuedTriggers := make([]types.QueuedTrigger, simState.Rand.Intn(5))
+	for i := range queuedTriggers {
+		queuedTriggers[i] = NewRandomQueuedTrigger(simState.Rand, simState, simState.Accounts, triggerID)
+		triggerID++
 	}
 
 	gasLimits := []types.GasLimit{}
 	for _, trigger := range triggers {
 		gasLimits = append(gasLimits, types.GasLimit{
 			TriggerId: trigger.GetId(),
-			Amount:    1000000,
+			Amount:    NewRandomGasLimit(simState.Rand),
 		})
 	}
 	for _, item := range queuedTriggers {
 		gasLimits = append(gasLimits, types.GasLimit{
 			TriggerId: item.Trigger.Id,
-			Amount:    1000000,
+			Amount:    NewRandomGasLimit(simState.Rand),
 		})
 	}
 

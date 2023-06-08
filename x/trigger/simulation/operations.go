@@ -71,7 +71,7 @@ func SimulateMsgCreateTrigger(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk 
 			to, _ = simtypes.RandomAcc(r, accs)
 		}
 
-		msg := types.NewCreateTriggerRequest(from.Address.String(), GetRandomEvent(r, now), []sdk.Msg{GetRandomAction(r, from.Address.String(), to.Address.String())})
+		msg := types.NewCreateTriggerRequest(from.Address.String(), NewRandomEvent(r, now), []sdk.Msg{NewRandomAction(r, from.Address.String(), to.Address.String())})
 
 		return Dispatch(r, app, ctx, from, chainID, msg, ak, bk, nil)
 	}
