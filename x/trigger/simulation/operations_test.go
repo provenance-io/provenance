@@ -82,21 +82,21 @@ func (s *SimTestSuite) TestSimulateMsgCreateTrigger() {
 	op := simulation.SimulateMsgCreateTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, []simtypes.Account{accounts[0]}, "")
 	s.Require().Equal(operationMsg, simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), "cannot choose 2 accounts because there are only 1"))
-	s.Require().Nil(futureOperations)
-	s.Require().Nil(err)
+	s.Require().Nil(futureOperations, "should be nil for invalid SimulateMsgCreateTrigger operation")
+	s.Require().Nil(err, "should have no error for a invalid SimulateMsgCreateTrigger operation")
 
 	// execute operation
 	op = simulation.SimulateMsgCreateTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err = op(r, s.app.BaseApp, s.ctx, accounts, "")
-	s.Require().NoError(err)
+	s.Require().NoError(err, "should have no error for a valid SimulateMsgCreateTrigger operation")
 
 	var msg types.MsgCreateTriggerRequest
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
-	s.Require().True(operationMsg.OK, operationMsg.String())
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
-	s.Require().Len(futureOperations, 0)
+	s.Require().True(operationMsg.OK, operationMsg.String(), "should be an operation.OK for SimulateMsgCreateTrigger")
+	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "should have correct name for SimulateMsgCreateTrigger")
+	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "should have correct route for SimulateMsgCreateTrigger")
+	s.Require().Len(futureOperations, 0, "should have no future operations for SimulateMsgCreateTrigger")
 }
 
 func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
@@ -119,17 +119,17 @@ func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
 	// execute operation
 	op := simulation.SimulateMsgDestroyTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
-	s.Require().NoError(err)
+	s.Require().NoError(err, "should have no error for valid SimulateMsgDestroyTrigger")
 
 	var msg types.MsgDestroyTriggerRequest
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
-	s.Require().True(operationMsg.OK, operationMsg.String())
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
-	s.Require().Equal(uint64(1000), msg.GetId())
-	s.Require().Equal(accounts[0].Address.String(), msg.GetAuthority())
-	s.Require().Len(futureOperations, 0)
+	s.Require().True(operationMsg.OK, operationMsg.String(), "should be an operation.OK for SimulateMsgDestroyTrigger")
+	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "should have the correct message name for SimulateMsgDestroyTrigger")
+	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "should have the correct message route for SimulateMsgDestroyTrigger")
+	s.Require().Equal(int(1000), int(msg.GetId()), "should have the correct id for SimulateMsgDestroyTrigger")
+	s.Require().Equal(accounts[0].Address.String(), msg.GetAuthority(), "should have the correct authority for SimulateMsgDestroyTrigger")
+	s.Require().Len(futureOperations, 0, "should have no future operations for SimulateMsgDestroyTrigger")
 }
 
 func (s *SimTestSuite) TestRandomAccs() {
@@ -181,39 +181,13 @@ func (s *SimTestSuite) TestRandomAccs() {
 		s.Run(tc.name, func() {
 			raccs, err := simulation.RandomAccs(r, tc.accs, tc.count)
 			if len(tc.err) == 0 {
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expected, raccs)
+				s.Require().NoError(err, "should have no error for successful RandomAccs")
+				s.Require().Equal(tc.expected, raccs, "should have correct output for successful RandomAccs")
 			} else {
-				s.Require().Error(err)
-				s.Require().EqualError(err, tc.err)
+				s.Require().EqualError(err, tc.err, "should have correct error message for RandomAccs")
 			}
 		})
 	}
-
-	actions, _ := sdktx.SetMsgs([]sdk.Msg{simulation.NewRandomAction(r, accounts[0].Address.String(), accounts[1].Address.String())})
-	anyEvent, _ := codectypes.NewAnyWithValue(simulation.NewRandomEvent(r, s.ctx.BlockTime().UTC()))
-	trigger := types.NewTrigger(1000, accounts[0].Address.String(), anyEvent, actions)
-	s.app.TriggerKeeper.SetTrigger(s.ctx, trigger)
-	s.app.TriggerKeeper.SetEventListener(s.ctx, trigger)
-	s.app.TriggerKeeper.SetGasLimit(s.ctx, trigger.GetId(), 1000)
-
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
-
-	// execute operation
-	op := simulation.SimulateMsgDestroyTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
-	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
-	s.Require().NoError(err)
-
-	var msg types.MsgDestroyTriggerRequest
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
-	s.Require().True(operationMsg.OK, operationMsg.String())
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
-	s.Require().Equal(uint64(1000), msg.GetId())
-	s.Require().Equal(accounts[0].Address.String(), msg.GetAuthority())
-	s.Require().Len(futureOperations, 0)
 }
 
 func TestSimTestSuite(t *testing.T) {
