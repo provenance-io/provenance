@@ -48,12 +48,11 @@ func (s *KeeperTestSuite) TestGetAndSetEventListener() {
 		s.Run(tc.name, func() {
 			listener, err := s.app.TriggerKeeper.GetEventListener(s.ctx, tc.prefix, tc.id)
 			if len(tc.err) > 0 {
-				s.Error(err)
-				s.EqualError(err, tc.err)
-				s.Equal(uint64(0), listener.Id)
+				s.EqualError(err, tc.err, "should have correct error for invalid GetEventListener")
+				s.Equal(0, int(listener.Id), "should have id of 0 for invalid GetEventListener")
 			} else {
-				s.NoError(err)
-				s.Equal(*tc.expected, listener)
+				s.NoError(err, "should have no error for valid GetEventListener")
+				s.Equal(*tc.expected, listener, "should receive the correct listener from GetEventListener")
 			}
 		})
 	}
@@ -74,7 +73,7 @@ func (s *KeeperTestSuite) TestIterateEventListeners() {
 		name      string
 		shortStop bool
 		add       []types.Trigger
-		count     uint64
+		count     int
 		prefix    string
 	}{
 		{
@@ -109,7 +108,7 @@ func (s *KeeperTestSuite) TestIterateEventListeners() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			count := uint64(0)
+			count := 0
 			for _, trigger := range tc.add {
 				s.app.TriggerKeeper.SetEventListener(s.ctx, trigger)
 			}
@@ -117,8 +116,8 @@ func (s *KeeperTestSuite) TestIterateEventListeners() {
 				count += 1
 				return tc.shortStop, nil
 			})
-			s.NoError(err)
-			s.Equal(tc.count, count)
+			s.NoError(err, "should receive no error from IterateEventListeners")
+			s.Equal(tc.count, count, "should iterate the correct number of times for IterateEventListeners")
 		})
 	}
 }
@@ -152,7 +151,7 @@ func (s *KeeperTestSuite) TestRemoveEventListener() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			success := s.app.TriggerKeeper.RemoveEventListener(s.ctx, tc.trigger)
-			s.Equal(tc.expected, success)
+			s.Equal(tc.expected, success, "should return the correct result for RemoveEventListener")
 		})
 	}
 }

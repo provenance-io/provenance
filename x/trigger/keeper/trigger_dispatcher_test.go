@@ -33,7 +33,7 @@ func (s *KeeperTestSuite) TestProcessActions() {
 
 	tests := []struct {
 		name     string
-		panics   bool
+		panic    string
 		existing []types.Trigger
 		queue    []types.QueuedTrigger
 		gas      []uint64
@@ -42,7 +42,6 @@ func (s *KeeperTestSuite) TestProcessActions() {
 	}{
 		{
 			name:     "valid - no items in queue to run",
-			panics:   false,
 			existing: []types.Trigger{},
 			queue:    []types.QueuedTrigger{},
 			gas:      []uint64{},
@@ -51,7 +50,6 @@ func (s *KeeperTestSuite) TestProcessActions() {
 		},
 		{
 			name:     "valid - one item in queue to run",
-			panics:   false,
 			existing: []types.Trigger{existing1},
 			queue: []types.QueuedTrigger{
 				{
@@ -65,8 +63,8 @@ func (s *KeeperTestSuite) TestProcessActions() {
 			events:   []sdk.Event{event1},
 		},
 		{
-			name:   "invalid - trigger with missing gas limit",
-			panics: true,
+			name:  "invalid - trigger with missing gas limit",
+			panic: "gas limit not found for trigger",
 			queue: []types.QueuedTrigger{
 				{
 					BlockHeight: uint64(s.ctx.BlockHeight()),
@@ -80,7 +78,6 @@ func (s *KeeperTestSuite) TestProcessActions() {
 		},
 		{
 			name:     "valid - trigger with no action",
-			panics:   false,
 			existing: []types.Trigger{},
 			queue: []types.QueuedTrigger{
 				{
@@ -95,7 +92,6 @@ func (s *KeeperTestSuite) TestProcessActions() {
 		},
 		{
 			name:     "valid - trigger with multiple actions",
-			panics:   false,
 			existing: []types.Trigger{existing1, existing2},
 			queue: []types.QueuedTrigger{
 				{
@@ -110,7 +106,6 @@ func (s *KeeperTestSuite) TestProcessActions() {
 		},
 		{
 			name:     "valid - multiple triggers in queue",
-			panics:   false,
 			existing: []types.Trigger{existing1, existing2},
 			queue: []types.QueuedTrigger{
 				{
@@ -130,7 +125,6 @@ func (s *KeeperTestSuite) TestProcessActions() {
 		},
 		{
 			name:     "valid - limit multiple triggers in queue by gas",
-			panics:   false,
 			existing: []types.Trigger{existing1, existing2},
 			queue: []types.QueuedTrigger{
 				{
@@ -150,7 +144,6 @@ func (s *KeeperTestSuite) TestProcessActions() {
 		},
 		{
 			name:     "valid - limit multiple triggers in queue",
-			panics:   false,
 			existing: []types.Trigger{existing1, existing2},
 			queue: []types.QueuedTrigger{
 				{
@@ -190,7 +183,6 @@ func (s *KeeperTestSuite) TestProcessActions() {
 		},
 		{
 			name:     "invalid - trigger with single action runs out of gas",
-			panics:   false,
 			existing: []types.Trigger{existing1},
 			queue: []types.QueuedTrigger{
 				{
@@ -205,7 +197,6 @@ func (s *KeeperTestSuite) TestProcessActions() {
 		},
 		{
 			name:     "invalid - trigger with multiple actions runs out of gas",
-			panics:   false,
 			existing: []types.Trigger{existing1, existing2},
 			queue: []types.QueuedTrigger{
 				{
@@ -220,7 +211,6 @@ func (s *KeeperTestSuite) TestProcessActions() {
 		},
 		{
 			name:     "valid - multiple triggers in queue and one runs out of gas",
-			panics:   false,
 			existing: []types.Trigger{existing1, existing2},
 			queue: []types.QueuedTrigger{
 				{
@@ -255,16 +245,16 @@ func (s *KeeperTestSuite) TestProcessActions() {
 			}
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 
-			if tc.panics {
-				s.Panics(func() {
+			if len(tc.panic) > 0 {
+				s.PanicsWithValue(tc.panic, func() {
 					s.app.TriggerKeeper.ProcessTriggers(s.ctx)
 				})
 			} else {
 				s.app.TriggerKeeper.ProcessTriggers(s.ctx)
 
 				remaining, err := s.app.TriggerKeeper.GetAllTriggers(s.ctx)
-				s.NoError(err)
-				s.Equal(tc.expected, remaining)
+				s.NoError(err, "GetAllTriggers")
+				s.Equal(tc.expected, remaining, "should still have remaining triggers after deletion actions from ProcessTriggers")
 
 				for _, trigger := range remaining {
 					s.app.TriggerKeeper.UnregisterTrigger(s.ctx, trigger)
@@ -272,7 +262,7 @@ func (s *KeeperTestSuite) TestProcessActions() {
 				}
 
 				events := s.ctx.EventManager().Events()
-				s.Equal(tc.events, events)
+				s.Equal(tc.events, events, "should have matching events from successful actions in ProcessTriggers")
 			}
 
 			for !s.app.TriggerKeeper.QueueIsEmpty(s.ctx) {

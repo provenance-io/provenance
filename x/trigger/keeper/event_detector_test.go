@@ -201,18 +201,18 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 
 			// Verify
 			triggers, err := s.app.TriggerKeeper.GetAllTriggers(s.ctx)
-			s.NoError(err)
-			s.Equal(tc.registered, triggers)
+			s.NoError(err, "GetAllTriggers")
+			s.Equal(tc.registered, triggers, "should have the correct remaining triggers after DetectBlockEvents")
 			for _, trigger := range triggers {
 				event, err := trigger.GetTriggerEventI()
-				s.NoError(err)
+				s.NoError(err, "GetTriggerEventI")
 				_, err = s.app.TriggerKeeper.GetEventListener(s.ctx, event.GetEventPrefix(), trigger.GetId())
-				s.NoError(err)
+				s.NoError(err, "GetEventListener")
 			}
 
 			items, err := s.app.TriggerKeeper.GetAllQueueItems(s.ctx)
-			s.NoError(err)
-			s.Equal(tc.queued, items)
+			s.NoError(err, "GetAllQueueItems")
+			s.Equal(tc.queued, items, "should have correct items in queue after DetectBlockEvents")
 
 			// Cleanup
 			for !s.app.TriggerKeeper.QueueIsEmpty(s.ctx) {

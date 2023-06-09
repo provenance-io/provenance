@@ -35,7 +35,7 @@ func (s *KeeperTestSuite) TestQueueTrigger() {
 			}
 			for _, expected := range tc.expected {
 				item := s.app.TriggerKeeper.QueuePeek(s.ctx)
-				s.Equal(expected, *item)
+				s.Equal(expected, *item, "should place correct item in front of queue for QueueTrigger")
 				s.app.TriggerKeeper.Dequeue(s.ctx)
 			}
 		})
@@ -83,7 +83,7 @@ func (s *KeeperTestSuite) TestQueuePeek() {
 			}
 
 			item := s.app.TriggerKeeper.QueuePeek(s.ctx)
-			s.Equal(tc.expected, item)
+			s.Equal(tc.expected, item, "should return correct value for QueuePeek")
 
 			for range tc.triggers {
 				s.app.TriggerKeeper.Dequeue(s.ctx)
@@ -130,8 +130,8 @@ func (s *KeeperTestSuite) TestEnqueue() {
 			}
 
 			items, err := s.app.TriggerKeeper.GetAllQueueItems(s.ctx)
-			s.NoError(err)
-			s.Equal(tc.expected, items)
+			s.NoError(err, "should not return an error when calling GetAllQueueItems")
+			s.Equal(tc.expected, items, "should return all items when calling GetAllQueueItems")
 
 			for range tc.expected {
 				s.app.TriggerKeeper.Dequeue(s.ctx)
@@ -148,19 +148,18 @@ func (s *KeeperTestSuite) TestDequeue() {
 		name     string
 		triggers []types.Trigger
 		expected []types.QueuedTrigger
-		panics   bool
+		panic    string
 	}{
 		{
 			name:     "valid - empty",
 			triggers: []types.Trigger{},
 			expected: []types.QueuedTrigger{},
-			panics:   true,
+			panic:    "unable to dequeue from empty queue.",
 		},
 		{
 			name:     "valid - single item",
 			triggers: []types.Trigger{trigger1},
 			expected: []types.QueuedTrigger(nil),
-			panics:   false,
 		},
 		{
 			name:     "valid - multiple item should display only last",
@@ -179,15 +178,15 @@ func (s *KeeperTestSuite) TestDequeue() {
 				s.app.TriggerKeeper.QueueTrigger(s.ctx, trigger)
 			}
 
-			if tc.panics {
-				s.Panics(func() {
+			if len(tc.panic) > 0 {
+				s.PanicsWithValue(tc.panic, func() {
 					s.app.TriggerKeeper.Dequeue(s.ctx)
 				})
 			} else {
 				s.app.TriggerKeeper.Dequeue(s.ctx)
 				items, err := s.app.TriggerKeeper.GetAllQueueItems(s.ctx)
-				s.NoError(err)
-				s.Equal(tc.expected, items)
+				s.NoError(err, "should not throw an error when obtaining GetAllQueueItems after Dequeue")
+				s.Equal(tc.expected, items, "should have correct items in queue after Dequeue")
 			}
 
 			for !s.app.TriggerKeeper.QueueIsEmpty(s.ctx) {
@@ -230,7 +229,7 @@ func (s *KeeperTestSuite) TestQueueIsEmpty() {
 			}
 
 			isEmpty := s.app.TriggerKeeper.QueueIsEmpty(s.ctx)
-			s.Equal(tc.expected, isEmpty)
+			s.Equal(tc.expected, isEmpty, "should return the correct value for QueueIsEmpty")
 
 			for range tc.triggers {
 				s.app.TriggerKeeper.Dequeue(s.ctx)
@@ -277,8 +276,8 @@ func (s *KeeperTestSuite) TestGetAllQueueItems() {
 			}
 
 			items, err := s.app.TriggerKeeper.GetAllQueueItems(s.ctx)
-			s.NoError(err)
-			s.Equal(tc.expected, items)
+			s.NoError(err, "should not throw an error when calling GetAllQueueItems")
+			s.Equal(tc.expected, items, "should return all queue items when calling GetAllQueueItems")
 
 			for range tc.expected {
 				s.app.TriggerKeeper.Dequeue(s.ctx)

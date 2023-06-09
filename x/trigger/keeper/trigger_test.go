@@ -41,8 +41,8 @@ func (s *KeeperTestSuite) TestGetAllTriggers() {
 				s.app.TriggerKeeper.SetTrigger(s.ctx, trigger)
 			}
 			triggers, err := s.app.TriggerKeeper.GetAllTriggers(s.ctx)
-			s.NoError(err)
-			s.Equal(tc.triggers, triggers)
+			s.NoError(err, "should have no error for GetAllTriggers")
+			s.Equal(tc.triggers, triggers, "should have matching trigger output for GetAllTriggers")
 		})
 	}
 }
@@ -80,12 +80,11 @@ func (s *KeeperTestSuite) TestGetAndSetTrigger() {
 		s.Run(tc.name, func() {
 			trigger, err := s.app.TriggerKeeper.GetTrigger(s.ctx, tc.id)
 			if len(tc.err) > 0 {
-				s.Error(err)
-				s.EqualError(err, tc.err)
-				s.Equal(uint64(0), trigger.Id)
+				s.EqualError(err, tc.err, "should have correct error for invalid GetTrigger")
+				s.Equal(0, int(trigger.Id), "should have invalid id for invalid GetTrigger")
 			} else {
-				s.NoError(err)
-				s.Equal(*tc.expected, trigger)
+				s.NoError(err, "should have no error for valid GetTrigger")
+				s.Equal(*tc.expected, trigger, "should have correct output for valid GetTrigger")
 			}
 		})
 	}
@@ -113,7 +112,7 @@ func (s *KeeperTestSuite) TestNewTriggerWithID() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			trigger := s.app.TriggerKeeper.NewTriggerWithID(s.ctx, tc.expected.Owner, tc.expected.Event, tc.expected.Actions)
-			s.Equal(tc.expected, trigger)
+			s.Equal(tc.expected, trigger, "should have correct trigger from NewTrigger")
 		})
 	}
 }
@@ -127,7 +126,7 @@ func (s *KeeperTestSuite) TestIterateTriggers() {
 		name      string
 		shortStop bool
 		add       []types.Trigger
-		count     uint64
+		count     int
 	}{
 		{
 			name:      "valid - no triggers",
@@ -157,7 +156,7 @@ func (s *KeeperTestSuite) TestIterateTriggers() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			count := uint64(0)
+			count := 0
 			for _, trigger := range tc.add {
 				s.app.TriggerKeeper.SetTrigger(s.ctx, trigger)
 			}
@@ -165,8 +164,8 @@ func (s *KeeperTestSuite) TestIterateTriggers() {
 				count += 1
 				return tc.shortStop, nil
 			})
-			s.NoError(err)
-			s.Equal(tc.count, count)
+			s.NoError(err, "should have no error from IterateTriggers")
+			s.Equal(tc.count, count, "should iterate the correct number of items in IterateTriggers")
 		})
 	}
 }
@@ -200,7 +199,7 @@ func (s *KeeperTestSuite) TestRemoveTrigger() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			success := s.app.TriggerKeeper.RemoveTrigger(s.ctx, tc.id)
-			s.Equal(tc.expected, success)
+			s.Equal(tc.expected, success, "should have the correct output for RemoveTrigger")
 		})
 	}
 }

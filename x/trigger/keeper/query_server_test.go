@@ -51,10 +51,10 @@ func (s *KeeperTestSuite) TestTriggerByID() {
 			request := types.QueryTriggerByIDRequest{Id: tc.triggerID}
 			response, err := queryClient.TriggerByID(s.ctx.Context(), &request)
 			if len(tc.err) > 0 {
-				s.EqualError(err, tc.err)
+				s.EqualError(err, tc.err, "should have the correct error message for invalid TriggerByID")
 			} else {
-				s.Assert().Nil(err)
-				s.Assert().Equal(tc.expected.Id, response.Trigger.Id)
+				s.Assert().Nil(err, "should have no error message for valid TriggerByID")
+				s.Assert().Equal(tc.expected.Id, response.Trigger.Id, "should have the correct trigger in response for TriggerByID")
 			}
 
 			// Destroy
@@ -145,8 +145,8 @@ func (s *KeeperTestSuite) TestTriggers() {
 				request.Pagination = tc.pageRequest
 			}
 			response, err := queryClient.Triggers(s.ctx.Context(), &request)
-			s.Assert().Nil(err, "query should not error")
-			s.Assert().Equal(len(tc.expected), len(response.Triggers))
+			s.Assert().Nil(err, "should not throw an error when querying Triggers")
+			s.Assert().Equal(len(tc.expected), len(response.Triggers), "should have the correct amount of triggers returned when calling Triggers")
 
 			// Destroy
 			for _, trigger := range tc.triggers {
