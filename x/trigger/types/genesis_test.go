@@ -132,7 +132,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			modify: func(gs *GenesisState) {
 				gs.Triggers[0].Actions = badRequest.Actions
 			},
-			err: "msg: 0, err: invalid address for trigger authority from address: empty address string is not allowed",
+			err: "trigger id: 1, msg: 0, err: invalid address for trigger authority from address: empty address string is not allowed",
 		},
 		{
 			name: "invalid - A trigger's id cannot exceed state trigger id",
@@ -148,7 +148,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				gs.QueuedTriggers[0].Trigger.Owner = "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"
 				gs.Triggers[0].Id = 5
 			},
-			err: "trigger id is invalid and cannot exceed 2",
+			err: "trigger id 5 is invalid and cannot exceed 2",
 		},
 		{
 			name: "invalid - queued trigger action must pass internal validate basic",
@@ -162,7 +162,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			modify: func(gs *GenesisState) {
 				gs.QueuedTriggers[0].Trigger.Actions = badRequest.Actions
 			},
-			err: "msg: 0, err: invalid address for trigger authority from address: empty address string is not allowed",
+			err: "trigger id: 2, msg: 0, err: invalid address for trigger authority from address: empty address string is not allowed",
 		},
 		{
 			name: "invalid - A queued trigger's id cannot exceed state trigger id",
@@ -178,7 +178,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				gs.QueuedTriggers[0].Trigger.Owner = "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"
 				gs.QueuedTriggers[0].Trigger.Id = 5
 			},
-			err: "trigger id is invalid and cannot exceed 2",
+			err: "trigger id 5 is invalid and cannot exceed 2",
 		},
 		{
 			name: "invalid - A trigger's event must pass validation",
@@ -193,7 +193,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				gs.Triggers[0].Owner = "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"
 				gs.Triggers[0].Event = badRequest.Event
 			},
-			err: "empty event name",
+			err: "could not validate event for trigger with id 1: empty event name",
 		},
 		{
 			name: "invalid - A queued trigger's event must pass validation",
@@ -208,7 +208,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				gs.Triggers[0].Owner = "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"
 				gs.QueuedTriggers[0].Trigger.Event = badRequest.Event
 			},
-			err: "empty event name",
+			err: "could not validate event for trigger with id 2: empty event name",
 		},
 		{
 			name: "invalid - Gas limits must match either a trigger or queued trigger",
@@ -232,7 +232,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger}},
 			},
 			modify: nil,
-			err:    "cannot have duplicate trigger id in gas limits",
+			err:    "cannot have duplicate trigger id (1) in gas limits",
 		},
 		{
 			name: "invalid - triggers cannot have duplicate id",
@@ -244,7 +244,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger2}},
 			},
 			modify: nil,
-			err:    "all trigger ids shared between triggers and queued triggers must be unique",
+			err:    "trigger id 1 is not unique within the set all triggers and queued triggers",
 		},
 		{
 			name: "invalid - queued triggers cannot have duplicate id",
@@ -256,7 +256,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger2}, {BlockHeight: 1, Time: time.Time{}, Trigger: trigger2}},
 			},
 			modify: nil,
-			err:    "all trigger ids shared between triggers and queued triggers must be unique",
+			err:    "trigger id 2 is not unique within the set all triggers and queued triggers",
 		},
 		{
 			name: "invalid - cannot have duplicate id between triggers and queued triggers",
@@ -268,7 +268,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				QueuedTriggers: []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger}},
 			},
 			modify: nil,
-			err:    "all trigger ids shared between triggers and queued triggers must be unique",
+			err:    "trigger id 1 is not unique within the set all triggers and queued triggers",
 		},
 	}
 

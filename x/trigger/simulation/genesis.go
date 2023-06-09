@@ -29,7 +29,7 @@ func TriggerIDStartFn(r *rand.Rand) uint64 {
 
 // QueueStartFn randomized Queue Start Index
 func QueueStartFn(r *rand.Rand) uint64 {
-	return uint64(r.Intn(10000000000))
+	return uint64(simtypes.RandIntBetween(r, 1, 10000000000))
 }
 
 // NewRandomGasLimit randomized Gas Limit

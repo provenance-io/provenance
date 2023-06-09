@@ -43,7 +43,7 @@ func (gs GenesisState) Validate() error {
 	gasLimitMap := make(map[uint64]bool)
 	for _, gasLimit := range gs.GasLimits {
 		if _, found := gasLimitMap[gasLimit.TriggerId]; found {
-			return fmt.Errorf("cannot have duplicate trigger id in gas limits")
+			return fmt.Errorf("cannot have duplicate trigger id (%d) in gas limits", gasLimit.TriggerId)
 		}
 		gasLimitMap[gasLimit.TriggerId] = true
 	}
@@ -52,25 +52,25 @@ func (gs GenesisState) Validate() error {
 	for _, trigger := range triggers {
 		msgs, err := sdktx.GetMsgs(trigger.Actions, "Genesis - Validate")
 		if err != nil {
-			return err
+			return fmt.Errorf("could not get msgs for trigger with id %d: %w", trigger.GetId(), err)
 		}
 
 		for idx, msg := range msgs {
 			if err = msg.ValidateBasic(); err != nil {
-				return fmt.Errorf("msg: %d, err: %w", idx, err)
+				return fmt.Errorf("trigger id: %d, msg: %d, err: %w", trigger.GetId(), idx, err)
 			}
 		}
 
 		if trigger.GetId() > gs.TriggerId {
-			return fmt.Errorf("trigger id is invalid and cannot exceed %d", gs.TriggerId)
+			return fmt.Errorf("trigger id %d is invalid and cannot exceed %d", trigger.GetId(), gs.TriggerId)
 		}
 
 		event, err := trigger.GetTriggerEventI()
 		if err != nil {
-			return err
+			return fmt.Errorf("could not get event for trigger with id %d: %w", trigger.GetId(), err)
 		}
 		if err = event.Validate(); err != nil {
-			return err
+			return fmt.Errorf("could not validate event for trigger with id %d: %w", trigger.GetId(), err)
 		}
 
 		if _, found := gasLimitMap[trigger.GetId()]; !found {
@@ -78,7 +78,7 @@ func (gs GenesisState) Validate() error {
 		}
 
 		if _, found := triggerMap[trigger.GetId()]; found {
-			return fmt.Errorf("all trigger ids shared between triggers and queued triggers must be unique")
+			return fmt.Errorf("trigger id %d is not unique within the set all triggers and queued triggers", trigger.GetId())
 		}
 		triggerMap[trigger.GetId()] = true
 	}
