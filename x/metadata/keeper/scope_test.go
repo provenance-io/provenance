@@ -1361,6 +1361,191 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 	}
 }
 
+func (s *ScopeKeeperTestSuite) TestValidateSetScopeAccountData() {
+	pt := func(addr string, role types.PartyType, opt bool) types.Party {
+		return types.Party{
+			Address:  addr,
+			Role:     role,
+			Optional: opt,
+		}
+	}
+	ptz := func(parties ...types.Party) []types.Party {
+		rv := make([]types.Party, 0, len(parties))
+		rv = append(rv, parties...)
+		return rv
+	}
+
+	ctx := s.FreshCtx()
+
+	scopeNoValueOwner := types.Scope{
+		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:   types.ScopeSpecMetadataAddress(uuid.New()),
+		Owners:            ownerPartyList(s.user1, s.user2),
+		DataAccess:        nil,
+		ValueOwnerAddress: "",
+	}
+	s.app.MetadataKeeper.SetScope(ctx, scopeNoValueOwner)
+
+	owner := types.PartyType_PARTY_TYPE_OWNER
+	servicer := types.PartyType_PARTY_TYPE_SERVICER
+
+	scopeSpec := types.ScopeSpecification{
+		SpecificationId: types.ScopeSpecMetadataAddress(uuid.New()),
+		Description:     types.NewDescription("tester", "test scope spec", "", ""),
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{owner, servicer},
+		ContractSpecIds: []types.MetadataAddress{types.ContractSpecMetadataAddress(uuid.New())},
+	}
+	s.app.MetadataKeeper.SetScopeSpecification(ctx, scopeSpec)
+
+	otherUser := sdk.AccAddress("some_other_user_____").String()
+
+	// with rollup no scope spec req party not signed
+	scopeRollupNoSpecReq := types.Scope{
+		ScopeId:            types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:    types.ScopeSpecMetadataAddress(uuid.New()),
+		Owners:             ptz(pt(s.user1, owner, false), pt(s.user2, servicer, false), pt(otherUser, owner, true)),
+		DataAccess:         nil,
+		ValueOwnerAddress:  "",
+		RequirePartyRollup: true,
+	}
+	s.app.MetadataKeeper.SetScope(ctx, scopeRollupNoSpecReq)
+
+	// with rollup req scope owner not signed
+	// with rollup req role not signed
+	// with rollup req scope owner and req role signed.
+	scopeRollup := types.Scope{
+		ScopeId:            types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId:    scopeSpec.SpecificationId,
+		Owners:             ptz(pt(s.user1, owner, false), pt(s.user2, servicer, true), pt(otherUser, owner, true)),
+		DataAccess:         nil,
+		ValueOwnerAddress:  "",
+		RequirePartyRollup: true,
+	}
+	s.app.MetadataKeeper.SetScope(ctx, scopeRollup)
+
+	dneScopeID := types.ScopeMetadataAddress(uuid.New())
+
+	missing1Sig := func(addr string) string {
+		return fmt.Sprintf("missing signature: %s", addr)
+	}
+
+	missing2Sigs := func(addr1, addr2 string) string {
+		return fmt.Sprintf("missing signatures: %s, %s", addr1, addr2)
+	}
+
+	tests := []struct {
+		name     string
+		addr     types.MetadataAddress
+		value    string
+		signers  []string
+		expected string
+	}{
+		{
+			name:     "all signers",
+			addr:     scopeNoValueOwner.ScopeId,
+			signers:  []string{s.user1, s.user2},
+			expected: "",
+		},
+		{
+			name:     "all signers reversed",
+			addr:     scopeNoValueOwner.ScopeId,
+			signers:  []string{s.user1, s.user2},
+			expected: "",
+		},
+		{
+			name:     "extra signer",
+			addr:     scopeNoValueOwner.ScopeId,
+			signers:  []string{s.user1, s.user2, s.user3},
+			expected: "",
+		},
+		{
+			name:     "missing signer 1",
+			addr:     scopeNoValueOwner.ScopeId,
+			signers:  []string{s.user2},
+			expected: missing1Sig(s.user1),
+		},
+		{
+			name:     "missing signer 2",
+			addr:     scopeNoValueOwner.ScopeId,
+			signers:  []string{s.user1},
+			expected: missing1Sig(s.user2),
+		},
+		{
+			name:     "no signers",
+			addr:     scopeNoValueOwner.ScopeId,
+			signers:  []string{},
+			expected: missing2Sigs(s.user1, s.user2),
+		},
+		{
+			name:     "wrong signer",
+			addr:     scopeNoValueOwner.ScopeId,
+			signers:  []string{s.user3},
+			expected: missing2Sigs(s.user1, s.user2),
+		},
+		{
+			name:     "scope does not exist",
+			addr:     dneScopeID,
+			value:    "Some new value.",
+			signers:  []string{},
+			expected: fmt.Sprintf("scope not found with id %s", dneScopeID),
+		},
+		{
+			name:     "scope does not exist but value is empty",
+			addr:     dneScopeID,
+			value:    "",
+			signers:  []string{},
+			expected: "",
+		},
+		{
+			name:     "with rollup no scope spec",
+			addr:     scopeRollupNoSpecReq.ScopeId,
+			signers:  []string{otherUser},
+			expected: fmt.Sprintf("scope specification %s not found for scope id %s", scopeRollupNoSpecReq.SpecificationId, scopeRollupNoSpecReq.ScopeId),
+		},
+		{
+			name:     "with rollup req scope owner not signed",
+			addr:     scopeRollup.ScopeId,
+			signers:  []string{s.user2, otherUser},
+			expected: "missing required signature: " + s.user1 + " (OWNER)",
+		},
+		{
+			name:     "with rollup req role not signed",
+			addr:     scopeRollup.ScopeId,
+			signers:  []string{s.user1},
+			expected: "missing signers for roles required by spec: SERVICER need 1 have 0",
+		},
+		{
+			name:     "with rollup req scope owner and req roles signed",
+			addr:     scopeRollup.ScopeId,
+			signers:  []string{s.user1, s.user2},
+			expected: "",
+		},
+		{
+			name:     "smart contract singer not involved",
+			addr:     scopeNoValueOwner.ScopeId,
+			signers:  []string{s.user1, s.user2, s.scUser},
+			expected: "smart contract signer " + s.scUser + " cannot follow non-smart-contract signer",
+		},
+	}
+
+	for _, tc := range tests {
+		s.T().Run(tc.name, func(t *testing.T) {
+			msg := &types.MsgSetAccountDataRequest{
+				MetadataAddr: tc.addr,
+				Value:        tc.value,
+				Signers:      tc.signers,
+			}
+			actual := s.app.MetadataKeeper.ValidateSetScopeAccountData(s.FreshCtx(), msg)
+			if len(tc.expected) > 0 {
+				require.EqualError(t, actual, tc.expected)
+			} else {
+				require.NoError(t, actual)
+			}
+		})
+	}
+}
+
 func (s *ScopeKeeperTestSuite) TestValidateScopeAddDataAccess() {
 	pt := func(addr string, role types.PartyType, opt bool) types.Party {
 		return types.Party{

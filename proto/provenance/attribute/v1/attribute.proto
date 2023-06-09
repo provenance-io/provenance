@@ -108,3 +108,8 @@ message EventAttributeExpired {
   string account        = 4;
   string expiration     = 5;
 }
+
+// EventAccountDataUpdated event emitted when accountdata is set, updated, or deleted.
+message EventAccountDataUpdated {
+  string account = 1;
+}

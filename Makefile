@@ -46,11 +46,12 @@ HTTPS_GIT := https://github.com/provenance-io/provenance.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 
+# Only support go version 1.20
 GO_MAJOR_VERSION = $(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
 GO_MINOR_VERSION = $(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
-MINIMUM_SUPPORTED_GO_MAJOR_VERSION = 1
-MINIMUM_SUPPORTED_GO_MINOR_VERSION = 17
-GO_VERSION_VALIDATION_ERR_MSG = Golang version $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION) is not supported, please update to at least $(MINIMUM_SUPPORTED_GO_MAJOR_VERSION).$(MINIMUM_SUPPORTED_GO_MINOR_VERSION)
+SUPPORTED_GO_MAJOR_VERSION = 1
+SUPPORTED_GO_MINOR_VERSION = 20
+GO_VERSION_VALIDATION_ERR_MSG = Golang version $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION) is not supported, you must use $(SUPPORTED_GO_MAJOR_VERSION).$(SUPPORTED_GO_MINOR_VERSION)
 
 # The below include contains the tools target.
 include contrib/devtools/Makefile
@@ -381,13 +382,8 @@ cleveldb:
 
 
 validate-go-version: ## Validates the installed version of go against Provenance's minimum requirement.
-	@if [ $(GO_MAJOR_VERSION) -gt $(MINIMUM_SUPPORTED_GO_MAJOR_VERSION) ]; then \
-		exit 0 ;\
-	elif [ $(GO_MAJOR_VERSION) -lt $(MINIMUM_SUPPORTED_GO_MAJOR_VERSION) ]; then \
-		echo '$(GO_VERSION_VALIDATION_ERR_MSG)';\
-		exit 1; \
-	elif [ $(GO_MINOR_VERSION) -lt $(MINIMUM_SUPPORTED_GO_MINOR_VERSION) ] ; then \
-		echo '$(GO_VERSION_VALIDATION_ERR_MSG)';\
+	@if [ "$(GO_MAJOR_VERSION)" -ne $(SUPPORTED_GO_MAJOR_VERSION) ] || [ "$(GO_MINOR_VERSION)" -ne $(SUPPORTED_GO_MINOR_VERSION) ]; then \
+		echo '$(GO_VERSION_VALIDATION_ERR_MSG)'; \
 		exit 1; \
 	fi
 
@@ -549,6 +545,8 @@ indexer-db-down:
 # Proto -> golang compilation
 ##############################
 proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-gen update-swagger-docs
+proto-checks: proto-update-deps proto-lint proto-check-breaking proto-check-breaking-third-party
+proto-regen: proto-format proto-gen update-swagger-docs
 
 containerProtoVer=v0.2
 containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
@@ -621,7 +619,7 @@ proto-update-deps:
 	@echo "Updating Protobuf files"
 	sh ./scripts/proto-update-deps.sh
 
-.PHONY: proto-all proto-gen proto-format proto-gen-any proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check
+.PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-gen-any proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check
 
 
 ##############################

@@ -36,6 +36,7 @@ var allRequestMsgs = []sdk.Msg{
 	(*MsgSupplyIncreaseProposalRequest)(nil),
 	(*MsgUpdateRequiredAttributesRequest)(nil),
 	(*MsgUpdateForcedTransferRequest)(nil),
+	(*MsgSetAccountDataRequest)(nil),
 }
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
@@ -633,5 +634,20 @@ func (msg MsgUpdateForcedTransferRequest) ValidateBasic() error {
 
 func (msg MsgUpdateForcedTransferRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgSetAccountDataRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
+	}
+	if len(msg.Denom) == 0 {
+		return errors.New("invalid denom: empty denom string is not allowed")
+	}
+	return sdk.ValidateDenom(msg.Denom)
+}
+
+func (msg MsgSetAccountDataRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Signer)
 	return []sdk.AccAddress{addr}
 }

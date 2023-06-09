@@ -59,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Create `rust` upgrade handlers [PR 1549](https://github.com/provenance-io/provenance/pull/1549).
 * Remove mutation of store from `attribute` keeper iterators [#1557](https://github.com/provenance-io/provenance/issues/1557).
 * Bumped ibc-go to 6.1.1 [#1563](https://github.com/provenance-io/provenance/pull/1563).
+* Update `marker` module spec documentation with new proto references [#1580](https://github.com/provenance-io/provenance/pull/1580).
 
 ### Bug Fixes
 
@@ -71,6 +72,34 @@ Ref: https://keepachangelog.com/en/1.0.0/
 marker escrow account if it does not have deposit access.  In order for it to work, deposit access needs to be added.  This can be done using the `MsgAddAccessRequest` tx  [#1525](https://github.com/provenance-io/provenance/issues/1525).
 * `MsgMultiSend` is now limited to a single `Input` [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
 * SDK errors returned from Metadata module endpoints [#978](https://github.com/provenance-io/provenance/issues/978).
+
+---
+
+## [v1.15.2](https://github.com/provenance-io/provenance/releases/tag/v1.15.2) - 2023-06-08
+
+### Bug Fixes
+
+* Address the [Barberry security advisory](https://forum.cosmos.network/t/cosmos-sdk-security-advisory-barberry/10825) [PR 1576](https://github.com/provenance-io/provenance/pull/1576)
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.15.1...v1.15.2
+
+---
+
+## [v1.15.1](https://github.com/provenance-io/provenance/releases/tag/v1.15.1) - 2023-06-01
+
+### Improvements
+
+* Bumped ibc-go to 6.1.1 [PR 1563](https://github.com/provenance-io/provenance/pull/1563).
+
+### Bug Fixes
+
+* Bring back some proto messages that were deleted but still needed for historical queries [#1554](https://github.com/provenance-io/provenance/issues/1554).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.15.0...v1.15.1
 
 ---
 
@@ -87,6 +116,7 @@ marker escrow account if it does not have deposit access.  In order for it to wo
 * Repeated roles in a spec require multiple different parties [#1437](https://github.com/provenance-io/provenance/issues/1437).
 * The `PROVENANCE` role can only be used by smart contract addresses, and vice versa [#1381](https://github.com/provenance-io/provenance/issues/1381).
 * Add stargate query from wasm support [#1481](https://github.com/provenance-io/provenance/issues/1481).
+* Create methods for storing and retrieving account data for accounts, markers, and scopes [#1552](https://github.com/provenance-io/provenance/issues/1552).
 
 ### Improvements
 

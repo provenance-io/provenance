@@ -56,6 +56,11 @@ service Query {
   rpc DenomMetadata(QueryDenomMetadataRequest) returns (QueryDenomMetadataResponse) {
     option (google.api.http).get = "/provenance/marker/v1/getdenommetadata/{denom}";
   }
+
+  // query for account data associated with a denom
+  rpc AccountData(QueryAccountDataRequest) returns (QueryAccountDataResponse) {
+    option (google.api.http).get = "/provenance/marker/v1/accountdata/{denom}";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -144,6 +149,17 @@ message QueryDenomMetadataRequest {
 // QueryDenomMetadataResponse is the response type for the Query/DenomMetadata
 message QueryDenomMetadataResponse {
   cosmos.bank.v1beta1.Metadata metadata = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryAccountDataRequest is the request type for the Query/AccountData
+message QueryAccountDataRequest {
+  // The denomination to look up.
+  string denom = 1;
+}
+// QueryAccountDataResponse is the response type for the Query/AccountData
+message QueryAccountDataResponse {
+  // The accountdata for the requested denom.
+  string value = 1;
 }
 
 // Balance defines an account address and balance pair used in queries for accounts holding a marker

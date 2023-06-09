@@ -8,19 +8,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
-	attrkeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
-	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 )
 
 // Handler is a handler function for use with IterateRecords.
@@ -53,23 +47,23 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 
 	// To check whether accounts exist for addresses.
-	authKeeper authkeeper.AccountKeeper
+	authKeeper types.AccountKeeper
 
 	// To check whether accounts exist for addresses.
-	authzKeeper authzkeeper.Keeper
+	authzKeeper types.AuthzKeeper
 
 	// To handle movement of coin between accounts and check total supply
-	bankKeeper bankkeeper.Keeper
+	bankKeeper types.BankKeeper
 
 	// To pass through grant creation for callers with admin access on a marker.
-	feegrantKeeper feegrantkeeper.Keeper
+	feegrantKeeper types.FeeGrantKeeper
 
 	ibcKeeper ibckeeper.Keeper
 
 	// To access attributes for addresses
-	attrKeeper attrkeeper.Keeper
+	attrKeeper types.AttrKeeper
 	// To access names and normalize required attributes
-	nameKeeper namekeeper.Keeper
+	nameKeeper types.NameKeeper
 
 	// Key to access the key-value store from sdk.Context.
 	storeKey storetypes.StoreKey
@@ -94,13 +88,13 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	key storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
-	authKeeper authkeeper.AccountKeeper,
-	bankKeeper bankkeeper.Keeper,
-	authzKeeper authzkeeper.Keeper,
-	feegrantKeeper feegrantkeeper.Keeper,
+	authKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper,
+	authzKeeper types.AuthzKeeper,
+	feegrantKeeper types.FeeGrantKeeper,
 	ibcKeeper ibckeeper.Keeper,
-	attrKeeper attrkeeper.Keeper,
-	nameKeeper namekeeper.Keeper,
+	attrKeeper types.AttrKeeper,
+	nameKeeper types.NameKeeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())

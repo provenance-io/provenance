@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
@@ -83,6 +84,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.GenesisState = genesisState
 
 	cfg.ChainID = antewrapper.SimAppChainID
+	cfg.TimeoutCommit = 500 * time.Millisecond
 	s.cfg = cfg
 
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)

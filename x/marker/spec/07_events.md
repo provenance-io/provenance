@@ -46,6 +46,7 @@ Fires when administrative access is granted for a marker
 | EventMarkerAddAccess   | Access                | {access grant format}     |
 
 `provenance.marker.v1.EventMarkerAddAccess`
+
 ### Access Grant Format
 
 | Attribute Key         | Attribute Value          |
@@ -53,6 +54,7 @@ Fires when administrative access is granted for a marker
 | Address               | {bech32 address string}  |
 | Permissions           | {array of role names}    |
 
+`provenance.marker.v1.EventMarkerAccess`
 
 ---
 ## Revoke Access
@@ -184,6 +186,8 @@ Fires when the denom metadata is set for a marker
 | EventMarkerSetDenomMetadata   | MetadataDenomUnits    | {array of  denom units}     |
 | EventMarkerSetDenomMetadata   | Administrator         | {admin account address}     |
 
+`provenance.marker.v1.EventMarkerSetDenomMetadata`
+
 ### Denom Unit Format
 
 Denom units have a specified exponent (1-18), a specified denom, and a list of optional aliases.  Example
@@ -195,7 +199,6 @@ aliases for `uhash` might be `microhash` or `µhash`
 | Exponent              | {uint}                   |
 | Aliases               | {array of denom strings} |
 
-
-`provenance.marker.v1.EventMarkerSetDenomMetadata`
+`provenance.marker.v1.EventDenomUnit`
 
 ---

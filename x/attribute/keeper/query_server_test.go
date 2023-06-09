@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -18,6 +19,8 @@ import (
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/attribute/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 type QueryServerTestSuite struct {
@@ -116,4 +119,83 @@ func (s *QueryServerTestSuite) TestAttributeAccountsQuery() {
 	allResults = append(allResults, results.Accounts...)
 
 	s.Assert().ElementsMatch(accounts, allResults)
+}
+
+func (s *QueryServerTestSuite) TestAccountData() {
+	// Use GetModuleAccount to ensure that the account exists.
+	attrModAcc := s.app.AccountKeeper.GetModuleAccount(s.ctx, types.ModuleName)
+	attrModAddr := attrModAcc.GetAddress()
+
+	err := s.app.NameKeeper.SetNameRecord(s.ctx, types.AccountDataName, attrModAddr, true)
+	s.Require().NoError(err, "SetNameRecord(%q)", types.AccountDataName)
+
+	addrWithoutData := sdk.AccAddress("addrWithoutData_____").String()
+	addrWithData := sdk.AccAddress("addrWithData________").String()
+	scopeIDWithData := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
+	markerAddrWithData := markertypes.MustGetMarkerAddress("mytestdenom").String()
+
+	addrData := "this is some data"
+	scopeIDData := "this is some scope data"
+	markerData := "this is some marker data"
+
+	err = s.app.AttributeKeeper.SetAccountData(s.ctx, addrWithData, addrData)
+	s.Require().NoError(err, "Setup: SetAccountData addrWithData")
+	err = s.app.AttributeKeeper.SetAccountData(s.ctx, scopeIDWithData, scopeIDData)
+	s.Require().NoError(err, "Setup: SetAccountData scopeIDWithData")
+	err = s.app.AttributeKeeper.SetAccountData(s.ctx, markerAddrWithData, markerData)
+	s.Require().NoError(err, "Setup: SetAccountData markerAddrWithData")
+
+	req := func(account string) *types.QueryAccountDataRequest {
+		return &types.QueryAccountDataRequest{Account: account}
+	}
+	resp := func(value string) *types.QueryAccountDataResponse {
+		return &types.QueryAccountDataResponse{Value: value}
+	}
+
+	tests := []struct {
+		name   string
+		req    *types.QueryAccountDataRequest
+		resp   *types.QueryAccountDataResponse
+		expErr string
+	}{
+		{
+			name:   "nil request",
+			req:    nil,
+			resp:   nil,
+			expErr: "rpc error: code = InvalidArgument desc = invalid request",
+		},
+		// Not sure how to cause GetAccountData to return an error.
+		{
+			name: "address without data",
+			req:  req(addrWithoutData),
+			resp: resp(""),
+		},
+		{
+			name: "account with data",
+			req:  req(addrWithData),
+			resp: resp(addrData),
+		},
+		{
+			name: "scope with data",
+			req:  req(scopeIDWithData),
+			resp: resp(scopeIDData),
+		},
+		{
+			name: "marker with data",
+			req:  req(markerAddrWithData),
+			resp: resp(markerData),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			actual, err := s.app.AttributeKeeper.AccountData(s.ctx, tc.req)
+			if len(tc.expErr) > 0 {
+				s.Require().EqualErrorf(err, tc.expErr, "AccountData error")
+			} else {
+				s.Require().NoError(err, "AccountData error")
+			}
+			s.Assert().Equal(tc.resp, actual, "AccountData response")
+		})
+	}
 }

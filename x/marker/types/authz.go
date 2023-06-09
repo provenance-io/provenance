@@ -31,7 +31,7 @@ func (a MarkerTransferAuthorization) Accept(_ sdk.Context, msg sdk.Msg) (authz.A
 		toAddress := msg.ToAddress
 		limitLeft, isNegative := a.DecreaseTransferLimit(msg.Amount)
 		if isNegative {
-			return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
+			return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrap("requested amount is more than spend limit")
 		}
 		shouldDelete := false
 		if limitLeft.IsZero() {
