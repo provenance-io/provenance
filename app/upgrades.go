@@ -71,7 +71,7 @@ var upgrades = map[string]appUpgrade{
 
 			removeP8eMemorializeContractFee(ctx, app)
 
-			removeInactiveValidators(ctx, app)
+			removeInactiveValidatorDelegations(ctx, app)
 
 			fixNameIndexEntries(ctx, app)
 
