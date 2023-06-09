@@ -1,10 +1,14 @@
 package simulation_test
 
 import (
+	"bytes"
+	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -32,7 +36,26 @@ func (s *SimTestSuite) SetupTest() {
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 }
 
-func (s *SimTestSuite) TestWeightedOperations() {
+// LogOperationMsg logs all fields of the provided operationMsg.
+func (s *SimTestSuite) LogOperationMsg(operationMsg simtypes.OperationMsg, msg string, args ...interface{}) {
+	msgFmt := "%s"
+	if len(bytes.TrimSpace(operationMsg.Msg)) == 0 {
+		msgFmt = "    %q"
+	}
+	fmtLines := []string{
+		fmt.Sprintf(msg, args...),
+		"operationMsg.Route:   %q",
+		"operationMsg.Name:    %q",
+		"operationMsg.Comment: %q",
+		"operationMsg.OK:      %t",
+		"operationMsg.Msg: " + msgFmt,
+	}
+	s.T().Logf(strings.Join(fmtLines, "\n"),
+		operationMsg.Route, operationMsg.Name, operationMsg.Comment, operationMsg.OK, string(operationMsg.Msg),
+	)
+}
+
+qfunc (s *SimTestSuite) TestWeightedOperations() {
 	cdc := s.app.AppCodec()
 	appParams := make(simtypes.AppParams)
 
@@ -57,19 +80,32 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		{simappparams.DefaultWeightSubmitDestroyTrigger, sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{})},
 	}
 
+	expNames := make([]string, len(expected))
+	for i, exp := range expected {
+		expNames[i] = exp.opMsgName
+	}
+
+	// Run all the ops and get the operation messages and their names.
+	opMsgs := make([]simtypes.OperationMsg, len(weightedOps))
+	actualNames := make([]string, len(weightedOps))
 	for i, w := range weightedOps {
-		operationMsg, _, _ := w.Op()(r, s.app.BaseApp, s.ctx, accs, "")
-		// the following checks are very much dependent from the ordering of the output given
-		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
-		// will fail
-		s.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
-		s.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
-		s.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
+		opMsgs[i], _, _ = w.Op()(r, s.app.BaseApp, s.ctx, accs, "")
+		actualNames[i] = opMsgs[i].Name
+	}
+
+	// First, make sure the op names are as expected since a failure there probably means the rest will fail.
+	// And it's probably easier to address when you've got a nice list comparison of names and their orderings.
+	s.Require().Equal(expNames, actualNames, "operation message names")
+
+	// Now assert that each entry was as expected.
+	for i := range expected {
+		s.Assert().Equal(expected[i].weight, weightedOps[i].Weight(), "weightedOps[%d].Weight", i)
+		s.Assert().Equal(expected[i].opMsgRoute, opMsgs[i].Route, "weightedOps[%d] operationMsg.Route", i)
+		s.Assert().Equal(expected[i].opMsgName, opMsgs[i].Name, "weightedOps[%d] operationMsg.Name", i)
 	}
 }
 
 func (s *SimTestSuite) TestSimulateMsgCreateTrigger() {
-
 	// setup 3 accounts
 	source := rand.NewSource(1)
 	r := rand.New(source)
@@ -80,27 +116,29 @@ func (s *SimTestSuite) TestSimulateMsgCreateTrigger() {
 
 	// bad operation
 	op := simulation.SimulateMsgCreateTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
-	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, []simtypes.Account{accounts[0]}, "")
-	s.Require().Equal(operationMsg, simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), "cannot choose 2 accounts because there are only 1"))
-	s.Require().Nil(futureOperations, "should be nil for invalid SimulateMsgCreateTrigger operation")
-	s.Require().Nil(err, "should have no error for a invalid SimulateMsgCreateTrigger operation")
+	expBadOp := simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), "cannot choose 2 accounts because there are only 1")
+	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts[0:1], "")
+	s.LogOperationMsg(operationMsg, "bad SimulateMsgCreateTrigger")
+	s.Assert().Equal(expBadOp, operationMsg, "bad operationMsg")
+	s.Assert().Len(futureOperations, 0, "bad future ops")
+	s.Assert().NoError(err, "bad SimulateMsgCreateTrigger op(...) error")
 
 	// execute operation
 	op = simulation.SimulateMsgCreateTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err = op(r, s.app.BaseApp, s.ctx, accounts, "")
-	s.Require().NoError(err, "should have no error for a valid SimulateMsgCreateTrigger operation")
+	s.Require().NoError(err, "SimulateMsgCreateTrigger op(...) error")
+	s.LogOperationMsg(operationMsg, "good")
 
 	var msg types.MsgCreateTriggerRequest
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	s.Require().NoError(s.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
-	s.Require().True(operationMsg.OK, operationMsg.String(), "should be an operation.OK for SimulateMsgCreateTrigger")
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "should have correct name for SimulateMsgCreateTrigger")
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "should have correct route for SimulateMsgCreateTrigger")
-	s.Require().Len(futureOperations, 0, "should have no future operations for SimulateMsgCreateTrigger")
+	s.Assert().True(operationMsg.OK, "operationMsg.OK")
+	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
+	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
 func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
-
 	// setup 3 accounts
 	source := rand.NewSource(1)
 	r := rand.New(source)
@@ -119,17 +157,18 @@ func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
 	// execute operation
 	op := simulation.SimulateMsgDestroyTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
-	s.Require().NoError(err, "should have no error for valid SimulateMsgDestroyTrigger")
+	s.Require().NoError(err, "SimulateMsgDestroyTrigger op(...) error")
+	s.LogOperationMsg(operationMsg, "good")
 
 	var msg types.MsgDestroyTriggerRequest
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	s.Require().NoError(s.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
-	s.Require().True(operationMsg.OK, operationMsg.String(), "should be an operation.OK for SimulateMsgDestroyTrigger")
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "should have the correct message name for SimulateMsgDestroyTrigger")
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "should have the correct message route for SimulateMsgDestroyTrigger")
-	s.Require().Equal(int(1000), int(msg.GetId()), "should have the correct id for SimulateMsgDestroyTrigger")
-	s.Require().Equal(accounts[0].Address.String(), msg.GetAuthority(), "should have the correct authority for SimulateMsgDestroyTrigger")
-	s.Require().Len(futureOperations, 0, "should have no future operations for SimulateMsgDestroyTrigger")
+	s.Assert().True(operationMsg.OK, "operationMsg.OK")
+	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
+	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(1000, int(msg.GetId()), "msg.GetId()")
+	s.Assert().Equal(accounts[0].Address.String(), msg.GetAuthority(), "msg.GetAuthority()")
+	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
 func (s *SimTestSuite) TestRandomAccs() {
