@@ -148,7 +148,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Deprecated: Route returns the message routing key for the trigger module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, triggerModule.NewHandler(am.keeper))
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the route we respond to for abci queries
