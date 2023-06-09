@@ -12,6 +12,7 @@ const (
 	DefaultWeightMsgUpdateAttribute         int = 5
 	DefaultWeightMsgDeleteAttribute         int = 5
 	DefaultWeightMsgDeleteDistinctAttribute int = 5
+	DefaultWeightMsgSetAccountData          int = 10
 	// Marker
 	DefaultWeightSupplyIncreaseProposalContent      int = 5
 	DefaultWeightSupplyDecreaseProposalContent      int = 5

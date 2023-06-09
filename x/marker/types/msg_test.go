@@ -614,3 +614,78 @@ func TestMsgUpdateForcedTransferRequestGetSigners(t *testing.T) {
 		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
 	})
 }
+
+func TestMsgSetAccountDataRequestValidateBasic(t *testing.T) {
+	addr := sdk.AccAddress("addr________________").String()
+	denom := "somedenom"
+
+	tests := []struct {
+		name string
+		msg  MsgSetAccountDataRequest
+		exp  string
+	}{
+		{
+			name: "control",
+			msg:  MsgSetAccountDataRequest{Denom: denom, Signer: addr},
+			exp:  "",
+		},
+		{
+			name: "no denom",
+			msg:  MsgSetAccountDataRequest{Denom: "", Signer: addr},
+			exp:  "invalid denom: empty denom string is not allowed",
+		},
+		{
+			name: "invalid denom",
+			msg:  MsgSetAccountDataRequest{Denom: "1denomcannotstartwithdigit", Signer: addr},
+			exp:  "invalid denom: 1denomcannotstartwithdigit",
+		},
+		{
+			name: "no signer",
+			msg:  MsgSetAccountDataRequest{Denom: denom, Signer: ""},
+			exp:  "invalid signer: empty address string is not allowed",
+		},
+		{
+			name: "invalid signer",
+			msg:  MsgSetAccountDataRequest{Denom: denom, Signer: "not1validsigner"},
+			exp:  "invalid signer: decoding bech32 failed: invalid character not part of charset: 105",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.exp) > 0 {
+				require.EqualErrorf(t, err, tc.exp, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgSetAccountDataRequestGetSigners(t *testing.T) {
+	t.Run("good signer", func(t *testing.T) {
+		msg := MsgSetAccountDataRequest{
+			Signer: sdk.AccAddress("good_address________").String(),
+		}
+		exp := []sdk.AccAddress{sdk.AccAddress("good_address________")}
+
+		var signers []sdk.AccAddress
+		testFunc := func() {
+			signers = msg.GetSigners()
+		}
+		require.NotPanics(t, testFunc, "GetSigners")
+		assert.Equal(t, exp, signers, "GetSigners")
+	})
+
+	t.Run("bad signer", func(t *testing.T) {
+		msg := MsgSetAccountDataRequest{
+			Signer: "bad_address________",
+		}
+
+		testFunc := func() {
+			_ = msg.GetSigners()
+		}
+		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
+	})
+}

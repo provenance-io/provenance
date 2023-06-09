@@ -2508,6 +2508,7 @@ func TestGetAuthzMessageTypeURLs(t *testing.T) {
 		boringCase(types.TypeURLMsgBindOSLocatorRequest),
 		boringCase(types.TypeURLMsgDeleteOSLocatorRequest),
 		boringCase(types.TypeURLMsgModifyOSLocatorRequest),
+		boringCase(types.TypeURLMsgSetAccountDataRequest),
 	}
 
 	for _, tc := range tests {

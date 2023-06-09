@@ -28,7 +28,7 @@ func GenMaxTotalSupply(r *rand.Rand) uint64 {
 
 // GenEnableGovernance returns a randomized EnableGovernance parameter.
 func GenEnableGovernance(r *rand.Rand) bool {
-	return r.Int63n(101) <= 50 // 50% chance of unrestricted names being enabled
+	return r.Int63n(100) < 50 // 50% chance of unrestricted names being enabled
 }
 
 // GenUnrestrictedDenomRegex returns a randomized length focused string for the unrestricted denom validation expression

@@ -74,8 +74,8 @@ func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.Conte
 			acc, _ := simtypes.RandomAcc(r, accs)
 			dest = acc.Address.String()
 		}
-		m := randomMarker(r, ctx, k)
-		if m == nil || !m.HasGovernanceEnabled() || m.GetStatus() > types.StatusActive {
+		m := randomGovMarkerWithMaxStatus(r, ctx, k, types.StatusActive)
+		if m == nil {
 			return nil
 		}
 
@@ -91,8 +91,8 @@ func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.Conte
 // SimulateCreateSupplyDecreaseProposalContent generates random create-root-name proposal content
 func SimulateCreateSupplyDecreaseProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-		m := randomMarker(r, ctx, k)
-		if m == nil || !m.HasGovernanceEnabled() || m.GetStatus() > types.StatusActive {
+		m := randomGovMarkerWithMaxStatus(r, ctx, k, types.StatusActive)
+		if m == nil {
 			return nil
 		}
 		currentSupply := k.CurrentEscrow(ctx, m).AmountOf(m.GetDenom())
@@ -111,15 +111,15 @@ func SimulateCreateSupplyDecreaseProposalContent(k keeper.Keeper) simtypes.Conte
 // SimulateCreateSetAdministratorProposalContent generates random create-root-name proposal content
 func SimulateCreateSetAdministratorProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-		m := randomMarker(r, ctx, k)
-		if m == nil || !m.HasGovernanceEnabled() {
+		m := randomGovMarkerWithMaxStatus(r, ctx, k, types.StatusDestroyed)
+		if m == nil {
 			return nil
 		}
 		return types.NewSetAdministratorProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
 			m.GetDenom(),
-			randomAccessGrants(r, accs, 2),
+			randomAccessGrants(r, accs, 2, m.GetMarkerType()),
 		)
 	}
 }
@@ -128,8 +128,8 @@ func SimulateCreateSetAdministratorProposalContent(k keeper.Keeper) simtypes.Con
 func SimulateCreateRemoveAdministratorProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		m := randomMarker(r, ctx, k)
-		if m == nil || !m.HasGovernanceEnabled() {
+		m := randomGovMarkerWithMaxStatus(r, ctx, k, types.StatusDestroyed)
+		if m == nil {
 			return nil
 		}
 		return types.NewRemoveAdministratorProposal(
@@ -144,8 +144,8 @@ func SimulateCreateRemoveAdministratorProposalContent(k keeper.Keeper) simtypes.
 // SimulateCreateChangeStatusProposalContent generates random create-root-name proposal content
 func SimulateCreateChangeStatusProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-		m := randomMarker(r, ctx, k)
-		if m == nil || !m.HasGovernanceEnabled() || m.GetStatus() > types.StatusCancelled {
+		m := randomGovMarkerWithMaxStatus(r, ctx, k, types.StatusCancelled)
+		if m == nil {
 			return nil
 		}
 		return types.NewChangeStatusProposal(
@@ -160,8 +160,8 @@ func SimulateCreateChangeStatusProposalContent(k keeper.Keeper) simtypes.Content
 // SimulateSetDenomMetadataProposalContent generates random set denom metadata proposal content
 func SimulateSetDenomMetadataProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-		m := randomMarker(r, ctx, k)
-		if m == nil || !m.HasGovernanceEnabled() {
+		m := randomGovMarkerWithMaxStatus(r, ctx, k, types.StatusDestroyed)
+		if m == nil {
 			return nil
 		}
 
@@ -205,4 +205,19 @@ func SimulateSetDenomMetadataProposalContent(k keeper.Keeper) simtypes.ContentSi
 			},
 		)
 	}
+}
+
+func randomGovMarkerWithMaxStatus(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, status types.MarkerStatus) types.MarkerAccountI {
+	var markers []types.MarkerAccountI
+	k.IterateMarkers(ctx, func(marker types.MarkerAccountI) (stop bool) {
+		if marker.HasGovernanceEnabled() && marker.GetStatus() <= status {
+			markers = append(markers, marker)
+		}
+		return false
+	})
+	if len(markers) == 0 {
+		return nil
+	}
+	idx := r.Intn(len(markers))
+	return markers[idx]
 }

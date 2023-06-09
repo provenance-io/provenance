@@ -21,6 +21,9 @@ All created/modified state objects specified by each message are defined within 
   - [Msg/AddFinalizeActivateMarkerRequest](#msgaddfinalizeactivatemarkerrequest)
   - [Msg/GrantAllowanceRequest](#msggrantallowancerequest)
   - [Msg/SupplyIncreaseProposalRequest](#msgsupplyincreaseproposalrequest)
+  - [Msg/UpdateRequiredAttributesRequest](#msgupdaterequiredattributesrequest)
+  - [Msg/UpdateForcedTransferRequest](#msgupdateforcedtransferrequest)
+  - [Msg/SetAccountDataRequest](#msgsetaccountdatarequest)
 
 
 
@@ -342,7 +345,7 @@ See also: [Governance: Supply Increase Proposal](./10_governance.md#supply-incre
 
 ## Msg/UpdateRequiredAttributesRequest
 
-UpdateRequiredAttributesRequest allows signers that have transfer authority or via gov proposal to add and remove required attributes from a restricted marker.
+UpdateRequiredAttributes allows signers that have transfer authority or via gov proposal to add and remove required attributes from a restricted marker.
 
 +++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L244-255
 
@@ -354,3 +357,36 @@ This service message is expected to fail if:
 - Add list has an attribute that already exist in current Required Attributes
 - Attributes cannot be normalized
 - Marker denom cannot be found or is not a restricted marker
+
+## Msg/UpdateForcedTransferRequest
+
+UpdateForcedTransfer allows for the activation or deactivation of forced transfers for a marker.
+This message must be submitted via governance proposal.
+
++++ https://github.com/provenance-io/provenance/blob/a830a8ecf24199469de52b92ee20475d6912f2eb/proto/provenance/marker/v1/tx.proto#L260-L272
+
++++ https://github.com/provenance-io/provenance/blob/a830a8ecf24199469de52b92ee20475d6912f2eb/proto/provenance/marker/v1/tx.proto#L274-L275
+
+This service message is expected to fail if:
+
+- The authority is not the governance module account address.
+- No marker with the provided denom exists.
+- The marker is not a restricted coin.
+- The marker does not allow governance control.
+
+## Msg/SetAccountDataRequest
+
+SetAccountData allows the association of some data (a string) with a marker.
+
++++ https://github.com/provenance-io/provenance/blob/e83f1955cba07e2ba87790c4487d22632ae9e69c/proto/provenance/marker/v1/tx.proto#L279-L291
+
++++ https://github.com/provenance-io/provenance/blob/e83f1955cba07e2ba87790c4487d22632ae9e69c/proto/provenance/marker/v1/tx.proto#L293-L294
+
+This endpoint can either be used directly or via governance proposal.
+
+This service message is expected to fail if:
+
+- No marker with the provided denom exists.
+- The signer is the governance module account address but the marker does not allow governance control.
+- The signer is not the governance module account and does not have deposit access on the marker.
+- The provided value is too long (as defined by the attribute module params).

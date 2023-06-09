@@ -29,10 +29,13 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	"github.com/provenance-io/provenance/x/marker/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -267,8 +270,23 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	genesisState[markertypes.ModuleName] = markerDataBz
 
+	// Pre-define an accountdata entry
+	attrData := attrtypes.DefaultGenesisState()
+	attrData.Attributes = append(attrData.Attributes,
+		attrtypes.Attribute{
+			Name:          attrtypes.AccountDataName,
+			Value:         []byte("Do not sell this coin."),
+			AttributeType: attrtypes.AttributeType_String,
+			Address:       markerData.Markers[5].Address, // Should be hodlercoin's address.
+		},
+	)
+	attrDataBz, err := cfg.Codec.MarshalJSON(attrData)
+	s.Require().NoError(err, "MarshalJSON(attrData)")
+	genesisState[attrtypes.ModuleName] = attrDataBz
+
 	cfg.GenesisState = genesisState
 	cfg.ChainID = antewrapper.SimAppChainID
+	cfg.TimeoutCommit = 500 * time.Millisecond
 
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err, "creating testnet")
@@ -529,6 +547,12 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			},
 			fmt.Sprintf("amount:\n  amount: \"%s\"\n  denom: %s", s.cfg.BondedTokens.Mul(sdk.NewInt(int64(s.cfg.NumValidators))), s.cfg.BondDenom),
 		},
+		{
+			name:           "account data",
+			cmd:            markercli.AccountDataCmd(),
+			args:           []string{"hodlercoin"},
+			expectedOutput: "value: Do not sell this coin.",
+		},
 	}
 	for _, tc := range testCases {
 		tc := tc
@@ -647,7 +671,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			[]string{
 				s.testnet.Validators[0].Address.String(),
 				"hotdog",
-				"mint,burn,transfer,withdraw",
+				"mint,burn,transfer,withdraw,deposit",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -859,6 +883,21 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
+			name: "set account data",
+			cmd:  markercli.GetCmdSetAccountData(),
+			args: []string{
+				"hotdog",
+				fmt.Sprintf("--%s", attrcli.FlagValue), "Not as good as corndog.",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
 			"remove access",
 			markercli.GetCmdDeleteAccess(),
 			[]string{
@@ -870,6 +909,22 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			name: "set account data via gov prop",
+			cmd:  markercli.GetCmdSetAccountData(),
+			args: []string{
+				"hotdog",
+				fmt.Sprintf("--%s", attrcli.FlagValue), "Better than corndog.",
+				fmt.Sprintf("--%s", markercli.FlagGovProposal),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 	}
 
@@ -887,6 +942,62 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+
+	// Now check some stuff to make sure it actually happened.
+
+	checks := []struct {
+		name   string
+		cmd    *cobra.Command
+		args   []string
+		expOut []string
+	}{
+		{
+			name:   "get account data with marker command",
+			cmd:    markercli.AccountDataCmd(),
+			args:   []string{"hotdog"},
+			expOut: []string{"value: Not as good as corndog."},
+		},
+		{
+			name:   "get account data with attribute command",
+			cmd:    attrcli.GetAccountDataCmd(),
+			args:   []string{markertypes.MustGetMarkerAddress("hotdog").String()},
+			expOut: []string{"value: Not as good as corndog."},
+		},
+		{
+			name: "gov prop created for account data",
+			cmd:  govcli.GetCmdQueryProposals(),
+			expOut: []string{
+				"'@type': /provenance.marker.v1.MsgSetAccountDataRequest",
+				"denom: hotdog",
+				"signer: " + authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				"value: Better than corndog.",
+			},
+		},
+	}
+
+	for _, check := range checks {
+		s.Run(check.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			cmdName := check.cmd.Name()
+			var outStr string
+			defer func() {
+				if s.T().Failed() {
+					s.T().Logf("Command: %s\nArgs: %q\nOutput:\n%s", cmdName, check.args, outStr)
+				}
+			}()
+
+			if check.args == nil {
+				check.args = []string{}
+			}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, check.cmd, check.args)
+			outStr = out.String()
+			s.Require().NoError(err, "ExecTestCLICmd %s command", cmdName)
+			for _, exp := range check.expOut {
+				s.Assert().Contains(outStr, exp, "%s command output", cmdName)
 			}
 		})
 	}

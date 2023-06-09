@@ -3,6 +3,7 @@ package cli_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -51,6 +52,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	pioconfig.SetProvenanceConfig("atom", 0)
 
 	cfg := testutil.DefaultTestNetworkConfig()
+	cfg.TimeoutCommit = 500 * time.Millisecond
 
 	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
