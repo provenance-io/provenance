@@ -10,14 +10,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/trigger"
+	"github.com/provenance-io/provenance/x/trigger/keeper"
 	"github.com/provenance-io/provenance/x/trigger/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
@@ -31,7 +31,7 @@ type KeeperTestSuite struct {
 	app         *simapp.App
 	ctx         sdk.Context
 	queryClient types.QueryClient
-	handler     sdk.Handler
+	msgServer   types.MsgServer
 
 	accountAddr      sdk.AccAddress
 	accountKey       *secp256k1.PrivKey
@@ -53,7 +53,7 @@ func (s *KeeperTestSuite) CreateAccounts(number int) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.CreateAccounts(4)
-	s.handler = trigger.NewHandler(s.app.TriggerKeeper)
+	s.msgServer = keeper.NewMsgServerImpl(s.app.TriggerKeeper)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now().UTC()})
 	s.ctx = s.ctx.WithBlockHeight(100)
 

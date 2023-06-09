@@ -32,17 +32,19 @@ func (s *KeeperTestSuite) TestCreateTrigger() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.ctx = s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999))
-			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-			result, err := s.handler(s.ctx, tc.request)
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999)).WithEventManager(em)
+			response, err := s.msgServer.CreateTrigger(ctx, tc.request)
 			s.ctx = s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999))
 
 			if len(tc.err) == 0 {
 				s.NoError(err, "should not throw an error for handler")
+				expResp := &types.MsgCreateTriggerResponse{Id: tc.expectedId}
 				resultEvent, _ := sdk.TypedEventToEvent(&types.EventTriggerCreated{
 					TriggerId: fmt.Sprintf("%d", tc.expectedId),
 				})
-				s.Equal(sdk.Events{resultEvent}, result.GetEvents(), "should have correct events for CreateTrigger")
+				s.Equal(expResp, response, "CreateTrigger response")
+				s.Equal(sdk.Events{resultEvent}, em.Events(), "should have correct events for CreateTrigger")
 				_, err = s.app.TriggerKeeper.GetEventListener(s.ctx, event.GetEventPrefix(), tc.expectedId)
 				s.NoError(err, "should have event listener for successful CreateTrigger")
 				_, err = s.app.TriggerKeeper.GetTrigger(s.ctx, tc.expectedId)
@@ -68,9 +70,10 @@ func (s *KeeperTestSuite) TestDestroyTrigger() {
 		types.NewCreateTriggerRequest(owner, event, []sdk.Msg{&action}),
 		types.NewCreateTriggerRequest(owner2, event, []sdk.Msg{&action}),
 	}
-	for _, request := range setupRequests {
+	for i, request := range setupRequests {
 		s.ctx = s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999))
-		s.handler(s.ctx, request)
+		_, err := s.msgServer.CreateTrigger(s.ctx, request)
+		s.Require().NoError(err, "Setup[%d]: CreateTrigger", i)
 	}
 
 	tests := []struct {
@@ -102,9 +105,9 @@ func (s *KeeperTestSuite) TestDestroyTrigger() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.ctx = s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999))
-			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-			result, err := s.handler(s.ctx, tc.request)
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999)).WithEventManager(em)
+			_, err := s.msgServer.DestroyTrigger(ctx, tc.request)
 			s.ctx = s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999))
 
 			if len(tc.err) == 0 {
@@ -112,7 +115,7 @@ func (s *KeeperTestSuite) TestDestroyTrigger() {
 				resultEvent, _ := sdk.TypedEventToEvent(&types.EventTriggerDestroyed{
 					TriggerId: fmt.Sprintf("%d", tc.request.GetId()),
 				})
-				s.Equal(sdk.Events{resultEvent}, result.GetEvents(), "should have correct events for TriggerDestroyRequest")
+				s.Equal(sdk.Events{resultEvent}, em.Events(), "should have correct events for TriggerDestroyRequest")
 				_, err = s.app.TriggerKeeper.GetEventListener(s.ctx, event.GetEventPrefix(), tc.request.GetId())
 				s.Error(err, "should not have an event listener after handling TriggerDestroyRequest")
 				_, err = s.app.TriggerKeeper.GetTrigger(s.ctx, tc.request.GetId())
