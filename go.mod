@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.1
 	github.com/CosmWasm/wasmd v0.29.0
-	github.com/CosmWasm/wasmvm v1.1.2
+	github.com/CosmWasm/wasmvm v1.2.4
 	github.com/armon/go-metrics v0.4.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.46.10
@@ -185,7 +185,7 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 // TODO: Required for v1.13.x: Remove this and update the require line above to have the new version once it's out. https://github.com/provenance-io/provenance/issues/1015
 // TODO: This is also required for https://github.com/provenance-io/provenance/issues/1414
-replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-4
+replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
 
 // TODO: Required for IBC Transfer Module. Remove this when they patch it to include our changes. https://github.com/provenance-io/provenance/issues/1100
 replace github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.1.1-pio-1
