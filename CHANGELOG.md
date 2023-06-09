@@ -58,6 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Create `rust` upgrade handlers [PR 1549](https://github.com/provenance-io/provenance/pull/1549).
 * Remove mutation of store from `attribute` keeper iterators [#1557](https://github.com/provenance-io/provenance/issues/1557).
 * Bumped ibc-go to 6.1.1 [#1563](https://github.com/provenance-io/provenance/pull/1563).
+* Update `marker` module spec documentation with new proto references [#1580](https://github.com/provenance-io/provenance/pull/1580).
 
 ### Bug Fixes
 
