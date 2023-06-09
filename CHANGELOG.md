@@ -74,6 +74,34 @@ marker escrow account if it does not have deposit access.  In order for it to wo
 
 ---
 
+## [v1.15.2](https://github.com/provenance-io/provenance/releases/tag/v1.15.2) - 2023-06-08
+
+### Bug Fixes
+
+* Address the [Barberry security advisory](https://forum.cosmos.network/t/cosmos-sdk-security-advisory-barberry/10825) [PR 1576](https://github.com/provenance-io/provenance/pull/1576)
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.15.1...v1.15.2
+
+---
+
+## [v1.15.1](https://github.com/provenance-io/provenance/releases/tag/v1.15.1) - 2023-06-01
+
+### Improvements
+
+* Bumped ibc-go to 6.1.1 [PR 1563](https://github.com/provenance-io/provenance/pull/1563).
+
+### Bug Fixes
+
+* Bring back some proto messages that were deleted but still needed for historical queries [#1554](https://github.com/provenance-io/provenance/issues/1554).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.15.0...v1.15.1
+
+---
+
 ## [v1.15.0](https://github.com/provenance-io/provenance/releases/tag/v1.15.0) - 2023-05-05
 
 ### Features
