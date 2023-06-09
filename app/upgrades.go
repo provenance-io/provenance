@@ -88,7 +88,7 @@ var upgrades = map[string]appUpgrade{
 
 			removeP8eMemorializeContractFee(ctx, app)
 
-			removeInactiveValidators(ctx, app)
+			removeInactiveValidatorDelegations(ctx, app)
 
 			fixNameIndexEntries(ctx, app)
 
@@ -232,10 +232,10 @@ func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
 	}
 }
 
-// removeInactiveValidators unbonds all delegations from inactive validators, triggering their removal from the validator set.
-func removeInactiveValidators(ctx sdk.Context, app *App) {
+// removeInactiveValidatorDelegations unbonds all delegations from inactive validators, triggering their removal from the validator set.
+func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 	unbondingTimeParam := app.StakingKeeper.GetParams(ctx).UnbondingTime
-	ctx.Logger().Info(fmt.Sprintf("removing any validator that has been inactive (unbonded) for %d hours", int64(unbondingTimeParam.Hours()/24)))
+	ctx.Logger().Info(fmt.Sprintf("removing all delegations from validators that have been inactive (unbonded) for %d days", int64(unbondingTimeParam.Hours()/24)))
 	removalCount := 0
 	validators := app.StakingKeeper.GetAllValidators(ctx)
 	for _, validator := range validators {
@@ -256,15 +256,11 @@ func removeInactiveValidators(ctx sdk.Context, app *App) {
 						panic(err)
 					}
 				}
-				// this should probably never be true, an unbonded delegator will be removed when the last delegator has called Unbond
-				if len(delegations) == 0 && validator.DelegatorShares.IsZero() {
-					app.StakingKeeper.RemoveValidator(ctx, valAddress)
-				}
 				removalCount++
 			}
 		}
 	}
-	ctx.Logger().Info(fmt.Sprintf("a total of %d inactive (unbonded) validators have been removed", removalCount))
+	ctx.Logger().Info(fmt.Sprintf("a total of %d inactive (unbonded) validators have had all their delegators removed", removalCount))
 }
 
 // fixNameIndexEntries fixes the name module's address to name index entries.
