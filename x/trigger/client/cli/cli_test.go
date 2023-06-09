@@ -79,7 +79,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	bankGenState.Params = banktypes.DefaultParams()
 	bankGenState.Balances = genBalances
 	bankDataBz, err := s.cfg.Codec.MarshalJSON(&bankGenState)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "should be able to marshal bank genesis state when setting up suite")
 	genesisState[banktypes.ModuleName] = bankDataBz
 
 	var authData authtypes.GenesisState
@@ -88,10 +88,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[0], nil, 3, 0))
 	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[1], nil, 4, 0))
 	accounts, err := authtypes.PackAccounts(genAccounts)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "should be able to pack accounts for genesis state when setting up suite")
 	authData.Accounts = accounts
 	authDataBz, err := s.cfg.Codec.MarshalJSON(&authData)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "should be able to marshal auth genesis state when setting up suite")
 	genesisState[authtypes.ModuleName] = authDataBz
 
 	now := time.Now().UTC()
@@ -156,7 +156,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	)
 
 	triggerDataBz, err := s.cfg.Codec.MarshalJSON(triggerData)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "should be able to marshal trigger genesis state when setting up suite")
 	genesisState[triggertypes.ModuleName] = triggerDataBz
 
 	s.cfg.GenesisState = genesisState
@@ -171,7 +171,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
@@ -180,12 +180,12 @@ func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
 	path := hd.CreateHDPath(118, 0, 0).String()
 	s.keyringDir = s.T().TempDir()
 	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "Keyring.New")
 	s.keyring = kr
 	for i := 0; i < number; i++ {
 		keyId := fmt.Sprintf("test_key%v", i)
 		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-		s.Require().NoError(err)
+		s.Require().NoError(err, "Keyring.NewMneomonic")
 		addr, err := info.GetAddress()
 		if err != nil {
 			panic(err)
@@ -207,7 +207,7 @@ func (s *IntegrationTestSuite) TestQueryTriggers() {
 		byId         bool
 		expectErrMsg string
 		expectedCode uint32
-		expectedIds  []uint64
+		expectedIds  []int
 	}{
 		{
 			name: "query all triggers",
@@ -217,7 +217,7 @@ func (s *IntegrationTestSuite) TestQueryTriggers() {
 			byId:         false,
 			expectErrMsg: "",
 			expectedCode: 0,
-			expectedIds:  []uint64{1, 2, 8, 9},
+			expectedIds:  []int{1, 2, 8, 9},
 		},
 		{
 			name: "query paginate with limit 1",
@@ -229,7 +229,7 @@ func (s *IntegrationTestSuite) TestQueryTriggers() {
 			byId:         false,
 			expectErrMsg: "",
 			expectedCode: 0,
-			expectedIds:  []uint64{1},
+			expectedIds:  []int{1},
 		},
 		{
 			name: "query paginate with excessive limit",
@@ -241,7 +241,7 @@ func (s *IntegrationTestSuite) TestQueryTriggers() {
 			byId:         false,
 			expectErrMsg: "",
 			expectedCode: 0,
-			expectedIds:  []uint64{1, 2, 8, 9},
+			expectedIds:  []int{1, 2, 8, 9},
 		},
 		{
 			name: "query trigger by id",
@@ -251,7 +251,7 @@ func (s *IntegrationTestSuite) TestQueryTriggers() {
 			byId:         true,
 			expectErrMsg: "",
 			expectedCode: 0,
-			expectedIds:  []uint64{1},
+			expectedIds:  []int{1},
 		},
 		{
 			name: "query trigger by invalid id",
@@ -261,7 +261,7 @@ func (s *IntegrationTestSuite) TestQueryTriggers() {
 			byId:         true,
 			expectErrMsg: "failed to query trigger 1000: rpc error: code = Unknown desc = trigger not found: unknown request",
 			expectedCode: types.ErrTriggerNotFound.ABCICode(),
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 	}
 
@@ -272,23 +272,23 @@ func (s *IntegrationTestSuite) TestQueryTriggers() {
 			clientCtx := s.network.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetTriggersCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
 			if len(tc.expectErrMsg) > 0 {
-				s.EqualError(err, tc.expectErrMsg)
+				s.EqualError(err, tc.expectErrMsg, "should have correct error message for invalid QueryTriggers")
 			} else if tc.byId {
 				var response types.QueryTriggerByIDResponse
-				s.NoError(err)
+				s.NoError(err, "should have no error message for valid QueryTriggerByID")
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
-				s.NoError(err)
-				s.Equal(tc.expectedIds[0], response.Trigger.Id)
+				s.NoError(err, "should have no error message when unmarshalling response to QueryTriggerByID")
+				s.Equal(int(tc.expectedIds[0]), int(response.Trigger.Id), "should return correct trigger for QueryTriggerByID")
 			} else {
 				var response types.QueryTriggersResponse
-				s.NoError(err)
+				s.NoError(err, "should have no error message for valid QueryTriggers")
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
-				s.NoError(err)
-				var triggerIDs []uint64
+				s.NoError(err, "should have no error message when unmarshalling response to QueryTriggers")
+				var triggerIDs []int
 				for _, rp := range response.Triggers {
-					triggerIDs = append(triggerIDs, rp.Id)
+					triggerIDs = append(triggerIDs, int(rp.Id))
 				}
-				s.ElementsMatch(tc.expectedIds, triggerIDs)
+				s.ElementsMatch(tc.expectedIds, triggerIDs, "should have all triggers for QueryTriggers")
 			}
 		})
 	}
@@ -301,7 +301,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 		fileContent  string
 		expectErrMsg string
 		expectedCode uint32
-		expectedIds  []uint64
+		expectedIds  []int
 	}{
 		{
 			name:         "create block height trigger",
@@ -309,7 +309,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			fileContent:  "",
 			expectErrMsg: "",
 			expectedCode: 0,
-			expectedIds:  []uint64{8},
+			expectedIds:  []int{8},
 		},
 		{
 			name:         "create invalid block height trigger for past block",
@@ -317,7 +317,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			fileContent:  "",
 			expectErrMsg: "",
 			expectedCode: types.ErrInvalidBlockHeight.ABCICode(),
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 		{
 			name:         "invalid file format",
@@ -325,7 +325,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			fileContent:  "abc",
 			expectErrMsg: "unable to parse message file: invalid character 'a' looking for beginning of value",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 		{
 			name:         "bad height",
@@ -333,7 +333,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			fileContent:  "",
 			expectErrMsg: "invalid block height \"abc\": strconv.Atoi: parsing \"abc\": invalid syntax",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 		{
 			name:         "invalid message format",
@@ -341,7 +341,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			fileContent:  "{}",
 			expectErrMsg: "unable to parse message file: Any JSON doesn't have '@type'",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 		{
 			name:   "unsupported action",
@@ -360,7 +360,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			}`, s.accountAddresses[0].String(), s.accountAddresses[1].String()),
 			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 		{
 			name:   "invalid internal message data",
@@ -379,7 +379,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			}`, "abc", s.accountAddresses[1].String()),
 			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 	}
 
@@ -425,12 +425,12 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {
-				s.Assert().EqualError(err, tc.expectErrMsg)
-				s.Assert().Equal(tc.expectedCode, response.Code)
+				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid AddBlockHeightTrigger request")
+				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for invalid AddBlockHeightTrigger request")
 			} else {
-				s.Assert().NoError(err)
-				s.Assert().NoError(marshalErr, out.String())
-				s.Assert().Equal(tc.expectedCode, response.Code)
+				s.Assert().NoError(err, "should have no error for valid AddBlockHeightTrigger request")
+				s.Assert().NoError(marshalErr, out.String(), "should have no error for marshaling request")
+				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for AddBlockHeightTrigger request")
 			}
 		})
 	}
@@ -443,7 +443,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 		txEvent      string
 		expectErrMsg string
 		expectedCode uint32
-		expectedIds  []uint64
+		expectedIds  []int
 	}{
 		{
 			name:         "create transaction trigger",
@@ -451,7 +451,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			txEvent:      "",
 			expectErrMsg: "",
 			expectedCode: 0,
-			expectedIds:  []uint64{8},
+			expectedIds:  []int{8},
 		},
 		{
 			name:         "invalid tx event content",
@@ -459,7 +459,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			txEvent:      "abc",
 			expectErrMsg: "unable to parse event file: invalid character 'a' looking for beginning of value",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 		{
 			name:         "invalid file format",
@@ -467,7 +467,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			txEvent:      "",
 			expectErrMsg: "unable to parse message file: invalid character 'a' looking for beginning of value",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 		{
 			name:         "invalid message format",
@@ -475,7 +475,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			txEvent:      "",
 			expectErrMsg: "unable to parse message file: Any JSON doesn't have '@type'",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 		{
 			name:    "unsupported action",
@@ -494,7 +494,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			}`, s.accountAddresses[0].String(), s.accountAddresses[1].String()),
 			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 		{
 			name:    "invalid internal message data",
@@ -513,7 +513,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			}`, "abc", s.accountAddresses[1].String()),
 			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 	}
 
@@ -580,12 +580,12 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {
-				s.Assert().EqualError(err, tc.expectErrMsg)
-				s.Assert().Equal(tc.expectedCode, response.Code)
+				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid AddTransactionTrigger request")
+				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for invalid AddTransactionTrigger request")
 			} else {
-				s.Assert().NoError(err)
-				s.Assert().NoError(marshalErr, out.String())
-				s.Assert().Equal(tc.expectedCode, response.Code)
+				s.Assert().NoError(err, "should have no error for valid AddTransactionTrigger request")
+				s.Assert().NoError(marshalErr, out.String(), "should have no marshalling error for valid AddTransactionTrigger request")
+				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for valid AddTransactionTrigger request")
 			}
 		})
 	}
@@ -598,7 +598,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 		fileContent  string
 		expectErrMsg string
 		expectedCode uint32
-		expectedIds  []uint64
+		expectedIds  []int
 	}{
 		{
 			name:         "create block time trigger",
@@ -606,7 +606,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			fileContent:  "",
 			expectErrMsg: "",
 			expectedCode: 0,
-			expectedIds:  []uint64{8},
+			expectedIds:  []int{8},
 		},
 		{
 			name:         "create invalid block time trigger for past block",
@@ -614,7 +614,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			fileContent:  "",
 			expectErrMsg: "",
 			expectedCode: types.ErrInvalidBlockTime.ABCICode(),
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 		{
 			name:         "invalid file format",
@@ -622,7 +622,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			fileContent:  "abc",
 			expectErrMsg: "unable to parse message file: invalid character 'a' looking for beginning of value",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 		{
 			name:         "invalid bad time",
@@ -630,7 +630,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			fileContent:  "",
 			expectErrMsg: "unable to parse time (abc) required format is RFC3339 (2006-01-02T15:04:05Z07:00): parsing time \"abc\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"abc\" as \"2006\"",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 		{
 			name:         "invalid message format",
@@ -638,7 +638,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			fileContent:  "{}",
 			expectErrMsg: "unable to parse message file: Any JSON doesn't have '@type'",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 		{
 			name:      "unsupported action",
@@ -657,7 +657,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			}`, s.accountAddresses[0].String(), s.accountAddresses[1].String()),
 			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 		{
 			name:      "invalid internal message data",
@@ -676,7 +676,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			}`, "abc", s.accountAddresses[1].String()),
 			expectErrMsg: "unable to parse message file: unable to resolve type URL /cosmos.bank.v1beta1.InvalidMessageSend",
 			expectedCode: 0,
-			expectedIds:  []uint64{},
+			expectedIds:  []int{},
 		},
 	}
 
@@ -722,12 +722,12 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {
-				s.Assert().EqualError(err, tc.expectErrMsg)
-				s.Assert().Equal(tc.expectedCode, response.Code)
+				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid AddBlockTimeTrigger request")
+				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for invalid AddBlockTimeTrigger request")
 			} else {
-				s.Assert().NoError(err)
-				s.Assert().NoError(marshalErr, out.String())
-				s.Assert().Equal(tc.expectedCode, response.Code)
+				s.Assert().NoError(err, "should have no error for valid AddBlockTimeTrigger request")
+				s.Assert().NoError(marshalErr, out.String(), "should have no marshal error for valid AddBlockTimeTrigger request")
+				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for valid AddBlockTimeTrigger request")
 			}
 		})
 	}
@@ -793,12 +793,12 @@ func (s *IntegrationTestSuite) TestDestroyTrigger() {
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {
-				s.Assert().EqualError(err, tc.expectErrMsg)
-				s.Assert().Equal(tc.expectedCode, response.Code)
+				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid DestroyTrigger request")
+				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for invalid DestroyTrigger request")
 			} else {
-				s.Assert().NoError(err)
-				s.Assert().NoError(marshalErr, out.String())
-				s.Assert().Equal(tc.expectedCode, response.Code)
+				s.Assert().NoError(err, "should have no error for valid DestroyTrigger request")
+				s.Assert().NoError(marshalErr, out.String(), "should have no marshal error for valid DestroyTrigger request")
+				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for valid DestroyTrigger request")
 			}
 		})
 	}
