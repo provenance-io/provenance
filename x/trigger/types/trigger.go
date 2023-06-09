@@ -31,6 +31,8 @@ type TriggerEventI interface {
 var _ TriggerEventI = &TransactionEvent{}
 var _ TriggerEventI = &BlockHeightEvent{}
 var _ TriggerEventI = &BlockTimeEvent{}
+var _ codectypes.UnpackInterfacesMessage = (*Trigger)(nil)
+var _ codectypes.UnpackInterfacesMessage = (*QueuedTrigger)(nil)
 
 // Matches checks if two TransactionEvents have the same type and matching attributes.
 func (e TransactionEvent) Matches(other abci.Event) bool {

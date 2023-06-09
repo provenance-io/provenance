@@ -7,6 +7,8 @@ import (
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
+var _ types.UnpackInterfacesMessage = (*GenesisState)(nil)
+
 func NewGenesisState(triggerID, queueStart uint64, triggers []Trigger, gasLimits []GasLimit, queuedTriggers []QueuedTrigger) *GenesisState {
 	return &GenesisState{
 		TriggerId:      triggerID,
@@ -88,16 +90,16 @@ func (gs GenesisState) Validate() error {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (gs GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	for _, t := range gs.Triggers {
+	for i, t := range gs.Triggers {
 		err := t.UnpackInterfaces(unpacker)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to unpack Triggers[%d]: %w", i, err)
 		}
 	}
-	for _, q := range gs.QueuedTriggers {
+	for i, q := range gs.QueuedTriggers {
 		err := q.UnpackInterfaces(unpacker)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to unpack QueuedTriggers[%d]: %w", i, err)
 		}
 	}
 	return nil

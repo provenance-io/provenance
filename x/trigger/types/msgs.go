@@ -10,6 +10,7 @@ import (
 
 var _ sdk.Msg = &MsgCreateTriggerRequest{}
 var _ sdk.Msg = &MsgDestroyTriggerRequest{}
+var _ codectypes.UnpackInterfacesMessage = (*MsgCreateTriggerRequest)(nil)
 
 // NewCreateTriggerRequest Creates a new trigger create request
 func NewCreateTriggerRequest(authority string, event TriggerEventI, msgs []sdk.Msg) *MsgCreateTriggerRequest {
