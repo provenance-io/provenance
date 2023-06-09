@@ -18,7 +18,7 @@ Markers are represented as a type that extends the `base_account` type of the `a
 marker is able to perform normal functions such as receiving and holding coins, and having a defined address that can
 be queried against for balance information from the `bank` module.
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/marker.proto#L28-L58
++++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/marker.proto#L28-L63
 ```go
 type MarkerAccount struct {
 	// cosmos base_account  including address and account number
@@ -171,4 +171,4 @@ and defines overall functioning of the marker module.
 
 - Params: `Paramsspace("marker") -> legacy_amino(params)`
 
-+++ https://github.com/provenance-io/provenance/blob/2e713a82ac71747e99975a98e902efe01286f591/proto/provenance/marker/v1/marker.proto#L14-L25
++++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/marker.proto#L14-L25
