@@ -143,7 +143,7 @@ func GetGasLimitFromBytes(bz []byte) uint64 {
 func GetEventNameBytes(name string) []byte {
 	eventName := strings.ToLower(strings.TrimSpace(name))
 	if len(eventName) == 0 {
-		panic(fmt.Sprintf("invalid event name %s", name))
+		panic(fmt.Sprintf("invalid event name: %s", name))
 	}
 	hash := sha256.Sum256([]byte(eventName))
 	return hash[:]

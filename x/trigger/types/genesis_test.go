@@ -13,21 +13,21 @@ func TestNewGenesisState(t *testing.T) {
 	trigger := NewTrigger(1, "owner", request.Event, request.Actions)
 	state := NewGenesisState(1, 2, []Trigger{trigger}, []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 2, Amount: 2}}, []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger}})
 
-	assert.Equal(t, uint64(1), state.TriggerId)
-	assert.Equal(t, uint64(2), state.QueueStart)
-	assert.Equal(t, []Trigger{trigger}, state.Triggers)
-	assert.Equal(t, []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 2, Amount: 2}}, state.GasLimits)
-	assert.Equal(t, []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger}}, state.QueuedTriggers)
+	assert.Equal(t, uint64(1), state.TriggerId, "trigger ids should match in NewGenesisState")
+	assert.Equal(t, uint64(2), state.QueueStart, "queue start should match in NewGenesisState")
+	assert.Equal(t, []Trigger{trigger}, state.Triggers, "triggers should match in NewGenesisState")
+	assert.Equal(t, []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 2, Amount: 2}}, state.GasLimits, "gas limits should match in NewGenesisState")
+	assert.Equal(t, []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger}}, state.QueuedTriggers, "queud triggers should match in NewGenesisState")
 }
 
 func TestDefaultGenesis(t *testing.T) {
 	state := DefaultGenesis()
 
-	assert.Equal(t, uint64(1), state.TriggerId)
-	assert.Equal(t, uint64(1), state.QueueStart)
-	assert.Equal(t, []Trigger{}, state.Triggers)
-	assert.Equal(t, []GasLimit{}, state.GasLimits)
-	assert.Equal(t, []QueuedTrigger{}, state.QueuedTriggers)
+	assert.Equal(t, uint64(1), state.TriggerId, "trigger ids should match in DefaultGenesis")
+	assert.Equal(t, uint64(1), state.QueueStart, "queue start should match in DefaultGenesis")
+	assert.Equal(t, []Trigger{}, state.Triggers, "triggers should be empty in DefaultGenesis")
+	assert.Equal(t, []GasLimit{}, state.GasLimits, "gas limits should be empty in default DefaultGenesis")
+	assert.Equal(t, []QueuedTrigger{}, state.QueuedTriggers, "queued triggers should be empty in default DefaultGenesis")
 }
 
 func TestGenesisStateValidate(t *testing.T) {
@@ -279,10 +279,10 @@ func TestGenesisStateValidate(t *testing.T) {
 			}
 			res := tc.state.Validate()
 			if len(tc.err) > 0 {
-				assert.EqualError(t, res, tc.err)
+				assert.EqualError(t, res, tc.err, "should have correct error message for GenesisStateValidate")
 			} else {
-				assert.NoError(t, res)
-				assert.Nil(t, res)
+				assert.NoError(t, res, "should have no error for successful GenesisStateValidate")
+				assert.Nil(t, res, "should have nil response for successful GenesisStateValidate")
 			}
 		})
 	}

@@ -22,9 +22,10 @@ func TestNewTrigger(t *testing.T) {
 	request := NewCreateTriggerRequest(authority, event, msgs)
 
 	trigger := NewTrigger(id, authority, request.GetEvent(), request.GetActions())
-	assert.Equal(t, authority, trigger.Owner)
-	assert.Equal(t, request.GetEvent(), trigger.Event)
-	assert.Equal(t, request.GetActions(), trigger.Actions)
+	assert.Equal(t, int(id), int(trigger.Id), "should have correct id for NewTrigger")
+	assert.Equal(t, authority, trigger.Owner, "should have correct owner for NewTrigger")
+	assert.Equal(t, request.GetEvent(), trigger.Event, "should have correct event for NewTrigger")
+	assert.Equal(t, request.GetActions(), trigger.Actions, "should have correct actions for NewTrigger")
 }
 
 func TestNewQueuedTrigger(t *testing.T) {
@@ -38,9 +39,9 @@ func TestNewQueuedTrigger(t *testing.T) {
 	trigger := NewTrigger(id, authority, request.GetEvent(), request.GetActions())
 	queuedTrigger := NewQueuedTrigger(trigger, time.Time{}, uint64(1))
 
-	assert.Equal(t, trigger, queuedTrigger.Trigger)
-	assert.Equal(t, time.Time{}, queuedTrigger.Time)
-	assert.Equal(t, uint64(1), queuedTrigger.BlockHeight)
+	assert.Equal(t, trigger, queuedTrigger.Trigger, "should have correct trigger for NewQueuedTrigger")
+	assert.Equal(t, time.Time{}, queuedTrigger.Time, "should have correct time for NewQueuedTrigger")
+	assert.Equal(t, int(1), int(queuedTrigger.BlockHeight), "should have correct height for NewQueuedTrigger")
 }
 
 func TestTransactionEventMatches(t *testing.T) {
@@ -90,7 +91,7 @@ func TestTransactionEventMatches(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.shouldMatch, tc.event.Matches(tc.event2))
+			assert.Equal(t, tc.shouldMatch, tc.event.Matches(tc.event2), "should have correct output for Matches")
 		})
 	}
 }
@@ -129,14 +130,14 @@ func TestAttributeMatches(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		assert.Equal(t, tc.shouldMatch, tc.attr1.Matches(tc.attr2))
+		assert.Equal(t, tc.shouldMatch, tc.attr1.Matches(tc.attr2), "should have correct output for Matches")
 		t.Run(tc.name, func(t *testing.T) {})
 	}
 }
 
 func TestTransactionEventGetEventPrefix(t *testing.T) {
 	event := TransactionEvent{Name: "customName"}
-	assert.Equal(t, "customName", event.GetEventPrefix())
+	assert.Equal(t, "customName", event.GetEventPrefix(), "should get correct prefix for GetEventPrefix")
 }
 
 func TestTransactionEventValidate(t *testing.T) {
@@ -176,9 +177,9 @@ func TestTransactionEventValidate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res := tc.event.Validate()
 			if len(tc.err) > 0 {
-				assert.EqualError(t, res, tc.err)
+				assert.EqualError(t, res, tc.err, "should have correct error for Validate")
 			} else {
-				assert.NoError(t, res)
+				assert.NoError(t, res, "should have no error for successful Validate")
 			}
 		})
 	}
@@ -204,9 +205,9 @@ func TestTransactionEventValidateContext(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res := tc.event.ValidateContext(ctx)
 			if len(tc.err) > 0 {
-				assert.EqualError(t, res, tc.err)
+				assert.EqualError(t, res, tc.err, "should have correct error for ValidateContext")
 			} else {
-				assert.NoError(t, res)
+				assert.NoError(t, res, "should have no error for successful ValidateContext")
 			}
 		})
 	}
@@ -242,9 +243,9 @@ func TestBlockHeightEventValidateContext(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res := tc.event.ValidateContext(ctx)
 			if len(tc.err) > 0 {
-				assert.EqualError(t, res, tc.err)
+				assert.EqualError(t, res, tc.err, "should have correct error for ValidateContext")
 			} else {
-				assert.NoError(t, res)
+				assert.NoError(t, res, "should have no error for succesful ValidateContext")
 			}
 		})
 	}
@@ -281,9 +282,9 @@ func TestBlockTimeEventValidateContext(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res := tc.event.ValidateContext(ctx)
 			if len(tc.err) > 0 {
-				assert.EqualError(t, res, tc.err)
+				assert.EqualError(t, res, tc.err, "should have correct error for ValidateContext")
 			} else {
-				assert.NoError(t, res)
+				assert.NoError(t, res, "should have no error for successful ValidateContext")
 			}
 		})
 	}
@@ -291,22 +292,22 @@ func TestBlockTimeEventValidateContext(t *testing.T) {
 
 func TestBlockHeightEventGetEventPrefix(t *testing.T) {
 	event := BlockHeightEvent{}
-	assert.Equal(t, BlockHeightPrefix, event.GetEventPrefix())
+	assert.Equal(t, BlockHeightPrefix, event.GetEventPrefix(), "should have correct prefix for GetEventPrefix")
 }
 
 func TestBlockHeightEventValidate(t *testing.T) {
 	event := BlockHeightEvent{}
-	assert.Nil(t, event.Validate())
+	assert.Nil(t, event.Validate(), "should always have successful validate")
 }
 
 func TestBlockTimeEventGetEventPrefix(t *testing.T) {
 	event := BlockTimeEvent{}
-	assert.Equal(t, BlockTimePrefix, event.GetEventPrefix())
+	assert.Equal(t, BlockTimePrefix, event.GetEventPrefix(), "should have correct prefix for GetEventPrefix")
 }
 
 func TestBlockTimeEventValidate(t *testing.T) {
 	event := BlockTimeEvent{}
-	assert.Nil(t, event.Validate())
+	assert.Nil(t, event.Validate(), "should always have successful validate")
 }
 
 func TestTriggerUnpackInterfaces(t *testing.T) {
@@ -331,9 +332,9 @@ func TestTriggerUnpackInterfaces(t *testing.T) {
 			msg := NewCreateTriggerRequest(tc.authority, tc.event, tc.msgs)
 			trigger := NewTrigger(uint64(1), tc.authority, msg.Event, msg.Actions)
 			err := trigger.UnpackInterfaces(cdc)
-			assert.NoError(t, err)
-			assert.Equal(t, tc.event, trigger.Event.GetCachedValue())
-			assert.Equal(t, tc.msgs[0], trigger.Actions[0].GetCachedValue())
+			assert.NoError(t, err, "should not throw an error for UnpackInterfaces")
+			assert.Equal(t, tc.event, trigger.Event.GetCachedValue(), "should have correct cached event after UnpackInterfaces")
+			assert.Equal(t, tc.msgs[0], trigger.Actions[0].GetCachedValue(), "should have correct cached actions after UnpackInterfaces")
 		})
 	}
 }
@@ -361,9 +362,9 @@ func TestQueuedTriggerUnpackInterfaces(t *testing.T) {
 			trigger := NewTrigger(uint64(1), tc.authority, msg.Event, msg.Actions)
 			queuedTrigger := NewQueuedTrigger(trigger, time.Time{}, uint64(1))
 			err := queuedTrigger.UnpackInterfaces(cdc)
-			assert.NoError(t, err)
-			assert.Equal(t, tc.event, queuedTrigger.Trigger.Event.GetCachedValue())
-			assert.Equal(t, tc.msgs[0], queuedTrigger.Trigger.Actions[0].GetCachedValue())
+			assert.NoError(t, err, "should have no error in successful UnpackInterfaces")
+			assert.Equal(t, tc.event, queuedTrigger.Trigger.Event.GetCachedValue(), "should have correct cached event after UnpackInterfaces")
+			assert.Equal(t, tc.msgs[0], queuedTrigger.Trigger.Actions[0].GetCachedValue(), "should have correct cached actions after UnpackInterfaces")
 		})
 	}
 }
@@ -406,13 +407,13 @@ func TestTriggerGetTriggerEventI(t *testing.T) {
 			}
 			trigger := NewTrigger(uint64(1), tc.authority, msg.Event, msg.Actions)
 			err := trigger.UnpackInterfaces(cdc)
-			assert.NoError(t, err)
+			assert.NoError(t, err, "should have no error from UnpackInterfaces")
 			triggerEvent, err := msg.GetTriggerEventI()
 			if tc.err == nil {
-				assert.NoError(t, err)
-				assert.Equal(t, tc.event, triggerEvent)
+				assert.NoError(t, err, "should not throw error in successful GetTriggerEvent")
+				assert.Equal(t, tc.event, triggerEvent, "should have expected event for GetTriggerEventI")
 			} else {
-				assert.Error(t, tc.err, err)
+				assert.Error(t, tc.err, err, "should have expected error from failing GetTriggerEventI")
 			}
 
 		})

@@ -24,7 +24,7 @@ func TestNewCreateTriggerRequest(t *testing.T) {
 	}
 
 	trigger := NewCreateTriggerRequest(expected.Authority, event, msgs)
-	assert.Equal(t, expected, trigger)
+	assert.Equal(t, expected, trigger, "should create the correct request with NewCreateTriggerRequest")
 }
 
 func TestNewDestroyTriggerRequest(t *testing.T) {
@@ -34,7 +34,7 @@ func TestNewDestroyTriggerRequest(t *testing.T) {
 	}
 
 	request := NewDestroyTriggerRequest(expected.Authority, expected.Id)
-	assert.Equal(t, &expected, request)
+	assert.Equal(t, &expected, request, "should create the correct request with DestroyTriggerRequest")
 }
 
 func TestMsgCreateTriggerRequestValidateBasic(t *testing.T) {
@@ -87,9 +87,9 @@ func TestMsgCreateTriggerRequestValidateBasic(t *testing.T) {
 			msg := NewCreateTriggerRequest(tc.authority, tc.event, tc.msgs)
 			err := msg.ValidateBasic()
 			if len(tc.err) > 0 {
-				assert.EqualError(t, err, tc.err)
+				assert.EqualError(t, err, tc.err, "should have error in ValidateBasic")
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "should have no error in successful ValidateBasic")
 			}
 		})
 	}
@@ -111,7 +111,7 @@ func TestMsgCreateTriggerRequestGetSigners(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			signers := tc.msg.GetSigners()
-			assert.Equal(t, tc.signers, signers)
+			assert.Equal(t, tc.signers, signers, "should receive the correct signers from GetSigners")
 		})
 	}
 }
@@ -137,9 +137,9 @@ func TestMsgCreateTriggerRequestUnpackInterfaces(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			msg := NewCreateTriggerRequest(tc.authority, tc.event, tc.msgs)
 			err := msg.UnpackInterfaces(cdc)
-			assert.NoError(t, err)
-			assert.Equal(t, tc.event, msg.Event.GetCachedValue())
-			assert.Equal(t, tc.msgs[0], msg.Actions[0].GetCachedValue())
+			assert.NoError(t, err, "should have no error for UnpackInterfaces")
+			assert.Equal(t, tc.event, msg.Event.GetCachedValue(), "should have cached value for Event in UnpackInterfaces")
+			assert.Equal(t, tc.msgs[0], msg.Actions[0].GetCachedValue(), "should have cached value for Actions in UnpackInterfaces")
 		})
 	}
 }
@@ -152,21 +152,21 @@ func TestMsgCreateTriggerRequestGetTriggerEventI(t *testing.T) {
 		authority string
 		event     TriggerEventI
 		msgs      []sdk.Msg
-		err       error
+		err       string
 	}{
 		{
 			name:      "valid - GetTriggerEventI",
 			authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 			event:     &BlockHeightEvent{},
 			msgs:      []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
-			err:       nil,
+			err:       "",
 		},
 		{
 			name:      "invalid - Returns error when interface is nil",
 			authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 			event:     nil,
 			msgs:      []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
-			err:       ErrNoTriggerEvent.Wrap("failed to get event"),
+			err:       "event is nil: trigger does not have event",
 		},
 	}
 
@@ -181,13 +181,13 @@ func TestMsgCreateTriggerRequestGetTriggerEventI(t *testing.T) {
 				msg.Event = nil
 			}
 			err := msg.UnpackInterfaces(cdc)
-			assert.NoError(t, err)
+			assert.NoError(t, err, "should have no error for UnpackInterfaces")
 			triggerEvent, err := msg.GetTriggerEventI()
-			if tc.err == nil {
-				assert.NoError(t, err)
-				assert.Equal(t, tc.event, triggerEvent)
+			if len(tc.err) == 0 {
+				assert.NoError(t, err, "should have no error for GetTriggerEventI after UnpackInterfaces")
+				assert.Equal(t, tc.event, triggerEvent, "should have matching events after UnpackInterfaces")
 			} else {
-				assert.Error(t, tc.err, err)
+				assert.EqualError(t, err, tc.err)
 			}
 
 		})
@@ -226,9 +226,9 @@ func TestMsgDestroyTriggerRequestValidateBasic(t *testing.T) {
 			msg := NewDestroyTriggerRequest(tc.authority, tc.id)
 			err := msg.ValidateBasic()
 			if tc.err != nil {
-				assert.Error(t, err)
+				assert.Error(t, err, "should receive correct error for failed ValidateBasic")
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "should receive no error for successful ValidateBasic")
 			}
 		})
 	}
@@ -236,35 +236,35 @@ func TestMsgDestroyTriggerRequestValidateBasic(t *testing.T) {
 
 func TestMsgDestroyTriggerRequestGetSigners(t *testing.T) {
 	tests := []struct {
-		name      string
-		authority string
-		id        uint64
-		panics    bool
+		name         string
+		authority    string
+		id           uint64
+		panicMessage string
 	}{
 		{
-			name:      "valid - success",
-			authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			id:        1,
-			panics:    false,
+			name:         "valid - success",
+			authority:    "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+			id:           1,
+			panicMessage: "",
 		},
 		{
-			name:      "invalid - bad addr",
-			authority: "badaddr",
-			id:        1,
-			panics:    true,
+			name:         "invalid - bad addr",
+			authority:    "badaddr",
+			id:           1,
+			panicMessage: "decoding bech32 failed: invalid bech32 string length 7",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			msg := NewDestroyTriggerRequest(tc.authority, tc.id)
-			if tc.panics {
-				assert.Panics(t, func() {
+			if len(tc.panicMessage) > 0 {
+				assert.PanicsWithError(t, tc.panicMessage, func() {
 					msg.GetSigners()
 				})
 			} else {
 				signers := msg.GetSigners()
-				assert.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(tc.authority)}, signers)
+				assert.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(tc.authority)}, signers, "should only contain authority in GetSigners")
 			}
 		})
 	}
