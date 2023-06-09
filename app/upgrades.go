@@ -247,14 +247,16 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 				ctx.Logger().Info(fmt.Sprintf("validator %v has been inactive (unbonded) for %d days and will be removed", validator.OperatorAddress, int64(inActiveDuration.Hours()/24)))
 				valAddress, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 				if err != nil {
-					panic(err)
+					ctx.Logger().Error(fmt.Sprintf("invalid operator address: %s: %v", validator.OperatorAddress, err))
+					continue
 				}
 				delegations := app.StakingKeeper.GetValidatorDelegations(ctx, valAddress)
 				for _, delegation := range delegations {
 					ctx.Logger().Info(fmt.Sprintf("undelegate delegator %v from validator %v of all shares (%v)", delegation.DelegatorAddress, validator.OperatorAddress, delegation.GetShares()))
 					_, err := app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), valAddress, delegation.GetShares())
 					if err != nil {
-						panic(err)
+						ctx.Logger().Error(fmt.Sprintf("failed to undelegate delegator %s from validator %s: %v", delegation.GetDelegatorAddr().String(), valAddress.String(), err))
+						continue
 					}
 				}
 				removalCount++
