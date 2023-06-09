@@ -91,6 +91,7 @@ type AppModule struct {
 	bankKeeper     bankkeeper.Keeper
 	feegrantKeeper feegrantkeeper.Keeper
 	govKeeper      types.GovKeeper
+	attrKeeper     types.AttrKeeper
 	registry       cdctypes.InterfaceRegistry
 }
 
@@ -102,6 +103,7 @@ func NewAppModule(
 	bankKeeper bankkeeper.Keeper,
 	feegrantKeeper feegrantkeeper.Keeper,
 	govKeeper types.GovKeeper,
+	attrKeeper types.AttrKeeper,
 	registry cdctypes.InterfaceRegistry,
 ) AppModule {
 	return AppModule{
@@ -111,6 +113,7 @@ func NewAppModule(
 		bankKeeper:     bankKeeper,
 		feegrantKeeper: feegrantKeeper,
 		govKeeper:      govKeeper,
+		attrKeeper:     attrKeeper,
 		registry:       registry,
 	}
 }
@@ -199,7 +202,8 @@ func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 // WeightedOperations returns the all the marker module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, codec.NewProtoCodec(am.registry), am.keeper, am.accountKeeper, am.bankKeeper, am.govKeeper,
+		simState.AppParams, simState.Cdc, codec.NewProtoCodec(am.registry),
+		am.keeper, am.accountKeeper, am.bankKeeper, am.govKeeper, am.attrKeeper,
 	)
 }
 

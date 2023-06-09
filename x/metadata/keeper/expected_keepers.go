@@ -19,3 +19,9 @@ type AuthzKeeper interface {
 	DeleteGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, msgType string) error
 	SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error
 }
+
+// AttrKeeper defines the attribute functionality needed by the metadata module.
+type AttrKeeper interface {
+	GetAccountData(ctx sdk.Context, addr string) (string, error)
+	SetAccountData(ctx sdk.Context, addr string, value string) error
+}

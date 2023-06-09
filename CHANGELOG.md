@@ -58,6 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Create `rust` upgrade handlers [PR 1549](https://github.com/provenance-io/provenance/pull/1549).
 * Remove mutation of store from `attribute` keeper iterators [#1557](https://github.com/provenance-io/provenance/issues/1557).
 * Bumped ibc-go to 6.1.1 [#1563](https://github.com/provenance-io/provenance/pull/1563).
+* Update `marker` module spec documentation with new proto references [#1580](https://github.com/provenance-io/provenance/pull/1580).
 * Bump Cosmos-SDK to [v0.46.13-pio-1](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.13-pio-1/RELEASE_NOTES.md) (from `v0.46.10-pio-4`) [PR 1585](https://github.com/provenance-io/provenance/pull/1585).
 
 ### Bug Fixes
@@ -115,6 +116,7 @@ marker escrow account if it does not have deposit access.  In order for it to wo
 * Repeated roles in a spec require multiple different parties [#1437](https://github.com/provenance-io/provenance/issues/1437).
 * The `PROVENANCE` role can only be used by smart contract addresses, and vice versa [#1381](https://github.com/provenance-io/provenance/issues/1381).
 * Add stargate query from wasm support [#1481](https://github.com/provenance-io/provenance/issues/1481).
+* Create methods for storing and retrieving account data for accounts, markers, and scopes [#1552](https://github.com/provenance-io/provenance/issues/1552).
 
 ### Improvements
 

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	cerrs "cosmossdk.io/errors"
 
@@ -17,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -28,6 +28,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channelutils "github.com/cosmos/ibc-go/v6/modules/core/04-channel/client/utils"
 
+	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -82,6 +83,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdAddFinalizeActivateMarker(),
 		GetCmdUpdateRequiredAttributes(),
 		GetCmdUpdateForcedTransfer(),
+		GetCmdSetAccountData(),
 	)
 	return txCmd
 }
@@ -507,7 +509,7 @@ func GetCmdWithdrawCoins() *cobra.Command {
 	return cmd
 }
 
-// Transfer handles a message to send coins from one account to another
+// GetNewTransferCmd implements the transfer command for marker funds.
 func GetNewTransferCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "transfer [from] [to] [coins]",
@@ -544,9 +546,9 @@ func GetNewTransferCmd() *cobra.Command {
 	return cmd
 }
 
-// TODO: refactor usage comments to be provenance specific
 // GetIbcTransferTxCmd returns the command to create a GetIbcTransferTxCmd transaction
 func GetIbcTransferTxCmd() *cobra.Command {
+	// TODO: refactor ibc-transfer usage comments to be provenance specific
 	cmd := &cobra.Command{
 		Use:   "ibc-transfer [src-port] [src-channel] [sender] [receiver] [amount]",
 		Short: "Transfer a restricted marker token through IBC",
@@ -715,7 +717,7 @@ func GetCmdGrantAuthorization() *cobra.Command {
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.Flags().String(FlagTransferLimit, "", "The total amount an account is allowed to tranfer on granter's behalf")
+	cmd.Flags().String(FlagTransferLimit, "", "The total amount an account is allowed to transfer on granter's behalf")
 	cmd.Flags().StringSlice(FlagAllowList, []string{}, "Allowed addresses grantee is allowed to send restricted coins separated by ,")
 	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	return cmd
@@ -986,62 +988,35 @@ func GetCmdUpdateRequiredAttributes() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			flagSet := cmd.Flags()
 
-			addReqValues, err := cmd.Flags().GetStringSlice(FlagAdd)
+			msg := &types.MsgUpdateRequiredAttributesRequest{Denom: args[0]}
+
+			msg.AddRequiredAttributes, err = flagSet.GetStringSlice(FlagAdd)
 			if err != nil {
 				return fmt.Errorf("incorrect value for %s flag.  Accepted: comma delimited list of attributes Error: %w", FlagAdd, err)
 			}
-			removeReqValues, err := cmd.Flags().GetStringSlice(FlagRemove)
+
+			msg.RemoveRequiredAttributes, err = flagSet.GetStringSlice(FlagRemove)
 			if err != nil {
 				return fmt.Errorf("incorrect value for %s flag.  Accepted: comma delimited list of attributes Error: %w", FlagRemove, err)
 			}
 
-			isGov, err := cmd.Flags().GetBool(FlagGovProposal)
-			if err != nil {
-				return err
+			authSetter := func(authority string) {
+				msg.TransferAuthority = authority
 			}
 
-			var transferAuth sdk.AccAddress
-			if !isGov {
-				transferAuth = clientCtx.GetFromAddress()
-			} else {
-				transferAuth = authtypes.NewModuleAddress(govtypes.ModuleName)
-			}
-
-			req := types.NewMsgUpdateRequiredAttributesRequest(args[0], transferAuth, removeReqValues, addReqValues)
-
-			var msg sdk.Msg
-			if isGov {
-				var govErr error
-				govMsg, govErr := govcli.ReadGovPropFlags(clientCtx, cmd.Flags())
-				if govErr != nil {
-					return govErr
-				}
-				anys, govErr := sdktx.SetMsgs([]sdk.Msg{req})
-				if govErr != nil {
-					return govErr
-				}
-
-				govMsg.Messages = anys
-				msg = govMsg
-			} else {
-				msg = req
-			}
-			if err = msg.ValidateBasic(); err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return generateOrBroadcastOptGovProp(clientCtx, flagSet, authSetter, msg)
 		},
 	}
 	cmd.Flags().StringSlice(FlagAdd, []string{}, "comma delimited list of required attributes to be added to restricted marker")
 	cmd.Flags().StringSlice(FlagRemove, []string{}, "comma delimited list of required attributes to be removed from restricted marker")
-	cmd.Flags().Bool(FlagGovProposal, false, "submit required attribute update as a gov proposal")
-	govcli.AddGovPropFlagsToCmd(cmd)
+	addOptGovPropFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
+// GetCmdUpdateForcedTransfer returns a CLI command for updating a marker's allow_force_transfer flag.
 func GetCmdUpdateForcedTransfer() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "update-forced-transfer <denom> {true|false}",
@@ -1071,6 +1046,45 @@ func GetCmdUpdateForcedTransfer() *cobra.Command {
 	}
 
 	govcli.AddGovPropFlagsToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdSetAccountData returns a CLI command for setting a marker's account data.
+func GetCmdSetAccountData() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "account-data <denom> " + attrcli.AccountDataFlagsUse,
+		Aliases: []string{"accountdata", "ad"},
+		Short:   "Set a marker's account data",
+		Example: fmt.Sprintf(`$ %[1]s tx marker account-data hotdogcoin --%[2]s "This is hotdogcoin's marker data.'"
+$ %[1]s tx marker account-data hotdogcoin --%[3]s hotdogcoin-account-data.json
+$ %[1]s tx marker account-data hotdogcoin --%[4]s`,
+			version.AppName, attrcli.FlagValue, attrcli.FlagFile, attrcli.FlagDelete),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+
+			msg := &types.MsgSetAccountDataRequest{Denom: strings.TrimSpace(args[0])}
+
+			msg.Value, err = attrcli.ReadAccountDataFlags(flagSet)
+			if err != nil {
+				return err
+			}
+
+			setSigner := func(signer string) {
+				msg.Signer = signer
+			}
+
+			return generateOrBroadcastOptGovProp(clientCtx, flagSet, setSigner, msg)
+		},
+	}
+
+	attrcli.AddAccountDataFlagsToCmd(cmd)
+	addOptGovPropFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -1176,4 +1190,39 @@ func ParseBoolStrict(input string) (bool, error) {
 		return false, nil
 	}
 	return false, fmt.Errorf("invalid boolean string: %q", input)
+}
+
+// addOptGovPropFlags adds the gov prop flags and a flag making them optional.
+// See also: generateOrBroadcastOptGovProp
+func addOptGovPropFlags(cmd *cobra.Command) {
+	cmd.Flags().Bool(FlagGovProposal, false, "submit message as a gov proposal")
+	govcli.AddGovPropFlagsToCmd(cmd)
+}
+
+// generateOrBroadcastOptGovProp either calls GenerateOrBroadcastTxCLIAsGovProp or GenerateOrBroadcastTxCLI
+// depending on the presence of --gov-proposal in the flags.
+// The authSetter is used to set the authority/signer of the provided message; if doing a gov prop,
+// it's set to the gov module's account address, otherwise it's the --from address.
+//
+// See also: addOptGovPropFlags.
+func generateOrBroadcastOptGovProp(clientCtx client.Context, flagSet *pflag.FlagSet, authSetter func(authority string), msg sdk.Msg) error {
+	isGov, err := flagSet.GetBool(FlagGovProposal)
+	if err != nil {
+		return err
+	}
+	if isGov {
+		authSetter(authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	} else {
+		authSetter(clientCtx.GetFromAddress().String())
+	}
+
+	err = msg.ValidateBasic()
+	if err != nil {
+		return err
+	}
+
+	if isGov {
+		return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+	}
+	return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
 }

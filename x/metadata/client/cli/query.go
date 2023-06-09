@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"regexp"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -56,6 +54,7 @@ func GetQueryCmd() *cobra.Command {
 		GetOwnershipCmd(),
 		GetValueOwnershipCmd(),
 		GetOSLocatorCmd(),
+		GetAccountDataCmd(),
 	)
 	return queryCmd
 }
@@ -582,6 +581,41 @@ func GetOSLocatorCmd() *cobra.Command {
 	return cmd
 }
 
+// GetAccountDataCmd is the CLI command for querying account data for metadata.
+func GetAccountDataCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "account-data <address>",
+		Short:   "Get the account data for a metadata address",
+		Aliases: []string{"accountdata", "ad"},
+		Example: fmt.Sprintf(`$ %s account-data scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`, cmdStart),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			req := &types.AccountDataRequest{}
+
+			req.MetadataAddr, err = types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid metadata address %q: %w", args[0], err)
+			}
+
+			resp, err := queryClient.AccountData(context.Background(), req)
+			if err != nil {
+				return fmt.Errorf("failed to query account data for metadata address %q: %w", args[0], err)
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
 // ------------ private funcs for actually querying and outputting ------------
 
 // outputParams calls the Params query and outputs the response.
@@ -638,7 +672,7 @@ func outputScopesAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
@@ -696,7 +730,7 @@ func outputSessionsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
@@ -751,7 +785,7 @@ func outputRecordsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
@@ -777,7 +811,7 @@ func outputOwnership(cmd *cobra.Command, address string) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
@@ -803,7 +837,7 @@ func outputValueOwnership(cmd *cobra.Command, address string) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
@@ -855,7 +889,7 @@ func outputScopeSpecsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
@@ -906,7 +940,7 @@ func outputContractSpecsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
@@ -981,7 +1015,7 @@ func outputRecordSpecsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
@@ -1051,7 +1085,7 @@ func outputOSLocatorsByURI(cmd *cobra.Command, uri string) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
@@ -1099,7 +1133,7 @@ func outputOSLocatorsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
@@ -1166,18 +1200,4 @@ func addIncludeRequestFlag(cmd *cobra.Command) {
 // The flag value is tied to the includeContractSpecs variable.
 func addIncludeContractSpecsFlag(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&includeContractSpecs, "include-contract-specs", false, "include contract specs in the output")
-}
-
-// sdk ReadPageRequest expects binary but we encoded to base64 in our marshaller
-func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
-	encoded, err := flagSet.GetString(flags.FlagPageKey)
-	if err != nil {
-		panic(err.Error())
-	}
-	raw, err := base64.StdEncoding.DecodeString(encoded)
-	if err != nil {
-		panic(err.Error())
-	}
-	_ = flagSet.Set(flags.FlagPageKey, string(raw))
-	return flagSet
 }

@@ -65,6 +65,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		},
 		func(signers []string) MetadataMsg { return &MsgWriteRecordSpecificationRequest{Signers: signers} },
 		func(signers []string) MetadataMsg { return &MsgDeleteRecordSpecificationRequest{Signers: signers} },
+		func(signers []string) MetadataMsg { return &MsgSetAccountDataRequest{Signers: signers} },
 	}
 
 	singleSignerMsgMakers := []func(signer string) MetadataMsg{
@@ -924,6 +925,78 @@ func TestBindOSLocatorInvalidURI(t *testing.T) {
 
 	err := bindRequestMsg.ValidateBasic()
 	require.Error(t, err)
+}
+
+func TestMsgSetAccountDataRequest_ValidateBasic(t *testing.T) {
+	addr1 := sdk.AccAddress("addr1_______________").String()
+	addr2 := sdk.AccAddress("addr2_______________").String()
+
+	uuid1 := uuid.MustParse("D0FE5658-1A5A-4428-BBEC-7034476C990B")
+	uuid2 := uuid.MustParse("C132796F-B2C1-4804-A77E-DD34F46E22F4")
+	recordName := "somerecord"
+
+	errNotScopeID := "invalid metadata address: only scope ids are supported"
+
+	msgWAddr := func(addr MetadataAddress) MsgSetAccountDataRequest {
+		return MsgSetAccountDataRequest{
+			MetadataAddr: addr,
+			Value:        "Some test value.",
+			Signers:      []string{addr1},
+		}
+	}
+
+	msgWSigners := func(signers ...string) MsgSetAccountDataRequest {
+		return MsgSetAccountDataRequest{
+			MetadataAddr: ScopeMetadataAddress(uuid1),
+			Value:        "Some other test value.",
+			Signers:      signers,
+		}
+	}
+
+	tests := []struct {
+		name string
+		msg  MsgSetAccountDataRequest
+		exp  string
+	}{
+		{name: "nil metadata address", msg: msgWAddr(nil), exp: "invalid metadata address: address is empty"},
+		{name: "empty metadata address", msg: msgWAddr(MetadataAddress{}), exp: "invalid metadata address: address is empty"},
+		{name: "scope id", msg: msgWAddr(ScopeMetadataAddress(uuid1))},
+		{name: "session id", msg: msgWAddr(SessionMetadataAddress(uuid1, uuid2)), exp: errNotScopeID},
+		{name: "record id", msg: msgWAddr(RecordMetadataAddress(uuid1, recordName)), exp: errNotScopeID},
+		{name: "scope spec id", msg: msgWAddr(ScopeSpecMetadataAddress(uuid1)), exp: errNotScopeID},
+		{name: "contract spec id", msg: msgWAddr(ContractSpecMetadataAddress(uuid1)), exp: errNotScopeID},
+		{name: "record spec id", msg: msgWAddr(RecordSpecMetadataAddress(uuid1, recordName)), exp: errNotScopeID},
+		{name: "no signers", msg: msgWSigners(), exp: "at least one signer is required"},
+		{name: "one signer", msg: msgWSigners(addr1)},
+		{name: "two signers", msg: msgWSigners(addr1, addr2)},
+		{
+			name: "empty value",
+			msg: MsgSetAccountDataRequest{
+				MetadataAddr: ScopeMetadataAddress(uuid1),
+				Value:        "",
+				Signers:      []string{addr1},
+			},
+		},
+		{
+			name: "super long value",
+			msg: MsgSetAccountDataRequest{
+				MetadataAddr: ScopeMetadataAddress(uuid1),
+				Value:        strings.Repeat("long-", 10000),
+				Signers:      []string{addr1},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.exp) > 0 {
+				assert.EqualError(t, err, tc.exp, "ValidateBasic")
+			} else {
+				assert.NoError(t, err, "ValidateBasic")
+			}
+		})
+	}
 }
 
 // TestPrintMessageTypeStrings just prints out all the MsgTypeURLs.

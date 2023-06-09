@@ -50,9 +50,7 @@ func (s msgServer) BindName(goCtx context.Context, msg *types.MsgBindNameRequest
 			return nil, sdkerrors.ErrInvalidRequest.Wrap(addrErr.Error())
 		}
 		if !s.Keeper.ResolvesTo(ctx, msg.Parent.Name, parentAddress) {
-			errm := "parent name is restricted and does not resolve to the provided parent address"
-			ctx.Logger().Error(errm)
-			return nil, sdkerrors.ErrInvalidRequest.Wrap(errm)
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("parent name %q is restricted and does not resolve to the provided parent address", record.Name)
 		}
 	}
 	// Combine names, normalize, and check for existing record

@@ -45,11 +45,9 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(s.T())
+	s.app = simapp.Setup(s.T())
 	s.startBlockTime = time.Now()
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: s.startBlockTime})
-	s.app = app
-	s.ctx = ctx
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: s.startBlockTime})
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
@@ -67,11 +65,11 @@ func (s *KeeperTestSuite) SetupTest() {
 	nameData.Params.MinSegmentLength = 3
 	nameData.Params.MaxSegmentLength = 12
 
-	app.NameKeeper.InitGenesis(ctx, nameData)
+	s.app.NameKeeper.InitGenesis(s.ctx, nameData)
 
-	params := app.AttributeKeeper.GetParams(ctx)
+	params := s.app.AttributeKeeper.GetParams(s.ctx)
 	params.MaxValueLength = 10
-	app.AttributeKeeper.SetParams(ctx, params)
+	s.app.AttributeKeeper.SetParams(s.ctx, params)
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 }
 
@@ -579,7 +577,7 @@ func (s *KeeperTestSuite) TestDeleteAttribute() {
 			name:      "no keys will be deleted with unknown name",
 			attrName:  "dne",
 			ownerAddr: s.user1Addr,
-			errorMsg:  "no keys deleted with name dne",
+			errorMsg:  `no keys deleted with name "dne"`,
 		},
 		{
 			name:        "attribute will be removed without error when name has been removed",
@@ -667,7 +665,7 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			name:      "dne",
 			value:     []byte("123456789"),
 			ownerAddr: s.user1Addr,
-			errorMsg:  `no keys deleted with name dne value "123456789"`,
+			errorMsg:  `no keys deleted with name "dne" and value "123456789"`,
 		},
 		{
 			testName:     "should successfully delete attribute",
@@ -684,7 +682,7 @@ func (s *KeeperTestSuite) TestDeleteDistinctAttribute() {
 			value:     []byte("123456789"),
 			accAddr:   s.user1,
 			ownerAddr: s.user1Addr,
-			errorMsg:  `no keys deleted with name example.attribute value "123456789"`,
+			errorMsg:  `no keys deleted with name "example.attribute" and value "123456789"`,
 		},
 		{
 			testName:     "should successfully delete attribute, with same key but different value",
@@ -941,7 +939,6 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 		s.Require().NoError(err)
 		s.Require().Equal(1, len(records))
 	})
-
 }
 
 func (s *KeeperTestSuite) TestPopulateAddressAttributeNameTable() {
@@ -1160,4 +1157,182 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr4.Name, attr4.GetAddressBytes())), "store.Get attr4 AttributeNameAddrKeyPrefix")
 	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr5)), "store.Get attr5 AttributeExpireKey")
 	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr5.Name, attr5.GetAddressBytes())), "store.Get attr5 AttributeNameAddrKeyPrefix")
+}
+
+func (s *KeeperTestSuite) TestGetAccountData() {
+	params := s.app.AttributeKeeper.GetParams(s.ctx)
+	if params.MaxValueLength < 100 {
+		defer s.app.AttributeKeeper.SetParams(s.ctx, params)
+		params.MaxValueLength = 100
+		s.app.AttributeKeeper.SetParams(s.ctx, params)
+	}
+
+	withoutAddr := sdk.AccAddress("withoutAddr_________").String()
+	withOneAddr := sdk.AccAddress("withOneAddr_________").String()
+	withTwoAddr := sdk.AccAddress("withTwoAddr_________").String()
+
+	withOneVal := "This is the value for the address with only one attribute."
+	withOneAttr := types.Attribute{
+		Name:          types.AccountDataName,
+		Value:         []byte(withOneVal),
+		AttributeType: types.AttributeType_String,
+		Address:       withOneAddr,
+	}
+	withTwoVal1 := "This is the first of two entries."
+	withTwoVal2 := "This is the second of two entries."
+	withTwoAttr1 := types.Attribute{
+		Name:          types.AccountDataName,
+		Value:         []byte(withTwoVal1),
+		AttributeType: types.AttributeType_String,
+		Address:       withTwoAddr,
+	}
+	withTwoAttr2 := types.Attribute{
+		Name:          types.AccountDataName,
+		Value:         []byte(withTwoVal2),
+		AttributeType: types.AttributeType_String,
+		Address:       withTwoAddr,
+	}
+
+	// Use GetModuleAccount to ensure that the account exists.
+	attrModAcc := s.app.AccountKeeper.GetModuleAccount(s.ctx, types.ModuleName)
+	attrModAddr := attrModAcc.GetAddress()
+
+	err := s.app.AttributeKeeper.SetAttribute(s.ctx, withOneAttr, attrModAddr)
+	s.Require().NoError(err, "SetAttribute withOneAttr")
+	err = s.app.AttributeKeeper.SetAttribute(s.ctx, withTwoAttr1, attrModAddr)
+	s.Require().NoError(err, "SetAttribute withTwoAttr1")
+	err = s.app.AttributeKeeper.SetAttribute(s.ctx, withTwoAttr2, attrModAddr)
+	s.Require().NoError(err, "SetAttribute withTwoAttr2")
+
+	tests := []struct {
+		name   string
+		addr   string
+		nameK  *mockNameKeeper
+		expVal string
+		expErr string
+	}{
+		{name: "no data exists", addr: withoutAddr},
+		{name: "one entry", addr: withOneAddr, expVal: withOneVal},
+		// Which of these it is depends on how they hash, and withTwoVal1 hashes lower than 2.
+		{name: "two entries", addr: withTwoAddr, expVal: withTwoVal1},
+		{
+			name:   "error getting account attributes",
+			addr:   withOneAddr,
+			nameK:  newMockNameKeeper(&s.app.NameKeeper).WithGetRecordByNameError("injected error"),
+			expErr: `error finding ` + types.AccountDataName + ` for "` + withOneAddr + `": injected error`,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			attrKeeper := s.app.AttributeKeeper
+			if tc.nameK != nil {
+				attrKeeper = attrKeeper.WithNameKeeper(tc.nameK)
+			}
+			val, err := attrKeeper.GetAccountData(s.ctx, tc.addr)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualErrorf(err, tc.expErr, "GetAccountData error")
+			} else {
+				s.Assert().NoError(err, "GetAccountData error")
+			}
+			s.Assert().Equal(tc.expVal, val, "GetAccountData value")
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSetAccountData() {
+	params := s.app.AttributeKeeper.GetParams(s.ctx)
+	if params.MaxValueLength < 100 {
+		defer s.app.AttributeKeeper.SetParams(s.ctx, params)
+		params.MaxValueLength = 100
+		s.app.AttributeKeeper.SetParams(s.ctx, params)
+	}
+
+	hasNoneAddr := sdk.AccAddress("hasNoneAddr_________").String()
+	alreadyHasOneAddr := sdk.AccAddress("alreadyHasOneAddr___").String()
+	alreadyHasTwoAddr := sdk.AccAddress("alreadyHasTwoAddr___").String()
+
+	alreadyHasOneAttr := types.Attribute{
+		Name:          types.AccountDataName,
+		Value:         []byte("alreadyHasOneAttr original value"),
+		AttributeType: types.AttributeType_String,
+		Address:       alreadyHasOneAddr,
+	}
+	alreadyHasTwoAttr1 := types.Attribute{
+		Name:          types.AccountDataName,
+		Value:         []byte("alreadyHasTwoAddr first original value"),
+		AttributeType: types.AttributeType_String,
+		Address:       alreadyHasTwoAddr,
+	}
+	alreadyHasTwoAttr2 := types.Attribute{
+		Name:          types.AccountDataName,
+		Value:         []byte("alreadyHasTwoAddr second original value"),
+		AttributeType: types.AttributeType_String,
+		Address:       alreadyHasTwoAddr,
+	}
+
+	// Use GetModuleAccount to ensure that the account exists.
+	attrModAcc := s.app.AccountKeeper.GetModuleAccount(s.ctx, types.ModuleName)
+	attrModAddr := attrModAcc.GetAddress()
+
+	err := s.app.AttributeKeeper.SetAttribute(s.ctx, alreadyHasOneAttr, attrModAddr)
+	s.Require().NoError(err, "SetAttribute alreadyHasOneAttr")
+	err = s.app.AttributeKeeper.SetAttribute(s.ctx, alreadyHasTwoAttr1, attrModAddr)
+	s.Require().NoError(err, "SetAttribute alreadyHasTwoAttr1")
+	err = s.app.AttributeKeeper.SetAttribute(s.ctx, alreadyHasTwoAttr2, attrModAddr)
+	s.Require().NoError(err, "SetAttribute alreadyHasTwoAttr2")
+
+	tests := []struct {
+		name  string
+		addr  string
+		value string
+		// I've no idea how to make any of GetAttributes, DeleteAttribute, or SetAttribute error.
+		// Those are the only error conditions, so the expected error is omitted as a test param.
+	}{
+		{
+			name:  "does not yet have data",
+			addr:  hasNoneAddr,
+			value: "This is a new value for hasNoneAddr.",
+		},
+		{
+			name:  "overwrites existing entry",
+			addr:  alreadyHasOneAddr,
+			value: "This is a new value for alreadyHasOneAddr.",
+		},
+		{
+			name:  "extra entries deleted",
+			addr:  alreadyHasTwoAddr,
+			value: "This is now the one and only entry for alreadyHasTwoAddr.",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			err = s.app.AttributeKeeper.SetAccountData(ctx, tc.addr, tc.value)
+			s.Require().NoError(err, "SetAccountData")
+
+			// Make sure there's exactly one attribute now and it has the expected value.
+			attrs, err := s.app.AttributeKeeper.GetAttributes(s.ctx, tc.addr, types.AccountDataName)
+			s.Require().NoError(err, "GetAttributes(%q) after SetAccountData", types.AccountDataName)
+			if s.Assert().Len(attrs, 1, "attributes after SetAccountData") {
+				s.Assert().Equal(types.AccountDataName, attrs[0].Name, "attribute Name")
+				s.Assert().Equal(tc.addr, attrs[0].Address, "attribute Address")
+				s.Assert().Equal(types.AttributeType_String, attrs[0].AttributeType, "attribute AttributeType")
+				s.Assert().Equal(tc.value, string(attrs[0].Value), "attribute Value")
+			}
+
+			// Make sure the last event emitted is about updating account data.
+			events := em.Events()
+			if s.Assert().GreaterOrEqual(len(events), 1, "events emitted during SetAccountData") {
+				event := events[len(events)-1]
+				s.Assert().Contains(event.Type, "EventAccountDataUpdated", "event type")
+				if s.Assert().Len(event.Attributes, 1, "event attributes") {
+					s.Assert().Equal("account", string(event.Attributes[0].Key), "attribute key")
+					s.Assert().Equal(`"`+tc.addr+`"`, string(event.Attributes[0].Value), "attribute value")
+				}
+			}
+		})
+	}
 }

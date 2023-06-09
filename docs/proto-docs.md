@@ -6,6 +6,7 @@
 
 - [provenance/attribute/v1/attribute.proto](#provenance/attribute/v1/attribute.proto)
     - [Attribute](#provenance.attribute.v1.Attribute)
+    - [EventAccountDataUpdated](#provenance.attribute.v1.EventAccountDataUpdated)
     - [EventAttributeAdd](#provenance.attribute.v1.EventAttributeAdd)
     - [EventAttributeDelete](#provenance.attribute.v1.EventAttributeDelete)
     - [EventAttributeDistinctDelete](#provenance.attribute.v1.EventAttributeDistinctDelete)
@@ -20,6 +21,8 @@
     - [GenesisState](#provenance.attribute.v1.GenesisState)
   
 - [provenance/attribute/v1/query.proto](#provenance/attribute/v1/query.proto)
+    - [QueryAccountDataRequest](#provenance.attribute.v1.QueryAccountDataRequest)
+    - [QueryAccountDataResponse](#provenance.attribute.v1.QueryAccountDataResponse)
     - [QueryAttributeAccountsRequest](#provenance.attribute.v1.QueryAttributeAccountsRequest)
     - [QueryAttributeAccountsResponse](#provenance.attribute.v1.QueryAttributeAccountsResponse)
     - [QueryAttributeRequest](#provenance.attribute.v1.QueryAttributeRequest)
@@ -40,6 +43,8 @@
     - [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse)
     - [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest)
     - [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse)
+    - [MsgSetAccountDataRequest](#provenance.attribute.v1.MsgSetAccountDataRequest)
+    - [MsgSetAccountDataResponse](#provenance.attribute.v1.MsgSetAccountDataResponse)
     - [MsgUpdateAttributeExpirationRequest](#provenance.attribute.v1.MsgUpdateAttributeExpirationRequest)
     - [MsgUpdateAttributeExpirationResponse](#provenance.attribute.v1.MsgUpdateAttributeExpirationResponse)
     - [MsgUpdateAttributeRequest](#provenance.attribute.v1.MsgUpdateAttributeRequest)
@@ -93,6 +98,8 @@
     - [Balance](#provenance.marker.v1.Balance)
     - [QueryAccessRequest](#provenance.marker.v1.QueryAccessRequest)
     - [QueryAccessResponse](#provenance.marker.v1.QueryAccessResponse)
+    - [QueryAccountDataRequest](#provenance.marker.v1.QueryAccountDataRequest)
+    - [QueryAccountDataResponse](#provenance.marker.v1.QueryAccountDataResponse)
     - [QueryAllMarkersRequest](#provenance.marker.v1.QueryAllMarkersRequest)
     - [QueryAllMarkersResponse](#provenance.marker.v1.QueryAllMarkersResponse)
     - [QueryDenomMetadataRequest](#provenance.marker.v1.QueryDenomMetadataRequest)
@@ -138,6 +145,8 @@
     - [MsgIbcTransferResponse](#provenance.marker.v1.MsgIbcTransferResponse)
     - [MsgMintRequest](#provenance.marker.v1.MsgMintRequest)
     - [MsgMintResponse](#provenance.marker.v1.MsgMintResponse)
+    - [MsgSetAccountDataRequest](#provenance.marker.v1.MsgSetAccountDataRequest)
+    - [MsgSetAccountDataResponse](#provenance.marker.v1.MsgSetAccountDataResponse)
     - [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest)
     - [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse)
     - [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest)
@@ -246,6 +255,8 @@
     - [PublicKeyType](#provenance.metadata.v1.p8e.PublicKeyType)
   
 - [provenance/metadata/v1/query.proto](#provenance/metadata/v1/query.proto)
+    - [AccountDataRequest](#provenance.metadata.v1.AccountDataRequest)
+    - [AccountDataResponse](#provenance.metadata.v1.AccountDataResponse)
     - [ContractSpecificationRequest](#provenance.metadata.v1.ContractSpecificationRequest)
     - [ContractSpecificationResponse](#provenance.metadata.v1.ContractSpecificationResponse)
     - [ContractSpecificationWrapper](#provenance.metadata.v1.ContractSpecificationWrapper)
@@ -330,6 +341,8 @@
     - [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse)
     - [MsgP8eMemorializeContractRequest](#provenance.metadata.v1.MsgP8eMemorializeContractRequest)
     - [MsgP8eMemorializeContractResponse](#provenance.metadata.v1.MsgP8eMemorializeContractResponse)
+    - [MsgSetAccountDataRequest](#provenance.metadata.v1.MsgSetAccountDataRequest)
+    - [MsgSetAccountDataResponse](#provenance.metadata.v1.MsgSetAccountDataResponse)
     - [MsgUpdateValueOwnersRequest](#provenance.metadata.v1.MsgUpdateValueOwnersRequest)
     - [MsgUpdateValueOwnersResponse](#provenance.metadata.v1.MsgUpdateValueOwnersResponse)
     - [MsgWriteContractSpecificationRequest](#provenance.metadata.v1.MsgWriteContractSpecificationRequest)
@@ -487,6 +500,21 @@ Attribute holds a typed key/value structure for data associated with an account
 | `attribute_type` | [AttributeType](#provenance.attribute.v1.AttributeType) |  | The attribute value type. |
 | `address` | [string](#string) |  | The address the attribute is bound to |
 | `expiration_date` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that an attribute will expire. |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.EventAccountDataUpdated"></a>
+
+### EventAccountDataUpdated
+EventAccountDataUpdated event emitted when accountdata is set, updated, or deleted.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  |  |
 
 
 
@@ -691,10 +719,40 @@ GenesisState defines the attribute module's genesis state.
 
 
 
+<a name="provenance.attribute.v1.QueryAccountDataRequest"></a>
+
+### QueryAccountDataRequest
+QueryAccountDataRequest is the request type for the Query/AccountData method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address of the account to get the data for |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.QueryAccountDataResponse"></a>
+
+### QueryAccountDataResponse
+QueryAccountDataResponse is the response type for the Query/AccountData method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  | value is the accountdata attribute value for the requested account. |
+
+
+
+
+
+
 <a name="provenance.attribute.v1.QueryAttributeAccountsRequest"></a>
 
 ### QueryAttributeAccountsRequest
-QueryAttributeAccountsRequest is the response type for the Query/AccountsByAttribute method.
+QueryAttributeAccountsRequest is the request type for the Query/AttributeAccounts method.
 
 
 | Field | Type | Label | Description |
@@ -710,7 +768,7 @@ QueryAttributeAccountsRequest is the response type for the Query/AccountsByAttri
 <a name="provenance.attribute.v1.QueryAttributeAccountsResponse"></a>
 
 ### QueryAttributeAccountsResponse
-QueryAttributeAccountsResponse is the response type for the Query/AccountsByAttribute method.
+QueryAttributeAccountsResponse is the response type for the Query/AttributeAccounts method.
 
 
 | Field | Type | Label | Description |
@@ -776,7 +834,7 @@ QueryAttributesRequest is the request type for the Query/Attributes method.
 <a name="provenance.attribute.v1.QueryAttributesResponse"></a>
 
 ### QueryAttributesResponse
-QueryAttributesResponse is the response type for the Query/Attribute method.
+QueryAttributesResponse is the response type for the Query/Attributes method.
 
 
 | Field | Type | Label | Description |
@@ -818,7 +876,7 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 <a name="provenance.attribute.v1.QueryScanRequest"></a>
 
 ### QueryScanRequest
-QueryScanRequest is the request type for the Query/Scan account attributes method.
+QueryScanRequest is the request type for the Query/Scan method.
 
 
 | Field | Type | Label | Description |
@@ -835,7 +893,7 @@ QueryScanRequest is the request type for the Query/Scan account attributes metho
 <a name="provenance.attribute.v1.QueryScanResponse"></a>
 
 ### QueryScanResponse
-QueryScanResponse is the response type for the Query/Attribute method.
+QueryScanResponse is the response type for the Query/Scan method.
 
 
 | Field | Type | Label | Description |
@@ -867,6 +925,7 @@ Query defines the gRPC querier service for attribute module.
 | `Attributes` | [QueryAttributesRequest](#provenance.attribute.v1.QueryAttributesRequest) | [QueryAttributesResponse](#provenance.attribute.v1.QueryAttributesResponse) | Attributes queries attributes on a given account (address) for any defined attributes | GET|/provenance/attribute/v1/attributes/{account}|
 | `Scan` | [QueryScanRequest](#provenance.attribute.v1.QueryScanRequest) | [QueryScanResponse](#provenance.attribute.v1.QueryScanResponse) | Scan queries attributes on a given account (address) for any that match the provided suffix | GET|/provenance/attribute/v1/attribute/{account}/scan/{suffix}|
 | `AttributeAccounts` | [QueryAttributeAccountsRequest](#provenance.attribute.v1.QueryAttributeAccountsRequest) | [QueryAttributeAccountsResponse](#provenance.attribute.v1.QueryAttributeAccountsResponse) | AttributeAccounts queries accounts on a given attribute name | GET|/provenance/attribute/v1/accounts/{attribute_name}|
+| `AccountData` | [QueryAccountDataRequest](#provenance.attribute.v1.QueryAccountDataRequest) | [QueryAccountDataResponse](#provenance.attribute.v1.QueryAccountDataResponse) | AccountData returns the accountdata for a specified account. | GET|/provenance/attribute/v1/accountdata/{account}|
 
  <!-- end services -->
 
@@ -882,7 +941,7 @@ Query defines the gRPC querier service for attribute module.
 <a name="provenance.attribute.v1.MsgAddAttributeRequest"></a>
 
 ### MsgAddAttributeRequest
-MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account
+MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account.
 Attributes may only be set in an account by the account that the attribute name resolves to.
 
 
@@ -903,7 +962,7 @@ Attributes may only be set in an account by the account that the attribute name 
 <a name="provenance.attribute.v1.MsgAddAttributeResponse"></a>
 
 ### MsgAddAttributeResponse
-MsgAddAttributeResponse defines the Msg/Vote response type.
+MsgAddAttributeResponse defines the Msg/AddAttribute response type.
 
 
 
@@ -914,7 +973,7 @@ MsgAddAttributeResponse defines the Msg/Vote response type.
 
 ### MsgDeleteAttributeRequest
 MsgDeleteAttributeRequest defines a message to delete an attribute from an account
-Attributes may only be remove from an account by the account that the attribute name resolves to.
+Attributes may only be removed from an account by the account that the attribute name resolves to.
 
 
 | Field | Type | Label | Description |
@@ -931,7 +990,7 @@ Attributes may only be remove from an account by the account that the attribute 
 <a name="provenance.attribute.v1.MsgDeleteAttributeResponse"></a>
 
 ### MsgDeleteAttributeResponse
-MsgDeleteAttributeResponse defines the Msg/Vote response type.
+MsgDeleteAttributeResponse defines the Msg/DeleteAttribute response type.
 
 
 
@@ -942,7 +1001,7 @@ MsgDeleteAttributeResponse defines the Msg/Vote response type.
 
 ### MsgDeleteDistinctAttributeRequest
 MsgDeleteDistinctAttributeRequest defines a message to delete an attribute with matching name, value, and type from
-an account Attributes may only be remove from an account by the account that the attribute name resolves to.
+an account. Attributes may only be removed from an account by the account that the attribute name resolves to.
 
 
 | Field | Type | Label | Description |
@@ -960,7 +1019,33 @@ an account Attributes may only be remove from an account by the account that the
 <a name="provenance.attribute.v1.MsgDeleteDistinctAttributeResponse"></a>
 
 ### MsgDeleteDistinctAttributeResponse
-MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
+MsgDeleteDistinctAttributeResponse defines the Msg/DeleteDistinctAttribute response type.
+
+
+
+
+
+
+<a name="provenance.attribute.v1.MsgSetAccountDataRequest"></a>
+
+### MsgSetAccountDataRequest
+MsgSetAccountDataRequest defines a message to set an account's accountdata attribute.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  |  |
+| `account` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.MsgSetAccountDataResponse"></a>
+
+### MsgSetAccountDataResponse
+MsgSetAccountDataResponse defines the Msg/SetAccountData response type.
 
 
 
@@ -1000,7 +1085,7 @@ MsgUpdateAttributeExpirationResponse defines the Msg/Vote response type.
 <a name="provenance.attribute.v1.MsgUpdateAttributeRequest"></a>
 
 ### MsgUpdateAttributeRequest
-MsgUpdateAttributeRequest defines an sdk.Msg type that is used to update an existing attribute to an account
+MsgUpdateAttributeRequest defines an sdk.Msg type that is used to update an existing attribute to an account.
 Attributes may only be set in an account by the account that the attribute name resolves to.
 
 
@@ -1022,7 +1107,7 @@ Attributes may only be set in an account by the account that the attribute name 
 <a name="provenance.attribute.v1.MsgUpdateAttributeResponse"></a>
 
 ### MsgUpdateAttributeResponse
-MsgUpdateAttributeResponse defines the Msg/Vote response type.
+MsgUpdateAttributeResponse defines the Msg/UpdateAttribute response type.
 
 
 
@@ -1047,6 +1132,7 @@ Msg defines the attribute module Msg service.
 | `UpdateAttributeExpiration` | [MsgUpdateAttributeExpirationRequest](#provenance.attribute.v1.MsgUpdateAttributeExpirationRequest) | [MsgUpdateAttributeExpirationResponse](#provenance.attribute.v1.MsgUpdateAttributeExpirationResponse) | UpdateAttributeExpiration defines a method to verify a particular invariance. | |
 | `DeleteAttribute` | [MsgDeleteAttributeRequest](#provenance.attribute.v1.MsgDeleteAttributeRequest) | [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse) | DeleteAttribute defines a method to verify a particular invariance. | |
 | `DeleteDistinctAttribute` | [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest) | [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse) | DeleteDistinctAttribute defines a method to verify a particular invariance. | |
+| `SetAccountData` | [MsgSetAccountDataRequest](#provenance.attribute.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.attribute.v1.MsgSetAccountDataResponse) | SetAccountData defines a method for setting/updating an account's accountdata attribute. | |
 
  <!-- end services -->
 
@@ -1721,6 +1807,36 @@ QueryAccessResponse is the response type for the Query/MarkerAccess method.
 
 
 
+<a name="provenance.marker.v1.QueryAccountDataRequest"></a>
+
+### QueryAccountDataRequest
+QueryAccountDataRequest is the request type for the Query/AccountData
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | The denomination to look up. |
+
+
+
+
+
+
+<a name="provenance.marker.v1.QueryAccountDataResponse"></a>
+
+### QueryAccountDataResponse
+QueryAccountDataResponse is the response type for the Query/AccountData
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  | The accountdata for the requested denom. |
+
+
+
+
+
+
 <a name="provenance.marker.v1.QueryAllMarkersRequest"></a>
 
 ### QueryAllMarkersRequest
@@ -1951,6 +2067,7 @@ Query defines the gRPC querier service for marker module.
 | `Escrow` | [QueryEscrowRequest](#provenance.marker.v1.QueryEscrowRequest) | [QueryEscrowResponse](#provenance.marker.v1.QueryEscrowResponse) | query for coins on a marker account | GET|/provenance/marker/v1/escrow/{id}|
 | `Access` | [QueryAccessRequest](#provenance.marker.v1.QueryAccessRequest) | [QueryAccessResponse](#provenance.marker.v1.QueryAccessResponse) | query for access records on an account | GET|/provenance/marker/v1/accesscontrol/{id}|
 | `DenomMetadata` | [QueryDenomMetadataRequest](#provenance.marker.v1.QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#provenance.marker.v1.QueryDenomMetadataResponse) | query for access records on an account | GET|/provenance/marker/v1/getdenommetadata/{denom}|
+| `AccountData` | [QueryAccountDataRequest](#provenance.marker.v1.QueryAccountDataRequest) | [QueryAccountDataResponse](#provenance.marker.v1.QueryAccountDataResponse) | query for account data associated with a denom | GET|/provenance/marker/v1/accountdata/{denom}|
 
  <!-- end services -->
 
@@ -2343,6 +2460,34 @@ MsgMintResponse defines the Msg/Mint response type
 
 
 
+<a name="provenance.marker.v1.MsgSetAccountDataRequest"></a>
+
+### MsgSetAccountDataRequest
+MsgSetAccountDataRequest defines a msg to set/update/delete the account data for a marker.
+Signer must have deposit authority or be a gov proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | The denomination of the marker to update. |
+| `value` | [string](#string) |  | The desired accountdata value. |
+| `signer` | [string](#string) |  | The signer of this message. Must have deposit authority or be the governance module account address. |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgSetAccountDataResponse"></a>
+
+### MsgSetAccountDataResponse
+MsgSetAccountDataResponse defines the Msg/SetAccountData response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgSetDenomMetadataRequest"></a>
 
 ### MsgSetDenomMetadataRequest
@@ -2446,7 +2591,7 @@ It is only usable via governance proposal.
 <a name="provenance.marker.v1.MsgUpdateForcedTransferResponse"></a>
 
 ### MsgUpdateForcedTransferResponse
-MsgUpdateForcedTransferResponse defines the Msg/UpdateForcedTransferResponse response type
+MsgUpdateForcedTransferResponse defines the Msg/UpdateForcedTransfer response type
 
 
 
@@ -2542,6 +2687,7 @@ Msg defines the Marker Msg service.
 | `SupplyIncreaseProposal` | [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest) | [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse) | SupplyIncreaseProposal can only be called via gov proposal | |
 | `UpdateRequiredAttributes` | [MsgUpdateRequiredAttributesRequest](#provenance.marker.v1.MsgUpdateRequiredAttributesRequest) | [MsgUpdateRequiredAttributesResponse](#provenance.marker.v1.MsgUpdateRequiredAttributesResponse) | UpdateRequiredAttributes will only succeed if signer has transfer authority | |
 | `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance.marker.v1.MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. | |
+| `SetAccountData` | [MsgSetAccountDataRequest](#provenance.marker.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.marker.v1.MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. | |
 
  <!-- end services -->
 
@@ -3937,6 +4083,36 @@ Deprecated: Do not use.
 
 
 
+<a name="provenance.metadata.v1.AccountDataRequest"></a>
+
+### AccountDataRequest
+AccountDataRequest is the request type for the Query/AccountData RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `metadata_addr` | [bytes](#bytes) |  | The metadata address to look up. Currently, only scope ids are supported. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.AccountDataResponse"></a>
+
+### AccountDataResponse
+AccountDataResponse is the response type for the Query/AccountData RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  | The accountdata for the requested metadata address. |
+
+
+
+
+
+
 <a name="provenance.metadata.v1.ContractSpecificationRequest"></a>
 
 ### ContractSpecificationRequest
@@ -4789,6 +4965,7 @@ The specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e606
 | `OSLocatorsByURI` | [OSLocatorsByURIRequest](#provenance.metadata.v1.OSLocatorsByURIRequest) | [OSLocatorsByURIResponse](#provenance.metadata.v1.OSLocatorsByURIResponse) | OSLocatorsByURI returns all ObjectStoreLocator entries for a locator uri. | GET|/provenance/metadata/v1/locator/uri/{uri}|
 | `OSLocatorsByScope` | [OSLocatorsByScopeRequest](#provenance.metadata.v1.OSLocatorsByScopeRequest) | [OSLocatorsByScopeResponse](#provenance.metadata.v1.OSLocatorsByScopeResponse) | OSLocatorsByScope returns all ObjectStoreLocator entries for a for all signer's present in the specified scope. | GET|/provenance/metadata/v1/locator/scope/{scope_id}|
 | `OSAllLocators` | [OSAllLocatorsRequest](#provenance.metadata.v1.OSAllLocatorsRequest) | [OSAllLocatorsResponse](#provenance.metadata.v1.OSAllLocatorsResponse) | OSAllLocators returns all ObjectStoreLocator entries. | GET|/provenance/metadata/v1/locators/all|
+| `AccountData` | [AccountDataRequest](#provenance.metadata.v1.AccountDataRequest) | [AccountDataResponse](#provenance.metadata.v1.AccountDataResponse) | AccountData gets the account data associated with a metadata address. Currently, only scope ids are supported. | GET|/provenance/metadata/v1/accountdata/{metadata_addr}|
 
  <!-- end services -->
 
@@ -5251,6 +5428,33 @@ Deprecated: This message is no longer part of any endpoint and cannot be used fo
 
 
 
+<a name="provenance.metadata.v1.MsgSetAccountDataRequest"></a>
+
+### MsgSetAccountDataRequest
+MsgSetAccountDataRequest is the request to set/update/delete a scope's account data.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `metadata_addr` | [bytes](#bytes) |  | The identifier to associate the data with. Currently, only scope ids are supported. |
+| `value` | [string](#string) |  | The desired accountdata value. |
+| `signers` | [string](#string) | repeated | The signers of this message. Must fulfill owner requirements of the scope. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgSetAccountDataResponse"></a>
+
+### MsgSetAccountDataResponse
+MsgSetAccountDataResponse is the response from setting/updating/deleting a scope's account data.
+
+
+
+
+
+
 <a name="provenance.metadata.v1.MsgUpdateValueOwnersRequest"></a>
 
 ### MsgUpdateValueOwnersRequest
@@ -5560,6 +5764,7 @@ Msg defines the Metadata Msg service.
 | `BindOSLocator` | [MsgBindOSLocatorRequest](#provenance.metadata.v1.MsgBindOSLocatorRequest) | [MsgBindOSLocatorResponse](#provenance.metadata.v1.MsgBindOSLocatorResponse) | BindOSLocator binds an owner address to a uri. | |
 | `DeleteOSLocator` | [MsgDeleteOSLocatorRequest](#provenance.metadata.v1.MsgDeleteOSLocatorRequest) | [MsgDeleteOSLocatorResponse](#provenance.metadata.v1.MsgDeleteOSLocatorResponse) | DeleteOSLocator deletes an existing ObjectStoreLocator record. | |
 | `ModifyOSLocator` | [MsgModifyOSLocatorRequest](#provenance.metadata.v1.MsgModifyOSLocatorRequest) | [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse) | ModifyOSLocator updates an ObjectStoreLocator record by the current owner. | |
+| `SetAccountData` | [MsgSetAccountDataRequest](#provenance.metadata.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.metadata.v1.MsgSetAccountDataResponse) | SetAccountData associates some basic data with a metadata address. Currently, only scope ids are supported. | |
 
  <!-- end services -->
 

@@ -32923,6 +32923,54 @@ paths:
           type: boolean
       tags:
         - Query
+  '/provenance/attribute/v1/accountdata/{account}':
+    get:
+      summary: AccountData returns the accountdata for a specified account.
+      operationId: AccountData
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              value:
+                type: string
+                description: >-
+                  value is the accountdata attribute value for the requested
+                  account.
+            description: >-
+              QueryAccountDataResponse is the response type for the
+              Query/AccountData method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: account
+          description: account is the bech32 address of the account to get the data for
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   '/provenance/attribute/v1/accounts/{attribute_name}':
     get:
       summary: AttributeAccounts queries accounts on a given attribute name
@@ -32959,7 +33007,7 @@ paths:
                       was set, its value is undefined otherwise
             description: >-
               QueryAttributeAccountsResponse is the response type for the
-              Query/AccountsByAttribute method.
+              Query/AttributeAccounts method.
         default:
           description: An unexpected error response
           schema:
@@ -33124,9 +33172,7 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-            description: >-
-              QueryScanResponse is the response type for the Query/Attribute
-              method.
+            description: QueryScanResponse is the response type for the Query/Scan method.
         default:
           description: An unexpected error response
           schema:
@@ -33472,7 +33518,7 @@ paths:
                       was set, its value is undefined otherwise
             description: >-
               QueryAttributesResponse is the response type for the
-              Query/Attribute method.
+              Query/Attributes method.
         default:
           description: An unexpected error response
           schema:
@@ -33853,6 +33899,219 @@ paths:
       parameters:
         - name: id
           description: address or denom for the marker
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  '/provenance/marker/v1/accountdata/{denom}':
+    get:
+      summary: query for account data associated with a denom
+      operationId: MarkerAccountData
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              value:
+                type: string
+                description: The accountdata for the requested denom.
+            title: >-
+              QueryAccountDataResponse is the response type for the
+              Query/AccountData
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := ptypes.MarshalAny(foo)
+                         ...
+                         foo := &pb.Foo{}
+                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: denom
+          description: The denomination to look up.
           in: path
           required: true
           type: string
@@ -36013,6 +36272,57 @@ paths:
           in: path
           required: true
           type: string
+      tags:
+        - Query
+  '/provenance/metadata/v1/accountdata/{metadata_addr}':
+    get:
+      summary: |-
+        AccountData gets the account data associated with a metadata address.
+        Currently, only scope ids are supported.
+      operationId: MetadataAccountData
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              value:
+                type: string
+                description: The accountdata for the requested metadata address.
+            description: >-
+              AccountDataResponse is the response type for the Query/AccountData
+              RPC method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: metadata_addr
+          description: |-
+            The metadata address to look up.
+            Currently, only scope ids are supported.
+          in: path
+          required: true
+          type: string
+          format: byte
       tags:
         - Query
   '/provenance/metadata/v1/contractspec/{specification_id}':
@@ -80279,6 +80589,15 @@ definitions:
         format: int64
         title: maximum length of data to allow in an attribute value
     description: Params defines the set of params for the attribute module.
+  provenance.attribute.v1.QueryAccountDataResponse:
+    type: object
+    properties:
+      value:
+        type: string
+        description: value is the accountdata attribute value for the requested account.
+    description: >-
+      QueryAccountDataResponse is the response type for the Query/AccountData
+      method.
   provenance.attribute.v1.QueryAttributeAccountsResponse:
     type: object
     properties:
@@ -80308,7 +80627,7 @@ definitions:
               was set, its value is undefined otherwise
     description: >-
       QueryAttributeAccountsResponse is the response type for the
-      Query/AccountsByAttribute method.
+      Query/AttributeAccounts method.
   provenance.attribute.v1.QueryAttributeResponse:
     type: object
     properties:
@@ -80447,7 +80766,7 @@ definitions:
 
               was set, its value is undefined otherwise
     description: >-
-      QueryAttributesResponse is the response type for the Query/Attribute
+      QueryAttributesResponse is the response type for the Query/Attributes
       method.
   provenance.attribute.v1.QueryParamsResponse:
     type: object
@@ -80528,22 +80847,27 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-    description: QueryScanResponse is the response type for the Query/Attribute method.
+    description: QueryScanResponse is the response type for the Query/Scan method.
   provenance.attribute.v1.MsgAddAttributeResponse:
     type: object
-    description: MsgAddAttributeResponse defines the Msg/Vote response type.
+    description: MsgAddAttributeResponse defines the Msg/AddAttribute response type.
   provenance.attribute.v1.MsgDeleteAttributeResponse:
     type: object
-    description: MsgDeleteAttributeResponse defines the Msg/Vote response type.
+    description: MsgDeleteAttributeResponse defines the Msg/DeleteAttribute response type.
   provenance.attribute.v1.MsgDeleteDistinctAttributeResponse:
     type: object
-    description: MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
+    description: >-
+      MsgDeleteDistinctAttributeResponse defines the Msg/DeleteDistinctAttribute
+      response type.
+  provenance.attribute.v1.MsgSetAccountDataResponse:
+    type: object
+    description: MsgSetAccountDataResponse defines the Msg/SetAccountData response type.
   provenance.attribute.v1.MsgUpdateAttributeExpirationResponse:
     type: object
     description: MsgUpdateAttributeExpirationResponse defines the Msg/Vote response type.
   provenance.attribute.v1.MsgUpdateAttributeResponse:
     type: object
-    description: MsgUpdateAttributeResponse defines the Msg/Vote response type.
+    description: MsgUpdateAttributeResponse defines the Msg/UpdateAttribute response type.
   provenance.marker.v1.Access:
     type: string
     enum:
@@ -80717,6 +81041,13 @@ definitions:
     description: >-
       QueryAccessResponse is the response type for the Query/MarkerAccess
       method.
+  provenance.marker.v1.QueryAccountDataResponse:
+    type: object
+    properties:
+      value:
+        type: string
+        description: The accountdata for the requested denom.
+    title: QueryAccountDataResponse is the response type for the Query/AccountData
   provenance.marker.v1.QueryAllMarkersResponse:
     type: object
     properties:
@@ -81417,6 +81748,9 @@ definitions:
   provenance.marker.v1.MsgMintResponse:
     type: object
     title: MsgMintResponse defines the Msg/Mint response type
+  provenance.marker.v1.MsgSetAccountDataResponse:
+    type: object
+    title: MsgSetAccountDataResponse defines the Msg/SetAccountData response type
   provenance.marker.v1.MsgSetDenomMetadataResponse:
     type: object
     title: MsgSetDenomMetadataResponse defines the Msg/SetDenomMetadata response type
@@ -81431,8 +81765,8 @@ definitions:
   provenance.marker.v1.MsgUpdateForcedTransferResponse:
     type: object
     title: >-
-      MsgUpdateForcedTransferResponse defines the
-      Msg/UpdateForcedTransferResponse response type
+      MsgUpdateForcedTransferResponse defines the Msg/UpdateForcedTransfer
+      response type
   provenance.marker.v1.MsgUpdateRequiredAttributesResponse:
     type: object
     title: >-
@@ -81441,6 +81775,15 @@ definitions:
   provenance.marker.v1.MsgWithdrawResponse:
     type: object
     title: MsgWithdrawResponse defines the Msg/Withdraw response type
+  provenance.metadata.v1.AccountDataResponse:
+    type: object
+    properties:
+      value:
+        type: string
+        description: The accountdata for the requested metadata address.
+    description: >-
+      AccountDataResponse is the response type for the Query/AccountData RPC
+      method.
   provenance.metadata.v1.AuditFields:
     type: object
     properties:
@@ -89821,6 +90164,11 @@ definitions:
     description: >-
       MsgModifyOSLocatorResponse is the response type for the
       Msg/ModifyOSLocator RPC method.
+  provenance.metadata.v1.MsgSetAccountDataResponse:
+    type: object
+    description: >-
+      MsgSetAccountDataResponse is the response from setting/updating/deleting a
+      scope's account data.
   provenance.metadata.v1.MsgUpdateValueOwnersResponse:
     type: object
     description: >-

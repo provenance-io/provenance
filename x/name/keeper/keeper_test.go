@@ -16,9 +16,12 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
@@ -86,10 +89,8 @@ func (s *KeeperTestSuite) TestSetup() {
 		s.Require().Equal(uint32(2), p.MinSegmentLength)
 		s.Require().Equal(uint32(16), p.MaxSegmentLength)
 	})
-	gen := s.app.NameKeeper.ExportGenesis(s.ctx)
-	out, err := yaml.Marshal(gen)
-	s.Require().NoError(err)
-	s.Require().Equal(fmt.Sprintf(`params:
+
+	expOut := fmt.Sprintf(`params:
   maxsegmentlength: 16
   minsegmentlength: 2
   maxnamelevels: 16
@@ -101,7 +102,16 @@ bindings:
 - name: example.name
   address: %[1]s
   restricted: false
-`, s.user1Addr.String()), string(out))
+- name: %[2]s
+  address: %[3]s
+  restricted: true
+`,
+		s.user1Addr.String(), attrtypes.AccountDataName, authtypes.NewModuleAddress(attrtypes.ModuleName).String())
+
+	gen := s.app.NameKeeper.ExportGenesis(s.ctx)
+	out, err := yaml.Marshal(gen)
+	s.Require().NoError(err)
+	s.Require().Equal(expOut, string(out))
 }
 
 func (s *KeeperTestSuite) TestNameNormalization() {
@@ -341,6 +351,11 @@ func (s *KeeperTestSuite) TestGetAuthority() {
 
 func (s *KeeperTestSuite) TestIterateRecord() {
 	s.Run("iterate name's", func() {
+		expRecords := nametypes.NameRecords{
+			nametypes.NewNameRecord("name", s.user1Addr, false),
+			nametypes.NewNameRecord("example.name", s.user1Addr, false),
+			nametypes.NewNameRecord(attrtypes.AccountDataName, authtypes.NewModuleAddress(attrtypes.ModuleName), true),
+		}
 		records := nametypes.NameRecords{}
 		// Callback func that adds records to genesis state.
 		appendToRecords := func(record nametypes.NameRecord) error {
@@ -349,8 +364,8 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 		}
 		// Collect and return genesis state.
 		err := s.app.NameKeeper.IterateRecords(s.ctx, nametypes.NameKeyPrefix, appendToRecords)
-		s.Require().NoError(err)
-		s.Require().Equal(2, len(records))
+		s.Require().NoError(err, "IterateRecords error")
+		s.Require().Equal(expRecords, records, "records iterated over")
 	})
 
 }
@@ -436,6 +451,7 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 		{Name: "sub.one", Address: addr1.String()},
 		{Name: "two", Address: addr2.String()},
 		{Name: "sub.two", Address: addr2.String()},
+		{Name: attrtypes.AccountDataName, Address: authtypes.NewModuleAddress(attrtypes.ModuleName).String(), Restricted: true},
 	}
 
 	// For these, all we care about are the names.

@@ -169,3 +169,21 @@ func (k Keeper) AttributeAccounts(c context.Context, req *types.QueryAttributeAc
 
 	return &types.QueryAttributeAccountsResponse{Accounts: accounts, Pagination: pageRes}, nil
 }
+
+// AccountData returns the accountdata for a specified account.
+func (k Keeper) AccountData(c context.Context, req *types.QueryAccountDataRequest) (*types.QueryAccountDataResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	value, err := k.GetAccountData(ctx, req.Account)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+
+	resp := &types.QueryAccountDataResponse{
+		Value: value,
+	}
+	return resp, nil
+}

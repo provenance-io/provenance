@@ -17,6 +17,7 @@ var allRequestMsgs = []sdk.Msg{
 	(*MsgUpdateAttributeExpirationRequest)(nil),
 	(*MsgDeleteAttributeRequest)(nil),
 	(*MsgDeleteDistinctAttributeRequest)(nil),
+	(*MsgSetAccountDataRequest)(nil),
 }
 
 // NewMsgAddAttributeRequest creates a new add attribute message
@@ -216,5 +217,20 @@ func (msg MsgDeleteDistinctAttributeRequest) GetSigners() []sdk.AccAddress {
 	if err != nil {
 		panic(fmt.Errorf("invalid owner value on message: %w", err))
 	}
+	return []sdk.AccAddress{addr}
+}
+
+// ValidateBasic runs stateless validation checks on the message.
+func (msg MsgSetAccountDataRequest) ValidateBasic() error {
+	// This message is only for regular account addresses. No need to allow for scopes or others.
+	if _, err := sdk.AccAddressFromBech32(msg.Account); err != nil {
+		return fmt.Errorf("invalid account: %w", err)
+	}
+	return nil
+}
+
+// GetSigners indicates that the message must have been signed by the account.
+func (msg MsgSetAccountDataRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Account)
 	return []sdk.AccAddress{addr}
 }
