@@ -128,7 +128,7 @@ func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a func to decode each module's defined types from their corresponding store key
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns simulation operations (i.e msgs) with their respective weight
