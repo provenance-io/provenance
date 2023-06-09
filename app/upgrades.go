@@ -71,6 +71,8 @@ var upgrades = map[string]appUpgrade{
 
 			removeP8eMemorializeContractFee(ctx, app)
 
+			removeInactiveValidators(ctx, app)
+
 			fixNameIndexEntries(ctx, app)
 
 			return vm, nil
@@ -250,7 +252,6 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 				delegations := app.StakingKeeper.GetValidatorDelegations(ctx, valAddress)
 				for _, delegation := range delegations {
 					ctx.Logger().Info(fmt.Sprintf("undelegate delegator %v from validator %v of all shares (%v)", delegation.DelegatorAddress, validator.OperatorAddress, delegation.GetShares()))
-					// unbonding all of a delegators shares, method will remove validator from set once all have been removed.
 					_, err := app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), valAddress, delegation.GetShares())
 					if err != nil {
 						panic(err)
