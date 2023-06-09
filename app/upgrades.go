@@ -242,9 +242,9 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 	validators := app.StakingKeeper.GetAllValidators(ctx)
 	for _, validator := range validators {
 		if validator.IsUnbonded() {
-			inActiveDuration := ctx.BlockTime().Sub(validator.UnbondingTime)
-			if inActiveDuration >= unbondingTimeParam {
-				ctx.Logger().Info(fmt.Sprintf("validator %v has been inactive (unbonded) for %d days and will be removed", validator.OperatorAddress, int64(inActiveDuration.Hours()/24)))
+			inactiveDuration := ctx.BlockTime().Sub(validator.UnbondingTime)
+			if inactiveDuration >= unbondingTimeParam {
+				ctx.Logger().Info(fmt.Sprintf("validator %v has been inactive (unbonded) for %d days and will be removed", validator.OperatorAddress, int64(inactiveDuration.Hours()/24)))
 				valAddress, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 				if err != nil {
 					ctx.Logger().Error(fmt.Sprintf("invalid operator address: %s: %v", validator.OperatorAddress, err))
