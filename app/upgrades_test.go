@@ -56,6 +56,13 @@ func (s *UpgradeTestSuite) SetupSuite() {
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 }
 
+// GetLogOutput gets the log buffer contents. This (probably) also clears the log buffer.
+func (s *UpgradeTestSuite) GetLogOutput(msg string, args ...interface{}) string {
+	logOutput := s.logBuffer.String()
+	s.T().Logf(msg+" log output:\n%s", append(args, logOutput)...)
+	return logOutput
+}
+
 // AssertUpgradeHandlerLogs runs the Handler of the provided key and asserts that
 // each entry in expInLog is in the log output, and each entry in expNotInLog
 // is not in the log output.
@@ -63,20 +70,16 @@ func (s *UpgradeTestSuite) SetupSuite() {
 // entries in expInLog are expected to be full lines.
 // entries in expNotInLog can be parts of lines.
 //
-// This returns the log output and whether all assertions passed (true = all passed,
-// false = one or more problems were found).
-func (s *UpgradeTestSuite) AssertUpgradeHandlerLogs(key string, expInLog, expNotInLog []string) (logOutput string, allPassed bool) {
+// This returns the log output and whether everything is as expected (true = all good).
+func (s *UpgradeTestSuite) AssertUpgradeHandlerLogs(key string, expInLog, expNotInLog []string) (string, bool) {
 	s.T().Helper()
-	defer func() {
-		allPassed = !s.T().Failed()
-	}()
 
 	if !s.Assert().Contains(upgrades, key, "defined upgrades map") {
-		return // If the upgrades map doesn't have that key, there's nothing more to do in here.
+		return "", false // If the upgrades map doesn't have that key, there's nothing more to do in here.
 	}
 	handler := upgrades[key].Handler
 	if !s.Assert().NotNil(handler, "upgrades[%q].Handler", key) {
-		return // If the entry doesn't have a .Handler, there's nothing more to do in here.
+		return "", false // If the entry doesn't have a .Handler, there's nothing more to do in here.
 	}
 
 	// This app was just created brand new, so it will create all the modules with their most
@@ -88,40 +91,122 @@ func (s *UpgradeTestSuite) AssertUpgradeHandlerLogs(key string, expInLog, expNot
 	// any old state for that module since anything added already was done using new stuff.
 	origVersionMap := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
 
+	msgFormat := fmt.Sprintf("upgrades[%q].Handler(...)", key)
+
 	var versionMap module.VersionMap
 	var err error
 	s.logBuffer.Reset()
 	testFunc := func() {
 		versionMap, err = handler(s.ctx, s.app, origVersionMap)
 	}
-	if !s.Assert().NotPanics(testFunc, "upgrades[%q].Handler(...)", key) {
-		return // If the handler panics, there's nothing more to check in here.
+	didNotPanic := s.Assert().NotPanics(testFunc, msgFormat)
+	logOutput := s.GetLogOutput(msgFormat)
+	if !didNotPanic {
+		// If the handler panicked, there's nothing more to check in here.
+		return logOutput, false
 	}
-
-	// Add the handler log output to the test log for easier troubleshooting.
-	logOutput = s.logBuffer.String()
-	s.T().Logf("upgrades[%q].Handler(...) log output:\n%s", key, logOutput)
 
 	// Checking for error cases should be done in individual function unit tests.
 	// For this, always check for no error and a non-empty version map.
-	s.Assert().NoError(err, "upgrades[%q].Handler(...) error", key)
-	s.Assert().NotEmpty(versionMap, "upgrades[%q].Handler(...) version map", key)
+	rv := s.Assert().NoErrorf(err, msgFormat+" error")
+	rv = s.Assert().NotEmptyf(versionMap, msgFormat+" version map") && rv
+	rv = s.AssertLogContents(logOutput, expInLog, expNotInLog, msgFormat) && rv
 
-	logLines := strings.Split(logOutput, "\n")
+	return logOutput, rv
+}
+
+// splitLogOutput splits the provided log output into individual lines.
+func splitLogOutput(logOutput string) []string {
+	rv := strings.Split(logOutput, "\n")
+	if len(rv[len(rv)-1]) == 0 {
+		rv = rv[:len(rv)-1]
+	}
+	return rv
+}
+
+// AssertLogContents asserts that the provided log output string contains all expInLog lines in the provided order,
+// and doesn't contain any string in the expNotInLog slice.
+// Returns true if everything is as expected.
+func (s *UpgradeTestSuite) AssertLogContents(logOutput string, expInLog, expNotInLog []string, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	rv := s.assertLogLinesInOrder(logOutput, expInLog, msg+" log output", args...)
+	rv = s.assertLogDoesNotContain(logOutput, expNotInLog, msg+" log output", args...) && rv
+	return rv
+}
+
+// assertLogLinesInOrder asserts that the log output has whole lines matching each of the expInLog entries,
+// and that they're in the same order (allowing for extra lines to be in the log output that aren't in expInLog).
+// Designed for AssertLogContents, please use that.
+func (s *UpgradeTestSuite) assertLogLinesInOrder(logOutput string, expInLog []string, msg string, args ...interface{}) bool {
+	if len(expInLog) == 0 {
+		return true
+	}
+
+	logLines := splitLogOutput(logOutput)
+
+	allThere := true
+	// First, just make sure all the lines are there.
+	// This gives a nicer failure message than if we try to do it while checking ordering.
 	for _, exp := range expInLog {
 		// I'm including the expected in the msgAndArgs here even though it's also included in the
 		// failure message because the failure message puts everything on one line. So the expected
 		// string is almost at the end of a very long line. Having it in the "message" portion of
 		// the failure makes it easier to identify the problematic entry.
-		s.Assert().Contains(logLines, exp, "upgrades[%q].Handler(...) log output.\nExpecting: %q", key, exp)
+		if !s.Assert().Containsf(logLines, exp, msg+"\nExpecting: %q", append(args, exp)...) {
+			allThere = false
+		}
+	}
+	if !allThere {
+		return false
 	}
 
+	// Now make sure they're in the same order, allowing for extra lines in the log that might not be expected.
+	e := 0
+	for _, logLine := range logLines {
+		if expInLog[e] == logLine {
+			e++
+			if e == len(expInLog) {
+				return true
+			}
+		}
+	}
+
+	// We didn't get to the end of the expected list. Issue a custom failure.
+	failureLines := []string{
+		"Log lines not in expected order.",
+		fmt.Sprintf("End of log reached looking for [%d]: %q", e, expInLog[e]),
+		// Note: We know that all expInLog lines are in the log output.
+		// So the above loop will find at least the first entry, and e will be at least 1.
+		fmt.Sprintf("Expected it to be after [%d]: %q", e-1, expInLog[e-1]),
+	}
+	// Putting the actual entries first to put it closer to the previous two lines,
+	// which have the most important expected entries.
+	failureLines = append(failureLines, "Actual:")
+	for i, line := range logLines {
+		failureLines = append(failureLines, fmt.Sprintf("  [%d]: %q", i, line))
+	}
+	// Then give all the expected entries for good form.
+	failureLines = append(failureLines, "Expected:")
+	for i, line := range expInLog {
+		failureLines = append(failureLines, fmt.Sprintf("  [%d]: %q", i, line))
+	}
+	return s.Failf(strings.Join(failureLines, "\n"), msg, args...)
+}
+
+// assertLogDoesNotContain asserts that the log output does not contain any of the expNotInLog as substrings.
+// Designed for AssertLogContents, please use that.
+func (s *UpgradeTestSuite) assertLogDoesNotContain(logOutput string, expNotInLog []string, msg string, args ...interface{}) bool {
+	noneThere := true
 	for _, unexp := range expNotInLog {
-		// Same here with the msgAndArgs thing.
-		s.Assert().NotContains(logOutput, unexp, "upgrades[%q].Handler(...) log output.\nNot Expecting: %q", key, unexp)
+		// I'm including the unexpected in the msgAndArgs here even though it's also included in the
+		// failure message because the failure message puts everything on one line. So the expected
+		// string is almost at the end of a very long line. Having it in the "message" portion of
+		// the failure makes it easier to identify the problematic entry.
+		if !s.Assert().NotContainsf(logOutput, unexp, msg+"\nNot Expecting: %q", append(args, unexp)...) {
+			noneThere = false
+		}
 	}
-
-	return
+	return noneThere
 }
 
 func (s *UpgradeTestSuite) TestKeysInHandlersMap() {
@@ -263,9 +348,9 @@ func (s *UpgradeTestSuite) TestAddGovV1SubmitFee() {
 	v1TypeURL := "/cosmos.gov.v1.MsgSubmitProposal"
 	v1B1TypeURL := "/cosmos.gov.v1beta1.MsgSubmitProposal"
 
-	startingMsg := `Creating message fee for "` + v1TypeURL + `" if it doesn't already exist.`
+	startingMsg := `INF Creating message fee for "` + v1TypeURL + `" if it doesn't already exist.`
 	successMsg := func(amt string) string {
-		return `Successfully set fee for "` + v1TypeURL + `" with amount "` + amt + `".`
+		return `INF Successfully set fee for "` + v1TypeURL + `" with amount "` + amt + `".`
 	}
 
 	coin := func(denom string, amt int64) *sdk.Coin {
@@ -286,7 +371,7 @@ func (s *UpgradeTestSuite) TestAddGovV1SubmitFee() {
 			v1B1Amt: coin("betacoin", 99),
 			expInLog: []string{
 				startingMsg,
-				`Message fee for "` + v1TypeURL + `" already exists with amount "88foocoin". Nothing to do.`,
+				`INF Message fee for "` + v1TypeURL + `" already exists with amount "88foocoin". Nothing to do.`,
 			},
 			expAmt: *coin("foocoin", 88),
 		},
@@ -295,7 +380,7 @@ func (s *UpgradeTestSuite) TestAddGovV1SubmitFee() {
 			v1B1Amt: coin("betacoin", 99),
 			expInLog: []string{
 				startingMsg,
-				`Copying "` + v1B1TypeURL + `" fee to "` + v1TypeURL + `".`,
+				`INF Copying "` + v1B1TypeURL + `" fee to "` + v1TypeURL + `".`,
 				successMsg("99betacoin"),
 			},
 			expAmt: *coin("betacoin", 99),
@@ -304,7 +389,7 @@ func (s *UpgradeTestSuite) TestAddGovV1SubmitFee() {
 			name: "brand new",
 			expInLog: []string{
 				startingMsg,
-				`Creating "` + v1TypeURL + `" fee.`,
+				`INF Creating "` + v1TypeURL + `" fee.`,
 				successMsg("100000000000nhash"),
 			},
 			expAmt: *coin("nhash", 100_000_000_000),
@@ -341,14 +426,14 @@ func (s *UpgradeTestSuite) TestAddGovV1SubmitFee() {
 			testFunc := func() {
 				addGovV1SubmitFee(s.ctx, s.app)
 			}
-			s.Require().NotPanics(testFunc, "addGovV1SubmitFee")
-			logOutput := s.logBuffer.String()
-			s.T().Logf("addGovV1SubmitFee log output:\n%s", logOutput)
+			didNotPanic := s.Assert().NotPanics(testFunc, "addGovV1SubmitFee")
+			logOutput := s.GetLogOutput("addGovV1SubmitFee")
+			if !didNotPanic {
+				return
+			}
 
 			// Make sure the log has the expected lines.
-			for _, exp := range tc.expInLog {
-				s.Assert().Contains(logOutput, exp, "addGovV1SubmitFee log output")
-			}
+			s.AssertLogContents(logOutput, tc.expInLog, nil, "addGovV1SubmitFee")
 
 			// Get the fee and make sure it's now as expected.
 			fee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, v1TypeURL)
@@ -362,7 +447,7 @@ func (s *UpgradeTestSuite) TestAddGovV1SubmitFee() {
 
 func (s *UpgradeTestSuite) TestRemoveP8eMemorializeContractFee() {
 	typeURL := "/provenance.metadata.v1.MsgP8eMemorializeContractRequest"
-	startingMsg := `Removing message fee for "` + typeURL + `" if one exists.`
+	startingMsg := `INF Removing message fee for "` + typeURL + `" if one exists.`
 
 	coin := func(denom string, amt int64) *sdk.Coin {
 		rv := sdk.NewInt64Coin(denom, amt)
@@ -378,7 +463,7 @@ func (s *UpgradeTestSuite) TestRemoveP8eMemorializeContractFee() {
 			name: "does not exist",
 			expInLog: []string{
 				startingMsg,
-				`Message fee for "` + typeURL + `" already does not exist. Nothing to do.`,
+				`INF Message fee for "` + typeURL + `" already does not exist. Nothing to do.`,
 			},
 		},
 		{
@@ -386,7 +471,7 @@ func (s *UpgradeTestSuite) TestRemoveP8eMemorializeContractFee() {
 			amt:  coin("p8ecoin", 808),
 			expInLog: []string{
 				startingMsg,
-				`Successfully removed message fee for "` + typeURL + `" with amount "808p8ecoin".`,
+				`INF Successfully removed message fee for "` + typeURL + `" with amount "808p8ecoin".`,
 			},
 		},
 	}
@@ -404,17 +489,19 @@ func (s *UpgradeTestSuite) TestRemoveP8eMemorializeContractFee() {
 				}
 			}
 
+			// Reset the log buffer to clear out unrelated entries.
 			s.logBuffer.Reset()
+			// Call removeP8eMemorializeContractFee and relog its output (to help if things fail).
 			testFunc := func() {
 				removeP8eMemorializeContractFee(s.ctx, s.app)
 			}
-			s.Require().NotPanics(testFunc, "removeP8eMemorializeContractFee")
-			logOutput := s.logBuffer.String()
-			s.T().Logf("removeP8eMemorializeContractFee log output:\n%s", logOutput)
-
-			for _, exp := range tc.expInLog {
-				s.Assert().Contains(logOutput, exp, "removeP8eMemorializeContractFee log output")
+			didNotPanic := s.Assert().NotPanics(testFunc, "removeP8eMemorializeContractFee")
+			logOutput := s.GetLogOutput("removeP8eMemorializeContractFee")
+			if !didNotPanic {
+				return
 			}
+
+			s.AssertLogContents(logOutput, tc.expInLog, nil, "removeP8eMemorializeContractFee")
 
 			// Make sure there isn't a fee anymore.
 			fee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, typeURL)
@@ -425,25 +512,29 @@ func (s *UpgradeTestSuite) TestRemoveP8eMemorializeContractFee() {
 }
 
 func (s *UpgradeTestSuite) TestSetAccountDataNameRecord() {
-	// Since this is also done during InitGenesis, it should already be set up as needed.
+	// Most of the testing should (hopefully) be done in the name module. So this is
+	// just a superficial test that makes sure it's doing something.
+	// Since the name is also created during InitGenesis, it should already be set up as needed.
 	// So in this unit test, the logs will indicate that.
-	expLogLines := []string{
+	expInLog := []string{
 		`INF Setting "accountdata" name record.`,
 		`INF The "accountdata" name record already exists as needed. Nothing to do.`,
-		"", // The log lines all end with a \n. So when I split it on \n there will be an empty string at the end.
 	}
 	// During an actual upgrade, that last line would instead be this:
 	// `INF Successfully set "accountdata" name record.`
 
+	// Reset the log buffer to clear out unrelated entries.
 	s.logBuffer.Reset()
+	// Call setAccountDataNameRecord and relog its output (to help if things fail).
 	var err error
 	testFunc := func() {
 		err = setAccountDataNameRecord(s.ctx, s.app.AccountKeeper, &s.app.NameKeeper)
 	}
-	s.Require().NotPanics(testFunc, "setAccountDataNameRecord")
-	logged := s.logBuffer.String()
-	s.T().Logf("Logs generated during setAccountDataNameRecord:\n%s", logged)
+	didNotPanic := s.Assert().NotPanics(testFunc, "setAccountDataNameRecord")
+	logOutput := s.GetLogOutput("setAccountDataNameRecord")
+	if !didNotPanic {
+		return
+	}
 	s.Require().NoError(err, "setAccountDataNameRecord")
-	loggedLines := strings.Split(logged, "\n")
-	s.Assert().Equal(expLogLines, loggedLines, "lines logged during setAccountDataNameRecord")
+	s.AssertLogContents(logOutput, expInLog, nil, "setAccountDataNameRecord")
 }
