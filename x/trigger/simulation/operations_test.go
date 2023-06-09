@@ -55,7 +55,7 @@ func (s *SimTestSuite) LogOperationMsg(operationMsg simtypes.OperationMsg, msg s
 	)
 }
 
-qfunc (s *SimTestSuite) TestWeightedOperations() {
+func (s *SimTestSuite) TestWeightedOperations() {
 	cdc := s.app.AppCodec()
 	appParams := make(simtypes.AppParams)
 
