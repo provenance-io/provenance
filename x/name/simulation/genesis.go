@@ -31,7 +31,7 @@ func GenMaxSegmentLength(r *rand.Rand) uint32 {
 
 // GenMaxNameLevels randomized Maximum number of segment levels
 func GenMaxNameLevels(r *rand.Rand) uint32 {
-	return uint32(r.Intn(9) + 2)
+	return uint32(r.Intn(9) + 3)
 }
 
 // GenMinSegmentLength randomized minimum segment name length
