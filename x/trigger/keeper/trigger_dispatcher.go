@@ -3,13 +3,10 @@ package keeper
 import (
 	"fmt"
 
-	errorsmod "cosmossdk.io/errors"
-
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 const (
@@ -78,15 +75,15 @@ func (k Keeper) handleMsgs(ctx sdk.Context, msgs []sdk.Msg) ([]sdk.Result, error
 	for i, msg := range msgs {
 		handler := k.router.Handler(msg)
 		if handler == nil {
-			return nil, errorsmod.Wrapf(errors.ErrInvalid, "no message handler found for %q", sdk.MsgTypeURL(msg))
+			return nil, fmt.Errorf("no message handler found for message %s at position %d", sdk.MsgTypeURL(msg), i)
 		}
 		r, err := k.safeHandle(ctx, msg, handler)
 		if err != nil {
-			return nil, errorsmod.Wrapf(err, "message %s at position %d", sdk.MsgTypeURL(msg), i)
+			return nil, fmt.Errorf("error processing message %s at position %d: %w", sdk.MsgTypeURL(msg), i, err)
 		}
 		// Handler should always return non-nil sdk.Result.
 		if r == nil {
-			return nil, fmt.Errorf("got nil sdk.Result for message %q at position %d", sdk.MsgTypeURL(msg), i)
+			return nil, fmt.Errorf("got nil sdk.Result for message %s at position %d", sdk.MsgTypeURL(msg), i)
 		}
 
 		results[i] = *r
@@ -98,15 +95,21 @@ func (k Keeper) handleMsgs(ctx sdk.Context, msgs []sdk.Msg) ([]sdk.Result, error
 func (k Keeper) safeHandle(ctx sdk.Context, msg sdk.Msg, handler MsgServiceHandler) (result *sdk.Result, err error) {
 	defer func() {
 		if e := recover(); e != nil {
-			_, ok := e.(storetypes.ErrorOutOfGas)
-			if ok {
+			// If it's an out-of-gas panic, convert it to a nicer error.
+			if _, ok := e.(storetypes.ErrorOutOfGas); ok {
 				result = nil
 				err = fmt.Errorf("gas %d exceeded limit %d for message %q", ctx.GasMeter().GasConsumed(), ctx.GasMeter().Limit(), sdk.MsgTypeURL(msg))
 				return
 			}
 
-			// It is not an out of gas panic so pass it up
-			panic(e)
+			// If it's some other error, wrap it up and return it (instead of panicking).
+			if er, ok := e.(error); ok {
+				err = fmt.Errorf("panic (recovered) processing msg: %w", er)
+				return
+			}
+
+			// Otherwise, it's some other panic. Just create a new error for it.
+			err = fmt.Errorf("panic (recovered) processing msg: %v", e)
 		}
 	}()
 	return handler(ctx, msg)
