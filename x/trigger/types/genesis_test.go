@@ -4,8 +4,9 @@ import (
 	"testing"
 	time "time"
 
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestNewGenesisState(t *testing.T) {
@@ -279,10 +280,9 @@ func TestGenesisStateValidate(t *testing.T) {
 			}
 			res := tc.state.Validate()
 			if len(tc.err) > 0 {
-				assert.EqualError(t, res, tc.err, "should have correct error message for GenesisStateValidate")
+				assert.EqualError(t, res, tc.err, "Validate")
 			} else {
-				assert.NoError(t, res, "should have no error for successful GenesisStateValidate")
-				assert.Nil(t, res, "should have nil response for successful GenesisStateValidate")
+				assert.NoError(t, res, "Validate")
 			}
 		})
 	}
