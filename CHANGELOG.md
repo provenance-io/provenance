@@ -59,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Remove mutation of store from `attribute` keeper iterators [#1557](https://github.com/provenance-io/provenance/issues/1557).
 * Bumped ibc-go to 6.1.1 [#1563](https://github.com/provenance-io/provenance/pull/1563).
 * Update `marker` module spec documentation with new proto references [#1580](https://github.com/provenance-io/provenance/pull/1580).
+* Bumped `wasmd` to v0.30.0-pio-5 and `wasmvm` to v1.2.4 [#1582](https://github.com/provenance-io/provenance/pull/1582).
 * Inactive validator delegation cleanup process [#1556](https://github.com/provenance-io/provenance/issues/1556).
 
 ### Bug Fixes
