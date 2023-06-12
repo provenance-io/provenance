@@ -29,10 +29,11 @@ func (k Keeper) TriggerByID(ctx context.Context, req *types.QueryTriggerByIDRequ
 	return &types.QueryTriggerByIDResponse{Trigger: &trigger}, nil
 }
 
-// Triggers returns a trigger matching the ID.
+// Triggers returns the list of triggers.
 func (k Keeper) Triggers(ctx context.Context, req *types.QueryTriggersRequest) (*types.QueryTriggersResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	var pagination *query.PageRequest
+	if req != nil {
+		pagination = req.Pagination
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -40,7 +41,7 @@ func (k Keeper) Triggers(ctx context.Context, req *types.QueryTriggersRequest) (
 	response := types.QueryTriggersResponse{}
 	kvStore := sdkCtx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(kvStore, types.TriggerKeyPrefix)
-	pageResponse, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageResponse, err := query.FilteredPaginate(prefixStore, pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var trigger types.Trigger
 		vErr := trigger.Unmarshal(value)
 
