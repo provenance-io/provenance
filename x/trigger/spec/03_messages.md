@@ -17,11 +17,11 @@ Creates a `Trigger` that will fire when its event has been detected. If the mess
 
 ### Request
 
-+++ https://github.com/provenance-io/provenance/blob/f560c43f9e0e8079e3b62b4e8fc8411baee5590c/proto/provenance/trigger/v1/tx.proto#L21-L31
++++ https://github.com/provenance-io/provenance/blob/bda28e5f58a4a58e8fef21141400ad362b84518b/proto/provenance/trigger/v1/tx.proto#L20-L31
 
 ### Response
 
-+++ https://github.com/provenance-io/provenance/blob/288f8b1b60861da811c61840dbf4220a3f906071/proto/provenance/trigger/v1/tx.proto#L34-L37
++++ https://github.com/provenance-io/provenance/blob/bda28e5f58a4a58e8fef21141400ad362b84518b/proto/provenance/trigger/v1/tx.proto#L33-L37
 
 The message will fail under the following conditions:
 * The authority is an invalid bech32 address
@@ -36,11 +36,11 @@ Destroys a `Trigger` that has been created and is still registered.
 
 ### Request
 
-+++ https://github.com/provenance-io/provenance/blob/288f8b1b60861da811c61840dbf4220a3f906071/proto/provenance/trigger/v1/tx.proto#L40-L48
++++ https://github.com/provenance-io/provenance/blob/bda28e5f58a4a58e8fef21141400ad362b84518b/proto/provenance/trigger/v1/tx.proto#L39-L48
 
 ### Response
 
-+++ https://github.com/provenance-io/provenance/blob/288f8b1b60861da811c61840dbf4220a3f906071/proto/provenance/trigger/v1/tx.proto#L51
++++ https://github.com/provenance-io/provenance/blob/bda28e5f58a4a58e8fef21141400ad362b84518b/proto/provenance/trigger/v1/tx.proto#L50-L51
 
 The message will fail under the following conditions:
 * The `Trigger` does not exist

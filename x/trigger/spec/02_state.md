@@ -28,45 +28,43 @@ The excess gas on a MsgCreateTrigger transaction will be used for the `Trigger's
 * Event Listener: `0x02 | Event Type (32 bytes) | Order (8 bytes) -> ProtocolBuffers(Trigger)`
 * Gas Limit: `0x04 | Trigger ID (8 bytes) -> uint64(GasLimit)`
 
-+++ https://github.com/provenance-io/provenance/blob/29b326542ba420affce45af8c7190b96046cce0e/proto/provenance/trigger/v1/trigger.proto#L14-L26
++++ https://github.com/provenance-io/provenance/blob/bda28e5f58a4a58e8fef21141400ad362b84518b/proto/provenance/trigger/v1/trigger.proto#L13-L26
 
 ### TriggerEventI
 
 A `Trigger` must have an event that implements the `TriggerEventI` interface. Currently, the system supports `BlockHeightEvent`, `BlockTimeEvent`, and `TransactionEvent`.
 
-+++ https://github.com/provenance-io/provenance/blob/f560c43f9e0e8079e3b62b4e8fc8411baee5590c/x/trigger/types/trigger.go#L24-L30
-
 #### BlockHeightEvent
 
 The `BlockHeightEvent` allows the user to configure their `Trigger` to fire when the current block's `Block Height` is greater than or equal to the defined one.
 
-+++ https://github.com/provenance-io/provenance/blob/29b326542ba420affce45af8c7190b96046cce0e/proto/provenance/trigger/v1/trigger.proto#L42-L49
++++ https://github.com/provenance-io/provenance/blob/bda28e5f58a4a58e8fef21141400ad362b84518b/proto/provenance/trigger/v1/trigger.proto#L41-L49
 
 #### BlockTimeEvent
 
 The `BlockTimeEvent` allows the user to configure their `Trigger` to fire when the current block's `Block Time` is greater than or equal to the defined one.
 
-+++ https://github.com/provenance-io/provenance/blob/29b326542ba420affce45af8c7190b96046cce0e/proto/provenance/trigger/v1/trigger.proto#L52-L59
++++ https://github.com/provenance-io/provenance/blob/bda28e5f58a4a58e8fef21141400ad362b84518b/proto/provenance/trigger/v1/trigger.proto#L51-L59
 
 #### TransactionEvent
 
 The `TransactionEvent` allows the user to configure their `Trigger` to fire when a transaction event matching the user defined one has been emitted.
 
-+++ https://github.com/provenance-io/provenance/blob/29b326542ba420affce45af8c7190b96046cce0e/proto/provenance/trigger/v1/trigger.proto#L62-L71
++++ https://github.com/provenance-io/provenance/blob/bda28e5f58a4a58e8fef21141400ad362b84518b/proto/provenance/trigger/v1/trigger.proto#L61-L71
 
 ##### Attribute
 
 The `Attribute` is used by the `TransactionEvent` to allow the user to configure which attributes must be present on the transaction event. An `Attribute` with an empty `value` will only require the `name` to match.
 
-+++ https://github.com/provenance-io/provenance/blob/29b326542ba420affce45af8c7190b96046cce0e/proto/provenance/trigger/v1/trigger.proto#L74-L82
++++ https://github.com/provenance-io/provenance/blob/bda28e5f58a4a58e8fef21141400ad362b84518b/proto/provenance/trigger/v1/trigger.proto#L73-L82
 
 ---
-## Queue
+## QueuedTrigger
 
-The `Queue` is an internal structure that we use to store and throttle the execution of `Triggers` on the `BeginBlock`. We store each `Trigger` as a `QueuedTrigger`, and then manipulate the `Queue Start Index` and `Queue Length` whenever we add or remove from the `Queue`. When we add to the `Queue`, the new element is added to the `QueueStartIndex` + `Length`. The `QueueLength` is then incremented by one. When we dequeue from the Queue, the `QueueStartIndex` will be incremented by 1 and the `QueueLength` is decremented by 1. We also ensure the key of the dequeued element is removed.
+The `QueuedTrigger` is an internal structure that we use to store and throttle the execution of `Triggers` on the `BeginBlock`. We store each `Trigger` as a `QueuedTrigger`, and then manipulate the `Queue Start Index` and `Queue Length` whenever we add or remove from the `Queue`. When we add to the `Queue`, the new element is added to the `QueueStartIndex` + `Length`. The `QueueLength` is then incremented by one. When we dequeue from the Queue, the `QueueStartIndex` will be incremented by 1 and the `QueueLength` is decremented by 1. We also ensure the key of the dequeued element is removed.
 
 * Queue Item: `0x03 | Queue Index (8 bytes) -> ProtocolBuffers(QueuedTrigger)`
 * Queue Start Index: `0x06 -> uint64(QueueStartIndex)`
 * Queue Length: `0x07 -> uint64(QueueLength)`
 
-+++ https://github.com/provenance-io/provenance/blob/29b326542ba420affce45af8c7190b96046cce0e/proto/provenance/trigger/v1/trigger.proto#L29-L39
++++ https://github.com/provenance-io/provenance/blob/bda28e5f58a4a58e8fef21141400ad362b84518b/proto/provenance/trigger/v1/trigger.proto#L28-L39
