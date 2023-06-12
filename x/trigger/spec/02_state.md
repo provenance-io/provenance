@@ -36,7 +36,7 @@ The excess gas on a MsgCreateTrigger transaction will be used for the `Trigger's
 
 A `Trigger` must have an event that implements the `TriggerEventI` interface. Currently, the system supports `BlockHeightEvent`, `BlockTimeEvent`, and `TransactionEvent`.
 
-+++ https://github.com/provenance-io/provenance/blob/29b326542ba420affce45af8c7190b96046cce0e/x/trigger/types/trigger.go#L21-L24
++++ https://github.com/provenance-io/provenance/blob/f560c43f9e0e8079e3b62b4e8fc8411baee5590c/x/trigger/types/trigger.go#L24-L30
 
 #### BlockHeightEvent
 
