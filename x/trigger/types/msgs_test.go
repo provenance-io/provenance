@@ -85,14 +85,14 @@ func TestMsgCreateTriggerRequestValidateBasic(t *testing.T) {
 			authorities: []string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},
 			event:       &BlockHeightEvent{},
 			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4", Id: 1}},
-			err:         "action: 0, err: signer missing: cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+			err:         "action: 0, err: signer missing: cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4",
 		},
 		{
-			name:        "invalid - authorities length must match",
-			authorities: []string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4"},
+			name:        "valid - the action's signer must be in authorities subset",
+			authorities: []string{"cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4", "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},
 			event:       &BlockHeightEvent{},
-			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4", Id: 1}},
-			err:         "action: 0, err: expected 2 signers",
+			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
+			err:         "",
 		},
 	}
 

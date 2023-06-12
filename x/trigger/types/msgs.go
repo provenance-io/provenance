@@ -2,7 +2,6 @@ package types
 
 import (
 	fmt "fmt"
-	"sort"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,8 +62,8 @@ func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 		if err := action.ValidateBasic(); err != nil {
 			return fmt.Errorf("action: %d, err: %w", idx, err)
 		}
-		signers := accAddressesToStrings(action.GetSigners())
-		if err := signersMatch(msg.Authorities, signers); err != nil {
+		actionSigners := accAddressesToStrings(action.GetSigners())
+		if err := hasSigners(msg.Authorities, actionSigners); err != nil {
 			return fmt.Errorf("action: %d, err: %w", idx, err)
 		}
 	}
@@ -76,15 +75,17 @@ func (msg MsgCreateTriggerRequest) GetSigners() []sdk.AccAddress {
 	return stringsToAccAddresses(msg.GetAuthorities())
 }
 
-func signersMatch(left []string, right []string) error {
-	if len(left) != len(right) {
-		return fmt.Errorf("expected %d signers", len(left))
+// hasSigners checks if the signers are all in the set of the entries
+func hasSigners(entries []string, signers []string) error {
+	set := make(map[string]bool)
+
+	for _, entry := range entries {
+		set[entry] = true
 	}
-	sort.Strings(left)
-	sort.Strings(right)
-	for idx := range left {
-		if left[idx] != right[idx] {
-			return fmt.Errorf("signer missing: %s", left[idx])
+
+	for _, signer := range signers {
+		if _, ok := set[signer]; !ok {
+			return fmt.Errorf("signer missing: %s", signer)
 		}
 	}
 	return nil
