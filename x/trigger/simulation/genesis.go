@@ -152,7 +152,7 @@ func randomTriggerIDs(r *rand.Rand, count int, max int) []uint64 {
 	rv := make([]uint64, count)
 	// If count is 33+% of max, generate a permutation up to max (exclusive).
 	// Then increment each of the first <count> of them (since we want 1 to max inclusive) and return those.
-	if max/3 >= count {
+	if max/3 <= count {
 		nums := r.Perm(max)
 		for i := range rv {
 			rv[i] = uint64(nums[i]) + 1
