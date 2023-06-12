@@ -68,6 +68,8 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			removeInactiveValidatorDelegations(ctx, app)
+
 			err = setAccountDataNameRecord(ctx, app.AccountKeeper, &app.NameKeeper)
 			if err != nil {
 				return nil, err
@@ -90,6 +92,8 @@ var upgrades = map[string]appUpgrade{
 			if err != nil {
 				return nil, err
 			}
+
+			removeInactiveValidatorDelegations(ctx, app)
 
 			err = setAccountDataNameRecord(ctx, app.AccountKeeper, &app.NameKeeper)
 			if err != nil {
@@ -240,6 +244,38 @@ func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
 	} else {
 		ctx.Logger().Info(fmt.Sprintf("Successfully removed message fee for %q with amount %q.", fee.MsgTypeUrl, fee.AdditionalFee.String()))
 	}
+}
+
+// removeInactiveValidatorDelegations unbonds all delegations from inactive validators, triggering their removal from the validator set.
+func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
+	unbondingTimeParam := app.StakingKeeper.GetParams(ctx).UnbondingTime
+	ctx.Logger().Info(fmt.Sprintf("removing all delegations from validators that have been inactive (unbonded) for %d days", int64(unbondingTimeParam.Hours()/24)))
+	removalCount := 0
+	validators := app.StakingKeeper.GetAllValidators(ctx)
+	for _, validator := range validators {
+		if validator.IsUnbonded() {
+			inactiveDuration := ctx.BlockTime().Sub(validator.UnbondingTime)
+			if inactiveDuration >= unbondingTimeParam {
+				ctx.Logger().Info(fmt.Sprintf("validator %v has been inactive (unbonded) for %d days and will be removed", validator.OperatorAddress, int64(inactiveDuration.Hours()/24)))
+				valAddress, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
+				if err != nil {
+					ctx.Logger().Error(fmt.Sprintf("invalid operator address: %s: %v", validator.OperatorAddress, err))
+					continue
+				}
+				delegations := app.StakingKeeper.GetValidatorDelegations(ctx, valAddress)
+				for _, delegation := range delegations {
+					ctx.Logger().Info(fmt.Sprintf("undelegate delegator %v from validator %v of all shares (%v)", delegation.DelegatorAddress, validator.OperatorAddress, delegation.GetShares()))
+					_, err = app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), valAddress, delegation.GetShares())
+					if err != nil {
+						ctx.Logger().Error(fmt.Sprintf("failed to undelegate delegator %s from validator %s: %v", delegation.GetDelegatorAddr().String(), valAddress.String(), err))
+						continue
+					}
+				}
+				removalCount++
+			}
+		}
+	}
+	ctx.Logger().Info(fmt.Sprintf("a total of %d inactive (unbonded) validators have had all their delegators removed", removalCount))
 }
 
 // fixNameIndexEntries fixes the name module's address to name index entries.
