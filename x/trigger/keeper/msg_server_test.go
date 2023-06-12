@@ -8,9 +8,9 @@ import (
 )
 
 func (s *KeeperTestSuite) TestCreateTrigger() {
-	owner := s.accountAddresses[0].String()
+	owner := []string{s.accountAddresses[0].String()}
 	var event types.TriggerEventI = &types.BlockHeightEvent{BlockHeight: 130}
-	action := types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}
+	action := types.MsgDestroyTriggerRequest{Id: 100, Authority: owner[0]}
 
 	tests := []struct {
 		name       string
@@ -60,10 +60,10 @@ func (s *KeeperTestSuite) TestCreateTrigger() {
 }
 
 func (s *KeeperTestSuite) TestDestroyTrigger() {
-	owner := s.accountAddresses[0].String()
-	owner2 := s.accountAddresses[1].String()
+	owner := []string{s.accountAddresses[0].String()}
+	owner2 := []string{s.accountAddresses[1].String()}
 	var event types.TriggerEventI = &types.BlockHeightEvent{BlockHeight: 130}
-	action := types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}
+	action := types.MsgDestroyTriggerRequest{Id: 100, Authority: owner[0]}
 
 	setupRequests := []*types.MsgCreateTriggerRequest{
 		types.NewCreateTriggerRequest(owner, event, []sdk.Msg{&action}),
@@ -83,22 +83,22 @@ func (s *KeeperTestSuite) TestDestroyTrigger() {
 	}{
 		{
 			name:    "valid - single trigger destroyed",
-			request: types.NewDestroyTriggerRequest(owner, 1),
+			request: types.NewDestroyTriggerRequest(owner[0], 1),
 			err:     "",
 		},
 		{
 			name:    "valid - multiple triggers destroyed",
-			request: types.NewDestroyTriggerRequest(owner, 2),
+			request: types.NewDestroyTriggerRequest(owner[0], 2),
 			err:     "",
 		},
 		{
 			name:    "invalid - destroy a non existant trigger",
-			request: types.NewDestroyTriggerRequest(owner, 100),
+			request: types.NewDestroyTriggerRequest(owner[0], 100),
 			err:     "trigger not found",
 		},
 		{
 			name:    "invalid - destroy a trigger that is not owned by the user",
-			request: types.NewDestroyTriggerRequest(owner, 3),
+			request: types.NewDestroyTriggerRequest(owner[0], 3),
 			err:     "signer does not have authority to destroy trigger",
 		},
 	}

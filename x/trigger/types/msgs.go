@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	"sort"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,7 +14,7 @@ var _ sdk.Msg = &MsgDestroyTriggerRequest{}
 var _ codectypes.UnpackInterfacesMessage = (*MsgCreateTriggerRequest)(nil)
 
 // NewCreateTriggerRequest Creates a new trigger create request
-func NewCreateTriggerRequest(authority string, event TriggerEventI, msgs []sdk.Msg) *MsgCreateTriggerRequest {
+func NewCreateTriggerRequest(authorities []string, event TriggerEventI, msgs []sdk.Msg) *MsgCreateTriggerRequest {
 	actions, err := sdktx.SetMsgs(msgs)
 	if err != nil {
 		fmt.Printf("unable to set messages: %s\n", err)
@@ -27,9 +28,9 @@ func NewCreateTriggerRequest(authority string, event TriggerEventI, msgs []sdk.M
 	}
 
 	m := &MsgCreateTriggerRequest{
-		Authority: authority,
-		Event:     eventAny,
-		Actions:   actions,
+		Authorities: authorities,
+		Event:       eventAny,
+		Actions:     actions,
 	}
 
 	return m
@@ -37,9 +38,6 @@ func NewCreateTriggerRequest(authority string, event TriggerEventI, msgs []sdk.M
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgCreateTriggerRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return fmt.Errorf("invalid address for trigger authority from address: %w", err)
-	}
 	if len(msg.Actions) == 0 {
 		return fmt.Errorf("trigger must contain actions")
 	}
@@ -55,9 +53,19 @@ func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 		return err
 	}
 
-	for idx, msg := range actions {
-		if err := msg.ValidateBasic(); err != nil {
-			return fmt.Errorf("msg: %d, err: %w", idx, err)
+	for _, authority := range msg.Authorities {
+		if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+			return fmt.Errorf("invalid address for trigger authority from address: %w", err)
+		}
+	}
+
+	for idx, action := range actions {
+		if err := action.ValidateBasic(); err != nil {
+			return fmt.Errorf("action: %d, err: %w", idx, err)
+		}
+		signers := accAddressesToStrings(action.GetSigners())
+		if err := signersMatch(msg.Authorities, signers); err != nil {
+			return fmt.Errorf("action: %d, err: %w", idx, err)
 		}
 	}
 	return nil
@@ -65,7 +73,44 @@ func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 
 // GetSigners indicates that the message must have been signed by the parent.
 func (msg MsgCreateTriggerRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.GetAuthority())}
+	return stringsToAccAddresses(msg.GetAuthorities())
+}
+
+func signersMatch(left []string, right []string) error {
+	if len(left) != len(right) {
+		return fmt.Errorf("expected %d signers", len(left))
+	}
+	sort.Strings(left)
+	sort.Strings(right)
+	for idx := range left {
+		if left[idx] != right[idx] {
+			return fmt.Errorf("signer missing: %s", left[idx])
+		}
+	}
+	return nil
+}
+
+// stringsToAccAddresses converts an array of strings into an array of Acc Addresses.
+// Panics if it can't convert one.
+func stringsToAccAddresses(strings []string) []sdk.AccAddress {
+	retval := make([]sdk.AccAddress, len(strings))
+
+	for i, str := range strings {
+		retval[i] = sdk.MustAccAddressFromBech32(str)
+	}
+
+	return retval
+}
+
+// accAddressesToStrings converts an array of sdk.AccAddress into an array of strings.
+func accAddressesToStrings(addrs []sdk.AccAddress) []string {
+	retval := make([]string, len(addrs))
+
+	for i, addr := range addrs {
+		retval[i] = addr.String()
+	}
+
+	return retval
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

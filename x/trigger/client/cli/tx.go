@@ -71,7 +71,7 @@ func GetCmdAddTransactionTrigger() *cobra.Command {
 			}
 
 			msg := types.NewCreateTriggerRequest(
-				callerAddr.String(),
+				[]string{callerAddr.String()},
 				event,
 				msgs,
 			)
@@ -112,7 +112,7 @@ func GetCmdAddBlockHeightTrigger() *cobra.Command {
 			}
 
 			msg := types.NewCreateTriggerRequest(
-				callerAddr.String(),
+				[]string{callerAddr.String()},
 				&types.BlockHeightEvent{BlockHeight: uint64(height)},
 				msgs,
 			)
@@ -153,7 +153,7 @@ func GetCmdAddBlockTimeTrigger() *cobra.Command {
 			}
 
 			msg := types.NewCreateTriggerRequest(
-				callerAddr.String(),
+				[]string{callerAddr.String()},
 				&types.BlockTimeEvent{Time: startTime.UTC()},
 				msgs,
 			)
