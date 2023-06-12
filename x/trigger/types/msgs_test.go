@@ -4,11 +4,12 @@ import (
 	fmt "fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNewCreateTriggerRequest(t *testing.T) {
@@ -71,7 +72,7 @@ func TestMsgCreateTriggerRequestValidateBasic(t *testing.T) {
 			authorities: []string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},
 			event:       &BlockHeightEvent{},
 			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"}},
-			err:         "action: 0, err: invalid id for trigger",
+			err:         "action: 0: invalid id for trigger",
 		},
 		{
 			name:        "invalid - event validation failed",
@@ -85,7 +86,7 @@ func TestMsgCreateTriggerRequestValidateBasic(t *testing.T) {
 			authorities: []string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},
 			event:       &BlockHeightEvent{},
 			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4", Id: 1}},
-			err:         "action: 0, err: signer missing: cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4",
+			err:         "action: 0: signers[0] \"cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4\" is not a signer of the request message",
 		},
 		{
 			name:        "valid - the action's signer must be in authorities subset",

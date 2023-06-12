@@ -52,19 +52,22 @@ func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 		return err
 	}
 
+	authorities := make(map[string]bool)
 	for _, authority := range msg.Authorities {
-		if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		var addr sdk.AccAddress
+		addr, err = sdk.AccAddressFromBech32(authority)
+		if err != nil {
 			return fmt.Errorf("invalid address for trigger authority from address: %w", err)
 		}
+		authorities[string(addr)] = true
 	}
 
 	for idx, action := range actions {
-		if err := action.ValidateBasic(); err != nil {
-			return fmt.Errorf("action: %d, err: %w", idx, err)
+		if err = action.ValidateBasic(); err != nil {
+			return fmt.Errorf("action: %d: %w", idx, err)
 		}
-		actionSigners := accAddressesToStrings(action.GetSigners())
-		if err := hasSigners(msg.Authorities, actionSigners); err != nil {
-			return fmt.Errorf("action: %d, err: %w", idx, err)
+		if err = hasSigners(authorities, action.GetSigners()); err != nil {
+			return fmt.Errorf("action: %d: %w", idx, err)
 		}
 	}
 	return nil
@@ -76,16 +79,11 @@ func (msg MsgCreateTriggerRequest) GetSigners() []sdk.AccAddress {
 }
 
 // hasSigners checks if the signers are all in the set of the entries
-func hasSigners(entries []string, signers []string) error {
-	set := make(map[string]bool)
-
-	for _, entry := range entries {
-		set[entry] = true
-	}
-
-	for _, signer := range signers {
-		if _, ok := set[signer]; !ok {
-			return fmt.Errorf("signer missing: %s", signer)
+// The keys in the available map are a cast of an AccAddress to a string. It is not the result of AccAddress.String().
+func hasSigners(available map[string]bool, signers []sdk.AccAddress) error {
+	for i, signer := range signers {
+		if !available[string(signer)] {
+			return fmt.Errorf("signers[%d] %q is not a signer of the request message", i, signer.String())
 		}
 	}
 	return nil
