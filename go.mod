@@ -30,7 +30,7 @@ require (
 	github.com/tendermint/tendermint v0.34.28
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/exp v0.0.0-20230310171629-522b1b587ee0
-	golang.org/x/text v0.9.0
+	golang.org/x/text v0.10.0
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
