@@ -59,9 +59,9 @@ The `Attribute` is used by the `TransactionEvent` to allow the user to configure
 +++ https://github.com/provenance-io/provenance/blob/bda28e5f58a4a58e8fef21141400ad362b84518b/proto/provenance/trigger/v1/trigger.proto#L73-L82
 
 ---
-## Queued
+## Queue
 
-The `Queued` is an internal structure that we use to store and throttle the execution of `Triggers` on the `BeginBlock`. We store each `Trigger` as a `QueuedTrigger`, and then manipulate the `Queue Start Index` and `Queue Length` whenever we add or remove from the `Queue`. When we add to the `Queue`, the new element is added to the `QueueStartIndex` + `Length`. The `QueueLength` is then incremented by one. When we dequeue from the Queue, the `QueueStartIndex` will be incremented by 1 and the `QueueLength` is decremented by 1. We also ensure the key of the dequeued element is removed.
+The `Queue` is an internal structure that we use to store and throttle the execution of `Triggers` on the `BeginBlock`. We store each `Trigger` as a `QueuedTrigger`, and then manipulate the `Queue Start Index` and `Queue Length` whenever we add or remove from the `Queue`. When we add to the `Queue`, the new element is added to the `QueueStartIndex` + `Length`. The `QueueLength` is then incremented by one. When we dequeue from the Queue, the `QueueStartIndex` will be incremented by 1 and the `QueueLength` is decremented by 1. We also ensure the key of the dequeued element is removed.
 
 * Queue Item: `0x03 | Queue Index (8 bytes) -> ProtocolBuffers(QueuedTrigger)`
 * Queue Start Index: `0x06 -> uint64(QueueStartIndex)`
