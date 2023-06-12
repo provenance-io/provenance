@@ -68,6 +68,8 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			removeInactiveValidatorDelegations(ctx, app)
+
 			err = setAccountDataNameRecord(ctx, app.AccountKeeper, &app.NameKeeper)
 			if err != nil {
 				return nil, err
@@ -77,8 +79,6 @@ var upgrades = map[string]appUpgrade{
 			addGovV1SubmitFee(ctx, app)
 
 			removeP8eMemorializeContractFee(ctx, app)
-
-			removeInactiveValidatorDelegations(ctx, app)
 
 			fixNameIndexEntries(ctx, app)
 
@@ -93,6 +93,8 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			removeInactiveValidatorDelegations(ctx, app)
+
 			err = setAccountDataNameRecord(ctx, app.AccountKeeper, &app.NameKeeper)
 			if err != nil {
 				return nil, err
@@ -101,8 +103,6 @@ var upgrades = map[string]appUpgrade{
 			// No need to call addGovV1SubmitFee in here as mainnet already has it defined.
 
 			removeP8eMemorializeContractFee(ctx, app)
-
-			removeInactiveValidatorDelegations(ctx, app)
 
 			fixNameIndexEntries(ctx, app)
 
@@ -265,7 +265,7 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 				delegations := app.StakingKeeper.GetValidatorDelegations(ctx, valAddress)
 				for _, delegation := range delegations {
 					ctx.Logger().Info(fmt.Sprintf("undelegate delegator %v from validator %v of all shares (%v)", delegation.DelegatorAddress, validator.OperatorAddress, delegation.GetShares()))
-					_, err := app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), valAddress, delegation.GetShares())
+					_, err = app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), valAddress, delegation.GetShares())
 					if err != nil {
 						ctx.Logger().Error(fmt.Sprintf("failed to undelegate delegator %s from validator %s: %v", delegation.GetDelegatorAddr().String(), valAddress.String(), err))
 						continue
