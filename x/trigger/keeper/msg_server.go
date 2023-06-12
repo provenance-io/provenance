@@ -33,7 +33,7 @@ func (s msgServer) CreateTrigger(goCtx context.Context, msg *types.MsgCreateTrig
 		return nil, err
 	}
 
-	trigger := s.NewTriggerWithID(ctx, msg.GetAuthority(), msg.GetEvent(), msg.GetActions())
+	trigger := s.NewTriggerWithID(ctx, msg.GetAuthorities()[0], msg.GetEvent(), msg.GetActions())
 	s.RegisterTrigger(ctx, trigger)
 
 	err = ctx.EventManager().EmitTypedEvent(&types.EventTriggerCreated{

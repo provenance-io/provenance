@@ -14,29 +14,29 @@ import (
 )
 
 func TestNewTrigger(t *testing.T) {
-	authority := "addr"
+	authorities := []string{"addr1", "addr2"}
 	event := &BlockHeightEvent{}
 	msgs := []sdk.Msg{}
 	id := uint64(1)
 
-	request := NewCreateTriggerRequest(authority, event, msgs)
+	request := NewCreateTriggerRequest(authorities, event, msgs)
 
-	trigger := NewTrigger(id, authority, request.GetEvent(), request.GetActions())
+	trigger := NewTrigger(id, authorities[0], request.GetEvent(), request.GetActions())
 	assert.Equal(t, int(id), int(trigger.Id), "should have correct id for NewTrigger")
-	assert.Equal(t, authority, trigger.Owner, "should have correct owner for NewTrigger")
+	assert.Equal(t, authorities[0], trigger.Owner, "should have correct owner for NewTrigger")
 	assert.Equal(t, request.GetEvent(), trigger.Event, "should have correct event for NewTrigger")
 	assert.Equal(t, request.GetActions(), trigger.Actions, "should have correct actions for NewTrigger")
 }
 
 func TestNewQueuedTrigger(t *testing.T) {
-	authority := "addr"
+	authorities := []string{"addr"}
 	event := &BlockHeightEvent{}
 	msgs := []sdk.Msg{}
 	id := uint64(1)
 
-	request := NewCreateTriggerRequest(authority, event, msgs)
+	request := NewCreateTriggerRequest(authorities, event, msgs)
 
-	trigger := NewTrigger(id, authority, request.GetEvent(), request.GetActions())
+	trigger := NewTrigger(id, authorities[0], request.GetEvent(), request.GetActions())
 	queuedTrigger := NewQueuedTrigger(trigger, time.Time{}, uint64(1))
 
 	assert.Equal(t, trigger, queuedTrigger.Trigger, "should have correct trigger for NewQueuedTrigger")
@@ -138,6 +138,11 @@ func TestAttributeMatches(t *testing.T) {
 func TestTransactionEventGetEventPrefix(t *testing.T) {
 	event := TransactionEvent{Name: "customName"}
 	assert.Equal(t, "customName", event.GetEventPrefix(), "should get correct prefix for GetEventPrefix")
+}
+
+func TestTransactionEventGetEventOrder(t *testing.T) {
+	event := TransactionEvent{Name: "customName"}
+	assert.Equal(t, 0, int(event.GetEventOrder()), "should get correct event order")
 }
 
 func TestTransactionEventValidate(t *testing.T) {
@@ -295,6 +300,11 @@ func TestBlockHeightEventGetEventPrefix(t *testing.T) {
 	assert.Equal(t, BlockHeightPrefix, event.GetEventPrefix(), "should have correct prefix for GetEventPrefix")
 }
 
+func TestBlockHeightEventGetEventOrder(t *testing.T) {
+	event := BlockHeightEvent{BlockHeight: 77}
+	assert.Equal(t, int(77), int(event.GetEventOrder()), "should have correct event order")
+}
+
 func TestBlockHeightEventValidate(t *testing.T) {
 	event := BlockHeightEvent{}
 	assert.Nil(t, event.Validate(), "should always have successful validate")
@@ -303,6 +313,12 @@ func TestBlockHeightEventValidate(t *testing.T) {
 func TestBlockTimeEventGetEventPrefix(t *testing.T) {
 	event := BlockTimeEvent{}
 	assert.Equal(t, BlockTimePrefix, event.GetEventPrefix(), "should have correct prefix for GetEventPrefix")
+}
+
+func TestBlockTimeEventGetEventOrder(t *testing.T) {
+	now := time.Now().UTC()
+	event := BlockTimeEvent{Time: now}
+	assert.Equal(t, int(now.UnixNano()), int(event.GetEventOrder()), "should have correct order")
 }
 
 func TestBlockTimeEventValidate(t *testing.T) {
@@ -329,7 +345,7 @@ func TestTriggerUnpackInterfaces(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := NewCreateTriggerRequest(tc.authority, tc.event, tc.msgs)
+			msg := NewCreateTriggerRequest([]string{tc.authority}, tc.event, tc.msgs)
 			trigger := NewTrigger(uint64(1), tc.authority, msg.Event, msg.Actions)
 			err := trigger.UnpackInterfaces(cdc)
 			assert.NoError(t, err, "should not throw an error for UnpackInterfaces")
@@ -358,7 +374,7 @@ func TestQueuedTriggerUnpackInterfaces(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := NewCreateTriggerRequest(tc.authority, tc.event, tc.msgs)
+			msg := NewCreateTriggerRequest([]string{tc.authority}, tc.event, tc.msgs)
 			trigger := NewTrigger(uint64(1), tc.authority, msg.Event, msg.Actions)
 			queuedTrigger := NewQueuedTrigger(trigger, time.Time{}, uint64(1))
 			err := queuedTrigger.UnpackInterfaces(cdc)
@@ -401,7 +417,7 @@ func TestTriggerGetTriggerEventI(t *testing.T) {
 			if event == nil {
 				event = &BlockHeightEvent{}
 			}
-			msg := NewCreateTriggerRequest(tc.authority, event, tc.msgs)
+			msg := NewCreateTriggerRequest([]string{tc.authority}, event, tc.msgs)
 			if tc.event == nil {
 				msg.Event = nil
 			}

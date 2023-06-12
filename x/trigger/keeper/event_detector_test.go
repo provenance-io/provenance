@@ -133,6 +133,26 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 			},
 		},
 		{
+			name: "valid - multiple detected block height events and reordered",
+			triggers: []types.TriggerEventI{
+				&types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())},
+				&types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight() - 1)},
+			},
+			registered: []types.Trigger(nil),
+			queued: []types.QueuedTrigger{
+				{
+					BlockHeight: uint64(s.ctx.BlockHeight()),
+					Time:        s.ctx.BlockTime(),
+					Trigger:     s.CreateTrigger(12, s.accountAddresses[0].String(), &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight() - 1)}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
+				},
+				{
+					BlockHeight: uint64(s.ctx.BlockHeight()),
+					Time:        s.ctx.BlockTime(),
+					Trigger:     s.CreateTrigger(11, s.accountAddresses[0].String(), &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
+				},
+			},
+		},
+		{
 			name: "valid - multiple detected time events",
 			triggers: []types.TriggerEventI{
 				&types.BlockTimeEvent{Time: s.ctx.BlockTime()},
@@ -143,12 +163,12 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 				{
 					BlockHeight: uint64(s.ctx.BlockHeight()),
 					Time:        s.ctx.BlockTime(),
-					Trigger:     s.CreateTrigger(11, s.accountAddresses[0].String(), &types.BlockTimeEvent{Time: s.ctx.BlockTime()}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
+					Trigger:     s.CreateTrigger(13, s.accountAddresses[0].String(), &types.BlockTimeEvent{Time: s.ctx.BlockTime()}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 				},
 				{
 					BlockHeight: uint64(s.ctx.BlockHeight()),
 					Time:        s.ctx.BlockTime(),
-					Trigger:     s.CreateTrigger(12, s.accountAddresses[0].String(), &types.BlockTimeEvent{Time: s.ctx.BlockTime()}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
+					Trigger:     s.CreateTrigger(14, s.accountAddresses[0].String(), &types.BlockTimeEvent{Time: s.ctx.BlockTime()}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 				},
 			},
 		},
@@ -161,23 +181,23 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 				&types.BlockTimeEvent{Time: s.ctx.BlockTime()},
 			},
 			registered: []types.Trigger{
-				s.CreateTrigger(14, s.accountAddresses[0].String(), &types.TransactionEvent{Name: "non-existing-event"}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
+				s.CreateTrigger(16, s.accountAddresses[0].String(), &types.TransactionEvent{Name: "non-existing-event"}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 			},
 			queued: []types.QueuedTrigger{
 				{
 					BlockHeight: uint64(s.ctx.BlockHeight()),
 					Time:        s.ctx.BlockTime(),
-					Trigger:     s.CreateTrigger(13, s.accountAddresses[0].String(), &types.TransactionEvent{Name: "event1"}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
+					Trigger:     s.CreateTrigger(15, s.accountAddresses[0].String(), &types.TransactionEvent{Name: "event1"}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 				},
 				{
 					BlockHeight: uint64(s.ctx.BlockHeight()),
 					Time:        s.ctx.BlockTime(),
-					Trigger:     s.CreateTrigger(15, s.accountAddresses[0].String(), &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
+					Trigger:     s.CreateTrigger(17, s.accountAddresses[0].String(), &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 				},
 				{
 					BlockHeight: uint64(s.ctx.BlockHeight()),
 					Time:        s.ctx.BlockTime(),
-					Trigger:     s.CreateTrigger(16, s.accountAddresses[0].String(), &types.BlockTimeEvent{Time: s.ctx.BlockTime()}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
+					Trigger:     s.CreateTrigger(18, s.accountAddresses[0].String(), &types.BlockTimeEvent{Time: s.ctx.BlockTime()}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 				},
 			},
 		},
@@ -206,7 +226,7 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 			for _, trigger := range triggers {
 				event, err := trigger.GetTriggerEventI()
 				s.NoError(err, "GetTriggerEventI")
-				_, err = s.app.TriggerKeeper.GetEventListener(s.ctx, event.GetEventPrefix(), trigger.GetId())
+				_, err = s.app.TriggerKeeper.GetEventListener(s.ctx, event.GetEventPrefix(), event.GetEventOrder(), trigger.GetId())
 				s.NoError(err, "GetEventListener")
 			}
 

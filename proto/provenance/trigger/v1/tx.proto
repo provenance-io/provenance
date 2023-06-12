@@ -22,8 +22,8 @@ message MsgCreateTriggerRequest {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
 
-  // The signing authority for the request
-  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // The signing authorities for the request
+  repeated string authorities = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // The event that must be detected for the trigger to fire.
   google.protobuf.Any event = 2 [(cosmos_proto.accepts_interface) = "TriggerEventI"];
   // The messages to run when the trigger fires.

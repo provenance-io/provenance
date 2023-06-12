@@ -12,18 +12,18 @@ import (
 )
 
 func TestNewCreateTriggerRequest(t *testing.T) {
-	authority := "addr"
+	authorities := []string{"addr1", "addr2"}
 	var event TriggerEventI = &BlockHeightEvent{BlockHeight: 1}
-	msgs := []sdk.Msg{&MsgDestroyTriggerRequest{Id: 5, Authority: authority}}
+	msgs := []sdk.Msg{&MsgDestroyTriggerRequest{Id: 5, Authority: authorities[0]}}
 	actions, _ := sdktx.SetMsgs(msgs)
 	eventAny, _ := codectypes.NewAnyWithValue(event)
 	expected := &MsgCreateTriggerRequest{
-		Authority: authority,
-		Actions:   actions,
-		Event:     eventAny,
+		Authorities: authorities,
+		Actions:     actions,
+		Event:       eventAny,
 	}
 
-	trigger := NewCreateTriggerRequest(expected.Authority, event, msgs)
+	trigger := NewCreateTriggerRequest(expected.Authorities, event, msgs)
 	assert.Equal(t, expected, trigger, "should create the correct request with NewCreateTriggerRequest")
 }
 
@@ -39,52 +39,66 @@ func TestNewDestroyTriggerRequest(t *testing.T) {
 
 func TestMsgCreateTriggerRequestValidateBasic(t *testing.T) {
 	tests := []struct {
-		name      string
-		authority string
-		event     TriggerEventI
-		msgs      []sdk.Msg
-		err       string
+		name        string
+		authorities []string
+		event       TriggerEventI
+		msgs        []sdk.Msg
+		err         string
 	}{
 		{
-			name:      "valid - successful validate",
-			authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			event:     &BlockHeightEvent{},
-			msgs:      []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
-			err:       "",
+			name:        "valid - successful validate",
+			authorities: []string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},
+			event:       &BlockHeightEvent{},
+			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
+			err:         "",
 		},
 		{
-			name:      "invalid - address is not correct format",
-			authority: "badaddr",
-			event:     &BlockHeightEvent{},
-			msgs:      []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
-			err:       "invalid address for trigger authority from address: decoding bech32 failed: invalid bech32 string length 7",
+			name:        "invalid - address is not correct format",
+			authorities: []string{"badaddr"},
+			event:       &BlockHeightEvent{},
+			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
+			err:         "invalid address for trigger authority from address: decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
-			name:      "invalid - missing actions",
-			authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			event:     &BlockHeightEvent{},
-			msgs:      []sdk.Msg{},
-			err:       "trigger must contain actions",
+			name:        "invalid - missing actions",
+			authorities: []string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},
+			event:       &BlockHeightEvent{},
+			msgs:        []sdk.Msg{},
+			err:         "trigger must contain actions",
 		},
 		{
-			name:      "invalid - actions validate failed",
-			authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			event:     &BlockHeightEvent{},
-			msgs:      []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"}},
-			err:       "msg: 0, err: invalid id for trigger",
+			name:        "invalid - actions validate failed",
+			authorities: []string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},
+			event:       &BlockHeightEvent{},
+			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"}},
+			err:         "action: 0, err: invalid id for trigger",
 		},
 		{
-			name:      "invalid - event validation failed",
-			authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			event:     &TransactionEvent{},
-			msgs:      []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
-			err:       "empty event name",
+			name:        "invalid - event validation failed",
+			authorities: []string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},
+			event:       &TransactionEvent{},
+			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
+			err:         "empty event name",
+		},
+		{
+			name:        "invalid - authorities must match",
+			authorities: []string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},
+			event:       &BlockHeightEvent{},
+			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4", Id: 1}},
+			err:         "action: 0, err: signer missing: cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4",
+		},
+		{
+			name:        "valid - the action's signer must be in authorities subset",
+			authorities: []string{"cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4", "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},
+			event:       &BlockHeightEvent{},
+			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
+			err:         "",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := NewCreateTriggerRequest(tc.authority, tc.event, tc.msgs)
+			msg := NewCreateTriggerRequest(tc.authorities, tc.event, tc.msgs)
 			err := msg.ValidateBasic()
 			if len(tc.err) > 0 {
 				assert.EqualError(t, err, tc.err, "should have error in ValidateBasic")
@@ -102,9 +116,16 @@ func TestMsgCreateTriggerRequestGetSigners(t *testing.T) {
 		signers []sdk.AccAddress
 	}{
 		{
-			name:    "valid - Get signers returns the correct signers",
-			msg:     NewCreateTriggerRequest("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", &BlockHeightEvent{}, []sdk.Msg{}),
-			signers: []sdk.AccAddress{sdk.MustAccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")},
+			name: "valid - Get signers returns the correct signers",
+			msg: NewCreateTriggerRequest(
+				[]string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4"},
+				&BlockHeightEvent{},
+				[]sdk.Msg{},
+			),
+			signers: []sdk.AccAddress{
+				sdk.MustAccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+				sdk.MustAccAddressFromBech32("cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4"),
+			},
 		},
 	}
 
@@ -120,22 +141,22 @@ func TestMsgCreateTriggerRequestUnpackInterfaces(t *testing.T) {
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 
 	tests := []struct {
-		name      string
-		authority string
-		event     TriggerEventI
-		msgs      []sdk.Msg
+		name        string
+		authorities []string
+		event       TriggerEventI
+		msgs        []sdk.Msg
 	}{
 		{
-			name:      "valid - Unpack Interfaces",
-			authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			event:     &BlockHeightEvent{},
-			msgs:      []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
+			name:        "valid - Unpack Interfaces",
+			authorities: []string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},
+			event:       &BlockHeightEvent{},
+			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := NewCreateTriggerRequest(tc.authority, tc.event, tc.msgs)
+			msg := NewCreateTriggerRequest(tc.authorities, tc.event, tc.msgs)
 			err := msg.UnpackInterfaces(cdc)
 			assert.NoError(t, err, "should have no error for UnpackInterfaces")
 			assert.Equal(t, tc.event, msg.Event.GetCachedValue(), "should have cached value for Event in UnpackInterfaces")
@@ -148,25 +169,25 @@ func TestMsgCreateTriggerRequestGetTriggerEventI(t *testing.T) {
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 
 	tests := []struct {
-		name      string
-		authority string
-		event     TriggerEventI
-		msgs      []sdk.Msg
-		err       string
+		name        string
+		authorities []string
+		event       TriggerEventI
+		msgs        []sdk.Msg
+		err         string
 	}{
 		{
-			name:      "valid - GetTriggerEventI",
-			authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			event:     &BlockHeightEvent{},
-			msgs:      []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
-			err:       "",
+			name:        "valid - GetTriggerEventI",
+			authorities: []string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},
+			event:       &BlockHeightEvent{},
+			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
+			err:         "",
 		},
 		{
-			name:      "invalid - Returns error when interface is nil",
-			authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			event:     nil,
-			msgs:      []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
-			err:       "event is nil: trigger does not have event",
+			name:        "invalid - Returns error when interface is nil",
+			authorities: []string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},
+			event:       nil,
+			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", Id: 1}},
+			err:         "event is nil: trigger does not have event",
 		},
 	}
 
@@ -176,7 +197,7 @@ func TestMsgCreateTriggerRequestGetTriggerEventI(t *testing.T) {
 			if event == nil {
 				event = &BlockHeightEvent{}
 			}
-			msg := NewCreateTriggerRequest(tc.authority, event, tc.msgs)
+			msg := NewCreateTriggerRequest(tc.authorities, event, tc.msgs)
 			if tc.event == nil {
 				msg.Event = nil
 			}

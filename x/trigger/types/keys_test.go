@@ -10,16 +10,18 @@ import (
 )
 
 func TestGetEventListenerKey(t *testing.T) {
-	key1 := GetEventListenerKey("event", 1)
-	key2 := GetEventListenerKey("event", 0)
+	key1 := GetEventListenerKey("event", 5, 1)
+	key2 := GetEventListenerKey("event", 2, 0)
 
 	assert.EqualValues(t, EventListenerKeyPrefix, key1[0:1], "should have correct prefix on GetEventListenerKey for key1")
 	assert.EqualValues(t, EventListenerKeyPrefix, key2[0:1], "should have correct prefix on GetEventListenerKey for key2")
 	assert.EqualValues(t, GetEventNameBytes("event"), key1[1:33], "should have correct name bytes in GetEventListenerKey for key1")
 	assert.EqualValues(t, GetEventNameBytes("event"), key2[1:33], "should have correct name bytes in GetEventListenerKey for key2")
-	assert.EqualValues(t, int(1), int(binary.BigEndian.Uint64(key1[33:41])), "should have correct trigger id bytes in GetEventListenerKey for key1")
-	assert.EqualValues(t, int(0), int(binary.BigEndian.Uint64(key2[33:41])), "should have correct trigger id bytes in GetEventListenerKey for key2")
-	assert.PanicsWithValue(t, "invalid event name: ", func() { GetEventListenerKey("", 0) }, "should panic with error message when given invalid event name")
+	assert.EqualValues(t, int(5), int(binary.BigEndian.Uint64(key1[33:41])), "should have correct order bytes in GetEventListenerKey for key1")
+	assert.EqualValues(t, int(2), int(binary.BigEndian.Uint64(key2[33:41])), "should have correct order bytes in GetEventListenerKey for key2")
+	assert.EqualValues(t, int(1), int(binary.BigEndian.Uint64(key1[41:49])), "should have correct trigger id bytes in GetEventListenerKey for key1")
+	assert.EqualValues(t, int(0), int(binary.BigEndian.Uint64(key2[41:49])), "should have correct trigger id bytes in GetEventListenerKey for key2")
+	assert.PanicsWithValue(t, "invalid event name: ", func() { GetEventListenerKey("", 2, 0) }, "should panic with error message when given invalid event name")
 }
 
 func TestGetEventListenerPrefix(t *testing.T) {

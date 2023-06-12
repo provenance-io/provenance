@@ -7596,7 +7596,7 @@ MsgCreateTriggerRequest is the request type for creating a trigger RPC
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | The signing authority for the request |
+| `authorities` | [string](#string) | repeated | The signing authorities for the request |
 | `event` | [google.protobuf.Any](#google.protobuf.Any) |  | The event that must be detected for the trigger to fire. |
 | `actions` | [google.protobuf.Any](#google.protobuf.Any) | repeated | The messages to run when the trigger fires. |
 
