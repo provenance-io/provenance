@@ -27,6 +27,7 @@ Each entry or specification state object is wrapped with an `*IdInfo` message co
   - [OSLocatorsByURI](#oslocatorsbyuri)
   - [OSLocatorsByScope](#oslocatorsbyscope)
   - [OSAllLocators](#osalllocators)
+  - [AccountData](#accountdata)
 
 
 ---
@@ -421,3 +422,16 @@ The only input to this query is pagination information.
 
 ### Response
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L674-L682
+
+---
+## AccountData
+
+The `AccountData` query gets the account data associated with a scope.
+
+### Request
++++ https://github.com/provenance-io/provenance/blob/e83f1955cba07e2ba87790c4487d22632ae9e69c/proto/provenance/metadata/v1/query.proto#L718-L727
+
+The `metadata_addr` must be a scope id, e.g. `scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`.
+
+### Response
++++ https://github.com/provenance-io/provenance/blob/e83f1955cba07e2ba87790c4487d22632ae9e69c/proto/provenance/metadata/v1/query.proto#L729-L733

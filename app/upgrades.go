@@ -11,6 +11,8 @@ import (
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -66,6 +68,11 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			err = setAccountDataNameRecord(ctx, app.AccountKeeper, &app.NameKeeper)
+			if err != nil {
+				return nil, err
+			}
+
 			// We only need to call addGovV1SubmitFee on testnet.
 			addGovV1SubmitFee(ctx, app)
 
@@ -82,6 +89,11 @@ var upgrades = map[string]appUpgrade{
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			err = setAccountDataNameRecord(ctx, app.AccountKeeper, &app.NameKeeper)
 			if err != nil {
 				return nil, err
 			}
@@ -271,4 +283,10 @@ func fixNameIndexEntries(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Fixing name module store index entries.")
 	app.NameKeeper.DeleteInvalidAddressIndexEntries(ctx)
 	ctx.Logger().Info("Done fixing name module store index entries.")
+}
+
+// setAccountDataNameRecord makes sure the account data name record exists, is restricted,
+// and is owned by the attribute module. An error is returned if it fails to make it so.
+func setAccountDataNameRecord(ctx sdk.Context, accountK attributetypes.AccountKeeper, nameK attributetypes.NameKeeper) (err error) {
+	return attributekeeper.EnsureModuleAccountAndAccountDataNameRecord(ctx, accountK, nameK)
 }

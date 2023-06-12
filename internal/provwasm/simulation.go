@@ -423,9 +423,6 @@ func Dispatch(
 // getRandomRootNameRecord finds a random root name record owned by a known account.
 // An error is only returned if there was a problem iterating records.
 func getRandomRootNameRecord(r *rand.Rand, ctx sdk.Context, nk namekeeper.Keeper, accs []simtypes.Account) (nametypes.NameRecord, simtypes.Account, bool, error) {
-	var randomRecord nametypes.NameRecord
-	var simAccount simtypes.Account
-
 	var records []nametypes.NameRecord
 	err := nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
 		if len(record.Address) > 0 && !strings.Contains(record.Name, ".") {
@@ -434,20 +431,19 @@ func getRandomRootNameRecord(r *rand.Rand, ctx sdk.Context, nk namekeeper.Keeper
 		return nil
 	})
 	if err != nil || len(records) == 0 {
-		return randomRecord, simAccount, false, err
+		return nametypes.NameRecord{}, simtypes.Account{}, false, err
 	}
 
 	r.Shuffle(len(records), func(i, j int) {
 		records[i], records[j] = records[j], records[i]
 	})
 
-	found := false
-	for _, randomRecord = range records {
-		simAccount, found = simtypes.FindAccount(accs, sdk.MustAccAddressFromBech32(randomRecord.Address))
+	for _, randomRecord := range records {
+		simAccount, found := simtypes.FindAccount(accs, sdk.MustAccAddressFromBech32(randomRecord.Address))
 		if found {
-			break
+			return randomRecord, simAccount, true, nil
 		}
 	}
 
-	return randomRecord, simAccount, found, nil
+	return nametypes.NameRecord{}, simtypes.Account{}, false, nil
 }

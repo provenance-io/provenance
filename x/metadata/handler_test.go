@@ -3,6 +3,7 @@ package metadata_test
 import (
 	"encoding/base64"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -65,8 +66,358 @@ func TestMetadataHandlerTestSuite(t *testing.T) {
 	suite.Run(t, new(MetadataHandlerTestSuite))
 }
 
+func ownerPartyList(addresses ...string) []types.Party {
+	retval := make([]types.Party, len(addresses))
+	for i, addr := range addresses {
+		retval[i] = types.Party{Address: addr, Role: types.PartyType_PARTY_TYPE_OWNER}
+	}
+	return retval
+}
+
+// AssertErrorValue asserts that:
+//   - If errorString is empty, theError must be nil
+//   - If errorString is not empty, theError must equal the errorString.
+func AssertErrorValue(t *testing.T, theError error, errorString string, msgAndArgs ...interface{}) bool {
+	t.Helper()
+	if len(errorString) > 0 {
+		return assert.EqualError(t, theError, errorString, msgAndArgs...)
+	}
+	return assert.NoError(t, theError, msgAndArgs...)
+}
+
+// AssertErrorValue asserts that:
+//   - If errorString is empty, theError must be nil
+//   - If errorString is not empty, theError must equal the errorString.
+func (s *MetadataHandlerTestSuite) AssertErrorValue(theError error, errorString string, msgAndArgs ...interface{}) bool {
+	return AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
+}
+
 // TODO: WriteScope tests
 // TODO: DeleteScope tests
+
+func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
+	scopeID := types.ScopeMetadataAddress(uuid.New())
+	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "", false)
+	dneScopeID := types.ScopeMetadataAddress(uuid.New())
+	user3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
+
+	cases := []struct {
+		name     string
+		msg      sdk.Msg
+		signers  []string
+		errorMsg string
+	}{
+		{
+			"setup test with new scope specification",
+			types.NewMsgWriteScopeSpecificationRequest(*scopeSpec, []string{s.user1}),
+			[]string{s.user1},
+			"",
+		},
+		{
+			"setup test with new scope",
+			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}),
+			[]string{s.user1},
+			"",
+		},
+		{
+			"should fail to ADD address to data access, msg validate basic failure",
+			types.NewMsgAddScopeDataAccessRequest(scopeID, []string{}, []string{s.user1}),
+			[]string{s.user1},
+			"data access list cannot be empty: invalid request",
+		},
+		{
+			"should fail to ADD address to data access, validate add failure",
+			types.NewMsgAddScopeDataAccessRequest(dneScopeID, []string{s.user1}, []string{s.user1}),
+			[]string{s.user1},
+			fmt.Sprintf("scope not found with id %s: not found", dneScopeID),
+		},
+		{
+			"should fail to ADD address to data access, validate add failure",
+			types.NewMsgAddScopeDataAccessRequest(scopeID, []string{s.user1}, []string{s.user1}),
+			[]string{s.user1},
+			fmt.Sprintf("address already exists for data access %s: invalid request", s.user1),
+		},
+		{
+			"should successfully ADD address to data access",
+			types.NewMsgAddScopeDataAccessRequest(scopeID, []string{s.user2}, []string{s.user1}),
+			[]string{s.user1},
+			"",
+		},
+		{
+			"should fail to DELETE address from data access, msg validate basic failure",
+			types.NewMsgDeleteScopeDataAccessRequest(scopeID, []string{}, []string{s.user1}),
+			[]string{s.user1},
+			"data access list cannot be empty: invalid request",
+		},
+		{
+			"should fail to DELETE address from data access, validate add failure",
+			types.NewMsgDeleteScopeDataAccessRequest(dneScopeID, []string{s.user1}, []string{s.user1}),
+			[]string{s.user1},
+			fmt.Sprintf("scope not found with id %s: not found", dneScopeID),
+		},
+		{
+			"should fail to DELETE address from data access, validate add failure",
+			types.NewMsgDeleteScopeDataAccessRequest(scopeID, []string{user3}, []string{s.user1}),
+			[]string{s.user1},
+			fmt.Sprintf("address does not exist in scope data access: %s: invalid request", user3),
+		},
+		{
+			"should successfully DELETE address from data access",
+			types.NewMsgDeleteScopeDataAccessRequest(scopeID, []string{s.user2}, []string{s.user1}),
+			[]string{s.user1},
+			"",
+		},
+	}
+
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			_, err := s.handler(s.ctx, tc.msg)
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+
+	s.T().Run("data access actually deleted and added", func(t *testing.T) {
+		addrOriginator := "cosmos1rr4d0eu62pgt4edw38d2ev27798pfhdhm39zct"
+		addrServicer := "cosmos1a7mmtar5ke5fxk5gn00dlag0zfmdkmhapmugk7"
+		scopeA := types.Scope{
+			ScopeId:           types.ScopeMetadataAddress(uuid.New()),
+			SpecificationId:   types.ScopeSpecMetadataAddress(uuid.New()),
+			DataAccess:        []string{addrOriginator, addrServicer},
+			ValueOwnerAddress: addrServicer,
+			Owners: []types.Party{
+				{
+					Address: addrOriginator,
+					Role:    types.PartyType_PARTY_TYPE_ORIGINATOR,
+				},
+			},
+		}
+
+		scopeSpecA := types.ScopeSpecification{
+			SpecificationId: scopeA.SpecificationId,
+			Description: &types.Description{
+				Name:        "com.figure.origination.loan",
+				Description: "Figure loan origination",
+			},
+			OwnerAddresses:  []string{"cosmos1q8n4v4m0hm8v0a7n697nwtpzhfsz3f4d40lnsu"},
+			PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_ORIGINATOR},
+			ContractSpecIds: nil,
+		}
+
+		s.app.MetadataKeeper.SetScope(s.ctx, scopeA)
+		s.app.MetadataKeeper.SetScopeSpecification(s.ctx, scopeSpecA)
+
+		msgDel := types.NewMsgDeleteScopeDataAccessRequest(
+			scopeA.ScopeId,
+			[]string{addrServicer},
+			[]string{addrOriginator},
+		)
+
+		_, errDel := s.handler(s.ctx, msgDel)
+		require.NoError(t, errDel, "Failed to make DeleteScopeDataAccessRequest call")
+
+		scopeB, foundB := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
+		require.Truef(t, foundB, "Scope %s not found after DeleteScopeOwnerRequest call.", scopeA.ScopeId)
+
+		assert.Equal(t, scopeA.ScopeId, scopeB.ScopeId, "del ScopeId")
+		assert.Equal(t, scopeA.SpecificationId, scopeB.SpecificationId, "del SpecificationId")
+		assert.Equal(t, scopeA.DataAccess[0:1], scopeB.DataAccess, "del DataAccess")
+		assert.Equal(t, scopeA.ValueOwnerAddress, scopeB.ValueOwnerAddress, "del ValueOwnerAddress")
+		assert.Equal(t, scopeA.Owners, scopeB.Owners, "del Owners")
+
+		// Stop test if it's already failed.
+		if t.Failed() {
+			t.FailNow()
+		}
+
+		msgAdd := types.NewMsgAddScopeDataAccessRequest(
+			scopeA.ScopeId,
+			[]string{addrServicer},
+			[]string{addrOriginator},
+		)
+
+		_, errAdd := s.handler(s.ctx, msgAdd)
+		require.NoError(t, errAdd, "Failed to make AddScopeDataAccessRequest call")
+
+		scopeC, foundC := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
+		require.Truef(t, foundC, "Scope %s not found after AddScopeOwnerRequest call.", scopeA.ScopeId)
+
+		assert.Equal(t, scopeA.ScopeId, scopeC.ScopeId, "add ScopeId")
+		assert.Equal(t, scopeA.SpecificationId, scopeC.SpecificationId, "add SpecificationId")
+		assert.Equal(t, scopeA.DataAccess, scopeC.DataAccess, "add DataAccess")
+		assert.Equal(t, scopeA.ValueOwnerAddress, scopeC.ValueOwnerAddress, "add ValueOwnerAddress")
+		assert.Equal(t, scopeA.Owners, scopeC.Owners, "add Owners")
+	})
+}
+
+func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
+	scopeID := types.ScopeMetadataAddress(uuid.New())
+	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "", false)
+	dneScopeID := types.ScopeMetadataAddress(uuid.New())
+	user3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
+
+	cases := []struct {
+		name     string
+		msg      sdk.Msg
+		signers  []string
+		errorMsg string
+	}{
+		{
+			"setup test with new scope specification",
+			types.NewMsgWriteScopeSpecificationRequest(*scopeSpec, []string{s.user1}),
+			[]string{s.user1},
+			"",
+		},
+		{
+			"setup test with new scope",
+			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}),
+			[]string{s.user1},
+			"",
+		},
+		{
+			"should fail to ADD owners, msg validate basic failure",
+			types.NewMsgAddScopeOwnerRequest(scopeID, []types.Party{}, []string{s.user1}),
+			[]string{s.user1},
+			"invalid owners: at least one party is required: invalid request",
+		},
+		{
+			"should fail to ADD owners, can not find scope",
+			types.NewMsgAddScopeOwnerRequest(dneScopeID, []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
+			[]string{s.user1},
+			fmt.Sprintf("scope not found with id %s: not found", dneScopeID),
+		},
+		{
+			"should fail to ADD owners, validate add failure",
+			types.NewMsgAddScopeOwnerRequest(scopeID, []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
+			[]string{s.user1},
+			fmt.Sprintf("party already exists with address %s and role %s", s.user1, types.PartyType_PARTY_TYPE_OWNER),
+		},
+		{
+			"should successfully ADD owners",
+			types.NewMsgAddScopeOwnerRequest(scopeID, []types.Party{{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
+			[]string{s.user1},
+			"",
+		},
+		{
+			"should fail to DELETE owners, msg validate basic failure",
+			types.NewMsgDeleteScopeOwnerRequest(scopeID, []string{}, []string{s.user1, s.user2}),
+			[]string{s.user1},
+			"at least one owner address is required: invalid request",
+		},
+		{
+			"should fail to DELETE owners, validate add failure",
+			types.NewMsgDeleteScopeOwnerRequest(dneScopeID, []string{s.user1}, []string{s.user1, s.user2}),
+			[]string{s.user1},
+			fmt.Sprintf("scope not found with id %s: not found", dneScopeID),
+		},
+		{
+			"should fail to DELETE owners, validate add failure",
+			types.NewMsgDeleteScopeOwnerRequest(scopeID, []string{user3}, []string{s.user1, s.user2}),
+			[]string{s.user1},
+			fmt.Sprintf("address does not exist in scope owners: %s", user3),
+		},
+		{
+			"should successfully DELETE owners",
+			types.NewMsgDeleteScopeOwnerRequest(scopeID, []string{s.user2}, []string{s.user1, s.user2}),
+			[]string{s.user1},
+			"",
+		},
+	}
+
+	for _, tc := range cases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			_, err := s.handler(s.ctx, tc.msg)
+			if len(tc.errorMsg) > 0 {
+				assert.EqualError(t, err, tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+
+	s.T().Run("owner actually deleted and added", func(t *testing.T) {
+		addrOriginator := "cosmos1rr4d0eu62pgt4edw38d2ev27798pfhdhm39zct"
+		addrServicer := "cosmos1a7mmtar5ke5fxk5gn00dlag0zfmdkmhapmugk7"
+		scopeA := types.Scope{
+			ScopeId:           types.ScopeMetadataAddress(uuid.New()),
+			SpecificationId:   types.ScopeSpecMetadataAddress(uuid.New()),
+			DataAccess:        []string{addrOriginator, addrServicer},
+			ValueOwnerAddress: addrServicer,
+			Owners: []types.Party{
+				{
+					Address: addrOriginator,
+					Role:    types.PartyType_PARTY_TYPE_ORIGINATOR,
+				},
+				{
+					Address: addrServicer,
+					Role:    types.PartyType_PARTY_TYPE_SERVICER,
+				},
+			},
+		}
+
+		scopeSpecA := types.ScopeSpecification{
+			SpecificationId: scopeA.SpecificationId,
+			Description: &types.Description{
+				Name:        "com.figure.origination.loan",
+				Description: "Figure loan origination",
+			},
+			OwnerAddresses:  []string{"cosmos1q8n4v4m0hm8v0a7n697nwtpzhfsz3f4d40lnsu"},
+			PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_ORIGINATOR},
+			ContractSpecIds: nil,
+		}
+
+		s.app.MetadataKeeper.SetScope(s.ctx, scopeA)
+		s.app.MetadataKeeper.SetScopeSpecification(s.ctx, scopeSpecA)
+
+		msgDel := types.NewMsgDeleteScopeOwnerRequest(
+			scopeA.ScopeId,
+			[]string{addrServicer},
+			[]string{addrOriginator, addrServicer},
+		)
+
+		_, errDel := s.handler(s.ctx, msgDel)
+		require.NoError(t, errDel, "Failed to make DeleteScopeOwnerRequest call")
+
+		scopeB, foundB := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
+		require.Truef(t, foundB, "Scope %s not found after DeleteScopeOwnerRequest call.", scopeA.ScopeId)
+
+		assert.Equal(t, scopeA.ScopeId, scopeB.ScopeId, "del ScopeId")
+		assert.Equal(t, scopeA.SpecificationId, scopeB.SpecificationId, "del SpecificationId")
+		assert.Equal(t, scopeA.DataAccess, scopeB.DataAccess, "del DataAccess")
+		assert.Equal(t, scopeA.ValueOwnerAddress, scopeB.ValueOwnerAddress, "del ValueOwnerAddress")
+		assert.Equal(t, scopeA.Owners[0:1], scopeB.Owners, "del Owners")
+
+		// Stop test if it's already failed.
+		if t.Failed() {
+			t.FailNow()
+		}
+
+		msgAdd := types.NewMsgAddScopeOwnerRequest(
+			scopeA.ScopeId,
+			[]types.Party{{Address: addrServicer, Role: types.PartyType_PARTY_TYPE_SERVICER}},
+			[]string{addrOriginator},
+		)
+
+		_, errAdd := s.handler(s.ctx, msgAdd)
+		require.NoError(t, errAdd, "Failed to make DeleteScopeOwnerRequest call")
+
+		scopeC, foundC := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
+		require.Truef(t, foundC, "Scope %s not found after AddScopeOwnerRequest call.", scopeA.ScopeId)
+
+		assert.Equal(t, scopeA.ScopeId, scopeC.ScopeId, "add ScopeId")
+		assert.Equal(t, scopeA.SpecificationId, scopeC.SpecificationId, "add SpecificationId")
+		assert.Equal(t, scopeA.DataAccess, scopeC.DataAccess, "add DataAccess")
+		assert.Equal(t, scopeA.ValueOwnerAddress, scopeC.ValueOwnerAddress, "add ValueOwnerAddress")
+		assert.Equal(t, scopeA.Owners, scopeC.Owners, "add Owners")
+	})
+}
 
 func (s *MetadataHandlerTestSuite) TestUpdateValueOwners() {
 	scopeID1 := types.ScopeMetadataAddress(uuid.New())
@@ -814,336 +1165,76 @@ func (s *MetadataHandlerTestSuite) TestDeleteContractSpecFromScopeSpec() {
 // TODO: DeleteOSLocator tests
 // TODO: ModifyOSLocator tests
 
-func ownerPartyList(addresses ...string) []types.Party {
-	retval := make([]types.Party, len(addresses))
-	for i, addr := range addresses {
-		retval[i] = types.Party{Address: addr, Role: types.PartyType_PARTY_TYPE_OWNER}
+func (s *MetadataHandlerTestSuite) TestSetAccountData() {
+	scopeSpec := types.ScopeSpecification{
+		SpecificationId: types.ScopeSpecMetadataAddress(uuid.New()),
+		OwnerAddresses:  []string{s.user1},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
 	}
-	return retval
-}
+	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, scopeSpec)
 
-func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
-	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
-	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
-	scopeID := types.ScopeMetadataAddress(uuid.New())
-	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "", false)
-	dneScopeID := types.ScopeMetadataAddress(uuid.New())
-	user3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
+	scope := types.Scope{
+		ScopeId:         types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId: scopeSpec.SpecificationId,
+		Owners:          []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}},
+	}
+	s.app.MetadataKeeper.SetScope(s.ctx, scope)
 
-	cases := []struct {
-		name     string
-		msg      sdk.Msg
-		signers  []string
-		errorMsg string
+	tests := []struct {
+		name   string
+		msg    *types.MsgSetAccountDataRequest
+		exp    *types.MsgSetAccountDataResponse
+		expErr string
 	}{
 		{
-			"setup test with new scope specification",
-			types.NewMsgWriteScopeSpecificationRequest(*scopeSpec, []string{s.user1}),
-			[]string{s.user1},
-			"",
+			name: "incorrect signer",
+			msg: &types.MsgSetAccountDataRequest{
+				MetadataAddr: scope.ScopeId,
+				Value:        "This won't work.",
+				Signers:      []string{s.user2},
+			},
+			expErr: "missing signature: " + s.user1 + ": invalid request",
 		},
 		{
-			"setup test with new scope",
-			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}),
-			[]string{s.user1},
-			"",
+			name: "value too long",
+			msg: &types.MsgSetAccountDataRequest{
+				MetadataAddr: scope.ScopeId,
+				Value:        strings.Repeat("This won't work. ", 1000),
+				Signers:      []string{s.user1},
+			},
+			expErr: "could not set accountdata for \"" + scope.ScopeId.String() + "\": attribute value length of 17000 exceeds max length 10000: invalid request",
 		},
 		{
-			"should fail to ADD owners, msg validate basic failure",
-			types.NewMsgAddScopeOwnerRequest(scopeID, []types.Party{}, []string{s.user1}),
-			[]string{s.user1},
-			"invalid owners: at least one party is required: invalid request",
-		},
-		{
-			"should fail to ADD owners, can not find scope",
-			types.NewMsgAddScopeOwnerRequest(dneScopeID, []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
-			[]string{s.user1},
-			fmt.Sprintf("scope not found with id %s: not found", dneScopeID),
-		},
-		{
-			"should fail to ADD owners, validate add failure",
-			types.NewMsgAddScopeOwnerRequest(scopeID, []types.Party{{Address: s.user1, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
-			[]string{s.user1},
-			fmt.Sprintf("party already exists with address %s and role %s", s.user1, types.PartyType_PARTY_TYPE_OWNER),
-		},
-		{
-			"should successfully ADD owners",
-			types.NewMsgAddScopeOwnerRequest(scopeID, []types.Party{{Address: s.user2, Role: types.PartyType_PARTY_TYPE_OWNER}}, []string{s.user1}),
-			[]string{s.user1},
-			"",
-		},
-		{
-			"should fail to DELETE owners, msg validate basic failure",
-			types.NewMsgDeleteScopeOwnerRequest(scopeID, []string{}, []string{s.user1, s.user2}),
-			[]string{s.user1},
-			"at least one owner address is required: invalid request",
-		},
-		{
-			"should fail to DELETE owners, validate add failure",
-			types.NewMsgDeleteScopeOwnerRequest(dneScopeID, []string{s.user1}, []string{s.user1, s.user2}),
-			[]string{s.user1},
-			fmt.Sprintf("scope not found with id %s: not found", dneScopeID),
-		},
-		{
-			"should fail to DELETE owners, validate add failure",
-			types.NewMsgDeleteScopeOwnerRequest(scopeID, []string{user3}, []string{s.user1, s.user2}),
-			[]string{s.user1},
-			fmt.Sprintf("address does not exist in scope owners: %s", user3),
-		},
-		{
-			"should successfully DELETE owners",
-			types.NewMsgDeleteScopeOwnerRequest(scopeID, []string{s.user2}, []string{s.user1, s.user2}),
-			[]string{s.user1},
-			"",
+			name: "all good",
+			msg: &types.MsgSetAccountDataRequest{
+				MetadataAddr: scope.ScopeId,
+				Value:        "This value is a good value for this scope.",
+				Signers:      []string{s.user1},
+			},
+			exp: &types.MsgSetAccountDataResponse{},
 		},
 	}
 
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var err error
+			var result *sdk.Result
+			testFunc := func() {
+				result, err = s.handler(s.ctx, tc.msg)
+			}
+			s.Require().NotPanics(testFunc, "%T hander", tc.msg)
+			s.AssertErrorValue(err, tc.expErr, "%T handler error", tc.msg)
+			if tc.exp == nil {
+				s.Assert().Nil(result, "%T handler result", tc.msg)
 			} else {
-				assert.NoError(t, err)
+				if s.Assert().Len(result.MsgResponses, 1, "%T handler result MsgResponses", tc.msg) {
+					resp, isResp := result.MsgResponses[0].GetCachedValue().(*types.MsgSetAccountDataResponse)
+					s.Require().True(isResp, "casting %T handler result.MsgResponses[0].GetCachedValue() to %T", tc.msg, resp)
+					s.Assert().Equal(tc.exp, resp, "%T handler msg response", tc.msg)
+				}
 			}
 		})
 	}
-
-	s.T().Run("owner actually deleted and added", func(t *testing.T) {
-		addrOriginator := "cosmos1rr4d0eu62pgt4edw38d2ev27798pfhdhm39zct"
-		addrServicer := "cosmos1a7mmtar5ke5fxk5gn00dlag0zfmdkmhapmugk7"
-		scopeA := types.Scope{
-			ScopeId:           types.ScopeMetadataAddress(uuid.New()),
-			SpecificationId:   types.ScopeSpecMetadataAddress(uuid.New()),
-			DataAccess:        []string{addrOriginator, addrServicer},
-			ValueOwnerAddress: addrServicer,
-			Owners: []types.Party{
-				{
-					Address: addrOriginator,
-					Role:    types.PartyType_PARTY_TYPE_ORIGINATOR,
-				},
-				{
-					Address: addrServicer,
-					Role:    types.PartyType_PARTY_TYPE_SERVICER,
-				},
-			},
-		}
-
-		scopeSpecA := types.ScopeSpecification{
-			SpecificationId: scopeA.SpecificationId,
-			Description: &types.Description{
-				Name:        "com.figure.origination.loan",
-				Description: "Figure loan origination",
-			},
-			OwnerAddresses:  []string{"cosmos1q8n4v4m0hm8v0a7n697nwtpzhfsz3f4d40lnsu"},
-			PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_ORIGINATOR},
-			ContractSpecIds: nil,
-		}
-
-		s.app.MetadataKeeper.SetScope(s.ctx, scopeA)
-		s.app.MetadataKeeper.SetScopeSpecification(s.ctx, scopeSpecA)
-
-		msgDel := types.NewMsgDeleteScopeOwnerRequest(
-			scopeA.ScopeId,
-			[]string{addrServicer},
-			[]string{addrOriginator, addrServicer},
-		)
-
-		_, errDel := s.handler(s.ctx, msgDel)
-		require.NoError(t, errDel, "Failed to make DeleteScopeOwnerRequest call")
-
-		scopeB, foundB := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
-		require.Truef(t, foundB, "Scope %s not found after DeleteScopeOwnerRequest call.", scopeA.ScopeId)
-
-		assert.Equal(t, scopeA.ScopeId, scopeB.ScopeId, "del ScopeId")
-		assert.Equal(t, scopeA.SpecificationId, scopeB.SpecificationId, "del SpecificationId")
-		assert.Equal(t, scopeA.DataAccess, scopeB.DataAccess, "del DataAccess")
-		assert.Equal(t, scopeA.ValueOwnerAddress, scopeB.ValueOwnerAddress, "del ValueOwnerAddress")
-		assert.Equal(t, scopeA.Owners[0:1], scopeB.Owners, "del Owners")
-
-		// Stop test if it's already failed.
-		if t.Failed() {
-			t.FailNow()
-		}
-
-		msgAdd := types.NewMsgAddScopeOwnerRequest(
-			scopeA.ScopeId,
-			[]types.Party{{Address: addrServicer, Role: types.PartyType_PARTY_TYPE_SERVICER}},
-			[]string{addrOriginator},
-		)
-
-		_, errAdd := s.handler(s.ctx, msgAdd)
-		require.NoError(t, errAdd, "Failed to make DeleteScopeOwnerRequest call")
-
-		scopeC, foundC := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
-		require.Truef(t, foundC, "Scope %s not found after AddScopeOwnerRequest call.", scopeA.ScopeId)
-
-		assert.Equal(t, scopeA.ScopeId, scopeC.ScopeId, "add ScopeId")
-		assert.Equal(t, scopeA.SpecificationId, scopeC.SpecificationId, "add SpecificationId")
-		assert.Equal(t, scopeA.DataAccess, scopeC.DataAccess, "add DataAccess")
-		assert.Equal(t, scopeA.ValueOwnerAddress, scopeC.ValueOwnerAddress, "add ValueOwnerAddress")
-		assert.Equal(t, scopeA.Owners, scopeC.Owners, "add Owners")
-	})
-}
-
-func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
-	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
-	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
-	scopeID := types.ScopeMetadataAddress(uuid.New())
-	scope := types.NewScope(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, "", false)
-	dneScopeID := types.ScopeMetadataAddress(uuid.New())
-	user3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
-
-	cases := []struct {
-		name     string
-		msg      sdk.Msg
-		signers  []string
-		errorMsg string
-	}{
-		{
-			"setup test with new scope specification",
-			types.NewMsgWriteScopeSpecificationRequest(*scopeSpec, []string{s.user1}),
-			[]string{s.user1},
-			"",
-		},
-		{
-			"setup test with new scope",
-			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}),
-			[]string{s.user1},
-			"",
-		},
-		{
-			"should fail to ADD address to data access, msg validate basic failure",
-			types.NewMsgAddScopeDataAccessRequest(scopeID, []string{}, []string{s.user1}),
-			[]string{s.user1},
-			"data access list cannot be empty: invalid request",
-		},
-		{
-			"should fail to ADD address to data access, validate add failure",
-			types.NewMsgAddScopeDataAccessRequest(dneScopeID, []string{s.user1}, []string{s.user1}),
-			[]string{s.user1},
-			fmt.Sprintf("scope not found with id %s: not found", dneScopeID),
-		},
-		{
-			"should fail to ADD address to data access, validate add failure",
-			types.NewMsgAddScopeDataAccessRequest(scopeID, []string{s.user1}, []string{s.user1}),
-			[]string{s.user1},
-			fmt.Sprintf("address already exists for data access %s: invalid request", s.user1),
-		},
-		{
-			"should successfully ADD address to data access",
-			types.NewMsgAddScopeDataAccessRequest(scopeID, []string{s.user2}, []string{s.user1}),
-			[]string{s.user1},
-			"",
-		},
-		{
-			"should fail to DELETE address from data access, msg validate basic failure",
-			types.NewMsgDeleteScopeDataAccessRequest(scopeID, []string{}, []string{s.user1}),
-			[]string{s.user1},
-			"data access list cannot be empty: invalid request",
-		},
-		{
-			"should fail to DELETE address from data access, validate add failure",
-			types.NewMsgDeleteScopeDataAccessRequest(dneScopeID, []string{s.user1}, []string{s.user1}),
-			[]string{s.user1},
-			fmt.Sprintf("scope not found with id %s: not found", dneScopeID),
-		},
-		{
-			"should fail to DELETE address from data access, validate add failure",
-			types.NewMsgDeleteScopeDataAccessRequest(scopeID, []string{user3}, []string{s.user1}),
-			[]string{s.user1},
-			fmt.Sprintf("address does not exist in scope data access: %s: invalid request", user3),
-		},
-		{
-			"should successfully DELETE address from data access",
-			types.NewMsgDeleteScopeDataAccessRequest(scopeID, []string{s.user2}, []string{s.user1}),
-			[]string{s.user1},
-			"",
-		},
-	}
-
-	for _, tc := range cases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				assert.EqualError(t, err, tc.errorMsg)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-
-	s.T().Run("data access actually deleted and added", func(t *testing.T) {
-		addrOriginator := "cosmos1rr4d0eu62pgt4edw38d2ev27798pfhdhm39zct"
-		addrServicer := "cosmos1a7mmtar5ke5fxk5gn00dlag0zfmdkmhapmugk7"
-		scopeA := types.Scope{
-			ScopeId:           types.ScopeMetadataAddress(uuid.New()),
-			SpecificationId:   types.ScopeSpecMetadataAddress(uuid.New()),
-			DataAccess:        []string{addrOriginator, addrServicer},
-			ValueOwnerAddress: addrServicer,
-			Owners: []types.Party{
-				{
-					Address: addrOriginator,
-					Role:    types.PartyType_PARTY_TYPE_ORIGINATOR,
-				},
-			},
-		}
-
-		scopeSpecA := types.ScopeSpecification{
-			SpecificationId: scopeA.SpecificationId,
-			Description: &types.Description{
-				Name:        "com.figure.origination.loan",
-				Description: "Figure loan origination",
-			},
-			OwnerAddresses:  []string{"cosmos1q8n4v4m0hm8v0a7n697nwtpzhfsz3f4d40lnsu"},
-			PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_ORIGINATOR},
-			ContractSpecIds: nil,
-		}
-
-		s.app.MetadataKeeper.SetScope(s.ctx, scopeA)
-		s.app.MetadataKeeper.SetScopeSpecification(s.ctx, scopeSpecA)
-
-		msgDel := types.NewMsgDeleteScopeDataAccessRequest(
-			scopeA.ScopeId,
-			[]string{addrServicer},
-			[]string{addrOriginator},
-		)
-
-		_, errDel := s.handler(s.ctx, msgDel)
-		require.NoError(t, errDel, "Failed to make DeleteScopeDataAccessRequest call")
-
-		scopeB, foundB := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
-		require.Truef(t, foundB, "Scope %s not found after DeleteScopeOwnerRequest call.", scopeA.ScopeId)
-
-		assert.Equal(t, scopeA.ScopeId, scopeB.ScopeId, "del ScopeId")
-		assert.Equal(t, scopeA.SpecificationId, scopeB.SpecificationId, "del SpecificationId")
-		assert.Equal(t, scopeA.DataAccess[0:1], scopeB.DataAccess, "del DataAccess")
-		assert.Equal(t, scopeA.ValueOwnerAddress, scopeB.ValueOwnerAddress, "del ValueOwnerAddress")
-		assert.Equal(t, scopeA.Owners, scopeB.Owners, "del Owners")
-
-		// Stop test if it's already failed.
-		if t.Failed() {
-			t.FailNow()
-		}
-
-		msgAdd := types.NewMsgAddScopeDataAccessRequest(
-			scopeA.ScopeId,
-			[]string{addrServicer},
-			[]string{addrOriginator},
-		)
-
-		_, errAdd := s.handler(s.ctx, msgAdd)
-		require.NoError(t, errAdd, "Failed to make AddScopeDataAccessRequest call")
-
-		scopeC, foundC := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
-		require.Truef(t, foundC, "Scope %s not found after AddScopeOwnerRequest call.", scopeA.ScopeId)
-
-		assert.Equal(t, scopeA.ScopeId, scopeC.ScopeId, "add ScopeId")
-		assert.Equal(t, scopeA.SpecificationId, scopeC.SpecificationId, "add SpecificationId")
-		assert.Equal(t, scopeA.DataAccess, scopeC.DataAccess, "add DataAccess")
-		assert.Equal(t, scopeA.ValueOwnerAddress, scopeC.ValueOwnerAddress, "add ValueOwnerAddress")
-		assert.Equal(t, scopeA.Owners, scopeC.Owners, "add Owners")
-	})
 }
 
 func (s *MetadataHandlerTestSuite) TestIssue412WriteScopeOptionalField() {

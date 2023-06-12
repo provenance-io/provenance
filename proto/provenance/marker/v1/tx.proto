@@ -56,6 +56,8 @@ service Msg {
   rpc UpdateRequiredAttributes(MsgUpdateRequiredAttributesRequest) returns (MsgUpdateRequiredAttributesResponse);
   // UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal.
   rpc UpdateForcedTransfer(MsgUpdateForcedTransferRequest) returns (MsgUpdateForcedTransferResponse);
+  // SetAccountData sets the accountdata for a denom. Signer must have deposit authority.
+  rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
@@ -271,5 +273,22 @@ message MsgUpdateForcedTransferRequest {
   string authority = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgUpdateForcedTransferResponse defines the Msg/UpdateForcedTransferResponse response type
+// MsgUpdateForcedTransferResponse defines the Msg/UpdateForcedTransfer response type
 message MsgUpdateForcedTransferResponse {}
+
+// MsgSetAccountDataRequest defines a msg to set/update/delete the account data for a marker.
+// Signer must have deposit authority or be a gov proposal.
+message MsgSetAccountDataRequest {
+  option (gogoproto.equal)      = true;
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // The denomination of the marker to update.
+  string denom = 1;
+  // The desired accountdata value.
+  string value = 2;
+  // The signer of this message. Must have deposit authority or be the governance module account address.
+  string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgSetAccountDataResponse defines the Msg/SetAccountData response type
+message MsgSetAccountDataResponse {}

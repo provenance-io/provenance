@@ -433,6 +433,54 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 	return k.validateSmartContractSigners(ctx, usedSigners, msg)
 }
 
+// ValidateSetScopeAccountData makes sure that the msg signers have proper authority to
+// set the account data of the provided metadata address.
+// Assumes that msg.MetadataAddr is a scope id.
+func (k Keeper) ValidateSetScopeAccountData(ctx sdk.Context, msg *types.MsgSetAccountDataRequest) error {
+	scope, found := k.GetScope(ctx, msg.MetadataAddr)
+	if !found {
+		// Allow deletion of account data if the scope no longer exists.
+		if len(msg.Value) == 0 {
+			return nil
+		}
+		return fmt.Errorf("scope not found with id %s", msg.MetadataAddr.String())
+	}
+
+	var err error
+	var validatedParties []*PartyDetails
+
+	// This is similar to ValidateDeleteScope, but the value owner isn't considered,
+	// and we expect the scope spec to still exist.
+
+	if !scope.RequirePartyRollup {
+		// Old:
+		//   - All roles required by the scope spec must have a party in the owners.
+		//   - If not new, all existing owners must sign.
+		//   - Value owner signer restrictions are applied.
+		validatedParties, err = k.validateAllRequiredSigned(ctx, scope.GetAllOwnerAddresses(), msg)
+		if err != nil {
+			return err
+		}
+	} else {
+		// New:
+		//   - All roles required by the scope spec must have a party in the owners.
+		//   - If not new, all required=false existing owners must be signers.
+		//   - If not new, all roles required by the scope spec must have a signer and
+		//     associated party from the existing scope.
+		//   - Value owner signer restrictions are applied.
+		scopeSpec, specFound := k.GetScopeSpecification(ctx, scope.SpecificationId)
+		if !specFound {
+			return fmt.Errorf("scope specification %s not found for scope id %s", scope.SpecificationId.String(), scope.ScopeId.String())
+		}
+		validatedParties, err = k.validateAllRequiredPartiesSigned(ctx, scope.Owners, scope.Owners, scopeSpec.PartiesInvolved, msg)
+		if err != nil {
+			return err
+		}
+	}
+
+	return k.validateSmartContractSigners(ctx, GetUsedSigners(validatedParties), msg)
+}
+
 // ValidateAddScopeDataAccess checks the current scope and the proposed
 func (k Keeper) ValidateAddScopeDataAccess(
 	ctx sdk.Context,

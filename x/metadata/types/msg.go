@@ -35,6 +35,7 @@ const (
 	TypeURLMsgBindOSLocatorRequest                   = "/provenance.metadata.v1.MsgBindOSLocatorRequest"
 	TypeURLMsgDeleteOSLocatorRequest                 = "/provenance.metadata.v1.MsgDeleteOSLocatorRequest"
 	TypeURLMsgModifyOSLocatorRequest                 = "/provenance.metadata.v1.MsgModifyOSLocatorRequest"
+	TypeURLMsgSetAccountDataRequest                  = "/provenance.metadata.v1.MsgSetAccountDataRequest"
 )
 
 // MetadataMsg extends the sdk.Msg interface with functions common to x/metadata messages.
@@ -74,6 +75,8 @@ var allRequestMsgs = []MetadataMsg{
 	(*MsgBindOSLocatorRequest)(nil),
 	(*MsgDeleteOSLocatorRequest)(nil),
 	(*MsgModifyOSLocatorRequest)(nil),
+
+	(*MsgSetAccountDataRequest)(nil),
 }
 
 // We still need these deprecated messages to be sdk.Msg for the codec.
@@ -997,6 +1000,34 @@ func (msg MsgModifyOSLocatorRequest) GetSigners() []sdk.AccAddress {
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
 func (msg MsgModifyOSLocatorRequest) GetSignerStrs() []string {
 	return []string{msg.Locator.Owner}
+}
+
+// ------------------  MsgSetAccountDataRequest  ------------------
+
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
+func (msg MsgSetAccountDataRequest) ValidateBasic() error {
+	if err := msg.MetadataAddr.Validate(); err != nil {
+		return fmt.Errorf("invalid metadata address: %w", err)
+	}
+	if !msg.MetadataAddr.IsScopeAddress() {
+		return fmt.Errorf("invalid metadata address: only scope ids are supported")
+	}
+
+	if len(msg.Signers) == 0 {
+		return fmt.Errorf("at least one signer is required")
+	}
+
+	return nil
+}
+
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
+func (msg MsgSetAccountDataRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
+func (msg MsgSetAccountDataRequest) GetSignerStrs() []string {
+	return msg.Signers
 }
 
 // ------------------  SessionIdComponents  ------------------

@@ -240,6 +240,7 @@ func (s *UpgradeTestSuite) TestRustRC1() {
 
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		`INF Setting "accountdata" name record.`,
 		`INF Creating message fee for "/cosmos.gov.v1.MsgSubmitProposal" if it doesn't already exist.`,
 		`INF Removing message fee for "/provenance.metadata.v1.MsgP8eMemorializeContractRequest" if one exists.`,
 		"INF Fixing name module store index entries.",
@@ -255,6 +256,7 @@ func (s *UpgradeTestSuite) TestRust() {
 
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		`INF Setting "accountdata" name record.`,
 		`INF Removing message fee for "/provenance.metadata.v1.MsgP8eMemorializeContractRequest" if one exists.`,
 		"INF Fixing name module store index entries.",
 	}
@@ -428,6 +430,30 @@ func (s *UpgradeTestSuite) TestRemoveP8eMemorializeContractFee() {
 			s.Require().Nil(fee, "GetMsgFee(%q) value", typeURL)
 		})
 	}
+}
+
+func (s *UpgradeTestSuite) TestSetAccountDataNameRecord() {
+	// Since this is also done during InitGenesis, it should already be set up as needed.
+	// So in this unit test, the logs will indicate that.
+	expLogLines := []string{
+		`INF Setting "accountdata" name record.`,
+		`INF The "accountdata" name record already exists as needed. Nothing to do.`,
+		"", // The log lines all end with a \n. So when I split it on \n there will be an empty string at the end.
+	}
+	// During an actual upgrade, that last line would instead be this:
+	// `INF Successfully set "accountdata" name record.`
+
+	s.logBuffer.Reset()
+	var err error
+	testFunc := func() {
+		err = setAccountDataNameRecord(s.ctx, s.app.AccountKeeper, &s.app.NameKeeper)
+	}
+	s.Require().NotPanics(testFunc, "setAccountDataNameRecord")
+	logged := s.logBuffer.String()
+	s.T().Logf("Logs generated during setAccountDataNameRecord:\n%s", logged)
+	s.Require().NoError(err, "setAccountDataNameRecord")
+	loggedLines := strings.Split(logged, "\n")
+	s.Assert().Equal(expLogLines, loggedLines, "lines logged during setAccountDataNameRecord")
 }
 
 func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
