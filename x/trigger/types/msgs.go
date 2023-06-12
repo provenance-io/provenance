@@ -13,17 +13,15 @@ var _ sdk.Msg = &MsgDestroyTriggerRequest{}
 var _ codectypes.UnpackInterfacesMessage = (*MsgCreateTriggerRequest)(nil)
 
 // NewCreateTriggerRequest Creates a new trigger create request
-func NewCreateTriggerRequest(authorities []string, event TriggerEventI, msgs []sdk.Msg) *MsgCreateTriggerRequest {
+func NewCreateTriggerRequest(authorities []string, event TriggerEventI, msgs []sdk.Msg) (*MsgCreateTriggerRequest, error) {
 	actions, err := sdktx.SetMsgs(msgs)
 	if err != nil {
-		fmt.Printf("unable to set messages: %s\n", err)
-		return nil
+		return nil, fmt.Errorf("unable to set messages: %w", err)
 	}
 
 	eventAny, err := codectypes.NewAnyWithValue(event)
 	if err != nil {
-		fmt.Printf("unable to set event: %s\n", err)
-		return nil
+		return nil, fmt.Errorf("unable to set event: %w", err)
 	}
 
 	m := &MsgCreateTriggerRequest{
@@ -32,6 +30,14 @@ func NewCreateTriggerRequest(authorities []string, event TriggerEventI, msgs []s
 		Actions:     actions,
 	}
 
+	return m, nil
+}
+
+func MustNewCreateTriggerRequest(authorities []string, event TriggerEventI, msgs []sdk.Msg) *MsgCreateTriggerRequest {
+	m, err := NewCreateTriggerRequest(authorities, event, msgs)
+	if err != nil {
+		panic(err)
+	}
 	return m
 }
 

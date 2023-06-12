@@ -10,7 +10,7 @@ import (
 )
 
 func TestNewGenesisState(t *testing.T) {
-	request := NewCreateTriggerRequest([]string{"addr"}, &BlockHeightEvent{}, []types.Msg{&MsgDestroyTriggerRequest{}})
+	request := MustNewCreateTriggerRequest([]string{"addr"}, &BlockHeightEvent{}, []types.Msg{&MsgDestroyTriggerRequest{}})
 	trigger := NewTrigger(1, "owner", request.Event, request.Actions)
 	state := NewGenesisState(1, 2, []Trigger{trigger}, []GasLimit{{TriggerId: 1, Amount: 1}, {TriggerId: 2, Amount: 2}}, []QueuedTrigger{{BlockHeight: 1, Time: time.Time{}, Trigger: trigger}})
 
@@ -29,11 +29,14 @@ func TestDefaultGenesis(t *testing.T) {
 	assert.Equal(t, []Trigger{}, state.Triggers, "triggers should be empty in DefaultGenesis")
 	assert.Equal(t, []GasLimit{}, state.GasLimits, "gas limits should be empty in default DefaultGenesis")
 	assert.Equal(t, []QueuedTrigger{}, state.QueuedTriggers, "queued triggers should be empty in default DefaultGenesis")
+
+	err := state.Validate()
+	assert.NoError(t, err, "DefaultGenesis.Validate() error")
 }
 
 func TestGenesisStateValidate(t *testing.T) {
-	request := NewCreateTriggerRequest([]string{"addr"}, &BlockHeightEvent{}, []types.Msg{&MsgDestroyTriggerRequest{Id: 1, Authority: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"}})
-	badRequest := NewCreateTriggerRequest([]string{"addr"}, &TransactionEvent{Name: "", Attributes: []Attribute{}}, []types.Msg{&MsgDestroyTriggerRequest{Id: 1, Authority: ""}})
+	request := MustNewCreateTriggerRequest([]string{"addr"}, &BlockHeightEvent{}, []types.Msg{&MsgDestroyTriggerRequest{Id: 1, Authority: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"}})
+	badRequest := MustNewCreateTriggerRequest([]string{"addr"}, &TransactionEvent{Name: "", Attributes: []Attribute{}}, []types.Msg{&MsgDestroyTriggerRequest{Id: 1, Authority: ""}})
 	trigger := NewTrigger(1, "owner", request.Event, request.Actions)
 	trigger2 := NewTrigger(2, "owner", request.Event, request.Actions)
 

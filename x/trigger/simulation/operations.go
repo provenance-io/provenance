@@ -73,7 +73,10 @@ func SimulateMsgCreateTrigger(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk 
 		from := raccs[0]
 		to := raccs[1]
 
-		msg := types.NewCreateTriggerRequest([]string{from.Address.String()}, NewRandomEvent(r, now), []sdk.Msg{NewRandomAction(r, from.Address.String(), to.Address.String())})
+		msg, err := types.NewCreateTriggerRequest([]string{from.Address.String()}, NewRandomEvent(r, now), []sdk.Msg{NewRandomAction(r, from.Address.String(), to.Address.String())})
+		if err != nil {
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "error creating message"), nil, err
+		}
 
 		return Dispatch(r, app, ctx, from, chainID, msg, ak, bk, nil)
 	}

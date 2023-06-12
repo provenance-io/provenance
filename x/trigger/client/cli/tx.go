@@ -70,11 +70,15 @@ func GetCmdAddTransactionTrigger() *cobra.Command {
 				return fmt.Errorf("no actions added to trigger")
 			}
 
-			msg := types.NewCreateTriggerRequest(
+			msg, err := types.NewCreateTriggerRequest(
 				[]string{callerAddr.String()},
 				event,
 				msgs,
 			)
+			if err != nil {
+				return fmt.Errorf("error creating %T: %w", msg, err)
+			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -111,11 +115,15 @@ func GetCmdAddBlockHeightTrigger() *cobra.Command {
 				return fmt.Errorf("no actions added to trigger")
 			}
 
-			msg := types.NewCreateTriggerRequest(
+			msg, err := types.NewCreateTriggerRequest(
 				[]string{callerAddr.String()},
 				&types.BlockHeightEvent{BlockHeight: uint64(height)},
 				msgs,
 			)
+			if err != nil {
+				return fmt.Errorf("error creating %T: %w", msg, err)
+			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -152,11 +160,15 @@ func GetCmdAddBlockTimeTrigger() *cobra.Command {
 				return fmt.Errorf("no actions added to trigger")
 			}
 
-			msg := types.NewCreateTriggerRequest(
+			msg, err := types.NewCreateTriggerRequest(
 				[]string{callerAddr.String()},
 				&types.BlockTimeEvent{Time: startTime.UTC()},
 				msgs,
 			)
+			if err != nil {
+				return fmt.Errorf("error creating %T: %w", msg, err)
+			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

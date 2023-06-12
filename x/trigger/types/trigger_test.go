@@ -4,10 +4,11 @@ import (
 	"testing"
 	time "time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -19,7 +20,7 @@ func TestNewTrigger(t *testing.T) {
 	msgs := []sdk.Msg{}
 	id := uint64(1)
 
-	request := NewCreateTriggerRequest(authorities, event, msgs)
+	request := MustNewCreateTriggerRequest(authorities, event, msgs)
 
 	trigger := NewTrigger(id, authorities[0], request.GetEvent(), request.GetActions())
 	assert.Equal(t, int(id), int(trigger.Id), "should have correct id for NewTrigger")
@@ -34,7 +35,7 @@ func TestNewQueuedTrigger(t *testing.T) {
 	msgs := []sdk.Msg{}
 	id := uint64(1)
 
-	request := NewCreateTriggerRequest(authorities, event, msgs)
+	request := MustNewCreateTriggerRequest(authorities, event, msgs)
 
 	trigger := NewTrigger(id, authorities[0], request.GetEvent(), request.GetActions())
 	queuedTrigger := NewQueuedTrigger(trigger, time.Time{}, uint64(1))
@@ -345,7 +346,7 @@ func TestTriggerUnpackInterfaces(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := NewCreateTriggerRequest([]string{tc.authority}, tc.event, tc.msgs)
+			msg := MustNewCreateTriggerRequest([]string{tc.authority}, tc.event, tc.msgs)
 			trigger := NewTrigger(uint64(1), tc.authority, msg.Event, msg.Actions)
 			err := trigger.UnpackInterfaces(cdc)
 			assert.NoError(t, err, "should not throw an error for UnpackInterfaces")
@@ -374,7 +375,7 @@ func TestQueuedTriggerUnpackInterfaces(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := NewCreateTriggerRequest([]string{tc.authority}, tc.event, tc.msgs)
+			msg := MustNewCreateTriggerRequest([]string{tc.authority}, tc.event, tc.msgs)
 			trigger := NewTrigger(uint64(1), tc.authority, msg.Event, msg.Actions)
 			queuedTrigger := NewQueuedTrigger(trigger, time.Time{}, uint64(1))
 			err := queuedTrigger.UnpackInterfaces(cdc)
@@ -417,7 +418,7 @@ func TestTriggerGetTriggerEventI(t *testing.T) {
 			if event == nil {
 				event = &BlockHeightEvent{}
 			}
-			msg := NewCreateTriggerRequest([]string{tc.authority}, event, tc.msgs)
+			msg := MustNewCreateTriggerRequest([]string{tc.authority}, event, tc.msgs)
 			if tc.event == nil {
 				msg.Event = nil
 			}

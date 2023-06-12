@@ -24,7 +24,7 @@ func TestNewCreateTriggerRequest(t *testing.T) {
 		Event:       eventAny,
 	}
 
-	trigger := NewCreateTriggerRequest(expected.Authorities, event, msgs)
+	trigger := MustNewCreateTriggerRequest(expected.Authorities, event, msgs)
 	assert.Equal(t, expected, trigger, "should create the correct request with NewCreateTriggerRequest")
 }
 
@@ -99,7 +99,7 @@ func TestMsgCreateTriggerRequestValidateBasic(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := NewCreateTriggerRequest(tc.authorities, tc.event, tc.msgs)
+			msg := MustNewCreateTriggerRequest(tc.authorities, tc.event, tc.msgs)
 			err := msg.ValidateBasic()
 			if len(tc.err) > 0 {
 				assert.EqualError(t, err, tc.err, "should have error in ValidateBasic")
@@ -118,7 +118,7 @@ func TestMsgCreateTriggerRequestGetSigners(t *testing.T) {
 	}{
 		{
 			name: "valid - Get signers returns the correct signers",
-			msg: NewCreateTriggerRequest(
+			msg: MustNewCreateTriggerRequest(
 				[]string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4"},
 				&BlockHeightEvent{},
 				[]sdk.Msg{},
@@ -157,7 +157,7 @@ func TestMsgCreateTriggerRequestUnpackInterfaces(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := NewCreateTriggerRequest(tc.authorities, tc.event, tc.msgs)
+			msg := MustNewCreateTriggerRequest(tc.authorities, tc.event, tc.msgs)
 			err := msg.UnpackInterfaces(cdc)
 			assert.NoError(t, err, "should have no error for UnpackInterfaces")
 			assert.Equal(t, tc.event, msg.Event.GetCachedValue(), "should have cached value for Event in UnpackInterfaces")
@@ -198,7 +198,7 @@ func TestMsgCreateTriggerRequestGetTriggerEventI(t *testing.T) {
 			if event == nil {
 				event = &BlockHeightEvent{}
 			}
-			msg := NewCreateTriggerRequest(tc.authorities, event, tc.msgs)
+			msg := MustNewCreateTriggerRequest(tc.authorities, event, tc.msgs)
 			if tc.event == nil {
 				msg.Event = nil
 			}

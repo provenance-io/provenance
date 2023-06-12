@@ -229,7 +229,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Selected randomly generated triggers:\n%s\n", bz)
+	fmt.Printf("Selected randomly generated trigger parameters:\n%s\n", bz)
 }
 
 // randIntBetween generates a random number between min and max inclusive.

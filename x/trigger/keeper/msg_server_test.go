@@ -20,12 +20,12 @@ func (s *KeeperTestSuite) TestCreateTrigger() {
 	}{
 		{
 			name:       "valid - single trigger created",
-			request:    types.NewCreateTriggerRequest(owner, event, []sdk.Msg{&action}),
+			request:    types.MustNewCreateTriggerRequest(owner, event, []sdk.Msg{&action}),
 			expectedId: 1,
 		},
 		{
 			name:       "valid - second trigger has incremented id",
-			request:    types.NewCreateTriggerRequest(owner, event, []sdk.Msg{&action}),
+			request:    types.MustNewCreateTriggerRequest(owner, event, []sdk.Msg{&action}),
 			expectedId: 2,
 		},
 	}
@@ -66,9 +66,9 @@ func (s *KeeperTestSuite) TestDestroyTrigger() {
 	action := types.MsgDestroyTriggerRequest{Id: 100, Authority: owner[0]}
 
 	setupRequests := []*types.MsgCreateTriggerRequest{
-		types.NewCreateTriggerRequest(owner, event, []sdk.Msg{&action}),
-		types.NewCreateTriggerRequest(owner, event, []sdk.Msg{&action}),
-		types.NewCreateTriggerRequest(owner2, event, []sdk.Msg{&action}),
+		types.MustNewCreateTriggerRequest(owner, event, []sdk.Msg{&action}),
+		types.MustNewCreateTriggerRequest(owner, event, []sdk.Msg{&action}),
+		types.MustNewCreateTriggerRequest(owner2, event, []sdk.Msg{&action}),
 	}
 	for i, request := range setupRequests {
 		s.ctx = s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999))
