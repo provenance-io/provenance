@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"encoding/binary"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
@@ -9,9 +11,8 @@ import (
 // SetEventListener Adds the trigger to the event listener store.
 func (k Keeper) SetEventListener(ctx sdk.Context, trigger triggertypes.Trigger) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&trigger)
 	event, _ := trigger.GetTriggerEventI()
-	store.Set(triggertypes.GetEventListenerKey(event.GetEventPrefix(), event.GetEventOrder(), trigger.GetId()), bz)
+	store.Set(triggertypes.GetEventListenerKey(event.GetEventPrefix(), event.GetEventOrder(), trigger.GetId()), []byte{})
 }
 
 // RemoveEventListener Removes the trigger from the event listener store.
@@ -30,12 +31,10 @@ func (k Keeper) RemoveEventListener(ctx sdk.Context, trigger triggertypes.Trigge
 func (k Keeper) GetEventListener(ctx sdk.Context, eventName string, order uint64, triggerID triggertypes.TriggerID) (trigger triggertypes.Trigger, err error) {
 	store := ctx.KVStore(k.storeKey)
 	key := triggertypes.GetEventListenerKey(eventName, order, triggerID)
-	bz := store.Get(key)
-	if len(bz) == 0 {
+	if !store.Has(key) {
 		return trigger, triggertypes.ErrEventNotFound
 	}
-	err = k.cdc.Unmarshal(bz, &trigger)
-	return trigger, err
+	return k.GetTrigger(ctx, triggerID)
 }
 
 // IterateEventListeners Iterates through all the event listeners.
@@ -45,10 +44,12 @@ func (k Keeper) IterateEventListeners(ctx sdk.Context, eventName string, handle 
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		record := triggertypes.Trigger{}
-		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
+		triggerID := binary.BigEndian.Uint64(iterator.Key()[41:49])
+		record, err := k.GetTrigger(ctx, triggerID)
+		if err != nil {
 			return err
 		}
+
 		stop, err := handle(record)
 		if err != nil {
 			return err

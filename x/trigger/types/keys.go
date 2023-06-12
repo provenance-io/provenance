@@ -41,7 +41,7 @@ const (
 // The <event_type_bytes> is 32 bytes representing the event type's name.
 // The next 8 bytes <order_bytes> are to help order the events and improve searching
 // The last 8 bytes <trigger_id_bytes> is a the trigger id that the event listener belongs to.
-//   - 0x02<event_type_bytes><order_bytes><trigger_id_bytes>: Trigger
+//   - 0x02<event_type_bytes><order_bytes><trigger_id_bytes>: []byte{}
 //     | 1 |       32       |      8      |        8        |
 //
 // The key in this section is used to track gas limits for triggers.
