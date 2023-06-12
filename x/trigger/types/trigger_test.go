@@ -140,6 +140,11 @@ func TestTransactionEventGetEventPrefix(t *testing.T) {
 	assert.Equal(t, "customName", event.GetEventPrefix(), "should get correct prefix for GetEventPrefix")
 }
 
+func TestTransactionEventGetEventOrder(t *testing.T) {
+	event := TransactionEvent{Name: "customName"}
+	assert.Equal(t, 0, int(event.GetEventOrder()), "should get correct event order")
+}
+
 func TestTransactionEventValidate(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -295,6 +300,11 @@ func TestBlockHeightEventGetEventPrefix(t *testing.T) {
 	assert.Equal(t, BlockHeightPrefix, event.GetEventPrefix(), "should have correct prefix for GetEventPrefix")
 }
 
+func TestBlockHeightEventGetEventOrder(t *testing.T) {
+	event := BlockHeightEvent{BlockHeight: 77}
+	assert.Equal(t, int(77), int(event.GetEventOrder()), "should have correct event order")
+}
+
 func TestBlockHeightEventValidate(t *testing.T) {
 	event := BlockHeightEvent{}
 	assert.Nil(t, event.Validate(), "should always have successful validate")
@@ -303,6 +313,12 @@ func TestBlockHeightEventValidate(t *testing.T) {
 func TestBlockTimeEventGetEventPrefix(t *testing.T) {
 	event := BlockTimeEvent{}
 	assert.Equal(t, BlockTimePrefix, event.GetEventPrefix(), "should have correct prefix for GetEventPrefix")
+}
+
+func TestBlockTimeEventGetEventOrder(t *testing.T) {
+	now := time.Now().UTC()
+	event := BlockTimeEvent{Time: now}
+	assert.Equal(t, int(now.UnixNano()), int(event.GetEventOrder()), "should have correct order")
 }
 
 func TestBlockTimeEventValidate(t *testing.T) {

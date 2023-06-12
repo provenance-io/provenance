@@ -24,6 +24,7 @@ const (
 type TriggerEventI interface {
 	proto.Message
 	GetEventPrefix() string
+	GetEventOrder() uint64
 	Validate() error
 	ValidateContext(ctx sdk.Context) error
 }
@@ -76,6 +77,11 @@ func (e TransactionEvent) GetEventPrefix() string {
 	return e.Name
 }
 
+// GetEventOrder gets the order for which this event should be processed
+func (e TransactionEvent) GetEventOrder() uint64 {
+	return 0
+}
+
 // Validate checks if the event data is valid.
 func (e TransactionEvent) Validate() error {
 	if strings.TrimSpace(e.Name) == "" {
@@ -99,6 +105,11 @@ func (e BlockHeightEvent) GetEventPrefix() string {
 	return BlockHeightPrefix
 }
 
+// GetEventOrder gets the order for which this event should be processed
+func (e BlockHeightEvent) GetEventOrder() uint64 {
+	return e.BlockHeight
+}
+
 // Validate checks if the event data is valid.
 func (e BlockHeightEvent) Validate() error {
 	return nil
@@ -115,6 +126,11 @@ func (e BlockHeightEvent) ValidateContext(ctx sdk.Context) error {
 // GetEventPrefix gets the prefix for a BlockTimeEvent.
 func (e BlockTimeEvent) GetEventPrefix() string {
 	return BlockTimePrefix
+}
+
+// GetEventOrder gets the order for which this event should be processed
+func (e BlockTimeEvent) GetEventOrder() uint64 {
+	return uint64(e.Time.UnixNano())
 }
 
 // Validate checks if the event data is valid.

@@ -20,6 +20,7 @@ const (
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
 
+	EventOrderLength = 8
 	TriggerIDLength  = 8
 	QueueIndexLength = 8
 	GasLimitLength   = 8
@@ -35,12 +36,15 @@ var (
 	QueueLengthKey         = []byte{0x07}
 )
 
-// GetEventListenerKey converts an event name and trigger ID into an event registry key format.
-func GetEventListenerKey(eventName string, id TriggerID) []byte {
+// GetEventListenerKey converts an event name, order, and trigger ID into an event registry key format.
+func GetEventListenerKey(eventName string, order uint64, id TriggerID) []byte {
 	triggerIDBytes := make([]byte, TriggerIDLength)
 	binary.BigEndian.PutUint64(triggerIDBytes, id)
+	orderBytes := make([]byte, EventOrderLength)
+	binary.BigEndian.PutUint64(orderBytes, order)
 
 	key := GetEventListenerPrefix(eventName)
+	key = append(key, orderBytes...)
 	key = append(key, triggerIDBytes...)
 	return key
 }

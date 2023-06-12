@@ -45,7 +45,7 @@ func (s *KeeperTestSuite) TestCreateTrigger() {
 				})
 				s.Equal(expResp, response, "CreateTrigger response")
 				s.Equal(sdk.Events{resultEvent}, em.Events(), "should have correct events for CreateTrigger")
-				_, err = s.app.TriggerKeeper.GetEventListener(s.ctx, event.GetEventPrefix(), tc.expectedId)
+				_, err = s.app.TriggerKeeper.GetEventListener(s.ctx, event.GetEventPrefix(), event.GetEventOrder(), tc.expectedId)
 				s.NoError(err, "should have event listener for successful CreateTrigger")
 				_, err = s.app.TriggerKeeper.GetTrigger(s.ctx, tc.expectedId)
 				s.NoError(err, "should have trigger for successful CreateTrigger")
@@ -116,7 +116,7 @@ func (s *KeeperTestSuite) TestDestroyTrigger() {
 					TriggerId: fmt.Sprintf("%d", tc.request.GetId()),
 				})
 				s.Equal(sdk.Events{resultEvent}, em.Events(), "should have correct events for TriggerDestroyRequest")
-				_, err = s.app.TriggerKeeper.GetEventListener(s.ctx, event.GetEventPrefix(), tc.request.GetId())
+				_, err = s.app.TriggerKeeper.GetEventListener(s.ctx, event.GetEventPrefix(), event.GetEventOrder(), tc.request.GetId())
 				s.Error(err, "should not have an event listener after handling TriggerDestroyRequest")
 				_, err = s.app.TriggerKeeper.GetTrigger(s.ctx, tc.request.GetId())
 				s.Error(err, "should not have a trigger after handling TriggerDestroyRequest")

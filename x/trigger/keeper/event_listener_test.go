@@ -19,6 +19,7 @@ func (s *KeeperTestSuite) TestGetAndSetEventListener() {
 		id       types.TriggerID
 		expected *types.Trigger
 		prefix   string
+		order    uint64
 		err      string
 	}{
 		{
@@ -26,6 +27,7 @@ func (s *KeeperTestSuite) TestGetAndSetEventListener() {
 			id:       1,
 			expected: &newTrigger,
 			prefix:   types.BlockHeightPrefix,
+			order:    1,
 			err:      "",
 		},
 		{
@@ -33,6 +35,7 @@ func (s *KeeperTestSuite) TestGetAndSetEventListener() {
 			id:       999,
 			expected: nil,
 			prefix:   types.BlockHeightPrefix,
+			order:    1,
 			err:      types.ErrEventNotFound.Error(),
 		},
 		{
@@ -40,13 +43,22 @@ func (s *KeeperTestSuite) TestGetAndSetEventListener() {
 			id:       1,
 			expected: nil,
 			prefix:   types.BlockTimePrefix,
+			order:    1,
+			err:      types.ErrEventNotFound.Error(),
+		},
+		{
+			name:     "invalid - event listener doesn't exist with wrong order",
+			id:       1,
+			expected: nil,
+			prefix:   types.BlockTimePrefix,
+			order:    3,
 			err:      types.ErrEventNotFound.Error(),
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			listener, err := s.app.TriggerKeeper.GetEventListener(s.ctx, tc.prefix, tc.id)
+			listener, err := s.app.TriggerKeeper.GetEventListener(s.ctx, tc.prefix, tc.order, tc.id)
 			if len(tc.err) > 0 {
 				s.EqualError(err, tc.err, "should have correct error for invalid GetEventListener")
 				s.Equal(0, int(listener.Id), "should have id of 0 for invalid GetEventListener")

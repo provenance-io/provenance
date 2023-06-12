@@ -27,7 +27,7 @@ The excess gas on a MsgCreateTrigger transaction will be used for the `Trigger's
 
 * Trigger: `0x01 | Trigger ID (8 bytes) -> ProtocolBuffers(Trigger)`
 * Trigger ID: `0x05 -> uint64(TriggerID)`
-* Event Listener: `0x02 | Event Type (32 bytes) -> ProtocolBuffers(Trigger)`
+* Event Listener: `0x02 | Event Type (32 bytes) | Order (8 bytes) -> ProtocolBuffers(Trigger)`
 * Gas Limit: `0x04 | Trigger ID (8 bytes) -> uint64(GasLimit)`
 
 +++ https://github.com/provenance-io/provenance/blob/29b326542ba420affce45af8c7190b96046cce0e/proto/provenance/trigger/v1/trigger.proto#L14-L26

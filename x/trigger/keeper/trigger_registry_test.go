@@ -33,7 +33,7 @@ func (s *KeeperTestSuite) TestRegisterTrigger() {
 		},
 		{
 			name:     "valid - register with no gas for trigger",
-			meter:    sdk.NewGasMeter(19890),
+			meter:    sdk.NewGasMeter(20130),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
 			expected: 0,
 		},
@@ -63,7 +63,8 @@ func (s *KeeperTestSuite) TestRegisterTrigger() {
 				s.NoError(err, "should add trigger to store in RegisterTrigger")
 				s.Equal(tc.trigger, trigger, "should be correct trigger that is stored for RegisterTrigger")
 
-				listener, err := s.app.TriggerKeeper.GetEventListener(s.ctx, types.BlockHeightPrefix, tc.trigger.Id)
+				triggerEvent, _ := tc.trigger.GetTriggerEventI()
+				listener, err := s.app.TriggerKeeper.GetEventListener(s.ctx, triggerEvent.GetEventPrefix(), triggerEvent.GetEventOrder(), tc.trigger.Id)
 				s.NoError(err, "should add trigger to event listener store in RegisterTrigger")
 				s.Equal(tc.trigger, listener, "should be correct trigger that is stored in RegisterTrigger")
 
@@ -113,7 +114,8 @@ func (s *KeeperTestSuite) TestUnregisterTrigger() {
 
 			_, err := s.app.TriggerKeeper.GetTrigger(s.ctx, tc.trigger.Id)
 			s.EqualError(err, types.ErrTriggerNotFound.Error())
-			_, err = s.app.TriggerKeeper.GetEventListener(s.ctx, types.BlockHeightPrefix, tc.trigger.Id)
+			triggerEvent, _ := tc.trigger.GetTriggerEventI()
+			_, err = s.app.TriggerKeeper.GetEventListener(s.ctx, triggerEvent.GetEventPrefix(), triggerEvent.GetEventOrder(), tc.trigger.Id)
 			s.EqualError(err, types.ErrEventNotFound.Error())
 		})
 	}
