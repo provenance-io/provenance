@@ -107,17 +107,6 @@ func stringsToAccAddresses(strings []string) []sdk.AccAddress {
 	return retval
 }
 
-// accAddressesToStrings converts an array of sdk.AccAddress into an array of strings.
-func accAddressesToStrings(addrs []sdk.AccAddress) []string {
-	retval := make([]string, len(addrs))
-
-	for i, addr := range addrs {
-		retval[i] = addr.String()
-	}
-
-	return retval
-}
-
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgCreateTriggerRequest) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if msg.Event != nil {
