@@ -6,14 +6,9 @@ order: 3
 
 In this section we describe the processing of the trigger messages and the corresponding updates to the state.
 
-<!-- TOC 3 -->
-- [Messages](#messages)
+<!-- TOC 2 -->
   - [Msg/CreateTriggerRequest](#msgcreatetriggerrequest)
-    - [Request](#request)
-    - [Response](#response)
   - [Msg/DestroyTriggerRequest](#msgdestroytriggerrequest)
-    - [Request](#request-1)
-    - [Response](#response-1)
 
 
 ## Msg/CreateTriggerRequest
@@ -21,9 +16,11 @@ In this section we describe the processing of the trigger messages and the corre
 Creates a `Trigger` that will fire when its event has been detected. If the message has more than one signer, then the newly created `Trigger` will designate the first signer as the owner.
 
 ### Request
+
 +++ https://github.com/provenance-io/provenance/blob/f560c43f9e0e8079e3b62b4e8fc8411baee5590c/proto/provenance/trigger/v1/tx.proto#L21-L31
 
 ### Response
+
 +++ https://github.com/provenance-io/provenance/blob/288f8b1b60861da811c61840dbf4220a3f906071/proto/provenance/trigger/v1/tx.proto#L34-L37
 
 The message will fail under the following conditions:
@@ -38,9 +35,11 @@ The message will fail under the following conditions:
 Destroys a `Trigger` that has been created and is still registered.
 
 ### Request
+
 +++ https://github.com/provenance-io/provenance/blob/288f8b1b60861da811c61840dbf4220a3f906071/proto/provenance/trigger/v1/tx.proto#L40-L48
 
 ### Response
+
 +++ https://github.com/provenance-io/provenance/blob/288f8b1b60861da811c61840dbf4220a3f906071/proto/provenance/trigger/v1/tx.proto#L51
 
 The message will fail under the following conditions:

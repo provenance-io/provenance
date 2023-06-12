@@ -7,14 +7,12 @@ order: 2
 The trigger module manages the state of every trigger.
 
 ---
-<!-- TOC 5 -->
-- [State](#state)
+<!-- TOC 2 4 -->
   - [Trigger](#trigger)
     - [TriggerEventI](#triggereventi)
       - [BlockHeightEvent](#blockheightevent)
       - [BlockTimeEvent](#blocktimeevent)
       - [TransactionEvent](#transactionevent)
-        - [Attribute](#attribute)
   - [Queue](#queue)
 
 
