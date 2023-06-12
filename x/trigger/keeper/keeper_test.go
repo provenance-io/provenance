@@ -21,10 +21,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-var (
-	PKs = simapp.CreateTestPubKeys(500)
-)
-
 type KeeperTestSuite struct {
 	suite.Suite
 
