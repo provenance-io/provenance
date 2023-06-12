@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -92,7 +93,7 @@ func (k Keeper) handleMsgs(ctx sdk.Context, msgs []sdk.Msg) ([]sdk.Result, error
 }
 
 // safeHandle Handles one message and safely returns an error if it panics
-func (k Keeper) safeHandle(ctx sdk.Context, msg sdk.Msg, handler MsgServiceHandler) (result *sdk.Result, err error) {
+func (k Keeper) safeHandle(ctx sdk.Context, msg sdk.Msg, handler baseapp.MsgServiceHandler) (result *sdk.Result, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			// If it's an out-of-gas panic, convert it to a nicer error.

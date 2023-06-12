@@ -11,9 +11,6 @@ import (
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
-// MsgServiceHandler defines a function type which handles Msg service message.
-type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
-
 type Keeper struct {
 	storeKey storetypes.StoreKey
 	cdc      codec.BinaryCodec
