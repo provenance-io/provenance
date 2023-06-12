@@ -117,13 +117,15 @@ type Keeper struct {
 
 	// To check granter grantee authorization of messages.
 	authzKeeper AuthzKeeper
+
+	// For getting/setting account data.
+	attrKeeper AttrKeeper
 }
 
 // NewKeeper creates new instances of the metadata Keeper.
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace paramtypes.Subspace,
-	authKeeper AuthKeeper,
-	authzKeeper AuthzKeeper,
+	authKeeper AuthKeeper, authzKeeper AuthzKeeper, attrKeeper AttrKeeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -135,6 +137,7 @@ func NewKeeper(
 		paramSpace:  paramSpace,
 		authKeeper:  authKeeper,
 		authzKeeper: authzKeeper,
+		attrKeeper:  attrKeeper,
 	}
 }
 

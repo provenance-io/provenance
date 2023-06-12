@@ -40,7 +40,7 @@ func (k msgServer) WriteScope(
 		existing = &e
 	}
 	if err := k.ValidateWriteScope(ctx, existing, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.SetScope(ctx, msg.Scope)
@@ -58,7 +58,7 @@ func (k msgServer) DeleteScope(
 	ctx := UnwrapMetadataContext(goCtx)
 
 	if err := k.ValidateDeleteScope(ctx, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.RemoveScope(ctx, msg.ScopeId)
@@ -81,7 +81,7 @@ func (k msgServer) AddScopeDataAccess(
 	}
 
 	if err := k.ValidateAddScopeDataAccess(ctx, existing, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	existing.AddDataAccess(msg.DataAccess)
@@ -106,7 +106,7 @@ func (k msgServer) DeleteScopeDataAccess(
 	}
 
 	if err := k.ValidateDeleteScopeDataAccess(ctx, existing, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	existing.RemoveDataAccess(msg.DataAccess)
@@ -126,7 +126,7 @@ func (k msgServer) AddScopeOwner(
 	ctx := UnwrapMetadataContext(goCtx)
 
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	existing, found := k.GetScope(ctx, msg.ScopeId)
@@ -141,7 +141,7 @@ func (k msgServer) AddScopeOwner(
 	}
 
 	if err := k.ValidateUpdateScopeOwners(ctx, existing, proposed, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.SetScope(ctx, proposed)
@@ -159,7 +159,7 @@ func (k msgServer) DeleteScopeOwner(
 	ctx := UnwrapMetadataContext(goCtx)
 
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	existing, found := k.GetScope(ctx, msg.ScopeId)
@@ -174,7 +174,7 @@ func (k msgServer) DeleteScopeOwner(
 	}
 
 	if err := k.ValidateUpdateScopeOwners(ctx, existing, proposed, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.SetScope(ctx, proposed)
@@ -202,7 +202,7 @@ func (k msgServer) UpdateValueOwners(
 
 	err := k.ValidateUpdateValueOwners(ctx, scopes, msg.ValueOwnerAddress, msg)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.SetScopeValueOwners(ctx, scopes, msg.ValueOwnerAddress)
@@ -228,7 +228,7 @@ func (k msgServer) MigrateValueOwner(
 		return false
 	})
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	if len(scopes) == 0 {
 		return nil, sdkerrors.ErrNotFound.Wrapf("no scopes found with value owner %q", msg.Existing)
@@ -236,7 +236,7 @@ func (k msgServer) MigrateValueOwner(
 
 	err = k.ValidateUpdateValueOwners(ctx, scopes, msg.Proposed, msg)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.SetScopeValueOwners(ctx, scopes, msg.Proposed)
@@ -263,7 +263,7 @@ func (k msgServer) WriteSession(
 		existingAudit = existing.Audit
 	}
 	if err := k.ValidateWriteSession(ctx, existing, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	msg.Session.Audit = existingAudit.UpdateAudit(ctx.BlockTime(), strings.Join(msg.Signers, ", "), "")
@@ -287,7 +287,7 @@ func (k msgServer) WriteRecord(
 
 	scopeUUID, err := msg.Record.SessionId.ScopeUUID()
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	recordID := types.RecordMetadataAddress(scopeUUID, msg.Record.Name)
@@ -297,7 +297,7 @@ func (k msgServer) WriteRecord(
 		existing = &e
 	}
 	if err = k.ValidateWriteRecord(ctx, existing, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.SetRecord(ctx, msg.Record)
@@ -321,7 +321,7 @@ func (k msgServer) DeleteRecord(
 	ctx := UnwrapMetadataContext(goCtx)
 
 	if err := k.ValidateDeleteRecord(ctx, msg.RecordId, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.RemoveRecord(ctx, msg.RecordId)
@@ -345,11 +345,11 @@ func (k msgServer) WriteScopeSpecification(
 	if e, found := k.GetScopeSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
 		if err := k.ValidateSignersWithoutParties(ctx, existing.OwnerAddresses, msg); err != nil {
-			return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 		}
 	}
 	if err := k.ValidateWriteScopeSpecification(ctx, existing, msg.Specification); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.SetScopeSpecification(ctx, msg.Specification)
@@ -371,7 +371,7 @@ func (k msgServer) DeleteScopeSpecification(
 		return nil, sdkerrors.ErrNotFound.Wrapf("scope specification not found with id %s", msg.SpecificationId)
 	}
 	if err := k.ValidateSignersWithoutParties(ctx, existing.OwnerAddresses, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	if err := k.RemoveScopeSpecification(ctx, msg.SpecificationId); err != nil {
@@ -397,11 +397,11 @@ func (k msgServer) WriteContractSpecification(
 	if e, found := k.GetContractSpecification(ctx, msg.Specification.SpecificationId); found {
 		existing = &e
 		if err := k.ValidateSignersWithoutParties(ctx, existing.OwnerAddresses, msg); err != nil {
-			return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 		}
 	}
 	if err := k.ValidateWriteContractSpecification(ctx, existing, msg.Specification); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.SetContractSpecification(ctx, msg.Specification)
@@ -423,7 +423,7 @@ func (k msgServer) DeleteContractSpecification(
 		return nil, sdkerrors.ErrNotFound.Wrapf("contract specification not found with id %s", msg.SpecificationId)
 	}
 	if err := k.ValidateSignersWithoutParties(ctx, existing.OwnerAddresses, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	// Remove all record specifications associated with this contract specification.
@@ -476,7 +476,7 @@ func (k msgServer) AddContractSpecToScopeSpec(
 		return nil, sdkerrors.ErrNotFound.Wrapf("scope specification not found with id %s", msg.ScopeSpecificationId)
 	}
 	if err := k.ValidateSignersWithoutParties(ctx, scopeSpec.OwnerAddresses, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	for _, cSpecID := range scopeSpec.ContractSpecIds {
@@ -504,7 +504,7 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 		return nil, sdkerrors.ErrNotFound.Wrapf("scope specification not found with id %s", msg.ScopeSpecificationId)
 	}
 	if err := k.ValidateSignersWithoutParties(ctx, scopeSpec.OwnerAddresses, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	updateContractSpecIds := []types.MetadataAddress{}
@@ -541,7 +541,7 @@ func (k msgServer) WriteRecordSpecification(
 
 	contractSpecID, err := msg.Specification.SpecificationId.AsContractSpecAddress()
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	contractSpec, contractSpecFound := k.GetContractSpecification(ctx, contractSpecID)
 	if !contractSpecFound {
@@ -550,7 +550,7 @@ func (k msgServer) WriteRecordSpecification(
 			contractSpecID, contractSpecUUID, msg.Specification.SpecificationId)
 	}
 	if err = k.ValidateSignersWithoutParties(ctx, contractSpec.OwnerAddresses, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	var existing *types.RecordSpecification
@@ -558,7 +558,7 @@ func (k msgServer) WriteRecordSpecification(
 		existing = &e
 	}
 	if err = k.ValidateWriteRecordSpecification(ctx, existing, msg.Specification); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	k.SetRecordSpecification(ctx, msg.Specification)
@@ -581,7 +581,7 @@ func (k msgServer) DeleteRecordSpecification(
 	}
 	contractSpecID, err := msg.SpecificationId.AsContractSpecAddress()
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	contractSpec, contractSpecFound := k.GetContractSpecification(ctx, contractSpecID)
 	if !contractSpecFound {
@@ -589,7 +589,7 @@ func (k msgServer) DeleteRecordSpecification(
 			contractSpecID, msg.SpecificationId)
 	}
 	if err := k.ValidateSignersWithoutParties(ctx, contractSpec.OwnerAddresses, msg); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	if err := k.RemoveRecordSpecification(ctx, msg.SpecificationId); err != nil {
@@ -707,4 +707,23 @@ func (k msgServer) ModifyOSLocator(
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_ModifyOSLocator, msg.GetSignerStrs()))
 	return types.NewMsgModifyOSLocatorResponse(msg.Locator), nil
+}
+
+// SetAccountData associates some basic data with a metadata address.
+// Currently, only scope ids are supported.
+func (k msgServer) SetAccountData(
+	goCtx context.Context,
+	msg *types.MsgSetAccountDataRequest,
+) (*types.MsgSetAccountDataResponse, error) {
+	ctx := UnwrapMetadataContext(goCtx)
+
+	if err := k.ValidateSetAccountData(ctx, msg); err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	if err := k.attrKeeper.SetAccountData(ctx, msg.MetadataAddr.String(), msg.Value); err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	return &types.MsgSetAccountDataResponse{}, nil
 }

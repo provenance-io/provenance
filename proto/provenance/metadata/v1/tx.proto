@@ -78,6 +78,10 @@ service Msg {
   rpc DeleteOSLocator(MsgDeleteOSLocatorRequest) returns (MsgDeleteOSLocatorResponse);
   // ModifyOSLocator updates an ObjectStoreLocator record by the current owner.
   rpc ModifyOSLocator(MsgModifyOSLocatorRequest) returns (MsgModifyOSLocatorResponse);
+
+  // SetAccountData associates some basic data with a metadata address.
+  // Currently, only scope ids are supported.
+  rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
 }
 
 // MsgWriteScopeRequest is the request type for the Msg/WriteScope RPC method.
@@ -581,6 +585,28 @@ message MsgModifyOSLocatorRequest {
 message MsgModifyOSLocatorResponse {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
 }
+
+// MsgSetAccountDataRequest is the request to set/update/delete a scope's account data.
+message MsgSetAccountDataRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.goproto_getters)  = false;
+
+  // The identifier to associate the data with.
+  // Currently, only scope ids are supported.
+  bytes metadata_addr = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"metadata_addr\""
+  ];
+  // The desired accountdata value.
+  string value = 2;
+  // The signers of this message. Must fulfill owner requirements of the scope.
+  repeated string signers = 3;
+}
+
+// MsgSetAccountDataResponse is the response from setting/updating/deleting a scope's account data.
+message MsgSetAccountDataResponse {}
 
 // MsgWriteP8eContractSpecRequest has been deprecated and is no longer usable.
 // Deprecated: This message is no longer part of any endpoint and cannot be used for anything.

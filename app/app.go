@@ -219,9 +219,10 @@ var (
 		icatypes.ModuleName:         nil,
 		ibctransfertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 
-		markertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
-		wasm.ModuleName:        {authtypes.Burner},
-		rewardtypes.ModuleName: nil,
+		attributetypes.ModuleName: nil,
+		markertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		wasm.ModuleName:           {authtypes.Burner},
+		rewardtypes.ModuleName:    nil,
 	}
 )
 
@@ -459,16 +460,16 @@ func New(
 		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
 	)
 
-	app.MetadataKeeper = metadatakeeper.NewKeeper(
-		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper, app.AuthzKeeper,
-	)
-
 	app.NameKeeper = namekeeper.NewKeeper(
 		appCodec, keys[nametypes.StoreKey], app.GetSubspace(nametypes.ModuleName),
 	)
 
 	app.AttributeKeeper = attributekeeper.NewKeeper(
 		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, &app.NameKeeper,
+	)
+
+	app.MetadataKeeper = metadatakeeper.NewKeeper(
+		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper,
 	)
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
@@ -616,7 +617,7 @@ func New(
 
 		// PROVENANCE
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
-		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.GovKeeper, app.interfaceRegistry),
+		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.GovKeeper, app.AttributeKeeper, app.interfaceRegistry),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
@@ -802,7 +803,7 @@ func New(
 		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
-		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.GovKeeper, app.interfaceRegistry),
+		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.GovKeeper, app.AttributeKeeper, app.interfaceRegistry),
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),

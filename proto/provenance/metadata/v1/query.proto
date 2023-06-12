@@ -231,6 +231,12 @@ service Query {
   rpc OSAllLocators(OSAllLocatorsRequest) returns (OSAllLocatorsResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/locators/all";
   }
+
+  // AccountData gets the account data associated with a metadata address.
+  // Currently, only scope ids are supported.
+  rpc AccountData(AccountDataRequest) returns (AccountDataResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/accountdata/{metadata_addr}";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -707,4 +713,21 @@ message OSAllLocatorsResponse {
   OSAllLocatorsRequest request = 98;
   // pagination provides the pagination information of this response.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// AccountDataRequest is the request type for the Query/AccountData RPC method.
+message AccountDataRequest {
+  // The metadata address to look up.
+  // Currently, only scope ids are supported.
+  bytes metadata_addr = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"scope_id\""
+  ];
+}
+
+// AccountDataResponse is the response type for the Query/AccountData RPC method.
+message AccountDataResponse {
+  // The accountdata for the requested metadata address.
+  string value = 1;
 }

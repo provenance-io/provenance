@@ -5,8 +5,10 @@ In this section we describe the processing of the staking messages and the corre
 <!-- TOC -->
   - [MsgAddAttributeRequest](#msgaddattributerequest)
   - [MsgUpdateAttributeRequest](#msgupdateattributerequest)
+  - [MsgUpdateAttributeExpirationRequest](#msgupdateattributeexpirationrequest)
   - [MsgDeleteAttributeRequest](#msgdeleteattributerequest)
   - [MsgDeleteDistinctAttributeRequest](#msgdeletedistinctattributerequest)
+  - [MsgSetAccountDataRequest](#msgsetaccountdatarequest)
 
 
 
@@ -15,7 +17,7 @@ In this section we describe the processing of the staking messages and the corre
 An attribute record is created using the `MsgAddAttributeRequest` message.
 
 ```proto
-// MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account
+// MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account.
 // Attributes may only be set in an account by the account that the attribute name resolves to.
 message MsgAddAttributeRequest {
   option (gogoproto.equal)            = false;
@@ -33,6 +35,8 @@ message MsgAddAttributeRequest {
   string account = 4;
   // The address that the name must resolve to.
   string owner = 5;
+  // Time that an attribute will expire.
+  google.protobuf.Timestamp expiration_date = 6 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
 }
 ```
 
@@ -44,12 +48,13 @@ This message is expected to fail if:
 - The name does not resolve to the owner address
 
 If successful, an attribute record will be created for the account.
+
 ## MsgUpdateAttributeRequest
 
 The update attribute request method allows an existing attribute record to replace its value with a new one.
 
 ```proto
-// MsgUpdateAttributeRequest defines an sdk.Msg type that is used to update an existing attribute to an account
+// MsgUpdateAttributeRequest defines an sdk.Msg type that is used to update an existing attribute to an account.
 // Attributes may only be set in an account by the account that the attribute name resolves to.
 message MsgUpdateAttributeRequest {
   option (gogoproto.equal)            = false;
@@ -71,8 +76,6 @@ message MsgUpdateAttributeRequest {
   string account = 6;
   // The address that the name must resolve to.
   string owner = 7;
-  // Time that an attribute will expire.
-  google.protobuf.Timestamp expiration_date = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
 }
 ```
 
@@ -86,62 +89,6 @@ This message is expected to fail if:
 - The original attribute does not exist
 
 If successful, the value of an attribute will be updated.
-## MsgDeleteAttributeRequest
-
-The delete distinct attribute request method removes an existing account attribute.
-
-```proto
-// MsgDeleteAttributeRequest defines a message to delete an attribute from an account
-// Attributes may only be remove from an account by the account that the attribute name resolves to.
-message MsgDeleteAttributeRequest {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
-
-  // The attribute name.
-  string name = 1;
-  // The account to add the attribute to.
-  string account = 2;
-  // The address that the name must resolve to.
-  string owner = 3;
-}
-```
-
-This message is expected to fail if:
-- Any components of the request do not pass basic integrity and format checks
-- The owner account does not exist
-- The name does not resolve to the owner address
-- The attribute does not exist
-## MsgDeleteDistinctAttributeRequest
-
-The delete distinct attribute request method removes an existing account attribute with a specific value.
-
-```proto
-// MsgDeleteDistinctAttributeRequest defines a message to delete an attribute with matching name, value, and type from
-// an account Attributes may only be remove from an account by the account that the attribute name resolves to.
-message MsgDeleteDistinctAttributeRequest {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
-
-  // The attribute name.
-  string name = 1;
-  // The attribute value.
-  bytes value = 2;
-  // The account to add the attribute to.
-  string account = 3;
-  // The address that the name must resolve to.
-  string owner = 4;
-}
-```
-
-This message is expected to fail if:
-- Any components of the request do not pass basic integrity and format checks
-- The owner account does not exist
-- The name does not resolve to the owner address
-- The attribute does not exist
 
 ## MsgUpdateAttributeExpirationRequest
 
@@ -174,3 +121,79 @@ This message is expected to fail if:
 - The name does not resolve to the owner address
 - The attribute does not exist
 - The expiration date is before current block height
+
+## MsgDeleteAttributeRequest
+
+The delete distinct attribute request method removes an existing account attribute.
+
+```proto
+// MsgDeleteAttributeRequest defines a message to delete an attribute from an account
+// Attributes may only be removed from an account by the account that the attribute name resolves to.
+message MsgDeleteAttributeRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // The attribute name.
+  string name = 1;
+  // The account to add the attribute to.
+  string account = 2;
+  // The address that the name must resolve to.
+  string owner = 3;
+}
+```
+
+This message is expected to fail if:
+- Any components of the request do not pass basic integrity and format checks
+- The owner account does not exist
+- The name does not resolve to the owner address
+- The attribute does not exist
+
+## MsgDeleteDistinctAttributeRequest
+
+The delete distinct attribute request method removes an existing account attribute with a specific value.
+
+```proto
+// MsgDeleteDistinctAttributeRequest defines a message to delete an attribute with matching name, value, and type from
+// an account. Attributes may only be removed from an account by the account that the attribute name resolves to.
+message MsgDeleteDistinctAttributeRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // The attribute name.
+  string name = 1;
+  // The attribute value.
+  bytes value = 2;
+  // The account to add the attribute to.
+  string account = 3;
+  // The address that the name must resolve to.
+  string owner = 4;
+}
+```
+
+This message is expected to fail if:
+- Any components of the request do not pass basic integrity and format checks
+- The owner account does not exist
+- The name does not resolve to the owner address
+- The attribute does not exist
+
+## MsgSetAccountDataRequest
+
+The set account data request method associates some data (a string) with an account.
+
+```protobuf
+// MsgSetAccountDataRequest defines a message to set an account's accountdata attribute.
+message MsgSetAccountDataRequest {
+  option (cosmos.msg.v1.signer) = "account";
+
+  string value   = 1;
+  string account = 2;
+}
+```
+
+This message is expected to fail if:
+- The value is too long (as defined in attribute module params).
+- The message is not signed by the provided account.

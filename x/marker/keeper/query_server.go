@@ -160,3 +160,23 @@ func (k Keeper) DenomMetadata(c context.Context, req *types.QueryDenomMetadataRe
 
 	return &types.QueryDenomMetadataResponse{Metadata: metadata}, nil
 }
+
+// AccountData query for account data associated with a denom
+func (k Keeper) AccountData(c context.Context, req *types.QueryAccountDataRequest) (*types.QueryAccountDataResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	addr, err := types.MarkerAddress(req.Denom)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	value, err := k.attrKeeper.GetAccountData(ctx, addr.String())
+	if err != nil {
+		return nil, status.Errorf(codes.Unknown, "could not get %q account data: %v", req.Denom, err)
+	}
+
+	return &types.QueryAccountDataResponse{Value: value}, nil
+}

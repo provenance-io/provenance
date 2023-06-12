@@ -86,6 +86,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.ModifyOSLocator(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
+		case *types.MsgSetAccountDataRequest:
+			res, err := msgServer.SetAccountData(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
 		default:
 			return nil, sdkerrors.ErrUnknownRequest.Wrapf("unrecognized %s message type: %T", types.ModuleName, msg)
 		}
