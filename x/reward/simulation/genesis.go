@@ -9,8 +9,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/reward/types"
 )
@@ -25,22 +23,22 @@ const (
 
 // GenTotalRewardsPool randomized TotalRewardsPool
 func GenTotalRewardsPool(r *rand.Rand) sdk.Coin {
-	return sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, int64(simtypes.RandIntBetween(r, 1000, 10000000000)))
+	return sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, int64(randIntBetween(r, 1000, 10000000000)))
 }
 
 // GenMaxRewardsByAddress randomized MaxRewardByAddress
 func GenMaxRewardsByAddress(r *rand.Rand) sdk.Coin {
-	return sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, int64(simtypes.RandIntBetween(r, 1, 999)))
+	return sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, int64(randIntBetween(r, 1, 999)))
 }
 
 // MaxActionsFn randomized MaxActions
 func MaxActionsFn(r *rand.Rand) uint64 {
-	return uint64(simtypes.RandIntBetween(r, 100, 100000000))
+	return uint64(randIntBetween(r, 100, 100000000))
 }
 
 // MinActionsFn randomized MinActions
 func MinActionsFn(r *rand.Rand) uint64 {
-	return uint64(simtypes.RandIntBetween(r, 0, 100))
+	return uint64(r.Intn(101))
 }
 
 // RandomizedGenState generates a random GenesisState for distribution
@@ -123,4 +121,9 @@ func RandomizedGenState(simState *module.SimulationState) {
 	}
 	fmt.Printf("Selected randomly generated reward programs:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(rewards)
+}
+
+// randIntBetween generates a random number between min and max inclusive.
+func randIntBetween(r *rand.Rand, min, max int) int {
+	return r.Intn(max-min+1) + min
 }

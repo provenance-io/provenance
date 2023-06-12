@@ -205,7 +205,7 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
+	memo := simulation.RandStringOfLength(r, r.Intn(101))
 
 	signMode := gen.SignModeHandler().DefaultMode()
 

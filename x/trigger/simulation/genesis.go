@@ -24,12 +24,12 @@ const (
 
 // TriggerIDStartFn randomized starting trigger id
 func TriggerIDStartFn(r *rand.Rand) uint64 {
-	return uint64(simtypes.RandIntBetween(r, 1, 10000000000))
+	return uint64(randIntBetween(r, 1, 10000000000))
 }
 
 // QueueStartFn randomized Queue Start Index
 func QueueStartFn(r *rand.Rand) uint64 {
-	return uint64(simtypes.RandIntBetween(r, 1, 10000000000))
+	return uint64(randIntBetween(r, 1, 10000000000))
 }
 
 // NewRandomGasLimit randomized Gas Limit
@@ -42,16 +42,16 @@ func NewRandomEvent(r *rand.Rand, now time.Time) types.TriggerEventI {
 	if r.Intn(2) > 0 {
 		minimumTime := int(time.Second * 10)
 		maximumTime := int(time.Minute * 5)
-		randTime := now.Add(time.Duration(simtypes.RandIntBetween(r, minimumTime, maximumTime)))
+		randTime := now.Add(time.Duration(randIntBetween(r, minimumTime, maximumTime)))
 		return &types.BlockTimeEvent{Time: randTime.UTC()}
 	}
-	height := uint64(simtypes.RandIntBetween(r, 10, 150))
+	height := uint64(randIntBetween(r, 10, 150))
 	return &types.BlockHeightEvent{BlockHeight: height}
 }
 
 // NewRandomAction returns a random action
 func NewRandomAction(r *rand.Rand, from string, to string) sdk.Msg {
-	amount := int64(simtypes.RandIntBetween(r, 100, 1000))
+	amount := int64(randIntBetween(r, 100, 1000))
 	return &banktypes.MsgSend{
 		FromAddress: from,
 		ToAddress:   to,
@@ -152,4 +152,9 @@ func RandomizedGenState(simState *module.SimulationState) {
 		panic(err)
 	}
 	fmt.Printf("Selected randomly generated triggers:\n%s\n", bz)
+}
+
+// randIntBetween generates a random number between min and max inclusive.
+func randIntBetween(r *rand.Rand, min, max int) int {
+	return r.Intn(max-min+1) + min
 }
