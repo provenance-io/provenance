@@ -33,7 +33,7 @@ func (s *KeeperTestSuite) TestRegisterTrigger() {
 		},
 		{
 			name:     "valid - register with no gas for trigger",
-			meter:    sdk.NewGasMeter(20130),
+			meter:    sdk.NewGasMeter(14190),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
 			expected: 0,
 		},

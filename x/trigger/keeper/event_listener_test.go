@@ -13,6 +13,7 @@ func (s *KeeperTestSuite) TestGetAndSetEventListener() {
 	eventAny, _ := codectypes.NewAnyWithValue(event)
 	newTrigger := types.NewTrigger(1, s.accountAddresses[0].String(), eventAny, actions)
 	s.app.TriggerKeeper.SetEventListener(s.ctx, newTrigger)
+	s.app.TriggerKeeper.SetTrigger(s.ctx, newTrigger)
 
 	tests := []struct {
 		name     string
@@ -123,6 +124,7 @@ func (s *KeeperTestSuite) TestIterateEventListeners() {
 			count := 0
 			for _, trigger := range tc.add {
 				s.app.TriggerKeeper.SetEventListener(s.ctx, trigger)
+				s.app.TriggerKeeper.SetTrigger(s.ctx, trigger)
 			}
 			err := s.app.TriggerKeeper.IterateEventListeners(s.ctx, tc.prefix, func(trigger types.Trigger) (stop bool, err error) {
 				count += 1
