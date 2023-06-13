@@ -47,6 +47,7 @@ func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*types.An
 
 	msgs, err := sdktx.GetMsgs(actions, "RunActions")
 	if err != nil {
+		ctx.GasMeter().ConsumeGas(gasLimit, "failed trigger dispatch")
 		k.Logger(ctx).Error(
 			"GetMsgs",
 			"actions", actions,
@@ -56,6 +57,7 @@ func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*types.An
 	}
 	results, err := k.handleMsgs(cacheCtx, msgs)
 	if err != nil {
+		ctx.GasMeter().ConsumeGas(gasLimit, "failed trigger dispatch")
 		k.Logger(ctx).Error(
 			"HandleMsgs",
 			"error", err,

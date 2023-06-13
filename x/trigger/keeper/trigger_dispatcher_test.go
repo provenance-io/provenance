@@ -32,21 +32,23 @@ func (s *KeeperTestSuite) TestProcessActions() {
 	})
 
 	tests := []struct {
-		name     string
-		panic    string
-		existing []types.Trigger
-		queue    []types.QueuedTrigger
-		gas      []uint64
-		expected []types.Trigger
-		events   sdk.Events
+		name         string
+		panic        string
+		existing     []types.Trigger
+		queue        []types.QueuedTrigger
+		gas          []uint64
+		expected     []types.Trigger
+		events       sdk.Events
+		remainingGas uint64
 	}{
 		{
-			name:     "valid - no items in queue to run",
-			existing: []types.Trigger{},
-			queue:    []types.QueuedTrigger{},
-			gas:      []uint64{},
-			expected: []types.Trigger(nil),
-			events:   []sdk.Event{},
+			name:         "valid - no items in queue to run",
+			existing:     []types.Trigger{},
+			queue:        []types.QueuedTrigger{},
+			gas:          []uint64{},
+			expected:     []types.Trigger(nil),
+			events:       []sdk.Event{},
+			remainingGas: 3998973,
 		},
 		{
 			name:     "valid - one item in queue to run",
@@ -58,9 +60,10 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     trigger1,
 				},
 			},
-			gas:      []uint64{2000000},
-			expected: []types.Trigger(nil),
-			events:   []sdk.Event{event1},
+			gas:          []uint64{2000000},
+			expected:     []types.Trigger(nil),
+			events:       []sdk.Event{event1},
+			remainingGas: 3981542,
 		},
 		{
 			name:  "invalid - trigger with missing gas limit",
@@ -72,9 +75,10 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     trigger1,
 				},
 			},
-			gas:      []uint64{},
-			expected: []types.Trigger{existing1},
-			events:   []sdk.Event{},
+			gas:          []uint64{},
+			expected:     []types.Trigger{existing1},
+			events:       []sdk.Event{},
+			remainingGas: 3994214,
 		},
 		{
 			name:     "valid - trigger with no action",
@@ -86,9 +90,10 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     emptyTrigger,
 				},
 			},
-			gas:      []uint64{2000000},
-			expected: []types.Trigger(nil),
-			events:   []sdk.Event{},
+			gas:          []uint64{2000000},
+			expected:     []types.Trigger(nil),
+			events:       []sdk.Event{},
+			remainingGas: 3981851,
 		},
 		{
 			name:     "valid - trigger with multiple actions",
@@ -100,9 +105,10 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     multiActionTrigger,
 				},
 			},
-			gas:      []uint64{2000000},
-			expected: []types.Trigger(nil),
-			events:   []sdk.Event{event1, event2},
+			gas:          []uint64{2000000},
+			expected:     []types.Trigger(nil),
+			events:       []sdk.Event{event1, event2},
+			remainingGas: 3981236,
 		},
 		{
 			name:     "valid - multiple triggers in queue",
@@ -119,9 +125,10 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     trigger2,
 				},
 			},
-			gas:      []uint64{1000000, 1000000},
-			expected: []types.Trigger(nil),
-			events:   []sdk.Event{event1, event2},
+			gas:          []uint64{1000000, 1000000},
+			expected:     []types.Trigger(nil),
+			events:       []sdk.Event{event1, event2},
+			remainingGas: 3964108,
 		},
 		{
 			name:     "valid - limit multiple triggers in queue by gas",
@@ -138,9 +145,10 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     trigger2,
 				},
 			},
-			gas:      []uint64{2000000, 1000000},
-			expected: []types.Trigger{existing2},
-			events:   []sdk.Event{event1},
+			gas:          []uint64{2000000, 1000000},
+			expected:     []types.Trigger{existing2},
+			events:       []sdk.Event{event1},
+			remainingGas: 3976756,
 		},
 		{
 			name:     "valid - limit multiple triggers in queue",
@@ -177,9 +185,10 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     trigger2,
 				},
 			},
-			gas:      []uint64{100000, 100000, 100000, 100000, 100000, 100000},
-			expected: []types.Trigger{existing2},
-			events:   []sdk.Event{event1},
+			gas:          []uint64{100000, 100000, 100000, 100000, 100000, 100000},
+			expected:     []types.Trigger{existing2},
+			events:       []sdk.Event{event1},
+			remainingGas: 3511806,
 		},
 		{
 			name:     "invalid - trigger with single action runs out of gas",
@@ -191,9 +200,10 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     trigger1,
 				},
 			},
-			gas:      []uint64{1},
-			expected: []types.Trigger{existing1},
-			events:   []sdk.Event{},
+			gas:          []uint64{1},
+			expected:     []types.Trigger{existing1},
+			events:       []sdk.Event{},
+			remainingGas: 3981541,
 		},
 		{
 			name:     "invalid - trigger with multiple actions runs out of gas",
@@ -205,9 +215,10 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     multiActionTrigger,
 				},
 			},
-			gas:      []uint64{6000},
-			expected: []types.Trigger{existing1, existing2},
-			events:   []sdk.Event{},
+			gas:          []uint64{6000},
+			expected:     []types.Trigger{existing1, existing2},
+			events:       []sdk.Event{},
+			remainingGas: 3975236,
 		},
 		{
 			name:     "valid - multiple triggers in queue and one runs out of gas",
@@ -224,9 +235,55 @@ func (s *KeeperTestSuite) TestProcessActions() {
 					Trigger:     trigger2,
 				},
 			},
-			gas:      []uint64{1, 1000000},
-			expected: []types.Trigger{existing1},
-			events:   []sdk.Event{event2},
+			gas:          []uint64{1, 1000000},
+			expected:     []types.Trigger{existing1},
+			events:       []sdk.Event{event2},
+			remainingGas: 3964107,
+		},
+		{
+			name:     "invalid - consumes all gas if action fails",
+			existing: []types.Trigger{existing2},
+			queue: []types.QueuedTrigger{
+				{
+					BlockHeight: uint64(s.ctx.BlockHeight()),
+					Time:        s.ctx.BlockTime(),
+					Trigger:     trigger1,
+				},
+			},
+			gas:          []uint64{2000000},
+			expected:     []types.Trigger{existing2},
+			events:       []sdk.Event{},
+			remainingGas: 1981542,
+		},
+		{
+			name:     "invalid - consumes all gas if one action fails",
+			existing: []types.Trigger{existing1},
+			queue: []types.QueuedTrigger{
+				{
+					BlockHeight: uint64(s.ctx.BlockHeight()),
+					Time:        s.ctx.BlockTime(),
+					Trigger:     multiActionTrigger,
+				},
+			},
+			gas:          []uint64{2000000},
+			expected:     []types.Trigger{existing1},
+			events:       []sdk.Event{},
+			remainingGas: 1981236,
+		},
+		{
+			name:     "invalid - stops early if one action fails",
+			existing: []types.Trigger{existing2},
+			queue: []types.QueuedTrigger{
+				{
+					BlockHeight: uint64(s.ctx.BlockHeight()),
+					Time:        s.ctx.BlockTime(),
+					Trigger:     multiActionTrigger,
+				},
+			},
+			gas:          []uint64{2000000},
+			expected:     []types.Trigger{existing2},
+			events:       []sdk.Event{},
+			remainingGas: 1981236,
 		},
 	}
 
@@ -244,6 +301,7 @@ func (s *KeeperTestSuite) TestProcessActions() {
 				}
 			}
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			s.ctx = s.ctx.WithGasMeter(sdk.NewGasMeter(4000000))
 
 			if len(tc.panic) > 0 {
 				s.PanicsWithValue(tc.panic, func() {
@@ -251,6 +309,7 @@ func (s *KeeperTestSuite) TestProcessActions() {
 				})
 			} else {
 				s.app.TriggerKeeper.ProcessTriggers(s.ctx)
+				s.Equal(tc.remainingGas, s.ctx.GasMeter().GasRemaining(), "should have correct gas usage")
 
 				remaining, err := s.app.TriggerKeeper.GetAllTriggers(s.ctx)
 				s.NoError(err, "GetAllTriggers")
