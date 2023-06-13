@@ -44,6 +44,7 @@ func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*types.An
 	cacheCtx, flush := ctx.CacheContext()
 	gasMeter := sdk.NewGasMeter(gasLimit)
 	cacheCtx = cacheCtx.WithGasMeter(gasMeter)
+	ctx.BlockGasMeter().ConsumeGas(gasLimit, "trigger run attempt")
 
 	msgs, err := sdktx.GetMsgs(actions, "RunActions")
 	if err != nil {
