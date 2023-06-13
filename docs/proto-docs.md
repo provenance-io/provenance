@@ -476,6 +476,38 @@
   
     - [Msg](#provenance.reward.v1.Msg)
   
+- [provenance/trigger/v1/event.proto](#provenance/trigger/v1/event.proto)
+    - [EventTriggerCreated](#provenance.trigger.v1.EventTriggerCreated)
+    - [EventTriggerDestroyed](#provenance.trigger.v1.EventTriggerDestroyed)
+  
+- [provenance/trigger/v1/trigger.proto](#provenance/trigger/v1/trigger.proto)
+    - [Attribute](#provenance.trigger.v1.Attribute)
+    - [BlockHeightEvent](#provenance.trigger.v1.BlockHeightEvent)
+    - [BlockTimeEvent](#provenance.trigger.v1.BlockTimeEvent)
+    - [QueuedTrigger](#provenance.trigger.v1.QueuedTrigger)
+    - [TransactionEvent](#provenance.trigger.v1.TransactionEvent)
+    - [Trigger](#provenance.trigger.v1.Trigger)
+  
+- [provenance/trigger/v1/genesis.proto](#provenance/trigger/v1/genesis.proto)
+    - [GasLimit](#provenance.trigger.v1.GasLimit)
+    - [GenesisState](#provenance.trigger.v1.GenesisState)
+  
+- [provenance/trigger/v1/query.proto](#provenance/trigger/v1/query.proto)
+    - [QueryTriggerByIDRequest](#provenance.trigger.v1.QueryTriggerByIDRequest)
+    - [QueryTriggerByIDResponse](#provenance.trigger.v1.QueryTriggerByIDResponse)
+    - [QueryTriggersRequest](#provenance.trigger.v1.QueryTriggersRequest)
+    - [QueryTriggersResponse](#provenance.trigger.v1.QueryTriggersResponse)
+  
+    - [Query](#provenance.trigger.v1.Query)
+  
+- [provenance/trigger/v1/tx.proto](#provenance/trigger/v1/tx.proto)
+    - [MsgCreateTriggerRequest](#provenance.trigger.v1.MsgCreateTriggerRequest)
+    - [MsgCreateTriggerResponse](#provenance.trigger.v1.MsgCreateTriggerResponse)
+    - [MsgDestroyTriggerRequest](#provenance.trigger.v1.MsgDestroyTriggerRequest)
+    - [MsgDestroyTriggerResponse](#provenance.trigger.v1.MsgDestroyTriggerResponse)
+  
+    - [Msg](#provenance.trigger.v1.Msg)
+  
 - [Scalar Value Types](#scalar-value-types)
 
 
@@ -7246,6 +7278,389 @@ Msg
 | `EndRewardProgram` | [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest) | [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse) | EndRewardProgram is the RPC endpoint for ending a rewards program | |
 | `ClaimRewards` | [MsgClaimRewardsRequest](#provenance.reward.v1.MsgClaimRewardsRequest) | [MsgClaimRewardsResponse](#provenance.reward.v1.MsgClaimRewardsResponse) | ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program | |
 | `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) | ClaimAllRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for the signer of the tx. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/event.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/event.proto
+
+
+
+<a name="provenance.trigger.v1.EventTriggerCreated"></a>
+
+### EventTriggerCreated
+EventTriggerCreated is an event for when a trigger is created
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [string](#string) |  | trigger_id is a unique identifier of the trigger |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.EventTriggerDestroyed"></a>
+
+### EventTriggerDestroyed
+EventTriggerDestroyed is an event for when a trigger is destroyed
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [string](#string) |  | trigger_id is a unique identifier of the trigger |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/trigger.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/trigger.proto
+
+
+
+<a name="provenance.trigger.v1.Attribute"></a>
+
+### Attribute
+Attribute
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | The name of the attribute that the event must have to be considered a match. |
+| `value` | [string](#string) |  | The value of the attribute that the event must have to be considered a match. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.BlockHeightEvent"></a>
+
+### BlockHeightEvent
+BlockHeightEvent
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `block_height` | [uint64](#uint64) |  | The height that the trigger should fire at. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.BlockTimeEvent"></a>
+
+### BlockTimeEvent
+BlockTimeEvent
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time the trigger should fire at. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.QueuedTrigger"></a>
+
+### QueuedTrigger
+QueuedTrigger
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `block_height` | [uint64](#uint64) |  | The block height the trigger was detected and queued. |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time the trigger was detected and queued. |
+| `trigger` | [Trigger](#provenance.trigger.v1.Trigger) |  | The trigger that was detected. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.TransactionEvent"></a>
+
+### TransactionEvent
+TransactionEvent
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | The name of the event for a match. |
+| `attributes` | [Attribute](#provenance.trigger.v1.Attribute) | repeated | The attributes that must be present for a match. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.Trigger"></a>
+
+### Trigger
+Trigger
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | An integer to uniquely identify the trigger. |
+| `owner` | [string](#string) |  | The owner of the trigger. |
+| `event` | [google.protobuf.Any](#google.protobuf.Any) |  | The event that must be detected for the trigger to fire. |
+| `actions` | [google.protobuf.Any](#google.protobuf.Any) | repeated | The messages to run when the trigger fires. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/genesis.proto
+
+
+
+<a name="provenance.trigger.v1.GasLimit"></a>
+
+### GasLimit
+GasLimit defines the trigger module's grouping of a trigger and a gas limit
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [uint64](#uint64) |  | The identifier of the trigger this GasLimit belongs to. |
+| `amount` | [uint64](#uint64) |  | The maximum amount of gas that the trigger can use. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the trigger module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [uint64](#uint64) |  | Trigger id is the next auto incremented id to be assigned to the next created trigger |
+| `queue_start` | [uint64](#uint64) |  | Queue start is the starting index of the queue. |
+| `triggers` | [Trigger](#provenance.trigger.v1.Trigger) | repeated | Triggers to initially start with. |
+| `gas_limits` | [GasLimit](#provenance.trigger.v1.GasLimit) | repeated | Maximum amount of gas that the triggers can use. |
+| `queued_triggers` | [QueuedTrigger](#provenance.trigger.v1.QueuedTrigger) | repeated | Triggers to initially start with in the queue. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/query.proto
+
+
+
+<a name="provenance.trigger.v1.QueryTriggerByIDRequest"></a>
+
+### QueryTriggerByIDRequest
+QueryTriggerByIDRequest queries for the Trigger with an identifier of id.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | The id of the trigger to query. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.QueryTriggerByIDResponse"></a>
+
+### QueryTriggerByIDResponse
+QueryTriggerByIDResponse contains the requested Trigger.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger` | [Trigger](#provenance.trigger.v1.Trigger) |  | The trigger object that was queried for. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.QueryTriggersRequest"></a>
+
+### QueryTriggersRequest
+QueryTriggersRequest queries for all triggers.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.QueryTriggersResponse"></a>
+
+### QueryTriggersResponse
+QueryTriggersResponse contains the list of Triggers.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `triggers` | [Trigger](#provenance.trigger.v1.Trigger) | repeated | List of Trigger objects. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.trigger.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service for trigger module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `TriggerByID` | [QueryTriggerByIDRequest](#provenance.trigger.v1.QueryTriggerByIDRequest) | [QueryTriggerByIDResponse](#provenance.trigger.v1.QueryTriggerByIDResponse) | TriggerByID returns a trigger matching the ID. | GET|/provenance/trigger/v1/triggers/{id}|
+| `Triggers` | [QueryTriggersRequest](#provenance.trigger.v1.QueryTriggersRequest) | [QueryTriggersResponse](#provenance.trigger.v1.QueryTriggersResponse) | Triggers returns the list of triggers. | GET|/provenance/trigger/v1/triggers|
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/tx.proto
+
+
+
+<a name="provenance.trigger.v1.MsgCreateTriggerRequest"></a>
+
+### MsgCreateTriggerRequest
+MsgCreateTriggerRequest is the request type for creating a trigger RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authorities` | [string](#string) | repeated | The signing authorities for the request |
+| `event` | [google.protobuf.Any](#google.protobuf.Any) |  | The event that must be detected for the trigger to fire. |
+| `actions` | [google.protobuf.Any](#google.protobuf.Any) | repeated | The messages to run when the trigger fires. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.MsgCreateTriggerResponse"></a>
+
+### MsgCreateTriggerResponse
+MsgCreateTriggerResponse is the response type for creating a trigger RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | trigger id that is generated on creation. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.MsgDestroyTriggerRequest"></a>
+
+### MsgDestroyTriggerRequest
+MsgDestroyTriggerRequest is the request type for creating a trigger RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | the id of the trigger to destroy. |
+| `authority` | [string](#string) |  | The signing authority for the request |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.MsgDestroyTriggerResponse"></a>
+
+### MsgDestroyTriggerResponse
+MsgDestroyTriggerResponse is the response type for creating a trigger RPC
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.trigger.v1.Msg"></a>
+
+### Msg
+Msg
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateTrigger` | [MsgCreateTriggerRequest](#provenance.trigger.v1.MsgCreateTriggerRequest) | [MsgCreateTriggerResponse](#provenance.trigger.v1.MsgCreateTriggerResponse) | CreateTrigger is the RPC endpoint for creating a trigger | |
+| `DestroyTrigger` | [MsgDestroyTriggerRequest](#provenance.trigger.v1.MsgDestroyTriggerRequest) | [MsgDestroyTriggerResponse](#provenance.trigger.v1.MsgDestroyTriggerResponse) | DestroyTrigger is the RPC endpoint for creating a trigger | |
 
  <!-- end services -->
 

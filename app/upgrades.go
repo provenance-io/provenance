@@ -14,6 +14,7 @@ import (
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
+	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -84,6 +85,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
+		Added: []string{triggertypes.ModuleName},
 	},
 	"rust": { // upgrade for v1.16.0,
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -108,6 +110,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
+		Added: []string{triggertypes.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
 }
