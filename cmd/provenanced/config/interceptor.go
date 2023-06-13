@@ -8,8 +8,6 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	tmconfig "github.com/tendermint/tendermint/config"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 )
@@ -33,7 +31,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	}
 
 	// Create a new Server context with the same viper as the client context, a default config, and no logger.
-	serverCtx := server.NewContext(vpr, tmconfig.DefaultConfig(), nil)
+	serverCtx := server.NewContext(vpr, DefaultTmConfig(), nil)
 	if err := server.SetCmdServerContext(cmd, serverCtx); err != nil {
 		return err
 	}
