@@ -42,7 +42,5 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 }
 
 var (
-	// moving to protoCodec since this is a new module and should not use the
-	// amino codec..someone to double verify
 	ModuleCdc = codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
 )

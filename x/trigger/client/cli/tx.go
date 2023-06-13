@@ -49,7 +49,36 @@ func GetCmdAddTransactionTrigger() *cobra.Command {
 		Aliases: []string{"tx"},
 		Short:   "Creates a new trigger that fires when a tx event is detected.",
 		Long:    strings.TrimSpace(`Creates a new trigger.  This will delay the execution of the provided message until the tx event has occurred`),
-		Example: fmt.Sprintf(`$ %[1]s tx trigger create-tx-trigger event.json message.json`, version.AppName),
+		Example: fmt.Sprintf(`$ %[1]s tx trigger create-tx-trigger event.json message.json
+		
+Example of event.json contents:
+{
+	"name": "coin_received",
+	"attributes": [
+		{
+			"name": "receiver",
+			"value": "tp19yjn905u442gh430hw362zrq5m6gj0klhk8ghx"
+		},
+		{
+			"name": "amount",
+			"value": "100nhash"
+		}
+	]
+}
+
+Example of message.json contents:
+{
+	"@type": "/cosmos.bank.v1beta1.MsgSend",
+	"from_address": "tp1ywnsu9y84wa7wr5erz7gcwpzxafzj974aw4sg3",
+	"to_address": "tp1v38sj5m2dm84nsf3efv2qy6pc8msr4zqu7c3cg",
+	"amount": [
+		{
+			"denom": "nhash",
+			"amount": "100"
+		}
+	]
+}`,
+			version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -94,7 +123,21 @@ func GetCmdAddBlockHeightTrigger() *cobra.Command {
 		Aliases: []string{"ht", "height"},
 		Short:   "Creates a new trigger that fires when a block height is reached",
 		Long:    strings.TrimSpace(`Creates a new trigger.  This will delay the execution of the provided message until the block height event has occurred`),
-		Example: fmt.Sprintf(`$ %[1]s tx trigger create-height-trigger 500 message.json`, version.AppName),
+		Example: fmt.Sprintf(`$ %[1]s tx trigger create-height-trigger 500 message.json
+
+Example of message.json contents:
+{
+	"@type": "/cosmos.bank.v1beta1.MsgSend",
+	"from_address": "tp1ywnsu9y84wa7wr5erz7gcwpzxafzj974aw4sg3",
+	"to_address": "tp1v38sj5m2dm84nsf3efv2qy6pc8msr4zqu7c3cg",
+	"amount": [
+		{
+			"denom": "nhash",
+			"amount": "100"
+		}
+	]
+}`,
+			version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -139,7 +182,21 @@ func GetCmdAddBlockTimeTrigger() *cobra.Command {
 		Aliases: []string{"tt", "time"},
 		Short:   "Creates a new trigger that fires when a block time is reached",
 		Long:    strings.TrimSpace(`Creates a new trigger.  This will delay the execution of the provided message until the block time event has occurred`),
-		Example: fmt.Sprintf(`$ %[1]s tx trigger create-time-trigger 2006-01-02T15:04:05-04:00 message.json`, version.AppName),
+		Example: fmt.Sprintf(`$ %[1]s tx trigger create-time-trigger 2006-01-02T15:04:05-04:00 message.json
+		
+Example of message.json contents:
+{
+	"@type": "/cosmos.bank.v1beta1.MsgSend",
+	"from_address": "tp1ywnsu9y84wa7wr5erz7gcwpzxafzj974aw4sg3",
+	"to_address": "tp1v38sj5m2dm84nsf3efv2qy6pc8msr4zqu7c3cg",
+	"amount": [
+		{
+			"denom": "nhash",
+			"amount": "100"
+		}
+	]
+}`,
+			version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
