@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Add support to add/remove required attributes for a restricted marker. [#1512](https://github.com/provenance-io/provenance/issues/1512)
+* Add trigger module for delayed execution. [#1462](https://github.com/provenance-io/provenance/issues/1462)
 * Add support to update the `allow_forced_transfer` field of a restricted marker [#1545](https://github.com/provenance-io/provenance/issues/1545).
 * Add expiration date value to `attribute` [#1435](https://github.com/provenance-io/provenance/issues/1435).
 * Add endpoints to update the value owner address of scopes [#1329](https://github.com/provenance-io/provenance/issues/1329).

@@ -77,7 +77,8 @@ func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankk
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		parentRecord, parentOwner, found, err := getRandomRecord(r, ctx, k, accs, true)
+		params := k.GetParams(ctx)
+		parentRecord, parentOwner, found, err := getRandomRecord(r, ctx, k, accs, 1, int(params.MaxNameLevels)-1)
 		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "iterator of existing records failed"), nil, err
 		}
@@ -85,7 +86,8 @@ func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankk
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "no name records available to create under"), nil, nil
 		}
 
-		newRecordName := simtypes.RandStringOfLength(r, r.Intn(10)+2)
+		nameLen := randIntBetween(r, int(params.GetMinSegmentLength()), int(params.GetMaxSegmentLength()))
+		newRecordName := simtypes.RandStringOfLength(r, nameLen)
 		newRecordOwner := parentOwner
 		if !parentRecord.Restricted {
 			newRecordOwner, _ = simtypes.RandomAcc(r, accs)
@@ -103,7 +105,10 @@ func SimulateMsgDeleteName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk ban
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		randomRecord, simAccount, found, err := getRandomRecord(r, ctx, k, accs, false)
+		// minSeg = 2 because we don't want to delete any root name records.
+		// maxSeg = 1_000_000 because that should be more than any name has.
+		// Not doing a min/max params lookup because they can change during the sim and don't apply to this operation.
+		randomRecord, simAccount, found, err := getRandomRecord(r, ctx, k, accs, 2, 1_000_000)
 		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "iterator of existing records failed"), nil, err
 		}
@@ -122,7 +127,8 @@ func SimulateMsgModifyName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk ban
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		randomRecord, simAccount, found, err := getRandomRecord(r, ctx, k, accs, true)
+		params := k.GetParams(ctx)
+		randomRecord, simAccount, found, err := getRandomRecord(r, ctx, k, accs, 1, int(params.MaxNameLevels))
 		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "iterator of existing records failed"), nil, err
 		}
@@ -188,10 +194,11 @@ func Dispatch(
 
 // getRandomRecord finds a random record owned by a known account.
 // An error is only returned if there was a problem iterating records.
-func getRandomRecord(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, accs []simtypes.Account, rootOK bool) (types.NameRecord, simtypes.Account, bool, error) {
+func getRandomRecord(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, accs []simtypes.Account, segmentsMin, segmentsMax int) (types.NameRecord, simtypes.Account, bool, error) {
 	var records []types.NameRecord
 	err := k.IterateRecords(ctx, types.NameKeyPrefix, func(record types.NameRecord) error {
-		if rootOK || strings.Contains(record.Name, ".") {
+		segments := strings.Count(record.Name, ".") + 1
+		if segmentsMin <= segments && segments <= segmentsMax {
 			records = append(records, record)
 		}
 		return nil
@@ -212,4 +219,9 @@ func getRandomRecord(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, accs []simt
 	}
 
 	return types.NameRecord{}, simtypes.Account{}, false, nil
+}
+
+// randIntBetween generates a random number between min and max inclusive.
+func randIntBetween(r *rand.Rand, min, max int) int {
+	return r.Intn(max-min+1) + min
 }

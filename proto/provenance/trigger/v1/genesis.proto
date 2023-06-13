@@ -1,0 +1,38 @@
+syntax = "proto3";
+package provenance.trigger.v1;
+
+import "gogoproto/gogo.proto";
+import "provenance/trigger/v1/trigger.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/trigger/types";
+option java_package        = "io.provenance.trigger.v1";
+option java_multiple_files = true;
+
+// GenesisState defines the trigger module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // Trigger id is the next auto incremented id to be assigned to the next created trigger
+  uint64 trigger_id = 1;
+
+  // Queue start is the starting index of the queue.
+  uint64 queue_start = 2;
+
+  // Triggers to initially start with.
+  repeated Trigger triggers = 3 [(gogoproto.nullable) = false];
+
+  // Maximum amount of gas that the triggers can use.
+  repeated GasLimit gas_limits = 4 [(gogoproto.nullable) = false];
+
+  // Triggers to initially start with in the queue.
+  repeated QueuedTrigger queued_triggers = 5 [(gogoproto.nullable) = false];
+}
+
+// GasLimit defines the trigger module's grouping of a trigger and a gas limit
+message GasLimit {
+  // The identifier of the trigger this GasLimit belongs to.
+  uint64 trigger_id = 1;
+  // The maximum amount of gas that the trigger can use.
+  uint64 amount = 2;
+}

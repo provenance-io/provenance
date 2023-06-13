@@ -53,6 +53,7 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
 func init() {
@@ -272,6 +273,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[attributetypes.StoreKey], newApp.keys[attributetypes.StoreKey], [][]byte{attributetypes.AttributeAddrLookupKeyPrefix}},
 		{app.keys[nametypes.StoreKey], newApp.keys[nametypes.StoreKey], [][]byte{}},
 		{app.keys[metadatatypes.StoreKey], newApp.keys[metadatatypes.StoreKey], [][]byte{}},
+		{app.keys[triggertypes.StoreKey], newApp.keys[triggertypes.StoreKey], [][]byte{}},
 	}
 
 	for _, skp := range storeKeysPrefixes {
@@ -365,6 +367,11 @@ func TestAppSimulationAfterImport(t *testing.T) {
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
+	// uncomment these to run in ide without flags.
+	//sdksim.FlagEnabledValue = true
+	//sdksim.FlagBlockSizeValue = 100
+	//sdksim.FlagNumBlocksValue = 50
+
 	if !sdksim.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
@@ -376,6 +383,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
 	config.DBBackend = "memdb"
+	config.Commit = true
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
@@ -383,8 +391,16 @@ func TestAppStateDeterminism(t *testing.T) {
 
 	home := t.TempDir()
 
-	for i := 0; i < numSeeds; i++ {
-		config.Seed = rand.Int63()
+	seeds := make([]int64, numSeeds)
+	for i := range seeds {
+		seeds[i] = rand.Int63()
+	}
+
+	// uncomment and tweak to use a single specific seed.
+	//seeds = []int64{9171851189930047994}
+
+	for i, seed := range seeds {
+		config.Seed = seed
 		PrintConfig(config)
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
