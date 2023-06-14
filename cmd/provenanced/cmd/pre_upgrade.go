@@ -1,17 +1,23 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	tmconfig "github.com/tendermint/tendermint/config"
 
+	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
+)
+
+var (
+	ErrFail      error = server.ErrorCode{Code: 30}
+	ErrFailRetry error = server.ErrorCode{Code: 31}
 )
 
 // GetPreUpgradeCmd returns the pre-upgrade command which cosmovisor runs before
@@ -27,19 +33,27 @@ func GetPreUpgradeCmd() *cobra.Command {
 It should be run using the new version before restarting the node.
 
 Exit code meanings:
-   0 - Success. The node should now be started as usual.
-   1 - Returned only if this command does not exist. The node should now be started as usual.
+   0 - Success. The node should be started as usual.
+   1 - Returned only if this command does not exist. The node should be started as usual.
   30 - Execution failed and the node should not be restarted.
   31 - Execution failed, but this command should be re-attempted until it returns either 0 or 30.`,
-		Args:         cobra.NoArgs, // cosmovisor doesn't provide any args, so 0 args must always be possible.
-		Hidden:       true,         // This isn't a command that we need to advertise in provenanced help.
-		SilenceUsage: true,         // No need to print usage if the command fails.
-		Run: func(cmd *cobra.Command, _ []string) {
+		Hidden:       true, // This isn't a command that we need to advertise in provenanced help.
+		SilenceUsage: true, // No need to print usage if the command fails.
+		// Cosmovisor doesn't provide any args, and none are expected. But we want an
+		// exit code of 30 here (instead of 1), so we're not using cobra.NoArgs.
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 0 {
+				return errors.Join(fmt.Errorf("expected 0 args, received %d", len(args)), ErrFail)
+			}
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
 			err := UpdateConfig(cmd)
 			if err != nil {
-				cmd.PrintErrf("could not update config file(s): %v\n", err)
-				os.Exit(30)
+				return errors.Join(fmt.Errorf("could not update config file(s): %w", err), ErrFail)
 			}
+			cmd.Printf("pre-upgrade successful")
+			return nil
 		},
 	}
 
