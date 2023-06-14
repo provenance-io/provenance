@@ -12,7 +12,7 @@ import (
 )
 
 func TestInitCmd(t *testing.T) {
-	rootCmd, _ := cmd.NewRootCmd()
+	rootCmd, _ := cmd.NewRootCmd(true)
 	rootCmd.SetArgs([]string{
 		"init",        // Test the init cmd
 		"simapp-test", // Moniker

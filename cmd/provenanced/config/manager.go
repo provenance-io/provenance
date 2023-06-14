@@ -98,6 +98,13 @@ func ExtractTmConfig(cmd *cobra.Command) (*tmconfig.Config, error) {
 		return nil, fmt.Errorf("error extracting tendermint config: %w", err)
 	}
 	conf.SetRoot(GetHomeDir(cmd))
+	// When the RPCServers value is "", it gets read as []string{}.
+	// But from a packed config without that entry, it gets read as nil.
+	// The default is also nil.
+	// So, if there's nothing in it, just set it to nil for consistency.
+	if len(conf.StateSync.RPCServers) == 0 {
+		conf.StateSync.RPCServers = nil
+	}
 	return conf, nil
 }
 

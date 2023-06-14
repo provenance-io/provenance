@@ -60,9 +60,9 @@ const (
 // ChainID is the id of the running chain
 var ChainID string
 
-// NewRootCmd creates a new root command for simd. It is called once in the
-// main function.
-func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
+// NewRootCmd creates a new root command for provenanced. It is called once in the main function.
+// Providing sealConfig = false is only for unit tests that want to run multiple commands.
+func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
@@ -82,6 +82,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
+			home, _ := cmd.Flags().GetString(flags.FlagHome)
+			_ = home
 			if cmd.Flags().Changed(flags.FlagHome) {
 				rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
 				initClientCtx = initClientCtx.WithHomeDir(rootDir)
@@ -97,7 +99,9 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
 			customDenom := server.GetServerContextFromCmd(cmd).Viper.GetString(CustomDenomFlag)
 			customMsgFeeFloor := server.GetServerContextFromCmd(cmd).Viper.GetInt64(CustomMsgFeeFloorPriceFlag)
-			app.SetConfig(testnet, true)
+			if sealConfig {
+				app.SetConfig(testnet, true)
+			}
 			pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloor)
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
