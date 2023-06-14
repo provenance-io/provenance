@@ -14,15 +14,27 @@ import (
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 )
 
+// GetPreUpgradeCmd returns the pre-upgrade command which cosmovisor runs before
+// starting a node after an upgrade. Anyone not using cosmovisor should manually
+// run this after swapping executables and before restarting the node.
 func GetPreUpgradeCmd() *cobra.Command {
+	// https://docs.cosmos.network/main/building-apps/app-upgrade#pre-upgrade-handling
+	// The exit code meanings are dictated by cosmovisor.
 	cmd := &cobra.Command{
-		Use:          "pre-upgrade",
-		Short:        "Pre-Upgrade command",
-		Long:         "Pre-upgrade command to implement custom pre-upgrade handling",
-		Args:         cobra.NoArgs,
-		Hidden:       true,
-		SilenceUsage: true,
-		Run: func(cmd *cobra.Command, args []string) {
+		Use:   "pre-upgrade", // cosmovisor requires it to be this.
+		Short: "Pre-Upgrade command",
+		Long: `A command to be run as part of an upgrade.
+It should be run using the new version before restarting the node.
+
+Exit code meanings:
+   0 - Success. The node should now be started as usual.
+   1 - Returned only if this command does not exist. The node should now be started as usual.
+  30 - Execution failed and the node should not be restarted.
+  31 - Execution failed, but this command should be re-attempted until it returns either 0 or 30.`,
+		Args:         cobra.NoArgs, // cosmovisor doesn't provide any args, so 0 args must always be possible.
+		Hidden:       true,         // This isn't a command that we need to advertise in provenanced help.
+		SilenceUsage: true,         // No need to print usage if the command fails.
+		Run: func(cmd *cobra.Command, _ []string) {
 			err := UpdateConfig(cmd)
 			if err != nil {
 				cmd.PrintErrf("could not update config file(s): %v\n", err)
@@ -35,34 +47,40 @@ func GetPreUpgradeCmd() *cobra.Command {
 }
 
 // UpdateConfig writes the current config to files.
+// During a pre-upgrade, this, at the very least, updates the config file using
+// the most recent template. It might also force-change some config values.
 func UpdateConfig(cmd *cobra.Command) error {
-	// This depends on the configs already being loaded.
-	// Usually this is done with the root command's PersistentPreRunE.
-	// If the config(s) change too much though, you might need to read/load
-	// them using something else that correctly reads in the previous version.
-
+	// Load all the config objects.
+	// This depends on the configs already being read into viper.
+	// Usually that is done with the root command's PersistentPreRunE.
+	// If the configs change too much, though, you might need to read/load
+	// them using something else that correctly handles in the previous version.
 	appCfg, err := config.ExtractAppConfig(cmd)
 	if err != nil {
 		return err
 	}
-
 	tmCfg, err := config.ExtractTmConfig(cmd)
 	if err != nil {
 		return err
 	}
-
 	clientCfg, err := config.ExtractClientConfig(cmd)
 	if err != nil {
 		return err
 	}
 
-	if tmCfg.Consensus.TimeoutCommit <= 4*time.Second {
-		tmCfg.Consensus.TimeoutCommit = 5 * time.Second
+	// Set any config values that we want to forcefully update.
+
+	timeoutCommit := 5 * time.Second
+	if tmCfg.Consensus.TimeoutCommit != timeoutCommit {
+		cmd.Printf("Updating consensus.timeout_commit config value to %q (from %q)\n",
+			timeoutCommit.String(), tmCfg.Consensus.TimeoutCommit.String())
+		tmCfg.Consensus.TimeoutCommit = timeoutCommit
 	}
 
 	return SafeSaveConfigs(cmd, appCfg, tmCfg, clientCfg, true)
 }
 
+// SafeSaveConfigs calls config.SaveConfigs but returns an error instead of panicking.
 func SafeSaveConfigs(cmd *cobra.Command,
 	appConfig *serverconfig.Config,
 	tmConfig *tmconfig.Config,
