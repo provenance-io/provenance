@@ -76,9 +76,37 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithViper("PIO")
 	sdk.SetCoinDenomRegex(app.SdkCoinDenomRegex)
 	rootCmd := &cobra.Command{
-		Use:               "provenanced",
-		Short:             "Provenance Blockchain App",
-		PersistentPreRunE: RootPersistentPreRunE(initClientCtx),
+		Use:   "provenanced",
+		Short: "Provenance Blockchain App",
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			cmd.SetOut(cmd.OutOrStdout())
+			cmd.SetErr(cmd.ErrOrStderr())
+
+			if cmd.Flags().Changed(flags.FlagHome) {
+				rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
+				initClientCtx = initClientCtx.WithHomeDir(rootDir)
+			}
+			if err := client.SetCmdClientContext(cmd, initClientCtx); err != nil {
+				return err
+			}
+			if err := config.InterceptConfigsPreRunHandler(cmd); err != nil {
+				return err
+			}
+
+			// set app context based on initialized EnvTypeFlag
+			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
+			customDenom := server.GetServerContextFromCmd(cmd).Viper.GetString(CustomDenomFlag)
+			customMsgFeeFloor := server.GetServerContextFromCmd(cmd).Viper.GetInt64(CustomMsgFeeFloorPriceFlag)
+			app.SetConfig(testnet, true)
+			pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloor)
+			overwriteFlagDefaults(cmd, map[string]string{
+				// Override default value for coin-type to match our mainnet or testnet value.
+				CoinTypeFlag: fmt.Sprint(app.CoinType),
+				// Override min gas price(server level config) here since the provenance config would have been set based on flags.
+				server.FlagMinGasPrices: pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices,
+			})
+			return nil
+		},
 	}
 	initRootCmd(rootCmd, encodingConfig)
 	overwriteFlagDefaults(rootCmd, map[string]string{
@@ -88,39 +116,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	})
 
 	return rootCmd, encodingConfig
-}
-
-// RootPersistentPreRunE is the root command's PersistentPreRunE for the given initial client context.
-func RootPersistentPreRunE(initClientCtx client.Context) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, _ []string) error {
-		cmd.SetOut(cmd.OutOrStdout())
-		cmd.SetErr(cmd.ErrOrStderr())
-
-		if cmd.Flags().Changed(flags.FlagHome) {
-			rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
-			initClientCtx = initClientCtx.WithHomeDir(rootDir)
-		}
-		if err := client.SetCmdClientContext(cmd, initClientCtx); err != nil {
-			return err
-		}
-		if err := config.InterceptConfigsPreRunHandler(cmd); err != nil {
-			return err
-		}
-
-		// set app context based on initialized EnvTypeFlag
-		testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
-		customDenom := server.GetServerContextFromCmd(cmd).Viper.GetString(CustomDenomFlag)
-		customMsgFeeFloor := server.GetServerContextFromCmd(cmd).Viper.GetInt64(CustomMsgFeeFloorPriceFlag)
-		app.SetConfig(testnet, true)
-		pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloor)
-		overwriteFlagDefaults(cmd, map[string]string{
-			// Override default value for coin-type to match our mainnet or testnet value.
-			CoinTypeFlag: fmt.Sprint(app.CoinType),
-			// Override min gas price(server level config) here since the provenance config would have been set based on flags.
-			server.FlagMinGasPrices: pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices,
-		})
-		return nil
-	}
 }
 
 // Execute executes the root command.
