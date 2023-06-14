@@ -113,7 +113,9 @@ func executeRootCmd(t *testing.T, home string, cmdArgs ...string) *CmdResult {
 
 	t.Logf("Executing: %s", strings.Join(append([]string{rv.Cmd.Name()}, cmdArgs...), " "))
 	// This is similar logic to main.go, but just capturing the exit code instead of calling os.Exit.
-	if rv.Result = cmd.Execute(rv.Cmd); rv.Result != nil {
+	rv.Result = cmd.Execute(rv.Cmd)
+	if rv.Result != nil {
+		t.Logf("Execution resulting in error: %v", rv.Result)
 		var srvErrP *server.ErrorCode
 		var srvErr server.ErrorCode
 		switch {
@@ -122,8 +124,10 @@ func executeRootCmd(t *testing.T, home string, cmdArgs ...string) *CmdResult {
 		case errors.As(rv.Result, &srvErr):
 			rv.ExitCode = srvErr.Code
 		default:
-			os.Exit(1)
+			rv.ExitCode = 1
 		}
+	} else {
+		t.Logf("Execution completed successfully.")
 	}
 	t.Logf("exit code: %d", rv.ExitCode)
 
@@ -232,6 +236,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 	var homeDefaultsUnpacked, homeDefaultsPacked string
 	var homeChangedUnpacked, homeChangedPacked string
 	var homeDNE string
+	var homeCannotWrite, cannotWriteToFile string
 
 	tmpDir := t.TempDir()
 
@@ -299,6 +304,31 @@ func TestPreUpgradeCmd(t *testing.T) {
 
 		logDir(t, homeDNE)
 	})
+
+	t.Run("setup: home cannot write", func(t *testing.T) {
+		home := filepath.Join(tmpDir, "cannot_write")
+		homeCannotWrite = home
+		t.Logf("Creating: %s", home)
+		require.NoError(t, os.MkdirAll(home, 0o755), "MkdirAll")
+
+		t.Logf("Saving configs")
+		dummyCmd := makeDummyCmd(t, home)
+		require.NotPanics(t, func() { config.SaveConfigs(dummyCmd, appCfgC, tmCfgC, clientCfgC, false) }, "SaveConfigs")
+		logDir(t, home)
+
+		t.Logf("Packing configs")
+		dummyCmd = makeDummyCmd(t, home)
+		require.NoError(t, config.PackConfig(dummyCmd), "PackConfig")
+		logDir(t, home)
+
+		cannotWriteToFile = config.GetFullPathToPackedConf(dummyCmd)
+		t.Logf("Changing permissions on %s", cannotWriteToFile)
+		require.NoError(t, os.Chmod(cannotWriteToFile, 0o444), "Chmod")
+	})
+	defer func() {
+		t.Logf("Changing permissions on %s so it can be deleted", cannotWriteToFile)
+		logIfError(t, os.Chmod(cannotWriteToFile, 0o666), "Chmod")
+	}()
 
 	success := "pre-upgrade successful"
 
@@ -370,6 +400,13 @@ func TestPreUpgradeCmd(t *testing.T) {
 			args:        []string{"arg1"},
 			expExitCode: 30,
 			expInStderr: []string{"expected 0 args, received 1"},
+		},
+		{
+			name:        "cannot write new file",
+			home:        homeCannotWrite,
+			expExitCode: 30,
+			expInStdout: []string{`Updating consensus.timeout_commit config value to "5s" (from "1s")`},
+			expInStderr: []string{"could not update config file(s):", "error saving config file(s):", "permission denied"},
 		},
 	}
 
