@@ -78,8 +78,6 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
-			home, _ := cmd.Flags().GetString(flags.FlagHome)
-			_ = home
 			if cmd.Flags().Changed(flags.FlagHome) {
 				rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
 				initClientCtx = initClientCtx.WithHomeDir(rootDir)
