@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* nothing
+
+---
+
+## [v1.16.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.16.0-rc1) - 2023-06-13
+
 ### Features
 
 * Add support to add/remove required attributes for a restricted marker. [#1512](https://github.com/provenance-io/provenance/issues/1512)
@@ -75,6 +81,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 marker escrow account if it does not have deposit access.  In order for it to work, deposit access needs to be added.  This can be done using the `MsgAddAccessRequest` tx  [#1525](https://github.com/provenance-io/provenance/issues/1525).
 * `MsgMultiSend` is now limited to a single `Input` [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
 * SDK errors returned from Metadata module endpoints [#978](https://github.com/provenance-io/provenance/issues/978).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.15.2...v1.16.0-rc1
 
 ---
 
