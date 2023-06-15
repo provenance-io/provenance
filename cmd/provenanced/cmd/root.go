@@ -92,10 +92,9 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 			}
 
 			// set app context based on initialized EnvTypeFlag
-			if sealConfig {
-				testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
-				app.SetConfig(testnet, true)
-			}
+			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
+			app.SetConfig(testnet, sealConfig)
+
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
 				CoinTypeFlag: fmt.Sprint(app.CoinType),
