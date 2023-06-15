@@ -60,8 +60,8 @@ func InitCmd(mbm module.BasicManager) *cobra.Command {
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().BoolP(FlagRecover, "r", false, "interactive key recovery from mnemonic")
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
-	cmd.Flags().String(CustomDenomFlag, "", "custom denom, optional")
-	cmd.Flags().Int64(CustomMsgFeeFloorPriceFlag, 0, "custom msg fee floor price, optional")
+	cmd.Flags().String(provconfig.CustomDenomFlag, "", "custom denom, optional")
+	cmd.Flags().Int64(provconfig.CustomMsgFeeFloorPriceFlag, 0, "custom msg fee floor price, optional")
 	return cmd
 }
 
@@ -76,10 +76,6 @@ func Init(
 	doRecover, _ := cmd.Flags().GetBool(FlagRecover)
 	doOverwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
 
-	customDenom, _ := cmd.Flags().GetString(CustomDenomFlag)
-	customMsgFeeFloorPrice, _ := cmd.Flags().GetInt64(CustomMsgFeeFloorPriceFlag)
-
-	pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloorPrice)
 	if err := provconfig.EnsureConfigDir(cmd); err != nil {
 		return err
 	}

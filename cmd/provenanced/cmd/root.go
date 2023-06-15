@@ -51,10 +51,6 @@ const (
 	EnvTypeFlag = "testnet"
 	// Flag used to indicate coin type.
 	CoinTypeFlag = "coin-type"
-	// CustomDenomFlag flag to take in custom denom, defaults to nhash if not passed in.
-	CustomDenomFlag = "custom-denom"
-	// CustomMsgFeeFloorPriceFlag flag to take in custom msg floor fees, defaults to 1905nhash if not passed in.
-	CustomMsgFeeFloorPriceFlag = "msgfee-floor-price"
 )
 
 // ChainID is the id of the running chain
@@ -96,13 +92,10 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 			}
 
 			// set app context based on initialized EnvTypeFlag
-			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
-			customDenom := server.GetServerContextFromCmd(cmd).Viper.GetString(CustomDenomFlag)
-			customMsgFeeFloor := server.GetServerContextFromCmd(cmd).Viper.GetInt64(CustomMsgFeeFloorPriceFlag)
 			if sealConfig {
+				testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
 				app.SetConfig(testnet, true)
 			}
-			pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloor)
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
 				CoinTypeFlag: fmt.Sprint(app.CoinType),
@@ -139,9 +132,9 @@ func Execute(rootCmd *cobra.Command) error {
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, tmcfg.LogFormatPlain, "The logging format (json|plain)")
 
 	// Custom denom flag added to root command
-	rootCmd.PersistentFlags().String(CustomDenomFlag, "", "Indicates if a custom denom is to be used, and the name of it (default nhash)")
+	rootCmd.PersistentFlags().String(config.CustomDenomFlag, "", "Indicates if a custom denom is to be used, and the name of it (default nhash)")
 	// Custom msgFee floor price flag added to root command
-	rootCmd.PersistentFlags().Int64(CustomMsgFeeFloorPriceFlag, 0, "Custom msgfee floor price, optional (default 1905)")
+	rootCmd.PersistentFlags().Int64(config.CustomMsgFeeFloorPriceFlag, 0, "Custom msgfee floor price, optional (default 1905)")
 
 	executor := tmcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
 	return executor.ExecuteContext(ctx)
