@@ -17,16 +17,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	tmconfig "github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	tmconfig "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 // logIfError logs an error if it's not nil.
@@ -97,12 +99,7 @@ type CmdResult struct {
 func executeRootCmd(t *testing.T, home string, cmdArgs ...string) *CmdResult {
 	rv := &CmdResult{Home: home}
 
-	origHome := app.DefaultNodeHome
-	defer func() {
-		app.DefaultNodeHome = origHome
-	}()
-	t.Logf("Setting DefaultNodeHome = %q", home)
-	app.DefaultNodeHome = home
+	cmdArgs = append([]string{"--home", home}, cmdArgs...)
 
 	// Use our own buffers for the output so we can capture it.
 	var outBuf, errBuf bytes.Buffer
@@ -214,7 +211,7 @@ func makeDummyCmd(t *testing.T, home string) *cobra.Command {
 }
 
 func TestPreUpgradeCmd(t *testing.T) {
-	app.SetConfig(true, true)
+	app.SetConfig(true, false)
 	pioconfig.SetProvenanceConfig("", 0)
 
 	appCfgD := config.DefaultAppConfig()
