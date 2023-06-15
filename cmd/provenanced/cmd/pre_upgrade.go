@@ -52,7 +52,7 @@ Exit code meanings:
 			if err != nil {
 				return errors.Join(fmt.Errorf("could not update config file(s): %w", err), ErrFail)
 			}
-			cmd.Printf("pre-upgrade successful")
+			cmd.Printf("pre-upgrade successful\n")
 			return nil
 		},
 	}
