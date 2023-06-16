@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -82,12 +81,11 @@ func UpdateConfig(cmd *cobra.Command) error {
 		return err
 	}
 
-	// Set any config values that we want to forcefully update.
-
-	timeoutCommit := 5 * time.Second
-	if tmCfg.Consensus.TimeoutCommit != timeoutCommit {
+	// Update the timeout commit if it's too low.
+	timeoutCommit := config.DefaultConsensusTimeoutCommit
+	if tmCfg.Consensus.TimeoutCommit < timeoutCommit/2 {
 		cmd.Printf("Updating consensus.timeout_commit config value to %q (from %q)\n",
-			timeoutCommit.String(), tmCfg.Consensus.TimeoutCommit.String())
+			timeoutCommit, tmCfg.Consensus.TimeoutCommit)
 		tmCfg.Consensus.TimeoutCommit = timeoutCommit
 	}
 

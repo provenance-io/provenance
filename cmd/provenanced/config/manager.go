@@ -22,6 +22,9 @@ import (
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
+// DefaultConsensusTimeoutCommit is the default value used for the consensus.timeout_commit config value.
+var DefaultConsensusTimeoutCommit = 5 * time.Second
+
 // PackConfig generates and saves the packed config file then removes the individual config files.
 func PackConfig(cmd *cobra.Command) error {
 	generateAndWritePackedConfig(cmd, nil, nil, nil, true)
@@ -121,7 +124,7 @@ func ExtractTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, FieldValueMap,
 
 func DefaultTmConfig() *tmconfig.Config {
 	rv := tmconfig.DefaultConfig()
-	rv.Consensus.TimeoutCommit = 5 * time.Second
+	rv.Consensus.TimeoutCommit = DefaultConsensusTimeoutCommit
 	return rv
 }
 
