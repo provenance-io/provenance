@@ -238,9 +238,12 @@ func txCommand() *cobra.Command {
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	var cache sdk.MultiStorePersistentCache
 
-	timeoutCommit := cast.ToDuration(appOpts.Get("consensus.timeout_commit"))
-	if timeoutCommit < 4*time.Second {
-		logger.Error(fmt.Sprintf("Your consensus.timeout_commit config value should be set to \"5s\" (it is currently %q).", timeoutCommit.String()))
+	ChainID = cast.ToString(appOpts.Get("chain-id"))
+	if ChainID == "pio-mainnet-1" {
+		timeoutCommit := cast.ToDuration(appOpts.Get("consensus.timeout_commit"))
+		if timeoutCommit < 4*time.Second {
+			logger.Error(fmt.Sprintf("Your consensus.timeout_commit config value is too low and should be increased to \"5s\" (it is currently %q).", timeoutCommit))
+		}
 	}
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
