@@ -139,6 +139,11 @@ func Execute(rootCmd *cobra.Command) error {
 	rootCmd.PersistentFlags().Int64(config.CustomMsgFeeFloorPriceFlag, 0, "Custom msgfee floor price, optional (default 1905)")
 
 	executor := tmcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
+	// Add the --help flag now so that its usage can be capitalized.
+	// Otherwise, it gets added by cobra at the last second.
+	// And for some reason, running the root_test in an IDE doesn't see it, but
+	// running with make test causes a failure.
+	rootCmd.InitDefaultHelpFlag()
 	capitalizeUses(rootCmd)
 
 	return executor.ExecuteContext(ctx)

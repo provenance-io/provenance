@@ -66,12 +66,12 @@ func TestAllUsesStartUpperCased(t *testing.T) {
 			break
 		}
 		isUpper := unicode.IsLower(first)
-		return assert.Falsef(t, isUpper, "unicode.IsLower(%+q) on first letter of "+msg+": %+q",
+		return assert.Falsef(t, isUpper, "unicode.IsLower(%+q), the first letter of "+msg+": %+q",
 			append([]interface{}{first}, append(args, str)...)...)
 	}
 
 	// Set this to true to have the test log out ALL the flags and usages.
-	verbose := true
+	verbose := false
 
 	assertFlagUsageFirstIsLower := func(t *testing.T, getter func() *pflag.FlagSet, name string) {
 		if verbose {
@@ -88,7 +88,7 @@ func TestAllUsesStartUpperCased(t *testing.T) {
 			if verbose {
 				t.Logf("  --%s\t%s", f.Name, f.Usage)
 			}
-			assertFirstIsNotLower(t, f.Usage, "--%s flag", f.Name)
+			assertFirstIsNotLower(t, f.Usage, "--%s flag usage", f.Name)
 		})
 	}
 
@@ -96,6 +96,9 @@ func TestAllUsesStartUpperCased(t *testing.T) {
 	checkCmd = func(t *testing.T, parents []string, cmd *cobra.Command) {
 		parents = append(parents, cmd.Name())
 		t.Run(strings.Join(parents, " "), func(t *testing.T) {
+			if verbose {
+				t.Logf("%s short usage: %q", cmd.Name(), cmd.Short)
+			}
 			assertFirstIsNotLower(t, cmd.Short, "cmd.Short")
 
 			assertFlagUsageFirstIsLower(t, cmd.NonInheritedFlags, "NonInheritedFlags")
