@@ -23,10 +23,10 @@ The following environment variables control the behavior of this script:
                         Default: test
   PIO_CHAIN_ID -------- The chain id to use.
                         Default: testing
+  TIMEOUT_COMMIT ------ The consensus.timeout_commit value to set.
+                        Default: defined by init command
   SHOW_START ---------- Whether to output how to start the chain (at the end).
                         Default: true
-  TIMEOUT_COMMIT ------ The consensus.timeout_commit value to set.
-                        Default: 1s
 
 EOF
             exit 0
@@ -49,7 +49,6 @@ PIO_TESTNET="${PIO_TESTNET:-true}"
 PIO_KEYRING_BACKEND="${PIO_KEYRING_BACKEND:-test}"
 PIO_CHAIN_ID="${PIO_CHAIN_ID:-testing}"
 SHOW_START="${SHOW_START:-true}"
-TIMEOUT_COMMIT="${TIMEOUT_COMMIT:-1s}"
 
 # When the PROV_CMD is a docker thing, env vars don't get passed.
 # So just always provide the needed ones as args.
@@ -60,6 +59,10 @@ PROV_CMD="$PROV_CMD --home $PIO_HOME"
 arg_chain_id="--chain-id=$PIO_CHAIN_ID"
 arg_keyring="--keyring-backend $PIO_KEYRING_BACKEND"
 
+if [ -n "$TIMEOUT_COMMIT" ]; then
+  arg_timeout_commit="--timeout-commit $TIMEOUT_COMMIT"
+fi
+
 if [ -n "$VERBOSE" ]; then
     printf 'Initializing blockchain:\n'
     printf '%s=%s\n' \
@@ -69,11 +72,12 @@ if [ -n "$VERBOSE" ]; then
         MIN_FLOOR_PRICE "$MIN_FLOOR_PRICE" \
         PIO_TESTNET "$PIO_TESTNET" \
         PIO_KEYRING_BACKEND "$PIO_KEYRING_BACKEND" \
-        PIO_CHAIN_ID "$PIO_CHAIN_ID"
+        PIO_CHAIN_ID "$PIO_CHAIN_ID" \
+        TIMEOUT_COMMIT "$TIMEOUT_COMMIT"
 fi
 
 set -ex
-$PROV_CMD init testing --custom-denom="$DENOM" $arg_chain_id
+$PROV_CMD init testing --custom-denom "$DENOM" $arg_timeout_commit $arg_chain_id
 $PROV_CMD keys add validator $arg_keyring
 $PROV_CMD add-genesis-root-name validator pio $arg_keyring
 $PROV_CMD add-genesis-root-name validator pb --restrict=false $arg_keyring
@@ -92,7 +96,7 @@ $PROV_CMD add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest "1
 $PROV_CMD add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest "10000000000$DENOM"
 $PROV_CMD add-genesis-custom-floor "${MIN_FLOOR_PRICE}${DENOM}"
 $PROV_CMD collect-gentxs
-$PROV_CMD config set minimum-gas-prices "${MIN_FLOOR_PRICE}${DENOM}" consensus.timeout_commit "$TIMEOUT_COMMIT"
+$PROV_CMD config set minimum-gas-prices "${MIN_FLOOR_PRICE}${DENOM}"
 set +ex
 
 [ -n "$VERBOSE" ] && printf '\nProvenance Blockchain initialized at: %s\n' "$PIO_HOME"
