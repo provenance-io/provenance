@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"unicode"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
@@ -138,6 +139,8 @@ func Execute(rootCmd *cobra.Command) error {
 	rootCmd.PersistentFlags().Int64(config.CustomMsgFeeFloorPriceFlag, 0, "Custom msgfee floor price, optional (default 1905)")
 
 	executor := tmcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
+	capitalizeUses(rootCmd)
+
 	return executor.ExecuteContext(ctx)
 }
 
@@ -161,6 +164,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		GetPreUpgradeCmd(),
 	)
 
+	fixDebugPubkeyRawTypeFlag(rootCmd)
+
 	server.AddCommands(rootCmd, app.DefaultNodeHome, newApp, createAppAndExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
@@ -174,12 +179,36 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	// Add Rosetta command
 	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 	rootCmd.AddCommand(pruning.PruningCmd(newApp))
+
 	// Disable usage when the start command returns an error.
 	startCmd, _, err := rootCmd.Find([]string{"start"})
 	if err != nil {
 		panic(fmt.Errorf("start command not found: %w", err))
 	}
 	startCmd.SilenceUsage = true
+}
+
+// fixDebugPubkeyRawTypeFlag removes the -t shorthand option of the --type flag from the debug pubkey-raw command.
+// It clashes with our persistent --testnet/-t flag added to the root command.
+func fixDebugPubkeyRawTypeFlag(rootCmd *cobra.Command) {
+	debugCmd, _, err := rootCmd.Find([]string{"debug", "pubkey-raw"})
+	if err != nil || debugCmd == nil {
+		// If the command doesn't exist, there's nothing to do.
+		return
+	}
+
+	// We can't just debugCmd.Flags().Lookup("type").Shorthand = "" here because
+	// there's some internal flagset stuff that needs clearing too, that we can't
+	// do from here. So we do this the hard way. We clear out the command's flags
+	// and re-add them all, but get rid of the shorthand on the type flag first.
+	debugFlags := debugCmd.Flags()
+	debugCmd.ResetFlags()
+	debugFlags.VisitAll(func(f *pflag.Flag) {
+		if f.Name == "type" {
+			f.Shorthand = ""
+		}
+		debugCmd.Flags().AddFlag(f)
+	})
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
@@ -337,24 +366,72 @@ func createAppAndExport(
 	return a.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 }
 
-func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {
-	set := func(s *pflag.FlagSet, key, val string) {
-		if f := s.Lookup(key); f != nil {
-			if f.Changed {
-				return
-			}
-			f.DefValue = val
-			if err := f.Value.Set(val); err != nil {
-				panic(err)
-			}
+// setFlagDefault sets the default value of a flag if it hasn't been changed.
+func setFlagDefault(s *pflag.FlagSet, key, val string) {
+	if f := s.Lookup(key); f != nil {
+		if f.Changed {
+			return
+		}
+		f.DefValue = val
+		if err := f.Value.Set(val); err != nil {
+			panic(err)
 		}
 	}
+}
+
+// overwriteFlagDefaults recursively overwrites the default values of flags
+// with the provided defaults for this command and all sub-commands.
+func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {
 	for key, val := range defaults {
-		set(c.Flags(), key, val)
-		set(c.PersistentFlags(), key, val)
+		setFlagDefault(c.Flags(), key, val)
+		setFlagDefault(c.PersistentFlags(), key, val)
 	}
-	for _, c := range c.Commands() {
-		overwriteFlagDefaults(c, defaults)
+
+	for _, sc := range c.Commands() {
+		overwriteFlagDefaults(sc, defaults)
+	}
+}
+
+// capitalizeFirst returns the provided string with the first letter capitalized.
+func capitalizeFirst(str string) string {
+	if len(str) == 0 {
+		return str
+	}
+	// str[0] only gets the first byte, but we want the first rune (might be
+	// multiple bytes, we don't know). So we use the hack where range on a
+	// string loops over runes (not bytes), and break after getting the first.
+	// Just getting the first, for now, since we commonly won't need the rest.
+	var first rune
+	for _, r := range str {
+		first = r
+		break
+	}
+	if !unicode.IsLower(first) {
+		return str
+	}
+	// Alright. We need to upper-case the first one. We'll need all the runes so we can put it back together correctly.
+	runes := make([]rune, 0, len(str))
+	for _, r := range str {
+		runes = append(runes, r)
+	}
+	runes[0] = unicode.ToUpper(runes[0])
+	return string(runes)
+}
+
+// capitalizeFlagUsage capitalizes the first letter of the flag's usage string.
+func capitalizeFlagUsage(f *pflag.Flag) {
+	f.Usage = capitalizeFirst(f.Usage)
+}
+
+// capitalizeUses recursively capitalizes the first letter of command short
+// usage and all flag usages for this command and all sub-commands.
+func capitalizeUses(c *cobra.Command) {
+	c.Short = capitalizeFirst(c.Short)
+	c.Flags().VisitAll(capitalizeFlagUsage)
+	c.PersistentFlags().VisitAll(capitalizeFlagUsage)
+
+	for _, sc := range c.Commands() {
+		capitalizeUses(sc)
 	}
 }
 
