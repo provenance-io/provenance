@@ -216,8 +216,11 @@ func TestPreUpgradeCmd(t *testing.T) {
 
 	tmpDir := t.TempDir()
 
+	seenNames := make(map[string]bool)
 	// newHome creates a new home directory and saves the configs. Returns full path to home and success.
 	newHome := func(t *testing.T, name string, appCfg *serverconfig.Config, tmCfg *tmconfig.Config, clientCfg *config.ClientConfig) (string, bool) {
+		require.False(t, seenNames[name], "dir name %q created in previous test", name)
+		seenNames[name] = true
 		home := filepath.Join(tmpDir, name)
 		if !assert.NoError(t, os.MkdirAll(home, 0o755), "MkdirAll") {
 			return home, false
@@ -251,14 +254,15 @@ func TestPreUpgradeCmd(t *testing.T) {
 	tmCfgC.LogLevel = "debug"
 	clientCfgC := config.DefaultClientConfig()
 	clientCfgC.Output = "json"
+	clientCfgMainnetC := config.DefaultClientConfig()
+	clientCfgMainnetC.Output = "json"
+	clientCfgMainnetC.ChainID = "pio-mainnet-1"
 
 	tmCfgCFixed := config.DefaultTmConfig()
 	tmCfgCFixed.LogLevel = "debug"
 
 	tmCfgNoChange := config.DefaultTmConfig()
 	tmCfgNoChange.Consensus.TimeoutCommit = 3 * time.Second
-
-	var unwritableFile string
 
 	successMsg := "pre-upgrade successful"
 	updatingMsg := func(old time.Duration) string {
@@ -267,8 +271,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		setup        func(t *testing.T) (string, bool) // returns home dir and success.
-		cleanup      func(t *testing.T)
+		setup        func(t *testing.T) (string, func(), bool) // returns home dir, a deferrable and success.
 		args         []string
 		expExitCode  int
 		expInStdout  []string
@@ -279,8 +282,8 @@ func TestPreUpgradeCmd(t *testing.T) {
 	}{
 		{
 			name: "home dir does not exist yet",
-			setup: func(t *testing.T) (string, bool) {
-				return filepath.Join(tmpDir, "dne"), true
+			setup: func(t *testing.T) (string, func(), bool) {
+				return filepath.Join(tmpDir, "dne"), nil, true
 			},
 			expExitCode:  0,
 			expInStdout:  []string{successMsg},
@@ -289,9 +292,19 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expClientCfg: clientCfgD,
 		},
 		{
+			name: "arg provided",
+			setup: func(t *testing.T) (string, func(), bool) {
+				return filepath.Join(tmpDir, "dne_with_arg"), nil, true
+			},
+			args:        []string{"arg1"},
+			expExitCode: 30,
+			expInStderr: []string{"expected 0 args, received 1"},
+		},
+		{
 			name: "unpacked config with defaults",
-			setup: func(t *testing.T) (string, bool) {
-				return newHome(t, "defaults_unpacked", appCfgD, tmCfgD, clientCfgD)
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHome(t, "defaults_unpacked", appCfgD, tmCfgD, clientCfgD)
+				return home, nil, success
 			},
 			expExitCode:  0,
 			expInStdout:  []string{successMsg},
@@ -301,8 +314,9 @@ func TestPreUpgradeCmd(t *testing.T) {
 		},
 		{
 			name: "packed config with defaults",
-			setup: func(t *testing.T) (string, bool) {
-				return newHomePacked(t, "defaults_packed", appCfgD, tmCfgD, clientCfgD)
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHomePacked(t, "defaults_packed", appCfgD, tmCfgD, clientCfgD)
+				return home, nil, success
 			},
 			expExitCode:  0,
 			expInStdout:  []string{successMsg},
@@ -311,9 +325,10 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expClientCfg: clientCfgD,
 		},
 		{
-			name: "unpacked config with changes",
-			setup: func(t *testing.T) (string, bool) {
-				return newHome(t, "changed_unpacked", appCfgC, tmCfgC, clientCfgC)
+			name: "mainnet unpacked config with changes",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHome(t, "mainnet_changed_unpacked", appCfgC, tmCfgC, clientCfgMainnetC)
+				return home, nil, success
 			},
 			expExitCode: 0,
 			expInStdout: []string{
@@ -322,12 +337,13 @@ func TestPreUpgradeCmd(t *testing.T) {
 			},
 			expAppCfg:    appCfgC,
 			expTmCfg:     tmCfgCFixed,
-			expClientCfg: clientCfgC,
+			expClientCfg: clientCfgMainnetC,
 		},
 		{
-			name: "packed config with changes",
-			setup: func(t *testing.T) (string, bool) {
-				return newHomePacked(t, "changed_packed", appCfgC, tmCfgC, clientCfgC)
+			name: "mainnet packed config with changes",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHomePacked(t, "mainnet_changed_packed", appCfgC, tmCfgC, clientCfgMainnetC)
+				return home, nil, success
 			},
 			expExitCode: 0,
 			expInStdout: []string{
@@ -336,43 +352,33 @@ func TestPreUpgradeCmd(t *testing.T) {
 			},
 			expAppCfg:    appCfgC,
 			expTmCfg:     tmCfgCFixed,
-			expClientCfg: clientCfgC,
+			expClientCfg: clientCfgMainnetC,
 		},
 		{
-			name: "arg provided",
-			setup: func(t *testing.T) (string, bool) {
-				return filepath.Join(tmpDir, "dne_with_arg"), true
-			},
-			args:        []string{"arg1"},
-			expExitCode: 30,
-			expInStderr: []string{"expected 0 args, received 1"},
-		},
-		{
-			name: "cannot write new file",
-			setup: func(t *testing.T) (string, bool) {
-				home, success := newHomePacked(t, "cannot_write", appCfgC, tmCfgC, clientCfgC)
+			name: "mainnet cannot write new file",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHomePacked(t, "mainnet_cannot_write", appCfgC, tmCfgC, clientCfgMainnetC)
 				if !success {
-					return home, success
+					return home, nil, success
 				}
 
 				dummyCmd := makeDummyCmd(t, home)
-				unwritableFile = config.GetFullPathToPackedConf(dummyCmd)
+				unwritableFile := config.GetFullPathToPackedConf(dummyCmd)
 				success = assert.NoError(t, os.Chmod(unwritableFile, 0o444), "Chmod")
-				return home, success
-			},
-			cleanup: func(t *testing.T) {
-				if len(unwritableFile) > 0 {
+				deferrable := func() {
 					logIfError(t, os.Chmod(unwritableFile, 0o666), "Changing permissions on %s so it can be deleted", unwritableFile)
 				}
+				return home, deferrable, success
 			},
 			expExitCode: 30,
 			expInStdout: []string{updatingMsg(tmCfgC.Consensus.TimeoutCommit)},
-			expInStderr: []string{"could not update config file(s):", "error saving config file(s):", "permission denied", unwritableFile},
+			expInStderr: []string{"could not update config file(s):", "error saving config file(s):", "permission denied"},
 		},
 		{
-			name: "timeout commit low but not too low",
-			setup: func(t *testing.T) (string, bool) {
-				return newHome(t, "different_not_changed", appCfgD, tmCfgNoChange, clientCfgD)
+			name: "mainnet timeout commit low but not too low",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHome(t, "mainnet_different_not_changed", appCfgD, tmCfgNoChange, clientCfgD)
+				return home, nil, success
 			},
 			expExitCode:  0,
 			expInStdout:  []string{successMsg},
@@ -380,14 +386,61 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expTmCfg:     tmCfgNoChange,
 			expClientCfg: clientCfgD,
 		},
+		{
+			name: "other net unpacked config with changes",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHome(t, "other_changed_unpacked", appCfgC, tmCfgC, clientCfgC)
+				return home, nil, success
+			},
+			expExitCode: 0,
+			expInStdout: []string{
+				successMsg,
+			},
+			expAppCfg:    appCfgC,
+			expTmCfg:     tmCfgC,
+			expClientCfg: clientCfgC,
+		},
+		{
+			name: "other net packed config with changes",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHomePacked(t, "other_changed_packed", appCfgC, tmCfgC, clientCfgC)
+				return home, nil, success
+			},
+			expExitCode: 0,
+			expInStdout: []string{
+				successMsg,
+			},
+			expAppCfg:    appCfgC,
+			expTmCfg:     tmCfgC,
+			expClientCfg: clientCfgC,
+		},
+		{
+			name: "other net cannot write new file",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHomePacked(t, "other_cannot_write", appCfgC, tmCfgC, clientCfgC)
+				if !success {
+					return home, nil, success
+				}
+
+				dummyCmd := makeDummyCmd(t, home)
+				unwritableFile := config.GetFullPathToPackedConf(dummyCmd)
+				success = assert.NoError(t, os.Chmod(unwritableFile, 0o444), "Chmod")
+				deferrable := func() {
+					logIfError(t, os.Chmod(unwritableFile, 0o666), "Changing permissions on %s so it can be deleted", unwritableFile)
+				}
+				return home, deferrable, success
+			},
+			expExitCode: 30,
+			expInStderr: []string{"could not update config file(s):", "error saving config file(s):", "permission denied"},
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			if tc.cleanup != nil {
-				defer tc.cleanup(t)
+			home, deferrable, ok := tc.setup(t)
+			if deferrable != nil {
+				defer deferrable()
 			}
-			home, ok := tc.setup(t)
 			if !ok {
 				t.Logf("Setup failed.")
 				return

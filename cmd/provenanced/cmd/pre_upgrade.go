@@ -81,12 +81,14 @@ func UpdateConfig(cmd *cobra.Command) error {
 		return err
 	}
 
-	// Update the timeout commit if it's too low.
-	timeoutCommit := config.DefaultConsensusTimeoutCommit
-	if tmCfg.Consensus.TimeoutCommit < timeoutCommit/2 {
-		cmd.Printf("Updating consensus.timeout_commit config value to %q (from %q)\n",
-			timeoutCommit, tmCfg.Consensus.TimeoutCommit)
-		tmCfg.Consensus.TimeoutCommit = timeoutCommit
+	if clientCfg.ChainID == "pio-mainnet-1" {
+		// Update the timeout commit if it's too low.
+		timeoutCommit := config.DefaultConsensusTimeoutCommit
+		if tmCfg.Consensus.TimeoutCommit < timeoutCommit/2 {
+			cmd.Printf("Updating consensus.timeout_commit config value to %q (from %q)\n",
+				timeoutCommit, tmCfg.Consensus.TimeoutCommit)
+			tmCfg.Consensus.TimeoutCommit = timeoutCommit
+		}
 	}
 
 	return SafeSaveConfigs(cmd, appCfg, tmCfg, clientCfg, true)
