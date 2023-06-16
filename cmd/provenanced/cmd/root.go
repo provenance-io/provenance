@@ -53,9 +53,6 @@ const (
 	CoinTypeFlag = "coin-type"
 )
 
-// ChainID is the id of the running chain
-var ChainID string
-
 // NewRootCmd creates a new root command for provenanced. It is called once in the main function.
 // Providing sealConfig = false is only for unit tests that want to run multiple commands.
 func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
@@ -94,9 +91,6 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 			testnet := vpr.GetBool(EnvTypeFlag)
 			app.SetConfig(testnet, sealConfig)
 
-			// Store the chain id in a global variable.
-			ChainID = vpr.GetString(flags.FlagChainID)
-
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
 				CoinTypeFlag: fmt.Sprint(app.CoinType),
@@ -108,7 +102,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	}
 	initRootCmd(rootCmd, encodingConfig)
 	overwriteFlagDefaults(rootCmd, map[string]string{
-		flags.FlagChainID:        ChainID,
+		flags.FlagChainID:        "",
 		flags.FlagKeyringBackend: "test",
 		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
 	})
@@ -243,7 +237,8 @@ func txCommand() *cobra.Command {
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	var cache sdk.MultiStorePersistentCache
 
-	if ChainID == "pio-mainnet-1" {
+	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
+	if chainID == "pio-mainnet-1" {
 		timeoutCommit := cast.ToDuration(appOpts.Get("consensus.timeout_commit"))
 		if timeoutCommit < config.DefaultConsensusTimeoutCommit/2 {
 			logger.Error(fmt.Sprintf("Your consensus.timeout_commit config value is too low and should be increased to %q (it is currently %q).",
