@@ -37,9 +37,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-TODO[1594]: Move these to correct sections once v1.16.0-rc1 is marked.
+### Features
+
 * Add pre-upgrade command that updates config files to newest format and sets `consensus.timeout_commit` to `5s` [PR 1594](https://github.com/provenance-io/provenance/pull/1594)
+
+### Bug Fixes
+
 * Fix `minimum-gas-prices` from sometimes getting unset in the configs [PR 1594](https://github.com/provenance-io/provenance/pull/1594)
+
+---
+
+## [v1.16.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.16.0-rc1) - 2023-06-13
 
 ### Features
 
@@ -79,6 +87,10 @@ TODO[1594]: Move these to correct sections once v1.16.0-rc1 is marked.
 marker escrow account if it does not have deposit access.  In order for it to work, deposit access needs to be added.  This can be done using the `MsgAddAccessRequest` tx  [#1525](https://github.com/provenance-io/provenance/issues/1525).
 * `MsgMultiSend` is now limited to a single `Input` [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
 * SDK errors returned from Metadata module endpoints [#978](https://github.com/provenance-io/provenance/issues/978).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.15.2...v1.16.0-rc1
 
 ---
 
