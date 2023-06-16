@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
@@ -91,8 +90,12 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 			}
 
 			// set app context based on initialized EnvTypeFlag
-			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
+			vpr := server.GetServerContextFromCmd(cmd).Viper
+			testnet := vpr.GetBool(EnvTypeFlag)
 			app.SetConfig(testnet, sealConfig)
+
+			// Store the chain id in a global variable.
+			ChainID = vpr.GetString(flags.FlagChainID)
 
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
@@ -238,11 +241,11 @@ func txCommand() *cobra.Command {
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	var cache sdk.MultiStorePersistentCache
 
-	ChainID = cast.ToString(appOpts.Get("chain-id"))
 	if ChainID == "pio-mainnet-1" {
 		timeoutCommit := cast.ToDuration(appOpts.Get("consensus.timeout_commit"))
-		if timeoutCommit < 4*time.Second {
-			logger.Error(fmt.Sprintf("Your consensus.timeout_commit config value is too low and should be increased to \"5s\" (it is currently %q).", timeoutCommit))
+		if timeoutCommit < config.DefaultConsensusTimeoutCommit/2 {
+			logger.Error(fmt.Sprintf("Your consensus.timeout_commit config value is too low and should be increased to %q (it is currently %q).",
+				config.DefaultConsensusTimeoutCommit, timeoutCommit))
 		}
 	}
 
