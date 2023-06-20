@@ -23,6 +23,8 @@ The following environment variables control the behavior of this script:
                         Default: test
   PIO_CHAIN_ID -------- The chain id to use.
                         Default: testing
+  TIMEOUT_COMMIT ------ The consensus.timeout_commit value to set.
+                        Default: defined by init command
   SHOW_START ---------- Whether to output how to start the chain (at the end).
                         Default: true
 
@@ -57,6 +59,10 @@ PROV_CMD="$PROV_CMD --home $PIO_HOME"
 arg_chain_id="--chain-id=$PIO_CHAIN_ID"
 arg_keyring="--keyring-backend $PIO_KEYRING_BACKEND"
 
+if [ -n "$TIMEOUT_COMMIT" ]; then
+  arg_timeout_commit="--timeout-commit $TIMEOUT_COMMIT"
+fi
+
 if [ -n "$VERBOSE" ]; then
     printf 'Initializing blockchain:\n'
     printf '%s=%s\n' \
@@ -66,11 +72,12 @@ if [ -n "$VERBOSE" ]; then
         MIN_FLOOR_PRICE "$MIN_FLOOR_PRICE" \
         PIO_TESTNET "$PIO_TESTNET" \
         PIO_KEYRING_BACKEND "$PIO_KEYRING_BACKEND" \
-        PIO_CHAIN_ID "$PIO_CHAIN_ID"
+        PIO_CHAIN_ID "$PIO_CHAIN_ID" \
+        TIMEOUT_COMMIT "$TIMEOUT_COMMIT"
 fi
 
 set -ex
-$PROV_CMD init testing --custom-denom="$DENOM" $arg_chain_id
+$PROV_CMD init testing --custom-denom "$DENOM" $arg_timeout_commit $arg_chain_id
 $PROV_CMD keys add validator $arg_keyring
 $PROV_CMD add-genesis-root-name validator pio $arg_keyring
 $PROV_CMD add-genesis-root-name validator pb --restrict=false $arg_keyring
