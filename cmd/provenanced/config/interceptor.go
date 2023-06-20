@@ -8,10 +8,17 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	tmconfig "github.com/tendermint/tendermint/config"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
+)
+
+const (
+	// CustomDenomFlag flag to take in custom denom, defaults to nhash if not passed in.
+	CustomDenomFlag = "custom-denom"
+	// CustomMsgFeeFloorPriceFlag flag to take in custom msg floor fees, defaults to 1905nhash if not passed in.
+	CustomMsgFeeFloorPriceFlag = "msgfee-floor-price"
 )
 
 // InterceptConfigsPreRunHandler performs a pre-run function for all commands.
@@ -32,14 +39,24 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 		return err
 	}
 
+	// Set the pio config now so that the proper default is set for the rest of the stuff.
+	SetPioConfigFromFlags(cmd.Flags())
+
 	// Create a new Server context with the same viper as the client context, a default config, and no logger.
-	serverCtx := server.NewContext(vpr, tmconfig.DefaultConfig(), nil)
+	serverCtx := server.NewContext(vpr, DefaultTmConfig(), nil)
 	if err := server.SetCmdServerContext(cmd, serverCtx); err != nil {
 		return err
 	}
 
 	// Read the configs into viper and the contexts.
 	return LoadConfigFromFiles(cmd)
+}
+
+func SetPioConfigFromFlags(flagSet *pflag.FlagSet) {
+	// Ignoring errors here in the off chance that the flags weren't defined originally.
+	customDenom, _ := flagSet.GetString(CustomDenomFlag)
+	customMsgFeeFloor, _ := flagSet.GetInt64(CustomMsgFeeFloorPriceFlag)
+	pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloor)
 }
 
 // Binds viper flags using the PIO ENV prefix.

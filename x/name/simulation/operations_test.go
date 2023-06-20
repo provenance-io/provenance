@@ -55,8 +55,7 @@ func (s *SimTestSuite) LogOperationMsg(operationMsg simtypes.OperationMsg) {
 // The error is automatically added to the format and args.
 func (s *SimTestSuite) LogIfError(err error, format string, args ...interface{}) {
 	if err != nil {
-		args = append(args, err)
-		s.T().Logf(format+": %v", args)
+		s.T().Logf(format+" error: %v", append(args, err)...)
 	}
 }
 

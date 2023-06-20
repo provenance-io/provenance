@@ -51,18 +51,11 @@ const (
 	EnvTypeFlag = "testnet"
 	// Flag used to indicate coin type.
 	CoinTypeFlag = "coin-type"
-	// CustomDenomFlag flag to take in custom denom, defaults to nhash if not passed in.
-	CustomDenomFlag = "custom-denom"
-	// CustomMsgFeeFloorPriceFlag flag to take in custom msg floor fees, defaults to 1905nhash if not passed in.
-	CustomMsgFeeFloorPriceFlag = "msgfee-floor-price"
 )
 
-// ChainID is the id of the running chain
-var ChainID string
-
-// NewRootCmd creates a new root command for simd. It is called once in the
-// main function.
-func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
+// NewRootCmd creates a new root command for provenanced. It is called once in the main function.
+// Providing sealConfig = false is only for unit tests that want to run multiple commands.
+func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
@@ -94,11 +87,10 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			}
 
 			// set app context based on initialized EnvTypeFlag
-			testnet := server.GetServerContextFromCmd(cmd).Viper.GetBool(EnvTypeFlag)
-			customDenom := server.GetServerContextFromCmd(cmd).Viper.GetString(CustomDenomFlag)
-			customMsgFeeFloor := server.GetServerContextFromCmd(cmd).Viper.GetInt64(CustomMsgFeeFloorPriceFlag)
-			app.SetConfig(testnet, true)
-			pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloor)
+			vpr := server.GetServerContextFromCmd(cmd).Viper
+			testnet := vpr.GetBool(EnvTypeFlag)
+			app.SetConfig(testnet, sealConfig)
+
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
 				CoinTypeFlag: fmt.Sprint(app.CoinType),
@@ -110,7 +102,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	}
 	initRootCmd(rootCmd, encodingConfig)
 	overwriteFlagDefaults(rootCmd, map[string]string{
-		flags.FlagChainID:        ChainID,
+		flags.FlagChainID:        "",
 		flags.FlagKeyringBackend: "test",
 		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
 	})
@@ -135,9 +127,9 @@ func Execute(rootCmd *cobra.Command) error {
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, tmcfg.LogFormatPlain, "The logging format (json|plain)")
 
 	// Custom denom flag added to root command
-	rootCmd.PersistentFlags().String(CustomDenomFlag, "", "Indicates if a custom denom is to be used, and the name of it (default nhash)")
+	rootCmd.PersistentFlags().String(config.CustomDenomFlag, "", "Indicates if a custom denom is to be used, and the name of it (default nhash)")
 	// Custom msgFee floor price flag added to root command
-	rootCmd.PersistentFlags().Int64(CustomMsgFeeFloorPriceFlag, 0, "Custom msgfee floor price, optional (default 1905)")
+	rootCmd.PersistentFlags().Int64(config.CustomMsgFeeFloorPriceFlag, 0, "Custom msgfee floor price, optional (default 1905)")
 
 	executor := tmcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
 	return executor.ExecuteContext(ctx)
@@ -160,7 +152,10 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		ConfigCmd(),
 		AddMetaAddressCmd(),
 		snapshot.Cmd(newApp),
+		GetPreUpgradeCmd(),
 	)
+
+	fixDebugPubkeyRawTypeFlag(rootCmd)
 
 	server.AddCommands(rootCmd, app.DefaultNodeHome, newApp, createAppAndExport, addModuleInitFlags)
 
@@ -241,6 +236,15 @@ func txCommand() *cobra.Command {
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	var cache sdk.MultiStorePersistentCache
+
+	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
+	if chainID == "pio-mainnet-1" {
+		timeoutCommit := cast.ToDuration(appOpts.Get("consensus.timeout_commit"))
+		if timeoutCommit < config.DefaultConsensusTimeoutCommit/2 {
+			logger.Error(fmt.Sprintf("Your consensus.timeout_commit config value is too low and should be increased to %q (it is currently %q).",
+				config.DefaultConsensusTimeoutCommit, timeoutCommit))
+		}
+	}
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
@@ -328,6 +332,29 @@ func createAppAndExport(
 	}
 
 	return a.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+}
+
+// fixDebugPubkeyRawTypeFlag removes the -t shorthand option of the --type flag from the debug pubkey-raw command.
+// It clashes with our persistent --testnet/-t flag added to the root command.
+func fixDebugPubkeyRawTypeFlag(rootCmd *cobra.Command) {
+	debugCmd, _, err := rootCmd.Find([]string{"debug", "pubkey-raw"})
+	if err != nil || debugCmd == nil {
+		// If the command doesn't exist, there's nothing to do.
+		return
+	}
+
+	// We can't just debugCmd.Flags().Lookup("type").Shorthand = "" here because
+	// there's some internal flagset stuff that needs clearing too, that we can't
+	// do from here. So we do this the hard way. We clear out the command's flags
+	// and re-add them all, but get rid of the shorthand on the type flag first.
+	debugFlags := debugCmd.Flags()
+	debugCmd.ResetFlags()
+	debugFlags.VisitAll(func(f *pflag.Flag) {
+		if f.Name == "type" {
+			f.Shorthand = ""
+		}
+		debugCmd.Flags().AddFlag(f)
+	})
 }
 
 func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {
