@@ -12,8 +12,10 @@ import (
 )
 
 func TestInitCmd(t *testing.T) {
-	rootCmd, _ := cmd.NewRootCmd()
+	home := t.TempDir()
+	rootCmd, _ := cmd.NewRootCmd(false)
 	rootCmd.SetArgs([]string{
+		"--home", home,
 		"init",        // Test the init cmd
 		"simapp-test", // Moniker
 		fmt.Sprintf("--%s=%s", cli.FlagOverwrite, "true"), // Overwrite genesis.json, in case it already exists

@@ -37,9 +37,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* Add pre-upgrade command that updates config files to newest format and sets `consensus.timeout_commit` to `5s` [PR 1594](https://github.com/provenance-io/provenance/pull/1594)
+
 ### Bug Fixes
 
 * Add `NewUpdateAccountAttributeExpirationCmd` to the CLI [#1592](https://github.com/provenance-io/provenance/issues/1592).
+* Fix `minimum-gas-prices` from sometimes getting unset in the configs [PR 1594](https://github.com/provenance-io/provenance/pull/1594)
 
 ---
 

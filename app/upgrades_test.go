@@ -76,8 +76,7 @@ func (s *UpgradeTestSuite) GetLogOutput(msg string, args ...interface{}) string 
 // Use this if there's a possible error that we probably don't care about (but might).
 func (s *UpgradeTestSuite) LogIfError(err error, format string, args ...interface{}) {
 	if err != nil {
-		args = append(args, err)
-		s.T().Logf(format+": %v", args)
+		s.T().Logf(format+" error: %v", append(args, err)...)
 	}
 }
 
