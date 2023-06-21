@@ -247,7 +247,7 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		// Tendermint header and a few entries.
 		{"tendermint header", regexp.MustCompile(`(?m)^Tendermint Config: .*/config/` + s.BaseFNTM + ` \(or env\)$`)},
 		{"tendermint fast_sync", regexp.MustCompile(`(?m)^fast_sync=true$`)},
-		{"tendermint consensus.timeout_commit", regexp.MustCompile(`(?m)^consensus.timeout_commit="5s"$`)},
+		{"tendermint consensus.timeout_commit", regexp.MustCompile(`(?m)^consensus.timeout_commit=` + fmt.Sprintf("%q", provconfig.DefaultConsensusTimeoutCommit) + `$`)},
 		{"tendermint mempool.size", regexp.MustCompile(`(?m)^mempool.size=5000$`)},
 		{"tendermint statesync.trust_period", regexp.MustCompile(`(?m)^statesync.trust_period="168h0m0s"$`)},
 		{"tendermint p2p.recv_rate", regexp.MustCompile(`(?m)^p2p.recv_rate=5120000$`)},
@@ -609,7 +609,7 @@ func (s *ConfigTestSuite) TestConfigCmdSet() {
 		},
 		{
 			name:    "consensus.timeout_commit",
-			oldVal:  `"5s"`,
+			oldVal:  fmt.Sprintf("%q", provconfig.DefaultConsensusTimeoutCommit),
 			newVal:  `"2s"`,
 			toMatch: []*regexp.Regexp{reTMConfigUpdated},
 		},
@@ -701,7 +701,7 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 			out: s.makeMultiLine(
 				s.makeTMConfigUpdateLines(),
 				s.makeKeyUpdatedLine("log_format", `"plain"`, `"json"`),
-				s.makeKeyUpdatedLine("consensus.timeout_commit", `"5s"`, `"950ms"`),
+				s.makeKeyUpdatedLine("consensus.timeout_commit", fmt.Sprintf("%q", provconfig.DefaultConsensusTimeoutCommit), `"950ms"`),
 				""),
 		},
 		{

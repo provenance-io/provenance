@@ -354,7 +354,7 @@ func (s *ConfigManagerTestSuite) TestDefaultTmConfig() {
 	cfg := DefaultTmConfig()
 
 	s.Run("consensus.commit_timeout", func() {
-		exp := 5 * time.Second
+		exp := 1500 * time.Millisecond
 		act := cfg.Consensus.TimeoutCommit
 		s.Assert().Equal(exp, act, "cfg.Consensus.TimeoutCommit")
 	})

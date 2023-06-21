@@ -23,7 +23,7 @@ import (
 )
 
 // DefaultConsensusTimeoutCommit is the default value used for the consensus.timeout_commit config value.
-var DefaultConsensusTimeoutCommit = 5 * time.Second
+var DefaultConsensusTimeoutCommit = 1500 * time.Millisecond
 
 // PackConfig generates and saves the packed config file then removes the individual config files.
 func PackConfig(cmd *cobra.Command) error {
