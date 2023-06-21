@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
@@ -235,16 +236,9 @@ func txCommand() *cobra.Command {
 }
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
-	var cache sdk.MultiStorePersistentCache
+	warnAboutSettings(logger, appOpts)
 
-	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
-	if chainID == "pio-mainnet-1" {
-		timeoutCommit := cast.ToDuration(appOpts.Get("consensus.timeout_commit"))
-		if timeoutCommit < config.DefaultConsensusTimeoutCommit/2 {
-			logger.Error(fmt.Sprintf("Your consensus.timeout_commit config value is too low and should be increased to %q (it is currently %q).",
-				config.DefaultConsensusTimeoutCommit, timeoutCommit))
-		}
-	}
+	var cache sdk.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
@@ -301,6 +295,27 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
 		baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(server.FlagIAVLLazyLoading))),
 	)
+}
+
+// warnAboutSettings logs warnings about any settings that might cause problems.
+func warnAboutSettings(logger log.Logger, appOpts servertypes.AppOptions) {
+	defer func() {
+		// If this func panics, just move on. It's just supposed to log things anyway.
+		_ = recover()
+	}()
+
+	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
+	if chainID == "pio-mainnet-1" {
+		skipTimeoutCommit := cast.ToBool(appOpts.Get("consensus.skip_timeout_commit"))
+		if !skipTimeoutCommit {
+			timeoutCommit := cast.ToDuration(appOpts.Get("consensus.timeout_commit"))
+			upperLimit := config.DefaultConsensusTimeoutCommit + 2*time.Second
+			if timeoutCommit > upperLimit {
+				logger.Error(fmt.Sprintf("Your consensus.timeout_commit config value is too high and should be decreased to at most %q. The recommended value is %q. Your current value is %q.",
+					upperLimit, config.DefaultConsensusTimeoutCommit, timeoutCommit))
+			}
+		}
+	}
 }
 
 func createAppAndExport(

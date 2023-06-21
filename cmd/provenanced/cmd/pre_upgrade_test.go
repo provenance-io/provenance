@@ -249,9 +249,12 @@ func TestPreUpgradeCmd(t *testing.T) {
 	appCfgC := config.DefaultAppConfig()
 	appCfgC.API.Enable = true
 	appCfgC.API.Swagger = true
-	tmCfgC := config.DefaultTmConfig()
-	tmCfgC.Consensus.TimeoutCommit = 1 * time.Second
-	tmCfgC.LogLevel = "debug"
+	tmCfgLower := config.DefaultTmConfig()
+	tmCfgLower.Consensus.TimeoutCommit = tmCfgD.Consensus.TimeoutCommit - 500*time.Millisecond
+	tmCfgLower.LogLevel = "debug"
+	tmCfgHigher := config.DefaultTmConfig()
+	tmCfgHigher.Consensus.TimeoutCommit = tmCfgD.Consensus.TimeoutCommit + 500*time.Millisecond
+	tmCfgHigher.LogLevel = "debug"
 	clientCfgC := config.DefaultClientConfig()
 	clientCfgC.Output = "json"
 	clientCfgMainnetC := config.DefaultClientConfig()
@@ -260,9 +263,6 @@ func TestPreUpgradeCmd(t *testing.T) {
 
 	tmCfgCFixed := config.DefaultTmConfig()
 	tmCfgCFixed.LogLevel = "debug"
-
-	tmCfgNoChange := config.DefaultTmConfig()
-	tmCfgNoChange.Consensus.TimeoutCommit = 3 * time.Second
 
 	successMsg := "pre-upgrade successful"
 	updatingMsg := func(old time.Duration) string {
@@ -276,6 +276,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 		expExitCode  int
 		expInStdout  []string
 		expInStderr  []string
+		expNot       []string
 		expAppCfg    *serverconfig.Config
 		expTmCfg     *tmconfig.Config
 		expClientCfg *config.ClientConfig
@@ -325,14 +326,14 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expClientCfg: clientCfgD,
 		},
 		{
-			name: "mainnet unpacked config with changes",
+			name: "mainnet unpacked config lower than default",
 			setup: func(t *testing.T) (string, func(), bool) {
-				home, success := newHome(t, "mainnet_changed_unpacked", appCfgC, tmCfgC, clientCfgMainnetC)
+				home, success := newHome(t, "mainnet_unpacked_lower", appCfgC, tmCfgLower, clientCfgMainnetC)
 				return home, nil, success
 			},
 			expExitCode: 0,
 			expInStdout: []string{
-				updatingMsg(tmCfgC.Consensus.TimeoutCommit),
+				updatingMsg(tmCfgLower.Consensus.TimeoutCommit),
 				successMsg,
 			},
 			expAppCfg:    appCfgC,
@@ -340,14 +341,44 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expClientCfg: clientCfgMainnetC,
 		},
 		{
-			name: "mainnet packed config with changes",
+			name: "mainnet unpacked config higher than default",
 			setup: func(t *testing.T) (string, func(), bool) {
-				home, success := newHomePacked(t, "mainnet_changed_packed", appCfgC, tmCfgC, clientCfgMainnetC)
+				home, success := newHome(t, "mainnet_unpacked_higher", appCfgC, tmCfgHigher, clientCfgMainnetC)
 				return home, nil, success
 			},
 			expExitCode: 0,
 			expInStdout: []string{
-				updatingMsg(tmCfgC.Consensus.TimeoutCommit),
+				updatingMsg(tmCfgHigher.Consensus.TimeoutCommit),
+				successMsg,
+			},
+			expAppCfg:    appCfgC,
+			expTmCfg:     tmCfgCFixed,
+			expClientCfg: clientCfgMainnetC,
+		},
+		{
+			name: "mainnet packed config lower than default",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHomePacked(t, "mainnet_packed_lower", appCfgC, tmCfgLower, clientCfgMainnetC)
+				return home, nil, success
+			},
+			expExitCode: 0,
+			expInStdout: []string{
+				updatingMsg(tmCfgLower.Consensus.TimeoutCommit),
+				successMsg,
+			},
+			expAppCfg:    appCfgC,
+			expTmCfg:     tmCfgCFixed,
+			expClientCfg: clientCfgMainnetC,
+		},
+		{
+			name: "mainnet packed config higher than default",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHomePacked(t, "mainnet_packed_higher", appCfgC, tmCfgHigher, clientCfgMainnetC)
+				return home, nil, success
+			},
+			expExitCode: 0,
+			expInStdout: []string{
+				updatingMsg(tmCfgHigher.Consensus.TimeoutCommit),
 				successMsg,
 			},
 			expAppCfg:    appCfgC,
@@ -357,7 +388,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 		{
 			name: "mainnet cannot write new file",
 			setup: func(t *testing.T) (string, func(), bool) {
-				home, success := newHomePacked(t, "mainnet_cannot_write", appCfgC, tmCfgC, clientCfgMainnetC)
+				home, success := newHomePacked(t, "mainnet_cannot_write", appCfgC, tmCfgLower, clientCfgMainnetC)
 				if !success {
 					return home, nil, success
 				}
@@ -371,53 +402,65 @@ func TestPreUpgradeCmd(t *testing.T) {
 				return home, deferrable, success
 			},
 			expExitCode: 30,
-			expInStdout: []string{updatingMsg(tmCfgC.Consensus.TimeoutCommit)},
+			expInStdout: []string{updatingMsg(tmCfgLower.Consensus.TimeoutCommit)},
 			expInStderr: []string{"could not update config file(s):", "error saving config file(s):", "permission denied"},
 		},
 		{
-			name: "mainnet timeout commit low but not too low",
+			name: "other net unpacked config lower than default",
 			setup: func(t *testing.T) (string, func(), bool) {
-				home, success := newHome(t, "mainnet_different_not_changed", appCfgD, tmCfgNoChange, clientCfgD)
+				home, success := newHome(t, "other_unpacked_lower", appCfgC, tmCfgLower, clientCfgC)
 				return home, nil, success
 			},
 			expExitCode:  0,
 			expInStdout:  []string{successMsg},
-			expAppCfg:    appCfgD,
-			expTmCfg:     tmCfgNoChange,
-			expClientCfg: clientCfgD,
-		},
-		{
-			name: "other net unpacked config with changes",
-			setup: func(t *testing.T) (string, func(), bool) {
-				home, success := newHome(t, "other_changed_unpacked", appCfgC, tmCfgC, clientCfgC)
-				return home, nil, success
-			},
-			expExitCode: 0,
-			expInStdout: []string{
-				successMsg,
-			},
+			expNot:       []string{"Updating consensus.timeout_commit config value"},
 			expAppCfg:    appCfgC,
-			expTmCfg:     tmCfgC,
+			expTmCfg:     tmCfgLower,
 			expClientCfg: clientCfgC,
 		},
 		{
-			name: "other net packed config with changes",
+			name: "other net unpacked config higher than default",
 			setup: func(t *testing.T) (string, func(), bool) {
-				home, success := newHomePacked(t, "other_changed_packed", appCfgC, tmCfgC, clientCfgC)
+				home, success := newHome(t, "other_unpacked_higher", appCfgC, tmCfgHigher, clientCfgC)
 				return home, nil, success
 			},
-			expExitCode: 0,
-			expInStdout: []string{
-				successMsg,
-			},
+			expExitCode:  0,
+			expInStdout:  []string{successMsg},
+			expNot:       []string{"Updating consensus.timeout_commit config value"},
 			expAppCfg:    appCfgC,
-			expTmCfg:     tmCfgC,
+			expTmCfg:     tmCfgHigher,
+			expClientCfg: clientCfgC,
+		},
+		{
+			name: "other net packed config lower than default",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHomePacked(t, "other_packed_lower", appCfgC, tmCfgLower, clientCfgC)
+				return home, nil, success
+			},
+			expExitCode:  0,
+			expInStdout:  []string{successMsg},
+			expNot:       []string{"Updating consensus.timeout_commit config value"},
+			expAppCfg:    appCfgC,
+			expTmCfg:     tmCfgLower,
+			expClientCfg: clientCfgC,
+		},
+		{
+			name: "other net packed config higher than default",
+			setup: func(t *testing.T) (string, func(), bool) {
+				home, success := newHomePacked(t, "other_packed_higher", appCfgC, tmCfgHigher, clientCfgC)
+				return home, nil, success
+			},
+			expExitCode:  0,
+			expInStdout:  []string{successMsg},
+			expNot:       []string{"Updating consensus.timeout_commit config value"},
+			expAppCfg:    appCfgC,
+			expTmCfg:     tmCfgHigher,
 			expClientCfg: clientCfgC,
 		},
 		{
 			name: "other net cannot write new file",
 			setup: func(t *testing.T) (string, func(), bool) {
-				home, success := newHomePacked(t, "other_cannot_write", appCfgC, tmCfgC, clientCfgC)
+				home, success := newHomePacked(t, "other_cannot_write", appCfgC, tmCfgLower, clientCfgC)
 				if !success {
 					return home, nil, success
 				}
@@ -455,6 +498,10 @@ func TestPreUpgradeCmd(t *testing.T) {
 				assert.Empty(t, tc.expInStderr, "stderr")
 			} else {
 				assertContainsAll(t, res.Stderr, tc.expInStderr, "stderr")
+			}
+			for _, unexp := range tc.expNot {
+				assert.NotContains(t, res.Stdout, unexp, "stdout")
+				assert.NotContains(t, res.Stderr, unexp, "stderr")
 			}
 
 			if res.ExitCode != 0 {
