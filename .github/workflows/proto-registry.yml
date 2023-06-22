@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - dwedul/provio-bot
     paths:
       - "third_party/**.proto"
       - ".github/workflows/proto-registry.yml"
