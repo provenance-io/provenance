@@ -32,6 +32,9 @@ const (
 var (
 	// MarkerStoreKeyPrefix prefix for marker-address reference (improves iterator performance over auth accounts)
 	MarkerStoreKeyPrefix = []byte{0x02}
+
+	// DenySendKeyPrefix prefix for adding addresses that are denied send functionality on restricted markers
+	DenySendKeyPrefix = []byte{0x02}
 )
 
 // MarkerAddress returns the module account address for the given denomination
@@ -59,4 +62,10 @@ func MarkerStoreKey(addr sdk.AccAddress) []byte {
 // SplitMarkerStoreKey returns an account address given a store key, uses the length prefix to determine length of AccAddress
 func SplitMarkerStoreKey(key []byte) sdk.AccAddress {
 	return sdk.AccAddress(key[2 : key[1]+2])
+}
+
+// DenySendKey returns a key [prefix][denom addr][deny addr] for send deny list for restricted markers
+func DenySendKey(markerAddr sdk.AccAddress, denyAddr sdk.AccAddress) []byte {
+	key := append(MarkerStoreKeyPrefix, address.MustLengthPrefix(markerAddr.Bytes())...)
+	return append(key, address.MustLengthPrefix(denyAddr.Bytes())...)
 }
