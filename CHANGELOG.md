@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Add pre-upgrade command that updates config files to newest format and sets `consensus.timeout_commit` to `1500ms` [PR 1594](https://github.com/provenance-io/provenance/pull/1594), [PR 1600](https://github.com/provenance-io/provenance/pull/1600).
+* Allow marker admin to prevent transfer of restricted coin with deny list on send [#1518](https://github.com/provenance-io/provenance/issues/1518).
 
 ### Bug Fixes
 
