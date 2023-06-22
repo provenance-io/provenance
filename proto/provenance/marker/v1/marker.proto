@@ -60,8 +60,6 @@ message MarkerAccount {
   // list of required attributes on restricted marker in order to send and receive transfers if sender does not have
   // transfer authority
   repeated string required_attributes = 11;
-  // list of bech32 addresses that are denied the ability to send the restricted marker
-  repeated string send_deny_list = 12;
 }
 
 // MarkerType defines the types of marker
