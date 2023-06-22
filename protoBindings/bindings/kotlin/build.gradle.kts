@@ -147,6 +147,8 @@ publishing {
                         id.set(project.property("developer.id") as String)
                         name.set(project.property("developer.name") as String)
                         email.set(project.property("developer.email") as String)
+                        organization.set(project.property("developer.organization") as String)
+                        organizationUrl.set(project.property("developer.organizationUrl") as String)
                     }
                 }
 
