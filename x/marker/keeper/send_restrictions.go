@@ -57,7 +57,10 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 		return nil
 	}
 
-	// TODO: If from address is in deny list, prevent sending of restricted marker
+	// If from address is in deny list, prevent sending of restricted marker
+	if k.IsSendDeny(ctx, markerAddr, fromAddr) {
+		return fmt.Errorf("%s is on deny list for sending resticted marker", fromAddr.String())
+	}
 
 	// If the fromAddr has transfer access, there's nothing left to check.
 	if marker.AddressHasAccess(fromAddr, types.Access_Transfer) {

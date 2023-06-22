@@ -192,3 +192,8 @@ func (k Keeper) GetEscrow(ctx sdk.Context, marker types.MarkerAccountI) sdk.Coin
 func (k Keeper) GetAuthority() string {
 	return k.authority
 }
+
+func (k Keeper) IsSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(types.DenySendKey(markerAddr, senderAddr))
+}
