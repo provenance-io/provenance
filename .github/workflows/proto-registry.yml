@@ -25,18 +25,12 @@ on:
 # This helps avoid a buf push failure due to a new third party proto reference.
 jobs:
   push_third_party:
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Buf setup action
         uses: bufbuild/buf-setup-action@v1.21.0
-      - name: Buf push 'third_party/proto'
-        uses: bufbuild/buf-push-action@v1
-        with:
-          input: 'third_party/proto'
-          buf_token: ${{ secrets.BUF_TOKEN }}
       - name: Import GPG key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v5
@@ -51,6 +45,7 @@ jobs:
           cd proto
           buf mod update
           cd ..
+          printf 'New file\n' >> a-new-file.txt
           git add .
           git commit -S -m "Update buf.lock to latest commit hash"
       - name: Create Pull Request
