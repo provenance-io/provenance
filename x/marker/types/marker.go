@@ -54,6 +54,9 @@ type MarkerAccountI interface {
 
 	GetRequiredAttributes() []string
 	SetRequiredAttributes([]string)
+
+	GetSendDenyList() []string
+	SetSendDenyList([]string)
 }
 
 // NewEmptyMarkerAccount creates a new empty marker account in a Proposed state
@@ -262,6 +265,16 @@ func (ma *MarkerAccount) GetRequiredAttributes() []string {
 
 func (ma *MarkerAccount) SetRequiredAttributes(requiredAttributes []string) {
 	ma.RequiredAttributes = requiredAttributes
+}
+
+// GetSendDenyList returns a list of bech32 address that are denied the ability to send restricted marker
+func (ma *MarkerAccount) GetSendDenyList() []string {
+	return ma.SendDenyList
+}
+
+// SetSendDenyList sets the list of bech32 address that are denied the ability to send restricted marker
+func (ma *MarkerAccount) SetSendDenyList(sendDenyList []string) {
+	ma.SendDenyList = sendDenyList
 }
 
 // GetPubKey implements authtypes.Account (but there are no public keys associated with the account for signing)
