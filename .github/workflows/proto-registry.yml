@@ -57,7 +57,7 @@ jobs:
         uses: peter-evans/create-pull-request@v5.0.2
         with:
           base: main
-          branch: create-pull-request/patch-buf-lock
+          branch: provenanceio-bot/patch-buf-lock
           delete-branch: true
           # GitHub Personal Access Token (from the same account where the GPG key is stored)
           # When this expires, you'll need to log into the provenanceio-bot github account,
