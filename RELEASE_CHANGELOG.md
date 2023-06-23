@@ -1,8 +1,10 @@
-## [v1.16.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.16.0-rc1) - 2023-06-13
+## [v1.16.0](https://github.com/provenance-io/provenance/releases/tag/v1.16.0) - 2023-06-23
 
-Important: When building this version of `provenanced`, you **MUST** use go v1.20.
+Notice: When building this version of `provenanced`, you **MUST** use go v1.20.
 
 Version `1.16.0` of the Provenance Blockchain brings several features, improvements, and bug fixes.
+
+A new `provenanced pre-upgrade` command has been added. Cosmovisor will automatically run it during the upgrade process. If you do not use Cosmovisor, you should manually run it before restarting your node; make sure to provide the appropriate `--home` for your environment.
 
 ### Features
 
@@ -11,6 +13,7 @@ Version `1.16.0` of the Provenance Blockchain brings several features, improveme
 * Add support to update the `allow_forced_transfer` field of a restricted marker [#1545](https://github.com/provenance-io/provenance/issues/1545).
 * Add expiration date value to `attribute` [#1435](https://github.com/provenance-io/provenance/issues/1435).
 * Add endpoints to update the value owner address of scopes [#1329](https://github.com/provenance-io/provenance/issues/1329).
+* Add pre-upgrade command that updates config files to newest format and sets `consensus.timeout_commit` to `1500ms` [PR 1594](https://github.com/provenance-io/provenance/pull/1594), [PR 1600](https://github.com/provenance-io/provenance/pull/1600).
 
 ### Improvements
 
@@ -35,15 +38,16 @@ Version `1.16.0` of the Provenance Blockchain brings several features, improveme
 
 * Bring back some proto messages that were deleted but still needed for historical queries [#1554](https://github.com/provenance-io/provenance/issues/1554).
 * Fix the `MsgModifyNameRequest` endpoint to properly clean up old index data [PR 1565](https://github.com/provenance-io/provenance/pull/1565).
+* Add `NewUpdateAccountAttributeExpirationCmd` to the CLI [#1592](https://github.com/provenance-io/provenance/issues/1592).
+* Fix `minimum-gas-prices` from sometimes getting unset in the configs [PR 1594](https://github.com/provenance-io/provenance/pull/1594).
 
 ### API Breaking
 
 * Add marker deposit access check for sends to marker escrow account.  Will break any current address that is sending to the
-marker escrow account if it does not have deposit access.  In order for it to work, deposit access needs to be added.  This can be done using the `MsgAddAccessRequest` tx  [#1525](https://github.com/provenance-io/provenance/issues/1525).
+  marker escrow account if it does not have deposit access.  In order for it to work, deposit access needs to be added.  This can be done using the `MsgAddAccessRequest` tx  [#1525](https://github.com/provenance-io/provenance/issues/1525).
 * `MsgMultiSend` is now limited to a single `Input` [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
 * SDK errors returned from Metadata module endpoints [#978](https://github.com/provenance-io/provenance/issues/978).
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.15.2...v1.16.0-rc1
-
+* https://github.com/provenance-io/provenance/compare/v1.15.2...v1.16.0
