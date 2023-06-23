@@ -58,6 +58,8 @@ service Msg {
   rpc UpdateForcedTransfer(MsgUpdateForcedTransferRequest) returns (MsgUpdateForcedTransferResponse);
   // SetAccountData sets the accountdata for a denom. Signer must have deposit authority.
   rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
+  // UpdateSendDenyList will only succeed if signer has admin authority
+  rpc UpdateSendDenyList(MsgUpdateSendDenyListRequest) returns (MsgUpdateSendDenyListResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
@@ -292,3 +294,18 @@ message MsgSetAccountDataRequest {
 
 // MsgSetAccountDataResponse defines the Msg/SetAccountData response type
 message MsgSetAccountDataResponse {}
+
+// MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a resticted marker
+// signer must have admin authority
+message MsgUpdateSendDenyListRequest {
+  option (gogoproto.equal)      = true;
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string          denom                      = 1;
+  repeated string remove_denied_addresses = 2;
+  repeated string add_denied_addresses    = 3;
+  string          authority = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"]; // signer of the proposal
+}
+
+// MsgUpdateSendDenyListResponse defines the Msg/UpdateSendDenyList response type
+message MsgUpdateSendDenyListResponse {}

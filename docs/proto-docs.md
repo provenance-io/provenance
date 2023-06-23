@@ -157,6 +157,8 @@
     - [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse)
     - [MsgUpdateRequiredAttributesRequest](#provenance.marker.v1.MsgUpdateRequiredAttributesRequest)
     - [MsgUpdateRequiredAttributesResponse](#provenance.marker.v1.MsgUpdateRequiredAttributesResponse)
+    - [MsgUpdateSendDenyListRequest](#provenance.marker.v1.MsgUpdateSendDenyListRequest)
+    - [MsgUpdateSendDenyListResponse](#provenance.marker.v1.MsgUpdateSendDenyListResponse)
     - [MsgWithdrawRequest](#provenance.marker.v1.MsgWithdrawRequest)
     - [MsgWithdrawResponse](#provenance.marker.v1.MsgWithdrawResponse)
   
@@ -2660,6 +2662,35 @@ MsgUpdateRequiredAttributesResponse defines the Msg/UpdateRequiredAttributes res
 
 
 
+<a name="provenance.marker.v1.MsgUpdateSendDenyListRequest"></a>
+
+### MsgUpdateSendDenyListRequest
+MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a resticted marker
+signer must have admin authority
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `remove_denied_addresses` | [string](#string) | repeated |  |
+| `add_denied_addresses` | [string](#string) | repeated |  |
+| `authority` | [string](#string) |  | signer of the proposal |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgUpdateSendDenyListResponse"></a>
+
+### MsgUpdateSendDenyListResponse
+MsgUpdateSendDenyListResponse defines the Msg/UpdateSendDenyList response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgWithdrawRequest"></a>
 
 ### MsgWithdrawRequest
@@ -2720,6 +2751,7 @@ Msg defines the Marker Msg service.
 | `UpdateRequiredAttributes` | [MsgUpdateRequiredAttributesRequest](#provenance.marker.v1.MsgUpdateRequiredAttributesRequest) | [MsgUpdateRequiredAttributesResponse](#provenance.marker.v1.MsgUpdateRequiredAttributesResponse) | UpdateRequiredAttributes will only succeed if signer has transfer authority | |
 | `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance.marker.v1.MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. | |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance.marker.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.marker.v1.MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. | |
+| `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance.marker.v1.MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance.marker.v1.MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has admin authority | |
 
  <!-- end services -->
 

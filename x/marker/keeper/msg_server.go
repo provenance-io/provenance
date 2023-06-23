@@ -764,3 +764,7 @@ func (k msgServer) SetAccountData(goCtx context.Context, msg *types.MsgSetAccoun
 
 	return &types.MsgSetAccountDataResponse{}, nil
 }
+
+func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdateSendDenyListRequest) (*types.MsgUpdateSendDenyListResponse, error) {
+	return nil, nil
+}
