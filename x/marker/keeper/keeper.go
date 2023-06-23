@@ -202,3 +202,8 @@ func (k Keeper) AddSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddre
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.DenySendKey(markerAddr, senderAddr), []byte{})
 }
+
+func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.DenySendKey(markerAddr, senderAddr))
+}
