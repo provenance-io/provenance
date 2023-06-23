@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
+	"github.com/provenance-io/provenance/x/ibc-rate-limit/types"
 )
 
 type GenesisTestSuite struct {

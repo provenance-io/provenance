@@ -14,7 +14,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v6/modules/core/exported"
 
-	"github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
+	"github.com/provenance-io/provenance/x/ibc-rate-limit/types"
 )
 
 var (

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/provenance-io/provenance/x/osmoutils"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +16,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v6/modules/core/exported"
 
-	"github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
+	"github.com/provenance-io/provenance/x/types"
 )
 
 type IBCModule struct {
