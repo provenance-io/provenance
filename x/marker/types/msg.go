@@ -37,6 +37,7 @@ var allRequestMsgs = []sdk.Msg{
 	(*MsgUpdateRequiredAttributesRequest)(nil),
 	(*MsgUpdateForcedTransferRequest)(nil),
 	(*MsgSetAccountDataRequest)(nil),
+	(*MsgUpdateSendDenyListRequest)(nil),
 }
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
@@ -649,5 +650,46 @@ func (msg MsgSetAccountDataRequest) ValidateBasic() error {
 
 func (msg MsgSetAccountDataRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Signer)
+	return []sdk.AccAddress{addr}
+}
+
+// NewMsgUpdateSendDenyListRequest creates a NewMsgUpdateSendDenyListRequest
+func NewMsgUpdateSendDenyListRequest(denom string, transferAuthority sdk.AccAddress, removeDenyAddresses, addDenyAddresses []string) *MsgUpdateSendDenyListRequest {
+	return &MsgUpdateSendDenyListRequest{
+		Denom:                 denom,
+		Authority:             transferAuthority.String(),
+		RemoveDeniedAddresses: removeDenyAddresses,
+		AddDeniedAddresses:    addDenyAddresses,
+	}
+}
+
+func (msg MsgUpdateSendDenyListRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+	if len(msg.AddDeniedAddresses) == 0 && len(msg.RemoveDeniedAddresses) == 0 {
+		return fmt.Errorf("both add and remove lists cannot be empty")
+	}
+
+	combined := []string{}
+	combined = append(combined, msg.AddDeniedAddresses...)
+	combined = append(combined, msg.RemoveDeniedAddresses...)
+	seen := make(map[string]bool)
+	for _, addr := range combined {
+		if _, err := sdk.AccAddressFromBech32(addr); err != nil {
+			return err
+		}
+		if seen[addr] {
+			return fmt.Errorf("denied address lists contain duplicate entries")
+		}
+		seen[addr] = true
+	}
+
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	return err
+}
+
+func (msg *MsgUpdateSendDenyListRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{addr}
 }
