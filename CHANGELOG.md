@@ -37,18 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-### Features
-
-* Add pre-upgrade command that updates config files to newest format and sets `consensus.timeout_commit` to `1500ms` [PR 1594](https://github.com/provenance-io/provenance/pull/1594), [PR 1600](https://github.com/provenance-io/provenance/pull/1600).
-
-### Bug Fixes
-
-* Add `NewUpdateAccountAttributeExpirationCmd` to the CLI [#1592](https://github.com/provenance-io/provenance/issues/1592).
-* Fix `minimum-gas-prices` from sometimes getting unset in the configs [PR 1594](https://github.com/provenance-io/provenance/pull/1594).
+* nothing
 
 ---
 
-## [v1.16.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.16.0-rc1) - 2023-06-13
+## [v1.16.0](https://github.com/provenance-io/provenance/releases/tag/v1.16.0) - 2023-06-23
 
 ### Features
 
@@ -57,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add support to update the `allow_forced_transfer` field of a restricted marker [#1545](https://github.com/provenance-io/provenance/issues/1545).
 * Add expiration date value to `attribute` [#1435](https://github.com/provenance-io/provenance/issues/1435).
 * Add endpoints to update the value owner address of scopes [#1329](https://github.com/provenance-io/provenance/issues/1329).
+* Add pre-upgrade command that updates config files to newest format and sets `consensus.timeout_commit` to `1500ms` [PR 1594](https://github.com/provenance-io/provenance/pull/1594), [PR 1600](https://github.com/provenance-io/provenance/pull/1600).
 
 ### Improvements
 
@@ -81,6 +75,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Bring back some proto messages that were deleted but still needed for historical queries [#1554](https://github.com/provenance-io/provenance/issues/1554).
 * Fix the `MsgModifyNameRequest` endpoint to properly clean up old index data [PR 1565](https://github.com/provenance-io/provenance/pull/1565).
+* Add `NewUpdateAccountAttributeExpirationCmd` to the CLI [#1592](https://github.com/provenance-io/provenance/issues/1592).
+* Fix `minimum-gas-prices` from sometimes getting unset in the configs [PR 1594](https://github.com/provenance-io/provenance/pull/1594).
 
 ### API Breaking
 
@@ -91,7 +87,7 @@ marker escrow account if it does not have deposit access.  In order for it to wo
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.15.2...v1.16.0-rc1
+* https://github.com/provenance-io/provenance/compare/v1.15.2...v1.16.0
 
 ---
 
