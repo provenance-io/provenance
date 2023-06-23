@@ -3,12 +3,11 @@ package provenance.ibcratelimit.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/provenance-io/provenance/x/ibc-rate-limit/types";
+option go_package          = "github.com/provenance-io/provenance/x/ibc-rate-limit/types";
 option java_package        = "io.provenance.ibcratelimit.v1beta1";
 option java_multiple_files = true;
 
 // Params defines the parameters for the ibc-rate-limit module.
 message Params {
-  string contract_address = 1
-      [ (gogoproto.moretags) = "yaml:\"contract_address\"" ];
+  string contract_address = 1 [(gogoproto.moretags) = "yaml:\"contract_address\""];
 }

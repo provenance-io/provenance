@@ -6,7 +6,9 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "provenance/ibc-rate-limit/v1beta1/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/client/queryproto";
+option go_package          = "github.com/provenance-io/provenance/x/ibc-rate-limit/types";
+option java_package        = "io.provenance.ibcratelimit.v1beta1";
+option java_multiple_files = true;
 
 // Query defines the gRPC querier service.
 service Query {
@@ -23,5 +25,5 @@ message ParamsRequest {}
 // aramsResponse is the response type for the Query/Params RPC method.
 message ParamsResponse {
   // params defines the parameters of the module.
-  Params params = 1 [ (gogoproto.nullable) = false ];
+  Params params = 1 [(gogoproto.nullable) = false];
 }

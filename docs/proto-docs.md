@@ -52,6 +52,18 @@
   
     - [Msg](#provenance.attribute.v1.Msg)
   
+- [provenance/ibc-rate-limit/v1beta1/params.proto](#provenance/ibc-rate-limit/v1beta1/params.proto)
+    - [Params](#provenance.ibcratelimit.v1beta1.Params)
+  
+- [provenance/ibc-rate-limit/v1beta1/genesis.proto](#provenance/ibc-rate-limit/v1beta1/genesis.proto)
+    - [GenesisState](#provenance.ibcratelimit.v1beta1.GenesisState)
+  
+- [provenance/ibc-rate-limit/v1beta1/query.proto](#provenance/ibc-rate-limit/v1beta1/query.proto)
+    - [ParamsRequest](#provenance.ibcratelimit.v1beta1.ParamsRequest)
+    - [ParamsResponse](#provenance.ibcratelimit.v1beta1.ParamsResponse)
+  
+    - [Query](#provenance.ibcratelimit.v1beta1.Query)
+  
 - [provenance/marker/v1/accessgrant.proto](#provenance/marker/v1/accessgrant.proto)
     - [AccessGrant](#provenance.marker.v1.AccessGrant)
   
@@ -1165,6 +1177,119 @@ Msg defines the attribute module Msg service.
 | `DeleteAttribute` | [MsgDeleteAttributeRequest](#provenance.attribute.v1.MsgDeleteAttributeRequest) | [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse) | DeleteAttribute defines a method to verify a particular invariance. | |
 | `DeleteDistinctAttribute` | [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest) | [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse) | DeleteDistinctAttribute defines a method to verify a particular invariance. | |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance.attribute.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.attribute.v1.MsgSetAccountDataResponse) | SetAccountData defines a method for setting/updating an account's accountdata attribute. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibc-rate-limit/v1beta1/params.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibc-rate-limit/v1beta1/params.proto
+
+
+
+<a name="provenance.ibcratelimit.v1beta1.Params"></a>
+
+### Params
+Params defines the parameters for the ibc-rate-limit module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contract_address` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibc-rate-limit/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibc-rate-limit/v1beta1/genesis.proto
+
+
+
+<a name="provenance.ibcratelimit.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the ibc-rate-limit module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.ibcratelimit.v1beta1.Params) |  | params are all the parameters of the module |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibc-rate-limit/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibc-rate-limit/v1beta1/query.proto
+
+
+
+<a name="provenance.ibcratelimit.v1beta1.ParamsRequest"></a>
+
+### ParamsRequest
+ParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="provenance.ibcratelimit.v1beta1.ParamsResponse"></a>
+
+### ParamsResponse
+aramsResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.ibcratelimit.v1beta1.Params) |  | params defines the parameters of the module. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.ibcratelimit.v1beta1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [ParamsRequest](#provenance.ibcratelimit.v1beta1.ParamsRequest) | [ParamsResponse](#provenance.ibcratelimit.v1beta1.ParamsResponse) | Params defines a gRPC query method that returns the ibc-rate-limit module's parameters. | GET|/provenance/ibc-rate-limit/v1beta1/params|
 
  <!-- end services -->
 
