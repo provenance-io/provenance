@@ -40,7 +40,7 @@ jobs:
           fi
           echo "Setting output: base-branch=$branch"
           echo "base-branch=$branch" >> "$GITHUB_OUTPUT"
-      - uses: bufbuild/buf-setup-action@v1.21.0
+      - uses: bufbuild/buf-setup-action@v1.22.0
       - uses: bufbuild/buf-lint-action@v1.0.3
         if: always()
         with:
