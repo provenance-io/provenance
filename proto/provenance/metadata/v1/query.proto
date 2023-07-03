@@ -731,19 +731,19 @@ message GetByAddrRequest {
 // GetByAddrResponse is the response type for the Query/GetByAddr RPC method.
 message GetByAddrResponse {
   // scopes contains any scopes that were requested and found.
-  repeated Scope scopes = 1;
+  repeated Scope scopes = 1 [(gogoproto.moretags) = "yaml:\"scopes,omitempty\""];
   // sessions contains any sessions that were requested and found.
-  repeated Session sessions = 2;
+  repeated Session sessions = 2 [(gogoproto.moretags) = "yaml:\"sessions,omitempty\""];
   // records contains any records that were requested and found.
-  repeated Record records = 3;
+  repeated Record records = 3 [(gogoproto.moretags) = "yaml:\"records,omitempty\""];
   // scope_specs contains any scope specifications that were requested and found.
-  repeated ScopeSpecification scope_specs = 4 [(gogoproto.moretags) = "yaml:\"scope_specs\""];
+  repeated ScopeSpecification scope_specs = 4 [(gogoproto.moretags) = "yaml:\"scope_specs,omitempty\""];
   // contract_specs contains any contract specifications that were requested and found.
-  repeated ContractSpecification contract_specs = 5 [(gogoproto.moretags) = "yaml:\"contract_specs\""];
+  repeated ContractSpecification contract_specs = 5 [(gogoproto.moretags) = "yaml:\"contract_specs,omitempty\""];
   // record_specs contains any record specifications that were requested and found.
-  repeated RecordSpecification record_specs = 6 [(gogoproto.moretags) = "yaml:\"record_specs\""];
+  repeated RecordSpecification record_specs = 6 [(gogoproto.moretags) = "yaml:\"record_specs,omitempty\""];
   // not_found contains any addrs requested but not found.
-  repeated string not_found = 7 [(gogoproto.moretags) = "yaml:\"not_found\""];
+  repeated string not_found = 7 [(gogoproto.moretags) = "yaml:\"not_found,omitempty\""];
 }
 
 // OSLocatorParamsRequest is the request type for the Query/OSLocatorParams RPC method.
