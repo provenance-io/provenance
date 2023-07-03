@@ -29,7 +29,12 @@ func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 	var params types.Params
 	k.paramSpace.GetParamSet(ctx, &params)
 
-	return &types.QueryParamsResponse{Params: params, Request: req}, nil
+	resp := &types.QueryParamsResponse{Params: params}
+	if req != nil && req.IncludeRequest {
+		resp.Request = req
+	}
+
+	return resp, nil
 }
 
 // Scope returns a specific scope by id.
@@ -39,7 +44,10 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	retval := types.ScopeResponse{Request: req}
+	retval := types.ScopeResponse{}
+	if req.IncludeRequest {
+		retval.Request = req
+	}
 
 	var scopeAddr, sessionAddr types.MetadataAddress
 	if len(req.ScopeId) > 0 {
@@ -138,7 +146,14 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 // ScopesAll returns all scopes (limited by pagination).
 func (k Keeper) ScopesAll(c context.Context, req *types.ScopesAllRequest) (*types.ScopesAllResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "ScopesAll")
-	retval := types.ScopesAllResponse{Request: req}
+	retval := types.ScopesAllResponse{}
+	incInfo := false
+	if req != nil {
+		if req.IncludeRequest {
+			retval.Request = req
+		}
+		incInfo = req.IncludeIdInfo
+	}
 
 	pageRequest := getPageRequest(req)
 
@@ -150,7 +165,7 @@ func (k Keeper) ScopesAll(c context.Context, req *types.ScopesAllRequest) (*type
 		var scope types.Scope
 		vErr := scope.Unmarshal(value)
 		if vErr == nil {
-			retval.Scopes = append(retval.Scopes, types.WrapScope(&scope, req.IncludeIdInfo))
+			retval.Scopes = append(retval.Scopes, types.WrapScope(&scope, incInfo))
 			return nil
 		}
 		// Something's wrong. Let's do what we can to give indications of it.
@@ -181,7 +196,10 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	retval := types.SessionsResponse{Request: req}
+	retval := types.SessionsResponse{}
+	if req.IncludeRequest {
+		retval.Request = req
+	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -326,7 +344,14 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 // SessionsAll returns all sessions (limited by pagination).
 func (k Keeper) SessionsAll(c context.Context, req *types.SessionsAllRequest) (*types.SessionsAllResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "SessionsAll")
-	retval := types.SessionsAllResponse{Request: req}
+	retval := types.SessionsAllResponse{}
+	incInfo := false
+	if req != nil {
+		if req.IncludeRequest {
+			retval.Request = req
+		}
+		incInfo = req.IncludeIdInfo
+	}
 
 	pageRequest := getPageRequest(req)
 
@@ -338,7 +363,7 @@ func (k Keeper) SessionsAll(c context.Context, req *types.SessionsAllRequest) (*
 		var session types.Session
 		vErr := session.Unmarshal(value)
 		if vErr == nil {
-			retval.Sessions = append(retval.Sessions, types.WrapSession(&session, req.IncludeIdInfo))
+			retval.Sessions = append(retval.Sessions, types.WrapSession(&session, incInfo))
 			return nil
 		}
 		// Something's wrong. Let's do what we can to give indications of it.
@@ -369,7 +394,10 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	retval := types.RecordsResponse{Request: req}
+	retval := types.RecordsResponse{}
+	if req.IncludeRequest {
+		retval.Request = req
+	}
 	ctx := sdk.UnwrapSDKContext(c)
 
 	var scopeAddr, sessionAddr, recordAddr types.MetadataAddress
@@ -502,7 +530,14 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 // RecordsAll returns all records (limited by pagination).
 func (k Keeper) RecordsAll(c context.Context, req *types.RecordsAllRequest) (*types.RecordsAllResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "RecordsAll")
-	retval := types.RecordsAllResponse{Request: req}
+	retval := types.RecordsAllResponse{}
+	incInfo := false
+	if req != nil {
+		if req.IncludeRequest {
+			retval.Request = req
+		}
+		incInfo = req.IncludeIdInfo
+	}
 
 	pageRequest := getPageRequest(req)
 
@@ -514,7 +549,7 @@ func (k Keeper) RecordsAll(c context.Context, req *types.RecordsAllRequest) (*ty
 		var record types.Record
 		vErr := record.Unmarshal(value)
 		if vErr == nil {
-			retval.Records = append(retval.Records, types.WrapRecord(&record, req.IncludeIdInfo))
+			retval.Records = append(retval.Records, types.WrapRecord(&record, incInfo))
 			return nil
 		}
 		// Something's wrong. Let's do what we can to give indications of it.
@@ -545,7 +580,10 @@ func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*type
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	retval := types.OwnershipResponse{Request: req}
+	retval := types.OwnershipResponse{}
+	if req.IncludeRequest {
+		retval.Request = req
+	}
 
 	if req.Address == "" {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap("address cannot be empty")
@@ -587,7 +625,10 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	retval := types.ValueOwnershipResponse{Request: req}
+	retval := types.ValueOwnershipResponse{}
+	if req.IncludeRequest {
+		retval.Request = req
+	}
 
 	if req.Address == "" {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap("address cannot be empty")
@@ -628,7 +669,10 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	retval := types.ScopeSpecificationResponse{Request: req}
+	retval := types.ScopeSpecificationResponse{}
+	if req.IncludeRequest {
+		retval.Request = req
+	}
 
 	if len(req.SpecificationId) == 0 {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap("specification id cannot be empty")
@@ -683,7 +727,14 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 // ScopeSpecificationsAll returns all scope specifications (limited by pagination).
 func (k Keeper) ScopeSpecificationsAll(c context.Context, req *types.ScopeSpecificationsAllRequest) (*types.ScopeSpecificationsAllResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "ScopeSpecificationsAll")
-	retval := types.ScopeSpecificationsAllResponse{Request: req}
+	retval := types.ScopeSpecificationsAllResponse{}
+	incInfo := false
+	if req != nil {
+		if req.IncludeRequest {
+			retval.Request = req
+		}
+		incInfo = req.IncludeIdInfo
+	}
 
 	pageRequest := getPageRequest(req)
 
@@ -695,7 +746,7 @@ func (k Keeper) ScopeSpecificationsAll(c context.Context, req *types.ScopeSpecif
 		var scopeSpec types.ScopeSpecification
 		vErr := scopeSpec.Unmarshal(value)
 		if vErr == nil {
-			retval.ScopeSpecifications = append(retval.ScopeSpecifications, types.WrapScopeSpec(&scopeSpec, req.IncludeIdInfo))
+			retval.ScopeSpecifications = append(retval.ScopeSpecifications, types.WrapScopeSpec(&scopeSpec, incInfo))
 			return nil
 		}
 		// Something's wrong. Let's do what we can to give indications of it.
@@ -726,7 +777,10 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	retval := types.ContractSpecificationResponse{Request: req}
+	retval := types.ContractSpecificationResponse{}
+	if req.IncludeRequest {
+		retval.Request = req
+	}
 
 	if len(req.SpecificationId) == 0 {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap("specification id cannot be empty")
@@ -760,7 +814,14 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 // ContractSpecificationsAll returns all contract specifications (limited by pagination).
 func (k Keeper) ContractSpecificationsAll(c context.Context, req *types.ContractSpecificationsAllRequest) (*types.ContractSpecificationsAllResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "ContractSpecificationsAll")
-	retval := types.ContractSpecificationsAllResponse{Request: req}
+	retval := types.ContractSpecificationsAllResponse{}
+	incInfo := false
+	if req != nil {
+		if req.IncludeRequest {
+			retval.Request = req
+		}
+		incInfo = req.IncludeIdInfo
+	}
 
 	pageRequest := getPageRequest(req)
 
@@ -772,7 +833,7 @@ func (k Keeper) ContractSpecificationsAll(c context.Context, req *types.Contract
 		var contractSpec types.ContractSpecification
 		vErr := contractSpec.Unmarshal(value)
 		if vErr == nil {
-			retval.ContractSpecifications = append(retval.ContractSpecifications, types.WrapContractSpec(&contractSpec, req.IncludeIdInfo))
+			retval.ContractSpecifications = append(retval.ContractSpecifications, types.WrapContractSpec(&contractSpec, incInfo))
 			return nil
 		}
 		// Something's wrong. Let's do what we can to give indications of it.
@@ -806,7 +867,10 @@ func (k Keeper) RecordSpecificationsForContractSpecification(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	retval := types.RecordSpecificationsForContractSpecificationResponse{Request: req}
+	retval := types.RecordSpecificationsForContractSpecificationResponse{}
+	if req.IncludeRequest {
+		retval.Request = req
+	}
 
 	if len(req.SpecificationId) == 0 {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap("contract specification id cannot be empty")
@@ -842,7 +906,10 @@ func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecific
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	retval := types.RecordSpecificationResponse{Request: req}
+	retval := types.RecordSpecificationResponse{}
+	if req.IncludeRequest {
+		retval.Request = req
+	}
 
 	if len(req.SpecificationId) == 0 {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap("specification id cannot be empty")
@@ -867,7 +934,14 @@ func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecific
 // RecordSpecificationsAll returns all record specifications (limited by pagination).
 func (k Keeper) RecordSpecificationsAll(c context.Context, req *types.RecordSpecificationsAllRequest) (*types.RecordSpecificationsAllResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "RecordSpecificationsAll")
-	retval := types.RecordSpecificationsAllResponse{Request: req}
+	retval := types.RecordSpecificationsAllResponse{}
+	incInfo := false
+	if req != nil {
+		if req.IncludeRequest {
+			retval.Request = req
+		}
+		incInfo = req.IncludeIdInfo
+	}
 
 	pageRequest := getPageRequest(req)
 
@@ -879,7 +953,7 @@ func (k Keeper) RecordSpecificationsAll(c context.Context, req *types.RecordSpec
 		var recordSpec types.RecordSpecification
 		vErr := recordSpec.Unmarshal(value)
 		if vErr == nil {
-			retval.RecordSpecifications = append(retval.RecordSpecifications, types.WrapRecordSpec(&recordSpec, req.IncludeIdInfo))
+			retval.RecordSpecifications = append(retval.RecordSpecifications, types.WrapRecordSpec(&recordSpec, incInfo))
 			return nil
 		}
 		// Something's wrong. Let's do what we can to give indications of it.
@@ -973,7 +1047,11 @@ func (k Keeper) OSLocatorParams(c context.Context, request *types.OSLocatorParam
 	var params types.OSLocatorParams
 	k.paramSpace.GetParamSet(ctx, &params)
 
-	return &types.OSLocatorParamsResponse{Params: params, Request: request}, nil
+	resp := &types.OSLocatorParamsResponse{Params: params}
+	if request != nil && request.IncludeRequest {
+		resp.Request = request
+	}
+	return resp, nil
 }
 
 func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*types.OSLocatorResponse, error) {
@@ -982,7 +1060,10 @@ func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	retval := types.OSLocatorResponse{Request: request}
+	retval := types.OSLocatorResponse{}
+	if request.IncludeRequest {
+		retval.Request = request
+	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 	accAddr, err := sdk.AccAddressFromBech32(request.Owner)
@@ -1001,9 +1082,12 @@ func (k Keeper) OSLocator(c context.Context, request *types.OSLocatorRequest) (*
 
 func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsByURIRequest) (*types.OSLocatorsByURIResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSLocatorsByURI")
-	retval := types.OSLocatorsByURIResponse{Request: request}
+	retval := types.OSLocatorsByURIResponse{}
 	if request == nil {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+	if request.IncludeRequest {
+		retval.Request = request
 	}
 
 	var sDec []byte
@@ -1048,7 +1132,10 @@ func (k Keeper) OSLocatorsByScope(ctx context.Context, request *types.OSLocators
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	retval := types.OSLocatorsByScopeResponse{Request: request}
+	retval := types.OSLocatorsByScopeResponse{}
+	if request.IncludeRequest {
+		retval.Request = request
+	}
 
 	ctxSDK := sdk.UnwrapSDKContext(ctx)
 	if request.ScopeId == "" {
@@ -1066,9 +1153,12 @@ func (k Keeper) OSLocatorsByScope(ctx context.Context, request *types.OSLocators
 
 func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsRequest) (*types.OSAllLocatorsResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSAllLocators")
-	retval := types.OSAllLocatorsResponse{Request: request}
+	retval := types.OSAllLocatorsResponse{}
 	if request == nil {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+	if request.IncludeRequest {
+		retval.Request = request
 	}
 
 	osLocatorStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.OSLocatorAddressKeyPrefix)
