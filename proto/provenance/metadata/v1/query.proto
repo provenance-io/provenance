@@ -245,7 +245,10 @@ service Query {
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
-message QueryParamsRequest {}
+message QueryParamsRequest {
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+}
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
@@ -273,6 +276,9 @@ message ScopeRequest {
   bool include_records = 11 [(gogoproto.moretags) = "yaml:\"include_records\""];
   // include_id_info is a flag for whether to include the id info in the response.
   bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
 }
 
 // ScopeResponse is the response type for the Query/Scope RPC method.
@@ -302,6 +308,9 @@ message ScopeWrapper {
 message ScopesAllRequest {
   // include_id_info is a flag for whether to include the id info in the response.
   bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -337,6 +346,9 @@ message SessionsRequest {
   bool include_records = 11 [(gogoproto.moretags) = "yaml:\"include_records\""];
   // include_id_info is a flag for whether to include the id info in the response.
   bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
 }
 
 // SessionsResponse is the response type for the Query/Sessions RPC method.
@@ -366,6 +378,9 @@ message SessionWrapper {
 message SessionsAllRequest {
   // include_id_info is a flag for whether to include the id info in the response.
   bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -401,6 +416,9 @@ message RecordsRequest {
   bool include_sessions = 11 [(gogoproto.moretags) = "yaml:\"include_sessions\""];
   // include_id_info is a flag for whether to include the id info in the response.
   bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
 }
 
 // RecordsResponse is the response type for the Query/Records RPC method.
@@ -430,6 +448,9 @@ message RecordWrapper {
 message RecordsAllRequest {
   // include_id_info is a flag for whether to include the id info in the response.
   bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -449,6 +470,8 @@ message RecordsAllResponse {
 message OwnershipRequest {
   string address = 1;
 
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -468,6 +491,8 @@ message OwnershipResponse {
 message ValueOwnershipRequest {
   string address = 1;
 
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -497,6 +522,9 @@ message ScopeSpecificationRequest {
   bool include_record_specs = 11 [(gogoproto.moretags) = "yaml:\"include_record_specs\""];
   // include_id_info is a flag for whether to include the id info in the response.
   bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
 }
 
 // ScopeSpecificationResponse is the response type for the Query/ScopeSpecification RPC method.
@@ -524,6 +552,9 @@ message ScopeSpecificationWrapper {
 message ScopeSpecificationsAllRequest {
   // include_id_info is a flag for whether to include the id info in the response.
   bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -552,6 +583,9 @@ message ContractSpecificationRequest {
   bool include_record_specs = 10 [(gogoproto.moretags) = "yaml:\"include_record_specs\""];
   // include_id_info is a flag for whether to include the id info in the response.
   bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
 }
 
 // ContractSpecificationResponse is the response type for the Query/ContractSpecification RPC method.
@@ -579,6 +613,9 @@ message ContractSpecificationWrapper {
 message ContractSpecificationsAllRequest {
   // include_id_info is a flag for whether to include the id info in the response.
   bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -603,8 +640,12 @@ message RecordSpecificationsForContractSpecificationRequest {
   // It can also be a record specification address, e.g.
   // recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44.
   string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
+
   // include_id_info is a flag for whether to include the id info in the response.
   bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
 }
 
 // RecordSpecificationsForContractSpecificationResponse is the response type for the
@@ -633,8 +674,12 @@ message RecordSpecificationRequest {
   // It is required if the specification_id is a uuid or contract specification address.
   // It is ignored if the specification_id is a record specification address.
   string name = 2;
+
   // include_id_info is a flag for whether to include the id info in the response.
   bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
 }
 
 // RecordSpecificationResponse is the response type for the Query/RecordSpecification RPC method.
@@ -658,6 +703,9 @@ message RecordSpecificationWrapper {
 message RecordSpecificationsAllRequest {
   // include_id_info is a flag for whether to include the id info in the response.
   bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -699,7 +747,10 @@ message GetByAddrResponse {
 }
 
 // OSLocatorParamsRequest is the request type for the Query/OSLocatorParams RPC method.
-message OSLocatorParamsRequest {}
+message OSLocatorParamsRequest {
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+}
 
 // OSLocatorParamsResponse is the response type for the Query/OSLocatorParams RPC method.
 message OSLocatorParamsResponse {
@@ -713,6 +764,9 @@ message OSLocatorParamsResponse {
 // OSLocatorRequest is the request type for the Query/OSLocator RPC method.
 message OSLocatorRequest {
   string owner = 1;
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
 }
 
 // OSLocatorResponse is the response type for the Query/OSLocator RPC method.
@@ -727,6 +781,8 @@ message OSLocatorResponse {
 message OSLocatorsByURIRequest {
   string uri = 1;
 
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -744,6 +800,9 @@ message OSLocatorsByURIResponse {
 // OSLocatorsByScopeRequest is the request type for the Query/OSLocatorsByScope RPC method.
 message OSLocatorsByScopeRequest {
   string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
 }
 
 // OSLocatorsByScopeResponse is the response type for the Query/OSLocatorsByScope RPC method.
@@ -756,6 +815,8 @@ message OSLocatorsByScopeResponse {
 
 // OSAllLocatorsRequest is the request type for the Query/OSAllLocators RPC method.
 message OSAllLocatorsRequest {
+  // include_request is a flag for whether to include this request in your result.
+  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }

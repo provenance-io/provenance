@@ -37708,6 +37708,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               ContractSpecificationResponse is the response type for the
               Query/ContractSpecification RPC method.
@@ -37762,6 +37768,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -37996,6 +38010,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               RecordSpecificationResponse is the response type for the
               Query/RecordSpecification RPC method.
@@ -38052,6 +38072,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -38307,6 +38335,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               RecordSpecificationsForContractSpecificationResponse is the
               response type for the
@@ -38353,6 +38387,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -38513,6 +38555,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
                   pagination:
                     description: >-
                       pagination defines optional pagination parameters for the
@@ -38633,6 +38681,14 @@ paths:
           required: false
           type: boolean
           format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -38715,6 +38771,13 @@ paths:
               request:
                 description: request is a copy of the request that generated these results.
                 type: object
+                properties:
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               OSLocatorParamsResponse is the response type for the
               Query/OSLocatorParams RPC method.
@@ -38740,6 +38803,15 @@ paths:
                     value:
                       type: string
                       format: byte
+      parameters:
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/locator/scope/{scope_id}':
@@ -38779,6 +38851,12 @@ paths:
                 properties:
                   scope_id:
                     type: string
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               OSLocatorsByScopeResponse is the response type for the
               Query/OSLocatorsByScope RPC method.
@@ -38809,6 +38887,14 @@ paths:
           in: path
           required: true
           type: string
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/locator/uri/{uri}':
@@ -38848,6 +38934,12 @@ paths:
                 properties:
                   uri:
                     type: string
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
                   pagination:
                     description: >-
                       pagination defines optional pagination parameters for the
@@ -38964,6 +39056,14 @@ paths:
           in: path
           required: true
           type: string
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -39057,6 +39157,12 @@ paths:
                 properties:
                   owner:
                     type: string
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               OSLocatorResponse is the response type for the Query/OSLocator RPC
               method.
@@ -39087,6 +39193,14 @@ paths:
           in: path
           required: true
           type: string
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
       tags:
         - Query
   /provenance/metadata/v1/locators/all:
@@ -39122,6 +39236,12 @@ paths:
                 description: request is a copy of the request that generated these results.
                 type: object
                 properties:
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
                   pagination:
                     description: >-
                       pagination defines optional pagination parameters for the
@@ -39234,6 +39354,14 @@ paths:
                       type: string
                       format: byte
       parameters:
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -39317,6 +39445,12 @@ paths:
                 properties:
                   address:
                     type: string
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
                   pagination:
                     description: >-
                       pagination defines optional pagination parameters for the
@@ -39433,6 +39567,14 @@ paths:
           in: path
           required: true
           type: string
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -39509,6 +39651,13 @@ paths:
               request:
                 description: request is a copy of the request that generated these results.
                 type: object
+                properties:
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -39534,6 +39683,15 @@ paths:
                     value:
                       type: string
                       format: byte
+      parameters:
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
       tags:
         - Query
   '/provenance/metadata/v1/record/{record_addr}':
@@ -40319,6 +40477,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               RecordsResponse is the response type for the Query/Records RPC
               method.
@@ -40399,6 +40563,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -41172,6 +41344,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: ScopeResponse is the response type for the Query/Scope RPC method.
         default:
           description: An unexpected error response
@@ -41239,6 +41417,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -42045,6 +42231,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               SessionsResponse is the response type for the Query/Sessions RPC
               method.
@@ -42127,6 +42319,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -42426,6 +42626,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
                   pagination:
                     description: >-
                       pagination defines optional pagination parameters for the
@@ -42542,6 +42748,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -42834,6 +43048,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               RecordSpecificationResponse is the response type for the
               Query/RecordSpecification RPC method.
@@ -42890,6 +43110,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -43104,6 +43332,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
                   pagination:
                     description: >-
                       pagination defines optional pagination parameters for the
@@ -43220,6 +43454,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -44051,6 +44293,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: ScopeResponse is the response type for the Query/Scope RPC method.
         default:
           description: An unexpected error response
@@ -44118,6 +44366,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -44907,6 +45163,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               RecordsResponse is the response type for the Query/Records RPC
               method.
@@ -44987,6 +45249,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -45793,6 +46063,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               SessionsResponse is the response type for the Query/Sessions RPC
               method.
@@ -45875,6 +46151,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -46664,6 +46948,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               RecordsResponse is the response type for the Query/Records RPC
               method.
@@ -46744,6 +47034,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -47550,6 +47848,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               SessionsResponse is the response type for the Query/Sessions RPC
               method.
@@ -47632,6 +47936,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -48421,6 +48733,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               RecordsResponse is the response type for the Query/Records RPC
               method.
@@ -48501,6 +48819,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -49290,6 +49616,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               RecordsResponse is the response type for the Query/Records RPC
               method.
@@ -49370,6 +49702,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -50176,6 +50516,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               SessionsResponse is the response type for the Query/Sessions RPC
               method.
@@ -50258,6 +50604,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -50456,6 +50810,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
                   pagination:
                     description: >-
                       pagination defines optional pagination parameters for the
@@ -50572,6 +50932,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -51134,6 +51502,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               ScopeSpecificationResponse is the response type for the
               Query/ScopeSpecification RPC method.
@@ -51193,6 +51567,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -51341,6 +51723,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
                   pagination:
                     description: >-
                       pagination defines optional pagination parameters for the
@@ -51457,6 +51845,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -52288,6 +52684,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: ScopeResponse is the response type for the Query/Scope RPC method.
         default:
           description: An unexpected error response
@@ -52355,6 +52757,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -53161,6 +53571,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               SessionsResponse is the response type for the Query/Sessions RPC
               method.
@@ -53243,6 +53659,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -54032,6 +54456,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               RecordsResponse is the response type for the Query/Records RPC
               method.
@@ -54112,6 +54542,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -54901,6 +55339,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
             description: >-
               RecordsResponse is the response type for the Query/Records RPC
               method.
@@ -54981,6 +55425,14 @@ paths:
           description: >-
             include_id_info is a flag for whether to include the id info in the
             response.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
           in: query
           required: false
           type: boolean
@@ -55241,6 +55693,12 @@ paths:
                     description: >-
                       include_id_info is a flag for whether to include the id
                       info in the response.
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
                   pagination:
                     description: >-
                       pagination defines optional pagination parameters for the
@@ -55361,6 +55819,14 @@ paths:
           required: false
           type: boolean
           format: boolean
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -55444,6 +55910,12 @@ paths:
                 properties:
                   address:
                     type: string
+                  include_request:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      include_request is a flag for whether to include this
+                      request in your result.
                   pagination:
                     description: >-
                       pagination defines optional pagination parameters for the
@@ -55560,6 +56032,14 @@ paths:
           in: path
           required: true
           type: string
+        - name: include_request
+          description: >-
+            include_request is a flag for whether to include this request in
+            your result.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -83537,6 +84017,12 @@ definitions:
         description: >-
           include_id_info is a flag for whether to include the id info in the
           response.
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
     description: >-
       ContractSpecificationRequest is the request type for the
       Query/ContractSpecification RPC method.
@@ -83877,6 +84363,12 @@ definitions:
             description: >-
               include_id_info is a flag for whether to include the id info in
               the response.
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
     description: >-
       ContractSpecificationResponse is the response type for the
       Query/ContractSpecification RPC method.
@@ -84008,6 +84500,12 @@ definitions:
         description: >-
           include_id_info is a flag for whether to include the id info in the
           response.
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
       pagination:
         description: pagination defines optional pagination parameters for the request.
         type: object
@@ -84206,6 +84704,12 @@ definitions:
             description: >-
               include_id_info is a flag for whether to include the id info in
               the response.
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
           pagination:
             description: pagination defines optional pagination parameters for the request.
             type: object
@@ -84961,6 +85465,12 @@ definitions:
   provenance.metadata.v1.OSAllLocatorsRequest:
     type: object
     properties:
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
       pagination:
         description: pagination defines optional pagination parameters for the request.
         type: object
@@ -85046,6 +85556,12 @@ definitions:
         description: request is a copy of the request that generated these results.
         type: object
         properties:
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
           pagination:
             description: pagination defines optional pagination parameters for the request.
             type: object
@@ -85139,6 +85655,13 @@ definitions:
     description: Params defines the parameters for the metadata-locator module methods.
   provenance.metadata.v1.OSLocatorParamsRequest:
     type: object
+    properties:
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
     description: >-
       OSLocatorParamsRequest is the request type for the Query/OSLocatorParams
       RPC method.
@@ -85155,6 +85678,13 @@ definitions:
       request:
         description: request is a copy of the request that generated these results.
         type: object
+        properties:
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
     description: >-
       OSLocatorParamsResponse is the response type for the Query/OSLocatorParams
       RPC method.
@@ -85163,6 +85693,12 @@ definitions:
     properties:
       owner:
         type: string
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
     description: OSLocatorRequest is the request type for the Query/OSLocator RPC method.
   provenance.metadata.v1.OSLocatorResponse:
     type: object
@@ -85190,12 +85726,24 @@ definitions:
         properties:
           owner:
             type: string
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
     description: OSLocatorResponse is the response type for the Query/OSLocator RPC method.
   provenance.metadata.v1.OSLocatorsByScopeRequest:
     type: object
     properties:
       scope_id:
         type: string
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
     description: >-
       OSLocatorsByScopeRequest is the request type for the
       Query/OSLocatorsByScope RPC method.
@@ -85227,6 +85775,12 @@ definitions:
         properties:
           scope_id:
             type: string
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
     description: >-
       OSLocatorsByScopeResponse is the response type for the
       Query/OSLocatorsByScope RPC method.
@@ -85235,6 +85789,12 @@ definitions:
     properties:
       uri:
         type: string
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
       pagination:
         description: pagination defines optional pagination parameters for the request.
         type: object
@@ -85322,6 +85882,12 @@ definitions:
         properties:
           uri:
             type: string
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
           pagination:
             description: pagination defines optional pagination parameters for the request.
             type: object
@@ -85428,6 +85994,12 @@ definitions:
     properties:
       address:
         type: string
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
       pagination:
         description: pagination defines optional pagination parameters for the request.
         type: object
@@ -85499,6 +86071,12 @@ definitions:
         properties:
           address:
             type: string
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
           pagination:
             description: pagination defines optional pagination parameters for the request.
             type: object
@@ -85675,6 +86253,13 @@ definitions:
       generate this record
   provenance.metadata.v1.QueryParamsRequest:
     type: object
+    properties:
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
     description: QueryParamsRequest is the request type for the Query/Params RPC method.
   provenance.metadata.v1.QueryParamsResponse:
     type: object
@@ -85685,6 +86270,13 @@ definitions:
       request:
         description: request is a copy of the request that generated these results.
         type: object
+        properties:
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   provenance.metadata.v1.Record:
     type: object
@@ -86106,6 +86698,12 @@ definitions:
         description: >-
           include_id_info is a flag for whether to include the id info in the
           response.
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
     description: >-
       RecordSpecificationRequest is the request type for the
       Query/RecordSpecification RPC method.
@@ -86322,6 +86920,12 @@ definitions:
             description: >-
               include_id_info is a flag for whether to include the id info in
               the response.
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
     description: >-
       RecordSpecificationResponse is the response type for the
       Query/RecordSpecification RPC method.
@@ -86506,6 +87110,12 @@ definitions:
         description: >-
           include_id_info is a flag for whether to include the id info in the
           response.
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
       pagination:
         description: pagination defines optional pagination parameters for the request.
         type: object
@@ -86759,6 +87369,12 @@ definitions:
             description: >-
               include_id_info is a flag for whether to include the id info in
               the response.
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
           pagination:
             description: pagination defines optional pagination parameters for the request.
             type: object
@@ -86864,6 +87480,12 @@ definitions:
         description: >-
           include_id_info is a flag for whether to include the id info in the
           response.
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
     description: >-
       RecordSpecificationsForContractSpecificationRequest is the request type
       for the
@@ -87087,6 +87709,12 @@ definitions:
             description: >-
               include_id_info is a flag for whether to include the id info in
               the response.
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
     description: >-
       RecordSpecificationsForContractSpecificationResponse is the response type
       for the
@@ -87338,6 +87966,12 @@ definitions:
         description: >-
           include_id_info is a flag for whether to include the id info in the
           response.
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
       pagination:
         description: pagination defines optional pagination parameters for the request.
         type: object
@@ -87666,6 +88300,12 @@ definitions:
             description: >-
               include_id_info is a flag for whether to include the id info in
               the response.
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
           pagination:
             description: pagination defines optional pagination parameters for the request.
             type: object
@@ -87796,6 +88436,12 @@ definitions:
         description: >-
           include_id_info is a flag for whether to include the id info in the
           response.
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
     description: RecordsRequest is the request type for the Query/Records RPC method.
   provenance.metadata.v1.RecordsResponse:
     type: object
@@ -88484,6 +89130,12 @@ definitions:
             description: >-
               include_id_info is a flag for whether to include the id info in
               the response.
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
     description: RecordsResponse is the response type for the Query/Records RPC method.
   provenance.metadata.v1.ResultStatus:
     type: string
@@ -88652,6 +89304,12 @@ definitions:
         description: >-
           include_id_info is a flag for whether to include the id info in the
           response.
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
     description: ScopeRequest is the request type for the Query/Scope RPC method.
   provenance.metadata.v1.ScopeResponse:
     type: object
@@ -89332,6 +89990,12 @@ definitions:
             description: >-
               include_id_info is a flag for whether to include the id info in
               the response.
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
     description: ScopeResponse is the response type for the Query/Scope RPC method.
   provenance.metadata.v1.ScopeSpecIdInfo:
     type: object
@@ -89464,6 +90128,12 @@ definitions:
         description: >-
           include_id_info is a flag for whether to include the id info in the
           response.
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
     description: >-
       ScopeSpecificationRequest is the request type for the
       Query/ScopeSpecification RPC method.
@@ -89929,6 +90599,12 @@ definitions:
             description: >-
               include_id_info is a flag for whether to include the id info in
               the response.
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
     description: >-
       ScopeSpecificationResponse is the response type for the
       Query/ScopeSpecification RPC method.
@@ -90049,6 +90725,12 @@ definitions:
         description: >-
           include_id_info is a flag for whether to include the id info in the
           response.
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
       pagination:
         description: pagination defines optional pagination parameters for the request.
         type: object
@@ -90240,6 +90922,12 @@ definitions:
             description: >-
               include_id_info is a flag for whether to include the id info in
               the response.
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
           pagination:
             description: pagination defines optional pagination parameters for the request.
             type: object
@@ -90481,6 +91169,12 @@ definitions:
         description: >-
           include_id_info is a flag for whether to include the id info in the
           response.
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
       pagination:
         description: pagination defines optional pagination parameters for the request.
         type: object
@@ -90714,6 +91408,12 @@ definitions:
             description: >-
               include_id_info is a flag for whether to include the id info in
               the response.
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
           pagination:
             description: pagination defines optional pagination parameters for the request.
             type: object
@@ -91167,6 +91867,12 @@ definitions:
         description: >-
           include_id_info is a flag for whether to include the id info in the
           response.
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
       pagination:
         description: pagination defines optional pagination parameters for the request.
         type: object
@@ -91458,6 +92164,12 @@ definitions:
             description: >-
               include_id_info is a flag for whether to include the id info in
               the response.
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
           pagination:
             description: pagination defines optional pagination parameters for the request.
             type: object
@@ -91590,6 +92302,12 @@ definitions:
         description: >-
           include_id_info is a flag for whether to include the id info in the
           response.
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
     description: SessionsRequest is the request type for the Query/Sessions RPC method.
   provenance.metadata.v1.SessionsResponse:
     type: object
@@ -92280,12 +92998,24 @@ definitions:
             description: >-
               include_id_info is a flag for whether to include the id info in
               the response.
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
     description: SessionsResponse is the response type for the Query/Sessions RPC method.
   provenance.metadata.v1.ValueOwnershipRequest:
     type: object
     properties:
       address:
         type: string
+      include_request:
+        type: boolean
+        format: boolean
+        description: >-
+          include_request is a flag for whether to include this request in your
+          result.
       pagination:
         description: pagination defines optional pagination parameters for the request.
         type: object
@@ -92359,6 +93089,12 @@ definitions:
         properties:
           address:
             type: string
+          include_request:
+            type: boolean
+            format: boolean
+            description: >-
+              include_request is a flag for whether to include this request in
+              your result.
           pagination:
             description: pagination defines optional pagination parameters for the request.
             type: object
