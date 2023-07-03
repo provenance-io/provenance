@@ -9,13 +9,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/stretchr/testify/suite"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
 type AddressTestSuite struct {
@@ -207,6 +207,334 @@ func (s *AddressTestSuite) TestLegacySha512HashToAddress() {
 			} else {
 				require.EqualError(t, err, tc.expectedError, "ConvertHashToAddress error expected")
 			}
+		})
+	}
+}
+
+func (s *AddressTestSuite) TestVerifyMetadataAddressFormat() {
+	uuid0 := uuid.UUID([16]byte{})                                  // filled with zeros by default.
+	uuid1 := uuid.MustParse("1D42DB43-FCF2-46F8-A4B6-974D73B6551E") // came from uuidgen
+	uuid2 := uuid.MustParse("9713E8BB-8728-4CE9-8051-FCA03E7BD1D1") // came from uuidgen
+
+	makeBz := func(parts ...[]byte) []byte {
+		var rv []byte
+		for _, part := range parts {
+			rv = append(rv, part...)
+		}
+		return rv
+	}
+
+	type testCase struct {
+		name   string
+		bz     []byte
+		expHRP string
+		expErr string
+	}
+
+	tests := []testCase{
+		{
+			name:   "nil",
+			bz:     nil,
+			expErr: "address is empty",
+		},
+		{
+			name:   "empty",
+			bz:     []byte{},
+			expErr: "address is empty",
+		},
+		{
+			name:   "scope zeros",
+			bz:     makeBz(ScopeKeyPrefix, uuid0[:]),
+			expHRP: PrefixScope,
+		},
+		{
+			name:   "scope normal",
+			bz:     makeBz(ScopeKeyPrefix, uuid1[:]),
+			expHRP: PrefixScope,
+		},
+		{
+			name:   "scope too short",
+			bz:     makeBz(ScopeKeyPrefix, uuid1[:15]),
+			expHRP: PrefixScope,
+			expErr: "incorrect address length (expected: 17, actual: 16)",
+		},
+		{
+			name:   "scope too long",
+			bz:     makeBz(ScopeKeyPrefix, uuid1[:], ScopeKeyPrefix),
+			expHRP: PrefixScope,
+			expErr: "incorrect address length (expected: 17, actual: 18)",
+		},
+		{
+			name:   "session zeros",
+			bz:     makeBz(SessionKeyPrefix, uuid0[:], uuid0[:]),
+			expHRP: PrefixSession,
+		},
+		{
+			name:   "session normal",
+			bz:     makeBz(SessionKeyPrefix, uuid1[:], uuid2[:]),
+			expHRP: PrefixSession,
+		},
+		{
+			name:   "session too short",
+			bz:     makeBz(SessionKeyPrefix, uuid1[:], uuid2[:15]),
+			expHRP: PrefixSession,
+			expErr: "incorrect address length (expected: 33, actual: 32)",
+		},
+		{
+			name:   "session too long",
+			bz:     makeBz(SessionKeyPrefix, uuid1[:], uuid2[:], SessionKeyPrefix),
+			expHRP: PrefixSession,
+			expErr: "incorrect address length (expected: 33, actual: 34)",
+		},
+		{
+			name:   "record zeros",
+			bz:     makeBz(RecordKeyPrefix, uuid0[:], uuid0[:]),
+			expHRP: PrefixRecord,
+		},
+		{
+			name:   "record normal",
+			bz:     makeBz(RecordKeyPrefix, uuid1[:], uuid2[:]),
+			expHRP: PrefixRecord,
+		},
+		{
+			name:   "record too short",
+			bz:     makeBz(RecordKeyPrefix, uuid1[:], uuid2[:15]),
+			expHRP: PrefixRecord,
+			expErr: "incorrect address length (expected: 33, actual: 32)",
+		},
+		{
+			name:   "record too long",
+			bz:     makeBz(RecordKeyPrefix, uuid1[:], uuid2[:], RecordKeyPrefix),
+			expHRP: PrefixRecord,
+			expErr: "incorrect address length (expected: 33, actual: 34)",
+		},
+		{
+			name:   "scope spec zeros",
+			bz:     makeBz(ScopeSpecificationKeyPrefix, uuid0[:]),
+			expHRP: PrefixScopeSpecification,
+		},
+		{
+			name:   "scope spec normal",
+			bz:     makeBz(ScopeSpecificationKeyPrefix, uuid1[:]),
+			expHRP: PrefixScopeSpecification,
+		},
+		{
+			name:   "scope spec too short",
+			bz:     makeBz(ScopeSpecificationKeyPrefix, uuid1[:15]),
+			expHRP: PrefixScopeSpecification,
+			expErr: "incorrect address length (expected: 17, actual: 16)",
+		},
+		{
+			name:   "scope spec too long",
+			bz:     makeBz(ScopeSpecificationKeyPrefix, uuid1[:], ScopeSpecificationKeyPrefix),
+			expHRP: PrefixScopeSpecification,
+			expErr: "incorrect address length (expected: 17, actual: 18)",
+		},
+		{
+			name:   "contract spec zeros",
+			bz:     makeBz(ContractSpecificationKeyPrefix, uuid0[:]),
+			expHRP: PrefixContractSpecification,
+		},
+		{
+			name:   "contract spec normal",
+			bz:     makeBz(ContractSpecificationKeyPrefix, uuid1[:]),
+			expHRP: PrefixContractSpecification,
+		},
+		{
+			name:   "contract spec too short",
+			bz:     makeBz(ContractSpecificationKeyPrefix, uuid1[:15]),
+			expHRP: PrefixContractSpecification,
+			expErr: "incorrect address length (expected: 17, actual: 16)",
+		},
+		{
+			name:   "contract spec too long",
+			bz:     makeBz(ContractSpecificationKeyPrefix, uuid1[:], ContractSpecificationKeyPrefix),
+			expHRP: PrefixContractSpecification,
+			expErr: "incorrect address length (expected: 17, actual: 18)",
+		},
+		{
+			name:   "record spec zeros",
+			bz:     makeBz(RecordSpecificationKeyPrefix, uuid0[:], uuid0[:]),
+			expHRP: PrefixRecordSpecification,
+		},
+		{
+			name:   "record spec normal",
+			bz:     makeBz(RecordSpecificationKeyPrefix, uuid1[:], uuid2[:]),
+			expHRP: PrefixRecordSpecification,
+		},
+		{
+			name:   "record spec too short",
+			bz:     makeBz(RecordSpecificationKeyPrefix, uuid1[:], uuid2[:15]),
+			expHRP: PrefixRecordSpecification,
+			expErr: "incorrect address length (expected: 33, actual: 32)",
+		},
+		{
+			name:   "record spec too long",
+			bz:     makeBz(RecordSpecificationKeyPrefix, uuid1[:], uuid2[:], RecordSpecificationKeyPrefix),
+			expHRP: PrefixRecordSpecification,
+			expErr: "incorrect address length (expected: 33, actual: 34)",
+		},
+		// Note: As of writing this, the only way uuid.FromBytes returns an error is if the
+		// provided slice doesn't have length 16. But that's hard-coded to be the case in
+		// VerifyMetadataAddressFormat, so there's no unit tests for those checks.
+	}
+
+	knownTypeBytes := []byte{
+		ScopeKeyPrefix[0],
+		SessionKeyPrefix[0],
+		RecordKeyPrefix[0],
+		ScopeSpecificationKeyPrefix[0],
+		ContractSpecificationKeyPrefix[0],
+		RecordSpecificationKeyPrefix[0],
+	}
+	isKnownTypeByte := func(b byte) bool {
+		for _, kb := range knownTypeBytes {
+			if b == kb {
+				return true
+			}
+		}
+		return false
+	}
+
+	for i := 0; i < 256; i++ {
+		b := byte(i)
+		if !isKnownTypeByte(b) {
+			tests = append(tests, testCase{
+				name:   fmt.Sprintf("type byte 0x%x", b),
+				bz:     []byte{b},
+				expErr: fmt.Sprintf("invalid metadata address type: %d", i),
+			})
+		}
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			hrp, err := VerifyMetadataAddressFormat(tc.bz)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "VerifyMetadataAddressFormat error")
+			} else {
+				s.Assert().NoError(err, "VerifyMetadataAddressFormat error")
+			}
+			s.Assert().Equal(tc.expHRP, hrp, "VerifyMetadataAddressFormat hrp")
+		})
+	}
+}
+
+func (s *AddressTestSuite) TestParseMetadataAddressFromBech32() {
+	notAScopeAddr := MetadataAddress{ScopeKeyPrefix[0], 1, 2, 3}
+	notAScopeAddrStr, err := bech32.ConvertAndEncode(PrefixScope, notAScopeAddr)
+	s.Require().NoError(err, "ConvertAndEncode notAScopeAddrStr")
+
+	makeAddr := func(parts ...[]byte) MetadataAddress {
+		var rv MetadataAddress
+		for _, part := range parts {
+			rv = append(rv, part...)
+		}
+		return rv
+	}
+
+	uuid1 := uuid.MustParse("1D42DB43-FCF2-46F8-A4B6-974D73B6551E") // came from uuidgen
+	uuid2 := uuid.MustParse("9713E8BB-8728-4CE9-8051-FCA03E7BD1D1") // came from uuidgen
+	scopeAddr := makeAddr(ScopeKeyPrefix, uuid1[:])
+	sessionAddr := makeAddr(SessionKeyPrefix, uuid1[:], uuid2[:])
+	recordAddr := makeAddr(RecordKeyPrefix, uuid1[:], uuid2[:])
+	scopeSpecAddr := makeAddr(ScopeSpecificationKeyPrefix, uuid1[:])
+	contractSpecAddr := makeAddr(ContractSpecificationKeyPrefix, uuid1[:])
+	recordSpecAddr := makeAddr(RecordSpecificationKeyPrefix, uuid1[:], uuid2[:])
+
+	hrpMismatchAddr, err := bech32.ConvertAndEncode(PrefixScopeSpecification, scopeAddr)
+	s.Require().NoError(err, "ConvertAndEncode hrpMismatchAddr")
+
+	tests := []struct {
+		name    string
+		input   string
+		expAddr MetadataAddress
+		expHRP  string
+		expErr  string
+	}{
+		{
+			name:    "empty",
+			input:   "",
+			expAddr: MetadataAddress{},
+			expHRP:  "",
+			expErr:  "empty address string is not allowed",
+		},
+		{
+			name:    "white space",
+			input:   "       ",
+			expAddr: MetadataAddress{},
+			expHRP:  "",
+			expErr:  "empty address string is not allowed",
+		},
+		{
+			name:    "invalid bech32",
+			input:   "notvalid",
+			expAddr: nil,
+			expHRP:  "",
+			expErr:  "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:    "invalid metadata address bytes",
+			input:   notAScopeAddrStr,
+			expAddr: nil,
+			expHRP:  "",
+			expErr:  "incorrect address length (expected: 17, actual: 4)",
+		},
+		{
+			name:    "hrp mismatch",
+			input:   hrpMismatchAddr,
+			expAddr: MetadataAddress{},
+			expHRP:  "",
+			expErr:  "invalid bech32 prefix; expected scope, got scopespec",
+		},
+		{
+			name:    "scope",
+			input:   scopeAddr.String(),
+			expAddr: scopeAddr,
+			expHRP:  PrefixScope,
+		},
+		{
+			name:    "session",
+			input:   sessionAddr.String(),
+			expAddr: sessionAddr,
+			expHRP:  PrefixSession,
+		},
+		{
+			name:    "record",
+			input:   recordAddr.String(),
+			expAddr: recordAddr,
+			expHRP:  PrefixRecord,
+		},
+		{
+			name:    "scope spec",
+			input:   scopeSpecAddr.String(),
+			expAddr: scopeSpecAddr,
+			expHRP:  PrefixScopeSpecification,
+		},
+		{
+			name:    "contract spec",
+			input:   contractSpecAddr.String(),
+			expAddr: contractSpecAddr,
+			expHRP:  PrefixContractSpecification,
+		},
+		{
+			name:    "record spec",
+			input:   recordSpecAddr.String(),
+			expAddr: recordSpecAddr,
+			expHRP:  PrefixRecordSpecification,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			addr, hrp, err := ParseMetadataAddressFromBech32(tc.input)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "ParseMetadataAddressFromBech32 error")
+			} else {
+				s.Assert().NoError(err, "ParseMetadataAddressFromBech32 error")
+			}
+			s.Assert().Equal(tc.expAddr, addr, "ParseMetadataAddressFromBech32 address")
+			s.Assert().Equal(tc.expHRP, hrp, "ParseMetadataAddressFromBech32 HRP")
 		})
 	}
 }
