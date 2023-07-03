@@ -626,13 +626,9 @@ func outputParams(cmd *cobra.Command) error {
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+	res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{IncludeRequest: includeRequest})
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -651,16 +647,13 @@ func outputScope(cmd *cobra.Command, scopeID string, sessionAddr string, recordA
 		RecordAddr:      recordAddr,
 		IncludeSessions: includeSessions,
 		IncludeRecords:  includeRecords,
+		IncludeRequest:  includeRequest,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.Scope(context.Background(), &req)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -679,14 +672,10 @@ func outputScopesAll(cmd *cobra.Command) error {
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ScopesAll(
 		context.Background(),
-		&types.ScopesAllRequest{Pagination: pageReq},
+		&types.ScopesAllRequest{IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -706,6 +695,7 @@ func outputSessions(cmd *cobra.Command, scopeID, sessionID, recordID, recordName
 		RecordName:     recordName,
 		IncludeScope:   includeScope,
 		IncludeRecords: includeRecords,
+		IncludeRequest: includeRequest,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
@@ -715,10 +705,6 @@ func outputSessions(cmd *cobra.Command, scopeID, sessionID, recordID, recordName
 	}
 	if res == nil || res.Sessions == nil || len(res.Sessions) == 0 {
 		return errors.New("no sessions found")
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -737,14 +723,10 @@ func outputSessionsAll(cmd *cobra.Command) error {
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.SessionsAll(
 		context.Background(),
-		&types.SessionsAllRequest{Pagination: pageReq},
+		&types.SessionsAllRequest{IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -764,16 +746,13 @@ func outputRecords(cmd *cobra.Command, recordAddr string, scopeID string, sessio
 		Name:            name,
 		IncludeScope:    includeScope,
 		IncludeSessions: includeSessions,
+		IncludeRequest:  includeRequest,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.Records(context.Background(), &req)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -792,14 +771,10 @@ func outputRecordsAll(cmd *cobra.Command) error {
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.RecordsAll(
 		context.Background(),
-		&types.RecordsAllRequest{Pagination: pageReq},
+		&types.RecordsAllRequest{IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -818,14 +793,10 @@ func outputOwnership(cmd *cobra.Command, address string) error {
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.Ownership(
 		context.Background(),
-		&types.OwnershipRequest{Address: address, Pagination: pageReq},
+		&types.OwnershipRequest{Address: address, IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -844,14 +815,10 @@ func outputValueOwnership(cmd *cobra.Command, address string) error {
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ValueOwnership(
 		context.Background(),
-		&types.ValueOwnershipRequest{Address: address, Pagination: pageReq},
+		&types.ValueOwnershipRequest{Address: address, IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -868,16 +835,13 @@ func outputScopeSpec(cmd *cobra.Command, specificationID string) error {
 		SpecificationId:      specificationID,
 		IncludeContractSpecs: includeContractSpecs,
 		IncludeRecordSpecs:   includeRecordSpecs,
+		IncludeRequest:       includeRequest,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ScopeSpecification(context.Background(), &req)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -896,14 +860,10 @@ func outputScopeSpecsAll(cmd *cobra.Command) error {
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ScopeSpecificationsAll(
 		context.Background(),
-		&types.ScopeSpecificationsAllRequest{Pagination: pageReq},
+		&types.ScopeSpecificationsAllRequest{IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -919,16 +879,13 @@ func outputContractSpec(cmd *cobra.Command, specificationID string) error {
 	req := types.ContractSpecificationRequest{
 		SpecificationId:    specificationID,
 		IncludeRecordSpecs: includeRecordSpecs,
+		IncludeRequest:     includeRequest,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ContractSpecification(context.Background(), &req)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -947,14 +904,10 @@ func outputContractSpecsAll(cmd *cobra.Command) error {
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ContractSpecificationsAll(
 		context.Background(),
-		&types.ContractSpecificationsAllRequest{Pagination: pageReq},
+		&types.ContractSpecificationsAllRequest{IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -970,16 +923,13 @@ func outputRecordSpec(cmd *cobra.Command, specificationID string, name string) e
 	req := types.RecordSpecificationRequest{
 		SpecificationId: specificationID,
 		Name:            name,
+		IncludeRequest:  includeRequest,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.RecordSpecification(context.Background(), &req)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -994,16 +944,13 @@ func outputRecordSpecsForContractSpec(cmd *cobra.Command, specificationID string
 
 	req := types.RecordSpecificationsForContractSpecificationRequest{
 		SpecificationId: specificationID,
+		IncludeRequest:  includeRequest,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.RecordSpecificationsForContractSpecification(context.Background(), &req)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -1022,14 +969,10 @@ func outputRecordSpecsAll(cmd *cobra.Command) error {
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.RecordSpecificationsAll(
 		context.Background(),
-		&types.RecordSpecificationsAllRequest{Pagination: pageReq},
+		&types.RecordSpecificationsAllRequest{IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -1044,14 +987,10 @@ func outputOSLocatorParams(cmd *cobra.Command) error {
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSLocatorParams(
 		context.Background(),
-		&types.OSLocatorParamsRequest{},
+		&types.OSLocatorParamsRequest{IncludeRequest: includeRequest},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -1066,14 +1005,10 @@ func outputOSLocator(cmd *cobra.Command, owner string) error {
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSLocator(
 		context.Background(),
-		&types.OSLocatorRequest{Owner: owner},
+		&types.OSLocatorRequest{Owner: owner, IncludeRequest: includeRequest},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -1092,14 +1027,10 @@ func outputOSLocatorsByURI(cmd *cobra.Command, uri string) error {
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSLocatorsByURI(
 		context.Background(),
-		&types.OSLocatorsByURIRequest{Uri: uri, Pagination: pageReq},
+		&types.OSLocatorsByURIRequest{Uri: uri, IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -1114,14 +1045,10 @@ func outputOSLocatorsByScope(cmd *cobra.Command, scopeID string) error {
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSLocatorsByScope(
 		context.Background(),
-		&types.OSLocatorsByScopeRequest{ScopeId: scopeID},
+		&types.OSLocatorsByScopeRequest{ScopeId: scopeID, IncludeRequest: includeRequest},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -1140,14 +1067,10 @@ func outputOSLocatorsAll(cmd *cobra.Command) error {
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSAllLocators(
 		context.Background(),
-		&types.OSAllLocatorsRequest{Pagination: pageReq},
+		&types.OSAllLocatorsRequest{IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
