@@ -91,7 +91,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 	ctx := sdk.UnwrapSDKContext(c)
 	scope, found := k.GetScope(ctx, scopeAddr)
 	if found {
-		retval.Scope = types.WrapScope(&scope)
+		retval.Scope = types.WrapScope(&scope, req.IncludeIdInfo)
 	} else {
 		retval.Scope = types.WrapScopeNotFound(scopeAddr)
 	}
@@ -100,7 +100,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 
 	if req.IncludeSessions {
 		err := k.IterateSessions(ctx, scopeAddr, func(session types.Session) (stop bool) {
-			retval.Sessions = append(retval.Sessions, types.WrapSession(&session))
+			retval.Sessions = append(retval.Sessions, types.WrapSession(&session, req.IncludeIdInfo))
 			return false
 		})
 		if err != nil {
@@ -110,7 +110,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 
 	if req.IncludeRecords {
 		err := k.IterateRecords(ctx, scopeAddr, func(record types.Record) (stop bool) {
-			retval.Records = append(retval.Records, types.WrapRecord(&record))
+			retval.Records = append(retval.Records, types.WrapRecord(&record, req.IncludeIdInfo))
 			return false
 		})
 		if err != nil {
@@ -150,7 +150,7 @@ func (k Keeper) ScopesAll(c context.Context, req *types.ScopesAllRequest) (*type
 		var scope types.Scope
 		vErr := scope.Unmarshal(value)
 		if vErr == nil {
-			retval.Scopes = append(retval.Scopes, types.WrapScope(&scope))
+			retval.Scopes = append(retval.Scopes, types.WrapScope(&scope, req.IncludeIdInfo))
 			return nil
 		}
 		// Something's wrong. Let's do what we can to give indications of it.
@@ -268,13 +268,13 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 	case !sessionAddr.Empty():
 		session, found := k.GetSession(ctx, sessionAddr)
 		if found {
-			retval.Sessions = append(retval.Sessions, types.WrapSession(&session))
+			retval.Sessions = append(retval.Sessions, types.WrapSession(&session, req.IncludeIdInfo))
 		} else {
 			retval.Sessions = append(retval.Sessions, types.WrapSessionNotFound(sessionAddr))
 		}
 	case !scopeAddr.Empty():
 		itErr := k.IterateSessions(ctx, scopeAddr, func(s types.Session) (stop bool) {
-			retval.Sessions = append(retval.Sessions, types.WrapSession(&s))
+			retval.Sessions = append(retval.Sessions, types.WrapSession(&s, req.IncludeIdInfo))
 			return false
 		})
 		if itErr != nil {
@@ -287,7 +287,7 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 	if req.IncludeScope {
 		scope, found := k.GetScope(ctx, scopeAddr)
 		if found {
-			retval.Scope = types.WrapScope(&scope)
+			retval.Scope = types.WrapScope(&scope, req.IncludeIdInfo)
 		} else {
 			retval.Scope = types.WrapScopeNotFound(scopeAddr)
 		}
@@ -311,7 +311,7 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 				}
 			}
 			if keep {
-				retval.Records = append(retval.Records, types.WrapRecord(&r))
+				retval.Records = append(retval.Records, types.WrapRecord(&r, req.IncludeIdInfo))
 			}
 			return false
 		})
@@ -338,7 +338,7 @@ func (k Keeper) SessionsAll(c context.Context, req *types.SessionsAllRequest) (*
 		var session types.Session
 		vErr := session.Unmarshal(value)
 		if vErr == nil {
-			retval.Sessions = append(retval.Sessions, types.WrapSession(&session))
+			retval.Sessions = append(retval.Sessions, types.WrapSession(&session, req.IncludeIdInfo))
 			return nil
 		}
 		// Something's wrong. Let's do what we can to give indications of it.
@@ -434,7 +434,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 	case !recordAddr.Empty():
 		record, found := k.GetRecord(ctx, recordAddr)
 		if found {
-			retval.Records = append(retval.Records, types.WrapRecord(&record))
+			retval.Records = append(retval.Records, types.WrapRecord(&record, req.IncludeIdInfo))
 		} else {
 			retval.Records = append(retval.Records, types.WrapRecordNotFound(recordAddr))
 		}
@@ -451,7 +451,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 			haveSessionAddr := !sessionAddr.Empty()
 			for _, r := range records {
 				if !haveSessionAddr || sessionAddr.Equals(r.SessionId) {
-					retval.Records = append(retval.Records, types.WrapRecord(r))
+					retval.Records = append(retval.Records, types.WrapRecord(r, req.IncludeIdInfo))
 				}
 			}
 		}
@@ -462,7 +462,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 	if req.IncludeScope {
 		scope, found := k.GetScope(ctx, scopeAddr)
 		if found {
-			retval.Scope = types.WrapScope(&scope)
+			retval.Scope = types.WrapScope(&scope, req.IncludeIdInfo)
 		} else {
 			retval.Scope = types.WrapScopeNotFound(scopeAddr)
 		}
@@ -489,7 +489,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 		for _, a := range sessionAddrs {
 			session, found := k.GetSession(ctx, a)
 			if found {
-				retval.Sessions = append(retval.Sessions, types.WrapSession(&session))
+				retval.Sessions = append(retval.Sessions, types.WrapSession(&session, req.IncludeIdInfo))
 			} else {
 				retval.Sessions = append(retval.Sessions, types.WrapSessionNotFound(a))
 			}
@@ -514,7 +514,7 @@ func (k Keeper) RecordsAll(c context.Context, req *types.RecordsAllRequest) (*ty
 		var record types.Record
 		vErr := record.Unmarshal(value)
 		if vErr == nil {
-			retval.Records = append(retval.Records, types.WrapRecord(&record))
+			retval.Records = append(retval.Records, types.WrapRecord(&record, req.IncludeIdInfo))
 			return nil
 		}
 		// Something's wrong. Let's do what we can to give indications of it.
@@ -642,7 +642,7 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 	ctx := sdk.UnwrapSDKContext(c)
 	spec, found := k.GetScopeSpecification(ctx, specAddr)
 	if found {
-		retval.ScopeSpecification = types.WrapScopeSpec(&spec)
+		retval.ScopeSpecification = types.WrapScopeSpec(&spec, req.IncludeIdInfo)
 	} else {
 		retval.ScopeSpecification = types.WrapScopeSpecNotFound(specAddr)
 	}
@@ -651,7 +651,7 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 		for _, id := range spec.ContractSpecIds {
 			cs, ok := k.GetContractSpecification(ctx, id)
 			if ok {
-				retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpec(&cs))
+				retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpec(&cs, req.IncludeIdInfo))
 			} else {
 				retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpecNotFound(id))
 			}
@@ -664,7 +664,7 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 			err = k.IterateRecordSpecsForContractSpec(ctx, id, func(recordSpecID types.MetadataAddress) (stop bool) {
 				rs, ok := k.GetRecordSpecification(ctx, recordSpecID)
 				if ok {
-					retval.RecordSpecs = append(retval.RecordSpecs, types.WrapRecordSpec(&rs))
+					retval.RecordSpecs = append(retval.RecordSpecs, types.WrapRecordSpec(&rs, req.IncludeIdInfo))
 				} else {
 					retval.RecordSpecs = append(retval.RecordSpecs, types.WrapRecordSpecNotFound(recordSpecID))
 				}
@@ -695,7 +695,7 @@ func (k Keeper) ScopeSpecificationsAll(c context.Context, req *types.ScopeSpecif
 		var scopeSpec types.ScopeSpecification
 		vErr := scopeSpec.Unmarshal(value)
 		if vErr == nil {
-			retval.ScopeSpecifications = append(retval.ScopeSpecifications, types.WrapScopeSpec(&scopeSpec))
+			retval.ScopeSpecifications = append(retval.ScopeSpecifications, types.WrapScopeSpec(&scopeSpec, req.IncludeIdInfo))
 			return nil
 		}
 		// Something's wrong. Let's do what we can to give indications of it.
@@ -740,7 +740,7 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 	ctx := sdk.UnwrapSDKContext(c)
 	spec, found := k.GetContractSpecification(ctx, specAddr)
 	if found {
-		retval.ContractSpecification = types.WrapContractSpec(&spec)
+		retval.ContractSpecification = types.WrapContractSpec(&spec, req.IncludeIdInfo)
 	} else {
 		retval.ContractSpecification = types.WrapContractSpecNotFound(specAddr)
 	}
@@ -751,7 +751,7 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("error getting record specifications for contract spec %s: %v",
 				specAddr, err)
 		}
-		retval.RecordSpecifications = types.WrapRecordSpecs(recSpecs)
+		retval.RecordSpecifications = types.WrapRecordSpecs(recSpecs, req.IncludeIdInfo)
 	}
 
 	return &retval, nil
@@ -772,7 +772,7 @@ func (k Keeper) ContractSpecificationsAll(c context.Context, req *types.Contract
 		var contractSpec types.ContractSpecification
 		vErr := contractSpec.Unmarshal(value)
 		if vErr == nil {
-			retval.ContractSpecifications = append(retval.ContractSpecifications, types.WrapContractSpec(&contractSpec))
+			retval.ContractSpecifications = append(retval.ContractSpecifications, types.WrapContractSpec(&contractSpec, req.IncludeIdInfo))
 			return nil
 		}
 		// Something's wrong. Let's do what we can to give indications of it.
@@ -830,7 +830,7 @@ func (k Keeper) RecordSpecificationsForContractSpecification(
 			contractSpecAddr, err)
 	}
 
-	retval.RecordSpecifications = types.WrapRecordSpecs(recSpecs)
+	retval.RecordSpecifications = types.WrapRecordSpecs(recSpecs, req.IncludeIdInfo)
 
 	return &retval, err
 }
@@ -856,7 +856,7 @@ func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecific
 	ctx := sdk.UnwrapSDKContext(c)
 	spec, found := k.GetRecordSpecification(ctx, recSpecAddr)
 	if found {
-		retval.RecordSpecification = types.WrapRecordSpec(&spec)
+		retval.RecordSpecification = types.WrapRecordSpec(&spec, req.IncludeIdInfo)
 	} else {
 		retval.RecordSpecification = types.WrapRecordSpecNotFound(recSpecAddr)
 	}
@@ -879,7 +879,7 @@ func (k Keeper) RecordSpecificationsAll(c context.Context, req *types.RecordSpec
 		var recordSpec types.RecordSpecification
 		vErr := recordSpec.Unmarshal(value)
 		if vErr == nil {
-			retval.RecordSpecifications = append(retval.RecordSpecifications, types.WrapRecordSpec(&recordSpec))
+			retval.RecordSpecifications = append(retval.RecordSpecifications, types.WrapRecordSpec(&recordSpec, req.IncludeIdInfo))
 			return nil
 		}
 		// Something's wrong. Let's do what we can to give indications of it.

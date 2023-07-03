@@ -254,7 +254,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		},
 		{
 			name:    "only scope id as uuid exists - results",
-			req:     &types.SessionsRequest{ScopeId: s.scopeUUID.String()},
+			req:     &types.SessionsRequest{ScopeId: s.scopeUUID.String(), IncludeIdInfo: true},
 			count:   &ten,
 			scopeID: s.scopeID,
 		},
@@ -703,6 +703,9 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 			checkExactCount := tc.count != nil
 			checkScopeIds := len(tc.scopeID) > 0
 			checkSessionIds := len(tc.sessionID) > 0
+			if checkScopeIds || checkSessionIds && tc.req != nil {
+				tc.req.IncludeIdInfo = true
+			}
 			sr, err := queryClient.Sessions(gocontext.Background(), tc.req)
 			if expectError {
 				assert.EqualError(t, err, tc.err, "expected error")
@@ -745,7 +748,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		assert.Equal(t, s.scopeID, sr.Scope.Scope.ScopeId, "scope id")
 	})
 	s.T().Run("include records", func(t *testing.T) {
-		req := types.SessionsRequest{SessionId: s.sessionID.String(), IncludeRecords: true}
+		req := types.SessionsRequest{SessionId: s.sessionID.String(), IncludeRecords: true, IncludeIdInfo: true}
 		sr, err := queryClient.Sessions(gocontext.Background(), &req)
 		require.NoErrorf(t, err, "unexpected error: %s", err)
 		require.NotNil(t, sr, "result of Sessions query")
@@ -756,8 +759,8 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		assert.Equal(t, s.sessionID, sr.Records[0].Record.SessionId, "session id")
 		assert.Equal(t, s.recordName, sr.Records[0].Record.Name, "record name")
 	})
-	s.T().Run("iinclude both scope and records", func(t *testing.T) {
-		req := types.SessionsRequest{SessionId: s.sessionID.String(), IncludeScope: true, IncludeRecords: true}
+	s.T().Run("include both scope and records", func(t *testing.T) {
+		req := types.SessionsRequest{SessionId: s.sessionID.String(), IncludeScope: true, IncludeRecords: true, IncludeIdInfo: true}
 		sr, err := queryClient.Sessions(gocontext.Background(), &req)
 		require.NoErrorf(t, err, "unexpected error: %s", err)
 		require.NotNil(t, sr, "result of Sessions query")
@@ -769,6 +772,36 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		assert.Equal(t, s.scopeID, sr.Records[0].RecordIdInfo.ScopeIdInfo.ScopeId, "scope id")
 		assert.Equal(t, s.sessionID, sr.Records[0].Record.SessionId, "session id")
 		assert.Equal(t, s.recordName, sr.Records[0].Record.Name, "record name")
+	})
+	s.T().Run("include both scope and records without id info", func(t *testing.T) {
+		req := types.SessionsRequest{SessionId: s.sessionID.String(), IncludeScope: true, IncludeRecords: true}
+		sr, err := queryClient.Sessions(gocontext.Background(), &req)
+		require.NoErrorf(t, err, "unexpected error: %s", err)
+		require.NotNil(t, sr, "result of Sessions query")
+
+		if assert.NotNil(t, sr.Scope, "scope wrapper") {
+			assert.NotNil(t, sr.Scope.Scope, "the scope")
+			assert.Nil(t, sr.Scope.ScopeIdInfo, "scope id info")
+			assert.Nil(t, sr.Scope.ScopeSpecIdInfo, "scope spec id info")
+		}
+
+		if assert.Len(t, sr.Sessions, 1, "sessions") {
+			sw := sr.Sessions[0]
+			if assert.NotNil(t, sw, "session wrapper") {
+				assert.NotNil(t, sw.Session, "the session")
+				assert.Nil(t, sw.SessionIdInfo, "session id info")
+				assert.Nil(t, sw.ContractSpecIdInfo, "contract spec id info")
+			}
+		}
+
+		if assert.Len(t, sr.Records, 1, "records") {
+			rw := sr.Records[0]
+			if assert.NotNil(t, rw, "record wrapper") {
+				assert.NotNil(t, rw.Record, "the record")
+				assert.Nil(t, rw.RecordIdInfo, "record id info")
+				assert.Nil(t, rw.RecordSpecIdInfo, "record spec id info")
+			}
+		}
 	})
 }
 
@@ -796,26 +829,26 @@ func (s *QueryServerTestSuite) TestRecordsQuery() {
 
 	// TODO: expand this to test new features/failures of the Records query.
 
-	rsUUID, err := queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: scopeUUID.String()})
+	rsUUID, err := queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: scopeUUID.String(), IncludeIdInfo: true})
 	s.NoError(err)
 	s.Equal(10, len(rsUUID.Records), "should be 10 records in set for record query by scope uuid")
 	s.Equal(scopeUUID.String(), rsUUID.Records[0].RecordIdInfo.ScopeIdInfo.ScopeUuid)
 	s.Equal(scopeID.String(), rsUUID.Records[0].RecordIdInfo.ScopeIdInfo.ScopeAddr)
 
-	rsUUID2, err2 := queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: scopeUUID.String(), Name: recordNames[0]})
+	rsUUID2, err2 := queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: scopeUUID.String(), Name: recordNames[0], IncludeIdInfo: true})
 	s.NoError(err2)
 	s.Equal(1, len(rsUUID2.Records), "should be 1 record in set for record query by scope uuid")
 	s.Equal(scopeUUID.String(), rsUUID2.Records[0].RecordIdInfo.ScopeIdInfo.ScopeUuid)
 	s.Equal(scopeID.String(), rsUUID2.Records[0].RecordIdInfo.ScopeIdInfo.ScopeAddr)
 	s.Equal(recordNames[0], rsUUID2.Records[0].Record.Name)
 
-	rsID, err := queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: scopeID.String()})
+	rsID, err := queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: scopeID.String(), IncludeIdInfo: true})
 	s.NoError(err)
 	s.Equal(10, len(rsID.Records), "should be 10 records in set for record query by scope id")
 	s.Equal(scopeUUID.String(), rsID.Records[0].RecordIdInfo.ScopeIdInfo.ScopeUuid)
 	s.Equal(scopeID.String(), rsID.Records[0].RecordIdInfo.ScopeIdInfo.ScopeAddr)
 
-	rsID, err = queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: scopeID.String(), Name: recordNames[0]})
+	rsID, err = queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: scopeID.String(), Name: recordNames[0], IncludeIdInfo: true})
 	s.NoError(err)
 	s.Equal(1, len(rsID.Records), "should be 1 record in set for record query by scope id")
 	s.Equal(scopeUUID.String(), rsID.Records[0].RecordIdInfo.ScopeIdInfo.ScopeUuid)
