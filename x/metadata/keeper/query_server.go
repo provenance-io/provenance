@@ -903,6 +903,70 @@ func (k Keeper) RecordSpecificationsAll(c context.Context, req *types.RecordSpec
 	return &retval, nil
 }
 
+// GetByAddr retrieves metadata given any address(es).
+func (k Keeper) GetByAddr(c context.Context, req *types.GetByAddrRequest) (*types.GetByAddrResponse, error) {
+	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "GetByAddr")
+	if req == nil || len(req.Addrs) == 0 {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	retval := &types.GetByAddrResponse{}
+	for _, addr := range req.Addrs {
+		id, hrp, err := types.ParseMetadataAddressFromBech32(addr)
+		if err != nil {
+			retval.NotFound = append(retval.NotFound, addr)
+			continue
+		}
+		switch hrp {
+		case types.PrefixScope:
+			scope, found := k.GetScope(ctx, id)
+			if found {
+				retval.Scopes = append(retval.Scopes, &scope)
+			} else {
+				retval.NotFound = append(retval.NotFound, addr)
+			}
+		case types.PrefixSession:
+			session, found := k.GetSession(ctx, id)
+			if found {
+				retval.Sessions = append(retval.Sessions, &session)
+			} else {
+				retval.NotFound = append(retval.NotFound, addr)
+			}
+		case types.PrefixRecord:
+			record, found := k.GetRecord(ctx, id)
+			if found {
+				retval.Records = append(retval.Records, &record)
+			} else {
+				retval.NotFound = append(retval.NotFound, addr)
+			}
+		case types.PrefixScopeSpecification:
+			spec, found := k.GetScopeSpecification(ctx, id)
+			if found {
+				retval.ScopeSpecs = append(retval.ScopeSpecs, &spec)
+			} else {
+				retval.NotFound = append(retval.NotFound, addr)
+			}
+		case types.PrefixContractSpecification:
+			spec, found := k.GetContractSpecification(ctx, id)
+			if found {
+				retval.ContractSpecs = append(retval.ContractSpecs, &spec)
+			} else {
+				retval.NotFound = append(retval.NotFound, addr)
+			}
+		case types.PrefixRecordSpecification:
+			spec, found := k.GetRecordSpecification(ctx, id)
+			if found {
+				retval.RecordSpecs = append(retval.RecordSpecs, &spec)
+			} else {
+				retval.NotFound = append(retval.NotFound, addr)
+			}
+		}
+	}
+
+	return retval, nil
+}
+
 func (k Keeper) OSLocatorParams(c context.Context, request *types.OSLocatorParamsRequest) (*types.OSLocatorParamsResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSLocatorParams")
 	ctx := sdk.UnwrapSDKContext(c)

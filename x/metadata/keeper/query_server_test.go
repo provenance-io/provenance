@@ -908,6 +908,341 @@ func (s *QueryServerTestSuite) TestScopeSpecificationQuery() {
 // TODO: RecordSpecificationsForContractSpecification tests
 // TODO: RecordSpecification tests
 // TODO: RecordSpecificationsAll tests
+
+func (s *QueryServerTestSuite) TestGetByAddr() {
+	recordName := "myrecord"
+	uuids := []uuid.UUID{
+		uuid.MustParse("7D3D0BFA-44CF-4536-888F-DEBF28ACC887"),
+		uuid.MustParse("30FE5269-27F6-44AC-B900-BD13879932C3"),
+		uuid.MustParse("8FA0F897-28C5-43D0-AC55-CC950A79AC9E"),
+		uuid.MustParse("036E7E4C-014C-4103-A9F4-5759981D9CE8"),
+		uuid.MustParse("1A0C65EC-C512-43B0-8F90-9CCF59A54FDE"),
+		uuid.MustParse("F757BA39-ED71-4CE5-9FE9-A77659CEAC40"),
+		uuid.MustParse("3B5F6C64-8A08-4EEB-BAE5-A92D18332DA9"),
+		uuid.MustParse("A8BC40DE-A280-4599-8C8A-7A00B0A47CBA"),
+	}
+
+	scopeID1 := types.ScopeMetadataAddress(uuids[0])               // scope1qp7n6zl6gn852d5g3l0t729vezrsq304wz
+	sessionID1 := types.SessionMetadataAddress(uuids[0], uuids[1]) // session1q97n6zl6gn852d5g3l0t729vezrnpljjdynlv39vhyqt6yu8nyevxx7k828
+	recordID1 := types.RecordMetadataAddress(uuids[0], recordName) // record1qf7n6zl6gn852d5g3l0t729vezr7hw7d4pu05x7tj9hjcr4sla9v6fxd4pw
+
+	scopeID2 := types.ScopeMetadataAddress(uuids[2])               // scope1qz86p7yh9rz5859v2hxf2zne4j0qef5nle
+	sessionID2 := types.SessionMetadataAddress(uuids[2], uuids[3]) // session1qx86p7yh9rz5859v2hxf2zne4j0qxmn7fsq5csgr4869wkvcrkwws2wefy6
+	recordID2 := types.RecordMetadataAddress(uuids[2], recordName) // record1q286p7yh9rz5859v2hxf2zne4j0whw7d4pu05x7tj9hjcr4sla9v6dur3el
+
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuids[4])            // scopespec1qsdqce0vc5fy8vy0jzwv7kd9fl0qknw7xs
+	cSpecID := types.ContractSpecMetadataAddress(uuids[5])             // contractspec1q0m40w3ea4c5eevlaxnhvkww43qq7adrfr
+	recSpecID := types.RecordSpecMetadataAddress(uuids[5], recordName) // recspec1qhm40w3ea4c5eevlaxnhvkww43qwhw7d4pu05x7tj9hjcr4sla9v64sc2mh
+
+	scopeIDDNE := types.ScopeMetadataAddress(uuids[6])                    // scope1qqa47mry3gyya6a6uk5j6xpn9k5skuvtxy
+	sessionIDDNE := types.SessionMetadataAddress(uuids[6], uuids[7])      // session1qya47mry3gyya6a6uk5j6xpn9k5630zqm63gq3ve3j985q9s537t5q3pgyg
+	recordIDDNE := types.RecordMetadataAddress(uuids[6], recordName)      // record1qga47mry3gyya6a6uk5j6xpn9k57hw7d4pu05x7tj9hjcr4sla9v6xkxzus
+	scopeSpecIDDNE := types.ScopeSpecMetadataAddress(uuids[6])            // scopespec1qsa47mry3gyya6a6uk5j6xpn9k5sc649p3
+	cSpecIDDNE := types.ContractSpecMetadataAddress(uuids[6])             // contractspec1qva47mry3gyya6a6uk5j6xpn9k5s6h5s78
+	recSpecIDDNE := types.RecordSpecMetadataAddress(uuids[6], recordName) // recspec1q5a47mry3gyya6a6uk5j6xpn9k57hw7d4pu05x7tj9hjcr4sla9v6negyuq
+
+	ownerAddr := sdk.AccAddress("ownerAddr___________").String() // cosmos1damkuetjg9jxgujlta047h6lta047h6lmp9nkx
+
+	scopeSpec := types.ScopeSpecification{
+		SpecificationId: scopeSpecID,
+		Description: &types.Description{
+			Name:        "myTestScopeSpec",
+			Description: "my test scope spec",
+			WebsiteUrl:  "http://example.com",
+		},
+		OwnerAddresses:  []string{ownerAddr},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		ContractSpecIds: []types.MetadataAddress{cSpecID},
+	}
+	cSpec := types.ContractSpecification{
+		SpecificationId: cSpecID,
+		Description: &types.Description{
+			Name:        "myTestContractSpec",
+			Description: "my test contract spec",
+			WebsiteUrl:  "http://example.com",
+		},
+		OwnerAddresses:  scopeSpec.OwnerAddresses,
+		PartiesInvolved: scopeSpec.PartiesInvolved,
+		Source:          &types.ContractSpecification_Hash{Hash: "1845ca13f061fc68f2343bba7f6be3be"}, // printf 'mycspec' | md5sum
+		ClassName:       "myclass",
+	}
+	recSpec := types.RecordSpecification{
+		SpecificationId: recSpecID,
+		Name:            recordName,
+		Inputs: []*types.InputSpecification{
+			{
+				Name:     "myinput",
+				TypeName: "string",
+				Source:   &types.InputSpecification_Hash{Hash: "8bf572e7226b661b87d47458b5aec2a7"},
+			},
+		},
+		TypeName:           "myRecordType",
+		ResultType:         types.DefinitionType_DEFINITION_TYPE_PROPOSED,
+		ResponsibleParties: cSpec.PartiesInvolved,
+	}
+
+	scope1 := types.Scope{
+		ScopeId:           scopeID1,
+		SpecificationId:   scopeSpecID,
+		Owners:            []types.Party{{Address: ownerAddr, Role: types.PartyType_PARTY_TYPE_OWNER}},
+		ValueOwnerAddress: ownerAddr,
+	}
+	scope2 := types.Scope{
+		ScopeId:           scopeID2,
+		SpecificationId:   scopeSpecID,
+		Owners:            []types.Party{{Address: ownerAddr, Role: types.PartyType_PARTY_TYPE_OWNER}},
+		ValueOwnerAddress: ownerAddr,
+	}
+	session1 := types.Session{
+		SessionId:       sessionID1,
+		SpecificationId: cSpecID,
+		Parties:         scope1.Owners,
+		Name:            "mysession",
+	}
+	session1.Audit = session1.Audit.UpdateAudit(time.Unix(1650450000, 0).UTC(), ownerAddr, "test update")
+	session2 := types.Session{
+		SessionId:       sessionID2,
+		SpecificationId: cSpecID,
+		Parties:         scope2.Owners,
+		Name:            "mysession",
+	}
+	session2.Audit = session2.Audit.UpdateAudit(time.Unix(1650450001, 0).UTC(), ownerAddr, "test update")
+	record1 := types.Record{
+		Name:      recordName,
+		SessionId: sessionID1,
+		Process: types.Process{
+			ProcessId: &types.Process_Hash{Hash: "528706d1dfad2c63d619297c005cc841"}, // printf 'myrecord' | md5sum
+			Name:      "myproc",
+			Method:    "mymethod",
+		},
+		Inputs: []types.RecordInput{
+			{
+				Name:     recSpec.Inputs[0].Name,
+				Source:   &types.RecordInput_Hash{Hash: "8bf572e7226b661b87d47458b5aec2a7"}, // printf 'myinput' | md5sum
+				TypeName: recSpec.Inputs[0].TypeName,
+				Status:   types.RecordInputStatus_Proposed,
+			},
+		},
+		Outputs: []types.RecordOutput{
+			{
+				Hash:   "b7aebd675ceb38fcb6c11289c6ae5216", // printf 'myoutput' | md5sum
+				Status: types.ResultStatus_RESULT_STATUS_PASS,
+			},
+		},
+		SpecificationId: recSpecID,
+	}
+	record2 := types.Record{
+		Name:      recordName,
+		SessionId: sessionID2,
+		Process: types.Process{
+			ProcessId: &types.Process_Hash{Hash: "ac39c3a10703a3a7fae08207216a56d1"}, // printf 'myrecord2' | md5sum
+			Name:      "myproc",
+			Method:    "mymethod",
+		},
+		Inputs: []types.RecordInput{
+			{
+				Name:     recSpec.Inputs[0].Name,
+				Source:   &types.RecordInput_Hash{Hash: "8bf572e7226b661b87d47458b5aec2a7"}, // printf 'myinput' | md5sum
+				TypeName: recSpec.Inputs[0].TypeName,
+				Status:   types.RecordInputStatus_Proposed,
+			},
+		},
+		Outputs: []types.RecordOutput{
+			{
+				Hash:   "240bd2d0c49dc033e5de33679b434108", // printf 'myoutput2' | md5sum
+				Status: types.ResultStatus_RESULT_STATUS_PASS,
+			},
+		},
+		SpecificationId: recSpecID,
+	}
+
+	s.app.MetadataKeeper.SetContractSpecification(s.ctx, cSpec)
+	s.app.MetadataKeeper.SetRecordSpecification(s.ctx, recSpec)
+	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, scopeSpec)
+
+	s.app.MetadataKeeper.SetScope(s.ctx, scope1)
+	s.app.MetadataKeeper.SetSession(s.ctx, session1)
+	s.app.MetadataKeeper.SetRecord(s.ctx, record1)
+	s.app.MetadataKeeper.SetScope(s.ctx, scope2)
+	s.app.MetadataKeeper.SetSession(s.ctx, session2)
+	s.app.MetadataKeeper.SetRecord(s.ctx, record2)
+
+	req := func(addrs ...string) *types.GetByAddrRequest {
+		return &types.GetByAddrRequest{Addrs: addrs}
+	}
+
+	tests := []struct {
+		name    string
+		req     *types.GetByAddrRequest
+		expResp *types.GetByAddrResponse
+		expErr  string
+	}{
+		{
+			name:   "nil req",
+			req:    nil,
+			expErr: "empty request: invalid request",
+		},
+		{
+			name:   "no addrs",
+			req:    req(),
+			expErr: "empty request: invalid request",
+		},
+		{
+			name:    "one addr bad",
+			req:     req("notanaddr"),
+			expResp: &types.GetByAddrResponse{NotFound: []string{"notanaddr"}},
+		},
+		{
+			name:    "one addr scope found",
+			req:     req(scopeID1.String()),
+			expResp: &types.GetByAddrResponse{Scopes: []*types.Scope{&scope1}},
+		},
+		{
+			name:    "one addr scope not found",
+			req:     req(scopeIDDNE.String()),
+			expResp: &types.GetByAddrResponse{NotFound: []string{scopeIDDNE.String()}},
+		},
+		{
+			name:    "one addr session found",
+			req:     req(sessionID1.String()),
+			expResp: &types.GetByAddrResponse{Sessions: []*types.Session{&session1}},
+		},
+		{
+			name:    "one addr session not found",
+			req:     req(sessionIDDNE.String()),
+			expResp: &types.GetByAddrResponse{NotFound: []string{sessionIDDNE.String()}},
+		},
+		{
+			name:    "one addr record found",
+			req:     req(recordID1.String()),
+			expResp: &types.GetByAddrResponse{Records: []*types.Record{&record1}},
+		},
+		{
+			name:    "one addr record not found",
+			req:     req(recordIDDNE.String()),
+			expResp: &types.GetByAddrResponse{NotFound: []string{recordIDDNE.String()}},
+		},
+		{
+			name:    "one addr scope spec found",
+			req:     req(scopeSpecID.String()),
+			expResp: &types.GetByAddrResponse{ScopeSpecs: []*types.ScopeSpecification{&scopeSpec}},
+		},
+		{
+			name:    "one addr scope spec not found",
+			req:     req(scopeSpecIDDNE.String()),
+			expResp: &types.GetByAddrResponse{NotFound: []string{scopeSpecIDDNE.String()}},
+		},
+		{
+			name:    "one addr contract spec found",
+			req:     req(cSpecID.String()),
+			expResp: &types.GetByAddrResponse{ContractSpecs: []*types.ContractSpecification{&cSpec}},
+		},
+		{
+			name:    "one addr contract spec not found",
+			req:     req(cSpecIDDNE.String()),
+			expResp: &types.GetByAddrResponse{NotFound: []string{cSpecIDDNE.String()}},
+		},
+		{
+			name:    "one addr record spec found",
+			req:     req(recSpecID.String()),
+			expResp: &types.GetByAddrResponse{RecordSpecs: []*types.RecordSpecification{&recSpec}},
+		},
+		{
+			name:    "one addr record spec not found",
+			req:     req(recSpecIDDNE.String()),
+			expResp: &types.GetByAddrResponse{NotFound: []string{recSpecIDDNE.String()}},
+		},
+		{
+			name: "two scopes found one not",
+			req:  req(scopeIDDNE.String(), scopeID2.String(), scopeID1.String()),
+			expResp: &types.GetByAddrResponse{
+				Scopes:   []*types.Scope{&scope2, &scope1},
+				NotFound: []string{scopeIDDNE.String()},
+			},
+		},
+		{
+			name: "two sessions found one not",
+			req:  req(sessionIDDNE.String(), sessionID2.String(), sessionID1.String()),
+			expResp: &types.GetByAddrResponse{
+				Sessions: []*types.Session{&session2, &session1},
+				NotFound: []string{sessionIDDNE.String()},
+			},
+		},
+		{
+			name: "two records found one not",
+			req:  req(recordIDDNE.String(), recordID2.String(), recordID1.String()),
+			expResp: &types.GetByAddrResponse{
+				Records:  []*types.Record{&record2, &record1},
+				NotFound: []string{recordIDDNE.String()},
+			},
+		},
+		{
+			name: "scope session and record",
+			req:  req(scopeID1.String(), sessionID1.String(), recordID1.String()),
+			expResp: &types.GetByAddrResponse{
+				Scopes:   []*types.Scope{&scope1},
+				Sessions: []*types.Session{&session1},
+				Records:  []*types.Record{&record1},
+			},
+		},
+		{
+			name: "scope spec contract spec and record spec",
+			req:  req(scopeSpecID.String(), cSpecID.String(), recSpecID.String()),
+			expResp: &types.GetByAddrResponse{
+				ScopeSpecs:    []*types.ScopeSpecification{&scopeSpec},
+				ContractSpecs: []*types.ContractSpecification{&cSpec},
+				RecordSpecs:   []*types.RecordSpecification{&recSpec},
+			},
+		},
+		{
+			name: "everything and then some",
+			req: req(
+				cSpecID.String(), scopeID1.String(), recordID1.String(),
+				cSpecIDDNE.String(), recordIDDNE.String(), "badaddr",
+				recSpecID.String(), scopeSpecID.String(), sessionID2.String(),
+				recordID2.String(), sessionID1.String(), "addrnotfound",
+				sessionIDDNE.String(), "anothernotfound", recSpecIDDNE.String(),
+				scopeID2.String(), scopeSpecIDDNE.String(), scopeIDDNE.String(),
+			),
+			expResp: &types.GetByAddrResponse{
+				Scopes:        []*types.Scope{&scope1, &scope2},
+				Sessions:      []*types.Session{&session2, &session1},
+				Records:       []*types.Record{&record1, &record2},
+				ScopeSpecs:    []*types.ScopeSpecification{&scopeSpec},
+				ContractSpecs: []*types.ContractSpecification{&cSpec},
+				RecordSpecs:   []*types.RecordSpecification{&recSpec},
+				NotFound: []string{
+					cSpecIDDNE.String(), recordIDDNE.String(), "badaddr",
+					"addrnotfound", sessionIDDNE.String(), "anothernotfound",
+					recSpecIDDNE.String(), scopeSpecIDDNE.String(), scopeIDDNE.String(),
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			resp, err := s.queryClient.GetByAddr(s.ctx, tc.req)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "GetByAddr error")
+			} else {
+				s.Assert().NoError(err, "GetByAddr error")
+			}
+			if tc.expResp == nil {
+				s.Assert().Nil(resp, "GetByAddr response")
+			} else {
+				s.Assert().Equal(tc.expResp.Scopes, resp.Scopes, "GetByAddr response Scopes")
+				s.Assert().Equal(tc.expResp.Sessions, resp.Sessions, "GetByAddr response Sessions")
+				s.Assert().Equal(tc.expResp.Records, resp.Records, "GetByAddr response Records")
+				s.Assert().Equal(tc.expResp.ScopeSpecs, resp.ScopeSpecs, "GetByAddr response ScopeSpecs")
+				s.Assert().Equal(tc.expResp.ContractSpecs, resp.ContractSpecs, "GetByAddr response ContractSpecs")
+				s.Assert().Equal(tc.expResp.RecordSpecs, resp.RecordSpecs, "GetByAddr response RecordSpecs")
+				s.Assert().Equal(tc.expResp.NotFound, resp.NotFound, "GetByAddr response NotFound")
+			}
+		})
+	}
+}
+
 // TODO: OSLocatorParams tests
 // TODO: OSLocator tests
 // TODO: OSLocatorsByURI tests
