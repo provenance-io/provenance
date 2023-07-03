@@ -3,12 +3,14 @@ package types
 // -------------- ScopeWrapper --------------
 
 // WrapScope wraps a scope in a ScopeWrapper and populates the _addr and _uuid fields.
-func WrapScope(scope *Scope) *ScopeWrapper {
+func WrapScope(scope *Scope, includeIDInfo bool) *ScopeWrapper {
 	wrapper := ScopeWrapper{}
 	if scope != nil {
 		wrapper.Scope = scope
-		wrapper.ScopeIdInfo = GetScopeIDInfo(scope.ScopeId)
-		wrapper.ScopeSpecIdInfo = GetScopeSpecIDInfo(scope.SpecificationId)
+		if includeIDInfo {
+			wrapper.ScopeIdInfo = GetScopeIDInfo(scope.ScopeId)
+			wrapper.ScopeSpecIdInfo = GetScopeSpecIDInfo(scope.SpecificationId)
+		}
 	}
 	return &wrapper
 }
@@ -23,12 +25,14 @@ func WrapScopeNotFound(scopeAddr MetadataAddress) *ScopeWrapper {
 // -------------- SessionWrapper --------------
 
 // WrapSession wraps a session in a SessionWrapper and populates the _addr and _uuid fields.
-func WrapSession(session *Session) *SessionWrapper {
+func WrapSession(session *Session, includeIDInfo bool) *SessionWrapper {
 	wrapper := SessionWrapper{}
 	if session != nil {
 		wrapper.Session = session
-		wrapper.SessionIdInfo = GetSessionIDInfo(session.SessionId)
-		wrapper.ContractSpecIdInfo = GetContractSpecIDInfo(session.SpecificationId)
+		if includeIDInfo {
+			wrapper.SessionIdInfo = GetSessionIDInfo(session.SessionId)
+			wrapper.ContractSpecIdInfo = GetContractSpecIDInfo(session.SpecificationId)
+		}
 	}
 	return &wrapper
 }
@@ -43,12 +47,14 @@ func WrapSessionNotFound(sessionAddr MetadataAddress) *SessionWrapper {
 // -------------- RecordWrapper --------------
 
 // WrapRecord wraps a record in a RecordWrapper and populates the _addr and _uuid fields.
-func WrapRecord(record *Record) *RecordWrapper {
+func WrapRecord(record *Record, includeIDInfo bool) *RecordWrapper {
 	wrapper := RecordWrapper{}
 	if record != nil {
 		wrapper.Record = record
-		wrapper.RecordIdInfo = GetRecordIDInfo(record.GetRecordAddress())
-		wrapper.RecordSpecIdInfo = GetRecordSpecIDInfo(record.SpecificationId)
+		if includeIDInfo {
+			wrapper.RecordIdInfo = GetRecordIDInfo(record.GetRecordAddress())
+			wrapper.RecordSpecIdInfo = GetRecordSpecIDInfo(record.SpecificationId)
+		}
 	}
 	return &wrapper
 }
@@ -63,11 +69,13 @@ func WrapRecordNotFound(recordAddr MetadataAddress) *RecordWrapper {
 // -------------- ScopeSpecificationWrapper --------------
 
 // WrapScopeSpec wraps a scope specification in a ScopeSpecificationWrapper and populates the _addr and _uuid fields.
-func WrapScopeSpec(spec *ScopeSpecification) *ScopeSpecificationWrapper {
+func WrapScopeSpec(spec *ScopeSpecification, includeIDInfo bool) *ScopeSpecificationWrapper {
 	wrapper := ScopeSpecificationWrapper{}
 	if spec != nil {
 		wrapper.Specification = spec
-		wrapper.ScopeSpecIdInfo = GetScopeSpecIDInfo(spec.SpecificationId)
+		if includeIDInfo {
+			wrapper.ScopeSpecIdInfo = GetScopeSpecIDInfo(spec.SpecificationId)
+		}
 	}
 	return &wrapper
 }
@@ -82,11 +90,13 @@ func WrapScopeSpecNotFound(ma MetadataAddress) *ScopeSpecificationWrapper {
 // -------------- ContractSpecificationWrapper --------------
 
 // WrapContractSpec wraps a contract specification in a ContractSpecificationWrapper and populates the _addr and _uuid fields.
-func WrapContractSpec(spec *ContractSpecification) *ContractSpecificationWrapper {
+func WrapContractSpec(spec *ContractSpecification, includeIDInfo bool) *ContractSpecificationWrapper {
 	wrapper := ContractSpecificationWrapper{}
 	if spec != nil {
 		wrapper.Specification = spec
-		wrapper.ContractSpecIdInfo = GetContractSpecIDInfo(spec.SpecificationId)
+		if includeIDInfo {
+			wrapper.ContractSpecIdInfo = GetContractSpecIDInfo(spec.SpecificationId)
+		}
 	}
 	return &wrapper
 }
@@ -101,19 +111,21 @@ func WrapContractSpecNotFound(ma MetadataAddress) *ContractSpecificationWrapper 
 // -------------- RecordSpecificationWrapper --------------
 
 // WrapRecordSpec wraps a record specification in a RecordSpecificationWrapper and populates the _addr and _uuid fields.
-func WrapRecordSpec(spec *RecordSpecification) *RecordSpecificationWrapper {
+func WrapRecordSpec(spec *RecordSpecification, includeIDInfo bool) *RecordSpecificationWrapper {
 	wrapper := RecordSpecificationWrapper{}
 	if spec != nil {
 		wrapper.Specification = spec
-		wrapper.RecordSpecIdInfo = GetRecordSpecIDInfo(spec.SpecificationId)
+		if includeIDInfo {
+			wrapper.RecordSpecIdInfo = GetRecordSpecIDInfo(spec.SpecificationId)
+		}
 	}
 	return &wrapper
 }
 
-func WrapRecordSpecs(specs []*RecordSpecification) []*RecordSpecificationWrapper {
+func WrapRecordSpecs(specs []*RecordSpecification, includeIDInfo bool) []*RecordSpecificationWrapper {
 	retval := make([]*RecordSpecificationWrapper, len(specs))
 	for i, s := range specs {
-		retval[i] = WrapRecordSpec(s)
+		retval[i] = WrapRecordSpec(s, includeIDInfo)
 	}
 	return retval
 }
