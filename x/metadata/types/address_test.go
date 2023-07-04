@@ -420,7 +420,7 @@ func (s *AddressTestSuite) TestVerifyMetadataAddressFormat() {
 	}
 }
 
-func (s *AddressTestSuite) TestParseMetadataAddressFromBech32() {
+func (s *AddressTestSuite) TestMetadataAddressFromBech32() {
 	notAScopeAddr := MetadataAddress{ScopeKeyPrefix[0], 1, 2, 3}
 	notAScopeAddrStr, err := bech32.ConvertAndEncode(PrefixScope, notAScopeAddr)
 	s.Require().NoError(err, "ConvertAndEncode notAScopeAddrStr")
@@ -535,6 +535,14 @@ func (s *AddressTestSuite) TestParseMetadataAddressFromBech32() {
 			}
 			s.Assert().Equal(tc.expAddr, addr, "ParseMetadataAddressFromBech32 address")
 			s.Assert().Equal(tc.expHRP, hrp, "ParseMetadataAddressFromBech32 HRP")
+
+			addr, err = MetadataAddressFromBech32(tc.input)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "MetadataAddressFromBech32 error")
+			} else {
+				s.Assert().NoError(err, "MetadataAddressFromBech32 error")
+			}
+			s.Assert().Equal(tc.expAddr, addr, "MetadataAddressFromBech32 address")
 		})
 	}
 }
