@@ -37,7 +37,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Features
+
+* New `GetByAddr` metadata query [#1443](https://github.com/provenance-io/provenance/issues/1443).
+
+### Improvements
+
+* Updated metadata queries to optionally include the request and id info [#1443](https://github.com/provenance-io/provenance/issues/1443).
+
+### Client Breaking
+
+* Metadata queries no longer include the request and id info by default [#1443](https://github.com/provenance-io/provenance/issues/1443).
+* The `provenanced query metadata get` command has been changed to use the new `GetByAddr` query [#1443](https://github.com/provenance-io/provenance/issues/1443).
+  The command can now take in multiple ids.
+  The output of this command reflects the `GetByAddrResponse` instead of specific type queries.
+  The command no longer has any `--include-<thing>` flags since they don't pertain to the `GetByAddr` query.
+  The specific queries (e.g. `provenanced query metadata scope`) are still available with all appropriate flags.
 
 ---
 
