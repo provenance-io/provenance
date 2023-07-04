@@ -1035,6 +1035,8 @@ func (k Keeper) GetByAddr(c context.Context, req *types.GetByAddrRequest) (*type
 			} else {
 				retval.NotFound = append(retval.NotFound, addr)
 			}
+		default:
+			retval.NotFound = append(retval.NotFound, addr)
 		}
 	}
 
