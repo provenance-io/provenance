@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/metadata/keeper"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/stretchr/testify/assert"
@@ -976,6 +977,11 @@ func (s *QueryServerTestSuite) TestGetByAddr() {
 
 	ownerAddr := sdk.AccAddress("ownerAddr___________").String() // cosmos1damkuetjg9jxgujlta047h6lta047h6lmp9nkx
 
+	tooManyAddrs := make([]string, keeper.MaxGetByAddrAddrs+1)
+	for i := range tooManyAddrs {
+		tooManyAddrs[i] = types.ScopeMetadataAddress(uuid.New()).String()
+	}
+
 	scopeSpec := types.ScopeSpecification{
 		SpecificationId: scopeSpecID,
 		Description: &types.Description{
@@ -1119,6 +1125,16 @@ func (s *QueryServerTestSuite) TestGetByAddr() {
 			name:   "no addrs",
 			req:    req(),
 			expErr: "empty request: invalid request",
+		},
+		{
+			name:   "too many addresses",
+			req:    req(tooManyAddrs...),
+			expErr: fmt.Sprintf("too many addresses: have %d, max %d: invalid request", len(tooManyAddrs), keeper.MaxGetByAddrAddrs),
+		},
+		{
+			name:    "maximum addresses",
+			req:     req(tooManyAddrs[:keeper.MaxGetByAddrAddrs]...),
+			expResp: &types.GetByAddrResponse{NotFound: tooManyAddrs[:keeper.MaxGetByAddrAddrs]},
 		},
 		{
 			name:    "one addr bad",
