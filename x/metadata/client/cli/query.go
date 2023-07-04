@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -588,7 +587,7 @@ func GetAccountDataCmd() *cobra.Command {
 				return fmt.Errorf("invalid metadata address %q: %w", args[0], err)
 			}
 
-			resp, err := queryClient.AccountData(context.Background(), req)
+			resp, err := queryClient.AccountData(cmd.Context(), req)
 			if err != nil {
 				return fmt.Errorf("failed to query account data for metadata address %q: %w", args[0], err)
 			}
@@ -611,7 +610,7 @@ func outputParams(cmd *cobra.Command) error {
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{IncludeRequest: includeRequest})
+	res, err := queryClient.Params(cmd.Context(), &types.QueryParamsRequest{IncludeRequest: includeRequest})
 	if err != nil {
 		return err
 	}
@@ -627,7 +626,7 @@ func outputGetByAddr(cmd *cobra.Command, addrs []string) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.GetByAddr(
-		context.Background(),
+		cmd.Context(),
 		&types.GetByAddrRequest{Addrs: addrs},
 	)
 	if err != nil {
@@ -655,7 +654,7 @@ func outputScope(cmd *cobra.Command, scopeID string, sessionAddr string, recordA
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Scope(context.Background(), &req)
+	res, err := queryClient.Scope(cmd.Context(), &req)
 	if err != nil {
 		return err
 	}
@@ -675,7 +674,7 @@ func outputScopesAll(cmd *cobra.Command) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ScopesAll(
-		context.Background(),
+		cmd.Context(),
 		&types.ScopesAllRequest{
 			IncludeIdInfo:  includeIDInfo,
 			IncludeRequest: includeRequest,
@@ -708,7 +707,7 @@ func outputSessions(cmd *cobra.Command, scopeID, sessionID, recordID, recordName
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Sessions(context.Background(), &req)
+	res, err := queryClient.Sessions(cmd.Context(), &req)
 	if err != nil {
 		return err
 	}
@@ -731,7 +730,7 @@ func outputSessionsAll(cmd *cobra.Command) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.SessionsAll(
-		context.Background(),
+		cmd.Context(),
 		&types.SessionsAllRequest{
 			IncludeIdInfo:  includeIDInfo,
 			IncludeRequest: includeRequest,
@@ -764,7 +763,7 @@ func outputRecords(cmd *cobra.Command, recordAddr string, scopeID string, sessio
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Records(context.Background(), &req)
+	res, err := queryClient.Records(cmd.Context(), &req)
 	if err != nil {
 		return err
 	}
@@ -784,7 +783,7 @@ func outputRecordsAll(cmd *cobra.Command) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.RecordsAll(
-		context.Background(),
+		cmd.Context(),
 		&types.RecordsAllRequest{
 			IncludeIdInfo:  includeIDInfo,
 			IncludeRequest: includeRequest,
@@ -810,7 +809,7 @@ func outputOwnership(cmd *cobra.Command, address string) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.Ownership(
-		context.Background(),
+		cmd.Context(),
 		&types.OwnershipRequest{Address: address, IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
@@ -832,7 +831,7 @@ func outputValueOwnership(cmd *cobra.Command, address string) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ValueOwnership(
-		context.Background(),
+		cmd.Context(),
 		&types.ValueOwnershipRequest{Address: address, IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
@@ -858,7 +857,7 @@ func outputScopeSpec(cmd *cobra.Command, specificationID string) error {
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.ScopeSpecification(context.Background(), &req)
+	res, err := queryClient.ScopeSpecification(cmd.Context(), &req)
 	if err != nil {
 		return err
 	}
@@ -878,7 +877,7 @@ func outputScopeSpecsAll(cmd *cobra.Command) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ScopeSpecificationsAll(
-		context.Background(),
+		cmd.Context(),
 		&types.ScopeSpecificationsAllRequest{
 			IncludeIdInfo:  includeIDInfo,
 			IncludeRequest: includeRequest,
@@ -907,7 +906,7 @@ func outputContractSpec(cmd *cobra.Command, specificationID string) error {
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.ContractSpecification(context.Background(), &req)
+	res, err := queryClient.ContractSpecification(cmd.Context(), &req)
 	if err != nil {
 		return err
 	}
@@ -927,7 +926,7 @@ func outputContractSpecsAll(cmd *cobra.Command) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ContractSpecificationsAll(
-		context.Background(),
+		cmd.Context(),
 		&types.ContractSpecificationsAllRequest{
 			IncludeIdInfo:  includeIDInfo,
 			IncludeRequest: includeRequest,
@@ -956,7 +955,7 @@ func outputRecordSpec(cmd *cobra.Command, specificationID string, name string) e
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.RecordSpecification(context.Background(), &req)
+	res, err := queryClient.RecordSpecification(cmd.Context(), &req)
 	if err != nil {
 		return err
 	}
@@ -978,7 +977,7 @@ func outputRecordSpecsForContractSpec(cmd *cobra.Command, specificationID string
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.RecordSpecificationsForContractSpecification(context.Background(), &req)
+	res, err := queryClient.RecordSpecificationsForContractSpecification(cmd.Context(), &req)
 	if err != nil {
 		return err
 	}
@@ -998,7 +997,7 @@ func outputRecordSpecsAll(cmd *cobra.Command) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.RecordSpecificationsAll(
-		context.Background(),
+		cmd.Context(),
 		&types.RecordSpecificationsAllRequest{
 			IncludeIdInfo:  includeIDInfo,
 			IncludeRequest: includeRequest,
@@ -1020,7 +1019,7 @@ func outputOSLocatorParams(cmd *cobra.Command) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSLocatorParams(
-		context.Background(),
+		cmd.Context(),
 		&types.OSLocatorParamsRequest{IncludeRequest: includeRequest},
 	)
 	if err != nil {
@@ -1038,7 +1037,7 @@ func outputOSLocator(cmd *cobra.Command, owner string) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSLocator(
-		context.Background(),
+		cmd.Context(),
 		&types.OSLocatorRequest{Owner: owner, IncludeRequest: includeRequest},
 	)
 	if err != nil {
@@ -1060,7 +1059,7 @@ func outputOSLocatorsByURI(cmd *cobra.Command, uri string) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSLocatorsByURI(
-		context.Background(),
+		cmd.Context(),
 		&types.OSLocatorsByURIRequest{Uri: uri, IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
@@ -1078,7 +1077,7 @@ func outputOSLocatorsByScope(cmd *cobra.Command, scopeID string) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSLocatorsByScope(
-		context.Background(),
+		cmd.Context(),
 		&types.OSLocatorsByScopeRequest{ScopeId: scopeID, IncludeRequest: includeRequest},
 	)
 	if err != nil {
@@ -1100,7 +1099,7 @@ func outputOSLocatorsAll(cmd *cobra.Command) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSAllLocators(
-		context.Background(),
+		cmd.Context(),
 		&types.OSAllLocatorsRequest{IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
