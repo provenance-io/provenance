@@ -66,6 +66,7 @@ func SplitMarkerStoreKey(key []byte) sdk.AccAddress {
 
 // DenySendKey returns a key [prefix][denom addr][deny addr] for send deny list for restricted markers
 func DenySendKey(markerAddr sdk.AccAddress, denyAddr sdk.AccAddress) []byte {
-	key := append(DenySendKeyPrefix, address.MustLengthPrefix(markerAddr.Bytes())...)
+	key := DenySendKeyPrefix
+	key = append(key, address.MustLengthPrefix(markerAddr.Bytes())...)
 	return append(key, address.MustLengthPrefix(denyAddr.Bytes())...)
 }
