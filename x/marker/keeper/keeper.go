@@ -5,13 +5,13 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -58,8 +58,6 @@ type Keeper struct {
 	// To pass through grant creation for callers with admin access on a marker.
 	feegrantKeeper types.FeeGrantKeeper
 
-	ibcKeeper ibckeeper.Keeper
-
 	// To access attributes for addresses
 	attrKeeper types.AttrKeeper
 	// To access names and normalize required attributes
@@ -77,6 +75,9 @@ type Keeper struct {
 	markerModuleAddr sdk.AccAddress
 
 	ibcTransferModuleAddr sdk.AccAddress
+
+	// Routes messages to other modules
+	router baseapp.IMsgServiceRouter
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -92,9 +93,10 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	authzKeeper types.AuthzKeeper,
 	feegrantKeeper types.FeeGrantKeeper,
-	ibcKeeper ibckeeper.Keeper,
 	attrKeeper types.AttrKeeper,
 	nameKeeper types.NameKeeper,
+	router baseapp.IMsgServiceRouter,
+
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -106,7 +108,6 @@ func NewKeeper(
 		authzKeeper:           authzKeeper,
 		bankKeeper:            bankKeeper,
 		feegrantKeeper:        feegrantKeeper,
-		ibcKeeper:             ibcKeeper,
 		attrKeeper:            attrKeeper,
 		nameKeeper:            nameKeeper,
 		storeKey:              key,
@@ -114,6 +115,7 @@ func NewKeeper(
 		authority:             authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		markerModuleAddr:      authtypes.NewModuleAddress(types.CoinPoolName),
 		ibcTransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
+		router:                router,
 	}
 	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
 	return rv

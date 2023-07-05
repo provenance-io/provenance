@@ -480,7 +480,7 @@ func New(
 	)
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
-		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper, app.TransferKeeper, app.AttributeKeeper, app.NameKeeper,
+		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper, app.AttributeKeeper, app.NameKeeper, app.MsgServiceRouter(),
 	)
 
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {

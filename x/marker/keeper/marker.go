@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 
@@ -672,7 +671,6 @@ func (k Keeper) IbcTransferCoin(
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
 	memo string,
-	checkRestrictionsHandler ibckeeper.CheckRestrictionsHandler,
 ) error {
 	m, err := k.GetMarkerByDenom(ctx, token.Denom)
 	if err != nil {
@@ -705,18 +703,10 @@ func (k Keeper) IbcTransferCoin(
 		k.SetMarker(ctx, m)
 	}
 
-	_, err = k.ibcKeeper.SendTransfer(
-		types.WithBypass(ctx),
-		sourcePort,
-		sourceChannel,
-		token,
-		sender,
-		receiver,
-		timeoutHeight,
-		timeoutTimestamp,
-		memo,
-		checkRestrictionsHandler,
+	msg := ibctypes.NewMsgTransfer(
+		sourcePort, sourceChannel, token, sender.String(), receiver, timeoutHeight, timeoutTimestamp, memo,
 	)
+	err = k.routeIbcMsgTransfer(ctx, msg)
 	if err != nil {
 		return err
 	}
@@ -810,6 +800,27 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 	// if the given account is currently holding 100% of the supply of a marker then it should be able to invoke
 	// the operations as an admin on the marker.
 	return m.GetSupply().IsEqual(sdk.NewCoin(m.GetDenom(), balance.Amount))
+}
+
+// routeIbcMsgTransfer routes the supplied MsgTransfer to the correct handler.
+func (k Keeper) routeIbcMsgTransfer(
+	ctx sdk.Context,
+	msg *ibctypes.MsgTransfer,
+) error {
+	handler := k.router.Handler(msg)
+	if handler == nil {
+		return fmt.Errorf("no message handler found for message %s", sdk.MsgTypeURL(msg))
+	}
+	r, err := handler(ctx, msg)
+	if err != nil {
+		return fmt.Errorf("error processing message %s: %w", sdk.MsgTypeURL(msg), err)
+	}
+	// Handler should always return non-nil sdk.Result.
+	if r == nil {
+		return fmt.Errorf("got nil sdk.Result for message %s", sdk.MsgTypeURL(msg))
+	}
+
+	return nil
 }
 
 // RemoveIsSendEnabledEntries removes all entries in the bankkeepers send enabled table
