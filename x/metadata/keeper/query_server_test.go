@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/x/metadata/keeper"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/stretchr/testify/assert"
@@ -977,9 +976,35 @@ func (s *QueryServerTestSuite) TestGetByAddr() {
 
 	ownerAddr := sdk.AccAddress("ownerAddr___________").String() // cosmos1damkuetjg9jxgujlta047h6lta047h6lmp9nkx
 
-	tooManyAddrs := make([]string, keeper.MaxGetByAddrAddrs+1)
-	for i := range tooManyAddrs {
-		tooManyAddrs[i] = types.ScopeMetadataAddress(uuid.New()).String()
+	manyAddrs := make([]string, 10000)
+	curUUID := uuid.MustParse("4D09C7B0-5B86-43BF-BA9F-33CA3D78C1DB")
+	incCurUUID := func() {
+		for i := 15; i >= 0; i-- {
+			if curUUID[i] != 255 {
+				curUUID[i] = curUUID[i] + 1
+				break
+			}
+			curUUID[i] = 0
+		}
+	}
+	for i := range manyAddrs {
+		switch i % 7 {
+		case 0:
+			incCurUUID()
+			manyAddrs[i] = types.ScopeMetadataAddress(curUUID).String()
+		case 1:
+			manyAddrs[i] = types.SessionMetadataAddress(curUUID, uuid.New()).String()
+		case 2:
+			manyAddrs[i] = types.RecordMetadataAddress(curUUID, recordName).String()
+		case 3:
+			manyAddrs[i] = types.ScopeSpecMetadataAddress(curUUID).String()
+		case 4:
+			manyAddrs[i] = types.ContractSpecMetadataAddress(curUUID).String()
+		case 5:
+			manyAddrs[i] = types.RecordSpecMetadataAddress(curUUID, recordName).String()
+		case 6:
+			manyAddrs[i] = curUUID.String()
+		}
 	}
 
 	scopeSpec := types.ScopeSpecification{
@@ -1127,14 +1152,9 @@ func (s *QueryServerTestSuite) TestGetByAddr() {
 			expErr: "empty request: invalid request",
 		},
 		{
-			name:   "too many addresses",
-			req:    req(tooManyAddrs...),
-			expErr: fmt.Sprintf("too many addresses: have %d, max %d: invalid request", len(tooManyAddrs), keeper.MaxGetByAddrAddrs),
-		},
-		{
-			name:    "maximum addresses",
-			req:     req(tooManyAddrs[:keeper.MaxGetByAddrAddrs]...),
-			expResp: &types.GetByAddrResponse{NotFound: tooManyAddrs[:keeper.MaxGetByAddrAddrs]},
+			name:    "many addresses",
+			req:     req(manyAddrs...),
+			expResp: &types.GetByAddrResponse{NotFound: manyAddrs},
 		},
 		{
 			name:    "one addr bad",

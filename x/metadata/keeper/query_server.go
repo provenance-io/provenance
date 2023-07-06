@@ -20,9 +20,6 @@ import (
 
 const defaultLimit = 100
 
-// MaxGetByAddrAddrs is the maximum number of addresses that can be provided in a GetByAddr query.
-var MaxGetByAddrAddrs = 100
-
 var _ types.QueryServer = Keeper{}
 
 // Params queries params of metadata module.
@@ -985,9 +982,6 @@ func (k Keeper) GetByAddr(c context.Context, req *types.GetByAddrRequest) (*type
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "GetByAddr")
 	if req == nil || len(req.Addrs) == 0 {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
-	}
-	if len(req.Addrs) > MaxGetByAddrAddrs {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("too many addresses: have %d, max %d", len(req.Addrs), MaxGetByAddrAddrs)
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
