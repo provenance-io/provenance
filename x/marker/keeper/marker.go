@@ -706,7 +706,7 @@ func (k Keeper) IbcTransferCoin(
 	msg := ibctypes.NewMsgTransfer(
 		sourcePort, sourceChannel, token, sender.String(), receiver, timeoutHeight, timeoutTimestamp, memo,
 	)
-	res, err := k.routeIbcMsgTransfer(ctx, msg)
+	res, err := k.routeIbcMsgTransfer(types.WithBypass(ctx), msg)
 	if err != nil {
 		return err
 	}
