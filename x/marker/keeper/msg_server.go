@@ -771,7 +771,7 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 
 	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
 	if err != nil {
-		return nil, fmt.Errorf("could not get %s marker: %w", msg.Denom, err)
+		return nil, fmt.Errorf("marker not found for %s: %w", msg.Denom, err)
 	}
 
 	if marker.GetMarkerType() != types.MarkerType_RestrictedCoin {

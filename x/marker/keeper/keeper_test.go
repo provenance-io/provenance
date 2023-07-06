@@ -1415,3 +1415,63 @@ func TestRemoveIsSendEnabledEntries(t *testing.T) {
 	assert.True(t, app.BankKeeper.IsSendEnabledDenom(ctx, "testcoin"), "should not exist in table therefore default to true")
 
 }
+
+func TestMsgUpdateSendDenyListRequest(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
+
+	// authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+
+	authUser := testUserAddress("test")
+	// notTransferAuthUser := testUserAddress("test1")
+
+	notRestrictedMarker := types.NewEmptyMarkerAccount(
+		"not-restricted-marker",
+		authUser.String(),
+		[]types.AccessGrant{})
+
+	err := app.MarkerKeeper.AddMarkerAccount(ctx, notRestrictedMarker)
+	require.NoError(t, err)
+
+	rMarkerDenom := "restricted-marker"
+	rMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom), nil, 0, 0)
+	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{}))
+
+	testCases := []struct {
+		name             string
+		updateMsgRequest types.MsgUpdateSendDenyListRequest
+		expectedReqAttr  []string
+		expectedError    string
+	}{
+		{
+			name:             "should fail, cannot find marker",
+			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest("blah", authUser, []string{}, []string{}),
+			expectedError:    "marker not found for blah: marker blah not found for address: cosmos1psw3a97ywtr595qa4295lw07cz9665hynnfpee",
+		},
+		{
+			name:             "should fail, not a restricted marker",
+			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest("not-restricted-marker", authUser, []string{}, []string{}),
+			expectedError:    "marker not-restricted-marker is not a restricted marker",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := server.UpdateSendDenyList(sdk.WrapSDKContext(ctx),
+				&tc.updateMsgRequest)
+
+			if len(tc.expectedError) > 0 {
+				assert.Nil(t, res)
+				assert.EqualError(t, err, tc.expectedError)
+
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, res, &types.MsgUpdateRequiredAttributesResponse{})
+				actualMarker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, tc.updateMsgRequest.Denom)
+				require.NoError(t, err)
+				assert.ElementsMatch(t, tc.expectedReqAttr, actualMarker.GetRequiredAttributes())
+			}
+		})
+	}
+}

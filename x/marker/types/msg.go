@@ -654,10 +654,10 @@ func (msg MsgSetAccountDataRequest) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgUpdateSendDenyListRequest creates a NewMsgUpdateSendDenyListRequest
-func NewMsgUpdateSendDenyListRequest(denom string, transferAuthority sdk.AccAddress, removeDenyAddresses, addDenyAddresses []string) *MsgUpdateSendDenyListRequest {
+func NewMsgUpdateSendDenyListRequest(denom string, authority sdk.AccAddress, removeDenyAddresses, addDenyAddresses []string) *MsgUpdateSendDenyListRequest {
 	return &MsgUpdateSendDenyListRequest{
 		Denom:                 denom,
-		Authority:             transferAuthority.String(),
+		Authority:             authority.String(),
 		RemoveDeniedAddresses: removeDenyAddresses,
 		AddDeniedAddresses:    addDenyAddresses,
 	}
