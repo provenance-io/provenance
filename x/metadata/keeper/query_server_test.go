@@ -703,7 +703,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 			checkExactCount := tc.count != nil
 			checkScopeIds := len(tc.scopeID) > 0
 			checkSessionIds := len(tc.sessionID) > 0
-			if checkScopeIds || checkSessionIds && tc.req != nil {
+			if (checkScopeIds || checkSessionIds) && tc.req != nil {
 				tc.req.IncludeIdInfo = true
 			}
 			sr, err := queryClient.Sessions(gocontext.Background(), tc.req)

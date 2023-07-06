@@ -212,7 +212,7 @@ func (s *AddressTestSuite) TestLegacySha512HashToAddress() {
 }
 
 func (s *AddressTestSuite) TestVerifyMetadataAddressFormat() {
-	uuid0 := uuid.UUID([16]byte{})                                  // filled with zeros by default.
+	uuid0 := uuid.Nil
 	uuid1 := uuid.MustParse("1D42DB43-FCF2-46F8-A4B6-974D73B6551E") // came from uuidgen
 	uuid2 := uuid.MustParse("9713E8BB-8728-4CE9-8051-FCA03E7BD1D1") // came from uuidgen
 
