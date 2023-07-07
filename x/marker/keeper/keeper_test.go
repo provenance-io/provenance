@@ -1421,10 +1421,10 @@ func TestMsgUpdateSendDenyListRequest(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
-	// authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 
 	authUser := testUserAddress("test")
-	// notTransferAuthUser := testUserAddress("test1")
+	notAuthUser := testUserAddress("test1")
 
 	notRestrictedMarker := types.NewEmptyMarkerAccount(
 		"not-restricted-marker",
@@ -1436,7 +1436,19 @@ func TestMsgUpdateSendDenyListRequest(t *testing.T) {
 
 	rMarkerDenom := "restricted-marker"
 	rMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom), nil, 0, 0)
-	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{}))
+	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer, types.Access_Admin}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
+
+	rMarkerGovDenom := "restricted-marker-gov"
+	rMarkerGovAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerGovDenom), nil, 0, 0)
+	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerGovAcct, sdk.NewInt64Coin(rMarkerGovDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{}))
+
+	denyAddrToRemove := testUserAddress("denyAddrToRemove")
+	app.MarkerKeeper.AddSendDeny(ctx, rMarkerAcct.GetAddress(), denyAddrToRemove)
+	require.True(t, app.MarkerKeeper.IsSendDeny(ctx, rMarkerAcct.GetAddress(), denyAddrToRemove), rMarkerDenom+" should have added address to deny list "+denyAddrToRemove.String())
+
+	denyAddrToAdd := testUserAddress("denyAddrToAdd")
+
+	denyAddrToAddGov := testUserAddress("denyAddrToAddGov")
 
 	testCases := []struct {
 		name             string
@@ -1451,8 +1463,55 @@ func TestMsgUpdateSendDenyListRequest(t *testing.T) {
 		},
 		{
 			name:             "should fail, not a restricted marker",
-			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest("not-restricted-marker", authUser, []string{}, []string{}),
+			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(notRestrictedMarker.Denom, authUser, []string{}, []string{}),
 			expectedError:    "marker not-restricted-marker is not a restricted marker",
+		},
+		{
+			name:             "should fail, not a restricted marker",
+			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(rMarkerDenom, notAuthUser, []string{}, []string{}),
+			expectedError:    "cosmos1ku2jzvpkt4ffxxaajyk2r88axk9cr5jqlthcm4 does not have admin access for restricted-marker marker",
+		},
+		{
+			name:             "should fail, gov not enabled for restricted marker",
+			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(rMarkerDenom, authority, []string{}, []string{}),
+			expectedError:    "restricted-marker marker does not allow governance control",
+		},
+		{
+			name:             "should fail, address is already on deny list",
+			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(rMarkerDenom, authUser, []string{}, []string{denyAddrToRemove.String()}),
+			expectedError:    denyAddrToRemove.String() + " is already on deny list cannot add address",
+		},
+		{
+			name:             "should fail, address can not be removed not in deny list",
+			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(rMarkerDenom, authUser, []string{denyAddrToAdd.String()}, []string{}),
+			expectedError:    denyAddrToAdd.String() + " is not on deny list cannot remove address",
+		},
+		{
+			name:             "should fail, invalid address on add list",
+			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(rMarkerDenom, authUser, []string{}, []string{"invalid-add-address"}),
+			expectedError:    "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:             "should fail, invalid address on remove list",
+			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(rMarkerDenom, authUser, []string{"invalid-remove-address"}, []string{}),
+			expectedError:    "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:             "should fail, both add and remove lists are empty",
+			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(rMarkerDenom, authUser, []string{}, []string{}),
+			expectedError:    "both add and remove lists cannot be empty",
+		},
+		{
+			name:             "should succeed to add to deny list",
+			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(rMarkerDenom, authUser, []string{}, []string{denyAddrToAdd.String()}),
+		},
+		{
+			name:             "should succeed to remove from deny list",
+			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(rMarkerDenom, authUser, []string{denyAddrToRemove.String()}, []string{}),
+		},
+		{
+			name:             "should succeed gov allowed for marker",
+			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(rMarkerGovDenom, authority, []string{}, []string{denyAddrToAddGov.String()}),
 		},
 	}
 
@@ -1467,10 +1526,7 @@ func TestMsgUpdateSendDenyListRequest(t *testing.T) {
 
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, res, &types.MsgUpdateRequiredAttributesResponse{})
-				actualMarker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, tc.updateMsgRequest.Denom)
-				require.NoError(t, err)
-				assert.ElementsMatch(t, tc.expectedReqAttr, actualMarker.GetRequiredAttributes())
+				assert.Equal(t, res, &types.MsgUpdateSendDenyListResponse{})
 			}
 		})
 	}

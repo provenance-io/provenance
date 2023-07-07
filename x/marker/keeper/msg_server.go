@@ -784,8 +784,12 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 		}
 	} else {
 		if !marker.HasAccess(msg.Authority, types.Access_Admin) {
-			return nil, fmt.Errorf("%s does not have deposit access for %s marker", msg.Authority, msg.Denom)
+			return nil, fmt.Errorf("%s does not have admin access for %s marker", msg.Authority, msg.Denom)
 		}
+	}
+
+	if len(msg.RemoveDeniedAddresses) == 0 && len(msg.AddDeniedAddresses) == 0 {
+		return nil, fmt.Errorf("both add and remove lists cannot be empty")
 	}
 
 	markerAddr := marker.GetAddress()
