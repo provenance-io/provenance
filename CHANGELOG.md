@@ -42,6 +42,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update ibcnet ports so they don't conflict with host machine. [#1622](https://github.com/provenance-io/provenance/issues/1622)
 * Replace custom ibc-go v6.1.1 fork with official module.  [#1616](https://github.com/provenance-io/provenance/issues/1616)
 
+### Bug Fixes
+
+* Fix ibcnet relayer creating multiple connections on restart [#1620](https://github.com/provenance-io/provenance/issues/1620).
+
 ---
 
 ## [v1.16.0](https://github.com/provenance-io/provenance/releases/tag/v1.16.0) - 2023-06-23
