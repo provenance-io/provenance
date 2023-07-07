@@ -3,7 +3,9 @@
 In this section we describe the queries available for looking up metadata information.
 All state objects specified by each message are defined within the [state](02_state.md) section.
 
-Each entry or specification state object is wrapped with an `*IdInfo` message containing information about that state object's address/id.
+Each entry or specification state object is wrapped with an `*_id_info` message containing information about that state object's address/id.
+By default, the `*_id_info` fields aren't populated, but each applicable request has an `include_id_info` flag.
+If a requested entry or specification isn't found, an empty wrapper containing only id info is returned.
 
 <!-- TOC 2 -->
   - [Params](#params)
@@ -22,6 +24,7 @@ Each entry or specification state object is wrapped with an `*IdInfo` message co
   - [RecordSpecificationsForContractSpecification](#recordspecificationsforcontractspecification)
   - [RecordSpecification](#recordspecification)
   - [RecordSpecificationsAll](#recordspecificationsall)
+  - [GetByAddr](#getbyaddr)
   - [OSLocatorParams](#oslocatorparams)
   - [OSLocator](#oslocator)
   - [OSLocatorsByURI](#oslocatorsbyuri)
@@ -350,6 +353,22 @@ The only input to this query is pagination information.
 ### Response
 +++ https://github.com/provenance-io/provenance/blob/995c8f6e73eca5f63ebc85b27df6a1c6bdd43e10/proto/provenance/metadata/v1/query.proto#L600-L610
 
+
+---
+## GetByAddr
+
+The `GetByAddr` query looks up metadata entries and/or specifications for a given list of addresses.
+The results of this query are not wrapped with id information like the other queries, and only returns the exact entries requested.
+
+### Request
++++ https://github.com/provenance-io/provenance/blob/18a18427afb882d0c1a5427421abaf56a0f95103/proto/provenance/metadata/v1/query.proto#L725-L729
+
+The `addrs` can contain any valid metadata address bech32 strings.
+
+### Response
++++ https://github.com/provenance-io/provenance/blob/18a18427afb882d0c1a5427421abaf56a0f95103/proto/provenance/metadata/v1/query.proto#L731-L747
+
+Any invalid or nonexistent `addrs` will be in the `not_found` list.
 
 ---
 ## OSLocatorParams
