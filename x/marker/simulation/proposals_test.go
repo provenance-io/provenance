@@ -41,7 +41,7 @@ func TestProposalContents(t *testing.T) {
 			app.FeeGrantKeeper,
 			app.AttributeKeeper,
 			app.NameKeeper,
-			app.MsgServiceRouter(),
+			app.TransferKeeper,
 		),
 	)
 	require.Len(t, weightedProposalContent, 6)

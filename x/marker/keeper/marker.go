@@ -706,11 +706,10 @@ func (k Keeper) IbcTransferCoin(
 	msg := ibctypes.NewMsgTransfer(
 		sourcePort, sourceChannel, token, sender.String(), receiver, timeoutHeight, timeoutTimestamp, memo,
 	)
-	res, err := k.routeIbcMsgTransfer(types.WithBypass(ctx), msg)
+	_, err = k.ibcTransferServer.Transfer(types.WithBypass(ctx), msg)
 	if err != nil {
 		return err
 	}
-	ctx.EventManager().EmitEvents(res.GetEvents())
 
 	markerIbcTransferEvent := types.NewEventMarkerIbcTransfer(
 		token.Amount.String(),
@@ -801,27 +800,6 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 	// if the given account is currently holding 100% of the supply of a marker then it should be able to invoke
 	// the operations as an admin on the marker.
 	return m.GetSupply().IsEqual(sdk.NewCoin(m.GetDenom(), balance.Amount))
-}
-
-// routeIbcMsgTransfer routes the supplied MsgTransfer to the correct handler.
-func (k Keeper) routeIbcMsgTransfer(
-	ctx sdk.Context,
-	msg *ibctypes.MsgTransfer,
-) (*sdk.Result, error) {
-	handler := k.router.Handler(msg)
-	if handler == nil {
-		return nil, fmt.Errorf("no message handler found for message %s", sdk.MsgTypeURL(msg))
-	}
-	r, err := handler(ctx, msg)
-	if err != nil {
-		return nil, fmt.Errorf("error processing message %s: %w", sdk.MsgTypeURL(msg), err)
-	}
-	// Handler should always return non-nil sdk.Result.
-	if r == nil {
-		return nil, fmt.Errorf("got nil sdk.Result for message %s", sdk.MsgTypeURL(msg))
-	}
-
-	return r, err
 }
 
 // RemoveIsSendEnabledEntries removes all entries in the bankkeepers send enabled table

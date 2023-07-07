@@ -5,7 +5,6 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -76,8 +75,8 @@ type Keeper struct {
 
 	ibcTransferModuleAddr sdk.AccAddress
 
-	// Routes messages to other modules
-	router baseapp.IMsgServiceRouter
+	// Used to transfer the ibc marker
+	ibcTransferServer types.IbcTransferMsgServer
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -95,8 +94,7 @@ func NewKeeper(
 	feegrantKeeper types.FeeGrantKeeper,
 	attrKeeper types.AttrKeeper,
 	nameKeeper types.NameKeeper,
-	router baseapp.IMsgServiceRouter,
-
+	ibcTransferServer types.IbcTransferMsgServer,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -115,7 +113,7 @@ func NewKeeper(
 		authority:             authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		markerModuleAddr:      authtypes.NewModuleAddress(types.CoinPoolName),
 		ibcTransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
-		router:                router,
+		ibcTransferServer:     ibcTransferServer,
 	}
 	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
 	return rv
