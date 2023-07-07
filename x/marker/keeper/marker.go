@@ -706,6 +706,9 @@ func (k Keeper) IbcTransferCoin(
 	msg := ibctypes.NewMsgTransfer(
 		sourcePort, sourceChannel, token, sender.String(), receiver, timeoutHeight, timeoutTimestamp, memo,
 	)
+	if validationErr := msg.ValidateBasic(); validationErr != nil {
+		return validationErr
+	}
 	_, err = k.ibcTransferServer.Transfer(types.WithBypass(ctx), msg)
 	if err != nil {
 		return err
