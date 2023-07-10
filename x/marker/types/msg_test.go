@@ -753,3 +753,30 @@ func TestMsgUpdateSendDenyListRequest(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgUpdateSendDenyListRequestGetSigners(t *testing.T) {
+	t.Run("good signer", func(t *testing.T) {
+		msg := MsgUpdateSendDenyListRequest{
+			Authority: sdk.AccAddress("good_address________").String(),
+		}
+		exp := []sdk.AccAddress{sdk.AccAddress("good_address________")}
+
+		var signers []sdk.AccAddress
+		testFunc := func() {
+			signers = msg.GetSigners()
+		}
+		require.NotPanics(t, testFunc, "GetSigners")
+		assert.Equal(t, exp, signers, "GetSigners")
+	})
+
+	t.Run("bad signer", func(t *testing.T) {
+		msg := MsgUpdateSendDenyListRequest{
+			Authority: "bad_address________",
+		}
+
+		testFunc := func() {
+			_ = msg.GetSigners()
+		}
+		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
+	})
+}
