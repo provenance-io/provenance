@@ -347,7 +347,7 @@ See also: [Governance: Supply Increase Proposal](./10_governance.md#supply-incre
 
 UpdateRequiredAttributes allows signers that have transfer authority or via gov proposal to add and remove required attributes from a restricted marker.
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L244-255
++++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L244-L255
 
 +++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L257-L258
 
@@ -357,6 +357,22 @@ This service message is expected to fail if:
 - Add list has an attribute that already exist in current Required Attributes
 - Attributes cannot be normalized
 - Marker denom cannot be found or is not a restricted marker
+
+## Msg/UpdateSendDenyListRequest
+
+UpdateSendDenyList allows signers that have admin authority or via gov proposal to add and remove addresses to the deny send list for a restricted marker.
+
++++ https://github.com/provenance-io/provenance/blob/373d0ee8faeaa9e3b70d658e6069ab1781e6ce5e/proto/provenance/marker/v1/tx.proto #L295-L308
+
++++ https://github.com/provenance-io/provenance/blob/373d0ee8faeaa9e3b70d658e6069ab1781e6ce5e/proto/provenance/marker/v1/tx.proto #L310-L311
+
+This service message is expected to fail if:
+
+- Remove list has an address that does not exist in current deny list
+- Add list has an attribute that already exist in current deny list
+- Invalid address format in add/remove lists
+- Marker denom cannot be found or is not a restricted marker
+- Signer is does not have admin authority or is not from gov proposal
 
 ## Msg/UpdateForcedTransferRequest
 
