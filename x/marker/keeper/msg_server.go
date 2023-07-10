@@ -815,5 +815,12 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 		k.AddSendDeny(ctx, markerAddr, denyAddr)
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
 	return &types.MsgUpdateSendDenyListResponse{}, nil
 }
