@@ -731,6 +731,11 @@ func TestMsgUpdateSendDenyListRequest(t *testing.T) {
 			expectedError: "decoding bech32 failed: invalid separator index -1",
 		},
 		{
+			name:          "should succeed, duplicate entries in list",
+			msg:           MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{removeAddr, removeAddr}, AddDeniedAddresses: []string{}, Authority: addr},
+			expectedError: "denied address lists contain duplicate entries",
+		},
+		{
 			name:          "should fail, invalid denom",
 			msg:           MsgUpdateSendDenyListRequest{Denom: "1", RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{addAddr}, Authority: addr},
 			expectedError: "invalid denom: 1",
