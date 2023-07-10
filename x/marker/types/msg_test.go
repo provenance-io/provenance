@@ -689,3 +689,62 @@ func TestMsgSetAccountDataRequestGetSigners(t *testing.T) {
 		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
 	})
 }
+
+func TestMsgUpdateSendDenyListRequest(t *testing.T) {
+	addr := sdk.AccAddress("addr________________").String()
+	denom := "somedenom"
+	addAddr := sdk.AccAddress("addAddr________________").String()
+	removeAddr := sdk.AccAddress("removeAddr________________").String()
+
+	tests := []struct {
+		name          string
+		msg           MsgUpdateSendDenyListRequest
+		expectedError string
+	}{
+		{
+			name: "should succeed",
+			msg:  MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{addAddr}, Authority: addr},
+		},
+		{
+			name:          "should fail, invalid authority address",
+			msg:           MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{addAddr}, Authority: "invalid-address"},
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "should fail, both add and remove list are empty",
+			msg:           MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{}, AddDeniedAddresses: []string{}, Authority: addr},
+			expectedError: "both add and remove lists cannot be empty",
+		},
+		{
+			name:          "should fail, invalid authority address",
+			msg:           MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{addAddr}, Authority: "invalid-address"},
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "should fail, invalid remove address",
+			msg:           MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{"invalid-address"}, AddDeniedAddresses: []string{}, Authority: addr},
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "should succeed, invalid add address",
+			msg:           MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{"invalid-addrs"}, Authority: addr},
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "should fail, invalid denom",
+			msg:           MsgUpdateSendDenyListRequest{Denom: "1", RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{addAddr}, Authority: addr},
+			expectedError: "invalid denom: 1",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.expectedError) > 0 {
+				require.EqualErrorf(t, err, tc.expectedError, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
