@@ -1467,7 +1467,7 @@ func TestMsgUpdateSendDenyListRequest(t *testing.T) {
 			expectedError:    "marker not-restricted-marker is not a restricted marker",
 		},
 		{
-			name:             "should fail, not a restricted marker",
+			name:             "should fail, signer does not have admin access",
 			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(rMarkerDenom, notAuthUser, []string{}, []string{}),
 			expectedError:    "cosmos1ku2jzvpkt4ffxxaajyk2r88axk9cr5jqlthcm4 does not have admin access for restricted-marker marker",
 		},
