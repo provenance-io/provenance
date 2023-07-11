@@ -362,9 +362,9 @@ This service message is expected to fail if:
 
 UpdateSendDenyList allows signers that have admin authority or via gov proposal to add and remove addresses to the deny send list for a restricted marker.
 
-+++ https://github.com/provenance-io/provenance/blob/373d0ee8faeaa9e3b70d658e6069ab1781e6ce5e/proto/provenance/marker/v1/tx.proto #L295-L308
++++ https://github.com/provenance-io/provenance/blob/373d0ee8faeaa9e3b70d658e6069ab1781e6ce5e/proto/provenance/marker/v1/tx.proto#L295-L308
 
-+++ https://github.com/provenance-io/provenance/blob/373d0ee8faeaa9e3b70d658e6069ab1781e6ce5e/proto/provenance/marker/v1/tx.proto #L310-L311
++++ https://github.com/provenance-io/provenance/blob/373d0ee8faeaa9e3b70d658e6069ab1781e6ce5e/proto/provenance/marker/v1/tx.proto#L310-L311
 
 This service message is expected to fail if:
 
