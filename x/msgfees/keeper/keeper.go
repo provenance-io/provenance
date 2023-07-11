@@ -13,6 +13,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
@@ -31,6 +32,7 @@ type Keeper struct {
 	defaultFeeDenom  string
 	simulateFunc     baseAppSimulateFunc
 	txDecoder        sdk.TxDecoder
+	authority        string
 }
 
 // NewKeeper returns a AdditionalFeeKeeper. It handles:
@@ -56,7 +58,13 @@ func NewKeeper(
 		defaultFeeDenom:  defaultFeeDenom,
 		simulateFunc:     simulateFunc,
 		txDecoder:        txDecoder,
+		authority:        cosmosauthtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
+}
+
+// GetAuthority is signer of the proposal
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
 
 // Logger returns a module-specific logger.
