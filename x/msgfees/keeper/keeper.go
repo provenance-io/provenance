@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -32,6 +33,7 @@ type Keeper struct {
 	defaultFeeDenom  string
 	simulateFunc     baseAppSimulateFunc
 	txDecoder        sdk.TxDecoder
+	registry         cdctypes.InterfaceRegistry
 	authority        string
 }
 
@@ -45,6 +47,7 @@ func NewKeeper(
 	defaultFeeDenom string,
 	simulateFunc baseAppSimulateFunc,
 	txDecoder sdk.TxDecoder,
+	registry cdctypes.InterfaceRegistry,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -59,6 +62,7 @@ func NewKeeper(
 		simulateFunc:     simulateFunc,
 		txDecoder:        txDecoder,
 		authority:        cosmosauthtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		registry:         registry,
 	}
 }
 
