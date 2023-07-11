@@ -370,9 +370,10 @@ This service message is expected to fail if:
 
 - Remove list has an address that does not exist in current deny list
 - Add list has an attribute that already exist in current deny list
+- Both add and remove lists are empty
 - Invalid address format in add/remove lists
 - Marker denom cannot be found or is not a restricted marker
-- Signer is does not have admin authority or is not from gov proposal
+- Signer does not have admin authority or is not from gov proposal
 
 ## Msg/UpdateForcedTransferRequest
 
