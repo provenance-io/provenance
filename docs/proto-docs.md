@@ -2642,10 +2642,10 @@ add list
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  |  |
-| `remove_required_attributes` | [string](#string) | repeated |  |
-| `add_required_attributes` | [string](#string) | repeated |  |
-| `transfer_authority` | [string](#string) |  | signer of the proposal |
+| `denom` | [string](#string) |  | The denomination of the marker to update. |
+| `remove_required_attributes` | [string](#string) | repeated | list of required attributes to remove from marker |
+| `add_required_attributes` | [string](#string) | repeated | list of required attributes to add to marker |
+| `transfer_authority` | [string](#string) |  | The signer of the message. Must have transfer authority to marker or be governance module account address. |
 
 
 
@@ -2671,10 +2671,10 @@ signer must have admin authority
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  |  |
-| `remove_denied_addresses` | [string](#string) | repeated |  |
-| `add_denied_addresses` | [string](#string) | repeated |  |
-| `authority` | [string](#string) |  | signer of the proposal |
+| `denom` | [string](#string) |  | The denomination of the marker to update. |
+| `remove_denied_addresses` | [string](#string) | repeated | List of bech32 addresses to remove from the deny send list. |
+| `add_denied_addresses` | [string](#string) | repeated | List of bech32 addresses to add to the deny send list. |
+| `authority` | [string](#string) |  | The signer of the message. Must have admin authority to marker or be governance module account address. |
 
 
 

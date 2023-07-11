@@ -1622,10 +1622,14 @@ var xxx_messageInfo_MsgSupplyIncreaseProposalResponse proto.InternalMessageInfo
 // signer must have transfer authority to change attributes, to update attribute add current to remove list and new to
 // add list
 type MsgUpdateRequiredAttributesRequest struct {
-	Denom                    string   `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	// The denomination of the marker to update.
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	// list of required attributes to remove from marker
 	RemoveRequiredAttributes []string `protobuf:"bytes,2,rep,name=remove_required_attributes,json=removeRequiredAttributes,proto3" json:"remove_required_attributes,omitempty"`
-	AddRequiredAttributes    []string `protobuf:"bytes,3,rep,name=add_required_attributes,json=addRequiredAttributes,proto3" json:"add_required_attributes,omitempty"`
-	TransferAuthority        string   `protobuf:"bytes,4,opt,name=transfer_authority,json=transferAuthority,proto3" json:"transfer_authority,omitempty"`
+	// list of required attributes to add to marker
+	AddRequiredAttributes []string `protobuf:"bytes,3,rep,name=add_required_attributes,json=addRequiredAttributes,proto3" json:"add_required_attributes,omitempty"`
+	// The signer of the message.  Must have transfer authority to marker or be governance module account address.
+	TransferAuthority string `protobuf:"bytes,4,opt,name=transfer_authority,json=transferAuthority,proto3" json:"transfer_authority,omitempty"`
 }
 
 func (m *MsgUpdateRequiredAttributesRequest) Reset()         { *m = MsgUpdateRequiredAttributesRequest{} }
@@ -1933,10 +1937,14 @@ var xxx_messageInfo_MsgSetAccountDataResponse proto.InternalMessageInfo
 // MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a resticted marker
 // signer must have admin authority
 type MsgUpdateSendDenyListRequest struct {
-	Denom                 string   `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	// The denomination of the marker to update.
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	// List of bech32 addresses to remove from the deny send list.
 	RemoveDeniedAddresses []string `protobuf:"bytes,2,rep,name=remove_denied_addresses,json=removeDeniedAddresses,proto3" json:"remove_denied_addresses,omitempty"`
-	AddDeniedAddresses    []string `protobuf:"bytes,3,rep,name=add_denied_addresses,json=addDeniedAddresses,proto3" json:"add_denied_addresses,omitempty"`
-	Authority             string   `protobuf:"bytes,4,opt,name=authority,proto3" json:"authority,omitempty"`
+	// List of bech32 addresses to add to the deny send list.
+	AddDeniedAddresses []string `protobuf:"bytes,3,rep,name=add_denied_addresses,json=addDeniedAddresses,proto3" json:"add_denied_addresses,omitempty"`
+	// The signer of the message.  Must have admin authority to marker or be governance module account address.
+	Authority string `protobuf:"bytes,4,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 
 func (m *MsgUpdateSendDenyListRequest) Reset()         { *m = MsgUpdateSendDenyListRequest{} }
