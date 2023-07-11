@@ -1624,9 +1624,9 @@ var xxx_messageInfo_MsgSupplyIncreaseProposalResponse proto.InternalMessageInfo
 type MsgUpdateRequiredAttributesRequest struct {
 	// The denomination of the marker to update.
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
-	// list of required attributes to remove from marker
+	// List of required attributes to remove from marker.
 	RemoveRequiredAttributes []string `protobuf:"bytes,2,rep,name=remove_required_attributes,json=removeRequiredAttributes,proto3" json:"remove_required_attributes,omitempty"`
-	// list of required attributes to add to marker
+	// List of required attributes to add to marker.
 	AddRequiredAttributes []string `protobuf:"bytes,3,rep,name=add_required_attributes,json=addRequiredAttributes,proto3" json:"add_required_attributes,omitempty"`
 	// The signer of the message.  Must have transfer authority to marker or be governance module account address.
 	TransferAuthority string `protobuf:"bytes,4,opt,name=transfer_authority,json=transferAuthority,proto3" json:"transfer_authority,omitempty"`

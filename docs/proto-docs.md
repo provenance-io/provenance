@@ -2643,8 +2643,8 @@ add list
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  | The denomination of the marker to update. |
-| `remove_required_attributes` | [string](#string) | repeated | list of required attributes to remove from marker |
-| `add_required_attributes` | [string](#string) | repeated | list of required attributes to add to marker |
+| `remove_required_attributes` | [string](#string) | repeated | List of required attributes to remove from marker. |
+| `add_required_attributes` | [string](#string) | repeated | List of required attributes to add to marker. |
 | `transfer_authority` | [string](#string) |  | The signer of the message. Must have transfer authority to marker or be governance module account address. |
 
 
