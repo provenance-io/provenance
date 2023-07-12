@@ -93,7 +93,7 @@ type GovKeeper interface {
 	GetProposalID(ctx sdk.Context) (uint64, error)
 }
 
-// IbcTransferServer defines the message server functionality needed by the marker module.
+// IbcTransferMsgServer defines the message server functionality needed by the marker module.
 type IbcTransferMsgServer interface {
 	Transfer(goCtx context.Context, msg *transfertypes.MsgTransfer) (*transfertypes.MsgTransferResponse, error)
 }
