@@ -17,15 +17,15 @@ const (
 	AssessCustomMsgFeeBips = 10_000
 )
 
-// Compile time interface checks.
-var (
-	_ sdk.Msg = &MsgAssessCustomMsgFeeRequest{}
-	_ sdk.Msg = &MsgAddMsgFeeProposalRequest{}
-	_ sdk.Msg = &MsgUpdateMsgFeeProposalRequest{}
-	_ sdk.Msg = &MsgRemoveMsgFeeProposalRequest{}
-	_ sdk.Msg = &MsgUpdateConversionFeeDenomProposalRequest{}
-	_ sdk.Msg = &MsgUpdateNhashPerUsdMilProposalRequest{}
-)
+// allRequestMsgs defines all the Msg*Request messages.
+var allRequestMsgs = []sdk.Msg{
+	(*MsgAssessCustomMsgFeeRequest)(nil),
+	(*MsgAddMsgFeeProposalRequest)(nil),
+	(*MsgUpdateMsgFeeProposalRequest)(nil),
+	(*MsgRemoveMsgFeeProposalRequest)(nil),
+	(*MsgUpdateConversionFeeDenomProposalRequest)(nil),
+	(*MsgUpdateNhashPerUsdMilProposalRequest)(nil),
+}
 
 func NewMsgAssessCustomMsgFeeRequest(
 	name string,
