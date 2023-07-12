@@ -22,11 +22,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgAssessCustomMsgFeeRequest{},
-		&MsgAddMsgFeeProposalRequest{},
-		&MsgUpdateMsgFeeProposalRequest{},
-		&MsgRemoveMsgFeeProposalRequest{},
-		&MsgUpdateNhashPerUsdMilProposalRequest{},
-		&MsgUpdateConversionFeeDenomProposalRequest{},
 	)
 }
 
