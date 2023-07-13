@@ -10,6 +10,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 )
@@ -90,4 +91,9 @@ type GovKeeper interface {
 	GetDepositParams(ctx sdk.Context) govtypes.DepositParams
 	GetVotingParams(ctx sdk.Context) govtypes.VotingParams
 	GetProposalID(ctx sdk.Context) (uint64, error)
+}
+
+// IbcTransferMsgServer defines the message server functionality needed by the marker module.
+type IbcTransferMsgServer interface {
+	Transfer(goCtx context.Context, msg *transfertypes.MsgTransfer) (*transfertypes.MsgTransferResponse, error)
 }

@@ -39,9 +39,9 @@ func TestProposalContents(t *testing.T) {
 			app.BankKeeper,
 			app.AuthzKeeper,
 			app.FeeGrantKeeper,
-			app.TransferKeeper,
 			app.AttributeKeeper,
 			app.NameKeeper,
+			app.TransferKeeper,
 		),
 	)
 	require.Len(t, weightedProposalContent, 6)
