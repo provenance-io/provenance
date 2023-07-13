@@ -190,6 +190,3 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 // TODO: This is also required for https://github.com/provenance-io/provenance/issues/1414
 replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
-
-// TODO: Required for IBC Transfer Module. Remove this when they patch it to include our changes. https://github.com/provenance-io/provenance/issues/1100
-replace github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.1.1-pio-1
