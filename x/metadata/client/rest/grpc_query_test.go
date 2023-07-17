@@ -188,6 +188,7 @@ func (s *IntegrationGRPCTestSuite) TestGRPCQueries() {
 				Scope: &types.ScopeWrapper{Scope: &s.scope},
 				Request: &types.ScopeRequest{
 					ScopeId:        s.scopeUUID.String(),
+					ExcludeIdInfo:  true,
 					IncludeRequest: true,
 				},
 			},
@@ -216,7 +217,6 @@ func (s *IntegrationGRPCTestSuite) TestGRPCQueries() {
 				},
 				Request: &types.ScopeRequest{
 					ScopeId:        s.scopeUUID.String(),
-					IncludeIdInfo:  true,
 					IncludeRequest: true,
 				},
 			},

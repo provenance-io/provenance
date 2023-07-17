@@ -99,7 +99,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 	ctx := sdk.UnwrapSDKContext(c)
 	scope, found := k.GetScope(ctx, scopeAddr)
 	if found {
-		retval.Scope = types.WrapScope(&scope, req.IncludeIdInfo)
+		retval.Scope = types.WrapScope(&scope, !req.ExcludeIdInfo)
 	} else {
 		retval.Scope = types.WrapScopeNotFound(scopeAddr)
 	}
@@ -108,7 +108,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 
 	if req.IncludeSessions {
 		err := k.IterateSessions(ctx, scopeAddr, func(session types.Session) (stop bool) {
-			retval.Sessions = append(retval.Sessions, types.WrapSession(&session, req.IncludeIdInfo))
+			retval.Sessions = append(retval.Sessions, types.WrapSession(&session, !req.ExcludeIdInfo))
 			return false
 		})
 		if err != nil {
@@ -118,7 +118,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 
 	if req.IncludeRecords {
 		err := k.IterateRecords(ctx, scopeAddr, func(record types.Record) (stop bool) {
-			retval.Records = append(retval.Records, types.WrapRecord(&record, req.IncludeIdInfo))
+			retval.Records = append(retval.Records, types.WrapRecord(&record, !req.ExcludeIdInfo))
 			return false
 		})
 		if err != nil {
@@ -152,7 +152,7 @@ func (k Keeper) ScopesAll(c context.Context, req *types.ScopesAllRequest) (*type
 		if req.IncludeRequest {
 			retval.Request = req
 		}
-		incInfo = req.IncludeIdInfo
+		incInfo = !req.ExcludeIdInfo
 	}
 
 	pageRequest := getPageRequest(req)
@@ -286,13 +286,13 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 	case !sessionAddr.Empty():
 		session, found := k.GetSession(ctx, sessionAddr)
 		if found {
-			retval.Sessions = append(retval.Sessions, types.WrapSession(&session, req.IncludeIdInfo))
+			retval.Sessions = append(retval.Sessions, types.WrapSession(&session, !req.ExcludeIdInfo))
 		} else {
 			retval.Sessions = append(retval.Sessions, types.WrapSessionNotFound(sessionAddr))
 		}
 	case !scopeAddr.Empty():
 		itErr := k.IterateSessions(ctx, scopeAddr, func(s types.Session) (stop bool) {
-			retval.Sessions = append(retval.Sessions, types.WrapSession(&s, req.IncludeIdInfo))
+			retval.Sessions = append(retval.Sessions, types.WrapSession(&s, !req.ExcludeIdInfo))
 			return false
 		})
 		if itErr != nil {
@@ -305,7 +305,7 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 	if req.IncludeScope {
 		scope, found := k.GetScope(ctx, scopeAddr)
 		if found {
-			retval.Scope = types.WrapScope(&scope, req.IncludeIdInfo)
+			retval.Scope = types.WrapScope(&scope, !req.ExcludeIdInfo)
 		} else {
 			retval.Scope = types.WrapScopeNotFound(scopeAddr)
 		}
@@ -329,7 +329,7 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 				}
 			}
 			if keep {
-				retval.Records = append(retval.Records, types.WrapRecord(&r, req.IncludeIdInfo))
+				retval.Records = append(retval.Records, types.WrapRecord(&r, !req.ExcludeIdInfo))
 			}
 			return false
 		})
@@ -350,7 +350,7 @@ func (k Keeper) SessionsAll(c context.Context, req *types.SessionsAllRequest) (*
 		if req.IncludeRequest {
 			retval.Request = req
 		}
-		incInfo = req.IncludeIdInfo
+		incInfo = !req.ExcludeIdInfo
 	}
 
 	pageRequest := getPageRequest(req)
@@ -462,7 +462,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 	case !recordAddr.Empty():
 		record, found := k.GetRecord(ctx, recordAddr)
 		if found {
-			retval.Records = append(retval.Records, types.WrapRecord(&record, req.IncludeIdInfo))
+			retval.Records = append(retval.Records, types.WrapRecord(&record, !req.ExcludeIdInfo))
 		} else {
 			retval.Records = append(retval.Records, types.WrapRecordNotFound(recordAddr))
 		}
@@ -479,7 +479,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 			haveSessionAddr := !sessionAddr.Empty()
 			for _, r := range records {
 				if !haveSessionAddr || sessionAddr.Equals(r.SessionId) {
-					retval.Records = append(retval.Records, types.WrapRecord(r, req.IncludeIdInfo))
+					retval.Records = append(retval.Records, types.WrapRecord(r, !req.ExcludeIdInfo))
 				}
 			}
 		}
@@ -490,7 +490,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 	if req.IncludeScope {
 		scope, found := k.GetScope(ctx, scopeAddr)
 		if found {
-			retval.Scope = types.WrapScope(&scope, req.IncludeIdInfo)
+			retval.Scope = types.WrapScope(&scope, !req.ExcludeIdInfo)
 		} else {
 			retval.Scope = types.WrapScopeNotFound(scopeAddr)
 		}
@@ -517,7 +517,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 		for _, a := range sessionAddrs {
 			session, found := k.GetSession(ctx, a)
 			if found {
-				retval.Sessions = append(retval.Sessions, types.WrapSession(&session, req.IncludeIdInfo))
+				retval.Sessions = append(retval.Sessions, types.WrapSession(&session, !req.ExcludeIdInfo))
 			} else {
 				retval.Sessions = append(retval.Sessions, types.WrapSessionNotFound(a))
 			}
@@ -536,7 +536,7 @@ func (k Keeper) RecordsAll(c context.Context, req *types.RecordsAllRequest) (*ty
 		if req.IncludeRequest {
 			retval.Request = req
 		}
-		incInfo = req.IncludeIdInfo
+		incInfo = !req.ExcludeIdInfo
 	}
 
 	pageRequest := getPageRequest(req)
@@ -686,7 +686,7 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 	ctx := sdk.UnwrapSDKContext(c)
 	spec, found := k.GetScopeSpecification(ctx, specAddr)
 	if found {
-		retval.ScopeSpecification = types.WrapScopeSpec(&spec, req.IncludeIdInfo)
+		retval.ScopeSpecification = types.WrapScopeSpec(&spec, !req.ExcludeIdInfo)
 	} else {
 		retval.ScopeSpecification = types.WrapScopeSpecNotFound(specAddr)
 	}
@@ -695,7 +695,7 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 		for _, id := range spec.ContractSpecIds {
 			cs, ok := k.GetContractSpecification(ctx, id)
 			if ok {
-				retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpec(&cs, req.IncludeIdInfo))
+				retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpec(&cs, !req.ExcludeIdInfo))
 			} else {
 				retval.ContractSpecs = append(retval.ContractSpecs, types.WrapContractSpecNotFound(id))
 			}
@@ -708,7 +708,7 @@ func (k Keeper) ScopeSpecification(c context.Context, req *types.ScopeSpecificat
 			err = k.IterateRecordSpecsForContractSpec(ctx, id, func(recordSpecID types.MetadataAddress) (stop bool) {
 				rs, ok := k.GetRecordSpecification(ctx, recordSpecID)
 				if ok {
-					retval.RecordSpecs = append(retval.RecordSpecs, types.WrapRecordSpec(&rs, req.IncludeIdInfo))
+					retval.RecordSpecs = append(retval.RecordSpecs, types.WrapRecordSpec(&rs, !req.ExcludeIdInfo))
 				} else {
 					retval.RecordSpecs = append(retval.RecordSpecs, types.WrapRecordSpecNotFound(recordSpecID))
 				}
@@ -733,7 +733,7 @@ func (k Keeper) ScopeSpecificationsAll(c context.Context, req *types.ScopeSpecif
 		if req.IncludeRequest {
 			retval.Request = req
 		}
-		incInfo = req.IncludeIdInfo
+		incInfo = !req.ExcludeIdInfo
 	}
 
 	pageRequest := getPageRequest(req)
@@ -794,7 +794,7 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 	ctx := sdk.UnwrapSDKContext(c)
 	spec, found := k.GetContractSpecification(ctx, specAddr)
 	if found {
-		retval.ContractSpecification = types.WrapContractSpec(&spec, req.IncludeIdInfo)
+		retval.ContractSpecification = types.WrapContractSpec(&spec, !req.ExcludeIdInfo)
 	} else {
 		retval.ContractSpecification = types.WrapContractSpecNotFound(specAddr)
 	}
@@ -805,7 +805,7 @@ func (k Keeper) ContractSpecification(c context.Context, req *types.ContractSpec
 			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("error getting record specifications for contract spec %s: %v",
 				specAddr, err)
 		}
-		retval.RecordSpecifications = types.WrapRecordSpecs(recSpecs, req.IncludeIdInfo)
+		retval.RecordSpecifications = types.WrapRecordSpecs(recSpecs, !req.ExcludeIdInfo)
 	}
 
 	return &retval, nil
@@ -820,7 +820,7 @@ func (k Keeper) ContractSpecificationsAll(c context.Context, req *types.Contract
 		if req.IncludeRequest {
 			retval.Request = req
 		}
-		incInfo = req.IncludeIdInfo
+		incInfo = !req.ExcludeIdInfo
 	}
 
 	pageRequest := getPageRequest(req)
@@ -894,7 +894,7 @@ func (k Keeper) RecordSpecificationsForContractSpecification(
 			contractSpecAddr, err)
 	}
 
-	retval.RecordSpecifications = types.WrapRecordSpecs(recSpecs, req.IncludeIdInfo)
+	retval.RecordSpecifications = types.WrapRecordSpecs(recSpecs, !req.ExcludeIdInfo)
 
 	return &retval, err
 }
@@ -923,7 +923,7 @@ func (k Keeper) RecordSpecification(c context.Context, req *types.RecordSpecific
 	ctx := sdk.UnwrapSDKContext(c)
 	spec, found := k.GetRecordSpecification(ctx, recSpecAddr)
 	if found {
-		retval.RecordSpecification = types.WrapRecordSpec(&spec, req.IncludeIdInfo)
+		retval.RecordSpecification = types.WrapRecordSpec(&spec, !req.ExcludeIdInfo)
 	} else {
 		retval.RecordSpecification = types.WrapRecordSpecNotFound(recSpecAddr)
 	}
@@ -940,7 +940,7 @@ func (k Keeper) RecordSpecificationsAll(c context.Context, req *types.RecordSpec
 		if req.IncludeRequest {
 			retval.Request = req
 		}
-		incInfo = req.IncludeIdInfo
+		incInfo = !req.ExcludeIdInfo
 	}
 
 	pageRequest := getPageRequest(req)
