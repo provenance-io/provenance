@@ -46,6 +46,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update ibcnet ports so they don't conflict with host machine. [#1622](https://github.com/provenance-io/provenance/issues/1622)
 * Replace custom ibc-go v6.1.1 fork with official module.  [#1616](https://github.com/provenance-io/provenance/issues/1616)
 * Updated metadata queries to optionally include the request and id info [#1443](https://github.com/provenance-io/provenance/issues/1443).
+  The request is now omitted by default, but will be included if `include_request` is `true`.
+  The id info is still included by default, but will be excluded if `exclude_id_info` is `true`.
 
 ### Bug Fixes
 
@@ -53,8 +55,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Client Breaking
 
-* Metadata queries no longer include the request and id info by default [#1443](https://github.com/provenance-io/provenance/issues/1443).
-  They are still available by setting the `include_request` and/or `include_id_info` flags in the requests.
+* Metadata query responses no longer include the request by default [#1443](https://github.com/provenance-io/provenance/issues/1443).
+  They are still available by setting the `include_request` flag in the requests.
 * The `provenanced query metadata get` command has been changed to use the new `GetByAddr` query [#1443](https://github.com/provenance-io/provenance/issues/1443).
   The command can now take in multiple ids.
   The output of this command reflects the `GetByAddrResponse` instead of specific type queries.
