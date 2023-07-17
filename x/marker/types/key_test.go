@@ -27,7 +27,7 @@ func TestDenySendKey(t *testing.T) {
 	require.NoError(t, err)
 	denyAddr := sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
 	denyKey := DenySendKey(addr, denyAddr)
-	assert.Equal(t, DenySendKeyPrefix[0], denyKey[0], "should have correct prefix for deny send key")
+	assert.Equal(t, uint8(3), denyKey[0], "should have correct prefix for deny send key")
 	denomArrLen := int32(denyKey[1])
 	assert.Equal(t, addr.Bytes(), denyKey[2:denomArrLen+2], "should match denom key")
 	denyAddrLen := int32(denyKey[denomArrLen+2])
