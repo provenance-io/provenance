@@ -54,6 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Client Breaking
 
 * Metadata queries no longer include the request and id info by default [#1443](https://github.com/provenance-io/provenance/issues/1443).
+  They are still available by setting the `include_request` and/or `include_id_info` flags in the requests.
 * The `provenanced query metadata get` command has been changed to use the new `GetByAddr` query [#1443](https://github.com/provenance-io/provenance/issues/1443).
   The command can now take in multiple ids.
   The output of this command reflects the `GetByAddrResponse` instead of specific type queries.
