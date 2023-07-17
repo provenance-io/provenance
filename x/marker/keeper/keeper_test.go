@@ -1436,11 +1436,11 @@ func TestMsgUpdateSendDenyListRequest(t *testing.T) {
 
 	rMarkerDenom := "restricted-marker"
 	rMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom), nil, 0, 0)
-	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer, types.Access_Admin}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
+	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
 
 	rMarkerGovDenom := "restricted-marker-gov"
 	rMarkerGovAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerGovDenom), nil, 0, 0)
-	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerGovAcct, sdk.NewInt64Coin(rMarkerGovDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{}))
+	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerGovAcct, sdk.NewInt64Coin(rMarkerGovDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{}))
 
 	denyAddrToRemove := testUserAddress("denyAddrToRemove")
 	app.MarkerKeeper.AddSendDeny(ctx, rMarkerAcct.GetAddress(), denyAddrToRemove)
@@ -1469,7 +1469,7 @@ func TestMsgUpdateSendDenyListRequest(t *testing.T) {
 		{
 			name:             "should fail, signer does not have admin access",
 			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(rMarkerDenom, notAuthUser, []string{}, []string{}),
-			expectedError:    "cosmos1ku2jzvpkt4ffxxaajyk2r88axk9cr5jqlthcm4 does not have admin access for restricted-marker marker",
+			expectedError:    "cosmos1ku2jzvpkt4ffxxaajyk2r88axk9cr5jqlthcm4 does not have transfer authority for restricted-marker marker",
 		},
 		{
 			name:             "should fail, gov not enabled for restricted marker",

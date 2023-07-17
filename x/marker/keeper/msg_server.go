@@ -771,8 +771,8 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 			return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
 		}
 	} else {
-		if !marker.HasAccess(msg.Authority, types.Access_Admin) {
-			return nil, fmt.Errorf("%s does not have admin access for %s marker", msg.Authority, msg.Denom)
+		if !marker.HasAccess(msg.Authority, types.Access_Transfer) {
+			return nil, fmt.Errorf("%s does not have transfer authority for %s marker", msg.Authority, msg.Denom)
 		}
 	}
 
