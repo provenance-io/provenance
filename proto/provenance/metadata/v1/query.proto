@@ -274,8 +274,8 @@ message ScopeRequest {
   bool include_sessions = 10 [(gogoproto.moretags) = "yaml:\"include_sessions\""];
   // include_records is a flag for whether to include the records of the scope in the response.
   bool include_records = 11 [(gogoproto.moretags) = "yaml:\"include_records\""];
-  // include_id_info is a flag for whether to include the id info in the response.
-  bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+  // exclude_id_info is a flag for whether to exclude the id info from the response.
+  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
 
   // include_request is a flag for whether to include this request in your result.
   bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
@@ -306,8 +306,8 @@ message ScopeWrapper {
 
 // ScopesAllRequest is the request type for the Query/ScopesAll RPC method.
 message ScopesAllRequest {
-  // include_id_info is a flag for whether to include the id info in the response.
-  bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+  // exclude_id_info is a flag for whether to exclude the id info from the response.
+  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
 
   // include_request is a flag for whether to include this request in your result.
   bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
@@ -344,8 +344,8 @@ message SessionsRequest {
   bool include_scope = 10 [(gogoproto.moretags) = "yaml:\"include_scope\""];
   // include_records is a flag for whether to include the records of these sessions in the response.
   bool include_records = 11 [(gogoproto.moretags) = "yaml:\"include_records\""];
-  // include_id_info is a flag for whether to include the id info in the response.
-  bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+  // exclude_id_info is a flag for whether to exclude the id info from the response.
+  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
 
   // include_request is a flag for whether to include this request in your result.
   bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
@@ -376,8 +376,8 @@ message SessionWrapper {
 
 // SessionsAllRequest is the request type for the Query/SessionsAll RPC method.
 message SessionsAllRequest {
-  // include_id_info is a flag for whether to include the id info in the response.
-  bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+  // exclude_id_info is a flag for whether to exclude the id info from the response.
+  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
 
   // include_request is a flag for whether to include this request in your result.
   bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
@@ -414,8 +414,8 @@ message RecordsRequest {
   bool include_scope = 10 [(gogoproto.moretags) = "yaml:\"include_scope\""];
   // include_sessions is a flag for whether to include the sessions containing these records in the response.
   bool include_sessions = 11 [(gogoproto.moretags) = "yaml:\"include_sessions\""];
-  // include_id_info is a flag for whether to include the id info in the response.
-  bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+  // exclude_id_info is a flag for whether to exclude the id info from the response.
+  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
 
   // include_request is a flag for whether to include this request in your result.
   bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
@@ -446,8 +446,8 @@ message RecordWrapper {
 
 // RecordsAllRequest is the request type for the Query/RecordsAll RPC method.
 message RecordsAllRequest {
-  // include_id_info is a flag for whether to include the id info in the response.
-  bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+  // exclude_id_info is a flag for whether to exclude the id info from the response.
+  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
 
   // include_request is a flag for whether to include this request in your result.
   bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
@@ -520,8 +520,8 @@ message ScopeSpecificationRequest {
   // include_record_specs is a flag for whether to include the record specifications of the scope specification in the
   // response.
   bool include_record_specs = 11 [(gogoproto.moretags) = "yaml:\"include_record_specs\""];
-  // include_id_info is a flag for whether to include the id info in the response.
-  bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+  // exclude_id_info is a flag for whether to exclude the id info from the response.
+  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
 
   // include_request is a flag for whether to include this request in your result.
   bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
@@ -550,8 +550,8 @@ message ScopeSpecificationWrapper {
 
 // ScopeSpecificationsAllRequest is the request type for the Query/ScopeSpecificationsAll RPC method.
 message ScopeSpecificationsAllRequest {
-  // include_id_info is a flag for whether to include the id info in the response.
-  bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+  // exclude_id_info is a flag for whether to exclude the id info from the response.
+  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
 
   // include_request is a flag for whether to include this request in your result.
   bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
@@ -581,8 +581,8 @@ message ContractSpecificationRequest {
   // include_record_specs is a flag for whether to include the the record specifications of this contract specification
   // in the response.
   bool include_record_specs = 10 [(gogoproto.moretags) = "yaml:\"include_record_specs\""];
-  // include_id_info is a flag for whether to include the id info in the response.
-  bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+  // exclude_id_info is a flag for whether to exclude the id info from the response.
+  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
 
   // include_request is a flag for whether to include this request in your result.
   bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
@@ -611,8 +611,8 @@ message ContractSpecificationWrapper {
 
 // ContractSpecificationsAllRequest is the request type for the Query/ContractSpecificationsAll RPC method.
 message ContractSpecificationsAllRequest {
-  // include_id_info is a flag for whether to include the id info in the response.
-  bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+  // exclude_id_info is a flag for whether to exclude the id info from the response.
+  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
 
   // include_request is a flag for whether to include this request in your result.
   bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
@@ -641,8 +641,8 @@ message RecordSpecificationsForContractSpecificationRequest {
   // recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44.
   string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
 
-  // include_id_info is a flag for whether to include the id info in the response.
-  bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+  // exclude_id_info is a flag for whether to exclude the id info from the response.
+  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
 
   // include_request is a flag for whether to include this request in your result.
   bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
@@ -675,8 +675,8 @@ message RecordSpecificationRequest {
   // It is ignored if the specification_id is a record specification address.
   string name = 2;
 
-  // include_id_info is a flag for whether to include the id info in the response.
-  bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+  // exclude_id_info is a flag for whether to exclude the id info from the response.
+  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
 
   // include_request is a flag for whether to include this request in your result.
   bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
@@ -701,8 +701,8 @@ message RecordSpecificationWrapper {
 
 // RecordSpecificationsAllRequest is the request type for the Query/RecordSpecificationsAll RPC method.
 message RecordSpecificationsAllRequest {
-  // include_id_info is a flag for whether to include the id info in the response.
-  bool include_id_info = 12 [(gogoproto.moretags) = "yaml:\"include_id_info\""];
+  // exclude_id_info is a flag for whether to exclude the id info from the response.
+  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
 
   // include_request is a flag for whether to include this request in your result.
   bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];

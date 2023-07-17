@@ -176,13 +176,13 @@ func (s *IntegrationGRPCTestSuite) TestGRPCQueries() {
 		},
 		{
 			name:     "Get metadata scope by id no req no info",
-			url:      fmt.Sprintf("%s/provenance/metadata/v1/scope/%s", baseURL, s.scopeUUID),
+			url:      fmt.Sprintf("%s/provenance/metadata/v1/scope/%s?exclude_id_info=true", baseURL, s.scopeUUID),
 			respType: &types.ScopeResponse{},
 			expected: &types.ScopeResponse{Scope: &types.ScopeWrapper{Scope: &s.scope}},
 		},
 		{
 			name:     "Get metadata scope by id with req no info",
-			url:      fmt.Sprintf("%s/provenance/metadata/v1/scope/%s?include_request=true", baseURL, s.scopeUUID),
+			url:      fmt.Sprintf("%s/provenance/metadata/v1/scope/%s?include_request=true&exclude_id_info=true", baseURL, s.scopeUUID),
 			respType: &types.ScopeResponse{},
 			expected: &types.ScopeResponse{
 				Scope: &types.ScopeWrapper{Scope: &s.scope},
@@ -194,7 +194,7 @@ func (s *IntegrationGRPCTestSuite) TestGRPCQueries() {
 		},
 		{
 			name:     "Get metadata scope by id no req with info",
-			url:      fmt.Sprintf("%s/provenance/metadata/v1/scope/%s?include_id_info=true", baseURL, s.scopeUUID),
+			url:      fmt.Sprintf("%s/provenance/metadata/v1/scope/%s", baseURL, s.scopeUUID),
 			respType: &types.ScopeResponse{},
 			expected: &types.ScopeResponse{
 				Scope: &types.ScopeWrapper{
@@ -206,7 +206,7 @@ func (s *IntegrationGRPCTestSuite) TestGRPCQueries() {
 		},
 		{
 			name:     "Get metadata scope by id with req and info",
-			url:      fmt.Sprintf("%s/provenance/metadata/v1/scope/%s?include_request=true&include_id_info=true", baseURL, s.scopeUUID),
+			url:      fmt.Sprintf("%s/provenance/metadata/v1/scope/%s?include_request=true", baseURL, s.scopeUUID),
 			respType: &types.ScopeResponse{},
 			expected: &types.ScopeResponse{
 				Scope: &types.ScopeWrapper{

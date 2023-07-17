@@ -37702,12 +37702,12 @@ paths:
                       the record specifications of this contract specification
 
                       in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -37764,10 +37764,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -38004,12 +38004,12 @@ paths:
 
                       It is ignored if the specification_id is a record
                       specification address.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -38068,10 +38068,10 @@ paths:
           in: path
           required: true
           type: string
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -38329,12 +38329,12 @@ paths:
                       It can also be a record specification address, e.g.
 
                       recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -38383,10 +38383,10 @@ paths:
           in: path
           required: true
           type: string
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -38549,12 +38549,12 @@ paths:
                 description: request is a copy of the request that generated these results.
                 type: object
                 properties:
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -38673,10 +38673,10 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -40471,12 +40471,12 @@ paths:
                     description: >-
                       include_sessions is a flag for whether to include the
                       sessions containing these records in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -40559,10 +40559,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -41338,12 +41338,12 @@ paths:
                     description: >-
                       include_records is a flag for whether to include the
                       records of the scope in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -41413,10 +41413,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -42225,12 +42225,12 @@ paths:
                     description: >-
                       include_records is a flag for whether to include the
                       records of these sessions in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -42315,10 +42315,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -42620,12 +42620,12 @@ paths:
                 description: request is a copy of the request that generated these results.
                 type: object
                 properties:
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -42744,10 +42744,10 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -43042,12 +43042,12 @@ paths:
 
                       It is ignored if the specification_id is a record
                       specification address.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -43106,10 +43106,10 @@ paths:
           in: query
           required: false
           type: string
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -43326,12 +43326,12 @@ paths:
                 description: request is a copy of the request that generated these results.
                 type: object
                 properties:
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -43450,10 +43450,10 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -44287,12 +44287,12 @@ paths:
                     description: >-
                       include_records is a flag for whether to include the
                       records of the scope in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -44362,10 +44362,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -45157,12 +45157,12 @@ paths:
                     description: >-
                       include_sessions is a flag for whether to include the
                       sessions containing these records in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -45245,10 +45245,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -46057,12 +46057,12 @@ paths:
                     description: >-
                       include_records is a flag for whether to include the
                       records of these sessions in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -46147,10 +46147,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -46942,12 +46942,12 @@ paths:
                     description: >-
                       include_sessions is a flag for whether to include the
                       sessions containing these records in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -47030,10 +47030,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -47842,12 +47842,12 @@ paths:
                     description: >-
                       include_records is a flag for whether to include the
                       records of these sessions in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -47932,10 +47932,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -48727,12 +48727,12 @@ paths:
                     description: >-
                       include_sessions is a flag for whether to include the
                       sessions containing these records in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -48815,10 +48815,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -49610,12 +49610,12 @@ paths:
                     description: >-
                       include_sessions is a flag for whether to include the
                       sessions containing these records in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -49698,10 +49698,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -50510,12 +50510,12 @@ paths:
                     description: >-
                       include_records is a flag for whether to include the
                       records of these sessions in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -50600,10 +50600,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -50804,12 +50804,12 @@ paths:
                 description: request is a copy of the request that generated these results.
                 type: object
                 properties:
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -50928,10 +50928,10 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -51496,12 +51496,12 @@ paths:
                       record specifications of the scope specification in the
 
                       response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -51563,10 +51563,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -51717,12 +51717,12 @@ paths:
                 description: request is a copy of the request that generated these results.
                 type: object
                 properties:
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -51841,10 +51841,10 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -52678,12 +52678,12 @@ paths:
                     description: >-
                       include_records is a flag for whether to include the
                       records of the scope in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -52753,10 +52753,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -53565,12 +53565,12 @@ paths:
                     description: >-
                       include_records is a flag for whether to include the
                       records of these sessions in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -53655,10 +53655,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -54450,12 +54450,12 @@ paths:
                     description: >-
                       include_sessions is a flag for whether to include the
                       sessions containing these records in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -54538,10 +54538,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -55333,12 +55333,12 @@ paths:
                     description: >-
                       include_sessions is a flag for whether to include the
                       sessions containing these records in the response.
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -55421,10 +55421,10 @@ paths:
           required: false
           type: boolean
           format: boolean
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -55687,12 +55687,12 @@ paths:
                 description: request is a copy of the request that generated these results.
                 type: object
                 properties:
-                  include_id_info:
+                  exclude_id_info:
                     type: boolean
                     format: boolean
                     description: >-
-                      include_id_info is a flag for whether to include the id
-                      info in the response.
+                      exclude_id_info is a flag for whether to exclude the id
+                      info from the response.
                   include_request:
                     type: boolean
                     format: boolean
@@ -55811,10 +55811,10 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: include_id_info
+        - name: exclude_id_info
           description: >-
-            include_id_info is a flag for whether to include the id info in the
-            response.
+            exclude_id_info is a flag for whether to exclude the id info from
+            the response.
           in: query
           required: false
           type: boolean
@@ -84011,11 +84011,11 @@ definitions:
           specifications of this contract specification
 
           in the response.
-      include_id_info:
+      exclude_id_info:
         type: boolean
         format: boolean
         description: >-
-          include_id_info is a flag for whether to include the id info in the
+          exclude_id_info is a flag for whether to exclude the id info from the
           response.
       include_request:
         type: boolean
@@ -84357,11 +84357,11 @@ definitions:
               record specifications of this contract specification
 
               in the response.
-          include_id_info:
+          exclude_id_info:
             type: boolean
             format: boolean
             description: >-
-              include_id_info is a flag for whether to include the id info in
+              exclude_id_info is a flag for whether to exclude the id info from
               the response.
           include_request:
             type: boolean
@@ -84494,11 +84494,11 @@ definitions:
   provenance.metadata.v1.ContractSpecificationsAllRequest:
     type: object
     properties:
-      include_id_info:
+      exclude_id_info:
         type: boolean
         format: boolean
         description: >-
-          include_id_info is a flag for whether to include the id info in the
+          exclude_id_info is a flag for whether to exclude the id info from the
           response.
       include_request:
         type: boolean
@@ -84698,11 +84698,11 @@ definitions:
         description: request is a copy of the request that generated these results.
         type: object
         properties:
-          include_id_info:
+          exclude_id_info:
             type: boolean
             format: boolean
             description: >-
-              include_id_info is a flag for whether to include the id info in
+              exclude_id_info is a flag for whether to exclude the id info from
               the response.
           include_request:
             type: boolean
@@ -86692,11 +86692,11 @@ definitions:
 
           It is ignored if the specification_id is a record specification
           address.
-      include_id_info:
+      exclude_id_info:
         type: boolean
         format: boolean
         description: >-
-          include_id_info is a flag for whether to include the id info in the
+          exclude_id_info is a flag for whether to exclude the id info from the
           response.
       include_request:
         type: boolean
@@ -86914,11 +86914,11 @@ definitions:
 
               It is ignored if the specification_id is a record specification
               address.
-          include_id_info:
+          exclude_id_info:
             type: boolean
             format: boolean
             description: >-
-              include_id_info is a flag for whether to include the id info in
+              exclude_id_info is a flag for whether to exclude the id info from
               the response.
           include_request:
             type: boolean
@@ -87104,11 +87104,11 @@ definitions:
   provenance.metadata.v1.RecordSpecificationsAllRequest:
     type: object
     properties:
-      include_id_info:
+      exclude_id_info:
         type: boolean
         format: boolean
         description: >-
-          include_id_info is a flag for whether to include the id info in the
+          exclude_id_info is a flag for whether to exclude the id info from the
           response.
       include_request:
         type: boolean
@@ -87363,11 +87363,11 @@ definitions:
         description: request is a copy of the request that generated these results.
         type: object
         properties:
-          include_id_info:
+          exclude_id_info:
             type: boolean
             format: boolean
             description: >-
-              include_id_info is a flag for whether to include the id info in
+              exclude_id_info is a flag for whether to exclude the id info from
               the response.
           include_request:
             type: boolean
@@ -87474,11 +87474,11 @@ definitions:
           It can also be a record specification address, e.g.
 
           recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44.
-      include_id_info:
+      exclude_id_info:
         type: boolean
         format: boolean
         description: >-
-          include_id_info is a flag for whether to include the id info in the
+          exclude_id_info is a flag for whether to exclude the id info from the
           response.
       include_request:
         type: boolean
@@ -87703,11 +87703,11 @@ definitions:
               It can also be a record specification address, e.g.
 
               recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44.
-          include_id_info:
+          exclude_id_info:
             type: boolean
             format: boolean
             description: >-
-              include_id_info is a flag for whether to include the id info in
+              exclude_id_info is a flag for whether to exclude the id info from
               the response.
           include_request:
             type: boolean
@@ -87960,11 +87960,11 @@ definitions:
   provenance.metadata.v1.RecordsAllRequest:
     type: object
     properties:
-      include_id_info:
+      exclude_id_info:
         type: boolean
         format: boolean
         description: >-
-          include_id_info is a flag for whether to include the id info in the
+          exclude_id_info is a flag for whether to exclude the id info from the
           response.
       include_request:
         type: boolean
@@ -88294,11 +88294,11 @@ definitions:
         description: request is a copy of the request that generated these results.
         type: object
         properties:
-          include_id_info:
+          exclude_id_info:
             type: boolean
             format: boolean
             description: >-
-              include_id_info is a flag for whether to include the id info in
+              exclude_id_info is a flag for whether to exclude the id info from
               the response.
           include_request:
             type: boolean
@@ -88430,11 +88430,11 @@ definitions:
         description: >-
           include_sessions is a flag for whether to include the sessions
           containing these records in the response.
-      include_id_info:
+      exclude_id_info:
         type: boolean
         format: boolean
         description: >-
-          include_id_info is a flag for whether to include the id info in the
+          exclude_id_info is a flag for whether to exclude the id info from the
           response.
       include_request:
         type: boolean
@@ -89124,11 +89124,11 @@ definitions:
             description: >-
               include_sessions is a flag for whether to include the sessions
               containing these records in the response.
-          include_id_info:
+          exclude_id_info:
             type: boolean
             format: boolean
             description: >-
-              include_id_info is a flag for whether to include the id info in
+              exclude_id_info is a flag for whether to exclude the id info from
               the response.
           include_request:
             type: boolean
@@ -89298,11 +89298,11 @@ definitions:
         description: >-
           include_records is a flag for whether to include the records of the
           scope in the response.
-      include_id_info:
+      exclude_id_info:
         type: boolean
         format: boolean
         description: >-
-          include_id_info is a flag for whether to include the id info in the
+          exclude_id_info is a flag for whether to exclude the id info from the
           response.
       include_request:
         type: boolean
@@ -89984,11 +89984,11 @@ definitions:
             description: >-
               include_records is a flag for whether to include the records of
               the scope in the response.
-          include_id_info:
+          exclude_id_info:
             type: boolean
             format: boolean
             description: >-
-              include_id_info is a flag for whether to include the id info in
+              exclude_id_info is a flag for whether to exclude the id info from
               the response.
           include_request:
             type: boolean
@@ -90122,11 +90122,11 @@ definitions:
           specifications of the scope specification in the
 
           response.
-      include_id_info:
+      exclude_id_info:
         type: boolean
         format: boolean
         description: >-
-          include_id_info is a flag for whether to include the id info in the
+          exclude_id_info is a flag for whether to exclude the id info from the
           response.
       include_request:
         type: boolean
@@ -90593,11 +90593,11 @@ definitions:
               specifications of the scope specification in the
 
               response.
-          include_id_info:
+          exclude_id_info:
             type: boolean
             format: boolean
             description: >-
-              include_id_info is a flag for whether to include the id info in
+              exclude_id_info is a flag for whether to exclude the id info from
               the response.
           include_request:
             type: boolean
@@ -90719,11 +90719,11 @@ definitions:
   provenance.metadata.v1.ScopeSpecificationsAllRequest:
     type: object
     properties:
-      include_id_info:
+      exclude_id_info:
         type: boolean
         format: boolean
         description: >-
-          include_id_info is a flag for whether to include the id info in the
+          exclude_id_info is a flag for whether to exclude the id info from the
           response.
       include_request:
         type: boolean
@@ -90916,11 +90916,11 @@ definitions:
         description: request is a copy of the request that generated these results.
         type: object
         properties:
-          include_id_info:
+          exclude_id_info:
             type: boolean
             format: boolean
             description: >-
-              include_id_info is a flag for whether to include the id info in
+              exclude_id_info is a flag for whether to exclude the id info from
               the response.
           include_request:
             type: boolean
@@ -91163,11 +91163,11 @@ definitions:
   provenance.metadata.v1.ScopesAllRequest:
     type: object
     properties:
-      include_id_info:
+      exclude_id_info:
         type: boolean
         format: boolean
         description: >-
-          include_id_info is a flag for whether to include the id info in the
+          exclude_id_info is a flag for whether to exclude the id info from the
           response.
       include_request:
         type: boolean
@@ -91402,11 +91402,11 @@ definitions:
         description: request is a copy of the request that generated these results.
         type: object
         properties:
-          include_id_info:
+          exclude_id_info:
             type: boolean
             format: boolean
             description: >-
-              include_id_info is a flag for whether to include the id info in
+              exclude_id_info is a flag for whether to exclude the id info from
               the response.
           include_request:
             type: boolean
@@ -91861,11 +91861,11 @@ definitions:
   provenance.metadata.v1.SessionsAllRequest:
     type: object
     properties:
-      include_id_info:
+      exclude_id_info:
         type: boolean
         format: boolean
         description: >-
-          include_id_info is a flag for whether to include the id info in the
+          exclude_id_info is a flag for whether to exclude the id info from the
           response.
       include_request:
         type: boolean
@@ -92158,11 +92158,11 @@ definitions:
         description: request is a copy of the request that generated these results.
         type: object
         properties:
-          include_id_info:
+          exclude_id_info:
             type: boolean
             format: boolean
             description: >-
-              include_id_info is a flag for whether to include the id info in
+              exclude_id_info is a flag for whether to exclude the id info from
               the response.
           include_request:
             type: boolean
@@ -92296,11 +92296,11 @@ definitions:
         description: >-
           include_records is a flag for whether to include the records of these
           sessions in the response.
-      include_id_info:
+      exclude_id_info:
         type: boolean
         format: boolean
         description: >-
-          include_id_info is a flag for whether to include the id info in the
+          exclude_id_info is a flag for whether to exclude the id info from the
           response.
       include_request:
         type: boolean
@@ -92992,11 +92992,11 @@ definitions:
             description: >-
               include_records is a flag for whether to include the records of
               these sessions in the response.
-          include_id_info:
+          exclude_id_info:
             type: boolean
             format: boolean
             description: >-
-              include_id_info is a flag for whether to include the id info in
+              exclude_id_info is a flag for whether to exclude the id info from
               the response.
           include_request:
             type: boolean

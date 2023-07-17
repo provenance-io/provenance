@@ -4,7 +4,7 @@ In this section we describe the queries available for looking up metadata inform
 All state objects specified by each message are defined within the [state](02_state.md) section.
 
 Each entry or specification state object is wrapped with an `*_id_info` message containing information about that state object's address/id.
-By default, the `*_id_info` fields aren't populated, but each applicable request has an `include_id_info` flag.
+By default, the `*_id_info` fields populated with information about the ids involved, but each applicable request has an `exclude_id_info` flag to cause those field to not be populated in the result.
 If a requested entry or specification isn't found, an empty wrapper containing only id info is returned.
 
 <!-- TOC 2 -->

@@ -4157,7 +4157,7 @@ ContractSpecificationRequest is the request type for the Query/ContractSpecifica
 | ----- | ---- | ----- | ----------- |
 | `specification_id` | [string](#string) |  | specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84 or a bech32 contract specification address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn. It can also be a record specification address, e.g. recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44. |
 | `include_record_specs` | [bool](#bool) |  | include_record_specs is a flag for whether to include the the record specifications of this contract specification in the response. |
-| `include_id_info` | [bool](#bool) |  | include_id_info is a flag for whether to include the id info in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
 | `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
@@ -4206,7 +4206,7 @@ ContractSpecificationsAllRequest is the request type for the Query/ContractSpeci
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `include_id_info` | [bool](#bool) |  | include_id_info is a flag for whether to include the id info in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
 | `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
@@ -4505,7 +4505,7 @@ RecordSpecificationRequest is the request type for the Query/RecordSpecification
 | ----- | ---- | ----- | ----------- |
 | `specification_id` | [string](#string) |  | specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84 or a bech32 contract specification address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn. It can also be a record specification address, e.g. recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44. |
 | `name` | [string](#string) |  | name is the name of the record to look up. It is required if the specification_id is a uuid or contract specification address. It is ignored if the specification_id is a record specification address. |
-| `include_id_info` | [bool](#bool) |  | include_id_info is a flag for whether to include the id info in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
 | `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
@@ -4553,7 +4553,7 @@ RecordSpecificationsAllRequest is the request type for the Query/RecordSpecifica
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `include_id_info` | [bool](#bool) |  | include_id_info is a flag for whether to include the id info in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
 | `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
@@ -4589,7 +4589,7 @@ Query/RecordSpecificationsForContractSpecification RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `specification_id` | [string](#string) |  | specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84 or a bech32 contract specification address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn. It can also be a record specification address, e.g. recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44. |
-| `include_id_info` | [bool](#bool) |  | include_id_info is a flag for whether to include the id info in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
 | `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
@@ -4641,7 +4641,7 @@ RecordsAllRequest is the request type for the Query/RecordsAll RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `include_id_info` | [bool](#bool) |  | include_id_info is a flag for whether to include the id info in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
 | `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
@@ -4681,7 +4681,7 @@ RecordsRequest is the request type for the Query/Records RPC method.
 | `name` | [string](#string) |  | name is the name of the record to look for |
 | `include_scope` | [bool](#bool) |  | include_scope is a flag for whether to include the the scope containing these records in the response. |
 | `include_sessions` | [bool](#bool) |  | include_sessions is a flag for whether to include the sessions containing these records in the response. |
-| `include_id_info` | [bool](#bool) |  | include_id_info is a flag for whether to include the id info in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
 | `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
@@ -4720,7 +4720,7 @@ ScopeRequest is the request type for the Query/Scope RPC method.
 | `record_addr` | [string](#string) |  | record_addr is a bech32 record address, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3. |
 | `include_sessions` | [bool](#bool) |  | include_sessions is a flag for whether to include the sessions of the scope in the response. |
 | `include_records` | [bool](#bool) |  | include_records is a flag for whether to include the records of the scope in the response. |
-| `include_id_info` | [bool](#bool) |  | include_id_info is a flag for whether to include the id info in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
 | `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
@@ -4757,7 +4757,7 @@ ScopeSpecificationRequest is the request type for the Query/ScopeSpecification R
 | `specification_id` | [string](#string) |  | specification_id can either be a uuid, e.g. dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 or a bech32 scope specification address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m. |
 | `include_contract_specs` | [bool](#bool) |  | include_contract_specs is a flag for whether to include the contract specifications of the scope specification in the response. |
 | `include_record_specs` | [bool](#bool) |  | include_record_specs is a flag for whether to include the record specifications of the scope specification in the response. |
-| `include_id_info` | [bool](#bool) |  | include_id_info is a flag for whether to include the id info in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
 | `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
@@ -4807,7 +4807,7 @@ ScopeSpecificationsAllRequest is the request type for the Query/ScopeSpecificati
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `include_id_info` | [bool](#bool) |  | include_id_info is a flag for whether to include the id info in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
 | `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
@@ -4858,7 +4858,7 @@ ScopesAllRequest is the request type for the Query/ScopesAll RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `include_id_info` | [bool](#bool) |  | include_id_info is a flag for whether to include the id info in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
 | `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
@@ -4909,7 +4909,7 @@ SessionsAllRequest is the request type for the Query/SessionsAll RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `include_id_info` | [bool](#bool) |  | include_id_info is a flag for whether to include the id info in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
 | `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
@@ -4949,7 +4949,7 @@ SessionsRequest is the request type for the Query/Sessions RPC method.
 | `record_name` | [string](#string) |  | record_name is the name of the record to find the session for in the provided scope. |
 | `include_scope` | [bool](#bool) |  | include_scope is a flag for whether to include the scope containing these sessions in the response. |
 | `include_records` | [bool](#bool) |  | include_records is a flag for whether to include the records of these sessions in the response. |
-| `include_id_info` | [bool](#bool) |  | include_id_info is a flag for whether to include the id info in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
 | `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
