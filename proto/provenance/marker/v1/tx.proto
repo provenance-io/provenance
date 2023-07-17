@@ -300,7 +300,7 @@ message MsgSetAccountDataRequest {
 message MsgSetAccountDataResponse {}
 
 // MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a resticted marker
-// signer must have admin authority
+// signer must have transfer authority
 message MsgUpdateSendDenyListRequest {
   option (gogoproto.equal)      = true;
   option (cosmos.msg.v1.signer) = "authority";

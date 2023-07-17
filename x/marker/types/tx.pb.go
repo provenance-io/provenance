@@ -1935,7 +1935,7 @@ func (m *MsgSetAccountDataResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgSetAccountDataResponse proto.InternalMessageInfo
 
 // MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a resticted marker
-// signer must have admin authority
+// signer must have transfer authority
 type MsgUpdateSendDenyListRequest struct {
 	// The denomination of the marker to update.
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
