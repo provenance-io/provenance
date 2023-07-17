@@ -1497,11 +1497,6 @@ func TestMsgUpdateSendDenyListRequest(t *testing.T) {
 			expectedError:    "decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			name:             "should fail, both add and remove lists are empty",
-			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(rMarkerDenom, authUser, []string{}, []string{}),
-			expectedError:    "both add and remove lists cannot be empty",
-		},
-		{
 			name:             "should succeed to add to deny list",
 			updateMsgRequest: *types.NewMsgUpdateSendDenyListRequest(rMarkerDenom, authUser, []string{}, []string{denyAddrToAdd.String()}),
 		},

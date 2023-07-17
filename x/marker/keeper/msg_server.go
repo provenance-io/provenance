@@ -776,10 +776,6 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 		}
 	}
 
-	if len(msg.RemoveDeniedAddresses) == 0 && len(msg.AddDeniedAddresses) == 0 {
-		return nil, fmt.Errorf("both add and remove lists cannot be empty")
-	}
-
 	markerAddr := marker.GetAddress()
 	for _, addr := range msg.RemoveDeniedAddresses {
 		denyAddr, err := sdk.AccAddressFromBech32(addr)

@@ -34,7 +34,7 @@ var (
 	MarkerStoreKeyPrefix = []byte{0x02}
 
 	// DenySendKeyPrefix prefix for adding addresses that are denied send functionality on restricted markers
-	DenySendKeyPrefix = []byte{0x02}
+	DenySendKeyPrefix = []byte{0x03}
 )
 
 // MarkerAddress returns the module account address for the given denomination
