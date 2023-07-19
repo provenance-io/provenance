@@ -54,3 +54,34 @@ See Also: [Building](docs/Building.md)
 ## Active Networks
 
 There are two active public Provenance networks, [testnet](https://github.com/provenance-io/testnet) and [mainnet](https://github.com/provenance-io/mainnet).
+
+## Does this work?
+
+
+```mermaid
+sequenceDiagram
+participant Buyer
+participant Seller
+participant dApp
+participant BrokerDealer
+participant Blockchain
+
+autonumber
+
+Seller->>+dApp: Start Offer Order
+dApp-)Blockchain: Query Offer Cost/Eligibility
+dApp->>-Seller: Return Offer Tx
+Seller->>Blockchain: Submit Signed Offer Order Tx
+
+Buyer->>+dApp: Query Available Offers
+dApp-)Blockchain: Query Offers for MarketPlace
+dApp->>Buyer: Return filtered eligible results
+
+Buyer->>+dApp: Start Bid Order
+dApp-)Blockchain: Query Bid Cost/Eligibility
+dApp->>-Buyer: Return Bid Tx
+Buyer->>Blockchain: Submit Signed Bid Order Tx
+
+
+
+```
