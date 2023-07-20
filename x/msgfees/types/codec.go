@@ -1,11 +1,12 @@
 package types
 
 import (
+	proto "github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 // ignoring RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
