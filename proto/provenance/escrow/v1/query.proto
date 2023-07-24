@@ -39,8 +39,8 @@ message GetEscrowResponse {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // escrow is the total in escrow for the requested address.
-  repeated cosmos.base.v1beta1.Coin escrow = 1
+  // amount is the total in escrow for the requested address.
+  repeated cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 

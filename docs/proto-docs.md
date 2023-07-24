@@ -1308,7 +1308,7 @@ GetEscrowResponse is the response type for the Query/GetEscrow query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `escrow` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | escrow is the total in escrow for the requested address. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the total in escrow for the requested address. |
 
 
 
