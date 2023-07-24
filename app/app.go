@@ -128,6 +128,9 @@ import (
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	attributewasm "github.com/provenance-io/provenance/x/attribute/wasm"
+	"github.com/provenance-io/provenance/x/escrow"
+	escrowkeeper "github.com/provenance-io/provenance/x/escrow/keeper"
+	escrowmodule "github.com/provenance-io/provenance/x/escrow/module"
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -209,6 +212,7 @@ var (
 		msgfeesmodule.AppModuleBasic{},
 		rewardmodule.AppModuleBasic{},
 		triggermodule.AppModuleBasic{},
+		escrowmodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -294,6 +298,7 @@ type App struct {
 	MetadataKeeper  metadatakeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
 	NameKeeper      namekeeper.Keeper
+	EscrowKeeper    escrowkeeper.Keeper
 	WasmKeeper      wasm.Keeper
 
 	// make scoped keepers public for test purposes
@@ -364,6 +369,7 @@ func New(
 		quarantine.StoreKey,
 		sanction.StoreKey,
 		triggertypes.StoreKey,
+		escrow.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -481,6 +487,10 @@ func New(
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
 		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper, app.AttributeKeeper, app.NameKeeper, app.TransferKeeper,
+	)
+
+	app.EscrowKeeper = escrowkeeper.NewKeeper(
+		appCodec, keys[escrow.StoreKey], app.BankKeeper,
 	)
 
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
@@ -632,6 +642,7 @@ func New(
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
+		escrowmodule.NewAppModule(appCodec, app.EscrowKeeper),
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
@@ -676,6 +687,7 @@ func New(
 		vestingtypes.ModuleName,
 		quarantine.ModuleName,
 		sanction.ModuleName,
+		escrow.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -711,6 +723,7 @@ func New(
 		paramstypes.ModuleName,
 		quarantine.ModuleName,
 		sanction.ModuleName,
+		escrow.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -741,6 +754,7 @@ func New(
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
 		msgfeestypes.ModuleName,
+		escrow.ModuleName,
 
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -777,6 +791,7 @@ func New(
 		vestingtypes.ModuleName,
 		quarantine.ModuleName,
 		sanction.ModuleName,
+		escrow.ModuleName,
 
 		icatypes.ModuleName,
 		wasm.ModuleName,
@@ -822,6 +837,7 @@ func New(
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
+		escrowmodule.NewAppModule(appCodec, app.EscrowKeeper),
 		provwasm.NewWrapper(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 
 		ibc.NewAppModule(app.IBCKeeper),
