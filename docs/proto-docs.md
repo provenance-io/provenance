@@ -52,6 +52,20 @@
   
     - [Msg](#provenance.attribute.v1.Msg)
   
+- [provenance/escrow/v1/escrow.proto](#provenance/escrow/v1/escrow.proto)
+    - [AccountEscrow](#provenance.escrow.v1.AccountEscrow)
+  
+- [provenance/escrow/v1/genesis.proto](#provenance/escrow/v1/genesis.proto)
+    - [GenesisState](#provenance.escrow.v1.GenesisState)
+  
+- [provenance/escrow/v1/query.proto](#provenance/escrow/v1/query.proto)
+    - [GetAllEscrowRequest](#provenance.escrow.v1.GetAllEscrowRequest)
+    - [GetAllEscrowResponse](#provenance.escrow.v1.GetAllEscrowResponse)
+    - [GetEscrowRequest](#provenance.escrow.v1.GetEscrowRequest)
+    - [GetEscrowResponse](#provenance.escrow.v1.GetEscrowResponse)
+  
+    - [Query](#provenance.escrow.v1.Query)
+  
 - [provenance/marker/v1/accessgrant.proto](#provenance/marker/v1/accessgrant.proto)
     - [AccessGrant](#provenance.marker.v1.AccessGrant)
   
@@ -1165,6 +1179,157 @@ Msg defines the attribute module Msg service.
 | `DeleteAttribute` | [MsgDeleteAttributeRequest](#provenance.attribute.v1.MsgDeleteAttributeRequest) | [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse) | DeleteAttribute defines a method to verify a particular invariance. | |
 | `DeleteDistinctAttribute` | [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest) | [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse) | DeleteDistinctAttribute defines a method to verify a particular invariance. | |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance.attribute.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.attribute.v1.MsgSetAccountDataResponse) | SetAccountData defines a method for setting/updating an account's accountdata attribute. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/escrow/v1/escrow.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/escrow/v1/escrow.proto
+
+
+
+<a name="provenance.escrow.v1.AccountEscrow"></a>
+
+### AccountEscrow
+AccountEscrow associates an address with an amount.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the account address that holds the funds in escrow. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the balances that are in escrow for the address. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/escrow/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/escrow/v1/genesis.proto
+
+
+
+<a name="provenance.escrow.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the attribute module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `escrows` | [AccountEscrow](#provenance.escrow.v1.AccountEscrow) | repeated | escrows defines the funds in escrow at genesis. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/escrow/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/escrow/v1/query.proto
+
+
+
+<a name="provenance.escrow.v1.GetAllEscrowRequest"></a>
+
+### GetAllEscrowRequest
+GetAllEscrowRequest is the request type for the Query/GetAllEscrow query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.escrow.v1.GetAllEscrowResponse"></a>
+
+### GetAllEscrowResponse
+GetAllEscrowResponse is the response type for the Query/GetAllEscrow query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `escrows` | [AccountEscrow](#provenance.escrow.v1.AccountEscrow) | repeated | escrows is a list of addresses with funds in escrow and the amounts in escrow. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.escrow.v1.GetEscrowRequest"></a>
+
+### GetEscrowRequest
+GetEscrowRequest is the request type for the Query/GetEscrow query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the account address to get escrow balances for. |
+
+
+
+
+
+
+<a name="provenance.escrow.v1.GetEscrowResponse"></a>
+
+### GetEscrowResponse
+GetEscrowResponse is the response type for the Query/GetEscrow query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `escrow` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | escrow is the total in escrow for the requested address. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.escrow.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service for attribute module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `GetEscrow` | [GetEscrowRequest](#provenance.escrow.v1.GetEscrowRequest) | [GetEscrowResponse](#provenance.escrow.v1.GetEscrowResponse) | GetEscrow looks up the funds that are in escrow for an address. | GET|/provenance/escrow/v1/funds/{address}|
+| `GetAllEscrow` | [GetAllEscrowRequest](#provenance.escrow.v1.GetAllEscrowRequest) | [GetAllEscrowResponse](#provenance.escrow.v1.GetAllEscrowResponse) | GetAllEscrow returns all addresses with funds in escrow, and the amount in escrow. | GET|/provenance/escrow/v1/funds|
 
  <!-- end services -->
 
