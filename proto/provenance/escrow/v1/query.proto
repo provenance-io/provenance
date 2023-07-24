@@ -1,0 +1,62 @@
+syntax = "proto3";
+package provenance.escrow.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/escrow";
+
+option java_package        = "io.provenance.escrow.v1";
+option java_multiple_files = true;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "provenance/escrow/v1/escrow.proto";
+
+// Query defines the gRPC querier service for attribute module.
+service Query {
+  // GetEscrow looks up the funds that are in escrow for an address.
+  rpc GetEscrow(GetEscrowRequest) returns (GetEscrowResponse) {
+    option (google.api.http).get = "/provenance/escrow/v1/funds/{address}";
+  };
+
+  // GetAllEscrow returns all addresses with funds in escrow, and the amount in escrow.
+  rpc GetAllEscrow(GetAllEscrowRequest) returns (GetAllEscrowResponse) {
+    option (google.api.http).get = "/provenance/escrow/v1/funds";
+  };
+}
+
+// GetEscrowRequest is the request type for the Query/GetEscrow query.
+message GetEscrowRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // address is the account address to get escrow balances for.
+  string address = 1;
+}
+
+// GetEscrowResponse is the response type for the Query/GetEscrow query.
+message GetEscrowResponse {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // escrow is the total in escrow for the requested address.
+  repeated cosmos.base.v1beta1.Coin escrow = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// GetAllEscrowRequest is the request type for the Query/GetAllEscrow query.
+message GetAllEscrowRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// GetAllEscrowResponse is the response type for the Query/GetAllEscrow query.
+message GetAllEscrowResponse {
+  // escrows is a list of addresses with funds in escrow and the amounts in escrow.
+  repeated AccountEscrow escrows = 1 [(gogoproto.nullable) = false];
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
