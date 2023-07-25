@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* Allow funds to be put into escrow while remaining in the owner's account [#1607](https://github.com/provenance-io/provenance/issues/1607).
+
 ### Improvements
 
 * Update ibcnet ports so they don't conflict with host machine. [#1622](https://github.com/provenance-io/provenance/issues/1622)
