@@ -155,11 +155,13 @@ func (k Keeper) RemoveEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coi
 // GetEscrowCoin gets the amount of a denom in escrow for a given account.
 // Will return a zero Coin of the given denom if the store does not have an entry for it.
 func (k Keeper) GetEscrowCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) (sdk.Coin, error) {
-	amount, err := k.getEscrowCoinAmount(ctx.KVStore(k.storeKey), addr, denom)
+	var err error
+	rv := sdk.Coin{Denom: denom}
+	rv.Amount, err = k.getEscrowCoinAmount(ctx.KVStore(k.storeKey), addr, denom)
 	if err != nil {
-		return sdk.Coin{}, err
+		return rv, fmt.Errorf("could not get escrow coin amount for %s: %w", addr, err)
 	}
-	return sdk.NewCoin(denom, amount), nil
+	return rv, nil
 }
 
 // GetEscrowCoins gets all funds in escrow for a given account.
