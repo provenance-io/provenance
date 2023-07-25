@@ -15,7 +15,7 @@ import (
 func NewDecodeStore(_ codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
-		case bytes.HasPrefix(kvA.Key, keeper.EscrowCoinPrefix):
+		case bytes.HasPrefix(kvA.Key, keeper.KeyPrefixEscrowCoin):
 			addr, denom := keeper.ParseEscrowCoinKey(kvA.Key)
 			valAMsg := escrowCoinValueMsg(kvA.Value)
 			valBMsg := escrowCoinValueMsg(kvB.Value)

@@ -62,18 +62,8 @@ func (k Keeper) getEscrowCoinAmount(store sdk.KVStore, addr sdk.AccAddress, deno
 	return UnmarshalEscrowCoinValue(amountBz)
 }
 
-// UnmarshalEscrowCoinValue parses the store value of an escrow coin entry back into it's Int form.
-func UnmarshalEscrowCoinValue(value []byte) (sdkmath.Int, error) {
-	var rv sdkmath.Int
-	err := rv.Unmarshal(value)
-	if err != nil {
-		return sdkmath.ZeroInt(), fmt.Errorf("could not unmarshal %v to %T: %w", value, rv, err)
-	}
-	return rv, nil
-}
-
 // ValidateNewEscrow checks the account's spendable balance to make sure it has at least as much as the funds provided.
-func (k Keeper) ValidateNewEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) (err error) {
+func (k Keeper) ValidateNewEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error {
 	if funds.IsZero() {
 		return nil
 	}
@@ -175,7 +165,6 @@ func (k Keeper) GetEscrowCoin(ctx sdk.Context, addr sdk.AccAddress, denom string
 // GetEscrowCoins gets all funds in escrow for a given account.
 func (k Keeper) GetEscrowCoins(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, error) {
 	var rv sdk.Coins
-
 	err := k.IterateEscrow(ctx, addr, func(coin sdk.Coin) bool {
 		rv = rv.Add(coin)
 		return false
@@ -222,7 +211,7 @@ func (k Keeper) IterateEscrow(ctx sdk.Context, addr sdk.AccAddress, process func
 
 // getAllEscrowCoinPrefixStore returns a kv store prefixed for all escrow coin entries.
 func (k Keeper) getAllEscrowCoinPrefixStore(ctx sdk.Context) sdk.KVStore {
-	return prefix.NewStore(ctx.KVStore(k.storeKey), EscrowCoinPrefix)
+	return prefix.NewStore(ctx.KVStore(k.storeKey), KeyPrefixEscrowCoin)
 }
 
 // IterateAllEscrow iterates over all in escrow coin entries for all accounts.

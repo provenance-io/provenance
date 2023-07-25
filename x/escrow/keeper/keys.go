@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -11,8 +12,8 @@ import (
 // Coin in escrow:
 // - 0x00<addr len (1 byte)><addr><denom> -> <amount>
 var (
-	// EscrowCoinPrefix is the prefix of an escrow entry for an address and single denom
-	EscrowCoinPrefix = []byte{0x00}
+	// KeyPrefixEscrowCoin is the prefix of an escrow entry for an address and single denom
+	KeyPrefixEscrowCoin = []byte{0x00}
 )
 
 // concatBzPlusCap creates a single byte slice consisting of the two provided byte slices with some extra capacity in the underlying array.
@@ -30,8 +31,8 @@ func concatBzPlusCap(bz1, bz2 []byte, extraCap int) []byte {
 	return rv
 }
 
-// ParseLengthPrefixedBz parses a length-prefixed byte slice into those bytes and any leftover bytes.
-func ParseLengthPrefixedBz(bz []byte) ([]byte, []byte) {
+// parseLengthPrefixedBz parses a length-prefixed byte slice into those bytes and any leftover bytes.
+func parseLengthPrefixedBz(bz []byte) ([]byte, []byte) {
 	addrLen, addrLenEndIndex := sdk.ParseLengthPrefixedBytes(bz, 0, 1)
 	addr, addrEndIndex := sdk.ParseLengthPrefixedBytes(bz, addrLenEndIndex+1, int(addrLen[0]))
 	var remainder []byte
@@ -44,7 +45,7 @@ func ParseLengthPrefixedBz(bz []byte) ([]byte, []byte) {
 // createEscrowCoinKeyAddrPrefixPlusCap creates an escrow coin key prefix containing the provided address.
 // The resulting slice will have the provided amount of extra capacity (in case you want to append something to it).
 func createEscrowCoinKeyAddrPrefixPlusCap(addr sdk.AccAddress, extraCap int) []byte {
-	return concatBzPlusCap(EscrowCoinPrefix, address.MustLengthPrefix(addr), extraCap)
+	return concatBzPlusCap(KeyPrefixEscrowCoin, address.MustLengthPrefix(addr), extraCap)
 }
 
 // CreateEscrowCoinKeyAddrPrefix creates an escrow coin key prefix containing the provided address.
@@ -67,6 +68,19 @@ func ParseEscrowCoinKey(key []byte) (sdk.AccAddress, string) {
 
 // ParseEscrowCoinKeyUnprefixed parses an escrow coin key without the type prefix into its address and denom.
 func ParseEscrowCoinKeyUnprefixed(key []byte) (sdk.AccAddress, string) {
-	addr, denom := ParseLengthPrefixedBz(key)
+	addr, denom := parseLengthPrefixedBz(key)
 	return addr, string(denom)
+}
+
+// UnmarshalEscrowCoinValue parses the store value of an escrow coin entry back into it's Int form.
+func UnmarshalEscrowCoinValue(value []byte) (sdkmath.Int, error) {
+	if len(value) == 0 {
+		return sdkmath.ZeroInt(), nil
+	}
+	var rv sdkmath.Int
+	err := rv.Unmarshal(value)
+	if err != nil {
+		return sdkmath.ZeroInt(), err
+	}
+	return rv, nil
 }
