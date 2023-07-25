@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/x/escrow"
 )
@@ -35,12 +36,36 @@ func (k Keeper) GetEscrow(goCtx context.Context, req *escrow.GetEscrowRequest) (
 }
 
 // GetAllEscrow returns all addresses with funds in escrow, and the amount in escrow.
-func (k Keeper) GetAllEscrow(goCtx context.Context, _ *escrow.GetAllEscrowRequest) (*escrow.GetAllEscrowResponse, error) {
+func (k Keeper) GetAllEscrow(goCtx context.Context, req *escrow.GetAllEscrowRequest) (*escrow.GetAllEscrowResponse, error) {
+	var pagination *query.PageRequest
+	if req != nil {
+		pagination = req.Pagination
+	}
+
+	var err error
+	resp := &escrow.GetAllEscrowResponse{}
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	escrows, err := k.GetAllAccountEscrows(ctx)
+	store := k.getAllEscrowCoinPrefixStore(ctx)
+	// TODO[1607]: Fix this so that the count is by address instead of entry.
+	resp.Pagination, err = query.Paginate(
+		store, pagination,
+		func(key []byte, value []byte) error {
+			amount, ierr := UnmarshalEscrowCoinValue(value)
+			if ierr != nil {
+				return ierr
+			}
+			addr, denom := ParseEscrowCoinKeyUnprefixed(key)
+			// TODO[1607]: Fix this so that each entry is combined by address.
+			resp.Escrows = append(resp.Escrows, &escrow.AccountEscrow{
+				Address: addr.String(),
+				Amount:  sdk.Coins{sdk.NewCoin(denom, amount)},
+			})
+			return nil
+		},
+	)
+
 	if err != nil {
 		return nil, err
 	}
-
-	return &escrow.GetAllEscrowResponse{Escrows: escrows}, nil
+	return resp, nil
 }
