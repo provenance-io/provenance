@@ -2,10 +2,14 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	db "github.com/tendermint/tm-db"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -37,35 +41,137 @@ func (k Keeper) GetEscrow(goCtx context.Context, req *escrow.GetEscrowRequest) (
 
 // GetAllEscrow returns all addresses with funds in escrow, and the amount in escrow.
 func (k Keeper) GetAllEscrow(goCtx context.Context, req *escrow.GetAllEscrowRequest) (*escrow.GetAllEscrowResponse, error) {
-	var pagination *query.PageRequest
+	var pageReq *query.PageRequest
 	if req != nil {
-		pagination = req.Pagination
+		pageReq = req.Pagination
 	}
 
-	var err error
-	resp := &escrow.GetAllEscrowResponse{}
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	store := k.getAllEscrowCoinPrefixStore(ctx)
-	// TODO[1607]: Fix this so that the count is by address instead of entry.
-	resp.Pagination, err = query.Paginate(
-		store, pagination,
-		func(key []byte, value []byte) error {
-			amount, ierr := UnmarshalEscrowCoinValue(value)
-			if ierr != nil {
-				return ierr
+	return k.paginateAllEscrow(sdk.UnwrapSDKContext(goCtx), pageReq)
+}
+
+// paginateAllEscrow iterates over escrow entries to generate a paginated GetAllEscrow result.
+// It's copied from query.FilteredPaginate and tweaked to count results by address instead of iterator entry.
+// It was easier to do it this way than shoehorn a solution into a call to FilteredPaginate.
+func (k Keeper) paginateAllEscrow(ctx sdk.Context, pageRequest *query.PageRequest) (*escrow.GetAllEscrowResponse, error) {
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &query.PageRequest{}
+	}
+
+	offset := pageRequest.Offset
+	key := pageRequest.Key
+	limit := pageRequest.Limit
+	countTotal := pageRequest.CountTotal
+	reverse := pageRequest.Reverse
+
+	if offset > 0 && key != nil {
+		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+	}
+
+	if limit == 0 {
+		limit = query.DefaultLimit
+
+		// count total results when the limit is zero/not supplied
+		countTotal = true
+	}
+
+	var lastAddr sdk.AccAddress
+	var lastEntry *escrow.AccountEscrow
+	resp := &escrow.GetAllEscrowResponse{Pagination: &query.PageResponse{}}
+	prefixStore := k.getAllEscrowCoinPrefixStore(ctx)
+
+	if len(key) != 0 {
+		iterator := getIterator(prefixStore, key, reverse)
+		defer iterator.Close()
+
+		for ; iterator.Valid(); iterator.Next() {
+			if err := iterator.Error(); err != nil {
+				return nil, err
 			}
-			addr, denom := ParseEscrowCoinKeyUnprefixed(key)
-			// TODO[1607]: Fix this so that each entry is combined by address.
-			resp.Escrows = append(resp.Escrows, &escrow.AccountEscrow{
-				Address: addr.String(),
-				Amount:  sdk.Coins{sdk.NewCoin(denom, amount)},
-			})
-			return nil
-		},
-	)
 
-	if err != nil {
-		return nil, err
+			ikey := iterator.Key()
+			addr, denom := ParseEscrowCoinKeyUnprefixed(ikey)
+			if !addr.Equals(lastAddr) {
+				if uint64(len(resp.Escrows)) >= limit {
+					resp.Pagination.NextKey = ikey
+					break
+				}
+				lastAddr = addr
+				lastEntry = &escrow.AccountEscrow{Address: addr.String()}
+				resp.Escrows = append(resp.Escrows, lastEntry)
+			}
+			ival := iterator.Value()
+			amount, err := UnmarshalEscrowCoinValue(ival)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read amount of %s for account %s: %w", denom, addr, err)
+			}
+			lastEntry.Amount = lastEntry.Amount.Add(sdk.Coin{Denom: denom, Amount: amount})
+		}
+
+		return resp, nil
 	}
+
+	iterator := getIterator(prefixStore, nil, reverse)
+	defer iterator.Close()
+
+	accumulate := false
+	var numHits uint64
+
+	for ; iterator.Valid(); iterator.Next() {
+		if err := iterator.Error(); err != nil {
+			return nil, err
+		}
+
+		ikey := iterator.Key()
+		addr, denom := ParseEscrowCoinKeyUnprefixed(ikey)
+		if !addr.Equals(lastAddr) {
+			if uint64(len(resp.Escrows)) >= limit && len(resp.Pagination.NextKey) == 0 {
+				resp.Pagination.NextKey = ikey
+				if !countTotal {
+					break
+				}
+			}
+			lastAddr = addr
+
+			numHits++
+			accumulate = numHits > offset && uint64(len(resp.Escrows)) < limit
+			if accumulate {
+				lastEntry = &escrow.AccountEscrow{Address: addr.String()}
+				resp.Escrows = append(resp.Escrows, lastEntry)
+			}
+		}
+
+		if accumulate {
+			ival := iterator.Value()
+			amount, err := UnmarshalEscrowCoinValue(ival)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read amount of %s for account %s: %w", denom, addr, err)
+			}
+			lastEntry.Amount = lastEntry.Amount.Add(sdk.Coin{Denom: denom, Amount: amount})
+		}
+	}
+
+	if countTotal {
+		resp.Pagination.Total = numHits
+	}
+
 	return resp, nil
+}
+
+// getIterator creates an iterator on the provided store with the provided start and direction.
+// It's copied from query.pagination.go.
+func getIterator(prefixStore storetypes.KVStore, start []byte, reverse bool) db.Iterator {
+	if reverse {
+		var end []byte
+		if start != nil {
+			itr := prefixStore.Iterator(start, nil)
+			defer itr.Close()
+			if itr.Valid() {
+				itr.Next()
+				end = itr.Key()
+			}
+		}
+		return prefixStore.ReverseIterator(nil, end)
+	}
+	return prefixStore.Iterator(start, nil)
 }
