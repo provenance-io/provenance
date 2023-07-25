@@ -62,9 +62,13 @@ func (s *TestSuite) cz(coins string) sdk.Coins {
 func (s *TestSuite) coin(amount int64, denom string) sdk.Coin {
 	s.T().Helper()
 	return sdk.Coin{
-		Amount: sdkmath.NewInt(amount),
+		Amount: s.int(amount),
 		Denom:  denom,
 	}
+}
+
+func (s *TestSuite) int(amount int64) sdkmath.Int {
+	return sdkmath.NewInt(amount)
 }
 
 func (s *TestSuite) AssertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
@@ -208,7 +212,79 @@ func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
 
 // TODO[1607]: func (s *TestSuite) TestKeeper_RemoveEscrow()
 
-// TODO[1607]: func (s *TestSuite) TestKeeper_GetEscrowCoin()
+func (s *TestSuite) TestKeeper_GetEscrowCoin() {
+	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "SetEscrowCoinAmount(addr1, 99banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3)), "SetEscrowCoinAmount(addr1, 3cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "SetEscrowCoinAmount(addr2, 18banana)")
+	store.Set(keeper.CreateEscrowCoinKey(s.addr1, "badcoin"), []byte("badvalue"))
+	store = nil
+
+	tests := []struct {
+		name    string
+		addr    sdk.AccAddress
+		denom   string
+		expCoin sdk.Coin
+		expErr  []string
+	}{
+		{
+			name:    "nothing in escrow for addr",
+			addr:    s.addr5,
+			denom:   "nonecoin",
+			expCoin: s.coin(0, "nonecoin"),
+		},
+		{
+			name:    "addr has escrow but not this denom",
+			addr:    s.addr2,
+			denom:   "cucumber",
+			expCoin: s.coin(0, "cucumber"),
+		},
+		{
+			name:    "addr has only this denom in escrow",
+			addr:    s.addr2,
+			denom:   "banana",
+			expCoin: s.coin(18, "banana"),
+		},
+		{
+			name:    "addr has multiple denoms in escrow but not this one",
+			addr:    s.addr1,
+			denom:   "nonecoin",
+			expCoin: s.coin(0, "nonecoin"),
+		},
+		{
+			name:    "addr has multiple denoms in escrow this denom also in escrow by other addr",
+			addr:    s.addr1,
+			denom:   "banana",
+			expCoin: s.coin(99, "banana"),
+		},
+		{
+			name:    "addr has multiple denoms in escrow this denom is only in escrow by this addr",
+			addr:    s.addr1,
+			denom:   "cucumber",
+			expCoin: s.coin(3, "cucumber"),
+		},
+		{
+			name:    "bad value",
+			addr:    s.addr1,
+			denom:   "badcoin",
+			expCoin: s.coin(0, "badcoin"),
+			expErr:  []string{"could not get escrow coin amount for", s.addr1.String(), "math/big: cannot unmarshal \"badvalue\" into a *big.Int"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var coin sdk.Coin
+			var err error
+			testFunc := func() {
+				coin, err = s.keeper.GetEscrowCoin(s.sdkCtx, tc.addr, tc.denom)
+			}
+			s.Require().NotPanics(testFunc, "GetEscrowCoin")
+			s.AssertErrorContents(err, tc.expErr, "GetEscrowCoin")
+			s.Assert().Equal(tc.expCoin.String(), coin.String(), "GetEscrowCoin")
+		})
+	}
+}
 
 // TODO[1607]: func (s *TestSuite) TestKeeper_GetEscrowCoins()
 
