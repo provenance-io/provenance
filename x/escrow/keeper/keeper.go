@@ -74,16 +74,11 @@ func UnmarshalEscrowCoinValue(value []byte) (sdkmath.Int, error) {
 
 // ValidateNewEscrow checks the account's spendable balance to make sure it has at least as much as the funds provided.
 func (k Keeper) ValidateNewEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) (err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("cannot put %q in escrow for account %s: %w", funds, addr, err)
-		}
-	}()
 	if funds.IsZero() {
 		return nil
 	}
 	if funds.IsAnyNegative() {
-		return errors.New("amounts cannot be negative")
+		return fmt.Errorf("escrow amounts %q for %s cannot be negative", funds, addr)
 	}
 
 	// Not bypassing escrow's locked coins here because we're testing about new funds to be put into escrow.
@@ -94,10 +89,10 @@ func (k Keeper) ValidateNewEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sd
 		}
 		has, available := spendable.Find(toAdd.Denom)
 		if !has {
-			return fmt.Errorf("account has 0%s spendable", toAdd.Denom)
+			return fmt.Errorf("account %s spendable balance 0%s is less than escrow amount %s", addr, toAdd.Denom, toAdd)
 		}
 		if available.Amount.LT(toAdd.Amount) {
-			return fmt.Errorf("account has only %s spendable", available)
+			return fmt.Errorf("account %s spendable balance %s is less than escrow amount %s", addr, available, toAdd)
 		}
 	}
 

@@ -89,8 +89,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
 // RegisterInvariants registers the invariants for the escrow module.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	// TODO[1607]: Add variant registration.
-	_ = ir
+	keeper.RegisterInvariants(ir, am.keeper)
 }
 
 // Deprecated: Route returns the message routing key for the escrow module, empty.
