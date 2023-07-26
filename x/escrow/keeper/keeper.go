@@ -196,12 +196,12 @@ func (k Keeper) IterateEscrow(ctx sdk.Context, addr sdk.AccAddress, process func
 		key := iter.Key()
 		value := iter.Value()
 
+		denom := string(key)
 		amount, err := UnmarshalEscrowCoinValue(value)
 		if err != nil {
-			errs = append(errs, err)
+			errs = append(errs, fmt.Errorf("failed to read amount of %s for account %s: %w", denom, addr, err))
 			continue
 		}
-		denom := string(key)
 
 		if process(sdk.Coin{Denom: denom, Amount: amount}) {
 			break
@@ -231,12 +231,12 @@ func (k Keeper) IterateAllEscrow(ctx sdk.Context, process func(sdk.AccAddress, s
 		key := iter.Key()
 		value := iter.Value()
 
+		addr, denom := ParseEscrowCoinKeyUnprefixed(key)
 		amount, err := UnmarshalEscrowCoinValue(value)
 		if err != nil {
-			errs = append(errs, err)
+			errs = append(errs, fmt.Errorf("failed to read amount of %s for account %s: %w", denom, addr, err))
 			continue
 		}
-		addr, denom := ParseEscrowCoinKeyUnprefixed(key)
 
 		if process(addr, sdk.Coin{Denom: denom, Amount: amount}) {
 			break
@@ -247,24 +247,12 @@ func (k Keeper) IterateAllEscrow(ctx sdk.Context, process func(sdk.AccAddress, s
 }
 
 // GetAllAccountEscrows gets all the AccountEscrow entries currently in the state store.
-func (k Keeper) GetAllAccountEscrows(ctx sdk.Context) (escrows []*escrow.AccountEscrow, err error) {
-	defer func() {
-		// A panic might happen with the Coins stuff. So handle that a bit better.
-		if r := recover(); r != nil {
-			if rE, isE := r.(error); isE {
-				err = fmt.Errorf("recovered from panic: %w", rE)
-			} else {
-				err = fmt.Errorf("recovered from panic: %v", r)
-			}
-		}
-		if err != nil {
-			escrows = nil
-		}
-	}()
+func (k Keeper) GetAllAccountEscrows(ctx sdk.Context) ([]*escrow.AccountEscrow, error) {
+	var escrows []*escrow.AccountEscrow
 	var lastAddr sdk.AccAddress
 	var lastEntry *escrow.AccountEscrow
 
-	err = k.IterateAllEscrow(ctx, func(addr sdk.AccAddress, coin sdk.Coin) bool {
+	err := k.IterateAllEscrow(ctx, func(addr sdk.AccAddress, coin sdk.Coin) bool {
 		if !addr.Equals(lastAddr) {
 			lastAddr = addr
 			lastEntry = &escrow.AccountEscrow{
