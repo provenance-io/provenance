@@ -7,12 +7,15 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	sdkmath "cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/escrow"
 	"github.com/provenance-io/provenance/x/escrow/keeper"
 )
 
@@ -280,16 +283,404 @@ func (s *TestSuite) TestKeeper_GetEscrowCoin() {
 				coin, err = s.keeper.GetEscrowCoin(s.sdkCtx, tc.addr, tc.denom)
 			}
 			s.Require().NotPanics(testFunc, "GetEscrowCoin")
-			s.AssertErrorContents(err, tc.expErr, "GetEscrowCoin")
-			s.Assert().Equal(tc.expCoin.String(), coin.String(), "GetEscrowCoin")
+			s.AssertErrorContents(err, tc.expErr, "GetEscrowCoin error")
+			s.Assert().Equal(tc.expCoin.String(), coin.String(), "GetEscrowCoin coin")
 		})
 	}
 }
 
-// TODO[1607]: func (s *TestSuite) TestKeeper_GetEscrowCoins()
+func (s *TestSuite) TestKeeper_GetEscrowCoins() {
+	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "SetEscrowCoinAmount(addr1, 99banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "SetEscrowCoinAmount(addr2, 18banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "SetEscrowCoinAmount(addr2, 3cucumber)")
+	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "grimcoin"), []byte("grimvalue"))
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "SetEscrowCoinAmount(addr4, 52acorn)")
+	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "badcoin"), []byte("badvalue"))
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "SetEscrowCoinAmount(addr4, 12cucumber)")
+	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "dreadcoin"), []byte("dreadvalue"))
+	store = nil
 
-// TODO[1607]: func (s *TestSuite) TestKeeper_IterateEscrow()
+	tests := []struct {
+		name     string
+		addr     sdk.AccAddress
+		expCoins sdk.Coins
+		expErr   []string
+	}{
+		{
+			name:     "addr with only one denom",
+			addr:     s.addr1,
+			expCoins: s.cz("99banana"),
+		},
+		{
+			name:     "addr with two denoms",
+			addr:     s.addr2,
+			expCoins: s.cz("18banana,3cucumber"),
+		},
+		{
+			name:     "addr with only one denom and it's bad",
+			addr:     s.addr3,
+			expCoins: nil,
+			expErr: []string{
+				s.addr3.String(),
+				"failed to read amount of grimcoin",
+				"math/big: cannot unmarshal \"grimvalue\" into a *big.Int",
+			},
+		},
+		{
+			name:     "addr with two good denoms and two bad ones",
+			addr:     s.addr4,
+			expCoins: s.cz("52acorn,12cucumber"),
+			expErr: []string{
+				s.addr4.String(),
+				"failed to read amount of badcoin",
+				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
+				"failed to read amount of dreadcoin",
+				"math/big: cannot unmarshal \"dreadvalue\" into a *big.Int",
+			},
+		},
+		{
+			name:     "addr without anything",
+			addr:     s.addr5,
+			expCoins: nil,
+		},
+	}
 
-// TODO[1607]: func (s *TestSuite) TestKeeper_IterateAllEscrow()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var coins sdk.Coins
+			var err error
+			testFunc := func() {
+				coins, err = s.keeper.GetEscrowCoins(s.sdkCtx, tc.addr)
+			}
+			s.Require().NotPanics(testFunc, "GetEscrowCoins")
+			s.AssertErrorContents(err, tc.expErr, "GetEscrowCoins error")
+			s.Assert().Equal(tc.expCoins.String(), coins.String(), "GetEscrowCoins coins")
+		})
+	}
+}
 
-// TODO[1607]: func (s *TestSuite) TestKeeper_GetAllAccountEscrows()
+func (s *TestSuite) TestKeeper_IterateEscrow() {
+	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "SetEscrowCoinAmount(addr1, 99banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "SetEscrowCoinAmount(addr2, 18banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "SetEscrowCoinAmount(addr2, 3cucumber)")
+	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "grimcoin"), []byte("grimvalue"))
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "SetEscrowCoinAmount(addr4, 52acorn)")
+	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "badcoin"), []byte("badvalue"))
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "SetEscrowCoinAmount(addr4, 12cucumber)")
+	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "dreadcoin"), []byte("dreadvalue"))
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747)), "SetEscrowCoinAmount(addr4, 747eggplant)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358)), "SetEscrowCoinAmount(addr5, 358acorn)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "banana", s.int(101)), "SetEscrowCoinAmount(addr5, 101banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8)), "SetEscrowCoinAmount(addr5, 8cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "durian", s.int(5)), "SetEscrowCoinAmount(addr5, 5durian)")
+	store = nil
+
+	addrDNE := sdk.AccAddress("addr_does_not_exist_")
+
+	var processed []string
+	stopAfter := func(count int) func(coin sdk.Coin) bool {
+		return func(coin sdk.Coin) bool {
+			processed = append(processed, coin.String())
+			return len(processed) >= count
+		}
+	}
+	getAll := func(coin sdk.Coin) bool {
+		processed = append(processed, coin.String())
+		return false
+	}
+
+	tests := []struct {
+		name        string
+		addr        sdk.AccAddress
+		process     func(sdk.Coin) bool
+		expProc     []string
+		expErr      []string
+		expNotInErr []string
+	}{
+		{
+			name:    "address is unknown",
+			addr:    addrDNE,
+			process: getAll,
+			expProc: nil,
+		},
+		{
+			name:    "address has one entry",
+			addr:    s.addr1,
+			process: getAll,
+			expProc: []string{"99banana"},
+		},
+		{
+			name:    "address has two entries: get all",
+			addr:    s.addr2,
+			process: getAll,
+			expProc: []string{"18banana", "3cucumber"},
+		},
+		{
+			name:    "address has two entries: stop after first",
+			addr:    s.addr2,
+			process: stopAfter(1),
+			expProc: []string{"18banana"},
+		},
+		{
+			name:    "address has single bad entry",
+			addr:    s.addr3,
+			process: getAll,
+			expProc: nil,
+			expErr: []string{
+				s.addr3.String(),
+				"failed to read amount of grimcoin",
+				"math/big: cannot unmarshal \"grimvalue\" into a *big.Int",
+			},
+		},
+		{
+			name:    "address has three good and two bad: get all",
+			addr:    s.addr4,
+			process: getAll,
+			expProc: []string{"52acorn", "12cucumber", "747eggplant"},
+			expErr: []string{
+				s.addr4.String(),
+				"failed to read amount of badcoin",
+				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
+				"failed to read amount of dreadcoin",
+				"math/big: cannot unmarshal \"dreadvalue\" into a *big.Int",
+			},
+		},
+		{
+			name:    "address has three good and two bad: stop after first",
+			addr:    s.addr4,
+			process: stopAfter(1),
+			expProc: []string{"52acorn"},
+			expErr:  nil,
+		},
+		{
+			name:    "address has three good and two bad: stop after second",
+			addr:    s.addr4,
+			process: stopAfter(2),
+			expProc: []string{"52acorn", "12cucumber"},
+			expErr: []string{
+				s.addr4.String(),
+				"failed to read amount of badcoin",
+				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
+			},
+			expNotInErr: []string{
+				"failed to read amount of dreadcoin",
+				"math/big: cannot unmarshal \"dreadvalue\" into a *big.Int",
+			},
+		},
+		{
+			name:    "address has four entries: get all",
+			addr:    s.addr5,
+			process: getAll,
+			expProc: []string{"358acorn", "101banana", "8cucumber", "5durian"},
+		},
+		{
+			name:    "address has four entries: stop after 3",
+			addr:    s.addr5,
+			process: stopAfter(3),
+			expProc: []string{"358acorn", "101banana", "8cucumber"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			processed = nil
+			var err error
+			testFunc := func() {
+				err = s.keeper.IterateEscrow(s.sdkCtx, tc.addr, tc.process)
+			}
+			s.Require().NotPanics(testFunc, "IterateEscrow")
+			s.AssertErrorContents(err, tc.expErr, "IterateEscrow error")
+			if err != nil && len(tc.expNotInErr) > 0 {
+				errStr := err.Error()
+				for _, unexp := range tc.expNotInErr {
+					s.Assert().NotContains(errStr, unexp, "IterateEscrow error")
+				}
+			}
+			s.Assert().Equal(tc.expProc, processed, "IterateEscrow entries processed")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_IterateAllEscrow() {
+	// Since the addresses should have been created sequentially, that's the order the store records should be in.
+	// I also picked easy-to-sort coin names.
+	// That means that the order they're being defined here should be the order they are in state.
+	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "SetEscrowCoinAmount(addr1, 99banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "SetEscrowCoinAmount(addr2, 18banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "SetEscrowCoinAmount(addr2, 3cucumber)")
+	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "grimcoin"), []byte("grimvalue"))
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "SetEscrowCoinAmount(addr4, 52acorn)")
+	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "badcoin"), []byte("badvalue"))
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "SetEscrowCoinAmount(addr4, 12cucumber)")
+	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "dreadcoin"), []byte("dreadvalue"))
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747)), "SetEscrowCoinAmount(addr4, 747eggplant)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358)), "SetEscrowCoinAmount(addr5, 358acorn)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "banana", s.int(101)), "SetEscrowCoinAmount(addr5, 101banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8)), "SetEscrowCoinAmount(addr5, 8cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "durian", s.int(5)), "SetEscrowCoinAmount(addr5, 5durian)")
+	store = nil
+
+	entry := func(addr sdk.AccAddress, coin string) string {
+		return addr.String() + ":" + coin
+	}
+	var processed []string
+	stopAfter := func(count int) func(addr sdk.AccAddress, coin sdk.Coin) bool {
+		return func(addr sdk.AccAddress, coin sdk.Coin) bool {
+			processed = append(processed, entry(addr, coin.String()))
+			return len(processed) >= count
+		}
+	}
+	getAll := func(addr sdk.AccAddress, coin sdk.Coin) bool {
+		processed = append(processed, entry(addr, coin.String()))
+		return false
+	}
+
+	expProcessed := []string{
+		entry(s.addr1, "99banana"),
+		entry(s.addr2, "18banana"),
+		entry(s.addr2, "3cucumber"),
+		entry(s.addr4, "52acorn"),
+		entry(s.addr4, "12cucumber"),
+		entry(s.addr4, "747eggplant"),
+		entry(s.addr5, "358acorn"),
+		entry(s.addr5, "101banana"),
+		entry(s.addr5, "8cucumber"),
+		entry(s.addr5, "5durian"),
+	}
+
+	tests := []struct {
+		name        string
+		process     func(sdk.AccAddress, sdk.Coin) bool
+		expProc     []string
+		expErr      []string
+		expNotInErr []string
+	}{
+		{
+			name:    "Get all",
+			process: getAll,
+			expProc: expProcessed,
+			expErr: []string{
+				s.addr3.String(),
+				"failed to read amount of grimcoin",
+				"math/big: cannot unmarshal \"grimvalue\" into a *big.Int",
+				s.addr4.String(),
+				"failed to read amount of badcoin",
+				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
+				"failed to read amount of dreadcoin",
+				"math/big: cannot unmarshal \"dreadvalue\" into a *big.Int",
+			},
+		},
+		{
+			name:    "stop after 1",
+			process: stopAfter(1),
+			expProc: expProcessed[0:1],
+		},
+		{
+			name:    "stop after 4 (after 1st error)",
+			process: stopAfter(4),
+			expProc: expProcessed[0:4],
+			expErr: []string{
+				s.addr3.String(),
+				"failed to read amount of grimcoin",
+				"math/big: cannot unmarshal \"grimvalue\" into a *big.Int",
+			},
+			expNotInErr: []string{
+				s.addr4.String(),
+				"failed to read amount of badcoin",
+				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
+				"failed to read amount of dreadcoin",
+				"math/big: cannot unmarshal \"dreadvalue\" into a *big.Int",
+			},
+		},
+		{
+			name:    "stop after 5 (after 2nd error)",
+			process: stopAfter(5),
+			expProc: expProcessed[0:5],
+			expErr: []string{
+				s.addr3.String(),
+				"failed to read amount of grimcoin",
+				"math/big: cannot unmarshal \"grimvalue\" into a *big.Int",
+				s.addr4.String(),
+				"failed to read amount of badcoin",
+				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
+			},
+			expNotInErr: []string{
+				"failed to read amount of dreadcoin",
+				"math/big: cannot unmarshal \"dreadvalue\" into a *big.Int",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			processed = nil
+			var err error
+			testFunc := func() {
+				err = s.keeper.IterateAllEscrow(s.sdkCtx, tc.process)
+			}
+			s.Require().NotPanics(testFunc, "IterateAllEscrow")
+			s.AssertErrorContents(err, tc.expErr, "IterateAllEscrow error")
+			if err != nil && len(tc.expNotInErr) > 0 {
+				errStr := err.Error()
+				for _, unexp := range tc.expNotInErr {
+					s.Assert().NotContains(errStr, unexp, "IterateAllEscrow error")
+				}
+			}
+			s.Assert().Equal(tc.expProc, processed, "IterateAllEscrow entries processed")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_GetAllAccountEscrows() {
+	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "SetEscrowCoinAmount(addr1, 99banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "SetEscrowCoinAmount(addr2, 18banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "SetEscrowCoinAmount(addr2, 3cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "SetEscrowCoinAmount(addr4, 52acorn)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "SetEscrowCoinAmount(addr4, 12cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747)), "SetEscrowCoinAmount(addr4, 747eggplant)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358)), "SetEscrowCoinAmount(addr5, 358acorn)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "banana", s.int(101)), "SetEscrowCoinAmount(addr5, 101banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8)), "SetEscrowCoinAmount(addr5, 8cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "durian", s.int(5)), "SetEscrowCoinAmount(addr5, 5durian)")
+	store = nil
+
+	expected := []*escrow.AccountEscrow{
+		{Address: s.addr1.String(), Amount: s.cz("99banana")},
+		{Address: s.addr2.String(), Amount: s.cz("18banana,3cucumber")},
+		{Address: s.addr4.String(), Amount: s.cz("52acorn,12cucumber,747eggplant")},
+		{Address: s.addr5.String(), Amount: s.cz("358acorn,101banana,8cucumber,5durian")},
+	}
+
+	s.Run("no bad entries", func() {
+		escrows, err := s.keeper.GetAllAccountEscrows(s.sdkCtx)
+		s.Assert().NoError(err, "GetAllAccountEscrows error")
+		s.Assert().Equal(expected, escrows, "GetAllAccountEscrows escrows")
+	})
+
+	store = s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "grimcoin"), []byte("grimvalue"))
+	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "badcoin"), []byte("badvalue"))
+	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "dreadcoin"), []byte("dreadvalue"))
+	store = nil
+
+	s.Run("a few bad entries", func() {
+		expInErr := []string{
+			s.addr3.String(),
+			"failed to read amount of grimcoin",
+			"math/big: cannot unmarshal \"grimvalue\" into a *big.Int",
+			s.addr4.String(),
+			"failed to read amount of badcoin",
+			"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
+			"failed to read amount of dreadcoin",
+			"math/big: cannot unmarshal \"dreadvalue\" into a *big.Int",
+		}
+
+		escrows, err := s.keeper.GetAllAccountEscrows(s.sdkCtx)
+		s.AssertErrorContents(err, expInErr, "GetAllAccountEscrows error")
+		s.Assert().Equal(expected, escrows, "GetAllAccountEscrows escrows")
+	})
+}
