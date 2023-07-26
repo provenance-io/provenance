@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Features
+
+* Allow marker's transfer authority to prevent transfer of restricted coin with deny list on send [#1518](https://github.com/provenance-io/provenance/issues/1518).
+
 ### Improvements
 
 * Update ibcnet ports so they don't conflict with host machine. [#1622](https://github.com/provenance-io/provenance/issues/1622)

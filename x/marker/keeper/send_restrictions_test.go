@@ -60,6 +60,7 @@ func TestSendRestrictionFn(t *testing.T) {
 	addrWithTransfer := sdk.AccAddress("addr_with_transfer__")
 	addrWithDeposit := sdk.AccAddress("addrWithDeposit_____")
 	addrWithTranDep := sdk.AccAddress("addrWithTranDep_____")
+	addrWithDenySend := sdk.AccAddress("addrWithDenySend_____")
 
 	coin := types.MarkerType_Coin
 	restricted := types.MarkerType_RestrictedCoin
@@ -109,6 +110,8 @@ func TestSendRestrictionFn(t *testing.T) {
 
 	rDenom3Attrs := "restrictedmarkerreqattributes5"
 	newMarker(rDenom3Attrs, restricted, []string{"kyc.provenance.io", "not-kyc.provenance.io", "foo.provenance.io"})
+
+	app.MarkerKeeper.AddSendDeny(ctx, rMarkerNoAttr.GetAddress(), addrWithDenySend)
 
 	testCases := []struct {
 		name   string
@@ -185,6 +188,13 @@ func TestSendRestrictionFn(t *testing.T) {
 			to:     addrWithAttrs,
 			amt:    cz(c(1, rDenom1AttrNoOneHas)),
 			expErr: "",
+		},
+		{
+			name:   "send from an account on denied list",
+			from:   addrWithDenySend,
+			to:     addrWithAttrs,
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: addrWithDenySend.String() + " is on deny list for sending restricted marker",
 		},
 		{
 			name:   "account contains the needed attribute",
