@@ -107,13 +107,13 @@ func (k Keeper) AddEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins)
 		}
 		inEscrow, err := k.getEscrowCoinAmount(store, addr, toAdd.Denom)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to get current escrow amount for %s: %w", addr, err))
+			errs = append(errs, fmt.Errorf("failed to get current %s escrow amount for %s: %w", toAdd.Denom, addr, err))
 			continue
 		}
 		newEscrowAmt := inEscrow.Add(toAdd.Amount)
 		err = k.setEscrowCoinAmount(store, addr, toAdd.Denom, newEscrowAmt)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to place %q in escrow for %s: %w", toAdd, addr, err))
+			errs = append(errs, fmt.Errorf("failed to place %s in escrow for %s: %w", toAdd, addr, err))
 		}
 	}
 	return errors.Join(errs...)
@@ -136,17 +136,17 @@ func (k Keeper) RemoveEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coi
 		}
 		inEscrow, err := k.getEscrowCoinAmount(store, addr, toRemove.Denom)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to get current escrow amount for %s: %w", addr, err))
+			errs = append(errs, fmt.Errorf("failed to get current %s escrow amount for %s: %w", toRemove.Denom, addr, err))
 			continue
 		}
 		newAmount := inEscrow.Sub(toRemove.Amount)
 		if newAmount.IsNegative() {
-			errs = append(errs, fmt.Errorf("cannot remove %q from escrow for %s: account only has %q in escrow", toRemove, addr, inEscrow))
+			errs = append(errs, fmt.Errorf("cannot remove %s from escrow for %s: account only has %s%s in escrow", toRemove, addr, inEscrow, toRemove.Denom))
 			continue
 		}
 		err = k.setEscrowCoinAmount(store, addr, toRemove.Denom, newAmount)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to remove %q from escrow for %s: %w", toRemove, addr, err))
+			errs = append(errs, fmt.Errorf("failed to remove %s from escrow for %s: %w", toRemove, addr, err))
 		}
 	}
 	return errors.Join(errs...)
