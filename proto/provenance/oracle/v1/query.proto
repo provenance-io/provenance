@@ -27,7 +27,7 @@ service Query {
   }
 
   // OracleResult returns the address of the oracle's contract
-  rpc OracleResult(QueryOracleResult) returns (QueryOracleResultResponse) {
+  rpc OracleResult(QueryOracleResultRequest) returns (QueryOracleResultResponse) {
     option (google.api.http).get = "/provenance/oracle/v1/oracle_result";
   }
 }
@@ -44,7 +44,7 @@ message QueryContractAddressResponse {
 // QueryOracleRequest queries an Oracle on another chain
 message QueryOracleRequest {
   // Query contains the query data passed to the oracle.
-  bytes query = 1 [(gogoproto.casttype) = "RawContractMessage"];
+  bytes query = 1 [(gogoproto.casttype) = "github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage"];
   // Source port is the source port to the oracle.
   string source_port = 2;
   // Source channel is the channel to the oracle.
@@ -60,17 +60,17 @@ message QueryOracleResponse {
 // QueryOracleContractRequest queries the oracle's smart contract
 message QueryOracleContractRequest {
   // Query contains the query data passed to the contract.
-  bytes query = 1 [(gogoproto.casttype) = "RawContractMessage"];
+  bytes query = 1 [(gogoproto.casttype) = "github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage"];
 }
 
 // QueryOracleContractResponse contains the result of the query to the oracle's smart contract
 message QueryOracleContractResponse {
   // Data contains the json data returned from the smart contract.
-  bytes data = 1 [(gogoproto.casttype) = "RawContractMessage"];
+  bytes data = 1 [(gogoproto.casttype) = "github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage"];
 }
 
-// QueryOracleResult attempts to obtain the result of the oracle query.
-message QueryOracleResult {
+// QueryOracleResultRequest attempts to obtain the result of the oracle query.
+message QueryOracleResultRequest {
   // The id of the query to get the result from
   uint64 query_id = 1;
 }
@@ -78,5 +78,5 @@ message QueryOracleResult {
 // QueryOracleResult contains the result of the oracle query.
 message QueryOracleResultResponse {
   // Data contains the json data returned from the smart contract.
-  bytes data = 2 [(gogoproto.casttype) = "RawContractMessage"];
+  bytes data = 2 [(gogoproto.casttype) = "github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage"];
 }

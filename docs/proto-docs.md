@@ -443,7 +443,7 @@
     - [QueryOracleContractResponse](#provenance.oracle.v1.QueryOracleContractResponse)
     - [QueryOracleRequest](#provenance.oracle.v1.QueryOracleRequest)
     - [QueryOracleResponse](#provenance.oracle.v1.QueryOracleResponse)
-    - [QueryOracleResult](#provenance.oracle.v1.QueryOracleResult)
+    - [QueryOracleResultRequest](#provenance.oracle.v1.QueryOracleResultRequest)
     - [QueryOracleResultResponse](#provenance.oracle.v1.QueryOracleResultResponse)
   
     - [Query](#provenance.oracle.v1.Query)
@@ -6824,10 +6824,10 @@ QueryOracleResponse contains the id of the oracle query.
 
 
 
-<a name="provenance.oracle.v1.QueryOracleResult"></a>
+<a name="provenance.oracle.v1.QueryOracleResultRequest"></a>
 
-### QueryOracleResult
-QueryOracleResult attempts to obtain the result of the oracle query.
+### QueryOracleResultRequest
+QueryOracleResultRequest attempts to obtain the result of the oracle query.
 
 
 | Field | Type | Label | Description |
@@ -6870,7 +6870,7 @@ Query defines the gRPC querier service for oracle module.
 | `ContractAddress` | [QueryContractAddressRequest](#provenance.oracle.v1.QueryContractAddressRequest) | [QueryContractAddressResponse](#provenance.oracle.v1.QueryContractAddressResponse) | ContractAddress returns the address of the oracle's contract | GET|/provenance/oracle/v1/contract_address|
 | `Oracle` | [QueryOracleRequest](#provenance.oracle.v1.QueryOracleRequest) | [QueryOracleResponse](#provenance.oracle.v1.QueryOracleResponse) | Oracle sends an icq to an oracle on another chain | GET|/provenance/oracle/v1/oracle|
 | `OracleContract` | [QueryOracleContractRequest](#provenance.oracle.v1.QueryOracleContractRequest) | [QueryOracleContractResponse](#provenance.oracle.v1.QueryOracleContractResponse) | OracleContract sends a query to the oracle's contract | GET|/provenance/oracle/v1/oracle_contract|
-| `OracleResult` | [QueryOracleResult](#provenance.oracle.v1.QueryOracleResult) | [QueryOracleResultResponse](#provenance.oracle.v1.QueryOracleResultResponse) | OracleResult returns the address of the oracle's contract | GET|/provenance/oracle/v1/oracle_result|
+| `OracleResult` | [QueryOracleResultRequest](#provenance.oracle.v1.QueryOracleResultRequest) | [QueryOracleResultResponse](#provenance.oracle.v1.QueryOracleResultResponse) | OracleResult returns the address of the oracle's contract | GET|/provenance/oracle/v1/oracle_result|
 
  <!-- end services -->
 
