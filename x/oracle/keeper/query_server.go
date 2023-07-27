@@ -22,6 +22,6 @@ func (k Keeper) OracleContract(ctx context.Context, req *types.QueryOracleContra
 	return &types.QueryOracleContractResponse{}, nil
 }
 
-func (k Keeper) OracleResult(ctx context.Context, req *types.QueryOracleResult) (*types.QueryOracleResultResponse, error) {
+func (k Keeper) OracleResult(ctx context.Context, req *types.QueryOracleResultRequest) (*types.QueryOracleResultResponse, error) {
 	return &types.QueryOracleResultResponse{}, nil
 }
