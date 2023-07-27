@@ -10,6 +10,9 @@ import (
 // This file is available only to unit tests and houses functions for doing
 // things with private keeper package stuff.
 
+// EscrowAccountBalancesInvariantHelper exposes the escrowAccountBalancesInvariantHelper function for unit tests.
+var EscrowAccountBalancesInvariantHelper = escrowAccountBalancesInvariantHelper
+
 // WithBankKeeper returns a new keeper that uses the provided bank keeper for unit tests.
 func (k Keeper) WithBankKeeper(bk escrow.BankKeeper) Keeper {
 	k.bankKeeper = bk
