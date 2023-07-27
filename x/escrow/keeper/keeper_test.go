@@ -55,25 +55,43 @@ func (s *TestSuite) SetupTest() {
 
 }
 
-func (s *TestSuite) cz(coins string) sdk.Coins {
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(TestSuite))
+}
+
+// coins creates an sdk.Coins from a string, requiring it to work.
+func (s *TestSuite) coins(coins string) sdk.Coins {
 	s.T().Helper()
 	rv, err := sdk.ParseCoinsNormalized(coins)
 	s.Require().NoError(err, "ParseCoinsNormalized(%q)", coins)
 	return rv
 }
 
+// coin creates a new coin without doing any validation on it.
 func (s *TestSuite) coin(amount int64, denom string) sdk.Coin {
-	s.T().Helper()
 	return sdk.Coin{
 		Amount: s.int(amount),
 		Denom:  denom,
 	}
 }
 
+// int is a shorter way to call sdkmath.NewInt.
 func (s *TestSuite) int(amount int64) sdkmath.Int {
 	return sdkmath.NewInt(amount)
 }
 
+// intStr creates an sdkmath.Int from a string, requiring it to work.
+func (s *TestSuite) intStr(amount string) sdkmath.Int {
+	s.T().Helper()
+	rv, ok := sdkmath.NewIntFromString(amount)
+	s.Require().True(ok, "NewIntFromString(%q) ok bool", amount)
+	return rv
+}
+
+// AssertErrorContents asserts that the provided error is as expected.
+// If contains is empty, it asserts there is no error.
+// Otherwise, it asseerts that the error contains each of the entries in the contains slice.
+// Returns true if it's all good, false if one or more assertion failed.
 func (s *TestSuite) AssertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
 	s.T().Helper()
 	if len(contains) == 0 {
@@ -91,10 +109,6 @@ func (s *TestSuite) AssertErrorContents(theError error, contains []string, msgAn
 	return hasAll
 }
 
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(TestSuite))
-}
-
 func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
 	tests := []struct {
 		name      string
@@ -107,91 +121,91 @@ func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
 			name:      "nil funds",
 			addr:      s.addr1,
 			funds:     nil,
-			spendable: s.cz("123rake"),
+			spendable: s.coins("123rake"),
 		},
 		{
 			name:      "empty funds",
 			addr:      s.addr1,
 			funds:     sdk.Coins{},
-			spendable: s.cz("123bake"),
+			spendable: s.coins("123bake"),
 		},
 		{
 			name:      "two zero coins",
 			addr:      s.addr1,
 			funds:     sdk.Coins{s.coin(0, "acorn"), s.coin(0, "boin")},
-			spendable: s.cz("123fake"),
+			spendable: s.coins("123fake"),
 		},
 		{
 			name:      "with negative coin",
 			addr:      s.addr1,
 			funds:     sdk.Coins{s.coin(10, "acorn"), s.coin(-3, "boin"), s.coin(22, "corn")},
-			spendable: s.cz("10acorn,5boin,100corn"),
+			spendable: s.coins("10acorn,5boin,100corn"),
 			expErr:    []string{"10acorn,-3boin,22corn", "escrow amounts", "cannot be negative", s.addr1.String()},
 		},
 		{
 			name:      "no spendable for one coin",
 			addr:      s.addr2,
-			funds:     s.cz("10acorn,5boin,100corn"),
-			spendable: s.cz("10acorn,100corn"),
+			funds:     s.coins("10acorn,5boin,100corn"),
+			spendable: s.coins("10acorn,100corn"),
 			expErr:    []string{"spendable balance 0boin is less than escrow amount 5boin", s.addr2.String()},
 		},
 		{
 			name:      "not enough spendable for a coin",
 			addr:      s.addr3,
-			funds:     s.cz("10acorn,5boin,100corn"),
-			spendable: s.cz("10acorn,4boin,100corn"),
+			funds:     s.coins("10acorn,5boin,100corn"),
+			spendable: s.coins("10acorn,4boin,100corn"),
 			expErr:    []string{"spendable balance 4boin is less than escrow amount 5boin", s.addr3.String()},
 		},
 		{
 			name:      "all spendable of one coin being put in escrow",
 			addr:      s.addr5,
-			funds:     s.cz("5boin"),
-			spendable: s.cz("10acorn,5boin,100corn"),
+			funds:     s.coins("5boin"),
+			spendable: s.coins("10acorn,5boin,100corn"),
 		},
 		{
 			name:      "all spendable being put in escrow",
 			addr:      s.addr4,
-			funds:     s.cz("10acorn,5boin,100corn"),
-			spendable: s.cz("10acorn,5boin,100corn"),
+			funds:     s.coins("10acorn,5boin,100corn"),
+			spendable: s.coins("10acorn,5boin,100corn"),
 		},
 		{
 			name:      "a zero coin that is not in spendable",
 			addr:      s.addr5,
 			funds:     sdk.Coins{s.coin(18, "acorn"), s.coin(0, "boin"), s.coin(55, "corn")},
-			spendable: s.cz("20acorn,100corn"),
+			spendable: s.coins("20acorn,100corn"),
 		},
 		{
 			name:      "three coins: all enough",
 			addr:      s.addr1,
-			funds:     s.cz("10acorn,20boin,30corn"),
-			spendable: s.cz("10acorn,20boin,30corn"),
+			funds:     s.coins("10acorn,20boin,30corn"),
+			spendable: s.coins("10acorn,20boin,30corn"),
 		},
 		{
 			name:      "three coins: none enough",
 			addr:      s.addr1,
-			funds:     s.cz("11acorn,21boin,31corn"),
-			spendable: s.cz("10acorn,20boin,30corn"),
+			funds:     s.coins("11acorn,21boin,31corn"),
+			spendable: s.coins("10acorn,20boin,30corn"),
 			expErr:    []string{"spendable balance 10acorn is less than escrow amount 11acorn", s.addr1.String()},
 		},
 		{
 			name:      "three coins: first insufficient",
 			addr:      s.addr1,
-			funds:     s.cz("11acorn,20boin,30corn"),
-			spendable: s.cz("10acorn,20boin,30corn"),
+			funds:     s.coins("11acorn,20boin,30corn"),
+			spendable: s.coins("10acorn,20boin,30corn"),
 			expErr:    []string{"spendable balance 10acorn is less than escrow amount 11acorn", s.addr1.String()},
 		},
 		{
 			name:      "three coins: second insufficient",
 			addr:      s.addr1,
-			funds:     s.cz("10acorn,21boin,30corn"),
-			spendable: s.cz("10acorn,20boin,30corn"),
+			funds:     s.coins("10acorn,21boin,30corn"),
+			spendable: s.coins("10acorn,20boin,30corn"),
 			expErr:    []string{"spendable balance 20boin is less than escrow amount 21boin", s.addr1.String()},
 		},
 		{
 			name:      "three coins: third insufficient",
 			addr:      s.addr1,
-			funds:     s.cz("10acorn,20boin,31corn"),
-			spendable: s.cz("10acorn,20boin,30corn"),
+			funds:     s.coins("10acorn,20boin,31corn"),
+			spendable: s.coins("10acorn,20boin,30corn"),
 			expErr:    []string{"spendable balance 30corn is less than escrow amount 31corn", s.addr1.String()},
 		},
 	}
@@ -211,15 +225,344 @@ func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
 	}
 }
 
-// TODO[1607]: func (s *TestSuite) TestKeeper_AddEscrow()
+func (s *TestSuite) TestKeeper_AddEscrow() {
+	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "setEscrowCoinAmount(addr1, 99banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3)), "setEscrowCoinAmount(addr1, 3cucumber)")
+	// max uint64 = 18,446,744,073,709,551,615
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "hugecoin", s.intStr("1844674407370955161500")), "setEscrowCoinAmount(addr2, 1844674407370955161500hugecoin)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "mediumcoin", s.intStr("10000000000000000000")), "setEscrowCoinAmount(addr2, 10000000000000000000mediumcoin)")
+	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "badcoin"), []byte("badvalue"))
+	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "crudcoin"), []byte("crudvalue"))
+	store = nil
 
-// TODO[1607]: func (s *TestSuite) TestKeeper_RemoveEscrow()
+	// Tests are ordered by address since the spendable balance depends on the previous state.
+	tests := []struct {
+		name     string
+		addr     sdk.AccAddress
+		funds    sdk.Coins
+		spendBal sdk.Coins
+		expErr   []string
+		finalEsc sdk.Coins
+	}{
+		{
+			name:     "nil funds",
+			addr:     s.addr1,
+			funds:    nil,
+			finalEsc: s.coins("99banana,3cucumber"),
+		},
+		{
+			name:     "empty funds",
+			addr:     s.addr1,
+			funds:    sdk.Coins{},
+			finalEsc: s.coins("99banana,3cucumber"),
+		},
+		{
+			name:     "insufficent spendable: some already in escrow",
+			addr:     s.addr1,
+			funds:    s.coins("2cucumber"),
+			spendBal: s.coins("1cucumber"),
+			expErr:   []string{"spendable balance 1cucumber is less than escrow amount 2cucumber"},
+			finalEsc: s.coins("99banana,3cucumber"),
+		},
+		{
+			name:     "sufficient spendable: add to existing entry",
+			addr:     s.addr1,
+			funds:    s.coins("2banana"),
+			spendBal: s.coins("2banana,9cucumber,11durian"),
+			finalEsc: s.coins("101banana,3cucumber"),
+		},
+		{
+			name:     "small amount added to existing amount over max uint64",
+			addr:     s.addr2,
+			funds:    s.coins("99hugecoin"),
+			spendBal: s.coins("5000000000000000000000hugecoin"),
+			finalEsc: s.coins("1844674407370955161599hugecoin,10000000000000000000mediumcoin"),
+		},
+		{
+			name:     "amount over max uint64 added to existing amount over max uint64",
+			addr:     s.addr2,
+			funds:    s.coins("2000000000000000000000hugecoin"),
+			spendBal: s.coins("5000000000000000000000hugecoin"),
+			finalEsc: s.coins("3844674407370955161599hugecoin,10000000000000000000mediumcoin"),
+		},
+		{
+			name:     "amount over max uint64 added to new entry",
+			addr:     s.addr2,
+			funds:    s.coins("18446744073709551616bigcoin"),
+			spendBal: s.coins("20000000000000000000bigcoin"),
+			finalEsc: s.coins("18446744073709551616bigcoin,3844674407370955161599hugecoin,10000000000000000000mediumcoin"),
+		},
+		{
+			name:     "amount under max uint64 added to another such amount resulting in more than max uint64",
+			addr:     s.addr2,
+			funds:    s.coins("10000000000000000000mediumcoin"),
+			spendBal: s.coins("10000000000000000000mediumcoin"),
+			finalEsc: s.coins("18446744073709551616bigcoin,3844674407370955161599hugecoin,20000000000000000000mediumcoin"),
+		},
+		{
+			name:     "existing entry is invalid",
+			addr:     s.addr3,
+			funds:    s.coins("1badcoin"),
+			spendBal: s.coins("1badcoin"),
+			expErr: []string{
+				"failed to get current badcoin escrow amount",
+				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
+			},
+		},
+		{
+			name:     "existing entry is invalid but new is zero",
+			addr:     s.addr3,
+			funds:    s.coins("0badcoin"),
+			spendBal: s.coins("1badcoin"),
+		},
+		{
+			name:     "addr has bad entry but adding different denom",
+			addr:     s.addr3,
+			funds:    s.coins("4goodcoin"),
+			spendBal: s.coins("1badcoin,2banana,4goodcoin"),
+			finalEsc: s.coins("4goodcoin"),
+		},
+		{
+			name:     "zero of bad denom with some of another",
+			addr:     s.addr3,
+			funds:    s.coins("0badcoin,8goodcoin"),
+			spendBal: s.coins("8goodcoin"),
+			finalEsc: s.coins("12goodcoin"),
+		},
+		{
+			name:     "three denoms: two existing and bad",
+			addr:     s.addr3,
+			funds:    s.coins("57acorn,5badcoin,4crudcoin"),
+			spendBal: s.coins("100acorn,100badcoin,100crudcoin"),
+			expErr: []string{
+				"failed to get current badcoin escrow amount",
+				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
+				"failed to get current crudcoin escrow amount",
+				"math/big: cannot unmarshal \"crudvalue\" into a *big.Int",
+			},
+			finalEsc: s.coins("57acorn,12goodcoin"),
+		},
+		{
+			name:     "sufficient spendable: new denoms to escrow",
+			addr:     s.addr4,
+			funds:    s.coins("37acorn,12banana"),
+			spendBal: s.coins("37acorn,12banana"),
+			finalEsc: s.coins("37acorn,12banana"),
+		},
+		{
+			name:     "amount over max uint64 added to amount under uint64",
+			addr:     s.addr4,
+			funds:    s.coins("5000000000000000000000banana"),
+			spendBal: s.coins("5000000000000000000000banana"),
+			finalEsc: s.coins("37acorn,5000000000000000000012banana"),
+		},
+		{
+			name:  "zero funds",
+			addr:  s.addr5,
+			funds: sdk.Coins{s.coin(0, "banana"), s.coin(0, "cucumber")},
+		},
+		{
+			name:     "insufficient spendable: none in escrow yet",
+			addr:     s.addr5,
+			funds:    s.coins("49apple"),
+			spendBal: s.coins("48apple"),
+			expErr:   []string{"spendable balance 48apple is less than escrow amount 49apple"},
+		},
+		{
+			name:     "new amount is invalid",
+			addr:     s.addr5,
+			funds:    sdk.Coins{s.coin(-1, "banana")},
+			spendBal: s.coins("2banana"),
+			expErr:   []string{s.addr5.String(), "-1banana", "cannot be negative"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if len(tc.expErr) > 0 {
+				tc.expErr = append(tc.expErr, tc.addr.String())
+			}
+			bk := NewMockBankKeeper().WithSpendable(tc.addr, tc.spendBal)
+			k := s.keeper.WithBankKeeper(bk)
+
+			var err error
+			testFunc := func() {
+				err = k.AddEscrow(s.sdkCtx, tc.addr, tc.funds)
+			}
+			s.Require().NotPanics(testFunc, "AddEscrow")
+
+			s.AssertErrorContents(err, tc.expErr, "AddEscrow error")
+
+			finalEsc, _ := k.GetEscrowCoins(s.sdkCtx, tc.addr)
+			s.Assert().Equal(tc.finalEsc.String(), finalEsc.String(), "final escrow")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_RemoveEscrow() {
+	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "setEscrowCoinAmount(addr1, 99banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3)), "setEscrowCoinAmount(addr1, 3cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "setEscrowCoinAmount(addr2, 18banana)")
+	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "badcoin"), []byte("badvalue"))
+	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "crudcoin"), []byte("crudvalue"))
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr3, "goodcoin", s.int(2)), "setEscrowCoinAmount(addr3, 2goodcoin)")
+	// max uint64 = 18,446,744,073,709,551,615
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "hugecoin", s.intStr("1844674407370955161500")), "setEscrowCoinAmount(addr4, 1844674407370955161500hugecoin)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "largecoin", s.intStr("1000000000000000000000")), "setEscrowCoinAmount(addr4, 1000000000000000000000largecoin)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "mediumcoin", s.intStr("20000000000000000000")), "setEscrowCoinAmount(addr4, 20000000000000000000mediumcoin)")
+	store = nil
+
+	// Tests are ordered by address since the spendable balance depends on the previous state.
+	tests := []struct {
+		name     string
+		addr     sdk.AccAddress
+		funds    sdk.Coins
+		expErr   []string
+		finalEsc sdk.Coins
+	}{
+		{
+			name:     "remove some of two denoms",
+			addr:     s.addr1,
+			funds:    s.coins("1banana,1cucumber"),
+			finalEsc: s.coins("98banana,2cucumber"),
+		},
+		{
+			name:  "remove all of two denoms",
+			addr:  s.addr1,
+			funds: s.coins("98banana,2cucumber"),
+		},
+		{
+			name:  "not enough in escrow",
+			addr:  s.addr2,
+			funds: s.coins("20banana"),
+			expErr: []string{
+				"cannot remove 20banana from escrow",
+				"account only has 18banana in escrow",
+			},
+			finalEsc: s.coins("18banana"),
+		},
+		{
+			name:     "only remove some",
+			addr:     s.addr2,
+			funds:    s.coins("10banana"),
+			finalEsc: s.coins("8banana"),
+		},
+		{
+			name:  "remove all of one denom",
+			addr:  s.addr2,
+			funds: s.coins("8banana"),
+		},
+		{
+			name:  "bad existing entry",
+			addr:  s.addr3,
+			funds: s.coins("1badcoin"),
+			expErr: []string{
+				"failed to get current badcoin escrow amount",
+				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
+			},
+			finalEsc: s.coins("2goodcoin"),
+		},
+		{
+			name:     "bad existing entry but amount of that denom is zero",
+			addr:     s.addr3,
+			funds:    s.coins("0badcoin,1goodcoin"),
+			finalEsc: s.coins("1goodcoin"),
+		},
+		{
+			name:  "two bad denoms one good",
+			addr:  s.addr3,
+			funds: s.coins("1badcoin,2crudcoin,1goodcoin"),
+			expErr: []string{
+				"failed to get current badcoin escrow amount",
+				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
+				"failed to get current crudcoin escrow amount",
+				"math/big: cannot unmarshal \"crudvalue\" into a *big.Int",
+			},
+		},
+		{
+			name:     "amount left in escrow still greater than max uint64",
+			addr:     s.addr4,
+			funds:    s.coins("1hugecoin"),
+			finalEsc: s.coins("1844674407370955161499hugecoin,1000000000000000000000largecoin,20000000000000000000mediumcoin"),
+		},
+		{
+			name:     "amount removed is greater than max uint64",
+			addr:     s.addr4,
+			funds:    s.coins("1844674407370955161400hugecoin"),
+			finalEsc: s.coins("99hugecoin,1000000000000000000000largecoin,20000000000000000000mediumcoin"),
+		},
+		{
+			name:     "exising amount more than max uint64 and amount removed is less with result also less",
+			addr:     s.addr4,
+			funds:    s.coins("10000000000000000000mediumcoin"),
+			finalEsc: s.coins("99hugecoin,1000000000000000000000largecoin,10000000000000000000mediumcoin"),
+		},
+		{
+			name:     "amount removed is more than max uint64 with result also more",
+			addr:     s.addr4,
+			funds:    s.coins("100000000000000000000largecoin"),
+			finalEsc: s.coins("99hugecoin,900000000000000000000largecoin,10000000000000000000mediumcoin"),
+		},
+		{
+			name:  "existing amount and amount to remove over max uint64 but insufficient",
+			addr:  s.addr4,
+			funds: s.coins("900000000000000000001largecoin"),
+			expErr: []string{
+				"cannot remove 900000000000000000001largecoin from escrow",
+				"account only has 900000000000000000000largecoin in escrow",
+			},
+			finalEsc: s.coins("99hugecoin,900000000000000000000largecoin,10000000000000000000mediumcoin"),
+		},
+		{
+			name:  "nil funds",
+			addr:  s.addr5,
+			funds: nil,
+		},
+		{
+			name:  "empty funds",
+			addr:  s.addr5,
+			funds: sdk.Coins{},
+		},
+		{
+			name:  "zero funds",
+			addr:  s.addr5,
+			funds: sdk.Coins{s.coin(0, "banana"), s.coin(0, "cucumber")},
+		},
+		{
+			name:   "negative amount",
+			addr:   s.addr5,
+			funds:  sdk.Coins{s.coin(-1, "banana")},
+			expErr: []string{"cannot remove \"-1banana\" from escrow", "amounts cannot be negative"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if len(tc.expErr) > 0 {
+				tc.expErr = append(tc.expErr, tc.addr.String())
+			}
+
+			var err error
+			testFunc := func() {
+				err = s.keeper.RemoveEscrow(s.sdkCtx, tc.addr, tc.funds)
+			}
+			s.Require().NotPanics(testFunc, "RemoveEscrow")
+
+			s.AssertErrorContents(err, tc.expErr, "RemoveEscrow error")
+
+			finalEsc, _ := s.keeper.GetEscrowCoins(s.sdkCtx, tc.addr)
+			s.Assert().Equal(tc.finalEsc.String(), finalEsc.String(), "final escrow")
+		})
+	}
+}
 
 func (s *TestSuite) TestKeeper_GetEscrowCoin() {
 	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "SetEscrowCoinAmount(addr1, 99banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3)), "SetEscrowCoinAmount(addr1, 3cucumber)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "SetEscrowCoinAmount(addr2, 18banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "setEscrowCoinAmount(addr1, 99banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3)), "setEscrowCoinAmount(addr1, 3cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "setEscrowCoinAmount(addr2, 18banana)")
 	store.Set(keeper.CreateEscrowCoinKey(s.addr1, "badcoin"), []byte("badvalue"))
 	store = nil
 
@@ -291,13 +634,13 @@ func (s *TestSuite) TestKeeper_GetEscrowCoin() {
 
 func (s *TestSuite) TestKeeper_GetEscrowCoins() {
 	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "SetEscrowCoinAmount(addr1, 99banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "SetEscrowCoinAmount(addr2, 18banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "SetEscrowCoinAmount(addr2, 3cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "setEscrowCoinAmount(addr1, 99banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "setEscrowCoinAmount(addr2, 18banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "setEscrowCoinAmount(addr2, 3cucumber)")
 	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "grimcoin"), []byte("grimvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "SetEscrowCoinAmount(addr4, 52acorn)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "setEscrowCoinAmount(addr4, 52acorn)")
 	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "badcoin"), []byte("badvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "SetEscrowCoinAmount(addr4, 12cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "setEscrowCoinAmount(addr4, 12cucumber)")
 	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "dreadcoin"), []byte("dreadvalue"))
 	store = nil
 
@@ -310,12 +653,12 @@ func (s *TestSuite) TestKeeper_GetEscrowCoins() {
 		{
 			name:     "addr with only one denom",
 			addr:     s.addr1,
-			expCoins: s.cz("99banana"),
+			expCoins: s.coins("99banana"),
 		},
 		{
 			name:     "addr with two denoms",
 			addr:     s.addr2,
-			expCoins: s.cz("18banana,3cucumber"),
+			expCoins: s.coins("18banana,3cucumber"),
 		},
 		{
 			name:     "addr with only one denom and it's bad",
@@ -330,7 +673,7 @@ func (s *TestSuite) TestKeeper_GetEscrowCoins() {
 		{
 			name:     "addr with two good denoms and two bad ones",
 			addr:     s.addr4,
-			expCoins: s.cz("52acorn,12cucumber"),
+			expCoins: s.coins("52acorn,12cucumber"),
 			expErr: []string{
 				s.addr4.String(),
 				"failed to read amount of badcoin",
@@ -362,19 +705,19 @@ func (s *TestSuite) TestKeeper_GetEscrowCoins() {
 
 func (s *TestSuite) TestKeeper_IterateEscrow() {
 	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "SetEscrowCoinAmount(addr1, 99banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "SetEscrowCoinAmount(addr2, 18banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "SetEscrowCoinAmount(addr2, 3cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "setEscrowCoinAmount(addr1, 99banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "setEscrowCoinAmount(addr2, 18banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "setEscrowCoinAmount(addr2, 3cucumber)")
 	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "grimcoin"), []byte("grimvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "SetEscrowCoinAmount(addr4, 52acorn)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "setEscrowCoinAmount(addr4, 52acorn)")
 	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "badcoin"), []byte("badvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "SetEscrowCoinAmount(addr4, 12cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "setEscrowCoinAmount(addr4, 12cucumber)")
 	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "dreadcoin"), []byte("dreadvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747)), "SetEscrowCoinAmount(addr4, 747eggplant)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358)), "SetEscrowCoinAmount(addr5, 358acorn)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "banana", s.int(101)), "SetEscrowCoinAmount(addr5, 101banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8)), "SetEscrowCoinAmount(addr5, 8cucumber)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "durian", s.int(5)), "SetEscrowCoinAmount(addr5, 5durian)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747)), "setEscrowCoinAmount(addr4, 747eggplant)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358)), "setEscrowCoinAmount(addr5, 358acorn)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "banana", s.int(101)), "setEscrowCoinAmount(addr5, 101banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8)), "setEscrowCoinAmount(addr5, 8cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "durian", s.int(5)), "setEscrowCoinAmount(addr5, 5durian)")
 	store = nil
 
 	addrDNE := sdk.AccAddress("addr_does_not_exist_")
@@ -508,19 +851,19 @@ func (s *TestSuite) TestKeeper_IterateAllEscrow() {
 	// I also picked easy-to-sort coin names.
 	// That means that the order they're being defined here should be the order they are in state.
 	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "SetEscrowCoinAmount(addr1, 99banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "SetEscrowCoinAmount(addr2, 18banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "SetEscrowCoinAmount(addr2, 3cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "setEscrowCoinAmount(addr1, 99banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "setEscrowCoinAmount(addr2, 18banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "setEscrowCoinAmount(addr2, 3cucumber)")
 	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "grimcoin"), []byte("grimvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "SetEscrowCoinAmount(addr4, 52acorn)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "setEscrowCoinAmount(addr4, 52acorn)")
 	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "badcoin"), []byte("badvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "SetEscrowCoinAmount(addr4, 12cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "setEscrowCoinAmount(addr4, 12cucumber)")
 	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "dreadcoin"), []byte("dreadvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747)), "SetEscrowCoinAmount(addr4, 747eggplant)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358)), "SetEscrowCoinAmount(addr5, 358acorn)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "banana", s.int(101)), "SetEscrowCoinAmount(addr5, 101banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8)), "SetEscrowCoinAmount(addr5, 8cucumber)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "durian", s.int(5)), "SetEscrowCoinAmount(addr5, 5durian)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747)), "setEscrowCoinAmount(addr4, 747eggplant)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358)), "setEscrowCoinAmount(addr5, 358acorn)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "banana", s.int(101)), "setEscrowCoinAmount(addr5, 101banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8)), "setEscrowCoinAmount(addr5, 8cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "durian", s.int(5)), "setEscrowCoinAmount(addr5, 5durian)")
 	store = nil
 
 	entry := func(addr sdk.AccAddress, coin string) string {
@@ -636,23 +979,23 @@ func (s *TestSuite) TestKeeper_IterateAllEscrow() {
 
 func (s *TestSuite) TestKeeper_GetAllAccountEscrows() {
 	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "SetEscrowCoinAmount(addr1, 99banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "SetEscrowCoinAmount(addr2, 18banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "SetEscrowCoinAmount(addr2, 3cucumber)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "SetEscrowCoinAmount(addr4, 52acorn)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "SetEscrowCoinAmount(addr4, 12cucumber)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747)), "SetEscrowCoinAmount(addr4, 747eggplant)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358)), "SetEscrowCoinAmount(addr5, 358acorn)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "banana", s.int(101)), "SetEscrowCoinAmount(addr5, 101banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8)), "SetEscrowCoinAmount(addr5, 8cucumber)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "durian", s.int(5)), "SetEscrowCoinAmount(addr5, 5durian)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "setEscrowCoinAmount(addr1, 99banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "setEscrowCoinAmount(addr2, 18banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "setEscrowCoinAmount(addr2, 3cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "setEscrowCoinAmount(addr4, 52acorn)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "setEscrowCoinAmount(addr4, 12cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747)), "setEscrowCoinAmount(addr4, 747eggplant)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358)), "setEscrowCoinAmount(addr5, 358acorn)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "banana", s.int(101)), "setEscrowCoinAmount(addr5, 101banana)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8)), "setEscrowCoinAmount(addr5, 8cucumber)")
+	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "durian", s.int(5)), "setEscrowCoinAmount(addr5, 5durian)")
 	store = nil
 
 	expected := []*escrow.AccountEscrow{
-		{Address: s.addr1.String(), Amount: s.cz("99banana")},
-		{Address: s.addr2.String(), Amount: s.cz("18banana,3cucumber")},
-		{Address: s.addr4.String(), Amount: s.cz("52acorn,12cucumber,747eggplant")},
-		{Address: s.addr5.String(), Amount: s.cz("358acorn,101banana,8cucumber,5durian")},
+		{Address: s.addr1.String(), Amount: s.coins("99banana")},
+		{Address: s.addr2.String(), Amount: s.coins("18banana,3cucumber")},
+		{Address: s.addr4.String(), Amount: s.coins("52acorn,12cucumber,747eggplant")},
+		{Address: s.addr5.String(), Amount: s.coins("358acorn,101banana,8cucumber,5durian")},
 	}
 
 	s.Run("no bad entries", func() {
