@@ -5,8 +5,6 @@ import (
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-
 	"github.com/provenance-io/provenance/x/escrow"
 	"github.com/provenance-io/provenance/x/escrow/keeper"
 )
@@ -62,8 +60,8 @@ func (s *TestSuite) stateEntryString(key, value []byte) string {
 
 func (s *TestSuite) TestKeeper_InitGenesis() {
 	// SetupTest creates the accounts each with 1_000_000_000 of the bond denom.
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, s.addr1, s.coins("99banana,53cactus")), "FundAccount(addr1)")
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, s.addr2, s.coins("42banana")), "FundAccount(addr1)")
+	s.requireFundAccount(s.addr1, "99banana,53cactus")
+	s.requireFundAccount(s.addr2, "42banana")
 	addrDNE := sdk.AccAddress("addr_does_not_exist_")
 
 	genStateWithEscrows := func(escrows ...*escrow.AccountEscrow) *escrow.GenesisState {

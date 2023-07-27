@@ -15,6 +15,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/escrow"
@@ -238,15 +239,22 @@ func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
 
 // requireSetEscrowCoinAmount calls SetEscrowCoinAmount making sure it doesn't panic or return an error.
 func (s *TestSuite) requireSetEscrowCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) {
-	f := func() error {
+	testFunc := func() error {
 		return s.keeper.SetEscrowCoinAmount(store, addr, denom, amount)
 	}
-	s.requireNotPanicsNoErrorf(f, "setEscrowCoinAmount(%s, %s%s)", s.getAddrName(addr), amount, denom)
+	s.requireNotPanicsNoErrorf(testFunc, "setEscrowCoinAmount(%s, %s%s)", s.getAddrName(addr), amount, denom)
 }
 
 // setEscrowCoinAmountRaw sets an escrow coin amount to the provided amount string.
 func (s *TestSuite) setEscrowCoinAmountRaw(store sdk.KVStore, addr sdk.AccAddress, denom string, amount string) {
 	store.Set(keeper.CreateEscrowCoinKey(addr, denom), []byte(amount))
+}
+
+func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
+	testFunc := func() error {
+		return testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, s.coins(coins))
+	}
+	s.requireNotPanicsNoErrorf(testFunc, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
 }
 
 func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
