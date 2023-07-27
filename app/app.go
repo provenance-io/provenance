@@ -149,6 +149,9 @@ import (
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	namewasm "github.com/provenance-io/provenance/x/name/wasm"
+	oraclekeeper "github.com/provenance-io/provenance/x/oracle/keeper"
+	oraclemodule "github.com/provenance-io/provenance/x/oracle/module"
+	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	rewardkeeper "github.com/provenance-io/provenance/x/reward/keeper"
 	rewardmodule "github.com/provenance-io/provenance/x/reward/module"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
@@ -213,6 +216,7 @@ var (
 		msgfeesmodule.AppModuleBasic{},
 		rewardmodule.AppModuleBasic{},
 		triggermodule.AppModuleBasic{},
+		oraclemodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -232,6 +236,7 @@ var (
 		wasm.ModuleName:           {authtypes.Burner},
 		rewardtypes.ModuleName:    nil,
 		triggertypes.ModuleName:   nil,
+		oracletypes.ModuleName:    nil,
 	}
 )
 
@@ -289,6 +294,7 @@ type App struct {
 	QuarantineKeeper quarantinekeeper.Keeper
 	SanctionKeeper   sanctionkeeper.Keeper
 	TriggerKeeper    triggerkeeper.Keeper
+	OracleKeeper     oraclekeeper.Keeper
 
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	ICAHostKeeper  icahostkeeper.Keeper
@@ -371,6 +377,7 @@ func New(
 		quarantine.StoreKey,
 		sanction.StoreKey,
 		triggertypes.StoreKey,
+		oracletypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -495,6 +502,7 @@ func New(
 		return pioMsgFeesRouter.Handler(msg)
 	})
 	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], app.MsgServiceRouter())
+	app.OracleKeeper = oraclekeeper.NewKeeper(appCodec, keys[oracletypes.StoreKey])
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec, keys[icahosttypes.StoreKey], app.GetSubspace(icahosttypes.SubModuleName),
 		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
@@ -649,6 +657,7 @@ func New(
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
+		oraclemodule.NewAppModule(appCodec, app.OracleKeeper),
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
@@ -688,6 +697,7 @@ func New(
 		paramstypes.ModuleName,
 		msgfeestypes.ModuleName,
 		metadatatypes.ModuleName,
+		oracletypes.ModuleName,
 		wasm.ModuleName,
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
@@ -712,6 +722,7 @@ func New(
 		distrtypes.ModuleName,
 		authz.ModuleName,
 		metadatatypes.ModuleName,
+		oracletypes.ModuleName,
 		nametypes.ModuleName,
 		genutiltypes.ModuleName,
 		ibchost.ModuleName,
@@ -770,6 +781,7 @@ func New(
 		wasm.ModuleName,
 		rewardtypes.ModuleName,
 		triggertypes.ModuleName,
+		oracletypes.ModuleName,
 
 		// no-ops
 		paramstypes.ModuleName,
@@ -809,6 +821,7 @@ func New(
 		nametypes.ModuleName,
 		rewardtypes.ModuleName,
 		triggertypes.ModuleName,
+		oracletypes.ModuleName,
 
 		// Last due to v0.44 issue: https://github.com/cosmos/cosmos-sdk/issues/10591
 		authtypes.ModuleName,
@@ -843,6 +856,7 @@ func New(
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
+		oraclemodule.NewAppModule(appCodec, app.OracleKeeper),
 		provwasm.NewWrapper(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 
 		ibc.NewAppModule(app.IBCKeeper),
@@ -1131,6 +1145,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(rewardtypes.ModuleName)
 	paramsKeeper.Subspace(triggertypes.ModuleName)
+	paramsKeeper.Subspace(oracletypes.ModuleName)
 
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
