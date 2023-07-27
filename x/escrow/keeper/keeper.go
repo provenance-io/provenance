@@ -23,8 +23,9 @@ type Keeper struct {
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, bankKeeper escrow.BankKeeper) Keeper {
 	rv := Keeper{
-		cdc:      cdc,
-		storeKey: storeKey,
+		cdc:        cdc,
+		storeKey:   storeKey,
+		bankKeeper: bankKeeper,
 	}
 	bankKeeper.AppendLockedCoinsGetter(rv.GetLockedCoins)
 	return rv
