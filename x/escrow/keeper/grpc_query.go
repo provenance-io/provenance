@@ -65,7 +65,7 @@ func (k Keeper) paginateAllEscrow(ctx sdk.Context, pageRequest *query.PageReques
 	reverse := pageRequest.Reverse
 
 	if offset > 0 && key != nil {
-		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+		return nil, status.Errorf(codes.InvalidArgument, "either offset or key is expected, got both")
 	}
 
 	if limit == 0 {
