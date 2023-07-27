@@ -428,6 +428,7 @@ func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
 }
 
 func (s *TestSuite) TestKeeper_AddEscrow() {
+	// TODO: Update AddEscrow tests to check for expected events.
 	store := s.getStore()
 	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
 	s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3))
@@ -603,6 +604,7 @@ func (s *TestSuite) TestKeeper_AddEscrow() {
 }
 
 func (s *TestSuite) TestKeeper_RemoveEscrow() {
+	// TODO: Update RemoveEscrow tests to check for expected events.
 	store := s.getStore()
 	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
 	s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3))
