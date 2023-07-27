@@ -123,7 +123,7 @@ func (s *TestSuite) TestEscrowAccountBalancesInvariantHelper() {
 		s.Run(tc.name, func() {
 			s.clearEscrowState()
 			if tc.setup != nil {
-				tc.setup(s, s.sdkCtx.KVStore(s.keeper.GetStoreKey()))
+				tc.setup(s, s.getStore())
 			}
 			msg, broken := keeper.EscrowAccountBalancesInvariantHelper(s.sdkCtx, s.keeper)
 			s.Assert().Equal(tc.expBroken, broken, "broken bool")

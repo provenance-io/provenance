@@ -1,62 +1,12 @@
 package keeper_test
 
 import (
-	"fmt"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/escrow"
 	"github.com/provenance-io/provenance/x/escrow/keeper"
 )
-
-// clearEscrowState will delete all entries from the escrow store.
-func (s *TestSuite) clearEscrowState() {
-	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	var keys [][]byte
-
-	iter := store.Iterator(nil, nil)
-	defer func() {
-		if iter != nil {
-			iter.Close()
-		}
-	}()
-
-	for ; iter.Valid(); iter.Next() {
-		s.Require().NoError(iter.Error(), "iter.Error()")
-		keys = append(keys, iter.Key())
-	}
-	err := iter.Close()
-	iter = nil
-	s.Require().NoError(err, "iter.Close()")
-
-	for _, key := range keys {
-		store.Delete(key)
-	}
-}
-
-// dumpEscrowState creates a string for each entry in the escrow state store.
-// Each entry has the format `"<key>"="<value>"`.
-func (s *TestSuite) dumpEscrowState() []string {
-	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	var rv []string
-
-	iter := store.Iterator(nil, nil)
-	defer iter.Close()
-
-	for ; iter.Valid(); iter.Next() {
-		s.Require().NoError(iter.Error(), "iter.Error()")
-		key := iter.Key()
-		value := iter.Value()
-		rv = append(rv, s.stateEntryString(key, value))
-	}
-
-	return rv
-}
-
-// stateEntryString converts the provided key and value into a "<key>"="<value>" string.
-func (s *TestSuite) stateEntryString(key, value []byte) string {
-	return fmt.Sprintf("%q=%q", key, value)
-}
 
 func (s *TestSuite) TestKeeper_InitGenesis() {
 	// SetupTest creates the accounts each with 1_000_000_000 of the bond denom.
@@ -284,7 +234,7 @@ func (s *TestSuite) TestKeeper_ExportGenesis() {
 		s.Run(tc.name, func() {
 			s.clearEscrowState()
 			if tc.setup != nil {
-				tc.setup(s, s.sdkCtx.KVStore(s.keeper.GetStoreKey()))
+				tc.setup(s, s.getStore())
 			}
 
 			var genState *escrow.GenesisState

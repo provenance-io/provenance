@@ -237,6 +237,11 @@ func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
 	}
 }
 
+// getStore returns the escrow state store.
+func (s *TestSuite) getStore() sdk.KVStore {
+	return s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+}
+
 // requireSetEscrowCoinAmount calls SetEscrowCoinAmount making sure it doesn't panic or return an error.
 func (s *TestSuite) requireSetEscrowCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) {
 	testFunc := func() error {
@@ -255,6 +260,55 @@ func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 		return testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, s.coins(coins))
 	}
 	s.requireNotPanicsNoErrorf(testFunc, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
+}
+
+// clearEscrowState will delete all entries from the escrow store.
+func (s *TestSuite) clearEscrowState() {
+	store := s.getStore()
+	var keys [][]byte
+
+	iter := store.Iterator(nil, nil)
+	defer func() {
+		if iter != nil {
+			iter.Close()
+		}
+	}()
+
+	for ; iter.Valid(); iter.Next() {
+		s.Require().NoError(iter.Error(), "iter.Error()")
+		keys = append(keys, iter.Key())
+	}
+	err := iter.Close()
+	iter = nil
+	s.Require().NoError(err, "iter.Close()")
+
+	for _, key := range keys {
+		store.Delete(key)
+	}
+}
+
+// stateEntryString converts the provided key and value into a "<key>"="<value>" string.
+func (s *TestSuite) stateEntryString(key, value []byte) string {
+	return fmt.Sprintf("%q=%q", key, value)
+}
+
+// dumpEscrowState creates a string for each entry in the escrow state store.
+// Each entry has the format `"<key>"="<value>"`.
+func (s *TestSuite) dumpEscrowState() []string {
+	store := s.getStore()
+	var rv []string
+
+	iter := store.Iterator(nil, nil)
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		s.Require().NoError(iter.Error(), "iter.Error()")
+		key := iter.Key()
+		value := iter.Value()
+		rv = append(rv, s.stateEntryString(key, value))
+	}
+
+	return rv
 }
 
 func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
@@ -374,7 +428,7 @@ func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
 }
 
 func (s *TestSuite) TestKeeper_AddEscrow() {
-	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	store := s.getStore()
 	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
 	s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3))
 	// max uint64 = 18,446,744,073,709,551,615
@@ -549,7 +603,7 @@ func (s *TestSuite) TestKeeper_AddEscrow() {
 }
 
 func (s *TestSuite) TestKeeper_RemoveEscrow() {
-	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	store := s.getStore()
 	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
 	s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3))
 	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
@@ -707,7 +761,7 @@ func (s *TestSuite) TestKeeper_RemoveEscrow() {
 }
 
 func (s *TestSuite) TestKeeper_GetEscrowCoin() {
-	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	store := s.getStore()
 	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
 	s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3))
 	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
@@ -781,7 +835,7 @@ func (s *TestSuite) TestKeeper_GetEscrowCoin() {
 }
 
 func (s *TestSuite) TestKeeper_GetEscrowCoins() {
-	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	store := s.getStore()
 	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
 	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
 	s.requireSetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3))
@@ -852,7 +906,7 @@ func (s *TestSuite) TestKeeper_GetEscrowCoins() {
 }
 
 func (s *TestSuite) TestKeeper_IterateEscrow() {
-	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	store := s.getStore()
 	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
 	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
 	s.requireSetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3))
@@ -998,7 +1052,7 @@ func (s *TestSuite) TestKeeper_IterateAllEscrow() {
 	// Since the addresses should have been created sequentially, that's the order the store records should be in.
 	// I also picked easy-to-sort coin names.
 	// That means that the order they're being defined here should be the order they are in state.
-	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	store := s.getStore()
 	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
 	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
 	s.requireSetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3))
@@ -1126,7 +1180,7 @@ func (s *TestSuite) TestKeeper_IterateAllEscrow() {
 }
 
 func (s *TestSuite) TestKeeper_GetAllAccountEscrows() {
-	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	store := s.getStore()
 	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
 	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
 	s.requireSetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3))
@@ -1152,7 +1206,7 @@ func (s *TestSuite) TestKeeper_GetAllAccountEscrows() {
 		s.Assert().Equal(expected, escrows, "GetAllAccountEscrows escrows")
 	})
 
-	store = s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	store = s.getStore()
 	s.setEscrowCoinAmountRaw(store, s.addr3, "grimcoin", "grimvalue")
 	s.setEscrowCoinAmountRaw(store, s.addr4, "badcoin", "badvalue")
 	s.setEscrowCoinAmountRaw(store, s.addr4, "dreadcoin", "dreadvalue")
