@@ -76,6 +76,7 @@
     - [EventMarkerTransfer](#provenance.marker.v1.EventMarkerTransfer)
     - [EventMarkerWithdraw](#provenance.marker.v1.EventMarkerWithdraw)
     - [MarkerAccount](#provenance.marker.v1.MarkerAccount)
+    - [MarkerNetAssetValue](#provenance.marker.v1.MarkerNetAssetValue)
     - [Params](#provenance.marker.v1.Params)
   
     - [MarkerStatus](#provenance.marker.v1.MarkerStatus)
@@ -1524,6 +1525,24 @@ MarkerAccount holds the marker configuration information in addition to a base a
 | `allow_governance_control` | [bool](#bool) |  | indicates that governance based control is allowed for this marker |
 | `allow_forced_transfer` | [bool](#bool) |  | Whether an admin can transfer restricted coins from a 3rd-party account without their signature. |
 | `required_attributes` | [string](#string) | repeated | list of required attributes on restricted marker in order to send and receive transfers if sender does not have transfer authority |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MarkerNetAssetValue"></a>
+
+### MarkerNetAssetValue
+MarkerNetAssetValue defines a marker's net asset value
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | value is the value of asset in token |
+| `volume` | [uint64](#uint64) |  | volume is the volume of the assets |
+| `source` | [string](#string) |  | source defines the module that updated the value |
+| `update_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | update_time is the block height time of last update |
 
 
 

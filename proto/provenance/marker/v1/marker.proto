@@ -2,8 +2,10 @@ syntax = "proto3";
 package provenance.marker.v1;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "provenance/marker/v1/accessgrant.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/marker/types";
@@ -90,6 +92,18 @@ enum MarkerStatus {
   // MARKER_STATUS_DESTROYED - Marker supply has all been recalled, marker is considered destroyed and no further
   // actions allowed.
   MARKER_STATUS_DESTROYED = 5 [(gogoproto.enumvalue_customname) = "StatusDestroyed"];
+}
+
+// MarkerNetAssetValue defines a marker's net asset value
+message MarkerNetAssetValue {
+  // value is the value of asset in token
+  cosmos.base.v1beta1.Coin value = 1 [(gogoproto.nullable) = false];
+  // volume is the volume of the assets
+  uint64 volume = 2 [(gogoproto.customtype) = "uint64", (gogoproto.nullable) = false];
+  // source defines the module that updated the value
+  string source = 3;
+  // update_time is the block height time of last update
+  google.protobuf.Timestamp update_time = 4;
 }
 
 // EventMarkerAdd event emitted when marker is added
