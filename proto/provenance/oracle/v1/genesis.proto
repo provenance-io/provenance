@@ -1,0 +1,17 @@
+syntax = "proto3";
+package provenance.oracle.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/oracle/types";
+option java_package        = "io.provenance.oracle.v1";
+option java_multiple_files = true;
+
+// GenesisState defines the oracle module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // Query id is the next auto incremented id to be assigned to the next query
+  uint64 query_id = 1;
+}
