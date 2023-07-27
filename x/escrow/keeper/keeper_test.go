@@ -93,11 +93,11 @@ func (s *TestSuite) intStr(amount string) sdkmath.Int {
 	return rv
 }
 
-// AssertErrorContents asserts that the provided error is as expected.
+// assertErrorContents asserts that the provided error is as expected.
 // If contains is empty, it asserts there is no error.
 // Otherwise, it asseerts that the error contains each of the entries in the contains slice.
 // Returns true if it's all good, false if one or more assertion failed.
-func (s *TestSuite) AssertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
+func (s *TestSuite) assertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
 	s.T().Helper()
 	if len(contains) == 0 {
 		return s.Assert().NoError(theError, msgAndArgs...)
@@ -134,9 +134,9 @@ func didPanic(f panicTestFunc) (didPanic bool, message interface{}, stack string
 	return
 }
 
-// AssertPanicContents asserts that, if contains is empty, the provided func does not panic
+// assertPanicContents asserts that, if contains is empty, the provided func does not panic
 // Otherwise, asserts that the func panics and that its panic message contains each of the provided strings.
-func (s *TestSuite) AssertPanicContents(f panicTestFunc, contains []string, msgAndArgs ...interface{}) bool {
+func (s *TestSuite) assertPanicContents(f panicTestFunc, contains []string, msgAndArgs ...interface{}) bool {
 	s.T().Helper()
 
 	funcDidPanic, panicValue, panickedStack := didPanic(f)
@@ -182,16 +182,71 @@ func (s *TestSuite) AssertPanicContents(f panicTestFunc, contains []string, msgA
 	return s.Assert().Fail(msg, msgAndArgs)
 }
 
-// RequirePanicContents asserts that, if contains is empty, the provided func does not panic
+// requirePanicContents asserts that, if contains is empty, the provided func does not panic
 // Otherwise, asserts that the func panics and that its panic message contains each of the provided strings.
 //
 // If the assertion fails, the test is halted.
-func (s *TestSuite) RequirePanicContents(f panicTestFunc, contains []string, msgAndArgs ...interface{}) {
+func (s *TestSuite) requirePanicContents(f panicTestFunc, contains []string, msgAndArgs ...interface{}) {
 	s.T().Helper()
-	if s.AssertPanicContents(f, contains, msgAndArgs...) {
+	if s.assertPanicContents(f, contains, msgAndArgs...) {
 		return
 	}
 	s.T().FailNow()
+}
+
+// assertNotPanicsNoErrorf asserts that the code inside the provided function does not panic
+// and that it does not return an error.
+// Returns true if it neither panics nor errors.
+func (s *TestSuite) assertNotPanicsNoErrorf(f func() error, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	var err error
+	if !s.Assert().NotPanicsf(func() { err = f() }, msg, args...) {
+		return false
+	}
+	return s.Assert().NoErrorf(err, msg, args...)
+}
+
+// requireNotPanicsNoErrorf asserts that the code inside the provided function does not panic
+// and that it does not return an error.
+//
+// If the assertion fails, the test is halted.
+func (s *TestSuite) requireNotPanicsNoErrorf(f func() error, msg string, args ...interface{}) {
+	s.T().Helper()
+	if s.assertNotPanicsNoErrorf(f, msg, args...) {
+		return
+	}
+	s.T().FailNow()
+}
+
+// getAddrName returns the name of the variable in this TestSuite holding the provided address.
+func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
+	switch string(addr) {
+	case string(s.addr1):
+		return "addr1"
+	case string(s.addr2):
+		return "addr2"
+	case string(s.addr3):
+		return "addr3"
+	case string(s.addr4):
+		return "addr4"
+	case string(s.addr5):
+		return "addr5"
+	default:
+		return addr.String()
+	}
+}
+
+// requireSetEscrowCoinAmount calls SetEscrowCoinAmount making sure it doesn't panic or return an error.
+func (s *TestSuite) requireSetEscrowCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) {
+	f := func() error {
+		return s.keeper.SetEscrowCoinAmount(store, addr, denom, amount)
+	}
+	s.requireNotPanicsNoErrorf(f, "setEscrowCoinAmount(%s, %s%s)", s.getAddrName(addr), amount, denom)
+}
+
+// setEscrowCoinAmountRaw sets an escrow coin amount to the provided amount string.
+func (s *TestSuite) setEscrowCoinAmountRaw(store sdk.KVStore, addr sdk.AccAddress, denom string, amount string) {
+	store.Set(keeper.CreateEscrowCoinKey(addr, denom), []byte(amount))
 }
 
 func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
@@ -305,20 +360,20 @@ func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
 				err = k.ValidateNewEscrow(s.sdkCtx, tc.addr, tc.funds)
 			}
 			s.Require().NotPanics(testFunc, "ValidateNewEscrow")
-			s.AssertErrorContents(err, tc.expErr, "ValidateNewEscrow")
+			s.assertErrorContents(err, tc.expErr, "ValidateNewEscrow")
 		})
 	}
 }
 
 func (s *TestSuite) TestKeeper_AddEscrow() {
 	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "setEscrowCoinAmount(addr1, 99banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3)), "setEscrowCoinAmount(addr1, 3cucumber)")
+	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
+	s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3))
 	// max uint64 = 18,446,744,073,709,551,615
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "hugecoin", s.intStr("1844674407370955161500")), "setEscrowCoinAmount(addr2, 1844674407370955161500hugecoin)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "mediumcoin", s.intStr("10000000000000000000")), "setEscrowCoinAmount(addr2, 10000000000000000000mediumcoin)")
-	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "badcoin"), []byte("badvalue"))
-	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "crudcoin"), []byte("crudvalue"))
+	s.requireSetEscrowCoinAmount(store, s.addr2, "hugecoin", s.intStr("1844674407370955161500"))
+	s.requireSetEscrowCoinAmount(store, s.addr2, "mediumcoin", s.intStr("10000000000000000000"))
+	s.setEscrowCoinAmountRaw(store, s.addr3, "badcoin", "badvalue")
+	s.setEscrowCoinAmountRaw(store, s.addr3, "crudcoin", "crudvalue")
 	store = nil
 
 	// Tests are ordered by address since the spendable balance depends on the previous state.
@@ -477,7 +532,7 @@ func (s *TestSuite) TestKeeper_AddEscrow() {
 			}
 			s.Require().NotPanics(testFunc, "AddEscrow")
 
-			s.AssertErrorContents(err, tc.expErr, "AddEscrow error")
+			s.assertErrorContents(err, tc.expErr, "AddEscrow error")
 
 			finalEsc, _ := k.GetEscrowCoins(s.sdkCtx, tc.addr)
 			s.Assert().Equal(tc.finalEsc.String(), finalEsc.String(), "final escrow")
@@ -487,16 +542,16 @@ func (s *TestSuite) TestKeeper_AddEscrow() {
 
 func (s *TestSuite) TestKeeper_RemoveEscrow() {
 	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "setEscrowCoinAmount(addr1, 99banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3)), "setEscrowCoinAmount(addr1, 3cucumber)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "setEscrowCoinAmount(addr2, 18banana)")
-	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "badcoin"), []byte("badvalue"))
-	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "crudcoin"), []byte("crudvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr3, "goodcoin", s.int(2)), "setEscrowCoinAmount(addr3, 2goodcoin)")
+	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
+	s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3))
+	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
+	s.setEscrowCoinAmountRaw(store, s.addr3, "badcoin", "badvalue")
+	s.setEscrowCoinAmountRaw(store, s.addr3, "crudcoin", "crudvalue")
+	s.requireSetEscrowCoinAmount(store, s.addr3, "goodcoin", s.int(2))
 	// max uint64 = 18,446,744,073,709,551,615
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "hugecoin", s.intStr("1844674407370955161500")), "setEscrowCoinAmount(addr4, 1844674407370955161500hugecoin)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "largecoin", s.intStr("1000000000000000000000")), "setEscrowCoinAmount(addr4, 1000000000000000000000largecoin)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "mediumcoin", s.intStr("20000000000000000000")), "setEscrowCoinAmount(addr4, 20000000000000000000mediumcoin)")
+	s.requireSetEscrowCoinAmount(store, s.addr4, "hugecoin", s.intStr("1844674407370955161500"))
+	s.requireSetEscrowCoinAmount(store, s.addr4, "largecoin", s.intStr("1000000000000000000000"))
+	s.requireSetEscrowCoinAmount(store, s.addr4, "mediumcoin", s.intStr("20000000000000000000"))
 	store = nil
 
 	// Tests are ordered by address since the spendable balance depends on the previous state.
@@ -635,7 +690,7 @@ func (s *TestSuite) TestKeeper_RemoveEscrow() {
 			}
 			s.Require().NotPanics(testFunc, "RemoveEscrow")
 
-			s.AssertErrorContents(err, tc.expErr, "RemoveEscrow error")
+			s.assertErrorContents(err, tc.expErr, "RemoveEscrow error")
 
 			finalEsc, _ := s.keeper.GetEscrowCoins(s.sdkCtx, tc.addr)
 			s.Assert().Equal(tc.finalEsc.String(), finalEsc.String(), "final escrow")
@@ -645,10 +700,10 @@ func (s *TestSuite) TestKeeper_RemoveEscrow() {
 
 func (s *TestSuite) TestKeeper_GetEscrowCoin() {
 	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "setEscrowCoinAmount(addr1, 99banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3)), "setEscrowCoinAmount(addr1, 3cucumber)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "setEscrowCoinAmount(addr2, 18banana)")
-	store.Set(keeper.CreateEscrowCoinKey(s.addr1, "badcoin"), []byte("badvalue"))
+	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
+	s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3))
+	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
+	s.setEscrowCoinAmountRaw(store, s.addr1, "badcoin", "badvalue")
 	store = nil
 
 	tests := []struct {
@@ -711,7 +766,7 @@ func (s *TestSuite) TestKeeper_GetEscrowCoin() {
 				coin, err = s.keeper.GetEscrowCoin(s.sdkCtx, tc.addr, tc.denom)
 			}
 			s.Require().NotPanics(testFunc, "GetEscrowCoin")
-			s.AssertErrorContents(err, tc.expErr, "GetEscrowCoin error")
+			s.assertErrorContents(err, tc.expErr, "GetEscrowCoin error")
 			s.Assert().Equal(tc.expCoin.String(), coin.String(), "GetEscrowCoin coin")
 		})
 	}
@@ -719,14 +774,14 @@ func (s *TestSuite) TestKeeper_GetEscrowCoin() {
 
 func (s *TestSuite) TestKeeper_GetEscrowCoins() {
 	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "setEscrowCoinAmount(addr1, 99banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "setEscrowCoinAmount(addr2, 18banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "setEscrowCoinAmount(addr2, 3cucumber)")
-	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "grimcoin"), []byte("grimvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "setEscrowCoinAmount(addr4, 52acorn)")
-	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "badcoin"), []byte("badvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "setEscrowCoinAmount(addr4, 12cucumber)")
-	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "dreadcoin"), []byte("dreadvalue"))
+	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
+	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
+	s.requireSetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3))
+	s.setEscrowCoinAmountRaw(store, s.addr3, "grimcoin", "grimvalue")
+	s.requireSetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52))
+	s.setEscrowCoinAmountRaw(store, s.addr4, "badcoin", "badvalue")
+	s.requireSetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12))
+	s.setEscrowCoinAmountRaw(store, s.addr4, "dreadcoin", "dreadvalue")
 	store = nil
 
 	tests := []struct {
@@ -782,7 +837,7 @@ func (s *TestSuite) TestKeeper_GetEscrowCoins() {
 				coins, err = s.keeper.GetEscrowCoins(s.sdkCtx, tc.addr)
 			}
 			s.Require().NotPanics(testFunc, "GetEscrowCoins")
-			s.AssertErrorContents(err, tc.expErr, "GetEscrowCoins error")
+			s.assertErrorContents(err, tc.expErr, "GetEscrowCoins error")
 			s.Assert().Equal(tc.expCoins.String(), coins.String(), "GetEscrowCoins coins")
 		})
 	}
@@ -790,19 +845,19 @@ func (s *TestSuite) TestKeeper_GetEscrowCoins() {
 
 func (s *TestSuite) TestKeeper_IterateEscrow() {
 	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "setEscrowCoinAmount(addr1, 99banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "setEscrowCoinAmount(addr2, 18banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "setEscrowCoinAmount(addr2, 3cucumber)")
-	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "grimcoin"), []byte("grimvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "setEscrowCoinAmount(addr4, 52acorn)")
-	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "badcoin"), []byte("badvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "setEscrowCoinAmount(addr4, 12cucumber)")
-	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "dreadcoin"), []byte("dreadvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747)), "setEscrowCoinAmount(addr4, 747eggplant)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358)), "setEscrowCoinAmount(addr5, 358acorn)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "banana", s.int(101)), "setEscrowCoinAmount(addr5, 101banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8)), "setEscrowCoinAmount(addr5, 8cucumber)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "durian", s.int(5)), "setEscrowCoinAmount(addr5, 5durian)")
+	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
+	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
+	s.requireSetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3))
+	s.setEscrowCoinAmountRaw(store, s.addr3, "grimcoin", "grimvalue")
+	s.requireSetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52))
+	s.setEscrowCoinAmountRaw(store, s.addr4, "badcoin", "badvalue")
+	s.requireSetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12))
+	s.setEscrowCoinAmountRaw(store, s.addr4, "dreadcoin", "dreadvalue")
+	s.requireSetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747))
+	s.requireSetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358))
+	s.requireSetEscrowCoinAmount(store, s.addr5, "banana", s.int(101))
+	s.requireSetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8))
+	s.requireSetEscrowCoinAmount(store, s.addr5, "durian", s.int(5))
 	store = nil
 
 	addrDNE := sdk.AccAddress("addr_does_not_exist_")
@@ -919,7 +974,7 @@ func (s *TestSuite) TestKeeper_IterateEscrow() {
 				err = s.keeper.IterateEscrow(s.sdkCtx, tc.addr, tc.process)
 			}
 			s.Require().NotPanics(testFunc, "IterateEscrow")
-			s.AssertErrorContents(err, tc.expErr, "IterateEscrow error")
+			s.assertErrorContents(err, tc.expErr, "IterateEscrow error")
 			if err != nil && len(tc.expNotInErr) > 0 {
 				errStr := err.Error()
 				for _, unexp := range tc.expNotInErr {
@@ -936,19 +991,19 @@ func (s *TestSuite) TestKeeper_IterateAllEscrow() {
 	// I also picked easy-to-sort coin names.
 	// That means that the order they're being defined here should be the order they are in state.
 	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "setEscrowCoinAmount(addr1, 99banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "setEscrowCoinAmount(addr2, 18banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "setEscrowCoinAmount(addr2, 3cucumber)")
-	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "grimcoin"), []byte("grimvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "setEscrowCoinAmount(addr4, 52acorn)")
-	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "badcoin"), []byte("badvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "setEscrowCoinAmount(addr4, 12cucumber)")
-	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "dreadcoin"), []byte("dreadvalue"))
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747)), "setEscrowCoinAmount(addr4, 747eggplant)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358)), "setEscrowCoinAmount(addr5, 358acorn)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "banana", s.int(101)), "setEscrowCoinAmount(addr5, 101banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8)), "setEscrowCoinAmount(addr5, 8cucumber)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "durian", s.int(5)), "setEscrowCoinAmount(addr5, 5durian)")
+	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
+	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
+	s.requireSetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3))
+	s.setEscrowCoinAmountRaw(store, s.addr3, "grimcoin", "grimvalue")
+	s.requireSetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52))
+	s.setEscrowCoinAmountRaw(store, s.addr4, "badcoin", "badvalue")
+	s.requireSetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12))
+	s.setEscrowCoinAmountRaw(store, s.addr4, "dreadcoin", "dreadvalue")
+	s.requireSetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747))
+	s.requireSetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358))
+	s.requireSetEscrowCoinAmount(store, s.addr5, "banana", s.int(101))
+	s.requireSetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8))
+	s.requireSetEscrowCoinAmount(store, s.addr5, "durian", s.int(5))
 	store = nil
 
 	entry := func(addr sdk.AccAddress, coin string) string {
@@ -1050,7 +1105,7 @@ func (s *TestSuite) TestKeeper_IterateAllEscrow() {
 				err = s.keeper.IterateAllEscrow(s.sdkCtx, tc.process)
 			}
 			s.Require().NotPanics(testFunc, "IterateAllEscrow")
-			s.AssertErrorContents(err, tc.expErr, "IterateAllEscrow error")
+			s.assertErrorContents(err, tc.expErr, "IterateAllEscrow error")
 			if err != nil && len(tc.expNotInErr) > 0 {
 				errStr := err.Error()
 				for _, unexp := range tc.expNotInErr {
@@ -1064,16 +1119,16 @@ func (s *TestSuite) TestKeeper_IterateAllEscrow() {
 
 func (s *TestSuite) TestKeeper_GetAllAccountEscrows() {
 	store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr1, "banana", s.int(99)), "setEscrowCoinAmount(addr1, 99banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "banana", s.int(18)), "setEscrowCoinAmount(addr2, 18banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3)), "setEscrowCoinAmount(addr2, 3cucumber)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52)), "setEscrowCoinAmount(addr4, 52acorn)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12)), "setEscrowCoinAmount(addr4, 12cucumber)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747)), "setEscrowCoinAmount(addr4, 747eggplant)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358)), "setEscrowCoinAmount(addr5, 358acorn)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "banana", s.int(101)), "setEscrowCoinAmount(addr5, 101banana)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8)), "setEscrowCoinAmount(addr5, 8cucumber)")
-	s.Require().NoError(s.keeper.SetEscrowCoinAmount(store, s.addr5, "durian", s.int(5)), "setEscrowCoinAmount(addr5, 5durian)")
+	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
+	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
+	s.requireSetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3))
+	s.requireSetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52))
+	s.requireSetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12))
+	s.requireSetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747))
+	s.requireSetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358))
+	s.requireSetEscrowCoinAmount(store, s.addr5, "banana", s.int(101))
+	s.requireSetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8))
+	s.requireSetEscrowCoinAmount(store, s.addr5, "durian", s.int(5))
 	store = nil
 
 	expected := []*escrow.AccountEscrow{
@@ -1090,9 +1145,9 @@ func (s *TestSuite) TestKeeper_GetAllAccountEscrows() {
 	})
 
 	store = s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-	store.Set(keeper.CreateEscrowCoinKey(s.addr3, "grimcoin"), []byte("grimvalue"))
-	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "badcoin"), []byte("badvalue"))
-	store.Set(keeper.CreateEscrowCoinKey(s.addr4, "dreadcoin"), []byte("dreadvalue"))
+	s.setEscrowCoinAmountRaw(store, s.addr3, "grimcoin", "grimvalue")
+	s.setEscrowCoinAmountRaw(store, s.addr4, "badcoin", "badvalue")
+	s.setEscrowCoinAmountRaw(store, s.addr4, "dreadcoin", "dreadvalue")
 	store = nil
 
 	s.Run("a few bad entries", func() {
@@ -1108,7 +1163,7 @@ func (s *TestSuite) TestKeeper_GetAllAccountEscrows() {
 		}
 
 		escrows, err := s.keeper.GetAllAccountEscrows(s.sdkCtx)
-		s.AssertErrorContents(err, expInErr, "GetAllAccountEscrows error")
+		s.assertErrorContents(err, expInErr, "GetAllAccountEscrows error")
 		s.Assert().Equal(expected, escrows, "GetAllAccountEscrows escrows")
 	})
 }
