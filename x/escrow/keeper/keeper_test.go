@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"context"
+	"fmt"
+	"runtime/debug"
 	"strings"
 	"testing"
 
@@ -29,6 +31,7 @@ type TestSuite struct {
 	bankKeeper bankkeeper.Keeper
 
 	bondDenom string
+	initBal   sdk.Coins
 
 	addr1 sdk.AccAddress
 	addr2 sdk.AccAddress
@@ -45,8 +48,10 @@ func (s *TestSuite) SetupTest() {
 	s.bankKeeper = s.app.BankKeeper
 
 	s.bondDenom = s.app.StakingKeeper.BondDenom(s.sdkCtx)
+	initAmount := sdk.NewInt(1_000_000_000)
+	s.initBal = sdk.NewCoins(sdk.NewCoin(s.bondDenom, initAmount))
 
-	addrs := app.AddTestAddrsIncremental(s.app, s.sdkCtx, 5, sdk.NewInt(1_000_000_000))
+	addrs := app.AddTestAddrsIncremental(s.app, s.sdkCtx, 5, initAmount)
 	s.addr1 = addrs[0]
 	s.addr2 = addrs[1]
 	s.addr3 = addrs[2]
@@ -107,6 +112,86 @@ func (s *TestSuite) AssertErrorContents(theError error, contains []string, msgAn
 		hasAll = s.Assert().ErrorContains(theError, expInErr, msgAndArgs...) && hasAll
 	}
 	return hasAll
+}
+
+// panicTestFunc is a type declaration for a function that will be tested for panic.
+type panicTestFunc func()
+
+// didPanic safely executes the provided function and returns info about any panic it might have encountered.
+func didPanic(f panicTestFunc) (didPanic bool, message interface{}, stack string) {
+	didPanic = true
+
+	defer func() {
+		message = recover()
+		if didPanic {
+			stack = string(debug.Stack())
+		}
+	}()
+
+	f()
+	didPanic = false
+
+	return
+}
+
+// AssertPanicContents asserts that, if contains is empty, the provided func does not panic
+// Otherwise, asserts that the func panics and that its panic message contains each of the provided strings.
+func (s *TestSuite) AssertPanicContents(f panicTestFunc, contains []string, msgAndArgs ...interface{}) bool {
+	s.T().Helper()
+
+	funcDidPanic, panicValue, panickedStack := didPanic(f)
+	panicMsg := fmt.Sprintf("%v", panicValue)
+
+	if len(contains) == 0 {
+		if !funcDidPanic {
+			return true
+		}
+		msg := fmt.Sprintf("func %#v should not panic, but did.", f)
+		msg += fmt.Sprintf("\n\tPanic message:\t%q", panicMsg)
+		msg += fmt.Sprintf("\n\t  Panic value:\t%#v", panicValue)
+		msg += fmt.Sprintf("\n\t  Panic stack:\t%s", panickedStack)
+		return s.Assert().Fail(msg, msgAndArgs...)
+	}
+
+	if !funcDidPanic {
+		msg := fmt.Sprintf("func %#v should panic, but did not.", f)
+		for _, exp := range contains {
+			msg += fmt.Sprintf("\n\tExpected to contain:\t%q", exp)
+		}
+		return s.Assert().Fail(msg, msgAndArgs...)
+	}
+
+	var missing []string
+	for _, exp := range contains {
+		if !strings.Contains(panicMsg, exp) {
+			missing = append(missing, exp)
+		}
+	}
+
+	if len(missing) == 0 {
+		return true
+	}
+
+	msg := fmt.Sprintf("func %#v panic message incorrect.", f)
+	msg += fmt.Sprintf("\n\t   Panic message:\t%q", panicMsg)
+	for _, exp := range missing {
+		msg += fmt.Sprintf("\n\tDoes not contain:\t%q", exp)
+	}
+	msg += fmt.Sprintf("\n\tPanic value:\t%#v", panicValue)
+	msg += fmt.Sprintf("\n\tPanic stack:\t%s", panickedStack)
+	return s.Assert().Fail(msg, msgAndArgs)
+}
+
+// RequirePanicContents asserts that, if contains is empty, the provided func does not panic
+// Otherwise, asserts that the func panics and that its panic message contains each of the provided strings.
+//
+// If the assertion fails, the test is halted.
+func (s *TestSuite) RequirePanicContents(f panicTestFunc, contains []string, msgAndArgs ...interface{}) {
+	s.T().Helper()
+	if s.AssertPanicContents(f, contains, msgAndArgs...) {
+		return
+	}
+	s.T().FailNow()
 }
 
 func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
