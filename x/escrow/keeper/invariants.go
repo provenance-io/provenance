@@ -54,9 +54,9 @@ func escrowAccountBalancesInvariantHelper(ctx sdk.Context, keeper Keeper) (strin
 	case 0:
 		msg.WriteString("No accounts have funds in escrow.")
 	case 1:
-		msg.WriteString(fmt.Sprintf("1 account has %q in escrow.", total))
+		msg.WriteString(fmt.Sprintf("1 account has %s in escrow.", total))
 	default:
-		msg.WriteString(fmt.Sprintf("%d accounts have %q in escrow.", allCount, total))
+		msg.WriteString(fmt.Sprintf("%d accounts have %s in escrow.", allCount, total))
 	}
 
 	msg.WriteByte(' ')
@@ -67,11 +67,11 @@ func escrowAccountBalancesInvariantHelper(ctx sdk.Context, keeper Keeper) (strin
 		broken = false
 		msg.WriteString("No problems detected.")
 	case 1:
-		msg.WriteString(fmt.Sprintf("1 error detected: %v", errs[0]))
+		msg.WriteString(fmt.Sprintf("1 problem detected: %v", errs[0]))
 	case 2:
-		msg.WriteString(fmt.Sprintf("%d errors detected:\n", errCount))
+		msg.WriteString(fmt.Sprintf("%d problems detected:", errCount))
 		for i, er := range errs {
-			msg.WriteString(fmt.Sprintf("%d: %v", i+1, er))
+			msg.WriteString(fmt.Sprintf("\n%d: %v", i+1, er))
 		}
 	}
 
