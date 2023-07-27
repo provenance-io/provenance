@@ -116,6 +116,7 @@ func (k Keeper) AddEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins)
 			errs = append(errs, fmt.Errorf("failed to place %s in escrow for %s: %w", toAdd, addr, err))
 		}
 	}
+	// TODO[1607]: Emit event for adding escrow.
 	return errors.Join(errs...)
 }
 
@@ -149,6 +150,7 @@ func (k Keeper) RemoveEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coi
 			errs = append(errs, fmt.Errorf("failed to remove %s from escrow for %s: %w", toRemove, addr, err))
 		}
 	}
+	// TODO[1607]: Emit event for removing escrow.
 	return errors.Join(errs...)
 }
 
