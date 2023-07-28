@@ -101,6 +101,7 @@ func (k Keeper) AddEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins)
 	}
 
 	store := ctx.KVStore(k.storeKey)
+	var fundsAdded sdk.Coins
 	var errs []error
 	for _, toAdd := range funds {
 		if toAdd.IsZero() {
@@ -116,8 +117,16 @@ func (k Keeper) AddEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to place %s in escrow for %s: %w", toAdd, addr, err))
 		}
+		fundsAdded = fundsAdded.Add(toAdd)
 	}
-	// TODO[1607]: Emit event for adding escrow.
+
+	if !fundsAdded.IsZero() {
+		err := ctx.EventManager().EmitTypedEvent(escrow.NewEventEscrowAdded(addr, fundsAdded))
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	return errors.Join(errs...)
 }
 
@@ -131,6 +140,7 @@ func (k Keeper) RemoveEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coi
 	}
 
 	store := ctx.KVStore(k.storeKey)
+	var fundsRemoved sdk.Coins
 	var errs []error
 	for _, toRemove := range funds {
 		if toRemove.IsZero() {
@@ -150,8 +160,16 @@ func (k Keeper) RemoveEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coi
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to remove %s from escrow for %s: %w", toRemove, addr, err))
 		}
+		fundsRemoved = fundsRemoved.Add(toRemove)
 	}
-	// TODO[1607]: Emit event for removing escrow.
+
+	if !fundsRemoved.IsZero() {
+		err := ctx.EventManager().EmitTypedEvent(escrow.NewEventEscrowRemoved(addr, fundsRemoved))
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	return errors.Join(errs...)
 }
 
