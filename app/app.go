@@ -312,6 +312,7 @@ type App struct {
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
 	ScopedICQKeeper      capabilitykeeper.ScopedKeeper
+	ScopedOracleKeeper   capabilitykeeper.ScopedKeeper
 
 	// the module manager
 	mm *module.Manager
@@ -517,7 +518,19 @@ func New(
 	)
 	icqModule := icq.NewAppModule(app.ICQKeeper)
 	icqIBCModule := icq.NewIBCModule(app.ICQKeeper)
-	app.OracleKeeper = oraclekeeper.NewKeeper(appCodec, keys[oracletypes.StoreKey], app.ICQKeeper)
+
+	scopedOracleKeeper := app.CapabilityKeeper.ScopeToModule(oracletypes.ModuleName)
+	app.ScopedOracleKeeper = scopedOracleKeeper
+	app.OracleKeeper = *oraclekeeper.NewKeeper(
+		appCodec,
+		keys[oracletypes.StoreKey],
+		keys[oracletypes.MemStoreKey],
+		app.GetSubspace(icqtypes.ModuleName),
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		scopedOracleKeeper,
+	)
 
 	// Init CosmWasm module
 	wasmDir := filepath.Join(homePath, "data", "wasm")

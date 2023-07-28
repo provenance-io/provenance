@@ -11,8 +11,12 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 }
 
 // InitGenesis new trigger genesis
-func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
-	if err := data.Validate(); err != nil {
+func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
+	k.SetPort(ctx, genState.PortId)
+
+	if err := genState.Validate(); err != nil {
 		panic(err)
 	}
+
+	k.SetParams(ctx, genState.Params)
 }

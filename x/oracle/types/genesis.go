@@ -1,6 +1,10 @@
 package types
 
-import fmt "fmt"
+import (
+	fmt "fmt"
+
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+)
 
 func NewGenesisState(queryID uint64) *GenesisState {
 	return &GenesisState{
@@ -10,7 +14,11 @@ func NewGenesisState(queryID uint64) *GenesisState {
 
 // DefaultGenesis returns the default trigger genesis state
 func DefaultGenesis() *GenesisState {
-	return NewGenesisState(1)
+	return &GenesisState{
+		PortId:  PortID,
+		Params:  DefaultParams(),
+		QueryId: 1,
+	}
 }
 
 // Validate performs basic genesis state validation returning an error upon any
@@ -20,5 +28,9 @@ func (gs GenesisState) Validate() error {
 		return fmt.Errorf("invalid query id")
 	}
 
-	return nil
+	if err := host.PortIdentifierValidator(gs.PortId); err != nil {
+		return err
+	}
+
+	return gs.Params.Validate()
 }

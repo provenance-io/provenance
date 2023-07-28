@@ -433,6 +433,9 @@
 - [provenance/oracle/v1/event.proto](#provenance/oracle/v1/event.proto)
     - [EventOracleQueryResponse](#provenance.oracle.v1.EventOracleQueryResponse)
   
+- [provenance/oracle/v1/params.proto](#provenance/oracle/v1/params.proto)
+    - [Params](#provenance.oracle.v1.Params)
+  
 - [provenance/oracle/v1/genesis.proto](#provenance/oracle/v1/genesis.proto)
     - [GenesisState](#provenance.oracle.v1.GenesisState)
   
@@ -6699,6 +6702,32 @@ EventOracleQueryResponse is an event for when the chain receives a response from
 
 
 
+<a name="provenance/oracle/v1/params.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/oracle/v1/params.proto
+
+
+
+<a name="provenance.oracle.v1.Params"></a>
+
+### Params
+Params defines the parameters for the module.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="provenance/oracle/v1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -6715,6 +6744,8 @@ GenesisState defines the oracle module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `query_id` | [uint64](#uint64) |  | Query id is the next auto incremented id to be assigned to the next query |
+| `params` | [Params](#provenance.oracle.v1.Params) |  | Params |
+| `port_id` | [string](#string) |  | The port to assign to the module |
 
 
 

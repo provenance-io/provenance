@@ -2,6 +2,7 @@ syntax = "proto3";
 package provenance.oracle.v1;
 
 import "gogoproto/gogo.proto";
+import "provenance/oracle/v1/params.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/oracle/types";
 option java_package        = "io.provenance.oracle.v1";
@@ -14,4 +15,8 @@ message GenesisState {
 
   // Query id is the next auto incremented id to be assigned to the next query
   uint64 query_id = 1;
+  // Params
+  Params params = 2 [(gogoproto.nullable) = false];
+  // The port to assign to the module
+  string port_id = 3;
 }
