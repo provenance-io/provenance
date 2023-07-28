@@ -175,7 +175,8 @@ require (
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 // replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.13-pio-1
-replace github.com/cosmos/cosmos-sdk => ../prov-cosmos-sdk
+// replace github.com/cosmos/cosmos-sdk => ../prov-cosmos-sdk
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.13-pio-1.0.20230728170659-9d5e97ff8efd
 
 // Use cometbft as requied by the SDK at v0.46.13
 replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.28
