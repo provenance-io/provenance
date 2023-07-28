@@ -82145,6 +82145,11 @@ definitions:
     title: >-
       MsgUpdateRequiredAttributesResponse defines the
       Msg/UpdateRequiredAttributes response type
+  provenance.marker.v1.MsgUpdateSendDenyListResponse:
+    type: object
+    title: >-
+      MsgUpdateSendDenyListResponse defines the Msg/UpdateSendDenyList response
+      type
   provenance.marker.v1.MsgWithdrawResponse:
     type: object
     title: MsgWithdrawResponse defines the Msg/Withdraw response type

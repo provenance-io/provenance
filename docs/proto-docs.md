@@ -175,6 +175,8 @@
     - [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse)
     - [MsgUpdateRequiredAttributesRequest](#provenance.marker.v1.MsgUpdateRequiredAttributesRequest)
     - [MsgUpdateRequiredAttributesResponse](#provenance.marker.v1.MsgUpdateRequiredAttributesResponse)
+    - [MsgUpdateSendDenyListRequest](#provenance.marker.v1.MsgUpdateSendDenyListRequest)
+    - [MsgUpdateSendDenyListResponse](#provenance.marker.v1.MsgUpdateSendDenyListResponse)
     - [MsgWithdrawRequest](#provenance.marker.v1.MsgWithdrawRequest)
     - [MsgWithdrawResponse](#provenance.marker.v1.MsgWithdrawResponse)
   
@@ -2857,10 +2859,10 @@ add list
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  |  |
-| `remove_required_attributes` | [string](#string) | repeated |  |
-| `add_required_attributes` | [string](#string) | repeated |  |
-| `transfer_authority` | [string](#string) |  | signer of the proposal |
+| `denom` | [string](#string) |  | The denomination of the marker to update. |
+| `remove_required_attributes` | [string](#string) | repeated | List of required attributes to remove from marker. |
+| `add_required_attributes` | [string](#string) | repeated | List of required attributes to add to marker. |
+| `transfer_authority` | [string](#string) |  | The signer of the message. Must have transfer authority to marker or be governance module account address. |
 
 
 
@@ -2871,6 +2873,35 @@ add list
 
 ### MsgUpdateRequiredAttributesResponse
 MsgUpdateRequiredAttributesResponse defines the Msg/UpdateRequiredAttributes response type
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgUpdateSendDenyListRequest"></a>
+
+### MsgUpdateSendDenyListRequest
+MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a resticted marker
+signer must have transfer authority
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | The denomination of the marker to update. |
+| `remove_denied_addresses` | [string](#string) | repeated | List of bech32 addresses to remove from the deny send list. |
+| `add_denied_addresses` | [string](#string) | repeated | List of bech32 addresses to add to the deny send list. |
+| `authority` | [string](#string) |  | The signer of the message. Must have admin authority to marker or be governance module account address. |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgUpdateSendDenyListResponse"></a>
+
+### MsgUpdateSendDenyListResponse
+MsgUpdateSendDenyListResponse defines the Msg/UpdateSendDenyList response type
 
 
 
@@ -2937,6 +2968,7 @@ Msg defines the Marker Msg service.
 | `UpdateRequiredAttributes` | [MsgUpdateRequiredAttributesRequest](#provenance.marker.v1.MsgUpdateRequiredAttributesRequest) | [MsgUpdateRequiredAttributesResponse](#provenance.marker.v1.MsgUpdateRequiredAttributesResponse) | UpdateRequiredAttributes will only succeed if signer has transfer authority | |
 | `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance.marker.v1.MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. | |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance.marker.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.marker.v1.MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. | |
+| `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance.marker.v1.MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance.marker.v1.MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has admin authority | |
 
  <!-- end services -->
 
