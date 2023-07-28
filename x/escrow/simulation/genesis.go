@@ -19,7 +19,7 @@ func RandomAccountEscrows(r *rand.Rand, accounts []simtypes.Account) []*escrow.A
 		return nil
 	}
 
-	count := r.Intn(len(accounts))
+	count := r.Intn(len(accounts) + 1)
 	if count == 0 {
 		return nil
 	}
@@ -66,9 +66,9 @@ func RandomizedGenState(simState *module.SimulationState) {
 		var newBalances []banktypes.Balance
 		for _, ae := range genState.Escrows {
 			haveBal := false
-			for _, bal := range bankGen.Balances {
+			for i, bal := range bankGen.Balances {
 				if bal.Address == ae.Address {
-					bal.Coins = bal.Coins.Add(ae.Amount...)
+					bankGen.Balances[i].Coins = bal.Coins.Add(ae.Amount...)
 					totalAdded = totalAdded.Add(ae.Amount...)
 					haveBal = true
 					break
