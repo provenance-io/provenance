@@ -13,11 +13,6 @@ func (k Keeper) ContractAddress(ctx context.Context, req *types.QueryContractAdd
 	return &types.QueryContractAddressResponse{}, nil
 }
 
-// Oracle sends an ICQ to an oracle
-func (k Keeper) Oracle(ctx context.Context, req *types.QueryOracleRequest) (*types.QueryOracleResponse, error) {
-	return &types.QueryOracleResponse{}, nil
-}
-
 func (k Keeper) OracleContract(ctx context.Context, req *types.QueryOracleContractRequest) (*types.QueryOracleContractResponse, error) {
 	return &types.QueryOracleContractResponse{}, nil
 }

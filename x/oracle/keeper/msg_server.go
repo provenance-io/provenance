@@ -21,6 +21,9 @@ var _ types.MsgServer = msgServer{}
 // UpdateOracle changes the oracle's address to the provided one
 func (s msgServer) UpdateOracle(goCtx context.Context, msg *types.MsgUpdateOracleRequest) (*types.MsgUpdateOracleResponse, error) {
 	//ctx := sdk.UnwrapSDKContext(goCtx)
-
 	return &types.MsgUpdateOracleResponse{}, nil
+}
+
+func (s msgServer) QueryOracle(goCtx context.Context, msg *types.MsgQueryOracleRequest) (*types.MsgQueryOracleResponse, error) {
+	return &types.MsgQueryOracleResponse{}, nil
 }

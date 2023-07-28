@@ -12,6 +12,24 @@ option java_multiple_files = true;
 service Msg {
   // UpdateOracle is the RPC endpoint for updating the oracle
   rpc UpdateOracle(MsgUpdateOracleRequest) returns (MsgUpdateOracleResponse);
+  // QueryOracle sends an icq to an oracle on another chain
+  rpc QueryOracle(MsgQueryOracleRequest) returns (MsgQueryOracleResponse);
+}
+
+// MsgQueryOracleRequest queries an Oracle on another chain
+message MsgQueryOracleRequest {
+  // Query contains the query data passed to the oracle.
+  bytes query = 1 [(gogoproto.casttype) = "github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage"];
+  // Source port is the source port to the oracle.
+  string source_port = 2;
+  // Source channel is the channel to the oracle.
+  string source_channel = 3;
+}
+
+// MsgQueryOracleResponse contains the id of the oracle query.
+message MsgQueryOracleResponse {
+  // The id that uniquely identifies the query.
+  uint64 query_id = 1;
 }
 
 // MsgUpdateOracleRequest is the request type for updating an oracle's contract address

@@ -441,14 +441,14 @@
     - [QueryContractAddressResponse](#provenance.oracle.v1.QueryContractAddressResponse)
     - [QueryOracleContractRequest](#provenance.oracle.v1.QueryOracleContractRequest)
     - [QueryOracleContractResponse](#provenance.oracle.v1.QueryOracleContractResponse)
-    - [QueryOracleRequest](#provenance.oracle.v1.QueryOracleRequest)
-    - [QueryOracleResponse](#provenance.oracle.v1.QueryOracleResponse)
     - [QueryOracleResultRequest](#provenance.oracle.v1.QueryOracleResultRequest)
     - [QueryOracleResultResponse](#provenance.oracle.v1.QueryOracleResultResponse)
   
     - [Query](#provenance.oracle.v1.Query)
   
 - [provenance/oracle/v1/tx.proto](#provenance/oracle/v1/tx.proto)
+    - [MsgQueryOracleRequest](#provenance.oracle.v1.MsgQueryOracleRequest)
+    - [MsgQueryOracleResponse](#provenance.oracle.v1.MsgQueryOracleResponse)
     - [MsgUpdateOracleRequest](#provenance.oracle.v1.MsgUpdateOracleRequest)
     - [MsgUpdateOracleResponse](#provenance.oracle.v1.MsgUpdateOracleResponse)
   
@@ -6792,38 +6792,6 @@ QueryOracleContractResponse contains the result of the query to the oracle's sma
 
 
 
-<a name="provenance.oracle.v1.QueryOracleRequest"></a>
-
-### QueryOracleRequest
-QueryOracleRequest queries an Oracle on another chain
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `query` | [bytes](#bytes) |  | Query contains the query data passed to the oracle. |
-| `source_port` | [string](#string) |  | Source port is the source port to the oracle. |
-| `source_channel` | [string](#string) |  | Source channel is the channel to the oracle. |
-
-
-
-
-
-
-<a name="provenance.oracle.v1.QueryOracleResponse"></a>
-
-### QueryOracleResponse
-QueryOracleResponse contains the id of the oracle query.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `query_id` | [uint64](#uint64) |  | The id that uniquely identifies the query. |
-
-
-
-
-
-
 <a name="provenance.oracle.v1.QueryOracleResultRequest"></a>
 
 ### QueryOracleResultRequest
@@ -6868,7 +6836,6 @@ Query defines the gRPC querier service for oracle module.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `ContractAddress` | [QueryContractAddressRequest](#provenance.oracle.v1.QueryContractAddressRequest) | [QueryContractAddressResponse](#provenance.oracle.v1.QueryContractAddressResponse) | ContractAddress returns the address of the oracle's contract | GET|/provenance/oracle/v1/contract_address|
-| `Oracle` | [QueryOracleRequest](#provenance.oracle.v1.QueryOracleRequest) | [QueryOracleResponse](#provenance.oracle.v1.QueryOracleResponse) | Oracle sends an icq to an oracle on another chain | GET|/provenance/oracle/v1/oracle|
 | `OracleContract` | [QueryOracleContractRequest](#provenance.oracle.v1.QueryOracleContractRequest) | [QueryOracleContractResponse](#provenance.oracle.v1.QueryOracleContractResponse) | OracleContract sends a query to the oracle's contract | GET|/provenance/oracle/v1/oracle_contract|
 | `OracleResult` | [QueryOracleResultRequest](#provenance.oracle.v1.QueryOracleResultRequest) | [QueryOracleResultResponse](#provenance.oracle.v1.QueryOracleResultResponse) | OracleResult returns the address of the oracle's contract | GET|/provenance/oracle/v1/oracle_result|
 
@@ -6880,6 +6847,38 @@ Query defines the gRPC querier service for oracle module.
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/oracle/v1/tx.proto
+
+
+
+<a name="provenance.oracle.v1.MsgQueryOracleRequest"></a>
+
+### MsgQueryOracleRequest
+MsgQueryOracleRequest queries an Oracle on another chain
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `query` | [bytes](#bytes) |  | Query contains the query data passed to the oracle. |
+| `source_port` | [string](#string) |  | Source port is the source port to the oracle. |
+| `source_channel` | [string](#string) |  | Source channel is the channel to the oracle. |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.MsgQueryOracleResponse"></a>
+
+### MsgQueryOracleResponse
+MsgQueryOracleResponse contains the id of the oracle query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `query_id` | [uint64](#uint64) |  | The id that uniquely identifies the query. |
+
+
+
 
 
 
@@ -6923,6 +6922,7 @@ Msg
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `UpdateOracle` | [MsgUpdateOracleRequest](#provenance.oracle.v1.MsgUpdateOracleRequest) | [MsgUpdateOracleResponse](#provenance.oracle.v1.MsgUpdateOracleResponse) | UpdateOracle is the RPC endpoint for updating the oracle | |
+| `QueryOracle` | [MsgQueryOracleRequest](#provenance.oracle.v1.MsgQueryOracleRequest) | [MsgQueryOracleResponse](#provenance.oracle.v1.MsgQueryOracleResponse) | QueryOracle sends an icq to an oracle on another chain | |
 
  <!-- end services -->
 

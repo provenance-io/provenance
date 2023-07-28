@@ -4,24 +4,27 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/provenance-io/provenance/x/oracle/types"
-
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/oracle/types"
+	icq "github.com/strangelove-ventures/async-icq/v6/keeper"
 )
 
 type Keeper struct {
-	storeKey storetypes.StoreKey
-	cdc      codec.BinaryCodec
+	storeKey  storetypes.StoreKey
+	cdc       codec.BinaryCodec
+	icqKeeper icq.Keeper
 }
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	key storetypes.StoreKey,
+	icqKeeper icq.Keeper,
 ) Keeper {
 	return Keeper{
-		storeKey: key,
-		cdc:      cdc,
+		storeKey:  key,
+		cdc:       cdc,
+		icqKeeper: icqKeeper,
 	}
 }
 
