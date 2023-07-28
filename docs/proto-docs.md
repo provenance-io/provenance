@@ -55,6 +55,10 @@
 - [provenance/escrow/v1/escrow.proto](#provenance/escrow/v1/escrow.proto)
     - [AccountEscrow](#provenance.escrow.v1.AccountEscrow)
   
+- [provenance/escrow/v1/events.proto](#provenance/escrow/v1/events.proto)
+    - [EventEscrowAdded](#provenance.escrow.v1.EventEscrowAdded)
+    - [EventEscrowRemoved](#provenance.escrow.v1.EventEscrowRemoved)
+  
 - [provenance/escrow/v1/genesis.proto](#provenance/escrow/v1/genesis.proto)
     - [GenesisState](#provenance.escrow.v1.GenesisState)
   
@@ -1201,6 +1205,54 @@ AccountEscrow associates an address with an amount.
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address is the account address that holds the funds in escrow. |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the balances that are in escrow for the address. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/escrow/v1/events.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/escrow/v1/events.proto
+
+
+
+<a name="provenance.escrow.v1.EventEscrowAdded"></a>
+
+### EventEscrowAdded
+EventEscrowAdded is an event indicating that some funds were placed in escrow for an account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the bech32 address string of the account with the funds. |
+| `amount` | [string](#string) |  | amount is a Coins string of the funds placed in escrow. |
+
+
+
+
+
+
+<a name="provenance.escrow.v1.EventEscrowRemoved"></a>
+
+### EventEscrowRemoved
+EventEscrowAdded is an event indicating that some funds were removed from escrow for an account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the bech32 address string of the account with the funds. |
+| `amount` | [string](#string) |  | amount is a Coins string of the funds removed from escrow. |
 
 
 
