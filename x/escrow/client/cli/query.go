@@ -87,6 +87,10 @@ func QueryCmdGetAllEscrow() *cobra.Command {
 			}
 
 			req := escrow.GetAllEscrowRequest{}
+			req.Pagination, err = client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			var res *escrow.GetAllEscrowResponse
 			queryClient := escrow.NewQueryClient(clientCtx)
@@ -100,6 +104,7 @@ func QueryCmdGetAllEscrow() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "all escrows")
 
 	return cmd
 }
