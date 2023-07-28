@@ -19,7 +19,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -503,6 +502,8 @@ func (s *IntegrationCLITestSuite) TestQueryCmdGetAllEscrow() {
 	}
 }
 
+// TODO[1607]: Uncomment this TestEscrowRemovedFromSpendable test.
+/* commented out until I have a version of the sdk with the GetSpendableBalancesCmd query.
 func (s *IntegrationCLITestSuite) TestEscrowRemovedFromSpendable() {
 	// The purpose of these tests is to make sure that the bank module is
 	// being properly informed of the locked escrow funds.
@@ -554,3 +555,4 @@ func (s *IntegrationCLITestSuite) TestEscrowRemovedFromSpendable() {
 		})
 	}
 }
+*/
