@@ -23,26 +23,26 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// EventEscrowAdded is an event indicating that some funds were placed in escrow for an account.
-type EventEscrowAdded struct {
+// EventHoldAdded is an event indicating that some funds were placed on hold in an account.
+type EventHoldAdded struct {
 	// address is the bech32 address string of the account with the funds.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// amount is a Coins string of the funds placed in escrow.
+	// amount is a Coins string of the funds placed on hold.
 	Amount string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
-func (m *EventEscrowAdded) Reset()         { *m = EventEscrowAdded{} }
-func (m *EventEscrowAdded) String() string { return proto.CompactTextString(m) }
-func (*EventEscrowAdded) ProtoMessage()    {}
-func (*EventEscrowAdded) Descriptor() ([]byte, []int) {
+func (m *EventHoldAdded) Reset()         { *m = EventHoldAdded{} }
+func (m *EventHoldAdded) String() string { return proto.CompactTextString(m) }
+func (*EventHoldAdded) ProtoMessage()    {}
+func (*EventHoldAdded) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3be3cec6aa38cf10, []int{0}
 }
-func (m *EventEscrowAdded) XXX_Unmarshal(b []byte) error {
+func (m *EventHoldAdded) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventEscrowAdded) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventHoldAdded) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventEscrowAdded.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventHoldAdded.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -52,52 +52,52 @@ func (m *EventEscrowAdded) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
-func (m *EventEscrowAdded) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventEscrowAdded.Merge(m, src)
+func (m *EventHoldAdded) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventHoldAdded.Merge(m, src)
 }
-func (m *EventEscrowAdded) XXX_Size() int {
+func (m *EventHoldAdded) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventEscrowAdded) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventEscrowAdded.DiscardUnknown(m)
+func (m *EventHoldAdded) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventHoldAdded.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventEscrowAdded proto.InternalMessageInfo
+var xxx_messageInfo_EventHoldAdded proto.InternalMessageInfo
 
-func (m *EventEscrowAdded) GetAddress() string {
+func (m *EventHoldAdded) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-func (m *EventEscrowAdded) GetAmount() string {
+func (m *EventHoldAdded) GetAmount() string {
 	if m != nil {
 		return m.Amount
 	}
 	return ""
 }
 
-// EventEscrowAdded is an event indicating that some funds were removed from escrow for an account.
-type EventEscrowRemoved struct {
+// EventHoldAdded is an event indicating that some funds were removed from hold for an account.
+type EventHoldRemoved struct {
 	// address is the bech32 address string of the account with the funds.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// amount is a Coins string of the funds removed from escrow.
+	// amount is a Coins string of the funds removed from hold.
 	Amount string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
-func (m *EventEscrowRemoved) Reset()         { *m = EventEscrowRemoved{} }
-func (m *EventEscrowRemoved) String() string { return proto.CompactTextString(m) }
-func (*EventEscrowRemoved) ProtoMessage()    {}
-func (*EventEscrowRemoved) Descriptor() ([]byte, []int) {
+func (m *EventHoldRemoved) Reset()         { *m = EventHoldRemoved{} }
+func (m *EventHoldRemoved) String() string { return proto.CompactTextString(m) }
+func (*EventHoldRemoved) ProtoMessage()    {}
+func (*EventHoldRemoved) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3be3cec6aa38cf10, []int{1}
 }
-func (m *EventEscrowRemoved) XXX_Unmarshal(b []byte) error {
+func (m *EventHoldRemoved) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EventEscrowRemoved) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventHoldRemoved) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_EventEscrowRemoved.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventHoldRemoved.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -107,26 +107,26 @@ func (m *EventEscrowRemoved) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *EventEscrowRemoved) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventEscrowRemoved.Merge(m, src)
+func (m *EventHoldRemoved) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventHoldRemoved.Merge(m, src)
 }
-func (m *EventEscrowRemoved) XXX_Size() int {
+func (m *EventHoldRemoved) XXX_Size() int {
 	return m.Size()
 }
-func (m *EventEscrowRemoved) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventEscrowRemoved.DiscardUnknown(m)
+func (m *EventHoldRemoved) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventHoldRemoved.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_EventEscrowRemoved proto.InternalMessageInfo
+var xxx_messageInfo_EventHoldRemoved proto.InternalMessageInfo
 
-func (m *EventEscrowRemoved) GetAddress() string {
+func (m *EventHoldRemoved) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-func (m *EventEscrowRemoved) GetAmount() string {
+func (m *EventHoldRemoved) GetAmount() string {
 	if m != nil {
 		return m.Amount
 	}
@@ -134,32 +134,32 @@ func (m *EventEscrowRemoved) GetAmount() string {
 }
 
 func init() {
-	proto.RegisterType((*EventEscrowAdded)(nil), "provenance.hold.v1.EventEscrowAdded")
-	proto.RegisterType((*EventEscrowRemoved)(nil), "provenance.hold.v1.EventEscrowRemoved")
+	proto.RegisterType((*EventHoldAdded)(nil), "provenance.hold.v1.EventHoldAdded")
+	proto.RegisterType((*EventHoldRemoved)(nil), "provenance.hold.v1.EventHoldRemoved")
 }
 
 func init() { proto.RegisterFile("provenance/hold/v1/events.proto", fileDescriptor_3be3cec6aa38cf10) }
 
 var fileDescriptor_3be3cec6aa38cf10 = []byte{
-	// 235 bytes of a gzipped FileDescriptorProto
+	// 233 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x2f, 0x28, 0xca, 0x2f,
 	0x4b, 0xcd, 0x4b, 0xcc, 0x4b, 0x4e, 0xd5, 0xcf, 0xc8, 0xcf, 0x49, 0xd1, 0x2f, 0x33, 0xd4, 0x4f,
 	0x2d, 0x4b, 0xcd, 0x2b, 0x29, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x42, 0x28, 0xd0,
 	0x03, 0x29, 0xd0, 0x2b, 0x33, 0x94, 0x92, 0x4c, 0xce, 0x2f, 0xce, 0xcd, 0x2f, 0x8e, 0x07, 0xab,
-	0xd0, 0x87, 0x70, 0x20, 0xca, 0x95, 0xe2, 0xb8, 0x04, 0x5c, 0x41, 0xda, 0x5d, 0x8b, 0x93, 0x8b,
-	0xf2, 0xcb, 0x1d, 0x53, 0x52, 0x52, 0x53, 0x84, 0x8c, 0xb8, 0xd8, 0x13, 0x53, 0x52, 0x8a, 0x52,
-	0x8b, 0x8b, 0x25, 0x18, 0x15, 0x18, 0x35, 0x38, 0x9d, 0x24, 0x2e, 0x6d, 0xd1, 0x15, 0x81, 0x6a,
-	0x73, 0x84, 0xc8, 0x04, 0x97, 0x14, 0x65, 0xe6, 0xa5, 0x07, 0xc1, 0x14, 0x0a, 0x89, 0x71, 0xb1,
-	0x25, 0xe6, 0xe6, 0x97, 0xe6, 0x95, 0x48, 0x30, 0x81, 0xb4, 0x04, 0x41, 0x79, 0x4a, 0x09, 0x5c,
-	0x42, 0x48, 0xe6, 0x07, 0xa5, 0xe6, 0xe6, 0x97, 0x51, 0xd7, 0x06, 0xa7, 0xd8, 0x13, 0x8f, 0xe4,
-	0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f,
-	0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0xe0, 0x12, 0xcd, 0xcc, 0xd7, 0xc3, 0x0c, 0x8d, 0x00, 0xc6,
-	0x28, 0xad, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0x7d, 0x84, 0x02, 0xdd,
-	0xcc, 0x7c, 0x24, 0x9e, 0x7e, 0x05, 0x38, 0x7c, 0x93, 0xd8, 0xc0, 0xe1, 0x64, 0x0c, 0x08, 0x00,
-	0x00, 0xff, 0xff, 0xb9, 0xca, 0x94, 0xb3, 0x79, 0x01, 0x00, 0x00,
+	0xd0, 0x87, 0x70, 0x20, 0xca, 0x95, 0x62, 0xb8, 0xf8, 0x5c, 0x41, 0xda, 0x3d, 0xf2, 0x73, 0x52,
+	0x1c, 0x53, 0x52, 0x52, 0x53, 0x84, 0x8c, 0xb8, 0xd8, 0x13, 0x53, 0x52, 0x8a, 0x52, 0x8b, 0x8b,
+	0x25, 0x18, 0x15, 0x18, 0x35, 0x38, 0x9d, 0x24, 0x2e, 0x6d, 0xd1, 0x15, 0x81, 0x6a, 0x72, 0x84,
+	0xc8, 0x04, 0x97, 0x14, 0x65, 0xe6, 0xa5, 0x07, 0xc1, 0x14, 0x0a, 0x89, 0x71, 0xb1, 0x25, 0xe6,
+	0xe6, 0x97, 0xe6, 0x95, 0x48, 0x30, 0x81, 0xb4, 0x04, 0x41, 0x79, 0x4a, 0x71, 0x5c, 0x02, 0x70,
+	0xd3, 0x83, 0x52, 0x73, 0xf3, 0xcb, 0xa8, 0x6b, 0xbe, 0x53, 0xec, 0x89, 0x47, 0x72, 0x8c, 0x17,
+	0x1e, 0xc9, 0x31, 0x3e, 0x78, 0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c, 0xc3, 0x85, 0xc7, 0x72, 0x0c,
+	0x37, 0x1e, 0xcb, 0x31, 0x70, 0x89, 0x66, 0xe6, 0xeb, 0x61, 0x86, 0x44, 0x00, 0x63, 0x94, 0x56,
+	0x7a, 0x66, 0x49, 0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e, 0xae, 0x3e, 0x42, 0x81, 0x6e, 0x66, 0x3e,
+	0x12, 0x4f, 0xbf, 0x02, 0x1c, 0xb6, 0x49, 0x6c, 0xe0, 0x30, 0x32, 0x06, 0x04, 0x00, 0x00, 0xff,
+	0xff, 0x91, 0xd3, 0xea, 0xc9, 0x75, 0x01, 0x00, 0x00,
 }
 
-func (m *EventEscrowAdded) Marshal() (dAtA []byte, err error) {
+func (m *EventHoldAdded) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -169,12 +169,12 @@ func (m *EventEscrowAdded) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventEscrowAdded) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventHoldAdded) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventEscrowAdded) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventHoldAdded) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -196,7 +196,7 @@ func (m *EventEscrowAdded) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventEscrowRemoved) Marshal() (dAtA []byte, err error) {
+func (m *EventHoldRemoved) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -206,12 +206,12 @@ func (m *EventEscrowRemoved) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EventEscrowRemoved) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventHoldRemoved) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EventEscrowRemoved) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventHoldRemoved) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -244,7 +244,7 @@ func encodeVarintEvents(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *EventEscrowAdded) Size() (n int) {
+func (m *EventHoldAdded) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -261,7 +261,7 @@ func (m *EventEscrowAdded) Size() (n int) {
 	return n
 }
 
-func (m *EventEscrowRemoved) Size() (n int) {
+func (m *EventHoldRemoved) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -284,7 +284,7 @@ func sovEvents(x uint64) (n int) {
 func sozEvents(x uint64) (n int) {
 	return sovEvents(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *EventEscrowAdded) Unmarshal(dAtA []byte) error {
+func (m *EventHoldAdded) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -307,10 +307,10 @@ func (m *EventEscrowAdded) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventEscrowAdded: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventHoldAdded: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventEscrowAdded: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventHoldAdded: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -398,7 +398,7 @@ func (m *EventEscrowAdded) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EventEscrowRemoved) Unmarshal(dAtA []byte) error {
+func (m *EventHoldRemoved) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -421,10 +421,10 @@ func (m *EventEscrowRemoved) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EventEscrowRemoved: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventHoldRemoved: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventEscrowRemoved: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventHoldRemoved: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

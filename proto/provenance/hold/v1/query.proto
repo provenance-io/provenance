@@ -14,38 +14,38 @@ import "provenance/hold/v1/hold.proto";
 
 // Query defines the gRPC querier service for attribute module.
 service Query {
-  // GetEscrow looks up the funds that are in escrow for an address.
-  rpc GetEscrow(GetEscrowRequest) returns (GetEscrowResponse) {
-    option (google.api.http).get = "/provenance/escrow/v1/funds/{address}";
+  // GetHolds looks up the funds that are on hold for an address.
+  rpc GetHolds(GetHoldsRequest) returns (GetHoldsResponse) {
+    option (google.api.http).get = "/provenance/hold/v1/funds/{address}";
   };
 
-  // GetAllEscrow returns all addresses with funds in escrow, and the amount in escrow.
-  rpc GetAllEscrow(GetAllEscrowRequest) returns (GetAllEscrowResponse) {
-    option (google.api.http).get = "/provenance/escrow/v1/funds";
+  // GetAllHolds returns all addresses with funds on hold, and the amount held.
+  rpc GetAllHolds(GetAllHoldsRequest) returns (GetAllHoldsResponse) {
+    option (google.api.http).get = "/provenance/hold/v1/funds";
   };
 }
 
-// GetEscrowRequest is the request type for the Query/GetEscrow query.
-message GetEscrowRequest {
+// GetHoldsRequest is the request type for the Query/GetHolds query.
+message GetHoldsRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // address is the account address to get escrow balances for.
+  // address is the account address to get on-hold balances for.
   string address = 1;
 }
 
-// GetEscrowResponse is the response type for the Query/GetEscrow query.
-message GetEscrowResponse {
+// GetHoldsResponse is the response type for the Query/GetHolds query.
+message GetHoldsResponse {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // amount is the total in escrow for the requested address.
+  // amount is the total on hold for the requested address.
   repeated cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
-// GetAllEscrowRequest is the request type for the Query/GetAllEscrow query.
-message GetAllEscrowRequest {
+// GetAllHoldsRequest is the request type for the Query/GetAllHolds query.
+message GetAllHoldsRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -53,10 +53,10 @@ message GetAllEscrowRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
-// GetAllEscrowResponse is the response type for the Query/GetAllEscrow query.
-message GetAllEscrowResponse {
-  // escrows is a list of addresses with funds in escrow and the amounts in escrow.
-  repeated AccountEscrow escrows = 1;
+// GetAllHoldsResponse is the response type for the Query/GetAllHolds query.
+message GetAllHoldsResponse {
+  // holds is a list of addresses with funds on hold and the amounts being held.
+  repeated AccountHold holds = 1;
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }

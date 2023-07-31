@@ -14,6 +14,6 @@ message GenesisState {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // escrows defines the funds in escrow at genesis.
-  repeated AccountEscrow escrows = 1;
+  // holds defines the funds on hold at genesis.
+  repeated AccountHold holds = 1;
 }

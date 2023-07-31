@@ -8,18 +8,18 @@ option java_multiple_files = true;
 
 import "cosmos_proto/cosmos.proto";
 
-// EventEscrowAdded is an event indicating that some funds were placed in escrow for an account.
-message EventEscrowAdded {
+// EventHoldAdded is an event indicating that some funds were placed on hold in an account.
+message EventHoldAdded {
   // address is the bech32 address string of the account with the funds.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // amount is a Coins string of the funds placed in escrow.
+  // amount is a Coins string of the funds placed on hold.
   string amount = 2;
 }
 
-// EventEscrowAdded is an event indicating that some funds were removed from escrow for an account.
-message EventEscrowRemoved {
+// EventHoldAdded is an event indicating that some funds were removed from hold for an account.
+message EventHoldRemoved {
   // address is the bech32 address string of the account with the funds.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // amount is a Coins string of the funds removed from escrow.
+  // amount is a Coins string of the funds removed from hold.
   string amount = 2;
 }
