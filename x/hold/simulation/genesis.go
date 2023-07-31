@@ -1,6 +1,8 @@
 package simulation
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -56,6 +58,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	simState.GenState[hold.ModuleName] = simState.Cdc.MustMarshalJSON(genState)
 
+	bz, err := json.MarshalIndent(simState.GenState[hold.ModuleName], "", " ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Selected randomly generated hold parameters:\n%s\n", bz)
+
 	// If we put stuff in hold, add those funds to the bank accounts.
 	if len(genState.Holds) > 0 {
 		bankGenRaw := simState.GenState[banktypes.ModuleName]
@@ -86,5 +94,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 		bankGen.Supply = bankGen.Supply.Add(totalAdded...)
 
 		simState.GenState[banktypes.ModuleName] = simState.Cdc.MustMarshalJSON(&bankGen)
+
+		bz, err = json.MarshalIndent(simState.GenState[hold.ModuleName], "", " ")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("Bank parameters updated due to randomly generated hold parameters:\n%s\n", bz)
 	}
 }
