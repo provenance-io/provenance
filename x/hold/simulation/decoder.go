@@ -15,21 +15,21 @@ import (
 func NewDecodeStore(_ codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
-		case bytes.HasPrefix(kvA.Key, keeper.KeyPrefixEscrowCoin):
-			addr, denom := keeper.ParseEscrowCoinKey(kvA.Key)
-			valAMsg := escrowCoinValueMsg(kvA.Value)
-			valBMsg := escrowCoinValueMsg(kvB.Value)
-			return fmt.Sprintf("<EscrowCoin><%s><%s>: A = %s, B = %s\n", addr, denom, valAMsg, valBMsg)
+		case bytes.HasPrefix(kvA.Key, keeper.KeyPrefixHoldCoin):
+			addr, denom := keeper.ParseHoldCoinKey(kvA.Key)
+			valAMsg := holdCoinValueMsg(kvA.Value)
+			valBMsg := holdCoinValueMsg(kvB.Value)
+			return fmt.Sprintf("<HoldCoin><%s><%s>: A = %s, B = %s\n", addr, denom, valAMsg, valBMsg)
 
 		default:
-			panic(fmt.Sprintf("invalid escrow key %X", kvA.Key))
+			panic(fmt.Sprintf("invalid hold key %X", kvA.Key))
 		}
 	}
 }
 
-// escrowCoinValueMsg converts the given bytes into an escrow coin entry value string.
-func escrowCoinValueMsg(value []byte) string {
-	val, err := keeper.UnmarshalEscrowCoinValue(value)
+// holdCoinValueMsg converts the given bytes into a hold coin entry value string.
+func holdCoinValueMsg(value []byte) string {
+	val, err := keeper.UnmarshalHoldCoinValue(value)
 	if err != nil {
 		return fmt.Sprintf("<invalid>: %v", value)
 	}

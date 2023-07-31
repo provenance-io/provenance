@@ -13,8 +13,8 @@ import (
 
 const HoldAccountHolds = "hold-account-holds"
 
-// RandomAccountEscrows randomly selects accounts and hold amounts for the selected ones.
-func RandomAccountEscrows(r *rand.Rand, accounts []simtypes.Account) []*hold.AccountEscrow {
+// RandomAccountHolds randomly selects accounts and hold amounts for the selected ones.
+func RandomAccountHolds(r *rand.Rand, accounts []simtypes.Account) []*hold.AccountHold {
 	if len(accounts) == 0 {
 		return nil
 	}
@@ -32,9 +32,9 @@ func RandomAccountEscrows(r *rand.Rand, accounts []simtypes.Account) []*hold.Acc
 		addrs[i], addrs[j] = addrs[j], addrs[i]
 	})
 
-	rv := make([]*hold.AccountEscrow, count)
+	rv := make([]*hold.AccountHold, count)
 	for i, addr := range addrs[:count] {
-		rv[i] = &hold.AccountEscrow{
+		rv[i] = &hold.AccountHold{
 			Address: addr.String(),
 			Amount:  sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, r.Int63n(1000)+1)),
 		}
@@ -48,38 +48,38 @@ func RandomizedGenState(simState *module.SimulationState) {
 	genState := &hold.GenesisState{}
 
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, HoldAccountHolds, &genState.Escrows, simState.Rand,
+		simState.Cdc, HoldAccountHolds, &genState.Holds, simState.Rand,
 		func(r *rand.Rand) {
-			genState.Escrows = RandomAccountEscrows(r, simState.Accounts)
+			genState.Holds = RandomAccountHolds(r, simState.Accounts)
 		},
 	)
 
 	simState.GenState[hold.ModuleName] = simState.Cdc.MustMarshalJSON(genState)
 
 	// If we put stuff in hold, add those funds to the bank accounts.
-	if len(genState.Escrows) > 0 {
+	if len(genState.Holds) > 0 {
 		bankGenRaw := simState.GenState[banktypes.ModuleName]
 		bankGen := banktypes.GenesisState{}
 		simState.Cdc.MustUnmarshalJSON(bankGenRaw, &bankGen)
 
 		var totalAdded sdk.Coins
 		var newBalances []banktypes.Balance
-		for _, ae := range genState.Escrows {
+		for _, ah := range genState.Holds {
 			haveBal := false
 			for i, bal := range bankGen.Balances {
-				if bal.Address == ae.Address {
-					bankGen.Balances[i].Coins = bal.Coins.Add(ae.Amount...)
-					totalAdded = totalAdded.Add(ae.Amount...)
+				if bal.Address == ah.Address {
+					bankGen.Balances[i].Coins = bal.Coins.Add(ah.Amount...)
+					totalAdded = totalAdded.Add(ah.Amount...)
 					haveBal = true
 					break
 				}
 			}
 			if !haveBal {
 				newBalances = append(newBalances, banktypes.Balance{
-					Address: ae.Address,
-					Coins:   ae.Amount,
+					Address: ah.Address,
+					Coins:   ah.Amount,
 				})
-				totalAdded = totalAdded.Add(ae.Amount...)
+				totalAdded = totalAdded.Add(ah.Amount...)
 			}
 		}
 		bankGen.Balances = append(bankGen.Balances, newBalances...)

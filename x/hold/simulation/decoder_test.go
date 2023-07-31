@@ -28,16 +28,16 @@ func TestDecodeStore(t *testing.T) {
 		expPanic string
 	}{
 		{
-			name: "EscrowCoin",
-			kvA:  kv.Pair{Key: keeper.CreateEscrowCoinKey(addr0, "banana"), Value: []byte("99")},
-			kvB:  kv.Pair{Key: keeper.CreateEscrowCoinKey(addr1, "cherry"), Value: []byte("123")},
-			exp:  "<EscrowCoin><" + addr0.String() + "><banana>: A = \"99\", B = \"123\"\n",
+			name: "HoldCoin",
+			kvA:  kv.Pair{Key: keeper.CreateHoldCoinKey(addr0, "banana"), Value: []byte("99")},
+			kvB:  kv.Pair{Key: keeper.CreateHoldCoinKey(addr1, "cherry"), Value: []byte("123")},
+			exp:  "<HoldCoin><" + addr0.String() + "><banana>: A = \"99\", B = \"123\"\n",
 		},
 		{
 			name:     "unknown",
 			kvA:      kv.Pair{Key: []byte{0x9a}, Value: []byte{0x9b}},
 			kvB:      kv.Pair{Key: []byte{0x9c}, Value: []byte{0x9d}},
-			expPanic: "invalid escrow key 9A",
+			expPanic: "invalid hold key 9A",
 		},
 	}
 
