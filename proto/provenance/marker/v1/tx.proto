@@ -58,6 +58,8 @@ service Msg {
   rpc UpdateForcedTransfer(MsgUpdateForcedTransferRequest) returns (MsgUpdateForcedTransferResponse);
   // SetAccountData sets the accountdata for a denom. Signer must have deposit authority.
   rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
+  // UpdateSendDenyList will only succeed if signer has admin authority
+  rpc UpdateSendDenyList(MsgUpdateSendDenyListRequest) returns (MsgUpdateSendDenyListResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
@@ -250,10 +252,14 @@ message MsgUpdateRequiredAttributesRequest {
   option (gogoproto.equal)      = true;
   option (cosmos.msg.v1.signer) = "transfer_authority";
 
-  string          denom                      = 1;
+  // The denomination of the marker to update.
+  string denom = 1;
+  // List of required attributes to remove from marker.
   repeated string remove_required_attributes = 2;
-  repeated string add_required_attributes    = 3;
-  string          transfer_authority = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"]; // signer of the proposal
+  // List of required attributes to add to marker.
+  repeated string add_required_attributes = 3;
+  // The signer of the message.  Must have transfer authority to marker or be governance module account address.
+  string transfer_authority = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgUpdateRequiredAttributesResponse defines the Msg/UpdateRequiredAttributes response type
@@ -292,3 +298,22 @@ message MsgSetAccountDataRequest {
 
 // MsgSetAccountDataResponse defines the Msg/SetAccountData response type
 message MsgSetAccountDataResponse {}
+
+// MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a resticted marker
+// signer must have transfer authority
+message MsgUpdateSendDenyListRequest {
+  option (gogoproto.equal)      = true;
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // The denomination of the marker to update.
+  string denom = 1;
+  // List of bech32 addresses to remove from the deny send list.
+  repeated string remove_denied_addresses = 2;
+  // List of bech32 addresses to add to the deny send list.
+  repeated string add_denied_addresses = 3;
+  // The signer of the message.  Must have admin authority to marker or be governance module account address.
+  string authority = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateSendDenyListResponse defines the Msg/UpdateSendDenyList response type
+message MsgUpdateSendDenyListResponse {}
