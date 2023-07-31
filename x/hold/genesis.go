@@ -12,20 +12,20 @@ func DefaultGenesisState() *GenesisState {
 func (g GenesisState) Validate() error {
 	addrs := make(map[string]int)
 	var errs []error
-	for i, ae := range g.Escrows {
-		if ae == nil {
-			errs = append(errs, fmt.Errorf("invalid escrows[%d]: cannot be nil", i))
+	for i, ah := range g.Holds {
+		if ah == nil {
+			errs = append(errs, fmt.Errorf("invalid holds[%d]: cannot be nil", i))
 			continue
 		}
-		if err := ae.Validate(); err != nil {
-			errs = append(errs, fmt.Errorf("invalid escrows[%d]: %w", i, err))
+		if err := ah.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("invalid holds[%d]: %w", i, err))
 			continue
 		}
-		j, seen := addrs[ae.Address]
+		j, seen := addrs[ah.Address]
 		if seen {
-			errs = append(errs, fmt.Errorf("invalid escrows[%d]: duplicate address also at index %d", i, j))
+			errs = append(errs, fmt.Errorf("invalid holds[%d]: duplicate address also at index %d", i, j))
 		} else {
-			addrs[ae.Address] = i
+			addrs[ah.Address] = i
 		}
 	}
 	return errors.Join(errs...)

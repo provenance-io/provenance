@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (e AccountEscrow) Validate() error {
+func (e AccountHold) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(e.Address); err != nil {
 		return fmt.Errorf("invalid address: %w", err)
 	}

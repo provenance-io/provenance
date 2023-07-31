@@ -13,39 +13,39 @@ import (
 func TestDefaultGenesisState(t *testing.T) {
 	genState := DefaultGenesisState()
 	require.NotNil(t, genState, "DefaultGenesisState()")
-	assert.Empty(t, genState.Escrows, "Escrows")
+	assert.Empty(t, genState.Holds, "Holds")
 }
 
 func TestGenesisState_Validate(t *testing.T) {
-	escrows := func(rv ...*AccountEscrow) []*AccountEscrow {
+	holds := func(rv ...*AccountHold) []*AccountHold {
 		return rv
 	}
 
-	aeGood1 := &AccountEscrow{
-		Address: sdk.AccAddress("aeGood1_____________").String(),
+	ahGood1 := &AccountHold{
+		Address: sdk.AccAddress("ahGood1_____________").String(),
 		Amount:  sdk.NewCoins(sdk.NewInt64Coin("nhash", 5_000_000_001)),
 	}
-	aeGood2 := &AccountEscrow{
-		Address: sdk.AccAddress("aeGood2_____________").String(),
+	ahGood2 := &AccountHold{
+		Address: sdk.AccAddress("ahGood2_____________").String(),
 		Amount:  sdk.NewCoins(sdk.NewInt64Coin("nhash", 35_000), sdk.NewInt64Coin("steak", 88)),
 	}
-	aeGood3 := &AccountEscrow{
-		Address: sdk.AccAddress("aeGood3_____________").String(),
+	ahGood3 := &AccountHold{
+		Address: sdk.AccAddress("ahGood3_____________").String(),
 		Amount:  sdk.NewCoins(sdk.NewInt64Coin("nhash", 1_234_567_890)),
 	}
-	aeBad := &AccountEscrow{
+	ahBad := &AccountHold{
 		Address: "",
 		Amount:  sdk.NewCoins(sdk.NewInt64Coin("acorn", 321)),
 	}
 
 	badErr := func(i int) string {
-		return fmt.Sprintf("invalid escrows[%d]: invalid address: empty address string is not allowed", i)
+		return fmt.Sprintf("invalid holds[%d]: invalid address: empty address string is not allowed", i)
 	}
 	nilErr := func(i int) string {
-		return fmt.Sprintf("invalid escrows[%d]: cannot be nil", i)
+		return fmt.Sprintf("invalid holds[%d]: cannot be nil", i)
 	}
 	dupErr := func(i, j int) string {
-		return fmt.Sprintf("invalid escrows[%d]: duplicate address also at index %d", i, j)
+		return fmt.Sprintf("invalid holds[%d]: duplicate address also at index %d", i, j)
 	}
 
 	tests := []struct {
@@ -54,93 +54,93 @@ func TestGenesisState_Validate(t *testing.T) {
 		expErr   []string
 	}{
 		{
-			name:     "nil escrows",
-			genState: GenesisState{},
+			name:     "nil holds",
+			genState: GenesisState{Holds: nil},
 		},
 		{
-			name:     "empty escrows",
-			genState: GenesisState{Escrows: nil},
+			name:     "empty holds",
+			genState: GenesisState{Holds: []*AccountHold{}},
 		},
 		{
-			name:     "one escrow: good",
-			genState: GenesisState{Escrows: escrows(aeGood1)},
+			name:     "one holds: good",
+			genState: GenesisState{Holds: holds(ahGood1)},
 		},
 		{
-			name:     "one escrow: bad",
-			genState: GenesisState{Escrows: escrows(aeBad)},
+			name:     "one hold: bad",
+			genState: GenesisState{Holds: holds(ahBad)},
 			expErr:   []string{badErr(0)},
 		},
 		{
-			name:     "one escrow: nil",
-			genState: GenesisState{Escrows: escrows(nil)},
+			name:     "one hold: nil",
+			genState: GenesisState{Holds: holds(nil)},
 			expErr:   []string{nilErr(0)},
 		},
 		{
-			name:     "two escrows: good good",
-			genState: GenesisState{Escrows: escrows(aeGood2, aeGood3)},
+			name:     "two holds: good good",
+			genState: GenesisState{Holds: holds(ahGood2, ahGood3)},
 		},
 		{
-			name:     "two escrows: good bad",
-			genState: GenesisState{Escrows: escrows(aeGood1, aeBad)},
+			name:     "two holds: good bad",
+			genState: GenesisState{Holds: holds(ahGood1, ahBad)},
 			expErr:   []string{badErr(1)},
 		},
 		{
-			name:     "two escrows: bad good",
-			genState: GenesisState{Escrows: escrows(aeBad, aeGood1)},
+			name:     "two holds: bad good",
+			genState: GenesisState{Holds: holds(ahBad, ahGood1)},
 			expErr:   []string{badErr(0)},
 		},
 		{
-			name:     "two escrows: good nil",
-			genState: GenesisState{Escrows: escrows(aeGood1, nil)},
+			name:     "two holds: good nil",
+			genState: GenesisState{Holds: holds(ahGood1, nil)},
 			expErr:   []string{nilErr(1)},
 		},
 		{
-			name:     "two escrows: nil good",
-			genState: GenesisState{Escrows: escrows(nil, aeGood1)},
+			name:     "two holds: nil good",
+			genState: GenesisState{Holds: holds(nil, ahGood1)},
 			expErr:   []string{nilErr(0)},
 		},
 		{
-			name:     "two escrows: bad nil",
-			genState: GenesisState{Escrows: escrows(aeBad, nil)},
+			name:     "two holds: bad nil",
+			genState: GenesisState{Holds: holds(ahBad, nil)},
 			expErr:   []string{badErr(0), nilErr(1)},
 		},
 		{
-			name:     "two escrows: nil bad",
-			genState: GenesisState{Escrows: escrows(nil, aeBad)},
+			name:     "two holds: nil bad",
+			genState: GenesisState{Holds: holds(nil, ahBad)},
 			expErr:   []string{nilErr(0), badErr(1)},
 		},
 		{
-			name:     "two escrows: same",
-			genState: GenesisState{Escrows: escrows(aeGood1, aeGood1)},
+			name:     "two holds: same",
+			genState: GenesisState{Holds: holds(ahGood1, ahGood1)},
 			expErr:   []string{dupErr(1, 0)},
 		},
 		{
-			name:     "three escrows: good good good",
-			genState: GenesisState{Escrows: escrows(aeGood1, aeGood2, aeGood3)},
+			name:     "three holds: good good good",
+			genState: GenesisState{Holds: holds(ahGood1, ahGood2, ahGood3)},
 		},
 		{
-			name:     "three escrows: good bad good",
-			genState: GenesisState{Escrows: escrows(aeGood1, aeBad, aeGood3)},
+			name:     "three holds: good bad good",
+			genState: GenesisState{Holds: holds(ahGood1, ahBad, ahGood3)},
 			expErr:   []string{badErr(1)},
 		},
 		{
-			name:     "three escrows: good nil bad",
-			genState: GenesisState{Escrows: escrows(aeGood1, nil, aeBad)},
+			name:     "three holds: good nil bad",
+			genState: GenesisState{Holds: holds(ahGood1, nil, ahBad)},
 			expErr:   []string{nilErr(1), badErr(2)},
 		},
 		{
-			name:     "three escrows: same first and third bad second",
-			genState: GenesisState{Escrows: escrows(aeGood1, aeBad, aeGood1)},
+			name:     "three holds: same first and third bad second",
+			genState: GenesisState{Holds: holds(ahGood1, ahBad, ahGood1)},
 			expErr:   []string{badErr(1), dupErr(2, 0)},
 		},
 		{
-			name:     "three escrows: all same",
-			genState: GenesisState{Escrows: escrows(aeGood1, aeGood1, aeGood1)},
+			name:     "three holds: all same",
+			genState: GenesisState{Holds: holds(ahGood1, ahGood1, ahGood1)},
 			expErr:   []string{dupErr(1, 0), dupErr(2, 0)},
 		},
 		{
-			name:     "six escrows: good1 bad good2 nil good1 good3",
-			genState: GenesisState{Escrows: escrows(aeGood1, aeBad, aeGood2, nil, aeGood2, aeGood3)},
+			name:     "six holds: good1 bad good2 nil good1 good3",
+			genState: GenesisState{Holds: holds(ahGood1, ahBad, ahGood2, nil, ahGood2, ahGood3)},
 			expErr:   []string{badErr(1), nilErr(3), dupErr(4, 2)},
 		},
 	}
