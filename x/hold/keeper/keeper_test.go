@@ -238,24 +238,25 @@ func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
 	}
 }
 
-// getStore returns the escrow state store.
+// getStore returns the hold state store.
 func (s *TestSuite) getStore() sdk.KVStore {
 	return s.sdkCtx.KVStore(s.keeper.GetStoreKey())
 }
 
-// requireSetEscrowCoinAmount calls SetEscrowCoinAmount making sure it doesn't panic or return an error.
-func (s *TestSuite) requireSetEscrowCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) {
+// requireSetHoldCoinAmount calls setHoldCoinAmount making sure it doesn't panic or return an error.
+func (s *TestSuite) requireSetHoldCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) {
 	testFunc := func() error {
-		return s.keeper.SetEscrowCoinAmount(store, addr, denom, amount)
+		return s.keeper.SetHoldCoinAmount(store, addr, denom, amount)
 	}
-	s.requireNotPanicsNoErrorf(testFunc, "setEscrowCoinAmount(%s, %s%s)", s.getAddrName(addr), amount, denom)
+	s.requireNotPanicsNoErrorf(testFunc, "setHoldCoinAmount(%s, %s%s)", s.getAddrName(addr), amount, denom)
 }
 
-// setEscrowCoinAmountRaw sets an escrow coin amount to the provided amount string.
-func (s *TestSuite) setEscrowCoinAmountRaw(store sdk.KVStore, addr sdk.AccAddress, denom string, amount string) {
-	store.Set(keeper.CreateEscrowCoinKey(addr, denom), []byte(amount))
+// setHoldCoinAmountRaw sets a hold coin amount to the provided "amount" string.
+func (s *TestSuite) setHoldCoinAmountRaw(store sdk.KVStore, addr sdk.AccAddress, denom string, amount string) {
+	store.Set(keeper.CreateHoldCoinKey(addr, denom), []byte(amount))
 }
 
+// requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or error.
 func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 	testFunc := func() error {
 		return testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, s.coins(coins))
@@ -263,8 +264,8 @@ func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 	s.requireNotPanicsNoErrorf(testFunc, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
 }
 
-// clearEscrowState will delete all entries from the escrow store.
-func (s *TestSuite) clearEscrowState() {
+// clearHoldState will delete all entries from the hold store.
+func (s *TestSuite) clearHoldState() {
 	store := s.getStore()
 	var keys [][]byte
 
@@ -293,9 +294,9 @@ func (s *TestSuite) stateEntryString(key, value []byte) string {
 	return fmt.Sprintf("%q=%q", key, value)
 }
 
-// dumpEscrowState creates a string for each entry in the escrow state store.
+// dumpHoldState creates a string for each entry in the hold state store.
 // Each entry has the format `"<key>"="<value>"`.
-func (s *TestSuite) dumpEscrowState() []string {
+func (s *TestSuite) dumpHoldState() []string {
 	store := s.getStore()
 	var rv []string
 
@@ -390,7 +391,7 @@ func (s *TestSuite) assertEqualEvents(expected, actual sdk.Events, msgAndArgs ..
 	return s.Assert().Equal(expectedStrs, actualStrs, msgAndArgs...)
 }
 
-func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
+func (s *TestSuite) TestKeeper_ValidateNewHold() {
 	tests := []struct {
 		name      string
 		addr      sdk.AccAddress
@@ -421,30 +422,30 @@ func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
 			addr:      s.addr1,
 			funds:     sdk.Coins{s.coin(10, "acorn"), s.coin(-3, "boin"), s.coin(22, "corn")},
 			spendable: s.coins("10acorn,5boin,100corn"),
-			expErr:    []string{"10acorn,-3boin,22corn", "escrow amounts", "cannot be negative", s.addr1.String()},
+			expErr:    []string{"10acorn,-3boin,22corn", "hold amounts", "cannot be negative", s.addr1.String()},
 		},
 		{
 			name:      "no spendable for one coin",
 			addr:      s.addr2,
 			funds:     s.coins("10acorn,5boin,100corn"),
 			spendable: s.coins("10acorn,100corn"),
-			expErr:    []string{"spendable balance 0boin is less than escrow amount 5boin", s.addr2.String()},
+			expErr:    []string{"spendable balance 0boin is less than hold amount 5boin", s.addr2.String()},
 		},
 		{
 			name:      "not enough spendable for a coin",
 			addr:      s.addr3,
 			funds:     s.coins("10acorn,5boin,100corn"),
 			spendable: s.coins("10acorn,4boin,100corn"),
-			expErr:    []string{"spendable balance 4boin is less than escrow amount 5boin", s.addr3.String()},
+			expErr:    []string{"spendable balance 4boin is less than hold amount 5boin", s.addr3.String()},
 		},
 		{
-			name:      "all spendable of one coin being put in escrow",
+			name:      "all spendable of one coin being put on hold",
 			addr:      s.addr5,
 			funds:     s.coins("5boin"),
 			spendable: s.coins("10acorn,5boin,100corn"),
 		},
 		{
-			name:      "all spendable being put in escrow",
+			name:      "all spendable being put on hold",
 			addr:      s.addr4,
 			funds:     s.coins("10acorn,5boin,100corn"),
 			spendable: s.coins("10acorn,5boin,100corn"),
@@ -466,28 +467,28 @@ func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
 			addr:      s.addr1,
 			funds:     s.coins("11acorn,21boin,31corn"),
 			spendable: s.coins("10acorn,20boin,30corn"),
-			expErr:    []string{"spendable balance 10acorn is less than escrow amount 11acorn", s.addr1.String()},
+			expErr:    []string{"spendable balance 10acorn is less than hold amount 11acorn", s.addr1.String()},
 		},
 		{
 			name:      "three coins: first insufficient",
 			addr:      s.addr1,
 			funds:     s.coins("11acorn,20boin,30corn"),
 			spendable: s.coins("10acorn,20boin,30corn"),
-			expErr:    []string{"spendable balance 10acorn is less than escrow amount 11acorn", s.addr1.String()},
+			expErr:    []string{"spendable balance 10acorn is less than hold amount 11acorn", s.addr1.String()},
 		},
 		{
 			name:      "three coins: second insufficient",
 			addr:      s.addr1,
 			funds:     s.coins("10acorn,21boin,30corn"),
 			spendable: s.coins("10acorn,20boin,30corn"),
-			expErr:    []string{"spendable balance 20boin is less than escrow amount 21boin", s.addr1.String()},
+			expErr:    []string{"spendable balance 20boin is less than hold amount 21boin", s.addr1.String()},
 		},
 		{
 			name:      "three coins: third insufficient",
 			addr:      s.addr1,
 			funds:     s.coins("10acorn,20boin,31corn"),
 			spendable: s.coins("10acorn,20boin,30corn"),
-			expErr:    []string{"spendable balance 30corn is less than escrow amount 31corn", s.addr1.String()},
+			expErr:    []string{"spendable balance 30corn is less than hold amount 31corn", s.addr1.String()},
 		},
 	}
 
@@ -498,23 +499,23 @@ func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
 
 			var err error
 			testFunc := func() {
-				err = k.ValidateNewEscrow(s.sdkCtx, tc.addr, tc.funds)
+				err = k.ValidateNewHold(s.sdkCtx, tc.addr, tc.funds)
 			}
-			s.Require().NotPanics(testFunc, "ValidateNewEscrow")
-			s.assertErrorContents(err, tc.expErr, "ValidateNewEscrow")
+			s.Require().NotPanics(testFunc, "ValidateNewHold")
+			s.assertErrorContents(err, tc.expErr, "ValidateNewHold")
 		})
 	}
 }
 
-func (s *TestSuite) TestKeeper_AddEscrow() {
+func (s *TestSuite) TestKeeper_AddHold() {
 	store := s.getStore()
-	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
-	s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3))
+	s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
+	s.requireSetHoldCoinAmount(store, s.addr1, "cucumber", s.int(3))
 	// max uint64 = 18,446,744,073,709,551,615
-	s.requireSetEscrowCoinAmount(store, s.addr2, "hugecoin", s.intStr("1844674407370955161500"))
-	s.requireSetEscrowCoinAmount(store, s.addr2, "mediumcoin", s.intStr("10000000000000000000"))
-	s.setEscrowCoinAmountRaw(store, s.addr3, "badcoin", "badvalue")
-	s.setEscrowCoinAmountRaw(store, s.addr3, "crudcoin", "crudvalue")
+	s.requireSetHoldCoinAmount(store, s.addr2, "hugecoin", s.intStr("1844674407370955161500"))
+	s.requireSetHoldCoinAmount(store, s.addr2, "mediumcoin", s.intStr("10000000000000000000"))
+	s.setHoldCoinAmountRaw(store, s.addr3, "badcoin", "badvalue")
+	s.setHoldCoinAmountRaw(store, s.addr3, "crudcoin", "crudvalue")
 	store = nil
 
 	makeEvents := func(addr sdk.AccAddress, coins sdk.Coins) sdk.Events {
@@ -546,11 +547,11 @@ func (s *TestSuite) TestKeeper_AddEscrow() {
 			finalEsc: s.coins("99banana,3cucumber"),
 		},
 		{
-			name:     "insufficent spendable: some already in escrow",
+			name:     "insufficent spendable: some already on hold",
 			addr:     s.addr1,
 			funds:    s.coins("2cucumber"),
 			spendBal: s.coins("1cucumber"),
-			expErr:   []string{"spendable balance 1cucumber is less than escrow amount 2cucumber"},
+			expErr:   []string{"spendable balance 1cucumber is less than hold amount 2cucumber"},
 			finalEsc: s.coins("99banana,3cucumber"),
 		},
 		{
@@ -599,7 +600,7 @@ func (s *TestSuite) TestKeeper_AddEscrow() {
 			funds:    s.coins("1badcoin"),
 			spendBal: s.coins("1badcoin"),
 			expErr: []string{
-				"failed to get current badcoin escrow amount",
+				"failed to get current badcoin hold amount",
 				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
 			},
 		},
@@ -631,16 +632,16 @@ func (s *TestSuite) TestKeeper_AddEscrow() {
 			funds:    s.coins("57acorn,5badcoin,4crudcoin"),
 			spendBal: s.coins("100acorn,100badcoin,100crudcoin"),
 			expErr: []string{
-				"failed to get current badcoin escrow amount",
+				"failed to get current badcoin hold amount",
 				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
-				"failed to get current crudcoin escrow amount",
+				"failed to get current crudcoin hold amount",
 				"math/big: cannot unmarshal \"crudvalue\" into a *big.Int",
 			},
 			finalEsc:  s.coins("57acorn,12goodcoin"),
 			expEvents: makeEvents(s.addr3, s.coins("57acorn")),
 		},
 		{
-			name:      "sufficient spendable: new denoms to escrow",
+			name:      "sufficient spendable: new denoms on hold",
 			addr:      s.addr4,
 			funds:     s.coins("37acorn,12banana"),
 			spendBal:  s.coins("37acorn,12banana"),
@@ -661,11 +662,11 @@ func (s *TestSuite) TestKeeper_AddEscrow() {
 			funds: sdk.Coins{s.coin(0, "banana"), s.coin(0, "cucumber")},
 		},
 		{
-			name:     "insufficient spendable: none in escrow yet",
+			name:     "insufficient spendable: none on hold yet",
 			addr:     s.addr5,
 			funds:    s.coins("49apple"),
 			spendBal: s.coins("48apple"),
-			expErr:   []string{"spendable balance 48apple is less than escrow amount 49apple"},
+			expErr:   []string{"spendable balance 48apple is less than hold amount 49apple"},
 		},
 		{
 			name:     "new amount is invalid",
@@ -688,33 +689,33 @@ func (s *TestSuite) TestKeeper_AddEscrow() {
 			ctx := s.sdkCtx.WithEventManager(em)
 			var err error
 			testFunc := func() {
-				err = k.AddEscrow(ctx, tc.addr, tc.funds)
+				err = k.AddHold(ctx, tc.addr, tc.funds)
 			}
-			s.Require().NotPanics(testFunc, "AddEscrow")
+			s.Require().NotPanics(testFunc, "AddHold")
 
-			s.assertErrorContents(err, tc.expErr, "AddEscrow error")
+			s.assertErrorContents(err, tc.expErr, "AddHold error")
 
-			finalEsc, _ := k.GetEscrowCoins(s.sdkCtx, tc.addr)
-			s.Assert().Equal(tc.finalEsc.String(), finalEsc.String(), "final escrow")
+			finalEsc, _ := k.GetHoldCoins(s.sdkCtx, tc.addr)
+			s.Assert().Equal(tc.finalEsc.String(), finalEsc.String(), "final hold")
 
 			events := em.Events()
-			s.assertEqualEvents(tc.expEvents, events, "AddEscrow events")
+			s.assertEqualEvents(tc.expEvents, events, "AddHold events")
 		})
 	}
 }
 
-func (s *TestSuite) TestKeeper_RemoveEscrow() {
+func (s *TestSuite) TestKeeper_RemoveHold() {
 	store := s.getStore()
-	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
-	s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3))
-	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
-	s.setEscrowCoinAmountRaw(store, s.addr3, "badcoin", "badvalue")
-	s.setEscrowCoinAmountRaw(store, s.addr3, "crudcoin", "crudvalue")
-	s.requireSetEscrowCoinAmount(store, s.addr3, "goodcoin", s.int(2))
+	s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
+	s.requireSetHoldCoinAmount(store, s.addr1, "cucumber", s.int(3))
+	s.requireSetHoldCoinAmount(store, s.addr2, "banana", s.int(18))
+	s.setHoldCoinAmountRaw(store, s.addr3, "badcoin", "badvalue")
+	s.setHoldCoinAmountRaw(store, s.addr3, "crudcoin", "crudvalue")
+	s.requireSetHoldCoinAmount(store, s.addr3, "goodcoin", s.int(2))
 	// max uint64 = 18,446,744,073,709,551,615
-	s.requireSetEscrowCoinAmount(store, s.addr4, "hugecoin", s.intStr("1844674407370955161500"))
-	s.requireSetEscrowCoinAmount(store, s.addr4, "largecoin", s.intStr("1000000000000000000000"))
-	s.requireSetEscrowCoinAmount(store, s.addr4, "mediumcoin", s.intStr("20000000000000000000"))
+	s.requireSetHoldCoinAmount(store, s.addr4, "hugecoin", s.intStr("1844674407370955161500"))
+	s.requireSetHoldCoinAmount(store, s.addr4, "largecoin", s.intStr("1000000000000000000000"))
+	s.requireSetHoldCoinAmount(store, s.addr4, "mediumcoin", s.intStr("20000000000000000000"))
 	store = nil
 
 	makeEvents := func(addr sdk.AccAddress, coins sdk.Coins) sdk.Events {
@@ -746,12 +747,12 @@ func (s *TestSuite) TestKeeper_RemoveEscrow() {
 			expEvents: makeEvents(s.addr1, s.coins("98banana,2cucumber")),
 		},
 		{
-			name:  "not enough in escrow",
+			name:  "not enough on hold",
 			addr:  s.addr2,
 			funds: s.coins("20banana"),
 			expErr: []string{
-				"cannot remove 20banana from escrow",
-				"account only has 18banana in escrow",
+				"cannot remove 20banana from hold",
+				"account only has 18banana on hold",
 			},
 			finalEsc: s.coins("18banana"),
 		},
@@ -773,7 +774,7 @@ func (s *TestSuite) TestKeeper_RemoveEscrow() {
 			addr:  s.addr3,
 			funds: s.coins("1badcoin"),
 			expErr: []string{
-				"failed to get current badcoin escrow amount",
+				"failed to get current badcoin hold amount",
 				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
 			},
 			finalEsc: s.coins("2goodcoin"),
@@ -790,15 +791,15 @@ func (s *TestSuite) TestKeeper_RemoveEscrow() {
 			addr:  s.addr3,
 			funds: s.coins("1badcoin,2crudcoin,1goodcoin"),
 			expErr: []string{
-				"failed to get current badcoin escrow amount",
+				"failed to get current badcoin hold amount",
 				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
-				"failed to get current crudcoin escrow amount",
+				"failed to get current crudcoin hold amount",
 				"math/big: cannot unmarshal \"crudvalue\" into a *big.Int",
 			},
 			expEvents: makeEvents(s.addr3, s.coins("1goodcoin")),
 		},
 		{
-			name:      "amount left in escrow still greater than max uint64",
+			name:      "amount left on hold still greater than max uint64",
 			addr:      s.addr4,
 			funds:     s.coins("1hugecoin"),
 			finalEsc:  s.coins("1844674407370955161499hugecoin,1000000000000000000000largecoin,20000000000000000000mediumcoin"),
@@ -830,8 +831,8 @@ func (s *TestSuite) TestKeeper_RemoveEscrow() {
 			addr:  s.addr4,
 			funds: s.coins("900000000000000000001largecoin"),
 			expErr: []string{
-				"cannot remove 900000000000000000001largecoin from escrow",
-				"account only has 900000000000000000000largecoin in escrow",
+				"cannot remove 900000000000000000001largecoin from hold",
+				"account only has 900000000000000000000largecoin on hold",
 			},
 			finalEsc: s.coins("99hugecoin,900000000000000000000largecoin,10000000000000000000mediumcoin"),
 		},
@@ -854,7 +855,7 @@ func (s *TestSuite) TestKeeper_RemoveEscrow() {
 			name:   "negative amount",
 			addr:   s.addr5,
 			funds:  sdk.Coins{s.coin(-1, "banana")},
-			expErr: []string{"cannot remove \"-1banana\" from escrow", "amounts cannot be negative"},
+			expErr: []string{"cannot remove \"-1banana\" from hold", "amounts cannot be negative"},
 		},
 	}
 
@@ -868,27 +869,27 @@ func (s *TestSuite) TestKeeper_RemoveEscrow() {
 			ctx := s.sdkCtx.WithEventManager(em)
 			var err error
 			testFunc := func() {
-				err = s.keeper.RemoveEscrow(ctx, tc.addr, tc.funds)
+				err = s.keeper.RemoveHold(ctx, tc.addr, tc.funds)
 			}
-			s.Require().NotPanics(testFunc, "RemoveEscrow")
+			s.Require().NotPanics(testFunc, "RemoveHold")
 
-			s.assertErrorContents(err, tc.expErr, "RemoveEscrow error")
+			s.assertErrorContents(err, tc.expErr, "RemoveHold error")
 
-			finalEsc, _ := s.keeper.GetEscrowCoins(s.sdkCtx, tc.addr)
-			s.Assert().Equal(tc.finalEsc.String(), finalEsc.String(), "final escrow")
+			finalEsc, _ := s.keeper.GetHoldCoins(s.sdkCtx, tc.addr)
+			s.Assert().Equal(tc.finalEsc.String(), finalEsc.String(), "final hold")
 
 			events := em.Events()
-			s.assertEqualEvents(tc.expEvents, events, "AddEscrow events")
+			s.assertEqualEvents(tc.expEvents, events, "AddHold events")
 		})
 	}
 }
 
-func (s *TestSuite) TestKeeper_GetEscrowCoin() {
+func (s *TestSuite) TestKeeper_GetHoldCoin() {
 	store := s.getStore()
-	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
-	s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3))
-	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
-	s.setEscrowCoinAmountRaw(store, s.addr1, "badcoin", "badvalue")
+	s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
+	s.requireSetHoldCoinAmount(store, s.addr1, "cucumber", s.int(3))
+	s.requireSetHoldCoinAmount(store, s.addr2, "banana", s.int(18))
+	s.setHoldCoinAmountRaw(store, s.addr1, "badcoin", "badvalue")
 	store = nil
 
 	tests := []struct {
@@ -899,37 +900,37 @@ func (s *TestSuite) TestKeeper_GetEscrowCoin() {
 		expErr  []string
 	}{
 		{
-			name:    "nothing in escrow for addr",
+			name:    "nothing on hold for addr",
 			addr:    s.addr5,
 			denom:   "nonecoin",
 			expCoin: s.coin(0, "nonecoin"),
 		},
 		{
-			name:    "addr has escrow but not this denom",
+			name:    "addr has hold but not this denom",
 			addr:    s.addr2,
 			denom:   "cucumber",
 			expCoin: s.coin(0, "cucumber"),
 		},
 		{
-			name:    "addr has only this denom in escrow",
+			name:    "addr has only this denom on hold",
 			addr:    s.addr2,
 			denom:   "banana",
 			expCoin: s.coin(18, "banana"),
 		},
 		{
-			name:    "addr has multiple denoms in escrow but not this one",
+			name:    "addr has multiple denoms on hold but not this one",
 			addr:    s.addr1,
 			denom:   "nonecoin",
 			expCoin: s.coin(0, "nonecoin"),
 		},
 		{
-			name:    "addr has multiple denoms in escrow this denom also in escrow by other addr",
+			name:    "addr has multiple denoms on hold this denom also on hold by other addr",
 			addr:    s.addr1,
 			denom:   "banana",
 			expCoin: s.coin(99, "banana"),
 		},
 		{
-			name:    "addr has multiple denoms in escrow this denom is only in escrow by this addr",
+			name:    "addr has multiple denoms on hold this denom is only on hold by this addr",
 			addr:    s.addr1,
 			denom:   "cucumber",
 			expCoin: s.coin(3, "cucumber"),
@@ -939,7 +940,7 @@ func (s *TestSuite) TestKeeper_GetEscrowCoin() {
 			addr:    s.addr1,
 			denom:   "badcoin",
 			expCoin: s.coin(0, "badcoin"),
-			expErr:  []string{"could not get escrow coin amount for", s.addr1.String(), "math/big: cannot unmarshal \"badvalue\" into a *big.Int"},
+			expErr:  []string{"could not get hold coin amount for", s.addr1.String(), "math/big: cannot unmarshal \"badvalue\" into a *big.Int"},
 		},
 	}
 
@@ -948,25 +949,25 @@ func (s *TestSuite) TestKeeper_GetEscrowCoin() {
 			var coin sdk.Coin
 			var err error
 			testFunc := func() {
-				coin, err = s.keeper.GetEscrowCoin(s.sdkCtx, tc.addr, tc.denom)
+				coin, err = s.keeper.GetHoldCoin(s.sdkCtx, tc.addr, tc.denom)
 			}
-			s.Require().NotPanics(testFunc, "GetEscrowCoin")
-			s.assertErrorContents(err, tc.expErr, "GetEscrowCoin error")
-			s.Assert().Equal(tc.expCoin.String(), coin.String(), "GetEscrowCoin coin")
+			s.Require().NotPanics(testFunc, "GetHoldCoin")
+			s.assertErrorContents(err, tc.expErr, "GetHoldCoin error")
+			s.Assert().Equal(tc.expCoin.String(), coin.String(), "GetHoldCoin coin")
 		})
 	}
 }
 
-func (s *TestSuite) TestKeeper_GetEscrowCoins() {
+func (s *TestSuite) TestKeeper_GetHoldCoins() {
 	store := s.getStore()
-	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
-	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
-	s.requireSetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3))
-	s.setEscrowCoinAmountRaw(store, s.addr3, "grimcoin", "grimvalue")
-	s.requireSetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52))
-	s.setEscrowCoinAmountRaw(store, s.addr4, "badcoin", "badvalue")
-	s.requireSetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12))
-	s.setEscrowCoinAmountRaw(store, s.addr4, "dreadcoin", "dreadvalue")
+	s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
+	s.requireSetHoldCoinAmount(store, s.addr2, "banana", s.int(18))
+	s.requireSetHoldCoinAmount(store, s.addr2, "cucumber", s.int(3))
+	s.setHoldCoinAmountRaw(store, s.addr3, "grimcoin", "grimvalue")
+	s.requireSetHoldCoinAmount(store, s.addr4, "acorn", s.int(52))
+	s.setHoldCoinAmountRaw(store, s.addr4, "badcoin", "badvalue")
+	s.requireSetHoldCoinAmount(store, s.addr4, "cucumber", s.int(12))
+	s.setHoldCoinAmountRaw(store, s.addr4, "dreadcoin", "dreadvalue")
 	store = nil
 
 	tests := []struct {
@@ -1019,30 +1020,30 @@ func (s *TestSuite) TestKeeper_GetEscrowCoins() {
 			var coins sdk.Coins
 			var err error
 			testFunc := func() {
-				coins, err = s.keeper.GetEscrowCoins(s.sdkCtx, tc.addr)
+				coins, err = s.keeper.GetHoldCoins(s.sdkCtx, tc.addr)
 			}
-			s.Require().NotPanics(testFunc, "GetEscrowCoins")
-			s.assertErrorContents(err, tc.expErr, "GetEscrowCoins error")
-			s.Assert().Equal(tc.expCoins.String(), coins.String(), "GetEscrowCoins coins")
+			s.Require().NotPanics(testFunc, "GetHoldCoins")
+			s.assertErrorContents(err, tc.expErr, "GetHoldCoins error")
+			s.Assert().Equal(tc.expCoins.String(), coins.String(), "GetHoldCoins coins")
 		})
 	}
 }
 
-func (s *TestSuite) TestKeeper_IterateEscrow() {
+func (s *TestSuite) TestKeeper_IterateHolds() {
 	store := s.getStore()
-	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
-	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
-	s.requireSetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3))
-	s.setEscrowCoinAmountRaw(store, s.addr3, "grimcoin", "grimvalue")
-	s.requireSetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52))
-	s.setEscrowCoinAmountRaw(store, s.addr4, "badcoin", "badvalue")
-	s.requireSetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12))
-	s.setEscrowCoinAmountRaw(store, s.addr4, "dreadcoin", "dreadvalue")
-	s.requireSetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747))
-	s.requireSetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358))
-	s.requireSetEscrowCoinAmount(store, s.addr5, "banana", s.int(101))
-	s.requireSetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8))
-	s.requireSetEscrowCoinAmount(store, s.addr5, "durian", s.int(5))
+	s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
+	s.requireSetHoldCoinAmount(store, s.addr2, "banana", s.int(18))
+	s.requireSetHoldCoinAmount(store, s.addr2, "cucumber", s.int(3))
+	s.setHoldCoinAmountRaw(store, s.addr3, "grimcoin", "grimvalue")
+	s.requireSetHoldCoinAmount(store, s.addr4, "acorn", s.int(52))
+	s.setHoldCoinAmountRaw(store, s.addr4, "badcoin", "badvalue")
+	s.requireSetHoldCoinAmount(store, s.addr4, "cucumber", s.int(12))
+	s.setHoldCoinAmountRaw(store, s.addr4, "dreadcoin", "dreadvalue")
+	s.requireSetHoldCoinAmount(store, s.addr4, "eggplant", s.int(747))
+	s.requireSetHoldCoinAmount(store, s.addr5, "acorn", s.int(358))
+	s.requireSetHoldCoinAmount(store, s.addr5, "banana", s.int(101))
+	s.requireSetHoldCoinAmount(store, s.addr5, "cucumber", s.int(8))
+	s.requireSetHoldCoinAmount(store, s.addr5, "durian", s.int(5))
 	store = nil
 
 	addrDNE := sdk.AccAddress("addr_does_not_exist_")
@@ -1156,39 +1157,39 @@ func (s *TestSuite) TestKeeper_IterateEscrow() {
 			processed = nil
 			var err error
 			testFunc := func() {
-				err = s.keeper.IterateEscrow(s.sdkCtx, tc.addr, tc.process)
+				err = s.keeper.IterateHolds(s.sdkCtx, tc.addr, tc.process)
 			}
-			s.Require().NotPanics(testFunc, "IterateEscrow")
-			s.assertErrorContents(err, tc.expErr, "IterateEscrow error")
+			s.Require().NotPanics(testFunc, "IterateHolds")
+			s.assertErrorContents(err, tc.expErr, "IterateHolds error")
 			if err != nil && len(tc.expNotInErr) > 0 {
 				errStr := err.Error()
 				for _, unexp := range tc.expNotInErr {
-					s.Assert().NotContains(errStr, unexp, "IterateEscrow error")
+					s.Assert().NotContains(errStr, unexp, "IterateHolds error")
 				}
 			}
-			s.Assert().Equal(tc.expProc, processed, "IterateEscrow entries processed")
+			s.Assert().Equal(tc.expProc, processed, "IterateHolds entries processed")
 		})
 	}
 }
 
-func (s *TestSuite) TestKeeper_IterateAllEscrow() {
+func (s *TestSuite) TestKeeper_IterateAllHolds() {
 	// Since the addresses should have been created sequentially, that's the order the store records should be in.
 	// I also picked easy-to-sort coin names.
 	// That means that the order they're being defined here should be the order they are in state.
 	store := s.getStore()
-	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
-	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
-	s.requireSetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3))
-	s.setEscrowCoinAmountRaw(store, s.addr3, "grimcoin", "grimvalue")
-	s.requireSetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52))
-	s.setEscrowCoinAmountRaw(store, s.addr4, "badcoin", "badvalue")
-	s.requireSetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12))
-	s.setEscrowCoinAmountRaw(store, s.addr4, "dreadcoin", "dreadvalue")
-	s.requireSetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747))
-	s.requireSetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358))
-	s.requireSetEscrowCoinAmount(store, s.addr5, "banana", s.int(101))
-	s.requireSetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8))
-	s.requireSetEscrowCoinAmount(store, s.addr5, "durian", s.int(5))
+	s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
+	s.requireSetHoldCoinAmount(store, s.addr2, "banana", s.int(18))
+	s.requireSetHoldCoinAmount(store, s.addr2, "cucumber", s.int(3))
+	s.setHoldCoinAmountRaw(store, s.addr3, "grimcoin", "grimvalue")
+	s.requireSetHoldCoinAmount(store, s.addr4, "acorn", s.int(52))
+	s.setHoldCoinAmountRaw(store, s.addr4, "badcoin", "badvalue")
+	s.requireSetHoldCoinAmount(store, s.addr4, "cucumber", s.int(12))
+	s.setHoldCoinAmountRaw(store, s.addr4, "dreadcoin", "dreadvalue")
+	s.requireSetHoldCoinAmount(store, s.addr4, "eggplant", s.int(747))
+	s.requireSetHoldCoinAmount(store, s.addr5, "acorn", s.int(358))
+	s.requireSetHoldCoinAmount(store, s.addr5, "banana", s.int(101))
+	s.requireSetHoldCoinAmount(store, s.addr5, "cucumber", s.int(8))
+	s.requireSetHoldCoinAmount(store, s.addr5, "durian", s.int(5))
 	store = nil
 
 	entry := func(addr sdk.AccAddress, coin string) string {
@@ -1287,36 +1288,36 @@ func (s *TestSuite) TestKeeper_IterateAllEscrow() {
 			processed = nil
 			var err error
 			testFunc := func() {
-				err = s.keeper.IterateAllEscrow(s.sdkCtx, tc.process)
+				err = s.keeper.IterateAllHolds(s.sdkCtx, tc.process)
 			}
-			s.Require().NotPanics(testFunc, "IterateAllEscrow")
-			s.assertErrorContents(err, tc.expErr, "IterateAllEscrow error")
+			s.Require().NotPanics(testFunc, "IterateAllHolds")
+			s.assertErrorContents(err, tc.expErr, "IterateAllHolds error")
 			if err != nil && len(tc.expNotInErr) > 0 {
 				errStr := err.Error()
 				for _, unexp := range tc.expNotInErr {
-					s.Assert().NotContains(errStr, unexp, "IterateAllEscrow error")
+					s.Assert().NotContains(errStr, unexp, "IterateAllHolds error")
 				}
 			}
-			s.Assert().Equal(tc.expProc, processed, "IterateAllEscrow entries processed")
+			s.Assert().Equal(tc.expProc, processed, "IterateAllHolds entries processed")
 		})
 	}
 }
 
-func (s *TestSuite) TestKeeper_GetAllAccountEscrows() {
+func (s *TestSuite) TestKeeper_GetAllAccountHolds() {
 	store := s.getStore()
-	s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
-	s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(18))
-	s.requireSetEscrowCoinAmount(store, s.addr2, "cucumber", s.int(3))
-	s.requireSetEscrowCoinAmount(store, s.addr4, "acorn", s.int(52))
-	s.requireSetEscrowCoinAmount(store, s.addr4, "cucumber", s.int(12))
-	s.requireSetEscrowCoinAmount(store, s.addr4, "eggplant", s.int(747))
-	s.requireSetEscrowCoinAmount(store, s.addr5, "acorn", s.int(358))
-	s.requireSetEscrowCoinAmount(store, s.addr5, "banana", s.int(101))
-	s.requireSetEscrowCoinAmount(store, s.addr5, "cucumber", s.int(8))
-	s.requireSetEscrowCoinAmount(store, s.addr5, "durian", s.int(5))
+	s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
+	s.requireSetHoldCoinAmount(store, s.addr2, "banana", s.int(18))
+	s.requireSetHoldCoinAmount(store, s.addr2, "cucumber", s.int(3))
+	s.requireSetHoldCoinAmount(store, s.addr4, "acorn", s.int(52))
+	s.requireSetHoldCoinAmount(store, s.addr4, "cucumber", s.int(12))
+	s.requireSetHoldCoinAmount(store, s.addr4, "eggplant", s.int(747))
+	s.requireSetHoldCoinAmount(store, s.addr5, "acorn", s.int(358))
+	s.requireSetHoldCoinAmount(store, s.addr5, "banana", s.int(101))
+	s.requireSetHoldCoinAmount(store, s.addr5, "cucumber", s.int(8))
+	s.requireSetHoldCoinAmount(store, s.addr5, "durian", s.int(5))
 	store = nil
 
-	expected := []*hold.AccountEscrow{
+	expected := []*hold.AccountHold{
 		{Address: s.addr1.String(), Amount: s.coins("99banana")},
 		{Address: s.addr2.String(), Amount: s.coins("18banana,3cucumber")},
 		{Address: s.addr4.String(), Amount: s.coins("52acorn,12cucumber,747eggplant")},
@@ -1324,15 +1325,15 @@ func (s *TestSuite) TestKeeper_GetAllAccountEscrows() {
 	}
 
 	s.Run("no bad entries", func() {
-		escrows, err := s.keeper.GetAllAccountEscrows(s.sdkCtx)
-		s.Assert().NoError(err, "GetAllAccountEscrows error")
-		s.Assert().Equal(expected, escrows, "GetAllAccountEscrows escrows")
+		holds, err := s.keeper.GetAllAccountHolds(s.sdkCtx)
+		s.Assert().NoError(err, "GetAllAccountHolds error")
+		s.Assert().Equal(expected, holds, "GetAllAccountHolds holds")
 	})
 
 	store = s.getStore()
-	s.setEscrowCoinAmountRaw(store, s.addr3, "grimcoin", "grimvalue")
-	s.setEscrowCoinAmountRaw(store, s.addr4, "badcoin", "badvalue")
-	s.setEscrowCoinAmountRaw(store, s.addr4, "dreadcoin", "dreadvalue")
+	s.setHoldCoinAmountRaw(store, s.addr3, "grimcoin", "grimvalue")
+	s.setHoldCoinAmountRaw(store, s.addr4, "badcoin", "badvalue")
+	s.setHoldCoinAmountRaw(store, s.addr4, "dreadcoin", "dreadvalue")
 	store = nil
 
 	s.Run("a few bad entries", func() {
@@ -1347,8 +1348,8 @@ func (s *TestSuite) TestKeeper_GetAllAccountEscrows() {
 			"math/big: cannot unmarshal \"dreadvalue\" into a *big.Int",
 		}
 
-		escrows, err := s.keeper.GetAllAccountEscrows(s.sdkCtx)
-		s.assertErrorContents(err, expInErr, "GetAllAccountEscrows error")
-		s.Assert().Equal(expected, escrows, "GetAllAccountEscrows escrows")
+		holds, err := s.keeper.GetAllAccountHolds(s.sdkCtx)
+		s.assertErrorContents(err, expInErr, "GetAllAccountHolds error")
+		s.Assert().Equal(expected, holds, "GetAllAccountHolds holds")
 	})
 }

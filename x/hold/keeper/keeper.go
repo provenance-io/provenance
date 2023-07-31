@@ -31,18 +31,18 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, bankKeeper h
 	return rv
 }
 
-// setEscrowCoinAmount updates the store with the provided escrow info.
-// If the amount is zero, the escrow coin entry for addr+denom is deleted.
-// Otherwise, the escrow coin entry for addr+denom is created/updated in the provided amount.
-func (k Keeper) setEscrowCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) error {
+// setHoldCoinAmount updates the store with the provided hold info.
+// If the amount is zero, the hold coin entry for addr+denom is deleted.
+// Otherwise, the hold coin entry for addr+denom is created/updated in the provided amount.
+func (k Keeper) setHoldCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) error {
 	if len(denom) == 0 {
-		return fmt.Errorf("cannot store escrow with an empty denom for %s", addr)
+		return fmt.Errorf("cannot store hold with an empty denom for %s", addr)
 	}
 	if amount.IsNegative() {
-		return fmt.Errorf("cannot store negative escrow amount %s%s for %s", amount, denom, addr)
+		return fmt.Errorf("cannot store negative hold amount %s%s for %s", amount, denom, addr)
 	}
 
-	key := CreateEscrowCoinKey(addr, denom)
+	key := CreateHoldCoinKey(addr, denom)
 	if amount.IsZero() {
 		store.Delete(key)
 		return nil
@@ -56,23 +56,23 @@ func (k Keeper) setEscrowCoinAmount(store sdk.KVStore, addr sdk.AccAddress, deno
 	return nil
 }
 
-// getEscrowCoinAmount gets (from the store) the amount marked as in escrow for the given address and denom.
-func (k Keeper) getEscrowCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom string) (sdkmath.Int, error) {
-	key := CreateEscrowCoinKey(addr, denom)
+// getHoldCoinAmount gets (from the store) the amount marked as on hold for the given address and denom.
+func (k Keeper) getHoldCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom string) (sdkmath.Int, error) {
+	key := CreateHoldCoinKey(addr, denom)
 	amountBz := store.Get(key)
-	return UnmarshalEscrowCoinValue(amountBz)
+	return UnmarshalHoldCoinValue(amountBz)
 }
 
-// ValidateNewEscrow checks the account's spendable balance to make sure it has at least as much as the funds provided.
-func (k Keeper) ValidateNewEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error {
+// ValidateNewHold checks the account's spendable balance to make sure it has at least as much as the funds provided.
+func (k Keeper) ValidateNewHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error {
 	if funds.IsZero() {
 		return nil
 	}
 	if funds.IsAnyNegative() {
-		return fmt.Errorf("escrow amounts %q for %s cannot be negative", funds, addr)
+		return fmt.Errorf("hold amounts %q for %s cannot be negative", funds, addr)
 	}
 
-	// Not bypassing escrow's locked coins here because we're testing about new funds to be put into escrow.
+	// Not bypassing hold's locked coins here because we're testing about new funds to be put on hold.
 	spendable := k.bankKeeper.SpendableCoins(ctx, addr)
 	for _, toAdd := range funds {
 		if toAdd.IsZero() {
@@ -80,23 +80,23 @@ func (k Keeper) ValidateNewEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sd
 		}
 		has, available := spendable.Find(toAdd.Denom)
 		if !has {
-			return fmt.Errorf("account %s spendable balance 0%s is less than escrow amount %s", addr, toAdd.Denom, toAdd)
+			return fmt.Errorf("account %s spendable balance 0%s is less than hold amount %s", addr, toAdd.Denom, toAdd)
 		}
 		if available.Amount.LT(toAdd.Amount) {
-			return fmt.Errorf("account %s spendable balance %s is less than escrow amount %s", addr, available, toAdd)
+			return fmt.Errorf("account %s spendable balance %s is less than hold amount %s", addr, available, toAdd)
 		}
 	}
 
 	return nil
 }
 
-// AddEscrow puts the provided funds in escrow for the provided account.
-func (k Keeper) AddEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error {
+// AddHold puts the provided funds on hold for the provided account.
+func (k Keeper) AddHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error {
 	if funds.IsZero() {
 		return nil
 	}
 
-	if err := k.ValidateNewEscrow(ctx, addr, funds); err != nil {
+	if err := k.ValidateNewHold(ctx, addr, funds); err != nil {
 		return err
 	}
 
@@ -107,15 +107,15 @@ func (k Keeper) AddEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins)
 		if toAdd.IsZero() {
 			continue
 		}
-		inEscrow, err := k.getEscrowCoinAmount(store, addr, toAdd.Denom)
+		onHold, err := k.getHoldCoinAmount(store, addr, toAdd.Denom)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to get current %s escrow amount for %s: %w", toAdd.Denom, addr, err))
+			errs = append(errs, fmt.Errorf("failed to get current %s hold amount for %s: %w", toAdd.Denom, addr, err))
 			continue
 		}
-		newEscrowAmt := inEscrow.Add(toAdd.Amount)
-		err = k.setEscrowCoinAmount(store, addr, toAdd.Denom, newEscrowAmt)
+		newHoldAmt := onHold.Add(toAdd.Amount)
+		err = k.setHoldCoinAmount(store, addr, toAdd.Denom, newHoldAmt)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to place %s in escrow for %s: %w", toAdd, addr, err))
+			errs = append(errs, fmt.Errorf("failed to place %s on hold for %s: %w", toAdd, addr, err))
 		}
 		fundsAdded = fundsAdded.Add(toAdd)
 	}
@@ -130,13 +130,13 @@ func (k Keeper) AddEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins)
 	return errors.Join(errs...)
 }
 
-// RemoveEscrow takes the provided funds out of escrow for the provided account.
-func (k Keeper) RemoveEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error {
+// RemoveHold releases the hold on the provided funds for the provided account.
+func (k Keeper) RemoveHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error {
 	if funds.IsZero() {
 		return nil
 	}
 	if funds.IsAnyNegative() {
-		return fmt.Errorf("cannot remove %q from escrow for %s: amounts cannot be negative", funds, addr)
+		return fmt.Errorf("cannot remove %q from hold for %s: amounts cannot be negative", funds, addr)
 	}
 
 	store := ctx.KVStore(k.storeKey)
@@ -146,19 +146,19 @@ func (k Keeper) RemoveEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coi
 		if toRemove.IsZero() {
 			continue
 		}
-		inEscrow, err := k.getEscrowCoinAmount(store, addr, toRemove.Denom)
+		onHold, err := k.getHoldCoinAmount(store, addr, toRemove.Denom)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to get current %s escrow amount for %s: %w", toRemove.Denom, addr, err))
+			errs = append(errs, fmt.Errorf("failed to get current %s hold amount for %s: %w", toRemove.Denom, addr, err))
 			continue
 		}
-		newAmount := inEscrow.Sub(toRemove.Amount)
+		newAmount := onHold.Sub(toRemove.Amount)
 		if newAmount.IsNegative() {
-			errs = append(errs, fmt.Errorf("cannot remove %s from escrow for %s: account only has %s%s in escrow", toRemove, addr, inEscrow, toRemove.Denom))
+			errs = append(errs, fmt.Errorf("cannot remove %s from hold for %s: account only has %s%s on hold", toRemove, addr, onHold, toRemove.Denom))
 			continue
 		}
-		err = k.setEscrowCoinAmount(store, addr, toRemove.Denom, newAmount)
+		err = k.setHoldCoinAmount(store, addr, toRemove.Denom, newAmount)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to remove %s from escrow for %s: %w", toRemove, addr, err))
+			errs = append(errs, fmt.Errorf("failed to remove %s from hold for %s: %w", toRemove, addr, err))
 		}
 		fundsRemoved = fundsRemoved.Add(toRemove)
 	}
@@ -173,22 +173,22 @@ func (k Keeper) RemoveEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coi
 	return errors.Join(errs...)
 }
 
-// GetEscrowCoin gets the amount of a denom in escrow for a given account.
+// GetHoldCoin gets the amount of a denom on hold for a given account.
 // Will return a zero Coin of the given denom if the store does not have an entry for it.
-func (k Keeper) GetEscrowCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) (sdk.Coin, error) {
+func (k Keeper) GetHoldCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) (sdk.Coin, error) {
 	var err error
 	rv := sdk.Coin{Denom: denom}
-	rv.Amount, err = k.getEscrowCoinAmount(ctx.KVStore(k.storeKey), addr, denom)
+	rv.Amount, err = k.getHoldCoinAmount(ctx.KVStore(k.storeKey), addr, denom)
 	if err != nil {
-		return rv, fmt.Errorf("could not get escrow coin amount for %s: %w", addr, err)
+		return rv, fmt.Errorf("could not get hold coin amount for %s: %w", addr, err)
 	}
 	return rv, nil
 }
 
-// GetEscrowCoins gets all funds in escrow for a given account.
-func (k Keeper) GetEscrowCoins(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, error) {
+// GetHoldCoins gets all funds on hold for a given account.
+func (k Keeper) GetHoldCoins(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, error) {
 	var rv sdk.Coins
-	err := k.IterateEscrow(ctx, addr, func(coin sdk.Coin) bool {
+	err := k.IterateHolds(ctx, addr, func(coin sdk.Coin) bool {
 		rv = rv.Add(coin)
 		return false
 	})
@@ -196,18 +196,18 @@ func (k Keeper) GetEscrowCoins(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins,
 	return rv, err
 }
 
-// getEscrowCoinPrefixStore returns a kv store prefixed for escrow coin entries for the provided address.
-func (k Keeper) getEscrowCoinPrefixStore(ctx sdk.Context, addr sdk.AccAddress) sdk.KVStore {
-	pre := CreateEscrowCoinKeyAddrPrefix(addr)
+// getHoldCoinPrefixStore returns a kv store prefixed for hold coin entries for the provided address.
+func (k Keeper) getHoldCoinPrefixStore(ctx sdk.Context, addr sdk.AccAddress) sdk.KVStore {
+	pre := CreateHoldCoinKeyAddrPrefix(addr)
 	return prefix.NewStore(ctx.KVStore(k.storeKey), pre)
 }
 
-// IterateEscrow iterates over all funds in escrow for a given account.
+// IterateHolds iterates over all funds on hold for a given account.
 // The process function should return whether to stop: false = keep iterating, true = stop.
 // If an error is encountered while reading from the store, that entry is skipped and an error is
 // returned for it when iteration is completed.
-func (k Keeper) IterateEscrow(ctx sdk.Context, addr sdk.AccAddress, process func(sdk.Coin) bool) error {
-	store := k.getEscrowCoinPrefixStore(ctx, addr)
+func (k Keeper) IterateHolds(ctx sdk.Context, addr sdk.AccAddress, process func(sdk.Coin) bool) error {
+	store := k.getHoldCoinPrefixStore(ctx, addr)
 
 	iter := store.Iterator(nil, nil)
 	defer iter.Close()
@@ -218,7 +218,7 @@ func (k Keeper) IterateEscrow(ctx sdk.Context, addr sdk.AccAddress, process func
 		value := iter.Value()
 
 		denom := string(key)
-		amount, err := UnmarshalEscrowCoinValue(value)
+		amount, err := UnmarshalHoldCoinValue(value)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to read amount of %s for account %s: %w", denom, addr, err))
 			continue
@@ -232,17 +232,17 @@ func (k Keeper) IterateEscrow(ctx sdk.Context, addr sdk.AccAddress, process func
 	return errors.Join(errs...)
 }
 
-// getAllEscrowCoinPrefixStore returns a kv store prefixed for all escrow coin entries.
-func (k Keeper) getAllEscrowCoinPrefixStore(ctx sdk.Context) sdk.KVStore {
-	return prefix.NewStore(ctx.KVStore(k.storeKey), KeyPrefixEscrowCoin)
+// getAllHoldCoinPrefixStore returns a kv store prefixed for all hold coin entries.
+func (k Keeper) getAllHoldCoinPrefixStore(ctx sdk.Context) sdk.KVStore {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), KeyPrefixHoldCoin)
 }
 
-// IterateAllEscrow iterates over all in escrow coin entries for all accounts.
+// IterateAllHolds iterates over all hold coin entries for all accounts.
 // The process function should return whether to stop: false = keep iterating, true = stop.
 // If an error is encountered while reading from the store, that entry is skipped and an error is
 // returned for it when iteration is completed.
-func (k Keeper) IterateAllEscrow(ctx sdk.Context, process func(sdk.AccAddress, sdk.Coin) bool) error {
-	store := k.getAllEscrowCoinPrefixStore(ctx)
+func (k Keeper) IterateAllHolds(ctx sdk.Context, process func(sdk.AccAddress, sdk.Coin) bool) error {
+	store := k.getAllHoldCoinPrefixStore(ctx)
 
 	iter := store.Iterator(nil, nil)
 	defer iter.Close()
@@ -252,8 +252,8 @@ func (k Keeper) IterateAllEscrow(ctx sdk.Context, process func(sdk.AccAddress, s
 		key := iter.Key()
 		value := iter.Value()
 
-		addr, denom := ParseEscrowCoinKeyUnprefixed(key)
-		amount, err := UnmarshalEscrowCoinValue(value)
+		addr, denom := ParseHoldCoinKeyUnprefixed(key)
+		amount, err := UnmarshalHoldCoinValue(value)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to read amount of %s for account %s: %w", denom, addr, err))
 			continue
@@ -267,23 +267,23 @@ func (k Keeper) IterateAllEscrow(ctx sdk.Context, process func(sdk.AccAddress, s
 	return errors.Join(errs...)
 }
 
-// GetAllAccountEscrows gets all the AccountEscrow entries currently in the state store.
-func (k Keeper) GetAllAccountEscrows(ctx sdk.Context) ([]*hold.AccountEscrow, error) {
-	var escrows []*hold.AccountEscrow
+// GetAllAccountHolds gets all the AccountHold entries currently in the state store.
+func (k Keeper) GetAllAccountHolds(ctx sdk.Context) ([]*hold.AccountHold, error) {
+	var holds []*hold.AccountHold
 	var lastAddr sdk.AccAddress
-	var lastEntry *hold.AccountEscrow
+	var lastEntry *hold.AccountHold
 
-	err := k.IterateAllEscrow(ctx, func(addr sdk.AccAddress, coin sdk.Coin) bool {
+	err := k.IterateAllHolds(ctx, func(addr sdk.AccAddress, coin sdk.Coin) bool {
 		if !addr.Equals(lastAddr) {
 			lastAddr = addr
-			lastEntry = &hold.AccountEscrow{
+			lastEntry = &hold.AccountHold{
 				Address: addr.String(),
 				Amount:  sdk.Coins{},
 			}
-			escrows = append(escrows, lastEntry)
+			holds = append(holds, lastEntry)
 		}
 		lastEntry.Amount = lastEntry.Amount.Add(coin)
 		return false
 	})
-	return escrows, err
+	return holds, err
 }

@@ -13,15 +13,15 @@ import (
 	"github.com/provenance-io/provenance/x/hold/keeper"
 )
 
-// assertKeyPrefixEscrowCoinValue asserts that the KeyPrefixEscrowCoin value
+// assertKeyPrefixHoldCoinValue asserts that the KeyPrefixHoldCoin value
 // is still exactly as it should be.
 // Returns true if everything's okay, false if something has gone horribly wrong.
-func assertKeyPrefixEscrowCoinValue(t *testing.T) bool {
+func assertKeyPrefixHoldCoinValue(t *testing.T) bool {
 	t.Helper()
 	rv := true
-	rv = assert.Equal(t, []byte{0x00}, keeper.KeyPrefixEscrowCoin, "KeyPrefixEscrowCoin value") && rv
-	rv = assert.Len(t, keeper.KeyPrefixEscrowCoin, 1, "KeyPrefixEscrowCoin length") && rv
-	rv = assert.Equal(t, 1, cap(keeper.KeyPrefixEscrowCoin), "KeyPrefixEscrowCoin capacity") && rv
+	rv = assert.Equal(t, []byte{0x00}, keeper.KeyPrefixHoldCoin, "KeyPrefixHoldCoin value") && rv
+	rv = assert.Len(t, keeper.KeyPrefixHoldCoin, 1, "KeyPrefixHoldCoin length") && rv
+	rv = assert.Equal(t, 1, cap(keeper.KeyPrefixHoldCoin), "KeyPrefixHoldCoin capacity") && rv
 	return rv
 }
 
@@ -34,7 +34,7 @@ func concatBzs(bzs ...[]byte) []byte {
 	return rv
 }
 
-func TestCreateEscrowCoinKeyAddrPrefix(t *testing.T) {
+func TestCreateHoldCoinKeyAddrPrefix(t *testing.T) {
 	addr20 := sdk.AccAddress("addr_with_20_bytes__")
 	addr32 := sdk.AccAddress("longer__address__with__32__bytes")
 	addr20WLen, err := address.LengthPrefix(addr20)
@@ -50,22 +50,22 @@ func TestCreateEscrowCoinKeyAddrPrefix(t *testing.T) {
 		{
 			name: "nil address",
 			addr: nil,
-			exp:  keeper.KeyPrefixEscrowCoin,
+			exp:  keeper.KeyPrefixHoldCoin,
 		},
 		{
 			name: "empty address",
 			addr: sdk.AccAddress{},
-			exp:  keeper.KeyPrefixEscrowCoin,
+			exp:  keeper.KeyPrefixHoldCoin,
 		},
 		{
 			name: "20 byte address",
 			addr: addr20,
-			exp:  append(keeper.KeyPrefixEscrowCoin, addr20WLen...),
+			exp:  append(keeper.KeyPrefixHoldCoin, addr20WLen...),
 		},
 		{
 			name: "32 byte address",
 			addr: addr32,
-			exp:  append(keeper.KeyPrefixEscrowCoin, addr32WLen...),
+			exp:  append(keeper.KeyPrefixHoldCoin, addr32WLen...),
 		},
 	}
 
@@ -73,20 +73,20 @@ func TestCreateEscrowCoinKeyAddrPrefix(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual []byte
 			testFunc := func() {
-				actual = keeper.CreateEscrowCoinKeyAddrPrefix(tc.addr)
+				actual = keeper.CreateHoldCoinKeyAddrPrefix(tc.addr)
 			}
-			require.NotPanics(t, testFunc, "CreateEscrowCoinKeyAddrPrefix")
+			require.NotPanics(t, testFunc, "CreateHoldCoinKeyAddrPrefix")
 			if assert.Equal(t, tc.exp, actual, "result") {
 				assert.Equal(t, len(actual), cap(actual), "result length (expected) vs capacity (actual)")
 			}
-			// Change the first byte and make sure KeyPrefixEscrowCoin is still the same.
+			// Change the first byte and make sure KeyPrefixHoldCoin is still the same.
 			actual[0] = 0xDD
-			assertKeyPrefixEscrowCoinValue(t)
+			assertKeyPrefixHoldCoinValue(t)
 		})
 	}
 }
 
-func TestCreateEscrowCoinKey(t *testing.T) {
+func TestCreateHoldCoinKey(t *testing.T) {
 	addr20 := sdk.AccAddress("addr_with_20_bytes__")
 	addr32 := sdk.AccAddress("longer__address__with__32__bytes")
 	addr20WLen, err := address.LengthPrefix(addr20)
@@ -104,13 +104,13 @@ func TestCreateEscrowCoinKey(t *testing.T) {
 			name:  "20 byte address",
 			addr:  addr20,
 			denom: "foocoin",
-			exp:   concatBzs(keeper.KeyPrefixEscrowCoin, addr20WLen, []byte("foocoin")),
+			exp:   concatBzs(keeper.KeyPrefixHoldCoin, addr20WLen, []byte("foocoin")),
 		},
 		{
 			name:  "32 byte address",
 			addr:  addr32,
 			denom: "barcoin",
-			exp:   concatBzs(keeper.KeyPrefixEscrowCoin, addr32WLen, []byte("barcoin")),
+			exp:   concatBzs(keeper.KeyPrefixHoldCoin, addr32WLen, []byte("barcoin")),
 		},
 	}
 
@@ -118,20 +118,20 @@ func TestCreateEscrowCoinKey(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual []byte
 			testFunc := func() {
-				actual = keeper.CreateEscrowCoinKey(tc.addr, tc.denom)
+				actual = keeper.CreateHoldCoinKey(tc.addr, tc.denom)
 			}
-			require.NotPanics(t, testFunc, "CreateEscrowCoinKey")
+			require.NotPanics(t, testFunc, "CreateHoldCoinKey")
 			if assert.Equal(t, tc.exp, actual, "result") {
 				assert.Equal(t, len(actual), cap(actual), "result length (expected) vs capacity (actual)")
 			}
-			// Change the first byte and make sure KeyPrefixEscrowCoin is still the same.
+			// Change the first byte and make sure KeyPrefixHoldCoin is still the same.
 			actual[0] = 0xAF
-			assertKeyPrefixEscrowCoinValue(t)
+			assertKeyPrefixHoldCoinValue(t)
 		})
 	}
 }
 
-func TestParseEscrowCoinKey(t *testing.T) {
+func TestParseHoldCoinKey(t *testing.T) {
 	addr20 := sdk.AccAddress("addr_with_20_bytes__")
 	addr32 := sdk.AccAddress("longer__address__with__32__bytes")
 	addr20WLen, err := address.LengthPrefix(addr20)
@@ -147,13 +147,13 @@ func TestParseEscrowCoinKey(t *testing.T) {
 	}{
 		{
 			name:     "20 byte address",
-			key:      concatBzs(keeper.KeyPrefixEscrowCoin, addr20WLen, []byte("bananacoin")),
+			key:      concatBzs(keeper.KeyPrefixHoldCoin, addr20WLen, []byte("bananacoin")),
 			expAddr:  addr20,
 			expDenom: "bananacoin",
 		},
 		{
 			name:     "32 byte address",
-			key:      concatBzs(keeper.KeyPrefixEscrowCoin, addr32WLen, []byte("grapegrape")),
+			key:      concatBzs(keeper.KeyPrefixHoldCoin, addr32WLen, []byte("grapegrape")),
 			expAddr:  addr32,
 			expDenom: "grapegrape",
 		},
@@ -164,16 +164,16 @@ func TestParseEscrowCoinKey(t *testing.T) {
 			var addr sdk.AccAddress
 			var denom string
 			testFunc := func() {
-				addr, denom = keeper.ParseEscrowCoinKey(tc.key)
+				addr, denom = keeper.ParseHoldCoinKey(tc.key)
 			}
-			require.NotPanics(t, testFunc, "ParseEscrowCoinKey")
+			require.NotPanics(t, testFunc, "ParseHoldCoinKey")
 			assert.Equal(t, tc.expAddr, addr, "address")
 			assert.Equal(t, tc.expDenom, denom, "denom")
 		})
 	}
 }
 
-func TestParseEscrowCoinKeyUnprefixed(t *testing.T) {
+func TestParseHoldCoinKeyUnprefixed(t *testing.T) {
 	addr20 := sdk.AccAddress("addr_with_20_bytes__")
 	addr32 := sdk.AccAddress("longer__address__with__32__bytes")
 	addr20WLen, err := address.LengthPrefix(addr20)
@@ -206,16 +206,16 @@ func TestParseEscrowCoinKeyUnprefixed(t *testing.T) {
 			var addr sdk.AccAddress
 			var denom string
 			testFunc := func() {
-				addr, denom = keeper.ParseEscrowCoinKeyUnprefixed(tc.key)
+				addr, denom = keeper.ParseHoldCoinKeyUnprefixed(tc.key)
 			}
-			require.NotPanics(t, testFunc, "ParseEscrowCoinKeyUnprefixed")
+			require.NotPanics(t, testFunc, "ParseHoldCoinKeyUnprefixed")
 			assert.Equal(t, tc.expAddr, addr, "address")
 			assert.Equal(t, tc.expDenom, denom, "denom")
 		})
 	}
 }
 
-func TestUnmarshalEscrowCoinValue(t *testing.T) {
+func TestUnmarshalHoldCoinValue(t *testing.T) {
 	newInt := func(amount string) sdkmath.Int {
 		rv, ok := sdkmath.NewIntFromString(amount)
 		require.True(t, ok, "NewIntFromString(%q)", amount)
@@ -286,13 +286,13 @@ func TestUnmarshalEscrowCoinValue(t *testing.T) {
 			var amount sdkmath.Int
 			var err error
 			testFunc := func() {
-				amount, err = keeper.UnmarshalEscrowCoinValue(tc.value)
+				amount, err = keeper.UnmarshalHoldCoinValue(tc.value)
 			}
-			require.NotPanics(t, testFunc, "UnmarshalEscrowCoinValue")
+			require.NotPanics(t, testFunc, "UnmarshalHoldCoinValue")
 			if len(tc.expErr) > 0 {
-				assert.EqualError(t, err, tc.expErr, "UnmarshalEscrowCoinValue")
+				assert.EqualError(t, err, tc.expErr, "UnmarshalHoldCoinValue")
 			} else {
-				assert.NoError(t, err, "UnmarshalEscrowCoinValue")
+				assert.NoError(t, err, "UnmarshalHoldCoinValue")
 			}
 			assert.Equal(t, tc.expAmt.String(), amount.String(), "result amount")
 		})

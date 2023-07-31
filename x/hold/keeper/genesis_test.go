@@ -15,22 +15,22 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 	s.requireFundAccount(s.addr2, "42banana")
 	addrDNE := sdk.AccAddress("addr_does_not_exist_")
 
-	genStateWithEscrows := func(escrows ...*hold.AccountEscrow) *hold.GenesisState {
-		return &hold.GenesisState{Escrows: escrows}
+	genStateWithHolds := func(holds ...*hold.AccountHold) *hold.GenesisState {
+		return &hold.GenesisState{Holds: holds}
 	}
-	accEscrow := func(addr sdk.AccAddress, amount sdk.Coins) *hold.AccountEscrow {
-		return &hold.AccountEscrow{
+	accHold := func(addr sdk.AccAddress, amount sdk.Coins) *hold.AccountHold {
+		return &hold.AccountHold{
 			Address: addr.String(),
 			Amount:  amount,
 		}
 	}
-	aeStateEntries := func(ae *hold.AccountEscrow) []string {
-		addr, err := sdk.AccAddressFromBech32(ae.Address)
-		s.Require().NoError(err, "sdk.AccAddressFromBech32(%q)", ae.Address)
+	ahStateEntries := func(ah *hold.AccountHold) []string {
+		addr, err := sdk.AccAddressFromBech32(ah.Address)
+		s.Require().NoError(err, "sdk.AccAddressFromBech32(%q)", ah.Address)
 		var rv []string
 		var val []byte
-		for _, coin := range ae.Amount {
-			key := keeper.CreateEscrowCoinKey(addr, coin.Denom)
+		for _, coin := range ah.Amount {
+			key := keeper.CreateHoldCoinKey(addr, coin.Denom)
 			val, err = coin.Amount.Marshal()
 			s.Require().NoError(err, "%q.Amount.Marshal()", coin)
 			rv = append(rv, s.stateEntryString(key, val))
@@ -40,8 +40,8 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 	expStateEntries := func(genState *hold.GenesisState) []string {
 		var rv []string
 		if genState != nil {
-			for _, ae := range genState.Escrows {
-				rv = append(rv, aeStateEntries(ae)...)
+			for _, ah := range genState.Holds {
+				rv = append(rv, ahStateEntries(ah)...)
 			}
 			sort.Strings(rv)
 		}
@@ -62,52 +62,52 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 			genState: hold.DefaultGenesisState(),
 		},
 		{
-			name: "several escrows: all okay",
-			genState: genStateWithEscrows(
-				accEscrow(s.addr1, s.initBal.Add(s.coins("99banana,53cactus")...)),
-				accEscrow(s.addr2, s.initBal.Add(s.coins("42banana")...)),
-				accEscrow(s.addr3, s.initBal),
-				accEscrow(s.addr4, s.initBal),
-				accEscrow(s.addr5, s.initBal),
+			name: "several holds: all okay",
+			genState: genStateWithHolds(
+				accHold(s.addr1, s.initBal.Add(s.coins("99banana,53cactus")...)),
+				accHold(s.addr2, s.initBal.Add(s.coins("42banana")...)),
+				accHold(s.addr3, s.initBal),
+				accHold(s.addr4, s.initBal),
+				accHold(s.addr5, s.initBal),
 			),
 		},
 		{
-			name: "several escrows: first insufficient",
-			genState: genStateWithEscrows(
-				accEscrow(s.addr1, s.initBal.Add(s.coins("99banana,54cactus")...)),
-				accEscrow(s.addr2, s.initBal.Add(s.coins("42banana")...)),
-				accEscrow(s.addr3, s.initBal),
-				accEscrow(s.addr4, s.initBal),
-				accEscrow(s.addr5, s.initBal),
+			name: "several holds: first insufficient",
+			genState: genStateWithHolds(
+				accHold(s.addr1, s.initBal.Add(s.coins("99banana,54cactus")...)),
+				accHold(s.addr2, s.initBal.Add(s.coins("42banana")...)),
+				accHold(s.addr3, s.initBal),
+				accHold(s.addr4, s.initBal),
+				accHold(s.addr5, s.initBal),
 			),
 			expPanic: []string{
-				"escrows[0]", s.addr1.String(),
+				"holds[0]", s.addr1.String(),
 				"spendable balance 53cactus is less than hold amount 54cactus",
 			},
 		},
 		{
-			name: "several escrows: last insufficient",
-			genState: genStateWithEscrows(
-				accEscrow(s.addr1, s.initBal.Add(s.coins("99banana,53cactus")...)),
-				accEscrow(s.addr2, s.initBal.Add(s.coins("42banana")...)),
-				accEscrow(s.addr3, s.initBal),
-				accEscrow(s.addr4, s.initBal),
-				accEscrow(s.addr5, s.initBal.Add(s.coins("1banana")...)),
+			name: "several holds: last insufficient",
+			genState: genStateWithHolds(
+				accHold(s.addr1, s.initBal.Add(s.coins("99banana,53cactus")...)),
+				accHold(s.addr2, s.initBal.Add(s.coins("42banana")...)),
+				accHold(s.addr3, s.initBal),
+				accHold(s.addr4, s.initBal),
+				accHold(s.addr5, s.initBal.Add(s.coins("1banana")...)),
 			),
 			expPanic: []string{
-				"escrows[4]:", s.addr5.String(),
+				"holds[4]:", s.addr5.String(),
 				"spendable balance 0banana is less than hold amount 1banana",
 			},
 		},
 		{
 			name: "unknown address",
-			genState: genStateWithEscrows(
-				accEscrow(s.addr1, s.coins("9banana,3cactus")),
-				accEscrow(addrDNE, sdk.NewCoins(s.coin(5, s.bondDenom))),
-				accEscrow(s.addr4, s.initBal),
+			genState: genStateWithHolds(
+				accHold(s.addr1, s.coins("9banana,3cactus")),
+				accHold(addrDNE, sdk.NewCoins(s.coin(5, s.bondDenom))),
+				accHold(s.addr4, s.initBal),
 			),
 			expPanic: []string{
-				"escrows[1]:", addrDNE.String(),
+				"holds[1]:", addrDNE.String(),
 				"spendable balance 0" + s.bondDenom + " is less than hold amount 5" + s.bondDenom,
 			},
 		},
@@ -115,7 +115,7 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.clearEscrowState()
+			s.clearHoldState()
 			expectedState := expStateEntries(tc.genState)
 
 			em := sdk.NewEventManager()
@@ -126,7 +126,7 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 			s.requirePanicContents(testFunc, tc.expPanic, "InitGenesis")
 
 			if len(tc.expPanic) == 0 {
-				actualState := s.dumpEscrowState()
+				actualState := s.dumpHoldState()
 				s.Assert().Equal(expectedState, actualState, "hold state store entries")
 			}
 
@@ -137,11 +137,11 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 }
 
 func (s *TestSuite) TestKeeper_ExportGenesis() {
-	genStateWithEscrows := func(escrows ...*hold.AccountEscrow) *hold.GenesisState {
-		return &hold.GenesisState{Escrows: escrows}
+	genStateWithHolds := func(holds ...*hold.AccountHold) *hold.GenesisState {
+		return &hold.GenesisState{Holds: holds}
 	}
-	accEscrow := func(addr sdk.AccAddress, amount string) *hold.AccountEscrow {
-		return &hold.AccountEscrow{
+	accHold := func(addr sdk.AccAddress, amount string) *hold.AccountHold {
+		return &hold.AccountHold{
 			Address: addr.String(),
 			Amount:  s.coins(amount),
 		}
@@ -160,15 +160,15 @@ func (s *TestSuite) TestKeeper_ExportGenesis() {
 		{
 			name: "one entry: good",
 			setup: func(s *TestSuite, store sdk.KVStore) {
-				s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
+				s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
 			},
-			expGenState: genStateWithEscrows(accEscrow(s.addr1, "99banana")),
+			expGenState: genStateWithHolds(accHold(s.addr1, "99banana")),
 		},
 		{
 			name: "one entry: bad",
 			setup: func(s *TestSuite, store sdk.KVStore) {
-				s.setEscrowCoinAmountRaw(store, s.addr1, "badcoin", "badvalue")
-				s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
+				s.setHoldCoinAmountRaw(store, s.addr1, "badcoin", "badvalue")
+				s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
 			},
 			expPanic: []string{
 				s.addr1.String(), "failed to read amount of badcoin",
@@ -178,45 +178,45 @@ func (s *TestSuite) TestKeeper_ExportGenesis() {
 		{
 			name: "five addrs: all good",
 			setup: func(suite *TestSuite, store sdk.KVStore) {
-				s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
-				s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3))
-				s.requireSetEscrowCoinAmount(store, s.addr1, "durian", s.int(8))
-				s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(12))
-				s.requireSetEscrowCoinAmount(store, s.addr2, "eggplant", s.int(4))
-				s.requireSetEscrowCoinAmount(store, s.addr3, "acorn", s.int(92))
-				s.requireSetEscrowCoinAmount(store, s.addr3, "banana", s.int(71))
-				s.requireSetEscrowCoinAmount(store, s.addr4, "banana", s.int(15))
-				s.requireSetEscrowCoinAmount(store, s.addr5, "acorn", s.int(5))
-				s.requireSetEscrowCoinAmount(store, s.addr5, "cabbage", s.int(157))
-				s.requireSetEscrowCoinAmount(store, s.addr5, "dill", s.int(22))
-				s.requireSetEscrowCoinAmount(store, s.addr5, "favabean", s.int(30))
+				s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
+				s.requireSetHoldCoinAmount(store, s.addr1, "cucumber", s.int(3))
+				s.requireSetHoldCoinAmount(store, s.addr1, "durian", s.int(8))
+				s.requireSetHoldCoinAmount(store, s.addr2, "banana", s.int(12))
+				s.requireSetHoldCoinAmount(store, s.addr2, "eggplant", s.int(4))
+				s.requireSetHoldCoinAmount(store, s.addr3, "acorn", s.int(92))
+				s.requireSetHoldCoinAmount(store, s.addr3, "banana", s.int(71))
+				s.requireSetHoldCoinAmount(store, s.addr4, "banana", s.int(15))
+				s.requireSetHoldCoinAmount(store, s.addr5, "acorn", s.int(5))
+				s.requireSetHoldCoinAmount(store, s.addr5, "cabbage", s.int(157))
+				s.requireSetHoldCoinAmount(store, s.addr5, "dill", s.int(22))
+				s.requireSetHoldCoinAmount(store, s.addr5, "favabean", s.int(30))
 			},
-			expGenState: genStateWithEscrows(
-				accEscrow(s.addr1, "99banana,3cucumber,8durian"),
-				accEscrow(s.addr2, "12banana,4eggplant"),
-				accEscrow(s.addr3, "92acorn,71banana"),
-				accEscrow(s.addr4, "15banana"),
-				accEscrow(s.addr5, "5acorn,157cabbage,22dill,30favabean"),
+			expGenState: genStateWithHolds(
+				accHold(s.addr1, "99banana,3cucumber,8durian"),
+				accHold(s.addr2, "12banana,4eggplant"),
+				accHold(s.addr3, "92acorn,71banana"),
+				accHold(s.addr4, "15banana"),
+				accHold(s.addr5, "5acorn,157cabbage,22dill,30favabean"),
 			),
 		},
 		{
 			name: "five addrs: several bad",
 			setup: func(suite *TestSuite, store sdk.KVStore) {
-				s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
-				s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3))
-				s.requireSetEscrowCoinAmount(store, s.addr1, "durian", s.int(8))
-				s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(12))
-				s.setEscrowCoinAmountRaw(store, s.addr2, "badcoin", "badvalue")
-				s.requireSetEscrowCoinAmount(store, s.addr2, "eggplant", s.int(4))
-				s.requireSetEscrowCoinAmount(store, s.addr3, "acorn", s.int(92))
-				s.requireSetEscrowCoinAmount(store, s.addr3, "banana", s.int(71))
-				s.requireSetEscrowCoinAmount(store, s.addr4, "banana", s.int(15))
-				s.setEscrowCoinAmountRaw(store, s.addr4, "crunkcoin", "crunkvalue")
-				s.setEscrowCoinAmountRaw(store, s.addr4, "dumbcoin", "dumbvalue")
-				s.requireSetEscrowCoinAmount(store, s.addr5, "acorn", s.int(5))
-				s.requireSetEscrowCoinAmount(store, s.addr5, "cabbage", s.int(157))
-				s.requireSetEscrowCoinAmount(store, s.addr5, "dill", s.int(22))
-				s.requireSetEscrowCoinAmount(store, s.addr5, "favabean", s.int(30))
+				s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
+				s.requireSetHoldCoinAmount(store, s.addr1, "cucumber", s.int(3))
+				s.requireSetHoldCoinAmount(store, s.addr1, "durian", s.int(8))
+				s.requireSetHoldCoinAmount(store, s.addr2, "banana", s.int(12))
+				s.setHoldCoinAmountRaw(store, s.addr2, "badcoin", "badvalue")
+				s.requireSetHoldCoinAmount(store, s.addr2, "eggplant", s.int(4))
+				s.requireSetHoldCoinAmount(store, s.addr3, "acorn", s.int(92))
+				s.requireSetHoldCoinAmount(store, s.addr3, "banana", s.int(71))
+				s.requireSetHoldCoinAmount(store, s.addr4, "banana", s.int(15))
+				s.setHoldCoinAmountRaw(store, s.addr4, "crunkcoin", "crunkvalue")
+				s.setHoldCoinAmountRaw(store, s.addr4, "dumbcoin", "dumbvalue")
+				s.requireSetHoldCoinAmount(store, s.addr5, "acorn", s.int(5))
+				s.requireSetHoldCoinAmount(store, s.addr5, "cabbage", s.int(157))
+				s.requireSetHoldCoinAmount(store, s.addr5, "dill", s.int(22))
+				s.requireSetHoldCoinAmount(store, s.addr5, "favabean", s.int(30))
 			},
 			expPanic: []string{
 				s.addr2.String(),
@@ -233,7 +233,7 @@ func (s *TestSuite) TestKeeper_ExportGenesis() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.clearEscrowState()
+			s.clearHoldState()
 			if tc.setup != nil {
 				tc.setup(s, s.getStore())
 			}

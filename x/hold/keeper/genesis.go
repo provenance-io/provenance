@@ -18,12 +18,12 @@ func (k Keeper) InitGenesis(origCtx sdk.Context, genState *hold.GenesisState) {
 	// We don't want the events from this, so use a context with a throw-away event manager.
 	ctx := origCtx.WithEventManager(sdk.NewEventManager())
 
-	for i, ae := range genState.Escrows {
+	for i, ah := range genState.Holds {
 		// Not worrying about wrapping any bech32 error because I'm assuming
 		// genState.Validate() was called before this.
-		addr := sdk.MustAccAddressFromBech32(ae.Address)
-		if err := k.AddEscrow(ctx, addr, ae.Amount); err != nil {
-			panic(fmt.Errorf("escrows[%d]: %w", i, err))
+		addr := sdk.MustAccAddressFromBech32(ah.Address)
+		if err := k.AddHold(ctx, addr, ah.Amount); err != nil {
+			panic(fmt.Errorf("holds[%d]: %w", i, err))
 		}
 	}
 }
@@ -33,7 +33,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *hold.GenesisState {
 	var err error
 	rv := &hold.GenesisState{}
 
-	rv.Escrows, err = k.GetAllAccountEscrows(ctx)
+	rv.Holds, err = k.GetAllAccountHolds(ctx)
 	if err != nil {
 		panic(err)
 	}

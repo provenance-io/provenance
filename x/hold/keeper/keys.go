@@ -10,11 +10,11 @@ import (
 // Keys for store prefixes.
 // Items are stored with the following keys:
 //
-// Coin in escrow:
+// Coin on hold:
 // - 0x00<addr len (1 byte)><addr><denom> -> <amount>
 var (
-	// KeyPrefixEscrowCoin is the prefix of an escrow entry for an address and single denom
-	KeyPrefixEscrowCoin = []byte{0x00}
+	// KeyPrefixHoldCoin is the prefix of a hold entry for an address and single denom.
+	KeyPrefixHoldCoin = []byte{0x00}
 )
 
 // concatBzPlusCap creates a single byte slice consisting of the two provided byte slices with some extra capacity in the underlying array.
@@ -43,38 +43,38 @@ func parseLengthPrefixedBz(bz []byte) ([]byte, []byte) {
 	return addr, remainder
 }
 
-// createEscrowCoinKeyAddrPrefixPlusCap creates an escrow coin key prefix containing the provided address.
+// createHoldCoinKeyAddrPrefixPlusCap creates a hold coin key prefix containing the provided address.
 // The resulting slice will have the provided amount of extra capacity (in case you want to append something to it).
-func createEscrowCoinKeyAddrPrefixPlusCap(addr sdk.AccAddress, extraCap int) []byte {
-	return concatBzPlusCap(KeyPrefixEscrowCoin, address.MustLengthPrefix(addr), extraCap)
+func createHoldCoinKeyAddrPrefixPlusCap(addr sdk.AccAddress, extraCap int) []byte {
+	return concatBzPlusCap(KeyPrefixHoldCoin, address.MustLengthPrefix(addr), extraCap)
 }
 
-// CreateEscrowCoinKeyAddrPrefix creates an escrow coin key prefix containing the provided address.
-// It's useful for iterating over all funds in escrow for an address.
-func CreateEscrowCoinKeyAddrPrefix(addr sdk.AccAddress) []byte {
-	return createEscrowCoinKeyAddrPrefixPlusCap(addr, 0)
+// CreateHoldCoinKeyAddrPrefix creates a hold coin key prefix containing the provided address.
+// It's useful for iterating over all funds on hold for an address.
+func CreateHoldCoinKeyAddrPrefix(addr sdk.AccAddress) []byte {
+	return createHoldCoinKeyAddrPrefixPlusCap(addr, 0)
 }
 
-// CreateEscrowCoinKey creates an escrow coin key for the provided address and denom.
-func CreateEscrowCoinKey(addr sdk.AccAddress, denom string) []byte {
-	rv := createEscrowCoinKeyAddrPrefixPlusCap(addr, len(denom))
+// CreateHoldCoinKey creates a hold coin key for the provided address and denom.
+func CreateHoldCoinKey(addr sdk.AccAddress, denom string) []byte {
+	rv := createHoldCoinKeyAddrPrefixPlusCap(addr, len(denom))
 	rv = append(rv, []byte(denom)...)
 	return rv
 }
 
-// ParseEscrowCoinKey parses a full escrow coin key into its address and denom.
-func ParseEscrowCoinKey(key []byte) (sdk.AccAddress, string) {
-	return ParseEscrowCoinKeyUnprefixed(key[1:])
+// ParseHoldCoinKey parses a full hold coin key into its address and denom.
+func ParseHoldCoinKey(key []byte) (sdk.AccAddress, string) {
+	return ParseHoldCoinKeyUnprefixed(key[1:])
 }
 
-// ParseEscrowCoinKeyUnprefixed parses an escrow coin key without the type prefix into its address and denom.
-func ParseEscrowCoinKeyUnprefixed(key []byte) (sdk.AccAddress, string) {
+// ParseHoldCoinKeyUnprefixed parses a hold coin key without the type prefix into its address and denom.
+func ParseHoldCoinKeyUnprefixed(key []byte) (sdk.AccAddress, string) {
 	addr, denom := parseLengthPrefixedBz(key)
 	return addr, string(denom)
 }
 
-// UnmarshalEscrowCoinValue parses the store value of an escrow coin entry back into it's Int form.
-func UnmarshalEscrowCoinValue(value []byte) (sdkmath.Int, error) {
+// UnmarshalHoldCoinValue parses the store value of a hold coin entry back into it's Int form.
+func UnmarshalHoldCoinValue(value []byte) (sdkmath.Int, error) {
 	if len(value) == 0 {
 		return sdkmath.ZeroInt(), nil
 	}

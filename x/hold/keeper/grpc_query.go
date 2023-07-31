@@ -16,8 +16,8 @@ import (
 	"github.com/provenance-io/provenance/x/hold"
 )
 
-// GetEscrow looks up the funds that are in escrow for an address.
-func (k Keeper) GetEscrow(goCtx context.Context, req *hold.GetEscrowRequest) (*hold.GetEscrowResponse, error) {
+// GetHolds looks up the funds that are on hold for an address.
+func (k Keeper) GetHolds(goCtx context.Context, req *hold.GetHoldsRequest) (*hold.GetHoldsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -31,28 +31,28 @@ func (k Keeper) GetEscrow(goCtx context.Context, req *hold.GetEscrowRequest) (*h
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	resp := &hold.GetEscrowResponse{}
-	resp.Amount, err = k.GetEscrowCoins(ctx, addr)
+	resp := &hold.GetHoldsResponse{}
+	resp.Amount, err = k.GetHoldCoins(ctx, addr)
 	if err != nil {
 		return nil, err
 	}
 	return resp, err
 }
 
-// GetAllEscrow returns all addresses with funds in escrow, and the amount in escrow.
-func (k Keeper) GetAllEscrow(goCtx context.Context, req *hold.GetAllEscrowRequest) (*hold.GetAllEscrowResponse, error) {
+// GetAllHolds returns all addresses with funds on hold, and the amount held.
+func (k Keeper) GetAllHolds(goCtx context.Context, req *hold.GetAllHoldsRequest) (*hold.GetAllHoldsResponse, error) {
 	var pageReq *query.PageRequest
 	if req != nil {
 		pageReq = req.Pagination
 	}
 
-	return k.paginateAllEscrow(sdk.UnwrapSDKContext(goCtx), pageReq)
+	return k.paginateAllHolds(sdk.UnwrapSDKContext(goCtx), pageReq)
 }
 
-// paginateAllEscrow iterates over escrow entries to generate a paginated GetAllEscrow result.
+// paginateAllHolds iterates over hold entries to generate a paginated GetAllHolds result.
 // It's copied from query.FilteredPaginate and tweaked to count results by address instead of iterator entry.
 // It was easier to do it this way than shoehorn a solution into a call to FilteredPaginate.
-func (k Keeper) paginateAllEscrow(ctx sdk.Context, pageRequest *query.PageRequest) (*hold.GetAllEscrowResponse, error) {
+func (k Keeper) paginateAllHolds(ctx sdk.Context, pageRequest *query.PageRequest) (*hold.GetAllHoldsResponse, error) {
 	// if the PageRequest is nil, use default PageRequest
 	if pageRequest == nil {
 		pageRequest = &query.PageRequest{}
@@ -76,9 +76,9 @@ func (k Keeper) paginateAllEscrow(ctx sdk.Context, pageRequest *query.PageReques
 	}
 
 	var lastAddr sdk.AccAddress
-	var lastEntry *hold.AccountEscrow
-	resp := &hold.GetAllEscrowResponse{Pagination: &query.PageResponse{}}
-	prefixStore := k.getAllEscrowCoinPrefixStore(ctx)
+	var lastEntry *hold.AccountHold
+	resp := &hold.GetAllHoldsResponse{Pagination: &query.PageResponse{}}
+	prefixStore := k.getAllHoldCoinPrefixStore(ctx)
 
 	if len(key) != 0 {
 		iterator := getIterator(prefixStore, key, reverse)
@@ -90,18 +90,18 @@ func (k Keeper) paginateAllEscrow(ctx sdk.Context, pageRequest *query.PageReques
 			}
 
 			ikey := iterator.Key()
-			addr, denom := ParseEscrowCoinKeyUnprefixed(ikey)
+			addr, denom := ParseHoldCoinKeyUnprefixed(ikey)
 			if !addr.Equals(lastAddr) {
-				if uint64(len(resp.Escrows)) >= limit {
+				if uint64(len(resp.Holds)) >= limit {
 					resp.Pagination.NextKey = ikey
 					break
 				}
 				lastAddr = addr
-				lastEntry = &hold.AccountEscrow{Address: addr.String()}
-				resp.Escrows = append(resp.Escrows, lastEntry)
+				lastEntry = &hold.AccountHold{Address: addr.String()}
+				resp.Holds = append(resp.Holds, lastEntry)
 			}
 			ival := iterator.Value()
-			amount, err := UnmarshalEscrowCoinValue(ival)
+			amount, err := UnmarshalHoldCoinValue(ival)
 			if err != nil {
 				return nil, fmt.Errorf("failed to read amount of %s for account %s: %w", denom, addr, err)
 			}
@@ -123,9 +123,9 @@ func (k Keeper) paginateAllEscrow(ctx sdk.Context, pageRequest *query.PageReques
 		}
 
 		ikey := iterator.Key()
-		addr, denom := ParseEscrowCoinKeyUnprefixed(ikey)
+		addr, denom := ParseHoldCoinKeyUnprefixed(ikey)
 		if !addr.Equals(lastAddr) {
-			if uint64(len(resp.Escrows)) >= limit && len(resp.Pagination.NextKey) == 0 {
+			if uint64(len(resp.Holds)) >= limit && len(resp.Pagination.NextKey) == 0 {
 				resp.Pagination.NextKey = ikey
 				if !countTotal {
 					break
@@ -134,16 +134,16 @@ func (k Keeper) paginateAllEscrow(ctx sdk.Context, pageRequest *query.PageReques
 			lastAddr = addr
 
 			numHits++
-			accumulate = numHits > offset && uint64(len(resp.Escrows)) < limit
+			accumulate = numHits > offset && uint64(len(resp.Holds)) < limit
 			if accumulate {
-				lastEntry = &hold.AccountEscrow{Address: addr.String()}
-				resp.Escrows = append(resp.Escrows, lastEntry)
+				lastEntry = &hold.AccountHold{Address: addr.String()}
+				resp.Holds = append(resp.Holds, lastEntry)
 			}
 		}
 
 		if accumulate {
 			ival := iterator.Value()
-			amount, err := UnmarshalEscrowCoinValue(ival)
+			amount, err := UnmarshalHoldCoinValue(ival)
 			if err != nil {
 				return nil, fmt.Errorf("failed to read amount of %s for account %s: %w", denom, addr, err)
 			}
