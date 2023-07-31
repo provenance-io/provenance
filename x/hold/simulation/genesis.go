@@ -8,13 +8,13 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/provenance-io/provenance/x/hold"
+	hold "github.com/provenance-io/provenance/x/hold"
 )
 
-const EscrowAccountEscrows = "escrow-account-escrows"
+const HoldAccountHolds = "hold-account-holds"
 
-// RandomAccountEscrows randomly selects accounts and escrow amounts for the selected ones.
-func RandomAccountEscrows(r *rand.Rand, accounts []simtypes.Account) []*escrow.AccountEscrow {
+// RandomAccountEscrows randomly selects accounts and hold amounts for the selected ones.
+func RandomAccountEscrows(r *rand.Rand, accounts []simtypes.Account) []*hold.AccountEscrow {
 	if len(accounts) == 0 {
 		return nil
 	}
@@ -32,9 +32,9 @@ func RandomAccountEscrows(r *rand.Rand, accounts []simtypes.Account) []*escrow.A
 		addrs[i], addrs[j] = addrs[j], addrs[i]
 	})
 
-	rv := make([]*escrow.AccountEscrow, count)
+	rv := make([]*hold.AccountEscrow, count)
 	for i, addr := range addrs[:count] {
-		rv[i] = &escrow.AccountEscrow{
+		rv[i] = &hold.AccountEscrow{
 			Address: addr.String(),
 			Amount:  sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, r.Int63n(1000)+1)),
 		}
@@ -43,20 +43,20 @@ func RandomAccountEscrows(r *rand.Rand, accounts []simtypes.Account) []*escrow.A
 	return rv
 }
 
-// RandomizedGenState generates a random GenesisState for the escrow module.
+// RandomizedGenState generates a random GenesisState for the hold module.
 func RandomizedGenState(simState *module.SimulationState) {
-	genState := &escrow.GenesisState{}
+	genState := &hold.GenesisState{}
 
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, EscrowAccountEscrows, &genState.Escrows, simState.Rand,
+		simState.Cdc, HoldAccountHolds, &genState.Escrows, simState.Rand,
 		func(r *rand.Rand) {
 			genState.Escrows = RandomAccountEscrows(r, simState.Accounts)
 		},
 	)
 
-	simState.GenState[escrow.ModuleName] = simState.Cdc.MustMarshalJSON(genState)
+	simState.GenState[hold.ModuleName] = simState.Cdc.MustMarshalJSON(genState)
 
-	// If we put stuff in escrow, add those funds to the bank accounts.
+	// If we put stuff in hold, add those funds to the bank accounts.
 	if len(genState.Escrows) > 0 {
 		bankGenRaw := simState.GenState[banktypes.ModuleName]
 		bankGen := banktypes.GenesisState{}

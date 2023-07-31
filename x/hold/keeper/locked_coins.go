@@ -11,7 +11,7 @@ var _ banktypes.GetLockedCoinsFn = Keeper{}.GetLockedCoins
 
 // GetLockedCoins gets all the coins that are in escrow for the given address.
 func (k Keeper) GetLockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	if escrow.HasBypass(ctx) {
+	if hold.HasBypass(ctx) {
 		return nil
 	}
 	rv, err := k.GetEscrowCoins(ctx, addr)

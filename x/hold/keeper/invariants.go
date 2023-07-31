@@ -13,34 +13,34 @@ const balanceInvariant = "Escrow-Account-Balances"
 
 // RegisterInvariants registers all quarantine invariants.
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
-	ir.RegisterRoute(escrow.ModuleName, balanceInvariant, EscrowAccountBalancesInvariant(keeper))
+	ir.RegisterRoute(hold.ModuleName, balanceInvariant, EscrowAccountBalancesInvariant(keeper))
 }
 
-// EscrowAccountBalancesInvariant checks that all funds in escrow are also otherwise unlocked in the account.
+// EscrowAccountBalancesInvariant checks that all funds on hold are also otherwise unlocked in the account.
 func EscrowAccountBalancesInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg, broken := escrowAccountBalancesInvariantHelper(ctx, keeper)
-		return sdk.FormatInvariant(escrow.ModuleName, balanceInvariant, msg), broken
+		return sdk.FormatInvariant(hold.ModuleName, balanceInvariant, msg), broken
 	}
 }
 
 // escrowAccountBalancesInvariantHelper does all the heavy lifting for EscrowAccountBalancesInvariant.
-// It will look up all escrow records and make sure that each address actually has the funds that are locked in escrow.
+// It will look up all hold records and make sure that each address actually has the funds that are locked on hold.
 func escrowAccountBalancesInvariantHelper(ctx sdk.Context, keeper Keeper) (string, bool) {
 	allEscrows, err := keeper.GetAllAccountEscrows(ctx)
 	if err != nil {
-		return fmt.Sprintf("Failed to get a record of all funds that are in escrow: %v", err), true
+		return fmt.Sprintf("Failed to get a record of all funds that are on hold: %v", err), true
 	}
 
 	var addr sdk.AccAddress
 	var total sdk.Coins
 	var errs []error
-	ctx = escrow.WithBypass(ctx)
+	ctx = hold.WithBypass(ctx)
 	for _, ae := range allEscrows {
 		total = total.Add(ae.Amount...)
 		addr, err = sdk.AccAddressFromBech32(ae.Address)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("invalid address %q with funds in escrow: %w", ae.Address, err))
+			errs = append(errs, fmt.Errorf("invalid address %q with funds on hold: %w", ae.Address, err))
 		}
 		if err = keeper.ValidateNewEscrow(ctx, addr, ae.Amount); err != nil {
 			errs = append(errs, err)
@@ -52,11 +52,11 @@ func escrowAccountBalancesInvariantHelper(ctx sdk.Context, keeper Keeper) (strin
 	allCount := len(allEscrows)
 	switch allCount {
 	case 0:
-		msg.WriteString("No accounts have funds in escrow.")
+		msg.WriteString("No accounts have funds on hold.")
 	case 1:
-		msg.WriteString(fmt.Sprintf("1 account has %s in escrow.", total))
+		msg.WriteString(fmt.Sprintf("1 account has %s on hold.", total))
 	default:
-		msg.WriteString(fmt.Sprintf("%d accounts have %s in escrow.", allCount, total))
+		msg.WriteString(fmt.Sprintf("%d accounts have %s on hold.", allCount, total))
 	}
 
 	msg.WriteByte(' ')

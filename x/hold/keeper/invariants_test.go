@@ -19,7 +19,7 @@ func (s *TestSuite) TestEscrowAccountBalancesInvariantHelper() {
 	}{
 		{
 			name:      "nothing in escrow",
-			expMsg:    "No accounts have funds in escrow. No problems detected.",
+			expMsg:    "No accounts have funds on hold. No problems detected.",
 			expBroken: false,
 		},
 		{
@@ -38,7 +38,7 @@ func (s *TestSuite) TestEscrowAccountBalancesInvariantHelper() {
 			setup: func(s *TestSuite, store sdk.KVStore) {
 				s.requireSetEscrowCoinAmount(store, s.addr4, "banana", s.int(5))
 			},
-			expMsg: "1 account has 5banana in escrow. 1 problem detected: " +
+			expMsg: "1 account has 5banana on hold. 1 problem detected: " +
 				"account " + s.addr4.String() + " spendable balance 0banana is less than escrow amount 5banana",
 			expBroken: true,
 		},
@@ -47,7 +47,7 @@ func (s *TestSuite) TestEscrowAccountBalancesInvariantHelper() {
 			setup: func(s *TestSuite, store sdk.KVStore) {
 				s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(13))
 			},
-			expMsg: "1 account has 13banana in escrow. 1 problem detected: " +
+			expMsg: "1 account has 13banana on hold. 1 problem detected: " +
 				"account " + s.addr2.String() + " spendable balance 12banana is less than escrow amount 13banana",
 			expBroken: true,
 		},
@@ -57,7 +57,7 @@ func (s *TestSuite) TestEscrowAccountBalancesInvariantHelper() {
 				s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(101))
 				s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(4))
 			},
-			expMsg: "1 account has 101banana,4cucumber in escrow. 1 problem detected: " +
+			expMsg: "1 account has 101banana,4cucumber on hold. 1 problem detected: " +
 				"account " + s.addr1.String() + " spendable balance 99banana is less than escrow amount 101banana",
 			expBroken: true,
 		},
@@ -67,7 +67,7 @@ func (s *TestSuite) TestEscrowAccountBalancesInvariantHelper() {
 				s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(101))
 				s.requireSetEscrowCoinAmount(store, s.addr2, "banana", s.int(14))
 			},
-			expMsg: "2 accounts have 115banana in escrow. 2 problems detected:" +
+			expMsg: "2 accounts have 115banana on hold. 2 problems detected:" +
 				"\n1: account " + s.addr1.String() + " spendable balance 99banana is less than escrow amount 101banana" +
 				"\n2: account " + s.addr2.String() + " spendable balance 12banana is less than escrow amount 14banana",
 			expBroken: true,
@@ -77,7 +77,7 @@ func (s *TestSuite) TestEscrowAccountBalancesInvariantHelper() {
 			setup: func(s *TestSuite, store sdk.KVStore) {
 				s.requireSetEscrowCoinAmount(store, s.addr1, "cucumber", s.int(3))
 			},
-			expMsg:    "1 account has 3cucumber in escrow. No problems detected.",
+			expMsg:    "1 account has 3cucumber on hold. No problems detected.",
 			expBroken: false,
 		},
 		{
@@ -85,7 +85,7 @@ func (s *TestSuite) TestEscrowAccountBalancesInvariantHelper() {
 			setup: func(s *TestSuite, store sdk.KVStore) {
 				s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(95))
 			},
-			expMsg:    "1 account has 95banana in escrow. No problems detected.",
+			expMsg:    "1 account has 95banana on hold. No problems detected.",
 			expBroken: false,
 		},
 		{
@@ -97,7 +97,7 @@ func (s *TestSuite) TestEscrowAccountBalancesInvariantHelper() {
 					}
 				}
 			},
-			expMsg: "5 accounts have 111banana,3cucumber,1844674407370955161500hugecoin,5000000000stake in escrow. " +
+			expMsg: "5 accounts have 111banana,3cucumber,1844674407370955161500hugecoin,5000000000stake on hold. " +
 				"No problems detected.",
 			expBroken: false,
 		},
@@ -111,7 +111,7 @@ func (s *TestSuite) TestEscrowAccountBalancesInvariantHelper() {
 				}
 				s.requireSetEscrowCoinAmount(store, s.addr3, "hugecoin", s.intStr("1844674407370955161501"))
 			},
-			expMsg: "5 accounts have 111banana,3cucumber,1844674407370955161501hugecoin,5000000000stake in escrow. " +
+			expMsg: "5 accounts have 111banana,3cucumber,1844674407370955161501hugecoin,5000000000stake on hold. " +
 				"1 problem detected: " +
 				"account " + s.addr3.String() + " spendable balance 1844674407370955161500hugecoin " +
 				"is less than escrow amount 1844674407370955161501hugecoin",

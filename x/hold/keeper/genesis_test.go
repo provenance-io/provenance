@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/keeper"
 )
@@ -14,16 +15,16 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 	s.requireFundAccount(s.addr2, "42banana")
 	addrDNE := sdk.AccAddress("addr_does_not_exist_")
 
-	genStateWithEscrows := func(escrows ...*escrow.AccountEscrow) *escrow.GenesisState {
-		return &escrow.GenesisState{Escrows: escrows}
+	genStateWithEscrows := func(escrows ...*hold.AccountEscrow) *hold.GenesisState {
+		return &hold.GenesisState{Escrows: escrows}
 	}
-	accEscrow := func(addr sdk.AccAddress, amount sdk.Coins) *escrow.AccountEscrow {
-		return &escrow.AccountEscrow{
+	accEscrow := func(addr sdk.AccAddress, amount sdk.Coins) *hold.AccountEscrow {
+		return &hold.AccountEscrow{
 			Address: addr.String(),
 			Amount:  amount,
 		}
 	}
-	aeStateEntries := func(ae *escrow.AccountEscrow) []string {
+	aeStateEntries := func(ae *hold.AccountEscrow) []string {
 		addr, err := sdk.AccAddressFromBech32(ae.Address)
 		s.Require().NoError(err, "sdk.AccAddressFromBech32(%q)", ae.Address)
 		var rv []string
@@ -36,7 +37,7 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 		}
 		return rv
 	}
-	expStateEntries := func(genState *escrow.GenesisState) []string {
+	expStateEntries := func(genState *hold.GenesisState) []string {
 		var rv []string
 		if genState != nil {
 			for _, ae := range genState.Escrows {
@@ -49,7 +50,7 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 
 	tests := []struct {
 		name     string
-		genState *escrow.GenesisState
+		genState *hold.GenesisState
 		expPanic []string
 	}{
 		{
@@ -58,7 +59,7 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 		},
 		{
 			name:     "default gen state",
-			genState: escrow.DefaultGenesisState(),
+			genState: hold.DefaultGenesisState(),
 		},
 		{
 			name: "several escrows: all okay",
@@ -81,7 +82,7 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 			),
 			expPanic: []string{
 				"escrows[0]", s.addr1.String(),
-				"spendable balance 53cactus is less than escrow amount 54cactus",
+				"spendable balance 53cactus is less than hold amount 54cactus",
 			},
 		},
 		{
@@ -95,7 +96,7 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 			),
 			expPanic: []string{
 				"escrows[4]:", s.addr5.String(),
-				"spendable balance 0banana is less than escrow amount 1banana",
+				"spendable balance 0banana is less than hold amount 1banana",
 			},
 		},
 		{
@@ -107,7 +108,7 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 			),
 			expPanic: []string{
 				"escrows[1]:", addrDNE.String(),
-				"spendable balance 0" + s.bondDenom + " is less than escrow amount 5" + s.bondDenom,
+				"spendable balance 0" + s.bondDenom + " is less than hold amount 5" + s.bondDenom,
 			},
 		},
 	}
@@ -126,7 +127,7 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 
 			if len(tc.expPanic) == 0 {
 				actualState := s.dumpEscrowState()
-				s.Assert().Equal(expectedState, actualState, "escrow state store entries")
+				s.Assert().Equal(expectedState, actualState, "hold state store entries")
 			}
 
 			events := em.Events()
@@ -136,11 +137,11 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 }
 
 func (s *TestSuite) TestKeeper_ExportGenesis() {
-	genStateWithEscrows := func(escrows ...*escrow.AccountEscrow) *escrow.GenesisState {
-		return &escrow.GenesisState{Escrows: escrows}
+	genStateWithEscrows := func(escrows ...*hold.AccountEscrow) *hold.GenesisState {
+		return &hold.GenesisState{Escrows: escrows}
 	}
-	accEscrow := func(addr sdk.AccAddress, amount string) *escrow.AccountEscrow {
-		return &escrow.AccountEscrow{
+	accEscrow := func(addr sdk.AccAddress, amount string) *hold.AccountEscrow {
+		return &hold.AccountEscrow{
 			Address: addr.String(),
 			Amount:  s.coins(amount),
 		}
@@ -149,12 +150,12 @@ func (s *TestSuite) TestKeeper_ExportGenesis() {
 	tests := []struct {
 		name        string
 		setup       func(*TestSuite, sdk.KVStore)
-		expGenState *escrow.GenesisState
+		expGenState *hold.GenesisState
 		expPanic    []string
 	}{
 		{
 			name:        "empty state",
-			expGenState: &escrow.GenesisState{},
+			expGenState: &hold.GenesisState{},
 		},
 		{
 			name: "one entry: good",
@@ -237,7 +238,7 @@ func (s *TestSuite) TestKeeper_ExportGenesis() {
 				tc.setup(s, s.getStore())
 			}
 
-			var genState *escrow.GenesisState
+			var genState *hold.GenesisState
 			testFunc := func() {
 				genState = s.keeper.ExportGenesis(s.sdkCtx)
 			}

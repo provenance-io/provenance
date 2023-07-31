@@ -7,7 +7,7 @@ import (
 	"github.com/provenance-io/provenance/x/hold"
 )
 
-var _ escrow.BankKeeper = (*MockBankKeeper)(nil)
+var _ hold.BankKeeper = (*MockBankKeeper)(nil)
 
 type MockBankKeeper struct {
 	// Spendable is a map of sdk.AccAddress (cast to string) to

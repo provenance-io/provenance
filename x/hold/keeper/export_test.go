@@ -4,6 +4,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/hold"
 )
 
@@ -14,7 +15,7 @@ import (
 var EscrowAccountBalancesInvariantHelper = escrowAccountBalancesInvariantHelper
 
 // WithBankKeeper returns a new keeper that uses the provided bank keeper for unit tests.
-func (k Keeper) WithBankKeeper(bk escrow.BankKeeper) Keeper {
+func (k Keeper) WithBankKeeper(bk hold.BankKeeper) Keeper {
 	k.bankKeeper = bk
 	return k
 }

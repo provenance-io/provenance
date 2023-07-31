@@ -46,7 +46,7 @@ func (s *TestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.sdkCtx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.stdlibCtx = sdk.WrapSDKContext(s.sdkCtx)
-	s.keeper = s.app.EscrowKeeper
+	s.keeper = s.app.HoldKeeper
 	s.bankKeeper = s.app.BankKeeper
 
 	s.bondDenom = s.app.StakingKeeper.BondDenom(s.sdkCtx)
@@ -353,13 +353,13 @@ func (s *TestSuite) TestEventsToStrings() {
 
 	addrAdd := sdk.AccAddress("address_add_event___")
 	coinsAdd := s.coins("97acorn,12banana")
-	eventAddT := escrow.NewEventEscrowAdded(addrAdd, coinsAdd)
+	eventAddT := hold.NewEventHoldAdded(addrAdd, coinsAdd)
 	eventAdd, err := sdk.TypedEventToEvent(eventAddT)
 	s.Require().NoError(err, "TypedEventToEvent EventEscrowAdded")
 
 	addrRem := sdk.AccAddress("address_rem_event___")
 	coinsRem := s.coins("13cucumber,81dill")
-	eventRemT := escrow.NewEventEscrowRemoved(addrRem, coinsRem)
+	eventRemT := hold.NewEventEscrowRemoved(addrRem, coinsRem)
 	eventRem, err := sdk.TypedEventToEvent(eventRemT)
 	s.Require().NoError(err, "TypedEventToEvent EventEscrowRemoved")
 
@@ -372,10 +372,10 @@ func (s *TestSuite) TestEventsToStrings() {
 	events[0].Attributes[0].Index = true
 
 	expected := []string{
-		fmt.Sprintf("[0]provenance.escrow.v1.EventEscrowAdded[0]: \"address\" = \"\\\"%s\\\"\" (indexed)", addrAdd.String()),
-		fmt.Sprintf("[0]provenance.escrow.v1.EventEscrowAdded[1]: \"amount\" = \"\\\"%s\\\"\"", coinsAdd.String()),
-		fmt.Sprintf("[1]provenance.escrow.v1.EventEscrowRemoved[0]: \"address\" = \"\\\"%s\\\"\"", addrRem.String()),
-		fmt.Sprintf("[1]provenance.escrow.v1.EventEscrowRemoved[1]: \"amount\" = \"\\\"%s\\\"\"", coinsRem.String()),
+		fmt.Sprintf("[0]provenance.hold.v1.EventHoldAdded[0]: \"address\" = \"\\\"%s\\\"\" (indexed)", addrAdd.String()),
+		fmt.Sprintf("[0]provenance.hold.v1.EventHoldAdded[1]: \"amount\" = \"\\\"%s\\\"\"", coinsAdd.String()),
+		fmt.Sprintf("[1]provenance.hold.v1.EventHoldRemoved[0]: \"address\" = \"\\\"%s\\\"\"", addrRem.String()),
+		fmt.Sprintf("[1]provenance.hold.v1.EventHoldRemoved[1]: \"amount\" = \"\\\"%s\\\"\"", coinsRem.String()),
 	}
 
 	actual := s.eventsToStrings(events)
@@ -494,7 +494,7 @@ func (s *TestSuite) TestKeeper_ValidateNewEscrow() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			bk := NewMockBankKeeper().WithSpendable(tc.addr, tc.spendable)
-			k := s.app.EscrowKeeper.WithBankKeeper(bk)
+			k := s.app.HoldKeeper.WithBankKeeper(bk)
 
 			var err error
 			testFunc := func() {
@@ -518,7 +518,7 @@ func (s *TestSuite) TestKeeper_AddEscrow() {
 	store = nil
 
 	makeEvents := func(addr sdk.AccAddress, coins sdk.Coins) sdk.Events {
-		event, err := sdk.TypedEventToEvent(escrow.NewEventEscrowAdded(addr, coins))
+		event, err := sdk.TypedEventToEvent(hold.NewEventHoldAdded(addr, coins))
 		s.Require().NoError(err, "TypedEventToEvent EventEscrowAdded(%s, %q)", s.getAddrName(addr), coins)
 		return sdk.Events{event}
 	}
@@ -718,7 +718,7 @@ func (s *TestSuite) TestKeeper_RemoveEscrow() {
 	store = nil
 
 	makeEvents := func(addr sdk.AccAddress, coins sdk.Coins) sdk.Events {
-		event, err := sdk.TypedEventToEvent(escrow.NewEventEscrowRemoved(addr, coins))
+		event, err := sdk.TypedEventToEvent(hold.NewEventEscrowRemoved(addr, coins))
 		s.Require().NoError(err, "TypedEventToEvent EventEscrowRemoved((%s, %q)", s.getAddrName(addr), coins)
 		return sdk.Events{event}
 	}
@@ -1316,7 +1316,7 @@ func (s *TestSuite) TestKeeper_GetAllAccountEscrows() {
 	s.requireSetEscrowCoinAmount(store, s.addr5, "durian", s.int(5))
 	store = nil
 
-	expected := []*escrow.AccountEscrow{
+	expected := []*hold.AccountEscrow{
 		{Address: s.addr1.String(), Amount: s.coins("99banana")},
 		{Address: s.addr2.String(), Amount: s.coins("18banana,3cucumber")},
 		{Address: s.addr4.String(), Amount: s.coins("52acorn,12cucumber,747eggplant")},

@@ -17,7 +17,7 @@ import (
 )
 
 // GetEscrow looks up the funds that are in escrow for an address.
-func (k Keeper) GetEscrow(goCtx context.Context, req *escrow.GetEscrowRequest) (*escrow.GetEscrowResponse, error) {
+func (k Keeper) GetEscrow(goCtx context.Context, req *hold.GetEscrowRequest) (*hold.GetEscrowResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -31,7 +31,7 @@ func (k Keeper) GetEscrow(goCtx context.Context, req *escrow.GetEscrowRequest) (
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	resp := &escrow.GetEscrowResponse{}
+	resp := &hold.GetEscrowResponse{}
 	resp.Amount, err = k.GetEscrowCoins(ctx, addr)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (k Keeper) GetEscrow(goCtx context.Context, req *escrow.GetEscrowRequest) (
 }
 
 // GetAllEscrow returns all addresses with funds in escrow, and the amount in escrow.
-func (k Keeper) GetAllEscrow(goCtx context.Context, req *escrow.GetAllEscrowRequest) (*escrow.GetAllEscrowResponse, error) {
+func (k Keeper) GetAllEscrow(goCtx context.Context, req *hold.GetAllEscrowRequest) (*hold.GetAllEscrowResponse, error) {
 	var pageReq *query.PageRequest
 	if req != nil {
 		pageReq = req.Pagination
@@ -52,7 +52,7 @@ func (k Keeper) GetAllEscrow(goCtx context.Context, req *escrow.GetAllEscrowRequ
 // paginateAllEscrow iterates over escrow entries to generate a paginated GetAllEscrow result.
 // It's copied from query.FilteredPaginate and tweaked to count results by address instead of iterator entry.
 // It was easier to do it this way than shoehorn a solution into a call to FilteredPaginate.
-func (k Keeper) paginateAllEscrow(ctx sdk.Context, pageRequest *query.PageRequest) (*escrow.GetAllEscrowResponse, error) {
+func (k Keeper) paginateAllEscrow(ctx sdk.Context, pageRequest *query.PageRequest) (*hold.GetAllEscrowResponse, error) {
 	// if the PageRequest is nil, use default PageRequest
 	if pageRequest == nil {
 		pageRequest = &query.PageRequest{}
@@ -76,8 +76,8 @@ func (k Keeper) paginateAllEscrow(ctx sdk.Context, pageRequest *query.PageReques
 	}
 
 	var lastAddr sdk.AccAddress
-	var lastEntry *escrow.AccountEscrow
-	resp := &escrow.GetAllEscrowResponse{Pagination: &query.PageResponse{}}
+	var lastEntry *hold.AccountEscrow
+	resp := &hold.GetAllEscrowResponse{Pagination: &query.PageResponse{}}
 	prefixStore := k.getAllEscrowCoinPrefixStore(ctx)
 
 	if len(key) != 0 {
@@ -97,7 +97,7 @@ func (k Keeper) paginateAllEscrow(ctx sdk.Context, pageRequest *query.PageReques
 					break
 				}
 				lastAddr = addr
-				lastEntry = &escrow.AccountEscrow{Address: addr.String()}
+				lastEntry = &hold.AccountEscrow{Address: addr.String()}
 				resp.Escrows = append(resp.Escrows, lastEntry)
 			}
 			ival := iterator.Value()
@@ -136,7 +136,7 @@ func (k Keeper) paginateAllEscrow(ctx sdk.Context, pageRequest *query.PageReques
 			numHits++
 			accumulate = numHits > offset && uint64(len(resp.Escrows)) < limit
 			if accumulate {
-				lastEntry = &escrow.AccountEscrow{Address: addr.String()}
+				lastEntry = &hold.AccountEscrow{Address: addr.String()}
 				resp.Escrows = append(resp.Escrows, lastEntry)
 			}
 		}

@@ -10,7 +10,7 @@ import (
 
 // InitGenesis loads the provided GenesisState into the state store.
 // Panics if there's an error.
-func (k Keeper) InitGenesis(origCtx sdk.Context, genState *escrow.GenesisState) {
+func (k Keeper) InitGenesis(origCtx sdk.Context, genState *hold.GenesisState) {
 	if genState == nil {
 		return
 	}
@@ -29,9 +29,9 @@ func (k Keeper) InitGenesis(origCtx sdk.Context, genState *escrow.GenesisState) 
 }
 
 // ExportGenesis creates a GenesisState from the current state store.
-func (k Keeper) ExportGenesis(ctx sdk.Context) *escrow.GenesisState {
+func (k Keeper) ExportGenesis(ctx sdk.Context) *hold.GenesisState {
 	var err error
-	rv := &escrow.GenesisState{}
+	rv := &hold.GenesisState{}
 
 	rv.Escrows, err = k.GetAllAccountEscrows(ctx)
 	if err != nil {

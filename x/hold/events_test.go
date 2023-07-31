@@ -1,4 +1,4 @@
-package escrow
+package hold
 
 import (
 	"fmt"
@@ -117,7 +117,7 @@ func TestTypedEventToEvent(t *testing.T) {
 			name: "EventEscrowAdded",
 			tev:  NewEventEscrowAdded(addr, coins),
 			expEvent: sdk.Event{
-				Type: "provenance.escrow.v1.EventEscrowAdded",
+				Type: "provenance.hold.v1.EventEscrowAdded",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("address"), Value: []byte(addrQ)},
 					{Key: []byte("amount"), Value: []byte(coinsQ)},
@@ -128,7 +128,7 @@ func TestTypedEventToEvent(t *testing.T) {
 			name: "EventEscrowRemoved",
 			tev:  NewEventEscrowRemoved(addr, coins),
 			expEvent: sdk.Event{
-				Type: "provenance.escrow.v1.EventEscrowRemoved",
+				Type: "provenance.hold.v1.EventEscrowRemoved",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("address"), Value: []byte(addrQ)},
 					{Key: []byte("amount"), Value: []byte(coinsQ)},

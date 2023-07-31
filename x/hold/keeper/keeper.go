@@ -18,10 +18,10 @@ type Keeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
 
-	bankKeeper escrow.BankKeeper
+	bankKeeper hold.BankKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, bankKeeper escrow.BankKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, bankKeeper hold.BankKeeper) Keeper {
 	rv := Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
@@ -121,7 +121,7 @@ func (k Keeper) AddEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins)
 	}
 
 	if !fundsAdded.IsZero() {
-		err := ctx.EventManager().EmitTypedEvent(escrow.NewEventEscrowAdded(addr, fundsAdded))
+		err := ctx.EventManager().EmitTypedEvent(hold.NewEventEscrowAdded(addr, fundsAdded))
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -164,7 +164,7 @@ func (k Keeper) RemoveEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coi
 	}
 
 	if !fundsRemoved.IsZero() {
-		err := ctx.EventManager().EmitTypedEvent(escrow.NewEventEscrowRemoved(addr, fundsRemoved))
+		err := ctx.EventManager().EmitTypedEvent(hold.NewEventEscrowRemoved(addr, fundsRemoved))
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -268,15 +268,15 @@ func (k Keeper) IterateAllEscrow(ctx sdk.Context, process func(sdk.AccAddress, s
 }
 
 // GetAllAccountEscrows gets all the AccountEscrow entries currently in the state store.
-func (k Keeper) GetAllAccountEscrows(ctx sdk.Context) ([]*escrow.AccountEscrow, error) {
-	var escrows []*escrow.AccountEscrow
+func (k Keeper) GetAllAccountEscrows(ctx sdk.Context) ([]*hold.AccountEscrow, error) {
+	var escrows []*hold.AccountEscrow
 	var lastAddr sdk.AccAddress
-	var lastEntry *escrow.AccountEscrow
+	var lastEntry *hold.AccountEscrow
 
 	err := k.IterateAllEscrow(ctx, func(addr sdk.AccAddress, coin sdk.Coin) bool {
 		if !addr.Equals(lastAddr) {
 			lastAddr = addr
-			lastEntry = &escrow.AccountEscrow{
+			lastEntry = &hold.AccountEscrow{
 				Address: addr.String(),
 				Amount:  sdk.Coins{},
 			}

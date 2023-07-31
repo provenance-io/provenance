@@ -35,10 +35,10 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
-func NewAppModule(cdc codec.Codec, escrowKeeper keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, holdKeeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		keeper:         escrowKeeper,
+		keeper:         holdKeeper,
 	}
 }
 
@@ -47,78 +47,78 @@ type AppModuleBasic struct {
 }
 
 func (AppModuleBasic) Name() string {
-	return escrow.ModuleName
+	return hold.ModuleName
 }
 
-// DefaultGenesis returns default genesis state as raw bytes for the escrow module.
+// DefaultGenesis returns default genesis state as raw bytes for the hold module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(escrow.DefaultGenesisState())
+	return cdc.MustMarshalJSON(hold.DefaultGenesisState())
 }
 
-// ValidateGenesis performs genesis state validation for the escrow module.
+// ValidateGenesis performs genesis state validation for the hold module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	var data escrow.GenesisState
+	var data hold.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", escrow.ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", hold.ModuleName, err)
 	}
 	return data.Validate()
 }
 
-// GetQueryCmd returns the cli query commands for the escrow module.
+// GetQueryCmd returns the cli query commands for the hold module.
 func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.QueryCmd()
 }
 
-// GetTxCmd returns the transaction commands for the escrow module.
+// GetTxCmd returns the transaction commands for the hold module.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 	return nil
 }
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the escrow module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the hold module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
-	if err := escrow.RegisterQueryHandlerClient(context.Background(), mux, escrow.NewQueryClient(clientCtx)); err != nil {
+	if err := hold.RegisterQueryHandlerClient(context.Background(), mux, hold.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
-// RegisterInterfaces registers the escrow module's interface types
+// RegisterInterfaces registers the hold module's interface types
 func (AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
-// RegisterLegacyAminoCodec registers the escrow module's types for the given codec.
+// RegisterLegacyAminoCodec registers the hold module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
-// RegisterInvariants registers the invariants for the escrow module.
+// RegisterInvariants registers the invariants for the hold module.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
-// Deprecated: Route returns the message routing key for the escrow module, empty.
+// Deprecated: Route returns the message routing key for the hold module, empty.
 func (am AppModule) Route() sdk.Route { return sdk.Route{} }
 
 // Deprecated: QuerierRoute returns the route we respond to for abci queries, "".
 func (AppModule) QuerierRoute() string { return "" }
 
-// Deprecated: LegacyQuerierHandler returns the escrow module sdk.Querier (nil).
+// Deprecated: LegacyQuerierHandler returns the hold module sdk.Querier (nil).
 func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier { return nil }
 
-// InitGenesis performs genesis initialization for the escrow module. It returns
+// InitGenesis performs genesis initialization for the hold module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState escrow.GenesisState
+	var genesisState hold.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 	am.keeper.InitGenesis(ctx, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the escrow module.
+// ExportGenesis returns the exported genesis state as raw bytes for the hold module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 
-// RegisterServices registers a gRPC query service to respond to the escrow-specific gRPC queries.
+// RegisterServices registers a gRPC query service to respond to the hold-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	escrow.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	hold.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
@@ -128,27 +128,27 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // AppModuleSimulation functions
 
-// GenerateGenesisState creates a randomized GenState of the escrow module.
+// GenerateGenesisState creates a randomized GenState of the hold module.
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the escrow content functions used to
-// simulate governance proposals, of which there are none for the escrow module.
+// ProposalContents returns all the hold content functions used to
+// simulate governance proposals, of which there are none for the hold module.
 func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
 	return nil
 }
 
-// RandomizedParams returns randomized escrow param changes for the simulator,
+// RandomizedParams returns randomized hold param changes for the simulator,
 // of which there are none since this module doesn't use the params module.
 func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange { return nil }
 
-// RegisterStoreDecoder registers a decoder for escrow module's types
+// RegisterStoreDecoder registers a decoder for hold module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[escrow.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[hold.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-// WeightedOperations returns the all the escrow module operations with their respective weights,
+// WeightedOperations returns the all the hold module operations with their respective weights,
 // of which there are none.
 func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return nil

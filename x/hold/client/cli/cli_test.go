@@ -26,7 +26,7 @@ import (
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/client/cli"
-	escrowkeeper "github.com/provenance-io/provenance/x/hold/keeper"
+	holdkeeper "github.com/provenance-io/provenance/x/hold/keeper"
 )
 
 type IntegrationCLITestSuite struct {
@@ -91,7 +91,7 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 		s.Require().NoError(err, "ParseCoinsNormalized(%q)", coins)
 		return rv
 	}
-	// newAmounts creates the balance, escrow, and spendable amounts.
+	// newAmounts creates the balance, hold, and spendable amounts.
 	newAmounts := func(name, plusBalance, escrowAmount string) (sdk.Coins, sdk.Coins, sdk.Coins) {
 		balance := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 1_000_000_000)}
 		if len(plusBalance) > 0 {
@@ -124,10 +124,10 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.addr5 = sdk.AccAddress("cli_test_address_5__")
 
 	// addr1 characteristics:
-	// - No escrow of bond denom.
-	// - Partial escrow of one denom.
-	// - More than max uint64 of one denom both in escrow and spendable.
-	// - One denom fully in escrow.
+	// - No hold of bond denom.
+	// - Partial hold of one denom.
+	// - More than max uint64 of one denom both in hold and spendable.
+	// - One denom fully on hold.
 	s.addr1Desc = "addr with large amounts"
 	addr1Plus := "15banana,5000000000000000000000hugecoin,1xenon"
 	addr1Esrow := "5banana,2000000000000000000000hugecoin,1xenon"
@@ -135,26 +135,26 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 
 	// addr2 characteristics:
 	// - One extra denom.
-	// - Nothing in escrow.
-	s.addr2Desc = "addr with extra denom no escrow"
+	// - Nothing on hold.
+	s.addr2Desc = "addr with extra denom no hold"
 	s.addr2Bal, s.addr2Escrow, s.addr2Spendable = newAmounts("addr2", "99banana", "")
 
 	// addr3 characteristics:
-	// - All funds in escrow.
-	s.addr3Desc = "addr with all funds in escrow"
+	// - All funds on hold.
+	s.addr3Desc = "addr with all funds on hold"
 	s.addr3Bal, s.addr3Escrow, s.addr3Spendable = newAmounts("addr3", "55acorn,12banana", "all")
 
 	// addr4 characteristics:
-	// - Most of one denom in escrow.
-	// - A little of the bond denom in escrow.
-	// - None of another denom in escrow.
-	s.addr4Desc = "addr with only a little escrow"
+	// - Most of one denom on hold.
+	// - A little of the bond denom on hold.
+	// - None of another denom on hold.
+	s.addr4Desc = "addr with only a little on hold"
 	s.addr4Bal, s.addr4Escrow, s.addr4Spendable = newAmounts("addr4", "93acorn,9carrot", "90acorn,30000"+s.cfg.BondDenom)
 
 	// addr5 characteristics:
 	// - Only has bond denom.
-	// - Nothing in escrow.
-	s.addr5Desc = "addr without escrow and only bond denom"
+	// - Nothing on hold.
+	s.addr5Desc = "addr without holds and only bond denom"
 	s.addr5Bal, s.addr5Escrow, s.addr5Spendable = newAmounts("addr5", "", "")
 
 	s.flagAsText = fmt.Sprintf("--%s=text", tmcli.OutputFlag)
@@ -195,19 +195,19 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.cfg.GenesisState[banktypes.ModuleName], err = s.cfg.Codec.MarshalJSON(&bankGen)
 	s.Require().NoError(err, "MarshalJSON bank gen state")
 
-	// Place some of their stuff in escrow.
-	var escrowGen escrow.GenesisState
-	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[escrow.ModuleName], &escrowGen)
+	// Place some of their stuff on hold.
+	var escrowGen hold.GenesisState
+	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[hold.ModuleName], &escrowGen)
 	s.Require().NoError(err, "UnmarshalJSON auth gen state")
 	escrowGen.Escrows = append(escrowGen.Escrows,
-		&escrow.AccountEscrow{Address: s.addr1.String(), Amount: s.addr1Escrow},
-		&escrow.AccountEscrow{Address: s.addr2.String(), Amount: s.addr2Escrow},
-		&escrow.AccountEscrow{Address: s.addr3.String(), Amount: s.addr3Escrow},
-		&escrow.AccountEscrow{Address: s.addr4.String(), Amount: s.addr4Escrow},
-		&escrow.AccountEscrow{Address: s.addr5.String(), Amount: s.addr5Escrow},
+		&hold.AccountEscrow{Address: s.addr1.String(), Amount: s.addr1Escrow},
+		&hold.AccountEscrow{Address: s.addr2.String(), Amount: s.addr2Escrow},
+		&hold.AccountEscrow{Address: s.addr3.String(), Amount: s.addr3Escrow},
+		&hold.AccountEscrow{Address: s.addr4.String(), Amount: s.addr4Escrow},
+		&hold.AccountEscrow{Address: s.addr5.String(), Amount: s.addr5Escrow},
 	)
-	s.cfg.GenesisState[escrow.ModuleName], err = s.cfg.Codec.MarshalJSON(&escrowGen)
-	s.Require().NoError(err, "MarshalJSON escrow gen state")
+	s.cfg.GenesisState[hold.ModuleName], err = s.cfg.Codec.MarshalJSON(&escrowGen)
+	s.Require().NoError(err, "MarshalJSON hold gen state")
 
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "creating testnet")
@@ -294,16 +294,16 @@ func (s *IntegrationCLITestSuite) TestQueryCmd() {
 	cmdGen := func() *cobra.Command {
 		return cli.QueryCmd()
 	}
-	resp := func(amount sdk.Coins) *escrow.GetEscrowResponse {
-		return &escrow.GetEscrowResponse{Amount: amount}
+	resp := func(amount sdk.Coins) *hold.GetEscrowResponse {
+		return &hold.GetEscrowResponse{Amount: amount}
 	}
-	respAll := &escrow.GetAllEscrowResponse{
-		Escrows: []*escrow.AccountEscrow{
+	respAll := &hold.GetAllEscrowResponse{
+		Escrows: []*hold.AccountEscrow{
 			{Address: s.addr1.String(), Amount: s.addr1Escrow},
-			// addr2 doesn't have anything in escrow.
+			// addr2 doesn't have anything on hold.
 			{Address: s.addr3.String(), Amount: s.addr3Escrow},
 			{Address: s.addr4.String(), Amount: s.addr4Escrow},
-			// addr5 doesn't have anything in escrow.
+			// addr5 doesn't have anything on hold.
 		},
 		Pagination: &query.PageResponse{
 			NextKey: nil,
@@ -341,60 +341,60 @@ func (s *IntegrationCLITestSuite) TestQueryCmdGetEscrow() {
 	cmdGen := func() *cobra.Command {
 		return cli.QueryCmdGetEscrow()
 	}
-	resp := func(amount sdk.Coins) *escrow.GetEscrowResponse {
-		return &escrow.GetEscrowResponse{Amount: amount}
+	resp := func(amount sdk.Coins) *hold.GetEscrowResponse {
+		return &hold.GetEscrowResponse{Amount: amount}
 	}
 
 	unknownAddr := sdk.AccAddress("unknown_address_____")
 
 	tests := []queryCmdTestCase{
 		{
-			name:   s.addr1Desc + ": get escrow as text",
+			name:   s.addr1Desc + ": get hold as text",
 			args:   []string{s.addr1.String(), s.flagAsText},
 			expOut: s.asYAML(resp(s.addr1Escrow)),
 		},
 		{
-			name:   s.addr1Desc + ": get escrow as json",
+			name:   s.addr1Desc + ": get hold as json",
 			args:   []string{s.addr1.String(), s.flagAsJSON},
 			expOut: s.asJSON(resp(s.addr1Escrow)),
 		},
 		{
-			name:   s.addr2Desc + ": get escrow as text",
+			name:   s.addr2Desc + ": get hold as text",
 			args:   []string{s.addr2.String(), s.flagAsText},
 			expOut: s.asYAML(resp(s.addr2Escrow)),
 		},
 		{
-			name:   s.addr2Desc + ": get escrow as json",
+			name:   s.addr2Desc + ": get hold as json",
 			args:   []string{s.addr2.String(), s.flagAsJSON},
 			expOut: s.asJSON(resp(s.addr2Escrow)),
 		},
 		{
-			name:   s.addr3Desc + ": get escrow as text",
+			name:   s.addr3Desc + ": get hold as text",
 			args:   []string{s.addr3.String(), s.flagAsText},
 			expOut: s.asYAML(resp(s.addr3Escrow)),
 		},
 		{
-			name:   s.addr3Desc + ": get escrow as json",
+			name:   s.addr3Desc + ": get hold as json",
 			args:   []string{s.addr3.String(), s.flagAsJSON},
 			expOut: s.asJSON(resp(s.addr3Escrow)),
 		},
 		{
-			name:   s.addr4Desc + ": get escrow as text",
+			name:   s.addr4Desc + ": get hold as text",
 			args:   []string{s.addr4.String(), s.flagAsText},
 			expOut: s.asYAML(resp(s.addr4Escrow)),
 		},
 		{
-			name:   s.addr4Desc + ": get escrow as json",
+			name:   s.addr4Desc + ": get hold as json",
 			args:   []string{s.addr4.String(), s.flagAsJSON},
 			expOut: s.asJSON(resp(s.addr4Escrow)),
 		},
 		{
-			name:   s.addr5Desc + ": get escrow as text",
+			name:   s.addr5Desc + ": get hold as text",
 			args:   []string{s.addr5.String(), s.flagAsText},
 			expOut: s.asYAML(resp(s.addr5Escrow)),
 		},
 		{
-			name:   s.addr5Desc + ": get escrow as json",
+			name:   s.addr5Desc + ": get hold as json",
 			args:   []string{s.addr5.String(), s.flagAsJSON},
 			expOut: s.asJSON(resp(s.addr5Escrow)),
 		},
@@ -433,21 +433,21 @@ func (s *IntegrationCLITestSuite) TestQueryCmdGetAllEscrow() {
 		return cli.QueryCmdGetAllEscrow()
 	}
 	pageKey := func(addr sdk.AccAddress, denom string) []byte {
-		return escrowkeeper.CreateEscrowCoinKey(addr, denom)[1:]
+		return holdkeeper.CreateEscrowCoinKey(addr, denom)[1:]
 
 	}
 	pageKeyArg := func(addr sdk.AccAddress, denom string) string {
 		return base64.StdEncoding.EncodeToString(pageKey(addr, denom))
 	}
-	allEntries := []*escrow.AccountEscrow{
+	allEntries := []*hold.AccountEscrow{
 		{Address: s.addr1.String(), Amount: s.addr1Escrow},
-		// addr2 doesn't have anything in escrow.
+		// addr2 doesn't have anything on hold.
 		{Address: s.addr3.String(), Amount: s.addr3Escrow},
 		{Address: s.addr4.String(), Amount: s.addr4Escrow},
-		// addr5 doesn't have anything in escrow.
+		// addr5 doesn't have anything on hold.
 	}
-	resp := func(total uint64, nextKey []byte, escrows ...*escrow.AccountEscrow) *escrow.GetAllEscrowResponse {
-		return &escrow.GetAllEscrowResponse{
+	resp := func(total uint64, nextKey []byte, escrows ...*hold.AccountEscrow) *hold.GetAllEscrowResponse {
+		return &hold.GetAllEscrowResponse{
 			Escrows: escrows,
 			Pagination: &query.PageResponse{
 				NextKey: nextKey,
@@ -506,7 +506,7 @@ func (s *IntegrationCLITestSuite) TestQueryCmdGetAllEscrow() {
 /* commented out until I have a version of the sdk with the GetSpendableBalancesCmd query.
 func (s *IntegrationCLITestSuite) TestEscrowRemovedFromSpendable() {
 	// The purpose of these tests is to make sure that the bank module is
-	// being properly informed of the locked escrow funds.
+	// being properly informed of the locked hold funds.
 	cmdGen := func() *cobra.Command {
 		return bankcli.GetSpendableBalancesCmd()
 	}

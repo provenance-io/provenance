@@ -11,18 +11,18 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/provenance-io/provenance/x/hold"
+	hold "github.com/provenance-io/provenance/x/hold"
 )
 
 // exampleQueryCmdBase is the base command that gets a user to one of the query commands in here.
-var exampleQueryCmdBase = fmt.Sprintf("%s query %s", version.AppName, escrow.ModuleName)
+var exampleQueryCmdBase = fmt.Sprintf("%s query %s", version.AppName, hold.ModuleName)
 
 var exampleQueryAddr1 = sdk.AccAddress("exampleQueryAddr1___")
 
 func QueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                        escrow.ModuleName,
-		Short:                      "Querying commands for the escrow module",
+		Use:                        hold.ModuleName,
+		Short:                      "Querying commands for the hold module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -39,8 +39,8 @@ func QueryCmd() *cobra.Command {
 func QueryCmdGetEscrow() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "get <address>",
-		Aliases: []string{"get-escrow"},
-		Short:   "Get the funds that are in escrow for an address.",
+		Aliases: []string{"get-hold", "on-hold"},
+		Short:   "Get the funds that are on hold for an address.",
 		Example: fmt.Sprintf("$ %s get %s", exampleQueryCmdBase, exampleQueryAddr1),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -53,12 +53,12 @@ func QueryCmdGetEscrow() *cobra.Command {
 				return sdkerrors.ErrInvalidAddress.Wrap(err.Error())
 			}
 
-			req := escrow.GetEscrowRequest{
+			req := hold.GetEscrowRequest{
 				Address: args[0],
 			}
 
-			var res *escrow.GetEscrowResponse
-			queryClient := escrow.NewQueryClient(clientCtx)
+			var res *hold.GetEscrowResponse
+			queryClient := hold.NewQueryClient(clientCtx)
 			res, err = queryClient.GetEscrow(cmd.Context(), &req)
 			if err != nil {
 				return err
@@ -77,7 +77,7 @@ func QueryCmdGetAllEscrow() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "all",
 		Aliases: []string{"get-all"},
-		Short:   "Get all funds in escrow for all accounts",
+		Short:   "Get all funds on hold for all accounts",
 		Example: fmt.Sprintf("$ %s all", exampleQueryCmdBase),
 		Args:    cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -86,14 +86,14 @@ func QueryCmdGetAllEscrow() *cobra.Command {
 				return err
 			}
 
-			req := escrow.GetAllEscrowRequest{}
+			req := hold.GetAllEscrowRequest{}
 			req.Pagination, err = client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			var res *escrow.GetAllEscrowResponse
-			queryClient := escrow.NewQueryClient(clientCtx)
+			var res *hold.GetAllEscrowResponse
+			queryClient := hold.NewQueryClient(clientCtx)
 			res, err = queryClient.GetAllEscrow(cmd.Context(), &req)
 			if err != nil {
 				return err

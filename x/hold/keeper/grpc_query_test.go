@@ -17,17 +17,17 @@ func (s *TestSuite) TestKeeper_GetEscrow() {
 	s.setEscrowCoinAmountRaw(store, s.addr4, "dratcoin", "dratvalue")
 	store = nil
 
-	req := func(addr string) *escrow.GetEscrowRequest {
-		return &escrow.GetEscrowRequest{Address: addr}
+	req := func(addr string) *hold.GetEscrowRequest {
+		return &hold.GetEscrowRequest{Address: addr}
 	}
-	resp := func(amount string) *escrow.GetEscrowResponse {
-		return &escrow.GetEscrowResponse{Amount: s.coins(amount)}
+	resp := func(amount string) *hold.GetEscrowResponse {
+		return &hold.GetEscrowResponse{Amount: s.coins(amount)}
 	}
 
 	tests := []struct {
 		name    string
-		request *escrow.GetEscrowRequest
-		expResp *escrow.GetEscrowResponse
+		request *hold.GetEscrowRequest
+		expResp *hold.GetEscrowResponse
 		expErr  []string
 	}{
 		{
@@ -46,17 +46,17 @@ func (s *TestSuite) TestKeeper_GetEscrow() {
 			expErr:  []string{"InvalidArgument", "invalid address", "decoding bech32 failed"},
 		},
 		{
-			name:    "nothing in escrow",
+			name:    "nothing on hold",
 			request: req(s.addr1.String()),
 			expResp: resp(""),
 		},
 		{
-			name:    "one denom in escrow",
+			name:    "one denom on hold",
 			request: req(s.addr2.String()),
 			expResp: resp("144banana"),
 		},
 		{
-			name:    "three denoms in escrow",
+			name:    "three denoms on hold",
 			request: req(s.addr3.String()),
 			expResp: resp("89banana,55cactus,34date"),
 		},
@@ -72,7 +72,7 @@ func (s *TestSuite) TestKeeper_GetEscrow() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			var response *escrow.GetEscrowResponse
+			var response *hold.GetEscrowResponse
 			var err error
 			testFunc := func() {
 				response, err = s.keeper.GetEscrow(s.stdlibCtx, tc.request)
@@ -85,8 +85,8 @@ func (s *TestSuite) TestKeeper_GetEscrow() {
 }
 
 func (s *TestSuite) TestKeeper_GetAllEscrow() {
-	accEscrow := func(addr sdk.AccAddress, amount string) *escrow.AccountEscrow {
-		return &escrow.AccountEscrow{
+	accEscrow := func(addr sdk.AccAddress, amount string) *hold.AccountEscrow {
+		return &hold.AccountEscrow{
 			Address: addr.String(),
 			Amount:  s.coins(amount),
 		}
@@ -101,7 +101,7 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 		return keeper.CreateEscrowCoinKey(addr, denom)[len(keeper.KeyPrefixEscrowCoin):]
 	}
 
-	// standardSetup puts two denoms in escrow for each addrs with incremental amounts.
+	// standardSetup puts two denoms on hold for each addrs with incremental amounts.
 	// This is used unless the test has a specific setup function to use instead.
 	standardSetup := func(s *TestSuite, store sdk.KVStore) {
 		s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
@@ -115,14 +115,14 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 		s.requireSetEscrowCoinAmount(store, s.addr5, "banana", s.int(103))
 		s.requireSetEscrowCoinAmount(store, s.addr5, "cherry", s.int(16))
 	}
-	standardExp := []*escrow.AccountEscrow{
+	standardExp := []*hold.AccountEscrow{
 		accEscrow(s.addr1, "99banana,12cherry"),
 		accEscrow(s.addr2, "100banana,13cherry"),
 		accEscrow(s.addr3, "101banana,14cherry"),
 		accEscrow(s.addr4, "102banana,15cherry"),
 		accEscrow(s.addr5, "103banana,16cherry"),
 	}
-	standardExpRev := make([]*escrow.AccountEscrow, len(standardExp))
+	standardExpRev := make([]*hold.AccountEscrow, len(standardExp))
 	for i, val := range standardExp {
 		standardExpRev[len(standardExp)-i-1] = val
 	}
@@ -130,8 +130,8 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 	tests := []struct {
 		name        string
 		setup       func(s *TestSuite, store sdk.KVStore)
-		request     *escrow.GetAllEscrowRequest
-		expEscrows  []*escrow.AccountEscrow
+		request     *hold.GetAllEscrowRequest
+		expEscrows  []*hold.AccountEscrow
 		expPageResp *query.PageResponse
 		expErr      []string
 	}{
@@ -143,13 +143,13 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 		},
 		{
 			name:        "nil pagination",
-			request:     &escrow.GetAllEscrowRequest{Pagination: nil},
+			request:     &hold.GetAllEscrowRequest{Pagination: nil},
 			expEscrows:  standardExp,
 			expPageResp: pageResp(5, nil),
 		},
 		{
 			name: "both offset and key",
-			request: &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{
+			request: &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{
 				Key: nextKey(s.addr1, "banana"), Offset: 1,
 			}},
 			expErr: []string{"InvalidArgument", "either offset or key is expected, got both"},
@@ -172,7 +172,7 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 				s.requireSetEscrowCoinAmount(store, s.addr1, "banana", s.int(99))
 				s.setEscrowCoinAmountRaw(store, s.addr2, "badcoin", "badvalue")
 			},
-			request: &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{
+			request: &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{
 				Key:   nextKey(s.addr1, "banana"),
 				Limit: 5,
 			}},
@@ -187,7 +187,7 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 				standardSetup(s, store)
 				s.setEscrowCoinAmountRaw(store, s.addr5, "zoinkscoin", "zoinksvalue")
 			},
-			request: &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{
+			request: &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{
 				Offset: 0, Limit: 4, CountTotal: true,
 			}},
 			expEscrows:  standardExp[:4],
@@ -195,7 +195,7 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 		},
 		{
 			name: "multiple denoms per entry, count total",
-			request: &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{
+			request: &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{
 				Offset: 1, Limit: 2, CountTotal: true,
 			}},
 			expEscrows:  standardExp[1:3],
@@ -203,7 +203,7 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 		},
 		{
 			name: "multiple denoms per entry, reversed, count total",
-			request: &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{
+			request: &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{
 				Offset: 1, Limit: 2, CountTotal: true, Reverse: true,
 			}},
 			expEscrows:  standardExpRev[1:3],
@@ -211,7 +211,7 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 		},
 		{
 			name: "with offset, partial results",
-			request: &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{
+			request: &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{
 				Offset: 1, Limit: 2,
 			}},
 			expEscrows:  standardExp[1:3],
@@ -219,7 +219,7 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 		},
 		{
 			name: "with offset, reversed, partial results",
-			request: &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{
+			request: &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{
 				Offset: 1, Limit: 2, Reverse: true,
 			}},
 			expEscrows:  standardExpRev[1:3],
@@ -227,7 +227,7 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 		},
 		{
 			name: "with offset, all results",
-			request: &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{
+			request: &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{
 				Offset: 1, Limit: 4,
 			}},
 			expEscrows:  standardExp[1:],
@@ -235,7 +235,7 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 		},
 		{
 			name: "with offset, reversed, all results",
-			request: &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{
+			request: &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{
 				Offset: 1, Reverse: true, Limit: 100,
 			}},
 			expEscrows:  standardExpRev[1:],
@@ -243,7 +243,7 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 		},
 		{
 			name: "with key, partial results",
-			request: &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{
+			request: &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{
 				Key: nextKey(s.addr2, "banana"), Limit: 2,
 			}},
 			expEscrows:  standardExp[1:3],
@@ -252,7 +252,7 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 		},
 		{
 			name: "with key, reversed, partial results",
-			request: &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{
+			request: &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{
 				Key: nextKey(s.addr4, "cherry"), Limit: 2, Reverse: true,
 			}},
 			expEscrows:  standardExpRev[1:3],
@@ -260,7 +260,7 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 		},
 		{
 			name: "with key, all results",
-			request: &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{
+			request: &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{
 				Key: nextKey(s.addr2, "banana"), Limit: 4,
 			}},
 			expEscrows:  standardExp[1:],
@@ -269,7 +269,7 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 		},
 		{
 			name: "with key, reversed, all results",
-			request: &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{
+			request: &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{
 				Key: nextKey(s.addr4, "cherry"), Limit: 4, Reverse: true,
 			}},
 			expEscrows:  standardExpRev[1:],
@@ -277,13 +277,13 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 		},
 		{
 			name:        "all results",
-			request:     &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{}},
+			request:     &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{}},
 			expEscrows:  standardExp,
 			expPageResp: pageResp(5, nil),
 		},
 		{
 			name:        "all results, reversed",
-			request:     &escrow.GetAllEscrowRequest{Pagination: &query.PageRequest{Reverse: true}},
+			request:     &hold.GetAllEscrowRequest{Pagination: &query.PageRequest{Reverse: true}},
 			expEscrows:  standardExpRev,
 			expPageResp: pageResp(5, nil),
 		},
@@ -297,7 +297,7 @@ func (s *TestSuite) TestKeeper_GetAllEscrow() {
 			}
 			tc.setup(s, s.getStore())
 
-			var response *escrow.GetAllEscrowResponse
+			var response *hold.GetAllEscrowResponse
 			var err error
 			testFunc := func() {
 				response, err = s.keeper.GetAllEscrow(s.stdlibCtx, tc.request)

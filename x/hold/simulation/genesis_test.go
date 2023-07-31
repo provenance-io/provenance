@@ -26,7 +26,7 @@ func TestRandomAccountEscrows(t *testing.T) {
 		name     string
 		seed     int64
 		accounts []simtypes.Account
-		expected []*escrow.AccountEscrow
+		expected []*hold.AccountEscrow
 	}{
 		{
 			name:     "nil accounts",
@@ -50,7 +50,7 @@ func TestRandomAccountEscrows(t *testing.T) {
 			name:     "1 account picked",
 			seed:     1,
 			accounts: accs[0:1],
-			expected: []*escrow.AccountEscrow{
+			expected: []*hold.AccountEscrow{
 				{
 					Address: accs[0].Address.String(),
 					Amount:  sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 552)),
@@ -67,7 +67,7 @@ func TestRandomAccountEscrows(t *testing.T) {
 			name:     "2 accounts one picked",
 			seed:     2,
 			accounts: accs[0:2],
-			expected: []*escrow.AccountEscrow{
+			expected: []*hold.AccountEscrow{
 				{
 					Address: accs[1].Address.String(),
 					Amount:  sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 543)),
@@ -78,7 +78,7 @@ func TestRandomAccountEscrows(t *testing.T) {
 			name:     "2 accounts both picked",
 			seed:     1,
 			accounts: accs[0:2],
-			expected: []*escrow.AccountEscrow{
+			expected: []*hold.AccountEscrow{
 				{
 					Address: accs[0].Address.String(),
 					Amount:  sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 822)),
@@ -93,7 +93,7 @@ func TestRandomAccountEscrows(t *testing.T) {
 			name:     "3 accounts 2 picked",
 			seed:     0,
 			accounts: accs,
-			expected: []*escrow.AccountEscrow{
+			expected: []*hold.AccountEscrow{
 				{
 					Address: accs[2].Address.String(),
 					Amount:  sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 795)),
@@ -118,9 +118,9 @@ func TestRandomAccountEscrows(t *testing.T) {
 func TestRandomizedGenState(t *testing.T) {
 	accs := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 3)
 
-	gs := func(escrows ...*escrow.AccountEscrow) *escrow.GenesisState {
-		rv := &escrow.GenesisState{
-			Escrows: make([]*escrow.AccountEscrow, len(escrows)),
+	gs := func(escrows ...*hold.AccountEscrow) *hold.GenesisState {
+		rv := &hold.GenesisState{
+			Escrows: make([]*hold.AccountEscrow, len(escrows)),
 		}
 		copy(rv.Escrows, escrows)
 		return rv
@@ -128,8 +128,8 @@ func TestRandomizedGenState(t *testing.T) {
 	bondCoins := func(amount int64) sdk.Coins {
 		return sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, amount))
 	}
-	ae := func(acc simtypes.Account, amount int64) *escrow.AccountEscrow {
-		return &escrow.AccountEscrow{
+	ae := func(acc simtypes.Account, amount int64) *hold.AccountEscrow {
+		return &hold.AccountEscrow{
 			Address: acc.Address.String(),
 			Amount:  bondCoins(amount),
 		}
@@ -157,10 +157,10 @@ func TestRandomizedGenState(t *testing.T) {
 	tests := []struct {
 		name         string
 		seed         int64
-		appParams    []*escrow.AccountEscrow
+		appParams    []*hold.AccountEscrow
 		accounts     []simtypes.Account
 		bankState    *banktypes.GenesisState
-		expGenState  *escrow.GenesisState
+		expGenState  *hold.GenesisState
 		expBankState *banktypes.GenesisState
 	}{
 		{
@@ -195,7 +195,7 @@ func TestRandomizedGenState(t *testing.T) {
 		},
 		{
 			name:         "2 from app params one already had balance",
-			appParams:    []*escrow.AccountEscrow{ae(accs[0], 123), ae(accs[1], 456)},
+			appParams:    []*hold.AccountEscrow{ae(accs[0], 123), ae(accs[1], 456)},
 			bankState:    bgs(bal(accs[1], 44), bal(accs[2], 9876)),
 			expGenState:  gs(ae(accs[0], 123), ae(accs[1], 456)),
 			expBankState: bgs(bal(accs[1], 500), bal(accs[2], 9876), bal(accs[0], 123)),
@@ -213,7 +213,7 @@ func TestRandomizedGenState(t *testing.T) {
 			}
 			var err error
 			if len(tc.appParams) > 0 {
-				simState.AppParams[simulation.EscrowAccountEscrows], err = json.Marshal(tc.appParams)
+				simState.AppParams[simulation.HoldAccountHolds], err = json.Marshal(tc.appParams)
 				require.NoError(t, err, "Marshal(tc.appParams)")
 			}
 			if tc.bankState != nil {
@@ -226,11 +226,11 @@ func TestRandomizedGenState(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "RandomizedGenState")
 
-			if assert.NotEmpty(t, simState.GenState[escrow.ModuleName]) {
-				escrowGenState := &escrow.GenesisState{}
-				err = simState.Cdc.UnmarshalJSON(simState.GenState[escrow.ModuleName], escrowGenState)
-				if assert.NoError(t, err, "UnmarshalJSON(escrow gen state)") {
-					assert.Equal(t, tc.expGenState, escrowGenState, "escrow gen state")
+			if assert.NotEmpty(t, simState.GenState[hold.ModuleName]) {
+				escrowGenState := &hold.GenesisState{}
+				err = simState.Cdc.UnmarshalJSON(simState.GenState[hold.ModuleName], escrowGenState)
+				if assert.NoError(t, err, "UnmarshalJSON(hold gen state)") {
+					assert.Equal(t, tc.expGenState, escrowGenState, "hold gen state")
 				}
 			}
 
