@@ -6892,6 +6892,7 @@ MsgQueryOracleRequest queries an Oracle on another chain
 | `query` | [bytes](#bytes) |  | Query contains the query data passed to the oracle. |
 | `source_port` | [string](#string) |  | Source port is the source port to the oracle. |
 | `source_channel` | [string](#string) |  | Source channel is the channel to the oracle. |
+| `authority` | [string](#string) |  | The signing authority for the request |
 
 
 
