@@ -52,23 +52,23 @@
   
     - [Msg](#provenance.attribute.v1.Msg)
   
-- [provenance/escrow/v1/escrow.proto](#provenance/escrow/v1/escrow.proto)
-    - [AccountEscrow](#provenance.escrow.v1.AccountEscrow)
+- [provenance/hold/v1/events.proto](#provenance/hold/v1/events.proto)
+    - [EventEscrowAdded](#provenance.hold.v1.EventEscrowAdded)
+    - [EventEscrowRemoved](#provenance.hold.v1.EventEscrowRemoved)
   
-- [provenance/escrow/v1/events.proto](#provenance/escrow/v1/events.proto)
-    - [EventEscrowAdded](#provenance.escrow.v1.EventEscrowAdded)
-    - [EventEscrowRemoved](#provenance.escrow.v1.EventEscrowRemoved)
+- [provenance/hold/v1/hold.proto](#provenance/hold/v1/hold.proto)
+    - [AccountEscrow](#provenance.hold.v1.AccountEscrow)
   
-- [provenance/escrow/v1/genesis.proto](#provenance/escrow/v1/genesis.proto)
-    - [GenesisState](#provenance.escrow.v1.GenesisState)
+- [provenance/hold/v1/genesis.proto](#provenance/hold/v1/genesis.proto)
+    - [GenesisState](#provenance.hold.v1.GenesisState)
   
-- [provenance/escrow/v1/query.proto](#provenance/escrow/v1/query.proto)
-    - [GetAllEscrowRequest](#provenance.escrow.v1.GetAllEscrowRequest)
-    - [GetAllEscrowResponse](#provenance.escrow.v1.GetAllEscrowResponse)
-    - [GetEscrowRequest](#provenance.escrow.v1.GetEscrowRequest)
-    - [GetEscrowResponse](#provenance.escrow.v1.GetEscrowResponse)
+- [provenance/hold/v1/query.proto](#provenance/hold/v1/query.proto)
+    - [GetAllEscrowRequest](#provenance.hold.v1.GetAllEscrowRequest)
+    - [GetAllEscrowResponse](#provenance.hold.v1.GetAllEscrowResponse)
+    - [GetEscrowRequest](#provenance.hold.v1.GetEscrowRequest)
+    - [GetEscrowResponse](#provenance.hold.v1.GetEscrowResponse)
   
-    - [Query](#provenance.escrow.v1.Query)
+    - [Query](#provenance.hold.v1.Query)
   
 - [provenance/marker/v1/accessgrant.proto](#provenance/marker/v1/accessgrant.proto)
     - [AccessGrant](#provenance.marker.v1.AccessGrant)
@@ -1190,46 +1190,14 @@ Msg defines the attribute module Msg service.
 
 
 
-<a name="provenance/escrow/v1/escrow.proto"></a>
+<a name="provenance/hold/v1/events.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## provenance/escrow/v1/escrow.proto
+## provenance/hold/v1/events.proto
 
 
 
-<a name="provenance.escrow.v1.AccountEscrow"></a>
-
-### AccountEscrow
-AccountEscrow associates an address with an amount.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address is the account address that holds the funds in escrow. |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the balances that are in escrow for the address. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="provenance/escrow/v1/events.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/escrow/v1/events.proto
-
-
-
-<a name="provenance.escrow.v1.EventEscrowAdded"></a>
+<a name="provenance.hold.v1.EventEscrowAdded"></a>
 
 ### EventEscrowAdded
 EventEscrowAdded is an event indicating that some funds were placed in escrow for an account.
@@ -1245,7 +1213,7 @@ EventEscrowAdded is an event indicating that some funds were placed in escrow fo
 
 
 
-<a name="provenance.escrow.v1.EventEscrowRemoved"></a>
+<a name="provenance.hold.v1.EventEscrowRemoved"></a>
 
 ### EventEscrowRemoved
 EventEscrowAdded is an event indicating that some funds were removed from escrow for an account.
@@ -1270,22 +1238,23 @@ EventEscrowAdded is an event indicating that some funds were removed from escrow
 
 
 
-<a name="provenance/escrow/v1/genesis.proto"></a>
+<a name="provenance/hold/v1/hold.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## provenance/escrow/v1/genesis.proto
+## provenance/hold/v1/hold.proto
 
 
 
-<a name="provenance.escrow.v1.GenesisState"></a>
+<a name="provenance.hold.v1.AccountEscrow"></a>
 
-### GenesisState
-GenesisState defines the attribute module's genesis state.
+### AccountEscrow
+AccountEscrow associates an address with an amount.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `escrows` | [AccountEscrow](#provenance.escrow.v1.AccountEscrow) | repeated | escrows defines the funds in escrow at genesis. |
+| `address` | [string](#string) |  | address is the account address that holds the funds in escrow. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the balances that are in escrow for the address. |
 
 
 
@@ -1301,14 +1270,45 @@ GenesisState defines the attribute module's genesis state.
 
 
 
-<a name="provenance/escrow/v1/query.proto"></a>
+<a name="provenance/hold/v1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## provenance/escrow/v1/query.proto
+## provenance/hold/v1/genesis.proto
 
 
 
-<a name="provenance.escrow.v1.GetAllEscrowRequest"></a>
+<a name="provenance.hold.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the attribute module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `escrows` | [AccountEscrow](#provenance.hold.v1.AccountEscrow) | repeated | escrows defines the funds in escrow at genesis. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/hold/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/hold/v1/query.proto
+
+
+
+<a name="provenance.hold.v1.GetAllEscrowRequest"></a>
 
 ### GetAllEscrowRequest
 GetAllEscrowRequest is the request type for the Query/GetAllEscrow query.
@@ -1323,7 +1323,7 @@ GetAllEscrowRequest is the request type for the Query/GetAllEscrow query.
 
 
 
-<a name="provenance.escrow.v1.GetAllEscrowResponse"></a>
+<a name="provenance.hold.v1.GetAllEscrowResponse"></a>
 
 ### GetAllEscrowResponse
 GetAllEscrowResponse is the response type for the Query/GetAllEscrow query.
@@ -1331,7 +1331,7 @@ GetAllEscrowResponse is the response type for the Query/GetAllEscrow query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `escrows` | [AccountEscrow](#provenance.escrow.v1.AccountEscrow) | repeated | escrows is a list of addresses with funds in escrow and the amounts in escrow. |
+| `escrows` | [AccountEscrow](#provenance.hold.v1.AccountEscrow) | repeated | escrows is a list of addresses with funds in escrow and the amounts in escrow. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
 
 
@@ -1339,7 +1339,7 @@ GetAllEscrowResponse is the response type for the Query/GetAllEscrow query.
 
 
 
-<a name="provenance.escrow.v1.GetEscrowRequest"></a>
+<a name="provenance.hold.v1.GetEscrowRequest"></a>
 
 ### GetEscrowRequest
 GetEscrowRequest is the request type for the Query/GetEscrow query.
@@ -1354,7 +1354,7 @@ GetEscrowRequest is the request type for the Query/GetEscrow query.
 
 
 
-<a name="provenance.escrow.v1.GetEscrowResponse"></a>
+<a name="provenance.hold.v1.GetEscrowResponse"></a>
 
 ### GetEscrowResponse
 GetEscrowResponse is the response type for the Query/GetEscrow query.
@@ -1375,15 +1375,15 @@ GetEscrowResponse is the response type for the Query/GetEscrow query.
  <!-- end HasExtensions -->
 
 
-<a name="provenance.escrow.v1.Query"></a>
+<a name="provenance.hold.v1.Query"></a>
 
 ### Query
 Query defines the gRPC querier service for attribute module.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `GetEscrow` | [GetEscrowRequest](#provenance.escrow.v1.GetEscrowRequest) | [GetEscrowResponse](#provenance.escrow.v1.GetEscrowResponse) | GetEscrow looks up the funds that are in escrow for an address. | GET|/provenance/escrow/v1/funds/{address}|
-| `GetAllEscrow` | [GetAllEscrowRequest](#provenance.escrow.v1.GetAllEscrowRequest) | [GetAllEscrowResponse](#provenance.escrow.v1.GetAllEscrowResponse) | GetAllEscrow returns all addresses with funds in escrow, and the amount in escrow. | GET|/provenance/escrow/v1/funds|
+| `GetEscrow` | [GetEscrowRequest](#provenance.hold.v1.GetEscrowRequest) | [GetEscrowResponse](#provenance.hold.v1.GetEscrowResponse) | GetEscrow looks up the funds that are in escrow for an address. | GET|/provenance/escrow/v1/funds/{address}|
+| `GetAllEscrow` | [GetAllEscrowRequest](#provenance.hold.v1.GetAllEscrowRequest) | [GetAllEscrowResponse](#provenance.hold.v1.GetAllEscrowResponse) | GetAllEscrow returns all addresses with funds in escrow, and the amount in escrow. | GET|/provenance/escrow/v1/funds|
 
  <!-- end services -->
 
