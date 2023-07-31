@@ -383,10 +383,22 @@ func TestBankSendCoinsUsesSendRestrictionFn(t *testing.T) {
 	// addrOther and addrHasAttr now each have 100 of the marker denom.
 	// addrHasAttr has the attribute needed to receive the denom, and addrOther does not.
 
+	// sendWithCache uses a cache context to call SendCoins, and only writes it if there wasn't an error.
+	// This is needed because SendCoins subtracts the amount from the fromAddr before checking the send restriction.
+	// That's usually okay because it's all being done in a single transaction, which gets rolled back on error.
+	sendWithCache := func(fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+		cacheCtx, writeCache := ctx.CacheContext()
+		err = app.BankKeeper.SendCoins(cacheCtx, fromAddr, toAddr, amt)
+		if err == nil {
+			writeCache()
+		}
+		return err
+	}
+
 	t.Run("send to address without attributes", func(t *testing.T) {
 		expErr := fmt.Sprintf("address %s does not contain the %q required attribute: \"kyc.provenance.io\"",
 			addrOther, markerDenom)
-		err = app.BankKeeper.SendCoins(ctx, addrHasAttr, addrOther, cz(5, markerDenom))
+		err = sendWithCache(addrHasAttr, addrOther, cz(5, markerDenom))
 		assert.EqualError(t, err, expErr, "SendCoins")
 		expBal := cz(100, markerDenom)
 		hasAttrBal := app.BankKeeper.GetBalance(ctx, addrHasAttr, markerDenom)
@@ -396,7 +408,7 @@ func TestBankSendCoinsUsesSendRestrictionFn(t *testing.T) {
 	})
 
 	t.Run("send to address with attributes", func(t *testing.T) {
-		err = app.BankKeeper.SendCoins(ctx, addrOther, addrHasAttr, cz(6, markerDenom))
+		err = sendWithCache(addrOther, addrHasAttr, cz(6, markerDenom))
 		assert.NoError(t, err, "SendCoins")
 		hasAttrExpBal := cz(106, markerDenom)
 		hasAttrBal := app.BankKeeper.GetBalance(ctx, addrHasAttr, markerDenom)
