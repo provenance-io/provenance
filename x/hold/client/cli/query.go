@@ -29,14 +29,14 @@ func QueryCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		QueryCmdGetEscrow(),
-		QueryCmdGetAllEscrow(),
+		QueryCmdGetHolds(),
+		QueryCmdGetAllHolds(),
 	)
 
 	return cmd
 }
 
-func QueryCmdGetEscrow() *cobra.Command {
+func QueryCmdGetHolds() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "get <address>",
 		Aliases: []string{"get-hold", "on-hold"},
@@ -53,13 +53,13 @@ func QueryCmdGetEscrow() *cobra.Command {
 				return sdkerrors.ErrInvalidAddress.Wrap(err.Error())
 			}
 
-			req := hold.GetEscrowRequest{
+			req := hold.GetHoldsRequest{
 				Address: args[0],
 			}
 
-			var res *hold.GetEscrowResponse
+			var res *hold.GetHoldsResponse
 			queryClient := hold.NewQueryClient(clientCtx)
-			res, err = queryClient.GetEscrow(cmd.Context(), &req)
+			res, err = queryClient.GetHolds(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
@@ -73,7 +73,7 @@ func QueryCmdGetEscrow() *cobra.Command {
 	return cmd
 }
 
-func QueryCmdGetAllEscrow() *cobra.Command {
+func QueryCmdGetAllHolds() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "all",
 		Aliases: []string{"get-all"},
@@ -86,15 +86,15 @@ func QueryCmdGetAllEscrow() *cobra.Command {
 				return err
 			}
 
-			req := hold.GetAllEscrowRequest{}
+			req := hold.GetAllHoldsRequest{}
 			req.Pagination, err = client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			var res *hold.GetAllEscrowResponse
+			var res *hold.GetAllHoldsResponse
 			queryClient := hold.NewQueryClient(clientCtx)
-			res, err = queryClient.GetAllEscrow(cmd.Context(), &req)
+			res, err = queryClient.GetAllHolds(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
@@ -104,7 +104,7 @@ func QueryCmdGetAllEscrow() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "all escrows")
+	flags.AddPaginationFlagsToCmd(cmd, "all holds")
 
 	return cmd
 }

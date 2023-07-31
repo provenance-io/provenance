@@ -53,11 +53,11 @@ type IntegrationCLITestSuite struct {
 	addr4Bal sdk.Coins
 	addr5Bal sdk.Coins
 
-	addr1Escrow sdk.Coins
-	addr2Escrow sdk.Coins
-	addr3Escrow sdk.Coins
-	addr4Escrow sdk.Coins
-	addr5Escrow sdk.Coins
+	addr1Hold sdk.Coins
+	addr2Hold sdk.Coins
+	addr3Hold sdk.Coins
+	addr4Hold sdk.Coins
+	addr5Hold sdk.Coins
 
 	addr1Spendable sdk.Coins
 	addr2Spendable sdk.Coins
@@ -92,29 +92,29 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 		return rv
 	}
 	// newAmounts creates the balance, hold, and spendable amounts.
-	newAmounts := func(name, plusBalance, escrowAmount string) (sdk.Coins, sdk.Coins, sdk.Coins) {
+	newAmounts := func(name, plusBalance, holdAmount string) (sdk.Coins, sdk.Coins, sdk.Coins) {
 		balance := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 1_000_000_000)}
 		if len(plusBalance) > 0 {
 			balance = balance.Add(newCoins(plusBalance)...)
 		}
-		inEscrow := balance
-		if escrowAmount != "all" {
-			inEscrow = newCoins(escrowAmount)
+		onHold := balance
+		if holdAmount != "all" {
+			onHold = newCoins(holdAmount)
 		}
 		// manually doing this subtraction because we need the zero entries.
 		hasNeg := false
 		var spendable sdk.Coins
 		for _, balCoin := range balance {
-			escHas, escCoin := inEscrow.Find(balCoin.Denom)
+			holdHas, holdCoin := onHold.Find(balCoin.Denom)
 			spendCoin := sdk.Coin{Denom: balCoin.Denom, Amount: balCoin.Amount}
-			if escHas && !escCoin.Amount.IsZero() {
-				spendCoin.Amount = balCoin.Amount.Sub(escCoin.Amount)
+			if holdHas && !holdCoin.Amount.IsZero() {
+				spendCoin.Amount = balCoin.Amount.Sub(holdCoin.Amount)
 			}
 			hasNeg = hasNeg || spendCoin.IsNegative()
 			spendable = append(spendable, spendCoin)
 		}
-		s.Require().False(hasNeg, "%s spendable went negative: %q - %q = %q", name, balance, inEscrow, spendable)
-		return balance, inEscrow, spendable
+		s.Require().False(hasNeg, "%s spendable went negative: %q - %q = %q", name, balance, onHold, spendable)
+		return balance, onHold, spendable
 	}
 
 	s.addr1 = sdk.AccAddress("cli_test_address_1__")
@@ -131,31 +131,31 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.addr1Desc = "addr with large amounts"
 	addr1Plus := "15banana,5000000000000000000000hugecoin,1xenon"
 	addr1Esrow := "5banana,2000000000000000000000hugecoin,1xenon"
-	s.addr1Bal, s.addr1Escrow, s.addr1Spendable = newAmounts("addr1", addr1Plus, addr1Esrow)
+	s.addr1Bal, s.addr1Hold, s.addr1Spendable = newAmounts("addr1", addr1Plus, addr1Esrow)
 
 	// addr2 characteristics:
 	// - One extra denom.
 	// - Nothing on hold.
 	s.addr2Desc = "addr with extra denom no hold"
-	s.addr2Bal, s.addr2Escrow, s.addr2Spendable = newAmounts("addr2", "99banana", "")
+	s.addr2Bal, s.addr2Hold, s.addr2Spendable = newAmounts("addr2", "99banana", "")
 
 	// addr3 characteristics:
 	// - All funds on hold.
 	s.addr3Desc = "addr with all funds on hold"
-	s.addr3Bal, s.addr3Escrow, s.addr3Spendable = newAmounts("addr3", "55acorn,12banana", "all")
+	s.addr3Bal, s.addr3Hold, s.addr3Spendable = newAmounts("addr3", "55acorn,12banana", "all")
 
 	// addr4 characteristics:
 	// - Most of one denom on hold.
 	// - A little of the bond denom on hold.
 	// - None of another denom on hold.
 	s.addr4Desc = "addr with only a little on hold"
-	s.addr4Bal, s.addr4Escrow, s.addr4Spendable = newAmounts("addr4", "93acorn,9carrot", "90acorn,30000"+s.cfg.BondDenom)
+	s.addr4Bal, s.addr4Hold, s.addr4Spendable = newAmounts("addr4", "93acorn,9carrot", "90acorn,30000"+s.cfg.BondDenom)
 
 	// addr5 characteristics:
 	// - Only has bond denom.
 	// - Nothing on hold.
 	s.addr5Desc = "addr without holds and only bond denom"
-	s.addr5Bal, s.addr5Escrow, s.addr5Spendable = newAmounts("addr5", "", "")
+	s.addr5Bal, s.addr5Hold, s.addr5Spendable = newAmounts("addr5", "", "")
 
 	s.flagAsText = fmt.Sprintf("--%s=text", tmcli.OutputFlag)
 	s.flagAsJSON = fmt.Sprintf("--%s=json", tmcli.OutputFlag)
@@ -196,17 +196,17 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.Require().NoError(err, "MarshalJSON bank gen state")
 
 	// Place some of their stuff on hold.
-	var escrowGen hold.GenesisState
-	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[hold.ModuleName], &escrowGen)
-	s.Require().NoError(err, "UnmarshalJSON auth gen state")
-	escrowGen.Escrows = append(escrowGen.Escrows,
-		&hold.AccountEscrow{Address: s.addr1.String(), Amount: s.addr1Escrow},
-		&hold.AccountEscrow{Address: s.addr2.String(), Amount: s.addr2Escrow},
-		&hold.AccountEscrow{Address: s.addr3.String(), Amount: s.addr3Escrow},
-		&hold.AccountEscrow{Address: s.addr4.String(), Amount: s.addr4Escrow},
-		&hold.AccountEscrow{Address: s.addr5.String(), Amount: s.addr5Escrow},
+	var holdGen hold.GenesisState
+	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[hold.ModuleName], &holdGen)
+	s.Require().NoError(err, "UnmarshalJSON hold gen state")
+	holdGen.Holds = append(holdGen.Holds,
+		&hold.AccountHold{Address: s.addr1.String(), Amount: s.addr1Hold},
+		&hold.AccountHold{Address: s.addr2.String(), Amount: s.addr2Hold},
+		&hold.AccountHold{Address: s.addr3.String(), Amount: s.addr3Hold},
+		&hold.AccountHold{Address: s.addr4.String(), Amount: s.addr4Hold},
+		&hold.AccountHold{Address: s.addr5.String(), Amount: s.addr5Hold},
 	)
-	s.cfg.GenesisState[hold.ModuleName], err = s.cfg.Codec.MarshalJSON(&escrowGen)
+	s.cfg.GenesisState[hold.ModuleName], err = s.cfg.Codec.MarshalJSON(&holdGen)
 	s.Require().NoError(err, "MarshalJSON hold gen state")
 
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
@@ -294,15 +294,15 @@ func (s *IntegrationCLITestSuite) TestQueryCmd() {
 	cmdGen := func() *cobra.Command {
 		return cli.QueryCmd()
 	}
-	resp := func(amount sdk.Coins) *hold.GetEscrowResponse {
-		return &hold.GetEscrowResponse{Amount: amount}
+	resp := func(amount sdk.Coins) *hold.GetHoldsResponse {
+		return &hold.GetHoldsResponse{Amount: amount}
 	}
-	respAll := &hold.GetAllEscrowResponse{
-		Escrows: []*hold.AccountEscrow{
-			{Address: s.addr1.String(), Amount: s.addr1Escrow},
+	respAll := &hold.GetAllHoldsResponse{
+		Holds: []*hold.AccountHold{
+			{Address: s.addr1.String(), Amount: s.addr1Hold},
 			// addr2 doesn't have anything on hold.
-			{Address: s.addr3.String(), Amount: s.addr3Escrow},
-			{Address: s.addr4.String(), Amount: s.addr4Escrow},
+			{Address: s.addr3.String(), Amount: s.addr3Hold},
+			{Address: s.addr4.String(), Amount: s.addr4Hold},
 			// addr5 doesn't have anything on hold.
 		},
 		Pagination: &query.PageResponse{
@@ -315,7 +315,7 @@ func (s *IntegrationCLITestSuite) TestQueryCmd() {
 		{
 			name:   "get",
 			args:   []string{"get", s.addr1.String(), s.flagAsText},
-			expOut: s.asYAML(resp(s.addr1Escrow)),
+			expOut: s.asYAML(resp(s.addr1Hold)),
 		},
 		{
 			name:   "all",
@@ -337,12 +337,12 @@ func (s *IntegrationCLITestSuite) TestQueryCmd() {
 	}
 }
 
-func (s *IntegrationCLITestSuite) TestQueryCmdGetEscrow() {
+func (s *IntegrationCLITestSuite) TestQueryCmdGetHolds() {
 	cmdGen := func() *cobra.Command {
-		return cli.QueryCmdGetEscrow()
+		return cli.QueryCmdGetHolds()
 	}
-	resp := func(amount sdk.Coins) *hold.GetEscrowResponse {
-		return &hold.GetEscrowResponse{Amount: amount}
+	resp := func(amount sdk.Coins) *hold.GetHoldsResponse {
+		return &hold.GetHoldsResponse{Amount: amount}
 	}
 
 	unknownAddr := sdk.AccAddress("unknown_address_____")
@@ -351,52 +351,52 @@ func (s *IntegrationCLITestSuite) TestQueryCmdGetEscrow() {
 		{
 			name:   s.addr1Desc + ": get hold as text",
 			args:   []string{s.addr1.String(), s.flagAsText},
-			expOut: s.asYAML(resp(s.addr1Escrow)),
+			expOut: s.asYAML(resp(s.addr1Hold)),
 		},
 		{
 			name:   s.addr1Desc + ": get hold as json",
 			args:   []string{s.addr1.String(), s.flagAsJSON},
-			expOut: s.asJSON(resp(s.addr1Escrow)),
+			expOut: s.asJSON(resp(s.addr1Hold)),
 		},
 		{
 			name:   s.addr2Desc + ": get hold as text",
 			args:   []string{s.addr2.String(), s.flagAsText},
-			expOut: s.asYAML(resp(s.addr2Escrow)),
+			expOut: s.asYAML(resp(s.addr2Hold)),
 		},
 		{
 			name:   s.addr2Desc + ": get hold as json",
 			args:   []string{s.addr2.String(), s.flagAsJSON},
-			expOut: s.asJSON(resp(s.addr2Escrow)),
+			expOut: s.asJSON(resp(s.addr2Hold)),
 		},
 		{
 			name:   s.addr3Desc + ": get hold as text",
 			args:   []string{s.addr3.String(), s.flagAsText},
-			expOut: s.asYAML(resp(s.addr3Escrow)),
+			expOut: s.asYAML(resp(s.addr3Hold)),
 		},
 		{
 			name:   s.addr3Desc + ": get hold as json",
 			args:   []string{s.addr3.String(), s.flagAsJSON},
-			expOut: s.asJSON(resp(s.addr3Escrow)),
+			expOut: s.asJSON(resp(s.addr3Hold)),
 		},
 		{
 			name:   s.addr4Desc + ": get hold as text",
 			args:   []string{s.addr4.String(), s.flagAsText},
-			expOut: s.asYAML(resp(s.addr4Escrow)),
+			expOut: s.asYAML(resp(s.addr4Hold)),
 		},
 		{
 			name:   s.addr4Desc + ": get hold as json",
 			args:   []string{s.addr4.String(), s.flagAsJSON},
-			expOut: s.asJSON(resp(s.addr4Escrow)),
+			expOut: s.asJSON(resp(s.addr4Hold)),
 		},
 		{
 			name:   s.addr5Desc + ": get hold as text",
 			args:   []string{s.addr5.String(), s.flagAsText},
-			expOut: s.asYAML(resp(s.addr5Escrow)),
+			expOut: s.asYAML(resp(s.addr5Hold)),
 		},
 		{
 			name:   s.addr5Desc + ": get hold as json",
 			args:   []string{s.addr5.String(), s.flagAsJSON},
-			expOut: s.asJSON(resp(s.addr5Escrow)),
+			expOut: s.asJSON(resp(s.addr5Hold)),
 		},
 		{
 			name:   "unknown address",
@@ -428,27 +428,27 @@ func (s *IntegrationCLITestSuite) TestQueryCmdGetEscrow() {
 	}
 }
 
-func (s *IntegrationCLITestSuite) TestQueryCmdGetAllEscrow() {
+func (s *IntegrationCLITestSuite) TestQueryCmdGetAllHolds() {
 	cmdGen := func() *cobra.Command {
-		return cli.QueryCmdGetAllEscrow()
+		return cli.QueryCmdGetAllHolds()
 	}
 	pageKey := func(addr sdk.AccAddress, denom string) []byte {
-		return holdkeeper.CreateEscrowCoinKey(addr, denom)[1:]
+		return holdkeeper.CreateHoldCoinKey(addr, denom)[1:]
 
 	}
 	pageKeyArg := func(addr sdk.AccAddress, denom string) string {
 		return base64.StdEncoding.EncodeToString(pageKey(addr, denom))
 	}
-	allEntries := []*hold.AccountEscrow{
-		{Address: s.addr1.String(), Amount: s.addr1Escrow},
+	allEntries := []*hold.AccountHold{
+		{Address: s.addr1.String(), Amount: s.addr1Hold},
 		// addr2 doesn't have anything on hold.
-		{Address: s.addr3.String(), Amount: s.addr3Escrow},
-		{Address: s.addr4.String(), Amount: s.addr4Escrow},
+		{Address: s.addr3.String(), Amount: s.addr3Hold},
+		{Address: s.addr4.String(), Amount: s.addr4Hold},
 		// addr5 doesn't have anything on hold.
 	}
-	resp := func(total uint64, nextKey []byte, escrows ...*hold.AccountEscrow) *hold.GetAllEscrowResponse {
-		return &hold.GetAllEscrowResponse{
-			Escrows: escrows,
+	resp := func(total uint64, nextKey []byte, holds ...*hold.AccountHold) *hold.GetAllHoldsResponse {
+		return &hold.GetAllHoldsResponse{
+			Holds: holds,
 			Pagination: &query.PageResponse{
 				NextKey: nextKey,
 				Total:   total,
@@ -502,9 +502,9 @@ func (s *IntegrationCLITestSuite) TestQueryCmdGetAllEscrow() {
 	}
 }
 
-// TODO[1607]: Uncomment this TestEscrowRemovedFromSpendable test.
+// TODO[1607]: Uncomment this TestHoldsRemovedFromSpendable test.
 /* commented out until I have a version of the sdk with the GetSpendableBalancesCmd query.
-func (s *IntegrationCLITestSuite) TestEscrowRemovedFromSpendable() {
+func (s *IntegrationCLITestSuite) TestHoldsRemovedFromSpendable() {
 	// The purpose of these tests is to make sure that the bank module is
 	// being properly informed of the locked hold funds.
 	cmdGen := func() *cobra.Command {
