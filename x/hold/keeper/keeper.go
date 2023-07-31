@@ -121,7 +121,7 @@ func (k Keeper) AddEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins)
 	}
 
 	if !fundsAdded.IsZero() {
-		err := ctx.EventManager().EmitTypedEvent(hold.NewEventEscrowAdded(addr, fundsAdded))
+		err := ctx.EventManager().EmitTypedEvent(hold.NewEventHoldAdded(addr, fundsAdded))
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -164,7 +164,7 @@ func (k Keeper) RemoveEscrow(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coi
 	}
 
 	if !fundsRemoved.IsZero() {
-		err := ctx.EventManager().EmitTypedEvent(hold.NewEventEscrowRemoved(addr, fundsRemoved))
+		err := ctx.EventManager().EmitTypedEvent(hold.NewEventHoldRemoved(addr, fundsRemoved))
 		if err != nil {
 			errs = append(errs, err)
 		}

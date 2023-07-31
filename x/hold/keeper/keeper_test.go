@@ -355,13 +355,13 @@ func (s *TestSuite) TestEventsToStrings() {
 	coinsAdd := s.coins("97acorn,12banana")
 	eventAddT := hold.NewEventHoldAdded(addrAdd, coinsAdd)
 	eventAdd, err := sdk.TypedEventToEvent(eventAddT)
-	s.Require().NoError(err, "TypedEventToEvent EventEscrowAdded")
+	s.Require().NoError(err, "TypedEventToEvent EventHoldAdded")
 
 	addrRem := sdk.AccAddress("address_rem_event___")
 	coinsRem := s.coins("13cucumber,81dill")
-	eventRemT := hold.NewEventEscrowRemoved(addrRem, coinsRem)
+	eventRemT := hold.NewEventHoldRemoved(addrRem, coinsRem)
 	eventRem, err := sdk.TypedEventToEvent(eventRemT)
-	s.Require().NoError(err, "TypedEventToEvent EventEscrowRemoved")
+	s.Require().NoError(err, "TypedEventToEvent EventHoldRemoved")
 
 	events := sdk.Events{
 		eventAdd,
@@ -519,7 +519,7 @@ func (s *TestSuite) TestKeeper_AddEscrow() {
 
 	makeEvents := func(addr sdk.AccAddress, coins sdk.Coins) sdk.Events {
 		event, err := sdk.TypedEventToEvent(hold.NewEventHoldAdded(addr, coins))
-		s.Require().NoError(err, "TypedEventToEvent EventEscrowAdded(%s, %q)", s.getAddrName(addr), coins)
+		s.Require().NoError(err, "TypedEventToEvent EventHoldAdded(%s, %q)", s.getAddrName(addr), coins)
 		return sdk.Events{event}
 	}
 
@@ -718,8 +718,8 @@ func (s *TestSuite) TestKeeper_RemoveEscrow() {
 	store = nil
 
 	makeEvents := func(addr sdk.AccAddress, coins sdk.Coins) sdk.Events {
-		event, err := sdk.TypedEventToEvent(hold.NewEventEscrowRemoved(addr, coins))
-		s.Require().NoError(err, "TypedEventToEvent EventEscrowRemoved((%s, %q)", s.getAddrName(addr), coins)
+		event, err := sdk.TypedEventToEvent(hold.NewEventHoldRemoved(addr, coins))
+		s.Require().NoError(err, "TypedEventToEvent EventHoldRemoved((%s, %q)", s.getAddrName(addr), coins)
 		return sdk.Events{event}
 	}
 

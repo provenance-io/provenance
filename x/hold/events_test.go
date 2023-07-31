@@ -12,30 +12,30 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func TestNewEventEscrowAdded(t *testing.T) {
+func TestNewEventHoldAdded(t *testing.T) {
 	tests := []struct {
 		name   string
 		addr   sdk.AccAddress
 		amount sdk.Coins
-		exp    *EventEscrowAdded
+		exp    *EventHoldAdded
 	}{
 		{
 			name:   "both nil",
 			addr:   nil,
 			amount: nil,
-			exp:    &EventEscrowAdded{Address: "", Amount: ""},
+			exp:    &EventHoldAdded{Address: "", Amount: ""},
 		},
 		{
 			name:   "both empty",
 			addr:   sdk.AccAddress{},
 			amount: sdk.Coins{},
-			exp:    &EventEscrowAdded{Address: "", Amount: ""},
+			exp:    &EventHoldAdded{Address: "", Amount: ""},
 		},
 		{
 			name:   "normal address and two denoms",
 			addr:   sdk.AccAddress("normal_address______"),
 			amount: sdk.NewCoins(sdk.NewInt64Coin("fingercoin", 10), sdk.NewInt64Coin("toecoin", 9)),
-			exp: &EventEscrowAdded{
+			exp: &EventHoldAdded{
 				Address: sdk.AccAddress("normal_address______").String(),
 				Amount:  "10fingercoin,9toecoin",
 			},
@@ -44,36 +44,36 @@ func TestNewEventEscrowAdded(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			event := NewEventEscrowAdded(tc.addr, tc.amount)
-			assert.Equal(t, tc.exp, event, "NewEventEscrowAdded")
+			event := NewEventHoldAdded(tc.addr, tc.amount)
+			assert.Equal(t, tc.exp, event, "NewEventHoldAdded")
 		})
 	}
 }
 
-func TestNewEventEscrowRemoved(t *testing.T) {
+func TestNewEventHoldRemoved(t *testing.T) {
 	tests := []struct {
 		name   string
 		addr   sdk.AccAddress
 		amount sdk.Coins
-		exp    *EventEscrowRemoved
+		exp    *EventHoldRemoved
 	}{
 		{
 			name:   "both nil",
 			addr:   nil,
 			amount: nil,
-			exp:    &EventEscrowRemoved{Address: "", Amount: ""},
+			exp:    &EventHoldRemoved{Address: "", Amount: ""},
 		},
 		{
 			name:   "both empty",
 			addr:   sdk.AccAddress{},
 			amount: sdk.Coins{},
-			exp:    &EventEscrowRemoved{Address: "", Amount: ""},
+			exp:    &EventHoldRemoved{Address: "", Amount: ""},
 		},
 		{
 			name:   "normal address and two denoms",
 			addr:   sdk.AccAddress("normal_address______"),
 			amount: sdk.NewCoins(sdk.NewInt64Coin("fingercoin", 10), sdk.NewInt64Coin("toecoin", 9)),
-			exp: &EventEscrowRemoved{
+			exp: &EventHoldRemoved{
 				Address: sdk.AccAddress("normal_address______").String(),
 				Amount:  "10fingercoin,9toecoin",
 			},
@@ -82,8 +82,8 @@ func TestNewEventEscrowRemoved(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			event := NewEventEscrowRemoved(tc.addr, tc.amount)
-			assert.Equal(t, tc.exp, event, "NewEventEscrowRemoved")
+			event := NewEventHoldRemoved(tc.addr, tc.amount)
+			assert.Equal(t, tc.exp, event, "NewEventHoldRemoved")
 		})
 	}
 }
@@ -114,10 +114,10 @@ func TestTypedEventToEvent(t *testing.T) {
 		expEvent sdk.Event
 	}{
 		{
-			name: "EventEscrowAdded",
-			tev:  NewEventEscrowAdded(addr, coins),
+			name: "EventHoldAdded",
+			tev:  NewEventHoldAdded(addr, coins),
 			expEvent: sdk.Event{
-				Type: "provenance.hold.v1.EventEscrowAdded",
+				Type: "provenance.hold.v1.EventHoldAdded",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("address"), Value: []byte(addrQ)},
 					{Key: []byte("amount"), Value: []byte(coinsQ)},
@@ -125,10 +125,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			},
 		},
 		{
-			name: "EventEscrowRemoved",
-			tev:  NewEventEscrowRemoved(addr, coins),
+			name: "EventHoldRemoved",
+			tev:  NewEventHoldRemoved(addr, coins),
 			expEvent: sdk.Event{
-				Type: "provenance.hold.v1.EventEscrowRemoved",
+				Type: "provenance.hold.v1.EventHoldRemoved",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("address"), Value: []byte(addrQ)},
 					{Key: []byte("amount"), Value: []byte(coinsQ)},
