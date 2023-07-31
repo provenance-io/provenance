@@ -9,8 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	"github.com/provenance-io/provenance/x/escrow/keeper"
-	"github.com/provenance-io/provenance/x/escrow/simulation"
+	"github.com/provenance-io/provenance/x/hold/keeper"
+	"github.com/provenance-io/provenance/x/hold/simulation"
 )
 
 func TestDecodeStore(t *testing.T) {

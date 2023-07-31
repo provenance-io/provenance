@@ -1,13 +1,13 @@
 syntax = "proto3";
-package provenance.escrow.v1;
+package provenance.hold.v1;
 
-option go_package = "github.com/provenance-io/provenance/x/escrow";
+option go_package = "github.com/provenance-io/provenance/x/hold";
 
-option java_package        = "io.provenance.escrow.v1";
+option java_package        = "io.provenance.hold.v1";
 option java_multiple_files = true;
 
 import "gogoproto/gogo.proto";
-import "provenance/escrow/v1/escrow.proto";
+import "provenance/hold/v1/hold.proto";
 
 // GenesisState defines the attribute module's genesis state.
 message GenesisState {

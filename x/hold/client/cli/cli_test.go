@@ -24,9 +24,9 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
-	"github.com/provenance-io/provenance/x/escrow"
-	"github.com/provenance-io/provenance/x/escrow/client/cli"
-	escrowkeeper "github.com/provenance-io/provenance/x/escrow/keeper"
+	"github.com/provenance-io/provenance/x/hold"
+	"github.com/provenance-io/provenance/x/hold/client/cli"
+	escrowkeeper "github.com/provenance-io/provenance/x/hold/keeper"
 )
 
 type IntegrationCLITestSuite struct {

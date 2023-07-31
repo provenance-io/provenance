@@ -18,10 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/provenance-io/provenance/x/escrow"
-	"github.com/provenance-io/provenance/x/escrow/client/cli"
-	"github.com/provenance-io/provenance/x/escrow/keeper"
-	"github.com/provenance-io/provenance/x/escrow/simulation"
+	"github.com/provenance-io/provenance/x/hold"
+	"github.com/provenance-io/provenance/x/hold/client/cli"
+	"github.com/provenance-io/provenance/x/hold/keeper"
+	"github.com/provenance-io/provenance/x/hold/simulation"
 )
 
 var (

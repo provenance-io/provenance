@@ -19,8 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/escrow"
-	"github.com/provenance-io/provenance/x/escrow/keeper"
+	"github.com/provenance-io/provenance/x/hold"
+	"github.com/provenance-io/provenance/x/hold/keeper"
 )
 
 type TestSuite struct {

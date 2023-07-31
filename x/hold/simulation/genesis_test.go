@@ -15,8 +15,8 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/provenance-io/provenance/x/escrow"
-	"github.com/provenance-io/provenance/x/escrow/simulation"
+	"github.com/provenance-io/provenance/x/hold"
+	"github.com/provenance-io/provenance/x/hold/simulation"
 )
 
 func TestRandomAccountEscrows(t *testing.T) {

@@ -1,16 +1,16 @@
 syntax = "proto3";
-package provenance.escrow.v1;
+package provenance.hold.v1;
 
-option go_package = "github.com/provenance-io/provenance/x/escrow";
+option go_package = "github.com/provenance-io/provenance/x/hold";
 
-option java_package        = "io.provenance.escrow.v1";
+option java_package        = "io.provenance.hold.v1";
 option java_multiple_files = true;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "provenance/escrow/v1/escrow.proto";
+import "provenance/hold/v1/hold.proto";
 
 // Query defines the gRPC querier service for attribute module.
 service Query {

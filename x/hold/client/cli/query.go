@@ -11,7 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/provenance-io/provenance/x/escrow"
+	"github.com/provenance-io/provenance/x/hold"
 )
 
 // exampleQueryCmdBase is the base command that gets a user to one of the query commands in here.

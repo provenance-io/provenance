@@ -3,7 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/provenance-io/provenance/x/escrow/keeper"
+	"github.com/provenance-io/provenance/x/hold/keeper"
 )
 
 func (s *TestSuite) TestEscrowAccountBalancesInvariantHelper() {

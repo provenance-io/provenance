@@ -9,7 +9,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/provenance-io/provenance/x/escrow/keeper"
+
+	"github.com/provenance-io/provenance/x/hold/keeper"
 )
 
 // assertKeyPrefixEscrowCoinValue asserts that the KeyPrefixEscrowCoin value

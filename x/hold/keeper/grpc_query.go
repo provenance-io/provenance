@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/provenance-io/provenance/x/escrow"
+	"github.com/provenance-io/provenance/x/hold"
 )
 
 // GetEscrow looks up the funds that are in escrow for an address.

@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/provenance-io/provenance/x/escrow"
+	"github.com/provenance-io/provenance/x/hold"
 )
 
 const balanceInvariant = "Escrow-Account-Balances"
