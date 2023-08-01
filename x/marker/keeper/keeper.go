@@ -210,3 +210,20 @@ func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAd
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.DenySendKey(markerAddr, senderAddr))
 }
+
+// IterateMarketNetAssetValues iterates marker net asset values for marker
+func (k Keeper) IterateMarketNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress, handler func(state types.MarkerNetAssetValue) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, types.MarkerNetAssetValueKeyPrefix(markerAddr))
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		var markerNav types.MarkerNetAssetValue
+		err := k.cdc.Unmarshal(it.Value(), &markerNav)
+		if err != nil {
+			return err
+		} else if handler(markerNav) {
+			break
+		}
+	}
+	return nil
+}

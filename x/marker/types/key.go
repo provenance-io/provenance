@@ -74,7 +74,12 @@ func DenySendKey(markerAddr sdk.AccAddress, denyAddr sdk.AccAddress) []byte {
 	return append(key, address.MustLengthPrefix(denyAddr.Bytes())...)
 }
 
-// MarkerNetAssetValueKey returns key [prefix][marker address] for marker net asset value
-func MarkerNetAssetValueKey(markerAddr sdk.AccAddress) []byte {
+// MarkerNetAssetValueKey returns key [prefix][marker address] for marker net asset values
+func MarkerNetAssetValueKeyPrefix(markerAddr sdk.AccAddress) []byte {
 	return append(MarkerNetAssetValuePrefix, address.MustLengthPrefix(markerAddr.Bytes())...)
+}
+
+// MarkerNetAssetValueKey returns key [prefix][marker address][asset denom value] for marker net asset value by value denom
+func MarkerNetAssetValueKey(markerAddr sdk.AccAddress, denom string) []byte {
+	return append(MarkerNetAssetValueKeyPrefix(markerAddr), denom...)
 }
