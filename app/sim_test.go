@@ -49,6 +49,7 @@ import (
 	cmdconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/provenance-io/provenance/x/hold"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
@@ -111,7 +112,7 @@ func TestFullAppSimulation(t *testing.T) {
 	app := New(logger, db, nil, true, map[int64]bool{}, t.TempDir(), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, "provenanced", app.Name())
 
-	fmt.Printf("running provenance full app simulation")
+	fmt.Printf("running provenance full app simulation\n")
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -188,7 +189,7 @@ func TestAppImportExport(t *testing.T) {
 	home := t.TempDir()
 	app := New(logger, db, nil, true, map[int64]bool{}, home, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 
-	fmt.Printf("running provenance test import export")
+	fmt.Printf("running provenance test import export\n")
 
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -274,6 +275,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[nametypes.StoreKey], newApp.keys[nametypes.StoreKey], [][]byte{}},
 		{app.keys[metadatatypes.StoreKey], newApp.keys[metadatatypes.StoreKey], [][]byte{}},
 		{app.keys[triggertypes.StoreKey], newApp.keys[triggertypes.StoreKey], [][]byte{}},
+		{app.keys[hold.StoreKey], newApp.keys[hold.StoreKey], [][]byte{}},
 	}
 
 	for _, skp := range storeKeysPrefixes {
