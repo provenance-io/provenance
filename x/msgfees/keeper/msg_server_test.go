@@ -55,6 +55,7 @@ func TestMsgServerTestSuite(t *testing.T) {
 }
 
 func (s *MsgServerTestSuite) TestAddMsgFeeProposal() {
+	typeUrl := sdk.MsgTypeURL(&types.MsgAddMsgFeeProposalRequest{})
 	tests := []struct {
 		name     string
 		msg      types.MsgAddMsgFeeProposalRequest
@@ -63,7 +64,7 @@ func (s *MsgServerTestSuite) TestAddMsgFeeProposal() {
 		{
 			name: "expected gov account for signer",
 			msg: types.MsgAddMsgFeeProposalRequest{
-				MsgTypeUrl:    "",
+				MsgTypeUrl:    typeUrl,
 				AdditionalFee: sdk.NewInt64Coin("nhash", 1),
 				Authority:     "",
 			},
@@ -81,7 +82,7 @@ func (s *MsgServerTestSuite) TestAddMsgFeeProposal() {
 		{
 			name: "successful",
 			msg: types.MsgAddMsgFeeProposalRequest{
-				MsgTypeUrl:    sdk.MsgTypeURL(&types.MsgAddMsgFeeProposalRequest{}),
+				MsgTypeUrl:    typeUrl,
 				AdditionalFee: sdk.NewInt64Coin("nhash", 1),
 				Authority:     "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 			},
@@ -117,7 +118,7 @@ func (s *MsgServerTestSuite) TestUpdateMsgFeeProposal() {
 		{
 			name: "expected gov account for signer",
 			msg: types.MsgUpdateMsgFeeProposalRequest{
-				MsgTypeUrl:    "",
+				MsgTypeUrl:    typeUrl,
 				AdditionalFee: sdk.NewInt64Coin("nhash", 1),
 				Authority:     "",
 			},
@@ -171,7 +172,7 @@ func (s *MsgServerTestSuite) TestRemoveMsgFeeProposal() {
 		{
 			name: "expected gov account for signer",
 			msg: types.MsgRemoveMsgFeeProposalRequest{
-				MsgTypeUrl: "",
+				MsgTypeUrl: typeUrl,
 				Authority:  "",
 			},
 			errorMsg: `expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got : expected gov account as only signer for proposal message`,
@@ -195,6 +196,50 @@ func (s *MsgServerTestSuite) TestRemoveMsgFeeProposal() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			response, err := s.msgServer.RemoveMsgFeeProposal(s.ctx, &tt.msg)
+			if len(tt.errorMsg) > 0 {
+				s.Assert().Error(err)
+				s.Assert().Equal(tt.errorMsg, err.Error())
+				s.Assert().Nil(response)
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().NotNil(response)
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestUpdateNhashPerUsdMilProposal() {
+	tests := []struct {
+		name     string
+		msg      types.MsgUpdateNhashPerUsdMilProposalRequest
+		errorMsg string
+	}{
+		{
+			name: "expected gov account for signer",
+			msg: types.MsgUpdateNhashPerUsdMilProposalRequest{
+				Authority: "",
+			},
+			errorMsg: `expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got : expected gov account as only signer for proposal message`,
+		},
+		{
+			name: "invalid NhashPerUsdMil amount",
+			msg: types.MsgUpdateNhashPerUsdMilProposalRequest{
+				NhashPerUsdMil: 0,
+				Authority:      "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+			},
+			errorMsg: `nhash per usd mil must be greater than 0`,
+		},
+		{
+			name: "successful",
+			msg: types.MsgUpdateNhashPerUsdMilProposalRequest{
+				NhashPerUsdMil: 10,
+				Authority:      "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+			},
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			response, err := s.msgServer.UpdateNhashPerUsdMilProposal(s.ctx, &tt.msg)
 			if len(tt.errorMsg) > 0 {
 				s.Assert().Error(err)
 				s.Assert().Equal(tt.errorMsg, err.Error())
