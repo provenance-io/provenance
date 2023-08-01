@@ -63,39 +63,87 @@ func (s *MsgServerTestSuite) TestAddMsgFeeProposal() {
 		{
 			name: "expected gov account for signer",
 			msg: types.MsgAddMsgFeeProposalRequest{
-				MsgTypeUrl:           "",
-				AdditionalFee:        sdk.NewInt64Coin("nhash", 1),
-				Recipient:            "",
-				RecipientBasisPoints: "",
-				Authority:            "",
+				MsgTypeUrl:    "",
+				AdditionalFee: sdk.NewInt64Coin("nhash", 1),
+				Authority:     "",
 			},
 			errorMsg: `expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got : expected gov account as only signer for proposal message`,
 		},
 		{
 			name: "msg type is empty",
 			msg: types.MsgAddMsgFeeProposalRequest{
-				MsgTypeUrl:           "",
-				AdditionalFee:        sdk.NewInt64Coin("nhash", 1),
-				Recipient:            "",
-				RecipientBasisPoints: "",
-				Authority:            "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+				MsgTypeUrl:    "",
+				AdditionalFee: sdk.NewInt64Coin("nhash", 1),
+				Authority:     "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 			},
 			errorMsg: `msg type is empty`,
 		},
 		{
 			name: "successful",
 			msg: types.MsgAddMsgFeeProposalRequest{
-				MsgTypeUrl:           sdk.MsgTypeURL(&types.MsgAddMsgFeeProposalRequest{}),
-				AdditionalFee:        sdk.NewInt64Coin("nhash", 1),
-				Recipient:            "",
-				RecipientBasisPoints: "",
-				Authority:            "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+				MsgTypeUrl:    sdk.MsgTypeURL(&types.MsgAddMsgFeeProposalRequest{}),
+				AdditionalFee: sdk.NewInt64Coin("nhash", 1),
+				Authority:     "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 			},
 		},
 	}
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			response, err := s.msgServer.AddMsgFeeProposal(s.ctx, &tt.msg)
+			if len(tt.errorMsg) > 0 {
+				s.Assert().Error(err)
+				s.Assert().Equal(tt.errorMsg, err.Error())
+				s.Assert().Nil(response)
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().NotNil(response)
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestUpdateMsgFeeProposal() {
+	typeUrl := sdk.MsgTypeURL(&types.MsgAddMsgFeeProposalRequest{})
+	msgFee := types.MsgFee{
+		MsgTypeUrl:    typeUrl,
+		AdditionalFee: sdk.NewInt64Coin("nhash", 1),
+	}
+	s.app.MsgFeesKeeper.SetMsgFee(s.ctx, msgFee)
+	tests := []struct {
+		name     string
+		msg      types.MsgUpdateMsgFeeProposalRequest
+		errorMsg string
+	}{
+		{
+			name: "expected gov account for signer",
+			msg: types.MsgUpdateMsgFeeProposalRequest{
+				MsgTypeUrl:    "",
+				AdditionalFee: sdk.NewInt64Coin("nhash", 1),
+				Authority:     "",
+			},
+			errorMsg: `expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got : expected gov account as only signer for proposal message`,
+		},
+		{
+			name: "msg type is empty",
+			msg: types.MsgUpdateMsgFeeProposalRequest{
+				MsgTypeUrl:    "",
+				AdditionalFee: sdk.NewInt64Coin("nhash", 1),
+				Authority:     "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+			},
+			errorMsg: `msg type is empty`,
+		},
+		{
+			name: "successful",
+			msg: types.MsgUpdateMsgFeeProposalRequest{
+				MsgTypeUrl:    typeUrl,
+				AdditionalFee: sdk.NewInt64Coin("nhash", 2),
+				Authority:     "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+			},
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			response, err := s.msgServer.UpdateMsgFeeProposal(s.ctx, &tt.msg)
 			if len(tt.errorMsg) > 0 {
 				s.Assert().Error(err)
 				s.Assert().Equal(tt.errorMsg, err.Error())
