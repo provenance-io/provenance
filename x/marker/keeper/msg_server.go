@@ -752,3 +752,59 @@ func (k msgServer) SetAccountData(goCtx context.Context, msg *types.MsgSetAccoun
 
 	return &types.MsgSetAccountDataResponse{}, nil
 }
+
+// UpdateSendDenyList updates the deny send list for restricted marker. Signer must be admin or gov proposal.
+func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdateSendDenyListRequest) (*types.MsgUpdateSendDenyListResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, fmt.Errorf("marker not found for %s: %w", msg.Denom, err)
+	}
+
+	if marker.GetMarkerType() != types.MarkerType_RestrictedCoin {
+		return nil, fmt.Errorf("marker %s is not a restricted marker", msg.Denom)
+	}
+
+	if msg.Authority == k.GetAuthority() {
+		if !marker.HasGovernanceEnabled() {
+			return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
+		}
+	} else {
+		if !marker.HasAccess(msg.Authority, types.Access_Transfer) {
+			return nil, fmt.Errorf("%s does not have transfer authority for %s marker", msg.Authority, msg.Denom)
+		}
+	}
+
+	markerAddr := marker.GetAddress()
+	for _, addr := range msg.RemoveDeniedAddresses {
+		denyAddr, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return nil, err
+		}
+		if !k.IsSendDeny(ctx, markerAddr, denyAddr) {
+			return nil, fmt.Errorf("%s is not on deny list cannot remove address", addr)
+		}
+		k.RemoveSendDeny(ctx, markerAddr, denyAddr)
+	}
+
+	for _, addr := range msg.AddDeniedAddresses {
+		denyAddr, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return nil, err
+		}
+		if k.IsSendDeny(ctx, markerAddr, denyAddr) {
+			return nil, fmt.Errorf("%s is already on deny list cannot add address", addr)
+		}
+		k.AddSendDeny(ctx, markerAddr, denyAddr)
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	return &types.MsgUpdateSendDenyListResponse{}, nil
+}

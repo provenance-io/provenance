@@ -84,6 +84,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdUpdateRequiredAttributes(),
 		GetCmdUpdateForcedTransfer(),
 		GetCmdSetAccountData(),
+		GetCmdUpdateSendDenyListRequest(),
 	)
 	return txCmd
 }
@@ -1046,6 +1047,53 @@ func GetCmdUpdateForcedTransfer() *cobra.Command {
 	}
 
 	govcli.AddGovPropFlagsToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdUpdateSendDenyListRequest implements the update deny list command
+func GetCmdUpdateSendDenyListRequest() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "update-deny-list <denom>",
+		Aliases: []string{"udl", "deny-list", "deny"},
+		Args:    cobra.ExactArgs(1),
+		Short:   "Update list of addresses for a restricted marker that are allowed to execute transfers",
+		Long: strings.TrimSpace(`Update list of addresses for a restricted marker that are allowed to execute transfers.
+`),
+		Example: fmt.Sprintf(`$ %s tx marker update-deny-list hotdogcoin --%s=bech32addr1,bech32addrs2,... --%s=bech32addr1,bech32addrs2,...`,
+			version.AppName,
+			FlagAdd,
+			FlagRemove,
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+
+			msg := &types.MsgUpdateSendDenyListRequest{Denom: args[0]}
+
+			msg.AddDeniedAddresses, err = flagSet.GetStringSlice(FlagAdd)
+			if err != nil {
+				return fmt.Errorf("incorrect value for %s flag.  Accepted: comma delimited list of bech32 addresses Error: %w", FlagAdd, err)
+			}
+
+			msg.RemoveDeniedAddresses, err = flagSet.GetStringSlice(FlagRemove)
+			if err != nil {
+				return fmt.Errorf("incorrect value for %s flag.  Accepted: comma delimited list of bech32 addresses Error: %w", FlagRemove, err)
+			}
+
+			authSetter := func(authority string) {
+				msg.Authority = authority
+			}
+
+			return generateOrBroadcastOptGovProp(clientCtx, flagSet, authSetter, msg)
+		},
+	}
+	cmd.Flags().StringSlice(FlagAdd, []string{}, "comma delimited list of bech32 addresses to be added to restricted marker transfer deny list")
+	cmd.Flags().StringSlice(FlagRemove, []string{}, "comma delimited list of bech32 addresses to be removed removed from restricted marker deny list")
+	addOptGovPropFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
