@@ -103,7 +103,7 @@ message MarkerNetAssetValue {
   // source defines the module that updated the value
   string source = 3;
   // update_time is the block height time of last update
-  google.protobuf.Timestamp update_time = 4;
+  google.protobuf.Timestamp update_time = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
 
 // EventMarkerAdd event emitted when marker is added
