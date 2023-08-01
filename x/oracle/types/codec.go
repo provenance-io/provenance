@@ -4,6 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/gogo/protobuf/proto"
 )
 
 // ignoring RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
@@ -13,6 +15,12 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgUpdateOracleRequest{},
 		&MsgQueryOracleRequest{},
+		&MsgSendQueryAllBalances{},
+	)
+
+	registry.RegisterImplementations((*proto.Message)(nil),
+		&banktypes.QueryAllBalancesRequest{},
+		&banktypes.QueryAllBalancesResponse{},
 	)
 }
 

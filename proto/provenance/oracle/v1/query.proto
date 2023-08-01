@@ -4,6 +4,7 @@ package provenance.oracle.v1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos_proto/cosmos.proto";
+import "google/protobuf/any.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/oracle/types";
 option java_package        = "io.provenance.oracle.v1";
@@ -25,6 +26,19 @@ service Query {
   rpc OracleResult(QueryOracleResultRequest) returns (QueryOracleResultResponse) {
     option (google.api.http).get = "/provenance/oracle/v1/oracle_result";
   }
+
+  rpc QueryState(QueryQueryStateRequest) returns (QueryQueryStateResponse) {
+    option (google.api.http).get = "/quasar-finance/interchainquerydemo/interquery/query_state";
+  }
+}
+
+message QueryQueryStateRequest {
+  uint64 sequence = 1;
+}
+
+message QueryQueryStateResponse {
+  google.protobuf.Any request  = 1 [(gogoproto.nullable) = false];
+  google.protobuf.Any response = 2 [(gogoproto.nullable) = true];
 }
 
 // QueryContractAddressRequest queries for the Trigger with an identifier of id.

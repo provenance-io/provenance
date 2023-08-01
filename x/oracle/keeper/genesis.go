@@ -7,15 +7,21 @@ import (
 
 // ExportGenesis returns a GenesisState for a given context.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	return types.NewGenesisState(1)
+	return types.DefaultGenesis()
 }
 
 // InitGenesis new trigger genesis
 func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
-	k.SetPort(ctx, genState.PortId)
-
 	if err := genState.Validate(); err != nil {
 		panic(err)
+	}
+
+	k.SetPort(ctx, genState.PortId)
+	if !k.IsBound(ctx, genState.PortId) {
+		err := k.BindPort(ctx, genState.PortId)
+		if err != nil {
+			panic("could not claim port capability: " + err.Error())
+		}
 	}
 
 	k.SetParams(ctx, genState.Params)

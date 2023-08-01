@@ -3,6 +3,8 @@ package provenance.oracle.v1;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/protobuf/any.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/oracle/types";
 option java_package        = "io.provenance.oracle.v1";
@@ -14,6 +16,19 @@ service Msg {
   rpc UpdateOracle(MsgUpdateOracleRequest) returns (MsgUpdateOracleResponse);
   // QueryOracle sends an icq to an oracle on another chain
   rpc QueryOracle(MsgQueryOracleRequest) returns (MsgQueryOracleResponse);
+
+  rpc SendQueryAllBalances(MsgSendQueryAllBalances) returns (MsgSendQueryAllBalancesResponse);
+}
+
+message MsgSendQueryAllBalances {
+  string                                creator    = 1;
+  string                                channel_id = 2;
+  string                                address    = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+}
+
+message MsgSendQueryAllBalancesResponse {
+  uint64 sequence = 1;
 }
 
 // MsgQueryOracleRequest queries an Oracle on another chain

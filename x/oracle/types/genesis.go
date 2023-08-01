@@ -6,19 +6,17 @@ import (
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 )
 
-func NewGenesisState(queryID uint64) *GenesisState {
+func NewGenesisState(port string, params Params, queryID uint64) *GenesisState {
 	return &GenesisState{
+		PortId:  port,
+		Params:  params,
 		QueryId: queryID,
 	}
 }
 
 // DefaultGenesis returns the default trigger genesis state
 func DefaultGenesis() *GenesisState {
-	return &GenesisState{
-		PortId:  PortID,
-		Params:  DefaultParams(),
-		QueryId: 1,
-	}
+	return NewGenesisState(PortID, DefaultParams(), 1)
 }
 
 // Validate performs basic genesis state validation returning an error upon any
