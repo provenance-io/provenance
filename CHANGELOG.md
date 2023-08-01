@@ -40,7 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Allow marker's transfer authority to prevent transfer of restricted coin with deny list on send [#1518](https://github.com/provenance-io/provenance/issues/1518).
-* Allow funds to be put into escrow while remaining in the owner's account [#1607](https://github.com/provenance-io/provenance/issues/1607).
+* Create the `x/hold` module which facilitates locking funds in an owners account [#1607](https://github.com/provenance-io/provenance/issues/1607).
+  Funds with a hold on them cannot be transferred until the hold is removed.
+  Management of holds is internal, but there are queries for looking up holds on accounts.
+  Holds are also reflected in the `x/bank` module's `SpendableBalances` query.
 
 ### Improvements
 
