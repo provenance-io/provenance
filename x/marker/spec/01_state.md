@@ -155,12 +155,6 @@ This can be configured by setting the `required_attributes` array on the Marker.
 
 A single wildcard can only be used for the starting name of the required attribute. For example, `*.provenance.io` is a valid wildcard attribute. Invalid wildcard usages include forms such as `*kyc.provenance.io` or `kyc.*.provenance.io`.  Matching will be accepted for any number of child level names, i.e. `one.two.three.provenance.io` and `one.provenance.io` will be accepted for `*.provenance.io`. 
 
-### Marker Net Asset Value
-
-A marker with the **Restricted Coin** type can support multiple distinct net asset values assigned to track settlement pricing information on-chain. The `value` attribute represents the coin value of the asset, such as `usd` or `nhash`, along with its corresponding `volume`. The `source` attribute denotes the module responsible for updating the asset value, while the `update_time` attribute captures the block time when the update occurred.
-
-TODO: Add proto link once more toward final...
-
 ## Marker Address Cache
 
 For performance purposes the marker module maintains a KVStore entry with the address of every marker account.  This
@@ -169,6 +163,11 @@ iterator from the auth module.
 
 - `0x01 | Address -> Address`
 
+### Marker Net Asset Value
+
+A marker with the **Restricted Coin** type can support multiple distinct net asset values assigned to track settlement pricing information on-chain. The `value` attribute represents the coin value of the asset, such as `usd` or `nhash`, along with its corresponding `volume`. The `source` attribute denotes the module responsible for updating the asset value, while the `update_time` attribute captures the block time when the update occurred.
+
+TODO: Add proto link once more toward final...
 
 ## Params
 
