@@ -251,3 +251,46 @@ func (s *MsgServerTestSuite) TestUpdateNhashPerUsdMilProposal() {
 		})
 	}
 }
+
+func (s *MsgServerTestSuite) TestUpdateConversionFeeDenomProposal() {
+	tests := []struct {
+		name     string
+		msg      types.MsgUpdateConversionFeeDenomProposalRequest
+		errorMsg string
+	}{
+		{
+			name: "expected gov account for signer",
+			msg: types.MsgUpdateConversionFeeDenomProposalRequest{
+				Authority: "",
+			},
+			errorMsg: `expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got : expected gov account as only signer for proposal message`,
+		},
+		{
+			name: "invalid denom",
+			msg: types.MsgUpdateConversionFeeDenomProposalRequest{
+				Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+			},
+			errorMsg: `invalid denom: `,
+		},
+		{
+			name: "successful",
+			msg: types.MsgUpdateConversionFeeDenomProposalRequest{
+				ConversionFeeDenom: "nhash",
+				Authority:          "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+			},
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			response, err := s.msgServer.UpdateConversionFeeDenomProposal(s.ctx, &tt.msg)
+			if len(tt.errorMsg) > 0 {
+				s.Assert().Error(err)
+				s.Assert().Equal(tt.errorMsg, err.Error())
+				s.Assert().Nil(response)
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().NotNil(response)
+			}
+		})
+	}
+}
