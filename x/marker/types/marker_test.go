@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -402,6 +403,74 @@ func TestRemovesFromRequiredAttributes(t *testing.T) {
 			} else {
 				assert.NotNil(t, err)
 				assert.Equal(t, tt.expectedError, err.Error())
+			}
+		})
+	}
+}
+
+func TestMarkerNetAssetValueValidate(t *testing.T) {
+	tests := []struct {
+		name   string
+		nav    MarkerNetAssetValue
+		expErr string
+	}{
+		{
+			name: "empty source value",
+			nav: MarkerNetAssetValue{
+				Source:     "",
+				Value:      sdk.NewInt64Coin("jackthecat", 420),
+				Volume:     406,
+				UpdateTime: time.Now(),
+			},
+			expErr: "marker net asset value must have a source defined",
+		},
+		{
+			name: "invalid denom",
+			nav: MarkerNetAssetValue{
+				Source:     "exchange",
+				Volume:     406,
+				UpdateTime: time.Now(),
+			},
+			expErr: "invalid denom: ",
+		},
+		{
+			name: "volume is not positive",
+			nav: MarkerNetAssetValue{
+				Source:     "exchange",
+				Value:      sdk.NewInt64Coin("jackthecat", 420),
+				Volume:     0,
+				UpdateTime: time.Now(),
+			},
+			expErr: "marker net asset value volume must be positive value",
+		},
+		{
+			name: "update time has not been set",
+			nav: MarkerNetAssetValue{
+				Source: "exchange",
+				Value:  sdk.NewInt64Coin("jackthecat", 420),
+				Volume: 406,
+			},
+			expErr: "marker net asset value must have current update time set",
+		},
+		{
+			name: "successful",
+			nav: MarkerNetAssetValue{
+				Source:     "exchange",
+				Value:      sdk.NewInt64Coin("jackthecat", 420),
+				Volume:     406,
+				UpdateTime: time.Now(),
+			},
+			expErr: "",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.nav.Validate()
+			if len(tt.expErr) > 0 {
+				assert.Equal(t, tt.expErr, err.Error())
+			} else {
+				assert.NoError(t, err, "MarkerNetAssetValue validate should have passed")
 			}
 		})
 	}
