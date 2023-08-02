@@ -2285,6 +2285,7 @@ If being provided as a governance proposal, set the from_address to the gov modu
 | `allow_governance_control` | [bool](#bool) |  |  |
 | `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
+| `marker_net_asset_values` | [MarkerNetAssetValue](#provenance.marker.v1.MarkerNetAssetValue) | repeated |  |
 
 
 

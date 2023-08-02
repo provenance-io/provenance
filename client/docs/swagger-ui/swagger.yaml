@@ -82068,6 +82068,34 @@ definitions:
       and
 
       freezing clients
+  provenance.marker.v1.MarkerNetAssetValue:
+    type: object
+    properties:
+      value:
+        title: value is the value of asset in token
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      volume:
+        type: string
+        format: uint64
+        title: volume is the volume of the assets
+      source:
+        type: string
+        title: source defines the module that updated the value
+      update_time:
+        type: string
+        format: date-time
+        title: update_time is the block height time of last update
+    title: MarkerNetAssetValue defines a marker's net asset value
   provenance.marker.v1.MarkerType:
     type: string
     enum:

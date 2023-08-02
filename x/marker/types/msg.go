@@ -51,6 +51,7 @@ func NewMsgAddMarkerRequest(
 	allowGovernanceControl bool,
 	allowForcedTransfer bool,
 	requiredAttributes []string,
+	// markerNetAssetValues []*MarkerNetAssetValue,
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
@@ -62,6 +63,7 @@ func NewMsgAddMarkerRequest(
 		AllowGovernanceControl: allowGovernanceControl,
 		AllowForcedTransfer:    allowForcedTransfer,
 		RequiredAttributes:     requiredAttributes,
+		// MarkerNetAssetValues:   markerNetAssetValues,
 	}
 }
 
@@ -94,6 +96,16 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 				return fmt.Errorf("required attribute list contains duplicate entries")
 			}
 			seen[str] = true
+		}
+	}
+
+	if len(msg.MarkerNetAssetValues) > 0 {
+		seen := make(map[string]bool)
+		for _, nav := range msg.MarkerNetAssetValues {
+			if seen[nav.Value.Denom] {
+				return fmt.Errorf("net asset values contain duplicate %q denom", nav.Value.Denom)
+			}
+			seen[nav.Value.Denom] = true
 		}
 	}
 

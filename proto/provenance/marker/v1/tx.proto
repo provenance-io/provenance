@@ -85,15 +85,16 @@ message MsgAddMarkerRequest {
 
   cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
-  string               manager                  = 3;
-  string               from_address             = 4;
-  MarkerStatus         status                   = 5;
-  MarkerType           marker_type              = 6;
-  repeated AccessGrant access_list              = 7 [(gogoproto.nullable) = false];
-  bool                 supply_fixed             = 8;
-  bool                 allow_governance_control = 9;
-  bool                 allow_forced_transfer    = 10;
-  repeated string      required_attributes      = 11;
+  string                       manager                  = 3;
+  string                       from_address             = 4;
+  MarkerStatus                 status                   = 5;
+  MarkerType                   marker_type              = 6;
+  repeated AccessGrant         access_list              = 7 [(gogoproto.nullable) = false];
+  bool                         supply_fixed             = 8;
+  bool                         allow_governance_control = 9;
+  bool                         allow_forced_transfer    = 10;
+  repeated string              required_attributes      = 11;
+  repeated MarkerNetAssetValue marker_net_asset_values  = 12;
 }
 
 // MsgAddMarkerResponse defines the Msg/AddMarker response type

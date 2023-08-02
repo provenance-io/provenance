@@ -113,6 +113,12 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
+	for _, nav := range msg.MarkerNetAssetValues {
+		if err = k.AddMarkerNetAssetValue(ctx, ma.GetAddress(), *nav); err != nil {
+			return nil, err
+		}
+	}
+
 	// Note: The status can only be Active if this is being done via gov prop.
 	if ma.Status == types.StatusActive {
 		// Active markers should have supply set.
