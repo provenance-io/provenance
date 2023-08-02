@@ -105,6 +105,9 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 			if seen[nav.Value.Denom] {
 				return fmt.Errorf("net asset values contain duplicate %q denom", nav.Value.Denom)
 			}
+			if err := nav.Validate(); err != nil {
+				return err
+			}
 			seen[nav.Value.Denom] = true
 		}
 	}
