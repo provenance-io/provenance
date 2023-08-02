@@ -579,7 +579,7 @@ func TestBankInputOutputCoinsUsesSendRestrictionFn(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err = app.BankKeeper.InputOutputCoins(ctx, tc.input, tc.outputs)
+			err = app.BankKeeper.InputOutputCoins(ctx, []banktypes.Input{tc.input}, tc.outputs)
 			if len(tc.expErr) != 0 {
 				assert.EqualError(t, err, tc.expErr, "InputOutputCoins")
 			} else {
