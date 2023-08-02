@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	proto "github.com/gogo/protobuf/proto"
 
@@ -454,6 +455,17 @@ func RemoveFromRequiredAttributes(currentAttrs []string, removeAttrs []string) (
 	return reqAttrs, nil
 }
 
+// NewMarkerNetAssetValue returns a new instance of MarkerNetAssetValue
+func NewMarkerNetAssetValue(source string, value sdk.Coin, volume uint64, updateTime time.Time) MarkerNetAssetValue {
+	return MarkerNetAssetValue{
+		Source:     source,
+		Value:      value,
+		Volume:     volume,
+		UpdateTime: updateTime,
+	}
+}
+
+// Validate returns error if MarkerNetAssetValue is not in a valid state
 func (mnav *MarkerNetAssetValue) Validate() error {
 	if len(mnav.Source) == 0 {
 		return fmt.Errorf("marker net asset value must have a source defined")

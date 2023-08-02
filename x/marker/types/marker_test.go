@@ -408,6 +408,18 @@ func TestRemovesFromRequiredAttributes(t *testing.T) {
 	}
 }
 
+func TestMarkerNetAssetValueConstructor(t *testing.T) {
+	source := "exchange"
+	value := sdk.NewInt64Coin("jackthecat", 406)
+	volume := uint64(100)
+	updateTime := time.Now()
+	actual := NewMarkerNetAssetValue(source, value, volume, updateTime)
+	assert.Equal(t, source, actual.Source)
+	assert.Equal(t, value, actual.Value)
+	assert.Equal(t, volume, actual.Volume)
+	assert.Equal(t, updateTime, actual.UpdateTime)
+}
+
 func TestMarkerNetAssetValueValidate(t *testing.T) {
 	tests := []struct {
 		name   string
