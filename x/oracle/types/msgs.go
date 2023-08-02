@@ -2,35 +2,23 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	query "github.com/cosmos/cosmos-sdk/types/query"
 )
 
-var _, _, _ sdk.Msg = &MsgUpdateOracleRequest{}, &MsgQueryOracleRequest{}, &MsgSendQueryAllBalances{}
+var _, _ sdk.Msg = &MsgUpdateOracleRequest{}, &MsgQueryOracleRequest{}
 
-func NewMsgSendQueryAllBalances(creator, channelId string, addr string, page *query.PageRequest) *MsgSendQueryAllBalances {
-	return &MsgSendQueryAllBalances{
-		Creator:    creator,
-		ChannelId:  channelId,
-		Address:    addr,
-		Pagination: page,
+func NewMsgQueryOracle(creator, channelId string, query []byte) *MsgQueryOracleRequest {
+	return &MsgQueryOracleRequest{
+		Authority: creator,
+		Channel:   channelId,
+		Query:     query,
 	}
 }
 
-func (msg *MsgSendQueryAllBalances) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		panic(err)
+func NewMsgUpdateOracle(creator, addr string) *MsgUpdateOracleRequest {
+	return &MsgUpdateOracleRequest{
+		Authority: creator,
+		Address:   addr,
 	}
-	return []sdk.AccAddress{creator}
-}
-
-func (msg *MsgSendQueryAllBalances) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
-	}
-	return nil
 }
 
 // GetSigners indicates that the message must have been signed by the parent.

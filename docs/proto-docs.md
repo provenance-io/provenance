@@ -444,8 +444,6 @@
     - [QueryContractAddressResponse](#provenance.oracle.v1.QueryContractAddressResponse)
     - [QueryOracleContractRequest](#provenance.oracle.v1.QueryOracleContractRequest)
     - [QueryOracleContractResponse](#provenance.oracle.v1.QueryOracleContractResponse)
-    - [QueryOracleResultRequest](#provenance.oracle.v1.QueryOracleResultRequest)
-    - [QueryOracleResultResponse](#provenance.oracle.v1.QueryOracleResultResponse)
     - [QueryQueryStateRequest](#provenance.oracle.v1.QueryQueryStateRequest)
     - [QueryQueryStateResponse](#provenance.oracle.v1.QueryQueryStateResponse)
   
@@ -454,8 +452,6 @@
 - [provenance/oracle/v1/tx.proto](#provenance/oracle/v1/tx.proto)
     - [MsgQueryOracleRequest](#provenance.oracle.v1.MsgQueryOracleRequest)
     - [MsgQueryOracleResponse](#provenance.oracle.v1.MsgQueryOracleResponse)
-    - [MsgSendQueryAllBalances](#provenance.oracle.v1.MsgSendQueryAllBalances)
-    - [MsgSendQueryAllBalancesResponse](#provenance.oracle.v1.MsgSendQueryAllBalancesResponse)
     - [MsgUpdateOracleRequest](#provenance.oracle.v1.MsgUpdateOracleRequest)
     - [MsgUpdateOracleResponse](#provenance.oracle.v1.MsgUpdateOracleResponse)
   
@@ -6827,36 +6823,6 @@ QueryOracleContractResponse contains the result of the query to the oracle's sma
 
 
 
-<a name="provenance.oracle.v1.QueryOracleResultRequest"></a>
-
-### QueryOracleResultRequest
-QueryOracleResultRequest attempts to obtain the result of the oracle query.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `query_id` | [uint64](#uint64) |  | The id of the query to get the result from |
-
-
-
-
-
-
-<a name="provenance.oracle.v1.QueryOracleResultResponse"></a>
-
-### QueryOracleResultResponse
-QueryOracleResult contains the result of the oracle query.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `data` | [bytes](#bytes) |  | Data contains the json data returned from the smart contract. |
-
-
-
-
-
-
 <a name="provenance.oracle.v1.QueryQueryStateRequest"></a>
 
 ### QueryQueryStateRequest
@@ -6903,7 +6869,6 @@ Query defines the gRPC querier service for oracle module.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `ContractAddress` | [QueryContractAddressRequest](#provenance.oracle.v1.QueryContractAddressRequest) | [QueryContractAddressResponse](#provenance.oracle.v1.QueryContractAddressResponse) | ContractAddress returns the address of the oracle's contract | GET|/provenance/oracle/v1/contract_address|
 | `OracleContract` | [QueryOracleContractRequest](#provenance.oracle.v1.QueryOracleContractRequest) | [QueryOracleContractResponse](#provenance.oracle.v1.QueryOracleContractResponse) | OracleContract sends a query to the oracle's contract | GET|/provenance/oracle/v1/oracle_contract|
-| `OracleResult` | [QueryOracleResultRequest](#provenance.oracle.v1.QueryOracleResultRequest) | [QueryOracleResultResponse](#provenance.oracle.v1.QueryOracleResultResponse) | OracleResult returns the address of the oracle's contract | GET|/provenance/oracle/v1/oracle_result|
 | `QueryState` | [QueryQueryStateRequest](#provenance.oracle.v1.QueryQueryStateRequest) | [QueryQueryStateResponse](#provenance.oracle.v1.QueryQueryStateResponse) |  | GET|/quasar-finance/interchainquerydemo/interquery/query_state|
 
  <!-- end services -->
@@ -6926,8 +6891,7 @@ MsgQueryOracleRequest queries an Oracle on another chain
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `query` | [bytes](#bytes) |  | Query contains the query data passed to the oracle. |
-| `source_port` | [string](#string) |  | Source port is the source port to the oracle. |
-| `source_channel` | [string](#string) |  | Source channel is the channel to the oracle. |
+| `channel` | [string](#string) |  | Channel is the channel to the oracle. |
 | `authority` | [string](#string) |  | The signing authority for the request |
 
 
@@ -6943,40 +6907,7 @@ MsgQueryOracleResponse contains the id of the oracle query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `query_id` | [uint64](#uint64) |  | The id that uniquely identifies the query. |
-
-
-
-
-
-
-<a name="provenance.oracle.v1.MsgSendQueryAllBalances"></a>
-
-### MsgSendQueryAllBalances
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `creator` | [string](#string) |  |  |
-| `channel_id` | [string](#string) |  |  |
-| `address` | [string](#string) |  |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
-
-
-
-
-
-
-<a name="provenance.oracle.v1.MsgSendQueryAllBalancesResponse"></a>
-
-### MsgSendQueryAllBalancesResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `sequence` | [uint64](#uint64) |  |  |
+| `sequence` | [uint64](#uint64) |  | The sequence number that uniquely identifies the query. |
 
 
 
@@ -7024,7 +6955,6 @@ Msg
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `UpdateOracle` | [MsgUpdateOracleRequest](#provenance.oracle.v1.MsgUpdateOracleRequest) | [MsgUpdateOracleResponse](#provenance.oracle.v1.MsgUpdateOracleResponse) | UpdateOracle is the RPC endpoint for updating the oracle | |
 | `QueryOracle` | [MsgQueryOracleRequest](#provenance.oracle.v1.MsgQueryOracleRequest) | [MsgQueryOracleResponse](#provenance.oracle.v1.MsgQueryOracleResponse) | QueryOracle sends an icq to an oracle on another chain | |
-| `SendQueryAllBalances` | [MsgSendQueryAllBalances](#provenance.oracle.v1.MsgSendQueryAllBalances) | [MsgSendQueryAllBalancesResponse](#provenance.oracle.v1.MsgSendQueryAllBalancesResponse) |  | |
 
  <!-- end services -->
 

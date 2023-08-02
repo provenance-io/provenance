@@ -22,11 +22,6 @@ service Query {
     option (google.api.http).get = "/provenance/oracle/v1/oracle_contract";
   }
 
-  // OracleResult returns the address of the oracle's contract
-  rpc OracleResult(QueryOracleResultRequest) returns (QueryOracleResultResponse) {
-    option (google.api.http).get = "/provenance/oracle/v1/oracle_result";
-  }
-
   rpc QueryState(QueryQueryStateRequest) returns (QueryQueryStateResponse) {
     option (google.api.http).get = "/quasar-finance/interchainquerydemo/interquery/query_state";
   }
@@ -60,16 +55,4 @@ message QueryOracleContractRequest {
 message QueryOracleContractResponse {
   // Data contains the json data returned from the smart contract.
   bytes data = 1 [(gogoproto.casttype) = "github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage"];
-}
-
-// QueryOracleResultRequest attempts to obtain the result of the oracle query.
-message QueryOracleResultRequest {
-  // The id of the query to get the result from
-  uint64 query_id = 1;
-}
-
-// QueryOracleResult contains the result of the oracle query.
-message QueryOracleResultResponse {
-  // Data contains the json data returned from the smart contract.
-  bytes data = 2 [(gogoproto.casttype) = "github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage"];
 }

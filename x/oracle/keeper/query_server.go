@@ -13,16 +13,23 @@ import (
 var _ types.QueryServer = Keeper{}
 
 // QueryAddress returns the address of the oracle's contract
-func (k Keeper) ContractAddress(ctx context.Context, req *types.QueryContractAddressRequest) (*types.QueryContractAddressResponse, error) {
-	return &types.QueryContractAddressResponse{}, nil
+func (k Keeper) ContractAddress(goCtx context.Context, req *types.QueryContractAddressRequest) (*types.QueryContractAddressResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	contract, err := k.GetOracleContract(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryContractAddressResponse{Address: contract.String()}, nil
 }
 
 func (k Keeper) OracleContract(ctx context.Context, req *types.QueryOracleContractRequest) (*types.QueryOracleContractResponse, error) {
+	// We do the logic here to actually send it to the oracle
 	return &types.QueryOracleContractResponse{}, nil
-}
-
-func (k Keeper) OracleResult(ctx context.Context, req *types.QueryOracleResultRequest) (*types.QueryOracleResultResponse, error) {
-	return &types.QueryOracleResultResponse{}, nil
 }
 
 func (k Keeper) QueryState(goCtx context.Context, req *types.QueryQueryStateRequest) (*types.QueryQueryStateResponse, error) {

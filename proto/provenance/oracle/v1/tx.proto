@@ -16,37 +16,22 @@ service Msg {
   rpc UpdateOracle(MsgUpdateOracleRequest) returns (MsgUpdateOracleResponse);
   // QueryOracle sends an icq to an oracle on another chain
   rpc QueryOracle(MsgQueryOracleRequest) returns (MsgQueryOracleResponse);
-
-  rpc SendQueryAllBalances(MsgSendQueryAllBalances) returns (MsgSendQueryAllBalancesResponse);
-}
-
-message MsgSendQueryAllBalances {
-  string                                creator    = 1;
-  string                                channel_id = 2;
-  string                                address    = 3;
-  cosmos.base.query.v1beta1.PageRequest pagination = 4;
-}
-
-message MsgSendQueryAllBalancesResponse {
-  uint64 sequence = 1;
 }
 
 // MsgQueryOracleRequest queries an Oracle on another chain
 message MsgQueryOracleRequest {
   // Query contains the query data passed to the oracle.
   bytes query = 1 [(gogoproto.casttype) = "github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage"];
-  // Source port is the source port to the oracle.
-  string source_port = 2;
-  // Source channel is the channel to the oracle.
-  string source_channel = 3;
+  // Channel is the channel to the oracle.
+  string channel = 3;
   // The signing authority for the request
   string authority = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgQueryOracleResponse contains the id of the oracle query.
 message MsgQueryOracleResponse {
-  // The id that uniquely identifies the query.
-  uint64 query_id = 1;
+  // The sequence number that uniquely identifies the query.
+  uint64 sequence = 1;
 }
 
 // MsgUpdateOracleRequest is the request type for updating an oracle's contract address

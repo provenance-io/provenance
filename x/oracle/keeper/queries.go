@@ -3,45 +3,44 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
 // SetQueryRequest saves the query request
-func (k Keeper) SetQueryRequest(ctx sdk.Context, packetSequence uint64, req banktypes.QueryAllBalancesRequest) {
+func (k Keeper) SetQueryRequest(ctx sdk.Context, packetSequence uint64, req types.QueryOracleContractRequest) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.QueryRequestStoreKey(packetSequence), k.cdc.MustMarshal(&req))
 }
 
 // GetQueryRequest returns the query request by packet sequence
-func (k Keeper) GetQueryRequest(ctx sdk.Context, packetSequence uint64) (banktypes.QueryAllBalancesRequest, error) {
+func (k Keeper) GetQueryRequest(ctx sdk.Context, packetSequence uint64) (types.QueryOracleContractRequest, error) {
 	bz := ctx.KVStore(k.storeKey).Get(types.QueryRequestStoreKey(packetSequence))
 	if bz == nil {
-		return banktypes.QueryAllBalancesRequest{}, sdkerrors.Wrapf(types.ErrSample,
+		return types.QueryOracleContractRequest{}, sdkerrors.Wrapf(types.ErrSample,
 			"GetQueryRequest: Result for packet sequence %d is not available.", packetSequence,
 		)
 	}
-	var req banktypes.QueryAllBalancesRequest
+	var req types.QueryOracleContractRequest
 	k.cdc.MustUnmarshal(bz, &req)
 	return req, nil
 }
 
 // SetQueryResponse saves the query response
-func (k Keeper) SetQueryResponse(ctx sdk.Context, packetSequence uint64, resp banktypes.QueryAllBalancesResponse) {
+func (k Keeper) SetQueryResponse(ctx sdk.Context, packetSequence uint64, resp types.QueryOracleContractResponse) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.QueryResponseStoreKey(packetSequence), k.cdc.MustMarshal(&resp))
 }
 
 // GetQueryResponse returns the query response by packet sequence
-func (k Keeper) GetQueryResponse(ctx sdk.Context, packetSequence uint64) (banktypes.QueryAllBalancesResponse, error) {
+func (k Keeper) GetQueryResponse(ctx sdk.Context, packetSequence uint64) (types.QueryOracleContractResponse, error) {
 	bz := ctx.KVStore(k.storeKey).Get(types.QueryResponseStoreKey(packetSequence))
 	if bz == nil {
-		return banktypes.QueryAllBalancesResponse{}, sdkerrors.Wrapf(types.ErrSample,
+		return types.QueryOracleContractResponse{}, sdkerrors.Wrapf(types.ErrSample,
 			"GetQueryResponse: Result for packet sequence %d is not available.", packetSequence,
 		)
 	}
-	var resp banktypes.QueryAllBalancesResponse
+	var resp types.QueryOracleContractResponse
 	k.cdc.MustUnmarshal(bz, &resp)
 	return resp, nil
 }

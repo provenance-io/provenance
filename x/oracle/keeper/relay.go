@@ -3,7 +3,6 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/provenance-io/provenance/x/oracle/types"
 
@@ -99,7 +98,7 @@ func (k Keeper) OnAcknowledgementPacket(
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "no responses in interchain query packet ack")
 		}
 
-		var r banktypes.QueryAllBalancesResponse
+		var r types.QueryOracleContractResponse
 		if err := k.cdc.Unmarshal(resps[0].Value, &r); err != nil {
 			return sdkerrors.Wrapf(err, "failed to unmarshal interchain query response to type %T", resp)
 		}

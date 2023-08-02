@@ -21,6 +21,7 @@ func GetQueryCmd() *cobra.Command {
 	}
 	queryCmd.AddCommand(
 		CmdQueryState(),
+		CmdQueryContractAddress(),
 	)
 	return queryCmd
 }
@@ -50,6 +51,36 @@ func CmdQueryState() *cobra.Command {
 			}
 
 			res, err := queryClient.QueryState(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdQueryContractAddress() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "contract-address",
+		Short: "Returns the address of the contract that the oracle is using",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			params := &types.QueryContractAddressRequest{}
+
+			res, err := queryClient.ContractAddress(context.Background(), params)
 			if err != nil {
 				return err
 			}

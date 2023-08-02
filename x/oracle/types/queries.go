@@ -11,7 +11,15 @@ var (
 
 	// LastQueryPacketSeqKey is the key for the last packet sequence
 	LastQueryPacketSeqKey = "coin_rates_last_id"
+
+	// ContractStoreKey is the key for the oracle's contract address
+	ContractStoreKey = []byte{0x01}
 )
+
+// ContractStoreKey is a function to get the key for the oracle's contract in store
+func GetContractStoreKey() []byte {
+	return []byte(ContractStoreKey)
+}
 
 // QueryRequestStoreKey is a function to generate key for each result in store
 func QueryRequestStoreKey(packetSequence uint64) []byte {

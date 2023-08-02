@@ -15,7 +15,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgUpdateOracleRequest{},
 		&MsgQueryOracleRequest{},
-		&MsgSendQueryAllBalances{},
 	)
 
 	registry.RegisterImplementations((*proto.Message)(nil),
