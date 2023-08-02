@@ -239,9 +239,10 @@ with the given supply amount and denomination provided in the coin argument
 				return err
 			}
 
+			// TODO: add marker net asset value flag
 			msg := types.NewMsgAddMarkerRequest(
 				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.MarkerType,
-				flagVals.SupplyFixed, flagVals.AllowGovControl, flagVals.AllowForceTransfer, flagVals.RequiredAttributes,
+				flagVals.SupplyFixed, flagVals.AllowGovControl, flagVals.AllowForceTransfer, flagVals.RequiredAttributes, []types.MarkerNetAssetValue{},
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

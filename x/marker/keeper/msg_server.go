@@ -114,7 +114,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 	}
 
 	for _, nav := range msg.MarkerNetAssetValues {
-		if err = k.AddMarkerNetAssetValue(ctx, ma.GetAddress(), *nav); err != nil {
+		if err = k.AddMarkerNetAssetValue(ctx, ma.GetAddress(), nav); err != nil {
 			return nil, err
 		}
 	}

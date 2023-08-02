@@ -94,7 +94,7 @@ message MsgAddMarkerRequest {
   bool                         allow_governance_control = 9;
   bool                         allow_forced_transfer    = 10;
   repeated string              required_attributes      = 11;
-  repeated MarkerNetAssetValue marker_net_asset_values  = 12;
+  repeated MarkerNetAssetValue marker_net_asset_values  = 12 [(gogoproto.nullable) = false];
 }
 
 // MsgAddMarkerResponse defines the Msg/AddMarker response type

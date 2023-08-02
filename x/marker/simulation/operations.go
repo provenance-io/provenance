@@ -160,6 +160,7 @@ func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 			r.Intn(2) > 0,                 // allow gov
 			r.Intn(2) > 0,                 // allow forced transfer
 			[]string{},
+			[]types.MarkerNetAssetValue{},
 		)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)

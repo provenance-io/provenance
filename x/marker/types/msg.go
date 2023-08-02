@@ -51,7 +51,7 @@ func NewMsgAddMarkerRequest(
 	allowGovernanceControl bool,
 	allowForcedTransfer bool,
 	requiredAttributes []string,
-	// markerNetAssetValues []*MarkerNetAssetValue,
+	markerNetAssetValues []MarkerNetAssetValue,
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
@@ -63,7 +63,7 @@ func NewMsgAddMarkerRequest(
 		AllowGovernanceControl: allowGovernanceControl,
 		AllowForcedTransfer:    allowForcedTransfer,
 		RequiredAttributes:     requiredAttributes,
-		// MarkerNetAssetValues:   markerNetAssetValues,
+		MarkerNetAssetValues:   markerNetAssetValues,
 	}
 }
 
