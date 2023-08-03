@@ -82123,6 +82123,9 @@ definitions:
   provenance.marker.v1.MsgAddMarkerResponse:
     type: object
     title: MsgAddMarkerResponse defines the Msg/AddMarker response type
+  provenance.marker.v1.MsgAddNetAssetValueResponse:
+    type: object
+    title: MsgAddNetAssetValueResponse defines the Msg/AddNetAssetValue response type
   provenance.marker.v1.MsgBurnResponse:
     type: object
     title: MsgBurnResponse defines the Msg/Burn response type
@@ -82132,6 +82135,11 @@ definitions:
   provenance.marker.v1.MsgDeleteAccessResponse:
     type: object
     title: MsgDeleteAccessResponse defines the Msg/DeleteAccess response type
+  provenance.marker.v1.MsgDeleteNetAssetValueResponse:
+    type: object
+    title: >-
+      MsgDeleteNetAssetValueResponse defines the Msg/DeleteNetAssetValue
+      response type
   provenance.marker.v1.MsgDeleteResponse:
     type: object
     title: MsgDeleteResponse defines the Msg/Delete response type

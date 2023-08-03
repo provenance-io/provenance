@@ -130,12 +130,16 @@
     - [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse)
     - [MsgAddMarkerRequest](#provenance.marker.v1.MsgAddMarkerRequest)
     - [MsgAddMarkerResponse](#provenance.marker.v1.MsgAddMarkerResponse)
+    - [MsgAddNetAssetValueRequest](#provenance.marker.v1.MsgAddNetAssetValueRequest)
+    - [MsgAddNetAssetValueResponse](#provenance.marker.v1.MsgAddNetAssetValueResponse)
     - [MsgBurnRequest](#provenance.marker.v1.MsgBurnRequest)
     - [MsgBurnResponse](#provenance.marker.v1.MsgBurnResponse)
     - [MsgCancelRequest](#provenance.marker.v1.MsgCancelRequest)
     - [MsgCancelResponse](#provenance.marker.v1.MsgCancelResponse)
     - [MsgDeleteAccessRequest](#provenance.marker.v1.MsgDeleteAccessRequest)
     - [MsgDeleteAccessResponse](#provenance.marker.v1.MsgDeleteAccessResponse)
+    - [MsgDeleteNetAssetValueRequest](#provenance.marker.v1.MsgDeleteNetAssetValueRequest)
+    - [MsgDeleteNetAssetValueResponse](#provenance.marker.v1.MsgDeleteNetAssetValueResponse)
     - [MsgDeleteRequest](#provenance.marker.v1.MsgDeleteRequest)
     - [MsgDeleteResponse](#provenance.marker.v1.MsgDeleteResponse)
     - [MsgFinalizeRequest](#provenance.marker.v1.MsgFinalizeRequest)
@@ -2302,6 +2306,33 @@ MsgAddMarkerResponse defines the Msg/AddMarker response type
 
 
 
+<a name="provenance.marker.v1.MsgAddNetAssetValueRequest"></a>
+
+### MsgAddNetAssetValueRequest
+MsgAddNetAssetValueRequest defines the Msg/AddNetAssetValue request type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `administrator` | [string](#string) |  |  |
+| `marker_net_asset_values` | [MarkerNetAssetValue](#provenance.marker.v1.MarkerNetAssetValue) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgAddNetAssetValueResponse"></a>
+
+### MsgAddNetAssetValueResponse
+MsgAddNetAssetValueResponse defines the Msg/AddNetAssetValue response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgBurnRequest"></a>
 
 ### MsgBurnRequest
@@ -2375,6 +2406,33 @@ MsgDeleteAccessRequest defines the Msg/DeleteAccess request type
 
 ### MsgDeleteAccessResponse
 MsgDeleteAccessResponse defines the Msg/DeleteAccess response type
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgDeleteNetAssetValueRequest"></a>
+
+### MsgDeleteNetAssetValueRequest
+MsgDeleteNetAssetValueRequest defines the Msg/DeleteNetAssetValue request type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `administrator` | [string](#string) |  |  |
+| `value_denoms` | [string](#string) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgDeleteNetAssetValueResponse"></a>
+
+### MsgDeleteNetAssetValueResponse
+MsgDeleteNetAssetValueResponse defines the Msg/DeleteNetAssetValue response type
 
 
 
@@ -2772,6 +2830,8 @@ Msg defines the Marker Msg service.
 | `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance.marker.v1.MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. | |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance.marker.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.marker.v1.MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. | |
 | `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance.marker.v1.MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance.marker.v1.MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has admin authority | |
+| `AddNetAssetValue` | [MsgAddNetAssetValueRequest](#provenance.marker.v1.MsgAddNetAssetValueRequest) | [MsgAddNetAssetValueResponse](#provenance.marker.v1.MsgAddNetAssetValueResponse) | AddNetAssetValue | |
+| `DeleteNetAssetValue` | [MsgDeleteNetAssetValueRequest](#provenance.marker.v1.MsgDeleteNetAssetValueRequest) | [MsgDeleteNetAssetValueResponse](#provenance.marker.v1.MsgDeleteNetAssetValueResponse) | DeleteNetAssetValue | |
 
  <!-- end services -->
 

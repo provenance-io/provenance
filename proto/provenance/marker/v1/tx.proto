@@ -60,6 +60,10 @@ service Msg {
   rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
   // UpdateSendDenyList will only succeed if signer has admin authority
   rpc UpdateSendDenyList(MsgUpdateSendDenyListRequest) returns (MsgUpdateSendDenyListResponse);
+  // AddNetAssetValue
+  rpc AddNetAssetValue(MsgAddNetAssetValueRequest) returns (MsgAddNetAssetValueResponse);
+  // DeleteNetAssetValue
+  rpc DeleteNetAssetValue(MsgDeleteNetAssetValueRequest) returns (MsgDeleteNetAssetValueResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
@@ -318,3 +322,22 @@ message MsgUpdateSendDenyListRequest {
 
 // MsgUpdateSendDenyListResponse defines the Msg/UpdateSendDenyList response type
 message MsgUpdateSendDenyListResponse {}
+
+// MsgAddNetAssetValueRequest defines the Msg/AddNetAssetValue request type
+message MsgAddNetAssetValueRequest {
+  string                       denom                   = 1;
+  string                       administrator           = 2;
+  repeated MarkerNetAssetValue marker_net_asset_values = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgAddNetAssetValueResponse defines the Msg/AddNetAssetValue response type
+message MsgAddNetAssetValueResponse {}
+
+// MsgDeleteNetAssetValueRequest defines the Msg/DeleteNetAssetValue request type
+message MsgDeleteNetAssetValueRequest {
+  string          denom         = 1;
+  string          administrator = 2;
+  repeated string value_denoms  = 3 [(gogoproto.nullable) = false];
+}
+// MsgDeleteNetAssetValueResponse defines the Msg/DeleteNetAssetValue response type
+message MsgDeleteNetAssetValueResponse {}

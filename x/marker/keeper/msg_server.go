@@ -814,3 +814,11 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 
 	return &types.MsgUpdateSendDenyListResponse{}, nil
 }
+
+func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetAssetValueRequest) (*types.MsgAddNetAssetValueResponse, error) {
+	return nil, nil
+}
+
+func (k msgServer) DeleteNetAssetValue(goCtx context.Context, msg *types.MsgDeleteNetAssetValueRequest) (*types.MsgDeleteNetAssetValueResponse, error) {
+	return nil, nil
+}
