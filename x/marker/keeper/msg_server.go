@@ -815,6 +815,7 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 	return &types.MsgUpdateSendDenyListResponse{}, nil
 }
 
+// AddNetAssetValue adds net asset values to a marker that is in pending state
 func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetAssetValueRequest) (*types.MsgAddNetAssetValueResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -838,19 +839,28 @@ func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetA
 			return nil, sdkerrors.ErrInvalidRequest.Wrapf("cannot set net asset value %v : %v", nav, err.Error())
 		}
 	}
-	return nil, nil
+
+	return &types.MsgAddNetAssetValueResponse{}, nil
 }
 
+// DeleteNetAssetValue deletes net asset values from a marker that is in pending state
 func (k msgServer) DeleteNetAssetValue(goCtx context.Context, msg *types.MsgDeleteNetAssetValueRequest) (*types.MsgDeleteNetAssetValueResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("marker not found for %s: %v", msg.Denom, err)
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("marker not found for %s : %v", msg.Denom, err)
 	}
 
 	if marker.GetStatus() != types.StatusProposed {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("can only remove net asset values to markers in the Proposed status")
 	}
-	return nil, nil
+
+	for _, denom := range msg.ValueDenoms {
+		if err := k.RemoveNetAssetValue(ctx, marker.GetAddress(), denom); err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("could not remove net asset value : %v", err.Error())
+		}
+	}
+
+	return &types.MsgDeleteNetAssetValueResponse{}, nil
 }
