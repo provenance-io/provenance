@@ -708,7 +708,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 	}
 }
 
-func (s *TestSuite) TestKeeper_RemoveHold() {
+func (s *TestSuite) TestKeeper_ReleaseHold() {
 	store := s.getStore()
 	s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
 	s.requireSetHoldCoinAmount(store, s.addr1, "cucumber", s.int(3))
@@ -873,11 +873,11 @@ func (s *TestSuite) TestKeeper_RemoveHold() {
 			ctx := s.sdkCtx.WithEventManager(em)
 			var err error
 			testFunc := func() {
-				err = s.keeper.RemoveHold(ctx, tc.addr, tc.funds)
+				err = s.keeper.ReleaseHold(ctx, tc.addr, tc.funds)
 			}
-			s.Require().NotPanics(testFunc, "RemoveHold")
+			s.Require().NotPanics(testFunc, "ReleaseHold")
 
-			s.assertErrorContents(err, tc.expErr, "RemoveHold error")
+			s.assertErrorContents(err, tc.expErr, "ReleaseHold error")
 
 			finalEsc, _ := s.keeper.GetHoldCoins(s.sdkCtx, tc.addr)
 			s.Assert().Equal(tc.finalEsc.String(), finalEsc.String(), "final hold")
@@ -1516,8 +1516,8 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 					amt := coins(-1 * action.hold)
 					logf(step, "Releasing hold on: %s", amtOf(amt))
 					reqNoPanicNoErr(func() error {
-						return s.keeper.RemoveHold(ctx, addr, amt)
-					}, "RemoveHold(addr, %q)", amt)
+						return s.keeper.ReleaseHold(ctx, addr, amt)
+					}, "ReleaseHold(addr, %q)", amt)
 				}
 				switch {
 				case action.delegate > 0:

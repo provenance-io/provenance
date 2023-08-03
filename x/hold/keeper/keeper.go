@@ -130,8 +130,8 @@ func (k Keeper) AddHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) e
 	return errors.Join(errs...)
 }
 
-// RemoveHold releases the hold on the provided funds for the provided account.
-func (k Keeper) RemoveHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error {
+// ReleaseHold releases the hold on the provided funds for the provided account.
+func (k Keeper) ReleaseHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error {
 	if funds.IsZero() {
 		return nil
 	}
