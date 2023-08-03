@@ -816,9 +816,29 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 }
 
 func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetAssetValueRequest) (*types.MsgAddNetAssetValueResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("marker not found for %s: %v", msg.Denom, err)
+	}
+
+	if marker.GetStatus() != types.StatusProposed {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("can only add net asset values to markers in the Proposed status")
+	}
 	return nil, nil
 }
 
 func (k msgServer) DeleteNetAssetValue(goCtx context.Context, msg *types.MsgDeleteNetAssetValueRequest) (*types.MsgDeleteNetAssetValueResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("marker not found for %s: %v", msg.Denom, err)
+	}
+
+	if marker.GetStatus() != types.StatusProposed {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("can only remove net asset values to markers in the Proposed status")
+	}
 	return nil, nil
 }
