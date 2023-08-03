@@ -4,7 +4,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -18,8 +17,8 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 
 	registry.RegisterImplementations((*proto.Message)(nil),
-		&banktypes.QueryAllBalancesRequest{},
-		&banktypes.QueryAllBalancesResponse{},
+		&QueryOracleContractRequest{},
+		&QueryOracleContractResponse{},
 	)
 }
 

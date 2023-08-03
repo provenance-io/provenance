@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/oracle/types"
@@ -27,9 +28,21 @@ func (k Keeper) ContractAddress(goCtx context.Context, req *types.QueryContractA
 	return &types.QueryContractAddressResponse{Address: contract.String()}, nil
 }
 
-func (k Keeper) OracleContract(ctx context.Context, req *types.QueryOracleContractRequest) (*types.QueryOracleContractResponse, error) {
-	// We do the logic here to actually send it to the oracle
-	return &types.QueryOracleContractResponse{}, nil
+func (k Keeper) OracleContract(goCtx context.Context, req *types.QueryOracleContractRequest) (*types.QueryOracleContractResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	addr, err := k.GetOracleContract(ctx)
+	if err != nil {
+		return nil, err
+	}
+	query := &wasmtypes.QuerySmartContractStateRequest{
+		Address:   addr.String(),
+		QueryData: req.Query,
+	}
+	resp, err := k.wasmQueryServer.SmartContractState(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryOracleContractResponse{Data: resp.Data}, nil
 }
 
 func (k Keeper) QueryState(goCtx context.Context, req *types.QueryQueryStateRequest) (*types.QueryQueryStateResponse, error) {

@@ -13,6 +13,8 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 type Keeper struct {
@@ -21,10 +23,11 @@ type Keeper struct {
 	memKey     storetypes.StoreKey
 	paramstore paramtypes.Subspace
 
-	ics4Wrapper   types.ICS4Wrapper
-	channelKeeper types.ChannelKeeper
-	portKeeper    types.PortKeeper
-	scopedKeeper  capabilitykeeper.ScopedKeeper
+	ics4Wrapper     types.ICS4Wrapper
+	channelKeeper   types.ChannelKeeper
+	portKeeper      types.PortKeeper
+	scopedKeeper    capabilitykeeper.ScopedKeeper
+	wasmQueryServer wasmtypes.QueryServer
 }
 
 func NewKeeper(
@@ -36,6 +39,7 @@ func NewKeeper(
 	channelKeeper types.ChannelKeeper,
 	portKeeper types.PortKeeper,
 	scopedKeeper capabilitykeeper.ScopedKeeper,
+	wasmQueryServer wasmtypes.QueryServer,
 ) *Keeper {
 
 	if !ps.HasKeyTable() {
@@ -48,10 +52,11 @@ func NewKeeper(
 		memKey:     memKey,
 		paramstore: ps,
 
-		ics4Wrapper:   ics4Wrapper,
-		channelKeeper: channelKeeper,
-		portKeeper:    portKeeper,
-		scopedKeeper:  scopedKeeper,
+		ics4Wrapper:     ics4Wrapper,
+		channelKeeper:   channelKeeper,
+		portKeeper:      portKeeper,
+		scopedKeeper:    scopedKeeper,
+		wasmQueryServer: wasmQueryServer,
 	}
 }
 
