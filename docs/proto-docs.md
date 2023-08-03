@@ -2316,7 +2316,7 @@ MsgAddNetAssetValueRequest defines the Msg/AddNetAssetValue request type
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `administrator` | [string](#string) |  |  |
-| `marker_net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated |  |
+| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated |  |
 
 
 

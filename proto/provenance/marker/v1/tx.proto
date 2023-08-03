@@ -325,9 +325,9 @@ message MsgUpdateSendDenyListResponse {}
 
 // MsgAddNetAssetValueRequest defines the Msg/AddNetAssetValue request type
 message MsgAddNetAssetValueRequest {
-  string                 denom                   = 1;
-  string                 administrator           = 2;
-  repeated NetAssetValue marker_net_asset_values = 3 [(gogoproto.nullable) = false];
+  string                 denom            = 1;
+  string                 administrator    = 2;
+  repeated NetAssetValue net_asset_values = 3 [(gogoproto.nullable) = false];
 }
 
 // MsgAddNetAssetValueResponse defines the Msg/AddNetAssetValue response type

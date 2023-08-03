@@ -717,7 +717,7 @@ func (msg MsgAddNetAssetValueRequest) ValidateBasic() error {
 	}
 
 	seen := make(map[string]bool)
-	for _, nav := range msg.MarkerNetAssetValues {
+	for _, nav := range msg.NetAssetValues {
 		if err := sdk.ValidateDenom(nav.Value.Denom); err != nil {
 			return err
 		}
