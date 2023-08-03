@@ -32,8 +32,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgQueryOracleRequest queries an Oracle on another chain
-type MsgQueryOracleRequest struct {
+// MsgSendQueryOracleRequest queries an oracle on another chain
+type MsgSendQueryOracleRequest struct {
 	// Query contains the query data passed to the oracle.
 	Query github_com_CosmWasm_wasmd_x_wasm_types.RawContractMessage `protobuf:"bytes,1,opt,name=query,proto3,casttype=github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage" json:"query,omitempty"`
 	// Channel is the channel to the oracle.
@@ -42,18 +42,18 @@ type MsgQueryOracleRequest struct {
 	Authority string `protobuf:"bytes,4,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 
-func (m *MsgQueryOracleRequest) Reset()         { *m = MsgQueryOracleRequest{} }
-func (m *MsgQueryOracleRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgQueryOracleRequest) ProtoMessage()    {}
-func (*MsgQueryOracleRequest) Descriptor() ([]byte, []int) {
+func (m *MsgSendQueryOracleRequest) Reset()         { *m = MsgSendQueryOracleRequest{} }
+func (m *MsgSendQueryOracleRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgSendQueryOracleRequest) ProtoMessage()    {}
+func (*MsgSendQueryOracleRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_66a39dda41c6a784, []int{0}
 }
-func (m *MsgQueryOracleRequest) XXX_Unmarshal(b []byte) error {
+func (m *MsgSendQueryOracleRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgQueryOracleRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgSendQueryOracleRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgQueryOracleRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgSendQueryOracleRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -63,57 +63,57 @@ func (m *MsgQueryOracleRequest) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *MsgQueryOracleRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgQueryOracleRequest.Merge(m, src)
+func (m *MsgSendQueryOracleRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSendQueryOracleRequest.Merge(m, src)
 }
-func (m *MsgQueryOracleRequest) XXX_Size() int {
+func (m *MsgSendQueryOracleRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgQueryOracleRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgQueryOracleRequest.DiscardUnknown(m)
+func (m *MsgSendQueryOracleRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSendQueryOracleRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgQueryOracleRequest proto.InternalMessageInfo
+var xxx_messageInfo_MsgSendQueryOracleRequest proto.InternalMessageInfo
 
-func (m *MsgQueryOracleRequest) GetQuery() github_com_CosmWasm_wasmd_x_wasm_types.RawContractMessage {
+func (m *MsgSendQueryOracleRequest) GetQuery() github_com_CosmWasm_wasmd_x_wasm_types.RawContractMessage {
 	if m != nil {
 		return m.Query
 	}
 	return nil
 }
 
-func (m *MsgQueryOracleRequest) GetChannel() string {
+func (m *MsgSendQueryOracleRequest) GetChannel() string {
 	if m != nil {
 		return m.Channel
 	}
 	return ""
 }
 
-func (m *MsgQueryOracleRequest) GetAuthority() string {
+func (m *MsgSendQueryOracleRequest) GetAuthority() string {
 	if m != nil {
 		return m.Authority
 	}
 	return ""
 }
 
-// MsgQueryOracleResponse contains the id of the oracle query.
-type MsgQueryOracleResponse struct {
+// MsgSendQueryOracleResponse contains the id of the oracle query.
+type MsgSendQueryOracleResponse struct {
 	// The sequence number that uniquely identifies the query.
 	Sequence uint64 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
 }
 
-func (m *MsgQueryOracleResponse) Reset()         { *m = MsgQueryOracleResponse{} }
-func (m *MsgQueryOracleResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgQueryOracleResponse) ProtoMessage()    {}
-func (*MsgQueryOracleResponse) Descriptor() ([]byte, []int) {
+func (m *MsgSendQueryOracleResponse) Reset()         { *m = MsgSendQueryOracleResponse{} }
+func (m *MsgSendQueryOracleResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSendQueryOracleResponse) ProtoMessage()    {}
+func (*MsgSendQueryOracleResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_66a39dda41c6a784, []int{1}
 }
-func (m *MsgQueryOracleResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgSendQueryOracleResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgQueryOracleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgSendQueryOracleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgQueryOracleResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgSendQueryOracleResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -123,19 +123,19 @@ func (m *MsgQueryOracleResponse) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *MsgQueryOracleResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgQueryOracleResponse.Merge(m, src)
+func (m *MsgSendQueryOracleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSendQueryOracleResponse.Merge(m, src)
 }
-func (m *MsgQueryOracleResponse) XXX_Size() int {
+func (m *MsgSendQueryOracleResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgQueryOracleResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgQueryOracleResponse.DiscardUnknown(m)
+func (m *MsgSendQueryOracleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSendQueryOracleResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgQueryOracleResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgSendQueryOracleResponse proto.InternalMessageInfo
 
-func (m *MsgQueryOracleResponse) GetSequence() uint64 {
+func (m *MsgSendQueryOracleResponse) GetSequence() uint64 {
 	if m != nil {
 		return m.Sequence
 	}
@@ -235,8 +235,8 @@ func (m *MsgUpdateOracleResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgUpdateOracleResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgQueryOracleRequest)(nil), "provenance.oracle.v1.MsgQueryOracleRequest")
-	proto.RegisterType((*MsgQueryOracleResponse)(nil), "provenance.oracle.v1.MsgQueryOracleResponse")
+	proto.RegisterType((*MsgSendQueryOracleRequest)(nil), "provenance.oracle.v1.MsgSendQueryOracleRequest")
+	proto.RegisterType((*MsgSendQueryOracleResponse)(nil), "provenance.oracle.v1.MsgSendQueryOracleResponse")
 	proto.RegisterType((*MsgUpdateOracleRequest)(nil), "provenance.oracle.v1.MsgUpdateOracleRequest")
 	proto.RegisterType((*MsgUpdateOracleResponse)(nil), "provenance.oracle.v1.MsgUpdateOracleResponse")
 }
@@ -244,37 +244,37 @@ func init() {
 func init() { proto.RegisterFile("provenance/oracle/v1/tx.proto", fileDescriptor_66a39dda41c6a784) }
 
 var fileDescriptor_66a39dda41c6a784 = []byte{
-	// 475 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x53, 0x31, 0x6f, 0xd3, 0x40,
-	0x14, 0xce, 0xd1, 0x42, 0xdb, 0xa3, 0x93, 0x15, 0xa8, 0x63, 0x09, 0xa7, 0xca, 0x54, 0x41, 0xe3,
-	0x53, 0x02, 0x42, 0x02, 0x89, 0x81, 0x74, 0x8e, 0x00, 0x57, 0x08, 0x89, 0x05, 0x9d, 0x9d, 0xe3,
-	0x62, 0x11, 0xdf, 0x73, 0xfd, 0xce, 0x69, 0xf2, 0x27, 0x10, 0x23, 0x63, 0x7f, 0x04, 0x33, 0x33,
-	0x63, 0xc5, 0xc4, 0x80, 0x10, 0x4a, 0x16, 0x7e, 0x03, 0x13, 0xca, 0x5d, 0x42, 0x5c, 0x1a, 0xaa,
-	0x4c, 0xf6, 0xbb, 0xef, 0x7b, 0xef, 0xbe, 0xef, 0xe9, 0x3b, 0x7a, 0x27, 0xcb, 0x61, 0x28, 0x14,
-	0x57, 0xb1, 0x60, 0x90, 0xf3, 0x78, 0x20, 0xd8, 0xb0, 0xc5, 0xf4, 0x28, 0xc8, 0x72, 0xd0, 0xe0,
-	0x54, 0x97, 0x70, 0x60, 0xe1, 0x60, 0xd8, 0xf2, 0x6a, 0x31, 0x60, 0x0a, 0xf8, 0xc6, 0x70, 0x98,
-	0x2d, 0x6c, 0x83, 0x57, 0x95, 0x20, 0xc1, 0x9e, 0xcf, 0xfe, 0xe6, 0xa7, 0x77, 0x2d, 0x87, 0x45,
-	0x1c, 0x05, 0x3b, 0x29, 0x44, 0x3e, 0x66, 0xc3, 0x56, 0x24, 0x34, 0x6f, 0xb1, 0x8c, 0xcb, 0x44,
-	0x71, 0x9d, 0x80, 0x9a, 0x73, 0x6b, 0x12, 0x40, 0x0e, 0x04, 0x33, 0x55, 0x54, 0xbc, 0x65, 0x5c,
-	0x8d, 0x2d, 0xd4, 0xf8, 0x4c, 0xe8, 0xad, 0x2e, 0xca, 0x17, 0xb3, 0x01, 0xcf, 0x8c, 0x9a, 0x50,
-	0x9c, 0x14, 0x02, 0xb5, 0x73, 0x4c, 0xaf, 0x9b, 0xb1, 0x2e, 0xd9, 0x27, 0x07, 0xbb, 0x9d, 0x27,
-	0xbf, 0x7f, 0xd4, 0x1f, 0xc9, 0x44, 0xf7, 0x8b, 0x28, 0x88, 0x21, 0x65, 0x47, 0x80, 0xe9, 0x2b,
-	0x8e, 0x29, 0x3b, 0xe5, 0x98, 0xf6, 0xd8, 0xc8, 0x7c, 0x99, 0x1e, 0x67, 0x02, 0x83, 0x90, 0x9f,
-	0x1e, 0x81, 0xd2, 0x39, 0x8f, 0x75, 0x57, 0x20, 0x72, 0x29, 0x42, 0x3b, 0xcb, 0x71, 0xe9, 0x56,
-	0xdc, 0xe7, 0x4a, 0x89, 0x81, 0xbb, 0xb1, 0x4f, 0x0e, 0x76, 0xc2, 0x45, 0xe9, 0x3c, 0xa4, 0x3b,
-	0xbc, 0xd0, 0x7d, 0xc8, 0x13, 0x3d, 0x76, 0x37, 0x67, 0x58, 0xc7, 0xfd, 0xfa, 0xa9, 0x59, 0x9d,
-	0xaf, 0xe2, 0x69, 0xaf, 0x97, 0x0b, 0xc4, 0x63, 0x9d, 0x27, 0x4a, 0x86, 0x4b, 0x6a, 0xe3, 0x01,
-	0xbd, 0xfd, 0xaf, 0x7e, 0xcc, 0x40, 0xa1, 0x70, 0x3c, 0xba, 0x8d, 0x33, 0x2f, 0x2a, 0x16, 0xc6,
-	0xc3, 0x66, 0xf8, 0xb7, 0x6e, 0xbc, 0x27, 0xa6, 0xed, 0x65, 0xd6, 0xe3, 0x5a, 0x5c, 0xf4, 0xdd,
-	0xa6, 0x5b, 0xdc, 0x5e, 0x66, 0xba, 0xae, 0x92, 0xb1, 0x20, 0x5e, 0x14, 0x7f, 0x6d, 0x6d, 0xf1,
-	0x8f, 0xb7, 0x3f, 0x9e, 0xd5, 0xc9, 0xaf, 0xb3, 0x3a, 0x69, 0xd4, 0xe8, 0xde, 0x25, 0x3d, 0xd6,
-	0x47, 0xfb, 0x3b, 0xa1, 0x1b, 0x5d, 0x94, 0xce, 0x3b, 0xba, 0x5b, 0xc6, 0x9d, 0xc3, 0x60, 0x55,
-	0x92, 0x82, 0xd5, 0xb6, 0xbc, 0xe6, 0x9a, 0xec, 0xf9, 0xf2, 0xfa, 0xf4, 0x66, 0x69, 0xa7, 0xce,
-	0xbd, 0xff, 0x76, 0x5f, 0x4e, 0x8e, 0x77, 0xb8, 0x1e, 0xd9, 0xde, 0xd4, 0x91, 0x5f, 0x26, 0x3e,
-	0x39, 0x9f, 0xf8, 0xe4, 0xe7, 0xc4, 0x27, 0x1f, 0xa6, 0x7e, 0xe5, 0x7c, 0xea, 0x57, 0xbe, 0x4d,
-	0xfd, 0x0a, 0xdd, 0x4b, 0x60, 0xe5, 0xa4, 0xe7, 0xe4, 0x75, 0xbb, 0x94, 0xc4, 0x25, 0xa5, 0x99,
-	0x40, 0xa9, 0x62, 0xa3, 0xc5, 0xf3, 0x33, 0xa9, 0x8c, 0x6e, 0x98, 0xc4, 0xdf, 0xff, 0x13, 0x00,
-	0x00, 0xff, 0xff, 0xdc, 0x47, 0x0a, 0x6d, 0xa0, 0x03, 0x00, 0x00,
+	// 480 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x53, 0xc1, 0x6e, 0xd3, 0x40,
+	0x10, 0xed, 0xd2, 0x42, 0xdb, 0x55, 0x25, 0x24, 0x2b, 0xa2, 0x8e, 0x25, 0x9c, 0x2a, 0xa7, 0x0a,
+	0x11, 0x2f, 0x09, 0x12, 0x02, 0x24, 0x0e, 0xa4, 0xe7, 0x08, 0x70, 0x84, 0x90, 0xb8, 0xa0, 0xb5,
+	0xbd, 0x6c, 0x2c, 0xe2, 0x1d, 0xd7, 0xb3, 0x4e, 0x93, 0x9f, 0x40, 0x1c, 0x39, 0xf6, 0x23, 0xf8,
+	0x02, 0x4e, 0x1c, 0x2b, 0x4e, 0x9c, 0x10, 0x4a, 0x2e, 0xfd, 0x06, 0x4e, 0x28, 0xbb, 0x09, 0x49,
+	0xc1, 0xa0, 0x9c, 0xec, 0xb7, 0xef, 0xcd, 0xdb, 0x79, 0xa3, 0x59, 0x7a, 0x3b, 0x2f, 0x60, 0x24,
+	0x14, 0x57, 0xb1, 0x60, 0x50, 0xf0, 0x78, 0x28, 0xd8, 0xa8, 0xcd, 0xf4, 0x38, 0xc8, 0x0b, 0xd0,
+	0xe0, 0xd4, 0x56, 0x74, 0x60, 0xe9, 0x60, 0xd4, 0xf6, 0xea, 0x31, 0x60, 0x06, 0xf8, 0xc6, 0x68,
+	0x98, 0x05, 0xb6, 0xc0, 0xab, 0x49, 0x90, 0x60, 0xcf, 0xe7, 0x7f, 0x8b, 0xd3, 0x3b, 0x56, 0xc3,
+	0x22, 0x8e, 0x82, 0x9d, 0x96, 0xa2, 0x98, 0xb0, 0x51, 0x3b, 0x12, 0x9a, 0xb7, 0x59, 0xce, 0x65,
+	0xaa, 0xb8, 0x4e, 0x41, 0x2d, 0xb4, 0x75, 0x09, 0x20, 0x87, 0x82, 0x19, 0x14, 0x95, 0x6f, 0x19,
+	0x57, 0x13, 0x4b, 0x35, 0x3f, 0x13, 0x5a, 0xef, 0xa1, 0xec, 0x0b, 0x95, 0xbc, 0x98, 0x9b, 0x3c,
+	0x33, 0x1d, 0x85, 0xe2, 0xb4, 0x14, 0xa8, 0x9d, 0x3e, 0xbd, 0x6e, 0xac, 0x5d, 0x72, 0x44, 0x8e,
+	0x0f, 0xba, 0x4f, 0x7e, 0x7e, 0x6f, 0x3c, 0x92, 0xa9, 0x1e, 0x94, 0x51, 0x10, 0x43, 0xc6, 0x4e,
+	0x00, 0xb3, 0x57, 0x1c, 0x33, 0x76, 0xc6, 0x31, 0x4b, 0xd8, 0xd8, 0x7c, 0x99, 0x9e, 0xe4, 0x02,
+	0x83, 0x90, 0x9f, 0x9d, 0x80, 0xd2, 0x05, 0x8f, 0x75, 0x4f, 0x20, 0x72, 0x29, 0x42, 0xeb, 0xe5,
+	0xb8, 0x74, 0x37, 0x1e, 0x70, 0xa5, 0xc4, 0xd0, 0xdd, 0x3e, 0x22, 0xc7, 0xfb, 0xe1, 0x12, 0x3a,
+	0x0f, 0xe8, 0x3e, 0x2f, 0xf5, 0x00, 0x8a, 0x54, 0x4f, 0xdc, 0x9d, 0x39, 0xd7, 0x75, 0xbf, 0x7e,
+	0x6a, 0xd5, 0x16, 0xe3, 0x78, 0x9a, 0x24, 0x85, 0x40, 0xec, 0xeb, 0x22, 0x55, 0x32, 0x5c, 0x49,
+	0x9b, 0x0f, 0xa9, 0x57, 0x95, 0x01, 0x73, 0x50, 0x28, 0x1c, 0x8f, 0xee, 0xe1, 0x3c, 0x8f, 0x8a,
+	0x85, 0xc9, 0xb1, 0x13, 0xfe, 0xc6, 0xcd, 0xf7, 0x84, 0xde, 0xea, 0xa1, 0x7c, 0x99, 0x27, 0x5c,
+	0x8b, 0xab, 0xd9, 0x3b, 0x74, 0x97, 0xdb, 0x0b, 0x4d, 0xd5, 0xff, 0x5a, 0x59, 0x0a, 0xaf, 0x06,
+	0xb8, 0xb6, 0x71, 0x80, 0xc7, 0x7b, 0x1f, 0xcf, 0x1b, 0xe4, 0xf2, 0xbc, 0x41, 0x9a, 0x75, 0x7a,
+	0xf8, 0x57, 0x3f, 0x36, 0x47, 0xe7, 0x92, 0xd0, 0xed, 0x1e, 0x4a, 0xe7, 0x1d, 0x3d, 0x58, 0xe7,
+	0x9d, 0xbb, 0x41, 0xd5, 0x46, 0x05, 0xd5, 0xb1, 0xbc, 0xd6, 0x86, 0xea, 0xc5, 0xf0, 0x34, 0xbd,
+	0xf9, 0xc7, 0x5c, 0x1d, 0xf6, 0x4f, 0x87, 0xea, 0x2d, 0xf2, 0xee, 0x6d, 0x5e, 0x60, 0x6f, 0xed,
+	0xca, 0x2f, 0x53, 0x9f, 0x5c, 0x4c, 0x7d, 0xf2, 0x63, 0xea, 0x93, 0x0f, 0x33, 0x7f, 0xeb, 0x62,
+	0xe6, 0x6f, 0x7d, 0x9b, 0xf9, 0x5b, 0xf4, 0x30, 0x85, 0x4a, 0xb7, 0xe7, 0xe4, 0x75, 0x67, 0x6d,
+	0x33, 0x57, 0x92, 0x56, 0x0a, 0x6b, 0x88, 0x8d, 0x97, 0x4f, 0xd2, 0x6c, 0x69, 0x74, 0xc3, 0xbc,
+	0x82, 0xfb, 0xbf, 0x02, 0x00, 0x00, 0xff, 0xff, 0xe4, 0xd9, 0x47, 0x26, 0xb4, 0x03, 0x00, 0x00,
 }
 
 func (this *MsgUpdateOracleRequest) Equal(that interface{}) bool {
@@ -319,8 +319,8 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// UpdateOracle is the RPC endpoint for updating the oracle
 	UpdateOracle(ctx context.Context, in *MsgUpdateOracleRequest, opts ...grpc.CallOption) (*MsgUpdateOracleResponse, error)
-	// QueryOracle sends an icq to an oracle on another chain
-	QueryOracle(ctx context.Context, in *MsgQueryOracleRequest, opts ...grpc.CallOption) (*MsgQueryOracleResponse, error)
+	// SendQueryOracle sends a query to an oracle on another chain
+	SendQueryOracle(ctx context.Context, in *MsgSendQueryOracleRequest, opts ...grpc.CallOption) (*MsgSendQueryOracleResponse, error)
 }
 
 type msgClient struct {
@@ -340,9 +340,9 @@ func (c *msgClient) UpdateOracle(ctx context.Context, in *MsgUpdateOracleRequest
 	return out, nil
 }
 
-func (c *msgClient) QueryOracle(ctx context.Context, in *MsgQueryOracleRequest, opts ...grpc.CallOption) (*MsgQueryOracleResponse, error) {
-	out := new(MsgQueryOracleResponse)
-	err := c.cc.Invoke(ctx, "/provenance.oracle.v1.Msg/QueryOracle", in, out, opts...)
+func (c *msgClient) SendQueryOracle(ctx context.Context, in *MsgSendQueryOracleRequest, opts ...grpc.CallOption) (*MsgSendQueryOracleResponse, error) {
+	out := new(MsgSendQueryOracleResponse)
+	err := c.cc.Invoke(ctx, "/provenance.oracle.v1.Msg/SendQueryOracle", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -353,8 +353,8 @@ func (c *msgClient) QueryOracle(ctx context.Context, in *MsgQueryOracleRequest, 
 type MsgServer interface {
 	// UpdateOracle is the RPC endpoint for updating the oracle
 	UpdateOracle(context.Context, *MsgUpdateOracleRequest) (*MsgUpdateOracleResponse, error)
-	// QueryOracle sends an icq to an oracle on another chain
-	QueryOracle(context.Context, *MsgQueryOracleRequest) (*MsgQueryOracleResponse, error)
+	// SendQueryOracle sends a query to an oracle on another chain
+	SendQueryOracle(context.Context, *MsgSendQueryOracleRequest) (*MsgSendQueryOracleResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -364,8 +364,8 @@ type UnimplementedMsgServer struct {
 func (*UnimplementedMsgServer) UpdateOracle(ctx context.Context, req *MsgUpdateOracleRequest) (*MsgUpdateOracleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOracle not implemented")
 }
-func (*UnimplementedMsgServer) QueryOracle(ctx context.Context, req *MsgQueryOracleRequest) (*MsgQueryOracleResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryOracle not implemented")
+func (*UnimplementedMsgServer) SendQueryOracle(ctx context.Context, req *MsgSendQueryOracleRequest) (*MsgSendQueryOracleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendQueryOracle not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -390,20 +390,20 @@ func _Msg_UpdateOracle_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_QueryOracle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgQueryOracleRequest)
+func _Msg_SendQueryOracle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSendQueryOracleRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).QueryOracle(ctx, in)
+		return srv.(MsgServer).SendQueryOracle(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.oracle.v1.Msg/QueryOracle",
+		FullMethod: "/provenance.oracle.v1.Msg/SendQueryOracle",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).QueryOracle(ctx, req.(*MsgQueryOracleRequest))
+		return srv.(MsgServer).SendQueryOracle(ctx, req.(*MsgSendQueryOracleRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -417,15 +417,15 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_UpdateOracle_Handler,
 		},
 		{
-			MethodName: "QueryOracle",
-			Handler:    _Msg_QueryOracle_Handler,
+			MethodName: "SendQueryOracle",
+			Handler:    _Msg_SendQueryOracle_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "provenance/oracle/v1/tx.proto",
 }
 
-func (m *MsgQueryOracleRequest) Marshal() (dAtA []byte, err error) {
+func (m *MsgSendQueryOracleRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -435,12 +435,12 @@ func (m *MsgQueryOracleRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgQueryOracleRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgSendQueryOracleRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgQueryOracleRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgSendQueryOracleRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -469,7 +469,7 @@ func (m *MsgQueryOracleRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgQueryOracleResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgSendQueryOracleResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -479,12 +479,12 @@ func (m *MsgQueryOracleResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgQueryOracleResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgSendQueryOracleResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgQueryOracleResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgSendQueryOracleResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -568,7 +568,7 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgQueryOracleRequest) Size() (n int) {
+func (m *MsgSendQueryOracleRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -589,7 +589,7 @@ func (m *MsgQueryOracleRequest) Size() (n int) {
 	return n
 }
 
-func (m *MsgQueryOracleResponse) Size() (n int) {
+func (m *MsgSendQueryOracleResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -633,7 +633,7 @@ func sovTx(x uint64) (n int) {
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *MsgQueryOracleRequest) Unmarshal(dAtA []byte) error {
+func (m *MsgSendQueryOracleRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -656,10 +656,10 @@ func (m *MsgQueryOracleRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgQueryOracleRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgSendQueryOracleRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgQueryOracleRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgSendQueryOracleRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -781,7 +781,7 @@ func (m *MsgQueryOracleRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgQueryOracleResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgSendQueryOracleResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -804,10 +804,10 @@ func (m *MsgQueryOracleResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgQueryOracleResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgSendQueryOracleResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgQueryOracleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgSendQueryOracleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

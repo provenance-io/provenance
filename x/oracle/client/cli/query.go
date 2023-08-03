@@ -78,9 +78,9 @@ func CmdQueryContractAddress() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryContractAddressRequest{}
+			params := &types.QueryOracleAddressRequest{}
 
-			res, err := queryClient.ContractAddress(context.Background(), params)
+			res, err := queryClient.OracleAddress(context.Background(), params)
 			if err != nil {
 				return err
 			}

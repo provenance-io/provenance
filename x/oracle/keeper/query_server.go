@@ -14,7 +14,7 @@ import (
 var _ types.QueryServer = Keeper{}
 
 // QueryAddress returns the address of the oracle's contract
-func (k Keeper) ContractAddress(goCtx context.Context, req *types.QueryContractAddressRequest) (*types.QueryContractAddressResponse, error) {
+func (k Keeper) OracleAddress(goCtx context.Context, req *types.QueryOracleAddressRequest) (*types.QueryOracleAddressResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -25,10 +25,10 @@ func (k Keeper) ContractAddress(goCtx context.Context, req *types.QueryContractA
 		return nil, err
 	}
 
-	return &types.QueryContractAddressResponse{Address: contract.String()}, nil
+	return &types.QueryOracleAddressResponse{Address: contract.String()}, nil
 }
 
-func (k Keeper) OracleContract(goCtx context.Context, req *types.QueryOracleContractRequest) (*types.QueryOracleContractResponse, error) {
+func (k Keeper) Oracle(goCtx context.Context, req *types.QueryOracleRequest) (*types.QueryOracleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	addr, err := k.GetOracleContract(ctx)
 	if err != nil {
@@ -42,7 +42,7 @@ func (k Keeper) OracleContract(goCtx context.Context, req *types.QueryOracleCont
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryOracleContractResponse{Data: resp.Data}, nil
+	return &types.QueryOracleResponse{Data: resp.Data}, nil
 }
 
 func (k Keeper) QueryState(goCtx context.Context, req *types.QueryQueryStateRequest) (*types.QueryQueryStateResponse, error) {

@@ -8,6 +8,6 @@ option java_multiple_files = true;
 
 // EventOracleQueryResponse is an event for when the chain receives a response from an oracle query
 message EventOracleQueryResponse {
-  // query_id is a unique identifier of the query
-  string query_id = 1;
+  // sequence_id is a unique identifier of the query
+  string sequence_id = 1;
 }

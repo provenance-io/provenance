@@ -6,11 +6,11 @@ import (
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 )
 
-func NewGenesisState(port string, params Params, queryID uint64) *GenesisState {
+func NewGenesisState(port string, params Params, sequence uint64) *GenesisState {
 	return &GenesisState{
-		PortId:  port,
-		Params:  params,
-		QueryId: queryID,
+		PortId:   port,
+		Params:   params,
+		Sequence: sequence,
 	}
 }
 
@@ -22,7 +22,7 @@ func DefaultGenesis() *GenesisState {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	if gs.QueryId == 0 {
+	if gs.Sequence == 0 {
 		return fmt.Errorf("invalid query id")
 	}
 

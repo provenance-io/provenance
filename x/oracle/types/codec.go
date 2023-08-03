@@ -13,12 +13,12 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgUpdateOracleRequest{},
-		&MsgQueryOracleRequest{},
+		&MsgSendQueryOracleRequest{},
 	)
 
 	registry.RegisterImplementations((*proto.Message)(nil),
-		&QueryOracleContractRequest{},
-		&QueryOracleContractResponse{},
+		&QueryOracleRequest{},
+		&QueryOracleResponse{},
 	)
 }
 

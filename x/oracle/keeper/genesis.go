@@ -7,7 +7,11 @@ import (
 
 // ExportGenesis returns a GenesisState for a given context.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	return types.DefaultGenesis()
+	return &types.GenesisState{
+		Sequence: k.GetLastQueryPacketSeq(ctx),
+		Params:   k.GetParams(ctx),
+		PortId:   k.GetPort(ctx),
+	}
 }
 
 // InitGenesis new trigger genesis

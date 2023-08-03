@@ -440,18 +440,18 @@
     - [GenesisState](#provenance.oracle.v1.GenesisState)
   
 - [provenance/oracle/v1/query.proto](#provenance/oracle/v1/query.proto)
-    - [QueryContractAddressRequest](#provenance.oracle.v1.QueryContractAddressRequest)
-    - [QueryContractAddressResponse](#provenance.oracle.v1.QueryContractAddressResponse)
-    - [QueryOracleContractRequest](#provenance.oracle.v1.QueryOracleContractRequest)
-    - [QueryOracleContractResponse](#provenance.oracle.v1.QueryOracleContractResponse)
+    - [QueryOracleAddressRequest](#provenance.oracle.v1.QueryOracleAddressRequest)
+    - [QueryOracleAddressResponse](#provenance.oracle.v1.QueryOracleAddressResponse)
+    - [QueryOracleRequest](#provenance.oracle.v1.QueryOracleRequest)
+    - [QueryOracleResponse](#provenance.oracle.v1.QueryOracleResponse)
     - [QueryQueryStateRequest](#provenance.oracle.v1.QueryQueryStateRequest)
     - [QueryQueryStateResponse](#provenance.oracle.v1.QueryQueryStateResponse)
   
     - [Query](#provenance.oracle.v1.Query)
   
 - [provenance/oracle/v1/tx.proto](#provenance/oracle/v1/tx.proto)
-    - [MsgQueryOracleRequest](#provenance.oracle.v1.MsgQueryOracleRequest)
-    - [MsgQueryOracleResponse](#provenance.oracle.v1.MsgQueryOracleResponse)
+    - [MsgSendQueryOracleRequest](#provenance.oracle.v1.MsgSendQueryOracleRequest)
+    - [MsgSendQueryOracleResponse](#provenance.oracle.v1.MsgSendQueryOracleResponse)
     - [MsgUpdateOracleRequest](#provenance.oracle.v1.MsgUpdateOracleRequest)
     - [MsgUpdateOracleResponse](#provenance.oracle.v1.MsgUpdateOracleResponse)
   
@@ -6686,7 +6686,7 @@ EventOracleQueryResponse is an event for when the chain receives a response from
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `query_id` | [string](#string) |  | query_id is a unique identifier of the query |
+| `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
 
 
 
@@ -6743,7 +6743,7 @@ GenesisState defines the oracle module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `query_id` | [uint64](#uint64) |  | Query id is the next auto incremented id to be assigned to the next query |
+| `sequence` | [uint64](#uint64) |  | Sequence is the next auto incremented id to be assigned to the next query |
 | `params` | [Params](#provenance.oracle.v1.Params) |  | Params |
 | `port_id` | [string](#string) |  | The port to assign to the module |
 
@@ -6768,55 +6768,55 @@ GenesisState defines the oracle module's genesis state.
 
 
 
-<a name="provenance.oracle.v1.QueryContractAddressRequest"></a>
+<a name="provenance.oracle.v1.QueryOracleAddressRequest"></a>
 
-### QueryContractAddressRequest
-QueryContractAddressRequest queries for the Trigger with an identifier of id.
-
-
-
-
-
-
-<a name="provenance.oracle.v1.QueryContractAddressResponse"></a>
-
-### QueryContractAddressResponse
-QueryContractAddressResponse contains the address of the oracle's contract.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | The address of the oracle's contract |
+### QueryOracleAddressRequest
+QueryOracleAddressRequest queries for the address of the oracle.
 
 
 
 
 
 
-<a name="provenance.oracle.v1.QueryOracleContractRequest"></a>
+<a name="provenance.oracle.v1.QueryOracleAddressResponse"></a>
 
-### QueryOracleContractRequest
-QueryOracleContractRequest queries the oracle's smart contract
+### QueryOracleAddressResponse
+QueryOracleAddressResponse contains the address of the oracle.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `query` | [bytes](#bytes) |  | Query contains the query data passed to the contract. |
+| `address` | [string](#string) |  | The address of the oracle |
 
 
 
 
 
 
-<a name="provenance.oracle.v1.QueryOracleContractResponse"></a>
+<a name="provenance.oracle.v1.QueryOracleRequest"></a>
 
-### QueryOracleContractResponse
-QueryOracleContractResponse contains the result of the query to the oracle's smart contract
+### QueryOracleRequest
+QueryOracleRequest queries the module's oracle.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `data` | [bytes](#bytes) |  | Data contains the json data returned from the smart contract. |
+| `query` | [bytes](#bytes) |  | Query contains the query data passed to the oracle. |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.QueryOracleResponse"></a>
+
+### QueryOracleResponse
+QueryOracleResponse contains the result of the query sent to the oracle.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `data` | [bytes](#bytes) |  | Data contains the json data returned from the oracle. |
 
 
 
@@ -6826,7 +6826,7 @@ QueryOracleContractResponse contains the result of the query to the oracle's sma
 <a name="provenance.oracle.v1.QueryQueryStateRequest"></a>
 
 ### QueryQueryStateRequest
-
+QueryQueryStateRequest queries for the state of the ICQ.
 
 
 | Field | Type | Label | Description |
@@ -6841,7 +6841,7 @@ QueryOracleContractResponse contains the result of the query to the oracle's sma
 <a name="provenance.oracle.v1.QueryQueryStateResponse"></a>
 
 ### QueryQueryStateResponse
-
+QueryQueryStateResponse contains the ICQ and its response.
 
 
 | Field | Type | Label | Description |
@@ -6867,9 +6867,9 @@ Query defines the gRPC querier service for oracle module.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `ContractAddress` | [QueryContractAddressRequest](#provenance.oracle.v1.QueryContractAddressRequest) | [QueryContractAddressResponse](#provenance.oracle.v1.QueryContractAddressResponse) | ContractAddress returns the address of the oracle's contract | GET|/provenance/oracle/v1/contract_address|
-| `OracleContract` | [QueryOracleContractRequest](#provenance.oracle.v1.QueryOracleContractRequest) | [QueryOracleContractResponse](#provenance.oracle.v1.QueryOracleContractResponse) | OracleContract sends a query to the oracle's contract | GET|/provenance/oracle/v1/oracle_contract|
-| `QueryState` | [QueryQueryStateRequest](#provenance.oracle.v1.QueryQueryStateRequest) | [QueryQueryStateResponse](#provenance.oracle.v1.QueryQueryStateResponse) |  | GET|/quasar-finance/interchainquerydemo/interquery/query_state|
+| `OracleAddress` | [QueryOracleAddressRequest](#provenance.oracle.v1.QueryOracleAddressRequest) | [QueryOracleAddressResponse](#provenance.oracle.v1.QueryOracleAddressResponse) | OracleAddress returns the address of the oracle | GET|/provenance/oracle/v1/oracle_address|
+| `Oracle` | [QueryOracleRequest](#provenance.oracle.v1.QueryOracleRequest) | [QueryOracleResponse](#provenance.oracle.v1.QueryOracleResponse) | Oracle sends a query to the oracle's contract | GET|/provenance/oracle/v1/oracle|
+| `QueryState` | [QueryQueryStateRequest](#provenance.oracle.v1.QueryQueryStateRequest) | [QueryQueryStateResponse](#provenance.oracle.v1.QueryQueryStateResponse) | QueryState returns the state of the oracle query | GET|/provenance/oracle/v1/query_state|
 
  <!-- end services -->
 
@@ -6882,10 +6882,10 @@ Query defines the gRPC querier service for oracle module.
 
 
 
-<a name="provenance.oracle.v1.MsgQueryOracleRequest"></a>
+<a name="provenance.oracle.v1.MsgSendQueryOracleRequest"></a>
 
-### MsgQueryOracleRequest
-MsgQueryOracleRequest queries an Oracle on another chain
+### MsgSendQueryOracleRequest
+MsgSendQueryOracleRequest queries an oracle on another chain
 
 
 | Field | Type | Label | Description |
@@ -6899,10 +6899,10 @@ MsgQueryOracleRequest queries an Oracle on another chain
 
 
 
-<a name="provenance.oracle.v1.MsgQueryOracleResponse"></a>
+<a name="provenance.oracle.v1.MsgSendQueryOracleResponse"></a>
 
-### MsgQueryOracleResponse
-MsgQueryOracleResponse contains the id of the oracle query.
+### MsgSendQueryOracleResponse
+MsgSendQueryOracleResponse contains the id of the oracle query.
 
 
 | Field | Type | Label | Description |
@@ -6954,7 +6954,7 @@ Msg
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `UpdateOracle` | [MsgUpdateOracleRequest](#provenance.oracle.v1.MsgUpdateOracleRequest) | [MsgUpdateOracleResponse](#provenance.oracle.v1.MsgUpdateOracleResponse) | UpdateOracle is the RPC endpoint for updating the oracle | |
-| `QueryOracle` | [MsgQueryOracleRequest](#provenance.oracle.v1.MsgQueryOracleRequest) | [MsgQueryOracleResponse](#provenance.oracle.v1.MsgQueryOracleResponse) | QueryOracle sends an icq to an oracle on another chain | |
+| `SendQueryOracle` | [MsgSendQueryOracleRequest](#provenance.oracle.v1.MsgSendQueryOracleRequest) | [MsgSendQueryOracleResponse](#provenance.oracle.v1.MsgSendQueryOracleResponse) | SendQueryOracle sends a query to an oracle on another chain | |
 
  <!-- end services -->
 

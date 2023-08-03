@@ -32,7 +32,7 @@ func (s msgServer) UpdateOracle(goCtx context.Context, msg *types.MsgUpdateOracl
 	return &types.MsgUpdateOracleResponse{}, nil
 }
 
-func (k msgServer) QueryOracle(goCtx context.Context, msg *types.MsgQueryOracleRequest) (*types.MsgQueryOracleResponse, error) {
+func (k msgServer) SendQueryOracle(goCtx context.Context, msg *types.MsgSendQueryOracleRequest) (*types.MsgSendQueryOracleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	chanCap, found := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(k.GetPort(ctx), msg.Channel))
@@ -40,13 +40,13 @@ func (k msgServer) QueryOracle(goCtx context.Context, msg *types.MsgQueryOracleR
 		return nil, sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
-	q := types.QueryOracleContractRequest{
+	q := types.QueryOracleRequest{
 		Query: msg.GetQuery(),
 	}
 
 	reqs := []abcitypes.RequestQuery{
 		{
-			Path: "/provenance.oracle.v1.Query/OracleContract",
+			Path: "/provenance.oracle.v1.Query/Oracle",
 			Data: k.cdc.MustMarshal(&q),
 		},
 	}
@@ -59,7 +59,7 @@ func (k msgServer) QueryOracle(goCtx context.Context, msg *types.MsgQueryOracleR
 
 	k.SetQueryRequest(ctx, seq, q)
 
-	return &types.MsgQueryOracleResponse{
+	return &types.MsgSendQueryOracleResponse{
 		Sequence: seq,
 	}, nil
 }

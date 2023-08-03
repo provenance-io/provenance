@@ -32,6 +32,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueryQueryStateRequest queries for the state of the ICQ.
 type QueryQueryStateRequest struct {
 	Sequence uint64 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
 }
@@ -76,6 +77,7 @@ func (m *QueryQueryStateRequest) GetSequence() uint64 {
 	return 0
 }
 
+// QueryQueryStateResponse contains the ICQ and its response.
 type QueryQueryStateResponse struct {
 	Request  types.Any  `protobuf:"bytes,1,opt,name=request,proto3" json:"request"`
 	Response *types.Any `protobuf:"bytes,2,opt,name=response,proto3" json:"response,omitempty"`
@@ -128,22 +130,22 @@ func (m *QueryQueryStateResponse) GetResponse() *types.Any {
 	return nil
 }
 
-// QueryContractAddressRequest queries for the Trigger with an identifier of id.
-type QueryContractAddressRequest struct {
+// QueryOracleAddressRequest queries for the address of the oracle.
+type QueryOracleAddressRequest struct {
 }
 
-func (m *QueryContractAddressRequest) Reset()         { *m = QueryContractAddressRequest{} }
-func (m *QueryContractAddressRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryContractAddressRequest) ProtoMessage()    {}
-func (*QueryContractAddressRequest) Descriptor() ([]byte, []int) {
+func (m *QueryOracleAddressRequest) Reset()         { *m = QueryOracleAddressRequest{} }
+func (m *QueryOracleAddressRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryOracleAddressRequest) ProtoMessage()    {}
+func (*QueryOracleAddressRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_169907f611744c57, []int{2}
 }
-func (m *QueryContractAddressRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryOracleAddressRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryContractAddressRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryOracleAddressRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryContractAddressRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryOracleAddressRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -153,36 +155,36 @@ func (m *QueryContractAddressRequest) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (m *QueryContractAddressRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryContractAddressRequest.Merge(m, src)
+func (m *QueryOracleAddressRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryOracleAddressRequest.Merge(m, src)
 }
-func (m *QueryContractAddressRequest) XXX_Size() int {
+func (m *QueryOracleAddressRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryContractAddressRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryContractAddressRequest.DiscardUnknown(m)
+func (m *QueryOracleAddressRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryOracleAddressRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryContractAddressRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryOracleAddressRequest proto.InternalMessageInfo
 
-// QueryContractAddressResponse contains the address of the oracle's contract.
-type QueryContractAddressResponse struct {
-	// The address of the oracle's contract
+// QueryOracleAddressResponse contains the address of the oracle.
+type QueryOracleAddressResponse struct {
+	// The address of the oracle
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
 
-func (m *QueryContractAddressResponse) Reset()         { *m = QueryContractAddressResponse{} }
-func (m *QueryContractAddressResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryContractAddressResponse) ProtoMessage()    {}
-func (*QueryContractAddressResponse) Descriptor() ([]byte, []int) {
+func (m *QueryOracleAddressResponse) Reset()         { *m = QueryOracleAddressResponse{} }
+func (m *QueryOracleAddressResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryOracleAddressResponse) ProtoMessage()    {}
+func (*QueryOracleAddressResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_169907f611744c57, []int{3}
 }
-func (m *QueryContractAddressResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryOracleAddressResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryContractAddressResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryOracleAddressResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryContractAddressResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryOracleAddressResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -192,43 +194,43 @@ func (m *QueryContractAddressResponse) XXX_Marshal(b []byte, deterministic bool)
 		return b[:n], nil
 	}
 }
-func (m *QueryContractAddressResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryContractAddressResponse.Merge(m, src)
+func (m *QueryOracleAddressResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryOracleAddressResponse.Merge(m, src)
 }
-func (m *QueryContractAddressResponse) XXX_Size() int {
+func (m *QueryOracleAddressResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryContractAddressResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryContractAddressResponse.DiscardUnknown(m)
+func (m *QueryOracleAddressResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryOracleAddressResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryContractAddressResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryOracleAddressResponse proto.InternalMessageInfo
 
-func (m *QueryContractAddressResponse) GetAddress() string {
+func (m *QueryOracleAddressResponse) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-// QueryOracleContractRequest queries the oracle's smart contract
-type QueryOracleContractRequest struct {
-	// Query contains the query data passed to the contract.
+// QueryOracleRequest queries the module's oracle.
+type QueryOracleRequest struct {
+	// Query contains the query data passed to the oracle.
 	Query github_com_CosmWasm_wasmd_x_wasm_types.RawContractMessage `protobuf:"bytes,1,opt,name=query,proto3,casttype=github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage" json:"query,omitempty"`
 }
 
-func (m *QueryOracleContractRequest) Reset()         { *m = QueryOracleContractRequest{} }
-func (m *QueryOracleContractRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryOracleContractRequest) ProtoMessage()    {}
-func (*QueryOracleContractRequest) Descriptor() ([]byte, []int) {
+func (m *QueryOracleRequest) Reset()         { *m = QueryOracleRequest{} }
+func (m *QueryOracleRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryOracleRequest) ProtoMessage()    {}
+func (*QueryOracleRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_169907f611744c57, []int{4}
 }
-func (m *QueryOracleContractRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryOracleRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryOracleContractRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryOracleRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryOracleContractRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryOracleRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -238,43 +240,43 @@ func (m *QueryOracleContractRequest) XXX_Marshal(b []byte, deterministic bool) (
 		return b[:n], nil
 	}
 }
-func (m *QueryOracleContractRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryOracleContractRequest.Merge(m, src)
+func (m *QueryOracleRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryOracleRequest.Merge(m, src)
 }
-func (m *QueryOracleContractRequest) XXX_Size() int {
+func (m *QueryOracleRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryOracleContractRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryOracleContractRequest.DiscardUnknown(m)
+func (m *QueryOracleRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryOracleRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryOracleContractRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryOracleRequest proto.InternalMessageInfo
 
-func (m *QueryOracleContractRequest) GetQuery() github_com_CosmWasm_wasmd_x_wasm_types.RawContractMessage {
+func (m *QueryOracleRequest) GetQuery() github_com_CosmWasm_wasmd_x_wasm_types.RawContractMessage {
 	if m != nil {
 		return m.Query
 	}
 	return nil
 }
 
-// QueryOracleContractResponse contains the result of the query to the oracle's smart contract
-type QueryOracleContractResponse struct {
-	// Data contains the json data returned from the smart contract.
+// QueryOracleResponse contains the result of the query sent to the oracle.
+type QueryOracleResponse struct {
+	// Data contains the json data returned from the oracle.
 	Data github_com_CosmWasm_wasmd_x_wasm_types.RawContractMessage `protobuf:"bytes,1,opt,name=data,proto3,casttype=github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage" json:"data,omitempty"`
 }
 
-func (m *QueryOracleContractResponse) Reset()         { *m = QueryOracleContractResponse{} }
-func (m *QueryOracleContractResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryOracleContractResponse) ProtoMessage()    {}
-func (*QueryOracleContractResponse) Descriptor() ([]byte, []int) {
+func (m *QueryOracleResponse) Reset()         { *m = QueryOracleResponse{} }
+func (m *QueryOracleResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryOracleResponse) ProtoMessage()    {}
+func (*QueryOracleResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_169907f611744c57, []int{5}
 }
-func (m *QueryOracleContractResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryOracleResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryOracleContractResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryOracleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryOracleContractResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryOracleResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -284,19 +286,19 @@ func (m *QueryOracleContractResponse) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (m *QueryOracleContractResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryOracleContractResponse.Merge(m, src)
+func (m *QueryOracleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryOracleResponse.Merge(m, src)
 }
-func (m *QueryOracleContractResponse) XXX_Size() int {
+func (m *QueryOracleResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryOracleContractResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryOracleContractResponse.DiscardUnknown(m)
+func (m *QueryOracleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryOracleResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryOracleContractResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryOracleResponse proto.InternalMessageInfo
 
-func (m *QueryOracleContractResponse) GetData() github_com_CosmWasm_wasmd_x_wasm_types.RawContractMessage {
+func (m *QueryOracleResponse) GetData() github_com_CosmWasm_wasmd_x_wasm_types.RawContractMessage {
 	if m != nil {
 		return m.Data
 	}
@@ -306,52 +308,50 @@ func (m *QueryOracleContractResponse) GetData() github_com_CosmWasm_wasmd_x_wasm
 func init() {
 	proto.RegisterType((*QueryQueryStateRequest)(nil), "provenance.oracle.v1.QueryQueryStateRequest")
 	proto.RegisterType((*QueryQueryStateResponse)(nil), "provenance.oracle.v1.QueryQueryStateResponse")
-	proto.RegisterType((*QueryContractAddressRequest)(nil), "provenance.oracle.v1.QueryContractAddressRequest")
-	proto.RegisterType((*QueryContractAddressResponse)(nil), "provenance.oracle.v1.QueryContractAddressResponse")
-	proto.RegisterType((*QueryOracleContractRequest)(nil), "provenance.oracle.v1.QueryOracleContractRequest")
-	proto.RegisterType((*QueryOracleContractResponse)(nil), "provenance.oracle.v1.QueryOracleContractResponse")
+	proto.RegisterType((*QueryOracleAddressRequest)(nil), "provenance.oracle.v1.QueryOracleAddressRequest")
+	proto.RegisterType((*QueryOracleAddressResponse)(nil), "provenance.oracle.v1.QueryOracleAddressResponse")
+	proto.RegisterType((*QueryOracleRequest)(nil), "provenance.oracle.v1.QueryOracleRequest")
+	proto.RegisterType((*QueryOracleResponse)(nil), "provenance.oracle.v1.QueryOracleResponse")
 }
 
 func init() { proto.RegisterFile("provenance/oracle/v1/query.proto", fileDescriptor_169907f611744c57) }
 
 var fileDescriptor_169907f611744c57 = []byte{
-	// 575 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xbd, 0x6e, 0x13, 0x31,
-	0x1c, 0x8f, 0xab, 0x94, 0x16, 0x83, 0x40, 0xb2, 0x22, 0x5a, 0x8e, 0x72, 0xad, 0x4e, 0x02, 0x3a,
-	0x10, 0x9b, 0x84, 0x0a, 0x09, 0x04, 0x43, 0xd3, 0x19, 0x41, 0x2f, 0x03, 0x12, 0x4b, 0xe4, 0x5c,
-	0xdc, 0xeb, 0x49, 0x3d, 0xfb, 0x62, 0xfb, 0xd2, 0x66, 0x65, 0x41, 0x6c, 0x48, 0xbc, 0x02, 0x03,
-	0x0b, 0x1b, 0x0f, 0xd1, 0xb1, 0x82, 0x85, 0xa9, 0x42, 0x09, 0x4f, 0xc1, 0x84, 0x62, 0xfb, 0x9a,
-	0xd2, 0x9e, 0x02, 0x95, 0x58, 0x12, 0x7f, 0xfc, 0xbe, 0xfc, 0xff, 0xdb, 0x07, 0xd7, 0x32, 0x29,
-	0x06, 0x8c, 0x53, 0x1e, 0x31, 0x22, 0x24, 0x8d, 0xf6, 0x18, 0x19, 0x34, 0x48, 0x3f, 0x67, 0x72,
-	0x88, 0x33, 0x29, 0xb4, 0x40, 0xb5, 0x29, 0x02, 0x5b, 0x04, 0x1e, 0x34, 0xbc, 0x5a, 0x2c, 0x62,
-	0x61, 0x00, 0x64, 0x32, 0xb2, 0x58, 0x6f, 0x25, 0x16, 0x22, 0xde, 0x63, 0x84, 0x66, 0x09, 0xa1,
-	0x9c, 0x0b, 0x4d, 0x75, 0x22, 0xb8, 0x72, 0xbb, 0x37, 0x23, 0xa1, 0x52, 0xa1, 0x3a, 0x96, 0x66,
-	0x27, 0xc5, 0x96, 0x23, 0x9a, 0x59, 0x37, 0xdf, 0x21, 0x94, 0x3b, 0xff, 0x60, 0x03, 0xde, 0xd8,
-	0x9e, 0xc4, 0x31, 0x3f, 0x6d, 0x4d, 0x35, 0x0b, 0x59, 0x3f, 0x67, 0x4a, 0x23, 0x0f, 0x2e, 0xaa,
-	0xc9, 0x90, 0x47, 0x6c, 0x19, 0xac, 0x81, 0xf5, 0x6a, 0x78, 0x32, 0x0f, 0xde, 0x02, 0xb8, 0x74,
-	0x8e, 0xa6, 0x32, 0xc1, 0x15, 0x43, 0x1b, 0x70, 0x41, 0x5a, 0x09, 0x43, 0xbb, 0xd2, 0xac, 0x61,
-	0x6b, 0x8f, 0x0b, 0x7b, 0xbc, 0xc9, 0x87, 0xad, 0xea, 0xe1, 0xf1, 0x6a, 0x25, 0x2c, 0xa0, 0xe8,
-	0x11, 0x5c, 0x94, 0x4e, 0x61, 0x79, 0xee, 0x2f, 0x34, 0x10, 0x9e, 0x60, 0x83, 0xdb, 0xf0, 0x96,
-	0xc9, 0xb0, 0x25, 0xb8, 0x96, 0x34, 0xd2, 0x9b, 0xbd, 0x9e, 0x64, 0x4a, 0xb9, 0x43, 0x04, 0x21,
-	0x5c, 0x29, 0xdf, 0x76, 0x61, 0x9b, 0x70, 0x81, 0xda, 0x25, 0x13, 0xf6, 0x72, 0x6b, 0xf9, 0xeb,
-	0x97, 0x7a, 0xcd, 0x15, 0xcf, 0x81, 0xdb, 0x5a, 0x26, 0x3c, 0x0e, 0x0b, 0x60, 0xd0, 0x87, 0x9e,
-	0xd1, 0x7c, 0x61, 0xda, 0x55, 0x28, 0x17, 0x65, 0x6b, 0xc3, 0x79, 0xd3, 0x5f, 0xa3, 0x77, 0xb5,
-	0xf5, 0xec, 0xd7, 0xf1, 0xea, 0xe3, 0x38, 0xd1, 0xbb, 0x79, 0x17, 0x47, 0x22, 0x25, 0x5b, 0x42,
-	0xa5, 0xaf, 0xa8, 0x4a, 0xc9, 0x3e, 0x55, 0x69, 0x8f, 0x1c, 0x98, 0x7f, 0xa2, 0x87, 0x19, 0x53,
-	0x38, 0xa4, 0xfb, 0x85, 0xda, 0x73, 0xa6, 0x14, 0x8d, 0x59, 0x68, 0xb5, 0x82, 0xcc, 0x9d, 0xf2,
-	0xac, 0xa5, 0x3b, 0xc5, 0x36, 0xac, 0xf6, 0xa8, 0xa6, 0xff, 0xc7, 0xd2, 0x48, 0x35, 0xdf, 0x55,
-	0xe1, 0xbc, 0xb1, 0x44, 0x9f, 0x00, 0xbc, 0x7e, 0xa6, 0x7c, 0xa8, 0x81, 0xcb, 0xae, 0x2d, 0x9e,
-	0xd1, 0x09, 0xaf, 0x79, 0x11, 0x8a, 0x6b, 0x2e, 0x7e, 0xf3, 0xed, 0xe7, 0x87, 0xb9, 0x75, 0x74,
-	0x97, 0x94, 0xbe, 0xa3, 0xc8, 0xd1, 0x3a, 0xae, 0x33, 0xe8, 0x23, 0x80, 0xd7, 0xfe, 0x2c, 0x11,
-	0x7a, 0x30, 0xc3, 0xb6, 0xb4, 0x81, 0x5e, 0xe3, 0x02, 0x0c, 0x97, 0xb3, 0x6e, 0x72, 0xde, 0x43,
-	0x77, 0xca, 0x73, 0xda, 0x51, 0xa7, 0x88, 0x8b, 0x3e, 0x03, 0x08, 0xa7, 0x0f, 0x07, 0xdd, 0x9f,
-	0x61, 0x78, 0xee, 0x59, 0x7a, 0xf5, 0x7f, 0x44, 0xbb, 0x68, 0x2d, 0x13, 0xed, 0x29, 0x7a, 0x42,
-	0xfa, 0x39, 0x55, 0x54, 0xd6, 0x77, 0x12, 0x1b, 0x2f, 0xe1, 0x9a, 0xc9, 0x68, 0x97, 0x26, 0xdc,
-	0x5c, 0xb1, 0x1e, 0x4b, 0x85, 0x5d, 0x33, 0x53, 0xfb, 0x8d, 0xea, 0xa8, 0x89, 0x56, 0x2b, 0x3e,
-	0x1c, 0xf9, 0xe0, 0x68, 0xe4, 0x83, 0x1f, 0x23, 0x1f, 0xbc, 0x1f, 0xfb, 0x95, 0xa3, 0xb1, 0x5f,
-	0xf9, 0x3e, 0xf6, 0x2b, 0x70, 0x29, 0x11, 0xa5, 0x71, 0x5e, 0x82, 0xd7, 0xcd, 0x53, 0x37, 0x70,
-	0x0a, 0xa9, 0x27, 0xe2, 0x74, 0x8d, 0x0e, 0x8a, 0x2a, 0x99, 0xdb, 0xd8, 0xbd, 0x64, 0x9e, 0xfa,
-	0xc3, 0xdf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x4a, 0xb8, 0xea, 0xba, 0x37, 0x05, 0x00, 0x00,
+	// 539 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xbf, 0x6e, 0x13, 0x31,
+	0x18, 0x8f, 0x4b, 0xff, 0xf1, 0x01, 0x8b, 0x89, 0x68, 0x7a, 0x54, 0xd7, 0x72, 0x54, 0xa8, 0x95,
+	0x1a, 0x9b, 0x86, 0x0a, 0x89, 0x81, 0xa1, 0xe9, 0x8c, 0x68, 0x2f, 0x03, 0x12, 0x4b, 0xe4, 0x5c,
+	0xcc, 0xf5, 0xa4, 0xc6, 0xbe, 0x9e, 0x9d, 0xb4, 0x59, 0x61, 0x60, 0x45, 0x82, 0x07, 0xe0, 0x21,
+	0x78, 0x07, 0x3a, 0x56, 0xb0, 0x30, 0x55, 0x28, 0xe1, 0x29, 0x98, 0x50, 0x6c, 0x5f, 0x93, 0xaa,
+	0x69, 0x9b, 0x81, 0x25, 0xb1, 0xcf, 0xbf, 0x7f, 0xf7, 0xf9, 0xfb, 0x0e, 0x56, 0xd2, 0x4c, 0x76,
+	0xb8, 0x60, 0x22, 0xe2, 0x54, 0x66, 0x2c, 0x3a, 0xe0, 0xb4, 0xb3, 0x49, 0x0f, 0xdb, 0x3c, 0xeb,
+	0x92, 0x34, 0x93, 0x5a, 0xe2, 0xe2, 0x10, 0x41, 0x2c, 0x82, 0x74, 0x36, 0xbd, 0x62, 0x2c, 0x63,
+	0x69, 0x00, 0x74, 0xb0, 0xb2, 0x58, 0x6f, 0x29, 0x96, 0x32, 0x3e, 0xe0, 0x94, 0xa5, 0x09, 0x65,
+	0x42, 0x48, 0xcd, 0x74, 0x22, 0x85, 0x72, 0xa7, 0x8b, 0x91, 0x54, 0x2d, 0xa9, 0xea, 0x96, 0x66,
+	0x37, 0xf9, 0x91, 0x23, 0x9a, 0x5d, 0xa3, 0xfd, 0x8e, 0x32, 0xe1, 0xfc, 0x83, 0x2d, 0x78, 0xb0,
+	0x37, 0x88, 0x63, 0x7e, 0x6a, 0x9a, 0x69, 0x1e, 0xf2, 0xc3, 0x36, 0x57, 0x1a, 0x7b, 0x30, 0xaf,
+	0x06, 0x4b, 0x11, 0xf1, 0x12, 0x5a, 0x41, 0x6b, 0xd3, 0xe1, 0xf9, 0x3e, 0xf8, 0x88, 0x60, 0xe1,
+	0x12, 0x4d, 0xa5, 0x52, 0x28, 0x8e, 0xb7, 0x60, 0x2e, 0xb3, 0x12, 0x86, 0x76, 0xa7, 0x52, 0x24,
+	0xd6, 0x9e, 0xe4, 0xf6, 0x64, 0x5b, 0x74, 0xab, 0xd3, 0x27, 0x67, 0xcb, 0x85, 0x30, 0x87, 0xe2,
+	0xe7, 0x30, 0x9f, 0x39, 0x85, 0xd2, 0xd4, 0x0d, 0x34, 0x14, 0x9e, 0x63, 0x83, 0x87, 0xb0, 0x68,
+	0x32, 0xbc, 0x36, 0xb5, 0xdb, 0x6e, 0x36, 0x33, 0xae, 0x94, 0x7b, 0x85, 0x60, 0x17, 0xbc, 0x71,
+	0x87, 0x2e, 0x68, 0x05, 0xe6, 0x98, 0x7d, 0x64, 0x82, 0xde, 0xae, 0x96, 0x7e, 0x7c, 0x2b, 0x17,
+	0x5d, 0xe1, 0x1c, 0xb8, 0xa6, 0xb3, 0x44, 0xc4, 0x61, 0x0e, 0x0c, 0x12, 0xc0, 0x23, 0x8a, 0x79,
+	0xa9, 0x6a, 0x30, 0x63, 0xee, 0xd4, 0xe8, 0xdc, 0xad, 0xbe, 0xfc, 0x7b, 0xb6, 0xfc, 0x22, 0x4e,
+	0xf4, 0x7e, 0xbb, 0x41, 0x22, 0xd9, 0xa2, 0x3b, 0x52, 0xb5, 0xde, 0x30, 0xd5, 0xa2, 0x47, 0x4c,
+	0xb5, 0x9a, 0xf4, 0xd8, 0xfc, 0x53, 0xdd, 0x4d, 0xb9, 0x22, 0x21, 0x3b, 0xda, 0x91, 0x42, 0x67,
+	0x2c, 0xd2, 0xaf, 0xb8, 0x52, 0x2c, 0xe6, 0xa1, 0xd5, 0x0a, 0xf6, 0xe1, 0xfe, 0x05, 0x2b, 0x97,
+	0x7a, 0x0f, 0xa6, 0x9b, 0x4c, 0xb3, 0xff, 0x63, 0x65, 0xa4, 0x2a, 0xdf, 0x6f, 0xc1, 0x8c, 0xb1,
+	0xc2, 0x5f, 0x11, 0xdc, 0xbb, 0x50, 0x2c, 0x4c, 0xc9, 0xb8, 0x06, 0x25, 0x57, 0xd6, 0xdc, 0x7b,
+	0x3a, 0x39, 0xc1, 0x5d, 0xe1, 0xc6, 0xfb, 0x9f, 0x7f, 0x3e, 0x4f, 0x3d, 0xc1, 0xab, 0x74, 0xec,
+	0xb4, 0xd8, 0x55, 0xdd, 0xdd, 0x00, 0xfe, 0x80, 0x60, 0xd6, 0xea, 0xe0, 0xb5, 0x1b, 0xad, 0xf2,
+	0x50, 0xeb, 0x13, 0x20, 0x5d, 0x9a, 0x55, 0x93, 0xc6, 0xc7, 0x4b, 0xd7, 0xa5, 0xc1, 0x5f, 0x10,
+	0xc0, 0xb0, 0xf7, 0xf1, 0xc6, 0x35, 0xfa, 0x97, 0x26, 0xcb, 0x2b, 0x4f, 0x88, 0x76, 0x89, 0xd6,
+	0x4d, 0xa2, 0xc7, 0xf8, 0x11, 0xbd, 0xfa, 0x6b, 0x52, 0x57, 0x03, 0x4a, 0x35, 0x3e, 0xe9, 0xf9,
+	0xe8, 0xb4, 0xe7, 0xa3, 0xdf, 0x3d, 0x1f, 0x7d, 0xea, 0xfb, 0x85, 0xd3, 0xbe, 0x5f, 0xf8, 0xd5,
+	0xf7, 0x0b, 0xb0, 0x90, 0xc8, 0xb1, 0xae, 0xbb, 0xe8, 0x6d, 0x65, 0xa4, 0x7f, 0x86, 0x90, 0x72,
+	0x22, 0x47, 0xfd, 0x8e, 0x73, 0x47, 0xd3, 0x4b, 0x8d, 0x59, 0x33, 0x94, 0xcf, 0xfe, 0x05, 0x00,
+	0x00, 0xff, 0xff, 0x8b, 0x00, 0xca, 0xa5, 0xe1, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -366,10 +366,11 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// ContractAddress returns the address of the oracle's contract
-	ContractAddress(ctx context.Context, in *QueryContractAddressRequest, opts ...grpc.CallOption) (*QueryContractAddressResponse, error)
-	// OracleContract sends a query to the oracle's contract
-	OracleContract(ctx context.Context, in *QueryOracleContractRequest, opts ...grpc.CallOption) (*QueryOracleContractResponse, error)
+	// OracleAddress returns the address of the oracle
+	OracleAddress(ctx context.Context, in *QueryOracleAddressRequest, opts ...grpc.CallOption) (*QueryOracleAddressResponse, error)
+	// Oracle sends a query to the oracle's contract
+	Oracle(ctx context.Context, in *QueryOracleRequest, opts ...grpc.CallOption) (*QueryOracleResponse, error)
+	// QueryState returns the state of the oracle query
 	QueryState(ctx context.Context, in *QueryQueryStateRequest, opts ...grpc.CallOption) (*QueryQueryStateResponse, error)
 }
 
@@ -381,18 +382,18 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) ContractAddress(ctx context.Context, in *QueryContractAddressRequest, opts ...grpc.CallOption) (*QueryContractAddressResponse, error) {
-	out := new(QueryContractAddressResponse)
-	err := c.cc.Invoke(ctx, "/provenance.oracle.v1.Query/ContractAddress", in, out, opts...)
+func (c *queryClient) OracleAddress(ctx context.Context, in *QueryOracleAddressRequest, opts ...grpc.CallOption) (*QueryOracleAddressResponse, error) {
+	out := new(QueryOracleAddressResponse)
+	err := c.cc.Invoke(ctx, "/provenance.oracle.v1.Query/OracleAddress", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) OracleContract(ctx context.Context, in *QueryOracleContractRequest, opts ...grpc.CallOption) (*QueryOracleContractResponse, error) {
-	out := new(QueryOracleContractResponse)
-	err := c.cc.Invoke(ctx, "/provenance.oracle.v1.Query/OracleContract", in, out, opts...)
+func (c *queryClient) Oracle(ctx context.Context, in *QueryOracleRequest, opts ...grpc.CallOption) (*QueryOracleResponse, error) {
+	out := new(QueryOracleResponse)
+	err := c.cc.Invoke(ctx, "/provenance.oracle.v1.Query/Oracle", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -410,10 +411,11 @@ func (c *queryClient) QueryState(ctx context.Context, in *QueryQueryStateRequest
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// ContractAddress returns the address of the oracle's contract
-	ContractAddress(context.Context, *QueryContractAddressRequest) (*QueryContractAddressResponse, error)
-	// OracleContract sends a query to the oracle's contract
-	OracleContract(context.Context, *QueryOracleContractRequest) (*QueryOracleContractResponse, error)
+	// OracleAddress returns the address of the oracle
+	OracleAddress(context.Context, *QueryOracleAddressRequest) (*QueryOracleAddressResponse, error)
+	// Oracle sends a query to the oracle's contract
+	Oracle(context.Context, *QueryOracleRequest) (*QueryOracleResponse, error)
+	// QueryState returns the state of the oracle query
 	QueryState(context.Context, *QueryQueryStateRequest) (*QueryQueryStateResponse, error)
 }
 
@@ -421,11 +423,11 @@ type QueryServer interface {
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) ContractAddress(ctx context.Context, req *QueryContractAddressRequest) (*QueryContractAddressResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ContractAddress not implemented")
+func (*UnimplementedQueryServer) OracleAddress(ctx context.Context, req *QueryOracleAddressRequest) (*QueryOracleAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OracleAddress not implemented")
 }
-func (*UnimplementedQueryServer) OracleContract(ctx context.Context, req *QueryOracleContractRequest) (*QueryOracleContractResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method OracleContract not implemented")
+func (*UnimplementedQueryServer) Oracle(ctx context.Context, req *QueryOracleRequest) (*QueryOracleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Oracle not implemented")
 }
 func (*UnimplementedQueryServer) QueryState(ctx context.Context, req *QueryQueryStateRequest) (*QueryQueryStateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryState not implemented")
@@ -435,38 +437,38 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_ContractAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryContractAddressRequest)
+func _Query_OracleAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryOracleAddressRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).ContractAddress(ctx, in)
+		return srv.(QueryServer).OracleAddress(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.oracle.v1.Query/ContractAddress",
+		FullMethod: "/provenance.oracle.v1.Query/OracleAddress",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).ContractAddress(ctx, req.(*QueryContractAddressRequest))
+		return srv.(QueryServer).OracleAddress(ctx, req.(*QueryOracleAddressRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_OracleContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryOracleContractRequest)
+func _Query_Oracle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryOracleRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).OracleContract(ctx, in)
+		return srv.(QueryServer).Oracle(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.oracle.v1.Query/OracleContract",
+		FullMethod: "/provenance.oracle.v1.Query/Oracle",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).OracleContract(ctx, req.(*QueryOracleContractRequest))
+		return srv.(QueryServer).Oracle(ctx, req.(*QueryOracleRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -494,12 +496,12 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ContractAddress",
-			Handler:    _Query_ContractAddress_Handler,
+			MethodName: "OracleAddress",
+			Handler:    _Query_OracleAddress_Handler,
 		},
 		{
-			MethodName: "OracleContract",
-			Handler:    _Query_OracleContract_Handler,
+			MethodName: "Oracle",
+			Handler:    _Query_Oracle_Handler,
 		},
 		{
 			MethodName: "QueryState",
@@ -583,7 +585,7 @@ func (m *QueryQueryStateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryContractAddressRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryOracleAddressRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -593,12 +595,12 @@ func (m *QueryContractAddressRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryContractAddressRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryOracleAddressRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryContractAddressRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryOracleAddressRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -606,7 +608,7 @@ func (m *QueryContractAddressRequest) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryContractAddressResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryOracleAddressResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -616,12 +618,12 @@ func (m *QueryContractAddressResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryContractAddressResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryOracleAddressResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryContractAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryOracleAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -636,7 +638,7 @@ func (m *QueryContractAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryOracleContractRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryOracleRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -646,12 +648,12 @@ func (m *QueryOracleContractRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryOracleContractRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryOracleRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryOracleContractRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryOracleRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -666,7 +668,7 @@ func (m *QueryOracleContractRequest) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryOracleContractResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryOracleResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -676,12 +678,12 @@ func (m *QueryOracleContractResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryOracleContractResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryOracleResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryOracleContractResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryOracleResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -734,7 +736,7 @@ func (m *QueryQueryStateResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryContractAddressRequest) Size() (n int) {
+func (m *QueryOracleAddressRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -743,7 +745,7 @@ func (m *QueryContractAddressRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryContractAddressResponse) Size() (n int) {
+func (m *QueryOracleAddressResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -756,7 +758,7 @@ func (m *QueryContractAddressResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryOracleContractRequest) Size() (n int) {
+func (m *QueryOracleRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -769,7 +771,7 @@ func (m *QueryOracleContractRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryOracleContractResponse) Size() (n int) {
+func (m *QueryOracleResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -976,7 +978,7 @@ func (m *QueryQueryStateResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryContractAddressRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryOracleAddressRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -999,10 +1001,10 @@ func (m *QueryContractAddressRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryContractAddressRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryOracleAddressRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryContractAddressRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryOracleAddressRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -1026,7 +1028,7 @@ func (m *QueryContractAddressRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryContractAddressResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryOracleAddressResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1049,10 +1051,10 @@ func (m *QueryContractAddressResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryContractAddressResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryOracleAddressResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryContractAddressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryOracleAddressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1108,7 +1110,7 @@ func (m *QueryContractAddressResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryOracleContractRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryOracleRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1131,10 +1133,10 @@ func (m *QueryOracleContractRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryOracleContractRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryOracleRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryOracleContractRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryOracleRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1192,7 +1194,7 @@ func (m *QueryOracleContractRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryOracleContractResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryOracleResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1215,10 +1217,10 @@ func (m *QueryOracleContractResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryOracleContractResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryOracleResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryOracleContractResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryOracleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

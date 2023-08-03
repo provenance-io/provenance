@@ -12,47 +12,50 @@ option java_multiple_files = true;
 
 // Query defines the gRPC querier service for oracle module.
 service Query {
-  // ContractAddress returns the address of the oracle's contract
-  rpc ContractAddress(QueryContractAddressRequest) returns (QueryContractAddressResponse) {
-    option (google.api.http).get = "/provenance/oracle/v1/contract_address";
+  // OracleAddress returns the address of the oracle
+  rpc OracleAddress(QueryOracleAddressRequest) returns (QueryOracleAddressResponse) {
+    option (google.api.http).get = "/provenance/oracle/v1/oracle_address";
   }
 
-  // OracleContract sends a query to the oracle's contract
-  rpc OracleContract(QueryOracleContractRequest) returns (QueryOracleContractResponse) {
-    option (google.api.http).get = "/provenance/oracle/v1/oracle_contract";
+  // Oracle sends a query to the oracle's contract
+  rpc Oracle(QueryOracleRequest) returns (QueryOracleResponse) {
+    option (google.api.http).get = "/provenance/oracle/v1/oracle";
   }
 
+  // QueryState returns the state of the oracle query
   rpc QueryState(QueryQueryStateRequest) returns (QueryQueryStateResponse) {
-    option (google.api.http).get = "/quasar-finance/interchainquerydemo/interquery/query_state";
+    option (google.api.http).get = "/provenance/oracle/v1/query_state";
   }
 }
 
+// QueryQueryStateRequest queries for the state of the ICQ.
 message QueryQueryStateRequest {
   uint64 sequence = 1;
 }
 
+// QueryQueryStateResponse contains the ICQ and its response.
 message QueryQueryStateResponse {
   google.protobuf.Any request  = 1 [(gogoproto.nullable) = false];
   google.protobuf.Any response = 2 [(gogoproto.nullable) = true];
 }
 
-// QueryContractAddressRequest queries for the Trigger with an identifier of id.
-message QueryContractAddressRequest {}
+// QueryOracleAddressRequest queries for the address of the oracle.
+message QueryOracleAddressRequest {}
 
-// QueryContractAddressResponse contains the address of the oracle's contract.
-message QueryContractAddressResponse {
-  // The address of the oracle's contract
+// QueryOracleAddressResponse contains the address of the oracle.
+message QueryOracleAddressResponse {
+  // The address of the oracle
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// QueryOracleContractRequest queries the oracle's smart contract
-message QueryOracleContractRequest {
-  // Query contains the query data passed to the contract.
+// QueryOracleRequest queries the module's oracle.
+message QueryOracleRequest {
+  // Query contains the query data passed to the oracle.
   bytes query = 1 [(gogoproto.casttype) = "github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage"];
 }
 
-// QueryOracleContractResponse contains the result of the query to the oracle's smart contract
-message QueryOracleContractResponse {
-  // Data contains the json data returned from the smart contract.
+// QueryOracleResponse contains the result of the query sent to the oracle.
+message QueryOracleResponse {
+  // Data contains the json data returned from the oracle.
   bytes data = 1 [(gogoproto.casttype) = "github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage"];
 }

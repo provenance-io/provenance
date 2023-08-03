@@ -13,8 +13,8 @@ message GenesisState {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // Query id is the next auto incremented id to be assigned to the next query
-  uint64 query_id = 1;
+  // Sequence is the next auto incremented id to be assigned to the next query
+  uint64 sequence = 1;
   // Params
   Params params = 2 [(gogoproto.nullable) = false];
   // The port to assign to the module
