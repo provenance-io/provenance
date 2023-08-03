@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/provenance-io/provenance/x/oracle/types"
 	"github.com/spf13/cobra"
 )
@@ -28,8 +29,8 @@ func NewTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		CmdOracleQuery(),
-		CmdOracleUpdate(),
+		GetCmdSendQuery(),
+		GetCmdOracleUpdate(),
 	)
 
 	return txCmd
@@ -37,11 +38,14 @@ func NewTxCmd() *cobra.Command {
 
 var _ = strconv.Itoa(0)
 
-func CmdOracleUpdate() *cobra.Command {
+// GetCmdOracleUpdate is a command to update the address of the module's oracle
+func GetCmdOracleUpdate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "oracle-update [address]",
-		Short: "Update the local oracle's contract address",
-		Args:  cobra.ExactArgs(1),
+		Use:     "update <address>",
+		Short:   "Update the module's oracle address",
+		Args:    cobra.ExactArgs(1),
+		Aliases: []string{"u"},
+		Example: fmt.Sprintf(`%[1]s tx oracle update pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -64,17 +68,22 @@ func CmdOracleUpdate() *cobra.Command {
 	return cmd
 }
 
-func CmdOracleQuery() *cobra.Command {
+// GetCmdSendQuery is a command to send a query to another chain's oracle
+func GetCmdSendQuery() *cobra.Command {
 	decoder := newArgDecoder(asciiDecodeString)
 	cmd := &cobra.Command{
-		Use:   "oracle-query [channel-id] [json]",
-		Short: "Query the oracle on the remote chain via ICQ",
-		Args:  cobra.ExactArgs(2),
+		Use:     "send-query <channel-id> <json>",
+		Short:   "Send a query to an oracle on a remote chain via IBC",
+		Args:    cobra.ExactArgs(2),
+		Aliases: []string{"sq"},
+		Example: fmt.Sprintf(`%[1]s tx oracle send-query channel-1 '{"query_version":{}}'`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
+
+			channelID := args[0]
 
 			queryData, err := decoder.DecodeString(args[1])
 			if err != nil {
@@ -86,8 +95,8 @@ func CmdOracleQuery() *cobra.Command {
 
 			msg := types.NewMsgQueryOracle(
 				clientCtx.GetFromAddress().String(),
-				args[0],   // channel id
-				queryData, // address
+				channelID,
+				queryData,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

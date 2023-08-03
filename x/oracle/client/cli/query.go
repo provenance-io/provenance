@@ -7,10 +7,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/provenance-io/provenance/x/oracle/types"
 	"github.com/spf13/cobra"
 )
 
+// GetQueryCmd is the top-level command for trigger CLI queries.
 func GetQueryCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -20,19 +22,23 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	queryCmd.AddCommand(
-		CmdQueryState(),
-		CmdQueryContractAddress(),
+		GetQueryStateCmd(),
+		GetQueryOracleAddressCmd(),
 	)
 	return queryCmd
 }
 
 var _ = strconv.Itoa(0)
+var cmdStart = fmt.Sprintf("%s query oracle", version.AppName)
 
-func CmdQueryState() *cobra.Command {
+// GetQueryStateCmd queries for the state of an existing oracle query
+func GetQueryStateCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "query-state [sequence]",
-		Short: "Returns the request and response of an ICQ query given the packet sequence",
-		Args:  cobra.ExactArgs(1),
+		Use:     "query-state [sequence]",
+		Short:   "Returns the request and response of an ICQ query given the packet sequence",
+		Args:    cobra.ExactArgs(1),
+		Aliases: []string{"qs", "state"},
+		Example: fmt.Sprintf(`%[1]s q oracle query-state 1`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -64,11 +70,14 @@ func CmdQueryState() *cobra.Command {
 	return cmd
 }
 
-func CmdQueryContractAddress() *cobra.Command {
+// GetQueryOracleAddressCmd queries for the module's oracle address
+func GetQueryOracleAddressCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "contract-address",
-		Short: "Returns the address of the contract that the oracle is using",
-		Args:  cobra.ExactArgs(0),
+		Use:     "address",
+		Short:   "Returns the address of the module's oracle",
+		Args:    cobra.ExactArgs(0),
+		Aliases: []string{"a"},
+		Example: fmt.Sprintf(`%[1]s q oracle address`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
 			clientCtx, err := client.GetClientQueryContext(cmd)
