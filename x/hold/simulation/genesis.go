@@ -147,7 +147,7 @@ func balancesString(balances []banktypes.Balance) string {
 
 // RandomizedGenState generates a random GenesisState for the hold module.
 func RandomizedGenState(simState *module.SimulationState) {
-	holdGenState := &hold.GenesisState{}
+	holdGenState := hold.DefaultGenesisState()
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, HoldAccountHolds, &holdGenState.Holds, simState.Rand,
