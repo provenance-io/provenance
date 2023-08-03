@@ -6,8 +6,24 @@ option go_package = "github.com/provenance-io/provenance/x/oracle/types";
 option java_package        = "io.provenance.oracle.v1";
 option java_multiple_files = true;
 
-// EventOracleQueryResponse is an event for when the chain receives a response from an oracle query
-message EventOracleQueryResponse {
+// EventOracleQuerySuccess is an event for when the chain receives a successful response from an oracle query
+message EventOracleQuerySuccess {
+  // sequence_id is a unique identifier of the query
+  string sequence_id = 1;
+  // result is the data received from the query
+  string result = 2;
+}
+
+// EventOracleQueryError is an event for when the chain receives an error response from an oracle query
+message EventOracleQueryError {
+  // sequence_id is a unique identifier of the query
+  string sequence_id = 1;
+  // error is the error message received from the query
+  string error = 2;
+}
+
+// EventOracleQueryTimeout is an event for when the chain receives a timeout from an oracle query
+message EventOracleQueryTimeout {
   // sequence_id is a unique identifier of the query
   string sequence_id = 1;
 }

@@ -29,4 +29,5 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	}
 
 	k.SetParams(ctx, genState.Params)
+	k.SetLastQueryPacketSeq(ctx, genState.Sequence)
 }

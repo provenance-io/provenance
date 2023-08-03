@@ -1,8 +1,6 @@
 package oracle
 
 import (
-	"strconv"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -128,7 +126,7 @@ func (am AppModule) OnRecvPacket(
 	modulePacket channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
-	return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(icqtypes.ErrInvalidChannelFlow, "inter-query module can not receive packets"))
+	return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(icqtypes.ErrInvalidChannelFlow, "oracle module can not receive packets"))
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface
@@ -152,16 +150,7 @@ func (am AppModule) OnTimeoutPacket(
 	modulePacket channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeTimeout,
-			sdk.NewAttribute(types.AttributeKeySequence, strconv.FormatUint(modulePacket.Sequence, 10)),
-		),
-	)
-
-	am.keeper.Logger(ctx).Error("Packet timeout", "sequence", modulePacket.Sequence)
-
-	return nil
+	return am.keeper.OnTimeoutPacket(ctx, modulePacket)
 }
 
 func (am AppModule) NegotiateAppVersion(

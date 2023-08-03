@@ -22,7 +22,16 @@ var _ types.MsgServer = msgServer{}
 // UpdateOracle changes the oracle's address to the provided one
 func (s msgServer) UpdateOracle(goCtx context.Context, msg *types.MsgUpdateOracleRequest) (*types.MsgUpdateOracleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	s.Keeper.SetOracle(ctx, sdk.MustAccAddressFromBech32(msg.Address))
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
 	return &types.MsgUpdateOracleResponse{}, nil
 }
 
@@ -34,6 +43,13 @@ func (k msgServer) SendQueryOracle(goCtx context.Context, msg *types.MsgSendQuer
 	if err != nil {
 		return nil, err
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	return &types.MsgSendQueryOracleResponse{
 		Sequence: seq,

@@ -431,7 +431,9 @@
     - [Msg](#provenance.name.v1.Msg)
   
 - [provenance/oracle/v1/event.proto](#provenance/oracle/v1/event.proto)
-    - [EventOracleQueryResponse](#provenance.oracle.v1.EventOracleQueryResponse)
+    - [EventOracleQueryError](#provenance.oracle.v1.EventOracleQueryError)
+    - [EventOracleQuerySuccess](#provenance.oracle.v1.EventOracleQuerySuccess)
+    - [EventOracleQueryTimeout](#provenance.oracle.v1.EventOracleQueryTimeout)
   
 - [provenance/oracle/v1/params.proto](#provenance/oracle/v1/params.proto)
     - [Params](#provenance.oracle.v1.Params)
@@ -6678,10 +6680,42 @@ Msg defines the bank Msg service.
 
 
 
-<a name="provenance.oracle.v1.EventOracleQueryResponse"></a>
+<a name="provenance.oracle.v1.EventOracleQueryError"></a>
 
-### EventOracleQueryResponse
-EventOracleQueryResponse is an event for when the chain receives a response from an oracle query
+### EventOracleQueryError
+EventOracleQueryError is an event for when the chain receives an error response from an oracle query
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
+| `error` | [string](#string) |  | error is the error message received from the query |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.EventOracleQuerySuccess"></a>
+
+### EventOracleQuerySuccess
+EventOracleQuerySuccess is an event for when the chain receives a successful response from an oracle query
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
+| `result` | [string](#string) |  | result is the data received from the query |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.EventOracleQueryTimeout"></a>
+
+### EventOracleQueryTimeout
+EventOracleQueryTimeout is an event for when the chain receives a timeout from an oracle query
 
 
 | Field | Type | Label | Description |

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -106,23 +108,32 @@ func (k Keeper) OnAcknowledgementPacket(
 		k.SetQueryResponse(ctx, modulePacket.Sequence, r)
 		k.SetLastQueryPacketSeq(ctx, modulePacket.Sequence)
 
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeQueryResult,
-				sdk.NewAttribute(types.AttributeKeyAckSuccess, string(resp.Result)),
-			),
-		)
+		ctx.EventManager().EmitTypedEvent(&types.EventOracleQuerySuccess{
+			SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),
+			Result:     string(resp.Result),
+		})
 
 		k.Logger(ctx).Info("interchain query response", "sequence", modulePacket.Sequence, "response", r)
 	case *channeltypes.Acknowledgement_Error:
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeQueryResult,
-				sdk.NewAttribute(types.AttributeKeyAckError, resp.Error),
-			),
-		)
+		ctx.EventManager().EmitTypedEvent(&types.EventOracleQueryError{
+			SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),
+			Error:      resp.Error,
+		})
 
 		k.Logger(ctx).Error("interchain query response", "sequence", modulePacket.Sequence, "error", resp.Error)
 	}
+	return nil
+}
+
+func (k Keeper) OnTimeoutPacket(
+	ctx sdk.Context,
+	modulePacket channeltypes.Packet,
+) error {
+	ctx.EventManager().EmitTypedEvent(&types.EventOracleQueryTimeout{
+		SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),
+	})
+
+	k.Logger(ctx).Error("Packet timeout", "sequence", modulePacket.Sequence)
+
 	return nil
 }
