@@ -20,7 +20,7 @@ func (k Keeper) OracleAddress(goCtx context.Context, req *types.QueryOracleAddre
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	contract, err := k.GetOracleContract(ctx)
+	contract, err := k.GetOracle(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (k Keeper) OracleAddress(goCtx context.Context, req *types.QueryOracleAddre
 
 func (k Keeper) Oracle(goCtx context.Context, req *types.QueryOracleRequest) (*types.QueryOracleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	addr, err := k.GetOracleContract(ctx)
+	addr, err := k.GetOracle(ctx)
 	if err != nil {
 		return nil, err
 	}
