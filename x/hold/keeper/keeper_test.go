@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"runtime/debug"
+	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
+	"golang.org/x/exp/maps"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -15,6 +18,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
@@ -258,10 +263,9 @@ func (s *TestSuite) setHoldCoinAmountRaw(store sdk.KVStore, addr sdk.AccAddress,
 
 // requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or error.
 func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
-	testFunc := func() error {
+	s.requireNotPanicsNoErrorf(func() error {
 		return testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, s.coins(coins))
-	}
-	s.requireNotPanicsNoErrorf(testFunc, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
+	}, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
 }
 
 // clearHoldState will delete all entries from the hold store.
@@ -1352,4 +1356,223 @@ func (s *TestSuite) TestKeeper_GetAllAccountHolds() {
 		s.assertErrorContents(err, expInErr, "GetAllAccountHolds error")
 		s.Assert().Equal(expected, holds, "GetAllAccountHolds holds")
 	})
+}
+
+func (s *TestSuite) TestVestingAndHoldOverTime() {
+	denom := "fish"
+	amtOf := func(coins sdk.Coins) sdkmath.Int {
+		return coins.AmountOf(denom)
+	}
+	coins := func(amt int64) sdk.Coins {
+		return sdk.NewCoins(sdk.NewInt64Coin(denom, amt))
+	}
+	appendJoin := func(suffix string, strs ...string) string {
+		return strings.Join(strs, suffix) + suffix
+	}
+	logf := func(after uint32, format string, args ...interface{}) {
+		s.T().Logf("%4ds: "+format, append([]interface{}{after}, args...)...)
+	}
+
+	addr := sdk.AccAddress("ContinuousVestingAcc")
+	totalSeconds := int64(1000)
+	totalDur := time.Duration(totalSeconds) * time.Second
+	originalVesting := coins(totalSeconds)
+	startTime := time.Unix(0, 0)
+	endTime := startTime.Add(totalDur)
+	ctx := s.sdkCtx.WithBlockTime(startTime)
+	baseAcc := s.app.AccountKeeper.NewAccountWithAddress(ctx, addr).(*authtypes.BaseAccount)
+	cva := vesting.NewContinuousVestingAccount(baseAcc, originalVesting, startTime.Unix(), endTime.Unix())
+	s.app.AccountKeeper.SetAccount(ctx, cva)
+	s.requireFundAccount(addr, originalVesting.String())
+
+	// Create a fake "module" address that we use to send "delegated" funds to.
+	modAddr := sdk.AccAddress("modAddr_____________")
+	modAcc := s.app.AccountKeeper.NewAccountWithAddress(ctx, modAddr)
+	s.app.AccountKeeper.SetAccount(ctx, modAcc)
+
+	// Create another account that we can send funds to, to get them out of the main address' account.
+	otherAddr := sdk.AccAddress("otherAddr___________")
+	otherAcc := s.app.AccountKeeper.NewAccountWithAddress(ctx, otherAddr)
+	s.app.AccountKeeper.SetAccount(ctx, otherAcc)
+
+	// actions are actions to take at various amounts of time (in seconds) after start time.
+	actions := map[uint32]struct {
+		fund     int64 // positive = funds added, negative = funds removed.
+		hold     int64 // positive = funds put into hold, negative = funds removed from hold.
+		delegate int64 // positive = funds delegated, negative = funds undelegated.
+	}{
+		50:   {delegate: 100},
+		150:  {delegate: -50},
+		200:  {fund: 50},
+		500:  {delegate: 500},
+		650:  {fund: 300, delegate: 300},
+		900:  {delegate: 100},
+		1050: {delegate: 50},
+		1100: {delegate: 300},
+		1150: {delegate: -950},
+	}
+
+	// TODO[1607]: Update these with holds and expected values.
+	// checks are expected values at various steps.
+	checks := map[uint32]struct{}{}
+
+	// Identify all defined step times.
+	lastStep := uint32(0)
+	stepsMap := make(map[uint32]bool)
+	addStep := func(step uint32) {
+		stepsMap[step] = true
+		if step > lastStep {
+			lastStep = step
+		}
+	}
+	for key := range actions {
+		addStep(key)
+	}
+	for key := range checks {
+		addStep(key)
+	}
+	// Make sure we've got a step for every 50 seconds to the next 50 after the last defined one.
+	stepEvery := uint32(50)
+	lastStep = (1 + lastStep/stepEvery) * stepEvery
+	for i := uint32(0); i <= lastStep; i += stepEvery {
+		stepsMap[i] = true
+	}
+
+	// Put all the step values in order.
+	steps := maps.Keys(stepsMap)
+	sort.Slice(steps, func(i, j int) bool {
+		return steps[i] < steps[j]
+	})
+
+	type stepResult struct {
+		step                uint32
+		blockTime           time.Time
+		balance             sdk.Coins
+		spendable           sdk.Coins
+		locked              sdk.Coins
+		onHold              sdk.Coins
+		unvested            sdk.Coins
+		accUnvested         sdk.Coins
+		accVested           sdk.Coins
+		accDelegatedVesting sdk.Coins
+		accDelegatedFree    sdk.Coins
+		delegated           sdk.Coins
+	}
+	logLabels := []string{
+		"B", "S", "L",
+		"LH", "LV",
+		"UV", "V",
+		"DV", "DF", "D",
+	}
+	logVals := func(result *stepResult) []interface{} {
+		vals := []sdk.Coins{
+			result.balance, result.spendable, result.locked,
+			result.onHold, result.unvested,
+			result.accUnvested, result.accVested,
+			result.accDelegatedVesting, result.accDelegatedFree, result.delegated,
+		}
+		rv := make([]interface{}, len(vals))
+		for i, val := range vals {
+			rv[i] = amtOf(val)
+		}
+		return rv
+	}
+	logStepData := func(step uint32, result *stepResult) {
+		logf(step, "  "+appendJoin("=%4s  ", logLabels...), logVals(result)...)
+	}
+
+	// First, run through each step, get the results, and log them. Later, we'll run the checks on them.
+	stepResults := make([]*stepResult, len(steps))
+	s.Run("setup: process steps", func() {
+		for i, step := range steps {
+			reqNoPanicNoErr := func(f func() error, msg string, args ...interface{}) {
+				s.requireNotPanicsNoErrorf(f, "%4ds: "+msg, append([]interface{}{step}, args...)...)
+			}
+			blockTime := startTime.Add(time.Duration(step) * time.Second)
+			ctx = s.sdkCtx.WithBlockTime(blockTime)
+			if action, ok := actions[step]; ok {
+				switch {
+				case action.fund > 0:
+					amt := coins(action.fund)
+					logf(step, "Adding funds: %s", amtOf(amt))
+					reqNoPanicNoErr(func() error {
+						return testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, amt)
+					}, "FundAccount(addr, %q)", amt)
+				case action.fund < 0:
+					amt := coins(-1 * action.fund)
+					logf(step, "Removing funds: %s", amtOf(amt))
+					reqNoPanicNoErr(func() error {
+						return s.app.BankKeeper.SendCoins(ctx, addr, otherAddr, amt)
+					}, "SendCoins(addr, otherAddr, %q)", amt)
+				}
+				switch {
+				case action.hold > 0:
+					amt := coins(action.hold)
+					logf(step, "Putting hold on: %s", amtOf(amt))
+					reqNoPanicNoErr(func() error {
+						return s.keeper.AddHold(ctx, addr, amt)
+					}, "AddHold(addr, %q)", amt)
+				case action.hold < 0:
+					amt := coins(-1 * action.hold)
+					logf(step, "Releasing hold on: %s", amtOf(amt))
+					reqNoPanicNoErr(func() error {
+						return s.keeper.RemoveHold(ctx, addr, amt)
+					}, "RemoveHold(addr, %q)", amt)
+				}
+				switch {
+				case action.delegate > 0:
+					amt := coins(action.delegate)
+					logf(step, "Delegating: %s", amtOf(amt))
+					reqNoPanicNoErr(func() error {
+						return s.app.BankKeeper.DelegateCoins(ctx, addr, modAddr, amt)
+					}, "DelegateCoins(%q)", amt)
+				case action.delegate < 0:
+					amt := coins(-1 * action.delegate)
+					logf(step, "Undelegating: %s", amtOf(amt))
+					reqNoPanicNoErr(func() error {
+						return s.app.BankKeeper.UndelegateCoins(ctx, modAddr, addr, amt)
+					}, "UndelegateCoins(%q)", amt)
+				}
+			}
+
+			var acc *vesting.ContinuousVestingAccount
+			reqNoPanicNoErr(func() error {
+				acc = s.app.AccountKeeper.GetAccount(ctx, addr).(*vesting.ContinuousVestingAccount)
+				return nil
+			}, "casting addr account to %T", acc)
+
+			stepResults[i] = &stepResult{
+				step:                step,
+				blockTime:           blockTime,
+				balance:             s.app.BankKeeper.GetAllBalances(ctx, addr),
+				spendable:           s.app.BankKeeper.SpendableCoins(ctx, addr),
+				locked:              s.app.BankKeeper.LockedCoins(ctx, addr),
+				onHold:              s.keeper.GetLockedCoins(ctx, addr),
+				unvested:            s.app.BankKeeper.UnvestedCoins(ctx, addr),
+				accUnvested:         acc.GetVestingCoins(blockTime),
+				accVested:           acc.GetVestedCoins(blockTime),
+				accDelegatedVesting: acc.GetDelegatedVesting(),
+				accDelegatedFree:    acc.GetDelegatedFree(),
+				delegated:           s.app.BankKeeper.GetAllBalances(ctx, modAddr),
+			}
+			logStepData(step, stepResults[i])
+		}
+	})
+	s.Require().False(s.T().Failed(), "Stopping early due to setup failure.")
+
+	for _, result := range stepResults {
+		s.Run(fmt.Sprintf("%d seconds", result.step), func() {
+			accDelegatedTotal := result.accDelegatedVesting.Add(result.accDelegatedFree...)
+			s.Require().Equal(result.delegated.String(), accDelegatedTotal.String(), "mod account balance vs vesting account delegated total")
+			balanceCheck := result.locked.Add(result.spendable...)
+			s.Require().Equal(result.balance.String(), balanceCheck.String(), "balance vs locked + spendable")
+			lockedCheck := result.unvested.Add(result.onHold...)
+			s.Require().Equal(result.locked.String(), lockedCheck.String(), "locked vs unvested + on hold")
+
+			if check, ok := checks[result.step]; ok {
+				// TODO[1607]: Add extra checks here.
+				_ = check
+			}
+		})
+	}
 }
