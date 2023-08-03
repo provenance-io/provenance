@@ -29,6 +29,13 @@ func (k Keeper) OracleAddress(goCtx context.Context, req *types.QueryOracleAddre
 }
 
 func (k Keeper) Oracle(goCtx context.Context, req *types.QueryOracleRequest) (*types.QueryOracleResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	if err := req.Query.ValidateBasic(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid query data")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	addr, err := k.GetOracle(ctx)
 	if err != nil {
