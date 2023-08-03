@@ -712,7 +712,26 @@ func (msg *MsgUpdateSendDenyListRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgAddNetAssetValueRequest) ValidateBasic() error {
-	return nil
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+
+	seen := make(map[string]bool)
+	for _, nav := range msg.MarkerNetAssetValues {
+		if err := sdk.ValidateDenom(nav.Value.Denom); err != nil {
+			return err
+		}
+		if err := nav.Validate(); err != nil {
+			return err
+		}
+		if seen[nav.Value.Denom] {
+			return fmt.Errorf("list of net asset values contains duplicates")
+		}
+		seen[nav.Value.Denom] = true
+	}
+
+	_, err := sdk.AccAddressFromBech32(msg.Administrator)
+	return err
 }
 
 func (msg *MsgAddNetAssetValueRequest) GetSigners() []sdk.AccAddress {
@@ -721,7 +740,23 @@ func (msg *MsgAddNetAssetValueRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgDeleteNetAssetValueRequest) ValidateBasic() error {
-	return nil
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+
+	seen := make(map[string]bool)
+	for _, denom := range msg.ValueDenoms {
+		if err := sdk.ValidateDenom(denom); err != nil {
+			return err
+		}
+		if seen[denom] {
+			return fmt.Errorf("list of value denoms contains duplicates")
+		}
+		seen[denom] = true
+	}
+
+	_, err := sdk.AccAddressFromBech32(msg.Administrator)
+	return err
 }
 
 func (msg *MsgDeleteNetAssetValueRequest) GetSigners() []sdk.AccAddress {
