@@ -5,9 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
-	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -35,8 +33,6 @@ func NewTxCmd() *cobra.Command {
 
 	return txCmd
 }
-
-var _ = strconv.Itoa(0)
 
 // GetCmdOracleUpdate is a command to update the address of the module's oracle
 func GetCmdOracleUpdate() *cobra.Command {
@@ -120,12 +116,7 @@ func newArgDecoder(def func(string) ([]byte, error)) *argumentDecoder {
 	return &argumentDecoder{dec: def}
 }
 
-func (a *argumentDecoder) RegisterFlags(f *flag.FlagSet, argName string) {
-	f.BoolVar(&a.asciiF, "ascii", false, "ascii encoded "+argName)
-	f.BoolVar(&a.hexF, "hex", false, "hex encoded "+argName)
-	f.BoolVar(&a.b64F, "b64", false, "base64 encoded "+argName)
-}
-
+// DecodeString decodes the supplied json string
 func (a *argumentDecoder) DecodeString(s string) ([]byte, error) {
 	found := -1
 	for i, v := range []*bool{&a.asciiF, &a.hexF, &a.b64F} {

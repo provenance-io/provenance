@@ -29,7 +29,6 @@ func GetQueryCmd() *cobra.Command {
 }
 
 var _ = strconv.Itoa(0)
-var cmdStart = fmt.Sprintf("%s query oracle", version.AppName)
 
 // GetQueryStateCmd queries for the state of an existing oracle query
 func GetQueryStateCmd() *cobra.Command {
