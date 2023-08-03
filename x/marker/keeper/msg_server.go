@@ -826,6 +826,18 @@ func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetA
 	if marker.GetStatus() != types.StatusProposed {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("can only add net asset values to markers in the Proposed status")
 	}
+
+	for _, nav := range msg.NetAssetValues {
+		if nav.Value.Denom == marker.GetDenom() {
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("net asset value denom cannot match marker denom %q", marker.GetDenom())
+		}
+		if nav.UpdateTime.UTC().After(ctx.BlockTime().UTC()) { // TODO: not sure if we should update this to current block time here or allow user to state the update time.
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("net asset value update time (%v) is later than current block time (%v)", nav.UpdateTime.UTC(), ctx.BlockTime().UTC())
+		}
+		if err := k.SetNetAssetValue(ctx, marker.GetAddress(), nav); err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("cannot set net asset value %v : %v", nav, err.Error())
+		}
+	}
 	return nil, nil
 }
 
