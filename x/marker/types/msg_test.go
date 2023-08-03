@@ -785,3 +785,164 @@ func TestMsgUpdateSendDenyListRequestGetSigners(t *testing.T) {
 		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
 	})
 }
+
+func TestMsgAddNetAssetValueValidateBasic(t *testing.T) {
+	addr := sdk.AccAddress("addr________________").String()
+	denom := "somedenom"
+	netAssetValue1 := NewNetAssetValue("source", sdk.NewInt64Coin("jackthecat", 100), uint64(100), time.Now())
+	netAssetValue2 := NewNetAssetValue("source", sdk.NewInt64Coin("hotdog", 100), uint64(100), time.Now())
+	invalidNetAssetValue := NewNetAssetValue("", sdk.NewInt64Coin("hotdog", 100), uint64(100), time.Now())
+
+	tests := []struct {
+		name   string
+		msg    MsgAddNetAssetValueRequest
+		expErr string
+	}{
+		{
+			name: "should succeed",
+			msg:  MsgAddNetAssetValueRequest{Denom: denom, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2}, Administrator: addr},
+		},
+		{
+			name:   "validation of net asset value failure",
+			msg:    MsgAddNetAssetValueRequest{Denom: denom, NetAssetValues: []NetAssetValue{invalidNetAssetValue}, Administrator: addr},
+			expErr: "marker net asset value must have a source defined",
+		},
+		{
+			name:   "duplicate net asset values",
+			msg:    MsgAddNetAssetValueRequest{Denom: denom, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2, netAssetValue2}, Administrator: addr},
+			expErr: "list of net asset values contains duplicates",
+		},
+		{
+			name:   "invalid denom",
+			msg:    MsgAddNetAssetValueRequest{Denom: "", NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2, netAssetValue2}, Administrator: addr},
+			expErr: "invalid denom: ",
+		},
+		{
+			name:   "invalid administrator address",
+			msg:    MsgAddNetAssetValueRequest{Denom: denom, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2}, Administrator: "invalid address"},
+			expErr: "decoding bech32 failed: invalid character in string: ' '",
+		},
+		{
+			name:   "empty net asset list",
+			msg:    MsgAddNetAssetValueRequest{Denom: denom, NetAssetValues: []NetAssetValue{}, Administrator: addr},
+			expErr: "net asset value list cannot be empty",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.expErr) > 0 {
+				require.EqualErrorf(t, err, tc.expErr, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgAddNetAssetValueRequestGetSigners(t *testing.T) {
+	t.Run("good signer", func(t *testing.T) {
+		msg := MsgAddNetAssetValueRequest{
+			Administrator: sdk.AccAddress("good_address________").String(),
+		}
+		exp := []sdk.AccAddress{sdk.AccAddress("good_address________")}
+
+		var signers []sdk.AccAddress
+		testFunc := func() {
+			signers = msg.GetSigners()
+		}
+		require.NotPanics(t, testFunc, "GetSigners")
+		assert.Equal(t, exp, signers, "GetSigners")
+	})
+
+	t.Run("bad signer", func(t *testing.T) {
+		msg := MsgAddNetAssetValueRequest{
+			Administrator: "bad_address________",
+		}
+
+		testFunc := func() {
+			_ = msg.GetSigners()
+		}
+		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
+	})
+}
+
+func TestMsgDeleteNetAssetValueValidateBasic(t *testing.T) {
+	addr := sdk.AccAddress("addr________________").String()
+	denom := "somedenom"
+
+	tests := []struct {
+		name   string
+		msg    MsgDeleteNetAssetValueRequest
+		expErr string
+	}{
+		{
+			name: "should succeed",
+			msg:  MsgDeleteNetAssetValueRequest{Denom: denom, ValueDenoms: []string{"denom1"}, Administrator: addr},
+		},
+		{
+			name:   "invalid denom",
+			msg:    MsgDeleteNetAssetValueRequest{Denom: "", ValueDenoms: []string{"denom1"}, Administrator: addr},
+			expErr: "invalid denom: ",
+		},
+		{
+			name:   "invalid denom in value denoms",
+			msg:    MsgDeleteNetAssetValueRequest{Denom: denom, ValueDenoms: []string{"denom1", ""}, Administrator: addr},
+			expErr: "invalid denom: ",
+		},
+		{
+			name:   "empty value denoms list",
+			msg:    MsgDeleteNetAssetValueRequest{Denom: denom, ValueDenoms: []string{}, Administrator: addr},
+			expErr: "value denoms list cannot be empty",
+		},
+		{
+			name:   "duplicate value denoms",
+			msg:    MsgDeleteNetAssetValueRequest{Denom: denom, ValueDenoms: []string{"denom1", "denom1"}, Administrator: addr},
+			expErr: "list of value denoms contains duplicates",
+		},
+		{
+			name:   "invalid signer address",
+			msg:    MsgDeleteNetAssetValueRequest{Denom: denom, ValueDenoms: []string{"denom1", "denom2"}, Administrator: "invalid"},
+			expErr: "decoding bech32 failed: invalid bech32 string length 7",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.expErr) > 0 {
+				require.EqualErrorf(t, err, tc.expErr, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgDeleteNetAssetValueRequestGetSigners(t *testing.T) {
+	t.Run("good signer", func(t *testing.T) {
+		msg := MsgDeleteNetAssetValueRequest{
+			Administrator: sdk.AccAddress("good_address________").String(),
+		}
+		exp := []sdk.AccAddress{sdk.AccAddress("good_address________")}
+
+		var signers []sdk.AccAddress
+		testFunc := func() {
+			signers = msg.GetSigners()
+		}
+		require.NotPanics(t, testFunc, "GetSigners")
+		assert.Equal(t, exp, signers, "GetSigners")
+	})
+
+	t.Run("bad signer", func(t *testing.T) {
+		msg := MsgDeleteAccessRequest{
+			Administrator: "bad_address________",
+		}
+
+		testFunc := func() {
+			_ = msg.GetSigners()
+		}
+		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
+	})
+}

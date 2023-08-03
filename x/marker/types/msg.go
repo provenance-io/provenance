@@ -716,6 +716,10 @@ func (msg MsgAddNetAssetValueRequest) ValidateBasic() error {
 		return err
 	}
 
+	if len(msg.NetAssetValues) == 0 {
+		return fmt.Errorf("net asset value list cannot be empty")
+	}
+
 	seen := make(map[string]bool)
 	for _, nav := range msg.NetAssetValues {
 		if err := sdk.ValidateDenom(nav.Value.Denom); err != nil {
@@ -742,6 +746,10 @@ func (msg *MsgAddNetAssetValueRequest) GetSigners() []sdk.AccAddress {
 func (msg MsgDeleteNetAssetValueRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return err
+	}
+
+	if len(msg.ValueDenoms) == 0 {
+		return fmt.Errorf("value denoms list cannot be empty")
 	}
 
 	seen := make(map[string]bool)
