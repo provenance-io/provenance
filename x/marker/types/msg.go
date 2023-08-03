@@ -38,6 +38,8 @@ var allRequestMsgs = []sdk.Msg{
 	(*MsgUpdateForcedTransferRequest)(nil),
 	(*MsgSetAccountDataRequest)(nil),
 	(*MsgUpdateSendDenyListRequest)(nil),
+	(*MsgAddNetAssetValueRequest)(nil),
+	(*MsgDeleteNetAssetValueRequest)(nil),
 }
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
@@ -51,7 +53,7 @@ func NewMsgAddMarkerRequest(
 	allowGovernanceControl bool,
 	allowForcedTransfer bool,
 	requiredAttributes []string,
-	markerNetAssetValues []MarkerNetAssetValue,
+	netAssetValues []NetAssetValue,
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
@@ -63,7 +65,7 @@ func NewMsgAddMarkerRequest(
 		AllowGovernanceControl: allowGovernanceControl,
 		AllowForcedTransfer:    allowForcedTransfer,
 		RequiredAttributes:     requiredAttributes,
-		MarkerNetAssetValues:   markerNetAssetValues,
+		NetAssetValues:         netAssetValues,
 	}
 }
 
@@ -99,9 +101,9 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 		}
 	}
 
-	if len(msg.MarkerNetAssetValues) > 0 {
+	if len(msg.NetAssetValues) > 0 {
 		seen := make(map[string]bool)
-		for _, nav := range msg.MarkerNetAssetValues {
+		for _, nav := range msg.NetAssetValues {
 			if seen[nav.Value.Denom] {
 				return fmt.Errorf("net asset values contain duplicate %q denom", nav.Value.Denom)
 			}
@@ -706,5 +708,23 @@ func (msg MsgUpdateSendDenyListRequest) ValidateBasic() error {
 
 func (msg *MsgUpdateSendDenyListRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgAddNetAssetValueRequest) ValidateBasic() error {
+	return nil
+}
+
+func (msg *MsgAddNetAssetValueRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Administrator)
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgDeleteNetAssetValueRequest) ValidateBasic() error {
+	return nil
+}
+
+func (msg *MsgDeleteNetAssetValueRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Administrator)
 	return []sdk.AccAddress{addr}
 }

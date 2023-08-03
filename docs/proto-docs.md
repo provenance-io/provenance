@@ -76,7 +76,7 @@
     - [EventMarkerTransfer](#provenance.marker.v1.EventMarkerTransfer)
     - [EventMarkerWithdraw](#provenance.marker.v1.EventMarkerWithdraw)
     - [MarkerAccount](#provenance.marker.v1.MarkerAccount)
-    - [MarkerNetAssetValue](#provenance.marker.v1.MarkerNetAssetValue)
+    - [NetAssetValue](#provenance.marker.v1.NetAssetValue)
     - [Params](#provenance.marker.v1.Params)
   
     - [MarkerStatus](#provenance.marker.v1.MarkerStatus)
@@ -1535,10 +1535,10 @@ MarkerAccount holds the marker configuration information in addition to a base a
 
 
 
-<a name="provenance.marker.v1.MarkerNetAssetValue"></a>
+<a name="provenance.marker.v1.NetAssetValue"></a>
 
-### MarkerNetAssetValue
-MarkerNetAssetValue defines a marker's net asset value
+### NetAssetValue
+NetAssetValue defines a marker's net asset value
 
 
 | Field | Type | Label | Description |
@@ -2289,7 +2289,7 @@ If being provided as a governance proposal, set the from_address to the gov modu
 | `allow_governance_control` | [bool](#bool) |  |  |
 | `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
-| `marker_net_asset_values` | [MarkerNetAssetValue](#provenance.marker.v1.MarkerNetAssetValue) | repeated |  |
+| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated |  |
 
 
 
@@ -2316,7 +2316,7 @@ MsgAddNetAssetValueRequest defines the Msg/AddNetAssetValue request type
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `administrator` | [string](#string) |  |  |
-| `marker_net_asset_values` | [MarkerNetAssetValue](#provenance.marker.v1.MarkerNetAssetValue) | repeated |  |
+| `marker_net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated |  |
 
 
 

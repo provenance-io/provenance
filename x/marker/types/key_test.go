@@ -35,10 +35,10 @@ func TestDenySendKey(t *testing.T) {
 	assert.Len(t, denyKey, int(3+denomArrLen+denyAddrLen), "should have key of length of sum 1 for prefix 2 length bytes and length of denom and deny address")
 }
 
-func TestMarkerNetAssetValueKey(t *testing.T) {
+func TestNetAssetValueKey(t *testing.T) {
 	addr, err := MarkerAddress("nhash")
 	require.NoError(t, err)
-	navKey := MarkerNetAssetValueKey(addr, "nhash")
+	navKey := NetAssetValueKey(addr, "nhash")
 	assert.Equal(t, uint8(4), navKey[0], "should have correct prefix for nav key")
 	denomArrLen := int32(navKey[1])
 	assert.Equal(t, addr.Bytes(), navKey[2:denomArrLen+2], "should match denom key")

@@ -36,8 +36,8 @@ var (
 	// DenySendKeyPrefix prefix for adding addresses that are denied send functionality on restricted markers
 	DenySendKeyPrefix = []byte{0x03}
 
-	// MarkerNetAssetValuePrefix prefix for net asset values of markers
-	MarkerNetAssetValuePrefix = []byte{0x04}
+	// NetAssetValuePrefix prefix for net asset values of markers
+	NetAssetValuePrefix = []byte{0x04}
 )
 
 // MarkerAddress returns the module account address for the given denomination
@@ -74,12 +74,12 @@ func DenySendKey(markerAddr sdk.AccAddress, denyAddr sdk.AccAddress) []byte {
 	return append(key, address.MustLengthPrefix(denyAddr.Bytes())...)
 }
 
-// MarkerNetAssetValueKey returns key [prefix][marker address] for marker net asset values
-func MarkerNetAssetValueKeyPrefix(markerAddr sdk.AccAddress) []byte {
-	return append(MarkerNetAssetValuePrefix, address.MustLengthPrefix(markerAddr.Bytes())...)
+// NetAssetValueKey returns key [prefix][marker address] for marker net asset values
+func NetAssetValueKeyPrefix(markerAddr sdk.AccAddress) []byte {
+	return append(NetAssetValuePrefix, address.MustLengthPrefix(markerAddr.Bytes())...)
 }
 
-// MarkerNetAssetValueKey returns key [prefix][marker address][asset denom value] for marker net asset value by value denom
-func MarkerNetAssetValueKey(markerAddr sdk.AccAddress, denom string) []byte {
-	return append(MarkerNetAssetValueKeyPrefix(markerAddr), denom...)
+// NetAssetValueKey returns key [prefix][marker address][asset denom value] for marker net asset value by value denom
+func NetAssetValueKey(markerAddr sdk.AccAddress, denom string) []byte {
+	return append(NetAssetValueKeyPrefix(markerAddr), denom...)
 }

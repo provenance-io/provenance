@@ -219,7 +219,7 @@ func TestNewMarkerValidate(t *testing.T) {
 
 func TestNewMarkerMsgEncoding(t *testing.T) {
 	base := authtypes.NewBaseAccountWithAddress(MustGetMarkerAddress("testcoin"))
-	newMsgMarker := NewMsgAddMarkerRequest("testcoin", sdk.OneInt(), base.GetAddress(), base.GetAddress(), MarkerType_Coin, false, false, false, []string{}, []MarkerNetAssetValue{})
+	newMsgMarker := NewMsgAddMarkerRequest("testcoin", sdk.OneInt(), base.GetAddress(), base.GetAddress(), MarkerType_Coin, false, false, false, []string{}, []NetAssetValue{})
 
 	require.NoError(t, newMsgMarker.ValidateBasic())
 }
@@ -408,27 +408,27 @@ func TestRemovesFromRequiredAttributes(t *testing.T) {
 	}
 }
 
-func TestMarkerNetAssetValueConstructor(t *testing.T) {
+func TestNetAssetValueConstructor(t *testing.T) {
 	source := "exchange"
 	value := sdk.NewInt64Coin("jackthecat", 406)
 	volume := uint64(100)
 	updateTime := time.Now()
-	actual := NewMarkerNetAssetValue(source, value, volume, updateTime)
+	actual := NewNetAssetValue(source, value, volume, updateTime)
 	assert.Equal(t, source, actual.Source)
 	assert.Equal(t, value, actual.Value)
 	assert.Equal(t, volume, actual.Volume)
 	assert.Equal(t, updateTime, actual.UpdateTime)
 }
 
-func TestMarkerNetAssetValueValidate(t *testing.T) {
+func TestNetAssetValueValidate(t *testing.T) {
 	tests := []struct {
 		name   string
-		nav    MarkerNetAssetValue
+		nav    NetAssetValue
 		expErr string
 	}{
 		{
 			name: "empty source value",
-			nav: MarkerNetAssetValue{
+			nav: NetAssetValue{
 				Source:     "",
 				Value:      sdk.NewInt64Coin("jackthecat", 420),
 				Volume:     406,
@@ -438,7 +438,7 @@ func TestMarkerNetAssetValueValidate(t *testing.T) {
 		},
 		{
 			name: "invalid denom",
-			nav: MarkerNetAssetValue{
+			nav: NetAssetValue{
 				Source:     "exchange",
 				Volume:     406,
 				UpdateTime: time.Now(),
@@ -447,7 +447,7 @@ func TestMarkerNetAssetValueValidate(t *testing.T) {
 		},
 		{
 			name: "volume is not positive",
-			nav: MarkerNetAssetValue{
+			nav: NetAssetValue{
 				Source:     "exchange",
 				Value:      sdk.NewInt64Coin("jackthecat", 420),
 				Volume:     0,
@@ -457,7 +457,7 @@ func TestMarkerNetAssetValueValidate(t *testing.T) {
 		},
 		{
 			name: "update time has not been set",
-			nav: MarkerNetAssetValue{
+			nav: NetAssetValue{
 				Source: "exchange",
 				Value:  sdk.NewInt64Coin("jackthecat", 420),
 				Volume: 406,
@@ -466,7 +466,7 @@ func TestMarkerNetAssetValueValidate(t *testing.T) {
 		},
 		{
 			name: "successful",
-			nav: MarkerNetAssetValue{
+			nav: NetAssetValue{
 				Source:     "exchange",
 				Value:      sdk.NewInt64Coin("jackthecat", 420),
 				Volume:     406,
@@ -482,7 +482,7 @@ func TestMarkerNetAssetValueValidate(t *testing.T) {
 			if len(tt.expErr) > 0 {
 				assert.Equal(t, tt.expErr, err.Error())
 			} else {
-				assert.NoError(t, err, "MarkerNetAssetValue validate should have passed")
+				assert.NoError(t, err, "NetAssetValue validate should have passed")
 			}
 		})
 	}

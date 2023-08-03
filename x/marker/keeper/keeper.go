@@ -211,22 +211,22 @@ func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAd
 	store.Delete(types.DenySendKey(markerAddr, senderAddr))
 }
 
-func (k Keeper) AddMarkerNetAssetValue(ctx sdk.Context, markerAddr sdk.AccAddress, markerNetAssetValue types.MarkerNetAssetValue) error {
-	bz, err := k.cdc.Marshal(&markerNetAssetValue)
+func (k Keeper) SetNetAssetValue(ctx sdk.Context, markerAddr sdk.AccAddress, netAssetValue types.NetAssetValue) error {
+	bz, err := k.cdc.Marshal(&netAssetValue)
 	if err != nil {
 		return err
 	}
-	ctx.KVStore(k.storeKey).Set(types.MarkerNetAssetValueKey(markerAddr, markerNetAssetValue.Value.Denom), bz)
+	ctx.KVStore(k.storeKey).Set(types.NetAssetValueKey(markerAddr, netAssetValue.Value.Denom), bz)
 	return nil
 }
 
 // IterateMarketNetAssetValues iterates marker net asset values for marker
-func (k Keeper) IterateMarketNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress, handler func(state types.MarkerNetAssetValue) (stop bool)) error {
+func (k Keeper) IterateMarketNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress, handler func(state types.NetAssetValue) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.MarkerNetAssetValueKeyPrefix(markerAddr))
+	it := sdk.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(markerAddr))
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
-		var markerNav types.MarkerNetAssetValue
+		var markerNav types.NetAssetValue
 		err := k.cdc.Unmarshal(it.Value(), &markerNav)
 		if err != nil {
 			return err

@@ -49,7 +49,7 @@ type CreateMarkerParams struct {
 	// list of restricted attributes
 	RestrictedAttributes []string `json:"restricted_attributes,omitempty"`
 	// list of marker net asset values
-	MarkerNetAssetValues []types.MarkerNetAssetValue
+	NetAssetValues []types.NetAssetValue
 }
 
 // GrantAccessParams are params for encoding a MsgAddAccessRequest.
@@ -183,7 +183,7 @@ func (params *CreateMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 		return nil, fmt.Errorf("wasm: allow_forced_transfer can only be set if marker type is restricted")
 	}
 	msg := types.NewMsgAddMarkerRequest(
-		params.Coin.Denom, params.Coin.Amount, contract, contract, markerType, false, false, params.AllowForcedTransfer, params.RestrictedAttributes, params.MarkerNetAssetValues,
+		params.Coin.Denom, params.Coin.Amount, contract, contract, markerType, false, false, params.AllowForcedTransfer, params.RestrictedAttributes, params.NetAssetValues,
 	)
 
 	return []sdk.Msg{msg}, nil

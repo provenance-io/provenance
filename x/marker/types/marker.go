@@ -455,9 +455,9 @@ func RemoveFromRequiredAttributes(currentAttrs []string, removeAttrs []string) (
 	return reqAttrs, nil
 }
 
-// NewMarkerNetAssetValue returns a new instance of MarkerNetAssetValue
-func NewMarkerNetAssetValue(source string, value sdk.Coin, volume uint64, updateTime time.Time) MarkerNetAssetValue {
-	return MarkerNetAssetValue{
+// NewNetAssetValue returns a new instance of NetAssetValue
+func NewNetAssetValue(source string, value sdk.Coin, volume uint64, updateTime time.Time) NetAssetValue {
+	return NetAssetValue{
 		Source:     source,
 		Value:      value,
 		Volume:     volume,
@@ -465,8 +465,8 @@ func NewMarkerNetAssetValue(source string, value sdk.Coin, volume uint64, update
 	}
 }
 
-// Validate returns error if MarkerNetAssetValue is not in a valid state
-func (mnav *MarkerNetAssetValue) Validate() error {
+// Validate returns error if NetAssetValue is not in a valid state
+func (mnav *NetAssetValue) Validate() error {
 	if len(mnav.Source) == 0 {
 		return fmt.Errorf("marker net asset value must have a source defined")
 	}

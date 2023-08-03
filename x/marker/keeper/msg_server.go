@@ -113,8 +113,8 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	for _, nav := range msg.MarkerNetAssetValues {
-		if err = k.AddMarkerNetAssetValue(ctx, ma.GetAddress(), nav); err != nil {
+	for _, nav := range msg.NetAssetValues {
+		if err = k.SetNetAssetValue(ctx, ma.GetAddress(), nav); err != nil {
 			return nil, err
 		}
 	}

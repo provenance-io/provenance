@@ -94,8 +94,8 @@ enum MarkerStatus {
   MARKER_STATUS_DESTROYED = 5 [(gogoproto.enumvalue_customname) = "StatusDestroyed"];
 }
 
-// MarkerNetAssetValue defines a marker's net asset value
-message MarkerNetAssetValue {
+// NetAssetValue defines a marker's net asset value
+message NetAssetValue {
   // value is the value of asset in token
   cosmos.base.v1beta1.Coin value = 1 [(gogoproto.nullable) = false];
   // volume is the volume of the assets
