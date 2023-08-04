@@ -14,7 +14,7 @@ func NewGenesisState(port string, params Params, sequence uint64) *GenesisState 
 	}
 }
 
-// DefaultGenesis returns the default trigger genesis state
+// DefaultGenesis returns the default oracle genesis state
 func DefaultGenesis() *GenesisState {
 	return NewGenesisState(PortID, DefaultParams(), 1)
 }

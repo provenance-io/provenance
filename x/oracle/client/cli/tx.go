@@ -15,12 +15,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewTxCmd is the top-level command for trigger CLI transactions.
+// NewTxCmd is the top-level command for oracle CLI transactions.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Aliases:                    []string{"t"},
-		Short:                      "Transaction commands for the trigger module",
+		Short:                      "Transaction commands for the oracle module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,

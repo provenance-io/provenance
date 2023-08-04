@@ -12,11 +12,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// GetQueryCmd is the top-level command for trigger CLI queries.
+// GetQueryCmd is the top-level command for oracle CLI queries.
 func GetQueryCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Querying commands for the triggers module",
+		Short:                      "Querying commands for the oracle module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,

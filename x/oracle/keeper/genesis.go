@@ -14,7 +14,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 }
 
-// InitGenesis new trigger genesis
+// InitGenesis new oracle genesis
 func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	if err := genState.Validate(); err != nil {
 		panic(err)
