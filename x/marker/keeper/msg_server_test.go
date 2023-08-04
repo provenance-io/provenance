@@ -1,7 +1,9 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -21,9 +23,10 @@ import (
 type MsgServerTestSuite struct {
 	suite.Suite
 
-	app       *simapp.App
-	ctx       sdk.Context
-	msgServer types.MsgServer
+	app            *simapp.App
+	ctx            sdk.Context
+	msgServer      types.MsgServer
+	blockStartTime time.Time
 
 	privkey1   cryptotypes.PrivKey
 	pubkey1    cryptotypes.PubKey
@@ -36,8 +39,11 @@ type MsgServerTestSuite struct {
 
 func (s *MsgServerTestSuite) SetupTest() {
 
+	s.blockStartTime = time.Now()
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{
+		Time: s.blockStartTime,
+	})
 	s.msgServer = markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
 
 	s.privkey1 = secp256k1.GenPrivKey()
@@ -339,6 +345,118 @@ func (s *MsgServerTestSuite) TestUpdateSendDenyList() {
 			} else {
 				s.Assert().NoError(err)
 				s.Assert().Equal(res, &types.MsgUpdateSendDenyListResponse{})
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestAddNetAssetValue() {
+	authUser := testUserAddress("test")
+
+	markerDenom := "jackthecat"
+	markerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(markerDenom), nil, 0, 0)
+	s.app.MarkerKeeper.SetMarker(s.ctx, types.NewMarkerAccount(markerAcct, sdk.NewInt64Coin(markerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusProposed, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
+
+	valueDenom := "usd"
+	valueAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(valueDenom), nil, 0, 0)
+	s.app.MarkerKeeper.SetMarker(s.ctx, types.NewMarkerAccount(valueAcct, sdk.NewInt64Coin(valueDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusProposed, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
+
+	finalizedMarkerDenom := "finalizedjackthecat"
+	finalizedMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(finalizedMarkerDenom), nil, 1, 0)
+	s.app.MarkerKeeper.SetMarker(s.ctx, types.NewMarkerAccount(finalizedMarkerAcct, sdk.NewInt64Coin(finalizedMarkerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
+
+	testCases := []struct {
+		name   string
+		msg    types.MsgAddNetAssetValueRequest
+		expErr string
+	}{
+		{
+			name:   "no marker found",
+			msg:    types.MsgAddNetAssetValueRequest{Denom: "cantfindme", NetAssetValues: []types.NetAssetValue{}, Administrator: authUser.String()},
+			expErr: "marker cantfindme not found for address: cosmos17l2yneua2mdfqaycgyhqag8t20asnjwf6adpmt: invalid request",
+		},
+		{
+			name:   "empty net asset values",
+			msg:    types.MsgAddNetAssetValueRequest{Denom: finalizedMarkerDenom, NetAssetValues: []types.NetAssetValue{}, Administrator: authUser.String()},
+			expErr: "can only add net asset values to markers in the Proposed status: invalid request",
+		},
+		{
+			name: "nav denom matches marker denom",
+			msg: types.MsgAddNetAssetValueRequest{
+				Denom: markerDenom,
+				NetAssetValues: []types.NetAssetValue{
+					{
+						Value:      sdk.NewInt64Coin(markerDenom, 100),
+						Volume:     uint64(100),
+						Source:     "exchange",
+						UpdateTime: s.blockStartTime,
+					},
+				},
+				Administrator: authUser.String(),
+			},
+			expErr: `net asset value denom cannot match marker denom "jackthecat": invalid request`,
+		},
+		{
+			name: "value denom does not exist",
+			msg: types.MsgAddNetAssetValueRequest{
+				Denom: markerDenom,
+				NetAssetValues: []types.NetAssetValue{
+					{
+						Value:      sdk.NewInt64Coin("hotdog", 100),
+						Volume:     uint64(100),
+						Source:     "exchange",
+						UpdateTime: s.blockStartTime,
+					},
+				},
+				Administrator: authUser.String(),
+			},
+			expErr: `net asset value denom does not exist: marker hotdog not found for address: cosmos1p6l3annxy35gm5mfm6m0jz2mdj8peheuzf9alh: invalid request`,
+		},
+		{
+			name: "time is in the future of current block",
+			msg: types.MsgAddNetAssetValueRequest{
+				Denom: markerDenom,
+				NetAssetValues: []types.NetAssetValue{
+					{
+						Value:      sdk.NewInt64Coin(valueDenom, 100),
+						Volume:     uint64(100),
+						Source:     "exchange",
+						UpdateTime: s.blockStartTime.Add(10 * time.Hour),
+					},
+				},
+				Administrator: authUser.String(),
+			},
+			expErr: fmt.Sprintf("net asset value update time (%v) is later than current block time (%v): invalid request", s.blockStartTime.Add(10*time.Hour).UTC(), s.blockStartTime.UTC()),
+		},
+		{
+			name: "successfully set nav",
+			msg: types.MsgAddNetAssetValueRequest{
+				Denom: markerDenom,
+				NetAssetValues: []types.NetAssetValue{
+					{
+						Value:      sdk.NewInt64Coin(valueDenom, 100),
+						Volume:     uint64(100),
+						Source:     "exchange",
+						UpdateTime: s.blockStartTime.UTC(),
+					},
+				},
+				Administrator: authUser.String(),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			res, err := s.msgServer.AddNetAssetValue(sdk.WrapSDKContext(s.ctx),
+				&tc.msg)
+
+			if len(tc.expErr) > 0 {
+				s.Assert().Nil(res)
+				s.Assert().EqualError(err, tc.expErr)
+
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().Equal(res, &types.MsgAddNetAssetValueResponse{})
 			}
 		})
 	}

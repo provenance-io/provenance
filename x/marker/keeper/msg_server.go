@@ -821,7 +821,7 @@ func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetA
 
 	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("marker not found for %s: %v", msg.Denom, err)
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	if marker.GetStatus() != types.StatusProposed {
@@ -831,6 +831,10 @@ func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetA
 	for _, nav := range msg.NetAssetValues {
 		if nav.Value.Denom == marker.GetDenom() {
 			return nil, sdkerrors.ErrInvalidRequest.Wrapf("net asset value denom cannot match marker denom %q", marker.GetDenom())
+		}
+		_, err := k.GetMarkerByDenom(ctx, nav.Value.Denom)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("net asset value denom does not exist: %v", err.Error())
 		}
 		if nav.UpdateTime.UTC().After(ctx.BlockTime().UTC()) { // TODO: not sure if we should update this to current block time here or allow user to state the update time.
 			return nil, sdkerrors.ErrInvalidRequest.Wrapf("net asset value update time (%v) is later than current block time (%v)", nav.UpdateTime.UTC(), ctx.BlockTime().UTC())
@@ -856,7 +860,7 @@ func (k msgServer) DeleteNetAssetValue(goCtx context.Context, msg *types.MsgDele
 
 	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("marker not found for %s : %v", msg.Denom, err)
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	if marker.GetStatus() != types.StatusProposed {
