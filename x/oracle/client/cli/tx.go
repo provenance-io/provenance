@@ -89,7 +89,7 @@ func GetCmdSendQuery() *cobra.Command {
 				return errors.New("query data must be json")
 			}
 
-			msg := types.NewMsgQueryOracle(
+			msg := types.NewMsgSendQueryOracle(
 				clientCtx.GetFromAddress().String(),
 				channelID,
 				queryData,

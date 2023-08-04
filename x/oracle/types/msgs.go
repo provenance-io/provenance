@@ -9,8 +9,8 @@ import (
 
 var _, _ sdk.Msg = &MsgUpdateOracleRequest{}, &MsgSendQueryOracleRequest{}
 
-// NewMsgQueryOracle creates a new MsgSendQueryOracleRequest
-func NewMsgQueryOracle(creator, channelId string, query []byte) *MsgSendQueryOracleRequest {
+// NewMsgSendQueryOracle creates a new MsgSendQueryOracleRequest
+func NewMsgSendQueryOracle(creator, channelId string, query []byte) *MsgSendQueryOracleRequest {
 	return &MsgSendQueryOracleRequest{
 		Authority: creator,
 		Channel:   channelId,
