@@ -611,7 +611,7 @@ func TestRandomizedGenState(t *testing.T) {
 			}
 
 			// Make sure stdout has the hold genesis state message.
-			expStdoutHolds := "Selected randomly generated holds:\n" +
+			expStdoutHolds := fmt.Sprintf("Selected %d randomly generated holds:\n", len(tc.expHoldGen.Holds)) +
 				simulation.HoldsString(tc.expHoldGen.Holds) + "\n"
 			assert.Contains(t, stdout, expStdoutHolds, "stdout message about holds\nExpected:\n%s", expStdoutHolds)
 

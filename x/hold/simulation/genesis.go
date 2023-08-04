@@ -157,7 +157,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	simState.GenState[hold.ModuleName] = simState.Cdc.MustMarshalJSON(holdGenState)
-	fmt.Printf("Selected randomly generated holds:\n%s\n", holdsString(holdGenState.Holds))
+	fmt.Printf("Selected %d randomly generated holds:\n%s\n", len(holdGenState.Holds), holdsString(holdGenState.Holds))
 
 	// If we put stuff in hold, add those funds to the bank balances.
 	if len(holdGenState.Holds) > 0 {
