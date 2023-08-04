@@ -23,7 +23,7 @@ func DefaultGenesis() *GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	if gs.Sequence == 0 {
-		return fmt.Errorf("invalid query id")
+		return fmt.Errorf("sequence %d is invalid, must be greater than 0", int(gs.Sequence))
 	}
 
 	if err := host.PortIdentifierValidator(gs.PortId); err != nil {
