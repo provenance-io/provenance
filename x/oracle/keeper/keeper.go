@@ -79,13 +79,13 @@ func (k Keeper) IsBound(ctx sdk.Context, portID string) bool {
 // GetPort returns the portID for the transfer module. Used in ExportGenesis
 func (k Keeper) GetPort(ctx sdk.Context) string {
 	store := ctx.KVStore(k.storeKey)
-	return string(store.Get(types.PortStoreKey))
+	return string(store.Get(types.GetPortStoreKey()))
 }
 
 // SetPort sets the portID for the transfer module. Used in InitGenesis
 func (k Keeper) SetPort(ctx sdk.Context, portID string) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.PortStoreKey, []byte(portID))
+	store.Set(types.GetPortStoreKey(), []byte(portID))
 }
 
 // AuthenticateCapability wraps the scopedKeeper's AuthenticateCapability function

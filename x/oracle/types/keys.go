@@ -36,18 +36,28 @@ var (
 	QueryResponseStoreKeyPrefix = []byte{0x05}
 )
 
-// ContractStoreKey is a function to get the key for the oracle's contract in store
+// GetContractStoreKey is a function to get the key for the oracle in store
 func GetContractStoreKey() []byte {
 	return ContractStoreKey
 }
 
-// QueryRequestStoreKey is a function to generate key for each result in store
-func QueryRequestStoreKey(packetSequence uint64) []byte {
+// GetPortStoreKey is a function to get the key for the port in store
+func GetPortStoreKey() []byte {
+	return PortStoreKey
+}
+
+// GetLastQueryPacketSeqKey is a function to get the key for the last query packet sequence in store
+func GetLastQueryPacketSeqKey() []byte {
+	return LastQueryPacketSeqKey
+}
+
+// GetQueryRequestStoreKey is a function to generate key for each result in store
+func GetQueryRequestStoreKey(packetSequence uint64) []byte {
 	return append(QueryRequestStoreKeyPrefix, uint64ToBytes(packetSequence)...)
 }
 
-// QueryResponseStoreKey is a function to generate key for each result in store
-func QueryResponseStoreKey(packetSequence uint64) []byte {
+// GetQueryResponseStoreKey is a function to generate key for each result in store
+func GetQueryResponseStoreKey(packetSequence uint64) []byte {
 	return append(QueryResponseStoreKeyPrefix, uint64ToBytes(packetSequence)...)
 }
 
