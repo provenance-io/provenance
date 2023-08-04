@@ -502,9 +502,9 @@ func (s *IntegrationCLITestSuite) TestQueryCmdGetAllHolds() {
 	}
 }
 
-// TODO[1607]: Uncomment this TestHoldsRemovedFromSpendable test.
+// TODO[1607]: Uncomment this TestHoldsNotInFromSpendable test.
 /* commented out until I have a version of the sdk with the GetSpendableBalancesCmd query.
-func (s *IntegrationCLITestSuite) TestHoldsRemovedFromSpendable() {
+func (s *IntegrationCLITestSuite) TestHoldsNotInFromSpendable() {
 	// The purpose of these tests is to make sure that the bank module is
 	// being properly informed of the locked hold funds.
 	cmdGen := func() *cobra.Command {

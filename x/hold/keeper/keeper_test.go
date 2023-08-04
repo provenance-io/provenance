@@ -363,15 +363,15 @@ func (s *TestSuite) TestEventsToStrings() {
 	eventAdd, err := sdk.TypedEventToEvent(eventAddT)
 	s.Require().NoError(err, "TypedEventToEvent EventHoldAdded")
 
-	addrRem := sdk.AccAddress("address_rem_event___")
-	coinsRem := s.coins("13cucumber,81dill")
-	eventRemT := hold.NewEventHoldRemoved(addrRem, coinsRem)
-	eventRem, err := sdk.TypedEventToEvent(eventRemT)
-	s.Require().NoError(err, "TypedEventToEvent EventHoldRemoved")
+	addrRel := sdk.AccAddress("address_rel_event___")
+	coinsRel := s.coins("13cucumber,81dill")
+	eventRelT := hold.NewEventHoldReleased(addrRel, coinsRel)
+	eventRel, err := sdk.TypedEventToEvent(eventRelT)
+	s.Require().NoError(err, "TypedEventToEvent EventHoldReleased")
 
 	events := sdk.Events{
 		eventAdd,
-		eventRem,
+		eventRel,
 	}
 
 	// Set the index flag on the first attribute of the first event so we make sure that makes a difference.
@@ -380,8 +380,8 @@ func (s *TestSuite) TestEventsToStrings() {
 	expected := []string{
 		fmt.Sprintf("[0]provenance.hold.v1.EventHoldAdded[0]: \"address\" = \"\\\"%s\\\"\" (indexed)", addrAdd.String()),
 		fmt.Sprintf("[0]provenance.hold.v1.EventHoldAdded[1]: \"amount\" = \"\\\"%s\\\"\"", coinsAdd.String()),
-		fmt.Sprintf("[1]provenance.hold.v1.EventHoldRemoved[0]: \"address\" = \"\\\"%s\\\"\"", addrRem.String()),
-		fmt.Sprintf("[1]provenance.hold.v1.EventHoldRemoved[1]: \"amount\" = \"\\\"%s\\\"\"", coinsRem.String()),
+		fmt.Sprintf("[1]provenance.hold.v1.EventHoldReleased[0]: \"address\" = \"\\\"%s\\\"\"", addrRel.String()),
+		fmt.Sprintf("[1]provenance.hold.v1.EventHoldReleased[1]: \"amount\" = \"\\\"%s\\\"\"", coinsRel.String()),
 	}
 
 	actual := s.eventsToStrings(events)
@@ -724,8 +724,8 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 	store = nil
 
 	makeEvents := func(addr sdk.AccAddress, coins sdk.Coins) sdk.Events {
-		event, err := sdk.TypedEventToEvent(hold.NewEventHoldRemoved(addr, coins))
-		s.Require().NoError(err, "TypedEventToEvent EventHoldRemoved((%s, %q)", s.getAddrName(addr), coins)
+		event, err := sdk.TypedEventToEvent(hold.NewEventHoldReleased(addr, coins))
+		s.Require().NoError(err, "TypedEventToEvent EventHoldReleased((%s, %q)", s.getAddrName(addr), coins)
 		return sdk.Events{event}
 	}
 
@@ -739,14 +739,14 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 		expEvents sdk.Events
 	}{
 		{
-			name:      "remove some of two denoms",
+			name:      "release some of two denoms",
 			addr:      s.addr1,
 			funds:     s.coins("1banana,1cucumber"),
 			finalEsc:  s.coins("98banana,2cucumber"),
 			expEvents: makeEvents(s.addr1, s.coins("1banana,1cucumber")),
 		},
 		{
-			name:      "remove all of two denoms",
+			name:      "release all of two denoms",
 			addr:      s.addr1,
 			funds:     s.coins("98banana,2cucumber"),
 			expEvents: makeEvents(s.addr1, s.coins("98banana,2cucumber")),
@@ -756,20 +756,20 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 			addr:  s.addr2,
 			funds: s.coins("20banana"),
 			expErr: []string{
-				"cannot remove 20banana from hold",
+				"cannot release 20banana from hold",
 				"account only has 18banana on hold",
 			},
 			finalEsc: s.coins("18banana"),
 		},
 		{
-			name:      "only remove some of one denom",
+			name:      "only release some of one denom",
 			addr:      s.addr2,
 			funds:     s.coins("10banana"),
 			finalEsc:  s.coins("8banana"),
 			expEvents: makeEvents(s.addr2, s.coins("10banana")),
 		},
 		{
-			name:      "remove all of one denom",
+			name:      "release all of one denom",
 			addr:      s.addr2,
 			funds:     s.coins("8banana"),
 			expEvents: makeEvents(s.addr2, s.coins("8banana")),
@@ -811,32 +811,32 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 			expEvents: makeEvents(s.addr4, s.coins("1hugecoin")),
 		},
 		{
-			name:      "amount removed is greater than max uint64",
+			name:      "amount released is greater than max uint64",
 			addr:      s.addr4,
 			funds:     s.coins("1844674407370955161400hugecoin"),
 			finalEsc:  s.coins("99hugecoin,1000000000000000000000largecoin,20000000000000000000mediumcoin"),
 			expEvents: makeEvents(s.addr4, s.coins("1844674407370955161400hugecoin")),
 		},
 		{
-			name:      "exising amount more than max uint64 and amount removed is less with result also less",
+			name:      "exising amount more than max uint64 and amount released is less with result also less",
 			addr:      s.addr4,
 			funds:     s.coins("10000000000000000000mediumcoin"),
 			finalEsc:  s.coins("99hugecoin,1000000000000000000000largecoin,10000000000000000000mediumcoin"),
 			expEvents: makeEvents(s.addr4, s.coins("10000000000000000000mediumcoin")),
 		},
 		{
-			name:      "amount removed is more than max uint64 with result also more",
+			name:      "amount released is more than max uint64 with result also more",
 			addr:      s.addr4,
 			funds:     s.coins("100000000000000000000largecoin"),
 			finalEsc:  s.coins("99hugecoin,900000000000000000000largecoin,10000000000000000000mediumcoin"),
 			expEvents: makeEvents(s.addr4, s.coins("100000000000000000000largecoin")),
 		},
 		{
-			name:  "existing amount and amount to remove over max uint64 but insufficient",
+			name:  "existing amount and amount to release over max uint64 but insufficient",
 			addr:  s.addr4,
 			funds: s.coins("900000000000000000001largecoin"),
 			expErr: []string{
-				"cannot remove 900000000000000000001largecoin from hold",
+				"cannot release 900000000000000000001largecoin from hold",
 				"account only has 900000000000000000000largecoin on hold",
 			},
 			finalEsc: s.coins("99hugecoin,900000000000000000000largecoin,10000000000000000000mediumcoin"),
@@ -860,7 +860,7 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 			name:   "negative amount",
 			addr:   s.addr5,
 			funds:  sdk.Coins{s.coin(-1, "banana")},
-			expErr: []string{"cannot remove \"-1banana\" from hold", "amounts cannot be negative"},
+			expErr: []string{"cannot release \"-1banana\" from hold", "amounts cannot be negative"},
 		},
 	}
 
@@ -1398,8 +1398,8 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 
 	// actions are actions to take at various amounts of time (in seconds) after start time.
 	actions := map[uint32]struct {
-		fund     int64 // positive = funds added, negative = funds removed.
-		hold     int64 // positive = funds put into hold, negative = funds removed from hold.
+		fund     int64 // positive = funds added, negative = funds released.
+		hold     int64 // positive = funds put into hold, negative = funds released from hold.
 		delegate int64 // positive = funds delegated, negative = funds undelegated.
 	}{
 		50:   {delegate: 100},

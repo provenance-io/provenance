@@ -50,30 +50,30 @@ func TestNewEventHoldAdded(t *testing.T) {
 	}
 }
 
-func TestNewEventHoldRemoved(t *testing.T) {
+func TestNewEventHoldReleased(t *testing.T) {
 	tests := []struct {
 		name   string
 		addr   sdk.AccAddress
 		amount sdk.Coins
-		exp    *EventHoldRemoved
+		exp    *EventHoldReleased
 	}{
 		{
 			name:   "both nil",
 			addr:   nil,
 			amount: nil,
-			exp:    &EventHoldRemoved{Address: "", Amount: ""},
+			exp:    &EventHoldReleased{Address: "", Amount: ""},
 		},
 		{
 			name:   "both empty",
 			addr:   sdk.AccAddress{},
 			amount: sdk.Coins{},
-			exp:    &EventHoldRemoved{Address: "", Amount: ""},
+			exp:    &EventHoldReleased{Address: "", Amount: ""},
 		},
 		{
 			name:   "normal address and two denoms",
 			addr:   sdk.AccAddress("normal_address______"),
 			amount: sdk.NewCoins(sdk.NewInt64Coin("fingercoin", 10), sdk.NewInt64Coin("toecoin", 9)),
-			exp: &EventHoldRemoved{
+			exp: &EventHoldReleased{
 				Address: sdk.AccAddress("normal_address______").String(),
 				Amount:  "10fingercoin,9toecoin",
 			},
@@ -82,8 +82,8 @@ func TestNewEventHoldRemoved(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			event := NewEventHoldRemoved(tc.addr, tc.amount)
-			assert.Equal(t, tc.exp, event, "NewEventHoldRemoved")
+			event := NewEventHoldReleased(tc.addr, tc.amount)
+			assert.Equal(t, tc.exp, event, "NewEventHoldReleased")
 		})
 	}
 }
@@ -125,10 +125,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			},
 		},
 		{
-			name: "EventHoldRemoved",
-			tev:  NewEventHoldRemoved(addr, coins),
+			name: "EventHoldReleased",
+			tev:  NewEventHoldReleased(addr, coins),
 			expEvent: sdk.Event{
-				Type: "provenance.hold.v1.EventHoldRemoved",
+				Type: "provenance.hold.v1.EventHoldReleased",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("address"), Value: []byte(addrQ)},
 					{Key: []byte("amount"), Value: []byte(coinsQ)},

@@ -16,10 +16,10 @@ message EventHoldAdded {
   string amount = 2;
 }
 
-// EventHoldAdded is an event indicating that some funds were removed from hold for an account.
-message EventHoldRemoved {
+// EventHoldReleased is an event indicating that some funds were released from hold for an account.
+message EventHoldReleased {
   // address is the bech32 address string of the account with the funds.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // amount is a Coins string of the funds removed from hold.
+  // amount is a Coins string of the funds released from hold.
   string amount = 2;
 }

@@ -9,8 +9,8 @@ func NewEventHoldAdded(addr sdk.AccAddress, amount sdk.Coins) *EventHoldAdded {
 	}
 }
 
-func NewEventHoldRemoved(addr sdk.AccAddress, amount sdk.Coins) *EventHoldRemoved {
-	return &EventHoldRemoved{
+func NewEventHoldReleased(addr sdk.AccAddress, amount sdk.Coins) *EventHoldReleased {
+	return &EventHoldReleased{
 		Address: addr.String(),
 		Amount:  amount.String(),
 	}

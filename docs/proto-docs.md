@@ -54,7 +54,7 @@
   
 - [provenance/hold/v1/events.proto](#provenance/hold/v1/events.proto)
     - [EventHoldAdded](#provenance.hold.v1.EventHoldAdded)
-    - [EventHoldRemoved](#provenance.hold.v1.EventHoldRemoved)
+    - [EventHoldReleased](#provenance.hold.v1.EventHoldReleased)
   
 - [provenance/hold/v1/hold.proto](#provenance/hold/v1/hold.proto)
     - [AccountHold](#provenance.hold.v1.AccountHold)
@@ -1213,16 +1213,16 @@ EventHoldAdded is an event indicating that some funds were placed on hold in an 
 
 
 
-<a name="provenance.hold.v1.EventHoldRemoved"></a>
+<a name="provenance.hold.v1.EventHoldReleased"></a>
 
-### EventHoldRemoved
-EventHoldAdded is an event indicating that some funds were removed from hold for an account.
+### EventHoldReleased
+EventHoldReleased is an event indicating that some funds were released from hold for an account.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address is the bech32 address string of the account with the funds. |
-| `amount` | [string](#string) |  | amount is a Coins string of the funds removed from hold. |
+| `amount` | [string](#string) |  | amount is a Coins string of the funds released from hold. |
 
 
 

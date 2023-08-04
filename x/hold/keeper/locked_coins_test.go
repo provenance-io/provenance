@@ -287,7 +287,7 @@ func (s *TestSuite) TestBank_Send() {
 
 	s.Run("with bypass: send less than balance but more than spendable", func() {
 		// Note: This is a really bad idea. It will break the invariant unless the hold is also deleted.
-		// It's better to remove the hold first, then do a send coins without any bypass.
+		// It's better to release the hold first, then do a send coins without any bypass.
 		// But for this test, I want to see that the bypass is being passed on as expected.
 
 		ctx := hold.WithBypass(s.sdkCtx)
