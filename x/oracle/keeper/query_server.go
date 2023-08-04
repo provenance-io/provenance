@@ -13,7 +13,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// QueryAddress returns the address of the oracle's contract
+// QueryAddress returns the address of the module's oracle
 func (k Keeper) OracleAddress(goCtx context.Context, req *types.QueryOracleAddressRequest) (*types.QueryOracleAddressResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -28,6 +28,7 @@ func (k Keeper) OracleAddress(goCtx context.Context, req *types.QueryOracleAddre
 	return &types.QueryOracleAddressResponse{Address: contract.String()}, nil
 }
 
+// Oracle queries module's oracle
 func (k Keeper) Oracle(goCtx context.Context, req *types.QueryOracleRequest) (*types.QueryOracleResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -52,6 +53,7 @@ func (k Keeper) Oracle(goCtx context.Context, req *types.QueryOracleRequest) (*t
 	return &types.QueryOracleResponse{Data: resp.Data}, nil
 }
 
+// QueryState gets the state of an icq
 func (k Keeper) QueryState(goCtx context.Context, req *types.QueryQueryStateRequest) (*types.QueryQueryStateResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

@@ -17,7 +17,7 @@ func (k Keeper) GetOracle(ctx sdk.Context) (oracle sdk.AccAddress, err error) {
 	key := types.GetContractStoreKey()
 	oracle = store.Get(key)
 	if len(oracle) == 0 {
-		return sdk.AccAddress{}, types.ErrContractAddressDoesNotExist
+		return sdk.AccAddress{}, types.ErrMissingOracleAddress
 	}
 
 	return oracle, err

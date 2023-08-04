@@ -1,12 +1,12 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	cerrs "cosmossdk.io/errors"
 )
 
 var (
-	ErrSample                      = sdkerrors.Register(ModuleName, 1100, "sample error")
-	ErrInvalidPacketTimeout        = sdkerrors.Register(ModuleName, 1500, "invalid packet timeout")
-	ErrInvalidVersion              = sdkerrors.Register(ModuleName, 1501, "invalid version")
-	ErrContractAddressDoesNotExist = sdkerrors.Register(ModuleName, 1502, "missing contract address")
+	ErrSample               = cerrs.Register(ModuleName, 2, "sample error")
+	ErrInvalidPacketTimeout = cerrs.Register(ModuleName, 3, "invalid packet timeout")
+	ErrInvalidVersion       = cerrs.Register(ModuleName, 4, "invalid version")
+	ErrMissingOracleAddress = cerrs.Register(ModuleName, 5, "missing oracle address")
 )

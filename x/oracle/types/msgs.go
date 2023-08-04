@@ -9,6 +9,7 @@ import (
 
 var _, _ sdk.Msg = &MsgUpdateOracleRequest{}, &MsgSendQueryOracleRequest{}
 
+// NewMsgQueryOracle creates a new MsgSendQueryOracleRequest
 func NewMsgQueryOracle(creator, channelId string, query []byte) *MsgSendQueryOracleRequest {
 	return &MsgSendQueryOracleRequest{
 		Authority: creator,
@@ -17,6 +18,7 @@ func NewMsgQueryOracle(creator, channelId string, query []byte) *MsgSendQueryOra
 	}
 }
 
+// NewMsgUpdateOracle creates a new MsgUpdateOracleRequest
 func NewMsgUpdateOracle(creator, addr string) *MsgUpdateOracleRequest {
 	return &MsgUpdateOracleRequest{
 		Authority: creator,

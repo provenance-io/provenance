@@ -14,6 +14,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+// SendQuery sends and records an icq
 func (k Keeper) SendQuery(
 	ctx sdk.Context,
 	sourcePort,
@@ -80,6 +81,7 @@ func (k Keeper) createOutgoingPacket(
 	return packet.Sequence, nil
 }
 
+// OnAcknowledgementPacket reacts to an Acknowledgement packet.
 func (k Keeper) OnAcknowledgementPacket(
 	ctx sdk.Context,
 	modulePacket channeltypes.Packet,
@@ -125,6 +127,7 @@ func (k Keeper) OnAcknowledgementPacket(
 	return nil
 }
 
+// OnTimeoutPacket reacts to a timed out packet.
 func (k Keeper) OnTimeoutPacket(
 	ctx sdk.Context,
 	modulePacket channeltypes.Packet,

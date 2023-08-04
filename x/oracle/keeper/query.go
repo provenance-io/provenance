@@ -47,7 +47,7 @@ func (k Keeper) GetQueryResponse(ctx sdk.Context, packetSequence uint64) (types.
 
 // GetLastQueryPacketSeq return the id from the last query request
 func (k Keeper) GetLastQueryPacketSeq(ctx sdk.Context) uint64 {
-	bz := ctx.KVStore(k.storeKey).Get(types.KeyPrefix(types.LastQueryPacketSeqKey))
+	bz := ctx.KVStore(k.storeKey).Get(types.LastQueryPacketSeqKey)
 	uintV := gogotypes.UInt64Value{}
 	k.cdc.MustUnmarshalLengthPrefixed(bz, &uintV)
 	return uintV.GetValue()
@@ -56,6 +56,6 @@ func (k Keeper) GetLastQueryPacketSeq(ctx sdk.Context) uint64 {
 // SetLastQueryPacketSeq saves the id from the last query request
 func (k Keeper) SetLastQueryPacketSeq(ctx sdk.Context, packetSequence uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.KeyPrefix(types.LastQueryPacketSeqKey),
+	store.Set(types.LastQueryPacketSeqKey,
 		k.cdc.MustMarshalLengthPrefixed(&gogotypes.UInt64Value{Value: packetSequence}))
 }
