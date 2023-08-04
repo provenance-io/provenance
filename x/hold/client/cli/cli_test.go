@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -502,8 +503,6 @@ func (s *IntegrationCLITestSuite) TestQueryCmdGetAllHolds() {
 	}
 }
 
-// TODO[1607]: Uncomment this TestHoldsNotInFromSpendable test.
-/* commented out until I have a version of the sdk with the GetSpendableBalancesCmd query.
 func (s *IntegrationCLITestSuite) TestHoldsNotInFromSpendable() {
 	// The purpose of these tests is to make sure that the bank module is
 	// being properly informed of the locked hold funds.
@@ -555,4 +554,3 @@ func (s *IntegrationCLITestSuite) TestHoldsNotInFromSpendable() {
 		})
 	}
 }
-*/
