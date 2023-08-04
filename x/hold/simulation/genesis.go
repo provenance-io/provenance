@@ -162,8 +162,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 	// If we put stuff in hold, add those funds to the bank balances.
 	if len(holdGenState.Holds) > 0 {
 		bankGenState := banktypes.GetGenesisStateFromAppState(simState.Cdc, simState.GenState)
-		// TODO[1607]: Remove this next Printf (but keep the bottom one).
-		fmt.Printf("Bank balances before update due to randomly generated holds:\n%s\n", balancesString(bankGenState.Balances))
 		UpdateBankGenStateForHolds(bankGenState, holdGenState)
 		simState.GenState[banktypes.ModuleName] = simState.Cdc.MustMarshalJSON(bankGenState)
 		fmt.Printf("Bank balances after update due to randomly generated holds:\n%s\n", balancesString(bankGenState.Balances))
