@@ -23,9 +23,35 @@ const (
 	PortID = "oracle"
 )
 
+// The Oracle module's KVStore categorizes each item in the store using a single byte prefix
+// Any additional bytes appended after this prefix are to help in making multiple unique entries per category
+// The keys in this section are relatively simple and are used for module setup and configuration
+//
+//	OracleStoreKey
+//	- 0x01: sdk.AccAddress
+//	  | 1 |
+//
+//	LastQueryPacketSeqKey
+//	- 0x02: uint64
+//	  | 1 |
+//
+//	PortStoreKey
+//	- 0x03: string
+//	  | 1 |
+//
+// The following keys are used to store ICQ oracle requests and responses
+// The <sequence_id_bytes> are 8 bytes to uniquely identify a ICQ request
+//
+//	QueryRequestStoreKey
+//	- 0x04<sequence_id_bytes>: QueryOracleRequest
+//	  | 1 |        8         |
+//
+//	QueryResponseStoreKey
+//	- 0x05<sequence_id_bytes>: QueryOracleResponse
+//	  | 1 |        8         |
 var (
-	// ContractStoreKey is the key for the oracle's contract address
-	ContractStoreKey = []byte{0x01}
+	// OracleStoreKey is the key for the module's oracle address
+	OracleStoreKey = []byte{0x01}
 	// LastQueryPacketSeqKey is the key for the last packet sequence
 	LastQueryPacketSeqKey = []byte{0x02}
 	// PortStoreKey defines the key to store the port ID in store
@@ -36,9 +62,9 @@ var (
 	QueryResponseStoreKeyPrefix = []byte{0x05}
 )
 
-// GetContractStoreKey is a function to get the key for the oracle in store
-func GetContractStoreKey() []byte {
-	return ContractStoreKey
+// GetOracleStoreKey is a function to get the key for the oracle's address in store
+func GetOracleStoreKey() []byte {
+	return OracleStoreKey
 }
 
 // GetPortStoreKey is a function to get the key for the port in store

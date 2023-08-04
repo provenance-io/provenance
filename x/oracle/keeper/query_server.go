@@ -20,12 +20,12 @@ func (k Keeper) OracleAddress(goCtx context.Context, req *types.QueryOracleAddre
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	contract, err := k.GetOracle(ctx)
+	oracle, err := k.GetOracle(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.QueryOracleAddressResponse{Address: contract.String()}, nil
+	return &types.QueryOracleAddressResponse{Address: oracle.String()}, nil
 }
 
 // Oracle queries module's oracle

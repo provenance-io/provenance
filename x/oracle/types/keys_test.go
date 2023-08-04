@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetContractStoreKey(t *testing.T) {
-	key := GetContractStoreKey()
-	assert.EqualValues(t, ContractStoreKey, key[0:1], "must return correct contract key")
+func TestGetOracleStoreKey(t *testing.T) {
+	key := GetOracleStoreKey()
+	assert.EqualValues(t, OracleStoreKey, key[0:1], "must return correct oracle key")
 }
 
 func TestGetPortStoreKey(t *testing.T) {
