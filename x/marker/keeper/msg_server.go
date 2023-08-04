@@ -840,6 +840,13 @@ func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetA
 		}
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
 	return &types.MsgAddNetAssetValueResponse{}, nil
 }
 
@@ -861,6 +868,13 @@ func (k msgServer) DeleteNetAssetValue(goCtx context.Context, msg *types.MsgDele
 			return nil, sdkerrors.ErrInvalidRequest.Wrapf("could not remove net asset value : %v", err.Error())
 		}
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	return &types.MsgDeleteNetAssetValueResponse{}, nil
 }
