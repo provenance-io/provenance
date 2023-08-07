@@ -6,6 +6,11 @@ order: 5
 
 The oracle module emits the following events:
 
+<!-- TOC 2 -->
+  - [EventOracleQuerySuccess](#eventoraclequerysuccess)
+  - [EventOracleQueryError](#eventoraclequeryerror)
+  - [EventOracleQueryTimeout](#eventoraclequerytimeout)
+
 
 ---
 ## EventOracleQuerySuccess

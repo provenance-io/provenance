@@ -6,6 +6,11 @@ order: 6
 
 In this section we describe the processing of the oracle messages and the corresponding updates to the state.
 
+<!-- TOC 2 -->
+  - [Msg/GenesisState](#msggenesisstate)
+
+
+---
 ## Msg/GenesisState
 
 The GenesisState encompasses the upcoming sequence ID for an ICQ packet, the associated parameters, and the designated port ID for the module. These values are both extracted for export and imported for storage within the store.

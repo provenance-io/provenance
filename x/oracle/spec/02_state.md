@@ -6,6 +6,13 @@ order: 2
 
 The oracle module manages the address of the Oracle and the ICQ state.
 
+<!-- TOC 2 -->
+  - [Oracle](#oracle)
+  - [IBC](#ibc)
+  - [ICQ Responses](#icq-responses)
+
+
+---
 ## Oracle
 
 The `Oracle` is a CosmWasm smart contract that the module forwards its queries to and relays responses from. Users can manipulate this state by submitting a update oracle proposal.

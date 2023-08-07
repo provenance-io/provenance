@@ -6,6 +6,12 @@ order: 1
 
 The oracle module is very minimal, but users should understand what the `Oracle` is and how it interacts with `ICQ`.
 
+<!-- TOC 2 -->
+  - [Oracle](#oracle)
+  - [Interchain Queries (ICQ)](#interchain-queries-icq)
+
+
+---
 ## Oracle
 
 The `Oracle` is a custom built CosmWasm smart contract that the chain queries for data. Chain users can update the address with a proposal.

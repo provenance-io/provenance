@@ -6,6 +6,12 @@ order: 3
 
 In this section we describe the processing of the oracle messages and their corresponding updates to the state.
 
+<!-- TOC 2 -->
+  - [Msg/UpdateOracleRequest](#msgupdateoraclerequest)
+  - [Msg/SendQueryOracleRequest](#msgsendqueryoraclerequest)
+
+
+---
 ## Msg/UpdateOracleRequest
 
 The oracle's address is modified by proposing the `MsgUpdateOracleRequest` message.
