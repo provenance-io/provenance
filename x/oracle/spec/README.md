@@ -11,3 +11,4 @@ One challenge that the Provenance Blockchain faces is supporting each Provenance
 3. **[Messages](03_messages.md)**
 4. **[Queries](04_queries.md)**
 5. **[Events](05_events.md)**
+6. **[Genesis](06_genesis.md)**
