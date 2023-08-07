@@ -114,6 +114,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 	}
 
 	for _, nav := range msg.NetAssetValues {
+		nav.UpdateTime = ctx.BlockTime().UTC()
 		if err = k.SetNetAssetValue(ctx, ma.GetAddress(), nav); err != nil {
 			return nil, err
 		}
@@ -836,9 +837,8 @@ func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetA
 		if err != nil {
 			return nil, sdkerrors.ErrInvalidRequest.Wrapf("net asset value denom does not exist: %v", err.Error())
 		}
-		if nav.UpdateTime.UTC().After(ctx.BlockTime().UTC()) { // TODO: not sure if we should update this to current block time here or allow user to state the update time.
-			return nil, sdkerrors.ErrInvalidRequest.Wrapf("net asset value update time (%v) is later than current block time (%v)", nav.UpdateTime.UTC(), ctx.BlockTime().UTC())
-		}
+
+		nav.UpdateTime = ctx.BlockTime().UTC()
 		if err := k.SetNetAssetValue(ctx, marker.GetAddress(), nav); err != nil {
 			return nil, sdkerrors.ErrInvalidRequest.Wrapf("cannot set net asset value %v : %v", nav, err.Error())
 		}

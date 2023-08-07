@@ -728,6 +728,11 @@ func (msg MsgAddNetAssetValueRequest) ValidateBasic() error {
 		if err := nav.Validate(); err != nil {
 			return err
 		}
+
+		if !nav.UpdateTime.IsZero() {
+			return fmt.Errorf("marker net asset value must not have current update time set")
+		}
+
 		if seen[nav.Value.Denom] {
 			return fmt.Errorf("list of net asset values contains duplicates")
 		}

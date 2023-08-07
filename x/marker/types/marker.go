@@ -479,9 +479,5 @@ func (mnav *NetAssetValue) Validate() error {
 		return fmt.Errorf("marker net asset value volume must be positive value")
 	}
 
-	if mnav.UpdateTime.IsZero() {
-		return fmt.Errorf("marker net asset value must have current update time set")
-	}
-
 	return nil
 }
