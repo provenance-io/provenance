@@ -3,18 +3,17 @@ package keeper
 import (
 	"github.com/tendermint/tendermint/libs/log"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
-	"github.com/provenance-io/provenance/x/oracle/types"
-
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
 type Keeper struct {
@@ -28,6 +27,9 @@ type Keeper struct {
 	portKeeper      types.PortKeeper
 	scopedKeeper    capabilitykeeper.ScopedKeeper
 	wasmQueryServer wasmtypes.QueryServer
+
+	// the signing authority for the gov proposals
+	authority string
 }
 
 func NewKeeper(
@@ -57,6 +59,7 @@ func NewKeeper(
 		portKeeper:      portKeeper,
 		scopedKeeper:    scopedKeeper,
 		wasmQueryServer: wasmQueryServer,
+		authority:       authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
 }
 
@@ -96,4 +99,8 @@ func (k Keeper) AuthenticateCapability(ctx sdk.Context, cap *capabilitytypes.Cap
 // ClaimCapability wraps the scopedKeeper's ClaimCapability function
 func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
+}
+
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
