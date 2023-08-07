@@ -9,3 +9,4 @@ One challenge that the Provenance Blockchain faces is supporting each Provenance
 1. **[Concepts](01_concepts.md)**
 2. **[State](02_state.md)**
 3. **[Messages](03_messages.md)**
+4. **[Queries](04_queries.md)**
