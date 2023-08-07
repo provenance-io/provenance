@@ -10,7 +10,7 @@ The oracle module emits the following events:
 ---
 ## EventOracleQuerySuccess
 
-This event is emitted when a `ICQ` response is received from an `ACK` and is successful.
+This event is emitted when an `ICQ` response is received from an `ACK` and is successful.
 
 | Type               | Attribute Key | Attribute Value                 |
 | ------------------ | ------------- | ------------------------------- |
@@ -20,7 +20,7 @@ This event is emitted when a `ICQ` response is received from an `ACK` and is suc
 ---
 ## EventOracleQueryError
 
-This event is emitted when a `ICQ` response is received from an `ACK` and contains an error.
+This event is emitted when an `ICQ` response is received from an `ACK` and contains an error.
 
 | Type             | Attribute Key | Attribute Value                |
 | ---------------- | ------------- | ------------------------------ |
@@ -30,7 +30,7 @@ This event is emitted when a `ICQ` response is received from an `ACK` and contai
 ---
 ## EventOracleQueryTimeout
 
-This event is emitted when a `ICQ` request results in a `Timeout`.
+This event is emitted when an `ICQ` request results in a `Timeout`.
 
 | Type               | Attribute Key | Attribute Value                |
 | ------------------ | ------------- | ------------------------------ |
