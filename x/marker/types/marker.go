@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	proto "github.com/gogo/protobuf/proto"
 
@@ -456,12 +455,11 @@ func RemoveFromRequiredAttributes(currentAttrs []string, removeAttrs []string) (
 }
 
 // NewNetAssetValue returns a new instance of NetAssetValue
-func NewNetAssetValue(source string, value sdk.Coin, volume uint64, updateTime time.Time) NetAssetValue {
+func NewNetAssetValue(source string, value sdk.Coin, volume uint64) NetAssetValue {
 	return NetAssetValue{
-		Source:     source,
-		Value:      value,
-		Volume:     volume,
-		UpdateTime: updateTime,
+		Source: source,
+		Value:  value,
+		Volume: volume,
 	}
 }
 

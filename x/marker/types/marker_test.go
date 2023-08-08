@@ -412,12 +412,11 @@ func TestNetAssetValueConstructor(t *testing.T) {
 	source := "exchange"
 	value := sdk.NewInt64Coin("jackthecat", 406)
 	volume := uint64(100)
-	updateTime := time.Now()
-	actual := NewNetAssetValue(source, value, volume, updateTime)
+	actual := NewNetAssetValue(source, value, volume)
 	assert.Equal(t, source, actual.Source)
 	assert.Equal(t, value, actual.Value)
 	assert.Equal(t, volume, actual.Volume)
-	assert.Equal(t, updateTime, actual.UpdateTime)
+	assert.True(t, actual.UpdateTime.IsZero(), "update time should not be set")
 }
 
 func TestNetAssetValueValidate(t *testing.T) {
@@ -456,15 +455,6 @@ func TestNetAssetValueValidate(t *testing.T) {
 			expErr: "marker net asset value volume must be positive value",
 		},
 		{
-			name: "update time has not been set",
-			nav: NetAssetValue{
-				Source: "exchange",
-				Value:  sdk.NewInt64Coin("jackthecat", 420),
-				Volume: 406,
-			},
-			expErr: "marker net asset value must have current update time set",
-		},
-		{
 			name: "successful",
 			nav: NetAssetValue{
 				Source:     "exchange",
@@ -480,7 +470,7 @@ func TestNetAssetValueValidate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.nav.Validate()
 			if len(tt.expErr) > 0 {
-				assert.Equal(t, tt.expErr, err.Error())
+				assert.EqualErrorf(t, err, tt.expErr, "NetAssetValue validate expected error")
 			} else {
 				assert.NoError(t, err, "NetAssetValue validate should have passed")
 			}

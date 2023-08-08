@@ -789,10 +789,9 @@ func TestMsgUpdateSendDenyListRequestGetSigners(t *testing.T) {
 func TestMsgAddNetAssetValueValidateBasic(t *testing.T) {
 	addr := sdk.AccAddress("addr________________").String()
 	denom := "somedenom"
-	netAssetValue1 := NewNetAssetValue("source", sdk.NewInt64Coin("jackthecat", 100), uint64(100), time.Now())
-	netAssetValue2 := NewNetAssetValue("source", sdk.NewInt64Coin("hotdog", 100), uint64(100), time.Now())
-	invalidNetAssetValue := NewNetAssetValue("", sdk.NewInt64Coin("hotdog", 100), uint64(100), time.Now())
-
+	netAssetValue1 := NewNetAssetValue("source", sdk.NewInt64Coin("jackthecat", 100), uint64(100))
+	netAssetValue2 := NewNetAssetValue("source", sdk.NewInt64Coin("hotdog", 100), uint64(100))
+	invalidNetAssetValue := NewNetAssetValue("", sdk.NewInt64Coin("hotdog", 100), uint64(100))
 	tests := []struct {
 		name   string
 		msg    MsgAddNetAssetValueRequest
