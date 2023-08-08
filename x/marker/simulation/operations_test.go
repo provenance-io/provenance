@@ -376,6 +376,7 @@ func (s *SimTestSuite) TestSSimulateMsgSetAccountData() {
 		AllowGovernanceControl: true,
 		AllowForcedTransfer:    false,
 		RequiredAttributes:     nil,
+		NetAssetValues:         []types.NetAssetValue{types.NewNetAssetValue("marker", sdk.NewInt64Coin("navdenom", 0), 1)},
 	}
 	markerMsgServer := keeper.NewMsgServerImpl(s.app.MarkerKeeper)
 	_, err := markerMsgServer.AddFinalizeActivateMarker(s.ctx, newMarker)

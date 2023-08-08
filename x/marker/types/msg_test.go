@@ -359,7 +359,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
 				[]NetAssetValue{invalidNetAssetValue},
 			),
-			errorMsg: "",
+			errorMsg: "marker net asset value must have a source defined",
 		},
 		{
 			name: "should fail no net asset value",
@@ -376,7 +376,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
 				[]NetAssetValue{},
 			),
-			errorMsg: "",
+			errorMsg: "net asset value list cannot be empty",
 		},
 		{
 			name: "should succeed",

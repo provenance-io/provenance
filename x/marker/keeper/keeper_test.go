@@ -21,6 +21,7 @@ import (
 	simapp "github.com/provenance-io/provenance/app"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
@@ -221,6 +222,7 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 	require.False(t, m.AddressHasAccess(user2, types.Access_Delete))
 	require.False(t, m.AddressHasAccess(user2, types.Access_Withdraw))
 
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), markertypes.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 0), 1)))
 	// Finalize marker and check permission enforcement.
 	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user1, m.GetDenom()))
 	_, err = app.MarkerKeeper.GetMarker(ctx, addr)
@@ -332,6 +334,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	// Should not fail for a non-active/finalized coin, must be able to adjust supply amount to match any existing
 	require.NoError(t, app.MarkerKeeper.MintCoin(ctx, user, sdk.NewInt64Coin("testcoin", 100)))
 	require.NoError(t, app.MarkerKeeper.BurnCoin(ctx, user, sdk.NewInt64Coin("testcoin", 100)))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), markertypes.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 0), 1)))
 
 	// Moves to finalized, mints required supply, moves to active status.
 	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
@@ -489,6 +492,8 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), markertypes.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 0), 1)))
+
 	// insufficient supply to cover existing
 	require.Error(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
 
@@ -525,6 +530,7 @@ func TestAccountImplictControl(t *testing.T) {
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), markertypes.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 0), 1)))
 
 	// Moves to finalized, mints required supply, moves to active status.
 	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))

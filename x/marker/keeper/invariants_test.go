@@ -36,6 +36,7 @@ func TestMarkerInvariant(t *testing.T) {
 	require.NoError(t, mac.SetManager(user))
 	require.NoError(t, mac.SetSupply(sdk.NewCoin(mac.Denom, sdk.OneInt())))
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), markertypes.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 0), 1)))
 
 	// Initial, invariant should pass
 	_, isBroken := invariantChecks(ctx)
