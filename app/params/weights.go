@@ -35,4 +35,7 @@ const (
 	// Trigger
 	DefaultWeightSubmitCreateTrigger  int = 95
 	DefaultWeightSubmitDestroyTrigger int = 5
+	// Oracle
+	DefaultWeightUpdateOracle    int = 25
+	DefaultWeightSendOracleQuery int = 75
 )

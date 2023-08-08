@@ -5,22 +5,23 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	cerrs "cosmossdk.io/errors"
+	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	channelkeeper "github.com/cosmos/ibc-go/v6/modules/core/04-channel/keeper"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/provenance-io/provenance/x/oracle/client/cli"
 	"github.com/provenance-io/provenance/x/oracle/keeper"
+	"github.com/provenance-io/provenance/x/oracle/simulation"
 	"github.com/provenance-io/provenance/x/oracle/types"
 	"github.com/spf13/cobra"
-
-	cerrs "cosmossdk.io/errors"
-	sdkclient "github.com/cosmos/cosmos-sdk/client"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -89,20 +90,26 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-	keeper keeper.Keeper
+	keeper        keeper.Keeper
+	accountKeeper authkeeper.AccountKeeper
+	bankKeeper    bankkeeper.Keeper
+	channelKeeper channelkeeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, channelKeeper channelkeeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
+		accountKeeper:  accountKeeper,
+		bankKeeper:     bankKeeper,
+		channelKeeper:  channelKeeper,
 	}
 }
 
 // GenerateGenesisState creates a randomized GenState of the oracle module.
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	// simulation.RandomizedGenState(simState)
+	simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents returns content functions used to simulate governance proposals.
@@ -119,15 +126,14 @@ func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a func to decode each module's defined types from their corresponding store key
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	//sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns simulation operations (i.e msgs) with their respective weight
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return []simtypes.WeightedOperation{}
-	/*return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.keeper, am.accountKeeper, am.bankKeeper,
-	)*/
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc, am.keeper, am.accountKeeper, am.bankKeeper, am.channelKeeper,
+	)
 }
 
 // Name returns the oracle module's name.
