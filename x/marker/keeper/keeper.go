@@ -211,6 +211,24 @@ func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAd
 	store.Delete(types.DenySendKey(markerAddr, senderAddr))
 }
 
+func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccountI, netAssetValues []types.NetAssetValue) error {
+	for _, nav := range netAssetValues {
+		if nav.Value.Denom == marker.GetDenom() {
+			return fmt.Errorf("net asset value denom cannot match marker denom %q", marker.GetDenom())
+		}
+		_, err := k.GetMarkerByDenom(ctx, nav.Value.Denom)
+		if err != nil {
+			return fmt.Errorf("net asset value denom does not exist: %v", err.Error())
+		}
+
+		nav.UpdateTime = ctx.BlockTime().UTC()
+		if err := k.SetNetAssetValue(ctx, marker.GetAddress(), nav); err != nil {
+			return fmt.Errorf("cannot set net asset value %v : %v", nav, err.Error())
+		}
+	}
+	return nil
+}
+
 func (k Keeper) SetNetAssetValue(ctx sdk.Context, markerAddr sdk.AccAddress, netAssetValue types.NetAssetValue) error {
 	bz, err := k.cdc.Marshal(&netAssetValue)
 	if err != nil {

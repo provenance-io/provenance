@@ -798,12 +798,9 @@ func (k Keeper) AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.Marke
 		return err
 	}
 
-	for _, nav := range netAssetValues {
-		if err = nav.Validate(); err != nil {
-			return err
-		}
-		nav.UpdateTime = ctx.BlockTime().UTC()
-		k.SetNetAssetValue(ctx, marker.GetAddress(), nav)
+	err = k.AddSetNetAssetValues(ctx, marker, netAssetValues)
+	if err != nil {
+		return err
 	}
 
 	// Manager is the same as the manager in add marker request.

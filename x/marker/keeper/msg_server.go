@@ -113,13 +113,10 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	for _, nav := range msg.NetAssetValues {
-		nav.UpdateTime = ctx.BlockTime().UTC()
-		if err = k.SetNetAssetValue(ctx, ma.GetAddress(), nav); err != nil {
-			return nil, err
-		}
+	err = k.AddSetNetAssetValues(ctx, ma, msg.NetAssetValues)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-
 	// Note: The status can only be Active if this is being done via gov prop.
 	if ma.Status == types.StatusActive {
 		// Active markers should have supply set.
@@ -829,19 +826,9 @@ func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetA
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("can only add net asset values to markers in the Proposed status")
 	}
 
-	for _, nav := range msg.NetAssetValues {
-		if nav.Value.Denom == marker.GetDenom() {
-			return nil, sdkerrors.ErrInvalidRequest.Wrapf("net asset value denom cannot match marker denom %q", marker.GetDenom())
-		}
-		_, err := k.GetMarkerByDenom(ctx, nav.Value.Denom)
-		if err != nil {
-			return nil, sdkerrors.ErrInvalidRequest.Wrapf("net asset value denom does not exist: %v", err.Error())
-		}
-
-		nav.UpdateTime = ctx.BlockTime().UTC()
-		if err := k.SetNetAssetValue(ctx, marker.GetAddress(), nav); err != nil {
-			return nil, sdkerrors.ErrInvalidRequest.Wrapf("cannot set net asset value %v : %v", nav, err.Error())
-		}
+	err = k.AddSetNetAssetValues(ctx, marker, msg.NetAssetValues)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	ctx.EventManager().EmitEvent(
