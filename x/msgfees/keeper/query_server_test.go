@@ -83,7 +83,7 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.app.AccountKeeper.SetAccount(s.ctx, s.acct1)
 	s.acct2 = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr)
 	s.app.AccountKeeper.SetAccount(s.ctx, s.acct2)
-
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, markertypes.NewEmptyMarkerAccount("navcoin", s.acct1.GetAddress().String(), []markertypes.AccessGrant{})))
 	s.Require().NoError(banktestutil.FundAccount(s.app.BankKeeper, s.ctx, s.acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100000)))))
 }
 

@@ -242,7 +242,7 @@ with the given supply amount and denomination provided in the coin argument
 			// TODO: add marker net asset value flag
 			msg := types.NewMsgAddMarkerRequest(
 				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.MarkerType,
-				flagVals.SupplyFixed, flagVals.AllowGovControl, flagVals.AllowForceTransfer, flagVals.RequiredAttributes, []types.NetAssetValue{types.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 1), 1)},
+				flagVals.SupplyFixed, flagVals.AllowGovControl, flagVals.AllowForceTransfer, flagVals.RequiredAttributes, []types.NetAssetValue{types.NewNetAssetValue("marker", sdk.NewInt64Coin("stake", 1), 1)},
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -957,10 +957,11 @@ with the given supply amount and denomination provided in the coin argument
 				panic("at least one access grant should be present.")
 			}
 
+			// TODO: parse nav value
 			msg := types.NewMsgAddFinalizeActivateMarkerRequest(
 				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.MarkerType,
 				flagVals.SupplyFixed, flagVals.AllowGovControl,
-				flagVals.AllowForceTransfer, flagVals.RequiredAttributes, accessGrants, []types.NetAssetValue{types.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 1), 1)},
+				flagVals.AllowForceTransfer, flagVals.RequiredAttributes, accessGrants, []types.NetAssetValue{types.NewNetAssetValue("marker", sdk.NewInt64Coin("stake", 1), 1)},
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

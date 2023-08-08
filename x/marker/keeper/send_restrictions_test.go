@@ -344,7 +344,7 @@ func TestBankSendCoinsUsesSendRestrictionFn(t *testing.T) {
 
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
+	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", addrNameOwner.String(), []types.AccessGrant{}))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrNameOwner))
 	err := app.NameKeeper.SetNameRecord(ctx, "kyc.provenance.io", addrNameOwner, false)
 	require.NoError(t, err, "SetNameRecord kyc.provenance.io")
@@ -370,7 +370,7 @@ func TestBankSendCoinsUsesSendRestrictionFn(t *testing.T) {
 		AllowGovernanceControl: true,
 		AllowForcedTransfer:    false,
 		RequiredAttributes:     []string{"kyc.provenance.io"},
-		NetAssetValues:         []types.NetAssetValue{types.NewNetAssetValue("marker", sdk.NewInt64Coin("navdenom", 0), 1)},
+		NetAssetValues:         []types.NetAssetValue{types.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 0), 1)},
 	}
 	markerHandler := marker.NewHandler(app.MarkerKeeper)
 	_, err = markerHandler(ctx, makeMarkerMsg)
@@ -427,7 +427,7 @@ func TestBankInputOutputCoinsUsesSendRestrictionFn(t *testing.T) {
 
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
+	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", addrManager.String(), []types.AccessGrant{}))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrManager))
 	err := app.NameKeeper.SetNameRecord(ctx, "rando.io", addrManager, false)
 	require.NoError(t, err, "SetNameRecord rando.io")
@@ -466,7 +466,7 @@ func TestBankInputOutputCoinsUsesSendRestrictionFn(t *testing.T) {
 		AllowGovernanceControl: true,
 		AllowForcedTransfer:    false,
 		RequiredAttributes:     []string{"rando.io"},
-		NetAssetValues:         []types.NetAssetValue{types.NewNetAssetValue("marker", sdk.NewInt64Coin("navdenom", 0), 1)},
+		NetAssetValues:         []types.NetAssetValue{types.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 0), 1)},
 	}
 	markerHandler := marker.NewHandler(app.MarkerKeeper)
 	_, err = markerHandler(ctx, makeMarkerMsg)
