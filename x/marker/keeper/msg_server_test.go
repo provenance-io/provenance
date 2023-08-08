@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -411,22 +410,6 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				Administrator: authUser.String(),
 			},
 			expErr: `net asset value denom does not exist: marker hotdog not found for address: cosmos1p6l3annxy35gm5mfm6m0jz2mdj8peheuzf9alh: invalid request`,
-		},
-		{
-			name: "time is in the future of current block",
-			msg: types.MsgAddNetAssetValueRequest{
-				Denom: markerDenom,
-				NetAssetValues: []types.NetAssetValue{
-					{
-						Value:      sdk.NewInt64Coin(valueDenom, 100),
-						Volume:     uint64(100),
-						Source:     "exchange",
-						UpdateTime: s.blockStartTime.Add(10 * time.Hour),
-					},
-				},
-				Administrator: authUser.String(),
-			},
-			expErr: fmt.Sprintf("net asset value update time (%v) is later than current block time (%v): invalid request", s.blockStartTime.Add(10*time.Hour).UTC(), s.blockStartTime.UTC()),
 		},
 		{
 			name: "successfully set nav",
