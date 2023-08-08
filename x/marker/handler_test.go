@@ -488,10 +488,11 @@ func (s *HandlerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 	denom := "hotdog"
 	rdenom := "restrictedhotdog"
 	denomWithDashPeriod := fmt.Sprintf("%s-my.marker", denom)
-	msgWithActiveStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})})
-	msgWithActiveStatusAttr := types.NewMsgAddFinalizeActivateMarkerRequest(rdenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{"attributes.one.com", "attributes.two.com"}, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})})
+	navs := []types.NetAssetValue{types.NewNetAssetValue("exchange", sdk.NewInt64Coin("navcoin", 100), 1)}
+	msgWithActiveStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}, navs)
+	msgWithActiveStatusAttr := types.NewMsgAddFinalizeActivateMarkerRequest(rdenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{"attributes.one.com", "attributes.two.com"}, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}, navs)
 
-	accessGrantWrongStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, nil)
+	accessGrantWrongStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, nil, navs)
 
 	cases := []CommonTest{
 		{
@@ -542,6 +543,8 @@ func (s *HandlerTestSuite) TestMsgSetAccountDataRequest() {
 
 	authority := s.app.MarkerKeeper.GetAuthority()
 
+	navs := []types.NetAssetValue{types.NewNetAssetValue("exchange", sdk.NewInt64Coin("navcoin", 100), 1)}
+
 	s.T().Logf("%s: %s", denomU, denomUAddr)
 	s.T().Logf("%s: %s", denomR, denomRAddr)
 	s.T().Logf("authority: %s", authority)
@@ -561,6 +564,7 @@ func (s *HandlerTestSuite) TestMsgSetAccountDataRequest() {
 					{Address: s.user1, Permissions: []types.Access{types.Access_Mint, types.Access_Admin}},
 					{Address: s.user2, Permissions: []types.Access{types.Access_Deposit}},
 				},
+				navs,
 			),
 		},
 		{
@@ -577,6 +581,7 @@ func (s *HandlerTestSuite) TestMsgSetAccountDataRequest() {
 					{Address: s.user1, Permissions: []types.Access{types.Access_Mint, types.Access_Admin}},
 					{Address: s.user2, Permissions: []types.Access{types.Access_Deposit}},
 				},
+				navs,
 			),
 		},
 		{

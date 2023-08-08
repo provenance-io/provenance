@@ -245,6 +245,7 @@ func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.Account
 		markerType := types.MarkerType(r.Intn(2) + 1) // coin or restricted_coin
 		// random access grants
 		grants := randomAccessGrants(r, accs, 100, markerType)
+		navs := []types.NetAssetValue{types.NewNetAssetValue("exchange", sdk.NewInt64Coin("navcoin", 100), 1)}
 		msg := types.NewMsgAddFinalizeActivateMarkerRequest(
 			denom,
 			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))),
@@ -256,6 +257,7 @@ func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.Account
 			r.Intn(2) > 0, // allow forced transfer
 			[]string{},
 			grants,
+			navs,
 		)
 
 		if msg.MarkerType != types.MarkerType_RestrictedCoin {

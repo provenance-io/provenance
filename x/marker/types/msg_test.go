@@ -271,6 +271,8 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 
 func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 	validAddress := sdk.MustAccAddressFromBech32("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck")
+	netAssetValue1 := NewNetAssetValue("source", sdk.NewInt64Coin("jackthecat", 100), uint64(100))
+	invalidNetAssetValue := NewNetAssetValue("", sdk.NewInt64Coin("hotdog", 100), uint64(100))
 
 	cases := []struct {
 		name     string
@@ -290,6 +292,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				SupplyFixed:            true,
 				AllowGovernanceControl: true,
 				AccessList:             []AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				NetAssetValues:         []NetAssetValue{netAssetValue1},
 			},
 			errorMsg: "invalid marker denom/total supply: invalid coins",
 		},
@@ -303,6 +306,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				SupplyFixed:            true,
 				AllowGovernanceControl: true,
 				AccessList:             []AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				NetAssetValues:         []NetAssetValue{netAssetValue1},
 			},
 			errorMsg: "empty address string is not allowed",
 		},
@@ -319,6 +323,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{},
 				[]AccessGrant{},
+				[]NetAssetValue{netAssetValue1},
 			),
 			errorMsg: "since this will activate the marker, must have access list defined",
 		},
@@ -335,8 +340,43 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{"blah"},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				[]NetAssetValue{netAssetValue1},
 			),
 			errorMsg: "required attributes are reserved for restricted markers",
+		},
+		{
+			name: "should fail invalid net asset value",
+			msg: *NewMsgAddFinalizeActivateMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_Coin,
+				true,
+				true,
+				false,
+				[]string{},
+				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				[]NetAssetValue{invalidNetAssetValue},
+			),
+			errorMsg: "",
+		},
+		{
+			name: "should fail no net asset value",
+			msg: *NewMsgAddFinalizeActivateMarkerRequest(
+				"hotdog",
+				sdk.NewInt(100),
+				validAddress,
+				validAddress,
+				MarkerType_Coin,
+				true,
+				true,
+				false,
+				[]string{},
+				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				[]NetAssetValue{},
+			),
+			errorMsg: "",
 		},
 		{
 			name: "should succeed",
@@ -351,6 +391,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				[]NetAssetValue{netAssetValue1},
 			),
 			errorMsg: "",
 		},
@@ -367,6 +408,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{"blah"},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				[]NetAssetValue{netAssetValue1},
 			),
 			errorMsg: "",
 		},
@@ -383,6 +425,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				[]string{},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				[]NetAssetValue{netAssetValue1},
 			),
 			errorMsg: "forced transfer is only available for restricted coins",
 		},

@@ -501,6 +501,7 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 	allowForcedTransfer bool,
 	requiredAttributes []string,
 	accessGrants []AccessGrant,
+	netAssetValues []NetAssetValue,
 ) *MsgAddFinalizeActivateMarkerRequest {
 	return &MsgAddFinalizeActivateMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
@@ -512,6 +513,7 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 		AccessList:             accessGrants,
 		AllowForcedTransfer:    allowForcedTransfer,
 		RequiredAttributes:     requiredAttributes,
+		NetAssetValues:         netAssetValues,
 	}
 }
 
@@ -545,6 +547,26 @@ func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 
 	if len(msg.RequiredAttributes) > 0 && msg.MarkerType != MarkerType_RestrictedCoin {
 		return fmt.Errorf("required attributes are reserved for restricted markers")
+	}
+
+	if len(msg.NetAssetValues) == 0 {
+		return fmt.Errorf("net asset value list cannot be empty")
+	}
+
+	seen := make(map[string]bool)
+	for _, nav := range msg.NetAssetValues {
+		if err := nav.Validate(); err != nil {
+			return err
+		}
+
+		if !nav.UpdateTime.IsZero() {
+			return fmt.Errorf("marker net asset value must not have current update time set")
+		}
+
+		if seen[nav.Value.Denom] {
+			return fmt.Errorf("list of net asset values contains duplicates")
+		}
+		seen[nav.Value.Denom] = true
 	}
 
 	return nil
@@ -722,9 +744,6 @@ func (msg MsgAddNetAssetValueRequest) ValidateBasic() error {
 
 	seen := make(map[string]bool)
 	for _, nav := range msg.NetAssetValues {
-		if err := sdk.ValidateDenom(nav.Value.Denom); err != nil {
-			return err
-		}
 		if err := nav.Validate(); err != nil {
 			return err
 		}
