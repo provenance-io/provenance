@@ -6902,7 +6902,7 @@ Query defines the gRPC querier service for oracle module.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `OracleAddress` | [QueryOracleAddressRequest](#provenance.oracle.v1.QueryOracleAddressRequest) | [QueryOracleAddressResponse](#provenance.oracle.v1.QueryOracleAddressResponse) | OracleAddress returns the address of the oracle | GET|/provenance/oracle/v1/oracle_address|
-| `Oracle` | [QueryOracleRequest](#provenance.oracle.v1.QueryOracleRequest) | [QueryOracleResponse](#provenance.oracle.v1.QueryOracleResponse) | Oracle sends a query to the oracle's contract | GET|/provenance/oracle/v1/oracle|
+| `Oracle` | [QueryOracleRequest](#provenance.oracle.v1.QueryOracleRequest) | [QueryOracleResponse](#provenance.oracle.v1.QueryOracleResponse) | Oracle forwards a query to the module's oracle | GET|/provenance/oracle/v1/oracle|
 | `QueryState` | [QueryQueryStateRequest](#provenance.oracle.v1.QueryQueryStateRequest) | [QueryQueryStateResponse](#provenance.oracle.v1.QueryQueryStateResponse) | QueryState returns the state of the oracle query | GET|/provenance/oracle/v1/query_state|
 
  <!-- end services -->

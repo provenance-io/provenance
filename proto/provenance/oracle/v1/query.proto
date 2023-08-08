@@ -17,7 +17,7 @@ service Query {
     option (google.api.http).get = "/provenance/oracle/v1/oracle_address";
   }
 
-  // Oracle sends a query to the oracle's contract
+  // Oracle forwards a query to the module's oracle
   rpc Oracle(QueryOracleRequest) returns (QueryOracleResponse) {
     option (google.api.http).get = "/provenance/oracle/v1/oracle";
   }

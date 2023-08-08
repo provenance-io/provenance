@@ -368,7 +368,7 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// OracleAddress returns the address of the oracle
 	OracleAddress(ctx context.Context, in *QueryOracleAddressRequest, opts ...grpc.CallOption) (*QueryOracleAddressResponse, error)
-	// Oracle sends a query to the oracle's contract
+	// Oracle forwards a query to the module's oracle
 	Oracle(ctx context.Context, in *QueryOracleRequest, opts ...grpc.CallOption) (*QueryOracleResponse, error)
 	// QueryState returns the state of the oracle query
 	QueryState(ctx context.Context, in *QueryQueryStateRequest, opts ...grpc.CallOption) (*QueryQueryStateResponse, error)
@@ -413,7 +413,7 @@ func (c *queryClient) QueryState(ctx context.Context, in *QueryQueryStateRequest
 type QueryServer interface {
 	// OracleAddress returns the address of the oracle
 	OracleAddress(context.Context, *QueryOracleAddressRequest) (*QueryOracleAddressResponse, error)
-	// Oracle sends a query to the oracle's contract
+	// Oracle forwards a query to the module's oracle
 	Oracle(context.Context, *QueryOracleRequest) (*QueryOracleResponse, error)
 	// QueryState returns the state of the oracle query
 	QueryState(context.Context, *QueryQueryStateRequest) (*QueryQueryStateResponse, error)
