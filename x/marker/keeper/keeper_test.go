@@ -620,7 +620,11 @@ func TestForceTransfer(t *testing.T) {
 		false,
 		[]string{},
 	)
-	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, noForceMac),
+	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, noForceMac, []types.NetAssetValue{{
+		Value:  sdk.NewInt64Coin("navcoin", 1),
+		Volume: 1,
+		Source: "marker",
+	}}),
 		"AddFinalizeAndActivateMarker without force transfer")
 
 	wForceDenom := "withforcecoin"
@@ -640,7 +644,11 @@ func TestForceTransfer(t *testing.T) {
 		true,
 		[]string{},
 	)
-	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, wForceMac),
+	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, wForceMac, []types.NetAssetValue{{
+		Value:  sdk.NewInt64Coin("navcoin", 1),
+		Volume: 1,
+		Source: "marker",
+	}}),
 		"AddFinalizeAndActivateMarker with force transfer")
 
 	requireBalances := func(tt *testing.T, desc string, noForceBal, wForceBal, adminBal, otherBal sdk.Coins) {

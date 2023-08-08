@@ -603,7 +603,7 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		normalizedReqAttrs,
 	)
 
-	if err := k.Keeper.AddFinalizeAndActivateMarker(ctx, ma); err != nil {
+	if err := k.Keeper.AddFinalizeAndActivateMarker(ctx, ma, msg.NetAssetValues); err != nil {
 		ctx.Logger().Error("unable to add, finalize and activate marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}

@@ -2254,6 +2254,7 @@ MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker re
 | `allow_governance_control` | [bool](#bool) |  |  |
 | `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
+| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated |  |
 
 
 

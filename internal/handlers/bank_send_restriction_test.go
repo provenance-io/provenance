@@ -49,17 +49,29 @@ func TestBankSend(tt *testing.T) {
 	nrMarkerDenom := "nonrestrictedmarker"
 	nrMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(nrMarkerDenom), nil, 200, 0)
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, markertypes.NewMarkerAccount(nrMarkerAcct, sdk.NewInt64Coin(nrMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
-		Permissions: []markertypes.Access{markertypes.Access_Withdraw}}}, markertypes.StatusProposed, markertypes.MarkerType_Coin, true, true, false, []string{})), "")
+		Permissions: []markertypes.Access{markertypes.Access_Withdraw}}}, markertypes.StatusProposed, markertypes.MarkerType_Coin, true, true, false, []string{}), []types.NetAssetValue{{
+		Value:  sdk.NewInt64Coin("navcoin", 1),
+		Volume: 1,
+		Source: "marker",
+	}}), "")
 
 	restrictedMarkerDenom := "restrictedmarker"
 	rMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(restrictedMarkerDenom), nil, 300, 0)
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, markertypes.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(restrictedMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
-		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{})), "")
+		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{}), []types.NetAssetValue{{
+		Value:  sdk.NewInt64Coin("navcoin", 1),
+		Volume: 1,
+		Source: "marker",
+	}}), "")
 
 	restrictedAttrMarkerDenom := "restrictedmarkerattr"
 	raMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(restrictedAttrMarkerDenom), nil, 400, 0)
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, markertypes.NewMarkerAccount(raMarkerAcct, sdk.NewInt64Coin(restrictedAttrMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
-		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{"some.kyc.provenance.io"})), "")
+		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{"some.kyc.provenance.io"}), []types.NetAssetValue{{
+		Value:  sdk.NewInt64Coin("navcoin", 1),
+		Volume: 1,
+		Source: "marker",
+	}}), "")
 
 	// Check both account balances before we begin.
 	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()

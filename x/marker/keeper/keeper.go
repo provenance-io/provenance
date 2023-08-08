@@ -230,8 +230,8 @@ func (k Keeper) RemoveNetAssetValue(ctx sdk.Context, markerAddr sdk.AccAddress, 
 	return nil
 }
 
-// IterateMarketNetAssetValues iterates marker net asset values for marker
-func (k Keeper) IterateMarketNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress, handler func(state types.NetAssetValue) (stop bool)) error {
+// IterateNetAssetValues iterates net asset values for marker
+func (k Keeper) IterateNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress, handler func(state types.NetAssetValue) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(markerAddr))
 	defer it.Close()

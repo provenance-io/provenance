@@ -222,14 +222,15 @@ message MsgSetDenomMetadataResponse {}
 message MsgAddFinalizeActivateMarkerRequest {
   cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
-  string               manager                  = 3;
-  string               from_address             = 4;
-  MarkerType           marker_type              = 5;
-  repeated AccessGrant access_list              = 6 [(gogoproto.nullable) = false];
-  bool                 supply_fixed             = 7;
-  bool                 allow_governance_control = 8;
-  bool                 allow_forced_transfer    = 9;
-  repeated string      required_attributes      = 10;
+  string                 manager                  = 3;
+  string                 from_address             = 4;
+  MarkerType             marker_type              = 5;
+  repeated AccessGrant   access_list              = 6 [(gogoproto.nullable) = false];
+  bool                   supply_fixed             = 7;
+  bool                   allow_governance_control = 8;
+  bool                   allow_forced_transfer    = 9;
+  repeated string        required_attributes      = 10;
+  repeated NetAssetValue net_asset_values         = 11 [(gogoproto.nullable) = false];
 }
 
 // MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type
