@@ -63,6 +63,7 @@ func NewKeeper(
 	}
 }
 
+// Logger returns the correctly named logger for the module
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
@@ -101,6 +102,7 @@ func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
 }
 
+// GetAuthority returns the module's authority address
 func (k Keeper) GetAuthority() string {
 	return k.authority
 }
