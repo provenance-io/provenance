@@ -24,10 +24,12 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // EventOracleQuerySuccess is an event for when the chain receives a successful response from an oracle query
 type EventOracleQuerySuccess struct {
+	// channel is the local channel that the oracle query response was received from
+	Channel string `protobuf:"bytes,1,opt,name=channel,proto3" json:"channel,omitempty"`
 	// sequence_id is a unique identifier of the query
-	SequenceId string `protobuf:"bytes,1,opt,name=sequence_id,json=sequenceId,proto3" json:"sequence_id,omitempty"`
+	SequenceId string `protobuf:"bytes,2,opt,name=sequence_id,json=sequenceId,proto3" json:"sequence_id,omitempty"`
 	// result is the data received from the query
-	Result string `protobuf:"bytes,2,opt,name=result,proto3" json:"result,omitempty"`
+	Result string `protobuf:"bytes,3,opt,name=result,proto3" json:"result,omitempty"`
 }
 
 func (m *EventOracleQuerySuccess) Reset()         { *m = EventOracleQuerySuccess{} }
@@ -63,6 +65,13 @@ func (m *EventOracleQuerySuccess) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventOracleQuerySuccess proto.InternalMessageInfo
 
+func (m *EventOracleQuerySuccess) GetChannel() string {
+	if m != nil {
+		return m.Channel
+	}
+	return ""
+}
+
 func (m *EventOracleQuerySuccess) GetSequenceId() string {
 	if m != nil {
 		return m.SequenceId
@@ -79,10 +88,12 @@ func (m *EventOracleQuerySuccess) GetResult() string {
 
 // EventOracleQueryError is an event for when the chain receives an error response from an oracle query
 type EventOracleQueryError struct {
+	// channel is the local channel that the oracle query response was received from
+	Channel string `protobuf:"bytes,1,opt,name=channel,proto3" json:"channel,omitempty"`
 	// sequence_id is a unique identifier of the query
-	SequenceId string `protobuf:"bytes,1,opt,name=sequence_id,json=sequenceId,proto3" json:"sequence_id,omitempty"`
+	SequenceId string `protobuf:"bytes,2,opt,name=sequence_id,json=sequenceId,proto3" json:"sequence_id,omitempty"`
 	// error is the error message received from the query
-	Error string `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	Error string `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
 }
 
 func (m *EventOracleQueryError) Reset()         { *m = EventOracleQueryError{} }
@@ -118,6 +129,13 @@ func (m *EventOracleQueryError) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventOracleQueryError proto.InternalMessageInfo
 
+func (m *EventOracleQueryError) GetChannel() string {
+	if m != nil {
+		return m.Channel
+	}
+	return ""
+}
+
 func (m *EventOracleQueryError) GetSequenceId() string {
 	if m != nil {
 		return m.SequenceId
@@ -134,8 +152,10 @@ func (m *EventOracleQueryError) GetError() string {
 
 // EventOracleQueryTimeout is an event for when the chain receives a timeout from an oracle query
 type EventOracleQueryTimeout struct {
+	// channel is the local channel that the oracle timeout was received from
+	Channel string `protobuf:"bytes,1,opt,name=channel,proto3" json:"channel,omitempty"`
 	// sequence_id is a unique identifier of the query
-	SequenceId string `protobuf:"bytes,1,opt,name=sequence_id,json=sequenceId,proto3" json:"sequence_id,omitempty"`
+	SequenceId string `protobuf:"bytes,2,opt,name=sequence_id,json=sequenceId,proto3" json:"sequence_id,omitempty"`
 }
 
 func (m *EventOracleQueryTimeout) Reset()         { *m = EventOracleQueryTimeout{} }
@@ -171,6 +191,13 @@ func (m *EventOracleQueryTimeout) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventOracleQueryTimeout proto.InternalMessageInfo
 
+func (m *EventOracleQueryTimeout) GetChannel() string {
+	if m != nil {
+		return m.Channel
+	}
+	return ""
+}
+
 func (m *EventOracleQueryTimeout) GetSequenceId() string {
 	if m != nil {
 		return m.SequenceId
@@ -187,23 +214,24 @@ func init() {
 func init() { proto.RegisterFile("provenance/oracle/v1/event.proto", fileDescriptor_e98d10c8454ad24d) }
 
 var fileDescriptor_e98d10c8454ad24d = []byte{
-	// 241 bytes of a gzipped FileDescriptorProto
+	// 258 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x28, 0x28, 0xca, 0x2f,
 	0x4b, 0xcd, 0x4b, 0xcc, 0x4b, 0x4e, 0xd5, 0xcf, 0x2f, 0x4a, 0x4c, 0xce, 0x49, 0xd5, 0x2f, 0x33,
 	0xd4, 0x4f, 0x2d, 0x4b, 0xcd, 0x2b, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x41, 0xa8,
-	0xd0, 0x83, 0xa8, 0xd0, 0x2b, 0x33, 0x54, 0x0a, 0xe2, 0x12, 0x77, 0x05, 0x29, 0xf2, 0x07, 0x8b,
-	0x04, 0x96, 0xa6, 0x16, 0x55, 0x06, 0x97, 0x26, 0x27, 0xa7, 0x16, 0x17, 0x0b, 0xc9, 0x73, 0x71,
-	0x17, 0xa7, 0x16, 0x96, 0xa6, 0xe6, 0x25, 0xa7, 0xc6, 0x67, 0xa6, 0x48, 0x30, 0x2a, 0x30, 0x6a,
-	0x70, 0x06, 0x71, 0xc1, 0x84, 0x3c, 0x53, 0x84, 0xc4, 0xb8, 0xd8, 0x8a, 0x52, 0x8b, 0x4b, 0x73,
-	0x4a, 0x24, 0x98, 0xc0, 0x72, 0x50, 0x9e, 0x92, 0x1f, 0x97, 0x28, 0xba, 0x99, 0xae, 0x45, 0x45,
-	0xf9, 0x45, 0x84, 0x4d, 0x14, 0xe1, 0x62, 0x4d, 0x05, 0xa9, 0x84, 0x1a, 0x08, 0xe1, 0x28, 0x59,
-	0x61, 0xba, 0x31, 0x24, 0x33, 0x37, 0x35, 0xbf, 0xb4, 0x84, 0xa0, 0x89, 0x4e, 0xe9, 0x27, 0x1e,
-	0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17,
-	0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c, 0xc7, 0xc0, 0x25, 0x9e, 0x99, 0xaf, 0x87, 0x2d, 0x48, 0x02,
-	0x18, 0xa3, 0x8c, 0xd2, 0x33, 0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0x11, 0x4a,
-	0x74, 0x33, 0xf3, 0x91, 0x78, 0xfa, 0x15, 0xb0, 0x70, 0x2e, 0xa9, 0x2c, 0x48, 0x2d, 0x4e, 0x62,
-	0x03, 0x87, 0xb2, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x80, 0x00, 0xe8, 0xf6, 0x89, 0x01, 0x00,
-	0x00,
+	0xd0, 0x83, 0xa8, 0xd0, 0x2b, 0x33, 0x54, 0xca, 0xe1, 0x12, 0x77, 0x05, 0x29, 0xf2, 0x07, 0x8b,
+	0x04, 0x96, 0xa6, 0x16, 0x55, 0x06, 0x97, 0x26, 0x27, 0xa7, 0x16, 0x17, 0x0b, 0x49, 0x70, 0xb1,
+	0x27, 0x67, 0x24, 0xe6, 0xe5, 0xa5, 0xe6, 0x48, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x06, 0xc1, 0xb8,
+	0x42, 0xf2, 0x5c, 0xdc, 0xc5, 0xa9, 0x85, 0xa5, 0xa9, 0x79, 0xc9, 0xa9, 0xf1, 0x99, 0x29, 0x12,
+	0x4c, 0x60, 0x59, 0x2e, 0x98, 0x90, 0x67, 0x8a, 0x90, 0x18, 0x17, 0x5b, 0x51, 0x6a, 0x71, 0x69,
+	0x4e, 0x89, 0x04, 0x33, 0x58, 0x0e, 0xca, 0x53, 0xca, 0xe0, 0x12, 0x45, 0xb7, 0xcd, 0xb5, 0xa8,
+	0x28, 0xbf, 0x88, 0x12, 0xbb, 0x44, 0xb8, 0x58, 0x53, 0x41, 0x66, 0x40, 0xad, 0x82, 0x70, 0x94,
+	0x42, 0x30, 0xfd, 0x15, 0x92, 0x99, 0x9b, 0x9a, 0x5f, 0x5a, 0x42, 0x81, 0x5d, 0x4e, 0xe9, 0x27,
+	0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c,
+	0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c, 0xc7, 0xc0, 0x25, 0x9e, 0x99, 0xaf, 0x87, 0x2d, 0x80,
+	0x03, 0x18, 0xa3, 0x8c, 0xd2, 0x33, 0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0x11,
+	0x4a, 0x74, 0x33, 0xf3, 0x91, 0x78, 0xfa, 0x15, 0xb0, 0x58, 0x2b, 0xa9, 0x2c, 0x48, 0x2d, 0x4e,
+	0x62, 0x03, 0xc7, 0x99, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x36, 0xdb, 0x1f, 0x32, 0xd7, 0x01,
+	0x00, 0x00,
 }
 
 func (m *EventOracleQuerySuccess) Marshal() (dAtA []byte, err error) {
@@ -231,12 +259,19 @@ func (m *EventOracleQuerySuccess) MarshalToSizedBuffer(dAtA []byte) (int, error)
 		copy(dAtA[i:], m.Result)
 		i = encodeVarintEvent(dAtA, i, uint64(len(m.Result)))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x1a
 	}
 	if len(m.SequenceId) > 0 {
 		i -= len(m.SequenceId)
 		copy(dAtA[i:], m.SequenceId)
 		i = encodeVarintEvent(dAtA, i, uint64(len(m.SequenceId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Channel) > 0 {
+		i -= len(m.Channel)
+		copy(dAtA[i:], m.Channel)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Channel)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -268,12 +303,19 @@ func (m *EventOracleQueryError) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.Error)
 		i = encodeVarintEvent(dAtA, i, uint64(len(m.Error)))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x1a
 	}
 	if len(m.SequenceId) > 0 {
 		i -= len(m.SequenceId)
 		copy(dAtA[i:], m.SequenceId)
 		i = encodeVarintEvent(dAtA, i, uint64(len(m.SequenceId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Channel) > 0 {
+		i -= len(m.Channel)
+		copy(dAtA[i:], m.Channel)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Channel)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -305,6 +347,13 @@ func (m *EventOracleQueryTimeout) MarshalToSizedBuffer(dAtA []byte) (int, error)
 		copy(dAtA[i:], m.SequenceId)
 		i = encodeVarintEvent(dAtA, i, uint64(len(m.SequenceId)))
 		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Channel) > 0 {
+		i -= len(m.Channel)
+		copy(dAtA[i:], m.Channel)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Channel)))
+		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
@@ -327,6 +376,10 @@ func (m *EventOracleQuerySuccess) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.Channel)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
 	l = len(m.SequenceId)
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
@@ -344,6 +397,10 @@ func (m *EventOracleQueryError) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.Channel)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
 	l = len(m.SequenceId)
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
@@ -361,6 +418,10 @@ func (m *EventOracleQueryTimeout) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.Channel)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
 	l = len(m.SequenceId)
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
@@ -405,6 +466,38 @@ func (m *EventOracleQuerySuccess) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Channel", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Channel = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SequenceId", wireType)
 			}
 			var stringLen uint64
@@ -435,7 +528,7 @@ func (m *EventOracleQuerySuccess) Unmarshal(dAtA []byte) error {
 			}
 			m.SequenceId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Result", wireType)
 			}
@@ -519,6 +612,38 @@ func (m *EventOracleQueryError) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Channel", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Channel = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SequenceId", wireType)
 			}
 			var stringLen uint64
@@ -549,7 +674,7 @@ func (m *EventOracleQueryError) Unmarshal(dAtA []byte) error {
 			}
 			m.SequenceId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
 			}
@@ -632,6 +757,38 @@ func (m *EventOracleQueryTimeout) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Channel", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Channel = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SequenceId", wireType)
 			}

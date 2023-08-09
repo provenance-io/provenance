@@ -446,8 +446,6 @@
     - [QueryOracleAddressResponse](#provenance.oracle.v1.QueryOracleAddressResponse)
     - [QueryOracleRequest](#provenance.oracle.v1.QueryOracleRequest)
     - [QueryOracleResponse](#provenance.oracle.v1.QueryOracleResponse)
-    - [QueryQueryStateRequest](#provenance.oracle.v1.QueryQueryStateRequest)
-    - [QueryQueryStateResponse](#provenance.oracle.v1.QueryQueryStateResponse)
   
     - [Query](#provenance.oracle.v1.Query)
   
@@ -6688,6 +6686,7 @@ EventOracleQueryError is an event for when the chain receives an error response 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `channel` | [string](#string) |  | channel is the local channel that the oracle query response was received from |
 | `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
 | `error` | [string](#string) |  | error is the error message received from the query |
 
@@ -6704,6 +6703,7 @@ EventOracleQuerySuccess is an event for when the chain receives a successful res
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `channel` | [string](#string) |  | channel is the local channel that the oracle query response was received from |
 | `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
 | `result` | [string](#string) |  | result is the data received from the query |
 
@@ -6720,6 +6720,7 @@ EventOracleQueryTimeout is an event for when the chain receives a timeout from a
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `channel` | [string](#string) |  | channel is the local channel that the oracle timeout was received from |
 | `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
 
 
@@ -6856,37 +6857,6 @@ QueryOracleResponse contains the result of the query sent to the oracle.
 
 
 
-
-<a name="provenance.oracle.v1.QueryQueryStateRequest"></a>
-
-### QueryQueryStateRequest
-QueryQueryStateRequest queries for the state of the ICQ.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `sequence` | [uint64](#uint64) |  |  |
-
-
-
-
-
-
-<a name="provenance.oracle.v1.QueryQueryStateResponse"></a>
-
-### QueryQueryStateResponse
-QueryQueryStateResponse contains the ICQ and its response.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `request` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `response` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6903,7 +6873,6 @@ Query defines the gRPC querier service for oracle module.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `OracleAddress` | [QueryOracleAddressRequest](#provenance.oracle.v1.QueryOracleAddressRequest) | [QueryOracleAddressResponse](#provenance.oracle.v1.QueryOracleAddressResponse) | OracleAddress returns the address of the oracle | GET|/provenance/oracle/v1/oracle_address|
 | `Oracle` | [QueryOracleRequest](#provenance.oracle.v1.QueryOracleRequest) | [QueryOracleResponse](#provenance.oracle.v1.QueryOracleResponse) | Oracle forwards a query to the module's oracle | GET|/provenance/oracle/v1/oracle|
-| `QueryState` | [QueryQueryStateRequest](#provenance.oracle.v1.QueryQueryStateRequest) | [QueryQueryStateResponse](#provenance.oracle.v1.QueryQueryStateResponse) | QueryState returns the state of the oracle query | GET|/provenance/oracle/v1/query_state|
 
  <!-- end services -->
 

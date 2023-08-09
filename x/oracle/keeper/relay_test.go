@@ -70,19 +70,21 @@ func (s *KeeperTestSuite) TestOnAcknowledgementPacket() {
 		{
 			name:   "success - error event is emitted on ack error",
 			ack:    channeltypes.NewErrorAcknowledgement(wasmError),
-			packet: channeltypes.Packet{Sequence: 5},
+			packet: channeltypes.Packet{Sequence: 5, DestinationChannel: "oracle-channel"},
 			event: &types.EventOracleQueryError{
 				SequenceId: strconv.FormatUint(5, 10),
 				Error:      fmt.Sprintf("ABCI code: %d: %s", code, "error handling packet: see events for details"),
+				Channel:    "oracle-channel",
 			},
 		},
 		{
 			name:   "success - success event is emitted on ack",
 			ack:    channeltypes.NewResultAcknowledgement(createICQResponse(s.app.AppCodec(), "{}")),
-			packet: channeltypes.Packet{Sequence: 5},
+			packet: channeltypes.Packet{Sequence: 5, DestinationChannel: "oracle-channel"},
 			event: &types.EventOracleQuerySuccess{
 				SequenceId: strconv.FormatUint(5, 10),
 				Result:     "{\"data\":\"CgY6BAoCe30=\"}",
+				Channel:    "oracle-channel",
 			},
 		},
 		{
@@ -133,10 +135,11 @@ func (s *KeeperTestSuite) TestOnAcknowledgementPacket() {
 }
 
 func (s *KeeperTestSuite) TestOnTimeoutPacket() {
-	packet := channeltypes.Packet{Sequence: 5}
+	packet := channeltypes.Packet{Sequence: 5, DestinationChannel: "oracle-channel"}
 	err := s.app.OracleKeeper.OnTimeoutPacket(s.ctx, packet)
 	event, _ := sdktypes.TypedEventToEvent(&types.EventOracleQueryTimeout{
 		SequenceId: strconv.FormatUint(5, 10),
+		Channel:    "oracle-channel",
 	})
 	s.Assert().NoError(err, "should not throw an error")
 	emitted := s.ctx.EventManager().Events()

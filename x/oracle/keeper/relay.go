@@ -107,12 +107,12 @@ func (k Keeper) OnAcknowledgementPacket(
 			return sdkerrors.Wrapf(err, "failed to unmarshal interchain query response to type %T", resp)
 		}
 
-		k.SetQueryResponse(ctx, modulePacket.Sequence, r)
 		k.SetLastQueryPacketSeq(ctx, modulePacket.Sequence)
 
 		ctx.EventManager().EmitTypedEvent(&types.EventOracleQuerySuccess{
 			SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),
 			Result:     string(resp.Result),
+			Channel:    modulePacket.DestinationChannel,
 		})
 
 		k.Logger(ctx).Info("interchain query response", "sequence", modulePacket.Sequence, "response", r)
@@ -120,6 +120,7 @@ func (k Keeper) OnAcknowledgementPacket(
 		ctx.EventManager().EmitTypedEvent(&types.EventOracleQueryError{
 			SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),
 			Error:      resp.Error,
+			Channel:    modulePacket.DestinationChannel,
 		})
 
 		k.Logger(ctx).Error("interchain query response", "sequence", modulePacket.Sequence, "error", resp.Error)
@@ -134,6 +135,7 @@ func (k Keeper) OnTimeoutPacket(
 ) error {
 	ctx.EventManager().EmitTypedEvent(&types.EventOracleQueryTimeout{
 		SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),
+		Channel:    modulePacket.DestinationChannel,
 	})
 
 	k.Logger(ctx).Error("Packet timeout", "sequence", modulePacket.Sequence)

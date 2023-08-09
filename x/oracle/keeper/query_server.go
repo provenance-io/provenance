@@ -4,7 +4,6 @@ import (
 	"context"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/oracle/types"
 	"google.golang.org/grpc/codes"
@@ -51,36 +50,4 @@ func (k Keeper) Oracle(goCtx context.Context, req *types.QueryOracleRequest) (*t
 		return nil, err
 	}
 	return &types.QueryOracleResponse{Data: resp.Data}, nil
-}
-
-// QueryState gets the state of an icq
-func (k Keeper) QueryState(goCtx context.Context, req *types.QueryQueryStateRequest) (*types.QueryQueryStateResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	qreq, err := k.GetQueryRequest(ctx, req.Sequence)
-	if err != nil {
-		return nil, status.Error(codes.NotFound, err.Error())
-	}
-
-	var anyQResp *cdctypes.Any
-	qresp, err := k.GetQueryResponse(ctx, req.Sequence)
-	if err == nil {
-		anyQResp, err = cdctypes.NewAnyWithValue(&qresp)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	anyQReq, err := cdctypes.NewAnyWithValue(&qreq)
-	if err != nil {
-		panic(err)
-	}
-	return &types.QueryQueryStateResponse{
-		Request:  *anyQReq,
-		Response: anyQResp,
-	}, nil
 }

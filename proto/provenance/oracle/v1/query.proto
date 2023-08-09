@@ -21,22 +21,6 @@ service Query {
   rpc Oracle(QueryOracleRequest) returns (QueryOracleResponse) {
     option (google.api.http).get = "/provenance/oracle/v1/oracle";
   }
-
-  // QueryState returns the state of the oracle query
-  rpc QueryState(QueryQueryStateRequest) returns (QueryQueryStateResponse) {
-    option (google.api.http).get = "/provenance/oracle/v1/query_state";
-  }
-}
-
-// QueryQueryStateRequest queries for the state of the ICQ.
-message QueryQueryStateRequest {
-  uint64 sequence = 1;
-}
-
-// QueryQueryStateResponse contains the ICQ and its response.
-message QueryQueryStateResponse {
-  google.protobuf.Any request  = 1 [(gogoproto.nullable) = false];
-  google.protobuf.Any response = 2 [(gogoproto.nullable) = true];
 }
 
 // QueryOracleAddressRequest queries for the address of the oracle.

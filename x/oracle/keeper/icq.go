@@ -37,6 +37,5 @@ func (k Keeper) QueryOracle(ctx sdk.Context, query wasmtypes.RawContractMessage,
 		return 0, err
 	}
 
-	k.SetQueryRequest(ctx, seq, q)
 	return seq, nil
 }

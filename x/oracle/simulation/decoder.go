@@ -31,20 +31,6 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			attribB := string(kvB.Value)
 
 			return fmt.Sprintf("Port: A:[%v] B:[%v]\n", attribA, attribB)
-		case bytes.Equal(kvA.Key[:1], types.QueryRequestStoreKeyPrefix):
-			var attribA, attribB types.QueryOracleRequest
-
-			cdc.MustUnmarshal(kvA.Value, &attribA)
-			cdc.MustUnmarshal(kvB.Value, &attribB)
-
-			return fmt.Sprintf("QueryOracleRequest: A:[%v] B:[%v]\n", attribA, attribB)
-		case bytes.Equal(kvA.Key[:1], types.QueryResponseStoreKeyPrefix):
-			var attribA, attribB types.QueryOracleResponse
-
-			cdc.MustUnmarshal(kvA.Value, &attribA)
-			cdc.MustUnmarshal(kvB.Value, &attribB)
-
-			return fmt.Sprintf("QueryOracleResponse: A:[%v] B:[%v]\n", attribA, attribB)
 		default:
 			panic(fmt.Sprintf("unexpected %s key %X (%s)", types.ModuleName, kvA.Key, kvA.Key))
 		}

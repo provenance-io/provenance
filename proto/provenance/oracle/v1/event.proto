@@ -8,22 +8,28 @@ option java_multiple_files = true;
 
 // EventOracleQuerySuccess is an event for when the chain receives a successful response from an oracle query
 message EventOracleQuerySuccess {
+  // channel is the local channel that the oracle query response was received from
+  string channel = 1;
   // sequence_id is a unique identifier of the query
-  string sequence_id = 1;
+  string sequence_id = 2;
   // result is the data received from the query
-  string result = 2;
+  string result = 3;
 }
 
 // EventOracleQueryError is an event for when the chain receives an error response from an oracle query
 message EventOracleQueryError {
+  // channel is the local channel that the oracle query response was received from
+  string channel = 1;
   // sequence_id is a unique identifier of the query
-  string sequence_id = 1;
+  string sequence_id = 2;
   // error is the error message received from the query
-  string error = 2;
+  string error = 3;
 }
 
 // EventOracleQueryTimeout is an event for when the chain receives a timeout from an oracle query
 message EventOracleQueryTimeout {
+  // channel is the local channel that the oracle timeout was received from
+  string channel = 1;
   // sequence_id is a unique identifier of the query
-  string sequence_id = 1;
+  string sequence_id = 2;
 }
