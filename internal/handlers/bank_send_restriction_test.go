@@ -51,7 +51,6 @@ func TestBankSend(tt *testing.T) {
 	require.NoError(tt, app.MarkerKeeper.SetNetAssetValue(ctx, nrMarkerAcct.GetAddress(), markertypes.NetAssetValue{
 		Value:  sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, 1),
 		Volume: 1,
-		Source: "marker",
 	}), "SetNetAssetValue failed to create nav for marker")
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, markertypes.NewMarkerAccount(nrMarkerAcct, sdk.NewInt64Coin(nrMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
 		Permissions: []markertypes.Access{markertypes.Access_Withdraw}}}, markertypes.StatusProposed, markertypes.MarkerType_Coin, true, true, false, []string{}), []types.NetAssetValue{}),
@@ -63,7 +62,6 @@ func TestBankSend(tt *testing.T) {
 	require.NoError(tt, app.MarkerKeeper.SetNetAssetValue(ctx, rMarkerAcct.GetAddress(), markertypes.NetAssetValue{
 		Value:  sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, 1),
 		Volume: 1,
-		Source: "marker",
 	}), "SetNetAssetValue failed to create nav for marker")
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, markertypes.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(restrictedMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
 		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{}), []types.NetAssetValue{}), "AddFinalizeAndActivateMarker failed to create marker")
@@ -73,7 +71,6 @@ func TestBankSend(tt *testing.T) {
 	require.NoError(tt, app.MarkerKeeper.SetNetAssetValue(ctx, raMarkerAcct.GetAddress(), markertypes.NetAssetValue{
 		Value:  sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, 1),
 		Volume: 1,
-		Source: "marker",
 	}), "SetNetAssetValue failed to create nav for marker")
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, markertypes.NewMarkerAccount(raMarkerAcct, sdk.NewInt64Coin(restrictedAttrMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
 		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{"some.kyc.provenance.io"}), []types.NetAssetValue{}), "AddFinalizeAndActivateMarker failed to create marker")

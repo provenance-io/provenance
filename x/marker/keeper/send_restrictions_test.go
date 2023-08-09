@@ -370,7 +370,6 @@ func TestBankSendCoinsUsesSendRestrictionFn(t *testing.T) {
 		AllowGovernanceControl: true,
 		AllowForcedTransfer:    false,
 		RequiredAttributes:     []string{"kyc.provenance.io"},
-		NetAssetValues:         []types.NetAssetValue{types.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 0), 1)},
 	}
 	markerHandler := marker.NewHandler(app.MarkerKeeper)
 	_, err = markerHandler(ctx, makeMarkerMsg)
@@ -466,7 +465,6 @@ func TestBankInputOutputCoinsUsesSendRestrictionFn(t *testing.T) {
 		AllowGovernanceControl: true,
 		AllowForcedTransfer:    false,
 		RequiredAttributes:     []string{"rando.io"},
-		NetAssetValues:         []types.NetAssetValue{types.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 0), 1)},
 	}
 	markerHandler := marker.NewHandler(app.MarkerKeeper)
 	_, err = markerHandler(ctx, makeMarkerMsg)

@@ -600,7 +600,12 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		normalizedReqAttrs,
 	)
 
-	if err := k.Keeper.AddFinalizeAndActivateMarker(ctx, ma, msg.NetAssetValues); err != nil {
+	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin("usd", int64(msg.UsdCents)), msg.Volume)})
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	if err := k.Keeper.AddFinalizeAndActivateMarker(ctx, ma); err != nil {
 		ctx.Logger().Error("unable to add, finalize and activate marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -839,33 +844,4 @@ func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetA
 	)
 
 	return &types.MsgAddNetAssetValueResponse{}, nil
-}
-
-// DeleteNetAssetValue deletes net asset values from a marker that is in pending state
-func (k msgServer) DeleteNetAssetValue(goCtx context.Context, msg *types.MsgDeleteNetAssetValueRequest) (*types.MsgDeleteNetAssetValueResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
-
-	if marker.GetStatus() != types.StatusProposed {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("can only remove net asset values to markers in the Proposed status")
-	}
-
-	for _, denom := range msg.ValueDenoms {
-		if err := k.RemoveNetAssetValue(ctx, marker.GetAddress(), denom); err != nil {
-			return nil, sdkerrors.ErrInvalidRequest.Wrapf("could not remove net asset value : %v", err.Error())
-		}
-	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-
-	return &types.MsgDeleteNetAssetValueResponse{}, nil
 }

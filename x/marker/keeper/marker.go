@@ -792,13 +792,8 @@ func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metad
 }
 
 // AddFinalizeAndActivateMarker adds marker, finalizes, and then activates it
-func (k Keeper) AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.MarkerAccountI, netAssetValues []types.NetAssetValue) error {
+func (k Keeper) AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
 	err := k.AddMarkerAccount(ctx, marker)
-	if err != nil {
-		return err
-	}
-
-	err = k.AddSetNetAssetValues(ctx, marker, netAssetValues)
 	if err != nil {
 		return err
 	}

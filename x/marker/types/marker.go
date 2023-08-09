@@ -455,9 +455,8 @@ func RemoveFromRequiredAttributes(currentAttrs []string, removeAttrs []string) (
 }
 
 // NewNetAssetValue returns a new instance of NetAssetValue
-func NewNetAssetValue(source string, value sdk.Coin, volume uint64) NetAssetValue {
+func NewNetAssetValue(value sdk.Coin, volume uint64) NetAssetValue {
 	return NetAssetValue{
-		Source: source,
 		Value:  value,
 		Volume: volume,
 	}
@@ -465,10 +464,6 @@ func NewNetAssetValue(source string, value sdk.Coin, volume uint64) NetAssetValu
 
 // Validate returns error if NetAssetValue is not in a valid state
 func (mnav *NetAssetValue) Validate() error {
-	if len(mnav.Source) == 0 {
-		return fmt.Errorf("marker net asset value must have a source defined")
-	}
-
 	if err := mnav.Value.Validate(); err != nil {
 		return err
 	}

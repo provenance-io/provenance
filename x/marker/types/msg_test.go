@@ -184,7 +184,6 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				false,
 				[]string{"blah"},
-				[]NetAssetValue{},
 			),
 			errorMsg: "required attributes are reserved for restricted markers",
 		},
@@ -200,7 +199,6 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				false,
 				[]string{"blah"},
-				[]NetAssetValue{},
 			),
 			errorMsg: "",
 		},
@@ -216,7 +214,6 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				false,
 				[]string{},
-				[]NetAssetValue{},
 			),
 			errorMsg: "",
 		},
@@ -232,7 +229,6 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				false,
 				[]string{},
-				[]NetAssetValue{},
 			),
 			errorMsg: "",
 		},
@@ -248,7 +244,6 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				false,
 				[]string{"foo", "foo"},
-				[]NetAssetValue{},
 			),
 			errorMsg: "required attribute list contains duplicate entries",
 		},
@@ -271,8 +266,8 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 
 func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 	validAddress := sdk.MustAccAddressFromBech32("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck")
-	netAssetValue1 := NewNetAssetValue("source", sdk.NewInt64Coin("jackthecat", 100), uint64(100))
-	invalidNetAssetValue := NewNetAssetValue("", sdk.NewInt64Coin("hotdog", 100), uint64(100))
+	// netAssetValue1 := NewNetAssetValue(sdk.NewInt64Coin("jackthecat", 100), uint64(100))
+	// invalidNetAssetValue := NewNetAssetValue(sdk.NewInt64Coin("hotdog", 100), uint64(100))
 
 	cases := []struct {
 		name     string
@@ -292,7 +287,6 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				SupplyFixed:            true,
 				AllowGovernanceControl: true,
 				AccessList:             []AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
-				NetAssetValues:         []NetAssetValue{netAssetValue1},
 			},
 			errorMsg: "invalid marker denom/total supply: invalid coins",
 		},
@@ -306,7 +300,6 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				SupplyFixed:            true,
 				AllowGovernanceControl: true,
 				AccessList:             []AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
-				NetAssetValues:         []NetAssetValue{netAssetValue1},
 			},
 			errorMsg: "empty address string is not allowed",
 		},
@@ -323,7 +316,6 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{},
 				[]AccessGrant{},
-				[]NetAssetValue{netAssetValue1},
 			),
 			errorMsg: "since this will activate the marker, must have access list defined",
 		},
@@ -340,7 +332,6 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{"blah"},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
-				[]NetAssetValue{netAssetValue1},
 			),
 			errorMsg: "required attributes are reserved for restricted markers",
 		},
@@ -357,7 +348,6 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
-				[]NetAssetValue{invalidNetAssetValue},
 			),
 			errorMsg: "marker net asset value must have a source defined",
 		},
@@ -374,7 +364,6 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
-				[]NetAssetValue{},
 			),
 			errorMsg: "net asset value list cannot be empty",
 		},
@@ -391,7 +380,6 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
-				[]NetAssetValue{netAssetValue1},
 			),
 			errorMsg: "",
 		},
@@ -408,7 +396,6 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{"blah"},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
-				[]NetAssetValue{netAssetValue1},
 			),
 			errorMsg: "",
 		},
@@ -425,7 +412,6 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				[]string{},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
-				[]NetAssetValue{netAssetValue1},
 			),
 			errorMsg: "forced transfer is only available for restricted coins",
 		},
@@ -832,9 +818,9 @@ func TestMsgUpdateSendDenyListRequestGetSigners(t *testing.T) {
 func TestMsgAddNetAssetValueValidateBasic(t *testing.T) {
 	addr := sdk.AccAddress("addr________________").String()
 	denom := "somedenom"
-	netAssetValue1 := NewNetAssetValue("source", sdk.NewInt64Coin("jackthecat", 100), uint64(100))
-	netAssetValue2 := NewNetAssetValue("source", sdk.NewInt64Coin("hotdog", 100), uint64(100))
-	invalidNetAssetValue := NewNetAssetValue("", sdk.NewInt64Coin("hotdog", 100), uint64(100))
+	netAssetValue1 := NewNetAssetValue(sdk.NewInt64Coin("jackthecat", 100), uint64(100))
+	netAssetValue2 := NewNetAssetValue(sdk.NewInt64Coin("hotdog", 100), uint64(100))
+	invalidNetAssetValue := NewNetAssetValue(sdk.NewInt64Coin("hotdog", 100), uint64(100))
 	tests := []struct {
 		name   string
 		msg    MsgAddNetAssetValueRequest
@@ -900,85 +886,6 @@ func TestMsgAddNetAssetValueRequestGetSigners(t *testing.T) {
 
 	t.Run("bad signer", func(t *testing.T) {
 		msg := MsgAddNetAssetValueRequest{
-			Administrator: "bad_address________",
-		}
-
-		testFunc := func() {
-			_ = msg.GetSigners()
-		}
-		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
-	})
-}
-
-func TestMsgDeleteNetAssetValueValidateBasic(t *testing.T) {
-	addr := sdk.AccAddress("addr________________").String()
-	denom := "somedenom"
-
-	tests := []struct {
-		name   string
-		msg    MsgDeleteNetAssetValueRequest
-		expErr string
-	}{
-		{
-			name: "should succeed",
-			msg:  MsgDeleteNetAssetValueRequest{Denom: denom, ValueDenoms: []string{"denom1"}, Administrator: addr},
-		},
-		{
-			name:   "invalid denom",
-			msg:    MsgDeleteNetAssetValueRequest{Denom: "", ValueDenoms: []string{"denom1"}, Administrator: addr},
-			expErr: "invalid denom: ",
-		},
-		{
-			name:   "invalid denom in value denoms",
-			msg:    MsgDeleteNetAssetValueRequest{Denom: denom, ValueDenoms: []string{"denom1", ""}, Administrator: addr},
-			expErr: "invalid denom: ",
-		},
-		{
-			name:   "empty value denoms list",
-			msg:    MsgDeleteNetAssetValueRequest{Denom: denom, ValueDenoms: []string{}, Administrator: addr},
-			expErr: "value denoms list cannot be empty",
-		},
-		{
-			name:   "duplicate value denoms",
-			msg:    MsgDeleteNetAssetValueRequest{Denom: denom, ValueDenoms: []string{"denom1", "denom1"}, Administrator: addr},
-			expErr: "list of value denoms contains duplicates",
-		},
-		{
-			name:   "invalid signer address",
-			msg:    MsgDeleteNetAssetValueRequest{Denom: denom, ValueDenoms: []string{"denom1", "denom2"}, Administrator: "invalid"},
-			expErr: "decoding bech32 failed: invalid bech32 string length 7",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.msg.ValidateBasic()
-			if len(tc.expErr) > 0 {
-				require.EqualErrorf(t, err, tc.expErr, "ValidateBasic error")
-			} else {
-				require.NoError(t, err, "ValidateBasic error")
-			}
-		})
-	}
-}
-
-func TestMsgDeleteNetAssetValueRequestGetSigners(t *testing.T) {
-	t.Run("good signer", func(t *testing.T) {
-		msg := MsgDeleteNetAssetValueRequest{
-			Administrator: sdk.AccAddress("good_address________").String(),
-		}
-		exp := []sdk.AccAddress{sdk.AccAddress("good_address________")}
-
-		var signers []sdk.AccAddress
-		testFunc := func() {
-			signers = msg.GetSigners()
-		}
-		require.NotPanics(t, testFunc, "GetSigners")
-		assert.Equal(t, exp, signers, "GetSigners")
-	})
-
-	t.Run("bad signer", func(t *testing.T) {
-		msg := MsgDeleteAccessRequest{
 			Administrator: "bad_address________",
 		}
 

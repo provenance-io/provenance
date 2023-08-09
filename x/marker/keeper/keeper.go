@@ -216,12 +216,14 @@ func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccount
 		if nav.Value.Denom == marker.GetDenom() {
 			return fmt.Errorf("net asset value denom cannot match marker denom %q", marker.GetDenom())
 		}
-		_, err := k.GetMarkerByDenom(ctx, nav.Value.Denom)
-		if err != nil {
-			return fmt.Errorf("net asset value denom does not exist: %v", err.Error())
+		if nav.Value.Denom != "usd" {
+			_, err := k.GetMarkerByDenom(ctx, nav.Value.Denom)
+			if err != nil {
+				return fmt.Errorf("net asset value denom does not exist: %v", err.Error())
+			}
 		}
 
-		nav.UpdateTime = ctx.BlockTime().UTC()
+		nav.UpdatedBlockHeight = uint64(ctx.BlockHeight())
 		if err := k.SetNetAssetValue(ctx, marker.GetAddress(), nav); err != nil {
 			return fmt.Errorf("cannot set net asset value %v : %v", nav, err.Error())
 		}

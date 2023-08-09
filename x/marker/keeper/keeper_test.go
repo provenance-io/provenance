@@ -630,7 +630,6 @@ func TestForceTransfer(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, noForceMac, []types.NetAssetValue{{
 		Value:  sdk.NewInt64Coin("navcoin", 1),
 		Volume: 1,
-		Source: "marker",
 	}}),
 		"AddFinalizeAndActivateMarker without force transfer")
 
@@ -654,7 +653,6 @@ func TestForceTransfer(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, wForceMac, []types.NetAssetValue{{
 		Value:  sdk.NewInt64Coin("navcoin", 1),
 		Volume: 1,
-		Source: "marker",
 	}}),
 		"AddFinalizeAndActivateMarker with force transfer")
 

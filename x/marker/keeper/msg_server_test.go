@@ -385,10 +385,9 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				Denom: markerDenom,
 				NetAssetValues: []types.NetAssetValue{
 					{
-						Value:      sdk.NewInt64Coin(markerDenom, 100),
-						Volume:     uint64(100),
-						Source:     "exchange",
-						UpdateTime: s.blockStartTime,
+						Value:              sdk.NewInt64Coin(markerDenom, 100),
+						Volume:             uint64(100),
+						UpdatedBlockHeight: 1,
 					},
 				},
 				Administrator: authUser.String(),
@@ -401,10 +400,9 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				Denom: markerDenom,
 				NetAssetValues: []types.NetAssetValue{
 					{
-						Value:      sdk.NewInt64Coin("hotdog", 100),
-						Volume:     uint64(100),
-						Source:     "exchange",
-						UpdateTime: s.blockStartTime,
+						Value:              sdk.NewInt64Coin("hotdog", 100),
+						Volume:             uint64(100),
+						UpdatedBlockHeight: 1,
 					},
 				},
 				Administrator: authUser.String(),
@@ -417,10 +415,9 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				Denom: markerDenom,
 				NetAssetValues: []types.NetAssetValue{
 					{
-						Value:      sdk.NewInt64Coin(valueDenom, 100),
-						Volume:     uint64(100),
-						Source:     "exchange",
-						UpdateTime: s.blockStartTime.UTC(),
+						Value:              sdk.NewInt64Coin(valueDenom, 100),
+						Volume:             uint64(100),
+						UpdatedBlockHeight: 1,
 					},
 				},
 				Administrator: authUser.String(),
@@ -440,72 +437,6 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 			} else {
 				s.Assert().NoError(err)
 				s.Assert().Equal(res, &types.MsgAddNetAssetValueResponse{})
-			}
-		})
-	}
-}
-
-func (s *MsgServerTestSuite) TestDeleteNetAssetValue() {
-	authUser := testUserAddress("test")
-
-	markerDenom := "jackthecat"
-	markerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(markerDenom), nil, 0, 0)
-	s.app.MarkerKeeper.SetMarker(s.ctx, types.NewMarkerAccount(markerAcct, sdk.NewInt64Coin(markerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusProposed, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
-
-	valueDenom := "usd"
-	valueAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(valueDenom), nil, 0, 0)
-	s.app.MarkerKeeper.SetMarker(s.ctx, types.NewMarkerAccount(valueAcct, sdk.NewInt64Coin(valueDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusProposed, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
-
-	nav := types.NetAssetValue{
-		Value:      sdk.NewInt64Coin(valueDenom, 100),
-		Volume:     uint64(100),
-		Source:     "exchange",
-		UpdateTime: s.blockStartTime,
-	}
-	s.app.MarkerKeeper.SetNetAssetValue(s.ctx, markerAcct.GetAddress(), nav)
-
-	finalizedMarkerDenom := "finalizedjackthecat"
-	finalizedMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(finalizedMarkerDenom), nil, 1, 0)
-	s.app.MarkerKeeper.SetMarker(s.ctx, types.NewMarkerAccount(finalizedMarkerAcct, sdk.NewInt64Coin(finalizedMarkerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
-
-	testCases := []struct {
-		name   string
-		msg    types.MsgDeleteNetAssetValueRequest
-		expErr string
-	}{
-		{
-			name:   "no marker found",
-			msg:    types.MsgDeleteNetAssetValueRequest{Denom: "cantfindme", ValueDenoms: []string{valueDenom}, Administrator: authUser.String()},
-			expErr: "marker cantfindme not found for address: cosmos17l2yneua2mdfqaycgyhqag8t20asnjwf6adpmt: invalid request",
-		},
-		{
-			name:   "marker is not in proposed state",
-			msg:    types.MsgDeleteNetAssetValueRequest{Denom: finalizedMarkerDenom, ValueDenoms: []string{valueDenom}, Administrator: authUser.String()},
-			expErr: "can only remove net asset values to markers in the Proposed status: invalid request",
-		},
-		{
-			name:   "marker is not in proposed state",
-			msg:    types.MsgDeleteNetAssetValueRequest{Denom: markerDenom, ValueDenoms: []string{"dne"}, Administrator: authUser.String()},
-			expErr: "could not remove net asset value : net asset value for cosmos157rf76qwxlttnjyncsaxvelc96m9e5eepfat5g marker address not found for value dne: invalid request",
-		},
-		{
-			name: "successfully remove",
-			msg:  types.MsgDeleteNetAssetValueRequest{Denom: markerDenom, ValueDenoms: []string{valueDenom}, Administrator: authUser.String()},
-		},
-	}
-
-	for _, tc := range testCases {
-		s.Run(tc.name, func() {
-			res, err := s.msgServer.DeleteNetAssetValue(sdk.WrapSDKContext(s.ctx),
-				&tc.msg)
-
-			if len(tc.expErr) > 0 {
-				s.Assert().Nil(res)
-				s.Assert().EqualError(err, tc.expErr)
-
-			} else {
-				s.Assert().NoError(err)
-				s.Assert().Equal(res, &types.MsgDeleteNetAssetValueResponse{})
 			}
 		})
 	}

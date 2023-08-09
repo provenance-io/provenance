@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -219,7 +218,7 @@ func TestNewMarkerValidate(t *testing.T) {
 
 func TestNewMarkerMsgEncoding(t *testing.T) {
 	base := authtypes.NewBaseAccountWithAddress(MustGetMarkerAddress("testcoin"))
-	newMsgMarker := NewMsgAddMarkerRequest("testcoin", sdk.OneInt(), base.GetAddress(), base.GetAddress(), MarkerType_Coin, false, false, false, []string{}, []NetAssetValue{})
+	newMsgMarker := NewMsgAddMarkerRequest("testcoin", sdk.OneInt(), base.GetAddress(), base.GetAddress(), MarkerType_Coin, false, false, false, []string{})
 
 	require.NoError(t, newMsgMarker.ValidateBasic())
 }
@@ -409,14 +408,12 @@ func TestRemovesFromRequiredAttributes(t *testing.T) {
 }
 
 func TestNetAssetValueConstructor(t *testing.T) {
-	source := "exchange"
 	value := sdk.NewInt64Coin("jackthecat", 406)
 	volume := uint64(100)
-	actual := NewNetAssetValue(source, value, volume)
-	assert.Equal(t, source, actual.Source)
+	actual := NewNetAssetValue(value, volume)
 	assert.Equal(t, value, actual.Value)
 	assert.Equal(t, volume, actual.Volume)
-	assert.True(t, actual.UpdateTime.IsZero(), "update time should not be set")
+	assert.Equal(t, uint64(0), actual.UpdatedBlockHeight, "update time should not be set")
 }
 
 func TestNetAssetValueValidate(t *testing.T) {
@@ -428,39 +425,31 @@ func TestNetAssetValueValidate(t *testing.T) {
 		{
 			name: "empty source value",
 			nav: NetAssetValue{
-				Source:     "",
-				Value:      sdk.NewInt64Coin("jackthecat", 420),
-				Volume:     406,
-				UpdateTime: time.Now(),
+				Value:  sdk.NewInt64Coin("jackthecat", 420),
+				Volume: 406,
 			},
 			expErr: "marker net asset value must have a source defined",
 		},
 		{
 			name: "invalid denom",
 			nav: NetAssetValue{
-				Source:     "exchange",
-				Volume:     406,
-				UpdateTime: time.Now(),
+				Volume: 406,
 			},
 			expErr: "invalid denom: ",
 		},
 		{
 			name: "volume is not positive",
 			nav: NetAssetValue{
-				Source:     "exchange",
-				Value:      sdk.NewInt64Coin("jackthecat", 420),
-				Volume:     0,
-				UpdateTime: time.Now(),
+				Value:  sdk.NewInt64Coin("jackthecat", 420),
+				Volume: 0,
 			},
 			expErr: "marker net asset value volume must be positive value",
 		},
 		{
 			name: "successful",
 			nav: NetAssetValue{
-				Source:     "exchange",
-				Value:      sdk.NewInt64Coin("jackthecat", 420),
-				Volume:     406,
-				UpdateTime: time.Now(),
+				Value:  sdk.NewInt64Coin("jackthecat", 420),
+				Volume: 406,
 			},
 			expErr: "",
 		},

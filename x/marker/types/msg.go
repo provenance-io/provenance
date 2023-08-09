@@ -39,7 +39,6 @@ var allRequestMsgs = []sdk.Msg{
 	(*MsgSetAccountDataRequest)(nil),
 	(*MsgUpdateSendDenyListRequest)(nil),
 	(*MsgAddNetAssetValueRequest)(nil),
-	(*MsgDeleteNetAssetValueRequest)(nil),
 }
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
@@ -53,7 +52,6 @@ func NewMsgAddMarkerRequest(
 	allowGovernanceControl bool,
 	allowForcedTransfer bool,
 	requiredAttributes []string,
-	netAssetValues []NetAssetValue,
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
@@ -65,7 +63,6 @@ func NewMsgAddMarkerRequest(
 		AllowGovernanceControl: allowGovernanceControl,
 		AllowForcedTransfer:    allowForcedTransfer,
 		RequiredAttributes:     requiredAttributes,
-		NetAssetValues:         netAssetValues,
 	}
 }
 
@@ -98,19 +95,6 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 				return fmt.Errorf("required attribute list contains duplicate entries")
 			}
 			seen[str] = true
-		}
-	}
-
-	if len(msg.NetAssetValues) > 0 {
-		seen := make(map[string]bool)
-		for _, nav := range msg.NetAssetValues {
-			if seen[nav.Value.Denom] {
-				return fmt.Errorf("net asset values contain duplicate %q denom", nav.Value.Denom)
-			}
-			if err := nav.Validate(); err != nil {
-				return err
-			}
-			seen[nav.Value.Denom] = true
 		}
 	}
 
@@ -501,7 +485,6 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 	allowForcedTransfer bool,
 	requiredAttributes []string,
 	accessGrants []AccessGrant,
-	netAssetValues []NetAssetValue,
 ) *MsgAddFinalizeActivateMarkerRequest {
 	return &MsgAddFinalizeActivateMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
@@ -513,7 +496,6 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 		AccessList:             accessGrants,
 		AllowForcedTransfer:    allowForcedTransfer,
 		RequiredAttributes:     requiredAttributes,
-		NetAssetValues:         netAssetValues,
 	}
 }
 
@@ -547,26 +529,6 @@ func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 
 	if len(msg.RequiredAttributes) > 0 && msg.MarkerType != MarkerType_RestrictedCoin {
 		return fmt.Errorf("required attributes are reserved for restricted markers")
-	}
-
-	if len(msg.NetAssetValues) == 0 {
-		return fmt.Errorf("net asset value list cannot be empty")
-	}
-
-	seen := make(map[string]bool)
-	for _, nav := range msg.NetAssetValues {
-		if err := nav.Validate(); err != nil {
-			return err
-		}
-
-		if !nav.UpdateTime.IsZero() {
-			return fmt.Errorf("marker net asset value must not have current update time set")
-		}
-
-		if seen[nav.Value.Denom] {
-			return fmt.Errorf("list of net asset values contains duplicates")
-		}
-		seen[nav.Value.Denom] = true
 	}
 
 	return nil
@@ -748,8 +710,8 @@ func (msg MsgAddNetAssetValueRequest) ValidateBasic() error {
 			return err
 		}
 
-		if !nav.UpdateTime.IsZero() {
-			return fmt.Errorf("marker net asset value must not have current update time set")
+		if nav.UpdatedBlockHeight != 0 {
+			return fmt.Errorf("marker net asset value must not have update height set")
 		}
 
 		if seen[nav.Value.Denom] {
@@ -763,35 +725,6 @@ func (msg MsgAddNetAssetValueRequest) ValidateBasic() error {
 }
 
 func (msg *MsgAddNetAssetValueRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Administrator)
-	return []sdk.AccAddress{addr}
-}
-
-func (msg MsgDeleteNetAssetValueRequest) ValidateBasic() error {
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return err
-	}
-
-	if len(msg.ValueDenoms) == 0 {
-		return fmt.Errorf("value denoms list cannot be empty")
-	}
-
-	seen := make(map[string]bool)
-	for _, denom := range msg.ValueDenoms {
-		if err := sdk.ValidateDenom(denom); err != nil {
-			return err
-		}
-		if seen[denom] {
-			return fmt.Errorf("list of value denoms contains duplicates")
-		}
-		seen[denom] = true
-	}
-
-	_, err := sdk.AccAddressFromBech32(msg.Administrator)
-	return err
-}
-
-func (msg *MsgDeleteNetAssetValueRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Administrator)
 	return []sdk.AccAddress{addr}
 }

@@ -183,7 +183,7 @@ func (params *CreateMarkerParams) Encode(contract sdk.AccAddress) ([]sdk.Msg, er
 		return nil, fmt.Errorf("wasm: allow_forced_transfer can only be set if marker type is restricted")
 	}
 	msg := types.NewMsgAddMarkerRequest(
-		params.Coin.Denom, params.Coin.Amount, contract, contract, markerType, false, false, params.AllowForcedTransfer, params.RestrictedAttributes, params.NetAssetValues,
+		params.Coin.Denom, params.Coin.Amount, contract, contract, markerType, false, false, params.AllowForcedTransfer, params.RestrictedAttributes,
 	)
 
 	return []sdk.Msg{msg}, nil
