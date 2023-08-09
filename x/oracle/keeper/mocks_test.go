@@ -96,12 +96,12 @@ func (k *Keeper) SetMockChannelKeeper(channelKeeper types.ChannelKeeper) {
 	k.channelKeeper = channelKeeper
 }
 
-func (m MockChannelKeeper) GetChannel(ctx sdk.Context, portID, channelID string) (channeltypes.Channel, bool) {
+func (m *MockChannelKeeper) GetChannel(ctx sdk.Context, portID, channelID string) (channeltypes.Channel, bool) {
 	return channeltypes.Channel{}, true
 }
 
-func (m MockChannelKeeper) GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool) {
-	m.counter++
+func (m *MockChannelKeeper) GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool) {
+	m.counter += 1
 	return m.counter, true
 }
 

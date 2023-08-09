@@ -109,7 +109,7 @@ func (s *KeeperTestSuite) TestSendQueryOracle() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			if tc.mockChannel {
-				s.app.OracleKeeper.SetMockChannelKeeper(keeper.MockChannelKeeper{})
+				s.app.OracleKeeper.SetMockChannelKeeper(&keeper.MockChannelKeeper{})
 			}
 			res, err := s.msgServer.SendQueryOracle(s.ctx, tc.req)
 
