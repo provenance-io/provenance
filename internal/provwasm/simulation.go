@@ -170,7 +170,6 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk
 			true,       // allow gov
 			false,      // don't allow forced transfer
 			[]string{}, // required attributes
-			[]markertypes.NetAssetValue{markertypes.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 1), 1)},
 		)
 
 		bk.SetSendEnabled(ctx, denom, true)

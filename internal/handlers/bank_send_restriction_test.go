@@ -53,7 +53,7 @@ func TestBankSend(tt *testing.T) {
 		Volume: 1,
 	}), "SetNetAssetValue failed to create nav for marker")
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, markertypes.NewMarkerAccount(nrMarkerAcct, sdk.NewInt64Coin(nrMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
-		Permissions: []markertypes.Access{markertypes.Access_Withdraw}}}, markertypes.StatusProposed, markertypes.MarkerType_Coin, true, true, false, []string{}), []types.NetAssetValue{}),
+		Permissions: []markertypes.Access{markertypes.Access_Withdraw}}}, markertypes.StatusProposed, markertypes.MarkerType_Coin, true, true, false, []string{})),
 		"AddFinalizeAndActivateMarker failed to create marker")
 
 	restrictedMarkerDenom := "restrictedmarker"
@@ -64,7 +64,7 @@ func TestBankSend(tt *testing.T) {
 		Volume: 1,
 	}), "SetNetAssetValue failed to create nav for marker")
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, markertypes.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(restrictedMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
-		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{}), []types.NetAssetValue{}), "AddFinalizeAndActivateMarker failed to create marker")
+		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{})), "AddFinalizeAndActivateMarker failed to create marker")
 
 	restrictedAttrMarkerDenom := "restrictedmarkerattr"
 	raMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(restrictedAttrMarkerDenom), nil, 400, 0)
@@ -73,7 +73,7 @@ func TestBankSend(tt *testing.T) {
 		Volume: 1,
 	}), "SetNetAssetValue failed to create nav for marker")
 	require.NoError(tt, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, markertypes.NewMarkerAccount(raMarkerAcct, sdk.NewInt64Coin(restrictedAttrMarkerDenom, 10_000), addr1, []markertypes.AccessGrant{{Address: acct1.Address,
-		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{"some.kyc.provenance.io"}), []types.NetAssetValue{}), "AddFinalizeAndActivateMarker failed to create marker")
+		Permissions: []markertypes.Access{markertypes.Access_Withdraw, markertypes.Access_Transfer}}}, markertypes.StatusProposed, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{"some.kyc.provenance.io"})), "AddFinalizeAndActivateMarker failed to create marker")
 
 	// Check both account balances before we begin.
 	addr1beforeBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()

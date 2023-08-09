@@ -113,7 +113,8 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	err = k.AddSetNetAssetValues(ctx, ma, msg.NetAssetValues)
+	nav := types.NewNetAssetValue(sdk.NewInt64Coin("usd", int64(msg.UsdCents)), msg.Volume)
+	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{nav})
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}

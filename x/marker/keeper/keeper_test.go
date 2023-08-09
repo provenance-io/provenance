@@ -21,7 +21,6 @@ import (
 	simapp "github.com/provenance-io/provenance/app"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
@@ -88,21 +87,21 @@ func TestExistingAccounts(t *testing.T) {
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
 
 	// Creating a marker over an account with zero sequence is fine.
-	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, []types.NetAssetValue{}))
+	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}))
 	require.NoError(t, err, "should allow a marker over existing account that has not signed anything.")
 
 	// existing coin balance must still be present
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balances must be preserved")
 
 	// Creating a marker over an existing marker fails.
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, []types.NetAssetValue{}))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}))
 	require.Error(t, err, "fails because marker already exists")
 
 	// replace existing test account with a new copy that has a positive sequence number
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
 
 	// Creating a marker over an existing account with a positive sequence number fails.
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, []types.NetAssetValue{}))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}))
 	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
 }
 
@@ -115,16 +114,16 @@ func TestAccountUnrestrictedDenoms(t *testing.T) {
 
 	// Require a long unrestricted denom
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "[a-z]{12,20}"})
-	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("tooshort", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, []types.NetAssetValue{}))
+	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("tooshort", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}))
 	require.Error(t, err, "fails with unrestricted denom length fault")
 	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err, "should fail with denom restriction")
 
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("itslongenough", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, []types.NetAssetValue{}))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("itslongenough", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}))
 	require.NoError(t, err, "should allow a marker with a sufficiently long denom")
 
 	// Set to an empty string (returns to default expression)
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: ""})
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("short", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, []types.NetAssetValue{}))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("short", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}))
 	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
 	require.NoError(t, err, "should allow any valid denom with a min length of two")
 }
@@ -222,7 +221,6 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 	require.False(t, m.AddressHasAccess(user2, types.Access_Delete))
 	require.False(t, m.AddressHasAccess(user2, types.Access_Withdraw))
 
-	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), markertypes.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 0), 1)))
 	// Finalize marker and check permission enforcement.
 	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user1, m.GetDenom()))
 	_, err = app.MarkerKeeper.GetMarker(ctx, addr)
@@ -334,7 +332,6 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	// Should not fail for a non-active/finalized coin, must be able to adjust supply amount to match any existing
 	require.NoError(t, app.MarkerKeeper.MintCoin(ctx, user, sdk.NewInt64Coin("testcoin", 100)))
 	require.NoError(t, app.MarkerKeeper.BurnCoin(ctx, user, sdk.NewInt64Coin("testcoin", 100)))
-	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), markertypes.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 0), 1)))
 
 	// Moves to finalized, mints required supply, moves to active status.
 	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
@@ -492,7 +489,6 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
-	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), markertypes.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 0), 1)))
 
 	// insufficient supply to cover existing
 	require.Error(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
@@ -530,7 +526,6 @@ func TestAccountImplictControl(t *testing.T) {
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
-	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), markertypes.NewNetAssetValue("marker", sdk.NewInt64Coin("navcoin", 0), 1)))
 
 	// Moves to finalized, mints required supply, moves to active status.
 	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
@@ -594,7 +589,6 @@ func TestForceTransfer(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	admin := sdk.AccAddress("admin_account_______")
 	other := sdk.AccAddress("other_account_______")
-	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", admin.String(), []types.AccessGrant{}))
 
 	// Shorten up the lines making Coins.
 	cz := func(coins ...sdk.Coin) sdk.Coins {
@@ -627,10 +621,7 @@ func TestForceTransfer(t *testing.T) {
 		false,
 		[]string{},
 	)
-	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, noForceMac, []types.NetAssetValue{{
-		Value:  sdk.NewInt64Coin("navcoin", 1),
-		Volume: 1,
-	}}),
+	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, noForceMac),
 		"AddFinalizeAndActivateMarker without force transfer")
 
 	wForceDenom := "withforcecoin"
@@ -650,10 +641,7 @@ func TestForceTransfer(t *testing.T) {
 		true,
 		[]string{},
 	)
-	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, wForceMac, []types.NetAssetValue{{
-		Value:  sdk.NewInt64Coin("navcoin", 1),
-		Volume: 1,
-	}}),
+	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, wForceMac),
 		"AddFinalizeAndActivateMarker with force transfer")
 
 	requireBalances := func(tt *testing.T, desc string, noForceBal, wForceBal, adminBal, otherBal sdk.Coins) {
@@ -748,8 +736,6 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 	user := testUserAddress("testcoin")
 	manager := testUserAddress("manager")
 	existingBalance := sdk.NewCoin("coin", sdk.NewInt(1000))
-	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", user.String(), []types.AccessGrant{}))
-	navs := []types.NetAssetValue{types.NewNetAssetValue("exchange", sdk.NewInt64Coin("navcoin", 100), 1)}
 
 	// prefund the marker address so an account gets created before the marker does.
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
@@ -769,7 +755,6 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
-		navs,
 	))
 	require.NoError(t, err, "should allow a marker over existing account that has not signed anything.")
 
@@ -798,7 +783,6 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
-		navs,
 	))
 	require.Error(t, err, "fails because marker already exists")
 
@@ -820,7 +804,6 @@ func TestInvalidAccount(t *testing.T) {
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 	user := testUserAddress("testcoin")
 	manager := testUserAddress("manager")
-	navs := []types.NetAssetValue{types.NewNetAssetValue("exchange", sdk.NewInt64Coin("navcoin", 100), 1)}
 
 	// replace existing test account with a new copy that has a positive sequence number
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
@@ -836,7 +819,6 @@ func TestInvalidAccount(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
-		navs,
 	))
 	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
 	require.Contains(t, err.Error(), "account at "+user.String()+" is not a marker account: invalid request")
@@ -848,8 +830,6 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
 	user := testUserAddress("test")
-	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", user.String(), []types.AccessGrant{}))
-	navs := []types.NetAssetValue{types.NewNetAssetValue("exchange", sdk.NewInt64Coin("navcoin", 100), 1)}
 
 	// Require a long unrestricted denom
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "[a-z]{12,20}"})
@@ -866,7 +846,6 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 			false,
 			[]string{},
 			[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
-			navs,
 		))
 	require.Error(t, err, "fails with unrestricted denom length fault")
 	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err, "should fail with denom restriction")
@@ -882,7 +861,6 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
-		navs,
 	))
 	require.NoError(t, err, "should allow a marker with a sufficiently long denom")
 
@@ -899,7 +877,6 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
-		navs,
 	))
 	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
 	require.NoError(t, err, "should allow any valid denom with a min length of two")
