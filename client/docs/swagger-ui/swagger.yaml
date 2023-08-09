@@ -82107,11 +82107,6 @@ definitions:
   provenance.marker.v1.MsgDeleteAccessResponse:
     type: object
     title: MsgDeleteAccessResponse defines the Msg/DeleteAccess response type
-  provenance.marker.v1.MsgDeleteNetAssetValueResponse:
-    type: object
-    title: >-
-      MsgDeleteNetAssetValueResponse defines the Msg/DeleteNetAssetValue
-      response type
   provenance.marker.v1.MsgDeleteResponse:
     type: object
     title: MsgDeleteResponse defines the Msg/Delete response type
@@ -82181,13 +82176,10 @@ definitions:
         type: string
         format: uint64
         title: volume is the volume of the assets
-      source:
+      updated_block_height:
         type: string
-        title: source defines the module that updated the value
-      update_time:
-        type: string
-        format: date-time
-        title: update_time is the block height time of last update
+        format: uint64
+        title: updated_block_height is the block height of last update
     title: NetAssetValue defines a marker's net asset value
   provenance.metadata.v1.AccountDataResponse:
     type: object

@@ -138,8 +138,6 @@
     - [MsgCancelResponse](#provenance.marker.v1.MsgCancelResponse)
     - [MsgDeleteAccessRequest](#provenance.marker.v1.MsgDeleteAccessRequest)
     - [MsgDeleteAccessResponse](#provenance.marker.v1.MsgDeleteAccessResponse)
-    - [MsgDeleteNetAssetValueRequest](#provenance.marker.v1.MsgDeleteNetAssetValueRequest)
-    - [MsgDeleteNetAssetValueResponse](#provenance.marker.v1.MsgDeleteNetAssetValueResponse)
     - [MsgDeleteRequest](#provenance.marker.v1.MsgDeleteRequest)
     - [MsgDeleteResponse](#provenance.marker.v1.MsgDeleteResponse)
     - [MsgFinalizeRequest](#provenance.marker.v1.MsgFinalizeRequest)
@@ -1545,8 +1543,7 @@ NetAssetValue defines a marker's net asset value
 | ----- | ---- | ----- | ----------- |
 | `value` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | value is the value of asset in token |
 | `volume` | [uint64](#uint64) |  | volume is the volume of the assets |
-| `source` | [string](#string) |  | source defines the module that updated the value |
-| `update_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | update_time is the block height time of last update |
+| `updated_block_height` | [uint64](#uint64) |  | updated_block_height is the block height of last update |
 
 
 
@@ -2254,7 +2251,8 @@ MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker re
 | `allow_governance_control` | [bool](#bool) |  |  |
 | `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
-| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated |  |
+| `usd_cents` | [uint64](#uint64) |  |  |
+| `volume` | [uint64](#uint64) |  |  |
 
 
 
@@ -2290,7 +2288,8 @@ If being provided as a governance proposal, set the from_address to the gov modu
 | `allow_governance_control` | [bool](#bool) |  |  |
 | `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
-| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated |  |
+| `usd_cents` | [uint64](#uint64) |  |  |
+| `volume` | [uint64](#uint64) |  |  |
 
 
 
@@ -2407,33 +2406,6 @@ MsgDeleteAccessRequest defines the Msg/DeleteAccess request type
 
 ### MsgDeleteAccessResponse
 MsgDeleteAccessResponse defines the Msg/DeleteAccess response type
-
-
-
-
-
-
-<a name="provenance.marker.v1.MsgDeleteNetAssetValueRequest"></a>
-
-### MsgDeleteNetAssetValueRequest
-MsgDeleteNetAssetValueRequest defines the Msg/DeleteNetAssetValue request type
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  |  |
-| `administrator` | [string](#string) |  |  |
-| `value_denoms` | [string](#string) | repeated |  |
-
-
-
-
-
-
-<a name="provenance.marker.v1.MsgDeleteNetAssetValueResponse"></a>
-
-### MsgDeleteNetAssetValueResponse
-MsgDeleteNetAssetValueResponse defines the Msg/DeleteNetAssetValue response type
 
 
 
@@ -2832,7 +2804,6 @@ Msg defines the Marker Msg service.
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance.marker.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.marker.v1.MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. | |
 | `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance.marker.v1.MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance.marker.v1.MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has admin authority | |
 | `AddNetAssetValue` | [MsgAddNetAssetValueRequest](#provenance.marker.v1.MsgAddNetAssetValueRequest) | [MsgAddNetAssetValueResponse](#provenance.marker.v1.MsgAddNetAssetValueResponse) | AddNetAssetValue | |
-| `DeleteNetAssetValue` | [MsgDeleteNetAssetValueRequest](#provenance.marker.v1.MsgDeleteNetAssetValueRequest) | [MsgDeleteNetAssetValueResponse](#provenance.marker.v1.MsgDeleteNetAssetValueResponse) | DeleteNetAssetValue | |
 
  <!-- end services -->
 

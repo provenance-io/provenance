@@ -2,7 +2,6 @@ syntax = "proto3";
 package provenance.marker.v1;
 
 import "gogoproto/gogo.proto";
-import "google/protobuf/timestamp.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
@@ -99,11 +98,9 @@ message NetAssetValue {
   // value is the value of asset in token
   cosmos.base.v1beta1.Coin value = 1 [(gogoproto.nullable) = false];
   // volume is the volume of the assets
-  uint64 volume = 2 [(gogoproto.customtype) = "uint64", (gogoproto.nullable) = false];
-  // source defines the module that updated the value
-  string source = 3;
-  // update_time is the block height time of last update
-  google.protobuf.Timestamp update_time = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  uint64 volume = 2;
+  // updated_block_height is the block height of last update
+  uint64 updated_block_height = 3;
 }
 
 // EventMarkerAdd event emitted when marker is added

@@ -62,8 +62,6 @@ service Msg {
   rpc UpdateSendDenyList(MsgUpdateSendDenyListRequest) returns (MsgUpdateSendDenyListResponse);
   // AddNetAssetValue
   rpc AddNetAssetValue(MsgAddNetAssetValueRequest) returns (MsgAddNetAssetValueResponse);
-  // DeleteNetAssetValue
-  rpc DeleteNetAssetValue(MsgDeleteNetAssetValueRequest) returns (MsgDeleteNetAssetValueResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
@@ -89,16 +87,17 @@ message MsgAddMarkerRequest {
 
   cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
-  string                 manager                  = 3;
-  string                 from_address             = 4;
-  MarkerStatus           status                   = 5;
-  MarkerType             marker_type              = 6;
-  repeated AccessGrant   access_list              = 7 [(gogoproto.nullable) = false];
-  bool                   supply_fixed             = 8;
-  bool                   allow_governance_control = 9;
-  bool                   allow_forced_transfer    = 10;
-  repeated string        required_attributes      = 11;
-  repeated NetAssetValue net_asset_values         = 12 [(gogoproto.nullable) = false];
+  string               manager                  = 3;
+  string               from_address             = 4;
+  MarkerStatus         status                   = 5;
+  MarkerType           marker_type              = 6;
+  repeated AccessGrant access_list              = 7 [(gogoproto.nullable) = false];
+  bool                 supply_fixed             = 8;
+  bool                 allow_governance_control = 9;
+  bool                 allow_forced_transfer    = 10;
+  repeated string      required_attributes      = 11;
+  uint64               usd_cents                = 12;
+  uint64               volume                   = 13;
 }
 
 // MsgAddMarkerResponse defines the Msg/AddMarker response type
@@ -222,15 +221,16 @@ message MsgSetDenomMetadataResponse {}
 message MsgAddFinalizeActivateMarkerRequest {
   cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
-  string                 manager                  = 3;
-  string                 from_address             = 4;
-  MarkerType             marker_type              = 5;
-  repeated AccessGrant   access_list              = 6 [(gogoproto.nullable) = false];
-  bool                   supply_fixed             = 7;
-  bool                   allow_governance_control = 8;
-  bool                   allow_forced_transfer    = 9;
-  repeated string        required_attributes      = 10;
-  repeated NetAssetValue net_asset_values         = 11 [(gogoproto.nullable) = false];
+  string               manager                  = 3;
+  string               from_address             = 4;
+  MarkerType           marker_type              = 5;
+  repeated AccessGrant access_list              = 6 [(gogoproto.nullable) = false];
+  bool                 supply_fixed             = 7;
+  bool                 allow_governance_control = 8;
+  bool                 allow_forced_transfer    = 9;
+  repeated string      required_attributes      = 10;
+  uint64               usd_cents                = 11;
+  uint64               volume                   = 12;
 }
 
 // MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type
@@ -333,12 +333,3 @@ message MsgAddNetAssetValueRequest {
 
 // MsgAddNetAssetValueResponse defines the Msg/AddNetAssetValue response type
 message MsgAddNetAssetValueResponse {}
-
-// MsgDeleteNetAssetValueRequest defines the Msg/DeleteNetAssetValue request type
-message MsgDeleteNetAssetValueRequest {
-  string          denom         = 1;
-  string          administrator = 2;
-  repeated string value_denoms  = 3 [(gogoproto.nullable) = false];
-}
-// MsgDeleteNetAssetValueResponse defines the Msg/DeleteNetAssetValue response type
-message MsgDeleteNetAssetValueResponse {}
