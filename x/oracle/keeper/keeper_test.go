@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) CreateAccounts(number int) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.CreateAccounts(4)
-	s.msgServer = keeper.NewMsgServerImpl(s.app.OracleKeeper)
+	s.msgServer = keeper.NewMsgServerImpl(&s.app.OracleKeeper)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now().UTC()})
 	s.ctx = s.ctx.WithBlockHeight(100)
 

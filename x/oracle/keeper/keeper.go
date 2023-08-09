@@ -8,7 +8,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -25,7 +24,7 @@ type Keeper struct {
 	ics4Wrapper     types.ICS4Wrapper
 	channelKeeper   types.ChannelKeeper
 	portKeeper      types.PortKeeper
-	scopedKeeper    capabilitykeeper.ScopedKeeper
+	scopedKeeper    types.ScopedKeeper
 	wasmQueryServer wasmtypes.QueryServer
 
 	// the signing authority for the gov proposals
@@ -40,7 +39,7 @@ func NewKeeper(
 	ics4Wrapper types.ICS4Wrapper,
 	channelKeeper types.ChannelKeeper,
 	portKeeper types.PortKeeper,
-	scopedKeeper capabilitykeeper.ScopedKeeper,
+	scopedKeeper types.ScopedKeeper,
 	wasmQueryServer wasmtypes.QueryServer,
 ) *Keeper {
 

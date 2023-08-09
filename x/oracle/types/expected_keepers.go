@@ -20,7 +20,7 @@ type ICS4Wrapper interface {
 	) (sequence uint64, err error)
 }
 
-// PortKeeper defines the expected IBC channel keeper
+// Channel defines the expected IBC channel keeper
 type ChannelKeeper interface {
 	GetChannel(ctx sdk.Context, portID, channelID string) (channeltypes.Channel, bool)
 	GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool)
@@ -30,4 +30,11 @@ type ChannelKeeper interface {
 type PortKeeper interface {
 	BindPort(ctx sdk.Context, portID string) *capabilitytypes.Capability
 	IsBound(ctx sdk.Context, portID string) bool
+}
+
+// ScopedKeeper defines the expected x/capability scoped keeper interface
+type ScopedKeeper interface {
+	GetCapability(ctx sdk.Context, name string) (*capabilitytypes.Capability, bool)
+	AuthenticateCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) bool
+	ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error
 }
