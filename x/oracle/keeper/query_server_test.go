@@ -21,13 +21,12 @@ func (s *KeeperTestSuite) TestOracleAddress() {
 			err:      "rpc error: code = InvalidArgument desc = invalid request",
 		},
 		{
-			name:     "failure - should throw error when missing oracle address",
+			name:     "success - should return correct oracle address",
 			req:      &types.QueryOracleAddressRequest{},
-			expected: nil,
-			err:      types.ErrMissingOracleAddress.Error(),
+			expected: &types.QueryOracleAddressResponse{Address: ""},
 		},
 		{
-			name:     "success - should throw error when missing oracle address",
+			name:     "success - should return correct oracle address",
 			req:      &types.QueryOracleAddressRequest{},
 			oracle:   "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			expected: &types.QueryOracleAddressResponse{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"},

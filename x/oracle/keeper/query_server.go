@@ -19,10 +19,7 @@ func (k Keeper) OracleAddress(goCtx context.Context, req *types.QueryOracleAddre
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	oracle, err := k.GetOracle(ctx)
-	if err != nil {
-		return nil, err
-	}
+	oracle, _ := k.GetOracle(ctx)
 
 	return &types.QueryOracleAddressResponse{Address: oracle.String()}, nil
 }
