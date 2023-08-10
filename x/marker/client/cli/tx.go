@@ -52,6 +52,8 @@ const (
 	FlagAdd                    = "add"
 	FlagRemove                 = "remove"
 	FlagGovProposal            = "gov-proposal"
+	FlagUsdCents               = "usd-cents"
+	FlagVolume                 = "volume"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -241,8 +243,17 @@ with the given supply amount and denomination provided in the coin argument
 
 			// TODO: add marker net asset value flag
 			msg := types.NewMsgAddMarkerRequest(
-				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.MarkerType,
-				flagVals.SupplyFixed, flagVals.AllowGovControl, flagVals.AllowForceTransfer, flagVals.RequiredAttributes,
+				coin.Denom,
+				coin.Amount,
+				callerAddr,
+				callerAddr,
+				flagVals.MarkerType,
+				flagVals.SupplyFixed,
+				flagVals.AllowGovControl,
+				flagVals.AllowForceTransfer,
+				flagVals.RequiredAttributes,
+				flagVals.UsdCents,
+				flagVals.Volume,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -957,11 +968,10 @@ with the given supply amount and denomination provided in the coin argument
 				panic("at least one access grant should be present.")
 			}
 
-			// TODO: parse nav value
 			msg := types.NewMsgAddFinalizeActivateMarkerRequest(
 				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.MarkerType,
 				flagVals.SupplyFixed, flagVals.AllowGovControl,
-				flagVals.AllowForceTransfer, flagVals.RequiredAttributes, accessGrants, 0, 0,
+				flagVals.AllowForceTransfer, flagVals.RequiredAttributes, accessGrants, flagVals.UsdCents, flagVals.Volume,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -1179,6 +1189,8 @@ func AddNewMarkerFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "Indicates that governance control is allowed")
 	cmd.Flags().Bool(FlagAllowForceTransfer, false, "Indicates that force transfer is allowed")
 	cmd.Flags().StringSlice(FlagRequiredAttributes, []string{}, "comma delimited list of required attributes needed for a restricted marker to have send authority")
+	cmd.Flags().Uint64(FlagUsdCents, 0, "Indicates the net asset value of marker in usd cents, i.e. 1234 = $1.234")
+	cmd.Flags().Uint64(FlagVolume, 0, "Indicates the volume of the net asset value")
 }
 
 // NewMarkerFlagValues represents the values provided in the flags added by AddNewMarkerFlags.
@@ -1188,6 +1200,8 @@ type NewMarkerFlagValues struct {
 	AllowGovControl    bool
 	AllowForceTransfer bool
 	RequiredAttributes []string
+	UsdCents           uint64
+	Volume             uint64
 }
 
 // ParseNewMarkerFlags reads the flags added by AddNewMarkerFlags.
@@ -1225,6 +1239,20 @@ func ParseNewMarkerFlags(cmd *cobra.Command) (*NewMarkerFlagValues, error) {
 	rv.RequiredAttributes, err = cmd.Flags().GetStringSlice(FlagRequiredAttributes)
 	if err != nil {
 		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: comma delimited list of attributes Error: %w", FlagRequiredAttributes, err)
+	}
+
+	rv.UsdCents, err = cmd.Flags().GetUint64(FlagUsdCents)
+	if err != nil {
+		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagUsdCents, err)
+	}
+
+	rv.Volume, err = cmd.Flags().GetUint64(FlagVolume)
+	if err != nil {
+		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagVolume, err)
+	}
+
+	if rv.UsdCents > 0 && rv.Volume == 0 {
+		return nil, fmt.Errorf("incorrect value for %s flag.  Must be positive number if %s flag has been set to positive value", FlagVolume, FlagUsdCents)
 	}
 
 	return rv, nil
