@@ -5,7 +5,14 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	cerrs "cosmossdk.io/errors"
+
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -15,14 +22,11 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	channelkeeper "github.com/cosmos/ibc-go/v6/modules/core/04-channel/keeper"
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+
 	"github.com/provenance-io/provenance/x/oracle/client/cli"
 	"github.com/provenance-io/provenance/x/oracle/keeper"
 	"github.com/provenance-io/provenance/x/oracle/simulation"
 	"github.com/provenance-io/provenance/x/oracle/types"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (

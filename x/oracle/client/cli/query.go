@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+
 	"github.com/provenance-io/provenance/x/oracle/types"
-	"github.com/spf13/cobra"
 )
 
 // GetQueryCmd is the top-level command for oracle CLI queries.
@@ -35,7 +37,6 @@ func GetQueryOracleAddressCmd() *cobra.Command {
 		Aliases: []string{"a"},
 		Example: fmt.Sprintf(`%[1]s q oracle address`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err

@@ -3,15 +3,17 @@ package keeper
 import (
 	"strconv"
 
+	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	"github.com/provenance-io/provenance/x/oracle/types"
-
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
-	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
 // SendQuery sends and records an icq

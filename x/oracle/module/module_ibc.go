@@ -1,6 +1,8 @@
 package oracle
 
 import (
+	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -8,8 +10,8 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
+
 	"github.com/provenance-io/provenance/x/oracle/types"
-	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
 )
 
 // OnChanOpenInit implements the IBCModule interface
@@ -23,7 +25,6 @@ func (am AppModule) OnChanOpenInit(
 	counterparty channeltypes.Counterparty,
 	version string,
 ) (string, error) {
-
 	// Require portID is the portID module is bound to
 	boundPort := am.keeper.GetPort(ctx)
 	if boundPort != portID {
@@ -53,7 +54,6 @@ func (am AppModule) OnChanOpenTry(
 	counterparty channeltypes.Counterparty,
 	counterpartyVersion string,
 ) (string, error) {
-
 	// Require portID is the portID module is bound to
 	boundPort := am.keeper.GetPort(ctx)
 	if boundPort != portID {

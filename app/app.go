@@ -17,6 +17,9 @@ import (
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
+	icq "github.com/strangelove-ventures/async-icq/v6"
+	icqkeeper "github.com/strangelove-ventures/async-icq/v6/keeper"
+	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -117,9 +120,6 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
-	icq "github.com/strangelove-ventures/async-icq/v6"
-	icqkeeper "github.com/strangelove-ventures/async-icq/v6/keeper"
-	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
 
 	appparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/antewrapper"

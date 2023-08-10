@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	"github.com/tendermint/tendermint/libs/log"
 
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +13,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
@@ -42,7 +44,6 @@ func NewKeeper(
 	scopedKeeper types.ScopedKeeper,
 	wasmQueryServer wasmtypes.QueryServer,
 ) *Keeper {
-
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}

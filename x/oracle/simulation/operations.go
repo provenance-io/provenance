@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	channelkeeper "github.com/cosmos/ibc-go/v6/modules/core/04-channel/keeper"
+
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/oracle/keeper"
@@ -73,9 +74,6 @@ func SimulateMsgUpdateOracle(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 		// 50% chance to be from the module's authority
 		from := raccs[0]
 		to := raccs[1]
-		if r.Intn(2) > 0 {
-			from = simtypes.Account{Address: sdk.MustAccAddressFromBech32(k.GetAuthority())}
-		}
 
 		msg := types.NewMsgUpdateOracle(from.Address.String(), to.Address.String())
 

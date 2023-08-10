@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/provenance-io/provenance/x/oracle/types"
-
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
+	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
 const (
