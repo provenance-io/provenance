@@ -19,17 +19,25 @@ const (
 
 // SequenceIDFn randomized sequence id
 func SequenceIDFn(r *rand.Rand) uint64 {
-	return uint64(randIntBetween(r, 1, 10000000000))
+	return uint64(randIntBetween(r, 0, 10000000000))
 }
 
 // PortFn randomized port name
 func PortFn(r *rand.Rand) string {
-	randomName := uint64(randIntBetween(r, 0, 1))
-	if randomName < 1 {
+	if r.Intn(2) > 0 {
 		return "oracle"
 	}
 	length := uint64(randIntBetween(r, 6, 10))
 	return strings.ToLower(simtypes.RandStringOfLength(r, int(length)))
+}
+
+// OracleFn randomized oracle address
+func OracleFn(r *rand.Rand, accs []simtypes.Account) string {
+	randomAccount, _ := RandomAccs(r, accs, 1)
+	if r.Intn(2) > 0 {
+		return ""
+	}
+	return randomAccount[0].Address.String()
 }
 
 // RandomizedGenState generates a random GenesisState for trigger
@@ -48,7 +56,13 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	params := types.DefaultParams()
 
-	genesis := types.NewGenesisState(port, params, sequenceID, "")
+	var oracle string
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, Port, &port, simState.Rand,
+		func(r *rand.Rand) { oracle = OracleFn(r, simState.Accounts) },
+	)
+
+	genesis := types.NewGenesisState(port, params, sequenceID, oracle)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(genesis)
 
 	bz, err := json.MarshalIndent(simState.GenState[types.ModuleName], "", " ")

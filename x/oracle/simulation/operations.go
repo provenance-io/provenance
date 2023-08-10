@@ -61,16 +61,21 @@ func WeightedOperations(
 }
 
 // SimulateMsgCreateTrigger sends a MsgUpdateOracle.
-func SimulateMsgUpdateOracle(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgUpdateOracle(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		raccs, err := RandomAccs(r, accs, 2)
+		raccs, err := RandomAccs(r, accs, uint64(len(accs)))
 		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgUpdateOracleRequest{}), sdk.MsgTypeURL(&types.MsgUpdateOracleRequest{}), err.Error()), nil, nil
 		}
+
+		// 50% chance to be from the module's authority
 		from := raccs[0]
 		to := raccs[1]
+		if r.Intn(2) > 0 {
+			from = simtypes.Account{Address: sdk.MustAccAddressFromBech32(k.GetAuthority())}
+		}
 
 		msg := types.NewMsgUpdateOracle(from.Address.String(), to.Address.String())
 
@@ -84,6 +89,7 @@ func SimulateMsgSendQueryOracle(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		raccs, err := RandomAccs(r, accs, 1)
+
 		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), err.Error()), nil, nil
 		}
@@ -93,7 +99,7 @@ func SimulateMsgSendQueryOracle(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), err.Error()), nil, nil
 		}
-		query := []byte("{}")
+		query := randomQuery(r, ctx)
 
 		msg := types.NewMsgSendQueryOracle(addr.Address.String(), channel, query)
 		return Dispatch(r, app, ctx, addr, chainID, msg, ak, bk, nil)
@@ -174,4 +180,20 @@ func randomChannel(r *rand.Rand, ctx sdk.Context, ck channelkeeper.Keeper) (stri
 	}
 	idx := r.Intn(len(channels))
 	return channels[idx].String(), nil
+}
+
+func randomQuery(r *rand.Rand, ctx sdk.Context) []byte {
+	queryType := randIntBetween(r, 0, 3)
+	var query string
+	if queryType == 0 {
+		query = ""
+	} else if queryType == 1 {
+		query = "{}"
+	} else if queryType == 2 {
+		query = "{\"version\":{}}"
+	} else {
+		query = "xyz"
+	}
+
+	return []byte(query)
 }
