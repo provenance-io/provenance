@@ -255,6 +255,8 @@ func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.Account
 			r.Intn(2) > 0, // allow forced transfer
 			[]string{},
 			grants,
+			0,
+			0,
 		)
 
 		if msg.MarkerType != types.MarkerType_RestrictedCoin {

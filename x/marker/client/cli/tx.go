@@ -961,7 +961,7 @@ with the given supply amount and denomination provided in the coin argument
 			msg := types.NewMsgAddFinalizeActivateMarkerRequest(
 				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.MarkerType,
 				flagVals.SupplyFixed, flagVals.AllowGovControl,
-				flagVals.AllowForceTransfer, flagVals.RequiredAttributes, accessGrants,
+				flagVals.AllowForceTransfer, flagVals.RequiredAttributes, accessGrants, 0, 0,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

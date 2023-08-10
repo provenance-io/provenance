@@ -485,6 +485,8 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 	allowForcedTransfer bool,
 	requiredAttributes []string,
 	accessGrants []AccessGrant,
+	usdCentsValue uint64,
+	netAssetVolume uint64,
 ) *MsgAddFinalizeActivateMarkerRequest {
 	return &MsgAddFinalizeActivateMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
@@ -496,6 +498,8 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 		AccessList:             accessGrants,
 		AllowForcedTransfer:    allowForcedTransfer,
 		RequiredAttributes:     requiredAttributes,
+		UsdCents:               usdCentsValue,
+		Volume:                 netAssetVolume,
 	}
 }
 

@@ -478,10 +478,10 @@ func (s *HandlerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 	denom := "hotdog"
 	rdenom := "restrictedhotdog"
 	denomWithDashPeriod := fmt.Sprintf("%s-my.marker", denom)
-	msgWithActiveStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})})
-	msgWithActiveStatusAttr := types.NewMsgAddFinalizeActivateMarkerRequest(rdenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{"attributes.one.com", "attributes.two.com"}, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})})
+	msgWithActiveStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}, 0, 0)
+	msgWithActiveStatusAttr := types.NewMsgAddFinalizeActivateMarkerRequest(rdenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{"attributes.one.com", "attributes.two.com"}, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}, 0, 0)
 
-	accessGrantWrongStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, nil)
+	accessGrantWrongStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, nil, 0, 0)
 
 	cases := []CommonTest{
 		{
@@ -551,6 +551,8 @@ func (s *HandlerTestSuite) TestMsgSetAccountDataRequest() {
 					{Address: s.user1, Permissions: []types.Access{types.Access_Mint, types.Access_Admin}},
 					{Address: s.user2, Permissions: []types.Access{types.Access_Deposit}},
 				},
+				0,
+				0,
 			),
 		},
 		{
@@ -567,6 +569,8 @@ func (s *HandlerTestSuite) TestMsgSetAccountDataRequest() {
 					{Address: s.user1, Permissions: []types.Access{types.Access_Mint, types.Access_Admin}},
 					{Address: s.user2, Permissions: []types.Access{types.Access_Deposit}},
 				},
+				0,
+				0,
 			),
 		},
 		{

@@ -316,6 +316,8 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{},
 				[]AccessGrant{},
+				0,
+				0,
 			),
 			errorMsg: "since this will activate the marker, must have access list defined",
 		},
@@ -332,40 +334,10 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{"blah"},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				0,
+				0,
 			),
 			errorMsg: "required attributes are reserved for restricted markers",
-		},
-		{
-			name: "should fail invalid net asset value",
-			msg: *NewMsgAddFinalizeActivateMarkerRequest(
-				"hotdog",
-				sdk.NewInt(100),
-				validAddress,
-				validAddress,
-				MarkerType_Coin,
-				true,
-				true,
-				false,
-				[]string{},
-				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
-			),
-			errorMsg: "marker net asset value must have a source defined",
-		},
-		{
-			name: "should fail no net asset value",
-			msg: *NewMsgAddFinalizeActivateMarkerRequest(
-				"hotdog",
-				sdk.NewInt(100),
-				validAddress,
-				validAddress,
-				MarkerType_Coin,
-				true,
-				true,
-				false,
-				[]string{},
-				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
-			),
-			errorMsg: "net asset value list cannot be empty",
 		},
 		{
 			name: "should succeed",
@@ -380,6 +352,8 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				0,
+				0,
 			),
 			errorMsg: "",
 		},
@@ -396,6 +370,8 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{"blah"},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				0,
+				0,
 			),
 			errorMsg: "",
 		},
@@ -412,6 +388,8 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				[]string{},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				0,
+				0,
 			),
 			errorMsg: "forced transfer is only available for restricted coins",
 		},
@@ -820,7 +798,7 @@ func TestMsgAddNetAssetValueValidateBasic(t *testing.T) {
 	denom := "somedenom"
 	netAssetValue1 := NewNetAssetValue(sdk.NewInt64Coin("jackthecat", 100), uint64(100))
 	netAssetValue2 := NewNetAssetValue(sdk.NewInt64Coin("hotdog", 100), uint64(100))
-	invalidNetAssetValue := NewNetAssetValue(sdk.NewInt64Coin("hotdog", 100), uint64(100))
+	invalidNetAssetValue := NewNetAssetValue(sdk.NewInt64Coin("hotdog", 100), uint64(0))
 	tests := []struct {
 		name   string
 		msg    MsgAddNetAssetValueRequest
@@ -833,7 +811,7 @@ func TestMsgAddNetAssetValueValidateBasic(t *testing.T) {
 		{
 			name:   "validation of net asset value failure",
 			msg:    MsgAddNetAssetValueRequest{Denom: denom, NetAssetValues: []NetAssetValue{invalidNetAssetValue}, Administrator: addr},
-			expErr: "marker net asset value must have a source defined",
+			expErr: "marker net asset value volume must be positive value",
 		},
 		{
 			name:   "duplicate net asset values",

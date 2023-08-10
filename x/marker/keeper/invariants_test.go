@@ -10,6 +10,7 @@ import (
 	simapp "github.com/provenance-io/provenance/app"
 
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
+	"github.com/provenance-io/provenance/x/marker/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -36,6 +37,7 @@ func TestMarkerInvariant(t *testing.T) {
 	require.NoError(t, mac.SetManager(user))
 	require.NoError(t, mac.SetSupply(sdk.NewCoin(mac.Denom, sdk.OneInt())))
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), types.NewNetAssetValue(sdk.NewInt64Coin("usd", 1), 1)))
 
 	// Initial, invariant should pass
 	_, isBroken := invariantChecks(ctx)

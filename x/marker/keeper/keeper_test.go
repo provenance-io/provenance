@@ -182,6 +182,7 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 	require.NoError(t, mac.SetManager(user1))
 	require.NoError(t, mac.SetSupply(sdk.NewCoin(mac.Denom, sdk.OneInt())))
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), types.NewNetAssetValue(sdk.NewInt64Coin("usd", 1), 1)))
 
 	// Initial, should not have access
 	m, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "testcoin")
@@ -329,6 +330,8 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), types.NewNetAssetValue(sdk.NewInt64Coin("usd", 1), 1)))
+
 	// Should not fail for a non-active/finalized coin, must be able to adjust supply amount to match any existing
 	require.NoError(t, app.MarkerKeeper.MintCoin(ctx, user, sdk.NewInt64Coin("testcoin", 100)))
 	require.NoError(t, app.MarkerKeeper.BurnCoin(ctx, user, sdk.NewInt64Coin("testcoin", 100)))
@@ -489,6 +492,7 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), types.NewNetAssetValue(sdk.NewInt64Coin("usd", 1), 1)))
 
 	// insufficient supply to cover existing
 	require.Error(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
@@ -526,6 +530,7 @@ func TestAccountImplictControl(t *testing.T) {
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), types.NewNetAssetValue(sdk.NewInt64Coin("usd", 1), 1)))
 
 	// Moves to finalized, mints required supply, moves to active status.
 	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
@@ -621,6 +626,7 @@ func TestForceTransfer(t *testing.T) {
 		false,
 		[]string{},
 	)
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, noForceMac.GetAddress(), types.NewNetAssetValue(sdk.NewInt64Coin("usd", 1), 1)))
 	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, noForceMac),
 		"AddFinalizeAndActivateMarker without force transfer")
 
@@ -641,6 +647,7 @@ func TestForceTransfer(t *testing.T) {
 		true,
 		[]string{},
 	)
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, wForceMac.GetAddress(), types.NewNetAssetValue(sdk.NewInt64Coin("usd", 1), 1)))
 	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, wForceMac),
 		"AddFinalizeAndActivateMarker with force transfer")
 
@@ -755,6 +762,8 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
+		0,
+		0,
 	))
 	require.NoError(t, err, "should allow a marker over existing account that has not signed anything.")
 
@@ -783,6 +792,8 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
+		0,
+		0,
 	))
 	require.Error(t, err, "fails because marker already exists")
 
@@ -819,6 +830,8 @@ func TestInvalidAccount(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
+		0,
+		0,
 	))
 	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
 	require.Contains(t, err.Error(), "account at "+user.String()+" is not a marker account: invalid request")
@@ -846,6 +859,8 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 			false,
 			[]string{},
 			[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
+			0,
+			0,
 		))
 	require.Error(t, err, "fails with unrestricted denom length fault")
 	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err, "should fail with denom restriction")
@@ -861,6 +876,8 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
+		0,
+		0,
 	))
 	require.NoError(t, err, "should allow a marker with a sufficiently long denom")
 
@@ -877,6 +894,8 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
+		0,
+		0,
 	))
 	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
 	require.NoError(t, err, "should allow any valid denom with a min length of two")
