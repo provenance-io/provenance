@@ -122,7 +122,7 @@ func NewContractSpecification(
 }
 
 // NewContractSpecificationSourceResourceID creates a new source (for a ContractSpecification) with a resource id
-func NewContractSpecificationSourceResourceID(resourceID MetadataAddress) *ContractSpecification_ResourceId {
+func NewContractSpecificationSourceResourceID(resourceID sdk.AccAddress) *ContractSpecification_ResourceId {
 	return &ContractSpecification_ResourceId{ResourceId: resourceID}
 }
 
