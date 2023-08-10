@@ -16,4 +16,4 @@ In this section we describe the processing of the oracle messages and the corres
 
 The GenesisState encompasses the upcoming sequence ID for an ICQ packet, the associated parameters, the designated port ID for the module, and the oracle address. These values are both extracted for export and imported for storage within the store.
 
-+++ https://github.com/provenance-io/provenance/blob/65865991f93e2c1a7647e29be11f6527f49616e6/proto/provenance/oracle/v1/genesis.proto#L11-L22
++++ https://github.com/provenance-io/provenance/blob/ba0b65c54f61f99c951fe4694271847dbad0fb00/proto/provenance/oracle/v1/genesis.proto#L11-L24
