@@ -7,9 +7,13 @@ order: 4
 In this section we describe the queries available for looking up oracle information.
 
 <!-- TOC 2 -->
+- [Queries](#queries)
   - [Query Oracle Address](#query-oracle-address)
+    - [Request](#request)
+    - [Response](#response)
   - [Query Oracle](#query-oracle)
-  - [Query Query State](#query-query-state)
+    - [Request](#request-1)
+    - [Response](#response-1)
 
 ---
 ## Query Oracle Address
@@ -17,11 +21,11 @@ The `QueryOracleAddress` query is used to obtain the address of the module's ora
 
 ### Request
 
-+++ https://github.com/provenance-io/provenance/blob/65865991f93e2c1a7647e29be11f6527f49616e6/proto/provenance/oracle/v1/query.proto#L42-L43
++++ https://github.com/provenance-io/provenance/blob/5afab1b1797b0071cf6a19ea5928c5b8f8831329/proto/provenance/oracle/v1/query.proto#L26-L27
 
 ### Response
 
-+++ https://github.com/provenance-io/provenance/blob/65865991f93e2c1a7647e29be11f6527f49616e6/proto/provenance/oracle/v1/query.proto#L45-L49
++++ https://github.com/provenance-io/provenance/blob/5afab1b1797b0071cf6a19ea5928c5b8f8831329/proto/provenance/oracle/v1/query.proto#L29-L33
 
 
 ---
@@ -30,22 +34,10 @@ The `QueryOracle` query forwards a query to the module's oracle.
 
 ### Request
 
-+++ https://github.com/provenance-io/provenance/blob/65865991f93e2c1a7647e29be11f6527f49616e6/proto/provenance/oracle/v1/query.proto#L51-L55
++++ https://github.com/provenance-io/provenance/blob/5afab1b1797b0071cf6a19ea5928c5b8f8831329/proto/provenance/oracle/v1/query.proto#L35-L39
 
 ### Response
 
-+++ https://github.com/provenance-io/provenance/blob/65865991f93e2c1a7647e29be11f6527f49616e6/proto/provenance/oracle/v1/query.proto#L57-L61
++++ https://github.com/provenance-io/provenance/blob/5afab1b1797b0071cf6a19ea5928c5b8f8831329/proto/provenance/oracle/v1/query.proto#L41-L45
 
 The data from the `query` field is a `CosmWasm query` forwarded to the `oracle`. 
-
----
-## Query Query State
-The `QueryQueryState` query is used to obtain the state of an existing query.
-
-### Request
-
-+++ https://github.com/provenance-io/provenance/blob/65865991f93e2c1a7647e29be11f6527f49616e6/proto/provenance/oracle/v1/query.proto#L31-L34
-
-### Response
-
-+++ https://github.com/provenance-io/provenance/blob/65865991f93e2c1a7647e29be11f6527f49616e6/proto/provenance/oracle/v1/query.proto#L36-L40

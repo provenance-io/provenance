@@ -27,7 +27,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type GenesisState struct {
 	// Sequence is the next auto incremented id to be assigned to the next query
 	Sequence uint64 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	// Params
+	// Params are the parameters that the module uses
 	Params Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params"`
 	// The port to assign to the module
 	PortId string `protobuf:"bytes,3,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`

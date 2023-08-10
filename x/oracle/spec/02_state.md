@@ -7,9 +7,9 @@ order: 2
 The oracle module manages the address of the Oracle and the ICQ state.
 
 <!-- TOC 2 -->
+- [State](#state)
   - [Oracle](#oracle)
   - [IBC](#ibc)
-  - [ICQ Responses](#icq-responses)
 
 
 ---
@@ -26,13 +26,3 @@ The `Oracle` is a CosmWasm smart contract that the module forwards its queries t
 
 * Port `0x03 -> []byte{}`
 * Last Query Sequence Number `0x02 -> uint64`
-
----
-## ICQ Responses
-
-The asynchronous nature of the `ICQ` implementation necessitates the module to retain both the request and the corresponding response. This enables users to monitor the progress of their requests and subsequently review the received responses.
-
-* QueryRequest `0x04 | Sequence ID (8 Bytes) -> ProtocolBuffers(QueryOracleRequest)`
-* QueryResponse `0x05 | Sequence ID (8 Bytes) -> ProtocolBuffers(QueryOracleResponse)`
-
-+++ https://github.com/provenance-io/provenance/blob/a10304ad4fe1ddb20bc4f54a413942b8898ce887/proto/provenance/oracle/v1/query.proto#L51C1-L61

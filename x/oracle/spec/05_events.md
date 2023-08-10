@@ -7,6 +7,7 @@ order: 5
 The oracle module emits the following events:
 
 <!-- TOC 2 -->
+- [Events](#events)
   - [EventOracleQuerySuccess](#eventoraclequerysuccess)
   - [EventOracleQueryError](#eventoraclequeryerror)
   - [EventOracleQueryTimeout](#eventoraclequerytimeout)
@@ -17,26 +18,29 @@ The oracle module emits the following events:
 
 This event is emitted when an `ICQ` response is received from an `ACK` and is successful.
 
-| Type               | Attribute Key | Attribute Value                 |
-| ------------------ | ------------- | ------------------------------- |
-| OracleQuerySuccess | sequence_id   | Sequence ID of the ICQ request  |
-| OracleQuerySuccess | result        | Query data obtained from oracle |
+| Type               | Attribute Key | Attribute Value                     |
+| ------------------ | ------------- | ----------------------------------- |
+| OracleQuerySuccess | channel       | Channel the ICQ request was sent on |
+| OracleQuerySuccess | sequence_id   | Sequence ID of the ICQ request      |
+| OracleQuerySuccess | result        | Query data obtained from oracle     |
 
 ---
 ## EventOracleQueryError
 
 This event is emitted when an `ICQ` response is received from an `ACK` and contains an error.
 
-| Type             | Attribute Key | Attribute Value                |
-| ---------------- | ------------- | ------------------------------ |
-| OracleQueryError | sequence_id   | Sequence ID of the ICQ request |
-| OracleQueryError | error         | Error received from the module |
+| Type             | Attribute Key | Attribute Value                     |
+| ---------------- | ------------- | ----------------------------------- |
+| OracleQueryError | channel       | Channel the ICQ request was sent on |
+| OracleQueryError | sequence_id   | Sequence ID of the ICQ request      |
+| OracleQueryError | error         | Error received from the module      |
 
 ---
 ## EventOracleQueryTimeout
 
 This event is emitted when an `ICQ` request results in a `Timeout`.
 
-| Type               | Attribute Key | Attribute Value                |
-| ------------------ | ------------- | ------------------------------ |
-| OracleQueryTimeout | sequence_id   | Sequence ID of the ICQ request |
+| Type               | Attribute Key | Attribute Value                     |
+| ------------------ | ------------- | ----------------------------------- |
+| OracleQueryTimeout | channel       | Channel the ICQ request was sent on |
+| OracleQueryTimeout | sequence_id   | Sequence ID of the ICQ request      |
