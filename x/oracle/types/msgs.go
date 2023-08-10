@@ -50,7 +50,7 @@ func (msg MsgSendQueryOracleRequest) GetSigners() []sdk.AccAddress {
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgSendQueryOracleRequest) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.Channel); err != nil {
-		return fmt.Errorf("invalid channel id: %w", err)
+		return fmt.Errorf("invalid channel id")
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
 		return fmt.Errorf("invalid authority address: %w", err)

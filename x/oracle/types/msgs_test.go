@@ -98,7 +98,7 @@ func TestMsgSendQueryOracleRequestValidateBasic(t *testing.T) {
 		{
 			name: "failure - invalid channel",
 			msg:  NewMsgSendQueryOracle("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", "bad", []byte("{}")),
-			err:  "invalid channel id: identifier bad has invalid length: 3, must be between 8-64 characters: invalid identifier [cosmos/ibc-go/v6/modules/core/24-host/validate.go:49]",
+			err:  "invalid channel id",
 		},
 		{
 			name: "failure - invalid query",
