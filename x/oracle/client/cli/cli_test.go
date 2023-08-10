@@ -6,6 +6,7 @@ import (
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -165,6 +166,134 @@ func (s *IntegrationTestSuite) TestQueryOracleAddress() {
 				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
 				s.NoError(err, "should have no error message when unmarshalling response to QueryOracleAddress")
 				s.Equal(tc.expectedAddress, response.Address, "should have the correct oracle address")
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestOracleUpdate() {
+	testCases := []struct {
+		name         string
+		address      string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name:         "success - address updated",
+			address:      "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			expectedCode: 0,
+			signer:       s.accountAddresses[0].String(),
+		},
+		{
+			name:         "failure - unable to pass validate basic with bad address",
+			address:      "badaddress",
+			expectErrMsg: "invalid address for oracle: decoding bech32 failed: invalid separator index -1",
+			signer:       s.accountAddresses[0].String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+
+			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+
+			args := []string{
+				tc.address,
+			}
+			flags := []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			}
+			args = append(args, flags...)
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetCmdOracleUpdate(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			var response sdk.TxResponse
+			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
+			if len(tc.expectErrMsg) > 0 {
+				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid OracleUpdate request")
+				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for invalid OracleUpdate request")
+			} else {
+				s.Assert().NoError(err, "should have no error for valid OracleUpdate request")
+				s.Assert().NoError(marshalErr, out.String(), "should have no marshal error for valid OracleUpdate request")
+				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for valid OracleUpdate request")
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestSendQuery() {
+	testCases := []struct {
+		name         string
+		query        string
+		channel      string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name:         "success - a valid message was attempted to be sent on ibc",
+			query:        "{}",
+			channel:      "channel-1",
+			expectedCode: 9,
+			signer:       s.accountAddresses[0].String(),
+		},
+		{
+			name:         "failure - invalid query data",
+			query:        "abc",
+			expectErrMsg: "query data must be json",
+			channel:      "channel-1",
+			signer:       s.accountAddresses[0].String(),
+		},
+		{
+			name:         "failure - invalid channel format",
+			query:        "{}",
+			expectErrMsg: "invalid channel id",
+			channel:      "a",
+			signer:       s.accountAddresses[0].String(),
+		},
+		{
+			name:         "failure - invalid signer",
+			query:        "{}",
+			expectErrMsg: "abc.info: key not found",
+			channel:      "channel-1",
+			signer:       "abc",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+
+			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+
+			args := []string{
+				tc.channel,
+				tc.query,
+			}
+			flags := []string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			}
+			args = append(args, flags...)
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetCmdSendQuery(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			var response sdk.TxResponse
+			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
+			if len(tc.expectErrMsg) > 0 {
+				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid SendQuery request")
+				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for invalid SendQuery request")
+			} else {
+				s.Assert().NoError(err, "should have no error for valid SendQuery request")
+				s.Assert().NoError(marshalErr, out.String(), "should have no marshal error for valid SendQuery request")
+				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for valid SendQuery request")
 			}
 		})
 	}
