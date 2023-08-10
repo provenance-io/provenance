@@ -423,14 +423,6 @@ func TestNetAssetValueValidate(t *testing.T) {
 		expErr string
 	}{
 		{
-			name: "empty source value",
-			nav: NetAssetValue{
-				Value:  sdk.NewInt64Coin("jackthecat", 420),
-				Volume: 406,
-			},
-			expErr: "marker net asset value must have a source defined",
-		},
-		{
 			name: "invalid denom",
 			nav: NetAssetValue{
 				Volume: 406,
@@ -446,12 +438,26 @@ func TestNetAssetValueValidate(t *testing.T) {
 			expErr: "marker net asset value volume must be positive value",
 		},
 		{
+			name: "volume must be positive if value is greater than 1",
+			nav: NetAssetValue{
+				Value:  sdk.NewInt64Coin("usdcents", 1),
+				Volume: 0,
+			},
+			expErr: "marker net asset value volume must be positive value",
+		},
+		{
+			name: "successful with 0 volume and coin",
+			nav: NetAssetValue{
+				Value:  sdk.NewInt64Coin("usdcents", 0),
+				Volume: 0,
+			},
+		},
+		{
 			name: "successful",
 			nav: NetAssetValue{
 				Value:  sdk.NewInt64Coin("jackthecat", 420),
 				Volume: 406,
 			},
-			expErr: "",
 		},
 	}
 	for _, tt := range tests {

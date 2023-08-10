@@ -468,7 +468,7 @@ func (mnav *NetAssetValue) Validate() error {
 		return err
 	}
 
-	if mnav.Volume < 1 {
+	if mnav.Value.Amount.GT(sdk.NewInt(0)) && mnav.Volume < 1 {
 		return fmt.Errorf("marker net asset value volume must be positive value")
 	}
 
