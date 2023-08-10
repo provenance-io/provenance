@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -72,6 +73,7 @@ func ProvAppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) s
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
 		appState, simAccs, chainID, genesisTimestamp := sdksim.AppStateFn(cdc, simManager)(r, accs, config)
 		appState = appStateWithICA(appState, cdc)
+		appState = appStateWithICQ(appState, cdc)
 		return appState, simAccs, chainID, genesisTimestamp
 	}
 }
@@ -87,6 +89,25 @@ func appStateWithICA(appState json.RawMessage, cdc codec.JSONCodec) json.RawMess
 	if !icaGenFound || len(icaGenJSON) == 0 {
 		icaGenState := icagenesistypes.DefaultGenesis()
 		rawState[icatypes.ModuleName] = cdc.MustMarshalJSON(icaGenState)
+		appState, err = json.Marshal(rawState)
+		if err != nil {
+			panic(fmt.Sprintf("error marshalling appstate: %v", err))
+		}
+	}
+	return appState
+}
+
+// appStateWithICA checks the given appState for an ica entry. If it's not found, it's populated with the defaults.
+func appStateWithICQ(appState json.RawMessage, cdc codec.JSONCodec) json.RawMessage {
+	rawState := make(map[string]json.RawMessage)
+	err := json.Unmarshal(appState, &rawState)
+	if err != nil {
+		panic(fmt.Sprintf("error unmarshalling appstate: %v", err))
+	}
+	icqGenJSON, icqGenFound := rawState[icqtypes.ModuleName]
+	if !icqGenFound || len(icqGenJSON) == 0 {
+		icqGenState := icqtypes.DefaultGenesis()
+		rawState[icqtypes.ModuleName] = cdc.MustMarshalJSON(icqGenState)
 		appState, err = json.Marshal(rawState)
 		if err != nil {
 			panic(fmt.Sprintf("error marshalling appstate: %v", err))
