@@ -19,4 +19,6 @@ message GenesisState {
   Params params = 2 [(gogoproto.nullable) = false];
   // The port to assign to the module
   string port_id = 3;
+  // The address of the oracle
+  string oracle = 4;
 }

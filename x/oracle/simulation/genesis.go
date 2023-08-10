@@ -48,7 +48,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	params := types.DefaultParams()
 
-	genesis := types.NewGenesisState(port, params, sequenceID)
+	genesis := types.NewGenesisState(port, params, sequenceID, "")
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(genesis)
 
 	bz, err := json.MarshalIndent(simState.GenState[types.ModuleName], "", " ")

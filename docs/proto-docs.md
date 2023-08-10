@@ -6781,6 +6781,7 @@ GenesisState defines the oracle module's genesis state.
 | `sequence` | [uint64](#uint64) |  | Sequence is the next auto incremented id to be assigned to the next query |
 | `params` | [Params](#provenance.oracle.v1.Params) |  | Params are the parameters that the module uses |
 | `port_id` | [string](#string) |  | The port to assign to the module |
+| `oracle` | [string](#string) |  | The address of the oracle |
 
 
 

@@ -7,10 +7,12 @@ import (
 
 // ExportGenesis returns a GenesisState for a given context.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	oracle, _ := k.GetOracle(ctx)
 	return &types.GenesisState{
 		Sequence: k.GetLastQueryPacketSeq(ctx),
 		Params:   k.GetParams(ctx),
 		PortId:   k.GetPort(ctx),
+		Oracle:   oracle.String(),
 	}
 }
 
@@ -30,4 +32,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 	k.SetParams(ctx, genState.Params)
 	k.SetLastQueryPacketSeq(ctx, genState.Sequence)
+	var oracle sdk.AccAddress
+	if len(genState.Oracle) == 0 {
+		oracle = sdk.AccAddress{}
+	} else {
+		oracle = sdk.MustAccAddressFromBech32(genState.Oracle)
+	}
+	k.SetOracle(ctx, oracle)
 }

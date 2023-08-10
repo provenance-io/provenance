@@ -3,20 +3,22 @@ package types
 import (
 	fmt "fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 )
 
-func NewGenesisState(port string, params Params, sequence uint64) *GenesisState {
+func NewGenesisState(port string, params Params, sequence uint64, oracle string) *GenesisState {
 	return &GenesisState{
 		PortId:   port,
 		Params:   params,
 		Sequence: sequence,
+		Oracle:   oracle,
 	}
 }
 
 // DefaultGenesis returns the default oracle genesis state
 func DefaultGenesis() *GenesisState {
-	return NewGenesisState(PortID, DefaultParams(), 1)
+	return NewGenesisState(PortID, DefaultParams(), 1, "")
 }
 
 // Validate performs basic genesis state validation returning an error upon any
@@ -27,6 +29,11 @@ func (gs GenesisState) Validate() error {
 	}
 
 	if err := host.PortIdentifierValidator(gs.PortId); err != nil {
+		return err
+	}
+
+	_, err := sdk.AccAddressFromBech32(gs.Oracle)
+	if len(gs.Oracle) > 0 && err != nil {
 		return err
 	}
 
