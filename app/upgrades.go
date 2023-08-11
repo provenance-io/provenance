@@ -42,25 +42,6 @@ type appUpgrade struct {
 // If something is happening in the rc upgrade(s) that isn't being applied in the non-rc,
 // or vice versa, please add comments explaining why in both entries.
 var upgrades = map[string]appUpgrade{
-	"quicksilver-rc1": { // upgrade for v1.15.0-rc2
-		Handler: func(ctx sdk.Context, app *App, _ module.VersionMap) (module.VersionMap, error) {
-			app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
-			app.AttributeKeeper.PopulateAddressAttributeNameTable(ctx)
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
-		},
-	},
-	"quicksilver-rc2": {}, // upgrade for v1.15.0-rc3
-	"quicksilver": { // upgrade for v1.15.0
-		Handler: func(ctx sdk.Context, app *App, _ module.VersionMap) (module.VersionMap, error) {
-			app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
-			app.AttributeKeeper.PopulateAddressAttributeNameTable(ctx)
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
-		},
-	},
 	"rust-rc1": { // upgrade for v1.16.0-rc1,
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
