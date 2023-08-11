@@ -3,6 +3,8 @@ package app
 import (
 	"fmt"
 
+	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +18,6 @@ import (
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
-	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.

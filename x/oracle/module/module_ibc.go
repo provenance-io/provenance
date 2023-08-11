@@ -1,8 +1,9 @@
 package oracle
 
 import (
-	cerrs "cosmossdk.io/errors"
 	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
+
+	cerrs "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
