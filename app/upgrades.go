@@ -42,7 +42,7 @@ type appUpgrade struct {
 // If something is happening in the rc upgrade(s) that isn't being applied in the non-rc,
 // or vice versa, please add comments explaining why in both entries.
 var upgrades = map[string]appUpgrade{
-	"rust-rc1": { // upgrade for v1.16.0-rc1,
+	"rust-rc1": { // upgrade for v1.16.0-rc1
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			vm, err = runModuleMigrations(ctx, app, vm)
@@ -68,7 +68,7 @@ var upgrades = map[string]appUpgrade{
 		},
 		Added: []string{triggertypes.ModuleName},
 	},
-	"rust": { // upgrade for v1.16.0,
+	"rust": { // upgrade for v1.16.0
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			vm, err = runModuleMigrations(ctx, app, vm)
@@ -92,6 +92,32 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 		Added: []string{triggertypes.ModuleName},
+	},
+	"saffron-rc1": { // upgrade for v1.17.0-rc1
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			removeInactiveValidatorDelegations(ctx, app)
+
+			return vm, nil
+		},
+	},
+	"saffron": { // upgrade for v1.17.0
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			removeInactiveValidatorDelegations(ctx, app)
+
+			return vm, nil
+		},
 	},
 	// TODO - Add new upgrade definitions here.
 }
