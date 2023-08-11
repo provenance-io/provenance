@@ -16,6 +16,7 @@ This event is emitted when a hold is placed on some funds.
 |---------------|-----------------------------------------|
 | address       | bech32 string of account with the funds |
 | amount        | string of coins newly placed on hold    |
+| reason        | human readable string                   |
 
 Both values are wrapped in double quotes.
 
@@ -27,6 +28,7 @@ Example:
   "attributes": [
     {"key": "address", "value": "\"pb1v9jxgun9wde476twta6xse2lv4mx2mn56s5hm4\""},
     {"key": "amount", "value": "\"1000000000nhash,5000musdf\""}
+    {"key": "reason", "value": "\"order 66\""}
   ]
 }
 ```
