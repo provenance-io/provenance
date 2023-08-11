@@ -22,7 +22,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
-	github.com/rs/zerolog v1.29.1
+	github.com/rs/zerolog v1.30.0
 	github.com/spf13/cast v1.5.1
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
@@ -32,10 +32,10 @@ require (
 	github.com/tendermint/tendermint v0.34.28
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/exp v0.0.0-20230310171629-522b1b587ee0
-	golang.org/x/text v0.11.0
+	golang.org/x/text v0.12.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230526203410-71b5a4ffd15e
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230706204954-ccb25ca9f130
-	google.golang.org/grpc v1.56.2
+	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v2 v2.4.0
 
@@ -161,6 +161,7 @@ require (
 	golang.org/x/crypto v0.11.0 // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/oauth2 v0.7.0 // indirect
+	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/term v0.10.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
