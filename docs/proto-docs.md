@@ -412,8 +412,18 @@
     - [Query](#provenance.msgfees.v1.Query)
   
 - [provenance/msgfees/v1/tx.proto](#provenance/msgfees/v1/tx.proto)
+    - [MsgAddMsgFeeProposalRequest](#provenance.msgfees.v1.MsgAddMsgFeeProposalRequest)
+    - [MsgAddMsgFeeProposalResponse](#provenance.msgfees.v1.MsgAddMsgFeeProposalResponse)
     - [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest)
     - [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse)
+    - [MsgRemoveMsgFeeProposalRequest](#provenance.msgfees.v1.MsgRemoveMsgFeeProposalRequest)
+    - [MsgRemoveMsgFeeProposalResponse](#provenance.msgfees.v1.MsgRemoveMsgFeeProposalResponse)
+    - [MsgUpdateConversionFeeDenomProposalRequest](#provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalRequest)
+    - [MsgUpdateConversionFeeDenomProposalResponse](#provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalResponse)
+    - [MsgUpdateMsgFeeProposalRequest](#provenance.msgfees.v1.MsgUpdateMsgFeeProposalRequest)
+    - [MsgUpdateMsgFeeProposalResponse](#provenance.msgfees.v1.MsgUpdateMsgFeeProposalResponse)
+    - [MsgUpdateNhashPerUsdMilProposalRequest](#provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalRequest)
+    - [MsgUpdateNhashPerUsdMilProposalResponse](#provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalResponse)
   
     - [Msg](#provenance.msgfees.v1.Msg)
   
@@ -6486,6 +6496,35 @@ Query defines the gRPC querier service for marker module.
 
 
 
+<a name="provenance.msgfees.v1.MsgAddMsgFeeProposalRequest"></a>
+
+### MsgAddMsgFeeProposalRequest
+AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | type url of msg to add fee |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional fee for msg type |
+| `recipient` | [string](#string) |  | optional recipient to receive basis points |
+| `recipient_basis_points` | [string](#string) |  | basis points to use when recipient is present (1 - 10,000) |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgAddMsgFeeProposalResponse"></a>
+
+### MsgAddMsgFeeProposalResponse
+MsgAddMsgFeeProposalResponse defines the Msg/AddMsgFeeProposal response type
+
+
+
+
+
+
 <a name="provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest"></a>
 
 ### MsgAssessCustomMsgFeeRequest
@@ -6514,6 +6553,113 @@ MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
 
 
 
+
+<a name="provenance.msgfees.v1.MsgRemoveMsgFeeProposalRequest"></a>
+
+### MsgRemoveMsgFeeProposalRequest
+RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | type url of msg fee to remove |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgRemoveMsgFeeProposalResponse"></a>
+
+### MsgRemoveMsgFeeProposalResponse
+MsgRemoveMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response type
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalRequest"></a>
+
+### MsgUpdateConversionFeeDenomProposalRequest
+UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is the denom that usd will be converted to |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalResponse"></a>
+
+### MsgUpdateConversionFeeDenomProposalResponse
+MsgUpdateConversionFeeDenomProposalResponse defines the Msg/UpdateConversionFeeDenomProposal response type
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateMsgFeeProposalRequest"></a>
+
+### MsgUpdateMsgFeeProposalRequest
+UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | type url of msg to update fee |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional fee for msg type |
+| `recipient` | [string](#string) |  | optional recipient to recieve basis points |
+| `recipient_basis_points` | [string](#string) |  | basis points to use when recipient is present (1 - 10,000) |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateMsgFeeProposalResponse"></a>
+
+### MsgUpdateMsgFeeProposalResponse
+MsgUpdateMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response type
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalRequest"></a>
+
+### MsgUpdateNhashPerUsdMilProposalRequest
+UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is number of nhash per usd mil |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalResponse"></a>
+
+### MsgUpdateNhashPerUsdMilProposalResponse
+MsgUpdateNhashPerUsdMilProposalResponse defines the Msg/UpdateNhashPerUsdMilProposal response type
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6529,6 +6675,11 @@ Msg defines the msgfees Msg service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `AssessCustomMsgFee` | [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest) | [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse) | AssessCustomMsgFee endpoint executes the additional fee charges. This will only emit the event and not persist it to the keeper. Fees are handled with the custom msg fee handlers Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts | |
+| `AddMsgFeeProposal` | [MsgAddMsgFeeProposalRequest](#provenance.msgfees.v1.MsgAddMsgFeeProposalRequest) | [MsgAddMsgFeeProposalResponse](#provenance.msgfees.v1.MsgAddMsgFeeProposalResponse) | AddMsgFeeProposal defines a governance proposal to add additional msg based fee | |
+| `UpdateMsgFeeProposal` | [MsgUpdateMsgFeeProposalRequest](#provenance.msgfees.v1.MsgUpdateMsgFeeProposalRequest) | [MsgUpdateMsgFeeProposalResponse](#provenance.msgfees.v1.MsgUpdateMsgFeeProposalResponse) | UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee | |
+| `RemoveMsgFeeProposal` | [MsgRemoveMsgFeeProposalRequest](#provenance.msgfees.v1.MsgRemoveMsgFeeProposalRequest) | [MsgRemoveMsgFeeProposalResponse](#provenance.msgfees.v1.MsgRemoveMsgFeeProposalResponse) | RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee | |
+| `UpdateNhashPerUsdMilProposal` | [MsgUpdateNhashPerUsdMilProposalRequest](#provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalRequest) | [MsgUpdateNhashPerUsdMilProposalResponse](#provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalResponse) | UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param | |
+| `UpdateConversionFeeDenomProposal` | [MsgUpdateConversionFeeDenomProposalRequest](#provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalRequest) | [MsgUpdateConversionFeeDenomProposalResponse](#provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalResponse) | UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom | |
 
  <!-- end services -->
 

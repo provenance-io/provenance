@@ -180,7 +180,7 @@ replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alp
 replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.3-pio-4.0.20230804192106-0194df1aa61d
 
 // Use cometbft as requied by the SDK at v0.46.13
-replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.28
+replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.29
 
 // Replace broken goleveldb as required by the SDK at v0.46.13
 replace github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7

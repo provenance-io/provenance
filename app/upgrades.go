@@ -42,26 +42,7 @@ type appUpgrade struct {
 // If something is happening in the rc upgrade(s) that isn't being applied in the non-rc,
 // or vice versa, please add comments explaining why in both entries.
 var upgrades = map[string]appUpgrade{
-	"quicksilver-rc1": { // upgrade for v1.15.0-rc2
-		Handler: func(ctx sdk.Context, app *App, _ module.VersionMap) (module.VersionMap, error) {
-			app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
-			app.AttributeKeeper.PopulateAddressAttributeNameTable(ctx)
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
-		},
-	},
-	"quicksilver-rc2": {}, // upgrade for v1.15.0-rc3
-	"quicksilver": { // upgrade for v1.15.0
-		Handler: func(ctx sdk.Context, app *App, _ module.VersionMap) (module.VersionMap, error) {
-			app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
-			app.AttributeKeeper.PopulateAddressAttributeNameTable(ctx)
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
-		},
-	},
-	"rust-rc1": { // upgrade for v1.16.0-rc1,
+	"rust-rc1": { // upgrade for v1.16.0-rc1
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			vm, err = runModuleMigrations(ctx, app, vm)
@@ -87,7 +68,7 @@ var upgrades = map[string]appUpgrade{
 		},
 		Added: []string{triggertypes.ModuleName},
 	},
-	"rust": { // upgrade for v1.16.0,
+	"rust": { // upgrade for v1.16.0
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			vm, err = runModuleMigrations(ctx, app, vm)
@@ -111,6 +92,32 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 		Added: []string{triggertypes.ModuleName},
+	},
+	"saffron-rc1": { // upgrade for v1.17.0-rc1
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			removeInactiveValidatorDelegations(ctx, app)
+
+			return vm, nil
+		},
+	},
+	"saffron": { // upgrade for v1.17.0
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			removeInactiveValidatorDelegations(ctx, app)
+
+			return vm, nil
+		},
 	},
 	// TODO - Add new upgrade definitions here.
 }
@@ -196,6 +203,7 @@ func runModuleMigrations(ctx sdk.Context, app *App, vm module.VersionMap) (modul
 var _ = runModuleMigrations
 
 // addGovV1SubmitFee adds a msg-fee for the gov v1 MsgSubmitProposal if there isn't one yet.
+// TODO: Remove with the rust handlers.
 func addGovV1SubmitFee(ctx sdk.Context, app *App) {
 	typeURL := sdk.MsgTypeURL(&govtypesv1.MsgSubmitProposal{})
 
@@ -233,6 +241,7 @@ func addGovV1SubmitFee(ctx sdk.Context, app *App) {
 }
 
 // removeP8eMemorializeContractFee removes the message fee for the now-non-existent MsgP8eMemorializeContractRequest.
+// TODO: Remove with the rust handlers.
 func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
 	typeURL := "/provenance.metadata.v1.MsgP8eMemorializeContractRequest"
 
@@ -250,6 +259,7 @@ func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
 }
 
 // removeInactiveValidatorDelegations unbonds all delegations from inactive validators, triggering their removal from the validator set.
+// This should be applied in most upgrades.
 func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 	unbondingTimeParam := app.StakingKeeper.GetParams(ctx).UnbondingTime
 	ctx.Logger().Info(fmt.Sprintf("removing all delegations from validators that have been inactive (unbonded) for %d days", int64(unbondingTimeParam.Hours()/24)))
@@ -282,6 +292,7 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 }
 
 // fixNameIndexEntries fixes the name module's address to name index entries.
+// TODO: Remove with the rust handlers.
 func fixNameIndexEntries(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Fixing name module store index entries.")
 	app.NameKeeper.DeleteInvalidAddressIndexEntries(ctx)
@@ -290,6 +301,7 @@ func fixNameIndexEntries(ctx sdk.Context, app *App) {
 
 // setAccountDataNameRecord makes sure the account data name record exists, is restricted,
 // and is owned by the attribute module. An error is returned if it fails to make it so.
+// TODO: Remove with the rust handlers.
 func setAccountDataNameRecord(ctx sdk.Context, accountK attributetypes.AccountKeeper, nameK attributetypes.NameKeeper) (err error) {
 	return attributekeeper.EnsureModuleAccountAndAccountDataNameRecord(ctx, accountK, nameK)
 }
