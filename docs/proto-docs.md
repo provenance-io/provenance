@@ -1209,6 +1209,7 @@ EventHoldAdded is an event indicating that some funds were placed on hold in an 
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address is the bech32 address string of the account with the funds. |
 | `amount` | [string](#string) |  | amount is a Coins string of the funds placed on hold. |
+| `reason` | [string](#string) |  | reason is a human-readable indicator of why this hold was added. |
 
 
 
