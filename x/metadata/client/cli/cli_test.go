@@ -521,6 +521,7 @@ func ownerPartyList(addresses ...string) []metadatatypes.Party {
 	return retval
 }
 
+// indent breaks the str into lines and adds the desired number of spaces at the start of each line.
 func indent(str string, spaces int) string {
 	var sb strings.Builder
 	lines := strings.Split(str, "\n")
@@ -528,6 +529,27 @@ func indent(str string, spaces int) string {
 	s := strings.Repeat(" ", spaces)
 	for i, l := range lines {
 		sb.WriteString(s)
+		sb.WriteString(l)
+		if i != maxI {
+			sb.WriteString("\n")
+		}
+	}
+	return sb.String()
+}
+
+// entryIndent is similar to indent except the very first line will include the - that a yaml entry would have.
+// Panics if spaces < 2.
+func entryIndent(str string, spaces int) string {
+	var sb strings.Builder
+	lines := strings.Split(str, "\n")
+	maxI := len(lines) - 1
+	s := strings.Repeat(" ", spaces)
+	for i, l := range lines {
+		if i == 0 {
+			sb.WriteString(strings.Repeat(" ", spaces-2) + "- ")
+		} else {
+			sb.WriteString(s)
+		}
 		sb.WriteString(l)
 		if i != maxI {
 			sb.WriteString("\n")
@@ -621,7 +643,11 @@ func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmdGen func() *cobra.Comma
 				require.NoErrorf(t, err, "%s error", cmdName)
 			}
 			for _, exp := range tc.expOut {
-				assert.Contains(t, outStr, exp, "%s command output", cmdName)
+				if !assert.Contains(t, outStr, exp, "%s command output", cmdName) {
+					// The expected entry is easily lost in the failure message, so log it now too.
+					// Logging it instead of putting it in the assertion message so it lines up with the deferrable.
+					t.Logf("Not Found:\n%s", exp)
+				}
 			}
 		})
 	}
@@ -649,7 +675,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataParamsCmd() {
 		{
 			name:   "get params as json output including request",
 			args:   []string{s.asJson, s.includeRequest},
-			expOut: []string{"\"params\":{}", "\"request\":{}"},
+			expOut: []string{"\"params\":{}", "\"request\":{\"include_request\":true}"},
 		},
 		{
 			name:   "get locator params as json",
@@ -659,7 +685,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataParamsCmd() {
 		{
 			name:   "get locator params as text including request",
 			args:   []string{"locator", s.asText, s.includeRequest},
-			expOut: []string{"params:", "max_uri_length: 2048", "request: {}"},
+			expOut: []string{"params:", "max_uri_length: 2048", "request:", "include_request: true"},
 		},
 	}
 
@@ -678,12 +704,12 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 		{
 			name:   "get metadata by id - scope id as text",
 			args:   []string{s.scopeID.String(), s.asText},
-			expOut: []string{indent(s.scopeAsText, 4)},
+			expOut: []string{entryIndent(s.scopeAsText, 2)},
 		},
 		{
 			name:   "get metadata by id - scope id does not exist",
 			args:   []string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
-			expOut: []string{"scope: null", "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
+			expOut: []string{"not_found:\n- scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"},
 		},
 		{
 			name:   "get metadata by id - session id as json",
@@ -693,12 +719,12 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 		{
 			name:   "get metadata by id - session id as text",
 			args:   []string{s.sessionID.String(), s.asText},
-			expOut: []string{indent(s.sessionAsText, 4)},
+			expOut: []string{entryIndent(s.sessionAsText, 2)},
 		},
 		{
 			name:   "get metadata by id - session id does not exist",
 			args:   []string{"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
-			expOut: []string{"session: null", "session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
+			expOut: []string{"not_found:\n- session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"},
 		},
 		{
 			name:   "get metadata by id - record id as json",
@@ -708,12 +734,12 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 		{
 			name:   "get metadata by id - record id as text",
 			args:   []string{s.recordID.String(), s.asText},
-			expOut: []string{indent(s.recordAsText, 4)},
+			expOut: []string{entryIndent(s.recordAsText, 2)},
 		},
 		{
 			name:   "get metadata by id - record id does not exist",
 			args:   []string{"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
-			expOut: []string{"record: null", "record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
+			expOut: []string{"not_found:\n- record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"},
 		},
 		{
 			name:   "get metadata by id - scope spec id as json",
@@ -723,12 +749,12 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 		{
 			name:   "get metadata by id - scope spec id as text",
 			args:   []string{s.scopeSpecID.String(), s.asText},
-			expOut: []string{indent(s.scopeSpecAsText, 4)},
+			expOut: []string{entryIndent(s.scopeSpecAsText, 2)},
 		},
 		{
 			name:   "get metadata by id - scope spec id does not exist",
 			args:   []string{"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
-			expOut: []string{"specification: null", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
+			expOut: []string{"not_found:\n- scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
 		},
 		{
 			name:   "get metadata by id - contract spec id as json",
@@ -738,12 +764,12 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 		{
 			name:   "get metadata by id - contract spec id as text",
 			args:   []string{s.contractSpecID.String(), s.asText},
-			expOut: []string{indent(s.contractSpecAsText, 4)},
+			expOut: []string{entryIndent(s.contractSpecAsText, 2)},
 		},
 		{
 			name:   "get metadata by id - contract spec id does not exist",
 			args:   []string{"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
-			expOut: []string{"specification: null", "contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
+			expOut: []string{"not_found:\n- contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"},
 		},
 		{
 			name:   "get metadata by id - record spec id as json",
@@ -753,12 +779,12 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 		{
 			name:   "get metadata by id - record spec id as text",
 			args:   []string{s.recordSpecID.String(), s.asText},
-			expOut: []string{indent(s.recordSpecAsText, 4)},
+			expOut: []string{entryIndent(s.recordSpecAsText, 2)},
 		},
 		{
 			name:   "get metadata by id - record spec id does not exist",
 			args:   []string{"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
-			expOut: []string{"specification: null", "recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
+			expOut: []string{"not_found:\n- recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"},
 		},
 		{
 			name:   "get metadata by id - bad prefix",
@@ -768,12 +794,12 @@ func (s *IntegrationCLITestSuite) TestGetMetadataByIDCmd() {
 		{
 			name:   "get metadata by id - no args",
 			args:   []string{},
-			expErr: "accepts 1 arg(s), received 0",
+			expErr: "requires at least 1 arg(s), only received 0",
 		},
 		{
 			name:   "get metadata by id - two args",
 			args:   []string{"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel", "scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
-			expErr: "accepts 1 arg(s), received 2",
+			expOut: []string{"not_found:\n- scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel\n- scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"},
 		},
 		{
 			name:   "get metadata by id - uuid",
