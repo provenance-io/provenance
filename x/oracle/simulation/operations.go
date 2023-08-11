@@ -183,13 +183,14 @@ func randomChannel(r *rand.Rand, ctx sdk.Context, ck channelkeeper.Keeper) (stri
 func randomQuery(r *rand.Rand) []byte {
 	queryType := randIntBetween(r, 0, 3)
 	var query string
-	if queryType == 0 {
+	switch queryType {
+	case 0:
 		query = ""
-	} else if queryType == 1 {
+	case 1:
 		query = "{}"
-	} else if queryType == 2 {
+	case 2:
 		query = "{\"version\":{}}"
-	} else {
+	default:
 		query = "xyz"
 	}
 

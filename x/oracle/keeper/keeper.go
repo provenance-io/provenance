@@ -70,8 +70,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // BindPort stores the provided portID and binds to it, returning the associated capability
 func (k Keeper) BindPort(ctx sdk.Context, portID string) error {
-	cap := k.portKeeper.BindPort(ctx, portID)
-	return k.ClaimCapability(ctx, cap, host.PortPath(portID))
+	capability := k.portKeeper.BindPort(ctx, portID)
+	return k.ClaimCapability(ctx, capability, host.PortPath(portID))
 }
 
 // IsBound checks if the interchain query already bound to the desired port

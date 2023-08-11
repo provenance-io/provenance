@@ -42,10 +42,10 @@ func (s msgServer) UpdateOracle(goCtx context.Context, msg *types.MsgUpdateOracl
 }
 
 // SendQueryOracle sends an icq to another chain's oracle
-func (k msgServer) SendQueryOracle(goCtx context.Context, msg *types.MsgSendQueryOracleRequest) (*types.MsgSendQueryOracleResponse, error) {
+func (s msgServer) SendQueryOracle(goCtx context.Context, msg *types.MsgSendQueryOracleRequest) (*types.MsgSendQueryOracleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	seq, err := k.QueryOracle(ctx, msg.Query, msg.Channel)
+	seq, err := s.QueryOracle(ctx, msg.Query, msg.Channel)
 	if err != nil {
 		return nil, err
 	}

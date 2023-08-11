@@ -24,7 +24,7 @@ func (k Keeper) SendQuery(
 	sourceChannel string,
 	chanCap *capabilitytypes.Capability,
 	reqs []abci.RequestQuery,
-	timeoutHeight clienttypes.Height,
+	_ clienttypes.Height,
 	timeoutTimestamp uint64,
 ) (uint64, error) {
 	sourceChannelEnd, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
@@ -37,7 +37,7 @@ func (k Keeper) SendQuery(
 
 	data, err := icqtypes.SerializeCosmosQuery(reqs)
 	if err != nil {
-		return 0, sdkerrors.Wrap(err, "could not serialize reqs into cosmos query")
+		return 0, cerrs.Wrap(err, "could not serialize reqs into cosmos query")
 	}
 	icqPacketData := icqtypes.InterchainQueryPacketData{
 		Data: data,
@@ -57,7 +57,7 @@ func (k Keeper) createOutgoingPacket(
 	timeoutTimestamp uint64,
 ) (uint64, error) {
 	if err := icqPacketData.ValidateBasic(); err != nil {
-		return 0, sdkerrors.Wrap(err, "invalid interchain query packet data")
+		return 0, cerrs.Wrap(err, "invalid interchain query packet data")
 	}
 
 	// get the next sequence
@@ -94,15 +94,15 @@ func (k Keeper) OnAcknowledgementPacket(
 	case *channeltypes.Acknowledgement_Result:
 		var ackData icqtypes.InterchainQueryPacketAck
 		if err := icqtypes.ModuleCdc.UnmarshalJSON(resp.Result, &ackData); err != nil {
-			return sdkerrors.Wrap(err, "failed to unmarshal interchain query packet ack")
+			return cerrs.Wrap(err, "failed to unmarshal interchain query packet ack")
 		}
 		resps, err := icqtypes.DeserializeCosmosResponse(ackData.Data)
 		if err != nil {
-			return sdkerrors.Wrap(err, "could not deserialize data to cosmos response")
+			return cerrs.Wrap(err, "could not deserialize data to cosmos response")
 		}
 
 		if len(resps) < 1 {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "no responses in interchain query packet ack")
+			return cerrs.Wrap(sdkerrors.ErrInvalidRequest, "no responses in interchain query packet ack")
 		}
 
 		var r types.QueryOracleResponse
