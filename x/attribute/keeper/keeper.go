@@ -521,20 +521,6 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 	return nil
 }
 
-// PopulateAddressAttributeNameTable retrieves all attributes and populates address by attribute name lookup table
-// TODO: remove after v1.15.0 upgrade handler is removed
-func (k Keeper) PopulateAddressAttributeNameTable(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.AttributeKeyPrefix)
-	for ; it.Valid(); it.Next() {
-		attr := types.Attribute{}
-		if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
-			return
-		}
-		k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
-	}
-}
-
 // DeleteExpiredAttributes find and delete expired attributes returns the total deleted
 // limit sets the max amount to delete in a call, 0 for not limit
 func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
