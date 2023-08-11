@@ -177,6 +177,7 @@ func runModuleMigrations(ctx sdk.Context, app *App, vm module.VersionMap) (modul
 var _ = runModuleMigrations
 
 // addGovV1SubmitFee adds a msg-fee for the gov v1 MsgSubmitProposal if there isn't one yet.
+// TODO: Remove with the rust handlers.
 func addGovV1SubmitFee(ctx sdk.Context, app *App) {
 	typeURL := sdk.MsgTypeURL(&govtypesv1.MsgSubmitProposal{})
 
@@ -214,6 +215,7 @@ func addGovV1SubmitFee(ctx sdk.Context, app *App) {
 }
 
 // removeP8eMemorializeContractFee removes the message fee for the now-non-existent MsgP8eMemorializeContractRequest.
+// TODO: Remove with the rust handlers.
 func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
 	typeURL := "/provenance.metadata.v1.MsgP8eMemorializeContractRequest"
 
@@ -231,6 +233,7 @@ func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
 }
 
 // removeInactiveValidatorDelegations unbonds all delegations from inactive validators, triggering their removal from the validator set.
+// This should be applied in most upgrades.
 func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 	unbondingTimeParam := app.StakingKeeper.GetParams(ctx).UnbondingTime
 	ctx.Logger().Info(fmt.Sprintf("removing all delegations from validators that have been inactive (unbonded) for %d days", int64(unbondingTimeParam.Hours()/24)))
@@ -263,6 +266,7 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 }
 
 // fixNameIndexEntries fixes the name module's address to name index entries.
+// TODO: Remove with the rust handlers.
 func fixNameIndexEntries(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Fixing name module store index entries.")
 	app.NameKeeper.DeleteInvalidAddressIndexEntries(ctx)
@@ -271,6 +275,7 @@ func fixNameIndexEntries(ctx sdk.Context, app *App) {
 
 // setAccountDataNameRecord makes sure the account data name record exists, is restricted,
 // and is owned by the attribute module. An error is returned if it fails to make it so.
+// TODO: Remove with the rust handlers.
 func setAccountDataNameRecord(ctx sdk.Context, accountK attributetypes.AccountKeeper, nameK attributetypes.NameKeeper) (err error) {
 	return attributekeeper.EnsureModuleAccountAndAccountDataNameRecord(ctx, accountK, nameK)
 }
