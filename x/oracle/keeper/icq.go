@@ -3,10 +3,11 @@ package keeper
 import (
 	"time"
 
-	cerrs "cosmossdk.io/errors"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	abcitypes "github.com/tendermint/tendermint/abci/types"
+
+	cerrs "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
