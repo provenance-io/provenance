@@ -605,8 +605,8 @@ icon-url           - address to a image to be used as an icon (optional, can onl
 				ClassName:       args[4],
 			}
 			sourceValue := args[3]
-			var recordID types.MetadataAddress
-			recordID, err = types.MetadataAddressFromBech32(sourceValue)
+			var recordID sdk.AccAddress
+			recordID, err = sdk.AccAddressFromBech32(sourceValue)
 			if err != nil {
 				contractSpecification.Source = &types.ContractSpecification_Hash{
 					Hash: sourceValue,
