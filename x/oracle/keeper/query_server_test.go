@@ -17,8 +17,7 @@ func (s *KeeperTestSuite) TestOracleAddress() {
 		{
 			name:     "failure - should handle nil request",
 			req:      nil,
-			expected: nil,
-			err:      "rpc error: code = InvalidArgument desc = invalid request",
+			expected: &types.QueryOracleAddressResponse{Address: ""},
 		},
 		{
 			name:     "success - should return correct oracle address",
