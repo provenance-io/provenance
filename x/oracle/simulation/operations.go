@@ -61,7 +61,7 @@ func WeightedOperations(
 	}
 }
 
-// SimulateMsgCreateTrigger sends a MsgUpdateOracle.
+// SimulateMsgUpdateOracle sends a MsgUpdateOracle.
 func SimulateMsgUpdateOracle(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,

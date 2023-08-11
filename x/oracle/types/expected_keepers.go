@@ -20,7 +20,7 @@ type ICS4Wrapper interface {
 	) (sequence uint64, err error)
 }
 
-// Channel defines the expected IBC channel keeper
+// ChannelKeeper defines the expected IBC channel keeper
 type ChannelKeeper interface {
 	GetChannel(ctx sdk.Context, portID, channelID string) (channeltypes.Channel, bool)
 	GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool)

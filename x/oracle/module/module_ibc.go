@@ -155,6 +155,7 @@ func (am AppModule) OnTimeoutPacket(
 	return am.keeper.OnTimeoutPacket(ctx, modulePacket)
 }
 
+// NegotiateAppVersion implements the IBCModule interface
 func (am AppModule) NegotiateAppVersion(
 	_ sdk.Context,
 	_ channeltypes.Order,
