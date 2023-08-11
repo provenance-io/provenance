@@ -107,7 +107,7 @@ func (k Keeper) OnAcknowledgementPacket(
 		}
 
 		var r types.QueryOracleResponse
-		if err := k.cdc.Unmarshal(resps[0].Value, &r); err != nil {
+		if err = k.cdc.Unmarshal(resps[0].Value, &r); err != nil {
 			return cerrs.Wrapf(err, "failed to unmarshal interchain query response to type %T", resp)
 		}
 
@@ -123,7 +123,7 @@ func (k Keeper) OnAcknowledgementPacket(
 
 		if err != nil {
 			k.Logger(ctx).Error("interchain query ack response was unable to emit event", "sequence", modulePacket.Sequence, "error", err)
-			return cerrs.Wrapf(err, "failed to emit event %w", err)
+			return err
 		}
 	case *channeltypes.Acknowledgement_Error:
 		err := ctx.EventManager().EmitTypedEvent(&types.EventOracleQueryError{
@@ -136,7 +136,7 @@ func (k Keeper) OnAcknowledgementPacket(
 
 		if err != nil {
 			k.Logger(ctx).Error("interchain query ack error response was unable to emit event", "sequence", modulePacket.Sequence, "error", err)
-			return cerrs.Wrapf(err, "failed to emit event %w", err)
+			return err
 		}
 	}
 	return nil
@@ -156,7 +156,7 @@ func (k Keeper) OnTimeoutPacket(
 
 	if err != nil {
 		k.Logger(ctx).Error("interchain query timeout was unable to emit event", "sequence", modulePacket.Sequence, "error", err)
-		return cerrs.Wrapf(err, "failed to emit event %w", err)
+		return err
 	}
 
 	return nil
