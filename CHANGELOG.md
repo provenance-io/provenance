@@ -51,6 +51,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Fix ibcnet relayer creating multiple connections on restart [#1620](https://github.com/provenance-io/provenance/issues/1620).
+* Fix for incorrect resource-id type casting on contract specification [#1647](https://github.com/provenance-io/provenance/issues/1647).
 
 ---
 

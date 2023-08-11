@@ -354,7 +354,7 @@ func (s *SpecificationTestSuite) TestContractSpecValidateBasic() {
 				nil,
 				[]string{specTestBech32},
 				[]PartyType{PartyType_PARTY_TYPE_OWNER},
-				NewContractSpecificationSourceResourceID(MetadataAddress(specTestAddr)),
+				NewContractSpecificationSourceResourceID(specTestAddr),
 				"someclass",
 			),
 			fmt.Sprintf("invalid source resource id: %s", "invalid metadata address type: 133"),
