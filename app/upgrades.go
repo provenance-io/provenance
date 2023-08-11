@@ -325,8 +325,7 @@ func setAccountDataNameRecord(ctx sdk.Context, accountK attributetypes.AccountKe
 	return attributekeeper.EnsureModuleAccountAndAccountDataNameRecord(ctx, accountK, nameK)
 }
 
-// setAccountDataNameRecord makes sure the account data name record exists, is restricted,
-// and is owned by the attribute module. An error is returned if it fails to make it so.
+// setupICQ sets the correct default values for ICQKeeper
 func setupICQ(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating ICQ params")
 	app.ICQKeeper.SetParams(ctx, icqtypes.NewParams(true, []string{"/provenance.oracle.v1.Query/Oracle"}))
