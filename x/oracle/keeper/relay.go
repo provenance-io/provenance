@@ -113,21 +113,31 @@ func (k Keeper) OnAcknowledgementPacket(
 
 		k.SetLastQueryPacketSeq(ctx, modulePacket.Sequence)
 
-		ctx.EventManager().EmitTypedEvent(&types.EventOracleQuerySuccess{
+		err = ctx.EventManager().EmitTypedEvent(&types.EventOracleQuerySuccess{
 			SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),
 			Result:     string(resp.Result),
 			Channel:    modulePacket.DestinationChannel,
 		})
 
-		k.Logger(ctx).Info("interchain query response", "sequence", modulePacket.Sequence, "response", r)
+		k.Logger(ctx).Info("interchain query ack response", "sequence", modulePacket.Sequence, "response", r)
+
+		if err != nil {
+			k.Logger(ctx).Error("interchain query ack response was unable to emit event", "sequence", modulePacket.Sequence, "error", err)
+			return cerrs.Wrapf(err, "failed to emit event %w", err)
+		}
 	case *channeltypes.Acknowledgement_Error:
-		ctx.EventManager().EmitTypedEvent(&types.EventOracleQueryError{
+		err := ctx.EventManager().EmitTypedEvent(&types.EventOracleQueryError{
 			SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),
 			Error:      resp.Error,
 			Channel:    modulePacket.DestinationChannel,
 		})
 
-		k.Logger(ctx).Error("interchain query response", "sequence", modulePacket.Sequence, "error", resp.Error)
+		k.Logger(ctx).Error("interchain query ack error response", "sequence", modulePacket.Sequence, "error", resp.Error)
+
+		if err != nil {
+			k.Logger(ctx).Error("interchain query ack error response was unable to emit event", "sequence", modulePacket.Sequence, "error", err)
+			return cerrs.Wrapf(err, "failed to emit event %w", err)
+		}
 	}
 	return nil
 }
@@ -137,12 +147,17 @@ func (k Keeper) OnTimeoutPacket(
 	ctx sdk.Context,
 	modulePacket channeltypes.Packet,
 ) error {
-	ctx.EventManager().EmitTypedEvent(&types.EventOracleQueryTimeout{
+	err := ctx.EventManager().EmitTypedEvent(&types.EventOracleQueryTimeout{
 		SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),
 		Channel:    modulePacket.DestinationChannel,
 	})
 
 	k.Logger(ctx).Error("Packet timeout", "sequence", modulePacket.Sequence)
+
+	if err != nil {
+		k.Logger(ctx).Error("interchain query timeout was unable to emit event", "sequence", modulePacket.Sequence, "error", err)
+		return cerrs.Wrapf(err, "failed to emit event %w", err)
+	}
 
 	return nil
 }
