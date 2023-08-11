@@ -60,7 +60,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// BindPort stores the provided portID and binds to it, returning the associated capability
+// BindPort stores the provided portID and binds to it
 func (k Keeper) BindPort(ctx sdk.Context, portID string) error {
 	capability := k.portKeeper.BindPort(ctx, portID)
 	return k.ClaimCapability(ctx, capability, host.PortPath(portID))
