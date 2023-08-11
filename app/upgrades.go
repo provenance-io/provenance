@@ -14,7 +14,9 @@ import (
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
+	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
+	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -111,6 +113,20 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 		Added: []string{triggertypes.ModuleName},
+	},
+	"saffron-rc1": { // upgrade for v1.16.0,
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			setupICQ(ctx, app)
+
+			return vm, nil
+		},
+		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
 }
@@ -292,4 +308,12 @@ func fixNameIndexEntries(ctx sdk.Context, app *App) {
 // and is owned by the attribute module. An error is returned if it fails to make it so.
 func setAccountDataNameRecord(ctx sdk.Context, accountK attributetypes.AccountKeeper, nameK attributetypes.NameKeeper) (err error) {
 	return attributekeeper.EnsureModuleAccountAndAccountDataNameRecord(ctx, accountK, nameK)
+}
+
+// setAccountDataNameRecord makes sure the account data name record exists, is restricted,
+// and is owned by the attribute module. An error is returned if it fails to make it so.
+func setupICQ(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Updating ICQ params")
+	app.ICQKeeper.SetParams(ctx, icqtypes.NewParams(true, []string{"/provenance.oracle.v1.Query/Oracle"}))
+	ctx.Logger().Info("Done updating ICQ params")
 }
