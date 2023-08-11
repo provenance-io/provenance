@@ -52,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   The request is now omitted by default, but will be included if `include_request` is `true`.
   The id info is still included by default, but will be excluded if `exclude_id_info` is `true`.
 * Removed the quicksilver upgrade handlers [PR 1648](https://github.com/provenance-io/provenance/pull/1648).
+* Bump cometbft to v0.34.29 (from v0.34.28) [PR 1649](https://github.com/provenance-io/provenance/pull/1649).
 
 ### Bug Fixes
 
