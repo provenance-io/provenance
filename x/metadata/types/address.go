@@ -139,26 +139,38 @@ func MetadataAddressFromHex(address string) (MetadataAddress, error) {
 	return MetadataAddress(bz), err
 }
 
-// MetadataAddressFromBech32 creates a MetadataAddress from a Bech32 string.  The encoded data is checked against the
-// provided bech32 hrp along with an overall verification of the byte format.
-func MetadataAddressFromBech32(address string) (addr MetadataAddress, err error) {
+// ParseMetadataAddressFromBech32 creates a MetadataAddress from a Bech32 string.
+// The encoded data is checked against the provided bech32 hrp along with an overall verification of the byte format.
+// The address, hrp, and any error are returned.
+//
+// If you don't need the HRP, use MetadataAddressFromBech32.
+func ParseMetadataAddressFromBech32(address string) (MetadataAddress, string, error) {
 	if len(strings.TrimSpace(address)) == 0 {
-		return MetadataAddress{}, errors.New("empty address string is not allowed")
+		return MetadataAddress{}, "", errors.New("empty address string is not allowed")
 	}
 
 	hrp, bz, err := bech32.DecodeAndConvert(address)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	expectedHrp, err := VerifyMetadataAddressFormat(bz)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if expectedHrp != hrp {
-		return MetadataAddress{}, fmt.Errorf("invalid bech32 prefix; expected %s, got %s", expectedHrp, hrp)
+		return MetadataAddress{}, "", fmt.Errorf("invalid bech32 prefix; expected %s, got %s", expectedHrp, hrp)
 	}
 
-	return MetadataAddress(bz), nil
+	return bz, hrp, nil
+}
+
+// MetadataAddressFromBech32 creates a MetadataAddress from a Bech32 string.  The encoded data is checked against the
+// provided bech32 hrp along with an overall verification of the byte format.
+//
+// If you need the HRP, use ParseMetadataAddressFromBech32.
+func MetadataAddressFromBech32(address string) (addr MetadataAddress, err error) {
+	bz, _, err := ParseMetadataAddressFromBech32(address)
+	return bz, err
 }
 
 // ScopeMetadataAddress creates a MetadataAddress instance for the given scope by its uuid
