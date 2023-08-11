@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) TestUpdateOracle() {
 				s.Assert().Equal(1, len(s.ctx.EventManager().Events()), "should emit the correct number of events")
 				s.Assert().Equal(*tc.event, s.ctx.EventManager().Events()[0], "should emit the correct event")
 			} else {
-				s.Assert().Equal(0, len(s.ctx.EventManager().Events()), "should not emit events")
+				s.Assert().Empty(s.ctx.EventManager().Events(), "should not emit events")
 			}
 
 			if len(tc.err) > 0 {
@@ -117,7 +117,7 @@ func (s *KeeperTestSuite) TestSendQueryOracle() {
 				s.Assert().Equal(1, len(s.ctx.EventManager().Events()), "should emit the correct number of events")
 				s.Assert().Equal(*tc.event, s.ctx.EventManager().Events()[0], "should emit the correct event")
 			} else {
-				s.Assert().Equal(0, len(s.ctx.EventManager().Events()), "should not emit events")
+				s.Assert().Empty(s.ctx.EventManager().Events(), "should not emit events")
 			}
 
 			if len(tc.err) > 0 {
