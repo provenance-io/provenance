@@ -415,30 +415,32 @@ func (s *UpgradeTestSuite) TestRust() {
 	s.AssertUpgradeHandlerLogs("rust", expInLog, expNotInLog)
 }
 
-func (s *UpgradeTestSuite) TestSaffron() {
-	// Each part is (hopefully) tested thoroughly on its own.
-	// So for this test, just make sure there's log entries for each part being done.
-
-	expInLog := []string{
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF Updating ICQ params",
-		"INF Done updating ICQ params",
-	}
-
-	s.AssertUpgradeHandlerLogs("saffron", expInLog, nil)
-}
-
 func (s *UpgradeTestSuite) TestSaffronRC1() {
 	// Each part is (hopefully) tested thoroughly on its own.
 	// So for this test, just make sure there's log entries for each part being done.
 
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
 		"INF Updating ICQ params",
 		"INF Done updating ICQ params",
 	}
 
 	s.AssertUpgradeHandlerLogs("saffron-rc1", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestSaffron() {
+	// Each part is (hopefully) tested thoroughly on its own.
+	// So for this test, just make sure there's log entries for each part being done.
+
+	expInLog := []string{
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
+		"INF Updating ICQ params",
+		"INF Done updating ICQ params",
+	}
+
+	s.AssertUpgradeHandlerLogs("saffron", expInLog, nil)
 }
 
 func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
