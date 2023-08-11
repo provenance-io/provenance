@@ -38,7 +38,6 @@ type IntegrationTestSuite struct {
 	accountKey       *secp256k1.PrivKey
 	accountAddresses []sdk.AccAddress
 
-	params   oracletypes.Params
 	sequence uint64
 	port     string
 	oracle   string
@@ -88,13 +87,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState[authtypes.ModuleName] = authDataBz
 
 	s.sequence = uint64(1)
-	s.params = oracletypes.DefaultParams()
 	s.port = oracletypes.PortID
 	s.oracle = "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"
 
 	oracleData := oracletypes.NewGenesisState(
 		s.port,
-		s.params,
 		s.sequence,
 		s.oracle,
 	)

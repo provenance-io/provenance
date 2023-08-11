@@ -437,9 +437,6 @@
     - [EventOracleQuerySuccess](#provenance.oracle.v1.EventOracleQuerySuccess)
     - [EventOracleQueryTimeout](#provenance.oracle.v1.EventOracleQueryTimeout)
   
-- [provenance/oracle/v1/params.proto](#provenance/oracle/v1/params.proto)
-    - [Params](#provenance.oracle.v1.Params)
-  
 - [provenance/oracle/v1/genesis.proto](#provenance/oracle/v1/genesis.proto)
     - [GenesisState](#provenance.oracle.v1.GenesisState)
   
@@ -6818,32 +6815,6 @@ EventOracleQueryTimeout is an event for when the chain receives a timeout from a
 
 
 
-<a name="provenance/oracle/v1/params.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/oracle/v1/params.proto
-
-
-
-<a name="provenance.oracle.v1.Params"></a>
-
-### Params
-Params defines the parameters for the module.
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
 <a name="provenance/oracle/v1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -6860,7 +6831,6 @@ GenesisState defines the oracle module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sequence` | [uint64](#uint64) |  | Sequence is the next auto incremented id to be assigned to the next query |
-| `params` | [Params](#provenance.oracle.v1.Params) |  | Params are the parameters that the module uses |
 | `port_id` | [string](#string) |  | The port to assign to the module |
 | `oracle` | [string](#string) |  | The address of the oracle |
 

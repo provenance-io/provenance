@@ -54,15 +54,13 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { port = PortFn(r) },
 	)
 
-	params := types.DefaultParams()
-
 	var oracle string
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, Port, &port, simState.Rand,
 		func(r *rand.Rand) { oracle = OracleFn(r, simState.Accounts) },
 	)
 
-	genesis := types.NewGenesisState(port, params, sequenceID, oracle)
+	genesis := types.NewGenesisState(port, sequenceID, oracle)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(genesis)
 
 	bz, err := json.MarshalIndent(simState.GenState[types.ModuleName], "", " ")

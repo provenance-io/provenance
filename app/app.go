@@ -578,7 +578,6 @@ func New(
 		appCodec,
 		keys[oracletypes.StoreKey],
 		keys[oracletypes.MemStoreKey],
-		app.GetSubspace(icqtypes.ModuleName),
 		app.IBCKeeper.ChannelKeeper,
 		app.IBCKeeper.ChannelKeeper,
 		&app.IBCKeeper.PortKeeper,

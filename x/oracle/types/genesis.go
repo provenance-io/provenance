@@ -7,10 +7,9 @@ import (
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 )
 
-func NewGenesisState(port string, params Params, sequence uint64, oracle string) *GenesisState {
+func NewGenesisState(port string, sequence uint64, oracle string) *GenesisState {
 	return &GenesisState{
 		PortId:   port,
-		Params:   params,
 		Sequence: sequence,
 		Oracle:   oracle,
 	}
@@ -18,7 +17,7 @@ func NewGenesisState(port string, params Params, sequence uint64, oracle string)
 
 // DefaultGenesis returns the default oracle genesis state
 func DefaultGenesis() *GenesisState {
-	return NewGenesisState(PortID, DefaultParams(), 1, "")
+	return NewGenesisState(PortID, 1, "")
 }
 
 // Validate performs basic genesis state validation returning an error upon any
@@ -37,5 +36,5 @@ func (gs GenesisState) Validate() error {
 		return err
 	}
 
-	return gs.Params.Validate()
+	return nil
 }

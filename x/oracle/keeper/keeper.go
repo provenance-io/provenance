@@ -11,17 +11,15 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
 type Keeper struct {
-	cdc        codec.BinaryCodec
-	storeKey   storetypes.StoreKey
-	memKey     storetypes.StoreKey
-	paramstore paramtypes.Subspace
+	cdc      codec.BinaryCodec
+	storeKey storetypes.StoreKey
+	memKey   storetypes.StoreKey
 
 	ics4Wrapper     types.ICS4Wrapper
 	channelKeeper   types.ChannelKeeper
@@ -37,22 +35,16 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey,
 	memKey storetypes.StoreKey,
-	ps paramtypes.Subspace,
 	ics4Wrapper types.ICS4Wrapper,
 	channelKeeper types.ChannelKeeper,
 	portKeeper types.PortKeeper,
 	scopedKeeper types.ScopedKeeper,
 	wasmQueryServer wasmtypes.QueryServer,
 ) *Keeper {
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
-	}
-
 	return &Keeper{
-		storeKey:   storeKey,
-		cdc:        cdc,
-		memKey:     memKey,
-		paramstore: ps,
+		storeKey: storeKey,
+		cdc:      cdc,
+		memKey:   memKey,
 
 		ics4Wrapper:     ics4Wrapper,
 		channelKeeper:   channelKeeper,
