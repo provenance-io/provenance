@@ -40,15 +40,35 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Allow marker's transfer authority to prevent transfer of restricted coin with deny list on send [#1518](https://github.com/provenance-io/provenance/issues/1518).
+* New `GetByAddr` metadata query [#1443](https://github.com/provenance-io/provenance/issues/1443).
+* Add Trigger module queries to stargate whitelist for smart contracts [#1636](https://github.com/provenance-io/provenance/issues/1636)
+* Added the saffron upgrade handlers [PR 1648](https://github.com/provenance-io/provenance/pull/1648).
 
 ### Improvements
 
 * Update ibcnet ports so they don't conflict with host machine. [#1622](https://github.com/provenance-io/provenance/issues/1622)
 * Replace custom ibc-go v6.1.1 fork with official module.  [#1616](https://github.com/provenance-io/provenance/issues/1616)
+* Migrate `msgfees` gov proposals to v1. [#1328](https://github.com/provenance-io/provenance/issues/1328)
+* Updated metadata queries to optionally include the request and id info [#1443](https://github.com/provenance-io/provenance/issues/1443).
+  The request is now omitted by default, but will be included if `include_request` is `true`.
+  The id info is still included by default, but will be excluded if `exclude_id_info` is `true`.
+* Removed the quicksilver upgrade handlers [PR 1648](https://github.com/provenance-io/provenance/pull/1648).
+* Bump cometbft to v0.34.29 (from v0.34.28) [PR 1649](https://github.com/provenance-io/provenance/pull/1649).
 
 ### Bug Fixes
 
 * Fix ibcnet relayer creating multiple connections on restart [#1620](https://github.com/provenance-io/provenance/issues/1620).
+* Fix for incorrect resource-id type casting on contract specification [#1647](https://github.com/provenance-io/provenance/issues/1647).
+
+### Client Breaking
+
+* Metadata query responses no longer include the request by default [#1443](https://github.com/provenance-io/provenance/issues/1443).
+  They are still available by setting the `include_request` flag in the requests.
+* The `provenanced query metadata get` command has been changed to use the new `GetByAddr` query [#1443](https://github.com/provenance-io/provenance/issues/1443).
+  The command can now take in multiple ids.
+  The output of this command reflects the `GetByAddrResponse` instead of specific type queries.
+  The command no longer has any `--include-<thing>` flags since they don't pertain to the `GetByAddr` query.
+  The specific queries (e.g. `provenanced query metadata scope`) are still available with all appropriate flags.
 
 ---
 

@@ -30,7 +30,7 @@ func TestProposalContents(t *testing.T) {
 
 	// execute ProposalContents function
 	weightedProposalContent := simulation.ProposalContents(keeper.NewKeeper(app.AppCodec(), app.GetKey(types.ModuleName),
-		app.GetSubspace(types.ModuleName), "", pioconfig.GetProvenanceConfig().FeeDenom, nil, nil))
+		app.GetSubspace(types.ModuleName), "", pioconfig.GetProvenanceConfig().FeeDenom, nil, nil, app.InterfaceRegistry()))
 	require.Len(t, weightedProposalContent, 2)
 
 	w0 := weightedProposalContent[0]

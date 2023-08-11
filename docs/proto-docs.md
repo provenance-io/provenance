@@ -264,6 +264,8 @@
     - [ContractSpecificationWrapper](#provenance.metadata.v1.ContractSpecificationWrapper)
     - [ContractSpecificationsAllRequest](#provenance.metadata.v1.ContractSpecificationsAllRequest)
     - [ContractSpecificationsAllResponse](#provenance.metadata.v1.ContractSpecificationsAllResponse)
+    - [GetByAddrRequest](#provenance.metadata.v1.GetByAddrRequest)
+    - [GetByAddrResponse](#provenance.metadata.v1.GetByAddrResponse)
     - [OSAllLocatorsRequest](#provenance.metadata.v1.OSAllLocatorsRequest)
     - [OSAllLocatorsResponse](#provenance.metadata.v1.OSAllLocatorsResponse)
     - [OSLocatorParamsRequest](#provenance.metadata.v1.OSLocatorParamsRequest)
@@ -392,8 +394,18 @@
     - [Query](#provenance.msgfees.v1.Query)
   
 - [provenance/msgfees/v1/tx.proto](#provenance/msgfees/v1/tx.proto)
+    - [MsgAddMsgFeeProposalRequest](#provenance.msgfees.v1.MsgAddMsgFeeProposalRequest)
+    - [MsgAddMsgFeeProposalResponse](#provenance.msgfees.v1.MsgAddMsgFeeProposalResponse)
     - [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest)
     - [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse)
+    - [MsgRemoveMsgFeeProposalRequest](#provenance.msgfees.v1.MsgRemoveMsgFeeProposalRequest)
+    - [MsgRemoveMsgFeeProposalResponse](#provenance.msgfees.v1.MsgRemoveMsgFeeProposalResponse)
+    - [MsgUpdateConversionFeeDenomProposalRequest](#provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalRequest)
+    - [MsgUpdateConversionFeeDenomProposalResponse](#provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalResponse)
+    - [MsgUpdateMsgFeeProposalRequest](#provenance.msgfees.v1.MsgUpdateMsgFeeProposalRequest)
+    - [MsgUpdateMsgFeeProposalResponse](#provenance.msgfees.v1.MsgUpdateMsgFeeProposalResponse)
+    - [MsgUpdateNhashPerUsdMilProposalRequest](#provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalRequest)
+    - [MsgUpdateNhashPerUsdMilProposalResponse](#provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalResponse)
   
     - [Msg](#provenance.msgfees.v1.Msg)
   
@@ -4186,7 +4198,9 @@ ContractSpecificationRequest is the request type for the Query/ContractSpecifica
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `specification_id` | [string](#string) |  | specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84 or a bech32 contract specification address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn. It can also be a record specification address, e.g. recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44. |
-| `include_record_specs` | [bool](#bool) |  | include_record_specs is a flag for whether or not the record specifications in this contract specification should be included in the result. |
+| `include_record_specs` | [bool](#bool) |  | include_record_specs is a flag for whether to include the the record specifications of this contract specification in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -4234,6 +4248,8 @@ ContractSpecificationsAllRequest is the request type for the Query/ContractSpeci
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -4258,6 +4274,42 @@ ContractSpecificationsAllResponse is the response type for the Query/ContractSpe
 
 
 
+<a name="provenance.metadata.v1.GetByAddrRequest"></a>
+
+### GetByAddrRequest
+GetByAddrRequest is the request type for the Query/GetByAddr RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `addrs` | [string](#string) | repeated | ids are the metadata addresses of the things to look up. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.GetByAddrResponse"></a>
+
+### GetByAddrResponse
+GetByAddrResponse is the response type for the Query/GetByAddr RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scopes` | [Scope](#provenance.metadata.v1.Scope) | repeated | scopes contains any scopes that were requested and found. |
+| `sessions` | [Session](#provenance.metadata.v1.Session) | repeated | sessions contains any sessions that were requested and found. |
+| `records` | [Record](#provenance.metadata.v1.Record) | repeated | records contains any records that were requested and found. |
+| `scope_specs` | [ScopeSpecification](#provenance.metadata.v1.ScopeSpecification) | repeated | scope_specs contains any scope specifications that were requested and found. |
+| `contract_specs` | [ContractSpecification](#provenance.metadata.v1.ContractSpecification) | repeated | contract_specs contains any contract specifications that were requested and found. |
+| `record_specs` | [RecordSpecification](#provenance.metadata.v1.RecordSpecification) | repeated | record_specs contains any record specifications that were requested and found. |
+| `not_found` | [string](#string) | repeated | not_found contains any addrs requested but not found. |
+
+
+
+
+
+
 <a name="provenance.metadata.v1.OSAllLocatorsRequest"></a>
 
 ### OSAllLocatorsRequest
@@ -4266,6 +4318,7 @@ OSAllLocatorsRequest is the request type for the Query/OSAllLocators RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -4294,6 +4347,11 @@ OSAllLocatorsResponse is the response type for the Query/OSAllLocators RPC metho
 
 ### OSLocatorParamsRequest
 OSLocatorParamsRequest is the request type for the Query/OSLocatorParams RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -4325,6 +4383,7 @@ OSLocatorRequest is the request type for the Query/OSLocator RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  |  |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -4356,6 +4415,7 @@ OSLocatorsByScopeRequest is the request type for the Query/OSLocatorsByScope RPC
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `scope_id` | [string](#string) |  |  |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -4387,6 +4447,7 @@ OSLocatorsByURIRequest is the request type for the Query/OSLocatorsByURI RPC met
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `uri` | [string](#string) |  |  |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -4420,6 +4481,7 @@ OwnershipRequest is the request type for the Query/Ownership RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -4448,6 +4510,11 @@ OwnershipResponse is the response type for the Query/Ownership RPC method.
 
 ### QueryParamsRequest
 QueryParamsRequest is the request type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -4480,6 +4547,8 @@ RecordSpecificationRequest is the request type for the Query/RecordSpecification
 | ----- | ---- | ----- | ----------- |
 | `specification_id` | [string](#string) |  | specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84 or a bech32 contract specification address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn. It can also be a record specification address, e.g. recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44. |
 | `name` | [string](#string) |  | name is the name of the record to look up. It is required if the specification_id is a uuid or contract specification address. It is ignored if the specification_id is a record specification address. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -4526,6 +4595,8 @@ RecordSpecificationsAllRequest is the request type for the Query/RecordSpecifica
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -4560,6 +4631,8 @@ Query/RecordSpecificationsForContractSpecification RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `specification_id` | [string](#string) |  | specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84 or a bech32 contract specification address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn. It can also be a record specification address, e.g. recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -4610,6 +4683,8 @@ RecordsAllRequest is the request type for the Query/RecordsAll RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -4646,8 +4721,10 @@ RecordsRequest is the request type for the Query/Records RPC method.
 | `scope_id` | [string](#string) |  | scope_id can either be a uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. |
 | `session_id` | [string](#string) |  | session_id can either be a uuid, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0 or a bech32 session address, e.g. session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. This can only be a uuid if a scope_id is also provided. |
 | `name` | [string](#string) |  | name is the name of the record to look for |
-| `include_scope` | [bool](#bool) |  | include_scope is a flag for whether or not the scope containing these records should be included. |
-| `include_sessions` | [bool](#bool) |  | include_sessions is a flag for whether or not the sessions containing these records should be included. |
+| `include_scope` | [bool](#bool) |  | include_scope is a flag for whether to include the the scope containing these records in the response. |
+| `include_sessions` | [bool](#bool) |  | include_sessions is a flag for whether to include the sessions containing these records in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -4683,8 +4760,10 @@ ScopeRequest is the request type for the Query/Scope RPC method.
 | `scope_id` | [string](#string) |  | scope_id can either be a uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. |
 | `session_addr` | [string](#string) |  | session_addr is a bech32 session address, e.g. session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. |
 | `record_addr` | [string](#string) |  | record_addr is a bech32 record address, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3. |
-| `include_sessions` | [bool](#bool) |  | include_sessions is a flag for whether or not the sessions in the scope should be included. |
-| `include_records` | [bool](#bool) |  | include_records is a flag for whether or not the records in the scope should be included. |
+| `include_sessions` | [bool](#bool) |  | include_sessions is a flag for whether to include the sessions of the scope in the response. |
+| `include_records` | [bool](#bool) |  | include_records is a flag for whether to include the records of the scope in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -4718,8 +4797,10 @@ ScopeSpecificationRequest is the request type for the Query/ScopeSpecification R
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `specification_id` | [string](#string) |  | specification_id can either be a uuid, e.g. dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 or a bech32 scope specification address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m. |
-| `include_contract_specs` | [bool](#bool) |  | include_contract_specs is a flag for whether or not the contract specifications in the scope specification should be included. |
-| `include_record_specs` | [bool](#bool) |  | include_record_specs is a flag for whether or not the record specifications in the scope specification should be included. |
+| `include_contract_specs` | [bool](#bool) |  | include_contract_specs is a flag for whether to include the contract specifications of the scope specification in the response. |
+| `include_record_specs` | [bool](#bool) |  | include_record_specs is a flag for whether to include the record specifications of the scope specification in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -4768,6 +4849,8 @@ ScopeSpecificationsAllRequest is the request type for the Query/ScopeSpecificati
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -4817,6 +4900,8 @@ ScopesAllRequest is the request type for the Query/ScopesAll RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -4866,6 +4951,8 @@ SessionsAllRequest is the request type for the Query/SessionsAll RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -4902,8 +4989,10 @@ SessionsRequest is the request type for the Query/Sessions RPC method.
 | `session_id` | [string](#string) |  | session_id can either be a uuid, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0 or a bech32 session address, e.g. session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. This can only be a uuid if a scope_id is also provided. |
 | `record_addr` | [string](#string) |  | record_addr is a bech32 record address, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3. |
 | `record_name` | [string](#string) |  | record_name is the name of the record to find the session for in the provided scope. |
-| `include_scope` | [bool](#bool) |  | include_scope is a flag for whether or not the scope containing these sessions should be included. |
-| `include_records` | [bool](#bool) |  | include_records is a flag for whether or not the records in these sessions should be included. |
+| `include_scope` | [bool](#bool) |  | include_scope is a flag for whether to include the scope containing these sessions in the response. |
+| `include_records` | [bool](#bool) |  | include_records is a flag for whether to include the records of these sessions in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -4937,6 +5026,7 @@ ValueOwnershipRequest is the request type for the Query/ValueOwnership RPC metho
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -5024,6 +5114,7 @@ By default, the record specifications for this contract specification are not in
 The specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84, a bech32 contract specification address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn, or a bech32 record specification address, e.g. recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44. If it is a record specification address, then the contract specification that contains that record specification is used. | GET|/provenance/metadata/v1/contractspec/{specification_id}/recordspecs|
 | `RecordSpecification` | [RecordSpecificationRequest](#provenance.metadata.v1.RecordSpecificationRequest) | [RecordSpecificationResponse](#provenance.metadata.v1.RecordSpecificationResponse) | RecordSpecification returns a record specification for the given input. | GET|/provenance/metadata/v1/recordspec/{specification_id}GET|/provenance/metadata/v1/contractspec/{specification_id}/recordspec/{name}|
 | `RecordSpecificationsAll` | [RecordSpecificationsAllRequest](#provenance.metadata.v1.RecordSpecificationsAllRequest) | [RecordSpecificationsAllResponse](#provenance.metadata.v1.RecordSpecificationsAllResponse) | RecordSpecificationsAll retrieves all record specifications. | GET|/provenance/metadata/v1/recordspecs/all|
+| `GetByAddr` | [GetByAddrRequest](#provenance.metadata.v1.GetByAddrRequest) | [GetByAddrResponse](#provenance.metadata.v1.GetByAddrResponse) | GetByAddr retrieves metadata given any address(es). | GET|/provenance/metadata/v1/addr/{addrs}|
 | `OSLocatorParams` | [OSLocatorParamsRequest](#provenance.metadata.v1.OSLocatorParamsRequest) | [OSLocatorParamsResponse](#provenance.metadata.v1.OSLocatorParamsResponse) | OSLocatorParams returns all parameters for the object store locator sub module. | GET|/provenance/metadata/v1/locator/params|
 | `OSLocator` | [OSLocatorRequest](#provenance.metadata.v1.OSLocatorRequest) | [OSLocatorResponse](#provenance.metadata.v1.OSLocatorResponse) | OSLocator returns an ObjectStoreLocator by its owner's address. | GET|/provenance/metadata/v1/locator/{owner}|
 | `OSLocatorsByURI` | [OSLocatorsByURIRequest](#provenance.metadata.v1.OSLocatorsByURIRequest) | [OSLocatorsByURIResponse](#provenance.metadata.v1.OSLocatorsByURIResponse) | OSLocatorsByURI returns all ObjectStoreLocator entries for a locator uri. | GET|/provenance/metadata/v1/locator/uri/{uri}|
@@ -6187,6 +6278,35 @@ Query defines the gRPC querier service for marker module.
 
 
 
+<a name="provenance.msgfees.v1.MsgAddMsgFeeProposalRequest"></a>
+
+### MsgAddMsgFeeProposalRequest
+AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | type url of msg to add fee |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional fee for msg type |
+| `recipient` | [string](#string) |  | optional recipient to receive basis points |
+| `recipient_basis_points` | [string](#string) |  | basis points to use when recipient is present (1 - 10,000) |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgAddMsgFeeProposalResponse"></a>
+
+### MsgAddMsgFeeProposalResponse
+MsgAddMsgFeeProposalResponse defines the Msg/AddMsgFeeProposal response type
+
+
+
+
+
+
 <a name="provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest"></a>
 
 ### MsgAssessCustomMsgFeeRequest
@@ -6215,6 +6335,113 @@ MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
 
 
 
+
+<a name="provenance.msgfees.v1.MsgRemoveMsgFeeProposalRequest"></a>
+
+### MsgRemoveMsgFeeProposalRequest
+RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | type url of msg fee to remove |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgRemoveMsgFeeProposalResponse"></a>
+
+### MsgRemoveMsgFeeProposalResponse
+MsgRemoveMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response type
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalRequest"></a>
+
+### MsgUpdateConversionFeeDenomProposalRequest
+UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is the denom that usd will be converted to |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalResponse"></a>
+
+### MsgUpdateConversionFeeDenomProposalResponse
+MsgUpdateConversionFeeDenomProposalResponse defines the Msg/UpdateConversionFeeDenomProposal response type
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateMsgFeeProposalRequest"></a>
+
+### MsgUpdateMsgFeeProposalRequest
+UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | type url of msg to update fee |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional fee for msg type |
+| `recipient` | [string](#string) |  | optional recipient to recieve basis points |
+| `recipient_basis_points` | [string](#string) |  | basis points to use when recipient is present (1 - 10,000) |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateMsgFeeProposalResponse"></a>
+
+### MsgUpdateMsgFeeProposalResponse
+MsgUpdateMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response type
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalRequest"></a>
+
+### MsgUpdateNhashPerUsdMilProposalRequest
+UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is number of nhash per usd mil |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalResponse"></a>
+
+### MsgUpdateNhashPerUsdMilProposalResponse
+MsgUpdateNhashPerUsdMilProposalResponse defines the Msg/UpdateNhashPerUsdMilProposal response type
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6230,6 +6457,11 @@ Msg defines the msgfees Msg service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `AssessCustomMsgFee` | [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest) | [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse) | AssessCustomMsgFee endpoint executes the additional fee charges. This will only emit the event and not persist it to the keeper. Fees are handled with the custom msg fee handlers Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts | |
+| `AddMsgFeeProposal` | [MsgAddMsgFeeProposalRequest](#provenance.msgfees.v1.MsgAddMsgFeeProposalRequest) | [MsgAddMsgFeeProposalResponse](#provenance.msgfees.v1.MsgAddMsgFeeProposalResponse) | AddMsgFeeProposal defines a governance proposal to add additional msg based fee | |
+| `UpdateMsgFeeProposal` | [MsgUpdateMsgFeeProposalRequest](#provenance.msgfees.v1.MsgUpdateMsgFeeProposalRequest) | [MsgUpdateMsgFeeProposalResponse](#provenance.msgfees.v1.MsgUpdateMsgFeeProposalResponse) | UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee | |
+| `RemoveMsgFeeProposal` | [MsgRemoveMsgFeeProposalRequest](#provenance.msgfees.v1.MsgRemoveMsgFeeProposalRequest) | [MsgRemoveMsgFeeProposalResponse](#provenance.msgfees.v1.MsgRemoveMsgFeeProposalResponse) | RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee | |
+| `UpdateNhashPerUsdMilProposal` | [MsgUpdateNhashPerUsdMilProposalRequest](#provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalRequest) | [MsgUpdateNhashPerUsdMilProposalResponse](#provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalResponse) | UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param | |
+| `UpdateConversionFeeDenomProposal` | [MsgUpdateConversionFeeDenomProposalRequest](#provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalRequest) | [MsgUpdateConversionFeeDenomProposalResponse](#provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalResponse) | UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom | |
 
  <!-- end services -->
 

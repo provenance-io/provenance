@@ -21,6 +21,7 @@ import (
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
+	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
 // stargateWhitelist keeps whitelist and its deterministic
@@ -119,6 +120,10 @@ func init() {
 	setWhitelistedQuery("/provenance.reward.v1.Query/ClaimPeriodRewardDistributions", &rewardtypes.QueryClaimPeriodRewardDistributionsResponse{})
 	setWhitelistedQuery("/provenance.reward.v1.Query/ClaimPeriodRewardDistributionsByID", &rewardtypes.QueryClaimPeriodRewardDistributionsByIDResponse{})
 	setWhitelistedQuery("/provenance.reward.v1.Query/RewardDistributionsByAddress", &rewardtypes.QueryRewardDistributionsByAddressResponse{})
+
+	// trigger
+	setWhitelistedQuery("/provenance.trigger.v1.Query/TriggerByID", &triggertypes.QueryTriggerByIDResponse{})
+	setWhitelistedQuery("/provenance.trigger.v1.Query/Triggers", &triggertypes.QueryTriggersResponse{})
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.

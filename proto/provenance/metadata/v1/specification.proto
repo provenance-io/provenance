@@ -77,7 +77,10 @@ message ContractSpecification {
   // contract
   oneof source {
     // the address of a record on chain that represents this contract
-    bytes resource_id = 5 [(gogoproto.customtype) = "MetadataAddress", (gogoproto.moretags) = "yaml:\"resource_id\""];
+    bytes resource_id = 5 [
+      (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+      (gogoproto.moretags) = "yaml:\"resource_id\""
+    ];
     // the hash of contract binary (off-chain instance)
     string hash = 6;
   }
