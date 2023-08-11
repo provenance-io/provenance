@@ -22,7 +22,7 @@ func (k Keeper) InitGenesis(origCtx sdk.Context, genState *hold.GenesisState) {
 		// Not worrying about wrapping any bech32 error because I'm assuming
 		// genState.Validate() was called before this.
 		addr := sdk.MustAccAddressFromBech32(ah.Address)
-		if err := k.AddHold(ctx, addr, ah.Amount); err != nil {
+		if err := k.AddHold(ctx, addr, ah.Amount, "genesis"); err != nil {
 			panic(fmt.Errorf("holds[%d]: %w", i, err))
 		}
 	}

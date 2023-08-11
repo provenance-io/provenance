@@ -359,7 +359,8 @@ func (s *TestSuite) TestEventsToStrings() {
 
 	addrAdd := sdk.AccAddress("address_add_event___")
 	coinsAdd := s.coins("97acorn,12banana")
-	eventAddT := hold.NewEventHoldAdded(addrAdd, coinsAdd)
+	reason := "just some test reason"
+	eventAddT := hold.NewEventHoldAdded(addrAdd, coinsAdd, reason)
 	eventAdd, err := sdk.TypedEventToEvent(eventAddT)
 	s.Require().NoError(err, "TypedEventToEvent EventHoldAdded")
 
@@ -380,6 +381,7 @@ func (s *TestSuite) TestEventsToStrings() {
 	expected := []string{
 		fmt.Sprintf("[0]provenance.hold.v1.EventHoldAdded[0]: \"address\" = \"\\\"%s\\\"\" (indexed)", addrAdd.String()),
 		fmt.Sprintf("[0]provenance.hold.v1.EventHoldAdded[1]: \"amount\" = \"\\\"%s\\\"\"", coinsAdd.String()),
+		fmt.Sprintf("[0]provenance.hold.v1.EventHoldAdded[2]: \"reason\" = \"\\\"%s\\\"\"", reason),
 		fmt.Sprintf("[1]provenance.hold.v1.EventHoldReleased[0]: \"address\" = \"\\\"%s\\\"\"", addrRel.String()),
 		fmt.Sprintf("[1]provenance.hold.v1.EventHoldReleased[1]: \"amount\" = \"\\\"%s\\\"\"", coinsRel.String()),
 	}
@@ -523,8 +525,8 @@ func (s *TestSuite) TestKeeper_AddHold() {
 	s.setHoldCoinAmountRaw(store, s.addr3, "crudcoin", "crudvalue")
 	store = nil
 
-	makeEvents := func(addr sdk.AccAddress, coins sdk.Coins) sdk.Events {
-		event, err := sdk.TypedEventToEvent(hold.NewEventHoldAdded(addr, coins))
+	makeEvents := func(addr sdk.AccAddress, coins sdk.Coins, reason string) sdk.Events {
+		event, err := sdk.TypedEventToEvent(hold.NewEventHoldAdded(addr, coins, reason))
 		s.Require().NoError(err, "TypedEventToEvent EventHoldAdded(%s, %q)", s.getAddrName(addr), coins)
 		return sdk.Events{event}
 	}
@@ -565,7 +567,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			funds:     s.coins("2banana"),
 			spendBal:  s.coins("2banana,9cucumber,11durian"),
 			finalEsc:  s.coins("101banana,3cucumber"),
-			expEvents: makeEvents(s.addr1, s.coins("2banana")),
+			expEvents: makeEvents(s.addr1, s.coins("2banana"), "sufficient spendable: add to existing entry"),
 		},
 		{
 			name:      "small amount added to existing amount over max uint64",
@@ -573,7 +575,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			funds:     s.coins("99hugecoin"),
 			spendBal:  s.coins("5000000000000000000000hugecoin"),
 			finalEsc:  s.coins("1844674407370955161599hugecoin,10000000000000000000mediumcoin"),
-			expEvents: makeEvents(s.addr2, s.coins("99hugecoin")),
+			expEvents: makeEvents(s.addr2, s.coins("99hugecoin"), "small amount added to existing amount over max uint64"),
 		},
 		{
 			name:      "amount over max uint64 added to existing amount over max uint64",
@@ -581,7 +583,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			funds:     s.coins("2000000000000000000000hugecoin"),
 			spendBal:  s.coins("5000000000000000000000hugecoin"),
 			finalEsc:  s.coins("3844674407370955161599hugecoin,10000000000000000000mediumcoin"),
-			expEvents: makeEvents(s.addr2, s.coins("2000000000000000000000hugecoin")),
+			expEvents: makeEvents(s.addr2, s.coins("2000000000000000000000hugecoin"), "amount over max uint64 added to existing amount over max uint64"),
 		},
 		{
 			name:      "amount over max uint64 added to new entry",
@@ -589,7 +591,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			funds:     s.coins("18446744073709551616bigcoin"),
 			spendBal:  s.coins("20000000000000000000bigcoin"),
 			finalEsc:  s.coins("18446744073709551616bigcoin,3844674407370955161599hugecoin,10000000000000000000mediumcoin"),
-			expEvents: makeEvents(s.addr2, s.coins("18446744073709551616bigcoin")),
+			expEvents: makeEvents(s.addr2, s.coins("18446744073709551616bigcoin"), "amount over max uint64 added to new entry"),
 		},
 		{
 			name:      "amount under max uint64 added to another such amount resulting in more than max uint64",
@@ -597,7 +599,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			funds:     s.coins("10000000000000000000mediumcoin"),
 			spendBal:  s.coins("10000000000000000000mediumcoin"),
 			finalEsc:  s.coins("18446744073709551616bigcoin,3844674407370955161599hugecoin,20000000000000000000mediumcoin"),
-			expEvents: makeEvents(s.addr2, s.coins("10000000000000000000mediumcoin")),
+			expEvents: makeEvents(s.addr2, s.coins("10000000000000000000mediumcoin"), "amount under max uint64 added to another such amount resulting in more than max uint64"),
 		},
 		{
 			name:     "existing entry is invalid",
@@ -621,7 +623,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			funds:     s.coins("4goodcoin"),
 			spendBal:  s.coins("1badcoin,2banana,4goodcoin"),
 			finalEsc:  s.coins("4goodcoin"),
-			expEvents: makeEvents(s.addr3, s.coins("4goodcoin")),
+			expEvents: makeEvents(s.addr3, s.coins("4goodcoin"), "addr has bad entry but adding different denom"),
 		},
 		{
 			name:      "zero of bad denom with some of another",
@@ -629,7 +631,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			funds:     s.coins("0badcoin,8goodcoin"),
 			spendBal:  s.coins("8goodcoin"),
 			finalEsc:  s.coins("12goodcoin"),
-			expEvents: makeEvents(s.addr3, s.coins("8goodcoin")),
+			expEvents: makeEvents(s.addr3, s.coins("8goodcoin"), "zero of bad denom with some of another"),
 		},
 		{
 			name:     "three denoms: two existing and bad",
@@ -643,7 +645,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 				"math/big: cannot unmarshal \"crudvalue\" into a *big.Int",
 			},
 			finalEsc:  s.coins("57acorn,12goodcoin"),
-			expEvents: makeEvents(s.addr3, s.coins("57acorn")),
+			expEvents: makeEvents(s.addr3, s.coins("57acorn"), "three denoms: two existing and bad"),
 		},
 		{
 			name:      "sufficient spendable: new denoms on hold",
@@ -651,7 +653,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			funds:     s.coins("37acorn,12banana"),
 			spendBal:  s.coins("37acorn,12banana"),
 			finalEsc:  s.coins("37acorn,12banana"),
-			expEvents: makeEvents(s.addr4, s.coins("37acorn,12banana")),
+			expEvents: makeEvents(s.addr4, s.coins("37acorn,12banana"), "sufficient spendable: new denoms on hold"),
 		},
 		{
 			name:      "amount over max uint64 added to amount under uint64",
@@ -659,7 +661,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			funds:     s.coins("5000000000000000000000banana"),
 			spendBal:  s.coins("5000000000000000000000banana"),
 			finalEsc:  s.coins("37acorn,5000000000000000000012banana"),
-			expEvents: makeEvents(s.addr4, s.coins("5000000000000000000000banana")),
+			expEvents: makeEvents(s.addr4, s.coins("5000000000000000000000banana"), "amount over max uint64 added to amount under uint64"),
 		},
 		{
 			name:  "zero funds",
@@ -694,7 +696,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			ctx := s.sdkCtx.WithEventManager(em)
 			var err error
 			testFunc := func() {
-				err = k.AddHold(ctx, tc.addr, tc.funds)
+				err = k.AddHold(ctx, tc.addr, tc.funds, tc.name)
 			}
 			s.Require().NotPanics(testFunc, "AddHold")
 
@@ -1631,7 +1633,7 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 				amt := coins(action.hold)
 				logf(step, "Putting hold on: %s", amtOf(amt))
 				reqNoPanicNoErr(func() error {
-					return s.keeper.AddHold(ctx, addr, amt)
+					return s.keeper.AddHold(ctx, addr, amt, fmt.Sprintf("test at %d", step))
 				}, "AddHold(addr, %q)", amt)
 			}
 

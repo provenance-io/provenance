@@ -91,7 +91,7 @@ func (k Keeper) ValidateNewHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.
 }
 
 // AddHold puts the provided funds on hold for the provided account.
-func (k Keeper) AddHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error {
+func (k Keeper) AddHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins, reason string) error {
 	if funds.IsZero() {
 		return nil
 	}
@@ -121,7 +121,7 @@ func (k Keeper) AddHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) e
 	}
 
 	if !fundsAdded.IsZero() {
-		err := ctx.EventManager().EmitTypedEvent(hold.NewEventHoldAdded(addr, fundsAdded))
+		err := ctx.EventManager().EmitTypedEvent(hold.NewEventHoldAdded(addr, fundsAdded, reason))
 		if err != nil {
 			errs = append(errs, err)
 		}

@@ -17,6 +17,7 @@ func TestNewEventHoldAdded(t *testing.T) {
 		name   string
 		addr   sdk.AccAddress
 		amount sdk.Coins
+		reason string
 		exp    *EventHoldAdded
 	}{
 		{
@@ -40,11 +41,27 @@ func TestNewEventHoldAdded(t *testing.T) {
 				Amount:  "10fingercoin,9toecoin",
 			},
 		},
+		{
+			name:   "only a reason",
+			reason: "this is a test reason",
+			exp:    &EventHoldAdded{Reason: "this is a test reason"},
+		},
+		{
+			name:   "control",
+			addr:   sdk.AccAddress("control_address_____"),
+			amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 4)),
+			reason: "control reason",
+			exp: &EventHoldAdded{
+				Address: sdk.AccAddress("control_address_____").String(),
+				Amount:  sdk.NewCoins(sdk.NewInt64Coin("cherry", 4)).String(),
+				Reason:  "control reason",
+			},
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			event := NewEventHoldAdded(tc.addr, tc.amount)
+			event := NewEventHoldAdded(tc.addr, tc.amount, tc.reason)
 			assert.Equal(t, tc.exp, event, "NewEventHoldAdded")
 		})
 	}
@@ -115,12 +132,13 @@ func TestTypedEventToEvent(t *testing.T) {
 	}{
 		{
 			name: "EventHoldAdded",
-			tev:  NewEventHoldAdded(addr, coins),
+			tev:  NewEventHoldAdded(addr, coins, "test reason"),
 			expEvent: sdk.Event{
 				Type: "provenance.hold.v1.EventHoldAdded",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("address"), Value: []byte(addrQ)},
 					{Key: []byte("amount"), Value: []byte(coinsQ)},
+					{Key: []byte("reason"), Value: []byte(`"test reason"`)},
 				},
 			},
 		},
