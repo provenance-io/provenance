@@ -18,51 +18,53 @@ func TestMsgAssessCustomMsgFeeValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"should succeed to validate basic, usd coin type",
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), validAddress, validAddress, ""),
-			"",
+			name:     "should succeed to validate basic, usd coin type",
+			msg:      NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), validAddress, validAddress, ""),
+			errorMsg: "",
 		},
 		{
-			"should succeed to validate basic, nhash coin type",
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), validAddress, validAddress, ""),
-			"",
+			name:     "should succeed to validate basic, nhash coin type",
+			msg:      NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), validAddress, validAddress, ""),
+			errorMsg: "",
 		},
 		{
-			"should succeed to validate basic, non positive coin",
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 0), validAddress, validAddress, ""),
-			"amount must be greater than zero",
+			name:     "should succeed to validate basic, non positive coin",
+			msg:      NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 0), validAddress, validAddress, ""),
+			errorMsg: "amount must be greater than zero",
+		},
+		{
+			name:     "should succeed to validate basic, without recipient",
+			msg:      NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), "", validAddress, ""),
+			errorMsg: "",
+		},
+		{
+			name:     "should succeed to validate basic, with bips set",
+			msg:      NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), validAddress, validAddress, "5000"),
+			errorMsg: "",
 		}, {
-			"should succeed to validate basic, without recipient",
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), "", validAddress, ""),
-			"",
-		}, {
-			"should succeed to validate basic, with bips set",
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), validAddress, validAddress, "5000"),
-			"",
-		}, {
-			"should fail to validate basic, invalid address",
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), "invalid", validAddress, ""),
-			"decoding bech32 failed: invalid bech32 string length 7",
+			name:     "should fail to validate basic, invalid address",
+			msg:      NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin(UsdDenom, 10), "invalid", validAddress, ""),
+			errorMsg: "decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
-			"should fail to validate basic, invalid from address",
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("nhash", 10), "", "invalid", ""),
-			"decoding bech32 failed: invalid bech32 string length 7",
+			name:     "should fail to validate basic, invalid from address",
+			msg:      NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("nhash", 10), "", "invalid", ""),
+			errorMsg: "decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
-			"should fail to validate basic, invalid bips string",
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("nhash", 10), "", validAddress, "invalid_bips"),
-			`strconv.ParseUint: parsing "invalid_bips": invalid syntax`,
+			name:     "should fail to validate basic, invalid bips string",
+			msg:      NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("nhash", 10), "", validAddress, "invalid_bips"),
+			errorMsg: `strconv.ParseUint: parsing "invalid_bips": invalid syntax`,
 		},
 		{
-			"should fail to validate basic, invalid bips string too small",
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("nhash", 10), "", validAddress, "-1"),
-			`strconv.ParseUint: parsing "-1": invalid syntax`,
+			name:     "should fail to validate basic, invalid bips string too small",
+			msg:      NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("nhash", 10), "", validAddress, "-1"),
+			errorMsg: `strconv.ParseUint: parsing "-1": invalid syntax`,
 		},
 		{
-			"should fail to validate basic, invalid bips string too high",
-			NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("nhash", 10), "", validAddress, "10001"),
-			"recipient basis points can only be between 0 and 10,000 : 10001",
+			name:     "should fail to validate basic, invalid bips string too high",
+			msg:      NewMsgAssessCustomMsgFeeRequest("shortname", sdk.NewInt64Coin("nhash", 10), "", validAddress, "10001"),
+			errorMsg: "recipient basis points can only be between 0 and 10,000 : 10001",
 		},
 	}
 
@@ -89,49 +91,49 @@ func TestMsgAddMsgFeeProposalRequestValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"Empty type error",
-			NewMsgAddMsgFeeProposalRequest("", sdk.NewCoin("hotdog", sdk.NewInt(10)), "", "", authority),
-			"msg type is empty",
+			name:     "Empty type error",
+			msg:      NewMsgAddMsgFeeProposalRequest("", sdk.NewCoin("hotdog", sdk.NewInt(10)), "", "", authority),
+			errorMsg: "msg type is empty",
 		},
 		{
-			"Invalid fee amounts",
-			NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(0)), "", "", authority),
-			"invalid fee amount",
+			name:     "Invalid fee amounts",
+			msg:      NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(0)), "", "", authority),
+			errorMsg: "invalid fee amount",
 		},
 		{
-			"Invalid proposal recipient address",
-			NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(10)), "invalid", "", authority),
-			"decoding bech32 failed: invalid bech32 string length 7",
+			name:     "Invalid proposal recipient address",
+			msg:      NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(10)), "invalid", "", authority),
+			errorMsg: "decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
-			"Invalid proposal invalid basis points for address",
-			NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10001", authority),
-			"recipient basis points can only be between 0 and 10,000 : 10001",
+			name:     "Invalid proposal invalid basis points for address",
+			msg:      NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10001", authority),
+			errorMsg: "recipient basis points can only be between 0 and 10,000 : 10001",
 		},
 		{
-			"Valid proposal without recipient",
-			NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(10)), "", "", authority),
-			"",
+			name:     "Valid proposal without recipient",
+			msg:      NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(10)), "", "", authority),
+			errorMsg: "",
 		},
 		{
-			"Valid proposal with recipient",
-			NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10000", authority),
-			"",
+			name:     "Valid proposal with recipient",
+			msg:      NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10000", authority),
+			errorMsg: "",
 		},
 		{
-			"Valid proposal with recipient without defined bips",
-			NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "", authority),
-			"",
+			name:     "Valid proposal with recipient without defined bips",
+			msg:      NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "", authority),
+			errorMsg: "",
 		},
 		{
-			"Valid proposal with recipient with defined bips",
-			NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10", authority),
-			"",
+			name:     "Valid proposal with recipient with defined bips",
+			msg:      NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10", authority),
+			errorMsg: "",
 		},
 		{
-			"invalid authority",
-			NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10", ""),
-			"empty address string is not allowed",
+			name:     "invalid authority",
+			msg:      NewMsgAddMsgFeeProposalRequest("msgType", sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10", ""),
+			errorMsg: "empty address string is not allowed",
 		},
 	}
 
@@ -167,44 +169,44 @@ func TestMsgUpdateMsgFeeProposalRequestValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"Empty type error",
-			NewMsgUpdateMsgFeeProposalRequest("", sdk.NewCoin("hotdog", sdk.NewInt(10)), "", "", authority),
-			"msg type is empty",
+			name:     "Empty type error",
+			msg:      NewMsgUpdateMsgFeeProposalRequest("", sdk.NewCoin("hotdog", sdk.NewInt(10)), "", "", authority),
+			errorMsg: "msg type is empty",
 		},
 		{
-			"Invalid fee amounts",
-			NewMsgUpdateMsgFeeProposalRequest(msgType, sdk.NewCoin("hotdog", sdk.NewInt(0)), "", "", authority),
-			"invalid fee amount",
+			name:     "Invalid fee amounts",
+			msg:      NewMsgUpdateMsgFeeProposalRequest(msgType, sdk.NewCoin("hotdog", sdk.NewInt(0)), "", "", authority),
+			errorMsg: "invalid fee amount",
 		},
 		{
-			"Invalid proposal recipient address",
-			NewMsgUpdateMsgFeeProposalRequest(msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "invalid", "50", authority),
-			"decoding bech32 failed: invalid bech32 string length 7",
+			name:     "Invalid proposal recipient address",
+			msg:      NewMsgUpdateMsgFeeProposalRequest(msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "invalid", "50", authority),
+			errorMsg: "decoding bech32 failed: invalid bech32 string length 7",
 		},
 		{
-			"Invalid proposal invalid basis points for address",
-			NewMsgUpdateMsgFeeProposalRequest(msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10001", authority),
-			"recipient basis points can only be between 0 and 10,000 : 10001",
+			name:     "Invalid proposal invalid basis points for address",
+			msg:      NewMsgUpdateMsgFeeProposalRequest(msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10001", authority),
+			errorMsg: "recipient basis points can only be between 0 and 10,000 : 10001",
 		},
 		{
-			"Valid proposal without recipient",
-			NewMsgUpdateMsgFeeProposalRequest(msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "", "", authority),
-			"",
+			name:     "Valid proposal without recipient",
+			msg:      NewMsgUpdateMsgFeeProposalRequest(msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "", "", authority),
+			errorMsg: "",
 		},
 		{
-			"Valid proposal with recipient without defined bips",
-			NewMsgUpdateMsgFeeProposalRequest(msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "", authority),
-			"",
+			name:     "Valid proposal with recipient without defined bips",
+			msg:      NewMsgUpdateMsgFeeProposalRequest(msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "", authority),
+			errorMsg: "",
 		},
 		{
-			"Valid proposal with recipient with defined bips",
-			NewMsgUpdateMsgFeeProposalRequest(msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10", authority),
-			"",
+			name:     "Valid proposal with recipient with defined bips",
+			msg:      NewMsgUpdateMsgFeeProposalRequest(msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10", authority),
+			errorMsg: "",
 		},
 		{
-			"invalid authority",
-			NewMsgUpdateMsgFeeProposalRequest(msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10", ""),
-			"empty address string is not allowed",
+			name:     "invalid authority",
+			msg:      NewMsgUpdateMsgFeeProposalRequest(msgType, sdk.NewCoin("hotdog", sdk.NewInt(10)), "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27", "10", ""),
+			errorMsg: "empty address string is not allowed",
 		},
 	}
 
@@ -241,19 +243,19 @@ func TestMsgRemoveMsgFeeProposalRequestValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"valid message",
-			NewMsgRemoveMsgFeeProposalRequest(msgType, authority),
-			"",
+			name:     "valid message",
+			msg:      NewMsgRemoveMsgFeeProposalRequest(msgType, authority),
+			errorMsg: "",
 		},
 		{
-			"empty message type",
-			NewMsgRemoveMsgFeeProposalRequest("", authority),
-			"msg type is empty",
+			name:     "empty message type",
+			msg:      NewMsgRemoveMsgFeeProposalRequest("", authority),
+			errorMsg: "msg type is empty",
 		},
 		{
-			"invalid authority",
-			NewMsgRemoveMsgFeeProposalRequest(msgType, ""),
-			"empty address string is not allowed",
+			name:     "invalid authority",
+			msg:      NewMsgRemoveMsgFeeProposalRequest(msgType, ""),
+			errorMsg: "empty address string is not allowed",
 		},
 	}
 
@@ -288,19 +290,19 @@ func TestMsgUpdateNhashPerUsdMilProposalRequestValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"Empty type error",
-			NewMsgUpdateNhashPerUsdMilProposalRequest(0, authority),
-			"nhash per usd mil must be greater than 0",
+			name:     "Empty type error",
+			msg:      NewMsgUpdateNhashPerUsdMilProposalRequest(0, authority),
+			errorMsg: "nhash per usd mil must be greater than 0",
 		},
 		{
-			"Valid proposal",
-			NewMsgUpdateNhashPerUsdMilProposalRequest(70, authority),
-			"",
+			name:     "Valid proposal",
+			msg:      NewMsgUpdateNhashPerUsdMilProposalRequest(70, authority),
+			errorMsg: "",
 		},
 		{
-			"invalid authority",
-			NewMsgUpdateNhashPerUsdMilProposalRequest(70, ""),
-			"empty address string is not allowed",
+			name:     "invalid authority",
+			msg:      NewMsgUpdateNhashPerUsdMilProposalRequest(70, ""),
+			errorMsg: "empty address string is not allowed",
 		},
 	}
 
@@ -336,19 +338,19 @@ func TestUpdateConversionFeeDenomProposalRequestValidateBasic(t *testing.T) {
 		errorMsg string
 	}{
 		{
-			"invalid denom",
-			NewMsgUpdateConversionFeeDenomProposalRequest("??", authority),
-			"invalid denom: ??",
+			name:     "invalid denom",
+			msg:      NewMsgUpdateConversionFeeDenomProposalRequest("??", authority),
+			errorMsg: "invalid denom: ??",
 		},
 		{
-			"valid message",
-			NewMsgUpdateConversionFeeDenomProposalRequest("hotdog", authority),
-			"",
+			name:     "valid message",
+			msg:      NewMsgUpdateConversionFeeDenomProposalRequest("hotdog", authority),
+			errorMsg: "",
 		},
 		{
-			"invalid authority",
-			NewMsgUpdateConversionFeeDenomProposalRequest("hotdog", ""),
-			"empty address string is not allowed",
+			name:     "invalid authority",
+			msg:      NewMsgUpdateConversionFeeDenomProposalRequest("hotdog", ""),
+			errorMsg: "empty address string is not allowed",
 		},
 	}
 
