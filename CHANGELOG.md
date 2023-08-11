@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add ICQHost and Oracle module to allow cross chain oracle queries [#1497](https://github.com/provenance-io/provenance/issues/1497).
 * New `GetByAddr` metadata query [#1443](https://github.com/provenance-io/provenance/issues/1443).
 * Add Trigger module queries to stargate whitelist for smart contracts [#1636](https://github.com/provenance-io/provenance/issues/1636)
+* Added the saffron upgrade handlers. [#1648](https://github.com/provenance-io/provenance/pull/1648).
 
 ### Improvements
 
@@ -51,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Updated metadata queries to optionally include the request and id info [#1443](https://github.com/provenance-io/provenance/issues/1443).
   The request is now omitted by default, but will be included if `include_request` is `true`.
   The id info is still included by default, but will be excluded if `exclude_id_info` is `true`.
+* Removed the quicksilver upgrade handlers. [#1648](https://github.com/provenance-io/provenance/pull/1648).
 
 ### Bug Fixes
 
