@@ -110,7 +110,7 @@ func GetCmdSendQuery() *cobra.Command {
 
 			queryData, err := decoder.DecodeString(args[1])
 			if err != nil {
-				return fmt.Errorf("decode query: %s", err)
+				return fmt.Errorf("decode query: %w", err)
 			}
 			if !json.Valid(queryData) {
 				return errors.New("query data must be json")

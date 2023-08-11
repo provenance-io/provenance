@@ -1,8 +1,6 @@
 package types
 
 import (
-	"encoding/binary"
-
 	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
 )
 
@@ -60,10 +58,4 @@ func GetPortStoreKey() []byte {
 // GetLastQueryPacketSeqKey is a function to get the key for the last query packet sequence in store
 func GetLastQueryPacketSeqKey() []byte {
 	return LastQueryPacketSeqKey
-}
-
-func uint64ToBytes(num uint64) []byte {
-	result := make([]byte, 8)
-	binary.BigEndian.PutUint64(result, uint64(num))
-	return result
 }

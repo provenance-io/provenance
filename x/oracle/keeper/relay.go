@@ -7,6 +7,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	cerrs "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -28,7 +29,7 @@ func (k Keeper) SendQuery(
 ) (uint64, error) {
 	sourceChannelEnd, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
-		return 0, sdkerrors.Wrapf(channeltypes.ErrChannelNotFound, "port ID (%s) channel ID (%s)", sourcePort, sourceChannel)
+		return 0, cerrs.Wrapf(channeltypes.ErrChannelNotFound, "port ID (%s) channel ID (%s)", sourcePort, sourceChannel)
 	}
 
 	destinationPort := sourceChannelEnd.GetCounterparty().GetPortID()
@@ -62,7 +63,7 @@ func (k Keeper) createOutgoingPacket(
 	// get the next sequence
 	sequence, found := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
 	if !found {
-		return 0, sdkerrors.Wrapf(channeltypes.ErrSequenceSendNotFound, "failed to retrieve next sequence send for channel %s on port %s", sourceChannel, sourcePort)
+		return 0, cerrs.Wrapf(channeltypes.ErrSequenceSendNotFound, "failed to retrieve next sequence send for channel %s on port %s", sourceChannel, sourcePort)
 	}
 
 	packet := channeltypes.NewPacket(
@@ -106,7 +107,7 @@ func (k Keeper) OnAcknowledgementPacket(
 
 		var r types.QueryOracleResponse
 		if err := k.cdc.Unmarshal(resps[0].Value, &r); err != nil {
-			return sdkerrors.Wrapf(err, "failed to unmarshal interchain query response to type %T", resp)
+			return cerrs.Wrapf(err, "failed to unmarshal interchain query response to type %T", resp)
 		}
 
 		k.SetLastQueryPacketSeq(ctx, modulePacket.Sequence)

@@ -62,7 +62,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgCreateTrigger sends a MsgUpdateOracle.
-func SimulateMsgUpdateOracle(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgUpdateOracle(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -82,7 +82,7 @@ func SimulateMsgUpdateOracle(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 }
 
 // SimulateMsgSendQueryOracle sends a MsgSendQueryOracle.
-func SimulateMsgSendQueryOracle(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, ck channelkeeper.Keeper) simtypes.Operation {
+func SimulateMsgSendQueryOracle(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, ck channelkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -97,7 +97,7 @@ func SimulateMsgSendQueryOracle(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), err.Error()), nil, nil
 		}
-		query := randomQuery(r, ctx)
+		query := randomQuery(r)
 
 		msg := types.NewMsgSendQueryOracle(addr.Address.String(), channel, query)
 		return Dispatch(r, app, ctx, addr, chainID, msg, ak, bk, nil)
@@ -180,7 +180,7 @@ func randomChannel(r *rand.Rand, ctx sdk.Context, ck channelkeeper.Keeper) (stri
 	return channels[idx].String(), nil
 }
 
-func randomQuery(r *rand.Rand, ctx sdk.Context) []byte {
+func randomQuery(r *rand.Rand) []byte {
 	queryType := randIntBetween(r, 0, 3)
 	var query string
 	if queryType == 0 {

@@ -14,7 +14,7 @@ import (
 
 // NewDecodeStore returns a decoder function closure that unmarshalls the KVPair's
 // Value
-func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
+func NewDecodeStore(_ codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.OracleStoreKey):

@@ -182,12 +182,12 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock is the `BeginBlocker` function run at the beginning of each block to
 // process oracle module updates.
-func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {
 }
 
 // EndBlock The `EndBlocker` abci call is ran at the end of each block. The `EventManager` is monitored
 // and `Qualifying Actions` are deduced from newly created events and prior internal state.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
