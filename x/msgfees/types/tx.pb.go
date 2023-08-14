@@ -6,7 +6,9 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	types "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
@@ -108,39 +110,603 @@ func (m *MsgAssessCustomMsgFeeResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAssessCustomMsgFeeResponse proto.InternalMessageInfo
 
+// AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+type MsgAddMsgFeeProposalRequest struct {
+	// type url of msg to add fee
+	MsgTypeUrl string `protobuf:"bytes,1,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
+	// additional fee for msg type
+	AdditionalFee types.Coin `protobuf:"bytes,2,opt,name=additional_fee,json=additionalFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"additional_fee" yaml:"additional_fee"`
+	// optional recipient to receive basis points
+	Recipient string `protobuf:"bytes,3,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	// basis points to use when recipient is present (1 - 10,000)
+	RecipientBasisPoints string `protobuf:"bytes,4,opt,name=recipient_basis_points,json=recipientBasisPoints,proto3" json:"recipient_basis_points,omitempty"`
+	// the signing authority for the proposal
+	Authority string `protobuf:"bytes,5,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgAddMsgFeeProposalRequest) Reset()         { *m = MsgAddMsgFeeProposalRequest{} }
+func (m *MsgAddMsgFeeProposalRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgAddMsgFeeProposalRequest) ProtoMessage()    {}
+func (*MsgAddMsgFeeProposalRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c6bb65eaf858b5f, []int{2}
+}
+func (m *MsgAddMsgFeeProposalRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgAddMsgFeeProposalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgAddMsgFeeProposalRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgAddMsgFeeProposalRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddMsgFeeProposalRequest.Merge(m, src)
+}
+func (m *MsgAddMsgFeeProposalRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgAddMsgFeeProposalRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddMsgFeeProposalRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgAddMsgFeeProposalRequest proto.InternalMessageInfo
+
+func (m *MsgAddMsgFeeProposalRequest) GetMsgTypeUrl() string {
+	if m != nil {
+		return m.MsgTypeUrl
+	}
+	return ""
+}
+
+func (m *MsgAddMsgFeeProposalRequest) GetAdditionalFee() types.Coin {
+	if m != nil {
+		return m.AdditionalFee
+	}
+	return types.Coin{}
+}
+
+func (m *MsgAddMsgFeeProposalRequest) GetRecipient() string {
+	if m != nil {
+		return m.Recipient
+	}
+	return ""
+}
+
+func (m *MsgAddMsgFeeProposalRequest) GetRecipientBasisPoints() string {
+	if m != nil {
+		return m.RecipientBasisPoints
+	}
+	return ""
+}
+
+func (m *MsgAddMsgFeeProposalRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+// MsgAddMsgFeeProposalResponse defines the Msg/AddMsgFeeProposal response type
+type MsgAddMsgFeeProposalResponse struct {
+}
+
+func (m *MsgAddMsgFeeProposalResponse) Reset()         { *m = MsgAddMsgFeeProposalResponse{} }
+func (m *MsgAddMsgFeeProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddMsgFeeProposalResponse) ProtoMessage()    {}
+func (*MsgAddMsgFeeProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c6bb65eaf858b5f, []int{3}
+}
+func (m *MsgAddMsgFeeProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgAddMsgFeeProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgAddMsgFeeProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgAddMsgFeeProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddMsgFeeProposalResponse.Merge(m, src)
+}
+func (m *MsgAddMsgFeeProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgAddMsgFeeProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddMsgFeeProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgAddMsgFeeProposalResponse proto.InternalMessageInfo
+
+// UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+type MsgUpdateMsgFeeProposalRequest struct {
+	// type url of msg to update fee
+	MsgTypeUrl string `protobuf:"bytes,1,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
+	// additional fee for msg type
+	AdditionalFee types.Coin `protobuf:"bytes,2,opt,name=additional_fee,json=additionalFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"additional_fee"`
+	// optional recipient to recieve basis points
+	Recipient string `protobuf:"bytes,3,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	// basis points to use when recipient is present (1 - 10,000)
+	RecipientBasisPoints string `protobuf:"bytes,4,opt,name=recipient_basis_points,json=recipientBasisPoints,proto3" json:"recipient_basis_points,omitempty"`
+	// the signing authority for the proposal
+	Authority string `protobuf:"bytes,5,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgUpdateMsgFeeProposalRequest) Reset()         { *m = MsgUpdateMsgFeeProposalRequest{} }
+func (m *MsgUpdateMsgFeeProposalRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateMsgFeeProposalRequest) ProtoMessage()    {}
+func (*MsgUpdateMsgFeeProposalRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c6bb65eaf858b5f, []int{4}
+}
+func (m *MsgUpdateMsgFeeProposalRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateMsgFeeProposalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateMsgFeeProposalRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateMsgFeeProposalRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateMsgFeeProposalRequest.Merge(m, src)
+}
+func (m *MsgUpdateMsgFeeProposalRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateMsgFeeProposalRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateMsgFeeProposalRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateMsgFeeProposalRequest proto.InternalMessageInfo
+
+func (m *MsgUpdateMsgFeeProposalRequest) GetMsgTypeUrl() string {
+	if m != nil {
+		return m.MsgTypeUrl
+	}
+	return ""
+}
+
+func (m *MsgUpdateMsgFeeProposalRequest) GetAdditionalFee() types.Coin {
+	if m != nil {
+		return m.AdditionalFee
+	}
+	return types.Coin{}
+}
+
+func (m *MsgUpdateMsgFeeProposalRequest) GetRecipient() string {
+	if m != nil {
+		return m.Recipient
+	}
+	return ""
+}
+
+func (m *MsgUpdateMsgFeeProposalRequest) GetRecipientBasisPoints() string {
+	if m != nil {
+		return m.RecipientBasisPoints
+	}
+	return ""
+}
+
+func (m *MsgUpdateMsgFeeProposalRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+// MsgUpdateMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response type
+type MsgUpdateMsgFeeProposalResponse struct {
+}
+
+func (m *MsgUpdateMsgFeeProposalResponse) Reset()         { *m = MsgUpdateMsgFeeProposalResponse{} }
+func (m *MsgUpdateMsgFeeProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateMsgFeeProposalResponse) ProtoMessage()    {}
+func (*MsgUpdateMsgFeeProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c6bb65eaf858b5f, []int{5}
+}
+func (m *MsgUpdateMsgFeeProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateMsgFeeProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateMsgFeeProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateMsgFeeProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateMsgFeeProposalResponse.Merge(m, src)
+}
+func (m *MsgUpdateMsgFeeProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateMsgFeeProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateMsgFeeProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateMsgFeeProposalResponse proto.InternalMessageInfo
+
+// RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+type MsgRemoveMsgFeeProposalRequest struct {
+	// type url of msg fee to remove
+	MsgTypeUrl string `protobuf:"bytes,1,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
+	// the signing authority for the proposal
+	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgRemoveMsgFeeProposalRequest) Reset()         { *m = MsgRemoveMsgFeeProposalRequest{} }
+func (m *MsgRemoveMsgFeeProposalRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveMsgFeeProposalRequest) ProtoMessage()    {}
+func (*MsgRemoveMsgFeeProposalRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c6bb65eaf858b5f, []int{6}
+}
+func (m *MsgRemoveMsgFeeProposalRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveMsgFeeProposalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveMsgFeeProposalRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveMsgFeeProposalRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveMsgFeeProposalRequest.Merge(m, src)
+}
+func (m *MsgRemoveMsgFeeProposalRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveMsgFeeProposalRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveMsgFeeProposalRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveMsgFeeProposalRequest proto.InternalMessageInfo
+
+func (m *MsgRemoveMsgFeeProposalRequest) GetMsgTypeUrl() string {
+	if m != nil {
+		return m.MsgTypeUrl
+	}
+	return ""
+}
+
+func (m *MsgRemoveMsgFeeProposalRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+// MsgRemoveMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response type
+type MsgRemoveMsgFeeProposalResponse struct {
+}
+
+func (m *MsgRemoveMsgFeeProposalResponse) Reset()         { *m = MsgRemoveMsgFeeProposalResponse{} }
+func (m *MsgRemoveMsgFeeProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveMsgFeeProposalResponse) ProtoMessage()    {}
+func (*MsgRemoveMsgFeeProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c6bb65eaf858b5f, []int{7}
+}
+func (m *MsgRemoveMsgFeeProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveMsgFeeProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveMsgFeeProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveMsgFeeProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveMsgFeeProposalResponse.Merge(m, src)
+}
+func (m *MsgRemoveMsgFeeProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveMsgFeeProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveMsgFeeProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveMsgFeeProposalResponse proto.InternalMessageInfo
+
+// UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+type MsgUpdateNhashPerUsdMilProposalRequest struct {
+	// nhash_per_usd_mil is number of nhash per usd mil
+	NhashPerUsdMil uint64 `protobuf:"varint,1,opt,name=nhash_per_usd_mil,json=nhashPerUsdMil,proto3" json:"nhash_per_usd_mil,omitempty"`
+	// the signing authority for the proposal
+	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgUpdateNhashPerUsdMilProposalRequest) Reset() {
+	*m = MsgUpdateNhashPerUsdMilProposalRequest{}
+}
+func (m *MsgUpdateNhashPerUsdMilProposalRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateNhashPerUsdMilProposalRequest) ProtoMessage()    {}
+func (*MsgUpdateNhashPerUsdMilProposalRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c6bb65eaf858b5f, []int{8}
+}
+func (m *MsgUpdateNhashPerUsdMilProposalRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateNhashPerUsdMilProposalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateNhashPerUsdMilProposalRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateNhashPerUsdMilProposalRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateNhashPerUsdMilProposalRequest.Merge(m, src)
+}
+func (m *MsgUpdateNhashPerUsdMilProposalRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateNhashPerUsdMilProposalRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateNhashPerUsdMilProposalRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateNhashPerUsdMilProposalRequest proto.InternalMessageInfo
+
+func (m *MsgUpdateNhashPerUsdMilProposalRequest) GetNhashPerUsdMil() uint64 {
+	if m != nil {
+		return m.NhashPerUsdMil
+	}
+	return 0
+}
+
+func (m *MsgUpdateNhashPerUsdMilProposalRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+// MsgUpdateNhashPerUsdMilProposalResponse defines the Msg/UpdateNhashPerUsdMilProposal response type
+type MsgUpdateNhashPerUsdMilProposalResponse struct {
+}
+
+func (m *MsgUpdateNhashPerUsdMilProposalResponse) Reset() {
+	*m = MsgUpdateNhashPerUsdMilProposalResponse{}
+}
+func (m *MsgUpdateNhashPerUsdMilProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateNhashPerUsdMilProposalResponse) ProtoMessage()    {}
+func (*MsgUpdateNhashPerUsdMilProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c6bb65eaf858b5f, []int{9}
+}
+func (m *MsgUpdateNhashPerUsdMilProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateNhashPerUsdMilProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateNhashPerUsdMilProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateNhashPerUsdMilProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateNhashPerUsdMilProposalResponse.Merge(m, src)
+}
+func (m *MsgUpdateNhashPerUsdMilProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateNhashPerUsdMilProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateNhashPerUsdMilProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateNhashPerUsdMilProposalResponse proto.InternalMessageInfo
+
+// UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+type MsgUpdateConversionFeeDenomProposalRequest struct {
+	// conversion_fee_denom is the denom that usd will be converted to
+	ConversionFeeDenom string `protobuf:"bytes,1,opt,name=conversion_fee_denom,json=conversionFeeDenom,proto3" json:"conversion_fee_denom,omitempty"`
+	// the signing authority for the proposal
+	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgUpdateConversionFeeDenomProposalRequest) Reset() {
+	*m = MsgUpdateConversionFeeDenomProposalRequest{}
+}
+func (m *MsgUpdateConversionFeeDenomProposalRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgUpdateConversionFeeDenomProposalRequest) ProtoMessage() {}
+func (*MsgUpdateConversionFeeDenomProposalRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c6bb65eaf858b5f, []int{10}
+}
+func (m *MsgUpdateConversionFeeDenomProposalRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateConversionFeeDenomProposalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateConversionFeeDenomProposalRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateConversionFeeDenomProposalRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateConversionFeeDenomProposalRequest.Merge(m, src)
+}
+func (m *MsgUpdateConversionFeeDenomProposalRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateConversionFeeDenomProposalRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateConversionFeeDenomProposalRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateConversionFeeDenomProposalRequest proto.InternalMessageInfo
+
+func (m *MsgUpdateConversionFeeDenomProposalRequest) GetConversionFeeDenom() string {
+	if m != nil {
+		return m.ConversionFeeDenom
+	}
+	return ""
+}
+
+func (m *MsgUpdateConversionFeeDenomProposalRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+// MsgUpdateConversionFeeDenomProposalResponse defines the Msg/UpdateConversionFeeDenomProposal response type
+type MsgUpdateConversionFeeDenomProposalResponse struct {
+}
+
+func (m *MsgUpdateConversionFeeDenomProposalResponse) Reset() {
+	*m = MsgUpdateConversionFeeDenomProposalResponse{}
+}
+func (m *MsgUpdateConversionFeeDenomProposalResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgUpdateConversionFeeDenomProposalResponse) ProtoMessage() {}
+func (*MsgUpdateConversionFeeDenomProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c6bb65eaf858b5f, []int{11}
+}
+func (m *MsgUpdateConversionFeeDenomProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateConversionFeeDenomProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateConversionFeeDenomProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateConversionFeeDenomProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateConversionFeeDenomProposalResponse.Merge(m, src)
+}
+func (m *MsgUpdateConversionFeeDenomProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateConversionFeeDenomProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateConversionFeeDenomProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateConversionFeeDenomProposalResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgAssessCustomMsgFeeRequest)(nil), "provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest")
 	proto.RegisterType((*MsgAssessCustomMsgFeeResponse)(nil), "provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse")
+	proto.RegisterType((*MsgAddMsgFeeProposalRequest)(nil), "provenance.msgfees.v1.MsgAddMsgFeeProposalRequest")
+	proto.RegisterType((*MsgAddMsgFeeProposalResponse)(nil), "provenance.msgfees.v1.MsgAddMsgFeeProposalResponse")
+	proto.RegisterType((*MsgUpdateMsgFeeProposalRequest)(nil), "provenance.msgfees.v1.MsgUpdateMsgFeeProposalRequest")
+	proto.RegisterType((*MsgUpdateMsgFeeProposalResponse)(nil), "provenance.msgfees.v1.MsgUpdateMsgFeeProposalResponse")
+	proto.RegisterType((*MsgRemoveMsgFeeProposalRequest)(nil), "provenance.msgfees.v1.MsgRemoveMsgFeeProposalRequest")
+	proto.RegisterType((*MsgRemoveMsgFeeProposalResponse)(nil), "provenance.msgfees.v1.MsgRemoveMsgFeeProposalResponse")
+	proto.RegisterType((*MsgUpdateNhashPerUsdMilProposalRequest)(nil), "provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalRequest")
+	proto.RegisterType((*MsgUpdateNhashPerUsdMilProposalResponse)(nil), "provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalResponse")
+	proto.RegisterType((*MsgUpdateConversionFeeDenomProposalRequest)(nil), "provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalRequest")
+	proto.RegisterType((*MsgUpdateConversionFeeDenomProposalResponse)(nil), "provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalResponse")
 }
 
 func init() { proto.RegisterFile("provenance/msgfees/v1/tx.proto", fileDescriptor_4c6bb65eaf858b5f) }
 
 var fileDescriptor_4c6bb65eaf858b5f = []byte{
-	// 373 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0x31, 0x8f, 0xd3, 0x30,
-	0x14, 0xc7, 0x63, 0xae, 0x9c, 0x74, 0x86, 0xc9, 0x3a, 0x50, 0xa8, 0x0e, 0xa7, 0xea, 0xd4, 0x05,
-	0x5b, 0x69, 0x2b, 0x21, 0xb1, 0xd1, 0x4a, 0x6c, 0x95, 0xaa, 0x8e, 0x2c, 0x55, 0x12, 0xbd, 0x06,
-	0x0f, 0xf1, 0x0b, 0x79, 0x4e, 0x54, 0x26, 0x36, 0xc4, 0xc8, 0xc8, 0xd8, 0x8f, 0xd3, 0xb1, 0x23,
-	0x13, 0x82, 0x76, 0xe1, 0x63, 0xa0, 0x24, 0x55, 0x8b, 0x44, 0x41, 0xba, 0xed, 0x25, 0xbf, 0x9f,
-	0xdf, 0xdf, 0x7e, 0x36, 0x97, 0x79, 0x81, 0x15, 0xd8, 0xc8, 0x26, 0xa0, 0x33, 0x4a, 0x57, 0x00,
-	0xa4, 0xab, 0x50, 0xbb, 0xb5, 0xca, 0x0b, 0x74, 0x28, 0x9e, 0x9c, 0xb9, 0x3a, 0x72, 0x55, 0x85,
-	0xdd, 0xdb, 0x14, 0x53, 0x6c, 0x0c, 0x5d, 0x57, 0xad, 0xdc, 0x95, 0x09, 0x52, 0x86, 0xa4, 0xe3,
-	0x88, 0x40, 0x57, 0x61, 0x0c, 0x2e, 0x0a, 0x75, 0x82, 0xc6, 0xb6, 0xbc, 0xff, 0x93, 0xf1, 0xbb,
-	0x19, 0xa5, 0xaf, 0x89, 0x80, 0x68, 0x5a, 0x92, 0xc3, 0x6c, 0x46, 0xe9, 0x1b, 0x80, 0x05, 0xbc,
-	0x2f, 0x81, 0x9c, 0x10, 0xbc, 0x63, 0xa3, 0x0c, 0x7c, 0xd6, 0x63, 0x83, 0x9b, 0x45, 0x53, 0x8b,
-	0x97, 0xfc, 0x3a, 0xca, 0xb0, 0xb4, 0xce, 0x7f, 0xd0, 0x63, 0x83, 0x47, 0xc3, 0x67, 0xaa, 0x4d,
-	0x51, 0x75, 0x8a, 0x3a, 0xa6, 0xa8, 0x29, 0x1a, 0x3b, 0xe9, 0x6c, 0xbf, 0x07, 0xde, 0xe2, 0xa8,
-	0x8b, 0x3b, 0x7e, 0x53, 0x40, 0x62, 0x72, 0x03, 0xd6, 0xf9, 0x57, 0x4d, 0xc7, 0xf3, 0x8f, 0x3a,
-	0x6a, 0x55, 0x60, 0xe6, 0x77, 0xda, 0xa8, 0xba, 0x16, 0x63, 0xfe, 0xf4, 0x24, 0x2c, 0xe3, 0x88,
-	0x0c, 0x2d, 0x73, 0x34, 0xd6, 0x91, 0xff, 0xb0, 0xb1, 0x6e, 0x4f, 0x74, 0x52, 0xc3, 0x79, 0xc3,
-	0x5e, 0x3d, 0xfe, 0xbc, 0x09, 0xbc, 0xaf, 0x9b, 0x80, 0xfd, 0xda, 0x04, 0x5e, 0x3f, 0xe0, 0xcf,
-	0xff, 0x71, 0x44, 0xca, 0xd1, 0x12, 0x0c, 0x3f, 0x31, 0x7e, 0x35, 0xa3, 0x54, 0x7c, 0xe4, 0xe2,
-	0x6f, 0x4b, 0x8c, 0xd4, 0xc5, 0x81, 0xab, 0xff, 0x8d, 0xad, 0x3b, 0xbe, 0xdf, 0xa2, 0x76, 0x23,
-	0x13, 0xb3, 0xdd, 0x4b, 0xb6, 0xdb, 0x4b, 0xf6, 0x63, 0x2f, 0xd9, 0x97, 0x83, 0xf4, 0x76, 0x07,
-	0xe9, 0x7d, 0x3b, 0x48, 0x8f, 0xfb, 0x06, 0x2f, 0x77, 0x9c, 0xb3, 0xb7, 0xa3, 0xd4, 0xb8, 0x77,
-	0x65, 0xac, 0x12, 0xcc, 0xf4, 0xd9, 0x79, 0x61, 0xf0, 0x8f, 0x2f, 0xbd, 0x3e, 0xbd, 0x25, 0xf7,
-	0x21, 0x07, 0x8a, 0xaf, 0x9b, 0xfb, 0x1f, 0xfd, 0x0e, 0x00, 0x00, 0xff, 0xff, 0xd3, 0x69, 0xd8,
-	0x51, 0x6e, 0x02, 0x00, 0x00,
+	// 824 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x56, 0x41, 0x6b, 0x1b, 0x47,
+	0x14, 0xd6, 0xc8, 0xaa, 0xc1, 0x53, 0xd7, 0xe0, 0x41, 0x6e, 0x65, 0xd5, 0xdd, 0x55, 0x75, 0x68,
+	0x6d, 0x17, 0xed, 0x5a, 0x96, 0xeb, 0x82, 0xa1, 0x05, 0xcb, 0xc5, 0xd0, 0x83, 0x8a, 0x50, 0xeb,
+	0x4b, 0x2f, 0xcb, 0x4a, 0x3b, 0x5e, 0x0d, 0xd5, 0xce, 0x6c, 0xf7, 0xad, 0x84, 0x05, 0x85, 0x42,
+	0xa1, 0x50, 0x28, 0x94, 0x1c, 0x73, 0x09, 0xf1, 0x35, 0x3e, 0xe5, 0x90, 0x1f, 0xe1, 0xa3, 0xc9,
+	0x21, 0xe4, 0xe4, 0x38, 0xf6, 0x21, 0xb9, 0xe4, 0x92, 0x5f, 0x10, 0x76, 0x77, 0x22, 0xd9, 0x96,
+	0xb4, 0x8a, 0x1c, 0x9f, 0x72, 0xd2, 0x8c, 0xde, 0xf7, 0xde, 0xfb, 0xde, 0xf7, 0xe6, 0xcd, 0x2c,
+	0x56, 0x5c, 0x4f, 0x74, 0x28, 0x37, 0x79, 0x83, 0xea, 0x0e, 0xd8, 0xfb, 0x94, 0x82, 0xde, 0x29,
+	0xea, 0xfe, 0x81, 0xe6, 0x7a, 0xc2, 0x17, 0x64, 0xa1, 0x6f, 0xd7, 0xa4, 0x5d, 0xeb, 0x14, 0xb3,
+	0x69, 0x5b, 0xd8, 0x22, 0x44, 0xe8, 0xc1, 0x2a, 0x02, 0x67, 0x17, 0x1b, 0x02, 0x1c, 0x01, 0x46,
+	0x64, 0x88, 0x36, 0xd2, 0xa4, 0x44, 0x3b, 0xbd, 0x6e, 0x02, 0xd5, 0x3b, 0xc5, 0x3a, 0xf5, 0xcd,
+	0xa2, 0xde, 0x10, 0x8c, 0x4b, 0xfb, 0x67, 0xd2, 0xee, 0x80, 0x1d, 0xe4, 0x77, 0xc0, 0x8e, 0x0c,
+	0xf9, 0xe7, 0x08, 0x2f, 0x55, 0xc0, 0xde, 0x06, 0xa0, 0x00, 0x3b, 0x6d, 0xf0, 0x85, 0x53, 0x01,
+	0x7b, 0x97, 0xd2, 0x1a, 0xfd, 0xa3, 0x4d, 0xc1, 0x27, 0x04, 0xa7, 0xb8, 0xe9, 0xd0, 0x0c, 0xca,
+	0xa1, 0xe5, 0x99, 0x5a, 0xb8, 0x26, 0xdf, 0xe1, 0x69, 0xd3, 0x11, 0x6d, 0xee, 0x67, 0x92, 0x39,
+	0xb4, 0xfc, 0xf1, 0xfa, 0xa2, 0x26, 0xc9, 0x04, 0xe9, 0x35, 0x99, 0x5e, 0xdb, 0x11, 0x8c, 0x97,
+	0x53, 0xc7, 0xa7, 0x6a, 0xa2, 0x26, 0xe1, 0x64, 0x09, 0xcf, 0x78, 0xb4, 0xc1, 0x5c, 0x46, 0xb9,
+	0x9f, 0x99, 0x0a, 0x23, 0xf6, 0xff, 0x08, 0x52, 0xed, 0x7b, 0xc2, 0xc9, 0xa4, 0xa2, 0x54, 0xc1,
+	0x9a, 0x6c, 0xe0, 0x4f, 0x7b, 0x00, 0xa3, 0x6e, 0x02, 0x03, 0xc3, 0x15, 0x8c, 0xfb, 0x90, 0xf9,
+	0x28, 0x44, 0xa5, 0x7b, 0xd6, 0x72, 0x60, 0xac, 0x86, 0xb6, 0xad, 0xd9, 0x7f, 0x0f, 0xd5, 0xc4,
+	0xdd, 0x43, 0x15, 0xbd, 0x3c, 0x54, 0x13, 0x79, 0x15, 0x7f, 0x31, 0xa2, 0x44, 0x70, 0x05, 0x07,
+	0x9a, 0x7f, 0x95, 0xc4, 0x9f, 0x07, 0x08, 0xcb, 0x8a, 0x0c, 0x55, 0x4f, 0xb8, 0x02, 0xcc, 0xd6,
+	0x5b, 0x0d, 0x72, 0x78, 0xd6, 0x01, 0xdb, 0xf0, 0xbb, 0x2e, 0x35, 0xda, 0x5e, 0x4b, 0x6a, 0x81,
+	0x1d, 0xb0, 0x7f, 0xed, 0xba, 0x74, 0xcf, 0x6b, 0x91, 0xff, 0x10, 0x9e, 0x33, 0x2d, 0x8b, 0xf9,
+	0x4c, 0x70, 0xb3, 0x65, 0xec, 0x53, 0x3a, 0x5e, 0x9a, 0x9f, 0x02, 0x69, 0x5e, 0x9f, 0xaa, 0x0b,
+	0x5d, 0xd3, 0x69, 0x6d, 0xe5, 0xaf, 0xba, 0xe7, 0x8f, 0x9e, 0xa9, 0xcb, 0x36, 0xf3, 0x9b, 0xed,
+	0xba, 0xd6, 0x10, 0x8e, 0xec, 0xb6, 0xfc, 0x29, 0x80, 0xf5, 0xbb, 0x1e, 0xb0, 0x81, 0x30, 0x12,
+	0xd4, 0x3e, 0xe9, 0x3b, 0xef, 0x52, 0x3a, 0x46, 0xe6, 0xd1, 0x92, 0xa6, 0x46, 0x4b, 0x4a, 0x36,
+	0xf1, 0x8c, 0xd9, 0xf6, 0x9b, 0xc2, 0x63, 0x7e, 0x37, 0xd2, 0xbe, 0x9c, 0x79, 0xfc, 0xa8, 0x90,
+	0x96, 0xe5, 0x6d, 0x5b, 0x96, 0x47, 0x01, 0x7e, 0xf1, 0x3d, 0xc6, 0xed, 0x5a, 0x1f, 0xba, 0x45,
+	0x82, 0x36, 0xfc, 0xfd, 0xe2, 0xe1, 0x6a, 0xff, 0xbf, 0xbc, 0x12, 0x9d, 0xb9, 0x41, 0xb9, 0x65,
+	0x3f, 0x9e, 0x24, 0xb1, 0x52, 0x01, 0x7b, 0xcf, 0xb5, 0x4c, 0x9f, 0xde, 0xb4, 0x25, 0xde, 0xe4,
+	0x1d, 0x59, 0x0b, 0x3a, 0xf2, 0x21, 0x0b, 0xff, 0x25, 0x56, 0x47, 0xea, 0x2a, 0xb5, 0xff, 0x1f,
+	0x85, 0xda, 0xd7, 0xa8, 0x23, 0x3a, 0x37, 0xd6, 0xfe, 0x0a, 0xe7, 0xe4, 0x6d, 0x70, 0x1e, 0xce,
+	0x47, 0x72, 0xbe, 0x8f, 0xf0, 0x57, 0xbd, 0xba, 0x7e, 0x6e, 0x9a, 0xd0, 0xac, 0x52, 0x6f, 0x0f,
+	0xac, 0x0a, 0x6b, 0x5d, 0xe7, 0xbe, 0x82, 0xe7, 0x79, 0x00, 0x30, 0x5c, 0xea, 0x19, 0x6d, 0xb0,
+	0x0c, 0x87, 0x45, 0x05, 0xa4, 0x6a, 0x73, 0xfc, 0x8a, 0xe7, 0xad, 0x16, 0xb1, 0x82, 0xbf, 0x1e,
+	0x4b, 0x50, 0x16, 0x73, 0x84, 0xf0, 0x6a, 0x0f, 0xbb, 0x23, 0x78, 0x87, 0x7a, 0xc0, 0x04, 0xdf,
+	0xa5, 0xf4, 0x47, 0xca, 0x85, 0x73, 0xbd, 0xa0, 0x35, 0x9c, 0x6e, 0xf4, 0x40, 0xc1, 0x31, 0x37,
+	0xac, 0x00, 0x26, 0x9b, 0x42, 0x1a, 0x03, 0x01, 0x6e, 0xb5, 0xae, 0x02, 0xfe, 0xe6, 0x9d, 0xb8,
+	0x46, 0xb5, 0xad, 0x9f, 0x4d, 0xe3, 0xa9, 0x0a, 0xd8, 0xe4, 0x2f, 0x4c, 0x06, 0xaf, 0x63, 0x52,
+	0xd2, 0x86, 0xbe, 0x86, 0x5a, 0xdc, 0xfb, 0x94, 0xdd, 0x98, 0xcc, 0x29, 0x22, 0x42, 0xfe, 0xc4,
+	0xf3, 0x03, 0xd7, 0x0f, 0x59, 0x8f, 0x09, 0x35, 0xe2, 0x69, 0xc8, 0x96, 0x26, 0xf2, 0x91, 0xd9,
+	0xff, 0x41, 0x38, 0x3d, 0x6c, 0x08, 0xc9, 0xb7, 0xa3, 0xa3, 0xc5, 0x5c, 0x86, 0xd9, 0xcd, 0x49,
+	0xdd, 0x2e, 0xf1, 0x18, 0x36, 0x58, 0x71, 0x3c, 0x62, 0x2e, 0x86, 0x38, 0x1e, 0x71, 0xf3, 0x4b,
+	0xee, 0x21, 0xbc, 0x14, 0x37, 0x1b, 0xe4, 0xfb, 0x71, 0x05, 0xc6, 0x0e, 0x7d, 0xf6, 0x87, 0x9b,
+	0xba, 0x4b, 0x7e, 0x0f, 0x10, 0xce, 0x8d, 0x3b, 0xe3, 0x64, 0x7b, 0x5c, 0x92, 0xb1, 0xb3, 0x9c,
+	0x2d, 0xbf, 0x4f, 0x88, 0x88, 0x6b, 0x99, 0x1d, 0x9f, 0x2b, 0xe8, 0xe4, 0x5c, 0x41, 0x67, 0xe7,
+	0x0a, 0xba, 0x73, 0xa1, 0x24, 0x4e, 0x2e, 0x94, 0xc4, 0xd3, 0x0b, 0x25, 0x81, 0x33, 0x4c, 0x0c,
+	0x8f, 0x5f, 0x45, 0xbf, 0x95, 0x2e, 0xbd, 0x78, 0x7d, 0x4c, 0x81, 0x89, 0x4b, 0x3b, 0xfd, 0xa0,
+	0xf7, 0x09, 0x1b, 0x3e, 0x81, 0xf5, 0xe9, 0xf0, 0x13, 0xb2, 0xf4, 0x26, 0x00, 0x00, 0xff, 0xff,
+	0xf2, 0x44, 0x96, 0x7b, 0xe5, 0x0a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -160,6 +726,16 @@ type MsgClient interface {
 	// Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient
 	// for executing contracts
 	AssessCustomMsgFee(ctx context.Context, in *MsgAssessCustomMsgFeeRequest, opts ...grpc.CallOption) (*MsgAssessCustomMsgFeeResponse, error)
+	// AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+	AddMsgFeeProposal(ctx context.Context, in *MsgAddMsgFeeProposalRequest, opts ...grpc.CallOption) (*MsgAddMsgFeeProposalResponse, error)
+	// UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+	UpdateMsgFeeProposal(ctx context.Context, in *MsgUpdateMsgFeeProposalRequest, opts ...grpc.CallOption) (*MsgUpdateMsgFeeProposalResponse, error)
+	// RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+	RemoveMsgFeeProposal(ctx context.Context, in *MsgRemoveMsgFeeProposalRequest, opts ...grpc.CallOption) (*MsgRemoveMsgFeeProposalResponse, error)
+	// UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+	UpdateNhashPerUsdMilProposal(ctx context.Context, in *MsgUpdateNhashPerUsdMilProposalRequest, opts ...grpc.CallOption) (*MsgUpdateNhashPerUsdMilProposalResponse, error)
+	// UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+	UpdateConversionFeeDenomProposal(ctx context.Context, in *MsgUpdateConversionFeeDenomProposalRequest, opts ...grpc.CallOption) (*MsgUpdateConversionFeeDenomProposalResponse, error)
 }
 
 type msgClient struct {
@@ -179,6 +755,51 @@ func (c *msgClient) AssessCustomMsgFee(ctx context.Context, in *MsgAssessCustomM
 	return out, nil
 }
 
+func (c *msgClient) AddMsgFeeProposal(ctx context.Context, in *MsgAddMsgFeeProposalRequest, opts ...grpc.CallOption) (*MsgAddMsgFeeProposalResponse, error) {
+	out := new(MsgAddMsgFeeProposalResponse)
+	err := c.cc.Invoke(ctx, "/provenance.msgfees.v1.Msg/AddMsgFeeProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateMsgFeeProposal(ctx context.Context, in *MsgUpdateMsgFeeProposalRequest, opts ...grpc.CallOption) (*MsgUpdateMsgFeeProposalResponse, error) {
+	out := new(MsgUpdateMsgFeeProposalResponse)
+	err := c.cc.Invoke(ctx, "/provenance.msgfees.v1.Msg/UpdateMsgFeeProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) RemoveMsgFeeProposal(ctx context.Context, in *MsgRemoveMsgFeeProposalRequest, opts ...grpc.CallOption) (*MsgRemoveMsgFeeProposalResponse, error) {
+	out := new(MsgRemoveMsgFeeProposalResponse)
+	err := c.cc.Invoke(ctx, "/provenance.msgfees.v1.Msg/RemoveMsgFeeProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateNhashPerUsdMilProposal(ctx context.Context, in *MsgUpdateNhashPerUsdMilProposalRequest, opts ...grpc.CallOption) (*MsgUpdateNhashPerUsdMilProposalResponse, error) {
+	out := new(MsgUpdateNhashPerUsdMilProposalResponse)
+	err := c.cc.Invoke(ctx, "/provenance.msgfees.v1.Msg/UpdateNhashPerUsdMilProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateConversionFeeDenomProposal(ctx context.Context, in *MsgUpdateConversionFeeDenomProposalRequest, opts ...grpc.CallOption) (*MsgUpdateConversionFeeDenomProposalResponse, error) {
+	out := new(MsgUpdateConversionFeeDenomProposalResponse)
+	err := c.cc.Invoke(ctx, "/provenance.msgfees.v1.Msg/UpdateConversionFeeDenomProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// AssessCustomMsgFee endpoint executes the additional fee charges.
@@ -186,6 +807,16 @@ type MsgServer interface {
 	// Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient
 	// for executing contracts
 	AssessCustomMsgFee(context.Context, *MsgAssessCustomMsgFeeRequest) (*MsgAssessCustomMsgFeeResponse, error)
+	// AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+	AddMsgFeeProposal(context.Context, *MsgAddMsgFeeProposalRequest) (*MsgAddMsgFeeProposalResponse, error)
+	// UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+	UpdateMsgFeeProposal(context.Context, *MsgUpdateMsgFeeProposalRequest) (*MsgUpdateMsgFeeProposalResponse, error)
+	// RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+	RemoveMsgFeeProposal(context.Context, *MsgRemoveMsgFeeProposalRequest) (*MsgRemoveMsgFeeProposalResponse, error)
+	// UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+	UpdateNhashPerUsdMilProposal(context.Context, *MsgUpdateNhashPerUsdMilProposalRequest) (*MsgUpdateNhashPerUsdMilProposalResponse, error)
+	// UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+	UpdateConversionFeeDenomProposal(context.Context, *MsgUpdateConversionFeeDenomProposalRequest) (*MsgUpdateConversionFeeDenomProposalResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -194,6 +825,21 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) AssessCustomMsgFee(ctx context.Context, req *MsgAssessCustomMsgFeeRequest) (*MsgAssessCustomMsgFeeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AssessCustomMsgFee not implemented")
+}
+func (*UnimplementedMsgServer) AddMsgFeeProposal(ctx context.Context, req *MsgAddMsgFeeProposalRequest) (*MsgAddMsgFeeProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddMsgFeeProposal not implemented")
+}
+func (*UnimplementedMsgServer) UpdateMsgFeeProposal(ctx context.Context, req *MsgUpdateMsgFeeProposalRequest) (*MsgUpdateMsgFeeProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMsgFeeProposal not implemented")
+}
+func (*UnimplementedMsgServer) RemoveMsgFeeProposal(ctx context.Context, req *MsgRemoveMsgFeeProposalRequest) (*MsgRemoveMsgFeeProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveMsgFeeProposal not implemented")
+}
+func (*UnimplementedMsgServer) UpdateNhashPerUsdMilProposal(ctx context.Context, req *MsgUpdateNhashPerUsdMilProposalRequest) (*MsgUpdateNhashPerUsdMilProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateNhashPerUsdMilProposal not implemented")
+}
+func (*UnimplementedMsgServer) UpdateConversionFeeDenomProposal(ctx context.Context, req *MsgUpdateConversionFeeDenomProposalRequest) (*MsgUpdateConversionFeeDenomProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateConversionFeeDenomProposal not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -218,6 +864,96 @@ func _Msg_AssessCustomMsgFee_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_AddMsgFeeProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAddMsgFeeProposalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).AddMsgFeeProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.msgfees.v1.Msg/AddMsgFeeProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).AddMsgFeeProposal(ctx, req.(*MsgAddMsgFeeProposalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateMsgFeeProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateMsgFeeProposalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateMsgFeeProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.msgfees.v1.Msg/UpdateMsgFeeProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateMsgFeeProposal(ctx, req.(*MsgUpdateMsgFeeProposalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_RemoveMsgFeeProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRemoveMsgFeeProposalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RemoveMsgFeeProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.msgfees.v1.Msg/RemoveMsgFeeProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RemoveMsgFeeProposal(ctx, req.(*MsgRemoveMsgFeeProposalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateNhashPerUsdMilProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateNhashPerUsdMilProposalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateNhashPerUsdMilProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.msgfees.v1.Msg/UpdateNhashPerUsdMilProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateNhashPerUsdMilProposal(ctx, req.(*MsgUpdateNhashPerUsdMilProposalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateConversionFeeDenomProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateConversionFeeDenomProposalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateConversionFeeDenomProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.msgfees.v1.Msg/UpdateConversionFeeDenomProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateConversionFeeDenomProposal(ctx, req.(*MsgUpdateConversionFeeDenomProposalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.msgfees.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -225,6 +961,26 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AssessCustomMsgFee",
 			Handler:    _Msg_AssessCustomMsgFee_Handler,
+		},
+		{
+			MethodName: "AddMsgFeeProposal",
+			Handler:    _Msg_AddMsgFeeProposal_Handler,
+		},
+		{
+			MethodName: "UpdateMsgFeeProposal",
+			Handler:    _Msg_UpdateMsgFeeProposal_Handler,
+		},
+		{
+			MethodName: "RemoveMsgFeeProposal",
+			Handler:    _Msg_RemoveMsgFeeProposal_Handler,
+		},
+		{
+			MethodName: "UpdateNhashPerUsdMilProposal",
+			Handler:    _Msg_UpdateNhashPerUsdMilProposal_Handler,
+		},
+		{
+			MethodName: "UpdateConversionFeeDenomProposal",
+			Handler:    _Msg_UpdateConversionFeeDenomProposal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -315,6 +1071,352 @@ func (m *MsgAssessCustomMsgFeeResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgAddMsgFeeProposalRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgAddMsgFeeProposalRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgAddMsgFeeProposalRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.RecipientBasisPoints) > 0 {
+		i -= len(m.RecipientBasisPoints)
+		copy(dAtA[i:], m.RecipientBasisPoints)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.RecipientBasisPoints)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Recipient) > 0 {
+		i -= len(m.Recipient)
+		copy(dAtA[i:], m.Recipient)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Recipient)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	{
+		size, err := m.AdditionalFee.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.MsgTypeUrl) > 0 {
+		i -= len(m.MsgTypeUrl)
+		copy(dAtA[i:], m.MsgTypeUrl)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.MsgTypeUrl)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgAddMsgFeeProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgAddMsgFeeProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgAddMsgFeeProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateMsgFeeProposalRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateMsgFeeProposalRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateMsgFeeProposalRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.RecipientBasisPoints) > 0 {
+		i -= len(m.RecipientBasisPoints)
+		copy(dAtA[i:], m.RecipientBasisPoints)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.RecipientBasisPoints)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Recipient) > 0 {
+		i -= len(m.Recipient)
+		copy(dAtA[i:], m.Recipient)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Recipient)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	{
+		size, err := m.AdditionalFee.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.MsgTypeUrl) > 0 {
+		i -= len(m.MsgTypeUrl)
+		copy(dAtA[i:], m.MsgTypeUrl)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.MsgTypeUrl)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateMsgFeeProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateMsgFeeProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateMsgFeeProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRemoveMsgFeeProposalRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveMsgFeeProposalRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveMsgFeeProposalRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.MsgTypeUrl) > 0 {
+		i -= len(m.MsgTypeUrl)
+		copy(dAtA[i:], m.MsgTypeUrl)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.MsgTypeUrl)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRemoveMsgFeeProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveMsgFeeProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveMsgFeeProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateNhashPerUsdMilProposalRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateNhashPerUsdMilProposalRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateNhashPerUsdMilProposalRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.NhashPerUsdMil != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.NhashPerUsdMil))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateNhashPerUsdMilProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateNhashPerUsdMilProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateNhashPerUsdMilProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateConversionFeeDenomProposalRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateConversionFeeDenomProposalRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateConversionFeeDenomProposalRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ConversionFeeDenom) > 0 {
+		i -= len(m.ConversionFeeDenom)
+		copy(dAtA[i:], m.ConversionFeeDenom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ConversionFeeDenom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateConversionFeeDenomProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateConversionFeeDenomProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateConversionFeeDenomProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -354,6 +1456,155 @@ func (m *MsgAssessCustomMsgFeeRequest) Size() (n int) {
 }
 
 func (m *MsgAssessCustomMsgFeeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgAddMsgFeeProposalRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.MsgTypeUrl)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.AdditionalFee.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = len(m.Recipient)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.RecipientBasisPoints)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgAddMsgFeeProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateMsgFeeProposalRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.MsgTypeUrl)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.AdditionalFee.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = len(m.Recipient)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.RecipientBasisPoints)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateMsgFeeProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgRemoveMsgFeeProposalRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.MsgTypeUrl)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgRemoveMsgFeeProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateNhashPerUsdMilProposalRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.NhashPerUsdMil != 0 {
+		n += 1 + sovTx(uint64(m.NhashPerUsdMil))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateNhashPerUsdMilProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateConversionFeeDenomProposalRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ConversionFeeDenom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateConversionFeeDenomProposalResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -606,6 +1857,1007 @@ func (m *MsgAssessCustomMsgFeeResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgAssessCustomMsgFeeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgAddMsgFeeProposalRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgAddMsgFeeProposalRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgAddMsgFeeProposalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MsgTypeUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MsgTypeUrl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AdditionalFee", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.AdditionalFee.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Recipient", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Recipient = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecipientBasisPoints", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecipientBasisPoints = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgAddMsgFeeProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgAddMsgFeeProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgAddMsgFeeProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateMsgFeeProposalRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateMsgFeeProposalRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateMsgFeeProposalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MsgTypeUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MsgTypeUrl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AdditionalFee", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.AdditionalFee.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Recipient", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Recipient = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecipientBasisPoints", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecipientBasisPoints = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateMsgFeeProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateMsgFeeProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateMsgFeeProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveMsgFeeProposalRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveMsgFeeProposalRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveMsgFeeProposalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MsgTypeUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MsgTypeUrl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveMsgFeeProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveMsgFeeProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveMsgFeeProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateNhashPerUsdMilProposalRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateNhashPerUsdMilProposalRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateNhashPerUsdMilProposalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NhashPerUsdMil", wireType)
+			}
+			m.NhashPerUsdMil = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NhashPerUsdMil |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateNhashPerUsdMilProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateNhashPerUsdMilProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateNhashPerUsdMilProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateConversionFeeDenomProposalRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateConversionFeeDenomProposalRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateConversionFeeDenomProposalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConversionFeeDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConversionFeeDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateConversionFeeDenomProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateConversionFeeDenomProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateConversionFeeDenomProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

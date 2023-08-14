@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -40,4 +43,115 @@ func (m msgServer) AssessCustomMsgFee(goCtx context.Context, req *types.MsgAsses
 		),
 	)
 	return &types.MsgAssessCustomMsgFeeResponse{}, nil
+}
+
+func (m msgServer) AddMsgFeeProposal(goCtx context.Context, req *types.MsgAddMsgFeeProposalRequest) (*types.MsgAddMsgFeeProposalResponse, error) {
+	if m.GetAuthority() != req.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	prop := types.AddMsgFeeProposal{
+		Title:                "AddMsgFeeProposal",
+		Description:          "AddMsgFeeProposal",
+		MsgTypeUrl:           req.MsgTypeUrl,
+		AdditionalFee:        req.AdditionalFee,
+		Recipient:            req.Recipient,
+		RecipientBasisPoints: req.RecipientBasisPoints,
+	}
+
+	err := HandleAddMsgFeeProposal(ctx, m.Keeper, &prop, m.registry)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgAddMsgFeeProposalResponse{}, nil
+}
+
+func (m msgServer) UpdateMsgFeeProposal(goCtx context.Context, req *types.MsgUpdateMsgFeeProposalRequest) (*types.MsgUpdateMsgFeeProposalResponse, error) {
+	if m.GetAuthority() != req.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	prop := types.UpdateMsgFeeProposal{
+		Title:                "UpdateMsgFeeProposal",
+		Description:          "UpdateMsgFeeProposal",
+		MsgTypeUrl:           req.MsgTypeUrl,
+		AdditionalFee:        req.AdditionalFee,
+		Recipient:            req.Recipient,
+		RecipientBasisPoints: req.RecipientBasisPoints,
+	}
+
+	err := HandleUpdateMsgFeeProposal(ctx, m.Keeper, &prop, m.registry)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateMsgFeeProposalResponse{}, nil
+}
+
+func (m msgServer) RemoveMsgFeeProposal(goCtx context.Context, req *types.MsgRemoveMsgFeeProposalRequest) (*types.MsgRemoveMsgFeeProposalResponse, error) {
+	if m.GetAuthority() != req.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	prop := types.RemoveMsgFeeProposal{
+		Title:       "RemoveMsgFeeProposal",
+		Description: "RemoveMsgFeeProposal",
+		MsgTypeUrl:  req.MsgTypeUrl,
+	}
+
+	err := HandleRemoveMsgFeeProposal(ctx, m.Keeper, &prop, m.registry)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRemoveMsgFeeProposalResponse{}, nil
+}
+
+func (m msgServer) UpdateNhashPerUsdMilProposal(goCtx context.Context, req *types.MsgUpdateNhashPerUsdMilProposalRequest) (*types.MsgUpdateNhashPerUsdMilProposalResponse, error) {
+	if m.GetAuthority() != req.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	prop := types.UpdateNhashPerUsdMilProposal{
+		Title:          "UpdateNhashPerUsdMilProposal",
+		Description:    "UpdateNhashPerUsdMilProposal",
+		NhashPerUsdMil: req.NhashPerUsdMil,
+	}
+
+	err := HandleUpdateNhashPerUsdMilProposal(ctx, m.Keeper, &prop)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateNhashPerUsdMilProposalResponse{}, nil
+}
+
+func (m msgServer) UpdateConversionFeeDenomProposal(goCtx context.Context, req *types.MsgUpdateConversionFeeDenomProposalRequest) (*types.MsgUpdateConversionFeeDenomProposalResponse, error) {
+	if m.GetAuthority() != req.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	prop := types.UpdateConversionFeeDenomProposal{
+		Title:              "UpdateConversionFeeDenomProposal",
+		Description:        "UpdateConversionFeeDenomProposal",
+		ConversionFeeDenom: req.ConversionFeeDenom,
+	}
+
+	err := HandleUpdateConversionFeeDenomProposal(ctx, m.Keeper, &prop)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateConversionFeeDenomProposalResponse{}, nil
 }
