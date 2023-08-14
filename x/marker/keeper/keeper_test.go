@@ -13,8 +13,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/quarantine"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -1485,6 +1489,94 @@ func TestUpdateSendDenyList(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, res, &types.MsgUpdateSendDenyListResponse{})
 			}
+		})
+	}
+}
+
+func TestWhitelistAddrs(t *testing.T) {
+	// Tests both GetWhitelistAddrs and IsWhitelistAddr.
+	expectedNames := []string{
+		authtypes.FeeCollectorName,
+		rewardtypes.ModuleName,
+		quarantine.ModuleName,
+		govtypes.ModuleName,
+		distrtypes.ModuleName,
+		stakingtypes.BondedPoolName,
+		stakingtypes.NotBondedPoolName,
+	}
+
+	incByte := func(b byte) byte {
+		if b == 0xFF {
+			return 0x00
+		}
+		return b + 1
+	}
+
+	app := simapp.Setup(t)
+
+	for _, name := range expectedNames {
+		t.Run(fmt.Sprintf("get: contains %s", name), func(t *testing.T) {
+			expAddr := authtypes.NewModuleAddress(name)
+			actual := app.MarkerKeeper.GetWhitelistAddrs()
+			assert.Contains(t, actual, expAddr, "GetWhitelistAddrs()")
+		})
+	}
+	t.Run("get: only has expected entries", func(t *testing.T) {
+		// This assumes each expectedNames test passed. This is designed to fail if a new entry
+		// is added to the list (in app.go). When that happens, update the expectedNames with
+		// the new entry so it's harder for it to accidentally go missing.
+		actual := app.MarkerKeeper.GetWhitelistAddrs()
+		assert.Len(t, actual, len(expectedNames), "GetWhitelistAddrs()")
+	})
+
+	t.Run("get: called twice equal but not same", func(t *testing.T) {
+		expected := app.MarkerKeeper.GetWhitelistAddrs()
+		actual := app.MarkerKeeper.GetWhitelistAddrs()
+		if assert.Equal(t, expected, actual, "GetWhitelistAddrs()") {
+			if assert.NotSame(t, expected, actual, "GetWhitelistAddrs()") {
+				for i := range expected {
+					assert.NotSame(t, expected[i], actual[i], "GetWhitelistAddrs()[%d]", i)
+				}
+			}
+		}
+	})
+
+	t.Run("get: changes to result not reflected in next result", func(t *testing.T) {
+		actual1 := app.MarkerKeeper.GetWhitelistAddrs()
+		origActual100 := actual1[0][0]
+		actual1[0][0] = incByte(origActual100)
+		actual2 := app.MarkerKeeper.GetWhitelistAddrs()
+		actual200 := actual2[0][0]
+		assert.Equal(t, origActual100, actual200, "first byte of first address after changing it in an earlier result")
+	})
+
+	for _, name := range expectedNames {
+		t.Run(fmt.Sprintf("is: %s", name), func(t *testing.T) {
+			addr := authtypes.NewModuleAddress(name)
+			actual := app.MarkerKeeper.IsWhitelistAddr(addr)
+			assert.True(t, actual, "IsWhitelistAddr(NewModuleAddress(%q))", name)
+		})
+	}
+
+	almostName0 := authtypes.NewModuleAddress(expectedNames[0])
+	almostName0[0] = incByte(almostName0[0])
+
+	negativeIsTests := []struct {
+		name string
+		addr sdk.AccAddress
+	}{
+		{name: "nil address", addr: nil},
+		{name: "empty address", addr: sdk.AccAddress{}},
+		{name: "zerod address", addr: make(sdk.AccAddress, 20)},
+		{name: "almost " + expectedNames[0], addr: almostName0},
+		{name: "short " + expectedNames[0], addr: authtypes.NewModuleAddress(expectedNames[0])[:19]},
+		{name: "long " + expectedNames[0], addr: append(authtypes.NewModuleAddress(expectedNames[0]), 0x00)},
+	}
+
+	for _, tc := range negativeIsTests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := app.MarkerKeeper.IsWhitelistAddr(tc.addr)
+			assert.False(t, actual, "IsWhitelistAddr(...)")
 		})
 	}
 }

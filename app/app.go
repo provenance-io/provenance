@@ -479,8 +479,19 @@ func New(
 		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper,
 	)
 
+	markerWhitelistAddrs := []sdk.AccAddress{
+		authtypes.NewModuleAddress(authtypes.FeeCollectorName),     // Allow collecting fees in restricted coins.
+		authtypes.NewModuleAddress(rewardtypes.ModuleName),         // Allow rewards to hold onto restricted coins.
+		authtypes.NewModuleAddress(quarantine.ModuleName),          // Allow quarantine to hold onto restricted coins.
+		authtypes.NewModuleAddress(govtypes.ModuleName),            // Allow restricted coins in deposits.
+		authtypes.NewModuleAddress(distrtypes.ModuleName),          // Allow bond denom to be a restricted coin.
+		authtypes.NewModuleAddress(stakingtypes.BondedPoolName),    // Allow bond denom to be a restricted coin.
+		authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName), // Allow bond denom to be a restricted coin.
+	}
 	app.MarkerKeeper = markerkeeper.NewKeeper(
-		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper, app.AttributeKeeper, app.NameKeeper, app.TransferKeeper,
+		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName),
+		app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper,
+		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper, markerWhitelistAddrs,
 	)
 
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {

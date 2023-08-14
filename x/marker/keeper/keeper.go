@@ -77,6 +77,8 @@ type Keeper struct {
 
 	// Used to transfer the ibc marker
 	ibcTransferServer types.IbcTransferMsgServer
+
+	whitelistAddrs []sdk.AccAddress
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -95,6 +97,7 @@ func NewKeeper(
 	attrKeeper types.AttrKeeper,
 	nameKeeper types.NameKeeper,
 	ibcTransferServer types.IbcTransferMsgServer,
+	whitelistAddrs []sdk.AccAddress,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -114,6 +117,7 @@ func NewKeeper(
 		markerModuleAddr:      authtypes.NewModuleAddress(types.CoinPoolName),
 		ibcTransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
 		ibcTransferServer:     ibcTransferServer,
+		whitelistAddrs:        whitelistAddrs,
 	}
 	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
 	return rv
@@ -206,4 +210,24 @@ func (k Keeper) AddSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddre
 func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.DenySendKey(markerAddr, senderAddr))
+}
+
+// GetWhitelistAddrs returns a deep copy of the whitelisted addresses.
+func (k Keeper) GetWhitelistAddrs() []sdk.AccAddress {
+	rv := make([]sdk.AccAddress, len(k.whitelistAddrs))
+	for i, addr := range k.whitelistAddrs {
+		rv[i] = make(sdk.AccAddress, len(addr))
+		copy(rv[i], addr)
+	}
+	return rv
+}
+
+// IsWhitelistAddr returns true if the provided addr has been whitelisted.
+func (k Keeper) IsWhitelistAddr(addr sdk.AccAddress) bool {
+	for _, w := range k.whitelistAddrs {
+		if addr.Equals(w) {
+			return true
+		}
+	}
+	return false
 }
