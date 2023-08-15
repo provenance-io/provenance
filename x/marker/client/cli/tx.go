@@ -241,7 +241,6 @@ with the given supply amount and denomination provided in the coin argument
 				return err
 			}
 
-			// TODO: add marker net asset value flag
 			msg := types.NewMsgAddMarkerRequest(
 				coin.Denom,
 				coin.Amount,
