@@ -79,6 +79,10 @@ type Keeper struct {
 	ibcTransferServer types.IbcTransferMsgServer
 
 	// reqAttrBypassAddrs is a set of addresses that are allowed to bypass the required attribute check.
+	// When sending to one of these, if there are required attributes, it behaves as if the addr has them;
+	// if there aren't required attributes, the sender still needs transfer permission.
+	// When sending from one of these, if there are required attributes, the destination must have them;
+	// if there aren't required attributes, it behaves as if the sender has transfer permission.
 	reqAttrBypassAddrs []sdk.AccAddress
 }
 
