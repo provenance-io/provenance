@@ -165,7 +165,7 @@ iterator from the auth module.
 
 ### Marker Net Asset Value
 
-A marker with the **Restricted Coin** type can support multiple distinct net asset values assigned to track settlement pricing information on-chain. The `value` attribute represents the coin value of the asset, such as `usd` or `nhash`, along with its corresponding `volume`. The `source` attribute denotes the module responsible for updating the asset value, while the `update_time` attribute captures the block time when the update occurred.
+A marker can support multiple distinct net asset values assigned to track settlement pricing information on-chain. The `value` attribute represents the coin value of the asset, such as `usd` or `nhash`, along with its corresponding `volume`. The `update_block_height` attribute captures the block height when the update occurred.
 
 TODO: Add proto link once more toward final...
 
