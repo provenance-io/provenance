@@ -240,16 +240,6 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, markerAddr sdk.AccAddress, net
 	return nil
 }
 
-func (k Keeper) RemoveNetAssetValue(ctx sdk.Context, markerAddr sdk.AccAddress, valueDenom string) error {
-	store := ctx.KVStore(k.storeKey)
-	key := types.NetAssetValueKey(markerAddr, valueDenom)
-	if !store.Has(key) {
-		return fmt.Errorf("net asset value for %v marker address not found for value %v", markerAddr.String(), valueDenom)
-	}
-	ctx.KVStore(k.storeKey).Delete(types.NetAssetValueKey(markerAddr, valueDenom))
-	return nil
-}
-
 // IterateNetAssetValues iterates net asset values for marker
 func (k Keeper) IterateNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress, handler func(state types.NetAssetValue) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
