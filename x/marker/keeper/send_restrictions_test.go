@@ -61,6 +61,11 @@ func TestSendRestrictionFn(t *testing.T) {
 	addrWithDeposit := sdk.AccAddress("addrWithDeposit_____")
 	addrWithTranDep := sdk.AccAddress("addrWithTranDep_____")
 	addrWithDenySend := sdk.AccAddress("addrWithDenySend_____")
+	addrOther := sdk.AccAddress("addrOther___________")
+
+	bypassAddrs := app.MarkerKeeper.GetReqAttrBypassAddrs()
+	addrWithBypass := bypassAddrs[0]
+	addrWithBypassNoDep := bypassAddrs[1]
 
 	coin := types.MarkerType_Coin
 	restricted := types.MarkerType_RestrictedCoin
@@ -75,6 +80,8 @@ func TestSendRestrictionFn(t *testing.T) {
 				{Address: addrWithTransfer.String(), Permissions: types.AccessList{types.Access_Transfer}},
 				{Address: addrWithDeposit.String(), Permissions: types.AccessList{types.Access_Deposit}},
 				{Address: addrWithTranDep.String(), Permissions: types.AccessList{types.Access_Deposit, types.Access_Transfer}},
+				// It's silly to give any permissions to a bypass address, but I do so in here to hit some test cases.
+				{Address: addrWithBypass.String(), Permissions: types.AccessList{types.Access_Deposit}},
 			}
 		}
 		rv := types.NewMarkerAccount(
@@ -306,6 +313,85 @@ func TestSendRestrictionFn(t *testing.T) {
 			from:   addrWithoutAttrs,
 			to:     nrMarker.GetAddress(),
 			amt:    cz(c(1, nrDenom)),
+			expErr: "",
+		},
+		{
+			name: "to a marker from addr with bypass but no deposit",
+			from: addrWithBypassNoDep,
+			to:   rMarkerNoAttr.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+			expErr: fmt.Sprintf("%s does not have deposit access for %s (%s)",
+				addrWithBypassNoDep, rMarkerNoAttr.GetAddress().String(), rDenomNoAttr),
+		},
+		{
+			name:   "to a marker with req attrs from an addr with bypass",
+			from:   addrWithBypass,
+			to:     rMarker1Attr.GetAddress(),
+			amt:    cz(c(1, rDenom1Attr)),
+			expErr: addrWithBypass.String() + " does not have transfer permissions",
+		},
+		{
+			name:   "to marker without req attrs from addr with bypass",
+			from:   addrWithBypass,
+			to:     rMarkerNoAttr.GetAddress(),
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: addrWithBypass.String() + " does not have transfer permissions",
+		},
+		{
+			name:   "no req attrs from addr with bypass",
+			from:   addrWithBypass,
+			to:     addrOther,
+			amt:    cz(c(3, rDenomNoAttr)),
+			expErr: "",
+		},
+		{
+			name: "with req attrs from addr with bypass",
+			from: addrWithBypass,
+			to:   addrOther,
+			amt:  cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: fmt.Sprintf("address %s does not contain the %q required attribute: \"some.attribute.that.i.require\"",
+				addrOther, rDenom1AttrNoOneHas),
+		},
+		{
+			name:   "no req attrs to addr with bypass from without transfer",
+			from:   addrOther,
+			to:     addrWithBypass,
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: addrOther.String() + " does not have transfer permissions",
+		},
+		{
+			name:   "no req attrs to addr with bypass from with transfer",
+			from:   addrWithTransfer,
+			to:     addrWithBypass,
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: "",
+		},
+		{
+			name:   "with req attrs to addr with bypass from without transfer",
+			from:   addrOther,
+			to:     addrWithBypass,
+			amt:    cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: "",
+		},
+		{
+			name:   "with req attrs to addr with bypass from with transfer",
+			from:   addrWithTransfer,
+			to:     addrWithBypass,
+			amt:    cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: "",
+		},
+		{
+			name:   "with req attrs between bypass addrs",
+			from:   addrWithBypass,
+			to:     addrWithBypassNoDep,
+			amt:    cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: "",
+		},
+		{
+			name:   "without req attrs between bypass addrs",
+			from:   addrWithBypass,
+			to:     addrWithBypassNoDep,
+			amt:    cz(c(1, rDenomNoAttr)),
 			expErr: "",
 		},
 	}
