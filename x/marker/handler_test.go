@@ -222,22 +222,6 @@ func (s *HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
 	s.runTests(cases)
 }
 
-func (s *HandlerTestSuite) TestMsgFinalizeMarkerRequest() {
-	hotdogDenom := "hotdog"
-	cases := []CommonTest{
-		{
-			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
-		},
-		{
-			name:          "should successfully finalize marker",
-			msg:           types.NewMsgFinalizeRequest(hotdogDenom, s.user1Addr),
-			expectedEvent: types.NewEventMarkerFinalize(hotdogDenom, s.user1),
-		},
-	}
-	s.runTests(cases)
-}
-
 func (s *HandlerTestSuite) TestMsgActivateMarkerRequest() {
 	hotdogDenom := "hotdog"
 

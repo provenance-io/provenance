@@ -56,6 +56,58 @@ func TestMsgServerTestSuite(t *testing.T) {
 	suite.Run(t, new(MsgServerTestSuite))
 }
 
+func (s *MsgServerTestSuite) TestMsgFinalizeMarkerRequest() {
+	authUser := testUserAddress("test")
+	noNavMarker := types.NewEmptyMarkerAccount(
+		"nonav",
+		authUser.String(),
+		[]types.AccessGrant{})
+
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, noNavMarker))
+
+	validMarker := types.NewEmptyMarkerAccount(
+		"hotdog",
+		authUser.String(),
+		[]types.AccessGrant{
+			{Address: authUser.String(), Permissions: types.AccessList{types.Access_Admin, types.Access_Mint}},
+		},
+	)
+	validMarker.Supply = sdk.NewInt(1)
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, validMarker))
+	s.Require().NoError(s.app.MarkerKeeper.SetNetAssetValue(s.ctx, validMarker.GetAddress(), types.NetAssetValue{Value: sdk.NewInt64Coin(types.UsdDenom, 1), Volume: 1}))
+
+	testCases := []struct {
+		name   string
+		msg    types.MsgFinalizeRequest
+		expErr string
+	}{
+		{
+			name:   "marker does not have net asset value",
+			msg:    types.MsgFinalizeRequest{Denom: noNavMarker.Denom, Administrator: authUser.String()},
+			expErr: "marker nonav does not have any net asset values assigned: invalid request",
+		},
+		{
+			name: "successfully finalize",
+			msg:  types.MsgFinalizeRequest{Denom: validMarker.Denom, Administrator: authUser.String()},
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			res, err := s.msgServer.Finalize(sdk.WrapSDKContext(s.ctx),
+				&tc.msg)
+
+			if len(tc.expErr) > 0 {
+				s.Assert().Nil(res)
+				s.Assert().EqualError(err, tc.expErr)
+
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().Equal(res, &types.MsgFinalizeResponse{})
+			}
+		})
+	}
+}
+
 func (s *MsgServerTestSuite) TestUpdateForcedTransfer() {
 	authority := s.app.MarkerKeeper.GetAuthority()
 	otherAddr := sdk.AccAddress("otherAccAddr________").String()

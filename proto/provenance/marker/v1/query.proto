@@ -189,5 +189,5 @@ message QueryNetAssetValuesRequest {
 // QueryNetAssetValuesRequest is the response type for the Query/NetAssetValues method.
 message QueryNetAssetValuesResponse {
   // net asset values for marker denom
-  repeated NetAssetValue net_asset_values = 1 [(gogoproto.nullable) = false];
+  repeated NetAssetValue net_asset_values = 1 [(gogoproto.nullable) = false][];
 }
