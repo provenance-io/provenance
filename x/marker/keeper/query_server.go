@@ -180,3 +180,7 @@ func (k Keeper) AccountData(c context.Context, req *types.QueryAccountDataReques
 
 	return &types.QueryAccountDataResponse{Value: value}, nil
 }
+
+func (k Keeper) NetAssetValues(c context.Context, req *types.QueryNetAssetValuesRequest) (*types.QueryNetAssetValuesResponse, error) {
+	return nil, nil
+}

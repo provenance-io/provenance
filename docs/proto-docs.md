@@ -111,6 +111,8 @@
     - [QueryHoldingResponse](#provenance.marker.v1.QueryHoldingResponse)
     - [QueryMarkerRequest](#provenance.marker.v1.QueryMarkerRequest)
     - [QueryMarkerResponse](#provenance.marker.v1.QueryMarkerResponse)
+    - [QueryNetAssetValuesRequest](#provenance.marker.v1.QueryNetAssetValuesRequest)
+    - [QueryNetAssetValuesResponse](#provenance.marker.v1.QueryNetAssetValuesResponse)
     - [QueryParamsRequest](#provenance.marker.v1.QueryParamsRequest)
     - [QueryParamsResponse](#provenance.marker.v1.QueryParamsResponse)
     - [QuerySupplyRequest](#provenance.marker.v1.QuerySupplyRequest)
@@ -2057,6 +2059,36 @@ QueryMarkerResponse is the response type for the Query/Marker method.
 
 
 
+<a name="provenance.marker.v1.QueryNetAssetValuesRequest"></a>
+
+### QueryNetAssetValuesRequest
+QueryNetAssetValuesRequest is the request type for the Query/NetAssetValues method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | address or denom for the marker |
+
+
+
+
+
+
+<a name="provenance.marker.v1.QueryNetAssetValuesResponse"></a>
+
+### QueryNetAssetValuesResponse
+QueryNetAssetValuesRequest is the response type for the Query/NetAssetValues method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated | net asset values for marker denom |
+
+
+
+
+
+
 <a name="provenance.marker.v1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
@@ -2134,6 +2166,7 @@ Query defines the gRPC querier service for marker module.
 | `Access` | [QueryAccessRequest](#provenance.marker.v1.QueryAccessRequest) | [QueryAccessResponse](#provenance.marker.v1.QueryAccessResponse) | query for access records on an account | GET|/provenance/marker/v1/accesscontrol/{id}|
 | `DenomMetadata` | [QueryDenomMetadataRequest](#provenance.marker.v1.QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#provenance.marker.v1.QueryDenomMetadataResponse) | query for access records on an account | GET|/provenance/marker/v1/getdenommetadata/{denom}|
 | `AccountData` | [QueryAccountDataRequest](#provenance.marker.v1.QueryAccountDataRequest) | [QueryAccountDataResponse](#provenance.marker.v1.QueryAccountDataResponse) | query for account data associated with a denom | GET|/provenance/marker/v1/accountdata/{denom}|
+| `NetAssetValues` | [QueryNetAssetValuesRequest](#provenance.marker.v1.QueryNetAssetValuesRequest) | [QueryNetAssetValuesResponse](#provenance.marker.v1.QueryNetAssetValuesResponse) | NetAssetValues returns net asset values for marker | GET|/provenance/marker/v1/netassetvalues/{id}|
 
  <!-- end services -->
 

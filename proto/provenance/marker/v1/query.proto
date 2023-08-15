@@ -61,6 +61,11 @@ service Query {
   rpc AccountData(QueryAccountDataRequest) returns (QueryAccountDataResponse) {
     option (google.api.http).get = "/provenance/marker/v1/accountdata/{denom}";
   }
+
+  // NetAssetValues returns net asset values for marker
+  rpc NetAssetValues(QueryNetAssetValuesRequest) returns (QueryNetAssetValuesResponse) {
+    option (google.api.http).get = "/provenance/marker/v1/netassetvalues/{id}";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -173,4 +178,16 @@ message Balance {
   // coins defines the different coins this balance holds.
   repeated cosmos.base.v1beta1.Coin coins = 2
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+// QueryNetAssetValuesRequest is the request type for the Query/NetAssetValues method.
+message QueryNetAssetValuesRequest {
+  // address or denom for the marker
+  string id = 1;
+}
+
+// QueryNetAssetValuesRequest is the response type for the Query/NetAssetValues method.
+message QueryNetAssetValuesResponse {
+  // net asset values for marker denom
+  repeated NetAssetValue net_asset_values = 1;
 }
