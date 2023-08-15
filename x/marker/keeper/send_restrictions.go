@@ -69,11 +69,29 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 
 	reqAttr := marker.GetRequiredAttributes()
 
-	// If there aren't any required attributes, or it's going to marker, then
-
-	// transfers are only allowed by those with transfer permission.
-	if len(reqAttr) == 0 || toMarker != nil {
+	// If going to a marker, transfer permission is required regardless of whether it's coming from a bypass.
+	// If someone wants to deposit funds from a bypass account, they can either send the funds to a valid
+	// intermediary account and deposit them from there, or give the bypass account deposit and transfer permissions.
+	// It's assumed that a marker address cannot be in the bypass list.
+	if toMarker != nil {
 		return fmt.Errorf("%s does not have transfer permissions", fromAddr.String())
+	}
+
+	// If there aren't any required attributes, transfer permission is required unless coming from a bypass account.
+	// It's assumed that the only way the restricted coins with required attributes can got into a bypass
+	// account is by someone with transfer permission, which is then conveyed for this transfer too.
+	if len(reqAttr) == 0 {
+		if k.IsReqAttrBypassAddr(fromAddr) {
+			return nil
+		}
+		return fmt.Errorf("%s does not have transfer permissions", fromAddr.String())
+	}
+
+	// At this point, we know there are required attributes and that fromAddr does not have transfer permission.
+	// If the toAddress has a bypass, skip checking the attributes and allow the transfer.
+	// When these funds are then being moved out of the bypass account, attributes are checked on that destination.
+	if k.IsReqAttrBypassAddr(toAddr) {
+		return nil
 	}
 
 	attributes, err := k.attrKeeper.GetAllAttributesAddr(ctx, toAddr)
