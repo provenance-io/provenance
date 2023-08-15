@@ -436,7 +436,7 @@ func New(
 	)
 
 	app.MsgFeesKeeper = msgfeeskeeper.NewKeeper(
-		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName), authtypes.FeeCollectorName, pioconfig.GetProvenanceConfig().FeeDenom, app.Simulate, encodingConfig.TxConfig.TxDecoder())
+		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName), authtypes.FeeCollectorName, pioconfig.GetProvenanceConfig().FeeDenom, app.Simulate, encodingConfig.TxConfig.TxDecoder(), interfaceRegistry)
 
 	pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
 	pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)

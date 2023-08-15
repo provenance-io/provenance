@@ -32,7 +32,6 @@ require (
 	golang.org/x/exp v0.0.0-20230310171629-522b1b587ee0
 	golang.org/x/text v0.12.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230526203410-71b5a4ffd15e
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230706204954-ccb25ca9f130
 	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -167,6 +166,7 @@ require (
 	google.golang.org/api v0.122.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230629202037-9506855d4529 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230706204954-ccb25ca9f130 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
@@ -178,7 +178,7 @@ replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alp
 replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.13-pio-1
 
 // Use cometbft as requied by the SDK at v0.46.13
-replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.28
+replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.29
 
 // Replace broken goleveldb as required by the SDK at v0.46.13
 replace github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7

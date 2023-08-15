@@ -8,11 +8,13 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
@@ -31,6 +33,8 @@ type Keeper struct {
 	defaultFeeDenom  string
 	simulateFunc     baseAppSimulateFunc
 	txDecoder        sdk.TxDecoder
+	registry         cdctypes.InterfaceRegistry
+	authority        string
 }
 
 // NewKeeper returns a AdditionalFeeKeeper. It handles:
@@ -43,6 +47,7 @@ func NewKeeper(
 	defaultFeeDenom string,
 	simulateFunc baseAppSimulateFunc,
 	txDecoder sdk.TxDecoder,
+	registry cdctypes.InterfaceRegistry,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -56,7 +61,14 @@ func NewKeeper(
 		defaultFeeDenom:  defaultFeeDenom,
 		simulateFunc:     simulateFunc,
 		txDecoder:        txDecoder,
+		authority:        cosmosauthtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		registry:         registry,
 	}
+}
+
+// GetAuthority is signer of the proposal
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
 
 // Logger returns a module-specific logger.

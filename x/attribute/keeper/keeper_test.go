@@ -941,63 +941,6 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 	})
 }
 
-func (s *KeeperTestSuite) TestPopulateAddressAttributeNameTable() {
-	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
-
-	example1Attr := "example.one"
-	exampleAttr1 := types.NewAttribute(example1Attr, s.user1, types.AttributeType_String, []byte("test1"), nil)
-	exampleAttr2 := types.NewAttribute(example1Attr, s.user1, types.AttributeType_String, []byte("test2"), nil)
-	exampleAttr3 := types.NewAttribute(example1Attr, s.user1, types.AttributeType_String, []byte("test3"), nil)
-	exampleAttr4 := types.NewAttribute(example1Attr, s.user2, types.AttributeType_String, []byte("test4"), nil)
-	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, example1Attr, s.user1Addr, false), "name record should save successfully")
-	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, exampleAttr1, s.user1Addr), "should save successfully")
-	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, exampleAttr2, s.user1Addr), "should save successfully")
-	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, exampleAttr3, s.user1Addr), "should save successfully")
-	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, exampleAttr4, s.user1Addr), "should save successfully")
-
-	example2Attr := "example.two"
-	example2Attr1 := types.NewAttribute(example2Attr, s.user1, types.AttributeType_String, []byte("test1"), nil)
-	example2Attr2 := types.NewAttribute(example2Attr, s.user2, types.AttributeType_String, []byte("test2"), nil)
-	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, example2Attr, s.user1Addr, false), "name record should save successfully")
-	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, example2Attr1, s.user1Addr), "should save successfully")
-	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, example2Attr2, s.user1Addr), "should save successfully")
-
-	// Clear the kv store of all address look up prefixes
-	// This is because the SetAttribute call would have populated it in the test setup
-	it := sdk.KVStorePrefixIterator(store, types.AttributeAddrLookupKeyPrefix)
-	for ; it.Valid(); it.Next() {
-		store.Delete(it.Key())
-	}
-
-	// Check keys do not exist
-	s.Require().False(store.Has(types.AttributeNameAddrKeyPrefix(example1Attr, s.user1Addr)))
-	s.Require().False(store.Has(types.AttributeNameAddrKeyPrefix(example1Attr, s.user2Addr)))
-	s.Require().False(store.Has(types.AttributeNameAddrKeyPrefix(example2Attr, s.user1Addr)))
-	s.Require().False(store.Has(types.AttributeNameAddrKeyPrefix(example2Attr, s.user2Addr)))
-
-	s.app.AttributeKeeper.PopulateAddressAttributeNameTable(s.ctx)
-
-	lookupKey := types.AttributeNameAddrKeyPrefix(example1Attr, s.user1Addr)
-	bz := store.Get(lookupKey)
-	s.Assert().NotNil(bz)
-	s.Assert().Equal(uint64(3), binary.BigEndian.Uint64(bz))
-
-	lookupKey = types.AttributeNameAddrKeyPrefix(example1Attr, s.user2Addr)
-	bz = store.Get(lookupKey)
-	s.Assert().NotNil(bz)
-	s.Assert().Equal(uint64(1), binary.BigEndian.Uint64(bz))
-
-	lookupKey = types.AttributeNameAddrKeyPrefix(example2Attr, s.user1Addr)
-	bz = store.Get(lookupKey)
-	s.Assert().NotNil(bz)
-	s.Assert().Equal(uint64(1), binary.BigEndian.Uint64(bz))
-
-	lookupKey = types.AttributeNameAddrKeyPrefix(example2Attr, s.user2Addr)
-	bz = store.Get(lookupKey)
-	s.Assert().NotNil(bz)
-	s.Assert().Equal(uint64(1), binary.BigEndian.Uint64(bz))
-}
-
 func (s *KeeperTestSuite) TestPurgeAttributes() {
 
 	attr := types.Attribute{
