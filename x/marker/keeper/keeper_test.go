@@ -1208,39 +1208,3 @@ func TestGetAuthority(t *testing.T) {
 	app := simapp.Setup(t)
 	require.Equal(t, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", app.MarkerKeeper.GetAuthority())
 }
-
-func TestRemoveIsSendEnabledEntries(t *testing.T) {
-	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	markerAddr := types.MustGetMarkerAddress("testcoin").String()
-
-	err := app.MarkerKeeper.AddMarkerAccount(ctx, &types.MarkerAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address:       markerAddr,
-			AccountNumber: 23,
-		},
-		AccessControl: []types.AccessGrant{
-			{
-				Address:     "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
-				Permissions: types.AccessListByNames("deposit,withdraw"),
-			},
-		},
-		Denom:      "testcoin",
-		Supply:     sdk.NewInt(1000),
-		MarkerType: types.MarkerType_Coin,
-		Status:     types.StatusActive,
-	})
-	require.NoError(t, err, "should have added marker")
-	app.BankKeeper.SetSendEnabled(ctx, "testcoin", false)
-	app.BankKeeper.SetSendEnabled(ctx, "nonmarkercoin", false)
-
-	sendEnabledItems := app.BankKeeper.GetAllSendEnabledEntries(ctx)
-	assert.Len(t, sendEnabledItems, 2, "before removal")
-
-	app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
-	sendEnabledItems = app.BankKeeper.GetAllSendEnabledEntries(ctx)
-	assert.Equal(t, len(sendEnabledItems), 1, "denom without a marker should only exist")
-	assert.Equal(t, sendEnabledItems[0].Denom, "nonmarkercoin", "denom without a marker should only exist")
-	assert.False(t, app.BankKeeper.IsSendEnabledDenom(ctx, "nonmarkercoin"), "should be in table as false since there is not a marker associated with it")
-	assert.True(t, app.BankKeeper.IsSendEnabledDenom(ctx, "testcoin"), "should not exist in table therefore default to true")
-}
