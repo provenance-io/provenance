@@ -276,8 +276,6 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 
 func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 	validAddress := sdk.MustAccAddressFromBech32("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck")
-	// netAssetValue1 := NewNetAssetValue(sdk.NewInt64Coin("jackthecat", 100), uint64(100))
-	// invalidNetAssetValue := NewNetAssetValue(sdk.NewInt64Coin("hotdog", 100), uint64(100))
 
 	cases := []struct {
 		name     string
