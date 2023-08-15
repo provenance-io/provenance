@@ -78,7 +78,7 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 	}
 
 	// If there aren't any required attributes, transfer permission is required unless coming from a bypass account.
-	// It's assumed that the only way the restricted coins with required attributes can got into a bypass
+	// It's assumed that the only way the restricted coins without required attributes can got into a bypass
 	// account is by someone with transfer permission, which is then conveyed for this transfer too.
 	if len(reqAttr) == 0 {
 		if k.IsReqAttrBypassAddr(fromAddr) {

@@ -78,6 +78,7 @@ type Keeper struct {
 	// Used to transfer the ibc marker
 	ibcTransferServer types.IbcTransferMsgServer
 
+	// reqAttrBypassAddrs is a set of addresses that are allowed to bypass the required attribute check.
 	reqAttrBypassAddrs []sdk.AccAddress
 }
 
