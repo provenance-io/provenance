@@ -403,6 +403,7 @@ func (s *MsgServerTestSuite) TestUpdateSendDenyList() {
 
 func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 	authUser := testUserAddress("test")
+	notAuthUser := testUserAddress("blah")
 
 	markerDenom := "jackthecat"
 	markerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(markerDenom), nil, 0, 0)
@@ -461,6 +462,21 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				Administrator: authUser.String(),
 			},
 			expErr: `net asset value denom does not exist: marker hotdog not found for address: cosmos1p6l3annxy35gm5mfm6m0jz2mdj8peheuzf9alh: invalid request`,
+		},
+		{
+			name: "not authorize user",
+			msg: types.MsgAddNetAssetValueRequest{
+				Denom: markerDenom,
+				NetAssetValues: []types.NetAssetValue{
+					{
+						Value:              sdk.NewInt64Coin(types.UsdDenom, 100),
+						Volume:             uint64(100),
+						UpdatedBlockHeight: 1,
+					},
+				},
+				Administrator: notAuthUser.String(),
+			},
+			expErr: `signer cosmos1psw3a97ywtr595qa4295lw07cz9665hynnfpee does not have permission to add net asset value for "jackthecat"`,
 		},
 		{
 			name: "successfully set nav",
