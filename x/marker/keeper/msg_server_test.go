@@ -356,9 +356,8 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 	markerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(markerDenom), nil, 0, 0)
 	s.app.MarkerKeeper.SetMarker(s.ctx, types.NewMarkerAccount(markerAcct, sdk.NewInt64Coin(markerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusProposed, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
 
-	valueDenom := "usd"
-	valueAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(valueDenom), nil, 0, 0)
-	s.app.MarkerKeeper.SetMarker(s.ctx, types.NewMarkerAccount(valueAcct, sdk.NewInt64Coin(valueDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusProposed, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
+	valueAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(types.UsdDenom), nil, 0, 0)
+	s.app.MarkerKeeper.SetMarker(s.ctx, types.NewMarkerAccount(valueAcct, sdk.NewInt64Coin(types.UsdDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusProposed, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
 
 	finalizedMarkerDenom := "finalizedjackthecat"
 	finalizedMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(finalizedMarkerDenom), nil, 1, 0)
@@ -415,7 +414,7 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				Denom: markerDenom,
 				NetAssetValues: []types.NetAssetValue{
 					{
-						Value:              sdk.NewInt64Coin(valueDenom, 100),
+						Value:              sdk.NewInt64Coin(types.UsdDenom, 100),
 						Volume:             uint64(100),
 						UpdatedBlockHeight: 1,
 					},

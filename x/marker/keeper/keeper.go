@@ -216,7 +216,7 @@ func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccount
 		if nav.Value.Denom == marker.GetDenom() {
 			return fmt.Errorf("net asset value denom cannot match marker denom %q", marker.GetDenom())
 		}
-		if nav.Value.Denom != "usd" {
+		if nav.Value.Denom != types.UsdDenom {
 			_, err := k.GetMarkerByDenom(ctx, nav.Value.Denom)
 			if err != nil {
 				return fmt.Errorf("net asset value denom does not exist: %v", err.Error())

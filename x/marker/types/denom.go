@@ -10,6 +10,7 @@ import (
 
 const (
 	maxDenomMetadataDescriptionLength = 200
+	UsdDenom                          = "usd"
 )
 
 // ValidateDenomMetadataBasic performs validation of the denom metadata fields.
