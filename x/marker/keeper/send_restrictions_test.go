@@ -798,3 +798,212 @@ func TestMatchAttribute(t *testing.T) {
 		})
 	}
 }
+
+func TestQuarantineOfRestrictedCoins(t *testing.T) {
+	// Directly tests the bug described in https://github.com/provenance-io/provenance/issues/1626
+
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	owner := sdk.AccAddress("owner_address_______")
+	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, owner))
+	reqAttr := "quarantinetest.provenance.io"
+	require.NoError(t, app.NameKeeper.SetNameRecord(ctx, reqAttr, owner, false), "SetNameRecord(%q)", reqAttr)
+
+	// Two source addresses, one with transfer on both markers, one without on either.
+	addrWithTransfer := sdk.AccAddress("addrWithTransfer____")
+	addrWithWithdraw := sdk.AccAddress("addrWithWithdraw____")
+	addrWithoutTransfer := sdk.AccAddress("addrWithoutTransfer_")
+
+	newMarker := func(denom string, reqAttrs []string) *types.MarkerAccount {
+		rv := types.NewMarkerAccount(
+			app.AccountKeeper.NewAccountWithAddress(ctx, types.MustGetMarkerAddress(denom)).(*authtypes.BaseAccount),
+			sdk.NewInt64Coin(denom, 1000),
+			owner,
+			[]types.AccessGrant{
+				{Address: addrWithTransfer.String(), Permissions: types.AccessList{types.Access_Transfer}},
+				{Address: addrWithWithdraw.String(), Permissions: types.AccessList{types.Access_Withdraw}},
+			},
+			types.StatusProposed,
+			types.MarkerType_RestrictedCoin,
+			true,  // supply fixed
+			true,  // allow gov
+			false, // no force transfer
+			reqAttrs,
+		)
+		err := app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, rv)
+		require.NoError(t, err, "AddFinalizeAndActivateMarker(%s)", denom)
+		return rv
+	}
+
+	// Two markers, one with a required attribute, one without any.
+	denomNoReqAttr := "denomNoReqAttr"
+	denom1ReqAttr := "denom1ReqAttr"
+
+	coinsNoReqAttr := sdk.NewCoins(sdk.NewInt64Coin(denomNoReqAttr, 3))
+	coins1ReqAttr := sdk.NewCoins(sdk.NewInt64Coin(denom1ReqAttr, 2))
+
+	newMarker(denomNoReqAttr, nil)
+	newMarker(denom1ReqAttr, []string{reqAttr})
+
+	mustWithdraw := func(recipient sdk.AccAddress, denom string) {
+		coins := sdk.NewCoins(sdk.NewInt64Coin(denom, 100))
+		err := app.MarkerKeeper.WithdrawCoins(ctx, addrWithWithdraw, recipient, denom, coins)
+		require.NoError(t, err, "WithdrawCoins(%q, %q)", string(recipient), coins)
+	}
+	mustWithdraw(addrWithTransfer, denomNoReqAttr)
+	mustWithdraw(addrWithTransfer, denom1ReqAttr)
+	mustWithdraw(addrWithoutTransfer, denomNoReqAttr)
+	mustWithdraw(addrWithoutTransfer, denom1ReqAttr)
+
+	// Create two quarantined address: one with the required attributes, one without.
+	optIn := func(t *testing.T, addr sdk.AccAddress) {
+		require.NoError(t, app.QuarantineKeeper.SetOptIn(ctx, addr), "SetOptIn(%q)", string(addr))
+	}
+	addrQWithAttr := sdk.AccAddress("addrQWithReqAttrs____")
+	addrQWithoutAttr := sdk.AccAddress("addrQWithoutReqAttrs____")
+	optIn(t, addrQWithAttr)
+	optIn(t, addrQWithoutAttr)
+
+	attrVal := []byte("string value")
+	setAttr := func(t *testing.T, addr sdk.AccAddress) {
+		attr := attrTypes.Attribute{
+			Name:          reqAttr,
+			Value:         attrVal,
+			Address:       addr.String(),
+			AttributeType: attrTypes.AttributeType_String,
+		}
+		err := app.AttributeKeeper.SetAttribute(ctx, attr, owner)
+		require.NoError(t, err, "SetAttribute(%q, %q)", string(addr), attr.Name)
+	}
+	setAttr(t, addrQWithAttr)
+
+	noTransErr := addrWithoutTransfer.String() + " does not have transfer permissions"
+	noAttrErr := func(addr sdk.AccAddress) string {
+		return fmt.Sprintf("address %s does not contain the %q required attribute: %q", addr, denom1ReqAttr, reqAttr)
+	}
+
+	quarantineModAddr := authtypes.NewModuleAddress("quarantine")
+
+	tests := []struct {
+		name         string
+		fromAddr     sdk.AccAddress
+		toAddr       sdk.AccAddress
+		amt          sdk.Coins
+		expSendErr   string
+		expAcceptErr string
+	}{
+		{
+			name:     "no req attrs from addr with transfer to quarantined",
+			fromAddr: addrWithTransfer,
+			toAddr:   addrQWithoutAttr,
+			amt:      coinsNoReqAttr,
+		},
+		{
+			name:       "no req attrs from addr without transfer to quarantined",
+			fromAddr:   addrWithoutTransfer,
+			toAddr:     addrQWithoutAttr,
+			amt:        coinsNoReqAttr,
+			expSendErr: noTransErr,
+		},
+		{
+			name:         "with req attrs from addr with transfer to quarantined without attrs",
+			fromAddr:     addrWithTransfer,
+			toAddr:       addrQWithoutAttr,
+			amt:          coins1ReqAttr,
+			expAcceptErr: noAttrErr(addrQWithoutAttr),
+		},
+		{
+			name:     "with req attrs from addr with transfer to quarantined with attrs",
+			fromAddr: addrWithTransfer,
+			toAddr:   addrQWithAttr,
+			amt:      coins1ReqAttr,
+		},
+		{
+			name:       "with req attrs from addr without transfer to quarantined without attrs",
+			fromAddr:   addrWithoutTransfer,
+			toAddr:     addrQWithoutAttr,
+			amt:        coins1ReqAttr,
+			expSendErr: noAttrErr(addrQWithoutAttr),
+		},
+		{
+			name:     "with req attrs from addr without transfer to quarantined with attrs",
+			fromAddr: addrWithoutTransfer,
+			toAddr:   addrQWithAttr,
+			amt:      coins1ReqAttr,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			defer func() {
+				if t.Failed() {
+					t.Logf("fromAddr: %s", tc.fromAddr)
+					t.Logf("  toAddr: %s", tc.toAddr)
+					t.Logf("quarantine module address: %s", quarantineModAddr)
+				}
+			}()
+			sendErr := app.BankKeeper.SendCoins(ctx, tc.fromAddr, tc.toAddr, tc.amt)
+			if len(tc.expSendErr) != 0 {
+				require.EqualError(t, sendErr, tc.expSendErr, "SendCoins")
+			} else {
+				require.NoError(t, sendErr, "SendCoins")
+			}
+			if sendErr != nil {
+				return
+			}
+			amt, acceptErr := app.QuarantineKeeper.AcceptQuarantinedFunds(ctx, tc.toAddr, tc.fromAddr)
+			if len(tc.expAcceptErr) != 0 {
+				require.EqualError(t, acceptErr, tc.expAcceptErr, "AcceptQuarantinedFunds")
+			} else {
+				require.NoError(t, acceptErr, "AcceptQuarantinedFunds")
+				assert.Equal(t, tc.amt.String(), amt.String(), "accepted quarantined funds")
+			}
+		})
+	}
+
+	t.Run("attr deleted after funds quarantined", func(t *testing.T) {
+		fromAddr := addrWithoutTransfer
+		toAddr := sdk.AccAddress("addr_attr_del_______")
+		amt := coins1ReqAttr
+		optIn(t, toAddr)
+		setAttr(t, toAddr)
+		sendErr := app.BankKeeper.SendCoins(ctx, fromAddr, toAddr, amt)
+		require.NoError(t, sendErr, "SendCoins")
+		delErr := app.AttributeKeeper.DeleteAttribute(ctx, toAddr.String(), reqAttr, &attrVal, owner)
+		require.NoError(t, delErr, "DeleteAttribute")
+		expAcceptErr := noAttrErr(toAddr)
+		_, acceptErr := app.QuarantineKeeper.AcceptQuarantinedFunds(ctx, toAddr, fromAddr)
+		require.EqualError(t, acceptErr, expAcceptErr, "AcceptQuarantinedFunds")
+	})
+
+	t.Run("attr added after funds quarantined", func(t *testing.T) {
+		fromAddr := addrWithTransfer
+		toAddr := sdk.AccAddress("addr_attr_add_______")
+		amt := coins1ReqAttr
+		optIn(t, toAddr)
+		sendErr := app.BankKeeper.SendCoins(ctx, fromAddr, toAddr, amt)
+		require.NoError(t, sendErr, "SendCoins")
+		setAttr(t, toAddr)
+		acceptedAmt, acceptErr := app.QuarantineKeeper.AcceptQuarantinedFunds(ctx, toAddr, fromAddr)
+		require.NoError(t, acceptErr, "AcceptQuarantinedFunds error")
+		assert.Equal(t, amt.String(), acceptedAmt.String(), "AcceptQuarantinedFunds amount")
+	})
+
+	t.Run("marker restriction applied before quarantine", func(t *testing.T) {
+		// This test makes sure that the marker SendRestrictionFn is being applied before the quarantine one.
+		// If the quarantine one is applied first, then the toAddr in the marker's restriction will be the
+		// quarantine module, which will have a bypass.
+		// So we attempt to send from the addr without transfer permission to the address without the required attribute.
+		// If we get an error about the attribute not being there, we're good.
+		// If we don't get an error, the toAddr was probably the quarantine module which bypasses that attribute check.
+		fromAddr := addrWithoutTransfer
+		toAddr := addrQWithoutAttr
+		amt := coins1ReqAttr
+
+		err := app.BankKeeper.SendCoins(ctx, fromAddr, toAddr, amt)
+		require.Error(t, err, "SendCoins error\n"+
+			"If this assertion fails, it's probably because the quarantine\n"+
+			"SendRestrictionFn is being applied before the marker's")
+		require.EqualError(t, err, noAttrErr(toAddr))
+	})
+}
