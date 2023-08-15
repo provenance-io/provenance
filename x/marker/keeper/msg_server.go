@@ -828,8 +828,13 @@ func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetA
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	if marker.GetStatus() != types.StatusProposed {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap("can only add net asset values to markers in the Proposed status")
+	isGovProp := marker.HasGovernanceEnabled() && msg.Administrator == k.GetAuthority()
+
+	if !isGovProp {
+		hasGrants := types.GrantsForAddress(msg.GetSigners()[0], marker.GetAccessList()...).GetAccessList()
+		if len(hasGrants) == 0 {
+			return nil, fmt.Errorf("signer %v does not have permission to add net asset value for %q", msg.Administrator, marker.GetDenom())
+		}
 	}
 
 	err = k.AddSetNetAssetValues(ctx, marker, msg.NetAssetValues)
