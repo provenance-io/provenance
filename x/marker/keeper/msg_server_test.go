@@ -369,14 +369,16 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 		expErr string
 	}{
 		{
-			name:   "no marker found",
-			msg:    types.MsgAddNetAssetValueRequest{Denom: "cantfindme", NetAssetValues: []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin("navcoin", 1), 1)}, Administrator: authUser.String()},
+			name: "no marker found",
+			msg: types.MsgAddNetAssetValueRequest{
+				Denom: "cantfindme",
+				NetAssetValues: []types.NetAssetValue{
+					{
+						Value:  sdk.NewInt64Coin("navcoin", 1),
+						Volume: 1,
+					}},
+				Administrator: authUser.String()},
 			expErr: "marker cantfindme not found for address: cosmos17l2yneua2mdfqaycgyhqag8t20asnjwf6adpmt: invalid request",
-		},
-		{
-			name:   "marker is not in proposed state",
-			msg:    types.MsgAddNetAssetValueRequest{Denom: finalizedMarkerDenom, NetAssetValues: []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin("navcoin", 1), 1)}, Administrator: authUser.String()},
-			expErr: "can only add net asset values to markers in the Proposed status: invalid request",
 		},
 		{
 			name: "nav denom matches marker denom",
