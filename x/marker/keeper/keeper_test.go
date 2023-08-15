@@ -1493,8 +1493,8 @@ func TestUpdateSendDenyList(t *testing.T) {
 	}
 }
 
-func TestWhitelistAddrs(t *testing.T) {
-	// Tests both GetWhitelistAddrs and IsWhitelistAddr.
+func TestReqAttrBypassAddrs(t *testing.T) {
+	// Tests both GetReqAttrBypassAddrs and IsReqAttrBypassAddr.
 	expectedNames := []string{
 		authtypes.FeeCollectorName,
 		rewardtypes.ModuleName,
@@ -1517,35 +1517,35 @@ func TestWhitelistAddrs(t *testing.T) {
 	for _, name := range expectedNames {
 		t.Run(fmt.Sprintf("get: contains %s", name), func(t *testing.T) {
 			expAddr := authtypes.NewModuleAddress(name)
-			actual := app.MarkerKeeper.GetWhitelistAddrs()
-			assert.Contains(t, actual, expAddr, "GetWhitelistAddrs()")
+			actual := app.MarkerKeeper.GetReqAttrBypassAddrs()
+			assert.Contains(t, actual, expAddr, "GetReqAttrBypassAddrs()")
 		})
 	}
 	t.Run("get: only has expected entries", func(t *testing.T) {
 		// This assumes each expectedNames test passed. This is designed to fail if a new entry
 		// is added to the list (in app.go). When that happens, update the expectedNames with
 		// the new entry so it's harder for it to accidentally go missing.
-		actual := app.MarkerKeeper.GetWhitelistAddrs()
-		assert.Len(t, actual, len(expectedNames), "GetWhitelistAddrs()")
+		actual := app.MarkerKeeper.GetReqAttrBypassAddrs()
+		assert.Len(t, actual, len(expectedNames), "GetReqAttrBypassAddrs()")
 	})
 
 	t.Run("get: called twice equal but not same", func(t *testing.T) {
-		expected := app.MarkerKeeper.GetWhitelistAddrs()
-		actual := app.MarkerKeeper.GetWhitelistAddrs()
-		if assert.Equal(t, expected, actual, "GetWhitelistAddrs()") {
-			if assert.NotSame(t, expected, actual, "GetWhitelistAddrs()") {
+		expected := app.MarkerKeeper.GetReqAttrBypassAddrs()
+		actual := app.MarkerKeeper.GetReqAttrBypassAddrs()
+		if assert.Equal(t, expected, actual, "GetReqAttrBypassAddrs()") {
+			if assert.NotSame(t, expected, actual, "GetReqAttrBypassAddrs()") {
 				for i := range expected {
-					assert.NotSame(t, expected[i], actual[i], "GetWhitelistAddrs()[%d]", i)
+					assert.NotSame(t, expected[i], actual[i], "GetReqAttrBypassAddrs()[%d]", i)
 				}
 			}
 		}
 	})
 
 	t.Run("get: changes to result not reflected in next result", func(t *testing.T) {
-		actual1 := app.MarkerKeeper.GetWhitelistAddrs()
+		actual1 := app.MarkerKeeper.GetReqAttrBypassAddrs()
 		origActual100 := actual1[0][0]
 		actual1[0][0] = incByte(origActual100)
-		actual2 := app.MarkerKeeper.GetWhitelistAddrs()
+		actual2 := app.MarkerKeeper.GetReqAttrBypassAddrs()
 		actual200 := actual2[0][0]
 		assert.Equal(t, origActual100, actual200, "first byte of first address after changing it in an earlier result")
 	})
@@ -1553,8 +1553,8 @@ func TestWhitelistAddrs(t *testing.T) {
 	for _, name := range expectedNames {
 		t.Run(fmt.Sprintf("is: %s", name), func(t *testing.T) {
 			addr := authtypes.NewModuleAddress(name)
-			actual := app.MarkerKeeper.IsWhitelistAddr(addr)
-			assert.True(t, actual, "IsWhitelistAddr(NewModuleAddress(%q))", name)
+			actual := app.MarkerKeeper.IsReqAttrBypassAddr(addr)
+			assert.True(t, actual, "IsReqAttrBypassAddr(NewModuleAddress(%q))", name)
 		})
 	}
 
@@ -1575,8 +1575,8 @@ func TestWhitelistAddrs(t *testing.T) {
 
 	for _, tc := range negativeIsTests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := app.MarkerKeeper.IsWhitelistAddr(tc.addr)
-			assert.False(t, actual, "IsWhitelistAddr(...)")
+			actual := app.MarkerKeeper.IsReqAttrBypassAddr(tc.addr)
+			assert.False(t, actual, "IsReqAttrBypassAddr(...)")
 		})
 	}
 }
