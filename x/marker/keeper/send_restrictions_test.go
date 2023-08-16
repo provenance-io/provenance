@@ -910,6 +910,7 @@ func TestQuarantineOfRestrictedCoins(t *testing.T) {
 			fromAddr:     addrWithTransfer,
 			toAddr:       addrQWithoutAttr,
 			amt:          coins1ReqAttr,
+			expSendErr:   "",
 			expAcceptErr: noAttrErr(addrQWithoutAttr),
 		},
 		{
