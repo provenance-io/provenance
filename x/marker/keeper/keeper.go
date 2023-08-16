@@ -235,11 +235,13 @@ func (k Keeper) IsReqAttrBypassAddr(addr sdk.AccAddress) bool {
 // deepCopyAccAddresses creates a deep copy of the provided slice of acc addresses.
 // A copy of each entry is made and placed into a new slice.
 func deepCopyAccAddresses(orig []sdk.AccAddress) []sdk.AccAddress {
+	if orig == nil {
+		return nil
+	}
 	rv := make([]sdk.AccAddress, len(orig))
 	for i, addr := range orig {
 		rv[i] = make(sdk.AccAddress, len(addr))
 		copy(rv[i], addr)
 	}
 	return rv
-
 }
