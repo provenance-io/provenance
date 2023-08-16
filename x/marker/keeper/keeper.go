@@ -256,6 +256,10 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 		}
 	}
 
+	if netAssetValue.Volume > marker.GetSupply().Amount.Uint64() {
+		return fmt.Errorf("volume(%v) cannot exceed marker %q supply(%v) ", netAssetValue.Volume, marker.GetDenom(), marker.GetSupply())
+	}
+
 	bz, err := k.cdc.Marshal(&netAssetValue)
 	if err != nil {
 		return err
