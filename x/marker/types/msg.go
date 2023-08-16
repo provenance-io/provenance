@@ -722,10 +722,10 @@ func (msg MsgAddNetAssetValueRequest) ValidateBasic() error {
 			return fmt.Errorf("marker net asset value must not have update height set")
 		}
 
-		if seen[nav.Value.Denom] {
+		if seen[nav.PricePerToken.Denom] {
 			return fmt.Errorf("list of net asset values contains duplicates")
 		}
-		seen[nav.Value.Denom] = true
+		seen[nav.PricePerToken.Denom] = true
 	}
 
 	_, err := sdk.AccAddressFromBech32(msg.Administrator)

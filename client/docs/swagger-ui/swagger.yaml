@@ -36163,7 +36163,7 @@ paths:
                 items:
                   type: object
                   properties:
-                    value:
+                    price_per_token:
                       type: object
                       properties:
                         denom:
@@ -36178,7 +36178,7 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-                      title: value is the value of asset in token
+                      title: price_per_token is the price per unit for given volume
                     volume:
                       type: string
                       format: uint64
@@ -83287,7 +83287,7 @@ definitions:
   provenance.marker.v1.NetAssetValue:
     type: object
     properties:
-      value:
+      price_per_token:
         type: object
         properties:
           denom:
@@ -83299,7 +83299,7 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-        title: value is the value of asset in token
+        title: price_per_token is the price per unit for given volume
       volume:
         type: string
         format: uint64
@@ -83905,7 +83905,7 @@ definitions:
         items:
           type: object
           properties:
-            value:
+            price_per_token:
               type: object
               properties:
                 denom:
@@ -83920,7 +83920,7 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-              title: value is the value of asset in token
+              title: price_per_token is the price per unit for given volume
             volume:
               type: string
               format: uint64

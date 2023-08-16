@@ -455,20 +455,20 @@ func RemoveFromRequiredAttributes(currentAttrs []string, removeAttrs []string) (
 }
 
 // NewNetAssetValue returns a new instance of NetAssetValue
-func NewNetAssetValue(value sdk.Coin, volume uint64) NetAssetValue {
+func NewNetAssetValue(pricePerToken sdk.Coin, volume uint64) NetAssetValue {
 	return NetAssetValue{
-		Value:  value,
-		Volume: volume,
+		PricePerToken: pricePerToken,
+		Volume:        volume,
 	}
 }
 
 // Validate returns error if NetAssetValue is not in a valid state
 func (mnav *NetAssetValue) Validate() error {
-	if err := mnav.Value.Validate(); err != nil {
+	if err := mnav.PricePerToken.Validate(); err != nil {
 		return err
 	}
 
-	if mnav.Value.Amount.GT(sdk.NewInt(0)) && mnav.Volume < 1 {
+	if mnav.PricePerToken.Amount.GT(sdk.NewInt(0)) && mnav.Volume < 1 {
 		return fmt.Errorf("marker net asset value volume must be positive value")
 	}
 

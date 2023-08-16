@@ -95,8 +95,8 @@ enum MarkerStatus {
 
 // NetAssetValue defines a marker's net asset value
 message NetAssetValue {
-  // value is the value of asset in token
-  cosmos.base.v1beta1.Coin value = 1 [(gogoproto.nullable) = false];
+  // price_per_token is the price per unit for given volume
+  cosmos.base.v1beta1.Coin price_per_token = 1 [(gogoproto.nullable) = false];
   // volume is the volume of the assets
   uint64 volume = 2;
   // updated_block_height is the block height of last update

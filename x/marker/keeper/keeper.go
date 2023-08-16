@@ -213,11 +213,11 @@ func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAd
 
 func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccountI, netAssetValues []types.NetAssetValue, source string) error {
 	for _, nav := range netAssetValues {
-		if nav.Value.Denom == marker.GetDenom() {
+		if nav.PricePerToken.Denom == marker.GetDenom() {
 			return fmt.Errorf("net asset value denom cannot match marker denom %q", marker.GetDenom())
 		}
-		if nav.Value.Denom != types.UsdDenom {
-			_, err := k.GetMarkerByDenom(ctx, nav.Value.Denom)
+		if nav.PricePerToken.Denom != types.UsdDenom {
+			_, err := k.GetMarkerByDenom(ctx, nav.PricePerToken.Denom)
 			if err != nil {
 				return fmt.Errorf("net asset value denom does not exist: %v", err.Error())
 			}
@@ -236,12 +236,12 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 		return err
 	}
 
-	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Value, netAssetValue.Volume, source)
-	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err == nil {
+	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.PricePerToken, netAssetValue.Volume, source)
+	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err != nil {
 		return err
 	}
 
-	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Value.Denom)
+	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.PricePerToken.Denom)
 	store := ctx.KVStore(k.storeKey)
 
 	value := store.Get(key)
@@ -275,10 +275,10 @@ func (k Keeper) calculateRollingAverage(prevNav types.NetAssetValue, netAssetVal
 	if totalVolume == 0 {
 		return netAssetValue
 	}
-	prevTotalPrice := prevNav.Value.Amount.Mul(sdk.NewInt(int64(prevNav.Volume)))
-	currentTotalPrice := netAssetValue.Value.Amount.Mul(sdk.NewInt(int64(netAssetValue.Volume)))
+	prevTotalPrice := prevNav.PricePerToken.Amount.Mul(sdk.NewInt(int64(prevNav.Volume)))
+	currentTotalPrice := netAssetValue.PricePerToken.Amount.Mul(sdk.NewInt(int64(netAssetValue.Volume)))
 	average := prevTotalPrice.Add(currentTotalPrice).Quo(sdk.NewInt(int64(totalVolume)))
-	netAssetValue.Value = sdk.NewCoin(prevNav.Value.Denom, average)
+	netAssetValue.PricePerToken = sdk.NewCoin(prevNav.PricePerToken.Denom, average)
 	netAssetValue.Volume = totalVolume
 	return netAssetValue
 }

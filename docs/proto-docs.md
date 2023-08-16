@@ -1574,7 +1574,7 @@ NetAssetValue defines a marker's net asset value
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `value` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | value is the value of asset in token |
+| `price_per_token` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price_per_token is the price per unit for given volume |
 | `volume` | [uint64](#uint64) |  | volume is the volume of the assets |
 | `updated_block_height` | [uint64](#uint64) |  | updated_block_height is the block height of last update |
 
