@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -13,12 +14,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/quarantine"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -26,6 +28,7 @@ import (
 	simapp "github.com/provenance-io/provenance/app"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
+	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
@@ -1579,4 +1582,77 @@ func TestReqAttrBypassAddrs(t *testing.T) {
 			assert.False(t, actual, "IsReqAttrBypassAddr(...)")
 		})
 	}
+}
+
+// dummyBankKeeper satisfies the types.BankKeeper interface but does nothing.
+type dummyBankKeeper struct{}
+
+var _ types.BankKeeper = (*dummyBankKeeper)(nil)
+
+func (d dummyBankKeeper) GetAllBalances(_ sdk.Context, _ sdk.AccAddress) sdk.Coins { return nil }
+
+func (d dummyBankKeeper) GetBalance(_ sdk.Context, _ sdk.AccAddress, denom string) sdk.Coin {
+	return sdk.Coin{}
+}
+
+func (d dummyBankKeeper) GetSupply(_ sdk.Context, _ string) sdk.Coin { return sdk.Coin{} }
+
+func (d dummyBankKeeper) DenomOwners(_ context.Context, _ *banktypes.QueryDenomOwnersRequest) (*banktypes.QueryDenomOwnersResponse, error) {
+	return nil, nil
+}
+
+func (d dummyBankKeeper) SendCoins(_ sdk.Context, _, _ sdk.AccAddress, amt sdk.Coins) error {
+	return nil
+}
+
+func (d dummyBankKeeper) SendCoinsFromModuleToAccount(_ sdk.Context, _ string, _ sdk.AccAddress, _ sdk.Coins) error {
+	return nil
+}
+
+func (d dummyBankKeeper) SendCoinsFromAccountToModule(_ sdk.Context, _ sdk.AccAddress, _ string, _ sdk.Coins) error {
+	return nil
+}
+
+func (d dummyBankKeeper) MintCoins(_ sdk.Context, _ string, _ sdk.Coins) error { return nil }
+
+func (d dummyBankKeeper) BurnCoins(_ sdk.Context, _ string, _ sdk.Coins) error { return nil }
+
+func (d dummyBankKeeper) AppendSendRestriction(_ banktypes.SendRestrictionFn) {}
+
+func (d dummyBankKeeper) BlockedAddr(_ sdk.AccAddress) bool { return false }
+
+func (d dummyBankKeeper) GetDenomMetaData(_ sdk.Context, _ string) (banktypes.Metadata, bool) {
+	return banktypes.Metadata{}, false
+}
+
+func (d dummyBankKeeper) SetDenomMetaData(_ sdk.Context, _ banktypes.Metadata) {}
+
+func (d dummyBankKeeper) IterateAllBalances(_ sdk.Context, _ func(sdk.AccAddress, sdk.Coin) bool) {}
+
+func (d dummyBankKeeper) GetAllSendEnabledEntries(_ sdk.Context) []banktypes.SendEnabled { return nil }
+
+func (d dummyBankKeeper) DeleteSendEnabled(_ sdk.Context, _ string) {}
+
+func TestBypassAddrsLocked(t *testing.T) {
+	// This test makes sure that the keeper's copy of reqAttrBypassAddrs
+	// isn't changed if the originally provided value is changed.
+
+	addrs := []sdk.AccAddress{
+		sdk.AccAddress("addrs[0]____________"),
+		sdk.AccAddress("addrs[1]____________"),
+		sdk.AccAddress("addrs[2]____________"),
+		sdk.AccAddress("addrs[3]____________"),
+		sdk.AccAddress("addrs[4]____________"),
+	}
+
+	mk := markerkeeper.NewKeeper(nil, nil, paramtypes.NewSubspace(nil, nil, nil, nil, "test"), nil, &dummyBankKeeper{}, nil, nil, nil, nil, nil, addrs)
+
+	// Now that the keeper has been created using the provided addresses, change the first byte of
+	// the first address to something else. Then, get the addresses back from the keeper and make
+	// sure that change didn't affect what's in the keeper.
+	orig00 := addrs[0][0]
+	addrs[0][0] = 'b'
+	kAddrs := mk.GetReqAttrBypassAddrs()
+	act00 := kAddrs[0][0]
+	assert.Equal(t, orig00, act00, "first byte of first address returned by GetReqAttrBypassAddrs")
 }

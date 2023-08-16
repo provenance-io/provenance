@@ -122,7 +122,7 @@ func NewKeeper(
 		markerModuleAddr:      authtypes.NewModuleAddress(types.CoinPoolName),
 		ibcTransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
 		ibcTransferServer:     ibcTransferServer,
-		reqAttrBypassAddrs:    reqAttrBypassAddrs,
+		reqAttrBypassAddrs:    deepCopyAccAddresses(reqAttrBypassAddrs),
 	}
 	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
 	return rv
@@ -219,12 +219,7 @@ func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAd
 
 // GetReqAttrBypassAddrs returns a deep copy of the addresses that bypass the required attributes checking.
 func (k Keeper) GetReqAttrBypassAddrs() []sdk.AccAddress {
-	rv := make([]sdk.AccAddress, len(k.reqAttrBypassAddrs))
-	for i, addr := range k.reqAttrBypassAddrs {
-		rv[i] = make(sdk.AccAddress, len(addr))
-		copy(rv[i], addr)
-	}
-	return rv
+	return deepCopyAccAddresses(k.reqAttrBypassAddrs)
 }
 
 // IsReqAttrBypassAddr returns true if the provided addr can bypass the required attributes checking.
@@ -235,4 +230,16 @@ func (k Keeper) IsReqAttrBypassAddr(addr sdk.AccAddress) bool {
 		}
 	}
 	return false
+}
+
+// deepCopyAccAddresses creates a deep copy of the provided slice of acc addresses.
+// A copy of each entry is made and placed into a new slice.
+func deepCopyAccAddresses(orig []sdk.AccAddress) []sdk.AccAddress {
+	rv := make([]sdk.AccAddress, len(orig))
+	for i, addr := range orig {
+		rv[i] = make(sdk.AccAddress, len(addr))
+		copy(rv[i], addr)
+	}
+	return rv
+
 }
