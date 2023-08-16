@@ -19,4 +19,18 @@ message GenesisState {
 
   // A collection of marker accounts to create on start
   repeated MarkerAccount markers = 2 [(gogoproto.nullable) = false];
+
+  repeated MarkerNetAssetValues net_asset_values = 3 [(gogoproto.nullable) = false];
+}
+
+// MarkerNetAssetValues defines the net asset values for a marker
+message MarkerNetAssetValues {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // address defines the marker address
+  string address = 1;
+
+  // net_asset_values
+  repeated NetAssetValue net_asset_values = 2 [(gogoproto.nullable) = false];
 }

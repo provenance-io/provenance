@@ -43,6 +43,18 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 			k.SetMarker(ctx, &data.Markers[i])
 		}
 	}
+
+	for _, mNavs := range data.NetAssetValues {
+		for _, nav := range mNavs.NetAssetValues {
+			nav.UpdatedBlockHeight = uint64(ctx.BlockHeight())
+			bz, err := k.cdc.Marshal(&nav)
+			if err != nil {
+				panic(err)
+			}
+			address := sdk.MustAccAddressFromBech32(mNavs.Address)
+			store.Set(types.NetAssetValueKey(address, nav.PricePerToken.Denom), bz)
+		}
+	}
 }
 
 // ExportGenesis exports the current keeper state of the marker module.ExportGenesis
@@ -73,5 +85,24 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	}
 
 	k.IterateMarkers(ctx, appendToMarkers)
-	return types.NewGenesisState(params, markers)
+
+	markerNetAssetValues := make([]types.MarkerNetAssetValues, len(markers))
+
+	for _, marker := range markers {
+		var markerNavs types.MarkerNetAssetValues
+
+		var navs []types.NetAssetValue
+		err := k.IterateNetAssetValues(ctx, marker.GetAddress(), func(nav types.NetAssetValue) (stop bool) {
+			navs = append(navs, nav)
+			return false
+		})
+		if err != nil {
+			panic(err)
+		}
+		markerNavs.Address = marker.GetAddress().String()
+		markerNavs.NetAssetValues = navs
+		markerNetAssetValues = append(markerNetAssetValues, markerNavs)
+	}
+
+	return types.NewGenesisState(params, markers, markerNetAssetValues)
 }

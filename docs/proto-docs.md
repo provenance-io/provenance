@@ -85,6 +85,7 @@
   
 - [provenance/marker/v1/genesis.proto](#provenance/marker/v1/genesis.proto)
     - [GenesisState](#provenance.marker.v1.GenesisState)
+    - [MarkerNetAssetValues](#provenance.marker.v1.MarkerNetAssetValues)
   
 - [provenance/marker/v1/proposals.proto](#provenance/marker/v1/proposals.proto)
     - [AddMarkerProposal](#provenance.marker.v1.AddMarkerProposal)
@@ -1655,6 +1656,23 @@ GenesisState defines the account module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#provenance.marker.v1.Params) |  | params defines all the parameters of the module. |
 | `markers` | [MarkerAccount](#provenance.marker.v1.MarkerAccount) | repeated | A collection of marker accounts to create on start |
+| `net_asset_values` | [MarkerNetAssetValues](#provenance.marker.v1.MarkerNetAssetValues) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MarkerNetAssetValues"></a>
+
+### MarkerNetAssetValues
+MarkerNetAssetValues defines the net asset values for a marker
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address defines the marker address |
+| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated | net_asset_values |
 
 
 
