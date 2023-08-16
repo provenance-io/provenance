@@ -236,6 +236,11 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 		return err
 	}
 
+	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Value, netAssetValue.Volume, source)
+	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err == nil {
+		return err
+	}
+
 	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Value.Denom)
 	store := ctx.KVStore(k.storeKey)
 
@@ -257,8 +262,7 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 	}
 	store.Set(key, bz)
 
-	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Value, netAssetValue.Volume, source)
-	return ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent)
+	return nil
 }
 
 // calculateRollingAverage returns an updated net asset value with an average price per token and summed volume
