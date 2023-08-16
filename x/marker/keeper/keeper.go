@@ -223,7 +223,6 @@ func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccount
 			}
 		}
 
-		nav.UpdatedBlockHeight = uint64(ctx.BlockHeight())
 		if err := k.SetNetAssetValue(ctx, marker, nav, source); err != nil {
 			return fmt.Errorf("cannot set net asset value %v : %v", nav, err.Error())
 		}
@@ -232,15 +231,42 @@ func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccount
 }
 
 func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string) error {
+	netAssetValue.UpdatedBlockHeight = uint64(ctx.BlockHeight())
+
+	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Value.Denom)
+	store := ctx.KVStore(k.storeKey)
+
+	value := store.Get(key)
+	if value != nil {
+		var prevNav types.NetAssetValue
+		err := k.cdc.Unmarshal(value, &prevNav)
+		if err != nil {
+			return err
+		}
+		if prevNav.UpdatedBlockHeight == netAssetValue.UpdatedBlockHeight {
+			netAssetValue = k.calculateRollingAverage(prevNav, netAssetValue)
+		}
+	}
+
 	bz, err := k.cdc.Marshal(&netAssetValue)
 	if err != nil {
 		return err
 	}
-	ctx.KVStore(k.storeKey).Set(types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Value.Denom), bz)
+	store.Set(key, bz)
 
 	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Value, netAssetValue.Volume, source)
 	return ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent)
+}
 
+// calculateRollingAverage returns an updated net asset value with an average price per token and summed volume
+func (k Keeper) calculateRollingAverage(prevNav types.NetAssetValue, netAssetValue types.NetAssetValue) types.NetAssetValue {
+	prevTotalPrice := prevNav.Value.Amount.Mul(sdk.NewInt(int64(prevNav.Volume)))
+	currentTotalPrice := netAssetValue.Value.Amount.Mul(sdk.NewInt(int64(netAssetValue.Volume)))
+	totalVolume := prevNav.Volume + netAssetValue.Volume
+	average := prevTotalPrice.Add(currentTotalPrice).Quo(sdk.NewInt(int64(totalVolume)))
+	netAssetValue.Value = sdk.NewCoin(prevNav.Value.Denom, average)
+	netAssetValue.Volume = totalVolume
+	return netAssetValue
 }
 
 // IterateNetAssetValues iterates net asset values for marker
@@ -249,11 +275,11 @@ func (k Keeper) IterateNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress
 	it := sdk.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(markerAddr))
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
-		var markerNav types.NetAssetValue
+		var prevNav types.NetAssetValue
 		err := k.cdc.Unmarshal(it.Value(), &markerNav)
 		if err != nil {
 			return err
-		} else if handler(markerNav) {
+		} else if handler(prevNav) {
 			break
 		}
 	}
