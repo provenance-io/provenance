@@ -172,7 +172,7 @@ func NewEventMarkerSetDenomMetadata(metadata banktypes.Metadata, administrator s
 	}
 }
 
-func EventEventSetNetAssetValue(denom string, price sdk.Coin, volume uint64, source string) *EventSetNetAssetValue {
+func NewEventSetNetAssetValue(denom string, price sdk.Coin, volume uint64, source string) *EventSetNetAssetValue {
 	return &EventSetNetAssetValue{
 		Denom:  denom,
 		Price:  price.String(),

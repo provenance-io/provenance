@@ -238,8 +238,8 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 	}
 	ctx.KVStore(k.storeKey).Set(types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Value.Denom), bz)
 
-	markerActivateEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Value, netAssetValue.Volume, source)
-	return ctx.EventManager().EmitTypedEvent(markerActivateEvent)
+	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Value, netAssetValue.Volume, source)
+	return ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent)
 
 }
 
