@@ -75,6 +75,7 @@
     - [EventMarkerSetDenomMetadata](#provenance.marker.v1.EventMarkerSetDenomMetadata)
     - [EventMarkerTransfer](#provenance.marker.v1.EventMarkerTransfer)
     - [EventMarkerWithdraw](#provenance.marker.v1.EventMarkerWithdraw)
+    - [EventSetNetAssetValue](#provenance.marker.v1.EventSetNetAssetValue)
     - [MarkerAccount](#provenance.marker.v1.MarkerAccount)
     - [NetAssetValue](#provenance.marker.v1.NetAssetValue)
     - [Params](#provenance.marker.v1.Params)
@@ -1516,6 +1517,24 @@ EventMarkerWithdraw event emitted when coins are withdrew from marker
 | `denom` | [string](#string) |  |  |
 | `administrator` | [string](#string) |  |  |
 | `to_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.marker.v1.EventSetNetAssetValue"></a>
+
+### EventSetNetAssetValue
+EventSetNetAssetValue event emitted when Net Asset Value for marker is update or added
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `price` | [string](#string) |  |  |
+| `volume` | [string](#string) |  |  |
+| `source` | [string](#string) |  |  |
 
 
 

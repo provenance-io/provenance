@@ -205,3 +205,11 @@ message EventDenomUnit {
   string          exponent = 2;
   repeated string aliases  = 3;
 }
+
+// EventSetNetAssetValue event emitted when Net Asset Value for marker is update or added
+message EventSetNetAssetValue {
+  string denom  = 1;
+  string price  = 2;
+  string volume = 3;
+  string source = 4;
+}
