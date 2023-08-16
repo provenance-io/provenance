@@ -211,7 +211,7 @@ func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAd
 	store.Delete(types.DenySendKey(markerAddr, senderAddr))
 }
 
-func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccountI, netAssetValues []types.NetAssetValue) error {
+func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccountI, netAssetValues []types.NetAssetValue, source string) error {
 	for _, nav := range netAssetValues {
 		if nav.Value.Denom == marker.GetDenom() {
 			return fmt.Errorf("net asset value denom cannot match marker denom %q", marker.GetDenom())
@@ -224,20 +224,23 @@ func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccount
 		}
 
 		nav.UpdatedBlockHeight = uint64(ctx.BlockHeight())
-		if err := k.SetNetAssetValue(ctx, marker.GetAddress(), nav); err != nil {
+		if err := k.SetNetAssetValue(ctx, marker, nav, source); err != nil {
 			return fmt.Errorf("cannot set net asset value %v : %v", nav, err.Error())
 		}
 	}
 	return nil
 }
 
-func (k Keeper) SetNetAssetValue(ctx sdk.Context, markerAddr sdk.AccAddress, netAssetValue types.NetAssetValue) error {
+func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string) error {
 	bz, err := k.cdc.Marshal(&netAssetValue)
 	if err != nil {
 		return err
 	}
-	ctx.KVStore(k.storeKey).Set(types.NetAssetValueKey(markerAddr, netAssetValue.Value.Denom), bz)
-	return nil
+	ctx.KVStore(k.storeKey).Set(types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Value.Denom), bz)
+
+	markerActivateEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Value, netAssetValue.Volume, source)
+	return ctx.EventManager().EmitTypedEvent(markerActivateEvent)
+
 }
 
 // IterateNetAssetValues iterates net asset values for marker

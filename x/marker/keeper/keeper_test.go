@@ -182,7 +182,7 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 	require.NoError(t, mac.SetManager(user1))
 	require.NoError(t, mac.SetSupply(sdk.NewCoin(mac.Denom, sdk.OneInt())))
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
-	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1)))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
 
 	// Initial, should not have access
 	m, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "testcoin")
@@ -330,7 +330,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
-	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1)))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
 
 	// Should not fail for a non-active/finalized coin, must be able to adjust supply amount to match any existing
 	require.NoError(t, app.MarkerKeeper.MintCoin(ctx, user, sdk.NewInt64Coin("testcoin", 100)))
@@ -492,7 +492,7 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
-	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1)))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
 
 	// insufficient supply to cover existing
 	require.Error(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
@@ -530,7 +530,7 @@ func TestAccountImplictControl(t *testing.T) {
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
-	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac.GetAddress(), types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1)))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
 
 	// Moves to finalized, mints required supply, moves to active status.
 	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
@@ -626,7 +626,7 @@ func TestForceTransfer(t *testing.T) {
 		false,
 		[]string{},
 	)
-	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, noForceMac.GetAddress(), types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1)))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, noForceMac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
 	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, noForceMac),
 		"AddFinalizeAndActivateMarker without force transfer")
 
@@ -647,7 +647,7 @@ func TestForceTransfer(t *testing.T) {
 		true,
 		[]string{},
 	)
-	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, wForceMac.GetAddress(), types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1)))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, wForceMac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
 	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, wForceMac),
 		"AddFinalizeAndActivateMarker with force transfer")
 

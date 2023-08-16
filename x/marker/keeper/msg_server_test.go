@@ -74,7 +74,7 @@ func (s *MsgServerTestSuite) TestMsgFinalizeMarkerRequest() {
 	)
 	validMarker.Supply = sdk.NewInt(1)
 	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, validMarker))
-	s.Require().NoError(s.app.MarkerKeeper.SetNetAssetValue(s.ctx, validMarker.GetAddress(), types.NetAssetValue{Value: sdk.NewInt64Coin(types.UsdDenom, 1), Volume: 1}))
+	s.Require().NoError(s.app.MarkerKeeper.SetNetAssetValue(s.ctx, validMarker, types.NetAssetValue{Value: sdk.NewInt64Coin(types.UsdDenom, 1), Volume: 1}, "test"))
 
 	testCases := []struct {
 		name   string

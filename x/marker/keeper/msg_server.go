@@ -114,7 +114,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 	}
 
 	nav := types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(msg.UsdCents)), msg.Volume)
-	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{nav})
+	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{nav}, "test")
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -601,7 +601,7 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		normalizedReqAttrs,
 	)
 
-	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(msg.UsdCents)), msg.Volume)})
+	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(msg.UsdCents)), msg.Volume)}, "test")
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -837,7 +837,7 @@ func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetA
 		}
 	}
 
-	err = k.AddSetNetAssetValues(ctx, marker, msg.NetAssetValues)
+	err = k.AddSetNetAssetValues(ctx, marker, msg.NetAssetValues, "test")
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
