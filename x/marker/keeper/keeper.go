@@ -83,7 +83,7 @@ type Keeper struct {
 	// if there aren't required attributes, the sender still needs transfer permission.
 	// When sending from one of these, if there are required attributes, the destination must have them;
 	// if there aren't required attributes, it behaves as if the sender has transfer permission.
-	reqAttrBypassAddrs []sdk.AccAddress
+	reqAttrBypassAddrs types.ImmutableAccAddresses
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -122,7 +122,7 @@ func NewKeeper(
 		markerModuleAddr:      authtypes.NewModuleAddress(types.CoinPoolName),
 		ibcTransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
 		ibcTransferServer:     ibcTransferServer,
-		reqAttrBypassAddrs:    deepCopyAccAddresses(reqAttrBypassAddrs),
+		reqAttrBypassAddrs:    types.NewImmutableAccAddresses(reqAttrBypassAddrs),
 	}
 	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
 	return rv
@@ -219,29 +219,10 @@ func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAd
 
 // GetReqAttrBypassAddrs returns a deep copy of the addresses that bypass the required attributes checking.
 func (k Keeper) GetReqAttrBypassAddrs() []sdk.AccAddress {
-	return deepCopyAccAddresses(k.reqAttrBypassAddrs)
+	return k.reqAttrBypassAddrs.GetSlice()
 }
 
 // IsReqAttrBypassAddr returns true if the provided addr can bypass the required attributes checking.
 func (k Keeper) IsReqAttrBypassAddr(addr sdk.AccAddress) bool {
-	for _, w := range k.reqAttrBypassAddrs {
-		if addr.Equals(w) {
-			return true
-		}
-	}
-	return false
-}
-
-// deepCopyAccAddresses creates a deep copy of the provided slice of acc addresses.
-// A copy of each entry is made and placed into a new slice.
-func deepCopyAccAddresses(orig []sdk.AccAddress) []sdk.AccAddress {
-	if orig == nil {
-		return nil
-	}
-	rv := make([]sdk.AccAddress, len(orig))
-	for i, addr := range orig {
-		rv[i] = make(sdk.AccAddress, len(addr))
-		copy(rv[i], addr)
-	}
-	return rv
+	return k.reqAttrBypassAddrs.Has(addr)
 }
