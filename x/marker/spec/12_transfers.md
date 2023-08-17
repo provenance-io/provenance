@@ -104,7 +104,7 @@ flowchart TD
     mored -.->|no| ok
     isdok -.->|no| denied
 
-    style denomloop fill:#000000
+    style denomloop fill:#bbffff
     linkStyle 8 stroke:#b30000,color:#b30000
     linkStyle 1,7 stroke:#1b8500,color:#1b8500
 ```
