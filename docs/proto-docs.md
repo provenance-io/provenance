@@ -1533,7 +1533,7 @@ EventSetNetAssetValue event emitted when Net Asset Value for marker is update or
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
-| `price` | [string](#string) |  |  |
+| `price_per_token` | [string](#string) |  |  |
 | `volume` | [string](#string) |  |  |
 | `source` | [string](#string) |  |  |
 
