@@ -1833,6 +1833,8 @@ func TestParseNewMarkerFlags(t *testing.T) {
 	argGov := "--" + markercli.FlagAllowGovernanceControl
 	argForce := "--" + markercli.FlagAllowForceTransfer
 	argRequiredAtt := "--" + markercli.FlagRequiredAttributes
+	argUsdCents := "--" + markercli.FlagUsdCents
+	argVolume := "--" + markercli.FlagVolume
 
 	tests := []struct {
 		name   string
@@ -2018,15 +2020,51 @@ func TestParseNewMarkerFlags(t *testing.T) {
 			},
 		},
 		{
+			name:   "usd cents present without volume",
+			cmd:    getTestCmd(),
+			args:   []string{argUsdCents + "=10"},
+			expErr: []string{"incorrect value for volume flag.  Must be positive number if usd-cents flag has been set to positive value"},
+		},
+		{
+			name: "volume present",
+			cmd:  getTestCmd(),
+			args: []string{argVolume + "=11"},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        false,
+				AllowGovControl:    false,
+				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
+				UsdCents:           0,
+				Volume:             11,
+			},
+		},
+		{
+			name: "usd-cents and volume present",
+			cmd:  getTestCmd(),
+			args: []string{argVolume + "=11", argUsdCents + "=1"},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        false,
+				AllowGovControl:    false,
+				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
+				UsdCents:           1,
+				Volume:             11,
+			},
+		},
+		{
 			name: "everything",
 			cmd:  getTestCmd(),
-			args: []string{argForce, argGov, argType, "RESTRICTED", argFixed, argRequiredAtt, "jack.the.cat.io,george.the.dog.io"},
+			args: []string{argForce, argGov, argType, "RESTRICTED", argFixed, argRequiredAtt, "jack.the.cat.io,george.the.dog.io", argUsdCents, "10", argVolume, "12"},
 			exp: &markercli.NewMarkerFlagValues{
 				MarkerType:         types.MarkerType_RestrictedCoin,
 				SupplyFixed:        true,
 				AllowGovControl:    true,
 				AllowForceTransfer: true,
 				RequiredAttributes: []string{"jack.the.cat.io", "george.the.dog.io"},
+				UsdCents:           10,
+				Volume:             12,
 			},
 		},
 		// Note: I can't figure out a way to make cmd.Flags().GetBool return an error.
