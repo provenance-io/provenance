@@ -201,4 +201,18 @@ aliases for `uhash` might be `microhash` or `µhash`
 
 `provenance.marker.v1.EventDenomUnit`
 
+### Set Net Asset Value
+
+Fires when a new NetAssetValue is add or updated for a marker.  
+
+| Type                    | Attribute Key         | Attribute Value             |
+| ------------------------| --------------------- | --------------------------- |
+| EventSetNetAssetValue   | Denom                 | {marker's denom string}     |
+| EventSetNetAssetValue   | PricePerToken         | {token amount the marker is valued at per share}     |
+| EventSetNetAssetValue   | Volume                | {total volume/shares associated with price}     |
+| EventSetNetAssetValue   | Source                | {source address of caller}     |
+
+
+`provenance.marker.v1.EventSetNetAssetValue`
+
 ---
