@@ -211,6 +211,7 @@ func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAd
 	store.Delete(types.DenySendKey(markerAddr, senderAddr))
 }
 
+// AddSetNetAssetValues adds a set of net asset values to a marker
 func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccountI, netAssetValues []types.NetAssetValue, source string) error {
 	for _, nav := range netAssetValues {
 		if nav.PricePerToken.Denom == marker.GetDenom() {
@@ -230,6 +231,8 @@ func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccount
 	return nil
 }
 
+// SetNetAssetValue adds/updates a net asset value to marker
+// If multiple net asset values are set during same block height that rolling average will be stored
 func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string) error {
 	netAssetValue.UpdatedBlockHeight = uint64(ctx.BlockHeight())
 	if err := netAssetValue.Validate(); err != nil {
@@ -252,7 +255,7 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 			return err
 		}
 		if prevNav.UpdatedBlockHeight == netAssetValue.UpdatedBlockHeight {
-			netAssetValue = k.calculateRollingAverage(prevNav, netAssetValue)
+			netAssetValue = k.CalculateRollingAverage(prevNav, netAssetValue)
 		}
 	}
 
@@ -269,8 +272,8 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 	return nil
 }
 
-// calculateRollingAverage returns an updated net asset value with an average price per token and summed volume
-func (k Keeper) calculateRollingAverage(prevNav types.NetAssetValue, netAssetValue types.NetAssetValue) types.NetAssetValue {
+// CalculateRollingAverage returns an updated net asset value with an average price per token and summed volume
+func (k Keeper) CalculateRollingAverage(prevNav types.NetAssetValue, netAssetValue types.NetAssetValue) types.NetAssetValue {
 	totalVolume := prevNav.Volume + netAssetValue.Volume
 	if totalVolume == 0 {
 		return netAssetValue
