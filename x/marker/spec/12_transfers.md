@@ -179,8 +179,8 @@ flowchart TD
     qadminfrom{{"Does Sender == Admin?"}}
     qallowft{{"Is forced transfer allowed for Denom?"}}
     qauthz{{"Has Sender granted Admin\npermission with authz?"}}
-    qmodacc{{"Is Sender a module account?"}}
-    qblocked{{"Is Receiver a blocked address?"}}
+    qmodacc{{"Is Sender a\nmodule account?"}}
+    qblocked{{"Is Receiver an\naddress blocked by\nthe bank module?"}}
     ok(["Transfer allowed."])
     style ok fill:#bbffaa,stroke:#1b8500,stroke-width:3px
     denied(["Transfer denied."])
