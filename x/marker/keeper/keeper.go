@@ -162,6 +162,7 @@ func (k Keeper) RemoveMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 	store := ctx.KVStore(k.storeKey)
 	k.authKeeper.RemoveAccount(ctx, marker)
 
+	k.RemoveNetAssetValues(ctx, marker.GetAddress())
 	store.Delete(types.MarkerStoreKey(marker.GetAddress()))
 }
 
@@ -301,4 +302,19 @@ func (k Keeper) IterateNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress
 		}
 	}
 	return nil
+}
+
+// RemoveNetAssetValues removes all net asset values for a marker
+func (k Keeper) RemoveNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress) {
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(markerAddr))
+	var keys [][]byte
+	for ; it.Valid(); it.Next() {
+		keys = append(keys, it.Key())
+	}
+	it.Close()
+
+	for _, key := range keys {
+		store.Delete(key)
+	}
 }
