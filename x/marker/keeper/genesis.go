@@ -46,13 +46,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 
 	for _, mNavs := range data.NetAssetValues {
 		for _, nav := range mNavs.NetAssetValues {
-			nav.UpdatedBlockHeight = uint64(ctx.BlockHeight())
-			bz, err := k.cdc.Marshal(&nav)
+			navCopy := nav
+			bz, err := k.cdc.Marshal(&navCopy)
 			if err != nil {
 				panic(err)
 			}
 			address := sdk.MustAccAddressFromBech32(mNavs.Address)
-			store.Set(types.NetAssetValueKey(address, nav.PricePerToken.Denom), bz)
+			store.Set(types.NetAssetValueKey(address, navCopy.PricePerToken.Denom), bz)
 		}
 	}
 }
@@ -61,8 +61,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 // We do not export anything because our marker accounts will be exported/imported by the Account Module.
 func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	params := k.GetParams(ctx)
-	markers := make([]types.MarkerAccount, 0)
 
+	var markers []types.MarkerAccount
 	appendToMarkers := func(marker types.MarkerAccountI) bool {
 		markers = append(markers, types.MarkerAccount{
 			BaseAccount: &authtypes.BaseAccount{
@@ -83,27 +83,22 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		})
 		return false
 	}
-
 	k.IterateMarkers(ctx, appendToMarkers)
 
-	var markerNetAssetValues []types.MarkerNetAssetValues
-	for _, marker := range markers {
+	markerNetAssetValues := make([]types.MarkerNetAssetValues, len(markers))
+	for i := range markers {
 		var markerNavs types.MarkerNetAssetValues
-
 		var navs []types.NetAssetValue
-		err := k.IterateNetAssetValues(ctx, marker.GetAddress(), func(nav types.NetAssetValue) (stop bool) {
+		err := k.IterateNetAssetValues(ctx, markers[i].GetAddress(), func(nav types.NetAssetValue) (stop bool) {
 			navs = append(navs, nav)
 			return false
 		})
 		if err != nil {
 			panic(err)
 		}
-		if len(navs) == 0 {
-			continue
-		}
-		markerNavs.Address = marker.GetAddress().String()
+		markerNavs.Address = markers[i].GetAddress().String()
 		markerNavs.NetAssetValues = navs
-		markerNetAssetValues = append(markerNetAssetValues, markerNavs)
+		markerNetAssetValues[i] = markerNavs
 	}
 
 	return types.NewGenesisState(params, markers, markerNetAssetValues)
