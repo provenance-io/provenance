@@ -86,8 +86,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 
 	k.IterateMarkers(ctx, appendToMarkers)
 
-	markerNetAssetValues := make([]types.MarkerNetAssetValues, len(markers))
-
+	var markerNetAssetValues []types.MarkerNetAssetValues
 	for _, marker := range markers {
 		var markerNavs types.MarkerNetAssetValues
 
@@ -98,6 +97,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		})
 		if err != nil {
 			panic(err)
+		}
+		if len(navs) == 0 {
+			continue
 		}
 		markerNavs.Address = marker.GetAddress().String()
 		markerNavs.NetAssetValues = navs
