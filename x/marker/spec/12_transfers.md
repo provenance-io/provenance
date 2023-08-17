@@ -6,6 +6,7 @@ There are some complex interactions involved with transfers of restricted coins.
   - [General](#general)
   - [Definitions](#definitions)
     - [Transfer Permission](#transfer-permission)
+    - [Forced Transfers](#forced-transfers)
     - [Required Attributes](#required-attributes)
     - [Individuality](#individuality)
     - [Deposits](#deposits)
@@ -26,13 +27,17 @@ During such transfers several things are checked using a `SendRestrictionFn` inj
 
 ### Transfer Permission
 
-One permission that can be granted to an address is `transfer`. An address with `transfer` permission can utilize `MsgTransferRequest` to move restricted funds from one account to another. If the marker allows forced transfer, the source account can be any account, otherwise, it must be the admin's own account.
+One permission that can be granted to an address is `transfer`.  The `transfer` permission is granted to accounts that represent a "Transfer Agent" or "Transfer Authority" for restricted marker tokens. An address with `transfer` permission can utilize `MsgTransferRequest` to move restricted funds from one account to another. If the marker allows forced transfer, the source account can be any account, otherwise, it must be the admin's own account.
 
 `MsgSend` and `MsgMultiSend` can also be used by an address with `transfer` permission to move funds out of their own account.
 
+### Forced Transfers
+
+A restricted coin marker can be configured to allow forced transfers. If allowed, an account with `transfer` permission can use a `MsgTransferRequest` to transfer the restricted coins out of almost any account to another. Forced transfer cannot be used to move restricted coins out of module accounts or smart contract accounts, though.
+
 ### Required Attributes
 
-Required attributes are something that can be configured for a restricted marker. Accounts with the required attributes are allowed to receive those marker's coins regardless of whether the sender has `transfer` authority.
+Required attributes allow a marker Transfer Authority to define a set of account attestations created with the name/attribute modules to certify an account as an approved holder of the token.  Accounts that possess all of the required attributes are considered authorized by the Transfer Authority to receive the token from normal bank send operations without a specific Transfer Authority approval. Required attributes are only supported on restricted markers.
 
 For example, say account A has some restricted coins of a marker that has required attributes. Also say account B has all of those required attributes, and account C does not. Account A could use a `MsgSend` to send those restricted coins to account B. However, account B could not send them to account C (unless B also has `transfer` permission).
 
@@ -270,7 +275,7 @@ If the `Send` is denied, the funds remain with `QFH`.
 
 An important subtle part of this process is the rechecking of `Receiver` attributes. It's possible for the initial send to be okay (causing funds to be quarantined), then later, during this `Accept`, the send is not okay, and the quarantined funds are effectively locked with`QFH` until the `Receiver` gets the required attributes.
 
-If the marker does not have required attributes though, it's assumed that they were originally sent by someone with transfer authority, so they are allowed to continue to from here too.
+If the marker does not have required attributes though, it's assumed that they were originally sent by someone with transfer authority, so they are allowed to continue from here too.
 
 #### Successful Quarantine and Accept Sequence
 
