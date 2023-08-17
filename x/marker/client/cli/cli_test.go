@@ -247,6 +247,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			AllowForcedTransfer:    true,
 		},
 	}
+	for _, marker := range markerData.Markers {
+		var mNav types.MarkerNetAssetValues
+		mNav.Address = marker.GetAddress().String()
+		mNav.NetAssetValues = []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 100), 100)}
+		markerData.NetAssetValues = append(markerData.NetAssetValues, mNav)
+	}
 	for i := len(markerData.Markers); i < s.markerCount; i++ {
 		denom := toWritten(i + 1)
 		markerData.Markers = append(markerData.Markers,
@@ -265,6 +271,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				AllowForcedTransfer:    false,
 			},
 		)
+		var mNav types.MarkerNetAssetValues
+		mNav.Address = markertypes.MustGetMarkerAddress(denom).String()
+		mNav.NetAssetValues = []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 100), 100)}
+		markerData.NetAssetValues = append(markerData.NetAssetValues, mNav)
 	}
 	markerDataBz, err := cfg.Codec.MarshalJSON(&markerData)
 	s.Require().NoError(err)
@@ -552,6 +562,12 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			cmd:            markercli.AccountDataCmd(),
 			args:           []string{"hodlercoin"},
 			expectedOutput: "value: Do not sell this coin.",
+		},
+		{
+			name:           "marker net asset value query",
+			cmd:            markercli.NetAssetValuesCmd(),
+			args:           []string{"testcoin"},
+			expectedOutput: "net_asset_values:\n- price_per_token:\n    amount: \"100\"\n    denom: usd\n  updated_block_height: \"0\"\n  volume: \"100\"",
 		},
 	}
 	for _, tc := range testCases {
