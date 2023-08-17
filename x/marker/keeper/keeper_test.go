@@ -521,8 +521,17 @@ func TestAccountInsufficientExisting(t *testing.T) {
 func TestAccountImplictControl(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	setAcc := func(addr sdk.AccAddress, sequence uint64) {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		require.NoError(t, acc.SetSequence(sequence), "%s.SetSequence(%d)", string(addr), sequence)
+		app.AccountKeeper.SetAccount(ctx, acc)
+	}
+
 	user := testUserAddress("test")
 	user2 := testUserAddress("test2")
+	setAcc(user, 1)
+	setAcc(user2, 1)
 
 	// create account and check default values
 	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
@@ -588,14 +597,24 @@ func TestAccountImplictControl(t *testing.T) {
 	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user2, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
 	// succeeds when admin user (grantee with authz permissions) has transfer authority with receiver is on allowed list
 	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
-
 }
 
 func TestForceTransfer(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	setAcc := func(addr sdk.AccAddress, sequence uint64) {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		require.NoError(t, acc.SetSequence(sequence), "%s.SetSequence(%d)", string(addr), sequence)
+		app.AccountKeeper.SetAccount(ctx, acc)
+	}
+
 	admin := sdk.AccAddress("admin_account_______")
 	other := sdk.AccAddress("other_account_______")
+	seq0 := sdk.AccAddress("sequence_0__________")
+	setAcc(admin, 1)
+	setAcc(other, 1)
+	setAcc(seq0, 0)
 
 	// Shorten up the lines making Coins.
 	cz := func(coins ...sdk.Coin) sdk.Coins {
@@ -651,39 +670,99 @@ func TestForceTransfer(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, wForceMac),
 		"AddFinalizeAndActivateMarker with force transfer")
 
-	requireBalances := func(tt *testing.T, desc string, noForceBal, wForceBal, adminBal, otherBal sdk.Coins) {
+	noForceBal := cz(noForceMac.GetSupply())
+	wForceBal := cz(wForceMac.GetSupply())
+	var adminBal, otherBal, seq0Bal sdk.Coins
+	requireBalances := func(tt *testing.T, desc string) {
 		tt.Helper()
-		ok := assert.Equal(tt, noForceBal, app.BankKeeper.GetAllBalances(ctx, noForceAddr),
-			"%s no-force-transfer marker balance", desc)
-		ok = assert.Equal(tt, wForceBal, app.BankKeeper.GetAllBalances(ctx, wForceAddr),
-			"%s with-force-transfer marker balance", desc) && ok
-		ok = assert.Equal(tt, adminBal, app.BankKeeper.GetAllBalances(ctx, admin),
-			"%s admin balance", desc) && ok
-		ok = assert.Equal(tt, otherBal, app.BankKeeper.GetAllBalances(ctx, other),
-			"%s other balance", desc) && ok
+		ok := assert.Equal(tt, noForceBal.String(), app.BankKeeper.GetAllBalances(ctx, noForceAddr).String(),
+			"%s: no-force-transfer marker balance", desc)
+		ok = assert.Equal(tt, wForceBal.String(), app.BankKeeper.GetAllBalances(ctx, wForceAddr).String(),
+			"%s: with-force-transfer marker balance", desc) && ok
+		ok = assert.Equal(tt, adminBal.String(), app.BankKeeper.GetAllBalances(ctx, admin).String(),
+			"%s: admin balance", desc) && ok
+		ok = assert.Equal(tt, otherBal.String(), app.BankKeeper.GetAllBalances(ctx, other).String(),
+			"%s: other balance", desc) && ok
+		ok = assert.Equal(tt, seq0Bal.String(), app.BankKeeper.GetAllBalances(ctx, seq0).String(),
+			"%s: sequence 0 balance", desc) && ok
 		if !ok {
 			tt.FailNow()
 		}
 	}
-	requireBalances(t, "starting", cz(noForceCoin(1111)), cz(wForceCoin(2222)), cz(), cz())
+	requireBalances(t, "starting")
 
 	// Have the admin withdraw funds of each to the other account.
-	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, noForceDenom, cz(noForceCoin(111))),
+	toWithdraw := cz(noForceCoin(111))
+	otherBal = otherBal.Add(toWithdraw...)
+	noForceBal = noForceBal.Sub(toWithdraw...)
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, noForceDenom, toWithdraw),
 		"withdraw 500noforceback to other")
-	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, wForceDenom, cz(wForceCoin(222))),
+	toWithdraw = cz(wForceCoin(222))
+	otherBal = otherBal.Add(toWithdraw...)
+	wForceBal = wForceBal.Sub(toWithdraw...)
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, wForceDenom, toWithdraw),
 		"withdraw 500wforceback to other")
-	requireBalances(t, "after withdraws", cz(noForceCoin(1000)), cz(wForceCoin(2000)), cz(), cz(noForceCoin(111), wForceCoin(222)))
+	requireBalances(t, "after withdraws")
 
 	// Have the admin try a transfer of the no-force-transfer from that other account to itself. It should fail.
 	assert.EqualError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, noForceCoin(11)),
 		fmt.Sprintf("%s account has not been granted authority to withdraw from %s account", admin, other),
 		"transfer of non-force-transfer coin from other account back to admin")
-	requireBalances(t, "after failed transfer", cz(noForceCoin(1000)), cz(wForceCoin(2000)), cz(), cz(noForceCoin(111), wForceCoin(222)))
+	requireBalances(t, "after failed transfer")
 
 	// Have the admin try a transfer of the w/force transfer from that other account to itself. It should go through.
-	assert.NoError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, wForceCoin(22)),
+	transferCoin := wForceCoin(22)
+	assert.NoError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, transferCoin),
 		"transfer of force-transferrable coin from other account back to admin")
-	requireBalances(t, "after successful transfer", cz(noForceCoin(1000)), cz(wForceCoin(2000)), cz(wForceCoin(22)), cz(noForceCoin(111), wForceCoin(200)))
+	otherBal = otherBal.Sub(transferCoin)
+	adminBal = adminBal.Add(transferCoin)
+	requireBalances(t, "after successful transfer")
+
+	// Fund the sequence 0 account and have the admin try a transfer of the w/force transfer from there to itself. This should fail.
+	seq0Bal = cz(wForceCoin(5))
+	wForceBal = wForceBal.Sub(seq0Bal...)
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, seq0, wForceDenom, seq0Bal),
+		"withdraw 500wforceback to other")
+	requireBalances(t, "funds withdrawn to sequence 0 address")
+	assert.EqualError(t, app.MarkerKeeper.TransferCoin(ctx, seq0, admin, admin, wForceCoin(2)),
+		fmt.Sprintf("funds are not allowed to be removed from %s", seq0),
+		"transfer of force-transfer coin from account with sequence 0 back to admin",
+	)
+	requireBalances(t, "after failed force transfer")
+}
+
+func TestCanForceTransferFrom(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	setAcc := func(addr sdk.AccAddress, sequence uint64) {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		require.NoError(t, acc.SetSequence(sequence), "%s.SetSequence(%d)", string(addr), sequence)
+		app.AccountKeeper.SetAccount(ctx, acc)
+	}
+
+	addrNoAcc := sdk.AccAddress("addrNoAcc___________")
+	addrSeq0 := sdk.AccAddress("addrSeq0____________")
+	addrSeq1 := sdk.AccAddress("addrSeq1____________")
+	setAcc(addrSeq0, 0)
+	setAcc(addrSeq1, 1)
+
+	tests := []struct {
+		name string
+		from sdk.AccAddress
+		exp  bool
+	}{
+		{name: "address without an account", from: addrNoAcc, exp: true},
+		{name: "address with sequence 0", from: addrSeq0, exp: false},
+		{name: "address with sequence 1", from: addrSeq1, exp: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := app.MarkerKeeper.CanForceTransferFrom(ctx, tc.from)
+			assert.Equal(t, tc.exp, actual, "canForceTransferFrom")
+		})
+	}
 }
 
 func TestMarkerFeeGrant(t *testing.T) {
