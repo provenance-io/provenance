@@ -3,6 +3,16 @@
 There are some complex interactions involved with transfers of restricted coins.
 
 <!-- TOC -->
+  - [General](#general)
+  - [Definitions](#definitions)
+    - [Transfer Permission](#transfer-permission)
+    - [Required Attributes](#required-attributes)
+    - [Individuality](#individuality)
+    - [Deposits](#deposits)
+    - [Bypass Accounts](#bypass-accounts)
+  - [Send Restrictions](#send-restrictions)
+    - [Flowcharts](#flowcharts)
+    - [Quarantine Complexities](#quarantine-complexities)
 
 ## General
 
