@@ -18,7 +18,7 @@ There are some complex interactions involved with transfers of restricted coins.
 
 Accounting of restricted coins is handled by the bank module. Restricted funds can be moved using the bank module's `MsgSend` or `MsgMutliSend`. They can also be moved using the marker module's `MsgTransferRequest`.
 
-During such transfers several things are checked using a `SendRestrictionFn` injected into the bank module. This restriction is applied in almost all instances when funds are being moved between accounts. The exceptions are delegations, undelegations, minting, burning, and marker withdrawals.
+During such transfers several things are checked using a `SendRestrictionFn` injected into the bank module. This restriction is applied in almost all instances when funds are being moved between accounts. The exceptions are delegations, undelegations, minting, burning, and marker withdrawals. A `MsgTransferRequest` also bypasses the `SendRestrictionFn` in order to include the `admin` account in the logic.
 
 <!-- TODO: Add notes about IBC movement too -->
 
@@ -51,7 +51,7 @@ Whenever funds are being deposited into a marker, the sender must have `deposit`
 
 ### Bypass Accounts
 
-There are several hard-coded module account addresses that are given special consideration:
+There are several hard-coded module account addresses that are given special consideration in the marker module's `SendRestrictionFn`:
 
 * `authtypes.FeeCollectorName` - Allows paying fees with restricted coins.
 * `reward` - Allows reward programs to use restricted coins.
@@ -71,18 +71,22 @@ For restricted markers with required attributes:
 * If the `toAddr` is a bypass account, the transfer is allowed regardless of whether the `fromAddr` has transfer authority. It's assumed that the next destination's attributes will be properly checked before allowing the funds to leave the bypass account.
 * If the `fromAddr` is a bypass account, the `toAddr` must have the required attributes.
 
+Bypass accounts are not considered during a `MsgTransferRequest`.
+
 ## Send Restrictions
 
-The marker module injects a `SendRestrictionFn` into the bank module. This function is responsible for deciding whether any given transfer is allowed from the marker module's point of view.
+The marker module injects a `SendRestrictionFn` into the bank module. This function is responsible for deciding whether any given transfer is allowed from the marker module's point of view. However, it is bypassed during a `MsgTransfer`.
 
 ### Flowcharts
+
+#### The SendRestrictionFn
 
 This `SendRestrictionFn` uses the following flow.
 
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
 flowchart TD
-    start["SendRestrictionFn(Sender, Receiver, Amount)"]
+    start[["SendRestrictionFn(Sender, Receiver, Amount)"]]
     qhasbp{{"Does context have bypass?"}}
     nextd["Get next Denom from Amount."]
     vsd[["validateSendDenom(Sender, Receiver, Denom)"]]
@@ -108,6 +112,8 @@ flowchart TD
     linkStyle 8 stroke:#b30000,color:#b30000
     linkStyle 1,7 stroke:#1b8500,color:#1b8500
 ```
+
+#### validateSendDenom
 
 Each `Denom` is checked using `validateSendDenom`, which has this flow:
 
@@ -155,6 +161,45 @@ flowchart TD
     linkStyle 6,10,16,18,20 stroke:#1b8500,color:#1b8500
 ```
 
+#### MsgTransferRequest
+
+A `MsgTransferRequest` bypasses the `SendRestrictionFn` and applies its own logic. A `MsgTransferRequest` only allows for a single coin amount, i.e. there's only one `Denom` to consider.
+
+```mermaid
+%%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
+flowchart TD
+    start[["TransferCoin(Sender, Receiver, Admin)"]]
+    qisrc{{"Is Denom a restricted coin?"}}
+    qhast{{"Does Admin have transfer for Denom?"}}
+    qadminfrom{{"Does Sender == Admin?"}}
+    qallowft{{"Is forced transfer allowed for Denom?"}}
+    qauthz{{"Has Sender granted Admin\npermission with authz?"}}
+    qmodacc{{"Is Sender a module account?"}}
+    qblocked{{"Is Receiver a blocked address?"}}
+    ok(["Transfer allowed."])
+    style ok fill:#bbffaa,stroke:#1b8500,stroke-width:3px
+    denied(["Transfer denied."])
+    style denied fill:#ffaaaa,stroke:#b30000,stroke-width:3px
+    start --> qisrc
+    qisrc -->|yes| qhast
+    qisrc -.->|no| denied
+    qhast -->|yes| qadminfrom
+    qhast -.->|no| denied
+    qadminfrom -->|yes| qblocked
+    qadminfrom -.->|no| qallowft
+    qallowft -->|yes| qmodacc
+    qallowft -.->|no| qauthz
+    qmodacc -.->|no| qblocked
+    qmodacc -->|yes| denied
+    qauthz -->|yes| qblocked
+    qauthz -.->|no| denied
+    qblocked -.->|no| ok
+    qblocked -->|yes| denied
+
+    linkStyle 2,4,10,12,14 stroke:#b30000,color:#b30000
+    linkStyle 13 stroke:#1b8500,color:#1b8500
+```
+
 ### Quarantine Complexities
 
 There are some noteable complexities involving restricted coins and quarantined accounts.
@@ -190,6 +235,8 @@ flowchart LR
 If the `Send` is allowed, and the `Receiver` is a quarantined account, the quarantine module's `SendRestrictionFn` will then change the `Send`'s destination to `QFH` (the Quarantined-funds-holder account) and make a record of the transfer. The `Send` then transfers funds from the `Sender` to `QFH`.
 
 The marker's `SendRestrictionFn` should never have `QFH` as a `Receiver`. The only way this would happen is if `MsgSend` is used to send funds directly to `QFH`.
+
+If `MsgTransferRequest` is used to transfer a restricted coin to a quarantined account, the standard `MsgTransferRequest` logic is applied (bypassing the marker module's `SendRestrictionFn`). The quarantine module's `SendRestrictionFn` is not bypassed, though, so the funds still go to the `QFH`.
 
 #### Accepting Quarantined Restricted Coins
 
@@ -257,7 +304,7 @@ sequenceDiagram
     Bank Module ->>+ Marker Restriction: Is this send  from QFH to Receiver allowed?
     Marker Restriction -->>- Bank Module: Yes
     Bank Module ->>+ Quarantine Restriction: Is Receiver quarantined?
-    Quarantine Restriction -->>- Bank Module: Restriction bypassed. No change.  
+    Quarantine Restriction -->>- Bank Module: Restriction bypassed. No change.
     QFH ->> Receiver: Funds transferred from QFH to Receiver.
     deactivate Bank Module
     deactivate Quarantine Module
