@@ -665,7 +665,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	return ctx.EventManager().EmitTypedEvent(markerTransferEvent)
 }
 
-// canForceTransferFrom returns true if funds can be forcefully transfered out of the provided address.
+// canForceTransferFrom returns true if funds can be forcefully transferred out of the provided address.
 func (k Keeper) canForceTransferFrom(ctx sdk.Context, from sdk.AccAddress) bool {
 	acc := k.authKeeper.GetAccount(ctx, from)
 	// If acc is nil, there's no funds in it, so the transfer will fail anyway.
