@@ -18,7 +18,7 @@ This event is emitted when a hold is placed on some funds.
 | amount        | string of coins newly placed on hold    |
 | reason        | human readable string                   |
 
-Both values are wrapped in double quotes.
+All values are wrapped in double quotes.
 
 Example:
 
