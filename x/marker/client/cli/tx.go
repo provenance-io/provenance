@@ -88,6 +88,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdUpdateForcedTransfer(),
 		GetCmdSetAccountData(),
 		GetCmdUpdateSendDenyListRequest(),
+		GetCmdAddNetAssetValues(),
 	)
 	return txCmd
 }
