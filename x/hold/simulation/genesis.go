@@ -68,28 +68,16 @@ HoldsLoop:
 	bankGenState.Supply = bankGenState.Supply.Add(totalAdded...)
 }
 
-// addrCoinsStringsObjJSON creates a JSON object string of address -> amount fields for each provided entry.
-func addrCoinsStringsObjJSON[T any](entries []T, getAddr func(T) string, getAmt func(T) sdk.Coins) string {
-	if len(entries) == 0 {
-		return "{}"
-	}
-	strs := make([]string, len(entries))
-	for i, entry := range entries {
-		strs[i] = fmt.Sprintf("%q:%q", getAddr(entry), getAmt(entry))
-	}
-	return fmt.Sprintf("{\n %s\n}", strings.Join(strs, ",\n "))
-}
-
 // holdsString creates a JSON object string of address -> amount for each hold.
 func holdsString(holds []*hold.AccountHold) string {
-	return addrCoinsStringsObjJSON(holds,
-		func(ah *hold.AccountHold) string {
-			return ah.Address
-		},
-		func(ah *hold.AccountHold) sdk.Coins {
-			return ah.Amount
-		},
-	)
+	if len(holds) == 0 {
+		return "{}"
+	}
+	lines := make([]string, len(holds))
+	for i, ah := range holds {
+		lines[i] = fmt.Sprintf("%q:%q", ah.Address, ah.Amount)
+	}
+	return fmt.Sprintf("{\n %s\n}", strings.Join(lines, ",\n "))
 }
 
 // RandomizedGenState generates a random GenesisState for the hold module.
