@@ -172,7 +172,7 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 				s.Require().EqualError(err, tc.expErr, "AddMarker(%v) error", tc.msg)
 			} else {
 				s.Require().NoError(err, "AddMarker(%v) error", tc.msg)
-				s.Assert().Equal(res, &types.MsgUpdateSendDenyListResponse{})
+				s.Assert().Equal(res, &types.MsgAddMarkerResponse{})
 			}
 		})
 	}

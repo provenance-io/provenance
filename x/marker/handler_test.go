@@ -157,20 +157,7 @@ func (s *HandlerTestSuite) TestMsgAddMarkerRequest() {
 			expectedEvent: types.NewEventMarkerAdd(rdenom, types.MustGetMarkerAddress(rdenom).String(), "100", "proposed", s.user1, types.MarkerType_RestrictedCoin.String()),
 		},
 	}
-	for _, tc := range cases {
-		s.Run(tc.name, func() {
-			response, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				s.Require().EqualError(err, tc.errorMsg, "handler(%T) error", tc.msg)
-			} else {
-				s.Require().NoError(err, "handler(%T) error", tc.msg)
-				if tc.expectedEvent != nil {
-					result := s.containsMessage(response, tc.expectedEvent)
-					s.Assert().True(result, "Expected typed event was not found in response.\n    Expected: %+v\n    Response: %+v", tc.expectedEvent, response)
-				}
-			}
-		})
-	}
+	s.runTests(cases)
 }
 
 func (s *HandlerTestSuite) TestMsgAddAccessRequest() {
