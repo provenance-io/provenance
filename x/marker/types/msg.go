@@ -38,7 +38,7 @@ var allRequestMsgs = []sdk.Msg{
 	(*MsgUpdateForcedTransferRequest)(nil),
 	(*MsgSetAccountDataRequest)(nil),
 	(*MsgUpdateSendDenyListRequest)(nil),
-	(*MsgAddNetAssetValueRequest)(nil),
+	(*MsgAddNetAssetValuesRequest)(nil),
 }
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
@@ -703,7 +703,7 @@ func (msg *MsgUpdateSendDenyListRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (msg MsgAddNetAssetValueRequest) ValidateBasic() error {
+func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return err
 	}
@@ -732,7 +732,7 @@ func (msg MsgAddNetAssetValueRequest) ValidateBasic() error {
 	return err
 }
 
-func (msg *MsgAddNetAssetValueRequest) GetSigners() []sdk.AccAddress {
+func (msg *MsgAddNetAssetValuesRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Administrator)
 	return []sdk.AccAddress{addr}
 }

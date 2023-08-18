@@ -60,8 +60,8 @@ service Msg {
   rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
   // UpdateSendDenyList will only succeed if signer has admin authority
   rpc UpdateSendDenyList(MsgUpdateSendDenyListRequest) returns (MsgUpdateSendDenyListResponse);
-  // AddNetAssetValue
-  rpc AddNetAssetValue(MsgAddNetAssetValueRequest) returns (MsgAddNetAssetValueResponse);
+  // AddNetAssetValues set the net asset value for a marker
+  rpc AddNetAssetValues(MsgAddNetAssetValuesRequest) returns (MsgAddNetAssetValuesResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
@@ -324,12 +324,12 @@ message MsgUpdateSendDenyListRequest {
 // MsgUpdateSendDenyListResponse defines the Msg/UpdateSendDenyList response type
 message MsgUpdateSendDenyListResponse {}
 
-// MsgAddNetAssetValueRequest defines the Msg/AddNetAssetValue request type
-message MsgAddNetAssetValueRequest {
+// MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
+message MsgAddNetAssetValuesRequest {
   string                 denom            = 1;
   string                 administrator    = 2;
   repeated NetAssetValue net_asset_values = 3 [(gogoproto.nullable) = false];
 }
 
-// MsgAddNetAssetValueResponse defines the Msg/AddNetAssetValue response type
-message MsgAddNetAssetValueResponse {}
+// MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
+message MsgAddNetAssetValuesResponse {}

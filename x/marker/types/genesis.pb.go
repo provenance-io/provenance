@@ -69,7 +69,7 @@ var xxx_messageInfo_GenesisState proto.InternalMessageInfo
 type MarkerNetAssetValues struct {
 	// address defines the marker address
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// net_asset_values
+	// net_asset_values that are assigned to marker
 	NetAssetValues []NetAssetValue `protobuf:"bytes,2,rep,name=net_asset_values,json=netAssetValues,proto3" json:"net_asset_values"`
 }
 

@@ -84092,9 +84092,11 @@ definitions:
   provenance.marker.v1.MsgAddMarkerResponse:
     type: object
     title: MsgAddMarkerResponse defines the Msg/AddMarker response type
-  provenance.marker.v1.MsgAddNetAssetValueResponse:
+  provenance.marker.v1.MsgAddNetAssetValuesResponse:
     type: object
-    title: MsgAddNetAssetValueResponse defines the Msg/AddNetAssetValue response type
+    title: >-
+      MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response
+      type
   provenance.marker.v1.MsgBurnResponse:
     type: object
     title: MsgBurnResponse defines the Msg/Burn response type

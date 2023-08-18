@@ -811,41 +811,41 @@ func TestMsgAddNetAssetValueValidateBasic(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		msg    MsgAddNetAssetValueRequest
+		msg    MsgAddNetAssetValuesRequest
 		expErr string
 	}{
 		{
 			name: "should succeed",
-			msg:  MsgAddNetAssetValueRequest{Denom: denom, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2}, Administrator: addr},
+			msg:  MsgAddNetAssetValuesRequest{Denom: denom, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2}, Administrator: addr},
 		},
 		{
 			name:   "block height is set",
-			msg:    MsgAddNetAssetValueRequest{Denom: denom, NetAssetValues: []NetAssetValue{invalidNetAssetValue2}, Administrator: addr},
+			msg:    MsgAddNetAssetValuesRequest{Denom: denom, NetAssetValues: []NetAssetValue{invalidNetAssetValue2}, Administrator: addr},
 			expErr: "marker net asset value must not have update height set",
 		},
 		{
 			name:   "validation of net asset value failure",
-			msg:    MsgAddNetAssetValueRequest{Denom: denom, NetAssetValues: []NetAssetValue{invalidNetAssetValue}, Administrator: addr},
+			msg:    MsgAddNetAssetValuesRequest{Denom: denom, NetAssetValues: []NetAssetValue{invalidNetAssetValue}, Administrator: addr},
 			expErr: "marker net asset value volume must be positive value",
 		},
 		{
 			name:   "duplicate net asset values",
-			msg:    MsgAddNetAssetValueRequest{Denom: denom, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2, netAssetValue2}, Administrator: addr},
+			msg:    MsgAddNetAssetValuesRequest{Denom: denom, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2, netAssetValue2}, Administrator: addr},
 			expErr: "list of net asset values contains duplicates",
 		},
 		{
 			name:   "invalid denom",
-			msg:    MsgAddNetAssetValueRequest{Denom: "", NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2, netAssetValue2}, Administrator: addr},
+			msg:    MsgAddNetAssetValuesRequest{Denom: "", NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2, netAssetValue2}, Administrator: addr},
 			expErr: "invalid denom: ",
 		},
 		{
 			name:   "invalid administrator address",
-			msg:    MsgAddNetAssetValueRequest{Denom: denom, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2}, Administrator: "invalid address"},
+			msg:    MsgAddNetAssetValuesRequest{Denom: denom, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2}, Administrator: "invalid address"},
 			expErr: "decoding bech32 failed: invalid character in string: ' '",
 		},
 		{
 			name:   "empty net asset list",
-			msg:    MsgAddNetAssetValueRequest{Denom: denom, NetAssetValues: []NetAssetValue{}, Administrator: addr},
+			msg:    MsgAddNetAssetValuesRequest{Denom: denom, NetAssetValues: []NetAssetValue{}, Administrator: addr},
 			expErr: "net asset value list cannot be empty",
 		},
 	}
@@ -862,9 +862,9 @@ func TestMsgAddNetAssetValueValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgAddNetAssetValueRequestGetSigners(t *testing.T) {
+func TestMsgAddNetAssetValuesRequestGetSigners(t *testing.T) {
 	t.Run("good signer", func(t *testing.T) {
-		msg := MsgAddNetAssetValueRequest{
+		msg := MsgAddNetAssetValuesRequest{
 			Administrator: sdk.AccAddress("good_address________").String(),
 		}
 		exp := []sdk.AccAddress{sdk.AccAddress("good_address________")}
@@ -878,7 +878,7 @@ func TestMsgAddNetAssetValueRequestGetSigners(t *testing.T) {
 	})
 
 	t.Run("bad signer", func(t *testing.T) {
-		msg := MsgAddNetAssetValueRequest{
+		msg := MsgAddNetAssetValuesRequest{
 			Administrator: "bad_address________",
 		}
 

@@ -31,6 +31,6 @@ message MarkerNetAssetValues {
   // address defines the marker address
   string address = 1;
 
-  // net_asset_values
+  // net_asset_values that are assigned to marker
   repeated NetAssetValue net_asset_values = 2 [(gogoproto.nullable) = false];
 }

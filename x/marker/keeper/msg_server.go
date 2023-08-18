@@ -114,7 +114,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 	}
 
 	nav := types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(msg.UsdCents)), msg.Volume)
-	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{nav}, "test")
+	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{nav}, types.ModuleName)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -819,8 +819,8 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 	return &types.MsgUpdateSendDenyListResponse{}, nil
 }
 
-// AddNetAssetValue adds net asset values to a marker that is in pending state
-func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetAssetValueRequest) (*types.MsgAddNetAssetValueResponse, error) {
+// AddNetAssetValues adds net asset values to a marker that is in pending state
+func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNetAssetValuesRequest) (*types.MsgAddNetAssetValuesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
@@ -849,5 +849,5 @@ func (k msgServer) AddNetAssetValue(goCtx context.Context, msg *types.MsgAddNetA
 		),
 	)
 
-	return &types.MsgAddNetAssetValueResponse{}, nil
+	return &types.MsgAddNetAssetValuesResponse{}, nil
 }

@@ -134,8 +134,8 @@
     - [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse)
     - [MsgAddMarkerRequest](#provenance.marker.v1.MsgAddMarkerRequest)
     - [MsgAddMarkerResponse](#provenance.marker.v1.MsgAddMarkerResponse)
-    - [MsgAddNetAssetValueRequest](#provenance.marker.v1.MsgAddNetAssetValueRequest)
-    - [MsgAddNetAssetValueResponse](#provenance.marker.v1.MsgAddNetAssetValueResponse)
+    - [MsgAddNetAssetValuesRequest](#provenance.marker.v1.MsgAddNetAssetValuesRequest)
+    - [MsgAddNetAssetValuesResponse](#provenance.marker.v1.MsgAddNetAssetValuesResponse)
     - [MsgBurnRequest](#provenance.marker.v1.MsgBurnRequest)
     - [MsgBurnResponse](#provenance.marker.v1.MsgBurnResponse)
     - [MsgCancelRequest](#provenance.marker.v1.MsgCancelRequest)
@@ -1672,7 +1672,7 @@ MarkerNetAssetValues defines the net asset values for a marker
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address defines the marker address |
-| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated | net_asset_values |
+| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated | net_asset_values that are assigned to marker |
 
 
 
@@ -2388,10 +2388,10 @@ MsgAddMarkerResponse defines the Msg/AddMarker response type
 
 
 
-<a name="provenance.marker.v1.MsgAddNetAssetValueRequest"></a>
+<a name="provenance.marker.v1.MsgAddNetAssetValuesRequest"></a>
 
-### MsgAddNetAssetValueRequest
-MsgAddNetAssetValueRequest defines the Msg/AddNetAssetValue request type
+### MsgAddNetAssetValuesRequest
+MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
 
 
 | Field | Type | Label | Description |
@@ -2405,10 +2405,10 @@ MsgAddNetAssetValueRequest defines the Msg/AddNetAssetValue request type
 
 
 
-<a name="provenance.marker.v1.MsgAddNetAssetValueResponse"></a>
+<a name="provenance.marker.v1.MsgAddNetAssetValuesResponse"></a>
 
-### MsgAddNetAssetValueResponse
-MsgAddNetAssetValueResponse defines the Msg/AddNetAssetValue response type
+### MsgAddNetAssetValuesResponse
+MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
 
 
 
@@ -2885,7 +2885,7 @@ Msg defines the Marker Msg service.
 | `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance.marker.v1.MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. | |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance.marker.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.marker.v1.MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. | |
 | `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance.marker.v1.MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance.marker.v1.MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has admin authority | |
-| `AddNetAssetValue` | [MsgAddNetAssetValueRequest](#provenance.marker.v1.MsgAddNetAssetValueRequest) | [MsgAddNetAssetValueResponse](#provenance.marker.v1.MsgAddNetAssetValueResponse) | AddNetAssetValue | |
+| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance.marker.v1.MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance.marker.v1.MsgAddNetAssetValuesResponse) | AddNetAssetValues set the net asset value for a marker | |
 
  <!-- end services -->
 
