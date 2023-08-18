@@ -92,16 +92,6 @@ func holdsString(holds []*hold.AccountHold) string {
 	)
 }
 
-// balancesString creates a JSON object string of address -> amount for each balance.
-func balancesString(balances []banktypes.Balance) string {
-	return addrCoinsStringsObjJSON(balances,
-		func(bal banktypes.Balance) string {
-			return bal.Address
-		},
-		banktypes.Balance.GetCoins,
-	)
-}
-
 // RandomizedGenState generates a random GenesisState for the hold module.
 func RandomizedGenState(simState *module.SimulationState) {
 	holdGenState := hold.DefaultGenesisState()
@@ -121,6 +111,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 		bankGenState := banktypes.GetGenesisStateFromAppState(simState.Cdc, simState.GenState)
 		UpdateBankGenStateForHolds(bankGenState, holdGenState)
 		simState.GenState[banktypes.ModuleName] = simState.Cdc.MustMarshalJSON(bankGenState)
-		fmt.Printf("Bank balances after update due to randomly generated holds:\n%s\n", balancesString(bankGenState.Balances))
 	}
 }

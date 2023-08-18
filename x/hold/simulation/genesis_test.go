@@ -367,62 +367,6 @@ func TestHoldsString(t *testing.T) {
 	}
 }
 
-func TestBalancesString(t *testing.T) {
-	denom := "carp"
-	bal := func(addr sdk.AccAddress, amt int64) banktypes.Balance {
-		return banktypes.Balance{
-			Address: addr.String(),
-			Coins:   sdk.NewCoins(sdk.NewInt64Coin(denom, amt)),
-		}
-	}
-
-	addr1 := sdk.AccAddress("addr1_______________")
-	addr2 := sdk.AccAddress("addr2_______________")
-	addr3 := sdk.AccAddress("addr3_______________")
-	addr4 := sdk.AccAddress("addr4_______________")
-
-	tests := []struct {
-		name string
-		bals []banktypes.Balance
-	}{
-		{name: "nil holds", bals: nil},
-		{name: "one hold", bals: []banktypes.Balance{bal(addr1, 11)}},
-		{name: "two holds", bals: []banktypes.Balance{bal(addr1, 11), bal(addr2, 22)}},
-		{name: "two holds reversed", bals: []banktypes.Balance{bal(addr2, 22), bal(addr1, 11)}},
-		{
-			name: "four holds",
-			bals: []banktypes.Balance{bal(addr1, 11), bal(addr2, 22), bal(addr3, 33), bal(addr4, 44)},
-		},
-		{
-			name: "four shuffled holds",
-			bals: []banktypes.Balance{bal(addr3, 33), bal(addr1, 11), bal(addr4, 44), bal(addr2, 22)},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var expected []string
-			if len(tc.bals) == 0 {
-				expected = []string{"{}"}
-			} else {
-				expected = make([]string, len(tc.bals)+2)
-				expected[0] = "{"
-				for i, h := range tc.bals {
-					expected[i+1] = ` "` + h.Address + `":"` + h.Coins.String() + `"`
-					if i < len(tc.bals)-1 {
-						expected[i+1] = expected[i+1] + ","
-					}
-				}
-				expected[len(expected)-1] = "}"
-			}
-
-			result := simulation.BalancesString(tc.bals)
-			lines := strings.Split(result, "\n")
-			assert.Equal(t, expected, lines, "BalancesString result lines")
-		})
-	}
-}
-
 func TestRandomizedGenState(t *testing.T) {
 	accs := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 3)
 
@@ -614,15 +558,6 @@ func TestRandomizedGenState(t *testing.T) {
 			expStdoutHolds := fmt.Sprintf("Selected %d randomly generated holds:\n", len(tc.expHoldGen.Holds)) +
 				simulation.HoldsString(tc.expHoldGen.Holds) + "\n"
 			assert.Contains(t, stdout, expStdoutHolds, "stdout message about holds\nExpected:\n%s", expStdoutHolds)
-
-			// Make sure stdout has the bank genesis state message if it's expected.
-			if len(tc.expHoldGen.Holds) == 0 {
-				assert.NotContains(t, stdout, "balances", "stdout message")
-			} else {
-				expStdoutBals := "Bank balances after update due to randomly generated holds:\n" +
-					simulation.BalancesString(tc.expBankGen.Balances) + "\n"
-				assert.Contains(t, stdout, expStdoutBals, "stdout message about updated balances:\nExpected:\n%s", expStdoutBals)
-			}
 		})
 	}
 }
