@@ -121,45 +121,6 @@ func (s *HandlerTestSuite) runTests(cases []CommonTest) {
 	}
 }
 
-func (s *HandlerTestSuite) TestMsgAddMarkerRequest() {
-	denom := "hotdog"
-	rdenom := "restrictedhotdog"
-	denomWithDashPeriod := fmt.Sprintf("%s-my.marker", denom)
-	activeStatus := types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0)
-	activeStatus.Status = types.StatusActive
-
-	cases := []CommonTest{
-		{
-			name:          "should successfully ADD new marker",
-			msg:           types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
-			expectedEvent: types.NewEventMarkerAdd(denom, types.MustGetMarkerAddress(denom).String(), "100", "proposed", s.user1, types.MarkerType_Coin.String()),
-		},
-		{
-			name:     "should fail to ADD new marker, invalid status",
-			msg:      activeStatus,
-			errorMsg: "marker can only be created with a Proposed or Finalized status",
-		},
-		{
-			name:     "should fail to ADD new marker, marker already exists",
-			msg:      types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
-			errorMsg: fmt.Sprintf("marker address already exists for %s: invalid request", types.MustGetMarkerAddress(denom)),
-		},
-		{
-
-			name:          "should successfully add marker with dash and period",
-			msg:           types.NewMsgAddMarkerRequest(denomWithDashPeriod, sdk.NewInt(1000), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
-			expectedEvent: types.NewEventMarkerAdd(denomWithDashPeriod, types.MustGetMarkerAddress(denomWithDashPeriod).String(), "1000", "proposed", s.user1, types.MarkerType_Coin.String()),
-		},
-		{
-
-			name:          "should successfully ADD new marker with required attributes",
-			msg:           types.NewMsgAddMarkerRequest(rdenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{"attribute.one.com", "attribute.two.com"}, 0, 0),
-			expectedEvent: types.NewEventMarkerAdd(rdenom, types.MustGetMarkerAddress(rdenom).String(), "100", "proposed", s.user1, types.MarkerType_RestrictedCoin.String()),
-		},
-	}
-	s.runTests(cases)
-}
-
 func (s *HandlerTestSuite) TestMsgAddAccessRequest() {
 	accessMintGrant := types.AccessGrant{
 		Address:     s.user1,

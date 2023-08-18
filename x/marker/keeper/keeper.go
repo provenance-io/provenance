@@ -235,7 +235,7 @@ func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccount
 		}
 
 		if err := k.SetNetAssetValue(ctx, marker, nav, source); err != nil {
-			return fmt.Errorf("cannot set net asset value %v : %v", nav, err.Error())
+			return fmt.Errorf("cannot set net asset value : %v", err.Error())
 		}
 	}
 	return nil

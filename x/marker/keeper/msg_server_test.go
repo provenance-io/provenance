@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +14,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"google.golang.org/protobuf/proto"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -62,16 +63,17 @@ func TestMsgServerTestSuite(t *testing.T) {
 func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 	denom := "hotdog"
 	rdenom := "restrictedhotdog"
+	navDenom := "navdenom"
 	denomWithDashPeriod := fmt.Sprintf("%s-my.marker", denom)
 
 	cases := []struct {
 		name     string
 		msg      types.MsgAddMarkerRequest
 		expErr   string
-		expEvent *types.EventMarkerAdd
+		expEvent []proto.Message
 	}{
 		{
-			name: "should successfully ADD new marker",
+			name: "successfully ADD new marker",
 			msg: types.MsgAddMarkerRequest{
 				Amount:                 sdk.NewCoin(denom, sdk.NewInt(100)),
 				Manager:                s.owner1,
@@ -82,17 +84,25 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 				AllowGovernanceControl: true,
 				AllowForcedTransfer:    false,
 			},
-			expEvent: &types.EventMarkerAdd{
-				Denom:      denom,
-				Address:    types.MustGetMarkerAddress(denom).String(),
-				Amount:     "100",
-				Status:     "proposed",
-				Manager:    s.owner1,
-				MarkerType: types.MarkerType_Coin.String(),
+			expEvent: []proto.Message{
+				&types.EventMarkerAdd{
+					Denom:      denom,
+					Address:    types.MustGetMarkerAddress(denom).String(),
+					Amount:     "100",
+					Status:     "proposed",
+					Manager:    s.owner1,
+					MarkerType: types.MarkerType_Coin.String(),
+				},
+				&types.EventSetNetAssetValue{
+					Denom:         denom,
+					PricePerToken: "0usd",
+					Volume:        "0",
+					Source:        types.ModuleName,
+				},
 			},
 		},
 		{
-			name: "should fail to ADD new marker, invalid status",
+			name: "fail to ADD new marker, invalid status",
 			msg: types.MsgAddMarkerRequest{
 				Amount:                 sdk.NewCoin(denom, sdk.NewInt(100)),
 				Manager:                s.owner1,
@@ -106,7 +116,7 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 			expErr: "marker can only be created with a Proposed or Finalized status",
 		},
 		{
-			name: "should fail to ADD new marker, marker already exists",
+			name: "fail to ADD new marker, marker already exists",
 			msg: types.MsgAddMarkerRequest{
 				Amount:                 sdk.NewCoin(denom, sdk.NewInt(100)),
 				Manager:                s.owner1,
@@ -120,8 +130,54 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 			expErr: fmt.Sprintf("marker address already exists for %s: invalid request", types.MustGetMarkerAddress(denom)),
 		},
 		{
-
-			name: "should successfully add marker with dash and period",
+			name: "fail to ADD new marker, incorrect nav config",
+			msg: types.MsgAddMarkerRequest{
+				Amount:                 sdk.NewCoin("jackthecat", sdk.NewInt(100)),
+				Manager:                s.owner1,
+				FromAddress:            s.owner1,
+				Status:                 types.StatusProposed,
+				MarkerType:             types.MarkerType_Coin,
+				SupplyFixed:            true,
+				AllowGovernanceControl: true,
+				AllowForcedTransfer:    false,
+				UsdCents:               1,
+				Volume:                 0,
+			},
+			expErr: `cannot set net asset value : marker net asset value volume must be positive value: invalid request`,
+		},
+		{
+			name: "successfully Add marker with nav",
+			msg: types.MsgAddMarkerRequest{
+				Amount:                 sdk.NewCoin(navDenom, sdk.NewInt(100)),
+				Manager:                s.owner1,
+				FromAddress:            s.owner1,
+				Status:                 types.StatusProposed,
+				MarkerType:             types.MarkerType_Coin,
+				SupplyFixed:            true,
+				AllowGovernanceControl: true,
+				AllowForcedTransfer:    false,
+				UsdCents:               1,
+				Volume:                 10,
+			},
+			expEvent: []proto.Message{
+				&types.EventMarkerAdd{
+					Denom:      navDenom,
+					Address:    types.MustGetMarkerAddress(navDenom).String(),
+					Amount:     "100",
+					Status:     "proposed",
+					Manager:    s.owner1,
+					MarkerType: types.MarkerType_Coin.String(),
+				},
+				&types.EventSetNetAssetValue{
+					Denom:         navDenom,
+					PricePerToken: "1usd",
+					Volume:        "10",
+					Source:        types.ModuleName,
+				},
+			},
+		},
+		{
+			name: "successfully add marker with dash and period",
 			msg: types.MsgAddMarkerRequest{
 				Amount:                 sdk.NewCoin(denomWithDashPeriod, sdk.NewInt(1000)),
 				Manager:                s.owner1,
@@ -132,18 +188,25 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 				AllowGovernanceControl: true,
 				AllowForcedTransfer:    false,
 			},
-			expEvent: &types.EventMarkerAdd{
-				Denom:      denomWithDashPeriod,
-				Address:    types.MustGetMarkerAddress(denom).String(),
-				Amount:     "1000",
-				Status:     "proposed",
-				Manager:    s.owner1,
-				MarkerType: types.MarkerType_Coin.String(),
+			expEvent: []proto.Message{
+				&types.EventMarkerAdd{
+					Denom:      denomWithDashPeriod,
+					Address:    types.MustGetMarkerAddress(denomWithDashPeriod).String(),
+					Amount:     "1000",
+					Status:     "proposed",
+					Manager:    s.owner1,
+					MarkerType: types.MarkerType_Coin.String(),
+				},
+				&types.EventSetNetAssetValue{
+					Denom:         denomWithDashPeriod,
+					PricePerToken: "0usd",
+					Volume:        "0",
+					Source:        types.ModuleName,
+				},
 			},
 		},
 		{
-
-			name: "should successfully ADD new marker with required attributes",
+			name: "successfully ADD new marker with required attributes",
 			msg: types.MsgAddMarkerRequest{
 				Amount:                 sdk.NewCoin(rdenom, sdk.NewInt(100)),
 				Manager:                s.owner1,
@@ -155,31 +218,43 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 				AllowForcedTransfer:    false,
 				RequiredAttributes:     []string{"attribute.one.com", "attribute.two.com"},
 			},
-			expEvent: &types.EventMarkerAdd{
-				Denom:      rdenom,
-				Address:    types.MustGetMarkerAddress(denom).String(),
-				Amount:     "100",
-				Status:     "proposed",
-				Manager:    s.owner1,
-				MarkerType: types.MarkerType_Coin.String(),
+			expEvent: []proto.Message{
+				&types.EventMarkerAdd{
+					Denom:      rdenom,
+					Address:    types.MustGetMarkerAddress(rdenom).String(),
+					Amount:     "100",
+					Status:     "proposed",
+					Manager:    s.owner1,
+					MarkerType: types.MarkerType_RestrictedCoin.String(),
+				},
+				&types.EventSetNetAssetValue{
+					Denom:         rdenom,
+					PricePerToken: "0usd",
+					Volume:        "0",
+					Source:        types.ModuleName,
+				},
 			},
 		},
 	}
 	for _, tc := range cases {
 		s.Run(tc.name, func() {
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			res, err := s.msgServer.AddMarker(s.ctx, &tc.msg)
 			if len(tc.expErr) > 0 {
 				s.Require().EqualError(err, tc.expErr, "AddMarker(%v) error", tc.msg)
 			} else {
+				events := s.ctx.EventManager().ABCIEvents()
 				s.Require().NoError(err, "AddMarker(%v) error", tc.msg)
 				s.Assert().Equal(res, &types.MsgAddMarkerResponse{})
+				for _, expEvent := range tc.expEvent {
+					s.Assert().True(s.containsMessage(events, expEvent), "AddMarker missing expected event %T", expEvent)
+				}
 			}
 		})
 	}
 }
 
-func (s *MsgServerTestSuite) containsMessage(result *sdk.Result, msg proto.Message) bool {
-	events := result.GetEvents().ToABCIEvents()
+func (s *MsgServerTestSuite) containsMessage(events []abci.Event, msg proto.Message) bool {
 	for _, event := range events {
 		typeEvent, _ := sdk.ParseTypedEvent(event)
 		if assert.ObjectsAreEqual(msg, typeEvent) {
