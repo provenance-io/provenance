@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -13,14 +14,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/quarantine"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
+	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
@@ -518,8 +525,17 @@ func TestAccountInsufficientExisting(t *testing.T) {
 func TestAccountImplictControl(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	setAcc := func(addr sdk.AccAddress, sequence uint64) {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		require.NoError(t, acc.SetSequence(sequence), "%s.SetSequence(%d)", string(addr), sequence)
+		app.AccountKeeper.SetAccount(ctx, acc)
+	}
+
 	user := testUserAddress("test")
 	user2 := testUserAddress("test2")
+	setAcc(user, 1)
+	setAcc(user2, 1)
 
 	// create account and check default values
 	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
@@ -586,14 +602,24 @@ func TestAccountImplictControl(t *testing.T) {
 	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user2, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
 	// succeeds when admin user (grantee with authz permissions) has transfer authority with receiver is on allowed list
 	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
-
 }
 
 func TestForceTransfer(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	setAcc := func(addr sdk.AccAddress, sequence uint64) {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		require.NoError(t, acc.SetSequence(sequence), "%s.SetSequence(%d)", string(addr), sequence)
+		app.AccountKeeper.SetAccount(ctx, acc)
+	}
+
 	admin := sdk.AccAddress("admin_account_______")
 	other := sdk.AccAddress("other_account_______")
+	seq0 := sdk.AccAddress("sequence_0__________")
+	setAcc(admin, 1)
+	setAcc(other, 1)
+	setAcc(seq0, 0)
 
 	// Shorten up the lines making Coins.
 	cz := func(coins ...sdk.Coin) sdk.Coins {
@@ -651,39 +677,99 @@ func TestForceTransfer(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, wForceMac),
 		"AddFinalizeAndActivateMarker with force transfer")
 
-	requireBalances := func(tt *testing.T, desc string, noForceBal, wForceBal, adminBal, otherBal sdk.Coins) {
+	noForceBal := cz(noForceMac.GetSupply())
+	wForceBal := cz(wForceMac.GetSupply())
+	var adminBal, otherBal, seq0Bal sdk.Coins
+	requireBalances := func(tt *testing.T, desc string) {
 		tt.Helper()
-		ok := assert.Equal(tt, noForceBal, app.BankKeeper.GetAllBalances(ctx, noForceAddr),
-			"%s no-force-transfer marker balance", desc)
-		ok = assert.Equal(tt, wForceBal, app.BankKeeper.GetAllBalances(ctx, wForceAddr),
-			"%s with-force-transfer marker balance", desc) && ok
-		ok = assert.Equal(tt, adminBal, app.BankKeeper.GetAllBalances(ctx, admin),
-			"%s admin balance", desc) && ok
-		ok = assert.Equal(tt, otherBal, app.BankKeeper.GetAllBalances(ctx, other),
-			"%s other balance", desc) && ok
+		ok := assert.Equal(tt, noForceBal.String(), app.BankKeeper.GetAllBalances(ctx, noForceAddr).String(),
+			"%s: no-force-transfer marker balance", desc)
+		ok = assert.Equal(tt, wForceBal.String(), app.BankKeeper.GetAllBalances(ctx, wForceAddr).String(),
+			"%s: with-force-transfer marker balance", desc) && ok
+		ok = assert.Equal(tt, adminBal.String(), app.BankKeeper.GetAllBalances(ctx, admin).String(),
+			"%s: admin balance", desc) && ok
+		ok = assert.Equal(tt, otherBal.String(), app.BankKeeper.GetAllBalances(ctx, other).String(),
+			"%s: other balance", desc) && ok
+		ok = assert.Equal(tt, seq0Bal.String(), app.BankKeeper.GetAllBalances(ctx, seq0).String(),
+			"%s: sequence 0 balance", desc) && ok
 		if !ok {
 			tt.FailNow()
 		}
 	}
-	requireBalances(t, "starting", cz(noForceCoin(1111)), cz(wForceCoin(2222)), cz(), cz())
+	requireBalances(t, "starting")
 
 	// Have the admin withdraw funds of each to the other account.
-	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, noForceDenom, cz(noForceCoin(111))),
+	toWithdraw := cz(noForceCoin(111))
+	otherBal = otherBal.Add(toWithdraw...)
+	noForceBal = noForceBal.Sub(toWithdraw...)
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, noForceDenom, toWithdraw),
 		"withdraw 500noforceback to other")
-	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, wForceDenom, cz(wForceCoin(222))),
+	toWithdraw = cz(wForceCoin(222))
+	otherBal = otherBal.Add(toWithdraw...)
+	wForceBal = wForceBal.Sub(toWithdraw...)
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, other, wForceDenom, toWithdraw),
 		"withdraw 500wforceback to other")
-	requireBalances(t, "after withdraws", cz(noForceCoin(1000)), cz(wForceCoin(2000)), cz(), cz(noForceCoin(111), wForceCoin(222)))
+	requireBalances(t, "after withdraws")
 
 	// Have the admin try a transfer of the no-force-transfer from that other account to itself. It should fail.
 	assert.EqualError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, noForceCoin(11)),
 		fmt.Sprintf("%s account has not been granted authority to withdraw from %s account", admin, other),
 		"transfer of non-force-transfer coin from other account back to admin")
-	requireBalances(t, "after failed transfer", cz(noForceCoin(1000)), cz(wForceCoin(2000)), cz(), cz(noForceCoin(111), wForceCoin(222)))
+	requireBalances(t, "after failed transfer")
 
 	// Have the admin try a transfer of the w/force transfer from that other account to itself. It should go through.
-	assert.NoError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, wForceCoin(22)),
+	transferCoin := wForceCoin(22)
+	assert.NoError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, transferCoin),
 		"transfer of force-transferrable coin from other account back to admin")
-	requireBalances(t, "after successful transfer", cz(noForceCoin(1000)), cz(wForceCoin(2000)), cz(wForceCoin(22)), cz(noForceCoin(111), wForceCoin(200)))
+	otherBal = otherBal.Sub(transferCoin)
+	adminBal = adminBal.Add(transferCoin)
+	requireBalances(t, "after successful transfer")
+
+	// Fund the sequence 0 account and have the admin try a transfer of the w/force transfer from there to itself. This should fail.
+	seq0Bal = cz(wForceCoin(5))
+	wForceBal = wForceBal.Sub(seq0Bal...)
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, admin, seq0, wForceDenom, seq0Bal),
+		"withdraw 500wforceback to other")
+	requireBalances(t, "funds withdrawn to sequence 0 address")
+	assert.EqualError(t, app.MarkerKeeper.TransferCoin(ctx, seq0, admin, admin, wForceCoin(2)),
+		fmt.Sprintf("funds are not allowed to be removed from %s", seq0),
+		"transfer of force-transfer coin from account with sequence 0 back to admin",
+	)
+	requireBalances(t, "after failed force transfer")
+}
+
+func TestCanForceTransferFrom(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	setAcc := func(addr sdk.AccAddress, sequence uint64) {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		require.NoError(t, acc.SetSequence(sequence), "%s.SetSequence(%d)", string(addr), sequence)
+		app.AccountKeeper.SetAccount(ctx, acc)
+	}
+
+	addrNoAcc := sdk.AccAddress("addrNoAcc___________")
+	addrSeq0 := sdk.AccAddress("addrSeq0____________")
+	addrSeq1 := sdk.AccAddress("addrSeq1____________")
+	setAcc(addrSeq0, 0)
+	setAcc(addrSeq1, 1)
+
+	tests := []struct {
+		name string
+		from sdk.AccAddress
+		exp  bool
+	}{
+		{name: "address without an account", from: addrNoAcc, exp: true},
+		{name: "address with sequence 0", from: addrSeq0, exp: false},
+		{name: "address with sequence 1", from: addrSeq1, exp: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := app.MarkerKeeper.CanForceTransferFrom(ctx, tc.from)
+			assert.Equal(t, tc.exp, actual, "canForceTransferFrom")
+		})
+	}
 }
 
 func TestMarkerFeeGrant(t *testing.T) {
@@ -1207,4 +1293,165 @@ func TestMsgUpdateRequiredAttributesRequest(t *testing.T) {
 func TestGetAuthority(t *testing.T) {
 	app := simapp.Setup(t)
 	require.Equal(t, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", app.MarkerKeeper.GetAuthority())
+}
+
+func TestReqAttrBypassAddrs(t *testing.T) {
+	// Tests both GetReqAttrBypassAddrs and IsReqAttrBypassAddr.
+	expectedNames := []string{
+		authtypes.FeeCollectorName,
+		rewardtypes.ModuleName,
+		quarantine.ModuleName,
+		govtypes.ModuleName,
+		distrtypes.ModuleName,
+		stakingtypes.BondedPoolName,
+		stakingtypes.NotBondedPoolName,
+	}
+
+	incByte := func(b byte) byte {
+		if b == 0xFF {
+			return 0x00
+		}
+		return b + 1
+	}
+
+	app := simapp.Setup(t)
+
+	for _, name := range expectedNames {
+		t.Run(fmt.Sprintf("get: contains %s", name), func(t *testing.T) {
+			expAddr := authtypes.NewModuleAddress(name)
+			actual := app.MarkerKeeper.GetReqAttrBypassAddrs()
+			assert.Contains(t, actual, expAddr, "GetReqAttrBypassAddrs()")
+		})
+	}
+	t.Run("get: only has expected entries", func(t *testing.T) {
+		// This assumes each expectedNames test passed. This is designed to fail if a new entry
+		// is added to the list (in app.go). When that happens, update the expectedNames with
+		// the new entry so it's harder for it to accidentally go missing.
+		actual := app.MarkerKeeper.GetReqAttrBypassAddrs()
+		assert.Len(t, actual, len(expectedNames), "GetReqAttrBypassAddrs()")
+	})
+
+	t.Run("get: called twice equal but not same", func(t *testing.T) {
+		expected := app.MarkerKeeper.GetReqAttrBypassAddrs()
+		actual := app.MarkerKeeper.GetReqAttrBypassAddrs()
+		if assert.Equal(t, expected, actual, "GetReqAttrBypassAddrs()") {
+			if assert.NotSame(t, expected, actual, "GetReqAttrBypassAddrs()") {
+				for i := range expected {
+					assert.NotSame(t, expected[i], actual[i], "GetReqAttrBypassAddrs()[%d]", i)
+				}
+			}
+		}
+	})
+
+	t.Run("get: changes to result not reflected in next result", func(t *testing.T) {
+		actual1 := app.MarkerKeeper.GetReqAttrBypassAddrs()
+		origActual100 := actual1[0][0]
+		actual1[0][0] = incByte(origActual100)
+		actual2 := app.MarkerKeeper.GetReqAttrBypassAddrs()
+		actual200 := actual2[0][0]
+		assert.Equal(t, origActual100, actual200, "first byte of first address after changing it in an earlier result")
+	})
+
+	for _, name := range expectedNames {
+		t.Run(fmt.Sprintf("is: %s", name), func(t *testing.T) {
+			addr := authtypes.NewModuleAddress(name)
+			actual := app.MarkerKeeper.IsReqAttrBypassAddr(addr)
+			assert.True(t, actual, "IsReqAttrBypassAddr(NewModuleAddress(%q))", name)
+		})
+	}
+
+	almostName0 := authtypes.NewModuleAddress(expectedNames[0])
+	almostName0[0] = incByte(almostName0[0])
+
+	negativeIsTests := []struct {
+		name string
+		addr sdk.AccAddress
+	}{
+		{name: "nil address", addr: nil},
+		{name: "empty address", addr: sdk.AccAddress{}},
+		{name: "zerod address", addr: make(sdk.AccAddress, 20)},
+		{name: "almost " + expectedNames[0], addr: almostName0},
+		{name: "short " + expectedNames[0], addr: authtypes.NewModuleAddress(expectedNames[0])[:19]},
+		{name: "long " + expectedNames[0], addr: append(authtypes.NewModuleAddress(expectedNames[0]), 0x00)},
+	}
+
+	for _, tc := range negativeIsTests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := app.MarkerKeeper.IsReqAttrBypassAddr(tc.addr)
+			assert.False(t, actual, "IsReqAttrBypassAddr(...)")
+		})
+	}
+}
+
+// dummyBankKeeper satisfies the types.BankKeeper interface but does nothing.
+type dummyBankKeeper struct{}
+
+var _ types.BankKeeper = (*dummyBankKeeper)(nil)
+
+func (d dummyBankKeeper) GetAllBalances(_ sdk.Context, _ sdk.AccAddress) sdk.Coins { return nil }
+
+func (d dummyBankKeeper) GetBalance(_ sdk.Context, _ sdk.AccAddress, denom string) sdk.Coin {
+	return sdk.Coin{}
+}
+
+func (d dummyBankKeeper) GetSupply(_ sdk.Context, _ string) sdk.Coin { return sdk.Coin{} }
+
+func (d dummyBankKeeper) DenomOwners(_ context.Context, _ *banktypes.QueryDenomOwnersRequest) (*banktypes.QueryDenomOwnersResponse, error) {
+	return nil, nil
+}
+
+func (d dummyBankKeeper) SendCoins(_ sdk.Context, _, _ sdk.AccAddress, amt sdk.Coins) error {
+	return nil
+}
+
+func (d dummyBankKeeper) SendCoinsFromModuleToAccount(_ sdk.Context, _ string, _ sdk.AccAddress, _ sdk.Coins) error {
+	return nil
+}
+
+func (d dummyBankKeeper) SendCoinsFromAccountToModule(_ sdk.Context, _ sdk.AccAddress, _ string, _ sdk.Coins) error {
+	return nil
+}
+
+func (d dummyBankKeeper) MintCoins(_ sdk.Context, _ string, _ sdk.Coins) error { return nil }
+
+func (d dummyBankKeeper) BurnCoins(_ sdk.Context, _ string, _ sdk.Coins) error { return nil }
+
+func (d dummyBankKeeper) AppendSendRestriction(_ banktypes.SendRestrictionFn) {}
+
+func (d dummyBankKeeper) BlockedAddr(_ sdk.AccAddress) bool { return false }
+
+func (d dummyBankKeeper) GetDenomMetaData(_ sdk.Context, _ string) (banktypes.Metadata, bool) {
+	return banktypes.Metadata{}, false
+}
+
+func (d dummyBankKeeper) SetDenomMetaData(_ sdk.Context, _ banktypes.Metadata) {}
+
+func (d dummyBankKeeper) IterateAllBalances(_ sdk.Context, _ func(sdk.AccAddress, sdk.Coin) bool) {}
+
+func (d dummyBankKeeper) GetAllSendEnabledEntries(_ sdk.Context) []banktypes.SendEnabled { return nil }
+
+func (d dummyBankKeeper) DeleteSendEnabled(_ sdk.Context, _ string) {}
+
+func TestBypassAddrsLocked(t *testing.T) {
+	// This test makes sure that the keeper's copy of reqAttrBypassAddrs
+	// isn't changed if the originally provided value is changed.
+
+	addrs := []sdk.AccAddress{
+		sdk.AccAddress("addrs[0]____________"),
+		sdk.AccAddress("addrs[1]____________"),
+		sdk.AccAddress("addrs[2]____________"),
+		sdk.AccAddress("addrs[3]____________"),
+		sdk.AccAddress("addrs[4]____________"),
+	}
+
+	mk := markerkeeper.NewKeeper(nil, nil, paramtypes.NewSubspace(nil, nil, nil, nil, "test"), nil, &dummyBankKeeper{}, nil, nil, nil, nil, nil, addrs)
+
+	// Now that the keeper has been created using the provided addresses, change the first byte of
+	// the first address to something else. Then, get the addresses back from the keeper and make
+	// sure that change didn't affect what's in the keeper.
+	orig00 := addrs[0][0]
+	addrs[0][0] = 'b'
+	kAddrs := mk.GetReqAttrBypassAddrs()
+	act00 := kAddrs[0][0]
+	assert.Equal(t, orig00, act00, "first byte of first address returned by GetReqAttrBypassAddrs")
 }
