@@ -634,10 +634,15 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	if !m.AddressHasAccess(admin, types.Access_Transfer) {
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
-	if !admin.Equals(from) && !m.AllowsForcedTransfer() {
-		err = k.authzHandler(ctx, admin, from, to, amount)
-		if err != nil {
-			return err
+	if !admin.Equals(from) {
+		switch {
+		case !m.AllowsForcedTransfer():
+			err = k.authzHandler(ctx, admin, from, to, amount)
+			if err != nil {
+				return err
+			}
+		case !k.canForceTransferFrom(ctx, from):
+			return fmt.Errorf("funds are not allowed to be removed from %s", from)
 		}
 	}
 	if k.bankKeeper.BlockedAddr(to) {
@@ -658,6 +663,18 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	)
 
 	return ctx.EventManager().EmitTypedEvent(markerTransferEvent)
+}
+
+// canForceTransferFrom returns true if funds can be forcefully transferred out of the provided address.
+func (k Keeper) canForceTransferFrom(ctx sdk.Context, from sdk.AccAddress) bool {
+	acc := k.authKeeper.GetAccount(ctx, from)
+	// If acc is nil, there's no funds in it, so the transfer will fail anyway.
+	// In that case, return true from here so it can fail later with a more accurate message.
+	// If there is an account, only allow force transfers if the sequence number isn't zero.
+	// This is to prevent forced transfer from module accounts and smart contracts.
+	// It will also block forced transfers from new or dead accounts, though.
+	// If the forced transfer is absolutely required, use a governance proposal with a MsgSend.
+	return acc == nil || acc.GetSequence() != 0
 }
 
 // IbcTransferCoin transfers restricted coins between two chains when the administrator account holds the transfer

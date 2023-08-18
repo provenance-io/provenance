@@ -14,3 +14,8 @@ func (k Keeper) GetMarkerModuleAddr() sdk.AccAddress {
 func (k Keeper) GetIbcTransferModuleAddr() sdk.AccAddress {
 	return k.ibcTransferModuleAddr
 }
+
+// CanForceTransferFrom is a TEST ONLY exposure of the canForceTransferFrom value.
+func (k Keeper) CanForceTransferFrom(ctx sdk.Context, from sdk.AccAddress) bool {
+	return k.canForceTransferFrom(ctx, from)
+}
