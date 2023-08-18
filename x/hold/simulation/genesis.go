@@ -45,49 +45,6 @@ func RandomAccountHolds(r *rand.Rand, accounts []simtypes.Account) []*hold.Accou
 	return rv
 }
 
-// RandomAccountHolds2 randomly selects accounts with an existing balance to place a hold of a random amount.
-func RandomAccountHolds2(r *rand.Rand, balances []banktypes.Balance) []*hold.AccountHold {
-	if len(balances) == 0 {
-		return nil
-	}
-
-	count := r.Intn(len(balances) + 1)
-	if count == 0 {
-		return nil
-	}
-
-	randBals := make([]banktypes.Balance, 0, len(balances))
-	for _, bal := range balances {
-		if !bal.Coins.IsZero() {
-			randBals = append(randBals, bal)
-		}
-	}
-	r.Shuffle(len(randBals), func(i, j int) {
-		randBals[i], randBals[j] = randBals[j], randBals[i]
-	})
-
-	rv := make([]*hold.AccountHold, count)
-	for i, bal := range randBals[:count] {
-		rv[i] = &hold.AccountHold{Address: bal.Address}
-		// First, add 0 to 1000 of each denom.
-		for _, coin := range bal.Coins {
-			amt := r.Int63n(1001)
-			holdCoin := sdk.NewInt64Coin(coin.Denom, amt)
-			if !holdCoin.IsZero() {
-				rv[i].Amount = append(rv[i].Amount, holdCoin)
-			}
-		}
-		// If we still don't have a hold amount, add 1 to 1000 of a randomly selected denom.
-		if rv[i].Amount.IsZero() {
-			ind := r.Intn(len(bal.Coins))
-			amt := r.Int63n(1000) + 1
-			rv[i].Amount = append(rv[i].Amount, sdk.NewInt64Coin(bal.Coins[ind].Denom, amt))
-		}
-	}
-
-	return rv
-}
-
 // UpdateBankGenStateForHolds adds all hold funds to the bank balances.
 // Panics if there's an address with a hold that doesn't already have a balance.
 func UpdateBankGenStateForHolds(bankGenState *banktypes.GenesisState, holdGenState *hold.GenesisState) {
