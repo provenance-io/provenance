@@ -813,6 +813,7 @@ func TestQuarantineOfRestrictedCoins(t *testing.T) {
 	addrWithTransfer := sdk.AccAddress("addrWithTransfer____")
 	addrWithWithdraw := sdk.AccAddress("addrWithWithdraw____")
 	addrWithoutTransfer := sdk.AccAddress("addrWithoutTransfer_")
+	nav := []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(1)), 1)}
 
 	newMarker := func(denom string, reqAttrs []string) *types.MarkerAccount {
 		rv := types.NewMarkerAccount(
@@ -830,7 +831,9 @@ func TestQuarantineOfRestrictedCoins(t *testing.T) {
 			false, // no force transfer
 			reqAttrs,
 		)
-		err := app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, rv)
+		err := app.MarkerKeeper.AddSetNetAssetValues(ctx, rv, nav, types.ModuleName)
+		require.NoError(t, err, "AddSetNetAssetValues(%v, %v, %v)", rv, nav, types.ModuleName)
+		err = app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, rv)
 		require.NoError(t, err, "AddFinalizeAndActivateMarker(%s)", denom)
 		return rv
 	}
