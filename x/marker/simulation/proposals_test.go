@@ -42,6 +42,7 @@ func TestProposalContents(t *testing.T) {
 			app.AttributeKeeper,
 			app.NameKeeper,
 			app.TransferKeeper,
+			nil,
 		),
 	)
 	require.Len(t, weightedProposalContent, 6)
