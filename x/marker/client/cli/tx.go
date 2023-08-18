@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1148,6 +1149,30 @@ $ %[1]s tx marker account-data hotdogcoin --%[4]s`,
 	return cmd
 }
 
+// GetCmdAddNetAssetValues returns a CLI command for adding/updating marker net asset values.
+func GetCmdAddNetAssetValues() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "add-net-asset-values <denom> " + attrcli.AccountDataFlagsUse,
+		Aliases: []string{"add-navs", "anavs"},
+		Short:   "Add/updates net asset values for a marker",
+		Example: fmt.Sprintf(`$ %[1]s tx marker add-net-asset-values hotdogcoin 1usd,1;2nhash,3`,
+			version.AppName),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			netAssetValues := ParseNetAssertValueString(args[1])
+			denom := strings.TrimSpace(args[0])
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), types.NewMsgAddNetAssetValuesRequest(denom, clientCtx.From, netAssetValues))
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
 func getPeriodReset(duration int64) time.Time {
 	return time.Now().Add(getPeriod(duration))
 }
@@ -1178,6 +1203,28 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 		grants = append(grants, *types.NewAccessGrant(address, permissions))
 	}
 	return grants
+}
+
+// ParseNetAssertValueString splits string (example address1,perm1,perm2...;address2, perm1...) to list of NetAssetValue's
+func ParseNetAssertValueString(netAssetValuesString string) []types.NetAssetValue {
+	navs := strings.Split(netAssetValuesString, ";")
+	netAssetValues := make([]types.NetAssetValue, len(navs))
+	for i, nav := range navs {
+		parts := strings.Split(nav, ",")
+		if len(parts) != 2 {
+			panic("invalid net asset value, expected coin,volume")
+		}
+		coin, err := sdk.ParseCoinNormalized(parts[0])
+		if err != nil {
+			panic(fmt.Sprintf("invalid coin %s", parts[0]))
+		}
+		volume, err := strconv.ParseUint(parts[1], 10, 64)
+		if err != nil {
+			panic(fmt.Sprintf("invalid volume %s", parts[1]))
+		}
+		netAssetValues[i] = types.NewNetAssetValue(coin, volume)
+	}
+	return netAssetValues
 }
 
 // AddNewMarkerFlags adds the flags needed when defining a new marker.

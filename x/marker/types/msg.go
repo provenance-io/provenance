@@ -703,6 +703,14 @@ func (msg *MsgUpdateSendDenyListRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
+func NewMsgAddNetAssetValuesRequest(denom, administrator string, netAssetValues []NetAssetValue) *MsgAddNetAssetValuesRequest {
+	return &MsgAddNetAssetValuesRequest{
+		Denom:          denom,
+		NetAssetValues: netAssetValues,
+		Administrator:  administrator,
+	}
+}
+
 func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
 		return err
