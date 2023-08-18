@@ -77,6 +77,13 @@ type Keeper struct {
 
 	// Used to transfer the ibc marker
 	ibcTransferServer types.IbcTransferMsgServer
+
+	// reqAttrBypassAddrs is a set of addresses that are allowed to bypass the required attribute check.
+	// When sending to one of these, if there are required attributes, it behaves as if the addr has them;
+	// if there aren't required attributes, the sender still needs transfer permission.
+	// When sending from one of these, if there are required attributes, the destination must have them;
+	// if there aren't required attributes, it behaves as if the sender has transfer permission.
+	reqAttrBypassAddrs types.ImmutableAccAddresses
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -95,6 +102,7 @@ func NewKeeper(
 	attrKeeper types.AttrKeeper,
 	nameKeeper types.NameKeeper,
 	ibcTransferServer types.IbcTransferMsgServer,
+	reqAttrBypassAddrs []sdk.AccAddress,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -114,6 +122,7 @@ func NewKeeper(
 		markerModuleAddr:      authtypes.NewModuleAddress(types.CoinPoolName),
 		ibcTransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
 		ibcTransferServer:     ibcTransferServer,
+		reqAttrBypassAddrs:    types.NewImmutableAccAddresses(reqAttrBypassAddrs),
 	}
 	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
 	return rv
@@ -206,4 +215,14 @@ func (k Keeper) AddSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddre
 func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.DenySendKey(markerAddr, senderAddr))
+}
+
+// GetReqAttrBypassAddrs returns a deep copy of the addresses that bypass the required attributes checking.
+func (k Keeper) GetReqAttrBypassAddrs() []sdk.AccAddress {
+	return k.reqAttrBypassAddrs.GetSlice()
+}
+
+// IsReqAttrBypassAddr returns true if the provided addr can bypass the required attributes checking.
+func (k Keeper) IsReqAttrBypassAddr(addr sdk.AccAddress) bool {
+	return k.reqAttrBypassAddrs.Has(addr)
 }

@@ -22,6 +22,7 @@ All created/modified state objects specified by each message are defined within 
   - [Msg/GrantAllowanceRequest](#msggrantallowancerequest)
   - [Msg/SupplyIncreaseProposalRequest](#msgsupplyincreaseproposalrequest)
   - [Msg/UpdateRequiredAttributesRequest](#msgupdaterequiredattributesrequest)
+  - [Msg/UpdateSendDenyListRequest](#msgupdatesenddenylistrequest)
   - [Msg/UpdateForcedTransferRequest](#msgupdateforcedtransferrequest)
   - [Msg/SetAccountDataRequest](#msgsetaccountdatarequest)
 
