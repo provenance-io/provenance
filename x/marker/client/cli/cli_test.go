@@ -1760,57 +1760,114 @@ func (s *IntegrationTestSuite) TestParseAccessGrantFromString() {
 	testCases := []struct {
 		name              string
 		accessGrantString string
-		expectPanic       bool
-		expectedResult    []types.AccessGrant
+		expPanic          bool
+		expResult         []types.AccessGrant
 	}{
 		{
-			"successfully parses empty string",
-			"",
-			false,
-			[]types.AccessGrant{},
+			name:              "successfully parses empty string",
+			accessGrantString: "",
+			expPanic:          false,
+			expResult:         []types.AccessGrant{},
 		},
 		{
-			"fails parsing invalid string",
-			"blah",
-			true,
-			[]types.AccessGrant{},
+			name:              "fails parsing invalid string",
+			accessGrantString: "blah",
+			expPanic:          true,
+			expResult:         []types.AccessGrant{},
 		},
 		{
-			"should fail empty list of permissions",
-			",,;",
-			true,
-			[]types.AccessGrant{},
+			name:              "should fail empty list of permissions",
+			accessGrantString: ",,;",
+			expPanic:          true,
+			expResult:         []types.AccessGrant{},
 		},
 		{
-			"should fail address is not valid",
-			"NotAnAddress,mint;",
-			true,
-			[]types.AccessGrant{},
+			name:              "should fail address is not valid",
+			accessGrantString: "NotAnAddress,mint;",
+			expPanic:          true,
+			expResult:         []types.AccessGrant{},
 		},
 		{
-			"should succeed to add access type",
-			fmt.Sprintf("%s,mint;", s.accountAddresses[0].String()),
-			false,
-			[]types.AccessGrant{markertypes.AccessGrant{Address: s.accountAddresses[0].String(), Permissions: []markertypes.Access{markertypes.Access_Mint}}},
+			name:              "should succeed to add access type",
+			accessGrantString: fmt.Sprintf("%s,mint;", s.accountAddresses[0].String()),
+			expPanic:          false,
+			expResult:         []types.AccessGrant{markertypes.AccessGrant{Address: s.accountAddresses[0].String(), Permissions: []markertypes.Access{markertypes.Access_Mint}}},
 		},
 		{
-			"should succeed to add access type",
-			fmt.Sprintf("%s,mint;", s.accountAddresses[0].String()),
-			false,
-			[]types.AccessGrant{markertypes.AccessGrant{Address: s.accountAddresses[0].String(), Permissions: []markertypes.Access{markertypes.Access_Mint}}},
+			name:              "should succeed to add access type",
+			accessGrantString: fmt.Sprintf("%s,mint;", s.accountAddresses[0].String()),
+			expPanic:          false,
+			expResult:         []types.AccessGrant{markertypes.AccessGrant{Address: s.accountAddresses[0].String(), Permissions: []markertypes.Access{markertypes.Access_Mint}}},
 		},
 	}
 	for _, tc := range testCases {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			if tc.expectPanic {
+			if tc.expPanic {
 				panicFunc := func() { markercli.ParseAccessGrantFromString(tc.accessGrantString) }
 				s.Assert().Panics(panicFunc)
 
 			} else {
 				result := markercli.ParseAccessGrantFromString(tc.accessGrantString)
-				s.Assert().ElementsMatch(result, tc.expectedResult)
+				s.Assert().ElementsMatch(result, tc.expResult)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestParseNetAssertValueString() {
+	testCases := []struct {
+		name           string
+		netAssetValues string
+		expPanic       bool
+		expResult      []types.NetAssetValue
+	}{
+		{
+			name:           "successfully parses empty string",
+			netAssetValues: "",
+			expPanic:       false,
+			expResult:      []types.NetAssetValue{},
+		},
+		{
+			name:           "invalid coin",
+			netAssetValues: "notacoin,1",
+			expPanic:       true,
+		},
+		{
+			name:           "invalid volume string",
+			netAssetValues: "1hotdog,invalidvolume",
+			expPanic:       true,
+		},
+		{
+			name:           "invalid amount of args",
+			netAssetValues: "1hotdog,invalidvolume,notsupposedtobehere",
+			expPanic:       true,
+		},
+		{
+			name:           "successfully parse single nav",
+			netAssetValues: "1hotdog,10",
+			expPanic:       false,
+			expResult:      []types.NetAssetValue{{PricePerToken: sdk.NewInt64Coin("hotdog", 1), Volume: 10}},
+		},
+		{
+			name:           "successfully parse multi nav",
+			netAssetValues: "1hotdog,10;20jackthecat,40",
+			expPanic:       false,
+			expResult:      []types.NetAssetValue{{PricePerToken: sdk.NewInt64Coin("hotdog", 1), Volume: 10}, {PricePerToken: sdk.NewInt64Coin("jackthecat", 20), Volume: 40}},
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			if tc.expPanic {
+				panicFunc := func() { markercli.ParseNetAssertValueString(tc.netAssetValues) }
+				s.Assert().Panics(panicFunc)
+
+			} else {
+				result := markercli.ParseNetAssertValueString(tc.netAssetValues)
+				s.Assert().ElementsMatch(result, tc.expResult)
 			}
 		})
 	}

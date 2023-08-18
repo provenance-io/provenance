@@ -1209,6 +1209,9 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 // ParseNetAssertValueString splits string (example address1,perm1,perm2...;address2, perm1...) to list of NetAssetValue's
 func ParseNetAssertValueString(netAssetValuesString string) []types.NetAssetValue {
 	navs := strings.Split(netAssetValuesString, ";")
+	if len(navs) == 1 && len(navs[0]) == 0 {
+		return []types.NetAssetValue{}
+	}
 	netAssetValues := make([]types.NetAssetValue, len(navs))
 	for i, nav := range navs {
 		parts := strings.Split(nav, ",")
