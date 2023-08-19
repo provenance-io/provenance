@@ -159,7 +159,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			event, err := sdk.TypedEventToEvent(tc.tev)
 			require.NoError(t, err, "TypedEventToEvent error")
-			if assert.NotNilf(t, event, "TypedEventToEvent result") {
+			if assert.NotNil(t, event, "TypedEventToEvent result") {
 				assert.Equal(t, tc.expEvent.Type, event.Type, "event type")
 				expAttrs := attrsToStrings(tc.expEvent.Attributes)
 				actAttrs := attrsToStrings(event.Attributes)

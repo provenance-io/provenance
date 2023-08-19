@@ -21,6 +21,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/simulation"
 )
@@ -297,13 +298,11 @@ func TestUpdateBankGenStateForHolds(t *testing.T) {
 			testFunc := func() {
 				simulation.UpdateBankGenStateForHolds(tc.bankGen, tc.holdGen)
 			}
-			if len(tc.expPanic) > 0 {
-				require.PanicsWithError(t, tc.expPanic, testFunc, "UpdateBankGenStateForHolds")
-			} else {
-				require.NotPanics(t, testFunc, "UpdateBankGenStateForHolds")
+			testutil.RequirePanicEquals(t, testFunc, tc.expPanic, "UpdateBankGenStateForHolds")
+			if tc.expBankGen != nil {
 				actualBals := balsStrings(tc.bankGen)
 				assert.Equal(t, expectedBals, actualBals, "resulting bank genesis balances")
-				assert.Equal(t, tc.expBankGen.Supply.Sort(), tc.bankGen.Supply.Sort(), "resulting bank genesis supply")
+				assert.Equal(t, tc.expBankGen.Supply.String(), tc.bankGen.Supply.String(), "resulting bank genesis supply")
 			}
 
 			actualHolds := holdsStrings(tc.holdGen)
@@ -521,12 +520,10 @@ func TestRandomizedGenState(t *testing.T) {
 			testFunc := func() {
 				simulation.RandomizedGenState(simState)
 			}
+			testutil.RequirePanicEquals(t, testFunc, tc.expPanic, "RandomizedGenState")
 			if len(tc.expPanic) > 0 {
-				require.PanicsWithError(t, tc.expPanic, testFunc, "RandomizedGenState")
 				// No further testing to do.
 				return
-			} else {
-				require.NotPanics(t, testFunc, "RandomizedGenState")
 			}
 
 			// End stdout capturing and get it.

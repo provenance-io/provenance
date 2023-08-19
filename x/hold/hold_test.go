@@ -3,11 +3,12 @@ package hold
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/testutil"
 )
 
 func TestAccountHold_Validate(t *testing.T) {
@@ -63,11 +64,7 @@ func TestAccountHold_Validate(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.ae.Validate()
-			if len(tc.exp) > 0 {
-				assert.EqualError(t, err, tc.exp, "Validate()")
-			} else {
-				assert.NoError(t, err, tc.exp, "Validate()")
-			}
+			testutil.AssertErrorValue(t, err, tc.exp, "Validate()")
 		})
 	}
 }

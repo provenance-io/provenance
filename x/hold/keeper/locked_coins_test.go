@@ -71,7 +71,7 @@ func (s *TestSuite) TestKeeper_GetLockedCoins() {
 			testFunc := func() {
 				coins = s.keeper.GetLockedCoins(tc.ctx, tc.addr)
 			}
-			s.assertPanicContents(testFunc, tc.expPanic, "GetLockedCoins")
+			s.requirePanicContents(testFunc, tc.expPanic, "GetLockedCoins")
 			s.Assert().Equal(tc.expCoins.String(), coins.String(), "GetLockedCoins result")
 		})
 	}
@@ -163,7 +163,7 @@ func (s *TestSuite) TestBank_LockedCoins() {
 			testFunc := func() {
 				coins = s.app.BankKeeper.LockedCoins(tc.ctx, tc.addr)
 			}
-			s.assertPanicContents(testFunc, tc.expPanic, "LockedCoins")
+			s.requirePanicContents(testFunc, tc.expPanic, "LockedCoins")
 			s.Assert().Equal(tc.expCoins.String(), coins.String(), "LockedCoins result")
 		})
 	}
@@ -255,7 +255,7 @@ func (s *TestSuite) TestBank_SpendableCoins() {
 			testFunc := func() {
 				coins = s.app.BankKeeper.SpendableCoins(tc.ctx, tc.addr)
 			}
-			s.assertPanicContents(testFunc, tc.expPanic, "SpendableCoins")
+			s.requirePanicContents(testFunc, tc.expPanic, "SpendableCoins")
 			s.Assert().Equal(tc.expCoins.String(), coins.String(), "SpendableCoins result")
 		})
 	}

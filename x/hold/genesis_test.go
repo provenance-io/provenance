@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/testutil"
 )
 
 func TestDefaultGenesisState(t *testing.T) {
@@ -152,15 +154,7 @@ func TestGenesisState_Validate(t *testing.T) {
 				err = tc.genState.Validate()
 			}
 			require.NotPanics(t, testFunc, "Validate()")
-			if len(tc.expErr) > 0 {
-				if assert.Error(t, err, "Validate()") {
-					for _, exp := range tc.expErr {
-						assert.ErrorContains(t, err, exp, "Validate()\nExpected substring: %q", exp)
-					}
-				}
-			} else {
-				assert.NoError(t, err, "Validate()")
-			}
+			testutil.AssertErrorContents(t, err, tc.expErr, "Validate()")
 		})
 	}
 }

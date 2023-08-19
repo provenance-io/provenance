@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"context"
 	"fmt"
-	"runtime/debug"
 	"sort"
 	"strings"
 	"testing"
@@ -12,7 +11,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/exp/maps"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
@@ -21,9 +19,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktest "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/keeper"
 )
@@ -65,7 +64,6 @@ func (s *TestSuite) SetupTest() {
 	s.addr3 = addrs[2]
 	s.addr4 = addrs[3]
 	s.addr5 = addrs[4]
-
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -106,124 +104,15 @@ func (s *TestSuite) intStr(amount string) sdkmath.Int {
 // Otherwise, it asseerts that the error contains each of the entries in the contains slice.
 // Returns true if it's all good, false if one or more assertion failed.
 func (s *TestSuite) assertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
-	s.T().Helper()
-	if len(contains) == 0 {
-		return s.Assert().NoError(theError, msgAndArgs...)
-	}
-	if !s.Assert().Error(theError, msgAndArgs...) {
-		s.T().Logf("Error was expected to contain:\n\t\t\"%s\"", strings.Join(contains, "\"\n\t\t\""))
-		return false
-	}
-
-	hasAll := true
-	for _, expInErr := range contains {
-		hasAll = s.Assert().ErrorContains(theError, expInErr, msgAndArgs...) && hasAll
-	}
-	return hasAll
-}
-
-// panicTestFunc is a type declaration for a function that will be tested for panic.
-type panicTestFunc func()
-
-// didPanic safely executes the provided function and returns info about any panic it might have encountered.
-func didPanic(f panicTestFunc) (didPanic bool, message interface{}, stack string) {
-	didPanic = true
-
-	defer func() {
-		message = recover()
-		if didPanic {
-			stack = string(debug.Stack())
-		}
-	}()
-
-	f()
-	didPanic = false
-
-	return
-}
-
-// assertPanicContents asserts that, if contains is empty, the provided func does not panic
-// Otherwise, asserts that the func panics and that its panic message contains each of the provided strings.
-func (s *TestSuite) assertPanicContents(f panicTestFunc, contains []string, msgAndArgs ...interface{}) bool {
-	s.T().Helper()
-
-	funcDidPanic, panicValue, panickedStack := didPanic(f)
-	panicMsg := fmt.Sprintf("%v", panicValue)
-
-	if len(contains) == 0 {
-		if !funcDidPanic {
-			return true
-		}
-		msg := fmt.Sprintf("func %#v should not panic, but did.", f)
-		msg += fmt.Sprintf("\n\tPanic message:\t%q", panicMsg)
-		msg += fmt.Sprintf("\n\t  Panic value:\t%#v", panicValue)
-		msg += fmt.Sprintf("\n\t  Panic stack:\t%s", panickedStack)
-		return s.Assert().Fail(msg, msgAndArgs...)
-	}
-
-	if !funcDidPanic {
-		msg := fmt.Sprintf("func %#v should panic, but did not.", f)
-		for _, exp := range contains {
-			msg += fmt.Sprintf("\n\tExpected to contain:\t%q", exp)
-		}
-		return s.Assert().Fail(msg, msgAndArgs...)
-	}
-
-	var missing []string
-	for _, exp := range contains {
-		if !strings.Contains(panicMsg, exp) {
-			missing = append(missing, exp)
-		}
-	}
-
-	if len(missing) == 0 {
-		return true
-	}
-
-	msg := fmt.Sprintf("func %#v panic message incorrect.", f)
-	msg += fmt.Sprintf("\n\t   Panic message:\t%q", panicMsg)
-	for _, exp := range missing {
-		msg += fmt.Sprintf("\n\tDoes not contain:\t%q", exp)
-	}
-	msg += fmt.Sprintf("\n\tPanic value:\t%#v", panicValue)
-	msg += fmt.Sprintf("\n\tPanic stack:\t%s", panickedStack)
-	return s.Assert().Fail(msg, msgAndArgs)
+	return testutil.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
 }
 
 // requirePanicContents asserts that, if contains is empty, the provided func does not panic
 // Otherwise, asserts that the func panics and that its panic message contains each of the provided strings.
 //
 // If the assertion fails, the test is halted.
-func (s *TestSuite) requirePanicContents(f panicTestFunc, contains []string, msgAndArgs ...interface{}) {
-	s.T().Helper()
-	if s.assertPanicContents(f, contains, msgAndArgs...) {
-		return
-	}
-	s.T().FailNow()
-}
-
-// assertNotPanicsNoErrorf asserts that the code inside the provided function does not panic
-// and that it does not return an error.
-// Returns true if it neither panics nor errors.
-func (s *TestSuite) assertNotPanicsNoErrorf(f func() error, msg string, args ...interface{}) bool {
-	s.T().Helper()
-	var err error
-	if !s.Assert().NotPanicsf(func() { err = f() }, msg, args...) {
-		return false
-	}
-	return s.Assert().NoErrorf(err, msg, args...)
-}
-
-// requireNotPanicsNoErrorf asserts that the code inside the provided function does not panic
-// and that it does not return an error.
-//
-// If the assertion fails, the test is halted.
-func (s *TestSuite) requireNotPanicsNoErrorf(f func() error, msg string, args ...interface{}) {
-	s.T().Helper()
-	if s.assertNotPanicsNoErrorf(f, msg, args...) {
-		return
-	}
-	s.T().FailNow()
+func (s *TestSuite) requirePanicContents(f testutil.PanicTestFunc, contains []string, msgAndArgs ...interface{}) {
+	testutil.RequirePanicContents(s.T(), f, contains, msgAndArgs...)
 }
 
 // getAddrName returns the name of the variable in this TestSuite holding the provided address.
@@ -251,10 +140,9 @@ func (s *TestSuite) getStore() sdk.KVStore {
 
 // requireSetHoldCoinAmount calls setHoldCoinAmount making sure it doesn't panic or return an error.
 func (s *TestSuite) requireSetHoldCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) {
-	testFunc := func() error {
+	testutil.RequireNotPanicsNoErrorf(s.T(), func() error {
 		return s.keeper.SetHoldCoinAmount(store, addr, denom, amount)
-	}
-	s.requireNotPanicsNoErrorf(testFunc, "setHoldCoinAmount(%s, %s%s)", s.getAddrName(addr), amount, denom)
+	}, "setHoldCoinAmount(%s, %s%s)", s.getAddrName(addr), amount, denom)
 }
 
 // setHoldCoinAmountRaw sets a hold coin amount to the provided "amount" string.
@@ -262,11 +150,17 @@ func (s *TestSuite) setHoldCoinAmountRaw(store sdk.KVStore, addr sdk.AccAddress,
 	store.Set(keeper.CreateHoldCoinKey(addr, denom), []byte(amount))
 }
 
-// requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or error.
+// requireFundAccount calls banktest.FundAccount, making sure it doesn't panic or return an error.
 func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
-	s.requireNotPanicsNoErrorf(func() error {
-		return testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, s.coins(coins))
+	testutil.RequireNotPanicsNoErrorf(s.T(), func() error {
+		return banktest.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, s.coins(coins))
 	}, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
+}
+
+// assertEqualEvents asserts that the expected events equal the actual events.
+// Returns success (true = they're equal, false = they're different).
+func (s *TestSuite) assertEqualEvents(expected, actual sdk.Events, msgAndArgs ...interface{}) bool {
+	return testutil.AssertEqualEvents(s.T(), expected, actual, msgAndArgs...)
 }
 
 // clearHoldState will delete all entries from the hold store.
@@ -316,86 +210,6 @@ func (s *TestSuite) dumpHoldState() []string {
 	}
 
 	return rv
-}
-
-// prependToEach prepends the provided prefix to each of the provide lines.
-func (s *TestSuite) prependToEach(prefix string, lines []string) []string {
-	for i, line := range lines {
-		lines[i] = prefix + line
-	}
-	return lines
-}
-
-// eventsToStrings converts events to strings representing the events, one line per attribute.
-func (s *TestSuite) eventsToStrings(events sdk.Events) []string {
-	var rv []string
-	for i, event := range events {
-		rv = append(rv, s.prependToEach(fmt.Sprintf("[%d]", i), s.eventToStrings(event))...)
-	}
-	return rv
-}
-
-// eventToStrings converts a single event to strings, one string per attribute.
-func (s *TestSuite) eventToStrings(event sdk.Event) []string {
-	return s.prependToEach(event.Type, s.attrsToStrings(event.Attributes))
-}
-
-// attrsToStrings creates and returns a string for each attribute.
-func (s *TestSuite) attrsToStrings(attrs []abci.EventAttribute) []string {
-	rv := make([]string, len(attrs))
-	for i, attr := range attrs {
-		rv[i] = fmt.Sprintf("[%d]: %q = %q", i, string(attr.Key), string(attr.Value))
-		if attr.Index {
-			rv[i] = rv[i] + " (indexed)"
-		}
-	}
-	return rv
-}
-
-func (s *TestSuite) TestEventsToStrings() {
-	// This test is just making sure that the strings generated by eventsToStrings have
-	// all the needed info in them for accurate comparisons. Tests could erroneously pass
-	// if eventsToStrings isn't doing what's expected, e.g. if it were always returning an empty slice.
-
-	addrAdd := sdk.AccAddress("address_add_event___")
-	coinsAdd := s.coins("97acorn,12banana")
-	reason := "just some test reason"
-	eventAddT := hold.NewEventHoldAdded(addrAdd, coinsAdd, reason)
-	eventAdd, err := sdk.TypedEventToEvent(eventAddT)
-	s.Require().NoError(err, "TypedEventToEvent EventHoldAdded")
-
-	addrRel := sdk.AccAddress("address_rel_event___")
-	coinsRel := s.coins("13cucumber,81dill")
-	eventRelT := hold.NewEventHoldReleased(addrRel, coinsRel)
-	eventRel, err := sdk.TypedEventToEvent(eventRelT)
-	s.Require().NoError(err, "TypedEventToEvent EventHoldReleased")
-
-	events := sdk.Events{
-		eventAdd,
-		eventRel,
-	}
-
-	// Set the index flag on the first attribute of the first event so we make sure that makes a difference.
-	events[0].Attributes[0].Index = true
-
-	expected := []string{
-		fmt.Sprintf("[0]provenance.hold.v1.EventHoldAdded[0]: \"address\" = \"\\\"%s\\\"\" (indexed)", addrAdd.String()),
-		fmt.Sprintf("[0]provenance.hold.v1.EventHoldAdded[1]: \"amount\" = \"\\\"%s\\\"\"", coinsAdd.String()),
-		fmt.Sprintf("[0]provenance.hold.v1.EventHoldAdded[2]: \"reason\" = \"\\\"%s\\\"\"", reason),
-		fmt.Sprintf("[1]provenance.hold.v1.EventHoldReleased[0]: \"address\" = \"\\\"%s\\\"\"", addrRel.String()),
-		fmt.Sprintf("[1]provenance.hold.v1.EventHoldReleased[1]: \"amount\" = \"\\\"%s\\\"\"", coinsRel.String()),
-	}
-
-	actual := s.eventsToStrings(events)
-	s.Assert().Equal(expected, actual, "events strings")
-}
-
-// assertEqualEvents asserts that the expected events equal the actual events.
-// Returns success (true = they're equal, false = they're different).
-func (s *TestSuite) assertEqualEvents(expected, actual sdk.Events, msgAndArgs ...interface{}) bool {
-	expectedStrs := s.eventsToStrings(expected)
-	actualStrs := s.eventsToStrings(actual)
-	return s.Assert().Equal(expectedStrs, actualStrs, msgAndArgs...)
 }
 
 func (s *TestSuite) TestKeeper_ValidateNewHold() {
@@ -1584,7 +1398,7 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 	s.Run("setup: process steps", func() {
 		for i, step := range steps {
 			reqNoPanicNoErr := func(f func() error, msg string, args ...interface{}) {
-				s.requireNotPanicsNoErrorf(f, "%4ds: "+msg, append([]interface{}{step}, args...)...)
+				testutil.RequireNotPanicsNoErrorf(s.T(), f, "%4ds: "+msg, append([]interface{}{step}, args...)...)
 			}
 			blockTime := startTime.Add(time.Duration(step) * time.Second)
 			ctx = s.sdkCtx.WithBlockTime(blockTime)
@@ -1596,7 +1410,7 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 				amt := coins(action.fund)
 				logf(step, "Adding funds: %s", amtOf(amt))
 				reqNoPanicNoErr(func() error {
-					return testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, amt)
+					return banktest.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, amt)
 				}, "FundAccount(addr, %q)", amt)
 			}
 			if action.delegate < 0 {
