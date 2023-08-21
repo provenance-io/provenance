@@ -109,6 +109,8 @@ func RequirePanicContentsf(t TB, f PanicTestFunc, contains []string, msg string,
 // And if a panic is not expected, asserts that the provided func does not panic.
 //
 // Returns true if it's all good, false if an assertion fails.
+//
+// This can be preferred over PanicsWithError or PanicsWithValue because it doesn't require the panic to be a specific type.
 func AssertPanicEquals(t TB, f PanicTestFunc, expected string, msgAndArgs ...interface{}) bool {
 	t.Helper()
 
@@ -153,6 +155,8 @@ func AssertPanicEquals(t TB, f PanicTestFunc, expected string, msgAndArgs ...int
 // And if a panic is not expected, asserts that the provided func does not panic.
 //
 // Returns if it's all good, halts the test if the assertion failed.
+//
+// This can be preferred over PanicsWithError or PanicsWithValue because it doesn't require the panic to be a specific type.
 func RequirePanicEquals(t TB, f PanicTestFunc, expected string, msgAndArgs ...interface{}) {
 	t.Helper()
 	if !AssertPanicEquals(t, f, expected, msgAndArgs...) {
@@ -164,6 +168,8 @@ func RequirePanicEquals(t TB, f PanicTestFunc, expected string, msgAndArgs ...in
 // And if a panic is not expected, asserts that the provided func does not panic.
 //
 // Returns true if it's all good, false if an assertion fails.
+//
+// This can be preferred over PanicsWithErrorf or PanicsWithValuef because it doesn't require the panic to be a specific type.
 func AssertPanicEqualsf(t TB, f PanicTestFunc, expected string, msg string, args ...interface{}) bool {
 	return AssertPanicEquals(t, f, expected, append([]interface{}{msg}, args...)...)
 }
@@ -172,6 +178,8 @@ func AssertPanicEqualsf(t TB, f PanicTestFunc, expected string, msg string, args
 // And if a panic is not expected, asserts that the provided func does not panic.
 //
 // Returns if it's all good, halts the test if the assertion failed.
+//
+// This can be preferred over PanicsWithErrorf or PanicsWithValuef because it doesn't require the panic to be a specific type.
 func RequirePanicEqualsf(t TB, f PanicTestFunc, expected string, msg string, args ...interface{}) {
 	RequirePanicEquals(t, f, expected, append([]interface{}{msg}, args...)...)
 }
