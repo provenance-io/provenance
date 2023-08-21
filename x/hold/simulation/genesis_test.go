@@ -313,10 +313,13 @@ func TestUpdateBankGenStateForHolds(t *testing.T) {
 
 func TestHoldsString(t *testing.T) {
 	denom := "carp"
+	c := func(amt int64) sdk.Coins {
+		return sdk.NewCoins(sdk.NewInt64Coin(denom, amt))
+	}
 	ah := func(addr sdk.AccAddress, amt int64) *hold.AccountHold {
 		return &hold.AccountHold{
 			Address: addr.String(),
-			Amount:  sdk.NewCoins(sdk.NewInt64Coin(denom, amt)),
+			Amount:  c(amt),
 		}
 	}
 
@@ -328,18 +331,52 @@ func TestHoldsString(t *testing.T) {
 	tests := []struct {
 		name  string
 		holds []*hold.AccountHold
+		exp   string
 	}{
-		{name: "nil holds", holds: nil},
-		{name: "one hold", holds: []*hold.AccountHold{ah(addr1, 11)}},
-		{name: "two holds", holds: []*hold.AccountHold{ah(addr1, 11), ah(addr2, 22)}},
-		{name: "two holds reversed", holds: []*hold.AccountHold{ah(addr2, 22), ah(addr1, 11)}},
+		{name: "nil holds", holds: nil, exp: "{}"},
+		{name: "empty holds", holds: []*hold.AccountHold{}, exp: "{}"},
+		{
+			name:  "one hold",
+			holds: []*hold.AccountHold{ah(addr1, 11)},
+			exp: "{\n" +
+				fmt.Sprintf(" %q:%q\n", addr1.String(), c(11)) +
+				"}",
+		},
+		{
+			name:  "two holds",
+			holds: []*hold.AccountHold{ah(addr1, 11), ah(addr2, 22)},
+			exp: "{\n" +
+				fmt.Sprintf(" %q:%q,\n", addr1.String(), c(11)) +
+				fmt.Sprintf(" %q:%q\n", addr2.String(), c(22)) +
+				"}",
+		},
+		{
+			name:  "two holds reversed",
+			holds: []*hold.AccountHold{ah(addr2, 22), ah(addr1, 11)},
+			exp: "{\n" +
+				fmt.Sprintf(" %q:%q,\n", addr2.String(), c(22)) +
+				fmt.Sprintf(" %q:%q\n", addr1.String(), c(11)) +
+				"}",
+		},
 		{
 			name:  "four holds",
 			holds: []*hold.AccountHold{ah(addr1, 11), ah(addr2, 22), ah(addr3, 33), ah(addr4, 44)},
+			exp: "{\n" +
+				fmt.Sprintf(" %q:%q,\n", addr1.String(), c(11)) +
+				fmt.Sprintf(" %q:%q,\n", addr2.String(), c(22)) +
+				fmt.Sprintf(" %q:%q,\n", addr3.String(), c(33)) +
+				fmt.Sprintf(" %q:%q\n", addr4.String(), c(44)) +
+				"}",
 		},
 		{
 			name:  "four shuffled holds",
 			holds: []*hold.AccountHold{ah(addr3, 33), ah(addr1, 11), ah(addr4, 44), ah(addr2, 22)},
+			exp: "{\n" +
+				fmt.Sprintf(" %q:%q,\n", addr3.String(), c(33)) +
+				fmt.Sprintf(" %q:%q,\n", addr1.String(), c(11)) +
+				fmt.Sprintf(" %q:%q,\n", addr4.String(), c(44)) +
+				fmt.Sprintf(" %q:%q\n", addr2.String(), c(22)) +
+				"}",
 		},
 	}
 
@@ -349,16 +386,8 @@ func TestHoldsString(t *testing.T) {
 			if len(tc.holds) == 0 {
 				assert.Equal(t, "{}", result, "HoldsString result")
 			} else {
-				expected := make([]string, len(tc.holds)+2)
-				expected[0] = "{"
-				for i, h := range tc.holds {
-					expected[i+1] = ` "` + h.Address + `":"` + h.Amount.String() + `"`
-					if i < len(tc.holds)-1 {
-						expected[i+1] = expected[i+1] + ","
-					}
-				}
-				expected[len(expected)-1] = "}"
-
+				// Splitting on newlines because .Equals failure output is better on a slice of strings than a single multi-line string.
+				expected := strings.Split(tc.exp, "\n")
 				actual := strings.Split(result, "\n")
 				assert.Equal(t, expected, actual, "HoldsString result")
 			}
