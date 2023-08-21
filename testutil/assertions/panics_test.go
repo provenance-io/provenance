@@ -44,6 +44,21 @@ func TestDidPanic(t *testing.T) {
 			expPanicked: true,
 			expMessage:  "my hair is on fire",
 		},
+		{
+			name: "panic with anonymous struct",
+			f: func() {
+				called = true
+				panic(struct {
+					name  string
+					value int
+				}{name: "you don't know me", value: 43})
+			},
+			expPanicked: true,
+			expMessage: struct {
+				name  string
+				value int
+			}{name: "you don't know me", value: 43},
+		},
 	}
 
 	for _, tc := range tests {
@@ -142,6 +157,33 @@ func getPanicContentsTestCases() []*panicContentsTestCase {
 			f:         panicFuncWithString("this is a panic string"),
 			contains:  []string{"this is a", "a panic string"},
 			expOutput: nil,
+		}),
+		newPanicContentsTestCase(panicContentsTestCase{
+			name: "panics with struct as expected",
+			f: func() {
+				panic(struct {
+					name  string
+					value int
+				}{name: "who am i", value: 43})
+			},
+			contains:  []string{"who am i", "43"},
+			expOutput: nil,
+		}),
+		newPanicContentsTestCase(panicContentsTestCase{
+			name: "panics with struct missing contains",
+			f: func() {
+				panic(struct {
+					name  string
+					value int
+				}{name: "who am i", value: 43})
+			},
+			contains: []string{"who am i", "43", "bananas"},
+			expOutput: []string{
+				errorLead + "func (assertions.PanicTestFunc)",
+				"panic message incorrect.",
+				blankLead + "\t   Panic message:\t\"{who am i 43}\"",
+				blankLead + "\tDoes not contain:\t\"bananas\"",
+			},
 		}),
 		newPanicContentsTestCase(panicContentsTestCase{
 			name:     "error panic missing first contains",
@@ -377,6 +419,17 @@ func getPanicEqualsTestCases() []*panicEqualsTestCase {
 			expOutput: nil,
 		}),
 		newPanicEqualsTestCase(panicEqualsTestCase{
+			name: "panics with struct as expected",
+			f: func() {
+				panic(struct {
+					msg   string
+					value int
+				}{msg: "no paint for outhouse", value: 986})
+			},
+			expected:  "{no paint for outhouse 986}",
+			expOutput: nil,
+		}),
+		newPanicEqualsTestCase(panicEqualsTestCase{
 			name:     "panics with error different from expected",
 			f:        panicFuncWithError("this dip is tepid"),
 			expected: "this dip is ice cold",
@@ -400,6 +453,25 @@ func getPanicEqualsTestCases() []*panicEqualsTestCase {
 				blankLead + "\t   Panic message:\t\"this dip is tepid\"",
 				blankLead + "\tExpected message:\t\"this dip is ice cold\"",
 				blankLead + "\tPanic value:\t\"this dip is tepid\"",
+				blankLead + "\tPanic stack:",
+				"assertions.AssertPanicEquals",
+			},
+		}),
+		newPanicEqualsTestCase(panicEqualsTestCase{
+			name: "panics with struct different from expected",
+			f: func() {
+				panic(struct {
+					msg   string
+					value int
+				}{msg: "no paint for outhouse", value: 986})
+			},
+			expected: "{no aint for outhouse 987}",
+			expOutput: []string{
+				errorLead + "func (assertions.PanicTestFunc)",
+				"panic message incorrect.",
+				blankLead + "\t   Panic message:\t\"{no paint for outhouse 986}\"",
+				blankLead + "\tExpected message:\t\"{no aint for outhouse 987}\"",
+				blankLead + "\tPanic value:\tstruct { msg string; value int }{msg:\"no paint for outhouse\", value:986}",
 				blankLead + "\tPanic stack:",
 				"assertions.AssertPanicEquals",
 			},
