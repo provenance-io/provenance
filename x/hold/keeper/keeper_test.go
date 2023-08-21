@@ -352,35 +352,35 @@ func (s *TestSuite) TestKeeper_AddHold() {
 		funds     sdk.Coins
 		spendBal  sdk.Coins
 		expErr    []string
-		finalEsc  sdk.Coins
+		finalHold sdk.Coins
 		expEvents sdk.Events
 	}{
 		{
-			name:     "nil funds",
-			addr:     s.addr1,
-			funds:    nil,
-			finalEsc: s.coins("99banana,3cucumber"),
+			name:      "nil funds",
+			addr:      s.addr1,
+			funds:     nil,
+			finalHold: s.coins("99banana,3cucumber"),
 		},
 		{
-			name:     "empty funds",
-			addr:     s.addr1,
-			funds:    sdk.Coins{},
-			finalEsc: s.coins("99banana,3cucumber"),
+			name:      "empty funds",
+			addr:      s.addr1,
+			funds:     sdk.Coins{},
+			finalHold: s.coins("99banana,3cucumber"),
 		},
 		{
-			name:     "insufficent spendable: some already on hold",
-			addr:     s.addr1,
-			funds:    s.coins("2cucumber"),
-			spendBal: s.coins("1cucumber"),
-			expErr:   []string{"spendable balance 1cucumber is less than hold amount 2cucumber"},
-			finalEsc: s.coins("99banana,3cucumber"),
+			name:      "insufficent spendable: some already on hold",
+			addr:      s.addr1,
+			funds:     s.coins("2cucumber"),
+			spendBal:  s.coins("1cucumber"),
+			expErr:    []string{"spendable balance 1cucumber is less than hold amount 2cucumber"},
+			finalHold: s.coins("99banana,3cucumber"),
 		},
 		{
 			name:      "sufficient spendable: add to existing entry",
 			addr:      s.addr1,
 			funds:     s.coins("2banana"),
 			spendBal:  s.coins("2banana,9cucumber,11durian"),
-			finalEsc:  s.coins("101banana,3cucumber"),
+			finalHold: s.coins("101banana,3cucumber"),
 			expEvents: makeEvents(s.addr1, s.coins("2banana"), "sufficient spendable: add to existing entry"),
 		},
 		{
@@ -388,7 +388,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			addr:      s.addr2,
 			funds:     s.coins("99hugecoin"),
 			spendBal:  s.coins("5000000000000000000000hugecoin"),
-			finalEsc:  s.coins("1844674407370955161599hugecoin,10000000000000000000mediumcoin"),
+			finalHold: s.coins("1844674407370955161599hugecoin,10000000000000000000mediumcoin"),
 			expEvents: makeEvents(s.addr2, s.coins("99hugecoin"), "small amount added to existing amount over max uint64"),
 		},
 		{
@@ -396,7 +396,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			addr:      s.addr2,
 			funds:     s.coins("2000000000000000000000hugecoin"),
 			spendBal:  s.coins("5000000000000000000000hugecoin"),
-			finalEsc:  s.coins("3844674407370955161599hugecoin,10000000000000000000mediumcoin"),
+			finalHold: s.coins("3844674407370955161599hugecoin,10000000000000000000mediumcoin"),
 			expEvents: makeEvents(s.addr2, s.coins("2000000000000000000000hugecoin"), "amount over max uint64 added to existing amount over max uint64"),
 		},
 		{
@@ -404,7 +404,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			addr:      s.addr2,
 			funds:     s.coins("18446744073709551616bigcoin"),
 			spendBal:  s.coins("20000000000000000000bigcoin"),
-			finalEsc:  s.coins("18446744073709551616bigcoin,3844674407370955161599hugecoin,10000000000000000000mediumcoin"),
+			finalHold: s.coins("18446744073709551616bigcoin,3844674407370955161599hugecoin,10000000000000000000mediumcoin"),
 			expEvents: makeEvents(s.addr2, s.coins("18446744073709551616bigcoin"), "amount over max uint64 added to new entry"),
 		},
 		{
@@ -412,7 +412,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			addr:      s.addr2,
 			funds:     s.coins("10000000000000000000mediumcoin"),
 			spendBal:  s.coins("10000000000000000000mediumcoin"),
-			finalEsc:  s.coins("18446744073709551616bigcoin,3844674407370955161599hugecoin,20000000000000000000mediumcoin"),
+			finalHold: s.coins("18446744073709551616bigcoin,3844674407370955161599hugecoin,20000000000000000000mediumcoin"),
 			expEvents: makeEvents(s.addr2, s.coins("10000000000000000000mediumcoin"), "amount under max uint64 added to another such amount resulting in more than max uint64"),
 		},
 		{
@@ -436,7 +436,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			addr:      s.addr3,
 			funds:     s.coins("4goodcoin"),
 			spendBal:  s.coins("1badcoin,2banana,4goodcoin"),
-			finalEsc:  s.coins("4goodcoin"),
+			finalHold: s.coins("4goodcoin"),
 			expEvents: makeEvents(s.addr3, s.coins("4goodcoin"), "addr has bad entry but adding different denom"),
 		},
 		{
@@ -444,7 +444,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			addr:      s.addr3,
 			funds:     s.coins("0badcoin,8goodcoin"),
 			spendBal:  s.coins("8goodcoin"),
-			finalEsc:  s.coins("12goodcoin"),
+			finalHold: s.coins("12goodcoin"),
 			expEvents: makeEvents(s.addr3, s.coins("8goodcoin"), "zero of bad denom with some of another"),
 		},
 		{
@@ -458,7 +458,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 				"failed to get current crudcoin hold amount",
 				"math/big: cannot unmarshal \"crudvalue\" into a *big.Int",
 			},
-			finalEsc:  s.coins("57acorn,12goodcoin"),
+			finalHold: s.coins("57acorn,12goodcoin"),
 			expEvents: makeEvents(s.addr3, s.coins("57acorn"), "three denoms: two existing and bad"),
 		},
 		{
@@ -466,7 +466,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			addr:      s.addr4,
 			funds:     s.coins("37acorn,12banana"),
 			spendBal:  s.coins("37acorn,12banana"),
-			finalEsc:  s.coins("37acorn,12banana"),
+			finalHold: s.coins("37acorn,12banana"),
 			expEvents: makeEvents(s.addr4, s.coins("37acorn,12banana"), "sufficient spendable: new denoms on hold"),
 		},
 		{
@@ -474,7 +474,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			addr:      s.addr4,
 			funds:     s.coins("5000000000000000000000banana"),
 			spendBal:  s.coins("5000000000000000000000banana"),
-			finalEsc:  s.coins("37acorn,5000000000000000000012banana"),
+			finalHold: s.coins("37acorn,5000000000000000000012banana"),
 			expEvents: makeEvents(s.addr4, s.coins("5000000000000000000000banana"), "amount over max uint64 added to amount under uint64"),
 		},
 		{
@@ -516,8 +516,8 @@ func (s *TestSuite) TestKeeper_AddHold() {
 
 			s.assertErrorContents(err, tc.expErr, "AddHold error")
 
-			finalEsc, _ := k.GetHoldCoins(s.sdkCtx, tc.addr)
-			s.Assert().Equal(tc.finalEsc.String(), finalEsc.String(), "final hold")
+			finalHold, _ := k.GetHoldCoins(s.sdkCtx, tc.addr)
+			s.Assert().Equal(tc.finalHold.String(), finalHold.String(), "final hold")
 
 			events := em.Events()
 			s.assertEqualEvents(tc.expEvents, events, "AddHold events")
@@ -551,14 +551,14 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 		addr      sdk.AccAddress
 		funds     sdk.Coins
 		expErr    []string
-		finalEsc  sdk.Coins
+		finalHold sdk.Coins
 		expEvents sdk.Events
 	}{
 		{
 			name:      "release some of two denoms",
 			addr:      s.addr1,
 			funds:     s.coins("1banana,1cucumber"),
-			finalEsc:  s.coins("98banana,2cucumber"),
+			finalHold: s.coins("98banana,2cucumber"),
 			expEvents: makeEvents(s.addr1, s.coins("1banana,1cucumber")),
 		},
 		{
@@ -575,13 +575,13 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 				"cannot release 20banana from hold",
 				"account only has 18banana on hold",
 			},
-			finalEsc: s.coins("18banana"),
+			finalHold: s.coins("18banana"),
 		},
 		{
 			name:      "only release some of one denom",
 			addr:      s.addr2,
 			funds:     s.coins("10banana"),
-			finalEsc:  s.coins("8banana"),
+			finalHold: s.coins("8banana"),
 			expEvents: makeEvents(s.addr2, s.coins("10banana")),
 		},
 		{
@@ -598,13 +598,13 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 				"failed to get current badcoin hold amount",
 				"math/big: cannot unmarshal \"badvalue\" into a *big.Int",
 			},
-			finalEsc: s.coins("2goodcoin"),
+			finalHold: s.coins("2goodcoin"),
 		},
 		{
 			name:      "bad existing entry but amount of that denom is zero",
 			addr:      s.addr3,
 			funds:     s.coins("0badcoin,1goodcoin"),
-			finalEsc:  s.coins("1goodcoin"),
+			finalHold: s.coins("1goodcoin"),
 			expEvents: makeEvents(s.addr3, s.coins("1goodcoin")),
 		},
 		{
@@ -623,28 +623,28 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 			name:      "amount left on hold still greater than max uint64",
 			addr:      s.addr4,
 			funds:     s.coins("1hugecoin"),
-			finalEsc:  s.coins("1844674407370955161499hugecoin,1000000000000000000000largecoin,20000000000000000000mediumcoin"),
+			finalHold: s.coins("1844674407370955161499hugecoin,1000000000000000000000largecoin,20000000000000000000mediumcoin"),
 			expEvents: makeEvents(s.addr4, s.coins("1hugecoin")),
 		},
 		{
 			name:      "amount released is greater than max uint64",
 			addr:      s.addr4,
 			funds:     s.coins("1844674407370955161400hugecoin"),
-			finalEsc:  s.coins("99hugecoin,1000000000000000000000largecoin,20000000000000000000mediumcoin"),
+			finalHold: s.coins("99hugecoin,1000000000000000000000largecoin,20000000000000000000mediumcoin"),
 			expEvents: makeEvents(s.addr4, s.coins("1844674407370955161400hugecoin")),
 		},
 		{
 			name:      "exising amount more than max uint64 and amount released is less with result also less",
 			addr:      s.addr4,
 			funds:     s.coins("10000000000000000000mediumcoin"),
-			finalEsc:  s.coins("99hugecoin,1000000000000000000000largecoin,10000000000000000000mediumcoin"),
+			finalHold: s.coins("99hugecoin,1000000000000000000000largecoin,10000000000000000000mediumcoin"),
 			expEvents: makeEvents(s.addr4, s.coins("10000000000000000000mediumcoin")),
 		},
 		{
 			name:      "amount released is more than max uint64 with result also more",
 			addr:      s.addr4,
 			funds:     s.coins("100000000000000000000largecoin"),
-			finalEsc:  s.coins("99hugecoin,900000000000000000000largecoin,10000000000000000000mediumcoin"),
+			finalHold: s.coins("99hugecoin,900000000000000000000largecoin,10000000000000000000mediumcoin"),
 			expEvents: makeEvents(s.addr4, s.coins("100000000000000000000largecoin")),
 		},
 		{
@@ -655,7 +655,7 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 				"cannot release 900000000000000000001largecoin from hold",
 				"account only has 900000000000000000000largecoin on hold",
 			},
-			finalEsc: s.coins("99hugecoin,900000000000000000000largecoin,10000000000000000000mediumcoin"),
+			finalHold: s.coins("99hugecoin,900000000000000000000largecoin,10000000000000000000mediumcoin"),
 		},
 		{
 			name:  "nil funds",
@@ -696,8 +696,8 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 
 			s.assertErrorContents(err, tc.expErr, "ReleaseHold error")
 
-			finalEsc, _ := s.keeper.GetHoldCoins(s.sdkCtx, tc.addr)
-			s.Assert().Equal(tc.finalEsc.String(), finalEsc.String(), "final hold")
+			finalHold, _ := s.keeper.GetHoldCoins(s.sdkCtx, tc.addr)
+			s.Assert().Equal(tc.finalHold.String(), finalHold.String(), "final hold")
 
 			events := em.Events()
 			s.assertEqualEvents(tc.expEvents, events, "AddHold events")
