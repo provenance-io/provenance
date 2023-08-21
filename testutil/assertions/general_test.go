@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -22,6 +23,7 @@ const (
 // a divorced T to run tests on things that take in a T.
 // It keeps track of output and failure status.
 type mockTB struct {
+	mu       sync.RWMutex
 	panic    any
 	isFailed bool
 	output   string
@@ -31,13 +33,19 @@ var _ TB = (*mockTB)(nil)
 
 func (t *mockTB) Helper() {}
 func (t *mockTB) Errorf(format string, args ...any) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	t.isFailed = true
 	t.output += fmt.Sprintf(format, args...)
 }
 func (t *mockTB) Logf(format string, args ...any) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	t.output += fmt.Sprintf(format, args...)
 }
 func (t *mockTB) FailNow() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	t.isFailed = true
 	runtime.Goexit()
 }
@@ -49,9 +57,11 @@ func mockRun(t *testing.T, fn func(TB)) *mockTB {
 	rv := &mockTB{}
 	go func() {
 		defer func() {
-			rv.panic = recover()
-		}()
-		defer func() {
+			if r := recover(); r != nil {
+				rv.mu.Lock()
+				defer rv.mu.Unlock()
+				rv.panic = r
+			}
 			signal <- true
 		}()
 		fn(rv)
