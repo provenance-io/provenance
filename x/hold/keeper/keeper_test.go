@@ -107,6 +107,13 @@ func (s *TestSuite) assertErrorContents(theError error, contains []string, msgAn
 	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
 }
 
+// assertErrorValue asserts that the provided error equals the expected.
+// If expected is empty, asserts that theError is nil.
+// Returns true if it's all good, false if one or more assertion failed.
+func (s *TestSuite) assertErrorValue(theError error, expected string, msgAndArgs ...interface{}) bool {
+	return assertions.AssertErrorValue(s.T(), theError, expected, msgAndArgs...)
+}
+
 // requirePanicContents asserts that, if contains is empty, the provided func does not panic
 // Otherwise, asserts that the func panics and that its panic message contains each of the provided strings.
 //
@@ -210,6 +217,125 @@ func (s *TestSuite) dumpHoldState() []string {
 	}
 
 	return rv
+}
+
+func (s *TestSuite) TestSetHoldCoinAmount() {
+	stateEntry := func(addr sdk.AccAddress, denom string, amt sdkmath.Int) string {
+		return s.stateEntryString(keeper.CreateHoldCoinKey(addr, denom), []byte(amt.String()))
+	}
+	tests := []struct {
+		name       string
+		setupStore func(sdk.KVStore)
+		addr       sdk.AccAddress
+		denom      string
+		amount     sdkmath.Int
+		expErr     string
+		expState   []string
+	}{
+		{
+			name:     "empty store fresh address",
+			addr:     s.addr1,
+			denom:    "kitty",
+			amount:   s.int(3),
+			expState: []string{stateEntry(s.addr1, "kitty", s.int(3))},
+		},
+		{
+			name: "addr has none of this denom but one of another",
+			setupStore: func(store sdk.KVStore) {
+				s.requireSetHoldCoinAmount(store, s.addr1, "bag", s.int(3))
+			},
+			addr:   s.addr1,
+			denom:  "purse",
+			amount: s.int(8),
+			expState: []string{
+				stateEntry(s.addr1, "bag", s.int(3)),
+				stateEntry(s.addr1, "purse", s.int(8)),
+			},
+		},
+		{
+			name: "another addr has the same denom",
+			setupStore: func(store sdk.KVStore) {
+				s.requireSetHoldCoinAmount(store, s.addr2, "banana", s.int(88))
+			},
+			addr:   s.addr1,
+			denom:  "banana",
+			amount: s.int(99),
+			expState: []string{
+				stateEntry(s.addr1, "banana", s.int(99)),
+				stateEntry(s.addr2, "banana", s.int(88)),
+			},
+		},
+		{
+			name: "update existing entry",
+			setupStore: func(store sdk.KVStore) {
+				s.requireSetHoldCoinAmount(store, s.addr1, "eclair", s.int(3))
+				s.requireSetHoldCoinAmount(store, s.addr2, "eclair", s.int(500))
+			},
+			addr:   s.addr1,
+			denom:  "eclair",
+			amount: s.int(4),
+			expState: []string{
+				stateEntry(s.addr1, "eclair", s.int(4)),
+				stateEntry(s.addr2, "eclair", s.int(500)),
+			},
+		},
+		{
+			name: "delete existing entry",
+			setupStore: func(store sdk.KVStore) {
+				s.requireSetHoldCoinAmount(store, s.addr1, "blanket", s.int(12))
+				s.requireSetHoldCoinAmount(store, s.addr2, "blanket", s.int(44))
+			},
+			addr:   s.addr1,
+			denom:  "blanket",
+			amount: s.int(0),
+			expState: []string{
+				stateEntry(s.addr2, "blanket", s.int(44)),
+			},
+		},
+		{
+			name: "zero amount without an existing entry",
+			setupStore: func(store sdk.KVStore) {
+				s.requireSetHoldCoinAmount(store, s.addr2, "blanket", s.int(44))
+			},
+			addr:   s.addr1,
+			denom:  "blanket",
+			amount: s.int(0),
+			expState: []string{
+				stateEntry(s.addr2, "blanket", s.int(44)),
+			},
+		},
+		{
+			name:   "empty denom string",
+			addr:   s.addr1,
+			denom:  "",
+			amount: s.int(3),
+			expErr: "cannot store hold with an empty denom for " + s.addr1.String(),
+		},
+		{
+			name:   "negative amount string",
+			addr:   s.addr1,
+			denom:  "negcoin",
+			amount: s.int(-3),
+			expErr: "cannot store negative hold amount -3negcoin for " + s.addr1.String(),
+		},
+		// There's currently no way sdk.Amount.Marshall() returns an error, so that test case is omitted.
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearHoldState()
+			store := s.getStore()
+			if tc.setupStore != nil {
+				tc.setupStore(store)
+			}
+
+			err := s.keeper.SetHoldCoinAmount(store, tc.addr, tc.denom, tc.amount)
+			s.assertErrorValue(err, tc.expErr, "setHoldCoinAmount")
+
+			state := s.dumpHoldState()
+			s.Assert().Equal(tc.expState, state, "state after setHoldCoinAmount")
+		})
+	}
 }
 
 func (s *TestSuite) TestKeeper_ValidateNewHold() {
@@ -496,6 +622,14 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			spendBal: s.coins("2banana"),
 			expErr:   []string{s.addr5.String(), "-1banana", "cannot be negative"},
 		},
+		{
+			name:      "two zero coins plus one not",
+			addr:      s.addr5,
+			funds:     sdk.Coins{s.coin(1, "apple"), s.coin(0, "banana"), s.coin(0, "cucumber")},
+			spendBal:  s.coins("8apple"),
+			finalHold: s.coins("1apple"),
+			expEvents: makeEvents(s.addr5, s.coins("1apple"), "two zero coins plus one not"),
+		},
 	}
 
 	for _, tc := range tests {
@@ -562,10 +696,17 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 			expEvents: makeEvents(s.addr1, s.coins("1banana,1cucumber")),
 		},
 		{
+			name:      "two zero coins one not",
+			addr:      s.addr1,
+			funds:     sdk.Coins{s.coin(0, "apple"), s.coin(1, "banana"), s.coin(0, "cucumber")},
+			finalHold: s.coins("97banana,2cucumber"),
+			expEvents: makeEvents(s.addr1, s.coins("1banana")),
+		},
+		{
 			name:      "release all of two denoms",
 			addr:      s.addr1,
-			funds:     s.coins("98banana,2cucumber"),
-			expEvents: makeEvents(s.addr1, s.coins("98banana,2cucumber")),
+			funds:     s.coins("97banana,2cucumber"),
+			expEvents: makeEvents(s.addr1, s.coins("97banana,2cucumber")),
 		},
 		{
 			name:  "not enough on hold",
