@@ -8,8 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 func TestNewEventHoldAdded(t *testing.T) {
@@ -111,20 +114,6 @@ func TestTypedEventToEvent(t *testing.T) {
 	addrQ := fmt.Sprintf("%q", addr.String())
 	coinsQ := fmt.Sprintf("%q", coins.String())
 
-	// attrsToStrings converts the provided attributes to strings.
-	// These are used to compare actual/expected so that any differences are
-	// easier to understand in the test failure output.
-	attrsToStrings := func(attrs []abci.EventAttribute) []string {
-		rv := make([]string, len(attrs))
-		for i, attr := range attrs {
-			rv[i] = fmt.Sprintf("[%d]: %q = %q", i, string(attr.Key), string(attr.Value))
-			if attr.Index {
-				rv[i] = rv[i] + " (indexed)"
-			}
-		}
-		return rv
-	}
-
 	tests := []struct {
 		name     string
 		tev      proto.Message
@@ -161,8 +150,8 @@ func TestTypedEventToEvent(t *testing.T) {
 			require.NoError(t, err, "TypedEventToEvent error")
 			if assert.NotNil(t, event, "TypedEventToEvent result") {
 				assert.Equal(t, tc.expEvent.Type, event.Type, "event type")
-				expAttrs := attrsToStrings(tc.expEvent.Attributes)
-				actAttrs := attrsToStrings(event.Attributes)
+				expAttrs := assertions.AttrsToStrings(tc.expEvent.Attributes)
+				actAttrs := assertions.AttrsToStrings(event.Attributes)
 				assert.Equal(t, expAttrs, actAttrs, "event attributes")
 			}
 		})
