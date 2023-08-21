@@ -21,7 +21,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/provenance-io/provenance/testutil"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/simulation"
 )
@@ -298,7 +298,7 @@ func TestUpdateBankGenStateForHolds(t *testing.T) {
 			testFunc := func() {
 				simulation.UpdateBankGenStateForHolds(tc.bankGen, tc.holdGen)
 			}
-			testutil.RequirePanicEquals(t, testFunc, tc.expPanic, "UpdateBankGenStateForHolds")
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "UpdateBankGenStateForHolds")
 			if tc.expBankGen != nil {
 				actualBals := balsStrings(tc.bankGen)
 				assert.Equal(t, expectedBals, actualBals, "resulting bank genesis balances")
@@ -520,7 +520,7 @@ func TestRandomizedGenState(t *testing.T) {
 			testFunc := func() {
 				simulation.RandomizedGenState(simState)
 			}
-			testutil.RequirePanicEquals(t, testFunc, tc.expPanic, "RandomizedGenState")
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "RandomizedGenState")
 			if len(tc.expPanic) > 0 {
 				// No further testing to do.
 				return

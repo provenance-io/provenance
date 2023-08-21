@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	"github.com/provenance-io/provenance/testutil"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/hold/keeper"
 	"github.com/provenance-io/provenance/x/hold/simulation"
 )
@@ -48,7 +48,7 @@ func TestDecodeStore(t *testing.T) {
 			testFunc := func() {
 				actual = dec(tc.kvA, tc.kvB)
 			}
-			testutil.RequirePanicEquals(t, testFunc, tc.expPanic, "running decoder")
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "running decoder")
 			assert.Equal(t, tc.exp, actual, "decoder result")
 		})
 	}

@@ -19,10 +19,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktest "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/testutil"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/keeper"
 )
@@ -104,15 +104,15 @@ func (s *TestSuite) intStr(amount string) sdkmath.Int {
 // Otherwise, it asseerts that the error contains each of the entries in the contains slice.
 // Returns true if it's all good, false if one or more assertion failed.
 func (s *TestSuite) assertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
-	return testutil.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
+	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
 }
 
 // requirePanicContents asserts that, if contains is empty, the provided func does not panic
 // Otherwise, asserts that the func panics and that its panic message contains each of the provided strings.
 //
 // If the assertion fails, the test is halted.
-func (s *TestSuite) requirePanicContents(f testutil.PanicTestFunc, contains []string, msgAndArgs ...interface{}) {
-	testutil.RequirePanicContents(s.T(), f, contains, msgAndArgs...)
+func (s *TestSuite) requirePanicContents(f assertions.PanicTestFunc, contains []string, msgAndArgs ...interface{}) {
+	assertions.RequirePanicContents(s.T(), f, contains, msgAndArgs...)
 }
 
 // getAddrName returns the name of the variable in this TestSuite holding the provided address.
@@ -140,7 +140,7 @@ func (s *TestSuite) getStore() sdk.KVStore {
 
 // requireSetHoldCoinAmount calls setHoldCoinAmount making sure it doesn't panic or return an error.
 func (s *TestSuite) requireSetHoldCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) {
-	testutil.RequireNotPanicsNoErrorf(s.T(), func() error {
+	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
 		return s.keeper.SetHoldCoinAmount(store, addr, denom, amount)
 	}, "setHoldCoinAmount(%s, %s%s)", s.getAddrName(addr), amount, denom)
 }
@@ -150,17 +150,17 @@ func (s *TestSuite) setHoldCoinAmountRaw(store sdk.KVStore, addr sdk.AccAddress,
 	store.Set(keeper.CreateHoldCoinKey(addr, denom), []byte(amount))
 }
 
-// requireFundAccount calls banktest.FundAccount, making sure it doesn't panic or return an error.
+// requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or return an error.
 func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
-	testutil.RequireNotPanicsNoErrorf(s.T(), func() error {
-		return banktest.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, s.coins(coins))
+	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+		return testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, s.coins(coins))
 	}, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
 }
 
 // assertEqualEvents asserts that the expected events equal the actual events.
 // Returns success (true = they're equal, false = they're different).
 func (s *TestSuite) assertEqualEvents(expected, actual sdk.Events, msgAndArgs ...interface{}) bool {
-	return testutil.AssertEqualEvents(s.T(), expected, actual, msgAndArgs...)
+	return assertions.AssertEqualEvents(s.T(), expected, actual, msgAndArgs...)
 }
 
 // clearHoldState will delete all entries from the hold store.
@@ -1398,7 +1398,7 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 	s.Run("setup: process steps", func() {
 		for i, step := range steps {
 			reqNoPanicNoErr := func(f func() error, msg string, args ...interface{}) {
-				testutil.RequireNotPanicsNoErrorf(s.T(), f, "%4ds: "+msg, append([]interface{}{step}, args...)...)
+				assertions.RequireNotPanicsNoErrorf(s.T(), f, "%4ds: "+msg, append([]interface{}{step}, args...)...)
 			}
 			blockTime := startTime.Add(time.Duration(step) * time.Second)
 			ctx = s.sdkCtx.WithBlockTime(blockTime)
@@ -1410,7 +1410,7 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 				amt := coins(action.fund)
 				logf(step, "Adding funds: %s", amtOf(amt))
 				reqNoPanicNoErr(func() error {
-					return banktest.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, amt)
+					return testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, amt)
 				}, "FundAccount(addr, %q)", amt)
 			}
 			if action.delegate < 0 {

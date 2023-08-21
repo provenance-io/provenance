@@ -8,7 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/provenance-io/provenance/testutil"
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 func TestAccountHold_Validate(t *testing.T) {
@@ -64,7 +64,7 @@ func TestAccountHold_Validate(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.ae.Validate()
-			testutil.AssertErrorValue(t, err, tc.exp, "Validate()")
+			assertions.AssertErrorValue(t, err, tc.exp, "Validate()")
 		})
 	}
 }

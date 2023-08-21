@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
-	"github.com/provenance-io/provenance/testutil"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/hold/keeper"
 )
 
@@ -290,7 +290,7 @@ func TestUnmarshalHoldCoinValue(t *testing.T) {
 				amount, err = keeper.UnmarshalHoldCoinValue(tc.value)
 			}
 			require.NotPanics(t, testFunc, "UnmarshalHoldCoinValue")
-			testutil.AssertErrorValue(t, err, tc.expErr, "UnmarshalHoldCoinValue")
+			assertions.AssertErrorValue(t, err, tc.expErr, "UnmarshalHoldCoinValue")
 			assert.Equal(t, tc.expAmt.String(), amount.String(), "result amount")
 		})
 	}
