@@ -10,30 +10,36 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// prependToEach prepends the provided prefix to each of the provide lines.
-func prependToEach(prefix string, lines []string) []string {
+// PrependToEach prepends the provided prefix to each of the provide lines.
+func PrependToEach(prefix string, lines []string) []string {
 	for i, line := range lines {
 		lines[i] = prefix + line
 	}
 	return lines
 }
 
-// eventsToStrings converts events to strings representing the events, one line per attribute.
-func eventsToStrings(events sdk.Events) []string {
+// EventsToStrings converts events to strings representing the events, one line per attribute.
+func EventsToStrings(events sdk.Events) []string {
 	var rv []string
 	for i, event := range events {
-		rv = append(rv, prependToEach(fmt.Sprintf("[%d]", i), eventToStrings(event))...)
+		rv = append(rv, PrependToEach(fmt.Sprintf("[%d]", i), EventToStrings(event))...)
 	}
 	return rv
 }
 
-// eventToStrings converts a single event to strings, one string per attribute.
-func eventToStrings(event sdk.Event) []string {
-	return prependToEach(event.Type, attrsToStrings(event.Attributes))
+// EventToStrings converts a single event to strings, one string per attribute.
+func EventToStrings(event sdk.Event) []string {
+	if len(event.Attributes) == 0 {
+		return []string{fmt.Sprintf("%s: (no attributes)", event.Type)}
+	}
+	return PrependToEach(event.Type, AttrsToStrings(event.Attributes))
 }
 
-// attrsToStrings creates and returns a string for each attribute.
-func attrsToStrings(attrs []abci.EventAttribute) []string {
+// AttrsToStrings creates and returns a string for each attribute.
+func AttrsToStrings(attrs []abci.EventAttribute) []string {
+	if len(attrs) == 0 {
+		return nil
+	}
 	rv := make([]string, len(attrs))
 	for i, attr := range attrs {
 		rv[i] = fmt.Sprintf("[%d]: %q = %q", i, string(attr.Key), string(attr.Value))
@@ -50,8 +56,8 @@ func attrsToStrings(attrs []abci.EventAttribute) []string {
 func AssertEqualEvents(t TB, expected, actual sdk.Events, msgAndArgs ...interface{}) bool {
 	t.Helper()
 	// This converts them to strings for the comparison so that the failure output is significantly easier to read and understand.
-	expectedStrs := eventsToStrings(expected)
-	actualStrs := eventsToStrings(actual)
+	expectedStrs := EventsToStrings(expected)
+	actualStrs := EventsToStrings(actual)
 	return assert.Equal(t, expectedStrs, actualStrs, msgAndArgs...)
 }
 
