@@ -165,9 +165,9 @@ iterator from the auth module.
 
 ### Marker Net Asset Value
 
-A marker can support multiple distinct net asset values assigned to track settlement pricing information on-chain. The `value` attribute represents the coin value of the asset, such as `usd` or `nhash`, along with its corresponding `volume`. The `update_block_height` attribute captures the block height when the update occurred.
+A marker can support multiple distinct net asset values assigned to track settlement pricing information on-chain. The `price_per_token` attribute represents the coin value of the asset, such as `usd` or `nhash`, along with its corresponding `volume`. The `update_block_height` attribute captures the block height when the update occurred.
 
-TODO: Add proto link once more toward final...
++++ https://github.com/provenance-io/provenance/blob/25070572cc898c476f5bb1a816c6c1c4d07e3d38/proto/provenance/marker/v1/marker.proto#L96-L104
 
 ## Params
 
