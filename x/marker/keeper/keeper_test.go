@@ -1455,3 +1455,73 @@ func TestBypassAddrsLocked(t *testing.T) {
 	act00 := kAddrs[0][0]
 	assert.Equal(t, orig00, act00, "first byte of first address returned by GetReqAttrBypassAddrs")
 }
+
+func TestCalculateRollingAverage(t *testing.T) {
+	mk := markerkeeper.NewKeeper(nil, nil, paramtypes.NewSubspace(nil, nil, nil, nil, "test"), nil, &dummyBankKeeper{}, nil, nil, nil, nil, nil, nil)
+	testCases := []struct {
+		name    string
+		prevNav types.NetAssetValue
+		newNav  types.NetAssetValue
+		expNav  types.NetAssetValue
+		expErr  string
+	}{
+		{
+			name:    "volumes are zero",
+			prevNav: types.NetAssetValue{},
+			newNav:  types.NetAssetValue{},
+			expNav:  types.NetAssetValue{},
+		},
+		{
+			name: "denoms do not match",
+			prevNav: types.NetAssetValue{
+				PricePerToken: sdk.NewInt64Coin("denoma", 1),
+			},
+			newNav: types.NetAssetValue{
+				PricePerToken: sdk.NewInt64Coin("denomb", 1),
+			},
+			expErr: "net asset value denom do not match denoma:denomb",
+		},
+		{
+			name: "succesfully compute rolling average and new volume",
+			prevNav: types.NetAssetValue{
+				PricePerToken: sdk.NewInt64Coin("usd", 100),
+				Volume:        2,
+			},
+			newNav: types.NetAssetValue{
+				PricePerToken: sdk.NewInt64Coin("usd", 50),
+				Volume:        2,
+			},
+			expNav: types.NetAssetValue{
+				PricePerToken: sdk.NewInt64Coin("usd", 75),
+				Volume:        4,
+			},
+		},
+		{
+			name: "succesfully compute rolling average with rounding and new volume",
+			prevNav: types.NetAssetValue{
+				PricePerToken: sdk.NewInt64Coin("usd", 99),
+				Volume:        2,
+			},
+			newNav: types.NetAssetValue{
+				PricePerToken: sdk.NewInt64Coin("usd", 50),
+				Volume:        2,
+			},
+			expNav: types.NetAssetValue{
+				PricePerToken: sdk.NewInt64Coin("usd", 74),
+				Volume:        4,
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := mk.CalculateRollingAverage(tc.prevNav, tc.newNav)
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expNav, result)
+			}
+		})
+	}
+}
