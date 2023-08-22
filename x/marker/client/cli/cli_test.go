@@ -1756,6 +1756,80 @@ func (s *IntegrationTestSuite) TestGetCmdUpdateForcedTransfer() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestGetCmdAddNetAssetValues() {
+	denom := "updatenavcoin"
+	argsWStdFlags := func(args ...string) []string {
+		return append(args,
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		)
+	}
+
+	s.Run("add a new marker for this", func() {
+		cmd := markercli.GetCmdAddFinalizeActivateMarker()
+		args := argsWStdFlags(
+			"1000"+denom,
+			s.testnet.Validators[0].Address.String()+",mint,burn,deposit,withdraw,delete,admin,transfer",
+			fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+			"--"+markercli.FlagSupplyFixed,
+			"--"+markercli.FlagAllowGovernanceControl,
+		)
+		clientCtx := s.testnet.Validators[0].ClientCtx
+		out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+		s.Require().NoError(err, "CmdAddFinalizeActivateMarker error")
+		outBz := out.Bytes()
+		outStr := string(outBz)
+		var resp sdk.TxResponse
+		s.Require().NoError(clientCtx.Codec.UnmarshalJSON(outBz, &resp), "error unmarshalling response JSON:\n%s", outStr)
+		s.Require().Equal(0, int(resp.Code), "response code:\n%s", outStr)
+	})
+	if s.T().Failed() {
+		s.FailNow("Stopping due to setup error")
+	}
+
+	tests := []struct {
+		name   string
+		args   []string
+		expErr string
+		incLog bool // set to true to log the output regardless of failure
+	}{
+		{
+			name:   "invalid net asset string",
+			args:   argsWStdFlags(denom, "invalid"),
+			expErr: "invalid net asset value, expected coin,volume",
+		},
+		{
+			name:   "validate basic fail",
+			args:   argsWStdFlags("x", "1usd,1"),
+			expErr: "invalid denom: x",
+		},
+		{
+			name: "successful",
+			args: argsWStdFlags(denom, "1usd,1"),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdAddNetAssetValues()
+
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			outBz := out.Bytes()
+			outStr := string(outBz)
+
+			if len(tc.expErr) > 0 {
+				s.Require().EqualError(err, tc.expErr, "GetCmdAddNetAssetValues error")
+				s.Require().Contains(outStr, tc.expErr, "GetCmdAddNetAssetValues output")
+			} else {
+				s.Require().NoError(err, "GetCmdAddNetAssetValues error")
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestParseAccessGrantFromString() {
 	testCases := []struct {
 		name              string
@@ -1820,40 +1894,43 @@ func (s *IntegrationTestSuite) TestParseNetAssertValueString() {
 	testCases := []struct {
 		name           string
 		netAssetValues string
-		expPanic       bool
+		expErr         string
 		expResult      []types.NetAssetValue
 	}{
 		{
 			name:           "successfully parses empty string",
 			netAssetValues: "",
-			expPanic:       false,
+			expErr:         "",
 			expResult:      []types.NetAssetValue{},
 		},
 		{
 			name:           "invalid coin",
 			netAssetValues: "notacoin,1",
-			expPanic:       true,
+			expErr:         "invalid coin notacoin",
+			expResult:      []types.NetAssetValue{},
 		},
 		{
 			name:           "invalid volume string",
 			netAssetValues: "1hotdog,invalidvolume",
-			expPanic:       true,
+			expErr:         "invalid volume invalidvolume",
+			expResult:      []types.NetAssetValue{},
 		},
 		{
 			name:           "invalid amount of args",
 			netAssetValues: "1hotdog,invalidvolume,notsupposedtobehere",
-			expPanic:       true,
+			expErr:         "invalid net asset value, expected coin,volume",
+			expResult:      []types.NetAssetValue{},
 		},
 		{
 			name:           "successfully parse single nav",
 			netAssetValues: "1hotdog,10",
-			expPanic:       false,
+			expErr:         "",
 			expResult:      []types.NetAssetValue{{PricePerToken: sdk.NewInt64Coin("hotdog", 1), Volume: 10}},
 		},
 		{
 			name:           "successfully parse multi nav",
 			netAssetValues: "1hotdog,10;20jackthecat,40",
-			expPanic:       false,
+			expErr:         "",
 			expResult:      []types.NetAssetValue{{PricePerToken: sdk.NewInt64Coin("hotdog", 1), Volume: 10}, {PricePerToken: sdk.NewInt64Coin("jackthecat", 20), Volume: 40}},
 		},
 	}
@@ -1861,12 +1938,12 @@ func (s *IntegrationTestSuite) TestParseNetAssertValueString() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			if tc.expPanic {
-				panicFunc := func() { markercli.ParseNetAssertValueString(tc.netAssetValues) }
-				s.Assert().Panics(panicFunc)
-
+			result, err := markercli.ParseNetAssertValueString(tc.netAssetValues)
+			if len(tc.expErr) > 0 {
+				s.Assert().Equal(tc.expErr, err.Error())
+				s.Assert().Empty(result)
 			} else {
-				result := markercli.ParseNetAssertValueString(tc.netAssetValues)
+				s.Assert().NoError(err)
 				s.Assert().ElementsMatch(result, tc.expResult)
 			}
 		})

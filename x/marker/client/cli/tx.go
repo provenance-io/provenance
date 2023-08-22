@@ -1164,8 +1164,17 @@ func GetCmdAddNetAssetValues() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			netAssetValues := ParseNetAssertValueString(args[1])
+
 			denom := strings.TrimSpace(args[0])
+			netAssetValues, err := ParseNetAssertValueString(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgAddNetAssetValuesRequest(denom, clientCtx.From, netAssetValues)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), types.NewMsgAddNetAssetValuesRequest(denom, clientCtx.From, netAssetValues))
 		},
@@ -1207,28 +1216,28 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 }
 
 // ParseNetAssertValueString splits string (example address1,perm1,perm2...;address2, perm1...) to list of NetAssetValue's
-func ParseNetAssertValueString(netAssetValuesString string) []types.NetAssetValue {
+func ParseNetAssertValueString(netAssetValuesString string) ([]types.NetAssetValue, error) {
 	navs := strings.Split(netAssetValuesString, ";")
 	if len(navs) == 1 && len(navs[0]) == 0 {
-		return []types.NetAssetValue{}
+		return []types.NetAssetValue{}, nil
 	}
 	netAssetValues := make([]types.NetAssetValue, len(navs))
 	for i, nav := range navs {
 		parts := strings.Split(nav, ",")
 		if len(parts) != 2 {
-			panic("invalid net asset value, expected coin,volume")
+			return []types.NetAssetValue{}, errors.New("invalid net asset value, expected coin,volume")
 		}
 		coin, err := sdk.ParseCoinNormalized(parts[0])
 		if err != nil {
-			panic(fmt.Sprintf("invalid coin %s", parts[0]))
+			return []types.NetAssetValue{}, fmt.Errorf("invalid coin %s", parts[0])
 		}
 		volume, err := strconv.ParseUint(parts[1], 10, 64)
 		if err != nil {
-			panic(fmt.Sprintf("invalid volume %s", parts[1]))
+			return []types.NetAssetValue{}, fmt.Errorf("invalid volume %s", parts[1])
 		}
 		netAssetValues[i] = types.NewNetAssetValue(coin, volume)
 	}
-	return netAssetValues
+	return netAssetValues, nil
 }
 
 // AddNewMarkerFlags adds the flags needed when defining a new marker.
