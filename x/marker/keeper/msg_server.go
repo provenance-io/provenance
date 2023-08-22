@@ -837,7 +837,7 @@ func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNet
 		}
 	}
 
-	err = k.AddSetNetAssetValues(ctx, marker, msg.NetAssetValues, "test")
+	err = k.AddSetNetAssetValues(ctx, marker, msg.NetAssetValues, types.ModuleName)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
