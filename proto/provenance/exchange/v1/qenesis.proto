@@ -1,0 +1,27 @@
+syntax = "proto3";
+package provenance.exchange.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/exchange";
+
+option java_package        = "io.provenance.exchange.v1";
+option java_multiple_files = true;
+
+import "gogoproto/gogo.proto";
+import "provenance/exchange/v1/market.proto";
+import "provenance/exchange/v1/orders.proto";
+import "provenance/exchange/v1/params.proto";
+
+// GenesisState is the data that should be loaded into the exchange module during genesis.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // params defines all the parameters of the exchange module.
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  // markets are all of the markets to create at genesis.
+  repeated Market markets = 2;
+
+  // orders are all the orders to create at genesis.
+  repeated Order orders = 3;
+}

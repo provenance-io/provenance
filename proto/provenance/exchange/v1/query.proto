@@ -1,0 +1,127 @@
+syntax = "proto3";
+package provenance.exchange.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/exchange";
+
+option java_package        = "io.provenance.exchange.v1";
+option java_multiple_files = true;
+
+import "google/api/annotations.proto";
+
+// Query is the service for exchange module's query endpoints.
+service Query {
+  // QueryOrderFeeCalc calculates the fees that will be associated with the provided order.
+  rpc QueryOrderFeeCalc(QueryOrderFeeCalcRequest) returns (QueryOrderFeeCalcResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/fees/order";
+  }
+
+  // QuerySettlementFeeCalc calculates the fees that will be associated with the provided settlement.
+  rpc QuerySettlementFeeCalc(QuerySettlementFeeCalcRequest) returns (QuerySettlementFeeCalcResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/fees/settlement";
+  }
+
+  // QueryGetOrder looks up an order by id.
+  rpc QueryGetOrder(QueryGetOrderRequest) returns (QueryGetOrderResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/order/{order_id}";
+  }
+
+  // QueryGetMarketOrders looks up the orders in a market.
+  rpc QueryGetMarketOrders(QueryGetMarketOrdersRequest) returns (QueryGetMarketOrdersResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/market/{market_id}/orders";
+  }
+
+  // QueryGetAddressOrders looks up the orders from the provided address.
+  rpc QueryGetAddressOrders(QueryGetAddressOrdersRequest) returns (QueryGetAddressOrdersResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/orders/{address}";
+  }
+
+  // QueryGetAllOrders gets all orders in the exchange module.
+  rpc QueryGetAllOrders(QueryGetAllOrdersRequest) returns (QueryGetAllOrdersResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/orders";
+  }
+
+  // QueryMarketInfo returns the information/details about a market.
+  rpc QueryMarketInfo(QueryMarketInfoRequest) returns (QueryMarketInfoResponse) {
+    option (google.api.http) = {
+      get: "/provenance/exchange/v1/market/info"
+      additional_bindings: {get: "/provenance/exchange/v1/market/details"}
+    };
+  }
+
+  // QueryParams returns the exchange module parameters.
+  rpc QueryParams(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/params";
+  }
+}
+
+// QueryOrderFeeCalcRequest is a request message for the QueryOrderFeeCalc endpoint.
+message QueryOrderFeeCalcRequest {
+  // TODO[1658]: QueryOrderFeeCalcRequest
+}
+// QueryOrderFeeCalcResponse is a response message for the QueryOrderFeeCalc endpoint.
+message QueryOrderFeeCalcResponse {
+  // TODO[1658]: QueryOrderFeeCalcResponse
+}
+
+// QuerySettlementFeeCalcRequest is a request message for the QuerySettlementFeeCalc endpoint.
+message QuerySettlementFeeCalcRequest {
+  // TODO[1658]: QuerySettlementFeeCalcRequest
+}
+// QuerySettlementFeeCalcResponse is a response message for the QuerySettlementFeeCalc endpoint.
+message QuerySettlementFeeCalcResponse {
+  // TODO[1658]: QuerySettlementFeeCalcResponse
+}
+
+// QueryGetOrderRequest is a request message for the QueryGetOrder endpoint.
+message QueryGetOrderRequest {
+  // TODO[1658]: QueryGetOrderRequest
+}
+// QueryGetOrderResponse is a response message for the QueryGetOrder endpoint.
+message QueryGetOrderResponse {
+  // TODO[1658]: QueryGetOrderResponse
+}
+
+// QueryGetMarketOrdersRequest is a request message for the QueryGetMarketOrders endpoint.
+message QueryGetMarketOrdersRequest {
+  // TODO[1658]: QueryGetMarketOrdersRequest
+}
+// QueryGetMarketOrdersResponse is a response message for the QueryGetMarketOrders endpoint.
+message QueryGetMarketOrdersResponse {
+  // TODO[1658]: QueryGetMarketOrdersResponse
+}
+
+// QueryGetAddressOrdersRequest is a request message for the QueryGetAddressOrders endpoint.
+message QueryGetAddressOrdersRequest {
+  // TODO[1658]: QueryGetAddressOrdersRequest
+}
+// QueryGetAddressOrdersResponse is a response message for the QueryGetAddressOrders endpoint.
+message QueryGetAddressOrdersResponse {
+  // TODO[1658]: QueryGetAddressOrdersResponse
+}
+
+// QueryGetAllOrdersRequest is a request message for the QueryGetAllOrders endpoint.
+message QueryGetAllOrdersRequest {
+  // TODO[1658]: QueryGetAllOrdersRequest
+}
+// QueryGetAllOrdersResponse is a response message for the QueryGetAllOrders endpoint.
+message QueryGetAllOrdersResponse {
+  // TODO[1658]: QueryGetAllOrdersResponse
+}
+
+// QueryMarketInfoRequest is a request message for the QueryMarketInfo endpoint.
+message QueryMarketInfoRequest {
+  // TODO[1658]: QueryMarketInfoRequest
+}
+// QueryMarketInfoResponse is a response message for the QueryMarketInfo endpoint.
+message QueryMarketInfoResponse {
+  // TODO[1658]: QueryMarketInfoResponse
+}
+
+// QueryParamsRequest is a request message for the QueryParams endpoint.
+message QueryParamsRequest {
+  // TODO[1658]: QueryParamsRequest
+}
+// QueryParamsResponse is a response message for the QueryParams endpoint.
+message QueryParamsResponse {
+  // TODO[1658]: QueryParamsResponse
+}

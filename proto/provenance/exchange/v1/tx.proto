@@ -1,0 +1,191 @@
+syntax = "proto3";
+package provenance.exchange.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/exchange";
+
+option java_package        = "io.provenance.exchange.v1";
+option java_multiple_files = true;
+
+import "cosmos_proto/cosmos.proto";
+
+// Msg is the service for exchange module's tx endpoints.
+service Msg {
+  // CreateAsk creates an ask order (to sell something you own).
+  rpc CreateAsk(MsgCreateAskRequest) returns (MsgCreateAskResponse);
+
+  // CreateBid creates an bid order (to buy something you want).
+  rpc CreateBid(MsgCreateBidRequest) returns (MsgCreateBidResponse);
+
+  // CancelOrder cancels an order.
+  rpc CancelOrder(MsgCancelOrderRequest) returns (MsgCancelOrderResponse);
+
+  // FillBids uses the assets in your account to fulfill one or more bids (similar to a fill-or-cancel ask).
+  rpc FillBids(MsgFillBidsRequest) returns (MsgFillBidsResponse);
+
+  // FillAsks uses the funds in your account to fulfill one or more asks (similar to a fill-or-cancel bid).
+  rpc FillAsks(MsgFillAsksRequest) returns (MsgFillAsksResponse);
+
+  // MarketSettle is a market endpoint to trigger the settlement of orders.
+  rpc MarketSettle(MsgMarketSettleRequest) returns (MsgMarketSettleResponse);
+
+  // MarketWithdraw is a market endpoint to withdraw fees that have been collected.
+  rpc MarketWithdraw(MsgMarketWithdrawRequest) returns (MsgMarketWithdrawResponse);
+
+  // MarketUpdateDetails is a market endpoint to update its details.
+  rpc MarketUpdateDetails(MsgMarketUpdateDetailsRequest) returns (MsgMarketUpdateDetailsResponse);
+
+  // MarketUpdateEnabled is a market endpoint to update whether its accepting orders.
+  rpc MarketUpdateEnabled(MsgMarketUpdateEnabledRequest) returns (MsgMarketUpdateEnabledResponse);
+
+  // MarketUpdateUserSettle is a market endpoint to update whether it allows user-initiated settlement.
+  rpc MarketUpdateUserSettle(MsgMarketUpdateUserSettleRequest) returns (MsgMarketUpdateUserSettleResponse);
+
+  // MarketManagePermissions is a market endpoint to manage a market's user permissions.
+  rpc MarketManagePermissions(MsgMarketManagePermissionsRequest) returns (MsgMarketManagePermissionsResponse);
+
+  // MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it.
+  rpc MarketManageReqAttrs(MsgMarketManageReqAttrsRequest) returns (MsgMarketManageReqAttrsResponse);
+
+  // CreateMarket reserves the next market id and submits a GovCreateMarket governance proposal to create the market.
+  rpc CreateMarket(MsgCreateMarketRequest) returns (MsgCreateMarketResponse);
+
+  // GovCreateMarket is a governance proposal endpoint for creating a market.
+  // The CreateMarket endpoint should be used to submit one of these unless you don't need to know the market id until after the proposal passes.
+  rpc GovCreateMarket(MsgGovCreateMarketRequest) returns (MsgGovCreateMarketResponse);
+
+  // GovManageFees is a governance proposal endpoint for updating a market's fees.
+  rpc GovManageFees(MsgGovManageFeesRequest) returns (MsgGovManageFeesResponse);
+
+  // GovUpdateParams is a governance proposal endpoint for updating the exchange module's params.
+  rpc GovUpdateParams(MsgGovUpdateParamsRequest) returns (MsgGovUpdateParamsResponse);
+}
+
+// MsgCreateAskRequest is a request message for the CreateAsk endpoint.
+message MsgCreateAskRequest {
+  // TODO[1658]: MsgCreateAskRequest
+}
+
+// MsgCreateAskResponse is a response message for the CreateAsk endpoint.
+message MsgCreateAskResponse {}
+
+// MsgCreateBidRequest is a request message for the CreateBid endpoint.
+message MsgCreateBidRequest {
+  // TODO[1658]: MsgCreateBidRequest
+}
+
+// MsgCreateBidResponse is a response message for the CreateBid endpoint.
+message MsgCreateBidResponse {}
+
+// MsgCancelOrderRequest is a request message for the CancelOrder endpoint.
+message MsgCancelOrderRequest {
+  // TODO[1658]: MsgCancelOrderRequest
+}
+
+// MsgCancelOrderResponse is a response message for the CancelOrder endpoint.
+message MsgCancelOrderResponse {}
+
+// MsgFillBidsRequest is a request message for the FillBids endpoint.
+message MsgFillBidsRequest {
+  // TODO[1658]: MsgFillBidsRequest
+}
+
+// MsgFillBidsResponse is a response message for the FillBids endpoint.
+message MsgFillBidsResponse {}
+
+// MsgFillAsksRequest is a request message for the FillAsks endpoint.
+message MsgFillAsksRequest {
+  // TODO[1658]: MsgFillAsksRequest
+}
+
+// MsgFillAsksResponse is a response message for the FillAsks endpoint.
+message MsgFillAsksResponse {}
+
+// MsgMarketSettleRequest is a request message for the MarketSettle endpoint.
+message MsgMarketSettleRequest {
+  // TODO[1658]: MsgMarketSettleRequest
+}
+
+// MsgMarketSettleResponse is a response message for the MarketSettle endpoint.
+message MsgMarketSettleResponse {}
+
+// MsgMarketWithdrawRequest is a request message for the MarketWithdraw endpoint.
+message MsgMarketWithdrawRequest {
+  // TODO[1658]: MsgMarketWithdrawRequest
+}
+
+// MsgMarketWithdrawResponse is a response message for the MarketWithdraw endpoint.
+message MsgMarketWithdrawResponse {}
+
+// MsgMarketUpdateDetailsRequest is a request message for the MarketUpdateDetails endpoint.
+message MsgMarketUpdateDetailsRequest {
+  // TODO[1658]: MsgMarketUpdateDetailsRequest
+}
+
+// MsgMarketUpdateDetailsResponse is a response message for the MarketUpdateDetails endpoint.
+message MsgMarketUpdateDetailsResponse {}
+
+// MsgMarketUpdateEnabledRequest is a request message for the MarketUpdateEnabled endpoint.
+message MsgMarketUpdateEnabledRequest {
+  // TODO[1658]: MsgMarketUpdateEnabledRequest
+}
+
+// MsgMarketUpdateEnabledResponse is a response message for the MarketUpdateEnabled endpoint.
+message MsgMarketUpdateEnabledResponse {}
+
+// MsgMarketUpdateUserSettleRequest is a request message for the MarketUpdateUserSettle endpoint.
+message MsgMarketUpdateUserSettleRequest {
+  // TODO[1658]: MsgMarketUpdateUserSettleRequest
+}
+
+// MsgMarketUpdateUserSettleResponse is a response message for the MarketUpdateUserSettle endpoint.
+message MsgMarketUpdateUserSettleResponse {}
+
+// MsgMarketManagePermissionsRequest is a request message for the MarketManagePermissions endpoint.
+message MsgMarketManagePermissionsRequest {
+  // TODO[1658]: MsgMarketManagePermissionsRequest
+}
+
+// MsgMarketManagePermissionsResponse is a response message for the MarketManagePermissions endpoint.
+message MsgMarketManagePermissionsResponse {}
+
+// MsgMarketManageReqAttrsRequest is a request message for the MarketManageReqAttrs endpoint.
+message MsgMarketManageReqAttrsRequest {
+  // TODO[1658]: MsgMarketManageReqAttrsRequest
+}
+
+// MsgMarketManageReqAttrsResponse is a response message for the MarketManageReqAttrs endpoint.
+message MsgMarketManageReqAttrsResponse {}
+
+//rpc CreateMarket(MsgCreateMarketRequest) returns (MsgCreateMarketResponse);
+
+// MsgCreateMarketRequest is a request message for the CreateMarket endpoint.
+message MsgCreateMarketRequest {
+  // TODO[1658]: MsgCreateMarketRequest
+}
+
+// MsgCreateMarketResponse is a response message for the CreateMarket endpoint.
+message MsgCreateMarketResponse {}
+
+// MsgGovCreateMarketRequest is a request message for the GovCreateMarket endpoint.
+message MsgGovCreateMarketRequest {
+  // TODO[1658]: MsgGovCreateMarketRequest
+}
+
+// MsgGovCreateMarketResponse is a response message for the GovCreateMarket endpoint.
+message MsgGovCreateMarketResponse {}
+
+// MsgGovManageFeesRequest is a request message for the GovManageFees endpoint.
+message MsgGovManageFeesRequest {
+  // TODO[1658]: MsgGovManageFeesRequest
+}
+
+// MsgGovManageFeesResponse is a response message for the GovManageFees endpoint.
+message MsgGovManageFeesResponse {}
+
+// MsgGovUpdateParamsRequest is a request message for the GovUpdateParams endpoint.
+message MsgGovUpdateParamsRequest {
+  // TODO[1658]: MsgGovUpdateParamsRequest
+}
+
+// MsgGovUpdateParamsResponse is a response message for the GovUpdateParams endpoint.
+message MsgGovUpdateParamsResponse {}
