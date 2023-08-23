@@ -52,6 +52,101 @@
   
     - [Msg](#provenance.attribute.v1.Msg)
   
+- [provenance/exchange/v1/events.proto](#provenance/exchange/v1/events.proto)
+    - [EventCreateMarketSubmitted](#provenance.exchange.v1.EventCreateMarketSubmitted)
+    - [EventMarketCreated](#provenance.exchange.v1.EventMarketCreated)
+    - [EventMarketDetailsUpdated](#provenance.exchange.v1.EventMarketDetailsUpdated)
+    - [EventMarketDisabled](#provenance.exchange.v1.EventMarketDisabled)
+    - [EventMarketEnabled](#provenance.exchange.v1.EventMarketEnabled)
+    - [EventMarketFeesUpdated](#provenance.exchange.v1.EventMarketFeesUpdated)
+    - [EventMarketPermissionsUpdated](#provenance.exchange.v1.EventMarketPermissionsUpdated)
+    - [EventMarketReqAttrUpdated](#provenance.exchange.v1.EventMarketReqAttrUpdated)
+    - [EventMarketUserSettleUpdated](#provenance.exchange.v1.EventMarketUserSettleUpdated)
+    - [EventMarketWithdraw](#provenance.exchange.v1.EventMarketWithdraw)
+    - [EventOrderCancelled](#provenance.exchange.v1.EventOrderCancelled)
+    - [EventOrderCreated](#provenance.exchange.v1.EventOrderCreated)
+    - [EventOrderFilled](#provenance.exchange.v1.EventOrderFilled)
+    - [EventOrderPartiallyFilled](#provenance.exchange.v1.EventOrderPartiallyFilled)
+    - [EventOrderPartiallyFilled2](#provenance.exchange.v1.EventOrderPartiallyFilled2)
+    - [EventParamsUpdated](#provenance.exchange.v1.EventParamsUpdated)
+  
+- [provenance/exchange/v1/market.proto](#provenance/exchange/v1/market.proto)
+    - [AccessGrant](#provenance.exchange.v1.AccessGrant)
+    - [FeeRatio](#provenance.exchange.v1.FeeRatio)
+    - [Market](#provenance.exchange.v1.Market)
+    - [MarketAccount](#provenance.exchange.v1.MarketAccount)
+    - [MarketDetails](#provenance.exchange.v1.MarketDetails)
+  
+    - [Permission](#provenance.exchange.v1.Permission)
+  
+- [provenance/exchange/v1/orders.proto](#provenance/exchange/v1/orders.proto)
+    - [AskOrder](#provenance.exchange.v1.AskOrder)
+    - [BidOrder](#provenance.exchange.v1.BidOrder)
+    - [Order](#provenance.exchange.v1.Order)
+  
+- [provenance/exchange/v1/params.proto](#provenance/exchange/v1/params.proto)
+    - [DenomSplit](#provenance.exchange.v1.DenomSplit)
+    - [Params](#provenance.exchange.v1.Params)
+  
+- [provenance/exchange/v1/qenesis.proto](#provenance/exchange/v1/qenesis.proto)
+    - [GenesisState](#provenance.exchange.v1.GenesisState)
+  
+- [provenance/exchange/v1/query.proto](#provenance/exchange/v1/query.proto)
+    - [QueryGetAddressOrdersRequest](#provenance.exchange.v1.QueryGetAddressOrdersRequest)
+    - [QueryGetAddressOrdersResponse](#provenance.exchange.v1.QueryGetAddressOrdersResponse)
+    - [QueryGetAllOrdersRequest](#provenance.exchange.v1.QueryGetAllOrdersRequest)
+    - [QueryGetAllOrdersResponse](#provenance.exchange.v1.QueryGetAllOrdersResponse)
+    - [QueryGetMarketOrdersRequest](#provenance.exchange.v1.QueryGetMarketOrdersRequest)
+    - [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse)
+    - [QueryGetOrderRequest](#provenance.exchange.v1.QueryGetOrderRequest)
+    - [QueryGetOrderResponse](#provenance.exchange.v1.QueryGetOrderResponse)
+    - [QueryMarketInfoRequest](#provenance.exchange.v1.QueryMarketInfoRequest)
+    - [QueryMarketInfoResponse](#provenance.exchange.v1.QueryMarketInfoResponse)
+    - [QueryOrderFeeCalcRequest](#provenance.exchange.v1.QueryOrderFeeCalcRequest)
+    - [QueryOrderFeeCalcResponse](#provenance.exchange.v1.QueryOrderFeeCalcResponse)
+    - [QueryParamsRequest](#provenance.exchange.v1.QueryParamsRequest)
+    - [QueryParamsResponse](#provenance.exchange.v1.QueryParamsResponse)
+    - [QuerySettlementFeeCalcRequest](#provenance.exchange.v1.QuerySettlementFeeCalcRequest)
+    - [QuerySettlementFeeCalcResponse](#provenance.exchange.v1.QuerySettlementFeeCalcResponse)
+  
+    - [Query](#provenance.exchange.v1.Query)
+  
+- [provenance/exchange/v1/tx.proto](#provenance/exchange/v1/tx.proto)
+    - [MsgCancelOrderRequest](#provenance.exchange.v1.MsgCancelOrderRequest)
+    - [MsgCancelOrderResponse](#provenance.exchange.v1.MsgCancelOrderResponse)
+    - [MsgCreateAskRequest](#provenance.exchange.v1.MsgCreateAskRequest)
+    - [MsgCreateAskResponse](#provenance.exchange.v1.MsgCreateAskResponse)
+    - [MsgCreateBidRequest](#provenance.exchange.v1.MsgCreateBidRequest)
+    - [MsgCreateBidResponse](#provenance.exchange.v1.MsgCreateBidResponse)
+    - [MsgCreateMarketRequest](#provenance.exchange.v1.MsgCreateMarketRequest)
+    - [MsgCreateMarketResponse](#provenance.exchange.v1.MsgCreateMarketResponse)
+    - [MsgFillAsksRequest](#provenance.exchange.v1.MsgFillAsksRequest)
+    - [MsgFillAsksResponse](#provenance.exchange.v1.MsgFillAsksResponse)
+    - [MsgFillBidsRequest](#provenance.exchange.v1.MsgFillBidsRequest)
+    - [MsgFillBidsResponse](#provenance.exchange.v1.MsgFillBidsResponse)
+    - [MsgGovCreateMarketRequest](#provenance.exchange.v1.MsgGovCreateMarketRequest)
+    - [MsgGovCreateMarketResponse](#provenance.exchange.v1.MsgGovCreateMarketResponse)
+    - [MsgGovManageFeesRequest](#provenance.exchange.v1.MsgGovManageFeesRequest)
+    - [MsgGovManageFeesResponse](#provenance.exchange.v1.MsgGovManageFeesResponse)
+    - [MsgGovUpdateParamsRequest](#provenance.exchange.v1.MsgGovUpdateParamsRequest)
+    - [MsgGovUpdateParamsResponse](#provenance.exchange.v1.MsgGovUpdateParamsResponse)
+    - [MsgMarketManagePermissionsRequest](#provenance.exchange.v1.MsgMarketManagePermissionsRequest)
+    - [MsgMarketManagePermissionsResponse](#provenance.exchange.v1.MsgMarketManagePermissionsResponse)
+    - [MsgMarketManageReqAttrsRequest](#provenance.exchange.v1.MsgMarketManageReqAttrsRequest)
+    - [MsgMarketManageReqAttrsResponse](#provenance.exchange.v1.MsgMarketManageReqAttrsResponse)
+    - [MsgMarketSettleRequest](#provenance.exchange.v1.MsgMarketSettleRequest)
+    - [MsgMarketSettleResponse](#provenance.exchange.v1.MsgMarketSettleResponse)
+    - [MsgMarketUpdateDetailsRequest](#provenance.exchange.v1.MsgMarketUpdateDetailsRequest)
+    - [MsgMarketUpdateDetailsResponse](#provenance.exchange.v1.MsgMarketUpdateDetailsResponse)
+    - [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest)
+    - [MsgMarketUpdateEnabledResponse](#provenance.exchange.v1.MsgMarketUpdateEnabledResponse)
+    - [MsgMarketUpdateUserSettleRequest](#provenance.exchange.v1.MsgMarketUpdateUserSettleRequest)
+    - [MsgMarketUpdateUserSettleResponse](#provenance.exchange.v1.MsgMarketUpdateUserSettleResponse)
+    - [MsgMarketWithdrawRequest](#provenance.exchange.v1.MsgMarketWithdrawRequest)
+    - [MsgMarketWithdrawResponse](#provenance.exchange.v1.MsgMarketWithdrawResponse)
+  
+    - [Msg](#provenance.exchange.v1.Msg)
+  
 - [provenance/marker/v1/accessgrant.proto](#provenance/marker/v1/accessgrant.proto)
     - [AccessGrant](#provenance.marker.v1.AccessGrant)
   
@@ -1179,6 +1274,1127 @@ Msg defines the attribute module Msg service.
 | `DeleteAttribute` | [MsgDeleteAttributeRequest](#provenance.attribute.v1.MsgDeleteAttributeRequest) | [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse) | DeleteAttribute defines a method to verify a particular invariance. | |
 | `DeleteDistinctAttribute` | [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest) | [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse) | DeleteDistinctAttribute defines a method to verify a particular invariance. | |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance.attribute.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.attribute.v1.MsgSetAccountDataResponse) | SetAccountData defines a method for setting/updating an account's accountdata attribute. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/exchange/v1/events.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/exchange/v1/events.proto
+
+
+
+<a name="provenance.exchange.v1.EventCreateMarketSubmitted"></a>
+
+### EventCreateMarketSubmitted
+EventCreateMarketSubmitted is an event emitted during CreateMarket indicating that a governance
+proposal was submitted to create a market.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `proposal_id` | [uint64](#uint64) |  | proposal_id is the identifier of the governance proposal that was submitted to create the market. |
+| `submitted_by` | [string](#string) |  | submitted_by is the account that requested the creation of the market. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketCreated"></a>
+
+### EventMarketCreated
+EventMarketCreated is an event emitted when a market has been created.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketDetailsUpdated"></a>
+
+### EventMarketDetailsUpdated
+EventMarketDetailsUpdated is an event emitted when a market's details are updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the details. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketDisabled"></a>
+
+### EventMarketDisabled
+EventMarketDisabled is an event emitted when a market is disabled.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that disabled the market. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketEnabled"></a>
+
+### EventMarketEnabled
+EventMarketEnabled is an event emitted when a market is enabled.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that enabled the market. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketFeesUpdated"></a>
+
+### EventMarketFeesUpdated
+EventMarketFeesUpdated is an event emitted when a market's fees have been updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketPermissionsUpdated"></a>
+
+### EventMarketPermissionsUpdated
+EventMarketPermissionsUpdated is an event emitted when a market's permissions are updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the permissions. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketReqAttrUpdated"></a>
+
+### EventMarketReqAttrUpdated
+EventMarketReqAttrUpdated is an event emitted when a market's required attributes are updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the required attributes. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketUserSettleUpdated"></a>
+
+### EventMarketUserSettleUpdated
+EventMarketUserSettleUpdated is an event emitted when a market's self_settle option is updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the self_settle option. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketWithdraw"></a>
+
+### EventMarketWithdraw
+EventMarketWithdraw is an event emitted when a withdrawal of a market's collected fees is made.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `amount_withdrawn` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount_withdrawn is the amount of funds withdrawn from the market account. |
+| `destination` | [string](#string) |  | destination is the account that received the funds. |
+| `withdrawn_by` | [string](#string) |  | withdrawn_by is the account that requested the withdrawal. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventOrderCancelled"></a>
+
+### EventOrderCancelled
+EventOrderCancelled is an event emitted when an order is cancelled.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order created. |
+| `cancelled_by` | [string](#string) |  | cancelled_by is the account that triggered the cancellation of the order. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventOrderCreated"></a>
+
+### EventOrderCreated
+EventOrderCreated is an event emitted when an order is created.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order created. |
+| `order_type` | [string](#string) |  | order_type is the type of order, e.g. "ask" or "bid". |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventOrderFilled"></a>
+
+### EventOrderFilled
+EventOrderFilled is an event emitted when an order has been filled in full.
+This event is also used for orders that were previously partially filled, but have now been filled in full.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order created. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventOrderPartiallyFilled"></a>
+
+### EventOrderPartiallyFilled
+EventOrderPartiallyFilled is an event emitted when an order filled in part and still has more left to fill.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order created. |
+| `assets_filled` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount_filled is the amount of assets that were filled (and removed from the order). |
+| `fees_filled` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fees_filled is the amount of fees removed from the order. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventOrderPartiallyFilled2"></a>
+
+### EventOrderPartiallyFilled2
+EventOrderPartiallyFilled2 is an event emitted when an order filled in part and still has more left to fill.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order created. |
+| `assets_filled` | [string](#string) |  | amount_filled is the amount of assets that were filled (and removed from the order). |
+| `fees_filled` | [string](#string) |  | fees_filled is the amount of settlement fees removed from the order. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventParamsUpdated"></a>
+
+### EventParamsUpdated
+EventParamsUpdated is an event emitted when the exchange module's params have been updated.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/exchange/v1/market.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/exchange/v1/market.proto
+
+
+
+<a name="provenance.exchange.v1.AccessGrant"></a>
+
+### AccessGrant
+AddrPermissions associates an address with a list of permissions available for that address.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the address that these permissions apply to. |
+| `permissions` | [Permission](#provenance.exchange.v1.Permission) | repeated | allowed is the list of permissions available for the address. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.FeeRatio"></a>
+
+### FeeRatio
+FeeRatio defines a ratio of price amount to fee amount.
+For an order to be valid, its price must be evenly divisible by a FeeRatio's price.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the unit the order price is divided by to get how much of the fee should apply. |
+| `fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | fee is the amount to charge per price unit. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.Market"></a>
+
+### Market
+Market contains all information about a market.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier for this market. |
+| `market_details` | [MarketDetails](#provenance.exchange.v1.MarketDetails) |  | market_details is some information about this market. |
+| `fee_create_ask_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_create_ask_flat is the flat fee charged for creating an ask order. Each coin entry is a separate option. When an ask is created, one of these must be paid. If empty, no fee is required to create an ask order. |
+| `fee_create_bid_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_create_bid_flat is the flat fee charged for creating a bid order. Each coin entry is a separate option. When a bid is created, one of these must be paid. If empty, no fee is required to create a bid order. |
+| `fee_settlement_seller_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_settlement_seller_flat is the flat fee charged to the seller during settlement. Each coin entry is a separate option. When an ask is settled, the seller will pay the amount in the denom that matches the price they received. |
+| `fee_settlement_seller_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | fee_settlement_seller_ratios is the fee to charge a seller during settlement based on the price they are receiving. The price and fee denoms must be equal for each entry, and only one entry for any given denom is allowed. |
+| `fee_settlement_buyer_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_settlement_buyer_flat is the flat fee charged to the buyer during settlement. Each coin entry is a separate option. When a bid is created, the settlement fees provided must contain one of these. |
+| `fee_settlement_buyer_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | fee_settlement_buyer_ratios is the fee to charge a buyer during settlement based on the price they are spending. The price and fee denoms do not have to equal. Multiple entries for any given price or fee denom are allowed, but each price denom to fee denom pair can only have one entry. |
+| `accepting_orders` | [bool](#bool) |  | accepting_orders is whether this market is allowing orders to be created for it. |
+| `allow_user_settlement` | [bool](#bool) |  | allow_user_settlement is whether this market allows users to initiate their own settlements. For example, the FillBids and FillAsks endpoints are available if and only if this is true. The MarketSettle endpoint is only available to market actors regardless of the value of this field. |
+| `access_grants` | [AccessGrant](#provenance.exchange.v1.AccessGrant) | repeated | access_grants is the list of addresses and permissions granted for this market. |
+| `req_attr_create_ask` | [string](#string) | repeated | req_attr_create_ask is a list of attributes required on an account for it to be allowed to create an ask order. TODO[1658]: Add comment about wildcards. |
+| `req_attr_create_bid` | [string](#string) | repeated | req_attr_create_ask is a list of attributes required on an account for it to be allowed to create a bid order. TODO[1658]: Add comment about wildcards. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MarketAccount"></a>
+
+### MarketAccount
+MarketAccount is an account type for use with the accounts module to hold some basic information about a market.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `base_account` | [cosmos.auth.v1beta1.BaseAccount](#cosmos.auth.v1beta1.BaseAccount) |  | base_account is the base cosmos account information. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier for this market. |
+| `market_details` | [MarketDetails](#provenance.exchange.v1.MarketDetails) |  | market_details is some human-consumable information about this market. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MarketDetails"></a>
+
+### MarketDetails
+MarketDetails contains information about a market.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | name is a moniker that people can use to refer to this market. |
+| `description` | [string](#string) |  | description extra information about this market. The field is meant to be human-readable. |
+| `website_url` | [string](#string) |  | website_url is a url people can use to get to this market, or at least get more information about this market. |
+| `icon_uri` | [string](#string) |  | icon_uri is a uri for an icon to associate with this market. |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance.exchange.v1.Permission"></a>
+
+### Permission
+Permission defines the different types of permission that can be given to an account for a market.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| PERMISSION_UNSPECIFIED | 0 | PERMISSION_UNSPECIFIED is the zero-value Permission; it is an error to use it. |
+| PERMISSION_SETTLE | 1 | PERMISSION_SETTLE is the ability to use the Settle Tx endpoint on behalf of a market. |
+| PERMISSION_CANCEL | 2 | PERMISSION_CANCEL is the ability to use the Cancel Tx endpoint on behalf of a market. |
+| PERMISSION_WITHDRAW | 3 | PERMISSION_WITHDRAW is the ability to use the MarketWithdraw Tx endpoint. |
+| PERMISSION_UPDATE | 4 | PERMISSION_UPDATE is the ability to use the MarketUpdate* Tx endpoints. |
+| PERMISSION_PERMISSIONS | 5 | PERMISSION_PERMISSIONS is the ability to use the MarketManagePermissions Tx endpoint. |
+| PERMISSION_ATTRIBUTES | 6 | PERMISSION_ATTRIBUTES is the ability to use the MarketManageReqAttrs Tx endpoint. |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/exchange/v1/orders.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/exchange/v1/orders.proto
+
+
+
+<a name="provenance.exchange.v1.AskOrder"></a>
+
+### AskOrder
+AskOrder represents someone's desire to sell something at a minimum price.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id identifies the market that this order belongs to. |
+| `seller` | [string](#string) |  | seller is the address of the account that owns this order and has the assets to sell. |
+| `assets` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | assets are the things that the seller wishes to sell. A hold is placed on this until the order is filled or cancelled. |
+| `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the minimum amount that the seller is willing to accept for the assets. The seller's settlement proportional fee (and possibly the settlement flat fee) is taken out of the amount the seller receives, so it's possible that the seller will still receive less than this price. |
+| `seller_settlement_flat_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | seller_settlement_flat_fee is the flat fee for sellers that will be charged during settlement. If this denom is the same denom as the price, it will come out of the actual price received. If this denom is different, the amount must be in the seller's account and a hold is placed on it until the order is filled or cancelled. |
+| `allow_partial` | [bool](#bool) |  | allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the order must be either filled in full or not filled at all. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.BidOrder"></a>
+
+### BidOrder
+BidOrder represents someone's desire to buy something at a specific price.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id identifies the market that this order belongs to. |
+| `buyer` | [string](#string) |  | buyer is the address of the account that owns this order and has the price to spend. |
+| `assets` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | assets are the things that the buyer wishes to buy. |
+| `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the amount that the buyer will pay for the assets. A hold is placed on this until the order is filled or cancelled. |
+| `buyer_settlement_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | buyer_settlement_fees are the fees (both flat and proportional) that the buyer will pay (in addition to the price) when the order is settled. A hold is placed on this until the order is filled or cancelled. |
+| `allow_partial` | [bool](#bool) |  | allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the order must be either filled in full or not filled at all. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.Order"></a>
+
+### Order
+Order associates an order id with one of the order types.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier for this order. |
+| `ask_order` | [AskOrder](#provenance.exchange.v1.AskOrder) |  | ask_order is the information about this order if it represents an ask order. |
+| `bid_order` | [BidOrder](#provenance.exchange.v1.BidOrder) |  | bid_order is the information about this order if it represents a bid order. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/exchange/v1/params.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/exchange/v1/params.proto
+
+
+
+<a name="provenance.exchange.v1.DenomSplit"></a>
+
+### DenomSplit
+DenomSplit associates a coin denomination with an amount the exchange receives for that denom.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | denom is the coin denomination this split applies to. |
+| `split` | [uint32](#uint32) |  | split is the proportion of fees the exchange receives for this denom in basis points. E.g. 100 = 1%. Min = 0, Max = 10000. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.Params"></a>
+
+### Params
+Params is a representation of the exchange module parameters.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `default_split` | [uint32](#uint32) |  | default_split is the default proportion of fees the exchange receives in basis points. It is used if there isn't an applicable denom-specific split defined. E.g. 100 = 1%. Min = 0, Max = 10000. |
+| `denom_splits` | [DenomSplit](#provenance.exchange.v1.DenomSplit) | repeated | denom_splits are the denom-specific amounts the exchange receives. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/exchange/v1/qenesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/exchange/v1/qenesis.proto
+
+
+
+<a name="provenance.exchange.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState is the data that should be loaded into the exchange module during genesis.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.exchange.v1.Params) |  | params defines all the parameters of the exchange module. |
+| `markets` | [Market](#provenance.exchange.v1.Market) | repeated | markets are all of the markets to create at genesis. |
+| `orders` | [Order](#provenance.exchange.v1.Order) | repeated | orders are all the orders to create at genesis. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/exchange/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/exchange/v1/query.proto
+
+
+
+<a name="provenance.exchange.v1.QueryGetAddressOrdersRequest"></a>
+
+### QueryGetAddressOrdersRequest
+QueryGetAddressOrdersRequest is a request message for the QueryGetAddressOrders endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | TODO[1658]: QueryGetAddressOrdersRequest |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAddressOrdersResponse"></a>
+
+### QueryGetAddressOrdersResponse
+QueryGetAddressOrdersResponse is a response message for the QueryGetAddressOrders endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAllOrdersRequest"></a>
+
+### QueryGetAllOrdersRequest
+QueryGetAllOrdersRequest is a request message for the QueryGetAllOrders endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAllOrdersResponse"></a>
+
+### QueryGetAllOrdersResponse
+QueryGetAllOrdersResponse is a response message for the QueryGetAllOrders endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetMarketOrdersRequest"></a>
+
+### QueryGetMarketOrdersRequest
+QueryGetMarketOrdersRequest is a request message for the QueryGetMarketOrders endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | TODO[1658]: QueryGetMarketOrdersRequest |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetMarketOrdersResponse"></a>
+
+### QueryGetMarketOrdersResponse
+QueryGetMarketOrdersResponse is a response message for the QueryGetMarketOrders endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetOrderRequest"></a>
+
+### QueryGetOrderRequest
+QueryGetOrderRequest is a request message for the QueryGetOrder endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `order_id` | [uint64](#uint64) |  | TODO[1658]: QueryGetOrderRequest |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetOrderResponse"></a>
+
+### QueryGetOrderResponse
+QueryGetOrderResponse is a response message for the QueryGetOrder endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryMarketInfoRequest"></a>
+
+### QueryMarketInfoRequest
+QueryMarketInfoRequest is a request message for the QueryMarketInfo endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryMarketInfoResponse"></a>
+
+### QueryMarketInfoResponse
+QueryMarketInfoResponse is a response message for the QueryMarketInfo endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryOrderFeeCalcRequest"></a>
+
+### QueryOrderFeeCalcRequest
+QueryOrderFeeCalcRequest is a request message for the QueryOrderFeeCalc endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryOrderFeeCalcResponse"></a>
+
+### QueryOrderFeeCalcResponse
+QueryOrderFeeCalcResponse is a response message for the QueryOrderFeeCalc endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is a request message for the QueryParams endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is a response message for the QueryParams endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QuerySettlementFeeCalcRequest"></a>
+
+### QuerySettlementFeeCalcRequest
+QuerySettlementFeeCalcRequest is a request message for the QuerySettlementFeeCalc endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QuerySettlementFeeCalcResponse"></a>
+
+### QuerySettlementFeeCalcResponse
+QuerySettlementFeeCalcResponse is a response message for the QuerySettlementFeeCalc endpoint.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.exchange.v1.Query"></a>
+
+### Query
+Query is the service for exchange module's query endpoints.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `QueryOrderFeeCalc` | [QueryOrderFeeCalcRequest](#provenance.exchange.v1.QueryOrderFeeCalcRequest) | [QueryOrderFeeCalcResponse](#provenance.exchange.v1.QueryOrderFeeCalcResponse) | QueryOrderFeeCalc calculates the fees that will be associated with the provided order. | GET|/provenance/exchange/v1/fees/order|
+| `QuerySettlementFeeCalc` | [QuerySettlementFeeCalcRequest](#provenance.exchange.v1.QuerySettlementFeeCalcRequest) | [QuerySettlementFeeCalcResponse](#provenance.exchange.v1.QuerySettlementFeeCalcResponse) | QuerySettlementFeeCalc calculates the fees that will be associated with the provided settlement. | GET|/provenance/exchange/v1/fees/settlement|
+| `QueryGetOrder` | [QueryGetOrderRequest](#provenance.exchange.v1.QueryGetOrderRequest) | [QueryGetOrderResponse](#provenance.exchange.v1.QueryGetOrderResponse) | QueryGetOrder looks up an order by id. | GET|/provenance/exchange/v1/order/{order_id}|
+| `QueryGetMarketOrders` | [QueryGetMarketOrdersRequest](#provenance.exchange.v1.QueryGetMarketOrdersRequest) | [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse) | QueryGetMarketOrders looks up the orders in a market. | GET|/provenance/exchange/v1/market/{market_id}/orders|
+| `QueryGetAddressOrders` | [QueryGetAddressOrdersRequest](#provenance.exchange.v1.QueryGetAddressOrdersRequest) | [QueryGetAddressOrdersResponse](#provenance.exchange.v1.QueryGetAddressOrdersResponse) | QueryGetAddressOrders looks up the orders from the provided address. | GET|/provenance/exchange/v1/orders/{address}|
+| `QueryGetAllOrders` | [QueryGetAllOrdersRequest](#provenance.exchange.v1.QueryGetAllOrdersRequest) | [QueryGetAllOrdersResponse](#provenance.exchange.v1.QueryGetAllOrdersResponse) | QueryGetAllOrders gets all orders in the exchange module. | GET|/provenance/exchange/v1/orders|
+| `QueryMarketInfo` | [QueryMarketInfoRequest](#provenance.exchange.v1.QueryMarketInfoRequest) | [QueryMarketInfoResponse](#provenance.exchange.v1.QueryMarketInfoResponse) | QueryMarketInfo returns the information/details about a market. | GET|/provenance/exchange/v1/market/infoGET|/provenance/exchange/v1/market/details|
+| `QueryParams` | [QueryParamsRequest](#provenance.exchange.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.exchange.v1.QueryParamsResponse) | QueryParams returns the exchange module parameters. | GET|/provenance/exchange/v1/params|
+
+ <!-- end services -->
+
+
+
+<a name="provenance/exchange/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/exchange/v1/tx.proto
+
+
+
+<a name="provenance.exchange.v1.MsgCancelOrderRequest"></a>
+
+### MsgCancelOrderRequest
+MsgCancelOrderRequest is a request message for the CancelOrder endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCancelOrderResponse"></a>
+
+### MsgCancelOrderResponse
+MsgCancelOrderResponse is a response message for the CancelOrder endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCreateAskRequest"></a>
+
+### MsgCreateAskRequest
+MsgCreateAskRequest is a request message for the CreateAsk endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCreateAskResponse"></a>
+
+### MsgCreateAskResponse
+MsgCreateAskResponse is a response message for the CreateAsk endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCreateBidRequest"></a>
+
+### MsgCreateBidRequest
+MsgCreateBidRequest is a request message for the CreateBid endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCreateBidResponse"></a>
+
+### MsgCreateBidResponse
+MsgCreateBidResponse is a response message for the CreateBid endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCreateMarketRequest"></a>
+
+### MsgCreateMarketRequest
+MsgCreateMarketRequest is a request message for the CreateMarket endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCreateMarketResponse"></a>
+
+### MsgCreateMarketResponse
+MsgCreateMarketResponse is a response message for the CreateMarket endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgFillAsksRequest"></a>
+
+### MsgFillAsksRequest
+MsgFillAsksRequest is a request message for the FillAsks endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgFillAsksResponse"></a>
+
+### MsgFillAsksResponse
+MsgFillAsksResponse is a response message for the FillAsks endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgFillBidsRequest"></a>
+
+### MsgFillBidsRequest
+MsgFillBidsRequest is a request message for the FillBids endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgFillBidsResponse"></a>
+
+### MsgFillBidsResponse
+MsgFillBidsResponse is a response message for the FillBids endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgGovCreateMarketRequest"></a>
+
+### MsgGovCreateMarketRequest
+MsgGovCreateMarketRequest is a request message for the GovCreateMarket endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgGovCreateMarketResponse"></a>
+
+### MsgGovCreateMarketResponse
+MsgGovCreateMarketResponse is a response message for the GovCreateMarket endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgGovManageFeesRequest"></a>
+
+### MsgGovManageFeesRequest
+MsgGovManageFeesRequest is a request message for the GovManageFees endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgGovManageFeesResponse"></a>
+
+### MsgGovManageFeesResponse
+MsgGovManageFeesResponse is a response message for the GovManageFees endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgGovUpdateParamsRequest"></a>
+
+### MsgGovUpdateParamsRequest
+MsgGovUpdateParamsRequest is a request message for the GovUpdateParams endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgGovUpdateParamsResponse"></a>
+
+### MsgGovUpdateParamsResponse
+MsgGovUpdateParamsResponse is a response message for the GovUpdateParams endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketManagePermissionsRequest"></a>
+
+### MsgMarketManagePermissionsRequest
+MsgMarketManagePermissionsRequest is a request message for the MarketManagePermissions endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketManagePermissionsResponse"></a>
+
+### MsgMarketManagePermissionsResponse
+MsgMarketManagePermissionsResponse is a response message for the MarketManagePermissions endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketManageReqAttrsRequest"></a>
+
+### MsgMarketManageReqAttrsRequest
+MsgMarketManageReqAttrsRequest is a request message for the MarketManageReqAttrs endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketManageReqAttrsResponse"></a>
+
+### MsgMarketManageReqAttrsResponse
+MsgMarketManageReqAttrsResponse is a response message for the MarketManageReqAttrs endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketSettleRequest"></a>
+
+### MsgMarketSettleRequest
+MsgMarketSettleRequest is a request message for the MarketSettle endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketSettleResponse"></a>
+
+### MsgMarketSettleResponse
+MsgMarketSettleResponse is a response message for the MarketSettle endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketUpdateDetailsRequest"></a>
+
+### MsgMarketUpdateDetailsRequest
+MsgMarketUpdateDetailsRequest is a request message for the MarketUpdateDetails endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketUpdateDetailsResponse"></a>
+
+### MsgMarketUpdateDetailsResponse
+MsgMarketUpdateDetailsResponse is a response message for the MarketUpdateDetails endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketUpdateEnabledRequest"></a>
+
+### MsgMarketUpdateEnabledRequest
+MsgMarketUpdateEnabledRequest is a request message for the MarketUpdateEnabled endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketUpdateEnabledResponse"></a>
+
+### MsgMarketUpdateEnabledResponse
+MsgMarketUpdateEnabledResponse is a response message for the MarketUpdateEnabled endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketUpdateUserSettleRequest"></a>
+
+### MsgMarketUpdateUserSettleRequest
+MsgMarketUpdateUserSettleRequest is a request message for the MarketUpdateUserSettle endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketUpdateUserSettleResponse"></a>
+
+### MsgMarketUpdateUserSettleResponse
+MsgMarketUpdateUserSettleResponse is a response message for the MarketUpdateUserSettle endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketWithdrawRequest"></a>
+
+### MsgMarketWithdrawRequest
+MsgMarketWithdrawRequest is a request message for the MarketWithdraw endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketWithdrawResponse"></a>
+
+### MsgMarketWithdrawResponse
+MsgMarketWithdrawResponse is a response message for the MarketWithdraw endpoint.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.exchange.v1.Msg"></a>
+
+### Msg
+Msg is the service for exchange module's tx endpoints.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateAsk` | [MsgCreateAskRequest](#provenance.exchange.v1.MsgCreateAskRequest) | [MsgCreateAskResponse](#provenance.exchange.v1.MsgCreateAskResponse) | CreateAsk creates an ask order (to sell something you own). | |
+| `CreateBid` | [MsgCreateBidRequest](#provenance.exchange.v1.MsgCreateBidRequest) | [MsgCreateBidResponse](#provenance.exchange.v1.MsgCreateBidResponse) | CreateBid creates an bid order (to buy something you want). | |
+| `CancelOrder` | [MsgCancelOrderRequest](#provenance.exchange.v1.MsgCancelOrderRequest) | [MsgCancelOrderResponse](#provenance.exchange.v1.MsgCancelOrderResponse) | CancelOrder cancels an order. | |
+| `FillBids` | [MsgFillBidsRequest](#provenance.exchange.v1.MsgFillBidsRequest) | [MsgFillBidsResponse](#provenance.exchange.v1.MsgFillBidsResponse) | FillBids uses the assets in your account to fulfill one or more bids (similar to a fill-or-cancel ask). | |
+| `FillAsks` | [MsgFillAsksRequest](#provenance.exchange.v1.MsgFillAsksRequest) | [MsgFillAsksResponse](#provenance.exchange.v1.MsgFillAsksResponse) | FillAsks uses the funds in your account to fulfill one or more asks (similar to a fill-or-cancel bid). | |
+| `MarketSettle` | [MsgMarketSettleRequest](#provenance.exchange.v1.MsgMarketSettleRequest) | [MsgMarketSettleResponse](#provenance.exchange.v1.MsgMarketSettleResponse) | MarketSettle is a market endpoint to trigger the settlement of orders. | |
+| `MarketWithdraw` | [MsgMarketWithdrawRequest](#provenance.exchange.v1.MsgMarketWithdrawRequest) | [MsgMarketWithdrawResponse](#provenance.exchange.v1.MsgMarketWithdrawResponse) | MarketWithdraw is a market endpoint to withdraw fees that have been collected. | |
+| `MarketUpdateDetails` | [MsgMarketUpdateDetailsRequest](#provenance.exchange.v1.MsgMarketUpdateDetailsRequest) | [MsgMarketUpdateDetailsResponse](#provenance.exchange.v1.MsgMarketUpdateDetailsResponse) | MarketUpdateDetails is a market endpoint to update its details. | |
+| `MarketUpdateEnabled` | [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest) | [MsgMarketUpdateEnabledResponse](#provenance.exchange.v1.MsgMarketUpdateEnabledResponse) | MarketUpdateEnabled is a market endpoint to update whether its accepting orders. | |
+| `MarketUpdateUserSettle` | [MsgMarketUpdateUserSettleRequest](#provenance.exchange.v1.MsgMarketUpdateUserSettleRequest) | [MsgMarketUpdateUserSettleResponse](#provenance.exchange.v1.MsgMarketUpdateUserSettleResponse) | MarketUpdateUserSettle is a market endpoint to update whether it allows user-initiated settlement. | |
+| `MarketManagePermissions` | [MsgMarketManagePermissionsRequest](#provenance.exchange.v1.MsgMarketManagePermissionsRequest) | [MsgMarketManagePermissionsResponse](#provenance.exchange.v1.MsgMarketManagePermissionsResponse) | MarketManagePermissions is a market endpoint to manage a market's user permissions. | |
+| `MarketManageReqAttrs` | [MsgMarketManageReqAttrsRequest](#provenance.exchange.v1.MsgMarketManageReqAttrsRequest) | [MsgMarketManageReqAttrsResponse](#provenance.exchange.v1.MsgMarketManageReqAttrsResponse) | MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it. | |
+| `CreateMarket` | [MsgCreateMarketRequest](#provenance.exchange.v1.MsgCreateMarketRequest) | [MsgCreateMarketResponse](#provenance.exchange.v1.MsgCreateMarketResponse) | CreateMarket reserves the next market id and submits a GovCreateMarket governance proposal to create the market. | |
+| `GovCreateMarket` | [MsgGovCreateMarketRequest](#provenance.exchange.v1.MsgGovCreateMarketRequest) | [MsgGovCreateMarketResponse](#provenance.exchange.v1.MsgGovCreateMarketResponse) | GovCreateMarket is a governance proposal endpoint for creating a market. The CreateMarket endpoint should be used to submit one of these unless you don't need to know the market id until after the proposal passes. | |
+| `GovManageFees` | [MsgGovManageFeesRequest](#provenance.exchange.v1.MsgGovManageFeesRequest) | [MsgGovManageFeesResponse](#provenance.exchange.v1.MsgGovManageFeesResponse) | GovManageFees is a governance proposal endpoint for updating a market's fees. | |
+| `GovUpdateParams` | [MsgGovUpdateParamsRequest](#provenance.exchange.v1.MsgGovUpdateParamsRequest) | [MsgGovUpdateParamsResponse](#provenance.exchange.v1.MsgGovUpdateParamsResponse) | GovUpdateParams is a governance proposal endpoint for updating the exchange module's params. | |
 
  <!-- end services -->
 
