@@ -1,0 +1,15 @@
+syntax = "proto3";
+package provenance.ibchooks.v1;
+
+import "gogoproto/gogo.proto";
+import "provenance/ibchooks/v1/params.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/ibchooks/types";
+
+option java_package        = "io.provenance.ibchooks.v1";
+option java_multiple_files = true;
+
+// GenesisState is the IBC Hooks genesis state (params)
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
