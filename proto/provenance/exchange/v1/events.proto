@@ -10,7 +10,8 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-// TODO[1658]: Examine the difference between EventOrderPartiallyFilled and EventOrderPartiallyFilled2 to see if it's okay to have a Coins field instead of a string. Then remove one of them.
+// TODO[1658]: Examine the difference between EventOrderPartiallyFilled and EventOrderPartiallyFilled2 to see if it's
+//             okay to have a Coins field instead of a string. Then remove one of them.
 
 // EventOrderCreated is an event emitted when an order is created.
 message EventOrderCreated {
@@ -28,7 +29,8 @@ message EventOrderCancelled {
   string cancelled_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// EventOrderFilled is an event emitted when an order has been filled in full. This event is also used for orders that were previously partially filled, but have now been filled in full.
+// EventOrderFilled is an event emitted when an order has been filled in full.
+// This event is also used for orders that were previously partially filled, but have now been filled in full.
 message EventOrderFilled {
   // order_id is the numerical identifier of the order created.
   uint64 order_id = 1;
@@ -39,15 +41,11 @@ message EventOrderPartiallyFilled {
   // order_id is the numerical identifier of the order created.
   uint64 order_id = 1;
   // amount_filled is the amount of assets that were filled (and removed from the order).
-  repeated cosmos.base.v1beta1.Coin assets_filled = 2 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin assets_filled = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // fees_filled is the amount of fees removed from the order.
-  repeated cosmos.base.v1beta1.Coin fees_filled = 3 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin fees_filled = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 // EventOrderPartiallyFilled2 is an event emitted when an order filled in part and still has more left to fill.
@@ -65,10 +63,8 @@ message EventMarketWithdraw {
   // market_id is the numerical identifier of the market.
   uint32 market_id = 1;
   // amount_withdrawn is the amount of funds withdrawn from the market account.
-  repeated cosmos.base.v1beta1.Coin amount_withdrawn = 2 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin amount_withdrawn = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // destination is the account that received the funds.
   string destination = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // withdrawn_by is the account that requested the withdrawal.
@@ -123,7 +119,8 @@ message EventMarketReqAttrUpdated {
   string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// EventCreateMarketSubmitted is an event emitted during CreateMarket indicating that a governance proposal was submitted to create a market.
+// EventCreateMarketSubmitted is an event emitted during CreateMarket indicating that a governance
+// proposal was submitted to create a market.
 message EventCreateMarketSubmitted {
   // market_id is the numerical identifier of the market.
   uint32 market_id = 1;

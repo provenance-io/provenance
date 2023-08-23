@@ -6,8 +6,6 @@ option go_package = "github.com/provenance-io/provenance/x/exchange";
 option java_package        = "io.provenance.exchange.v1";
 option java_multiple_files = true;
 
-import "cosmos_proto/cosmos.proto";
-
 // Msg is the service for exchange module's tx endpoints.
 service Msg {
   // CreateAsk creates an ask order (to sell something you own).
@@ -50,7 +48,8 @@ service Msg {
   rpc CreateMarket(MsgCreateMarketRequest) returns (MsgCreateMarketResponse);
 
   // GovCreateMarket is a governance proposal endpoint for creating a market.
-  // The CreateMarket endpoint should be used to submit one of these unless you don't need to know the market id until after the proposal passes.
+  // The CreateMarket endpoint should be used to submit one of these unless you don't need to know the market id until
+  // after the proposal passes.
   rpc GovCreateMarket(MsgGovCreateMarketRequest) returns (MsgGovCreateMarketResponse);
 
   // GovManageFees is a governance proposal endpoint for updating a market's fees.
@@ -155,8 +154,6 @@ message MsgMarketManageReqAttrsRequest {
 
 // MsgMarketManageReqAttrsResponse is a response message for the MarketManageReqAttrs endpoint.
 message MsgMarketManageReqAttrsResponse {}
-
-//rpc CreateMarket(MsgCreateMarketRequest) returns (MsgCreateMarketResponse);
 
 // MsgCreateMarketRequest is a request message for the CreateMarket endpoint.
 message MsgCreateMarketRequest {
