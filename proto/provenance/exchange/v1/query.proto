@@ -6,6 +6,7 @@ option go_package = "github.com/provenance-io/provenance/x/exchange";
 option java_package        = "io.provenance.exchange.v1";
 option java_multiple_files = true;
 
+import "cosmos_proto/cosmos.proto";
 import "google/api/annotations.proto";
 
 // Query is the service for exchange module's query endpoints.
@@ -74,6 +75,7 @@ message QuerySettlementFeeCalcResponse {
 
 // QueryGetOrderRequest is a request message for the QueryGetOrder endpoint.
 message QueryGetOrderRequest {
+  uint64 order_id = 1;
   // TODO[1658]: QueryGetOrderRequest
 }
 // QueryGetOrderResponse is a response message for the QueryGetOrder endpoint.
@@ -83,6 +85,7 @@ message QueryGetOrderResponse {
 
 // QueryGetMarketOrdersRequest is a request message for the QueryGetMarketOrders endpoint.
 message QueryGetMarketOrdersRequest {
+  uint32 market_id = 1;
   // TODO[1658]: QueryGetMarketOrdersRequest
 }
 // QueryGetMarketOrdersResponse is a response message for the QueryGetMarketOrders endpoint.
@@ -92,6 +95,7 @@ message QueryGetMarketOrdersResponse {
 
 // QueryGetAddressOrdersRequest is a request message for the QueryGetAddressOrders endpoint.
 message QueryGetAddressOrdersRequest {
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // TODO[1658]: QueryGetAddressOrdersRequest
 }
 // QueryGetAddressOrdersResponse is a response message for the QueryGetAddressOrders endpoint.
