@@ -17,7 +17,7 @@ message GenesisState {
   option (gogoproto.goproto_getters) = false;
 
   // params defines all the parameters of the exchange module.
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params params = 1;
 
   // markets are all of the markets to create at genesis.
   repeated Market markets = 2;
