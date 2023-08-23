@@ -93,9 +93,9 @@ message Market {
 // For an order to be valid, its price must be evenly divisible by a FeeRatio's price.
 message FeeRatio {
   // price is the unit the order price is divided by to get how much of the fee should apply.
-  cosmos.base.v1beta1.Coin price = 1;
+  cosmos.base.v1beta1.Coin price = 1 [(gogoproto.nullable) = false];
   // fee is the amount to charge per price unit.
-  cosmos.base.v1beta1.Coin fee = 2;
+  cosmos.base.v1beta1.Coin fee = 2 [(gogoproto.nullable) = false];
 }
 
 // AddrPermissions associates an address with a list of permissions available for that address.

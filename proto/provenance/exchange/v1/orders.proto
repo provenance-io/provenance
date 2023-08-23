@@ -36,11 +36,11 @@ message AskOrder {
   // price is the minimum amount that the seller is willing to accept for the assets. The seller's settlement
   // proportional fee (and possibly the settlement flat fee) is taken out of the amount the seller receives,
   // so it's possible that the seller will still receive less than this price.
-  cosmos.base.v1beta1.Coin price = 4;
+  cosmos.base.v1beta1.Coin price = 4 [(gogoproto.nullable) = false];
   // seller_settlement_flat_fee is the flat fee for sellers that will be charged during settlement. If this denom is the
   // same denom as the price, it will come out of the actual price received. If this denom is different, the amount must
   // be in the seller's account and a hold is placed on it until the order is filled or cancelled.
-  cosmos.base.v1beta1.Coin seller_settlement_flat_fee = 5;
+  cosmos.base.v1beta1.Coin seller_settlement_flat_fee = 5 [(gogoproto.nullable) = false];
   // allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the
   // order must be either filled in full or not filled at all.
   bool allow_partial = 6;
@@ -57,7 +57,7 @@ message BidOrder {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // price is the amount that the buyer will pay for the assets.
   // A hold is placed on this until the order is filled or cancelled.
-  cosmos.base.v1beta1.Coin price = 4;
+  cosmos.base.v1beta1.Coin price = 4 [(gogoproto.nullable) = false];
   // buyer_settlement_fees are the fees (both flat and proportional) that the buyer will pay (in addition to the price)
   // when the order is settled. A hold is placed on this until the order is filled or cancelled.
   repeated cosmos.base.v1beta1.Coin buyer_settlement_fees = 5
