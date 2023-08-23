@@ -67,7 +67,6 @@
     - [EventOrderCreated](#provenance.exchange.v1.EventOrderCreated)
     - [EventOrderFilled](#provenance.exchange.v1.EventOrderFilled)
     - [EventOrderPartiallyFilled](#provenance.exchange.v1.EventOrderPartiallyFilled)
-    - [EventOrderPartiallyFilled2](#provenance.exchange.v1.EventOrderPartiallyFilled2)
     - [EventParamsUpdated](#provenance.exchange.v1.EventParamsUpdated)
   
 - [provenance/exchange/v1/market.proto](#provenance/exchange/v1/market.proto)
@@ -1439,7 +1438,7 @@ EventMarketWithdraw is an event emitted when a withdrawal of a market's collecte
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
-| `amount_withdrawn` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount_withdrawn is the amount of funds withdrawn from the market account. |
+| `amount_withdrawn` | [string](#string) |  | amount_withdrawn is the coins amount string of funds withdrawn from the market account. |
 | `destination` | [string](#string) |  | destination is the account that received the funds. |
 | `withdrawn_by` | [string](#string) |  | withdrawn_by is the account that requested the withdrawal. |
 
@@ -1505,25 +1504,8 @@ EventOrderPartiallyFilled is an event emitted when an order filled in part and s
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order created. |
-| `assets_filled` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount_filled is the amount of assets that were filled (and removed from the order). |
-| `fees_filled` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fees_filled is the amount of fees removed from the order. |
-
-
-
-
-
-
-<a name="provenance.exchange.v1.EventOrderPartiallyFilled2"></a>
-
-### EventOrderPartiallyFilled2
-EventOrderPartiallyFilled2 is an event emitted when an order filled in part and still has more left to fill.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order created. |
-| `assets_filled` | [string](#string) |  | amount_filled is the amount of assets that were filled (and removed from the order). |
-| `fees_filled` | [string](#string) |  | fees_filled is the amount of settlement fees removed from the order. |
+| `assets_filled` | [string](#string) |  | amount_filled is the coins amount string of assets that were filled (and removed from the order). |
+| `fees_filled` | [string](#string) |  | fees_filled is the coins amount string of fees removed from the order. |
 
 
 

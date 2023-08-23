@@ -6,12 +6,7 @@ option go_package = "github.com/provenance-io/provenance/x/exchange";
 option java_package        = "io.provenance.exchange.v1";
 option java_multiple_files = true;
 
-import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
-import "gogoproto/gogo.proto";
-
-// TODO[1658]: Examine the difference between EventOrderPartiallyFilled and EventOrderPartiallyFilled2 to see if it's
-//             okay to have a Coins field instead of a string. Then remove one of them.
 
 // EventOrderCreated is an event emitted when an order is created.
 message EventOrderCreated {
@@ -40,21 +35,9 @@ message EventOrderFilled {
 message EventOrderPartiallyFilled {
   // order_id is the numerical identifier of the order created.
   uint64 order_id = 1;
-  // amount_filled is the amount of assets that were filled (and removed from the order).
-  repeated cosmos.base.v1beta1.Coin assets_filled = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  // fees_filled is the amount of fees removed from the order.
-  repeated cosmos.base.v1beta1.Coin fees_filled = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-}
-
-// EventOrderPartiallyFilled2 is an event emitted when an order filled in part and still has more left to fill.
-message EventOrderPartiallyFilled2 {
-  // order_id is the numerical identifier of the order created.
-  uint64 order_id = 1;
-  // amount_filled is the amount of assets that were filled (and removed from the order).
+  // amount_filled is the coins amount string of assets that were filled (and removed from the order).
   string assets_filled = 2;
-  // fees_filled is the amount of settlement fees removed from the order.
+  // fees_filled is the coins amount string of fees removed from the order.
   string fees_filled = 3;
 }
 
@@ -62,9 +45,8 @@ message EventOrderPartiallyFilled2 {
 message EventMarketWithdraw {
   // market_id is the numerical identifier of the market.
   uint32 market_id = 1;
-  // amount_withdrawn is the amount of funds withdrawn from the market account.
-  repeated cosmos.base.v1beta1.Coin amount_withdrawn = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // amount_withdrawn is the coins amount string of funds withdrawn from the market account.
+  string amount_withdrawn = 2;
   // destination is the account that received the funds.
   string destination = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // withdrawn_by is the account that requested the withdrawal.
