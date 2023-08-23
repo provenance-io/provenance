@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -39,10 +40,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 
 // Validate params.
 func (p Params) Validate() error {
-	if err := validateAsyncAckAllowList(p.AllowedAsyncAckContracts); err != nil {
-		return err
-	}
-	return nil
+	return validateAsyncAckAllowList(p.AllowedAsyncAckContracts)
 }
 
 func validateAsyncAckAllowList(i interface{}) error {

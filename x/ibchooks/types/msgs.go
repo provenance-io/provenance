@@ -2,7 +2,6 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // constants.
@@ -16,10 +15,7 @@ func (m MsgEmitIBCAck) Route() string { return RouterKey }
 func (m MsgEmitIBCAck) Type() string  { return TypeMsgEmitIBCAck }
 func (m MsgEmitIBCAck) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
-	}
-	return nil
+	return err
 }
 
 func (m MsgEmitIBCAck) GetSignBytes() []byte {

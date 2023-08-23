@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	sdkerrors "cosmossdk.io/errors"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	sdkerrors "cosmossdk.io/errors"
+
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
@@ -335,7 +335,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 	}
 
 	// Notify the sender that the ack has been received
-	ackAsJson, err := json.Marshal(acknowledgement)
+	ackAsJSON, err := json.Marshal(acknowledgement)
 	if err != nil {
 		// If the ack is not a json object, error
 		return err
@@ -343,7 +343,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 
 	sudoMsg := []byte(fmt.Sprintf(
 		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
-		packet.SourceChannel, packet.Sequence, ackAsJson, success))
+		packet.SourceChannel, packet.Sequence, ackAsJSON, success))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback

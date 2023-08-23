@@ -4,23 +4,23 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/cosmos/cosmos-sdk/types/address"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-
-	"strings"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/provenance-io/provenance/x/ibchooks/osmoutils"
-	"github.com/provenance-io/provenance/x/ibchooks/types"
+	sdkerrors "cosmossdk.io/errors"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+
+	"github.com/provenance-io/provenance/x/ibchooks/osmoutils"
+	"github.com/provenance-io/provenance/x/ibchooks/types"
 )
 
 type (
@@ -174,7 +174,7 @@ func (k Keeper) DeletePacketAckActor(ctx sdk.Context, channel string, packetSequ
 func DeriveIntermediateSender(channel, originalSender, bech32Prefix string) (string, error) {
 	senderStr := fmt.Sprintf("%s/%s", channel, originalSender)
 	senderHash32 := address.Hash(types.SenderPrefix, []byte(senderStr))
-	sender := sdk.AccAddress(senderHash32[:])
+	sender := sdk.AccAddress(senderHash32)
 	return sdk.Bech32ifyAddressBytes(bech32Prefix, sender)
 }
 
@@ -192,7 +192,7 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 	}
 
 	// Write the acknowledgement
-	_, cap, err := k.channelKeeper.LookupModuleByChannel(ctx, "transfer", channel)
+	_, transferCapability, err := k.channelKeeper.LookupModuleByChannel(ctx, "transfer", channel)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 	}
@@ -222,16 +222,15 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 	ack, err := types.UnmarshalIBCAck(bz)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "could not unmarshal into IBCAckResponse or IBCAckError")
-
 	}
 	var newAck channeltypes.Acknowledgement
 	var packet channeltypes.Packet
 
 	switch ack.Type {
 	case "ack_response":
-		jsonAck, err := json.Marshal(ack.AckResponse.ContractAck)
-		if err != nil {
-			return nil, sdkerrors.Wrap(err, "could not marshal acknowledgement")
+		jsonAck, marshallErr := json.Marshal(ack.AckResponse.ContractAck)
+		if marshallErr != nil {
+			return nil, sdkerrors.Wrap(marshallErr, "could not marshal acknowledgement")
 		}
 		packet = ack.AckResponse.Packet
 		newAck = channeltypes.NewResultAcknowledgement(jsonAck)
@@ -252,7 +251,7 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 	}
 
 	// Now we can write the acknowledgement
-	err = k.channelKeeper.WriteAcknowledgement(ctx, cap, packet, newAck)
+	err = k.channelKeeper.WriteAcknowledgement(ctx, transferCapability, packet, newAck)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "could not write acknowledgement")
 	}
