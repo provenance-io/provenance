@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
-	"unicode"
-
-	"github.com/google/uuid"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -252,58 +249,26 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(recor
 
 // Normalize returns a name is storage format.
 func (k Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
-	comps := make([]string, 0)
-	for _, comp := range strings.Split(name, ".") {
-		comp = strings.ToLower(strings.TrimSpace(comp))
-		lenComp := uint32(len(comp))
-		isUUID := isValidUUID(comp)
-		if lenComp < k.GetMinSegmentLength(ctx) {
+	normalized := types.NormalizeName(name)
+	segCount := uint32(0)
+	for _, segment := range strings.Split(normalized, ".") {
+		segCount++
+		segLen := uint32(len(segment))
+		isUUID := types.IsValidUUID(segment)
+		if segLen < k.GetMinSegmentLength(ctx) {
 			return "", types.ErrNameSegmentTooShort
 		}
-		if lenComp > k.GetMaxSegmentLength(ctx) && !isUUID {
+		if segLen > k.GetMaxSegmentLength(ctx) && !isUUID {
 			return "", types.ErrNameSegmentTooLong
 		}
-		if !isValid(comp) {
+		if !types.IsValidNameSegment(segment) {
 			return "", types.ErrNameInvalid
 		}
-		comps = append(comps, comp)
 	}
-	if uint32(len(comps)) > k.GetMaxNameLevels(ctx) {
+	if segCount > k.GetMaxNameLevels(ctx) {
 		return "", types.ErrNameHasTooManySegments
 	}
-	return strings.Join(comps, "."), nil
-}
-
-// Check whether a name component is valid
-func isValid(s string) bool {
-	// Allow valid UUID
-	if isValidUUID(s) {
-		return true
-	}
-	// Only allow a single dash if not a UUID
-	if strings.Count(s, "-") > 1 {
-		return false
-	}
-	for _, c := range s {
-		if c == '-' {
-			continue
-		}
-		if !unicode.IsGraphic(c) {
-			return false
-		}
-		if !unicode.IsLower(c) && !unicode.IsDigit(c) {
-			return false
-		}
-	}
-	return true
-}
-
-// Ensure a string can be parsed into a UUID.
-func isValidUUID(s string) bool {
-	if _, err := uuid.Parse(s); err != nil {
-		return false
-	}
-	return true
+	return normalized, nil
 }
 
 func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict, isModifiable bool) error {
