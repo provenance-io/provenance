@@ -70,3 +70,12 @@ func DenySendKey(markerAddr sdk.AccAddress, denyAddr sdk.AccAddress) []byte {
 	key = append(key, address.MustLengthPrefix(markerAddr.Bytes())...)
 	return append(key, address.MustLengthPrefix(denyAddr.Bytes())...)
 }
+
+// GetDenySendAddresses returns marker and denied send sdk.AccAddress's from DenySendKey
+func GetDenySendAddresses(key []byte) (markerAddr sdk.AccAddress, denyAddr sdk.AccAddress) {
+	markerKeyLen := key[1]
+	denyKeyLen := key[markerKeyLen+2]
+	markerAddr = sdk.AccAddress(key[2 : markerKeyLen+2])
+	denyAddr = sdk.AccAddress(key[markerKeyLen+3 : markerKeyLen+3+denyKeyLen])
+	return
+}
