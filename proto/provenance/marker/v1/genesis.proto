@@ -21,16 +21,16 @@ message GenesisState {
   repeated MarkerAccount markers = 2 [(gogoproto.nullable) = false];
 
   // list of denom based denied send addresses
-  repeated DenySendAddresses deny_send_addresses = 4 [(gogoproto.nullable) = false];
+  repeated DenySendAddress deny_send_addresses = 4 [(gogoproto.nullable) = false];
 }
 
-// DenySendAddresses defines addresses that are denied sends for marker denom
-message DenySendAddresses {
+// DenySendAddress defines addresses that are denied sends for marker denom
+message DenySendAddress {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // denom is the marker's denom for denied addresses
-  string denom = 1;
-  // addresses defines all wallet addresses that are denied sends for marker denom
-  repeated string addresses = 3;
+  // marker_address is the marker's address for denied address
+  string marker_address = 1;
+  // deny_address defines all wallet addresses that are denied sends for the marker
+  string deny_address = 3;
 }

@@ -43,6 +43,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 			k.SetMarker(ctx, &data.Markers[i])
 		}
 	}
+
+	for _, denyAddress := range data.DenySendAddresses {
+		markerAddr := sdk.MustAccAddressFromBech32(denyAddress.MarkerAddress)
+		denyAddress := sdk.MustAccAddressFromBech32(denyAddress.DenyAddress)
+		k.AddSendDeny(ctx, markerAddr, denyAddress)
+	}
 }
 
 // ExportGenesis exports the current keeper state of the marker module.ExportGenesis
@@ -73,5 +79,14 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	}
 
 	k.IterateMarkers(ctx, appendToMarkers)
-	return types.NewGenesisState(params, markers)
+
+	var denyAddresses []types.DenySendAddress
+	handleDenyList := func(key []byte) bool {
+		markerAddr, denyAddr := types.GetDenySendAddresses(key)
+		denyAddresses = append(denyAddresses, types.DenySendAddress{MarkerAddress: markerAddr.String(), DenyAddress: denyAddr.String()})
+		return false
+	}
+	k.IterateSendDeny(ctx, handleDenyList)
+
+	return types.NewGenesisState(params, markers, denyAddresses)
 }
