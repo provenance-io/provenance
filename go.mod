@@ -177,6 +177,8 @@ replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alp
 
 replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.13-pio-1
 
+replace github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1
+
 // Use cometbft as requied by the SDK at v0.46.13
 replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.29
 

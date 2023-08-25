@@ -72,7 +72,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, 
 	// The funds sent on this packet need to be transferred to the intermediary account for the sender.
 	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds to this new address)
 	// and execute the underlying OnRecvPacket() call (which should eventually land on the transfer app's
-	// relay.go and send the sunds to the intermediary account.
+	// relay.go and send the funds to the intermediary account.
 	//
 	// If that succeeds, we make the contract call
 	data.Receiver = senderBech32
@@ -342,8 +342,12 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 	}
 
 	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
-		packet.SourceChannel, packet.Sequence, ackAsJSON, success))
+		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%q", "sequence": %d, "ack": %s, "success": %q}}}`,
+		packet.SourceChannel,
+		packet.Sequence,
+		ackAsJSON,
+		success))
+
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback

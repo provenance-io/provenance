@@ -39,16 +39,17 @@ func NewKeeper(
 	paramSpace paramtypes.Subspace,
 	channelKeeper types.ChannelKeeper,
 	contractKeeper *wasmkeeper.PermissionedKeeper,
-) *Keeper {
+) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
-	return &Keeper{
+	keeper := Keeper{
 		storeKey:       storeKey,
 		paramSpace:     paramSpace,
 		channelKeeper:  channelKeeper,
 		ContractKeeper: contractKeeper,
 	}
+	return keeper
 }
 
 // Logger returns a logger for the x/tokenfactory module
