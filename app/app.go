@@ -303,7 +303,8 @@ type App struct {
 	MetadataKeeper  metadatakeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
 	NameKeeper      namekeeper.Keeper
-	WasmKeeper      wasm.Keeper
+	WasmKeeper      *wasm.Keeper
+	ContractKeeper  *wasmkeeper.PermissionedKeeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -484,7 +485,8 @@ func New(
 	app.IBCHooksKeeper = &hooksKeeper
 
 	// Setup the ICS4Wrapper used by the hooks middleware
-	wasmHooks := ibchooks.NewWasmHooks(&hooksKeeper, nil, AccountAddressPrefix) // The contract keeper needs to be set later
+	addrPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()        // We use this approach so running tests which use "cosmos" will work while we use "pb"
+	wasmHooks := ibchooks.NewWasmHooks(&hooksKeeper, nil, addrPrefix) // The contract keeper needs to be set later
 	app.Ics20WasmHooks = &wasmHooks
 	app.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
 		app.IBCKeeper.ChannelKeeper,
@@ -579,7 +581,7 @@ func New(
 
 	// The last arguments contain custom message handlers, and custom query handlers,
 	// to allow smart contracts to use provenance modules.
-	app.WasmKeeper = wasm.NewKeeper(
+	wasmKeeperInstance := wasm.NewKeeper(
 		appCodec,
 		keys[wasm.StoreKey],
 		app.GetSubspace(wasm.ModuleName),
@@ -600,6 +602,12 @@ func New(
 		wasmkeeper.WithQueryPlugins(provwasm.QueryPlugins(querierRegistry, *app.GRPCQueryRouter(), appCodec)),
 		wasmkeeper.WithMessageEncoders(provwasm.MessageEncoders(encoderRegistry, logger)),
 	)
+	app.WasmKeeper = &wasmKeeperInstance
+
+	// Pass the wasm keeper to all the wrappers that need it
+	app.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
+	app.Ics20WasmHooks.ContractKeeper = app.WasmKeeper // app.ContractKeeper -- this changes in the next version of wasm to a permissioned keeper
+	app.IBCHooksKeeper.ContractKeeper = app.ContractKeeper
 
 	unsanctionableAddrs := make([]sdk.AccAddress, 0, len(maccPerms)+1)
 	for mName := range maccPerms {
@@ -680,7 +688,7 @@ func New(
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
-		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 
@@ -878,7 +886,7 @@ func New(
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
-		provwasm.NewWrapper(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
+		provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 
 		ibc.NewAppModule(app.IBCKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
