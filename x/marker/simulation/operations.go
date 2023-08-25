@@ -38,21 +38,9 @@ const (
 	OpWeightMsgAddMarkerProposal = "op_weight_msg_add_marker_proposal"
 	//nolint:gosec // not credentials
 	OpWeightMsgSetAccountData = "op_weight_msg_set_account_data"
+	//nolint:gosec // not credentials
+	OpWeightMsgUpdateSendDenyList = "op_weight_msg_update_send_deny_list"
 )
-
-/*
-
-AddAccess
-DeleteAccess
-
-Withdraw
-
-Mint
-Burn
-Transfer
-
-SetDenomMetadata
-*/
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
@@ -76,6 +64,7 @@ func WeightedOperations(
 		weightMsgAddFinalizeActivateMarker int
 		weightMsgAddMarkerProposal         int
 		weightMsgSetAccountData            int
+		weightMsgUpdateSendDenyList        int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgAddMarker, &weightMsgAddMarker, nil,
@@ -114,6 +103,12 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateSendDenyList, &weightMsgUpdateSendDenyList, nil,
+		func(_ *rand.Rand) {
+			weightMsgUpdateSendDenyList = simappparams.DefaultWeightMsgUpdateDenySendList
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgAddMarker,
@@ -138,6 +133,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgSetAccountData,
 			SimulateMsgSetAccountData(k, args),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgUpdateSendDenyList,
+			SimulateMsgUpdateSendDenyList(k, args),
 		),
 	}
 }
@@ -363,6 +362,32 @@ func SimulateMsgSetAccountData(k keeper.Keeper, args *WeightedOpsArgs) simtypes.
 			strLen := r.Intn(int(maxLen)) + 1
 			msg.Value = simtypes.RandStringOfLength(r, strLen)
 		}
+
+		return Dispatch(r, app, ctx, args.AK, args.BK, signer, chainID, msg, nil)
+	}
+}
+
+// SimulateMsgUpdateSendDenyList will update random marker with denied send addresses.
+func SimulateMsgUpdateSendDenyList(k keeper.Keeper, args *WeightedOpsArgs) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msg := &types.MsgUpdateSendDenyListRequest{}
+
+		marker, signer := randomMarkerWithAccessSigner(r, ctx, k, accs, types.Access_Transfer)
+		if marker == nil {
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to find marker with a transfer signer"), nil, nil
+		}
+
+		rDenyAccounts := simtypes.RandomAccounts(r, 10)
+		addDenyAddresses := make([]string, len(rDenyAccounts))
+		for i := range rDenyAccounts {
+			addDenyAddresses[i] = rDenyAccounts[i].Address.String()
+		}
+
+		msg.Denom = marker.GetDenom()
+		msg.AddDeniedAddresses = addDenyAddresses
+		msg.Authority = signer.Address.String()
 
 		return Dispatch(r, app, ctx, args.AK, args.BK, signer, chainID, msg, nil)
 	}
