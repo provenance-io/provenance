@@ -888,8 +888,11 @@ func New(
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 
+		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
+		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
+		icaModule,
 	)
 
 	app.sm.RegisterStoreDecoders()

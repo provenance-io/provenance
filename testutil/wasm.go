@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	"encoding/json"
 	"os"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -42,13 +41,4 @@ func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddres
 	suite.Require().NoError(err, "contract query failed", err)
 	println("got query result of ", string(state))
 	return string(state)
-}
-
-func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAddress, key []byte) []byte {
-	provenanceApp := chain.GetProvenanceApp()
-	state, err := provenanceApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
-	suite.Require().NoError(err, "contract query json failed", err)
-	suite.Require().True(json.Valid(state))
-	println("got query result of ", state)
-	return state
 }
