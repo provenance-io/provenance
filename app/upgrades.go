@@ -101,6 +101,8 @@ var upgrades = map[string]appUpgrade{
 			if err != nil {
 				return nil, err
 			}
+			// set ibchoooks defaults (no allowed async contracts)
+			app.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
 
 			removeInactiveValidatorDelegations(ctx, app)
 
@@ -115,6 +117,9 @@ var upgrades = map[string]appUpgrade{
 			if err != nil {
 				return nil, err
 			}
+
+			// set ibchoooks defaults (no allowed async contracts)
+			app.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
 
 			removeInactiveValidatorDelegations(ctx, app)
 
