@@ -87,7 +87,7 @@
     - [DenomSplit](#provenance.exchange.v1.DenomSplit)
     - [Params](#provenance.exchange.v1.Params)
   
-- [provenance/exchange/v1/qenesis.proto](#provenance/exchange/v1/qenesis.proto)
+- [provenance/exchange/v1/genesis.proto](#provenance/exchange/v1/genesis.proto)
     - [GenesisState](#provenance.exchange.v1.GenesisState)
   
 - [provenance/exchange/v1/query.proto](#provenance/exchange/v1/query.proto)
@@ -1780,10 +1780,10 @@ Params is a representation of the exchange module parameters.
 
 
 
-<a name="provenance/exchange/v1/qenesis.proto"></a>
+<a name="provenance/exchange/v1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## provenance/exchange/v1/qenesis.proto
+## provenance/exchange/v1/genesis.proto
 
 
 
