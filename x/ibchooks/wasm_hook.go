@@ -248,14 +248,8 @@ func (h WasmHooks) SendPacketOverride(
 	timeoutTimestamp uint64,
 	data []byte,
 ) (sequence uint64, err error) {
-	var concretePacket channeltypes.Packet
-
-	if err = concretePacket.Unmarshal(data); err != nil {
-		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
-	}
-
-	isIcs20, ics20Packet := isIcs20Packet(concretePacket)
-	if !isIcs20 {
+	var ics20Packet transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(data, &ics20Packet); err != nil {
 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
 	}
 
@@ -335,19 +329,15 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 	}
 
 	// Notify the sender that the ack has been received
-	ackAsJSON, err := json.Marshal(acknowledgement)
+	ack, err := json.Marshal(acknowledgement)
 	if err != nil {
 		// If the ack is not a json object, error
 		return err
 	}
 
 	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%q", "sequence": %d, "ack": %s, "success": %q}}}`,
-		packet.SourceChannel,
-		packet.Sequence,
-		ackAsJSON,
-		success))
-
+		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
+		packet.SourceChannel, packet.Sequence, ack, success))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback

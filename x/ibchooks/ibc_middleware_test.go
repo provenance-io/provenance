@@ -373,7 +373,8 @@ func (suite *HooksTestSuite) TestFundTracking() {
 		addr.String(),
 		fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"increment": {} } } }`, addr))
 
-	senderLocalAcc, err := keeper.DeriveIntermediateSender("channel-0", suite.chainB.SenderAccount.GetAddress().String(), "hash")
+	prefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
+	senderLocalAcc, err := keeper.DeriveIntermediateSender("channel-0", suite.chainB.SenderAccount.GetAddress().String(), prefix)
 	suite.Require().NoError(err)
 
 	state := suite.chainA.QueryContract(
