@@ -3,6 +3,7 @@ package ibchooks
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -334,9 +335,12 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 		return err
 	}
 
+	// This should never match anything, but we want to satisfy the github code scanning flag.
+	sanitizedSourceChannel := strings.ReplaceAll(packet.SourceChannel, "\"", "")
+
 	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%q", "sequence": %d, "ack": %s, "success": %s}}}`,
-		packet.SourceChannel, packet.Sequence, ack, success))
+		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
+		sanitizedSourceChannel, packet.Sequence, ack, success))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback
