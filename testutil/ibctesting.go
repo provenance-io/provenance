@@ -3,7 +3,8 @@ package testutil
 import (
 	"encoding/json"
 	"testing"
-	"time"
+
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -11,13 +12,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v6/testing"
 	"github.com/cosmos/ibc-go/v6/testing/simapp/helpers"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	provenanceapp "github.com/provenance-io/provenance/app"
-)
-
-var (
-	globalStartTime = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 )
 
 type TestChain struct {
@@ -65,7 +61,7 @@ func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*sdk.Result, error) {
 // SignAndDeliver signs and delivers a transaction without asserting the results. This overrides the function
 // from ibctesting
 func SignAndDeliver(
-	txCfg client.TxConfig, app *baseapp.BaseApp, header tmproto.Header, msgs []sdk.Msg,
+	txCfg client.TxConfig, app *baseapp.BaseApp, _ tmproto.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
 	tx, _ := helpers.GenTx(

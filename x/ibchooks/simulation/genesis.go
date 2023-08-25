@@ -13,7 +13,6 @@ import (
 
 // RandomizedGenState generates a random GenesisState for ibchooks
 func RandomizedGenState(simState *module.SimulationState) {
-
 	ibcHooksGenesis := types.DefaultGenesis()
 
 	bz, err := json.MarshalIndent(ibcHooksGenesis, "", " ")

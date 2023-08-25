@@ -247,7 +247,7 @@ func (h WasmHooks) SendPacketOverride(
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
 	data []byte,
-) (sequence uint64, err error) {
+) (uint64, error) {
 	var ics20Packet transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(data, &ics20Packet); err != nil {
 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
@@ -292,8 +292,7 @@ func (h WasmHooks) SendPacketOverride(
 		return seq, nil
 	}
 
-	_, err = sdktypes.AccAddressFromBech32(contract)
-	if err != nil {
+	if _, err := sdktypes.AccAddressFromBech32(contract); err != nil {
 		return seq, nil
 	}
 
@@ -336,7 +335,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 	}
 
 	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
+		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%q", "sequence": %d, "ack": %s, "success": %s}}}`,
 		packet.SourceChannel, packet.Sequence, ack, success))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
