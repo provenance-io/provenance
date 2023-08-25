@@ -99,6 +99,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		{simappparams.DefaultWeightMsgAddFinalizeActivateMarker, sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{})},
 		{simappparams.DefaultWeightMsgAddMarkerProposal, "gov", sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{})},
 		{simappparams.DefaultWeightMsgSetAccountData, sdk.MsgTypeURL(&types.MsgSetAccountDataRequest{}), sdk.MsgTypeURL(&types.MsgSetAccountDataRequest{})},
+		{simappparams.DefaultWeightMsgUpdateDenySendList, sdk.MsgTypeURL(&types.MsgUpdateSendDenyListRequest{}), sdk.MsgTypeURL(&types.MsgUpdateSendDenyListRequest{})},
 	}
 
 	expNames := make([]string, len(expected))
