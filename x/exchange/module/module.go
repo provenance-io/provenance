@@ -50,9 +50,7 @@ func (AppModuleBasic) Name() string {
 
 // DefaultGenesis returns default genesis state as raw bytes for the exchange module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	// TODO[1658]: Create DefaultGenesisState()
-	panic("not implemented")
-	// return cdc.MustMarshalJSON(exchange.DefaultGenesisState())
+	return cdc.MustMarshalJSON(exchange.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the exchange module.
@@ -61,9 +59,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ sdkclient.TxEncodin
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", exchange.ModuleName, err)
 	}
-	// TODO[1658]: Create GenesisState.Validate()
-	panic("not implemented")
-	//return data.Validate()
+	return data.Validate()
 }
 
 // GetQueryCmd returns the cli query commands for the exchange module.
