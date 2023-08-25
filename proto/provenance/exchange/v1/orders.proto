@@ -40,7 +40,7 @@ message AskOrder {
   // seller_settlement_flat_fee is the flat fee for sellers that will be charged during settlement. If this denom is the
   // same denom as the price, it will come out of the actual price received. If this denom is different, the amount must
   // be in the seller's account and a hold is placed on it until the order is filled or cancelled.
-  cosmos.base.v1beta1.Coin seller_settlement_flat_fee = 5 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin seller_settlement_flat_fee = 5;
   // allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the
   // order must be either filled in full or not filled at all.
   bool allow_partial = 6;
