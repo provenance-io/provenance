@@ -16,10 +16,10 @@ const (
 	MaxName = 250
 	// MaxDescription is the maximum length of MarketDetails.Description
 	MaxDescription = 2000
-	// MaxWebsiteUrl is the maximum length of MarketDetails.WebsiteUrl
-	MaxWebsiteUrl = 200
-	// MaxIconUri is the maximum length of MarketDetails.IconUri
-	MaxIconUri = 2000
+	// MaxWebsiteURL is the maximum length of MarketDetails.WebsiteUrl
+	MaxWebsiteURL = 200
+	// MaxIconURI is the maximum length of MarketDetails.IconUri
+	MaxIconURI = 2000
 )
 
 // Validate makes sure that everything in this Market is valid.
@@ -59,11 +59,11 @@ func (d MarketDetails) Validate() error {
 	if len(d.Description) > MaxDescription {
 		errs = append(errs, fmt.Errorf("description length %d exceeds maximum length of %d", len(d.Description), MaxDescription))
 	}
-	if len(d.WebsiteUrl) > MaxWebsiteUrl {
-		errs = append(errs, fmt.Errorf("website_url length %d exceeds maximum length of %d", len(d.WebsiteUrl), MaxWebsiteUrl))
+	if len(d.WebsiteUrl) > MaxWebsiteURL {
+		errs = append(errs, fmt.Errorf("website_url length %d exceeds maximum length of %d", len(d.WebsiteUrl), MaxWebsiteURL))
 	}
-	if len(d.IconUri) > MaxIconUri {
-		errs = append(errs, fmt.Errorf("icon_uri length %d exceeds maximum length of %d", len(d.IconUri), MaxIconUri))
+	if len(d.IconUri) > MaxIconURI {
+		errs = append(errs, fmt.Errorf("icon_uri length %d exceeds maximum length of %d", len(d.IconUri), MaxIconURI))
 	}
 	return errors.Join(errs...)
 }
@@ -178,7 +178,7 @@ func (r FeeRatio) Validate() error {
 
 // ValidateAccessGrants returns an error if any of the provided access grants are invalid.
 func ValidateAccessGrants(accessGrants []*AccessGrant) error {
-	var errs []error
+	var errs []error //nolint:prealloc // Stupid linter. It'll almost always be nil. No reason to pre-allocate anything.
 	seen := make(map[string]bool)
 	dups := make(map[string]bool)
 	for _, ag := range accessGrants {
