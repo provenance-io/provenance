@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
@@ -20,6 +21,11 @@ const (
 	MaxWebsiteURL = 200
 	// MaxIconURI is the maximum length of MarketDetails.IconUri
 	MaxIconURI = 2000
+)
+
+var (
+	_ authtypes.AccountI       = (*MarketAccount)(nil)
+	_ authtypes.GenesisAccount = (*MarketAccount)(nil)
 )
 
 // Validate makes sure that everything in this Market is valid.
