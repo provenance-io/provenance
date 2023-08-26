@@ -82,10 +82,18 @@ message Market {
   // access_grants is the list of addresses and permissions granted for this market.
   repeated AccessGrant access_grants = 11;
   // req_attr_create_ask is a list of attributes required on an account for it to be allowed to create an ask order.
-  // TODO[1658]: Add comment about wildcards.
+  //
+  // An entry that starts with "*." will match any attributes that end with the rest of it.
+  // E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a".
+  //
+  // An entry of exactly "*" will match any attribute, which is equivalent to leaving this list empty.
   repeated string req_attr_create_ask = 12;
   // req_attr_create_ask is a list of attributes required on an account for it to be allowed to create a bid order.
-  // TODO[1658]: Add comment about wildcards.
+  //
+  // An entry that starts with "*." will match any attributes that end with the rest of it.
+  // E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a".
+  //
+  // An entry of exactly "*" will match any attribute, which is equivalent to leaving this list empty.
   repeated string req_attr_create_bid = 13;
 }
 

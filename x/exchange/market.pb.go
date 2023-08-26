@@ -228,10 +228,18 @@ type Market struct {
 	// access_grants is the list of addresses and permissions granted for this market.
 	AccessGrants []*AccessGrant `protobuf:"bytes,11,rep,name=access_grants,json=accessGrants,proto3" json:"access_grants,omitempty"`
 	// req_attr_create_ask is a list of attributes required on an account for it to be allowed to create an ask order.
-	// TODO[1658]: Add comment about wildcards.
+	//
+	// An entry that starts with "*." will match any attributes that end with the rest of it.
+	// E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a".
+	//
+	// An entry of exactly "*" will match any attribute, which is equivalent to leaving this list empty.
 	ReqAttrCreateAsk []string `protobuf:"bytes,12,rep,name=req_attr_create_ask,json=reqAttrCreateAsk,proto3" json:"req_attr_create_ask,omitempty"`
 	// req_attr_create_ask is a list of attributes required on an account for it to be allowed to create a bid order.
-	// TODO[1658]: Add comment about wildcards.
+	//
+	// An entry that starts with "*." will match any attributes that end with the rest of it.
+	// E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a".
+	//
+	// An entry of exactly "*" will match any attribute, which is equivalent to leaving this list empty.
 	ReqAttrCreateBid []string `protobuf:"bytes,13,rep,name=req_attr_create_bid,json=reqAttrCreateBid,proto3" json:"req_attr_create_bid,omitempty"`
 }
 
