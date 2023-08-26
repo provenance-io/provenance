@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
@@ -182,7 +183,7 @@ func ValidateAccessGrants(accessGrants []*AccessGrant) error {
 	dups := make(map[string]bool)
 	for _, ag := range accessGrants {
 		if seen[ag.Address] && !dups[ag.Address] {
-			errs = append(errs, fmt.Errorf("%s appears in multiple access grant entries"))
+			errs = append(errs, fmt.Errorf("%s appears in multiple access grant entries", ag.Address))
 			dups[ag.Address] = true
 		}
 		seen[ag.Address] = true
@@ -226,7 +227,7 @@ func (p Permission) Validate() error {
 	}
 	_, exists := Permission_name[int32(p)]
 	if !exists {
-		return fmt.Errorf("permission %d does not exist")
+		return fmt.Errorf("permission %d does not exist", p)
 	}
 	return nil
 }

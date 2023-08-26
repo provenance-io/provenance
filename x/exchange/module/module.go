@@ -84,8 +84,8 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, m
 }
 
 // RegisterInterfaces registers the exchange module's interface types
-func (AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {
-	// TODO[1658]: Create something for RegisterInterfaces to call.
+func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	exchange.RegisterInterfaces(registry)
 }
 
 // RegisterLegacyAminoCodec registers the exchange module's types for the given codec.
