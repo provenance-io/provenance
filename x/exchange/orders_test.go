@@ -296,7 +296,50 @@ func TestOrder_OrderTypeByte(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestOrder_Validate(t *testing.T)
+func TestOrder_Validate(t *testing.T) {
+	// Annoyingly, sdkmath.Int{} (the zero value) causes panic whenever you
+	// try to do anything with it. So we have to give it something.
+	zeroCoin := sdk.Coin{Amount: sdkmath.ZeroInt()}
+	tests := []struct {
+		name  string
+		Order *Order
+		exp   []string
+	}{
+		{
+			name:  "order id is zero",
+			Order: NewOrder(0),
+			exp:   []string{"invalid order id: must not be zero"},
+		},
+		{
+			name:  "unknown order type",
+			Order: &Order{OrderId: 1, Order: &unknownOrderType{}},
+			exp:   []string{"unknown order type *exchange.unknownOrderType"},
+		},
+		{
+			name:  "ask order error",
+			Order: NewOrder(1).WithAsk(&AskOrder{MarketId: 0, Price: zeroCoin}),
+			exp:   []string{"invalid market id: must not be zero"},
+		},
+		{
+			name:  "bid order error",
+			Order: NewOrder(1).WithBid(&BidOrder{MarketId: 0, Price: zeroCoin}),
+			exp:   []string{"invalid market id: must not be zero"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.Order.Validate()
+			if len(tc.exp) > 0 {
+				if assert.Error(t, err, "Validate() error") {
+					for _, exp := range tc.exp {
+						assert.ErrorContains(t, err, exp, "Validate() error\nExpecting: %q", exp)
+					}
+				}
+			}
+		})
+	}
+}
 
 // TODO[1658]: func TestAskOrder_Validate(t *testing.T)
 
