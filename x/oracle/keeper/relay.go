@@ -111,8 +111,6 @@ func (k Keeper) OnAcknowledgementPacket(
 			return cerrs.Wrapf(err, "failed to unmarshal interchain query response to type %T", resp)
 		}
 
-		k.SetLastQueryPacketSeq(ctx, modulePacket.Sequence)
-
 		err = ctx.EventManager().EmitTypedEvent(&types.EventOracleQuerySuccess{
 			SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),
 			Result:     string(resp.Result),

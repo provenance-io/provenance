@@ -38,9 +38,8 @@ type IntegrationTestSuite struct {
 	accountKey       *secp256k1.PrivKey
 	accountAddresses []sdk.AccAddress
 
-	sequence uint64
-	port     string
-	oracle   string
+	port   string
+	oracle string
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -86,13 +85,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err, "should be able to marshal auth genesis state when setting up suite")
 	genesisState[authtypes.ModuleName] = authDataBz
 
-	s.sequence = uint64(1)
 	s.port = oracletypes.PortID
 	s.oracle = "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"
 
 	oracleData := oracletypes.NewGenesisState(
 		s.port,
-		s.sequence,
 		s.oracle,
 	)
 

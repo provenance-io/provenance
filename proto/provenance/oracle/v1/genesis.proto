@@ -12,8 +12,6 @@ message GenesisState {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // Sequence is the next auto incremented id to be assigned to the next query
-  uint64 sequence = 1;
   // The port to assign to the module
   string port_id = 2;
   // The address of the oracle
