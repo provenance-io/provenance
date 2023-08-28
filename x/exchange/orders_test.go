@@ -212,11 +212,6 @@ func TestOrder_OrderType(t *testing.T) {
 			expected: OrderTypeBid,
 		},
 		{
-			name:     "nil base order",
-			order:    nil,
-			expPanic: "OrderType() missing case for <nil>",
-		},
-		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
 			expPanic: "OrderType() missing case for <nil>",
@@ -235,6 +230,7 @@ func TestOrder_OrderType(t *testing.T) {
 				actual = tc.order.OrderType()
 			}
 
+			// TODO[1658]: Refactor to use testutils.RequirePanicEquals(t, testFunc, tc.expPanic, "OrderType")
 			if tc.expPanic != nil {
 				require.PanicsWithValue(t, tc.expPanic, testFunc, "OrderType")
 			} else {
@@ -263,11 +259,6 @@ func TestOrder_OrderTypeByte(t *testing.T) {
 			expected: OrderTypeByteBid,
 		},
 		{
-			name:     "nil base order",
-			order:    nil,
-			expPanic: "OrderTypeByte() missing case for <nil>",
-		},
-		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
 			expPanic: "OrderTypeByte() missing case for <nil>",
@@ -286,6 +277,7 @@ func TestOrder_OrderTypeByte(t *testing.T) {
 				actual = tc.order.OrderTypeByte()
 			}
 
+			// TODO[1658]: Refactor to use testutils.RequirePanicEquals(t, testFunc, tc.expPanic, "OrderTypeByte")
 			if tc.expPanic != nil {
 				require.PanicsWithValue(t, tc.expPanic, testFunc, "OrderTypeByte")
 			} else {
@@ -330,17 +322,514 @@ func TestOrder_Validate(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.Order.Validate()
+
+			// TODO[1658]: Replace this with testutil.AssertErrorContents(t, err, tc.exp, "Validate() error")
 			if len(tc.exp) > 0 {
 				if assert.Error(t, err, "Validate() error") {
 					for _, exp := range tc.exp {
 						assert.ErrorContains(t, err, exp, "Validate() error\nExpecting: %q", exp)
 					}
 				}
+			} else {
+				assert.NoError(t, err, "Validate() error")
 			}
 		})
 	}
 }
 
-// TODO[1658]: func TestAskOrder_Validate(t *testing.T)
+func TestAskOrder_Validate(t *testing.T) {
+	coin := func(amount int64, denom string) *sdk.Coin {
+		return &sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	coins := func(coins string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(coins)
+		require.NoError(t, err, "sdk.ParseCoinsNormalized(%q)", coins)
+		return rv
+	}
 
-// TODO[1658]: func TestBidOrder_Validate(t *testing.T)
+	tests := []struct {
+		name  string
+		order AskOrder
+		exp   []string
+	}{
+		{
+			name: "control",
+			order: AskOrder{
+				MarketId:                1,
+				Seller:                  sdk.AccAddress("control_address_____").String(),
+				Assets:                  coins("99bender"),
+				Price:                   *coin(42, "farnsworth"),
+				SellerSettlementFlatFee: coin(1, "farnsworth"),
+				AllowPartial:            false,
+			},
+			exp: nil,
+		},
+		{
+			name: "allow partial",
+			order: AskOrder{
+				MarketId:                1,
+				Seller:                  sdk.AccAddress("control_address_____").String(),
+				Assets:                  coins("99bender"),
+				Price:                   *coin(42, "farnsworth"),
+				SellerSettlementFlatFee: coin(1, "farnsworth"),
+				AllowPartial:            true,
+			},
+			exp: nil,
+		},
+		{
+			name: "nil seller settlement flat fee",
+			order: AskOrder{
+				MarketId:                1,
+				Seller:                  sdk.AccAddress("control_address_____").String(),
+				Assets:                  coins("99bender"),
+				Price:                   *coin(42, "farnsworth"),
+				SellerSettlementFlatFee: nil,
+				AllowPartial:            false,
+			},
+			exp: nil,
+		},
+		{
+			name: "multiple assets",
+			order: AskOrder{
+				MarketId: 1,
+				Seller:   sdk.AccAddress("another_address_____").String(),
+				Assets:   coins("12amy,99bender,8fry,112leela,1zoidberg"),
+				Price:    *coin(42, "farnsworth"),
+			},
+			exp: nil,
+		},
+		{
+			name: "market id zero",
+			order: AskOrder{
+				MarketId: 0,
+				Seller:   sdk.AccAddress("another_address_____").String(),
+				Assets:   coins("99bender"),
+				Price:    *coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid market id: must not be zero"},
+		},
+		{
+			name: "invalid seller",
+			order: AskOrder{
+				MarketId: 1,
+				Seller:   "shady_address_______",
+				Assets:   coins("99bender"),
+				Price:    *coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid seller: ", "invalid separator index -1"},
+		},
+		{
+			name: "no seller",
+			order: AskOrder{
+				MarketId: 1,
+				Seller:   "",
+				Assets:   coins("99bender"),
+				Price:    *coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid seller: ", "empty address string is not allowed"},
+		},
+		{
+			name: "zero price",
+			order: AskOrder{
+				MarketId: 1,
+				Seller:   sdk.AccAddress("another_address_____").String(),
+				Assets:   coins("99bender"),
+				Price:    *coin(0, "farnsworth"),
+			},
+			exp: []string{"invalid price: cannot be zero"},
+		},
+		{
+			name: "negative price",
+			order: AskOrder{
+				MarketId: 1,
+				Seller:   sdk.AccAddress("another_address_____").String(),
+				Assets:   coins("99bender"),
+				Price:    *coin(-24, "farnsworth"),
+			},
+			exp: []string{"invalid price: ", "negative coin amount: -24"},
+		},
+		{
+			name: "invalid price denom",
+			order: AskOrder{
+				MarketId: 1,
+				Seller:   sdk.AccAddress("another_address_____").String(),
+				Assets:   coins("99bender"),
+				Price:    *coin(42, "7"),
+			},
+			exp: []string{"invalid price: ", "invalid denom: 7"},
+		},
+		{
+			name: "zero amount in assets",
+			order: AskOrder{
+				MarketId: 1,
+				Seller:   sdk.AccAddress("another_address_____").String(),
+				Assets:   sdk.Coins{*coin(99, "bender"), *coin(0, "leela"), *coin(1, "zoidberg")},
+				Price:    *coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid assets: ", "coin leela amount is not positive"},
+		},
+		{
+			name: "negative amount in assets",
+			order: AskOrder{
+				MarketId: 1,
+				Seller:   sdk.AccAddress("another_address_____").String(),
+				Assets:   sdk.Coins{*coin(99, "bender"), *coin(-1, "leela"), *coin(1, "zoidberg")},
+				Price:    *coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid assets: ", "coin leela amount is not positive"},
+		},
+		{
+			name: "invalid denom in assets",
+			order: AskOrder{
+				MarketId: 1,
+				Seller:   sdk.AccAddress("another_address_____").String(),
+				Assets:   sdk.Coins{*coin(99, "bender"), *coin(1, "x"), *coin(1, "zoidberg")},
+				Price:    *coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid assets: ", "invalid denom: x"},
+		},
+		{
+			name: "nil assets",
+			order: AskOrder{
+				MarketId: 1,
+				Seller:   sdk.AccAddress("another_address_____").String(),
+				Assets:   nil,
+				Price:    *coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid assets: must not be empty"},
+		},
+		{
+			name: "empty assets",
+			order: AskOrder{
+				MarketId: 1,
+				Seller:   sdk.AccAddress("another_address_____").String(),
+				Assets:   sdk.Coins{},
+				Price:    *coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid assets: must not be empty"},
+		},
+		{
+			name: "price denom in assets",
+			order: AskOrder{
+				MarketId: 1,
+				Seller:   sdk.AccAddress("another_address_____").String(),
+				Assets:   coins("99bender,2farnsworth,44amy"),
+				Price:    *coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid assets: cannot contain price denom farnsworth"},
+		},
+		{
+			name: "invalid seller settlement flat fee denom",
+			order: AskOrder{
+				MarketId:                1,
+				Seller:                  sdk.AccAddress("another_address_____").String(),
+				Assets:                  coins("99bender"),
+				Price:                   *coin(42, "farnsworth"),
+				SellerSettlementFlatFee: coin(13, "x"),
+			},
+			exp: []string{"invalid seller settlement flat fee: ", "invalid denom: x"},
+		},
+		{
+			name: "zero seller settlement flat fee denom",
+			order: AskOrder{
+				MarketId:                1,
+				Seller:                  sdk.AccAddress("another_address_____").String(),
+				Assets:                  coins("99bender"),
+				Price:                   *coin(42, "farnsworth"),
+				SellerSettlementFlatFee: coin(0, "nibbler"),
+			},
+			exp: []string{"invalid seller settlement flat fee: ", "nibbler amount cannot be zero"},
+		},
+		{
+			name: "negative seller settlement flat fee",
+			order: AskOrder{
+				MarketId:                1,
+				Seller:                  sdk.AccAddress("another_address_____").String(),
+				Assets:                  coins("99bender"),
+				Price:                   *coin(42, "farnsworth"),
+				SellerSettlementFlatFee: coin(-3, "nibbler"),
+			},
+			exp: []string{"invalid seller settlement flat fee: ", "negative coin amount: -3"},
+		},
+		{
+			name: "multiple problems",
+			order: AskOrder{
+				Price:                   *coin(0, ""),
+				SellerSettlementFlatFee: coin(0, ""),
+			},
+			exp: []string{
+				"invalid market id: ",
+				"invalid seller: ",
+				"invalid price: ",
+				"invalid assets: ",
+				"invalid seller settlement flat fee: ",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.order.Validate()
+
+			// TODO[1658]: Replace this with testutil.AssertErrorContents(t, err, tc.exp, "Validate() error")
+			if len(tc.exp) > 0 {
+				if assert.Error(t, err, "Validate() error") {
+					for _, exp := range tc.exp {
+						assert.ErrorContains(t, err, exp, "Validate() error\nExpecting: %q", exp)
+					}
+				}
+			} else {
+				assert.NoError(t, err, "Validate() error")
+			}
+		})
+	}
+}
+
+func TestBidOrder_Validate(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	coins := func(coins string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(coins)
+		require.NoError(t, err, "sdk.ParseCoinsNormalized(%q)", coins)
+		return rv
+	}
+
+	tests := []struct {
+		name  string
+		order BidOrder
+		exp   []string
+	}{
+		{
+			name: "control",
+			order: BidOrder{
+				MarketId:            1,
+				Buyer:               sdk.AccAddress("control_address_____").String(),
+				Assets:              coins("99bender"),
+				Price:               coin(42, "farnsworth"),
+				BuyerSettlementFees: coins("1farnsworth"),
+				AllowPartial:        false,
+			},
+			exp: nil,
+		},
+		{
+			name: "allow partial",
+			order: BidOrder{
+				MarketId:            1,
+				Buyer:               sdk.AccAddress("control_address_____").String(),
+				Assets:              coins("99bender"),
+				Price:               coin(42, "farnsworth"),
+				BuyerSettlementFees: coins("1farnsworth"),
+				AllowPartial:        true,
+			},
+			exp: nil,
+		},
+		{
+			name: "nil buyer settlement fees",
+			order: BidOrder{
+				MarketId:            1,
+				Buyer:               sdk.AccAddress("control_address_____").String(),
+				Assets:              coins("99bender"),
+				Price:               coin(42, "farnsworth"),
+				BuyerSettlementFees: nil,
+				AllowPartial:        false,
+			},
+			exp: nil,
+		},
+		{
+			name: "empty buyer settlement fees",
+			order: BidOrder{
+				MarketId:            1,
+				Buyer:               sdk.AccAddress("control_address_____").String(),
+				Assets:              coins("99bender"),
+				Price:               coin(42, "farnsworth"),
+				BuyerSettlementFees: sdk.Coins{},
+				AllowPartial:        false,
+			},
+			exp: nil,
+		},
+		{
+			name: "multiple assets",
+			order: BidOrder{
+				MarketId: 1,
+				Buyer:    sdk.AccAddress("another_address_____").String(),
+				Assets:   coins("12amy,99bender,8fry,112leela,1zoidberg"),
+				Price:    coin(42, "farnsworth"),
+			},
+			exp: nil,
+		},
+		{
+			name: "market id zero",
+			order: BidOrder{
+				MarketId: 0,
+				Buyer:    sdk.AccAddress("another_address_____").String(),
+				Assets:   coins("99bender"),
+				Price:    coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid market id: must not be zero"},
+		},
+		{
+			name: "invalid buyer",
+			order: BidOrder{
+				MarketId: 1,
+				Buyer:    "shady_address_______",
+				Assets:   coins("99bender"),
+				Price:    coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid buyer: ", "invalid separator index -1"},
+		},
+		{
+			name: "no buyer",
+			order: BidOrder{
+				MarketId: 1,
+				Buyer:    "",
+				Assets:   coins("99bender"),
+				Price:    coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid buyer: ", "empty address string is not allowed"},
+		},
+		{
+			name: "zero price",
+			order: BidOrder{
+				MarketId: 1,
+				Buyer:    sdk.AccAddress("another_address_____").String(),
+				Assets:   coins("99bender"),
+				Price:    coin(0, "farnsworth"),
+			},
+			exp: []string{"invalid price: cannot be zero"},
+		},
+		{
+			name: "negative price",
+			order: BidOrder{
+				MarketId: 1,
+				Buyer:    sdk.AccAddress("another_address_____").String(),
+				Assets:   coins("99bender"),
+				Price:    coin(-24, "farnsworth"),
+			},
+			exp: []string{"invalid price: ", "negative coin amount: -24"},
+		},
+		{
+			name: "invalid price denom",
+			order: BidOrder{
+				MarketId: 1,
+				Buyer:    sdk.AccAddress("another_address_____").String(),
+				Assets:   coins("99bender"),
+				Price:    coin(42, "7"),
+			},
+			exp: []string{"invalid price: ", "invalid denom: 7"},
+		},
+		{
+			name: "zero amount in assets",
+			order: BidOrder{
+				MarketId: 1,
+				Buyer:    sdk.AccAddress("another_address_____").String(),
+				Assets:   sdk.Coins{coin(99, "bender"), coin(0, "leela"), coin(1, "zoidberg")},
+				Price:    coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid assets: ", "coin leela amount is not positive"},
+		},
+		{
+			name: "negative amount in assets",
+			order: BidOrder{
+				MarketId: 1,
+				Buyer:    sdk.AccAddress("another_address_____").String(),
+				Assets:   sdk.Coins{coin(99, "bender"), coin(-1, "leela"), coin(1, "zoidberg")},
+				Price:    coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid assets: ", "coin leela amount is not positive"},
+		},
+		{
+			name: "invalid denom in assets",
+			order: BidOrder{
+				MarketId: 1,
+				Buyer:    sdk.AccAddress("another_address_____").String(),
+				Assets:   sdk.Coins{coin(99, "bender"), coin(1, "x"), coin(1, "zoidberg")},
+				Price:    coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid assets: ", "invalid denom: x"},
+		},
+		{
+			name: "nil assets",
+			order: BidOrder{
+				MarketId: 1,
+				Buyer:    sdk.AccAddress("another_address_____").String(),
+				Assets:   nil,
+				Price:    coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid assets: must not be empty"},
+		},
+		{
+			name: "empty assets",
+			order: BidOrder{
+				MarketId: 1,
+				Buyer:    sdk.AccAddress("another_address_____").String(),
+				Assets:   sdk.Coins{},
+				Price:    coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid assets: must not be empty"},
+		},
+		{
+			name: "price denom in assets",
+			order: BidOrder{
+				MarketId: 1,
+				Buyer:    sdk.AccAddress("another_address_____").String(),
+				Assets:   coins("99bender,2farnsworth,44amy"),
+				Price:    coin(42, "farnsworth"),
+			},
+			exp: []string{"invalid assets: cannot contain price denom farnsworth"},
+		},
+		{
+			name: "invalid denom in buyer settlement fees",
+			order: BidOrder{
+				MarketId:            1,
+				Buyer:               sdk.AccAddress("another_address_____").String(),
+				Assets:              coins("99bender"),
+				Price:               coin(42, "farnsworth"),
+				BuyerSettlementFees: sdk.Coins{coin(1, "farnsworth"), coin(2, "x")},
+			},
+			exp: []string{"invalid buyer settlement fees: ", "invalid denom: x"},
+		},
+		{
+			name: "negative buyer settlement fees",
+			order: BidOrder{
+				MarketId:            1,
+				Buyer:               sdk.AccAddress("another_address_____").String(),
+				Assets:              coins("99bender"),
+				Price:               coin(42, "farnsworth"),
+				BuyerSettlementFees: sdk.Coins{coin(3, "farnsworth"), coin(-3, "nibbler")},
+			},
+			exp: []string{"invalid buyer settlement fees: ", "coin nibbler amount is not positive"},
+		},
+		{
+			name: "multiple problems",
+			order: BidOrder{
+				Price:               coin(0, ""),
+				BuyerSettlementFees: sdk.Coins{coin(0, "")},
+			},
+			exp: []string{
+				"invalid market id: ",
+				"invalid buyer: ",
+				"invalid price: ",
+				"invalid assets: ",
+				"invalid buyer settlement fees: ",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.order.Validate()
+
+			// TODO[1658]: Replace this with testutil.AssertErrorContents(t, err, tc.exp, "Validate() error")
+			if len(tc.exp) > 0 {
+				if assert.Error(t, err, "Validate() error") {
+					for _, exp := range tc.exp {
+						assert.ErrorContains(t, err, exp, "Validate() error\nExpecting: %q", exp)
+					}
+				}
+			} else {
+				assert.NoError(t, err, "Validate() error")
+			}
+		})
+	}
+}
