@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func NewGenesisState(params *Params, markets []*Market, orders []*Order) *GenesisState {
+func NewGenesisState(params *Params, markets []Market, orders []Order) *GenesisState {
 	return &GenesisState{
 		Params:  params,
 		Markets: markets,

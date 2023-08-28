@@ -20,8 +20,8 @@ message GenesisState {
   Params params = 1;
 
   // markets are all of the markets to create at genesis.
-  repeated Market markets = 2;
+  repeated Market markets = 2 [(gogoproto.nullable) = false];
 
   // orders are all the orders to create at genesis.
-  repeated Order orders = 3;
+  repeated Order orders = 3 [(gogoproto.nullable) = false];
 }
