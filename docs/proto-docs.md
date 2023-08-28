@@ -146,6 +146,18 @@
   
     - [Msg](#provenance.exchange.v1.Msg)
   
+- [provenance/ibchooks/v1/params.proto](#provenance/ibchooks/v1/params.proto)
+    - [Params](#provenance.ibchooks.v1.Params)
+  
+- [provenance/ibchooks/v1/genesis.proto](#provenance/ibchooks/v1/genesis.proto)
+    - [GenesisState](#provenance.ibchooks.v1.GenesisState)
+  
+- [provenance/ibchooks/v1/tx.proto](#provenance/ibchooks/v1/tx.proto)
+    - [MsgEmitIBCAck](#provenance.ibchooks.v1.MsgEmitIBCAck)
+    - [MsgEmitIBCAckResponse](#provenance.ibchooks.v1.MsgEmitIBCAckResponse)
+  
+    - [Msg](#provenance.ibchooks.v1.Msg)
+  
 - [provenance/marker/v1/accessgrant.proto](#provenance/marker/v1/accessgrant.proto)
     - [AccessGrant](#provenance.marker.v1.AccessGrant)
   
@@ -2385,6 +2397,127 @@ Msg is the service for exchange module's tx endpoints.
 | `GovCreateMarket` | [MsgGovCreateMarketRequest](#provenance.exchange.v1.MsgGovCreateMarketRequest) | [MsgGovCreateMarketResponse](#provenance.exchange.v1.MsgGovCreateMarketResponse) | GovCreateMarket is a governance proposal endpoint for creating a market. The CreateMarket endpoint should be used to submit one of these unless you don't need to know the market id until after the proposal passes. | |
 | `GovManageFees` | [MsgGovManageFeesRequest](#provenance.exchange.v1.MsgGovManageFeesRequest) | [MsgGovManageFeesResponse](#provenance.exchange.v1.MsgGovManageFeesResponse) | GovManageFees is a governance proposal endpoint for updating a market's fees. | |
 | `GovUpdateParams` | [MsgGovUpdateParamsRequest](#provenance.exchange.v1.MsgGovUpdateParamsRequest) | [MsgGovUpdateParamsResponse](#provenance.exchange.v1.MsgGovUpdateParamsResponse) | GovUpdateParams is a governance proposal endpoint for updating the exchange module's params. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibchooks/v1/params.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibchooks/v1/params.proto
+
+
+
+<a name="provenance.ibchooks.v1.Params"></a>
+
+### Params
+Params defines the allowed async ack contracts
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `allowed_async_ack_contracts` | [string](#string) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibchooks/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibchooks/v1/genesis.proto
+
+
+
+<a name="provenance.ibchooks.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState is the IBC Hooks genesis state (params)
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.ibchooks.v1.Params) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibchooks/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibchooks/v1/tx.proto
+
+
+
+<a name="provenance.ibchooks.v1.MsgEmitIBCAck"></a>
+
+### MsgEmitIBCAck
+MsgEmitIBCAck is the IBC Acknowledgement
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `packet_sequence` | [uint64](#uint64) |  |  |
+| `channel` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.ibchooks.v1.MsgEmitIBCAckResponse"></a>
+
+### MsgEmitIBCAckResponse
+MsgEmitIBCAckResponse is the IBC Acknowledgement response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contract_result` | [string](#string) |  |  |
+| `ibc_ack` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.ibchooks.v1.Msg"></a>
+
+### Msg
+Msg defines the Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `EmitIBCAck` | [MsgEmitIBCAck](#provenance.ibchooks.v1.MsgEmitIBCAck) | [MsgEmitIBCAckResponse](#provenance.ibchooks.v1.MsgEmitIBCAckResponse) | EmitIBCAck checks the sender can emit the ack and writes the IBC acknowledgement | |
 
  <!-- end services -->
 
