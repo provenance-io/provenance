@@ -7,13 +7,8 @@ order: 4
 In this section we describe the queries available for looking up oracle information.
 
 <!-- TOC 2 -->
-- [Queries](#queries)
   - [Query Oracle Address](#query-oracle-address)
-    - [Request](#request)
-    - [Response](#response)
   - [Query Oracle](#query-oracle)
-    - [Request](#request-1)
-    - [Response](#response-1)
 
 ---
 ## Query Oracle Address

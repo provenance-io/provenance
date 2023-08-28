@@ -7,7 +7,6 @@ order: 6
 In this section we describe the processing of the oracle messages and the corresponding updates to the state.
 
 <!-- TOC 2 -->
-- [Oracle Genesis](#oracle-genesis)
   - [Msg/GenesisState](#msggenesisstate)
 
 
