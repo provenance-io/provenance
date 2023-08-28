@@ -10,6 +10,7 @@ import (
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/provenance-io/provenance/x/hold"
 
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -108,7 +109,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
-		Added: []string{ibchookstypes.ModuleName},
+		Added: []string{hold.ModuleName, ibchookstypes.ModuleName},
 	},
 	"saffron": { // upgrade for v1.17.0
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -125,7 +126,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
-		Added: []string{ibchookstypes.ModuleName},
+		Added: []string{hold.ModuleName, ibchookstypes.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
 }
