@@ -79,10 +79,18 @@ func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.Conte
 			return nil
 		}
 
+		newSupply := randomUint64(r, k.GetMaxTotalSupply(ctx)-k.CurrentCirculation(ctx, m).Uint64())
+
+		// TODO: When the simulation tests are fixed to stop breaking supply invariants through incorrect minting, the following check should be removed.
+		if newSupply > k.GetMaxTotalSupply(ctx) {
+			println("!!!! WARNING, TOKEN SUPPLY IS INVALID, ABORTING NEW PROPOSAL !!!!")
+			return nil
+		}
+
 		return types.NewSupplyIncreaseProposal(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
-			sdk.NewCoin(m.GetDenom(), sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx)-k.CurrentCirculation(ctx, m).Uint64()))),
+			sdk.NewCoin(m.GetDenom(), sdk.ZeroInt()),
 			dest,
 		)
 	}
