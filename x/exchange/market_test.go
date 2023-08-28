@@ -1,6 +1,7 @@
 package exchange
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 	"testing"
@@ -15,7 +16,112 @@ import (
 
 // TODO[1658]: func TestMarket_Validate(t *testing.T)
 
-// TODO[1658]: func TestMarketDetails_Validate(t *testing.T)
+func TestMarketDetails_Validate(t *testing.T) {
+	joinErrs := func(errs ...string) string {
+		return strings.Join(errs, "\n")
+	}
+	nameErr := func(over int) string {
+		return fmt.Sprintf("name length %d exceeds maximum length of %d", MaxName+over, MaxName)
+	}
+	descErr := func(over int) string {
+		return fmt.Sprintf("description length %d exceeds maximum length of %d", MaxDescription+over, MaxDescription)
+	}
+	urlErr := func(over int) string {
+		return fmt.Sprintf("website_url length %d exceeds maximum length of %d", MaxWebsiteURL+over, MaxWebsiteURL)
+	}
+	iconErr := func(over int) string {
+		return fmt.Sprintf("icon_uri length %d exceeds maximum length of %d", MaxIconURI+over, MaxIconURI)
+	}
+
+	tests := []struct {
+		name    string
+		details MarketDetails
+		expErr  string
+	}{
+		{
+			name:    "zero value",
+			details: MarketDetails{},
+			expErr:  "",
+		},
+		{
+			name:    "name at max length",
+			details: MarketDetails{Name: strings.Repeat("n", MaxName)},
+			expErr:  "",
+		},
+		{
+			name:    "name over max length",
+			details: MarketDetails{Name: strings.Repeat("n", MaxName+1)},
+			expErr:  nameErr(1),
+		},
+		{
+			name:    "description at max length",
+			details: MarketDetails{Description: strings.Repeat("d", MaxDescription)},
+			expErr:  "",
+		},
+		{
+			name:    "description over max length",
+			details: MarketDetails{Description: strings.Repeat("d", MaxDescription+1)},
+			expErr:  descErr(1),
+		},
+		{
+			name:    "website url at max length",
+			details: MarketDetails{WebsiteUrl: strings.Repeat("w", MaxWebsiteURL)},
+			expErr:  "",
+		},
+		{
+			name:    "website url over max length",
+			details: MarketDetails{WebsiteUrl: strings.Repeat("w", MaxWebsiteURL+1)},
+			expErr:  urlErr(1),
+		},
+		{
+			name:    "icon uri at max length",
+			details: MarketDetails{IconUri: strings.Repeat("i", MaxIconURI)},
+			expErr:  "",
+		},
+		{
+			name:    "icon uri over max length",
+			details: MarketDetails{IconUri: strings.Repeat("i", MaxIconURI+1)},
+			expErr:  iconErr(1),
+		},
+		{
+			name: "all at max",
+			details: MarketDetails{
+				Name:        strings.Repeat("N", MaxName),
+				Description: strings.Repeat("D", MaxDescription),
+				WebsiteUrl:  strings.Repeat("W", MaxWebsiteURL),
+				IconUri:     strings.Repeat("I", MaxIconURI),
+			},
+			expErr: "",
+		},
+		{
+			name: "multiple errors",
+			details: MarketDetails{
+				Name:        strings.Repeat("N", MaxName+2),
+				Description: strings.Repeat("D", MaxDescription+3),
+				WebsiteUrl:  strings.Repeat("W", MaxWebsiteURL+4),
+				IconUri:     strings.Repeat("I", MaxIconURI+5),
+			},
+			expErr: joinErrs(nameErr(2), descErr(3), urlErr(4), iconErr(5)),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = tc.details.Validate()
+			}
+			require.NotPanics(t, testFunc, "Validate")
+
+			// TODO[1658]: Refactor to testutils.AssertErrorValue(t, err, tc.expErr, "Validate")
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr, "Validate")
+			} else {
+				assert.NoError(t, err, "Validate")
+			}
+		})
+	}
+}
 
 func TestValidateFeeRatios(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
