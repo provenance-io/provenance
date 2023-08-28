@@ -313,6 +313,18 @@ func TestIsReqAttrMatch(t *testing.T) {
 			exp:     false,
 		},
 		{
+			name:    "empty acc attr",
+			reqAttr: "foo",
+			accAttr: "",
+			exp:     false,
+		},
+		{
+			name:    "both empty",
+			reqAttr: "",
+			accAttr: "",
+			exp:     false,
+		},
+		{
 			name:    "no wildcard: exact match",
 			reqAttr: "penny.dime.quarter",
 			accAttr: "penny.dime.quarter",
@@ -521,6 +533,24 @@ func TestIsReqAttrMatch(t *testing.T) {
 			reqAttr: "penny.*.quarter",
 			accAttr: "penny.dime.quarter",
 			exp:     false,
+		},
+		{
+			name:    "just a star: empty account attribute",
+			reqAttr: "*",
+			accAttr: "",
+			exp:     false,
+		},
+		{
+			name:    "just wildcard: empty account attribute",
+			reqAttr: "*.",
+			accAttr: "",
+			exp:     false,
+		},
+		{
+			name:    "just a star: account attribute has value",
+			reqAttr: "*",
+			accAttr: "penny.dime.quarter",
+			exp:     true,
 		},
 	}
 

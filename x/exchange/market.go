@@ -366,8 +366,11 @@ func HasReqAttrMatch(reqAttr string, accAttrs []string) bool {
 // IsReqAttrMatch returns true if the provide account attribute is a match for the given required attribute.
 // This assumes that reqAttr and accAttr have both been normalized.
 func IsReqAttrMatch(reqAttr, accAttr string) bool {
-	if len(reqAttr) == 0 {
+	if len(reqAttr) == 0 || len(accAttr) == 0 {
 		return false
+	}
+	if reqAttr == "*" {
+		return true
 	}
 	if strings.HasPrefix(reqAttr, "*.") {
 		// reqAttr[1:] is used here (instead of [2:]) because we need that . to be
