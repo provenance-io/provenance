@@ -15,6 +15,7 @@ import (
 
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
@@ -103,12 +104,15 @@ var upgrades = map[string]appUpgrade{
 			if err != nil {
 				return nil, err
 			}
+			// set ibchoooks defaults (no allowed async contracts)
+			app.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
+
 			removeInactiveValidatorDelegations(ctx, app)
 			setupICQ(ctx, app)
 
 			return vm, nil
 		},
-		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName},
+		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.ModuleName},
 	},
 	"saffron": { // upgrade for v1.17.0,
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -117,12 +121,16 @@ var upgrades = map[string]appUpgrade{
 			if err != nil {
 				return nil, err
 			}
+
+			// set ibchoooks defaults (no allowed async contracts)
+			app.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
+
 			removeInactiveValidatorDelegations(ctx, app)
 			setupICQ(ctx, app)
 
 			return vm, nil
 		},
-		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName},
+		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
 }
