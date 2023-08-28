@@ -14,7 +14,267 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO[1658]: func TestMarket_Validate(t *testing.T)
+func TestMarket_Validate(t *testing.T) {
+	coins := func(coins string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(coins)
+		require.NoError(t, err, "sdk.ParseCoinsNormalized(%q)", coins)
+		return rv
+	}
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+
+	addr1 := sdk.AccAddress("addr1_______________").String()
+	addr2 := sdk.AccAddress("addr2_______________").String()
+
+	tests := []struct {
+		name   string
+		market Market
+		expErr []string
+	}{
+		{
+			name:   "zero value",
+			market: Market{},
+			expErr: nil,
+		},
+		{
+			// A little bit of everything that should all be valid.
+			name: "control",
+			market: Market{
+				MarketId:                1,
+				MarketDetails:           MarketDetails{Name: "Test Market", Description: "Just a market for testing."},
+				FeeCreateAskFlat:        coins("10nnibbler,5mfry"),
+				FeeCreateBidFlat:        coins("15nnibbler,5mfry"),
+				FeeSettlementSellerFlat: coins("50nnibler,8mfry"),
+				FeeSettlementSellerRatios: []*FeeRatio{
+					{Price: coin(1000, "nnibler"), Fee: coin(1, "nnibler")},
+					{Price: coin(300, "mfry"), Fee: coin(1, "mfry")},
+				},
+				FeeSettlementBuyerFlat: coins("100nnibler,20mfry"),
+				FeeSettlementBuyerRatios: []*FeeRatio{
+					{Price: coin(500, "nnibler"), Fee: coin(1, "nnibler")},
+					{Price: coin(500, "nnibler"), Fee: coin(8, "mfry")},
+					{Price: coin(150, "mfry"), Fee: coin(1, "mfry")},
+					{Price: coin(1, "mfry"), Fee: coin(1, "nnibler")},
+				},
+				AcceptingOrders:     true,
+				AllowUserSettlement: true,
+				AccessGrants: []*AccessGrant{
+					{Address: addr1, Permissions: AllPermissions()},
+					{Address: addr2, Permissions: []Permission{Permission_settle}},
+				},
+				ReqAttrCreateAsk: []string{"kyc.ask.path", "*.ask.some.other.path"},
+				ReqAttrCreateBid: []string{"kyc.bid.path", "*.bid.some.other.path"},
+			},
+			expErr: nil,
+		},
+		{
+			name:   "market id 0",
+			market: Market{MarketId: 0},
+			expErr: nil,
+		},
+		{
+			name:   "invalid market details",
+			market: Market{MarketDetails: MarketDetails{Name: strings.Repeat("n", MaxName+1)}},
+			expErr: []string{fmt.Sprintf("name length %d exceeds maximum length of %d", MaxName+1, MaxName)},
+		},
+		{
+			name:   "invalid fee create ask flat",
+			market: Market{FeeCreateAskFlat: sdk.Coins{coin(-1, "leela")}},
+			expErr: []string{`invalid create ask flat fee option "-1leela": negative coin amount: -1`},
+		},
+		{
+			name:   "invalid fee create bid flat",
+			market: Market{FeeCreateBidFlat: sdk.Coins{coin(-1, "leela")}},
+			expErr: []string{`invalid create bid flat fee option "-1leela": negative coin amount: -1`},
+		},
+		{
+			name:   "invalid fee settlement seller flat",
+			market: Market{FeeSettlementSellerFlat: sdk.Coins{coin(-1, "leela")}},
+			expErr: []string{`invalid settlement seller flat fee option "-1leela": negative coin amount: -1`},
+		},
+		{
+			name:   "invalid fee settlement buyer flat",
+			market: Market{FeeSettlementBuyerFlat: sdk.Coins{coin(-1, "leela")}},
+			expErr: []string{`invalid settlement buyer flat fee option "-1leela": negative coin amount: -1`},
+		},
+		{
+			name:   "invalid seller ratio",
+			market: Market{FeeSettlementSellerRatios: []*FeeRatio{{Price: coin(0, "fry"), Fee: coin(1, "fry")}}},
+			expErr: []string{`seller fee ratio price amount "0fry" must be positive`},
+		},
+		{
+			name:   "invalid buyer ratio",
+			market: Market{FeeSettlementBuyerRatios: []*FeeRatio{{Price: coin(0, "fry"), Fee: coin(1, "fry")}}},
+			expErr: []string{`buyer fee ratio price amount "0fry" must be positive`},
+		},
+		{
+			name: "invalid ratios",
+			market: Market{
+				FeeSettlementSellerRatios: []*FeeRatio{{Price: coin(10, "fry"), Fee: coin(1, "fry")}},
+				FeeSettlementBuyerRatios:  []*FeeRatio{{Price: coin(100, "leela"), Fee: coin(1, "leela")}},
+			},
+			expErr: []string{
+				`denom "fry" is defined in the seller settlement fee ratios but not buyer`,
+				`denom "leela" is defined in the buyer settlement fee ratios but not seller`,
+			},
+		},
+		{
+			name:   "invalid access grants",
+			market: Market{AccessGrants: []*AccessGrant{{Address: "bad_addr", Permissions: AllPermissions()}}},
+			expErr: []string{"invalid access grant: invalid address: decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name:   "invalid ask required attributes",
+			market: Market{ReqAttrCreateAsk: []string{"this-attr-is-bad"}},
+			expErr: []string{`invalid create ask required attributes: invalid required attribute "this-attr-is-bad"`},
+		},
+		{
+			name:   "invalid bid required attributes",
+			market: Market{ReqAttrCreateBid: []string{"this-attr-grrrr"}},
+			expErr: []string{`invalid create bid required attributes: invalid required attribute "this-attr-grrrr"`},
+		},
+		{
+			name: "multiple errors",
+			market: Market{
+				MarketDetails:             MarketDetails{Name: strings.Repeat("n", MaxName+1)},
+				FeeCreateAskFlat:          sdk.Coins{coin(-1, "leela")},
+				FeeCreateBidFlat:          sdk.Coins{coin(-1, "leela")},
+				FeeSettlementSellerFlat:   sdk.Coins{coin(-1, "leela")},
+				FeeSettlementBuyerFlat:    sdk.Coins{coin(-1, "leela")},
+				FeeSettlementSellerRatios: []*FeeRatio{{Price: coin(10, "fry"), Fee: coin(1, "fry")}},
+				FeeSettlementBuyerRatios:  []*FeeRatio{{Price: coin(100, "leela"), Fee: coin(1, "leela")}},
+				AccessGrants:              []*AccessGrant{{Address: "bad_addr", Permissions: AllPermissions()}},
+				ReqAttrCreateAsk:          []string{"this-attr-is-bad"},
+				ReqAttrCreateBid:          []string{"this-attr-grrrr"},
+			},
+			expErr: []string{
+				fmt.Sprintf("name length %d exceeds maximum length of %d", MaxName+1, MaxName),
+				`invalid create ask flat fee option "-1leela": negative coin amount: -1`,
+				`invalid create bid flat fee option "-1leela": negative coin amount: -1`,
+				`invalid settlement seller flat fee option "-1leela": negative coin amount: -1`,
+				`invalid settlement buyer flat fee option "-1leela": negative coin amount: -1`,
+				`denom "fry" is defined in the seller settlement fee ratios but not buyer`,
+				`denom "leela" is defined in the buyer settlement fee ratios but not seller`,
+				"invalid access grant: invalid address: decoding bech32 failed: invalid separator index -1",
+				`invalid create ask required attributes: invalid required attribute "this-attr-is-bad"`,
+				`invalid create bid required attributes: invalid required attribute "this-attr-grrrr"`,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = tc.market.Validate()
+			}
+			require.NotPanics(t, testFunc, "Market.Validate")
+
+			// TODO[1658]: Refactor to testutils.AssertErrorContents(t, err, tc.expErr, "Market.Validate")
+			if len(tc.expErr) > 0 {
+				if assert.Error(t, err, "Market.Validate") {
+					for _, exp := range tc.expErr {
+						assert.ErrorContains(t, err, exp, "Market.Validate")
+					}
+				}
+			} else {
+				assert.NoError(t, err, "Market.Validate")
+			}
+		})
+	}
+}
+
+func TestValidateFeeOptions(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+
+	tests := []struct {
+		name    string
+		field   string
+		options []sdk.Coin
+		expErr  string
+	}{
+		{
+			name:    "nil options",
+			field:   "",
+			options: nil,
+			expErr:  "",
+		},
+		{
+			name:    "empty options",
+			field:   "",
+			options: []sdk.Coin{},
+			expErr:  "",
+		},
+		{
+			name:    "one option: good",
+			field:   "",
+			options: []sdk.Coin{coin(1, "leela")},
+			expErr:  "",
+		},
+		{
+			name:    "one option: bad denom",
+			field:   "test field one",
+			options: []sdk.Coin{coin(1, "%")},
+			expErr:  `invalid test field one option "1%": invalid denom: %`,
+		},
+		{
+			name:    "one option: zero amount",
+			field:   "zero-amount",
+			options: []sdk.Coin{coin(0, "fry")},
+			expErr:  `invalid zero-amount option "0fry": amount cannot be zero`,
+		},
+		{
+			name:    "one option: negative amount",
+			field:   "i-pay-u",
+			options: []sdk.Coin{coin(-1, "nibbler")},
+			expErr:  `invalid i-pay-u option "-1nibbler": negative coin amount: -1`,
+		},
+		{
+			name:    "three options: all good",
+			field:   "",
+			options: []sdk.Coin{coin(5, "fry"), coin(2, "leela"), coin(1, "farnsworth")},
+			expErr:  "",
+		},
+		{
+			name:    "three options: bad first",
+			field:   "coffee",
+			options: []sdk.Coin{coin(0, "fry"), coin(2, "leela"), coin(1, "farnsworth")},
+			expErr:  `invalid coffee option "0fry": amount cannot be zero`,
+		},
+		{
+			name:    "three options: bad second",
+			field:   "eyeballs",
+			options: []sdk.Coin{coin(5, "fry"), coin(0, "leela"), coin(1, "farnsworth")},
+			expErr:  `invalid eyeballs option "0leela": amount cannot be zero`,
+		},
+		{
+			name:    "three options: bad third",
+			field:   "eyeballs",
+			options: []sdk.Coin{coin(5, "fry"), coin(2, "leela"), coin(0, "farnsworth")},
+			expErr:  `invalid eyeballs option "0farnsworth": amount cannot be zero`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = ValidateFeeOptions(tc.field, tc.options)
+			}
+			require.NotPanics(t, testFunc, "ValidateFeeOptions")
+
+			// TODO[1658]: Refactor this to testutils.AssertErrorValue(t, err, tc.expErr, "ValidateFeeOptions")
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr, "ValidateFeeOptions")
+			} else {
+				assert.NoError(t, err, "ValidateFeeOptions")
+			}
+		})
+	}
+}
 
 func TestMarketDetails_Validate(t *testing.T) {
 	joinErrs := func(errs ...string) string {
@@ -675,7 +935,7 @@ func TestValidateAccessGrants(t *testing.T) {
 				{Address: addr2, Permissions: AllPermissions()},
 				{Address: addr3, Permissions: AllPermissions()},
 			},
-			exp: "permission -1 does not exist for " + addr1,
+			exp: "invalid access grant: permission -1 does not exist for " + addr1,
 		},
 		{
 			name: "three entries: invalid second",
@@ -684,7 +944,7 @@ func TestValidateAccessGrants(t *testing.T) {
 				{Address: addr2, Permissions: []Permission{-1}},
 				{Address: addr3, Permissions: AllPermissions()},
 			},
-			exp: "permission -1 does not exist for " + addr2,
+			exp: "invalid access grant: permission -1 does not exist for " + addr2,
 		},
 		{
 			name: "three entries: invalid second",
@@ -693,7 +953,7 @@ func TestValidateAccessGrants(t *testing.T) {
 				{Address: addr2, Permissions: AllPermissions()},
 				{Address: addr3, Permissions: []Permission{-1}},
 			},
-			exp: "permission -1 does not exist for " + addr3,
+			exp: "invalid access grant: permission -1 does not exist for " + addr3,
 		},
 		{
 			name: "three entries: only valid first",
@@ -703,8 +963,8 @@ func TestValidateAccessGrants(t *testing.T) {
 				{Address: addr3, Permissions: []Permission{-1}},
 			},
 			exp: joinErrs(
-				"permission is unspecified for "+addr2,
-				"permission -1 does not exist for "+addr3,
+				"invalid access grant: permission is unspecified for "+addr2,
+				"invalid access grant: permission -1 does not exist for "+addr3,
 			),
 		},
 		{
@@ -715,8 +975,8 @@ func TestValidateAccessGrants(t *testing.T) {
 				{Address: addr3, Permissions: []Permission{-1}},
 			},
 			exp: joinErrs(
-				"permission is unspecified for "+addr1,
-				"permission -1 does not exist for "+addr3,
+				"invalid access grant: permission is unspecified for "+addr1,
+				"invalid access grant: permission -1 does not exist for "+addr3,
 			),
 		},
 		{
@@ -727,8 +987,8 @@ func TestValidateAccessGrants(t *testing.T) {
 				{Address: addr3, Permissions: AllPermissions()},
 			},
 			exp: joinErrs(
-				"permission is unspecified for "+addr1,
-				"permission -1 does not exist for "+addr2,
+				"invalid access grant: permission is unspecified for "+addr1,
+				"invalid access grant: permission -1 does not exist for "+addr2,
 			),
 		},
 		{
@@ -764,19 +1024,24 @@ func TestAccessGrant_Validate(t *testing.T) {
 		exp  string
 	}{
 		{
+			name: "control",
+			a:    AccessGrant{Address: addr, Permissions: AllPermissions()},
+			exp:  "",
+		},
+		{
 			name: "invalid address",
 			a:    AccessGrant{Address: "invalid_address_____", Permissions: []Permission{Permission_settle}},
-			exp:  "invalid address: decoding bech32 failed: invalid separator index -1",
+			exp:  "invalid access grant: invalid address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
 			name: "nil permissions",
 			a:    AccessGrant{Address: addr, Permissions: nil},
-			exp:  "no permissions provided for " + addr,
+			exp:  "invalid access grant: no permissions provided for " + addr,
 		},
 		{
 			name: "empty permissions",
 			a:    AccessGrant{Address: addr, Permissions: []Permission{}},
-			exp:  "no permissions provided for " + addr,
+			exp:  "invalid access grant: no permissions provided for " + addr,
 		},
 		{
 			name: "duplicate entry",
@@ -788,7 +1053,7 @@ func TestAccessGrant_Validate(t *testing.T) {
 					Permission_settle,
 				},
 			},
-			exp: "settle appears multiple times for " + addr,
+			exp: "invalid access grant: settle appears multiple times for " + addr,
 		},
 		{
 			name: "invalid entry",
@@ -800,7 +1065,7 @@ func TestAccessGrant_Validate(t *testing.T) {
 					Permission_attributes,
 				},
 			},
-			exp: "permission -1 does not exist for " + addr,
+			exp: "invalid access grant: permission -1 does not exist for " + addr,
 		},
 	}
 

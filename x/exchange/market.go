@@ -36,10 +36,10 @@ func (m Market) Validate() error {
 
 	errs := []error{
 		m.MarketDetails.Validate(),
-		m.FeeCreateAskFlat.Validate(),
-		m.FeeCreateBidFlat.Validate(),
-		m.FeeSettlementSellerFlat.Validate(),
-		m.FeeSettlementBuyerFlat.Validate(),
+		ValidateFeeOptions("create ask flat fee", m.FeeCreateAskFlat),
+		ValidateFeeOptions("create bid flat fee", m.FeeCreateBidFlat),
+		ValidateFeeOptions("settlement seller flat fee", m.FeeSettlementSellerFlat),
+		ValidateFeeOptions("settlement buyer flat fee", m.FeeSettlementBuyerFlat),
 		ValidateFeeRatios(m.FeeSettlementSellerRatios, m.FeeSettlementBuyerRatios),
 		ValidateAccessGrants(m.AccessGrants),
 	}
@@ -54,6 +54,19 @@ func (m Market) Validate() error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func ValidateFeeOptions(field string, options []sdk.Coin) error {
+	for _, coin := range options {
+		err := coin.Validate()
+		if err != nil {
+			return fmt.Errorf("invalid %s option %q: %w", field, coin, err)
+		}
+		if coin.IsZero() {
+			return fmt.Errorf("invalid %s option %q: amount cannot be zero", field, coin)
+		}
+	}
+	return nil
 }
 
 // Validate returns an error if anything in this MarketDetails is invalid.
@@ -242,19 +255,19 @@ func ValidateAccessGrants(accessGrants []*AccessGrant) error {
 func (a AccessGrant) Validate() error {
 	_, err := sdk.AccAddressFromBech32(a.Address)
 	if err != nil {
-		return fmt.Errorf("invalid address: %w", err)
+		return fmt.Errorf("invalid access grant: invalid address: %w", err)
 	}
 	if len(a.Permissions) == 0 {
-		return fmt.Errorf("no permissions provided for %s", a.Address)
+		return fmt.Errorf("invalid access grant: no permissions provided for %s", a.Address)
 	}
 	seen := make(map[Permission]bool)
 	for _, perm := range a.Permissions {
 		if seen[perm] {
-			return fmt.Errorf("%s appears multiple times for %s", perm.SimpleString(), a.Address)
+			return fmt.Errorf("invalid access grant: %s appears multiple times for %s", perm.SimpleString(), a.Address)
 		}
 		seen[perm] = true
 		if err = perm.Validate(); err != nil {
-			return fmt.Errorf("%w for %s", err, a.Address)
+			return fmt.Errorf("invalid access grant: %w for %s", err, a.Address)
 		}
 	}
 	return nil
