@@ -100,7 +100,7 @@ func ValidateSellerFeeRatios(ratios []*FeeRatio) error {
 func ValidateBuyerFeeRatios(ratios []*FeeRatio) error {
 	seen := make(map[string]bool)
 	dups := make(map[string]bool)
-	var errs []error
+	var errs []error //nolint:prealloc // ideally always empty, so no reason to preallocate anything.
 	for _, ratio := range ratios {
 		key := ratio.Price.Denom + ":" + ratio.Fee.Denom
 		if seen[key] && !dups[key] {
@@ -338,4 +338,41 @@ func IsValidReqAttr(reqAttr string) bool {
 
 	// Nothing left that might save it.
 	return false
+}
+
+// FindUnmatchedReqAttrs returns all required attributes that don't have a match in the provided account attributes.
+// This assumes that reqAttrs and accAttrs have all been normalized.
+func FindUnmatchedReqAttrs(reqAttrs, accAttrs []string) []string {
+	var rv []string
+	for _, reqAttr := range reqAttrs {
+		if !HasReqAttrMatch(reqAttr, accAttrs) {
+			rv = append(rv, reqAttr)
+		}
+	}
+	return rv
+}
+
+// HasReqAttrMatch returns true if one (or more) accAttrs is a match for the provided required attribute.
+// This assumes that reqAttr and accAttrs have all been normalized.
+func HasReqAttrMatch(reqAttr string, accAttrs []string) bool {
+	for _, accAttr := range accAttrs {
+		if IsReqAttrMatch(reqAttr, accAttr) {
+			return true
+		}
+	}
+	return false
+}
+
+// IsReqAttrMatch returns true if the provide account attribute is a match for the given required attribute.
+// This assumes that reqAttr and accAttr have both been normalized.
+func IsReqAttrMatch(reqAttr, accAttr string) bool {
+	if len(reqAttr) == 0 {
+		return false
+	}
+	if strings.HasPrefix(reqAttr, "*.") {
+		// reqAttr[1:] is used here (instead of [2:]) because we need that . to be
+		// part of the match. Otherwise "*.b.a" would match "c.b.a" as well as "c.evilb.a".
+		return strings.HasSuffix(accAttr, reqAttr[1:])
+	}
+	return reqAttr == accAttr
 }
