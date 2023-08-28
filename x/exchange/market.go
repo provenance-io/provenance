@@ -184,16 +184,21 @@ func (r FeeRatio) Validate() error {
 
 // ValidateAccessGrants returns an error if any of the provided access grants are invalid.
 func ValidateAccessGrants(accessGrants []*AccessGrant) error {
-	var errs []error //nolint:prealloc // Stupid linter. It'll almost always be nil. No reason to pre-allocate anything.
+	errs := make([]error, len(accessGrants))
 	seen := make(map[string]bool)
 	dups := make(map[string]bool)
-	for _, ag := range accessGrants {
+	for i, ag := range accessGrants {
+		if ag == nil {
+			errs[i] = fmt.Errorf("nil access grant not allowed")
+			continue
+		}
 		if seen[ag.Address] && !dups[ag.Address] {
-			errs = append(errs, fmt.Errorf("%s appears in multiple access grant entries", ag.Address))
+			errs[i] = fmt.Errorf("%s appears in multiple access grant entries", ag.Address)
 			dups[ag.Address] = true
+			continue
 		}
 		seen[ag.Address] = true
-		errs = append(errs, ag.Validate())
+		errs[i] = ag.Validate()
 	}
 	return errors.Join(errs...)
 }
@@ -202,7 +207,7 @@ func ValidateAccessGrants(accessGrants []*AccessGrant) error {
 func (a AccessGrant) Validate() error {
 	_, err := sdk.AccAddressFromBech32(a.Address)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid address: %w", err)
 	}
 	if len(a.Permissions) == 0 {
 		return fmt.Errorf("no permissions provided for %s", a.Address)
@@ -210,11 +215,11 @@ func (a AccessGrant) Validate() error {
 	seen := make(map[Permission]bool)
 	for _, perm := range a.Permissions {
 		if seen[perm] {
-			return fmt.Errorf("%s appears multiple times for %s", perm.String(), a.Address)
+			return fmt.Errorf("%s appears multiple times for %s", perm.SimpleString(), a.Address)
 		}
 		seen[perm] = true
 		if err = perm.Validate(); err != nil {
-			return err
+			return fmt.Errorf("%w for %s", err, a.Address)
 		}
 	}
 	return nil

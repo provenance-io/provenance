@@ -7,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/maps"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TODO[1658]: func TestMarket_Validate(t *testing.T)
@@ -23,9 +25,201 @@ import (
 
 // TODO[1658]: func TestFeeRatio_Validate(t *testing.T)
 
-// TODO[1658]: func TestValidateAccessGrants(t *testing.T)
+func TestValidateAccessGrants(t *testing.T) {
+	joinErrs := func(errs ...string) string {
+		return strings.Join(errs, "\n")
+	}
+	addrDup := sdk.AccAddress("duplicate_address___").String()
+	addr1 := sdk.AccAddress("address_1___________").String()
+	addr2 := sdk.AccAddress("address_2___________").String()
+	addr3 := sdk.AccAddress("address_3___________").String()
 
-// TODO[1658]: func TestAccessGrant_Validate(t *testing.T)
+	tests := []struct {
+		name   string
+		grants []*AccessGrant
+		exp    string
+	}{
+		{
+			name:   "nil grants",
+			grants: nil,
+			exp:    "",
+		},
+		{
+			name:   "empty grants",
+			grants: []*AccessGrant{},
+			exp:    "",
+		},
+		{
+			name:   "nil entry",
+			grants: []*AccessGrant{nil},
+			exp:    "nil access grant not allowed",
+		},
+		{
+			name: "duplicate address",
+			grants: []*AccessGrant{
+				{Address: addrDup, Permissions: []Permission{Permission_settle}},
+				{Address: addrDup, Permissions: []Permission{Permission_cancel}},
+			},
+			exp: sdk.AccAddress("duplicate_address___").String() + " appears in multiple access grant entries",
+		},
+		{
+			name: "three entries: all valid",
+			grants: []*AccessGrant{
+				{Address: addr1, Permissions: AllPermissions()},
+				{Address: addr2, Permissions: AllPermissions()},
+				{Address: addr3, Permissions: AllPermissions()},
+			},
+			exp: "",
+		},
+		{
+			name: "three entries: invalid first",
+			grants: []*AccessGrant{
+				{Address: addr1, Permissions: []Permission{-1}},
+				{Address: addr2, Permissions: AllPermissions()},
+				{Address: addr3, Permissions: AllPermissions()},
+			},
+			exp: "permission -1 does not exist for " + addr1,
+		},
+		{
+			name: "three entries: invalid second",
+			grants: []*AccessGrant{
+				{Address: addr1, Permissions: AllPermissions()},
+				{Address: addr2, Permissions: []Permission{-1}},
+				{Address: addr3, Permissions: AllPermissions()},
+			},
+			exp: "permission -1 does not exist for " + addr2,
+		},
+		{
+			name: "three entries: invalid second",
+			grants: []*AccessGrant{
+				{Address: addr1, Permissions: AllPermissions()},
+				{Address: addr2, Permissions: AllPermissions()},
+				{Address: addr3, Permissions: []Permission{-1}},
+			},
+			exp: "permission -1 does not exist for " + addr3,
+		},
+		{
+			name: "three entries: only valid first",
+			grants: []*AccessGrant{
+				{Address: addr1, Permissions: AllPermissions()},
+				{Address: addr2, Permissions: []Permission{0}},
+				{Address: addr3, Permissions: []Permission{-1}},
+			},
+			exp: joinErrs(
+				"permission is unspecified for "+addr2,
+				"permission -1 does not exist for "+addr3,
+			),
+		},
+		{
+			name: "three entries: only valid second",
+			grants: []*AccessGrant{
+				{Address: addr1, Permissions: []Permission{0}},
+				{Address: addr2, Permissions: AllPermissions()},
+				{Address: addr3, Permissions: []Permission{-1}},
+			},
+			exp: joinErrs(
+				"permission is unspecified for "+addr1,
+				"permission -1 does not exist for "+addr3,
+			),
+		},
+		{
+			name: "three entries: only valid third",
+			grants: []*AccessGrant{
+				{Address: addr1, Permissions: []Permission{0}},
+				{Address: addr2, Permissions: []Permission{-1}},
+				{Address: addr3, Permissions: AllPermissions()},
+			},
+			exp: joinErrs(
+				"permission is unspecified for "+addr1,
+				"permission -1 does not exist for "+addr2,
+			),
+		},
+		{
+			name: "three entries: all same address",
+			grants: []*AccessGrant{
+				{Address: addrDup, Permissions: AllPermissions()},
+				{Address: addrDup, Permissions: AllPermissions()},
+				{Address: addrDup, Permissions: AllPermissions()},
+			},
+			exp: addrDup + " appears in multiple access grant entries",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAccessGrants(tc.grants)
+
+			// TODO[1658]: Refactor to use testutils.AssertErrorValue(t, err, tc.exp, "ValidateAccessGrants")
+			if len(tc.exp) > 0 {
+				assert.EqualError(t, err, tc.exp, "ValidateAccessGrants")
+			} else {
+				assert.NoError(t, err, "ValidateAccessGrants")
+			}
+		})
+	}
+}
+
+func TestAccessGrant_Validate(t *testing.T) {
+	addr := sdk.AccAddress("addr________________").String()
+	tests := []struct {
+		name string
+		a    AccessGrant
+		exp  string
+	}{
+		{
+			name: "invalid address",
+			a:    AccessGrant{Address: "invalid_address_____", Permissions: []Permission{Permission_settle}},
+			exp:  "invalid address: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "nil permissions",
+			a:    AccessGrant{Address: addr, Permissions: nil},
+			exp:  "no permissions provided for " + addr,
+		},
+		{
+			name: "empty permissions",
+			a:    AccessGrant{Address: addr, Permissions: []Permission{}},
+			exp:  "no permissions provided for " + addr,
+		},
+		{
+			name: "duplicate entry",
+			a: AccessGrant{
+				Address: addr,
+				Permissions: []Permission{
+					Permission_settle,
+					Permission_cancel,
+					Permission_settle,
+				},
+			},
+			exp: "settle appears multiple times for " + addr,
+		},
+		{
+			name: "invalid entry",
+			a: AccessGrant{
+				Address: addr,
+				Permissions: []Permission{
+					Permission_withdraw,
+					-1,
+					Permission_attributes,
+				},
+			},
+			exp: "permission -1 does not exist for " + addr,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.a.Validate()
+
+			// TODO[1658]: Refactor this to testutils.AssertErrorValue(t, err, tc.exp, "Validate")
+			if len(tc.exp) > 0 {
+				assert.EqualError(t, err, tc.exp, "Validate")
+			} else {
+				assert.NoError(t, err, "Validate")
+			}
+		})
+	}
+}
 
 func TestPermission_SimpleString(t *testing.T) {
 	tests := []struct {
