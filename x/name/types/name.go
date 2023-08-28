@@ -48,9 +48,10 @@ func NormalizeName(name string) string {
 	return strings.Join(segments, ".")
 }
 
-// IsValidName returns true if the provided name is valid after normalization and without consideration of length limits.
+// IsValidName returns true if the provided name is valid (without consideration of length limits).
+// It is assumed that the name provided has been normalized using NormalizeName.
 func IsValidName(name string) bool {
-	for _, segment := range strings.Split(NormalizeName(name), ".") {
+	for _, segment := range strings.Split(name, ".") {
 		if !IsValidNameSegment(segment) {
 			return false
 		}

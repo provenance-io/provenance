@@ -250,6 +250,9 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(recor
 // Normalize returns a name is storage format.
 func (k Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
 	normalized := types.NormalizeName(name)
+	if !types.IsValidName(normalized) {
+		return "", types.ErrNameInvalid
+	}
 	segCount := uint32(0)
 	for _, segment := range strings.Split(normalized, ".") {
 		segCount++
@@ -260,9 +263,6 @@ func (k Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
 		}
 		if segLen > k.GetMaxSegmentLength(ctx) && !isUUID {
 			return "", types.ErrNameSegmentTooLong
-		}
-		if !types.IsValidNameSegment(segment) {
-			return "", types.ErrNameInvalid
 		}
 	}
 	if segCount > k.GetMaxNameLevels(ctx) {
