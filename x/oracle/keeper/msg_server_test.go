@@ -70,8 +70,8 @@ func (s *KeeperTestSuite) TestSendQueryOracle() {
 		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 	)
 
-	s.app.OracleKeeper.SetMockICS4Wrapper(keeper.MockICS4Wrapper{})
-	s.app.OracleKeeper.SetMockScopedKeeper(keeper.MockScopedKeeper{})
+	s.app.OracleKeeper = s.app.OracleKeeper.WithMockICS4Wrapper(keeper.MockICS4Wrapper{})
+	s.app.OracleKeeper = s.app.OracleKeeper.WithMockScopedKeeper(keeper.MockScopedKeeper{})
 
 	tests := []struct {
 		name        string
@@ -109,7 +109,7 @@ func (s *KeeperTestSuite) TestSendQueryOracle() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			if tc.mockChannel {
-				s.app.OracleKeeper.SetMockChannelKeeper(&keeper.MockChannelKeeper{})
+				s.app.OracleKeeper = s.app.OracleKeeper.WithMockChannelKeeper(&keeper.MockChannelKeeper{})
 			}
 			res, err := s.msgServer.SendQueryOracle(s.ctx, tc.req)
 

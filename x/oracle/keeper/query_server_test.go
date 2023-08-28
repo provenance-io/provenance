@@ -108,7 +108,7 @@ func (s *KeeperTestSuite) TestOracle() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			if tc.mockEnabled {
-				s.app.OracleKeeper.SetWasmQueryServer(keeper.MockWasmServer{})
+				s.app.OracleKeeper = s.app.OracleKeeper.WithWasmQueryServer(keeper.MockWasmServer{})
 			}
 
 			if len(tc.oracle) > 0 {

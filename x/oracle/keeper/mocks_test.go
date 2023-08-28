@@ -17,8 +17,9 @@ import (
 type MockWasmServer struct {
 }
 
-func (k *Keeper) SetWasmQueryServer(server wasmtypes.QueryServer) {
+func (k Keeper) WithWasmQueryServer(server wasmtypes.QueryServer) Keeper {
 	k.wasmQueryServer = server
+	return k
 }
 
 func (m MockWasmServer) ContractInfo(context.Context, *wasmtypes.QueryContractInfoRequest) (*wasmtypes.QueryContractInfoResponse, error) {
@@ -71,8 +72,9 @@ type MockICS4Wrapper struct {
 	counter uint64
 }
 
-func (k *Keeper) SetMockICS4Wrapper(ics4wrapper types.ICS4Wrapper) {
+func (k Keeper) WithMockICS4Wrapper(ics4wrapper types.ICS4Wrapper) Keeper {
 	k.ics4Wrapper = ics4wrapper
+	return k
 }
 
 func (k MockICS4Wrapper) SendPacket(
@@ -92,8 +94,9 @@ type MockChannelKeeper struct {
 	counter uint64
 }
 
-func (k *Keeper) SetMockChannelKeeper(channelKeeper types.ChannelKeeper) {
+func (k Keeper) WithMockChannelKeeper(channelKeeper types.ChannelKeeper) Keeper {
 	k.channelKeeper = channelKeeper
+	return k
 }
 
 func (m *MockChannelKeeper) GetChannel(ctx sdk.Context, portID, channelID string) (channeltypes.Channel, bool) {
@@ -108,8 +111,9 @@ func (m *MockChannelKeeper) GetNextSequenceSend(ctx sdk.Context, portID, channel
 type MockScopedKeeper struct {
 }
 
-func (k *Keeper) SetMockScopedKeeper(scopedKeeper types.ScopedKeeper) {
+func (k Keeper) WithMockScopedKeeper(scopedKeeper types.ScopedKeeper) Keeper {
 	k.scopedKeeper = scopedKeeper
+	return k
 }
 
 func (m MockScopedKeeper) GetCapability(ctx sdk.Context, name string) (*capabilitytypes.Capability, bool) {

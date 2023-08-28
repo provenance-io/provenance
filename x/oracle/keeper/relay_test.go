@@ -41,8 +41,8 @@ func (s *KeeperTestSuite) TestSendQuery() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			if tc.enableMocks {
-				s.app.OracleKeeper.SetMockChannelKeeper(&keeper.MockChannelKeeper{})
-				s.app.OracleKeeper.SetMockICS4Wrapper(&keeper.MockICS4Wrapper{})
+				s.app.OracleKeeper = s.app.OracleKeeper.WithMockChannelKeeper(&keeper.MockChannelKeeper{})
+				s.app.OracleKeeper = s.app.OracleKeeper.WithMockICS4Wrapper(&keeper.MockICS4Wrapper{})
 			}
 			sequence, err := s.app.OracleKeeper.SendQuery(s.ctx, "port", "channel", nil, tc.req, clienttypes.ZeroHeight(), 0)
 			if len(tc.err) > 0 {

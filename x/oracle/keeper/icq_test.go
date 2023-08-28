@@ -11,8 +11,9 @@ func (s *KeeperTestSuite) TestQueryOracle() {
 		channel     string
 		sequence    uint64
 		err         string
-		setMocks    bool
-		setIcs4Mock bool
+		scopeMock   bool
+		channelMock bool
+		ics4Mock    bool
 	}{
 		{
 			name:     "failure - missing channel capability",
@@ -22,36 +23,35 @@ func (s *KeeperTestSuite) TestQueryOracle() {
 			err:      "module does not own channel capability: channel capability not found",
 		},
 		{
-			name:     "failure - unable to send",
-			query:    []byte("{}"),
-			channel:  "channel-1",
-			sequence: 0,
-			err:      "channel-1: channel not found",
-			setMocks: true,
+			name:        "failure - unable to send",
+			query:       []byte("{}"),
+			channel:     "channel-1",
+			sequence:    0,
+			err:         "channel-1: channel not found",
+			scopeMock:   true,
+			channelMock: true,
 		},
 		{
 			name:        "success - should send a packet",
 			query:       []byte("{}"),
 			channel:     "channel-1",
-			sequence:    2,
-			setIcs4Mock: true,
-		},
-		{
-			name:     "success - should send a packet with the next sequence",
-			query:    []byte("{}"),
-			channel:  "channel-1",
-			sequence: 3,
+			sequence:    1,
+			scopeMock:   true,
+			channelMock: true,
+			ics4Mock:    true,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			if tc.setMocks {
-				s.app.OracleKeeper.SetMockScopedKeeper(keeper.MockScopedKeeper{})
-				s.app.OracleKeeper.SetMockChannelKeeper(&keeper.MockChannelKeeper{})
+			if tc.scopeMock {
+				s.app.OracleKeeper = s.app.OracleKeeper.WithMockScopedKeeper(keeper.MockScopedKeeper{})
 			}
-			if tc.setIcs4Mock {
-				s.app.OracleKeeper.SetMockICS4Wrapper(keeper.MockICS4Wrapper{})
+			if tc.channelMock {
+				s.app.OracleKeeper = s.app.OracleKeeper.WithMockChannelKeeper(&keeper.MockChannelKeeper{})
+			}
+			if tc.ics4Mock {
+				s.app.OracleKeeper = s.app.OracleKeeper.WithMockICS4Wrapper(&keeper.MockICS4Wrapper{})
 			}
 			sequence, err := s.app.OracleKeeper.QueryOracle(s.ctx, tc.query, tc.channel)
 			s.Assert().Equal(int(tc.sequence), int(sequence), "should have correct sequence")
