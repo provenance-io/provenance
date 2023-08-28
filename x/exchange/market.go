@@ -291,19 +291,21 @@ func ParsePermissions(permissions ...string) ([]Permission, error) {
 func ValidateReqAttrs(attrLists ...[]string) error {
 	var errs []error
 	seen := make(map[string]bool)
-	dups := make(map[string]bool)
+	bad := make(map[string]bool)
 	for _, attrs := range attrLists {
 		for _, attr := range attrs {
-			if seen[attr] {
-				if !dups[attr] {
+			normalized := nametypes.NormalizeName(attr)
+			if seen[normalized] {
+				if !bad[normalized] {
 					errs = append(errs, fmt.Errorf("duplicate required attribute entry: %q", attr))
-					dups[attr] = true
+					bad[normalized] = true
 				}
 				continue
 			}
-			seen[attr] = true
-			if !IsValidReqAttr(attr) {
+			seen[normalized] = true
+			if !IsValidReqAttr(normalized) {
 				errs = append(errs, fmt.Errorf("invalid required attribute %q", attr))
+				bad[normalized] = true
 			}
 		}
 	}
@@ -311,23 +313,22 @@ func ValidateReqAttrs(attrLists ...[]string) error {
 }
 
 // IsValidReqAttr returns true if the provided string is a valid required attribute entry.
+// Assumes that the provided reqAttr has already been normalized.
 func IsValidReqAttr(reqAttr string) bool {
-	normalized := nametypes.NormalizeName(reqAttr)
-
 	// Allow it to just be the wildcard character.
-	if normalized == "*" {
+	if reqAttr == "*" {
 		return true
 	}
 
 	// A leading wildcard segment is valid for us, but not the name module. So, remove it if it's there.
-	normalized = strings.TrimPrefix(normalized, "*.")
+	reqAttr = strings.TrimPrefix(reqAttr, "*.")
 
 	// IsValidName doesn't consider length, so an empty string is valid by it, but not valid in here.
-	if len(normalized) == 0 {
+	if len(reqAttr) == 0 {
 		return false
 	}
 
-	return nametypes.IsValidName(normalized)
+	return nametypes.IsValidName(reqAttr)
 }
 
 // FindUnmatchedReqAttrs returns all required attributes that don't have a match in the provided account attributes.

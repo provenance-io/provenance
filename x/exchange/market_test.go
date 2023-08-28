@@ -1,6 +1,7 @@
 package exchange
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,7 +35,170 @@ import (
 
 // TODO[1658]: func TestParsePermissions(t *testing.T)
 
-// TODO[1658]: func TestValidateReqAttrs(t *testing.T)
+func TestValidateReqAttrs(t *testing.T) {
+	joinErrs := func(errs ...string) string {
+		return strings.Join(errs, "\n")
+	}
+
+	tests := []struct {
+		name      string
+		attrLists [][]string
+		exp       string
+	}{
+		{
+			name:      "nil lists",
+			attrLists: nil,
+			exp:       "",
+		},
+		{
+			name:      "no lists",
+			attrLists: [][]string{},
+			exp:       "",
+		},
+		{
+			name:      "two empty lists",
+			attrLists: [][]string{{}, {}},
+			exp:       "",
+		},
+		{
+			name: "one list: three valid entries: normalized",
+			attrLists: [][]string{
+				{"*.wildcard", "penny.nickel.dime", "*.example.pb"},
+			},
+			exp: "",
+		},
+		{
+			name: "one list: three valid entries: not normalized",
+			attrLists: [][]string{
+				{" * . wildcard ", " penny  . nickel .   dime ", " * . example . pb        "},
+			},
+			exp: "",
+		},
+		{
+			name: "one list: three entries: first invalid",
+			attrLists: [][]string{
+				{"x.*.wildcard", "penny.nickel.dime", "*.example.pb"},
+			},
+			exp: `invalid required attribute "x.*.wildcard"`,
+		},
+		{
+			name: "one list: three entries: second invalid",
+			attrLists: [][]string{
+				{"*.wildcard", "penny.nic kel.dime", "*.example.pb"},
+			},
+			exp: `invalid required attribute "penny.nic kel.dime"`,
+		},
+		{
+			name: "one list: three entries: third invalid",
+			attrLists: [][]string{
+				{"*.wildcard", "penny.nickel.dime", "*.ex-am-ple.pb"},
+			},
+			exp: `invalid required attribute "*.ex-am-ple.pb"`,
+		},
+		{
+			name: "one list: duplicate entries",
+			attrLists: [][]string{
+				{"*.multi", "*.multi", "*.multi"},
+			},
+			exp: `duplicate required attribute entry: "*.multi"`,
+		},
+		{
+			name: "one list: duplicate bad entries",
+			attrLists: [][]string{
+				{"bad.*.example", "bad. * .example"},
+			},
+			exp: `invalid required attribute "bad.*.example"`,
+		},
+		{
+			name: "one list: multiple problems",
+			attrLists: [][]string{
+				{
+					"one.multi", "x.*.wildcard", "x.*.wildcard", "one.multi", "two.multi",
+					"penny.nic kel.dime", "one.multi", "two.multi", "*.ex-am-ple.pb", "two.multi",
+				},
+			},
+			exp: joinErrs(
+				`invalid required attribute "x.*.wildcard"`,
+				`duplicate required attribute entry: "one.multi"`,
+				`invalid required attribute "penny.nic kel.dime"`,
+				`duplicate required attribute entry: "two.multi"`,
+				`invalid required attribute "*.ex-am-ple.pb"`,
+			),
+		},
+		{
+			name: "two lists: second has invalid first",
+			attrLists: [][]string{
+				{"*.ok", "also.okay.by.me", "this.makes.me.happy"},
+				{"x.*.wildcard", "penny.nickel.dime", "*.example.pb"},
+			},
+			exp: `invalid required attribute "x.*.wildcard"`,
+		},
+		{
+			name: "two lists: second has invalid middle",
+			attrLists: [][]string{
+				{"*.ok", "also.okay.by.me", "this.makes.me.happy"},
+				{"*.wildcard", "penny.nic kel.dime", "*.example.pb"},
+			},
+			exp: `invalid required attribute "penny.nic kel.dime"`,
+		},
+		{
+			name: "two lists: second has invalid last",
+			attrLists: [][]string{
+				{"*.ok", "also.okay.by.me", "this.makes.me.happy"},
+				{"*.wildcard", "penny.nickel.dime", "*.ex-am-ple.pb"},
+			},
+			exp: `invalid required attribute "*.ex-am-ple.pb"`,
+		},
+		{
+			name: "two lists: same entry in both but one is not normalized",
+			attrLists: [][]string{
+				{"this.attr.is.twice"},
+				{" This .    Attr . Is . TWice"},
+			},
+			exp: `duplicate required attribute entry: " This .    Attr . Is . TWice"`,
+		},
+		{
+			name: "two lists: multiple problems",
+			attrLists: [][]string{
+				{"one.multi", "x.*.wildcard", "x.*.wildcard", "one.multi", "two.multi"},
+				{"penny.nic kel.dime", "one.multi", "two.multi", "*.ex-am-ple.pb", "two.multi"},
+			},
+			exp: joinErrs(
+				`invalid required attribute "x.*.wildcard"`,
+				`duplicate required attribute entry: "one.multi"`,
+				`invalid required attribute "penny.nic kel.dime"`,
+				`duplicate required attribute entry: "two.multi"`,
+				`invalid required attribute "*.ex-am-ple.pb"`,
+			),
+		},
+		{
+			name: "many lists: multiple problems",
+			attrLists: [][]string{
+				{" one . multi "}, {"x.*.wildcard"}, {"x.*.wildcard"}, {"one.multi"}, {"   two.multi       "},
+				{"penny.nic kel.dime"}, {"one.multi"}, {"two.multi"}, {"*.ex-am-ple.pb"}, {"two.multi"},
+			},
+			exp: joinErrs(
+				`invalid required attribute "x.*.wildcard"`,
+				`duplicate required attribute entry: "one.multi"`,
+				`invalid required attribute "penny.nic kel.dime"`,
+				`duplicate required attribute entry: "two.multi"`,
+				`invalid required attribute "*.ex-am-ple.pb"`,
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateReqAttrs(tc.attrLists...)
+			// TODO[1658]: Replace this with testutils.AssertErrorValue(t, err, tc.exp, "ValidateReqAttrs")
+			if len(tc.exp) > 0 {
+				assert.EqualError(t, err, tc.exp, "ValidateReqAttrs")
+			} else {
+				assert.NoError(t, err, "ValidateReqAttrs")
+			}
+		})
+	}
+}
 
 func TestIsValidReqAttr(t *testing.T) {
 	tests := []struct {
@@ -43,12 +207,14 @@ func TestIsValidReqAttr(t *testing.T) {
 		exp     bool
 	}{
 		{name: "already valid and normalized", reqAttr: "x.y.z", exp: true},
-		{name: "already valid but not normalized", reqAttr: " x . y . z ", exp: true},
+		{name: "already valid but not normalized", reqAttr: " x . y . z ", exp: false},
 		{name: "invalid character", reqAttr: "x._y.z", exp: false},
-		{name: "just the wildcard", reqAttr: " * ", exp: true},
-		{name: "just star dot", reqAttr: "*. ", exp: false},
-		{name: "star dot valid", reqAttr: "* . x . y . z", exp: true},
-		{name: "star dot invalid", reqAttr: "* . x . _y . z", exp: false},
+		{name: "just the wildcard", reqAttr: "*", exp: true},
+		{name: "just the wildcard not normalized", reqAttr: " * ", exp: false},
+		{name: "just star dot", reqAttr: "*.", exp: false},
+		{name: "star dot valid", reqAttr: "*.x.y.z", exp: true},
+		{name: "star dot valid not normalized", reqAttr: "* . x . y . z", exp: false},
+		{name: "star dot invalid", reqAttr: "*.x._y.z", exp: false},
 		{name: "empty string", reqAttr: "", exp: false},
 		{name: "wildcard in middle", reqAttr: "x.*.y.z", exp: false},
 	}
