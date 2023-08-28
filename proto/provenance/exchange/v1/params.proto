@@ -6,6 +6,8 @@ option go_package = "github.com/provenance-io/provenance/x/exchange";
 option java_package        = "io.provenance.exchange.v1";
 option java_multiple_files = true;
 
+import "gogoproto/gogo.proto";
+
 // Params is a representation of the exchange module parameters.
 message Params {
   // default_split is the default proportion of fees the exchange receives in basis points.
@@ -13,7 +15,7 @@ message Params {
   // E.g. 100 = 1%. Min = 0, Max = 10000.
   uint32 default_split = 1;
   // denom_splits are the denom-specific amounts the exchange receives.
-  repeated DenomSplit denom_splits = 2;
+  repeated DenomSplit denom_splits = 2 [(gogoproto.nullable) = false];
 }
 
 // DenomSplit associates a coin denomination with an amount the exchange receives for that denom.

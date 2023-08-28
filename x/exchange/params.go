@@ -16,7 +16,7 @@ const (
 	MaxSplit = uint32(10_000)
 )
 
-func NewParams(defaultSplit uint32, denomSplits []*DenomSplit) *Params {
+func NewParams(defaultSplit uint32, denomSplits []DenomSplit) *Params {
 	return &Params{
 		DefaultSplit: defaultSplit,
 		DenomSplits:  denomSplits,

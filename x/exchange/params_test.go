@@ -18,7 +18,7 @@ func TestNewParams(t *testing.T) {
 	tests := []struct {
 		name         string
 		defaultSplit uint32
-		denomSplits  []*DenomSplit
+		denomSplits  []DenomSplit
 		expected     *Params
 	}{
 		{
@@ -36,13 +36,13 @@ func TestNewParams(t *testing.T) {
 		{
 			name:         "123 with two denom splits",
 			defaultSplit: 123,
-			denomSplits: []*DenomSplit{
+			denomSplits: []DenomSplit{
 				{Denom: "atom", Split: 234},
 				{Denom: "nhash", Split: 56},
 			},
 			expected: &Params{
 				DefaultSplit: 123,
-				DenomSplits: []*DenomSplit{
+				DenomSplits: []DenomSplit{
 					{Denom: "atom", Split: 234},
 					{Denom: "nhash", Split: 56},
 				},
@@ -93,14 +93,14 @@ func TestParams_Validate(t *testing.T) {
 		},
 		{
 			name:   "one denom split and it is bad",
-			params: Params{DenomSplits: []*DenomSplit{{Denom: "badcointype", Split: 10_001}}},
+			params: Params{DenomSplits: []DenomSplit{{Denom: "badcointype", Split: 10_001}}},
 			expErr: []string{"badcointype split 10001 cannot be greater than 10000"},
 		},
 		{
 			name: "bad default and three bad denom splits",
 			params: Params{
 				DefaultSplit: 10_001,
-				DenomSplits: []*DenomSplit{
+				DenomSplits: []DenomSplit{
 					{Denom: "badcointype", Split: 10_002},
 					{Denom: "x", Split: 3},
 					{Denom: "thisIsNotGood", Split: 10_003},
