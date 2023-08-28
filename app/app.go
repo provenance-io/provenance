@@ -107,7 +107,7 @@ import (
 	icahostkeeper "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
-	"github.com/cosmos/ibc-go/v6/modules/apps/transfer"
+	ibctransfer "github.com/cosmos/ibc-go/v6/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v6/modules/core"
@@ -117,6 +117,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
+	ibctestingtypes "github.com/cosmos/ibc-go/v6/testing/types"
 
 	appparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -131,6 +132,9 @@ import (
 	"github.com/provenance-io/provenance/x/hold"
 	holdkeeper "github.com/provenance-io/provenance/x/hold/keeper"
 	holdmodule "github.com/provenance-io/provenance/x/hold/module"
+	ibchooks "github.com/provenance-io/provenance/x/ibchooks"
+	ibchookskeeper "github.com/provenance-io/provenance/x/ibchooks/keeper"
+	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -201,8 +205,9 @@ var (
 		sanctionmodule.AppModuleBasic{},
 
 		ibc.AppModuleBasic{},
-		transfer.AppModuleBasic{},
+		ibctransfer.AppModuleBasic{},
 		ica.AppModuleBasic{},
+		ibchooks.AppModuleBasic{},
 
 		marker.AppModuleBasic{},
 		attribute.AppModuleBasic{},
@@ -226,6 +231,7 @@ var (
 
 		icatypes.ModuleName:         nil,
 		ibctransfertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+		ibchookstypes.ModuleName:    nil,
 
 		attributetypes.ModuleName: nil,
 		markertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
@@ -291,20 +297,26 @@ type App struct {
 	TriggerKeeper    triggerkeeper.Keeper
 
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	ICAHostKeeper  icahostkeeper.Keeper
-	TransferKeeper ibctransferkeeper.Keeper
+	IBCHooksKeeper *ibchookskeeper.Keeper
+	ICAHostKeeper  *icahostkeeper.Keeper
+	TransferKeeper *ibctransferkeeper.Keeper
 
 	MarkerKeeper    markerkeeper.Keeper
 	MetadataKeeper  metadatakeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
 	NameKeeper      namekeeper.Keeper
 	HoldKeeper      holdkeeper.Keeper
-	WasmKeeper      wasm.Keeper
+	WasmKeeper      *wasm.Keeper
+	ContractKeeper  *wasmkeeper.PermissionedKeeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
+
+	TransferStack    *ibchooks.IBCMiddleware
+	Ics20WasmHooks   *ibchooks.WasmHooks
+	HooksICS4Wrapper ibchooks.ICS4Middleware
 
 	// the module manager
 	mm *module.Manager
@@ -358,6 +370,7 @@ func New(
 		ibchost.StoreKey,
 		ibctransfertypes.StoreKey,
 		icahosttypes.StoreKey,
+		ibchookstypes.StoreKey,
 
 		metadatatypes.StoreKey,
 		markertypes.StoreKey,
@@ -466,12 +479,40 @@ func New(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
 	)
 
-	// Create Transfer Keepers
-	app.TransferKeeper = ibctransferkeeper.NewKeeper(
-		appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(ibctransfertypes.ModuleName),
-		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
-		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
+	// Configure the hooks keeper
+	hooksKeeper := ibchookskeeper.NewKeeper(
+		keys[ibchookstypes.StoreKey],
+		app.GetSubspace(ibchookstypes.ModuleName),
+		app.IBCKeeper.ChannelKeeper,
+		nil,
 	)
+	app.IBCHooksKeeper = &hooksKeeper
+
+	// Setup the ICS4Wrapper used by the hooks middleware
+	addrPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()        // We use this approach so running tests which use "cosmos" will work while we use "pb"
+	wasmHooks := ibchooks.NewWasmHooks(&hooksKeeper, nil, addrPrefix) // The contract keeper needs to be set later
+	app.Ics20WasmHooks = &wasmHooks
+	app.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
+		app.IBCKeeper.ChannelKeeper,
+		app.Ics20WasmHooks,
+	)
+
+	// Create Transfer Keepers
+	transferKeeper := ibctransferkeeper.NewKeeper(
+		appCodec,
+		keys[ibctransfertypes.StoreKey],
+		app.GetSubspace(ibctransfertypes.ModuleName),
+		app.HooksICS4Wrapper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		app.AccountKeeper,
+		app.BankKeeper,
+		scopedTransferKeeper,
+	)
+	app.TransferKeeper = &transferKeeper
+	transferModule := ibctransfer.NewIBCModule(*app.TransferKeeper)
+	hooksTransferModule := ibchooks.NewIBCMiddleware(transferModule, &app.HooksICS4Wrapper)
+	app.TransferStack = &hooksTransferModule
 
 	app.NameKeeper = namekeeper.NewKeeper(
 		appCodec, keys[nametypes.StoreKey], app.GetSubspace(nametypes.ModuleName),
@@ -508,13 +549,14 @@ func New(
 		return pioMsgFeesRouter.Handler(msg)
 	})
 	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], app.MsgServiceRouter())
-	app.ICAHostKeeper = icahostkeeper.NewKeeper(
+	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, keys[icahosttypes.StoreKey], app.GetSubspace(icahosttypes.SubModuleName),
 		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
 		app.AccountKeeper, scopedICAHostKeeper, pioMessageRouter,
 	)
-	icaModule := ica.NewAppModule(nil, &app.ICAHostKeeper)
-	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
+	app.ICAHostKeeper = &icaHostKeeper
+	icaModule := ica.NewAppModule(nil, app.ICAHostKeeper)
+	icaHostIBCModule := icahost.NewIBCModule(*app.ICAHostKeeper)
 
 	// Init CosmWasm module
 	wasmDir := filepath.Join(homePath, "data", "wasm")
@@ -547,7 +589,7 @@ func New(
 
 	// The last arguments contain custom message handlers, and custom query handlers,
 	// to allow smart contracts to use provenance modules.
-	app.WasmKeeper = wasm.NewKeeper(
+	wasmKeeperInstance := wasm.NewKeeper(
 		appCodec,
 		keys[wasm.StoreKey],
 		app.GetSubspace(wasm.ModuleName),
@@ -568,6 +610,12 @@ func New(
 		wasmkeeper.WithQueryPlugins(provwasm.QueryPlugins(querierRegistry, *app.GRPCQueryRouter(), appCodec)),
 		wasmkeeper.WithMessageEncoders(provwasm.MessageEncoders(encoderRegistry, logger)),
 	)
+	app.WasmKeeper = &wasmKeeperInstance
+
+	// Pass the wasm keeper to all the wrappers that need it
+	app.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
+	app.Ics20WasmHooks.ContractKeeper = app.WasmKeeper // app.ContractKeeper -- this changes in the next version of wasm to a permissioned keeper
+	app.IBCHooksKeeper.ContractKeeper = app.ContractKeeper
 
 	unsanctionableAddrs := make([]sdk.AccAddress, 0, len(maccPerms)+1)
 	for mName := range maccPerms {
@@ -595,12 +643,10 @@ func New(
 	)
 	app.GovKeeper.SetHooks(govtypes.NewMultiGovHooks(app.SanctionKeeper))
 
-	transferModule := transfer.NewAppModule(app.TransferKeeper)
-	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
-
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
-	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
+	ibcRouter.
+		AddRoute(ibctransfertypes.ModuleName, app.TransferStack).
 		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper)).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
@@ -650,14 +696,15 @@ func New(
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
-		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
-		transferModule,
+		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
+		ibctransfer.NewAppModule(*app.TransferKeeper),
 		icaModule,
 	)
 
@@ -693,6 +740,7 @@ func New(
 		msgfeestypes.ModuleName,
 		metadatatypes.ModuleName,
 		wasm.ModuleName,
+		ibchookstypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		nametypes.ModuleName,
 		vestingtypes.ModuleName,
@@ -719,6 +767,7 @@ func New(
 		nametypes.ModuleName,
 		genutiltypes.ModuleName,
 		ibchost.ModuleName,
+		ibchookstypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		msgfeestypes.ModuleName,
 		wasm.ModuleName,
@@ -770,6 +819,7 @@ func New(
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		ibchookstypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
 		rewardtypes.ModuleName,
@@ -804,6 +854,7 @@ func New(
 		sanction.ModuleName,
 		hold.ModuleName,
 
+		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
 		wasm.ModuleName,
 
@@ -849,10 +900,13 @@ func New(
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
-		provwasm.NewWrapper(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
+		provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 
+		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
-		transferModule,
+		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
+		ibctransfer.NewAppModule(*app.TransferKeeper),
+		icaModule,
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -940,6 +994,31 @@ func New(
 	app.ScopedICAHostKeeper = scopedICAHostKeeper
 
 	return app
+}
+
+// GetBaseApp returns the base cosmos app
+func (app *App) GetBaseApp() *baseapp.BaseApp {
+	return app.BaseApp
+}
+
+// GetStakingKeeper returns the staking keeper (for ibc testing)
+func (app *App) GetStakingKeeper() ibctestingtypes.StakingKeeper {
+	return app.StakingKeeper
+}
+
+// GetIBCKeeper returns the ibc keeper (for ibc testing)
+func (app *App) GetIBCKeeper() *ibckeeper.Keeper {
+	return app.IBCKeeper // This is a *ibckeeper.Keeper
+}
+
+// GetScopedIBCKeeper returns the scoped ibc keeper (for ibc testing)
+func (app *App) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
+	return app.ScopedIBCKeeper
+}
+
+// GetTxConfig implements the TestingApp interface (for ibc testing).
+func (app *App) GetTxConfig() client.TxConfig {
+	return MakeEncodingConfig().TxConfig
 }
 
 // Name returns the name of the App
@@ -1140,6 +1219,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
+	paramsKeeper.Subspace(ibchookstypes.ModuleName)
 
 	return paramsKeeper
 }

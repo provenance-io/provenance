@@ -50,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* Add IBC-Hooks module for Axelar GMP support [PR 1659](https://github.com/provenance-io/provenance/pull/1659)
 * Update ibcnet ports so they don't conflict with host machine. [#1622](https://github.com/provenance-io/provenance/issues/1622)
 * Replace custom ibc-go v6.1.1 fork with official module.  [#1616](https://github.com/provenance-io/provenance/issues/1616)
 * Migrate `msgfees` gov proposals to v1. [#1328](https://github.com/provenance-io/provenance/issues/1328)

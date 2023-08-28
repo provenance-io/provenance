@@ -1,0 +1,14 @@
+syntax = "proto3";
+package provenance.ibchooks.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/provenance-io/provenance/x/ibchooks/types";
+
+option java_package        = "io.provenance.ibchooks.v1";
+option java_multiple_files = true;
+
+// Params defines the allowed async ack contracts
+message Params {
+  repeated string allowed_async_ack_contracts = 1 [(gogoproto.moretags) = "yaml:\"allowed_async_ack_contracts\""];
+}

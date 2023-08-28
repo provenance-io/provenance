@@ -377,8 +377,6 @@ github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4
 github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
 github.com/cosmos/iavl v0.19.6 h1:XY78yEeNPrEYyNCKlqr9chrwoeSDJ0bV2VjocTk//OU=
 github.com/cosmos/iavl v0.19.6/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
-github.com/cosmos/ibc-go/v6 v6.2.0 h1:HKS5WNxQrlmjowHb73J9LqlNJfvTnvkbhXZ9QzNTU7Q=
-github.com/cosmos/ibc-go/v6 v6.2.0/go.mod h1:+S3sxcNwOhgraYDJAhIFDg5ipXHaUnJrg7tOQqGyWlc=
 github.com/cosmos/interchain-accounts v0.4.2 h1:BxdzY22uouwe9wGK7h/HbzPNIH89JJ/4+V6n02l3cG4=
 github.com/cosmos/keyring v1.2.0 h1:8C1lBP9xhImmIabyXW4c3vFjjLiBdGCmfLUfeZlV1Yo=
 github.com/cosmos/keyring v1.2.0/go.mod h1:fc+wB5KTk9wQ9sDx0kFXB3A0MaeGHM9AwRStKOQ5vOA=
@@ -1008,6 +1006,8 @@ github.com/prometheus/procfs v0.9.0/go.mod h1:+pB4zwohETzFnmlpe6yd2lSc+0/46IYZRB
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
 github.com/provenance-io/cosmos-sdk v0.46.13-pio-2 h1:P+MZTl8x1BoUYgwbXlKu12JRdQ9SIz/ZnASABJmNBek=
 github.com/provenance-io/cosmos-sdk v0.46.13-pio-2/go.mod h1:H7JTxq/UEPvM/LSs5bNYvMwmZlVl2NBT5UlqNe8tjEU=
+github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1 h1:IQ+H6+PiRJhGmSjNxA+5VmX34M3sWG5iQI99WbKgbeA=
+github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1/go.mod h1:ZxvTNnra+3aTGaKeg0GR0C8do06lAVdSGmMJHe2fkOM=
 github.com/provenance-io/wasmd v0.30.0-pio-5 h1:SNEZDiCC4LJdcLpINhhz5Jf0zddIQ76QIwScy4uxebM=
 github.com/provenance-io/wasmd v0.30.0-pio-5/go.mod h1:z03r/MHY9N+sO95lxNPiOlg4XMqE/rdeyBjYX54CT8o=
 github.com/rakyll/statik v0.1.7 h1:OF3QCZUuyPxuGEP7B4ypUa7sB/iHtqOTDYZXGM8KOdQ=

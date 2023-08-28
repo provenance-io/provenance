@@ -9,12 +9,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
+
+	errors "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -135,7 +136,7 @@ func Init(
 		}
 
 		if !bip39.IsMnemonicValid(mnemonic) {
-			return errors.New("invalid mnemonic")
+			return fmt.Errorf("invalid mnemonic")
 		}
 	}
 
