@@ -256,7 +256,7 @@ func AllPermissions() []Permission {
 // An error is returned if unknown or Permission_unspecified.
 // Example inputs: "settle", "CanCel", "WITHDRAW", "permission_update", "PermISSion_PErmissioNs", "PERMISSION_ATTRIBUTES"
 func ParsePermission(permission string) (Permission, error) {
-	permUC := strings.ToUpper(permission)
+	permUC := strings.ToUpper(strings.TrimSpace(permission))
 	val, found := Permission_value["PERMISSION_"+permUC]
 	if found {
 		if val != 0 {
@@ -275,6 +275,9 @@ func ParsePermission(permission string) (Permission, error) {
 // An error is returned if any are unknown or Permission_unspecified.
 // See also: ParsePermission.
 func ParsePermissions(permissions ...string) ([]Permission, error) {
+	if len(permissions) == 0 {
+		return nil, nil
+	}
 	rv := make([]Permission, len(permissions))
 	var errs []error
 	for i, perm := range permissions {

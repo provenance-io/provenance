@@ -1,10 +1,12 @@
 package exchange
 
 import (
+	"sort"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/maps"
 )
 
 // TODO[1658]: func TestMarket_Validate(t *testing.T)
@@ -25,15 +27,378 @@ import (
 
 // TODO[1658]: func TestAccessGrant_Validate(t *testing.T)
 
-// TODO[1658]: func TestPermission_SimpleString(t *testing.T)
+func TestPermission_SimpleString(t *testing.T) {
+	tests := []struct {
+		name string
+		p    Permission
+		exp  string
+	}{
+		{
+			name: "unspecified",
+			p:    Permission_unspecified,
+			exp:  "unspecified",
+		},
+		{
+			name: "settle",
+			p:    Permission_settle,
+			exp:  "settle",
+		},
+		{
+			name: "cancel",
+			p:    Permission_cancel,
+			exp:  "cancel",
+		},
+		{
+			name: "withdraw",
+			p:    Permission_withdraw,
+			exp:  "withdraw",
+		},
+		{
+			name: "update",
+			p:    Permission_update,
+			exp:  "update",
+		},
+		{
+			name: "permissions",
+			p:    Permission_permissions,
+			exp:  "permissions",
+		},
+		{
+			name: "attributes",
+			p:    Permission_attributes,
+			exp:  "attributes",
+		},
+		{
+			name: "negative 1",
+			p:    -1,
+			exp:  "-1",
+		},
+		{
+			name: "unknown value",
+			p:    99,
+			exp:  "99",
+		},
+	}
 
-// TODO[1658]: func TestPermission_Validate(t *testing.T)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.p.SimpleString()
+			assert.Equal(t, tc.exp, actual, "%s.SimpleString()", tc.p)
+		})
+	}
+}
 
-// TODO[1658]: func TestAllPermissions(t *testing.T)
+func TestPermission_Validate(t *testing.T) {
+	tests := []struct {
+		name string
+		p    Permission
+		exp  string
+	}{
+		{
+			name: "unspecified",
+			p:    Permission_unspecified,
+			exp:  "permission is unspecified",
+		},
+		{
+			name: "settle",
+			p:    Permission_settle,
+			exp:  "",
+		},
+		{
+			name: "cancel",
+			p:    Permission_cancel,
+			exp:  "",
+		},
+		{
+			name: "withdraw",
+			p:    Permission_withdraw,
+			exp:  "",
+		},
+		{
+			name: "update",
+			p:    Permission_update,
+			exp:  "",
+		},
+		{
+			name: "permissions",
+			p:    Permission_permissions,
+			exp:  "",
+		},
+		{
+			name: "attributes",
+			p:    Permission_attributes,
+			exp:  "",
+		},
+		{
+			name: "negative 1",
+			p:    -1,
+			exp:  "permission -1 does not exist",
+		},
+		{
+			name: "unknown value",
+			p:    99,
+			exp:  "permission 99 does not exist",
+		},
+	}
 
-// TODO[1658]: func TestParsePermission(t *testing.T)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.p.Validate()
 
-// TODO[1658]: func TestParsePermissions(t *testing.T)
+			// TODO: Refactor this to testutils.AssertErrorValue(t, err, tc.exp, "Validate()")
+			if len(tc.exp) > 0 {
+				assert.EqualError(t, err, tc.exp, "Validate()")
+			} else {
+				assert.NoError(t, err, "Validate()")
+			}
+		})
+	}
+
+	t.Run("all values have a test case", func(t *testing.T) {
+		allVals := maps.Keys(Permission_name)
+		sort.Slice(allVals, func(i, j int) bool {
+			return allVals[i] < allVals[j]
+		})
+
+		for _, val := range allVals {
+			perm := Permission(val)
+			hasTest := false
+			for _, tc := range tests {
+				if tc.p == perm {
+					hasTest = true
+					break
+				}
+			}
+			assert.True(t, hasTest, "No test case found that expects the %s permission", perm)
+		}
+	})
+}
+
+func TestAllPermissions(t *testing.T) {
+	expected := []Permission{
+		Permission_settle,
+		Permission_cancel,
+		Permission_withdraw,
+		Permission_update,
+		Permission_permissions,
+		Permission_attributes,
+	}
+
+	actual := AllPermissions()
+	assert.Equal(t, expected, actual, "AllPermissions()")
+}
+
+func TestParsePermission(t *testing.T) {
+	tests := []struct {
+		permission string
+		expected   Permission
+		expErr     string
+	}{
+		// Permission_settle
+		{permission: "settle", expected: Permission_settle},
+		{permission: " settle", expected: Permission_settle},
+		{permission: "settle ", expected: Permission_settle},
+		{permission: "SETTLE", expected: Permission_settle},
+		{permission: "SeTTle", expected: Permission_settle},
+		{permission: "permission_settle", expected: Permission_settle},
+		{permission: "PERMISSION_SETTLE", expected: Permission_settle},
+		{permission: "pERmiSSion_seTTle", expected: Permission_settle},
+
+		// Permission_cancel
+		{permission: "cancel", expected: Permission_cancel},
+		{permission: " cancel", expected: Permission_cancel},
+		{permission: "cancel ", expected: Permission_cancel},
+		{permission: "CANCEL", expected: Permission_cancel},
+		{permission: "caNCel", expected: Permission_cancel},
+		{permission: "permission_cancel", expected: Permission_cancel},
+		{permission: "PERMISSION_CANCEL", expected: Permission_cancel},
+		{permission: "pERmiSSion_CanCEl", expected: Permission_cancel},
+
+		// Permission_withdraw
+		{permission: "withdraw", expected: Permission_withdraw},
+		{permission: " withdraw", expected: Permission_withdraw},
+		{permission: "withdraw ", expected: Permission_withdraw},
+		{permission: "WITHDRAW", expected: Permission_withdraw},
+		{permission: "wiTHdRaw", expected: Permission_withdraw},
+		{permission: "permission_withdraw", expected: Permission_withdraw},
+		{permission: "PERMISSION_WITHDRAW", expected: Permission_withdraw},
+		{permission: "pERmiSSion_wIThdrAw", expected: Permission_withdraw},
+
+		// Permission_update
+		{permission: "update", expected: Permission_update},
+		{permission: " update", expected: Permission_update},
+		{permission: "update ", expected: Permission_update},
+		{permission: "UPDATE", expected: Permission_update},
+		{permission: "uPDaTe", expected: Permission_update},
+		{permission: "permission_update", expected: Permission_update},
+		{permission: "PERMISSION_UPDATE", expected: Permission_update},
+		{permission: "pERmiSSion_UpdAtE", expected: Permission_update},
+
+		// Permission_permissions
+		{permission: "permissions", expected: Permission_permissions},
+		{permission: " permissions", expected: Permission_permissions},
+		{permission: "permissions ", expected: Permission_permissions},
+		{permission: "PERMISSIONS", expected: Permission_permissions},
+		{permission: "pErmiSSions", expected: Permission_permissions},
+		{permission: "permission_permissions", expected: Permission_permissions},
+		{permission: "PERMISSION_PERMISSIONS", expected: Permission_permissions},
+		{permission: "pERmiSSion_perMIssIons", expected: Permission_permissions},
+
+		// Permission_attributes
+		{permission: "attributes", expected: Permission_attributes},
+		{permission: " attributes", expected: Permission_attributes},
+		{permission: "attributes ", expected: Permission_attributes},
+		{permission: "ATTRIBUTES", expected: Permission_attributes},
+		{permission: "aTTribuTes", expected: Permission_attributes},
+		{permission: "permission_attributes", expected: Permission_attributes},
+		{permission: "PERMISSION_ATTRIBUTES", expected: Permission_attributes},
+		{permission: "pERmiSSion_attRiButes", expected: Permission_attributes},
+
+		// Permission_unspecified
+		{permission: "unspecified", expErr: `invalid permission: "unspecified"`},
+		{permission: " unspecified", expErr: `invalid permission: " unspecified"`},
+		{permission: "unspecified ", expErr: `invalid permission: "unspecified "`},
+		{permission: "UNSPECIFIED", expErr: `invalid permission: "UNSPECIFIED"`},
+		{permission: "unsPeCiFied", expErr: `invalid permission: "unsPeCiFied"`},
+		{permission: "permission_unspecified", expErr: `invalid permission: "permission_unspecified"`},
+		{permission: "PERMISSION_UNSPECIFIED", expErr: `invalid permission: "PERMISSION_UNSPECIFIED"`},
+		{permission: "pERmiSSion_uNSpEcifiEd", expErr: `invalid permission: "pERmiSSion_uNSpEcifiEd"`},
+
+		// Invalid
+		{permission: "ettle", expErr: `invalid permission: "ettle"`},
+		{permission: "settl", expErr: `invalid permission: "settl"`},
+		{permission: "set tle", expErr: `invalid permission: "set tle"`},
+
+		{permission: "ancel", expErr: `invalid permission: "ancel"`},
+		{permission: "cance", expErr: `invalid permission: "cance"`},
+		{permission: "can cel", expErr: `invalid permission: "can cel"`},
+
+		{permission: "ithdraw", expErr: `invalid permission: "ithdraw"`},
+		{permission: "withdra", expErr: `invalid permission: "withdra"`},
+		{permission: "with draw", expErr: `invalid permission: "with draw"`},
+
+		{permission: "pdate", expErr: `invalid permission: "pdate"`},
+		{permission: "updat", expErr: `invalid permission: "updat"`},
+		{permission: "upd ate", expErr: `invalid permission: "upd ate"`},
+
+		{permission: "ermissions", expErr: `invalid permission: "ermissions"`},
+		{permission: "permission", expErr: `invalid permission: "permission"`},
+		{permission: "permission_permission", expErr: `invalid permission: "permission_permission"`},
+		{permission: "permis sions", expErr: `invalid permission: "permis sions"`},
+
+		{permission: "ttributes", expErr: `invalid permission: "ttributes"`},
+		{permission: "attribute", expErr: `invalid permission: "attribute"`},
+		{permission: "attr ibutes", expErr: `invalid permission: "attr ibutes"`},
+
+		{permission: "", expErr: `invalid permission: ""`},
+	}
+
+	for _, tc := range tests {
+		name := tc.permission
+		if len(tc.permission) == 0 {
+			name = "empty"
+		}
+		t.Run(name, func(t *testing.T) {
+			perm, err := ParsePermission(tc.permission)
+
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr, "ParsePermission(%q) error", tc.permission)
+			} else {
+				assert.NoError(t, err, "ParsePermission(%q) error", tc.permission)
+			}
+
+			assert.Equal(t, tc.expected, perm, "ParsePermission(%q) result", tc.permission)
+		})
+	}
+
+	t.Run("all values have a test case", func(t *testing.T) {
+		allVals := maps.Keys(Permission_name)
+		sort.Slice(allVals, func(i, j int) bool {
+			return allVals[i] < allVals[j]
+		})
+
+		for _, val := range allVals {
+			perm := Permission(val)
+			hasTest := false
+			for _, tc := range tests {
+				if tc.expected == perm {
+					hasTest = true
+					break
+				}
+			}
+			assert.True(t, hasTest, "No test case found that expects the %s permission", perm)
+		}
+	})
+}
+
+func TestParsePermissions(t *testing.T) {
+	tests := []struct {
+		name        string
+		permissions []string
+		expected    []Permission
+		expErr      string
+	}{
+		{
+			name:        "nil permissions",
+			permissions: nil,
+			expected:    nil,
+			expErr:      "",
+		},
+		{
+			name:        "empty permissions",
+			permissions: nil,
+			expected:    nil,
+			expErr:      "",
+		},
+		{
+			name:        "one of each permission",
+			permissions: []string{"settle", "cancel", "PERMISSION_WITHDRAW", "permission_update", "permissions", "attributes"},
+			expected: []Permission{
+				Permission_settle,
+				Permission_cancel,
+				Permission_withdraw,
+				Permission_update,
+				Permission_permissions,
+				Permission_attributes,
+			},
+		},
+		{
+			name:        "one bad entry",
+			permissions: []string{"settle", "what", "cancel"},
+			expected: []Permission{
+				Permission_settle,
+				Permission_unspecified,
+				Permission_cancel,
+			},
+			expErr: `invalid permission: "what"`,
+		},
+		{
+			name:        "two bad entries",
+			permissions: []string{"nope", "withdraw", "notgood"},
+			expected: []Permission{
+				Permission_unspecified,
+				Permission_withdraw,
+				Permission_unspecified,
+			},
+			expErr: `invalid permission: "nope"` + "\n" +
+				`invalid permission: "notgood"`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			perms, err := ParsePermissions(tc.permissions...)
+
+			// TODO: Refactor to use testutils.AssertErrorValue(t, err, tc.expErr, "ParsePermissions(%q) error", tc.permissions)
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr, "ParsePermissions(%q) error", tc.permissions)
+			} else {
+				assert.NoError(t, err, "ParsePermissions(%q) error", tc.permissions)
+			}
+			assert.Equal(t, tc.expected, perms, "ParsePermissions(%q) result", tc.permissions)
+		})
+	}
+}
 
 func TestValidateReqAttrs(t *testing.T) {
 	joinErrs := func(errs ...string) string {
