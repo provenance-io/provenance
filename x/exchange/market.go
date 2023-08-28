@@ -74,46 +74,6 @@ func (d MarketDetails) Validate() error {
 	return errors.Join(errs...)
 }
 
-// ValidateSellerFeeRatios returns an error if the provided seller fee ratios contains an invalid entry.
-func ValidateSellerFeeRatios(ratios []*FeeRatio) error {
-	seen := make(map[string]bool)
-	dups := make(map[string]bool)
-	var errs []error
-	for _, ratio := range ratios {
-		key := ratio.Price.Denom
-		if seen[key] && !dups[key] {
-			errs = append(errs, fmt.Errorf("seller fee ratio denom %q appears in multiple ratios", ratio.Price.Denom))
-			dups[key] = true
-		}
-		seen[key] = true
-
-		if ratio.Price.Denom != ratio.Fee.Denom {
-			errs = append(errs, fmt.Errorf("seller fee ratio price denom %q does not equal fee denom %q", ratio.Price.Denom, ratio.Fee.Denom))
-		} else {
-			errs = append(errs, ratio.Validate())
-		}
-	}
-	return errors.Join(errs...)
-}
-
-// ValidateBuyerFeeRatios returns an error if the provided buyer fee ratios contains an invalid entry.
-func ValidateBuyerFeeRatios(ratios []*FeeRatio) error {
-	seen := make(map[string]bool)
-	dups := make(map[string]bool)
-	var errs []error //nolint:prealloc // ideally always empty, so no reason to preallocate anything.
-	for _, ratio := range ratios {
-		key := ratio.Price.Denom + ":" + ratio.Fee.Denom
-		if seen[key] && !dups[key] {
-			errs = append(errs, fmt.Errorf("buyer fee ratio pair %q to %q appears in multiple ratios", ratio.Price.Denom, ratio.Fee.Denom))
-			dups[key] = true
-		}
-		seen[key] = true
-
-		errs = append(errs, ratio.Validate())
-	}
-	return errors.Join(errs...)
-}
-
 // ValidateFeeRatios makes sure that the provided fee ratios are valid and have the same price denoms.
 func ValidateFeeRatios(sellerRatios, buyerRatios []*FeeRatio) error {
 	var errs []error
@@ -146,16 +106,85 @@ func ValidateFeeRatios(sellerRatios, buyerRatios []*FeeRatio) error {
 
 	for _, denom := range sellerPriceDenoms {
 		if !contains(buyerPriceDenoms, denom) {
-			errs = append(errs, fmt.Errorf("denom %s is defined in the seller settlement fee ratios but not buyer", denom))
+			errs = append(errs, fmt.Errorf("denom %q is defined in the seller settlement fee ratios but not buyer", denom))
 		}
 	}
 
 	for _, denom := range buyerPriceDenoms {
 		if !contains(sellerPriceDenoms, denom) {
-			errs = append(errs, fmt.Errorf("denom %s is defined in the buyer settlement fee ratios but not seller", denom))
+			errs = append(errs, fmt.Errorf("denom %q is defined in the buyer settlement fee ratios but not seller", denom))
 		}
 	}
 
+	return errors.Join(errs...)
+}
+
+// ValidateSellerFeeRatios returns an error if the provided seller fee ratios contains an invalid entry.
+func ValidateSellerFeeRatios(ratios []*FeeRatio) error {
+	if len(ratios) == 0 {
+		return nil
+	}
+
+	seen := make(map[string]bool)
+	dups := make(map[string]bool)
+	var errs []error
+	for _, ratio := range ratios {
+		if ratio == nil {
+			errs = append(errs, errors.New("nil seller fee ratio not allowed"))
+			continue
+		}
+
+		key := ratio.Price.Denom
+		if seen[key] {
+			if !dups[key] {
+				errs = append(errs, fmt.Errorf("seller fee ratio denom %q appears in multiple ratios", ratio.Price.Denom))
+				dups[key] = true
+			}
+			continue
+		}
+		seen[key] = true
+
+		if ratio.Price.Denom != ratio.Fee.Denom {
+			errs = append(errs, fmt.Errorf("seller fee ratio price denom %q does not equal fee denom %q", ratio.Price.Denom, ratio.Fee.Denom))
+			continue
+		}
+
+		if err := ratio.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("seller fee ratio %w", err))
+		}
+	}
+	return errors.Join(errs...)
+}
+
+// ValidateBuyerFeeRatios returns an error if the provided buyer fee ratios contains an invalid entry.
+func ValidateBuyerFeeRatios(ratios []*FeeRatio) error {
+	if len(ratios) == 0 {
+		return nil
+	}
+
+	seen := make(map[string]bool)
+	dups := make(map[string]bool)
+	var errs []error
+	for _, ratio := range ratios {
+		if ratio == nil {
+			errs = append(errs, errors.New("nil buyer fee ratio not allowed"))
+			continue
+		}
+
+		key := ratio.Price.Denom + ":" + ratio.Fee.Denom
+		if seen[key] {
+			if !dups[key] {
+				errs = append(errs, fmt.Errorf("buyer fee ratio pair %q to %q appears in multiple ratios", ratio.Price.Denom, ratio.Fee.Denom))
+				dups[key] = true
+			}
+			continue
+		}
+		seen[key] = true
+
+		if err := ratio.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("buyer fee ratio %w", err))
+		}
+	}
 	return errors.Join(errs...)
 }
 
@@ -176,6 +205,12 @@ func (r FeeRatio) String() string {
 
 // Validate returns an error if this FeeRatio is invalid.
 func (r FeeRatio) Validate() error {
+	if !r.Price.Amount.IsPositive() {
+		return fmt.Errorf("price amount %q must be positive", r.Price)
+	}
+	if r.Fee.Amount.IsNegative() {
+		return fmt.Errorf("fee amount %q cannot be negative", r.Fee)
+	}
 	if r.Price.Denom == r.Fee.Denom && r.Fee.Amount.GT(r.Price.Amount) {
 		return fmt.Errorf("fee amount %q cannot be greater than price amount %q", r.Fee, r.Price)
 	}
@@ -189,7 +224,7 @@ func ValidateAccessGrants(accessGrants []*AccessGrant) error {
 	dups := make(map[string]bool)
 	for i, ag := range accessGrants {
 		if ag == nil {
-			errs[i] = fmt.Errorf("nil access grant not allowed")
+			errs[i] = errors.New("nil access grant not allowed")
 			continue
 		}
 		if seen[ag.Address] && !dups[ag.Address] {
