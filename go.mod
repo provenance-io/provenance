@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/errors v1.0.0
-	cosmossdk.io/math v1.0.1
+	cosmossdk.io/math v1.1.2
 	github.com/99designs/keyring v1.2.1
 	github.com/CosmWasm/wasmd v0.29.0
 	github.com/CosmWasm/wasmvm v1.2.4
