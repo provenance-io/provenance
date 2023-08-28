@@ -312,32 +312,22 @@ func ValidateReqAttrs(attrLists ...[]string) error {
 
 // IsValidReqAttr returns true if the provided string is a valid required attribute entry.
 func IsValidReqAttr(reqAttr string) bool {
-	// If it's already valid, we're all good.
-	if nametypes.IsValidName(reqAttr) {
-		return true
-	}
-
-	// If there isn't a wildcard in it, there's no saving it.
-	if !strings.Contains(reqAttr, "*") {
-		return false
-	}
-
-	// Get the normalized version so we can more accurately check things on it.
 	normalized := nametypes.NormalizeName(reqAttr)
 
-	// If it's just a wildcard, allow it.
+	// Allow it to just be the wildcard character.
 	if normalized == "*" {
 		return true
 	}
 
-	// The first segment can be a * wildcard.
-	// If that's what we've got, make sure everything after it is valid.
-	if normalized[:2] == "*." {
-		return nametypes.IsValidName(normalized[2:])
+	// A leading wildcard segment is valid for us, but not the name module. So, remove it if it's there.
+	normalized = strings.TrimPrefix(normalized, "*.")
+
+	// IsValidName doesn't consider length, so an empty string is valid by it, but not valid in here.
+	if len(normalized) == 0 {
+		return false
 	}
 
-	// Nothing left that might save it.
-	return false
+	return nametypes.IsValidName(normalized)
 }
 
 // FindUnmatchedReqAttrs returns all required attributes that don't have a match in the provided account attributes.

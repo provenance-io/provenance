@@ -36,7 +36,30 @@ import (
 
 // TODO[1658]: func TestValidateReqAttrs(t *testing.T)
 
-// TODO[1658]: func TestIsValidReqAttr(t *testing.T)
+func TestIsValidReqAttr(t *testing.T) {
+	tests := []struct {
+		name    string
+		reqAttr string
+		exp     bool
+	}{
+		{name: "already valid and normalized", reqAttr: "x.y.z", exp: true},
+		{name: "already valid but not normalized", reqAttr: " x . y . z ", exp: true},
+		{name: "invalid character", reqAttr: "x._y.z", exp: false},
+		{name: "just the wildcard", reqAttr: " * ", exp: true},
+		{name: "just star dot", reqAttr: "*. ", exp: false},
+		{name: "star dot valid", reqAttr: "* . x . y . z", exp: true},
+		{name: "star dot invalid", reqAttr: "* . x . _y . z", exp: false},
+		{name: "empty string", reqAttr: "", exp: false},
+		{name: "wildcard in middle", reqAttr: "x.*.y.z", exp: false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ok := IsValidReqAttr(tc.reqAttr)
+			assert.Equal(t, tc.exp, ok, "IsValidReqAttr(%q)", tc.reqAttr)
+		})
+	}
+}
 
 func TestFindUnmatchedReqAttrs(t *testing.T) {
 	tests := []struct {
