@@ -91,7 +91,7 @@ func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.Conte
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
 			//sdk.NewCoin(m.GetDenom(), sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx)-k.CurrentCirculation(ctx, m).Uint64()))),
-			sdk.NewCoin((m.GetDenom(), sdk.NewIntFromUint64(newSupply))
+			sdk.NewCoin(m.GetDenom(), sdk.NewIntFromUint64(newSupply)),
 			dest,
 		)
 	}
