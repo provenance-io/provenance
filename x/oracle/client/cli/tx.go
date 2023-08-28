@@ -22,9 +22,6 @@ import (
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
-// The flag to specify that the command should be ran as a gov proposal
-const FlagGovProposal = "gov-proposal"
-
 // NewTxCmd is the top-level command for oracle CLI transactions.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
@@ -70,21 +67,15 @@ func GetCmdOracleUpdate() *cobra.Command {
 			if govErr != nil {
 				return govErr
 			}
-			anys, govErr := sdktx.SetMsgs([]sdk.Msg{msg})
+			proposal.Messages, govErr = sdktx.SetMsgs([]sdk.Msg{msg})
 			if govErr != nil {
 				return govErr
 			}
-			proposal.Messages = anys
-			var req sdk.Msg = proposal
 
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), req)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
 		},
 	}
 
-	cmd.Flags().Bool(FlagGovProposal, false, "Run transaction as gov proposal")
 	govcli.AddGovPropFlagsToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 

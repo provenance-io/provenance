@@ -182,7 +182,7 @@ func (s *IntegrationTestSuite) TestOracleUpdate() {
 		{
 			name:         "failure - unable to pass validate basic with bad address",
 			address:      "badaddress",
-			expectErrMsg: "invalid address for oracle: decoding bech32 failed: invalid separator index -1",
+			expectErrMsg: "msg: 0, err: invalid address for oracle: decoding bech32 failed: invalid separator index -1: invalid proposal message",
 			signer:       s.accountAddresses[0].String(),
 		},
 	}
