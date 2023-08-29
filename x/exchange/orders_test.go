@@ -235,8 +235,8 @@ func TestOrder_OrderType(t *testing.T) {
 				require.PanicsWithValue(t, tc.expPanic, testFunc, "OrderType")
 			} else {
 				require.NotPanics(t, testFunc, "OrderType")
-				assert.Equal(t, tc.expected, actual, "OrderType result")
 			}
+			assert.Equal(t, tc.expected, actual, "OrderType result")
 		})
 	}
 }
@@ -282,8 +282,55 @@ func TestOrder_OrderTypeByte(t *testing.T) {
 				require.PanicsWithValue(t, tc.expPanic, testFunc, "OrderTypeByte")
 			} else {
 				require.NotPanics(t, testFunc, "OrderTypeByte")
-				assert.Equal(t, tc.expected, actual, "OrderTypeByte result")
 			}
+			assert.Equal(t, tc.expected, actual, "OrderTypeByte result")
+		})
+	}
+}
+
+func TestOrder_GetMarketID(t *testing.T) {
+	tests := []struct {
+		name     string
+		order    *Order
+		expected uint32
+		expPanic interface{}
+	}{
+		{
+			name:     "AskOrder",
+			order:    NewOrder(1).WithAsk(&AskOrder{MarketId: 123}),
+			expected: 123,
+		},
+		{
+			name:     "BidOrder",
+			order:    NewOrder(2).WithBid(&BidOrder{MarketId: 437}),
+			expected: 437,
+		},
+		{
+			name:     "nil inside order",
+			order:    NewOrder(3),
+			expPanic: "GetMarketID() missing case for <nil>",
+		},
+		{
+			name:     "unknown order type",
+			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			expPanic: "GetMarketID() missing case for *exchange.unknownOrderType",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual uint32
+			testFunc := func() {
+				actual = tc.order.GetMarketID()
+			}
+
+			// TODO[1658]: Refactor to use testutils.RequirePanicEquals(t, testFunc, tc.expPanic, "GetMarketID")
+			if tc.expPanic != nil {
+				require.PanicsWithValue(t, tc.expPanic, testFunc, "GetMarketID")
+			} else {
+				require.NotPanics(t, testFunc, "GetMarketID")
+			}
+			assert.Equal(t, tc.expected, actual, "GetMarketID result")
 		})
 	}
 }

@@ -61,9 +61,24 @@ func (o Order) OrderTypeByte() byte {
 	case *Order_BidOrder:
 		return OrderTypeByteBid
 	default:
-		// If OrderType() is called without the order being set yet, it's a programming error, so panic.
+		// If OrderTypeByte() is called without the order being set yet, it's a programming error, so panic.
 		// If it's a type without a case, the case needs to be added, so panic.
 		panic(fmt.Sprintf("OrderTypeByte() missing case for %T", v))
+	}
+}
+
+// GetMarketID returns the market id for this order.
+// Panics if the order details are not set or are something unexpected.
+func (o Order) GetMarketID() uint32 {
+	switch v := o.GetOrder().(type) {
+	case *Order_AskOrder:
+		return v.AskOrder.MarketId
+	case *Order_BidOrder:
+		return v.BidOrder.MarketId
+	default:
+		// If GetMarketID() is called without the order being set yet, it's a programming error, so panic.
+		// If it's a type without a case, the case needs to be added, so panic.
+		panic(fmt.Sprintf("GetMarketID() missing case for %T", v))
 	}
 }
 
