@@ -242,7 +242,6 @@ func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccount
 }
 
 // SetNetAssetValue adds/updates a net asset value to marker
-// If multiple net asset values are set during same block height that rolling average will be stored
 func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string) error {
 	netAssetValue.UpdatedBlockHeight = uint64(ctx.BlockHeight())
 	if err := netAssetValue.Validate(); err != nil {
@@ -256,22 +255,6 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 
 	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
 	store := ctx.KVStore(k.storeKey)
-
-	value := store.Get(key)
-	if value != nil {
-		var prevNav types.NetAssetValue
-		err := k.cdc.Unmarshal(value, &prevNav)
-		if err != nil {
-			return err
-		}
-		if prevNav.UpdatedBlockHeight == netAssetValue.UpdatedBlockHeight {
-			netAssetValue, err = k.CalculateRollingAverage(prevNav, netAssetValue)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
 	if netAssetValue.Volume > marker.GetSupply().Amount.Uint64() {
 		return fmt.Errorf("volume(%v) cannot exceed marker %q supply(%v) ", netAssetValue.Volume, marker.GetDenom(), marker.GetSupply())
 	}
@@ -283,23 +266,6 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 	store.Set(key, bz)
 
 	return nil
-}
-
-// CalculateRollingAverage returns an updated net asset value with an average price per token and summed volume
-func (k Keeper) CalculateRollingAverage(prevNav types.NetAssetValue, netAssetValue types.NetAssetValue) (types.NetAssetValue, error) {
-	if prevNav.Price.Denom != netAssetValue.Price.Denom {
-		return types.NetAssetValue{}, fmt.Errorf("net asset value denom do not match %v:%v", prevNav.Price.Denom, netAssetValue.Price.Denom)
-	}
-	totalVolume := prevNav.Volume + netAssetValue.Volume
-	if totalVolume == 0 {
-		return netAssetValue, nil
-	}
-	prevTotalPrice := prevNav.Price.Amount.Mul(sdk.NewInt(int64(prevNav.Volume)))
-	currentTotalPrice := netAssetValue.Price.Amount.Mul(sdk.NewInt(int64(netAssetValue.Volume)))
-	average := prevTotalPrice.Add(currentTotalPrice).Quo(sdk.NewInt(int64(totalVolume)))
-	netAssetValue.Price = sdk.NewCoin(prevNav.Price.Denom, average)
-	netAssetValue.Volume = totalVolume
-	return netAssetValue, nil
 }
 
 // IterateNetAssetValues iterates net asset values for marker

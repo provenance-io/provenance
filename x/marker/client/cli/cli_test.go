@@ -567,7 +567,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			name:           "marker net asset value query",
 			cmd:            markercli.NetAssetValuesCmd(),
 			args:           []string{"testcoin"},
-			expectedOutput: "net_asset_values:\n- price_per_token:\n    amount: \"100\"\n    denom: usd\n  updated_block_height: \"0\"\n  volume: \"100\"",
+			expectedOutput: "net_asset_values:\n- price:\n    amount: \"100\"\n    denom: usd\n  updated_block_height: \"0\"\n  volume: \"100\"",
 		},
 	}
 	for _, tc := range testCases {
