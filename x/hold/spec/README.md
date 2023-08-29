@@ -8,6 +8,5 @@ The Hold module keeps track of funds in an account that have a hold placed on th
 
 1. **[Concepts](01_concepts.md)**
 2. **[State](02_state.md)**
-2. **[Messages](03_messages.md)**
-3. **[Events](04_events.md)**
-4. **[Queries](05_queries.md)**
+3. **[Events](03_events.md)**
+4. **[Queries](04_queries.md)**
