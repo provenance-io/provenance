@@ -46,12 +46,12 @@ func TestMarket_Validate(t *testing.T) {
 				FeeCreateAskFlat:        coins("10nnibbler,5mfry"),
 				FeeCreateBidFlat:        coins("15nnibbler,5mfry"),
 				FeeSettlementSellerFlat: coins("50nnibler,8mfry"),
-				FeeSettlementSellerRatios: []*FeeRatio{
+				FeeSettlementSellerRatios: []FeeRatio{
 					{Price: coin(1000, "nnibler"), Fee: coin(1, "nnibler")},
 					{Price: coin(300, "mfry"), Fee: coin(1, "mfry")},
 				},
 				FeeSettlementBuyerFlat: coins("100nnibler,20mfry"),
-				FeeSettlementBuyerRatios: []*FeeRatio{
+				FeeSettlementBuyerRatios: []FeeRatio{
 					{Price: coin(500, "nnibler"), Fee: coin(1, "nnibler")},
 					{Price: coin(500, "nnibler"), Fee: coin(8, "mfry")},
 					{Price: coin(150, "mfry"), Fee: coin(1, "mfry")},
@@ -100,19 +100,19 @@ func TestMarket_Validate(t *testing.T) {
 		},
 		{
 			name:   "invalid seller ratio",
-			market: Market{FeeSettlementSellerRatios: []*FeeRatio{{Price: coin(0, "fry"), Fee: coin(1, "fry")}}},
+			market: Market{FeeSettlementSellerRatios: []FeeRatio{{Price: coin(0, "fry"), Fee: coin(1, "fry")}}},
 			expErr: []string{`seller fee ratio price amount "0fry" must be positive`},
 		},
 		{
 			name:   "invalid buyer ratio",
-			market: Market{FeeSettlementBuyerRatios: []*FeeRatio{{Price: coin(0, "fry"), Fee: coin(1, "fry")}}},
+			market: Market{FeeSettlementBuyerRatios: []FeeRatio{{Price: coin(0, "fry"), Fee: coin(1, "fry")}}},
 			expErr: []string{`buyer fee ratio price amount "0fry" must be positive`},
 		},
 		{
 			name: "invalid ratios",
 			market: Market{
-				FeeSettlementSellerRatios: []*FeeRatio{{Price: coin(10, "fry"), Fee: coin(1, "fry")}},
-				FeeSettlementBuyerRatios:  []*FeeRatio{{Price: coin(100, "leela"), Fee: coin(1, "leela")}},
+				FeeSettlementSellerRatios: []FeeRatio{{Price: coin(10, "fry"), Fee: coin(1, "fry")}},
+				FeeSettlementBuyerRatios:  []FeeRatio{{Price: coin(100, "leela"), Fee: coin(1, "leela")}},
 			},
 			expErr: []string{
 				`denom "fry" is defined in the seller settlement fee ratios but not buyer`,
@@ -142,8 +142,8 @@ func TestMarket_Validate(t *testing.T) {
 				FeeCreateBidFlat:          sdk.Coins{coin(-1, "leela")},
 				FeeSettlementSellerFlat:   sdk.Coins{coin(-1, "leela")},
 				FeeSettlementBuyerFlat:    sdk.Coins{coin(-1, "leela")},
-				FeeSettlementSellerRatios: []*FeeRatio{{Price: coin(10, "fry"), Fee: coin(1, "fry")}},
-				FeeSettlementBuyerRatios:  []*FeeRatio{{Price: coin(100, "leela"), Fee: coin(1, "leela")}},
+				FeeSettlementSellerRatios: []FeeRatio{{Price: coin(10, "fry"), Fee: coin(1, "fry")}},
+				FeeSettlementBuyerRatios:  []FeeRatio{{Price: coin(100, "leela"), Fee: coin(1, "leela")}},
 				AccessGrants:              []*AccessGrant{{Address: "bad_addr", Permissions: AllPermissions()}},
 				ReqAttrCreateAsk:          []string{"this-attr-is-bad"},
 				ReqAttrCreateBid:          []string{"this-attr-grrrr"},
@@ -393,8 +393,8 @@ func TestValidateFeeRatios(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		sellerRatios []*FeeRatio
-		buyerRatios  []*FeeRatio
+		sellerRatios []FeeRatio
+		buyerRatios  []FeeRatio
 		exp          string
 	}{
 		{
@@ -406,64 +406,52 @@ func TestValidateFeeRatios(t *testing.T) {
 		{
 			name:         "nil empty",
 			sellerRatios: nil,
-			buyerRatios:  []*FeeRatio{},
+			buyerRatios:  []FeeRatio{},
 			exp:          "",
 		},
 		{
 			name:         "empty nil",
-			sellerRatios: []*FeeRatio{},
+			sellerRatios: []FeeRatio{},
 			buyerRatios:  nil,
 			exp:          "",
 		},
 		{
 			name:         "empty empty",
-			sellerRatios: []*FeeRatio{},
-			buyerRatios:  []*FeeRatio{},
+			sellerRatios: []FeeRatio{},
+			buyerRatios:  []FeeRatio{},
 			exp:          "",
 		},
 		{
-			name:         "nil seller entry",
-			sellerRatios: []*FeeRatio{nil},
-			buyerRatios:  nil,
-			exp:          "nil seller fee ratio not allowed",
-		},
-		{
-			name:         "nil buyer entry",
-			sellerRatios: nil,
-			buyerRatios:  []*FeeRatio{nil},
-			exp:          "nil buyer fee ratio not allowed",
-		},
-		{
 			name: "multiple errors from sellers and buyers",
-			sellerRatios: []*FeeRatio{
-				nil,
+			sellerRatios: []FeeRatio{
+				{Price: coin(1, "fry"), Fee: coin(5, "fry")},
 				{Price: coin(0, "leela"), Fee: coin(1, "leela")},
 			},
-			buyerRatios: []*FeeRatio{
-				nil,
+			buyerRatios: []FeeRatio{
+				{Price: coin(1, "fry"), Fee: coin(5, "fry")},
 				{Price: coin(0, "leela"), Fee: coin(1, "leela")},
 			},
 			exp: joinErrs(
-				"nil seller fee ratio not allowed",
+				`seller fee ratio fee amount "5fry" cannot be greater than price amount "1fry"`,
 				`seller fee ratio price amount "0leela" must be positive`,
-				"nil buyer fee ratio not allowed",
+				`buyer fee ratio fee amount "5fry" cannot be greater than price amount "1fry"`,
 				`buyer fee ratio price amount "0leela" must be positive`,
 			),
 		},
 		{
 			name: "sellers have price denom that buyers do not",
-			sellerRatios: []*FeeRatio{
+			sellerRatios: []FeeRatio{
 				{Price: coin(100, "leela"), Fee: coin(1, "leela")},
 				{Price: coin(500, "fry"), Fee: coin(3, "fry")},
 			},
-			buyerRatios: []*FeeRatio{
+			buyerRatios: []FeeRatio{
 				{Price: coin(100, "leela"), Fee: coin(3, "leela")},
 			},
 			exp: `denom "fry" is defined in the seller settlement fee ratios but not buyer`,
 		},
 		{
 			name: "sellers have two price denoms that buyers do not",
-			sellerRatios: []*FeeRatio{
+			sellerRatios: []FeeRatio{
 				{Price: coin(100, "leela"), Fee: coin(1, "leela")},
 				{Price: coin(500, "fry"), Fee: coin(3, "fry")},
 			},
@@ -475,10 +463,10 @@ func TestValidateFeeRatios(t *testing.T) {
 		},
 		{
 			name: "buyers have price denom that sellers do not",
-			sellerRatios: []*FeeRatio{
+			sellerRatios: []FeeRatio{
 				{Price: coin(100, "leela"), Fee: coin(3, "leela")},
 			},
-			buyerRatios: []*FeeRatio{
+			buyerRatios: []FeeRatio{
 				{Price: coin(100, "leela"), Fee: coin(1, "leela")},
 				{Price: coin(500, "fry"), Fee: coin(3, "leela")},
 			},
@@ -487,7 +475,7 @@ func TestValidateFeeRatios(t *testing.T) {
 		{
 			name:         "buyers have two price denoms that sellers do not",
 			sellerRatios: nil,
-			buyerRatios: []*FeeRatio{
+			buyerRatios: []FeeRatio{
 				{Price: coin(100, "leela"), Fee: coin(1, "leela")},
 				{Price: coin(500, "fry"), Fee: coin(3, "leela")},
 			},
@@ -498,11 +486,11 @@ func TestValidateFeeRatios(t *testing.T) {
 		},
 		{
 			name: "two buyers and two sellers and four price denoms",
-			sellerRatios: []*FeeRatio{
+			sellerRatios: []FeeRatio{
 				{Price: coin(100, "leela"), Fee: coin(1, "leela")},
 				{Price: coin(500, "fry"), Fee: coin(3, "fry")},
 			},
-			buyerRatios: []*FeeRatio{
+			buyerRatios: []FeeRatio{
 				{Price: coin(100, "bender"), Fee: coin(1, "leela")},
 				{Price: coin(3, "professor"), Fee: coin(500, "fry")},
 			},
@@ -515,12 +503,12 @@ func TestValidateFeeRatios(t *testing.T) {
 		},
 		{
 			name: "three seller ratios and many buyer ratios all legit",
-			sellerRatios: []*FeeRatio{
+			sellerRatios: []FeeRatio{
 				{Price: coin(100, "leela"), Fee: coin(1, "leela")},
 				{Price: coin(500, "fry"), Fee: coin(3, "fry")},
 				{Price: coin(300, "bender"), Fee: coin(7, "bender")},
 			},
-			buyerRatios: []*FeeRatio{
+			buyerRatios: []FeeRatio{
 				{Price: coin(10, "leela"), Fee: coin(1, "leela")},
 				{Price: coin(11, "leela"), Fee: coin(2, "fry")},
 				{Price: coin(12, "leela"), Fee: coin(3, "bender")},
@@ -566,7 +554,7 @@ func TestValidateSellerFeeRatios(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		ratios []*FeeRatio
+		ratios []FeeRatio
 		exp    string
 	}{
 		{
@@ -576,32 +564,27 @@ func TestValidateSellerFeeRatios(t *testing.T) {
 		},
 		{
 			name:   "empty ratios",
-			ratios: []*FeeRatio{},
+			ratios: []FeeRatio{},
 			exp:    "",
 		},
 		{
-			name:   "one ratio: nil",
-			ratios: []*FeeRatio{nil},
-			exp:    "nil seller fee ratio not allowed",
-		},
-		{
 			name:   "one ratio: different denoms",
-			ratios: []*FeeRatio{{Price: coin(3, "hermes"), Fee: coin(2, "mom")}},
+			ratios: []FeeRatio{{Price: coin(3, "hermes"), Fee: coin(2, "mom")}},
 			exp:    `seller fee ratio price denom "hermes" does not equal fee denom "mom"`,
 		},
 		{
 			name:   "one ratio: same denoms",
-			ratios: []*FeeRatio{{Price: coin(3, "mom"), Fee: coin(2, "mom")}},
+			ratios: []FeeRatio{{Price: coin(3, "mom"), Fee: coin(2, "mom")}},
 			exp:    "",
 		},
 		{
 			name:   "one ratio: invalid",
-			ratios: []*FeeRatio{{Price: coin(0, "hermes"), Fee: coin(2, "hermes")}},
+			ratios: []FeeRatio{{Price: coin(0, "hermes"), Fee: coin(2, "hermes")}},
 			exp:    `seller fee ratio price amount "0hermes" must be positive`,
 		},
 		{
 			name: "two with same denom",
-			ratios: []*FeeRatio{
+			ratios: []FeeRatio{
 				{Price: coin(3, "hermes"), Fee: coin(2, "hermes")},
 				{Price: coin(6, "hermes"), Fee: coin(4, "hermes")},
 			},
@@ -609,7 +592,7 @@ func TestValidateSellerFeeRatios(t *testing.T) {
 		},
 		{
 			name: "three with diffrent denoms",
-			ratios: []*FeeRatio{
+			ratios: []FeeRatio{
 				{Price: coin(30, "leela"), Fee: coin(1, "leela")},
 				{Price: coin(5, "fry"), Fee: coin(1, "fry")},
 				{Price: coin(100, "professor"), Fee: coin(1, "professor")},
@@ -618,11 +601,10 @@ func TestValidateSellerFeeRatios(t *testing.T) {
 		},
 		{
 			name: "multiple errors",
-			ratios: []*FeeRatio{
+			ratios: []FeeRatio{
 				{Price: coin(3, "mom"), Fee: coin(2, "hermes")},
 				{Price: coin(0, "hermes"), Fee: coin(2, "hermes")},
 				{Price: coin(6, "bender"), Fee: coin(4, "bender")},
-				nil,
 				{Price: coin(1, "hermes"), Fee: coin(2, "hermes")},
 				{Price: coin(2, "bender"), Fee: coin(1, "bender")},
 				// This one is ignored because we've already complained about multiple hermes.
@@ -631,7 +613,6 @@ func TestValidateSellerFeeRatios(t *testing.T) {
 			exp: joinErrs(
 				`seller fee ratio price denom "mom" does not equal fee denom "hermes"`,
 				`seller fee ratio price amount "0hermes" must be positive`,
-				"nil seller fee ratio not allowed",
 				`seller fee ratio denom "hermes" appears in multiple ratios`,
 				`seller fee ratio denom "bender" appears in multiple ratios`,
 			),
@@ -666,7 +647,7 @@ func TestValidateBuyerFeeRatios(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		ratios []*FeeRatio
+		ratios []FeeRatio
 		exp    string
 	}{
 		{
@@ -676,32 +657,27 @@ func TestValidateBuyerFeeRatios(t *testing.T) {
 		},
 		{
 			name:   "empty ratios",
-			ratios: []*FeeRatio{},
+			ratios: []FeeRatio{},
 			exp:    "",
 		},
 		{
-			name:   "one ratio: nil",
-			ratios: []*FeeRatio{nil},
-			exp:    "nil buyer fee ratio not allowed",
-		},
-		{
 			name:   "one ratio: different denoms",
-			ratios: []*FeeRatio{{Price: coin(3, "hermes"), Fee: coin(2, "mom")}},
+			ratios: []FeeRatio{{Price: coin(3, "hermes"), Fee: coin(2, "mom")}},
 			exp:    "",
 		},
 		{
 			name:   "one ratio: same denoms",
-			ratios: []*FeeRatio{{Price: coin(3, "mom"), Fee: coin(2, "mom")}},
+			ratios: []FeeRatio{{Price: coin(3, "mom"), Fee: coin(2, "mom")}},
 			exp:    "",
 		},
 		{
 			name:   "one ratio: invalid",
-			ratios: []*FeeRatio{{Price: coin(0, "hermes"), Fee: coin(2, "hermes")}},
+			ratios: []FeeRatio{{Price: coin(0, "hermes"), Fee: coin(2, "hermes")}},
 			exp:    `buyer fee ratio price amount "0hermes" must be positive`,
 		},
 		{
 			name: "duplicate ratio denoms",
-			ratios: []*FeeRatio{
+			ratios: []FeeRatio{
 				{Price: coin(10, "morbo"), Fee: coin(2, "scruffy")},
 				{Price: coin(3, "morbo"), Fee: coin(1, "scruffy")},
 			},
@@ -709,7 +685,7 @@ func TestValidateBuyerFeeRatios(t *testing.T) {
 		},
 		{
 			name: "two ratios one each way",
-			ratios: []*FeeRatio{
+			ratios: []FeeRatio{
 				{Price: coin(10, "leela"), Fee: coin(2, "scruffy")},
 				{Price: coin(2, "scruffy"), Fee: coin(8, "leela")},
 			},
@@ -717,11 +693,10 @@ func TestValidateBuyerFeeRatios(t *testing.T) {
 		},
 		{
 			name: "multiple errors",
-			ratios: []*FeeRatio{
+			ratios: []FeeRatio{
 				{Price: coin(10, "morbo"), Fee: coin(2, "scruffy")},
 				{Price: coin(0, "zoidberg"), Fee: coin(1, "amy")},
 				{Price: coin(1, "hermes"), Fee: coin(2, "hermes")},
-				nil,
 				{Price: coin(3, "morbo"), Fee: coin(1, "scruffy")},
 				{Price: coin(0, "zoidberg"), Fee: coin(1, "amy")},
 				// This one has a different fee denom, though, so it's checked.
@@ -732,7 +707,6 @@ func TestValidateBuyerFeeRatios(t *testing.T) {
 			exp: joinErrs(
 				`buyer fee ratio price amount "0zoidberg" must be positive`,
 				`buyer fee ratio fee amount "2hermes" cannot be greater than price amount "1hermes"`,
-				"nil buyer fee ratio not allowed",
 				`buyer fee ratio pair "morbo" to "scruffy" appears in multiple ratios`,
 				`buyer fee ratio pair "zoidberg" to "amy" appears in multiple ratios`,
 				`buyer fee ratio fee amount "-1fry" cannot be negative`,
@@ -740,7 +714,7 @@ func TestValidateBuyerFeeRatios(t *testing.T) {
 		},
 		{
 			name: "two different price denoms to several fee denoms",
-			ratios: []*FeeRatio{
+			ratios: []FeeRatio{
 				{Price: coin(100, "fry"), Fee: coin(1, "fry")},
 				{Price: coin(1000, "fry"), Fee: coin(1, "professor")},
 				{Price: coin(1, "fry"), Fee: coin(1, "leela")},

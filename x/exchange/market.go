@@ -88,7 +88,7 @@ func (d MarketDetails) Validate() error {
 }
 
 // ValidateFeeRatios makes sure that the provided fee ratios are valid and have the same price denoms.
-func ValidateFeeRatios(sellerRatios, buyerRatios []*FeeRatio) error {
+func ValidateFeeRatios(sellerRatios, buyerRatios []FeeRatio) error {
 	var errs []error
 	if err := ValidateSellerFeeRatios(sellerRatios); err != nil {
 		errs = append(errs, err)
@@ -133,7 +133,7 @@ func ValidateFeeRatios(sellerRatios, buyerRatios []*FeeRatio) error {
 }
 
 // ValidateSellerFeeRatios returns an error if the provided seller fee ratios contains an invalid entry.
-func ValidateSellerFeeRatios(ratios []*FeeRatio) error {
+func ValidateSellerFeeRatios(ratios []FeeRatio) error {
 	if len(ratios) == 0 {
 		return nil
 	}
@@ -142,11 +142,6 @@ func ValidateSellerFeeRatios(ratios []*FeeRatio) error {
 	dups := make(map[string]bool)
 	var errs []error
 	for _, ratio := range ratios {
-		if ratio == nil {
-			errs = append(errs, errors.New("nil seller fee ratio not allowed"))
-			continue
-		}
-
 		key := ratio.Price.Denom
 		if seen[key] {
 			if !dups[key] {
@@ -170,7 +165,7 @@ func ValidateSellerFeeRatios(ratios []*FeeRatio) error {
 }
 
 // ValidateBuyerFeeRatios returns an error if the provided buyer fee ratios contains an invalid entry.
-func ValidateBuyerFeeRatios(ratios []*FeeRatio) error {
+func ValidateBuyerFeeRatios(ratios []FeeRatio) error {
 	if len(ratios) == 0 {
 		return nil
 	}
@@ -179,11 +174,6 @@ func ValidateBuyerFeeRatios(ratios []*FeeRatio) error {
 	dups := make(map[string]bool)
 	var errs []error
 	for _, ratio := range ratios {
-		if ratio == nil {
-			errs = append(errs, errors.New("nil buyer fee ratio not allowed"))
-			continue
-		}
-
 		key := ratio.Price.Denom + ":" + ratio.Fee.Denom
 		if seen[key] {
 			if !dups[key] {
