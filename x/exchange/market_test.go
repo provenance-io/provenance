@@ -186,6 +186,9 @@ func TestMarket_Validate(t *testing.T) {
 }
 
 func TestValidateFeeOptions(t *testing.T) {
+	joinErrs := func(errs ...string) string {
+		return strings.Join(errs, "\n")
+	}
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
@@ -252,9 +255,32 @@ func TestValidateFeeOptions(t *testing.T) {
 		},
 		{
 			name:    "three options: bad third",
-			field:   "eyeballs",
+			field:   "pinky",
 			options: []sdk.Coin{coin(5, "fry"), coin(2, "leela"), coin(0, "farnsworth")},
-			expErr:  `invalid eyeballs option "0farnsworth": amount cannot be zero`,
+			expErr:  `invalid pinky option "0farnsworth": amount cannot be zero`,
+		},
+		{
+			name:  "duplicated denoms",
+			field: "duppa-duppa-dup",
+			options: []sdk.Coin{
+				coin(1, "fry"), coin(1, "leela"),
+				coin(1, "amy"), coin(2, "amy"),
+				coin(1, "farnsworth"),
+				coin(2, "fry"), coin(3, "fry")},
+			expErr: joinErrs(
+				`invalid duppa-duppa-dup option "2amy": denom used in multiple entries`,
+				`invalid duppa-duppa-dup option "2fry": denom used in multiple entries`,
+			),
+		},
+		{
+			name:    "three options: all bad",
+			field:   "carp corp",
+			options: []sdk.Coin{coin(0, "fry"), coin(1, "l"), coin(-12, "farnsworth")},
+			expErr: joinErrs(
+				`invalid carp corp option "0fry": amount cannot be zero`,
+				`invalid carp corp option "1l": invalid denom: l`,
+				`invalid carp corp option "-12farnsworth": negative coin amount: -12`,
+			),
 		},
 	}
 
@@ -277,9 +303,7 @@ func TestValidateFeeOptions(t *testing.T) {
 }
 
 func TestMarketDetails_Validate(t *testing.T) {
-	joinErrs := func(errs ...string) string {
-		return strings.Join(errs, "\n")
-	}
+
 	nameErr := func(over int) string {
 		return fmt.Sprintf("name length %d exceeds maximum length of %d", MaxName+over, MaxName)
 	}
@@ -361,7 +385,7 @@ func TestMarketDetails_Validate(t *testing.T) {
 				WebsiteUrl:  strings.Repeat("W", MaxWebsiteURL+4),
 				IconUri:     strings.Repeat("I", MaxIconURI+5),
 			},
-			expErr: joinErrs(nameErr(2), descErr(3), urlErr(4), iconErr(5)),
+			expErr: nameErr(2) + "\n" + descErr(3) + "\n" + urlErr(4) + "\n" + iconErr(5),
 		},
 	}
 
@@ -548,9 +572,6 @@ func TestValidateSellerFeeRatios(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
-	joinErrs := func(errs ...string) string {
-		return strings.Join(errs, "\n")
-	}
 
 	tests := []struct {
 		name   string
@@ -610,12 +631,10 @@ func TestValidateSellerFeeRatios(t *testing.T) {
 				// This one is ignored because we've already complained about multiple hermes.
 				{Price: coin(30, "hermes"), Fee: coin(2, "hermes")},
 			},
-			exp: joinErrs(
-				`seller fee ratio price denom "mom" does not equal fee denom "hermes"`,
-				`seller fee ratio price amount "0hermes" must be positive`,
-				`seller fee ratio denom "hermes" appears in multiple ratios`,
+			exp: `seller fee ratio price denom "mom" does not equal fee denom "hermes"` + "\n" +
+				`seller fee ratio price amount "0hermes" must be positive` + "\n" +
+				`seller fee ratio denom "hermes" appears in multiple ratios` + "\n" +
 				`seller fee ratio denom "bender" appears in multiple ratios`,
-			),
 		},
 	}
 
@@ -640,9 +659,6 @@ func TestValidateSellerFeeRatios(t *testing.T) {
 func TestValidateBuyerFeeRatios(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
-	}
-	joinErrs := func(errs ...string) string {
-		return strings.Join(errs, "\n")
 	}
 
 	tests := []struct {
@@ -704,13 +720,11 @@ func TestValidateBuyerFeeRatios(t *testing.T) {
 				// We've already complained about this one, so it doesn't happen again.
 				{Price: coin(12, "zoidberg"), Fee: coin(55, "amy")},
 			},
-			exp: joinErrs(
-				`buyer fee ratio price amount "0zoidberg" must be positive`,
-				`buyer fee ratio fee amount "2hermes" cannot be greater than price amount "1hermes"`,
-				`buyer fee ratio pair "morbo" to "scruffy" appears in multiple ratios`,
-				`buyer fee ratio pair "zoidberg" to "amy" appears in multiple ratios`,
+			exp: `buyer fee ratio price amount "0zoidberg" must be positive` + "\n" +
+				`buyer fee ratio fee amount "2hermes" cannot be greater than price amount "1hermes"` + "\n" +
+				`buyer fee ratio pair "morbo" to "scruffy" appears in multiple ratios` + "\n" +
+				`buyer fee ratio pair "zoidberg" to "amy" appears in multiple ratios` + "\n" +
 				`buyer fee ratio fee amount "-1fry" cannot be negative`,
-			),
 		},
 		{
 			name: "two different price denoms to several fee denoms",
@@ -785,6 +799,59 @@ func TestFeeRatio_String(t *testing.T) {
 	}
 }
 
+func TestFeeRatiosString(t *testing.T) {
+	feeRatio := func(priceAmount int64, priceDenom string, feeAmount int64, feeDenom string) FeeRatio {
+		return FeeRatio{
+			Price: sdk.Coin{Denom: priceDenom, Amount: sdkmath.NewInt(priceAmount)},
+			Fee:   sdk.Coin{Denom: feeDenom, Amount: sdkmath.NewInt(feeAmount)},
+		}
+	}
+
+	tests := []struct {
+		name   string
+		ratios []FeeRatio
+		exp    string
+	}{
+		{name: "nil", ratios: nil, exp: ""},
+		{name: "empty", ratios: []FeeRatio{}, exp: ""},
+		{
+			name:   "one entry",
+			ratios: []FeeRatio{feeRatio(1, "pdenom", 2, "fdenom")},
+			exp:    "1pdenom:2fdenom",
+		},
+		{
+			name: "two entries",
+			ratios: []FeeRatio{
+				feeRatio(1, "pdenom", 2, "fdenom"),
+				feeRatio(3, "qdenom", 4, "gdenom"),
+			},
+			exp: "1pdenom:2fdenom,3qdenom:4gdenom",
+		},
+		{
+			name: "five entries",
+			ratios: []FeeRatio{
+				feeRatio(1, "a", 2, "b"),
+				feeRatio(3, "c", 4, "d"),
+				feeRatio(5, "e", 6, "f"),
+				feeRatio(7, "g", 8, "h"),
+				feeRatio(9, "i", 10, "j"),
+			},
+			exp: "1a:2b,3c:4d,5e:6f,7g:8h,9i:10j",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual string
+			testFunc := func() {
+				actual = FeeRatiosString(tc.ratios)
+			}
+			require.NotPanics(t, testFunc, "FeeRatiosString")
+			assert.Equal(t, tc.exp, actual, "FeeRatiosString result")
+		})
+	}
+}
+
 func TestFeeRatio_Validate(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
@@ -851,6 +918,581 @@ func TestFeeRatio_Validate(t *testing.T) {
 				assert.EqualError(t, err, tc.exp, "Validate")
 			} else {
 				assert.NoError(t, err, "Validate")
+			}
+		})
+	}
+}
+
+func TestFeeRatio_Equals(t *testing.T) {
+	feeRatio := func(priceAmount int64, priceDenom string, feeAmount int64, feeDenom string) FeeRatio {
+		return FeeRatio{
+			Price: sdk.Coin{Denom: priceDenom, Amount: sdkmath.NewInt(priceAmount)},
+			Fee:   sdk.Coin{Denom: feeDenom, Amount: sdkmath.NewInt(feeAmount)},
+		}
+	}
+
+	tests := []struct {
+		name  string
+		base  FeeRatio
+		other FeeRatio
+		exp   bool
+	}{
+		{
+			name:  "empty ratios",
+			base:  FeeRatio{},
+			other: FeeRatio{},
+			exp:   true,
+		},
+		{
+			name:  "zero amounts",
+			base:  feeRatio(0, "pdenom", 0, "fdenom"),
+			other: feeRatio(0, "pdenom", 0, "fdenom"),
+			exp:   true,
+		},
+		{
+			name:  "same price and fee",
+			base:  feeRatio(1, "pdenom", 2, "fdenom"),
+			other: feeRatio(1, "pdenom", 2, "fdenom"),
+			exp:   true,
+		},
+		{
+			name:  "different base price amount",
+			base:  feeRatio(3, "pdenom", 2, "fdenom"),
+			other: feeRatio(1, "pdenom", 2, "fdenom"),
+			exp:   false,
+		},
+		{
+			name:  "different base price denom",
+			base:  feeRatio(1, "qdenom", 2, "fdenom"),
+			other: feeRatio(1, "pdenom", 2, "fdenom"),
+			exp:   false,
+		},
+		{
+			name:  "different base fee amount",
+			base:  feeRatio(1, "pdenom", 3, "fdenom"),
+			other: feeRatio(1, "pdenom", 2, "fdenom"),
+			exp:   false,
+		},
+		{
+			name:  "different base fee denom",
+			base:  feeRatio(1, "pdenom", 2, "gdenom"),
+			other: feeRatio(1, "pdenom", 2, "fdenom"),
+			exp:   false,
+		},
+		{
+			name:  "different other price amount",
+			base:  feeRatio(1, "pdenom", 2, "fdenom"),
+			other: feeRatio(3, "pdenom", 2, "fdenom"),
+			exp:   false,
+		},
+		{
+			name:  "different other price denom",
+			base:  feeRatio(1, "pdenom", 2, "fdenom"),
+			other: feeRatio(1, "qdenom", 2, "fdenom"),
+			exp:   false,
+		},
+		{
+			name:  "different other fee amount",
+			base:  feeRatio(1, "pdenom", 2, "fdenom"),
+			other: feeRatio(1, "pdenom", 3, "fdenom"),
+			exp:   false,
+		},
+		{
+			name:  "different other fee denom",
+			base:  feeRatio(1, "pdenom", 2, "fdenom"),
+			other: feeRatio(1, "pdenom", 2, "gdenom"),
+			exp:   false,
+		},
+		{
+			name:  "negative base price amount",
+			base:  feeRatio(-1, "pdenom", 2, "fdenom"),
+			other: feeRatio(1, "pdenom", 2, "fdenom"),
+			exp:   false,
+		},
+		{
+			name:  "negative other price amount",
+			base:  feeRatio(1, "pdenom", 2, "fdenom"),
+			other: feeRatio(-1, "pdenom", 2, "fdenom"),
+			exp:   false,
+		},
+		{
+			name:  "negative base fee amount",
+			base:  feeRatio(1, "pdenom", -2, "fdenom"),
+			other: feeRatio(1, "pdenom", 2, "fdenom"),
+			exp:   false,
+		},
+		{
+			name:  "negative other fee amount",
+			base:  feeRatio(1, "pdenom", 2, "fdenom"),
+			other: feeRatio(1, "pdenom", -2, "fdenom"),
+			exp:   false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = tc.base.Equals(tc.other)
+			}
+			require.NotPanics(t, testFunc, "%s.Equals(%s)", tc.base, tc.other)
+			assert.Equal(t, tc.exp, actual, "%s.Equals(%s) result", tc.base, tc.other)
+		})
+	}
+}
+
+func TestIntersectionOfFeeRatios(t *testing.T) {
+	feeRatio := func(priceAmount int64, priceDenom string, feeAmount int64, feeDenom string) FeeRatio {
+		return FeeRatio{
+			Price: sdk.Coin{Denom: priceDenom, Amount: sdkmath.NewInt(priceAmount)},
+			Fee:   sdk.Coin{Denom: feeDenom, Amount: sdkmath.NewInt(feeAmount)},
+		}
+	}
+
+	tests := []struct {
+		name     string
+		ratios1  []FeeRatio
+		ratios2  []FeeRatio
+		expected []FeeRatio
+	}{
+		{name: "nil nil", ratios1: nil, ratios2: nil, expected: nil},
+		{name: "nil empty", ratios1: nil, ratios2: []FeeRatio{}, expected: nil},
+		{name: "empty nil", ratios1: []FeeRatio{}, ratios2: nil, expected: nil},
+		{name: "empty empty", ratios1: []FeeRatio{}, ratios2: []FeeRatio{}, expected: nil},
+		{
+			name:     "one nil",
+			ratios1:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			ratios2:  nil,
+			expected: nil,
+		},
+		{
+			name:     "nil one",
+			ratios1:  nil,
+			ratios2:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			expected: nil,
+		},
+		{
+			name:     "one one equal",
+			ratios1:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			ratios2:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			expected: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+		},
+		{
+			name:     "one one diff first price amount",
+			ratios1:  []FeeRatio{feeRatio(3, "spicy", 2, "lemon")},
+			ratios2:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			expected: nil,
+		},
+		{
+			name:     "one one diff first price denom",
+			ratios1:  []FeeRatio{feeRatio(1, "bland", 2, "lemon")},
+			ratios2:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			expected: nil,
+		},
+		{
+			name:     "one one diff first fee amount",
+			ratios1:  []FeeRatio{feeRatio(1, "spicy", 3, "lemon")},
+			ratios2:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			expected: nil,
+		},
+		{
+			name:     "one one diff first fee denom",
+			ratios1:  []FeeRatio{feeRatio(1, "spicy", 2, "grape")},
+			ratios2:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			expected: nil,
+		},
+		{
+			name:     "one one diff second price amount",
+			ratios1:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			ratios2:  []FeeRatio{feeRatio(3, "spicy", 2, "lemon")},
+			expected: nil,
+		},
+		{
+			name:     "one one diff second price denom",
+			ratios1:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			ratios2:  []FeeRatio{feeRatio(1, "bland", 2, "lemon")},
+			expected: nil,
+		},
+		{
+			name:     "one one diff second fee amount",
+			ratios1:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			ratios2:  []FeeRatio{feeRatio(1, "spicy", 3, "lemon")},
+			expected: nil,
+		},
+		{
+			name:     "one one diff second fee denom",
+			ratios1:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			ratios2:  []FeeRatio{feeRatio(1, "spicy", 2, "bland")},
+			expected: nil,
+		},
+		{
+			name: "three three two common",
+			ratios1: []FeeRatio{
+				feeRatio(1, "lamp", 2, "bag"),
+				feeRatio(3, "keys", 4, "phone"),
+				feeRatio(5, "fan", 6, "bottle"),
+			},
+			ratios2: []FeeRatio{
+				feeRatio(3, "kays", 4, "phone"),
+				feeRatio(5, "fan", 6, "bottle"),
+				feeRatio(1, "lamp", 2, "bag"),
+			},
+			expected: []FeeRatio{
+				feeRatio(1, "lamp", 2, "bag"),
+				feeRatio(5, "fan", 6, "bottle"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual []FeeRatio
+			testFunc := func() {
+				actual = IntersectionOfFeeRatios(tc.ratios1, tc.ratios2)
+			}
+			require.NotPanics(t, testFunc, "IntersectionOfFeeRatios")
+			assert.Equal(t, tc.expected, actual, "IntersectionOfFeeRatios result")
+		})
+	}
+}
+
+func TestValidateDisjointFeeRatios(t *testing.T) {
+	feeRatio := func(priceAmount int64, priceDenom string, feeAmount int64, feeDenom string) FeeRatio {
+		return FeeRatio{
+			Price: sdk.Coin{Denom: priceDenom, Amount: sdkmath.NewInt(priceAmount)},
+			Fee:   sdk.Coin{Denom: feeDenom, Amount: sdkmath.NewInt(feeAmount)},
+		}
+	}
+
+	tests := []struct {
+		name     string
+		field    string
+		toAdd    []FeeRatio
+		toRemove []FeeRatio
+		expErr   string
+	}{
+		{name: "nil nil", toAdd: nil, toRemove: nil, expErr: ""},
+		{name: "nil empty", toAdd: nil, toRemove: []FeeRatio{}, expErr: ""},
+		{name: "empty nil", toAdd: []FeeRatio{}, toRemove: nil, expErr: ""},
+		{name: "empty empty", toAdd: []FeeRatio{}, toRemove: []FeeRatio{}, expErr: ""},
+		{
+			name:     "one nil",
+			toAdd:    []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			toRemove: nil,
+			expErr:   "",
+		},
+		{
+			name:     "nil one",
+			toAdd:    nil,
+			toRemove: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			expErr:   "",
+		},
+		{
+			name:     "one one equal",
+			field:    "<fieldname>",
+			toAdd:    []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			toRemove: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			expErr:   "cannot add and remove the same <fieldname> ratios: 1spicy:2lemon",
+		},
+		{
+			name:     "one one diff first price amount",
+			toAdd:    []FeeRatio{feeRatio(3, "spicy", 2, "lemon")},
+			toRemove: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			expErr:   "",
+		},
+		{
+			name:     "one one diff first price denom",
+			toAdd:    []FeeRatio{feeRatio(1, "bland", 2, "lemon")},
+			toRemove: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			expErr:   "",
+		},
+		{
+			name:     "one one diff first fee amount",
+			toAdd:    []FeeRatio{feeRatio(1, "spicy", 3, "lemon")},
+			toRemove: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			expErr:   "",
+		},
+		{
+			name:     "one one diff first fee denom",
+			toAdd:    []FeeRatio{feeRatio(1, "spicy", 2, "grape")},
+			toRemove: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			expErr:   "",
+		},
+		{
+			name:     "one one diff second price amount",
+			toAdd:    []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			toRemove: []FeeRatio{feeRatio(3, "spicy", 2, "lemon")},
+			expErr:   "",
+		},
+		{
+			name:     "one one diff second price denom",
+			toAdd:    []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			toRemove: []FeeRatio{feeRatio(1, "bland", 2, "lemon")},
+			expErr:   "",
+		},
+		{
+			name:     "one one diff second fee amount",
+			toAdd:    []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			toRemove: []FeeRatio{feeRatio(1, "spicy", 3, "lemon")},
+			expErr:   "",
+		},
+		{
+			name:     "one one diff second fee denom",
+			toAdd:    []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			toRemove: []FeeRatio{feeRatio(1, "spicy", 2, "bland")},
+			expErr:   "",
+		},
+		{
+			name:  "three three two common",
+			field: "test field name",
+			toAdd: []FeeRatio{
+				feeRatio(1, "lamp", 2, "bag"),
+				feeRatio(3, "keys", 4, "phone"),
+				feeRatio(5, "fan", 6, "bottle"),
+			},
+			toRemove: []FeeRatio{
+				feeRatio(3, "kays", 4, "phone"),
+				feeRatio(5, "fan", 6, "bottle"),
+				feeRatio(1, "lamp", 2, "bag"),
+			},
+			expErr: "cannot add and remove the same test field name ratios: 1lamp:2bag,5fan:6bottle",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = ValidateDisjointFeeRatios(tc.field, tc.toAdd, tc.toRemove)
+			}
+			require.NotPanics(t, testFunc, "ValidateDisjointFeeRatios")
+
+			// TODO[1658]: Replace with testutils.AsserErrorValue(t, err, tc.expErr, "ValidateDisjointFeeRatios")
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr, "ValidateDisjointFeeRatios")
+			} else {
+				assert.NoError(t, err, "ValidateDisjointFeeRatios")
+			}
+		})
+	}
+}
+
+func TestIntersectionOfFeeOptions(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+
+	tests := []struct {
+		name     string
+		options1 []sdk.Coin
+		options2 []sdk.Coin
+		expected []sdk.Coin
+	}{
+		{name: "nil nil", options1: nil, options2: nil, expected: nil},
+		{name: "nil empty", options1: nil, options2: []sdk.Coin{}, expected: nil},
+		{name: "empty nil", options1: []sdk.Coin{}, options2: nil, expected: nil},
+		{name: "empty empty", options1: []sdk.Coin{}, options2: []sdk.Coin{}, expected: nil},
+		{
+			name:     "one nil",
+			options1: []sdk.Coin{coin(1, "finger")},
+			options2: nil,
+			expected: nil,
+		},
+		{
+			name:     "nil one",
+			options1: nil,
+			options2: []sdk.Coin{coin(1, "finger")},
+			expected: nil,
+		},
+		{
+			name:     "one one same",
+			options1: []sdk.Coin{coin(1, "finger")},
+			options2: []sdk.Coin{coin(1, "finger")},
+			expected: []sdk.Coin{coin(1, "finger")},
+		},
+		{
+			name:     "one one different first amount",
+			options1: []sdk.Coin{coin(2, "finger")},
+			options2: []sdk.Coin{coin(1, "finger")},
+			expected: nil,
+		},
+		{
+			name:     "one one different first denom",
+			options1: []sdk.Coin{coin(1, "toe")},
+			options2: []sdk.Coin{coin(1, "finger")},
+			expected: nil,
+		},
+		{
+			name:     "one one different second amount",
+			options1: []sdk.Coin{coin(1, "finger")},
+			options2: []sdk.Coin{coin(2, "finger")},
+			expected: nil,
+		},
+		{
+			name:     "one one different second denom",
+			options1: []sdk.Coin{coin(1, "finger")},
+			options2: []sdk.Coin{coin(1, "toe")},
+			expected: nil,
+		},
+		{
+			name:     "three three two common",
+			options1: []sdk.Coin{coin(1, "finger"), coin(2, "toe"), coin(3, "elbow")},
+			options2: []sdk.Coin{coin(5, "toe"), coin(3, "elbow"), coin(1, "finger")},
+			expected: []sdk.Coin{coin(1, "finger"), coin(3, "elbow")},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual []sdk.Coin
+			testFunc := func() {
+				actual = IntersectionOfFeeOptions(tc.options1, tc.options2)
+			}
+			require.NotPanics(t, testFunc, "IntersectionOfFeeOptions")
+			assert.Equal(t, tc.expected, actual, "IntersectionOfFeeOptions result")
+		})
+	}
+}
+
+func TestValidateAddRemoveFeeOptions(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	joinErrs := func(errs ...string) string {
+		return strings.Join(errs, "\n")
+	}
+
+	tests := []struct {
+		name     string
+		field    string
+		toAdd    []sdk.Coin
+		toRemove []sdk.Coin
+		expErr   string
+	}{
+		{name: "nil nil", toAdd: nil, toRemove: nil, expErr: ""},
+		{name: "nil empty", toAdd: nil, toRemove: []sdk.Coin{}, expErr: ""},
+		{name: "empty nil", toAdd: []sdk.Coin{}, toRemove: nil, expErr: ""},
+		{name: "empty empty", toAdd: []sdk.Coin{}, toRemove: []sdk.Coin{}, expErr: ""},
+		{
+			name:     "one nil",
+			toAdd:    []sdk.Coin{coin(1, "finger")},
+			toRemove: nil,
+			expErr:   "",
+		},
+		{
+			name:     "nil one",
+			toAdd:    nil,
+			toRemove: []sdk.Coin{coin(1, "finger")},
+			expErr:   "",
+		},
+		{
+			name:     "one one same",
+			field:    "<fieldname>",
+			toAdd:    []sdk.Coin{coin(1, "finger")},
+			toRemove: []sdk.Coin{coin(1, "finger")},
+			expErr:   "cannot add and remove the same <fieldname> options: 1finger",
+		},
+		{
+			name:     "one one different first amount",
+			toAdd:    []sdk.Coin{coin(2, "finger")},
+			toRemove: []sdk.Coin{coin(1, "finger")},
+			expErr:   "",
+		},
+		{
+			name:     "one one different first denom",
+			toAdd:    []sdk.Coin{coin(1, "toe")},
+			toRemove: []sdk.Coin{coin(1, "finger")},
+			expErr:   "",
+		},
+		{
+			name:     "one one different second amount",
+			toAdd:    []sdk.Coin{coin(1, "finger")},
+			toRemove: []sdk.Coin{coin(2, "finger")},
+			expErr:   "",
+		},
+		{
+			name:     "one one different second denom",
+			toAdd:    []sdk.Coin{coin(1, "finger")},
+			toRemove: []sdk.Coin{coin(1, "toe")},
+			expErr:   "",
+		},
+		{
+			name:     "three three two common",
+			field:    "body part",
+			toAdd:    []sdk.Coin{coin(1, "finger"), coin(2, "toe"), coin(3, "elbow")},
+			toRemove: []sdk.Coin{coin(5, "toe"), coin(3, "elbow"), coin(1, "finger")},
+			expErr:   "cannot add and remove the same body part options: 1finger,3elbow",
+		},
+		{
+			name:     "adding one invalid",
+			field:    "badabadabada",
+			toAdd:    []sdk.Coin{coin(0, "zerocoin")},
+			toRemove: nil,
+			expErr:   `invalid badabadabada to add option "0zerocoin": amount cannot be zero`,
+		},
+		{
+			name:     "adding two invalid entries",
+			field:    "friendly iterative error lookup device (F.I.E.L.D)",
+			toAdd:    []sdk.Coin{coin(-1, "bananas"), coin(3, "okaycoin"), coin(0, "zerocoin"), coin(5, "goodgood")},
+			toRemove: nil,
+			expErr: joinErrs(
+				`invalid friendly iterative error lookup device (F.I.E.L.D) to add option "-1bananas": negative coin amount: -1`,
+				`invalid friendly iterative error lookup device (F.I.E.L.D) to add option "0zerocoin": amount cannot be zero`,
+			),
+		},
+		{
+			name:     "removing one invalid",
+			field:    "",
+			toAdd:    nil,
+			toRemove: []sdk.Coin{coin(-1, "bananas")},
+			expErr:   "",
+		},
+		{
+			name:     "adding and removing one invalid",
+			field:    "fruits",
+			toAdd:    []sdk.Coin{coin(-1, "bananas")},
+			toRemove: []sdk.Coin{coin(-1, "bananas")},
+			expErr: joinErrs(
+				`invalid fruits to add option "-1bananas": negative coin amount: -1`,
+				"cannot add and remove the same fruits options: -1bananas",
+			),
+		},
+		{
+			name:  "multiple errors",
+			field: "merrs!",
+			toAdd: []sdk.Coin{
+				coin(1, "apple"),
+				coin(3, "l"),
+				coin(99, "banana"),
+				coin(-55, "peach"),
+				coin(14, "copycoin"),
+				coin(5, "grape"),
+			},
+			toRemove: []sdk.Coin{
+				coin(98, "banana"),
+				coin(14, "copycoin"),
+			},
+			expErr: joinErrs(
+				`invalid merrs! to add option "3l": invalid denom: l`,
+				`invalid merrs! to add option "-55peach": negative coin amount: -55`,
+				"cannot add and remove the same merrs! options: 14copycoin",
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = ValidateAddRemoveFeeOptions(tc.field, tc.toAdd, tc.toRemove)
+			}
+			require.NotPanics(t, testFunc, "ValidateAddRemoveFeeOptions")
+
+			// TODO[1658]: Refactor to testutils.AssertErrorValue(t, err, tc.expErr, "ValidateAddRemoveFeeOptions")
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr, "ValidateAddRemoveFeeOptions")
+			} else {
+				assert.NoError(t, err, "ValidateAddRemoveFeeOptions")
 			}
 		})
 	}

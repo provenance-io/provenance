@@ -56,17 +56,31 @@ func (m Market) Validate() error {
 	return errors.Join(errs...)
 }
 
+// ValidateFeeOptions returns an error if any of the provide coin values is not a valid fee option.
 func ValidateFeeOptions(field string, options []sdk.Coin) error {
+	var errs []error
+	denoms := make(map[string]bool)
+	dups := make(map[string]bool)
 	for _, coin := range options {
+		if denoms[coin.Denom] {
+			if !dups[coin.Denom] {
+				errs = append(errs, fmt.Errorf("invalid %s option %q: denom used in multiple entries", field, coin))
+				dups[coin.Denom] = true
+			}
+			continue
+		}
+		denoms[coin.Denom] = true
+
 		err := coin.Validate()
 		if err != nil {
-			return fmt.Errorf("invalid %s option %q: %w", field, coin, err)
+			errs = append(errs, fmt.Errorf("invalid %s option %q: %w", field, coin, err))
+			continue
 		}
 		if coin.IsZero() {
-			return fmt.Errorf("invalid %s option %q: amount cannot be zero", field, coin)
+			errs = append(errs, fmt.Errorf("invalid %s option %q: amount cannot be zero", field, coin))
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 // Validate returns an error if anything in this MarketDetails is invalid.
@@ -206,6 +220,15 @@ func (r FeeRatio) String() string {
 	return fmt.Sprintf("%s:%s", r.Price, r.Fee)
 }
 
+// FeeRatiosString converts the provided ratios into a single string with format <ratio1>,<ratio2>,...
+func FeeRatiosString(ratios []FeeRatio) string {
+	entries := make([]string, len(ratios))
+	for i, ratio := range ratios {
+		entries[i] = ratio.String()
+	}
+	return strings.Join(entries, ",")
+}
+
 // Validate returns an error if this FeeRatio is invalid.
 func (r FeeRatio) Validate() error {
 	if !r.Price.Amount.IsPositive() {
@@ -218,6 +241,64 @@ func (r FeeRatio) Validate() error {
 		return fmt.Errorf("fee amount %q cannot be greater than price amount %q", r.Fee, r.Price)
 	}
 	return nil
+}
+
+// Equals returns true if this FeeRatio has the same price and fee as the provided other FeeRatio.
+func (r FeeRatio) Equals(other FeeRatio) bool {
+	// Cannot use coin.IsEqual because it panics if the denoms are different, because that makes perfect sense.
+	// The coin.Equal(interface{}) function behaves as expected, though, but with the extra casting costs.
+	return r.Price.Equal(other.Price) && r.Fee.Equal(other.Fee)
+}
+
+// IntersectionOfFeeRatios returns all FeeRatios that are in both lists.
+func IntersectionOfFeeRatios(ratios1, ratios2 []FeeRatio) []FeeRatio {
+	var rv []FeeRatio
+	for _, r1 := range ratios1 {
+		for _, r2 := range ratios2 {
+			if r1.Equals(r2) {
+				rv = append(rv, r1)
+				break
+			}
+		}
+	}
+	return rv
+}
+
+// ValidateDisjointFeeRatios returns an error if one or more entries appears in both lists.
+func ValidateDisjointFeeRatios(field string, toAdd, toRemove []FeeRatio) error {
+	shared := IntersectionOfFeeRatios(toAdd, toRemove)
+	if len(shared) > 0 {
+		return fmt.Errorf("cannot add and remove the same %s ratios: %s", field, FeeRatiosString(shared))
+	}
+	return nil
+}
+
+// IntersectionOfFeeOptions returns all Coin options that are in both lists.
+func IntersectionOfFeeOptions(options1, options2 []sdk.Coin) []sdk.Coin {
+	var rv []sdk.Coin
+	for _, c1 := range options1 {
+		for _, c2 := range options2 {
+			if c1.Equal(c2) {
+				rv = append(rv, c1)
+				break
+			}
+		}
+	}
+	return rv
+}
+
+// ValidateAddRemoveFeeOptions returns an error if the toAdd list has an invalid
+// entry or if the two lists have one or more common entries.
+func ValidateAddRemoveFeeOptions(field string, toAdd, toRemove []sdk.Coin) error {
+	var errs []error
+	if err := ValidateFeeOptions(field+" to add", toAdd); err != nil {
+		errs = append(errs, err)
+	}
+	shared := IntersectionOfFeeOptions(toAdd, toRemove)
+	if len(shared) > 0 {
+		errs = append(errs, fmt.Errorf("cannot add and remove the same %s options: %s", field, sdk.Coins(shared)))
+	}
+	return errors.Join(errs...)
 }
 
 // ValidateAccessGrants returns an error if any of the provided access grants are invalid.
