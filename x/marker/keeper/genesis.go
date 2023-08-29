@@ -52,7 +52,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 				panic(err)
 			}
 			address := sdk.MustAccAddressFromBech32(mNavs.Address)
-			store.Set(types.NetAssetValueKey(address, navCopy.PricePerToken.Denom), bz)
+			store.Set(types.NetAssetValueKey(address, navCopy.Price.Denom), bz)
 		}
 	}
 }

@@ -224,11 +224,11 @@ func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAd
 // AddSetNetAssetValues adds a set of net asset values to a marker
 func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccountI, netAssetValues []types.NetAssetValue, source string) error {
 	for _, nav := range netAssetValues {
-		if nav.PricePerToken.Denom == marker.GetDenom() {
+		if nav.Price.Denom == marker.GetDenom() {
 			return fmt.Errorf("net asset value denom cannot match marker denom %q", marker.GetDenom())
 		}
-		if nav.PricePerToken.Denom != types.UsdDenom {
-			_, err := k.GetMarkerByDenom(ctx, nav.PricePerToken.Denom)
+		if nav.Price.Denom != types.UsdDenom {
+			_, err := k.GetMarkerByDenom(ctx, nav.Price.Denom)
 			if err != nil {
 				return fmt.Errorf("net asset value denom does not exist: %v", err.Error())
 			}
@@ -249,12 +249,12 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 		return err
 	}
 
-	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.PricePerToken, netAssetValue.Volume, source)
+	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Price, netAssetValue.Volume, source)
 	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err != nil {
 		return err
 	}
 
-	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.PricePerToken.Denom)
+	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
 	store := ctx.KVStore(k.storeKey)
 
 	value := store.Get(key)
@@ -287,17 +287,17 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 
 // CalculateRollingAverage returns an updated net asset value with an average price per token and summed volume
 func (k Keeper) CalculateRollingAverage(prevNav types.NetAssetValue, netAssetValue types.NetAssetValue) (types.NetAssetValue, error) {
-	if prevNav.PricePerToken.Denom != netAssetValue.PricePerToken.Denom {
-		return types.NetAssetValue{}, fmt.Errorf("net asset value denom do not match %v:%v", prevNav.PricePerToken.Denom, netAssetValue.PricePerToken.Denom)
+	if prevNav.Price.Denom != netAssetValue.Price.Denom {
+		return types.NetAssetValue{}, fmt.Errorf("net asset value denom do not match %v:%v", prevNav.Price.Denom, netAssetValue.Price.Denom)
 	}
 	totalVolume := prevNav.Volume + netAssetValue.Volume
 	if totalVolume == 0 {
 		return netAssetValue, nil
 	}
-	prevTotalPrice := prevNav.PricePerToken.Amount.Mul(sdk.NewInt(int64(prevNav.Volume)))
-	currentTotalPrice := netAssetValue.PricePerToken.Amount.Mul(sdk.NewInt(int64(netAssetValue.Volume)))
+	prevTotalPrice := prevNav.Price.Amount.Mul(sdk.NewInt(int64(prevNav.Volume)))
+	currentTotalPrice := netAssetValue.Price.Amount.Mul(sdk.NewInt(int64(netAssetValue.Volume)))
 	average := prevTotalPrice.Add(currentTotalPrice).Quo(sdk.NewInt(int64(totalVolume)))
-	netAssetValue.PricePerToken = sdk.NewCoin(prevNav.PricePerToken.Denom, average)
+	netAssetValue.Price = sdk.NewCoin(prevNav.Price.Denom, average)
 	netAssetValue.Volume = totalVolume
 	return netAssetValue, nil
 }

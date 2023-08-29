@@ -1474,41 +1474,41 @@ func TestCalculateRollingAverage(t *testing.T) {
 		{
 			name: "denoms do not match",
 			prevNav: types.NetAssetValue{
-				PricePerToken: sdk.NewInt64Coin("denoma", 1),
+				Price: sdk.NewInt64Coin("denoma", 1),
 			},
 			newNav: types.NetAssetValue{
-				PricePerToken: sdk.NewInt64Coin("denomb", 1),
+				Price: sdk.NewInt64Coin("denomb", 1),
 			},
 			expErr: "net asset value denom do not match denoma:denomb",
 		},
 		{
 			name: "succesfully compute rolling average and new volume",
 			prevNav: types.NetAssetValue{
-				PricePerToken: sdk.NewInt64Coin("usd", 100),
-				Volume:        2,
+				Price:  sdk.NewInt64Coin("usd", 100),
+				Volume: 2,
 			},
 			newNav: types.NetAssetValue{
-				PricePerToken: sdk.NewInt64Coin("usd", 50),
-				Volume:        2,
+				Price:  sdk.NewInt64Coin("usd", 50),
+				Volume: 2,
 			},
 			expNav: types.NetAssetValue{
-				PricePerToken: sdk.NewInt64Coin("usd", 75),
-				Volume:        4,
+				Price:  sdk.NewInt64Coin("usd", 75),
+				Volume: 4,
 			},
 		},
 		{
 			name: "succesfully compute rolling average with rounding and new volume",
 			prevNav: types.NetAssetValue{
-				PricePerToken: sdk.NewInt64Coin("usd", 99),
-				Volume:        2,
+				Price:  sdk.NewInt64Coin("usd", 99),
+				Volume: 2,
 			},
 			newNav: types.NetAssetValue{
-				PricePerToken: sdk.NewInt64Coin("usd", 50),
-				Volume:        2,
+				Price:  sdk.NewInt64Coin("usd", 50),
+				Volume: 2,
 			},
 			expNav: types.NetAssetValue{
-				PricePerToken: sdk.NewInt64Coin("usd", 74),
-				Volume:        4,
+				Price:  sdk.NewInt64Coin("usd", 74),
+				Volume: 4,
 			},
 		},
 	}

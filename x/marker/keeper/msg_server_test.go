@@ -94,10 +94,10 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 					MarkerType: types.MarkerType_Coin.String(),
 				},
 				&types.EventSetNetAssetValue{
-					Denom:         denom,
-					PricePerToken: "0usd",
-					Volume:        "0",
-					Source:        types.ModuleName,
+					Denom:  denom,
+					Price:  "0usd",
+					Volume: "0",
+					Source: types.ModuleName,
 				},
 			},
 		},
@@ -169,10 +169,10 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 					MarkerType: types.MarkerType_Coin.String(),
 				},
 				&types.EventSetNetAssetValue{
-					Denom:         navDenom,
-					PricePerToken: "1usd",
-					Volume:        "10",
-					Source:        types.ModuleName,
+					Denom:  navDenom,
+					Price:  "1usd",
+					Volume: "10",
+					Source: types.ModuleName,
 				},
 			},
 		},
@@ -198,10 +198,10 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 					MarkerType: types.MarkerType_Coin.String(),
 				},
 				&types.EventSetNetAssetValue{
-					Denom:         denomWithDashPeriod,
-					PricePerToken: "0usd",
-					Volume:        "0",
-					Source:        types.ModuleName,
+					Denom:  denomWithDashPeriod,
+					Price:  "0usd",
+					Volume: "0",
+					Source: types.ModuleName,
 				},
 			},
 		},
@@ -228,10 +228,10 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 					MarkerType: types.MarkerType_RestrictedCoin.String(),
 				},
 				&types.EventSetNetAssetValue{
-					Denom:         rdenom,
-					PricePerToken: "0usd",
-					Volume:        "0",
-					Source:        types.ModuleName,
+					Denom:  rdenom,
+					Price:  "0usd",
+					Volume: "0",
+					Source: types.ModuleName,
 				},
 			},
 		},
@@ -282,7 +282,7 @@ func (s *MsgServerTestSuite) TestMsgFinalizeMarkerRequest() {
 	)
 	validMarker.Supply = sdk.NewInt(1)
 	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, validMarker))
-	s.Require().NoError(s.app.MarkerKeeper.SetNetAssetValue(s.ctx, validMarker, types.NetAssetValue{PricePerToken: sdk.NewInt64Coin(types.UsdDenom, 1), Volume: 1}, "test"))
+	s.Require().NoError(s.app.MarkerKeeper.SetNetAssetValue(s.ctx, validMarker, types.NetAssetValue{Price: sdk.NewInt64Coin(types.UsdDenom, 1), Volume: 1}, "test"))
 
 	testCases := []struct {
 		name   string
@@ -635,8 +635,8 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				Denom: "cantfindme",
 				NetAssetValues: []types.NetAssetValue{
 					{
-						PricePerToken: sdk.NewInt64Coin("navcoin", 1),
-						Volume:        1,
+						Price:  sdk.NewInt64Coin("navcoin", 1),
+						Volume: 1,
 					}},
 				Administrator: authUser.String()},
 			expErr: "marker cantfindme not found for address: cosmos17l2yneua2mdfqaycgyhqag8t20asnjwf6adpmt: invalid request",
@@ -647,7 +647,7 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				Denom: markerDenom,
 				NetAssetValues: []types.NetAssetValue{
 					{
-						PricePerToken:      sdk.NewInt64Coin(markerDenom, 100),
+						Price:              sdk.NewInt64Coin(markerDenom, 100),
 						Volume:             uint64(100),
 						UpdatedBlockHeight: 1,
 					},
@@ -662,7 +662,7 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				Denom: markerDenom,
 				NetAssetValues: []types.NetAssetValue{
 					{
-						PricePerToken:      sdk.NewInt64Coin("hotdog", 100),
+						Price:              sdk.NewInt64Coin("hotdog", 100),
 						Volume:             uint64(100),
 						UpdatedBlockHeight: 1,
 					},
@@ -677,7 +677,7 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				Denom: markerDenom,
 				NetAssetValues: []types.NetAssetValue{
 					{
-						PricePerToken:      sdk.NewInt64Coin(types.UsdDenom, 100),
+						Price:              sdk.NewInt64Coin(types.UsdDenom, 100),
 						Volume:             uint64(100),
 						UpdatedBlockHeight: 1,
 					},
@@ -692,7 +692,7 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				Denom: markerDenom,
 				NetAssetValues: []types.NetAssetValue{
 					{
-						PricePerToken:      sdk.NewInt64Coin(types.UsdDenom, 100),
+						Price:              sdk.NewInt64Coin(types.UsdDenom, 100),
 						Volume:             uint64(100),
 						UpdatedBlockHeight: 1,
 					},

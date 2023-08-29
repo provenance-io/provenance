@@ -1925,13 +1925,13 @@ func (s *IntegrationTestSuite) TestParseNetAssertValueString() {
 			name:           "successfully parse single nav",
 			netAssetValues: "1hotdog,10",
 			expErr:         "",
-			expResult:      []types.NetAssetValue{{PricePerToken: sdk.NewInt64Coin("hotdog", 1), Volume: 10}},
+			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1), Volume: 10}},
 		},
 		{
 			name:           "successfully parse multi nav",
 			netAssetValues: "1hotdog,10;20jackthecat,40",
 			expErr:         "",
-			expResult:      []types.NetAssetValue{{PricePerToken: sdk.NewInt64Coin("hotdog", 1), Volume: 10}, {PricePerToken: sdk.NewInt64Coin("jackthecat", 20), Volume: 40}},
+			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1), Volume: 10}, {Price: sdk.NewInt64Coin("jackthecat", 20), Volume: 40}},
 		},
 	}
 	for _, tc := range testCases {

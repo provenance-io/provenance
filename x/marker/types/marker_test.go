@@ -408,10 +408,10 @@ func TestRemovesFromRequiredAttributes(t *testing.T) {
 }
 
 func TestNetAssetValueConstructor(t *testing.T) {
-	pricePerToken := sdk.NewInt64Coin("jackthecat", 406)
+	price := sdk.NewInt64Coin("jackthecat", 406)
 	volume := uint64(100)
-	actual := NewNetAssetValue(pricePerToken, volume)
-	assert.Equal(t, pricePerToken, actual.PricePerToken)
+	actual := NewNetAssetValue(price, volume)
+	assert.Equal(t, price, actual.Price)
 	assert.Equal(t, volume, actual.Volume)
 	assert.Equal(t, uint64(0), actual.UpdatedBlockHeight, "update time should not be set")
 }
@@ -432,31 +432,31 @@ func TestNetAssetValueValidate(t *testing.T) {
 		{
 			name: "volume is not positive",
 			nav: NetAssetValue{
-				PricePerToken: sdk.NewInt64Coin("jackthecat", 420),
-				Volume:        0,
+				Price:  sdk.NewInt64Coin("jackthecat", 420),
+				Volume: 0,
 			},
 			expErr: "marker net asset value volume must be positive value",
 		},
 		{
 			name: "volume must be positive if value is greater than 1",
 			nav: NetAssetValue{
-				PricePerToken: sdk.NewInt64Coin("usdcents", 1),
-				Volume:        0,
+				Price:  sdk.NewInt64Coin("usdcents", 1),
+				Volume: 0,
 			},
 			expErr: "marker net asset value volume must be positive value",
 		},
 		{
 			name: "successful with 0 volume and coin",
 			nav: NetAssetValue{
-				PricePerToken: sdk.NewInt64Coin("usdcents", 0),
-				Volume:        0,
+				Price:  sdk.NewInt64Coin("usdcents", 0),
+				Volume: 0,
 			},
 		},
 		{
 			name: "successful",
 			nav: NetAssetValue{
-				PricePerToken: sdk.NewInt64Coin("jackthecat", 420),
-				Volume:        406,
+				Price:  sdk.NewInt64Coin("jackthecat", 420),
+				Volume: 406,
 			},
 		},
 	}

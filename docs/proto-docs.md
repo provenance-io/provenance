@@ -1666,7 +1666,7 @@ EventSetNetAssetValue event emitted when Net Asset Value for marker is update or
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
-| `price_per_token` | [string](#string) |  |  |
+| `price` | [string](#string) |  |  |
 | `volume` | [string](#string) |  |  |
 | `source` | [string](#string) |  |  |
 
@@ -1708,7 +1708,7 @@ NetAssetValue defines a marker's net asset value
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `price_per_token` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price_per_token is the price per unit for given volume |
+| `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the complete value of the asset's volume |
 | `volume` | [uint64](#uint64) |  | volume is the volume of the assets |
 | `updated_block_height` | [uint64](#uint64) |  | updated_block_height is the block height of last update |
 
