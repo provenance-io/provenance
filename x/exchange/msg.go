@@ -1,6 +1,11 @@
 package exchange
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"errors"
+	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 var allRequestMsgs = []sdk.Msg{
 	(*MsgCreateAskRequest)(nil),
@@ -141,31 +146,68 @@ func (m MsgMarketManageReqAttrsRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgGovCreateMarketRequest) ValidateBasic() error {
-	// TODO[1658]: MsgGovCreateMarketRequest.ValidateBasic()
-	return nil
+	errs := make([]error, 0, 2)
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		errs = append(errs, fmt.Errorf("invalid authority: %w", err))
+	}
+	errs = append(errs, m.Market.Validate())
+	return errors.Join(errs...)
 }
 
 func (m MsgGovCreateMarketRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgGovCreateMarketRequest.GetSigners
-	panic("not implemented")
+	addr := sdk.MustAccAddressFromBech32(m.Authority)
+	return []sdk.AccAddress{addr}
 }
 
 func (m MsgGovManageFeesRequest) ValidateBasic() error {
-	// TODO[1658]: MsgGovManageFeesRequest.ValidateBasic()
-	return nil
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		errs = append(errs, fmt.Errorf("invalid authority: %w", err))
+	}
+
+	if m.HasUpdates() {
+		errs = append(errs,
+			ValidateAddRemoveFeeOptions("create ask flat fee", m.AddFeeCreateAskFlat, m.RemoveFeeCreateAskFlat),
+			ValidateAddRemoveFeeOptions("create bid flat fee", m.AddFeeCreateBidFlat, m.RemoveFeeCreateBidFlat),
+			ValidateAddRemoveFeeOptions("seller settlement flat fee", m.AddFeeSettlementSellerFlat, m.RemoveFeeSettlementSellerFlat),
+			ValidateSellerFeeRatios(m.AddFeeSettlementSellerRatios),
+			ValidateDisjointFeeRatios("seller settlement fee", m.AddFeeSettlementSellerRatios, m.RemoveFeeSettlementSellerRatios),
+			ValidateAddRemoveFeeOptions("buyer settlement flat fee", m.AddFeeSettlementBuyerFlat, m.RemoveFeeSettlementBuyerFlat),
+			ValidateBuyerFeeRatios(m.AddFeeSettlementBuyerRatios),
+			ValidateDisjointFeeRatios("buyer settlement fee", m.AddFeeSettlementBuyerRatios, m.RemoveFeeSettlementBuyerRatios),
+		)
+	} else {
+		errs = append(errs, errors.New("no updates"))
+	}
+
+	return errors.Join(errs...)
+}
+
+// HasUpdates returns true if this has at least one fee change, false if devoid of updates.
+func (m MsgGovManageFeesRequest) HasUpdates() bool {
+	return len(m.AddFeeCreateAskFlat) > 0 || len(m.RemoveFeeCreateAskFlat) > 0 ||
+		len(m.AddFeeCreateBidFlat) > 0 || len(m.RemoveFeeCreateBidFlat) > 0 ||
+		len(m.AddFeeSettlementSellerFlat) > 0 || len(m.RemoveFeeSettlementSellerFlat) > 0 ||
+		len(m.AddFeeSettlementSellerRatios) > 0 || len(m.RemoveFeeSettlementSellerRatios) > 0 ||
+		len(m.AddFeeSettlementBuyerFlat) > 0 || len(m.RemoveFeeSettlementBuyerFlat) > 0 ||
+		len(m.AddFeeSettlementBuyerRatios) > 0 || len(m.RemoveFeeSettlementBuyerRatios) > 0
 }
 
 func (m MsgGovManageFeesRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgGovManageFeesRequest.GetSigners
-	panic("not implemented")
+	addr := sdk.MustAccAddressFromBech32(m.Authority)
+	return []sdk.AccAddress{addr}
 }
 
 func (m MsgGovUpdateParamsRequest) ValidateBasic() error {
-	// TODO[1658]: MsgGovUpdateParamsRequest.ValidateBasic()
-	return nil
+	errs := make([]error, 0, 2)
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		errs = append(errs, fmt.Errorf("invalid authority: %w", err))
+	}
+	errs = append(errs, m.Params.Validate())
+	return errors.Join(errs...)
 }
 
 func (m MsgGovUpdateParamsRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgGovUpdateParamsRequest.GetSigners
-	panic("not implemented")
+	addr := sdk.MustAccAddressFromBech32(m.Authority)
+	return []sdk.AccAddress{addr}
 }
