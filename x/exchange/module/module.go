@@ -122,10 +122,11 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 	//return cdc.MustMarshalJSON(gs)
 }
 
-// RegisterServices registers a gRPC query service to respond to the exchange-specific gRPC queries.
+// RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	exchange.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
 	// TODO[1658]: Uncomment this once the keeper implements the query server.
-	// exchange.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	// exchange.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
