@@ -15,7 +15,6 @@ var allRequestMsgs = []sdk.Msg{
 	(*MsgMarketUpdateUserSettleRequest)(nil),
 	(*MsgMarketManagePermissionsRequest)(nil),
 	(*MsgMarketManageReqAttrsRequest)(nil),
-	(*MsgCreateMarketRequest)(nil),
 	(*MsgGovCreateMarketRequest)(nil),
 	(*MsgGovManageFeesRequest)(nil),
 	(*MsgGovUpdateParamsRequest)(nil),
@@ -138,16 +137,6 @@ func (m MsgMarketManageReqAttrsRequest) ValidateBasic() error {
 
 func (m MsgMarketManageReqAttrsRequest) GetSigners() []sdk.AccAddress {
 	// TODO[1658]: MsgMarketManageReqAttrsRequest.GetSigners
-	panic("not implemented")
-}
-
-func (m MsgCreateMarketRequest) ValidateBasic() error {
-	// TODO[1658]: MsgCreateMarketRequest.ValidateBasic()
-	return nil
-}
-
-func (m MsgCreateMarketRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgCreateMarketRequest.GetSigners
 	panic("not implemented")
 }
 

@@ -53,6 +53,11 @@ service Query {
   rpc QueryParams(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/provenance/exchange/v1/params";
   }
+
+  // QueryIsValidMarket checks the provided market and returns any errors that would be encountered trying to create it.
+  rpc QueryIsValidMarket(QueryIsValidMarketRequest) returns (QueryIsValidMarketResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/market/validate";
+  }
 }
 
 // QueryOrderFeeCalcRequest is a request message for the QueryOrderFeeCalc endpoint.
@@ -128,4 +133,13 @@ message QueryParamsRequest {
 // QueryParamsResponse is a response message for the QueryParams endpoint.
 message QueryParamsResponse {
   // TODO[1658]: QueryParamsResponse
+}
+
+// QueryIsValidMarketRequest is a request message for the QueryIsValidMarket endpoint.
+message QueryIsValidMarketRequest {
+  // TODO[1658]: QueryIsValidMarketRequest
+}
+// QueryIsValidMarketResponse is a response message for the QueryIsValidMarket endpoint.
+message QueryIsValidMarketResponse {
+  // TODO[1658]: QueryIsValidMarketResponse
 }

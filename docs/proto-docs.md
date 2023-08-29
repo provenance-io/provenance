@@ -99,6 +99,8 @@
     - [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse)
     - [QueryGetOrderRequest](#provenance.exchange.v1.QueryGetOrderRequest)
     - [QueryGetOrderResponse](#provenance.exchange.v1.QueryGetOrderResponse)
+    - [QueryIsValidMarketRequest](#provenance.exchange.v1.QueryIsValidMarketRequest)
+    - [QueryIsValidMarketResponse](#provenance.exchange.v1.QueryIsValidMarketResponse)
     - [QueryMarketInfoRequest](#provenance.exchange.v1.QueryMarketInfoRequest)
     - [QueryMarketInfoResponse](#provenance.exchange.v1.QueryMarketInfoResponse)
     - [QueryOrderFeeCalcRequest](#provenance.exchange.v1.QueryOrderFeeCalcRequest)
@@ -117,8 +119,6 @@
     - [MsgCreateAskResponse](#provenance.exchange.v1.MsgCreateAskResponse)
     - [MsgCreateBidRequest](#provenance.exchange.v1.MsgCreateBidRequest)
     - [MsgCreateBidResponse](#provenance.exchange.v1.MsgCreateBidResponse)
-    - [MsgCreateMarketRequest](#provenance.exchange.v1.MsgCreateMarketRequest)
-    - [MsgCreateMarketResponse](#provenance.exchange.v1.MsgCreateMarketResponse)
     - [MsgFillAsksRequest](#provenance.exchange.v1.MsgFillAsksRequest)
     - [MsgFillAsksResponse](#provenance.exchange.v1.MsgFillAsksResponse)
     - [MsgFillBidsRequest](#provenance.exchange.v1.MsgFillBidsRequest)
@@ -1935,6 +1935,26 @@ QueryGetOrderResponse is a response message for the QueryGetOrder endpoint.
 
 
 
+<a name="provenance.exchange.v1.QueryIsValidMarketRequest"></a>
+
+### QueryIsValidMarketRequest
+QueryIsValidMarketRequest is a request message for the QueryIsValidMarket endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryIsValidMarketResponse"></a>
+
+### QueryIsValidMarketResponse
+QueryIsValidMarketResponse is a response message for the QueryIsValidMarket endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.QueryMarketInfoRequest"></a>
 
 ### QueryMarketInfoRequest
@@ -2036,6 +2056,7 @@ Query is the service for exchange module's query endpoints.
 | `QueryGetAllOrders` | [QueryGetAllOrdersRequest](#provenance.exchange.v1.QueryGetAllOrdersRequest) | [QueryGetAllOrdersResponse](#provenance.exchange.v1.QueryGetAllOrdersResponse) | QueryGetAllOrders gets all orders in the exchange module. | GET|/provenance/exchange/v1/orders|
 | `QueryMarketInfo` | [QueryMarketInfoRequest](#provenance.exchange.v1.QueryMarketInfoRequest) | [QueryMarketInfoResponse](#provenance.exchange.v1.QueryMarketInfoResponse) | QueryMarketInfo returns the information/details about a market. | GET|/provenance/exchange/v1/market/infoGET|/provenance/exchange/v1/market/details|
 | `QueryParams` | [QueryParamsRequest](#provenance.exchange.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.exchange.v1.QueryParamsResponse) | QueryParams returns the exchange module parameters. | GET|/provenance/exchange/v1/params|
+| `QueryIsValidMarket` | [QueryIsValidMarketRequest](#provenance.exchange.v1.QueryIsValidMarketRequest) | [QueryIsValidMarketResponse](#provenance.exchange.v1.QueryIsValidMarketResponse) | QueryIsValidMarket checks the provided market and returns any errors that would be encountered trying to create it. | GET|/provenance/exchange/v1/market/validate|
 
  <!-- end services -->
 
@@ -2108,26 +2129,6 @@ MsgCreateBidResponse is a response message for the CreateBid endpoint.
 
 
 
-<a name="provenance.exchange.v1.MsgCreateMarketRequest"></a>
-
-### MsgCreateMarketRequest
-MsgCreateMarketRequest is a request message for the CreateMarket endpoint.
-
-
-
-
-
-
-<a name="provenance.exchange.v1.MsgCreateMarketResponse"></a>
-
-### MsgCreateMarketResponse
-MsgCreateMarketResponse is a response message for the CreateMarket endpoint.
-
-
-
-
-
-
 <a name="provenance.exchange.v1.MsgFillAsksRequest"></a>
 
 ### MsgFillAsksRequest
@@ -2174,6 +2175,12 @@ MsgFillBidsResponse is a response message for the FillBids endpoint.
 MsgGovCreateMarketRequest is a request message for the GovCreateMarket endpoint.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `market` | [Market](#provenance.exchange.v1.Market) |  | market is the initial market configuration. If the market_id is 0, the next available market_id will be used (once voting ends). If it is not zero, it must not yet be in use when the voting period ends. |
+
+
 
 
 
@@ -2194,6 +2201,23 @@ MsgGovCreateMarketResponse is a response message for the GovCreateMarket endpoin
 MsgGovManageFeesRequest is a request message for the GovManageFees endpoint.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `add_fee_create_ask_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_create_ask_flat are the create ask flat fee options to add. |
+| `remove_fee_create_ask_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_create_ask_flat are the create ask flat fee options to remove. |
+| `add_fee_create_bid_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_create_bid_flat are the create bid flat fee options to add. |
+| `remove_fee_create_bid_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_create_bid_flat are the create bid flat fee options to remove. |
+| `add_fee_settlement_seller_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_settlement_seller_flat are the seller settlement flat fee options to add. |
+| `remove_fee_settlement_seller_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_settlement_seller_flat are the seller settlement flat fee options to remove. |
+| `add_fee_settlement_seller_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | add_fee_settlement_seller_ratios are the seller settlement fee ratios to add. |
+| `remove_fee_settlement_seller_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | remove_fee_settlement_seller_ratios are the seller settlement fee ratios to remove. |
+| `add_fee_settlement_buyer_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_settlement_buyer_flat are the buyer settlement flat fee options to add. |
+| `remove_fee_settlement_buyer_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_settlement_buyer_flat are the buyer settlement flat fee options to remove. |
+| `add_fee_settlement_buyer_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | add_fee_settlement_buyer_ratios are the buyer settlement fee ratios to add. |
+| `remove_fee_settlement_buyer_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | remove_fee_settlement_buyer_ratios are the buyer settlement fee ratios to remove. |
+
+
 
 
 
@@ -2212,6 +2236,12 @@ MsgGovManageFeesResponse is a response message for the GovManageFees endpoint.
 
 ### MsgGovUpdateParamsRequest
 MsgGovUpdateParamsRequest is a request message for the GovUpdateParams endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `params` | [Params](#provenance.exchange.v1.Params) |  | params are the new param values to set |
 
 
 
@@ -2393,8 +2423,7 @@ Msg is the service for exchange module's tx endpoints.
 | `MarketUpdateUserSettle` | [MsgMarketUpdateUserSettleRequest](#provenance.exchange.v1.MsgMarketUpdateUserSettleRequest) | [MsgMarketUpdateUserSettleResponse](#provenance.exchange.v1.MsgMarketUpdateUserSettleResponse) | MarketUpdateUserSettle is a market endpoint to update whether it allows user-initiated settlement. | |
 | `MarketManagePermissions` | [MsgMarketManagePermissionsRequest](#provenance.exchange.v1.MsgMarketManagePermissionsRequest) | [MsgMarketManagePermissionsResponse](#provenance.exchange.v1.MsgMarketManagePermissionsResponse) | MarketManagePermissions is a market endpoint to manage a market's user permissions. | |
 | `MarketManageReqAttrs` | [MsgMarketManageReqAttrsRequest](#provenance.exchange.v1.MsgMarketManageReqAttrsRequest) | [MsgMarketManageReqAttrsResponse](#provenance.exchange.v1.MsgMarketManageReqAttrsResponse) | MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it. | |
-| `CreateMarket` | [MsgCreateMarketRequest](#provenance.exchange.v1.MsgCreateMarketRequest) | [MsgCreateMarketResponse](#provenance.exchange.v1.MsgCreateMarketResponse) | CreateMarket reserves the next market id and submits a GovCreateMarket governance proposal to create the market. | |
-| `GovCreateMarket` | [MsgGovCreateMarketRequest](#provenance.exchange.v1.MsgGovCreateMarketRequest) | [MsgGovCreateMarketResponse](#provenance.exchange.v1.MsgGovCreateMarketResponse) | GovCreateMarket is a governance proposal endpoint for creating a market. The CreateMarket endpoint should be used to submit one of these unless you don't need to know the market id until after the proposal passes. | |
+| `GovCreateMarket` | [MsgGovCreateMarketRequest](#provenance.exchange.v1.MsgGovCreateMarketRequest) | [MsgGovCreateMarketResponse](#provenance.exchange.v1.MsgGovCreateMarketResponse) | GovCreateMarket is a governance proposal endpoint for creating a market. | |
 | `GovManageFees` | [MsgGovManageFeesRequest](#provenance.exchange.v1.MsgGovManageFeesRequest) | [MsgGovManageFeesResponse](#provenance.exchange.v1.MsgGovManageFeesResponse) | GovManageFees is a governance proposal endpoint for updating a market's fees. | |
 | `GovUpdateParams` | [MsgGovUpdateParamsRequest](#provenance.exchange.v1.MsgGovUpdateParamsRequest) | [MsgGovUpdateParamsResponse](#provenance.exchange.v1.MsgGovUpdateParamsResponse) | GovUpdateParams is a governance proposal endpoint for updating the exchange module's params. | |
 

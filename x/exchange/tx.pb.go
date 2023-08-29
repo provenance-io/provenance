@@ -6,6 +6,11 @@ package exchange
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
+	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	grpc "google.golang.org/grpc"
@@ -915,89 +920,21 @@ func (m *MsgMarketManageReqAttrsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgMarketManageReqAttrsResponse proto.InternalMessageInfo
 
-// MsgCreateMarketRequest is a request message for the CreateMarket endpoint.
-type MsgCreateMarketRequest struct {
-}
-
-func (m *MsgCreateMarketRequest) Reset()         { *m = MsgCreateMarketRequest{} }
-func (m *MsgCreateMarketRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgCreateMarketRequest) ProtoMessage()    {}
-func (*MsgCreateMarketRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e333fcffc093bd1b, []int{24}
-}
-func (m *MsgCreateMarketRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgCreateMarketRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgCreateMarketRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgCreateMarketRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgCreateMarketRequest.Merge(m, src)
-}
-func (m *MsgCreateMarketRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgCreateMarketRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgCreateMarketRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgCreateMarketRequest proto.InternalMessageInfo
-
-// MsgCreateMarketResponse is a response message for the CreateMarket endpoint.
-type MsgCreateMarketResponse struct {
-}
-
-func (m *MsgCreateMarketResponse) Reset()         { *m = MsgCreateMarketResponse{} }
-func (m *MsgCreateMarketResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgCreateMarketResponse) ProtoMessage()    {}
-func (*MsgCreateMarketResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e333fcffc093bd1b, []int{25}
-}
-func (m *MsgCreateMarketResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgCreateMarketResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgCreateMarketResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgCreateMarketResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgCreateMarketResponse.Merge(m, src)
-}
-func (m *MsgCreateMarketResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgCreateMarketResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgCreateMarketResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgCreateMarketResponse proto.InternalMessageInfo
-
 // MsgGovCreateMarketRequest is a request message for the GovCreateMarket endpoint.
 type MsgGovCreateMarketRequest struct {
+	// authority should be the governance module account address.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// market is the initial market configuration.
+	// If the market_id is 0, the next available market_id will be used (once voting ends).
+	// If it is not zero, it must not yet be in use when the voting period ends.
+	Market Market `protobuf:"bytes,2,opt,name=market,proto3" json:"market"`
 }
 
 func (m *MsgGovCreateMarketRequest) Reset()         { *m = MsgGovCreateMarketRequest{} }
 func (m *MsgGovCreateMarketRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgGovCreateMarketRequest) ProtoMessage()    {}
 func (*MsgGovCreateMarketRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e333fcffc093bd1b, []int{26}
+	return fileDescriptor_e333fcffc093bd1b, []int{24}
 }
 func (m *MsgGovCreateMarketRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1026,6 +963,20 @@ func (m *MsgGovCreateMarketRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgGovCreateMarketRequest proto.InternalMessageInfo
 
+func (m *MsgGovCreateMarketRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgGovCreateMarketRequest) GetMarket() Market {
+	if m != nil {
+		return m.Market
+	}
+	return Market{}
+}
+
 // MsgGovCreateMarketResponse is a response message for the GovCreateMarket endpoint.
 type MsgGovCreateMarketResponse struct {
 }
@@ -1034,7 +985,7 @@ func (m *MsgGovCreateMarketResponse) Reset()         { *m = MsgGovCreateMarketRe
 func (m *MsgGovCreateMarketResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgGovCreateMarketResponse) ProtoMessage()    {}
 func (*MsgGovCreateMarketResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e333fcffc093bd1b, []int{27}
+	return fileDescriptor_e333fcffc093bd1b, []int{25}
 }
 func (m *MsgGovCreateMarketResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1065,13 +1016,39 @@ var xxx_messageInfo_MsgGovCreateMarketResponse proto.InternalMessageInfo
 
 // MsgGovManageFeesRequest is a request message for the GovManageFees endpoint.
 type MsgGovManageFeesRequest struct {
+	// authority should be the governance module account address.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// add_fee_create_ask_flat are the create ask flat fee options to add.
+	AddFeeCreateAskFlat github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=add_fee_create_ask_flat,json=addFeeCreateAskFlat,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"add_fee_create_ask_flat"`
+	// remove_fee_create_ask_flat are the create ask flat fee options to remove.
+	RemoveFeeCreateAskFlat github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=remove_fee_create_ask_flat,json=removeFeeCreateAskFlat,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"remove_fee_create_ask_flat"`
+	// add_fee_create_bid_flat are the create bid flat fee options to add.
+	AddFeeCreateBidFlat github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=add_fee_create_bid_flat,json=addFeeCreateBidFlat,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"add_fee_create_bid_flat"`
+	// remove_fee_create_bid_flat are the create bid flat fee options to remove.
+	RemoveFeeCreateBidFlat github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=remove_fee_create_bid_flat,json=removeFeeCreateBidFlat,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"remove_fee_create_bid_flat"`
+	// add_fee_settlement_seller_flat are the seller settlement flat fee options to add.
+	AddFeeSettlementSellerFlat github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,6,rep,name=add_fee_settlement_seller_flat,json=addFeeSettlementSellerFlat,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"add_fee_settlement_seller_flat"`
+	// remove_fee_settlement_seller_flat are the seller settlement flat fee options to remove.
+	RemoveFeeSettlementSellerFlat github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,7,rep,name=remove_fee_settlement_seller_flat,json=removeFeeSettlementSellerFlat,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"remove_fee_settlement_seller_flat"`
+	// add_fee_settlement_seller_ratios are the seller settlement fee ratios to add.
+	AddFeeSettlementSellerRatios []FeeRatio `protobuf:"bytes,8,rep,name=add_fee_settlement_seller_ratios,json=addFeeSettlementSellerRatios,proto3" json:"add_fee_settlement_seller_ratios"`
+	// remove_fee_settlement_seller_ratios are the seller settlement fee ratios to remove.
+	RemoveFeeSettlementSellerRatios []FeeRatio `protobuf:"bytes,9,rep,name=remove_fee_settlement_seller_ratios,json=removeFeeSettlementSellerRatios,proto3" json:"remove_fee_settlement_seller_ratios"`
+	// add_fee_settlement_buyer_flat are the buyer settlement flat fee options to add.
+	AddFeeSettlementBuyerFlat github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,10,rep,name=add_fee_settlement_buyer_flat,json=addFeeSettlementBuyerFlat,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"add_fee_settlement_buyer_flat"`
+	// remove_fee_settlement_buyer_flat are the buyer settlement flat fee options to remove.
+	RemoveFeeSettlementBuyerFlat github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,11,rep,name=remove_fee_settlement_buyer_flat,json=removeFeeSettlementBuyerFlat,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"remove_fee_settlement_buyer_flat"`
+	// add_fee_settlement_buyer_ratios are the buyer settlement fee ratios to add.
+	AddFeeSettlementBuyerRatios []FeeRatio `protobuf:"bytes,12,rep,name=add_fee_settlement_buyer_ratios,json=addFeeSettlementBuyerRatios,proto3" json:"add_fee_settlement_buyer_ratios"`
+	// remove_fee_settlement_buyer_ratios are the buyer settlement fee ratios to remove.
+	RemoveFeeSettlementBuyerRatios []FeeRatio `protobuf:"bytes,13,rep,name=remove_fee_settlement_buyer_ratios,json=removeFeeSettlementBuyerRatios,proto3" json:"remove_fee_settlement_buyer_ratios"`
 }
 
 func (m *MsgGovManageFeesRequest) Reset()         { *m = MsgGovManageFeesRequest{} }
 func (m *MsgGovManageFeesRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgGovManageFeesRequest) ProtoMessage()    {}
 func (*MsgGovManageFeesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e333fcffc093bd1b, []int{28}
+	return fileDescriptor_e333fcffc093bd1b, []int{26}
 }
 func (m *MsgGovManageFeesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1100,6 +1077,97 @@ func (m *MsgGovManageFeesRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgGovManageFeesRequest proto.InternalMessageInfo
 
+func (m *MsgGovManageFeesRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgGovManageFeesRequest) GetAddFeeCreateAskFlat() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.AddFeeCreateAskFlat
+	}
+	return nil
+}
+
+func (m *MsgGovManageFeesRequest) GetRemoveFeeCreateAskFlat() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.RemoveFeeCreateAskFlat
+	}
+	return nil
+}
+
+func (m *MsgGovManageFeesRequest) GetAddFeeCreateBidFlat() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.AddFeeCreateBidFlat
+	}
+	return nil
+}
+
+func (m *MsgGovManageFeesRequest) GetRemoveFeeCreateBidFlat() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.RemoveFeeCreateBidFlat
+	}
+	return nil
+}
+
+func (m *MsgGovManageFeesRequest) GetAddFeeSettlementSellerFlat() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.AddFeeSettlementSellerFlat
+	}
+	return nil
+}
+
+func (m *MsgGovManageFeesRequest) GetRemoveFeeSettlementSellerFlat() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.RemoveFeeSettlementSellerFlat
+	}
+	return nil
+}
+
+func (m *MsgGovManageFeesRequest) GetAddFeeSettlementSellerRatios() []FeeRatio {
+	if m != nil {
+		return m.AddFeeSettlementSellerRatios
+	}
+	return nil
+}
+
+func (m *MsgGovManageFeesRequest) GetRemoveFeeSettlementSellerRatios() []FeeRatio {
+	if m != nil {
+		return m.RemoveFeeSettlementSellerRatios
+	}
+	return nil
+}
+
+func (m *MsgGovManageFeesRequest) GetAddFeeSettlementBuyerFlat() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.AddFeeSettlementBuyerFlat
+	}
+	return nil
+}
+
+func (m *MsgGovManageFeesRequest) GetRemoveFeeSettlementBuyerFlat() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.RemoveFeeSettlementBuyerFlat
+	}
+	return nil
+}
+
+func (m *MsgGovManageFeesRequest) GetAddFeeSettlementBuyerRatios() []FeeRatio {
+	if m != nil {
+		return m.AddFeeSettlementBuyerRatios
+	}
+	return nil
+}
+
+func (m *MsgGovManageFeesRequest) GetRemoveFeeSettlementBuyerRatios() []FeeRatio {
+	if m != nil {
+		return m.RemoveFeeSettlementBuyerRatios
+	}
+	return nil
+}
+
 // MsgGovManageFeesResponse is a response message for the GovManageFees endpoint.
 type MsgGovManageFeesResponse struct {
 }
@@ -1108,7 +1176,7 @@ func (m *MsgGovManageFeesResponse) Reset()         { *m = MsgGovManageFeesRespon
 func (m *MsgGovManageFeesResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgGovManageFeesResponse) ProtoMessage()    {}
 func (*MsgGovManageFeesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e333fcffc093bd1b, []int{29}
+	return fileDescriptor_e333fcffc093bd1b, []int{27}
 }
 func (m *MsgGovManageFeesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1139,13 +1207,17 @@ var xxx_messageInfo_MsgGovManageFeesResponse proto.InternalMessageInfo
 
 // MsgGovUpdateParamsRequest is a request message for the GovUpdateParams endpoint.
 type MsgGovUpdateParamsRequest struct {
+	// authority should be the governance module account address.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// params are the new param values to set
+	Params Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params"`
 }
 
 func (m *MsgGovUpdateParamsRequest) Reset()         { *m = MsgGovUpdateParamsRequest{} }
 func (m *MsgGovUpdateParamsRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgGovUpdateParamsRequest) ProtoMessage()    {}
 func (*MsgGovUpdateParamsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e333fcffc093bd1b, []int{30}
+	return fileDescriptor_e333fcffc093bd1b, []int{28}
 }
 func (m *MsgGovUpdateParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1174,6 +1246,20 @@ func (m *MsgGovUpdateParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgGovUpdateParamsRequest proto.InternalMessageInfo
 
+func (m *MsgGovUpdateParamsRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgGovUpdateParamsRequest) GetParams() Params {
+	if m != nil {
+		return m.Params
+	}
+	return Params{}
+}
+
 // MsgGovUpdateParamsResponse is a response message for the GovUpdateParams endpoint.
 type MsgGovUpdateParamsResponse struct {
 }
@@ -1182,7 +1268,7 @@ func (m *MsgGovUpdateParamsResponse) Reset()         { *m = MsgGovUpdateParamsRe
 func (m *MsgGovUpdateParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgGovUpdateParamsResponse) ProtoMessage()    {}
 func (*MsgGovUpdateParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e333fcffc093bd1b, []int{31}
+	return fileDescriptor_e333fcffc093bd1b, []int{29}
 }
 func (m *MsgGovUpdateParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1236,8 +1322,6 @@ func init() {
 	proto.RegisterType((*MsgMarketManagePermissionsResponse)(nil), "provenance.exchange.v1.MsgMarketManagePermissionsResponse")
 	proto.RegisterType((*MsgMarketManageReqAttrsRequest)(nil), "provenance.exchange.v1.MsgMarketManageReqAttrsRequest")
 	proto.RegisterType((*MsgMarketManageReqAttrsResponse)(nil), "provenance.exchange.v1.MsgMarketManageReqAttrsResponse")
-	proto.RegisterType((*MsgCreateMarketRequest)(nil), "provenance.exchange.v1.MsgCreateMarketRequest")
-	proto.RegisterType((*MsgCreateMarketResponse)(nil), "provenance.exchange.v1.MsgCreateMarketResponse")
 	proto.RegisterType((*MsgGovCreateMarketRequest)(nil), "provenance.exchange.v1.MsgGovCreateMarketRequest")
 	proto.RegisterType((*MsgGovCreateMarketResponse)(nil), "provenance.exchange.v1.MsgGovCreateMarketResponse")
 	proto.RegisterType((*MsgGovManageFeesRequest)(nil), "provenance.exchange.v1.MsgGovManageFeesRequest")
@@ -1249,51 +1333,79 @@ func init() {
 func init() { proto.RegisterFile("provenance/exchange/v1/tx.proto", fileDescriptor_e333fcffc093bd1b) }
 
 var fileDescriptor_e333fcffc093bd1b = []byte{
-	// 697 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x56, 0x5b, 0x4f, 0xd4, 0x40,
-	0x14, 0xa6, 0x31, 0x31, 0x7a, 0xbc, 0x90, 0x0c, 0xb0, 0xc0, 0xa8, 0x05, 0x56, 0x9f, 0x44, 0x5a,
-	0xc0, 0x88, 0x97, 0x37, 0x56, 0x85, 0xa7, 0x8d, 0x04, 0x43, 0x4c, 0x7c, 0x1b, 0xb6, 0xe3, 0xd2,
-	0x50, 0xda, 0x65, 0x66, 0x58, 0xf7, 0x07, 0x98, 0x18, 0x1f, 0x4c, 0xf8, 0x59, 0x3e, 0xf2, 0xe8,
-	0xa3, 0x81, 0x3f, 0x62, 0x96, 0x99, 0x5e, 0xa6, 0x9d, 0x5e, 0x96, 0xc7, 0x9d, 0xf3, 0x5d, 0xce,
-	0x6c, 0x7b, 0xbe, 0x53, 0x58, 0x1a, 0xb0, 0x68, 0x48, 0x43, 0x12, 0xf6, 0xa8, 0x4b, 0x47, 0xbd,
-	0x23, 0x12, 0xf6, 0xa9, 0x3b, 0xdc, 0x70, 0xc5, 0xc8, 0x19, 0xb0, 0x48, 0x44, 0xa8, 0x95, 0x02,
-	0x9c, 0x18, 0xe0, 0x0c, 0x37, 0xda, 0x73, 0x30, 0xd3, 0xe5, 0xfd, 0xf7, 0x8c, 0x12, 0x41, 0xb7,
-	0xf9, 0xf1, 0x3e, 0x3d, 0x3d, 0xa3, 0x5c, 0xb4, 0x5b, 0x30, 0xab, 0x1f, 0xf3, 0x41, 0x14, 0x72,
-	0xaa, 0xc1, 0x3b, 0xbe, 0x67, 0x82, 0x5f, 0x1f, 0x2b, 0xf8, 0x3c, 0xcc, 0x8d, 0xcf, 0xc7, 0xae,
-	0xc1, 0x27, 0xe6, 0x51, 0x16, 0x13, 0x16, 0xa0, 0x95, 0x2f, 0x28, 0xca, 0x2c, 0xa0, 0x2e, 0xef,
-	0xef, 0xf8, 0x41, 0xd0, 0xf1, 0x3d, 0x1e, 0xe3, 0xa5, 0x6f, 0x7a, 0x5a, 0x00, 0x6f, 0xf3, 0x63,
-	0x03, 0x58, 0x9e, 0x2a, 0xb0, 0xf4, 0xec, 0x12, 0x76, 0x4c, 0xc5, 0x67, 0x2a, 0x44, 0x40, 0x63,
-	0xc2, 0x22, 0xcc, 0x17, 0x2a, 0x8a, 0x84, 0x61, 0x21, 0x29, 0x7d, 0xf1, 0xc5, 0x91, 0xc7, 0xc8,
-	0xf7, 0x98, 0xf6, 0x08, 0x16, 0x0d, 0x35, 0x45, 0x5c, 0x82, 0x27, 0x49, 0xf1, 0x60, 0xe0, 0x11,
-	0x41, 0x3f, 0x50, 0x41, 0xfc, 0x20, 0xe9, 0x72, 0x19, 0xec, 0x32, 0x40, 0xa9, 0xc4, 0xc7, 0x90,
-	0x1c, 0x06, 0xd4, 0x2b, 0x97, 0x48, 0x00, 0x4a, 0xa2, 0x0d, 0xcb, 0x39, 0xc4, 0x01, 0xa7, 0x4c,
-	0xbf, 0xfd, 0x53, 0x58, 0xa9, 0xc0, 0x28, 0xa1, 0x2c, 0xa8, 0x4b, 0x42, 0xd2, 0xa7, 0x7b, 0x94,
-	0x9d, 0xf8, 0x9c, 0xfb, 0x51, 0x98, 0x5c, 0xe9, 0x19, 0xb4, 0xab, 0x40, 0x4a, 0x2a, 0xdb, 0xb5,
-	0x44, 0xed, 0xd3, 0xd3, 0x6d, 0x21, 0x58, 0xa2, 0xb3, 0x02, 0x4b, 0xa5, 0x08, 0xed, 0x61, 0xca,
-	0x37, 0x4e, 0x02, 0xf5, 0x87, 0xa9, 0x57, 0x14, 0x49, 0x3e, 0xb0, 0xdd, 0x68, 0x68, 0xe2, 0x3d,
-	0x06, 0x6c, 0x2a, 0x2a, 0xaa, 0x54, 0xdd, 0x8d, 0x86, 0xb2, 0x9f, 0x1d, 0x4a, 0x93, 0x6e, 0xe5,
-	0x2b, 0x92, 0x2b, 0xe5, 0x1d, 0xe5, 0x1f, 0xbb, 0x47, 0x18, 0x39, 0xe1, 0x05, 0x47, 0xbd, 0x28,
-	0xa9, 0x9b, 0xbf, 0xa6, 0xe1, 0x56, 0x97, 0xf7, 0xd1, 0x37, 0xb8, 0x9b, 0xcc, 0x21, 0x5a, 0x75,
-	0xcc, 0x73, 0xec, 0x18, 0x86, 0x18, 0xbf, 0x68, 0x06, 0x96, 0x7e, 0xa9, 0x4f, 0xc7, 0xf7, 0x1a,
-	0xf8, 0xa4, 0xd3, 0xdf, 0xc0, 0x27, 0x93, 0x09, 0x28, 0x80, 0x7b, 0x99, 0xb9, 0x47, 0x6b, 0x55,
-	0xe4, 0x42, 0x70, 0x60, 0xa7, 0x29, 0x5c, 0xb9, 0xf5, 0xe0, 0x4e, 0x9c, 0x1a, 0xe8, 0x79, 0x05,
-	0x37, 0x17, 0x38, 0x78, 0xb5, 0x11, 0x56, 0x37, 0x19, 0xa7, 0x4d, 0xad, 0x49, 0x26, 0xa8, 0x6a,
-	0x4d, 0xb2, 0xf1, 0x85, 0x22, 0xb8, 0x9f, 0x4d, 0x28, 0x54, 0xf5, 0x4f, 0x18, 0x42, 0x0e, 0xbb,
-	0x8d, 0xf1, 0xca, 0xf0, 0x0c, 0x1e, 0xea, 0xd9, 0x86, 0xd6, 0x6b, 0x25, 0x72, 0x11, 0x89, 0x37,
-	0x26, 0x60, 0x28, 0xdb, 0x1f, 0x16, 0xcc, 0x18, 0x52, 0x11, 0xbd, 0xaa, 0x95, 0x32, 0xc5, 0x2c,
-	0xde, 0x9a, 0x94, 0x56, 0xd2, 0x86, 0x4a, 0xd6, 0xc6, 0x6d, 0xe8, 0x51, 0xdd, 0xb8, 0x8d, 0x5c,
-	0x80, 0xa3, 0xdf, 0x16, 0xb4, 0xcc, 0xd1, 0x8c, 0xde, 0x34, 0x94, 0x2c, 0x24, 0x3e, 0x7e, 0x7b,
-	0x03, 0xa6, 0xea, 0xe7, 0xdc, 0x82, 0xf9, 0x92, 0x80, 0x47, 0xf5, 0xb2, 0x65, 0x9b, 0x03, 0xbf,
-	0xbb, 0x09, 0x55, 0xb5, 0xf4, 0xd3, 0x82, 0x59, 0xd3, 0xae, 0x40, 0x5b, 0x0d, 0x45, 0x73, 0xeb,
-	0x07, 0xbf, 0x9e, 0x98, 0x97, 0x8e, 0x68, 0x76, 0x79, 0x54, 0x8e, 0xa8, 0x61, 0x05, 0x55, 0x8e,
-	0xa8, 0x69, 0x2b, 0xa1, 0x11, 0x4c, 0xe7, 0x16, 0x16, 0xaa, 0x9a, 0x38, 0xf3, 0xe6, 0xc3, 0x9b,
-	0x93, 0x50, 0x94, 0x33, 0x83, 0x07, 0xda, 0xc6, 0x43, 0x6e, 0xb5, 0x48, 0x61, 0x6d, 0xe2, 0xf5,
-	0xe6, 0x04, 0xed, 0xb6, 0xd9, 0x65, 0x59, 0x77, 0x5b, 0xc3, 0xd6, 0xad, 0xbb, 0xad, 0x69, 0x17,
-	0x77, 0xe8, 0x9f, 0x4b, 0xdb, 0xba, 0xb8, 0xb4, 0xad, 0x7f, 0x97, 0xb6, 0x75, 0x7e, 0x65, 0x4f,
-	0x5d, 0x5c, 0xd9, 0x53, 0x7f, 0xaf, 0xec, 0x29, 0x58, 0xf4, 0xa3, 0x12, 0xbd, 0x3d, 0xeb, 0xab,
-	0xd3, 0xf7, 0xc5, 0xd1, 0xd9, 0xa1, 0xd3, 0x8b, 0x4e, 0xdc, 0x14, 0xb4, 0xe6, 0x47, 0x99, 0x5f,
-	0xee, 0x28, 0xf9, 0x60, 0x3f, 0xbc, 0x7d, 0xfd, 0xad, 0xfe, 0xf2, 0x7f, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0xa1, 0xfc, 0xc3, 0xf5, 0xce, 0x0b, 0x00, 0x00,
+	// 1151 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x58, 0x41, 0x6f, 0x1b, 0x45,
+	0x14, 0xce, 0x92, 0x12, 0x9a, 0x97, 0x26, 0x48, 0x93, 0x34, 0xb1, 0xb7, 0xc9, 0xda, 0x71, 0x38,
+	0x44, 0x2d, 0x59, 0x27, 0x41, 0x04, 0xa8, 0xb8, 0xc4, 0x85, 0xf4, 0x14, 0x11, 0x39, 0xaa, 0x90,
+	0xb8, 0x58, 0x63, 0xef, 0x64, 0xb3, 0xca, 0x7a, 0xc7, 0xdd, 0x19, 0x9b, 0xe4, 0x08, 0x42, 0xea,
+	0x09, 0x51, 0x09, 0x55, 0xe2, 0xca, 0x95, 0x13, 0x07, 0x7e, 0x44, 0x8f, 0x15, 0x27, 0x4e, 0x80,
+	0x92, 0x03, 0x7f, 0x03, 0xed, 0xce, 0xec, 0x7a, 0x6d, 0xcf, 0xae, 0xd7, 0xad, 0x7b, 0x6a, 0x3d,
+	0xf3, 0xbd, 0xf7, 0x7d, 0xef, 0x73, 0x76, 0xdf, 0x7b, 0x86, 0x52, 0xc7, 0xa7, 0x3d, 0xe2, 0x61,
+	0xaf, 0x45, 0xaa, 0xe4, 0xb2, 0x75, 0x8e, 0x3d, 0x9b, 0x54, 0x7b, 0x7b, 0x55, 0x7e, 0x69, 0x76,
+	0x7c, 0xca, 0x29, 0x5a, 0xed, 0x03, 0xcc, 0x08, 0x60, 0xf6, 0xf6, 0x74, 0xa3, 0x45, 0x59, 0x9b,
+	0xb2, 0x6a, 0x13, 0xb3, 0x20, 0xa0, 0x49, 0x38, 0xde, 0xab, 0xb6, 0xa8, 0xe3, 0x89, 0x38, 0x7d,
+	0x4d, 0xde, 0xb7, 0x99, 0x1d, 0xe4, 0x6b, 0x33, 0x5b, 0x5e, 0x14, 0xc5, 0x45, 0x23, 0xfc, 0x54,
+	0x15, 0x1f, 0xe4, 0xd5, 0x8a, 0x4d, 0x6d, 0x2a, 0xce, 0x83, 0xff, 0xc9, 0xd3, 0xad, 0x14, 0x89,
+	0x6d, 0xec, 0x5f, 0x10, 0x3e, 0x06, 0xd4, 0xc1, 0x3e, 0x6e, 0xcb, 0xfc, 0x95, 0xbb, 0xb0, 0x7c,
+	0xcc, 0xec, 0x47, 0x3e, 0xc1, 0x9c, 0x1c, 0xb2, 0x8b, 0x3a, 0x79, 0xda, 0x25, 0x8c, 0x57, 0x56,
+	0x61, 0x65, 0xf0, 0x98, 0x75, 0xa8, 0xc7, 0xc8, 0x00, 0xbc, 0xe6, 0x58, 0x2a, 0x78, 0x78, 0x2c,
+	0xe1, 0x6b, 0x70, 0x37, 0x38, 0x0f, 0x24, 0xb8, 0x5f, 0xf9, 0x16, 0xf1, 0xa3, 0x80, 0x02, 0xac,
+	0x0e, 0x5f, 0xc8, 0x90, 0x15, 0x40, 0xc7, 0xcc, 0x3e, 0x72, 0x5c, 0xb7, 0xe6, 0x58, 0x2c, 0xc2,
+	0x0b, 0xde, 0xfe, 0xe9, 0x08, 0xf8, 0x90, 0x5d, 0x28, 0xc0, 0xe2, 0x54, 0x82, 0x05, 0xe7, 0x71,
+	0x68, 0xd1, 0x29, 0xe1, 0xdc, 0x25, 0x51, 0x40, 0x11, 0xd6, 0x46, 0x6e, 0x64, 0x90, 0x0e, 0x85,
+	0xf8, 0xea, 0x6b, 0x87, 0x9f, 0x5b, 0x3e, 0xfe, 0x36, 0x0a, 0xbb, 0x07, 0x45, 0xc5, 0x9d, 0x0c,
+	0x2c, 0xc1, 0x46, 0x7c, 0xf9, 0xa4, 0x63, 0x61, 0x4e, 0xbe, 0x20, 0x1c, 0x3b, 0x6e, 0xac, 0xb2,
+	0x0c, 0x46, 0x1a, 0x20, 0x35, 0xc5, 0x97, 0x1e, 0x6e, 0xba, 0xc4, 0x4a, 0x4f, 0x11, 0x03, 0x64,
+	0x8a, 0x0a, 0x94, 0x87, 0x10, 0x4f, 0x18, 0xf1, 0x07, 0xab, 0xdf, 0x82, 0xcd, 0x0c, 0x8c, 0x4c,
+	0x94, 0x04, 0x1d, 0x63, 0x0f, 0xdb, 0xe4, 0x84, 0xf8, 0x6d, 0x87, 0x31, 0x87, 0x7a, 0x71, 0x49,
+	0x1f, 0x40, 0x25, 0x0b, 0x24, 0x53, 0x25, 0x55, 0x0b, 0x54, 0x9d, 0x3c, 0x3d, 0xe4, 0xdc, 0x8f,
+	0xf3, 0x6c, 0x42, 0x29, 0x15, 0x21, 0x93, 0xfc, 0xaa, 0x85, 0xe6, 0x3f, 0xa6, 0x3d, 0xf1, 0x57,
+	0x27, 0xc0, 0x32, 0x01, 0x3a, 0x80, 0x79, 0xdc, 0xe5, 0xe7, 0xd4, 0x77, 0xf8, 0x55, 0x41, 0x2b,
+	0x6b, 0xdb, 0xf3, 0xb5, 0xc2, 0x9f, 0x7f, 0xec, 0xac, 0xc8, 0x47, 0xeb, 0xd0, 0xb2, 0x7c, 0xc2,
+	0xd8, 0x29, 0xf7, 0x1d, 0xcf, 0xae, 0xf7, 0xa1, 0xe8, 0x73, 0x98, 0x13, 0x8f, 0x50, 0xe1, 0x9d,
+	0xb2, 0xb6, 0xbd, 0xb0, 0x6f, 0x98, 0xea, 0x47, 0xdd, 0x14, 0x74, 0xb5, 0x5b, 0x2f, 0xff, 0x2e,
+	0xcd, 0xd4, 0x65, 0xcc, 0xc3, 0xa5, 0xef, 0xff, 0xfb, 0xfd, 0x7e, 0x3f, 0x5b, 0x65, 0x1d, 0x74,
+	0x95, 0x44, 0x59, 0xc1, 0x8b, 0xc5, 0xf0, 0xaf, 0xee, 0x31, 0xed, 0x89, 0x12, 0x8f, 0x08, 0x61,
+	0x6f, 0xaa, 0xff, 0x3b, 0x0d, 0xd6, 0xb0, 0x65, 0x35, 0xce, 0x08, 0x69, 0xb4, 0x42, 0xd2, 0x06,
+	0x66, 0x17, 0x8d, 0x33, 0x17, 0x07, 0x15, 0xcd, 0x6e, 0x2f, 0xec, 0x17, 0x4d, 0x99, 0x23, 0x78,
+	0x49, 0x99, 0xf2, 0x25, 0x65, 0x3e, 0xa2, 0x8e, 0x57, 0xdb, 0x0d, 0x8a, 0xf9, 0xed, 0x9f, 0xd2,
+	0xb6, 0xed, 0xf0, 0xf3, 0x6e, 0xd3, 0x6c, 0xd1, 0xb6, 0x7c, 0x17, 0xc9, 0x7f, 0x76, 0x98, 0x75,
+	0x51, 0xe5, 0x57, 0x1d, 0xc2, 0xc2, 0x00, 0x56, 0x5f, 0xc6, 0x96, 0x75, 0x44, 0x48, 0xfc, 0x9a,
+	0x38, 0x72, 0x31, 0x47, 0xcf, 0x34, 0xd0, 0x7d, 0xd2, 0xa6, 0x3d, 0xa2, 0x94, 0x31, 0x3b, 0x7d,
+	0x19, 0xab, 0x82, 0x6e, 0x44, 0x89, 0xc2, 0x8d, 0xa6, 0x63, 0x09, 0x19, 0xb7, 0xde, 0xb2, 0x1b,
+	0x35, 0xc7, 0xca, 0x70, 0x23, 0x96, 0xf1, 0xee, 0xdb, 0x77, 0x23, 0x52, 0xf2, 0x93, 0x06, 0x46,
+	0xe4, 0x06, 0x0b, 0x1f, 0xee, 0x36, 0xf1, 0x78, 0x83, 0x11, 0xd7, 0x25, 0xbe, 0x50, 0x33, 0x37,
+	0x7d, 0x35, 0xba, 0x30, 0xe5, 0x34, 0x26, 0x3c, 0x0d, 0xf9, 0x42, 0x45, 0x2f, 0x34, 0xd8, 0x4c,
+	0x78, 0x93, 0x22, 0xea, 0xbd, 0xe9, 0x8b, 0xda, 0x88, 0x2d, 0x52, 0xea, 0xf2, 0xa0, 0x9c, 0x6e,
+	0x94, 0x8f, 0xb9, 0x43, 0x59, 0xe1, 0x76, 0xa8, 0xaa, 0x9c, 0xf6, 0x7e, 0x38, 0x22, 0xa4, 0x1e,
+	0x00, 0xe5, 0x1b, 0x62, 0x5d, 0xed, 0x42, 0x08, 0x61, 0x88, 0xc3, 0x56, 0xa6, 0x0d, 0x92, 0x72,
+	0x7e, 0x22, 0xca, 0x52, 0x6a, 0x8d, 0x92, 0xf5, 0x47, 0x0d, 0x36, 0x14, 0x65, 0x36, 0xbb, 0x57,
+	0x91, 0xf3, 0x30, 0x7d, 0xe7, 0x8b, 0xc3, 0x46, 0xd4, 0x02, 0xba, 0xd0, 0xf5, 0x9f, 0x35, 0x28,
+	0xab, 0x6d, 0x48, 0x48, 0x5a, 0x98, 0xbe, 0xa4, 0x75, 0x85, 0x51, 0x7d, 0x55, 0x2e, 0x94, 0x52,
+	0x4d, 0x92, 0xdf, 0xcb, 0x9d, 0x89, 0xbe, 0x97, 0x7b, 0x4a, 0x07, 0xe4, 0x77, 0xe2, 0x43, 0x25,
+	0xcb, 0x02, 0x49, 0xb8, 0x38, 0x11, 0xa1, 0x91, 0x56, 0x9f, 0xe0, 0x1c, 0xe9, 0x5a, 0x62, 0xe2,
+	0x19, 0x6a, 0x4b, 0x23, 0x5d, 0x57, 0x0c, 0x0a, 0x27, 0xe1, 0x28, 0x39, 0x85, 0xae, 0x2b, 0x66,
+	0xd2, 0x71, 0x5d, 0x57, 0xd0, 0x45, 0x5d, 0x57, 0xc4, 0xa4, 0x77, 0xdd, 0x41, 0x89, 0xa2, 0x82,
+	0xfd, 0x5f, 0x96, 0x60, 0xf6, 0x98, 0xd9, 0xe8, 0x0c, 0xe6, 0xe3, 0x66, 0x81, 0x1e, 0xa4, 0xb6,
+	0xf9, 0xd1, 0xd1, 0x58, 0xff, 0x30, 0x1f, 0x58, 0xf0, 0xf5, 0x79, 0x6a, 0x8e, 0x95, 0x83, 0xa7,
+	0x3f, 0x53, 0xe7, 0xe0, 0x49, 0x4c, 0xda, 0xc8, 0x85, 0x85, 0xc4, 0x34, 0x8d, 0x76, 0xb2, 0x82,
+	0x47, 0xc6, 0x71, 0xdd, 0xcc, 0x0b, 0x97, 0x6c, 0x2d, 0xb8, 0x1d, 0xcd, 0xe2, 0xe8, 0x7e, 0x46,
+	0xec, 0xd0, 0x18, 0xaf, 0x3f, 0xc8, 0x85, 0x1d, 0x24, 0x09, 0x66, 0xf8, 0xb1, 0x24, 0x89, 0xf1,
+	0x7f, 0x2c, 0x49, 0x72, 0x29, 0x40, 0x14, 0xee, 0x24, 0xe7, 0x7e, 0x94, 0xe5, 0x84, 0x62, 0x75,
+	0xd0, 0xab, 0xb9, 0xf1, 0x92, 0xb0, 0x0b, 0x4b, 0x83, 0x1b, 0x03, 0xda, 0x1d, 0x9b, 0x62, 0x68,
+	0xf1, 0xd0, 0xf7, 0x26, 0x88, 0x90, 0xb4, 0x3f, 0x68, 0xb0, 0xac, 0xd8, 0x35, 0xd0, 0xc7, 0x63,
+	0x53, 0xa9, 0x96, 0x17, 0xfd, 0x60, 0xd2, 0xb0, 0x14, 0x19, 0x72, 0x5f, 0xc9, 0x2d, 0x63, 0x70,
+	0x01, 0xca, 0x2d, 0x63, 0x68, 0x2d, 0x0a, 0x7a, 0xdf, 0xaa, 0x7a, 0xe1, 0x41, 0x9f, 0xe6, 0x4c,
+	0x39, 0xb2, 0x47, 0xe9, 0x9f, 0xbd, 0x46, 0xa4, 0xd4, 0xf3, 0x5c, 0x83, 0xb5, 0x94, 0xb5, 0x09,
+	0x8d, 0x4f, 0x9b, 0xb6, 0x8f, 0xe9, 0x0f, 0x5f, 0x27, 0x54, 0x4a, 0x7a, 0xa6, 0xc1, 0x8a, 0x6a,
+	0x03, 0x43, 0x07, 0x39, 0x93, 0x0e, 0x2d, 0x75, 0xfa, 0x27, 0x13, 0xc7, 0x49, 0x25, 0x97, 0xf0,
+	0xfe, 0xd0, 0x0e, 0x85, 0xb2, 0x1e, 0x00, 0xf5, 0x4a, 0xa8, 0xef, 0x4f, 0x12, 0x22, 0x99, 0x7d,
+	0x58, 0x1c, 0xe8, 0x83, 0xa8, 0x9a, 0x9d, 0x64, 0x64, 0x91, 0xd3, 0x77, 0xf3, 0x07, 0x0c, 0x54,
+	0x9b, 0xec, 0x5d, 0xe3, 0xaa, 0x55, 0xb4, 0xe2, 0x71, 0xd5, 0xaa, 0x5a, 0x63, 0x8d, 0xbc, 0xbc,
+	0x36, 0xb4, 0x57, 0xd7, 0x86, 0xf6, 0xef, 0xb5, 0xa1, 0x3d, 0xbf, 0x31, 0x66, 0x5e, 0xdd, 0x18,
+	0x33, 0x7f, 0xdd, 0x18, 0x33, 0x50, 0x74, 0x68, 0x4a, 0xbe, 0x13, 0xed, 0x1b, 0x33, 0x31, 0x69,
+	0xf5, 0x41, 0x3b, 0x0e, 0x4d, 0x7c, 0xaa, 0x5e, 0xc6, 0xbf, 0x40, 0x35, 0xe7, 0xc2, 0x1f, 0x9e,
+	0x3e, 0xfa, 0x3f, 0x00, 0x00, 0xff, 0xff, 0xec, 0x17, 0x46, 0x90, 0x67, 0x13, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1332,11 +1444,7 @@ type MsgClient interface {
 	MarketManagePermissions(ctx context.Context, in *MsgMarketManagePermissionsRequest, opts ...grpc.CallOption) (*MsgMarketManagePermissionsResponse, error)
 	// MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it.
 	MarketManageReqAttrs(ctx context.Context, in *MsgMarketManageReqAttrsRequest, opts ...grpc.CallOption) (*MsgMarketManageReqAttrsResponse, error)
-	// CreateMarket reserves the next market id and submits a GovCreateMarket governance proposal to create the market.
-	CreateMarket(ctx context.Context, in *MsgCreateMarketRequest, opts ...grpc.CallOption) (*MsgCreateMarketResponse, error)
 	// GovCreateMarket is a governance proposal endpoint for creating a market.
-	// The CreateMarket endpoint should be used to submit one of these unless you don't need to know the market id until
-	// after the proposal passes.
 	GovCreateMarket(ctx context.Context, in *MsgGovCreateMarketRequest, opts ...grpc.CallOption) (*MsgGovCreateMarketResponse, error)
 	// GovManageFees is a governance proposal endpoint for updating a market's fees.
 	GovManageFees(ctx context.Context, in *MsgGovManageFeesRequest, opts ...grpc.CallOption) (*MsgGovManageFeesResponse, error)
@@ -1460,15 +1568,6 @@ func (c *msgClient) MarketManageReqAttrs(ctx context.Context, in *MsgMarketManag
 	return out, nil
 }
 
-func (c *msgClient) CreateMarket(ctx context.Context, in *MsgCreateMarketRequest, opts ...grpc.CallOption) (*MsgCreateMarketResponse, error) {
-	out := new(MsgCreateMarketResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Msg/CreateMarket", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *msgClient) GovCreateMarket(ctx context.Context, in *MsgGovCreateMarketRequest, opts ...grpc.CallOption) (*MsgGovCreateMarketResponse, error) {
 	out := new(MsgGovCreateMarketResponse)
 	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Msg/GovCreateMarket", in, out, opts...)
@@ -1522,11 +1621,7 @@ type MsgServer interface {
 	MarketManagePermissions(context.Context, *MsgMarketManagePermissionsRequest) (*MsgMarketManagePermissionsResponse, error)
 	// MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it.
 	MarketManageReqAttrs(context.Context, *MsgMarketManageReqAttrsRequest) (*MsgMarketManageReqAttrsResponse, error)
-	// CreateMarket reserves the next market id and submits a GovCreateMarket governance proposal to create the market.
-	CreateMarket(context.Context, *MsgCreateMarketRequest) (*MsgCreateMarketResponse, error)
 	// GovCreateMarket is a governance proposal endpoint for creating a market.
-	// The CreateMarket endpoint should be used to submit one of these unless you don't need to know the market id until
-	// after the proposal passes.
 	GovCreateMarket(context.Context, *MsgGovCreateMarketRequest) (*MsgGovCreateMarketResponse, error)
 	// GovManageFees is a governance proposal endpoint for updating a market's fees.
 	GovManageFees(context.Context, *MsgGovManageFeesRequest) (*MsgGovManageFeesResponse, error)
@@ -1573,9 +1668,6 @@ func (*UnimplementedMsgServer) MarketManagePermissions(ctx context.Context, req 
 }
 func (*UnimplementedMsgServer) MarketManageReqAttrs(ctx context.Context, req *MsgMarketManageReqAttrsRequest) (*MsgMarketManageReqAttrsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MarketManageReqAttrs not implemented")
-}
-func (*UnimplementedMsgServer) CreateMarket(ctx context.Context, req *MsgCreateMarketRequest) (*MsgCreateMarketResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateMarket not implemented")
 }
 func (*UnimplementedMsgServer) GovCreateMarket(ctx context.Context, req *MsgGovCreateMarketRequest) (*MsgGovCreateMarketResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GovCreateMarket not implemented")
@@ -1807,24 +1899,6 @@ func _Msg_MarketManageReqAttrs_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_CreateMarket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreateMarketRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).CreateMarket(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Msg/CreateMarket",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateMarket(ctx, req.(*MsgCreateMarketRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Msg_GovCreateMarket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgGovCreateMarketRequest)
 	if err := dec(in); err != nil {
@@ -1930,10 +2004,6 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MarketManageReqAttrs",
 			Handler:    _Msg_MarketManageReqAttrs_Handler,
-		},
-		{
-			MethodName: "CreateMarket",
-			Handler:    _Msg_CreateMarket_Handler,
 		},
 		{
 			MethodName: "GovCreateMarket",
@@ -2504,52 +2574,6 @@ func (m *MsgMarketManageReqAttrsResponse) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgCreateMarketRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgCreateMarketRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgCreateMarketRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgCreateMarketResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgCreateMarketResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgCreateMarketResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
 func (m *MsgGovCreateMarketRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2570,6 +2594,23 @@ func (m *MsgGovCreateMarketRequest) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
+	{
+		size, err := m.Market.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -2616,6 +2657,181 @@ func (m *MsgGovManageFeesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	_ = i
 	var l int
 	_ = l
+	if len(m.RemoveFeeSettlementBuyerRatios) > 0 {
+		for iNdEx := len(m.RemoveFeeSettlementBuyerRatios) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RemoveFeeSettlementBuyerRatios[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x6a
+		}
+	}
+	if len(m.AddFeeSettlementBuyerRatios) > 0 {
+		for iNdEx := len(m.AddFeeSettlementBuyerRatios) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.AddFeeSettlementBuyerRatios[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x62
+		}
+	}
+	if len(m.RemoveFeeSettlementBuyerFlat) > 0 {
+		for iNdEx := len(m.RemoveFeeSettlementBuyerFlat) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RemoveFeeSettlementBuyerFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x5a
+		}
+	}
+	if len(m.AddFeeSettlementBuyerFlat) > 0 {
+		for iNdEx := len(m.AddFeeSettlementBuyerFlat) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.AddFeeSettlementBuyerFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x52
+		}
+	}
+	if len(m.RemoveFeeSettlementSellerRatios) > 0 {
+		for iNdEx := len(m.RemoveFeeSettlementSellerRatios) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RemoveFeeSettlementSellerRatios[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x4a
+		}
+	}
+	if len(m.AddFeeSettlementSellerRatios) > 0 {
+		for iNdEx := len(m.AddFeeSettlementSellerRatios) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.AddFeeSettlementSellerRatios[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x42
+		}
+	}
+	if len(m.RemoveFeeSettlementSellerFlat) > 0 {
+		for iNdEx := len(m.RemoveFeeSettlementSellerFlat) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RemoveFeeSettlementSellerFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x3a
+		}
+	}
+	if len(m.AddFeeSettlementSellerFlat) > 0 {
+		for iNdEx := len(m.AddFeeSettlementSellerFlat) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.AddFeeSettlementSellerFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x32
+		}
+	}
+	if len(m.RemoveFeeCreateBidFlat) > 0 {
+		for iNdEx := len(m.RemoveFeeCreateBidFlat) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RemoveFeeCreateBidFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.AddFeeCreateBidFlat) > 0 {
+		for iNdEx := len(m.AddFeeCreateBidFlat) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.AddFeeCreateBidFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if len(m.RemoveFeeCreateAskFlat) > 0 {
+		for iNdEx := len(m.RemoveFeeCreateAskFlat) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RemoveFeeCreateAskFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.AddFeeCreateAskFlat) > 0 {
+		for iNdEx := len(m.AddFeeCreateAskFlat) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.AddFeeCreateAskFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -2662,6 +2878,23 @@ func (m *MsgGovUpdateParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
+	{
+		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -2915,30 +3148,18 @@ func (m *MsgMarketManageReqAttrsResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgCreateMarketRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *MsgCreateMarketResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
 func (m *MsgGovCreateMarketRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Market.Size()
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -2957,6 +3178,82 @@ func (m *MsgGovManageFeesRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.AddFeeCreateAskFlat) > 0 {
+		for _, e := range m.AddFeeCreateAskFlat {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if len(m.RemoveFeeCreateAskFlat) > 0 {
+		for _, e := range m.RemoveFeeCreateAskFlat {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if len(m.AddFeeCreateBidFlat) > 0 {
+		for _, e := range m.AddFeeCreateBidFlat {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if len(m.RemoveFeeCreateBidFlat) > 0 {
+		for _, e := range m.RemoveFeeCreateBidFlat {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if len(m.AddFeeSettlementSellerFlat) > 0 {
+		for _, e := range m.AddFeeSettlementSellerFlat {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if len(m.RemoveFeeSettlementSellerFlat) > 0 {
+		for _, e := range m.RemoveFeeSettlementSellerFlat {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if len(m.AddFeeSettlementSellerRatios) > 0 {
+		for _, e := range m.AddFeeSettlementSellerRatios {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if len(m.RemoveFeeSettlementSellerRatios) > 0 {
+		for _, e := range m.RemoveFeeSettlementSellerRatios {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if len(m.AddFeeSettlementBuyerFlat) > 0 {
+		for _, e := range m.AddFeeSettlementBuyerFlat {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if len(m.RemoveFeeSettlementBuyerFlat) > 0 {
+		for _, e := range m.RemoveFeeSettlementBuyerFlat {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if len(m.AddFeeSettlementBuyerRatios) > 0 {
+		for _, e := range m.AddFeeSettlementBuyerRatios {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if len(m.RemoveFeeSettlementBuyerRatios) > 0 {
+		for _, e := range m.RemoveFeeSettlementBuyerRatios {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -2975,6 +3272,12 @@ func (m *MsgGovUpdateParamsRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Params.Size()
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -4193,106 +4496,6 @@ func (m *MsgMarketManageReqAttrsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgCreateMarketRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgCreateMarketRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgCreateMarketRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgCreateMarketResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgCreateMarketResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgCreateMarketResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *MsgGovCreateMarketRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -4322,6 +4525,71 @@ func (m *MsgGovCreateMarketRequest) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgGovCreateMarketRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Market", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Market.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -4422,6 +4690,446 @@ func (m *MsgGovManageFeesRequest) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgGovManageFeesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AddFeeCreateAskFlat", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AddFeeCreateAskFlat = append(m.AddFeeCreateAskFlat, types.Coin{})
+			if err := m.AddFeeCreateAskFlat[len(m.AddFeeCreateAskFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RemoveFeeCreateAskFlat", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RemoveFeeCreateAskFlat = append(m.RemoveFeeCreateAskFlat, types.Coin{})
+			if err := m.RemoveFeeCreateAskFlat[len(m.RemoveFeeCreateAskFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AddFeeCreateBidFlat", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AddFeeCreateBidFlat = append(m.AddFeeCreateBidFlat, types.Coin{})
+			if err := m.AddFeeCreateBidFlat[len(m.AddFeeCreateBidFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RemoveFeeCreateBidFlat", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RemoveFeeCreateBidFlat = append(m.RemoveFeeCreateBidFlat, types.Coin{})
+			if err := m.RemoveFeeCreateBidFlat[len(m.RemoveFeeCreateBidFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AddFeeSettlementSellerFlat", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AddFeeSettlementSellerFlat = append(m.AddFeeSettlementSellerFlat, types.Coin{})
+			if err := m.AddFeeSettlementSellerFlat[len(m.AddFeeSettlementSellerFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RemoveFeeSettlementSellerFlat", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RemoveFeeSettlementSellerFlat = append(m.RemoveFeeSettlementSellerFlat, types.Coin{})
+			if err := m.RemoveFeeSettlementSellerFlat[len(m.RemoveFeeSettlementSellerFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AddFeeSettlementSellerRatios", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AddFeeSettlementSellerRatios = append(m.AddFeeSettlementSellerRatios, FeeRatio{})
+			if err := m.AddFeeSettlementSellerRatios[len(m.AddFeeSettlementSellerRatios)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RemoveFeeSettlementSellerRatios", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RemoveFeeSettlementSellerRatios = append(m.RemoveFeeSettlementSellerRatios, FeeRatio{})
+			if err := m.RemoveFeeSettlementSellerRatios[len(m.RemoveFeeSettlementSellerRatios)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AddFeeSettlementBuyerFlat", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AddFeeSettlementBuyerFlat = append(m.AddFeeSettlementBuyerFlat, types.Coin{})
+			if err := m.AddFeeSettlementBuyerFlat[len(m.AddFeeSettlementBuyerFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RemoveFeeSettlementBuyerFlat", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RemoveFeeSettlementBuyerFlat = append(m.RemoveFeeSettlementBuyerFlat, types.Coin{})
+			if err := m.RemoveFeeSettlementBuyerFlat[len(m.RemoveFeeSettlementBuyerFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AddFeeSettlementBuyerRatios", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AddFeeSettlementBuyerRatios = append(m.AddFeeSettlementBuyerRatios, FeeRatio{})
+			if err := m.AddFeeSettlementBuyerRatios[len(m.AddFeeSettlementBuyerRatios)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RemoveFeeSettlementBuyerRatios", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RemoveFeeSettlementBuyerRatios = append(m.RemoveFeeSettlementBuyerRatios, FeeRatio{})
+			if err := m.RemoveFeeSettlementBuyerRatios[len(m.RemoveFeeSettlementBuyerRatios)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -4522,6 +5230,71 @@ func (m *MsgGovUpdateParamsRequest) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgGovUpdateParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
