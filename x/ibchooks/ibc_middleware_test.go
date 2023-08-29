@@ -7,10 +7,9 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	"github.com/provenance-io/provenance/testutil"
+	testutil "github.com/provenance-io/provenance/testutil/ibc"
 	"github.com/provenance-io/provenance/x/ibchooks"
 	"github.com/provenance-io/provenance/x/ibchooks/keeper"
-	"github.com/provenance-io/provenance/x/ibchooks/osmoutils"
 
 	"github.com/stretchr/testify/suite"
 
@@ -250,8 +249,8 @@ func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, pr
 
 func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 	// Setup contract
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
+	codeId := suite.chainA.StoreContractEchoDirect(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", codeId)
 
 	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"echo": {"msg": "test"} } } }`, addr))
 	ackStr := string(ackBytes)
@@ -266,11 +265,11 @@ func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 // After successfully executing a wasm call, the contract should have the funds sent via IBC
 func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 	// Setup contract
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
+	codeId := suite.chainA.StoreContractEchoDirect(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", codeId)
 
 	// Check that the contract has no funds
-	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	localDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 
@@ -292,11 +291,11 @@ func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 // If the wasm call wails, the contract acknowledgement should be an error and the funds returned
 func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	// Setup contract
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
+	codeId := suite.chainA.StoreContractEchoDirect(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", codeId)
 
 	// Check that the contract has no funds
-	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	localDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 
@@ -360,11 +359,11 @@ func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
 // After successfully executing a wasm call, the contract should have the funds sent via IBC
 func (suite *HooksTestSuite) TestFundTracking() {
 	// Setup contract
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/counter.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, 1)
+	codeId := suite.chainA.StoreContractCounterDirect(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, codeId)
 
 	// Check that the contract has no funds
-	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	localDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 
@@ -486,8 +485,8 @@ func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Re
 }
 
 func (suite *HooksTestSuite) TestAcks() {
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/counter.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, 1)
+	codeId := suite.chainA.StoreContractCounterDirect(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, codeId)
 
 	// Generate swap instructions for the contract
 	callbackMemo := fmt.Sprintf(`{"ibc_callback":"%s"}`, addr)

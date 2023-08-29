@@ -1,4 +1,4 @@
-package testutil
+package ibc
 
 import (
 	"encoding/json"
@@ -14,6 +14,9 @@ import (
 	"github.com/cosmos/ibc-go/v6/testing/simapp/helpers"
 
 	provenanceapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil/contracts"
+
+	"github.com/stretchr/testify/suite"
 )
 
 type TestChain struct {
@@ -23,6 +26,34 @@ type TestChain struct {
 func SetupTestingApp(t *testing.T) (ibctesting.TestingApp, map[string]json.RawMessage) {
 	provenanceApp := provenanceapp.Setup(t)
 	return provenanceApp, provenanceapp.NewDefaultGenesisState(provenanceApp.AppCodec())
+}
+
+func (chain *TestChain) StoreContractCounterDirect(suite *suite.Suite) uint64 {
+	codeID, err := contracts.StoreContractCode(chain.GetProvenanceApp(), chain.GetContext(), contracts.CounterWasm())
+	suite.Require().NoError(err, "counter contract direct code load failed", err)
+	println("loaded counter contract with code id: ", codeID)
+	return codeID
+}
+
+func (chain *TestChain) StoreContractEchoDirect(suite *suite.Suite) uint64 {
+	codeID, err := contracts.StoreContractCode(chain.GetProvenanceApp(), chain.GetContext(), contracts.EchoWasm())
+	suite.Require().NoError(err, "echo contract direct code load failed", err)
+	println("loaded echo contract with code id: ", codeID)
+	return codeID
+}
+
+func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, codeID uint64) sdk.AccAddress {
+	addr, err := contracts.InstantiateContract(chain.GetProvenanceApp(), chain.GetContext(), msg, codeID)
+	suite.Require().NoError(err, "contract instantiation failed", err)
+	println("instantiated contract '", codeID, "' with address: ", addr)
+	return addr
+}
+
+func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddress, key []byte) string {
+	state, err := contracts.QueryContract(chain.GetProvenanceApp(), chain.GetContext(), contract, key)
+	suite.Require().NoError(err, "contract query failed", err)
+	println("got query result of ", string(state))
+	return string(state)
 }
 
 // SendMsgsNoCheck is an alternative to ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller
