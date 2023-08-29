@@ -178,7 +178,7 @@ func TestMsgGovCreateMarketRequest_ValidateBasic(t *testing.T) {
 		},
 		AcceptingOrders:     true,
 		AllowUserSettlement: true,
-		AccessGrants: []*AccessGrant{
+		AccessGrants: []AccessGrant{
 			{
 				Address:     sdk.AccAddress("just_some_addr______").String(),
 				Permissions: AllPermissions(),

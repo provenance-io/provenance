@@ -59,7 +59,7 @@ func TestMarket_Validate(t *testing.T) {
 				},
 				AcceptingOrders:     true,
 				AllowUserSettlement: true,
-				AccessGrants: []*AccessGrant{
+				AccessGrants: []AccessGrant{
 					{Address: addr1, Permissions: AllPermissions()},
 					{Address: addr2, Permissions: []Permission{Permission_settle}},
 				},
@@ -121,7 +121,7 @@ func TestMarket_Validate(t *testing.T) {
 		},
 		{
 			name:   "invalid access grants",
-			market: Market{AccessGrants: []*AccessGrant{{Address: "bad_addr", Permissions: AllPermissions()}}},
+			market: Market{AccessGrants: []AccessGrant{{Address: "bad_addr", Permissions: AllPermissions()}}},
 			expErr: []string{"invalid access grant: invalid address: decoding bech32 failed: invalid separator index -1"},
 		},
 		{
@@ -144,7 +144,7 @@ func TestMarket_Validate(t *testing.T) {
 				FeeSettlementBuyerFlat:    sdk.Coins{coin(-1, "leela")},
 				FeeSettlementSellerRatios: []FeeRatio{{Price: coin(10, "fry"), Fee: coin(1, "fry")}},
 				FeeSettlementBuyerRatios:  []FeeRatio{{Price: coin(100, "leela"), Fee: coin(1, "leela")}},
-				AccessGrants:              []*AccessGrant{{Address: "bad_addr", Permissions: AllPermissions()}},
+				AccessGrants:              []AccessGrant{{Address: "bad_addr", Permissions: AllPermissions()}},
 				ReqAttrCreateAsk:          []string{"this-attr-is-bad"},
 				ReqAttrCreateBid:          []string{"this-attr-grrrr"},
 			},
@@ -1509,7 +1509,7 @@ func TestValidateAccessGrants(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		grants []*AccessGrant
+		grants []AccessGrant
 		exp    string
 	}{
 		{
@@ -1519,17 +1519,12 @@ func TestValidateAccessGrants(t *testing.T) {
 		},
 		{
 			name:   "empty grants",
-			grants: []*AccessGrant{},
+			grants: []AccessGrant{},
 			exp:    "",
 		},
 		{
-			name:   "nil entry",
-			grants: []*AccessGrant{nil},
-			exp:    "nil access grant not allowed",
-		},
-		{
 			name: "duplicate address",
-			grants: []*AccessGrant{
+			grants: []AccessGrant{
 				{Address: addrDup, Permissions: []Permission{Permission_settle}},
 				{Address: addrDup, Permissions: []Permission{Permission_cancel}},
 			},
@@ -1537,7 +1532,7 @@ func TestValidateAccessGrants(t *testing.T) {
 		},
 		{
 			name: "three entries: all valid",
-			grants: []*AccessGrant{
+			grants: []AccessGrant{
 				{Address: addr1, Permissions: AllPermissions()},
 				{Address: addr2, Permissions: AllPermissions()},
 				{Address: addr3, Permissions: AllPermissions()},
@@ -1546,7 +1541,7 @@ func TestValidateAccessGrants(t *testing.T) {
 		},
 		{
 			name: "three entries: invalid first",
-			grants: []*AccessGrant{
+			grants: []AccessGrant{
 				{Address: addr1, Permissions: []Permission{-1}},
 				{Address: addr2, Permissions: AllPermissions()},
 				{Address: addr3, Permissions: AllPermissions()},
@@ -1555,7 +1550,7 @@ func TestValidateAccessGrants(t *testing.T) {
 		},
 		{
 			name: "three entries: invalid second",
-			grants: []*AccessGrant{
+			grants: []AccessGrant{
 				{Address: addr1, Permissions: AllPermissions()},
 				{Address: addr2, Permissions: []Permission{-1}},
 				{Address: addr3, Permissions: AllPermissions()},
@@ -1564,7 +1559,7 @@ func TestValidateAccessGrants(t *testing.T) {
 		},
 		{
 			name: "three entries: invalid second",
-			grants: []*AccessGrant{
+			grants: []AccessGrant{
 				{Address: addr1, Permissions: AllPermissions()},
 				{Address: addr2, Permissions: AllPermissions()},
 				{Address: addr3, Permissions: []Permission{-1}},
@@ -1573,7 +1568,7 @@ func TestValidateAccessGrants(t *testing.T) {
 		},
 		{
 			name: "three entries: only valid first",
-			grants: []*AccessGrant{
+			grants: []AccessGrant{
 				{Address: addr1, Permissions: AllPermissions()},
 				{Address: addr2, Permissions: []Permission{0}},
 				{Address: addr3, Permissions: []Permission{-1}},
@@ -1585,7 +1580,7 @@ func TestValidateAccessGrants(t *testing.T) {
 		},
 		{
 			name: "three entries: only valid second",
-			grants: []*AccessGrant{
+			grants: []AccessGrant{
 				{Address: addr1, Permissions: []Permission{0}},
 				{Address: addr2, Permissions: AllPermissions()},
 				{Address: addr3, Permissions: []Permission{-1}},
@@ -1597,7 +1592,7 @@ func TestValidateAccessGrants(t *testing.T) {
 		},
 		{
 			name: "three entries: only valid third",
-			grants: []*AccessGrant{
+			grants: []AccessGrant{
 				{Address: addr1, Permissions: []Permission{0}},
 				{Address: addr2, Permissions: []Permission{-1}},
 				{Address: addr3, Permissions: AllPermissions()},
@@ -1609,7 +1604,7 @@ func TestValidateAccessGrants(t *testing.T) {
 		},
 		{
 			name: "three entries: all same address",
-			grants: []*AccessGrant{
+			grants: []AccessGrant{
 				{Address: addrDup, Permissions: AllPermissions()},
 				{Address: addrDup, Permissions: AllPermissions()},
 				{Address: addrDup, Permissions: AllPermissions()},

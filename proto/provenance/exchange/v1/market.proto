@@ -76,7 +76,7 @@ message Market {
   // The MarketSettle endpoint is only available to market actors regardless of the value of this field.
   bool allow_user_settlement = 10;
   // access_grants is the list of addresses and permissions granted for this market.
-  repeated AccessGrant access_grants = 11;
+  repeated AccessGrant access_grants = 11 [(gogoproto.nullable) = false];
   // req_attr_create_ask is a list of attributes required on an account for it to be allowed to create an ask order.
   //
   // An entry that starts with "*." will match any attributes that end with the rest of it.

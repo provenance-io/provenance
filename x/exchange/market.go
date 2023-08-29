@@ -302,15 +302,11 @@ func ValidateAddRemoveFeeOptions(field string, toAdd, toRemove []sdk.Coin) error
 }
 
 // ValidateAccessGrants returns an error if any of the provided access grants are invalid.
-func ValidateAccessGrants(accessGrants []*AccessGrant) error {
+func ValidateAccessGrants(accessGrants []AccessGrant) error {
 	errs := make([]error, len(accessGrants))
 	seen := make(map[string]bool)
 	dups := make(map[string]bool)
 	for i, ag := range accessGrants {
-		if ag == nil {
-			errs[i] = errors.New("nil access grant not allowed")
-			continue
-		}
 		if seen[ag.Address] && !dups[ag.Address] {
 			errs[i] = fmt.Errorf("%s appears in multiple access grant entries", ag.Address)
 			dups[ag.Address] = true
