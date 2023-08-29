@@ -181,28 +181,22 @@ message MsgGovManageFeesRequest {
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // add_fee_create_ask_flat are the create ask flat fee options to add.
-  repeated cosmos.base.v1beta1.Coin add_fee_create_ask_flat = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin add_fee_create_ask_flat = 2 [(gogoproto.nullable) = false];
 
   // remove_fee_create_ask_flat are the create ask flat fee options to remove.
-  repeated cosmos.base.v1beta1.Coin remove_fee_create_ask_flat = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin remove_fee_create_ask_flat = 3 [(gogoproto.nullable) = false];
 
   // add_fee_create_bid_flat are the create bid flat fee options to add.
-  repeated cosmos.base.v1beta1.Coin add_fee_create_bid_flat = 4
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin add_fee_create_bid_flat = 4 [(gogoproto.nullable) = false];
 
   // remove_fee_create_bid_flat are the create bid flat fee options to remove.
-  repeated cosmos.base.v1beta1.Coin remove_fee_create_bid_flat = 5
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin remove_fee_create_bid_flat = 5 [(gogoproto.nullable) = false];
 
   // add_fee_settlement_seller_flat are the seller settlement flat fee options to add.
-  repeated cosmos.base.v1beta1.Coin add_fee_settlement_seller_flat = 6
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin add_fee_settlement_seller_flat = 6 [(gogoproto.nullable) = false];
 
   // remove_fee_settlement_seller_flat are the seller settlement flat fee options to remove.
-  repeated cosmos.base.v1beta1.Coin remove_fee_settlement_seller_flat = 7
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin remove_fee_settlement_seller_flat = 7 [(gogoproto.nullable) = false];
 
   // add_fee_settlement_seller_ratios are the seller settlement fee ratios to add.
   repeated FeeRatio add_fee_settlement_seller_ratios = 8 [(gogoproto.nullable) = false];
@@ -211,12 +205,10 @@ message MsgGovManageFeesRequest {
   repeated FeeRatio remove_fee_settlement_seller_ratios = 9 [(gogoproto.nullable) = false];
 
   // add_fee_settlement_buyer_flat are the buyer settlement flat fee options to add.
-  repeated cosmos.base.v1beta1.Coin add_fee_settlement_buyer_flat = 10
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin add_fee_settlement_buyer_flat = 10 [(gogoproto.nullable) = false];
 
   // remove_fee_settlement_buyer_flat are the buyer settlement flat fee options to remove.
-  repeated cosmos.base.v1beta1.Coin remove_fee_settlement_buyer_flat = 11
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin remove_fee_settlement_buyer_flat = 11 [(gogoproto.nullable) = false];
 
   // add_fee_settlement_buyer_ratios are the buyer settlement fee ratios to add.
   repeated FeeRatio add_fee_settlement_buyer_ratios = 12 [(gogoproto.nullable) = false];

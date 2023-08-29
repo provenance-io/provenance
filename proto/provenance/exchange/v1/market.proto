@@ -49,26 +49,22 @@ message Market {
   // fee_create_ask_flat is the flat fee charged for creating an ask order.
   // Each coin entry is a separate option. When an ask is created, one of these must be paid.
   // If empty, no fee is required to create an ask order.
-  repeated cosmos.base.v1beta1.Coin fee_create_ask_flat = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin fee_create_ask_flat = 3 [(gogoproto.nullable) = false];
   // fee_create_bid_flat is the flat fee charged for creating a bid order.
   // Each coin entry is a separate option. When a bid is created, one of these must be paid.
   // If empty, no fee is required to create a bid order.
-  repeated cosmos.base.v1beta1.Coin fee_create_bid_flat = 4
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin fee_create_bid_flat = 4 [(gogoproto.nullable) = false];
   // fee_settlement_seller_flat is the flat fee charged to the seller during settlement.
   // Each coin entry is a separate option.
   // When an ask is settled, the seller will pay the amount in the denom that matches the price they received.
-  repeated cosmos.base.v1beta1.Coin fee_settlement_seller_flat = 5
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin fee_settlement_seller_flat = 5 [(gogoproto.nullable) = false];
   // fee_settlement_seller_ratios is the fee to charge a seller during settlement based on the price they are receiving.
   // The price and fee denoms must be equal for each entry, and only one entry for any given denom is allowed.
   repeated FeeRatio fee_settlement_seller_ratios = 6 [(gogoproto.nullable) = false];
   // fee_settlement_buyer_flat is the flat fee charged to the buyer during settlement.
   // Each coin entry is a separate option.
   // When a bid is created, the settlement fees provided must contain one of these.
-  repeated cosmos.base.v1beta1.Coin fee_settlement_buyer_flat = 7
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin fee_settlement_buyer_flat = 7 [(gogoproto.nullable) = false];
   // fee_settlement_buyer_ratios is the fee to charge a buyer during settlement based on the price they are spending.
   // The price and fee denoms do not have to equal. Multiple entries for any given price or fee denom are allowed, but
   // each price denom to fee denom pair can only have one entry.
