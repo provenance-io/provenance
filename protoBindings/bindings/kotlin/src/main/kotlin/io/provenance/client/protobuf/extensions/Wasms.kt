@@ -1,7 +1,8 @@
 package io.provenance.client.protobuf.extensions
 
 import cosmwasm.wasm.v1.QueryOuterClass
-import cosmwasm.wasm.v1.QueryGrpc.QueryBlockingStub as Wasms
+import cosmwasm.wasm.v1.QueryGrpc.QueryBlockingStub as BlockingWasms
+import cosmwasm.wasm.v1.QueryGrpcKt.QueryCoroutineStub as CoroutineWasms
 
 /**
  * Query wasm
@@ -11,7 +12,18 @@ import cosmwasm.wasm.v1.QueryGrpc.QueryBlockingStub as Wasms
  *  @param request
  *  @return [QueryOuterClass.QuerySmartContractStateResponse].
  */
-fun Wasms.queryWasm(request: QueryOuterClass.QuerySmartContractStateRequest): QueryOuterClass.QuerySmartContractStateResponse =
+fun BlockingWasms.queryWasm(request: QueryOuterClass.QuerySmartContractStateRequest): QueryOuterClass.QuerySmartContractStateResponse =
+    smartContractState(request)
+
+/**
+ * Query wasm
+ *
+ * See [Wasms](https://github.com/FigureTechnologies/service-wallet/blob/v45/pb-client/src/main/kotlin/com/figure/wallet/pbclient/client/grpc/Wasms.kt#L22).
+ *
+ *  @param request
+ *  @return [QueryOuterClass.QuerySmartContractStateResponse].
+ */
+suspend fun CoroutineWasms.queryWasm(request: QueryOuterClass.QuerySmartContractStateRequest): QueryOuterClass.QuerySmartContractStateResponse =
     smartContractState(request)
 
 /**
@@ -22,7 +34,18 @@ fun Wasms.queryWasm(request: QueryOuterClass.QuerySmartContractStateRequest): Qu
  * @param request
  * @return [QueryOuterClass.QueryContractInfoResponse].
  */
-fun Wasms.getContractInfo(request: QueryOuterClass.QueryContractInfoRequest): QueryOuterClass.QueryContractInfoResponse =
+fun BlockingWasms.getContractInfo(request: QueryOuterClass.QueryContractInfoRequest): QueryOuterClass.QueryContractInfoResponse =
+    contractInfo(request)
+
+/**
+ * Get contract information.
+ *
+ * See [Wasms](https://github.com/FigureTechnologies/service-wallet/blob/v45/pb-client/src/main/kotlin/com/figure/wallet/pbclient/client/grpc/Wasms.kt#L25).
+ *
+ * @param request
+ * @return [QueryOuterClass.QueryContractInfoResponse].
+ */
+suspend fun CoroutineWasms.getContractInfo(request: QueryOuterClass.QueryContractInfoRequest): QueryOuterClass.QueryContractInfoResponse =
     contractInfo(request)
 
 /**
@@ -33,7 +56,18 @@ fun Wasms.getContractInfo(request: QueryOuterClass.QueryContractInfoRequest): Qu
  * @param request
  * @return [QueryOuterClass.QueryContractHistoryResponse].
  */
-fun Wasms.getContractHistory(request: QueryOuterClass.QueryContractHistoryRequest): QueryOuterClass.QueryContractHistoryResponse =
+fun BlockingWasms.getContractHistory(request: QueryOuterClass.QueryContractHistoryRequest): QueryOuterClass.QueryContractHistoryResponse =
+    contractHistory(request)
+
+/**
+ * Get contract history.
+ *
+ * See [Wasms](https://github.com/FigureTechnologies/service-wallet/blob/v45/pb-client/src/main/kotlin/com/figure/wallet/pbclient/client/grpc/Wasms.kt#L28).
+ *
+ * @param request
+ * @return [QueryOuterClass.QueryContractHistoryResponse].
+ */
+suspend fun CoroutineWasms.getContractHistory(request: QueryOuterClass.QueryContractHistoryRequest): QueryOuterClass.QueryContractHistoryResponse =
     contractHistory(request)
 
 /**
@@ -44,7 +78,18 @@ fun Wasms.getContractHistory(request: QueryOuterClass.QueryContractHistoryReques
  * @param request
  * @Return [QueryOuterClass.QueryContractsByCodeResponse].
  */
-fun Wasms.getContractsByCode(request: QueryOuterClass.QueryContractsByCodeRequest): QueryOuterClass.QueryContractsByCodeResponse =
+fun BlockingWasms.getContractsByCode(request: QueryOuterClass.QueryContractsByCodeRequest): QueryOuterClass.QueryContractsByCodeResponse =
+    contractsByCode(request)
+
+/**
+ * Get contracts by code.
+ *
+ * See [Wasms](https://github.com/FigureTechnologies/service-wallet/blob/v45/pb-client/src/main/kotlin/com/figure/wallet/pbclient/client/grpc/Wasms.kt#L31).
+ *
+ * @param request
+ * @Return [QueryOuterClass.QueryContractsByCodeResponse].
+ */
+suspend fun CoroutineWasms.getContractsByCode(request: QueryOuterClass.QueryContractsByCodeRequest): QueryOuterClass.QueryContractsByCodeResponse =
     contractsByCode(request)
 
 /**
@@ -55,7 +100,17 @@ fun Wasms.getContractsByCode(request: QueryOuterClass.QueryContractsByCodeReques
  * @param request
  * @return [QueryOuterClass.QueryCodesResponse].
  */
-fun Wasms.getCode(request: QueryOuterClass.QueryCodeRequest): QueryOuterClass.QueryCodeResponse = code(request)
+fun BlockingWasms.getCode(request: QueryOuterClass.QueryCodeRequest): QueryOuterClass.QueryCodeResponse = code(request)
+
+/**
+ * Get code.
+ *
+ * See [Wasms](https://github.com/FigureTechnologies/service-wallet/blob/v45/pb-client/src/main/kotlin/com/figure/wallet/pbclient/client/grpc/Wasms.kt#L34).
+ *
+ * @param request
+ * @return [QueryOuterClass.QueryCodesResponse].
+ */
+suspend fun CoroutineWasms.getCode(request: QueryOuterClass.QueryCodeRequest): QueryOuterClass.QueryCodeResponse = code(request)
 
 /**
  * Get codes.
@@ -65,4 +120,14 @@ fun Wasms.getCode(request: QueryOuterClass.QueryCodeRequest): QueryOuterClass.Qu
  * @param request
  * @return [QueryOuterClass.QueryCodesResponse].
  */
-fun Wasms.getCodes(request: QueryOuterClass.QueryCodesRequest): QueryOuterClass.QueryCodesResponse = codes(request)
+fun BlockingWasms.getCodes(request: QueryOuterClass.QueryCodesRequest): QueryOuterClass.QueryCodesResponse = codes(request)
+
+/**
+ * Get codes.
+ *
+ * See [Wasms](https://github.com/FigureTechnologies/service-wallet/blob/v45/pb-client/src/main/kotlin/com/figure/wallet/pbclient/client/grpc/Wasms.kt#L36).
+ *
+ * @param request
+ * @return [QueryOuterClass.QueryCodesResponse].
+ */
+suspend fun CoroutineWasms.getCodes(request: QueryOuterClass.QueryCodesRequest): QueryOuterClass.QueryCodesResponse = codes(request)

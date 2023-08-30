@@ -9,7 +9,8 @@ import io.provenance.marker.v1.QueryEscrowRequest
 import io.provenance.marker.v1.QueryHoldingRequest
 import io.provenance.marker.v1.QueryHoldingResponse
 import io.provenance.marker.v1.QueryMarkerRequest
-import io.provenance.marker.v1.QueryGrpc.QueryBlockingStub as Markers
+import io.provenance.marker.v1.QueryGrpc.QueryBlockingStub as BlockingMarkers
+import io.provenance.marker.v1.QueryGrpcKt.QueryCoroutineStub as CoroutineMarkers
 
 /**
  * Get a marker account by ID.
@@ -19,7 +20,23 @@ import io.provenance.marker.v1.QueryGrpc.QueryBlockingStub as Markers
  * @param id The identifier of the marker account.
  * @return [MarkerAccount]
  */
-fun Markers.getMarkerAccount(id: String): MarkerAccount =
+fun BlockingMarkers.getMarkerAccount(id: String): MarkerAccount =
+    marker(QueryMarkerRequest.newBuilder().setId(id).build()).marker.run {
+        when {
+            this.`is`(MarkerAccount::class.java) -> unpack(MarkerAccount::class.java)
+            else -> throw IllegalArgumentException("Marker type not handled:$typeUrl")
+        }
+    }
+
+/**
+ * Get a marker account by ID.
+ *
+ * See [Markers](https://github.com/FigureTechnologies/service-wallet/blob/v45/pb-client/src/main/kotlin/com/figure/wallet/pbclient/client/grpc/Markers.kt#L17).
+ *
+ * @param id The identifier of the marker account.
+ * @return [MarkerAccount]
+ */
+suspend fun CoroutineMarkers.getMarkerAccount(id: String): MarkerAccount =
     marker(QueryMarkerRequest.newBuilder().setId(id).build()).marker.run {
         when {
             this.`is`(MarkerAccount::class.java) -> unpack(MarkerAccount::class.java)
@@ -35,7 +52,18 @@ fun Markers.getMarkerAccount(id: String): MarkerAccount =
  * @param denom The denomination.
  * @return [Bank.Metadata]
  */
-fun Markers.getMarkerMetadata(denom: String): Bank.Metadata =
+fun BlockingMarkers.getMarkerMetadata(denom: String): Bank.Metadata =
+    denomMetadata(QueryDenomMetadataRequest.newBuilder().setDenom(denom).build()).metadata
+
+/**
+ * Get the metadata associated with a given marker.
+ *
+ * See [Markers](https://github.com/FigureTechnologies/service-wallet/blob/v45/pb-client/src/main/kotlin/com/figure/wallet/pbclient/client/grpc/Markers.kt#L25).
+ *
+ * @param denom The denomination.
+ * @return [Bank.Metadata]
+ */
+suspend fun CoroutineMarkers.getMarkerMetadata(denom: String): Bank.Metadata =
     denomMetadata(QueryDenomMetadataRequest.newBuilder().setDenom(denom).build()).metadata
 
 /**
@@ -48,7 +76,25 @@ fun Markers.getMarkerMetadata(denom: String): Bank.Metadata =
  * @param limit
  * @return [QueryHoldingResponse]
  */
-fun Markers.getMarkerHolders(denom: String, offset: Int = 0, limit: Int = 200): QueryHoldingResponse =
+fun BlockingMarkers.getMarkerHolders(denom: String, offset: Int = 0, limit: Int = 200): QueryHoldingResponse =
+    holding(
+        QueryHoldingRequest.newBuilder()
+            .setId(denom)
+            .setPagination(paginationBuilder(offset, limit))
+            .build()
+    )
+
+/**
+ * List all accounts holding the given marker.
+ *
+ * See [Markers](https://github.com/FigureTechnologies/service-wallet/blob/v45/pb-client/src/main/kotlin/com/figure/wallet/pbclient/client/grpc/Markers.kt#L31).
+ *
+ * @param denom The denomination.
+ * @param offset
+ * @param limit
+ * @return [QueryHoldingResponse]
+ */
+suspend fun CoroutineMarkers.getMarkerHolders(denom: String, offset: Int = 0, limit: Int = 200): QueryHoldingResponse =
     holding(
         QueryHoldingRequest.newBuilder()
             .setId(denom)
@@ -63,7 +109,23 @@ fun Markers.getMarkerHolders(denom: String, offset: Int = 0, limit: Int = 200): 
  * @param escrowDenom The escrow denomination.
  * @return [CoinOuterClass.Coin?]
  */
-fun Markers.getMarkerEscrow(id: String, escrowDenom: String): CoinOuterClass.Coin? =
+fun BlockingMarkers.getMarkerEscrow(id: String, escrowDenom: String): CoinOuterClass.Coin? =
+    escrow(
+        QueryEscrowRequest
+            .newBuilder()
+            .setId(id)
+            .build()
+    ).escrowList
+        .firstOrNull { it.denom == escrowDenom }
+
+/**
+ * TODO: Description for getMarkerEscrow
+ *
+ * @param id The identifier of the marker.
+ * @param escrowDenom The escrow denomination.
+ * @return [CoinOuterClass.Coin?]
+ */
+suspend fun CoroutineMarkers.getMarkerEscrow(id: String, escrowDenom: String): CoinOuterClass.Coin? =
     escrow(
         QueryEscrowRequest
             .newBuilder()
