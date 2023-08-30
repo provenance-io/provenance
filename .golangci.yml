@@ -6,29 +6,42 @@ run:
 linters:
   disable-all: true
   enable:
+    - asciicheck
+    - bidichk
     - bodyclose
     - depguard
     - dogsled
+    - durationcheck
     - errcheck
     - errorlint
+    - errname
     - exportloopref
+#    - forcetypeassert
     - gci
     - goconst
     - gocritic
     - gofmt
     - goimports
+    - goheader
+    - gomodguard
+    - goprintffuncname
     - gosec
     - gosimple
     - govet
+    - importas
     - ineffassign
+    - makezero
     - misspell
     - nakedret
     - nolintlint
     - prealloc
     - predeclared
+    - promlinter
     - revive
     - staticcheck
     - stylecheck
+    - tenv
+    - tparallel
     - typecheck
     - unconvert
     - unparam
@@ -59,6 +72,59 @@ issues:
   max-same-issues: 10000
 
 linters-settings:
+  depguard:
+    rules:
+      main:
+        files:
+          - $all
+          - "!$test"
+        allow:
+          - $gostd
+
+          - github.com/armon/go-metrics
+
+          - cosmossdk.io/math
+          - cosmossdk.io/errors
+          - github.com/cosmos/go-bip39
+          - github.com/cosmos/cosmos-sdk
+          - github.com/cosmos/ibc-go/v6
+
+          - github.com/CosmWasm/wasmd
+          - github.com/CosmWasm/wasmvm/types
+
+          - github.com/gogo/protobuf
+
+          - github.com/google/uuid
+
+          - github.com/gorilla/mux
+
+          - github.com/grpc-ecosystem/grpc-gateway
+
+          - github.com/otiai10/copy  # Used by the dbmigrate only
+
+          - github.com/provenance-io/provenance
+
+          - github.com/rakyll/statik/fs 
+
+          - github.com/spf13/cast
+          - github.com/spf13/cobra
+          - github.com/spf13/pflag
+          - github.com/spf13/viper
+
+          - github.com/stretchr/testify/require # used by the test-utils shared toolkit
+          - github.com/stretchr/testify/suite
+
+          - github.com/tendermint/tendermint
+          - github.com/tendermint/tm-db
+
+          - github.com/rs/zerolog
+      test:
+        files:
+          - "$test"
+        allow:
+          - $gostd
+          - github.com/stretchr/testify
+
   gci:
     custom-order: true
     sections:
