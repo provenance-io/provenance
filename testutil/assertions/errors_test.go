@@ -24,6 +24,12 @@ func getErrorContentsTestCases() []errorContentsTestCase {
 			expOutput: nil,
 		},
 		{
+			name:      "nil error empty contains",
+			theError:  nil,
+			contains:  []string{},
+			expOutput: nil,
+		},
+		{
 			name:      "nil error one contains",
 			theError:  nil,
 			contains:  []string{"not in error"},
@@ -39,6 +45,12 @@ func getErrorContentsTestCases() []errorContentsTestCase {
 			name:      "with error nil contains",
 			theError:  errors.New("test error"),
 			contains:  nil,
+			expOutput: []string{"Received unexpected error:", "test error"},
+		},
+		{
+			name:      "with error empty contains",
+			theError:  errors.New("test error"),
+			contains:  []string{},
 			expOutput: []string{"Received unexpected error:", "test error"},
 		},
 		{
