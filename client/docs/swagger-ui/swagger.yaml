@@ -36183,8 +36183,8 @@ paths:
                       type: string
                       format: uint64
                       title: >-
-                        volume is the total quantity of the marker associated
-                        with the price
+                        volume is the number of tokens of the marker that were
+                        purchased for the price
                     updated_block_height:
                       type: string
                       format: uint64
@@ -83305,7 +83305,9 @@ definitions:
       volume:
         type: string
         format: uint64
-        title: volume is the total quantity of the marker associated with the price
+        title: >-
+          volume is the number of tokens of the marker that were purchased for
+          the price
       updated_block_height:
         type: string
         format: uint64
@@ -83927,8 +83929,8 @@ definitions:
               type: string
               format: uint64
               title: >-
-                volume is the total quantity of the marker associated with the
-                price
+                volume is the number of tokens of the marker that were purchased
+                for the price
             updated_block_height:
               type: string
               format: uint64
