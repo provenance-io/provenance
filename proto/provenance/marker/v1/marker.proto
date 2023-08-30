@@ -97,7 +97,7 @@ enum MarkerStatus {
 message NetAssetValue {
   // price is the complete value of the asset's volume
   cosmos.base.v1beta1.Coin price = 1 [(gogoproto.nullable) = false];
-  // volume is the volume of the assets
+  // volume is the total quantity of the marker associated with the price
   uint64 volume = 2;
   // updated_block_height is the block height of last update
   uint64 updated_block_height = 3;

@@ -36182,7 +36182,9 @@ paths:
                     volume:
                       type: string
                       format: uint64
-                      title: volume is the volume of the assets
+                      title: >-
+                        volume is the total quantity of the marker associated
+                        with the price
                     updated_block_height:
                       type: string
                       format: uint64
@@ -83303,7 +83305,7 @@ definitions:
       volume:
         type: string
         format: uint64
-        title: volume is the volume of the assets
+        title: volume is the total quantity of the marker associated with the price
       updated_block_height:
         type: string
         format: uint64
@@ -83924,7 +83926,9 @@ definitions:
             volume:
               type: string
               format: uint64
-              title: volume is the volume of the assets
+              title: >-
+                volume is the total quantity of the marker associated with the
+                price
             updated_block_height:
               type: string
               format: uint64
