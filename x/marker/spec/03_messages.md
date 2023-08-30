@@ -411,7 +411,7 @@ This service message is expected to fail if:
 
 ## Msg/AddNetAssetValuesRequest
 
-AddNetAssetValuesRequest allows for the addin/updating of net asset values for a marker.
+AddNetAssetValuesRequest allows for the adding/updating of net asset values for a marker.
 
 +++ https://github.com/provenance-io/provenance/blob/25070572cc898c476f5bb1a816c6c1c4d07e3d38/proto/provenance/marker/v1/tx.proto#L327-L332
 
