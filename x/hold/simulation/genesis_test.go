@@ -169,7 +169,7 @@ func TestUpdateBankGenStateForHolds(t *testing.T) {
 	holdGenState := func(holds ...*hold.AccountHold) *hold.GenesisState {
 		return &hold.GenesisState{Holds: holds}
 	}
-	ah := func(addr sdk.AccAddress, amt int64) *hold.AccountHold {
+	accountHold := func(addr sdk.AccAddress, amt int64) *hold.AccountHold {
 		return &hold.AccountHold{
 			Address: addr.String(),
 			Amount:  coins(amt),
@@ -242,50 +242,53 @@ func TestUpdateBankGenStateForHolds(t *testing.T) {
 		{
 			name:       "one balance with a hold",
 			bankGen:    bankGenState(bal(addr1, 33)),
-			holdGen:    holdGenState(ah(addr1, 17)),
+			holdGen:    holdGenState(accountHold(addr1, 17)),
 			expBankGen: bankGenState(bal(addr1, 50)),
 		},
 		{
 			name:       "three balances one hold first",
 			bankGen:    bankGenState(bal(addr1, 33), bal(addr2, 66), bal(addr3, 99)),
-			holdGen:    holdGenState(ah(addr1, 17)),
+			holdGen:    holdGenState(accountHold(addr1, 17)),
 			expBankGen: bankGenState(bal(addr1, 50), bal(addr2, 66), bal(addr3, 99)),
 		},
 		{
 			name:       "three balances one hold second",
 			bankGen:    bankGenState(bal(addr1, 33), bal(addr2, 66), bal(addr3, 99)),
-			holdGen:    holdGenState(ah(addr2, 24)),
+			holdGen:    holdGenState(accountHold(addr2, 24)),
 			expBankGen: bankGenState(bal(addr1, 33), bal(addr2, 90), bal(addr3, 99)),
 		},
 		{
 			name:       "three balances one hold third",
 			bankGen:    bankGenState(bal(addr1, 33), bal(addr2, 66), bal(addr3, 99)),
-			holdGen:    holdGenState(ah(addr3, 1)),
+			holdGen:    holdGenState(accountHold(addr3, 1)),
 			expBankGen: bankGenState(bal(addr1, 33), bal(addr2, 66), bal(addr3, 100)),
 		},
 		{
 			name:       "three balances three holds",
 			bankGen:    bankGenState(bal(addr1, 33), bal(addr2, 66), bal(addr3, 99)),
-			holdGen:    holdGenState(ah(addr2, 24), ah(addr3, 1), ah(addr1, 17)),
+			holdGen:    holdGenState(accountHold(addr2, 24), accountHold(addr3, 1), accountHold(addr1, 17)),
 			expBankGen: bankGenState(bal(addr1, 50), bal(addr2, 90), bal(addr3, 100)),
 		},
 		{
 			name:     "no balances one hold",
 			bankGen:  bankGenState(),
-			holdGen:  holdGenState(ah(addr1, 17)),
-			expPanic: panicNoBal(ah(addr1, 17)),
+			holdGen:  holdGenState(accountHold(addr1, 17)),
+			expPanic: panicNoBal(accountHold(addr1, 17)),
 		},
 		{
 			name:     "three balances one hold not in balances",
 			bankGen:  bankGenState(bal(addr1, 33), bal(addr2, 66), bal(addr3, 99)),
-			holdGen:  holdGenState(ah(addr4, 111)),
-			expPanic: panicNoBal(ah(addr4, 111)),
+			holdGen:  holdGenState(accountHold(addr4, 111)),
+			expPanic: panicNoBal(accountHold(addr4, 111)),
 		},
 		{
-			name:     "three balances four holds",
-			bankGen:  bankGenState(bal(addr1, 33), bal(addr2, 66), bal(addr3, 99)),
-			holdGen:  holdGenState(ah(addr2, 24), ah(addr3, 1), ah(addr4, 111), ah(addr1, 17)),
-			expPanic: panicNoBal(ah(addr4, 111)),
+			name:    "three balances four holds",
+			bankGen: bankGenState(bal(addr1, 33), bal(addr2, 66), bal(addr3, 99)),
+			holdGen: holdGenState(
+				accountHold(addr2, 24), accountHold(addr3, 1),
+				accountHold(addr4, 111), accountHold(addr1, 17),
+			),
+			expPanic: panicNoBal(accountHold(addr4, 111)),
 		},
 	}
 
@@ -313,13 +316,13 @@ func TestUpdateBankGenStateForHolds(t *testing.T) {
 
 func TestHoldsString(t *testing.T) {
 	denom := "carp"
-	c := func(amt int64) sdk.Coins {
+	coins := func(amt int64) sdk.Coins {
 		return sdk.NewCoins(sdk.NewInt64Coin(denom, amt))
 	}
-	ah := func(addr sdk.AccAddress, amt int64) *hold.AccountHold {
+	accountHold := func(addr sdk.AccAddress, amt int64) *hold.AccountHold {
 		return &hold.AccountHold{
 			Address: addr.String(),
-			Amount:  c(amt),
+			Amount:  coins(amt),
 		}
 	}
 
@@ -337,45 +340,48 @@ func TestHoldsString(t *testing.T) {
 		{name: "empty holds", holds: []*hold.AccountHold{}, exp: "{}"},
 		{
 			name:  "one hold",
-			holds: []*hold.AccountHold{ah(addr1, 11)},
+			holds: []*hold.AccountHold{accountHold(addr1, 11)},
 			exp: "{\n" +
-				fmt.Sprintf(" %q:%q\n", addr1.String(), c(11)) +
+				fmt.Sprintf(" %q:%q\n", addr1.String(), coins(11)) +
 				"}",
 		},
 		{
 			name:  "two holds",
-			holds: []*hold.AccountHold{ah(addr1, 11), ah(addr2, 22)},
+			holds: []*hold.AccountHold{accountHold(addr1, 11), accountHold(addr2, 22)},
 			exp: "{\n" +
-				fmt.Sprintf(" %q:%q,\n", addr1.String(), c(11)) +
-				fmt.Sprintf(" %q:%q\n", addr2.String(), c(22)) +
+				fmt.Sprintf(" %q:%q,\n", addr1.String(), coins(11)) +
+				fmt.Sprintf(" %q:%q\n", addr2.String(), coins(22)) +
 				"}",
 		},
 		{
 			name:  "two holds reversed",
-			holds: []*hold.AccountHold{ah(addr2, 22), ah(addr1, 11)},
+			holds: []*hold.AccountHold{accountHold(addr2, 22), accountHold(addr1, 11)},
 			exp: "{\n" +
-				fmt.Sprintf(" %q:%q,\n", addr2.String(), c(22)) +
-				fmt.Sprintf(" %q:%q\n", addr1.String(), c(11)) +
+				fmt.Sprintf(" %q:%q,\n", addr2.String(), coins(22)) +
+				fmt.Sprintf(" %q:%q\n", addr1.String(), coins(11)) +
 				"}",
 		},
 		{
-			name:  "four holds",
-			holds: []*hold.AccountHold{ah(addr1, 11), ah(addr2, 22), ah(addr3, 33), ah(addr4, 44)},
+			name: "four holds",
+			holds: []*hold.AccountHold{
+				accountHold(addr1, 11), accountHold(addr2, 22),
+				accountHold(addr3, 33), accountHold(addr4, 44),
+			},
 			exp: "{\n" +
-				fmt.Sprintf(" %q:%q,\n", addr1.String(), c(11)) +
-				fmt.Sprintf(" %q:%q,\n", addr2.String(), c(22)) +
-				fmt.Sprintf(" %q:%q,\n", addr3.String(), c(33)) +
-				fmt.Sprintf(" %q:%q\n", addr4.String(), c(44)) +
+				fmt.Sprintf(" %q:%q,\n", addr1.String(), coins(11)) +
+				fmt.Sprintf(" %q:%q,\n", addr2.String(), coins(22)) +
+				fmt.Sprintf(" %q:%q,\n", addr3.String(), coins(33)) +
+				fmt.Sprintf(" %q:%q\n", addr4.String(), coins(44)) +
 				"}",
 		},
 		{
 			name:  "four shuffled holds",
-			holds: []*hold.AccountHold{ah(addr3, 33), ah(addr1, 11), ah(addr4, 44), ah(addr2, 22)},
+			holds: []*hold.AccountHold{accountHold(addr3, 33), accountHold(addr1, 11), accountHold(addr4, 44), accountHold(addr2, 22)},
 			exp: "{\n" +
-				fmt.Sprintf(" %q:%q,\n", addr3.String(), c(33)) +
-				fmt.Sprintf(" %q:%q,\n", addr1.String(), c(11)) +
-				fmt.Sprintf(" %q:%q,\n", addr4.String(), c(44)) +
-				fmt.Sprintf(" %q:%q\n", addr2.String(), c(22)) +
+				fmt.Sprintf(" %q:%q,\n", addr3.String(), coins(33)) +
+				fmt.Sprintf(" %q:%q,\n", addr1.String(), coins(11)) +
+				fmt.Sprintf(" %q:%q,\n", addr4.String(), coins(44)) +
+				fmt.Sprintf(" %q:%q\n", addr2.String(), coins(22)) +
 				"}",
 		},
 	}
@@ -407,7 +413,7 @@ func TestRandomizedGenState(t *testing.T) {
 		copy(rv.Holds, holds)
 		return rv
 	}
-	ah := func(acc simtypes.Account, amount int64) *hold.AccountHold {
+	accountHold := func(acc simtypes.Account, amount int64) *hold.AccountHold {
 		return &hold.AccountHold{
 			Address: acc.Address.String(),
 			Amount:  bondCoins(amount),
@@ -454,21 +460,21 @@ func TestRandomizedGenState(t *testing.T) {
 			seed:     1,
 			accounts: accs[0:1],
 			bankGen:  nil,
-			expPanic: panicNoBal(ah(accs[0], 552)),
+			expPanic: panicNoBal(accountHold(accs[0], 552)),
 		},
 		{
 			name:     "1 account picked no balance",
 			seed:     1,
 			accounts: accs[0:1],
 			bankGen:  &banktypes.GenesisState{},
-			expPanic: panicNoBal(ah(accs[0], 552)),
+			expPanic: panicNoBal(accountHold(accs[0], 552)),
 		},
 		{
 			name:       "1 account picked already had balance",
 			seed:       1,
 			accounts:   accs[0:1],
 			bankGen:    bankGen(bal(accs[0], 1000)),
-			expHoldGen: holdGen(ah(accs[0], 552)),
+			expHoldGen: holdGen(accountHold(accs[0], 552)),
 			expBankGen: bankGen(bal(accs[0], 1552)),
 		},
 		{
@@ -484,27 +490,27 @@ func TestRandomizedGenState(t *testing.T) {
 			seed:     0,
 			accounts: accs,
 			bankGen:  bankGen(bal(accs[0], 50), bal(accs[2], 1000)),
-			expPanic: panicNoBal(ah(accs[1], 203)),
+			expPanic: panicNoBal(accountHold(accs[1], 203)),
 		},
 		{
 			name:       "3 accounts 2 picked all already have a balance",
 			seed:       0,
 			accounts:   accs,
 			bankGen:    bankGen(bal(accs[0], 333), bal(accs[1], 50), bal(accs[2], 1000)),
-			expHoldGen: holdGen(ah(accs[2], 795), ah(accs[1], 203)),
+			expHoldGen: holdGen(accountHold(accs[2], 795), accountHold(accs[1], 203)),
 			expBankGen: bankGen(bal(accs[0], 333), bal(accs[1], 253), bal(accs[2], 1795)),
 		},
 		{
 			name:      "2 from app params only one already had balance",
-			appParams: []*hold.AccountHold{ah(accs[0], 123), ah(accs[1], 456)},
+			appParams: []*hold.AccountHold{accountHold(accs[0], 123), accountHold(accs[1], 456)},
 			bankGen:   bankGen(bal(accs[1], 44), bal(accs[2], 9876)),
-			expPanic:  panicNoBal(ah(accs[0], 123)),
+			expPanic:  panicNoBal(accountHold(accs[0], 123)),
 		},
 		{
 			name:       "2 from app params both already have balance",
-			appParams:  []*hold.AccountHold{ah(accs[1], 123), ah(accs[0], 456)},
+			appParams:  []*hold.AccountHold{accountHold(accs[1], 123), accountHold(accs[0], 456)},
 			bankGen:    bankGen(bal(accs[0], 44), bal(accs[1], 9876)),
-			expHoldGen: holdGen(ah(accs[1], 123), ah(accs[0], 456)),
+			expHoldGen: holdGen(accountHold(accs[1], 123), accountHold(accs[0], 456)),
 			expBankGen: bankGen(bal(accs[0], 500), bal(accs[1], 9999)),
 		},
 	}

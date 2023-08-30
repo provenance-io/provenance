@@ -12,15 +12,15 @@ import (
 )
 
 func TestAccountHold_Validate(t *testing.T) {
-	cz := func(coins string) sdk.Coins {
+	coins := func(coins string) sdk.Coins {
 		rv, err := sdk.ParseCoinsNormalized(coins)
 		require.NoError(t, err, "ParseCoinsNormalized(%q)", coins)
 		return rv
 	}
-	c := func(amount int64, denom string) sdk.Coin {
+	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
-	ah := func(addr string, amount sdk.Coins) AccountHold {
+	accountHold := func(addr string, amount sdk.Coins) AccountHold {
 		return AccountHold{
 			Address: addr,
 			Amount:  amount,
@@ -36,27 +36,27 @@ func TestAccountHold_Validate(t *testing.T) {
 	}{
 		{
 			name: "control",
-			ae:   ah(addr, cz("1000nhash")),
+			ae:   accountHold(addr, coins("1000nhash")),
 			exp:  "",
 		},
 		{
 			name: "control with two coins",
-			ae:   ah(addr, cz("50atom,1000nhash")),
+			ae:   accountHold(addr, coins("50atom,1000nhash")),
 			exp:  "",
 		},
 		{
 			name: "no address",
-			ae:   ah("", cz("1000nhash")),
+			ae:   accountHold("", coins("1000nhash")),
 			exp:  "invalid address: empty address string is not allowed",
 		},
 		{
 			name: "invalid address",
-			ae:   ah("bad", cz("1000nhash")),
+			ae:   accountHold("bad", coins("1000nhash")),
 			exp:  "invalid address: decoding bech32 failed: invalid bech32 string length 3",
 		},
 		{
 			name: "invalid amount",
-			ae:   ah(addr, sdk.Coins{c(-50, "badcoin")}),
+			ae:   accountHold(addr, sdk.Coins{coin(-50, "badcoin")}),
 			exp:  "invalid amount: coin -50badcoin amount is not positive",
 		},
 	}
