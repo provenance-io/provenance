@@ -146,20 +146,25 @@ func (k Keeper) ReleaseHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coin
 		if toRelease.IsZero() {
 			continue
 		}
+
 		onHold, err := k.getHoldCoinAmount(store, addr, toRelease.Denom)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to get current %s hold amount for %s: %w", toRelease.Denom, addr, err))
 			continue
 		}
+
 		newAmount := onHold.Sub(toRelease.Amount)
 		if newAmount.IsNegative() {
 			errs = append(errs, fmt.Errorf("cannot release %s from hold for %s: account only has %s%s on hold", toRelease, addr, onHold, toRelease.Denom))
 			continue
 		}
+
 		err = k.setHoldCoinAmount(store, addr, toRelease.Denom, newAmount)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to release %s from hold for %s: %w", toRelease, addr, err))
+			continue
 		}
+
 		fundsReleased = fundsReleased.Add(toRelease)
 	}
 
