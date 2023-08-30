@@ -214,3 +214,5 @@ func TestNewEventParamsUpdated(t *testing.T) {
 	event := NewEventParamsUpdated()
 	assertEverythingSet(t, event, "EventParamsUpdated")
 }
+
+// TODO[1658]: func TestTypedEventToEvent(t *testing.T)
