@@ -23,3 +23,8 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey) Keeper {
 	}
 	return rv
 }
+
+// GetAuthority gets the address (as bech32) that has governance authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
+}
