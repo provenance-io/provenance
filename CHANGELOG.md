@@ -43,6 +43,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * New `GetByAddr` metadata query [#1443](https://github.com/provenance-io/provenance/issues/1443).
 * Add Trigger module queries to stargate whitelist for smart contracts [#1636](https://github.com/provenance-io/provenance/issues/1636)
 * Added the saffron upgrade handlers [PR 1648](https://github.com/provenance-io/provenance/pull/1648).
+* Create the `x/hold` module which facilitates locking funds in an owners account [#1607](https://github.com/provenance-io/provenance/issues/1607).
+  Funds with a hold on them cannot be transferred until the hold is removed.
+  Management of holds is internal, but there are queries for looking up holds on accounts.
+  Holds are also reflected in the `x/bank` module's `SpendableBalances` query.
 
 ### Improvements
 
