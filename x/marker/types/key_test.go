@@ -37,7 +37,7 @@ func TestDenySendKey(t *testing.T) {
 
 func TestGetDenySendAddresses(t *testing.T) {
 	addr, err := MarkerAddress("nhash")
-	require.NoError(t, err)
+	require.NoError(t, err, "MarkerAddress(nhash)")
 	denyAddr := sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
 	denyKey := DenySendKey(addr, denyAddr)
 	mAddr, dAddr := GetDenySendAddresses(denyKey)
