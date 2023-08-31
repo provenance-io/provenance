@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -277,6 +278,9 @@ func marketKeyPrefixPermissions(marketID uint32, extraCap int) []byte {
 
 // marketKeyPrefixPermissionsForAddress creates the key prefix for an address' permissions in a given market with extra capacity for the rest.
 func marketKeyPrefixPermissionsForAddress(marketID uint32, addr sdk.AccAddress, extraCap int) []byte {
+	if len(addr) == 0 {
+		panic(errors.New("empty address not allowed"))
+	}
 	rv := marketKeyPrefixPermissions(marketID, 1+len(addr)+extraCap)
 	rv = append(rv, address.MustLengthPrefix(addr)...)
 	return rv
