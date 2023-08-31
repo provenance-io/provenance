@@ -41,6 +41,6 @@ func TestGetDenySendAddresses(t *testing.T) {
 	denyAddr := sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
 	denyKey := DenySendKey(addr, denyAddr)
 	mAddr, dAddr := GetDenySendAddresses(denyKey)
-	assert.Equal(t, mAddr, addr)
-	assert.Equal(t, dAddr, denyAddr)
+	assert.Equal(t, addr, mAddr, "module address")
+	assert.Equal(t, denyAddr, dAddr, "deny address")
 }
