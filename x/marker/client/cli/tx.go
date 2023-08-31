@@ -1166,7 +1166,7 @@ func GetCmdAddNetAssetValues() *cobra.Command {
 			}
 
 			denom := strings.TrimSpace(args[0])
-			netAssetValues, err := ParseNetAssertValueString(args[1])
+			netAssetValues, err := ParseNetAssetValueString(args[1])
 			if err != nil {
 				return err
 			}
@@ -1215,8 +1215,8 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 	return grants
 }
 
-// ParseNetAssertValueString splits string (example address1,perm1,perm2...;address2, perm1...) to list of NetAssetValue's
-func ParseNetAssertValueString(netAssetValuesString string) ([]types.NetAssetValue, error) {
+// ParseNetAssetValueString splits string (example address1,perm1,perm2...;address2, perm1...) to list of NetAssetValue's
+func ParseNetAssetValueString(netAssetValuesString string) ([]types.NetAssetValue, error) {
 	navs := strings.Split(netAssetValuesString, ";")
 	if len(navs) == 1 && len(navs[0]) == 0 {
 		return []types.NetAssetValue{}, nil

@@ -1938,7 +1938,7 @@ func (s *IntegrationTestSuite) TestParseNetAssertValueString() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			result, err := markercli.ParseNetAssertValueString(tc.netAssetValues)
+			result, err := markercli.ParseNetAssetValueString(tc.netAssetValues)
 			if len(tc.expErr) > 0 {
 				s.Assert().Equal(tc.expErr, err.Error())
 				s.Assert().Empty(result)
