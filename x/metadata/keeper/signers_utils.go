@@ -187,12 +187,12 @@ func (p *PartyDetails) IsSameAs(p2 types.Partier) bool {
 	return types.SamePartiers(p, p2)
 }
 
-// GetAllSigners gets a map of bech32 strings to true with a key for each used signer.
-func GetAllSigners(parties []*PartyDetails) map[string]bool {
-	rv := make(map[string]bool)
+// GetUsedSigners gets a map of bech32 strings to true with a key for each used signer.
+func GetUsedSigners(parties []*PartyDetails) UsedSignersMap {
+	rv := make(UsedSignersMap)
 	for _, party := range parties {
 		if party.HasSigner() {
-			rv[party.GetSigner()] = true
+			rv.Use(party.GetSigner())
 		}
 	}
 	return rv
@@ -232,20 +232,32 @@ func authzCacheAcceptableKey(grantee, granter sdk.AccAddress, msgTypeURL string)
 	return string(grantee) + "-" + string(granter) + "-" + msgTypeURL
 }
 
+// authzCacheIsWasmKey creates the key string used in the AuthzCache.known map.
+func authzCacheIsWasmKey(addr sdk.AccAddress) string {
+	return string(addr)
+}
+
 // AuthzCache is a struct that houses a map of authz authorizations that are known to have a passed Accept (and been handled).
 type AuthzCache struct {
 	acceptable map[string]authz.Authorization
+	isWasm     map[string]bool
 }
 
 // NewAuthzCache creates a new AuthzCache.
 func NewAuthzCache() *AuthzCache {
-	return &AuthzCache{acceptable: make(map[string]authz.Authorization)}
+	return &AuthzCache{
+		acceptable: make(map[string]authz.Authorization),
+		isWasm:     make(map[string]bool),
+	}
 }
 
 // Clear deletes all entries from this AuthzCache.
 func (c *AuthzCache) Clear() {
 	for k := range c.acceptable {
 		delete(c.acceptable, k)
+	}
+	for k := range c.isWasm {
+		delete(c.isWasm, k)
 	}
 }
 
@@ -258,6 +270,28 @@ func (c *AuthzCache) SetAcceptable(grantee, granter sdk.AccAddress, msgTypeURL s
 // Returns nil if no such authorization exists.
 func (c *AuthzCache) GetAcceptable(grantee, granter sdk.AccAddress, msgTypeURL string) authz.Authorization {
 	return c.acceptable[authzCacheAcceptableKey(grantee, granter, msgTypeURL)]
+}
+
+// SetIsWasm records whether an account is a wasm account.
+func (c *AuthzCache) SetIsWasm(addr sdk.AccAddress, value bool) {
+	c.isWasm[authzCacheIsWasmKey(addr)] = value
+}
+
+// HasIsWasm returns true if a cached IsWasm value has been recorded for the given address.
+// Use GetIsWasm to get the previously recorded IsWasm value.
+func (c *AuthzCache) HasIsWasm(addr sdk.AccAddress) bool {
+	_, rv := c.isWasm[authzCacheIsWasmKey(addr)]
+	return rv
+}
+
+// GetIsWasm returns true if the address was previously recorded as being a wasm account.
+// Returns false if either:
+//   - The address was previously recorded as NOT being a wasm account.
+//   - The WASM status of the account hasn't yet been recorded.
+//
+// Use HasIsWasm to differentiate the false conditions.
+func (c *AuthzCache) GetIsWasm(addr sdk.AccAddress) bool {
+	return c.isWasm[authzCacheIsWasmKey(addr)]
 }
 
 // authzCacheContextKey is the key used in an sdk.Context to set/get the AuthzCache.
@@ -303,6 +337,35 @@ func GetAuthzCache(ctx sdk.Context) *AuthzCache {
 // This should not be used outside of the Metadata module.
 func UnwrapMetadataContext(goCtx context.Context) sdk.Context {
 	return AddAuthzCacheToContext(sdk.UnwrapSDKContext(goCtx))
+}
+
+// UsedSignersMap is a type for recording that a signer has been used.
+type UsedSignersMap map[string]bool
+
+// NewUsedSignersMap creates a new UsedSignersMap
+func NewUsedSignersMap() UsedSignersMap {
+	return make(UsedSignersMap)
+}
+
+// Use notes that the provided addresses have been used.
+func (m UsedSignersMap) Use(addrs ...string) UsedSignersMap {
+	for _, addr := range addrs {
+		m[addr] = true
+	}
+	return m
+}
+
+// IsUsed returns true if the provided address has been used.
+func (m UsedSignersMap) IsUsed(addr string) bool {
+	return m[addr]
+}
+
+// AlsoUse adds all the entries in the provided UsedSignersMap to this UsedSignersMap.
+func (m UsedSignersMap) AlsoUse(m2 UsedSignersMap) UsedSignersMap {
+	for k := range m2 {
+		m[k] = true
+	}
+	return m
 }
 
 // findMissing returns all elements of the required list that are not found in the entries list.

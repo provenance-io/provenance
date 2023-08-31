@@ -59,9 +59,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	authData.Accounts = append(authData.Accounts, genAccount)
 
 	// Configure Genesis data for name module
+	attrModAddr := authtypes.NewModuleAddress(attributetypes.ModuleName)
 	var nameData nametypes.GenesisState
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("attribute", s.accountAddr, true))
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.attribute", s.accountAddr, false))
+	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord(attributetypes.AccountDataName, attrModAddr, true))
 	nameData.Params.AllowUnrestrictedNames = false
 	nameData.Params.MaxNameLevels = 3
 	nameData.Params.MinSegmentLength = 3
@@ -77,7 +79,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			"example.attribute",
 			s.accountStr,
 			attributetypes.AttributeType_String,
-			[]byte("example attribute value string")))
+			[]byte("example attribute value string"),
+			nil),
+		attributetypes.NewAttribute(
+			attributetypes.AccountDataName,
+			s.accountStr,
+			attributetypes.AttributeType_String,
+			[]byte("example accountdata value string"),
+			nil),
+	)
 	accountData.Params.MaxValueLength = 32
 	accountDataBz, err := cfg.Codec.MarshalJSON(&accountData)
 	s.Require().NoError(err)
@@ -132,9 +142,16 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 					attributetypes.NewAttribute("example.attribute",
 						s.accountStr,
 						attributetypes.AttributeType_String,
-						[]byte("example attribute value string")),
+						[]byte("example attribute value string"),
+						nil),
+					attributetypes.NewAttribute(
+						attributetypes.AccountDataName,
+						s.accountStr,
+						attributetypes.AttributeType_String,
+						[]byte("example accountdata value string"),
+						nil),
 				},
-				Pagination: &query.PageResponse{NextKey: nil, Total: 1},
+				Pagination: &query.PageResponse{NextKey: nil, Total: 2},
 			},
 		},
 		{
@@ -149,7 +166,9 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 					attributetypes.NewAttribute("example.attribute",
 						s.accountStr,
 						attributetypes.AttributeType_String,
-						[]byte("example attribute value string")),
+						[]byte("example attribute value string"),
+						nil,
+					),
 				},
 				Pagination: &query.PageResponse{NextKey: nil, Total: 1},
 			},
@@ -178,7 +197,9 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 					attributetypes.NewAttribute("example.attribute",
 						s.accountStr,
 						attributetypes.AttributeType_String,
-						[]byte("example attribute value string")),
+						[]byte("example attribute value string"),
+						nil,
+					),
 				},
 				Pagination: &query.PageResponse{NextKey: nil, Total: 1},
 			},
@@ -195,11 +216,29 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 				Pagination: &query.PageResponse{},
 			},
 		},
+		{
+			name:     "get account data that exists",
+			url:      fmt.Sprintf("%s/provenance/attribute/v1/accountdata/%s", baseURL, s.accountAddr),
+			headers:  map[string]string{},
+			expErr:   false,
+			respType: &attributetypes.QueryAccountDataResponse{},
+			expected: &attributetypes.QueryAccountDataResponse{
+				Value: "example accountdata value string",
+			},
+		},
+		{
+			name:     "get account data that does not exist",
+			url:      fmt.Sprintf("%s/provenance/attribute/v1/accountdata/%s", baseURL, sdk.AccAddress("unknown_address_____").String()),
+			headers:  map[string]string{},
+			expErr:   false,
+			respType: &attributetypes.QueryAccountDataResponse{},
+			expected: &attributetypes.QueryAccountDataResponse{
+				Value: "",
+			},
+		},
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)

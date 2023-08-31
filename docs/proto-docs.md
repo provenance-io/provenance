@@ -6,9 +6,12 @@
 
 - [provenance/attribute/v1/attribute.proto](#provenance/attribute/v1/attribute.proto)
     - [Attribute](#provenance.attribute.v1.Attribute)
+    - [EventAccountDataUpdated](#provenance.attribute.v1.EventAccountDataUpdated)
     - [EventAttributeAdd](#provenance.attribute.v1.EventAttributeAdd)
     - [EventAttributeDelete](#provenance.attribute.v1.EventAttributeDelete)
     - [EventAttributeDistinctDelete](#provenance.attribute.v1.EventAttributeDistinctDelete)
+    - [EventAttributeExpirationUpdate](#provenance.attribute.v1.EventAttributeExpirationUpdate)
+    - [EventAttributeExpired](#provenance.attribute.v1.EventAttributeExpired)
     - [EventAttributeUpdate](#provenance.attribute.v1.EventAttributeUpdate)
     - [Params](#provenance.attribute.v1.Params)
   
@@ -18,6 +21,8 @@
     - [GenesisState](#provenance.attribute.v1.GenesisState)
   
 - [provenance/attribute/v1/query.proto](#provenance/attribute/v1/query.proto)
+    - [QueryAccountDataRequest](#provenance.attribute.v1.QueryAccountDataRequest)
+    - [QueryAccountDataResponse](#provenance.attribute.v1.QueryAccountDataResponse)
     - [QueryAttributeAccountsRequest](#provenance.attribute.v1.QueryAttributeAccountsRequest)
     - [QueryAttributeAccountsResponse](#provenance.attribute.v1.QueryAttributeAccountsResponse)
     - [QueryAttributeRequest](#provenance.attribute.v1.QueryAttributeRequest)
@@ -38,10 +43,26 @@
     - [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse)
     - [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest)
     - [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse)
+    - [MsgSetAccountDataRequest](#provenance.attribute.v1.MsgSetAccountDataRequest)
+    - [MsgSetAccountDataResponse](#provenance.attribute.v1.MsgSetAccountDataResponse)
+    - [MsgUpdateAttributeExpirationRequest](#provenance.attribute.v1.MsgUpdateAttributeExpirationRequest)
+    - [MsgUpdateAttributeExpirationResponse](#provenance.attribute.v1.MsgUpdateAttributeExpirationResponse)
     - [MsgUpdateAttributeRequest](#provenance.attribute.v1.MsgUpdateAttributeRequest)
     - [MsgUpdateAttributeResponse](#provenance.attribute.v1.MsgUpdateAttributeResponse)
   
     - [Msg](#provenance.attribute.v1.Msg)
+  
+- [provenance/ibchooks/v1/params.proto](#provenance/ibchooks/v1/params.proto)
+    - [Params](#provenance.ibchooks.v1.Params)
+  
+- [provenance/ibchooks/v1/genesis.proto](#provenance/ibchooks/v1/genesis.proto)
+    - [GenesisState](#provenance.ibchooks.v1.GenesisState)
+  
+- [provenance/ibchooks/v1/tx.proto](#provenance/ibchooks/v1/tx.proto)
+    - [MsgEmitIBCAck](#provenance.ibchooks.v1.MsgEmitIBCAck)
+    - [MsgEmitIBCAckResponse](#provenance.ibchooks.v1.MsgEmitIBCAckResponse)
+  
+    - [Msg](#provenance.ibchooks.v1.Msg)
   
 - [provenance/marker/v1/accessgrant.proto](#provenance/marker/v1/accessgrant.proto)
     - [AccessGrant](#provenance.marker.v1.AccessGrant)
@@ -76,6 +97,7 @@
     - [GenesisState](#provenance.marker.v1.GenesisState)
   
 - [provenance/marker/v1/proposals.proto](#provenance/marker/v1/proposals.proto)
+    - [AddMarkerProposal](#provenance.marker.v1.AddMarkerProposal)
     - [ChangeStatusProposal](#provenance.marker.v1.ChangeStatusProposal)
     - [RemoveAdministratorProposal](#provenance.marker.v1.RemoveAdministratorProposal)
     - [SetAdministratorProposal](#provenance.marker.v1.SetAdministratorProposal)
@@ -88,6 +110,8 @@
     - [Balance](#provenance.marker.v1.Balance)
     - [QueryAccessRequest](#provenance.marker.v1.QueryAccessRequest)
     - [QueryAccessResponse](#provenance.marker.v1.QueryAccessResponse)
+    - [QueryAccountDataRequest](#provenance.marker.v1.QueryAccountDataRequest)
+    - [QueryAccountDataResponse](#provenance.marker.v1.QueryAccountDataResponse)
     - [QueryAllMarkersRequest](#provenance.marker.v1.QueryAllMarkersRequest)
     - [QueryAllMarkersResponse](#provenance.marker.v1.QueryAllMarkersResponse)
     - [QueryDenomMetadataRequest](#provenance.marker.v1.QueryDenomMetadataRequest)
@@ -133,14 +157,20 @@
     - [MsgIbcTransferResponse](#provenance.marker.v1.MsgIbcTransferResponse)
     - [MsgMintRequest](#provenance.marker.v1.MsgMintRequest)
     - [MsgMintResponse](#provenance.marker.v1.MsgMintResponse)
+    - [MsgSetAccountDataRequest](#provenance.marker.v1.MsgSetAccountDataRequest)
+    - [MsgSetAccountDataResponse](#provenance.marker.v1.MsgSetAccountDataResponse)
     - [MsgSetDenomMetadataRequest](#provenance.marker.v1.MsgSetDenomMetadataRequest)
     - [MsgSetDenomMetadataResponse](#provenance.marker.v1.MsgSetDenomMetadataResponse)
     - [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest)
     - [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse)
     - [MsgTransferRequest](#provenance.marker.v1.MsgTransferRequest)
     - [MsgTransferResponse](#provenance.marker.v1.MsgTransferResponse)
+    - [MsgUpdateForcedTransferRequest](#provenance.marker.v1.MsgUpdateForcedTransferRequest)
+    - [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse)
     - [MsgUpdateRequiredAttributesRequest](#provenance.marker.v1.MsgUpdateRequiredAttributesRequest)
     - [MsgUpdateRequiredAttributesResponse](#provenance.marker.v1.MsgUpdateRequiredAttributesResponse)
+    - [MsgUpdateSendDenyListRequest](#provenance.marker.v1.MsgUpdateSendDenyListRequest)
+    - [MsgUpdateSendDenyListResponse](#provenance.marker.v1.MsgUpdateSendDenyListResponse)
     - [MsgWithdrawRequest](#provenance.marker.v1.MsgWithdrawRequest)
     - [MsgWithdrawResponse](#provenance.marker.v1.MsgWithdrawResponse)
   
@@ -209,12 +239,45 @@
 - [provenance/metadata/v1/genesis.proto](#provenance/metadata/v1/genesis.proto)
     - [GenesisState](#provenance.metadata.v1.GenesisState)
   
+- [provenance/metadata/v1/p8e/p8e.proto](#provenance/metadata/v1/p8e/p8e.proto)
+    - [Condition](#provenance.metadata.v1.p8e.Condition)
+    - [ConditionSpec](#provenance.metadata.v1.p8e.ConditionSpec)
+    - [Consideration](#provenance.metadata.v1.p8e.Consideration)
+    - [ConsiderationSpec](#provenance.metadata.v1.p8e.ConsiderationSpec)
+    - [Contract](#provenance.metadata.v1.p8e.Contract)
+    - [ContractSpec](#provenance.metadata.v1.p8e.ContractSpec)
+    - [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec)
+    - [ExecutionResult](#provenance.metadata.v1.p8e.ExecutionResult)
+    - [Fact](#provenance.metadata.v1.p8e.Fact)
+    - [Location](#provenance.metadata.v1.p8e.Location)
+    - [OutputSpec](#provenance.metadata.v1.p8e.OutputSpec)
+    - [ProposedFact](#provenance.metadata.v1.p8e.ProposedFact)
+    - [ProvenanceReference](#provenance.metadata.v1.p8e.ProvenanceReference)
+    - [PublicKey](#provenance.metadata.v1.p8e.PublicKey)
+    - [Recital](#provenance.metadata.v1.p8e.Recital)
+    - [Recitals](#provenance.metadata.v1.p8e.Recitals)
+    - [Signature](#provenance.metadata.v1.p8e.Signature)
+    - [SignatureSet](#provenance.metadata.v1.p8e.SignatureSet)
+    - [SigningAndEncryptionPublicKeys](#provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys)
+    - [Timestamp](#provenance.metadata.v1.p8e.Timestamp)
+    - [UUID](#provenance.metadata.v1.p8e.UUID)
+  
+    - [DefinitionSpecType](#provenance.metadata.v1.p8e.DefinitionSpecType)
+    - [ExecutionResultType](#provenance.metadata.v1.p8e.ExecutionResultType)
+    - [PartyType](#provenance.metadata.v1.p8e.PartyType)
+    - [PublicKeyCurve](#provenance.metadata.v1.p8e.PublicKeyCurve)
+    - [PublicKeyType](#provenance.metadata.v1.p8e.PublicKeyType)
+  
 - [provenance/metadata/v1/query.proto](#provenance/metadata/v1/query.proto)
+    - [AccountDataRequest](#provenance.metadata.v1.AccountDataRequest)
+    - [AccountDataResponse](#provenance.metadata.v1.AccountDataResponse)
     - [ContractSpecificationRequest](#provenance.metadata.v1.ContractSpecificationRequest)
     - [ContractSpecificationResponse](#provenance.metadata.v1.ContractSpecificationResponse)
     - [ContractSpecificationWrapper](#provenance.metadata.v1.ContractSpecificationWrapper)
     - [ContractSpecificationsAllRequest](#provenance.metadata.v1.ContractSpecificationsAllRequest)
     - [ContractSpecificationsAllResponse](#provenance.metadata.v1.ContractSpecificationsAllResponse)
+    - [GetByAddrRequest](#provenance.metadata.v1.GetByAddrRequest)
+    - [GetByAddrResponse](#provenance.metadata.v1.GetByAddrResponse)
     - [OSAllLocatorsRequest](#provenance.metadata.v1.OSAllLocatorsRequest)
     - [OSAllLocatorsResponse](#provenance.metadata.v1.OSAllLocatorsResponse)
     - [OSLocatorParamsRequest](#provenance.metadata.v1.OSLocatorParamsRequest)
@@ -288,10 +351,20 @@
     - [MsgDeleteScopeResponse](#provenance.metadata.v1.MsgDeleteScopeResponse)
     - [MsgDeleteScopeSpecificationRequest](#provenance.metadata.v1.MsgDeleteScopeSpecificationRequest)
     - [MsgDeleteScopeSpecificationResponse](#provenance.metadata.v1.MsgDeleteScopeSpecificationResponse)
+    - [MsgMigrateValueOwnerRequest](#provenance.metadata.v1.MsgMigrateValueOwnerRequest)
+    - [MsgMigrateValueOwnerResponse](#provenance.metadata.v1.MsgMigrateValueOwnerResponse)
     - [MsgModifyOSLocatorRequest](#provenance.metadata.v1.MsgModifyOSLocatorRequest)
     - [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse)
+    - [MsgP8eMemorializeContractRequest](#provenance.metadata.v1.MsgP8eMemorializeContractRequest)
+    - [MsgP8eMemorializeContractResponse](#provenance.metadata.v1.MsgP8eMemorializeContractResponse)
+    - [MsgSetAccountDataRequest](#provenance.metadata.v1.MsgSetAccountDataRequest)
+    - [MsgSetAccountDataResponse](#provenance.metadata.v1.MsgSetAccountDataResponse)
+    - [MsgUpdateValueOwnersRequest](#provenance.metadata.v1.MsgUpdateValueOwnersRequest)
+    - [MsgUpdateValueOwnersResponse](#provenance.metadata.v1.MsgUpdateValueOwnersResponse)
     - [MsgWriteContractSpecificationRequest](#provenance.metadata.v1.MsgWriteContractSpecificationRequest)
     - [MsgWriteContractSpecificationResponse](#provenance.metadata.v1.MsgWriteContractSpecificationResponse)
+    - [MsgWriteP8eContractSpecRequest](#provenance.metadata.v1.MsgWriteP8eContractSpecRequest)
+    - [MsgWriteP8eContractSpecResponse](#provenance.metadata.v1.MsgWriteP8eContractSpecResponse)
     - [MsgWriteRecordRequest](#provenance.metadata.v1.MsgWriteRecordRequest)
     - [MsgWriteRecordResponse](#provenance.metadata.v1.MsgWriteRecordResponse)
     - [MsgWriteRecordSpecificationRequest](#provenance.metadata.v1.MsgWriteRecordSpecificationRequest)
@@ -333,8 +406,18 @@
     - [Query](#provenance.msgfees.v1.Query)
   
 - [provenance/msgfees/v1/tx.proto](#provenance/msgfees/v1/tx.proto)
+    - [MsgAddMsgFeeProposalRequest](#provenance.msgfees.v1.MsgAddMsgFeeProposalRequest)
+    - [MsgAddMsgFeeProposalResponse](#provenance.msgfees.v1.MsgAddMsgFeeProposalResponse)
     - [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest)
     - [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse)
+    - [MsgRemoveMsgFeeProposalRequest](#provenance.msgfees.v1.MsgRemoveMsgFeeProposalRequest)
+    - [MsgRemoveMsgFeeProposalResponse](#provenance.msgfees.v1.MsgRemoveMsgFeeProposalResponse)
+    - [MsgUpdateConversionFeeDenomProposalRequest](#provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalRequest)
+    - [MsgUpdateConversionFeeDenomProposalResponse](#provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalResponse)
+    - [MsgUpdateMsgFeeProposalRequest](#provenance.msgfees.v1.MsgUpdateMsgFeeProposalRequest)
+    - [MsgUpdateMsgFeeProposalResponse](#provenance.msgfees.v1.MsgUpdateMsgFeeProposalResponse)
+    - [MsgUpdateNhashPerUsdMilProposalRequest](#provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalRequest)
+    - [MsgUpdateNhashPerUsdMilProposalResponse](#provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalResponse)
   
     - [Msg](#provenance.msgfees.v1.Msg)
   
@@ -419,6 +502,38 @@
   
     - [Msg](#provenance.reward.v1.Msg)
   
+- [provenance/trigger/v1/event.proto](#provenance/trigger/v1/event.proto)
+    - [EventTriggerCreated](#provenance.trigger.v1.EventTriggerCreated)
+    - [EventTriggerDestroyed](#provenance.trigger.v1.EventTriggerDestroyed)
+  
+- [provenance/trigger/v1/trigger.proto](#provenance/trigger/v1/trigger.proto)
+    - [Attribute](#provenance.trigger.v1.Attribute)
+    - [BlockHeightEvent](#provenance.trigger.v1.BlockHeightEvent)
+    - [BlockTimeEvent](#provenance.trigger.v1.BlockTimeEvent)
+    - [QueuedTrigger](#provenance.trigger.v1.QueuedTrigger)
+    - [TransactionEvent](#provenance.trigger.v1.TransactionEvent)
+    - [Trigger](#provenance.trigger.v1.Trigger)
+  
+- [provenance/trigger/v1/genesis.proto](#provenance/trigger/v1/genesis.proto)
+    - [GasLimit](#provenance.trigger.v1.GasLimit)
+    - [GenesisState](#provenance.trigger.v1.GenesisState)
+  
+- [provenance/trigger/v1/query.proto](#provenance/trigger/v1/query.proto)
+    - [QueryTriggerByIDRequest](#provenance.trigger.v1.QueryTriggerByIDRequest)
+    - [QueryTriggerByIDResponse](#provenance.trigger.v1.QueryTriggerByIDResponse)
+    - [QueryTriggersRequest](#provenance.trigger.v1.QueryTriggersRequest)
+    - [QueryTriggersResponse](#provenance.trigger.v1.QueryTriggersResponse)
+  
+    - [Query](#provenance.trigger.v1.Query)
+  
+- [provenance/trigger/v1/tx.proto](#provenance/trigger/v1/tx.proto)
+    - [MsgCreateTriggerRequest](#provenance.trigger.v1.MsgCreateTriggerRequest)
+    - [MsgCreateTriggerResponse](#provenance.trigger.v1.MsgCreateTriggerResponse)
+    - [MsgDestroyTriggerRequest](#provenance.trigger.v1.MsgDestroyTriggerRequest)
+    - [MsgDestroyTriggerResponse](#provenance.trigger.v1.MsgDestroyTriggerResponse)
+  
+    - [Msg](#provenance.trigger.v1.Msg)
+  
 - [Scalar Value Types](#scalar-value-types)
 
 
@@ -442,6 +557,22 @@ Attribute holds a typed key/value structure for data associated with an account
 | `value` | [bytes](#bytes) |  | The attribute value. |
 | `attribute_type` | [AttributeType](#provenance.attribute.v1.AttributeType) |  | The attribute value type. |
 | `address` | [string](#string) |  | The address the attribute is bound to |
+| `expiration_date` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that an attribute will expire. |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.EventAccountDataUpdated"></a>
+
+### EventAccountDataUpdated
+EventAccountDataUpdated event emitted when accountdata is set, updated, or deleted.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  |  |
 
 
 
@@ -461,6 +592,7 @@ EventAttributeAdd event emitted when attribute is added
 | `type` | [string](#string) |  |  |
 | `account` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
+| `expiration` | [string](#string) |  |  |
 
 
 
@@ -497,6 +629,45 @@ EventAttributeDistinctDelete event emitted when attribute is deleted with matchi
 | `attribute_type` | [string](#string) |  |  |
 | `account` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.EventAttributeExpirationUpdate"></a>
+
+### EventAttributeExpirationUpdate
+EventAttributeExpirationUpdate event emitted when attribute expiration is updated
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `value` | [string](#string) |  |  |
+| `account` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+| `original_expiration` | [string](#string) |  |  |
+| `updated_expiration` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.EventAttributeExpired"></a>
+
+### EventAttributeExpired
+EventAttributeExpired event emitted when attribute has expired and been deleted in BeginBlocker
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `value_hash` | [string](#string) |  |  |
+| `attribute_type` | [string](#string) |  |  |
+| `account` | [string](#string) |  |  |
+| `expiration` | [string](#string) |  |  |
 
 
 
@@ -606,10 +777,40 @@ GenesisState defines the attribute module's genesis state.
 
 
 
+<a name="provenance.attribute.v1.QueryAccountDataRequest"></a>
+
+### QueryAccountDataRequest
+QueryAccountDataRequest is the request type for the Query/AccountData method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address of the account to get the data for |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.QueryAccountDataResponse"></a>
+
+### QueryAccountDataResponse
+QueryAccountDataResponse is the response type for the Query/AccountData method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  | value is the accountdata attribute value for the requested account. |
+
+
+
+
+
+
 <a name="provenance.attribute.v1.QueryAttributeAccountsRequest"></a>
 
 ### QueryAttributeAccountsRequest
-QueryAttributeAccountsRequest is the response type for the Query/AccountsByAttribute method.
+QueryAttributeAccountsRequest is the request type for the Query/AttributeAccounts method.
 
 
 | Field | Type | Label | Description |
@@ -625,7 +826,7 @@ QueryAttributeAccountsRequest is the response type for the Query/AccountsByAttri
 <a name="provenance.attribute.v1.QueryAttributeAccountsResponse"></a>
 
 ### QueryAttributeAccountsResponse
-QueryAttributeAccountsResponse is the response type for the Query/AccountsByAttribute method.
+QueryAttributeAccountsResponse is the response type for the Query/AttributeAccounts method.
 
 
 | Field | Type | Label | Description |
@@ -691,7 +892,7 @@ QueryAttributesRequest is the request type for the Query/Attributes method.
 <a name="provenance.attribute.v1.QueryAttributesResponse"></a>
 
 ### QueryAttributesResponse
-QueryAttributesResponse is the response type for the Query/Attribute method.
+QueryAttributesResponse is the response type for the Query/Attributes method.
 
 
 | Field | Type | Label | Description |
@@ -733,7 +934,7 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 <a name="provenance.attribute.v1.QueryScanRequest"></a>
 
 ### QueryScanRequest
-QueryScanRequest is the request type for the Query/Scan account attributes method.
+QueryScanRequest is the request type for the Query/Scan method.
 
 
 | Field | Type | Label | Description |
@@ -750,7 +951,7 @@ QueryScanRequest is the request type for the Query/Scan account attributes metho
 <a name="provenance.attribute.v1.QueryScanResponse"></a>
 
 ### QueryScanResponse
-QueryScanResponse is the response type for the Query/Attribute method.
+QueryScanResponse is the response type for the Query/Scan method.
 
 
 | Field | Type | Label | Description |
@@ -782,6 +983,7 @@ Query defines the gRPC querier service for attribute module.
 | `Attributes` | [QueryAttributesRequest](#provenance.attribute.v1.QueryAttributesRequest) | [QueryAttributesResponse](#provenance.attribute.v1.QueryAttributesResponse) | Attributes queries attributes on a given account (address) for any defined attributes | GET|/provenance/attribute/v1/attributes/{account}|
 | `Scan` | [QueryScanRequest](#provenance.attribute.v1.QueryScanRequest) | [QueryScanResponse](#provenance.attribute.v1.QueryScanResponse) | Scan queries attributes on a given account (address) for any that match the provided suffix | GET|/provenance/attribute/v1/attribute/{account}/scan/{suffix}|
 | `AttributeAccounts` | [QueryAttributeAccountsRequest](#provenance.attribute.v1.QueryAttributeAccountsRequest) | [QueryAttributeAccountsResponse](#provenance.attribute.v1.QueryAttributeAccountsResponse) | AttributeAccounts queries accounts on a given attribute name | GET|/provenance/attribute/v1/accounts/{attribute_name}|
+| `AccountData` | [QueryAccountDataRequest](#provenance.attribute.v1.QueryAccountDataRequest) | [QueryAccountDataResponse](#provenance.attribute.v1.QueryAccountDataResponse) | AccountData returns the accountdata for a specified account. | GET|/provenance/attribute/v1/accountdata/{account}|
 
  <!-- end services -->
 
@@ -797,7 +999,7 @@ Query defines the gRPC querier service for attribute module.
 <a name="provenance.attribute.v1.MsgAddAttributeRequest"></a>
 
 ### MsgAddAttributeRequest
-MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account
+MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account.
 Attributes may only be set in an account by the account that the attribute name resolves to.
 
 
@@ -808,6 +1010,7 @@ Attributes may only be set in an account by the account that the attribute name 
 | `attribute_type` | [AttributeType](#provenance.attribute.v1.AttributeType) |  | The attribute value type. |
 | `account` | [string](#string) |  | The account to add the attribute to. |
 | `owner` | [string](#string) |  | The address that the name must resolve to. |
+| `expiration_date` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that an attribute will expire. |
 
 
 
@@ -817,7 +1020,7 @@ Attributes may only be set in an account by the account that the attribute name 
 <a name="provenance.attribute.v1.MsgAddAttributeResponse"></a>
 
 ### MsgAddAttributeResponse
-MsgAddAttributeResponse defines the Msg/Vote response type.
+MsgAddAttributeResponse defines the Msg/AddAttribute response type.
 
 
 
@@ -828,7 +1031,7 @@ MsgAddAttributeResponse defines the Msg/Vote response type.
 
 ### MsgDeleteAttributeRequest
 MsgDeleteAttributeRequest defines a message to delete an attribute from an account
-Attributes may only be remove from an account by the account that the attribute name resolves to.
+Attributes may only be removed from an account by the account that the attribute name resolves to.
 
 
 | Field | Type | Label | Description |
@@ -845,7 +1048,7 @@ Attributes may only be remove from an account by the account that the attribute 
 <a name="provenance.attribute.v1.MsgDeleteAttributeResponse"></a>
 
 ### MsgDeleteAttributeResponse
-MsgDeleteAttributeResponse defines the Msg/Vote response type.
+MsgDeleteAttributeResponse defines the Msg/DeleteAttribute response type.
 
 
 
@@ -856,7 +1059,7 @@ MsgDeleteAttributeResponse defines the Msg/Vote response type.
 
 ### MsgDeleteDistinctAttributeRequest
 MsgDeleteDistinctAttributeRequest defines a message to delete an attribute with matching name, value, and type from
-an account Attributes may only be remove from an account by the account that the attribute name resolves to.
+an account. Attributes may only be removed from an account by the account that the attribute name resolves to.
 
 
 | Field | Type | Label | Description |
@@ -874,7 +1077,63 @@ an account Attributes may only be remove from an account by the account that the
 <a name="provenance.attribute.v1.MsgDeleteDistinctAttributeResponse"></a>
 
 ### MsgDeleteDistinctAttributeResponse
-MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
+MsgDeleteDistinctAttributeResponse defines the Msg/DeleteDistinctAttribute response type.
+
+
+
+
+
+
+<a name="provenance.attribute.v1.MsgSetAccountDataRequest"></a>
+
+### MsgSetAccountDataRequest
+MsgSetAccountDataRequest defines a message to set an account's accountdata attribute.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  |  |
+| `account` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.MsgSetAccountDataResponse"></a>
+
+### MsgSetAccountDataResponse
+MsgSetAccountDataResponse defines the Msg/SetAccountData response type.
+
+
+
+
+
+
+<a name="provenance.attribute.v1.MsgUpdateAttributeExpirationRequest"></a>
+
+### MsgUpdateAttributeExpirationRequest
+MsgUpdateAttributeExpirationRequest defines an sdk.Msg type that is used to update an existing attribute's expiration
+date
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | The attribute name. |
+| `value` | [bytes](#bytes) |  | The original attribute value. |
+| `expiration_date` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Time that an attribute will expire. |
+| `account` | [string](#string) |  | The account to add the attribute to. |
+| `owner` | [string](#string) |  | The address that the name must resolve to. |
+
+
+
+
+
+
+<a name="provenance.attribute.v1.MsgUpdateAttributeExpirationResponse"></a>
+
+### MsgUpdateAttributeExpirationResponse
+MsgUpdateAttributeExpirationResponse defines the Msg/Vote response type.
 
 
 
@@ -884,7 +1143,7 @@ MsgDeleteDistinctAttributeResponse defines the Msg/Vote response type.
 <a name="provenance.attribute.v1.MsgUpdateAttributeRequest"></a>
 
 ### MsgUpdateAttributeRequest
-MsgUpdateAttributeRequest defines an sdk.Msg type that is used to update an existing attribute to an account
+MsgUpdateAttributeRequest defines an sdk.Msg type that is used to update an existing attribute to an account.
 Attributes may only be set in an account by the account that the attribute name resolves to.
 
 
@@ -906,7 +1165,7 @@ Attributes may only be set in an account by the account that the attribute name 
 <a name="provenance.attribute.v1.MsgUpdateAttributeResponse"></a>
 
 ### MsgUpdateAttributeResponse
-MsgUpdateAttributeResponse defines the Msg/Vote response type.
+MsgUpdateAttributeResponse defines the Msg/UpdateAttribute response type.
 
 
 
@@ -928,8 +1187,131 @@ Msg defines the attribute module Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `AddAttribute` | [MsgAddAttributeRequest](#provenance.attribute.v1.MsgAddAttributeRequest) | [MsgAddAttributeResponse](#provenance.attribute.v1.MsgAddAttributeResponse) | AddAttribute defines a method to verify a particular invariance. | |
 | `UpdateAttribute` | [MsgUpdateAttributeRequest](#provenance.attribute.v1.MsgUpdateAttributeRequest) | [MsgUpdateAttributeResponse](#provenance.attribute.v1.MsgUpdateAttributeResponse) | UpdateAttribute defines a method to verify a particular invariance. | |
+| `UpdateAttributeExpiration` | [MsgUpdateAttributeExpirationRequest](#provenance.attribute.v1.MsgUpdateAttributeExpirationRequest) | [MsgUpdateAttributeExpirationResponse](#provenance.attribute.v1.MsgUpdateAttributeExpirationResponse) | UpdateAttributeExpiration defines a method to verify a particular invariance. | |
 | `DeleteAttribute` | [MsgDeleteAttributeRequest](#provenance.attribute.v1.MsgDeleteAttributeRequest) | [MsgDeleteAttributeResponse](#provenance.attribute.v1.MsgDeleteAttributeResponse) | DeleteAttribute defines a method to verify a particular invariance. | |
 | `DeleteDistinctAttribute` | [MsgDeleteDistinctAttributeRequest](#provenance.attribute.v1.MsgDeleteDistinctAttributeRequest) | [MsgDeleteDistinctAttributeResponse](#provenance.attribute.v1.MsgDeleteDistinctAttributeResponse) | DeleteDistinctAttribute defines a method to verify a particular invariance. | |
+| `SetAccountData` | [MsgSetAccountDataRequest](#provenance.attribute.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.attribute.v1.MsgSetAccountDataResponse) | SetAccountData defines a method for setting/updating an account's accountdata attribute. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibchooks/v1/params.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibchooks/v1/params.proto
+
+
+
+<a name="provenance.ibchooks.v1.Params"></a>
+
+### Params
+Params defines the allowed async ack contracts
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `allowed_async_ack_contracts` | [string](#string) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibchooks/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibchooks/v1/genesis.proto
+
+
+
+<a name="provenance.ibchooks.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState is the IBC Hooks genesis state (params)
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.ibchooks.v1.Params) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibchooks/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibchooks/v1/tx.proto
+
+
+
+<a name="provenance.ibchooks.v1.MsgEmitIBCAck"></a>
+
+### MsgEmitIBCAck
+MsgEmitIBCAck is the IBC Acknowledgement
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `packet_sequence` | [uint64](#uint64) |  |  |
+| `channel` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.ibchooks.v1.MsgEmitIBCAckResponse"></a>
+
+### MsgEmitIBCAckResponse
+MsgEmitIBCAckResponse is the IBC Acknowledgement response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contract_result` | [string](#string) |  |  |
+| `ibc_ack` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.ibchooks.v1.Msg"></a>
+
+### Msg
+Msg defines the Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `EmitIBCAck` | [MsgEmitIBCAck](#provenance.ibchooks.v1.MsgEmitIBCAck) | [MsgEmitIBCAckResponse](#provenance.ibchooks.v1.MsgEmitIBCAckResponse) | EmitIBCAck checks the sender can emit the ack and writes the IBC acknowledgement | |
 
  <!-- end services -->
 
@@ -1387,6 +1769,32 @@ GenesisState defines the account module's genesis state.
 
 
 
+<a name="provenance.marker.v1.AddMarkerProposal"></a>
+
+### AddMarkerProposal
+AddMarkerProposal is deprecated and can no longer be used.
+Deprecated: This message is no longer usable. It is only still included for
+backwards compatibility (e.g. looking up old governance proposals).
+It is replaced by providing a MsgAddMarkerRequest in a governance proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `manager` | [string](#string) |  |  |
+| `status` | [MarkerStatus](#provenance.marker.v1.MarkerStatus) |  |  |
+| `marker_type` | [MarkerType](#provenance.marker.v1.MarkerType) |  |  |
+| `access_list` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
+| `supply_fixed` | [bool](#bool) |  |  |
+| `allow_governance_control` | [bool](#bool) |  |  |
+
+
+
+
+
+
 <a name="provenance.marker.v1.ChangeStatusProposal"></a>
 
 ### ChangeStatusProposal
@@ -1572,6 +1980,36 @@ QueryAccessResponse is the response type for the Query/MarkerAccess method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `accounts` | [AccessGrant](#provenance.marker.v1.AccessGrant) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.marker.v1.QueryAccountDataRequest"></a>
+
+### QueryAccountDataRequest
+QueryAccountDataRequest is the request type for the Query/AccountData
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | The denomination to look up. |
+
+
+
+
+
+
+<a name="provenance.marker.v1.QueryAccountDataResponse"></a>
+
+### QueryAccountDataResponse
+QueryAccountDataResponse is the response type for the Query/AccountData
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  | The accountdata for the requested denom. |
 
 
 
@@ -1808,6 +2246,7 @@ Query defines the gRPC querier service for marker module.
 | `Escrow` | [QueryEscrowRequest](#provenance.marker.v1.QueryEscrowRequest) | [QueryEscrowResponse](#provenance.marker.v1.QueryEscrowResponse) | query for coins on a marker account | GET|/provenance/marker/v1/escrow/{id}|
 | `Access` | [QueryAccessRequest](#provenance.marker.v1.QueryAccessRequest) | [QueryAccessResponse](#provenance.marker.v1.QueryAccessResponse) | query for access records on an account | GET|/provenance/marker/v1/accesscontrol/{id}|
 | `DenomMetadata` | [QueryDenomMetadataRequest](#provenance.marker.v1.QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#provenance.marker.v1.QueryDenomMetadataResponse) | query for access records on an account | GET|/provenance/marker/v1/getdenommetadata/{denom}|
+| `AccountData` | [QueryAccountDataRequest](#provenance.marker.v1.QueryAccountDataRequest) | [QueryAccountDataResponse](#provenance.marker.v1.QueryAccountDataResponse) | query for account data associated with a denom | GET|/provenance/marker/v1/accountdata/{denom}|
 
  <!-- end services -->
 
@@ -2200,6 +2639,34 @@ MsgMintResponse defines the Msg/Mint response type
 
 
 
+<a name="provenance.marker.v1.MsgSetAccountDataRequest"></a>
+
+### MsgSetAccountDataRequest
+MsgSetAccountDataRequest defines a msg to set/update/delete the account data for a marker.
+Signer must have deposit authority or be a gov proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | The denomination of the marker to update. |
+| `value` | [string](#string) |  | The desired accountdata value. |
+| `signer` | [string](#string) |  | The signer of this message. Must have deposit authority or be the governance module account address. |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgSetAccountDataResponse"></a>
+
+### MsgSetAccountDataResponse
+MsgSetAccountDataResponse defines the Msg/SetAccountData response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgSetDenomMetadataRequest"></a>
 
 ### MsgSetDenomMetadataRequest
@@ -2282,6 +2749,34 @@ MsgTransferResponse defines the Msg/Transfer response type
 
 
 
+<a name="provenance.marker.v1.MsgUpdateForcedTransferRequest"></a>
+
+### MsgUpdateForcedTransferRequest
+MsgUpdateForcedTransferRequest defines a msg to update the allow_forced_transfer field of a marker.
+It is only usable via governance proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | The denomination of the marker to update. |
+| `allow_forced_transfer` | [bool](#bool) |  | Whether an admin can transfer restricted coins from a 3rd-party account without their signature. |
+| `authority` | [string](#string) |  | The signer of this message. Must be the governance module account address. |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgUpdateForcedTransferResponse"></a>
+
+### MsgUpdateForcedTransferResponse
+MsgUpdateForcedTransferResponse defines the Msg/UpdateForcedTransfer response type
+
+
+
+
+
+
 <a name="provenance.marker.v1.MsgUpdateRequiredAttributesRequest"></a>
 
 ### MsgUpdateRequiredAttributesRequest
@@ -2292,10 +2787,10 @@ add list
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  |  |
-| `remove_required_attributes` | [string](#string) | repeated |  |
-| `add_required_attributes` | [string](#string) | repeated |  |
-| `transfer_authority` | [string](#string) |  | signer of the proposal |
+| `denom` | [string](#string) |  | The denomination of the marker to update. |
+| `remove_required_attributes` | [string](#string) | repeated | List of required attributes to remove from marker. |
+| `add_required_attributes` | [string](#string) | repeated | List of required attributes to add to marker. |
+| `transfer_authority` | [string](#string) |  | The signer of the message. Must have transfer authority to marker or be governance module account address. |
 
 
 
@@ -2305,7 +2800,36 @@ add list
 <a name="provenance.marker.v1.MsgUpdateRequiredAttributesResponse"></a>
 
 ### MsgUpdateRequiredAttributesResponse
-MsgUpdateRequiredAttributesResponse defines the Msg/MsgUpdateRequiredAttributes response type
+MsgUpdateRequiredAttributesResponse defines the Msg/UpdateRequiredAttributes response type
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgUpdateSendDenyListRequest"></a>
+
+### MsgUpdateSendDenyListRequest
+MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a resticted marker
+signer must have transfer authority
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | The denomination of the marker to update. |
+| `remove_denied_addresses` | [string](#string) | repeated | List of bech32 addresses to remove from the deny send list. |
+| `add_denied_addresses` | [string](#string) | repeated | List of bech32 addresses to add to the deny send list. |
+| `authority` | [string](#string) |  | The signer of the message. Must have admin authority to marker or be governance module account address. |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgUpdateSendDenyListResponse"></a>
+
+### MsgUpdateSendDenyListResponse
+MsgUpdateSendDenyListResponse defines the Msg/UpdateSendDenyList response type
 
 
 
@@ -2370,6 +2894,9 @@ Msg defines the Marker Msg service.
 | `AddFinalizeActivateMarker` | [MsgAddFinalizeActivateMarkerRequest](#provenance.marker.v1.MsgAddFinalizeActivateMarkerRequest) | [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse) | AddFinalizeActivateMarker | |
 | `SupplyIncreaseProposal` | [MsgSupplyIncreaseProposalRequest](#provenance.marker.v1.MsgSupplyIncreaseProposalRequest) | [MsgSupplyIncreaseProposalResponse](#provenance.marker.v1.MsgSupplyIncreaseProposalResponse) | SupplyIncreaseProposal can only be called via gov proposal | |
 | `UpdateRequiredAttributes` | [MsgUpdateRequiredAttributesRequest](#provenance.marker.v1.MsgUpdateRequiredAttributesRequest) | [MsgUpdateRequiredAttributesResponse](#provenance.marker.v1.MsgUpdateRequiredAttributesResponse) | UpdateRequiredAttributes will only succeed if signer has transfer authority | |
+| `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance.marker.v1.MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. | |
+| `SetAccountData` | [MsgSetAccountDataRequest](#provenance.marker.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.marker.v1.MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. | |
+| `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance.marker.v1.MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance.marker.v1.MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has admin authority | |
 
  <!-- end services -->
 
@@ -3310,10 +3837,488 @@ GenesisState defines the account module's genesis state.
 
 
 
+<a name="provenance/metadata/v1/p8e/p8e.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/metadata/v1/p8e/p8e.proto
+
+
+
+<a name="provenance.metadata.v1.p8e.Condition"></a>
+
+### Condition
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `condition_name` | [string](#string) |  |  |
+| `result` | [ExecutionResult](#provenance.metadata.v1.p8e.ExecutionResult) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.ConditionSpec"></a>
+
+### ConditionSpec
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `func_name` | [string](#string) |  |  |
+| `input_specs` | [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec) | repeated |  |
+| `output_spec` | [OutputSpec](#provenance.metadata.v1.p8e.OutputSpec) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Consideration"></a>
+
+### Consideration
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `consideration_name` | [string](#string) |  |  |
+| `inputs` | [ProposedFact](#provenance.metadata.v1.p8e.ProposedFact) | repeated |  |
+| `result` | [ExecutionResult](#provenance.metadata.v1.p8e.ExecutionResult) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.ConsiderationSpec"></a>
+
+### ConsiderationSpec
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `func_name` | [string](#string) |  |  |
+| `responsible_party` | [PartyType](#provenance.metadata.v1.p8e.PartyType) |  |  |
+| `input_specs` | [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec) | repeated |  |
+| `output_spec` | [OutputSpec](#provenance.metadata.v1.p8e.OutputSpec) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Contract"></a>
+
+### Contract
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `definition` | [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec) |  |  |
+| `spec` | [Fact](#provenance.metadata.v1.p8e.Fact) |  |  |
+| `invoker` | [SigningAndEncryptionPublicKeys](#provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys) |  |  |
+| `inputs` | [Fact](#provenance.metadata.v1.p8e.Fact) | repeated |  |
+| `conditions` | [Condition](#provenance.metadata.v1.p8e.Condition) | repeated | **Deprecated.**  |
+| `considerations` | [Consideration](#provenance.metadata.v1.p8e.Consideration) | repeated |  |
+| `recitals` | [Recital](#provenance.metadata.v1.p8e.Recital) | repeated |  |
+| `times_executed` | [int32](#int32) |  |  |
+| `start_time` | [Timestamp](#provenance.metadata.v1.p8e.Timestamp) |  |  |
+| `context` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.ContractSpec"></a>
+
+### ContractSpec
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `definition` | [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec) |  |  |
+| `input_specs` | [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec) | repeated |  |
+| `parties_involved` | [PartyType](#provenance.metadata.v1.p8e.PartyType) | repeated |  |
+| `condition_specs` | [ConditionSpec](#provenance.metadata.v1.p8e.ConditionSpec) | repeated |  |
+| `consideration_specs` | [ConsiderationSpec](#provenance.metadata.v1.p8e.ConsiderationSpec) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.DefinitionSpec"></a>
+
+### DefinitionSpec
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `resource_location` | [Location](#provenance.metadata.v1.p8e.Location) |  |  |
+| `signature` | [Signature](#provenance.metadata.v1.p8e.Signature) |  |  |
+| `type` | [DefinitionSpecType](#provenance.metadata.v1.p8e.DefinitionSpecType) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.ExecutionResult"></a>
+
+### ExecutionResult
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `output` | [ProposedFact](#provenance.metadata.v1.p8e.ProposedFact) |  |  |
+| `result` | [ExecutionResultType](#provenance.metadata.v1.p8e.ExecutionResultType) |  |  |
+| `recorded_at` | [Timestamp](#provenance.metadata.v1.p8e.Timestamp) |  |  |
+| `error_message` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Fact"></a>
+
+### Fact
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `data_location` | [Location](#provenance.metadata.v1.p8e.Location) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Location"></a>
+
+### Location
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ref` | [ProvenanceReference](#provenance.metadata.v1.p8e.ProvenanceReference) |  |  |
+| `classname` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.OutputSpec"></a>
+
+### OutputSpec
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `spec` | [DefinitionSpec](#provenance.metadata.v1.p8e.DefinitionSpec) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.ProposedFact"></a>
+
+### ProposedFact
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `hash` | [string](#string) |  |  |
+| `classname` | [string](#string) |  |  |
+| `ancestor` | [ProvenanceReference](#provenance.metadata.v1.p8e.ProvenanceReference) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.ProvenanceReference"></a>
+
+### ProvenanceReference
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_uuid` | [UUID](#provenance.metadata.v1.p8e.UUID) |  |  |
+| `group_uuid` | [UUID](#provenance.metadata.v1.p8e.UUID) |  |  |
+| `hash` | [string](#string) |  |  |
+| `name` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.PublicKey"></a>
+
+### PublicKey
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `public_key_bytes` | [bytes](#bytes) |  |  |
+| `type` | [PublicKeyType](#provenance.metadata.v1.p8e.PublicKeyType) |  |  |
+| `curve` | [PublicKeyCurve](#provenance.metadata.v1.p8e.PublicKeyCurve) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Recital"></a>
+
+### Recital
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `signer_role` | [PartyType](#provenance.metadata.v1.p8e.PartyType) |  |  |
+| `signer` | [SigningAndEncryptionPublicKeys](#provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys) |  |  |
+| `address` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Recitals"></a>
+
+### Recitals
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `parties` | [Recital](#provenance.metadata.v1.p8e.Recital) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Signature"></a>
+
+### Signature
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `algo` | [string](#string) |  |  |
+| `provider` | [string](#string) |  |  |
+| `signature` | [string](#string) |  |  |
+| `signer` | [SigningAndEncryptionPublicKeys](#provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.SignatureSet"></a>
+
+### SignatureSet
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `signatures` | [Signature](#provenance.metadata.v1.p8e.Signature) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.SigningAndEncryptionPublicKeys"></a>
+
+### SigningAndEncryptionPublicKeys
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `signing_public_key` | [PublicKey](#provenance.metadata.v1.p8e.PublicKey) |  |  |
+| `encryption_public_key` | [PublicKey](#provenance.metadata.v1.p8e.PublicKey) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.Timestamp"></a>
+
+### Timestamp
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `seconds` | [int64](#int64) |  |  |
+| `nanos` | [int32](#int32) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.p8e.UUID"></a>
+
+### UUID
+Deprecated: Do not use.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance.metadata.v1.p8e.DefinitionSpecType"></a>
+
+### DefinitionSpecType
+Deprecated: Do not use.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| DEFINITION_SPEC_TYPE_UNKNOWN | 0 | Deprecated: Do not use. |
+| DEFINITION_SPEC_TYPE_PROPOSED | 1 | Deprecated: Do not use. |
+| DEFINITION_SPEC_TYPE_FACT | 2 | Deprecated: Do not use. |
+| DEFINITION_SPEC_TYPE_FACT_LIST | 3 | Deprecated: Do not use. |
+
+
+
+<a name="provenance.metadata.v1.p8e.ExecutionResultType"></a>
+
+### ExecutionResultType
+Deprecated: Do not use.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| RESULT_TYPE_UNKNOWN | 0 | Deprecated: Do not use. |
+| RESULT_TYPE_PASS | 1 | Deprecated: Do not use. |
+| RESULT_TYPE_SKIP | 2 | Deprecated: Do not use. |
+| RESULT_TYPE_FAIL | 3 | Deprecated: Do not use. |
+
+
+
+<a name="provenance.metadata.v1.p8e.PartyType"></a>
+
+### PartyType
+Deprecated: Do not use.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| PARTY_TYPE_UNKNOWN | 0 | Deprecated: Do not use. |
+| PARTY_TYPE_ORIGINATOR | 1 | Deprecated: Do not use. |
+| PARTY_TYPE_SERVICER | 2 | Deprecated: Do not use. |
+| PARTY_TYPE_INVESTOR | 3 | Deprecated: Do not use. |
+| PARTY_TYPE_CUSTODIAN | 4 | Deprecated: Do not use. |
+| PARTY_TYPE_OWNER | 5 | Deprecated: Do not use. |
+| PARTY_TYPE_AFFILIATE | 6 | Deprecated: Do not use. |
+| PARTY_TYPE_OMNIBUS | 7 | Deprecated: Do not use. |
+| PARTY_TYPE_PROVENANCE | 8 | Deprecated: Do not use. |
+| PARTY_TYPE_MARKER | 9 | Deprecated: Do not use. |
+| PARTY_TYPE_CONTROLLER | 10 | Deprecated: Do not use. |
+| PARTY_TYPE_VALIDATOR | 11 | Deprecated: Do not use. |
+
+
+
+<a name="provenance.metadata.v1.p8e.PublicKeyCurve"></a>
+
+### PublicKeyCurve
+Deprecated: Do not use.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| SECP256K1 | 0 | Deprecated: Do not use. |
+| P256 | 1 | Deprecated: Do not use. |
+
+
+
+<a name="provenance.metadata.v1.p8e.PublicKeyType"></a>
+
+### PublicKeyType
+Deprecated: Do not use.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| ELLIPTIC | 0 | Deprecated: Do not use. |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="provenance/metadata/v1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/metadata/v1/query.proto
+
+
+
+<a name="provenance.metadata.v1.AccountDataRequest"></a>
+
+### AccountDataRequest
+AccountDataRequest is the request type for the Query/AccountData RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `metadata_addr` | [bytes](#bytes) |  | The metadata address to look up. Currently, only scope ids are supported. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.AccountDataResponse"></a>
+
+### AccountDataResponse
+AccountDataResponse is the response type for the Query/AccountData RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [string](#string) |  | The accountdata for the requested metadata address. |
+
+
+
 
 
 
@@ -3326,7 +4331,9 @@ ContractSpecificationRequest is the request type for the Query/ContractSpecifica
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `specification_id` | [string](#string) |  | specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84 or a bech32 contract specification address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn. It can also be a record specification address, e.g. recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44. |
-| `include_record_specs` | [bool](#bool) |  | include_record_specs is a flag for whether or not the record specifications in this contract specification should be included in the result. |
+| `include_record_specs` | [bool](#bool) |  | include_record_specs is a flag for whether to include the the record specifications of this contract specification in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -3374,6 +4381,8 @@ ContractSpecificationsAllRequest is the request type for the Query/ContractSpeci
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -3398,6 +4407,42 @@ ContractSpecificationsAllResponse is the response type for the Query/ContractSpe
 
 
 
+<a name="provenance.metadata.v1.GetByAddrRequest"></a>
+
+### GetByAddrRequest
+GetByAddrRequest is the request type for the Query/GetByAddr RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `addrs` | [string](#string) | repeated | ids are the metadata addresses of the things to look up. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.GetByAddrResponse"></a>
+
+### GetByAddrResponse
+GetByAddrResponse is the response type for the Query/GetByAddr RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scopes` | [Scope](#provenance.metadata.v1.Scope) | repeated | scopes contains any scopes that were requested and found. |
+| `sessions` | [Session](#provenance.metadata.v1.Session) | repeated | sessions contains any sessions that were requested and found. |
+| `records` | [Record](#provenance.metadata.v1.Record) | repeated | records contains any records that were requested and found. |
+| `scope_specs` | [ScopeSpecification](#provenance.metadata.v1.ScopeSpecification) | repeated | scope_specs contains any scope specifications that were requested and found. |
+| `contract_specs` | [ContractSpecification](#provenance.metadata.v1.ContractSpecification) | repeated | contract_specs contains any contract specifications that were requested and found. |
+| `record_specs` | [RecordSpecification](#provenance.metadata.v1.RecordSpecification) | repeated | record_specs contains any record specifications that were requested and found. |
+| `not_found` | [string](#string) | repeated | not_found contains any addrs requested but not found. |
+
+
+
+
+
+
 <a name="provenance.metadata.v1.OSAllLocatorsRequest"></a>
 
 ### OSAllLocatorsRequest
@@ -3406,6 +4451,7 @@ OSAllLocatorsRequest is the request type for the Query/OSAllLocators RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -3434,6 +4480,11 @@ OSAllLocatorsResponse is the response type for the Query/OSAllLocators RPC metho
 
 ### OSLocatorParamsRequest
 OSLocatorParamsRequest is the request type for the Query/OSLocatorParams RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -3465,6 +4516,7 @@ OSLocatorRequest is the request type for the Query/OSLocator RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  |  |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -3496,6 +4548,7 @@ OSLocatorsByScopeRequest is the request type for the Query/OSLocatorsByScope RPC
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `scope_id` | [string](#string) |  |  |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -3527,6 +4580,7 @@ OSLocatorsByURIRequest is the request type for the Query/OSLocatorsByURI RPC met
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `uri` | [string](#string) |  |  |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -3560,6 +4614,7 @@ OwnershipRequest is the request type for the Query/Ownership RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -3588,6 +4643,11 @@ OwnershipResponse is the response type for the Query/Ownership RPC method.
 
 ### QueryParamsRequest
 QueryParamsRequest is the request type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -3620,6 +4680,8 @@ RecordSpecificationRequest is the request type for the Query/RecordSpecification
 | ----- | ---- | ----- | ----------- |
 | `specification_id` | [string](#string) |  | specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84 or a bech32 contract specification address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn. It can also be a record specification address, e.g. recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44. |
 | `name` | [string](#string) |  | name is the name of the record to look up. It is required if the specification_id is a uuid or contract specification address. It is ignored if the specification_id is a record specification address. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -3666,6 +4728,8 @@ RecordSpecificationsAllRequest is the request type for the Query/RecordSpecifica
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -3700,6 +4764,8 @@ Query/RecordSpecificationsForContractSpecification RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `specification_id` | [string](#string) |  | specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84 or a bech32 contract specification address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn. It can also be a record specification address, e.g. recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -3750,6 +4816,8 @@ RecordsAllRequest is the request type for the Query/RecordsAll RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -3786,8 +4854,10 @@ RecordsRequest is the request type for the Query/Records RPC method.
 | `scope_id` | [string](#string) |  | scope_id can either be a uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. |
 | `session_id` | [string](#string) |  | session_id can either be a uuid, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0 or a bech32 session address, e.g. session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. This can only be a uuid if a scope_id is also provided. |
 | `name` | [string](#string) |  | name is the name of the record to look for |
-| `include_scope` | [bool](#bool) |  | include_scope is a flag for whether or not the scope containing these records should be included. |
-| `include_sessions` | [bool](#bool) |  | include_sessions is a flag for whether or not the sessions containing these records should be included. |
+| `include_scope` | [bool](#bool) |  | include_scope is a flag for whether to include the the scope containing these records in the response. |
+| `include_sessions` | [bool](#bool) |  | include_sessions is a flag for whether to include the sessions containing these records in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -3823,8 +4893,10 @@ ScopeRequest is the request type for the Query/Scope RPC method.
 | `scope_id` | [string](#string) |  | scope_id can either be a uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope address, e.g. scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel. |
 | `session_addr` | [string](#string) |  | session_addr is a bech32 session address, e.g. session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. |
 | `record_addr` | [string](#string) |  | record_addr is a bech32 record address, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3. |
-| `include_sessions` | [bool](#bool) |  | include_sessions is a flag for whether or not the sessions in the scope should be included. |
-| `include_records` | [bool](#bool) |  | include_records is a flag for whether or not the records in the scope should be included. |
+| `include_sessions` | [bool](#bool) |  | include_sessions is a flag for whether to include the sessions of the scope in the response. |
+| `include_records` | [bool](#bool) |  | include_records is a flag for whether to include the records of the scope in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -3858,8 +4930,10 @@ ScopeSpecificationRequest is the request type for the Query/ScopeSpecification R
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `specification_id` | [string](#string) |  | specification_id can either be a uuid, e.g. dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 or a bech32 scope specification address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m. |
-| `include_contract_specs` | [bool](#bool) |  | include_contract_specs is a flag for whether or not the contract specifications in the scope specification should be included. |
-| `include_record_specs` | [bool](#bool) |  | include_record_specs is a flag for whether or not the record specifications in the scope specification should be included. |
+| `include_contract_specs` | [bool](#bool) |  | include_contract_specs is a flag for whether to include the contract specifications of the scope specification in the response. |
+| `include_record_specs` | [bool](#bool) |  | include_record_specs is a flag for whether to include the record specifications of the scope specification in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -3908,6 +4982,8 @@ ScopeSpecificationsAllRequest is the request type for the Query/ScopeSpecificati
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -3957,6 +5033,8 @@ ScopesAllRequest is the request type for the Query/ScopesAll RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -4006,6 +5084,8 @@ SessionsAllRequest is the request type for the Query/SessionsAll RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -4042,8 +5122,10 @@ SessionsRequest is the request type for the Query/Sessions RPC method.
 | `session_id` | [string](#string) |  | session_id can either be a uuid, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0 or a bech32 session address, e.g. session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. This can only be a uuid if a scope_id is also provided. |
 | `record_addr` | [string](#string) |  | record_addr is a bech32 record address, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3. |
 | `record_name` | [string](#string) |  | record_name is the name of the record to find the session for in the provided scope. |
-| `include_scope` | [bool](#bool) |  | include_scope is a flag for whether or not the scope containing these sessions should be included. |
-| `include_records` | [bool](#bool) |  | include_records is a flag for whether or not the records in these sessions should be included. |
+| `include_scope` | [bool](#bool) |  | include_scope is a flag for whether to include the scope containing these sessions in the response. |
+| `include_records` | [bool](#bool) |  | include_records is a flag for whether to include the records of these sessions in the response. |
+| `exclude_id_info` | [bool](#bool) |  | exclude_id_info is a flag for whether to exclude the id info from the response. |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 
 
 
@@ -4077,6 +5159,7 @@ ValueOwnershipRequest is the request type for the Query/ValueOwnership RPC metho
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
+| `include_request` | [bool](#bool) |  | include_request is a flag for whether to include this request in your result. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
 
 
@@ -4164,11 +5247,13 @@ By default, the record specifications for this contract specification are not in
 The specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e6060a84, a bech32 contract specification address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn, or a bech32 record specification address, e.g. recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44. If it is a record specification address, then the contract specification that contains that record specification is used. | GET|/provenance/metadata/v1/contractspec/{specification_id}/recordspecs|
 | `RecordSpecification` | [RecordSpecificationRequest](#provenance.metadata.v1.RecordSpecificationRequest) | [RecordSpecificationResponse](#provenance.metadata.v1.RecordSpecificationResponse) | RecordSpecification returns a record specification for the given input. | GET|/provenance/metadata/v1/recordspec/{specification_id}GET|/provenance/metadata/v1/contractspec/{specification_id}/recordspec/{name}|
 | `RecordSpecificationsAll` | [RecordSpecificationsAllRequest](#provenance.metadata.v1.RecordSpecificationsAllRequest) | [RecordSpecificationsAllResponse](#provenance.metadata.v1.RecordSpecificationsAllResponse) | RecordSpecificationsAll retrieves all record specifications. | GET|/provenance/metadata/v1/recordspecs/all|
+| `GetByAddr` | [GetByAddrRequest](#provenance.metadata.v1.GetByAddrRequest) | [GetByAddrResponse](#provenance.metadata.v1.GetByAddrResponse) | GetByAddr retrieves metadata given any address(es). | GET|/provenance/metadata/v1/addr/{addrs}|
 | `OSLocatorParams` | [OSLocatorParamsRequest](#provenance.metadata.v1.OSLocatorParamsRequest) | [OSLocatorParamsResponse](#provenance.metadata.v1.OSLocatorParamsResponse) | OSLocatorParams returns all parameters for the object store locator sub module. | GET|/provenance/metadata/v1/locator/params|
 | `OSLocator` | [OSLocatorRequest](#provenance.metadata.v1.OSLocatorRequest) | [OSLocatorResponse](#provenance.metadata.v1.OSLocatorResponse) | OSLocator returns an ObjectStoreLocator by its owner's address. | GET|/provenance/metadata/v1/locator/{owner}|
 | `OSLocatorsByURI` | [OSLocatorsByURIRequest](#provenance.metadata.v1.OSLocatorsByURIRequest) | [OSLocatorsByURIResponse](#provenance.metadata.v1.OSLocatorsByURIResponse) | OSLocatorsByURI returns all ObjectStoreLocator entries for a locator uri. | GET|/provenance/metadata/v1/locator/uri/{uri}|
 | `OSLocatorsByScope` | [OSLocatorsByScopeRequest](#provenance.metadata.v1.OSLocatorsByScopeRequest) | [OSLocatorsByScopeResponse](#provenance.metadata.v1.OSLocatorsByScopeResponse) | OSLocatorsByScope returns all ObjectStoreLocator entries for a for all signer's present in the specified scope. | GET|/provenance/metadata/v1/locator/scope/{scope_id}|
 | `OSAllLocators` | [OSAllLocatorsRequest](#provenance.metadata.v1.OSAllLocatorsRequest) | [OSAllLocatorsResponse](#provenance.metadata.v1.OSAllLocatorsResponse) | OSAllLocators returns all ObjectStoreLocator entries. | GET|/provenance/metadata/v1/locators/all|
+| `AccountData` | [AccountDataRequest](#provenance.metadata.v1.AccountDataRequest) | [AccountDataResponse](#provenance.metadata.v1.AccountDataResponse) | AccountData gets the account data associated with a metadata address. Currently, only scope ids are supported. | GET|/provenance/metadata/v1/accountdata/{metadata_addr}|
 
  <!-- end services -->
 
@@ -4534,6 +5619,33 @@ MsgDeleteScopeSpecificationResponse is the response type for the Msg/DeleteScope
 
 
 
+<a name="provenance.metadata.v1.MsgMigrateValueOwnerRequest"></a>
+
+### MsgMigrateValueOwnerRequest
+MsgMigrateValueOwnerRequest is the request to migrate all scopes with one value owner to another value owner.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `existing` | [string](#string) |  | existing is the value owner address that is being migrated. |
+| `proposed` | [string](#string) |  | proposed is the new value owner address for all of existing's scopes. |
+| `signers` | [string](#string) | repeated | signers is the list of addresses of those signing this request. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgMigrateValueOwnerResponse"></a>
+
+### MsgMigrateValueOwnerResponse
+MsgMigrateValueOwnerResponse is the response from migrating a value owner address.
+
+
+
+
+
+
 <a name="provenance.metadata.v1.MsgModifyOSLocatorRequest"></a>
 
 ### MsgModifyOSLocatorRequest
@@ -4558,6 +5670,100 @@ MsgModifyOSLocatorResponse is the response type for the Msg/ModifyOSLocator RPC 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `locator` | [ObjectStoreLocator](#provenance.metadata.v1.ObjectStoreLocator) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgP8eMemorializeContractRequest"></a>
+
+### MsgP8eMemorializeContractRequest
+MsgP8eMemorializeContractRequest  has been deprecated and is no longer usable.
+Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_id` | [string](#string) |  |  |
+| `group_id` | [string](#string) |  |  |
+| `scope_specification_id` | [string](#string) |  |  |
+| `recitals` | [p8e.Recitals](#provenance.metadata.v1.p8e.Recitals) |  |  |
+| `contract` | [p8e.Contract](#provenance.metadata.v1.p8e.Contract) |  |  |
+| `signatures` | [p8e.SignatureSet](#provenance.metadata.v1.p8e.SignatureSet) |  |  |
+| `invoker` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgP8eMemorializeContractResponse"></a>
+
+### MsgP8eMemorializeContractResponse
+MsgP8eMemorializeContractResponse  has been deprecated and is no longer usable.
+Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_id_info` | [ScopeIdInfo](#provenance.metadata.v1.ScopeIdInfo) |  |  |
+| `session_id_info` | [SessionIdInfo](#provenance.metadata.v1.SessionIdInfo) |  |  |
+| `record_id_infos` | [RecordIdInfo](#provenance.metadata.v1.RecordIdInfo) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgSetAccountDataRequest"></a>
+
+### MsgSetAccountDataRequest
+MsgSetAccountDataRequest is the request to set/update/delete a scope's account data.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `metadata_addr` | [bytes](#bytes) |  | The identifier to associate the data with. Currently, only scope ids are supported. |
+| `value` | [string](#string) |  | The desired accountdata value. |
+| `signers` | [string](#string) | repeated | The signers of this message. Must fulfill owner requirements of the scope. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgSetAccountDataResponse"></a>
+
+### MsgSetAccountDataResponse
+MsgSetAccountDataResponse is the response from setting/updating/deleting a scope's account data.
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgUpdateValueOwnersRequest"></a>
+
+### MsgUpdateValueOwnersRequest
+MsgUpdateValueOwnersRequest is the request to update the value owner addresses in one or more scopes.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_ids` | [bytes](#bytes) | repeated | scope_ids are the scope metadata addresses of all scopes to be updated. |
+| `value_owner_address` | [string](#string) |  | value_owner_address is the address of the new value owner for the provided scopes. |
+| `signers` | [string](#string) | repeated | signers is the list of addresses of those signing this request. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgUpdateValueOwnersResponse"></a>
+
+### MsgUpdateValueOwnersResponse
+MsgUpdateValueOwnersResponse is the response from updating value owner addresses in one or more scopes.
 
 
 
@@ -4590,6 +5796,40 @@ MsgWriteContractSpecificationResponse is the response type for the Msg/WriteCont
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `contract_spec_id_info` | [ContractSpecIdInfo](#provenance.metadata.v1.ContractSpecIdInfo) |  | contract_spec_id_info contains information about the id/address of the contract specification that was added or updated. |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgWriteP8eContractSpecRequest"></a>
+
+### MsgWriteP8eContractSpecRequest
+MsgWriteP8eContractSpecRequest has been deprecated and is no longer usable.
+Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contractspec` | [p8e.ContractSpec](#provenance.metadata.v1.p8e.ContractSpec) |  |  |
+| `signers` | [string](#string) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgWriteP8eContractSpecResponse"></a>
+
+### MsgWriteP8eContractSpecResponse
+MsgWriteP8eContractSpecResponse  has been deprecated and is no longer usable.
+Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contract_spec_id_info` | [ContractSpecIdInfo](#provenance.metadata.v1.ContractSpecIdInfo) |  |  |
+| `record_spec_id_infos` | [RecordSpecIdInfo](#provenance.metadata.v1.RecordSpecIdInfo) | repeated |  |
 
 
 
@@ -4796,6 +6036,8 @@ Msg defines the Metadata Msg service.
 | `DeleteScopeDataAccess` | [MsgDeleteScopeDataAccessRequest](#provenance.metadata.v1.MsgDeleteScopeDataAccessRequest) | [MsgDeleteScopeDataAccessResponse](#provenance.metadata.v1.MsgDeleteScopeDataAccessResponse) | DeleteScopeDataAccess removes data access AccAddress from scope | |
 | `AddScopeOwner` | [MsgAddScopeOwnerRequest](#provenance.metadata.v1.MsgAddScopeOwnerRequest) | [MsgAddScopeOwnerResponse](#provenance.metadata.v1.MsgAddScopeOwnerResponse) | AddScopeOwner adds new owner parties to a scope | |
 | `DeleteScopeOwner` | [MsgDeleteScopeOwnerRequest](#provenance.metadata.v1.MsgDeleteScopeOwnerRequest) | [MsgDeleteScopeOwnerResponse](#provenance.metadata.v1.MsgDeleteScopeOwnerResponse) | DeleteScopeOwner removes owner parties (by addresses) from a scope | |
+| `UpdateValueOwners` | [MsgUpdateValueOwnersRequest](#provenance.metadata.v1.MsgUpdateValueOwnersRequest) | [MsgUpdateValueOwnersResponse](#provenance.metadata.v1.MsgUpdateValueOwnersResponse) | UpdateValueOwners sets the value owner of one or more scopes. | |
+| `MigrateValueOwner` | [MsgMigrateValueOwnerRequest](#provenance.metadata.v1.MsgMigrateValueOwnerRequest) | [MsgMigrateValueOwnerResponse](#provenance.metadata.v1.MsgMigrateValueOwnerResponse) | MigrateValueOwner updates all scopes that have one value owner to have a another value owner. | |
 | `WriteSession` | [MsgWriteSessionRequest](#provenance.metadata.v1.MsgWriteSessionRequest) | [MsgWriteSessionResponse](#provenance.metadata.v1.MsgWriteSessionResponse) | WriteSession adds or updates a session context. | |
 | `WriteRecord` | [MsgWriteRecordRequest](#provenance.metadata.v1.MsgWriteRecordRequest) | [MsgWriteRecordResponse](#provenance.metadata.v1.MsgWriteRecordResponse) | WriteRecord adds or updates a record. | |
 | `DeleteRecord` | [MsgDeleteRecordRequest](#provenance.metadata.v1.MsgDeleteRecordRequest) | [MsgDeleteRecordResponse](#provenance.metadata.v1.MsgDeleteRecordResponse) | DeleteRecord deletes a record. | |
@@ -4810,6 +6052,7 @@ Msg defines the Metadata Msg service.
 | `BindOSLocator` | [MsgBindOSLocatorRequest](#provenance.metadata.v1.MsgBindOSLocatorRequest) | [MsgBindOSLocatorResponse](#provenance.metadata.v1.MsgBindOSLocatorResponse) | BindOSLocator binds an owner address to a uri. | |
 | `DeleteOSLocator` | [MsgDeleteOSLocatorRequest](#provenance.metadata.v1.MsgDeleteOSLocatorRequest) | [MsgDeleteOSLocatorResponse](#provenance.metadata.v1.MsgDeleteOSLocatorResponse) | DeleteOSLocator deletes an existing ObjectStoreLocator record. | |
 | `ModifyOSLocator` | [MsgModifyOSLocatorRequest](#provenance.metadata.v1.MsgModifyOSLocatorRequest) | [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse) | ModifyOSLocator updates an ObjectStoreLocator record by the current owner. | |
+| `SetAccountData` | [MsgSetAccountDataRequest](#provenance.metadata.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.metadata.v1.MsgSetAccountDataResponse) | SetAccountData associates some basic data with a metadata address. Currently, only scope ids are supported. | |
 
  <!-- end services -->
 
@@ -5168,6 +6411,35 @@ Query defines the gRPC querier service for marker module.
 
 
 
+<a name="provenance.msgfees.v1.MsgAddMsgFeeProposalRequest"></a>
+
+### MsgAddMsgFeeProposalRequest
+AddMsgFeeProposal defines a governance proposal to add additional msg based fee
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | type url of msg to add fee |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional fee for msg type |
+| `recipient` | [string](#string) |  | optional recipient to receive basis points |
+| `recipient_basis_points` | [string](#string) |  | basis points to use when recipient is present (1 - 10,000) |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgAddMsgFeeProposalResponse"></a>
+
+### MsgAddMsgFeeProposalResponse
+MsgAddMsgFeeProposalResponse defines the Msg/AddMsgFeeProposal response type
+
+
+
+
+
+
 <a name="provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest"></a>
 
 ### MsgAssessCustomMsgFeeRequest
@@ -5196,6 +6468,113 @@ MsgAssessCustomMsgFeeResponse defines the Msg/AssessCustomMsgFeee response type.
 
 
 
+
+<a name="provenance.msgfees.v1.MsgRemoveMsgFeeProposalRequest"></a>
+
+### MsgRemoveMsgFeeProposalRequest
+RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | type url of msg fee to remove |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgRemoveMsgFeeProposalResponse"></a>
+
+### MsgRemoveMsgFeeProposalResponse
+MsgRemoveMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response type
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalRequest"></a>
+
+### MsgUpdateConversionFeeDenomProposalRequest
+UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is the denom that usd will be converted to |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalResponse"></a>
+
+### MsgUpdateConversionFeeDenomProposalResponse
+MsgUpdateConversionFeeDenomProposalResponse defines the Msg/UpdateConversionFeeDenomProposal response type
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateMsgFeeProposalRequest"></a>
+
+### MsgUpdateMsgFeeProposalRequest
+UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type_url` | [string](#string) |  | type url of msg to update fee |
+| `additional_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | additional fee for msg type |
+| `recipient` | [string](#string) |  | optional recipient to recieve basis points |
+| `recipient_basis_points` | [string](#string) |  | basis points to use when recipient is present (1 - 10,000) |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateMsgFeeProposalResponse"></a>
+
+### MsgUpdateMsgFeeProposalResponse
+MsgUpdateMsgFeeProposalResponse defines the Msg/RemoveMsgFeeProposal response type
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalRequest"></a>
+
+### MsgUpdateNhashPerUsdMilProposalRequest
+UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is number of nhash per usd mil |
+| `authority` | [string](#string) |  | the signing authority for the proposal |
+
+
+
+
+
+
+<a name="provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalResponse"></a>
+
+### MsgUpdateNhashPerUsdMilProposalResponse
+MsgUpdateNhashPerUsdMilProposalResponse defines the Msg/UpdateNhashPerUsdMilProposal response type
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -5211,6 +6590,11 @@ Msg defines the msgfees Msg service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `AssessCustomMsgFee` | [MsgAssessCustomMsgFeeRequest](#provenance.msgfees.v1.MsgAssessCustomMsgFeeRequest) | [MsgAssessCustomMsgFeeResponse](#provenance.msgfees.v1.MsgAssessCustomMsgFeeResponse) | AssessCustomMsgFee endpoint executes the additional fee charges. This will only emit the event and not persist it to the keeper. Fees are handled with the custom msg fee handlers Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient for executing contracts | |
+| `AddMsgFeeProposal` | [MsgAddMsgFeeProposalRequest](#provenance.msgfees.v1.MsgAddMsgFeeProposalRequest) | [MsgAddMsgFeeProposalResponse](#provenance.msgfees.v1.MsgAddMsgFeeProposalResponse) | AddMsgFeeProposal defines a governance proposal to add additional msg based fee | |
+| `UpdateMsgFeeProposal` | [MsgUpdateMsgFeeProposalRequest](#provenance.msgfees.v1.MsgUpdateMsgFeeProposalRequest) | [MsgUpdateMsgFeeProposalResponse](#provenance.msgfees.v1.MsgUpdateMsgFeeProposalResponse) | UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee | |
+| `RemoveMsgFeeProposal` | [MsgRemoveMsgFeeProposalRequest](#provenance.msgfees.v1.MsgRemoveMsgFeeProposalRequest) | [MsgRemoveMsgFeeProposalResponse](#provenance.msgfees.v1.MsgRemoveMsgFeeProposalResponse) | RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee | |
+| `UpdateNhashPerUsdMilProposal` | [MsgUpdateNhashPerUsdMilProposalRequest](#provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalRequest) | [MsgUpdateNhashPerUsdMilProposalResponse](#provenance.msgfees.v1.MsgUpdateNhashPerUsdMilProposalResponse) | UpdateNhashPerUsdMilProposal defines a governance proposal to update the nhash per usd mil param | |
+| `UpdateConversionFeeDenomProposal` | [MsgUpdateConversionFeeDenomProposalRequest](#provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalRequest) | [MsgUpdateConversionFeeDenomProposalResponse](#provenance.msgfees.v1.MsgUpdateConversionFeeDenomProposalResponse) | UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom | |
 
  <!-- end services -->
 
@@ -6291,6 +7675,389 @@ Msg
 | `EndRewardProgram` | [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest) | [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse) | EndRewardProgram is the RPC endpoint for ending a rewards program | |
 | `ClaimRewards` | [MsgClaimRewardsRequest](#provenance.reward.v1.MsgClaimRewardsRequest) | [MsgClaimRewardsResponse](#provenance.reward.v1.MsgClaimRewardsResponse) | ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program | |
 | `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) | ClaimAllRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for the signer of the tx. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/event.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/event.proto
+
+
+
+<a name="provenance.trigger.v1.EventTriggerCreated"></a>
+
+### EventTriggerCreated
+EventTriggerCreated is an event for when a trigger is created
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [string](#string) |  | trigger_id is a unique identifier of the trigger |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.EventTriggerDestroyed"></a>
+
+### EventTriggerDestroyed
+EventTriggerDestroyed is an event for when a trigger is destroyed
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [string](#string) |  | trigger_id is a unique identifier of the trigger |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/trigger.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/trigger.proto
+
+
+
+<a name="provenance.trigger.v1.Attribute"></a>
+
+### Attribute
+Attribute
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | The name of the attribute that the event must have to be considered a match. |
+| `value` | [string](#string) |  | The value of the attribute that the event must have to be considered a match. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.BlockHeightEvent"></a>
+
+### BlockHeightEvent
+BlockHeightEvent
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `block_height` | [uint64](#uint64) |  | The height that the trigger should fire at. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.BlockTimeEvent"></a>
+
+### BlockTimeEvent
+BlockTimeEvent
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time the trigger should fire at. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.QueuedTrigger"></a>
+
+### QueuedTrigger
+QueuedTrigger
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `block_height` | [uint64](#uint64) |  | The block height the trigger was detected and queued. |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time the trigger was detected and queued. |
+| `trigger` | [Trigger](#provenance.trigger.v1.Trigger) |  | The trigger that was detected. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.TransactionEvent"></a>
+
+### TransactionEvent
+TransactionEvent
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | The name of the event for a match. |
+| `attributes` | [Attribute](#provenance.trigger.v1.Attribute) | repeated | The attributes that must be present for a match. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.Trigger"></a>
+
+### Trigger
+Trigger
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | An integer to uniquely identify the trigger. |
+| `owner` | [string](#string) |  | The owner of the trigger. |
+| `event` | [google.protobuf.Any](#google.protobuf.Any) |  | The event that must be detected for the trigger to fire. |
+| `actions` | [google.protobuf.Any](#google.protobuf.Any) | repeated | The messages to run when the trigger fires. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/genesis.proto
+
+
+
+<a name="provenance.trigger.v1.GasLimit"></a>
+
+### GasLimit
+GasLimit defines the trigger module's grouping of a trigger and a gas limit
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [uint64](#uint64) |  | The identifier of the trigger this GasLimit belongs to. |
+| `amount` | [uint64](#uint64) |  | The maximum amount of gas that the trigger can use. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the trigger module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [uint64](#uint64) |  | Trigger id is the next auto incremented id to be assigned to the next created trigger |
+| `queue_start` | [uint64](#uint64) |  | Queue start is the starting index of the queue. |
+| `triggers` | [Trigger](#provenance.trigger.v1.Trigger) | repeated | Triggers to initially start with. |
+| `gas_limits` | [GasLimit](#provenance.trigger.v1.GasLimit) | repeated | Maximum amount of gas that the triggers can use. |
+| `queued_triggers` | [QueuedTrigger](#provenance.trigger.v1.QueuedTrigger) | repeated | Triggers to initially start with in the queue. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/query.proto
+
+
+
+<a name="provenance.trigger.v1.QueryTriggerByIDRequest"></a>
+
+### QueryTriggerByIDRequest
+QueryTriggerByIDRequest queries for the Trigger with an identifier of id.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | The id of the trigger to query. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.QueryTriggerByIDResponse"></a>
+
+### QueryTriggerByIDResponse
+QueryTriggerByIDResponse contains the requested Trigger.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger` | [Trigger](#provenance.trigger.v1.Trigger) |  | The trigger object that was queried for. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.QueryTriggersRequest"></a>
+
+### QueryTriggersRequest
+QueryTriggersRequest queries for all triggers.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.QueryTriggersResponse"></a>
+
+### QueryTriggersResponse
+QueryTriggersResponse contains the list of Triggers.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `triggers` | [Trigger](#provenance.trigger.v1.Trigger) | repeated | List of Trigger objects. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.trigger.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service for trigger module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `TriggerByID` | [QueryTriggerByIDRequest](#provenance.trigger.v1.QueryTriggerByIDRequest) | [QueryTriggerByIDResponse](#provenance.trigger.v1.QueryTriggerByIDResponse) | TriggerByID returns a trigger matching the ID. | GET|/provenance/trigger/v1/triggers/{id}|
+| `Triggers` | [QueryTriggersRequest](#provenance.trigger.v1.QueryTriggersRequest) | [QueryTriggersResponse](#provenance.trigger.v1.QueryTriggersResponse) | Triggers returns the list of triggers. | GET|/provenance/trigger/v1/triggers|
+
+ <!-- end services -->
+
+
+
+<a name="provenance/trigger/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/trigger/v1/tx.proto
+
+
+
+<a name="provenance.trigger.v1.MsgCreateTriggerRequest"></a>
+
+### MsgCreateTriggerRequest
+MsgCreateTriggerRequest is the request type for creating a trigger RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authorities` | [string](#string) | repeated | The signing authorities for the request |
+| `event` | [google.protobuf.Any](#google.protobuf.Any) |  | The event that must be detected for the trigger to fire. |
+| `actions` | [google.protobuf.Any](#google.protobuf.Any) | repeated | The messages to run when the trigger fires. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.MsgCreateTriggerResponse"></a>
+
+### MsgCreateTriggerResponse
+MsgCreateTriggerResponse is the response type for creating a trigger RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | trigger id that is generated on creation. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.MsgDestroyTriggerRequest"></a>
+
+### MsgDestroyTriggerRequest
+MsgDestroyTriggerRequest is the request type for creating a trigger RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | the id of the trigger to destroy. |
+| `authority` | [string](#string) |  | The signing authority for the request |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.MsgDestroyTriggerResponse"></a>
+
+### MsgDestroyTriggerResponse
+MsgDestroyTriggerResponse is the response type for creating a trigger RPC
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.trigger.v1.Msg"></a>
+
+### Msg
+Msg
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateTrigger` | [MsgCreateTriggerRequest](#provenance.trigger.v1.MsgCreateTriggerRequest) | [MsgCreateTriggerResponse](#provenance.trigger.v1.MsgCreateTriggerResponse) | CreateTrigger is the RPC endpoint for creating a trigger | |
+| `DestroyTrigger` | [MsgDestroyTriggerRequest](#provenance.trigger.v1.MsgDestroyTriggerRequest) | [MsgDestroyTriggerResponse](#provenance.trigger.v1.MsgDestroyTriggerResponse) | DestroyTrigger is the RPC endpoint for creating a trigger | |
 
  <!-- end services -->
 

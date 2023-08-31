@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
@@ -9,6 +10,11 @@ import (
 
 // This file is available only to unit tests and exposes private things
 // so that they can be used in unit tests.
+
+// GetStoreKey is a TEST ONLY getter for the keeper's storekey.
+func (k *Keeper) GetStoreKey() storetypes.StoreKey {
+	return k.storeKey
+}
 
 // SetAuthKeeper is a TEST ONLY setter for the keeper's authKeeper.
 // It returns the previously defined AuthKeeper
@@ -102,6 +108,8 @@ func (p *PartyDetails) Copy() *PartyDetails {
 var (
 	// AuthzCacheAcceptableKey is a TEST ONLY exposure of authzCacheAcceptableKey.
 	AuthzCacheAcceptableKey = authzCacheAcceptableKey
+	// AuthzCacheIsWasmKey is a TEST ONLY exposure of authzCacheIsWasmKey.
+	AuthzCacheIsWasmKey = authzCacheIsWasmKey
 	// AuthzCacheContextKey is a TEST ONLY exposure of authzCacheContextKey.
 	AuthzCacheContextKey = authzCacheContextKey
 )
@@ -109,6 +117,11 @@ var (
 // AcceptableMap is a TEST ONLY exposure of the AuthzCache.acceptable map.
 func (c *AuthzCache) AcceptableMap() map[string]authz.Authorization {
 	return c.acceptable
+}
+
+// IsWasmMap is a TEST ONLY exposure of the AuthzCache.isWasm map.
+func (c *AuthzCache) IsWasmMap() map[string]bool {
+	return c.isWasm
 }
 
 // ValidateAllRequiredPartiesSigned is a TEST ONLY exposure of validateAllRequiredPartiesSigned.
@@ -182,8 +195,27 @@ func (k Keeper) ValidateAllRequiredSigned(ctx sdk.Context, required []string, ms
 }
 
 // ValidateSmartContractSigners is a TEST ONLY exposure of validateSmartContractSigners.
-func (k Keeper) ValidateSmartContractSigners(ctx sdk.Context, usedSigners map[string]bool, msg types.MetadataMsg) error {
+func (k Keeper) ValidateSmartContractSigners(ctx sdk.Context, usedSigners UsedSignersMap, msg types.MetadataMsg) error {
 	return k.validateSmartContractSigners(ctx, usedSigners, msg)
+}
+
+// ValidateScopeValueOwnerChangeFromExisting is a TEST ONLY exposure of validateScopeValueOwnerChangeFromExisting.
+func (k Keeper) ValidateScopeValueOwnerChangeFromExisting(
+	ctx sdk.Context,
+	existing string,
+	signers *SignersWrapper,
+	msg types.MetadataMsg,
+) (UsedSignersMap, error) {
+	return k.validateScopeValueOwnerChangeFromExisting(ctx, existing, signers, msg)
+}
+
+// ValidateScopeValueOwnerChangeToProposed is a TEST ONLY exposure of validateScopeValueOwnerChangeToProposed.
+func (k Keeper) ValidateScopeValueOwnerChangeToProposed(
+	ctx sdk.Context,
+	proposed string,
+	signers *SignersWrapper,
+) (UsedSignersMap, error) {
+	return k.validateScopeValueOwnerChangeToProposed(ctx, proposed, signers)
 }
 
 var (

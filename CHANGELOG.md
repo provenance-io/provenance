@@ -39,18 +39,117 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* Add support to add/remove required attributes for a restricted marker. [#1512](https://github.com/provenance-io/provenance/issues/1512)
+* Allow marker's transfer authority to prevent transfer of restricted coin with deny list on send [#1518](https://github.com/provenance-io/provenance/issues/1518).
+* New `GetByAddr` metadata query [#1443](https://github.com/provenance-io/provenance/issues/1443).
+* Add Trigger module queries to stargate whitelist for smart contracts [#1636](https://github.com/provenance-io/provenance/issues/1636)
+* Added the saffron upgrade handlers [PR 1648](https://github.com/provenance-io/provenance/pull/1648).
 
 ### Improvements
 
+* Add IBC-Hooks module for Axelar GMP support [PR 1659](https://github.com/provenance-io/provenance/pull/1659)
+* Update ibcnet ports so they don't conflict with host machine. [#1622](https://github.com/provenance-io/provenance/issues/1622)
+* Replace custom ibc-go v6.1.1 fork with official module.  [#1616](https://github.com/provenance-io/provenance/issues/1616)
+* Migrate `msgfees` gov proposals to v1. [#1328](https://github.com/provenance-io/provenance/issues/1328)
+* Updated metadata queries to optionally include the request and id info [#1443](https://github.com/provenance-io/provenance/issues/1443).
+  The request is now omitted by default, but will be included if `include_request` is `true`.
+  The id info is still included by default, but will be excluded if `exclude_id_info` is `true`.
+* Removed the quicksilver upgrade handlers [PR 1648](https://github.com/provenance-io/provenance/pull/1648).
+* Bump cometbft to v0.34.29 (from v0.34.28) [PR 1649](https://github.com/provenance-io/provenance/pull/1649).
+
+### Bug Fixes
+
+* Fix ibcnet relayer creating multiple connections on restart [#1620](https://github.com/provenance-io/provenance/issues/1620).
+* Fix for incorrect resource-id type casting on contract specification [#1647](https://github.com/provenance-io/provenance/issues/1647).
+* Allow restricted coins to be quarantined [#1626](https://github.com/provenance-io/provenance/issues/1626).
+* Prevent marker forced transfers from module accounts [#1626](https://github.com/provenance-io/provenance/issues/1626).
+
+### Client Breaking
+
+* Metadata query responses no longer include the request by default [#1443](https://github.com/provenance-io/provenance/issues/1443).
+  They are still available by setting the `include_request` flag in the requests.
+* The `provenanced query metadata get` command has been changed to use the new `GetByAddr` query [#1443](https://github.com/provenance-io/provenance/issues/1443).
+  The command can now take in multiple ids.
+  The output of this command reflects the `GetByAddrResponse` instead of specific type queries.
+  The command no longer has any `--include-<thing>` flags since they don't pertain to the `GetByAddr` query.
+  The specific queries (e.g. `provenanced query metadata scope`) are still available with all appropriate flags.
+
+---
+
+## [v1.16.0](https://github.com/provenance-io/provenance/releases/tag/v1.16.0) - 2023-06-23
+
+### Features
+
+* Add support to add/remove required attributes for a restricted marker. [#1512](https://github.com/provenance-io/provenance/issues/1512)
+* Add trigger module for delayed execution. [#1462](https://github.com/provenance-io/provenance/issues/1462)
+* Add support to update the `allow_forced_transfer` field of a restricted marker [#1545](https://github.com/provenance-io/provenance/issues/1545).
+* Add expiration date value to `attribute` [#1435](https://github.com/provenance-io/provenance/issues/1435).
+* Add endpoints to update the value owner address of scopes [#1329](https://github.com/provenance-io/provenance/issues/1329).
+* Add pre-upgrade command that updates config files to newest format and sets `consensus.timeout_commit` to `1500ms` [PR 1594](https://github.com/provenance-io/provenance/pull/1594), [PR 1600](https://github.com/provenance-io/provenance/pull/1600).
+
+### Improvements
+
+* Bump go to `1.20` (from `1.18`) [#1539](https://github.com/provenance-io/provenance/issues/1539).
+* Bump golangci-lint to `v1.52.2` (from `v1.48`) [#1539](https://github.com/provenance-io/provenance/issues/1539).
+  * New `make golangci-lint` target created for installing golangci-lint.
+  * New `make golangci-lint-update` target created for installing the current version even if you already have a version installed.
 * Add marker deposit access check for sends to marker escrow account [#1525](https://github.com/provenance-io/provenance/issues/1525).
 * Add support for `name` owner to execute `MsgModifyName` transaction [#1536](https://github.com/provenance-io/provenance/issues/1536).
 * Add usage of `AddGovPropFlagsToCmd` and `ReadGovPropFlags` cli for `GetModifyNameCmd` [#1542](https://github.com/provenance-io/provenance/issues/1542).
+* Bump Cosmos-SDK to `v0.46.10-pio-4` (from `v0.46.10-pio-3`) for the `SendRestrictionFn` changes [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
+* Switch to using a `SendRestrictionFn` for restricting sends of marker funds [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
+* Create `rust` upgrade handlers [PR 1549](https://github.com/provenance-io/provenance/pull/1549).
+* Remove mutation of store from `attribute` keeper iterators [#1557](https://github.com/provenance-io/provenance/issues/1557).
+* Bumped ibc-go to 6.1.1 [#1563](https://github.com/provenance-io/provenance/pull/1563).
+* Update `marker` module spec documentation with new proto references [#1580](https://github.com/provenance-io/provenance/pull/1580).
+* Bumped `wasmd` to v0.30.0-pio-5 and `wasmvm` to v1.2.4 [#1582](https://github.com/provenance-io/provenance/pull/1582).
+* Inactive validator delegation cleanup process [#1556](https://github.com/provenance-io/provenance/issues/1556).
+* Bump Cosmos-SDK to [v0.46.13-pio-1](https://github.com/provenance-io/cosmos-sdk/blob/v0.46.13-pio-1/RELEASE_NOTES.md) (from `v0.46.10-pio-4`) [PR 1585](https://github.com/provenance-io/provenance/pull/1585).
+
+### Bug Fixes
+
+* Bring back some proto messages that were deleted but still needed for historical queries [#1554](https://github.com/provenance-io/provenance/issues/1554).
+* Fix the `MsgModifyNameRequest` endpoint to properly clean up old index data [PR 1565](https://github.com/provenance-io/provenance/pull/1565).
+* Add `NewUpdateAccountAttributeExpirationCmd` to the CLI [#1592](https://github.com/provenance-io/provenance/issues/1592).
+* Fix `minimum-gas-prices` from sometimes getting unset in the configs [PR 1594](https://github.com/provenance-io/provenance/pull/1594).
 
 ### API Breaking
 
-* Add marker deposit access check for sends to marker escrow account.  Will break any current address that is sending to the 
+* Add marker deposit access check for sends to marker escrow account.  Will break any current address that is sending to the
 marker escrow account if it does not have deposit access.  In order for it to work, deposit access needs to be added.  This can be done using the `MsgAddAccessRequest` tx  [#1525](https://github.com/provenance-io/provenance/issues/1525).
+* `MsgMultiSend` is now limited to a single `Input` [PR 1506](https://github.com/provenance-io/provenance/pull/1506).
+* SDK errors returned from Metadata module endpoints [#978](https://github.com/provenance-io/provenance/issues/978).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.15.2...v1.16.0
+
+---
+
+## [v1.15.2](https://github.com/provenance-io/provenance/releases/tag/v1.15.2) - 2023-06-08
+
+### Bug Fixes
+
+* Address the [Barberry security advisory](https://forum.cosmos.network/t/cosmos-sdk-security-advisory-barberry/10825) [PR 1576](https://github.com/provenance-io/provenance/pull/1576)
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.15.1...v1.15.2
+
+---
+
+## [v1.15.1](https://github.com/provenance-io/provenance/releases/tag/v1.15.1) - 2023-06-01
+
+### Improvements
+
+* Bumped ibc-go to 6.1.1 [PR 1563](https://github.com/provenance-io/provenance/pull/1563).
+
+### Bug Fixes
+
+* Bring back some proto messages that were deleted but still needed for historical queries [#1554](https://github.com/provenance-io/provenance/issues/1554).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.15.0...v1.15.1
 
 ---
 
@@ -67,6 +166,7 @@ marker escrow account if it does not have deposit access.  In order for it to wo
 * Repeated roles in a spec require multiple different parties [#1437](https://github.com/provenance-io/provenance/issues/1437).
 * The `PROVENANCE` role can only be used by smart contract addresses, and vice versa [#1381](https://github.com/provenance-io/provenance/issues/1381).
 * Add stargate query from wasm support [#1481](https://github.com/provenance-io/provenance/issues/1481).
+* Create methods for storing and retrieving account data for accounts, markers, and scopes [#1552](https://github.com/provenance-io/provenance/issues/1552).
 
 ### Improvements
 

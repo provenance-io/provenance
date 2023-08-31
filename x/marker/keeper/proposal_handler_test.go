@@ -34,7 +34,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.app = provenance.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-	s.k = markerkeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(markertypes.ModuleName), s.app.GetSubspace(markertypes.ModuleName), s.app.AccountKeeper, s.app.BankKeeper, s.app.AuthzKeeper, s.app.FeeGrantKeeper, s.app.TransferKeeper, s.app.AttributeKeeper, s.app.NameKeeper)
+	s.k = markerkeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(markertypes.ModuleName), s.app.GetSubspace(markertypes.ModuleName), s.app.AccountKeeper, s.app.BankKeeper, s.app.AuthzKeeper, s.app.FeeGrantKeeper, s.app.AttributeKeeper, s.app.NameKeeper, s.app.TransferKeeper, nil)
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 }
 

@@ -12,6 +12,7 @@ const (
 	DefaultWeightMsgUpdateAttribute         int = 5
 	DefaultWeightMsgDeleteAttribute         int = 5
 	DefaultWeightMsgDeleteDistinctAttribute int = 5
+	DefaultWeightMsgSetAccountData          int = 10
 	// Marker
 	DefaultWeightSupplyIncreaseProposalContent      int = 5
 	DefaultWeightSupplyDecreaseProposalContent      int = 5
@@ -31,4 +32,7 @@ const (
 	// Rewards
 	DefaultWeightSubmitCreateRewards int = 95
 	DefaultWeightSubmitEndRewards    int = 5
+	// Trigger
+	DefaultWeightSubmitCreateTrigger  int = 95
+	DefaultWeightSubmitDestroyTrigger int = 5
 )

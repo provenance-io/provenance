@@ -27,15 +27,20 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) AddAttribute(goCtx context.Context, msg *types.MsgAddAttributeRequest) (*types.MsgAddAttributeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	attrib := types.Attribute{
-		Address:       msg.Account,
-		Name:          msg.Name,
-		AttributeType: msg.AttributeType,
-		Value:         msg.Value,
-	}
+	attrib := types.NewAttribute(
+		msg.Name,
+		msg.Account,
+		msg.AttributeType,
+		msg.Value,
+		msg.ExpirationDate,
+	)
 
 	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
+		return nil, err
+	}
+
+	if err = k.ValidateExpirationDate(ctx, attrib); err != nil {
 		return nil, err
 	}
 
@@ -122,6 +127,41 @@ func (k msgServer) UpdateAttribute(goCtx context.Context, msg *types.MsgUpdateAt
 	return &types.MsgUpdateAttributeResponse{}, nil
 }
 
+func (k msgServer) UpdateAttributeExpiration(goCtx context.Context, msg *types.MsgUpdateAttributeExpirationRequest) (*types.MsgUpdateAttributeExpirationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	attribute := types.Attribute{
+		Address:        msg.Account,
+		Name:           msg.Name,
+		Value:          msg.Value,
+		ExpirationDate: msg.ExpirationDate,
+	}
+
+	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = k.ValidateExpirationDate(ctx, attribute); err != nil {
+		return nil, err
+	}
+
+	err = k.Keeper.UpdateAttributeExpiration(ctx, attribute, ownerAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeAttributeExpirationUpdated,
+			sdk.NewAttribute(types.AttributeKeyNameAttribute, msg.Name),
+			sdk.NewAttribute(types.AttributeKeyAccountAddress, msg.Account),
+		),
+	)
+
+	return &types.MsgUpdateAttributeExpirationResponse{}, nil
+}
+
 func (k msgServer) DeleteAttribute(goCtx context.Context, msg *types.MsgDeleteAttributeRequest) (*types.MsgDeleteAttributeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -203,4 +243,16 @@ func (k msgServer) DeleteDistinctAttribute(goCtx context.Context, msg *types.Msg
 	)
 
 	return &types.MsgDeleteDistinctAttributeResponse{}, nil
+}
+
+// SetAccountData defines a method for setting/updating an account's accountdata attribute.
+func (k msgServer) SetAccountData(goCtx context.Context, msg *types.MsgSetAccountDataRequest) (*types.MsgSetAccountDataResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	err := k.Keeper.SetAccountData(ctx, msg.Account, msg.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSetAccountDataResponse{}, nil
 }

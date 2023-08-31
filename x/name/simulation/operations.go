@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"math/rand"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -76,37 +77,26 @@ func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankk
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
-
-		var records []types.NameRecord
-		if err := k.IterateRecords(ctx, types.NameKeyPrefix, func(record types.NameRecord) error {
-			records = append(records, record)
-			return nil
-		}); err != nil {
+		params := k.GetParams(ctx)
+		parentRecord, parentOwner, found, err := getRandomRecord(r, ctx, k, accs, 1, int(params.MaxNameLevels)-1)
+		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "iterator of existing records failed"), nil, err
 		}
-
-		if len(records) == 0 {
+		if !found {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "no name records available to create under"), nil, nil
 		}
 
-		parent := records[r.Intn(len(records))]
-		if parent.Restricted && parent.Address != simAccount.Address.String() {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "parent name record is restricted, not current owner"), nil, nil
+		nameLen := randIntBetween(r, int(params.GetMinSegmentLength()), int(params.GetMaxSegmentLength()))
+		newRecordName := simtypes.RandStringOfLength(r, nameLen)
+		newRecordOwner := parentOwner
+		if !parentRecord.Restricted {
+			newRecordOwner, _ = simtypes.RandomAcc(r, accs)
 		}
+		newRecordRestricted := r.Intn(9) < 4
+		newRecord := types.NewNameRecord(newRecordName, newRecordOwner.Address, newRecordRestricted)
+		msg := types.NewMsgBindNameRequest(newRecord, parentRecord)
 
-		restrict := r.Intn(9) < 4
-		msg := types.NewMsgBindNameRequest(
-			types.NewNameRecord(
-				simtypes.RandStringOfLength(r, r.Intn(10)+2),
-				simAccount.Address,
-				restrict),
-			types.NewNameRecord(
-				parent.Name,
-				simAccount.Address,
-				parent.Restricted))
-
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, ak, bk, parentOwner, chainID, msg)
 	}
 }
 
@@ -115,24 +105,15 @@ func SimulateMsgDeleteName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk ban
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
-
-		var records []types.NameRecord
-		if err := k.IterateRecords(ctx, types.NameKeyPrefix, func(record types.NameRecord) error {
-			records = append(records, record)
-			return nil
-		}); err != nil {
+		// minSeg = 2 because we don't want to delete any root name records.
+		// maxSeg = 1_000_000 because that should be more than any name has.
+		// Not doing a min/max params lookup because they can change during the sim and don't apply to this operation.
+		randomRecord, simAccount, found, err := getRandomRecord(r, ctx, k, accs, 2, 1_000_000)
+		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "iterator of existing records failed"), nil, err
 		}
-
-		if len(records) == 0 {
+		if !found {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "no name records available to delete"), nil, nil
-		}
-
-		randomRecord := records[r.Intn(len(records))]
-
-		if simAccount.Address.String() != randomRecord.Address {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "name record does not belong to user"), nil, nil
 		}
 
 		msg := types.NewMsgDeleteNameRequest(randomRecord)
@@ -146,28 +127,18 @@ func SimulateMsgModifyName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk ban
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
-
-		var records []types.NameRecord
-		if err := k.IterateRecords(ctx, types.NameKeyPrefix, func(record types.NameRecord) error {
-			records = append(records, record)
-			return nil
-		}); err != nil {
+		params := k.GetParams(ctx)
+		randomRecord, simAccount, found, err := getRandomRecord(r, ctx, k, accs, 1, int(params.MaxNameLevels))
+		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "iterator of existing records failed"), nil, err
 		}
-
-		if len(records) == 0 {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "no name records available to delete"), nil, nil
+		if !found {
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "no name records available to modify"), nil, nil
 		}
 
-		randomRecord := records[r.Intn(len(records))]
-
-		if simAccount.Address.String() != randomRecord.Address {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "name record does not belong to user"), nil, nil
-		}
-
+		newOwner, _ := simtypes.RandomAcc(r, accs)
 		restrict := r.Intn(9) < 4
-		msg := types.NewMsgModifyNameRequest(simAccount.Address.String(), randomRecord.Name, simAccount.Address, restrict)
+		msg := types.NewMsgModifyNameRequest(simAccount.Address.String(), randomRecord.Name, newOwner.Address, restrict)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
 	}
@@ -219,4 +190,38 @@ func Dispatch(
 	}
 
 	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), nil, nil
+}
+
+// getRandomRecord finds a random record owned by a known account.
+// An error is only returned if there was a problem iterating records.
+func getRandomRecord(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, accs []simtypes.Account, segmentsMin, segmentsMax int) (types.NameRecord, simtypes.Account, bool, error) {
+	var records []types.NameRecord
+	err := k.IterateRecords(ctx, types.NameKeyPrefix, func(record types.NameRecord) error {
+		segments := strings.Count(record.Name, ".") + 1
+		if segmentsMin <= segments && segments <= segmentsMax {
+			records = append(records, record)
+		}
+		return nil
+	})
+	if err != nil || len(records) == 0 {
+		return types.NameRecord{}, simtypes.Account{}, false, err
+	}
+
+	r.Shuffle(len(records), func(i, j int) {
+		records[i], records[j] = records[j], records[i]
+	})
+
+	for _, randomRecord := range records {
+		simAccount, found := simtypes.FindAccount(accs, sdk.MustAccAddressFromBech32(randomRecord.Address))
+		if found {
+			return randomRecord, simAccount, true, nil
+		}
+	}
+
+	return types.NameRecord{}, simtypes.Account{}, false, nil
+}
+
+// randIntBetween generates a random number between min and max inclusive.
+func randIntBetween(r *rand.Rand, min, max int) int {
+	return r.Intn(max-min+1) + min
 }

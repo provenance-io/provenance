@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 
@@ -93,11 +92,8 @@ func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) e
 		marker.GetManager().String(),
 		marker.GetMarkerType().String(),
 	)
-	if err := ctx.EventManager().EmitTypedEvent(markerAddEvent); err != nil {
-		return err
-	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(markerAddEvent)
 }
 
 // AddAccess adds the provided AccessGrant to the marker of the caller is allowed to make changes
@@ -140,11 +136,8 @@ func (k Keeper) AddAccess(
 	}
 
 	markerAddAccessEvent := types.NewEventMarkerAddAccess(grant, denom, caller.String())
-	if err := ctx.EventManager().EmitTypedEvent(markerAddAccessEvent); err != nil {
-		return err
-	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(markerAddAccessEvent)
 }
 
 // RemoveAccess delete the AccessGrant for the specified user from the marker if the caller is allowed to make changes
@@ -185,11 +178,8 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	}
 
 	markerDeleteAccessEvent := types.NewEventMarkerDeleteAccess(remove.String(), denom, caller.String())
-	if err := ctx.EventManager().EmitTypedEvent(markerDeleteAccessEvent); err != nil {
-		return err
-	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(markerDeleteAccessEvent)
 }
 
 // WithdrawCoins removes the specified coins from the MarkerAccount (both marker denominated coins and coins as assets
@@ -218,17 +208,13 @@ func (k Keeper) WithdrawCoins(
 		recipient = caller
 	}
 
-	ctx = WithMarkerSendRestrictionBypass(ctx, true)
-	if err := k.bankKeeper.SendCoins(ctx, m.GetAddress(), recipient, coins); err != nil {
+	if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), m.GetAddress(), recipient, coins); err != nil {
 		return err
 	}
 
 	markerWithdrawEvent := types.NewEventMarkerWithdraw(coins.String(), denom, caller.String(), recipient.String())
-	if err := ctx.EventManager().EmitTypedEvent(markerWithdrawEvent); err != nil {
-		return err
-	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(markerWithdrawEvent)
 }
 
 // MintCoin increases the Supply of a coin by interacting with the supply keeper for the adjustment,
@@ -269,11 +255,8 @@ func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	}
 
 	markerMintEvent := types.NewEventMarkerMint(coin.Amount.String(), coin.Denom, caller.String())
-	if err := ctx.EventManager().EmitTypedEvent(markerMintEvent); err != nil {
-		return err
-	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(markerMintEvent)
 }
 
 // BurnCoin removes supply from the marker by burning coins held within the marker acccount.
@@ -311,11 +294,8 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	}
 
 	markerBurnEvent := types.NewEventMarkerBurn(coin.Amount.String(), coin.Denom, caller.String())
-	if err := ctx.EventManager().EmitTypedEvent(markerBurnEvent); err != nil {
-		return err
-	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(markerBurnEvent)
 }
 
 // Returns the current supply in network according to the bank module for the given marker
@@ -336,7 +316,7 @@ func (k Keeper) AdjustCirculation(ctx sdk.Context, marker types.MarkerAccountI, 
 	if desiredSupply.Denom != marker.GetDenom() {
 		return fmt.Errorf("invalid denom for desired supply")
 	}
-	ctx = WithMarkerSendRestrictionBypass(ctx, true)
+	ctx = types.WithBypass(ctx)
 	if desiredSupply.Amount.GT(currentSupply) { // not enough coin in circulation, mint more.
 		offset := sdk.NewCoin(marker.GetDenom(), desiredSupply.Amount.Sub(currentSupply))
 		ctx.Logger().Info(
@@ -478,11 +458,8 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 
 	// record status as finalized.
 	markerFinalizeEvent := types.NewEventMarkerFinalize(denom, caller.String())
-	if err := ctx.EventManager().EmitTypedEvent(markerFinalizeEvent); err != nil {
-		return err
-	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(markerFinalizeEvent)
 }
 
 // ActivateMarker transitions a marker into the active status, enforcing permissions, supply constraints, and minting
@@ -533,11 +510,8 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 	k.SetMarker(ctx, m)
 
 	markerActivateEvent := types.NewEventMarkerActivate(denom, caller.String())
-	if err := ctx.EventManager().EmitTypedEvent(markerActivateEvent); err != nil {
-		return err
-	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(markerActivateEvent)
 }
 
 // CancelMarker prepares transition to deleted state.
@@ -583,11 +557,8 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	k.SetMarker(ctx, m)
 
 	markerCancelEvent := types.NewEventMarkerCancel(denom, caller.String())
-	if err := ctx.EventManager().EmitTypedEvent(markerCancelEvent); err != nil {
-		return err
-	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(markerCancelEvent)
 }
 
 // DeleteMarker burns the entire coin supply, ensure no assets are pooled, and marks the current instance of the
@@ -644,11 +615,8 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	k.SetMarker(ctx, m)
 
 	markerDeleteEvent := types.NewEventMarkerDelete(denom, caller.String())
-	if err := ctx.EventManager().EmitTypedEvent(markerDeleteEvent); err != nil {
-		return err
-	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(markerDeleteEvent)
 }
 
 // TransferCoin transfers restricted coins between to accounts when the administrator account holds the transfer
@@ -666,19 +634,23 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	if !m.AddressHasAccess(admin, types.Access_Transfer) {
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
-	if !admin.Equals(from) && !m.AllowsForcedTransfer() {
-		err = k.authzHandler(ctx, admin, from, to, amount)
-		if err != nil {
-			return err
+	if !admin.Equals(from) {
+		switch {
+		case !m.AllowsForcedTransfer():
+			err = k.authzHandler(ctx, admin, from, to, amount)
+			if err != nil {
+				return err
+			}
+		case !k.canForceTransferFrom(ctx, from):
+			return fmt.Errorf("funds are not allowed to be removed from %s", from)
 		}
 	}
 	if k.bankKeeper.BlockedAddr(to) {
 		return fmt.Errorf("%s is not allowed to receive funds", to)
 	}
 	// set context to having access to bypass attribute restriction test
-	ctx = WithMarkerSendRestrictionBypass(ctx, true)
 	// send the coins between accounts (does not check send_enabled on coin denom)
-	if err = k.bankKeeper.SendCoins(ctx, from, to, sdk.NewCoins(amount)); err != nil {
+	if err = k.bankKeeper.SendCoins(types.WithBypass(ctx), from, to, sdk.NewCoins(amount)); err != nil {
 		return err
 	}
 
@@ -689,14 +661,23 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		to.String(),
 		from.String(),
 	)
-	if err := ctx.EventManager().EmitTypedEvent(markerTransferEvent); err != nil {
-		return err
-	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(markerTransferEvent)
 }
 
-// IbcTransferCoin transfers restricted coins between to chains when the administrator account holds the transfer
+// canForceTransferFrom returns true if funds can be forcefully transferred out of the provided address.
+func (k Keeper) canForceTransferFrom(ctx sdk.Context, from sdk.AccAddress) bool {
+	acc := k.authKeeper.GetAccount(ctx, from)
+	// If acc is nil, there's no funds in it, so the transfer will fail anyway.
+	// In that case, return true from here so it can fail later with a more accurate message.
+	// If there is an account, only allow force transfers if the sequence number isn't zero.
+	// This is to prevent forced transfer from module accounts and smart contracts.
+	// It will also block forced transfers from new or dead accounts, though.
+	// If the forced transfer is absolutely required, use a governance proposal with a MsgSend.
+	return acc == nil || acc.GetSequence() != 0
+}
+
+// IbcTransferCoin transfers restricted coins between two chains when the administrator account holds the transfer
 // access right and the marker type is restricted_coin
 func (k Keeper) IbcTransferCoin(
 	ctx sdk.Context,
@@ -707,7 +688,7 @@ func (k Keeper) IbcTransferCoin(
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
 	memo string,
-	checkRestrictionsHandler ibckeeper.CheckRestrictionsHandler) error {
+) error {
 	m, err := k.GetMarkerByDenom(ctx, token.Denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", token.Denom, err)
@@ -729,7 +710,6 @@ func (k Keeper) IbcTransferCoin(
 		}
 	}
 
-	ctx = WithMarkerSendRestrictionBypass(ctx, true)
 	// checking if escrow account has transfer auth, if not add it
 	escrowAccount := ibctypes.GetEscrowAddress(sourcePort, sourceChannel)
 	if !m.AddressHasAccess(escrowAccount, types.Access_Transfer) {
@@ -740,18 +720,13 @@ func (k Keeper) IbcTransferCoin(
 		k.SetMarker(ctx, m)
 	}
 
-	_, err = k.ibcKeeper.SendTransfer(
-		ctx,
-		sourcePort,
-		sourceChannel,
-		token,
-		sender,
-		receiver,
-		timeoutHeight,
-		timeoutTimestamp,
-		memo,
-		checkRestrictionsHandler,
+	msg := ibctypes.NewMsgTransfer(
+		sourcePort, sourceChannel, token, sender.String(), receiver, timeoutHeight, timeoutTimestamp, memo,
 	)
+	if validationErr := msg.ValidateBasic(); validationErr != nil {
+		return validationErr
+	}
+	_, err = k.ibcTransferServer.Transfer(types.WithBypass(ctx), msg)
 	if err != nil {
 		return err
 	}
@@ -762,11 +737,8 @@ func (k Keeper) IbcTransferCoin(
 		admin.String(),
 		sender.String(),
 	)
-	if err := ctx.EventManager().EmitTypedEvent(markerIbcTransferEvent); err != nil {
-		return err
-	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(markerIbcTransferEvent)
 }
 
 func (k Keeper) authzHandler(ctx sdk.Context, admin, from, to sdk.AccAddress, amount sdk.Coin) error {
@@ -820,11 +792,8 @@ func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metad
 		metadata,
 		caller.String(),
 	)
-	if err := ctx.EventManager().EmitTypedEvent(markerSetDenomMetaEvent); err != nil {
-		return err
-	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(markerSetDenomMetaEvent)
 }
 
 // AddFinalizeAndActivateMarker adds marker, finalizes, and then activates it
@@ -840,11 +809,7 @@ func (k Keeper) AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.Marke
 		return err
 	}
 
-	err = k.ActivateMarker(ctx, marker.GetManager(), marker.GetDenom())
-	if err != nil {
-		return err
-	}
-	return nil
+	return k.ActivateMarker(ctx, marker.GetManager(), marker.GetDenom())
 }
 
 // accountControlsAllSupply return true if the caller account address possess 100% of the total supply of a marker.
@@ -855,16 +820,4 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 	// if the given account is currently holding 100% of the supply of a marker then it should be able to invoke
 	// the operations as an admin on the marker.
 	return m.GetSupply().IsEqual(sdk.NewCoin(m.GetDenom(), balance.Amount))
-}
-
-// RemoveIsSendEnabledEntries removes all entries in the bankkeepers send enabled table
-// TODO: remove after v1.15.0 upgrade handler is removed
-func (k Keeper) RemoveIsSendEnabledEntries(ctx sdk.Context) {
-	sendEnabledItems := k.bankKeeper.GetAllSendEnabledEntries(ctx)
-	for _, item := range sendEnabledItems {
-		marker, err := k.GetMarkerByDenom(ctx, item.Denom)
-		if err == nil {
-			k.bankKeeper.DeleteSendEnabled(ctx, marker.GetDenom())
-		}
-	}
 }

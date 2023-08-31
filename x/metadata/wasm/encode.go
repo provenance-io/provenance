@@ -26,7 +26,7 @@ type WriteScope struct {
 }
 
 // Encoder returns a smart contract message encoder for the metadata module.
-func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sdk.Msg, error) {
+func Encoder(_ sdk.AccAddress, msg json.RawMessage, _ string) ([]sdk.Msg, error) {
 	wrapper := struct {
 		Params *MetadataMsgParams `json:"metadata"`
 	}{}

@@ -27,11 +27,11 @@ func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
 }
 
 // SimulateCreateRootNameProposalContent generates random create-root-name proposal content
-func SimulateCreateRootNameProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
+func SimulateCreateRootNameProposalContent(_ keeper.Keeper) simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
-		restricted := simtypes.RandIntBetween(r, 1, 100) > 50
+		restricted := r.Intn(2) == 0
 
 		return types.NewCreateRootNameProposal(
 			simtypes.RandStringOfLength(r, 10),

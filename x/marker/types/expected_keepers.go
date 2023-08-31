@@ -1,64 +1,99 @@
 package types
 
 import (
+	"context"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 )
 
-// AccountKeeper defines the expected account keeper (noalias)
+// AccountKeeper defines the auth/account functionality needed by the marker keeper.
 type AccountKeeper interface {
-	IterateAccounts(ctx sdk.Context, process func(authtypes.AccountI) (stop bool))
+	GetAllAccounts(ctx sdk.Context) (accounts []authtypes.AccountI)
+	GetNextAccountNumber(ctx sdk.Context) uint64
 	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
 	SetAccount(sdk.Context, authtypes.AccountI)
 	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
+	RemoveAccount(ctx sdk.Context, acc authtypes.AccountI)
 }
 
-// BankKeeper defines the expected bank keeper (keeper, sendkeeper, viewkeeper) (noalias)
+// AuthzKeeper defines the authz functionality needed by the marker keeper.
+type AuthzKeeper interface {
+	GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time)
+	DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error
+	SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error
+}
+
+// BankKeeper defines the bank functionality needed by the marker module.
 type BankKeeper interface {
-	//
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-
-	// Used in the Get all marker Holders Query function
-	IterateAllBalances(ctx sdk.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
-
-	// Required for moving coins between Marker Module account and marker accounts
-	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
-
-	// Used by RESTRICTED_COIN markers for transfer between accounts.
-	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
-
-	// used for unit-test only.
-	SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error
-
-	// These two Params methods are required for controlling SendEnabled flags.
-	GetParams(ctx sdk.Context) types.Params
-	SetParams(ctx sdk.Context, params types.Params)
-
-	SendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
-	SendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
-
-	BlockedAddr(addr sdk.AccAddress) bool
-
-	// Keeper ---------
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
+	DenomOwners(goCtx context.Context, req *banktypes.QueryDenomOwnersRequest) (*banktypes.QueryDenomOwnersResponse, error)
 
-	GetDenomMetaData(ctx sdk.Context, denom string) types.Metadata
-	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
-	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
-
+	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+
+	AppendSendRestriction(restriction banktypes.SendRestrictionFn)
+	BlockedAddr(addr sdk.AccAddress) bool
+
+	GetDenomMetaData(ctx sdk.Context, denom string) (banktypes.Metadata, bool)
+	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
+
+	// TODO: Delete the below entries when no longer needed.
+
+	// IterateAllBalances only used in GetAllMarkerHolders used by the unneeded querier.
+	// The Holding query just uses the DenomOwners query endpoint.
+	IterateAllBalances(ctx sdk.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
+	// GetAllSendEnabledEntries only needed by RemoveIsSendEnabledEntries in the quicksilver upgrade.
+	GetAllSendEnabledEntries(ctx sdk.Context) []banktypes.SendEnabled
+	// DeleteSendEnabled only needed by RemoveIsSendEnabledEntries in the quicksilver upgrade.
+	DeleteSendEnabled(ctx sdk.Context, denom string)
 }
 
-// GovKeeper defines the gov functionality needed from within the gov module.
+// FeeGrantKeeper defines the fee-grant functionality needed by the marker module.
+type FeeGrantKeeper interface {
+	GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error
+}
+
+// Note: There is no IBCKeeper interface in here.
+// The SendTransfer function takes in a checkRestrictionsHandler. That is defined in the
+// ibc keeper package. Furthermore, checkRestrictionsHandler takes in an IBC Keeper anyway.
+// So there's no way to remove the dependency on that ibc keeper package.
+
+// AttrKeeper defines the attribute functionality needed by the marker module.
+type AttrKeeper interface {
+	GetMaxValueLength(ctx sdk.Context) uint32
+	GetAllAttributesAddr(ctx sdk.Context, addr []byte) ([]attrtypes.Attribute, error)
+	GetAccountData(ctx sdk.Context, addr string) (string, error)
+	SetAccountData(ctx sdk.Context, addr string, value string) error
+}
+
+// NameKeeper defines the name keeper functionality needed by the marker module.
+type NameKeeper interface {
+	Normalize(ctx sdk.Context, name string) (string, error)
+}
+
+// GovKeeper defines the gov functionality needed by the marker module sims.
 type GovKeeper interface {
 	GetProposal(ctx sdk.Context, proposalID uint64) (govtypes.Proposal, bool)
 	GetDepositParams(ctx sdk.Context) govtypes.DepositParams
 	GetVotingParams(ctx sdk.Context) govtypes.VotingParams
 	GetProposalID(ctx sdk.Context) (uint64, error)
+}
+
+// IbcTransferMsgServer defines the message server functionality needed by the marker module.
+type IbcTransferMsgServer interface {
+	Transfer(goCtx context.Context, msg *transfertypes.MsgTransfer) (*transfertypes.MsgTransferResponse, error)
 }

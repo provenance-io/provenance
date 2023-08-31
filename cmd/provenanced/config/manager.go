@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
@@ -20,6 +21,9 @@ import (
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )
+
+// DefaultConsensusTimeoutCommit is the default value used for the consensus.timeout_commit config value.
+var DefaultConsensusTimeoutCommit = 1500 * time.Millisecond
 
 // PackConfig generates and saves the packed config file then removes the individual config files.
 func PackConfig(cmd *cobra.Command) error {
@@ -82,14 +86,28 @@ func ExtractAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, FieldValu
 	return conf, fields, nil
 }
 
+// DefaultAppConfig gets our default app config.
+func DefaultAppConfig() *serverconfig.Config {
+	rv := serverconfig.DefaultConfig()
+	rv.MinGasPrices = pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
+	return rv
+}
+
 // ExtractTmConfig creates a tendermint config from the command context.
 func ExtractTmConfig(cmd *cobra.Command) (*tmconfig.Config, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
-	conf := tmconfig.DefaultConfig()
+	conf := DefaultTmConfig()
 	if err := v.Unmarshal(conf); err != nil {
 		return nil, fmt.Errorf("error extracting tendermint config: %w", err)
 	}
 	conf.SetRoot(GetHomeDir(cmd))
+	// When the RPCServers value is "", it gets read as []string{}.
+	// But from a packed config without that entry, it gets read as nil.
+	// The default is also nil.
+	// So, if there's nothing in it, just set it to nil for consistency.
+	if len(conf.StateSync.RPCServers) == 0 {
+		conf.StateSync.RPCServers = nil
+	}
 	return conf, nil
 }
 
@@ -102,6 +120,12 @@ func ExtractTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, FieldValueMap,
 	fields := MakeFieldValueMap(conf, true)
 	removeUndesirableTmConfigEntries(fields)
 	return conf, fields, nil
+}
+
+func DefaultTmConfig() *tmconfig.Config {
+	rv := tmconfig.DefaultConfig()
+	rv.Consensus.TimeoutCommit = DefaultConsensusTimeoutCommit
+	return rv
 }
 
 // removeUndesirableTmConfigEntries deletes some keys from the provided fields map that we don't want included.
@@ -143,19 +167,12 @@ func ExtractClientConfigAndMap(cmd *cobra.Command) (*ClientConfig, FieldValueMap
 	return conf, fields, nil
 }
 
-// DefaultAppConfig gets our default app config.
-func DefaultAppConfig() *serverconfig.Config {
-	rv := serverconfig.DefaultConfig()
-	rv.MinGasPrices = pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
-	return rv
-}
-
 // GetAllConfigDefaults gets a field map from the defaults of all the configs.
 func GetAllConfigDefaults() FieldValueMap {
 	rv := FieldValueMap{}
 	rv.AddEntriesFrom(
 		MakeFieldValueMap(DefaultAppConfig(), false),
-		removeUndesirableTmConfigEntries(MakeFieldValueMap(tmconfig.DefaultConfig(), false)),
+		removeUndesirableTmConfigEntries(MakeFieldValueMap(DefaultTmConfig(), false)),
 		MakeFieldValueMap(DefaultClientConfig(), false),
 	)
 	return rv
@@ -410,7 +427,7 @@ func loadUnpackedConfig(cmd *cobra.Command) error {
 	vpr := server.GetServerContextFromCmd(cmd).Viper
 
 	// Load the tendermint config defaults, then file if it exists.
-	tdErr := addFieldMapToViper(vpr, MakeFieldValueMap(tmconfig.DefaultConfig(), false))
+	tdErr := addFieldMapToViper(vpr, MakeFieldValueMap(DefaultTmConfig(), false))
 	if tdErr != nil {
 		return fmt.Errorf("tendermint config defaults load error: %w", tdErr)
 	}
@@ -487,7 +504,7 @@ func loadPackedConfig(cmd *cobra.Command) error {
 
 	// Start with the defaults
 	appConfigMap := MakeFieldValueMap(DefaultAppConfig(), false)
-	tmConfigMap := MakeFieldValueMap(tmconfig.DefaultConfig(), false)
+	tmConfigMap := MakeFieldValueMap(DefaultTmConfig(), false)
 	clientConfigMap := MakeFieldValueMap(DefaultClientConfig(), false)
 
 	// Apply the packed config entries to the defaults.
@@ -602,6 +619,11 @@ func applyConfigsToContexts(cmd *cobra.Command) error {
 	}
 	logger := zerolog.New(logWriter).Level(logLvl).With().Timestamp().Logger()
 	serverCtx.Logger = server.ZeroLogWrapper{Logger: logger}
+
+	// Copy all settings from our viper to the global viper since some stuff uses the global one.
+	if err = viper.MergeConfigMap(serverCtx.Viper.AllSettings()); err != nil {
+		return fmt.Errorf("error copying all settings to global viper: %w", err)
+	}
 
 	return nil
 }

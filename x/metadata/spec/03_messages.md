@@ -13,6 +13,8 @@ These endpoints, requests, and responses are defined in [tx.proto](https://githu
     - [Msg/DeleteScopeDataAccess](#msgdeletescopedataaccess)
     - [Msg/AddScopeOwner](#msgaddscopeowner)
     - [Msg/DeleteScopeOwner](#msgdeletescopeowner)
+    - [Msg/UpdateValueOwners](#msgupdatevalueowners)
+    - [Msg/MigrateValueOwner](#msgmigratevalueowner)
     - [Msg/WriteSession](#msgwritesession)
     - [Msg/WriteRecord](#msgwriterecord)
     - [Msg/DeleteRecord](#msgdeleterecord)
@@ -29,6 +31,8 @@ These endpoints, requests, and responses are defined in [tx.proto](https://githu
     - [Msg/BindOSLocator](#msgbindoslocator)
     - [Msg/DeleteOSLocator](#msgdeleteoslocator)
     - [Msg/ModifyOSLocator](#msgmodifyoslocator)
+  - [Account Data](#account-data)
+    - [Msg/SetAccountData](#msgsetaccountdata)
   - [Authz Grants](#authz-grants)
 
 
@@ -167,6 +171,46 @@ This service message is expected to fail if:
 * Any provided `owners` (addresses) are not an address in a party in the scope.
 * The resulting scope owners do not meet scope specification requirements.
 * The `signers` do not have permission to update the scope.
+
+---
+### Msg/UpdateValueOwners
+
+The value owner address of one or more scopes can be updated using the `UpdateValueOwners` service method.
+
+#### Request
+
++++ https://github.com/provenance-io/provenance/blob/37cdb0c84db7b2f91aef057a606c5ba6aece06a1/proto/provenance/metadata/v1/tx.proto#L219-L235
+
+#### Response
+
++++ https://github.com/provenance-io/provenance/blob/37cdb0c84db7b2f91aef057a606c5ba6aece06a1/proto/provenance/metadata/v1/tx.proto#L237-L238
+
+#### Expected failures
+
+This service message is expected to fail if:
+* The new value owner address is invalid.
+* Any of the provided scope ids are not metadata scope identifiers or do not exist.
+* The signers are not allowed to update the value owner address of a provided scope.
+
+---
+### Msg/MigrateValueOwner
+
+All scopes with a given existing value owner address can be updated to have a new proposed value owner address using the `MigrateValueOwner` endpoint.
+
+#### Request
+
++++ https://github.com/provenance-io/provenance/blob/37cdb0c84db7b2f91aef057a606c5ba6aece06a1/proto/provenance/metadata/v1/tx.proto#L240-L252
+
+#### Response
+
++++ https://github.com/provenance-io/provenance/blob/37cdb0c84db7b2f91aef057a606c5ba6aece06a1/proto/provenance/metadata/v1/tx.proto#L254-L255
+
+#### Expected failures
+
+This service message is expected to fail if:
+* Either the existing or proposed values are not valid bech32 addresses.
+* The existing address is not a value owner on any scopes.
+* The signers are not allowed to update the value owner address of a scope being updated.
 
 ---
 ### Msg/WriteSession
@@ -571,6 +615,23 @@ This service message is expected to fail if:
 * An object store locator does not exist for the given `owner`.
 
 ---
+## Account Data
+
+### Msg/SetAccountData
+
+Simple data (a string) can be associated with scopes using the `SetAccountData` service method.
+
++++ https://github.com/provenance-io/provenance/blob/e83f1955cba07e2ba87790c4487d22632ae9e69c/proto/provenance/metadata/v1/tx.proto#L589-L606
+
++++ https://github.com/provenance-io/provenance/blob/e83f1955cba07e2ba87790c4487d22632ae9e69c/proto/provenance/metadata/v1/tx.proto#L608-L609
+
+This service message is expected to fail if:
+* The provided address is not a scope id.
+* The provided scope id does not exist.
+* The signers do not have authority to update the entry.
+* The provided value is too long (as defined by the attribute module params).
+
+---
 ## Authz Grants
 
 Authz requires the use of fully qualified message type URLs when applying grants to an address. See [04_authz.md](04_authz.md) for more details.
@@ -582,6 +643,8 @@ Fully qualified `metadata` message type URLs:
 - `/provenance.metadata.v1.MsgDeleteScopeDataAccessRequest`
 - `/provenance.metadata.v1.MsgAddScopeOwnerRequest`
 - `/provenance.metadata.v1.MsgDeleteScopeOwnerRequest`
+- `/provenance.metadata.v1.MsgUpdateValueOwnersRequest`
+- `/provenance.metadata.v1.MsgMigrateValueOwnerRequest`
 - `/provenance.metadata.v1.MsgWriteSessionRequest`
 - `/provenance.metadata.v1.MsgWriteRecordRequest`
 - `/provenance.metadata.v1.MsgDeleteRecordRequest`
@@ -596,3 +659,4 @@ Fully qualified `metadata` message type URLs:
 - `/provenance.metadata.v1.MsgBindOSLocatorRequest`
 - `/provenance.metadata.v1.MsgDeleteOSLocatorRequest`
 - `/provenance.metadata.v1.MsgModifyOSLocatorRequest`
+- `/provenance.metadata.v1.MsgSetAccountDataRequest`

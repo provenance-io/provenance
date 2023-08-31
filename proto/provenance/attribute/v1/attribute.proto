@@ -2,6 +2,7 @@ syntax = "proto3";
 package provenance.attribute.v1;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/attribute/types";
 
@@ -26,6 +27,8 @@ message Attribute {
   AttributeType attribute_type = 3;
   // The address the attribute is bound to
   string address = 4;
+  // Time that an attribute will expire.
+  google.protobuf.Timestamp expiration_date = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
 }
 
 // AttributeType defines the type of the data stored in the attribute value
@@ -52,11 +55,12 @@ enum AttributeType {
 
 // EventAttributeAdd event emitted when attribute is added
 message EventAttributeAdd {
-  string name    = 1;
-  string value   = 2;
-  string type    = 3;
-  string account = 4;
-  string owner   = 5;
+  string name       = 1;
+  string value      = 2;
+  string type       = 3;
+  string account    = 4;
+  string owner      = 5;
+  string expiration = 6;
 }
 
 // EventAttributeUpdate event emitted when attribute is updated
@@ -68,6 +72,16 @@ message EventAttributeUpdate {
   string update_type    = 5;
   string account        = 6;
   string owner          = 7;
+}
+
+// EventAttributeExpirationUpdate event emitted when attribute expiration is updated
+message EventAttributeExpirationUpdate {
+  string name                = 1;
+  string value               = 2;
+  string account             = 3;
+  string owner               = 4;
+  string original_expiration = 5;
+  string updated_expiration  = 6;
 }
 
 // EventAttributeDelete event emitted when attribute is deleted
@@ -84,4 +98,18 @@ message EventAttributeDistinctDelete {
   string attribute_type = 3;
   string account        = 4;
   string owner          = 5;
+}
+
+// EventAttributeExpired event emitted when attribute has expired and been deleted in BeginBlocker
+message EventAttributeExpired {
+  string name           = 1;
+  string value_hash     = 2;
+  string attribute_type = 3;
+  string account        = 4;
+  string expiration     = 5;
+}
+
+// EventAccountDataUpdated event emitted when accountdata is set, updated, or deleted.
+message EventAccountDataUpdated {
+  string account = 1;
 }

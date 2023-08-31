@@ -7,6 +7,6 @@ import (
 )
 
 // ProposalContents defines the module weighted proposals' contents (none for attribute)
-func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
+func ProposalContents(_ keeper.Keeper) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{}
 }

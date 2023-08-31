@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -28,10 +29,13 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	"github.com/provenance-io/provenance/x/marker/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -266,8 +270,23 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	genesisState[markertypes.ModuleName] = markerDataBz
 
+	// Pre-define an accountdata entry
+	attrData := attrtypes.DefaultGenesisState()
+	attrData.Attributes = append(attrData.Attributes,
+		attrtypes.Attribute{
+			Name:          attrtypes.AccountDataName,
+			Value:         []byte("Do not sell this coin."),
+			AttributeType: attrtypes.AttributeType_String,
+			Address:       markerData.Markers[5].Address, // Should be hodlercoin's address.
+		},
+	)
+	attrDataBz, err := cfg.Codec.MarshalJSON(attrData)
+	s.Require().NoError(err, "MarshalJSON(attrData)")
+	genesisState[attrtypes.ModuleName] = attrDataBz
+
 	cfg.GenesisState = genesisState
 	cfg.ChainID = antewrapper.SimAppChainID
+	cfg.TimeoutCommit = 500 * time.Millisecond
 
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err, "creating testnet")
@@ -528,6 +547,12 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			},
 			fmt.Sprintf("amount:\n  amount: \"%s\"\n  denom: %s", s.cfg.BondedTokens.Mul(sdk.NewInt(int64(s.cfg.NumValidators))), s.cfg.BondDenom),
 		},
+		{
+			name:           "account data",
+			cmd:            markercli.AccountDataCmd(),
+			args:           []string{"hodlercoin"},
+			expectedOutput: "value: Do not sell this coin.",
+		},
 	}
 	for _, tc := range testCases {
 		tc := tc
@@ -646,7 +671,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			[]string{
 				s.testnet.Validators[0].Address.String(),
 				"hotdog",
-				"mint,burn,transfer,withdraw",
+				"mint,burn,transfer,withdraw,deposit",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -858,6 +883,21 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
+			name: "set account data",
+			cmd:  markercli.GetCmdSetAccountData(),
+			args: []string{
+				"hotdog",
+				fmt.Sprintf("--%s", attrcli.FlagValue), "Not as good as corndog.",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		{
 			"remove access",
 			markercli.GetCmdDeleteAccess(),
 			[]string{
@@ -869,6 +909,22 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			name: "set account data via gov prop",
+			cmd:  markercli.GetCmdSetAccountData(),
+			args: []string{
+				"hotdog",
+				fmt.Sprintf("--%s", attrcli.FlagValue), "Better than corndog.",
+				fmt.Sprintf("--%s", markercli.FlagGovProposal),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 	}
 
@@ -886,6 +942,62 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+
+	// Now check some stuff to make sure it actually happened.
+
+	checks := []struct {
+		name   string
+		cmd    *cobra.Command
+		args   []string
+		expOut []string
+	}{
+		{
+			name:   "get account data with marker command",
+			cmd:    markercli.AccountDataCmd(),
+			args:   []string{"hotdog"},
+			expOut: []string{"value: Not as good as corndog."},
+		},
+		{
+			name:   "get account data with attribute command",
+			cmd:    attrcli.GetAccountDataCmd(),
+			args:   []string{markertypes.MustGetMarkerAddress("hotdog").String()},
+			expOut: []string{"value: Not as good as corndog."},
+		},
+		{
+			name: "gov prop created for account data",
+			cmd:  govcli.GetCmdQueryProposals(),
+			expOut: []string{
+				"'@type': /provenance.marker.v1.MsgSetAccountDataRequest",
+				"denom: hotdog",
+				"signer: " + authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				"value: Better than corndog.",
+			},
+		},
+	}
+
+	for _, check := range checks {
+		s.Run(check.name, func() {
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			cmdName := check.cmd.Name()
+			var outStr string
+			defer func() {
+				if s.T().Failed() {
+					s.T().Logf("Command: %s\nArgs: %q\nOutput:\n%s", cmdName, check.args, outStr)
+				}
+			}()
+
+			if check.args == nil {
+				check.args = []string{}
+			}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, check.cmd, check.args)
+			outStr = out.String()
+			s.Require().NoError(err, "ExecTestCLICmd %s command", cmdName)
+			for _, exp := range check.expOut {
+				s.Assert().Contains(outStr, exp, "%s command output", cmdName)
 			}
 		})
 	}
@@ -1149,7 +1261,7 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 			fmt.Sprintf(`{"title":"test withdraw marker","description":"description","target_address":"%s",
 			"denom":"%s", "amount":[{"denom":"%s","amount":"1"}]}`, s.testnet.Validators[0].Address.String(),
 				s.cfg.BondDenom, s.cfg.BondDenom),
-			false, &sdk.TxResponse{}, 0x9,
+			false, &sdk.TxResponse{}, 0x5,
 			// The gov module now has its own set of errors.
 			// This /should/ fail due to insufficient funds, and it does, but then the gov module erroneously wraps it again.
 			// Insufficient funds is 0x5 in the main SDK's set of errors.
@@ -1322,6 +1434,12 @@ func getFormattedExpiration(duration int64) string {
 }
 
 func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
+	getAccessGrantString := func(address sdk.AccAddress, anotherAddress sdk.AccAddress) string {
+		if anotherAddress != nil {
+			return address.String() + ",mint,admin;" + anotherAddress.String() + ",burn"
+		}
+		return address.String() + ",mint,admin;"
+	}
 
 	testCases := []struct {
 		name         string
@@ -1528,13 +1646,97 @@ func (s *IntegrationTestSuite) TestUpdateRequiredAttributesTxCommand() {
 	}
 }
 
-func getAccessGrantString(address sdk.AccAddress, anotherAddress sdk.AccAddress) string {
-	if anotherAddress != nil {
-		accessGrant := address.String() + ",mint,admin;" + anotherAddress.String() + ",burn"
-		return accessGrant
-	} else {
-		accessGrant := address.String() + ",mint,admin;"
-		return accessGrant
+func (s *IntegrationTestSuite) TestGetCmdUpdateForcedTransfer() {
+	denom := "updateftcoin"
+	argsWStdFlags := func(args ...string) []string {
+		return append(args,
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		)
+	}
+
+	s.Run("add a new marker for this", func() {
+		cmd := markercli.GetCmdAddFinalizeActivateMarker()
+		args := argsWStdFlags(
+			"1000"+denom,
+			s.testnet.Validators[0].Address.String()+",mint,burn,deposit,withdraw,delete,admin,transfer",
+			fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+			"--"+markercli.FlagSupplyFixed,
+			"--"+markercli.FlagAllowGovernanceControl,
+		)
+		clientCtx := s.testnet.Validators[0].ClientCtx
+		out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+		s.Require().NoError(err, "CmdAddFinalizeActivateMarker error")
+		outBz := out.Bytes()
+		outStr := string(outBz)
+		var resp sdk.TxResponse
+		s.Require().NoError(clientCtx.Codec.UnmarshalJSON(outBz, &resp), "error unmarshalling response JSON:\n%s", outStr)
+		s.Require().Equal(0, int(resp.Code), "response code:\n%s", outStr)
+	})
+	if s.T().Failed() {
+		s.FailNow("Stopping due to setup error")
+	}
+
+	tests := []struct {
+		name   string
+		args   []string
+		expErr string
+		incLog bool // set to true to log the output regardless of failure
+	}{
+		{
+			name:   "invalid denom",
+			args:   argsWStdFlags("x", "true"),
+			expErr: "invalid denom: x",
+		},
+		{
+			name:   "invalid bool",
+			args:   argsWStdFlags(denom, "farse"),
+			expErr: "invalid boolean string: \"farse\"",
+		},
+		{
+			name: "set to true",
+			args: argsWStdFlags(denom, "true"),
+		},
+		{
+			name: "set to false",
+			args: argsWStdFlags(denom, "false"),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdUpdateForcedTransfer()
+
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			outBz := out.Bytes()
+			outStr := string(outBz)
+
+			if len(tc.expErr) > 0 {
+				s.Require().EqualError(err, tc.expErr, "CmdUpdateForcedTransfer error")
+				s.Require().Contains(outStr, tc.expErr, "CmdUpdateForcedTransfer output")
+			} else {
+				s.Require().NoError(err, "CmdUpdateForcedTransfer error")
+				s.Assert().Contains(outStr, `{\"key\":\"action\",\"value\":\"/cosmos.gov.v1.MsgSubmitProposal\"}`)
+				s.Assert().Contains(outStr, `{\"key\":\"proposal_messages\",\"value\":\",/provenance.marker.v1.MsgUpdateForcedTransferRequest\"}`)
+			}
+			if tc.incLog || s.T().Failed() {
+				// if the test failed, or it was requested, log the output of the command.
+				// If it's JSON, then pretty-print it, otherwise, just print it raw.
+				logMsg := outStr
+				var resp sdk.TxResponse
+				err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+				if err == nil {
+					asJSON, err := json.MarshalIndent(resp, "", "  ")
+					if err == nil {
+						logMsg = string(asJSON)
+					}
+				}
+				s.T().Logf("args: %q\noutput:\n%s", tc.args, logMsg)
+			}
+		})
 	}
 }
 
@@ -1831,6 +2033,75 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				require.NoError(t, err, "ParseNewMarkerFlags")
 				assert.Equal(t, tc.exp, actual, "NewMarkerFlagValues from '%s'", strings.Join(tc.args, "', '"))
 			}
+		})
+	}
+}
+
+func TestParseBoolStrict(t *testing.T) {
+	trueCases := []string{
+		"true", "TRUE", "True", "tRuE",
+	}
+	falseCases := []string{
+		"false", "FALSE", "False", "FalSe",
+	}
+	errCases := []string{
+		"yes", "no", "y", "n", "0", "1",
+		"t rue", "fa lse", "truetrue", "true false", "false true", "tru", "fals", "T", "F",
+	}
+
+	type testCase struct {
+		input  string
+		exp    bool
+		expErr bool
+	}
+
+	tests := []testCase(nil)
+
+	for _, tc := range trueCases {
+		tests = append(tests, []testCase{
+			{input: tc, exp: true},
+			{input: " " + tc, exp: true},
+			{input: tc + " ", exp: true},
+			{input: "   " + tc + "   ", exp: true},
+		}...)
+	}
+
+	for _, tc := range falseCases {
+		tests = append(tests, []testCase{
+			{input: tc, exp: false},
+			{input: " " + tc, exp: false},
+			{input: tc + " ", exp: false},
+			{input: "   " + tc + "   ", exp: false},
+		}...)
+	}
+
+	for _, tc := range errCases {
+		tests = append(tests, []testCase{
+			{input: tc, expErr: true},
+			{input: " " + tc, expErr: true},
+			{input: tc + " ", expErr: true},
+			{input: "   " + tc + "   ", expErr: true},
+		}...)
+	}
+
+	tests = append(tests, testCase{input: "", expErr: true})
+	tests = append(tests, testCase{input: " ", expErr: true})
+	tests = append(tests, testCase{input: "   ", expErr: true})
+
+	for _, tc := range tests {
+		name := tc.input
+		if len(name) == 0 {
+			name = "empty"
+		}
+		t.Run(name, func(t *testing.T) {
+			actual, err := markercli.ParseBoolStrict(tc.input)
+			if tc.expErr {
+				exp := fmt.Sprintf("invalid boolean string: %q", tc.input)
+				assert.EqualError(t, err, exp, "ParseBoolStrict(%q) error", tc.input)
+			} else {
+				assert.NoError(t, err, "ParseBoolStrict(%q) error", tc.input)
+			}
+			assert.Equal(t, tc.exp, actual, "ParseBoolStrict(%q) value", tc.input)
 		})
 	}
 }

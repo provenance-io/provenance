@@ -125,7 +125,7 @@ func HandleRemoveMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.Remov
 }
 
 // HandleUpdateNhashPerUsdMilProposal handles update of nhash per usd mil governance proposal request
-func HandleUpdateNhashPerUsdMilProposal(ctx sdk.Context, k Keeper, proposal *types.UpdateNhashPerUsdMilProposal, registry codectypes.InterfaceRegistry) error {
+func HandleUpdateNhashPerUsdMilProposal(ctx sdk.Context, k Keeper, proposal *types.UpdateNhashPerUsdMilProposal) error {
 	if err := proposal.ValidateBasic(); err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func HandleUpdateNhashPerUsdMilProposal(ctx sdk.Context, k Keeper, proposal *typ
 }
 
 // HandleUpdateConversionFeeDenomProposal handles update of conversion fee denom
-func HandleUpdateConversionFeeDenomProposal(ctx sdk.Context, k Keeper, proposal *types.UpdateConversionFeeDenomProposal, registry codectypes.InterfaceRegistry) error {
+func HandleUpdateConversionFeeDenomProposal(ctx sdk.Context, k Keeper, proposal *types.UpdateConversionFeeDenomProposal) error {
 	if err := proposal.ValidateBasic(); err != nil {
 		return err
 	}

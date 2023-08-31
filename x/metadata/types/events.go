@@ -61,6 +61,12 @@ func (t TelemetryAction) AsLabel() metrics.Label {
 
 // GetIncObjFunc creates a function that will call telemetry.IncrCounterWithLabels for counting metadata module chain objects.
 func GetIncObjFunc(objType TelemetryObjectType, action TelemetryAction) func() {
+	return GetIncObjFuncN(objType, action, 1)
+}
+
+// GetIncObjFuncN creates a function that will call telemetry.IncrCounterWithLabels for counting metadata module chain objects.
+// It's similar to GetIncObjFunc, except multiplies the counts by the provided count.
+func GetIncObjFuncN(objType TelemetryObjectType, action TelemetryAction, count int) func() {
 	val := 0 // Default is for action == TLAction_Updated
 	if action == TLAction_Created {
 		val = 1
@@ -77,13 +83,13 @@ func GetIncObjFunc(objType TelemetryObjectType, action TelemetryAction) func() {
 		if val != 0 {
 			telemetry.IncrCounterWithLabels(
 				[]string{ModuleName, TKObject},
-				float32(val),
+				float32(val*count),
 				[]metrics.Label{cat.AsLabel(), objType.AsLabel()},
 			)
 		}
 		telemetry.IncrCounterWithLabels(
 			[]string{ModuleName, TKObjectAction},
-			1,
+			float32(count),
 			[]metrics.Label{cat.AsLabel(), objType.AsLabel(), action.AsLabel()},
 		)
 	}
@@ -99,6 +105,8 @@ const (
 	TxEndpoint_DeleteScopeDataAccess TxEndpoint = "DeleteScopeDataAccess"
 	TxEndpoint_AddScopeOwner         TxEndpoint = "AddScopeOwner"
 	TxEndpoint_DeleteScopeOwner      TxEndpoint = "DeleteScopeOwner"
+	TxEndpoint_UpdateValueOwners     TxEndpoint = "UpdateValueOwners"
+	TxEndpoint_MigrateValueOwner     TxEndpoint = "MigrateValueOwner"
 
 	TxEndpoint_WriteSession TxEndpoint = "WriteSession"
 

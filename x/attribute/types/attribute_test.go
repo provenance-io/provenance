@@ -193,8 +193,6 @@ func (s *AttributeTestSuite) TestAttributeValidateBasic() {
 	}
 
 	for n, tc := range cases {
-		tc := tc
-
 		s.Run(n, func() {
 			err := tc.attribute.ValidateBasic()
 			if tc.expectErr {

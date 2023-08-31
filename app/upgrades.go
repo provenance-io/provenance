@@ -7,94 +7,151 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-)
 
-var (
-	noopHandler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
-		ctx.Logger().Info("Applying no-op upgrade plan for release " + plan.Name)
-		return versionMap, nil
-	}
+	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
+	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
+	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
-
-type appUpgradeHandler = func(sdk.Context, *App, upgradetypes.Plan) (module.VersionMap, error)
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
 type appUpgrade struct {
-	Added   []string
+	// Added contains names of modules being added during an upgrade.
+	Added []string
+	// Deleted contains names of modules being removed during an upgrade.
 	Deleted []string
+	// Renamed contains info on modules being renamed during an upgrade.
 	Renamed []storetypes.StoreRename
-	Handler appUpgradeHandler
+	// Handler is a function to execute during an upgrade.
+	Handler func(sdk.Context, *App, module.VersionMap) (module.VersionMap, error)
 }
 
-var handlers = map[string]appUpgrade{
-	"paua": { // upgrade for v1.14.0
-		Added: []string{quarantine.ModuleName, sanction.ModuleName},
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
-			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			versionMap, err := app.mm.RunMigrations(ctx, app.configurator, app.UpgradeKeeper.GetModuleVersionMap(ctx))
+// upgrades is where we define things that need to happen during an upgrade.
+// If no Handler is defined for an entry, a no-op upgrade handler is still registered.
+// If there's nothing that needs to be done for an upgrade, there still needs to be an
+// entry in this map, but it can just be {}.
+//
+// On the same line as the key, there should be a comment indicating the software version.
+// Entries currently in use (e.g. on mainnet or testnet) cannot be deleted.
+// Entries should be in chronological order, earliest first. E.g. quicksilver-rc1 went to
+// testnet first, then quicksilver-rc2 went to testnet, then quicksilver went to mainnet.
+//
+// If something is happening in the rc upgrade(s) that isn't being applied in the non-rc,
+// or vice versa, please add comments explaining why in both entries.
+var upgrades = map[string]appUpgrade{
+	"rust-rc1": { // upgrade for v1.16.0-rc1
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
 				return nil, err
 			}
-			err = SetSanctionParams(ctx, app) // Needs to happen after RunMigrations adds the sanction module.
+
+			removeInactiveValidatorDelegations(ctx, app)
+
+			err = setAccountDataNameRecord(ctx, app.AccountKeeper, &app.NameKeeper)
 			if err != nil {
 				return nil, err
 			}
-			IncreaseMaxCommissions(ctx, app)
-			// Skipping IncreaseMaxGas(ctx, app) in mainnet for now.
-			return versionMap, nil
+
+			// We only need to call addGovV1SubmitFee on testnet.
+			addGovV1SubmitFee(ctx, app)
+
+			removeP8eMemorializeContractFee(ctx, app)
+
+			fixNameIndexEntries(ctx, app)
+
+			return vm, nil
 		},
+		Added: []string{triggertypes.ModuleName},
 	},
-	"paua-rc2": { // upgrade for v1.14.0-rc3
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
-			// Reapply the max commissions thing again so testnet gets the max change rate bump too.
-			IncreaseMaxCommissions(ctx, app)
-			UndoMaxGasIncrease(ctx, app)
-			return app.UpgradeKeeper.GetModuleVersionMap(ctx), nil
+	"rust": { // upgrade for v1.16.0
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			removeInactiveValidatorDelegations(ctx, app)
+
+			err = setAccountDataNameRecord(ctx, app.AccountKeeper, &app.NameKeeper)
+			if err != nil {
+				return nil, err
+			}
+
+			// No need to call addGovV1SubmitFee in here as mainnet already has it defined.
+
+			removeP8eMemorializeContractFee(ctx, app)
+
+			fixNameIndexEntries(ctx, app)
+
+			return vm, nil
 		},
+		Added: []string{triggertypes.ModuleName},
 	},
-	"quicksilver-rc1": { // upgrade for v1.15.0-rc2
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
-			app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
-			app.AttributeKeeper.PopulateAddressAttributeNameTable(ctx)
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+	"saffron-rc1": { // upgrade for v1.17.0-rc1
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+			// set ibchoooks defaults (no allowed async contracts)
+			app.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
+
+			removeInactiveValidatorDelegations(ctx, app)
+
+			return vm, nil
 		},
+		Added: []string{ibchookstypes.ModuleName},
 	},
-	"quicksilver-rc2": {}, // upgrade for v1.15.0-rc3
-	"quicksilver": { // upgrade for v1.15.0
-		Handler: func(ctx sdk.Context, app *App, plan upgradetypes.Plan) (module.VersionMap, error) {
-			app.MarkerKeeper.RemoveIsSendEnabledEntries(ctx)
-			app.AttributeKeeper.PopulateAddressAttributeNameTable(ctx)
-			versionMap := app.UpgradeKeeper.GetModuleVersionMap(ctx)
-			ctx.Logger().Info("Starting migrations. This may take a significant amount of time to complete. Do not restart node.")
-			return app.mm.RunMigrations(ctx, app.configurator, versionMap)
+	"saffron": { // upgrade for v1.17.0
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			// set ibchoooks defaults (no allowed async contracts)
+			app.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
+
+			removeInactiveValidatorDelegations(ctx, app)
+
+			return vm, nil
 		},
+		Added: []string{ibchookstypes.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
 }
 
-// InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the handlers map.
+// InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the upgrades map.
 func InstallCustomUpgradeHandlers(app *App) {
 	// Register all explicit appUpgrades
-	for name, upgrade := range handlers {
+	for name, upgrade := range upgrades {
 		// If the handler has been defined, add it here, otherwise, use no-op.
 		var handler upgradetypes.UpgradeHandler
 		if upgrade.Handler == nil {
-			handler = noopHandler
+			handler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
+				ctx.Logger().Info(fmt.Sprintf("Applying no-op upgrade to %q", plan.Name))
+				return versionMap, nil
+			}
 		} else {
 			ref := upgrade
-			handler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
-				vM, err := ref.Handler(ctx, app, plan)
+			handler = func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+				ctx.Logger().Info(fmt.Sprintf("Starting upgrade to %q", plan.Name), "version-map", vm)
+				newVM, err := ref.Handler(ctx, app, vm)
 				if err != nil {
-					ctx.Logger().Info(fmt.Sprintf("Failed to upgrade to: %s with err: %v", plan.Name, err))
+					ctx.Logger().Error(fmt.Sprintf("Failed to upgrade to %q", plan.Name), "error", err)
 				} else {
-					ctx.Logger().Info(fmt.Sprintf("Successfully upgraded to: %s with version map: %v", plan.Name, vM))
+					ctx.Logger().Info(fmt.Sprintf("Successfully upgraded to %q", plan.Name), "version-map", newVM)
 				}
-				return vM, err
+				return newVM, err
 			}
 		}
 		app.UpgradeKeeper.SetUpgradeHandler(name, handler)
@@ -104,7 +161,7 @@ func InstallCustomUpgradeHandlers(app *App) {
 // GetUpgradeStoreLoader creates an StoreLoader for use in an upgrade.
 // Returns nil if no upgrade info is found or the upgrade doesn't need a store loader.
 func GetUpgradeStoreLoader(app *App, info upgradetypes.Plan) baseapp.StoreLoader {
-	upgrade, found := handlers[info.Name]
+	upgrade, found := upgrades[info.Name]
 	if !found {
 		return nil
 	}
@@ -132,39 +189,127 @@ func GetUpgradeStoreLoader(app *App, info upgradetypes.Plan) baseapp.StoreLoader
 	return upgradetypes.UpgradeStoreLoader(info.Height, &storeUpgrades)
 }
 
-func IncreaseMaxCommissions(ctx sdk.Context, app *App) {
-	oneHundredPct := sdk.OneDec()
-	fivePct := sdk.MustNewDecFromStr("0.05")
-	validators := app.StakingKeeper.GetAllValidators(ctx)
-	ctx.Logger().Info("Increasing all validator's max commission to 100% and max change rate to 5%", "count", len(validators))
-	for _, validator := range validators {
-		validator.Commission.MaxRate = oneHundredPct
-		// Note: This MaxChangeRate bump was added after paua-rc1 was run on testnet.
-		// So, even though it's called by the paua-rc1 upgrade handler now,
-		// it wasn't part of the actual paua-rc1 upgrade that was performed on testnet.
-		if validator.Commission.MaxChangeRate.LT(fivePct) {
-			validator.Commission.MaxChangeRate = fivePct
-		}
-		app.StakingKeeper.SetValidator(ctx, validator)
-	}
-}
-
-func UndoMaxGasIncrease(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Setting max gas per block back to 60,000,000")
-	params := app.GetConsensusParams(ctx)
-	params.Block.MaxGas = 60_000_000
-	app.StoreConsensusParams(ctx, params)
-}
-
-func SetSanctionParams(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Setting sanction params")
-	params := &sanction.Params{
-		ImmediateSanctionMinDeposit:   sdk.NewCoins(sdk.NewInt64Coin("nhash", 1_000_000_000_000_000)),
-		ImmediateUnsanctionMinDeposit: sdk.NewCoins(sdk.NewInt64Coin("nhash", 1_000_000_000_000_000)),
-	}
-	err := app.SanctionKeeper.SetParams(ctx, params)
+// runModuleMigrations wraps standard logging around the call to app.mm.RunMigrations.
+// In most cases, it should be the first thing done during a migration.
+//
+// If state is updated prior to this migration, you run the risk of writing state using
+// a new format when the migration is expecting all state to be in the old format.
+func runModuleMigrations(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+	// Even if this function is no longer called, do not delete it. Keep it around for the next time it's needed.
+	ctx.Logger().Info("Starting module migrations. This may take a significant amount of time to complete. Do not restart node.")
+	newVM, err := app.mm.RunMigrations(ctx, app.configurator, vm)
 	if err != nil {
-		return fmt.Errorf("could not set sanction params: %w", err)
+		ctx.Logger().Error("Module migrations encountered an error.", "error", err)
+		return nil, err
 	}
-	return nil
+	ctx.Logger().Info("Module migrations completed.")
+	return newVM, nil
+}
+
+// Create a use of runModuleMigrations so that the linter neither complains about it not being used,
+// nor complains about a nolint:unused directive that isn't needed because the function is used.
+var _ = runModuleMigrations
+
+// addGovV1SubmitFee adds a msg-fee for the gov v1 MsgSubmitProposal if there isn't one yet.
+// TODO: Remove with the rust handlers.
+func addGovV1SubmitFee(ctx sdk.Context, app *App) {
+	typeURL := sdk.MsgTypeURL(&govtypesv1.MsgSubmitProposal{})
+
+	ctx.Logger().Info(fmt.Sprintf("Creating message fee for %q if it doesn't already exist.", typeURL))
+	// At the time of writing this, the only way GetMsgFee returns an error is if it can't unmarshall state.
+	// If that's the case for the v1 entry, we want to fix it anyway, so we just ignore any error here.
+	fee, _ := app.MsgFeesKeeper.GetMsgFee(ctx, typeURL)
+	// If there's already a fee for it, do nothing.
+	if fee != nil {
+		ctx.Logger().Info(fmt.Sprintf("Message fee for %q already exists with amount %q. Nothing to do.", fee.MsgTypeUrl, fee.AdditionalFee.String()))
+		return
+	}
+
+	// Copy the fee from the beta entry if it exists, otherwise, just make it fresh.
+	betaTypeURL := sdk.MsgTypeURL(&govtypesv1beta1.MsgSubmitProposal{})
+	// Here too, if there's an error getting the beta fee, just ignore it.
+	betaFee, _ := app.MsgFeesKeeper.GetMsgFee(ctx, betaTypeURL)
+	if betaFee != nil {
+		fee = betaFee
+		fee.MsgTypeUrl = typeURL
+		ctx.Logger().Info(fmt.Sprintf("Copying %q fee to %q.", betaTypeURL, fee.MsgTypeUrl))
+	} else {
+		fee = &msgfeetypes.MsgFee{
+			MsgTypeUrl:           typeURL,
+			AdditionalFee:        sdk.NewInt64Coin("nhash", 100_000_000_000), // 100 hash
+			Recipient:            "",
+			RecipientBasisPoints: 0,
+		}
+		ctx.Logger().Info(fmt.Sprintf("Creating %q fee.", fee.MsgTypeUrl))
+	}
+
+	// At the time of writing this, SetMsgFee always returns nil.
+	_ = app.MsgFeesKeeper.SetMsgFee(ctx, *fee)
+	ctx.Logger().Info(fmt.Sprintf("Successfully set fee for %q with amount %q.", fee.MsgTypeUrl, fee.AdditionalFee.String()))
+}
+
+// removeP8eMemorializeContractFee removes the message fee for the now-non-existent MsgP8eMemorializeContractRequest.
+// TODO: Remove with the rust handlers.
+func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
+	typeURL := "/provenance.metadata.v1.MsgP8eMemorializeContractRequest"
+
+	ctx.Logger().Info(fmt.Sprintf("Removing message fee for %q if one exists.", typeURL))
+	// Get the existing fee for log output, but ignore any errors so we try to delete the entry either way.
+	fee, _ := app.MsgFeesKeeper.GetMsgFee(ctx, typeURL)
+	// At the time of writing this, the only error that RemoveMsgFee can return is ErrMsgFeeDoesNotExist.
+	// So ignore any error here and just use fee != nil for the different log messages.
+	_ = app.MsgFeesKeeper.RemoveMsgFee(ctx, typeURL)
+	if fee == nil {
+		ctx.Logger().Info(fmt.Sprintf("Message fee for %q already does not exist. Nothing to do.", typeURL))
+	} else {
+		ctx.Logger().Info(fmt.Sprintf("Successfully removed message fee for %q with amount %q.", fee.MsgTypeUrl, fee.AdditionalFee.String()))
+	}
+}
+
+// removeInactiveValidatorDelegations unbonds all delegations from inactive validators, triggering their removal from the validator set.
+// This should be applied in most upgrades.
+func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
+	unbondingTimeParam := app.StakingKeeper.GetParams(ctx).UnbondingTime
+	ctx.Logger().Info(fmt.Sprintf("removing all delegations from validators that have been inactive (unbonded) for %d days", int64(unbondingTimeParam.Hours()/24)))
+	removalCount := 0
+	validators := app.StakingKeeper.GetAllValidators(ctx)
+	for _, validator := range validators {
+		if validator.IsUnbonded() {
+			inactiveDuration := ctx.BlockTime().Sub(validator.UnbondingTime)
+			if inactiveDuration >= unbondingTimeParam {
+				ctx.Logger().Info(fmt.Sprintf("validator %v has been inactive (unbonded) for %d days and will be removed", validator.OperatorAddress, int64(inactiveDuration.Hours()/24)))
+				valAddress, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
+				if err != nil {
+					ctx.Logger().Error(fmt.Sprintf("invalid operator address: %s: %v", validator.OperatorAddress, err))
+					continue
+				}
+				delegations := app.StakingKeeper.GetValidatorDelegations(ctx, valAddress)
+				for _, delegation := range delegations {
+					ctx.Logger().Info(fmt.Sprintf("undelegate delegator %v from validator %v of all shares (%v)", delegation.DelegatorAddress, validator.OperatorAddress, delegation.GetShares()))
+					_, err = app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), valAddress, delegation.GetShares())
+					if err != nil {
+						ctx.Logger().Error(fmt.Sprintf("failed to undelegate delegator %s from validator %s: %v", delegation.GetDelegatorAddr().String(), valAddress.String(), err))
+						continue
+					}
+				}
+				removalCount++
+			}
+		}
+	}
+	ctx.Logger().Info(fmt.Sprintf("a total of %d inactive (unbonded) validators have had all their delegators removed", removalCount))
+}
+
+// fixNameIndexEntries fixes the name module's address to name index entries.
+// TODO: Remove with the rust handlers.
+func fixNameIndexEntries(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Fixing name module store index entries.")
+	app.NameKeeper.DeleteInvalidAddressIndexEntries(ctx)
+	ctx.Logger().Info("Done fixing name module store index entries.")
+}
+
+// setAccountDataNameRecord makes sure the account data name record exists, is restricted,
+// and is owned by the attribute module. An error is returned if it fails to make it so.
+// TODO: Remove with the rust handlers.
+func setAccountDataNameRecord(ctx sdk.Context, accountK attributetypes.AccountKeeper, nameK attributetypes.NameKeeper) (err error) {
+	return attributekeeper.EnsureModuleAccountAndAccountDataNameRecord(ctx, accountK, nameK)
 }

@@ -125,7 +125,7 @@ type TransferParams struct {
 }
 
 // Encoder returns a smart contract message encoder for the name module.
-func Encoder(contract sdk.AccAddress, msg json.RawMessage, version string) ([]sdk.Msg, error) {
+func Encoder(contract sdk.AccAddress, msg json.RawMessage, _ string) ([]sdk.Msg, error) {
 	wrapper := struct {
 		Params *MarkerMsgParams `json:"marker"`
 	}{}

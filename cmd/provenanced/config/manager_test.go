@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -13,13 +14,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	tmcmds "github.com/tendermint/tendermint/cmd/cometbft/commands"
+	tmconfig "github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
-
-	tmconfig "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )
@@ -46,7 +48,7 @@ func (s *ConfigManagerTestSuite) makeDummyCmd() *cobra.Command {
 		WithCodec(encodingConfig.Codec).
 		WithHomeDir(s.Home)
 	clientCtx.Viper = viper.New()
-	serverCtx := server.NewContext(clientCtx.Viper, tmconfig.DefaultConfig(), log.NewNopLogger())
+	serverCtx := server.NewContext(clientCtx.Viper, DefaultTmConfig(), log.NewNopLogger())
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -66,6 +68,19 @@ func (s *ConfigManagerTestSuite) makeDummyCmd() *cobra.Command {
 	dummyCmd, err = dummyCmd.ExecuteContextC(ctx)
 	s.Require().NoError(err, "dummy command execution")
 	return dummyCmd
+}
+
+func (s *ConfigManagerTestSuite) logFile(path string) {
+	if !FileExists(path) {
+		s.T().Logf("File does not exist: %s", path)
+		return
+	}
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		s.T().Logf("Error reading %s: %v", path, err)
+		return
+	}
+	s.T().Logf("File: %s\nContents:\n%s", path, contents)
 }
 
 func (s *ConfigManagerTestSuite) TestConfigIndexEventsWriteRead() {
@@ -107,7 +122,7 @@ func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadDefaults() {
 	dCmd := s.makeDummyCmd()
 
 	appConfig := DefaultAppConfig()
-	tmConfig := tmconfig.DefaultConfig()
+	tmConfig := DefaultTmConfig()
 	clientConfig := DefaultClientConfig()
 	generateAndWritePackedConfig(dCmd, appConfig, tmConfig, clientConfig, false)
 	s.Require().NoError(loadPackedConfig(dCmd))
@@ -127,7 +142,7 @@ func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadGlobalLabels() {
 	appConfig := serverconfig.DefaultConfig()
 	appConfig.Telemetry.GlobalLabels = append(appConfig.Telemetry.GlobalLabels, []string{"key1", "value1"})
 	appConfig.Telemetry.GlobalLabels = append(appConfig.Telemetry.GlobalLabels, []string{"key2", "value2"})
-	tmConfig := tmconfig.DefaultConfig()
+	tmConfig := DefaultTmConfig()
 	clientConfig := DefaultClientConfig()
 	generateAndWritePackedConfig(dCmd, appConfig, tmConfig, clientConfig, false)
 	s.Require().NoError(loadPackedConfig(dCmd))
@@ -166,13 +181,13 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 		vpr := ctx.Viper
 		actual := vpr.GetString("db_backend")
 		assert.NotEqual(t, "still bananas", actual, "unmanaged field value")
-		assert.Equal(t, tmconfig.DefaultConfig().DBBackend, actual, "unmanaged field default value")
+		assert.Equal(t, DefaultTmConfig().DBBackend, actual, "unmanaged field default value")
 	})
 
 	s.T().Run("unmanaged config is read with unpacked files", func(t *testing.T) {
 		dCmd := s.makeDummyCmd()
 		uFile := GetFullPathToUnmanagedConf(dCmd)
-		SaveConfigs(dCmd, DefaultAppConfig(), tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		SaveConfigs(dCmd, DefaultAppConfig(), DefaultTmConfig(), DefaultClientConfig(), false)
 		require.NoError(t, os.WriteFile(uFile, []byte("my-custom-entry = \"stuff\"\n"), 0o644), "writing unmanaged config")
 		require.NoError(t, LoadConfigFromFiles(dCmd))
 		ctx := client.GetClientContextFromCmd(dCmd)
@@ -184,7 +199,7 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 	s.T().Run("unmanaged config is read with packed config", func(t *testing.T) {
 		dCmd := s.makeDummyCmd()
 		uFile := GetFullPathToUnmanagedConf(dCmd)
-		SaveConfigs(dCmd, DefaultAppConfig(), tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		SaveConfigs(dCmd, DefaultAppConfig(), DefaultTmConfig(), DefaultClientConfig(), false)
 		require.NoError(t, PackConfig(dCmd), "packing config")
 		require.NoError(t, os.WriteFile(uFile, []byte("other-custom-entry = 8\n"), 0o644), "writing unmanaged config")
 		require.NoError(t, LoadConfigFromFiles(dCmd))
@@ -244,7 +259,7 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 
 	s.Run("tm and client files but no app file", func() {
 		cmd1 := s.makeDummyCmd()
-		SaveConfigs(cmd1, nil, tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		SaveConfigs(cmd1, nil, DefaultTmConfig(), DefaultClientConfig(), false)
 		appCfgFile := GetFullPathToAppConf(cmd1)
 		_, err := os.Stat(appCfgFile)
 		fileExists := !os.IsNotExist(err)
@@ -262,7 +277,7 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 		cmd1 := s.makeDummyCmd()
 		appCfg := DefaultAppConfig()
 		appCfg.MinGasPrices = ""
-		SaveConfigs(cmd1, appCfg, tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		SaveConfigs(cmd1, appCfg, DefaultTmConfig(), DefaultClientConfig(), false)
 		appCfgFile := GetFullPathToAppConf(cmd1)
 		_, err := os.Stat(appCfgFile)
 		fileExists := !os.IsNotExist(err)
@@ -280,7 +295,7 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 		cmd1 := s.makeDummyCmd()
 		appCfg := DefaultAppConfig()
 		appCfg.MinGasPrices = "something else"
-		SaveConfigs(cmd1, appCfg, tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		SaveConfigs(cmd1, appCfg, DefaultTmConfig(), DefaultClientConfig(), false)
 		appCfgFile := GetFullPathToAppConf(cmd1)
 		_, err := os.Stat(appCfgFile)
 		fileExists := !os.IsNotExist(err)
@@ -296,7 +311,7 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 
 	s.Run("packed config without min-gas-prices", func() {
 		cmd1 := s.makeDummyCmd()
-		SaveConfigs(cmd1, DefaultAppConfig(), tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		SaveConfigs(cmd1, DefaultAppConfig(), DefaultTmConfig(), DefaultClientConfig(), false)
 		s.Require().NoError(PackConfig(cmd1), "PackConfig")
 		packedCfgFile := GetFullPathToPackedConf(cmd1)
 		_, err := os.Stat(packedCfgFile)
@@ -316,7 +331,7 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 
 	s.Run("packed config with min-gas-prices", func() {
 		cmd1 := s.makeDummyCmd()
-		SaveConfigs(cmd1, DefaultAppConfig(), tmconfig.DefaultConfig(), DefaultClientConfig(), false)
+		SaveConfigs(cmd1, DefaultAppConfig(), DefaultTmConfig(), DefaultClientConfig(), false)
 		s.Require().NoError(PackConfig(cmd1), "PackConfig")
 		packedCfgFile := GetFullPathToPackedConf(cmd1)
 		_, err := os.Stat(packedCfgFile)
@@ -332,5 +347,48 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 		s.Require().NoError(err, "ExtractAppConfig")
 		actual := cfg.MinGasPrices
 		s.Assert().Equal("65blue", actual)
+	})
+}
+
+func (s *ConfigManagerTestSuite) TestDefaultTmConfig() {
+	cfg := DefaultTmConfig()
+
+	s.Run("consensus.commit_timeout", func() {
+		exp := 1500 * time.Millisecond
+		act := cfg.Consensus.TimeoutCommit
+		s.Assert().Equal(exp, act, "cfg.Consensus.TimeoutCommit")
+	})
+}
+
+func (s *ConfigManagerTestSuite) TestPackedConfigTmLoadDefaults() {
+	dCmd := s.makeDummyCmd()
+	dCmd.Flags().String("home", s.Home, "home dir")
+
+	appConfig := DefaultAppConfig()
+	tmConfig := DefaultTmConfig()
+	tmConfig.SetRoot(s.Home)
+	clientConfig := DefaultClientConfig()
+	generateAndWritePackedConfig(dCmd, appConfig, tmConfig, clientConfig, false)
+	s.logFile(GetFullPathToPackedConf(dCmd))
+	s.Require().NoError(loadPackedConfig(dCmd), "loadPackedConfig")
+
+	s.Run("tmcmds.ParseConfig", func() {
+		var tmConfig2 *tmconfig.Config
+		var err error
+		s.Require().NotPanics(func() {
+			tmConfig2, err = tmcmds.ParseConfig(dCmd)
+		})
+		s.Require().NoError(err, "tmcmds.ParseConfig")
+		s.Assert().Equal(tmConfig, tmConfig2)
+	})
+
+	s.Run("ExtractTmConfig", func() {
+		var tmConfig2 *tmconfig.Config
+		var err error
+		s.Require().NotPanics(func() {
+			tmConfig2, err = ExtractTmConfig(dCmd)
+		})
+		s.Require().NoError(err, "ExtractTmConfig")
+		s.Assert().Equal(tmConfig, tmConfig2)
 	})
 }

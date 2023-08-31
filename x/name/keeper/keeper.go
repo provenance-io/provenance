@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"bytes"
+	"fmt"
 	"strings"
 	"unicode"
 
@@ -17,9 +19,6 @@ import (
 
 	"github.com/provenance-io/provenance/x/name/types"
 )
-
-// Handler is a name record handler function for use with IterateRecords.
-type Handler func(record types.NameRecord) error
 
 // Keeper defines the name module Keeper
 type Keeper struct {
@@ -99,11 +98,7 @@ func (k Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress,
 
 	nameBoundEvent := types.NewEventNameBound(addr.String(), name, restrict)
 
-	if err := ctx.EventManager().EmitTypedEvent(nameBoundEvent); err != nil {
-		return err
-	}
-
-	return nil
+	return ctx.EventManager().EmitTypedEvent(nameBoundEvent)
 }
 
 // UpdateNameRecord updates the owner address and restricted flag on a name.
@@ -116,17 +111,38 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 		return types.ErrInvalidAddress.Wrap(err.Error())
 	}
 
+	// If there's an existing record, and the address is changing, we need to
+	// delete the existing address -> name index entry. If there's an error getting
+	// it, we don't really care; either it doesn't exist or the same error will
+	// come up again later (when we add the new record).
+	existing, _ := k.GetRecordByName(ctx, name)
+	if existing != nil && existing.Address != addr.String() {
+		var oldAddr sdk.AccAddress
+		var oldNameKeyPre, oldAddrKey []byte
+		oldAddr, err = sdk.AccAddressFromBech32(existing.Address)
+		if err != nil {
+			return types.ErrInvalidAddress.Wrapf("invalid existing %s record address: %v", name, err)
+		}
+		oldNameKeyPre, err = types.GetNameKeyPrefix(name)
+		if err != nil {
+			return err
+		}
+		oldAddrKey, err = types.GetAddressKeyPrefix(oldAddr)
+		if err != nil {
+			return types.ErrInvalidAddress.Wrapf("invalid existing %s record address format: %v", name, err)
+		}
+		oldAddrKey = append(oldAddrKey, oldNameKeyPre...)
+		store := ctx.KVStore(k.storeKey)
+		store.Delete(oldAddrKey)
+	}
+
 	if err = k.addRecord(ctx, name, addr, restrict, true); err != nil {
 		return err
 	}
 
 	nameUpdateEvent := types.NewEventNameUpdate(addr.String(), name, restrict)
 
-	if err := ctx.EventManager().EmitTypedEvent(nameUpdateEvent); err != nil {
-		return err
-	}
-
-	return nil
+	return ctx.EventManager().EmitTypedEvent(nameUpdateEvent)
 }
 
 // GetRecordByName resolves a record by name.
@@ -212,15 +228,11 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 
 	nameUnboundEvent := types.NewEventNameUnbound(record.Address, name, record.Restricted)
 
-	if err := ctx.EventManager().EmitTypedEvent(nameUnboundEvent); err != nil {
-		return err
-	}
-
-	return nil
+	return ctx.EventManager().EmitTypedEvent(nameUnboundEvent)
 }
 
 // IterateRecords iterates over all the stored name records and passes them to a callback function.
-func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) error {
+func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(record types.NameRecord) error) error {
 	// Init a name record iterator
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
@@ -327,4 +339,67 @@ func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, res
 
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// DeleteInvalidAddressIndexEntries is only for the rust upgrade. It goes over all the address -> name entries and
+// deletes any that are no longer accurate.
+func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
+	logger := k.Logger(ctx)
+	logger.Info("Checking address -> name index entries.")
+
+	keepCount := 0
+	var toDelete [][]byte
+
+	extractNameKey := func(key []byte) []byte {
+		// byte 1 is the type byte (0x05), it's ignored here.
+		// The 2nd byte is the length of the address that immediately follows it.
+		// The name key starts directly after the address, and is the rest of the key.
+		addrLen := int(key[1])
+		nameKeyStart := addrLen + 2
+		return key[nameKeyStart:]
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.AddressKeyPrefix)
+	defer func() {
+		if iter != nil {
+			iter.Close()
+		}
+	}()
+
+	for ; iter.Valid(); iter.Next() {
+		// If the key points to a non-existent name, delete it.
+		key := iter.Key()
+		nameKey := extractNameKey(key)
+		if !store.Has(nameKey) {
+			toDelete = append(toDelete, key)
+			continue
+		}
+
+		// If the index value and main value are different, delete the index.
+		indValBz := iter.Value()
+		mainValBz := store.Get(nameKey)
+		if !bytes.Equal(indValBz, mainValBz) {
+			toDelete = append(toDelete, key)
+			continue
+		}
+
+		keepCount++
+	}
+
+	iter.Close()
+	iter = nil
+
+	if len(toDelete) == 0 {
+		logger.Info(fmt.Sprintf("Done checking address -> name index entries. All %d entries are valid", keepCount))
+		return
+	}
+
+	logger.Info(fmt.Sprintf("Found %d invalid address -> name index entries. Deleting them now.", len(toDelete)))
+
+	for _, key := range toDelete {
+		store.Delete(key)
+	}
+
+	logger.Info(fmt.Sprintf("Done checking address -> name index entries. Deleted %d invalid entries and kept %d valid entries.", len(toDelete), keepCount))
 }

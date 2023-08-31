@@ -82,10 +82,7 @@ func (s Scope) ValidateOwnersBasic() error {
 	if err := ValidatePartiesBasic(s.Owners); err != nil {
 		return fmt.Errorf("invalid scope owners: %w", err)
 	}
-	if err := ValidateOptionalParties(s.RequirePartyRollup, s.Owners); err != nil {
-		return err
-	}
-	return nil
+	return ValidateOptionalParties(s.RequirePartyRollup, s.Owners)
 }
 
 // String implements stringer interface

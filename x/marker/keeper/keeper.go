@@ -8,19 +8,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
-	attrkeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
-	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 )
 
 // Handler is a handler function for use with IterateRecords.
@@ -53,23 +46,21 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 
 	// To check whether accounts exist for addresses.
-	authKeeper authkeeper.AccountKeeper
+	authKeeper types.AccountKeeper
 
 	// To check whether accounts exist for addresses.
-	authzKeeper authzkeeper.Keeper
+	authzKeeper types.AuthzKeeper
 
 	// To handle movement of coin between accounts and check total supply
-	bankKeeper bankkeeper.Keeper
+	bankKeeper types.BankKeeper
 
 	// To pass through grant creation for callers with admin access on a marker.
-	feegrantKeeper feegrantkeeper.Keeper
-
-	ibcKeeper ibckeeper.Keeper
+	feegrantKeeper types.FeeGrantKeeper
 
 	// To access attributes for addresses
-	attrKeeper attrkeeper.Keeper
+	attrKeeper types.AttrKeeper
 	// To access names and normalize required attributes
-	nameKeeper namekeeper.Keeper
+	nameKeeper types.NameKeeper
 
 	// Key to access the key-value store from sdk.Context.
 	storeKey storetypes.StoreKey
@@ -83,6 +74,16 @@ type Keeper struct {
 	markerModuleAddr sdk.AccAddress
 
 	ibcTransferModuleAddr sdk.AccAddress
+
+	// Used to transfer the ibc marker
+	ibcTransferServer types.IbcTransferMsgServer
+
+	// reqAttrBypassAddrs is a set of addresses that are allowed to bypass the required attribute check.
+	// When sending to one of these, if there are required attributes, it behaves as if the addr has them;
+	// if there aren't required attributes, the sender still needs transfer permission.
+	// When sending from one of these, if there are required attributes, the destination must have them;
+	// if there aren't required attributes, it behaves as if the sender has transfer permission.
+	reqAttrBypassAddrs types.ImmutableAccAddresses
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -94,25 +95,25 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	key storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
-	authKeeper authkeeper.AccountKeeper,
-	bankKeeper bankkeeper.Keeper,
-	authzKeeper authzkeeper.Keeper,
-	feegrantKeeper feegrantkeeper.Keeper,
-	ibcKeeper ibckeeper.Keeper,
-	attrKeeper attrkeeper.Keeper,
-	nameKeeper namekeeper.Keeper,
+	authKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper,
+	authzKeeper types.AuthzKeeper,
+	feegrantKeeper types.FeeGrantKeeper,
+	attrKeeper types.AttrKeeper,
+	nameKeeper types.NameKeeper,
+	ibcTransferServer types.IbcTransferMsgServer,
+	reqAttrBypassAddrs []sdk.AccAddress,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return Keeper{
+	rv := Keeper{
 		paramSpace:            paramSpace,
 		authKeeper:            authKeeper,
 		authzKeeper:           authzKeeper,
 		bankKeeper:            bankKeeper,
 		feegrantKeeper:        feegrantKeeper,
-		ibcKeeper:             ibcKeeper,
 		attrKeeper:            attrKeeper,
 		nameKeeper:            nameKeeper,
 		storeKey:              key,
@@ -120,7 +121,11 @@ func NewKeeper(
 		authority:             authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		markerModuleAddr:      authtypes.NewModuleAddress(types.CoinPoolName),
 		ibcTransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
+		ibcTransferServer:     ibcTransferServer,
+		reqAttrBypassAddrs:    types.NewImmutableAccAddresses(reqAttrBypassAddrs),
 	}
+	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
+	return rv
 }
 
 // Logger returns a module-specific logger.
@@ -195,4 +200,29 @@ func (k Keeper) GetEscrow(ctx sdk.Context, marker types.MarkerAccountI) sdk.Coin
 // GetAuthority is signer of the proposal
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+func (k Keeper) IsSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(types.DenySendKey(markerAddr, senderAddr))
+}
+
+func (k Keeper) AddSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.DenySendKey(markerAddr, senderAddr), []byte{})
+}
+
+func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.DenySendKey(markerAddr, senderAddr))
+}
+
+// GetReqAttrBypassAddrs returns a deep copy of the addresses that bypass the required attributes checking.
+func (k Keeper) GetReqAttrBypassAddrs() []sdk.AccAddress {
+	return k.reqAttrBypassAddrs.GetSlice()
+}
+
+// IsReqAttrBypassAddr returns true if the provided addr can bypass the required attributes checking.
+func (k Keeper) IsReqAttrBypassAddr(addr sdk.AccAddress) bool {
+	return k.reqAttrBypassAddrs.Has(addr)
 }

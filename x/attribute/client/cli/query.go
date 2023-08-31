@@ -2,12 +2,10 @@ package cli
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -32,6 +30,7 @@ func GetQueryCmd() *cobra.Command {
 		ListAccountAttributesCmd(),
 		ScanAccountAttributesCmd(),
 		GetAttributeAccountsCmd(),
+		GetAccountDataCmd(),
 	)
 
 	return queryCmd
@@ -68,7 +67,7 @@ func GetAttributeParamsCmd() *cobra.Command {
 // GetAccountAttributeCmd gets all account attributes by name.
 func GetAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get [address] [name]",
+		Use:   "get <address> <name>",
 		Short: "Get account attributes by name",
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`
@@ -85,7 +84,7 @@ func GetAccountAttributeCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -114,7 +113,7 @@ func GetAccountAttributeCmd() *cobra.Command {
 // ListAccountAttributesCmd gets all account attributes.
 func ListAccountAttributesCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list [address]",
+		Use:   "list <address>",
 		Short: "Get all account attributes",
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`
@@ -131,7 +130,7 @@ func ListAccountAttributesCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -158,7 +157,7 @@ func ListAccountAttributesCmd() *cobra.Command {
 // ScanAccountAttributesCmd gets account attributes by name suffix.
 func ScanAccountAttributesCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "scan [address] [suffix]",
+		Use:   "scan <address> <suffix>",
 		Short: "Scan account attributes by name suffix",
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`
@@ -175,7 +174,7 @@ func ScanAccountAttributesCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -200,24 +199,10 @@ func ScanAccountAttributesCmd() *cobra.Command {
 	return cmd
 }
 
-// sdk ReadPageRequest expects binary but we encoded to base64 in our marshaller
-func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
-	encoded, err := flagSet.GetString(flags.FlagPageKey)
-	if err != nil {
-		panic(err.Error())
-	}
-	raw, err := base64.StdEncoding.DecodeString(encoded)
-	if err != nil {
-		panic(err.Error())
-	}
-	_ = flagSet.Set(flags.FlagPageKey, string(raw))
-	return flagSet
-}
-
 // GetAttributeAccountsCmd gets account addresses with attribute name
 func GetAttributeAccountsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "accounts [name]",
+		Use:   "accounts <name>",
 		Short: "List account addresses that have attributes with name",
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`
@@ -234,7 +219,7 @@ func GetAttributeAccountsCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -253,6 +238,37 @@ func GetAttributeAccountsCmd() *cobra.Command {
 	}
 
 	flags.AddPaginationFlagsToCmd(cmd, "accounts")
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetAccountDataCmd gets data for an account
+func GetAccountDataCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "account-data <addr>",
+		Short:   "Look up account data",
+		Aliases: []string{"accountdata", "ad"},
+		Example: fmt.Sprintf(`$ %[1]s query attribute account-data pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk`, version.AppName),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := &types.QueryAccountDataRequest{Account: strings.TrimSpace(args[0])}
+
+			response, err := queryClient.AccountData(context.Background(), req)
+			if err != nil {
+				return fmt.Errorf("failed to query account data for %q: %w", req.Account, err)
+			}
+
+			return clientCtx.PrintProto(response)
+		},
+	}
+
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

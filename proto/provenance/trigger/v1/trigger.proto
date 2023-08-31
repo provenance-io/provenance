@@ -1,0 +1,82 @@
+syntax = "proto3";
+package provenance.trigger.v1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/trigger/types";
+option java_package        = "io.provenance.trigger.v1";
+option java_multiple_files = true;
+
+// Trigger
+message Trigger {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // An integer to uniquely identify the trigger.
+  uint64 id = 1;
+  // The owner of the trigger.
+  string owner = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // The event that must be detected for the trigger to fire.
+  google.protobuf.Any event = 3 [(cosmos_proto.accepts_interface) = "TriggerEventI"];
+  // The messages to run when the trigger fires.
+  repeated google.protobuf.Any actions = 4;
+}
+
+// QueuedTrigger
+message QueuedTrigger {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // The block height the trigger was detected and queued.
+  uint64 block_height = 1;
+  // The time the trigger was detected and queued.
+  google.protobuf.Timestamp time = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // The trigger that was detected.
+  Trigger trigger = 3 [(gogoproto.nullable) = false];
+}
+
+// BlockHeightEvent
+message BlockHeightEvent {
+  option (gogoproto.equal)                   = true;
+  option (gogoproto.goproto_stringer)        = true;
+  option (cosmos_proto.implements_interface) = "TriggerEventI";
+
+  // The height that the trigger should fire at.
+  uint64 block_height = 1;
+}
+
+// BlockTimeEvent
+message BlockTimeEvent {
+  option (gogoproto.equal)                   = true;
+  option (gogoproto.goproto_stringer)        = true;
+  option (cosmos_proto.implements_interface) = "TriggerEventI";
+
+  // The time the trigger should fire at.
+  google.protobuf.Timestamp time = 1 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
+
+// TransactionEvent
+message TransactionEvent {
+  option (gogoproto.equal)                   = true;
+  option (gogoproto.goproto_stringer)        = true;
+  option (cosmos_proto.implements_interface) = "TriggerEventI";
+
+  // The name of the event for a match.
+  string name = 1;
+  // The attributes that must be present for a match.
+  repeated Attribute attributes = 2 [(gogoproto.nullable) = false];
+}
+
+// Attribute
+message Attribute {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // The name of the attribute that the event must have to be considered a match.
+  string name = 1;
+  // The value of the attribute that the event must have to be considered a match.
+  string value = 2;
+}

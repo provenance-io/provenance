@@ -25,13 +25,13 @@ func (a MarkerTransferAuthorization) MsgTypeURL() string {
 }
 
 // Accept implements Authorization.Accept.
-func (a MarkerTransferAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
+func (a MarkerTransferAuthorization) Accept(_ sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
 	switch msg := msg.(type) {
 	case *MsgTransferRequest:
 		toAddress := msg.ToAddress
 		limitLeft, isNegative := a.DecreaseTransferLimit(msg.Amount)
 		if isNegative {
-			return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
+			return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrap("requested amount is more than spend limit")
 		}
 		shouldDelete := false
 		if limitLeft.IsZero() {

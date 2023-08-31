@@ -2,13 +2,11 @@ package cli
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -176,7 +174,7 @@ func outputClaimPeriodRewardDistributionAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if err != nil {
 		return err
 	}
@@ -225,20 +223,6 @@ func outputClaimPeriodRewardDistributionByID(cmd *cobra.Command, rewardID, claim
 	}
 
 	return clientCtx.PrintProto(response)
-}
-
-// sdk ReadPageRequest expects binary, but we encoded to base64 in our marshaller
-func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
-	encoded, err := flagSet.GetString(flags.FlagPageKey)
-	if err != nil {
-		panic(err.Error())
-	}
-	raw, err := base64.StdEncoding.DecodeString(encoded)
-	if err != nil {
-		panic(err.Error())
-	}
-	_ = flagSet.Set(flags.FlagPageKey, string(raw))
-	return flagSet
 }
 
 // Query for RewardAccountByAddress depending on claim status

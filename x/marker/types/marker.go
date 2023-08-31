@@ -50,6 +50,7 @@ type MarkerAccountI interface {
 	HasGovernanceEnabled() bool
 
 	AllowsForcedTransfer() bool
+	SetAllowForcedTransfer(bool)
 
 	GetRequiredAttributes() []string
 	SetRequiredAttributes([]string)
@@ -120,6 +121,10 @@ func (ma MarkerAccount) HasGovernanceEnabled() bool { return ma.AllowGovernanceC
 // AllowsForcedTransfer returns true if force transfer is allowed for this marker.
 func (ma MarkerAccount) AllowsForcedTransfer() bool {
 	return ma.AllowForcedTransfer
+}
+
+func (ma *MarkerAccount) SetAllowForcedTransfer(allowForcedTransfer bool) {
+	ma.AllowForcedTransfer = allowForcedTransfer
 }
 
 // HasAccess returns true if the provided address has been assigned the provided
@@ -265,12 +270,12 @@ func (ma MarkerAccount) GetPubKey() cryptotypes.PubKey {
 }
 
 // SetPubKey implements authtypes.Account (but there are no public keys associated with the account for signing)
-func (ma *MarkerAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
+func (ma *MarkerAccount) SetPubKey(_ cryptotypes.PubKey) error {
 	return fmt.Errorf("not supported for marker accounts")
 }
 
 // SetSequence implements authtypes.Account (but you can't set a sequence as you can't sign tx for this account)
-func (ma *MarkerAccount) SetSequence(seq uint64) error {
+func (ma *MarkerAccount) SetSequence(_ uint64) error {
 	return fmt.Errorf("not supported for marker accounts")
 }
 
@@ -350,7 +355,7 @@ func (ma MarkerAccount) GetSupply() sdk.Coin {
 // GrantAccess appends the access grant to the marker account.
 func (ma *MarkerAccount) GrantAccess(access AccessGrantI) error {
 	if err := access.Validate(); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	// Find any existing permissions and append specified permissions
 	for _, ac := range ma.AccessControl {

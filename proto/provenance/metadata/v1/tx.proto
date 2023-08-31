@@ -4,6 +4,7 @@ package provenance.metadata.v1;
 import "gogoproto/gogo.proto";
 import "provenance/metadata/v1/metadata.proto";
 import "provenance/metadata/v1/objectstore.proto";
+import "provenance/metadata/v1/p8e/p8e.proto";
 import "provenance/metadata/v1/scope.proto";
 import "provenance/metadata/v1/specification.proto";
 
@@ -30,6 +31,12 @@ service Msg {
   rpc AddScopeOwner(MsgAddScopeOwnerRequest) returns (MsgAddScopeOwnerResponse);
   // DeleteScopeOwner removes owner parties (by addresses) from a scope
   rpc DeleteScopeOwner(MsgDeleteScopeOwnerRequest) returns (MsgDeleteScopeOwnerResponse);
+
+  // UpdateValueOwners sets the value owner of one or more scopes.
+  rpc UpdateValueOwners(MsgUpdateValueOwnersRequest) returns (MsgUpdateValueOwnersResponse);
+
+  // MigrateValueOwner updates all scopes that have one value owner to have a another value owner.
+  rpc MigrateValueOwner(MsgMigrateValueOwnerRequest) returns (MsgMigrateValueOwnerResponse);
 
   // WriteSession adds or updates a session context.
   rpc WriteSession(MsgWriteSessionRequest) returns (MsgWriteSessionResponse);
@@ -71,6 +78,10 @@ service Msg {
   rpc DeleteOSLocator(MsgDeleteOSLocatorRequest) returns (MsgDeleteOSLocatorResponse);
   // ModifyOSLocator updates an ObjectStoreLocator record by the current owner.
   rpc ModifyOSLocator(MsgModifyOSLocatorRequest) returns (MsgModifyOSLocatorResponse);
+
+  // SetAccountData associates some basic data with a metadata address.
+  // Currently, only scope ids are supported.
+  rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
 }
 
 // MsgWriteScopeRequest is the request type for the Msg/WriteScope RPC method.
@@ -209,6 +220,44 @@ message MsgDeleteScopeOwnerRequest {
 
 // MsgDeleteScopeOwnerResponse is the response from removing owner AccAddress to scope
 message MsgDeleteScopeOwnerResponse {}
+
+// MsgUpdateValueOwnersRequest is the request to update the value owner addresses in one or more scopes.
+message MsgUpdateValueOwnersRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.goproto_getters)  = false;
+
+  // scope_ids are the scope metadata addresses of all scopes to be updated.
+  repeated bytes scope_ids = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"scope_ids\""
+  ];
+  // value_owner_address is the address of the new value owner for the provided scopes.
+  string value_owner_address = 2 [(gogoproto.moretags) = "yaml:\"value_owner_address\""];
+  // signers is the list of addresses of those signing this request.
+  repeated string signers = 3;
+}
+
+// MsgUpdateValueOwnersResponse is the response from updating value owner addresses in one or more scopes.
+message MsgUpdateValueOwnersResponse {}
+
+// MsgMigrateValueOwnerRequest is the request to migrate all scopes with one value owner to another value owner.
+message MsgMigrateValueOwnerRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.goproto_getters)  = false;
+
+  // existing is the value owner address that is being migrated.
+  string existing = 1;
+  // proposed is the new value owner address for all of existing's scopes.
+  string proposed = 2;
+  // signers is the list of addresses of those signing this request.
+  repeated string signers = 3;
+}
+
+// MsgMigrateValueOwnerResponse is the response from migrating a value owner address.
+message MsgMigrateValueOwnerResponse {}
 
 // MsgWriteSessionRequest is the request type for the Msg/WriteSession RPC method.
 message MsgWriteSessionRequest {
@@ -535,4 +584,68 @@ message MsgModifyOSLocatorRequest {
 // MsgModifyOSLocatorResponse is the response type for the Msg/ModifyOSLocator RPC method.
 message MsgModifyOSLocatorResponse {
   ObjectStoreLocator locator = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgSetAccountDataRequest is the request to set/update/delete a scope's account data.
+message MsgSetAccountDataRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.goproto_getters)  = false;
+
+  // The identifier to associate the data with.
+  // Currently, only scope ids are supported.
+  bytes metadata_addr = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customtype) = "MetadataAddress",
+    (gogoproto.moretags)   = "yaml:\"metadata_addr\""
+  ];
+  // The desired accountdata value.
+  string value = 2;
+  // The signers of this message. Must fulfill owner requirements of the scope.
+  repeated string signers = 3;
+}
+
+// MsgSetAccountDataResponse is the response from setting/updating/deleting a scope's account data.
+message MsgSetAccountDataResponse {}
+
+// MsgWriteP8eContractSpecRequest has been deprecated and is no longer usable.
+// Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+message MsgWriteP8eContractSpecRequest {
+  option deprecated                  = true;
+  option (gogoproto.goproto_getters) = false;
+  p8e.ContractSpec contractspec      = 1 [(gogoproto.nullable) = false];
+  repeated string  signers           = 2;
+}
+
+// MsgWriteP8eContractSpecResponse  has been deprecated and is no longer usable.
+// Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+message MsgWriteP8eContractSpecResponse {
+  option deprecated                               = true;
+  option (gogoproto.goproto_getters)              = false;
+  ContractSpecIdInfo        contract_spec_id_info = 1 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
+  repeated RecordSpecIdInfo record_spec_id_infos  = 2 [(gogoproto.moretags) = "yaml:\"record_spec_id_infos\""];
+}
+
+// MsgP8eMemorializeContractRequest  has been deprecated and is no longer usable.
+// Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+message MsgP8eMemorializeContractRequest {
+  option deprecated                                              = true;
+  option (gogoproto.goproto_getters)                             = false;
+  string                                  scope_id               = 1;
+  string                                  group_id               = 2;
+  string                                  scope_specification_id = 3;
+  provenance.metadata.v1.p8e.Recitals     recitals               = 4;
+  provenance.metadata.v1.p8e.Contract     contract               = 5;
+  provenance.metadata.v1.p8e.SignatureSet signatures             = 6;
+  string                                  invoker                = 7;
+}
+
+// MsgP8eMemorializeContractResponse  has been deprecated and is no longer usable.
+// Deprecated: This message is no longer part of any endpoint and cannot be used for anything.
+message MsgP8eMemorializeContractResponse {
+  option deprecated                     = true;
+  option (gogoproto.goproto_getters)    = false;
+  ScopeIdInfo           scope_id_info   = 1 [(gogoproto.moretags) = "yaml:\"scope_id_info\""];
+  SessionIdInfo         session_id_info = 2 [(gogoproto.moretags) = "yaml:\"session_id_info\""];
+  repeated RecordIdInfo record_id_infos = 3 [(gogoproto.moretags) = "yaml:\"record_id_infos\""];
 }

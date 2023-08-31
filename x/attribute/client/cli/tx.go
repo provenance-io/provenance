@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -30,6 +31,8 @@ func NewTxCmd() *cobra.Command {
 		NewUpdateAccountAttributeCmd(),
 		NewDeleteDistinctAccountAttributeCmd(),
 		NewDeleteAccountAttributeCmd(),
+		NewSetAccountDataCmd(),
+		NewUpdateAccountAttributeExpirationCmd(),
 	)
 	return txCmd
 }
@@ -37,13 +40,14 @@ func NewTxCmd() *cobra.Command {
 // NewAddAccountAttributeCmd creates a command for adding an account attributes.
 func NewAddAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "add [name] [address] [type] [value]",
+		Use:     "add <name> <address> <type> <value> [expire-time]",
 		Aliases: []string{"a"},
 		Short:   "Add an account attribute to the provenance blockchain",
 		Long: fmt.Sprintf(`Note: the attribute name must have already been created through the name module.  
 Refer to %s tx name bind --help for more information on how to do this.`, version.AppName),
-		Args:    cobra.ExactArgs(4),
-		Example: fmt.Sprintf(`$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value"`, version.AppName),
+		Args: cobra.RangeArgs(4, 5),
+		Example: fmt.Sprintf(`$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value"
+		$ %s tx attribute add "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" 2050-01-15T00:00:00Z`, version.AppName, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -74,6 +78,15 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 				attributeType,
 				value,
 			)
+
+			if len(args) == 5 {
+				expireTime, err := time.Parse(time.RFC3339, args[4])
+				if err != nil {
+					return fmt.Errorf("unable to parse time %q required format is RFC3339 (%v): %w", args[4], time.RFC3339, err)
+				}
+				msg.ExpirationDate = &expireTime
+			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -86,7 +99,7 @@ Refer to %s tx name bind --help for more information on how to do this.`, versio
 // NewUpdateAccountAttributeCmd creates a command for adding an account attributes.
 func NewUpdateAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "update [name] [address] [original-type] [original-value] [update-type] [update-value]",
+		Use:     "update <name> <address> <original-type> <original-value> <update-type> <update-value>",
 		Aliases: []string{"u"},
 		Short:   "Update an account attribute on the provenance blockchain",
 		Example: fmt.Sprintf(`$ %s tx attribute update "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value" "int" 100`, version.AppName),
@@ -157,7 +170,7 @@ func encodeAttributeValue(value string, attrType types.AttributeType) ([]byte, e
 // NewDeleteDistinctAccountAttributeCmd creates a command for removing account attributes with specific name value.
 func NewDeleteDistinctAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "delete-distinct [name] [address] [type] [value]",
+		Use:     "delete-distinct <name> <address> <type> <value>",
 		Aliases: []string{"dd"},
 		Short:   "Delete an account attribute with specific name and value the provenance blockchain",
 		Example: fmt.Sprintf(`$ %s tx attribute delete-distinct "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "string" "test value"`, version.AppName),
@@ -193,7 +206,7 @@ func NewDeleteDistinctAccountAttributeCmd() *cobra.Command {
 // NewDeleteAccountAttributeCmd creates a command for removing account attributes.
 func NewDeleteAccountAttributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "delete [name] [address]",
+		Use:     "delete <name> <address>",
 		Aliases: []string{"d"},
 		Short:   "Delete an account attribute from the provenance blockchain",
 		Example: fmt.Sprintf(`$ %s tx attribute delete "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx`, version.AppName),
@@ -217,6 +230,86 @@ func NewDeleteAccountAttributeCmd() *cobra.Command {
 		},
 	}
 
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewUpdateAccountAttributeExpirationCmd creates a command for updating account attributes expirations
+func NewUpdateAccountAttributeExpirationCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "update-expiration <name> <address> <value> [expiration-date]",
+		Aliases: []string{"ue"},
+		Short:   "Updates an attribute's expiration date on the provenance blockchain",
+		Example: fmt.Sprintf(`$ %s tx attribute update-expiration "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "attribute value" 2050-01-15T00:00:00Z
+$ %s tx attribute update-expiration "attr1.pb" tp1jypkeck8vywptdltjnwspwzulkqu7jv6ey90dx "attribute value"`, version.AppName, version.AppName),
+		Args: cobra.RangeArgs(3, 4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			err = types.ValidateAttributeAddress(args[1])
+			if err != nil {
+				return fmt.Errorf("invalid address: %w", err)
+			}
+			var expireTime *time.Time
+			if len(args) == 4 {
+				parsedTime, err := time.Parse(time.RFC3339, args[3])
+				if err != nil {
+					return fmt.Errorf("unable to parse time %q required format is RFC3339 (%v): %w", args[3], time.RFC3339, err)
+				}
+				expireTime = &parsedTime
+			}
+			msg := types.NewMsgUpdateAttributeExpirationRequest(
+				args[1],
+				args[0],
+				args[2],
+				expireTime,
+				clientCtx.GetFromAddress(),
+			)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewSetAccountDataCmd creates a command for setting account data.
+func NewSetAccountDataCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "account-data " + AccountDataFlagsUse,
+		Aliases: []string{"accountdata", "ad"},
+		Short:   "Set an account's data to either the value provided or the contents of the file provided",
+		Example: fmt.Sprintf(`$ %[1]s tx attribute account-data --%s "This is some account data."
+$ %[1]s tx attribute account-data --%s account-data.json
+$ %[1]s tx attribute account-data --%s
+`,
+			version.AppName, FlagValue, FlagFile, FlagDelete),
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgSetAccountDataRequest{
+				Account: clientCtx.GetFromAddress().String(),
+			}
+
+			msg.Value, err = ReadAccountDataFlags(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	AddAccountDataFlagsToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

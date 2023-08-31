@@ -1,7 +1,9 @@
 package simulation_test
 
 import (
+	"bytes"
 	"math/rand"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -16,7 +18,7 @@ import (
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/name/simulation"
-	types "github.com/provenance-io/provenance/x/name/types"
+	"github.com/provenance-io/provenance/x/name/types"
 )
 
 type SimTestSuite struct {
@@ -26,23 +28,49 @@ type SimTestSuite struct {
 	app *app.App
 }
 
-func (suite *SimTestSuite) SetupTest() {
-	suite.app = app.Setup(suite.T())
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
+func (s *SimTestSuite) SetupTest() {
+	s.app = app.Setup(s.T())
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 }
 
-func (suite *SimTestSuite) TestWeightedOperations() {
-	cdc := suite.app.AppCodec()
+// LogOperationMsg logs all fields of the provided operationMsg.
+func (s *SimTestSuite) LogOperationMsg(operationMsg simtypes.OperationMsg) {
+	msgFmt := "%s"
+	if len(bytes.TrimSpace(operationMsg.Msg)) == 0 {
+		msgFmt = "    %q"
+	}
+	fmtLines := []string{
+		"operationMsg.Route:   %q",
+		"operationMsg.Name:    %q",
+		"operationMsg.Comment: %q",
+		"operationMsg.OK:      %t",
+		"operationMsg.Msg: " + msgFmt,
+	}
+	s.T().Logf(strings.Join(fmtLines, "\n"),
+		operationMsg.Route, operationMsg.Name, operationMsg.Comment, operationMsg.OK, string(operationMsg.Msg),
+	)
+}
+
+// LogIfError logs an error if it's not nil.
+// The error is automatically added to the format and args.
+func (s *SimTestSuite) LogIfError(err error, format string, args ...interface{}) {
+	if err != nil {
+		s.T().Logf(format+" error: %v", append(args, err)...)
+	}
+}
+
+func (s *SimTestSuite) TestWeightedOperations() {
+	cdc := s.app.AppCodec()
 	appParams := make(simtypes.AppParams)
 
-	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.app.NameKeeper,
-		suite.app.AccountKeeper, suite.app.BankKeeper,
+	weightedOps := simulation.WeightedOperations(appParams, cdc, s.app.NameKeeper,
+		s.app.AccountKeeper, s.app.BankKeeper,
 	)
 
 	// setup 3 accounts
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	accs := suite.getTestingAccounts(r, 3)
+	src := rand.NewSource(1)
+	r := rand.New(src)
+	accs := s.getTestingAccounts(r, 3)
 
 	expected := []struct {
 		weight     int
@@ -54,115 +82,141 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simappparams.DefaultWeightMsgModifyName, sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{})},
 	}
 
-	for i, w := range weightesOps {
-		operationMsg, _, _ := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
-		// the following checks are very much dependent from the ordering of the output given
-		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
-		// will fail
-		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
-		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
-		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
+	expNames := make([]string, len(expected))
+	for i, exp := range expected {
+		expNames[i] = exp.opMsgName
+	}
+
+	// Run all the ops and get the operation messages and their names.
+	opMsgs := make([]simtypes.OperationMsg, len(weightedOps))
+	actualNames := make([]string, len(weightedOps))
+	for i, w := range weightedOps {
+		opMsgs[i], _, _ = w.Op()(r, s.app.BaseApp, s.ctx, accs, "")
+		actualNames[i] = opMsgs[i].Name
+	}
+
+	// First, make sure the op names are as expected since a failure there probably means the rest will fail.
+	// And it's probably easier to address when you've got a nice list comparison of names and their orderings.
+	s.Require().Equal(expNames, actualNames, "operation message names")
+
+	// Now assert that each entry was as expected.
+	for i := range expected {
+		s.Assert().Equal(expected[i].weight, weightedOps[i].Weight(), "weightedOps[%d].Weight", i)
+		s.Assert().Equal(expected[i].opMsgRoute, opMsgs[i].Route, "weightedOps[%d] operationMsg.Route", i)
+		s.Assert().Equal(expected[i].opMsgName, opMsgs[i].Name, "weightedOps[%d] operationMsg.Name", i)
 	}
 }
 
 // TestSimulateMsgBindName tests the normal scenario of a valid message of type TypeMsgBindName.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
-func (suite *SimTestSuite) TestSimulateMsgBindName() {
+func (s *SimTestSuite) TestSimulateMsgBindName() {
 
 	// setup 3 accounts
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, 3)
-	suite.app.NameKeeper.SetNameRecord(suite.ctx, "provenance", accounts[0].Address, false)
+	src := rand.NewSource(1)
+	r := rand.New(src)
+	accounts := s.getTestingAccounts(r, 3)
+
+	name := "provenance"
+	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q)", name)
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgBindName(suite.app.NameKeeper, suite.app.AccountKeeper, suite.app.BankKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-	suite.Require().NoError(err)
+	op := simulation.SimulateMsgBindName(s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
+	s.Require().NoError(err, "SimulateMsgBindName op(...) error")
+	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgBindNameRequest
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Record.Address)
-	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Parent.Address)
-	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
-	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
-	suite.Require().Len(futureOperations, 0)
+	s.Require().NoError(types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+
+	s.Assert().True(operationMsg.OK, "operationMsg.OK")
+	s.Assert().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Record.Address, "msg.Record.Address")
+	s.Assert().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Parent.Address, "msg.Parent.Address")
+	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
+	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
 // TestSimulateMsgDeleteName tests the normal scenario of a valid message of type MsgDeleteName.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
-func (suite *SimTestSuite) TestSimulateMsgDeleteName() {
+func (s *SimTestSuite) TestSimulateMsgDeleteName() {
 
 	// setup 3 accounts
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, 1)
-	suite.app.NameKeeper.SetNameRecord(suite.ctx, "deleteme", accounts[0].Address, false)
+	src := rand.NewSource(1)
+	r := rand.New(src)
+	accounts := s.getTestingAccounts(r, 1)
+
+	rootname := "deletemeroot"
+	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, rootname, accounts[0].Address, false), "SetNameRecord(%q)", rootname)
+	name := "deleteme.deletemeroot"
+	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q)", name)
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgDeleteName(suite.app.NameKeeper, suite.app.AccountKeeper, suite.app.BankKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-	suite.Require().NoError(err)
+	op := simulation.SimulateMsgDeleteName(s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
+	s.Require().NoError(err, "SimulateMsgDeleteName op(...) error")
+	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgDeleteNameRequest
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	s.Require().NoError(types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
-	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Record.Address)
-	suite.Require().Equal("deleteme", msg.Record.Name)
-	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
-	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
-	suite.Require().Len(futureOperations, 0)
+	s.Assert().True(operationMsg.OK, "operationMsg.OK")
+	s.Assert().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Record.Address, "msg.Record.Address")
+	s.Assert().Equal(name, msg.Record.Name, "msg.Record.Name")
+	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
+	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
 // simAccount.Address tests the normal scenario of a valid message of type MsgModifyName.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
-func (suite *SimTestSuite) TestSimulateMsgModifyName() {
+func (s *SimTestSuite) TestSimulateMsgModifyName() {
 
 	// setup 3 accounts
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, 1)
-	suite.app.NameKeeper.SetNameRecord(suite.ctx, "modifyme", accounts[0].Address, false)
+	src := rand.NewSource(1)
+	r := rand.New(src)
+	accounts := s.getTestingAccounts(r, 1)
+
+	name := "modifyme"
+	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q)", name)
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgModifyName(suite.app.NameKeeper, suite.app.AccountKeeper, suite.app.BankKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-	suite.Require().NoError(err)
+	op := simulation.SimulateMsgModifyName(s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
+	s.Require().NoError(err, "SimulateMsgModifyName op(...) error")
+	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgModifyNameRequest
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	s.Require().NoError(types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
-	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Record.Address)
-	suite.Require().Equal("modifyme", msg.Record.Name)
-	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
-	suite.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
-	suite.Require().Len(futureOperations, 0)
+	s.Assert().True(operationMsg.OK, "operationMsg.OK")
+	s.Assert().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Record.Address, "msg.Record.Address")
+	s.Assert().Equal(name, msg.Record.Name, "msg.Record.Name")
+	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
+	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
-func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
+func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
-	for _, account := range accounts {
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
-		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, account.Address, initCoins)
-		suite.Require().NoError(err)
+	for i, account := range accounts {
+		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
+		s.app.AccountKeeper.SetAccount(s.ctx, acc)
+		err := testutil.FundAccount(s.app.BankKeeper, s.ctx, account.Address, initCoins)
+		s.Require().NoError(err, "[%d]: FundAccount", i)
 	}
 
 	return accounts

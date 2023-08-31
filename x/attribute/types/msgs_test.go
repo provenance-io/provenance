@@ -3,9 +3,10 @@ package types
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -104,5 +105,75 @@ func TestMsgDeleteDistinctAttribute(t *testing.T) {
 		} else {
 			require.Error(t, msg.ValidateBasic(), "test: %v", tc)
 		}
+	}
+}
+
+func TestMsgSetAccountDataRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name string
+		msg  MsgSetAccountDataRequest
+		exp  string
+	}{
+		{
+			name: "control",
+			msg:  MsgSetAccountDataRequest{Account: sdk.AccAddress("control").String(), Value: "some value"},
+			exp:  "",
+		},
+		{
+			name: "bad account",
+			msg:  MsgSetAccountDataRequest{Account: "notabech32", Value: "some value"},
+			exp:  "invalid account: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "no value",
+			msg:  MsgSetAccountDataRequest{Account: sdk.AccAddress("no value").String(), Value: ""},
+			exp:  "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.exp) > 0 {
+				assert.EqualError(t, err, tc.exp, "ValidateBasic error")
+			} else {
+				assert.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgSetAccountDataRequest_GetSigners(t *testing.T) {
+	tests := []struct {
+		name string
+		msg  MsgSetAccountDataRequest
+		exp  []sdk.AccAddress
+		expP string
+	}{
+		{
+			name: "good account",
+			msg:  MsgSetAccountDataRequest{Account: sdk.AccAddress("good account").String()},
+			exp:  []sdk.AccAddress{sdk.AccAddress("good account")},
+		},
+		{
+			name: "bad account",
+			msg:  MsgSetAccountDataRequest{Account: "bad account"},
+			expP: "decoding bech32 failed: invalid character in string: ' '",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var signers []sdk.AccAddress
+			testFunc := func() {
+				signers = tc.msg.GetSigners()
+			}
+			if len(tc.expP) > 0 {
+				require.PanicsWithError(t, tc.expP, testFunc, "GetSigners")
+			} else {
+				require.NotPanics(t, testFunc, "GetSigners")
+			}
+			assert.Equal(t, tc.exp, signers, "GetSigners result")
+		})
 	}
 }

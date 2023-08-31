@@ -34,6 +34,12 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgDeleteScopeOwnerRequest:
 			res, err := msgServer.DeleteScopeOwner(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgUpdateValueOwnersRequest:
+			res, err := msgServer.UpdateValueOwners(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgMigrateValueOwnerRequest:
+			res, err := msgServer.MigrateValueOwner(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgWriteRecordRequest:
 			res, err := msgServer.WriteRecord(sdk.WrapSDKContext(ctx), msg)
@@ -78,6 +84,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgModifyOSLocatorRequest:
 			res, err := msgServer.ModifyOSLocator(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
+		case *types.MsgSetAccountDataRequest:
+			res, err := msgServer.SetAccountData(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		default:

@@ -10,10 +10,13 @@ import (
 )
 
 func main() {
-	rootCmd, _ := cmd.NewRootCmd()
+	rootCmd, _ := cmd.NewRootCmd(true)
 	if err := cmd.Execute(rootCmd); err != nil {
-		var srvErr *server.ErrorCode
+		var srvErrP *server.ErrorCode
+		var srvErr server.ErrorCode
 		switch {
+		case errors.As(err, &srvErrP):
+			os.Exit(srvErrP.Code)
 		case errors.As(err, &srvErr):
 			os.Exit(srvErr.Code)
 		default:

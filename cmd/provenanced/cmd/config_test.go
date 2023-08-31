@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -17,6 +17,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
@@ -24,9 +26,6 @@ import (
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
-
-	tmconfig "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 type ConfigTestSuite struct {
@@ -57,7 +56,7 @@ func (s *ConfigTestSuite) SetupTest() {
 		WithCodec(encodingConfig.Codec).
 		WithHomeDir(s.Home)
 	clientCtx.Viper = viper.New()
-	serverCtx := server.NewContext(clientCtx.Viper, tmconfig.DefaultConfig(), log.NewNopLogger())
+	serverCtx := server.NewContext(clientCtx.Viper, provconfig.DefaultTmConfig(), log.NewNopLogger())
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -86,7 +85,7 @@ func TestConfigTestSuite(t *testing.T) {
 // Test setup above. Test helpers below.
 //
 
-func (s ConfigTestSuite) getConfigCmd() *cobra.Command {
+func (s *ConfigTestSuite) getConfigCmd() *cobra.Command {
 	// What I really need here is a cobra.Command
 	// that already has a context.
 	// So I'm going to call --help on the config command
@@ -104,7 +103,7 @@ func (s ConfigTestSuite) getConfigCmd() *cobra.Command {
 	return configCmd
 }
 
-func (s ConfigTestSuite) ensureConfigFiles() {
+func (s *ConfigTestSuite) ensureConfigFiles() {
 	configCmd := s.getConfigCmd()
 	// Extract the individual config objects.
 	appConfig, aerr := provconfig.ExtractAppConfig(configCmd)
@@ -118,66 +117,66 @@ func (s ConfigTestSuite) ensureConfigFiles() {
 	provconfig.SaveConfigs(configCmd, appConfig, tmConfig, clientConfig, false)
 }
 
-func (s ConfigTestSuite) makeConfigHeaderLine(t, fn string) string {
+func (s *ConfigTestSuite) makeConfigHeaderLine(t, fn string) string {
 	return fmt.Sprintf("%s Config: %s/config/%s (or env)", t, s.Home, fn)
 }
 
-func (s ConfigTestSuite) makeAppConfigHeaderLines() string {
+func (s *ConfigTestSuite) makeAppConfigHeaderLines() string {
 	return s.makeConfigHeaderLine(s.HeaderStrApp, s.BaseFNApp) + "\n----------------"
 }
 
-func (s ConfigTestSuite) makeTMConfigHeaderLines() string {
+func (s *ConfigTestSuite) makeTMConfigHeaderLines() string {
 	return s.makeConfigHeaderLine(s.HeaderStrTM, s.BaseFNTM) + "\n-----------------------"
 }
 
-func (s ConfigTestSuite) makeClientConfigHeaderLines() string {
+func (s *ConfigTestSuite) makeClientConfigHeaderLines() string {
 	return s.makeConfigHeaderLine(s.HeaderStrClient, s.baseFNClient) + "\n-------------------"
 }
 
-func (s ConfigTestSuite) makeConfigUpdatedLine(t, fn string) string {
+func (s *ConfigTestSuite) makeConfigUpdatedLine(t, fn string) string {
 	return fmt.Sprintf("%s Config Updated: %s/config/%s", t, s.Home, fn)
 }
 
-func (s ConfigTestSuite) makeAppConfigUpdateLines() string {
+func (s *ConfigTestSuite) makeAppConfigUpdateLines() string {
 	return s.makeConfigUpdatedLine(s.HeaderStrApp, s.BaseFNApp) + "\n------------------------"
 }
 
-func (s ConfigTestSuite) makeTMConfigUpdateLines() string {
+func (s *ConfigTestSuite) makeTMConfigUpdateLines() string {
 	return s.makeConfigUpdatedLine(s.HeaderStrTM, s.BaseFNTM) + "\n-------------------------------"
 }
 
-func (s ConfigTestSuite) makeClientConfigUpdateLines() string {
+func (s *ConfigTestSuite) makeClientConfigUpdateLines() string {
 	return s.makeConfigUpdatedLine(s.HeaderStrClient, s.baseFNClient) + "\n---------------------------"
 }
 
-func (s ConfigTestSuite) makeConfigDiffHeaderLine(t, fn string) string {
+func (s *ConfigTestSuite) makeConfigDiffHeaderLine(t, fn string) string {
 	return fmt.Sprintf("%s Config Differences from Defaults: %s/config/%s (or env)", t, s.Home, fn)
 }
 
-func (s ConfigTestSuite) makeAppDiffHeaderLines() string {
+func (s *ConfigTestSuite) makeAppDiffHeaderLines() string {
 	return s.makeConfigDiffHeaderLine(s.HeaderStrApp, s.BaseFNApp) + "\n------------------------------------------"
 }
 
-func (s ConfigTestSuite) makeTMDiffHeaderLines() string {
+func (s *ConfigTestSuite) makeTMDiffHeaderLines() string {
 	return s.makeConfigDiffHeaderLine(s.HeaderStrTM, s.BaseFNTM) + "\n-------------------------------------------------"
 }
 
-func (s ConfigTestSuite) makeClientDiffHeaderLines() string {
+func (s *ConfigTestSuite) makeClientDiffHeaderLines() string {
 	return s.makeConfigDiffHeaderLine(s.HeaderStrClient, s.baseFNClient) + "\n---------------------------------------------"
 }
 
-func (s ConfigTestSuite) makeMultiLine(lines ...string) string {
+func (s *ConfigTestSuite) makeMultiLine(lines ...string) string {
 	return strings.Join(lines, "\n") + "\n"
 }
 
-func (s ConfigTestSuite) makeKeyUpdatedLine(key, oldVal, newVal string) string {
+func (s *ConfigTestSuite) makeKeyUpdatedLine(key, oldVal, newVal string) string {
 	return fmt.Sprintf("%s Was: %s, Is Now: %s", key, oldVal, newVal)
 }
 
 func applyMockIODiscardOutErr(c *cobra.Command) *bytes.Buffer {
 	b := bytes.NewBufferString("")
-	c.SetOut(ioutil.Discard)
-	c.SetErr(ioutil.Discard)
+	c.SetOut(io.Discard)
+	c.SetErr(io.Discard)
 	return b
 }
 
@@ -227,7 +226,7 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 	b := applyMockIOOutErr(configCmd)
 	err := configCmd.Execute()
 	s.Require().NoError(err, "%s - unexpected error executing configCmd", configCmd.Name())
-	out, err := ioutil.ReadAll(b)
+	out, err := io.ReadAll(b)
 	s.Require().NoError(err, "%s - unexpected error reading configCmd output", configCmd.Name())
 	outStr := string(out)
 
@@ -248,7 +247,7 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		// Tendermint header and a few entries.
 		{"tendermint header", regexp.MustCompile(`(?m)^Tendermint Config: .*/config/` + s.BaseFNTM + ` \(or env\)$`)},
 		{"tendermint fast_sync", regexp.MustCompile(`(?m)^fast_sync=true$`)},
-		{"tendermint consensus.timeout_commit", regexp.MustCompile(`(?m)^consensus.timeout_commit="1s"$`)},
+		{"tendermint consensus.timeout_commit", regexp.MustCompile(`(?m)^consensus.timeout_commit=` + fmt.Sprintf("%q", provconfig.DefaultConsensusTimeoutCommit) + `$`)},
 		{"tendermint mempool.size", regexp.MustCompile(`(?m)^mempool.size=5000$`)},
 		{"tendermint statesync.trust_period", regexp.MustCompile(`(?m)^statesync.trust_period="168h0m0s"$`)},
 		{"tendermint p2p.recv_rate", regexp.MustCompile(`(?m)^p2p.recv_rate=5120000$`)},
@@ -276,7 +275,7 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		b2 := applyMockIOOutErr(configCmd2)
 		err2 := configCmd2.Execute()
 		require.NoError(t, err2, "%s - unexpected error executing configCmd", configCmd2.Name())
-		out2, err2 := ioutil.ReadAll(b2)
+		out2, err2 := io.ReadAll(b2)
 		require.NoError(t, err2, "%s - unexpected error reading configCmd output", configCmd2.Name())
 		out2Str := string(out2)
 		require.Equal(t, outStr, out2Str, "output of no-args vs output of %s", args)
@@ -319,7 +318,7 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 			b3 := applyMockIOOutErr(configCmd3)
 			err3 := configCmd3.Execute()
 			require.NoError(t, err3, "%s - unexpected error executing configCmd", configCmd3.Name())
-			out3, rerr3 := ioutil.ReadAll(b3)
+			out3, rerr3 := io.ReadAll(b3)
 			require.NoError(t, rerr3, "%s - unexpected error reading configCmd output", configCmd3.Name())
 			out3Str := string(out3)
 			require.Contains(t, outStr, out3Str, "output of no-args vs output of %s", tc.args)
@@ -392,7 +391,7 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 			b := applyMockIOOutErr(configCmd)
 			err := configCmd.Execute()
 			require.NoError(t, err, "%s %s - unexpected error executing configCmd", configCmd.Name(), args)
-			out, err := ioutil.ReadAll(b)
+			out, err := io.ReadAll(b)
 			require.NoError(t, err, "%s %s - unexpected error reading configCmd output", configCmd.Name(), args)
 			outStr := string(out)
 			assert.Equal(t, tc.expected, outStr, "%s %s - output", configCmd.Name(), args)
@@ -417,7 +416,7 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 		b := applyMockIOOutErr(configCmd)
 		err := configCmd.Execute()
 		require.NoError(t, err, "%s %s - expected error executing configCmd", configCmd.Name(), args)
-		out, err := ioutil.ReadAll(b)
+		out, err := io.ReadAll(b)
 		require.NoError(t, err, "%s %s - unexpected error reading configCmd output", configCmd.Name(), args)
 		outStr := string(out)
 		assert.Equal(t, expected, outStr, "%s %s - output", configCmd.Name(), args)
@@ -440,7 +439,7 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 		b := applyMockIOOutErr(configCmd)
 		err := configCmd.Execute()
 		require.NoError(t, err, "%s %s - expected error executing configCmd", configCmd.Name(), args)
-		out, err := ioutil.ReadAll(b)
+		out, err := io.ReadAll(b)
 		require.NoError(t, err, "%s %s - unexpected error reading configCmd output", configCmd.Name(), args)
 		outStr := string(out)
 		assert.Equal(t, expected, outStr, "%s %s - output", configCmd.Name(), args)
@@ -466,7 +465,7 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 		allEqual("client"),
 		"",
 	}
-	expectedAllOutLines := []string{}
+	var expectedAllOutLines []string
 	expectedAllOutLines = append(expectedAllOutLines, expectedAppOutLines...)
 	expectedAllOutLines = append(expectedAllOutLines, expectedTMOutLines...)
 	expectedAllOutLines = append(expectedAllOutLines, expectedClientOutLines...)
@@ -505,7 +504,7 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 			b := applyMockIOOutErr(configCmd)
 			err := configCmd.Execute()
 			require.NoError(t, err, "%s %s - unexpected error executing configCmd", configCmd.Name(), tc.args)
-			out, err := ioutil.ReadAll(b)
+			out, err := io.ReadAll(b)
 			require.NoError(t, err, "%s %s - unexpected error reading configCmd output", configCmd.Name(), tc.args)
 			outStr := string(out)
 			assert.Equal(t, tc.out, outStr, "%s %s - output", configCmd.Name(), tc.args)
@@ -544,7 +543,7 @@ func (s *ConfigTestSuite) TestConfigSetValidation() {
 			b := applyMockIOOutErr(configCmd)
 			err := configCmd.Execute()
 			require.NoError(t, err, "%s %s unexpected error executing configCmd", configCmd.Name(), tc.args)
-			out, rerr := ioutil.ReadAll(b)
+			out, rerr := io.ReadAll(b)
 			require.NoError(t, rerr, "%s %s unexpected error reading output", configCmd.Name(), tc.args)
 			outStr := string(out)
 			assert.True(t, strings.Contains(outStr, expected), "%s %s output", configCmd.Name(), tc.args)
@@ -610,7 +609,7 @@ func (s *ConfigTestSuite) TestConfigCmdSet() {
 		},
 		{
 			name:    "consensus.timeout_commit",
-			oldVal:  `"1s"`,
+			oldVal:  fmt.Sprintf("%q", provconfig.DefaultConsensusTimeoutCommit),
 			newVal:  `"2s"`,
 			toMatch: []*regexp.Regexp{reTMConfigUpdated},
 		},
@@ -669,7 +668,7 @@ func (s *ConfigTestSuite) TestConfigCmdSet() {
 			b := applyMockIOOutErr(configCmd)
 			err := configCmd.Execute()
 			require.NoError(t, err, "%s %s - unexpected error in execution", configCmd.Name(), args)
-			out, rerr := ioutil.ReadAll(b)
+			out, rerr := io.ReadAll(b)
 			require.NoError(t, rerr, "%s %s - unexpected error in reading", configCmd.Name(), args)
 			outStr := string(out)
 			for _, re := range tc.toMatch {
@@ -702,7 +701,7 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 			out: s.makeMultiLine(
 				s.makeTMConfigUpdateLines(),
 				s.makeKeyUpdatedLine("log_format", `"plain"`, `"json"`),
-				s.makeKeyUpdatedLine("consensus.timeout_commit", `"1s"`, `"950ms"`),
+				s.makeKeyUpdatedLine("consensus.timeout_commit", fmt.Sprintf("%q", provconfig.DefaultConsensusTimeoutCommit), `"950ms"`),
 				""),
 		},
 		{
@@ -746,7 +745,7 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 			b := applyMockIOOutErr(configCmd)
 			err := configCmd.Execute()
 			require.NoError(t, err, "%s %s - unexpected error in execution", configCmd.Name(), tc.args)
-			out, rerr := ioutil.ReadAll(b)
+			out, rerr := io.ReadAll(b)
 			require.NoError(t, rerr, "%s %s - unexpected error in reading", configCmd.Name(), tc.args)
 			outStr := string(out)
 			assert.Equal(t, tc.out, outStr, "%s %s output", configCmd.Name(), tc.args)
@@ -766,7 +765,7 @@ func (s *ConfigTestSuite) TestPackUnpack() {
 		b := applyMockIOOutErr(configCmd)
 		err := configCmd.Execute()
 		require.NoError(t, err, "%s %s - unexpected error in execution", configCmd.Name(), args)
-		out, rerr := ioutil.ReadAll(b)
+		out, rerr := io.ReadAll(b)
 		require.NoError(t, rerr, "%s %s - unexpected error in reading", configCmd.Name(), args)
 		outStr := string(out)
 
@@ -780,7 +779,7 @@ func (s *ConfigTestSuite) TestPackUnpack() {
 		assert.False(t, provconfig.FileExists(appFile), "file exists: app")
 		tmFile := provconfig.GetFullPathToAppConf(configCmd)
 		assert.Contains(t, outStr, tmFile, "tendermint filename")
-		assert.False(t, provconfig.FileExists(tmFile), "file exists: tenderming")
+		assert.False(t, provconfig.FileExists(tmFile), "file exists: tendermint")
 		clientFile := provconfig.GetFullPathToAppConf(configCmd)
 		assert.Contains(t, outStr, clientFile, "client filename")
 		assert.False(t, provconfig.FileExists(clientFile), "file exists: client")
@@ -793,7 +792,7 @@ func (s *ConfigTestSuite) TestPackUnpack() {
 		b := applyMockIOOutErr(configCmd)
 		err := configCmd.Execute()
 		require.NoError(t, err, "%s %s - unexpected error in execution", configCmd.Name(), args)
-		out, rerr := ioutil.ReadAll(b)
+		out, rerr := io.ReadAll(b)
 		require.NoError(t, rerr, "%s %s - unexpected error in reading", configCmd.Name(), args)
 		outStr := string(out)
 
@@ -805,7 +804,7 @@ func (s *ConfigTestSuite) TestPackUnpack() {
 		assert.True(t, provconfig.FileExists(appFile), "file exists: app")
 		tmFile := provconfig.GetFullPathToAppConf(configCmd)
 		assert.Contains(t, outStr, tmFile, "tendermint filename")
-		assert.True(t, provconfig.FileExists(tmFile), "file exists: tenderming")
+		assert.True(t, provconfig.FileExists(tmFile), "file exists: tendermint")
 		clientFile := provconfig.GetFullPathToAppConf(configCmd)
 		assert.Contains(t, outStr, clientFile, "client filename")
 		assert.True(t, provconfig.FileExists(clientFile), "file exists: client")

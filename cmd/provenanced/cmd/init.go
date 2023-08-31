@@ -6,14 +6,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
+
+	errors "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -38,9 +40,10 @@ import (
 const (
 	// FlagOverwrite defines a flag to overwrite an existing genesis JSON file.
 	FlagOverwrite = "overwrite"
-
 	// FlagRecover defines a flag to initialize the private validator key from a specific seed.
 	FlagRecover = "recover"
+	// FlagTimeoutCommit is the flag string for providing a consensus.timeout_commit setting.
+	FlagTimeoutCommit = "timeout-commit"
 )
 
 // InitCmd Creates a command for generating genesis and config files.
@@ -57,11 +60,12 @@ func InitCmd(mbm module.BasicManager) *cobra.Command {
 			return Init(cmd, mbm, args[0])
 		},
 	}
-	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().BoolP(FlagRecover, "r", false, "interactive key recovery from mnemonic")
-	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
-	cmd.Flags().String(CustomDenomFlag, "", "custom denom, optional")
-	cmd.Flags().Int64(CustomMsgFeeFloorPriceFlag, 0, "custom msg fee floor price, optional")
+	cmd.Flags().String(flags.FlagChainID, "", "Genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().BoolP(FlagRecover, "r", false, "Interactive key recovery from mnemonic")
+	cmd.Flags().BoolP(FlagOverwrite, "o", false, "Overwrite the genesis.json file")
+	cmd.Flags().String(provconfig.CustomDenomFlag, "", "Custom denom, optional")
+	cmd.Flags().Int64(provconfig.CustomMsgFeeFloorPriceFlag, 0, "Custom msg fee floor price, optional")
+	cmd.Flags().Duration(FlagTimeoutCommit, 0, "The consensus.timeout_commit value to start with (default is 5s for mainnet or testnet, 1s otherwise)")
 	return cmd
 }
 
@@ -75,12 +79,12 @@ func Init(
 	isTestnet, _ := cmd.Flags().GetBool(EnvTypeFlag)
 	doRecover, _ := cmd.Flags().GetBool(FlagRecover)
 	doOverwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
+	timeoutCommit, err := cmd.Flags().GetDuration(FlagTimeoutCommit)
+	if err != nil {
+		return fmt.Errorf("invalid --%s: %w", FlagTimeoutCommit, err)
+	}
 
-	customDenom, _ := cmd.Flags().GetString(CustomDenomFlag)
-	customMsgFeeFloorPrice, _ := cmd.Flags().GetInt64(CustomMsgFeeFloorPriceFlag)
-
-	pioconfig.SetProvenanceConfig(customDenom, customMsgFeeFloorPrice)
-	if err := provconfig.EnsureConfigDir(cmd); err != nil {
+	if err = provconfig.EnsureConfigDir(cmd); err != nil {
 		return err
 	}
 
@@ -114,6 +118,14 @@ func Init(
 	}
 	clientConfig.ChainID = chainID
 
+	// If a timeout commit wasn't provided and not on a mainnet or testnet, set the timeout commit to 1s.
+	if timeoutCommit == 0 && !strings.Contains(chainID, "mainnet") && !strings.Contains(chainID, "testnet") {
+		timeoutCommit = 1 * time.Second
+	}
+	if timeoutCommit > 0 {
+		tmConfig.Consensus.TimeoutCommit = timeoutCommit
+	}
+
 	// Gather the bip39 mnemonic if a recover was requested.
 	var mnemonic string
 	if doRecover {
@@ -124,7 +136,7 @@ func Init(
 		}
 
 		if !bip39.IsMnemonicValid(mnemonic) {
-			return errors.New("invalid mnemonic")
+			return fmt.Errorf("invalid mnemonic")
 		}
 	}
 

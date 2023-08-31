@@ -66,7 +66,7 @@ func (mfd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 
 		mpErr := EnsureSufficientFloorAndMsgFees(ctx, feeCoins, floorGasPrice, gas, msgFeesDistribution.TotalAdditionalFees)
 		if mpErr != nil && !simulate {
-			return ctx, sdkerrors.ErrInsufficientFee.Wrapf(mpErr.Error())
+			return ctx, sdkerrors.ErrInsufficientFee.Wrap(mpErr.Error())
 		}
 	}
 

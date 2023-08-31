@@ -17,25 +17,28 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 )
 
-// Compile time interface check.
-var (
-	_ sdk.Msg = &MsgAddMarkerRequest{}
-	_ sdk.Msg = &MsgAddAccessRequest{}
-	_ sdk.Msg = &MsgDeleteAccessRequest{}
-	_ sdk.Msg = &MsgFinalizeRequest{}
-	_ sdk.Msg = &MsgActivateRequest{}
-	_ sdk.Msg = &MsgCancelRequest{}
-	_ sdk.Msg = &MsgDeleteRequest{}
-	_ sdk.Msg = &MsgMintRequest{}
-	_ sdk.Msg = &MsgBurnRequest{}
-	_ sdk.Msg = &MsgWithdrawRequest{}
-	_ sdk.Msg = &MsgTransferRequest{}
-	_ sdk.Msg = &MsgIbcTransferRequest{}
-	_ sdk.Msg = &MsgGrantAllowanceRequest{}
-	_ sdk.Msg = &MsgAddFinalizeActivateMarkerRequest{}
-	_ sdk.Msg = &MsgSupplyIncreaseProposalRequest{}
-	_ sdk.Msg = &MsgUpdateRequiredAttributesRequest{}
-)
+// allRequestMsgs defines all the Msg*Request messages.
+var allRequestMsgs = []sdk.Msg{
+	(*MsgAddMarkerRequest)(nil),
+	(*MsgAddAccessRequest)(nil),
+	(*MsgDeleteAccessRequest)(nil),
+	(*MsgFinalizeRequest)(nil),
+	(*MsgActivateRequest)(nil),
+	(*MsgCancelRequest)(nil),
+	(*MsgDeleteRequest)(nil),
+	(*MsgMintRequest)(nil),
+	(*MsgBurnRequest)(nil),
+	(*MsgWithdrawRequest)(nil),
+	(*MsgTransferRequest)(nil),
+	(*MsgIbcTransferRequest)(nil),
+	(*MsgGrantAllowanceRequest)(nil),
+	(*MsgAddFinalizeActivateMarkerRequest)(nil),
+	(*MsgSupplyIncreaseProposalRequest)(nil),
+	(*MsgUpdateRequiredAttributesRequest)(nil),
+	(*MsgUpdateForcedTransferRequest)(nil),
+	(*MsgSetAccountDataRequest)(nil),
+	(*MsgUpdateSendDenyListRequest)(nil),
+}
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgAddMarkerRequest(
@@ -118,12 +121,9 @@ func NewMsgAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGra
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgAddAccessRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
-	if err := ValidateGrants(msg.Access...); err != nil {
-		return fmt.Errorf(err.Error())
-	}
-	return nil
+	return ValidateGrants(msg.Access...)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -143,7 +143,7 @@ func NewDeleteAccessRequest(denom string, admin sdk.AccAddress, removed sdk.AccA
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteAccessRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	_, err := sdk.AccAddressFromBech32(msg.RemovedAddress)
 	return err
@@ -164,10 +164,7 @@ func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeReque
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgFinalizeRequest) ValidateBasic() error {
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
-	}
-	return nil
+	return sdk.ValidateDenom(msg.Denom)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -185,10 +182,7 @@ func NewMsgActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateReque
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgActivateRequest) ValidateBasic() error {
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
-	}
-	return nil
+	return sdk.ValidateDenom(msg.Denom)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -206,10 +200,7 @@ func NewMsgCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest {
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgCancelRequest) ValidateBasic() error {
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
-	}
-	return nil
+	return sdk.ValidateDenom(msg.Denom)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -227,10 +218,7 @@ func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest {
 
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteRequest) ValidateBasic() error {
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
-	}
-	return nil
+	return sdk.ValidateDenom(msg.Denom)
 }
 
 // GetSigners indicates that the message must have been signed by the address provided.
@@ -601,7 +589,7 @@ func NewMsgUpdateRequiredAttributesRequest(denom string, transferAuthority sdk.A
 
 func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	if len(msg.AddRequiredAttributes) == 0 && len(msg.RemoveRequiredAttributes) == 0 {
 		return fmt.Errorf("both add and remove lists cannot be empty")
@@ -624,5 +612,84 @@ func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
 
 func (msg *MsgUpdateRequiredAttributesRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.TransferAuthority)
+	return []sdk.AccAddress{addr}
+}
+
+func NewMsgUpdateForcedTransferRequest(denom string, allowForcedTransfer bool, authority sdk.AccAddress) *MsgUpdateForcedTransferRequest {
+	return &MsgUpdateForcedTransferRequest{
+		Denom:               denom,
+		AllowForcedTransfer: allowForcedTransfer,
+		Authority:           authority.String(),
+	}
+}
+
+func (msg MsgUpdateForcedTransferRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return fmt.Errorf("invalid authority: %w", err)
+	}
+	return nil
+}
+
+func (msg MsgUpdateForcedTransferRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{addr}
+}
+
+func (msg MsgSetAccountDataRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
+	}
+	if len(msg.Denom) == 0 {
+		return errors.New("invalid denom: empty denom string is not allowed")
+	}
+	return sdk.ValidateDenom(msg.Denom)
+}
+
+func (msg MsgSetAccountDataRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Signer)
+	return []sdk.AccAddress{addr}
+}
+
+// NewMsgUpdateSendDenyListRequest creates a NewMsgUpdateSendDenyListRequest
+func NewMsgUpdateSendDenyListRequest(denom string, authority sdk.AccAddress, removeDenyAddresses, addDenyAddresses []string) *MsgUpdateSendDenyListRequest {
+	return &MsgUpdateSendDenyListRequest{
+		Denom:                 denom,
+		Authority:             authority.String(),
+		RemoveDeniedAddresses: removeDenyAddresses,
+		AddDeniedAddresses:    addDenyAddresses,
+	}
+}
+
+func (msg MsgUpdateSendDenyListRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+	if len(msg.AddDeniedAddresses) == 0 && len(msg.RemoveDeniedAddresses) == 0 {
+		return fmt.Errorf("both add and remove lists cannot be empty")
+	}
+
+	combined := []string{}
+	combined = append(combined, msg.AddDeniedAddresses...)
+	combined = append(combined, msg.RemoveDeniedAddresses...)
+	seen := make(map[string]bool)
+	for _, addr := range combined {
+		if _, err := sdk.AccAddressFromBech32(addr); err != nil {
+			return err
+		}
+		if seen[addr] {
+			return fmt.Errorf("denied address lists contain duplicate entries")
+		}
+		seen[addr] = true
+	}
+
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	return err
+}
+
+func (msg *MsgUpdateSendDenyListRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{addr}
 }

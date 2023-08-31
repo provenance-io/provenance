@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"regexp"
@@ -10,7 +8,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -20,15 +17,19 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-var (
-	cmdStart = fmt.Sprintf("%s query metadata", version.AppName)
+// cmdStart is the first part of the command that gets you to one of the ones in here.
+var cmdStart = fmt.Sprintf("%s query metadata", version.AppName)
 
+// These vars are tied to flags that are added to many commands in here.
+var (
 	includeScope         bool
 	includeSessions      bool
 	includeRecords       bool
-	includeRecordSpecs   bool
-	includeRequest       bool
 	includeContractSpecs bool
+	includeRecordSpecs   bool
+
+	excludeIDInfo  bool
+	includeRequest bool
 )
 
 const all = "all"
@@ -56,6 +57,7 @@ func GetQueryCmd() *cobra.Command {
 		GetOwnershipCmd(),
 		GetValueOwnershipCmd(),
 		GetOSLocatorCmd(),
+		GetAccountDataCmd(),
 	)
 	return queryCmd
 }
@@ -91,55 +93,29 @@ func GetMetadataParamsCmd() *cobra.Command {
 // GetMetadataByIDCmd returns the command handler for querying metadata for anything from an id.
 func GetMetadataByIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "get id",
+		Use:     "get <id> [<id2> ...]",
 		Aliases: []string{"g"},
-		Short:   "Query the current metadata by id",
-		Long: fmt.Sprintf(`%[1]s get {scope_id} - gets the scope with the given scope id.
-%[1]s get {session_id} - gets the session with the given session id.
-%[1]s get {record_id} - gets the record with the given record id.
-%[1]s get {scope_spec_id} - gets the scope specification with the given scope specification id.
-%[1]s get {contract_spec_id} - gets the contract specification with the given contract specification id.
-%[1]s get {record_spec_id} - gets the record specification with the given record specification id.`, cmdStart),
-		Args: cobra.ExactArgs(1),
+		Short:   "Get metadata by address(es)",
+		Args:    cobra.MinimumNArgs(1),
 		Example: fmt.Sprintf(`%[1]s get scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel
 %[1]s get session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr
 %[1]s get record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3
 %[1]s get scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m
 %[1]s get contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn
-%[1]s get recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44`, cmdStart),
+%[1]s get recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44
+%[1]s get scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3`,
+			cmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, err := types.MetadataAddressFromBech32(strings.TrimSpace(args[0]))
-			if err != nil {
-				return err
-			}
-			prefix, err := id.Prefix()
-			if err != nil {
-				return err
+			for i, addr := range args {
+				if _, err := types.MetadataAddressFromBech32(addr); err != nil {
+					return fmt.Errorf("invalid metadata address %d, %q: %w", i+1, addr, err)
+				}
 			}
 
-			switch prefix {
-			case types.PrefixScope:
-				return outputScope(cmd, id.String(), "", "")
-			case types.PrefixSession:
-				return outputSessions(cmd, "", id.String(), "", "")
-			case types.PrefixRecord:
-				return outputRecords(cmd, id.String(), "", "", "")
-			case types.PrefixScopeSpecification:
-				return outputScopeSpec(cmd, id.String())
-			case types.PrefixContractSpecification:
-				return outputContractSpec(cmd, id.String())
-			case types.PrefixRecordSpecification:
-				return outputRecordSpec(cmd, id.String(), "")
-			}
-			return fmt.Errorf("unexpected address prefix %s", prefix)
+			return outputGetByAddr(cmd, args)
 		},
 	}
 
-	addIncludeScopeFlag(cmd)
-	addIncludeSessionsFlag(cmd)
-	addIncludeRecordsFlag(cmd)
-	addIncludeRecordSpecsFlag(cmd)
-	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
@@ -198,6 +174,7 @@ func GetMetadataGetAllCmd() *cobra.Command {
 		},
 	}
 
+	addExcludeIDInfoFlag(cmd)
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "entries")
@@ -244,6 +221,7 @@ func GetMetadataScopeCmd() *cobra.Command {
 
 	addIncludeSessionsFlag(cmd)
 	addIncludeRecordsFlag(cmd)
+	addExcludeIDInfoFlag(cmd)
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "scopes (all)")
@@ -305,6 +283,7 @@ func GetMetadataSessionCmd() *cobra.Command {
 
 	addIncludeScopeFlag(cmd)
 	addIncludeRecordsFlag(cmd)
+	addExcludeIDInfoFlag(cmd)
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "sessions (all)")
@@ -361,6 +340,7 @@ func GetMetadataRecordCmd() *cobra.Command {
 
 	addIncludeScopeFlag(cmd)
 	addIncludeSessionsFlag(cmd)
+	addExcludeIDInfoFlag(cmd)
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "records (all)")
@@ -392,6 +372,7 @@ func GetMetadataScopeSpecCmd() *cobra.Command {
 
 	addIncludeContractSpecsFlag(cmd)
 	addIncludeRecordSpecsFlag(cmd)
+	addExcludeIDInfoFlag(cmd)
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "scope specifications (all)")
@@ -424,6 +405,7 @@ func GetMetadataContractSpecCmd() *cobra.Command {
 	}
 
 	addIncludeRecordSpecsFlag(cmd)
+	addExcludeIDInfoFlag(cmd)
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "contract specifications (all)")
@@ -466,6 +448,7 @@ func GetMetadataRecordSpecCmd() *cobra.Command {
 		},
 	}
 
+	addExcludeIDInfoFlag(cmd)
 	addIncludeRequestFlag(cmd)
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "record specifications (all)")
@@ -582,6 +565,41 @@ func GetOSLocatorCmd() *cobra.Command {
 	return cmd
 }
 
+// GetAccountDataCmd is the CLI command for querying account data for metadata.
+func GetAccountDataCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "account-data <address>",
+		Short:   "Get the account data for a metadata address",
+		Aliases: []string{"accountdata", "ad"},
+		Example: fmt.Sprintf(`$ %s account-data scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`, cmdStart),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			req := &types.AccountDataRequest{}
+
+			req.MetadataAddr, err = types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid metadata address %q: %w", args[0], err)
+			}
+
+			resp, err := queryClient.AccountData(cmd.Context(), req)
+			if err != nil {
+				return fmt.Errorf("failed to query account data for metadata address %q: %w", args[0], err)
+			}
+
+			return clientCtx.PrintProto(resp)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
 // ------------ private funcs for actually querying and outputting ------------
 
 // outputParams calls the Params query and outputs the response.
@@ -592,13 +610,27 @@ func outputParams(cmd *cobra.Command) error {
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+	res, err := queryClient.Params(cmd.Context(), &types.QueryParamsRequest{IncludeRequest: includeRequest})
 	if err != nil {
 		return err
 	}
 
-	if !includeRequest {
-		res.Request = nil
+	return clientCtx.PrintProto(res)
+}
+
+// outputGetByAddr calls the GetByAddr query and outputs the response.
+func outputGetByAddr(cmd *cobra.Command, addrs []string) error {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+	queryClient := types.NewQueryClient(clientCtx)
+	res, err := queryClient.GetByAddr(
+		cmd.Context(),
+		&types.GetByAddrRequest{Addrs: addrs},
+	)
+	if err != nil {
+		return err
 	}
 
 	return clientCtx.PrintProto(res)
@@ -617,16 +649,14 @@ func outputScope(cmd *cobra.Command, scopeID string, sessionAddr string, recordA
 		RecordAddr:      recordAddr,
 		IncludeSessions: includeSessions,
 		IncludeRecords:  includeRecords,
+		ExcludeIdInfo:   excludeIDInfo,
+		IncludeRequest:  includeRequest,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Scope(context.Background(), &req)
+	res, err := queryClient.Scope(cmd.Context(), &req)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -638,21 +668,21 @@ func outputScopesAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ScopesAll(
-		context.Background(),
-		&types.ScopesAllRequest{Pagination: pageReq},
+		cmd.Context(),
+		&types.ScopesAllRequest{
+			ExcludeIdInfo:  excludeIDInfo,
+			IncludeRequest: includeRequest,
+			Pagination:     pageReq,
+		},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -672,19 +702,17 @@ func outputSessions(cmd *cobra.Command, scopeID, sessionID, recordID, recordName
 		RecordName:     recordName,
 		IncludeScope:   includeScope,
 		IncludeRecords: includeRecords,
+		ExcludeIdInfo:  excludeIDInfo,
+		IncludeRequest: includeRequest,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Sessions(context.Background(), &req)
+	res, err := queryClient.Sessions(cmd.Context(), &req)
 	if err != nil {
 		return err
 	}
 	if res == nil || res.Sessions == nil || len(res.Sessions) == 0 {
 		return errors.New("no sessions found")
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -696,21 +724,21 @@ func outputSessionsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.SessionsAll(
-		context.Background(),
-		&types.SessionsAllRequest{Pagination: pageReq},
+		cmd.Context(),
+		&types.SessionsAllRequest{
+			ExcludeIdInfo:  excludeIDInfo,
+			IncludeRequest: includeRequest,
+			Pagination:     pageReq,
+		},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -730,16 +758,14 @@ func outputRecords(cmd *cobra.Command, recordAddr string, scopeID string, sessio
 		Name:            name,
 		IncludeScope:    includeScope,
 		IncludeSessions: includeSessions,
+		ExcludeIdInfo:   excludeIDInfo,
+		IncludeRequest:  includeRequest,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.Records(context.Background(), &req)
+	res, err := queryClient.Records(cmd.Context(), &req)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -751,21 +777,21 @@ func outputRecordsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.RecordsAll(
-		context.Background(),
-		&types.RecordsAllRequest{Pagination: pageReq},
+		cmd.Context(),
+		&types.RecordsAllRequest{
+			ExcludeIdInfo:  excludeIDInfo,
+			IncludeRequest: includeRequest,
+			Pagination:     pageReq,
+		},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -777,21 +803,17 @@ func outputOwnership(cmd *cobra.Command, address string) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.Ownership(
-		context.Background(),
-		&types.OwnershipRequest{Address: address, Pagination: pageReq},
+		cmd.Context(),
+		&types.OwnershipRequest{Address: address, IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -803,21 +825,17 @@ func outputValueOwnership(cmd *cobra.Command, address string) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ValueOwnership(
-		context.Background(),
-		&types.ValueOwnershipRequest{Address: address, Pagination: pageReq},
+		cmd.Context(),
+		&types.ValueOwnershipRequest{Address: address, IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -834,16 +852,14 @@ func outputScopeSpec(cmd *cobra.Command, specificationID string) error {
 		SpecificationId:      specificationID,
 		IncludeContractSpecs: includeContractSpecs,
 		IncludeRecordSpecs:   includeRecordSpecs,
+		ExcludeIdInfo:        excludeIDInfo,
+		IncludeRequest:       includeRequest,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.ScopeSpecification(context.Background(), &req)
+	res, err := queryClient.ScopeSpecification(cmd.Context(), &req)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -855,21 +871,21 @@ func outputScopeSpecsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ScopeSpecificationsAll(
-		context.Background(),
-		&types.ScopeSpecificationsAllRequest{Pagination: pageReq},
+		cmd.Context(),
+		&types.ScopeSpecificationsAllRequest{
+			ExcludeIdInfo:  excludeIDInfo,
+			IncludeRequest: includeRequest,
+			Pagination:     pageReq,
+		},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -885,16 +901,14 @@ func outputContractSpec(cmd *cobra.Command, specificationID string) error {
 	req := types.ContractSpecificationRequest{
 		SpecificationId:    specificationID,
 		IncludeRecordSpecs: includeRecordSpecs,
+		ExcludeIdInfo:      excludeIDInfo,
+		IncludeRequest:     includeRequest,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.ContractSpecification(context.Background(), &req)
+	res, err := queryClient.ContractSpecification(cmd.Context(), &req)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -906,21 +920,21 @@ func outputContractSpecsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.ContractSpecificationsAll(
-		context.Background(),
-		&types.ContractSpecificationsAllRequest{Pagination: pageReq},
+		cmd.Context(),
+		&types.ContractSpecificationsAllRequest{
+			ExcludeIdInfo:  excludeIDInfo,
+			IncludeRequest: includeRequest,
+			Pagination:     pageReq,
+		},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -936,16 +950,14 @@ func outputRecordSpec(cmd *cobra.Command, specificationID string, name string) e
 	req := types.RecordSpecificationRequest{
 		SpecificationId: specificationID,
 		Name:            name,
+		ExcludeIdInfo:   excludeIDInfo,
+		IncludeRequest:  includeRequest,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.RecordSpecification(context.Background(), &req)
+	res, err := queryClient.RecordSpecification(cmd.Context(), &req)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -960,16 +972,14 @@ func outputRecordSpecsForContractSpec(cmd *cobra.Command, specificationID string
 
 	req := types.RecordSpecificationsForContractSpecificationRequest{
 		SpecificationId: specificationID,
+		ExcludeIdInfo:   excludeIDInfo,
+		IncludeRequest:  includeRequest,
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
-	res, err := queryClient.RecordSpecificationsForContractSpecification(context.Background(), &req)
+	res, err := queryClient.RecordSpecificationsForContractSpecification(cmd.Context(), &req)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -981,21 +991,21 @@ func outputRecordSpecsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.RecordSpecificationsAll(
-		context.Background(),
-		&types.RecordSpecificationsAllRequest{Pagination: pageReq},
+		cmd.Context(),
+		&types.RecordSpecificationsAllRequest{
+			ExcludeIdInfo:  excludeIDInfo,
+			IncludeRequest: includeRequest,
+			Pagination:     pageReq,
+		},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -1009,15 +1019,11 @@ func outputOSLocatorParams(cmd *cobra.Command) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSLocatorParams(
-		context.Background(),
-		&types.OSLocatorParamsRequest{},
+		cmd.Context(),
+		&types.OSLocatorParamsRequest{IncludeRequest: includeRequest},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -1031,15 +1037,11 @@ func outputOSLocator(cmd *cobra.Command, owner string) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSLocator(
-		context.Background(),
-		&types.OSLocatorRequest{Owner: owner},
+		cmd.Context(),
+		&types.OSLocatorRequest{Owner: owner, IncludeRequest: includeRequest},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -1051,21 +1053,17 @@ func outputOSLocatorsByURI(cmd *cobra.Command, uri string) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSLocatorsByURI(
-		context.Background(),
-		&types.OSLocatorsByURIRequest{Uri: uri, Pagination: pageReq},
+		cmd.Context(),
+		&types.OSLocatorsByURIRequest{Uri: uri, IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -1079,15 +1077,11 @@ func outputOSLocatorsByScope(cmd *cobra.Command, scopeID string) error {
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSLocatorsByScope(
-		context.Background(),
-		&types.OSLocatorsByScopeRequest{ScopeId: scopeID},
+		cmd.Context(),
+		&types.OSLocatorsByScopeRequest{ScopeId: scopeID, IncludeRequest: includeRequest},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -1099,21 +1093,17 @@ func outputOSLocatorsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 	if e != nil {
 		return e
 	}
 	queryClient := types.NewQueryClient(clientCtx)
 	res, err := queryClient.OSAllLocators(
-		context.Background(),
-		&types.OSAllLocatorsRequest{Pagination: pageReq},
+		cmd.Context(),
+		&types.OSAllLocatorsRequest{IncludeRequest: includeRequest, Pagination: pageReq},
 	)
 	if err != nil {
 		return err
-	}
-
-	if !includeRequest {
-		res.Request = nil
 	}
 
 	return clientCtx.PrintProto(res)
@@ -1150,34 +1140,26 @@ func addIncludeRecordsFlag(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&includeRecords, "include-records", false, "include records in the output")
 }
 
-// addIncludeRecordSpecsFlag sets up a command to look for an --include-record-specs.
-// The flag value is tied to the includeRecordSpecs variable.
-func addIncludeRecordSpecsFlag(cmd *cobra.Command) {
-	cmd.Flags().BoolVar(&includeRecordSpecs, "include-record-specs", false, "include record specs in the output")
-}
-
-// addIncludeRequestFlag sets up a command to look for an --include-request.
-// The flag value is tied to the includeRequest variable.
-func addIncludeRequestFlag(cmd *cobra.Command) {
-	cmd.Flags().BoolVar(&includeRequest, "include-request", false, "include the query request in the output")
-}
-
-// addIncludeContractSpecsFlag sets up a command to look for an --include-contract-specs.
+// addIncludeContractSpecsFlag sets up a command to look for an --include-contract-specs flag.
 // The flag value is tied to the includeContractSpecs variable.
 func addIncludeContractSpecsFlag(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&includeContractSpecs, "include-contract-specs", false, "include contract specs in the output")
 }
 
-// sdk ReadPageRequest expects binary but we encoded to base64 in our marshaller
-func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
-	encoded, err := flagSet.GetString(flags.FlagPageKey)
-	if err != nil {
-		panic(err.Error())
-	}
-	raw, err := base64.StdEncoding.DecodeString(encoded)
-	if err != nil {
-		panic(err.Error())
-	}
-	_ = flagSet.Set(flags.FlagPageKey, string(raw))
-	return flagSet
+// addIncludeRecordSpecsFlag sets up a command to look for an --include-record-specs flag.
+// The flag value is tied to the includeRecordSpecs variable.
+func addIncludeRecordSpecsFlag(cmd *cobra.Command) {
+	cmd.Flags().BoolVar(&includeRecordSpecs, "include-record-specs", false, "include record specs in the output")
+}
+
+// addExcludeIDInfoFlag sets up a command to look for an --exclude-id-info flag.
+// The flag value is tied to the excludeIDInfo variable.
+func addExcludeIDInfoFlag(cmd *cobra.Command) {
+	cmd.Flags().BoolVar(&excludeIDInfo, "exclude-id-info", false, "include breakdown information about the ids")
+}
+
+// addIncludeRequestFlag sets up a command to look for an --include-request flag.
+// The flag value is tied to the includeRequest variable.
+func addIncludeRequestFlag(cmd *cobra.Command) {
+	cmd.Flags().BoolVar(&includeRequest, "include-request", false, "include the query request in the output")
 }

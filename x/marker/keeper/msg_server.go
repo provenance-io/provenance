@@ -13,8 +13,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
-	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -485,17 +483,7 @@ func (k msgServer) IbcTransfer(goCtx context.Context, msg *types.MsgIbcTransferR
 		return nil, err
 	}
 
-	err = k.IbcTransferCoin(ctx, msg.Transfer.SourcePort, msg.Transfer.SourceChannel, msg.Transfer.Token, from, admin, msg.Transfer.Receiver, msg.Transfer.TimeoutHeight, msg.Transfer.TimeoutTimestamp, msg.Transfer.Memo, func(ctx sdk.Context, ibcKeeper ibckeeper.Keeper, sender sdk.AccAddress, token sdk.Coin) (canTransfer bool, err error) {
-		if !ibcKeeper.GetSendEnabled(ctx) {
-			return false, ibctypes.ErrSendDisabled
-		}
-
-		if ibcKeeper.BankKeeper.BlockedAddr(sender) {
-			return false, sdkerrors.ErrUnauthorized.Wrapf("%s is not allowed to send funds", sender)
-		}
-
-		return true, nil
-	})
+	err = k.IbcTransferCoin(ctx, msg.Transfer.SourcePort, msg.Transfer.SourceChannel, msg.Transfer.Token, from, admin, msg.Transfer.Receiver, msg.Transfer.TimeoutHeight, msg.Transfer.TimeoutTimestamp, msg.Transfer.Memo)
 	if err != nil {
 		return nil, err
 	}
@@ -623,6 +611,7 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 	return &types.MsgAddFinalizeActivateMarkerResponse{}, nil
 }
 
+// SupplyIncreaseProposal can only be called via gov proposal
 func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgSupplyIncreaseProposalRequest) (*types.MsgSupplyIncreaseProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -643,6 +632,7 @@ func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgS
 	return &types.MsgSupplyIncreaseProposalResponse{}, nil
 }
 
+// UpdateRequiredAttributes will only succeed if signer has transfer authority
 func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.MsgUpdateRequiredAttributesRequest) (*types.MsgUpdateRequiredAttributesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -659,8 +649,12 @@ func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 
-	isGovProp := msg.TransferAuthority == k.GetAuthority()
-	if !isGovProp && !m.AddressHasAccess(caller, types.Access_Transfer) {
+	switch {
+	case msg.TransferAuthority == k.GetAuthority():
+		if !m.HasGovernanceEnabled() {
+			return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
+		}
+	case !m.AddressHasAccess(caller, types.Access_Transfer):
 		return nil, fmt.Errorf("caller does not have authority to update required attributes %s", msg.TransferAuthority)
 	}
 
@@ -693,4 +687,124 @@ func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.Ms
 	)
 
 	return &types.MsgUpdateRequiredAttributesResponse{}, nil
+}
+
+// UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal.
+func (k msgServer) UpdateForcedTransfer(goCtx context.Context, msg *types.MsgUpdateForcedTransferRequest) (*types.MsgUpdateForcedTransferResponse, error) {
+	if msg.Authority != k.GetAuthority() {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, fmt.Errorf("could not get marker for %s: %w", msg.Denom, err)
+	}
+
+	if marker.GetMarkerType() != types.MarkerType_RestrictedCoin {
+		return nil, fmt.Errorf("cannot update forced transfer on unrestricted marker %s", msg.Denom)
+	}
+
+	if !marker.HasGovernanceEnabled() {
+		return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
+	}
+
+	if marker.AllowsForcedTransfer() == msg.AllowForcedTransfer {
+		return nil, fmt.Errorf("marker %s already has allow_forced_transfer = %t", msg.Denom, msg.AllowForcedTransfer)
+	}
+
+	marker.SetAllowForcedTransfer(msg.AllowForcedTransfer)
+	k.SetMarker(ctx, marker)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	return &types.MsgUpdateForcedTransferResponse{}, nil
+}
+
+// SetAccountData sets the accountdata for a denom. Signer must have deposit authority.
+func (k msgServer) SetAccountData(goCtx context.Context, msg *types.MsgSetAccountDataRequest) (*types.MsgSetAccountDataResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, fmt.Errorf("could not get %s marker: %w", msg.Denom, err)
+	}
+
+	if msg.Signer == k.GetAuthority() {
+		if !marker.HasGovernanceEnabled() {
+			return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
+		}
+	} else {
+		if !marker.HasAccess(msg.Signer, types.Access_Deposit) {
+			return nil, fmt.Errorf("%s does not have deposit access for %s marker", msg.Signer, msg.Denom)
+		}
+	}
+
+	err = k.attrKeeper.SetAccountData(ctx, marker.GetAddress().String(), msg.Value)
+	if err != nil {
+		return nil, fmt.Errorf("error setting %s account data: %w", msg.Denom, err)
+	}
+
+	return &types.MsgSetAccountDataResponse{}, nil
+}
+
+// UpdateSendDenyList updates the deny send list for restricted marker. Signer must be admin or gov proposal.
+func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdateSendDenyListRequest) (*types.MsgUpdateSendDenyListResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, fmt.Errorf("marker not found for %s: %w", msg.Denom, err)
+	}
+
+	if marker.GetMarkerType() != types.MarkerType_RestrictedCoin {
+		return nil, fmt.Errorf("marker %s is not a restricted marker", msg.Denom)
+	}
+
+	if msg.Authority == k.GetAuthority() {
+		if !marker.HasGovernanceEnabled() {
+			return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
+		}
+	} else {
+		if !marker.HasAccess(msg.Authority, types.Access_Transfer) {
+			return nil, fmt.Errorf("%s does not have transfer authority for %s marker", msg.Authority, msg.Denom)
+		}
+	}
+
+	markerAddr := marker.GetAddress()
+	for _, addr := range msg.RemoveDeniedAddresses {
+		denyAddr, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return nil, err
+		}
+		if !k.IsSendDeny(ctx, markerAddr, denyAddr) {
+			return nil, fmt.Errorf("%s is not on deny list cannot remove address", addr)
+		}
+		k.RemoveSendDeny(ctx, markerAddr, denyAddr)
+	}
+
+	for _, addr := range msg.AddDeniedAddresses {
+		denyAddr, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return nil, err
+		}
+		if k.IsSendDeny(ctx, markerAddr, denyAddr) {
+			return nil, fmt.Errorf("%s is already on deny list cannot add address", addr)
+		}
+		k.AddSendDeny(ctx, markerAddr, denyAddr)
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	return &types.MsgUpdateSendDenyListResponse{}, nil
 }

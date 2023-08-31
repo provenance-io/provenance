@@ -385,7 +385,7 @@ func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider K
 	return percentile
 }
 
-func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
+func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, _ RewardAccountState, event EvaluationResult) bool {
 	validator := event.Validator
 	delegator := event.Delegator
 
@@ -423,11 +423,11 @@ func (ad *ActionDelegate) GetMaximumActiveStakePercentile() sdk.Dec {
 	return sdk.NewDec(0)
 }
 
-func (ad *ActionDelegate) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+func (ad *ActionDelegate) PreEvaluate(_ sdk.Context, _ KeeperProvider, _ RewardAccountState) bool {
 	return true
 }
 
-func (ad *ActionDelegate) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) (bool, EvaluationResult) {
+func (ad *ActionDelegate) PostEvaluate(_ sdk.Context, _ KeeperProvider, state RewardAccountState, event EvaluationResult) (bool, EvaluationResult) {
 	actionCounter := GetActionCount(state.ActionCounter, ad.ActionType())
 	hasValidActionCount := actionCounter >= ad.GetMinimumActions() && actionCounter <= ad.GetMaximumActions()
 	return hasValidActionCount, event
@@ -457,7 +457,7 @@ func (at *ActionTransfer) ActionType() string {
 	return ActionTypeTransfer
 }
 
-func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
+func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, _ RewardAccountState, event EvaluationResult) bool {
 	// get the address that is performing the send
 	addressSender := event.Address
 	if addressSender == nil {
@@ -481,11 +481,11 @@ func (at *ActionTransfer) Evaluate(ctx sdk.Context, provider KeeperProvider, sta
 	return true
 }
 
-func (at *ActionTransfer) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+func (at *ActionTransfer) PreEvaluate(_ sdk.Context, _ KeeperProvider, _ RewardAccountState) bool {
 	return true
 }
 
-func (at *ActionTransfer) PostEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) (bool, EvaluationResult) {
+func (at *ActionTransfer) PostEvaluate(_ sdk.Context, _ KeeperProvider, state RewardAccountState, evaluationResult EvaluationResult) (bool, EvaluationResult) {
 	actionCounter := GetActionCount(state.ActionCounter, at.ActionType())
 	hasValidActionCount := actionCounter >= at.GetMinimumActions() && actionCounter <= at.GetMaximumActions()
 	return hasValidActionCount, evaluationResult
@@ -515,7 +515,7 @@ func (atd *ActionVote) ActionType() string {
 	return ActionTypeVote
 }
 
-func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState, event EvaluationResult) bool {
+func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, _ RewardAccountState, event EvaluationResult) bool {
 	// get the address that voted
 	addressVoting := event.Address
 	if !sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, sdk.ZeroInt()).IsGTE(atd.MinimumDelegationAmount) {
@@ -532,7 +532,7 @@ func (atd *ActionVote) Evaluate(ctx sdk.Context, provider KeeperProvider, state 
 	return true
 }
 
-func (atd *ActionVote) PreEvaluate(ctx sdk.Context, provider KeeperProvider, state RewardAccountState) bool {
+func (atd *ActionVote) PreEvaluate(_ sdk.Context, _ KeeperProvider, _ RewardAccountState) bool {
 	return true
 }
 

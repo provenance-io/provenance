@@ -127,10 +127,10 @@ func (s *QueryServerTestSuite) TestScopeQuery() {
 	s.NoError(err, "ScopeUUID error")
 
 	_, err = queryClient.Scope(gocontext.Background(), &types.ScopeRequest{})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = empty request parameters", "empty request error")
+	s.EqualError(err, "empty request parameters: invalid request", "empty request error")
 
 	_, err = queryClient.Scope(gocontext.Background(), &types.ScopeRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: invalid character not part of charset: 45) or uuid (invalid UUID format)", "invalid uuid in request error")
+	s.EqualError(err, "could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: invalid character not part of charset: 45) or uuid (invalid UUID format): invalid request", "invalid uuid in request error")
 
 	// TODO: expand this to test new features/failures of the Scope query.
 
@@ -233,19 +233,19 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		// {
 		// 	name: "nil request",
 		// 	req:  nil,
-		// 	err:  "rpc error: code = InvalidArgument desc = empty request",
+		// 	err:  "empty request",
 		// },
 		{
 			name: "empty request",
 			req:  &types.SessionsRequest{},
-			err:  "rpc error: code = InvalidArgument desc = empty request parameters",
+			err:  "empty request parameters: invalid request",
 		},
 
 		// only scope id
 		{
 			name: "only scope id invalid - error",
 			req:  &types.SessionsRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: invalid character not part of charset: 45) or uuid (invalid UUID format)",
+			err:  "could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: invalid character not part of charset: 45) or uuid (invalid UUID format): invalid request",
 		},
 		{
 			name:  "only scope id as uuid not found - empty",
@@ -274,12 +274,12 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "only session id invalid - error",
 			req:  &types.SessionsRequest{SessionId: "not-a-valid-session-id"},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [not-a-valid-session-id] into a session address: decoding bech32 failed: invalid separator index -1",
+			err:  "could not parse [not-a-valid-session-id] into a session address: decoding bech32 failed: invalid separator index -1: invalid request",
 		},
 		{
 			name: "only session id as uuid - error",
 			req:  &types.SessionsRequest{SessionId: unknownUUID.String()},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = could not parse [%s] into a session address: decoding bech32 failed: invalid separator index 35", unknownUUID),
+			err:  fmt.Sprintf("could not parse [%s] into a session address: decoding bech32 failed: invalid separator index 35: invalid request", unknownUUID),
 		},
 		{
 			name:       "only session id as addr not found - empty",
@@ -301,12 +301,12 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "only record addr invalid - error",
 			req:  &types.SessionsRequest{RecordAddr: "not-a-valid-record-id"},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [not-a-valid-record-id] into a record address: decoding bech32 failed: invalid separator index -1",
+			err:  "could not parse [not-a-valid-record-id] into a record address: decoding bech32 failed: invalid separator index -1: invalid request",
 		},
 		{
 			name: "only record addr not found - error",
 			req:  &types.SessionsRequest{RecordAddr: types.RecordMetadataAddress(s.scopeUUID, "no-such-record").String()},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist", types.RecordMetadataAddress(s.scopeUUID, "no-such-record")),
+			err:  fmt.Sprintf("record %s does not exist: invalid request", types.RecordMetadataAddress(s.scopeUUID, "no-such-record")),
 		},
 		{
 			name:      "only record addr exists - result",
@@ -320,35 +320,35 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "only record name - error",
 			req:  &types.SessionsRequest{RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = a scope is required to look up sessions by record name",
+			err:  "a scope is required to look up sessions by record name: invalid request",
 		},
 
 		// scope id and session id
 		{
 			name: "scope id invalid session id ok - error",
 			req:  &types.SessionsRequest{ScopeId: "not-a-scope-id", SessionId: s.sessionID.String()},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [not-a-scope-id] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 14)",
+			err:  "could not parse [not-a-scope-id] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 14): invalid request",
 		},
 		{
 			name: "scope id as uuid exists session id invalid - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeUUID.String(), SessionId: "invalidSessionID"},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [invalidSessionID] into either a session address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 16)",
+			err:  "could not parse [invalidSessionID] into either a session address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 16): invalid request",
 		},
 		{
 			name: "scope id as addr exists session id invalid - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), SessionId: "invalidSessionID"},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [invalidSessionID] into either a session address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 16)",
+			err:  "could not parse [invalidSessionID] into either a session address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 16): invalid request",
 		},
 		{
 			name: "scope id as uuid exists session id as addr wrong scope - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeUUID.String(), SessionId: types.SessionMetadataAddress(unknownUUID, s.sessionUUID).String()},
-			err: fmt.Sprintf("rpc error: code = InvalidArgument desc = session %s is not in scope %s",
+			err: fmt.Sprintf("session %s is not in scope %s: invalid request",
 				types.SessionMetadataAddress(unknownUUID, s.sessionUUID), s.scopeID),
 		},
 		{
 			name: "scope id as addr exists session id as addr wrong scope - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), SessionId: types.SessionMetadataAddress(unknownUUID, s.sessionUUID).String()},
-			err: fmt.Sprintf("rpc error: code = InvalidArgument desc = session %s is not in scope %s",
+			err: fmt.Sprintf("session %s is not in scope %s: invalid request",
 				types.SessionMetadataAddress(unknownUUID, s.sessionUUID), s.scopeID),
 		},
 		{
@@ -400,22 +400,22 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "scope id invalid record addr ok - error",
 			req:  &types.SessionsRequest{ScopeId: "notReallyAScopeID", RecordAddr: s.recordID.String()},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [notReallyAScopeID] into either a scope address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 17)",
+			err:  "could not parse [notReallyAScopeID] into either a scope address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 17): invalid request",
 		},
 		{
 			name: "scope id exists record addr invalid - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), RecordAddr: "invalid-record-addr"},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [invalid-record-addr] into a record address: decoding bech32 failed: invalid separator index -1",
+			err:  "could not parse [invalid-record-addr] into a record address: decoding bech32 failed: invalid separator index -1: invalid request",
 		},
 		{
 			name: "scope id exists record addr wrong scope - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), RecordAddr: types.RecordMetadataAddress(unknownUUID, s.recordName).String()},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s is not part of scope %s", types.RecordMetadataAddress(unknownUUID, s.recordName), s.scopeID),
+			err:  fmt.Sprintf("record %s is not part of scope %s: invalid request", types.RecordMetadataAddress(unknownUUID, s.recordName), s.scopeID),
 		},
 		{
 			name: "scope id exists record addr not found - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), RecordAddr: types.RecordMetadataAddress(s.scopeUUID, "record-not-real").String()},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist", types.RecordMetadataAddress(s.scopeUUID, "record-not-real")),
+			err:  fmt.Sprintf("record %s does not exist: invalid request", types.RecordMetadataAddress(s.scopeUUID, "record-not-real")),
 		},
 		{
 			name:      "scope id exists record addr exists - result",
@@ -429,27 +429,27 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "scope id invalid record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: "illegitimate-scope", RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [illegitimate-scope] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 18)",
+			err:  "could not parse [illegitimate-scope] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 18): invalid request",
 		},
 		{
 			name: "scope id as uuid not found record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: unknownUUID.String(), RecordName: s.recordName},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist", types.RecordMetadataAddress(unknownUUID, s.recordName)),
+			err:  fmt.Sprintf("record %s does not exist: invalid request", types.RecordMetadataAddress(unknownUUID, s.recordName)),
 		},
 		{
 			name: "scope id as addr not found record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: types.ScopeMetadataAddress(unknownUUID).String(), RecordName: s.recordName},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist", types.RecordMetadataAddress(unknownUUID, s.recordName)),
+			err:  fmt.Sprintf("record %s does not exist: invalid request", types.RecordMetadataAddress(unknownUUID, s.recordName)),
 		},
 		{
 			name: "scope id as uuid exists record name not found - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeUUID.String(), RecordName: "no-such-record"},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist", types.RecordMetadataAddress(s.scopeUUID, "no-such-record")),
+			err:  fmt.Sprintf("record %s does not exist: invalid request", types.RecordMetadataAddress(s.scopeUUID, "no-such-record")),
 		},
 		{
 			name: "scope id as addr exists record name not found - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), RecordName: "still-no-such-record"},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist", types.RecordMetadataAddress(s.scopeUUID, "still-no-such-record")),
+			err:  fmt.Sprintf("record %s does not exist: invalid request", types.RecordMetadataAddress(s.scopeUUID, "still-no-such-record")),
 		},
 		{
 			name:      "scope id as uuid exists record name exists - result",
@@ -470,22 +470,22 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "session id invalid record addr ok - error",
 			req:  &types.SessionsRequest{SessionId: "lol-nope-notASessionId", RecordAddr: s.recordID.String()},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [lol-nope-notASessionId] into either a session address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 22)",
+			err:  "could not parse [lol-nope-notASessionId] into either a session address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 22): invalid request",
 		},
 		{
 			name: "session id exists record addr invalid - error",
 			req:  &types.SessionsRequest{SessionId: s.sessionID.String(), RecordAddr: "yeah-not-a-record-addr"},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [yeah-not-a-record-addr] into a record address: decoding bech32 failed: invalid separator index -1",
+			err:  "could not parse [yeah-not-a-record-addr] into a record address: decoding bech32 failed: invalid separator index -1: invalid request",
 		},
 		{
 			name: "session id exists record addr wrong scope - error",
 			req:  &types.SessionsRequest{SessionId: s.sessionID.String(), RecordAddr: types.RecordMetadataAddress(unknownUUID, s.recordName).String()},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = session %s is not in scope %s", s.sessionID, types.ScopeMetadataAddress(unknownUUID)),
+			err:  fmt.Sprintf("session %s is not in scope %s: invalid request", s.sessionID, types.ScopeMetadataAddress(unknownUUID)),
 		},
 		{
 			name: "session id exists record addr wrong session - error",
 			req:  &types.SessionsRequest{SessionId: s.sessionID.String(), RecordAddr: anotherRecordID.String()},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s belongs to session %s (not %s)", anotherRecordID, anotherSessionID, s.sessionID),
+			err:  fmt.Sprintf("record %s belongs to session %s (not %s): invalid request", anotherRecordID, anotherSessionID, s.sessionID),
 		},
 		{
 			name:      "session id as addr exists record addr exists - result",
@@ -506,27 +506,27 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "session id invalid record name ok - error",
 			req:  &types.SessionsRequest{SessionId: "nopenope-nope-nope-nota-sessionuuidx", RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [nopenope-nope-nope-nota-sessionuuidx] into a session address: decoding bech32 failed: invalid separator index -1",
+			err:  "could not parse [nopenope-nope-nope-nota-sessionuuidx] into a session address: decoding bech32 failed: invalid separator index -1: invalid request",
 		},
 		{
 			name: "session id as uuid record name ok - error",
 			req:  &types.SessionsRequest{SessionId: unknownUUID.String(), RecordName: s.recordName},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = could not parse [%s] into a session address: decoding bech32 failed: invalid separator index 35", unknownUUID),
+			err:  fmt.Sprintf("could not parse [%s] into a session address: decoding bech32 failed: invalid separator index 35: invalid request", unknownUUID),
 		},
 		{
 			name: "session id as addr not found record name ok - error",
 			req:  &types.SessionsRequest{SessionId: types.SessionMetadataAddress(unknownUUID, unknownUUID).String(), RecordName: s.recordName},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist", types.RecordMetadataAddress(unknownUUID, s.recordName)),
+			err:  fmt.Sprintf("record %s does not exist: invalid request", types.RecordMetadataAddress(unknownUUID, s.recordName)),
 		},
 		{
 			name: "session id as addr exists record name not found - error",
 			req:  &types.SessionsRequest{SessionId: s.sessionID.String(), RecordName: "not-gonna-find-this-record"},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist", types.RecordMetadataAddress(s.scopeUUID, "not-gonna-find-this-record")),
+			err:  fmt.Sprintf("record %s does not exist: invalid request", types.RecordMetadataAddress(s.scopeUUID, "not-gonna-find-this-record")),
 		},
 		{
 			name: "session id as addr exists record name wrong session - error",
 			req:  &types.SessionsRequest{SessionId: s.sessionID.String(), RecordName: anotherRecordName},
-			err: fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s belongs to session %s (not %s)",
+			err: fmt.Sprintf("record %s belongs to session %s (not %s): invalid request",
 				types.RecordMetadataAddress(s.scopeUUID, anotherRecordName), anotherSessionID, s.sessionID),
 		},
 		{
@@ -541,12 +541,12 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "record addr invalid record name ok - error",
 			req:  &types.SessionsRequest{RecordAddr: "abby-lane", RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [abby-lane] into a record address: decoding bech32 failed: invalid separator index -1",
+			err:  "could not parse [abby-lane] into a record address: decoding bech32 failed: invalid separator index -1: invalid request",
 		},
 		{
 			name: "record addr exists record name wrong - error",
 			req:  &types.SessionsRequest{RecordAddr: s.recordID.String(), RecordName: anotherRecordName},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not have name %s", s.recordID, anotherRecordName),
+			err:  fmt.Sprintf("record %s does not have name %s: invalid request", s.recordID, anotherRecordName),
 		},
 		{
 			name:      "record addr exists record name matches - result",
@@ -560,22 +560,22 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "scope id invalid session id ok record addr ok - error",
 			req:  &types.SessionsRequest{ScopeId: "bad scope", SessionId: s.scopeID.String(), RecordAddr: s.recordID.String()},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [bad scope] into either a scope address (decoding bech32 failed: invalid character in string: ' ') or uuid (invalid UUID length: 9)",
+			err:  "could not parse [bad scope] into either a scope address (decoding bech32 failed: invalid character in string: ' ') or uuid (invalid UUID length: 9): invalid request",
 		},
 		{
 			name: "scope id exists session id invalid record addr ok - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), SessionId: "bad session", RecordAddr: s.recordID.String()},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [bad session] into either a session address (decoding bech32 failed: invalid character in string: ' ') or uuid (invalid UUID length: 11)",
+			err:  "could not parse [bad session] into either a session address (decoding bech32 failed: invalid character in string: ' ') or uuid (invalid UUID length: 11): invalid request",
 		},
 		{
 			name: "scope id exists session id exists record addr invalid - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), SessionId: s.sessionID.String(), RecordAddr: "bad record"},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [bad record] into a record address: decoding bech32 failed: invalid character in string: ' '",
+			err:  "could not parse [bad record] into a record address: decoding bech32 failed: invalid character in string: ' ': invalid request",
 		},
 		{
 			name: "scope id wrong scope session id exists record addr exists - error",
 			req:  &types.SessionsRequest{ScopeId: types.ScopeMetadataAddress(unknownUUID).String(), SessionId: s.sessionID.String(), RecordAddr: s.recordID.String()},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s is not part of scope %s", s.recordID, types.ScopeMetadataAddress(unknownUUID)),
+			err:  fmt.Sprintf("record %s is not part of scope %s: invalid request", s.recordID, types.ScopeMetadataAddress(unknownUUID)),
 		},
 		{
 			name:      "scope id exists session id exists record addr exists - result",
@@ -589,17 +589,17 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "scope id invalid session id ok record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: "nopescope", SessionId: s.sessionID.String(), RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [nopescope] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 9)",
+			err:  "could not parse [nopescope] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 9): invalid request",
 		},
 		{
 			name: "scope id exists session id invalid record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), SessionId: "nosesh", RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [nosesh] into either a session address (decoding bech32 failed: invalid bech32 string length 6) or uuid (invalid UUID length: 6)",
+			err:  "could not parse [nosesh] into either a session address (decoding bech32 failed: invalid bech32 string length 6) or uuid (invalid UUID length: 6): invalid request",
 		},
 		{
 			name: "scope id exists session id exists record name not found - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), SessionId: s.sessionID.String(), RecordName: "nopenopenope"},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not exist", types.RecordMetadataAddress(s.scopeUUID, "nopenopenope")),
+			err:  fmt.Sprintf("record %s does not exist: invalid request", types.RecordMetadataAddress(s.scopeUUID, "nopenopenope")),
 		},
 		{
 			name:      "scope id exists session id exists record name exists - result",
@@ -613,22 +613,22 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "scope id invalid record addr ok record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: "veryBadScope", RecordAddr: s.recordID.String(), RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [veryBadScope] into either a scope address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 12)",
+			err:  "could not parse [veryBadScope] into either a scope address (decoding bech32 failed: string not all lowercase or all uppercase) or uuid (invalid UUID length: 12): invalid request",
 		},
 		{
 			name: "scope id exists record addr invalid record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), RecordAddr: "kindofbadrecord", RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [kindofbadrecord] into a record address: decoding bech32 failed: invalid separator index -1",
+			err:  "could not parse [kindofbadrecord] into a record address: decoding bech32 failed: invalid separator index -1: invalid request",
 		},
 		{
 			name: "scope id exists record addr exists record name wrong - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), RecordAddr: s.recordID.String(), RecordName: "wrongagain"},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not have name wrongagain", s.recordID),
+			err:  fmt.Sprintf("record %s does not have name wrongagain: invalid request", s.recordID),
 		},
 		{
 			name: "scope id exists record addr wrong scope record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), RecordAddr: types.RecordMetadataAddress(unknownUUID, s.recordName).String(), RecordName: s.recordName},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s is not part of scope %s", types.RecordMetadataAddress(unknownUUID, s.recordName), s.scopeID),
+			err:  fmt.Sprintf("record %s is not part of scope %s: invalid request", types.RecordMetadataAddress(unknownUUID, s.recordName), s.scopeID),
 		},
 		{
 			name:      "scope id exists record addr exists record name matches - result",
@@ -642,22 +642,22 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "session id invalid record addr ok record name ok - error",
 			req:  &types.SessionsRequest{SessionId: "nopesess", RecordAddr: s.recordID.String(), RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [nopesess] into either a session address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 8)",
+			err:  "could not parse [nopesess] into either a session address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 8): invalid request",
 		},
 		{
 			name: "session id exists record addr invalid record name ok - error",
 			req:  &types.SessionsRequest{SessionId: s.sessionID.String(), RecordAddr: "incorrect-record-id", RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [incorrect-record-id] into a record address: decoding bech32 failed: invalid separator index -1",
+			err:  "could not parse [incorrect-record-id] into a record address: decoding bech32 failed: invalid separator index -1: invalid request",
 		},
 		{
 			name: "session id exists record addr wrong scope record name ok - error",
 			req:  &types.SessionsRequest{SessionId: s.sessionID.String(), RecordAddr: types.RecordMetadataAddress(unknownUUID, s.recordName).String(), RecordName: s.recordName},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = session %s is not in scope %s", s.sessionID, types.ScopeMetadataAddress(unknownUUID)),
+			err:  fmt.Sprintf("session %s is not in scope %s: invalid request", s.sessionID, types.ScopeMetadataAddress(unknownUUID)),
 		},
 		{
 			name: "session id exists record addr wrong session record name ok - error",
 			req:  &types.SessionsRequest{SessionId: s.sessionID.String(), RecordAddr: s.recordID.String(), RecordName: anotherRecordName},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not have name another-record", s.recordID),
+			err:  fmt.Sprintf("record %s does not have name another-record: invalid request", s.recordID),
 		},
 		{
 			name:      "session id exists record addr exists record name ok - result",
@@ -671,22 +671,22 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		{
 			name: "scope id invalid session id ok record addr ok record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: "negatoryscope", SessionId: s.sessionID.String(), RecordAddr: s.recordID.String(), RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [negatoryscope] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 13)",
+			err:  "could not parse [negatoryscope] into either a scope address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 13): invalid request",
 		},
 		{
 			name: "scope id exists session id invalid record addr ok record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), SessionId: "negatorysession", RecordAddr: s.recordID.String(), RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [negatorysession] into either a session address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 15)",
+			err:  "could not parse [negatorysession] into either a session address (decoding bech32 failed: invalid separator index -1) or uuid (invalid UUID length: 15): invalid request",
 		},
 		{
 			name: "scope id exists session id exists record addr invalid record name ok - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), SessionId: s.sessionID.String(), RecordAddr: "negatoryrecord", RecordName: s.recordName},
-			err:  "rpc error: code = InvalidArgument desc = could not parse [negatoryrecord] into a record address: decoding bech32 failed: invalid separator index -1",
+			err:  "could not parse [negatoryrecord] into a record address: decoding bech32 failed: invalid separator index -1: invalid request",
 		},
 		{
 			name: "scope id exists session id exists record addr exists record name wrong - error",
 			req:  &types.SessionsRequest{ScopeId: s.scopeID.String(), SessionId: s.sessionID.String(), RecordAddr: s.recordID.String(), RecordName: anotherRecordName},
-			err:  fmt.Sprintf("rpc error: code = InvalidArgument desc = record %s does not have name %s", s.recordID, anotherRecordName),
+			err:  fmt.Sprintf("record %s does not have name %s: invalid request", s.recordID, anotherRecordName),
 		},
 		{
 			name:      "scope id exists session id exists record addr exists record name matches - result",
@@ -756,7 +756,7 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		assert.Equal(t, s.sessionID, sr.Records[0].Record.SessionId, "session id")
 		assert.Equal(t, s.recordName, sr.Records[0].Record.Name, "record name")
 	})
-	s.T().Run("iinclude both scope and records", func(t *testing.T) {
+	s.T().Run("include both scope and records", func(t *testing.T) {
 		req := types.SessionsRequest{SessionId: s.sessionID.String(), IncludeScope: true, IncludeRecords: true}
 		sr, err := queryClient.Sessions(gocontext.Background(), &req)
 		require.NoErrorf(t, err, "unexpected error: %s", err)
@@ -769,6 +769,36 @@ func (s *QueryServerTestSuite) TestSessionsQuery() {
 		assert.Equal(t, s.scopeID, sr.Records[0].RecordIdInfo.ScopeIdInfo.ScopeId, "scope id")
 		assert.Equal(t, s.sessionID, sr.Records[0].Record.SessionId, "session id")
 		assert.Equal(t, s.recordName, sr.Records[0].Record.Name, "record name")
+	})
+	s.T().Run("include both scope and records without id info", func(t *testing.T) {
+		req := types.SessionsRequest{SessionId: s.sessionID.String(), IncludeScope: true, IncludeRecords: true, ExcludeIdInfo: true}
+		sr, err := queryClient.Sessions(gocontext.Background(), &req)
+		require.NoErrorf(t, err, "unexpected error: %s", err)
+		require.NotNil(t, sr, "result of Sessions query")
+
+		if assert.NotNil(t, sr.Scope, "scope wrapper") {
+			assert.NotNil(t, sr.Scope.Scope, "the scope")
+			assert.Nil(t, sr.Scope.ScopeIdInfo, "scope id info")
+			assert.Nil(t, sr.Scope.ScopeSpecIdInfo, "scope spec id info")
+		}
+
+		if assert.Len(t, sr.Sessions, 1, "sessions") {
+			sw := sr.Sessions[0]
+			if assert.NotNil(t, sw, "session wrapper") {
+				assert.NotNil(t, sw.Session, "the session")
+				assert.Nil(t, sw.SessionIdInfo, "session id info")
+				assert.Nil(t, sw.ContractSpecIdInfo, "contract spec id info")
+			}
+		}
+
+		if assert.Len(t, sr.Records, 1, "records") {
+			rw := sr.Records[0]
+			if assert.NotNil(t, rw, "record wrapper") {
+				assert.NotNil(t, rw.Record, "the record")
+				assert.Nil(t, rw.RecordIdInfo, "record id info")
+				assert.Nil(t, rw.RecordSpecIdInfo, "record spec id info")
+			}
+		}
 	})
 }
 
@@ -786,13 +816,13 @@ func (s *QueryServerTestSuite) TestRecordsQuery() {
 	}
 
 	_, err := queryClient.Records(gocontext.Background(), &types.RecordsRequest{})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = empty request parameters")
+	s.EqualError(err, "empty request parameters: invalid request")
 
 	_, err = queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: "foo"})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = could not parse [foo] into either a scope address (decoding bech32 failed: invalid bech32 string length 3) or uuid (invalid UUID length: 3)")
+	s.EqualError(err, "could not parse [foo] into either a scope address (decoding bech32 failed: invalid bech32 string length 3) or uuid (invalid UUID length: 3): invalid request")
 
 	_, err = queryClient.Records(gocontext.Background(), &types.RecordsRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"})
-	s.EqualError(err, "rpc error: code = InvalidArgument desc = could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: invalid character not part of charset: 45) or uuid (invalid UUID format)")
+	s.EqualError(err, "could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: invalid character not part of charset: 45) or uuid (invalid UUID format): invalid request")
 
 	// TODO: expand this to test new features/failures of the Records query.
 
@@ -908,6 +938,377 @@ func (s *QueryServerTestSuite) TestScopeSpecificationQuery() {
 // TODO: RecordSpecificationsForContractSpecification tests
 // TODO: RecordSpecification tests
 // TODO: RecordSpecificationsAll tests
+
+func (s *QueryServerTestSuite) TestGetByAddr() {
+	recordName := "myrecord"
+	uuids := []uuid.UUID{
+		uuid.MustParse("7D3D0BFA-44CF-4536-888F-DEBF28ACC887"),
+		uuid.MustParse("30FE5269-27F6-44AC-B900-BD13879932C3"),
+		uuid.MustParse("8FA0F897-28C5-43D0-AC55-CC950A79AC9E"),
+		uuid.MustParse("036E7E4C-014C-4103-A9F4-5759981D9CE8"),
+		uuid.MustParse("1A0C65EC-C512-43B0-8F90-9CCF59A54FDE"),
+		uuid.MustParse("F757BA39-ED71-4CE5-9FE9-A77659CEAC40"),
+		uuid.MustParse("3B5F6C64-8A08-4EEB-BAE5-A92D18332DA9"),
+		uuid.MustParse("A8BC40DE-A280-4599-8C8A-7A00B0A47CBA"),
+	}
+
+	scopeID1 := types.ScopeMetadataAddress(uuids[0])               // scope1qp7n6zl6gn852d5g3l0t729vezrsq304wz
+	sessionID1 := types.SessionMetadataAddress(uuids[0], uuids[1]) // session1q97n6zl6gn852d5g3l0t729vezrnpljjdynlv39vhyqt6yu8nyevxx7k828
+	recordID1 := types.RecordMetadataAddress(uuids[0], recordName) // record1qf7n6zl6gn852d5g3l0t729vezr7hw7d4pu05x7tj9hjcr4sla9v6fxd4pw
+
+	scopeID2 := types.ScopeMetadataAddress(uuids[2])               // scope1qz86p7yh9rz5859v2hxf2zne4j0qef5nle
+	sessionID2 := types.SessionMetadataAddress(uuids[2], uuids[3]) // session1qx86p7yh9rz5859v2hxf2zne4j0qxmn7fsq5csgr4869wkvcrkwws2wefy6
+	recordID2 := types.RecordMetadataAddress(uuids[2], recordName) // record1q286p7yh9rz5859v2hxf2zne4j0whw7d4pu05x7tj9hjcr4sla9v6dur3el
+
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuids[4])            // scopespec1qsdqce0vc5fy8vy0jzwv7kd9fl0qknw7xs
+	cSpecID := types.ContractSpecMetadataAddress(uuids[5])             // contractspec1q0m40w3ea4c5eevlaxnhvkww43qq7adrfr
+	recSpecID := types.RecordSpecMetadataAddress(uuids[5], recordName) // recspec1qhm40w3ea4c5eevlaxnhvkww43qwhw7d4pu05x7tj9hjcr4sla9v64sc2mh
+
+	scopeIDDNE := types.ScopeMetadataAddress(uuids[6])                    // scope1qqa47mry3gyya6a6uk5j6xpn9k5skuvtxy
+	sessionIDDNE := types.SessionMetadataAddress(uuids[6], uuids[7])      // session1qya47mry3gyya6a6uk5j6xpn9k5630zqm63gq3ve3j985q9s537t5q3pgyg
+	recordIDDNE := types.RecordMetadataAddress(uuids[6], recordName)      // record1qga47mry3gyya6a6uk5j6xpn9k57hw7d4pu05x7tj9hjcr4sla9v6xkxzus
+	scopeSpecIDDNE := types.ScopeSpecMetadataAddress(uuids[6])            // scopespec1qsa47mry3gyya6a6uk5j6xpn9k5sc649p3
+	cSpecIDDNE := types.ContractSpecMetadataAddress(uuids[6])             // contractspec1qva47mry3gyya6a6uk5j6xpn9k5s6h5s78
+	recSpecIDDNE := types.RecordSpecMetadataAddress(uuids[6], recordName) // recspec1q5a47mry3gyya6a6uk5j6xpn9k57hw7d4pu05x7tj9hjcr4sla9v6negyuq
+
+	ownerAddr := sdk.AccAddress("ownerAddr___________").String() // cosmos1damkuetjg9jxgujlta047h6lta047h6lmp9nkx
+
+	manyAddrs := make([]string, 10000)
+	curUUID := uuid.MustParse("4D09C7B0-5B86-43BF-BA9F-33CA3D78C1DB")
+	incCurUUID := func() {
+		for i := 15; i >= 0; i-- {
+			if curUUID[i] != 255 {
+				curUUID[i] = curUUID[i] + 1
+				break
+			}
+			curUUID[i] = 0
+		}
+	}
+	for i := range manyAddrs {
+		switch i % 7 {
+		case 0:
+			incCurUUID()
+			manyAddrs[i] = types.ScopeMetadataAddress(curUUID).String()
+		case 1:
+			manyAddrs[i] = types.SessionMetadataAddress(curUUID, uuid.New()).String()
+		case 2:
+			manyAddrs[i] = types.RecordMetadataAddress(curUUID, recordName).String()
+		case 3:
+			manyAddrs[i] = types.ScopeSpecMetadataAddress(curUUID).String()
+		case 4:
+			manyAddrs[i] = types.ContractSpecMetadataAddress(curUUID).String()
+		case 5:
+			manyAddrs[i] = types.RecordSpecMetadataAddress(curUUID, recordName).String()
+		case 6:
+			manyAddrs[i] = curUUID.String()
+		}
+	}
+
+	scopeSpec := types.ScopeSpecification{
+		SpecificationId: scopeSpecID,
+		Description: &types.Description{
+			Name:        "myTestScopeSpec",
+			Description: "my test scope spec",
+			WebsiteUrl:  "http://example.com",
+		},
+		OwnerAddresses:  []string{ownerAddr},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+		ContractSpecIds: []types.MetadataAddress{cSpecID},
+	}
+	cSpec := types.ContractSpecification{
+		SpecificationId: cSpecID,
+		Description: &types.Description{
+			Name:        "myTestContractSpec",
+			Description: "my test contract spec",
+			WebsiteUrl:  "http://example.com",
+		},
+		OwnerAddresses:  scopeSpec.OwnerAddresses,
+		PartiesInvolved: scopeSpec.PartiesInvolved,
+		Source:          &types.ContractSpecification_Hash{Hash: "1845ca13f061fc68f2343bba7f6be3be"}, // printf 'mycspec' | md5sum
+		ClassName:       "myclass",
+	}
+	recSpec := types.RecordSpecification{
+		SpecificationId: recSpecID,
+		Name:            recordName,
+		Inputs: []*types.InputSpecification{
+			{
+				Name:     "myinput",
+				TypeName: "string",
+				Source:   &types.InputSpecification_Hash{Hash: "8bf572e7226b661b87d47458b5aec2a7"},
+			},
+		},
+		TypeName:           "myRecordType",
+		ResultType:         types.DefinitionType_DEFINITION_TYPE_PROPOSED,
+		ResponsibleParties: cSpec.PartiesInvolved,
+	}
+
+	scope1 := types.Scope{
+		ScopeId:           scopeID1,
+		SpecificationId:   scopeSpecID,
+		Owners:            []types.Party{{Address: ownerAddr, Role: types.PartyType_PARTY_TYPE_OWNER}},
+		ValueOwnerAddress: ownerAddr,
+	}
+	scope2 := types.Scope{
+		ScopeId:           scopeID2,
+		SpecificationId:   scopeSpecID,
+		Owners:            []types.Party{{Address: ownerAddr, Role: types.PartyType_PARTY_TYPE_OWNER}},
+		ValueOwnerAddress: ownerAddr,
+	}
+	session1 := types.Session{
+		SessionId:       sessionID1,
+		SpecificationId: cSpecID,
+		Parties:         scope1.Owners,
+		Name:            "mysession",
+	}
+	session1.Audit = session1.Audit.UpdateAudit(time.Unix(1650450000, 0).UTC(), ownerAddr, "test update")
+	session2 := types.Session{
+		SessionId:       sessionID2,
+		SpecificationId: cSpecID,
+		Parties:         scope2.Owners,
+		Name:            "mysession",
+	}
+	session2.Audit = session2.Audit.UpdateAudit(time.Unix(1650450001, 0).UTC(), ownerAddr, "test update")
+	record1 := types.Record{
+		Name:      recordName,
+		SessionId: sessionID1,
+		Process: types.Process{
+			ProcessId: &types.Process_Hash{Hash: "528706d1dfad2c63d619297c005cc841"}, // printf 'myrecord' | md5sum
+			Name:      "myproc",
+			Method:    "mymethod",
+		},
+		Inputs: []types.RecordInput{
+			{
+				Name:     recSpec.Inputs[0].Name,
+				Source:   &types.RecordInput_Hash{Hash: "8bf572e7226b661b87d47458b5aec2a7"}, // printf 'myinput' | md5sum
+				TypeName: recSpec.Inputs[0].TypeName,
+				Status:   types.RecordInputStatus_Proposed,
+			},
+		},
+		Outputs: []types.RecordOutput{
+			{
+				Hash:   "b7aebd675ceb38fcb6c11289c6ae5216", // printf 'myoutput' | md5sum
+				Status: types.ResultStatus_RESULT_STATUS_PASS,
+			},
+		},
+		SpecificationId: recSpecID,
+	}
+	record2 := types.Record{
+		Name:      recordName,
+		SessionId: sessionID2,
+		Process: types.Process{
+			ProcessId: &types.Process_Hash{Hash: "ac39c3a10703a3a7fae08207216a56d1"}, // printf 'myrecord2' | md5sum
+			Name:      "myproc",
+			Method:    "mymethod",
+		},
+		Inputs: []types.RecordInput{
+			{
+				Name:     recSpec.Inputs[0].Name,
+				Source:   &types.RecordInput_Hash{Hash: "8bf572e7226b661b87d47458b5aec2a7"}, // printf 'myinput' | md5sum
+				TypeName: recSpec.Inputs[0].TypeName,
+				Status:   types.RecordInputStatus_Proposed,
+			},
+		},
+		Outputs: []types.RecordOutput{
+			{
+				Hash:   "240bd2d0c49dc033e5de33679b434108", // printf 'myoutput2' | md5sum
+				Status: types.ResultStatus_RESULT_STATUS_PASS,
+			},
+		},
+		SpecificationId: recSpecID,
+	}
+
+	s.app.MetadataKeeper.SetContractSpecification(s.ctx, cSpec)
+	s.app.MetadataKeeper.SetRecordSpecification(s.ctx, recSpec)
+	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, scopeSpec)
+
+	s.app.MetadataKeeper.SetScope(s.ctx, scope1)
+	s.app.MetadataKeeper.SetSession(s.ctx, session1)
+	s.app.MetadataKeeper.SetRecord(s.ctx, record1)
+	s.app.MetadataKeeper.SetScope(s.ctx, scope2)
+	s.app.MetadataKeeper.SetSession(s.ctx, session2)
+	s.app.MetadataKeeper.SetRecord(s.ctx, record2)
+
+	req := func(addrs ...string) *types.GetByAddrRequest {
+		return &types.GetByAddrRequest{Addrs: addrs}
+	}
+
+	tests := []struct {
+		name    string
+		req     *types.GetByAddrRequest
+		expResp *types.GetByAddrResponse
+		expErr  string
+	}{
+		{
+			name:   "nil req",
+			req:    nil,
+			expErr: "empty request: invalid request",
+		},
+		{
+			name:   "no addrs",
+			req:    req(),
+			expErr: "empty request: invalid request",
+		},
+		{
+			name:    "many addresses",
+			req:     req(manyAddrs...),
+			expResp: &types.GetByAddrResponse{NotFound: manyAddrs},
+		},
+		{
+			name:    "one addr bad",
+			req:     req("notanaddr"),
+			expResp: &types.GetByAddrResponse{NotFound: []string{"notanaddr"}},
+		},
+		{
+			name:    "one addr scope found",
+			req:     req(scopeID1.String()),
+			expResp: &types.GetByAddrResponse{Scopes: []*types.Scope{&scope1}},
+		},
+		{
+			name:    "one addr scope not found",
+			req:     req(scopeIDDNE.String()),
+			expResp: &types.GetByAddrResponse{NotFound: []string{scopeIDDNE.String()}},
+		},
+		{
+			name:    "one addr session found",
+			req:     req(sessionID1.String()),
+			expResp: &types.GetByAddrResponse{Sessions: []*types.Session{&session1}},
+		},
+		{
+			name:    "one addr session not found",
+			req:     req(sessionIDDNE.String()),
+			expResp: &types.GetByAddrResponse{NotFound: []string{sessionIDDNE.String()}},
+		},
+		{
+			name:    "one addr record found",
+			req:     req(recordID1.String()),
+			expResp: &types.GetByAddrResponse{Records: []*types.Record{&record1}},
+		},
+		{
+			name:    "one addr record not found",
+			req:     req(recordIDDNE.String()),
+			expResp: &types.GetByAddrResponse{NotFound: []string{recordIDDNE.String()}},
+		},
+		{
+			name:    "one addr scope spec found",
+			req:     req(scopeSpecID.String()),
+			expResp: &types.GetByAddrResponse{ScopeSpecs: []*types.ScopeSpecification{&scopeSpec}},
+		},
+		{
+			name:    "one addr scope spec not found",
+			req:     req(scopeSpecIDDNE.String()),
+			expResp: &types.GetByAddrResponse{NotFound: []string{scopeSpecIDDNE.String()}},
+		},
+		{
+			name:    "one addr contract spec found",
+			req:     req(cSpecID.String()),
+			expResp: &types.GetByAddrResponse{ContractSpecs: []*types.ContractSpecification{&cSpec}},
+		},
+		{
+			name:    "one addr contract spec not found",
+			req:     req(cSpecIDDNE.String()),
+			expResp: &types.GetByAddrResponse{NotFound: []string{cSpecIDDNE.String()}},
+		},
+		{
+			name:    "one addr record spec found",
+			req:     req(recSpecID.String()),
+			expResp: &types.GetByAddrResponse{RecordSpecs: []*types.RecordSpecification{&recSpec}},
+		},
+		{
+			name:    "one addr record spec not found",
+			req:     req(recSpecIDDNE.String()),
+			expResp: &types.GetByAddrResponse{NotFound: []string{recSpecIDDNE.String()}},
+		},
+		{
+			name: "two scopes found one not",
+			req:  req(scopeIDDNE.String(), scopeID2.String(), scopeID1.String()),
+			expResp: &types.GetByAddrResponse{
+				Scopes:   []*types.Scope{&scope2, &scope1},
+				NotFound: []string{scopeIDDNE.String()},
+			},
+		},
+		{
+			name: "two sessions found one not",
+			req:  req(sessionIDDNE.String(), sessionID2.String(), sessionID1.String()),
+			expResp: &types.GetByAddrResponse{
+				Sessions: []*types.Session{&session2, &session1},
+				NotFound: []string{sessionIDDNE.String()},
+			},
+		},
+		{
+			name: "two records found one not",
+			req:  req(recordIDDNE.String(), recordID2.String(), recordID1.String()),
+			expResp: &types.GetByAddrResponse{
+				Records:  []*types.Record{&record2, &record1},
+				NotFound: []string{recordIDDNE.String()},
+			},
+		},
+		{
+			name: "scope session and record",
+			req:  req(scopeID1.String(), sessionID1.String(), recordID1.String()),
+			expResp: &types.GetByAddrResponse{
+				Scopes:   []*types.Scope{&scope1},
+				Sessions: []*types.Session{&session1},
+				Records:  []*types.Record{&record1},
+			},
+		},
+		{
+			name: "scope spec contract spec and record spec",
+			req:  req(scopeSpecID.String(), cSpecID.String(), recSpecID.String()),
+			expResp: &types.GetByAddrResponse{
+				ScopeSpecs:    []*types.ScopeSpecification{&scopeSpec},
+				ContractSpecs: []*types.ContractSpecification{&cSpec},
+				RecordSpecs:   []*types.RecordSpecification{&recSpec},
+			},
+		},
+		{
+			name: "everything and then some",
+			req: req(
+				cSpecID.String(), scopeID1.String(), recordID1.String(),
+				cSpecIDDNE.String(), recordIDDNE.String(), "badaddr",
+				recSpecID.String(), scopeSpecID.String(), sessionID2.String(),
+				recordID2.String(), sessionID1.String(), "addrnotfound",
+				sessionIDDNE.String(), "anothernotfound", recSpecIDDNE.String(),
+				scopeID2.String(), scopeSpecIDDNE.String(), scopeIDDNE.String(),
+			),
+			expResp: &types.GetByAddrResponse{
+				Scopes:        []*types.Scope{&scope1, &scope2},
+				Sessions:      []*types.Session{&session2, &session1},
+				Records:       []*types.Record{&record1, &record2},
+				ScopeSpecs:    []*types.ScopeSpecification{&scopeSpec},
+				ContractSpecs: []*types.ContractSpecification{&cSpec},
+				RecordSpecs:   []*types.RecordSpecification{&recSpec},
+				NotFound: []string{
+					cSpecIDDNE.String(), recordIDDNE.String(), "badaddr",
+					"addrnotfound", sessionIDDNE.String(), "anothernotfound",
+					recSpecIDDNE.String(), scopeSpecIDDNE.String(), scopeIDDNE.String(),
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			resp, err := s.queryClient.GetByAddr(s.ctx, tc.req)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "GetByAddr error")
+			} else {
+				s.Assert().NoError(err, "GetByAddr error")
+			}
+			if tc.expResp == nil {
+				s.Assert().Nil(resp, "GetByAddr response")
+			} else {
+				s.Assert().Equal(tc.expResp.Scopes, resp.Scopes, "GetByAddr response Scopes")
+				s.Assert().Equal(tc.expResp.Sessions, resp.Sessions, "GetByAddr response Sessions")
+				s.Assert().Equal(tc.expResp.Records, resp.Records, "GetByAddr response Records")
+				s.Assert().Equal(tc.expResp.ScopeSpecs, resp.ScopeSpecs, "GetByAddr response ScopeSpecs")
+				s.Assert().Equal(tc.expResp.ContractSpecs, resp.ContractSpecs, "GetByAddr response ContractSpecs")
+				s.Assert().Equal(tc.expResp.RecordSpecs, resp.RecordSpecs, "GetByAddr response RecordSpecs")
+				s.Assert().Equal(tc.expResp.NotFound, resp.NotFound, "GetByAddr response NotFound")
+			}
+		})
+	}
+}
+
 // TODO: OSLocatorParams tests
 // TODO: OSLocator tests
 // TODO: OSLocatorsByURI tests

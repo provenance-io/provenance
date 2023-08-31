@@ -30,7 +30,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Buf setup action
-        uses: bufbuild/buf-setup-action@v1.18.0
+        uses: bufbuild/buf-setup-action@v1.26.1
       - name: Buf push 'third_party/proto'
         uses: bufbuild/buf-push-action@v1
         with:
@@ -40,8 +40,9 @@ jobs:
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v5
         with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          # Use a key associated with the provenanceio-bot github account.
+          gpg_private_key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.BOT_GPG_PRIVATE_KEY_PW }}
           git_user_signingkey: true
           git_commit_gpgsign: true
       - name: Update buf.lock
@@ -53,13 +54,15 @@ jobs:
           git commit -S -m "Update buf.lock to latest commit hash"
       - name: Create Pull Request
         id: cpr
-        uses: peter-evans/create-pull-request@v5.0.1
+        uses: peter-evans/create-pull-request@v5.0.2
         with:
           base: main
-          branch: create-pull-request/patch-buf-lock
+          branch: provenanceio-bot/patch-buf-lock
           delete-branch: true
           # GitHub Personal Access Token (from the same account where the GPG key is stored)
-          token: ${{ secrets.CPR_PAT }}
+          # When this expires, you'll need to log into the provenanceio-bot github account,
+          # regenerate a new one, and update the secret to have the new value.
+          token: ${{ secrets.BOT_CPR_PAT }}
           committer: ${{ steps.import_gpg.outputs.name }} <${{ steps.import_gpg.outputs.email }}>
           author: ${{ steps.import_gpg.outputs.name }} <${{ steps.import_gpg.outputs.email }}>
           signoff: true
