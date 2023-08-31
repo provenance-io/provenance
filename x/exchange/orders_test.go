@@ -49,7 +49,7 @@ func TestOrderTypesAndBytes(t *testing.T) {
 	}
 
 	ot := func(name string) string {
-		return "OrderType" + name
+		return "GetOrderType" + name
 	}
 	otb := func(name string) string {
 		return "OrderTypeByte" + name
@@ -214,12 +214,12 @@ func TestOrder_OrderType(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: "OrderType() missing case for <nil>",
+			expPanic: "GetOrderType() missing case for <nil>",
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: "OrderType() missing case for *exchange.unknownOrderType",
+			expPanic: "GetOrderType() missing case for *exchange.unknownOrderType",
 		},
 	}
 
@@ -227,16 +227,16 @@ func TestOrder_OrderType(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual string
 			testFunc := func() {
-				actual = tc.order.OrderType()
+				actual = tc.order.GetOrderType()
 			}
 
-			// TODO[1658]: Refactor to use testutils.RequirePanicEquals(t, testFunc, tc.expPanic, "OrderType")
+			// TODO[1658]: Refactor to use testutils.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderType")
 			if tc.expPanic != nil {
-				require.PanicsWithValue(t, tc.expPanic, testFunc, "OrderType")
+				require.PanicsWithValue(t, tc.expPanic, testFunc, "GetOrderType")
 			} else {
-				require.NotPanics(t, testFunc, "OrderType")
+				require.NotPanics(t, testFunc, "GetOrderType")
 			}
-			assert.Equal(t, tc.expected, actual, "OrderType result")
+			assert.Equal(t, tc.expected, actual, "GetOrderType result")
 		})
 	}
 }
@@ -261,12 +261,12 @@ func TestOrder_OrderTypeByte(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: "OrderTypeByte() missing case for <nil>",
+			expPanic: "GetOrderTypeByte() missing case for <nil>",
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: "OrderTypeByte() missing case for *exchange.unknownOrderType",
+			expPanic: "GetOrderTypeByte() missing case for *exchange.unknownOrderType",
 		},
 	}
 
@@ -274,16 +274,16 @@ func TestOrder_OrderTypeByte(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual byte
 			testFunc := func() {
-				actual = tc.order.OrderTypeByte()
+				actual = tc.order.GetOrderTypeByte()
 			}
 
-			// TODO[1658]: Refactor to use testutils.RequirePanicEquals(t, testFunc, tc.expPanic, "OrderTypeByte")
+			// TODO[1658]: Refactor to use testutils.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderTypeByte")
 			if tc.expPanic != nil {
-				require.PanicsWithValue(t, tc.expPanic, testFunc, "OrderTypeByte")
+				require.PanicsWithValue(t, tc.expPanic, testFunc, "GetOrderTypeByte")
 			} else {
-				require.NotPanics(t, testFunc, "OrderTypeByte")
+				require.NotPanics(t, testFunc, "GetOrderTypeByte")
 			}
-			assert.Equal(t, tc.expected, actual, "OrderTypeByte result")
+			assert.Equal(t, tc.expected, actual, "GetOrderTypeByte result")
 		})
 	}
 }

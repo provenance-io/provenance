@@ -334,7 +334,7 @@ func MakeKeyPrefixOrder(orderID uint64) []byte {
 // MakeKeyOrder makes the key to use for the given order.
 func MakeKeyOrder(order exchange.Order) []byte {
 	rv := keyPrefixOrder(order.GetOrderId(), 1)
-	rv = append(rv, order.OrderTypeByte())
+	rv = append(rv, order.GetOrderTypeByte())
 	return rv
 }
 
@@ -399,7 +399,7 @@ func MakeIndexPrefixAssetToOrderBids(assetDenom string) []byte {
 // MakeIndexKeyAssetToOrder creates the key to use for the asset to order index for the provided values.
 func MakeIndexKeyAssetToOrder(assetDenom string, order exchange.Order) []byte {
 	rv := indexPrefixAssetToOrder(assetDenom, 9)
-	rv = append(rv, order.OrderTypeByte())
+	rv = append(rv, order.GetOrderTypeByte())
 	rv = append(rv, uint64Bz(order.GetOrderId())...)
 	return rv
 }

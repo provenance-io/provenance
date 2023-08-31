@@ -40,7 +40,7 @@ func TestNewEventOrderCreated(t *testing.T) {
 		{
 			name:     "nil order",
 			order:    NewOrder(3),
-			expPanic: "OrderType() missing case for <nil>",
+			expPanic: "GetOrderType() missing case for <nil>",
 		},
 		{
 			name:  "order with ask",

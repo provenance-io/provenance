@@ -35,35 +35,35 @@ func (o *Order) WithBid(bidOrder *BidOrder) *Order {
 	return o
 }
 
-// OrderType returns a string indicating what type this order is.
+// GetOrderType returns a string indicating what type this order is.
 // See: OrderTypeAsk, OrderTypeBid
 // Panics if the order details are not set or are something unexpected.
-func (o Order) OrderType() string {
+func (o Order) GetOrderType() string {
 	switch v := o.GetOrder().(type) {
 	case *Order_AskOrder:
 		return OrderTypeAsk
 	case *Order_BidOrder:
 		return OrderTypeBid
 	default:
-		// If OrderType() is called without the order being set yet, it's a programming error, so panic.
+		// If GetOrderType() is called without the order being set yet, it's a programming error, so panic.
 		// If it's a type without a case, the case needs to be added, so panic.
-		panic(fmt.Sprintf("OrderType() missing case for %T", v))
+		panic(fmt.Sprintf("GetOrderType() missing case for %T", v))
 	}
 }
 
-// OrderTypeByte returns the type byte for this order.
+// GetOrderTypeByte returns the type byte for this order.
 // See: OrderTypeByteAsk, OrderTypeByteBid
 // Panics if the order details are not set or are something unexpected.
-func (o Order) OrderTypeByte() byte {
+func (o Order) GetOrderTypeByte() byte {
 	switch v := o.GetOrder().(type) {
 	case *Order_AskOrder:
 		return OrderTypeByteAsk
 	case *Order_BidOrder:
 		return OrderTypeByteBid
 	default:
-		// If OrderTypeByte() is called without the order being set yet, it's a programming error, so panic.
+		// If GetOrderTypeByte() is called without the order being set yet, it's a programming error, so panic.
 		// If it's a type without a case, the case needs to be added, so panic.
-		panic(fmt.Sprintf("OrderTypeByte() missing case for %T", v))
+		panic(fmt.Sprintf("GetOrderTypeByte() missing case for %T", v))
 	}
 }
 

@@ -5,7 +5,7 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 func NewEventOrderCreated(order *Order) *EventOrderCreated {
 	return &EventOrderCreated{
 		OrderId:   order.GetOrderId(),
-		OrderType: order.OrderType(),
+		OrderType: order.GetOrderType(),
 	}
 }
 
