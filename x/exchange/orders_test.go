@@ -10,6 +10,8 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 // copyCoins creates a copy of the provided coins slice with copies of each entry.
@@ -199,7 +201,7 @@ func TestOrder_OrderType(t *testing.T) {
 		name     string
 		order    *Order
 		expected string
-		expPanic interface{}
+		expPanic string
 	}{
 		{
 			name:     "AskOrder",
@@ -230,12 +232,7 @@ func TestOrder_OrderType(t *testing.T) {
 				actual = tc.order.GetOrderType()
 			}
 
-			// TODO[1658]: Refactor to use testutils.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderType")
-			if tc.expPanic != nil {
-				require.PanicsWithValue(t, tc.expPanic, testFunc, "GetOrderType")
-			} else {
-				require.NotPanics(t, testFunc, "GetOrderType")
-			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderType")
 			assert.Equal(t, tc.expected, actual, "GetOrderType result")
 		})
 	}
@@ -246,7 +243,7 @@ func TestOrder_OrderTypeByte(t *testing.T) {
 		name     string
 		order    *Order
 		expected byte
-		expPanic interface{}
+		expPanic string
 	}{
 		{
 			name:     "AskOrder",
@@ -277,12 +274,7 @@ func TestOrder_OrderTypeByte(t *testing.T) {
 				actual = tc.order.GetOrderTypeByte()
 			}
 
-			// TODO[1658]: Refactor to use testutils.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderTypeByte")
-			if tc.expPanic != nil {
-				require.PanicsWithValue(t, tc.expPanic, testFunc, "GetOrderTypeByte")
-			} else {
-				require.NotPanics(t, testFunc, "GetOrderTypeByte")
-			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderTypeByte")
 			assert.Equal(t, tc.expected, actual, "GetOrderTypeByte result")
 		})
 	}
@@ -293,7 +285,7 @@ func TestOrder_GetMarketID(t *testing.T) {
 		name     string
 		order    *Order
 		expected uint32
-		expPanic interface{}
+		expPanic string
 	}{
 		{
 			name:     "AskOrder",
@@ -324,12 +316,7 @@ func TestOrder_GetMarketID(t *testing.T) {
 				actual = tc.order.GetMarketID()
 			}
 
-			// TODO[1658]: Refactor to use testutils.RequirePanicEquals(t, testFunc, tc.expPanic, "GetMarketID")
-			if tc.expPanic != nil {
-				require.PanicsWithValue(t, tc.expPanic, testFunc, "GetMarketID")
-			} else {
-				require.NotPanics(t, testFunc, "GetMarketID")
-			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetMarketID")
 			assert.Equal(t, tc.expected, actual, "GetMarketID result")
 		})
 	}
@@ -370,16 +357,7 @@ func TestOrder_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.Order.Validate()
 
-			// TODO[1658]: Replace this with testutil.AssertErrorContents(t, err, tc.exp, "Validate() error")
-			if len(tc.exp) > 0 {
-				if assert.Error(t, err, "Validate() error") {
-					for _, exp := range tc.exp {
-						assert.ErrorContains(t, err, exp, "Validate() error\nExpecting: %q", exp)
-					}
-				}
-			} else {
-				assert.NoError(t, err, "Validate() error")
-			}
+			assertions.AssertErrorContents(t, err, tc.exp, "Validate() error")
 		})
 	}
 }
@@ -618,16 +596,7 @@ func TestAskOrder_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.order.Validate()
 
-			// TODO[1658]: Replace this with testutil.AssertErrorContents(t, err, tc.exp, "Validate() error")
-			if len(tc.exp) > 0 {
-				if assert.Error(t, err, "Validate() error") {
-					for _, exp := range tc.exp {
-						assert.ErrorContains(t, err, exp, "Validate() error\nExpecting: %q", exp)
-					}
-				}
-			} else {
-				assert.NoError(t, err, "Validate() error")
-			}
+			assertions.AssertErrorContents(t, err, tc.exp, "Validate() error")
 		})
 	}
 }
@@ -867,16 +836,7 @@ func TestBidOrder_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.order.Validate()
 
-			// TODO[1658]: Replace this with testutil.AssertErrorContents(t, err, tc.exp, "Validate() error")
-			if len(tc.exp) > 0 {
-				if assert.Error(t, err, "Validate() error") {
-					for _, exp := range tc.exp {
-						assert.ErrorContains(t, err, exp, "Validate() error\nExpecting: %q", exp)
-					}
-				}
-			} else {
-				assert.NoError(t, err, "Validate() error")
-			}
+			assertions.AssertErrorContents(t, err, tc.exp, "Validate() error")
 		})
 	}
 }

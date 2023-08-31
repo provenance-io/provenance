@@ -8,6 +8,8 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 func TestNewGenesisState(t *testing.T) {
@@ -419,16 +421,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "GenesisState.Validate")
 
-			// TODO[1658]: Replace this with testutils.AssertErrorContents(t, err, tc.expErr, "GenesisState.Validate")
-			if len(tc.expErr) > 0 {
-				if assert.Error(t, err, "GenesisState.Validate") {
-					for _, exp := range tc.expErr {
-						assert.ErrorContains(t, err, exp, "GenesisState.Validate")
-					}
-				}
-			} else {
-				assert.NoError(t, err, "GenesisState.Validate")
-			}
+			assertions.AssertErrorContents(t, err, tc.expErr, "GenesisState.Validate")
 		})
 	}
 }

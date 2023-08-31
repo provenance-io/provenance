@@ -12,6 +12,8 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 func TestMarket_Validate(t *testing.T) {
@@ -171,16 +173,7 @@ func TestMarket_Validate(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "Market.Validate")
 
-			// TODO[1658]: Refactor to testutils.AssertErrorContents(t, err, tc.expErr, "Market.Validate")
-			if len(tc.expErr) > 0 {
-				if assert.Error(t, err, "Market.Validate") {
-					for _, exp := range tc.expErr {
-						assert.ErrorContains(t, err, exp, "Market.Validate")
-					}
-				}
-			} else {
-				assert.NoError(t, err, "Market.Validate")
-			}
+			assertions.AssertErrorContents(t, err, tc.expErr, "Market.Validate")
 		})
 	}
 }
@@ -292,12 +285,7 @@ func TestValidateFeeOptions(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "ValidateFeeOptions")
 
-			// TODO[1658]: Refactor this to testutils.AssertErrorValue(t, err, tc.expErr, "ValidateFeeOptions")
-			if len(tc.expErr) > 0 {
-				assert.EqualError(t, err, tc.expErr, "ValidateFeeOptions")
-			} else {
-				assert.NoError(t, err, "ValidateFeeOptions")
-			}
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateFeeOptions")
 		})
 	}
 }
@@ -397,12 +385,7 @@ func TestMarketDetails_Validate(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "Validate")
 
-			// TODO[1658]: Refactor to testutils.AssertErrorValue(t, err, tc.expErr, "Validate")
-			if len(tc.expErr) > 0 {
-				assert.EqualError(t, err, tc.expErr, "Validate")
-			} else {
-				assert.NoError(t, err, "Validate")
-			}
+			assertions.AssertErrorValue(t, err, tc.expErr, "Validate")
 		})
 	}
 }
@@ -558,12 +541,7 @@ func TestValidateFeeRatios(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "ValidateFeeRatios")
 
-			// TODO[1658]: Refactor to testutils.AssertErrorValue(t, err, tc.exp, "ValidateFeeRatios")
-			if len(tc.exp) > 0 {
-				assert.EqualError(t, err, tc.exp, "ValidateFeeRatios")
-			} else {
-				assert.NoError(t, err, "ValidateFeeRatios")
-			}
+			assertions.AssertErrorValue(t, err, tc.exp, "ValidateFeeRatios")
 		})
 	}
 }
@@ -646,12 +624,7 @@ func TestValidateSellerFeeRatios(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "ValidateSellerFeeRatios")
 
-			// TODO[1658]: Refactor to testutils.AssertErrorValue(t, err, tc.exp, "ValidateSellerFeeRatios")
-			if len(tc.exp) > 0 {
-				assert.EqualError(t, err, tc.exp, "ValidateSellerFeeRatios")
-			} else {
-				assert.NoError(t, err, "ValidateSellerFeeRatios")
-			}
+			assertions.AssertErrorValue(t, err, tc.exp, "ValidateSellerFeeRatios")
 		})
 	}
 }
@@ -750,12 +723,7 @@ func TestValidateBuyerFeeRatios(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "ValidateBuyerFeeRatios")
 
-			// TODO[1658]: Refactor to testutils.AssertErrorValue(t, err, tc.exp, "ValidateBuyerFeeRatios")
-			if len(tc.exp) > 0 {
-				assert.EqualError(t, err, tc.exp, "ValidateBuyerFeeRatios")
-			} else {
-				assert.NoError(t, err, "ValidateBuyerFeeRatios")
-			}
+			assertions.AssertErrorValue(t, err, tc.exp, "ValidateBuyerFeeRatios")
 		})
 	}
 }
@@ -913,12 +881,7 @@ func TestFeeRatio_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.r.Validate()
 
-			// TODO[1658]: Refactor to use testutils.AssertErrorValue(t, err, tc.exp, "Validate")
-			if len(tc.exp) > 0 {
-				assert.EqualError(t, err, tc.exp, "Validate")
-			} else {
-				assert.NoError(t, err, "Validate")
-			}
+			assertions.AssertErrorValue(t, err, tc.exp, "Validate")
 		})
 	}
 }
@@ -1267,12 +1230,7 @@ func TestValidateDisjointFeeRatios(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "ValidateDisjointFeeRatios")
 
-			// TODO[1658]: Replace with testutils.AsserErrorValue(t, err, tc.expErr, "ValidateDisjointFeeRatios")
-			if len(tc.expErr) > 0 {
-				assert.EqualError(t, err, tc.expErr, "ValidateDisjointFeeRatios")
-			} else {
-				assert.NoError(t, err, "ValidateDisjointFeeRatios")
-			}
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateDisjointFeeRatios")
 		})
 	}
 }
@@ -1488,12 +1446,7 @@ func TestValidateAddRemoveFeeOptions(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "ValidateAddRemoveFeeOptions")
 
-			// TODO[1658]: Refactor to testutils.AssertErrorValue(t, err, tc.expErr, "ValidateAddRemoveFeeOptions")
-			if len(tc.expErr) > 0 {
-				assert.EqualError(t, err, tc.expErr, "ValidateAddRemoveFeeOptions")
-			} else {
-				assert.NoError(t, err, "ValidateAddRemoveFeeOptions")
-			}
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateAddRemoveFeeOptions")
 		})
 	}
 }
@@ -1617,12 +1570,7 @@ func TestValidateAccessGrants(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := ValidateAccessGrants(tc.grants)
 
-			// TODO[1658]: Refactor to use testutils.AssertErrorValue(t, err, tc.exp, "ValidateAccessGrants")
-			if len(tc.exp) > 0 {
-				assert.EqualError(t, err, tc.exp, "ValidateAccessGrants")
-			} else {
-				assert.NoError(t, err, "ValidateAccessGrants")
-			}
+			assertions.AssertErrorValue(t, err, tc.exp, "ValidateAccessGrants")
 		})
 	}
 }
@@ -1684,12 +1632,7 @@ func TestAccessGrant_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.a.Validate()
 
-			// TODO[1658]: Refactor this to testutils.AssertErrorValue(t, err, tc.exp, "Validate")
-			if len(tc.exp) > 0 {
-				assert.EqualError(t, err, tc.exp, "Validate")
-			} else {
-				assert.NoError(t, err, "Validate")
-			}
+			assertions.AssertErrorValue(t, err, tc.exp, "Validate")
 		})
 	}
 }
@@ -1812,12 +1755,7 @@ func TestPermission_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.p.Validate()
 
-			// TODO: Refactor this to testutils.AssertErrorValue(t, err, tc.exp, "Validate()")
-			if len(tc.exp) > 0 {
-				assert.EqualError(t, err, tc.exp, "Validate()")
-			} else {
-				assert.NoError(t, err, "Validate()")
-			}
+			assertions.AssertErrorValue(t, err, tc.exp, "Validate()")
 		})
 	}
 
@@ -2056,12 +1994,7 @@ func TestParsePermissions(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			perms, err := ParsePermissions(tc.permissions...)
 
-			// TODO: Refactor to use testutils.AssertErrorValue(t, err, tc.expErr, "ParsePermissions(%q) error", tc.permissions)
-			if len(tc.expErr) > 0 {
-				assert.EqualError(t, err, tc.expErr, "ParsePermissions(%q) error", tc.permissions)
-			} else {
-				assert.NoError(t, err, "ParsePermissions(%q) error", tc.permissions)
-			}
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParsePermissions(%q) error", tc.permissions)
 			assert.Equal(t, tc.expected, perms, "ParsePermissions(%q) result", tc.permissions)
 		})
 	}
@@ -2222,12 +2155,7 @@ func TestValidateReqAttrs(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := ValidateReqAttrs(tc.attrLists...)
-			// TODO[1658]: Replace this with testutils.AssertErrorValue(t, err, tc.exp, "ValidateReqAttrs")
-			if len(tc.exp) > 0 {
-				assert.EqualError(t, err, tc.exp, "ValidateReqAttrs")
-			} else {
-				assert.NoError(t, err, "ValidateReqAttrs")
-			}
+			assertions.AssertErrorValue(t, err, tc.exp, "ValidateReqAttrs")
 		})
 	}
 }

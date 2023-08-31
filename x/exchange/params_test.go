@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 func TestMaxSplit(t *testing.T) {
@@ -119,16 +121,7 @@ func TestParams_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.params.Validate()
 
-			// TODO[1658]: Replace this with testutils.AssertErrorContents(t, err, tc.expErr, "Validate")
-			if len(tc.expErr) > 0 {
-				if assert.Error(t, err, "Validate") {
-					for _, exp := range tc.expErr {
-						assert.ErrorContains(t, err, exp, "Validate\nExpecting: %q", exp)
-					}
-				}
-			} else {
-				assert.NoError(t, err, "Validate")
-			}
+			assertions.AssertErrorContents(t, err, tc.expErr, "Validate")
 		})
 	}
 }
@@ -206,12 +199,7 @@ func TestDenomSplit_Validate(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.denomSplit.Validate()
-			// TODO[1658]: Replace this with assertErrorValue(t, err, tc.expErr, "Validate")
-			if len(tc.expErr) > 0 {
-				assert.EqualError(t, err, tc.expErr, "Validate")
-			} else {
-				assert.NoError(t, err, "Validate")
-			}
+			assertions.AssertErrorValue(t, err, tc.expErr, "Validate")
 		})
 	}
 }

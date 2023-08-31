@@ -5,10 +5,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 )
@@ -41,17 +42,18 @@ type keyTestCase struct {
 // Also asserts that the result has the provided prefixes.
 func checkKey(t *testing.T, tc keyTestCase, msg string, args ...interface{}) {
 	t.Helper()
+	var expPanic []string
+	if len(tc.expPanic) > 0 {
+		expPanic = []string{tc.expPanic}
+	}
+
 	var actual []byte
 	testFunc := func() {
 		actual = tc.maker()
 	}
-	// TODO[1658]: Replace this with a testutils panic checker.
-	if len(tc.expPanic) > 0 {
-		require.PanicsWithErrorf(t, tc.expPanic, testFunc, msg, args...)
-	} else {
-		require.NotPanicsf(t, testFunc, msg, args...)
-	}
+	assertions.RequirePanicContentsf(t, testFunc, expPanic, msg, args...)
 	assert.Equalf(t, tc.expected, actual, msg+" result", args...)
+
 	if len(actual) > 0 {
 		assert.Equalf(t, len(actual), cap(actual), msg+" result length (expected) vs capacity (actual)", args...)
 		for _, expPre := range tc.expPrefixes {

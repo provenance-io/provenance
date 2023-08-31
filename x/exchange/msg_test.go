@@ -10,6 +10,8 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 func TestAllMsgsGetSigners(t *testing.T) {
@@ -38,6 +40,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg {
 			return &MsgGovUpdateParamsRequest{Authority: signer}
 		},
+		// TODO[1658]: Add the rest of the messages once they've actually been defined.
 	}
 
 	signerCases := []struct {
@@ -89,16 +92,11 @@ func TestAllMsgsGetSigners(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var signers []sdk.AccAddress
-			testGetSigners := func() {
+			testFunc := func() {
 				signers = tc.msg.GetSigners()
 			}
 
-			// TODO: Refactor to one of the new testutils panic assertions.
-			if len(tc.expPanic) > 0 {
-				require.PanicsWithError(t, tc.expPanic, testGetSigners, "GetSigners")
-			} else {
-				require.NotPanics(t, testGetSigners, "GetSigners")
-			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetSigners")
 			assert.Equal(t, tc.expSigners, signers, "GetSigners")
 		})
 	}
@@ -121,16 +119,7 @@ func testValidateBasic(t *testing.T, msg sdk.Msg, expErr []string) {
 	}
 	require.NotPanics(t, testFunc, "%T.ValidateBasic()", msg)
 
-	// TODO[1658]: Refactor to testutils.AssertErrorContents(t, err, tc.expErr, "%T.ValidateBasic() error", msg)
-	if len(expErr) > 0 {
-		if assert.Error(t, err, "%T.ValidateBasic() error", msg) {
-			for _, exp := range expErr {
-				assert.ErrorContains(t, err, exp, "%T.ValidateBasic() error", msg)
-			}
-		}
-	} else {
-		assert.NoError(t, err, "%T.ValidateBasic() error", msg)
-	}
+	assertions.AssertErrorContents(t, err, expErr, "%T.ValidateBasic() error", msg)
 }
 
 // TODO[1658]: func TestMsgCreateAskRequest_ValidateBasic(t *testing.T)
