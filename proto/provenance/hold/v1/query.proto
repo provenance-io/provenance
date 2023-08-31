@@ -1,0 +1,62 @@
+syntax = "proto3";
+package provenance.hold.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/hold";
+
+option java_package        = "io.provenance.hold.v1";
+option java_multiple_files = true;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "provenance/hold/v1/hold.proto";
+
+// Query defines the gRPC querier service for attribute module.
+service Query {
+  // GetHolds looks up the funds that are on hold for an address.
+  rpc GetHolds(GetHoldsRequest) returns (GetHoldsResponse) {
+    option (google.api.http).get = "/provenance/hold/v1/funds/{address}";
+  };
+
+  // GetAllHolds returns all addresses with funds on hold, and the amount held.
+  rpc GetAllHolds(GetAllHoldsRequest) returns (GetAllHoldsResponse) {
+    option (google.api.http).get = "/provenance/hold/v1/funds";
+  };
+}
+
+// GetHoldsRequest is the request type for the Query/GetHolds query.
+message GetHoldsRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // address is the account address to get on-hold balances for.
+  string address = 1;
+}
+
+// GetHoldsResponse is the response type for the Query/GetHolds query.
+message GetHoldsResponse {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // amount is the total on hold for the requested address.
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// GetAllHoldsRequest is the request type for the Query/GetAllHolds query.
+message GetAllHoldsRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// GetAllHoldsResponse is the response type for the Query/GetAllHolds query.
+message GetAllHoldsResponse {
+  // holds is a list of addresses with funds on hold and the amounts being held.
+  repeated AccountHold holds = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
