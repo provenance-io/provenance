@@ -7,27 +7,11 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
-// iterateParamsSplits iterates over all the params splits in the store (including the default entry).
-// cb should return whether to stop early (true = stop now, false = keep going).
-func iterateParamsSplits(store sdk.KVStore, cb func(denom string, split uint16) bool) {
-	// Using an open iterator on a prefixed store here so that iter.Key() doesn't contain the prefix.
-	pStore := prefix.NewStore(store, MakeKeyPrefixParamsSplit())
-	iter := pStore.Iterator(nil, nil)
-	defer iter.Close()
-
-	for ; iter.Valid(); iter.Next() {
-		denom := string(iter.Key())
-		split := uint16FromBz(iter.Value())
-		if cb(denom, split) {
-			break
-		}
-	}
-}
-
 // deleteAllParamsSplits deletes all the params splits in the store.
 func deleteAllParamsSplits(store sdk.KVStore) {
 	var keys [][]byte
 
+	// Using a prefix iterator so that iter.Key() is the whole key (including the prefix).
 	iter := sdk.KVStorePrefixIterator(store, MakeKeyPrefixParamsSplit())
 	defer func() {
 		if iter != nil {
@@ -79,8 +63,16 @@ func (k Keeper) SetParams(ctx sdk.Context, params *exchange.Params) {
 // GetParams gets the exchange module params.
 // If there aren't any params in state, nil is returned.
 func (k Keeper) GetParams(ctx sdk.Context) *exchange.Params {
+	// Using an open iterator on a prefixed store here so that iter.Key() doesn't contain the prefix.
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), MakeKeyPrefixParamsSplit())
+	iter := store.Iterator(nil, nil)
+	defer iter.Close()
+
 	var rv *exchange.Params
-	iterateParamsSplits(ctx.KVStore(k.storeKey), func(denom string, split uint16) bool {
+	for ; iter.Valid(); iter.Next() {
+		denom := string(iter.Key())
+		split := uint16FromBz(iter.Value())
+
 		if rv == nil {
 			rv = &exchange.Params{}
 		}
@@ -89,8 +81,8 @@ func (k Keeper) GetParams(ctx sdk.Context) *exchange.Params {
 		} else {
 			rv.DenomSplits = append(rv.DenomSplits, exchange.DenomSplit{Denom: denom, Split: uint32(split)})
 		}
-		return false
-	})
+	}
+
 	return rv
 }
 
