@@ -11,10 +11,10 @@ import (
 // These must all be unique. If you add entries, be sure to update TestOrderTypesAndBytes too.
 const (
 	OrderTypeAsk     = "ask"
-	OrderTypeByteAsk = 0x00
+	OrderTypeByteAsk = byte(0x00)
 
 	OrderTypeBid     = "bid"
-	OrderTypeByteBid = 0x01
+	OrderTypeByteBid = byte(0x01)
 )
 
 // NewOrder creates a new empty Order with the provided order id.
