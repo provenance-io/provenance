@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -1308,16 +1309,19 @@ func TestMakeKeyPrefixMarketPermissionsForAddress(t *testing.T) {
 		expPanic string
 	}{
 		{
-			name:     "market id 0 nil addr",
-			marketID: 0,
+			name:     "nil addr",
 			addr:     nil,
 			expPanic: "empty address not allowed",
 		},
 		{
-			name:     "market id 0 empty addr",
-			marketID: 0,
+			name:     "empty addr",
 			addr:     sdk.AccAddress{},
 			expPanic: "empty address not allowed",
+		},
+		{
+			name:     "256 byte addr",
+			addr:     bytes.Repeat([]byte{'p'}, 256),
+			expPanic: "address length should be max 255 bytes, got 256: unknown address",
 		},
 		{
 			name:     "market id 0 5 byte addr",
@@ -1401,16 +1405,19 @@ func TestMakeKeyMarketPermissions(t *testing.T) {
 		expPanic string
 	}{
 		{
-			name:     "market id 0 nil addr",
-			marketID: 0,
+			name:     "nil addr",
 			addr:     nil,
 			expPanic: "empty address not allowed",
 		},
 		{
-			name:     "market id 0 empty addr",
-			marketID: 0,
+			name:     "empty addr",
 			addr:     sdk.AccAddress{},
 			expPanic: "empty address not allowed",
+		},
+		{
+			name:     "256 byte addr",
+			addr:     bytes.Repeat([]byte{'p'}, 256),
+			expPanic: "address length should be max 255 bytes, got 256: unknown address",
 		},
 		{
 			name:     "market id 0 5 byte addr settle",
@@ -1757,22 +1764,824 @@ func TestMakeKeyMarketReqAttrBid(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestMakeKeyPrefixOrder(t *testing.T)
+func TestMakeKeyPrefixOrder(t *testing.T) {
+	tests := []struct {
+		name     string
+		orderID  uint64
+		expected []byte
+	}{
+		{
+			name:     "order id 0",
+			orderID:  0,
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 0, 0},
+		},
+		{
+			name:     "order id 1",
+			orderID:  1,
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 0, 1},
+		},
+		{
+			name:     "order id 256",
+			orderID:  256,
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 1, 0},
+		},
+		{
+			name:     "order id 65,536",
+			orderID:  65_536,
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 1, 0, 0},
+		},
+		{
+			name:     "order id 16,777,216",
+			orderID:  16_777_216,
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 1, 0, 0, 0},
+		},
+		{
+			name:     "order id 4,294,967,296",
+			orderID:  4_294_967_296,
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 1, 0, 0, 0, 0},
+		},
+		{
+			name:     "order id 1,099,511,627,776",
+			orderID:  1_099_511_627_776,
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 1, 0, 0, 0, 0, 0},
+		},
+		{
+			name:     "order id 281,474,976,710,656",
+			orderID:  281_474_976_710_656,
+			expected: []byte{keeper.KeyTypeOrder, 0, 1, 0, 0, 0, 0, 0, 0},
+		},
+		{
+			name:     "order id 72,057,594,037,927,936",
+			orderID:  72_057_594_037_927_936,
+			expected: []byte{keeper.KeyTypeOrder, 1, 0, 0, 0, 0, 0, 0, 0},
+		},
+		{
+			name:     "order id 72,340,172,838,076,673",
+			orderID:  72_340_172_838_076_673,
+			expected: []byte{keeper.KeyTypeOrder, 1, 1, 1, 1, 1, 1, 1, 1},
+		},
+		{
+			name:     "order id 1,229,782,938,247,303,441",
+			orderID:  1_229_782_938_247_303_441,
+			expected: []byte{keeper.KeyTypeOrder, 17, 17, 17, 17, 17, 17, 17, 17},
+		},
+		{
+			name:     "order id 18,446,744,073,709,551,615",
+			orderID:  18_446_744_073_709_551_615,
+			expected: []byte{keeper.KeyTypeOrder, 255, 255, 255, 255, 255, 255, 255, 255},
+		},
+	}
 
-// TODO[1658]: func TestMakeKeyOrder(t *testing.T)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeKeyPrefixOrder(tc.orderID)
+				},
+				expected: tc.expected,
+			}
+			checkKey(t, ktc, "MakeKeyPrefixOrder(%d)", tc.orderID)
+		})
+	}
+}
 
-// TODO[1658]: func TestMakeIndexPrefixMarketToOrder(t *testing.T)
+func TestMakeKeyOrder(t *testing.T) {
+	askOrder := func(orderID uint64) exchange.Order {
+		return *exchange.NewOrder(orderID).WithAsk(&exchange.AskOrder{})
+	}
+	bidOrder := func(orderID uint64) exchange.Order {
+		return *exchange.NewOrder(orderID).WithBid(&exchange.BidOrder{})
+	}
 
-// TODO[1658]: func TestMakeIndexKeyMarketToOrder(t *testing.T)
+	tests := []struct {
+		name     string
+		order    exchange.Order
+		expected []byte
+		expPanic string
+	}{
+		{
+			name:     "order id 0 ask",
+			order:    askOrder(0),
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 0, 0, exchange.OrderTypeByteAsk},
+		},
+		{
+			name:     "order id 0 bid",
+			order:    bidOrder(0),
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 0, 0, exchange.OrderTypeByteBid},
+		},
+		{
+			name:     "order id 1 ask",
+			order:    askOrder(1),
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 0, 1, exchange.OrderTypeByteAsk},
+		},
+		{
+			name:     "order id 1 bid",
+			order:    bidOrder(1),
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 0, 1, exchange.OrderTypeByteBid},
+		},
+		{
+			name:     "order id 256 ask",
+			order:    askOrder(256),
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 1, 0, exchange.OrderTypeByteAsk},
+		},
+		{
+			name:     "order id 256 bid",
+			order:    bidOrder(256),
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 1, 0, exchange.OrderTypeByteBid},
+		},
+		{
+			name:     "order id 65,536 ask",
+			order:    askOrder(65_536),
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 1, 0, 0, exchange.OrderTypeByteAsk},
+		},
+		{
+			name:     "order id 65,536 bid",
+			order:    bidOrder(65_536),
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 1, 0, 0, exchange.OrderTypeByteBid},
+		},
+		{
+			name:     "order id 16,777,216 ask",
+			order:    askOrder(16_777_216),
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 1, 0, 0, 0, exchange.OrderTypeByteAsk},
+		},
+		{
+			name:     "order id 16,777,216 bid",
+			order:    bidOrder(16_777_216),
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 1, 0, 0, 0, exchange.OrderTypeByteBid},
+		},
+		{
+			name:     "order id 4,294,967,296 ask",
+			order:    askOrder(4_294_967_296),
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 1, 0, 0, 0, 0, exchange.OrderTypeByteAsk},
+		},
+		{
+			name:     "order id 4,294,967,296 bid",
+			order:    bidOrder(4_294_967_296),
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 1, 0, 0, 0, 0, exchange.OrderTypeByteBid},
+		},
+		{
+			name:     "order id 1,099,511,627,776 ask",
+			order:    askOrder(1_099_511_627_776),
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 1, 0, 0, 0, 0, 0, exchange.OrderTypeByteAsk},
+		},
+		{
+			name:     "order id 1,099,511,627,776 bid",
+			order:    bidOrder(1_099_511_627_776),
+			expected: []byte{keeper.KeyTypeOrder, 0, 0, 1, 0, 0, 0, 0, 0, exchange.OrderTypeByteBid},
+		},
+		{
+			name:     "order id 281,474,976,710,656 ask",
+			order:    askOrder(281_474_976_710_656),
+			expected: []byte{keeper.KeyTypeOrder, 0, 1, 0, 0, 0, 0, 0, 0, exchange.OrderTypeByteAsk},
+		},
+		{
+			name:     "order id 281,474,976,710,656 bid",
+			order:    bidOrder(281_474_976_710_656),
+			expected: []byte{keeper.KeyTypeOrder, 0, 1, 0, 0, 0, 0, 0, 0, exchange.OrderTypeByteBid},
+		},
+		{
+			name:     "order id 72,057,594,037,927,936 ask",
+			order:    askOrder(72_057_594_037_927_936),
+			expected: []byte{keeper.KeyTypeOrder, 1, 0, 0, 0, 0, 0, 0, 0, exchange.OrderTypeByteAsk},
+		},
+		{
+			name:     "order id 72,057,594,037,927,936 bid",
+			order:    bidOrder(72_057_594_037_927_936),
+			expected: []byte{keeper.KeyTypeOrder, 1, 0, 0, 0, 0, 0, 0, 0, exchange.OrderTypeByteBid},
+		},
+		{
+			name:     "order id 72,340,172,838,076,673 ask",
+			order:    askOrder(72_340_172_838_076_673),
+			expected: []byte{keeper.KeyTypeOrder, 1, 1, 1, 1, 1, 1, 1, 1, exchange.OrderTypeByteAsk},
+		},
+		{
+			name:     "order id 72,340,172,838,076,673 bid",
+			order:    bidOrder(72_340_172_838_076_673),
+			expected: []byte{keeper.KeyTypeOrder, 1, 1, 1, 1, 1, 1, 1, 1, exchange.OrderTypeByteBid},
+		},
+		{
+			name:     "order id 1,229,782,938,247,303,441 ask",
+			order:    askOrder(1_229_782_938_247_303_441),
+			expected: []byte{keeper.KeyTypeOrder, 17, 17, 17, 17, 17, 17, 17, 17, exchange.OrderTypeByteAsk},
+		},
+		{
+			name:     "order id 1,229,782,938,247,303,441 bid",
+			order:    bidOrder(1_229_782_938_247_303_441),
+			expected: []byte{keeper.KeyTypeOrder, 17, 17, 17, 17, 17, 17, 17, 17, exchange.OrderTypeByteBid},
+		},
+		{
+			name:     "order id 18,446,744,073,709,551,615 ask",
+			order:    askOrder(18_446_744_073_709_551_615),
+			expected: []byte{keeper.KeyTypeOrder, 255, 255, 255, 255, 255, 255, 255, 255, exchange.OrderTypeByteAsk},
+		},
+		{
+			name:     "order id 18,446,744,073,709,551,615 bid",
+			order:    bidOrder(18_446_744_073_709_551_615),
+			expected: []byte{keeper.KeyTypeOrder, 255, 255, 255, 255, 255, 255, 255, 255, exchange.OrderTypeByteBid},
+		},
+		{
+			name:     "nil inside order",
+			order:    exchange.Order{OrderId: 5, Order: nil},
+			expPanic: "GetOrderTypeByte() missing case for <nil>",
+		},
+	}
 
-// TODO[1658]: func TestMakeIndexPrefixAddressToOrder(t *testing.T)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeKeyOrder(tc.order)
+				},
+				expected: tc.expected,
+				expPanic: tc.expPanic,
+			}
+			if len(tc.expPanic) == 0 {
+				ktc.expPrefixes = []expectedPrefix{
+					{name: "MakeKeyPrefixOrder", value: keeper.MakeKeyPrefixOrder(tc.order.OrderId)},
+				}
+			}
+			checkKey(t, ktc, "MakeKeyOrder %d %T", tc.order.OrderId, tc.order.Order)
+		})
+	}
+}
 
-// TODO[1658]: func TestMakeIndexKeyAddressToOrder(t *testing.T)
+func TestMakeIndexPrefixMarketToOrder(t *testing.T) {
+	tests := []struct {
+		name     string
+		marketID uint32
+		expected []byte
+	}{
+		{
+			name:     "market id 0",
+			marketID: 0,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 0},
+		},
+		{
+			name:     "market id 1",
+			marketID: 1,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 1},
+		},
+		{
+			name:     "market id 255",
+			marketID: 255,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 255},
+		},
+		{
+			name:     "market id 256",
+			marketID: 256,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 1, 0},
+		},
+		{
+			name:     "market id 65_536",
+			marketID: 65_536,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 1, 0, 0},
+		},
+		{
+			name:     "market id 16,777,216",
+			marketID: 16_777_216,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 1, 0, 0, 0},
+		},
+		{
+			name:     "market id 16,843,009",
+			marketID: 16_843_009,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 1, 1, 1, 1},
+		},
+		{
+			name:     "market id 4,294,967,295",
+			marketID: 4_294_967_295,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 255, 255, 255, 255},
+		},
+	}
 
-// TODO[1658]: func TestMakeIndexPrefixAssetToOrder(t *testing.T)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeIndexPrefixMarketToOrder(tc.marketID)
+				},
+				expected: tc.expected,
+			}
+			checkKey(t, ktc, "MakeIndexPrefixMarketToOrder(%d)", tc.marketID)
+		})
+	}
+}
 
-// TODO[1658]: func TestMakeIndexPrefixAssetToOrderAsks(t *testing.T)
+func TestMakeIndexKeyMarketToOrder(t *testing.T) {
+	tests := []struct {
+		name     string
+		marketID uint32
+		orderID  uint64
+		expected []byte
+	}{
+		{
+			name:     "market 0 order 0",
+			marketID: 0,
+			orderID:  0,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		},
+		{
+			name:     "market 0 order 1",
+			marketID: 0,
+			orderID:  1,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		},
+		{
+			name:     "market 0 order 72,340,172,838,076,673",
+			marketID: 0,
+			orderID:  72_340_172_838_076_673,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+		},
+		{
+			name:     "market 2 order 0",
+			marketID: 2,
+			orderID:  0,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0},
+		},
+		{
+			name:     "market 2 order 1",
+			marketID: 2,
+			orderID:  1,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1},
+		},
+		{
+			name:     "market 2 order 72,340,172,838,076,673",
+			marketID: 2,
+			orderID:  72_340_172_838_076_673,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1},
+		},
+		{
+			name:     "market 33,686,018 order 0",
+			marketID: 33_686_018,
+			orderID:  0,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0},
+		},
+		{
+			name:     "market 33,686,018 order 1",
+			marketID: 33_686_018,
+			orderID:  1,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1},
+		},
+		{
+			name:     "market 33,686,018 order 72,340,172,838,076,673",
+			marketID: 33_686_018,
+			orderID:  72_340_172_838_076_673,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1},
+		},
 
-// TODO[1658]: func TestMakeIndexPrefixAssetToOrderBids(t *testing.T)
+		{
+			name:     "market max order max",
+			marketID: 4_294_967_295,
+			orderID:  18_446_744_073_709_551_615,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},
+		},
+	}
 
-// TODO[1658]: func TestMakeIndexKeyAssetToOrder(t *testing.T)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeIndexKeyMarketToOrder(tc.marketID, tc.orderID)
+				},
+				expected: tc.expected,
+				expPrefixes: []expectedPrefix{
+					{name: "", value: keeper.MakeIndexPrefixMarketToOrder(tc.marketID)},
+				},
+			}
+			checkKey(t, ktc, "MakeIndexKeyMarketToOrder(%d, %d)", tc.marketID, tc.orderID)
+		})
+	}
+}
+
+func TestMakeIndexPrefixAddressToOrder(t *testing.T) {
+	tests := []struct {
+		name     string
+		addr     sdk.AccAddress
+		expected []byte
+		expPanic string
+	}{
+		{
+			name:     "nil addr",
+			addr:     nil,
+			expPanic: "empty address not allowed",
+		},
+		{
+			name:     "empty addr",
+			addr:     sdk.AccAddress{},
+			expPanic: "empty address not allowed",
+		},
+		{
+			name:     "256 byte addr",
+			addr:     sdk.AccAddress(bytes.Repeat([]byte{'P'}, 256)),
+			expPanic: "address length should be max 255 bytes, got 256: unknown address",
+		},
+		{
+			name:     "5 byte addr",
+			addr:     sdk.AccAddress("abcde"),
+			expected: append([]byte{keeper.KeyTypeAddressToOrderIndex, 5}, "abcde"...),
+		},
+		{
+			name:     "20 byte addr",
+			addr:     sdk.AccAddress("abcdefghijklmnopqrst"),
+			expected: append([]byte{keeper.KeyTypeAddressToOrderIndex, 20}, "abcdefghijklmnopqrst"...),
+		},
+		{
+			name:     "32 byte addr",
+			addr:     sdk.AccAddress("abcdefghijklmnopqrstuvwxyzABCDEF"),
+			expected: append([]byte{keeper.KeyTypeAddressToOrderIndex, 32}, "abcdefghijklmnopqrstuvwxyzABCDEF"...),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeIndexPrefixAddressToOrder(tc.addr)
+				},
+				expected: tc.expected,
+				expPanic: tc.expPanic,
+			}
+			checkKey(t, ktc, "MakeIndexPrefixAddressToOrder(%s)", string(tc.addr))
+		})
+	}
+}
+
+func TestMakeIndexKeyAddressToOrder(t *testing.T) {
+	tests := []struct {
+		name     string
+		addr     sdk.AccAddress
+		orderID  uint64
+		expected []byte
+		expPanic string
+	}{
+		{
+			name:     "nil addr",
+			addr:     nil,
+			expPanic: "empty address not allowed",
+		},
+		{
+			name:     "empty addr",
+			addr:     sdk.AccAddress{},
+			expPanic: "empty address not allowed",
+		},
+		{
+			name:     "256 byte addr",
+			addr:     sdk.AccAddress(bytes.Repeat([]byte{'P'}, 256)),
+			expPanic: "address length should be max 255 bytes, got 256: unknown address",
+		},
+		{
+			name:    "5 byte addr order 1",
+			addr:    sdk.AccAddress("abcde"),
+			orderID: 1,
+			expected: concatBz(
+				[]byte{keeper.KeyTypeAddressToOrderIndex, 5},
+				[]byte("abcde"),
+				[]byte{0, 0, 0, 0, 0, 0, 0, 1},
+			),
+		},
+		{
+			name:    "20 byte addr order 1",
+			addr:    sdk.AccAddress("abcdefghijklmnopqrst"),
+			orderID: 1,
+			expected: concatBz(
+				[]byte{keeper.KeyTypeAddressToOrderIndex, 20},
+				[]byte("abcdefghijklmnopqrst"),
+				[]byte{0, 0, 0, 0, 0, 0, 0, 1},
+			),
+		},
+		{
+			name:    "32 byte addr order 1",
+			addr:    sdk.AccAddress("abcdefghijklmnopqrstuvwxyzABCDEF"),
+			orderID: 1,
+			expected: concatBz(
+				[]byte{keeper.KeyTypeAddressToOrderIndex, 32},
+				[]byte("abcdefghijklmnopqrstuvwxyzABCDEF"),
+				[]byte{0, 0, 0, 0, 0, 0, 0, 1},
+			),
+		},
+		{
+			name:    "20 byte addr order 5",
+			addr:    sdk.AccAddress("ABCDEFGHIJKLMNOPQRST"),
+			orderID: 5,
+			expected: concatBz(
+				[]byte{keeper.KeyTypeAddressToOrderIndex, 20},
+				[]byte("ABCDEFGHIJKLMNOPQRST"),
+				[]byte{0, 0, 0, 0, 0, 0, 0, 5},
+			),
+		},
+		{
+			name:    "20 byte addr order 72,623,859,790,382,856",
+			addr:    sdk.AccAddress("ABCDEFGHIJKLMNOPQRST"),
+			orderID: 72_623_859_790_382_856,
+			expected: concatBz(
+				[]byte{keeper.KeyTypeAddressToOrderIndex, 20},
+				[]byte("ABCDEFGHIJKLMNOPQRST"),
+				[]byte{1, 2, 3, 4, 5, 6, 7, 8},
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeIndexKeyAddressToOrder(tc.addr, tc.orderID)
+				},
+				expected: tc.expected,
+				expPanic: tc.expPanic,
+			}
+			if len(tc.expPanic) == 0 {
+				ktc.expPrefixes = []expectedPrefix{
+					{name: "", value: keeper.MakeIndexPrefixAddressToOrder(tc.addr)},
+				}
+			}
+			checkKey(t, ktc, "MakeIndexKeyAddressToOrder(%s, %d)", string(tc.addr), tc.orderID)
+		})
+	}
+}
+
+func TestMakeIndexPrefixAssetToOrder(t *testing.T) {
+	tests := []struct {
+		name       string
+		assetDenom string
+		expected   []byte
+	}{
+		{
+			name:       "empty",
+			assetDenom: "",
+			expected:   []byte{keeper.KeyTypeAssetToOrderIndex},
+		},
+		{
+			name:       "1 char denom",
+			assetDenom: "p",
+			expected:   []byte{keeper.KeyTypeAssetToOrderIndex, 'p'},
+		},
+		{
+			name:       "nhash",
+			assetDenom: "nhash",
+			expected:   []byte{keeper.KeyTypeAssetToOrderIndex, 'n', 'h', 'a', 's', 'h'},
+		},
+		{
+			name:       "hex string",
+			assetDenom: hexString,
+			expected:   append([]byte{keeper.KeyTypeAssetToOrderIndex}, hexString...),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeIndexPrefixAssetToOrder(tc.assetDenom)
+				},
+				expected: tc.expected,
+			}
+			checkKey(t, ktc, "MakeIndexPrefixAssetToOrder(%q)", tc.assetDenom)
+		})
+	}
+}
+
+func TestMakeIndexPrefixAssetToOrderAsks(t *testing.T) {
+	orderKeyType := keeper.OrderKeyTypeAsk
+	tests := []struct {
+		name       string
+		assetDenom string
+		expected   []byte
+	}{
+		{
+			name:       "empty",
+			assetDenom: "",
+			expected:   []byte{keeper.KeyTypeAssetToOrderIndex, orderKeyType},
+		},
+		{
+			name:       "1 char denom",
+			assetDenom: "p",
+			expected:   []byte{keeper.KeyTypeAssetToOrderIndex, 'p', orderKeyType},
+		},
+		{
+			name:       "nhash",
+			assetDenom: "nhash",
+			expected:   []byte{keeper.KeyTypeAssetToOrderIndex, 'n', 'h', 'a', 's', 'h', orderKeyType},
+		},
+		{
+			name:       "hex string",
+			assetDenom: hexString,
+			expected: concatBz(
+				[]byte{keeper.KeyTypeAssetToOrderIndex},
+				[]byte(hexString),
+				[]byte{orderKeyType},
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeIndexPrefixAssetToOrderAsks(tc.assetDenom)
+				},
+				expected: tc.expected,
+				expPrefixes: []expectedPrefix{
+					{name: "MakeIndexPrefixAssetToOrder", value: keeper.MakeIndexPrefixAssetToOrder(tc.assetDenom)},
+				},
+			}
+
+			checkKey(t, ktc, "MakeIndexPrefixAssetToOrderAsks(%q)", tc.assetDenom)
+		})
+	}
+}
+
+func TestMakeIndexPrefixAssetToOrderBids(t *testing.T) {
+	orderKeyType := keeper.OrderKeyTypeBid
+	tests := []struct {
+		name       string
+		assetDenom string
+		expected   []byte
+	}{
+		{
+			name:       "empty",
+			assetDenom: "",
+			expected:   []byte{keeper.KeyTypeAssetToOrderIndex, orderKeyType},
+		},
+		{
+			name:       "1 char denom",
+			assetDenom: "p",
+			expected:   []byte{keeper.KeyTypeAssetToOrderIndex, 'p', orderKeyType},
+		},
+		{
+			name:       "nhash",
+			assetDenom: "nhash",
+			expected:   []byte{keeper.KeyTypeAssetToOrderIndex, 'n', 'h', 'a', 's', 'h', orderKeyType},
+		},
+		{
+			name:       "hex string",
+			assetDenom: hexString,
+			expected: concatBz(
+				[]byte{keeper.KeyTypeAssetToOrderIndex},
+				[]byte(hexString),
+				[]byte{orderKeyType},
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeIndexPrefixAssetToOrderBids(tc.assetDenom)
+				},
+				expected: tc.expected,
+				expPrefixes: []expectedPrefix{
+					{name: "MakeIndexPrefixAssetToOrder", value: keeper.MakeIndexPrefixAssetToOrder(tc.assetDenom)},
+				},
+			}
+
+			checkKey(t, ktc, "MakeIndexPrefixAssetToOrderBids(%q)", tc.assetDenom)
+		})
+	}
+}
+
+func TestMakeIndexKeyAssetToOrder(t *testing.T) {
+	askOrder := func(orderID uint64) exchange.Order {
+		return *exchange.NewOrder(orderID).WithAsk(&exchange.AskOrder{})
+	}
+	bidOrder := func(orderID uint64) exchange.Order {
+		return *exchange.NewOrder(orderID).WithBid(&exchange.BidOrder{})
+	}
+
+	tests := []struct {
+		name       string
+		assetDenom string
+		order      exchange.Order
+		expected   []byte
+		expPanic   string
+	}{
+		{
+			name:       "no asset order 0 ask",
+			assetDenom: "",
+			order:      askOrder(0),
+			expected: []byte{
+				keeper.KeyTypeAssetToOrderIndex,
+				keeper.OrderKeyTypeAsk, 0, 0, 0, 0, 0, 0, 0, 0,
+			},
+		},
+		{
+			name:       "no asset order 0 bid",
+			assetDenom: "",
+			order:      bidOrder(0),
+			expected: []byte{
+				keeper.KeyTypeAssetToOrderIndex,
+				keeper.OrderKeyTypeBid, 0, 0, 0, 0, 0, 0, 0, 0,
+			},
+		},
+		{
+			name:       "nhash order 1 ask",
+			assetDenom: "nhash",
+			order:      askOrder(1),
+			expected: []byte{
+				keeper.KeyTypeAssetToOrderIndex, 'n', 'h', 'a', 's', 'h',
+				keeper.OrderKeyTypeAsk, 0, 0, 0, 0, 0, 0, 0, 1,
+			},
+		},
+		{
+			name:       "nhash order 1 bid",
+			assetDenom: "nhash",
+			order:      bidOrder(1),
+			expected: []byte{
+				keeper.KeyTypeAssetToOrderIndex, 'n', 'h', 'a', 's', 'h',
+				keeper.OrderKeyTypeBid, 0, 0, 0, 0, 0, 0, 0, 1,
+			},
+		},
+		{
+			name:       "hex string order 5 ask",
+			assetDenom: hexString,
+			order:      askOrder(5),
+			expected: concatBz(
+				[]byte{keeper.KeyTypeAssetToOrderIndex}, []byte(hexString),
+				[]byte{keeper.OrderKeyTypeAsk, 0, 0, 0, 0, 0, 0, 0, 5},
+			),
+		},
+		{
+			name:       "hex string order 5 bid",
+			assetDenom: hexString,
+			order:      bidOrder(5),
+			expected: concatBz(
+				[]byte{keeper.KeyTypeAssetToOrderIndex}, []byte(hexString),
+				[]byte{keeper.OrderKeyTypeBid, 0, 0, 0, 0, 0, 0, 0, 5},
+			),
+		},
+		{
+			name:       "nhash order 4,294,967,296 ask",
+			assetDenom: "nhash",
+			order:      askOrder(4_294_967_296),
+			expected: []byte{
+				keeper.KeyTypeAssetToOrderIndex, 'n', 'h', 'a', 's', 'h',
+				keeper.OrderKeyTypeAsk, 0, 0, 0, 1, 0, 0, 0, 0,
+			},
+		},
+		{
+			name:       "nhash order 4,294,967,296 bid",
+			assetDenom: "nhash",
+			order:      bidOrder(4_294_967_296),
+			expected: []byte{
+				keeper.KeyTypeAssetToOrderIndex, 'n', 'h', 'a', 's', 'h',
+				keeper.OrderKeyTypeBid, 0, 0, 0, 1, 0, 0, 0, 0,
+			},
+		},
+		{
+			name:       "nhash order max ask",
+			assetDenom: "nhash",
+			order:      askOrder(18_446_744_073_709_551_615),
+			expected: []byte{
+				keeper.KeyTypeAssetToOrderIndex, 'n', 'h', 'a', 's', 'h',
+				keeper.OrderKeyTypeAsk, 255, 255, 255, 255, 255, 255, 255, 255,
+			},
+		},
+		{
+			name:       "nhash order max bid",
+			assetDenom: "nhash",
+			order:      bidOrder(18_446_744_073_709_551_615),
+			expected: []byte{
+				keeper.KeyTypeAssetToOrderIndex, 'n', 'h', 'a', 's', 'h',
+				keeper.OrderKeyTypeBid, 255, 255, 255, 255, 255, 255, 255, 255,
+			},
+		},
+		{
+			name:     "nil inside order",
+			order:    exchange.Order{OrderId: 3, Order: nil},
+			expPanic: "GetOrderTypeByte() missing case for <nil>",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeIndexKeyAssetToOrder(tc.assetDenom, tc.order)
+				},
+				expected: tc.expected,
+				expPanic: tc.expPanic,
+			}
+			if len(tc.expPanic) == 0 {
+				ktc.expPrefixes = []expectedPrefix{
+					{name: "MakeIndexPrefixAssetToOrder", value: keeper.MakeIndexPrefixAssetToOrder(tc.assetDenom)},
+				}
+				switch v := tc.order.Order.(type) {
+				case *exchange.Order_AskOrder:
+					ktc.expPrefixes = append(ktc.expPrefixes, expectedPrefix{
+						name:  "MakeIndexPrefixAssetToOrderAsks",
+						value: keeper.MakeIndexPrefixAssetToOrderAsks(tc.assetDenom),
+					})
+				case *exchange.Order_BidOrder:
+					ktc.expPrefixes = append(ktc.expPrefixes, expectedPrefix{
+						name:  "MakeIndexPrefixAssetToOrderBids",
+						value: keeper.MakeIndexPrefixAssetToOrderBids(tc.assetDenom),
+					})
+				default:
+					assert.Fail(t, "no expected prefix case defined for %T", v)
+				}
+			}
+
+			checkKey(t, ktc, "MakeIndexKeyAssetToOrder(%q, %d)", tc.assetDenom, tc.order)
+		})
+	}
+}

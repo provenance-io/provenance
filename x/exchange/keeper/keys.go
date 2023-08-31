@@ -361,6 +361,9 @@ func MakeIndexKeyMarketToOrder(marketID uint32, orderID uint64) []byte {
 
 // indexPrefixAddressToOrder creates the prefix for the address to order index entries with some extra apace for the rest.
 func indexPrefixAddressToOrder(addr sdk.AccAddress, extraCap int) []byte {
+	if len(addr) == 0 {
+		panic(errors.New("empty address not allowed"))
+	}
 	return prepKey(KeyTypeAddressToOrderIndex, address.MustLengthPrefix(addr), extraCap)
 }
 
