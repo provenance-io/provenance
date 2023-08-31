@@ -819,7 +819,7 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 	return &types.MsgUpdateSendDenyListResponse{}, nil
 }
 
-// AddNetAssetValues adds net asset values to a marker that is in pending state
+// AddNetAssetValues adds net asset values to a marker
 func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNetAssetValuesRequest) (*types.MsgAddNetAssetValuesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
