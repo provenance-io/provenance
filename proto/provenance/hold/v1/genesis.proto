@@ -1,0 +1,19 @@
+syntax = "proto3";
+package provenance.hold.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/hold";
+
+option java_package        = "io.provenance.hold.v1";
+option java_multiple_files = true;
+
+import "gogoproto/gogo.proto";
+import "provenance/hold/v1/hold.proto";
+
+// GenesisState defines the attribute module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // holds defines the funds on hold at genesis.
+  repeated AccountHold holds = 1;
+}
