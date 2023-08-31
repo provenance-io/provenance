@@ -115,11 +115,21 @@ func uint16Bz(val uint16) []byte {
 	return rv
 }
 
+// uint16FromBz converts the provided bytes into a uint16.
+func uint16FromBz(bz []byte) uint16 {
+	return binary.BigEndian.Uint16(bz)
+}
+
 // uint32Bz converts the provided uint32 value to a big-endian byte slice of length 4.
 func uint32Bz(val uint32) []byte {
 	rv := make([]byte, 4)
 	binary.BigEndian.PutUint32(rv, val)
 	return rv
+}
+
+// uint32FromBz converts the provided bytes into a uint32.
+func uint32FromBz(bz []byte) uint32 {
+	return binary.BigEndian.Uint32(bz)
 }
 
 // uint64Bz converts the provided uint64 value to a big-endian byte slice of length 8.
@@ -129,10 +139,24 @@ func uint64Bz(val uint64) []byte {
 	return rv
 }
 
+// uint64FromBz converts the provided bytes into a uint64.
+func uint64FromBz(bz []byte) uint64 {
+	return binary.BigEndian.Uint64(bz)
+}
+
+func keyPrefixParamsSplit(extraCap int) []byte {
+	return prepKey(KeyTypeParams, []byte("split"), extraCap)
+}
+
+// MakeKeyPrefixParamsSplit creates the key prefix for all params splits entries.
+func MakeKeyPrefixParamsSplit() []byte {
+	return keyPrefixParamsSplit(0)
+}
+
 // MakeKeyParamsSplit creates the key to use for the params defining the splits.
 // A denom of "" is used for the default split value.
 func MakeKeyParamsSplit(denom string) []byte {
-	rv := prepKey(KeyTypeParams, []byte("split"), len(denom))
+	rv := keyPrefixParamsSplit(len(denom))
 	rv = append(rv, denom...)
 	return rv
 }

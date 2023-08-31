@@ -121,6 +121,16 @@ func TestKeyTypeUniqueness(t *testing.T) {
 	}
 }
 
+func TestMakeKeyPrefixParamsSplit(t *testing.T) {
+	ktc := keyTestCase{
+		maker: func() []byte {
+			return keeper.MakeKeyPrefixParamsSplit()
+		},
+		expected: []byte{keeper.KeyTypeParams, 's', 'p', 'l', 'i', 't'},
+	}
+	checkKey(t, ktc, "MakeKeyPrefixParamsSplit")
+}
+
 func TestMakeKeyParamsSplit(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -151,6 +161,9 @@ func TestMakeKeyParamsSplit(t *testing.T) {
 					return keeper.MakeKeyParamsSplit(tc.denom)
 				},
 				expected: tc.expected,
+				expPrefixes: []expectedPrefix{
+					{name: "MakeKeyPrefixParamsSplit", value: keeper.MakeKeyPrefixParamsSplit()},
+				},
 			}
 			checkKey(t, ktc, "MakeKeyParamsSplit(%q)", tc.denom)
 		})
