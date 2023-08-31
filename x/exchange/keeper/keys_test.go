@@ -1543,7 +1543,8 @@ func TestMakeKeyMarketPermissions(t *testing.T) {
 				[]byte("abcdefghijklmnopqrstuvwxyzABCDEF"),
 				[]byte{byte(exchange.Permission_attributes)},
 			),
-		}, {
+		},
+		{
 			name:     "market id 67,305,985 20 byte addr unspecified",
 			marketID: 67_305_985,
 			addr:     sdk.AccAddress("abcdefghijklmnopqrst"),
@@ -1552,6 +1553,42 @@ func TestMakeKeyMarketPermissions(t *testing.T) {
 				[]byte{keeper.KeyTypeMarket, 4, 3, 2, 1, marketTypeByte, 20},
 				[]byte("abcdefghijklmnopqrst"),
 				[]byte{byte(exchange.Permission_unspecified)},
+			),
+		},
+		{
+			name:     "market id 117,967,114 negative permission",
+			marketID: 117_967_114,
+			addr:     sdk.AccAddress("abcdefghijklmnopqrst"),
+			perm:     -1,
+			expPanic: "permission value -1 out of range for uint8",
+		},
+		{
+			name:     "market id 117,967,114 permission 0",
+			marketID: 117_967_114,
+			addr:     sdk.AccAddress("abcdefghijklmnopqrst"),
+			perm:     0,
+			expected: concatBz(
+				[]byte{keeper.KeyTypeMarket, 7, 8, 9, 10, marketTypeByte, 20},
+				[]byte("abcdefghijklmnopqrst"),
+				[]byte{0},
+			),
+		},
+		{
+			name:     "market id 1,887,473,824 permission 256",
+			marketID: 1_887_473_824,
+			addr:     sdk.AccAddress("abcdefghijklmnopqrst"),
+			perm:     256,
+			expPanic: "permission value 256 out of range for uint8",
+		},
+		{
+			name:     "market id 1,887,473,824 permission 255",
+			marketID: 1_887_473_824,
+			addr:     sdk.AccAddress("abcdefghijklmnopqrst"),
+			perm:     255,
+			expected: concatBz(
+				[]byte{keeper.KeyTypeMarket, 112, 128, 144, 160, marketTypeByte, 20},
+				[]byte("abcdefghijklmnopqrst"),
+				[]byte{255},
 			),
 		},
 	}
@@ -1586,9 +1623,139 @@ func TestMakeKeyMarketPermissions(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestMakeKeyMarketReqAttrAsk(t *testing.T)
+func TestMakeKeyMarketReqAttrAsk(t *testing.T) {
+	marketTypeByte := keeper.MarketKeyTypeReqAttr
+	orderTypeByte := keeper.OrderKeyTypeAsk
 
-// TODO[1658]: func TestMakeKeyMarketReqAttrBid(t *testing.T)
+	tests := []struct {
+		name     string
+		marketID uint32
+		expected []byte
+	}{
+		{
+			name:     "market id 0",
+			marketID: 0,
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 0, marketTypeByte, orderTypeByte},
+		},
+		{
+			name:     "market id 1",
+			marketID: 1,
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 1, marketTypeByte, orderTypeByte},
+		},
+		{
+			name:     "market id 255",
+			marketID: 255,
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 255, marketTypeByte, orderTypeByte},
+		},
+		{
+			name:     "market id 256",
+			marketID: 256,
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 1, 0, marketTypeByte, orderTypeByte},
+		},
+		{
+			name:     "market id 65_536",
+			marketID: 65_536,
+			expected: []byte{keeper.KeyTypeMarket, 0, 1, 0, 0, marketTypeByte, orderTypeByte},
+		},
+		{
+			name:     "market id 16,777,216",
+			marketID: 16_777_216,
+			expected: []byte{keeper.KeyTypeMarket, 1, 0, 0, 0, marketTypeByte, orderTypeByte},
+		},
+		{
+			name:     "market id 16,843,009",
+			marketID: 16_843_009,
+			expected: []byte{keeper.KeyTypeMarket, 1, 1, 1, 1, marketTypeByte, orderTypeByte},
+		},
+		{
+			name:     "market id 4,294,967,295",
+			marketID: 4_294_967_295,
+			expected: []byte{keeper.KeyTypeMarket, 255, 255, 255, 255, marketTypeByte, orderTypeByte},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeKeyMarketReqAttrAsk(tc.marketID)
+				},
+				expected: tc.expected,
+				expPrefixes: []expectedPrefix{
+					{name: "MakeKeyPrefixMarket", value: keeper.MakeKeyPrefixMarket(tc.marketID)},
+				},
+			}
+			checkKey(t, ktc, "MakeKeyMarketReqAttrAsk(%d)", tc.marketID)
+		})
+	}
+}
+
+func TestMakeKeyMarketReqAttrBid(t *testing.T) {
+	marketTypeByte := keeper.MarketKeyTypeReqAttr
+	orderTypeByte := keeper.OrderKeyTypeBid
+
+	tests := []struct {
+		name     string
+		marketID uint32
+		expected []byte
+	}{
+		{
+			name:     "market id 0",
+			marketID: 0,
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 0, marketTypeByte, orderTypeByte},
+		},
+		{
+			name:     "market id 1",
+			marketID: 1,
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 1, marketTypeByte, orderTypeByte},
+		},
+		{
+			name:     "market id 255",
+			marketID: 255,
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 255, marketTypeByte, orderTypeByte},
+		},
+		{
+			name:     "market id 256",
+			marketID: 256,
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 1, 0, marketTypeByte, orderTypeByte},
+		},
+		{
+			name:     "market id 65_536",
+			marketID: 65_536,
+			expected: []byte{keeper.KeyTypeMarket, 0, 1, 0, 0, marketTypeByte, orderTypeByte},
+		},
+		{
+			name:     "market id 16,777,216",
+			marketID: 16_777_216,
+			expected: []byte{keeper.KeyTypeMarket, 1, 0, 0, 0, marketTypeByte, orderTypeByte},
+		},
+		{
+			name:     "market id 16,843,009",
+			marketID: 16_843_009,
+			expected: []byte{keeper.KeyTypeMarket, 1, 1, 1, 1, marketTypeByte, orderTypeByte},
+		},
+		{
+			name:     "market id 4,294,967,295",
+			marketID: 4_294_967_295,
+			expected: []byte{keeper.KeyTypeMarket, 255, 255, 255, 255, marketTypeByte, orderTypeByte},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeKeyMarketReqAttrBid(tc.marketID)
+				},
+				expected: tc.expected,
+				expPrefixes: []expectedPrefix{
+					{name: "MakeKeyPrefixMarket", value: keeper.MakeKeyPrefixMarket(tc.marketID)},
+				},
+			}
+			checkKey(t, ktc, "MakeKeyMarketReqAttrBid(%d)", tc.marketID)
+		})
+	}
+}
 
 // TODO[1658]: func TestMakeKeyPrefixOrder(t *testing.T)
 
