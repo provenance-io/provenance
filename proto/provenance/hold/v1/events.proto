@@ -1,0 +1,27 @@
+syntax = "proto3";
+package provenance.hold.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/hold";
+
+option java_package        = "io.provenance.hold.v1";
+option java_multiple_files = true;
+
+import "cosmos_proto/cosmos.proto";
+
+// EventHoldAdded is an event indicating that some funds were placed on hold in an account.
+message EventHoldAdded {
+  // address is the bech32 address string of the account with the funds.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // amount is a Coins string of the funds placed on hold.
+  string amount = 2;
+  // reason is a human-readable indicator of why this hold was added.
+  string reason = 3;
+}
+
+// EventHoldReleased is an event indicating that some funds were released from hold for an account.
+message EventHoldReleased {
+  // address is the bech32 address string of the account with the funds.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // amount is a Coins string of the funds released from hold.
+  string amount = 2;
+}

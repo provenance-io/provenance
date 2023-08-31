@@ -146,6 +146,24 @@
   
     - [Msg](#provenance.exchange.v1.Msg)
   
+- [provenance/hold/v1/events.proto](#provenance/hold/v1/events.proto)
+    - [EventHoldAdded](#provenance.hold.v1.EventHoldAdded)
+    - [EventHoldReleased](#provenance.hold.v1.EventHoldReleased)
+  
+- [provenance/hold/v1/hold.proto](#provenance/hold/v1/hold.proto)
+    - [AccountHold](#provenance.hold.v1.AccountHold)
+  
+- [provenance/hold/v1/genesis.proto](#provenance/hold/v1/genesis.proto)
+    - [GenesisState](#provenance.hold.v1.GenesisState)
+  
+- [provenance/hold/v1/query.proto](#provenance/hold/v1/query.proto)
+    - [GetAllHoldsRequest](#provenance.hold.v1.GetAllHoldsRequest)
+    - [GetAllHoldsResponse](#provenance.hold.v1.GetAllHoldsResponse)
+    - [GetHoldsRequest](#provenance.hold.v1.GetHoldsRequest)
+    - [GetHoldsResponse](#provenance.hold.v1.GetHoldsResponse)
+  
+    - [Query](#provenance.hold.v1.Query)
+  
 - [provenance/ibchooks/v1/params.proto](#provenance/ibchooks/v1/params.proto)
     - [Params](#provenance.ibchooks.v1.Params)
   
@@ -2426,6 +2444,206 @@ Msg is the service for exchange module's tx endpoints.
 | `GovCreateMarket` | [MsgGovCreateMarketRequest](#provenance.exchange.v1.MsgGovCreateMarketRequest) | [MsgGovCreateMarketResponse](#provenance.exchange.v1.MsgGovCreateMarketResponse) | GovCreateMarket is a governance proposal endpoint for creating a market. | |
 | `GovManageFees` | [MsgGovManageFeesRequest](#provenance.exchange.v1.MsgGovManageFeesRequest) | [MsgGovManageFeesResponse](#provenance.exchange.v1.MsgGovManageFeesResponse) | GovManageFees is a governance proposal endpoint for updating a market's fees. | |
 | `GovUpdateParams` | [MsgGovUpdateParamsRequest](#provenance.exchange.v1.MsgGovUpdateParamsRequest) | [MsgGovUpdateParamsResponse](#provenance.exchange.v1.MsgGovUpdateParamsResponse) | GovUpdateParams is a governance proposal endpoint for updating the exchange module's params. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/hold/v1/events.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/hold/v1/events.proto
+
+
+
+<a name="provenance.hold.v1.EventHoldAdded"></a>
+
+### EventHoldAdded
+EventHoldAdded is an event indicating that some funds were placed on hold in an account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the bech32 address string of the account with the funds. |
+| `amount` | [string](#string) |  | amount is a Coins string of the funds placed on hold. |
+| `reason` | [string](#string) |  | reason is a human-readable indicator of why this hold was added. |
+
+
+
+
+
+
+<a name="provenance.hold.v1.EventHoldReleased"></a>
+
+### EventHoldReleased
+EventHoldReleased is an event indicating that some funds were released from hold for an account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the bech32 address string of the account with the funds. |
+| `amount` | [string](#string) |  | amount is a Coins string of the funds released from hold. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/hold/v1/hold.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/hold/v1/hold.proto
+
+
+
+<a name="provenance.hold.v1.AccountHold"></a>
+
+### AccountHold
+AccountHold associates an address with an amount on hold for that address.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the account address that holds the funds on hold. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the balances that are on hold for the address. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/hold/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/hold/v1/genesis.proto
+
+
+
+<a name="provenance.hold.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the attribute module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `holds` | [AccountHold](#provenance.hold.v1.AccountHold) | repeated | holds defines the funds on hold at genesis. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/hold/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/hold/v1/query.proto
+
+
+
+<a name="provenance.hold.v1.GetAllHoldsRequest"></a>
+
+### GetAllHoldsRequest
+GetAllHoldsRequest is the request type for the Query/GetAllHolds query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.hold.v1.GetAllHoldsResponse"></a>
+
+### GetAllHoldsResponse
+GetAllHoldsResponse is the response type for the Query/GetAllHolds query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `holds` | [AccountHold](#provenance.hold.v1.AccountHold) | repeated | holds is a list of addresses with funds on hold and the amounts being held. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.hold.v1.GetHoldsRequest"></a>
+
+### GetHoldsRequest
+GetHoldsRequest is the request type for the Query/GetHolds query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the account address to get on-hold balances for. |
+
+
+
+
+
+
+<a name="provenance.hold.v1.GetHoldsResponse"></a>
+
+### GetHoldsResponse
+GetHoldsResponse is the response type for the Query/GetHolds query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the total on hold for the requested address. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.hold.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service for attribute module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `GetHolds` | [GetHoldsRequest](#provenance.hold.v1.GetHoldsRequest) | [GetHoldsResponse](#provenance.hold.v1.GetHoldsResponse) | GetHolds looks up the funds that are on hold for an address. | GET|/provenance/hold/v1/funds/{address}|
+| `GetAllHolds` | [GetAllHoldsRequest](#provenance.hold.v1.GetAllHoldsRequest) | [GetAllHoldsResponse](#provenance.hold.v1.GetAllHoldsResponse) | GetAllHolds returns all addresses with funds on hold, and the amount held. | GET|/provenance/hold/v1/funds|
 
  <!-- end services -->
 
