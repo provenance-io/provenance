@@ -192,29 +192,29 @@ message MsgGovManageFeesRequest {
   // remove_fee_create_bid_flat are the create-bid flat fee options to remove.
   repeated cosmos.base.v1beta1.Coin remove_fee_create_bid_flat = 5 [(gogoproto.nullable) = false];
 
-  // add_fee_settlement_seller_flat are the seller settlement flat fee options to add.
-  repeated cosmos.base.v1beta1.Coin add_fee_settlement_seller_flat = 6 [(gogoproto.nullable) = false];
+  // add_fee_seller_settlement_flat are the seller settlement flat fee options to add.
+  repeated cosmos.base.v1beta1.Coin add_fee_seller_settlement_flat = 6 [(gogoproto.nullable) = false];
 
-  // remove_fee_settlement_seller_flat are the seller settlement flat fee options to remove.
-  repeated cosmos.base.v1beta1.Coin remove_fee_settlement_seller_flat = 7 [(gogoproto.nullable) = false];
+  // remove_fee_seller_settlement_flat are the seller settlement flat fee options to remove.
+  repeated cosmos.base.v1beta1.Coin remove_fee_seller_settlement_flat = 7 [(gogoproto.nullable) = false];
 
-  // add_fee_settlement_seller_ratios are the seller settlement fee ratios to add.
-  repeated FeeRatio add_fee_settlement_seller_ratios = 8 [(gogoproto.nullable) = false];
+  // add_fee_seller_settlement_ratios are the seller settlement fee ratios to add.
+  repeated FeeRatio add_fee_seller_settlement_ratios = 8 [(gogoproto.nullable) = false];
 
-  // remove_fee_settlement_seller_ratios are the seller settlement fee ratios to remove.
-  repeated FeeRatio remove_fee_settlement_seller_ratios = 9 [(gogoproto.nullable) = false];
+  // remove_fee_seller_settlement_ratios are the seller settlement fee ratios to remove.
+  repeated FeeRatio remove_fee_seller_settlement_ratios = 9 [(gogoproto.nullable) = false];
 
-  // add_fee_settlement_buyer_flat are the buyer settlement flat fee options to add.
-  repeated cosmos.base.v1beta1.Coin add_fee_settlement_buyer_flat = 10 [(gogoproto.nullable) = false];
+  // add_fee_buyer_settlement_flat are the buyer settlement flat fee options to add.
+  repeated cosmos.base.v1beta1.Coin add_fee_buyer_settlement_flat = 10 [(gogoproto.nullable) = false];
 
-  // remove_fee_settlement_buyer_flat are the buyer settlement flat fee options to remove.
-  repeated cosmos.base.v1beta1.Coin remove_fee_settlement_buyer_flat = 11 [(gogoproto.nullable) = false];
+  // remove_fee_buyer_settlement_flat are the buyer settlement flat fee options to remove.
+  repeated cosmos.base.v1beta1.Coin remove_fee_buyer_settlement_flat = 11 [(gogoproto.nullable) = false];
 
-  // add_fee_settlement_buyer_ratios are the buyer settlement fee ratios to add.
-  repeated FeeRatio add_fee_settlement_buyer_ratios = 12 [(gogoproto.nullable) = false];
+  // add_fee_buyer_settlement_ratios are the buyer settlement fee ratios to add.
+  repeated FeeRatio add_fee_buyer_settlement_ratios = 12 [(gogoproto.nullable) = false];
 
-  // remove_fee_settlement_buyer_ratios are the buyer settlement fee ratios to remove.
-  repeated FeeRatio remove_fee_settlement_buyer_ratios = 13 [(gogoproto.nullable) = false];
+  // remove_fee_buyer_settlement_ratios are the buyer settlement fee ratios to remove.
+  repeated FeeRatio remove_fee_buyer_settlement_ratios = 13 [(gogoproto.nullable) = false];
 }
 
 // MsgGovManageFeesResponse is a response message for the GovManageFees endpoint.

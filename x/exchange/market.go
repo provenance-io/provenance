@@ -38,9 +38,9 @@ func (m Market) Validate() error {
 		m.MarketDetails.Validate(),
 		ValidateFeeOptions("create-ask flat fee", m.FeeCreateAskFlat),
 		ValidateFeeOptions("create-bid flat fee", m.FeeCreateBidFlat),
-		ValidateFeeOptions("settlement seller flat fee", m.FeeSettlementSellerFlat),
-		ValidateFeeOptions("settlement buyer flat fee", m.FeeSettlementBuyerFlat),
-		ValidateFeeRatios(m.FeeSettlementSellerRatios, m.FeeSettlementBuyerRatios),
+		ValidateFeeOptions("seller settlement flat fee", m.FeeSellerSettlementFlat),
+		ValidateFeeOptions("buyer settlement flat fee", m.FeeBuyerSettlementFlat),
+		ValidateFeeRatios(m.FeeSellerSettlementRatios, m.FeeBuyerSettlementRatios),
 		ValidateAccessGrants(m.AccessGrants),
 	}
 

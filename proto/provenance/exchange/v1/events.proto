@@ -77,11 +77,11 @@ message EventMarketDisabled {
   string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// EventMarketUserSettleUpdated is an event emitted when a market's self_settle option is updated.
+// EventMarketUserSettleUpdated is an event emitted when a market's user_settle option is updated.
 message EventMarketUserSettleUpdated {
   // market_id is the numerical identifier of the market.
   uint32 market_id = 1;
-  // updated_by is the account that updated the self_settle option.
+  // updated_by is the account that updated the user_settle option.
   string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 

@@ -1446,13 +1446,13 @@ EventMarketReqAttrUpdated is an event emitted when a market's required attribute
 <a name="provenance.exchange.v1.EventMarketUserSettleUpdated"></a>
 
 ### EventMarketUserSettleUpdated
-EventMarketUserSettleUpdated is an event emitted when a market's self_settle option is updated.
+EventMarketUserSettleUpdated is an event emitted when a market's user_settle option is updated.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
-| `updated_by` | [string](#string) |  | updated_by is the account that updated the self_settle option. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the user_settle option. |
 
 
 
@@ -1613,10 +1613,10 @@ Market contains all information about a market.
 | `market_details` | [MarketDetails](#provenance.exchange.v1.MarketDetails) |  | market_details is some information about this market. |
 | `fee_create_ask_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_create_ask_flat is the flat fee charged for creating an ask order. Each coin entry is a separate option. When an ask is created, one of these must be paid. If empty, no fee is required to create an ask order. |
 | `fee_create_bid_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_create_bid_flat is the flat fee charged for creating a bid order. Each coin entry is a separate option. When a bid is created, one of these must be paid. If empty, no fee is required to create a bid order. |
-| `fee_settlement_seller_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_settlement_seller_flat is the flat fee charged to the seller during settlement. Each coin entry is a separate option. When an ask is settled, the seller will pay the amount in the denom that matches the price they received. |
-| `fee_settlement_seller_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | fee_settlement_seller_ratios is the fee to charge a seller during settlement based on the price they are receiving. The price and fee denoms must be equal for each entry, and only one entry for any given denom is allowed. |
-| `fee_settlement_buyer_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_settlement_buyer_flat is the flat fee charged to the buyer during settlement. Each coin entry is a separate option. When a bid is created, the settlement fees provided must contain one of these. |
-| `fee_settlement_buyer_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | fee_settlement_buyer_ratios is the fee to charge a buyer during settlement based on the price they are spending. The price and fee denoms do not have to equal. Multiple entries for any given price or fee denom are allowed, but each price denom to fee denom pair can only have one entry. |
+| `fee_seller_settlement_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_seller_settlement_flat is the flat fee charged to the seller during settlement. Each coin entry is a separate option. When an ask is settled, the seller will pay the amount in the denom that matches the price they received. |
+| `fee_seller_settlement_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | fee_seller_settlement_ratios is the fee to charge a seller during settlement based on the price they are receiving. The price and fee denoms must be equal for each entry, and only one entry for any given denom is allowed. |
+| `fee_buyer_settlement_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_buyer_settlement_flat is the flat fee charged to the buyer during settlement. Each coin entry is a separate option. When a bid is created, the settlement fees provided must contain one of these. |
+| `fee_buyer_settlement_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | fee_buyer_settlement_ratios is the fee to charge a buyer during settlement based on the price they are spending. The price and fee denoms do not have to equal. Multiple entries for any given price or fee denom are allowed, but each price denom to fee denom pair can only have one entry. |
 | `accepting_orders` | [bool](#bool) |  | accepting_orders is whether this market is allowing orders to be created for it. |
 | `allow_user_settlement` | [bool](#bool) |  | allow_user_settlement is whether this market allows users to initiate their own settlements. For example, the FillBids and FillAsks endpoints are available if and only if this is true. The MarketSettle endpoint is only available to market actors regardless of the value of this field. |
 | `access_grants` | [AccessGrant](#provenance.exchange.v1.AccessGrant) | repeated | access_grants is the list of addresses and permissions granted for this market. |
@@ -2226,14 +2226,14 @@ MsgGovManageFeesRequest is a request message for the GovManageFees endpoint.
 | `remove_fee_create_ask_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_create_ask_flat are the create-ask flat fee options to remove. |
 | `add_fee_create_bid_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_create_bid_flat are the create-bid flat fee options to add. |
 | `remove_fee_create_bid_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_create_bid_flat are the create-bid flat fee options to remove. |
-| `add_fee_settlement_seller_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_settlement_seller_flat are the seller settlement flat fee options to add. |
-| `remove_fee_settlement_seller_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_settlement_seller_flat are the seller settlement flat fee options to remove. |
-| `add_fee_settlement_seller_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | add_fee_settlement_seller_ratios are the seller settlement fee ratios to add. |
-| `remove_fee_settlement_seller_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | remove_fee_settlement_seller_ratios are the seller settlement fee ratios to remove. |
-| `add_fee_settlement_buyer_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_settlement_buyer_flat are the buyer settlement flat fee options to add. |
-| `remove_fee_settlement_buyer_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_settlement_buyer_flat are the buyer settlement flat fee options to remove. |
-| `add_fee_settlement_buyer_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | add_fee_settlement_buyer_ratios are the buyer settlement fee ratios to add. |
-| `remove_fee_settlement_buyer_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | remove_fee_settlement_buyer_ratios are the buyer settlement fee ratios to remove. |
+| `add_fee_seller_settlement_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_seller_settlement_flat are the seller settlement flat fee options to add. |
+| `remove_fee_seller_settlement_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_seller_settlement_flat are the seller settlement flat fee options to remove. |
+| `add_fee_seller_settlement_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | add_fee_seller_settlement_ratios are the seller settlement fee ratios to add. |
+| `remove_fee_seller_settlement_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | remove_fee_seller_settlement_ratios are the seller settlement fee ratios to remove. |
+| `add_fee_buyer_settlement_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_buyer_settlement_flat are the buyer settlement flat fee options to add. |
+| `remove_fee_buyer_settlement_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_buyer_settlement_flat are the buyer settlement flat fee options to remove. |
+| `add_fee_buyer_settlement_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | add_fee_buyer_settlement_ratios are the buyer settlement fee ratios to add. |
+| `remove_fee_buyer_settlement_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | remove_fee_buyer_settlement_ratios are the buyer settlement fee ratios to remove. |
 
 
 

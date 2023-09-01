@@ -27,12 +27,12 @@ import (
 //
 //   Market Create-Ask Flat Fee: 0x01 | <market_id> | 0x00 | <denom> => <amount> (string)
 //   Market Create-Bid Flat Fee: 0x01 | <market_id> | 0x01 | <denom> => <amount> (string)
-//   Market Settlement Seller Flat Fee: 0x01 | <market_id> | 0x02 | <denom> => <amount> (string)
-//   Market Settlement Seller Fee Ratio: 0x01 | <market_id> | 0x03 | <price_denom> | 0x00 | <fee_denom> => comma-separated price and fee amount (string).
-//   Market Settlement Buyer Flat Fee: 0x01 | <market_id> | 0x04 | <denom> => <amount> (string)
-//   Market Settlement Buyer Fee Ratio: 0x01 | <market_id> | 0x05 | <price_denom> | 0x00 | <fee_denom> => comma-separated price and fee amount (string).
+//   Market Seller Settlement Flat Fee: 0x01 | <market_id> | 0x02 | <denom> => <amount> (string)
+//   Market Seller Settlement Fee Ratio: 0x01 | <market_id> | 0x03 | <price_denom> | 0x00 | <fee_denom> => comma-separated price and fee amount (string).
+//   Market Buyer Settlement Flat Fee: 0x01 | <market_id> | 0x04 | <denom> => <amount> (string)
+//   Market Buyer Settlement Fee Ratio: 0x01 | <market_id> | 0x05 | <price_denom> | 0x00 | <fee_denom> => comma-separated price and fee amount (string).
 //   Market inactive indicator: 0x01 | <market_id> | 0x06 => nil
-//   Market self-settle indicator: 0x01 | <market_id> | 0x07 => nil
+//   Market user-settle indicator: 0x01 | <market_id> | 0x07 => nil
 //   Market permissions: 0x01 | <market_id> | 0x08 | <addr len byte> | <address> | <permission type byte> => nil
 //   Market Required Attributes: 0x01 | <market_id> | 0x09 | <order_type_byte> => comma-separated list of required attribute entries.
 //
@@ -76,18 +76,18 @@ const (
 	MarketKeyTypeCreateAskFlat = byte(0x00)
 	// MarketKeyTypeCreateBidFlat is the market-specific type byte for the create-bid flat fees.
 	MarketKeyTypeCreateBidFlat = byte(0x01)
-	// MarketKeyTypeSettlementSellerFlat is the market-specific type byte for the seller settlement flat fees.
-	MarketKeyTypeSettlementSellerFlat = byte(0x02)
-	// MarketKeyTypeSettlementSellerRatio is the market-specific type byte for the seller settlement ratios.
-	MarketKeyTypeSettlementSellerRatio = byte(0x03)
-	// MarketKeyTypeSettlementBuyerFlat is the market-specific type byte for the buyer settlement flat fees.
-	MarketKeyTypeSettlementBuyerFlat = byte(0x04)
-	// MarketKeyTypeSettlementBuyerRatio is the market-specific type byte for the buyer settlement ratios.
-	MarketKeyTypeSettlementBuyerRatio = byte(0x05)
+	// MarketKeyTypeSellerSettlementFlat is the market-specific type byte for the seller settlement flat fees.
+	MarketKeyTypeSellerSettlementFlat = byte(0x02)
+	// MarketKeyTypeSellerSettlementRatio is the market-specific type byte for the seller settlement ratios.
+	MarketKeyTypeSellerSettlementRatio = byte(0x03)
+	// MarketKeyTypeBuyerSettlementFlat is the market-specific type byte for the buyer settlement flat fees.
+	MarketKeyTypeBuyerSettlementFlat = byte(0x04)
+	// MarketKeyTypeBuyerSettlementRatio is the market-specific type byte for the buyer settlement ratios.
+	MarketKeyTypeBuyerSettlementRatio = byte(0x05)
 	// MarketKeyTypeInactive is the market-specific type byte for the inactive indicators.
 	MarketKeyTypeInactive = byte(0x06)
-	// MarketKeyTypeSelfSettle is the market-specific type byte for the self-settle indicators.
-	MarketKeyTypeSelfSettle = byte(0x07)
+	// MarketKeyTypeUserSettle is the market-specific type byte for the user-settle indicators.
+	MarketKeyTypeUserSettle = byte(0x07)
 	// MarketKeyTypePermissions is the market-specific type byte for the market permissions.
 	MarketKeyTypePermissions = byte(0x08)
 	// MarketKeyTypeReqAttr is the market-specific type byte for the market's required attributes lists.
@@ -213,72 +213,72 @@ func MakeKeyMarketCreateBidFlatFee(marketID uint32, denom string) []byte {
 	return rv
 }
 
-// marketKeyPrefixSettlementSellerFlatFee creates the key prefix for a market's settlement seller flat fees with extra capacity for the rest.
-func marketKeyPrefixSettlementSellerFlatFee(marketID uint32, extraCap int) []byte {
-	return keyPrefixMarketType(marketID, MarketKeyTypeSettlementSellerFlat, extraCap)
+// marketKeyPrefixSellerSettlementFlatFee creates the key prefix for a market's seller settlement flat fees with extra capacity for the rest.
+func marketKeyPrefixSellerSettlementFlatFee(marketID uint32, extraCap int) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeSellerSettlementFlat, extraCap)
 }
 
-// MakeKeyPrefixMarketSettlementSellerFlatFee creates the key prefix for a market's settlement seller flat fees.
-func MakeKeyPrefixMarketSettlementSellerFlatFee(marketID uint32) []byte {
-	return marketKeyPrefixSettlementSellerFlatFee(marketID, 0)
+// MakeKeyPrefixMarketSellerSettlementFlatFee creates the key prefix for a market's seller settlement flat fees.
+func MakeKeyPrefixMarketSellerSettlementFlatFee(marketID uint32) []byte {
+	return marketKeyPrefixSellerSettlementFlatFee(marketID, 0)
 }
 
-// MakeKeyMarketSettlementSellerFlatFee creates the key for a market's settlement seller flat fee with the given denom.
-func MakeKeyMarketSettlementSellerFlatFee(marketID uint32, denom string) []byte {
-	rv := marketKeyPrefixSettlementSellerFlatFee(marketID, len(denom))
+// MakeKeyMarketSellerSettlementFlatFee creates the key for a market's seller settlement flat fee with the given denom.
+func MakeKeyMarketSellerSettlementFlatFee(marketID uint32, denom string) []byte {
+	rv := marketKeyPrefixSellerSettlementFlatFee(marketID, len(denom))
 	rv = append(rv, denom...)
 	return rv
 }
 
-// marketKeyPrefixSettlementSellerRatio creates the key prefix for a market's settlement seller ratios with extra capacity for the rest.
-func marketKeyPrefixSettlementSellerRatio(marketID uint32, extraCap int) []byte {
-	return keyPrefixMarketType(marketID, MarketKeyTypeSettlementSellerRatio, extraCap)
+// marketKeyPrefixSellerSettlementRatio creates the key prefix for a market's seller settlement ratios with extra capacity for the rest.
+func marketKeyPrefixSellerSettlementRatio(marketID uint32, extraCap int) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeSellerSettlementRatio, extraCap)
 }
 
-// MakeKeyPrefixMarketSettlementSellerRatio creates the key prefix for a market's settlement seller fee ratios.
-func MakeKeyPrefixMarketSettlementSellerRatio(marketID uint32) []byte {
-	return marketKeyPrefixSettlementSellerRatio(marketID, 0)
+// MakeKeyPrefixMarketSellerSettlementRatio creates the key prefix for a market's seller settlement fee ratios.
+func MakeKeyPrefixMarketSellerSettlementRatio(marketID uint32) []byte {
+	return marketKeyPrefixSellerSettlementRatio(marketID, 0)
 }
 
-// MakeKeyMarketSettlementSellerRatio creates the key to use for the given settlement seller fee ratio in the given market.
-func MakeKeyMarketSettlementSellerRatio(marketID uint32, ratio exchange.FeeRatio) []byte {
-	rv := marketKeyPrefixSettlementSellerRatio(marketID, len(ratio.Price.Denom)+1+len(ratio.Fee.Denom))
+// MakeKeyMarketSellerSettlementRatio creates the key to use for the given seller settlement fee ratio in the given market.
+func MakeKeyMarketSellerSettlementRatio(marketID uint32, ratio exchange.FeeRatio) []byte {
+	rv := marketKeyPrefixSellerSettlementRatio(marketID, len(ratio.Price.Denom)+1+len(ratio.Fee.Denom))
 	rv = append(rv, ratio.Price.Denom...)
 	rv = append(rv, 0x00)
 	rv = append(rv, ratio.Fee.Denom...)
 	return rv
 }
 
-// marketKeyPrefixSettlementBuyerFlatFee creates the key prefix for a market's settlement buyer flat fees with extra capacity for the rest.
-func marketKeyPrefixSettlementBuyerFlatFee(marketID uint32, extraCap int) []byte {
-	return keyPrefixMarketType(marketID, MarketKeyTypeSettlementBuyerFlat, extraCap)
+// marketKeyPrefixBuyerSettlementFlatFee creates the key prefix for a market's buyer settlement flat fees with extra capacity for the rest.
+func marketKeyPrefixBuyerSettlementFlatFee(marketID uint32, extraCap int) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeBuyerSettlementFlat, extraCap)
 }
 
-// MakeKeyPrefixMarketSettlementBuyerFlatFee creates the key prefix for a market's settlement buyer flat fees.
-func MakeKeyPrefixMarketSettlementBuyerFlatFee(marketID uint32) []byte {
-	return marketKeyPrefixSettlementBuyerFlatFee(marketID, 0)
+// MakeKeyPrefixMarketBuyerSettlementFlatFee creates the key prefix for a market's buyer settlement flat fees.
+func MakeKeyPrefixMarketBuyerSettlementFlatFee(marketID uint32) []byte {
+	return marketKeyPrefixBuyerSettlementFlatFee(marketID, 0)
 }
 
-// MakeKeyMarketSettlementBuyerFlatFee creates the key for a market's settlement buyer flat fee with the given denom.
-func MakeKeyMarketSettlementBuyerFlatFee(marketID uint32, denom string) []byte {
-	rv := marketKeyPrefixSettlementBuyerFlatFee(marketID, len(denom))
+// MakeKeyMarketBuyerSettlementFlatFee creates the key for a market's buyer settlement flat fee with the given denom.
+func MakeKeyMarketBuyerSettlementFlatFee(marketID uint32, denom string) []byte {
+	rv := marketKeyPrefixBuyerSettlementFlatFee(marketID, len(denom))
 	rv = append(rv, denom...)
 	return rv
 }
 
-// marketKeyPrefixSettlementBuyerRatio creates the key prefix for a market's settlement buyer ratios with extra capacity for the rest.
-func marketKeyPrefixSettlementBuyerRatio(marketID uint32, extraCap int) []byte {
-	return keyPrefixMarketType(marketID, MarketKeyTypeSettlementBuyerRatio, extraCap)
+// marketKeyPrefixBuyerSettlementRatio creates the key prefix for a market's buyer settlement ratios with extra capacity for the rest.
+func marketKeyPrefixBuyerSettlementRatio(marketID uint32, extraCap int) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeBuyerSettlementRatio, extraCap)
 }
 
-// MakeKeyPrefixMarketSettlementBuyerRatio creates the key prefix for a market's settlement buyer fee ratios.
-func MakeKeyPrefixMarketSettlementBuyerRatio(marketID uint32) []byte {
-	return marketKeyPrefixSettlementBuyerRatio(marketID, 0)
+// MakeKeyPrefixMarketBuyerSettlementRatio creates the key prefix for a market's buyer settlement fee ratios.
+func MakeKeyPrefixMarketBuyerSettlementRatio(marketID uint32) []byte {
+	return marketKeyPrefixBuyerSettlementRatio(marketID, 0)
 }
 
-// MakeKeyMarketSettlementBuyerRatio creates the key to use for the given settlement buyer fee ratio in the given market.
-func MakeKeyMarketSettlementBuyerRatio(marketID uint32, ratio exchange.FeeRatio) []byte {
-	rv := marketKeyPrefixSettlementBuyerRatio(marketID, len(ratio.Price.Denom)+1+len(ratio.Fee.Denom))
+// MakeKeyMarketBuyerSettlementRatio creates the key to use for the given buyer settlement fee ratio in the given market.
+func MakeKeyMarketBuyerSettlementRatio(marketID uint32, ratio exchange.FeeRatio) []byte {
+	rv := marketKeyPrefixBuyerSettlementRatio(marketID, len(ratio.Price.Denom)+1+len(ratio.Fee.Denom))
 	rv = append(rv, ratio.Price.Denom...)
 	rv = append(rv, 0x00)
 	rv = append(rv, ratio.Fee.Denom...)
@@ -290,9 +290,9 @@ func MakeKeyMarketInactive(marketID uint32) []byte {
 	return keyPrefixMarketType(marketID, MarketKeyTypeInactive, 0)
 }
 
-// MakeKeyMarketSelfSettle creates the key to use to indicate that a market allows self-settlement.
-func MakeKeyMarketSelfSettle(marketID uint32) []byte {
-	return keyPrefixMarketType(marketID, MarketKeyTypeSelfSettle, 0)
+// MakeKeyMarketUserSettle creates the key to use to indicate that a market allows settlement by users.
+func MakeKeyMarketUserSettle(marketID uint32) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeUserSettle, 0)
 }
 
 // marketKeyPrefixPermissions creates the key prefix for a market's permissions with extra capacity for the rest.

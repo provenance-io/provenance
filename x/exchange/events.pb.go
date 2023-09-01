@@ -482,11 +482,11 @@ func (m *EventMarketDisabled) GetUpdatedBy() string {
 	return ""
 }
 
-// EventMarketUserSettleUpdated is an event emitted when a market's self_settle option is updated.
+// EventMarketUserSettleUpdated is an event emitted when a market's user_settle option is updated.
 type EventMarketUserSettleUpdated struct {
 	// market_id is the numerical identifier of the market.
 	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
-	// updated_by is the account that updated the self_settle option.
+	// updated_by is the account that updated the user_settle option.
 	UpdatedBy string `protobuf:"bytes,2,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
 }
 

@@ -1025,22 +1025,22 @@ type MsgGovManageFeesRequest struct {
 	AddFeeCreateBidFlat []types.Coin `protobuf:"bytes,4,rep,name=add_fee_create_bid_flat,json=addFeeCreateBidFlat,proto3" json:"add_fee_create_bid_flat"`
 	// remove_fee_create_bid_flat are the create-bid flat fee options to remove.
 	RemoveFeeCreateBidFlat []types.Coin `protobuf:"bytes,5,rep,name=remove_fee_create_bid_flat,json=removeFeeCreateBidFlat,proto3" json:"remove_fee_create_bid_flat"`
-	// add_fee_settlement_seller_flat are the seller settlement flat fee options to add.
-	AddFeeSettlementSellerFlat []types.Coin `protobuf:"bytes,6,rep,name=add_fee_settlement_seller_flat,json=addFeeSettlementSellerFlat,proto3" json:"add_fee_settlement_seller_flat"`
-	// remove_fee_settlement_seller_flat are the seller settlement flat fee options to remove.
-	RemoveFeeSettlementSellerFlat []types.Coin `protobuf:"bytes,7,rep,name=remove_fee_settlement_seller_flat,json=removeFeeSettlementSellerFlat,proto3" json:"remove_fee_settlement_seller_flat"`
-	// add_fee_settlement_seller_ratios are the seller settlement fee ratios to add.
-	AddFeeSettlementSellerRatios []FeeRatio `protobuf:"bytes,8,rep,name=add_fee_settlement_seller_ratios,json=addFeeSettlementSellerRatios,proto3" json:"add_fee_settlement_seller_ratios"`
-	// remove_fee_settlement_seller_ratios are the seller settlement fee ratios to remove.
-	RemoveFeeSettlementSellerRatios []FeeRatio `protobuf:"bytes,9,rep,name=remove_fee_settlement_seller_ratios,json=removeFeeSettlementSellerRatios,proto3" json:"remove_fee_settlement_seller_ratios"`
-	// add_fee_settlement_buyer_flat are the buyer settlement flat fee options to add.
-	AddFeeSettlementBuyerFlat []types.Coin `protobuf:"bytes,10,rep,name=add_fee_settlement_buyer_flat,json=addFeeSettlementBuyerFlat,proto3" json:"add_fee_settlement_buyer_flat"`
-	// remove_fee_settlement_buyer_flat are the buyer settlement flat fee options to remove.
-	RemoveFeeSettlementBuyerFlat []types.Coin `protobuf:"bytes,11,rep,name=remove_fee_settlement_buyer_flat,json=removeFeeSettlementBuyerFlat,proto3" json:"remove_fee_settlement_buyer_flat"`
-	// add_fee_settlement_buyer_ratios are the buyer settlement fee ratios to add.
-	AddFeeSettlementBuyerRatios []FeeRatio `protobuf:"bytes,12,rep,name=add_fee_settlement_buyer_ratios,json=addFeeSettlementBuyerRatios,proto3" json:"add_fee_settlement_buyer_ratios"`
-	// remove_fee_settlement_buyer_ratios are the buyer settlement fee ratios to remove.
-	RemoveFeeSettlementBuyerRatios []FeeRatio `protobuf:"bytes,13,rep,name=remove_fee_settlement_buyer_ratios,json=removeFeeSettlementBuyerRatios,proto3" json:"remove_fee_settlement_buyer_ratios"`
+	// add_fee_seller_settlement_flat are the seller settlement flat fee options to add.
+	AddFeeSellerSettlementFlat []types.Coin `protobuf:"bytes,6,rep,name=add_fee_seller_settlement_flat,json=addFeeSellerSettlementFlat,proto3" json:"add_fee_seller_settlement_flat"`
+	// remove_fee_seller_settlement_flat are the seller settlement flat fee options to remove.
+	RemoveFeeSellerSettlementFlat []types.Coin `protobuf:"bytes,7,rep,name=remove_fee_seller_settlement_flat,json=removeFeeSellerSettlementFlat,proto3" json:"remove_fee_seller_settlement_flat"`
+	// add_fee_seller_settlement_ratios are the seller settlement fee ratios to add.
+	AddFeeSellerSettlementRatios []FeeRatio `protobuf:"bytes,8,rep,name=add_fee_seller_settlement_ratios,json=addFeeSellerSettlementRatios,proto3" json:"add_fee_seller_settlement_ratios"`
+	// remove_fee_seller_settlement_ratios are the seller settlement fee ratios to remove.
+	RemoveFeeSellerSettlementRatios []FeeRatio `protobuf:"bytes,9,rep,name=remove_fee_seller_settlement_ratios,json=removeFeeSellerSettlementRatios,proto3" json:"remove_fee_seller_settlement_ratios"`
+	// add_fee_buyer_settlement_flat are the buyer settlement flat fee options to add.
+	AddFeeBuyerSettlementFlat []types.Coin `protobuf:"bytes,10,rep,name=add_fee_buyer_settlement_flat,json=addFeeBuyerSettlementFlat,proto3" json:"add_fee_buyer_settlement_flat"`
+	// remove_fee_buyer_settlement_flat are the buyer settlement flat fee options to remove.
+	RemoveFeeBuyerSettlementFlat []types.Coin `protobuf:"bytes,11,rep,name=remove_fee_buyer_settlement_flat,json=removeFeeBuyerSettlementFlat,proto3" json:"remove_fee_buyer_settlement_flat"`
+	// add_fee_buyer_settlement_ratios are the buyer settlement fee ratios to add.
+	AddFeeBuyerSettlementRatios []FeeRatio `protobuf:"bytes,12,rep,name=add_fee_buyer_settlement_ratios,json=addFeeBuyerSettlementRatios,proto3" json:"add_fee_buyer_settlement_ratios"`
+	// remove_fee_buyer_settlement_ratios are the buyer settlement fee ratios to remove.
+	RemoveFeeBuyerSettlementRatios []FeeRatio `protobuf:"bytes,13,rep,name=remove_fee_buyer_settlement_ratios,json=removeFeeBuyerSettlementRatios,proto3" json:"remove_fee_buyer_settlement_ratios"`
 }
 
 func (m *MsgGovManageFeesRequest) Reset()         { *m = MsgGovManageFeesRequest{} }
@@ -1111,58 +1111,58 @@ func (m *MsgGovManageFeesRequest) GetRemoveFeeCreateBidFlat() []types.Coin {
 	return nil
 }
 
-func (m *MsgGovManageFeesRequest) GetAddFeeSettlementSellerFlat() []types.Coin {
+func (m *MsgGovManageFeesRequest) GetAddFeeSellerSettlementFlat() []types.Coin {
 	if m != nil {
-		return m.AddFeeSettlementSellerFlat
+		return m.AddFeeSellerSettlementFlat
 	}
 	return nil
 }
 
-func (m *MsgGovManageFeesRequest) GetRemoveFeeSettlementSellerFlat() []types.Coin {
+func (m *MsgGovManageFeesRequest) GetRemoveFeeSellerSettlementFlat() []types.Coin {
 	if m != nil {
-		return m.RemoveFeeSettlementSellerFlat
+		return m.RemoveFeeSellerSettlementFlat
 	}
 	return nil
 }
 
-func (m *MsgGovManageFeesRequest) GetAddFeeSettlementSellerRatios() []FeeRatio {
+func (m *MsgGovManageFeesRequest) GetAddFeeSellerSettlementRatios() []FeeRatio {
 	if m != nil {
-		return m.AddFeeSettlementSellerRatios
+		return m.AddFeeSellerSettlementRatios
 	}
 	return nil
 }
 
-func (m *MsgGovManageFeesRequest) GetRemoveFeeSettlementSellerRatios() []FeeRatio {
+func (m *MsgGovManageFeesRequest) GetRemoveFeeSellerSettlementRatios() []FeeRatio {
 	if m != nil {
-		return m.RemoveFeeSettlementSellerRatios
+		return m.RemoveFeeSellerSettlementRatios
 	}
 	return nil
 }
 
-func (m *MsgGovManageFeesRequest) GetAddFeeSettlementBuyerFlat() []types.Coin {
+func (m *MsgGovManageFeesRequest) GetAddFeeBuyerSettlementFlat() []types.Coin {
 	if m != nil {
-		return m.AddFeeSettlementBuyerFlat
+		return m.AddFeeBuyerSettlementFlat
 	}
 	return nil
 }
 
-func (m *MsgGovManageFeesRequest) GetRemoveFeeSettlementBuyerFlat() []types.Coin {
+func (m *MsgGovManageFeesRequest) GetRemoveFeeBuyerSettlementFlat() []types.Coin {
 	if m != nil {
-		return m.RemoveFeeSettlementBuyerFlat
+		return m.RemoveFeeBuyerSettlementFlat
 	}
 	return nil
 }
 
-func (m *MsgGovManageFeesRequest) GetAddFeeSettlementBuyerRatios() []FeeRatio {
+func (m *MsgGovManageFeesRequest) GetAddFeeBuyerSettlementRatios() []FeeRatio {
 	if m != nil {
-		return m.AddFeeSettlementBuyerRatios
+		return m.AddFeeBuyerSettlementRatios
 	}
 	return nil
 }
 
-func (m *MsgGovManageFeesRequest) GetRemoveFeeSettlementBuyerRatios() []FeeRatio {
+func (m *MsgGovManageFeesRequest) GetRemoveFeeBuyerSettlementRatios() []FeeRatio {
 	if m != nil {
-		return m.RemoveFeeSettlementBuyerRatios
+		return m.RemoveFeeBuyerSettlementRatios
 	}
 	return nil
 }
@@ -1332,7 +1332,7 @@ func init() {
 func init() { proto.RegisterFile("provenance/exchange/v1/tx.proto", fileDescriptor_e333fcffc093bd1b) }
 
 var fileDescriptor_e333fcffc093bd1b = []byte{
-	// 1107 bytes of a gzipped FileDescriptorProto
+	// 1106 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x58, 0x41, 0x6f, 0xe3, 0x44,
 	0x18, 0xad, 0xd9, 0xa5, 0x6c, 0xbf, 0xee, 0x16, 0x69, 0xda, 0x6d, 0x12, 0x6f, 0xeb, 0xa4, 0x29,
 	0x87, 0x6a, 0x97, 0xda, 0xdb, 0x22, 0x0a, 0xac, 0xb8, 0x34, 0x0b, 0xd9, 0x53, 0x44, 0x95, 0xaa,
@@ -1370,39 +1370,39 @@ var fileDescriptor_e333fcffc093bd1b = []byte{
 	0xeb, 0x4b, 0x2f, 0xeb, 0xd8, 0xb6, 0x9b, 0x84, 0x24, 0x37, 0xbf, 0xe9, 0x61, 0x8e, 0xbe, 0x05,
 	0x3d, 0x20, 0x7d, 0x3a, 0x22, 0x4a, 0xe6, 0x3b, 0xc5, 0x98, 0x37, 0x05, 0x45, 0x86, 0x3c, 0xdb,
 	0x73, 0xd7, 0xb5, 0x05, 0xf3, 0xdd, 0x5b, 0xf4, 0xdc, 0x70, 0xed, 0xfc, 0x9e, 0x13, 0xe6, 0x77,
-	0x6f, 0xd7, 0x73, 0x4c, 0xde, 0x03, 0x23, 0xee, 0x99, 0x45, 0xf7, 0xa4, 0x4f, 0x7c, 0xde, 0x61,
-	0xc4, 0xf3, 0x48, 0x20, 0x04, 0x96, 0x8b, 0x09, 0xe8, 0xa2, 0xf5, 0xd3, 0x84, 0xe4, 0x34, 0xe2,
+	0x6f, 0xd7, 0x73, 0x4c, 0xde, 0x03, 0x23, 0xee, 0x99, 0x11, 0xcf, 0x23, 0x41, 0x87, 0x45, 0xd7,
+	0xa5, 0x4f, 0x7c, 0x2e, 0x04, 0x96, 0x8b, 0x09, 0xe8, 0xa2, 0xf5, 0xd3, 0x88, 0xe4, 0x34, 0xe1,
 	0x88, 0x44, 0x5c, 0xd8, 0x49, 0x39, 0xc8, 0xd1, 0x79, 0xaf, 0x98, 0xce, 0x76, 0x62, 0x44, 0x29,
 	0xe5, 0x43, 0x2d, 0xdf, 0x4f, 0x80, 0xb9, 0x4b, 0x59, 0xf9, 0x5e, 0xa4, 0x54, 0xcb, 0xbb, 0x11,
 	0x4d, 0x42, 0xda, 0x21, 0x50, 0x0a, 0x6e, 0xa9, 0x8d, 0x45, 0x10, 0x86, 0x38, 0xec, 0xce, 0xb4,
-	0x26, 0x25, 0x57, 0x16, 0x92, 0xac, 0xe6, 0x7a, 0x94, 0xaa, 0x18, 0xb6, 0x15, 0x2e, 0xbb, 0xc3,
-	0x57, 0xf1, 0x61, 0x42, 0xb1, 0xc3, 0xac, 0x4c, 0x7b, 0x6b, 0x84, 0x14, 0xd1, 0x41, 0x3a, 0x50,
-	0x53, 0x1b, 0x4b, 0xa9, 0xac, 0x16, 0x53, 0xd9, 0x52, 0xd8, 0x19, 0x0b, 0x79, 0x50, 0xcd, 0xf5,
-	0x22, 0x4f, 0xef, 0xfe, 0x42, 0xa7, 0xf7, 0x48, 0x69, 0x4a, 0x9e, 0x5c, 0x00, 0xf5, 0x59, 0xb6,
-	0xa4, 0xe0, 0x83, 0x85, 0x04, 0x8d, 0x3c, 0x7f, 0x42, 0x33, 0xf3, 0x36, 0x15, 0x93, 0x78, 0xea,
-	0x75, 0x99, 0x99, 0x06, 0x62, 0x80, 0x9d, 0x44, 0x11, 0xe7, 0x7f, 0x98, 0x06, 0x22, 0x2b, 0xcd,
-	0x9b, 0x06, 0x42, 0x2e, 0x9e, 0x06, 0xa2, 0x26, 0x7f, 0x1a, 0x4c, 0xb6, 0x28, 0x1c, 0x1c, 0xfe,
-	0xbc, 0x06, 0x77, 0x5a, 0xcc, 0x41, 0xe7, 0xb0, 0x92, 0xbc, 0x1e, 0xd1, 0x93, 0xdc, 0xf1, 0x93,
-	0x8d, 0x6c, 0xfa, 0x87, 0xc5, 0xc0, 0x42, 0x6f, 0xac, 0xd3, 0x70, 0xed, 0x02, 0x3a, 0xe3, 0xac,
-	0x57, 0x40, 0x27, 0x95, 0x00, 0x91, 0x07, 0xab, 0xa9, 0x94, 0x87, 0xf6, 0x67, 0x15, 0x67, 0x62,
-	0xa2, 0x6e, 0x16, 0x85, 0x4b, 0xb5, 0x1e, 0xdc, 0x8b, 0x33, 0x22, 0x7a, 0x3c, 0xa3, 0x76, 0x2a,
-	0x5e, 0xea, 0x4f, 0x0a, 0x61, 0x27, 0x45, 0xc2, 0x6c, 0x39, 0x57, 0x24, 0x15, 0x4b, 0xe7, 0x8a,
-	0xa4, 0xc3, 0x2a, 0xa2, 0x70, 0x3f, 0x9d, 0x47, 0xd1, 0xac, 0x93, 0x50, 0x44, 0x5a, 0xdd, 0x2a,
-	0x8c, 0x97, 0x82, 0x43, 0x58, 0x9b, 0x4c, 0xb2, 0xe8, 0xe9, 0x5c, 0x8a, 0xa9, 0x40, 0xac, 0x1f,
-	0x2c, 0x50, 0x21, 0x65, 0x7f, 0xd0, 0x60, 0x5d, 0x91, 0x81, 0xd1, 0xc7, 0x73, 0xa9, 0x54, 0xa1,
-	0x5a, 0x3f, 0x5a, 0xb4, 0x2c, 0xa7, 0x0d, 0x99, 0xa3, 0x0b, 0xb7, 0x31, 0x19, 0xcc, 0x0b, 0xb7,
-	0x31, 0x15, 0xd7, 0xd1, 0x4f, 0x1a, 0x6c, 0xaa, 0x83, 0x38, 0xfa, 0xb4, 0x20, 0x65, 0x26, 0xdf,
-	0xeb, 0x9f, 0xdd, 0xa2, 0x52, 0xf6, 0xf3, 0x5a, 0x83, 0x52, 0x4e, 0x9c, 0x47, 0xf3, 0x69, 0xf3,
-	0xbe, 0x13, 0xf4, 0x67, 0xb7, 0x29, 0x95, 0x2d, 0xfd, 0xa8, 0xc1, 0x86, 0xea, 0xcb, 0x00, 0x1d,
-	0x15, 0x24, 0x9d, 0xfa, 0xd8, 0xd0, 0x3f, 0x59, 0xb8, 0x4e, 0x76, 0x72, 0x05, 0xef, 0x4f, 0x65,
-	0x7b, 0x34, 0xeb, 0x02, 0xa8, 0x3f, 0x55, 0xf4, 0xc3, 0x45, 0x4a, 0xa4, 0x72, 0x00, 0x0f, 0x26,
-	0xe6, 0x20, 0xb2, 0x66, 0x93, 0x64, 0x3e, 0x30, 0xf4, 0xa7, 0xc5, 0x0b, 0x26, 0xdc, 0xa6, 0x67,
-	0xd7, 0x3c, 0xb7, 0x8a, 0x51, 0x3c, 0xcf, 0xad, 0x6a, 0x34, 0x36, 0xc8, 0x9b, 0x6b, 0x43, 0x7b,
-	0x7b, 0x6d, 0x68, 0x7f, 0x5f, 0x1b, 0xda, 0xeb, 0x1b, 0x63, 0xe9, 0xed, 0x8d, 0xb1, 0xf4, 0xe7,
-	0x8d, 0xb1, 0x04, 0x15, 0x97, 0xe6, 0xf0, 0x9d, 0x68, 0xdf, 0x98, 0x8e, 0xcb, 0x2f, 0x86, 0x5d,
-	0xb3, 0x47, 0xfb, 0xd6, 0x18, 0xb4, 0xef, 0xd2, 0xd4, 0x93, 0x75, 0x95, 0xfc, 0x32, 0xd2, 0x5d,
-	0x8e, 0x7e, 0x10, 0xf9, 0xe8, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x23, 0x27, 0xbe, 0x30, 0xff,
-	0x11, 0x00, 0x00,
+	0x26, 0x25, 0x57, 0x16, 0x92, 0xac, 0xe6, 0x7a, 0x94, 0xaa, 0x18, 0xb6, 0x63, 0x97, 0xdd, 0xe1,
+	0x2b, 0xc5, 0x61, 0x42, 0xb1, 0xc3, 0xac, 0x08, 0x6f, 0x8d, 0x90, 0x63, 0xea, 0x20, 0x1d, 0xa8,
+	0xa5, 0x8c, 0xa9, 0x55, 0x56, 0x8b, 0xa9, 0x6c, 0x25, 0x76, 0x54, 0x42, 0x1e, 0x54, 0x73, 0xbd,
+	0xc8, 0xd3, 0xbb, 0xbf, 0xd0, 0xe9, 0x3d, 0x52, 0x9a, 0x92, 0x27, 0x17, 0x40, 0x7d, 0x96, 0x2d,
+	0x29, 0xf8, 0x60, 0x21, 0x41, 0x23, 0xcf, 0x9f, 0xd0, 0xcc, 0xbc, 0x4d, 0xc5, 0x24, 0x9e, 0x7a,
+	0x5d, 0x66, 0xa6, 0x81, 0x18, 0x60, 0x27, 0x51, 0xc4, 0xf9, 0x1f, 0xa6, 0x81, 0xc8, 0x4a, 0xf3,
+	0xa6, 0x81, 0x90, 0x8b, 0xa7, 0x81, 0xa8, 0xc9, 0x9f, 0x06, 0x93, 0x2d, 0x0a, 0x07, 0x87, 0x3f,
+	0xaf, 0xc1, 0x9d, 0x16, 0x73, 0xd0, 0x39, 0xac, 0x24, 0xaf, 0x47, 0xf4, 0x24, 0x77, 0xfc, 0x64,
+	0x23, 0x9b, 0xfe, 0x61, 0x31, 0xb0, 0xd0, 0x1b, 0xeb, 0x34, 0x5c, 0xbb, 0x80, 0xce, 0x38, 0xeb,
+	0x15, 0xd0, 0x49, 0x25, 0x40, 0xe4, 0xc1, 0x6a, 0x2a, 0xe5, 0xa1, 0xfd, 0x59, 0xc5, 0x99, 0x98,
+	0xa8, 0x9b, 0x45, 0xe1, 0x52, 0xad, 0x07, 0xf7, 0xe2, 0x8c, 0x88, 0x1e, 0xcf, 0xa8, 0x9d, 0x8a,
+	0x97, 0xfa, 0x93, 0x42, 0xd8, 0x49, 0x91, 0x30, 0x5b, 0xce, 0x15, 0x49, 0xc5, 0xd2, 0xb9, 0x22,
+	0xe9, 0xb0, 0x8a, 0x28, 0xdc, 0x4f, 0xe7, 0x51, 0x34, 0xeb, 0x24, 0x14, 0x91, 0x56, 0xb7, 0x0a,
+	0xe3, 0xa5, 0xe0, 0x10, 0xd6, 0x26, 0x93, 0x2c, 0x7a, 0x3a, 0x97, 0x62, 0x2a, 0x10, 0xeb, 0x07,
+	0x0b, 0x54, 0x48, 0xd9, 0x1f, 0x34, 0x58, 0x57, 0x64, 0x60, 0xf4, 0xf1, 0x5c, 0x2a, 0x55, 0xa8,
+	0xd6, 0x8f, 0x16, 0x2d, 0xcb, 0x69, 0x43, 0xe6, 0xe8, 0xc2, 0x6d, 0x4c, 0x06, 0xf3, 0xc2, 0x6d,
+	0x4c, 0xc5, 0x75, 0xf4, 0x93, 0x06, 0x9b, 0xea, 0x20, 0x8e, 0x3e, 0x2d, 0x48, 0x99, 0xc9, 0xf7,
+	0xfa, 0x67, 0xb7, 0xa8, 0x94, 0xfd, 0xbc, 0xd6, 0xa0, 0x94, 0x13, 0xe7, 0xd1, 0x7c, 0xda, 0xbc,
+	0xef, 0x04, 0xfd, 0xd9, 0x6d, 0x4a, 0x65, 0x4b, 0x3f, 0x6a, 0xb0, 0xa1, 0xfa, 0x32, 0x40, 0x47,
+	0x05, 0x49, 0xa7, 0x3e, 0x36, 0xf4, 0x4f, 0x16, 0xae, 0x93, 0x9d, 0x5c, 0xc1, 0xfb, 0x53, 0xd9,
+	0x1e, 0xcd, 0xba, 0x00, 0xea, 0x4f, 0x15, 0xfd, 0x70, 0x91, 0x12, 0xa9, 0x1c, 0xc0, 0x83, 0x89,
+	0x39, 0x88, 0xac, 0xd9, 0x24, 0x99, 0x0f, 0x0c, 0xfd, 0x69, 0xf1, 0x82, 0x09, 0xb7, 0xe9, 0xd9,
+	0x35, 0xcf, 0xad, 0x62, 0x14, 0xcf, 0x73, 0xab, 0x1a, 0x8d, 0x0d, 0xf2, 0xe6, 0xda, 0xd0, 0xde,
+	0x5e, 0x1b, 0xda, 0xdf, 0xd7, 0x86, 0xf6, 0xfa, 0xc6, 0x58, 0x7a, 0x7b, 0x63, 0x2c, 0xfd, 0x79,
+	0x63, 0x2c, 0x41, 0xc5, 0xa5, 0x39, 0x7c, 0x27, 0xda, 0x37, 0xa6, 0xe3, 0xf2, 0x8b, 0x61, 0xd7,
+	0xec, 0xd1, 0xbe, 0x35, 0x06, 0xed, 0xbb, 0x34, 0xf5, 0x64, 0x5d, 0x25, 0xbf, 0x8c, 0x74, 0x97,
+	0xa3, 0x1f, 0x44, 0x3e, 0xfa, 0x37, 0x00, 0x00, 0xff, 0xff, 0xd0, 0x7d, 0x80, 0x24, 0xff, 0x11,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2654,10 +2654,10 @@ func (m *MsgGovManageFeesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	_ = i
 	var l int
 	_ = l
-	if len(m.RemoveFeeSettlementBuyerRatios) > 0 {
-		for iNdEx := len(m.RemoveFeeSettlementBuyerRatios) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.RemoveFeeBuyerSettlementRatios) > 0 {
+		for iNdEx := len(m.RemoveFeeBuyerSettlementRatios) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.RemoveFeeSettlementBuyerRatios[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.RemoveFeeBuyerSettlementRatios[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -2668,10 +2668,10 @@ func (m *MsgGovManageFeesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 			dAtA[i] = 0x6a
 		}
 	}
-	if len(m.AddFeeSettlementBuyerRatios) > 0 {
-		for iNdEx := len(m.AddFeeSettlementBuyerRatios) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.AddFeeBuyerSettlementRatios) > 0 {
+		for iNdEx := len(m.AddFeeBuyerSettlementRatios) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.AddFeeSettlementBuyerRatios[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.AddFeeBuyerSettlementRatios[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -2682,10 +2682,10 @@ func (m *MsgGovManageFeesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 			dAtA[i] = 0x62
 		}
 	}
-	if len(m.RemoveFeeSettlementBuyerFlat) > 0 {
-		for iNdEx := len(m.RemoveFeeSettlementBuyerFlat) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.RemoveFeeBuyerSettlementFlat) > 0 {
+		for iNdEx := len(m.RemoveFeeBuyerSettlementFlat) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.RemoveFeeSettlementBuyerFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.RemoveFeeBuyerSettlementFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -2696,10 +2696,10 @@ func (m *MsgGovManageFeesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 			dAtA[i] = 0x5a
 		}
 	}
-	if len(m.AddFeeSettlementBuyerFlat) > 0 {
-		for iNdEx := len(m.AddFeeSettlementBuyerFlat) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.AddFeeBuyerSettlementFlat) > 0 {
+		for iNdEx := len(m.AddFeeBuyerSettlementFlat) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.AddFeeSettlementBuyerFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.AddFeeBuyerSettlementFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -2710,10 +2710,10 @@ func (m *MsgGovManageFeesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 			dAtA[i] = 0x52
 		}
 	}
-	if len(m.RemoveFeeSettlementSellerRatios) > 0 {
-		for iNdEx := len(m.RemoveFeeSettlementSellerRatios) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.RemoveFeeSellerSettlementRatios) > 0 {
+		for iNdEx := len(m.RemoveFeeSellerSettlementRatios) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.RemoveFeeSettlementSellerRatios[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.RemoveFeeSellerSettlementRatios[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -2724,10 +2724,10 @@ func (m *MsgGovManageFeesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 			dAtA[i] = 0x4a
 		}
 	}
-	if len(m.AddFeeSettlementSellerRatios) > 0 {
-		for iNdEx := len(m.AddFeeSettlementSellerRatios) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.AddFeeSellerSettlementRatios) > 0 {
+		for iNdEx := len(m.AddFeeSellerSettlementRatios) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.AddFeeSettlementSellerRatios[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.AddFeeSellerSettlementRatios[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -2738,10 +2738,10 @@ func (m *MsgGovManageFeesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 			dAtA[i] = 0x42
 		}
 	}
-	if len(m.RemoveFeeSettlementSellerFlat) > 0 {
-		for iNdEx := len(m.RemoveFeeSettlementSellerFlat) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.RemoveFeeSellerSettlementFlat) > 0 {
+		for iNdEx := len(m.RemoveFeeSellerSettlementFlat) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.RemoveFeeSettlementSellerFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.RemoveFeeSellerSettlementFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -2752,10 +2752,10 @@ func (m *MsgGovManageFeesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 			dAtA[i] = 0x3a
 		}
 	}
-	if len(m.AddFeeSettlementSellerFlat) > 0 {
-		for iNdEx := len(m.AddFeeSettlementSellerFlat) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.AddFeeSellerSettlementFlat) > 0 {
+		for iNdEx := len(m.AddFeeSellerSettlementFlat) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.AddFeeSettlementSellerFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.AddFeeSellerSettlementFlat[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -3203,50 +3203,50 @@ func (m *MsgGovManageFeesRequest) Size() (n int) {
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
-	if len(m.AddFeeSettlementSellerFlat) > 0 {
-		for _, e := range m.AddFeeSettlementSellerFlat {
+	if len(m.AddFeeSellerSettlementFlat) > 0 {
+		for _, e := range m.AddFeeSellerSettlementFlat {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
-	if len(m.RemoveFeeSettlementSellerFlat) > 0 {
-		for _, e := range m.RemoveFeeSettlementSellerFlat {
+	if len(m.RemoveFeeSellerSettlementFlat) > 0 {
+		for _, e := range m.RemoveFeeSellerSettlementFlat {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
-	if len(m.AddFeeSettlementSellerRatios) > 0 {
-		for _, e := range m.AddFeeSettlementSellerRatios {
+	if len(m.AddFeeSellerSettlementRatios) > 0 {
+		for _, e := range m.AddFeeSellerSettlementRatios {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
-	if len(m.RemoveFeeSettlementSellerRatios) > 0 {
-		for _, e := range m.RemoveFeeSettlementSellerRatios {
+	if len(m.RemoveFeeSellerSettlementRatios) > 0 {
+		for _, e := range m.RemoveFeeSellerSettlementRatios {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
-	if len(m.AddFeeSettlementBuyerFlat) > 0 {
-		for _, e := range m.AddFeeSettlementBuyerFlat {
+	if len(m.AddFeeBuyerSettlementFlat) > 0 {
+		for _, e := range m.AddFeeBuyerSettlementFlat {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
-	if len(m.RemoveFeeSettlementBuyerFlat) > 0 {
-		for _, e := range m.RemoveFeeSettlementBuyerFlat {
+	if len(m.RemoveFeeBuyerSettlementFlat) > 0 {
+		for _, e := range m.RemoveFeeBuyerSettlementFlat {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
-	if len(m.AddFeeSettlementBuyerRatios) > 0 {
-		for _, e := range m.AddFeeSettlementBuyerRatios {
+	if len(m.AddFeeBuyerSettlementRatios) > 0 {
+		for _, e := range m.AddFeeBuyerSettlementRatios {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
-	if len(m.RemoveFeeSettlementBuyerRatios) > 0 {
-		for _, e := range m.RemoveFeeSettlementBuyerRatios {
+	if len(m.RemoveFeeBuyerSettlementRatios) > 0 {
+		for _, e := range m.RemoveFeeBuyerSettlementRatios {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
@@ -4857,7 +4857,7 @@ func (m *MsgGovManageFeesRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AddFeeSettlementSellerFlat", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AddFeeSellerSettlementFlat", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -4884,14 +4884,14 @@ func (m *MsgGovManageFeesRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AddFeeSettlementSellerFlat = append(m.AddFeeSettlementSellerFlat, types.Coin{})
-			if err := m.AddFeeSettlementSellerFlat[len(m.AddFeeSettlementSellerFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.AddFeeSellerSettlementFlat = append(m.AddFeeSellerSettlementFlat, types.Coin{})
+			if err := m.AddFeeSellerSettlementFlat[len(m.AddFeeSellerSettlementFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 7:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RemoveFeeSettlementSellerFlat", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field RemoveFeeSellerSettlementFlat", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -4918,14 +4918,14 @@ func (m *MsgGovManageFeesRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.RemoveFeeSettlementSellerFlat = append(m.RemoveFeeSettlementSellerFlat, types.Coin{})
-			if err := m.RemoveFeeSettlementSellerFlat[len(m.RemoveFeeSettlementSellerFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.RemoveFeeSellerSettlementFlat = append(m.RemoveFeeSellerSettlementFlat, types.Coin{})
+			if err := m.RemoveFeeSellerSettlementFlat[len(m.RemoveFeeSellerSettlementFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 8:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AddFeeSettlementSellerRatios", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AddFeeSellerSettlementRatios", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -4952,14 +4952,14 @@ func (m *MsgGovManageFeesRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AddFeeSettlementSellerRatios = append(m.AddFeeSettlementSellerRatios, FeeRatio{})
-			if err := m.AddFeeSettlementSellerRatios[len(m.AddFeeSettlementSellerRatios)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.AddFeeSellerSettlementRatios = append(m.AddFeeSellerSettlementRatios, FeeRatio{})
+			if err := m.AddFeeSellerSettlementRatios[len(m.AddFeeSellerSettlementRatios)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 9:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RemoveFeeSettlementSellerRatios", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field RemoveFeeSellerSettlementRatios", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -4986,14 +4986,14 @@ func (m *MsgGovManageFeesRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.RemoveFeeSettlementSellerRatios = append(m.RemoveFeeSettlementSellerRatios, FeeRatio{})
-			if err := m.RemoveFeeSettlementSellerRatios[len(m.RemoveFeeSettlementSellerRatios)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.RemoveFeeSellerSettlementRatios = append(m.RemoveFeeSellerSettlementRatios, FeeRatio{})
+			if err := m.RemoveFeeSellerSettlementRatios[len(m.RemoveFeeSellerSettlementRatios)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 10:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AddFeeSettlementBuyerFlat", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AddFeeBuyerSettlementFlat", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -5020,14 +5020,14 @@ func (m *MsgGovManageFeesRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AddFeeSettlementBuyerFlat = append(m.AddFeeSettlementBuyerFlat, types.Coin{})
-			if err := m.AddFeeSettlementBuyerFlat[len(m.AddFeeSettlementBuyerFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.AddFeeBuyerSettlementFlat = append(m.AddFeeBuyerSettlementFlat, types.Coin{})
+			if err := m.AddFeeBuyerSettlementFlat[len(m.AddFeeBuyerSettlementFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 11:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RemoveFeeSettlementBuyerFlat", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field RemoveFeeBuyerSettlementFlat", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -5054,14 +5054,14 @@ func (m *MsgGovManageFeesRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.RemoveFeeSettlementBuyerFlat = append(m.RemoveFeeSettlementBuyerFlat, types.Coin{})
-			if err := m.RemoveFeeSettlementBuyerFlat[len(m.RemoveFeeSettlementBuyerFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.RemoveFeeBuyerSettlementFlat = append(m.RemoveFeeBuyerSettlementFlat, types.Coin{})
+			if err := m.RemoveFeeBuyerSettlementFlat[len(m.RemoveFeeBuyerSettlementFlat)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 12:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AddFeeSettlementBuyerRatios", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AddFeeBuyerSettlementRatios", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -5088,14 +5088,14 @@ func (m *MsgGovManageFeesRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AddFeeSettlementBuyerRatios = append(m.AddFeeSettlementBuyerRatios, FeeRatio{})
-			if err := m.AddFeeSettlementBuyerRatios[len(m.AddFeeSettlementBuyerRatios)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.AddFeeBuyerSettlementRatios = append(m.AddFeeBuyerSettlementRatios, FeeRatio{})
+			if err := m.AddFeeBuyerSettlementRatios[len(m.AddFeeBuyerSettlementRatios)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 13:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RemoveFeeSettlementBuyerRatios", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field RemoveFeeBuyerSettlementRatios", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -5122,8 +5122,8 @@ func (m *MsgGovManageFeesRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.RemoveFeeSettlementBuyerRatios = append(m.RemoveFeeSettlementBuyerRatios, FeeRatio{})
-			if err := m.RemoveFeeSettlementBuyerRatios[len(m.RemoveFeeSettlementBuyerRatios)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.RemoveFeeBuyerSettlementRatios = append(m.RemoveFeeBuyerSettlementRatios, FeeRatio{})
+			if err := m.RemoveFeeBuyerSettlementRatios[len(m.RemoveFeeBuyerSettlementRatios)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

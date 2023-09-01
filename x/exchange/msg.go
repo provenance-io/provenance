@@ -169,12 +169,12 @@ func (m MsgGovManageFeesRequest) ValidateBasic() error {
 		errs = append(errs,
 			ValidateAddRemoveFeeOptions("create-ask flat fee", m.AddFeeCreateAskFlat, m.RemoveFeeCreateAskFlat),
 			ValidateAddRemoveFeeOptions("create-bid flat fee", m.AddFeeCreateBidFlat, m.RemoveFeeCreateBidFlat),
-			ValidateAddRemoveFeeOptions("seller settlement flat fee", m.AddFeeSettlementSellerFlat, m.RemoveFeeSettlementSellerFlat),
-			ValidateSellerFeeRatios(m.AddFeeSettlementSellerRatios),
-			ValidateDisjointFeeRatios("seller settlement fee", m.AddFeeSettlementSellerRatios, m.RemoveFeeSettlementSellerRatios),
-			ValidateAddRemoveFeeOptions("buyer settlement flat fee", m.AddFeeSettlementBuyerFlat, m.RemoveFeeSettlementBuyerFlat),
-			ValidateBuyerFeeRatios(m.AddFeeSettlementBuyerRatios),
-			ValidateDisjointFeeRatios("buyer settlement fee", m.AddFeeSettlementBuyerRatios, m.RemoveFeeSettlementBuyerRatios),
+			ValidateAddRemoveFeeOptions("seller settlement flat fee", m.AddFeeSellerSettlementFlat, m.RemoveFeeSellerSettlementFlat),
+			ValidateSellerFeeRatios(m.AddFeeSellerSettlementRatios),
+			ValidateDisjointFeeRatios("seller settlement fee", m.AddFeeSellerSettlementRatios, m.RemoveFeeSellerSettlementRatios),
+			ValidateAddRemoveFeeOptions("buyer settlement flat fee", m.AddFeeBuyerSettlementFlat, m.RemoveFeeBuyerSettlementFlat),
+			ValidateBuyerFeeRatios(m.AddFeeBuyerSettlementRatios),
+			ValidateDisjointFeeRatios("buyer settlement fee", m.AddFeeBuyerSettlementRatios, m.RemoveFeeBuyerSettlementRatios),
 		)
 	} else {
 		errs = append(errs, errors.New("no updates"))
@@ -187,10 +187,10 @@ func (m MsgGovManageFeesRequest) ValidateBasic() error {
 func (m MsgGovManageFeesRequest) HasUpdates() bool {
 	return len(m.AddFeeCreateAskFlat) > 0 || len(m.RemoveFeeCreateAskFlat) > 0 ||
 		len(m.AddFeeCreateBidFlat) > 0 || len(m.RemoveFeeCreateBidFlat) > 0 ||
-		len(m.AddFeeSettlementSellerFlat) > 0 || len(m.RemoveFeeSettlementSellerFlat) > 0 ||
-		len(m.AddFeeSettlementSellerRatios) > 0 || len(m.RemoveFeeSettlementSellerRatios) > 0 ||
-		len(m.AddFeeSettlementBuyerFlat) > 0 || len(m.RemoveFeeSettlementBuyerFlat) > 0 ||
-		len(m.AddFeeSettlementBuyerRatios) > 0 || len(m.RemoveFeeSettlementBuyerRatios) > 0
+		len(m.AddFeeSellerSettlementFlat) > 0 || len(m.RemoveFeeSellerSettlementFlat) > 0 ||
+		len(m.AddFeeSellerSettlementRatios) > 0 || len(m.RemoveFeeSellerSettlementRatios) > 0 ||
+		len(m.AddFeeBuyerSettlementFlat) > 0 || len(m.RemoveFeeBuyerSettlementFlat) > 0 ||
+		len(m.AddFeeBuyerSettlementRatios) > 0 || len(m.RemoveFeeBuyerSettlementRatios) > 0
 }
 
 func (m MsgGovManageFeesRequest) GetSigners() []sdk.AccAddress {
