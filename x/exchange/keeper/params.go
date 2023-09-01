@@ -9,22 +9,7 @@ import (
 
 // deleteAllParamsSplits deletes all the params splits in the store.
 func deleteAllParamsSplits(store sdk.KVStore) {
-	var keys [][]byte
-
-	// Using a prefix iterator so that iter.Key() is the whole key (including the prefix).
-	iter := sdk.KVStorePrefixIterator(store, MakeKeyPrefixParamsSplit())
-	defer func() {
-		if iter != nil {
-			iter.Close()
-		}
-	}()
-
-	for ; iter.Valid(); iter.Next() {
-		keys = append(keys, iter.Key())
-	}
-	iter.Close()
-	iter = nil
-
+	keys := getAllKeys(store, MakeKeyPrefixParamsSplit())
 	for _, key := range keys {
 		store.Delete(key)
 	}
