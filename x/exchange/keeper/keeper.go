@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -49,5 +50,21 @@ func deleteAll(store sdk.KVStore, pre []byte) {
 	keys := getAllKeys(store, pre)
 	for _, key := range keys {
 		store.Delete(key)
+	}
+}
+
+// iterate iterates over all the entries in the store with the given prefix.
+// The key provided to the callback will NOT have the provided prefix; it will be everything after it.
+// The callback should return false to continue iteration, or true to stop.
+func (k Keeper) iterate(ctx sdk.Context, pre []byte, cb func(key, value []byte) bool) {
+	// Using an open iterator on a prefixed store here so that iter.Key() doesn't contain the prefix.
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), pre)
+	iter := store.Iterator(nil, nil)
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		if cb(iter.Key(), iter.Value()) {
+			break
+		}
 	}
 }

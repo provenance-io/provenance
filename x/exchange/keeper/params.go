@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
@@ -48,26 +47,20 @@ func (k Keeper) SetParams(ctx sdk.Context, params *exchange.Params) {
 // GetParams gets the exchange module params.
 // If there aren't any params in state, nil is returned.
 func (k Keeper) GetParams(ctx sdk.Context) *exchange.Params {
-	// Using an open iterator on a prefixed store here so that iter.Key() doesn't contain the prefix.
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), GetKeyPrefixParamsSplit())
-	iter := store.Iterator(nil, nil)
-	defer iter.Close()
-
 	var rv *exchange.Params
-	for ; iter.Valid(); iter.Next() {
-		denom := string(iter.Key())
-		split := uint16FromBz(iter.Value())
-
+	k.iterate(ctx, GetKeyPrefixParamsSplit(), func(key, value []byte) bool {
 		if rv == nil {
 			rv = &exchange.Params{}
 		}
+		denom := string(key)
+		split := uint16FromBz(value)
 		if len(denom) == 0 {
 			rv.DefaultSplit = uint32(split)
 		} else {
 			rv.DenomSplits = append(rv.DenomSplits, exchange.DenomSplit{Denom: denom, Split: uint32(split)})
 		}
-	}
-
+		return false
+	})
 	return rv
 }
 
