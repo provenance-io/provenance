@@ -9,7 +9,7 @@ import (
 
 // deleteAllParamsSplits deletes all the params splits in the store.
 func deleteAllParamsSplits(store sdk.KVStore) {
-	keys := getAllKeys(store, MakeKeyPrefixParamsSplit())
+	keys := getAllKeys(store, GetKeyPrefixParamsSplit())
 	for _, key := range keys {
 		store.Delete(key)
 	}
@@ -49,7 +49,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params *exchange.Params) {
 // If there aren't any params in state, nil is returned.
 func (k Keeper) GetParams(ctx sdk.Context) *exchange.Params {
 	// Using an open iterator on a prefixed store here so that iter.Key() doesn't contain the prefix.
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), MakeKeyPrefixParamsSplit())
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), GetKeyPrefixParamsSplit())
 	iter := store.Iterator(nil, nil)
 	defer iter.Close()
 

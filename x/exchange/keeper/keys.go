@@ -148,8 +148,8 @@ func keyPrefixParamsSplit(extraCap int) []byte {
 	return prepKey(KeyTypeParams, []byte("split"), extraCap)
 }
 
-// MakeKeyPrefixParamsSplit creates the key prefix for all params splits entries.
-func MakeKeyPrefixParamsSplit() []byte {
+// GetKeyPrefixParamsSplit creates the key prefix for all params splits entries.
+func GetKeyPrefixParamsSplit() []byte {
 	return keyPrefixParamsSplit(0)
 }
 
@@ -166,8 +166,8 @@ func keyPrefixMarket(marketID uint32, extraCap int) []byte {
 	return prepKey(KeyTypeMarket, uint32Bz(marketID), extraCap)
 }
 
-// MakeKeyPrefixMarket creates the key prefix for all of a market's entries.
-func MakeKeyPrefixMarket(marketID uint32) []byte {
+// GetKeyPrefixMarket creates the key prefix for all of a market's entries.
+func GetKeyPrefixMarket(marketID uint32) []byte {
 	return keyPrefixMarket(marketID, 0)
 }
 
@@ -184,8 +184,8 @@ func marketKeyPrefixCreateAskFlatFee(marketID uint32, extraCap int) []byte {
 	return keyPrefixMarketType(marketID, MarketKeyTypeCreateAskFlat, extraCap)
 }
 
-// MakeKeyPrefixMarketCreateAskFlatFee creates the key prefix for the create-ask flat fees for the provided market.
-func MakeKeyPrefixMarketCreateAskFlatFee(marketID uint32) []byte {
+// GetKeyPrefixMarketCreateAskFlatFee creates the key prefix for the create-ask flat fees for the provided market.
+func GetKeyPrefixMarketCreateAskFlatFee(marketID uint32) []byte {
 	return marketKeyPrefixCreateAskFlatFee(marketID, 0)
 }
 
@@ -201,8 +201,8 @@ func marketKeyPrefixCreateBidFlatFee(marketID uint32, extraCap int) []byte {
 	return keyPrefixMarketType(marketID, MarketKeyTypeCreateBidFlat, extraCap)
 }
 
-// MakeKeyPrefixMarketCreateBidFlatFee creates the key prefix for the create-bid flat fees for the provided market.
-func MakeKeyPrefixMarketCreateBidFlatFee(marketID uint32) []byte {
+// GetKeyPrefixMarketCreateBidFlatFee creates the key prefix for the create-bid flat fees for the provided market.
+func GetKeyPrefixMarketCreateBidFlatFee(marketID uint32) []byte {
 	return marketKeyPrefixCreateBidFlatFee(marketID, 0)
 }
 
@@ -218,8 +218,8 @@ func marketKeyPrefixSellerSettlementFlatFee(marketID uint32, extraCap int) []byt
 	return keyPrefixMarketType(marketID, MarketKeyTypeSellerSettlementFlat, extraCap)
 }
 
-// MakeKeyPrefixMarketSellerSettlementFlatFee creates the key prefix for a market's seller settlement flat fees.
-func MakeKeyPrefixMarketSellerSettlementFlatFee(marketID uint32) []byte {
+// GetKeyPrefixMarketSellerSettlementFlatFee creates the key prefix for a market's seller settlement flat fees.
+func GetKeyPrefixMarketSellerSettlementFlatFee(marketID uint32) []byte {
 	return marketKeyPrefixSellerSettlementFlatFee(marketID, 0)
 }
 
@@ -235,8 +235,8 @@ func marketKeyPrefixSellerSettlementRatio(marketID uint32, extraCap int) []byte 
 	return keyPrefixMarketType(marketID, MarketKeyTypeSellerSettlementRatio, extraCap)
 }
 
-// MakeKeyPrefixMarketSellerSettlementRatio creates the key prefix for a market's seller settlement fee ratios.
-func MakeKeyPrefixMarketSellerSettlementRatio(marketID uint32) []byte {
+// GetKeyPrefixMarketSellerSettlementRatio creates the key prefix for a market's seller settlement fee ratios.
+func GetKeyPrefixMarketSellerSettlementRatio(marketID uint32) []byte {
 	return marketKeyPrefixSellerSettlementRatio(marketID, 0)
 }
 
@@ -254,8 +254,8 @@ func marketKeyPrefixBuyerSettlementFlatFee(marketID uint32, extraCap int) []byte
 	return keyPrefixMarketType(marketID, MarketKeyTypeBuyerSettlementFlat, extraCap)
 }
 
-// MakeKeyPrefixMarketBuyerSettlementFlatFee creates the key prefix for a market's buyer settlement flat fees.
-func MakeKeyPrefixMarketBuyerSettlementFlatFee(marketID uint32) []byte {
+// GetKeyPrefixMarketBuyerSettlementFlatFee creates the key prefix for a market's buyer settlement flat fees.
+func GetKeyPrefixMarketBuyerSettlementFlatFee(marketID uint32) []byte {
 	return marketKeyPrefixBuyerSettlementFlatFee(marketID, 0)
 }
 
@@ -271,8 +271,8 @@ func marketKeyPrefixBuyerSettlementRatio(marketID uint32, extraCap int) []byte {
 	return keyPrefixMarketType(marketID, MarketKeyTypeBuyerSettlementRatio, extraCap)
 }
 
-// MakeKeyPrefixMarketBuyerSettlementRatio creates the key prefix for a market's buyer settlement fee ratios.
-func MakeKeyPrefixMarketBuyerSettlementRatio(marketID uint32) []byte {
+// GetKeyPrefixMarketBuyerSettlementRatio creates the key prefix for a market's buyer settlement fee ratios.
+func GetKeyPrefixMarketBuyerSettlementRatio(marketID uint32) []byte {
 	return marketKeyPrefixBuyerSettlementRatio(marketID, 0)
 }
 
@@ -310,13 +310,13 @@ func marketKeyPrefixPermissionsForAddress(marketID uint32, addr sdk.AccAddress, 
 	return rv
 }
 
-// MakeKeyPrefixMarketPermissions creates the key prefix for a market's permissions.
-func MakeKeyPrefixMarketPermissions(marketID uint32) []byte {
+// GetKeyPrefixMarketPermissions creates the key prefix for a market's permissions.
+func GetKeyPrefixMarketPermissions(marketID uint32) []byte {
 	return marketKeyPrefixPermissions(marketID, 0)
 }
 
-// MakeKeyPrefixMarketPermissionsForAddress creates the key prefix for an address' permissions in a given market.
-func MakeKeyPrefixMarketPermissionsForAddress(marketID uint32, addr sdk.AccAddress) []byte {
+// GetKeyPrefixMarketPermissionsForAddress creates the key prefix for an address' permissions in a given market.
+func GetKeyPrefixMarketPermissionsForAddress(marketID uint32, addr sdk.AccAddress) []byte {
 	return marketKeyPrefixPermissionsForAddress(marketID, addr, 0)
 }
 
@@ -354,8 +354,8 @@ func keyPrefixOrder(orderID uint64, extraCap int) []byte {
 	return prepKey(KeyTypeOrder, uint64Bz(orderID), extraCap)
 }
 
-// MakeKeyPrefixOrder creates the key prefix for the given order id.
-func MakeKeyPrefixOrder(orderID uint64) []byte {
+// GetKeyPrefixOrder creates the key prefix for the given order id.
+func GetKeyPrefixOrder(orderID uint64) []byte {
 	return keyPrefixOrder(orderID, 0)
 }
 
@@ -371,8 +371,8 @@ func indexPrefixMarketToOrder(marketID uint32, extraCap int) []byte {
 	return prepKey(KeyTypeMarketToOrderIndex, uint32Bz(marketID), extraCap)
 }
 
-// MakeIndexPrefixMarketToOrder creates the prefix for the market to order index limited ot the given market id.
-func MakeIndexPrefixMarketToOrder(marketID uint32) []byte {
+// GetIndexKeyPrefixMarketToOrder creates the prefix for the market to order index limited ot the given market id.
+func GetIndexKeyPrefixMarketToOrder(marketID uint32) []byte {
 	return indexPrefixMarketToOrder(marketID, 0)
 }
 
@@ -391,8 +391,8 @@ func indexPrefixAddressToOrder(addr sdk.AccAddress, extraCap int) []byte {
 	return prepKey(KeyTypeAddressToOrderIndex, address.MustLengthPrefix(addr), extraCap)
 }
 
-// MakeIndexPrefixAddressToOrder creates a key prefix for the address to order index limited to the given address.
-func MakeIndexPrefixAddressToOrder(addr sdk.AccAddress) []byte {
+// GetIndexKeyPrefixAddressToOrder creates a key prefix for the address to order index limited to the given address.
+func GetIndexKeyPrefixAddressToOrder(addr sdk.AccAddress) []byte {
 	return indexPrefixAddressToOrder(addr, 0)
 }
 
@@ -408,20 +408,20 @@ func indexPrefixAssetToOrder(assetDenom string, extraCap int) []byte {
 	return prepKey(KeyTypeAssetToOrderIndex, []byte(assetDenom), extraCap)
 }
 
-// MakeIndexPrefixAssetToOrder creates a key prefix for the asset to order index limited to the given asset.
-func MakeIndexPrefixAssetToOrder(assetDenom string) []byte {
+// GetIndexKeyPrefixAssetToOrder creates a key prefix for the asset to order index limited to the given asset.
+func GetIndexKeyPrefixAssetToOrder(assetDenom string) []byte {
 	return indexPrefixAssetToOrder(assetDenom, 0)
 }
 
-// MakeIndexPrefixAssetToOrderAsks creates a key prefix for the asset to orders limited to the given asset and only ask orders.
-func MakeIndexPrefixAssetToOrderAsks(assetDenom string) []byte {
+// GetIndexKeyPrefixAssetToOrderAsks creates a key prefix for the asset to orders limited to the given asset and only ask orders.
+func GetIndexKeyPrefixAssetToOrderAsks(assetDenom string) []byte {
 	rv := indexPrefixAssetToOrder(assetDenom, 1)
 	rv = append(rv, OrderKeyTypeAsk)
 	return rv
 }
 
-// MakeIndexPrefixAssetToOrderBids creates a key prefix for the asset to orders limited to the given asset and only bid orders.
-func MakeIndexPrefixAssetToOrderBids(assetDenom string) []byte {
+// GetIndexKeyPrefixAssetToOrderBids creates a key prefix for the asset to orders limited to the given asset and only bid orders.
+func GetIndexKeyPrefixAssetToOrderBids(assetDenom string) []byte {
 	rv := indexPrefixAssetToOrder(assetDenom, 1)
 	rv = append(rv, OrderKeyTypeBid)
 	return rv

@@ -17,22 +17,22 @@ var (
 	// createAskKeyMakers are the key and prefix makers for the create-ask flat fees.
 	createAskKeyMakers = flatFeeKeyMakers{
 		key:    MakeKeyMarketCreateAskFlatFee,
-		prefix: MakeKeyPrefixMarketCreateAskFlatFee,
+		prefix: GetKeyPrefixMarketCreateAskFlatFee,
 	}
 	// createBidKeyMakers are the key and prefix makers for the create-bid flat fees.
 	createBidKeyMakers = flatFeeKeyMakers{
 		key:    MakeKeyMarketCreateBidFlatFee,
-		prefix: MakeKeyPrefixMarketCreateBidFlatFee,
+		prefix: GetKeyPrefixMarketCreateBidFlatFee,
 	}
 	// sellerSettlementFlatKeyMakers are the key and prefix makers for the seller settlement flat fees.
 	sellerSettlementFlatKeyMakers = flatFeeKeyMakers{
 		key:    MakeKeyMarketSellerSettlementFlatFee,
-		prefix: MakeKeyPrefixMarketSellerSettlementFlatFee,
+		prefix: GetKeyPrefixMarketSellerSettlementFlatFee,
 	}
 	// sellerSettlementFlatKeyMakers are the key and prefix makers for the buyer settlement flat fees.
 	buyerSettlementFlatKeyMakers = flatFeeKeyMakers{
 		key:    MakeKeyMarketBuyerSettlementFlatFee,
-		prefix: MakeKeyPrefixMarketBuyerSettlementFlatFee,
+		prefix: GetKeyPrefixMarketBuyerSettlementFlatFee,
 	}
 )
 

@@ -123,14 +123,14 @@ func TestKeyTypeUniqueness(t *testing.T) {
 	}
 }
 
-func TestMakeKeyPrefixParamsSplit(t *testing.T) {
+func TestGetKeyPrefixParamsSplit(t *testing.T) {
 	ktc := keyTestCase{
 		maker: func() []byte {
-			return keeper.MakeKeyPrefixParamsSplit()
+			return keeper.GetKeyPrefixParamsSplit()
 		},
 		expected: []byte{keeper.KeyTypeParams, 's', 'p', 'l', 'i', 't'},
 	}
-	checkKey(t, ktc, "MakeKeyPrefixParamsSplit")
+	checkKey(t, ktc, "GetKeyPrefixParamsSplit")
 }
 
 func TestMakeKeyParamsSplit(t *testing.T) {
@@ -164,7 +164,7 @@ func TestMakeKeyParamsSplit(t *testing.T) {
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "MakeKeyPrefixParamsSplit", value: keeper.MakeKeyPrefixParamsSplit()},
+					{name: "GetKeyPrefixParamsSplit", value: keeper.GetKeyPrefixParamsSplit()},
 				},
 			}
 			checkKey(t, ktc, "MakeKeyParamsSplit(%q)", tc.denom)
@@ -172,7 +172,7 @@ func TestMakeKeyParamsSplit(t *testing.T) {
 	}
 }
 
-func TestMakeKeyPrefixMarket(t *testing.T) {
+func TestGetKeyPrefixMarket(t *testing.T) {
 	tests := []struct {
 		name     string
 		marketID uint32
@@ -224,16 +224,16 @@ func TestMakeKeyPrefixMarket(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeKeyPrefixMarket(tc.marketID)
+					return keeper.GetKeyPrefixMarket(tc.marketID)
 				},
 				expected: tc.expected,
 			}
-			checkKey(t, ktc, "MakeKeyPrefixMarket(%d)", tc.marketID)
+			checkKey(t, ktc, "GetKeyPrefixMarket(%d)", tc.marketID)
 		})
 	}
 }
 
-func TestMakeKeyPrefixMarketCreateAskFlatFee(t *testing.T) {
+func TestGetKeyPrefixMarketCreateAskFlatFee(t *testing.T) {
 	marketTypeByte := keeper.MarketKeyTypeCreateAskFlat
 
 	tests := []struct {
@@ -287,14 +287,14 @@ func TestMakeKeyPrefixMarketCreateAskFlatFee(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeKeyPrefixMarketCreateAskFlatFee(tc.marketID)
+					return keeper.GetKeyPrefixMarketCreateAskFlatFee(tc.marketID)
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "MakeKeyPrefixMarket", value: keeper.MakeKeyPrefixMarket(tc.marketID)},
+					{name: "GetKeyPrefixMarket", value: keeper.GetKeyPrefixMarket(tc.marketID)},
 				},
 			}
-			checkKey(t, ktc, "MakeKeyPrefixMarketCreateAskFlatFee(%d)", tc.marketID)
+			checkKey(t, ktc, "GetKeyPrefixMarketCreateAskFlatFee(%d)", tc.marketID)
 		})
 	}
 }
@@ -373,12 +373,12 @@ func TestMakeKeyMarketCreateAskFlatFee(t *testing.T) {
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
 					{
-						name:  "MakeKeyPrefixMarket",
-						value: keeper.MakeKeyPrefixMarket(tc.marketID),
+						name:  "GetKeyPrefixMarket",
+						value: keeper.GetKeyPrefixMarket(tc.marketID),
 					},
 					{
-						name:  "MakeKeyPrefixMarketCreateBidFlatFee",
-						value: keeper.MakeKeyPrefixMarketCreateAskFlatFee(tc.marketID),
+						name:  "GetKeyPrefixMarketCreateBidFlatFee",
+						value: keeper.GetKeyPrefixMarketCreateAskFlatFee(tc.marketID),
 					},
 				},
 			}
@@ -387,7 +387,7 @@ func TestMakeKeyMarketCreateAskFlatFee(t *testing.T) {
 	}
 }
 
-func TestMakeKeyPrefixMarketCreateBidFlatFee(t *testing.T) {
+func TestGetKeyPrefixMarketCreateBidFlatFee(t *testing.T) {
 	marketTypeByte := keeper.MarketKeyTypeCreateBidFlat
 
 	tests := []struct {
@@ -441,14 +441,14 @@ func TestMakeKeyPrefixMarketCreateBidFlatFee(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeKeyPrefixMarketCreateBidFlatFee(tc.marketID)
+					return keeper.GetKeyPrefixMarketCreateBidFlatFee(tc.marketID)
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "MakeKeyPrefixMarket", value: keeper.MakeKeyPrefixMarket(tc.marketID)},
+					{name: "GetKeyPrefixMarket", value: keeper.GetKeyPrefixMarket(tc.marketID)},
 				},
 			}
-			checkKey(t, ktc, "MakeKeyPrefixMarketCreateBidFlatFee(%d)", tc.marketID)
+			checkKey(t, ktc, "GetKeyPrefixMarketCreateBidFlatFee(%d)", tc.marketID)
 		})
 	}
 }
@@ -527,12 +527,12 @@ func TestMakeKeyMarketCreateBidFlatFee(t *testing.T) {
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
 					{
-						name:  "MakeKeyPrefixMarket",
-						value: keeper.MakeKeyPrefixMarket(tc.marketID),
+						name:  "GetKeyPrefixMarket",
+						value: keeper.GetKeyPrefixMarket(tc.marketID),
 					},
 					{
-						name:  "MakeKeyPrefixMarketCreateBidFlatFee",
-						value: keeper.MakeKeyPrefixMarketCreateBidFlatFee(tc.marketID),
+						name:  "GetKeyPrefixMarketCreateBidFlatFee",
+						value: keeper.GetKeyPrefixMarketCreateBidFlatFee(tc.marketID),
 					},
 				},
 			}
@@ -541,7 +541,7 @@ func TestMakeKeyMarketCreateBidFlatFee(t *testing.T) {
 	}
 }
 
-func TestMakeKeyPrefixMarketSellerSettlementFlatFee(t *testing.T) {
+func TestGetKeyPrefixMarketSellerSettlementFlatFee(t *testing.T) {
 	marketTypeByte := keeper.MarketKeyTypeSellerSettlementFlat
 
 	tests := []struct {
@@ -595,14 +595,14 @@ func TestMakeKeyPrefixMarketSellerSettlementFlatFee(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeKeyPrefixMarketSellerSettlementFlatFee(tc.marketID)
+					return keeper.GetKeyPrefixMarketSellerSettlementFlatFee(tc.marketID)
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "MakeKeyPrefixMarket", value: keeper.MakeKeyPrefixMarket(tc.marketID)},
+					{name: "GetKeyPrefixMarket", value: keeper.GetKeyPrefixMarket(tc.marketID)},
 				},
 			}
-			checkKey(t, ktc, "MakeKeyPrefixMarketSellerSettlementFlatFee(%d)", tc.marketID)
+			checkKey(t, ktc, "GetKeyPrefixMarketSellerSettlementFlatFee(%d)", tc.marketID)
 		})
 	}
 }
@@ -681,12 +681,12 @@ func TestMakeKeyMarketSellerSettlementFlatFee(t *testing.T) {
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
 					{
-						name:  "MakeKeyPrefixMarket",
-						value: keeper.MakeKeyPrefixMarket(tc.marketID),
+						name:  "GetKeyPrefixMarket",
+						value: keeper.GetKeyPrefixMarket(tc.marketID),
 					},
 					{
-						name:  "MakeKeyPrefixMarketSellerSettlementFlatFee",
-						value: keeper.MakeKeyPrefixMarketSellerSettlementFlatFee(tc.marketID),
+						name:  "GetKeyPrefixMarketSellerSettlementFlatFee",
+						value: keeper.GetKeyPrefixMarketSellerSettlementFlatFee(tc.marketID),
 					},
 				},
 			}
@@ -695,7 +695,7 @@ func TestMakeKeyMarketSellerSettlementFlatFee(t *testing.T) {
 	}
 }
 
-func TestMakeKeyPrefixMarketSellerSettlementRatio(t *testing.T) {
+func TestGetKeyPrefixMarketSellerSettlementRatio(t *testing.T) {
 	marketTypeByte := keeper.MarketKeyTypeSellerSettlementRatio
 
 	tests := []struct {
@@ -749,14 +749,14 @@ func TestMakeKeyPrefixMarketSellerSettlementRatio(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeKeyPrefixMarketSellerSettlementRatio(tc.marketID)
+					return keeper.GetKeyPrefixMarketSellerSettlementRatio(tc.marketID)
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "MakeKeyPrefixMarket", value: keeper.MakeKeyPrefixMarket(tc.marketID)},
+					{name: "GetKeyPrefixMarket", value: keeper.GetKeyPrefixMarket(tc.marketID)},
 				},
 			}
-			checkKey(t, ktc, "MakeKeyPrefixMarketSellerSettlementRatio(%d)", tc.marketID)
+			checkKey(t, ktc, "GetKeyPrefixMarketSellerSettlementRatio(%d)", tc.marketID)
 		})
 	}
 }
@@ -814,12 +814,12 @@ func TestMakeKeyMarketSellerSettlementRatio(t *testing.T) {
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
 					{
-						name:  "MakeKeyPrefixMarket",
-						value: keeper.MakeKeyPrefixMarket(tc.marketID),
+						name:  "GetKeyPrefixMarket",
+						value: keeper.GetKeyPrefixMarket(tc.marketID),
 					},
 					{
-						name:  "MakeKeyPrefixMarketSellerSettlementRatio",
-						value: keeper.MakeKeyPrefixMarketSellerSettlementRatio(tc.marketID),
+						name:  "GetKeyPrefixMarketSellerSettlementRatio",
+						value: keeper.GetKeyPrefixMarketSellerSettlementRatio(tc.marketID),
 					},
 				},
 			}
@@ -828,7 +828,7 @@ func TestMakeKeyMarketSellerSettlementRatio(t *testing.T) {
 	}
 }
 
-func TestMakeKeyPrefixMarketBuyerSettlementFlatFee(t *testing.T) {
+func TestGetKeyPrefixMarketBuyerSettlementFlatFee(t *testing.T) {
 	marketTypeByte := keeper.MarketKeyTypeBuyerSettlementFlat
 
 	tests := []struct {
@@ -882,14 +882,14 @@ func TestMakeKeyPrefixMarketBuyerSettlementFlatFee(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeKeyPrefixMarketBuyerSettlementFlatFee(tc.marketID)
+					return keeper.GetKeyPrefixMarketBuyerSettlementFlatFee(tc.marketID)
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "MakeKeyPrefixMarket", value: keeper.MakeKeyPrefixMarket(tc.marketID)},
+					{name: "GetKeyPrefixMarket", value: keeper.GetKeyPrefixMarket(tc.marketID)},
 				},
 			}
-			checkKey(t, ktc, "MakeKeyPrefixMarketBuyerSettlementFlatFee(%d)", tc.marketID)
+			checkKey(t, ktc, "GetKeyPrefixMarketBuyerSettlementFlatFee(%d)", tc.marketID)
 		})
 	}
 }
@@ -968,12 +968,12 @@ func TestMakeKeyMarketBuyerSettlementFlatFee(t *testing.T) {
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
 					{
-						name:  "MakeKeyPrefixMarket",
-						value: keeper.MakeKeyPrefixMarket(tc.marketID),
+						name:  "GetKeyPrefixMarket",
+						value: keeper.GetKeyPrefixMarket(tc.marketID),
 					},
 					{
-						name:  "MakeKeyPrefixMarketBuyerSettlementFlatFee",
-						value: keeper.MakeKeyPrefixMarketBuyerSettlementFlatFee(tc.marketID),
+						name:  "GetKeyPrefixMarketBuyerSettlementFlatFee",
+						value: keeper.GetKeyPrefixMarketBuyerSettlementFlatFee(tc.marketID),
 					},
 				},
 			}
@@ -982,7 +982,7 @@ func TestMakeKeyMarketBuyerSettlementFlatFee(t *testing.T) {
 	}
 }
 
-func TestMakeKeyPrefixMarketBuyerSettlementRatio(t *testing.T) {
+func TestGetKeyPrefixMarketBuyerSettlementRatio(t *testing.T) {
 	marketTypeByte := keeper.MarketKeyTypeBuyerSettlementRatio
 
 	tests := []struct {
@@ -1036,14 +1036,14 @@ func TestMakeKeyPrefixMarketBuyerSettlementRatio(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeKeyPrefixMarketBuyerSettlementRatio(tc.marketID)
+					return keeper.GetKeyPrefixMarketBuyerSettlementRatio(tc.marketID)
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "MakeKeyPrefixMarket", value: keeper.MakeKeyPrefixMarket(tc.marketID)},
+					{name: "GetKeyPrefixMarket", value: keeper.GetKeyPrefixMarket(tc.marketID)},
 				},
 			}
-			checkKey(t, ktc, "MakeKeyPrefixMarketBuyerSettlementRatio(%d)", tc.marketID)
+			checkKey(t, ktc, "GetKeyPrefixMarketBuyerSettlementRatio(%d)", tc.marketID)
 		})
 	}
 }
@@ -1101,12 +1101,12 @@ func TestMakeKeyMarketBuyerSettlementRatio(t *testing.T) {
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
 					{
-						name:  "MakeKeyPrefixMarket",
-						value: keeper.MakeKeyPrefixMarket(tc.marketID),
+						name:  "GetKeyPrefixMarket",
+						value: keeper.GetKeyPrefixMarket(tc.marketID),
 					},
 					{
-						name:  "MakeKeyPrefixMarketBuyerSettlementRatio",
-						value: keeper.MakeKeyPrefixMarketBuyerSettlementRatio(tc.marketID),
+						name:  "GetKeyPrefixMarketBuyerSettlementRatio",
+						value: keeper.GetKeyPrefixMarketBuyerSettlementRatio(tc.marketID),
 					},
 				},
 			}
@@ -1173,7 +1173,7 @@ func TestMakeKeyMarketInactive(t *testing.T) {
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "MakeKeyPrefixMarket", value: keeper.MakeKeyPrefixMarket(tc.marketID)},
+					{name: "GetKeyPrefixMarket", value: keeper.GetKeyPrefixMarket(tc.marketID)},
 				},
 			}
 			checkKey(t, ktc, "MakeKeyMarketInactive(%d)", tc.marketID)
@@ -1239,7 +1239,7 @@ func TestMakeKeyMarketUserSettle(t *testing.T) {
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "MakeKeyPrefixMarket", value: keeper.MakeKeyPrefixMarket(tc.marketID)},
+					{name: "GetKeyPrefixMarket", value: keeper.GetKeyPrefixMarket(tc.marketID)},
 				},
 			}
 			checkKey(t, ktc, "MakeKeyMarketUserSettle(%d)", tc.marketID)
@@ -1247,7 +1247,7 @@ func TestMakeKeyMarketUserSettle(t *testing.T) {
 	}
 }
 
-func TestMakeKeyPrefixMarketPermissions(t *testing.T) {
+func TestGetKeyPrefixMarketPermissions(t *testing.T) {
 	marketTypeByte := keeper.MarketKeyTypePermissions
 
 	tests := []struct {
@@ -1301,19 +1301,19 @@ func TestMakeKeyPrefixMarketPermissions(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeKeyPrefixMarketPermissions(tc.marketID)
+					return keeper.GetKeyPrefixMarketPermissions(tc.marketID)
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "MakeKeyPrefixMarket", value: keeper.MakeKeyPrefixMarket(tc.marketID)},
+					{name: "GetKeyPrefixMarket", value: keeper.GetKeyPrefixMarket(tc.marketID)},
 				},
 			}
-			checkKey(t, ktc, "MakeKeyPrefixMarketPermissions(%d)", tc.marketID)
+			checkKey(t, ktc, "GetKeyPrefixMarketPermissions(%d)", tc.marketID)
 		})
 	}
 }
 
-func TestMakeKeyPrefixMarketPermissionsForAddress(t *testing.T) {
+func TestGetKeyPrefixMarketPermissionsForAddress(t *testing.T) {
 	marketTypeByte := keeper.MarketKeyTypePermissions
 
 	tests := []struct {
@@ -1386,7 +1386,7 @@ func TestMakeKeyPrefixMarketPermissionsForAddress(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeKeyPrefixMarketPermissionsForAddress(tc.marketID, tc.addr)
+					return keeper.GetKeyPrefixMarketPermissionsForAddress(tc.marketID, tc.addr)
 				},
 				expected: tc.expected,
 				expPanic: tc.expPanic,
@@ -1394,16 +1394,16 @@ func TestMakeKeyPrefixMarketPermissionsForAddress(t *testing.T) {
 			if len(tc.expPanic) == 0 {
 				ktc.expPrefixes = []expectedPrefix{
 					{
-						name:  "MakeKeyPrefixMarket",
-						value: keeper.MakeKeyPrefixMarket(tc.marketID),
+						name:  "GetKeyPrefixMarket",
+						value: keeper.GetKeyPrefixMarket(tc.marketID),
 					},
 					{
-						name:  "MakeKeyPrefixMarketPermissions",
-						value: keeper.MakeKeyPrefixMarketPermissions(tc.marketID),
+						name:  "GetKeyPrefixMarketPermissions",
+						value: keeper.GetKeyPrefixMarketPermissions(tc.marketID),
 					},
 				}
 			}
-			checkKey(t, ktc, "MakeKeyPrefixMarketPermissionsForAddress(%d)", tc.marketID)
+			checkKey(t, ktc, "GetKeyPrefixMarketPermissionsForAddress(%d)", tc.marketID)
 		})
 	}
 }
@@ -1627,16 +1627,16 @@ func TestMakeKeyMarketPermissions(t *testing.T) {
 			if len(tc.expPanic) == 0 {
 				ktc.expPrefixes = []expectedPrefix{
 					{
-						name:  "MakeKeyPrefixMarket",
-						value: keeper.MakeKeyPrefixMarket(tc.marketID),
+						name:  "GetKeyPrefixMarket",
+						value: keeper.GetKeyPrefixMarket(tc.marketID),
 					},
 					{
-						name:  "MakeKeyPrefixMarketPermissions",
-						value: keeper.MakeKeyPrefixMarketPermissions(tc.marketID),
+						name:  "GetKeyPrefixMarketPermissions",
+						value: keeper.GetKeyPrefixMarketPermissions(tc.marketID),
 					},
 					{
-						name:  "MakeKeyPrefixMarketPermissionsForAddress",
-						value: keeper.MakeKeyPrefixMarketPermissionsForAddress(tc.marketID, tc.addr),
+						name:  "GetKeyPrefixMarketPermissionsForAddress",
+						value: keeper.GetKeyPrefixMarketPermissionsForAddress(tc.marketID, tc.addr),
 					},
 				}
 			}
@@ -1704,7 +1704,7 @@ func TestMakeKeyMarketReqAttrAsk(t *testing.T) {
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "MakeKeyPrefixMarket", value: keeper.MakeKeyPrefixMarket(tc.marketID)},
+					{name: "GetKeyPrefixMarket", value: keeper.GetKeyPrefixMarket(tc.marketID)},
 				},
 			}
 			checkKey(t, ktc, "MakeKeyMarketReqAttrAsk(%d)", tc.marketID)
@@ -1771,7 +1771,7 @@ func TestMakeKeyMarketReqAttrBid(t *testing.T) {
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "MakeKeyPrefixMarket", value: keeper.MakeKeyPrefixMarket(tc.marketID)},
+					{name: "GetKeyPrefixMarket", value: keeper.GetKeyPrefixMarket(tc.marketID)},
 				},
 			}
 			checkKey(t, ktc, "MakeKeyMarketReqAttrBid(%d)", tc.marketID)
@@ -1779,7 +1779,7 @@ func TestMakeKeyMarketReqAttrBid(t *testing.T) {
 	}
 }
 
-func TestMakeKeyPrefixOrder(t *testing.T) {
+func TestGetKeyPrefixOrder(t *testing.T) {
 	tests := []struct {
 		name     string
 		orderID  uint64
@@ -1851,11 +1851,11 @@ func TestMakeKeyPrefixOrder(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeKeyPrefixOrder(tc.orderID)
+					return keeper.GetKeyPrefixOrder(tc.orderID)
 				},
 				expected: tc.expected,
 			}
-			checkKey(t, ktc, "MakeKeyPrefixOrder(%d)", tc.orderID)
+			checkKey(t, ktc, "GetKeyPrefixOrder(%d)", tc.orderID)
 		})
 	}
 }
@@ -2012,7 +2012,7 @@ func TestMakeKeyOrder(t *testing.T) {
 			}
 			if len(tc.expPanic) == 0 {
 				ktc.expPrefixes = []expectedPrefix{
-					{name: "MakeKeyPrefixOrder", value: keeper.MakeKeyPrefixOrder(tc.order.OrderId)},
+					{name: "GetKeyPrefixOrder", value: keeper.GetKeyPrefixOrder(tc.order.OrderId)},
 				}
 			}
 			checkKey(t, ktc, "MakeKeyOrder %d %T", tc.order.OrderId, tc.order.Order)
@@ -2020,7 +2020,7 @@ func TestMakeKeyOrder(t *testing.T) {
 	}
 }
 
-func TestMakeIndexPrefixMarketToOrder(t *testing.T) {
+func TestGetIndexKeyPrefixMarketToOrder(t *testing.T) {
 	tests := []struct {
 		name     string
 		marketID uint32
@@ -2072,11 +2072,11 @@ func TestMakeIndexPrefixMarketToOrder(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeIndexPrefixMarketToOrder(tc.marketID)
+					return keeper.GetIndexKeyPrefixMarketToOrder(tc.marketID)
 				},
 				expected: tc.expected,
 			}
-			checkKey(t, ktc, "MakeIndexPrefixMarketToOrder(%d)", tc.marketID)
+			checkKey(t, ktc, "GetIndexKeyPrefixMarketToOrder(%d)", tc.marketID)
 		})
 	}
 }
@@ -2159,7 +2159,7 @@ func TestMakeIndexKeyMarketToOrder(t *testing.T) {
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "", value: keeper.MakeIndexPrefixMarketToOrder(tc.marketID)},
+					{name: "", value: keeper.GetIndexKeyPrefixMarketToOrder(tc.marketID)},
 				},
 			}
 			checkKey(t, ktc, "MakeIndexKeyMarketToOrder(%d, %d)", tc.marketID, tc.orderID)
@@ -2167,7 +2167,7 @@ func TestMakeIndexKeyMarketToOrder(t *testing.T) {
 	}
 }
 
-func TestMakeIndexPrefixAddressToOrder(t *testing.T) {
+func TestGetIndexKeyPrefixAddressToOrder(t *testing.T) {
 	tests := []struct {
 		name     string
 		addr     sdk.AccAddress
@@ -2210,12 +2210,12 @@ func TestMakeIndexPrefixAddressToOrder(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeIndexPrefixAddressToOrder(tc.addr)
+					return keeper.GetIndexKeyPrefixAddressToOrder(tc.addr)
 				},
 				expected: tc.expected,
 				expPanic: tc.expPanic,
 			}
-			checkKey(t, ktc, "MakeIndexPrefixAddressToOrder(%s)", string(tc.addr))
+			checkKey(t, ktc, "GetIndexKeyPrefixAddressToOrder(%s)", string(tc.addr))
 		})
 	}
 }
@@ -2306,7 +2306,7 @@ func TestMakeIndexKeyAddressToOrder(t *testing.T) {
 			}
 			if len(tc.expPanic) == 0 {
 				ktc.expPrefixes = []expectedPrefix{
-					{name: "", value: keeper.MakeIndexPrefixAddressToOrder(tc.addr)},
+					{name: "", value: keeper.GetIndexKeyPrefixAddressToOrder(tc.addr)},
 				}
 			}
 			checkKey(t, ktc, "MakeIndexKeyAddressToOrder(%s, %d)", string(tc.addr), tc.orderID)
@@ -2314,7 +2314,7 @@ func TestMakeIndexKeyAddressToOrder(t *testing.T) {
 	}
 }
 
-func TestMakeIndexPrefixAssetToOrder(t *testing.T) {
+func TestGetIndexKeyPrefixAssetToOrder(t *testing.T) {
 	tests := []struct {
 		name       string
 		assetDenom string
@@ -2346,16 +2346,16 @@ func TestMakeIndexPrefixAssetToOrder(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeIndexPrefixAssetToOrder(tc.assetDenom)
+					return keeper.GetIndexKeyPrefixAssetToOrder(tc.assetDenom)
 				},
 				expected: tc.expected,
 			}
-			checkKey(t, ktc, "MakeIndexPrefixAssetToOrder(%q)", tc.assetDenom)
+			checkKey(t, ktc, "GetIndexKeyPrefixAssetToOrder(%q)", tc.assetDenom)
 		})
 	}
 }
 
-func TestMakeIndexPrefixAssetToOrderAsks(t *testing.T) {
+func TestGetIndexKeyPrefixAssetToOrderAsks(t *testing.T) {
 	orderKeyType := keeper.OrderKeyTypeAsk
 	tests := []struct {
 		name       string
@@ -2392,20 +2392,20 @@ func TestMakeIndexPrefixAssetToOrderAsks(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeIndexPrefixAssetToOrderAsks(tc.assetDenom)
+					return keeper.GetIndexKeyPrefixAssetToOrderAsks(tc.assetDenom)
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "MakeIndexPrefixAssetToOrder", value: keeper.MakeIndexPrefixAssetToOrder(tc.assetDenom)},
+					{name: "GetIndexKeyPrefixAssetToOrder", value: keeper.GetIndexKeyPrefixAssetToOrder(tc.assetDenom)},
 				},
 			}
 
-			checkKey(t, ktc, "MakeIndexPrefixAssetToOrderAsks(%q)", tc.assetDenom)
+			checkKey(t, ktc, "GetIndexKeyPrefixAssetToOrderAsks(%q)", tc.assetDenom)
 		})
 	}
 }
 
-func TestMakeIndexPrefixAssetToOrderBids(t *testing.T) {
+func TestGetIndexKeyPrefixAssetToOrderBids(t *testing.T) {
 	orderKeyType := keeper.OrderKeyTypeBid
 	tests := []struct {
 		name       string
@@ -2442,15 +2442,15 @@ func TestMakeIndexPrefixAssetToOrderBids(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeIndexPrefixAssetToOrderBids(tc.assetDenom)
+					return keeper.GetIndexKeyPrefixAssetToOrderBids(tc.assetDenom)
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "MakeIndexPrefixAssetToOrder", value: keeper.MakeIndexPrefixAssetToOrder(tc.assetDenom)},
+					{name: "GetIndexKeyPrefixAssetToOrder", value: keeper.GetIndexKeyPrefixAssetToOrder(tc.assetDenom)},
 				},
 			}
 
-			checkKey(t, ktc, "MakeIndexPrefixAssetToOrderBids(%q)", tc.assetDenom)
+			checkKey(t, ktc, "GetIndexKeyPrefixAssetToOrderBids(%q)", tc.assetDenom)
 		})
 	}
 }
@@ -2578,18 +2578,18 @@ func TestMakeIndexKeyAssetToOrder(t *testing.T) {
 			}
 			if len(tc.expPanic) == 0 {
 				ktc.expPrefixes = []expectedPrefix{
-					{name: "MakeIndexPrefixAssetToOrder", value: keeper.MakeIndexPrefixAssetToOrder(tc.assetDenom)},
+					{name: "GetIndexKeyPrefixAssetToOrder", value: keeper.GetIndexKeyPrefixAssetToOrder(tc.assetDenom)},
 				}
 				switch v := tc.order.Order.(type) {
 				case *exchange.Order_AskOrder:
 					ktc.expPrefixes = append(ktc.expPrefixes, expectedPrefix{
-						name:  "MakeIndexPrefixAssetToOrderAsks",
-						value: keeper.MakeIndexPrefixAssetToOrderAsks(tc.assetDenom),
+						name:  "GetIndexKeyPrefixAssetToOrderAsks",
+						value: keeper.GetIndexKeyPrefixAssetToOrderAsks(tc.assetDenom),
 					})
 				case *exchange.Order_BidOrder:
 					ktc.expPrefixes = append(ktc.expPrefixes, expectedPrefix{
-						name:  "MakeIndexPrefixAssetToOrderBids",
-						value: keeper.MakeIndexPrefixAssetToOrderBids(tc.assetDenom),
+						name:  "GetIndexKeyPrefixAssetToOrderBids",
+						value: keeper.GetIndexKeyPrefixAssetToOrderBids(tc.assetDenom),
 					})
 				default:
 					assert.Fail(t, "no expected prefix case defined for %T", v)
