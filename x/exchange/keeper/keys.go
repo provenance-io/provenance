@@ -25,8 +25,8 @@ import (
 //   All market-related entries start with the type byte 0x01 followed by the <market_id>, then a market key type byte.
 //   The <market_id> is a uint32 in big-endian order (4 bytes).
 //
-//   Market Create Ask Flat Fee: 0x01 | <market_id> | 0x00 | <denom> => <amount> (string)
-//   Market Create Bid Flat Fee: 0x01 | <market_id> | 0x01 | <denom> => <amount> (string)
+//   Market Create-Ask Flat Fee: 0x01 | <market_id> | 0x00 | <denom> => <amount> (string)
+//   Market Create-Bid Flat Fee: 0x01 | <market_id> | 0x01 | <denom> => <amount> (string)
 //   Market Settlement Seller Flat Fee: 0x01 | <market_id> | 0x02 | <denom> => <amount> (string)
 //   Market Settlement Seller Fee Ratio: 0x01 | <market_id> | 0x03 | <price_denom> | 0x00 | <fee_denom> => comma-separated price and fee amount (string).
 //   Market Settlement Buyer Flat Fee: 0x01 | <market_id> | 0x04 | <denom> => <amount> (string)
@@ -72,9 +72,9 @@ const (
 	// KeyTypeAssetToOrderIndex is the type byte for entries in the asset to order index.
 	KeyTypeAssetToOrderIndex = byte(0x05)
 
-	// MarketKeyTypeCreateAskFlat is the market-specific type byte for the create ask flat fees.
+	// MarketKeyTypeCreateAskFlat is the market-specific type byte for the create-ask flat fees.
 	MarketKeyTypeCreateAskFlat = byte(0x00)
-	// MarketKeyTypeCreateBidFlat is the market-specific type byte for the create bid flat fees.
+	// MarketKeyTypeCreateBidFlat is the market-specific type byte for the create-bid flat fees.
 	MarketKeyTypeCreateBidFlat = byte(0x01)
 	// MarketKeyTypeSettlementSellerFlat is the market-specific type byte for the seller settlement flat fees.
 	MarketKeyTypeSettlementSellerFlat = byte(0x02)
@@ -179,34 +179,34 @@ func keyPrefixMarketType(marketID uint32, marketTypeByte byte, extraCap int) []b
 	return rv
 }
 
-// marketKeyPrefixCreateAskFlatFee creates the key prefix for a market's create ask flat fees with extra capacity for the rest.
+// marketKeyPrefixCreateAskFlatFee creates the key prefix for a market's create-ask flat fees with extra capacity for the rest.
 func marketKeyPrefixCreateAskFlatFee(marketID uint32, extraCap int) []byte {
 	return keyPrefixMarketType(marketID, MarketKeyTypeCreateAskFlat, extraCap)
 }
 
-// MakeKeyPrefixMarketCreateAskFlatFee creates the key prefix for the create ask flat fees for the provided market.
+// MakeKeyPrefixMarketCreateAskFlatFee creates the key prefix for the create-ask flat fees for the provided market.
 func MakeKeyPrefixMarketCreateAskFlatFee(marketID uint32) []byte {
 	return marketKeyPrefixCreateAskFlatFee(marketID, 0)
 }
 
-// MakeKeyMarketCreateAskFlatFee creates the key to use for a create ask flat fee for the given market and denom.
+// MakeKeyMarketCreateAskFlatFee creates the key to use for a create-ask flat fee for the given market and denom.
 func MakeKeyMarketCreateAskFlatFee(marketID uint32, denom string) []byte {
 	rv := marketKeyPrefixCreateAskFlatFee(marketID, len(denom))
 	rv = append(rv, denom...)
 	return rv
 }
 
-// marketKeyPrefixCreateBidFlatFee creates the key prefix for a market's create bid flat fees with extra capacity for the rest.
+// marketKeyPrefixCreateBidFlatFee creates the key prefix for a market's create-bid flat fees with extra capacity for the rest.
 func marketKeyPrefixCreateBidFlatFee(marketID uint32, extraCap int) []byte {
 	return keyPrefixMarketType(marketID, MarketKeyTypeCreateBidFlat, extraCap)
 }
 
-// MakeKeyPrefixMarketCreateBidFlatFee creates the key prefix for the create bid flat fees for the provided market.
+// MakeKeyPrefixMarketCreateBidFlatFee creates the key prefix for the create-bid flat fees for the provided market.
 func MakeKeyPrefixMarketCreateBidFlatFee(marketID uint32) []byte {
 	return marketKeyPrefixCreateBidFlatFee(marketID, 0)
 }
 
-// MakeKeyMarketCreateBidFlatFee creates the key to use for a create bid flat fee for the given denom.
+// MakeKeyMarketCreateBidFlatFee creates the key to use for a create-bid flat fee for the given denom.
 func MakeKeyMarketCreateBidFlatFee(marketID uint32, denom string) []byte {
 	rv := marketKeyPrefixCreateBidFlatFee(marketID, len(denom))
 	rv = append(rv, denom...)
@@ -259,7 +259,7 @@ func MakeKeyPrefixMarketSettlementBuyerFlatFee(marketID uint32) []byte {
 	return marketKeyPrefixSettlementBuyerFlatFee(marketID, 0)
 }
 
-// MakeKeyMarketSettlementBuyerFlatFee creates th ekey for a market's settlement buyer flat fee with the given denom.
+// MakeKeyMarketSettlementBuyerFlatFee creates the key for a market's settlement buyer flat fee with the given denom.
 func MakeKeyMarketSettlementBuyerFlatFee(marketID uint32, denom string) []byte {
 	rv := marketKeyPrefixSettlementBuyerFlatFee(marketID, len(denom))
 	rv = append(rv, denom...)
@@ -342,7 +342,7 @@ func MakeKeyMarketReqAttrAsk(marketID uint32) []byte {
 	return rv
 }
 
-// MakeKeyMarketReqAttrBid creates the key to use for a market's attributes required to create an bid order.
+// MakeKeyMarketReqAttrBid creates the key to use for a market's attributes required to create a bid order.
 func MakeKeyMarketReqAttrBid(marketID uint32) []byte {
 	rv := marketKeyPrefixReqAttr(marketID)
 	rv = append(rv, OrderKeyTypeBid)
@@ -403,7 +403,7 @@ func MakeIndexKeyAddressToOrder(addr sdk.AccAddress, orderID uint64) []byte {
 	return rv
 }
 
-// indexPrefixAssetToOrder creates the prefix for the asset to order index enties with some extra space for the rest.
+// indexPrefixAssetToOrder creates the prefix for the asset to order index entries with some extra space for the rest.
 func indexPrefixAssetToOrder(assetDenom string, extraCap int) []byte {
 	return prepKey(KeyTypeAssetToOrderIndex, []byte(assetDenom), extraCap)
 }

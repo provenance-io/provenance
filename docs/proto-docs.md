@@ -2222,10 +2222,10 @@ MsgGovManageFeesRequest is a request message for the GovManageFees endpoint.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  | authority should be the governance module account address. |
-| `add_fee_create_ask_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_create_ask_flat are the create ask flat fee options to add. |
-| `remove_fee_create_ask_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_create_ask_flat are the create ask flat fee options to remove. |
-| `add_fee_create_bid_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_create_bid_flat are the create bid flat fee options to add. |
-| `remove_fee_create_bid_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_create_bid_flat are the create bid flat fee options to remove. |
+| `add_fee_create_ask_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_create_ask_flat are the create-ask flat fee options to add. |
+| `remove_fee_create_ask_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_create_ask_flat are the create-ask flat fee options to remove. |
+| `add_fee_create_bid_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_create_bid_flat are the create-bid flat fee options to add. |
+| `remove_fee_create_bid_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_create_bid_flat are the create-bid flat fee options to remove. |
 | `add_fee_settlement_seller_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_settlement_seller_flat are the seller settlement flat fee options to add. |
 | `remove_fee_settlement_seller_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_settlement_seller_flat are the seller settlement flat fee options to remove. |
 | `add_fee_settlement_seller_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | add_fee_settlement_seller_ratios are the seller settlement fee ratios to add. |

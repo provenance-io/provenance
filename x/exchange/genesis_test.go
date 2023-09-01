@@ -309,9 +309,9 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 			},
 			expErr: []string{
-				`invalid market[0]: invalid create ask flat fee option "-1kif": negative coin amount: -1`,
-				`invalid market[1]: invalid create ask flat fee option "-2kif": negative coin amount: -2`,
-				`invalid market[2]: invalid create ask flat fee option "-3kif": negative coin amount: -3`,
+				`invalid market[0]: invalid create-ask flat fee option "-1kif": negative coin amount: -1`,
+				`invalid market[1]: invalid create-ask flat fee option "-2kif": negative coin amount: -2`,
+				`invalid market[2]: invalid create-ask flat fee option "-3kif": negative coin amount: -3`,
 			},
 		},
 		{
@@ -407,7 +407,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			expErr: []string{
 				"invalid params: default split 10001 cannot be greater than 10000",
-				`invalid market[1]: invalid create bid flat fee option "-1zapp": negative coin amount: -1`,
+				`invalid market[1]: invalid create-bid flat fee option "-1zapp": negative coin amount: -1`,
 				`invalid order[1]: unknown market id 4`,
 			},
 		},

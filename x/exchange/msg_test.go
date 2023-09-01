@@ -219,7 +219,7 @@ func TestMsgGovCreateMarketRequest_ValidateBasic(t *testing.T) {
 					FeeCreateAskFlat: []sdk.Coin{{Denom: "badbad", Amount: sdkmath.NewInt(0)}},
 				},
 			},
-			expErr: []string{`invalid create ask flat fee option "0badbad": amount cannot be zero`},
+			expErr: []string{`invalid create-ask flat fee option "0badbad": amount cannot be zero`},
 		},
 		{
 			name: "multiple errors",
@@ -231,7 +231,7 @@ func TestMsgGovCreateMarketRequest_ValidateBasic(t *testing.T) {
 			},
 			expErr: []string{
 				"invalid authority",
-				`invalid create bid flat fee option "0badbad": amount cannot be zero`,
+				`invalid create-bid flat fee option "0badbad": amount cannot be zero`,
 			},
 		},
 	}
@@ -279,38 +279,38 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 			expErr: []string{"invalid authority", "decoding bech32 failed"},
 		},
 		{
-			name: "invalid add create ask flat",
+			name: "invalid add create-ask flat",
 			msg: MsgGovManageFeesRequest{
 				Authority:           authority,
 				AddFeeCreateAskFlat: []sdk.Coin{coin(0, "nhash")},
 			},
-			expErr: []string{`invalid create ask flat fee to add option "0nhash": amount cannot be zero`},
+			expErr: []string{`invalid create-ask flat fee to add option "0nhash": amount cannot be zero`},
 		},
 		{
-			name: "same add and remove create ask flat",
+			name: "same add and remove create-ask flat",
 			msg: MsgGovManageFeesRequest{
 				Authority:              authority,
 				AddFeeCreateAskFlat:    []sdk.Coin{coin(1, "nhash")},
 				RemoveFeeCreateAskFlat: []sdk.Coin{coin(1, "nhash")},
 			},
-			expErr: []string{"cannot add and remove the same create ask flat fee options: 1nhash"},
+			expErr: []string{"cannot add and remove the same create-ask flat fee options: 1nhash"},
 		},
 		{
-			name: "invalid add create bid flat",
+			name: "invalid add create-bid flat",
 			msg: MsgGovManageFeesRequest{
 				Authority:           authority,
 				AddFeeCreateBidFlat: []sdk.Coin{coin(0, "nhash")},
 			},
-			expErr: []string{`invalid create bid flat fee to add option "0nhash": amount cannot be zero`},
+			expErr: []string{`invalid create-bid flat fee to add option "0nhash": amount cannot be zero`},
 		},
 		{
-			name: "same add and remove create bid flat",
+			name: "same add and remove create-bid flat",
 			msg: MsgGovManageFeesRequest{
 				Authority:              authority,
 				AddFeeCreateBidFlat:    []sdk.Coin{coin(1, "nhash")},
 				RemoveFeeCreateBidFlat: []sdk.Coin{coin(1, "nhash")},
 			},
-			expErr: []string{"cannot add and remove the same create bid flat fee options: 1nhash"},
+			expErr: []string{"cannot add and remove the same create-bid flat fee options: 1nhash"},
 		},
 		{
 			name: "invalid add settlement seller flat",
@@ -399,10 +399,10 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 			},
 			expErr: []string{
 				"invalid authority", "empty address string is not allowed",
-				`invalid create ask flat fee to add option "0nhash": amount cannot be zero`,
-				"cannot add and remove the same create ask flat fee options: 0nhash",
-				`invalid create bid flat fee to add option "0nhash": amount cannot be zero`,
-				"cannot add and remove the same create bid flat fee options: 0nhash",
+				`invalid create-ask flat fee to add option "0nhash": amount cannot be zero`,
+				"cannot add and remove the same create-ask flat fee options: 0nhash",
+				`invalid create-bid flat fee to add option "0nhash": amount cannot be zero`,
+				"cannot add and remove the same create-bid flat fee options: 0nhash",
 				`invalid seller settlement flat fee to add option "0nhash": amount cannot be zero`,
 				"cannot add and remove the same seller settlement flat fee options: 0nhash",
 				`seller fee ratio fee amount "2nhash" cannot be greater than price amount "1nhash"`,
@@ -444,22 +444,22 @@ func TestMsgGovManageFeesRequest_HasUpdates(t *testing.T) {
 			exp: false,
 		},
 		{
-			name: "one add fee create ask flat",
+			name: "one add fee create-ask flat",
 			msg:  MsgGovManageFeesRequest{AddFeeCreateAskFlat: oneCoin},
 			exp:  true,
 		},
 		{
-			name: "one remove fee create ask flat",
+			name: "one remove fee create-ask flat",
 			msg:  MsgGovManageFeesRequest{RemoveFeeCreateAskFlat: oneCoin},
 			exp:  true,
 		},
 		{
-			name: "one add fee create bid flat",
+			name: "one add fee create-bid flat",
 			msg:  MsgGovManageFeesRequest{AddFeeCreateBidFlat: oneCoin},
 			exp:  true,
 		},
 		{
-			name: "one remove fee create bid flat",
+			name: "one remove fee create-bid flat",
 			msg:  MsgGovManageFeesRequest{RemoveFeeCreateBidFlat: oneCoin},
 			exp:  true,
 		},

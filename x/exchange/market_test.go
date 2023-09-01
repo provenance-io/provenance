@@ -81,14 +81,14 @@ func TestMarket_Validate(t *testing.T) {
 			expErr: []string{fmt.Sprintf("name length %d exceeds maximum length of %d", MaxName+1, MaxName)},
 		},
 		{
-			name:   "invalid fee create ask flat",
+			name:   "invalid fee create-ask flat",
 			market: Market{FeeCreateAskFlat: sdk.Coins{coin(-1, "leela")}},
-			expErr: []string{`invalid create ask flat fee option "-1leela": negative coin amount: -1`},
+			expErr: []string{`invalid create-ask flat fee option "-1leela": negative coin amount: -1`},
 		},
 		{
-			name:   "invalid fee create bid flat",
+			name:   "invalid fee create-bid flat",
 			market: Market{FeeCreateBidFlat: sdk.Coins{coin(-1, "leela")}},
-			expErr: []string{`invalid create bid flat fee option "-1leela": negative coin amount: -1`},
+			expErr: []string{`invalid create-bid flat fee option "-1leela": negative coin amount: -1`},
 		},
 		{
 			name:   "invalid fee settlement seller flat",
@@ -129,12 +129,12 @@ func TestMarket_Validate(t *testing.T) {
 		{
 			name:   "invalid ask required attributes",
 			market: Market{ReqAttrCreateAsk: []string{"this-attr-is-bad"}},
-			expErr: []string{`invalid create ask required attributes: invalid required attribute "this-attr-is-bad"`},
+			expErr: []string{`invalid create-ask required attributes: invalid required attribute "this-attr-is-bad"`},
 		},
 		{
 			name:   "invalid bid required attributes",
 			market: Market{ReqAttrCreateBid: []string{"this-attr-grrrr"}},
-			expErr: []string{`invalid create bid required attributes: invalid required attribute "this-attr-grrrr"`},
+			expErr: []string{`invalid create-bid required attributes: invalid required attribute "this-attr-grrrr"`},
 		},
 		{
 			name: "multiple errors",
@@ -152,15 +152,15 @@ func TestMarket_Validate(t *testing.T) {
 			},
 			expErr: []string{
 				fmt.Sprintf("name length %d exceeds maximum length of %d", MaxName+1, MaxName),
-				`invalid create ask flat fee option "-1leela": negative coin amount: -1`,
-				`invalid create bid flat fee option "-1leela": negative coin amount: -1`,
+				`invalid create-ask flat fee option "-1leela": negative coin amount: -1`,
+				`invalid create-bid flat fee option "-1leela": negative coin amount: -1`,
 				`invalid settlement seller flat fee option "-1leela": negative coin amount: -1`,
 				`invalid settlement buyer flat fee option "-1leela": negative coin amount: -1`,
 				`denom "fry" is defined in the seller settlement fee ratios but not buyer`,
 				`denom "leela" is defined in the buyer settlement fee ratios but not seller`,
 				"invalid access grant: invalid address: decoding bech32 failed: invalid separator index -1",
-				`invalid create ask required attributes: invalid required attribute "this-attr-is-bad"`,
-				`invalid create bid required attributes: invalid required attribute "this-attr-grrrr"`,
+				`invalid create-ask required attributes: invalid required attribute "this-attr-is-bad"`,
+				`invalid create-bid required attributes: invalid required attribute "this-attr-grrrr"`,
 			},
 		},
 	}
@@ -590,7 +590,7 @@ func TestValidateSellerFeeRatios(t *testing.T) {
 			exp: `seller fee ratio denom "hermes" appears in multiple ratios`,
 		},
 		{
-			name: "three with diffrent denoms",
+			name: "three with different denoms",
 			ratios: []FeeRatio{
 				{Price: coin(30, "leela"), Fee: coin(1, "leela")},
 				{Price: coin(5, "fry"), Fee: coin(1, "fry")},

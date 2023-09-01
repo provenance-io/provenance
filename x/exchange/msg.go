@@ -167,8 +167,8 @@ func (m MsgGovManageFeesRequest) ValidateBasic() error {
 
 	if m.HasUpdates() {
 		errs = append(errs,
-			ValidateAddRemoveFeeOptions("create ask flat fee", m.AddFeeCreateAskFlat, m.RemoveFeeCreateAskFlat),
-			ValidateAddRemoveFeeOptions("create bid flat fee", m.AddFeeCreateBidFlat, m.RemoveFeeCreateBidFlat),
+			ValidateAddRemoveFeeOptions("create-ask flat fee", m.AddFeeCreateAskFlat, m.RemoveFeeCreateAskFlat),
+			ValidateAddRemoveFeeOptions("create-bid flat fee", m.AddFeeCreateBidFlat, m.RemoveFeeCreateBidFlat),
 			ValidateAddRemoveFeeOptions("seller settlement flat fee", m.AddFeeSettlementSellerFlat, m.RemoveFeeSettlementSellerFlat),
 			ValidateSellerFeeRatios(m.AddFeeSettlementSellerRatios),
 			ValidateDisjointFeeRatios("seller settlement fee", m.AddFeeSettlementSellerRatios, m.RemoveFeeSettlementSellerRatios),

@@ -1017,13 +1017,13 @@ var xxx_messageInfo_MsgGovCreateMarketResponse proto.InternalMessageInfo
 type MsgGovManageFeesRequest struct {
 	// authority should be the governance module account address.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	// add_fee_create_ask_flat are the create ask flat fee options to add.
+	// add_fee_create_ask_flat are the create-ask flat fee options to add.
 	AddFeeCreateAskFlat []types.Coin `protobuf:"bytes,2,rep,name=add_fee_create_ask_flat,json=addFeeCreateAskFlat,proto3" json:"add_fee_create_ask_flat"`
-	// remove_fee_create_ask_flat are the create ask flat fee options to remove.
+	// remove_fee_create_ask_flat are the create-ask flat fee options to remove.
 	RemoveFeeCreateAskFlat []types.Coin `protobuf:"bytes,3,rep,name=remove_fee_create_ask_flat,json=removeFeeCreateAskFlat,proto3" json:"remove_fee_create_ask_flat"`
-	// add_fee_create_bid_flat are the create bid flat fee options to add.
+	// add_fee_create_bid_flat are the create-bid flat fee options to add.
 	AddFeeCreateBidFlat []types.Coin `protobuf:"bytes,4,rep,name=add_fee_create_bid_flat,json=addFeeCreateBidFlat,proto3" json:"add_fee_create_bid_flat"`
-	// remove_fee_create_bid_flat are the create bid flat fee options to remove.
+	// remove_fee_create_bid_flat are the create-bid flat fee options to remove.
 	RemoveFeeCreateBidFlat []types.Coin `protobuf:"bytes,5,rep,name=remove_fee_create_bid_flat,json=removeFeeCreateBidFlat,proto3" json:"remove_fee_create_bid_flat"`
 	// add_fee_settlement_seller_flat are the seller settlement flat fee options to add.
 	AddFeeSettlementSellerFlat []types.Coin `protobuf:"bytes,6,rep,name=add_fee_settlement_seller_flat,json=addFeeSettlementSellerFlat,proto3" json:"add_fee_settlement_seller_flat"`

@@ -36,8 +36,8 @@ func (m Market) Validate() error {
 
 	errs := []error{
 		m.MarketDetails.Validate(),
-		ValidateFeeOptions("create ask flat fee", m.FeeCreateAskFlat),
-		ValidateFeeOptions("create bid flat fee", m.FeeCreateBidFlat),
+		ValidateFeeOptions("create-ask flat fee", m.FeeCreateAskFlat),
+		ValidateFeeOptions("create-bid flat fee", m.FeeCreateBidFlat),
 		ValidateFeeOptions("settlement seller flat fee", m.FeeSettlementSellerFlat),
 		ValidateFeeOptions("settlement buyer flat fee", m.FeeSettlementBuyerFlat),
 		ValidateFeeRatios(m.FeeSettlementSellerRatios, m.FeeSettlementBuyerRatios),
@@ -47,10 +47,10 @@ func (m Market) Validate() error {
 	// Nothing to check for with the AcceptingOrders and AllowUserSettlement booleans.
 
 	if err := ValidateReqAttrs(m.ReqAttrCreateAsk); err != nil {
-		errs = append(errs, fmt.Errorf("invalid create ask required attributes: %w", err))
+		errs = append(errs, fmt.Errorf("invalid create-ask required attributes: %w", err))
 	}
 	if err := ValidateReqAttrs(m.ReqAttrCreateBid); err != nil {
-		errs = append(errs, fmt.Errorf("invalid create bid required attributes: %w", err))
+		errs = append(errs, fmt.Errorf("invalid create-bid required attributes: %w", err))
 	}
 
 	return errors.Join(errs...)
