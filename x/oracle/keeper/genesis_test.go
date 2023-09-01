@@ -12,9 +12,10 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 
 func (s *KeeperTestSuite) TestInitGenesis() {
 	tests := []struct {
-		name    string
-		genesis *types.GenesisState
-		err     string
+		name     string
+		genesis  *types.GenesisState
+		err      string
+		mockPort bool
 	}{
 		{
 			name:    "success - valid genesis state",
@@ -42,7 +43,9 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-
+			if tc.mockPort {
+				s.app.OracleKeeper.BindPort(s.ctx, "test")
+			}
 			if len(tc.err) > 0 {
 				s.Assert().PanicsWithError(tc.err, func() {
 					s.app.OracleKeeper.InitGenesis(s.ctx, tc.genesis)
