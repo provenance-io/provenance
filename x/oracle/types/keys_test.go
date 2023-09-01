@@ -15,8 +15,3 @@ func TestGetPortStoreKey(t *testing.T) {
 	key := GetPortStoreKey()
 	assert.EqualValues(t, PortStoreKey, key[0:1], "must return correct port key")
 }
-
-func TestGetLastQueryPacketSeqKey(t *testing.T) {
-	key := GetLastQueryPacketSeqKey()
-	assert.EqualValues(t, LastQueryPacketSeqKey, key[0:1], "must return correct last query packet sequence key")
-}

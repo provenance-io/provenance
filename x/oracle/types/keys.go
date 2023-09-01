@@ -29,20 +29,15 @@ const (
 //	- 0x01: sdk.AccAddress
 //	  | 1 |
 //
-//	LastQueryPacketSeqKey
-//	- 0x02: uint64
-//	  | 1 |
 //
 //	PortStoreKey
-//	- 0x03: string
+//	- 0x02: string
 //	  | 1 |
 var (
 	// OracleStoreKey is the key for the module's oracle address
 	OracleStoreKey = []byte{0x01}
-	// LastQueryPacketSeqKey is the key for the last packet sequence
-	LastQueryPacketSeqKey = []byte{0x02}
 	// PortStoreKey defines the key to store the port ID in store
-	PortStoreKey = []byte{0x03}
+	PortStoreKey = []byte{0x02}
 )
 
 // GetOracleStoreKey is a function to get the key for the oracle's address in store
@@ -53,9 +48,4 @@ func GetOracleStoreKey() []byte {
 // GetPortStoreKey is a function to get the key for the port in store
 func GetPortStoreKey() []byte {
 	return PortStoreKey
-}
-
-// GetLastQueryPacketSeqKey is a function to get the key for the last query packet sequence in store
-func GetLastQueryPacketSeqKey() []byte {
-	return LastQueryPacketSeqKey
 }

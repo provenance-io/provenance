@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -20,11 +19,6 @@ func NewDecodeStore(_ codec.Codec) func(kvA, kvB kv.Pair) string {
 		case bytes.Equal(kvA.Key[:1], types.OracleStoreKey):
 			var attribA, attribB sdk.AccAddress = kvA.Value, kvB.Value
 			return fmt.Sprintf("Oracle Address: A:[%v] B:[%v]\n", attribA, attribB)
-		case bytes.Equal(kvA.Key[:1], types.LastQueryPacketSeqKey):
-			attribA := binary.BigEndian.Uint64(kvA.Value)
-			attribB := binary.BigEndian.Uint64(kvB.Value)
-
-			return fmt.Sprintf("Last Query Packet Sequence: A:[%v] B:[%v]\n", attribA, attribB)
 		case bytes.Equal(kvA.Key[:1], types.PortStoreKey):
 			attribA := string(kvA.Value)
 			attribB := string(kvB.Value)
