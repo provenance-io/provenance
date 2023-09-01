@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -97,6 +98,9 @@ const (
 	OrderKeyTypeAsk = exchange.OrderTypeByteAsk
 	// OrderKeyTypeBid is the order-specific type byte for bid orders.
 	OrderKeyTypeBid = exchange.OrderTypeByteBid
+
+	// RecordSeparator is the RE ascii control char used to separate records in a byte slice.
+	RecordSeparator = byte(0x1E)
 )
 
 // prepKey creates a single byte slice consisting of the type byte and provided byte slice with some extra capacity in the underlying array.
@@ -230,6 +234,28 @@ func MakeKeyMarketSellerSettlementFlatFee(marketID uint32, denom string) []byte 
 	return rv
 }
 
+// GetKeySuffixSettlementRatio gets the key suffix bytes to represent the provided fee ratio.
+func GetKeySuffixSettlementRatio(ratio exchange.FeeRatio) []byte {
+	rv := make([]byte, 0, len(ratio.Price.Denom)+1+len(ratio.Fee.Denom))
+	rv = append(rv, ratio.Price.Denom...)
+	rv = append(rv, RecordSeparator)
+	rv = append(rv, ratio.Fee.Denom...)
+	return rv
+}
+
+// ParseKeySuffixSettlementRatio parses the <price denom><RS><fee denom> portion
+// of a settlement ratio key back into the denom strings.
+func ParseKeySuffixSettlementRatio(suffix []byte) (priceDenom, feeDenom string, err error) {
+	parts := bytes.Split(suffix, []byte{RecordSeparator})
+	if len(parts) == 2 {
+		priceDenom = string(parts[0])
+		feeDenom = string(parts[1])
+	} else {
+		err = fmt.Errorf("key suffix %q has %d parts, expected 2", suffix, len(parts))
+	}
+	return
+}
+
 // marketKeyPrefixSellerSettlementRatio creates the key prefix for a market's seller settlement ratios with extra capacity for the rest.
 func marketKeyPrefixSellerSettlementRatio(marketID uint32, extraCap int) []byte {
 	return keyPrefixMarketType(marketID, MarketKeyTypeSellerSettlementRatio, extraCap)
@@ -242,10 +268,9 @@ func GetKeyPrefixMarketSellerSettlementRatio(marketID uint32) []byte {
 
 // MakeKeyMarketSellerSettlementRatio creates the key to use for the given seller settlement fee ratio in the given market.
 func MakeKeyMarketSellerSettlementRatio(marketID uint32, ratio exchange.FeeRatio) []byte {
-	rv := marketKeyPrefixSellerSettlementRatio(marketID, len(ratio.Price.Denom)+1+len(ratio.Fee.Denom))
-	rv = append(rv, ratio.Price.Denom...)
-	rv = append(rv, 0x00)
-	rv = append(rv, ratio.Fee.Denom...)
+	suffix := GetKeySuffixSettlementRatio(ratio)
+	rv := marketKeyPrefixSellerSettlementRatio(marketID, len(suffix))
+	rv = append(rv, suffix...)
 	return rv
 }
 
@@ -278,10 +303,9 @@ func GetKeyPrefixMarketBuyerSettlementRatio(marketID uint32) []byte {
 
 // MakeKeyMarketBuyerSettlementRatio creates the key to use for the given buyer settlement fee ratio in the given market.
 func MakeKeyMarketBuyerSettlementRatio(marketID uint32, ratio exchange.FeeRatio) []byte {
-	rv := marketKeyPrefixBuyerSettlementRatio(marketID, len(ratio.Price.Denom)+1+len(ratio.Fee.Denom))
-	rv = append(rv, ratio.Price.Denom...)
-	rv = append(rv, 0x00)
-	rv = append(rv, ratio.Fee.Denom...)
+	suffix := GetKeySuffixSettlementRatio(ratio)
+	rv := marketKeyPrefixBuyerSettlementRatio(marketID, len(suffix))
+	rv = append(rv, suffix...)
 	return rv
 }
 

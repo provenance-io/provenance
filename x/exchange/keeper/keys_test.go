@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -695,6 +696,131 @@ func TestMakeKeyMarketSellerSettlementFlatFee(t *testing.T) {
 	}
 }
 
+func TestGetKeySuffixSettlementRatio(t *testing.T) {
+	coin := func(denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.OneInt()}
+	}
+	tests := []struct {
+		name  string
+		ratio exchange.FeeRatio
+		exp   []byte
+	}{
+		{
+			name:  "both denoms empty",
+			ratio: exchange.FeeRatio{Price: coin(""), Fee: coin("")},
+			exp:   []byte{keeper.RecordSeparator},
+		},
+		{
+			name:  "empty price nhash fee",
+			ratio: exchange.FeeRatio{Price: coin(""), Fee: coin("nhash")},
+			exp:   []byte{keeper.RecordSeparator, 'n', 'h', 'a', 's', 'h'},
+		},
+		{
+			name:  "nhash price empty fee",
+			ratio: exchange.FeeRatio{Price: coin("nhash"), Fee: coin("")},
+			exp:   []byte{'n', 'h', 'a', 's', 'h', keeper.RecordSeparator},
+		},
+		{
+			name:  "nhash price nhash fee",
+			ratio: exchange.FeeRatio{Price: coin("nhash"), Fee: coin("nhash")},
+			exp:   []byte{'n', 'h', 'a', 's', 'h', keeper.RecordSeparator, 'n', 'h', 'a', 's', 'h'},
+		},
+		{
+			name:  "nhash price hex string fee",
+			ratio: exchange.FeeRatio{Price: coin("nhash"), Fee: coin(hexString)},
+			exp:   append([]byte{'n', 'h', 'a', 's', 'h', keeper.RecordSeparator}, hexString...),
+		},
+		{
+			name:  "hex string price nhash fee",
+			ratio: exchange.FeeRatio{Price: coin(hexString), Fee: coin("nhash")},
+			exp:   append([]byte(hexString), keeper.RecordSeparator, 'n', 'h', 'a', 's', 'h'),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.GetKeySuffixSettlementRatio(tc.ratio)
+				},
+				expected: tc.exp,
+			}
+			checkKey(t, ktc, "GetKeySuffixSettlementRatio(%s)", tc.ratio)
+		})
+	}
+}
+
+func TestParseKeySuffixSettlementRatio(t *testing.T) {
+	tests := []struct {
+		name          string
+		suffix        []byte
+		expPriceDenom string
+		expFeeDenom   string
+		expErr        string
+	}{
+		{
+			name:          "both denoms empty",
+			suffix:        []byte{keeper.RecordSeparator},
+			expPriceDenom: "",
+			expFeeDenom:   "",
+		},
+		{
+			name:          "empty price nhash fee",
+			suffix:        []byte{keeper.RecordSeparator, 'n', 'h', 'a', 's', 'h'},
+			expPriceDenom: "",
+			expFeeDenom:   "nhash",
+		},
+		{
+			name:          "nhash price empty fee",
+			suffix:        []byte{'n', 'h', 'a', 's', 'h', keeper.RecordSeparator},
+			expPriceDenom: "nhash",
+			expFeeDenom:   "",
+		},
+		{
+			name:          "nhash price nhash fee",
+			suffix:        []byte{'n', 'h', 'a', 's', 'h', keeper.RecordSeparator, 'n', 'h', 'a', 's', 'h'},
+			expPriceDenom: "nhash",
+			expFeeDenom:   "nhash",
+		},
+		{
+			name:          "nhash price hex string fee",
+			suffix:        append([]byte{'n', 'h', 'a', 's', 'h', keeper.RecordSeparator}, hexString...),
+			expPriceDenom: "nhash",
+			expFeeDenom:   hexString,
+		},
+		{
+			name:          "hex string price nhash fee",
+			suffix:        append([]byte(hexString), keeper.RecordSeparator, 'n', 'h', 'a', 's', 'h'),
+			expPriceDenom: hexString,
+			expFeeDenom:   "nhash",
+		},
+		{
+			name:   "no record separator",
+			suffix: []byte("nhashnhash"),
+			expErr: "key suffix \"nhashnhash\" has 1 parts, expected 2",
+		},
+		{
+			name:   "two record separators",
+			suffix: []byte{keeper.RecordSeparator, 'b', keeper.RecordSeparator},
+			expErr: "key suffix \"\\x1eb\\x1e\" has 3 parts, expected 2",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var priceDenom, feeDenom string
+			var err error
+			testFunc := func() {
+				priceDenom, feeDenom, err = keeper.ParseKeySuffixSettlementRatio(tc.suffix)
+			}
+			require.NotPanics(t, testFunc, "ParseKeySuffixSettlementRatio(%q)", tc.suffix)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseKeySuffixSettlementRatio(%q) error", tc.suffix)
+			assert.Equalf(t, tc.expPriceDenom, priceDenom, "ParseKeySuffixSettlementRatio(%q) price denom", tc.suffix)
+			assert.Equalf(t, tc.expFeeDenom, feeDenom, "ParseKeySuffixSettlementRatio(%q) fee denom", tc.suffix)
+		})
+	}
+}
+
 func TestGetKeyPrefixMarketSellerSettlementRatio(t *testing.T) {
 	marketTypeByte := keeper.MarketKeyTypeSellerSettlementRatio
 
@@ -766,6 +892,7 @@ func TestMakeKeyMarketSellerSettlementRatio(t *testing.T) {
 	coin := func(denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.OneInt()}
 	}
+	rs := keeper.RecordSeparator
 
 	tests := []struct {
 		name     string
@@ -777,31 +904,31 @@ func TestMakeKeyMarketSellerSettlementRatio(t *testing.T) {
 			name:     "market id 0 both denoms empty",
 			marketID: 0,
 			ratio:    exchange.FeeRatio{Price: coin(""), Fee: coin("")},
-			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 0, marketTypeByte, 0},
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 0, marketTypeByte, rs},
 		},
 		{
 			name:     "market id 1 nhash to empty",
 			marketID: 1,
 			ratio:    exchange.FeeRatio{Price: coin("nhash"), Fee: coin("")},
-			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 1, marketTypeByte, 'n', 'h', 'a', 's', 'h', 0},
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 1, marketTypeByte, 'n', 'h', 'a', 's', 'h', rs},
 		},
 		{
 			name:     "market id 1 empty to nhash",
 			marketID: 1,
 			ratio:    exchange.FeeRatio{Price: coin(""), Fee: coin("nhash")},
-			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 1, marketTypeByte, 0, 'n', 'h', 'a', 's', 'h'},
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 1, marketTypeByte, rs, 'n', 'h', 'a', 's', 'h'},
 		},
 		{
 			name:     "market id 1 nhash to nhash",
 			marketID: 1,
 			ratio:    exchange.FeeRatio{Price: coin("nhash"), Fee: coin("nhash")},
-			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 1, marketTypeByte, 'n', 'h', 'a', 's', 'h', 0, 'n', 'h', 'a', 's', 'h'},
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 1, marketTypeByte, 'n', 'h', 'a', 's', 'h', rs, 'n', 'h', 'a', 's', 'h'},
 		},
 		{
 			name:     "market id 16,843,009 nhash to hex string",
 			marketID: 16_843_009,
 			ratio:    exchange.FeeRatio{Price: coin("nhash"), Fee: coin(hexString)},
-			expected: append([]byte{keeper.KeyTypeMarket, 1, 1, 1, 1, marketTypeByte, 'n', 'h', 'a', 's', 'h', 0}, hexString...),
+			expected: append([]byte{keeper.KeyTypeMarket, 1, 1, 1, 1, marketTypeByte, 'n', 'h', 'a', 's', 'h', rs}, hexString...),
 		},
 	}
 
@@ -1053,6 +1180,7 @@ func TestMakeKeyMarketBuyerSettlementRatio(t *testing.T) {
 	coin := func(denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.OneInt()}
 	}
+	rs := keeper.RecordSeparator
 
 	tests := []struct {
 		name     string
@@ -1064,31 +1192,31 @@ func TestMakeKeyMarketBuyerSettlementRatio(t *testing.T) {
 			name:     "market id 0 both denoms empty",
 			marketID: 0,
 			ratio:    exchange.FeeRatio{Price: coin(""), Fee: coin("")},
-			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 0, marketTypeByte, 0},
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 0, marketTypeByte, rs},
 		},
 		{
 			name:     "market id 1 nhash to empty",
 			marketID: 1,
 			ratio:    exchange.FeeRatio{Price: coin("nhash"), Fee: coin("")},
-			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 1, marketTypeByte, 'n', 'h', 'a', 's', 'h', 0},
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 1, marketTypeByte, 'n', 'h', 'a', 's', 'h', rs},
 		},
 		{
 			name:     "market id 1 empty to nhash",
 			marketID: 1,
 			ratio:    exchange.FeeRatio{Price: coin(""), Fee: coin("nhash")},
-			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 1, marketTypeByte, 0, 'n', 'h', 'a', 's', 'h'},
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 1, marketTypeByte, rs, 'n', 'h', 'a', 's', 'h'},
 		},
 		{
 			name:     "market id 1 nhash to nhash",
 			marketID: 1,
 			ratio:    exchange.FeeRatio{Price: coin("nhash"), Fee: coin("nhash")},
-			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 1, marketTypeByte, 'n', 'h', 'a', 's', 'h', 0, 'n', 'h', 'a', 's', 'h'},
+			expected: []byte{keeper.KeyTypeMarket, 0, 0, 0, 1, marketTypeByte, 'n', 'h', 'a', 's', 'h', rs, 'n', 'h', 'a', 's', 'h'},
 		},
 		{
 			name:     "market id 16,843,009 nhash to hex string",
 			marketID: 16_843_009,
 			ratio:    exchange.FeeRatio{Price: coin("nhash"), Fee: coin(hexString)},
-			expected: append([]byte{keeper.KeyTypeMarket, 1, 1, 1, 1, marketTypeByte, 'n', 'h', 'a', 's', 'h', 0}, hexString...),
+			expected: append([]byte{keeper.KeyTypeMarket, 1, 1, 1, 1, marketTypeByte, 'n', 'h', 'a', 's', 'h', rs}, hexString...),
 		},
 	}
 
