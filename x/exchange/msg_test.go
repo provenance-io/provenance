@@ -106,7 +106,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		for _, msg := range allRequestMsgs {
 			typeName := getTypeName(msg)
 			// If this fails, a maker needs to be defined above for the missing msg type.
-			assert.True(t, hasMaker[typeName], "whether a GetSigners test exists for %s", typeName)
+			assert.True(t, hasMaker[typeName], "There is not a GetSigners test case for %s", typeName)
 		}
 	})
 }
