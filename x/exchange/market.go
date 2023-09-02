@@ -250,6 +250,23 @@ func (r FeeRatio) Equals(other FeeRatio) bool {
 	return r.Price.Equal(other.Price) && r.Fee.Equal(other.Fee)
 }
 
+// ApplyTo attempts to calculate the fee that results from applying this fee ratio to the provided price.
+func (r FeeRatio) ApplyTo(price sdk.Coin) (sdk.Coin, error) {
+	rv := sdk.Coin{Denom: "", Amount: sdk.ZeroInt()}
+	if r.Price.Denom != price.Denom {
+		return rv, fmt.Errorf("cannot apply ratio %s to price %s: incorrect price denom", r, price)
+	}
+	if r.Price.Amount.IsZero() {
+		return rv, fmt.Errorf("cannot apply ratio %s to price %s: division by zero", r, price)
+	}
+	if !price.Amount.Mod(r.Price.Amount).IsZero() {
+		return rv, fmt.Errorf("cannot apply ratio %s to price %s: price amount cannot be evenly divided by ratio price", r, price)
+	}
+	rv.Denom = r.Fee.Denom
+	rv.Amount = price.Amount.Quo(r.Price.Amount).Mul(r.Fee.Amount)
+	return rv, nil
+}
+
 // IntersectionOfFeeRatios returns all FeeRatios that are in both lists.
 func IntersectionOfFeeRatios(ratios1, ratios2 []FeeRatio) []FeeRatio {
 	var rv []FeeRatio

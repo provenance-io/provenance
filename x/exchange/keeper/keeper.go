@@ -56,10 +56,10 @@ func deleteAll(store sdk.KVStore, pre []byte) {
 // iterate iterates over all the entries in the store with the given prefix.
 // The key provided to the callback will NOT have the provided prefix; it will be everything after it.
 // The callback should return false to continue iteration, or true to stop.
-func (k Keeper) iterate(ctx sdk.Context, pre []byte, cb func(key, value []byte) bool) {
+func iterate(store sdk.KVStore, pre []byte, cb func(key, value []byte) bool) {
 	// Using an open iterator on a prefixed store here so that iter.Key() doesn't contain the prefix.
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), pre)
-	iter := store.Iterator(nil, nil)
+	pStore := prefix.NewStore(store, pre)
+	iter := pStore.Iterator(nil, nil)
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
@@ -67,4 +67,11 @@ func (k Keeper) iterate(ctx sdk.Context, pre []byte, cb func(key, value []byte) 
 			break
 		}
 	}
+}
+
+// iterate iterates over all the entries in the store with the given prefix.
+// The key provided to the callback will NOT have the provided prefix; it will be everything after it.
+// The callback should return false to continue iteration, or true to stop.
+func (k Keeper) iterate(ctx sdk.Context, pre []byte, cb func(key, value []byte) bool) {
+	iterate(ctx.KVStore(k.storeKey), pre, cb)
 }

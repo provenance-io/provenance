@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
@@ -29,13 +31,13 @@ import (
 //   Market Create-Ask Flat Fee: 0x01 | <market_id> | 0x00 | <denom> => <amount> (string)
 //   Market Create-Bid Flat Fee: 0x01 | <market_id> | 0x01 | <denom> => <amount> (string)
 //   Market Seller Settlement Flat Fee: 0x01 | <market_id> | 0x02 | <denom> => <amount> (string)
-//   Market Seller Settlement Fee Ratio: 0x01 | <market_id> | 0x03 | <price_denom> | 0x00 | <fee_denom> => comma-separated price and fee amount (string).
+//   Market Seller Settlement Fee Ratio: 0x01 | <market_id> | 0x03 | <price_denom> | 0x1E | <fee_denom> => price and fee amounts (strings) separated by 0x1E.
 //   Market Buyer Settlement Flat Fee: 0x01 | <market_id> | 0x04 | <denom> => <amount> (string)
-//   Market Buyer Settlement Fee Ratio: 0x01 | <market_id> | 0x05 | <price_denom> | 0x00 | <fee_denom> => comma-separated price and fee amount (string).
+//   Market Buyer Settlement Fee Ratio: 0x01 | <market_id> | 0x05 | <price_denom> | 0x1E | <fee_denom> => price and fee amounts (strings) separated by 0x1E.
 //   Market inactive indicator: 0x01 | <market_id> | 0x06 => nil
 //   Market user-settle indicator: 0x01 | <market_id> | 0x07 => nil
 //   Market permissions: 0x01 | <market_id> | 0x08 | <addr len byte> | <address> | <permission type byte> => nil
-//   Market Required Attributes: 0x01 | <market_id> | 0x09 | <order_type_byte> => comma-separated list of required attribute entries.
+//   Market Required Attributes: 0x01 | <market_id> | 0x09 | <order_type_byte> => 0x1E-separated list of required attribute entries.
 //
 //   The <permission_type_byte> is a single byte as uint8 with the same values as the enum entries.
 //
@@ -235,6 +237,7 @@ func MakeKeyMarketSellerSettlementFlatFee(marketID uint32, denom string) []byte 
 }
 
 // GetKeySuffixSettlementRatio gets the key suffix bytes to represent the provided fee ratio.
+// Result has the format <price denom><RS><fee denom>
 func GetKeySuffixSettlementRatio(ratio exchange.FeeRatio) []byte {
 	rv := make([]byte, 0, len(ratio.Price.Denom)+1+len(ratio.Fee.Denom))
 	rv = append(rv, ratio.Price.Denom...)
@@ -251,8 +254,50 @@ func ParseKeySuffixSettlementRatio(suffix []byte) (priceDenom, feeDenom string, 
 		priceDenom = string(parts[0])
 		feeDenom = string(parts[1])
 	} else {
-		err = fmt.Errorf("key suffix %q has %d parts, expected 2", suffix, len(parts))
+		err = fmt.Errorf("ratio key suffix %q has %d parts, expected 2", suffix, len(parts))
 	}
+	return
+}
+
+// GetFeeRatioStoreValue creates the byte slice to set in the store for a fee ratio's value.
+// Result has the format <price amount><RS><fee amount> where both amounts are strings (of digits).
+// E.g. "100\\1E3" (for a price amount of 100, and fee amount of 3).
+func GetFeeRatioStoreValue(ratio exchange.FeeRatio) []byte {
+	priceAmount := ratio.Price.Amount.String()
+	feeAmount := ratio.Fee.Amount.String()
+	rv := make([]byte, 0, len(priceAmount)+1+len(feeAmount))
+	rv = append(rv, priceAmount...)
+	rv = append(rv, RecordSeparator)
+	rv = append(rv, feeAmount...)
+	return rv
+}
+
+// ParseFeeRatioStoreValue parses a fee ratio's store value back into the amounts.
+// Input is expected to have the format <price amount><RS><fee amount> where both amounts are strings (of digits).
+// E.g. "100\\1E3" (for a price amount of 100, and fee amount of 3).
+func ParseFeeRatioStoreValue(value []byte) (priceAmount, feeAmount sdkmath.Int, err error) {
+	parts := bytes.Split(value, []byte{RecordSeparator})
+	if len(parts) == 2 {
+		var ok bool
+		priceAmount, ok = sdkmath.NewIntFromString(string(parts[0]))
+		if !ok {
+			err = fmt.Errorf("cannot convert price amount %q to sdkmath.Int", parts[0])
+		}
+		feeAmount, ok = sdkmath.NewIntFromString(string(parts[1]))
+		if !ok {
+			err = errors.Join(err, fmt.Errorf("cannot convert fee amount %q to sdkmath.Int", parts[1]))
+		}
+	} else {
+		err = fmt.Errorf("ratio value %q has %d parts, expected 2", value, len(parts))
+	}
+
+	// The zero-value of sdkmath.Int{} will panic if anything tries to do anything with it (e.g. convert it to a string).
+	// Additionally, if there was an error, we don't want either of them to have any left-over values.
+	if err != nil {
+		priceAmount = sdkmath.ZeroInt()
+		feeAmount = sdkmath.ZeroInt()
+	}
+
 	return
 }
 
@@ -299,6 +344,15 @@ func marketKeyPrefixBuyerSettlementRatio(marketID uint32, extraCap int) []byte {
 // GetKeyPrefixMarketBuyerSettlementRatio creates the key prefix for a market's buyer settlement fee ratios.
 func GetKeyPrefixMarketBuyerSettlementRatio(marketID uint32) []byte {
 	return marketKeyPrefixBuyerSettlementRatio(marketID, 0)
+}
+
+// GetKeyPrefixMarketBuyerSettlementRatioForPriceDenom creates the key prefix for a market's
+// buyer settlement fee ratios that have the provided price denom.
+func GetKeyPrefixMarketBuyerSettlementRatioForPriceDenom(marketID uint32, priceDenom string) []byte {
+	suffix := GetKeySuffixSettlementRatio(exchange.FeeRatio{Price: sdk.Coin{Denom: priceDenom}, Fee: sdk.Coin{Denom: ""}})
+	rv := marketKeyPrefixBuyerSettlementRatio(marketID, len(suffix))
+	rv = append(rv, suffix...)
+	return rv
 }
 
 // MakeKeyMarketBuyerSettlementRatio creates the key to use for the given buyer settlement fee ratio in the given market.

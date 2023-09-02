@@ -797,12 +797,12 @@ func TestParseKeySuffixSettlementRatio(t *testing.T) {
 		{
 			name:   "no record separator",
 			suffix: []byte("nhashnhash"),
-			expErr: "key suffix \"nhashnhash\" has 1 parts, expected 2",
+			expErr: "ratio key suffix \"nhashnhash\" has 1 parts, expected 2",
 		},
 		{
 			name:   "two record separators",
 			suffix: []byte{keeper.RecordSeparator, 'b', keeper.RecordSeparator},
-			expErr: "key suffix \"\\x1eb\\x1e\" has 3 parts, expected 2",
+			expErr: "ratio key suffix \"\\x1eb\\x1e\" has 3 parts, expected 2",
 		},
 	}
 
@@ -817,6 +817,220 @@ func TestParseKeySuffixSettlementRatio(t *testing.T) {
 			assertions.AssertErrorValue(t, err, tc.expErr, "ParseKeySuffixSettlementRatio(%q) error", tc.suffix)
 			assert.Equalf(t, tc.expPriceDenom, priceDenom, "ParseKeySuffixSettlementRatio(%q) price denom", tc.suffix)
 			assert.Equalf(t, tc.expFeeDenom, feeDenom, "ParseKeySuffixSettlementRatio(%q) fee denom", tc.suffix)
+		})
+	}
+}
+
+func TestGetFeeRatioStoreValue(t *testing.T) {
+	pCoin := func(amount string) sdk.Coin {
+		amt, ok := sdkmath.NewIntFromString(amount)
+		require.True(t, ok, "sdkmath.NewIntFromString(%q) ok boolean return value", amount)
+		return sdk.Coin{Denom: "price", Amount: amt}
+	}
+	fCoin := func(amount string) sdk.Coin {
+		amt, ok := sdkmath.NewIntFromString(amount)
+		require.True(t, ok, "sdkmath.NewIntFromString(%q) ok boolean return value", amount)
+		return sdk.Coin{Denom: "fee", Amount: amt}
+	}
+	rs := keeper.RecordSeparator
+
+	tests := []struct {
+		name  string
+		ratio exchange.FeeRatio
+		exp   []byte
+	}{
+		{
+			name:  "zero to zero",
+			ratio: exchange.FeeRatio{Price: pCoin("0"), Fee: fCoin("0")},
+			exp:   []byte{'0', rs, '0'},
+		},
+		{
+			name:  "zero to one",
+			ratio: exchange.FeeRatio{Price: pCoin("0"), Fee: fCoin("1")},
+			exp:   []byte{'0', rs, '1'},
+		},
+		{
+			name:  "one to zero",
+			ratio: exchange.FeeRatio{Price: pCoin("1"), Fee: fCoin("0")},
+			exp:   []byte{'1', rs, '0'},
+		},
+		{
+			name:  "one to one",
+			ratio: exchange.FeeRatio{Price: pCoin("1"), Fee: fCoin("1")},
+			exp:   []byte{'1', rs, '1'},
+		},
+		{
+			name:  "100 to 3",
+			ratio: exchange.FeeRatio{Price: pCoin("100"), Fee: fCoin("3")},
+			exp:   []byte{'1', '0', '0', rs, '3'},
+		},
+		{
+			name:  "3 to 100",
+			ratio: exchange.FeeRatio{Price: pCoin("3"), Fee: fCoin("100")},
+			exp:   []byte{'3', rs, '1', '0', '0'},
+		},
+		{
+			name: "huge number to 8",
+			// max uint64 = 18,446,744,073,709,551,615. This is 100 times that.
+			ratio: exchange.FeeRatio{Price: pCoin("1844674407370955161500"), Fee: fCoin("8")},
+			exp:   append([]byte("1844674407370955161500"), rs, '8'),
+		},
+		{
+			name: "15 to huge number",
+			// max uint64 = 18,446,744,073,709,551,615. This is 100 times that.
+			ratio: exchange.FeeRatio{Price: pCoin("15"), Fee: fCoin("1844674407370955161500")},
+			exp:   append([]byte{'1', '5', rs}, "1844674407370955161500"...),
+		},
+		{
+			name:  "two huge numbers",
+			ratio: exchange.FeeRatio{Price: pCoin("3454125219812878222609890"), Fee: fCoin("8876890151543931493173153")},
+			exp: concatBz(
+				[]byte("3454125219812878222609890"),
+				[]byte{rs},
+				[]byte("8876890151543931493173153"),
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.GetFeeRatioStoreValue(tc.ratio)
+				},
+				expected: tc.exp,
+			}
+			checkKey(t, ktc, "GetFeeRatioStoreValue(%s)", tc.ratio)
+		})
+	}
+}
+
+func TestParseFeeRatioStoreValue(t *testing.T) {
+	intAmt := func(amt string) sdkmath.Int {
+		rv, ok := sdkmath.NewIntFromString(amt)
+		require.True(t, ok, "sdkmath.NewIntFromString(%q)", amt)
+		return rv
+	}
+	rs := keeper.RecordSeparator
+
+	tests := []struct {
+		name           string
+		value          []byte
+		expPriceAmount sdkmath.Int
+		expFeeAmount   sdkmath.Int
+		expErr         string
+	}{
+		{
+			name:           "zero to zero",
+			value:          []byte{'0', rs, '0'},
+			expPriceAmount: intAmt("0"),
+			expFeeAmount:   intAmt("0"),
+		},
+		{
+			name:           "zero to one",
+			value:          []byte{'0', rs, '1'},
+			expPriceAmount: intAmt("0"),
+			expFeeAmount:   intAmt("1"),
+		},
+		{
+			name:           "one to zero",
+			value:          []byte{'1', rs, '0'},
+			expPriceAmount: intAmt("1"),
+			expFeeAmount:   intAmt("0"),
+		},
+		{
+			name:           "one to one",
+			value:          []byte{'1', rs, '1'},
+			expPriceAmount: intAmt("1"),
+			expFeeAmount:   intAmt("1"),
+		},
+		{
+			name:           "100 to 3",
+			value:          []byte{'1', '0', '0', rs, '3'},
+			expPriceAmount: intAmt("100"),
+			expFeeAmount:   intAmt("3"),
+		},
+		{
+			name:           "3 to 100",
+			value:          []byte{'3', rs, '1', '0', '0'},
+			expPriceAmount: intAmt("3"),
+			expFeeAmount:   intAmt("100"),
+		},
+		{
+			name: "huge number to 8",
+			// max uint64 = 18,446,744,073,709,551,615. This is 100 times that.
+			value:          append([]byte("1844674407370955161500"), rs, '8'),
+			expPriceAmount: intAmt("1844674407370955161500"),
+			expFeeAmount:   intAmt("8"),
+		},
+		{
+			name: "15 to huge number",
+			// max uint64 = 18,446,744,073,709,551,615. This is 100 times that.
+			value:          append([]byte{'1', '5', rs}, "1844674407370955161500"...),
+			expPriceAmount: intAmt("15"),
+			expFeeAmount:   intAmt("1844674407370955161500"),
+		},
+		{
+			name: "two huge numbers",
+			value: concatBz(
+				[]byte("3454125219812878222609890"),
+				[]byte{rs},
+				[]byte("8876890151543931493173153"),
+			),
+			expPriceAmount: intAmt("3454125219812878222609890"),
+			expFeeAmount:   intAmt("8876890151543931493173153"),
+		},
+		{
+			name:   "invalid char in price",
+			value:  []byte{'1', 'f', '0', rs, '5', '6', '7'},
+			expErr: "cannot convert price amount \"1f0\" to sdkmath.Int",
+		},
+		{
+			name:   "invalid char in fee",
+			value:  []byte{'1', '3', '0', rs, '5', 'f', '7'},
+			expErr: "cannot convert fee amount \"5f7\" to sdkmath.Int",
+		},
+		{
+			name:  "invalid char in both",
+			value: []byte{'1', 'f', '0', rs, '5', 'f', '7'},
+			expErr: "cannot convert price amount \"1f0\" to sdkmath.Int" + "\n" +
+				"cannot convert fee amount \"5f7\" to sdkmath.Int",
+		},
+		{
+			name:  "empty to empty",
+			value: []byte{rs},
+			expErr: "cannot convert price amount \"\" to sdkmath.Int" + "\n" +
+				"cannot convert fee amount \"\" to sdkmath.Int",
+		},
+		{
+			name:   "no record separator",
+			value:  []byte("100"),
+			expErr: "ratio value \"100\" has 1 parts, expected 2",
+		},
+		{
+			name:   "two record separators",
+			value:  []byte{rs, '1', '0', '0', rs},
+			expErr: "ratio value \"\\x1e100\\x1e\" has 3 parts, expected 2",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if len(tc.expErr) > 0 {
+				tc.expPriceAmount = sdkmath.ZeroInt()
+				tc.expFeeAmount = sdkmath.ZeroInt()
+			}
+
+			var priceAmount, feeAmont sdkmath.Int
+			var err error
+			testFunc := func() {
+				priceAmount, feeAmont, err = keeper.ParseFeeRatioStoreValue(tc.value)
+			}
+			require.NotPanics(t, testFunc, "ParseFeeRatioStoreValue(%q)", tc.value)
+
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseFeeRatioStoreValue(%q) error", tc.value)
+			assert.Equal(t, tc.expPriceAmount.String(), priceAmount.String(), "ParseFeeRatioStoreValue(%q) price amount", tc.value)
+			assert.Equal(t, tc.expFeeAmount.String(), feeAmont.String(), "ParseFeeRatioStoreValue(%q) fee amount", tc.value)
 		})
 	}
 }
