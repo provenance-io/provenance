@@ -87,9 +87,9 @@ func setFlatFee(store sdk.KVStore, marketID uint32, coin sdk.Coin, maker flatFee
 
 // getAllCoins gets all the coin entries from the store with the given prefix.
 // The denom comes from the part of the key after the prefix, and the amount comes from the values.
-func (k Keeper) getAllCoins(ctx sdk.Context, pre []byte) []sdk.Coin {
+func getAllCoins(store sdk.KVStore, pre []byte) []sdk.Coin {
 	var coins []sdk.Coin
-	k.iterate(ctx, pre, func(key, value []byte) bool {
+	iterate(store, pre, func(key, value []byte) bool {
 		amt, ok := sdkmath.NewIntFromString(string(value))
 		if ok {
 			coins = append(coins, sdk.Coin{Denom: string(key), Amount: amt})
@@ -97,6 +97,12 @@ func (k Keeper) getAllCoins(ctx sdk.Context, pre []byte) []sdk.Coin {
 		return false
 	})
 	return coins
+}
+
+// getAllCoins gets all the coin entries from the store with the given prefix.
+// The denom comes from the part of the key after the prefix, and the amount comes from the values.
+func (k Keeper) getAllCoins(ctx sdk.Context, pre []byte) []sdk.Coin {
+	return getAllCoins(ctx.KVStore(k.storeKey), pre)
 }
 
 // setAllCoins is a generic setter for a set of flat fee options.
@@ -311,8 +317,9 @@ func (k Keeper) CalculateBuyerSettlementFeeOptionsFromRatios(ctx sdk.Context, ma
 	return rv, nil
 }
 
-// IsAcceptableBuyerSettlementFee returns true if the provided fee is enough to cover both the buyer settlement flat and percent fees.
-func (k Keeper) IsAcceptableBuyerSettlementFee(ctx sdk.Context, marketID uint32, price sdk.Coin, fee sdk.Coins) bool {
+// ValidateBuyerSettlementFee returns an error if the provided fee is not enough to cover both the
+// buyer settlement flat and percent fees for the given price.
+func (k Keeper) ValidateBuyerSettlementFee(ctx sdk.Context, marketID uint32, price sdk.Coin, fee sdk.Coins) error {
 	flatKeyMaker := buyerSettlementFlatKeyMakers
 	ratioKeyMaker := buyerSettlementRatioKeyMakers
 	store := ctx.KVStore(k.storeKey)
@@ -320,106 +327,102 @@ func (k Keeper) IsAcceptableBuyerSettlementFee(ctx sdk.Context, marketID uint32,
 	ratioFeeReq := hasFeeRatio(store, marketID, ratioKeyMaker)
 
 	if !flatFeeReq && !ratioFeeReq {
-		return true
+		// no fee required. All good.
+		return nil
 	}
 
-	switch len(fee) {
-	case 0:
-		return !flatFeeReq && !ratioFeeReq
-	case 1:
-		reqAmt := sdkmath.ZeroInt()
+	if len(fee) == 0 {
+		// a fee is required, but we have none.
+		return errors.New("insufficient buyer settlement fee: no fee provided")
+	}
+
+	// Loop through each coin in the fee looking for entries that satisfy the fee requirements.
+	var flatFeeOk, ratioFeeOk bool
+	var errs []error
+	for _, feeCoin := range fee {
+		var flatFeeAmt, ratioFeeAmt *sdkmath.Int
 
 		if flatFeeReq {
-			flatFee := getFlatFee(store, marketID, fee[0].Denom, flatKeyMaker)
-			if flatFee == nil {
-				return false
+			flatFee := getFlatFee(store, marketID, feeCoin.Denom, flatKeyMaker)
+			switch {
+			case flatFee == nil:
+				errs = append(errs, fmt.Errorf("no flat fee options available for denom %s", feeCoin.Denom))
+			case feeCoin.Amount.LT(flatFee.Amount):
+				errs = append(errs, fmt.Errorf("%s is less than required flat fee %s", feeCoin, flatFee))
+			case !ratioFeeReq:
+				// This fee coin covers the flat fee, and there is no ratio fee needed, so we're all good.
+				return nil
+			case ratioFeeOk:
+				// A previous fee coin covered the ratio fee and this one covers the flat fee, so we're all good.
+				return nil
+			default:
+				flatFeeAmt = &flatFee.Amount
 			}
-			reqAmt = reqAmt.Add(flatFee.Amount)
 		}
 
 		if ratioFeeReq {
-			ratio := getFeeRatio(store, marketID, price.Denom, fee[0].Denom, ratioKeyMaker)
+			ratio := getFeeRatio(store, marketID, price.Denom, feeCoin.Denom, ratioKeyMaker)
 			if ratio == nil {
-				return false
-			}
-			if ratio != nil {
+				errs = append(errs, fmt.Errorf("no ratio from price denom %s to fee denom %s",
+					price.Denom, feeCoin.Denom))
+			} else {
 				ratioFee, err := ratio.ApplyTo(price)
-				if err != nil {
-					return false
-				}
-				reqAmt = reqAmt.Add(ratioFee.Amount)
-			}
-		}
-
-		return reqAmt.LTE(fee[0].Amount)
-	default:
-		// Find all the flat fee options available for each fee denom,
-		// and all ratio fee options available for each price denom to fee denom ratio.
-		var flatFees []sdk.Coin
-		var ratioFees []sdk.Coin
-		for _, coin := range fee {
-			var flatFee, ratioFee *sdk.Coin
-
-			if flatFeeReq {
-				flatFee = getFlatFee(store, marketID, coin.Denom, flatKeyMaker)
-				if flatFee != nil && flatFee.Amount.LTE(coin.Amount) {
-					// If there aren't any ratio fees required, this fee entry covers all required fees.
-					if !ratioFeeReq {
-						return true
-					}
-					// Keep track of this satisfaction. Yeah.
-					flatFees = append(flatFees, *flatFee)
-				} else {
-					flatFee = nil
+				switch {
+				case err != nil:
+					errs = append(errs, err)
+				case feeCoin.Amount.LT(ratioFee.Amount):
+					errs = append(errs, fmt.Errorf("%s is less than required ratio fee %s (based on price %s and ratio %s)",
+						feeCoin, ratioFee, price, ratio))
+				case !flatFeeReq:
+					// This fee coin covers the ratio fee, and there's no flat fee needed, so we're all good.
+					return nil
+				case flatFeeOk:
+					// A previous fee coin covered the flat fee and this one covers the ratio fee, so we're all good.
+					return nil
+				default:
+					ratioFeeAmt = &ratioFee.Amount
 				}
 			}
+		}
 
-			if ratioFeeReq {
-				ratio := getFeeRatio(store, marketID, price.Denom, coin.Denom, ratioKeyMaker)
-				if ratio != nil {
-					ratioFeeCalc, err := ratio.ApplyTo(price)
-					if err == nil {
-						// If there aren't any flat fees required, this fee entry covers all required fees.
-						if !flatFeeReq {
-							return true
-						}
-						// Keep track of this satisfaction. Uh huh.
-						ratioFees = append(ratioFees, ratioFeeCalc)
-						ratioFee = &ratioFeeCalc
-					}
-				}
-			}
-
-			// If this coin's denom is an option for BOTH flat and ratio portions, and is enough to cover the sum,
-			// this one coin satisfies both together, and we're good to go.
-			if flatFee != nil && ratioFee != nil && flatFee.Amount.Add(ratioFee.Amount).LTE(coin.Amount) {
-				return true
+		// If we have both a satisfactory flat and ratio fee, check this fee coin against the sum.
+		if flatFeeAmt != nil && ratioFeeAmt != nil {
+			reqAmt := flatFeeAmt.Add(*ratioFeeAmt)
+			if feeCoin.Amount.LT(reqAmt) {
+				errs = append(errs, fmt.Errorf("%s is less than combined fee %s%s = flat %s%s + ratio %s%s (based on price %s)",
+					feeCoin, reqAmt, fee[0].Denom, flatFeeAmt, fee[0].Denom, ratioFeeAmt, fee[0].Denom, price))
+			} else {
+				// This one coin fee is so satisfying. (How satisfying was it?)
+				// It's so satisfying, it covers both! Thank you for coming to my TED talk.
+				return nil
 			}
 		}
 
-		// If there's no flat fees, but one is required, the flat fee isn't covered in the fee provided.
-		if len(flatFees) == 0 && hasFlatFee(store, marketID, flatKeyMaker) {
-			return false
+		// Keep track of satisfied requirements for the next fee coin.
+		if flatFeeAmt != nil {
+			flatFeeOk = true
 		}
-		// If there's no ratio fees, but one is required, the ratio fee isn't covered in the fee provided.
-		if len(ratioFees) == 0 && hasFeeRatio(store, marketID, ratioKeyMaker) {
-			return false
+		if ratioFeeAmt != nil {
+			ratioFeeOk = true
 		}
-		// If there's exactly one of each, and they have the same denom,
-		// the fee of that denom was NOT enough to cover both together.
-		if len(flatFees) == 1 && len(ratioFees) == 1 && flatFees[0].Denom == ratioFees[0].Denom {
-			return false
-		}
-
-		// Flat fee requirements are met because either:
-		//  a) no flat fee was required.
-		//  b) one or more fee coins are enough to cover the flat fee.
-		// Ratio fee requirements are met because either:
-		//  a) no ratio fee was required.
-		//  b) one or more fee coins are enough to cover the ratio fee.
-		// We also know that, if there's exactly one of each, they have different denoms, so
-		// it's NOT the case where (flat or ratio fee) <= (the other type of fee) <= fee provided <= sum of required fees.
-		// I.e. if there are exactly one of each, they each satisfy a different fee type requirement.
-		return true
 	}
+
+	// Programmer Sanity check.
+	// Either we returned earlier or we added at least one entry to errs.
+	if len(errs) == 0 {
+		panic("no specific errors identified")
+	}
+
+	// If a fee type was required, but not satisfied, add that to the errors for easier identification by users.
+	if flatFeeReq && !flatFeeOk {
+		errs = append(errs, errors.New("required flat fee not satisfied"))
+	}
+	if ratioFeeReq && !ratioFeeOk {
+		errs = append(errs, errors.New("required ratio fee not satisfied"))
+	}
+
+	// And add an error with the overall reason for this failure.
+	errs = append(errs, fmt.Errorf("insufficient buyer settlement fee %s", fee))
+
+	return errors.Join(errs...)
 }
