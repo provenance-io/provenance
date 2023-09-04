@@ -69,9 +69,14 @@ func iterate(store sdk.KVStore, pre []byte, cb func(key, value []byte) bool) {
 	}
 }
 
+// getStore gets the store for the exchange module.
+func (k Keeper) getStore(ctx sdk.Context) sdk.KVStore {
+	return ctx.KVStore(k.storeKey)
+}
+
 // iterate iterates over all the entries in the store with the given prefix.
 // The key provided to the callback will NOT have the provided prefix; it will be everything after it.
 // The callback should return false to continue iteration, or true to stop.
 func (k Keeper) iterate(ctx sdk.Context, pre []byte, cb func(key, value []byte) bool) {
-	iterate(ctx.KVStore(k.storeKey), pre, cb)
+	iterate(k.getStore(ctx), pre, cb)
 }

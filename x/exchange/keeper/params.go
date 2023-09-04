@@ -34,7 +34,7 @@ func getParamsSplit(store sdk.KVStore, denom string) (uint16, bool) {
 // SetParams updates the params to match those provided.
 // If nil is provided, all params are deleted.
 func (k Keeper) SetParams(ctx sdk.Context, params *exchange.Params) {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	deleteAllParamsSplits(store)
 	if params != nil {
 		setParamsSplit(store, "", uint16(params.DefaultSplit))
@@ -68,7 +68,7 @@ func (k Keeper) GetParams(ctx sdk.Context) *exchange.Params {
 // If the denom is "", the default is returned.
 // If there isn't a specific entry for the provided denom, the default is returned.
 func (k Keeper) GetExchangeSplit(ctx sdk.Context, denom string) uint16 {
-	store := ctx.KVStore(k.storeKey)
+	store := k.getStore(ctx)
 	split, found := getParamsSplit(store, denom)
 	// If it wasn't found, and we weren't already looking for the default, look up the default now.
 	if !found && len(denom) > 0 {
