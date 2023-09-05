@@ -45,12 +45,14 @@ func (s *KeeperTestSuite) TestUpdateOracle() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			res, err := s.msgServer.UpdateOracle(s.ctx, tc.req)
+			events := s.ctx.EventManager().Events()
+			numEvents := len(events)
 
 			if tc.event != nil {
-				s.Assert().Equal(1, len(s.ctx.EventManager().Events()), "should emit the correct number of events")
-				s.Assert().Equal(*tc.event, s.ctx.EventManager().Events()[0], "should emit the correct event")
+				s.Assert().Equal(1, numEvents, "should emit the correct number of events")
+				s.Assert().Equal(*tc.event, events[0], "should emit the correct event")
 			} else {
-				s.Assert().Empty(s.ctx.EventManager().Events(), "should not emit events")
+				s.Assert().Empty(events, "should not emit events")
 			}
 
 			if len(tc.err) > 0 {
@@ -112,12 +114,14 @@ func (s *KeeperTestSuite) TestSendQueryOracle() {
 				s.app.OracleKeeper = s.app.OracleKeeper.WithMockChannelKeeper(&keeper.MockChannelKeeper{})
 			}
 			res, err := s.msgServer.SendQueryOracle(s.ctx, tc.req)
+			events := s.ctx.EventManager().Events()
+			numEvents := len(events)
 
 			if tc.event != nil {
-				s.Assert().Equal(1, len(s.ctx.EventManager().Events()), "should emit the correct number of events")
-				s.Assert().Equal(*tc.event, s.ctx.EventManager().Events()[0], "should emit the correct event")
+				s.Assert().Equal(1, numEvents, "should emit the correct number of events")
+				s.Assert().Equal(*tc.event, events[0], "should emit the correct event")
 			} else {
-				s.Assert().Empty(s.ctx.EventManager().Events(), "should not emit events")
+				s.Assert().Empty(events, "should not emit events")
 			}
 
 			if len(tc.err) > 0 {
