@@ -337,18 +337,8 @@ func GetFeeRatioStoreValue(ratio exchange.FeeRatio) []byte {
 // Input is expected to have the format <price amount><RS><fee amount> where both amounts are strings (of digits).
 // E.g. "100\\1E3" (for a price amount of 100, and fee amount of 3).
 func ParseFeeRatioStoreValue(value []byte) (priceAmount, feeAmount sdkmath.Int, err error) {
-	defer func() {
-		// The zero-value of sdkmath.Int{} will panic if anything tries to do anything with it (e.g. convert it to a string).
-		// Additionally, if there was an error, we don't want either of them to have any left-over values.
-		if err != nil {
-			priceAmount = sdkmath.ZeroInt()
-			feeAmount = sdkmath.ZeroInt()
-		}
-	}()
-
 	if len(value) == 0 {
-		err = errors.New("ratio value is empty")
-		return
+		return sdkmath.ZeroInt(), sdkmath.ZeroInt(), errors.New("ratio value is empty")
 	}
 
 	parts := bytes.Split(value, []byte{RecordSeparator})
@@ -366,7 +356,14 @@ func ParseFeeRatioStoreValue(value []byte) (priceAmount, feeAmount sdkmath.Int, 
 		err = fmt.Errorf("ratio value %q has %d parts, expected 2", value, len(parts))
 	}
 
-	return
+	if err != nil {
+		// The zero-value of sdkmath.Int{} will panic if anything tries to do anything with it (e.g. convert it to a string).
+		// Additionally, if there was an error, we don't want either of them to have any left-over values.
+		priceAmount = sdkmath.ZeroInt()
+		feeAmount = sdkmath.ZeroInt()
+	}
+
+	return priceAmount, feeAmount, err
 }
 
 // marketKeyPrefixSellerSettlementRatio creates the key prefix for a market's seller settlement ratios with extra capacity for the rest.
