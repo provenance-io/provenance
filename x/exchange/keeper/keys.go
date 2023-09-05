@@ -167,10 +167,10 @@ func parseLengthPrefixedAddr(key []byte) (sdk.AccAddress, []byte, error) {
 	}
 	l := int(key[0])
 	if l == 0 {
-		return nil, nil, errors.New("length byte is 0")
+		return nil, nil, errors.New("length byte is zero")
 	}
 	if len(key) <= l {
-		return nil, nil, fmt.Errorf("length byte is %d, but slice length has %d left", l, len(key)-1)
+		return nil, nil, fmt.Errorf("length byte is %d, but slice only has %d left", l, len(key)-1)
 	}
 	if len(key) == l+1 {
 		return key[1:], nil, nil
@@ -506,6 +506,9 @@ func MakeKeyMarketReqAttrBid(marketID uint32) []byte {
 
 // ParseReqAttrStoreValue parses a required attribute store value into it's string slice.
 func ParseReqAttrStoreValue(value []byte) []string {
+	if len(value) == 0 {
+		return nil
+	}
 	return strings.Split(string(value), string(RecordSeparator))
 }
 

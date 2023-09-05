@@ -126,7 +126,79 @@ func TestKeyTypeUniqueness(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestParseLengthPrefixedAddr(t *testing.T)
+func TestParseLengthPrefixedAddr(t *testing.T) {
+	tests := []struct {
+		name    string
+		key     []byte
+		expAddr sdk.AccAddress
+		expRest []byte
+		expErr  string
+	}{
+		{
+			name:   "nil slice",
+			key:    nil,
+			expErr: "slice is empty",
+		},
+		{
+			name:   "empty slice",
+			key:    []byte{},
+			expErr: "slice is empty",
+		},
+		{
+			name:   "first byte is zero",
+			key:    []byte{0, 1, 2, 3},
+			expErr: "length byte is zero",
+		},
+		{
+			name:   "too short for length byte 1",
+			key:    []byte{1},
+			expErr: "length byte is 1, but slice only has 0 left",
+		},
+		{
+			name:   "really too short for length byte 10",
+			key:    []byte{10, 1},
+			expErr: "length byte is 10, but slice only has 1 left",
+		},
+		{
+			name:   "barely too short for length byte 10",
+			key:    []byte{10, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+			expErr: "length byte is 10, but slice only has 9 left",
+		},
+		{
+			name:    "length 5 with nothing left",
+			key:     []byte{5, 1, 2, 3, 4, 5},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5},
+			expRest: nil,
+		},
+		{
+			name:    "length 5 with 1 byte left",
+			key:     []byte{5, 1, 2, 3, 4, 5, 11},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5},
+			expRest: []byte{11},
+		},
+		{
+			name:    "length 5 with 5 bytes left",
+			key:     []byte{5, 1, 2, 3, 4, 5, 11, 22, 33, 44, 55},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5},
+			expRest: []byte{11, 22, 33, 44, 55},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var addr sdk.AccAddress
+			var rest []byte
+			var err error
+			testFunc := func() {
+				addr, rest, err = keeper.ParseLengthPrefixedAddr(tc.key)
+			}
+			require.NotPanics(t, testFunc, "parseLengthPrefixedAddr(%v)", tc.key)
+			assertions.AssertErrorValue(t, err, tc.expErr, "parseLengthPrefixedAddr(%v) error", tc.key)
+			assert.Equal(t, tc.expAddr, addr, "parseLengthPrefixedAddr(%v) address", tc.key)
+			assert.Equal(t, tc.expRest, rest, "parseLengthPrefixedAddr(%v) the rest", tc.key)
+		})
+	}
+}
 
 func TestGetKeyPrefixParamsSplit(t *testing.T) {
 	ktc := keyTestCase{
@@ -177,13 +249,179 @@ func TestMakeKeyParamsSplit(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestMakeKeyLastMarketID(t *testing.T)
+func TestMakeKeyLastMarketID(t *testing.T) {
+	ktc := keyTestCase{
+		maker: func() []byte {
+			return keeper.MakeKeyLastMarketID()
+		},
+		expected: []byte{keeper.KeyTypeLastMarketID},
+	}
+	checkKey(t, ktc, "MakeKeyLastMarketID")
+}
 
-// TODO[1658]: func TestGetKeyPrefixKnownMarketID(t *testing.T)
+func TestGetKeyPrefixKnownMarketID(t *testing.T) {
+	ktc := keyTestCase{
+		maker: func() []byte {
+			return keeper.GetKeyPrefixKnownMarketID()
+		},
+		expected: []byte{keeper.KeyTypeKnownMarketID},
+	}
+	checkKey(t, ktc, "GetKeyPrefixKnownMarketID")
+}
 
-// TODO[1658]: func TestMakeKeyKnownMarketID(t *testing.T)
+func TestMakeKeyKnownMarketID(t *testing.T) {
+	tests := []struct {
+		name     string
+		marketID uint32
+		expected []byte
+	}{
+		{
+			name:     "market id 0",
+			marketID: 0,
+			expected: []byte{keeper.KeyTypeKnownMarketID, 0, 0, 0, 0},
+		},
+		{
+			name:     "market id 1",
+			marketID: 1,
+			expected: []byte{keeper.KeyTypeKnownMarketID, 0, 0, 0, 1},
+		},
+		{
+			name:     "market id 255",
+			marketID: 255,
+			expected: []byte{keeper.KeyTypeKnownMarketID, 0, 0, 0, 255},
+		},
+		{
+			name:     "market id 256",
+			marketID: 256,
+			expected: []byte{keeper.KeyTypeKnownMarketID, 0, 0, 1, 0},
+		},
+		{
+			name:     "market id 65_536",
+			marketID: 65_536,
+			expected: []byte{keeper.KeyTypeKnownMarketID, 0, 1, 0, 0},
+		},
+		{
+			name:     "market id 16,777,216",
+			marketID: 16_777_216,
+			expected: []byte{keeper.KeyTypeKnownMarketID, 1, 0, 0, 0},
+		},
+		{
+			name:     "market id 16,843,009",
+			marketID: 16_843_009,
+			expected: []byte{keeper.KeyTypeKnownMarketID, 1, 1, 1, 1},
+		},
+		{
+			name:     "market id 33,686,018",
+			marketID: 33_686_018,
+			expected: []byte{keeper.KeyTypeKnownMarketID, 2, 2, 2, 2},
+		},
+		{
+			name:     "market id 4,294,967,295",
+			marketID: 4_294_967_295,
+			expected: []byte{keeper.KeyTypeKnownMarketID, 255, 255, 255, 255},
+		},
+	}
 
-// TODO[1658]: func TestParseKeySuffixKnownMarketID(t *testing.T)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeKeyKnownMarketID(tc.marketID)
+				},
+				expected: tc.expected,
+				expPanic: "",
+				expPrefixes: []expectedPrefix{
+					{
+						name:  "GetKeyPrefixKnownMarketID",
+						value: keeper.GetKeyPrefixKnownMarketID(),
+					},
+				},
+			}
+			checkKey(t, ktc, "MakeKeyKnownMarketID(%d)", tc.marketID)
+		})
+	}
+}
+
+func TestParseKeySuffixKnownMarketID(t *testing.T) {
+	tests := []struct {
+		name     string
+		suffix   []byte
+		exp      uint32
+		expPanic string
+	}{
+		{
+			name:     "nil suffix",
+			suffix:   nil,
+			expPanic: "runtime error: index out of range [3] with length 0",
+		},
+		{
+			name:     "empty suffix",
+			suffix:   []byte{},
+			expPanic: "runtime error: index out of range [3] with length 0",
+		},
+		{
+			name:     "three byte suffix",
+			suffix:   []byte{1, 2, 3},
+			expPanic: "runtime error: index out of range [3] with length 3",
+		},
+		{
+			name:   "market id 16,909,060 but with extra byte",
+			suffix: []byte{1, 2, 3, 4, 5},
+			exp:    16_909_060,
+		},
+		{
+			name:   "market id 16,909,060",
+			suffix: []byte{1, 2, 3, 4},
+			exp:    16_909_060,
+		},
+		{
+			name:   "market id zero",
+			suffix: []byte{0, 0, 0, 0},
+			exp:    0,
+		},
+		{
+			name:   "market id 1",
+			suffix: []byte{0, 0, 0, 1},
+			exp:    1,
+		},
+		{
+			name:   "market id 255",
+			suffix: []byte{0, 0, 0, 255},
+			exp:    255,
+		},
+		{
+			name:   "market id 256",
+			suffix: []byte{0, 0, 1, 0},
+			exp:    256,
+		},
+		{
+			name:   "market id 65_536",
+			suffix: []byte{0, 1, 0, 0},
+			exp:    65_536,
+		},
+		{
+			name:   "market id 16,777,216",
+			suffix: []byte{1, 0, 0, 0},
+			exp:    16_777_216,
+		},
+		{
+			name:   "market id 4,294,967,295",
+			suffix: []byte{255, 255, 255, 255},
+			exp:    4_294_967_295,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var marketID uint32
+			testFunc := func() {
+				marketID = keeper.ParseKeySuffixKnownMarketID(tc.suffix)
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "ParseKeySuffixKnownMarketID")
+			assert.Equal(t, tc.exp, marketID, "ParseKeySuffixKnownMarketID result")
+		})
+	}
+}
 
 func TestGetKeyPrefixMarket(t *testing.T) {
 	tests := []struct {
@@ -2019,7 +2257,142 @@ func TestMakeKeyMarketPermissions(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestParseKeySuffixMarketPermissions(t *testing.T)
+func TestParseKeySuffixMarketPermissions(t *testing.T) {
+	tests := []struct {
+		name    string
+		suffix  []byte
+		expAddr sdk.AccAddress
+		expPerm exchange.Permission
+		expErr  string
+	}{
+		{
+			name:   "nil suffix",
+			suffix: nil,
+			expErr: "cannot parse address from market permissions key: slice is empty",
+		},
+		{
+			name:   "empty suffix",
+			suffix: []byte{},
+			expErr: "cannot parse address from market permissions key: slice is empty",
+		},
+		{
+			name:   "byte length too short",
+			suffix: []byte{5, 1, 2},
+			expErr: "cannot parse address from market permissions key: length byte is 5, but slice only has 2 left",
+		},
+		{
+			name:   "no permission byte",
+			suffix: []byte{5, 1, 2, 3, 4, 5},
+			expErr: "cannot parse market permissions key: found 0 bytes after address, expected 1",
+		},
+		{
+			name:   "two bytes after addr",
+			suffix: []byte{5, 1, 2, 3, 4, 5, 11, 22},
+			expErr: "cannot parse market permissions key: found 2 bytes after address, expected 1",
+		},
+		{
+			name:    "5 byte addr settle",
+			suffix:  []byte{5, 1, 2, 3, 4, 5, byte(exchange.Permission_settle)},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5},
+			expPerm: exchange.Permission_settle,
+		},
+		{
+			name:    "5 byte addr cancel",
+			suffix:  []byte{5, 1, 2, 3, 4, 5, byte(exchange.Permission_cancel)},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5},
+			expPerm: exchange.Permission_cancel,
+		},
+		{
+			name:    "5 byte addr withdraw",
+			suffix:  []byte{5, 1, 2, 3, 4, 5, byte(exchange.Permission_withdraw)},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5},
+			expPerm: exchange.Permission_withdraw,
+		},
+		{
+			name:    "5 byte addr update",
+			suffix:  []byte{5, 1, 2, 3, 4, 5, byte(exchange.Permission_update)},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5},
+			expPerm: exchange.Permission_update,
+		},
+		{
+			name:    "5 byte addr permissions",
+			suffix:  []byte{5, 1, 2, 3, 4, 5, byte(exchange.Permission_permissions)},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5},
+			expPerm: exchange.Permission_permissions,
+		},
+		{
+			name:    "5 byte addr attributes",
+			suffix:  []byte{5, 1, 2, 3, 4, 5, byte(exchange.Permission_attributes)},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5},
+			expPerm: exchange.Permission_attributes,
+		},
+		{
+			name:    "5 byte addr unknown permission",
+			suffix:  []byte{5, 1, 2, 3, 4, 5, 88},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5},
+			expPerm: exchange.Permission(88),
+		},
+		{
+			name:    "20 byte addr settle",
+			suffix:  []byte{20, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, byte(exchange.Permission_settle)},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+			expPerm: exchange.Permission_settle,
+		},
+		{
+			name:    "20 byte addr cancel",
+			suffix:  []byte{20, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, byte(exchange.Permission_cancel)},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+			expPerm: exchange.Permission_cancel,
+		},
+		{
+			name:    "20 byte addr withdraw",
+			suffix:  []byte{20, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, byte(exchange.Permission_withdraw)},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+			expPerm: exchange.Permission_withdraw,
+		},
+		{
+			name:    "20 byte addr update",
+			suffix:  []byte{20, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, byte(exchange.Permission_update)},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+			expPerm: exchange.Permission_update,
+		},
+		{
+			name:    "20 byte addr permissions",
+			suffix:  []byte{20, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, byte(exchange.Permission_permissions)},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+			expPerm: exchange.Permission_permissions,
+		},
+		{
+			name:    "20 byte addr attributes",
+			suffix:  []byte{20, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, byte(exchange.Permission_attributes)},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+			expPerm: exchange.Permission_attributes,
+		},
+		{
+			name: "32 byte addr settle",
+			suffix: []byte{32, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+				17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, byte(exchange.Permission_settle)},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+				17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32},
+			expPerm: exchange.Permission_settle,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var addr sdk.AccAddress
+			var perm exchange.Permission
+			var err error
+			testFunc := func() {
+				addr, perm, err = keeper.ParseKeySuffixMarketPermissions(tc.suffix)
+			}
+			require.NotPanics(t, testFunc, "ParseKeySuffixMarketPermissions")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseKeySuffixMarketPermissions error")
+			assert.Equal(t, tc.expAddr, addr, "ParseKeySuffixMarketPermissions address")
+			assert.Equal(t, tc.expPerm, perm, "ParseKeySuffixMarketPermissions permission")
+		})
+	}
+}
 
 func TestMakeKeyMarketReqAttrAsk(t *testing.T) {
 	marketTypeByte := keeper.MarketKeyTypeReqAttr
@@ -2155,7 +2528,64 @@ func TestMakeKeyMarketReqAttrBid(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestParseReqAttrStoreValue(t *testing.T)
+func TestParseReqAttrStoreValue(t *testing.T) {
+	rs := keeper.RecordSeparator
+
+	tests := []struct {
+		name  string
+		value []byte
+		exp   []string
+	}{
+		{
+			name:  "nil value",
+			value: nil,
+			exp:   nil,
+		},
+		{
+			name:  "empty value",
+			value: nil,
+			exp:   nil,
+		},
+		{
+			name:  "one long attribute",
+			value: []byte("one.long.really-long.super-long.attribute"),
+			exp:   []string{"one.long.really-long.super-long.attribute"},
+		},
+		{
+			name:  "two attributes",
+			value: []byte{'a', 't', 't', 'r', '1', rs, 's', 'e', 'c', 'o', 'n', 'd'},
+			exp:   []string{"attr1", "second"},
+		},
+		{
+			name: "five attributes",
+			value: bytes.Join([][]byte{
+				[]byte("this.is.attr.one"),
+				[]byte("a.second.appears"),
+				[]byte("thrice.is.twice.as.nice"),
+				[]byte("golfers.delight"),
+				[]byte("i.have.nothing.for.fifth"),
+			}, []byte{rs}),
+			exp: []string{
+				"this.is.attr.one",
+				"a.second.appears",
+				"thrice.is.twice.as.nice",
+				"golfers.delight",
+				"i.have.nothing.for.fifth",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual []string
+			testFunc := func() {
+				actual = keeper.ParseReqAttrStoreValue(tc.value)
+			}
+			require.NotPanics(t, testFunc, "ParseReqAttrStoreValue")
+			assert.Equal(t, tc.exp, actual, "ParseReqAttrStoreValue result")
+		})
+	}
+}
 
 func TestGetKeyPrefixOrder(t *testing.T) {
 	tests := []struct {
