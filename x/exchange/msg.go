@@ -165,6 +165,10 @@ func (m MsgGovManageFeesRequest) ValidateBasic() error {
 		errs = append(errs, fmt.Errorf("invalid authority: %w", err))
 	}
 
+	if m.MarketId == 0 {
+		errs = append(errs, errors.New("market id cannot be zero"))
+	}
+
 	if m.HasUpdates() {
 		errs = append(errs,
 			ValidateAddRemoveFeeOptions("create-ask flat fee", m.AddFeeCreateAskFlat, m.RemoveFeeCreateAskFlat),

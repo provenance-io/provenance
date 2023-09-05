@@ -5,16 +5,9 @@ import (
 	"fmt"
 )
 
-func NewGenesisState(params *Params, markets []Market, orders []Order) *GenesisState {
-	return &GenesisState{
-		Params:  params,
-		Markets: markets,
-		Orders:  orders,
-	}
-}
-
+// DefaultGenesisState returns the default genesis state for the exchange module.
 func DefaultGenesisState() *GenesisState {
-	return NewGenesisState(DefaultParams(), nil, nil)
+	return &GenesisState{Params: DefaultParams()}
 }
 
 func (g GenesisState) Validate() error {
@@ -66,6 +59,8 @@ func (g GenesisState) Validate() error {
 			errs = append(errs, fmt.Errorf("invalid order[%d]: unknown market id %d", i, order.GetMarketID()))
 		}
 	}
+
+	// No validation to do on LastMarketId.
 
 	return errors.Join(errs...)
 }

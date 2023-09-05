@@ -3,7 +3,6 @@ package exchange
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
@@ -11,214 +10,6 @@ import (
 
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
-
-func TestNewGenesisState(t *testing.T) {
-	coin := func(amount int64, denom string) sdk.Coin {
-		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
-	}
-
-	tests := []struct {
-		name     string
-		params   *Params
-		markets  []Market
-		orders   []Order
-		expected *GenesisState
-	}{
-		{
-			name:     "all nil",
-			params:   nil,
-			markets:  nil,
-			orders:   nil,
-			expected: &GenesisState{},
-		},
-		{
-			name: "only params",
-			params: &Params{
-				DefaultSplit: 54,
-				DenomSplits: []DenomSplit{
-					{Denom: "farnsworth", Split: 88},
-					{Denom: "fry", Split: 1000},
-				},
-			},
-			expected: &GenesisState{
-				Params: &Params{
-					DefaultSplit: 54,
-					DenomSplits: []DenomSplit{
-						{Denom: "farnsworth", Split: 88},
-						{Denom: "fry", Split: 1000},
-					},
-				},
-			},
-		},
-		{
-			name: "only markets",
-			markets: []Market{
-				{
-					MarketId:         1,
-					MarketDetails:    MarketDetails{Name: "Market One"},
-					FeeCreateAskFlat: []sdk.Coin{coin(5, "askd")},
-					AcceptingOrders:  true,
-				},
-				{
-					MarketId:                 2,
-					MarketDetails:            MarketDetails{Name: "Market Two"},
-					FeeCreateBidFlat:         []sdk.Coin{coin(3, "bidd")},
-					FeeBuyerSettlementRatios: []FeeRatio{{Price: coin(7, "buyrr"), Fee: coin(1, "buyrr")}},
-					AccessGrants:             []AccessGrant{{Address: "addr1", Permissions: AllPermissions()}},
-					ReqAttrCreateBid:         []string{"just.some.attr"},
-				},
-			},
-			expected: &GenesisState{
-				Params: nil,
-				Markets: []Market{
-					{
-						MarketId:         1,
-						MarketDetails:    MarketDetails{Name: "Market One"},
-						FeeCreateAskFlat: []sdk.Coin{coin(5, "askd")},
-						AcceptingOrders:  true,
-					},
-					{
-						MarketId:                 2,
-						MarketDetails:            MarketDetails{Name: "Market Two"},
-						FeeCreateBidFlat:         []sdk.Coin{coin(3, "bidd")},
-						FeeBuyerSettlementRatios: []FeeRatio{{Price: coin(7, "buyrr"), Fee: coin(1, "buyrr")}},
-						AccessGrants:             []AccessGrant{{Address: "addr1", Permissions: AllPermissions()}},
-						ReqAttrCreateBid:         []string{"just.some.attr"},
-					},
-				},
-				Orders: nil,
-			},
-		},
-		{
-			name: "just orders",
-			orders: []Order{
-				*NewOrder(1).WithAsk(&AskOrder{
-					MarketId: 1,
-					Seller:   "seller_addr",
-					Assets:   []sdk.Coin{coin(55, "fry")},
-					Price:    coin(888, "nibbler"),
-				}),
-				*NewOrder(1).WithBid(&BidOrder{
-					MarketId: 1,
-					Buyer:    "buyer_addr",
-					Assets:   []sdk.Coin{coin(55, "fry")},
-					Price:    coin(888, "nibbler"),
-				}),
-			},
-			expected: &GenesisState{
-				Params:  nil,
-				Markets: nil,
-				Orders: []Order{
-					*NewOrder(1).WithAsk(&AskOrder{
-						MarketId: 1,
-						Seller:   "seller_addr",
-						Assets:   []sdk.Coin{coin(55, "fry")},
-						Price:    coin(888, "nibbler"),
-					}),
-					*NewOrder(1).WithBid(&BidOrder{
-						MarketId: 1,
-						Buyer:    "buyer_addr",
-						Assets:   []sdk.Coin{coin(55, "fry")},
-						Price:    coin(888, "nibbler"),
-					}),
-				},
-			},
-		},
-		{
-			name: "all three together",
-			params: &Params{
-				DefaultSplit: 54,
-				DenomSplits: []DenomSplit{
-					{Denom: "farnsworth", Split: 88},
-					{Denom: "fry", Split: 1000},
-				},
-			},
-			markets: []Market{
-				{
-					MarketId:         1,
-					MarketDetails:    MarketDetails{Name: "Market One"},
-					FeeCreateAskFlat: []sdk.Coin{coin(5, "askd")},
-					AcceptingOrders:  true,
-				},
-				{
-					MarketId:                 2,
-					MarketDetails:            MarketDetails{Name: "Market Two"},
-					FeeCreateBidFlat:         []sdk.Coin{coin(3, "bidd")},
-					FeeBuyerSettlementRatios: []FeeRatio{{Price: coin(7, "buyrr"), Fee: coin(1, "buyrr")}},
-					AccessGrants:             []AccessGrant{{Address: "addr1", Permissions: AllPermissions()}},
-					ReqAttrCreateBid:         []string{"just.some.attr"},
-				},
-			},
-			orders: []Order{
-				*NewOrder(1).WithAsk(&AskOrder{
-					MarketId: 1,
-					Seller:   "seller_addr",
-					Assets:   []sdk.Coin{coin(55, "fry")},
-					Price:    coin(888, "nibbler"),
-				}),
-				*NewOrder(1).WithBid(&BidOrder{
-					MarketId: 1,
-					Buyer:    "buyer_addr",
-					Assets:   []sdk.Coin{coin(55, "fry")},
-					Price:    coin(888, "nibbler"),
-				}),
-			},
-			expected: &GenesisState{
-				Params: &Params{
-					DefaultSplit: 54,
-					DenomSplits: []DenomSplit{
-						{Denom: "farnsworth", Split: 88},
-						{Denom: "fry", Split: 1000},
-					},
-				},
-				Markets: []Market{
-					{
-						MarketId:         1,
-						MarketDetails:    MarketDetails{Name: "Market One"},
-						FeeCreateAskFlat: []sdk.Coin{coin(5, "askd")},
-						AcceptingOrders:  true,
-					},
-					{
-						MarketId:                 2,
-						MarketDetails:            MarketDetails{Name: "Market Two"},
-						FeeCreateBidFlat:         []sdk.Coin{coin(3, "bidd")},
-						FeeBuyerSettlementRatios: []FeeRatio{{Price: coin(7, "buyrr"), Fee: coin(1, "buyrr")}},
-						AccessGrants:             []AccessGrant{{Address: "addr1", Permissions: AllPermissions()}},
-						ReqAttrCreateBid:         []string{"just.some.attr"},
-					},
-				},
-				Orders: []Order{
-					*NewOrder(1).WithAsk(&AskOrder{
-						MarketId: 1,
-						Seller:   "seller_addr",
-						Assets:   []sdk.Coin{coin(55, "fry")},
-						Price:    coin(888, "nibbler"),
-					}),
-					*NewOrder(1).WithBid(&BidOrder{
-						MarketId: 1,
-						Buyer:    "buyer_addr",
-						Assets:   []sdk.Coin{coin(55, "fry")},
-						Price:    coin(888, "nibbler"),
-					}),
-				},
-			},
-		},
-		{
-			name:     "defaults",
-			params:   DefaultParams(),
-			markets:  nil,
-			orders:   nil,
-			expected: DefaultGenesisState(),
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			actual := NewGenesisState(tc.params, tc.markets, tc.orders)
-			assert.Equal(t, tc.expected, actual, "NewGenesisState")
-		})
-	}
-}
 
 func TestGenesisState_Validate(t *testing.T) {
 	addr1 := sdk.AccAddress("addr1_______________").String()
@@ -410,6 +201,31 @@ func TestGenesisState_Validate(t *testing.T) {
 				`invalid market[1]: invalid create-bid flat fee option "-1zapp": negative coin amount: -1`,
 				`invalid order[1]: unknown market id 4`,
 			},
+		},
+		{
+			name:     "last market id 1",
+			genState: GenesisState{LastMarketId: 1},
+			expErr:   nil,
+		},
+		{
+			name:     "last market id 256",
+			genState: GenesisState{LastMarketId: 256},
+			expErr:   nil,
+		},
+		{
+			name:     "last market id 65,536",
+			genState: GenesisState{LastMarketId: 65_536},
+			expErr:   nil,
+		},
+		{
+			name:     "last market id 16,777,216",
+			genState: GenesisState{LastMarketId: 16_777_216},
+			expErr:   nil,
+		},
+		{
+			name:     "last market id max uint32",
+			genState: GenesisState{LastMarketId: 4_294_967_295},
+			expErr:   nil,
 		},
 	}
 
