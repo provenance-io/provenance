@@ -1267,7 +1267,6 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(rewardtypes.ModuleName)
 	paramsKeeper.Subspace(triggertypes.ModuleName)
-	paramsKeeper.Subspace(oracletypes.ModuleName)
 
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
