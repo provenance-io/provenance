@@ -121,9 +121,14 @@ func (k MsgServer) GovManageFees(goCtx context.Context, msg *exchange.MsgGovMana
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	// TODO[1658]: Implement GovManageFees
-	_ = ctx
-	panic("not implemented")
+	k.UpdateCreateAskFlatFees(ctx, msg.MarketId, msg.RemoveFeeCreateAskFlat, msg.AddFeeCreateAskFlat)
+	k.UpdateCreateBidFlatFees(ctx, msg.MarketId, msg.RemoveFeeCreateBidFlat, msg.AddFeeCreateBidFlat)
+	k.UpdateSellerSettlementFlatFees(ctx, msg.MarketId, msg.RemoveFeeSellerSettlementFlat, msg.AddFeeSellerSettlementFlat)
+	k.UpdateSellerSettlementRatios(ctx, msg.MarketId, msg.RemoveFeeSellerSettlementRatios, msg.AddFeeSellerSettlementRatios)
+	k.UpdateBuyerSettlementFlatFees(ctx, msg.MarketId, msg.RemoveFeeBuyerSettlementFlat, msg.AddFeeBuyerSettlementFlat)
+	k.UpdateBuyerSettlementRatios(ctx, msg.MarketId, msg.RemoveFeeBuyerSettlementRatios, msg.AddFeeBuyerSettlementRatios)
+
+	return &exchange.MsgGovManageFeesResponse{}, nil
 }
 
 // GovUpdateParams is a governance proposal endpoint for updating the exchange module's params.
