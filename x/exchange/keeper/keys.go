@@ -26,6 +26,8 @@ import (
 // Last Market ID: 0x06 => uint32
 //   This stores the last auto-selected market id.
 //
+// Known Market IDs: 0x07 | <market_id> => nil
+//
 // Markets:
 //   Some aspects of a market are stored using the accounts module and the MarketAccount type.
 //   Others are stored in the exchange module.
@@ -70,6 +72,8 @@ const (
 	KeyTypeParams = byte(0x00)
 	// KeyTypeLastMarketID is the type byte for the last auto-selected market id.
 	KeyTypeLastMarketID = byte(0x06)
+	// KeyTypeKnownMarketID is the type byte for known market id entries.
+	KeyTypeKnownMarketID = byte(0x07)
 	// KeyTypeMarket is the type byte for market entries.
 	KeyTypeMarket = byte(0x01)
 	// KeyTypeOrder is the type byte for order entries.
@@ -195,6 +199,30 @@ func MakeKeyParamsSplit(denom string) []byte {
 // MakeKeyLastMarketID creates the key for the last auto-selected market id.
 func MakeKeyLastMarketID() []byte {
 	return []byte{KeyTypeLastMarketID}
+}
+
+// keyPrefixKnownMarketID creates the key prefix for a known market id entry.
+func keyPrefixKnownMarketID(extraCap int) []byte {
+	return prepKey(KeyTypeKnownMarketID, nil, extraCap)
+}
+
+// GetKeyPrefixKnownMarketID creates the key prefix for all known market id entries.
+func GetKeyPrefixKnownMarketID() []byte {
+	return keyPrefixKnownMarketID(0)
+}
+
+// MakeKeyKnownMarketID creates the key for a market's known market id entry.
+func MakeKeyKnownMarketID(marketID uint32) []byte {
+	suffix := uint32Bz(marketID)
+	rv := keyPrefixKnownMarketID(len(suffix))
+	rv = append(rv, suffix...)
+	return rv
+}
+
+// ParseKeySuffixKnownMarketID parses the market id out of a known market id key that doesn't have the type byte.
+// Input is expected to have the format <market id bytes>.
+func ParseKeySuffixKnownMarketID(suffix []byte) uint32 {
+	return uint32FromBz(suffix)
 }
 
 // keyPrefixMarket creates the root of a market's key with extra capacity for the rest.

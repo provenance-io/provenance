@@ -699,6 +699,23 @@ func (k Keeper) NextMarketID(ctx sdk.Context) uint32 {
 	return marketID
 }
 
+// SetMarketKnown sets the known market id indicator in the store.
+func (k Keeper) SetMarketKnown(ctx sdk.Context, marketID uint32) {
+	store := k.getStore(ctx)
+	key := MakeKeyKnownMarketID(marketID)
+	store.Set(key, nil)
+}
+
+// GetAllMarketIDs gets all the known market ids from the store.
+func (k Keeper) GetAllMarketIDs(ctx sdk.Context) []uint32 {
+	var rv []uint32
+	k.iterate(ctx, GetKeyPrefixKnownMarketID(), func(key, _ []byte) bool {
+		rv = append(rv, ParseKeySuffixKnownMarketID(key))
+		return false
+	})
+	return rv
+}
+
 // CreateMarket saves a new market to the store with all the info provided.
 // If the marketId is zero, the next available one will be used.
 func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (marketID uint32, err error) {
@@ -730,6 +747,7 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (marketID 
 	k.accountKeeper.NewAccount(ctx, marketAcc)
 	k.accountKeeper.SetAccount(ctx, marketAcc)
 
+	k.SetMarketKnown(ctx, marketID)
 	k.SetCreateAskFlatFees(ctx, marketID, market.FeeCreateAskFlat)
 	k.SetCreateBidFlatFees(ctx, marketID, market.FeeCreateBidFlat)
 	k.SetSellerSettlementFlatFees(ctx, marketID, market.FeeSellerSettlementFlat)
@@ -745,6 +763,8 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (marketID 
 	return marketID, err
 }
 
+// GetMarket reads all the market info from state and returns it.
+// Returns nil if the market account doesn't exist or it's not a market account.
 func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
 	marketAddr := exchange.GetMarketAddress(marketID)
 	acc := k.accountKeeper.GetAccount(ctx, marketAddr)
