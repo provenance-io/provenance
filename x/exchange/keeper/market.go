@@ -745,12 +745,30 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (marketID 
 	return marketID, err
 }
 
-// NormalizeReqAttrs normalizes/validates each of the provided require attributes.
-func (k Keeper) NormalizeReqAttrs(ctx sdk.Context, reqAttrs []string) ([]string, error) {
-	rv := make([]string, len(reqAttrs))
-	errs := make([]error, len(reqAttrs))
-	for i, attr := range reqAttrs {
-		rv[i], errs[i] = k.nameKeeper.Normalize(ctx, attr)
+func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
+	marketAddr := exchange.GetMarketAddress(marketID)
+	acc := k.accountKeeper.GetAccount(ctx, marketAddr)
+	if acc == nil {
+		return nil
 	}
-	return rv, errors.Join(errs...)
+	marketAcc, ok := acc.(*exchange.MarketAccount)
+	if !ok {
+		return nil
+	}
+
+	market := &exchange.Market{MarketId: marketID}
+	market.MarketDetails = marketAcc.MarketDetails
+	market.FeeCreateAskFlat = k.GetCreateAskFlatFees(ctx, marketID)
+	market.FeeCreateBidFlat = k.GetCreateBidFlatFees(ctx, marketID)
+	market.FeeSellerSettlementFlat = k.GetSellerSettlementFlatFees(ctx, marketID)
+	market.FeeSellerSettlementRatios = k.GetSellerSettlementRatios(ctx, marketID)
+	market.FeeBuyerSettlementFlat = k.GetBuyerSettlementFlatFees(ctx, marketID)
+	market.FeeBuyerSettlementRatios = k.GetBuyerSettlementRatios(ctx, marketID)
+	market.AcceptingOrders = k.IsMarketActive(ctx, marketID)
+	market.AllowUserSettlement = k.IsUserSettlementAllowed(ctx, marketID)
+	market.AccessGrants = k.GetAccessGrants(ctx, marketID)
+	market.ReqAttrCreateAsk = k.GetReqAttrAsk(ctx, marketID)
+	market.ReqAttrCreateBid = k.GetReqAttrBid(ctx, marketID)
+
+	return market
 }

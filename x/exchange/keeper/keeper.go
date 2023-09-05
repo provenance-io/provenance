@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"errors"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -89,4 +91,14 @@ func (k Keeper) getStore(ctx sdk.Context) sdk.KVStore {
 // The callback should return false to continue iteration, or true to stop.
 func (k Keeper) iterate(ctx sdk.Context, pre []byte, cb func(key, value []byte) bool) {
 	iterate(k.getStore(ctx), pre, cb)
+}
+
+// NormalizeReqAttrs normalizes/validates each of the provided require attributes.
+func (k Keeper) NormalizeReqAttrs(ctx sdk.Context, reqAttrs []string) ([]string, error) {
+	rv := make([]string, len(reqAttrs))
+	errs := make([]error, len(reqAttrs))
+	for i, attr := range reqAttrs {
+		rv[i], errs[i] = k.nameKeeper.Normalize(ctx, attr)
+	}
+	return rv, errors.Join(errs...)
 }
