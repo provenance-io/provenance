@@ -1836,6 +1836,7 @@ GenesisState is the data that should be loaded into the exchange module during g
 | `params` | [Params](#provenance.exchange.v1.Params) |  | params defines all the parameters of the exchange module. |
 | `markets` | [Market](#provenance.exchange.v1.Market) | repeated | markets are all of the markets to create at genesis. |
 | `orders` | [Order](#provenance.exchange.v1.Order) | repeated | orders are all the orders to create at genesis. |
+| `last_market_id` | [uint32](#uint32) |  | last_market_id is the value of the last auto-selected market id. |
 
 
 
@@ -2222,6 +2223,7 @@ MsgGovManageFeesRequest is a request message for the GovManageFees endpoint.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `market_id` | [uint32](#uint32) |  | market_id is the market id that will get these fee updates. |
 | `add_fee_create_ask_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_create_ask_flat are the create-ask flat fee options to add. |
 | `remove_fee_create_ask_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_create_ask_flat are the create-ask flat fee options to remove. |
 | `add_fee_create_bid_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_create_bid_flat are the create-bid flat fee options to add. |

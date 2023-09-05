@@ -24,4 +24,7 @@ message GenesisState {
 
   // orders are all the orders to create at genesis.
   repeated Order orders = 3 [(gogoproto.nullable) = false];
+
+  // last_market_id is the value of the last auto-selected market id.
+  uint32 last_market_id = 4;
 }
