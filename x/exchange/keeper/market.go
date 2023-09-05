@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -609,6 +610,13 @@ func (k Keeper) GetAccessGrants(ctx sdk.Context, marketID uint32) []exchange.Acc
 	return rv
 }
 
+// SetAccessGrants deletes all access grants on a market and sets just the ones provided.
+func (k Keeper) SetAccessGrants(ctx sdk.Context, marketID uint32, grants []exchange.AccessGrant) {
+	store := k.getStore(ctx)
+	revokeAllMarketPermissions(store, marketID)
+	setAllMarketPermissions(store, marketID, grants)
+}
+
 // UpdatePermissions revokes all permissions from the provided revokeAll bech32 addresses, then revokes all permissions
 // in the toRevoke list, and lastly, grants all the permissions in toGrant.
 func (k Keeper) UpdatePermissions(ctx sdk.Context, marketID uint32, revokeAll []string, toRevoke, toGrant []exchange.AccessGrant) {
@@ -654,4 +662,79 @@ func (k Keeper) GetReqAttrBid(ctx sdk.Context, marketID uint32) []string {
 // SetReqAttrBid sets the attributes required to create a bid order.
 func (k Keeper) SetReqAttrBid(ctx sdk.Context, marketID uint32, reqAttrs []string) {
 	setReqAttr(k.getStore(ctx), marketID, reqAttrs, MakeKeyMarketReqAttrBid)
+}
+
+// getLastAutoMarketID gets the last auto-selected market id.
+func getLastAutoMarketID(store sdk.KVStore) uint32 {
+	key := MakeKeyLastMarketID()
+	value := store.Get(key)
+	return uint32FromBz(value)
+}
+
+// setLastAutoMarketID sets the last auto-selected market id to the provided value.
+func setLastAutoMarketID(store sdk.KVStore, marketID uint32) {
+	key := MakeKeyLastMarketID()
+	value := uint32Bz(marketID)
+	store.Set(key, value)
+}
+
+// NextMarketID finds the next available market id, updates the last auto-selected
+// market id store entry, and returns the unused id it found.
+func (k Keeper) NextMarketID(ctx sdk.Context) uint32 {
+	store := k.getStore(ctx)
+	marketID := getLastAutoMarketID(store) + 1
+	for {
+		marketAddr := exchange.GetMarketAddress(marketID)
+		if !k.accountKeeper.HasAccount(ctx, marketAddr) {
+			break
+		}
+	}
+	setLastAutoMarketID(store, marketID)
+	return marketID
+}
+
+// CreateMarket saves a new market to the store with all the info provided.
+// If the marketId is zero, the next available one will be used.
+func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (marketID uint32, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			if e, ok := r.(error); ok {
+				err = fmt.Errorf("could not set market: %w", e)
+			} else {
+				err = fmt.Errorf("could not set market: %v", r)
+			}
+		}
+	}()
+
+	if market.MarketId == 0 {
+		market.MarketId = k.NextMarketID(ctx)
+	}
+	marketID = market.MarketId
+
+	marketAddr := exchange.GetMarketAddress(marketID)
+	if k.accountKeeper.HasAccount(ctx, marketAddr) {
+		return 0, fmt.Errorf("market id %d %s already exists", marketID, marketAddr)
+	}
+
+	marketAcc := &exchange.MarketAccount{
+		BaseAccount:   &authtypes.BaseAccount{Address: marketAddr.String()},
+		MarketId:      marketID,
+		MarketDetails: market.MarketDetails,
+	}
+	k.accountKeeper.NewAccount(ctx, marketAcc)
+	k.accountKeeper.SetAccount(ctx, marketAcc)
+
+	k.SetCreateAskFlatFees(ctx, marketID, market.FeeCreateAskFlat)
+	k.SetCreateBidFlatFees(ctx, marketID, market.FeeCreateBidFlat)
+	k.SetSellerSettlementFlatFees(ctx, marketID, market.FeeSellerSettlementFlat)
+	k.SetSellerSettlementRatios(ctx, marketID, market.FeeSellerSettlementRatios)
+	k.SetBuyerSettlementFlatFees(ctx, marketID, market.FeeBuyerSettlementFlat)
+	k.SetBuyerSettlementRatios(ctx, marketID, market.FeeBuyerSettlementRatios)
+	k.SetMarketActive(ctx, marketID, market.AcceptingOrders)
+	k.SetUserSettlementAllowed(ctx, marketID, market.AllowUserSettlement)
+	k.SetAccessGrants(ctx, marketID, market.AccessGrants)
+	k.SetReqAttrAsk(ctx, marketID, market.ReqAttrCreateAsk)
+	k.SetReqAttrBid(ctx, marketID, market.ReqAttrCreateBid)
+
+	return marketID, nil
 }

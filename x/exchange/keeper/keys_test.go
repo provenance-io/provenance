@@ -81,6 +81,7 @@ func TestKeyTypeUniqueness(t *testing.T) {
 			name: "base type bytes",
 			types: []byteEntry{
 				{name: "KeyTypeParams", value: keeper.KeyTypeParams},
+				{name: "KeyTypeLastMarketID", value: keeper.KeyTypeLastMarketID},
 				{name: "KeyTypeMarket", value: keeper.KeyTypeMarket},
 				{name: "KeyTypeOrder", value: keeper.KeyTypeOrder},
 				{name: "KeyTypeMarketToOrderIndex", value: keeper.KeyTypeMarketToOrderIndex},
@@ -174,6 +175,8 @@ func TestMakeKeyParamsSplit(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1658]: func TestMakeKeyLastMarketID(t *testing.T)
 
 func TestGetKeyPrefixMarket(t *testing.T) {
 	tests := []struct {

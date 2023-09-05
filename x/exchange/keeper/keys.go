@@ -23,6 +23,9 @@ import (
 //   Default split: 0x00 | "split" => uint16
 //   Specific splits: 0x00 | "split" | <denom> => uint16
 //
+// Last Market ID: 0x06 => uint32
+//   This stores the last auto-selected market id.
+//
 // Markets:
 //   Some aspects of a market are stored using the accounts module and the MarketAccount type.
 //   Others are stored in the exchange module.
@@ -65,6 +68,8 @@ import (
 const (
 	// KeyTypeParams is the type byte for params entries.
 	KeyTypeParams = byte(0x00)
+	// KeyTypeLastMarketID is the type byte for the last auto-selected market id.
+	KeyTypeLastMarketID = byte(0x06)
 	// KeyTypeMarket is the type byte for market entries.
 	KeyTypeMarket = byte(0x01)
 	// KeyTypeOrder is the type byte for order entries.
@@ -185,6 +190,11 @@ func MakeKeyParamsSplit(denom string) []byte {
 	rv := keyPrefixParamsSplit(len(denom))
 	rv = append(rv, denom...)
 	return rv
+}
+
+// MakeKeyLastMarketID creates the key for the last auto-selected market id.
+func MakeKeyLastMarketID() []byte {
+	return []byte{KeyTypeLastMarketID}
 }
 
 // keyPrefixMarket creates the root of a market's key with extra capacity for the rest.
