@@ -64,7 +64,7 @@ jobs:
     name: Build OSX
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup go
         uses: actions/setup-go@v4
         with:
@@ -91,7 +91,7 @@ jobs:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup go
         uses: actions/setup-go@v4
         with:
@@ -123,7 +123,7 @@ jobs:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup go
         uses: actions/setup-go@v4
         with:
@@ -156,7 +156,7 @@ jobs:
     name: Protobuf Push
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Buf setup action
         uses: bufbuild/buf-setup-action@v1.26.1
       - name: Buf push 'proto/'
@@ -175,7 +175,7 @@ jobs:
     name: Create Release
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Create release ${{ needs.build_init.outputs.version }}
         uses: actions/create-release@v1
         id: create_release
@@ -199,7 +199,7 @@ jobs:
     name: Attach Release Artifacts
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup go
         uses: actions/setup-go@v4
         with:
@@ -277,7 +277,7 @@ jobs:
     name: Java/Kotlin Proto Publishing
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Java Setup
         uses: actions/setup-java@v3
@@ -317,7 +317,7 @@ jobs:
     name: NPM Proto Publishing
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Publish
         uses: provenance-io/npm-publish-action@v1.1
         with:
