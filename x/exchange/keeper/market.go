@@ -13,6 +13,8 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
+// TODO[1658]: Recheck all the public funcs in here to make sure they're still needed.
+
 // flatFeeKeyMakers are the key and prefix maker funcs for a specific flat fee entry.
 type flatFeeKeyMakers struct {
 	key    func(marketID uint32, denom string) []byte
@@ -197,19 +199,24 @@ func updateFeeRatios(store sdk.KVStore, marketID uint32, toDelete, toWrite []exc
 	}
 }
 
+// getCreateAskFlatFees gets the create-ask flat fee options for a market.
+func getCreateAskFlatFees(store sdk.KVStore, marketID uint32) []sdk.Coin {
+	return getAllFlatFees(store, marketID, createAskFlatKeyMakers)
+}
+
 // GetCreateAskFlatFees gets the create-ask flat fee options for a market.
 func (k Keeper) GetCreateAskFlatFees(ctx sdk.Context, marketID uint32) []sdk.Coin {
-	return getAllFlatFees(k.getStore(ctx), marketID, createAskFlatKeyMakers)
+	return getCreateAskFlatFees(k.getStore(ctx), marketID)
 }
 
-// SetCreateAskFlatFees sets the create-ask flat fees for a market.
-func (k Keeper) SetCreateAskFlatFees(ctx sdk.Context, marketID uint32, options []sdk.Coin) {
-	setAllFlatFees(k.getStore(ctx), marketID, options, createAskFlatKeyMakers)
+// setCreateAskFlatFees sets the create-ask flat fees for a market.
+func setCreateAskFlatFees(store sdk.KVStore, marketID uint32, options []sdk.Coin) {
+	setAllFlatFees(store, marketID, options, createAskFlatKeyMakers)
 }
 
-// UpdateCreateAskFlatFees deletes all create-ask flat fees to delete then adds the ones to add.
-func (k Keeper) UpdateCreateAskFlatFees(ctx sdk.Context, marketID uint32, toDelete, toAdd []sdk.Coin) {
-	updateFlatFees(k.getStore(ctx), marketID, toDelete, toAdd, createAskFlatKeyMakers)
+// updateCreateAskFlatFees deletes all create-ask flat fees to delete then adds the ones to add.
+func updateCreateAskFlatFees(store sdk.KVStore, marketID uint32, toDelete, toAdd []sdk.Coin) {
+	updateFlatFees(store, marketID, toDelete, toAdd, createAskFlatKeyMakers)
 }
 
 // IsAcceptableCreateAskFlatFee returns true if the provide fee has a denom accepted as a create-ask flat fee,
@@ -219,19 +226,24 @@ func (k Keeper) IsAcceptableCreateAskFlatFee(ctx sdk.Context, marketID uint32, f
 	return reqFee != nil && fee.Amount.GTE(reqFee.Amount)
 }
 
+// getCreateBidFlatFees gets the create-bid flat fee options for a market.
+func getCreateBidFlatFees(store sdk.KVStore, marketID uint32) []sdk.Coin {
+	return getAllFlatFees(store, marketID, createBidFlatKeyMakers)
+}
+
 // GetCreateBidFlatFees gets the create-bid flat fee options for a market.
 func (k Keeper) GetCreateBidFlatFees(ctx sdk.Context, marketID uint32) []sdk.Coin {
-	return getAllFlatFees(k.getStore(ctx), marketID, createBidFlatKeyMakers)
+	return getCreateBidFlatFees(k.getStore(ctx), marketID)
 }
 
-// SetCreateBidFlatFees sets the create-bid flat fees for a market.
-func (k Keeper) SetCreateBidFlatFees(ctx sdk.Context, marketID uint32, options []sdk.Coin) {
-	setAllFlatFees(k.getStore(ctx), marketID, options, createBidFlatKeyMakers)
+// setCreateBidFlatFees sets the create-bid flat fees for a market.
+func setCreateBidFlatFees(store sdk.KVStore, marketID uint32, options []sdk.Coin) {
+	setAllFlatFees(store, marketID, options, createBidFlatKeyMakers)
 }
 
-// UpdateCreateBidFlatFees deletes all create-bid flat fees to delete then adds the ones to add.
-func (k Keeper) UpdateCreateBidFlatFees(ctx sdk.Context, marketID uint32, toDelete, toAdd []sdk.Coin) {
-	updateFlatFees(k.getStore(ctx), marketID, toDelete, toAdd, createBidFlatKeyMakers)
+// updateCreateBidFlatFees deletes all create-bid flat fees to delete then adds the ones to add.
+func updateCreateBidFlatFees(store sdk.KVStore, marketID uint32, toDelete, toAdd []sdk.Coin) {
+	updateFlatFees(store, marketID, toDelete, toAdd, createBidFlatKeyMakers)
 }
 
 // IsAcceptableCreateBidFlatFee returns true if the provide fee has a denom accepted as a create-bid flat fee,
@@ -241,19 +253,24 @@ func (k Keeper) IsAcceptableCreateBidFlatFee(ctx sdk.Context, marketID uint32, f
 	return reqFee != nil && fee.Amount.GTE(reqFee.Amount)
 }
 
+// getSellerSettlementFlatFees gets the seller settlement flat fee options for a market.
+func getSellerSettlementFlatFees(store sdk.KVStore, marketID uint32) []sdk.Coin {
+	return getAllFlatFees(store, marketID, sellerSettlementFlatKeyMakers)
+}
+
 // GetSellerSettlementFlatFees gets the seller settlement flat fee options for a market.
 func (k Keeper) GetSellerSettlementFlatFees(ctx sdk.Context, marketID uint32) []sdk.Coin {
-	return getAllFlatFees(k.getStore(ctx), marketID, sellerSettlementFlatKeyMakers)
+	return getSellerSettlementFlatFees(k.getStore(ctx), marketID)
 }
 
-// SetSellerSettlementFlatFees sets the seller settlement flat fees for a market.
-func (k Keeper) SetSellerSettlementFlatFees(ctx sdk.Context, marketID uint32, options []sdk.Coin) {
-	setAllFlatFees(k.getStore(ctx), marketID, options, sellerSettlementFlatKeyMakers)
+// setSellerSettlementFlatFees sets the seller settlement flat fees for a market.
+func setSellerSettlementFlatFees(store sdk.KVStore, marketID uint32, options []sdk.Coin) {
+	setAllFlatFees(store, marketID, options, sellerSettlementFlatKeyMakers)
 }
 
-// UpdateSellerSettlementFlatFees deletes all seller settlement flat fees to delete then adds the ones to add.
-func (k Keeper) UpdateSellerSettlementFlatFees(ctx sdk.Context, marketID uint32, toDelete, toAdd []sdk.Coin) {
-	updateFlatFees(k.getStore(ctx), marketID, toDelete, toAdd, sellerSettlementFlatKeyMakers)
+// updateSellerSettlementFlatFees deletes all seller settlement flat fees to delete then adds the ones to add.
+func updateSellerSettlementFlatFees(store sdk.KVStore, marketID uint32, toDelete, toAdd []sdk.Coin) {
+	updateFlatFees(store, marketID, toDelete, toAdd, sellerSettlementFlatKeyMakers)
 }
 
 // IsAcceptableSellerSettlementFlatFee returns true if the provide fee has a denom accepted as a seller settlement
@@ -263,19 +280,24 @@ func (k Keeper) IsAcceptableSellerSettlementFlatFee(ctx sdk.Context, marketID ui
 	return reqFee != nil && fee.Amount.GTE(reqFee.Amount)
 }
 
+// getSellerSettlementRatios gets the seller settlement fee ratios for a market.
+func getSellerSettlementRatios(store sdk.KVStore, marketID uint32) []exchange.FeeRatio {
+	return getAllFeeRatios(store, marketID, sellerSettlementRatioKeyMakers)
+}
+
 // GetSellerSettlementRatios gets the seller settlement fee ratios for a market.
 func (k Keeper) GetSellerSettlementRatios(ctx sdk.Context, marketID uint32) []exchange.FeeRatio {
-	return getAllFeeRatios(k.getStore(ctx), marketID, sellerSettlementRatioKeyMakers)
+	return getSellerSettlementRatios(k.getStore(ctx), marketID)
 }
 
-// SetSellerSettlementRatios sets the seller settlement fee ratios for a market.
-func (k Keeper) SetSellerSettlementRatios(ctx sdk.Context, marketID uint32, ratios []exchange.FeeRatio) {
-	setAllFeeRatios(k.getStore(ctx), marketID, ratios, sellerSettlementRatioKeyMakers)
+// setSellerSettlementRatios sets the seller settlement fee ratios for a market.
+func setSellerSettlementRatios(store sdk.KVStore, marketID uint32, ratios []exchange.FeeRatio) {
+	setAllFeeRatios(store, marketID, ratios, sellerSettlementRatioKeyMakers)
 }
 
-// UpdateSellerSettlementRatios deletes all seller settlement ratio entries to delete then adds the ones to add.
-func (k Keeper) UpdateSellerSettlementRatios(ctx sdk.Context, marketID uint32, toDelete, toAdd []exchange.FeeRatio) {
-	updateFeeRatios(k.getStore(ctx), marketID, toDelete, toAdd, sellerSettlementRatioKeyMakers)
+// updateSellerSettlementRatios deletes all seller settlement ratio entries to delete then adds the ones to add.
+func updateSellerSettlementRatios(store sdk.KVStore, marketID uint32, toDelete, toAdd []exchange.FeeRatio) {
+	updateFeeRatios(store, marketID, toDelete, toAdd, sellerSettlementRatioKeyMakers)
 }
 
 // CalculateSellerSettlementRatioFee calculates the seller settlement fee required for the given price.
@@ -291,40 +313,50 @@ func (k Keeper) CalculateSellerSettlementRatioFee(ctx sdk.Context, marketID uint
 	return rv, err
 }
 
+// getBuyerSettlementFlatFees gets the buyer settlement flat fee options for a market.
+func getBuyerSettlementFlatFees(store sdk.KVStore, marketID uint32) []sdk.Coin {
+	return getAllFlatFees(store, marketID, buyerSettlementFlatKeyMakers)
+}
+
 // GetBuyerSettlementFlatFees gets the buyer settlement flat fee options for a market.
 func (k Keeper) GetBuyerSettlementFlatFees(ctx sdk.Context, marketID uint32) []sdk.Coin {
-	return getAllFlatFees(k.getStore(ctx), marketID, buyerSettlementFlatKeyMakers)
+	return getBuyerSettlementFlatFees(k.getStore(ctx), marketID)
 }
 
-// SetBuyerSettlementFlatFees sets the buyer settlement flat fees for a market.
-func (k Keeper) SetBuyerSettlementFlatFees(ctx sdk.Context, marketID uint32, options []sdk.Coin) {
-	setAllFlatFees(k.getStore(ctx), marketID, options, buyerSettlementFlatKeyMakers)
+// setBuyerSettlementFlatFees sets the buyer settlement flat fees for a market.
+func setBuyerSettlementFlatFees(store sdk.KVStore, marketID uint32, options []sdk.Coin) {
+	setAllFlatFees(store, marketID, options, buyerSettlementFlatKeyMakers)
 }
 
-// UpdateBuyerSettlementFlatFees deletes all buyer settlement flat fees to delete then adds the ones to add.
-func (k Keeper) UpdateBuyerSettlementFlatFees(ctx sdk.Context, marketID uint32, toDelete, toAdd []sdk.Coin) {
-	updateFlatFees(k.getStore(ctx), marketID, toDelete, toAdd, buyerSettlementFlatKeyMakers)
+// updateBuyerSettlementFlatFees deletes all buyer settlement flat fees to delete then adds the ones to add.
+func updateBuyerSettlementFlatFees(store sdk.KVStore, marketID uint32, toDelete, toAdd []sdk.Coin) {
+	updateFlatFees(store, marketID, toDelete, toAdd, buyerSettlementFlatKeyMakers)
+}
+
+// getBuyerSettlementRatios gets the buyer settlement fee ratios for a market.
+func getBuyerSettlementRatios(store sdk.KVStore, marketID uint32) []exchange.FeeRatio {
+	return getAllFeeRatios(store, marketID, buyerSettlementRatioKeyMakers)
 }
 
 // GetBuyerSettlementRatios gets the buyer settlement fee ratios for a market.
 func (k Keeper) GetBuyerSettlementRatios(ctx sdk.Context, marketID uint32) []exchange.FeeRatio {
-	return getAllFeeRatios(k.getStore(ctx), marketID, buyerSettlementRatioKeyMakers)
+	return getBuyerSettlementRatios(k.getStore(ctx), marketID)
 }
 
-// SetBuyerSettlementRatios sets the buyer settlement fee ratios for a market.
-func (k Keeper) SetBuyerSettlementRatios(ctx sdk.Context, marketID uint32, ratios []exchange.FeeRatio) {
-	setAllFeeRatios(k.getStore(ctx), marketID, ratios, buyerSettlementRatioKeyMakers)
+// setBuyerSettlementRatios sets the buyer settlement fee ratios for a market.
+func setBuyerSettlementRatios(store sdk.KVStore, marketID uint32, ratios []exchange.FeeRatio) {
+	setAllFeeRatios(store, marketID, ratios, buyerSettlementRatioKeyMakers)
 }
 
-// UpdateBuyerSettlementRatios deletes all buyer settlement ratio entries to delete then adds the ones to add.
-func (k Keeper) UpdateBuyerSettlementRatios(ctx sdk.Context, marketID uint32, toDelete, toAdd []exchange.FeeRatio) {
-	updateFeeRatios(k.getStore(ctx), marketID, toDelete, toAdd, buyerSettlementRatioKeyMakers)
+// updateBuyerSettlementRatios deletes all buyer settlement ratio entries to delete then adds the ones to add.
+func updateBuyerSettlementRatios(store sdk.KVStore, marketID uint32, toDelete, toAdd []exchange.FeeRatio) {
+	updateFeeRatios(store, marketID, toDelete, toAdd, buyerSettlementRatioKeyMakers)
 }
 
-// GetBuyerSettlementFeeRatiosForPriceDenom gets all the buyer settlement fee ratios in a market that have the give price denom.
-func (k Keeper) GetBuyerSettlementFeeRatiosForPriceDenom(ctx sdk.Context, marketID uint32, priceDenom string) []exchange.FeeRatio {
+// getBuyerSettlementFeeRatiosForPriceDenom gets all the buyer settlement fee ratios in a market that have the give price denom.
+func getBuyerSettlementFeeRatiosForPriceDenom(store sdk.KVStore, marketID uint32, priceDenom string) []exchange.FeeRatio {
 	var ratios []exchange.FeeRatio
-	k.iterate(ctx, GetKeyPrefixMarketBuyerSettlementRatioForPriceDenom(marketID, priceDenom), func(key, value []byte) bool {
+	iterate(store, GetKeyPrefixMarketBuyerSettlementRatioForPriceDenom(marketID, priceDenom), func(key, value []byte) bool {
 		feeDenom := string(key)
 		priceAmount, feeAmount, err := ParseFeeRatioStoreValue(value)
 		if err == nil {
@@ -340,7 +372,7 @@ func (k Keeper) GetBuyerSettlementFeeRatiosForPriceDenom(ctx sdk.Context, market
 
 // CalculateBuyerSettlementRatioFeeOptions calculates the buyer settlement ratio fee options available for the given price.
 func (k Keeper) CalculateBuyerSettlementRatioFeeOptions(ctx sdk.Context, marketID uint32, price sdk.Coin) ([]sdk.Coin, error) {
-	ratios := k.GetBuyerSettlementFeeRatiosForPriceDenom(ctx, marketID, price.Denom)
+	ratios := getBuyerSettlementFeeRatiosForPriceDenom(k.getStore(ctx), marketID, price.Denom)
 	if len(ratios) == 0 {
 		return nil, fmt.Errorf("no buyer settlement fee ratios found with price denom %q", price.Denom)
 	}
@@ -477,14 +509,18 @@ func (k Keeper) ValidateBuyerSettlementFee(ctx sdk.Context, marketID uint32, pri
 	return errors.Join(errs...)
 }
 
-// IsMarketActive returns true if the provided market is accepting orders.
-func (k Keeper) IsMarketActive(ctx sdk.Context, marketID uint32) bool {
+// isMarketActive returns true if the provided market is accepting orders.
+func isMarketActive(store sdk.KVStore, marketID uint32) bool {
 	key := MakeKeyMarketInactive(marketID)
-	store := k.getStore(ctx)
 	return !store.Has(key)
 }
 
-// SetMarketActive sets whether the provided market is accepting orders.
+// IsMarketActive returns true if the provided market is accepting orders.
+func (k Keeper) IsMarketActive(ctx sdk.Context, marketID uint32) bool {
+	return isMarketActive(k.getStore(ctx), marketID)
+}
+
+// setMarketActive sets whether the provided market is accepting orders.
 func setMarketActive(store sdk.KVStore, marketID uint32, active bool) {
 	key := MakeKeyMarketInactive(marketID)
 	if active {
@@ -499,11 +535,15 @@ func (k Keeper) SetMarketActive(ctx sdk.Context, marketID uint32, active bool) {
 	setMarketActive(k.getStore(ctx), marketID, active)
 }
 
+// isUserSettlementAllowed gets whether user-settlement is allowed for a market.
+func isUserSettlementAllowed(store sdk.KVStore, marketID uint32) bool {
+	key := MakeKeyMarketUserSettle(marketID)
+	return store.Has(key)
+}
+
 // IsUserSettlementAllowed gets whether user-settlement is allowed for a market.
 func (k Keeper) IsUserSettlementAllowed(ctx sdk.Context, marketID uint32) bool {
-	key := MakeKeyMarketUserSettle(marketID)
-	store := k.getStore(ctx)
-	return store.Has(key)
+	return isUserSettlementAllowed(k.getStore(ctx), marketID)
 }
 
 // SetUserSettlementAllowed sets whether user-settlement is allowed for a market.
@@ -582,21 +622,26 @@ func (k Keeper) HasPermission(ctx sdk.Context, marketID uint32, addr sdk.AccAddr
 	return hasPermission(k.getStore(ctx), marketID, addr, permission)
 }
 
-// GetUserPermissions gets all permissions that have been granted to a user in a market.
-func (k Keeper) GetUserPermissions(ctx sdk.Context, marketID uint32, addr sdk.AccAddress) []exchange.Permission {
+// getUserPermissions gets all permissions that have been granted to a user in a market.
+func getUserPermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress) []exchange.Permission {
 	var rv []exchange.Permission
-	k.iterate(ctx, GetKeyPrefixMarketPermissionsForAddress(marketID, addr), func(key, _ []byte) bool {
+	iterate(store, GetKeyPrefixMarketPermissionsForAddress(marketID, addr), func(key, _ []byte) bool {
 		rv = append(rv, exchange.Permission(key[0]))
 		return false
 	})
 	return rv
 }
 
-// GetAccessGrants gets all the access grants for a market.
-func (k Keeper) GetAccessGrants(ctx sdk.Context, marketID uint32) []exchange.AccessGrant {
+// GetUserPermissions gets all permissions that have been granted to a user in a market.
+func (k Keeper) GetUserPermissions(ctx sdk.Context, marketID uint32, addr sdk.AccAddress) []exchange.Permission {
+	return getUserPermissions(k.getStore(ctx), marketID, addr)
+}
+
+// getAccessGrants gets all the access grants for a market.
+func getAccessGrants(store sdk.KVStore, marketID uint32) []exchange.AccessGrant {
 	var rv []exchange.AccessGrant
 	var lastAG exchange.AccessGrant
-	k.iterate(ctx, GetKeyPrefixMarketPermissions(marketID), func(key, _ []byte) bool {
+	iterate(store, GetKeyPrefixMarketPermissions(marketID), func(key, _ []byte) bool {
 		addr, perm, err := ParseKeySuffixMarketPermissions(key)
 		if err == nil {
 			if addr.String() != lastAG.Address {
@@ -610,16 +655,15 @@ func (k Keeper) GetAccessGrants(ctx sdk.Context, marketID uint32) []exchange.Acc
 	return rv
 }
 
-// SetAccessGrants deletes all access grants on a market and sets just the ones provided.
-func (k Keeper) SetAccessGrants(ctx sdk.Context, marketID uint32, grants []exchange.AccessGrant) {
-	store := k.getStore(ctx)
+// setAccessGrants deletes all access grants on a market and sets just the ones provided.
+func setAccessGrants(store sdk.KVStore, marketID uint32, grants []exchange.AccessGrant) {
 	revokeAllMarketPermissions(store, marketID)
 	setAllMarketPermissions(store, marketID, grants)
 }
 
-// UpdatePermissions revokes all permissions from the provided revokeAll bech32 addresses, then revokes all permissions
+// UpdateAccessGrants revokes all permissions from the provided revokeAll bech32 addresses, then revokes all permissions
 // in the toRevoke list, and lastly, grants all the permissions in toGrant.
-func (k Keeper) UpdatePermissions(ctx sdk.Context, marketID uint32, revokeAll []string, toRevoke, toGrant []exchange.AccessGrant) {
+func (k Keeper) UpdateAccessGrants(ctx sdk.Context, marketID uint32, revokeAll []string, toRevoke, toGrant []exchange.AccessGrant) {
 	updatePermissions(k.getStore(ctx), marketID, revokeAll, toRevoke, toGrant)
 }
 
@@ -634,40 +678,44 @@ func getReqAttr(store sdk.KVStore, marketID uint32, maker reqAttrKeyMaker) []str
 }
 
 // setReqAttr sets the required attributes for a market using the provided key maker.
-func (k Keeper) setReqAttr(ctx sdk.Context, marketID uint32, reqAttrs []string, maker reqAttrKeyMaker) error {
-	store := k.getStore(ctx)
+func setReqAttr(store sdk.KVStore, marketID uint32, reqAttrs []string, maker reqAttrKeyMaker) {
 	key := maker(marketID)
 	if len(reqAttrs) == 0 {
 		store.Delete(key)
 	} else {
-		reqAttrsNorm, err := k.NormalizeReqAttrs(ctx, reqAttrs)
-		if err != nil {
-			return err
-		}
-		value := []byte(strings.Join(reqAttrsNorm, string(RecordSeparator)))
+		value := []byte(strings.Join(reqAttrs, string(RecordSeparator)))
 		store.Set(key, value)
 	}
-	return nil
+}
+
+// getReqAttrAsk gets the attributes required to create an ask order.
+func getReqAttrAsk(store sdk.KVStore, marketID uint32) []string {
+	return getReqAttr(store, marketID, MakeKeyMarketReqAttrAsk)
 }
 
 // GetReqAttrAsk gets the attributes required to create an ask order.
 func (k Keeper) GetReqAttrAsk(ctx sdk.Context, marketID uint32) []string {
-	return getReqAttr(k.getStore(ctx), marketID, MakeKeyMarketReqAttrAsk)
+	return getReqAttrAsk(k.getStore(ctx), marketID)
 }
 
-// SetReqAttrAsk sets the attributes required to create an ask order.
-func (k Keeper) SetReqAttrAsk(ctx sdk.Context, marketID uint32, reqAttrs []string) error {
-	return k.setReqAttr(ctx, marketID, reqAttrs, MakeKeyMarketReqAttrAsk)
+// setReqAttrAsk sets the attributes required to create an ask order.
+func setReqAttrAsk(store sdk.KVStore, marketID uint32, reqAttrs []string) {
+	setReqAttr(store, marketID, reqAttrs, MakeKeyMarketReqAttrAsk)
+}
+
+// getReqAttrBid gets the attributes required to create a bid order.
+func getReqAttrBid(store sdk.KVStore, marketID uint32) []string {
+	return getReqAttr(store, marketID, MakeKeyMarketReqAttrBid)
 }
 
 // GetReqAttrBid gets the attributes required to create a bid order.
 func (k Keeper) GetReqAttrBid(ctx sdk.Context, marketID uint32) []string {
-	return getReqAttr(k.getStore(ctx), marketID, MakeKeyMarketReqAttrBid)
+	return getReqAttrBid(k.getStore(ctx), marketID)
 }
 
-// SetReqAttrBid sets the attributes required to create a bid order.
-func (k Keeper) SetReqAttrBid(ctx sdk.Context, marketID uint32, reqAttrs []string) error {
-	return k.setReqAttr(ctx, marketID, reqAttrs, MakeKeyMarketReqAttrBid)
+// setReqAttrBid sets the attributes required to create a bid order.
+func setReqAttrBid(store sdk.KVStore, marketID uint32, reqAttrs []string) {
+	setReqAttr(store, marketID, reqAttrs, MakeKeyMarketReqAttrBid)
 }
 
 // getLastAutoMarketID gets the last auto-selected market id.
@@ -699,9 +747,8 @@ func (k Keeper) NextMarketID(ctx sdk.Context) uint32 {
 	return marketID
 }
 
-// SetMarketKnown sets the known market id indicator in the store.
-func (k Keeper) SetMarketKnown(ctx sdk.Context, marketID uint32) {
-	store := k.getStore(ctx)
+// setMarketKnown sets the known market id indicator in the store.
+func setMarketKnown(store sdk.KVStore, marketID uint32) {
 	key := MakeKeyKnownMarketID(marketID)
 	store.Set(key, nil)
 }
@@ -739,6 +786,13 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (marketID 
 		return 0, fmt.Errorf("market id %d %s already exists", marketID, marketAddr)
 	}
 
+	reqAttrCreateAsk, errAsk := k.NormalizeReqAttrs(ctx, market.ReqAttrCreateAsk)
+	reqAttrCreateBid, errBid := k.NormalizeReqAttrs(ctx, market.ReqAttrCreateAsk)
+	err = errors.Join(errAsk, errBid)
+	if err != nil {
+		return 0, err
+	}
+
 	marketAcc := &exchange.MarketAccount{
 		BaseAccount:   &authtypes.BaseAccount{Address: marketAddr.String()},
 		MarketId:      marketID,
@@ -747,18 +801,19 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (marketID 
 	k.accountKeeper.NewAccount(ctx, marketAcc)
 	k.accountKeeper.SetAccount(ctx, marketAcc)
 
-	k.SetMarketKnown(ctx, marketID)
-	k.SetCreateAskFlatFees(ctx, marketID, market.FeeCreateAskFlat)
-	k.SetCreateBidFlatFees(ctx, marketID, market.FeeCreateBidFlat)
-	k.SetSellerSettlementFlatFees(ctx, marketID, market.FeeSellerSettlementFlat)
-	k.SetSellerSettlementRatios(ctx, marketID, market.FeeSellerSettlementRatios)
-	k.SetBuyerSettlementFlatFees(ctx, marketID, market.FeeBuyerSettlementFlat)
-	k.SetBuyerSettlementRatios(ctx, marketID, market.FeeBuyerSettlementRatios)
-	k.SetMarketActive(ctx, marketID, market.AcceptingOrders)
-	k.SetUserSettlementAllowed(ctx, marketID, market.AllowUserSettlement)
-	k.SetAccessGrants(ctx, marketID, market.AccessGrants)
-	err = errors.Join(err, k.SetReqAttrAsk(ctx, marketID, market.ReqAttrCreateAsk))
-	err = errors.Join(err, k.SetReqAttrBid(ctx, marketID, market.ReqAttrCreateBid))
+	store := k.getStore(ctx)
+	setMarketKnown(store, marketID)
+	setCreateAskFlatFees(store, marketID, market.FeeCreateAskFlat)
+	setCreateBidFlatFees(store, marketID, market.FeeCreateBidFlat)
+	setSellerSettlementFlatFees(store, marketID, market.FeeSellerSettlementFlat)
+	setSellerSettlementRatios(store, marketID, market.FeeSellerSettlementRatios)
+	setBuyerSettlementFlatFees(store, marketID, market.FeeBuyerSettlementFlat)
+	setBuyerSettlementRatios(store, marketID, market.FeeBuyerSettlementRatios)
+	setMarketActive(store, marketID, market.AcceptingOrders)
+	setUserSettlementAllowed(store, marketID, market.AllowUserSettlement)
+	setAccessGrants(store, marketID, market.AccessGrants)
+	setReqAttrAsk(store, marketID, reqAttrCreateAsk)
+	setReqAttrBid(store, marketID, reqAttrCreateBid)
 
 	return marketID, err
 }
@@ -776,19 +831,31 @@ func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
 		return nil
 	}
 
+	store := k.getStore(ctx)
 	market := &exchange.Market{MarketId: marketID}
 	market.MarketDetails = marketAcc.MarketDetails
-	market.FeeCreateAskFlat = k.GetCreateAskFlatFees(ctx, marketID)
-	market.FeeCreateBidFlat = k.GetCreateBidFlatFees(ctx, marketID)
-	market.FeeSellerSettlementFlat = k.GetSellerSettlementFlatFees(ctx, marketID)
-	market.FeeSellerSettlementRatios = k.GetSellerSettlementRatios(ctx, marketID)
-	market.FeeBuyerSettlementFlat = k.GetBuyerSettlementFlatFees(ctx, marketID)
-	market.FeeBuyerSettlementRatios = k.GetBuyerSettlementRatios(ctx, marketID)
-	market.AcceptingOrders = k.IsMarketActive(ctx, marketID)
-	market.AllowUserSettlement = k.IsUserSettlementAllowed(ctx, marketID)
-	market.AccessGrants = k.GetAccessGrants(ctx, marketID)
-	market.ReqAttrCreateAsk = k.GetReqAttrAsk(ctx, marketID)
-	market.ReqAttrCreateBid = k.GetReqAttrBid(ctx, marketID)
+	market.FeeCreateAskFlat = getCreateAskFlatFees(store, marketID)
+	market.FeeCreateBidFlat = getCreateBidFlatFees(store, marketID)
+	market.FeeSellerSettlementFlat = getSellerSettlementFlatFees(store, marketID)
+	market.FeeSellerSettlementRatios = getSellerSettlementRatios(store, marketID)
+	market.FeeBuyerSettlementFlat = getBuyerSettlementFlatFees(store, marketID)
+	market.FeeBuyerSettlementRatios = getBuyerSettlementRatios(store, marketID)
+	market.AcceptingOrders = isMarketActive(store, marketID)
+	market.AllowUserSettlement = isUserSettlementAllowed(store, marketID)
+	market.AccessGrants = getAccessGrants(store, marketID)
+	market.ReqAttrCreateAsk = getReqAttrAsk(store, marketID)
+	market.ReqAttrCreateBid = getReqAttrBid(store, marketID)
 
 	return market
+}
+
+// UpdateFees updates all the fees as provided in the MsgGovManageFeesRequest.
+func (k Keeper) UpdateFees(ctx sdk.Context, msg *exchange.MsgGovManageFeesRequest) {
+	store := k.getStore(ctx)
+	updateCreateAskFlatFees(store, msg.MarketId, msg.RemoveFeeCreateAskFlat, msg.AddFeeCreateAskFlat)
+	updateCreateBidFlatFees(store, msg.MarketId, msg.RemoveFeeCreateBidFlat, msg.AddFeeCreateBidFlat)
+	updateSellerSettlementFlatFees(store, msg.MarketId, msg.RemoveFeeSellerSettlementFlat, msg.AddFeeSellerSettlementFlat)
+	updateSellerSettlementRatios(store, msg.MarketId, msg.RemoveFeeSellerSettlementRatios, msg.AddFeeSellerSettlementRatios)
+	updateBuyerSettlementFlatFees(store, msg.MarketId, msg.RemoveFeeBuyerSettlementFlat, msg.AddFeeBuyerSettlementFlat)
+	updateBuyerSettlementRatios(store, msg.MarketId, msg.RemoveFeeBuyerSettlementRatios, msg.AddFeeBuyerSettlementRatios)
 }

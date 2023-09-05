@@ -121,12 +121,7 @@ func (k MsgServer) GovManageFees(goCtx context.Context, msg *exchange.MsgGovMana
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	k.UpdateCreateAskFlatFees(ctx, msg.MarketId, msg.RemoveFeeCreateAskFlat, msg.AddFeeCreateAskFlat)
-	k.UpdateCreateBidFlatFees(ctx, msg.MarketId, msg.RemoveFeeCreateBidFlat, msg.AddFeeCreateBidFlat)
-	k.UpdateSellerSettlementFlatFees(ctx, msg.MarketId, msg.RemoveFeeSellerSettlementFlat, msg.AddFeeSellerSettlementFlat)
-	k.UpdateSellerSettlementRatios(ctx, msg.MarketId, msg.RemoveFeeSellerSettlementRatios, msg.AddFeeSellerSettlementRatios)
-	k.UpdateBuyerSettlementFlatFees(ctx, msg.MarketId, msg.RemoveFeeBuyerSettlementFlat, msg.AddFeeBuyerSettlementFlat)
-	k.UpdateBuyerSettlementRatios(ctx, msg.MarketId, msg.RemoveFeeBuyerSettlementRatios, msg.AddFeeBuyerSettlementRatios)
+	k.UpdateFees(ctx, msg)
 
 	return &exchange.MsgGovManageFeesResponse{}, nil
 }
