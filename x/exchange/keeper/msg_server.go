@@ -3,9 +3,8 @@ package keeper
 import (
 	"context"
 
-	cerrs "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
@@ -84,20 +83,27 @@ func (k MsgServer) MarketManageReqAttrs(goCtx context.Context, msg *exchange.Msg
 	panic("not implemented")
 }
 
+// wrongAuthErr returns the error to use when a message's authority isn't what's required.
+func (k MsgServer) wrongAuthErr(authority string) error {
+	return govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", k.GetAuthority(), authority)
+}
+
 func (k MsgServer) GovCreateMarket(goCtx context.Context, msg *exchange.MsgGovCreateMarketRequest) (*exchange.MsgGovCreateMarketResponse, error) {
 	if msg.Authority != k.GetAuthority() {
-		return nil, cerrs.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+		return nil, k.wrongAuthErr(msg.Authority)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	// TODO[1658]: Implement GovCreateMarket
-	_ = ctx
-	panic("not implemented")
+	_, err := k.CreateMarket(ctx, msg.Market)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	return &exchange.MsgGovCreateMarketResponse{}, nil
 }
 
 func (k MsgServer) GovManageFees(goCtx context.Context, msg *exchange.MsgGovManageFeesRequest) (*exchange.MsgGovManageFeesResponse, error) {
 	if msg.Authority != k.GetAuthority() {
-		return nil, cerrs.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+		return nil, k.wrongAuthErr(msg.Authority)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -109,7 +115,7 @@ func (k MsgServer) GovManageFees(goCtx context.Context, msg *exchange.MsgGovMana
 // GovUpdateParams is a governance proposal endpoint for updating the exchange module's params.
 func (k MsgServer) GovUpdateParams(goCtx context.Context, msg *exchange.MsgGovUpdateParamsRequest) (*exchange.MsgGovUpdateParamsResponse, error) {
 	if msg.Authority != k.GetAuthority() {
-		return nil, cerrs.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+		return nil, k.wrongAuthErr(msg.Authority)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
