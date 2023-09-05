@@ -23,7 +23,7 @@ jobs:
   setup-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
@@ -87,7 +87,7 @@ jobs:
     env:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # CodeCov requires fetch-depth > 1
           fetch-depth: 2
@@ -119,7 +119,7 @@ jobs:
     #       it's in the steps below (except the checkout step).
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # CodeCov requires fetch-depth > 1
           fetch-depth: 2
@@ -174,7 +174,7 @@ jobs:
     env:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         if: needs.setup-tests.outputs.should-run
         with:
