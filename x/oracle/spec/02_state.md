@@ -7,7 +7,6 @@ order: 2
 The oracle module manages the address of the Oracle and the ICQ state.
 
 <!-- TOC 2 -->
-- [State](#state)
   - [Oracle](#oracle)
   - [IBC](#ibc)
 
