@@ -816,7 +816,16 @@ func TestParseKeySuffixSettlementRatio(t *testing.T) {
 			suffix: []byte{keeper.RecordSeparator, 'b', keeper.RecordSeparator},
 			expErr: "ratio key suffix \"\\x1eb\\x1e\" has 3 parts, expected 2",
 		},
-		// TODO[1658]: Test cases for ParseKeySuffixSettlementRatio empty suffix
+		{
+			name:   "nil suffix",
+			suffix: nil,
+			expErr: "ratio key suffix is empty",
+		},
+		{
+			name:   "empty suffix",
+			suffix: []byte{},
+			expErr: "ratio key suffix is empty",
+		},
 	}
 
 	for _, tc := range tests {
@@ -1025,7 +1034,16 @@ func TestParseFeeRatioStoreValue(t *testing.T) {
 			value:  []byte{rs, '1', '0', '0', rs},
 			expErr: "ratio value \"\\x1e100\\x1e\" has 3 parts, expected 2",
 		},
-		// TODO[1658]: Test cases for ParseFeeRatioStoreValue empty value
+		{
+			name:   "nil value",
+			value:  nil,
+			expErr: "ratio value is empty",
+		},
+		{
+			name:   "empty value",
+			value:  []byte{},
+			expErr: "ratio value is empty",
+		},
 	}
 
 	for _, tc := range tests {
