@@ -467,7 +467,7 @@ func (k Keeper) ValidateBuyerSettlementFee(ctx sdk.Context, marketID uint32, pri
 	if ratioFeeReq && !ratioFeeOk {
 		allRatioOptions := getAllFeeRatios(store, marketID, ratioKeyMaker)
 		errs = append(errs, fmt.Errorf("required ratio fee not satisfied, valid ratios: %s",
-			mapToJoinedStrings(allRatioOptions, exchange.FeeRatio.String)))
+			exchange.FeeRatiosString(allRatioOptions)))
 	}
 
 	// And add an error with the overall reason for this failure.
@@ -476,16 +476,182 @@ func (k Keeper) ValidateBuyerSettlementFee(ctx sdk.Context, marketID uint32, pri
 	return errors.Join(errs...)
 }
 
-// mapToJoinedStrings runs the provided mapper on each of the vals and returns the resulting strings joined using ", ".
-func mapToJoinedStrings[T any](vals []T, mapper func(entry T) string) string {
-	return strings.Join(mapToStrings(vals, mapper), ", ")
+// IsMarketActive returns true if the provided market is accepting orders.
+func (k Keeper) IsMarketActive(ctx sdk.Context, marketID uint32) bool {
+	key := MakeKeyMarketInactive(marketID)
+	store := k.getStore(ctx)
+	return !store.Has(key)
 }
 
-// mapToStrings runs the provided mapper on each of the vals and returns the resulting slice of strings.
-func mapToStrings[T any](vals []T, mapper func(entry T) string) []string {
-	rv := make([]string, len(vals))
-	for i, val := range vals {
-		rv[i] = mapper(val)
+// SetMarketActive sets whether the provided market is accepting orders.
+func setMarketActive(store sdk.KVStore, marketID uint32, active bool) {
+	key := MakeKeyMarketInactive(marketID)
+	if active {
+		store.Delete(key)
+	} else {
+		store.Set(key, nil)
 	}
+}
+
+// SetMarketActive sets whether the provided market is accepting orders.
+func (k Keeper) SetMarketActive(ctx sdk.Context, marketID uint32, active bool) {
+	setMarketActive(k.getStore(ctx), marketID, active)
+}
+
+// IsUserSettlementAllowed gets whether user-settlement is allowed for a market.
+func (k Keeper) IsUserSettlementAllowed(ctx sdk.Context, marketID uint32) bool {
+	key := MakeKeyMarketUserSettle(marketID)
+	store := k.getStore(ctx)
+	return store.Has(key)
+}
+
+// SetUserSettlementAllowed sets whether user-settlement is allowed for a market.
+func setUserSettlementAllowed(store sdk.KVStore, marketID uint32, allowed bool) {
+	key := MakeKeyMarketUserSettle(marketID)
+	if allowed {
+		store.Set(key, nil)
+	} else {
+		store.Delete(key)
+	}
+}
+
+// SetUserSettlementAllowed sets whether user-settlement is allowed for a market.
+func (k Keeper) SetUserSettlementAllowed(ctx sdk.Context, marketID uint32, allowed bool) {
+	setUserSettlementAllowed(k.getStore(ctx), marketID, allowed)
+}
+
+// hasPermission returns true if the provided address has the given permission in the market in question.
+func hasPermission(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, permission exchange.Permission) bool {
+	key := MakeKeyMarketPermissions(marketID, addr, permission)
+	return store.Has(key)
+}
+
+// grantPermissions updates the store so that the given address has the provided permissions in a market.
+func grantPermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, permissions []exchange.Permission) {
+	for _, perm := range permissions {
+		key := MakeKeyMarketPermissions(marketID, addr, perm)
+		store.Set(key, nil)
+	}
+}
+
+// revokePermissions updates the store so that the given address does NOT have the provided permissions for the market.
+func revokePermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, permissions []exchange.Permission) {
+	for _, perm := range permissions {
+		key := MakeKeyMarketPermissions(marketID, addr, perm)
+		store.Delete(key)
+	}
+}
+
+// revokeAllUserPermissions updates the store so that the given address does not have any permissions for the market.
+func revokeAllUserPermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress) {
+	key := GetKeyPrefixMarketPermissionsForAddress(marketID, addr)
+	deleteAll(store, key)
+}
+
+// revokeAllMarketPermissions clears out all permissions for a market.
+func revokeAllMarketPermissions(store sdk.KVStore, marketID uint32) {
+	key := GetKeyPrefixMarketPermissions(marketID)
+	deleteAll(store, key)
+}
+
+// setAllMarketPermissions clears out all market permissions then stores just the ones provided.
+func setAllMarketPermissions(store sdk.KVStore, marketID uint32, grants []exchange.AccessGrant) {
+	revokeAllMarketPermissions(store, marketID)
+	for _, ag := range grants {
+		grantPermissions(store, marketID, sdk.MustAccAddressFromBech32(ag.Address), ag.Permissions)
+	}
+}
+
+// updatePermissions revokes all permissions from the provided revokeAll bech32 addresses, then revokes all permissions
+// in the toRevoke list, and lastly, grants all the permissions in toGrant.
+func updatePermissions(store sdk.KVStore, marketID uint32, revokeAll []string, toRevoke, toGrant []exchange.AccessGrant) {
+	for _, revAddr := range revokeAll {
+		revokeAllUserPermissions(store, marketID, sdk.MustAccAddressFromBech32(revAddr))
+	}
+	for _, ag := range toRevoke {
+		revokePermissions(store, marketID, sdk.MustAccAddressFromBech32(ag.Address), ag.Permissions)
+	}
+	for _, ag := range toGrant {
+		grantPermissions(store, marketID, sdk.MustAccAddressFromBech32(ag.Address), ag.Permissions)
+	}
+}
+
+// HasPermission returns true if the provided addr has the permission in question for a given market.
+func (k Keeper) HasPermission(ctx sdk.Context, marketID uint32, addr sdk.AccAddress, permission exchange.Permission) bool {
+	return hasPermission(k.getStore(ctx), marketID, addr, permission)
+}
+
+// GetUserPermissions gets all permissions that have been granted to a user in a market.
+func (k Keeper) GetUserPermissions(ctx sdk.Context, marketID uint32, addr sdk.AccAddress) []exchange.Permission {
+	var rv []exchange.Permission
+	k.iterate(ctx, GetKeyPrefixMarketPermissionsForAddress(marketID, addr), func(key, _ []byte) bool {
+		rv = append(rv, exchange.Permission(key[0]))
+		return false
+	})
 	return rv
+}
+
+// GetAccessGrants gets all the access grants for a market.
+func (k Keeper) GetAccessGrants(ctx sdk.Context, marketID uint32) []exchange.AccessGrant {
+	var rv []exchange.AccessGrant
+	var lastAG exchange.AccessGrant
+	k.iterate(ctx, GetKeyPrefixMarketPermissions(marketID), func(key, _ []byte) bool {
+		addr, perm, err := ParseKeySuffixMarketPermissions(key)
+		if err == nil {
+			if addr.String() != lastAG.Address {
+				lastAG = exchange.AccessGrant{Address: addr.String()}
+				rv = append(rv, lastAG)
+			}
+			lastAG.Permissions = append(lastAG.Permissions, perm)
+		}
+		return false
+	})
+	return rv
+}
+
+// UpdatePermissions revokes all permissions from the provided revokeAll bech32 addresses, then revokes all permissions
+// in the toRevoke list, and lastly, grants all the permissions in toGrant.
+func (k Keeper) UpdatePermissions(ctx sdk.Context, marketID uint32, revokeAll []string, toRevoke, toGrant []exchange.AccessGrant) {
+	updatePermissions(k.getStore(ctx), marketID, revokeAll, toRevoke, toGrant)
+}
+
+// reqAttrKeyMaker is a function that returns a key for required attributes.
+type reqAttrKeyMaker func(marketID uint32) []byte
+
+// getReqAttr gets the required attributes for a market using the provided key maker.
+func getReqAttr(store sdk.KVStore, marketID uint32, maker reqAttrKeyMaker) []string {
+	key := maker(marketID)
+	value := store.Get(key)
+	return ParseReqAttrStoreValue(value)
+}
+
+// setReqAttr sets the required attributes for a market using the provided key maker.
+func setReqAttr(store sdk.KVStore, marketID uint32, reqAttrs []string, maker reqAttrKeyMaker) {
+	key := maker(marketID)
+	if len(reqAttrs) == 0 {
+		store.Delete(key)
+	} else {
+		value := []byte(strings.Join(reqAttrs, string(RecordSeparator)))
+		store.Set(key, value)
+	}
+}
+
+// GetReqAttrAsk gets the attributes required to create an ask order.
+func (k Keeper) GetReqAttrAsk(ctx sdk.Context, marketID uint32) []string {
+	return getReqAttr(k.getStore(ctx), marketID, MakeKeyMarketReqAttrAsk)
+}
+
+// SetReqAttrAsk sets the attributes required to create an ask order.
+func (k Keeper) SetReqAttrAsk(ctx sdk.Context, marketID uint32, reqAttrs []string) {
+	setReqAttr(k.getStore(ctx), marketID, reqAttrs, MakeKeyMarketReqAttrAsk)
+}
+
+// GetReqAttrBid gets the attributes required to create a bid order.
+func (k Keeper) GetReqAttrBid(ctx sdk.Context, marketID uint32) []string {
+	return getReqAttr(k.getStore(ctx), marketID, MakeKeyMarketReqAttrBid)
+}
+
+// SetReqAttrBid sets the attributes required to create a bid order.
+func (k Keeper) SetReqAttrBid(ctx sdk.Context, marketID uint32, reqAttrs []string) {
+	setReqAttr(k.getStore(ctx), marketID, reqAttrs, MakeKeyMarketReqAttrBid)
 }

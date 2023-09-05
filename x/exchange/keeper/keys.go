@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"strings"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -150,6 +151,25 @@ func uint64FromBz(bz []byte) uint64 {
 	return binary.BigEndian.Uint64(bz)
 }
 
+// parseLengthPrefixedAddr extracts the length-prefixed sdk.AccAddress from the front of the provided slice.
+func parseLengthPrefixedAddr(key []byte) (sdk.AccAddress, []byte, error) {
+	if len(key) == 0 {
+		return nil, nil, errors.New("slice is empty")
+	}
+	l := int(key[0])
+	if l == 0 {
+		return nil, nil, errors.New("length byte is 0")
+	}
+	if len(key) <= l {
+		return nil, nil, fmt.Errorf("length byte is %d, but slice length has %d left", l, len(key)-1)
+	}
+	if len(key) == l+1 {
+		return key[1:], nil, nil
+	}
+	return key[1 : l+1], key[l+1:], nil
+}
+
+// keyPrefixParamsSplit creates the key prefix for a params "split" entry.
 func keyPrefixParamsSplit(extraCap int) []byte {
 	return prepKey(KeyTypeParams, []byte("split"), extraCap)
 }
@@ -249,10 +269,13 @@ func GetKeySuffixSettlementRatio(ratio exchange.FeeRatio) []byte {
 // ParseKeySuffixSettlementRatio parses the <price denom><RS><fee denom> portion
 // of a settlement ratio key back into the denom strings.
 func ParseKeySuffixSettlementRatio(suffix []byte) (priceDenom, feeDenom string, err error) {
-	parts := bytes.Split(suffix, []byte{RecordSeparator})
+	if len(suffix) == 0 {
+		return "", "", errors.New("ratio key suffix is empty")
+	}
+	parts := strings.Split(string(suffix), string(RecordSeparator))
 	if len(parts) == 2 {
-		priceDenom = string(parts[0])
-		feeDenom = string(parts[1])
+		priceDenom = parts[0]
+		feeDenom = parts[1]
 	} else {
 		err = fmt.Errorf("ratio key suffix %q has %d parts, expected 2", suffix, len(parts))
 	}
@@ -276,6 +299,20 @@ func GetFeeRatioStoreValue(ratio exchange.FeeRatio) []byte {
 // Input is expected to have the format <price amount><RS><fee amount> where both amounts are strings (of digits).
 // E.g. "100\\1E3" (for a price amount of 100, and fee amount of 3).
 func ParseFeeRatioStoreValue(value []byte) (priceAmount, feeAmount sdkmath.Int, err error) {
+	defer func() {
+		// The zero-value of sdkmath.Int{} will panic if anything tries to do anything with it (e.g. convert it to a string).
+		// Additionally, if there was an error, we don't want either of them to have any left-over values.
+		if err != nil {
+			priceAmount = sdkmath.ZeroInt()
+			feeAmount = sdkmath.ZeroInt()
+		}
+	}()
+
+	if len(value) == 0 {
+		err = errors.New("ratio value is empty")
+		return
+	}
+
 	parts := bytes.Split(value, []byte{RecordSeparator})
 	if len(parts) == 2 {
 		var ok bool
@@ -289,13 +326,6 @@ func ParseFeeRatioStoreValue(value []byte) (priceAmount, feeAmount sdkmath.Int, 
 		}
 	} else {
 		err = fmt.Errorf("ratio value %q has %d parts, expected 2", value, len(parts))
-	}
-
-	// The zero-value of sdkmath.Int{} will panic if anything tries to do anything with it (e.g. convert it to a string).
-	// Additionally, if there was an error, we don't want either of them to have any left-over values.
-	if err != nil {
-		priceAmount = sdkmath.ZeroInt()
-		feeAmount = sdkmath.ZeroInt()
 	}
 
 	return
@@ -408,6 +438,18 @@ func MakeKeyMarketPermissions(marketID uint32, addr sdk.AccAddress, permission e
 	return rv
 }
 
+// ParseKeySuffixMarketPermissions parses the <addr length byte><addr><permission byte> portion of a market permissions key.
+func ParseKeySuffixMarketPermissions(suffix []byte) (sdk.AccAddress, exchange.Permission, error) {
+	addr, remainder, err := parseLengthPrefixedAddr(suffix)
+	if err != nil {
+		return nil, 0, fmt.Errorf("cannot parse address from market permissions key: %w", err)
+	}
+	if len(remainder) != 1 {
+		return nil, 0, fmt.Errorf("cannot parse market permissions key: found %d bytes after address, expected 1", len(remainder))
+	}
+	return addr, exchange.Permission(remainder[0]), nil
+}
+
 // marketKeyPrefixReqAttr creates the key prefix for a market's required attributes entries with an extra byte of capacity for the order type.
 func marketKeyPrefixReqAttr(marketID uint32) []byte {
 	return keyPrefixMarketType(marketID, MarketKeyTypeReqAttr, 1)
@@ -425,6 +467,11 @@ func MakeKeyMarketReqAttrBid(marketID uint32) []byte {
 	rv := marketKeyPrefixReqAttr(marketID)
 	rv = append(rv, OrderKeyTypeBid)
 	return rv
+}
+
+// ParseReqAttrStoreValue parses a required attribute store value into it's string slice.
+func ParseReqAttrStoreValue(value []byte) []string {
+	return strings.Split(string(value), string(RecordSeparator))
 }
 
 // keyPrefixOrder creates the key prefix for orders with the provide extra capacity for additional elements.

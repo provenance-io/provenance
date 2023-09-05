@@ -124,6 +124,8 @@ func TestKeyTypeUniqueness(t *testing.T) {
 	}
 }
 
+// TODO[1658]: func TestParseLengthPrefixedAddr(t *testing.T)
+
 func TestGetKeyPrefixParamsSplit(t *testing.T) {
 	ktc := keyTestCase{
 		maker: func() []byte {
@@ -804,6 +806,7 @@ func TestParseKeySuffixSettlementRatio(t *testing.T) {
 			suffix: []byte{keeper.RecordSeparator, 'b', keeper.RecordSeparator},
 			expErr: "ratio key suffix \"\\x1eb\\x1e\" has 3 parts, expected 2",
 		},
+		// TODO[1658]: Test cases for ParseKeySuffixSettlementRatio empty suffix
 	}
 
 	for _, tc := range tests {
@@ -1012,6 +1015,7 @@ func TestParseFeeRatioStoreValue(t *testing.T) {
 			value:  []byte{rs, '1', '0', '0', rs},
 			expErr: "ratio value \"\\x1e100\\x1e\" has 3 parts, expected 2",
 		},
+		// TODO[1658]: Test cases for ParseFeeRatioStoreValue empty value
 	}
 
 	for _, tc := range tests {
@@ -1987,6 +1991,8 @@ func TestMakeKeyMarketPermissions(t *testing.T) {
 	}
 }
 
+// TODO[1658]: func TestParseKeySuffixMarketPermissions(t *testing.T)
+
 func TestMakeKeyMarketReqAttrAsk(t *testing.T) {
 	marketTypeByte := keeper.MarketKeyTypeReqAttr
 	orderTypeByte := keeper.OrderKeyTypeAsk
@@ -2120,6 +2126,8 @@ func TestMakeKeyMarketReqAttrBid(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1658]: func TestParseReqAttrStoreValue(t *testing.T)
 
 func TestGetKeyPrefixOrder(t *testing.T) {
 	tests := []struct {
