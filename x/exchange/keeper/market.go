@@ -634,14 +634,20 @@ func getReqAttr(store sdk.KVStore, marketID uint32, maker reqAttrKeyMaker) []str
 }
 
 // setReqAttr sets the required attributes for a market using the provided key maker.
-func setReqAttr(store sdk.KVStore, marketID uint32, reqAttrs []string, maker reqAttrKeyMaker) {
+func (k Keeper) setReqAttr(ctx sdk.Context, marketID uint32, reqAttrs []string, maker reqAttrKeyMaker) error {
+	store := k.getStore(ctx)
 	key := maker(marketID)
 	if len(reqAttrs) == 0 {
 		store.Delete(key)
 	} else {
-		value := []byte(strings.Join(reqAttrs, string(RecordSeparator)))
+		reqAttrsNorm, err := k.NormalizeReqAttrs(ctx, reqAttrs)
+		if err != nil {
+			return err
+		}
+		value := []byte(strings.Join(reqAttrsNorm, string(RecordSeparator)))
 		store.Set(key, value)
 	}
+	return nil
 }
 
 // GetReqAttrAsk gets the attributes required to create an ask order.
@@ -650,8 +656,8 @@ func (k Keeper) GetReqAttrAsk(ctx sdk.Context, marketID uint32) []string {
 }
 
 // SetReqAttrAsk sets the attributes required to create an ask order.
-func (k Keeper) SetReqAttrAsk(ctx sdk.Context, marketID uint32, reqAttrs []string) {
-	setReqAttr(k.getStore(ctx), marketID, reqAttrs, MakeKeyMarketReqAttrAsk)
+func (k Keeper) SetReqAttrAsk(ctx sdk.Context, marketID uint32, reqAttrs []string) error {
+	return k.setReqAttr(ctx, marketID, reqAttrs, MakeKeyMarketReqAttrAsk)
 }
 
 // GetReqAttrBid gets the attributes required to create a bid order.
@@ -660,8 +666,8 @@ func (k Keeper) GetReqAttrBid(ctx sdk.Context, marketID uint32) []string {
 }
 
 // SetReqAttrBid sets the attributes required to create a bid order.
-func (k Keeper) SetReqAttrBid(ctx sdk.Context, marketID uint32, reqAttrs []string) {
-	setReqAttr(k.getStore(ctx), marketID, reqAttrs, MakeKeyMarketReqAttrBid)
+func (k Keeper) SetReqAttrBid(ctx sdk.Context, marketID uint32, reqAttrs []string) error {
+	return k.setReqAttr(ctx, marketID, reqAttrs, MakeKeyMarketReqAttrBid)
 }
 
 // getLastAutoMarketID gets the last auto-selected market id.
@@ -733,8 +739,18 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (marketID 
 	k.SetMarketActive(ctx, marketID, market.AcceptingOrders)
 	k.SetUserSettlementAllowed(ctx, marketID, market.AllowUserSettlement)
 	k.SetAccessGrants(ctx, marketID, market.AccessGrants)
-	k.SetReqAttrAsk(ctx, marketID, market.ReqAttrCreateAsk)
-	k.SetReqAttrBid(ctx, marketID, market.ReqAttrCreateBid)
+	err = errors.Join(err, k.SetReqAttrAsk(ctx, marketID, market.ReqAttrCreateAsk))
+	err = errors.Join(err, k.SetReqAttrBid(ctx, marketID, market.ReqAttrCreateBid))
 
-	return marketID, nil
+	return marketID, err
+}
+
+// NormalizeReqAttrs normalizes/validates each of the provided require attributes.
+func (k Keeper) NormalizeReqAttrs(ctx sdk.Context, reqAttrs []string) ([]string, error) {
+	rv := make([]string, len(reqAttrs))
+	errs := make([]error, len(reqAttrs))
+	for i, attr := range reqAttrs {
+		rv[i], errs[i] = k.nameKeeper.Normalize(ctx, attr)
+	}
+	return rv, errors.Join(errs...)
 }

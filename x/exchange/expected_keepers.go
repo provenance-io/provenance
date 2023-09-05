@@ -11,3 +11,7 @@ type AccountKeeper interface {
 	HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool
 	NewAccount(ctx sdk.Context, acc authtypes.AccountI) authtypes.AccountI
 }
+
+type NameKeeper interface {
+	Normalize(ctx sdk.Context, name string) (string, error)
+}

@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
@@ -15,17 +16,21 @@ type Keeper struct {
 	storeKey storetypes.StoreKey
 
 	accountKeeper exchange.AccountKeeper
+	nameKeeper    exchange.NameKeeper
 
 	// TODO[1658]: Finish the Keeper struct.
 	authority string
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, accountKeeper exchange.AccountKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey,
+	accountKeeper exchange.AccountKeeper, nameKeeper exchange.NameKeeper,
+) Keeper {
 	// TODO[1658]: Finish NewKeeper.
 	rv := Keeper{
 		cdc:           cdc,
 		storeKey:      storeKey,
 		accountKeeper: accountKeeper,
+		nameKeeper:    nameKeeper,
 		authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
 	return rv
