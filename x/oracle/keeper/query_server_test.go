@@ -78,7 +78,7 @@ func (s *KeeperTestSuite) TestOracle() {
 			err: "missing oracle address",
 		},
 		{
-			name: "success - should handle error from contract",
+			name: "failure - should handle error from contract",
 			req: &types.QueryOracleRequest{
 				Query: []byte("{}"),
 			},
