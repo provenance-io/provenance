@@ -2,7 +2,9 @@ package types
 
 import (
 	"fmt"
+	"strconv"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -167,5 +169,15 @@ func NewEventMarkerSetDenomMetadata(metadata banktypes.Metadata, administrator s
 		MetadataName:        metadata.Name,
 		MetadataSymbol:      metadata.Symbol,
 		Administrator:       administrator,
+	}
+}
+
+// NewEventSetNetAssetValue returns a new instance of EventSetNetAssetValue
+func NewEventSetNetAssetValue(denom string, price sdk.Coin, volume uint64, source string) *EventSetNetAssetValue {
+	return &EventSetNetAssetValue{
+		Denom:  denom,
+		Price:  price.String(),
+		Volume: strconv.FormatUint(volume, 10),
+		Source: source,
 	}
 }

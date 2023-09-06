@@ -430,7 +430,7 @@ func TestBankSendCoinsUsesSendRestrictionFn(t *testing.T) {
 
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
+	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", addrNameOwner.String(), []types.AccessGrant{}))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrNameOwner))
 	err := app.NameKeeper.SetNameRecord(ctx, "kyc.provenance.io", addrNameOwner, false)
 	require.NoError(t, err, "SetNameRecord kyc.provenance.io")
@@ -524,7 +524,7 @@ func TestBankInputOutputCoinsUsesSendRestrictionFn(t *testing.T) {
 
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
+	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", addrManager.String(), []types.AccessGrant{}))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrManager))
 	err := app.NameKeeper.SetNameRecord(ctx, "rando.io", addrManager, false)
 	require.NoError(t, err, "SetNameRecord rando.io")
@@ -825,6 +825,7 @@ func TestQuarantineOfRestrictedCoins(t *testing.T) {
 	addrWithTransfer := sdk.AccAddress("addrWithTransfer____")
 	addrWithWithdraw := sdk.AccAddress("addrWithWithdraw____")
 	addrWithoutTransfer := sdk.AccAddress("addrWithoutTransfer_")
+	nav := []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(1)), 1)}
 
 	newMarker := func(denom string, reqAttrs []string) *types.MarkerAccount {
 		rv := types.NewMarkerAccount(
@@ -842,7 +843,9 @@ func TestQuarantineOfRestrictedCoins(t *testing.T) {
 			false, // no force transfer
 			reqAttrs,
 		)
-		err := app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, rv)
+		err := app.MarkerKeeper.AddSetNetAssetValues(ctx, rv, nav, types.ModuleName)
+		require.NoError(t, err, "AddSetNetAssetValues(%v, %v, %v)", rv, nav, types.ModuleName)
+		err = app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, rv)
 		require.NoError(t, err, "AddFinalizeAndActivateMarker(%s)", denom)
 		return rv
 	}

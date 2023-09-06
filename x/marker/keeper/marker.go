@@ -447,6 +447,18 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 			" supply %v, can not finalize marker", supplyRequest, preexistingCoin)
 	}
 
+	var navs []types.NetAssetValue
+	err = k.IterateNetAssetValues(ctx, m.GetAddress(), func(nav types.NetAssetValue) (stop bool) {
+		navs = append(navs, nav)
+		return false
+	})
+	if err != nil {
+		return err
+	}
+	if len(navs) == 0 {
+		return fmt.Errorf("marker %v does not have any net asset values assigned", denom)
+	}
+
 	// transition to finalized state ... then to active once mint is complete
 	if err = m.SetStatus(types.StatusFinalized); err != nil {
 		return fmt.Errorf("could not transition marker account state to finalized: %w", err)

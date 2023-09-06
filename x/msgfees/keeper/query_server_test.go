@@ -83,7 +83,7 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.app.AccountKeeper.SetAccount(s.ctx, s.acct1)
 	s.acct2 = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr)
 	s.app.AccountKeeper.SetAccount(s.ctx, s.acct2)
-
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, markertypes.NewEmptyMarkerAccount("navcoin", s.acct1.GetAddress().String(), []markertypes.AccessGrant{})))
 	s.Require().NoError(banktestutil.FundAccount(s.app.BankKeeper, s.ctx, s.acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100000)))))
 }
 
@@ -130,7 +130,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesAuthz() {
 	server := markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
 
 	hotdogDenom := "hotdog"
-	_, err := server.AddMarker(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{}))
+	_, err := server.AddMarker(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{}, 0, 0))
 	s.Require().NoError(err)
 	access := markertypes.AccessGrant{
 		Address:     s.user1,

@@ -160,6 +160,8 @@ func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 			r.Intn(2) > 0,                 // allow gov
 			r.Intn(2) > 0,                 // allow forced transfer
 			[]string{},
+			0,
+			0,
 		)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
@@ -255,6 +257,8 @@ func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.Account
 			r.Intn(2) > 0, // allow forced transfer
 			[]string{},
 			grants,
+			0,
+			0,
 		)
 
 		if msg.MarkerType != types.MarkerType_RestrictedCoin {

@@ -105,7 +105,9 @@
     - [EventMarkerSetDenomMetadata](#provenance.marker.v1.EventMarkerSetDenomMetadata)
     - [EventMarkerTransfer](#provenance.marker.v1.EventMarkerTransfer)
     - [EventMarkerWithdraw](#provenance.marker.v1.EventMarkerWithdraw)
+    - [EventSetNetAssetValue](#provenance.marker.v1.EventSetNetAssetValue)
     - [MarkerAccount](#provenance.marker.v1.MarkerAccount)
+    - [NetAssetValue](#provenance.marker.v1.NetAssetValue)
     - [Params](#provenance.marker.v1.Params)
   
     - [MarkerStatus](#provenance.marker.v1.MarkerStatus)
@@ -113,6 +115,7 @@
   
 - [provenance/marker/v1/genesis.proto](#provenance/marker/v1/genesis.proto)
     - [GenesisState](#provenance.marker.v1.GenesisState)
+    - [MarkerNetAssetValues](#provenance.marker.v1.MarkerNetAssetValues)
   
 - [provenance/marker/v1/proposals.proto](#provenance/marker/v1/proposals.proto)
     - [AddMarkerProposal](#provenance.marker.v1.AddMarkerProposal)
@@ -140,6 +143,8 @@
     - [QueryHoldingResponse](#provenance.marker.v1.QueryHoldingResponse)
     - [QueryMarkerRequest](#provenance.marker.v1.QueryMarkerRequest)
     - [QueryMarkerResponse](#provenance.marker.v1.QueryMarkerResponse)
+    - [QueryNetAssetValuesRequest](#provenance.marker.v1.QueryNetAssetValuesRequest)
+    - [QueryNetAssetValuesResponse](#provenance.marker.v1.QueryNetAssetValuesResponse)
     - [QueryParamsRequest](#provenance.marker.v1.QueryParamsRequest)
     - [QueryParamsResponse](#provenance.marker.v1.QueryParamsResponse)
     - [QuerySupplyRequest](#provenance.marker.v1.QuerySupplyRequest)
@@ -159,6 +164,8 @@
     - [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse)
     - [MsgAddMarkerRequest](#provenance.marker.v1.MsgAddMarkerRequest)
     - [MsgAddMarkerResponse](#provenance.marker.v1.MsgAddMarkerResponse)
+    - [MsgAddNetAssetValuesRequest](#provenance.marker.v1.MsgAddNetAssetValuesRequest)
+    - [MsgAddNetAssetValuesResponse](#provenance.marker.v1.MsgAddNetAssetValuesResponse)
     - [MsgBurnRequest](#provenance.marker.v1.MsgBurnRequest)
     - [MsgBurnResponse](#provenance.marker.v1.MsgBurnResponse)
     - [MsgCancelRequest](#provenance.marker.v1.MsgCancelRequest)
@@ -1892,6 +1899,24 @@ EventMarkerWithdraw event emitted when coins are withdrew from marker
 
 
 
+<a name="provenance.marker.v1.EventSetNetAssetValue"></a>
+
+### EventSetNetAssetValue
+EventSetNetAssetValue event emitted when Net Asset Value for marker is update or added
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `price` | [string](#string) |  |  |
+| `volume` | [string](#string) |  |  |
+| `source` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="provenance.marker.v1.MarkerAccount"></a>
 
 ### MarkerAccount
@@ -1911,6 +1936,23 @@ MarkerAccount holds the marker configuration information in addition to a base a
 | `allow_governance_control` | [bool](#bool) |  | indicates that governance based control is allowed for this marker |
 | `allow_forced_transfer` | [bool](#bool) |  | Whether an admin can transfer restricted coins from a 3rd-party account without their signature. |
 | `required_attributes` | [string](#string) | repeated | list of required attributes on restricted marker in order to send and receive transfers if sender does not have transfer authority |
+
+
+
+
+
+
+<a name="provenance.marker.v1.NetAssetValue"></a>
+
+### NetAssetValue
+NetAssetValue defines a marker's net asset value
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the complete value of the asset's volume |
+| `volume` | [uint64](#uint64) |  | volume is the number of tokens of the marker that were purchased for the price |
+| `updated_block_height` | [uint64](#uint64) |  | updated_block_height is the block height of last update |
 
 
 
@@ -1989,6 +2031,23 @@ GenesisState defines the account module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#provenance.marker.v1.Params) |  | params defines all the parameters of the module. |
 | `markers` | [MarkerAccount](#provenance.marker.v1.MarkerAccount) | repeated | A collection of marker accounts to create on start |
+| `net_asset_values` | [MarkerNetAssetValues](#provenance.marker.v1.MarkerNetAssetValues) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MarkerNetAssetValues"></a>
+
+### MarkerNetAssetValues
+MarkerNetAssetValues defines the net asset values for a marker
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address defines the marker address |
+| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated | net_asset_values that are assigned to marker |
 
 
 
@@ -2412,6 +2471,36 @@ QueryMarkerResponse is the response type for the Query/Marker method.
 
 
 
+<a name="provenance.marker.v1.QueryNetAssetValuesRequest"></a>
+
+### QueryNetAssetValuesRequest
+QueryNetAssetValuesRequest is the request type for the Query/NetAssetValues method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | address or denom for the marker |
+
+
+
+
+
+
+<a name="provenance.marker.v1.QueryNetAssetValuesResponse"></a>
+
+### QueryNetAssetValuesResponse
+QueryNetAssetValuesRequest is the response type for the Query/NetAssetValues method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated | net asset values for marker denom |
+
+
+
+
+
+
 <a name="provenance.marker.v1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
@@ -2489,6 +2578,7 @@ Query defines the gRPC querier service for marker module.
 | `Access` | [QueryAccessRequest](#provenance.marker.v1.QueryAccessRequest) | [QueryAccessResponse](#provenance.marker.v1.QueryAccessResponse) | query for access records on an account | GET|/provenance/marker/v1/accesscontrol/{id}|
 | `DenomMetadata` | [QueryDenomMetadataRequest](#provenance.marker.v1.QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#provenance.marker.v1.QueryDenomMetadataResponse) | query for access records on an account | GET|/provenance/marker/v1/getdenommetadata/{denom}|
 | `AccountData` | [QueryAccountDataRequest](#provenance.marker.v1.QueryAccountDataRequest) | [QueryAccountDataResponse](#provenance.marker.v1.QueryAccountDataResponse) | query for account data associated with a denom | GET|/provenance/marker/v1/accountdata/{denom}|
+| `NetAssetValues` | [QueryNetAssetValuesRequest](#provenance.marker.v1.QueryNetAssetValuesRequest) | [QueryNetAssetValuesResponse](#provenance.marker.v1.QueryNetAssetValuesResponse) | NetAssetValues returns net asset values for marker | GET|/provenance/marker/v1/netassetvalues/{id}|
 
  <!-- end services -->
 
@@ -2618,6 +2708,8 @@ MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker re
 | `allow_governance_control` | [bool](#bool) |  |  |
 | `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
+| `usd_cents` | [uint64](#uint64) |  |  |
+| `volume` | [uint64](#uint64) |  |  |
 
 
 
@@ -2653,6 +2745,8 @@ If being provided as a governance proposal, set the from_address to the gov modu
 | `allow_governance_control` | [bool](#bool) |  |  |
 | `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
+| `usd_cents` | [uint64](#uint64) |  |  |
+| `volume` | [uint64](#uint64) |  |  |
 
 
 
@@ -2663,6 +2757,33 @@ If being provided as a governance proposal, set the from_address to the gov modu
 
 ### MsgAddMarkerResponse
 MsgAddMarkerResponse defines the Msg/AddMarker response type
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgAddNetAssetValuesRequest"></a>
+
+### MsgAddNetAssetValuesRequest
+MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `administrator` | [string](#string) |  |  |
+| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgAddNetAssetValuesResponse"></a>
+
+### MsgAddNetAssetValuesResponse
+MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
 
 
 
@@ -3139,6 +3260,7 @@ Msg defines the Marker Msg service.
 | `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance.marker.v1.MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. | |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance.marker.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.marker.v1.MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. | |
 | `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance.marker.v1.MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance.marker.v1.MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has admin authority | |
+| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance.marker.v1.MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance.marker.v1.MsgAddNetAssetValuesResponse) | AddNetAssetValues set the net asset value for a marker | |
 
  <!-- end services -->
 
