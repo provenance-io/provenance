@@ -2588,6 +2588,16 @@ func TestParseReqAttrStoreValue(t *testing.T) {
 }
 
 func TestGetKeyPrefixOrder(t *testing.T) {
+	ktc := keyTestCase{
+		maker: func() []byte {
+			return keeper.GetKeyPrefixOrder()
+		},
+		expected: []byte{keeper.KeyTypeOrder},
+	}
+	checkKey(t, ktc, "GetKeyPrefixOrder")
+}
+
+func TestMakeKeyOrder(t *testing.T) {
 	tests := []struct {
 		name     string
 		orderID  uint64
@@ -2659,171 +2669,12 @@ func TestGetKeyPrefixOrder(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.GetKeyPrefixOrder(tc.orderID)
+					return keeper.MakeKeyOrder(tc.orderID)
 				},
-				expected: tc.expected,
+				expected:    tc.expected,
+				expPrefixes: []expectedPrefix{{name: "", value: keeper.GetKeyPrefixOrder()}},
 			}
-			checkKey(t, ktc, "GetKeyPrefixOrder(%d)", tc.orderID)
-		})
-	}
-}
-
-func TestMakeKeyOrder(t *testing.T) {
-	askOrder := func(orderID uint64) exchange.Order {
-		return *exchange.NewOrder(orderID).WithAsk(&exchange.AskOrder{})
-	}
-	bidOrder := func(orderID uint64) exchange.Order {
-		return *exchange.NewOrder(orderID).WithBid(&exchange.BidOrder{})
-	}
-
-	tests := []struct {
-		name     string
-		order    exchange.Order
-		expected []byte
-		expPanic string
-	}{
-		{
-			name:     "order id 0 ask",
-			order:    askOrder(0),
-			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 0, 0, exchange.OrderTypeByteAsk},
-		},
-		{
-			name:     "order id 0 bid",
-			order:    bidOrder(0),
-			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 0, 0, exchange.OrderTypeByteBid},
-		},
-		{
-			name:     "order id 1 ask",
-			order:    askOrder(1),
-			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 0, 1, exchange.OrderTypeByteAsk},
-		},
-		{
-			name:     "order id 1 bid",
-			order:    bidOrder(1),
-			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 0, 1, exchange.OrderTypeByteBid},
-		},
-		{
-			name:     "order id 256 ask",
-			order:    askOrder(256),
-			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 1, 0, exchange.OrderTypeByteAsk},
-		},
-		{
-			name:     "order id 256 bid",
-			order:    bidOrder(256),
-			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 0, 1, 0, exchange.OrderTypeByteBid},
-		},
-		{
-			name:     "order id 65,536 ask",
-			order:    askOrder(65_536),
-			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 1, 0, 0, exchange.OrderTypeByteAsk},
-		},
-		{
-			name:     "order id 65,536 bid",
-			order:    bidOrder(65_536),
-			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 0, 1, 0, 0, exchange.OrderTypeByteBid},
-		},
-		{
-			name:     "order id 16,777,216 ask",
-			order:    askOrder(16_777_216),
-			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 1, 0, 0, 0, exchange.OrderTypeByteAsk},
-		},
-		{
-			name:     "order id 16,777,216 bid",
-			order:    bidOrder(16_777_216),
-			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 0, 1, 0, 0, 0, exchange.OrderTypeByteBid},
-		},
-		{
-			name:     "order id 4,294,967,296 ask",
-			order:    askOrder(4_294_967_296),
-			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 1, 0, 0, 0, 0, exchange.OrderTypeByteAsk},
-		},
-		{
-			name:     "order id 4,294,967,296 bid",
-			order:    bidOrder(4_294_967_296),
-			expected: []byte{keeper.KeyTypeOrder, 0, 0, 0, 1, 0, 0, 0, 0, exchange.OrderTypeByteBid},
-		},
-		{
-			name:     "order id 1,099,511,627,776 ask",
-			order:    askOrder(1_099_511_627_776),
-			expected: []byte{keeper.KeyTypeOrder, 0, 0, 1, 0, 0, 0, 0, 0, exchange.OrderTypeByteAsk},
-		},
-		{
-			name:     "order id 1,099,511,627,776 bid",
-			order:    bidOrder(1_099_511_627_776),
-			expected: []byte{keeper.KeyTypeOrder, 0, 0, 1, 0, 0, 0, 0, 0, exchange.OrderTypeByteBid},
-		},
-		{
-			name:     "order id 281,474,976,710,656 ask",
-			order:    askOrder(281_474_976_710_656),
-			expected: []byte{keeper.KeyTypeOrder, 0, 1, 0, 0, 0, 0, 0, 0, exchange.OrderTypeByteAsk},
-		},
-		{
-			name:     "order id 281,474,976,710,656 bid",
-			order:    bidOrder(281_474_976_710_656),
-			expected: []byte{keeper.KeyTypeOrder, 0, 1, 0, 0, 0, 0, 0, 0, exchange.OrderTypeByteBid},
-		},
-		{
-			name:     "order id 72,057,594,037,927,936 ask",
-			order:    askOrder(72_057_594_037_927_936),
-			expected: []byte{keeper.KeyTypeOrder, 1, 0, 0, 0, 0, 0, 0, 0, exchange.OrderTypeByteAsk},
-		},
-		{
-			name:     "order id 72,057,594,037,927,936 bid",
-			order:    bidOrder(72_057_594_037_927_936),
-			expected: []byte{keeper.KeyTypeOrder, 1, 0, 0, 0, 0, 0, 0, 0, exchange.OrderTypeByteBid},
-		},
-		{
-			name:     "order id 72,340,172,838,076,673 ask",
-			order:    askOrder(72_340_172_838_076_673),
-			expected: []byte{keeper.KeyTypeOrder, 1, 1, 1, 1, 1, 1, 1, 1, exchange.OrderTypeByteAsk},
-		},
-		{
-			name:     "order id 72,340,172,838,076,673 bid",
-			order:    bidOrder(72_340_172_838_076_673),
-			expected: []byte{keeper.KeyTypeOrder, 1, 1, 1, 1, 1, 1, 1, 1, exchange.OrderTypeByteBid},
-		},
-		{
-			name:     "order id 1,229,782,938,247,303,441 ask",
-			order:    askOrder(1_229_782_938_247_303_441),
-			expected: []byte{keeper.KeyTypeOrder, 17, 17, 17, 17, 17, 17, 17, 17, exchange.OrderTypeByteAsk},
-		},
-		{
-			name:     "order id 1,229,782,938,247,303,441 bid",
-			order:    bidOrder(1_229_782_938_247_303_441),
-			expected: []byte{keeper.KeyTypeOrder, 17, 17, 17, 17, 17, 17, 17, 17, exchange.OrderTypeByteBid},
-		},
-		{
-			name:     "order id 18,446,744,073,709,551,615 ask",
-			order:    askOrder(18_446_744_073_709_551_615),
-			expected: []byte{keeper.KeyTypeOrder, 255, 255, 255, 255, 255, 255, 255, 255, exchange.OrderTypeByteAsk},
-		},
-		{
-			name:     "order id 18,446,744,073,709,551,615 bid",
-			order:    bidOrder(18_446_744_073_709_551_615),
-			expected: []byte{keeper.KeyTypeOrder, 255, 255, 255, 255, 255, 255, 255, 255, exchange.OrderTypeByteBid},
-		},
-		{
-			name:     "nil inside order",
-			order:    exchange.Order{OrderId: 5, Order: nil},
-			expPanic: "GetOrderTypeByte() missing case for <nil>",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			ktc := keyTestCase{
-				maker: func() []byte {
-					return keeper.MakeKeyOrder(tc.order)
-				},
-				expected: tc.expected,
-				expPanic: tc.expPanic,
-			}
-			if len(tc.expPanic) == 0 {
-				ktc.expPrefixes = []expectedPrefix{
-					{name: "GetKeyPrefixOrder", value: keeper.GetKeyPrefixOrder(tc.order.OrderId)},
-				}
-			}
-			checkKey(t, ktc, "MakeKeyOrder %d %T", tc.order.OrderId, tc.order.Order)
+			checkKey(t, ktc, "MakeKeyOrder(%d)", tc.orderID)
 		})
 	}
 }

@@ -49,14 +49,14 @@ import (
 //
 // Orders:
 //   Order entries all have the following general format:
-//     0x02 | <order_id> (8 bytes) | <order_type_byte> => protobuf encoding of specific order type.
+//     0x02 | <order_id> (8 bytes) => <order_type_byte> | protobuf encoding of specific order type.
 //   The <order_id> is a uint64 in big-endian order (8 bytes).
 //   <order_type_byte> values:
 //     Ask: 0x00
 //     Bid: 0x01
 //   So, the specific entry formats look like this:
-//     Ask Orders: 0x02 | <order_id> (8 bytes) | 0x00 => protobuf(AskOrder)
-//     Bid Orders: 0x02 | <order_id> (8 bytes) | 0x01 => protobuf(BidOrder)
+//     Ask Orders: 0x02 | <order_id> (8 bytes) => 0x00 | protobuf(AskOrder)
+//     Bid Orders: 0x02 | <order_id> (8 bytes) => 0x01 | protobuf(BidOrder)
 //
 // A market to order index is maintained with the following format:
 //    0x03 | <market_id> (4 bytes) | <order_id> (8 bytes) => nil
@@ -512,20 +512,21 @@ func ParseReqAttrStoreValue(value []byte) []string {
 	return strings.Split(string(value), string(RecordSeparator))
 }
 
-// keyPrefixOrder creates the key prefix for orders with the provide extra capacity for additional elements.
-func keyPrefixOrder(orderID uint64, extraCap int) []byte {
-	return prepKey(KeyTypeOrder, uint64Bz(orderID), extraCap)
+// keyPrefixOrder creates the key prefix for orders with the provided extra capacity for additional elements.
+func keyPrefixOrder(extraCap int) []byte {
+	return prepKey(KeyTypeOrder, nil, extraCap)
 }
 
-// GetKeyPrefixOrder creates the key prefix for the given order id.
-func GetKeyPrefixOrder(orderID uint64) []byte {
-	return keyPrefixOrder(orderID, 0)
+// GetKeyPrefixOrder gets the key prefix for all orders.
+func GetKeyPrefixOrder() []byte {
+	return keyPrefixOrder(0)
 }
 
-// MakeKeyOrder makes the key to use for the given order.
-func MakeKeyOrder(order exchange.Order) []byte {
-	rv := keyPrefixOrder(order.GetOrderId(), 1)
-	rv = append(rv, order.GetOrderTypeByte())
+// MakeKeyOrder creates the key to use for an order ID.
+func MakeKeyOrder(orderID uint64) []byte {
+	suffix := uint64Bz(orderID)
+	rv := keyPrefixOrder(len(suffix))
+	rv = append(rv, suffix...)
 	return rv
 }
 
