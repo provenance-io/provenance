@@ -31,7 +31,7 @@ require (
 	github.com/tendermint/tendermint v0.34.28
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/exp v0.0.0-20230310171629-522b1b587ee0
-	golang.org/x/text v0.12.0
+	golang.org/x/text v0.13.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230526203410-71b5a4ffd15e
 	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
