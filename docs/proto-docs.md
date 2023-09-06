@@ -1620,14 +1620,14 @@ Market contains all information about a market.
 | `accepting_orders` | [bool](#bool) |  | accepting_orders is whether this market is allowing orders to be created for it. |
 | `allow_user_settlement` | [bool](#bool) |  | allow_user_settlement is whether this market allows users to initiate their own settlements. For example, the FillBids and FillAsks endpoints are available if and only if this is true. The MarketSettle endpoint is only available to market actors regardless of the value of this field. |
 | `access_grants` | [AccessGrant](#provenance.exchange.v1.AccessGrant) | repeated | access_grants is the list of addresses and permissions granted for this market. |
-| `req_attr_create_ask` | [string](#string) | repeated | req_attr_create_ask is a list of attributes required on an account for it to be allowed to create an ask order.
+| `req_attr_create_ask` | [string](#string) | repeated | req_attr_create_ask is a list of attributes required on an account for it to be allowed to create an ask order. An account must have all of these attributes in order to create an ask order in this market. If the list is empty, any account can create ask orders in this market.
 
-An entry that starts with "*." will match any attributes that end with the rest of it. E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a".
+An entry that starts with "*." will match any attributes that end with the rest of it. E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "b.x.a", or "c.b.a.x".
 
 An entry of exactly "*" will match any attribute, which is equivalent to leaving this list empty. |
-| `req_attr_create_bid` | [string](#string) | repeated | req_attr_create_ask is a list of attributes required on an account for it to be allowed to create a bid order.
+| `req_attr_create_bid` | [string](#string) | repeated | req_attr_create_ask is a list of attributes required on an account for it to be allowed to create a bid order. An account must have all of these attributes in order to create a bid order in this market. If the list is empty, any account can create bid orders in this market.
 
-An entry that starts with "*." will match any attributes that end with the rest of it. E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a".
+An entry that starts with "*." will match any attributes that end with the rest of it. E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "c.b.x.a", or "c.b.a.x".
 
 An entry of exactly "*" will match any attribute, which is equivalent to leaving this list empty. |
 
