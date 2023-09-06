@@ -60,6 +60,8 @@ service Msg {
   rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
   // UpdateSendDenyList will only succeed if signer has admin authority
   rpc UpdateSendDenyList(MsgUpdateSendDenyListRequest) returns (MsgUpdateSendDenyListResponse);
+  // AddNetAssetValues set the net asset value for a marker
+  rpc AddNetAssetValues(MsgAddNetAssetValuesRequest) returns (MsgAddNetAssetValuesResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
@@ -94,6 +96,8 @@ message MsgAddMarkerRequest {
   bool                 allow_governance_control = 9;
   bool                 allow_forced_transfer    = 10;
   repeated string      required_attributes      = 11;
+  uint64               usd_cents                = 12;
+  uint64               volume                   = 13;
 }
 
 // MsgAddMarkerResponse defines the Msg/AddMarker response type
@@ -225,6 +229,8 @@ message MsgAddFinalizeActivateMarkerRequest {
   bool                 allow_governance_control = 8;
   bool                 allow_forced_transfer    = 9;
   repeated string      required_attributes      = 10;
+  uint64               usd_cents                = 11;
+  uint64               volume                   = 12;
 }
 
 // MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type
@@ -317,3 +323,13 @@ message MsgUpdateSendDenyListRequest {
 
 // MsgUpdateSendDenyListResponse defines the Msg/UpdateSendDenyList response type
 message MsgUpdateSendDenyListResponse {}
+
+// MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
+message MsgAddNetAssetValuesRequest {
+  string                 denom            = 1;
+  string                 administrator    = 2;
+  repeated NetAssetValue net_asset_values = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
+message MsgAddNetAssetValuesResponse {}

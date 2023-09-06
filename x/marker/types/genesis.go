@@ -7,11 +7,12 @@ import (
 )
 
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(params Params, markers []MarkerAccount, denySendAddress []DenySendAddress) *GenesisState {
+func NewGenesisState(params Params, markers []MarkerAccount, denySendAddresses []DenySendAddress, netAssetValues []MarkerNetAssetValues) *GenesisState {
 	return &GenesisState{
 		Params:            params,
 		Markers:           markers,
-		DenySendAddresses: denySendAddress,
+		DenySendAddresses: denySendAddresses,
+		NetAssetValues:    netAssetValues,
 	}
 }
 
@@ -22,12 +23,20 @@ func (state GenesisState) Validate() error {
 			return err
 		}
 	}
+	for _, mNav := range state.NetAssetValues {
+		for _, nav := range mNav.NetAssetValues {
+			if err := nav.Validate(); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
 // DefaultGenesisState returns the initial module genesis state.
 func DefaultGenesisState() *GenesisState {
-	return NewGenesisState(DefaultParams(), []MarkerAccount{}, []DenySendAddress{})
+	return NewGenesisState(DefaultParams(), []MarkerAccount{}, []DenySendAddress{}, []MarkerNetAssetValues{})
 }
 
 // GetGenesisStateFromAppState returns x/marker GenesisState given raw application

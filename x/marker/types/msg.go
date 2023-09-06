@@ -38,6 +38,7 @@ var allRequestMsgs = []sdk.Msg{
 	(*MsgUpdateForcedTransferRequest)(nil),
 	(*MsgSetAccountDataRequest)(nil),
 	(*MsgUpdateSendDenyListRequest)(nil),
+	(*MsgAddNetAssetValuesRequest)(nil),
 }
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
@@ -51,6 +52,8 @@ func NewMsgAddMarkerRequest(
 	allowGovernanceControl bool,
 	allowForcedTransfer bool,
 	requiredAttributes []string,
+	usdCentValue uint64,
+	volume uint64,
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
@@ -62,6 +65,8 @@ func NewMsgAddMarkerRequest(
 		AllowGovernanceControl: allowGovernanceControl,
 		AllowForcedTransfer:    allowForcedTransfer,
 		RequiredAttributes:     requiredAttributes,
+		UsdCents:               usdCentValue,
+		Volume:                 volume,
 	}
 }
 
@@ -484,6 +489,8 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 	allowForcedTransfer bool,
 	requiredAttributes []string,
 	accessGrants []AccessGrant,
+	usdCentsValue uint64,
+	netAssetVolume uint64,
 ) *MsgAddFinalizeActivateMarkerRequest {
 	return &MsgAddFinalizeActivateMarkerRequest{
 		Amount:                 sdk.NewCoin(denom, totalSupply),
@@ -495,6 +502,8 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 		AccessList:             accessGrants,
 		AllowForcedTransfer:    allowForcedTransfer,
 		RequiredAttributes:     requiredAttributes,
+		UsdCents:               usdCentsValue,
+		Volume:                 netAssetVolume,
 	}
 }
 
@@ -691,5 +700,47 @@ func (msg MsgUpdateSendDenyListRequest) ValidateBasic() error {
 
 func (msg *MsgUpdateSendDenyListRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{addr}
+}
+
+func NewMsgAddNetAssetValuesRequest(denom, administrator string, netAssetValues []NetAssetValue) *MsgAddNetAssetValuesRequest {
+	return &MsgAddNetAssetValuesRequest{
+		Denom:          denom,
+		NetAssetValues: netAssetValues,
+		Administrator:  administrator,
+	}
+}
+
+func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+
+	if len(msg.NetAssetValues) == 0 {
+		return fmt.Errorf("net asset value list cannot be empty")
+	}
+
+	seen := make(map[string]bool)
+	for _, nav := range msg.NetAssetValues {
+		if err := nav.Validate(); err != nil {
+			return err
+		}
+
+		if nav.UpdatedBlockHeight != 0 {
+			return fmt.Errorf("marker net asset value must not have update height set")
+		}
+
+		if seen[nav.Price.Denom] {
+			return fmt.Errorf("list of net asset values contains duplicates")
+		}
+		seen[nav.Price.Denom] = true
+	}
+
+	_, err := sdk.AccAddressFromBech32(msg.Administrator)
+	return err
+}
+
+func (msg *MsgAddNetAssetValuesRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Administrator)
 	return []sdk.AccAddress{addr}
 }

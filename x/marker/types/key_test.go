@@ -44,3 +44,13 @@ func TestGetDenySendAddresses(t *testing.T) {
 	assert.Equal(t, addr, mAddr, "module address")
 	assert.Equal(t, denyAddr, dAddr, "deny address")
 }
+
+func TestNetAssetValueKey(t *testing.T) {
+	addr, err := MarkerAddress("nhash")
+	require.NoError(t, err)
+	navKey := NetAssetValueKey(addr, "nhash")
+	assert.Equal(t, uint8(4), navKey[0], "should have correct prefix for nav key")
+	denomArrLen := int32(navKey[1])
+	assert.Equal(t, addr.Bytes(), navKey[2:denomArrLen+2], "should match denom key")
+	assert.Equal(t, "nhash", string(navKey[denomArrLen+2:]))
+}

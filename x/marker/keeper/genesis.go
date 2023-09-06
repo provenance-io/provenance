@@ -49,14 +49,25 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 		denyAddress := sdk.MustAccAddressFromBech32(denyAddress.DenyAddress)
 		k.AddSendDeny(ctx, markerAddr, denyAddress)
 	}
+	for _, mNavs := range data.NetAssetValues {
+		for _, nav := range mNavs.NetAssetValues {
+			navCopy := nav
+			bz, err := k.cdc.Marshal(&navCopy)
+			if err != nil {
+				panic(err)
+			}
+			address := sdk.MustAccAddressFromBech32(mNavs.Address)
+			store.Set(types.NetAssetValueKey(address, navCopy.Price.Denom), bz)
+		}
+	}
 }
 
 // ExportGenesis exports the current keeper state of the marker module.ExportGenesis
 // We do not export anything because our marker accounts will be exported/imported by the Account Module.
 func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	params := k.GetParams(ctx)
-	markers := make([]types.MarkerAccount, 0)
 
+	var markers []types.MarkerAccount
 	appendToMarkers := func(marker types.MarkerAccountI) bool {
 		markers = append(markers, types.MarkerAccount{
 			BaseAccount: &authtypes.BaseAccount{
@@ -77,7 +88,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		})
 		return false
 	}
-
 	k.IterateMarkers(ctx, appendToMarkers)
 
 	var denyAddresses []types.DenySendAddress
@@ -88,5 +98,21 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	}
 	k.IterateSendDeny(ctx, handleDenyList)
 
-	return types.NewGenesisState(params, markers, denyAddresses)
+	markerNetAssetValues := make([]types.MarkerNetAssetValues, len(markers))
+	for i := range markers {
+		var markerNavs types.MarkerNetAssetValues
+		var navs []types.NetAssetValue
+		err := k.IterateNetAssetValues(ctx, markers[i].GetAddress(), func(nav types.NetAssetValue) (stop bool) {
+			navs = append(navs, nav)
+			return false
+		})
+		if err != nil {
+			panic(err)
+		}
+		markerNavs.Address = markers[i].GetAddress().String()
+		markerNavs.NetAssetValues = navs
+		markerNetAssetValues[i] = markerNavs
+	}
+
+	return types.NewGenesisState(params, markers, denyAddresses, markerNetAssetValues)
 }

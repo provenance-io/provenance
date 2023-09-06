@@ -218,7 +218,7 @@ func TestNewMarkerValidate(t *testing.T) {
 
 func TestNewMarkerMsgEncoding(t *testing.T) {
 	base := authtypes.NewBaseAccountWithAddress(MustGetMarkerAddress("testcoin"))
-	newMsgMarker := NewMsgAddMarkerRequest("testcoin", sdk.OneInt(), base.GetAddress(), base.GetAddress(), MarkerType_Coin, false, false, false, []string{})
+	newMsgMarker := NewMsgAddMarkerRequest("testcoin", sdk.OneInt(), base.GetAddress(), base.GetAddress(), MarkerType_Coin, false, false, false, []string{}, 0, 0)
 
 	require.NoError(t, newMsgMarker.ValidateBasic())
 }
@@ -402,6 +402,72 @@ func TestRemovesFromRequiredAttributes(t *testing.T) {
 			} else {
 				assert.NotNil(t, err)
 				assert.Equal(t, tt.expectedError, err.Error())
+			}
+		})
+	}
+}
+
+func TestNetAssetValueConstructor(t *testing.T) {
+	price := sdk.NewInt64Coin("jackthecat", 406)
+	volume := uint64(100)
+	actual := NewNetAssetValue(price, volume)
+	assert.Equal(t, price, actual.Price)
+	assert.Equal(t, volume, actual.Volume)
+	assert.Equal(t, uint64(0), actual.UpdatedBlockHeight, "update time should not be set")
+}
+
+func TestNetAssetValueValidate(t *testing.T) {
+	tests := []struct {
+		name   string
+		nav    NetAssetValue
+		expErr string
+	}{
+		{
+			name: "invalid denom",
+			nav: NetAssetValue{
+				Volume: 406,
+			},
+			expErr: "invalid denom: ",
+		},
+		{
+			name: "volume is not positive",
+			nav: NetAssetValue{
+				Price:  sdk.NewInt64Coin("jackthecat", 420),
+				Volume: 0,
+			},
+			expErr: "marker net asset value volume must be positive value",
+		},
+		{
+			name: "volume must be positive if value is greater than 1",
+			nav: NetAssetValue{
+				Price:  sdk.NewInt64Coin("usdcents", 1),
+				Volume: 0,
+			},
+			expErr: "marker net asset value volume must be positive value",
+		},
+		{
+			name: "successful with 0 volume and coin",
+			nav: NetAssetValue{
+				Price:  sdk.NewInt64Coin("usdcents", 0),
+				Volume: 0,
+			},
+		},
+		{
+			name: "successful",
+			nav: NetAssetValue{
+				Price:  sdk.NewInt64Coin("jackthecat", 420),
+				Volume: 406,
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.nav.Validate()
+			if len(tt.expErr) > 0 {
+				assert.EqualErrorf(t, err, tt.expErr, "NetAssetValue validate expected error")
+			} else {
+				assert.NoError(t, err, "NetAssetValue validate should have passed")
 			}
 		})
 	}

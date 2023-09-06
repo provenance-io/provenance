@@ -32,6 +32,7 @@ func GetQueryCmd() *cobra.Command {
 		MarkerEscrowCmd(),
 		MarkerSupplyCmd(),
 		AccountDataCmd(),
+		NetAssetValuesCmd(),
 	)
 	return queryCmd
 }
@@ -298,6 +299,38 @@ func AccountDataCmd() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// NetAssetValuesCmd is the CLI command for querying a marker's net asset values.
+func NetAssetValuesCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "net-asset-values [address|denom]",
+		Aliases: []string{"nav", "navs"},
+		Short:   "Get marker's net asset values'",
+		Long:    `Note: the address is for the base_account of the denom should you choose to use the address rather than the denom name`,
+		Example: fmt.Sprintf(`$ %s query marker net-asset-values "nhash"`, version.AppName),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			id := strings.TrimSpace(args[0])
+
+			var response *types.QueryNetAssetValuesResponse
+			if response, err = queryClient.NetAssetValues(
+				context.Background(),
+				&types.QueryNetAssetValuesRequest{Id: id},
+			); err != nil {
+				fmt.Printf("failed to query marker %q net asset values details: %v\n", id, err)
+				return nil
+			}
+			return clientCtx.PrintProto(response)
+		},
+	}
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
