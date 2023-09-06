@@ -59,7 +59,7 @@ import (
 //     Bid Orders: 0x02 | <order_id> (8 bytes) => 0x01 | protobuf(BidOrder)
 //
 // A market to order index is maintained with the following format:
-//    0x03 | <market_id> (4 bytes) | <order_id> (8 bytes) => nil
+//    0x03 | <market_id> (4 bytes) | <order_id> (8 bytes) => <order type byte>
 //
 // An address to order index is maintained with the following format:
 //    0x04 | len(<address>) (1 byte) | <address> | <order_id> (8 bytes) => nil
@@ -530,6 +530,11 @@ func MakeKeyOrder(orderID uint64) []byte {
 	return rv
 }
 
+// ParseKeySuffixOrder parses the order id from the <order id> bytes part of an order store key.
+func ParseKeySuffixOrder(suffix []byte) uint64 {
+	return uint64FromBz(suffix)
+}
+
 // indexPrefixMarketToOrder creates the prefix for the market to order prefix entries with some extra space for the rest.
 func indexPrefixMarketToOrder(marketID uint32, extraCap int) []byte {
 	return prepKey(KeyTypeMarketToOrderIndex, uint32Bz(marketID), extraCap)
@@ -572,6 +577,13 @@ func indexPrefixAssetToOrder(assetDenom string, extraCap int) []byte {
 	return prepKey(KeyTypeAssetToOrderIndex, []byte(assetDenom), extraCap)
 }
 
+// indexPrefixAssetToOrderOfType creates the prefix for asset to order index entries for the given asset denom and order type.
+func indexPrefixAssetToOrderOfType(assetDenom string, orderTypeByte byte, extraCap int) []byte {
+	rv := indexPrefixAssetToOrder(assetDenom, 1+extraCap)
+	rv = append(rv, orderTypeByte)
+	return rv
+}
+
 // GetIndexKeyPrefixAssetToOrder creates a key prefix for the asset to order index limited to the given asset.
 func GetIndexKeyPrefixAssetToOrder(assetDenom string) []byte {
 	return indexPrefixAssetToOrder(assetDenom, 0)
@@ -579,22 +591,18 @@ func GetIndexKeyPrefixAssetToOrder(assetDenom string) []byte {
 
 // GetIndexKeyPrefixAssetToOrderAsks creates a key prefix for the asset to orders limited to the given asset and only ask orders.
 func GetIndexKeyPrefixAssetToOrderAsks(assetDenom string) []byte {
-	rv := indexPrefixAssetToOrder(assetDenom, 1)
-	rv = append(rv, OrderKeyTypeAsk)
-	return rv
+	return indexPrefixAssetToOrderOfType(assetDenom, OrderKeyTypeAsk, 0)
 }
 
 // GetIndexKeyPrefixAssetToOrderBids creates a key prefix for the asset to orders limited to the given asset and only bid orders.
 func GetIndexKeyPrefixAssetToOrderBids(assetDenom string) []byte {
-	rv := indexPrefixAssetToOrder(assetDenom, 1)
-	rv = append(rv, OrderKeyTypeBid)
-	return rv
+	return indexPrefixAssetToOrderOfType(assetDenom, OrderKeyTypeBid, 0)
 }
 
 // MakeIndexKeyAssetToOrder creates the key to use for the asset to order index for the provided values.
-func MakeIndexKeyAssetToOrder(assetDenom string, order exchange.Order) []byte {
-	rv := indexPrefixAssetToOrder(assetDenom, 9)
-	rv = append(rv, order.GetOrderTypeByte())
-	rv = append(rv, uint64Bz(order.GetOrderId())...)
+func MakeIndexKeyAssetToOrder(assetDenom string, orderTypeByte byte, orderID uint64) []byte {
+	suffix := uint64Bz(orderID)
+	rv := indexPrefixAssetToOrderOfType(assetDenom, orderTypeByte, len(suffix))
+	rv = append(rv, suffix...)
 	return rv
 }

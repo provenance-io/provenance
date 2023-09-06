@@ -196,90 +196,6 @@ func (o *unknownOrderType) Size() int {
 	return 0
 }
 
-func TestOrder_OrderType(t *testing.T) {
-	tests := []struct {
-		name     string
-		order    *Order
-		expected string
-		expPanic string
-	}{
-		{
-			name:     "AskOrder",
-			order:    NewOrder(1).WithAsk(&AskOrder{}),
-			expected: OrderTypeAsk,
-		},
-		{
-			name:     "BidOrder",
-			order:    NewOrder(2).WithBid(&BidOrder{}),
-			expected: OrderTypeBid,
-		},
-		{
-			name:     "nil inside order",
-			order:    NewOrder(3),
-			expPanic: "GetOrderType() missing case for <nil>",
-		},
-		{
-			name:     "unknown order type",
-			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: "GetOrderType() missing case for *exchange.unknownOrderType",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var actual string
-			testFunc := func() {
-				actual = tc.order.GetOrderType()
-			}
-
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderType")
-			assert.Equal(t, tc.expected, actual, "GetOrderType result")
-		})
-	}
-}
-
-func TestOrder_OrderTypeByte(t *testing.T) {
-	tests := []struct {
-		name     string
-		order    *Order
-		expected byte
-		expPanic string
-	}{
-		{
-			name:     "AskOrder",
-			order:    NewOrder(1).WithAsk(&AskOrder{}),
-			expected: OrderTypeByteAsk,
-		},
-		{
-			name:     "BidOrder",
-			order:    NewOrder(2).WithBid(&BidOrder{}),
-			expected: OrderTypeByteBid,
-		},
-		{
-			name:     "nil inside order",
-			order:    NewOrder(3),
-			expPanic: "GetOrderTypeByte() missing case for <nil>",
-		},
-		{
-			name:     "unknown order type",
-			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: "GetOrderTypeByte() missing case for *exchange.unknownOrderType",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var actual byte
-			testFunc := func() {
-				actual = tc.order.GetOrderTypeByte()
-			}
-
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderTypeByte")
-			assert.Equal(t, tc.expected, actual, "GetOrderTypeByte result")
-		})
-	}
-}
-
 func TestOrder_IsAskOrder(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -360,6 +276,90 @@ func TestOrder_IsBidOrder(t *testing.T) {
 	}
 }
 
+func TestOrder_GetOrderType(t *testing.T) {
+	tests := []struct {
+		name     string
+		order    *Order
+		expected string
+		expPanic string
+	}{
+		{
+			name:     "AskOrder",
+			order:    NewOrder(1).WithAsk(&AskOrder{}),
+			expected: OrderTypeAsk,
+		},
+		{
+			name:     "BidOrder",
+			order:    NewOrder(2).WithBid(&BidOrder{}),
+			expected: OrderTypeBid,
+		},
+		{
+			name:     "nil inside order",
+			order:    NewOrder(3),
+			expPanic: "GetOrderType() missing case for <nil>",
+		},
+		{
+			name:     "unknown order type",
+			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			expPanic: "GetOrderType() missing case for *exchange.unknownOrderType",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual string
+			testFunc := func() {
+				actual = tc.order.GetOrderType()
+			}
+
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderType")
+			assert.Equal(t, tc.expected, actual, "GetOrderType result")
+		})
+	}
+}
+
+func TestOrder_GetOrderTypeByte(t *testing.T) {
+	tests := []struct {
+		name     string
+		order    *Order
+		expected byte
+		expPanic string
+	}{
+		{
+			name:     "AskOrder",
+			order:    NewOrder(1).WithAsk(&AskOrder{}),
+			expected: OrderTypeByteAsk,
+		},
+		{
+			name:     "BidOrder",
+			order:    NewOrder(2).WithBid(&BidOrder{}),
+			expected: OrderTypeByteBid,
+		},
+		{
+			name:     "nil inside order",
+			order:    NewOrder(3),
+			expPanic: "GetOrderTypeByte() missing case for <nil>",
+		},
+		{
+			name:     "unknown order type",
+			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			expPanic: "GetOrderTypeByte() missing case for *exchange.unknownOrderType",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual byte
+			testFunc := func() {
+				actual = tc.order.GetOrderTypeByte()
+			}
+
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderTypeByte")
+			assert.Equal(t, tc.expected, actual, "GetOrderTypeByte result")
+		})
+	}
+}
+
 func TestOrder_GetMarketID(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -398,6 +398,88 @@ func TestOrder_GetMarketID(t *testing.T) {
 
 			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetMarketID")
 			assert.Equal(t, tc.expected, actual, "GetMarketID result")
+		})
+	}
+}
+
+func TestOrder_GetOwner(t *testing.T) {
+	tests := []struct {
+		name     string
+		order    *Order
+		expected string
+		expPanic string
+	}{
+		{
+			name:     "AskOrder",
+			order:    NewOrder(1).WithAsk(&AskOrder{Seller: "I'm a seller!"}),
+			expected: "I'm a seller!",
+		},
+		{
+			name:     "BidOrder",
+			order:    NewOrder(2).WithBid(&BidOrder{Buyer: "gimmie gimmie"}),
+			expected: "gimmie gimmie",
+		},
+		{
+			name:     "nil inside order",
+			order:    NewOrder(3),
+			expPanic: "GetOwner() missing case for <nil>",
+		},
+		{
+			name:     "unknown order type",
+			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			expPanic: "GetOwner() missing case for *exchange.unknownOrderType",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var owner string
+			testFunc := func() {
+				owner = tc.order.GetOwner()
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOwner")
+			assert.Equal(t, tc.expected, owner, "GetOwner result")
+		})
+	}
+}
+
+func TestOrder_GetAssets(t *testing.T) {
+	tests := []struct {
+		name     string
+		order    *Order
+		expected sdk.Coins
+		expPanic string
+	}{
+		{
+			name:     "AskOrder",
+			order:    NewOrder(1).WithAsk(&AskOrder{Assets: sdk.NewCoins(sdk.NewInt64Coin("acorns", 85))}),
+			expected: sdk.NewCoins(sdk.NewInt64Coin("acorns", 85)),
+		},
+		{
+			name:     "BidOrder",
+			order:    NewOrder(2).WithBid(&BidOrder{Assets: sdk.NewCoins(sdk.NewInt64Coin("boogers", 3))}),
+			expected: sdk.NewCoins(sdk.NewInt64Coin("boogers", 3)),
+		},
+		{
+			name:     "nil inside order",
+			order:    NewOrder(3),
+			expPanic: "GetAssets() missing case for <nil>",
+		},
+		{
+			name:     "unknown order type",
+			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			expPanic: "GetAssets() missing case for *exchange.unknownOrderType",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var assets sdk.Coins
+			testFunc := func() {
+				assets = tc.order.GetAssets()
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetAssets")
+			assert.Equal(t, tc.expected, assets, "GetAssets result")
 		})
 	}
 }

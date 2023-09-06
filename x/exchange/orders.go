@@ -35,6 +35,16 @@ func (o *Order) WithBid(bidOrder *BidOrder) *Order {
 	return o
 }
 
+// IsAskOrder returns true if this order is an ask order.
+func (o Order) IsAskOrder() bool {
+	return o.GetAskOrder() != nil
+}
+
+// IsBidOrder returns true if this order is a bid order.
+func (o Order) IsBidOrder() bool {
+	return o.GetBidOrder() != nil
+}
+
 // GetOrderType returns a string indicating what type this order is.
 // See: OrderTypeAsk, OrderTypeBid
 // Panics if the order details are not set or are something unexpected.
@@ -82,14 +92,33 @@ func (o Order) GetMarketID() uint32 {
 	}
 }
 
-// IsAskOrder returns true if this order is an ask order.
-func (o Order) IsAskOrder() bool {
-	return o.GetAskOrder() != nil
+// GetOwner gets the address of the owner of this order.
+// E.g. the seller for ask orders, or buyer for bid orders.
+func (o Order) GetOwner() string {
+	switch v := o.GetOrder().(type) {
+	case *Order_AskOrder:
+		return v.AskOrder.Seller
+	case *Order_BidOrder:
+		return v.BidOrder.Buyer
+	default:
+		// If GetOwner() is called without the order being set yet, it's a programming error, so panic.
+		// If it's a type without a case, the case needs to be added, so panic.
+		panic(fmt.Sprintf("GetOwner() missing case for %T", v))
+	}
 }
 
-// IsBidOrder returns true if this order is a bid order.
-func (o Order) IsBidOrder() bool {
-	return o.GetBidOrder() != nil
+// GetAssets gets the assets in this order.
+func (o Order) GetAssets() sdk.Coins {
+	switch v := o.GetOrder().(type) {
+	case *Order_AskOrder:
+		return v.AskOrder.Assets
+	case *Order_BidOrder:
+		return v.BidOrder.Assets
+	default:
+		// If GetAssets() is called without the order being set yet, it's a programming error, so panic.
+		// If it's a type without a case, the case needs to be added, so panic.
+		panic(fmt.Sprintf("GetAssets() missing case for %T", v))
+	}
 }
 
 // Validate returns an error if anything in this order is invalid.
