@@ -82,6 +82,17 @@ func (o Order) GetMarketID() uint32 {
 	}
 }
 
+// IsAskOrder returns true if this order is an ask order.
+func (o Order) IsAskOrder() bool {
+	return o.GetAskOrder() != nil
+}
+
+// IsBidOrder returns true if this order is a bid order.
+func (o Order) IsBidOrder() bool {
+	return o.GetBidOrder() != nil
+}
+
+// Validate returns an error if anything in this order is invalid.
 func (o Order) Validate() error {
 	if o.OrderId == 0 {
 		return errors.New("invalid order id: must not be zero")

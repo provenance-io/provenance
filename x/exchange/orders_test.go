@@ -280,6 +280,86 @@ func TestOrder_OrderTypeByte(t *testing.T) {
 	}
 }
 
+func TestOrder_IsAskOrder(t *testing.T) {
+	tests := []struct {
+		name  string
+		order *Order
+		exp   bool
+	}{
+		{
+			name:  "nil inside order",
+			order: NewOrder(1),
+			exp:   false,
+		},
+		{
+			name:  "ask order",
+			order: NewOrder(2).WithAsk(&AskOrder{}),
+			exp:   true,
+		},
+		{
+			name:  "bid order",
+			order: NewOrder(3).WithBid(&BidOrder{}),
+			exp:   false,
+		},
+		{
+			name:  "unknown order type",
+			order: &Order{OrderId: 4, Order: &unknownOrderType{}},
+			exp:   false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = tc.order.IsAskOrder()
+			}
+			require.NotPanics(t, testFunc, "IsAskOrder")
+			assert.Equal(t, tc.exp, actual, "IsAskOrder result")
+		})
+	}
+}
+
+func TestOrder_IsBidOrder(t *testing.T) {
+	tests := []struct {
+		name  string
+		order *Order
+		exp   bool
+	}{
+		{
+			name:  "nil inside order",
+			order: NewOrder(1),
+			exp:   false,
+		},
+		{
+			name:  "ask order",
+			order: NewOrder(2).WithAsk(&AskOrder{}),
+			exp:   false,
+		},
+		{
+			name:  "bid order",
+			order: NewOrder(3).WithBid(&BidOrder{}),
+			exp:   true,
+		},
+		{
+			name:  "unknown order type",
+			order: &Order{OrderId: 4, Order: &unknownOrderType{}},
+			exp:   false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = tc.order.IsBidOrder()
+			}
+			require.NotPanics(t, testFunc, "IsBidOrder")
+			assert.Equal(t, tc.exp, actual, "IsBidOrder result")
+		})
+	}
+}
+
 func TestOrder_GetMarketID(t *testing.T) {
 	tests := []struct {
 		name     string
