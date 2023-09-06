@@ -18,6 +18,7 @@ type Keeper struct {
 	storeKey storetypes.StoreKey
 
 	accountKeeper exchange.AccountKeeper
+	attrKeeper    exchange.AttributeKeeper
 	nameKeeper    exchange.NameKeeper
 
 	// TODO[1658]: Finish the Keeper struct.
@@ -25,13 +26,14 @@ type Keeper struct {
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey,
-	accountKeeper exchange.AccountKeeper, nameKeeper exchange.NameKeeper,
+	accountKeeper exchange.AccountKeeper, attrKeeper exchange.AttributeKeeper, nameKeeper exchange.NameKeeper,
 ) Keeper {
 	// TODO[1658]: Finish NewKeeper.
 	rv := Keeper{
 		cdc:           cdc,
 		storeKey:      storeKey,
 		accountKeeper: accountKeeper,
+		attrKeeper:    attrKeeper,
 		nameKeeper:    nameKeeper,
 		authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}

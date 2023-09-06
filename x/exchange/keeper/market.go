@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
@@ -858,4 +858,33 @@ func (k Keeper) UpdateFees(ctx sdk.Context, msg *exchange.MsgGovManageFeesReques
 	updateSellerSettlementRatios(store, msg.MarketId, msg.RemoveFeeSellerSettlementRatios, msg.AddFeeSellerSettlementRatios)
 	updateBuyerSettlementFlatFees(store, msg.MarketId, msg.RemoveFeeBuyerSettlementFlat, msg.AddFeeBuyerSettlementFlat)
 	updateBuyerSettlementRatios(store, msg.MarketId, msg.RemoveFeeBuyerSettlementRatios, msg.AddFeeBuyerSettlementRatios)
+}
+
+// hasReqAttrs returns true if either reqAttrs is empty or the provide address has all of them on their account.
+func (k Keeper) hasReqAttrs(ctx sdk.Context, addr sdk.AccAddress, reqAttrs []string) bool {
+	if len(reqAttrs) == 0 {
+		return true
+	}
+	attrs, err := k.attrKeeper.GetAllAttributesAddr(ctx, addr)
+	if err != nil {
+		return false
+	}
+	accAttrs := make([]string, len(attrs))
+	for i, attr := range attrs {
+		accAttrs[i] = attr.Name
+	}
+	missing := exchange.FindUnmatchedReqAttrs(reqAttrs, accAttrs)
+	return len(missing) == 0
+}
+
+// CanCreateAsk returns true if the provided address is allowed to create an ask order in the given market.
+func (k Keeper) CanCreateAsk(ctx sdk.Context, marketID uint32, addr sdk.AccAddress) bool {
+	reqAttrs := k.GetReqAttrAsk(ctx, marketID)
+	return k.hasReqAttrs(ctx, addr, reqAttrs)
+}
+
+// CanCreateBid returns true if the provided address is allowed to create a bid order in the given market.
+func (k Keeper) CanCreateBid(ctx sdk.Context, marketID uint32, addr sdk.AccAddress) bool {
+	reqAttrs := k.GetReqAttrBid(ctx, marketID)
+	return k.hasReqAttrs(ctx, addr, reqAttrs)
 }
