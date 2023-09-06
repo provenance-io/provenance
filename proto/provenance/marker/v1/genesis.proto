@@ -35,7 +35,7 @@ message DenySendAddress {
   // marker_address is the marker's address for denied address
   string marker_address = 1;
   // deny_address defines all wallet addresses that are denied sends for the marker
-  string deny_address = 3;
+  string deny_address = 2;
 }
 
 // MarkerNetAssetValues defines the net asset values for a marker
