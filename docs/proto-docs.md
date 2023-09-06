@@ -479,6 +479,30 @@
   
     - [Msg](#provenance.name.v1.Msg)
   
+- [provenance/oracle/v1/event.proto](#provenance/oracle/v1/event.proto)
+    - [EventOracleQueryError](#provenance.oracle.v1.EventOracleQueryError)
+    - [EventOracleQuerySuccess](#provenance.oracle.v1.EventOracleQuerySuccess)
+    - [EventOracleQueryTimeout](#provenance.oracle.v1.EventOracleQueryTimeout)
+  
+- [provenance/oracle/v1/genesis.proto](#provenance/oracle/v1/genesis.proto)
+    - [GenesisState](#provenance.oracle.v1.GenesisState)
+  
+- [provenance/oracle/v1/query.proto](#provenance/oracle/v1/query.proto)
+    - [QueryOracleAddressRequest](#provenance.oracle.v1.QueryOracleAddressRequest)
+    - [QueryOracleAddressResponse](#provenance.oracle.v1.QueryOracleAddressResponse)
+    - [QueryOracleRequest](#provenance.oracle.v1.QueryOracleRequest)
+    - [QueryOracleResponse](#provenance.oracle.v1.QueryOracleResponse)
+  
+    - [Query](#provenance.oracle.v1.Query)
+  
+- [provenance/oracle/v1/tx.proto](#provenance/oracle/v1/tx.proto)
+    - [MsgSendQueryOracleRequest](#provenance.oracle.v1.MsgSendQueryOracleRequest)
+    - [MsgSendQueryOracleResponse](#provenance.oracle.v1.MsgSendQueryOracleResponse)
+    - [MsgUpdateOracleRequest](#provenance.oracle.v1.MsgUpdateOracleRequest)
+    - [MsgUpdateOracleResponse](#provenance.oracle.v1.MsgUpdateOracleResponse)
+  
+    - [Msg](#provenance.oracle.v1.Msg)
+  
 - [provenance/reward/v1/reward.proto](#provenance/reward/v1/reward.proto)
     - [ActionCounter](#provenance.reward.v1.ActionCounter)
     - [ActionDelegate](#provenance.reward.v1.ActionDelegate)
@@ -7344,6 +7368,271 @@ Msg defines the bank Msg service.
 | `DeleteName` | [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest) | [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse) | DeleteName defines a method to verify a particular invariance. | |
 | `ModifyName` | [MsgModifyNameRequest](#provenance.name.v1.MsgModifyNameRequest) | [MsgModifyNameResponse](#provenance.name.v1.MsgModifyNameResponse) | ModifyName defines a method to modify the attributes of an existing name. | |
 | `CreateRootName` | [MsgCreateRootNameRequest](#provenance.name.v1.MsgCreateRootNameRequest) | [MsgCreateRootNameResponse](#provenance.name.v1.MsgCreateRootNameResponse) | CreateRootName defines a governance method for creating a root name. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/oracle/v1/event.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/oracle/v1/event.proto
+
+
+
+<a name="provenance.oracle.v1.EventOracleQueryError"></a>
+
+### EventOracleQueryError
+EventOracleQueryError is an event for when the chain receives an error response from an oracle query
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `channel` | [string](#string) |  | channel is the local channel that the oracle query response was received from |
+| `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
+| `error` | [string](#string) |  | error is the error message received from the query |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.EventOracleQuerySuccess"></a>
+
+### EventOracleQuerySuccess
+EventOracleQuerySuccess is an event for when the chain receives a successful response from an oracle query
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `channel` | [string](#string) |  | channel is the local channel that the oracle query response was received from |
+| `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
+| `result` | [string](#string) |  | result is the data received from the query |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.EventOracleQueryTimeout"></a>
+
+### EventOracleQueryTimeout
+EventOracleQueryTimeout is an event for when the chain receives a timeout from an oracle query
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `channel` | [string](#string) |  | channel is the local channel that the oracle timeout was received from |
+| `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/oracle/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/oracle/v1/genesis.proto
+
+
+
+<a name="provenance.oracle.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the oracle module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `port_id` | [string](#string) |  | The port to assign to the module |
+| `oracle` | [string](#string) |  | The address of the oracle |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/oracle/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/oracle/v1/query.proto
+
+
+
+<a name="provenance.oracle.v1.QueryOracleAddressRequest"></a>
+
+### QueryOracleAddressRequest
+QueryOracleAddressRequest queries for the address of the oracle.
+
+
+
+
+
+
+<a name="provenance.oracle.v1.QueryOracleAddressResponse"></a>
+
+### QueryOracleAddressResponse
+QueryOracleAddressResponse contains the address of the oracle.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | The address of the oracle |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.QueryOracleRequest"></a>
+
+### QueryOracleRequest
+QueryOracleRequest queries the module's oracle.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `query` | [bytes](#bytes) |  | Query contains the query data passed to the oracle. |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.QueryOracleResponse"></a>
+
+### QueryOracleResponse
+QueryOracleResponse contains the result of the query sent to the oracle.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `data` | [bytes](#bytes) |  | Data contains the json data returned from the oracle. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.oracle.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service for oracle module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `OracleAddress` | [QueryOracleAddressRequest](#provenance.oracle.v1.QueryOracleAddressRequest) | [QueryOracleAddressResponse](#provenance.oracle.v1.QueryOracleAddressResponse) | OracleAddress returns the address of the oracle | GET|/provenance/oracle/v1/oracle_address|
+| `Oracle` | [QueryOracleRequest](#provenance.oracle.v1.QueryOracleRequest) | [QueryOracleResponse](#provenance.oracle.v1.QueryOracleResponse) | Oracle forwards a query to the module's oracle | GET|/provenance/oracle/v1/oracle|
+
+ <!-- end services -->
+
+
+
+<a name="provenance/oracle/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/oracle/v1/tx.proto
+
+
+
+<a name="provenance.oracle.v1.MsgSendQueryOracleRequest"></a>
+
+### MsgSendQueryOracleRequest
+MsgSendQueryOracleRequest queries an oracle on another chain
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `query` | [bytes](#bytes) |  | Query contains the query data passed to the oracle. |
+| `channel` | [string](#string) |  | Channel is the channel to the oracle. |
+| `authority` | [string](#string) |  | The signing authority for the request |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.MsgSendQueryOracleResponse"></a>
+
+### MsgSendQueryOracleResponse
+MsgSendQueryOracleResponse contains the id of the oracle query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sequence` | [uint64](#uint64) |  | The sequence number that uniquely identifies the query. |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.MsgUpdateOracleRequest"></a>
+
+### MsgUpdateOracleRequest
+MsgUpdateOracleRequest is the request type for updating an oracle's contract address
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | The address of the oracle's contract |
+| `authority` | [string](#string) |  | The signing authorities for the request |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.MsgUpdateOracleResponse"></a>
+
+### MsgUpdateOracleResponse
+MsgUpdateOracleResponse is the response type for updating the oracle.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.oracle.v1.Msg"></a>
+
+### Msg
+Msg
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `UpdateOracle` | [MsgUpdateOracleRequest](#provenance.oracle.v1.MsgUpdateOracleRequest) | [MsgUpdateOracleResponse](#provenance.oracle.v1.MsgUpdateOracleResponse) | UpdateOracle is the RPC endpoint for updating the oracle | |
+| `SendQueryOracle` | [MsgSendQueryOracleRequest](#provenance.oracle.v1.MsgSendQueryOracleRequest) | [MsgSendQueryOracleResponse](#provenance.oracle.v1.MsgSendQueryOracleResponse) | SendQueryOracle sends a query to an oracle on another chain | |
 
  <!-- end services -->
 

@@ -1,0 +1,44 @@
+syntax = "proto3";
+package provenance.oracle.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/oracle/types";
+option java_package        = "io.provenance.oracle.v1";
+option java_multiple_files = true;
+
+// Query defines the gRPC querier service for oracle module.
+service Query {
+  // OracleAddress returns the address of the oracle
+  rpc OracleAddress(QueryOracleAddressRequest) returns (QueryOracleAddressResponse) {
+    option (google.api.http).get = "/provenance/oracle/v1/oracle_address";
+  }
+
+  // Oracle forwards a query to the module's oracle
+  rpc Oracle(QueryOracleRequest) returns (QueryOracleResponse) {
+    option (google.api.http).get = "/provenance/oracle/v1/oracle";
+  }
+}
+
+// QueryOracleAddressRequest queries for the address of the oracle.
+message QueryOracleAddressRequest {}
+
+// QueryOracleAddressResponse contains the address of the oracle.
+message QueryOracleAddressResponse {
+  // The address of the oracle
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryOracleRequest queries the module's oracle.
+message QueryOracleRequest {
+  // Query contains the query data passed to the oracle.
+  bytes query = 1 [(gogoproto.casttype) = "github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage"];
+}
+
+// QueryOracleResponse contains the result of the query sent to the oracle.
+message QueryOracleResponse {
+  // Data contains the json data returned from the oracle.
+  bytes data = 1 [(gogoproto.casttype) = "github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage"];
+}
