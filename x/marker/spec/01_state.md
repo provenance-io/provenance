@@ -155,7 +155,6 @@ This can be configured by setting the `required_attributes` array on the Marker.
 
 A single wildcard can only be used for the starting name of the required attribute. For example, `*.provenance.io` is a valid wildcard attribute. Invalid wildcard usages include forms such as `*kyc.provenance.io` or `kyc.*.provenance.io`.  Matching will be accepted for any number of child level names, i.e. `one.two.three.provenance.io` and `one.provenance.io` will be accepted for `*.provenance.io`. 
 
-
 ## Marker Address Cache
 
 For performance purposes the marker module maintains a KVStore entry with the address of every marker account.  This
@@ -163,6 +162,12 @@ allows for cheap iterator operations over all marker accounts without having to 
 iterator from the auth module.
 
 - `0x01 | Address -> Address`
+
+### Marker Net Asset Value
+
+A marker can support multiple distinct net asset values assigned to track settlement pricing information on-chain. The `price` attribute denotes the value assigned to the marker for a specific asset's associated `volume`. For instance, when considering a scenario where 10 billion `nhash` holds a value of 15¢, the corresponding `volume` should reflect the quantity of 10,000,000,000. The `update_block_height` attribute captures the block height when the update occurred.
+
++++ https://github.com/provenance-io/provenance/blob/25070572cc898c476f5bb1a816c6c1c4d07e3d38/proto/provenance/marker/v1/marker.proto#L96-L104
 
 ## Params
 

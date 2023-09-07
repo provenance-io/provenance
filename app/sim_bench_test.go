@@ -39,7 +39,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	app := New(logger, db, nil, true, map[int64]bool{}, b.TempDir(), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, _, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
 		app.BaseApp,
@@ -88,7 +88,7 @@ func BenchmarkInvariants(b *testing.B) {
 	app := New(logger, db, nil, true, map[int64]bool{}, b.TempDir(), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, lastBlockTime, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
 		app.BaseApp,
@@ -111,7 +111,7 @@ func BenchmarkInvariants(b *testing.B) {
 
 	PrintStats(config, db)
 
-	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight() + 1})
+	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight() + 1, Time: lastBlockTime})
 
 	// 3. Benchmark each invariant separately
 	//

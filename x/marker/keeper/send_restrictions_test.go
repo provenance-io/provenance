@@ -430,7 +430,7 @@ func TestBankSendCoinsUsesSendRestrictionFn(t *testing.T) {
 
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
+	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", addrNameOwner.String(), []types.AccessGrant{}))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrNameOwner))
 	err := app.NameKeeper.SetNameRecord(ctx, "kyc.provenance.io", addrNameOwner, false)
 	require.NoError(t, err, "SetNameRecord kyc.provenance.io")
@@ -469,10 +469,22 @@ func TestBankSendCoinsUsesSendRestrictionFn(t *testing.T) {
 	// addrOther and addrHasAttr now each have 100 of the marker denom.
 	// addrHasAttr has the attribute needed to receive the denom, and addrOther does not.
 
+	// sendWithCache uses a cache context to call SendCoins, and only writes it if there wasn't an error.
+	// This is needed because SendCoins subtracts the amount from the fromAddr before checking the send restriction.
+	// That's usually okay because it's all being done in a single transaction, which gets rolled back on error.
+	sendWithCache := func(fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+		cacheCtx, writeCache := ctx.CacheContext()
+		err = app.BankKeeper.SendCoins(cacheCtx, fromAddr, toAddr, amt)
+		if err == nil {
+			writeCache()
+		}
+		return err
+	}
+
 	t.Run("send to address without attributes", func(t *testing.T) {
 		expErr := fmt.Sprintf("address %s does not contain the %q required attribute: \"kyc.provenance.io\"",
 			addrOther, markerDenom)
-		err = app.BankKeeper.SendCoins(ctx, addrHasAttr, addrOther, cz(5, markerDenom))
+		err = sendWithCache(addrHasAttr, addrOther, cz(5, markerDenom))
 		assert.EqualError(t, err, expErr, "SendCoins")
 		expBal := cz(100, markerDenom)
 		hasAttrBal := app.BankKeeper.GetBalance(ctx, addrHasAttr, markerDenom)
@@ -482,7 +494,7 @@ func TestBankSendCoinsUsesSendRestrictionFn(t *testing.T) {
 	})
 
 	t.Run("send to address with attributes", func(t *testing.T) {
-		err = app.BankKeeper.SendCoins(ctx, addrOther, addrHasAttr, cz(6, markerDenom))
+		err = sendWithCache(addrOther, addrHasAttr, cz(6, markerDenom))
 		assert.NoError(t, err, "SendCoins")
 		hasAttrExpBal := cz(106, markerDenom)
 		hasAttrBal := app.BankKeeper.GetBalance(ctx, addrHasAttr, markerDenom)
@@ -512,7 +524,7 @@ func TestBankInputOutputCoinsUsesSendRestrictionFn(t *testing.T) {
 
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
+	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", addrManager.String(), []types.AccessGrant{}))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrManager))
 	err := app.NameKeeper.SetNameRecord(ctx, "rando.io", addrManager, false)
 	require.NoError(t, err, "SetNameRecord rando.io")
@@ -653,7 +665,7 @@ func TestBankInputOutputCoinsUsesSendRestrictionFn(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err = app.BankKeeper.InputOutputCoins(ctx, tc.input, tc.outputs)
+			err = app.BankKeeper.InputOutputCoins(ctx, []banktypes.Input{tc.input}, tc.outputs)
 			if len(tc.expErr) != 0 {
 				assert.EqualError(t, err, tc.expErr, "InputOutputCoins")
 			} else {
@@ -813,6 +825,7 @@ func TestQuarantineOfRestrictedCoins(t *testing.T) {
 	addrWithTransfer := sdk.AccAddress("addrWithTransfer____")
 	addrWithWithdraw := sdk.AccAddress("addrWithWithdraw____")
 	addrWithoutTransfer := sdk.AccAddress("addrWithoutTransfer_")
+	nav := []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(1)), 1)}
 
 	newMarker := func(denom string, reqAttrs []string) *types.MarkerAccount {
 		rv := types.NewMarkerAccount(
@@ -830,7 +843,9 @@ func TestQuarantineOfRestrictedCoins(t *testing.T) {
 			false, // no force transfer
 			reqAttrs,
 		)
-		err := app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, rv)
+		err := app.MarkerKeeper.AddSetNetAssetValues(ctx, rv, nav, types.ModuleName)
+		require.NoError(t, err, "AddSetNetAssetValues(%v, %v, %v)", rv, nav, types.ModuleName)
+		err = app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, rv)
 		require.NoError(t, err, "AddFinalizeAndActivateMarker(%s)", denom)
 		return rv
 	}

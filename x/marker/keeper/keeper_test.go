@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/quarantine"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
@@ -95,21 +94,21 @@ func TestExistingAccounts(t *testing.T) {
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
 
 	// Creating a marker over an account with zero sequence is fine.
-	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}))
+	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.NoError(t, err, "should allow a marker over existing account that has not signed anything.")
 
 	// existing coin balance must still be present
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balances must be preserved")
 
 	// Creating a marker over an existing marker fails.
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.Error(t, err, "fails because marker already exists")
 
 	// replace existing test account with a new copy that has a positive sequence number
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
 
 	// Creating a marker over an existing account with a positive sequence number fails.
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
 }
 
@@ -122,16 +121,16 @@ func TestAccountUnrestrictedDenoms(t *testing.T) {
 
 	// Require a long unrestricted denom
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "[a-z]{12,20}"})
-	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("tooshort", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}))
+	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("tooshort", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.Error(t, err, "fails with unrestricted denom length fault")
 	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err, "should fail with denom restriction")
 
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("itslongenough", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("itslongenough", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.NoError(t, err, "should allow a marker with a sufficiently long denom")
 
 	// Set to an empty string (returns to default expression)
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: ""})
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("short", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("short", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
 	require.NoError(t, err, "should allow any valid denom with a min length of two")
 }
@@ -190,6 +189,7 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 	require.NoError(t, mac.SetManager(user1))
 	require.NoError(t, mac.SetSupply(sdk.NewCoin(mac.Denom, sdk.OneInt())))
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
 
 	// Initial, should not have access
 	m, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "testcoin")
@@ -337,6 +337,8 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
+
 	// Should not fail for a non-active/finalized coin, must be able to adjust supply amount to match any existing
 	require.NoError(t, app.MarkerKeeper.MintCoin(ctx, user, sdk.NewInt64Coin("testcoin", 100)))
 	require.NoError(t, app.MarkerKeeper.BurnCoin(ctx, user, sdk.NewInt64Coin("testcoin", 100)))
@@ -497,6 +499,8 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
+
 	// insufficient supply to cover existing
 	require.Error(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
 
@@ -542,6 +546,7 @@ func TestAccountImplictControl(t *testing.T) {
 	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
 
 	// Moves to finalized, mints required supply, moves to active status.
 	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
@@ -647,6 +652,7 @@ func TestForceTransfer(t *testing.T) {
 		false,
 		[]string{},
 	)
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, noForceMac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
 	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, noForceMac),
 		"AddFinalizeAndActivateMarker without force transfer")
 
@@ -667,6 +673,7 @@ func TestForceTransfer(t *testing.T) {
 		true,
 		[]string{},
 	)
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, wForceMac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
 	require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, wForceMac),
 		"AddFinalizeAndActivateMarker with force transfer")
 
@@ -841,6 +848,8 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
+		0,
+		0,
 	))
 	require.NoError(t, err, "should allow a marker over existing account that has not signed anything.")
 
@@ -869,6 +878,8 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
+		0,
+		0,
 	))
 	require.Error(t, err, "fails because marker already exists")
 
@@ -890,6 +901,7 @@ func TestInvalidAccount(t *testing.T) {
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 	user := testUserAddress("testcoin")
 	manager := testUserAddress("manager")
+
 	// replace existing test account with a new copy that has a positive sequence number
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
 
@@ -904,6 +916,8 @@ func TestInvalidAccount(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Mint, types.Access_Admin})},
+		0,
+		0,
 	))
 	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
 	require.Contains(t, err.Error(), "account at "+user.String()+" is not a marker account: invalid request")
@@ -931,6 +945,8 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 			false,
 			[]string{},
 			[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
+			0,
+			0,
 		))
 	require.Error(t, err, "fails with unrestricted denom length fault")
 	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err, "should fail with denom restriction")
@@ -946,6 +962,8 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
+		0,
+		0,
 	))
 	require.NoError(t, err, "should allow a marker with a sufficiently long denom")
 
@@ -962,6 +980,8 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 		false,
 		[]string{},
 		[]types.AccessGrant{*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})},
+		0,
+		0,
 	))
 	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
 	require.NoError(t, err, "should allow any valid denom with a min length of two")
@@ -1270,309 +1290,9 @@ func TestMsgUpdateRequiredAttributesRequest(t *testing.T) {
 	}
 }
 
-func TestUpdateForcedTransfer(t *testing.T) {
-	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
-	authority := app.MarkerKeeper.GetAuthority()
-	otherAddr := sdk.AccAddress("otherAccAddr________").String()
-
-	proposed := types.StatusProposed
-	active := types.StatusActive
-	finalized := types.StatusFinalized
-
-	newMarker := func(denom string, status types.MarkerStatus, allowForcedTransfer bool) *types.MarkerAccount {
-		rv := &types.MarkerAccount{
-			BaseAccount: authtypes.NewBaseAccountWithAddress(types.MustGetMarkerAddress(denom)),
-			AccessControl: []types.AccessGrant{
-				{
-					Address: sdk.AccAddress("allAccessAddr_______").String(),
-					Permissions: types.AccessList{
-						types.Access_Mint, types.Access_Burn,
-						types.Access_Deposit, types.Access_Withdraw,
-						types.Access_Delete, types.Access_Admin, types.Access_Transfer,
-					},
-				},
-			},
-			Status:                 status,
-			Denom:                  denom,
-			Supply:                 sdk.NewInt(1000),
-			MarkerType:             types.MarkerType_RestrictedCoin,
-			AllowGovernanceControl: true,
-			AllowForcedTransfer:    allowForcedTransfer,
-		}
-		app.AccountKeeper.NewAccount(ctx, rv.BaseAccount)
-		return rv
-	}
-	newUnMarker := func(denom string) *types.MarkerAccount {
-		rv := newMarker(denom, active, false)
-		rv.AccessControl = nil
-		rv.MarkerType = types.MarkerType_Coin
-		return rv
-	}
-	newNoGovMarker := func(denom string) *types.MarkerAccount {
-		rv := newMarker(denom, active, false)
-		rv.AllowGovernanceControl = false
-		return rv
-	}
-	newMsg := func(denom string, allowForcedTransfer bool) *types.MsgUpdateForcedTransferRequest {
-		return &types.MsgUpdateForcedTransferRequest{
-			Denom:               denom,
-			AllowForcedTransfer: allowForcedTransfer,
-			Authority:           authority,
-		}
-	}
-	markerAddr := func(denom string) string {
-		return types.MustGetMarkerAddress(denom).String()
-	}
-
-	tests := []struct {
-		name       string
-		origMarker types.MarkerAccountI
-		msg        *types.MsgUpdateForcedTransferRequest
-		expErr     string
-	}{
-		{
-			name: "wrong authority",
-			msg: &types.MsgUpdateForcedTransferRequest{
-				Denom:               "somedenom",
-				AllowForcedTransfer: false,
-				Authority:           otherAddr,
-			},
-			expErr: "expected " + authority + " got " + otherAddr + ": expected gov account as only signer for proposal message",
-		},
-		{
-			name:   "marker does not exist",
-			msg:    newMsg("nosuchmarker", false),
-			expErr: "could not get marker for nosuchmarker: marker nosuchmarker not found for address: " + markerAddr("nosuchmarker"),
-		},
-		{
-			name:       "unrestricted coin",
-			origMarker: newUnMarker("unrestrictedcoin"),
-			msg:        newMsg("unrestrictedcoin", true),
-			expErr:     "cannot update forced transfer on unrestricted marker unrestrictedcoin",
-		},
-		{
-			name:       "gov not enabled",
-			origMarker: newNoGovMarker("nogovallowed"),
-			msg:        newMsg("nogovallowed", true),
-			expErr:     "nogovallowed marker does not allow governance control",
-		},
-		{
-			name:       "false not changing",
-			origMarker: newMarker("activefalse", active, false),
-			msg:        newMsg("activefalse", false),
-			expErr:     "marker activefalse already has allow_forced_transfer = false",
-		},
-		{
-			name:       "true not changing",
-			origMarker: newMarker("activetrue", active, true),
-			msg:        newMsg("activetrue", true),
-			expErr:     "marker activetrue already has allow_forced_transfer = true",
-		},
-		{
-			name:       "active true to false",
-			origMarker: newMarker("activetf", active, true),
-			msg:        newMsg("activetf", false),
-			expErr:     "",
-		},
-		{
-			name:       "active false to true",
-			origMarker: newMarker("activeft", active, false),
-			msg:        newMsg("activeft", true),
-			expErr:     "",
-		},
-		{
-			name:       "proposed true to false",
-			origMarker: newMarker("proposedtf", proposed, true),
-			msg:        newMsg("proposedtf", false),
-			expErr:     "",
-		},
-		{
-			name:       "proposed false to true",
-			origMarker: newMarker("proposedft", proposed, false),
-			msg:        newMsg("proposedft", true),
-			expErr:     "",
-		},
-		{
-			name:       "finalized true to false",
-			origMarker: newMarker("finalizedtf", finalized, true),
-			msg:        newMsg("finalizedtf", false),
-			expErr:     "",
-		},
-		{
-			name:       "finalized false to true",
-			origMarker: newMarker("finalizedft", finalized, false),
-			msg:        newMsg("finalizedft", true),
-			expErr:     "",
-		},
-	}
-
-	markerLastSet := make(map[string]string)
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			if tc.origMarker != nil {
-				denom := tc.origMarker.GetDenom()
-				if len(markerLastSet[denom]) > 0 {
-					t.Logf("WARNING: overwriting %q marker previously defined in test %q.", denom, markerLastSet[denom])
-				}
-				markerLastSet[denom] = tc.name
-				app.MarkerKeeper.SetMarker(ctx, tc.origMarker)
-			}
-
-			em := sdk.NewEventManager()
-			goCtx := sdk.WrapSDKContext(ctx.WithEventManager(em))
-			var res *types.MsgUpdateForcedTransferResponse
-			var err error
-			testFunc := func() {
-				res, err = server.UpdateForcedTransfer(goCtx, tc.msg)
-			}
-
-			require.NotPanics(t, testFunc, "UpdateForcedTransfer")
-			if len(tc.expErr) > 0 {
-				assert.EqualError(t, err, tc.expErr, "UpdateForcedTransfer error")
-				assert.Nil(t, res, "UpdateForcedTransfer response")
-
-				events := em.Events()
-				assert.Empty(t, events, "events emitted during failed UpdateForcedTransfer")
-			} else {
-				require.NoError(t, err, "UpdateForcedTransfer error")
-				assert.Equal(t, res, &types.MsgUpdateForcedTransferResponse{}, "UpdateForcedTransfer response")
-
-				markerNow, err := app.MarkerKeeper.GetMarkerByDenom(ctx, tc.msg.Denom)
-				if assert.NoError(t, err, "GetMarkerByDenom(%q)", tc.msg.Denom) {
-					allowsForcedTransfer := markerNow.AllowsForcedTransfer()
-					assert.Equal(t, tc.msg.AllowForcedTransfer, allowsForcedTransfer, "AllowsForcedTransfer after UpdateForcedTransfer")
-				}
-
-				expEvents := sdk.Events{
-					{
-						Type: sdk.EventTypeMessage,
-						Attributes: []abci.EventAttribute{
-							{Key: []byte(sdk.AttributeKeyModule), Value: []byte(types.ModuleName)},
-						},
-					},
-				}
-				events := em.Events()
-				assert.Equal(t, expEvents, events, "events emitted during UpdateForcedTransfer")
-			}
-		})
-	}
-}
-
 func TestGetAuthority(t *testing.T) {
 	app := simapp.Setup(t)
 	require.Equal(t, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", app.MarkerKeeper.GetAuthority())
-}
-
-func TestUpdateSendDenyList(t *testing.T) {
-	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
-
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-
-	authUser := testUserAddress("test")
-	notAuthUser := testUserAddress("test1")
-
-	notRestrictedMarker := types.NewEmptyMarkerAccount(
-		"not-restricted-marker",
-		authUser.String(),
-		[]types.AccessGrant{})
-
-	err := app.MarkerKeeper.AddMarkerAccount(ctx, notRestrictedMarker)
-	require.NoError(t, err)
-
-	rMarkerDenom := "restricted-marker"
-	rMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom), nil, 0, 0)
-	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
-
-	rMarkerGovDenom := "restricted-marker-gov"
-	rMarkerGovAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerGovDenom), nil, 0, 0)
-	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerGovAcct, sdk.NewInt64Coin(rMarkerGovDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{}))
-
-	denyAddrToRemove := testUserAddress("denyAddrToRemove")
-	app.MarkerKeeper.AddSendDeny(ctx, rMarkerAcct.GetAddress(), denyAddrToRemove)
-	require.True(t, app.MarkerKeeper.IsSendDeny(ctx, rMarkerAcct.GetAddress(), denyAddrToRemove), rMarkerDenom+" should have added address to deny list "+denyAddrToRemove.String())
-
-	denyAddrToAdd := testUserAddress("denyAddrToAdd")
-
-	denyAddrToAddGov := testUserAddress("denyAddrToAddGov")
-
-	testCases := []struct {
-		name   string
-		msg    types.MsgUpdateSendDenyListRequest
-		expErr string
-	}{
-		{
-			name:   "should fail, cannot find marker",
-			msg:    types.MsgUpdateSendDenyListRequest{Denom: "blah", Authority: authUser.String(), RemoveDeniedAddresses: []string{}, AddDeniedAddresses: []string{}},
-			expErr: "marker not found for blah: marker blah not found for address: cosmos1psw3a97ywtr595qa4295lw07cz9665hynnfpee",
-		},
-		{
-			name:   "should fail, not a restricted marker",
-			msg:    types.MsgUpdateSendDenyListRequest{Denom: notRestrictedMarker.Denom, Authority: authUser.String(), RemoveDeniedAddresses: []string{}, AddDeniedAddresses: []string{}},
-			expErr: "marker not-restricted-marker is not a restricted marker",
-		},
-		{
-			name:   "should fail, signer does not have admin access",
-			msg:    types.MsgUpdateSendDenyListRequest{Denom: rMarkerDenom, Authority: notAuthUser.String(), RemoveDeniedAddresses: []string{}, AddDeniedAddresses: []string{}},
-			expErr: "cosmos1ku2jzvpkt4ffxxaajyk2r88axk9cr5jqlthcm4 does not have transfer authority for restricted-marker marker",
-		},
-		{
-			name:   "should fail, gov not enabled for restricted marker",
-			msg:    types.MsgUpdateSendDenyListRequest{Denom: rMarkerDenom, Authority: authority.String(), RemoveDeniedAddresses: []string{}, AddDeniedAddresses: []string{}},
-			expErr: "restricted-marker marker does not allow governance control",
-		},
-		{
-			name:   "should fail, address is already on deny list",
-			msg:    types.MsgUpdateSendDenyListRequest{Denom: rMarkerDenom, Authority: authUser.String(), RemoveDeniedAddresses: []string{}, AddDeniedAddresses: []string{denyAddrToRemove.String()}},
-			expErr: denyAddrToRemove.String() + " is already on deny list cannot add address",
-		},
-		{
-			name:   "should fail, address can not be removed not in deny list",
-			msg:    types.MsgUpdateSendDenyListRequest{Denom: rMarkerDenom, Authority: authUser.String(), RemoveDeniedAddresses: []string{denyAddrToAdd.String()}, AddDeniedAddresses: []string{}},
-			expErr: denyAddrToAdd.String() + " is not on deny list cannot remove address",
-		},
-		{
-			name:   "should fail, invalid address on add list",
-			msg:    types.MsgUpdateSendDenyListRequest{Denom: rMarkerDenom, Authority: authUser.String(), RemoveDeniedAddresses: []string{}, AddDeniedAddresses: []string{"invalid-add-address"}},
-			expErr: "decoding bech32 failed: invalid separator index -1",
-		},
-		{
-			name:   "should fail, invalid address on remove list",
-			msg:    types.MsgUpdateSendDenyListRequest{Denom: rMarkerDenom, Authority: authUser.String(), RemoveDeniedAddresses: []string{"invalid-remove-address"}, AddDeniedAddresses: []string{}},
-			expErr: "decoding bech32 failed: invalid separator index -1",
-		},
-		{
-			name: "should succeed to add to deny list",
-			msg:  types.MsgUpdateSendDenyListRequest{Denom: rMarkerDenom, Authority: authUser.String(), RemoveDeniedAddresses: []string{}, AddDeniedAddresses: []string{denyAddrToAdd.String()}},
-		},
-		{
-			name: "should succeed to remove from deny list",
-			msg:  types.MsgUpdateSendDenyListRequest{Denom: rMarkerDenom, Authority: authUser.String(), RemoveDeniedAddresses: []string{denyAddrToRemove.String()}, AddDeniedAddresses: []string{}},
-		},
-		{
-			name: "should succeed gov allowed for marker",
-			msg:  types.MsgUpdateSendDenyListRequest{Denom: rMarkerGovDenom, Authority: authority.String(), RemoveDeniedAddresses: []string{}, AddDeniedAddresses: []string{denyAddrToAddGov.String()}},
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			res, err := server.UpdateSendDenyList(sdk.WrapSDKContext(ctx),
-				&tc.msg)
-
-			if len(tc.expErr) > 0 {
-				assert.Nil(t, res)
-				assert.EqualError(t, err, tc.expErr)
-
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, res, &types.MsgUpdateSendDenyListResponse{})
-			}
-		})
-	}
 }
 
 func TestReqAttrBypassAddrs(t *testing.T) {

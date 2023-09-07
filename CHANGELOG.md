@@ -40,9 +40,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Allow marker's transfer authority to prevent transfer of restricted coin with deny list on send [#1518](https://github.com/provenance-io/provenance/issues/1518).
+* Add net asset value to markers [#1328](https://github.com/provenance-io/provenance/issues/1328).
+* Add ICQHost and Oracle module to allow cross chain oracle queries [#1497](https://github.com/provenance-io/provenance/issues/1497).
 * New `GetByAddr` metadata query [#1443](https://github.com/provenance-io/provenance/issues/1443).
 * Add Trigger module queries to stargate whitelist for smart contracts [#1636](https://github.com/provenance-io/provenance/issues/1636)
 * Added the saffron upgrade handlers [PR 1648](https://github.com/provenance-io/provenance/pull/1648).
+* Create the `x/hold` module which facilitates locking funds in an owners account [#1607](https://github.com/provenance-io/provenance/issues/1607).
+  Funds with a hold on them cannot be transferred until the hold is removed.
+  Management of holds is internal, but there are queries for looking up holds on accounts.
+  Holds are also reflected in the `x/bank` module's `SpendableBalances` query.
 
 ### Improvements
 
@@ -55,6 +61,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   The id info is still included by default, but will be excluded if `exclude_id_info` is `true`.
 * Removed the quicksilver upgrade handlers [PR 1648](https://github.com/provenance-io/provenance/pull/1648).
 * Bump cometbft to v0.34.29 (from v0.34.28) [PR 1649](https://github.com/provenance-io/provenance/pull/1649).
+* Add genesis/init for Marker module send deny list addresses. [#1660](https://github.com/provenance-io/provenance/issues/1660)
 
 ### Bug Fixes
 

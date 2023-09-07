@@ -180,3 +180,27 @@ func (k Keeper) AccountData(c context.Context, req *types.QueryAccountDataReques
 
 	return &types.QueryAccountDataResponse{Value: value}, nil
 }
+
+// NetAssetValues query for returning net asset values for a marker
+func (k Keeper) NetAssetValues(c context.Context, req *types.QueryNetAssetValuesRequest) (*types.QueryNetAssetValuesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	marker, err := accountForDenomOrAddress(ctx, k, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	var navs []types.NetAssetValue
+	err = k.IterateNetAssetValues(ctx, marker.GetAddress(), func(nav types.NetAssetValue) (stop bool) {
+		navs = append(navs, nav)
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryNetAssetValuesResponse{NetAssetValues: navs}, nil
+}

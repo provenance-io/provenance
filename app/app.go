@@ -17,6 +17,9 @@ import (
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
+	icq "github.com/strangelove-ventures/async-icq/v6"
+	icqkeeper "github.com/strangelove-ventures/async-icq/v6/keeper"
+	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -129,6 +132,9 @@ import (
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	attributewasm "github.com/provenance-io/provenance/x/attribute/wasm"
+	"github.com/provenance-io/provenance/x/hold"
+	holdkeeper "github.com/provenance-io/provenance/x/hold/keeper"
+	holdmodule "github.com/provenance-io/provenance/x/hold/module"
 	ibchooks "github.com/provenance-io/provenance/x/ibchooks"
 	ibchookskeeper "github.com/provenance-io/provenance/x/ibchooks/keeper"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
@@ -150,6 +156,9 @@ import (
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	namewasm "github.com/provenance-io/provenance/x/name/wasm"
+	oraclekeeper "github.com/provenance-io/provenance/x/oracle/keeper"
+	oraclemodule "github.com/provenance-io/provenance/x/oracle/module"
+	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	rewardkeeper "github.com/provenance-io/provenance/x/reward/keeper"
 	rewardmodule "github.com/provenance-io/provenance/x/reward/module"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
@@ -204,6 +213,7 @@ var (
 		ibc.AppModuleBasic{},
 		ibctransfer.AppModuleBasic{},
 		ica.AppModuleBasic{},
+		icq.AppModuleBasic{},
 		ibchooks.AppModuleBasic{},
 
 		marker.AppModuleBasic{},
@@ -214,6 +224,8 @@ var (
 		msgfeesmodule.AppModuleBasic{},
 		rewardmodule.AppModuleBasic{},
 		triggermodule.AppModuleBasic{},
+		oraclemodule.AppModuleBasic{},
+		holdmodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -234,6 +246,7 @@ var (
 		wasm.ModuleName:           {authtypes.Burner},
 		rewardtypes.ModuleName:    nil,
 		triggertypes.ModuleName:   nil,
+		oracletypes.ModuleName:    nil,
 	}
 )
 
@@ -291,16 +304,19 @@ type App struct {
 	QuarantineKeeper quarantinekeeper.Keeper
 	SanctionKeeper   sanctionkeeper.Keeper
 	TriggerKeeper    triggerkeeper.Keeper
+	OracleKeeper     oraclekeeper.Keeper
 
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	IBCHooksKeeper *ibchookskeeper.Keeper
 	ICAHostKeeper  *icahostkeeper.Keeper
 	TransferKeeper *ibctransferkeeper.Keeper
+	ICQKeeper      icqkeeper.Keeper
 
 	MarkerKeeper    markerkeeper.Keeper
 	MetadataKeeper  metadatakeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
 	NameKeeper      namekeeper.Keeper
+	HoldKeeper      holdkeeper.Keeper
 	WasmKeeper      *wasm.Keeper
 	ContractKeeper  *wasmkeeper.PermissionedKeeper
 
@@ -308,6 +324,8 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
+	ScopedICQKeeper      capabilitykeeper.ScopedKeeper
+	ScopedOracleKeeper   capabilitykeeper.ScopedKeeper
 
 	TransferStack    *ibchooks.IBCMiddleware
 	Ics20WasmHooks   *ibchooks.WasmHooks
@@ -365,6 +383,7 @@ func New(
 		ibchost.StoreKey,
 		ibctransfertypes.StoreKey,
 		icahosttypes.StoreKey,
+		icqtypes.StoreKey,
 		ibchookstypes.StoreKey,
 
 		metadatatypes.StoreKey,
@@ -377,6 +396,8 @@ func New(
 		quarantine.StoreKey,
 		sanction.StoreKey,
 		triggertypes.StoreKey,
+		oracletypes.StoreKey,
+		hold.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -411,6 +432,8 @@ func New(
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
+	scopedICQKeeper := app.CapabilityKeeper.ScopeToModule(icqtypes.ModuleName)
+	scopedOracleKeeper := app.CapabilityKeeper.ScopeToModule(oracletypes.ModuleName)
 
 	// capability keeper must be sealed after scope to module registrations are completed.
 	app.CapabilityKeeper.Seal()
@@ -535,6 +558,10 @@ func New(
 		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper, markerReqAttrBypassAddrs,
 	)
 
+	app.HoldKeeper = holdkeeper.NewKeeper(
+		appCodec, keys[hold.StoreKey], app.BankKeeper,
+	)
+
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
 		return pioMsgFeesRouter.Handler(msg)
 	})
@@ -547,6 +574,14 @@ func New(
 	app.ICAHostKeeper = &icaHostKeeper
 	icaModule := ica.NewAppModule(nil, app.ICAHostKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(*app.ICAHostKeeper)
+
+	app.ICQKeeper = icqkeeper.NewKeeper(
+		appCodec, keys[icqtypes.StoreKey], app.GetSubspace(icqtypes.ModuleName),
+		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
+		scopedICQKeeper, app.BaseApp,
+	)
+	icqModule := icq.NewAppModule(app.ICQKeeper)
+	icqIBCModule := icq.NewIBCModule(app.ICQKeeper)
 
 	// Init CosmWasm module
 	wasmDir := filepath.Join(homePath, "data", "wasm")
@@ -607,6 +642,19 @@ func New(
 	app.Ics20WasmHooks.ContractKeeper = app.WasmKeeper // app.ContractKeeper -- this changes in the next version of wasm to a permissioned keeper
 	app.IBCHooksKeeper.ContractKeeper = app.ContractKeeper
 
+	app.ScopedOracleKeeper = scopedOracleKeeper
+	app.OracleKeeper = *oraclekeeper.NewKeeper(
+		appCodec,
+		keys[oracletypes.StoreKey],
+		keys[oracletypes.MemStoreKey],
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		scopedOracleKeeper,
+		wasmkeeper.Querier(app.WasmKeeper),
+	)
+	oracleModule := oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper, app.IBCKeeper.ChannelKeeper)
+
 	unsanctionableAddrs := make([]sdk.AccAddress, 0, len(maccPerms)+1)
 	for mName := range maccPerms {
 		unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(mName))
@@ -638,7 +686,9 @@ func New(
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, app.TransferStack).
 		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper)).
-		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
+		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
+		AddRoute(icqtypes.ModuleName, icqIBCModule).
+		AddRoute(oracletypes.ModuleName, oracleModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	// Create evidence Keeper for to register the IBC light client misbehavior evidence route
@@ -689,11 +739,14 @@ func New(
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
+		oracleModule,
+		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
+		icqModule,
 		icaModule,
 	)
 
@@ -728,13 +781,16 @@ func New(
 		paramstypes.ModuleName,
 		msgfeestypes.ModuleName,
 		metadatatypes.ModuleName,
+		oracletypes.ModuleName,
 		wasm.ModuleName,
 		ibchookstypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		icqtypes.ModuleName,
 		nametypes.ModuleName,
 		vestingtypes.ModuleName,
 		quarantine.ModuleName,
 		sanction.ModuleName,
+		hold.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -752,11 +808,13 @@ func New(
 		distrtypes.ModuleName,
 		authz.ModuleName,
 		metadatatypes.ModuleName,
+		oracletypes.ModuleName,
 		nametypes.ModuleName,
 		genutiltypes.ModuleName,
 		ibchost.ModuleName,
 		ibchookstypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		icqtypes.ModuleName,
 		msgfeestypes.ModuleName,
 		wasm.ModuleName,
 		slashingtypes.ModuleName,
@@ -771,6 +829,7 @@ func New(
 		paramstypes.ModuleName,
 		quarantine.ModuleName,
 		sanction.ModuleName,
+		hold.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -801,15 +860,18 @@ func New(
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
 		msgfeestypes.ModuleName,
+		hold.ModuleName,
 
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
+		icqtypes.ModuleName,
 		icatypes.ModuleName,
 		ibchookstypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
 		rewardtypes.ModuleName,
 		triggertypes.ModuleName,
+		oracletypes.ModuleName,
 
 		// no-ops
 		paramstypes.ModuleName,
@@ -838,9 +900,11 @@ func New(
 		vestingtypes.ModuleName,
 		quarantine.ModuleName,
 		sanction.ModuleName,
+		hold.ModuleName,
 
 		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
+		icqtypes.ModuleName,
 		wasm.ModuleName,
 
 		attributetypes.ModuleName,
@@ -850,6 +914,7 @@ func New(
 		nametypes.ModuleName,
 		rewardtypes.ModuleName,
 		triggertypes.ModuleName,
+		oracletypes.ModuleName,
 
 		// Last due to v0.44 issue: https://github.com/cosmos/cosmos-sdk/issues/10591
 		authtypes.ModuleName,
@@ -884,6 +949,8 @@ func New(
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
+		oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper, app.IBCKeeper.ChannelKeeper),
+		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
 		provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 
 		// IBC
@@ -975,6 +1042,7 @@ func New(
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
+	app.ScopedICQKeeper = scopedICQKeeper
 	app.ScopedICAHostKeeper = scopedICAHostKeeper
 
 	return app
@@ -1203,6 +1271,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
+	paramsKeeper.Subspace(icqtypes.ModuleName)
 	paramsKeeper.Subspace(ibchookstypes.ModuleName)
 
 	return paramsKeeper

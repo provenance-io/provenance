@@ -24,7 +24,7 @@ jobs:
     name: Protobuf Checks
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Setup go
@@ -48,7 +48,7 @@ jobs:
       - name: provenance breaking
         id: breaking-prov
         if: always()
-        uses: bufbuild/buf-breaking-action@v1.1.2
+        uses: bufbuild/buf-breaking-action@v1.1.3
         with:
           input: 'proto'
           against: 'https://github.com/provenance-io/provenance.git#branch=${{ steps.setup.outputs.base-branch }},subdir=proto'
@@ -60,7 +60,7 @@ jobs:
       - name: third-party breaking
         id: breaking-third
         if: always()
-        uses: bufbuild/buf-breaking-action@v1.1.2
+        uses: bufbuild/buf-breaking-action@v1.1.3
         with:
           input: 'third_party/proto'
           against: 'https://github.com/provenance-io/provenance.git#branch=${{ steps.setup.outputs.base-branch }},subdir=third_party/proto'

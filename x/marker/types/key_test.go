@@ -34,3 +34,23 @@ func TestDenySendKey(t *testing.T) {
 	assert.Equal(t, denyAddr.Bytes(), denyKey[denomArrLen+3:denomArrLen+3+denyAddrLen], "should match deny key")
 	assert.Len(t, denyKey, int(3+denomArrLen+denyAddrLen), "should have key of length of sum 1 for prefix 2 length bytes and length of denom and deny address")
 }
+
+func TestGetDenySendAddresses(t *testing.T) {
+	addr, err := MarkerAddress("nhash")
+	require.NoError(t, err, "MarkerAddress(nhash)")
+	denyAddr := sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h")
+	denyKey := DenySendKey(addr, denyAddr)
+	mAddr, dAddr := GetDenySendAddresses(denyKey)
+	assert.Equal(t, addr, mAddr, "module address")
+	assert.Equal(t, denyAddr, dAddr, "deny address")
+}
+
+func TestNetAssetValueKey(t *testing.T) {
+	addr, err := MarkerAddress("nhash")
+	require.NoError(t, err)
+	navKey := NetAssetValueKey(addr, "nhash")
+	assert.Equal(t, uint8(4), navKey[0], "should have correct prefix for nav key")
+	denomArrLen := int32(navKey[1])
+	assert.Equal(t, addr.Bytes(), navKey[2:denomArrLen+2], "should match denom key")
+	assert.Equal(t, "nhash", string(navKey[denomArrLen+2:]))
+}

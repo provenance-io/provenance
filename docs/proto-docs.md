@@ -52,6 +52,24 @@
   
     - [Msg](#provenance.attribute.v1.Msg)
   
+- [provenance/hold/v1/events.proto](#provenance/hold/v1/events.proto)
+    - [EventHoldAdded](#provenance.hold.v1.EventHoldAdded)
+    - [EventHoldReleased](#provenance.hold.v1.EventHoldReleased)
+  
+- [provenance/hold/v1/hold.proto](#provenance/hold/v1/hold.proto)
+    - [AccountHold](#provenance.hold.v1.AccountHold)
+  
+- [provenance/hold/v1/genesis.proto](#provenance/hold/v1/genesis.proto)
+    - [GenesisState](#provenance.hold.v1.GenesisState)
+  
+- [provenance/hold/v1/query.proto](#provenance/hold/v1/query.proto)
+    - [GetAllHoldsRequest](#provenance.hold.v1.GetAllHoldsRequest)
+    - [GetAllHoldsResponse](#provenance.hold.v1.GetAllHoldsResponse)
+    - [GetHoldsRequest](#provenance.hold.v1.GetHoldsRequest)
+    - [GetHoldsResponse](#provenance.hold.v1.GetHoldsResponse)
+  
+    - [Query](#provenance.hold.v1.Query)
+  
 - [provenance/ibchooks/v1/params.proto](#provenance/ibchooks/v1/params.proto)
     - [Params](#provenance.ibchooks.v1.Params)
   
@@ -87,14 +105,18 @@
     - [EventMarkerSetDenomMetadata](#provenance.marker.v1.EventMarkerSetDenomMetadata)
     - [EventMarkerTransfer](#provenance.marker.v1.EventMarkerTransfer)
     - [EventMarkerWithdraw](#provenance.marker.v1.EventMarkerWithdraw)
+    - [EventSetNetAssetValue](#provenance.marker.v1.EventSetNetAssetValue)
     - [MarkerAccount](#provenance.marker.v1.MarkerAccount)
+    - [NetAssetValue](#provenance.marker.v1.NetAssetValue)
     - [Params](#provenance.marker.v1.Params)
   
     - [MarkerStatus](#provenance.marker.v1.MarkerStatus)
     - [MarkerType](#provenance.marker.v1.MarkerType)
   
 - [provenance/marker/v1/genesis.proto](#provenance/marker/v1/genesis.proto)
+    - [DenySendAddress](#provenance.marker.v1.DenySendAddress)
     - [GenesisState](#provenance.marker.v1.GenesisState)
+    - [MarkerNetAssetValues](#provenance.marker.v1.MarkerNetAssetValues)
   
 - [provenance/marker/v1/proposals.proto](#provenance/marker/v1/proposals.proto)
     - [AddMarkerProposal](#provenance.marker.v1.AddMarkerProposal)
@@ -122,6 +144,8 @@
     - [QueryHoldingResponse](#provenance.marker.v1.QueryHoldingResponse)
     - [QueryMarkerRequest](#provenance.marker.v1.QueryMarkerRequest)
     - [QueryMarkerResponse](#provenance.marker.v1.QueryMarkerResponse)
+    - [QueryNetAssetValuesRequest](#provenance.marker.v1.QueryNetAssetValuesRequest)
+    - [QueryNetAssetValuesResponse](#provenance.marker.v1.QueryNetAssetValuesResponse)
     - [QueryParamsRequest](#provenance.marker.v1.QueryParamsRequest)
     - [QueryParamsResponse](#provenance.marker.v1.QueryParamsResponse)
     - [QuerySupplyRequest](#provenance.marker.v1.QuerySupplyRequest)
@@ -141,6 +165,8 @@
     - [MsgAddFinalizeActivateMarkerResponse](#provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse)
     - [MsgAddMarkerRequest](#provenance.marker.v1.MsgAddMarkerRequest)
     - [MsgAddMarkerResponse](#provenance.marker.v1.MsgAddMarkerResponse)
+    - [MsgAddNetAssetValuesRequest](#provenance.marker.v1.MsgAddNetAssetValuesRequest)
+    - [MsgAddNetAssetValuesResponse](#provenance.marker.v1.MsgAddNetAssetValuesResponse)
     - [MsgBurnRequest](#provenance.marker.v1.MsgBurnRequest)
     - [MsgBurnResponse](#provenance.marker.v1.MsgBurnResponse)
     - [MsgCancelRequest](#provenance.marker.v1.MsgCancelRequest)
@@ -453,6 +479,30 @@
     - [MsgModifyNameResponse](#provenance.name.v1.MsgModifyNameResponse)
   
     - [Msg](#provenance.name.v1.Msg)
+  
+- [provenance/oracle/v1/event.proto](#provenance/oracle/v1/event.proto)
+    - [EventOracleQueryError](#provenance.oracle.v1.EventOracleQueryError)
+    - [EventOracleQuerySuccess](#provenance.oracle.v1.EventOracleQuerySuccess)
+    - [EventOracleQueryTimeout](#provenance.oracle.v1.EventOracleQueryTimeout)
+  
+- [provenance/oracle/v1/genesis.proto](#provenance/oracle/v1/genesis.proto)
+    - [GenesisState](#provenance.oracle.v1.GenesisState)
+  
+- [provenance/oracle/v1/query.proto](#provenance/oracle/v1/query.proto)
+    - [QueryOracleAddressRequest](#provenance.oracle.v1.QueryOracleAddressRequest)
+    - [QueryOracleAddressResponse](#provenance.oracle.v1.QueryOracleAddressResponse)
+    - [QueryOracleRequest](#provenance.oracle.v1.QueryOracleRequest)
+    - [QueryOracleResponse](#provenance.oracle.v1.QueryOracleResponse)
+  
+    - [Query](#provenance.oracle.v1.Query)
+  
+- [provenance/oracle/v1/tx.proto](#provenance/oracle/v1/tx.proto)
+    - [MsgSendQueryOracleRequest](#provenance.oracle.v1.MsgSendQueryOracleRequest)
+    - [MsgSendQueryOracleResponse](#provenance.oracle.v1.MsgSendQueryOracleResponse)
+    - [MsgUpdateOracleRequest](#provenance.oracle.v1.MsgUpdateOracleRequest)
+    - [MsgUpdateOracleResponse](#provenance.oracle.v1.MsgUpdateOracleResponse)
+  
+    - [Msg](#provenance.oracle.v1.Msg)
   
 - [provenance/reward/v1/reward.proto](#provenance/reward/v1/reward.proto)
     - [ActionCounter](#provenance.reward.v1.ActionCounter)
@@ -1196,6 +1246,206 @@ Msg defines the attribute module Msg service.
 
 
 
+<a name="provenance/hold/v1/events.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/hold/v1/events.proto
+
+
+
+<a name="provenance.hold.v1.EventHoldAdded"></a>
+
+### EventHoldAdded
+EventHoldAdded is an event indicating that some funds were placed on hold in an account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the bech32 address string of the account with the funds. |
+| `amount` | [string](#string) |  | amount is a Coins string of the funds placed on hold. |
+| `reason` | [string](#string) |  | reason is a human-readable indicator of why this hold was added. |
+
+
+
+
+
+
+<a name="provenance.hold.v1.EventHoldReleased"></a>
+
+### EventHoldReleased
+EventHoldReleased is an event indicating that some funds were released from hold for an account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the bech32 address string of the account with the funds. |
+| `amount` | [string](#string) |  | amount is a Coins string of the funds released from hold. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/hold/v1/hold.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/hold/v1/hold.proto
+
+
+
+<a name="provenance.hold.v1.AccountHold"></a>
+
+### AccountHold
+AccountHold associates an address with an amount on hold for that address.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the account address that holds the funds on hold. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the balances that are on hold for the address. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/hold/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/hold/v1/genesis.proto
+
+
+
+<a name="provenance.hold.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the attribute module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `holds` | [AccountHold](#provenance.hold.v1.AccountHold) | repeated | holds defines the funds on hold at genesis. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/hold/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/hold/v1/query.proto
+
+
+
+<a name="provenance.hold.v1.GetAllHoldsRequest"></a>
+
+### GetAllHoldsRequest
+GetAllHoldsRequest is the request type for the Query/GetAllHolds query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.hold.v1.GetAllHoldsResponse"></a>
+
+### GetAllHoldsResponse
+GetAllHoldsResponse is the response type for the Query/GetAllHolds query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `holds` | [AccountHold](#provenance.hold.v1.AccountHold) | repeated | holds is a list of addresses with funds on hold and the amounts being held. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.hold.v1.GetHoldsRequest"></a>
+
+### GetHoldsRequest
+GetHoldsRequest is the request type for the Query/GetHolds query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the account address to get on-hold balances for. |
+
+
+
+
+
+
+<a name="provenance.hold.v1.GetHoldsResponse"></a>
+
+### GetHoldsResponse
+GetHoldsResponse is the response type for the Query/GetHolds query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the total on hold for the requested address. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.hold.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service for attribute module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `GetHolds` | [GetHoldsRequest](#provenance.hold.v1.GetHoldsRequest) | [GetHoldsResponse](#provenance.hold.v1.GetHoldsResponse) | GetHolds looks up the funds that are on hold for an address. | GET|/provenance/hold/v1/funds/{address}|
+| `GetAllHolds` | [GetAllHoldsRequest](#provenance.hold.v1.GetAllHoldsRequest) | [GetAllHoldsResponse](#provenance.hold.v1.GetAllHoldsResponse) | GetAllHolds returns all addresses with funds on hold, and the amount held. | GET|/provenance/hold/v1/funds|
+
+ <!-- end services -->
+
+
+
 <a name="provenance/ibchooks/v1/params.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -1650,6 +1900,24 @@ EventMarkerWithdraw event emitted when coins are withdrew from marker
 
 
 
+<a name="provenance.marker.v1.EventSetNetAssetValue"></a>
+
+### EventSetNetAssetValue
+EventSetNetAssetValue event emitted when Net Asset Value for marker is update or added
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `price` | [string](#string) |  |  |
+| `volume` | [string](#string) |  |  |
+| `source` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="provenance.marker.v1.MarkerAccount"></a>
 
 ### MarkerAccount
@@ -1669,6 +1937,23 @@ MarkerAccount holds the marker configuration information in addition to a base a
 | `allow_governance_control` | [bool](#bool) |  | indicates that governance based control is allowed for this marker |
 | `allow_forced_transfer` | [bool](#bool) |  | Whether an admin can transfer restricted coins from a 3rd-party account without their signature. |
 | `required_attributes` | [string](#string) | repeated | list of required attributes on restricted marker in order to send and receive transfers if sender does not have transfer authority |
+
+
+
+
+
+
+<a name="provenance.marker.v1.NetAssetValue"></a>
+
+### NetAssetValue
+NetAssetValue defines a marker's net asset value
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the complete value of the asset's volume |
+| `volume` | [uint64](#uint64) |  | volume is the number of tokens of the marker that were purchased for the price |
+| `updated_block_height` | [uint64](#uint64) |  | updated_block_height is the block height of last update |
 
 
 
@@ -1737,6 +2022,22 @@ MarkerType defines the types of marker
 
 
 
+<a name="provenance.marker.v1.DenySendAddress"></a>
+
+### DenySendAddress
+DenySendAddress defines addresses that are denied sends for marker denom
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `marker_address` | [string](#string) |  | marker_address is the marker's address for denied address |
+| `deny_address` | [string](#string) |  | deny_address defines all wallet addresses that are denied sends for the marker |
+
+
+
+
+
+
 <a name="provenance.marker.v1.GenesisState"></a>
 
 ### GenesisState
@@ -1747,6 +2048,24 @@ GenesisState defines the account module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#provenance.marker.v1.Params) |  | params defines all the parameters of the module. |
 | `markers` | [MarkerAccount](#provenance.marker.v1.MarkerAccount) | repeated | A collection of marker accounts to create on start |
+| `net_asset_values` | [MarkerNetAssetValues](#provenance.marker.v1.MarkerNetAssetValues) | repeated | list of marker net asset values |
+| `deny_send_addresses` | [DenySendAddress](#provenance.marker.v1.DenySendAddress) | repeated | list of denom based denied send addresses |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MarkerNetAssetValues"></a>
+
+### MarkerNetAssetValues
+MarkerNetAssetValues defines the net asset values for a marker
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address defines the marker address |
+| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated | net_asset_values that are assigned to marker |
 
 
 
@@ -2170,6 +2489,36 @@ QueryMarkerResponse is the response type for the Query/Marker method.
 
 
 
+<a name="provenance.marker.v1.QueryNetAssetValuesRequest"></a>
+
+### QueryNetAssetValuesRequest
+QueryNetAssetValuesRequest is the request type for the Query/NetAssetValues method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | address or denom for the marker |
+
+
+
+
+
+
+<a name="provenance.marker.v1.QueryNetAssetValuesResponse"></a>
+
+### QueryNetAssetValuesResponse
+QueryNetAssetValuesRequest is the response type for the Query/NetAssetValues method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated | net asset values for marker denom |
+
+
+
+
+
+
 <a name="provenance.marker.v1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
@@ -2247,6 +2596,7 @@ Query defines the gRPC querier service for marker module.
 | `Access` | [QueryAccessRequest](#provenance.marker.v1.QueryAccessRequest) | [QueryAccessResponse](#provenance.marker.v1.QueryAccessResponse) | query for access records on an account | GET|/provenance/marker/v1/accesscontrol/{id}|
 | `DenomMetadata` | [QueryDenomMetadataRequest](#provenance.marker.v1.QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#provenance.marker.v1.QueryDenomMetadataResponse) | query for access records on an account | GET|/provenance/marker/v1/getdenommetadata/{denom}|
 | `AccountData` | [QueryAccountDataRequest](#provenance.marker.v1.QueryAccountDataRequest) | [QueryAccountDataResponse](#provenance.marker.v1.QueryAccountDataResponse) | query for account data associated with a denom | GET|/provenance/marker/v1/accountdata/{denom}|
+| `NetAssetValues` | [QueryNetAssetValuesRequest](#provenance.marker.v1.QueryNetAssetValuesRequest) | [QueryNetAssetValuesResponse](#provenance.marker.v1.QueryNetAssetValuesResponse) | NetAssetValues returns net asset values for marker | GET|/provenance/marker/v1/netassetvalues/{id}|
 
  <!-- end services -->
 
@@ -2376,6 +2726,8 @@ MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker re
 | `allow_governance_control` | [bool](#bool) |  |  |
 | `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
+| `usd_cents` | [uint64](#uint64) |  |  |
+| `volume` | [uint64](#uint64) |  |  |
 
 
 
@@ -2411,6 +2763,8 @@ If being provided as a governance proposal, set the from_address to the gov modu
 | `allow_governance_control` | [bool](#bool) |  |  |
 | `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
+| `usd_cents` | [uint64](#uint64) |  |  |
+| `volume` | [uint64](#uint64) |  |  |
 
 
 
@@ -2421,6 +2775,33 @@ If being provided as a governance proposal, set the from_address to the gov modu
 
 ### MsgAddMarkerResponse
 MsgAddMarkerResponse defines the Msg/AddMarker response type
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgAddNetAssetValuesRequest"></a>
+
+### MsgAddNetAssetValuesRequest
+MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `administrator` | [string](#string) |  |  |
+| `net_asset_values` | [NetAssetValue](#provenance.marker.v1.NetAssetValue) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.marker.v1.MsgAddNetAssetValuesResponse"></a>
+
+### MsgAddNetAssetValuesResponse
+MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
 
 
 
@@ -2897,6 +3278,7 @@ Msg defines the Marker Msg service.
 | `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance.marker.v1.MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance.marker.v1.MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. | |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance.marker.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.marker.v1.MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. | |
 | `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance.marker.v1.MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance.marker.v1.MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has admin authority | |
+| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance.marker.v1.MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance.marker.v1.MsgAddNetAssetValuesResponse) | AddNetAssetValues set the net asset value for a marker | |
 
  <!-- end services -->
 
@@ -7004,6 +7386,271 @@ Msg defines the bank Msg service.
 | `DeleteName` | [MsgDeleteNameRequest](#provenance.name.v1.MsgDeleteNameRequest) | [MsgDeleteNameResponse](#provenance.name.v1.MsgDeleteNameResponse) | DeleteName defines a method to verify a particular invariance. | |
 | `ModifyName` | [MsgModifyNameRequest](#provenance.name.v1.MsgModifyNameRequest) | [MsgModifyNameResponse](#provenance.name.v1.MsgModifyNameResponse) | ModifyName defines a method to modify the attributes of an existing name. | |
 | `CreateRootName` | [MsgCreateRootNameRequest](#provenance.name.v1.MsgCreateRootNameRequest) | [MsgCreateRootNameResponse](#provenance.name.v1.MsgCreateRootNameResponse) | CreateRootName defines a governance method for creating a root name. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/oracle/v1/event.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/oracle/v1/event.proto
+
+
+
+<a name="provenance.oracle.v1.EventOracleQueryError"></a>
+
+### EventOracleQueryError
+EventOracleQueryError is an event for when the chain receives an error response from an oracle query
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `channel` | [string](#string) |  | channel is the local channel that the oracle query response was received from |
+| `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
+| `error` | [string](#string) |  | error is the error message received from the query |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.EventOracleQuerySuccess"></a>
+
+### EventOracleQuerySuccess
+EventOracleQuerySuccess is an event for when the chain receives a successful response from an oracle query
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `channel` | [string](#string) |  | channel is the local channel that the oracle query response was received from |
+| `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
+| `result` | [string](#string) |  | result is the data received from the query |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.EventOracleQueryTimeout"></a>
+
+### EventOracleQueryTimeout
+EventOracleQueryTimeout is an event for when the chain receives a timeout from an oracle query
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `channel` | [string](#string) |  | channel is the local channel that the oracle timeout was received from |
+| `sequence_id` | [string](#string) |  | sequence_id is a unique identifier of the query |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/oracle/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/oracle/v1/genesis.proto
+
+
+
+<a name="provenance.oracle.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the oracle module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `port_id` | [string](#string) |  | The port to assign to the module |
+| `oracle` | [string](#string) |  | The address of the oracle |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/oracle/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/oracle/v1/query.proto
+
+
+
+<a name="provenance.oracle.v1.QueryOracleAddressRequest"></a>
+
+### QueryOracleAddressRequest
+QueryOracleAddressRequest queries for the address of the oracle.
+
+
+
+
+
+
+<a name="provenance.oracle.v1.QueryOracleAddressResponse"></a>
+
+### QueryOracleAddressResponse
+QueryOracleAddressResponse contains the address of the oracle.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | The address of the oracle |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.QueryOracleRequest"></a>
+
+### QueryOracleRequest
+QueryOracleRequest queries the module's oracle.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `query` | [bytes](#bytes) |  | Query contains the query data passed to the oracle. |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.QueryOracleResponse"></a>
+
+### QueryOracleResponse
+QueryOracleResponse contains the result of the query sent to the oracle.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `data` | [bytes](#bytes) |  | Data contains the json data returned from the oracle. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.oracle.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service for oracle module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `OracleAddress` | [QueryOracleAddressRequest](#provenance.oracle.v1.QueryOracleAddressRequest) | [QueryOracleAddressResponse](#provenance.oracle.v1.QueryOracleAddressResponse) | OracleAddress returns the address of the oracle | GET|/provenance/oracle/v1/oracle_address|
+| `Oracle` | [QueryOracleRequest](#provenance.oracle.v1.QueryOracleRequest) | [QueryOracleResponse](#provenance.oracle.v1.QueryOracleResponse) | Oracle forwards a query to the module's oracle | GET|/provenance/oracle/v1/oracle|
+
+ <!-- end services -->
+
+
+
+<a name="provenance/oracle/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/oracle/v1/tx.proto
+
+
+
+<a name="provenance.oracle.v1.MsgSendQueryOracleRequest"></a>
+
+### MsgSendQueryOracleRequest
+MsgSendQueryOracleRequest queries an oracle on another chain
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `query` | [bytes](#bytes) |  | Query contains the query data passed to the oracle. |
+| `channel` | [string](#string) |  | Channel is the channel to the oracle. |
+| `authority` | [string](#string) |  | The signing authority for the request |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.MsgSendQueryOracleResponse"></a>
+
+### MsgSendQueryOracleResponse
+MsgSendQueryOracleResponse contains the id of the oracle query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sequence` | [uint64](#uint64) |  | The sequence number that uniquely identifies the query. |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.MsgUpdateOracleRequest"></a>
+
+### MsgUpdateOracleRequest
+MsgUpdateOracleRequest is the request type for updating an oracle's contract address
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | The address of the oracle's contract |
+| `authority` | [string](#string) |  | The signing authorities for the request |
+
+
+
+
+
+
+<a name="provenance.oracle.v1.MsgUpdateOracleResponse"></a>
+
+### MsgUpdateOracleResponse
+MsgUpdateOracleResponse is the response type for updating the oracle.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.oracle.v1.Msg"></a>
+
+### Msg
+Msg
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `UpdateOracle` | [MsgUpdateOracleRequest](#provenance.oracle.v1.MsgUpdateOracleRequest) | [MsgUpdateOracleResponse](#provenance.oracle.v1.MsgUpdateOracleResponse) | UpdateOracle is the RPC endpoint for updating the oracle | |
+| `SendQueryOracle` | [MsgSendQueryOracleRequest](#provenance.oracle.v1.MsgSendQueryOracleRequest) | [MsgSendQueryOracleResponse](#provenance.oracle.v1.MsgSendQueryOracleResponse) | SendQueryOracle sends a query to an oracle on another chain | |
 
  <!-- end services -->
 

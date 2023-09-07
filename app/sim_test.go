@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -49,6 +50,7 @@ import (
 	cmdconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/provenance-io/provenance/x/hold"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
@@ -72,6 +74,7 @@ func ProvAppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) s
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
 		appState, simAccs, chainID, genesisTimestamp := sdksim.AppStateFn(cdc, simManager)(r, accs, config)
 		appState = appStateWithICA(appState, cdc)
+		appState = appStateWithICQ(appState, cdc)
 		return appState, simAccs, chainID, genesisTimestamp
 	}
 }
@@ -87,6 +90,25 @@ func appStateWithICA(appState json.RawMessage, cdc codec.JSONCodec) json.RawMess
 	if !icaGenFound || len(icaGenJSON) == 0 {
 		icaGenState := icagenesistypes.DefaultGenesis()
 		rawState[icatypes.ModuleName] = cdc.MustMarshalJSON(icaGenState)
+		appState, err = json.Marshal(rawState)
+		if err != nil {
+			panic(fmt.Sprintf("error marshalling appstate: %v", err))
+		}
+	}
+	return appState
+}
+
+// appStateWithICA checks the given appState for an ica entry. If it's not found, it's populated with the defaults.
+func appStateWithICQ(appState json.RawMessage, cdc codec.JSONCodec) json.RawMessage {
+	rawState := make(map[string]json.RawMessage)
+	err := json.Unmarshal(appState, &rawState)
+	if err != nil {
+		panic(fmt.Sprintf("error unmarshalling appstate: %v", err))
+	}
+	icqGenJSON, icqGenFound := rawState[icqtypes.ModuleName]
+	if !icqGenFound || len(icqGenJSON) == 0 {
+		icqGenState := icqtypes.DefaultGenesis()
+		rawState[icqtypes.ModuleName] = cdc.MustMarshalJSON(icqGenState)
 		appState, err = json.Marshal(rawState)
 		if err != nil {
 			panic(fmt.Sprintf("error marshalling appstate: %v", err))
@@ -111,10 +133,10 @@ func TestFullAppSimulation(t *testing.T) {
 	app := New(logger, db, nil, true, map[int64]bool{}, t.TempDir(), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, "provenanced", app.Name())
 
-	fmt.Printf("running provenance full app simulation")
+	fmt.Printf("running provenance full app simulation\n")
 
 	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, _, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -151,7 +173,7 @@ func TestSimple(t *testing.T) {
 	require.Equal(t, "provenanced", app.Name())
 
 	// run randomized simulation
-	_, _, simErr := simulation.SimulateFromSeed(
+	_, _, _, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -188,10 +210,10 @@ func TestAppImportExport(t *testing.T) {
 	home := t.TempDir()
 	app := New(logger, db, nil, true, map[int64]bool{}, home, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 
-	fmt.Printf("running provenance test import export")
+	fmt.Printf("running provenance test import export\n")
 
 	// Run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, lastBlockTime, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -242,8 +264,8 @@ func TestAppImportExport(t *testing.T) {
 		}
 	}()
 
-	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
-	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
+	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
 	newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
 	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
 
@@ -274,6 +296,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[nametypes.StoreKey], newApp.keys[nametypes.StoreKey], [][]byte{}},
 		{app.keys[metadatatypes.StoreKey], newApp.keys[metadatatypes.StoreKey], [][]byte{}},
 		{app.keys[triggertypes.StoreKey], newApp.keys[triggertypes.StoreKey], [][]byte{}},
+		{app.keys[hold.StoreKey], newApp.keys[hold.StoreKey], [][]byte{}},
 	}
 
 	for _, skp := range storeKeysPrefixes {
@@ -305,7 +328,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	app := New(logger, db, nil, true, map[int64]bool{}, home, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 
 	// Run randomized simulation
-	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
+	stopEarly, lastBlockTime, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -348,9 +371,11 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	newApp.InitChain(abci.RequestInitChain{
 		AppStateBytes: exported.AppState,
+		Time:          lastBlockTime,
 	})
 
-	_, _, err = simulation.SimulateFromSeed(
+	sdksim.FlagGenesisTimeValue = lastBlockTime.Unix()
+	_, _, _, err = simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		newApp.BaseApp,
@@ -419,7 +444,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			_, _, err := simulation.SimulateFromSeed(
+			_, _, _, err := simulation.SimulateFromSeed(
 				t,
 				os.Stdout,
 				app.BaseApp,

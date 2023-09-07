@@ -38,21 +38,9 @@ const (
 	OpWeightMsgAddMarkerProposal = "op_weight_msg_add_marker_proposal"
 	//nolint:gosec // not credentials
 	OpWeightMsgSetAccountData = "op_weight_msg_set_account_data"
+	//nolint:gosec // not credentials
+	OpWeightMsgUpdateSendDenyList = "op_weight_msg_update_send_deny_list"
 )
-
-/*
-
-AddAccess
-DeleteAccess
-
-Withdraw
-
-Mint
-Burn
-Transfer
-
-SetDenomMetadata
-*/
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
@@ -76,6 +64,7 @@ func WeightedOperations(
 		weightMsgAddFinalizeActivateMarker int
 		weightMsgAddMarkerProposal         int
 		weightMsgSetAccountData            int
+		weightMsgUpdateSendDenyList        int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgAddMarker, &weightMsgAddMarker, nil,
@@ -114,6 +103,12 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateSendDenyList, &weightMsgUpdateSendDenyList, nil,
+		func(_ *rand.Rand) {
+			weightMsgUpdateSendDenyList = simappparams.DefaultWeightMsgUpdateDenySendList
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgAddMarker,
@@ -139,10 +134,14 @@ func WeightedOperations(
 			weightMsgSetAccountData,
 			SimulateMsgSetAccountData(k, args),
 		),
+		simulation.NewWeightedOperation(
+			weightMsgUpdateSendDenyList,
+			SimulateMsgUpdateSendDenyList(k, args),
+		),
 	}
 }
 
-// SimulateMsgAddMarker will bind a NAME under an existing name using a 40% probability of restricting it.
+// SimulateMsgAddMarker will Add a random marker with random configuration.
 func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -160,12 +159,15 @@ func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 			r.Intn(2) > 0,                 // allow gov
 			r.Intn(2) > 0,                 // allow forced transfer
 			[]string{},
+			0,
+			0,
 		)
 
 		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
 	}
 }
 
+// SimulateMsgChangeStatus will randomly change the status of the marker depending on it's current state.
 func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -215,6 +217,7 @@ func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 	}
 }
 
+// SimulateMsgAddAccess will Add a random access to an account.
 func SimulateMsgAddAccess(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -255,6 +258,8 @@ func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.Account
 			r.Intn(2) > 0, // allow forced transfer
 			[]string{},
 			grants,
+			0,
+			0,
 		)
 
 		if msg.MarkerType != types.MarkerType_RestrictedCoin {
@@ -265,6 +270,7 @@ func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.Account
 	}
 }
 
+// SimulateMsgAddMarkerProposal will broadcast a Add random Marker Proposal.
 func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -339,6 +345,7 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 	}
 }
 
+// SimulateMsgSetAccountData will set randomized account data to a marker.
 func SimulateMsgSetAccountData(k keeper.Keeper, args *WeightedOpsArgs) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -363,6 +370,32 @@ func SimulateMsgSetAccountData(k keeper.Keeper, args *WeightedOpsArgs) simtypes.
 			strLen := r.Intn(int(maxLen)) + 1
 			msg.Value = simtypes.RandStringOfLength(r, strLen)
 		}
+
+		return Dispatch(r, app, ctx, args.AK, args.BK, signer, chainID, msg, nil)
+	}
+}
+
+// SimulateMsgUpdateSendDenyList will update random marker with denied send addresses.
+func SimulateMsgUpdateSendDenyList(k keeper.Keeper, args *WeightedOpsArgs) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msg := &types.MsgUpdateSendDenyListRequest{}
+
+		marker, signer := randomMarkerWithAccessSigner(r, ctx, k, accs, types.Access_Transfer)
+		if marker == nil {
+			return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to find marker with a transfer signer"), nil, nil
+		}
+
+		rDenyAccounts := simtypes.RandomAccounts(r, 10)
+		addDenyAddresses := make([]string, len(rDenyAccounts))
+		for i := range rDenyAccounts {
+			addDenyAddresses[i] = rDenyAccounts[i].Address.String()
+		}
+
+		msg.Denom = marker.GetDenom()
+		msg.AddDeniedAddresses = addDenyAddresses
+		msg.Authority = signer.Address.String()
 
 		return Dispatch(r, app, ctx, args.AK, args.BK, signer, chainID, msg, nil)
 	}
@@ -431,6 +464,7 @@ func Dispatch(
 	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, nil
 }
 
+// randomUnrestrictedDenom returns a randomized unrestricted denom string value.
 func randomUnrestrictedDenom(r *rand.Rand, unrestrictedDenomExp string) string {
 	exp := regexp.MustCompile(`\{(\d+),(\d+)\}`)
 	matches := exp.FindStringSubmatch(unrestrictedDenomExp)
@@ -474,6 +508,7 @@ func randomAccessTypes(r *rand.Rand, markerType types.MarkerType) (result []type
 	return
 }
 
+// randomMarker returns a randomly selected marker from store
 func randomMarker(r *rand.Rand, ctx sdk.Context, k keeper.Keeper) types.MarkerAccountI {
 	var markers []types.MarkerAccountI
 	k.IterateMarkers(ctx, func(marker types.MarkerAccountI) (stop bool) {
@@ -487,6 +522,7 @@ func randomMarker(r *rand.Rand, ctx sdk.Context, k keeper.Keeper) types.MarkerAc
 	return markers[idx]
 }
 
+// randomMarkerWithAccessSigner returns a randomly selected marker and account that has specified access.
 func randomMarkerWithAccessSigner(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, accs []simtypes.Account, access types.Access) (types.MarkerAccountI, simtypes.Account) {
 	var markers []types.MarkerAccountI
 	k.IterateMarkers(ctx, func(marker types.MarkerAccountI) (stop bool) {
