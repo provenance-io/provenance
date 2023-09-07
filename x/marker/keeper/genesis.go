@@ -44,6 +44,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 		}
 	}
 
+	for _, denyAddress := range data.DenySendAddresses {
+		markerAddr := sdk.MustAccAddressFromBech32(denyAddress.MarkerAddress)
+		denyAddress := sdk.MustAccAddressFromBech32(denyAddress.DenyAddress)
+		k.AddSendDeny(ctx, markerAddr, denyAddress)
+	}
 	for _, mNavs := range data.NetAssetValues {
 		for _, nav := range mNavs.NetAssetValues {
 			navCopy := nav
@@ -85,6 +90,14 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	}
 	k.IterateMarkers(ctx, appendToMarkers)
 
+	var denyAddresses []types.DenySendAddress
+	handleDenyList := func(key []byte) bool {
+		markerAddr, denyAddr := types.GetDenySendAddresses(key)
+		denyAddresses = append(denyAddresses, types.DenySendAddress{MarkerAddress: markerAddr.String(), DenyAddress: denyAddr.String()})
+		return false
+	}
+	k.IterateSendDeny(ctx, handleDenyList)
+
 	markerNetAssetValues := make([]types.MarkerNetAssetValues, len(markers))
 	for i := range markers {
 		var markerNavs types.MarkerNetAssetValues
@@ -101,5 +114,5 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		markerNetAssetValues[i] = markerNavs
 	}
 
-	return types.NewGenesisState(params, markers, markerNetAssetValues)
+	return types.NewGenesisState(params, markers, denyAddresses, markerNetAssetValues)
 }

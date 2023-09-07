@@ -114,6 +114,7 @@
     - [MarkerType](#provenance.marker.v1.MarkerType)
   
 - [provenance/marker/v1/genesis.proto](#provenance/marker/v1/genesis.proto)
+    - [DenySendAddress](#provenance.marker.v1.DenySendAddress)
     - [GenesisState](#provenance.marker.v1.GenesisState)
     - [MarkerNetAssetValues](#provenance.marker.v1.MarkerNetAssetValues)
   
@@ -2021,6 +2022,22 @@ MarkerType defines the types of marker
 
 
 
+<a name="provenance.marker.v1.DenySendAddress"></a>
+
+### DenySendAddress
+DenySendAddress defines addresses that are denied sends for marker denom
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `marker_address` | [string](#string) |  | marker_address is the marker's address for denied address |
+| `deny_address` | [string](#string) |  | deny_address defines all wallet addresses that are denied sends for the marker |
+
+
+
+
+
+
 <a name="provenance.marker.v1.GenesisState"></a>
 
 ### GenesisState
@@ -2031,7 +2048,8 @@ GenesisState defines the account module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#provenance.marker.v1.Params) |  | params defines all the parameters of the module. |
 | `markers` | [MarkerAccount](#provenance.marker.v1.MarkerAccount) | repeated | A collection of marker accounts to create on start |
-| `net_asset_values` | [MarkerNetAssetValues](#provenance.marker.v1.MarkerNetAssetValues) | repeated |  |
+| `net_asset_values` | [MarkerNetAssetValues](#provenance.marker.v1.MarkerNetAssetValues) | repeated | list of marker net asset values |
+| `deny_send_addresses` | [DenySendAddress](#provenance.marker.v1.DenySendAddress) | repeated | list of denom based denied send addresses |
 
 
 

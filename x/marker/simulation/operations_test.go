@@ -99,6 +99,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		{simappparams.DefaultWeightMsgAddFinalizeActivateMarker, sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{})},
 		{simappparams.DefaultWeightMsgAddMarkerProposal, "gov", sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{})},
 		{simappparams.DefaultWeightMsgSetAccountData, sdk.MsgTypeURL(&types.MsgSetAccountDataRequest{}), sdk.MsgTypeURL(&types.MsgSetAccountDataRequest{})},
+		{simappparams.DefaultWeightMsgUpdateDenySendList, sdk.MsgTypeURL(&types.MsgUpdateSendDenyListRequest{}), sdk.MsgTypeURL(&types.MsgUpdateSendDenyListRequest{})},
 	}
 
 	expNames := make([]string, len(expected))
@@ -351,7 +352,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 	}
 }
 
-func (s *SimTestSuite) TestSSimulateMsgSetAccountData() {
+func (s *SimTestSuite) TestSimulateMsgSetAccountData() {
 	// setup 3 accounts
 	src := rand.NewSource(1)
 	r := rand.New(src)
@@ -399,6 +400,58 @@ func (s *SimTestSuite) TestSSimulateMsgSetAccountData() {
 	s.Assert().Equal("simcoin", msg.Denom, "msg.Denom")
 	s.Assert().Equal("", msg.Value, "msg.Value")
 	s.Assert().Equal(accounts[1].Address.String(), msg.Signer, "msg.Signer")
+	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Len(futureOperations, 0, "futureOperations")
+}
+
+func (s *SimTestSuite) TestSimulateMsgUpdateSendDenyList() {
+	// setup 3 accounts
+	src := rand.NewSource(1)
+	r := rand.New(src)
+	accounts := s.getTestingAccounts(r, 3)
+
+	// Add a marker with deposit permissions so that it can be found by the sim.
+	newMarker := &types.MsgAddFinalizeActivateMarkerRequest{
+		Amount:      sdk.NewInt64Coin("simcoin", 1000),
+		Manager:     accounts[1].Address.String(),
+		FromAddress: accounts[1].Address.String(),
+		MarkerType:  types.MarkerType_RestrictedCoin,
+		AccessList: []types.AccessGrant{
+			{
+				Address: accounts[1].Address.String(),
+				Permissions: types.AccessList{
+					types.Access_Mint, types.Access_Burn, types.Access_Deposit, types.Access_Withdraw,
+					types.Access_Delete, types.Access_Admin, types.Access_Transfer,
+				},
+			},
+		},
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		AllowForcedTransfer:    false,
+		RequiredAttributes:     nil,
+	}
+	markerMsgServer := keeper.NewMsgServerImpl(s.app.MarkerKeeper)
+	_, err := markerMsgServer.AddFinalizeActivateMarker(s.ctx, newMarker)
+	s.Require().NoError(err, "AddFinalizeActivateMarker")
+
+	// begin a new block
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+
+	args := s.getWeightedOpsArgs()
+	// execute operation
+	op := simulation.SimulateMsgUpdateSendDenyList(s.app.MarkerKeeper, &args)
+	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
+	s.Require().NoError(err, "SimulateMsgUpdateSendDenyList op(...) error")
+	s.LogOperationMsg(operationMsg)
+
+	var msg types.MsgUpdateSendDenyListRequest
+	s.Require().NoError(s.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+
+	s.Assert().True(operationMsg.OK, "operationMsg.OK")
+	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
+	s.Assert().Equal("simcoin", msg.Denom, "msg.Denom")
+	s.Assert().Len(msg.AddDeniedAddresses, 10, "msg.AddDeniedAddresses")
+	s.Assert().Equal(accounts[1].Address.String(), msg.Authority, "msg.Authority")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
