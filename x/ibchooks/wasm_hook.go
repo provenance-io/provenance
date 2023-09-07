@@ -181,7 +181,7 @@ func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]inter
 }
 
 func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, contractAddr sdktypes.AccAddress, msgBytes []byte, err error) {
-	isWasmRouted, metadata := jsonStringHasKey(memo, "wasm")
+	isWasmRouted, metadata := jsonStringHasKey(memo, types.WasmHookKey)
 	if !isWasmRouted {
 		return isWasmRouted, sdktypes.AccAddress{}, nil, nil
 	}

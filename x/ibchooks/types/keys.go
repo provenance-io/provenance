@@ -8,6 +8,8 @@ const (
 	IBCCallbackKey = "ibc_callback"
 	IBCAsyncAckKey = "ibc_async_ack"
 
+	MarkerHookKey = "marker"
+
 	MsgEmitAckKey           = "emit_ack"
 	AttributeSender         = "sender"
 	AttributeChannel        = "channel"
