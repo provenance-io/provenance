@@ -30,7 +30,7 @@ func ParamChanges(_ *rand.Rand) []simtypes.ParamChange {
 		),
 		simulation.NewSimParamChange(types.ModuleName, keyMaxSupply,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", GenMaxSupply(r).Uint64())
+				return fmt.Sprintf("\"%s\"", GenMaxSupply(r).String())
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, keyEnableGovernance,
