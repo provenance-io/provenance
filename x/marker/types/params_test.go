@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,11 +17,13 @@ func TestDefaultParams(t *testing.T) {
 	require.Equal(t, DefaultUnrestrictedDenomRegex, p.UnrestrictedDenomRegex)
 	require.Equal(t, DefaultEnableGovernance, p.EnableGovernance)
 	require.Equal(t, uint64(DefaultMaxTotalSupply), p.MaxTotalSupply)
+	require.Equal(t, DefaultMaxSupply, p.MaxSupply.Uint64())
 
-	require.True(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex)))
-	require.False(t, p.Equal(NewParams(1000, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex)))
-	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, false, DefaultUnrestrictedDenomRegex)))
-	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, "a-z")))
+	require.True(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex, math.NewIntFromUint64(DefaultMaxSupply))))
+	require.False(t, p.Equal(NewParams(1000, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex, math.NewIntFromUint64(DefaultMaxSupply))))
+	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, false, DefaultUnrestrictedDenomRegex, math.NewIntFromUint64(DefaultMaxSupply))))
+	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, "a-z", math.NewIntFromUint64(DefaultMaxSupply))))
+	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex, math.NewIntFromUint64(1000))))
 	require.False(t, p.Equal(nil))
 
 	var p2 *Params
@@ -39,13 +42,14 @@ func TestParamString(t *testing.T) {
 	require.Equal(t, `maxtotalsupply: 100000000000
 enablegovernance: true
 unrestricteddenomregex: '[a-zA-Z][a-zA-Z0-9\-\.]{2,83}'
+max_supply: "100000000000"
 `, p.String())
 }
 
 func TestParamSetPairs(t *testing.T) {
 	p := DefaultParams()
 	pairs := p.ParamSetPairs()
-	require.Equal(t, 3, len(pairs))
+	require.Equal(t, 4, len(pairs))
 
 	for i := range pairs {
 		switch string(pairs[i].Key) {
@@ -56,6 +60,13 @@ func TestParamSetPairs(t *testing.T) {
 			require.Error(t, pairs[i].ValidatorFn("foo"))
 			require.Error(t, pairs[i].ValidatorFn(-1000))
 			require.NoError(t, pairs[i].ValidatorFn(uint64(1000)))
+		case string(ParamStoreKeyMaxSupply):
+			require.Error(t, pairs[i].ValidatorFn("foo"))
+			require.Error(t, pairs[i].ValidatorFn(-1000))
+			require.Error(t, pairs[i].ValidatorFn(1000))
+			bigint, _ := math.NewIntFromString("1944674407370955516150")
+			require.NoError(t, pairs[i].ValidatorFn(bigint))
+			require.NoError(t, pairs[i].ValidatorFn(math.NewInt(1000)))
 		case string(ParamStoreKeyUnrestrictedDenomRegex):
 			require.Error(t, pairs[i].ValidatorFn(1))
 			require.Error(t, pairs[i].ValidatorFn("\\!(")) // invalid regex

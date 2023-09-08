@@ -43,7 +43,8 @@ func TestRandomizedGenState(t *testing.T) {
 
 	require.Equal(t, true, markerGenesis.Params.EnableGovernance)
 	require.Equal(t, uint64(0x9408d2ac22c4d294), markerGenesis.Params.MaxTotalSupply)
-	require.Equal(t, `[a-zA-Z][a-zA-Z0-9\\-\\.]{7,60}`, markerGenesis.Params.UnrestrictedDenomRegex)
+	require.Equal(t, uint64(0xc697f48392907a0), markerGenesis.Params.MaxSupply.Uint64())
+	require.Equal(t, `[a-zA-Z][a-zA-Z0-9\\-\\.]{9,20}`, markerGenesis.Params.UnrestrictedDenomRegex)
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.

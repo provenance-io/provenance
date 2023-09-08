@@ -151,7 +151,7 @@ func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 		denom := randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx))
 		msg := types.NewMsgAddMarkerRequest(
 			denom,
-			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))),
+			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxSupply(ctx).Uint64())),
 			simAccount.Address,
 			mgrAccount.Address,
 			types.MarkerType(r.Intn(2)+1), // coin or restricted_coin
@@ -249,7 +249,7 @@ func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.Account
 		grants := randomAccessGrants(r, accs, 100, markerType)
 		msg := types.NewMsgAddFinalizeActivateMarkerRequest(
 			denom,
-			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))),
+			sdk.NewIntFromUint64(randomUint64(r, k.GetMaxSupply(ctx).Uint64())),
 			simAccount.Address,
 			mgrAccount.Address,
 			markerType,
@@ -283,7 +283,7 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 		msg := &types.MsgAddMarkerRequest{
 			Amount: sdk.Coin{
 				Denom:  denom,
-				Amount: sdk.NewIntFromUint64(randomUint64(r, k.GetMaxTotalSupply(ctx))),
+				Amount: sdk.NewIntFromUint64(randomUint64(r, k.GetMaxSupply(ctx).Uint64())),
 			},
 			Manager:                simAccount.Address.String(),
 			FromAddress:            k.GetAuthority(),

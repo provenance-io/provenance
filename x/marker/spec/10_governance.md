@@ -5,6 +5,7 @@ marker to be defined where no single account is allowed to make modifications an
 issue change requests through passing a governance proposal.
 
 <!-- TOC 2 2 -->
+- [Governance Proposal Control](#governance-proposal-control)
   - [Add Marker Proposal](#add-marker-proposal)
   - [Supply Increase Proposal](#supply-increase-proposal)
   - [Supply Decrease Proposal](#supply-decrease-proposal)
@@ -48,7 +49,7 @@ through minting coin and placing it within the marker or assigning it directly t
 
 This request is expected to fail if:
 - The governance proposal format (title, description, etc) is invalid
-- The requested supply exceeds the configuration parameter for `MaxTotalSupply`
+- The requested supply exceeds the configuration parameter for `MaxSupply`
 
 ## Supply Decrease Proposal
 
