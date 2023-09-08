@@ -175,7 +175,7 @@ func (k Keeper) RemoveMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 	store.Delete(types.MarkerStoreKey(marker.GetAddress()))
 }
 
-// IterateMarkers  iterates all markers with the given handler function.
+// IterateMarkers iterates all markers with the given handler function.
 func (k Keeper) IterateMarkers(ctx sdk.Context, cb func(marker types.MarkerAccountI) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.MarkerStoreKeyPrefix)
@@ -219,6 +219,19 @@ func (k Keeper) AddSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddre
 func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.DenySendKey(markerAddr, senderAddr))
+}
+
+// IterateMarkers  iterates all markers with the given handler function.
+func (k Keeper) IterateSendDeny(ctx sdk.Context, handler func(key []byte) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.DenySendKeyPrefix)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		if handler(iterator.Key()) {
+			break
+		}
+	}
 }
 
 // AddSetNetAssetValues adds a set of net asset values to a marker
