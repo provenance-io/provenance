@@ -8,6 +8,7 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -24,7 +25,7 @@ const (
 )
 
 // GenMaxTotalSupply is deprecated.
-// Deprecated: GenMaxTotalSupply is kept for backwards compatability.
+// Deprecated: GenMaxTotalSupply is kept for backwards compatibility.
 func GenMaxTotalSupply(r *rand.Rand) uint64 {
 	return r.Uint64()
 }

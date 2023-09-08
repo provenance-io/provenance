@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"regexp"
 
-	"cosmossdk.io/math"
 	yaml "gopkg.in/yaml.v2"
+
+	"cosmossdk.io/math"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )

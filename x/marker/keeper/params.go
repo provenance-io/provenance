@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -26,7 +27,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 }
 
 // GetMaxTotalSupply is deprecated.
-// Deprecated: GetMaxTotalSupply is kept for backwards compability.
+// Deprecated: GetMaxTotalSupply is kept for backwards compatibility.
 func (k Keeper) GetMaxTotalSupply(ctx sdk.Context) (max uint64) {
 	max = types.DefaultMaxTotalSupply
 	if k.paramSpace.Has(ctx, types.ParamStoreKeyMaxTotalSupply) {

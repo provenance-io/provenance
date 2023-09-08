@@ -3,8 +3,9 @@ package app
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
 	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
