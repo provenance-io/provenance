@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -110,6 +111,7 @@ var upgrades = map[string]appUpgrade{
 
 			removeInactiveValidatorDelegations(ctx, app)
 			setupICQ(ctx, app)
+			updateMaxSupply(ctx, app)
 
 			return vm, nil
 		},
@@ -128,6 +130,7 @@ var upgrades = map[string]appUpgrade{
 
 			removeInactiveValidatorDelegations(ctx, app)
 			setupICQ(ctx, app)
+			updateMaxSupply(ctx, app)
 
 			return vm, nil
 		},
@@ -325,4 +328,13 @@ func setupICQ(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating ICQ params")
 	app.ICQKeeper.SetParams(ctx, icqtypes.NewParams(true, []string{"/provenance.oracle.v1.Query/Oracle"}))
 	ctx.Logger().Info("Done updating ICQ params")
+}
+
+// updateMaxSupply sets the value of max supply to the current value of MaxTotalSupply
+func updateMaxSupply(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Updating MaxSupply marker param")
+	params := app.MarkerKeeper.GetParams(ctx)
+	params.MaxSupply = math.NewIntFromUint64(params.MaxTotalSupply)
+	app.MarkerKeeper.SetParams(ctx, params)
+	ctx.Logger().Info("Done updating MaxSupply marker param")
 }
