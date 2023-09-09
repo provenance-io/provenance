@@ -11,6 +11,7 @@ import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "provenance/exchange/v1/market.proto";
+import "provenance/exchange/v1/orders.proto";
 import "provenance/exchange/v1/params.proto";
 
 // Msg is the service for exchange module's tx endpoints.
@@ -63,23 +64,44 @@ service Msg {
 
 // MsgCreateAskRequest is a request message for the CreateAsk endpoint.
 message MsgCreateAskRequest {
-  // TODO[1658]: MsgCreateAskRequest
+  option (cosmos.msg.v1.signer) = "ask_order.seller";
+
+  // ask_order is the details of the order being created.
+  AskOrder ask_order = 1 [(gogoproto.nullable) = false];
+  // order_creation_fee is the fee that is being paid to create this order.
+  cosmos.base.v1beta1.Coin order_creation_fee = 2;
 }
 
 // MsgCreateAskResponse is a response message for the CreateAsk endpoint.
-message MsgCreateAskResponse {}
+message MsgCreateAskResponse {
+  // order_id is the id of the order created.
+  uint64 order_id = 1;
+}
 
 // MsgCreateBidRequest is a request message for the CreateBid endpoint.
 message MsgCreateBidRequest {
-  // TODO[1658]: MsgCreateBidRequest
+  option (cosmos.msg.v1.signer) = "bid_order.buyer";
+
+  // bid_order is the details of the order being created.
+  BidOrder bid_order = 1 [(gogoproto.nullable) = false];
+  // order_creation_fee is the fee that is being paid to create this order.
+  cosmos.base.v1beta1.Coin order_creation_fee = 2;
 }
 
 // MsgCreateBidResponse is a response message for the CreateBid endpoint.
-message MsgCreateBidResponse {}
+message MsgCreateBidResponse {
+  // order_id is the id of the order created.
+  uint64 order_id = 1;
+}
 
 // MsgCancelOrderRequest is a request message for the CancelOrder endpoint.
 message MsgCancelOrderRequest {
-  // TODO[1658]: MsgCancelOrderRequest
+  option (cosmos.msg.v1.signer) = "owner";
+
+  // owner is the account that owns the order. E.g. the seller for ask orders or buyer for bid orders.
+  string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // order_id is the id of the order to cancel.
+  uint64 order_id = 2;
 }
 
 // MsgCancelOrderResponse is a response message for the CancelOrder endpoint.

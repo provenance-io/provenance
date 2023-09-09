@@ -2094,6 +2094,12 @@ Query is the service for exchange module's query endpoints.
 MsgCancelOrderRequest is a request message for the CancelOrder endpoint.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  | owner is the account that owns the order. E.g. the seller for ask orders or buyer for bid orders. |
+| `order_id` | [uint64](#uint64) |  | order_id is the id of the order to cancel. |
+
+
 
 
 
@@ -2114,6 +2120,12 @@ MsgCancelOrderResponse is a response message for the CancelOrder endpoint.
 MsgCreateAskRequest is a request message for the CreateAsk endpoint.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ask_order` | [AskOrder](#provenance.exchange.v1.AskOrder) |  | ask_order is the details of the order being created. |
+| `order_creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | order_creation_fee is the fee that is being paid to create this order. |
+
+
 
 
 
@@ -2122,6 +2134,11 @@ MsgCreateAskRequest is a request message for the CreateAsk endpoint.
 
 ### MsgCreateAskResponse
 MsgCreateAskResponse is a response message for the CreateAsk endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `order_id` | [uint64](#uint64) |  | order_id is the id of the order created. |
 
 
 
@@ -2134,6 +2151,12 @@ MsgCreateAskResponse is a response message for the CreateAsk endpoint.
 MsgCreateBidRequest is a request message for the CreateBid endpoint.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bid_order` | [BidOrder](#provenance.exchange.v1.BidOrder) |  | bid_order is the details of the order being created. |
+| `order_creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | order_creation_fee is the fee that is being paid to create this order. |
+
+
 
 
 
@@ -2142,6 +2165,11 @@ MsgCreateBidRequest is a request message for the CreateBid endpoint.
 
 ### MsgCreateBidResponse
 MsgCreateBidResponse is a response message for the CreateBid endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `order_id` | [uint64](#uint64) |  | order_id is the id of the order created. |
 
 
 
