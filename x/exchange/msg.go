@@ -26,33 +26,52 @@ var allRequestMsgs = []sdk.Msg{
 }
 
 func (m MsgCreateAskRequest) ValidateBasic() error {
-	// TODO[1658]: MsgCreateAskRequest.ValidateBasic()
+	if err := m.AskOrder.Validate(); err != nil {
+		return err
+	}
+	if m.OrderCreationFee != nil {
+		if err := m.OrderCreationFee.Validate(); err != nil {
+			return fmt.Errorf("invalid order creation fee: %w", err)
+		}
+	}
 	return nil
 }
 
 func (m MsgCreateAskRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgCreateAskRequest.GetSigners
-	panic("not implemented")
+	addr := sdk.MustAccAddressFromBech32(m.AskOrder.Seller)
+	return []sdk.AccAddress{addr}
 }
 
 func (m MsgCreateBidRequest) ValidateBasic() error {
-	// TODO[1658]: MsgCreateBidRequest.ValidateBasic()
+	if err := m.BidOrder.Validate(); err != nil {
+		return err
+	}
+	if m.OrderCreationFee != nil {
+		if err := m.OrderCreationFee.Validate(); err != nil {
+			return fmt.Errorf("invalid order creation fee: %w", err)
+		}
+	}
 	return nil
 }
 
 func (m MsgCreateBidRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgCreateBidRequest.GetSigners
-	panic("not implemented")
+	addr := sdk.MustAccAddressFromBech32(m.BidOrder.Buyer)
+	return []sdk.AccAddress{addr}
 }
 
 func (m MsgCancelOrderRequest) ValidateBasic() error {
-	// TODO[1658]: MsgCancelOrderRequest.ValidateBasic()
+	if _, err := sdk.AccAddressFromBech32(m.Owner); err != nil {
+		return fmt.Errorf("invalid owner: %w", err)
+	}
+	if m.OrderId == 0 {
+		return fmt.Errorf("invalid order id: cannot be zero")
+	}
 	return nil
 }
 
 func (m MsgCancelOrderRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgCancelOrderRequest.GetSigners
-	panic("not implemented")
+	addr := sdk.MustAccAddressFromBech32(m.Owner)
+	return []sdk.AccAddress{addr}
 }
 
 func (m MsgFillBidsRequest) ValidateBasic() error {

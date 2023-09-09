@@ -646,6 +646,16 @@ func TestAskOrder_Validate(t *testing.T) {
 			exp: []string{"invalid price: ", "invalid denom: 7"},
 		},
 		{
+			name: "zero-value price",
+			order: AskOrder{
+				MarketId: 1,
+				Seller:   sdk.AccAddress("seller_address______").String(),
+				Assets:   coins("99bender"),
+				Price:    sdk.Coin{},
+			},
+			exp: []string{"invalid price: invalid denom: "},
+		},
+		{
 			name: "zero amount in assets",
 			order: AskOrder{
 				MarketId: 1,
@@ -895,6 +905,16 @@ func TestBidOrder_Validate(t *testing.T) {
 				Price:    coin(42, "7"),
 			},
 			exp: []string{"invalid price: ", "invalid denom: 7"},
+		},
+		{
+			name: "zero-value price",
+			order: BidOrder{
+				MarketId: 1,
+				Buyer:    sdk.AccAddress("buyer_address_______").String(),
+				Assets:   coins("99bender"),
+				Price:    sdk.Coin{},
+			},
+			exp: []string{"invalid price: invalid denom: "},
 		},
 		{
 			name: "zero amount in assets",

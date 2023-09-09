@@ -153,14 +153,12 @@ func (a AskOrder) Validate() error {
 	// The price must not be zero and must be a valid coin.
 	// The Coin.Validate() method allows the coin to be zero (but not negative).
 	var priceDenom string
-	if a.Price.IsZero() {
+	if err := a.Price.Validate(); err != nil {
+		errs = append(errs, fmt.Errorf("invalid price: %w", err))
+	} else if a.Price.IsZero() {
 		errs = append(errs, errors.New("invalid price: cannot be zero"))
 	} else {
-		if err := a.Price.Validate(); err != nil {
-			errs = append(errs, fmt.Errorf("invalid price: %w", err))
-		} else {
-			priceDenom = a.Price.Denom
-		}
+		priceDenom = a.Price.Denom
 	}
 
 	// The Coins.Validate method does NOT allow any coin entries to be zero (or negative).
@@ -215,14 +213,12 @@ func (a BidOrder) Validate() error {
 	// The price must not be zero and must be a valid coin.
 	// The Coin.Validate() method allows the coin to be zero (but not negative).
 	var priceDenom string
-	if a.Price.IsZero() {
+	if err := a.Price.Validate(); err != nil {
+		errs = append(errs, fmt.Errorf("invalid price: %w", err))
+	} else if a.Price.IsZero() {
 		errs = append(errs, errors.New("invalid price: cannot be zero"))
 	} else {
-		if err := a.Price.Validate(); err != nil {
-			errs = append(errs, fmt.Errorf("invalid price: %w", err))
-		} else {
-			priceDenom = a.Price.Denom
-		}
+		priceDenom = a.Price.Denom
 	}
 
 	// The Coins.Validate method does NOT allow any coin entries to be zero (or negative).

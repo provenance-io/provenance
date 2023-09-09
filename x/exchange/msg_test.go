@@ -32,6 +32,16 @@ func TestAllMsgsGetSigners(t *testing.T) {
 
 	msgMakers := []func(signer string) sdk.Msg{
 		func(signer string) sdk.Msg {
+			return &MsgCreateAskRequest{AskOrder: AskOrder{Seller: signer}}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgCreateBidRequest{BidOrder: BidOrder{Buyer: signer}}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgCancelOrderRequest{Owner: signer}
+		},
+		// TODO[1658]: Add the rest of the messages once they've actually been defined.
+		func(signer string) sdk.Msg {
 			return &MsgGovCreateMarketRequest{Authority: signer}
 		},
 		func(signer string) sdk.Msg {
@@ -40,7 +50,6 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg {
 			return &MsgGovUpdateParamsRequest{Authority: signer}
 		},
-		// TODO[1658]: Add the rest of the messages once they've actually been defined.
 	}
 
 	signerCases := []struct {
@@ -122,11 +131,128 @@ func testValidateBasic(t *testing.T, msg sdk.Msg, expErr []string) {
 	assertions.AssertErrorContents(t, err, expErr, "%T.ValidateBasic() error", msg)
 }
 
-// TODO[1658]: func TestMsgCreateAskRequest_ValidateBasic(t *testing.T)
+func TestMsgCreateAskRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgCreateAskRequest
+		expErr []string
+	}{
+		{
+			name: "empty ask order",
+			msg:  MsgCreateAskRequest{},
+			expErr: []string{
+				"invalid market id: ",
+				"invalid seller: ",
+				"invalid price: ",
+				"invalid assets: ",
+			},
+		},
+		{
+			name: "invalid fees",
+			msg: MsgCreateAskRequest{
+				AskOrder: AskOrder{
+					MarketId: 1,
+					Seller:   sdk.AccAddress("seller______________").String(),
+					Assets:   sdk.NewCoins(sdk.NewInt64Coin("banana", 99)),
+					Price:    sdk.NewInt64Coin("acorn", 12),
+				},
+				OrderCreationFee: &sdk.Coin{Denom: "cactus", Amount: sdkmath.NewInt(-3)},
+			},
+			expErr: []string{"invalid order creation fee: negative coin amount: -3"},
+		},
+	}
 
-// TODO[1658]: func TestMsgCreateBidRequest_ValidateBasic(t *testing.T)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
 
-// TODO[1658]: func TestMsgCancelOrderRequest_ValidateBasic(t *testing.T)
+func TestMsgCreateBidRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgCreateBidRequest
+		expErr []string
+	}{
+		{
+			name: "empty ask order",
+			msg:  MsgCreateBidRequest{},
+			expErr: []string{
+				"invalid market id: ",
+				"invalid buyer: ",
+				"invalid price: ",
+				"invalid assets: ",
+			},
+		},
+		{
+			name: "invalid fees",
+			msg: MsgCreateBidRequest{
+				BidOrder: BidOrder{
+					MarketId: 1,
+					Buyer:    sdk.AccAddress("buyer_______________").String(),
+					Assets:   sdk.NewCoins(sdk.NewInt64Coin("banana", 99)),
+					Price:    sdk.NewInt64Coin("acorn", 12),
+				},
+				OrderCreationFee: &sdk.Coin{Denom: "cactus", Amount: sdkmath.NewInt(-3)},
+			},
+			expErr: []string{"invalid order creation fee: negative coin amount: -3"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgCancelOrderRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgCancelOrderRequest
+		expErr []string
+	}{
+		{
+			name: "control",
+			msg: MsgCancelOrderRequest{
+				Owner:   sdk.AccAddress("owner_______________").String(),
+				OrderId: 1,
+			},
+			expErr: nil,
+		},
+		{
+			name: "missing owner",
+			msg: MsgCancelOrderRequest{
+				Owner:   "",
+				OrderId: 1,
+			},
+			expErr: []string{"invalid owner: ", "empty address string is not allowed"},
+		},
+		{
+			name: "invalid owner",
+			msg: MsgCancelOrderRequest{
+				Owner:   "notgonnawork",
+				OrderId: 1,
+			},
+			expErr: []string{"invalid owner: ", "decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "order 0",
+			msg: MsgCancelOrderRequest{
+				Owner:   sdk.AccAddress("valid_owner_________").String(),
+				OrderId: 0,
+			},
+			expErr: []string{"invalid order id: cannot be zero"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
 
 // TODO[1658]: func TestMsgFillBidsRequest_ValidateBasic(t *testing.T)
 
