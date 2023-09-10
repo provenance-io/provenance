@@ -121,6 +121,20 @@ func (o Order) GetAssets() sdk.Coins {
 	}
 }
 
+// GetHoldAmount returns the total amount that should be on hold for this order.
+func (o Order) GetHoldAmount() sdk.Coins {
+	switch v := o.GetOrder().(type) {
+	case *Order_AskOrder:
+		return v.AskOrder.GetHoldAmount()
+	case *Order_BidOrder:
+		return v.BidOrder.GetHoldAmount()
+	default:
+		// If HoldSettlementFee() is called without the order being set yet, it's a programming error, so panic.
+		// If it's a type without a case, the case needs to be added, so panic.
+		panic(fmt.Sprintf("GetHoldAmount() missing case for %T", v))
+	}
+}
+
 // Validate returns an error if anything in this order is invalid.
 func (o Order) Validate() error {
 	if o.OrderId == 0 {
@@ -134,6 +148,15 @@ func (o Order) Validate() error {
 	default:
 		return fmt.Errorf("unknown order type %T", v)
 	}
+}
+
+// GetHoldAmount gets the amount to put on hold for this ask order.
+func (a AskOrder) GetHoldAmount() sdk.Coins {
+	rv := a.Assets
+	if a.SellerSettlementFlatFee != nil && a.SellerSettlementFlatFee.Denom != a.Price.Denom {
+		rv = rv.Add(*a.SellerSettlementFlatFee)
+	}
+	return rv
 }
 
 // Validate returns an error if anything in this ask order is invalid.
@@ -196,42 +219,47 @@ func (a AskOrder) Validate() error {
 	return errors.Join(errs...)
 }
 
+// GetHoldAmount gets the amount to put on hold for this ask order.
+func (b BidOrder) GetHoldAmount() sdk.Coins {
+	return b.BuyerSettlementFees.Add(b.Price)
+}
+
 // Validate returns an error if anything in this ask order is invalid.
-func (a BidOrder) Validate() error {
+func (b BidOrder) Validate() error {
 	var errs []error
 
 	// The market id must be provided.
-	if a.MarketId == 0 {
+	if b.MarketId == 0 {
 		errs = append(errs, errors.New("invalid market id: must not be zero"))
 	}
 
 	// The seller address must be valid and not empty.
-	if _, err := sdk.AccAddressFromBech32(a.Buyer); err != nil {
+	if _, err := sdk.AccAddressFromBech32(b.Buyer); err != nil {
 		errs = append(errs, fmt.Errorf("invalid buyer: %w", err))
 	}
 
 	// The price must not be zero and must be a valid coin.
 	// The Coin.Validate() method allows the coin to be zero (but not negative).
 	var priceDenom string
-	if err := a.Price.Validate(); err != nil {
+	if err := b.Price.Validate(); err != nil {
 		errs = append(errs, fmt.Errorf("invalid price: %w", err))
-	} else if a.Price.IsZero() {
+	} else if b.Price.IsZero() {
 		errs = append(errs, errors.New("invalid price: cannot be zero"))
 	} else {
-		priceDenom = a.Price.Denom
+		priceDenom = b.Price.Denom
 	}
 
 	// The Coins.Validate method does NOT allow any coin entries to be zero (or negative).
 	// It does allow there to not be any entries, though, which we don't want to allow here.
 	// We also don't want to allow the price denom to also be in the assets.
-	if err := a.Assets.Validate(); err != nil {
+	if err := b.Assets.Validate(); err != nil {
 		errs = append(errs, fmt.Errorf("invalid assets: %w", err))
 	} else {
 		switch {
-		case len(a.Assets) == 0:
+		case len(b.Assets) == 0:
 			errs = append(errs, errors.New("invalid assets: must not be empty"))
 		case len(priceDenom) > 0:
-			for _, asset := range a.Assets {
+			for _, asset := range b.Assets {
 				if priceDenom == asset.Denom {
 					errs = append(errs, fmt.Errorf("invalid assets: cannot contain price denom %s", priceDenom))
 					break
@@ -240,9 +268,9 @@ func (a BidOrder) Validate() error {
 		}
 	}
 
-	if len(a.BuyerSettlementFees) > 0 {
+	if len(b.BuyerSettlementFees) > 0 {
 		// If there are buyer settlement fees, they must all be valid and positive (non-zero).
-		if err := a.BuyerSettlementFees.Validate(); err != nil {
+		if err := b.BuyerSettlementFees.Validate(); err != nil {
 			errs = append(errs, fmt.Errorf("invalid buyer settlement fees: %w", err))
 		}
 	}

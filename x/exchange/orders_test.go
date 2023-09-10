@@ -479,7 +479,58 @@ func TestOrder_GetAssets(t *testing.T) {
 				assets = tc.order.GetAssets()
 			}
 			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetAssets")
-			assert.Equal(t, tc.expected, assets, "GetAssets result")
+			assert.Equal(t, tc.expected.String(), assets.String(), "GetAssets result")
+		})
+	}
+}
+
+func TestOrder_GetHoldAmount(t *testing.T) {
+	tests := []struct {
+		name     string
+		order    *Order
+		expected sdk.Coins
+		expPanic string
+	}{
+		{
+			name: "AskOrder",
+			order: NewOrder(1).WithAsk(&AskOrder{
+				Assets:                  sdk.NewCoins(sdk.NewInt64Coin("acorns", 85)),
+				SellerSettlementFlatFee: &sdk.Coin{Denom: "bananas", Amount: sdkmath.NewInt(12)},
+			}),
+			expected: sdk.NewCoins(sdk.NewInt64Coin("acorns", 85), sdk.NewInt64Coin("bananas", 12)),
+		},
+		{
+			name: "BidOrder",
+			order: NewOrder(2).WithBid(&BidOrder{
+				Price:               sdk.NewInt64Coin("acorns", 85),
+				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("bananas", 4), sdk.NewInt64Coin("cucumber", 7)),
+			}),
+			expected: sdk.NewCoins(
+				sdk.NewInt64Coin("acorns", 85),
+				sdk.NewInt64Coin("bananas", 4),
+				sdk.NewInt64Coin("cucumber", 7),
+			),
+		},
+		{
+			name:     "nil inside order",
+			order:    NewOrder(3),
+			expPanic: "GetHoldAmount() missing case for <nil>",
+		},
+		{
+			name:     "unknown order type",
+			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			expPanic: "GetHoldAmount() missing case for *exchange.unknownOrderType",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual sdk.Coins
+			testFunc := func() {
+				actual = tc.order.GetHoldAmount()
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetHoldAmount")
+			assert.Equal(t, tc.expected.String(), actual.String(), "GetHoldAmount result")
 		})
 	}
 }
@@ -520,6 +571,60 @@ func TestOrder_Validate(t *testing.T) {
 			err := tc.Order.Validate()
 
 			assertions.AssertErrorContents(t, err, tc.exp, "Validate() error")
+		})
+	}
+}
+
+func TestAskOrder_GetHoldAmount(t *testing.T) {
+	tests := []struct {
+		name  string
+		order AskOrder
+		exp   sdk.Coins
+	}{
+		{
+			name:  "empty order",
+			order: AskOrder{},
+			exp:   nil,
+		},
+		{
+			name: "just assets",
+			order: AskOrder{
+				Assets: sdk.NewCoins(sdk.NewInt64Coin("acorn", 12), sdk.NewInt64Coin("banana", 99)),
+			},
+			exp: sdk.NewCoins(sdk.NewInt64Coin("acorn", 12), sdk.NewInt64Coin("banana", 99)),
+		},
+		{
+			name: "settlement fee is different denom from price",
+			order: AskOrder{
+				Assets:                  sdk.NewCoins(sdk.NewInt64Coin("acorn", 12), sdk.NewInt64Coin("banana", 99)),
+				Price:                   sdk.NewInt64Coin("cucumber", 8),
+				SellerSettlementFlatFee: &sdk.Coin{Denom: "durian", Amount: sdkmath.NewInt(52)},
+			},
+			exp: sdk.NewCoins(
+				sdk.NewInt64Coin("acorn", 12),
+				sdk.NewInt64Coin("banana", 99),
+				sdk.NewInt64Coin("durian", 52),
+			),
+		},
+		{
+			name: "settlement fee is same denom as price",
+			order: AskOrder{
+				Assets:                  sdk.NewCoins(sdk.NewInt64Coin("acorn", 12), sdk.NewInt64Coin("banana", 99)),
+				Price:                   sdk.NewInt64Coin("cucumber", 8),
+				SellerSettlementFlatFee: &sdk.Coin{Denom: "cucumber", Amount: sdkmath.NewInt(52)},
+			},
+			exp: sdk.NewCoins(sdk.NewInt64Coin("acorn", 12), sdk.NewInt64Coin("banana", 99)),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual sdk.Coins
+			testFunc := func() {
+				actual = tc.order.GetHoldAmount()
+			}
+			require.NotPanics(t, testFunc, "GetHoldAmount()")
+			assert.Equal(t, tc.exp, actual, "GetHoldAmount() result")
 		})
 	}
 }
@@ -769,6 +874,56 @@ func TestAskOrder_Validate(t *testing.T) {
 			err := tc.order.Validate()
 
 			assertions.AssertErrorContents(t, err, tc.exp, "Validate() error")
+		})
+	}
+}
+
+func TestBidOrder_GetHoldAmount(t *testing.T) {
+	tests := []struct {
+		name  string
+		order BidOrder
+		exp   sdk.Coins
+	}{
+		{
+			name: "just price",
+			order: BidOrder{
+				Price: sdk.NewInt64Coin("cucumber", 8),
+			},
+			exp: sdk.NewCoins(sdk.NewInt64Coin("cucumber", 8)),
+		},
+		{
+			name: "price and settlement fee with shared denom",
+			order: BidOrder{
+				Price:               sdk.NewInt64Coin("cucumber", 8),
+				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("acorn", 5), sdk.NewInt64Coin("cucumber", 1)),
+			},
+			exp: sdk.NewCoins(
+				sdk.NewInt64Coin("acorn", 5),
+				sdk.NewInt64Coin("cucumber", 9),
+			),
+		},
+		{
+			name: "price and settlement fee with different denom",
+			order: BidOrder{
+				Price:               sdk.NewInt64Coin("cucumber", 8),
+				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("acorn", 5), sdk.NewInt64Coin("banana", 1)),
+			},
+			exp: sdk.NewCoins(
+				sdk.NewInt64Coin("acorn", 5),
+				sdk.NewInt64Coin("banana", 1),
+				sdk.NewInt64Coin("cucumber", 8),
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual sdk.Coins
+			testFunc := func() {
+				actual = tc.order.GetHoldAmount()
+			}
+			require.NotPanics(t, testFunc, "GetHoldAmount()")
+			assert.Equal(t, tc.exp, actual, "GetHoldAmount() result")
 		})
 	}
 }
