@@ -125,6 +125,26 @@ func updateFlatFees(store sdk.KVStore, marketID uint32, toDelete, toWrite []sdk.
 	}
 }
 
+// validateFlatFee returns an error if the provided fee is not sufficient to cover the required flat fee.
+func validateFlatFee(store sdk.KVStore, marketID uint32, fee *sdk.Coin, name string, maker flatFeeKeyMakers) error {
+	if !hasFlatFee(store, marketID, maker) {
+		return nil
+	}
+	if fee == nil {
+		opts := getAllFlatFees(store, marketID, maker)
+		return fmt.Errorf("no %s fee provided, must be one of: %s", name, sdk.NewCoins(opts...).String())
+	}
+	reqFee := getFlatFee(store, marketID, fee.Denom, maker)
+	if reqFee == nil {
+		opts := getAllFlatFees(store, marketID, maker)
+		return fmt.Errorf("invalid %s fee, must be one of: %s", name, sdk.NewCoins(opts...).String())
+	}
+	if fee.Amount.LT(reqFee.Amount) {
+		return fmt.Errorf("insufficient %s fee: %q is less than required amount %q", name, fee, reqFee)
+	}
+	return nil
+}
+
 // hasFeeRatio returns true if this market has any fee ratios for a given type.
 func hasFeeRatio(store sdk.KVStore, marketID uint32, maker ratioKeyMakers) bool {
 	rv := false
@@ -219,11 +239,9 @@ func updateCreateAskFlatFees(store sdk.KVStore, marketID uint32, toDelete, toAdd
 	updateFlatFees(store, marketID, toDelete, toAdd, createAskFlatKeyMakers)
 }
 
-// IsAcceptableCreateAskFlatFee returns true if the provide fee has a denom accepted as a create-ask flat fee,
-// and the fee amount is at least as much as the required amount of that denom.
-func (k Keeper) IsAcceptableCreateAskFlatFee(ctx sdk.Context, marketID uint32, fee sdk.Coin) bool {
-	reqFee := getFlatFee(k.getStore(ctx), marketID, fee.Denom, createAskFlatKeyMakers)
-	return reqFee != nil && fee.Amount.GTE(reqFee.Amount)
+// validateCreateAskFlatFee returns an error if the provided fee is not a sufficient create ask flat fee.
+func validateCreateAskFlatFee(store sdk.KVStore, marketID uint32, fee *sdk.Coin) error {
+	return validateFlatFee(store, marketID, fee, "ask order creation", createAskFlatKeyMakers)
 }
 
 // getCreateBidFlatFees gets the create-bid flat fee options for a market.
@@ -246,11 +264,9 @@ func updateCreateBidFlatFees(store sdk.KVStore, marketID uint32, toDelete, toAdd
 	updateFlatFees(store, marketID, toDelete, toAdd, createBidFlatKeyMakers)
 }
 
-// IsAcceptableCreateBidFlatFee returns true if the provide fee has a denom accepted as a create-bid flat fee,
-// and the fee amount is at least as much as the required amount of that denom.
-func (k Keeper) IsAcceptableCreateBidFlatFee(ctx sdk.Context, marketID uint32, fee sdk.Coin) bool {
-	reqFee := getFlatFee(k.getStore(ctx), marketID, fee.Denom, createBidFlatKeyMakers)
-	return reqFee != nil && fee.Amount.GTE(reqFee.Amount)
+// validateCreateBidFlatFee returns an error if the provided fee is not a sufficient create bid flat fee.
+func validateCreateBidFlatFee(store sdk.KVStore, marketID uint32, fee *sdk.Coin) error {
+	return validateFlatFee(store, marketID, fee, "bid order creation", createBidFlatKeyMakers)
 }
 
 // getSellerSettlementFlatFees gets the seller settlement flat fee options for a market.
@@ -273,11 +289,9 @@ func updateSellerSettlementFlatFees(store sdk.KVStore, marketID uint32, toDelete
 	updateFlatFees(store, marketID, toDelete, toAdd, sellerSettlementFlatKeyMakers)
 }
 
-// IsAcceptableSellerSettlementFlatFee returns true if the provide fee has a denom accepted as a seller settlement
-// flat fee, and the fee amount is at least as much as the required amount of that denom.
-func (k Keeper) IsAcceptableSellerSettlementFlatFee(ctx sdk.Context, marketID uint32, fee sdk.Coin) bool {
-	reqFee := getFlatFee(k.getStore(ctx), marketID, fee.Denom, sellerSettlementFlatKeyMakers)
-	return reqFee != nil && fee.Amount.GTE(reqFee.Amount)
+// validateSellerSettlementFlatFee returns an error if the provided fee is not a sufficient seller settlement flat fee.
+func validateSellerSettlementFlatFee(store sdk.KVStore, marketID uint32, fee *sdk.Coin) error {
+	return validateFlatFee(store, marketID, fee, "seller settlement flat", createBidFlatKeyMakers)
 }
 
 // getSellerSettlementRatios gets the seller settlement fee ratios for a market.
@@ -300,17 +314,63 @@ func updateSellerSettlementRatios(store sdk.KVStore, marketID uint32, toDelete, 
 	updateFeeRatios(store, marketID, toDelete, toAdd, sellerSettlementRatioKeyMakers)
 }
 
-// CalculateSellerSettlementRatioFee calculates the seller settlement fee required for the given price.
-func (k Keeper) CalculateSellerSettlementRatioFee(ctx sdk.Context, marketID uint32, price sdk.Coin) (sdk.Coin, error) {
-	ratio := getFeeRatio(k.getStore(ctx), marketID, price.Denom, price.Denom, sellerSettlementRatioKeyMakers)
+// getSellerSettlementRatio gets the seller settlement fee ratio for the given market with the provided denom.
+func getSellerSettlementRatio(store sdk.KVStore, marketID uint32, priceDenom string) (*exchange.FeeRatio, error) {
+	ratio := getFeeRatio(store, marketID, priceDenom, priceDenom, sellerSettlementRatioKeyMakers)
 	if ratio == nil {
-		return sdk.Coin{}, fmt.Errorf("no seller settlement fee ratio found for denom %q", price.Denom)
+		if hasFeeRatio(store, marketID, sellerSettlementRatioKeyMakers) {
+			return nil, fmt.Errorf("no seller settlement fee ratio found for denom %q", priceDenom)
+		}
+	}
+	return ratio, nil
+}
+
+// validateAskPrice validates that the provided ask price denom is acceptable.
+func validateAskPrice(store sdk.KVStore, marketID uint32, price sdk.Coin, settlementFlatFee *sdk.Coin) error {
+	ratio, err := getSellerSettlementRatio(store, marketID, price.Denom)
+	if err != nil {
+		return err
+	}
+
+	// If there is a settlement flat fee with a different denom as the price, a hold is placed on it.
+	// If there's a settlement flat fee with the same denom as the price, it's paid out of the price along
+	// with the ratio amount. Assuming the ratio is less than one, the price will always cover the ratio fee amount.
+	// But if the flat fee is coming out of the price too, it's possible that the price might be less than the total
+	// fee that will need to come out of it. We want to return an error if that's the case.
+	if settlementFlatFee != nil && price.Denom == settlementFlatFee.Denom {
+		if price.Amount.LT(settlementFlatFee.Amount) {
+			return fmt.Errorf("price %s is less than seller settlement flat fee %s", price, settlementFlatFee)
+		}
+		if ratio != nil {
+			ratioFee, err := ratio.ApplyToLoosely(price)
+			if err != nil {
+				return err
+			}
+			reqPrice := settlementFlatFee.Add(ratioFee)
+			if price.IsLT(reqPrice) {
+				return fmt.Errorf("price %s is less than total required seller settlement fee of %s = %s flat + %s ratio",
+					price, reqPrice, settlementFlatFee, ratioFee)
+			}
+		}
+	}
+
+	return err
+}
+
+// calculateSellerSettlementRatioFee calculates the seller settlement fee required for the given price.
+func calculateSellerSettlementRatioFee(store sdk.KVStore, marketID uint32, price sdk.Coin) (*sdk.Coin, error) {
+	ratio, err := getSellerSettlementRatio(store, marketID, price.Denom)
+	if err != nil {
+		return nil, err
+	}
+	if ratio == nil {
+		return nil, nil
 	}
 	rv, err := ratio.ApplyTo(price)
 	if err != nil {
-		err = fmt.Errorf("invalid seller settlement fees: %w", err)
+		return nil, fmt.Errorf("invalid seller settlement fees: %w", err)
 	}
-	return rv, err
+	return &rv, nil
 }
 
 // getBuyerSettlementFlatFees gets the buyer settlement flat fee options for a market.
@@ -396,12 +456,11 @@ func (k Keeper) CalculateBuyerSettlementRatioFeeOptions(ctx sdk.Context, marketI
 	return rv, nil
 }
 
-// ValidateBuyerSettlementFee returns an error if the provided fee is not enough to cover both the
+// validateBuyerSettlementFee returns an error if the provided fee is not enough to cover both the
 // buyer settlement flat and percent fees for the given price.
-func (k Keeper) ValidateBuyerSettlementFee(ctx sdk.Context, marketID uint32, price sdk.Coin, fee sdk.Coins) error {
+func validateBuyerSettlementFee(store sdk.KVStore, marketID uint32, price sdk.Coin, fee sdk.Coins) error {
 	flatKeyMaker := buyerSettlementFlatKeyMakers
 	ratioKeyMaker := buyerSettlementRatioKeyMakers
-	store := k.getStore(ctx)
 	flatFeeReq := hasFlatFee(store, marketID, flatKeyMaker)
 	ratioFeeReq := hasFeeRatio(store, marketID, ratioKeyMaker)
 
@@ -751,6 +810,15 @@ func (k Keeper) NextMarketID(ctx sdk.Context) uint32 {
 func setMarketKnown(store sdk.KVStore, marketID uint32) {
 	key := MakeKeyKnownMarketID(marketID)
 	store.Set(key, nil)
+}
+
+// validateMarketExists returns an error if the provided marketID does not exist.
+func validateMarketExists(store sdk.KVStore, marketID uint32) error {
+	key := MakeKeyKnownMarketID(marketID)
+	if !store.Has(key) {
+		return fmt.Errorf("market %d does not exist", marketID)
+	}
+	return nil
 }
 
 // GetAllMarketIDs gets all the known market ids from the store.

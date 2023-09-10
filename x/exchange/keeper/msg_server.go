@@ -25,20 +25,32 @@ var _ exchange.MsgServer = MsgServer{}
 
 // CreateAsk creates an ask order (to sell something you own).
 func (k MsgServer) CreateAsk(goCtx context.Context, msg *exchange.MsgCreateAskRequest) (*exchange.MsgCreateAskResponse, error) {
-	// TODO[1658]: Implement CreateAsk
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	orderID, err := k.CreateAskOrder(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &exchange.MsgCreateAskResponse{OrderId: orderID}, nil
 }
 
 // CreateBid creates an bid order (to buy something you want).
 func (k MsgServer) CreateBid(goCtx context.Context, msg *exchange.MsgCreateBidRequest) (*exchange.MsgCreateBidResponse, error) {
-	// TODO[1658]: Implement CreateBid
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	orderID, err := k.CreateBidOrder(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &exchange.MsgCreateBidResponse{OrderId: orderID}, nil
 }
 
 // CancelOrder cancels an order.
 func (k MsgServer) CancelOrder(goCtx context.Context, msg *exchange.MsgCancelOrderRequest) (*exchange.MsgCancelOrderResponse, error) {
-	// TODO[1658]: Implement CancelOrder
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err := k.Keeper.CancelOrder(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &exchange.MsgCancelOrderResponse{}, nil
 }
 
 // FillBids uses the assets in your account to fulfill one or more bids (similar to a fill-or-cancel ask).
