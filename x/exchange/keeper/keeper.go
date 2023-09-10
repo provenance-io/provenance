@@ -2,6 +2,9 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -19,23 +22,30 @@ type Keeper struct {
 
 	accountKeeper exchange.AccountKeeper
 	attrKeeper    exchange.AttributeKeeper
+	bankKeeper    exchange.BankKeeper
+	holdKeeper    exchange.HoldKeeper
 	nameKeeper    exchange.NameKeeper
 
 	// TODO[1658]: Finish the Keeper struct.
-	authority string
+	authority        string
+	feeCollectorName string
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey,
-	accountKeeper exchange.AccountKeeper, attrKeeper exchange.AttributeKeeper, nameKeeper exchange.NameKeeper,
+func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollectorName string,
+	accountKeeper exchange.AccountKeeper, attrKeeper exchange.AttributeKeeper,
+	bankKeeper exchange.BankKeeper, holdKeeper exchange.HoldKeeper, nameKeeper exchange.NameKeeper,
 ) Keeper {
 	// TODO[1658]: Finish NewKeeper.
 	rv := Keeper{
-		cdc:           cdc,
-		storeKey:      storeKey,
-		accountKeeper: accountKeeper,
-		attrKeeper:    attrKeeper,
-		nameKeeper:    nameKeeper,
-		authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		cdc:              cdc,
+		storeKey:         storeKey,
+		accountKeeper:    accountKeeper,
+		attrKeeper:       attrKeeper,
+		bankKeeper:       bankKeeper,
+		holdKeeper:       holdKeeper,
+		nameKeeper:       nameKeeper,
+		authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		feeCollectorName: feeCollectorName,
 	}
 	return rv
 }
@@ -43,6 +53,11 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey,
 // GetAuthority gets the address (as bech32) that has governance authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// GetFeeCollectorName gets the name of the fee collector.
+func (k Keeper) GetFeeCollectorName() string {
+	return k.feeCollectorName
 }
 
 // getAllKeys gets all the keys in the store with the given prefix.
@@ -103,4 +118,41 @@ func (k Keeper) NormalizeReqAttrs(ctx sdk.Context, reqAttrs []string) ([]string,
 		rv[i], errs[i] = k.nameKeeper.Normalize(ctx, attr)
 	}
 	return rv, errors.Join(errs...)
+}
+
+// CollectFee will transfer the fee amount to the market account,
+// then the exchange's cut from the market to the fee collector.
+func (k Keeper) CollectFee(ctx sdk.Context, payer sdk.AccAddress, marketID uint32, feeAmt sdk.Coins) error {
+	if feeAmt.IsZero() {
+		return nil
+	}
+	exchangeAmt := make(sdk.Coins, 0, len(feeAmt))
+	for _, coin := range feeAmt {
+		if coin.Amount.IsZero() {
+			continue
+		}
+
+		split := int64(k.GetExchangeSplit(ctx, coin.Denom))
+		if split == 0 {
+			continue
+		}
+
+		splitAmt := coin.Amount.Mul(sdkmath.NewInt(split))
+		roundUp := !splitAmt.ModRaw(10_000).IsZero()
+		splitAmt = splitAmt.QuoRaw(10_000)
+		if roundUp {
+			splitAmt = splitAmt.Add(sdkmath.OneInt())
+		}
+		exchangeAmt = append(exchangeAmt, sdk.Coin{Denom: coin.Denom, Amount: splitAmt})
+	}
+
+	marketAddr := exchange.GetMarketAddress(marketID)
+	if err := k.bankKeeper.SendCoins(ctx, payer, marketAddr, feeAmt); err != nil {
+		return fmt.Errorf("error transferring %s from %s to market %d: %w", feeAmt, payer, marketID, err)
+	}
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, marketAddr, k.feeCollectorName, exchangeAmt); err != nil {
+		return fmt.Errorf("error collecting exchange fee %s (based off %s) from market %d: %w", exchangeAmt, feeAmt, marketID, err)
+	}
+
+	return nil
 }
