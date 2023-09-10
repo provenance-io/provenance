@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -250,20 +252,52 @@ func (r FeeRatio) Equals(other FeeRatio) bool {
 	return r.Price.Equal(other.Price) && r.Fee.Equal(other.Fee)
 }
 
+// applyLooselyTo returns the amount that results from the application of this ratio to the given price.
+// The second return value is whether rounding was needed. I.e. If price / ratio price * fee price is
+// not a whole number, the returned amount is increased by one and the second return value will be true.
+// If it is a whole number, the second return value is false.
+// An error is returned if the price's denom does not equal the ratio's price denom, or if the ratio's price amount is zero.
+func (r FeeRatio) applyLooselyTo(price sdk.Coin) (sdkmath.Int, bool, error) {
+	if r.Price.Denom != price.Denom {
+		return sdkmath.ZeroInt(), false, fmt.Errorf("cannot apply ratio %s to price %s: incorrect price denom", r, price)
+	}
+	if r.Price.Amount.IsZero() {
+		return sdkmath.ZeroInt(), false, fmt.Errorf("cannot apply ratio %s to price %s: division by zero", r, price)
+	}
+	rv := price.Amount.Mul(r.Fee.Amount)
+	mustRound := !rv.Mod(r.Price.Amount).IsZero()
+	rv = rv.Quo(r.Price.Amount)
+	if mustRound {
+		rv = rv.Add(sdkmath.OneInt())
+	}
+	return rv, mustRound, nil
+}
+
 // ApplyTo attempts to calculate the fee that results from applying this fee ratio to the provided price.
 func (r FeeRatio) ApplyTo(price sdk.Coin) (sdk.Coin, error) {
 	rv := sdk.Coin{Denom: "", Amount: sdk.ZeroInt()}
-	if r.Price.Denom != price.Denom {
-		return rv, fmt.Errorf("cannot apply ratio %s to price %s: incorrect price denom", r, price)
+	amt, wasRounded, err := r.applyLooselyTo(price)
+	if err != nil {
+		return rv, err
 	}
-	if r.Price.Amount.IsZero() {
-		return rv, fmt.Errorf("cannot apply ratio %s to price %s: division by zero", r, price)
-	}
-	if !price.Amount.Mod(r.Price.Amount).IsZero() {
+	if wasRounded {
 		return rv, fmt.Errorf("cannot apply ratio %s to price %s: price amount cannot be evenly divided by ratio price", r, price)
 	}
 	rv.Denom = r.Fee.Denom
-	rv.Amount = price.Amount.Quo(r.Price.Amount).Mul(r.Fee.Amount)
+	rv.Amount = amt
+	return rv, nil
+}
+
+// ApplyToLoosely calculates the fee that results from applying this fee ratio to the provided price, allowing for the
+// ratio to not evenly apply to the price.
+func (r FeeRatio) ApplyToLoosely(price sdk.Coin) (sdk.Coin, error) {
+	rv := sdk.Coin{Denom: "", Amount: sdk.ZeroInt()}
+	amt, _, err := r.applyLooselyTo(price)
+	if err != nil {
+		return rv, err
+	}
+	rv.Denom = r.Fee.Denom
+	rv.Amount = amt
 	return rv, nil
 }
 

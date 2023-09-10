@@ -1088,6 +1088,96 @@ func TestFeeRatio_ApplyTo(t *testing.T) {
 	}
 }
 
+func TestFeeRatio_ApplyToLoosely(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	bigCoin := func(amount string, denom string) sdk.Coin {
+		amt, ok := sdkmath.NewIntFromString(amount)
+		require.True(t, ok, "sdkmath.NewIntFromString(%q) ok result boolean", amount)
+		return sdk.Coin{Denom: denom, Amount: amt}
+	}
+	feeRatio := func(priceAmount int64, priceDenom string, feeAmount int64, feeDenom string) FeeRatio {
+		return FeeRatio{
+			Price: coin(priceAmount, priceDenom),
+			Fee:   coin(feeAmount, feeDenom),
+		}
+	}
+
+	tests := []struct {
+		name   string
+		ratio  FeeRatio
+		price  sdk.Coin
+		exp    sdk.Coin
+		expErr string
+	}{
+		{
+			name:   "wrong denom",
+			ratio:  feeRatio(1, "pdenom", 1, "fdenom"),
+			price:  coin(1, "fdenom"),
+			expErr: "cannot apply ratio 1pdenom:1fdenom to price 1fdenom: incorrect price denom",
+		},
+		{
+			name:   "ratio price amount is zero",
+			ratio:  feeRatio(0, "pdenom", 1, "fdenom"),
+			price:  coin(1, "pdenom"),
+			expErr: "cannot apply ratio 0pdenom:1fdenom to price 1pdenom: division by zero",
+		},
+		{
+			name:  "price amount is less than ratio price amount",
+			ratio: feeRatio(14, "pdenom", 3, "fdenom"),
+			price: coin(7, "pdenom"),
+			exp:   coin(2, "fdenom"), // 7 * 3 / 14 = 1.5 => 2
+		},
+		{
+			name:  "price amount is not evenly divisible by ratio",
+			ratio: feeRatio(7, "pdenom", 3, "fdenom"),
+			price: coin(71, "pdenom"),
+			exp:   coin(31, "fdenom"), // 71 * 3 / 7 = 30.4 => 31
+		},
+		{
+			name:  "price equals ratio price",
+			ratio: feeRatio(55, "pdenom", 3, "fdenom"),
+			price: coin(55, "pdenom"),
+			exp:   coin(3, "fdenom"),
+		},
+		{
+			name:  "three times ratio price",
+			ratio: feeRatio(13, "pdenom", 17, "fdenom"),
+			price: coin(39, "pdenom"),
+			exp:   coin(51, "fdenom"),
+		},
+		{
+			name:  "very big price",
+			ratio: feeRatio(1_000_000_000, "pdenom", 3, "fdenom"),
+			price: bigCoin("1000000000000000000000", "pdenom"),
+			exp:   coin(3_000_000_000_000, "fdenom"),
+		},
+		{
+			name:  "same price and fee denoms",
+			ratio: feeRatio(100, "nhash", 1, "nhash"),
+			price: coin(5_000_000_000, "nhash"),
+			exp:   coin(50_000_000, "nhash"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if len(tc.expErr) > 0 {
+				tc.exp = coin(0, "")
+			}
+			var actual sdk.Coin
+			var err error
+			testFunc := func() {
+				actual, err = tc.ratio.ApplyToLoosely(tc.price)
+			}
+			require.NotPanics(t, testFunc, "%s.ApplyToLoosely(%s)", tc.ratio, tc.price)
+			assertions.AssertErrorValue(t, err, tc.expErr, "%s.ApplyToLoosely(%s) error", tc.ratio, tc.price)
+			assert.Equal(t, tc.exp.String(), actual.String(), "%s.ApplyToLoosely(%s) result", tc.ratio, tc.price)
+		})
+	}
+}
+
 func TestIntersectionOfFeeRatios(t *testing.T) {
 	feeRatio := func(priceAmount int64, priceDenom string, feeAmount int64, feeDenom string) FeeRatio {
 		return FeeRatio{
