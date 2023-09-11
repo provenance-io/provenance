@@ -3,6 +3,7 @@ package simulation
 import (
 	"math/rand"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -79,10 +80,11 @@ func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.Conte
 			return nil
 		}
 
-		newSupply := randomUint64(r, k.GetMaxSupply(ctx).Uint64()-k.CurrentCirculation(ctx, m).Uint64())
+		maxSupply := k.GetMaxSupply(ctx).Sub(k.CurrentCirculation(ctx, m))
+		newSupply := math.NewIntFromBigInt(math.ZeroInt().BigInt().Rand(r, maxSupply.BigInt()))
 
 		// TODO: When the simulation tests are fixed to stop breaking supply invariants through incorrect minting, the following check should be removed.
-		if newSupply > k.GetMaxSupply(ctx).Uint64() {
+		if newSupply.GT(k.GetMaxSupply(ctx)) {
 			println("!!!! WARNING, TOKEN SUPPLY IS INVALID, ABORTING NEW PROPOSAL !!!!")
 			return nil
 		}
@@ -91,7 +93,7 @@ func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.Conte
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
 			// sdk.NewCoin(m.GetDenom(), sdk.NewIntFromUint64(randomUint64(r, k.GetMaxSupply(ctx).Uint64()-k.CurrentCirculation(ctx, m).Uint64()))),
-			sdk.NewCoin(m.GetDenom(), sdk.NewIntFromUint64(newSupply)),
+			sdk.NewCoin(m.GetDenom(), newSupply),
 			dest,
 		)
 	}
