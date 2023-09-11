@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -15,8 +17,6 @@ import (
 
 	provenanceapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/contracts"
-
-	"github.com/stretchr/testify/suite"
 )
 
 type TestChain struct {

@@ -4,6 +4,7 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
+
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 )
 
