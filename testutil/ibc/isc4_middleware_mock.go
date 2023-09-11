@@ -13,30 +13,30 @@ var _ porttypes.ICS4Wrapper = &ICS4WrapperMock{}
 type ICS4WrapperMock struct{}
 
 func (m *ICS4WrapperMock) SendPacket(
-	ctx sdk.Context,
-	chanCap *capabilitytypes.Capability,
-	sourcePort string,
-	sourceChannel string,
-	timeoutHeight ibcclienttypes.Height,
-	timeoutTimestamp uint64,
-	data []byte,
+	_ sdk.Context,
+	_ *capabilitytypes.Capability,
+	_ string,
+	_ string,
+	_ ibcclienttypes.Height,
+	_ uint64,
+	_ []byte,
 ) (sequence uint64, err error) {
 	return 1, nil
 }
 
 func (m *ICS4WrapperMock) WriteAcknowledgement(
-	ctx sdk.Context,
-	chanCap *capabilitytypes.Capability,
-	packet exported.PacketI,
-	ack exported.Acknowledgement,
+	_ sdk.Context,
+	_ *capabilitytypes.Capability,
+	_ exported.PacketI,
+	_ exported.Acknowledgement,
 ) error {
 	return nil
 }
 
 func (m *ICS4WrapperMock) GetAppVersion(
-	ctx sdk.Context,
-	portID,
-	channelID string,
+	_ sdk.Context,
+	_,
+	_ string,
 ) (string, bool) {
 	return "", false
 }
