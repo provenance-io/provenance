@@ -32,7 +32,12 @@ func GenMaxTotalSupply(r *rand.Rand) uint64 {
 
 // GenMaxSupply randomized Maximum amount of supply to allow for markers
 func GenMaxSupply(r *rand.Rand) math.Int {
-	return math.NewIntFromUint64(r.Uint64())
+	maxSupply := fmt.Sprintf("%d%d", r.Uint64(), r.Uint64())
+	res, ok := math.NewIntFromString(maxSupply)
+	if !ok {
+		panic("unable to generate max total supply")
+	}
+	return res
 }
 
 // GenEnableGovernance returns a randomized EnableGovernance parameter.

@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -41,10 +42,12 @@ func TestRandomizedGenState(t *testing.T) {
 	var markerGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &markerGenesis)
 
-	require.Equal(t, true, markerGenesis.Params.EnableGovernance)
+	expectedMaxSupply, _ := math.NewIntFromString("89438594918311721611998794077335055257")
+
+	require.Equal(t, false, markerGenesis.Params.EnableGovernance)
 	require.Equal(t, uint64(0x9408d2ac22c4d294), markerGenesis.Params.MaxTotalSupply)
-	require.Equal(t, uint64(0xc697f48392907a0), markerGenesis.Params.MaxSupply.Uint64())
-	require.Equal(t, `[a-zA-Z][a-zA-Z0-9\\-\\.]{9,20}`, markerGenesis.Params.UnrestrictedDenomRegex)
+	require.Equal(t, expectedMaxSupply, markerGenesis.Params.MaxSupply)
+	require.Equal(t, `[a-zA-Z][a-zA-Z0-9\\-\\.]{18,24}`, markerGenesis.Params.UnrestrictedDenomRegex)
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
