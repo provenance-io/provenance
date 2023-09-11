@@ -319,7 +319,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 
 	contractAddr, err := sdktypes.AccAddressFromBech32(contract)
 	if err != nil {
-		return sdkerrors.Wrap(err, "Ack callback error") // The callback configured is not a bech32. Error out
+		return sdkerrors.Wrap(err, "Ack callback error")
 	}
 
 	success := "false"
@@ -330,7 +330,6 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 	// Notify the sender that the ack has been received
 	ackAsJson, err := json.Marshal(acknowledgement)
 	if err != nil {
-		// If the ack is not a json object, error
 		return err
 	}
 
