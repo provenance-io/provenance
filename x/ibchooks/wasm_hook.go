@@ -18,7 +18,6 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
 
 	"github.com/provenance-io/provenance/x/ibchooks/keeper"
-	"github.com/provenance-io/provenance/x/ibchooks/osmoutils"
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 )
 
@@ -45,7 +44,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, 
 		// Not configured
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
-	isIcs20, data := isIcs20Packet(packet)
+	isIcs20, data := isIcs20Packet(packet.GetData())
 	if !isIcs20 {
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
@@ -56,10 +55,10 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, 
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 	if err != nil {
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMsgValidation, err.Error())
+		return NewEmitErrorAcknowledgement(ctx, types.ErrMsgValidation, err.Error())
 	}
 	if msgBytes == nil || contractAddr == nil { // This should never happen
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMsgValidation)
+		return NewEmitErrorAcknowledgement(ctx, types.ErrMsgValidation)
 	}
 
 	// Calculate the receiver / contract caller based on the packet's channel and sender
@@ -67,7 +66,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, 
 	sender := data.GetSender()
 	senderBech32, err := keeper.DeriveIntermediateSender(channel, sender, h.bech32PrefixAccAddr)
 	if err != nil {
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", channel, sender, err.Error()))
+		return NewEmitErrorAcknowledgement(ctx, types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", channel, sender, err.Error()))
 	}
 
 	// The funds sent on this packet need to be transferred to the intermediary account for the sender.
@@ -79,7 +78,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, 
 	data.Receiver = senderBech32
 	bz, err := json.Marshal(data)
 	if err != nil {
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrMarshaling, err.Error())
+		return NewEmitErrorAcknowledgement(ctx, types.ErrMarshaling, err.Error())
 	}
 	packet.Data = bz
 
@@ -93,11 +92,11 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, 
 	if !ok {
 		// This should never happen, as it should've been caught in the underlaying call to OnRecvPacket,
 		// but returning here for completeness
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrInvalidPacket, "Amount is not an int")
+		return NewEmitErrorAcknowledgement(ctx, types.ErrInvalidPacket, "Amount is not an int")
 	}
 
 	// The packet's denom is the denom in the sender chain. This needs to be converted to the local denom.
-	denom := osmoutils.MustExtractDenomFromPacketOnRecv(packet)
+	denom := MustExtractDenomFromPacketOnRecv(packet)
 	funds := sdktypes.NewCoins(sdktypes.NewCoin(denom, amount))
 
 	// Execute the contract
@@ -109,7 +108,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, 
 	}
 	response, err := h.execWasmMsg(ctx, &execMsg)
 	if err != nil {
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrWasmError, err.Error())
+		return NewEmitErrorAcknowledgement(ctx, types.ErrWasmError, err.Error())
 	}
 
 	// Check if the contract is requesting for the ack to be async.
@@ -120,7 +119,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, 
 		if asyncAckRequest.IsAsyncAck { // in which case IsAsyncAck is expected to be set to true
 			if !h.ibcHooksKeeper.IsInAllowList(ctx, contractAddr.String()) {
 				// Only allowed contracts can send async acks
-				return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrAsyncAckNotAllowed)
+				return NewEmitErrorAcknowledgement(ctx, types.ErrAsyncAckNotAllowed)
 			}
 			// Store the contract as the packet's ack actor and return nil
 			h.ibcHooksKeeper.StorePacketAckActor(ctx, packet, contractAddr.String())
@@ -132,7 +131,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, 
 	fullAck := types.ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
 	bz, err = json.Marshal(fullAck)
 	if err != nil {
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadResponse, err.Error())
+		return NewEmitErrorAcknowledgement(ctx, types.ErrBadResponse, err.Error())
 	}
 
 	return channeltypes.NewResultAcknowledgement(bz)
@@ -146,12 +145,12 @@ func (h WasmHooks) execWasmMsg(ctx sdktypes.Context, execMsg *wasmtypes.MsgExecu
 	return wasmMsgServer.ExecuteContract(sdktypes.WrapSDKContext(ctx), execMsg)
 }
 
-func isIcs20Packet(packet channeltypes.Packet) (isIcs20 bool, ics20data transfertypes.FungibleTokenPacketData) {
-	var data transfertypes.FungibleTokenPacketData
-	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
-		return false, data
+func isIcs20Packet(data []byte) (isIcs20 bool, ics20data transfertypes.FungibleTokenPacketData) {
+	var packetdata transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(data, &packetdata); err != nil {
+		return false, packetdata
 	}
-	return true, data
+	return true, packetdata
 }
 
 // jsonStringHasKey parses the memo as a json object and checks if it contains the key.
@@ -249,8 +248,8 @@ func (h WasmHooks) SendPacketOverride(
 	timeoutTimestamp uint64,
 	data []byte,
 ) (uint64, error) {
-	var ics20Packet transfertypes.FungibleTokenPacketData
-	if err := json.Unmarshal(data, &ics20Packet); err != nil {
+	isIcs20, ics20Packet := isIcs20Packet(data)
+	if !isIcs20 {
 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
 	}
 
@@ -269,7 +268,7 @@ func (h WasmHooks) SendPacketOverride(
 	delete(metadata, types.IBCCallbackKey)
 	bzMetadata, err := json.Marshal(metadata)
 	if err != nil {
-		return 0, sdkerrors.Wrap(err, "Send packet with callback error")
+		return 0, sdkerrors.Wrap(err, "ibc_callback marshall error")
 	}
 	stringMetadata := string(bzMetadata)
 	if stringMetadata == "{}" {
@@ -279,7 +278,7 @@ func (h WasmHooks) SendPacketOverride(
 	}
 	dataBytes, err := json.Marshal(ics20Packet)
 	if err != nil {
-		return 0, sdkerrors.Wrap(err, "Send packet with callback error")
+		return 0, sdkerrors.Wrap(err, "ics20data marshall error")
 	}
 
 	seq, err := i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, dataBytes)
@@ -290,11 +289,11 @@ func (h WasmHooks) SendPacketOverride(
 	// Make sure the callback contract is a string and a valid bech32 addr. If it isn't, ignore this packet
 	contract, ok := callbackRaw.(string)
 	if !ok {
-		return seq, nil
+		return 0, nil
 	}
 
 	if _, err := sdktypes.AccAddressFromBech32(contract); err != nil {
-		return seq, nil
+		return 0, nil
 	}
 
 	h.ibcHooksKeeper.StorePacketCallback(ctx, sourceChannel, seq, contract)
@@ -324,12 +323,12 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 	}
 
 	success := "false"
-	if !osmoutils.IsAckError(acknowledgement) {
+	if !IsJsonAckError(acknowledgement) {
 		success = "true"
 	}
 
 	// Notify the sender that the ack has been received
-	ack, err := json.Marshal(acknowledgement)
+	ackAsJson, err := json.Marshal(acknowledgement)
 	if err != nil {
 		// If the ack is not a json object, error
 		return err
@@ -340,7 +339,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 
 	sudoMsg := []byte(fmt.Sprintf(
 		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
-		sanitizedSourceChannel, packet.Sequence, ack, success))
+		sanitizedSourceChannel, packet.Sequence, ackAsJson, success))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback
@@ -392,4 +391,69 @@ func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Contex
 	}
 	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
 	return nil
+}
+
+// NewEmitErrorAcknowledgement creates a new error acknowledgement after having emitted an event with the
+// details of the error.
+func NewEmitErrorAcknowledgement(ctx sdktypes.Context, err error, errorContexts ...string) channeltypes.Acknowledgement {
+	errorType := "ibc-acknowledgement-error"
+	logger := ctx.Logger().With("module", errorType)
+
+	attributes := make([]sdktypes.Attribute, len(errorContexts)+1)
+	attributes[0] = sdktypes.NewAttribute("error", err.Error())
+	for i, s := range errorContexts {
+		attributes[i+1] = sdktypes.NewAttribute("error-context", s)
+		logger.Error(fmt.Sprintf("error-context: %v", s))
+	}
+
+	ctx.EventManager().EmitEvents(sdktypes.Events{
+		sdktypes.NewEvent(
+			errorType,
+			attributes...,
+		),
+	})
+
+	return channeltypes.NewErrorAcknowledgement(err)
+}
+
+// IsJsonAckError checks an IBC acknowledgement to see if it's an error.
+// This is a replacement for ack.Success() which is currently not working on some circumstances
+func IsJsonAckError(acknowledgement []byte) bool {
+	var ackErr channeltypes.Acknowledgement_Error
+	if err := json.Unmarshal(acknowledgement, &ackErr); err == nil && len(ackErr.Error) > 0 {
+		return true
+	}
+	return false
+}
+
+// MustExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the
+// denom as represented in the local chain.
+// If the data cannot be unmarshalled this function will panic
+func MustExtractDenomFromPacketOnRecv(packet ibcexported.PacketI) string {
+	var data transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
+		panic("unable to unmarshal ICS20 packet data")
+	}
+
+	var denom string
+	if transfertypes.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
+		// remove prefix added by sender chain
+		voucherPrefix := transfertypes.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
+
+		unprefixedDenom := data.Denom[len(voucherPrefix):]
+
+		// coin denomination used in sending from the escrow address
+		denom = unprefixedDenom
+
+		// The denomination used to send the coins is either the native denom or the hash of the path
+		// if the denomination is not native.
+		denomTrace := transfertypes.ParseDenomTrace(unprefixedDenom)
+		if denomTrace.Path != "" {
+			denom = denomTrace.IBCDenom()
+		}
+	} else {
+		prefixedDenom := transfertypes.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel()) + data.Denom
+		denom = transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom()
+	}
+	return denom
 }

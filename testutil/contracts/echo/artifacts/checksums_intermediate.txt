@@ -1,0 +1,1 @@
+e83bc7e3e532ed1b97846057c5ba737fa9e82668c54bf39307ec78ec79bd4319  ./target/wasm32-unknown-unknown/release/echo.wasm

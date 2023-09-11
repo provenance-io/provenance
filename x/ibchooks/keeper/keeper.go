@@ -19,7 +19,6 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 
-	"github.com/provenance-io/provenance/x/ibchooks/osmoutils"
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 )
 
@@ -237,7 +236,7 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 		newAck = channeltypes.NewResultAcknowledgement(jsonAck)
 	case "ack_error":
 		packet = ack.AckError.Packet
-		newAck = osmoutils.NewSuccessAckRepresentingAnError(ctx, types.ErrAckFromContract, []byte(ack.AckError.ErrorResponse), ack.AckError.ErrorDescription)
+		newAck = NewSuccessAckRepresentingAnError(ctx, types.ErrAckFromContract, []byte(ack.AckError.ErrorResponse), ack.AckError.ErrorDescription)
 	default:
 		return nil, sdkerrors.Wrap(err, "could not unmarshal into IBCAckResponse or IBCAckError")
 	}
@@ -273,4 +272,26 @@ func hashPacket(packet channeltypes.Packet) (string, error) {
 	}
 	packetHash := tmhash.Sum(bz)
 	return hex.EncodeToString(packetHash), nil
+}
+
+// NewSuccessAckRepresentingAnError creates a new success acknowledgement that represents an error.
+// This is useful for notifying the sender that an error has occurred in a way that does not allow
+// the received tokens to be reverted (which means they shouldn't be released by the sender's ics20 escrow)
+func NewSuccessAckRepresentingAnError(ctx sdk.Context, err error, errorContent []byte, errorContexts ...string) channeltypes.Acknowledgement {
+	logger := ctx.Logger().With("module", "ibc-acknowledgement-error")
+
+	attributes := make([]sdk.Attribute, len(errorContexts)+1)
+	attributes[0] = sdk.NewAttribute("error", err.Error())
+	for i, s := range errorContexts {
+		attributes[i+1] = sdk.NewAttribute("error-context", s)
+		logger.Error(fmt.Sprintf("error-context: %v", s))
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"ibc-acknowledgement-error",
+			attributes...,
+		),
+	})
+	return channeltypes.NewResultAcknowledgement(errorContent)
 }
