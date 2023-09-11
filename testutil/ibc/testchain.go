@@ -52,8 +52,8 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, code
 func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddress, key []byte) string {
 	state, err := contracts.QueryContract(chain.GetProvenanceApp(), chain.GetContext(), contract, key)
 	suite.Require().NoError(err, "contract query failed", err)
-	println("got query result of ", string(state))
-	return string(state)
+	println("got query result of ", state)
+	return state
 }
 
 // SendMsgsNoCheck is an alternative to ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller

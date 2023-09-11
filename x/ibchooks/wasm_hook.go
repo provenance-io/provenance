@@ -323,12 +323,12 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 	}
 
 	success := "false"
-	if !IsJsonAckError(acknowledgement) {
+	if !IsJSONAckError(acknowledgement) {
 		success = "true"
 	}
 
 	// Notify the sender that the ack has been received
-	ackAsJson, err := json.Marshal(acknowledgement)
+	ackAsJSON, err := json.Marshal(acknowledgement)
 	if err != nil {
 		return err
 	}
@@ -338,7 +338,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 
 	sudoMsg := []byte(fmt.Sprintf(
 		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
-		sanitizedSourceChannel, packet.Sequence, ackAsJson, success))
+		sanitizedSourceChannel, packet.Sequence, ackAsJSON, success))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback
@@ -415,9 +415,9 @@ func NewEmitErrorAcknowledgement(ctx sdktypes.Context, err error, errorContexts 
 	return channeltypes.NewErrorAcknowledgement(err)
 }
 
-// IsJsonAckError checks an IBC acknowledgement to see if it's an error.
+// IsJSONAckError checks an IBC acknowledgement to see if it's an error.
 // This is a replacement for ack.Success() which is currently not working on some circumstances
-func IsJsonAckError(acknowledgement []byte) bool {
+func IsJSONAckError(acknowledgement []byte) bool {
 	var ackErr channeltypes.Acknowledgement_Error
 	if err := json.Unmarshal(acknowledgement, &ackErr); err == nil && len(ackErr.Error) > 0 {
 		return true
