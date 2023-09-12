@@ -13,17 +13,11 @@ jobs:
   changelog:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # Depending on your needs, you can use a token that will re-trigger workflows
           # See https://github.com/stefanzweifel/git-auto-commit-action#commits-of-this-action-do-not-trigger-new-workflow-runs
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: dangoslen/dependabot-changelog-helper@v3
-        with:
-          version: ${{ needs.setup.outputs.version }}
-          activationLabel: 'dependencies'
-          changelogPath: './CHANGELOG.md'
 
       # All commits must be signed, import key and sign commit of updated change log.
       - name: Import GPG key
@@ -36,11 +30,17 @@ jobs:
           git_user_signingkey: true
           git_commit_gpgsign: true
 
+      - uses: dangoslen/dependabot-changelog-helper@v3
+        with:
+          version: ${{ needs.setup.outputs.version }}
+          activationLabel: 'dependencies'
+          changelogPath: './CHANGELOG.md'
+
       # This step is required for committing the changes to your branch. 
       # See https://github.com/stefanzweifel/git-auto-commit-action#commits-of-this-action-do-not-trigger-new-workflow-runs 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_user_name: "provenanceio-bot"
+          commit_user_name: "Provenance-io Bot"
           commit_user_email: "129784868+provenanceio-bot@users.noreply.github.com"
           commit_options: "-S"
           commit_message: "Updated Changelog"
