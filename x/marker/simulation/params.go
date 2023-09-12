@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	keyMaxTotalSupply         = "MaxTotalSupply"
 	keyMaxSupply              = "MaxSupply"
 	keyEnableGovernance       = "EnableGovernance"
 	keyUnrestrictedDenomRegex = "UnrestrictedDenomRegex"

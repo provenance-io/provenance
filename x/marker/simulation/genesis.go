@@ -18,7 +18,6 @@ import (
 
 // Simulation parameter constants
 const (
-	MaxTotalSupply         = "max_total_supply"
 	MaxSupply              = "max_supply"
 	EnableGovernance       = "enable_governance"
 	UnrestrictedDenomRegex = "unresticted_denom_regex"

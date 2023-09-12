@@ -45,7 +45,6 @@ func TestRandomizedGenState(t *testing.T) {
 	expectedMaxSupply, _ := math.NewIntFromString("10667007354186551956894385949183117216")
 
 	require.Equal(t, true, markerGenesis.Params.EnableGovernance)
-	require.Equal(t, uint64(0), markerGenesis.Params.MaxTotalSupply)
 	require.Equal(t, expectedMaxSupply, markerGenesis.Params.MaxSupply)
 	require.Equal(t, `[a-zA-Z][a-zA-Z0-9\\-\\.]{9,20}`, markerGenesis.Params.UnrestrictedDenomRegex)
 }
