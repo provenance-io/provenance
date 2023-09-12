@@ -23,11 +23,6 @@ const (
 // on the simulation
 func ParamChanges(_ *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
-		simulation.NewSimParamChange(types.ModuleName, keyMaxTotalSupply,
-			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", GenMaxTotalSupply(r))
-			},
-		),
 		simulation.NewSimParamChange(types.ModuleName, keyMaxSupply,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenMaxSupply(r).String())

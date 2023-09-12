@@ -24,12 +24,6 @@ const (
 	UnrestrictedDenomRegex = "unresticted_denom_regex"
 )
 
-// GenMaxTotalSupply is deprecated.
-// Deprecated: GenMaxTotalSupply is kept for backwards compatibility.
-func GenMaxTotalSupply(r *rand.Rand) uint64 {
-	return r.Uint64()
-}
-
 // GenMaxSupply randomized Maximum amount of supply to allow for markers
 func GenMaxSupply(r *rand.Rand) math.Int {
 	maxSupply := fmt.Sprintf("%d%d", r.Uint64(), r.Uint64())
@@ -54,12 +48,6 @@ func GenUnrestrictedDenomRegex(r *rand.Rand) string {
 
 // RandomizedGenState generates a random GenesisState for marker
 func RandomizedGenState(simState *module.SimulationState) {
-	var maxTotalSupply uint64
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MaxTotalSupply, &maxTotalSupply, simState.Rand,
-		func(r *rand.Rand) { maxTotalSupply = GenMaxTotalSupply(r) },
-	)
-
 	var maxSupply math.Int
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, MaxSupply, &maxSupply, simState.Rand,
@@ -80,7 +68,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	markerGenesis := types.GenesisState{
 		Params: types.Params{
-			MaxTotalSupply:         maxTotalSupply,
 			MaxSupply:              maxSupply,
 			EnableGovernance:       enableGovernance,
 			UnrestrictedDenomRegex: unrestrictedDenomRegex,

@@ -20,11 +20,6 @@ func TestParamChanges(t *testing.T) {
 		subspace    string
 	}{
 		{
-			composedKey: "marker/MaxTotalSupply",
-			key:         "MaxTotalSupply",
-			subspace:    markertypes.ModuleName,
-		},
-		{
 			composedKey: "marker/MaxSupply",
 			key:         "MaxSupply",
 			subspace:    markertypes.ModuleName,
@@ -43,7 +38,7 @@ func TestParamChanges(t *testing.T) {
 
 	paramChanges := simulation.ParamChanges(r)
 
-	require.Len(t, paramChanges, 4)
+	require.Len(t, paramChanges, 3)
 
 	for i, p := range paramChanges {
 		require.Equal(t, expected[i].composedKey, p.ComposedKey())
