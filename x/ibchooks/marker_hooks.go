@@ -29,7 +29,11 @@ func (h MarkerHooks) ProperlyConfigured() bool {
 }
 
 func (h MarkerHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) ibcexported.Acknowledgement {
-	// TODO: create marker if it doesn't exist
+	// isIcs20, data := isIcs20Packet(packet.GetData())
+	// if !isIcs20 {
+	// 	return im.App.OnRecvPacket(ctx, packet, relayer)
+	// }
+	// packet.
 	return im.App.OnRecvPacket(ctx, packet, relayer)
 }
 
@@ -44,30 +48,59 @@ func (h MarkerHooks) SendPacketOverride(
 	data []byte,
 ) (uint64, error) {
 	isIcs20, ics20Packet := isIcs20Packet(data)
-	if !isIcs20 {
-		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
+	if !isIcs20 || ics20Packet.Memo != "" {
+		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
 	markerAddr, err := markertypes.MarkerAddress(ics20Packet.Denom)
 	if err != nil {
 		//TODO: emit some kind of event, proceed as normal
-		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
+		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 
 	}
 	marker, err := h.MarkerKeeper.GetMarker(ctx, markerAddr)
 	if err != nil {
 		//TODO: emit some kind of event, proceed as normal
-		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
+		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
-	ics20Packet.Memo = CreateMarkerMemo(marker)
+	if marker != nil {
+		ics20Packet.Memo, err = CreateMarkerMemo(ctx, marker)
+		if err != nil {
+			return 0, sdkerrors.Wrap(err, "ics20data marshall error")
+		}
+	}
 	dataBytes, err := json.Marshal(ics20Packet)
 	if err != nil {
 		return 0, sdkerrors.Wrap(err, "ics20data marshall error")
 	}
 
-	return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, dataBytes) // continue
+	return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, dataBytes)
 }
 
-func CreateMarkerMemo(marker markertypes.MarkerAccountI) string {
+type MarkerMemo struct {
+	Marker MarkerPayload `json:"marker"`
+}
 
-	return marker.String()
+type MarkerPayload struct {
+	ChainId      string   `json:"chain-id"`
+	TransferAuth []string `json:"transfer-auth"`
+}
+
+func CreateMarkerMemo(ctx sdktypes.Context, marker markertypes.MarkerAccountI) (string, error) {
+	transferAuthAddr := marker.AddressListForPermission(markertypes.Access_Transfer)
+	addresses := make([]string, len(transferAuthAddr))
+	for i := 0; i < len(transferAuthAddr); i++ {
+		addresses[i] = transferAuthAddr[i].String()
+	}
+
+	memo := MarkerMemo{Marker: MarkerPayload{
+		ChainId:      ctx.ChainID(),
+		TransferAuth: addresses,
+	}}
+
+	jsonData, err := json.Marshal(memo)
+	if err != nil {
+		return "", err
+	}
+
+	return string(jsonData), nil
 }
