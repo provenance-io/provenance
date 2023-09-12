@@ -40,10 +40,15 @@ func (h MarkerHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context
 	}
 
 	ibcDenom := MustExtractDenomFromPacketOnRecv(packet)
-	if strings.HasPrefix("ibc/", ibcDenom) {
-		marker, err := h.MarkerKeeper.GetMarkerByDenom(ctx, ibcDenom)
+	if strings.HasPrefix(ibcDenom, "ibc/") {
+		markerAddress, err := types.MarkerAddress(ibcDenom)
 		if err != nil {
 			//TODO: emit some kind of event, proceed as normal
+			return im.App.OnRecvPacket(ctx, packet, relayer)
+		}
+		marker, err := h.MarkerKeeper.GetMarker(ctx, markerAddress)
+		if err != nil {
+			// TODO: emit some kind of event, proceed as normal
 			return im.App.OnRecvPacket(ctx, packet, relayer)
 		}
 		if marker == nil {
@@ -92,9 +97,13 @@ func (h MarkerHooks) SendPacketOverride(
 	if !isIcs20 || ics20Packet.Memo != "" {
 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
-	marker, err := h.MarkerKeeper.GetMarkerByDenom(ctx, ics20Packet.Denom)
+
+	markerAddress, err := types.MarkerAddress(ics20Packet.Denom)
 	if err != nil {
-		//TODO: emit some kind of event, proceed as normal
+		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+	}
+	marker, err := h.MarkerKeeper.GetMarker(ctx, markerAddress)
+	if err != nil {
 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
 	if marker != nil {

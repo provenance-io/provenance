@@ -10,6 +10,7 @@ import (
 	testutil "github.com/provenance-io/provenance/testutil/ibc"
 	"github.com/provenance-io/provenance/x/ibchooks"
 	"github.com/provenance-io/provenance/x/ibchooks/keeper"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/stretchr/testify/suite"
 
@@ -510,8 +511,23 @@ func (suite *HooksTestSuite) TestAcks() {
 
 func (suite *HooksTestSuite) TestSendWithoutMemo() {
 	// Sending a packet without memo to ensure that the ibc_callback middleware doesn't interfere with a regular send
-	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "")
+	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String(), "")
 	_, _, ack, err := suite.FullSend(transferMsg, AtoB)
-	suite.Require().NoError(err)
+	suite.Require().NoError(err, "FullSend()")
 	suite.Require().Contains(ack, "result")
+	prefixedDenom := transfertypes.GetDenomPrefix(suite.path.EndpointB.ChannelConfig.PortID, suite.path.EndpointB.ChannelID) + sdk.DefaultBondDenom
+	denom := transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom()
+	marker, err := suite.chainB.GetProvenanceApp().MarkerKeeper.GetMarkerByDenom(suite.chainB.GetContext(), denom)
+	suite.Require().NoError(err, "GetMarkerByDenom()")
+	suite.Require().Equal(marker.GetDenom(), denom)
+
+	transferMsg = NewMsgTransfer(sdk.NewCoin(denom, sdk.NewInt(100)), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "")
+	_, _, ack, err = suite.FullSend(transferMsg, BtoA)
+	suite.Require().NoError(err, "FullSend()")
+	suite.Require().Contains(ack, "result")
+	stakeAddr := markertypes.MustGetMarkerAddress(sdk.DefaultBondDenom)
+	marker, err = suite.chainA.GetProvenanceApp().MarkerKeeper.GetMarker(suite.chainA.GetContext(), stakeAddr)
+	suite.Require().NoError(err, "GetMarker()")
+	suite.Require().Nil(marker, "Should not create marker on chain a")
+
 }
