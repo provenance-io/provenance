@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -42,7 +41,7 @@ func TestRandomizedGenState(t *testing.T) {
 	var markerGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &markerGenesis)
 
-	expectedMaxSupply, _ := math.NewIntFromString("10667007354186551956894385949183117216")
+	expectedMaxSupply := types.StringToBigInt("10667007354186551956894385949183117216")
 
 	require.Equal(t, true, markerGenesis.Params.EnableGovernance)
 	require.Equal(t, expectedMaxSupply, markerGenesis.Params.MaxSupply)
