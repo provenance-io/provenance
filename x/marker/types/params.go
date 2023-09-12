@@ -17,7 +17,7 @@ const (
 	// DefaultMaxTotalSupply is deprecated.
 	DefaultMaxTotalSupply = uint64(100000000000)
 	// DefaultMaxSupply is the upper bound to enforce on supply for markers.
-	DefaultMaxSupply = uint64(100000000000)
+	DefaultMaxSupply = "100000000000000000000"
 	// DefaultUnrestrictedDenomRegex is a regex that denoms created by normal requests must pass.
 	DefaultUnrestrictedDenomRegex = `[a-zA-Z][a-zA-Z0-9\-\.]{2,83}`
 )
@@ -69,7 +69,7 @@ func DefaultParams() Params {
 		DefaultMaxTotalSupply,
 		DefaultEnableGovernance,
 		DefaultUnrestrictedDenomRegex,
-		math.NewIntFromUint64(DefaultMaxSupply),
+		StringToBigInt(DefaultMaxSupply),
 	)
 }
 
@@ -150,4 +150,12 @@ func validateRegexParam(i interface{}) error {
 	}
 	_, err := regexp.Compile(fmt.Sprintf(`^%s$`, exp))
 	return err
+}
+
+func StringToBigInt(val string) math.Int {
+	res, ok := math.NewIntFromString(val)
+	if !ok {
+		panic(fmt.Errorf("unable to create math.Int from string: %s", val))
+	}
+	return res
 }

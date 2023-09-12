@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,13 +18,13 @@ func TestDefaultParams(t *testing.T) {
 	require.Equal(t, DefaultUnrestrictedDenomRegex, p.UnrestrictedDenomRegex)
 	require.Equal(t, DefaultEnableGovernance, p.EnableGovernance)
 	require.Equal(t, uint64(DefaultMaxTotalSupply), p.MaxTotalSupply)
-	require.Equal(t, DefaultMaxSupply, p.MaxSupply.Uint64())
+	require.Equal(t, DefaultMaxSupply, p.MaxSupply.String())
 
-	require.True(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex, math.NewIntFromUint64(DefaultMaxSupply))))
-	require.False(t, p.Equal(NewParams(1000, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex, math.NewIntFromUint64(DefaultMaxSupply))))
-	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, false, DefaultUnrestrictedDenomRegex, math.NewIntFromUint64(DefaultMaxSupply))))
-	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, "a-z", math.NewIntFromUint64(DefaultMaxSupply))))
-	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex, math.NewIntFromUint64(1000))))
+	require.True(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex, StringToBigInt(DefaultMaxSupply))))
+	require.False(t, p.Equal(NewParams(1000, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex, StringToBigInt(DefaultMaxSupply))))
+	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, false, DefaultUnrestrictedDenomRegex, StringToBigInt(DefaultMaxSupply))))
+	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, "a-z", StringToBigInt(DefaultMaxSupply))))
+	require.False(t, p.Equal(NewParams(DefaultMaxTotalSupply, DefaultEnableGovernance, DefaultUnrestrictedDenomRegex, StringToBigInt("1000"))))
 	require.False(t, p.Equal(nil))
 
 	var p2 *Params
@@ -42,7 +43,7 @@ func TestParamString(t *testing.T) {
 	require.Equal(t, `maxtotalsupply: 100000000000
 enablegovernance: true
 unrestricteddenomregex: '[a-zA-Z][a-zA-Z0-9\-\.]{2,83}'
-max_supply: "100000000000"
+max_supply: "100000000000000000000"
 `, p.String())
 }
 
@@ -85,4 +86,15 @@ func TestParamSetPairs(t *testing.T) {
 			require.Fail(t, "unexpected param set pair")
 		}
 	}
+}
+
+func TestStringToBigInt(t *testing.T) {
+	require.Equal(t, math.NewIntFromUint64(1), StringToBigInt("1"), "should handle uint64")
+	require.Equal(t, math.NewIntFromUint64(0), StringToBigInt("0"), "should handle zero")
+	require.Equal(t, "-1", StringToBigInt("-1").String(), "should handle negative")
+	assertions.AssertPanicEquals(t, func() {
+		StringToBigInt("abc")
+	}, "unable to create math.Int from string: abc", "should panic on invalid input")
+	bigNum, _ := math.NewIntFromString("100000000000000000000")
+	require.Equal(t, bigNum, StringToBigInt("100000000000000000000"), "should handle large number that exceeds uint64")
 }
