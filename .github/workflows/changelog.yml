@@ -25,8 +25,22 @@ jobs:
           activationLabel: 'dependencies'
           changelogPath: './CHANGELOG.md'
 
+      # All commits must be signed, import key and sign commit of updated change log.
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          # Use a key associated with the provenanceio-bot github account.
+          gpg_private_key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.BOT_GPG_PRIVATE_KEY_PW }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+
       # This step is required for committing the changes to your branch. 
       # See https://github.com/stefanzweifel/git-auto-commit-action#commits-of-this-action-do-not-trigger-new-workflow-runs 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
+          commit_user_name: "provenanceio-bot"
+          commit_user_email: "129784868+provenanceio-bot@users.noreply.github.com"
+          commit_options: "-S"
           commit_message: "Updated Changelog"
