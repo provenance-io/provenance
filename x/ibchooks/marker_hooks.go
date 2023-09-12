@@ -2,15 +2,19 @@ package ibchooks
 
 import (
 	"encoding/json"
+	"strconv"
 
 	sdkerrors "cosmossdk.io/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
 
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
+	"github.com/provenance-io/provenance/x/marker/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -29,11 +33,44 @@ func (h MarkerHooks) ProperlyConfigured() bool {
 }
 
 func (h MarkerHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) ibcexported.Acknowledgement {
-	// isIcs20, data := isIcs20Packet(packet.GetData())
-	// if !isIcs20 {
-	// 	return im.App.OnRecvPacket(ctx, packet, relayer)
-	// }
-	// packet.
+	isIcs20, data := isIcs20Packet(packet.GetData())
+	if !isIcs20 {
+		return im.App.OnRecvPacket(ctx, packet, relayer)
+	}
+	ibcDenom := MustExtractDenomFromPacketOnRecv(packet)
+	marker, err := h.MarkerKeeper.GetMarkerByDenom(ctx, ibcDenom)
+	if err != nil {
+		//TODO: emit some kind of event, proceed as normal
+		return im.App.OnRecvPacket(ctx, packet, relayer)
+	}
+	if marker == nil {
+		amount, err := strconv.ParseInt(data.Amount, 10, 64)
+		if err != nil {
+			//TODO: emit some kind of event, proceed as normal
+			return im.App.OnRecvPacket(ctx, packet, relayer)
+		}
+		marker = types.NewMarkerAccount(
+			authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(ibcDenom)),
+			sdk.NewInt64Coin(ibcDenom, amount),
+			nil,
+			nil,
+			markertypes.StatusActive,
+			markertypes.MarkerType_Coin,
+			false, // supply fixed
+			false, // allow gov
+			false, // allow force transfer
+			[]string{},
+		)
+		if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
+			//TODO: emit some kind of event, proceed as normal
+			return im.App.OnRecvPacket(ctx, packet, relayer)
+		}
+		// metadata := banktypes.Metadata{Base: ibcDenom, Name: "chain-id/" + data.Denom, Display: "chain-id/" + data.Denom}
+		// im.bankKeeper.SetDenomMetaData(ctx, metadata)
+	}
+
+	// TODO: check if there is a memo with marker key and transfer auths to update.
+
 	return im.App.OnRecvPacket(ctx, packet, relayer)
 }
 
@@ -51,19 +88,13 @@ func (h MarkerHooks) SendPacketOverride(
 	if !isIcs20 || ics20Packet.Memo != "" {
 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
-	markerAddr, err := markertypes.MarkerAddress(ics20Packet.Denom)
-	if err != nil {
-		//TODO: emit some kind of event, proceed as normal
-		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
-
-	}
-	marker, err := h.MarkerKeeper.GetMarker(ctx, markerAddr)
+	marker, err := h.MarkerKeeper.GetMarkerByDenom(ctx, ics20Packet.Denom)
 	if err != nil {
 		//TODO: emit some kind of event, proceed as normal
 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
 	if marker != nil {
-		ics20Packet.Memo, err = CreateMarkerMemo(ctx, marker)
+		ics20Packet.Memo, err = CreateMarkerMemo(marker)
 		if err != nil {
 			return 0, sdkerrors.Wrap(err, "ics20data marshall error")
 		}
@@ -81,11 +112,10 @@ type MarkerMemo struct {
 }
 
 type MarkerPayload struct {
-	ChainId      string   `json:"chain-id"`
 	TransferAuth []string `json:"transfer-auth"`
 }
 
-func CreateMarkerMemo(ctx sdktypes.Context, marker markertypes.MarkerAccountI) (string, error) {
+func CreateMarkerMemo(marker markertypes.MarkerAccountI) (string, error) {
 	transferAuthAddr := marker.AddressListForPermission(markertypes.Access_Transfer)
 	addresses := make([]string, len(transferAuthAddr))
 	for i := 0; i < len(transferAuthAddr); i++ {
@@ -93,7 +123,6 @@ func CreateMarkerMemo(ctx sdktypes.Context, marker markertypes.MarkerAccountI) (
 	}
 
 	memo := MarkerMemo{Marker: MarkerPayload{
-		ChainId:      ctx.ChainID(),
 		TransferAuth: addresses,
 	}}
 
