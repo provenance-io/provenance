@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	sdkerrors "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -15,7 +15,6 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
 
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
-	"github.com/provenance-io/provenance/x/marker/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -41,7 +40,7 @@ func (h MarkerHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context
 
 	ibcDenom := MustExtractDenomFromPacketOnRecv(packet)
 	if strings.HasPrefix(ibcDenom, "ibc/") {
-		markerAddress, err := types.MarkerAddress(ibcDenom)
+		markerAddress, err := markertypes.MarkerAddress(ibcDenom)
 		if err != nil {
 			//TODO: emit some kind of event, proceed as normal
 			return im.App.OnRecvPacket(ctx, packet, relayer)
@@ -57,9 +56,9 @@ func (h MarkerHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context
 				//TODO: emit some kind of event, proceed as normal
 				return im.App.OnRecvPacket(ctx, packet, relayer)
 			}
-			marker = types.NewMarkerAccount(
+			marker = markertypes.NewMarkerAccount(
 				authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(ibcDenom)),
-				sdk.NewInt64Coin(ibcDenom, amount),
+				sdktypes.NewInt64Coin(ibcDenom, amount),
 				nil,
 				nil,
 				markertypes.StatusActive,
@@ -98,7 +97,7 @@ func (h MarkerHooks) SendPacketOverride(
 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
 
-	markerAddress, err := types.MarkerAddress(ics20Packet.Denom)
+	markerAddress, err := markertypes.MarkerAddress(ics20Packet.Denom)
 	if err != nil {
 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
