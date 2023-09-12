@@ -3,6 +3,7 @@ package ibchooks
 import (
 	"encoding/json"
 	"strconv"
+	"strings"
 
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,36 +38,39 @@ func (h MarkerHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context
 	if !isIcs20 {
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
+
 	ibcDenom := MustExtractDenomFromPacketOnRecv(packet)
-	marker, err := h.MarkerKeeper.GetMarkerByDenom(ctx, ibcDenom)
-	if err != nil {
-		//TODO: emit some kind of event, proceed as normal
-		return im.App.OnRecvPacket(ctx, packet, relayer)
-	}
-	if marker == nil {
-		amount, err := strconv.ParseInt(data.Amount, 10, 64)
+	if strings.HasPrefix("ibc/", ibcDenom) {
+		marker, err := h.MarkerKeeper.GetMarkerByDenom(ctx, ibcDenom)
 		if err != nil {
 			//TODO: emit some kind of event, proceed as normal
 			return im.App.OnRecvPacket(ctx, packet, relayer)
 		}
-		marker = types.NewMarkerAccount(
-			authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(ibcDenom)),
-			sdk.NewInt64Coin(ibcDenom, amount),
-			nil,
-			nil,
-			markertypes.StatusActive,
-			markertypes.MarkerType_Coin,
-			false, // supply fixed
-			false, // allow gov
-			false, // allow force transfer
-			[]string{},
-		)
-		if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
-			//TODO: emit some kind of event, proceed as normal
-			return im.App.OnRecvPacket(ctx, packet, relayer)
+		if marker == nil {
+			amount, err := strconv.ParseInt(data.Amount, 10, 64)
+			if err != nil {
+				//TODO: emit some kind of event, proceed as normal
+				return im.App.OnRecvPacket(ctx, packet, relayer)
+			}
+			marker = types.NewMarkerAccount(
+				authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(ibcDenom)),
+				sdk.NewInt64Coin(ibcDenom, amount),
+				nil,
+				nil,
+				markertypes.StatusActive,
+				markertypes.MarkerType_Coin,
+				false, // supply fixed
+				false, // allow gov
+				false, // allow force transfer
+				[]string{},
+			)
+			if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
+				//TODO: emit some kind of event, proceed as normal
+				return im.App.OnRecvPacket(ctx, packet, relayer)
+			}
+			// metadata := banktypes.Metadata{Base: ibcDenom, Name: "chain-id/" + data.Denom, Display: "chain-id/" + data.Denom}
+			// im.bankKeeper.SetDenomMetaData(ctx, metadata)
 		}
-		// metadata := banktypes.Metadata{Base: ibcDenom, Name: "chain-id/" + data.Denom, Display: "chain-id/" + data.Denom}
-		// im.bankKeeper.SetDenomMetaData(ctx, metadata)
 	}
 
 	// TODO: check if there is a memo with marker key and transfer auths to update.
