@@ -106,7 +106,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `google.golang.org/protobuf` from 1.30.0 to 1.31.0 ([#1611](https://github.com/provenance-io/provenance/pull/1611))
 - Bump `bufbuild/buf-setup-action` from 1.22.0 to 1.23.1 ([#1613](https://github.com/provenance-io/provenance/pull/1613))
 - Bump `bufbuild/buf-setup-action` from 1.21.0 to 1.22.0 ([#1610](https://github.com/provenance-io/provenance/pull/1610))
-- Bump `docker/setup-buildx-action` from 2 to 3 ([#1681](https://github.com/provenance-io/provenance/pull/1681))
 
 ---
 
