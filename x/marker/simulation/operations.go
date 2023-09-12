@@ -577,27 +577,6 @@ func randomInt63(r *rand.Rand, max int64) (result int64) {
 	return r.Int63n(max)
 }
 
-// randomUint64 gets a random uint64 between 0 and max (inclusive): [0, max].
-func randomUint64(r *rand.Rand, max uint64) uint64 {
-	if max == 0 {
-		return 0
-	}
-	// Max int64 is 9,223,372,036,854,775,807.
-	// If the provided max is less than that, we'll just use r.Int63n.
-	// Otherwise, we'll use an infinite loop until r.Uint64() returns something small enough.
-	// This way, if the max is small (e.g. 2), we don't sit in this loop forever.
-	if max < 9_223_372_036_854_775_807 {
-		// Using max+1 because we want max to be possible.
-		return uint64(r.Int63n(int64(max + 1)))
-	}
-	// Not using modulo here because that increases the chances of the low numbers and reduces the chances of bigger ones.
-	result := r.Uint64()
-	for result > max {
-		result = r.Uint64()
-	}
-	return result
-}
-
 // WeightedOpsArgs holds all the args provided to WeightedOperations so that they can be passed on later more easily.
 type WeightedOpsArgs struct {
 	AppParams  simtypes.AppParams
