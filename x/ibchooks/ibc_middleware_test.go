@@ -529,5 +529,4 @@ func (suite *HooksTestSuite) TestSendWithoutMemo() {
 	marker, err = suite.chainA.GetProvenanceApp().MarkerKeeper.GetMarker(suite.chainA.GetContext(), stakeAddr)
 	suite.Require().NoError(err, "GetMarker()")
 	suite.Require().Nil(marker, "Should not create marker on chain a")
-
 }
