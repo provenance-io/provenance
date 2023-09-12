@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -268,7 +269,7 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 
 	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
 	store := ctx.KVStore(k.storeKey)
-	if netAssetValue.Volume > marker.GetSupply().Amount.Uint64() {
+	if math.NewIntFromUint64(netAssetValue.Volume).GT(marker.GetSupply().Amount) {
 		return fmt.Errorf("volume(%v) cannot exceed marker %q supply(%v) ", netAssetValue.Volume, marker.GetDenom(), marker.GetSupply())
 	}
 
