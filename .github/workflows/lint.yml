@@ -34,7 +34,7 @@ jobs:
         if: env.GIT_DIFF
         with:
           # If you change this version, be sure to also change it in contrib/devtools/Makefile.
-          version: v1.52.2
+          version: v1.54.2
           args: --timeout 10m --out-${NO_FUTURE}format colored-line-number
           github-token: ${{ secrets.github_token }}
       - name: No Now Usage
