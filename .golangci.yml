@@ -92,6 +92,11 @@ linters-settings:
           - github.com/CosmWasm/wasmd
           - github.com/CosmWasm/wasmvm/types
 
+          # used for interchain queries
+          - github.com/strangelove-ventures/async-icq/v6
+          - github.com/strangelove-ventures/async-icq/v6/types
+          - github.com/strangelove-ventures/async-icq/v6/keeper
+
           - github.com/gogo/protobuf
 
           - github.com/google/uuid
@@ -112,6 +117,7 @@ linters-settings:
           - github.com/spf13/viper
 
           - github.com/stretchr/testify/require # used by the test-utils shared toolkit
+          - github.com/stretchr/testify/assert
           - github.com/stretchr/testify/suite
 
           - github.com/tendermint/tendermint
