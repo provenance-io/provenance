@@ -170,7 +170,7 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 		assert.Equal(t, "bananas", actual, "unmanaged field value")
 	})
 
-	s.T().Run("unmanaged config entry does not override other config", func(t *testing.T) {
+	s.T().Run("unmanaged config entry does override other config", func(t *testing.T) {
 		dCmd := s.makeDummyCmd()
 		configDir := GetFullPathToConfigDir(dCmd)
 		uFile := GetFullPathToUnmanagedConf(dCmd)
@@ -180,8 +180,8 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 		ctx := client.GetClientContextFromCmd(dCmd)
 		vpr := ctx.Viper
 		actual := vpr.GetString("db_backend")
-		assert.NotEqual(t, "still bananas", actual, "unmanaged field value")
-		assert.Equal(t, DefaultTmConfig().DBBackend, actual, "unmanaged field default value")
+		assert.Equal(t, "still bananas", actual, "unmanaged field value")
+		assert.NotEqual(t, DefaultTmConfig().DBBackend, actual, "unmanaged field default value")
 	})
 
 	s.T().Run("unmanaged config is read with unpacked files", func(t *testing.T) {
