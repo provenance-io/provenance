@@ -170,7 +170,7 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 		assert.Equal(t, "bananas", actual, "unmanaged field value")
 	})
 
-	s.T().Run("unmanaged config entry does override other config", func(t *testing.T) {
+	s.T().Run("unmanaged config entry overrides other config", func(t *testing.T) {
 		dCmd := s.makeDummyCmd()
 		configDir := GetFullPathToConfigDir(dCmd)
 		uFile := GetFullPathToUnmanagedConf(dCmd)
