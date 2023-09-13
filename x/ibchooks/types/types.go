@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 )
 
@@ -82,4 +83,22 @@ func UnmarshalIBCAck(bz []byte) (*IBCAck, error) {
 	}
 
 	return &ack, nil
+}
+
+type MarkerMemo struct {
+	Marker MarkerPayload `json:"marker"`
+}
+
+type MarkerPayload struct {
+	TransferAuth []string `json:"transfer-auth"`
+}
+
+func NewMarkerMemo(transferAuthAddrs []sdk.AccAddress) MarkerMemo {
+	addresses := make([]string, len(transferAuthAddrs))
+	for i := 0; i < len(transferAuthAddrs); i++ {
+		addresses[i] = transferAuthAddrs[i].String()
+	}
+	return MarkerMemo{Marker: MarkerPayload{
+		TransferAuth: addresses,
+	}}
 }

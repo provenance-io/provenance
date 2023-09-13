@@ -14,6 +14,7 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
 
+	"github.com/provenance-io/provenance/x/ibchooks/types"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -119,29 +120,13 @@ func (h MarkerHooks) SendPacketOverride(
 	return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, dataBytes)
 }
 
-type MarkerMemo struct {
-	Marker MarkerPayload `json:"marker"`
-}
-
-type MarkerPayload struct {
-	TransferAuth []string `json:"transfer-auth"`
-}
-
+// CreateMarkerMemo returns a json memo for marker
 func CreateMarkerMemo(marker markertypes.MarkerAccountI) (string, error) {
-	transferAuthAddr := marker.AddressListForPermission(markertypes.Access_Transfer)
-	addresses := make([]string, len(transferAuthAddr))
-	for i := 0; i < len(transferAuthAddr); i++ {
-		addresses[i] = transferAuthAddr[i].String()
-	}
-
-	memo := MarkerMemo{Marker: MarkerPayload{
-		TransferAuth: addresses,
-	}}
-
+	transferAuthAddrs := marker.AddressListForPermission(markertypes.Access_Transfer)
+	memo := types.NewMarkerMemo(transferAuthAddrs)
 	jsonData, err := json.Marshal(memo)
 	if err != nil {
 		return "", err
 	}
-
 	return string(jsonData), nil
 }
