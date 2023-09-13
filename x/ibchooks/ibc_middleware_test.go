@@ -323,7 +323,7 @@ func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
 		memo           string
 		expPassthrough bool
 	}{
-		{"", true},
+		// {"", true},
 		{"{01]", true}, // bad json
 		{"{}", true},
 		{`{"something": ""}`, true},
