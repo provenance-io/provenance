@@ -85,6 +85,26 @@ func UnmarshalIBCAck(bz []byte) (*IBCAck, error) {
 	return &ack, nil
 }
 
+type IbcAck struct {
+	Channel  string `json:"channel"`
+	Sequence uint64 `json:"sequence"`
+	Ack      string `json:"ack"`
+	Success  string `json:"success"`
+}
+
+type IbcLifecycleCompleteSuccess struct {
+	IbcAck IbcAck `json:"ibc_ack"`
+}
+
+type IbcTimeout struct {
+	Channel  string `json:"channel"`
+	Sequence uint64 `json:"sequence"`
+}
+
+type IbcLifecycleComplete struct {
+	IbcTimeout IbcTimeout `json:"ibc_timeout"`
+}
+
 type MarkerMemo struct {
 	Marker MarkerPayload `json:"marker"`
 }

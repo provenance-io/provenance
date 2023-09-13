@@ -336,8 +336,8 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 	// This should never match anything, but we want to satisfy the github code scanning flag.
 	sanitizedSourceChannel := strings.ReplaceAll(packet.SourceChannel, "\"", "")
 
-	ibcLifecycleComplete := IbcLifecycleCompleteSuccess{
-		IbcAck{
+	ibcLifecycleComplete := types.IbcLifecycleCompleteSuccess{
+		IbcAck: types.IbcAck{
 			Channel:  sanitizedSourceChannel,
 			Sequence: packet.Sequence,
 			Ack:      string(ackAsJSON),
@@ -360,17 +360,6 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 	}
 	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
 	return nil
-}
-
-type IbcAck struct {
-	Channel  string `json:"channel"`
-	Sequence uint64 `json:"sequence"`
-	Ack      string `json:"ack"`
-	Success  string `json:"success"`
-}
-
-type IbcLifecycleCompleteSuccess struct {
-	IbcAck IbcAck `json:"ibc_ack"`
 }
 
 func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) error {
@@ -420,15 +409,6 @@ func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Contex
 	}
 	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
 	return nil
-}
-
-type IbcTimeout struct {
-	Channel  string `json:"channel"`
-	Sequence uint64 `json:"sequence"`
-}
-
-type IbcLifecycleComplete struct {
-	IbcTimeout IbcTimeout `json:"ibc_timeout"`
 }
 
 // NewEmitErrorAcknowledgement creates a new error acknowledgement after having emitted an event with the
