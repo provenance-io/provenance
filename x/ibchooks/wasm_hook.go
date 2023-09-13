@@ -336,9 +336,22 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 	// This should never match anything, but we want to satisfy the github code scanning flag.
 	sanitizedSourceChannel := strings.ReplaceAll(packet.SourceChannel, "\"", "")
 
-	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
-		sanitizedSourceChannel, packet.Sequence, ackAsJSON, success))
+	ibcLifecycleComplete := IbcLifecycleCompleteSuccess{
+		IbcAck{
+			Channel:  sanitizedSourceChannel,
+			Sequence: packet.Sequence,
+			Ack:      string(ackAsJSON),
+			Success:  success,
+		},
+	}
+	sudoMsg, err := json.Marshal(ibcLifecycleComplete)
+	if err != nil {
+		return sdkerrors.Wrap(err, "Ack callback error")
+	}
+
+	// sudoMsg := []byte(fmt.Sprintf(
+	// 	`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
+	// 	sanitizedSourceChannel, packet.Sequence, ackAsJSON, success))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback
@@ -347,6 +360,17 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 	}
 	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
 	return nil
+}
+
+type IbcAck struct {
+	Channel  string `json:"channel"`
+	Sequence uint64 `json:"sequence"`
+	Ack      string `json:"ack"`
+	Success  string `json:"success"`
+}
+
+type IbcLifecycleCompleteSuccess struct {
+	IbcAck IbcAck `json:"ibc_ack"`
 }
 
 func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) error {
