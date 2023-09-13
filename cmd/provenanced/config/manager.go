@@ -385,11 +385,13 @@ func unquote(str string) string {
 }
 
 // LoadConfigFromFiles loads configurations appropriately.
-func LoadConfigFromFiles(cmd *cobra.Command) error {
+func LoadConfigFromFiles(cmd *cobra.Command) (err error) {
 	if IsPacked(cmd) {
-		return loadPackedConfig(cmd)
+		err = loadPackedConfig(cmd)
+	} else {
+		err = loadUnpackedConfig(cmd)
 	}
-	if err := loadUnpackedConfig(cmd); err != nil {
+	if err != nil {
 		return err
 	}
 	return loadUnmanagedConfig(cmd)
