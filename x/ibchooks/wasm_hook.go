@@ -3,7 +3,6 @@ package ibchooks
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -322,10 +321,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 		return sdkerrors.Wrap(err, "Ack callback error")
 	}
 
-	success := "false"
-	if !IsJSONAckError(acknowledgement) {
-		success = "true"
-	}
+	success := !IsJSONAckError(acknowledgement)
 
 	// Notify the sender that the ack has been received
 	ackAsJSON, err := json.Marshal(acknowledgement)
@@ -333,17 +329,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 		return err
 	}
 
-	// This should never match anything, but we want to satisfy the github code scanning flag.
-	sanitizedSourceChannel := strings.ReplaceAll(packet.SourceChannel, "\"", "")
-
-	ibcLifecycleComplete := types.IbcLifecycleCompleteSuccess{
-		IbcAck: types.IbcAck{
-			Channel:  sanitizedSourceChannel,
-			Sequence: packet.Sequence,
-			Ack:      string(ackAsJSON),
-			Success:  success,
-		},
-	}
+	ibcLifecycleComplete := types.NewIbcLifecycleCompleteAck(packet.SourceChannel, packet.Sequence, ackAsJSON, success)
 	sudoMsg, err := json.Marshal(ibcLifecycleComplete)
 	if err != nil {
 		return sdkerrors.Wrap(err, "Ack callback error")
@@ -369,30 +355,25 @@ func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Contex
 	}
 
 	if !h.ProperlyConfigured() {
-		// Not configured. Return from the underlying implementation
 		return nil
 	}
 
 	contract := h.ibcHooksKeeper.GetPacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
 	if contract == "" {
-		// No callback configured
 		return nil
 	}
 
 	contractAddr, err := sdktypes.AccAddressFromBech32(contract)
 	if err != nil {
-		return sdkerrors.Wrap(err, "Timeout callback error") // The callback configured is not a bech32. Error out
+		return sdkerrors.Wrap(err, "Timeout callback error")
 	}
 
-	sudoMsg := IbcLifecycleComplete{
-		IbcTimeout: IbcTimeout{
-			Channel:  packet.SourceChannel,
-			Sequence: packet.Sequence,
-		},
+	sudoMsg := types.NewIbcLifecycleCompleteTimeout(packet.SourceChannel, packet.Sequence)
+	jsonData, err := json.Marshal(sudoMsg)
+	if err != nil {
+		return sdkerrors.Wrap(err, "Timeout callback error")
 	}
 
-	// TODO do something with error
-	jsonData, _ := json.Marshal(sudoMsg)
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, jsonData)
 	if err != nil {
 		// error processing the callback. This could be because the contract doesn't implement the message type to

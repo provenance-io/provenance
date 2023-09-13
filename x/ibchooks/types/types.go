@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
@@ -86,13 +87,13 @@ func UnmarshalIBCAck(bz []byte) (*IBCAck, error) {
 }
 
 type IbcAck struct {
-	Channel  string `json:"channel"`
-	Sequence uint64 `json:"sequence"`
-	Ack      string `json:"ack"`
-	Success  string `json:"success"`
+	Channel  string    `json:"channel"`
+	Sequence uint64    `json:"sequence"`
+	Ack      JsonBytes `json:"ack"`
+	Success  bool      `json:"success"`
 }
 
-type IbcLifecycleCompleteSuccess struct {
+type IbcLifecycleCompleteAck struct {
 	IbcAck IbcAck `json:"ibc_ack"`
 }
 
@@ -101,8 +102,12 @@ type IbcTimeout struct {
 	Sequence uint64 `json:"sequence"`
 }
 
-type IbcLifecycleComplete struct {
+type IbcLifecycleCompleteTimeout struct {
 	IbcTimeout IbcTimeout `json:"ibc_timeout"`
+}
+
+type IbcLifecycleComplete struct {
+	IbcLifecycleComplete interface{} `json:"ibc_lifecycle_complete"`
 }
 
 type MarkerMemo struct {
@@ -121,4 +126,36 @@ func NewMarkerMemo(transferAuthAddrs []sdk.AccAddress) MarkerMemo {
 	return MarkerMemo{Marker: MarkerPayload{
 		TransferAuth: addresses,
 	}}
+}
+
+func NewIbcLifecycleCompleteAck(sourceChannel string, sequence uint64, ackAsJSON []byte, success bool) IbcLifecycleComplete {
+	sourceChannel = strings.ReplaceAll(sourceChannel, "\"", "")
+	ibcLifecycleCompleteAck := IbcLifecycleCompleteAck{
+		IbcAck: IbcAck{
+			Channel:  sourceChannel,
+			Sequence: sequence,
+			Ack:      ackAsJSON,
+			Success:  success,
+		},
+	}
+	return IbcLifecycleComplete{IbcLifecycleComplete: ibcLifecycleCompleteAck}
+}
+
+func NewIbcLifecycleCompleteTimeout(sourceChannel string, sequence uint64) IbcLifecycleComplete {
+	ibcLifecycleCompleteAck := IbcLifecycleCompleteTimeout{
+		IbcTimeout: IbcTimeout{
+			Channel:  sourceChannel,
+			Sequence: sequence,
+		},
+	}
+	return IbcLifecycleComplete{IbcLifecycleComplete: ibcLifecycleCompleteAck}
+}
+
+type JsonBytes []byte
+
+func (jb JsonBytes) MarshalJSON() ([]byte, error) {
+	if len(jb) == 0 {
+		return []byte("{}"), nil
+	}
+	return jb, nil
 }
