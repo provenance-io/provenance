@@ -371,10 +371,16 @@ func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Contex
 		return sdkerrors.Wrap(err, "Timeout callback error") // The callback configured is not a bech32. Error out
 	}
 
-	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_lifecycle_complete": {"ibc_timeout": {"channel": "%s", "sequence": %d}}}`,
-		packet.SourceChannel, packet.Sequence))
-	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
+	sudoMsg := IbcLifecycleComplete{
+		IbcTimeout: IbcTimeout{
+			Channel:  packet.SourceChannel,
+			Sequence: packet.Sequence,
+		},
+	}
+
+	// TODO do something with error
+	jsonData, _ := json.Marshal(sudoMsg)
+	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, jsonData)
 	if err != nil {
 		// error processing the callback. This could be because the contract doesn't implement the message type to
 		// process the callback. Retrying this will not help, so we can delete the callback from storage.
@@ -383,13 +389,22 @@ func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Contex
 			sdktypes.NewEvent(
 				"ibc-timeout-callback-error",
 				sdktypes.NewAttribute("contract", contractAddr.String()),
-				sdktypes.NewAttribute("message", string(sudoMsg)),
+				sdktypes.NewAttribute("message", string(jsonData)),
 				sdktypes.NewAttribute("error", err.Error()),
 			),
 		})
 	}
 	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
 	return nil
+}
+
+type IbcTimeout struct {
+	Channel  string `json:"channel"`
+	Sequence uint64 `json:"sequence"`
+}
+
+type IbcLifecycleComplete struct {
+	IbcTimeout IbcTimeout `json:"ibc_timeout"`
 }
 
 // NewEmitErrorAcknowledgement creates a new error acknowledgement after having emitted an event with the
