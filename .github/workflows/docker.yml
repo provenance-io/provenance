@@ -2,8 +2,6 @@ name: Docker Build and Push
 # Build & Push builds the simapp docker image on every push to master
 # and pushes the image to https://hub.docker.com/u/provenanceio
 on:
-  pull_request:
-
   push:
     branches:
       - main
@@ -64,7 +62,7 @@ jobs:
       - name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
