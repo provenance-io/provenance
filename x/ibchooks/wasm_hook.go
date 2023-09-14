@@ -41,7 +41,6 @@ func (h WasmHooks) ProperlyConfigured() bool {
 
 func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) ibcexported.Acknowledgement {
 	if !h.ProperlyConfigured() {
-		// Not configured
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 	isIcs20, data := isIcs20Packet(packet.GetData())
@@ -49,7 +48,6 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, 
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 
-	// Validate the memo
 	isWasmRouted, contractAddr, msgBytes, err := ValidateAndParseMemo(data.GetMemo(), data.Receiver)
 	if !isWasmRouted {
 		return im.App.OnRecvPacket(ctx, packet, relayer)

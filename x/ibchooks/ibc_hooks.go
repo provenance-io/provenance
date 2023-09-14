@@ -43,41 +43,15 @@ func (h IbcHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, p
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 
-	isIcs20, data := isIcs20Packet(packet.GetData())
+	isIcs20, _ := isIcs20Packet(packet.GetData())
 	if !isIcs20 {
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 
-	isWasmRouted, _ := jsonStringHasKey(data.GetMemo(), "wasm")
-	if isWasmRouted {
-		return h.wasmHooks.OnRecvPacketOverride(im, ctx, packet, relayer)
-	}
-	return h.markerHooks.OnRecvPacketOverride(im, ctx, packet, relayer)
+	h.markerHooks.ProcessMarkerMemo(ctx, packet)
+
+	return h.wasmHooks.OnRecvPacketOverride(im, ctx, packet, relayer)
 }
-
-// func (h IbcHooks) SendPacketOverride(
-// 	i ICS4Middleware,
-// 	ctx sdktypes.Context,
-// 	chanCap *capabilitytypes.Capability,
-// 	sourcePort string,
-// 	sourceChannel string,
-// 	timeoutHeight clienttypes.Height,
-// 	timeoutTimestamp uint64,
-// 	data []byte,
-// ) (uint64, error) {
-// 	isIcs20, ics20Packet := isIcs20Packet(data)
-// 	if !isIcs20 {
-// 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
-// 	}
-
-// 	isCallbackRouted, _ := jsonStringHasKey(ics20Packet.GetMemo(), types.IBCCallbackKey)
-// 	if isCallbackRouted {
-// 		return h.wasmHooks.SendPacketOverride(i, ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
-// 	}
-
-// 	// find marker, create memo struct, send ...
-// 	return h.markerHooks.SendPacketOverride(i, ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
-// }
 
 func (h IbcHooks) SendPacketAfterHook(ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,

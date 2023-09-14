@@ -7,12 +7,13 @@ import (
 
 	sdkerrors "cosmossdk.io/errors"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
+	"github.com/cosmos/ibc-go/v6/modules/core/exported"
 
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
@@ -33,29 +34,30 @@ func (h MarkerHooks) ProperlyConfigured() bool {
 	return h.MarkerKeeper != nil
 }
 
-func (h MarkerHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) ibcexported.Acknowledgement {
-	isIcs20, data := isIcs20Packet(packet.GetData())
-	if !isIcs20 {
-		return im.App.OnRecvPacket(ctx, packet, relayer)
+func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.PacketI) error {
+	var data transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
+		return err
 	}
-
 	ibcDenom := MustExtractDenomFromPacketOnRecv(packet)
 	if strings.HasPrefix(ibcDenom, "ibc/") {
 		markerAddress, err := markertypes.MarkerAddress(ibcDenom)
 		if err != nil {
-			//TODO: emit some kind of event, proceed as normal
-			return im.App.OnRecvPacket(ctx, packet, relayer)
+			return err
 		}
 		marker, err := h.MarkerKeeper.GetMarker(ctx, markerAddress)
 		if err != nil {
-			// TODO: emit some kind of event, proceed as normal
-			return im.App.OnRecvPacket(ctx, packet, relayer)
+			return err
+		}
+		var transferAuthAddrs []sdk.AccAddress
+		transferAuthAddrs, err = ProcessMarkerMemo(data.GetDenom())
+		if err != nil {
+			return err
 		}
 		if marker == nil {
 			amount, err := strconv.ParseInt(data.Amount, 10, 64)
 			if err != nil {
-				//TODO: emit some kind of event, proceed as normal
-				return im.App.OnRecvPacket(ctx, packet, relayer)
+				return err
 			}
 			marker = markertypes.NewMarkerAccount(
 				authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(ibcDenom)),
@@ -69,29 +71,58 @@ func (h MarkerHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context
 				false, // allow force transfer
 				[]string{},
 			)
+			ResetMarkerAccessGrants(transferAuthAddrs, marker)
+
 			if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
-				//TODO: emit some kind of event, proceed as normal
-				return im.App.OnRecvPacket(ctx, packet, relayer)
+				return err
 			}
-			// metadata := banktypes.Metadata{Base: ibcDenom, Name: "chain-id/" + data.Denom, Display: "chain-id/" + data.Denom}
-			// im.bankKeeper.SetDenomMetaData(ctx, metadata)
+		} else {
+			ResetMarkerAccessGrants(transferAuthAddrs, marker)
+			h.MarkerKeeper.SetMarker(ctx, marker)
 		}
 	}
 
-	// TODO: check if there is a memo with marker key and transfer auths to update.
+	// TODO: add metadata for marker
 
-	return im.App.OnRecvPacket(ctx, packet, relayer)
+	return nil
 }
 
-// func ProcessMemo(memo string) ([]markertypes.AccessGrant, error) {
-// 	var markerMemo types.MarkerMemo
-// 	err := json.Unmarshal([]byte(memo), &markerMemo)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	len := len(markerMemo.Marker.TransferAuth)
-// 	accessGrants := make(markertypes.AccessGrant{}, len)
-// }
+// ResetMarkerAccessGrants removes all current access grants from marker and adds new transfer grants for transferAuths
+func ResetMarkerAccessGrants(transferAuths []sdk.AccAddress, marker markertypes.MarkerAccountI) {
+	for _, currentAuth := range marker.GetAccessList() {
+		marker.RevokeAccess(currentAuth.GetAddress())
+	}
+	for _, transfAuth := range transferAuths {
+		marker.GrantAccess(markertypes.NewAccessGrant(transfAuth, markertypes.AccessList{markertypes.Access_Transfer}))
+	}
+}
+
+// ProcessMarkerMemo extracts the list of transfer auth address from marker part of packet memo
+func ProcessMarkerMemo(memo string) ([]sdk.AccAddress, error) {
+	found, jsonObject := jsonStringHasKey(memo, "marker")
+	if !found {
+		return []sdk.AccAddress{}, nil
+	}
+	markerPayload, ok := jsonObject["marker"].(string)
+	if !ok {
+		return []sdk.AccAddress{}, nil
+	}
+	var markerMemo types.MarkerPayload
+	err := json.Unmarshal([]byte(markerPayload), &markerMemo)
+	if err != nil {
+		return nil, err
+	}
+
+	transferAuths := make([]sdk.AccAddress, len(markerMemo.TransferAuth))
+	for i, addr := range markerMemo.TransferAuth {
+		accAddr, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return nil, err
+		}
+		transferAuths[i] = accAddr
+	}
+	return transferAuths, nil
+}
 
 func (h MarkerHooks) SendPacketOverride(
 	i ICS4Middleware,
