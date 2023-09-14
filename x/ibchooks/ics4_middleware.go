@@ -41,6 +41,17 @@ func (i ICS4Middleware) SendPacket(
 		hook.SendPacketBeforeHook(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
 
+	// Go Through all chained send function here that alter the data package and do other current chain operation
+	if hook, ok := i.Hooks.(GetSendPacketFns); ok {
+		fns := hook.GetSendPacketFns()
+		for i := 0; i < len(fns); i++ {
+			data, err = fns[i](ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+			if err != nil {
+				return 0, err
+			}
+		}
+	}
+
 	seq, err := i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 
 	if hook, ok := i.Hooks.(SendPacketAfterHooks); ok {

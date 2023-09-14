@@ -299,6 +299,69 @@ func (h WasmHooks) SendPacketOverride(
 	return seq, nil
 }
 
+func (h WasmHooks) SendPacketFn(
+	ctx sdktypes.Context,
+	chanCap *capabilitytypes.Capability,
+	sourcePort string,
+	sourceChannel string,
+	timeoutHeight clienttypes.Height,
+	timeoutTimestamp uint64,
+	data []byte,
+) ([]byte, error) {
+	isIcs20, ics20Packet := isIcs20Packet(data)
+	if !isIcs20 {
+		return data, nil
+	}
+
+	isCallbackRouted, metadata := jsonStringHasKey(ics20Packet.GetMemo(), types.IBCCallbackKey)
+	if !isCallbackRouted {
+		return data, nil
+	}
+
+	// We remove the callback metadata from the memo as it has already been processed.
+
+	// If the only available key in the memo is the callback, we should remove the memo
+	// from the data completely so the packet is sent without it.
+	// This way receiver chains that are on old versions of IBC will be able to process the packet
+
+	// callbackRaw := metadata[types.IBCCallbackKey] // This will be used later.
+	delete(metadata, types.IBCCallbackKey)
+	bzMetadata, err := json.Marshal(metadata)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "ibc_callback marshall error")
+	}
+	stringMetadata := string(bzMetadata)
+	if stringMetadata == "{}" {
+		ics20Packet.Memo = ""
+	} else {
+		ics20Packet.Memo = stringMetadata
+	}
+	dataBytes, err := json.Marshal(ics20Packet)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "ics20data marshall error")
+	}
+
+	return dataBytes, nil
+
+	// seq, err := i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, dataBytes)
+	// if err != nil {
+	// 	return 0, err
+	// }
+
+	// Make sure the callback contract is a string and a valid bech32 addr. If it isn't, ignore this packet
+	// contract, ok := callbackRaw.(string)
+	// if !ok {
+	// 	return 0, nil
+	// }
+
+	// if _, err := sdktypes.AccAddressFromBech32(contract); err != nil {
+	// 	return 0, nil
+	// }
+
+	// h.ibcHooksKeeper.StorePacketCallback(ctx, sourceChannel, seq, contract)
+	// return seq, nil
+}
+
 func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdktypes.AccAddress) error {
 	err := im.App.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
 	if err != nil {
@@ -334,10 +397,6 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktype
 	if err != nil {
 		return sdkerrors.Wrap(err, "Ack callback error")
 	}
-
-	// sudoMsg := []byte(fmt.Sprintf(
-	// 	`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
-	// 	sanitizedSourceChannel, packet.Sequence, ackAsJSON, success))
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback

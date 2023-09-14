@@ -83,6 +83,16 @@ func (h MarkerHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context
 	return im.App.OnRecvPacket(ctx, packet, relayer)
 }
 
+// func ProcessMemo(memo string) ([]markertypes.AccessGrant, error) {
+// 	var markerMemo types.MarkerMemo
+// 	err := json.Unmarshal([]byte(memo), &markerMemo)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	len := len(markerMemo.Marker.TransferAuth)
+// 	accessGrants := make(markertypes.AccessGrant{}, len)
+// }
+
 func (h MarkerHooks) SendPacketOverride(
 	i ICS4Middleware,
 	ctx sdktypes.Context,
@@ -94,7 +104,7 @@ func (h MarkerHooks) SendPacketOverride(
 	data []byte,
 ) (uint64, error) {
 	isIcs20, ics20Packet := isIcs20Packet(data)
-	if !isIcs20 || ics20Packet.Memo != "" {
+	if !isIcs20 {
 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
 
@@ -106,6 +116,7 @@ func (h MarkerHooks) SendPacketOverride(
 	if err != nil {
 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
+	ics20Packet.Memo = ""
 	if marker != nil {
 		ics20Packet.Memo, err = CreateMarkerMemo(marker)
 		if err != nil {
@@ -120,13 +131,70 @@ func (h MarkerHooks) SendPacketOverride(
 	return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, dataBytes)
 }
 
+func (h MarkerHooks) SendPacketFn(
+	ctx sdktypes.Context,
+	chanCap *capabilitytypes.Capability,
+	sourcePort string,
+	sourceChannel string,
+	timeoutHeight clienttypes.Height,
+	timeoutTimestamp uint64,
+	data []byte,
+) ([]byte, error) {
+	isIcs20, ics20Packet := isIcs20Packet(data)
+	if !isIcs20 {
+		return data, nil
+	}
+
+	memoAsJson := SanitizeMemo(ics20Packet.GetMemo())
+
+	markerAddress, err := markertypes.MarkerAddress(ics20Packet.Denom)
+	if err != nil {
+		return nil, err
+	}
+	marker, err := h.MarkerKeeper.GetMarker(ctx, markerAddress)
+	if err != nil {
+		return nil, err
+	}
+	memoAsJson["marker"], err = CreateMarkerMemo(marker)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "ics20data marshall error")
+	}
+	memo, err := json.Marshal(memoAsJson)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "ics20data marshall error")
+	}
+	ics20Packet.Memo = string(memo)
+	dataBytes, err := json.Marshal(ics20Packet)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "ics20data marshall error")
+	}
+
+	return dataBytes, nil
+}
+
+// SanitizeMemo returns a keyed json object for memo
+func SanitizeMemo(memo string) map[string]interface{} {
+	jsonObject := make(map[string]interface{})
+	if len(memo) != 0 {
+		err := json.Unmarshal([]byte(memo), &jsonObject)
+		if err != nil {
+			jsonObject["memo"] = memo
+		}
+	}
+	return jsonObject
+}
+
 // CreateMarkerMemo returns a json memo for marker
 func CreateMarkerMemo(marker markertypes.MarkerAccountI) (string, error) {
+	if marker == nil {
+		return "{}", nil
+	}
 	transferAuthAddrs := marker.AddressListForPermission(markertypes.Access_Transfer)
-	memo := types.NewMarkerMemo(transferAuthAddrs)
-	jsonData, err := json.Marshal(memo)
+	markerPayload := types.NewMarkerPayload(transferAuthAddrs)
+	jsonData, err := json.Marshal(markerPayload)
 	if err != nil {
 		return "", err
 	}
+
 	return string(jsonData), nil
 }

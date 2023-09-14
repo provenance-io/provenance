@@ -2,8 +2,6 @@ package ibchooks
 
 import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
 
@@ -15,19 +13,25 @@ type IbcHooks struct {
 	ibcHooksKeeper *keeper.Keeper
 	wasmHooks      *WasmHooks
 	markerHooks    *MarkerHooks
+	SendPacketFns  []types.SendPacketFn
 }
 
-func NewIbcHooks(ibcHooksKeeper *keeper.Keeper, wasmHooks *WasmHooks, markerHooks *MarkerHooks) IbcHooks {
+func NewIbcHooks(ibcHooksKeeper *keeper.Keeper, wasmHooks *WasmHooks, markerHooks *MarkerHooks, sendPacketFns []types.SendPacketFn) IbcHooks {
 	return IbcHooks{
 		ibcHooksKeeper: ibcHooksKeeper,
 		wasmHooks:      wasmHooks,
 		markerHooks:    markerHooks,
+		SendPacketFns:  sendPacketFns,
 	}
 }
 
 // ProperlyConfigured returns false if either wasm or marker hooks are configured properly
 func (h IbcHooks) ProperlyConfigured() bool {
 	return h.wasmHooks.ProperlyConfigured() && h.markerHooks.ProperlyConfigured()
+}
+
+func (h IbcHooks) GetSendPacketFns() []types.SendPacketFn {
+	return h.SendPacketFns
 }
 
 // OnRecvPacketOverride executes wasm or marker hooks for Ics20 packets, if not ics20 packet it will continue to process packet with no override
@@ -48,29 +52,29 @@ func (h IbcHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, p
 	return h.markerHooks.OnRecvPacketOverride(im, ctx, packet, relayer)
 }
 
-func (h IbcHooks) SendPacketOverride(
-	i ICS4Middleware,
-	ctx sdktypes.Context,
-	chanCap *capabilitytypes.Capability,
-	sourcePort string,
-	sourceChannel string,
-	timeoutHeight clienttypes.Height,
-	timeoutTimestamp uint64,
-	data []byte,
-) (uint64, error) {
-	isIcs20, ics20Packet := isIcs20Packet(data)
-	if !isIcs20 {
-		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
-	}
+// func (h IbcHooks) SendPacketOverride(
+// 	i ICS4Middleware,
+// 	ctx sdktypes.Context,
+// 	chanCap *capabilitytypes.Capability,
+// 	sourcePort string,
+// 	sourceChannel string,
+// 	timeoutHeight clienttypes.Height,
+// 	timeoutTimestamp uint64,
+// 	data []byte,
+// ) (uint64, error) {
+// 	isIcs20, ics20Packet := isIcs20Packet(data)
+// 	if !isIcs20 {
+// 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+// 	}
 
-	isCallbackRouted, _ := jsonStringHasKey(ics20Packet.GetMemo(), types.IBCCallbackKey)
-	if isCallbackRouted {
-		return h.wasmHooks.SendPacketOverride(i, ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
-	}
+// 	isCallbackRouted, _ := jsonStringHasKey(ics20Packet.GetMemo(), types.IBCCallbackKey)
+// 	if isCallbackRouted {
+// 		return h.wasmHooks.SendPacketOverride(i, ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+// 	}
 
-	// find marker, create memo struct, send ...
-	return h.markerHooks.SendPacketOverride(i, ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
-}
+// 	// find marker, create memo struct, send ...
+// 	return h.markerHooks.SendPacketOverride(i, ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+// }
 
 func (h IbcHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) error {
 	return h.wasmHooks.OnTimeoutPacketOverride(im, ctx, packet, relayer)

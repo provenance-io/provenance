@@ -513,7 +513,7 @@ func New(
 	app.Ics20WasmHooks = &wasmHooks
 	markerHooks := ibchooks.NewMarkerHooks(nil)
 	app.Ics20MarkerHooks = &markerHooks
-	ibcHooks := ibchooks.NewIbcHooks(&hooksKeeper, app.Ics20WasmHooks, app.Ics20MarkerHooks)
+	ibcHooks := ibchooks.NewIbcHooks(&hooksKeeper, app.Ics20WasmHooks, app.Ics20MarkerHooks, nil)
 	app.IbcHooks = &ibcHooks
 
 	app.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
@@ -649,6 +649,7 @@ func New(
 	app.Ics20WasmHooks.ContractKeeper = app.WasmKeeper // app.ContractKeeper -- this changes in the next version of wasm to a permissioned keeper
 	app.IBCHooksKeeper.ContractKeeper = app.ContractKeeper
 	app.Ics20MarkerHooks.MarkerKeeper = &app.MarkerKeeper
+	app.IbcHooks.SendPacketFns = []ibchookstypes.SendPacketFn{app.Ics20MarkerHooks.SendPacketFn, app.Ics20WasmHooks.SendPacketFn}
 
 	app.ScopedOracleKeeper = scopedOracleKeeper
 	app.OracleKeeper = *oraclekeeper.NewKeeper(

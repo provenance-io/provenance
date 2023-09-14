@@ -6,9 +6,14 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
+	"github.com/provenance-io/provenance/x/ibchooks/types"
 )
 
 type Hooks interface{}
+
+type GetSendPacketFns interface {
+	GetSendPacketFns() []types.SendPacketFn
+}
 
 type OnChanOpenInitOverrideHooks interface {
 	OnChanOpenInitOverride(im IBCMiddleware, ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string) (string, error)

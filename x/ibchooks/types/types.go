@@ -2,9 +2,10 @@ package types
 
 import (
 	"encoding/json"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 )
 
@@ -118,18 +119,17 @@ type MarkerPayload struct {
 	TransferAuth []string `json:"transfer-auth"`
 }
 
-func NewMarkerMemo(transferAuthAddrs []sdk.AccAddress) MarkerMemo {
+func NewMarkerPayload(transferAuthAddrs []sdk.AccAddress) MarkerPayload {
 	addresses := make([]string, len(transferAuthAddrs))
 	for i := 0; i < len(transferAuthAddrs); i++ {
 		addresses[i] = transferAuthAddrs[i].String()
 	}
-	return MarkerMemo{Marker: MarkerPayload{
+	return MarkerPayload{
 		TransferAuth: addresses,
-	}}
+	}
 }
 
 func NewIbcLifecycleCompleteAck(sourceChannel string, sequence uint64, ackAsJSON []byte, success bool) IbcLifecycleComplete {
-	sourceChannel = strings.ReplaceAll(sourceChannel, "\"", "")
 	ibcLifecycleCompleteAck := IbcLifecycleCompleteAck{
 		IbcAck: IbcAck{
 			Channel:  sourceChannel,
@@ -159,3 +159,5 @@ func (jb JsonBytes) MarshalJSON() ([]byte, error) {
 	}
 	return jb, nil
 }
+
+type SendPacketFn func(ctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte) ([]byte, error)
