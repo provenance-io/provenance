@@ -1,7 +1,10 @@
 package ibchooks
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
 
@@ -75,6 +78,20 @@ func (h IbcHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, p
 // 	// find marker, create memo struct, send ...
 // 	return h.markerHooks.SendPacketOverride(i, ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 // }
+
+func (h IbcHooks) SendPacketAfterHook(ctx sdk.Context,
+	chanCap *capabilitytypes.Capability,
+	sourcePort string,
+	sourceChannel string,
+	timeoutHeight clienttypes.Height,
+	timeoutTimestamp uint64,
+	data []byte,
+	sequence uint64,
+	err error,
+	processData map[string]interface{},
+) {
+	h.wasmHooks.SendPacketAfterHook(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data, sequence, err, processData)
+}
 
 func (h IbcHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) error {
 	return h.wasmHooks.OnTimeoutPacketOverride(im, ctx, packet, relayer)

@@ -160,4 +160,4 @@ func (jb JsonBytes) MarshalJSON() ([]byte, error) {
 	return jb, nil
 }
 
-type SendPacketFn func(ctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte) ([]byte, error)
+type SendPacketFn func(ctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte, processData map[string]interface{}) ([]byte, error)

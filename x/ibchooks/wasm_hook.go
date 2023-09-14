@@ -9,6 +9,7 @@ import (
 
 	sdkerrors "cosmossdk.io/errors"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
@@ -307,6 +308,7 @@ func (h WasmHooks) SendPacketFn(
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
 	data []byte,
+	processData map[string]interface{},
 ) ([]byte, error) {
 	isIcs20, ics20Packet := isIcs20Packet(data)
 	if !isIcs20 {
@@ -360,6 +362,40 @@ func (h WasmHooks) SendPacketFn(
 
 	// h.ibcHooksKeeper.StorePacketCallback(ctx, sourceChannel, seq, contract)
 	// return seq, nil
+}
+
+func (h WasmHooks) SendPacketAfterHook(ctx sdk.Context,
+	chanCap *capabilitytypes.Capability,
+	sourcePort string,
+	sourceChannel string,
+	timeoutHeight clienttypes.Height,
+	timeoutTimestamp uint64,
+	data []byte,
+	sequence uint64,
+	err error,
+	processData map[string]interface{},
+) {
+	if err != nil {
+		return
+	}
+
+	callbackRaw := processData[types.IBCCallbackKey]
+	if callbackRaw == nil {
+		return
+	}
+	// Make sure the callback contract is a string and a valid bech32 addr. If it isn't, ignore this packet
+	contract, ok := callbackRaw.(string)
+	if !ok {
+		sequence = 0
+		return
+	}
+
+	if _, err := sdktypes.AccAddressFromBech32(contract); err != nil {
+		sequence = 0
+		return
+	}
+
+	h.ibcHooksKeeper.StorePacketCallback(ctx, sourceChannel, sequence, contract)
 }
 
 func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdktypes.AccAddress) error {

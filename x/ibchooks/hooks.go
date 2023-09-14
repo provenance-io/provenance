@@ -145,7 +145,9 @@ type SendPacketAfterHooks interface {
 		timeoutTimestamp uint64,
 		data []byte,
 		sequence uint64,
-		err error)
+		err error,
+		processData map[string]interface{},
+	)
 }
 
 // WriteAcknowledgement Hooks

@@ -139,6 +139,7 @@ func (h MarkerHooks) SendPacketFn(
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
 	data []byte,
+	processData map[string]interface{},
 ) ([]byte, error) {
 	isIcs20, ics20Packet := isIcs20Packet(data)
 	if !isIcs20 {
