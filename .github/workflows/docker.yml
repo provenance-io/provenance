@@ -2,8 +2,6 @@ name: Docker Build and Push
 # Build & Push builds the simapp docker image on every push to master
 # and pushes the image to https://hub.docker.com/u/provenanceio
 on:
-  pull_request:
-
   push:
     branches:
       - main
