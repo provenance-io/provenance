@@ -326,11 +326,8 @@ func (k Keeper) CancelOrder(ctx sdk.Context, msg *exchange.MsgCancelOrderRequest
 	}
 
 	orderOwner := order.GetOwner()
-	if msg.Owner != orderOwner && msg.Owner != k.GetAuthority() {
-		msgOwnerAddr := sdk.MustAccAddressFromBech32(msg.Owner)
-		if hasPermission(store, order.GetMarketID(), msgOwnerAddr, exchange.Permission_cancel) {
-			return fmt.Errorf("account %s cannot cancel order %d", msg.Owner, msg.OrderId)
-		}
+	if msg.Owner != orderOwner && !k.hasPermission(store, order.GetMarketID(), msg.Owner, exchange.Permission_cancel) {
+		return fmt.Errorf("account %s cannot cancel order %d", msg.Owner, msg.OrderId)
 	}
 
 	orderOwnerAddr := sdk.MustAccAddressFromBech32(orderOwner)

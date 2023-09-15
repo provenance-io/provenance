@@ -621,7 +621,14 @@ func (k Keeper) SetUserSettlementAllowed(ctx sdk.Context, marketID uint32, allow
 }
 
 // hasPermission returns true if the provided address has the given permission in the market in question.
-func hasPermission(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, permission exchange.Permission) bool {
+func (k Keeper) hasPermission(store sdk.KVStore, marketID uint32, address string, permission exchange.Permission) bool {
+	if k.IsAuthority(address) {
+		return true
+	}
+	addr, err := sdk.AccAddressFromBech32(address)
+	if err != nil {
+		return false
+	}
 	key := MakeKeyMarketPermissions(marketID, addr, permission)
 	return store.Has(key)
 }
@@ -676,9 +683,9 @@ func updatePermissions(store sdk.KVStore, marketID uint32, revokeAll []string, t
 	}
 }
 
-// HasPermission returns true if the provided addr has the permission in question for a given market.
-func (k Keeper) HasPermission(ctx sdk.Context, marketID uint32, addr sdk.AccAddress, permission exchange.Permission) bool {
-	return hasPermission(k.getStore(ctx), marketID, addr, permission)
+// HasPermission returns true if the provided address has the permission in question for a given market.
+func (k Keeper) HasPermission(ctx sdk.Context, marketID uint32, address string, permission exchange.Permission) bool {
+	return k.hasPermission(k.getStore(ctx), marketID, address, permission)
 }
 
 // getUserPermissions gets all permissions that have been granted to a user in a market.
@@ -960,11 +967,7 @@ func (k Keeper) CanCreateBid(ctx sdk.Context, marketID uint32, addr sdk.AccAddre
 // CanWithdrawMarketFunds returns true if the provided admin bech32 address has permission to
 // withdraw funds from the given market's account.
 func (k Keeper) CanWithdrawMarketFunds(ctx sdk.Context, marketID uint32, admin string) bool {
-	if admin == k.GetAuthority() {
-		return true
-	}
-	adminAddr := sdk.MustAccAddressFromBech32(admin)
-	return hasPermission(k.getStore(ctx), marketID, adminAddr, exchange.Permission_withdraw)
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_withdraw)
 }
 
 // WithdrawMarketFunds transfers funds from a market account to another account.

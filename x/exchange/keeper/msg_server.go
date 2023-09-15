@@ -117,13 +117,13 @@ func (k MsgServer) MarketManageReqAttrs(goCtx context.Context, msg *exchange.Msg
 }
 
 // wrongAuthErr returns the error to use when a message's authority isn't what's required.
-func (k MsgServer) wrongAuthErr(authority string) error {
-	return govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", k.GetAuthority(), authority)
+func (k MsgServer) wrongAuthErr(badAuthority string) error {
+	return govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", k.GetAuthority(), badAuthority)
 }
 
 // GovCreateMarket is a governance proposal endpoint for creating a market.
 func (k MsgServer) GovCreateMarket(goCtx context.Context, msg *exchange.MsgGovCreateMarketRequest) (*exchange.MsgGovCreateMarketResponse, error) {
-	if msg.Authority != k.GetAuthority() {
+	if !k.IsAuthority(msg.Authority) {
 		return nil, k.wrongAuthErr(msg.Authority)
 	}
 
@@ -137,7 +137,7 @@ func (k MsgServer) GovCreateMarket(goCtx context.Context, msg *exchange.MsgGovCr
 
 // GovManageFees is a governance proposal endpoint for updating a market's fees.
 func (k MsgServer) GovManageFees(goCtx context.Context, msg *exchange.MsgGovManageFeesRequest) (*exchange.MsgGovManageFeesResponse, error) {
-	if msg.Authority != k.GetAuthority() {
+	if !k.IsAuthority(msg.Authority) {
 		return nil, k.wrongAuthErr(msg.Authority)
 	}
 
@@ -149,7 +149,7 @@ func (k MsgServer) GovManageFees(goCtx context.Context, msg *exchange.MsgGovMana
 
 // GovUpdateParams is a governance proposal endpoint for updating the exchange module's params.
 func (k MsgServer) GovUpdateParams(goCtx context.Context, msg *exchange.MsgGovUpdateParamsRequest) (*exchange.MsgGovUpdateParamsResponse, error) {
-	if msg.Authority != k.GetAuthority() {
+	if !k.IsAuthority(msg.Authority) {
 		return nil, k.wrongAuthErr(msg.Authority)
 	}
 

@@ -55,6 +55,11 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
+// IsAuthority returns true if the provided address bech32 string is the authority address.
+func (k Keeper) IsAuthority(addr string) bool {
+	return addr == k.authority
+}
+
 // GetFeeCollectorName gets the name of the fee collector.
 func (k Keeper) GetFeeCollectorName() string {
 	return k.feeCollectorName
