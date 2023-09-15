@@ -476,6 +476,34 @@ func ValidateReqAttrs(field string, attrs []string) error {
 	return errors.Join(errs...)
 }
 
+// IntersectionOfStrings returns all string options that are in both lists.
+func IntersectionOfStrings(options1, options2 []string) []string {
+	var rv []string
+	for _, o1 := range options1 {
+		for _, o2 := range options2 {
+			if o1 == o2 {
+				rv = append(rv, o1)
+				break
+			}
+		}
+	}
+	return rv
+}
+
+// ValidateAddRemoveReqAttrs returns an error if the toAdd list has an invalid
+// entry or if the two lists have one or more common entries.
+func ValidateAddRemoveReqAttrs(field string, toAdd, toRemove []string) error {
+	var errs []error
+	if err := ValidateReqAttrs(field+" to add", toAdd); err != nil {
+		errs = append(errs, err)
+	}
+	shared := IntersectionOfStrings(toAdd, toRemove)
+	if len(shared) > 0 {
+		errs = append(errs, fmt.Errorf("cannot add and remove the same %s options: %s", field, strings.Join(shared, ",")))
+	}
+	return errors.Join(errs...)
+}
+
 // IsValidReqAttr returns true if the provided string is a valid required attribute entry.
 // Assumes that the provided reqAttr has already been normalized.
 func IsValidReqAttr(reqAttr string) bool {

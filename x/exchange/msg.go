@@ -174,13 +174,32 @@ func (m MsgMarketManagePermissionsRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgMarketManageReqAttrsRequest) ValidateBasic() error {
-	// TODO[1658]: MsgMarketManageReqAttrsRequest.ValidateBasic()
-	return nil
+	var errs []error
+
+	if _, err := sdk.AccAddressFromBech32(m.Administrator); err != nil {
+		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Administrator, err))
+	}
+
+	if m.HasUpdates() {
+		errs = append(errs,
+			ValidateAddRemoveReqAttrs("create-ask", m.CreateAskToAdd, m.CreateAskToRemove),
+			ValidateAddRemoveReqAttrs("create-bid", m.CreateBidToAdd, m.CreateBidToRemove),
+		)
+	} else {
+		errs = append(errs, errors.New("no updates"))
+	}
+
+	return errors.Join(errs...)
+}
+
+func (m MsgMarketManageReqAttrsRequest) HasUpdates() bool {
+	return len(m.CreateAskToAdd) > 0 || len(m.CreateAskToRemove) > 0 ||
+		len(m.CreateBidToAdd) > 0 || len(m.CreateBidToRemove) > 0
 }
 
 func (m MsgMarketManageReqAttrsRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgMarketManageReqAttrsRequest.GetSigners
-	panic("not implemented")
+	addr := sdk.MustAccAddressFromBech32(m.Administrator)
+	return []sdk.AccAddress{addr}
 }
 
 func (m MsgGovCreateMarketRequest) ValidateBasic() error {
