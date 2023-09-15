@@ -170,7 +170,7 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 		assert.Equal(t, "bananas", actual, "unmanaged field value")
 	})
 
-	s.T().Run("unmanaged config entry does not override other config", func(t *testing.T) {
+	s.T().Run("unmanaged config entry overrides other config", func(t *testing.T) {
 		dCmd := s.makeDummyCmd()
 		configDir := GetFullPathToConfigDir(dCmd)
 		uFile := GetFullPathToUnmanagedConf(dCmd)
@@ -180,8 +180,8 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 		ctx := client.GetClientContextFromCmd(dCmd)
 		vpr := ctx.Viper
 		actual := vpr.GetString("db_backend")
-		assert.NotEqual(t, "still bananas", actual, "unmanaged field value")
-		assert.Equal(t, DefaultTmConfig().DBBackend, actual, "unmanaged field default value")
+		assert.Equal(t, "still bananas", actual, "unmanaged field value")
+		assert.NotEqual(t, DefaultTmConfig().DBBackend, actual, "unmanaged field default value")
 	})
 
 	s.T().Run("unmanaged config is read with unpacked files", func(t *testing.T) {
@@ -194,6 +194,27 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 		vpr := ctx.Viper
 		actual := vpr.GetString("my-custom-entry")
 		assert.Equal(t, "stuff", actual, "unmanaged field value")
+	})
+
+	s.T().Run("unmanaged config is read with invalid packed files", func(t *testing.T) {
+		dCmd := s.makeDummyCmd()
+		uFile := GetFullPathToUnmanagedConf(dCmd)
+		pFile := GetFullPathToPackedConf(dCmd)
+		SaveConfigs(dCmd, DefaultAppConfig(), DefaultTmConfig(), DefaultClientConfig(), false)
+		require.NoError(t, os.WriteFile(uFile, []byte("my-custom-entry = \"stuff\"\n"), 0o644), "writing unmanaged config")
+		require.NoError(t, os.WriteFile(pFile, []byte("kl234508923u5jl"), 0o644), "writing invalid data to packed config")
+		require.EqualError(t, LoadConfigFromFiles(dCmd), "packed config file parse error: invalid character 'k' looking for beginning of value", "should throw error with invalid packed config")
+		require.NoError(t, os.Remove(pFile), "removing packed config")
+	})
+
+	s.T().Run("unmanaged config is read with invalid unpacked files", func(t *testing.T) {
+		dCmd := s.makeDummyCmd()
+		uFile := GetFullPathToUnmanagedConf(dCmd)
+		pFile := GetFullPathToAppConf(dCmd)
+		SaveConfigs(dCmd, DefaultAppConfig(), DefaultTmConfig(), DefaultClientConfig(), false)
+		require.NoError(t, os.WriteFile(uFile, []byte("my-custom-entry = \"stuff\"\n"), 0o644), "writing unmanaged config")
+		require.NoError(t, os.WriteFile(pFile, []byte("kl234508923u5jl"), 0o644), "writing invalid data to app config")
+		require.EqualError(t, LoadConfigFromFiles(dCmd), "app config file merge error: While parsing config: toml: expected = after a key, but the document ends there", "should throw error with invalid packed config")
 	})
 
 	s.T().Run("unmanaged config is read with packed config", func(t *testing.T) {
