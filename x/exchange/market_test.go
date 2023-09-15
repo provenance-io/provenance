@@ -129,12 +129,12 @@ func TestMarket_Validate(t *testing.T) {
 		{
 			name:   "invalid ask required attributes",
 			market: Market{ReqAttrCreateAsk: []string{"this-attr-is-bad"}},
-			expErr: []string{`invalid create-ask required attributes: invalid required attribute "this-attr-is-bad"`},
+			expErr: []string{`invalid create-ask required attribute "this-attr-is-bad"`},
 		},
 		{
 			name:   "invalid bid required attributes",
 			market: Market{ReqAttrCreateBid: []string{"this-attr-grrrr"}},
-			expErr: []string{`invalid create-bid required attributes: invalid required attribute "this-attr-grrrr"`},
+			expErr: []string{`invalid create-bid required attribute "this-attr-grrrr"`},
 		},
 		{
 			name: "multiple errors",
@@ -159,8 +159,8 @@ func TestMarket_Validate(t *testing.T) {
 				`denom "fry" is defined in the seller settlement fee ratios but not buyer`,
 				`denom "leela" is defined in the buyer settlement fee ratios but not seller`,
 				"invalid access grant: invalid address: decoding bech32 failed: invalid separator index -1",
-				`invalid create-ask required attributes: invalid required attribute "this-attr-is-bad"`,
-				`invalid create-bid required attributes: invalid required attribute "this-attr-grrrr"`,
+				`invalid create-ask required attribute "this-attr-is-bad"`,
+				`invalid create-bid required attribute "this-attr-grrrr"`,
 			},
 		},
 	}
@@ -1178,7 +1178,7 @@ func TestFeeRatio_ApplyToLoosely(t *testing.T) {
 	}
 }
 
-func TestIntersectionOfFeeRatios(t *testing.T) {
+func intersectionFeeRatioEqualsTests(t *testing.T) {
 	feeRatio := func(priceAmount int64, priceDenom string, feeAmount int64, feeDenom string) FeeRatio {
 		return FeeRatio{
 			Price: sdk.Coin{Denom: priceDenom, Amount: sdkmath.NewInt(priceAmount)},
@@ -1188,88 +1188,88 @@ func TestIntersectionOfFeeRatios(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		ratios1  []FeeRatio
-		ratios2  []FeeRatio
+		options1 []FeeRatio
+		options2 []FeeRatio
 		expected []FeeRatio
 	}{
-		{name: "nil nil", ratios1: nil, ratios2: nil, expected: nil},
-		{name: "nil empty", ratios1: nil, ratios2: []FeeRatio{}, expected: nil},
-		{name: "empty nil", ratios1: []FeeRatio{}, ratios2: nil, expected: nil},
-		{name: "empty empty", ratios1: []FeeRatio{}, ratios2: []FeeRatio{}, expected: nil},
+		{name: "nil nil", options1: nil, options2: nil, expected: nil},
+		{name: "nil empty", options1: nil, options2: []FeeRatio{}, expected: nil},
+		{name: "empty nil", options1: []FeeRatio{}, options2: nil, expected: nil},
+		{name: "empty empty", options1: []FeeRatio{}, options2: []FeeRatio{}, expected: nil},
 		{
 			name:     "one nil",
-			ratios1:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
-			ratios2:  nil,
+			options1: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			options2: nil,
 			expected: nil,
 		},
 		{
 			name:     "nil one",
-			ratios1:  nil,
-			ratios2:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			options1: nil,
+			options2: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
 			expected: nil,
 		},
 		{
 			name:     "one one equal",
-			ratios1:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
-			ratios2:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			options1: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			options2: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
 			expected: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
 		},
 		{
 			name:     "one one diff first price amount",
-			ratios1:  []FeeRatio{feeRatio(3, "spicy", 2, "lemon")},
-			ratios2:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			options1: []FeeRatio{feeRatio(3, "spicy", 2, "lemon")},
+			options2: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
 			expected: nil,
 		},
 		{
 			name:     "one one diff first price denom",
-			ratios1:  []FeeRatio{feeRatio(1, "bland", 2, "lemon")},
-			ratios2:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			options1: []FeeRatio{feeRatio(1, "bland", 2, "lemon")},
+			options2: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
 			expected: nil,
 		},
 		{
 			name:     "one one diff first fee amount",
-			ratios1:  []FeeRatio{feeRatio(1, "spicy", 3, "lemon")},
-			ratios2:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			options1: []FeeRatio{feeRatio(1, "spicy", 3, "lemon")},
+			options2: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
 			expected: nil,
 		},
 		{
 			name:     "one one diff first fee denom",
-			ratios1:  []FeeRatio{feeRatio(1, "spicy", 2, "grape")},
-			ratios2:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			options1: []FeeRatio{feeRatio(1, "spicy", 2, "grape")},
+			options2: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
 			expected: nil,
 		},
 		{
 			name:     "one one diff second price amount",
-			ratios1:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
-			ratios2:  []FeeRatio{feeRatio(3, "spicy", 2, "lemon")},
+			options1: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			options2: []FeeRatio{feeRatio(3, "spicy", 2, "lemon")},
 			expected: nil,
 		},
 		{
 			name:     "one one diff second price denom",
-			ratios1:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
-			ratios2:  []FeeRatio{feeRatio(1, "bland", 2, "lemon")},
+			options1: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			options2: []FeeRatio{feeRatio(1, "bland", 2, "lemon")},
 			expected: nil,
 		},
 		{
 			name:     "one one diff second fee amount",
-			ratios1:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
-			ratios2:  []FeeRatio{feeRatio(1, "spicy", 3, "lemon")},
+			options1: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			options2: []FeeRatio{feeRatio(1, "spicy", 3, "lemon")},
 			expected: nil,
 		},
 		{
 			name:     "one one diff second fee denom",
-			ratios1:  []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
-			ratios2:  []FeeRatio{feeRatio(1, "spicy", 2, "bland")},
+			options1: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
+			options2: []FeeRatio{feeRatio(1, "spicy", 2, "bland")},
 			expected: nil,
 		},
 		{
 			name: "three three two common",
-			ratios1: []FeeRatio{
+			options1: []FeeRatio{
 				feeRatio(1, "lamp", 2, "bag"),
 				feeRatio(3, "keys", 4, "phone"),
 				feeRatio(5, "fan", 6, "bottle"),
 			},
-			ratios2: []FeeRatio{
+			options2: []FeeRatio{
 				feeRatio(3, "kays", 4, "phone"),
 				feeRatio(5, "fan", 6, "bottle"),
 				feeRatio(1, "lamp", 2, "bag"),
@@ -1285,10 +1285,10 @@ func TestIntersectionOfFeeRatios(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual []FeeRatio
 			testFunc := func() {
-				actual = IntersectionOfFeeRatios(tc.ratios1, tc.ratios2)
+				actual = Intersection(tc.options1, tc.options2, FeeRatio.Equals)
 			}
-			require.NotPanics(t, testFunc, "IntersectionOfFeeRatios")
-			assert.Equal(t, tc.expected, actual, "IntersectionOfFeeRatios result")
+			require.NotPanics(t, testFunc, "Intersection(FeeRatio.Equals)")
+			assert.Equal(t, tc.expected, actual, "Intersection(FeeRatio.Equals) result")
 		})
 	}
 }
@@ -1409,7 +1409,7 @@ func TestValidateDisjointFeeRatios(t *testing.T) {
 	}
 }
 
-func TestIntersectionOfFeeOptions(t *testing.T) {
+func intersectionCoinEqualsTests(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
@@ -1478,10 +1478,10 @@ func TestIntersectionOfFeeOptions(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual []sdk.Coin
 			testFunc := func() {
-				actual = IntersectionOfFeeOptions(tc.options1, tc.options2)
+				actual = Intersection(tc.options1, tc.options2, CoinEquals)
 			}
-			require.NotPanics(t, testFunc, "IntersectionOfFeeOptions")
-			assert.Equal(t, tc.expected, actual, "IntersectionOfFeeOptions result")
+			require.NotPanics(t, testFunc, "Intersection(CoinEquals)")
+			assert.Equal(t, tc.expected, actual, "Intersection(CoinEquals) result")
 		})
 	}
 }
@@ -2264,6 +2264,171 @@ func TestValidateReqAttrs(t *testing.T) {
 	}
 }
 
+func intersectionStringEqualsTests(t *testing.T) {
+	tests := []struct {
+		name     string
+		options1 []string
+		options2 []string
+		expected []string
+	}{
+		{name: "nil lists", options1: nil, options2: nil, expected: nil},
+		{name: "empty lists", options1: []string{}, options2: []string{}, expected: nil},
+		{name: "one item to nil", options1: []string{"one"}, options2: nil, expected: nil},
+		{name: "nil to one item", options1: nil, options2: []string{"one"}, expected: nil},
+		{name: "one to one: different", options1: []string{"one"}, options2: []string{"two"}, expected: nil},
+		{name: "one to one: same", options1: []string{"one"}, options2: []string{"one"}, expected: []string{"one"}},
+		{
+			name:     "one to three: none common",
+			options1: []string{"one"},
+			options2: []string{"two", "three", "four"},
+			expected: nil,
+		},
+		{
+			name:     "one to three: first",
+			options1: []string{"one"},
+			options2: []string{"one", "three", "four"},
+			expected: []string{"one"},
+		},
+		{
+			name:     "one to three: second",
+			options1: []string{"one"},
+			options2: []string{"two", "one", "four"},
+			expected: []string{"one"},
+		},
+		{
+			name:     "one to three: third",
+			options1: []string{"one"},
+			options2: []string{"two", "three", "one"},
+			expected: []string{"one"},
+		},
+		{
+			name:     "one to three: all equal",
+			options1: []string{"one"},
+			options2: []string{"one", "one", "one"},
+			expected: []string{"one"},
+		},
+		{
+			name:     "three to one: none common",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"four"},
+			expected: nil,
+		},
+		{
+			name:     "three to one: first",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"one"},
+			expected: []string{"one"},
+		},
+		{
+			name:     "three to one: second",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"two"},
+			expected: []string{"two"},
+		},
+		{
+			name:     "three to one: third",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"three"},
+			expected: []string{"three"},
+		},
+		{
+			name:     "three to one: all equal",
+			options1: []string{"one", "one", "one"},
+			options2: []string{"one"},
+			expected: []string{"one"},
+		},
+		{
+			name:     "three to three: none common",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"four", "five", "six"},
+			expected: nil,
+		},
+		{
+			name:     "three to three: one common: first to first",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"one", "five", "six"},
+			expected: []string{"one"},
+		},
+		{
+			name:     "three to three: one common: first to second",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"four", "one", "six"},
+			expected: []string{"one"},
+		},
+		{
+			name:     "three to three: one common: first to third",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"four", "five", "one"},
+			expected: []string{"one"},
+		},
+		{
+			name:     "three to three: one common: second to first",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"two", "five", "six"},
+			expected: []string{"two"},
+		},
+		{
+			name:     "three to three: one common: second to second",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"four", "two", "six"},
+			expected: []string{"two"},
+		},
+		{
+			name:     "three to three: one common: second to third",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"four", "five", "two"},
+			expected: []string{"two"},
+		},
+		{
+			name:     "three to three: one common: third to first",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"three", "five", "six"},
+			expected: []string{"three"},
+		},
+		{
+			name:     "three to three: one common: third to second",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"four", "three", "six"},
+			expected: []string{"three"},
+		},
+		{
+			name:     "three to three: one common: third to third",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"four", "five", "three"},
+			expected: []string{"three"},
+		},
+		{
+			name:     "three to three: two common",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"two", "five", "one"},
+			expected: []string{"one", "two"},
+		},
+		{
+			name:     "three to three: same lists different order",
+			options1: []string{"one", "two", "three"},
+			options2: []string{"two", "three", "one"},
+			expected: []string{"one", "two", "three"},
+		},
+		{
+			name:     "three to three: all equal",
+			options1: []string{"one", "one", "one"},
+			options2: []string{"one", "one", "one"},
+			expected: []string{"one"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual []string
+			testFunc := func() {
+				actual = Intersection(tc.options1, tc.options2, StringEquals)
+			}
+			require.NotPanics(t, testFunc, "Intersection(StringEquals)")
+			assert.Equal(t, tc.expected, actual, "Intersection(StringEquals) result")
+		})
+	}
+}
+
 func TestIsValidReqAttr(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -2813,4 +2978,106 @@ func TestIsReqAttrMatch(t *testing.T) {
 			assert.Equal(t, tc.exp, isMatch, "IsReqAttrMatch(%q, %q)", tc.reqAttr, tc.accAttr)
 		})
 	}
+}
+
+func TestCoinEquals(t *testing.T) {
+	tests := []struct {
+		name string
+		a    sdk.Coin
+		b    sdk.Coin
+		exp  bool
+	}{
+		{
+			name: "zero-value coins",
+			a:    sdk.Coin{},
+			b:    sdk.Coin{},
+			exp:  true,
+		},
+		{
+			name: "different amounts",
+			a:    sdk.NewInt64Coin("pear", 2),
+			b:    sdk.NewInt64Coin("pear", 3),
+			exp:  false,
+		},
+		{
+			name: "different denoms",
+			a:    sdk.NewInt64Coin("pear", 2),
+			b:    sdk.NewInt64Coin("onion", 2),
+			exp:  false,
+		},
+		{
+			name: "same denom and amount",
+			a:    sdk.NewInt64Coin("pear", 2),
+			b:    sdk.NewInt64Coin("pear", 2),
+			exp:  true,
+		},
+		{
+			name: "same denom zero amounts",
+			a:    sdk.NewInt64Coin("pear", 0),
+			b:    sdk.NewInt64Coin("pear", 0),
+			exp:  true,
+		},
+		{
+			name: "diff denom zero amounts",
+			a:    sdk.NewInt64Coin("pear", 0),
+			b:    sdk.NewInt64Coin("onion", 0),
+			exp:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = CoinEquals(tc.a, tc.b)
+			}
+			require.NotPanics(t, testFunc, "CoinEquals(%q, %q)", tc.a, tc.b)
+			assert.Equal(t, tc.exp, actual, "CoinEquals(%q, %q) result", tc.a, tc.b)
+		})
+	}
+}
+
+func TestStringEquals(t *testing.T) {
+	tests := []struct {
+		a   string
+		b   string
+		exp bool
+	}{
+		{a: "", b: "", exp: true},
+		{a: "c", b: "c", exp: true},
+		{a: "a b", b: "a b", exp: true},
+		{a: "x.y.z", b: "x.y.z", exp: true},
+		{a: "*.y.z", b: "x.y.z", exp: false},
+		{a: "a", b: "b", exp: false},
+		{a: "a", b: "ba", exp: false},
+		{a: "a", b: "ba", exp: false},
+		{a: "ab", b: "b", exp: false},
+		{a: "ba", b: "b", exp: false},
+		{a: "cccc", b: "ccccc", exp: false},
+		{a: "ccccc", b: "cccc", exp: false},
+		{a: "a b", b: "b a", exp: false},
+		{a: "a b", b: "a-b", exp: false},
+		{a: "c", b: " c", exp: false},
+		{a: "c", b: "c ", exp: false},
+		{a: " c", b: "c", exp: false},
+		{a: "c ", b: "c", exp: false},
+		{a: "c ", b: " c", exp: false},
+	}
+
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("%q|%q", tc.a, tc.b), func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = StringEquals(tc.a, tc.b)
+			}
+			require.NotPanics(t, testFunc, "StringEquals(%q, %q)", tc.a, tc.b)
+			assert.Equal(t, tc.exp, actual, "StringEquals(%q, %q) result", tc.a, tc.b)
+		})
+	}
+}
+
+func TestIntersection(t *testing.T) {
+	t.Run("of fee ratios", intersectionFeeRatioEqualsTests)
+	t.Run("of coins", intersectionCoinEqualsTests)
+	t.Run("of strings", intersectionStringEqualsTests)
 }

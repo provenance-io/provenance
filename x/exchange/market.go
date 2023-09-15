@@ -292,41 +292,13 @@ func (r FeeRatio) ApplyToLoosely(price sdk.Coin) (sdk.Coin, error) {
 	return rv, nil
 }
 
-// IntersectionOfFeeRatios returns all FeeRatios that are in both lists.
-func IntersectionOfFeeRatios(ratios1, ratios2 []FeeRatio) []FeeRatio {
-	var rv []FeeRatio
-	for _, r1 := range ratios1 {
-		for _, r2 := range ratios2 {
-			if r1.Equals(r2) {
-				rv = append(rv, r1)
-				break
-			}
-		}
-	}
-	return rv
-}
-
 // ValidateDisjointFeeRatios returns an error if one or more entries appears in both lists.
 func ValidateDisjointFeeRatios(field string, toAdd, toRemove []FeeRatio) error {
-	shared := IntersectionOfFeeRatios(toAdd, toRemove)
+	shared := Intersection(toAdd, toRemove, FeeRatio.Equals)
 	if len(shared) > 0 {
 		return fmt.Errorf("cannot add and remove the same %s ratios: %s", field, FeeRatiosString(shared))
 	}
 	return nil
-}
-
-// IntersectionOfFeeOptions returns all Coin options that are in both lists.
-func IntersectionOfFeeOptions(options1, options2 []sdk.Coin) []sdk.Coin {
-	var rv []sdk.Coin
-	for _, c1 := range options1 {
-		for _, c2 := range options2 {
-			if c1.Equal(c2) {
-				rv = append(rv, c1)
-				break
-			}
-		}
-	}
-	return rv
 }
 
 // ValidateAddRemoveFeeOptions returns an error if the toAdd list has an invalid
@@ -336,7 +308,7 @@ func ValidateAddRemoveFeeOptions(field string, toAdd, toRemove []sdk.Coin) error
 	if err := ValidateFeeOptions(field+" to add", toAdd); err != nil {
 		errs = append(errs, err)
 	}
-	shared := IntersectionOfFeeOptions(toAdd, toRemove)
+	shared := Intersection(toAdd, toRemove, CoinEquals)
 	if len(shared) > 0 {
 		errs = append(errs, fmt.Errorf("cannot add and remove the same %s options: %s", field, sdk.Coins(shared)))
 	}
@@ -476,20 +448,6 @@ func ValidateReqAttrs(field string, attrs []string) error {
 	return errors.Join(errs...)
 }
 
-// IntersectionOfStrings returns all string options that are in both lists.
-func IntersectionOfStrings(options1, options2 []string) []string {
-	var rv []string
-	for _, o1 := range options1 {
-		for _, o2 := range options2 {
-			if o1 == o2 {
-				rv = append(rv, o1)
-				break
-			}
-		}
-	}
-	return rv
-}
-
 // ValidateAddRemoveReqAttrs returns an error if the toAdd list has an invalid
 // entry or if the two lists have one or more common entries.
 func ValidateAddRemoveReqAttrs(field string, toAdd, toRemove []string) error {
@@ -497,7 +455,7 @@ func ValidateAddRemoveReqAttrs(field string, toAdd, toRemove []string) error {
 	if err := ValidateReqAttrs(field+" to add", toAdd); err != nil {
 		errs = append(errs, err)
 	}
-	shared := IntersectionOfStrings(toAdd, toRemove)
+	shared := Intersection(toAdd, toRemove, StringEquals)
 	if len(shared) > 0 {
 		errs = append(errs, fmt.Errorf("cannot add and remove the same %s options: %s", field, strings.Join(shared, ",")))
 	}
@@ -561,4 +519,42 @@ func IsReqAttrMatch(reqAttr, accAttr string) bool {
 		return strings.HasSuffix(accAttr, reqAttr[1:])
 	}
 	return reqAttr == accAttr
+}
+
+// CoinEquals returns true if the two provided coin entries are equal.
+// Designed for use with Intersection.
+//
+// We can't just provide sdk.Coin.isEqual to Intersection because that PANICS if the denoms are different.
+// And we can't provide sdk.Coin.Equal to Intersection because it takes in an interface{} (instead of sdk.Coin).
+func CoinEquals(a, b sdk.Coin) bool {
+	return a.Equal(b)
+}
+
+// StringEquals returns true if the two provided strings are equal.
+// Designed for use with Intersection.
+func StringEquals(a, b string) bool {
+	return a == b
+}
+
+// Intersection returns all entries that are in both lists.
+func Intersection[T any](list1, list2 []T, equals func(T, T) bool) []T {
+	var rv []T
+	for _, a := range list1 {
+		for _, b := range list2 {
+			if equals(a, b) {
+				alreadyHave := false
+				for _, r := range rv {
+					if equals(a, r) {
+						alreadyHave = true
+						break
+					}
+				}
+				if !alreadyHave {
+					rv = append(rv, a)
+				}
+				break
+			}
+		}
+	}
+	return rv
 }
