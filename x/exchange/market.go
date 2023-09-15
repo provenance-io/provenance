@@ -34,9 +34,8 @@ var (
 // The MarketId is allowed to be zero in here.
 // Some uses might require it to have a value, but that check is left up to the caller.
 func (m Market) Validate() error {
-	// Nothing to check on the MarketId. It's allowed to be zero to indicate to use the next one.
-
-	errs := []error{
+	return errors.Join(
+		// Nothing to check on the MarketId. It's allowed to be zero to indicate to use the next one.
 		m.MarketDetails.Validate(),
 		ValidateFeeOptions("create-ask flat fee", m.FeeCreateAskFlat),
 		ValidateFeeOptions("create-bid flat fee", m.FeeCreateBidFlat),
@@ -44,18 +43,10 @@ func (m Market) Validate() error {
 		ValidateFeeOptions("buyer settlement flat fee", m.FeeBuyerSettlementFlat),
 		ValidateFeeRatios(m.FeeSellerSettlementRatios, m.FeeBuyerSettlementRatios),
 		ValidateAccessGrants(m.AccessGrants),
-	}
-
-	// Nothing to check for with the AcceptingOrders and AllowUserSettlement booleans.
-
-	if err := ValidateReqAttrs(m.ReqAttrCreateAsk); err != nil {
-		errs = append(errs, fmt.Errorf("invalid create-ask required attributes: %w", err))
-	}
-	if err := ValidateReqAttrs(m.ReqAttrCreateBid); err != nil {
-		errs = append(errs, fmt.Errorf("invalid create-bid required attributes: %w", err))
-	}
-
-	return errors.Join(errs...)
+		// Nothing to check for with the AcceptingOrders and AllowUserSettlement booleans.
+		ValidateReqAttrs("create-ask", m.ReqAttrCreateAsk),
+		ValidateReqAttrs("create-bid", m.ReqAttrCreateBid),
+	)
 }
 
 // ValidateFeeOptions returns an error if any of the provide coin values is not a valid fee option.
@@ -462,25 +453,24 @@ func ParsePermissions(permissions ...string) ([]Permission, error) {
 }
 
 // ValidateReqAttrs makes sure that each provided attribute is valid and that no duplicate entries are provided.
-func ValidateReqAttrs(attrLists ...[]string) error {
+func ValidateReqAttrs(field string, attrs []string) error {
 	var errs []error
 	seen := make(map[string]bool)
 	bad := make(map[string]bool)
-	for _, attrs := range attrLists {
-		for _, attr := range attrs {
-			normalized := nametypes.NormalizeName(attr)
-			if seen[normalized] {
-				if !bad[normalized] {
-					errs = append(errs, fmt.Errorf("duplicate required attribute entry: %q", attr))
-					bad[normalized] = true
-				}
-				continue
-			}
-			seen[normalized] = true
-			if !IsValidReqAttr(normalized) {
-				errs = append(errs, fmt.Errorf("invalid required attribute %q", attr))
+	for _, attr := range attrs {
+		normalized := nametypes.NormalizeName(attr)
+		if seen[normalized] {
+			if !bad[normalized] {
+				errs = append(errs, fmt.Errorf("duplicate %s required attribute: %q",
+					field, attr))
 				bad[normalized] = true
 			}
+			continue
+		}
+		seen[normalized] = true
+		if !IsValidReqAttr(normalized) {
+			errs = append(errs, fmt.Errorf("invalid %s required attribute %q", field, attr))
+			bad[normalized] = true
 		}
 	}
 	return errors.Join(errs...)

@@ -2180,155 +2180,85 @@ func TestValidateReqAttrs(t *testing.T) {
 	}
 
 	tests := []struct {
-		name      string
-		attrLists [][]string
-		exp       string
+		name  string
+		field string
+		attrs []string
+		exp   string
 	}{
 		{
-			name:      "nil lists",
-			attrLists: nil,
-			exp:       "",
+			name:  "nil list",
+			field: "FEYULD",
+			attrs: nil,
+			exp:   "",
 		},
 		{
-			name:      "no lists",
-			attrLists: [][]string{},
-			exp:       "",
+			name:  "empty list",
+			field: "FEYULD",
+			attrs: []string{},
+			exp:   "",
 		},
 		{
-			name:      "two empty lists",
-			attrLists: [][]string{{}, {}},
-			exp:       "",
+			name:  "three valid entries: normalized",
+			field: "FEYULD",
+			attrs: []string{"*.wildcard", "penny.nickel.dime", "*.example.pb"},
+			exp:   "",
 		},
 		{
-			name: "one list: three valid entries: normalized",
-			attrLists: [][]string{
-				{"*.wildcard", "penny.nickel.dime", "*.example.pb"},
-			},
-			exp: "",
+			name:  "three valid entries: not normalized",
+			field: "FEYULD",
+			attrs: []string{" * . wildcard ", " penny  . nickel .   dime ", " * . example . pb        "},
+			exp:   "",
 		},
 		{
-			name: "one list: three valid entries: not normalized",
-			attrLists: [][]string{
-				{" * . wildcard ", " penny  . nickel .   dime ", " * . example . pb        "},
-			},
-			exp: "",
+			name:  "three entries: first invalid",
+			field: "FEYULD",
+			attrs: []string{"x.*.wildcard", "penny.nickel.dime", "*.example.pb"},
+			exp:   `invalid FEYULD required attribute "x.*.wildcard"`,
 		},
 		{
-			name: "one list: three entries: first invalid",
-			attrLists: [][]string{
-				{"x.*.wildcard", "penny.nickel.dime", "*.example.pb"},
-			},
-			exp: `invalid required attribute "x.*.wildcard"`,
+			name:  "three entries: second invalid",
+			field: "fee-yield",
+			attrs: []string{"*.wildcard", "penny.nic kel.dime", "*.example.pb"},
+			exp:   `invalid fee-yield required attribute "penny.nic kel.dime"`,
 		},
 		{
-			name: "one list: three entries: second invalid",
-			attrLists: [][]string{
-				{"*.wildcard", "penny.nic kel.dime", "*.example.pb"},
-			},
-			exp: `invalid required attribute "penny.nic kel.dime"`,
+			name:  "three entries: third invalid",
+			field: "fee-yelled",
+			attrs: []string{"*.wildcard", "penny.nickel.dime", "*.ex-am-ple.pb"},
+			exp:   `invalid fee-yelled required attribute "*.ex-am-ple.pb"`,
 		},
 		{
-			name: "one list: three entries: third invalid",
-			attrLists: [][]string{
-				{"*.wildcard", "penny.nickel.dime", "*.ex-am-ple.pb"},
-			},
-			exp: `invalid required attribute "*.ex-am-ple.pb"`,
+			name:  "duplicate entries",
+			field: "just some field name thingy",
+			attrs: []string{"*.multi", "*.multi", "*.multi"},
+			exp:   `duplicate just some field name thingy required attribute: "*.multi"`,
 		},
 		{
-			name: "one list: duplicate entries",
-			attrLists: [][]string{
-				{"*.multi", "*.multi", "*.multi"},
-			},
-			exp: `duplicate required attribute entry: "*.multi"`,
+			name:  "duplicate bad entries",
+			field: "bananas",
+			attrs: []string{"bad.*.example", "bad. * .example"},
+			exp:   `invalid bananas required attribute "bad.*.example"`,
 		},
 		{
-			name: "one list: duplicate bad entries",
-			attrLists: [][]string{
-				{"bad.*.example", "bad. * .example"},
-			},
-			exp: `invalid required attribute "bad.*.example"`,
-		},
-		{
-			name: "one list: multiple problems",
-			attrLists: [][]string{
-				{
-					"one.multi", "x.*.wildcard", "x.*.wildcard", "one.multi", "two.multi",
-					"penny.nic kel.dime", "one.multi", "two.multi", "*.ex-am-ple.pb", "two.multi",
-				},
+			name:  "multiple problems",
+			field: "♪ but a bit ain't one ♪",
+			attrs: []string{
+				"one.multi", "x.*.wildcard", "x.*.wildcard", "one.multi", "two.multi",
+				"penny.nic kel.dime", "one.multi", "two.multi", "*.ex-am-ple.pb", "two.multi",
 			},
 			exp: joinErrs(
-				`invalid required attribute "x.*.wildcard"`,
-				`duplicate required attribute entry: "one.multi"`,
-				`invalid required attribute "penny.nic kel.dime"`,
-				`duplicate required attribute entry: "two.multi"`,
-				`invalid required attribute "*.ex-am-ple.pb"`,
-			),
-		},
-		{
-			name: "two lists: second has invalid first",
-			attrLists: [][]string{
-				{"*.ok", "also.okay.by.me", "this.makes.me.happy"},
-				{"x.*.wildcard", "penny.nickel.dime", "*.example.pb"},
-			},
-			exp: `invalid required attribute "x.*.wildcard"`,
-		},
-		{
-			name: "two lists: second has invalid middle",
-			attrLists: [][]string{
-				{"*.ok", "also.okay.by.me", "this.makes.me.happy"},
-				{"*.wildcard", "penny.nic kel.dime", "*.example.pb"},
-			},
-			exp: `invalid required attribute "penny.nic kel.dime"`,
-		},
-		{
-			name: "two lists: second has invalid last",
-			attrLists: [][]string{
-				{"*.ok", "also.okay.by.me", "this.makes.me.happy"},
-				{"*.wildcard", "penny.nickel.dime", "*.ex-am-ple.pb"},
-			},
-			exp: `invalid required attribute "*.ex-am-ple.pb"`,
-		},
-		{
-			name: "two lists: same entry in both but one is not normalized",
-			attrLists: [][]string{
-				{"this.attr.is.twice"},
-				{" This .    Attr . Is . TWice"},
-			},
-			exp: `duplicate required attribute entry: " This .    Attr . Is . TWice"`,
-		},
-		{
-			name: "two lists: multiple problems",
-			attrLists: [][]string{
-				{"one.multi", "x.*.wildcard", "x.*.wildcard", "one.multi", "two.multi"},
-				{"penny.nic kel.dime", "one.multi", "two.multi", "*.ex-am-ple.pb", "two.multi"},
-			},
-			exp: joinErrs(
-				`invalid required attribute "x.*.wildcard"`,
-				`duplicate required attribute entry: "one.multi"`,
-				`invalid required attribute "penny.nic kel.dime"`,
-				`duplicate required attribute entry: "two.multi"`,
-				`invalid required attribute "*.ex-am-ple.pb"`,
-			),
-		},
-		{
-			name: "many lists: multiple problems",
-			attrLists: [][]string{
-				{" one . multi "}, {"x.*.wildcard"}, {"x.*.wildcard"}, {"one.multi"}, {"   two.multi       "},
-				{"penny.nic kel.dime"}, {"one.multi"}, {"two.multi"}, {"*.ex-am-ple.pb"}, {"two.multi"},
-			},
-			exp: joinErrs(
-				`invalid required attribute "x.*.wildcard"`,
-				`duplicate required attribute entry: "one.multi"`,
-				`invalid required attribute "penny.nic kel.dime"`,
-				`duplicate required attribute entry: "two.multi"`,
-				`invalid required attribute "*.ex-am-ple.pb"`,
+				`invalid ♪ but a bit ain't one ♪ required attribute "x.*.wildcard"`,
+				`duplicate ♪ but a bit ain't one ♪ required attribute: "one.multi"`,
+				`invalid ♪ but a bit ain't one ♪ required attribute "penny.nic kel.dime"`,
+				`duplicate ♪ but a bit ain't one ♪ required attribute: "two.multi"`,
+				`invalid ♪ but a bit ain't one ♪ required attribute "*.ex-am-ple.pb"`,
 			),
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateReqAttrs(tc.attrLists...)
+			err := ValidateReqAttrs(tc.field, tc.attrs)
 			assertions.AssertErrorValue(t, err, tc.exp, "ValidateReqAttrs")
 		})
 	}
