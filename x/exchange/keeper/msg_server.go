@@ -27,7 +27,7 @@ var _ exchange.MsgServer = MsgServer{}
 // CreateAsk creates an ask order (to sell something you own).
 func (k MsgServer) CreateAsk(goCtx context.Context, msg *exchange.MsgCreateAskRequest) (*exchange.MsgCreateAskResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	orderID, err := k.CreateAskOrder(ctx, msg)
+	orderID, err := k.createAskOrder(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (k MsgServer) CreateAsk(goCtx context.Context, msg *exchange.MsgCreateAskRe
 // CreateBid creates an bid order (to buy something you want).
 func (k MsgServer) CreateBid(goCtx context.Context, msg *exchange.MsgCreateBidRequest) (*exchange.MsgCreateBidResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	orderID, err := k.CreateBidOrder(ctx, msg)
+	orderID, err := k.createBidOrder(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (k MsgServer) CreateBid(goCtx context.Context, msg *exchange.MsgCreateBidRe
 // CancelOrder cancels an order.
 func (k MsgServer) CancelOrder(goCtx context.Context, msg *exchange.MsgCancelOrderRequest) (*exchange.MsgCancelOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	err := k.Keeper.CancelOrder(ctx, msg)
+	err := k.cancelOrder(ctx, msg.OrderId, msg.Owner)
 	if err != nil {
 		return nil, err
 	}

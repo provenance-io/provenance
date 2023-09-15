@@ -620,19 +620,6 @@ func (k Keeper) SetUserSettlementAllowed(ctx sdk.Context, marketID uint32, allow
 	setUserSettlementAllowed(k.getStore(ctx), marketID, allowed)
 }
 
-// hasPermission returns true if the provided address has the given permission in the market in question.
-func (k Keeper) hasPermission(store sdk.KVStore, marketID uint32, address string, permission exchange.Permission) bool {
-	if k.IsAuthority(address) {
-		return true
-	}
-	addr, err := sdk.AccAddressFromBech32(address)
-	if err != nil {
-		return false
-	}
-	key := MakeKeyMarketPermissions(marketID, addr, permission)
-	return store.Has(key)
-}
-
 // grantPermissions updates the store so that the given address has the provided permissions in a market.
 func grantPermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, permissions []exchange.Permission) {
 	for _, perm := range permissions {
@@ -684,8 +671,18 @@ func updatePermissions(store sdk.KVStore, marketID uint32, revokeAll []string, t
 }
 
 // HasPermission returns true if the provided address has the permission in question for a given market.
+// Also returns true if the provided address is the authority address.
 func (k Keeper) HasPermission(ctx sdk.Context, marketID uint32, address string, permission exchange.Permission) bool {
-	return k.hasPermission(k.getStore(ctx), marketID, address, permission)
+	if k.IsAuthority(address) {
+		return true
+	}
+	addr, err := sdk.AccAddressFromBech32(address)
+	if err != nil {
+		return false
+	}
+	store := k.getStore(ctx)
+	key := MakeKeyMarketPermissions(marketID, addr, permission)
+	return store.Has(key)
 }
 
 // getUserPermissions gets all permissions that have been granted to a user in a market.

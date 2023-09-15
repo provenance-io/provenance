@@ -70,17 +70,6 @@ func (k Keeper) parseOrderStoreValue(orderID uint64, value []byte) (*exchange.Or
 	}
 }
 
-// getOrderFromStore gets an order from the store.
-func (k Keeper) getOrderFromStore(store sdk.KVStore, orderID uint64) (*exchange.Order, error) {
-	key := MakeKeyOrder(orderID)
-	value := store.Get(key)
-	rv, err := k.parseOrderStoreValue(orderID, value)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read order %d: %w", orderID, err)
-	}
-	return rv, nil
-}
-
 // createIndexEntries creates all the key/value index entries for an order.
 func createIndexEntries(order exchange.Order) []sdk.KVPair {
 	marketID := order.GetMarketID()
@@ -125,15 +114,16 @@ func (k Keeper) setOrderInStore(store sdk.KVStore, order exchange.Order) error {
 			store.Set(entry.Key, entry.Value)
 		}
 		// It is assumed that these index entries cannot change over the life of an order.
-		// The only change that is allowed to an order is the assets due to partial fulfillment.
-		// But partial fulfillment is only allowed when there's a single asset type.
+		// The only change that is allowed to an order is the assets (due to partial fulfillment).
+		// Partial fulfillment is only allowed when there's a single asset type (denom), though.
 		// That's why no attempt is made in here to update index entries when the order already exists.
 	}
 	return nil
 }
 
-// deleteOrderFromStore deletes an order from the store (along with its indexes).
-func deleteOrderFromStore(store sdk.KVStore, order exchange.Order) {
+// deleteOrder deletes an order (along with its indexes).
+func (k Keeper) deleteOrder(ctx sdk.Context, order exchange.Order) {
+	store := k.getStore(ctx)
 	key := MakeKeyOrder(order.OrderId)
 	store.Delete(key)
 	indexEntries := createIndexEntries(order)
@@ -144,16 +134,18 @@ func deleteOrderFromStore(store sdk.KVStore, order exchange.Order) {
 
 // GetOrder gets an order. Returns nil, nil if the order does not exist.
 func (k Keeper) GetOrder(ctx sdk.Context, orderID uint64) (*exchange.Order, error) {
-	return k.getOrderFromStore(k.getStore(ctx), orderID)
+	store := k.getStore(ctx)
+	key := MakeKeyOrder(orderID)
+	value := store.Get(key)
+	rv, err := k.parseOrderStoreValue(orderID, value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read order %d: %w", orderID, err)
+	}
+	return rv, nil
 }
 
-// SetOrder stores the provided order in state.
-func (k Keeper) SetOrder(ctx sdk.Context, order exchange.Order) error {
-	return k.setOrderInStore(k.getStore(ctx), order)
-}
-
-// GetNextOrderID gets the next available order id from the store.
-func (k Keeper) GetNextOrderID(ctx sdk.Context) uint64 {
+// getNextOrderID gets the next available order id from the store.
+func (k Keeper) getNextOrderID(ctx sdk.Context) uint64 {
 	store := prefix.NewStore(k.getStore(ctx), GetKeyPrefixOrder())
 	iter := store.ReverseIterator(nil, nil)
 	defer iter.Close()
@@ -231,8 +223,8 @@ func (k Keeper) IterateAssetBidOrders(ctx sdk.Context, assetDenom string, cb fun
 	})
 }
 
-// CreateAskOrder creates an ask order, collects the creation fee, and places all needed holds.
-func (k Keeper) CreateAskOrder(ctx sdk.Context, msg *exchange.MsgCreateAskRequest) (uint64, error) {
+// createAskOrder creates an ask order, collects the creation fee, and places all needed holds.
+func (k Keeper) createAskOrder(ctx sdk.Context, msg *exchange.MsgCreateAskRequest) (uint64, error) {
 	store := k.getStore(ctx)
 	marketID := msg.AskOrder.MarketId
 	seller := sdk.MustAccAddressFromBech32(msg.AskOrder.Seller)
@@ -260,7 +252,7 @@ func (k Keeper) CreateAskOrder(ctx sdk.Context, msg *exchange.MsgCreateAskReques
 		}
 	}
 
-	orderID := k.GetNextOrderID(ctx)
+	orderID := k.getNextOrderID(ctx)
 	order := exchange.NewOrder(orderID).WithAsk(&msg.AskOrder)
 	if err := k.setOrderInStore(store, *order); err != nil {
 		return 0, fmt.Errorf("error storing ask order: %w", err)
@@ -274,8 +266,8 @@ func (k Keeper) CreateAskOrder(ctx sdk.Context, msg *exchange.MsgCreateAskReques
 	return orderID, nil
 }
 
-// CreateBidOrder creates a bid order, collects the creation fee, and places all needed holds.
-func (k Keeper) CreateBidOrder(ctx sdk.Context, msg *exchange.MsgCreateBidRequest) (uint64, error) {
+// createBidOrder creates a bid order, collects the creation fee, and places all needed holds.
+func (k Keeper) createBidOrder(ctx sdk.Context, msg *exchange.MsgCreateBidRequest) (uint64, error) {
 	store := k.getStore(ctx)
 	marketID := msg.BidOrder.MarketId
 	buyer := sdk.MustAccAddressFromBech32(msg.BidOrder.Buyer)
@@ -300,7 +292,7 @@ func (k Keeper) CreateBidOrder(ctx sdk.Context, msg *exchange.MsgCreateBidReques
 		}
 	}
 
-	orderID := k.GetNextOrderID(ctx)
+	orderID := k.getNextOrderID(ctx)
 	order := exchange.NewOrder(orderID).WithBid(&msg.BidOrder)
 	if err := k.setOrderInStore(store, *order); err != nil {
 		return 0, fmt.Errorf("error storing bid order: %w", err)
@@ -314,30 +306,29 @@ func (k Keeper) CreateBidOrder(ctx sdk.Context, msg *exchange.MsgCreateBidReques
 	return orderID, nil
 }
 
-// CancelOrder releases an order's held funds and deletes it.
-func (k Keeper) CancelOrder(ctx sdk.Context, msg *exchange.MsgCancelOrderRequest) error {
-	store := k.getStore(ctx)
-	order, err := k.getOrderFromStore(store, msg.OrderId)
+// cancelOrder releases an order's held funds and deletes it.
+func (k Keeper) cancelOrder(ctx sdk.Context, orderID uint64, signer string) error {
+	order, err := k.GetOrder(ctx, orderID)
 	if err != nil {
 		return err
 	}
 	if order == nil {
-		return fmt.Errorf("order %d does not exist", msg.OrderId)
+		return fmt.Errorf("order %d does not exist", orderID)
 	}
 
 	orderOwner := order.GetOwner()
-	if msg.Owner != orderOwner && !k.hasPermission(store, order.GetMarketID(), msg.Owner, exchange.Permission_cancel) {
-		return fmt.Errorf("account %s cannot cancel order %d", msg.Owner, msg.OrderId)
+	if signer != orderOwner && !k.HasPermission(ctx, order.GetMarketID(), signer, exchange.Permission_cancel) {
+		return fmt.Errorf("account %s does not have permission to cancel order %d", signer, orderID)
 	}
 
 	orderOwnerAddr := sdk.MustAccAddressFromBech32(orderOwner)
 	heldAmount := order.GetHoldAmount()
 	err = k.holdKeeper.ReleaseHold(ctx, orderOwnerAddr, heldAmount)
 	if err != nil {
-		return fmt.Errorf("unable to release hold on order %d funds: %w", msg.OrderId, err)
+		return fmt.Errorf("unable to release hold on order %d funds: %w", orderID, err)
 	}
 
-	deleteOrderFromStore(store, *order)
+	k.deleteOrder(ctx, *order)
 
 	return nil
 }
