@@ -10,7 +10,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
@@ -412,7 +411,142 @@ func TestMsgMarketWithdrawRequest_ValidateBasic(t *testing.T) {
 
 // TODO[1658]: func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T)
 
-// TODO[1658]: func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T)
+func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
+	goodAdmin := sdk.AccAddress("goodAdmin___________").String()
+
+	tests := []struct {
+		name   string
+		msg    MsgMarketManageReqAttrsRequest
+		expErr []string
+	}{
+		{
+			name: "no admin",
+			msg: MsgMarketManageReqAttrsRequest{
+				Administrator:  "",
+				CreateAskToAdd: []string{"abc"},
+			},
+			expErr: []string{"invalid administrator", "empty address string is not allowed"},
+		},
+		{
+			name: "bad admin",
+			msg: MsgMarketManageReqAttrsRequest{
+				Administrator:  "not1valid",
+				CreateAskToAdd: []string{"abc"},
+			},
+			expErr: []string{"invalid administrator", "decoding bech32 failed"},
+		},
+		{
+			name:   "no updates",
+			msg:    MsgMarketManageReqAttrsRequest{Administrator: goodAdmin},
+			expErr: []string{"no updates"},
+		},
+		{
+			name: "invalid create ask to add entry",
+			msg: MsgMarketManageReqAttrsRequest{
+				Administrator:  goodAdmin,
+				CreateAskToAdd: []string{"in-valid-attr"},
+			},
+			expErr: []string{"invalid create-ask to add required attribute \"in-valid-attr\""},
+		},
+		{
+			name: "invalid create ask to remove entry",
+			msg: MsgMarketManageReqAttrsRequest{
+				Administrator:     goodAdmin,
+				CreateAskToRemove: []string{"in-valid-attr"},
+			},
+		},
+		{
+			name: "invalid create bid to add entry",
+			msg: MsgMarketManageReqAttrsRequest{
+				Administrator:  goodAdmin,
+				CreateBidToAdd: []string{"in-valid-attr"},
+			},
+			expErr: []string{"invalid create-bid to add required attribute \"in-valid-attr\""},
+		},
+		{
+			name: "invalid create bid to remove entry",
+			msg: MsgMarketManageReqAttrsRequest{
+				Administrator:     goodAdmin,
+				CreateBidToRemove: []string{"in-valid-attr"},
+			},
+		},
+		{
+			name: "add and remove same create ask entry",
+			msg: MsgMarketManageReqAttrsRequest{
+				Administrator:     goodAdmin,
+				CreateAskToAdd:    []string{"abc", "def", "ghi"},
+				CreateAskToRemove: []string{"jkl", "abc"},
+			},
+			expErr: []string{"cannot add and remove the same create-ask required attributes \"abc\""},
+		},
+		{
+			name: "add and remove same create bid entry",
+			msg: MsgMarketManageReqAttrsRequest{
+				Administrator:     goodAdmin,
+				CreateBidToAdd:    []string{"abc", "def", "ghi"},
+				CreateBidToRemove: []string{"jkl", "abc"},
+			},
+			expErr: []string{"cannot add and remove the same create-bid required attributes \"abc\""},
+		},
+		{
+			name: "add to create-ask the same as remove from create-bid",
+			msg: MsgMarketManageReqAttrsRequest{
+				Administrator:     goodAdmin,
+				CreateAskToAdd:    []string{"abc", "def", "ghi"},
+				CreateBidToRemove: []string{"jkl", "abc"},
+			},
+		},
+		{
+			name: "add to create-bid the same as remove from create-ask",
+			msg: MsgMarketManageReqAttrsRequest{
+				Administrator:     goodAdmin,
+				CreateBidToAdd:    []string{"abc", "def", "ghi"},
+				CreateAskToRemove: []string{"jkl", "abc"},
+			},
+		},
+		{
+			name: "add one to and remove one from each",
+			msg: MsgMarketManageReqAttrsRequest{
+				Administrator:     goodAdmin,
+				CreateAskToAdd:    []string{"to-add.ask"},
+				CreateAskToRemove: []string{"to-remove.ask"},
+				CreateBidToAdd:    []string{"to-add.bid"},
+				CreateBidToRemove: []string{"to-remove.bid"},
+			},
+		},
+		{
+			name: "no admin and no updates",
+			msg:  MsgMarketManageReqAttrsRequest{},
+			expErr: []string{
+				"invalid administrator",
+				"no updates",
+			},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgMarketManageReqAttrsRequest{
+				Administrator:     "not1valid",
+				CreateAskToAdd:    []string{"bad-ask-attr", "dup-ask"},
+				CreateAskToRemove: []string{"dup-ask"},
+				CreateBidToAdd:    []string{"bad-bid-attr", "dup-bid"},
+				CreateBidToRemove: []string{"dup-bid"},
+			},
+			expErr: []string{
+				"invalid administrator",
+				"invalid create-ask to add required attribute \"bad-ask-attr\"",
+				"cannot add and remove the same create-ask required attributes \"dup-ask\"",
+				"invalid create-bid to add required attribute \"bad-bid-attr\"",
+				"cannot add and remove the same create-bid required attributes \"dup-bid\"",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
 
 func TestMsgGovCreateMarketRequest_ValidateBasic(t *testing.T) {
 	authority := sdk.AccAddress("authority___________").String()
