@@ -35,7 +35,7 @@ Types of changes (Stanzas):
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
-## Unreleased
+## [Unreleased]
 
 ### Features
 
@@ -83,29 +83,32 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Dependencies
 
-- Bump google.golang.org/grpc from 1.57.0 to 1.58.0 [PR 1672](https://github.com/provenance-io/provenance/pull/1672)
-- Bump crazy-max/ghaction-import-gpg from 5 to 6 [PR 1677](https://github.com/provenance-io/provenance/pull/1677)
-- Bump golang.org/x/text from 0.12.0 to 0.13.0 [PR 1667](https://github.com/provenance-io/provenance/pull/1667)
-- Bump actions/checkout from 3 to 4 [PR 1668](https://github.com/provenance-io/provenance/pull/1668)
-- Bump bufbuild/buf-breaking-action from 1.1.2 to 1.1.3 [PR 1663](https://github.com/provenance-io/provenance/pull/1663)
-- Bump cosmossdk.io/math from 1.0.1 to 1.1.2 [PR 1656](https://github.com/provenance-io/provenance/pull/1656)
-- Bump github.com/google/uuid from 1.3.0 to 1.3.1 [PR 1657](https://github.com/provenance-io/provenance/pull/1657)
-- Bump golangci/golangci-lint-action from 3.6.0 to 3.7.0 [PR 1651](https://github.com/provenance-io/provenance/pull/1651)
-- Bump bufbuild/buf-setup-action from 1.26.0 to 1.26.1 [PR 1650](https://github.com/provenance-io/provenance/pull/1650)
-- Bump cometbft to v0.34.29 (from v0.34.28) [PR 1649](https://github.com/provenance-io/provenance/pull/1649)
-- Bump golang.org/x/text from 0.11.0 to 0.12.0 [PR 1644](https://github.com/provenance-io/provenance/pull/1644)
-- Bump bufbuild/buf-setup-action from 1.25.1 to 1.26.0 [PR 1645](https://github.com/provenance-io/provenance/pull/1645)
-- Bump bufbuild/buf-setup-action from 1.25.0 to 1.25.1 [PR 1642](https://github.com/provenance-io/provenance/pull/1642)
-- Bump google.golang.org/grpc from 1.56.2 to 1.57.0 [PR 1635](https://github.com/provenance-io/provenance/pull/1635)
-- Bump github.com/rs/zerolog from 1.29.1 to 1.30.0 [PR 1639](https://github.com/provenance-io/provenance/pull/1639)
-- Bump bufbuild/buf-setup-action from 1.24.0 to 1.25.0 [PR 1632](https://github.com/provenance-io/provenance/pull/1632)
-- Bump bufbuild/buf-setup-action from 1.23.1 to 1.24.0 [PR 1631](https://github.com/provenance-io/provenance/pull/1631)
-- Bump github.com/cosmos/ibc-go/v6 from 6.1.1 to 6.2.0 [PR 1629](https://github.com/provenance-io/provenance/pull/1629)
-- Bump cosmossdk.io/errors from 1.0.0-beta.7 to 1.0.0 [PR 1628](https://github.com/provenance-io/provenance/pull/1628)
-- Bump google.golang.org/grpc from 1.56.1 to 1.56.2 [PR 1624](https://github.com/provenance-io/provenance/pull/1624)
-- Bump google.golang.org/protobuf from 1.30.0 to 1.31.0 [PR 1611](https://github.com/provenance-io/provenance/pull/1611)
-- Bump bufbuild/buf-setup-action from 1.22.0 to 1.23.1 [PR 1613](https://github.com/provenance-io/provenance/pull/1613)
-- Bump bufbuild/buf-setup-action from 1.21.0 to 1.22.0 [PR 1610](https://github.com/provenance-io/provenance/pull/1610)
+- Bump `google.golang.org/grpc` from 1.57.0 to 1.58.0 ([#1672](https://github.com/provenance-io/provenance/pull/1672))
+- Bump `crazy-max/ghaction-import-gpg` from 5 to 6 ([#1677](https://github.com/provenance-io/provenance/pull/1677))
+- Bump `golang.org/x/text` from 0.12.0 to 0.13.0 ([#1667](https://github.com/provenance-io/provenance/pull/1667))
+- Bump `actions/checkout` from 3 to 4 ([#1668](https://github.com/provenance-io/provenance/pull/1668))
+- Bump `bufbuild/buf-breaking-action` from 1.1.2 to 1.1.3 ([#1663](https://github.com/provenance-io/provenance/pull/1663))
+- Bump `cosmossdk.io/math` from 1.0.1 to 1.1.2 ([#1656](https://github.com/provenance-io/provenance/pull/1656))
+- Bump `github.com/google/uuid` from 1.3.0 to 1.3.1 ([#1657](https://github.com/provenance-io/provenance/pull/1657))
+- Bump `golangci/golangci-lint-action` from 3.6.0 to 3.7.0 ([#1651](https://github.com/provenance-io/provenance/pull/1651))
+- Bump `bufbuild/buf-setup-action` from 1.26.0 to 1.26.1 ([#1650](https://github.com/provenance-io/provenance/pull/1650))
+- Bump `cometbft to v0.34.29 `(from v0.34.28) ([#1649](https://github.com/provenance-io/provenance/pull/1649))
+- Bump `golang.org/x/text` from 0.11.0 to 0.12.0 ([#1644](https://github.com/provenance-io/provenance/pull/1644))
+- Bump `bufbuild/buf-setup-action` from 1.25.1 to 1.26.0 ([#1645](https://github.com/provenance-io/provenance/pull/1645))
+- Bump `bufbuild/buf-setup-action` from 1.25.0 to 1.25.1 ([#1642](https://github.com/provenance-io/provenance/pull/1642))
+- Bump `google.golang.org/grpc` from 1.56.2 to 1.57.0 ([#1635](https://github.com/provenance-io/provenance/pull/1635))
+- Bump `github.com/rs/zerolog` from 1.29.1 to 1.30.0 ([#1639](https://github.com/provenance-io/provenance/pull/1639))
+- Bump `bufbuild/buf-setup-action` from 1.24.0 to 1.25.0 ([#1632](https://github.com/provenance-io/provenance/pull/1632))
+- Bump `bufbuild/buf-setup-action` from 1.23.1 to 1.24.0 ([#1631](https://github.com/provenance-io/provenance/pull/1631))
+- Bump `github.com/cosmos/ibc-go/v6` from 6.1.1 to 6.2.0 ([#1629](https://github.com/provenance-io/provenance/pull/1629))
+- Bump `cosmossdk.io/errors` from 1.0.0-beta.7 to 1.0.0 ([#1628](https://github.com/provenance-io/provenance/pull/1628))
+- Bump `google.golang.org/grpc` from 1.56.1 to 1.56.2 ([#1624](https://github.com/provenance-io/provenance/pull/1624))
+- Bump `google.golang.org/protobuf` from 1.30.0 to 1.31.0 ([#1611](https://github.com/provenance-io/provenance/pull/1611))
+- Bump `bufbuild/buf-setup-action` from 1.22.0 to 1.23.1 ([#1613](https://github.com/provenance-io/provenance/pull/1613))
+- Bump `bufbuild/buf-setup-action` from 1.21.0 to 1.22.0 ([#1610](https://github.com/provenance-io/provenance/pull/1610))
+- Bump `docker/setup-buildx-action` from 2 to 3 ([#1681](https://github.com/provenance-io/provenance/pull/1681))
+- Bump `docker/login-action` from 2 to 3 ([#1680](https://github.com/provenance-io/provenance/pull/1680))
+- Bump `docker/build-push-action` from 4 to 5 ([#1679](https://github.com/provenance-io/provenance/pull/1679))
 
 ---
 
