@@ -105,13 +105,32 @@ func (m MsgMarketSettleRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgMarketWithdrawRequest) ValidateBasic() error {
-	// TODO[1658]: MsgMarketWithdrawRequest.ValidateBasic()
-	return nil
+	var errs []error
+
+	if _, err := sdk.AccAddressFromBech32(m.Administrator); err != nil {
+		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Administrator, err))
+	}
+
+	if m.MarketId == 0 {
+		errs = append(errs, errors.New("invalid market id: cannot be zero"))
+	}
+
+	if _, err := sdk.AccAddressFromBech32(m.ToAddress); err != nil {
+		errs = append(errs, fmt.Errorf("invalid to address %q: %w", m.ToAddress, err))
+	}
+
+	if err := m.Amount.Validate(); err != nil {
+		errs = append(errs, fmt.Errorf("invalid amount %q: %w", m.Amount, err))
+	} else if m.Amount.IsZero() {
+		errs = append(errs, fmt.Errorf("invalid amount %q: cannot be zero", m.Amount))
+	}
+
+	return errors.Join(errs...)
 }
 
 func (m MsgMarketWithdrawRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgMarketWithdrawRequest.GetSigners
-	panic("not implemented")
+	addr := sdk.MustAccAddressFromBech32(m.Administrator)
+	return []sdk.AccAddress{addr}
 }
 
 func (m MsgMarketUpdateDetailsRequest) ValidateBasic() error {

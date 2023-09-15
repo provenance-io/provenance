@@ -40,7 +40,17 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg {
 			return &MsgCancelOrderRequest{Owner: signer}
 		},
-		// TODO[1658]: Add the rest of the messages once they've actually been defined.
+		// TODO[1658]: Add MsgFillBidsRequest once it's actually been defined.
+		// TODO[1658]: Add MsgFillAsksRequest once it's actually been defined.
+		// TODO[1658]: Add MsgMarketSettleRequest once it's actually been defined.
+		func(signer string) sdk.Msg {
+			return &MsgMarketWithdrawRequest{Administrator: signer}
+		},
+		// TODO[1658]: Add MsgMarketUpdateDetailsRequest once it's actually been defined.
+		// TODO[1658]: Add MsgMarketUpdateEnabledRequest once it's actually been defined.
+		// TODO[1658]: Add MsgMarketUpdateUserSettleRequest once it's actually been defined.
+		// TODO[1658]: Add MsgMarketManagePermissionsRequest once it's actually been defined.
+		// TODO[1658]: Add MsgMarketManageReqAttrsRequest once it's actually been defined.
 		func(signer string) sdk.Msg {
 			return &MsgGovCreateMarketRequest{Authority: signer}
 		},
@@ -114,8 +124,10 @@ func TestAllMsgsGetSigners(t *testing.T) {
 	t.Run("all msgs have test case", func(t *testing.T) {
 		for _, msg := range allRequestMsgs {
 			typeName := getTypeName(msg)
-			// If this fails, a maker needs to be defined above for the missing msg type.
-			assert.True(t, hasMaker[typeName], "There is not a GetSigners test case for %s", typeName)
+			t.Run(typeName, func(t *testing.T) {
+				// If this fails, a maker needs to be defined above for the missing msg type.
+				assert.True(t, hasMaker[typeName], "There is not a GetSigners test case for %s", typeName)
+			})
 		}
 	})
 }
@@ -260,7 +272,137 @@ func TestMsgCancelOrderRequest_ValidateBasic(t *testing.T) {
 
 // TODO[1658]: func TestMsgMarketSettleRequest_ValidateBasic(t *testing.T)
 
-// TODO[1658]: func TestMsgMarketWithdrawRequest_ValidateBasic(t *testing.T)
+func TestMsgMarketWithdrawRequest_ValidateBasic(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	goodAdminAddr := sdk.AccAddress("Administrator_______").String()
+	goodToAddr := sdk.AccAddress("ToAddress___________").String()
+	goodCoins := sdk.NewCoins(coin(3, "acorns"))
+
+	tests := []struct {
+		name   string
+		msg    MsgMarketWithdrawRequest
+		expErr []string
+	}{
+		{
+			name: "control",
+			msg: MsgMarketWithdrawRequest{
+				Administrator: goodAdminAddr,
+				MarketId:      1,
+				ToAddress:     goodToAddr,
+				Amount:        goodCoins,
+			},
+			expErr: nil,
+		},
+		{
+			name: "no administrator",
+			msg: MsgMarketWithdrawRequest{
+				Administrator: "",
+				MarketId:      1,
+				ToAddress:     goodToAddr,
+				Amount:        goodCoins,
+			},
+			expErr: []string{`invalid administrator ""`, "empty address string is not allowed"},
+		},
+		{
+			name: "bad administrator",
+			msg: MsgMarketWithdrawRequest{
+				Administrator: "notright",
+				MarketId:      1,
+				ToAddress:     goodToAddr,
+				Amount:        goodCoins,
+			},
+			expErr: []string{`invalid administrator "notright"`, "decoding bech32 failed"},
+		},
+		{
+			name: "market id zero",
+			msg: MsgMarketWithdrawRequest{
+				Administrator: goodAdminAddr,
+				MarketId:      0,
+				ToAddress:     goodToAddr,
+				Amount:        goodCoins,
+			},
+			expErr: []string{"invalid market id", "cannot be zero"},
+		},
+		{
+			name: "no to address",
+			msg: MsgMarketWithdrawRequest{
+				Administrator: goodAdminAddr,
+				MarketId:      1,
+				ToAddress:     "",
+				Amount:        goodCoins,
+			},
+			expErr: []string{`invalid to address ""`, "empty address string is not allowed"},
+		},
+		{
+			name: "bad to address",
+			msg: MsgMarketWithdrawRequest{
+				Administrator: goodAdminAddr,
+				MarketId:      1,
+				ToAddress:     "notright",
+				Amount:        goodCoins,
+			},
+			expErr: []string{`invalid to address "notright"`, "decoding bech32 failed"},
+		},
+		{
+			name: "invalid denom in amount",
+			msg: MsgMarketWithdrawRequest{
+				Administrator: goodAdminAddr,
+				MarketId:      1,
+				ToAddress:     goodToAddr,
+				Amount:        sdk.Coins{coin(3, "x")},
+			},
+			expErr: []string{`invalid amount "3x"`, "invalid denom: x"},
+		},
+		{
+			name: "negative amount",
+			msg: MsgMarketWithdrawRequest{
+				Administrator: goodAdminAddr,
+				MarketId:      1,
+				ToAddress:     goodToAddr,
+				Amount:        sdk.Coins{coin(-1, "negcoin")},
+			},
+			expErr: []string{`invalid amount "-1negcoin"`, "coin -1negcoin amount is not positive"},
+		},
+		{
+			name: "empty amount",
+			msg: MsgMarketWithdrawRequest{
+				Administrator: goodAdminAddr,
+				MarketId:      1,
+				ToAddress:     goodToAddr,
+				Amount:        sdk.Coins{},
+			},
+			expErr: []string{`invalid amount ""`, "cannot be zero"},
+		},
+		{
+			name: "zero coin amount",
+			msg: MsgMarketWithdrawRequest{
+				Administrator: goodAdminAddr,
+				MarketId:      1,
+				ToAddress:     goodToAddr,
+				Amount:        sdk.Coins{coin(0, "acorn"), coin(0, "banana")},
+			},
+			expErr: []string{`invalid amount "0acorn,0banana"`, "coin 0acorn amount is not positive"},
+		},
+		{
+			name: "multiple errors",
+			msg:  MsgMarketWithdrawRequest{},
+			expErr: []string{
+				"invalid administrator",
+				"invalid market id",
+				"invalid to address",
+				"invalid amount",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
 
 // TODO[1658]: func TestMsgMarketUpdateDetailsRequest_ValidateBasic(t *testing.T)
 
