@@ -190,14 +190,16 @@ message MsgMarketManageReqAttrsRequest {
 
   // administrator is the account with withdraw permission requesting the withdrawal.
   string administrator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numerical identifier of the market to update required attributes for.
+  uint32 market_id = 2;
   // create_ask_to_add are the attributes that should now also be required to create an ask order.
-  repeated string create_ask_to_add = 2;
+  repeated string create_ask_to_add = 3;
   // create_ask_to_add are the attributes that should no longer be required to create an ask order.
-  repeated string create_ask_to_remove = 3;
+  repeated string create_ask_to_remove = 4;
   // create_ask_to_add are the attributes that should now also be required to create a bid order.
-  repeated string create_bid_to_add = 4;
+  repeated string create_bid_to_add = 5;
   // create_ask_to_add are the attributes that should no longer be required to create a bid order.
-  repeated string create_bid_to_remove = 5;
+  repeated string create_bid_to_remove = 6;
 }
 
 // MsgMarketManageReqAttrsResponse is a response message for the MarketManageReqAttrs endpoint.

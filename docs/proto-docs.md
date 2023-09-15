@@ -2368,6 +2368,7 @@ MsgMarketManageReqAttrsRequest is a request message for the MarketManageReqAttrs
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `administrator` | [string](#string) |  | administrator is the account with withdraw permission requesting the withdrawal. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
 | `create_ask_to_add` | [string](#string) | repeated | create_ask_to_add are the attributes that should now also be required to create an ask order. |
 | `create_ask_to_remove` | [string](#string) | repeated | create_ask_to_add are the attributes that should no longer be required to create an ask order. |
 | `create_bid_to_add` | [string](#string) | repeated | create_ask_to_add are the attributes that should now also be required to create a bid order. |
