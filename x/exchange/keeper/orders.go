@@ -223,11 +223,15 @@ func (k Keeper) IterateAssetBidOrders(ctx sdk.Context, assetDenom string, cb fun
 	})
 }
 
-// createAskOrder creates an ask order, collects the creation fee, and places all needed holds.
-func (k Keeper) createAskOrder(ctx sdk.Context, msg *exchange.MsgCreateAskRequest) (uint64, error) {
+// CreateAskOrder creates an ask order, collects the creation fee, and places all needed holds.
+func (k Keeper) CreateAskOrder(ctx sdk.Context, askOrder exchange.AskOrder, creationFee *sdk.Coin) (uint64, error) {
+	if err := askOrder.Validate(); err != nil {
+		return 0, err
+	}
+
+	seller := sdk.MustAccAddressFromBech32(askOrder.Seller)
+	marketID := askOrder.MarketId
 	store := k.getStore(ctx)
-	marketID := msg.AskOrder.MarketId
-	seller := sdk.MustAccAddressFromBech32(msg.AskOrder.Seller)
 
 	if err := validateMarketExists(store, marketID); err != nil {
 		return 0, err
@@ -235,25 +239,25 @@ func (k Keeper) createAskOrder(ctx sdk.Context, msg *exchange.MsgCreateAskReques
 	if !k.CanCreateAsk(ctx, marketID, seller) {
 		return 0, fmt.Errorf("account %s is not allowed to create ask orders in market %d", seller, marketID)
 	}
-	if err := validateCreateAskFlatFee(store, marketID, msg.OrderCreationFee); err != nil {
+	if err := validateCreateAskFlatFee(store, marketID, creationFee); err != nil {
 		return 0, err
 	}
-	if err := validateSellerSettlementFlatFee(store, marketID, msg.AskOrder.SellerSettlementFlatFee); err != nil {
+	if err := validateSellerSettlementFlatFee(store, marketID, askOrder.SellerSettlementFlatFee); err != nil {
 		return 0, err
 	}
-	if err := validateAskPrice(store, marketID, msg.AskOrder.Price, msg.AskOrder.SellerSettlementFlatFee); err != nil {
+	if err := validateAskPrice(store, marketID, askOrder.Price, askOrder.SellerSettlementFlatFee); err != nil {
 		return 0, err
 	}
 
-	if msg.OrderCreationFee != nil {
-		err := k.CollectFee(ctx, seller, marketID, sdk.Coins{*msg.OrderCreationFee})
+	if creationFee != nil {
+		err := k.CollectFee(ctx, seller, marketID, sdk.Coins{*creationFee})
 		if err != nil {
 			return 0, fmt.Errorf("error collecting ask order creation fee: %w", err)
 		}
 	}
 
 	orderID := k.getNextOrderID(ctx)
-	order := exchange.NewOrder(orderID).WithAsk(&msg.AskOrder)
+	order := exchange.NewOrder(orderID).WithAsk(&askOrder)
 	if err := k.setOrderInStore(store, *order); err != nil {
 		return 0, fmt.Errorf("error storing ask order: %w", err)
 	}
@@ -266,11 +270,15 @@ func (k Keeper) createAskOrder(ctx sdk.Context, msg *exchange.MsgCreateAskReques
 	return orderID, nil
 }
 
-// createBidOrder creates a bid order, collects the creation fee, and places all needed holds.
-func (k Keeper) createBidOrder(ctx sdk.Context, msg *exchange.MsgCreateBidRequest) (uint64, error) {
+// CreateBidOrder creates a bid order, collects the creation fee, and places all needed holds.
+func (k Keeper) CreateBidOrder(ctx sdk.Context, bidOrder exchange.BidOrder, creationFee *sdk.Coin) (uint64, error) {
+	if err := bidOrder.Validate(); err != nil {
+		return 0, err
+	}
+
+	buyer := sdk.MustAccAddressFromBech32(bidOrder.Buyer)
+	marketID := bidOrder.MarketId
 	store := k.getStore(ctx)
-	marketID := msg.BidOrder.MarketId
-	buyer := sdk.MustAccAddressFromBech32(msg.BidOrder.Buyer)
 
 	if err := validateMarketExists(store, marketID); err != nil {
 		return 0, err
@@ -278,22 +286,22 @@ func (k Keeper) createBidOrder(ctx sdk.Context, msg *exchange.MsgCreateBidReques
 	if !k.CanCreateBid(ctx, marketID, buyer) {
 		return 0, fmt.Errorf("account %s is not allowed to create bid orders in market %d", buyer, marketID)
 	}
-	if err := validateCreateBidFlatFee(store, marketID, msg.OrderCreationFee); err != nil {
+	if err := validateCreateBidFlatFee(store, marketID, creationFee); err != nil {
 		return 0, err
 	}
-	if err := validateBuyerSettlementFee(store, marketID, msg.BidOrder.Price, msg.BidOrder.BuyerSettlementFees); err != nil {
+	if err := validateBuyerSettlementFee(store, marketID, bidOrder.Price, bidOrder.BuyerSettlementFees); err != nil {
 		return 0, err
 	}
 
-	if msg.OrderCreationFee != nil {
-		err := k.CollectFee(ctx, buyer, marketID, sdk.Coins{*msg.OrderCreationFee})
+	if creationFee != nil {
+		err := k.CollectFee(ctx, buyer, marketID, sdk.Coins{*creationFee})
 		if err != nil {
 			return 0, fmt.Errorf("error collecting bid order creation fee: %w", err)
 		}
 	}
 
 	orderID := k.getNextOrderID(ctx)
-	order := exchange.NewOrder(orderID).WithBid(&msg.BidOrder)
+	order := exchange.NewOrder(orderID).WithBid(&bidOrder)
 	if err := k.setOrderInStore(store, *order); err != nil {
 		return 0, fmt.Errorf("error storing bid order: %w", err)
 	}
@@ -306,8 +314,8 @@ func (k Keeper) createBidOrder(ctx sdk.Context, msg *exchange.MsgCreateBidReques
 	return orderID, nil
 }
 
-// cancelOrder releases an order's held funds and deletes it.
-func (k Keeper) cancelOrder(ctx sdk.Context, orderID uint64, signer string) error {
+// CancelOrder releases an order's held funds and deletes it.
+func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) error {
 	order, err := k.GetOrder(ctx, orderID)
 	if err != nil {
 		return err

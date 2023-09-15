@@ -325,7 +325,7 @@ func getSellerSettlementRatio(store sdk.KVStore, marketID uint32, priceDenom str
 	return ratio, nil
 }
 
-// validateAskPrice validates that the provided ask price denom is acceptable.
+// validateAskPrice validates that the provided ask price is acceptable.
 func validateAskPrice(store sdk.KVStore, marketID uint32, price sdk.Coin, settlementFlatFee *sdk.Coin) error {
 	ratio, err := getSellerSettlementRatio(store, marketID, price.Denom)
 	if err != nil {
@@ -354,7 +354,7 @@ func validateAskPrice(store sdk.KVStore, marketID uint32, price sdk.Coin, settle
 		}
 	}
 
-	return err
+	return nil
 }
 
 // calculateSellerSettlementRatioFee calculates the seller settlement fee required for the given price.
