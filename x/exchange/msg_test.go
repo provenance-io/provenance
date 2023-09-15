@@ -49,7 +49,9 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		// TODO[1658]: Add MsgMarketUpdateEnabledRequest once it's actually been defined.
 		// TODO[1658]: Add MsgMarketUpdateUserSettleRequest once it's actually been defined.
 		// TODO[1658]: Add MsgMarketManagePermissionsRequest once it's actually been defined.
-		// TODO[1658]: Add MsgMarketManageReqAttrsRequest once it's actually been defined.
+		func(signer string) sdk.Msg {
+			return &MsgMarketManageReqAttrsRequest{Administrator: signer}
+		},
 		func(signer string) sdk.Msg {
 			return &MsgGovCreateMarketRequest{Authority: signer}
 		},
@@ -423,6 +425,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 			name: "no admin",
 			msg: MsgMarketManageReqAttrsRequest{
 				Administrator:  "",
+				MarketId:       1,
 				CreateAskToAdd: []string{"abc"},
 			},
 			expErr: []string{"invalid administrator", "empty address string is not allowed"},
@@ -431,19 +434,32 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 			name: "bad admin",
 			msg: MsgMarketManageReqAttrsRequest{
 				Administrator:  "not1valid",
+				MarketId:       1,
 				CreateAskToAdd: []string{"abc"},
 			},
 			expErr: []string{"invalid administrator", "decoding bech32 failed"},
 		},
 		{
-			name:   "no updates",
-			msg:    MsgMarketManageReqAttrsRequest{Administrator: goodAdmin},
+			name: "market id zero",
+			msg: MsgMarketManageReqAttrsRequest{
+				Administrator:  goodAdmin,
+				CreateAskToAdd: []string{"abc"},
+			},
+			expErr: []string{"invalid market id: cannot be zero"},
+		},
+		{
+			name: "no updates",
+			msg: MsgMarketManageReqAttrsRequest{
+				Administrator: goodAdmin,
+				MarketId:      1,
+			},
 			expErr: []string{"no updates"},
 		},
 		{
 			name: "invalid create ask to add entry",
 			msg: MsgMarketManageReqAttrsRequest{
 				Administrator:  goodAdmin,
+				MarketId:       1,
 				CreateAskToAdd: []string{"in-valid-attr"},
 			},
 			expErr: []string{"invalid create-ask to add required attribute \"in-valid-attr\""},
@@ -452,6 +468,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 			name: "invalid create ask to remove entry",
 			msg: MsgMarketManageReqAttrsRequest{
 				Administrator:     goodAdmin,
+				MarketId:          1,
 				CreateAskToRemove: []string{"in-valid-attr"},
 			},
 		},
@@ -459,6 +476,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 			name: "invalid create bid to add entry",
 			msg: MsgMarketManageReqAttrsRequest{
 				Administrator:  goodAdmin,
+				MarketId:       1,
 				CreateBidToAdd: []string{"in-valid-attr"},
 			},
 			expErr: []string{"invalid create-bid to add required attribute \"in-valid-attr\""},
@@ -467,6 +485,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 			name: "invalid create bid to remove entry",
 			msg: MsgMarketManageReqAttrsRequest{
 				Administrator:     goodAdmin,
+				MarketId:          1,
 				CreateBidToRemove: []string{"in-valid-attr"},
 			},
 		},
@@ -474,6 +493,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 			name: "add and remove same create ask entry",
 			msg: MsgMarketManageReqAttrsRequest{
 				Administrator:     goodAdmin,
+				MarketId:          1,
 				CreateAskToAdd:    []string{"abc", "def", "ghi"},
 				CreateAskToRemove: []string{"jkl", "abc"},
 			},
@@ -483,6 +503,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 			name: "add and remove same create bid entry",
 			msg: MsgMarketManageReqAttrsRequest{
 				Administrator:     goodAdmin,
+				MarketId:          1,
 				CreateBidToAdd:    []string{"abc", "def", "ghi"},
 				CreateBidToRemove: []string{"jkl", "abc"},
 			},
@@ -492,6 +513,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 			name: "add to create-ask the same as remove from create-bid",
 			msg: MsgMarketManageReqAttrsRequest{
 				Administrator:     goodAdmin,
+				MarketId:          1,
 				CreateAskToAdd:    []string{"abc", "def", "ghi"},
 				CreateBidToRemove: []string{"jkl", "abc"},
 			},
@@ -500,6 +522,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 			name: "add to create-bid the same as remove from create-ask",
 			msg: MsgMarketManageReqAttrsRequest{
 				Administrator:     goodAdmin,
+				MarketId:          1,
 				CreateBidToAdd:    []string{"abc", "def", "ghi"},
 				CreateAskToRemove: []string{"jkl", "abc"},
 			},
@@ -508,6 +531,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 			name: "add one to and remove one from each",
 			msg: MsgMarketManageReqAttrsRequest{
 				Administrator:     goodAdmin,
+				MarketId:          1,
 				CreateAskToAdd:    []string{"to-add.ask"},
 				CreateAskToRemove: []string{"to-remove.ask"},
 				CreateBidToAdd:    []string{"to-add.bid"},
@@ -515,10 +539,11 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 			},
 		},
 		{
-			name: "no admin and no updates",
+			name: "no admin and no market id and no updates",
 			msg:  MsgMarketManageReqAttrsRequest{},
 			expErr: []string{
 				"invalid administrator",
+				"invalid market id",
 				"no updates",
 			},
 		},
@@ -526,6 +551,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 			name: "multiple errors",
 			msg: MsgMarketManageReqAttrsRequest{
 				Administrator:     "not1valid",
+				MarketId:          0,
 				CreateAskToAdd:    []string{"bad-ask-attr", "dup-ask"},
 				CreateAskToRemove: []string{"dup-ask"},
 				CreateBidToAdd:    []string{"bad-bid-attr", "dup-bid"},
@@ -533,6 +559,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 			},
 			expErr: []string{
 				"invalid administrator",
+				"invalid market id",
 				"invalid create-ask to add required attribute \"bad-ask-attr\"",
 				"cannot add and remove the same create-ask required attributes \"dup-ask\"",
 				"invalid create-bid to add required attribute \"bad-bid-attr\"",
@@ -695,7 +722,7 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 				AddFeeCreateAskFlat:    []sdk.Coin{coin(1, "nhash")},
 				RemoveFeeCreateAskFlat: []sdk.Coin{coin(1, "nhash")},
 			},
-			expErr: []string{"cannot add and remove the same create-ask flat fee options: 1nhash"},
+			expErr: []string{"cannot add and remove the same create-ask flat fee options 1nhash"},
 		},
 		{
 			name: "invalid add create-bid flat",
@@ -712,7 +739,7 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 				AddFeeCreateBidFlat:    []sdk.Coin{coin(1, "nhash")},
 				RemoveFeeCreateBidFlat: []sdk.Coin{coin(1, "nhash")},
 			},
-			expErr: []string{"cannot add and remove the same create-bid flat fee options: 1nhash"},
+			expErr: []string{"cannot add and remove the same create-bid flat fee options 1nhash"},
 		},
 		{
 			name: "invalid add seller settlement flat",
@@ -729,7 +756,7 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 				AddFeeSellerSettlementFlat:    []sdk.Coin{coin(1, "nhash")},
 				RemoveFeeSellerSettlementFlat: []sdk.Coin{coin(1, "nhash")},
 			},
-			expErr: []string{"cannot add and remove the same seller settlement flat fee options: 1nhash"},
+			expErr: []string{"cannot add and remove the same seller settlement flat fee options 1nhash"},
 		},
 		{
 			name: "invalid add seller settlement ratio",
@@ -746,7 +773,7 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 				AddFeeSellerSettlementRatios:    []FeeRatio{ratio(2, "nhash", 1, "nhash")},
 				RemoveFeeSellerSettlementRatios: []FeeRatio{ratio(2, "nhash", 1, "nhash")},
 			},
-			expErr: []string{"cannot add and remove the same seller settlement fee ratios: 2nhash:1nhash"},
+			expErr: []string{"cannot add and remove the same seller settlement fee ratios 2nhash:1nhash"},
 		},
 		{
 			name: "invalid add buyer settlement flat",
@@ -763,7 +790,7 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 				AddFeeBuyerSettlementFlat:    []sdk.Coin{coin(1, "nhash")},
 				RemoveFeeBuyerSettlementFlat: []sdk.Coin{coin(1, "nhash")},
 			},
-			expErr: []string{"cannot add and remove the same buyer settlement flat fee options: 1nhash"},
+			expErr: []string{"cannot add and remove the same buyer settlement flat fee options 1nhash"},
 		},
 		{
 			name: "invalid add buyer settlement ratio",
@@ -780,7 +807,7 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 				AddFeeBuyerSettlementRatios:    []FeeRatio{ratio(2, "nhash", 1, "nhash")},
 				RemoveFeeBuyerSettlementRatios: []FeeRatio{ratio(2, "nhash", 1, "nhash")},
 			},
-			expErr: []string{"cannot add and remove the same buyer settlement fee ratios: 2nhash:1nhash"},
+			expErr: []string{"cannot add and remove the same buyer settlement fee ratios 2nhash:1nhash"},
 		},
 		{
 			name: "multiple errors",
@@ -802,17 +829,17 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 			expErr: []string{
 				"invalid authority", "empty address string is not allowed",
 				`invalid create-ask flat fee to add option "0nhash": amount cannot be zero`,
-				"cannot add and remove the same create-ask flat fee options: 0nhash",
+				"cannot add and remove the same create-ask flat fee options 0nhash",
 				`invalid create-bid flat fee to add option "0nhash": amount cannot be zero`,
-				"cannot add and remove the same create-bid flat fee options: 0nhash",
+				"cannot add and remove the same create-bid flat fee options 0nhash",
 				`invalid seller settlement flat fee to add option "0nhash": amount cannot be zero`,
-				"cannot add and remove the same seller settlement flat fee options: 0nhash",
+				"cannot add and remove the same seller settlement flat fee options 0nhash",
 				`seller fee ratio fee amount "2nhash" cannot be greater than price amount "1nhash"`,
-				"cannot add and remove the same seller settlement fee ratios: 1nhash:2nhash",
+				"cannot add and remove the same seller settlement fee ratios 1nhash:2nhash",
 				`invalid buyer settlement flat fee to add option "0nhash": amount cannot be zero`,
-				"cannot add and remove the same buyer settlement flat fee options: 0nhash",
+				"cannot add and remove the same buyer settlement flat fee options 0nhash",
 				`buyer fee ratio fee amount "2nhash" cannot be greater than price amount "1nhash"`,
-				"cannot add and remove the same buyer settlement fee ratios: 1nhash:2nhash",
+				"cannot add and remove the same buyer settlement fee ratios 1nhash:2nhash",
 			},
 		},
 	}

@@ -180,6 +180,10 @@ func (m MsgMarketManageReqAttrsRequest) ValidateBasic() error {
 		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Administrator, err))
 	}
 
+	if m.MarketId == 0 {
+		errs = append(errs, fmt.Errorf("invalid market id: cannot be zero"))
+	}
+
 	if m.HasUpdates() {
 		errs = append(errs,
 			ValidateAddRemoveReqAttrs("create-ask", m.CreateAskToAdd, m.CreateAskToRemove),
