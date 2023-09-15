@@ -1551,7 +1551,7 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// CreateAsk creates an ask order (to sell something you own).
 	CreateAsk(ctx context.Context, in *MsgCreateAskRequest, opts ...grpc.CallOption) (*MsgCreateAskResponse, error)
-	// CreateBid creates an bid order (to buy something you want).
+	// CreateBid creates a bid order (to buy something you want).
 	CreateBid(ctx context.Context, in *MsgCreateBidRequest, opts ...grpc.CallOption) (*MsgCreateBidResponse, error)
 	// CancelOrder cancels an order.
 	CancelOrder(ctx context.Context, in *MsgCancelOrderRequest, opts ...grpc.CallOption) (*MsgCancelOrderResponse, error)
@@ -1728,7 +1728,7 @@ func (c *msgClient) GovUpdateParams(ctx context.Context, in *MsgGovUpdateParamsR
 type MsgServer interface {
 	// CreateAsk creates an ask order (to sell something you own).
 	CreateAsk(context.Context, *MsgCreateAskRequest) (*MsgCreateAskResponse, error)
-	// CreateBid creates an bid order (to buy something you want).
+	// CreateBid creates a bid order (to buy something you want).
 	CreateBid(context.Context, *MsgCreateBidRequest) (*MsgCreateBidResponse, error)
 	// CancelOrder cancels an order.
 	CancelOrder(context.Context, *MsgCancelOrderRequest) (*MsgCancelOrderResponse, error)

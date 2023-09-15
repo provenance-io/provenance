@@ -34,7 +34,7 @@ func (k MsgServer) CreateAsk(goCtx context.Context, msg *exchange.MsgCreateAskRe
 	return &exchange.MsgCreateAskResponse{OrderId: orderID}, nil
 }
 
-// CreateBid creates an bid order (to buy something you want).
+// CreateBid creates a bid order (to buy something you want).
 func (k MsgServer) CreateBid(goCtx context.Context, msg *exchange.MsgCreateBidRequest) (*exchange.MsgCreateBidResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	orderID, err := k.CreateBidOrder(ctx, msg.BidOrder, msg.OrderCreationFee)

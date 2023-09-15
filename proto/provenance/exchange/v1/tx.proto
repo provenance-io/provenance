@@ -19,7 +19,7 @@ service Msg {
   // CreateAsk creates an ask order (to sell something you own).
   rpc CreateAsk(MsgCreateAskRequest) returns (MsgCreateAskResponse);
 
-  // CreateBid creates an bid order (to buy something you want).
+  // CreateBid creates a bid order (to buy something you want).
   rpc CreateBid(MsgCreateBidRequest) returns (MsgCreateBidResponse);
 
   // CancelOrder cancels an order.

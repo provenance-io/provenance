@@ -2501,7 +2501,7 @@ Msg is the service for exchange module's tx endpoints.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `CreateAsk` | [MsgCreateAskRequest](#provenance.exchange.v1.MsgCreateAskRequest) | [MsgCreateAskResponse](#provenance.exchange.v1.MsgCreateAskResponse) | CreateAsk creates an ask order (to sell something you own). | |
-| `CreateBid` | [MsgCreateBidRequest](#provenance.exchange.v1.MsgCreateBidRequest) | [MsgCreateBidResponse](#provenance.exchange.v1.MsgCreateBidResponse) | CreateBid creates an bid order (to buy something you want). | |
+| `CreateBid` | [MsgCreateBidRequest](#provenance.exchange.v1.MsgCreateBidRequest) | [MsgCreateBidResponse](#provenance.exchange.v1.MsgCreateBidResponse) | CreateBid creates a bid order (to buy something you want). | |
 | `CancelOrder` | [MsgCancelOrderRequest](#provenance.exchange.v1.MsgCancelOrderRequest) | [MsgCancelOrderResponse](#provenance.exchange.v1.MsgCancelOrderResponse) | CancelOrder cancels an order. | |
 | `FillBids` | [MsgFillBidsRequest](#provenance.exchange.v1.MsgFillBidsRequest) | [MsgFillBidsResponse](#provenance.exchange.v1.MsgFillBidsResponse) | FillBids uses the assets in your account to fulfill one or more bids (similar to a fill-or-cancel ask). | |
 | `FillAsks` | [MsgFillAsksRequest](#provenance.exchange.v1.MsgFillAsksRequest) | [MsgFillAsksResponse](#provenance.exchange.v1.MsgFillAsksResponse) | FillAsks uses the funds in your account to fulfill one or more asks (similar to a fill-or-cancel bid). | |
