@@ -2365,6 +2365,15 @@ MsgMarketManagePermissionsResponse is a response message for the MarketManagePer
 MsgMarketManageReqAttrsRequest is a request message for the MarketManageReqAttrs endpoint.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `administrator` | [string](#string) |  | administrator is the account with withdraw permission requesting the withdrawal. |
+| `create_ask_to_add` | [string](#string) | repeated | create_ask_to_add are the attributes that should now also be required to create an ask order. |
+| `create_ask_to_remove` | [string](#string) | repeated | create_ask_to_add are the attributes that should no longer be required to create an ask order. |
+| `create_bid_to_add` | [string](#string) | repeated | create_ask_to_add are the attributes that should now also be required to create a bid order. |
+| `create_bid_to_remove` | [string](#string) | repeated | create_ask_to_add are the attributes that should no longer be required to create a bid order. |
+
+
 
 
 
