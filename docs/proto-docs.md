@@ -2432,6 +2432,14 @@ MsgMarketUpdateUserSettleResponse is a response message for the MarketUpdateUser
 MsgMarketWithdrawRequest is a request message for the MarketWithdraw endpoint.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `administrator` | [string](#string) |  | administrator is the account with withdraw permission requesting the withdrawal. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to withdraw from. |
+| `to_address` | [string](#string) |  | to_address is the address that will receive the funds. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the funds to withdraw. |
+
+
 
 
 

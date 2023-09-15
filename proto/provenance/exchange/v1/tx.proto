@@ -133,7 +133,20 @@ message MsgMarketSettleResponse {}
 
 // MsgMarketWithdrawRequest is a request message for the MarketWithdraw endpoint.
 message MsgMarketWithdrawRequest {
-  // TODO[1658]: MsgMarketWithdrawRequest
+  option (cosmos.msg.v1.signer) = "administrator";
+
+  // administrator is the account with withdraw permission requesting the withdrawal.
+  string administrator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // market_id is the numerical identifier of the market to withdraw from.
+  uint32 market_id = 2;
+
+  // to_address is the address that will receive the funds.
+  string to_address = 3;
+
+  // amount is the funds to withdraw.
+  repeated cosmos.base.v1beta1.Coin amount = 4
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 // MsgMarketWithdrawResponse is a response message for the MarketWithdraw endpoint.
