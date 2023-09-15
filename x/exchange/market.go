@@ -125,13 +125,13 @@ func ValidateFeeRatios(sellerRatios, buyerRatios []FeeRatio) error {
 	}
 
 	for _, denom := range sellerPriceDenoms {
-		if !contains(buyerPriceDenoms, denom) {
+		if !containsString(buyerPriceDenoms, denom) {
 			errs = append(errs, fmt.Errorf("denom %q is defined in the seller settlement fee ratios but not buyer", denom))
 		}
 	}
 
 	for _, denom := range buyerPriceDenoms {
-		if !contains(sellerPriceDenoms, denom) {
+		if !containsString(sellerPriceDenoms, denom) {
 			errs = append(errs, fmt.Errorf("denom %q is defined in the buyer settlement fee ratios but not seller", denom))
 		}
 	}
@@ -198,14 +198,11 @@ func ValidateBuyerFeeRatios(ratios []FeeRatio) error {
 	return errors.Join(errs...)
 }
 
-// contains returns true if the provided toFind is present in the provided vals.
-func contains[T comparable](vals []T, toFind T) bool {
-	for _, v := range vals {
-		if toFind == v {
-			return true
-		}
-	}
-	return false
+// containsString returns true if the string to find is in the vals slice.
+func containsString(vals []string, toFind string) bool {
+	return contains(vals, toFind, func(a, b string) bool {
+		return a == b
+	})
 }
 
 // String returns a string representation of this FeeRatio.
@@ -292,13 +289,32 @@ func (r FeeRatio) ApplyToLoosely(price sdk.Coin) (sdk.Coin, error) {
 	return rv, nil
 }
 
+// IntersectionOfFeeRatios returns each FeeRatio entry that is in both lists.
+func IntersectionOfFeeRatios(list1, list2 []FeeRatio) []FeeRatio {
+	return intersection(list1, list2, FeeRatio.Equals)
+}
+
 // ValidateDisjointFeeRatios returns an error if one or more entries appears in both lists.
 func ValidateDisjointFeeRatios(field string, toAdd, toRemove []FeeRatio) error {
-	shared := Intersection(toAdd, toRemove, FeeRatio.Equals)
+	shared := IntersectionOfFeeRatios(toAdd, toRemove)
 	if len(shared) > 0 {
-		return fmt.Errorf("cannot add and remove the same %s ratios: %s", field, FeeRatiosString(shared))
+		return fmt.Errorf("cannot add and remove the same %s ratios %s", field, FeeRatiosString(shared))
 	}
 	return nil
+}
+
+// CoinEquals returns true if the two provided coin entries are equal.
+// Designed for use with intersection.
+//
+// We can't just provide sdk.Coin.isEqual to intersection because that PANICS if the denoms are different.
+// And we can't provide sdk.Coin.Equal to intersection because it takes in an interface{} (instead of sdk.Coin).
+func CoinEquals(a, b sdk.Coin) bool {
+	return a.Equal(b)
+}
+
+// IntersectionOfCoins returns each sdk.Coin entry that is in both lists.
+func IntersectionOfCoins(list1, list2 []sdk.Coin) []sdk.Coin {
+	return intersection(list1, list2, CoinEquals)
 }
 
 // ValidateAddRemoveFeeOptions returns an error if the toAdd list has an invalid
@@ -308,9 +324,9 @@ func ValidateAddRemoveFeeOptions(field string, toAdd, toRemove []sdk.Coin) error
 	if err := ValidateFeeOptions(field+" to add", toAdd); err != nil {
 		errs = append(errs, err)
 	}
-	shared := Intersection(toAdd, toRemove, CoinEquals)
+	shared := IntersectionOfCoins(toAdd, toRemove)
 	if len(shared) > 0 {
-		errs = append(errs, fmt.Errorf("cannot add and remove the same %s options: %s", field, sdk.Coins(shared)))
+		errs = append(errs, fmt.Errorf("cannot add and remove the same %s options %s", field, sdk.Coins(shared)))
 	}
 	return errors.Join(errs...)
 }
@@ -433,7 +449,7 @@ func ValidateReqAttrs(field string, attrs []string) error {
 		normalized := nametypes.NormalizeName(attr)
 		if seen[normalized] {
 			if !bad[normalized] {
-				errs = append(errs, fmt.Errorf("duplicate %s required attribute: %q",
+				errs = append(errs, fmt.Errorf("duplicate %s required attribute %q",
 					field, attr))
 				bad[normalized] = true
 			}
@@ -448,6 +464,11 @@ func ValidateReqAttrs(field string, attrs []string) error {
 	return errors.Join(errs...)
 }
 
+// IntersectionOfAttributes returns each attribute that is in both lists.
+func IntersectionOfAttributes(list1, list2 []string) []string {
+	return intersection(list1, list2, strings.EqualFold)
+}
+
 // ValidateAddRemoveReqAttrs returns an error if the toAdd list has an invalid
 // entry or if the two lists have one or more common entries.
 func ValidateAddRemoveReqAttrs(field string, toAdd, toRemove []string) error {
@@ -455,9 +476,10 @@ func ValidateAddRemoveReqAttrs(field string, toAdd, toRemove []string) error {
 	if err := ValidateReqAttrs(field+" to add", toAdd); err != nil {
 		errs = append(errs, err)
 	}
-	shared := Intersection(toAdd, toRemove, StringEquals)
+	// attributes are lower-cased during attribute, so we should use a case-insensitive matcher.
+	shared := IntersectionOfAttributes(toAdd, toRemove)
 	if len(shared) > 0 {
-		errs = append(errs, fmt.Errorf("cannot add and remove the same %s options: %s", field, strings.Join(shared, ",")))
+		errs = append(errs, fmt.Errorf("cannot add and remove the same %s required attributes \"%s\"", field, strings.Join(shared, "\",\"")))
 	}
 	return errors.Join(errs...)
 }
@@ -521,39 +543,22 @@ func IsReqAttrMatch(reqAttr, accAttr string) bool {
 	return reqAttr == accAttr
 }
 
-// CoinEquals returns true if the two provided coin entries are equal.
-// Designed for use with Intersection.
-//
-// We can't just provide sdk.Coin.isEqual to Intersection because that PANICS if the denoms are different.
-// And we can't provide sdk.Coin.Equal to Intersection because it takes in an interface{} (instead of sdk.Coin).
-func CoinEquals(a, b sdk.Coin) bool {
-	return a.Equal(b)
+// contains returns true if the provided toFind is present in the provided vals.
+func contains[T any](vals []T, toFind T, equals func(T, T) bool) bool {
+	for _, v := range vals {
+		if equals(toFind, v) {
+			return true
+		}
+	}
+	return false
 }
 
-// StringEquals returns true if the two provided strings are equal.
-// Designed for use with Intersection.
-func StringEquals(a, b string) bool {
-	return a == b
-}
-
-// Intersection returns all entries that are in both lists.
-func Intersection[T any](list1, list2 []T, equals func(T, T) bool) []T {
+// intersection returns each entry that is in both lists.
+func intersection[T any](list1, list2 []T, equals func(T, T) bool) []T {
 	var rv []T
 	for _, a := range list1 {
-		for _, b := range list2 {
-			if equals(a, b) {
-				alreadyHave := false
-				for _, r := range rv {
-					if equals(a, r) {
-						alreadyHave = true
-						break
-					}
-				}
-				if !alreadyHave {
-					rv = append(rv, a)
-				}
-				break
-			}
+		if contains(list2, a, equals) && !contains(rv, a, equals) {
+			rv = append(rv, a)
 		}
 	}
 	return rv

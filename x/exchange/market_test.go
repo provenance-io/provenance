@@ -1178,7 +1178,7 @@ func TestFeeRatio_ApplyToLoosely(t *testing.T) {
 	}
 }
 
-func intersectionFeeRatioEqualsTests(t *testing.T) {
+func TestIntersectionOfFeeRatios(t *testing.T) {
 	feeRatio := func(priceAmount int64, priceDenom string, feeAmount int64, feeDenom string) FeeRatio {
 		return FeeRatio{
 			Price: sdk.Coin{Denom: priceDenom, Amount: sdkmath.NewInt(priceAmount)},
@@ -1285,10 +1285,10 @@ func intersectionFeeRatioEqualsTests(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual []FeeRatio
 			testFunc := func() {
-				actual = Intersection(tc.options1, tc.options2, FeeRatio.Equals)
+				actual = IntersectionOfFeeRatios(tc.options1, tc.options2)
 			}
-			require.NotPanics(t, testFunc, "Intersection(FeeRatio.Equals)")
-			assert.Equal(t, tc.expected, actual, "Intersection(FeeRatio.Equals) result")
+			require.NotPanics(t, testFunc, "IntersectionOfFeeRatios")
+			assert.Equal(t, tc.expected, actual, "IntersectionOfFeeRatios result")
 		})
 	}
 }
@@ -1329,7 +1329,7 @@ func TestValidateDisjointFeeRatios(t *testing.T) {
 			field:    "<fieldname>",
 			toAdd:    []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
 			toRemove: []FeeRatio{feeRatio(1, "spicy", 2, "lemon")},
-			expErr:   "cannot add and remove the same <fieldname> ratios: 1spicy:2lemon",
+			expErr:   "cannot add and remove the same <fieldname> ratios 1spicy:2lemon",
 		},
 		{
 			name:     "one one diff first price amount",
@@ -1392,7 +1392,7 @@ func TestValidateDisjointFeeRatios(t *testing.T) {
 				feeRatio(5, "fan", 6, "bottle"),
 				feeRatio(1, "lamp", 2, "bag"),
 			},
-			expErr: "cannot add and remove the same test field name ratios: 1lamp:2bag,5fan:6bottle",
+			expErr: "cannot add and remove the same test field name ratios 1lamp:2bag,5fan:6bottle",
 		},
 	}
 
@@ -1409,7 +1409,64 @@ func TestValidateDisjointFeeRatios(t *testing.T) {
 	}
 }
 
-func intersectionCoinEqualsTests(t *testing.T) {
+func TestCoinEquals(t *testing.T) {
+	tests := []struct {
+		name string
+		a    sdk.Coin
+		b    sdk.Coin
+		exp  bool
+	}{
+		{
+			name: "zero-value coins",
+			a:    sdk.Coin{},
+			b:    sdk.Coin{},
+			exp:  true,
+		},
+		{
+			name: "different amounts",
+			a:    sdk.NewInt64Coin("pear", 2),
+			b:    sdk.NewInt64Coin("pear", 3),
+			exp:  false,
+		},
+		{
+			name: "different denoms",
+			a:    sdk.NewInt64Coin("pear", 2),
+			b:    sdk.NewInt64Coin("onion", 2),
+			exp:  false,
+		},
+		{
+			name: "same denom and amount",
+			a:    sdk.NewInt64Coin("pear", 2),
+			b:    sdk.NewInt64Coin("pear", 2),
+			exp:  true,
+		},
+		{
+			name: "same denom zero amounts",
+			a:    sdk.NewInt64Coin("pear", 0),
+			b:    sdk.NewInt64Coin("pear", 0),
+			exp:  true,
+		},
+		{
+			name: "diff denom zero amounts",
+			a:    sdk.NewInt64Coin("pear", 0),
+			b:    sdk.NewInt64Coin("onion", 0),
+			exp:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = CoinEquals(tc.a, tc.b)
+			}
+			require.NotPanics(t, testFunc, "CoinEquals(%q, %q)", tc.a, tc.b)
+			assert.Equal(t, tc.exp, actual, "CoinEquals(%q, %q) result", tc.a, tc.b)
+		})
+	}
+}
+
+func TestIntersectionOfCoins(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
@@ -1478,10 +1535,10 @@ func intersectionCoinEqualsTests(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual []sdk.Coin
 			testFunc := func() {
-				actual = Intersection(tc.options1, tc.options2, CoinEquals)
+				actual = IntersectionOfCoins(tc.options1, tc.options2)
 			}
-			require.NotPanics(t, testFunc, "Intersection(CoinEquals)")
-			assert.Equal(t, tc.expected, actual, "Intersection(CoinEquals) result")
+			require.NotPanics(t, testFunc, "IntersectionOfCoins")
+			assert.Equal(t, tc.expected, actual, "IntersectionOfCoins result")
 		})
 	}
 }
@@ -1522,7 +1579,7 @@ func TestValidateAddRemoveFeeOptions(t *testing.T) {
 			field:    "<fieldname>",
 			toAdd:    []sdk.Coin{coin(1, "finger")},
 			toRemove: []sdk.Coin{coin(1, "finger")},
-			expErr:   "cannot add and remove the same <fieldname> options: 1finger",
+			expErr:   "cannot add and remove the same <fieldname> options 1finger",
 		},
 		{
 			name:     "one one different first amount",
@@ -1553,7 +1610,7 @@ func TestValidateAddRemoveFeeOptions(t *testing.T) {
 			field:    "body part",
 			toAdd:    []sdk.Coin{coin(1, "finger"), coin(2, "toe"), coin(3, "elbow")},
 			toRemove: []sdk.Coin{coin(5, "toe"), coin(3, "elbow"), coin(1, "finger")},
-			expErr:   "cannot add and remove the same body part options: 1finger,3elbow",
+			expErr:   "cannot add and remove the same body part options 1finger,3elbow",
 		},
 		{
 			name:     "adding one invalid",
@@ -1586,7 +1643,7 @@ func TestValidateAddRemoveFeeOptions(t *testing.T) {
 			toRemove: []sdk.Coin{coin(-1, "bananas")},
 			expErr: joinErrs(
 				`invalid fruits to add option "-1bananas": negative coin amount: -1`,
-				"cannot add and remove the same fruits options: -1bananas",
+				"cannot add and remove the same fruits options -1bananas",
 			),
 		},
 		{
@@ -1607,7 +1664,7 @@ func TestValidateAddRemoveFeeOptions(t *testing.T) {
 			expErr: joinErrs(
 				`invalid merrs! to add option "3l": invalid denom: l`,
 				`invalid merrs! to add option "-55peach": negative coin amount: -55`,
-				"cannot add and remove the same merrs! options: 14copycoin",
+				"cannot add and remove the same merrs! options 14copycoin",
 			),
 		},
 	}
@@ -2231,7 +2288,7 @@ func TestValidateReqAttrs(t *testing.T) {
 			name:  "duplicate entries",
 			field: "just some field name thingy",
 			attrs: []string{"*.multi", "*.multi", "*.multi"},
-			exp:   `duplicate just some field name thingy required attribute: "*.multi"`,
+			exp:   `duplicate just some field name thingy required attribute "*.multi"`,
 		},
 		{
 			name:  "duplicate bad entries",
@@ -2248,9 +2305,9 @@ func TestValidateReqAttrs(t *testing.T) {
 			},
 			exp: joinErrs(
 				`invalid ♪ but a bit ain't one ♪ required attribute "x.*.wildcard"`,
-				`duplicate ♪ but a bit ain't one ♪ required attribute: "one.multi"`,
+				`duplicate ♪ but a bit ain't one ♪ required attribute "one.multi"`,
 				`invalid ♪ but a bit ain't one ♪ required attribute "penny.nic kel.dime"`,
-				`duplicate ♪ but a bit ain't one ♪ required attribute: "two.multi"`,
+				`duplicate ♪ but a bit ain't one ♪ required attribute "two.multi"`,
 				`invalid ♪ but a bit ain't one ♪ required attribute "*.ex-am-ple.pb"`,
 			),
 		},
@@ -2264,7 +2321,7 @@ func TestValidateReqAttrs(t *testing.T) {
 	}
 }
 
-func intersectionStringEqualsTests(t *testing.T) {
+func TestIntersectionOfAttributes(t *testing.T) {
 	tests := []struct {
 		name     string
 		options1 []string
@@ -2421,10 +2478,78 @@ func intersectionStringEqualsTests(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual []string
 			testFunc := func() {
-				actual = Intersection(tc.options1, tc.options2, StringEquals)
+				actual = IntersectionOfAttributes(tc.options1, tc.options2)
 			}
-			require.NotPanics(t, testFunc, "Intersection(StringEquals)")
-			assert.Equal(t, tc.expected, actual, "Intersection(StringEquals) result")
+			require.NotPanics(t, testFunc, "IntersectionOfAttributes")
+			assert.Equal(t, tc.expected, actual, "IntersectionOfAttributes result")
+		})
+	}
+}
+
+func TestValidateAddRemoveReqAttrs(t *testing.T) {
+	tests := []struct {
+		name     string
+		field    string
+		toAdd    []string
+		toRemove []string
+		expErr   string
+	}{
+		{
+			name:     "nil lists",
+			field:    "-<({[FIELD]})>-",
+			toAdd:    nil,
+			toRemove: nil,
+		},
+		{
+			name:     "empty lists",
+			field:    "-<({[FIELD]})>-",
+			toAdd:    []string{},
+			toRemove: []string{},
+		},
+		{
+			name:     "invalid to-add entry",
+			field:    "-<({[FIELD]})>-",
+			toAdd:    []string{"this has too many spaces"},
+			toRemove: nil,
+			expErr:   "invalid -<({[FIELD]})>- to add required attribute \"this has too many spaces\"",
+		},
+		{
+			name:     "invalid to-remove entry",
+			field:    "-<({[FIELD]})>-",
+			toAdd:    nil,
+			toRemove: []string{"this has too many spaces"},
+		},
+		{
+			name:     "duplicate to-add entry",
+			field:    "-<({[FIELD]})>-",
+			toAdd:    []string{"abc", "def", "abc", "abc"},
+			toRemove: nil,
+			expErr:   "duplicate -<({[FIELD]})>- to add required attribute \"abc\"",
+		},
+		{
+			name:     "same entry in both lists",
+			field:    "-<({[FIELD]})>-",
+			toAdd:    []string{"one", "two", "three"},
+			toRemove: []string{"four", "five", "six", "two", "seven"},
+			expErr:   "cannot add and remove the same -<({[FIELD]})>- required attributes \"two\"",
+		},
+		{
+			name:     "two entries in both lists differently cased",
+			field:    "-<({[FIELD]})>-",
+			toAdd:    []string{"one", "SEvEN", "two", "three"},
+			toRemove: []string{"four", "five", "six", "Two", "seven"},
+			expErr:   "cannot add and remove the same -<({[FIELD]})>- required attributes \"SEvEN\",\"two\"",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = ValidateAddRemoveReqAttrs(tc.field, tc.toAdd, tc.toRemove)
+			}
+			require.NotPanics(t, testFunc, "ValidateAddRemoveReqAttrs")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateAddRemoveReqAttrs error")
 		})
 	}
 }
@@ -2978,106 +3103,4 @@ func TestIsReqAttrMatch(t *testing.T) {
 			assert.Equal(t, tc.exp, isMatch, "IsReqAttrMatch(%q, %q)", tc.reqAttr, tc.accAttr)
 		})
 	}
-}
-
-func TestCoinEquals(t *testing.T) {
-	tests := []struct {
-		name string
-		a    sdk.Coin
-		b    sdk.Coin
-		exp  bool
-	}{
-		{
-			name: "zero-value coins",
-			a:    sdk.Coin{},
-			b:    sdk.Coin{},
-			exp:  true,
-		},
-		{
-			name: "different amounts",
-			a:    sdk.NewInt64Coin("pear", 2),
-			b:    sdk.NewInt64Coin("pear", 3),
-			exp:  false,
-		},
-		{
-			name: "different denoms",
-			a:    sdk.NewInt64Coin("pear", 2),
-			b:    sdk.NewInt64Coin("onion", 2),
-			exp:  false,
-		},
-		{
-			name: "same denom and amount",
-			a:    sdk.NewInt64Coin("pear", 2),
-			b:    sdk.NewInt64Coin("pear", 2),
-			exp:  true,
-		},
-		{
-			name: "same denom zero amounts",
-			a:    sdk.NewInt64Coin("pear", 0),
-			b:    sdk.NewInt64Coin("pear", 0),
-			exp:  true,
-		},
-		{
-			name: "diff denom zero amounts",
-			a:    sdk.NewInt64Coin("pear", 0),
-			b:    sdk.NewInt64Coin("onion", 0),
-			exp:  false,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var actual bool
-			testFunc := func() {
-				actual = CoinEquals(tc.a, tc.b)
-			}
-			require.NotPanics(t, testFunc, "CoinEquals(%q, %q)", tc.a, tc.b)
-			assert.Equal(t, tc.exp, actual, "CoinEquals(%q, %q) result", tc.a, tc.b)
-		})
-	}
-}
-
-func TestStringEquals(t *testing.T) {
-	tests := []struct {
-		a   string
-		b   string
-		exp bool
-	}{
-		{a: "", b: "", exp: true},
-		{a: "c", b: "c", exp: true},
-		{a: "a b", b: "a b", exp: true},
-		{a: "x.y.z", b: "x.y.z", exp: true},
-		{a: "*.y.z", b: "x.y.z", exp: false},
-		{a: "a", b: "b", exp: false},
-		{a: "a", b: "ba", exp: false},
-		{a: "a", b: "ba", exp: false},
-		{a: "ab", b: "b", exp: false},
-		{a: "ba", b: "b", exp: false},
-		{a: "cccc", b: "ccccc", exp: false},
-		{a: "ccccc", b: "cccc", exp: false},
-		{a: "a b", b: "b a", exp: false},
-		{a: "a b", b: "a-b", exp: false},
-		{a: "c", b: " c", exp: false},
-		{a: "c", b: "c ", exp: false},
-		{a: " c", b: "c", exp: false},
-		{a: "c ", b: "c", exp: false},
-		{a: "c ", b: " c", exp: false},
-	}
-
-	for _, tc := range tests {
-		t.Run(fmt.Sprintf("%q|%q", tc.a, tc.b), func(t *testing.T) {
-			var actual bool
-			testFunc := func() {
-				actual = StringEquals(tc.a, tc.b)
-			}
-			require.NotPanics(t, testFunc, "StringEquals(%q, %q)", tc.a, tc.b)
-			assert.Equal(t, tc.exp, actual, "StringEquals(%q, %q) result", tc.a, tc.b)
-		})
-	}
-}
-
-func TestIntersection(t *testing.T) {
-	t.Run("of fee ratios", intersectionFeeRatioEqualsTests)
-	t.Run("of coins", intersectionCoinEqualsTests)
-	t.Run("of strings", intersectionStringEqualsTests)
 }
