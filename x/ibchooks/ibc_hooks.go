@@ -1,26 +1,32 @@
 package ibchooks
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
 
 	"github.com/provenance-io/provenance/x/ibchooks/keeper"
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 )
 
 type IbcHooks struct {
+	cdc            codec.BinaryCodec
+	ibcKeeper      *ibckeeper.Keeper
 	ibcHooksKeeper *keeper.Keeper
 	wasmHooks      *WasmHooks
 	markerHooks    *MarkerHooks
 	SendPacketFns  []types.SendPacketFn
 }
 
-func NewIbcHooks(ibcHooksKeeper *keeper.Keeper, wasmHooks *WasmHooks, markerHooks *MarkerHooks, sendPacketFns []types.SendPacketFn) IbcHooks {
+func NewIbcHooks(cdc codec.BinaryCodec, ibcHooksKeeper *keeper.Keeper, ibcKeeper *ibckeeper.Keeper, wasmHooks *WasmHooks, markerHooks *MarkerHooks, sendPacketFns []types.SendPacketFn) IbcHooks {
 	return IbcHooks{
+		cdc:            cdc,
+		ibcKeeper:      ibcKeeper,
 		ibcHooksKeeper: ibcHooksKeeper,
 		wasmHooks:      wasmHooks,
 		markerHooks:    markerHooks,
@@ -30,7 +36,7 @@ func NewIbcHooks(ibcHooksKeeper *keeper.Keeper, wasmHooks *WasmHooks, markerHook
 
 // ProperlyConfigured returns false if either wasm or marker hooks are configured properly
 func (h IbcHooks) ProperlyConfigured() bool {
-	return h.wasmHooks.ProperlyConfigured() && h.markerHooks.ProperlyConfigured()
+	return h.wasmHooks.ProperlyConfigured() && h.markerHooks.ProperlyConfigured() && h.ibcHooksKeeper != nil
 }
 
 func (h IbcHooks) GetSendPacketFns() []types.SendPacketFn {
@@ -48,7 +54,7 @@ func (h IbcHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, p
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 
-	h.markerHooks.ProcessMarkerMemo(ctx, packet)
+	h.markerHooks.ProcessMarkerMemo(ctx, packet, h.cdc, h.ibcKeeper)
 
 	return h.wasmHooks.OnRecvPacketOverride(im, ctx, packet, relayer)
 }

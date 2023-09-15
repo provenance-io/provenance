@@ -7,13 +7,17 @@ import (
 
 	sdkerrors "cosmossdk.io/errors"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	"github.com/cosmos/ibc-go/v6/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
+	tendermintclient "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
 
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
@@ -24,7 +28,7 @@ type MarkerHooks struct {
 	MarkerKeeper *markerkeeper.Keeper
 }
 
-func NewMarkerHooks(markerkeeper *markerkeeper.Keeper) MarkerHooks {
+func NewMarkerHooks(markerkeeper *markerkeeper.Keeper, bankKeeper *markertypes.BankKeeper) MarkerHooks {
 	return MarkerHooks{
 		MarkerKeeper: markerkeeper,
 	}
@@ -34,7 +38,7 @@ func (h MarkerHooks) ProperlyConfigured() bool {
 	return h.MarkerKeeper != nil
 }
 
-func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.PacketI) error {
+func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.PacketI, cdc codec.BinaryCodec, ibcKeeper *ibckeeper.Keeper) error {
 	var data transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
 		return err
@@ -76,6 +80,14 @@ func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.Pac
 			if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
 				return err
 			}
+			chainId := h.GetChainId(ctx, packet, cdc, ibcKeeper)
+			markerMetadata := banktypes.Metadata{
+				Base:        ibcDenom,
+				Name:        chainId + "/" + data.Denom,
+				Display:     chainId + "/" + data.Denom,
+				Description: data.Denom + " from chain " + chainId,
+			}
+			h.MarkerKeeper.SetDenomMetaData(ctx, markerMetadata, authtypes.NewModuleAddress(types.ModuleName))
 		} else {
 			ResetMarkerAccessGrants(transferAuthAddrs, marker)
 			h.MarkerKeeper.SetMarker(ctx, marker)
@@ -85,6 +97,29 @@ func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.Pac
 	// TODO: add metadata for marker
 
 	return nil
+}
+
+func (h MarkerHooks) GetChainId(ctx sdktypes.Context, packet exported.PacketI, cdc codec.BinaryCodec, ibcKeeper *ibckeeper.Keeper) string {
+	chainId := "unknown"
+	channel, found := ibcKeeper.ChannelKeeper.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+	if !found {
+		return chainId
+	}
+	connectionEnd, found := ibcKeeper.ConnectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	if !found {
+		return chainId
+	}
+	clientState, found := ibcKeeper.ClientKeeper.GetClientState(ctx, connectionEnd.GetClientID())
+	if !found {
+		return chainId
+	}
+	if clientState.ClientType() == "07-tendermint" {
+		tmClientState, ok := clientState.(*tendermintclient.ClientState)
+		if ok {
+			chainId = tmClientState.ChainId
+		}
+	}
+	return chainId
 }
 
 // ResetMarkerAccessGrants removes all current access grants from marker and adds new transfer grants for transferAuths
