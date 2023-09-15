@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -73,8 +74,16 @@ func (k MsgServer) MarketSettle(goCtx context.Context, msg *exchange.MsgMarketSe
 
 // MarketWithdraw is a market endpoint to withdraw fees that have been collected.
 func (k MsgServer) MarketWithdraw(goCtx context.Context, msg *exchange.MsgMarketWithdrawRequest) (*exchange.MsgMarketWithdrawResponse, error) {
-	// TODO[1658]: Implement MarketWithdraw
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanWithdrawMarketFunds(ctx, msg.MarketId, msg.Administrator) {
+		return nil, fmt.Errorf("account %s does not have withdraw permission for market %d", msg.Administrator, msg.MarketId)
+	}
+	toAddr := sdk.MustAccAddressFromBech32(msg.ToAddress)
+	err := k.WithdrawMarketFunds(ctx, msg.MarketId, toAddr, msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+	return &exchange.MsgMarketWithdrawResponse{}, nil
 }
 
 // MarketUpdateDetails is a market endpoint to update its details.

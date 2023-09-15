@@ -956,3 +956,23 @@ func (k Keeper) CanCreateBid(ctx sdk.Context, marketID uint32, addr sdk.AccAddre
 	reqAttrs := k.GetReqAttrBid(ctx, marketID)
 	return k.hasReqAttrs(ctx, addr, reqAttrs)
 }
+
+// CanWithdrawMarketFunds returns true if the provided admin bech32 address has permission to
+// withdraw funds from the given market's account.
+func (k Keeper) CanWithdrawMarketFunds(ctx sdk.Context, marketID uint32, admin string) bool {
+	if admin == k.GetAuthority() {
+		return true
+	}
+	adminAddr := sdk.MustAccAddressFromBech32(admin)
+	return hasPermission(k.getStore(ctx), marketID, adminAddr, exchange.Permission_withdraw)
+}
+
+// WithdrawMarketFunds transfers funds from a market account to another account.
+func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk.AccAddress, amount sdk.Coins) error {
+	marketAddr := exchange.GetMarketAddress(marketID)
+	err := k.bankKeeper.SendCoins(ctx, marketAddr, toAddr, amount)
+	if err != nil {
+		return fmt.Errorf("failed to withdraw %s from market %d: %w", amount, marketID, err)
+	}
+	return nil
+}
