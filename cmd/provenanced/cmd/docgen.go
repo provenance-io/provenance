@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
@@ -26,12 +27,46 @@ func GetDocGenCmd() *cobra.Command {
 		Hidden:  true,
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			dir := args[0]
+			if !exists(dir) {
+				err := os.Mkdir(dir, 0755)
+				if err != nil {
+					return err
+				}
+			}
+
+			// Check if at least one flag is enabled
+
 			markdown, err := cmd.Flags().GetBool(FlagMarkdown)
 			if err != nil {
 				return err
 			}
 			if markdown {
-				doc.GenMarkdownTree(cmd.Root(), args[0])
+				doc.GenMarkdownTree(cmd.Root(), dir)
+			}
+
+			yaml, err := cmd.Flags().GetBool(FlagYaml)
+			if err != nil {
+				return err
+			}
+			if yaml {
+				doc.GenYamlTree(cmd.Root(), dir)
+			}
+
+			rest, err := cmd.Flags().GetBool(FlagRest)
+			if err != nil {
+				return err
+			}
+			if rest {
+				doc.GenReSTTree(cmd.Root(), dir)
+			}
+
+			manpage, err := cmd.Flags().GetBool(FlagManpage)
+			if err != nil {
+				return err
+			}
+			if manpage {
+				doc.GenManTree(cmd.Root(), nil, dir)
 			}
 
 			return nil
@@ -44,4 +79,9 @@ func GetDocGenCmd() *cobra.Command {
 	cmd.Flags().Bool(FlagManpage, false, "Generate documentation in the format of manpages.")
 
 	return cmd
+}
+
+func exists(dir string) bool {
+	_, err := os.Stat(dir)
+	return err == nil
 }
