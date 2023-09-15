@@ -50,7 +50,7 @@ func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.Pac
 			return err
 		}
 		var transferAuthAddrs []sdk.AccAddress
-		transferAuthAddrs, err = ProcessMarkerMemo(data.GetDenom())
+		transferAuthAddrs, coinType, err := ProcessMarkerMemo(data.GetMemo())
 		if err != nil {
 			return err
 		}
@@ -65,7 +65,7 @@ func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.Pac
 				nil,
 				nil,
 				markertypes.StatusActive,
-				markertypes.MarkerType_Coin,
+				coinType,
 				false, // supply fixed
 				false, // allow gov
 				false, // allow force transfer
@@ -98,68 +98,33 @@ func ResetMarkerAccessGrants(transferAuths []sdk.AccAddress, marker markertypes.
 }
 
 // ProcessMarkerMemo extracts the list of transfer auth address from marker part of packet memo
-func ProcessMarkerMemo(memo string) ([]sdk.AccAddress, error) {
+func ProcessMarkerMemo(memo string) ([]sdk.AccAddress, markertypes.MarkerType, error) {
 	found, jsonObject := jsonStringHasKey(memo, "marker")
 	if !found {
-		return []sdk.AccAddress{}, nil
+		return []sdk.AccAddress{}, markertypes.MarkerType_Coin, nil
 	}
 	markerPayload, ok := jsonObject["marker"].(string)
 	if !ok {
-		return []sdk.AccAddress{}, nil
+		return []sdk.AccAddress{}, markertypes.MarkerType_Coin, nil
 	}
 	var markerMemo types.MarkerPayload
 	err := json.Unmarshal([]byte(markerPayload), &markerMemo)
 	if err != nil {
-		return nil, err
+		return nil, markertypes.MarkerType_Unknown, err
+	}
+	if markerMemo.TransferAuth == nil {
+		return []sdk.AccAddress{}, markertypes.MarkerType_Coin, nil
 	}
 
 	transferAuths := make([]sdk.AccAddress, len(markerMemo.TransferAuth))
 	for i, addr := range markerMemo.TransferAuth {
 		accAddr, err := sdk.AccAddressFromBech32(addr)
 		if err != nil {
-			return nil, err
+			return nil, markertypes.MarkerType_Unknown, err
 		}
 		transferAuths[i] = accAddr
 	}
-	return transferAuths, nil
-}
-
-func (h MarkerHooks) SendPacketOverride(
-	i ICS4Middleware,
-	ctx sdktypes.Context,
-	chanCap *capabilitytypes.Capability,
-	sourcePort string,
-	sourceChannel string,
-	timeoutHeight clienttypes.Height,
-	timeoutTimestamp uint64,
-	data []byte,
-) (uint64, error) {
-	isIcs20, ics20Packet := isIcs20Packet(data)
-	if !isIcs20 {
-		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
-	}
-
-	markerAddress, err := markertypes.MarkerAddress(ics20Packet.Denom)
-	if err != nil {
-		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
-	}
-	marker, err := h.MarkerKeeper.GetMarker(ctx, markerAddress)
-	if err != nil {
-		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
-	}
-	ics20Packet.Memo = ""
-	if marker != nil {
-		ics20Packet.Memo, err = CreateMarkerMemo(marker)
-		if err != nil {
-			return 0, sdkerrors.Wrap(err, "ics20data marshall error")
-		}
-	}
-	dataBytes, err := json.Marshal(ics20Packet)
-	if err != nil {
-		return 0, sdkerrors.Wrap(err, "ics20data marshall error")
-	}
-
-	return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, dataBytes)
+	return transferAuths, markertypes.MarkerType_RestrictedCoin, nil
 }
 
 func (h MarkerHooks) SendPacketFn(
@@ -218,7 +183,7 @@ func SanitizeMemo(memo string) map[string]interface{} {
 
 // CreateMarkerMemo returns a json memo for marker
 func CreateMarkerMemo(marker markertypes.MarkerAccountI) (string, error) {
-	if marker == nil {
+	if marker == nil || marker.GetMarkerType() != markertypes.MarkerType_RestrictedCoin {
 		return "{}", nil
 	}
 	transferAuthAddrs := marker.AddressListForPermission(markertypes.Access_Transfer)
