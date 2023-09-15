@@ -99,8 +99,6 @@
     - [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse)
     - [QueryGetOrderRequest](#provenance.exchange.v1.QueryGetOrderRequest)
     - [QueryGetOrderResponse](#provenance.exchange.v1.QueryGetOrderResponse)
-    - [QueryIsValidMarketRequest](#provenance.exchange.v1.QueryIsValidMarketRequest)
-    - [QueryIsValidMarketResponse](#provenance.exchange.v1.QueryIsValidMarketResponse)
     - [QueryMarketInfoRequest](#provenance.exchange.v1.QueryMarketInfoRequest)
     - [QueryMarketInfoResponse](#provenance.exchange.v1.QueryMarketInfoResponse)
     - [QueryOrderFeeCalcRequest](#provenance.exchange.v1.QueryOrderFeeCalcRequest)
@@ -109,6 +107,10 @@
     - [QueryParamsResponse](#provenance.exchange.v1.QueryParamsResponse)
     - [QuerySettlementFeeCalcRequest](#provenance.exchange.v1.QuerySettlementFeeCalcRequest)
     - [QuerySettlementFeeCalcResponse](#provenance.exchange.v1.QuerySettlementFeeCalcResponse)
+    - [QueryValidateCreateMarketRequest](#provenance.exchange.v1.QueryValidateCreateMarketRequest)
+    - [QueryValidateCreateMarketResponse](#provenance.exchange.v1.QueryValidateCreateMarketResponse)
+    - [QueryValidateManageFeesRequest](#provenance.exchange.v1.QueryValidateManageFeesRequest)
+    - [QueryValidateManageFeesResponse](#provenance.exchange.v1.QueryValidateManageFeesResponse)
   
     - [Query](#provenance.exchange.v1.Query)
   
@@ -1954,30 +1956,15 @@ QueryGetOrderResponse is a response message for the QueryGetOrder endpoint.
 
 
 
-<a name="provenance.exchange.v1.QueryIsValidMarketRequest"></a>
-
-### QueryIsValidMarketRequest
-QueryIsValidMarketRequest is a request message for the QueryIsValidMarket endpoint.
-
-
-
-
-
-
-<a name="provenance.exchange.v1.QueryIsValidMarketResponse"></a>
-
-### QueryIsValidMarketResponse
-QueryIsValidMarketResponse is a response message for the QueryIsValidMarket endpoint.
-
-
-
-
-
-
 <a name="provenance.exchange.v1.QueryMarketInfoRequest"></a>
 
 ### QueryMarketInfoRequest
 QueryMarketInfoRequest is a request message for the QueryMarketInfo endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | TODO[1658]: QueryMarketInfoRequest |
 
 
 
@@ -2053,6 +2040,51 @@ QuerySettlementFeeCalcResponse is a response message for the QuerySettlementFeeC
 
 
 
+
+<a name="provenance.exchange.v1.QueryValidateCreateMarketRequest"></a>
+
+### QueryValidateCreateMarketRequest
+QueryValidateCreateMarketRequest is a request message for the QueryValidateCreateMarket endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryValidateCreateMarketResponse"></a>
+
+### QueryValidateCreateMarketResponse
+QueryValidateCreateMarketResponse is a response message for the QueryValidateCreateMarket endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryValidateManageFeesRequest"></a>
+
+### QueryValidateManageFeesRequest
+QueryValidateManageFeesRequest is a request message for the QueryValidateManageFees endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | TODO[1658]: QueryValidateManageFeesRequest |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryValidateManageFeesResponse"></a>
+
+### QueryValidateManageFeesResponse
+QueryValidateManageFeesResponse is a response message for the QueryValidateManageFees endpoint.
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -2073,9 +2105,10 @@ Query is the service for exchange module's query endpoints.
 | `QueryGetMarketOrders` | [QueryGetMarketOrdersRequest](#provenance.exchange.v1.QueryGetMarketOrdersRequest) | [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse) | QueryGetMarketOrders looks up the orders in a market. | GET|/provenance/exchange/v1/market/{market_id}/orders|
 | `QueryGetAddressOrders` | [QueryGetAddressOrdersRequest](#provenance.exchange.v1.QueryGetAddressOrdersRequest) | [QueryGetAddressOrdersResponse](#provenance.exchange.v1.QueryGetAddressOrdersResponse) | QueryGetAddressOrders looks up the orders from the provided address. | GET|/provenance/exchange/v1/orders/{address}|
 | `QueryGetAllOrders` | [QueryGetAllOrdersRequest](#provenance.exchange.v1.QueryGetAllOrdersRequest) | [QueryGetAllOrdersResponse](#provenance.exchange.v1.QueryGetAllOrdersResponse) | QueryGetAllOrders gets all orders in the exchange module. | GET|/provenance/exchange/v1/orders|
-| `QueryMarketInfo` | [QueryMarketInfoRequest](#provenance.exchange.v1.QueryMarketInfoRequest) | [QueryMarketInfoResponse](#provenance.exchange.v1.QueryMarketInfoResponse) | QueryMarketInfo returns the information/details about a market. | GET|/provenance/exchange/v1/market/infoGET|/provenance/exchange/v1/market/details|
+| `QueryMarketInfo` | [QueryMarketInfoRequest](#provenance.exchange.v1.QueryMarketInfoRequest) | [QueryMarketInfoResponse](#provenance.exchange.v1.QueryMarketInfoResponse) | QueryMarketInfo returns the information/details about a market. | GET|/provenance/exchange/v1/market/{market_id}|
 | `QueryParams` | [QueryParamsRequest](#provenance.exchange.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.exchange.v1.QueryParamsResponse) | QueryParams returns the exchange module parameters. | GET|/provenance/exchange/v1/params|
-| `QueryIsValidMarket` | [QueryIsValidMarketRequest](#provenance.exchange.v1.QueryIsValidMarketRequest) | [QueryIsValidMarketResponse](#provenance.exchange.v1.QueryIsValidMarketResponse) | QueryIsValidMarket checks the provided market and returns any errors that would be encountered trying to create it. | GET|/provenance/exchange/v1/market/validate|
+| `QueryValidateCreateMarket` | [QueryValidateCreateMarketRequest](#provenance.exchange.v1.QueryValidateCreateMarketRequest) | [QueryValidateCreateMarketResponse](#provenance.exchange.v1.QueryValidateCreateMarketResponse) | QueryValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have. | GET|/provenance/exchange/v1/validate/create_market|
+| `QueryValidateManageFees` | [QueryValidateManageFeesRequest](#provenance.exchange.v1.QueryValidateManageFeesRequest) | [QueryValidateManageFeesResponse](#provenance.exchange.v1.QueryValidateManageFeesResponse) | QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have. | GET|/provenance/exchange/v1/market/{market_id}/validate/manage_fees|
 
  <!-- end services -->
 

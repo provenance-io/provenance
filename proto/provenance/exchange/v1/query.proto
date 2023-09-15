@@ -43,10 +43,7 @@ service Query {
 
   // QueryMarketInfo returns the information/details about a market.
   rpc QueryMarketInfo(QueryMarketInfoRequest) returns (QueryMarketInfoResponse) {
-    option (google.api.http) = {
-      get: "/provenance/exchange/v1/market/info"
-      additional_bindings: {get: "/provenance/exchange/v1/market/details"}
-    };
+    option (google.api.http).get = "/provenance/exchange/v1/market/{market_id}";
   }
 
   // QueryParams returns the exchange module parameters.
@@ -54,9 +51,14 @@ service Query {
     option (google.api.http).get = "/provenance/exchange/v1/params";
   }
 
-  // QueryIsValidMarket checks the provided market and returns any errors that would be encountered trying to create it.
-  rpc QueryIsValidMarket(QueryIsValidMarketRequest) returns (QueryIsValidMarketResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/market/validate";
+  // QueryValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
+  rpc QueryValidateCreateMarket(QueryValidateCreateMarketRequest) returns (QueryValidateCreateMarketResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/validate/create_market";
+  }
+
+  // QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
+  rpc QueryValidateManageFees(QueryValidateManageFeesRequest) returns (QueryValidateManageFeesResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/market/{market_id}/validate/manage_fees";
   }
 }
 
@@ -119,6 +121,7 @@ message QueryGetAllOrdersResponse {
 
 // QueryMarketInfoRequest is a request message for the QueryMarketInfo endpoint.
 message QueryMarketInfoRequest {
+  uint32 market_id = 1;
   // TODO[1658]: QueryMarketInfoRequest
 }
 // QueryMarketInfoResponse is a response message for the QueryMarketInfo endpoint.
@@ -135,11 +138,21 @@ message QueryParamsResponse {
   // TODO[1658]: QueryParamsResponse
 }
 
-// QueryIsValidMarketRequest is a request message for the QueryIsValidMarket endpoint.
-message QueryIsValidMarketRequest {
-  // TODO[1658]: QueryIsValidMarketRequest
+// QueryValidateCreateMarketRequest is a request message for the QueryValidateCreateMarket endpoint.
+message QueryValidateCreateMarketRequest {
+  // TODO[1658]: QueryValidateCreateMarketRequest
 }
-// QueryIsValidMarketResponse is a response message for the QueryIsValidMarket endpoint.
-message QueryIsValidMarketResponse {
-  // TODO[1658]: QueryIsValidMarketResponse
+// QueryValidateCreateMarketResponse is a response message for the QueryValidateCreateMarket endpoint.
+message QueryValidateCreateMarketResponse {
+  // TODO[1658]: QueryValidateCreateMarketResponse
+}
+
+// QueryValidateManageFeesRequest is a request message for the QueryValidateManageFees endpoint.
+message QueryValidateManageFeesRequest {
+  uint32 market_id = 1;
+  // TODO[1658]: QueryValidateManageFeesRequest
+}
+// QueryValidateManageFeesResponse is a response message for the QueryValidateManageFees endpoint.
+message QueryValidateManageFeesResponse {
+  // TODO[1658]: QueryValidateManageFeesResponse
 }

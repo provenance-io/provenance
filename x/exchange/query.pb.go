@@ -499,6 +499,7 @@ var xxx_messageInfo_QueryGetAllOrdersResponse proto.InternalMessageInfo
 
 // QueryMarketInfoRequest is a request message for the QueryMarketInfo endpoint.
 type QueryMarketInfoRequest struct {
+	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
 }
 
 func (m *QueryMarketInfoRequest) Reset()         { *m = QueryMarketInfoRequest{} }
@@ -533,6 +534,13 @@ func (m *QueryMarketInfoRequest) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_QueryMarketInfoRequest proto.InternalMessageInfo
+
+func (m *QueryMarketInfoRequest) GetMarketId() uint32 {
+	if m != nil {
+		return m.MarketId
+	}
+	return 0
+}
 
 // QueryMarketInfoResponse is a response message for the QueryMarketInfo endpoint.
 type QueryMarketInfoResponse struct {
@@ -645,22 +653,22 @@ func (m *QueryParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsResponse proto.InternalMessageInfo
 
-// QueryIsValidMarketRequest is a request message for the QueryIsValidMarket endpoint.
-type QueryIsValidMarketRequest struct {
+// QueryValidateCreateMarketRequest is a request message for the QueryValidateCreateMarket endpoint.
+type QueryValidateCreateMarketRequest struct {
 }
 
-func (m *QueryIsValidMarketRequest) Reset()         { *m = QueryIsValidMarketRequest{} }
-func (m *QueryIsValidMarketRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryIsValidMarketRequest) ProtoMessage()    {}
-func (*QueryIsValidMarketRequest) Descriptor() ([]byte, []int) {
+func (m *QueryValidateCreateMarketRequest) Reset()         { *m = QueryValidateCreateMarketRequest{} }
+func (m *QueryValidateCreateMarketRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryValidateCreateMarketRequest) ProtoMessage()    {}
+func (*QueryValidateCreateMarketRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_00949b75b1c10bfe, []int{16}
 }
-func (m *QueryIsValidMarketRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryValidateCreateMarketRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryIsValidMarketRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryValidateCreateMarketRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryIsValidMarketRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryValidateCreateMarketRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -670,34 +678,34 @@ func (m *QueryIsValidMarketRequest) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *QueryIsValidMarketRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryIsValidMarketRequest.Merge(m, src)
+func (m *QueryValidateCreateMarketRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryValidateCreateMarketRequest.Merge(m, src)
 }
-func (m *QueryIsValidMarketRequest) XXX_Size() int {
+func (m *QueryValidateCreateMarketRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryIsValidMarketRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryIsValidMarketRequest.DiscardUnknown(m)
+func (m *QueryValidateCreateMarketRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryValidateCreateMarketRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryIsValidMarketRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryValidateCreateMarketRequest proto.InternalMessageInfo
 
-// QueryIsValidMarketResponse is a response message for the QueryIsValidMarket endpoint.
-type QueryIsValidMarketResponse struct {
+// QueryValidateCreateMarketResponse is a response message for the QueryValidateCreateMarket endpoint.
+type QueryValidateCreateMarketResponse struct {
 }
 
-func (m *QueryIsValidMarketResponse) Reset()         { *m = QueryIsValidMarketResponse{} }
-func (m *QueryIsValidMarketResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryIsValidMarketResponse) ProtoMessage()    {}
-func (*QueryIsValidMarketResponse) Descriptor() ([]byte, []int) {
+func (m *QueryValidateCreateMarketResponse) Reset()         { *m = QueryValidateCreateMarketResponse{} }
+func (m *QueryValidateCreateMarketResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryValidateCreateMarketResponse) ProtoMessage()    {}
+func (*QueryValidateCreateMarketResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_00949b75b1c10bfe, []int{17}
 }
-func (m *QueryIsValidMarketResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryValidateCreateMarketResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryIsValidMarketResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryValidateCreateMarketResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryIsValidMarketResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryValidateCreateMarketResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -707,17 +715,99 @@ func (m *QueryIsValidMarketResponse) XXX_Marshal(b []byte, deterministic bool) (
 		return b[:n], nil
 	}
 }
-func (m *QueryIsValidMarketResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryIsValidMarketResponse.Merge(m, src)
+func (m *QueryValidateCreateMarketResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryValidateCreateMarketResponse.Merge(m, src)
 }
-func (m *QueryIsValidMarketResponse) XXX_Size() int {
+func (m *QueryValidateCreateMarketResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryIsValidMarketResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryIsValidMarketResponse.DiscardUnknown(m)
+func (m *QueryValidateCreateMarketResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryValidateCreateMarketResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryIsValidMarketResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryValidateCreateMarketResponse proto.InternalMessageInfo
+
+// QueryValidateManageFeesRequest is a request message for the QueryValidateManageFees endpoint.
+type QueryValidateManageFeesRequest struct {
+	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+}
+
+func (m *QueryValidateManageFeesRequest) Reset()         { *m = QueryValidateManageFeesRequest{} }
+func (m *QueryValidateManageFeesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryValidateManageFeesRequest) ProtoMessage()    {}
+func (*QueryValidateManageFeesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00949b75b1c10bfe, []int{18}
+}
+func (m *QueryValidateManageFeesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryValidateManageFeesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryValidateManageFeesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryValidateManageFeesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryValidateManageFeesRequest.Merge(m, src)
+}
+func (m *QueryValidateManageFeesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryValidateManageFeesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryValidateManageFeesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryValidateManageFeesRequest proto.InternalMessageInfo
+
+func (m *QueryValidateManageFeesRequest) GetMarketId() uint32 {
+	if m != nil {
+		return m.MarketId
+	}
+	return 0
+}
+
+// QueryValidateManageFeesResponse is a response message for the QueryValidateManageFees endpoint.
+type QueryValidateManageFeesResponse struct {
+}
+
+func (m *QueryValidateManageFeesResponse) Reset()         { *m = QueryValidateManageFeesResponse{} }
+func (m *QueryValidateManageFeesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryValidateManageFeesResponse) ProtoMessage()    {}
+func (*QueryValidateManageFeesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00949b75b1c10bfe, []int{19}
+}
+func (m *QueryValidateManageFeesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryValidateManageFeesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryValidateManageFeesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryValidateManageFeesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryValidateManageFeesResponse.Merge(m, src)
+}
+func (m *QueryValidateManageFeesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryValidateManageFeesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryValidateManageFeesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryValidateManageFeesResponse proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*QueryOrderFeeCalcRequest)(nil), "provenance.exchange.v1.QueryOrderFeeCalcRequest")
@@ -736,8 +826,10 @@ func init() {
 	proto.RegisterType((*QueryMarketInfoResponse)(nil), "provenance.exchange.v1.QueryMarketInfoResponse")
 	proto.RegisterType((*QueryParamsRequest)(nil), "provenance.exchange.v1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "provenance.exchange.v1.QueryParamsResponse")
-	proto.RegisterType((*QueryIsValidMarketRequest)(nil), "provenance.exchange.v1.QueryIsValidMarketRequest")
-	proto.RegisterType((*QueryIsValidMarketResponse)(nil), "provenance.exchange.v1.QueryIsValidMarketResponse")
+	proto.RegisterType((*QueryValidateCreateMarketRequest)(nil), "provenance.exchange.v1.QueryValidateCreateMarketRequest")
+	proto.RegisterType((*QueryValidateCreateMarketResponse)(nil), "provenance.exchange.v1.QueryValidateCreateMarketResponse")
+	proto.RegisterType((*QueryValidateManageFeesRequest)(nil), "provenance.exchange.v1.QueryValidateManageFeesRequest")
+	proto.RegisterType((*QueryValidateManageFeesResponse)(nil), "provenance.exchange.v1.QueryValidateManageFeesResponse")
 }
 
 func init() {
@@ -745,53 +837,57 @@ func init() {
 }
 
 var fileDescriptor_00949b75b1c10bfe = []byte{
-	// 729 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x56, 0xcf, 0x4f, 0x13, 0x41,
-	0x14, 0x66, 0x8c, 0x0a, 0x8c, 0x12, 0xe3, 0x93, 0x1f, 0xed, 0x82, 0x2b, 0x59, 0x0d, 0x22, 0xca,
-	0x0e, 0x05, 0x31, 0xd1, 0x9b, 0x98, 0x68, 0x7a, 0x30, 0x60, 0x89, 0x1e, 0xb8, 0x90, 0xa1, 0x3b,
-	0x94, 0x8d, 0xdb, 0x9d, 0xb2, 0xb3, 0x34, 0x18, 0xc2, 0xc5, 0x3f, 0xc0, 0x98, 0x78, 0x37, 0x1e,
-	0x3c, 0x7a, 0x31, 0x31, 0xc6, 0x83, 0x7f, 0x80, 0xde, 0x88, 0x5e, 0x3c, 0x1a, 0xea, 0x1f, 0x62,
-	0x3a, 0x3b, 0xdb, 0x76, 0xdb, 0xdd, 0x6d, 0xf7, 0xb8, 0xf3, 0xbe, 0xef, 0x7d, 0x5f, 0x67, 0xde,
-	0xfb, 0x52, 0x6c, 0xd4, 0x3c, 0x5e, 0x67, 0x2e, 0x75, 0xcb, 0x8c, 0xb0, 0xc3, 0xf2, 0x1e, 0x75,
-	0x2b, 0x8c, 0xd4, 0x0b, 0x64, 0xff, 0x80, 0x79, 0xaf, 0xcc, 0x9a, 0xc7, 0x7d, 0x0e, 0x93, 0x6d,
-	0x8c, 0x19, 0x62, 0xcc, 0x7a, 0x41, 0xcb, 0x97, 0xb9, 0xa8, 0x72, 0xb1, 0x2d, 0x51, 0x24, 0xf8,
-	0x08, 0x28, 0xda, 0x4c, 0x85, 0xf3, 0x8a, 0xc3, 0x08, 0xad, 0xd9, 0x84, 0xba, 0x2e, 0xf7, 0xa9,
-	0x6f, 0x73, 0x57, 0x55, 0x0d, 0x0d, 0xe7, 0x9e, 0x35, 0xfb, 0xaf, 0x7b, 0x16, 0xf3, 0x1e, 0x33,
-	0xf6, 0x88, 0x3a, 0xe5, 0x12, 0xdb, 0x3f, 0x60, 0xc2, 0x37, 0xa6, 0x71, 0x3e, 0xa6, 0x26, 0x6a,
-	0xdc, 0x15, 0xcc, 0xb8, 0x86, 0xaf, 0xca, 0xe2, 0x26, 0xf3, 0x7d, 0x87, 0x55, 0x99, 0xeb, 0x77,
-	0xb1, 0x67, 0xb1, 0x9e, 0x04, 0x50, 0x2d, 0x0a, 0x78, 0x5c, 0x22, 0x9e, 0x30, 0x5f, 0x4a, 0x28,
-	0x26, 0xe4, 0xf1, 0x08, 0x6f, 0x7e, 0x6f, 0xdb, 0x56, 0x0e, 0xcd, 0xa2, 0xf9, 0xb3, 0xa5, 0x61,
-	0xf9, 0x5d, 0xb4, 0x8c, 0x29, 0x3c, 0xd1, 0x45, 0x51, 0xbd, 0x1e, 0xe0, 0xe9, 0xb0, 0xf0, 0x94,
-	0x7a, 0x2f, 0x55, 0x59, 0x84, 0x2d, 0xa7, 0xf1, 0x68, 0x55, 0x1e, 0x87, 0x3d, 0xc7, 0x4a, 0x23,
-	0xc1, 0x41, 0xd1, 0x32, 0x74, 0x3c, 0x13, 0xcf, 0x55, 0xbd, 0x4b, 0xed, 0xfa, 0x43, 0xcb, 0xf2,
-	0x98, 0x10, 0xd1, 0xe6, 0xcb, 0x78, 0x98, 0x06, 0xe7, 0xb2, 0xf5, 0xe8, 0x5a, 0xee, 0xd7, 0x97,
-	0xc5, 0x71, 0xf5, 0x08, 0x8a, 0xb1, 0xe9, 0x7b, 0xb6, 0x5b, 0x29, 0x85, 0xc0, 0xd6, 0xf5, 0xf5,
-	0xf6, 0x54, 0xa2, 0xe1, 0xc3, 0x34, 0x01, 0x8e, 0x13, 0x11, 0x6c, 0x3d, 0x4c, 0xb4, 0xa6, 0x88,
-	0x39, 0x3c, 0x29, 0x8b, 0xc1, 0x4f, 0x29, 0xba, 0xbb, 0x3c, 0xa4, 0xe5, 0xf1, 0x54, 0x4f, 0x45,
-	0x91, 0xc6, 0x31, 0xc8, 0xd2, 0x06, 0xf5, 0x68, 0xb5, 0xa5, 0x33, 0x81, 0xaf, 0x44, 0x4e, 0x15,
-	0x38, 0x94, 0x2f, 0x8a, 0x17, 0xd4, 0xb1, 0xad, 0xa0, 0x5d, 0xc8, 0x99, 0xc1, 0x5a, 0x5c, 0x31,
-	0xa0, 0x2e, 0x7f, 0xbe, 0x88, 0xcf, 0xc9, 0x32, 0x7c, 0x44, 0xf8, 0x72, 0xcf, 0x74, 0xc1, 0x92,
-	0x19, 0x3f, 0xe0, 0x66, 0xd2, 0x90, 0x6a, 0x85, 0x0c, 0x0c, 0xe5, 0x7f, 0xe1, 0xf5, 0xef, 0x7f,
-	0xef, 0xce, 0xdc, 0x00, 0x83, 0x24, 0x6c, 0xdc, 0x2e, 0x63, 0x82, 0xc8, 0x91, 0x83, 0x6f, 0x48,
-	0x5d, 0x67, 0xcf, 0x18, 0xc3, 0x6a, 0xaa, 0x72, 0xd2, 0x5e, 0x68, 0xf7, 0xb2, 0xd2, 0x94, 0x6b,
-	0x22, 0x5d, 0xdf, 0x82, 0x9b, 0xa9, 0xae, 0x45, 0x8b, 0x0f, 0xef, 0x11, 0x1e, 0x8b, 0x2c, 0x0b,
-	0xdc, 0x49, 0x95, 0xee, 0x5a, 0x43, 0x6d, 0x71, 0x40, 0xb4, 0xf2, 0xb7, 0x24, 0xfd, 0x2d, 0xc0,
-	0x7c, 0x92, 0x3f, 0x79, 0xa1, 0xe4, 0x28, 0x5c, 0xed, 0x63, 0xf8, 0x8e, 0xda, 0x01, 0xd0, 0xb9,
-	0x78, 0xb0, 0xd2, 0x4f, 0x39, 0x66, 0xc5, 0xb5, 0xbb, 0xd9, 0x48, 0xca, 0xf5, 0x7d, 0xe9, 0x7a,
-	0x05, 0x0a, 0x49, 0xae, 0x83, 0x94, 0x20, 0x47, 0xad, 0xf8, 0x38, 0x0e, 0x7e, 0x88, 0x80, 0xaf,
-	0xa8, 0x1d, 0x46, 0x91, 0x1d, 0x86, 0xbe, 0x56, 0xe2, 0x62, 0x44, 0x5b, 0xcd, 0xc8, 0xca, 0x74,
-	0xef, 0x82, 0x1c, 0xa9, 0xe8, 0x39, 0x86, 0x0f, 0xe1, 0xea, 0x75, 0xe6, 0x47, 0x9f, 0xd5, 0x8b,
-	0x89, 0xa1, 0x3e, 0xab, 0x17, 0x1b, 0x4e, 0x73, 0xd2, 0xec, 0x2c, 0xe8, 0xe9, 0x66, 0xe1, 0x27,
-	0xc2, 0x97, 0xba, 0xb2, 0x0a, 0xcc, 0x54, 0xb9, 0x9e, 0xb8, 0xd3, 0xc8, 0xc0, 0x78, 0x65, 0xee,
-	0xb9, 0x34, 0xb7, 0x0e, 0xd7, 0xfb, 0xcc, 0x82, 0xed, 0xee, 0xf2, 0xad, 0x79, 0x98, 0xeb, 0x03,
-	0xb3, 0x98, 0x4f, 0x6d, 0x47, 0xc0, 0x1b, 0x84, 0x2f, 0x74, 0xc4, 0x28, 0x2c, 0xa4, 0xfa, 0x8a,
-	0x24, 0xb0, 0x76, 0x7b, 0x20, 0xec, 0xa0, 0x97, 0x5b, 0x0b, 0x0c, 0x7c, 0x42, 0x2a, 0xed, 0x23,
-	0x19, 0x0d, 0xe9, 0xcf, 0x19, 0x17, 0xf6, 0xda, 0x72, 0x16, 0xca, 0xa0, 0x39, 0xa6, 0xae, 0xaf,
-	0xde, 0xe4, 0x52, 0x9f, 0xad, 0xb1, 0x1f, 0xa7, 0x3a, 0x3a, 0x39, 0xd5, 0xd1, 0xdf, 0x53, 0x1d,
-	0xbd, 0x6d, 0xe8, 0x43, 0x27, 0x0d, 0x7d, 0xe8, 0x4f, 0x43, 0x1f, 0xc2, 0x79, 0x9b, 0x27, 0x18,
-	0xd8, 0x40, 0x5b, 0x66, 0xc5, 0xf6, 0xf7, 0x0e, 0x76, 0xcc, 0x32, 0xaf, 0x76, 0x28, 0x2d, 0xda,
-	0xbc, 0x53, 0xf7, 0xb0, 0xa5, 0xbc, 0x73, 0x5e, 0xfe, 0x21, 0x5a, 0xf9, 0x1f, 0x00, 0x00, 0xff,
-	0xff, 0xae, 0xe1, 0xd2, 0x33, 0x87, 0x09, 0x00, 0x00,
+	// 794 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x56, 0xcd, 0x4e, 0x14, 0x4d,
+	0x14, 0xa5, 0xbe, 0x7c, 0x0a, 0x94, 0x41, 0xe3, 0x95, 0xbf, 0x69, 0xb0, 0x19, 0x5a, 0xa3, 0x38,
+	0x42, 0x17, 0x03, 0x82, 0x62, 0x62, 0x0c, 0x90, 0x40, 0x58, 0x10, 0x71, 0x48, 0x5c, 0xb8, 0x99,
+	0x14, 0x33, 0xc5, 0xd0, 0x71, 0xa6, 0x6b, 0xe8, 0x6e, 0x26, 0x18, 0x42, 0x62, 0x7c, 0x00, 0x63,
+	0xe2, 0xde, 0xb8, 0x30, 0x3e, 0x81, 0x31, 0x2e, 0x7c, 0x00, 0x96, 0x44, 0x36, 0x2e, 0x0d, 0xf8,
+	0x20, 0x66, 0xaa, 0xab, 0xe7, 0xaf, 0x7f, 0xa6, 0xdb, 0x65, 0xd7, 0x3d, 0xe7, 0xde, 0x53, 0x55,
+	0xf7, 0x9e, 0x6a, 0xac, 0x55, 0x2d, 0x5e, 0x63, 0x26, 0x35, 0x0b, 0x8c, 0xb0, 0xc3, 0xc2, 0x1e,
+	0x35, 0x4b, 0x8c, 0xd4, 0xb2, 0x64, 0xff, 0x80, 0x59, 0xaf, 0xf5, 0xaa, 0xc5, 0x1d, 0x0e, 0xc3,
+	0x4d, 0x8c, 0xee, 0x61, 0xf4, 0x5a, 0x56, 0x49, 0x15, 0xb8, 0x5d, 0xe1, 0x76, 0x5e, 0xa0, 0x88,
+	0xfb, 0xe1, 0x52, 0x94, 0xf1, 0x12, 0xe7, 0xa5, 0x32, 0x23, 0xb4, 0x6a, 0x10, 0x6a, 0x9a, 0xdc,
+	0xa1, 0x8e, 0xc1, 0x4d, 0x19, 0xd5, 0x14, 0x3c, 0xfa, 0xbc, 0x9e, 0xff, 0x99, 0x55, 0x64, 0xd6,
+	0x1a, 0x63, 0xab, 0xb4, 0x5c, 0xc8, 0xb1, 0xfd, 0x03, 0x66, 0x3b, 0xda, 0x18, 0x4e, 0x05, 0xc4,
+	0xec, 0x2a, 0x37, 0x6d, 0xa6, 0x4d, 0xe0, 0x9b, 0x22, 0xb8, 0xcd, 0x1c, 0xa7, 0xcc, 0x2a, 0xcc,
+	0x74, 0x3a, 0xd8, 0x69, 0xac, 0x86, 0x01, 0x64, 0x8a, 0x2c, 0x1e, 0x14, 0x88, 0x75, 0xe6, 0x88,
+	0x12, 0x92, 0x09, 0x29, 0xdc, 0xc7, 0xeb, 0xdf, 0x79, 0xa3, 0x38, 0x8a, 0xd2, 0x68, 0xea, 0xff,
+	0x5c, 0xaf, 0xf8, 0xde, 0x28, 0x6a, 0x23, 0x78, 0xa8, 0x83, 0x22, 0x73, 0x3d, 0xc6, 0x63, 0x5e,
+	0x60, 0x93, 0x5a, 0xaf, 0x64, 0xd8, 0xf6, 0x52, 0x8e, 0xe1, 0xfe, 0x8a, 0x58, 0xf6, 0x72, 0x0e,
+	0xe4, 0xfa, 0xdc, 0x85, 0x8d, 0xa2, 0xa6, 0xe2, 0xf1, 0x60, 0xae, 0xcc, 0x9d, 0x6b, 0xc6, 0x97,
+	0x8b, 0x45, 0x8b, 0xd9, 0x76, 0x7b, 0xf2, 0x39, 0xdc, 0x4b, 0xdd, 0x75, 0x91, 0xba, 0x7f, 0x65,
+	0xf4, 0xe7, 0xd7, 0x99, 0x41, 0x79, 0x09, 0x92, 0xb1, 0xed, 0x58, 0x86, 0x59, 0xca, 0x79, 0xc0,
+	0xc6, 0xf1, 0xf9, 0x73, 0xca, 0xa2, 0xde, 0xc5, 0xd4, 0x01, 0xe5, 0x72, 0x5b, 0xc1, 0xc6, 0xc5,
+	0xb4, 0xc7, 0x24, 0x71, 0x01, 0x0f, 0x8b, 0xa0, 0xbb, 0x95, 0x0d, 0x73, 0x97, 0xc7, 0x3a, 0x84,
+	0x14, 0x1e, 0xf1, 0xd1, 0x64, 0xc6, 0x41, 0x0c, 0x22, 0xb4, 0x45, 0x2d, 0x5a, 0x69, 0x88, 0x18,
+	0xc2, 0x37, 0xda, 0x56, 0x25, 0x58, 0xc3, 0x69, 0xb1, 0xfc, 0x82, 0x96, 0x8d, 0x22, 0x75, 0xd8,
+	0xaa, 0xc5, 0xa8, 0xc3, 0xdc, 0xac, 0x1e, 0xf5, 0x16, 0x9e, 0x8c, 0xc0, 0xc8, 0x44, 0x4f, 0x64,
+	0xff, 0x78, 0xa0, 0x4d, 0x6a, 0xd2, 0x12, 0x5b, 0x63, 0x2c, 0xde, 0xa5, 0x4e, 0xe2, 0x89, 0x50,
+	0xba, 0x5b, 0x61, 0xee, 0xcd, 0x55, 0x7c, 0x49, 0x60, 0xe0, 0x33, 0xc2, 0xd7, 0x7d, 0xad, 0x0e,
+	0xb3, 0x7a, 0xf0, 0xb4, 0xe9, 0x61, 0x13, 0xa3, 0x64, 0x13, 0x30, 0xe4, 0x36, 0x33, 0x6f, 0xcf,
+	0xfe, 0x7c, 0xf8, 0xef, 0x36, 0x68, 0x24, 0x64, 0xfc, 0x77, 0x19, 0xb3, 0x89, 0xe8, 0x7f, 0xf8,
+	0x8e, 0xe4, 0xdd, 0xfa, 0x66, 0x0a, 0x16, 0x22, 0x2b, 0x87, 0x0d, 0xa9, 0xb2, 0x98, 0x94, 0x26,
+	0x55, 0x13, 0xa1, 0xfa, 0x1e, 0xdc, 0x8d, 0x54, 0x6d, 0x37, 0xf8, 0xf0, 0x11, 0xe1, 0x81, 0xb6,
+	0xc9, 0x85, 0xe9, 0xc8, 0xd2, 0x1d, 0x9e, 0xa0, 0xcc, 0xc4, 0x44, 0x4b, 0x7d, 0xb3, 0x42, 0x5f,
+	0x06, 0xa6, 0xc2, 0xf4, 0x89, 0x03, 0x25, 0x47, 0x9e, 0xcf, 0x1c, 0xc3, 0x0f, 0xd4, 0x74, 0xa3,
+	0x56, 0x17, 0x80, 0xf9, 0x6e, 0x95, 0x03, 0xfc, 0x46, 0x79, 0x90, 0x8c, 0x24, 0x55, 0x2f, 0x09,
+	0xd5, 0xf3, 0x90, 0x0d, 0x53, 0xed, 0x76, 0x37, 0x39, 0x6a, 0xb4, 0xfd, 0xb1, 0xbb, 0x11, 0x1b,
+	0xbe, 0xa1, 0xa6, 0x33, 0xb6, 0x19, 0x0a, 0x74, 0x95, 0x12, 0xe4, 0x69, 0xca, 0x42, 0x42, 0x56,
+	0xa2, 0x73, 0xb7, 0xc9, 0x91, 0xf4, 0xc1, 0x63, 0xf8, 0xe4, 0x8d, 0x5e, 0xab, 0x99, 0x75, 0x19,
+	0xbd, 0x00, 0x4f, 0xec, 0x32, 0x7a, 0x81, 0x4e, 0x79, 0x47, 0x88, 0x4d, 0x83, 0x1a, 0x2d, 0x16,
+	0xbe, 0x20, 0x7c, 0xad, 0xc3, 0x1b, 0x41, 0x8f, 0x2c, 0xe7, 0xf3, 0x5e, 0x85, 0xc4, 0xc6, 0x4b,
+	0x71, 0x73, 0x42, 0xdc, 0x34, 0x64, 0xe2, 0xf7, 0x02, 0xbc, 0x43, 0xf8, 0x4a, 0x8b, 0x27, 0x43,
+	0x26, 0xb2, 0x68, 0x9b, 0x9d, 0x2b, 0xf7, 0x63, 0x61, 0xe3, 0x9e, 0x5c, 0xd5, 0x15, 0x70, 0x82,
+	0xe4, 0x4b, 0x15, 0xe4, 0xf4, 0xf0, 0x28, 0xb2, 0x64, 0xc4, 0x03, 0xa2, 0x2c, 0xfd, 0x03, 0x53,
+	0x4a, 0x5f, 0x14, 0xd2, 0x67, 0x41, 0x0f, 0x93, 0x5e, 0x93, 0x6c, 0x52, 0x10, 0xf4, 0xbc, 0x7b,
+	0xbe, 0x70, 0x86, 0xe4, 0x03, 0xe9, 0x7f, 0x50, 0x60, 0x31, 0x96, 0x1c, 0xdf, 0x03, 0xa6, 0x3c,
+	0x4c, 0xcc, 0x93, 0x9b, 0x58, 0x17, 0x9b, 0x58, 0x86, 0xa7, 0x09, 0x8c, 0xa2, 0xb1, 0xaf, 0x8a,
+	0xc8, 0x97, 0xaf, 0x3b, 0xf4, 0x0a, 0x3b, 0x39, 0x57, 0xd1, 0xe9, 0xb9, 0x8a, 0x7e, 0x9f, 0xab,
+	0xe8, 0xfd, 0x85, 0xda, 0x73, 0x7a, 0xa1, 0xf6, 0xfc, 0xba, 0x50, 0x7b, 0x70, 0xca, 0xe0, 0x21,
+	0xea, 0xb6, 0xd0, 0x4b, 0xbd, 0x64, 0x38, 0x7b, 0x07, 0x3b, 0x7a, 0x81, 0x57, 0x5a, 0x14, 0xcc,
+	0x18, 0xbc, 0x55, 0xcf, 0x61, 0x43, 0xd1, 0xce, 0x65, 0xf1, 0xb3, 0x39, 0xff, 0x37, 0x00, 0x00,
+	0xff, 0xff, 0x28, 0x02, 0x0e, 0xa9, 0xe3, 0x0a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -822,8 +918,10 @@ type QueryClient interface {
 	QueryMarketInfo(ctx context.Context, in *QueryMarketInfoRequest, opts ...grpc.CallOption) (*QueryMarketInfoResponse, error)
 	// QueryParams returns the exchange module parameters.
 	QueryParams(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// QueryIsValidMarket checks the provided market and returns any errors that would be encountered trying to create it.
-	QueryIsValidMarket(ctx context.Context, in *QueryIsValidMarketRequest, opts ...grpc.CallOption) (*QueryIsValidMarketResponse, error)
+	// QueryValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
+	QueryValidateCreateMarket(ctx context.Context, in *QueryValidateCreateMarketRequest, opts ...grpc.CallOption) (*QueryValidateCreateMarketResponse, error)
+	// QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
+	QueryValidateManageFees(ctx context.Context, in *QueryValidateManageFeesRequest, opts ...grpc.CallOption) (*QueryValidateManageFeesResponse, error)
 }
 
 type queryClient struct {
@@ -906,9 +1004,18 @@ func (c *queryClient) QueryParams(ctx context.Context, in *QueryParamsRequest, o
 	return out, nil
 }
 
-func (c *queryClient) QueryIsValidMarket(ctx context.Context, in *QueryIsValidMarketRequest, opts ...grpc.CallOption) (*QueryIsValidMarketResponse, error) {
-	out := new(QueryIsValidMarketResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryIsValidMarket", in, out, opts...)
+func (c *queryClient) QueryValidateCreateMarket(ctx context.Context, in *QueryValidateCreateMarketRequest, opts ...grpc.CallOption) (*QueryValidateCreateMarketResponse, error) {
+	out := new(QueryValidateCreateMarketResponse)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryValidateCreateMarket", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) QueryValidateManageFees(ctx context.Context, in *QueryValidateManageFeesRequest, opts ...grpc.CallOption) (*QueryValidateManageFeesResponse, error) {
+	out := new(QueryValidateManageFeesResponse)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryValidateManageFees", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -933,8 +1040,10 @@ type QueryServer interface {
 	QueryMarketInfo(context.Context, *QueryMarketInfoRequest) (*QueryMarketInfoResponse, error)
 	// QueryParams returns the exchange module parameters.
 	QueryParams(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// QueryIsValidMarket checks the provided market and returns any errors that would be encountered trying to create it.
-	QueryIsValidMarket(context.Context, *QueryIsValidMarketRequest) (*QueryIsValidMarketResponse, error)
+	// QueryValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
+	QueryValidateCreateMarket(context.Context, *QueryValidateCreateMarketRequest) (*QueryValidateCreateMarketResponse, error)
+	// QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
+	QueryValidateManageFees(context.Context, *QueryValidateManageFeesRequest) (*QueryValidateManageFeesResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -965,8 +1074,11 @@ func (*UnimplementedQueryServer) QueryMarketInfo(ctx context.Context, req *Query
 func (*UnimplementedQueryServer) QueryParams(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryParams not implemented")
 }
-func (*UnimplementedQueryServer) QueryIsValidMarket(ctx context.Context, req *QueryIsValidMarketRequest) (*QueryIsValidMarketResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryIsValidMarket not implemented")
+func (*UnimplementedQueryServer) QueryValidateCreateMarket(ctx context.Context, req *QueryValidateCreateMarketRequest) (*QueryValidateCreateMarketResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryValidateCreateMarket not implemented")
+}
+func (*UnimplementedQueryServer) QueryValidateManageFees(ctx context.Context, req *QueryValidateManageFeesRequest) (*QueryValidateManageFeesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryValidateManageFees not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1117,20 +1229,38 @@ func _Query_QueryParams_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryIsValidMarket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryIsValidMarketRequest)
+func _Query_QueryValidateCreateMarket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryValidateCreateMarketRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryIsValidMarket(ctx, in)
+		return srv.(QueryServer).QueryValidateCreateMarket(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Query/QueryIsValidMarket",
+		FullMethod: "/provenance.exchange.v1.Query/QueryValidateCreateMarket",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryIsValidMarket(ctx, req.(*QueryIsValidMarketRequest))
+		return srv.(QueryServer).QueryValidateCreateMarket(ctx, req.(*QueryValidateCreateMarketRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_QueryValidateManageFees_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryValidateManageFeesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).QueryValidateManageFees(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.exchange.v1.Query/QueryValidateManageFees",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).QueryValidateManageFees(ctx, req.(*QueryValidateManageFeesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1172,8 +1302,12 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_QueryParams_Handler,
 		},
 		{
-			MethodName: "QueryIsValidMarket",
-			Handler:    _Query_QueryIsValidMarket_Handler,
+			MethodName: "QueryValidateCreateMarket",
+			Handler:    _Query_QueryValidateCreateMarket_Handler,
+		},
+		{
+			MethodName: "QueryValidateManageFees",
+			Handler:    _Query_QueryValidateManageFees_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1493,6 +1627,11 @@ func (m *QueryMarketInfoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	_ = i
 	var l int
 	_ = l
+	if m.MarketId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x8
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -1565,7 +1704,7 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryIsValidMarketRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryValidateCreateMarketRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1575,12 +1714,12 @@ func (m *QueryIsValidMarketRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryIsValidMarketRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryValidateCreateMarketRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryIsValidMarketRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryValidateCreateMarketRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1588,7 +1727,7 @@ func (m *QueryIsValidMarketRequest) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryIsValidMarketResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryValidateCreateMarketResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1598,12 +1737,63 @@ func (m *QueryIsValidMarketResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryIsValidMarketResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryValidateCreateMarketResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryIsValidMarketResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryValidateCreateMarketResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryValidateManageFeesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryValidateManageFeesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryValidateManageFeesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.MarketId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryValidateManageFeesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryValidateManageFeesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryValidateManageFeesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1746,6 +1936,9 @@ func (m *QueryMarketInfoRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if m.MarketId != 0 {
+		n += 1 + sovQuery(uint64(m.MarketId))
+	}
 	return n
 }
 
@@ -1776,7 +1969,7 @@ func (m *QueryParamsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryIsValidMarketRequest) Size() (n int) {
+func (m *QueryValidateCreateMarketRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1785,7 +1978,28 @@ func (m *QueryIsValidMarketRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryIsValidMarketResponse) Size() (n int) {
+func (m *QueryValidateCreateMarketResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryValidateManageFeesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MarketId != 0 {
+		n += 1 + sovQuery(uint64(m.MarketId))
+	}
+	return n
+}
+
+func (m *QueryValidateManageFeesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2499,6 +2713,25 @@ func (m *QueryMarketInfoRequest) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: QueryMarketInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -2670,7 +2903,7 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryIsValidMarketRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryValidateCreateMarketRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2693,10 +2926,10 @@ func (m *QueryIsValidMarketRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryIsValidMarketRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryValidateCreateMarketRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryIsValidMarketRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryValidateCreateMarketRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -2720,7 +2953,7 @@ func (m *QueryIsValidMarketRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryIsValidMarketResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryValidateCreateMarketResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2743,10 +2976,129 @@ func (m *QueryIsValidMarketResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryIsValidMarketResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryValidateCreateMarketResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryIsValidMarketResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryValidateCreateMarketResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryValidateManageFeesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryValidateManageFeesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryValidateManageFeesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryValidateManageFeesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryValidateManageFeesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryValidateManageFeesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
