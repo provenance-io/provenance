@@ -208,7 +208,13 @@ message MsgMarketManagePermissionsRequest {
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // market_id is the numerical identifier of the market to update required attributes for.
   uint32 market_id = 2;
-  // TODO[1658]: MsgMarketManagePermissionsRequest
+
+  // revoke_all are addresses that should have all their permissions revoked.
+  repeated string revoke_all = 3;
+  // to_revoke are the specific permissions to remove for addresses.
+  repeated AccessGrant to_revoke = 4 [(gogoproto.nullable) = false];
+  // to_grant are the permissions to grant to addresses.
+  repeated AccessGrant to_grant = 5 [(gogoproto.nullable) = false];
 }
 
 // MsgMarketManagePermissionsResponse is a response message for the MarketManagePermissions endpoint.

@@ -2348,9 +2348,10 @@ MsgMarketManagePermissionsRequest is a request message for the MarketManagePermi
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "permissions" permission requesting this change. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for.
-
-TODO[1658]: MsgMarketManagePermissionsRequest |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `revoke_all` | [string](#string) | repeated | revoke_all are addresses that should have all their permissions revoked. |
+| `to_revoke` | [AccessGrant](#provenance.exchange.v1.AccessGrant) | repeated | to_revoke are the specific permissions to remove for addresses. |
+| `to_grant` | [AccessGrant](#provenance.exchange.v1.AccessGrant) | repeated | to_grant are the permissions to grant to addresses. |
 
 
 
