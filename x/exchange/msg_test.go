@@ -37,7 +37,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 			return &MsgCreateBidRequest{BidOrder: BidOrder{Buyer: signer}}
 		},
 		func(signer string) sdk.Msg {
-			return &MsgCancelOrderRequest{Owner: signer}
+			return &MsgCancelOrderRequest{Signer: signer}
 		},
 		// TODO[1658]: Add MsgFillBidsRequest once it's actually been defined.
 		// TODO[1658]: Add MsgFillAsksRequest once it's actually been defined.
@@ -239,7 +239,7 @@ func TestMsgCancelOrderRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "control",
 			msg: MsgCancelOrderRequest{
-				Owner:   sdk.AccAddress("owner_______________").String(),
+				Signer:  sdk.AccAddress("signer______________").String(),
 				OrderId: 1,
 			},
 			expErr: nil,
@@ -247,23 +247,23 @@ func TestMsgCancelOrderRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "missing owner",
 			msg: MsgCancelOrderRequest{
-				Owner:   "",
+				Signer:  "",
 				OrderId: 1,
 			},
-			expErr: []string{"invalid owner: ", "empty address string is not allowed"},
+			expErr: []string{"invalid signer: ", "empty address string is not allowed"},
 		},
 		{
 			name: "invalid owner",
 			msg: MsgCancelOrderRequest{
-				Owner:   "notgonnawork",
+				Signer:  "notgonnawork",
 				OrderId: 1,
 			},
-			expErr: []string{"invalid owner: ", "decoding bech32 failed: invalid separator index -1"},
+			expErr: []string{"invalid signer: ", "decoding bech32 failed: invalid separator index -1"},
 		},
 		{
 			name: "order 0",
 			msg: MsgCancelOrderRequest{
-				Owner:   sdk.AccAddress("valid_owner_________").String(),
+				Signer:  sdk.AccAddress("valid_signer________").String(),
 				OrderId: 0,
 			},
 			expErr: []string{"invalid order id: cannot be zero"},

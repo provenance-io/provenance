@@ -60,8 +60,8 @@ func (m MsgCreateBidRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgCancelOrderRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Owner); err != nil {
-		return fmt.Errorf("invalid owner: %w", err)
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
 	}
 	if m.OrderId == 0 {
 		return fmt.Errorf("invalid order id: cannot be zero")
@@ -70,7 +70,7 @@ func (m MsgCancelOrderRequest) ValidateBasic() error {
 }
 
 func (m MsgCancelOrderRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(m.Owner)
+	addr := sdk.MustAccAddressFromBech32(m.Signer)
 	return []sdk.AccAddress{addr}
 }
 

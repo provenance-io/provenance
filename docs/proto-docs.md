@@ -2129,7 +2129,7 @@ MsgCancelOrderRequest is a request message for the CancelOrder endpoint.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `owner` | [string](#string) |  | owner is the account that owns the order. E.g. the seller for ask orders or buyer for bid orders. |
+| `signer` | [string](#string) |  | signer is the account requesting the order cancelation. It must be either the order owner (e.g. the buyer or seller), the governance module account address, or an account with cancel permission with the market that the order is in. |
 | `order_id` | [uint64](#uint64) |  | order_id is the id of the order to cancel. |
 
 

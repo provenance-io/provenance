@@ -96,10 +96,12 @@ message MsgCreateBidResponse {
 
 // MsgCancelOrderRequest is a request message for the CancelOrder endpoint.
 message MsgCancelOrderRequest {
-  option (cosmos.msg.v1.signer) = "owner";
+  option (cosmos.msg.v1.signer) = "signer";
 
-  // owner is the account that owns the order. E.g. the seller for ask orders or buyer for bid orders.
-  string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // signer is the account requesting the order cancelation.
+  // It must be either the order owner (e.g. the buyer or seller), the governance module account address, or an account
+  // with cancel permission with the market that the order is in.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // order_id is the id of the order to cancel.
   uint64 order_id = 2;
 }

@@ -47,7 +47,7 @@ func (k MsgServer) CreateBid(goCtx context.Context, msg *exchange.MsgCreateBidRe
 // CancelOrder cancels an order.
 func (k MsgServer) CancelOrder(goCtx context.Context, msg *exchange.MsgCancelOrderRequest) (*exchange.MsgCancelOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	err := k.Keeper.CancelOrder(ctx, msg.OrderId, msg.Owner)
+	err := k.Keeper.CancelOrder(ctx, msg.OrderId, msg.Signer)
 	if err != nil {
 		return nil, err
 	}
