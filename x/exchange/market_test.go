@@ -728,6 +728,117 @@ func TestValidateBuyerFeeRatios(t *testing.T) {
 	}
 }
 
+func TestContainsString(t *testing.T) {
+	tests := []struct {
+		name   string
+		vals   []string
+		toFind string
+		exp    bool
+	}{
+		{
+			name:   "nil vals",
+			vals:   nil,
+			toFind: "",
+			exp:    false,
+		},
+		{
+			name:   "empty vals",
+			vals:   []string{},
+			toFind: "",
+			exp:    false,
+		},
+		{
+			name:   "one val: same",
+			vals:   []string{"one"},
+			toFind: "one",
+			exp:    true,
+		},
+		{
+			name:   "one val: different",
+			vals:   []string{"one"},
+			toFind: "two",
+			exp:    false,
+		},
+		{
+			name:   "one val: space at end of val",
+			vals:   []string{"one "},
+			toFind: "one",
+			exp:    false,
+		},
+		{
+			name:   "one val: space at end of toFind",
+			vals:   []string{"one"},
+			toFind: "one ",
+			exp:    false,
+		},
+		{
+			name:   "one val: space at start of val",
+			vals:   []string{" one"},
+			toFind: "one",
+			exp:    false,
+		},
+		{
+			name:   "one val: space at start of toFind",
+			vals:   []string{"one"},
+			toFind: " one",
+			exp:    false,
+		},
+		{
+			name:   "one val: different casing",
+			vals:   []string{"one"},
+			toFind: "oNe",
+			exp:    false,
+		},
+		{
+			name:   "three vals: not found",
+			vals:   []string{"one", "two", "three"},
+			toFind: "zero",
+			exp:    false,
+		},
+		{
+			name:   "three vals: first",
+			vals:   []string{"one", "two", "three"},
+			toFind: "one",
+			exp:    true,
+		},
+		{
+			name:   "three vals: second",
+			vals:   []string{"one", "two", "three"},
+			toFind: "two",
+			exp:    true,
+		},
+		{
+			name:   "three vals: third",
+			vals:   []string{"one", "two", "three"},
+			toFind: "three",
+			exp:    true,
+		},
+		{
+			name:   "three vals: empty string",
+			vals:   []string{"one", "two", "three"},
+			toFind: "",
+			exp:    false,
+		},
+		{
+			name:   "empty string in vals: finding empty string",
+			vals:   []string{"one", "", "three"},
+			toFind: "",
+			exp:    true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = ContainsString(tc.vals, tc.toFind)
+			}
+			require.NotPanics(t, testFunc, "ContainsString(%q, %q)", tc.vals, tc.toFind)
+			assert.Equal(t, tc.exp, actual, "ContainsString(%q, %q)", tc.vals, tc.toFind)
+		})
+	}
+}
+
 func TestFeeRatio_String(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}

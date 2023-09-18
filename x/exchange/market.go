@@ -125,13 +125,13 @@ func ValidateFeeRatios(sellerRatios, buyerRatios []FeeRatio) error {
 	}
 
 	for _, denom := range sellerPriceDenoms {
-		if !containsString(buyerPriceDenoms, denom) {
+		if !ContainsString(buyerPriceDenoms, denom) {
 			errs = append(errs, fmt.Errorf("denom %q is defined in the seller settlement fee ratios but not buyer", denom))
 		}
 	}
 
 	for _, denom := range buyerPriceDenoms {
-		if !containsString(sellerPriceDenoms, denom) {
+		if !ContainsString(sellerPriceDenoms, denom) {
 			errs = append(errs, fmt.Errorf("denom %q is defined in the buyer settlement fee ratios but not seller", denom))
 		}
 	}
@@ -198,8 +198,8 @@ func ValidateBuyerFeeRatios(ratios []FeeRatio) error {
 	return errors.Join(errs...)
 }
 
-// containsString returns true if the string to find is in the vals slice.
-func containsString(vals []string, toFind string) bool {
+// ContainsString returns true if the string to find is in the vals slice.
+func ContainsString(vals []string, toFind string) bool {
 	return contains(vals, toFind, func(a, b string) bool {
 		return a == b
 	})
