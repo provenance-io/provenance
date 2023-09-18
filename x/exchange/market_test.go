@@ -124,7 +124,7 @@ func TestMarket_Validate(t *testing.T) {
 		{
 			name:   "invalid access grants",
 			market: Market{AccessGrants: []AccessGrant{{Address: "bad_addr", Permissions: AllPermissions()}}},
-			expErr: []string{"invalid access grant: invalid address: decoding bech32 failed: invalid separator index -1"},
+			expErr: []string{`invalid access grant: invalid address "bad_addr": decoding bech32 failed: invalid separator index -1`},
 		},
 		{
 			name:   "invalid ask required attributes",
@@ -158,7 +158,7 @@ func TestMarket_Validate(t *testing.T) {
 				`invalid buyer settlement flat fee option "-1leela": negative coin amount: -1`,
 				`denom "fry" is defined in the seller settlement fee ratios but not buyer`,
 				`denom "leela" is defined in the buyer settlement fee ratios but not seller`,
-				"invalid access grant: invalid address: decoding bech32 failed: invalid separator index -1",
+				`invalid access grant: invalid address "bad_addr": decoding bech32 failed: invalid separator index -1`,
 				`invalid create-ask required attribute "this-attr-is-bad"`,
 				`invalid create-bid required attribute "this-attr-grrrr"`,
 			},
@@ -1793,7 +1793,7 @@ func TestValidateAddRemoveFeeOptions(t *testing.T) {
 	}
 }
 
-func TestValidateAccessGrants(t *testing.T) {
+func TestValidateAccessGrantsField(t *testing.T) {
 	joinErrs := func(errs ...string) string {
 		return strings.Join(errs, "\n")
 	}
@@ -1804,21 +1804,25 @@ func TestValidateAccessGrants(t *testing.T) {
 
 	tests := []struct {
 		name   string
+		field  string
 		grants []AccessGrant
 		exp    string
 	}{
 		{
 			name:   "nil grants",
+			field:  "<~FIELD~>",
 			grants: nil,
 			exp:    "",
 		},
 		{
 			name:   "empty grants",
+			field:  "<~FIELD~>",
 			grants: []AccessGrant{},
 			exp:    "",
 		},
 		{
-			name: "duplicate address",
+			name:  "duplicate address: no field",
+			field: "",
 			grants: []AccessGrant{
 				{Address: addrDup, Permissions: []Permission{Permission_settle}},
 				{Address: addrDup, Permissions: []Permission{Permission_cancel}},
@@ -1826,7 +1830,17 @@ func TestValidateAccessGrants(t *testing.T) {
 			exp: sdk.AccAddress("duplicate_address___").String() + " appears in multiple access grant entries",
 		},
 		{
-			name: "three entries: all valid",
+			name:  "duplicate address: with field",
+			field: "<~FIELD~>",
+			grants: []AccessGrant{
+				{Address: addrDup, Permissions: []Permission{Permission_settle}},
+				{Address: addrDup, Permissions: []Permission{Permission_cancel}},
+			},
+			exp: sdk.AccAddress("duplicate_address___").String() + " appears in multiple <~FIELD~> access grant entries",
+		},
+		{
+			name:  "three entries: all valid",
+			field: "<~FIELD~>",
 			grants: []AccessGrant{
 				{Address: addr1, Permissions: AllPermissions()},
 				{Address: addr2, Permissions: AllPermissions()},
@@ -1835,7 +1849,8 @@ func TestValidateAccessGrants(t *testing.T) {
 			exp: "",
 		},
 		{
-			name: "three entries: invalid first",
+			name:  "three entries: invalid first: no field",
+			field: "",
 			grants: []AccessGrant{
 				{Address: addr1, Permissions: []Permission{-1}},
 				{Address: addr2, Permissions: AllPermissions()},
@@ -1844,7 +1859,18 @@ func TestValidateAccessGrants(t *testing.T) {
 			exp: "invalid access grant: permission -1 does not exist for " + addr1,
 		},
 		{
-			name: "three entries: invalid second",
+			name:  "three entries: invalid first: with field",
+			field: "<~FIELD~>",
+			grants: []AccessGrant{
+				{Address: addr1, Permissions: []Permission{-1}},
+				{Address: addr2, Permissions: AllPermissions()},
+				{Address: addr3, Permissions: AllPermissions()},
+			},
+			exp: "invalid <~FIELD~> access grant: permission -1 does not exist for " + addr1,
+		},
+		{
+			name:  "three entries: invalid second: no field",
+			field: "",
 			grants: []AccessGrant{
 				{Address: addr1, Permissions: AllPermissions()},
 				{Address: addr2, Permissions: []Permission{-1}},
@@ -1853,7 +1879,18 @@ func TestValidateAccessGrants(t *testing.T) {
 			exp: "invalid access grant: permission -1 does not exist for " + addr2,
 		},
 		{
-			name: "three entries: invalid second",
+			name:  "three entries: invalid second: with field",
+			field: "<~FIELD~>",
+			grants: []AccessGrant{
+				{Address: addr1, Permissions: AllPermissions()},
+				{Address: addr2, Permissions: []Permission{-1}},
+				{Address: addr3, Permissions: AllPermissions()},
+			},
+			exp: "invalid <~FIELD~> access grant: permission -1 does not exist for " + addr2,
+		},
+		{
+			name:  "three entries: invalid third: no field",
+			field: "",
 			grants: []AccessGrant{
 				{Address: addr1, Permissions: AllPermissions()},
 				{Address: addr2, Permissions: AllPermissions()},
@@ -1862,7 +1899,18 @@ func TestValidateAccessGrants(t *testing.T) {
 			exp: "invalid access grant: permission -1 does not exist for " + addr3,
 		},
 		{
-			name: "three entries: only valid first",
+			name:  "three entries: invalid third: with field",
+			field: "<~FIELD~>",
+			grants: []AccessGrant{
+				{Address: addr1, Permissions: AllPermissions()},
+				{Address: addr2, Permissions: AllPermissions()},
+				{Address: addr3, Permissions: []Permission{-1}},
+			},
+			exp: "invalid <~FIELD~> access grant: permission -1 does not exist for " + addr3,
+		},
+		{
+			name:  "three entries: only valid first: no field",
+			field: "",
 			grants: []AccessGrant{
 				{Address: addr1, Permissions: AllPermissions()},
 				{Address: addr2, Permissions: []Permission{0}},
@@ -1874,7 +1922,21 @@ func TestValidateAccessGrants(t *testing.T) {
 			),
 		},
 		{
-			name: "three entries: only valid second",
+			name:  "three entries: only valid first: with field",
+			field: "<~FIELD~>",
+			grants: []AccessGrant{
+				{Address: addr1, Permissions: AllPermissions()},
+				{Address: addr2, Permissions: []Permission{0}},
+				{Address: addr3, Permissions: []Permission{-1}},
+			},
+			exp: joinErrs(
+				"invalid <~FIELD~> access grant: permission is unspecified for "+addr2,
+				"invalid <~FIELD~> access grant: permission -1 does not exist for "+addr3,
+			),
+		},
+		{
+			name:  "three entries: only valid second: no field",
+			field: "",
 			grants: []AccessGrant{
 				{Address: addr1, Permissions: []Permission{0}},
 				{Address: addr2, Permissions: AllPermissions()},
@@ -1886,7 +1948,21 @@ func TestValidateAccessGrants(t *testing.T) {
 			),
 		},
 		{
-			name: "three entries: only valid third",
+			name:  "three entries: only valid second: with field",
+			field: "<~FIELD~>",
+			grants: []AccessGrant{
+				{Address: addr1, Permissions: []Permission{0}},
+				{Address: addr2, Permissions: AllPermissions()},
+				{Address: addr3, Permissions: []Permission{-1}},
+			},
+			exp: joinErrs(
+				"invalid <~FIELD~> access grant: permission is unspecified for "+addr1,
+				"invalid <~FIELD~> access grant: permission -1 does not exist for "+addr3,
+			),
+		},
+		{
+			name:  "three entries: only valid third: no field",
+			field: "",
 			grants: []AccessGrant{
 				{Address: addr1, Permissions: []Permission{0}},
 				{Address: addr2, Permissions: []Permission{-1}},
@@ -1898,7 +1974,21 @@ func TestValidateAccessGrants(t *testing.T) {
 			),
 		},
 		{
-			name: "three entries: all same address",
+			name:  "three entries: only valid third: with field",
+			field: "<~FIELD~>",
+			grants: []AccessGrant{
+				{Address: addr1, Permissions: []Permission{0}},
+				{Address: addr2, Permissions: []Permission{-1}},
+				{Address: addr3, Permissions: AllPermissions()},
+			},
+			exp: joinErrs(
+				"invalid <~FIELD~> access grant: permission is unspecified for "+addr1,
+				"invalid <~FIELD~> access grant: permission -1 does not exist for "+addr2,
+			),
+		},
+		{
+			name:  "three entries: all same address: no field",
+			field: "",
 			grants: []AccessGrant{
 				{Address: addrDup, Permissions: AllPermissions()},
 				{Address: addrDup, Permissions: AllPermissions()},
@@ -1906,13 +1996,23 @@ func TestValidateAccessGrants(t *testing.T) {
 			},
 			exp: addrDup + " appears in multiple access grant entries",
 		},
+		{
+			name:  "three entries: all same address: with field",
+			field: "<~FIELD~>",
+			grants: []AccessGrant{
+				{Address: addrDup, Permissions: AllPermissions()},
+				{Address: addrDup, Permissions: AllPermissions()},
+				{Address: addrDup, Permissions: AllPermissions()},
+			},
+			exp: addrDup + " appears in multiple <~FIELD~> access grant entries",
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateAccessGrants(tc.grants)
+			err := ValidateAccessGrantsField(tc.field, tc.grants)
 
-			assertions.AssertErrorValue(t, err, tc.exp, "ValidateAccessGrants")
+			assertions.AssertErrorValue(t, err, tc.exp, "ValidateAccessGrantsField")
 		})
 	}
 }
@@ -1932,7 +2032,7 @@ func TestAccessGrant_Validate(t *testing.T) {
 		{
 			name: "invalid address",
 			a:    AccessGrant{Address: "invalid_address_____", Permissions: []Permission{Permission_settle}},
-			exp:  "invalid access grant: invalid address: decoding bech32 failed: invalid separator index -1",
+			exp:  `invalid access grant: invalid address "invalid_address_____": decoding bech32 failed: invalid separator index -1`,
 		},
 		{
 			name: "nil permissions",
@@ -1975,6 +2075,260 @@ func TestAccessGrant_Validate(t *testing.T) {
 			err := tc.a.Validate()
 
 			assertions.AssertErrorValue(t, err, tc.exp, "Validate")
+		})
+	}
+}
+
+func TestAccessGrant_ValidateInField(t *testing.T) {
+	addr := sdk.AccAddress("addr________________").String()
+	tests := []struct {
+		name  string
+		a     AccessGrant
+		field string
+		exp   string
+	}{
+		{
+			name:  "control",
+			a:     AccessGrant{Address: addr, Permissions: AllPermissions()},
+			field: "meadow",
+			exp:   "",
+		},
+		{
+			name:  "invalid address: no field",
+			a:     AccessGrant{Address: "invalid_address_____", Permissions: []Permission{Permission_settle}},
+			field: "",
+			exp:   `invalid access grant: invalid address "invalid_address_____": decoding bech32 failed: invalid separator index -1`,
+		},
+		{
+			name:  "invalid address: with field",
+			a:     AccessGrant{Address: "invalid_address_____", Permissions: []Permission{Permission_settle}},
+			field: "meadow",
+			exp:   `invalid meadow access grant: invalid address "invalid_address_____": decoding bech32 failed: invalid separator index -1`,
+		},
+		{
+			name:  "nil permissions: no field",
+			a:     AccessGrant{Address: addr, Permissions: nil},
+			field: "",
+			exp:   "invalid access grant: no permissions provided for " + addr,
+		},
+		{
+			name:  "nil permissions: with field",
+			a:     AccessGrant{Address: addr, Permissions: nil},
+			field: "meadow",
+			exp:   "invalid meadow access grant: no permissions provided for " + addr,
+		},
+		{
+			name:  "empty permissions: no field",
+			a:     AccessGrant{Address: addr, Permissions: []Permission{}},
+			field: "",
+			exp:   "invalid access grant: no permissions provided for " + addr,
+		},
+		{
+			name:  "empty permissions: with field",
+			a:     AccessGrant{Address: addr, Permissions: []Permission{}},
+			field: "meadow",
+			exp:   "invalid meadow access grant: no permissions provided for " + addr,
+		},
+		{
+			name: "duplicate entry: no field",
+			a: AccessGrant{
+				Address: addr,
+				Permissions: []Permission{
+					Permission_settle,
+					Permission_cancel,
+					Permission_settle,
+				},
+			},
+			field: "",
+			exp:   "invalid access grant: settle appears multiple times for " + addr,
+		},
+		{
+			name: "duplicate entry: with field",
+			a: AccessGrant{
+				Address: addr,
+				Permissions: []Permission{
+					Permission_settle,
+					Permission_cancel,
+					Permission_settle,
+				},
+			},
+			field: "meadow",
+			exp:   "invalid meadow access grant: settle appears multiple times for " + addr,
+		},
+		{
+			name: "invalid entry: no field",
+			a: AccessGrant{
+				Address: addr,
+				Permissions: []Permission{
+					Permission_withdraw,
+					-1,
+					Permission_attributes,
+				},
+			},
+			field: "",
+			exp:   "invalid access grant: permission -1 does not exist for " + addr,
+		},
+		{
+			name: "invalid entry: with field",
+			a: AccessGrant{
+				Address: addr,
+				Permissions: []Permission{
+					Permission_withdraw,
+					-1,
+					Permission_attributes,
+				},
+			},
+			field: "meadow",
+			exp:   "invalid meadow access grant: permission -1 does not exist for " + addr,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.a.ValidateInField(tc.field)
+
+			assertions.AssertErrorValue(t, err, tc.exp, "ValidateInField(%q)", tc.field)
+		})
+	}
+}
+
+func TestAccessGrant_Contains(t *testing.T) {
+	tests := []struct {
+		name string
+		a    AccessGrant
+		perm Permission
+		exp  bool
+	}{
+		{
+			name: "nil permissions",
+			a:    AccessGrant{Permissions: nil},
+			perm: 0,
+			exp:  false,
+		},
+		{
+			name: "empty permissions",
+			a:    AccessGrant{Permissions: []Permission{}},
+			perm: 0,
+			exp:  false,
+		},
+		{
+			name: "all permissions: checking unspecified",
+			a:    AccessGrant{Permissions: AllPermissions()},
+			perm: Permission_unspecified,
+			exp:  false,
+		},
+		{
+			name: "all permissions: checking settle",
+			a:    AccessGrant{Permissions: AllPermissions()},
+			perm: Permission_settle,
+			exp:  true,
+		},
+		{
+			name: "all permissions: checking cancel",
+			a:    AccessGrant{Permissions: AllPermissions()},
+			perm: Permission_cancel,
+			exp:  true,
+		},
+		{
+			name: "all permissions: checking withdraw",
+			a:    AccessGrant{Permissions: AllPermissions()},
+			perm: Permission_withdraw,
+			exp:  true,
+		},
+		{
+			name: "all permissions: checking update",
+			a:    AccessGrant{Permissions: AllPermissions()},
+			perm: Permission_update,
+			exp:  true,
+		},
+		{
+			name: "all permissions: checking permissions",
+			a:    AccessGrant{Permissions: AllPermissions()},
+			perm: Permission_permissions,
+			exp:  true,
+		},
+		{
+			name: "all permissions: checking attributes",
+			a:    AccessGrant{Permissions: AllPermissions()},
+			perm: Permission_attributes,
+			exp:  true,
+		},
+		{
+			name: "all permissions: checking unknown",
+			a:    AccessGrant{Permissions: AllPermissions()},
+			perm: 99,
+			exp:  false,
+		},
+		{
+			name: "all permissions: checking negative",
+			a:    AccessGrant{Permissions: AllPermissions()},
+			perm: -22,
+			exp:  false,
+		},
+		{
+			name: "only settle: checking unspecified",
+			a:    AccessGrant{Permissions: []Permission{Permission_settle}},
+			perm: Permission_unspecified,
+			exp:  false,
+		},
+		{
+			name: "only settle: checking settle",
+			a:    AccessGrant{Permissions: []Permission{Permission_settle}},
+			perm: Permission_settle,
+			exp:  true,
+		},
+		{
+			name: "only settle: checking cancel",
+			a:    AccessGrant{Permissions: []Permission{Permission_settle}},
+			perm: Permission_cancel,
+			exp:  false,
+		},
+		{
+			name: "only settle: checking withdraw",
+			a:    AccessGrant{Permissions: []Permission{Permission_settle}},
+			perm: Permission_withdraw,
+			exp:  false,
+		},
+		{
+			name: "only settle: checking update",
+			a:    AccessGrant{Permissions: []Permission{Permission_settle}},
+			perm: Permission_update,
+			exp:  false,
+		},
+		{
+			name: "only settle: checking permissions",
+			a:    AccessGrant{Permissions: []Permission{Permission_settle}},
+			perm: Permission_permissions,
+			exp:  false,
+		},
+		{
+			name: "only settle: checking attributes",
+			a:    AccessGrant{Permissions: []Permission{Permission_settle}},
+			perm: Permission_attributes,
+			exp:  false,
+		},
+		{
+			name: "only settle: checking unknown",
+			a:    AccessGrant{Permissions: []Permission{Permission_settle}},
+			perm: 99,
+			exp:  false,
+		},
+		{
+			name: "only settle: checking negative",
+			a:    AccessGrant{Permissions: []Permission{Permission_settle}},
+			perm: -22,
+			exp:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = tc.a.Contains(tc.perm)
+			}
+			require.NotPanics(t, testFunc, "%#v.Contains(%s)", tc.a, tc.perm.SimpleString())
+			assert.Equal(t, tc.exp, actual, "%#v.Contains(%s)", tc.a, tc.perm.SimpleString())
 		})
 	}
 }

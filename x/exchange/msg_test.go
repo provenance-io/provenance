@@ -421,7 +421,155 @@ func TestMsgMarketWithdrawRequest_ValidateBasic(t *testing.T) {
 
 // TODO[1658]: func TestMsgMarketUpdateUserSettleRequest_ValidateBasic(t *testing.T)
 
-// TODO[1658]: func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T)
+func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
+	goodAdminAddr := sdk.AccAddress("goodAdminAddr_______").String()
+	goodAddr1 := sdk.AccAddress("goodAddr1___________").String()
+	goodAddr2 := sdk.AccAddress("goodAddr2___________").String()
+	goodAddr3 := sdk.AccAddress("goodAddr3___________").String()
+
+	tests := []struct {
+		name   string
+		msg    MsgMarketManagePermissionsRequest
+		expErr []string
+	}{
+		{
+			name: "control",
+			msg: MsgMarketManagePermissionsRequest{
+				Admin:     goodAdminAddr,
+				MarketId:  1,
+				RevokeAll: []string{goodAddr1},
+				ToRevoke:  []AccessGrant{{Address: goodAddr2, Permissions: []Permission{Permission_settle}}},
+				ToGrant:   []AccessGrant{{Address: goodAddr3, Permissions: []Permission{Permission_cancel}}},
+			},
+			expErr: nil,
+		},
+		{
+			name: "invalid admin",
+			msg: MsgMarketManagePermissionsRequest{
+				Admin:     "bad1admin",
+				MarketId:  1,
+				RevokeAll: []string{goodAddr1},
+			},
+			expErr: []string{"invalid administrator", `"bad1admin"`, "decoding bech32 failed"},
+		},
+		{
+			name: "market id zero",
+			msg: MsgMarketManagePermissionsRequest{
+				Admin:     goodAdminAddr,
+				MarketId:  0,
+				RevokeAll: []string{goodAddr1},
+			},
+			expErr: []string{"invalid market id", "cannot be zero"},
+		},
+		{
+			name: "no updates",
+			msg: MsgMarketManagePermissionsRequest{
+				Admin:    goodAdminAddr,
+				MarketId: 1,
+			},
+			expErr: []string{"no updates"},
+		},
+		{
+			name: "two invalid addresses in revoke all",
+			msg: MsgMarketManagePermissionsRequest{
+				Admin:     goodAdminAddr,
+				MarketId:  1,
+				RevokeAll: []string{"bad1addr", "bad2addr"},
+			},
+			expErr: []string{
+				`invalid revoke-all address "bad1addr": decoding bech32 failed`,
+				`invalid revoke-all address "bad2addr": decoding bech32 failed`,
+			},
+		},
+		{
+			name: "two invalid to-revoke entries",
+			msg: MsgMarketManagePermissionsRequest{
+				Admin:    goodAdminAddr,
+				MarketId: 1,
+				ToRevoke: []AccessGrant{
+					{Address: "badaddr", Permissions: []Permission{Permission_withdraw}},
+					{Address: goodAddr1, Permissions: []Permission{Permission_unspecified}},
+				},
+			},
+			expErr: []string{
+				`invalid to-revoke access grant: invalid address "badaddr"`,
+				`invalid to-revoke access grant: permission is unspecified for ` + goodAddr1,
+			},
+		},
+		{
+			name: "two addrs in both revoke-all and to-revoke",
+			msg: MsgMarketManagePermissionsRequest{
+				Admin:     goodAdminAddr,
+				MarketId:  1,
+				RevokeAll: []string{goodAddr1, goodAddr2, goodAddr3},
+				ToRevoke: []AccessGrant{
+					{Address: goodAddr2, Permissions: []Permission{Permission_update}},
+					{Address: goodAddr1, Permissions: []Permission{Permission_permissions}},
+				},
+			},
+			expErr: []string{
+				"address " + goodAddr2 + " appears in both the revoke-all and to-revoke fields",
+				"address " + goodAddr1 + " appears in both the revoke-all and to-revoke fields",
+			},
+		},
+		{
+			name: "two invalid to-grant entries",
+			msg: MsgMarketManagePermissionsRequest{
+				Admin:    goodAdminAddr,
+				MarketId: 1,
+				ToGrant: []AccessGrant{
+					{Address: "badaddr", Permissions: []Permission{Permission_withdraw}},
+					{Address: goodAddr1, Permissions: []Permission{Permission_unspecified}},
+				},
+			},
+			expErr: []string{
+				`invalid to-grant access grant: invalid address "badaddr"`,
+				`invalid to-grant access grant: permission is unspecified for ` + goodAddr1,
+			},
+		},
+		{
+			name: "revoke all for two addrs and some for one, then add some for all three",
+			msg: MsgMarketManagePermissionsRequest{
+				Admin:     goodAdminAddr,
+				MarketId:  1,
+				RevokeAll: []string{goodAddr1, goodAddr2},
+				ToRevoke:  []AccessGrant{{Address: goodAddr3, Permissions: []Permission{Permission_settle}}},
+				ToGrant: []AccessGrant{
+					{Address: goodAddr1, Permissions: []Permission{Permission_settle, Permission_update}},
+					{Address: goodAddr2, Permissions: []Permission{Permission_cancel, Permission_permissions}},
+					{Address: goodAddr3, Permissions: []Permission{Permission_withdraw, Permission_attributes}},
+				},
+			},
+			expErr: nil,
+		},
+		{
+			name: "revoke and grant the same permission for two addresses",
+			msg: MsgMarketManagePermissionsRequest{
+				Admin:    goodAdminAddr,
+				MarketId: 1,
+				ToRevoke: []AccessGrant{
+					{Address: goodAddr2, Permissions: []Permission{Permission_permissions, Permission_cancel, Permission_attributes}},
+					{Address: goodAddr1, Permissions: []Permission{Permission_settle, Permission_withdraw, Permission_update}},
+				},
+				ToGrant: []AccessGrant{
+					{Address: goodAddr1, Permissions: []Permission{Permission_withdraw}},
+					{Address: goodAddr2, Permissions: []Permission{Permission_attributes, Permission_permissions}},
+				},
+			},
+			expErr: []string{
+				"address " + goodAddr1 + " has both revoke and grant \"withdraw\"",
+				"address " + goodAddr2 + " has both revoke and grant \"attributes\"",
+				"address " + goodAddr2 + " has both revoke and grant \"permissions\"",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
 
 func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 	goodAdmin := sdk.AccAddress("goodAdmin___________").String()

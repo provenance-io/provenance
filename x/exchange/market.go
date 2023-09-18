@@ -42,7 +42,7 @@ func (m Market) Validate() error {
 		ValidateFeeOptions("seller settlement flat fee", m.FeeSellerSettlementFlat),
 		ValidateFeeOptions("buyer settlement flat fee", m.FeeBuyerSettlementFlat),
 		ValidateFeeRatios(m.FeeSellerSettlementRatios, m.FeeBuyerSettlementRatios),
-		ValidateAccessGrants(m.AccessGrants),
+		ValidateAccessGrantsField("", m.AccessGrants),
 		// Nothing to check for with the AcceptingOrders and AllowUserSettlement booleans.
 		ValidateReqAttrs("create-ask", m.ReqAttrCreateAsk),
 		ValidateReqAttrs("create-bid", m.ReqAttrCreateBid),
@@ -331,43 +331,65 @@ func ValidateAddRemoveFeeOptions(field string, toAdd, toRemove []sdk.Coin) error
 	return errors.Join(errs...)
 }
 
-// ValidateAccessGrants returns an error if any of the provided access grants are invalid.
-func ValidateAccessGrants(accessGrants []AccessGrant) error {
+// ValidateAccessGrantsField returns an error if any of the provided access grants are invalid.
+// The provided field is used in error messages.
+func ValidateAccessGrantsField(field string, accessGrants []AccessGrant) error {
+	if len(field) > 0 && !strings.HasSuffix(field, " ") {
+		field += " "
+	}
 	errs := make([]error, len(accessGrants))
 	seen := make(map[string]bool)
 	dups := make(map[string]bool)
 	for i, ag := range accessGrants {
 		if seen[ag.Address] && !dups[ag.Address] {
-			errs[i] = fmt.Errorf("%s appears in multiple access grant entries", ag.Address)
+			errs[i] = fmt.Errorf("%s appears in multiple %saccess grant entries", ag.Address, field)
 			dups[ag.Address] = true
 			continue
 		}
 		seen[ag.Address] = true
-		errs[i] = ag.Validate()
+		errs[i] = ag.ValidateInField(field)
 	}
 	return errors.Join(errs...)
 }
 
 // Validate returns an error if there is anything wrong with this AccessGrant.
 func (a AccessGrant) Validate() error {
+	return a.ValidateInField("")
+}
+
+// ValidateInField returns an error if there is anything wrong with this AccessGrant.
+// The provided field is included in any error message.
+func (a AccessGrant) ValidateInField(field string) error {
+	if len(field) > 0 && !strings.HasSuffix(field, " ") {
+		field += " "
+	}
 	_, err := sdk.AccAddressFromBech32(a.Address)
 	if err != nil {
-		return fmt.Errorf("invalid access grant: invalid address: %w", err)
+		return fmt.Errorf("invalid %saccess grant: invalid address %q: %w", field, a.Address, err)
 	}
 	if len(a.Permissions) == 0 {
-		return fmt.Errorf("invalid access grant: no permissions provided for %s", a.Address)
+		return fmt.Errorf("invalid %saccess grant: no permissions provided for %s", field, a.Address)
 	}
 	seen := make(map[Permission]bool)
 	for _, perm := range a.Permissions {
 		if seen[perm] {
-			return fmt.Errorf("invalid access grant: %s appears multiple times for %s", perm.SimpleString(), a.Address)
+			return fmt.Errorf("invalid %saccess grant: %s appears multiple times for %s", field, perm.SimpleString(), a.Address)
 		}
 		seen[perm] = true
 		if err = perm.Validate(); err != nil {
-			return fmt.Errorf("invalid access grant: %w for %s", err, a.Address)
+			return fmt.Errorf("invalid %saccess grant: %w for %s", field, err, a.Address)
 		}
 	}
 	return nil
+}
+
+func (a AccessGrant) Contains(perm Permission) bool {
+	for _, p := range a.Permissions {
+		if p == perm {
+			return true
+		}
+	}
+	return false
 }
 
 // SimpleString returns a lower-cased version of the permission.String() without the leading "permission_"

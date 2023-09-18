@@ -214,8 +214,49 @@ func (m MsgMarketManagePermissionsRequest) ValidateBasic() error {
 		errs = append(errs, fmt.Errorf("invalid market id: cannot be zero"))
 	}
 
-	// TODO[1658]: MsgMarketManagePermissionsRequest.ValidateBasic()
+	if m.HasUpdates() {
+		for _, addrStr := range m.RevokeAll {
+			if _, err := sdk.AccAddressFromBech32(addrStr); err != nil {
+				errs = append(errs, fmt.Errorf("invalid revoke-all address %q: %w", addrStr, err))
+			}
+		}
+
+		if err := ValidateAccessGrantsField("to-revoke", m.ToRevoke); err != nil {
+			errs = append(errs, err)
+		}
+
+		toRevokeByAddr := make(map[string]AccessGrant)
+		for _, ag := range m.ToRevoke {
+			if ContainsString(m.RevokeAll, ag.Address) {
+				errs = append(errs, fmt.Errorf("address %s appears in both the revoke-all and to-revoke fields", ag.Address))
+			}
+			toRevokeByAddr[ag.Address] = ag
+		}
+
+		if err := ValidateAccessGrantsField("to-grant", m.ToGrant); err != nil {
+			errs = append(errs, err)
+		}
+
+		for _, ag := range m.ToGrant {
+			toRev, ok := toRevokeByAddr[ag.Address]
+			if ok {
+				for _, perm := range ag.Permissions {
+					if toRev.Contains(perm) {
+						errs = append(errs, fmt.Errorf("address %s has both revoke and grant %q", ag.Address, perm.SimpleString()))
+					}
+				}
+			}
+		}
+	} else {
+		errs = append(errs, errors.New("no updates"))
+	}
+
 	return errors.Join(errs...)
+}
+
+// HasUpdates returns true if this has at least one permission change, false if devoid of updates.
+func (m MsgMarketManagePermissionsRequest) HasUpdates() bool {
+	return len(m.RevokeAll) > 0 || len(m.ToRevoke) > 0 || len(m.ToGrant) > 0
 }
 
 func (m MsgMarketManagePermissionsRequest) GetSigners() []sdk.AccAddress {
@@ -246,6 +287,7 @@ func (m MsgMarketManageReqAttrsRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
+// HasUpdates returns true if this has at least one required attribute change, false if devoid of updates.
 func (m MsgMarketManageReqAttrsRequest) HasUpdates() bool {
 	return len(m.CreateAskToAdd) > 0 || len(m.CreateAskToRemove) > 0 ||
 		len(m.CreateBidToAdd) > 0 || len(m.CreateBidToRemove) > 0
