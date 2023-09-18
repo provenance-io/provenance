@@ -143,13 +143,11 @@ message MsgMarketWithdrawRequest {
 
   // admin is the account with withdraw permission requesting the withdrawal.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-
   // market_id is the numerical identifier of the market to withdraw from.
   uint32 market_id = 2;
 
   // to_address is the address that will receive the funds.
   string to_address = 3;
-
   // amount is the funds to withdraw.
   repeated cosmos.base.v1beta1.Coin amount = 4
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
@@ -236,6 +234,7 @@ message MsgMarketManageReqAttrsRequest {
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // market_id is the numerical identifier of the market to update required attributes for.
   uint32 market_id = 2;
+
   // create_ask_to_add are the attributes that should now also be required to create an ask order.
   repeated string create_ask_to_add = 3;
   // create_ask_to_add are the attributes that should no longer be required to create an ask order.
@@ -271,43 +270,36 @@ message MsgGovManageFeesRequest {
 
   // authority should be the governance module account address.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-
   // market_id is the market id that will get these fee updates.
   uint32 market_id = 2;
 
   // add_fee_create_ask_flat are the create-ask flat fee options to add.
   repeated cosmos.base.v1beta1.Coin add_fee_create_ask_flat = 3 [(gogoproto.nullable) = false];
-
   // remove_fee_create_ask_flat are the create-ask flat fee options to remove.
   repeated cosmos.base.v1beta1.Coin remove_fee_create_ask_flat = 4 [(gogoproto.nullable) = false];
 
   // add_fee_create_bid_flat are the create-bid flat fee options to add.
   repeated cosmos.base.v1beta1.Coin add_fee_create_bid_flat = 5 [(gogoproto.nullable) = false];
-
   // remove_fee_create_bid_flat are the create-bid flat fee options to remove.
   repeated cosmos.base.v1beta1.Coin remove_fee_create_bid_flat = 6 [(gogoproto.nullable) = false];
 
   // add_fee_seller_settlement_flat are the seller settlement flat fee options to add.
   repeated cosmos.base.v1beta1.Coin add_fee_seller_settlement_flat = 7 [(gogoproto.nullable) = false];
-
   // remove_fee_seller_settlement_flat are the seller settlement flat fee options to remove.
   repeated cosmos.base.v1beta1.Coin remove_fee_seller_settlement_flat = 8 [(gogoproto.nullable) = false];
 
   // add_fee_seller_settlement_ratios are the seller settlement fee ratios to add.
   repeated FeeRatio add_fee_seller_settlement_ratios = 9 [(gogoproto.nullable) = false];
-
   // remove_fee_seller_settlement_ratios are the seller settlement fee ratios to remove.
   repeated FeeRatio remove_fee_seller_settlement_ratios = 10 [(gogoproto.nullable) = false];
 
   // add_fee_buyer_settlement_flat are the buyer settlement flat fee options to add.
   repeated cosmos.base.v1beta1.Coin add_fee_buyer_settlement_flat = 11 [(gogoproto.nullable) = false];
-
   // remove_fee_buyer_settlement_flat are the buyer settlement flat fee options to remove.
   repeated cosmos.base.v1beta1.Coin remove_fee_buyer_settlement_flat = 12 [(gogoproto.nullable) = false];
 
   // add_fee_buyer_settlement_ratios are the buyer settlement fee ratios to add.
   repeated FeeRatio add_fee_buyer_settlement_ratios = 13 [(gogoproto.nullable) = false];
-
   // remove_fee_buyer_settlement_ratios are the buyer settlement fee ratios to remove.
   repeated FeeRatio remove_fee_buyer_settlement_ratios = 14 [(gogoproto.nullable) = false];
 }
