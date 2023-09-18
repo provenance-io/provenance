@@ -41,14 +41,24 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		},
 		// TODO[1658]: Add MsgFillBidsRequest once it's actually been defined.
 		// TODO[1658]: Add MsgFillAsksRequest once it's actually been defined.
-		// TODO[1658]: Add MsgMarketSettleRequest once it's actually been defined.
+		func(signer string) sdk.Msg {
+			return &MsgMarketSettleRequest{Admin: signer}
+		},
 		func(signer string) sdk.Msg {
 			return &MsgMarketWithdrawRequest{Admin: signer}
 		},
-		// TODO[1658]: Add MsgMarketUpdateDetailsRequest once it's actually been defined.
-		// TODO[1658]: Add MsgMarketUpdateEnabledRequest once it's actually been defined.
-		// TODO[1658]: Add MsgMarketUpdateUserSettleRequest once it's actually been defined.
-		// TODO[1658]: Add MsgMarketManagePermissionsRequest once it's actually been defined.
+		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateDetailsRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateEnabledRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateUserSettleRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketManagePermissionsRequest{Admin: signer}
+		},
 		func(signer string) sdk.Msg {
 			return &MsgMarketManageReqAttrsRequest{Admin: signer}
 		},

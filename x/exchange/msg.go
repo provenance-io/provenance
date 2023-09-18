@@ -95,13 +95,23 @@ func (m MsgFillAsksRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgMarketSettleRequest) ValidateBasic() error {
+	var errs []error
+
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
+	}
+
+	if m.MarketId == 0 {
+		errs = append(errs, fmt.Errorf("invalid market id: cannot be zero"))
+	}
+
 	// TODO[1658]: MsgMarketSettleRequest.ValidateBasic()
-	return nil
+	return errors.Join(errs...)
 }
 
 func (m MsgMarketSettleRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgMarketSettleRequest.GetSigners
-	panic("not implemented")
+	addr := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{addr}
 }
 
 func (m MsgMarketWithdrawRequest) ValidateBasic() error {
@@ -134,43 +144,83 @@ func (m MsgMarketWithdrawRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgMarketUpdateDetailsRequest) ValidateBasic() error {
+	var errs []error
+
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
+	}
+
+	if m.MarketId == 0 {
+		errs = append(errs, fmt.Errorf("invalid market id: cannot be zero"))
+	}
+
 	// TODO[1658]: MsgMarketUpdateDetailsRequest.ValidateBasic()
-	return nil
+	return errors.Join(errs...)
 }
 
 func (m MsgMarketUpdateDetailsRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgMarketUpdateDetailsRequest.GetSigners
-	panic("not implemented")
+	addr := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{addr}
 }
 
 func (m MsgMarketUpdateEnabledRequest) ValidateBasic() error {
+	var errs []error
+
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
+	}
+
+	if m.MarketId == 0 {
+		errs = append(errs, fmt.Errorf("invalid market id: cannot be zero"))
+	}
+
 	// TODO[1658]: MsgMarketUpdateEnabledRequest.ValidateBasic()
-	return nil
+	return errors.Join(errs...)
 }
 
 func (m MsgMarketUpdateEnabledRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgMarketUpdateEnabledRequest.GetSigners
-	panic("not implemented")
+	addr := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{addr}
 }
 
 func (m MsgMarketUpdateUserSettleRequest) ValidateBasic() error {
+	var errs []error
+
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
+	}
+
+	if m.MarketId == 0 {
+		errs = append(errs, fmt.Errorf("invalid market id: cannot be zero"))
+	}
+
 	// TODO[1658]: MsgMarketUpdateUserSettleRequest.ValidateBasic()
-	return nil
+	return errors.Join(errs...)
 }
 
 func (m MsgMarketUpdateUserSettleRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgMarketUpdateUserSettleRequest.GetSigners
-	panic("not implemented")
+	addr := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{addr}
 }
 
 func (m MsgMarketManagePermissionsRequest) ValidateBasic() error {
+	var errs []error
+
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
+	}
+
+	if m.MarketId == 0 {
+		errs = append(errs, fmt.Errorf("invalid market id: cannot be zero"))
+	}
+
 	// TODO[1658]: MsgMarketManagePermissionsRequest.ValidateBasic()
-	return nil
+	return errors.Join(errs...)
 }
 
 func (m MsgMarketManagePermissionsRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgMarketManagePermissionsRequest.GetSigners
-	panic("not implemented")
+	addr := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{addr}
 }
 
 func (m MsgMarketManageReqAttrsRequest) ValidateBasic() error {
