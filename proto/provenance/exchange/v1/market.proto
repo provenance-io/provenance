@@ -30,6 +30,8 @@ message MarketAccount {
 
 // MarketDetails contains information about a market.
 message MarketDetails {
+  option (gogoproto.equal) = true;
+
   // name is a moniker that people can use to refer to this market.
   string name = 1;
   // description extra information about this market. The field is meant to be human-readable.
