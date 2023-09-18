@@ -112,8 +112,15 @@ func (k MsgServer) MarketManagePermissions(goCtx context.Context, msg *exchange.
 
 // MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it.
 func (k MsgServer) MarketManageReqAttrs(goCtx context.Context, msg *exchange.MsgMarketManageReqAttrsRequest) (*exchange.MsgMarketManageReqAttrsResponse, error) {
-	// TODO[1658]: Implement MarketManageReqAttrs
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanWithdrawMarketFunds(ctx, msg.MarketId, msg.Administrator) {
+		return nil, fmt.Errorf("account %s does not have permission to manage required attributes for market %d", msg.Administrator, msg.MarketId)
+	}
+	err := k.UpdateReqAttrs(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &exchange.MsgMarketManageReqAttrsResponse{}, nil
 }
 
 // wrongAuthErr returns the error to use when a message's authority isn't what's required.

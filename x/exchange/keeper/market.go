@@ -976,3 +976,68 @@ func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk
 	}
 	return nil
 }
+
+// CanManageReqAttrs returns true if the provided admin bech32 address has permission to
+// manage required attributes for a given market.
+func (k Keeper) CanManageReqAttrs(ctx sdk.Context, marketID uint32, admin string) bool {
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_attributes)
+}
+
+// updateReqAttrs updates the required attributes in the store that use the provided key maker by removing then adding
+// the provided attributes to the existing entries.
+func updateReqAttrs(store sdk.KVStore, marketID uint32, toRemove, toAdd []string, field string, maker reqAttrKeyMaker) error {
+	var errs []error
+	curAttrs := getReqAttr(store, marketID, maker)
+
+	for _, attr := range toRemove {
+		if !exchange.ContainsString(curAttrs, attr) {
+			errs = append(errs, fmt.Errorf("cannot remove %s required attribute %q: attribute not currently required", field, attr))
+		}
+	}
+
+	var newAttrs []string
+	for _, attr := range curAttrs {
+		if !exchange.ContainsString(toRemove, attr) {
+			newAttrs = append(newAttrs, attr)
+		}
+	}
+
+	for _, attr := range toAdd {
+		if !exchange.ContainsString(curAttrs, attr) {
+			newAttrs = append(newAttrs, attr)
+		} else {
+			errs = append(errs, fmt.Errorf("cannot add %s required attribute %q: attribute already required", field, attr))
+		}
+	}
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	setReqAttr(store, marketID, newAttrs, maker)
+	return nil
+}
+
+// updateReqAttrsAsk updates the attributes required to create an ask order in the store by removing and adding
+// the provided entries to the existing entries.
+func updateReqAttrsAsk(store sdk.KVStore, marketID uint32, toRemove, toAdd []string) error {
+	return updateReqAttrs(store, marketID, toRemove, toAdd, "create ask", MakeKeyMarketReqAttrAsk)
+}
+
+// updateReqAttrsBid updates the attributes required to create a bid order in the store by removing and adding
+// the provided entries to the existing entries.
+func updateReqAttrsBid(store sdk.KVStore, marketID uint32, toRemove, toAdd []string) error {
+	return updateReqAttrs(store, marketID, toRemove, toAdd, "create bid", MakeKeyMarketReqAttrBid)
+}
+
+// UpdateReqAttrs updates the required attributes in the store using the provided changes.
+// The caller is responsible for making sure this update should be allowed (e.g. by calling CanManageReqAttrs first).
+func (k Keeper) UpdateReqAttrs(ctx sdk.Context, msg *exchange.MsgMarketManageReqAttrsRequest) error {
+	marketID := msg.MarketId
+	store := k.getStore(ctx)
+	errs := []error{
+		updateReqAttrsAsk(store, marketID, msg.CreateAskToRemove, msg.CreateAskToAdd),
+		updateReqAttrsBid(store, marketID, msg.CreateBidToRemove, msg.CreateBidToAdd),
+	}
+	return errors.Join(errs...)
+}
