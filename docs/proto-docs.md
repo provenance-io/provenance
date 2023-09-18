@@ -2435,9 +2435,8 @@ MsgMarketUpdateDetailsRequest is a request message for the MarketUpdateDetails e
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for.
-
-TODO[1658]: MsgMarketUpdateDetailsRequest |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `market_details` | [MarketDetails](#provenance.exchange.v1.MarketDetails) |  | market_details is some information about this market. |
 
 
 
@@ -2463,9 +2462,8 @@ MsgMarketUpdateEnabledRequest is a request message for the MarketUpdateEnabled e
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for.
-
-TODO[1658]: MsgMarketUpdateEnabledRequest |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `accepting_orders` | [bool](#bool) |  | accepting_orders is whether this market is allowing orders to be created for it. |
 
 
 
@@ -2491,9 +2489,8 @@ MsgMarketUpdateUserSettleRequest is a request message for the MarketUpdateUserSe
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for.
-
-TODO[1658]: MsgMarketUpdateUserSettleRequest |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `allow_user_settlement` | [bool](#bool) |  | allow_user_settlement is whether this market allows users to initiate their own settlements. For example, the FillBids and FillAsks endpoints are available if and only if this is true. The MarketSettle endpoint is only available to market actors regardless of the value of this field. |
 
 
 

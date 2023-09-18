@@ -166,7 +166,9 @@ message MsgMarketUpdateDetailsRequest {
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // market_id is the numerical identifier of the market to update required attributes for.
   uint32 market_id = 2;
-  // TODO[1658]: MsgMarketUpdateDetailsRequest
+
+  // market_details is some information about this market.
+  MarketDetails market_details = 3 [(gogoproto.nullable) = false];
 }
 
 // MsgMarketUpdateDetailsResponse is a response message for the MarketUpdateDetails endpoint.
@@ -180,7 +182,9 @@ message MsgMarketUpdateEnabledRequest {
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // market_id is the numerical identifier of the market to update required attributes for.
   uint32 market_id = 2;
-  // TODO[1658]: MsgMarketUpdateEnabledRequest
+
+  // accepting_orders is whether this market is allowing orders to be created for it.
+  bool accepting_orders = 3;
 }
 
 // MsgMarketUpdateEnabledResponse is a response message for the MarketUpdateEnabled endpoint.
@@ -194,7 +198,11 @@ message MsgMarketUpdateUserSettleRequest {
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // market_id is the numerical identifier of the market to update required attributes for.
   uint32 market_id = 2;
-  // TODO[1658]: MsgMarketUpdateUserSettleRequest
+
+  // allow_user_settlement is whether this market allows users to initiate their own settlements.
+  // For example, the FillBids and FillAsks endpoints are available if and only if this is true.
+  // The MarketSettle endpoint is only available to market actors regardless of the value of this field.
+  bool allow_user_settlement = 3;
 }
 
 // MsgMarketUpdateUserSettleResponse is a response message for the MarketUpdateUserSettle endpoint.
