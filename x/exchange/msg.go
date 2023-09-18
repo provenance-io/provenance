@@ -154,7 +154,10 @@ func (m MsgMarketUpdateDetailsRequest) ValidateBasic() error {
 		errs = append(errs, fmt.Errorf("invalid market id: cannot be zero"))
 	}
 
-	// TODO[1658]: MsgMarketUpdateDetailsRequest.ValidateBasic()
+	if err := m.MarketDetails.Validate(); err != nil {
+		errs = append(errs, err)
+	}
+
 	return errors.Join(errs...)
 }
 
@@ -174,7 +177,8 @@ func (m MsgMarketUpdateEnabledRequest) ValidateBasic() error {
 		errs = append(errs, fmt.Errorf("invalid market id: cannot be zero"))
 	}
 
-	// TODO[1658]: MsgMarketUpdateEnabledRequest.ValidateBasic()
+	// Nothing to validate for the AcceptingOrders field.
+
 	return errors.Join(errs...)
 }
 
@@ -194,7 +198,8 @@ func (m MsgMarketUpdateUserSettleRequest) ValidateBasic() error {
 		errs = append(errs, fmt.Errorf("invalid market id: cannot be zero"))
 	}
 
-	// TODO[1658]: MsgMarketUpdateUserSettleRequest.ValidateBasic()
+	// Nothing to validate for the AllowUserSettlement field.
+
 	return errors.Join(errs...)
 }
 

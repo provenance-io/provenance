@@ -415,11 +415,261 @@ func TestMsgMarketWithdrawRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestMsgMarketUpdateDetailsRequest_ValidateBasic(t *testing.T)
+func TestMsgMarketUpdateDetailsRequest_ValidateBasic(t *testing.T) {
+	admin := sdk.AccAddress("admin_______________").String()
+	tooLongErr := func(field string, max int) string {
+		return fmt.Sprintf("%s length %d exceeds maximum length of %d", field, max+1, max)
+	}
 
-// TODO[1658]: func TestMsgMarketUpdateEnabledRequest_ValidateBasic(t *testing.T)
+	tests := []struct {
+		name   string
+		msg    MsgMarketUpdateDetailsRequest
+		expErr []string
+	}{
+		{
+			name: "control",
+			msg: MsgMarketUpdateDetailsRequest{
+				Admin:    admin,
+				MarketId: 1,
+				MarketDetails: MarketDetails{
+					Name:        "MyMarket",
+					Description: "This is my own market only for me.",
+					WebsiteUrl:  "https://example.com",
+					IconUri:     "https://example.com/icon",
+				},
+			},
+			expErr: nil,
+		},
+		{
+			name: "empty admin",
+			msg: MsgMarketUpdateDetailsRequest{
+				Admin:         "",
+				MarketId:      1,
+				MarketDetails: MarketDetails{},
+			},
+			expErr: []string{`invalid administrator ""`, "empty address string is not allowed"},
+		},
+		{
+			name: "invalid admin",
+			msg: MsgMarketUpdateDetailsRequest{
+				Admin:         "notvalidadmin",
+				MarketId:      1,
+				MarketDetails: MarketDetails{},
+			},
+			expErr: []string{`invalid administrator "notvalidadmin"`, "decoding bech32 failed"},
+		},
+		{
+			name: "market id zero",
+			msg: MsgMarketUpdateDetailsRequest{
+				Admin:         admin,
+				MarketId:      0,
+				MarketDetails: MarketDetails{},
+			},
+			expErr: []string{"invalid market id", "cannot be zero"},
+		},
+		{
+			name: "name too long",
+			msg: MsgMarketUpdateDetailsRequest{
+				Admin:    admin,
+				MarketId: 1,
+				MarketDetails: MarketDetails{
+					Name: strings.Repeat("p", MaxName+1),
+				},
+			},
+			expErr: []string{tooLongErr("name", MaxName)},
+		},
+		{
+			name: "description too long",
+			msg: MsgMarketUpdateDetailsRequest{
+				Admin:    admin,
+				MarketId: 1,
+				MarketDetails: MarketDetails{
+					Description: strings.Repeat("d", MaxDescription+1),
+				},
+			},
+			expErr: []string{tooLongErr("description", MaxDescription)},
+		},
+		{
+			name: "website_url too long",
+			msg: MsgMarketUpdateDetailsRequest{
+				Admin:    admin,
+				MarketId: 1,
+				MarketDetails: MarketDetails{
+					WebsiteUrl: strings.Repeat("w", MaxWebsiteURL+1),
+				},
+			},
+			expErr: []string{tooLongErr("website_url", MaxWebsiteURL)},
+		},
+		{
+			name: "icon_uri too long",
+			msg: MsgMarketUpdateDetailsRequest{
+				Admin:    admin,
+				MarketId: 1,
+				MarketDetails: MarketDetails{
+					IconUri: strings.Repeat("i", MaxIconURI+1),
+				},
+			},
+			expErr: []string{tooLongErr("icon_uri", MaxIconURI)},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgMarketUpdateDetailsRequest{
+				Admin:    "",
+				MarketId: 0,
+				MarketDetails: MarketDetails{
+					Name:        strings.Repeat("p", MaxName+1),
+					Description: strings.Repeat("d", MaxDescription+1),
+					WebsiteUrl:  strings.Repeat("w", MaxWebsiteURL+1),
+					IconUri:     strings.Repeat("i", MaxIconURI+1),
+				},
+			},
+			expErr: []string{
+				"invalid administrator",
+				"invalid market id",
+				tooLongErr("name", MaxName),
+				tooLongErr("description", MaxDescription),
+				tooLongErr("website_url", MaxWebsiteURL),
+				tooLongErr("icon_uri", MaxIconURI),
+			},
+		},
+	}
 
-// TODO[1658]: func TestMsgMarketUpdateUserSettleRequest_ValidateBasic(t *testing.T)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgMarketUpdateEnabledRequest_ValidateBasic(t *testing.T) {
+	admin := sdk.AccAddress("admin_______________").String()
+
+	tests := []struct {
+		name   string
+		msg    MsgMarketUpdateEnabledRequest
+		expErr []string
+	}{
+		{
+			name: "control: true",
+			msg: MsgMarketUpdateEnabledRequest{
+				Admin:           admin,
+				MarketId:        1,
+				AcceptingOrders: true,
+			},
+			expErr: nil,
+		},
+		{
+			name: "control: false",
+			msg: MsgMarketUpdateEnabledRequest{
+				Admin:           admin,
+				MarketId:        1,
+				AcceptingOrders: true,
+			},
+			expErr: nil,
+		},
+		{
+			name: "empty admin",
+			msg: MsgMarketUpdateEnabledRequest{
+				Admin:    "",
+				MarketId: 1,
+			},
+			expErr: []string{
+				`invalid administrator ""`, "empty address string is not allowed",
+			},
+		},
+		{
+			name: "bad admin",
+			msg: MsgMarketUpdateEnabledRequest{
+				Admin:    "badadmin",
+				MarketId: 1,
+			},
+			expErr: []string{
+				`invalid administrator "badadmin"`, "decoding bech32 failed",
+			},
+		},
+		{
+			name: "market id zero",
+			msg: MsgMarketUpdateEnabledRequest{
+				Admin:    admin,
+				MarketId: 0,
+			},
+			expErr: []string{
+				"invalid market id", "cannot be zero",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgMarketUpdateUserSettleRequest_ValidateBasic(t *testing.T) {
+	admin := sdk.AccAddress("admin_______________").String()
+
+	tests := []struct {
+		name   string
+		msg    MsgMarketUpdateUserSettleRequest
+		expErr []string
+	}{
+		{
+			name: "control: true",
+			msg: MsgMarketUpdateUserSettleRequest{
+				Admin:               admin,
+				MarketId:            1,
+				AllowUserSettlement: true,
+			},
+			expErr: nil,
+		},
+		{
+			name: "control: false",
+			msg: MsgMarketUpdateUserSettleRequest{
+				Admin:               admin,
+				MarketId:            1,
+				AllowUserSettlement: true,
+			},
+			expErr: nil,
+		},
+		{
+			name: "empty admin",
+			msg: MsgMarketUpdateUserSettleRequest{
+				Admin:    "",
+				MarketId: 1,
+			},
+			expErr: []string{
+				`invalid administrator ""`, "empty address string is not allowed",
+			},
+		},
+		{
+			name: "bad admin",
+			msg: MsgMarketUpdateUserSettleRequest{
+				Admin:    "badadmin",
+				MarketId: 1,
+			},
+			expErr: []string{
+				`invalid administrator "badadmin"`, "decoding bech32 failed",
+			},
+		},
+		{
+			name: "market id zero",
+			msg: MsgMarketUpdateUserSettleRequest{
+				Admin:    admin,
+				MarketId: 0,
+			},
+			expErr: []string{
+				"invalid market id", "cannot be zero",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
 
 func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 	goodAdminAddr := sdk.AccAddress("goodAdminAddr_______").String()
@@ -444,13 +694,22 @@ func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 			expErr: nil,
 		},
 		{
+			name: "empty admin",
+			msg: MsgMarketManagePermissionsRequest{
+				Admin:     "",
+				MarketId:  1,
+				RevokeAll: []string{goodAddr1},
+			},
+			expErr: []string{`invalid administrator ""`, "empty address string is not allowed"},
+		},
+		{
 			name: "invalid admin",
 			msg: MsgMarketManagePermissionsRequest{
 				Admin:     "bad1admin",
 				MarketId:  1,
 				RevokeAll: []string{goodAddr1},
 			},
-			expErr: []string{"invalid administrator", `"bad1admin"`, "decoding bech32 failed"},
+			expErr: []string{`invalid administrator "bad1admin"`, "decoding bech32 failed"},
 		},
 		{
 			name: "market id zero",
@@ -493,7 +752,7 @@ func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 			},
 			expErr: []string{
 				`invalid to-revoke access grant: invalid address "badaddr"`,
-				`invalid to-revoke access grant: permission is unspecified for ` + goodAddr1,
+				"invalid to-revoke access grant: permission is unspecified for " + goodAddr1,
 			},
 		},
 		{
@@ -524,7 +783,7 @@ func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 			},
 			expErr: []string{
 				`invalid to-grant access grant: invalid address "badaddr"`,
-				`invalid to-grant access grant: permission is unspecified for ` + goodAddr1,
+				"invalid to-grant access grant: permission is unspecified for " + goodAddr1,
 			},
 		},
 		{
@@ -560,6 +819,23 @@ func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 				"address " + goodAddr1 + " has both revoke and grant \"withdraw\"",
 				"address " + goodAddr2 + " has both revoke and grant \"attributes\"",
 				"address " + goodAddr2 + " has both revoke and grant \"permissions\"",
+			},
+		},
+		{
+			name: "multiple errs",
+			msg: MsgMarketManagePermissionsRequest{
+				Admin:     "",
+				MarketId:  0,
+				RevokeAll: []string{"bad-revoke-addr"},
+				ToRevoke:  []AccessGrant{{Address: goodAddr1, Permissions: []Permission{Permission_unspecified}}},
+				ToGrant:   []AccessGrant{{Address: "bad-grant-addr", Permissions: []Permission{Permission_withdraw}}},
+			},
+			expErr: []string{
+				"invalid administrator \"\"",
+				"invalid market id",
+				"invalid revoke-all address \"bad-revoke-addr\"",
+				"invalid to-revoke access grant: permission is unspecified for " + goodAddr1,
+				`invalid to-grant access grant: invalid address "bad-grant-addr"`,
 			},
 		},
 	}
