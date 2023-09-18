@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
+
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 var docGenCmdStart = fmt.Sprintf("%s docgen", version.AppName)
@@ -48,12 +49,12 @@ A successful command will not only generate files in the selected formats but al
 			}
 
 			if !markdown && !yaml && !rest && !manpage {
-				return fmt.Errorf("at least one doc type must be specified.")
+				return fmt.Errorf("at least one doc type must be specified")
 			}
 
 			dir := args[0]
 			if !exists(dir) {
-				err := os.Mkdir(dir, 0755)
+				err = os.Mkdir(dir, 0755)
 				if err != nil {
 					return err
 				}
