@@ -325,7 +325,7 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 	}
 
 	orderOwner := order.GetOwner()
-	if signer != orderOwner && !k.HasPermission(ctx, order.GetMarketID(), signer, exchange.Permission_cancel) {
+	if signer != orderOwner && !k.CanCancelMarketOrders(ctx, order.GetMarketID(), signer) {
 		return fmt.Errorf("account %s does not have permission to cancel order %d", signer, orderID)
 	}
 

@@ -675,6 +675,42 @@ func (k Keeper) HasPermission(ctx sdk.Context, marketID uint32, address string, 
 	return storeHasPermission(k.getStore(ctx), marketID, addr, permission)
 }
 
+// CanSettleOrders returns true if the provided admin bech32 address has permission to
+// settle orders for a market. Also returns true if the provided address is the authority address.
+func (k Keeper) CanSettleOrders(ctx sdk.Context, marketID uint32, admin string) bool {
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_settle)
+}
+
+// CanCancelMarketOrders returns true if the provided admin bech32 address has permission to
+// cancel orders for a market. Also returns true if the provided address is the authority address.
+func (k Keeper) CanCancelMarketOrders(ctx sdk.Context, marketID uint32, admin string) bool {
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_cancel)
+}
+
+// CanWithdrawMarketFunds returns true if the provided admin bech32 address has permission to
+// withdraw funds from the given market's account. Also returns true if the provided address is the authority address.
+func (k Keeper) CanWithdrawMarketFunds(ctx sdk.Context, marketID uint32, admin string) bool {
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_withdraw)
+}
+
+// CanUpdateMarket returns true if the provided admin bech32 address has permission to
+// update market details and settings. Also returns true if the provided address is the authority address.
+func (k Keeper) CanUpdateMarket(ctx sdk.Context, marketID uint32, admin string) bool {
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_update)
+}
+
+// CanManagePermissions returns true if the provided admin bech32 address has permission to
+// manage user permissions for a given market. Also returns true if the provided address is the authority address.
+func (k Keeper) CanManagePermissions(ctx sdk.Context, marketID uint32, admin string) bool {
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_permissions)
+}
+
+// CanManageReqAttrs returns true if the provided admin bech32 address has permission to
+// manage required attributes for a given market. Also returns true if the provided address is the authority address.
+func (k Keeper) CanManageReqAttrs(ctx sdk.Context, marketID uint32, admin string) bool {
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_attributes)
+}
+
 // getUserPermissions gets all permissions that have been granted to a user in a market.
 func getUserPermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress) []exchange.Permission {
 	var rv []exchange.Permission
@@ -945,12 +981,6 @@ func (k Keeper) CanCreateBid(ctx sdk.Context, marketID uint32, addr sdk.AccAddre
 	return k.hasReqAttrs(ctx, addr, reqAttrs)
 }
 
-// CanWithdrawMarketFunds returns true if the provided admin bech32 address has permission to
-// withdraw funds from the given market's account. Also returns true if the provided address is the authority address.
-func (k Keeper) CanWithdrawMarketFunds(ctx sdk.Context, marketID uint32, admin string) bool {
-	return k.HasPermission(ctx, marketID, admin, exchange.Permission_withdraw)
-}
-
 // WithdrawMarketFunds transfers funds from a market account to another account.
 // The caller is responsible for making sure this withdrawal should be allowed (e.g. by calling CanWithdrawMarketFunds first).
 func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk.AccAddress, amount sdk.Coins) error {
@@ -960,12 +990,6 @@ func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk
 		return fmt.Errorf("failed to withdraw %s from market %d: %w", amount, marketID, err)
 	}
 	return nil
-}
-
-// CanManagePermissions returns true if the provided admin bech32 address has permission to
-// manage user permissions for a given market. Also returns true if the provided address is the authority address.
-func (k Keeper) CanManagePermissions(ctx sdk.Context, marketID uint32, admin string) bool {
-	return k.HasPermission(ctx, marketID, admin, exchange.Permission_permissions)
 }
 
 // UpdatePermissions updates users permissions in the store using the provided changes.
@@ -1016,12 +1040,6 @@ func (k Keeper) UpdatePermissions(ctx sdk.Context, msg *exchange.MsgMarketManage
 	}
 
 	return nil
-}
-
-// CanManageReqAttrs returns true if the provided admin bech32 address has permission to
-// manage required attributes for a given market. Also returns true if the provided address is the authority address.
-func (k Keeper) CanManageReqAttrs(ctx sdk.Context, marketID uint32, admin string) bool {
-	return k.HasPermission(ctx, marketID, admin, exchange.Permission_attributes)
 }
 
 // updateReqAttrs updates the required attributes in the store that use the provided key maker by removing then adding
