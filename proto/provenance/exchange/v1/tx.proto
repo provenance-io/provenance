@@ -111,7 +111,24 @@ message MsgCancelOrderResponse {}
 
 // MsgFillBidsRequest is a request message for the FillBids endpoint.
 message MsgFillBidsRequest {
-  // TODO[1658]: MsgFillBidsRequest
+  option (cosmos.msg.v1.signer) = "seller";
+
+  // seller is the address of the account with the assets to sell.
+  string seller = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numerical identifier of the market with the bids to fill.
+  // All bid orders being filled must be in this market.
+  uint32 market_id = 2;
+  // total_assets are the things that the seller wishes to sell.
+  // It must be the sum of all bid order assets.
+  repeated cosmos.base.v1beta1.Coin total_assets = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // bid_order_ids are the ids of the bid orders that you are trying to fill.
+  // All ids must be for bid orders, and must be in the same market as the market_id.
+  repeated uint64 bid_order_ids = 4;
+  // seller_settlement_flat_fee is the flat fee for sellers that will be charged during settlement.
+  cosmos.base.v1beta1.Coin seller_settlement_flat_fee = 5;
+  // ask_order_creation_fee is the fee that is being paid to create this order.
+  cosmos.base.v1beta1.Coin ask_order_creation_fee = 6;
 }
 
 // MsgFillBidsResponse is a response message for the FillBids endpoint.

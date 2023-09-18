@@ -2235,6 +2235,16 @@ MsgFillAsksResponse is a response message for the FillAsks endpoint.
 MsgFillBidsRequest is a request message for the FillBids endpoint.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `seller` | [string](#string) |  | seller is the address of the account with the assets to sell. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market with the bids to fill. All bid orders being filled must be in this market. |
+| `total_assets` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | total_assets are the things that the seller wishes to sell. It must be the sum of all bid order assets. |
+| `bid_order_ids` | [uint64](#uint64) | repeated | bid_order_ids are the ids of the bid orders that you are trying to fill. All ids must be for bid orders, and must be in the same market as the market_id. |
+| `seller_settlement_flat_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | seller_settlement_flat_fee is the flat fee for sellers that will be charged during settlement. |
+| `ask_order_creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | ask_order_creation_fee is the fee that is being paid to create this order. |
+
+
 
 
 
