@@ -29,7 +29,7 @@ func TestDocGen(t *testing.T) {
 			name:         "failure - no flags specified",
 			target:       "tmp",
 			createTarget: true,
-			err:          "at least one doc type must be specified.",
+			err:          "at least one doc type must be specified",
 		},
 		{
 			name:         "failure - unsupported flag format",
