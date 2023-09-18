@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -15,6 +17,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 		MaxTotalSupply:         k.GetMaxTotalSupply(ctx),
 		EnableGovernance:       k.GetEnableGovernance(ctx),
 		UnrestrictedDenomRegex: k.GetUnrestrictedDenomRegex(ctx),
+		MaxSupply:              k.GetMaxSupply(ctx),
 	}
 }
 
@@ -23,11 +26,21 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
-// GetMaxTotalSupply return the current parameter value for the max allowed total supply (or default if unset)
+// GetMaxTotalSupply is deprecated.
+// Deprecated: GetMaxTotalSupply is kept for backwards compatibility.
 func (k Keeper) GetMaxTotalSupply(ctx sdk.Context) (max uint64) {
 	max = types.DefaultMaxTotalSupply
 	if k.paramSpace.Has(ctx, types.ParamStoreKeyMaxTotalSupply) {
 		k.paramSpace.Get(ctx, types.ParamStoreKeyMaxTotalSupply, &max)
+	}
+	return
+}
+
+// GetMaxSupply return the current parameter value for the max allowed supply (or default if unset)
+func (k Keeper) GetMaxSupply(ctx sdk.Context) (max math.Int) {
+	max = types.StringToBigInt(types.DefaultMaxSupply)
+	if k.paramSpace.Has(ctx, types.ParamStoreKeyMaxSupply) {
+		k.paramSpace.Get(ctx, types.ParamStoreKeyMaxSupply, &max)
 	}
 	return
 }
