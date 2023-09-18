@@ -107,8 +107,8 @@ func (m MsgMarketSettleRequest) GetSigners() []sdk.AccAddress {
 func (m MsgMarketWithdrawRequest) ValidateBasic() error {
 	var errs []error
 
-	if _, err := sdk.AccAddressFromBech32(m.Administrator); err != nil {
-		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Administrator, err))
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
 	}
 
 	if m.MarketId == 0 {
@@ -129,7 +129,7 @@ func (m MsgMarketWithdrawRequest) ValidateBasic() error {
 }
 
 func (m MsgMarketWithdrawRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(m.Administrator)
+	addr := sdk.MustAccAddressFromBech32(m.Admin)
 	return []sdk.AccAddress{addr}
 }
 
@@ -176,8 +176,8 @@ func (m MsgMarketManagePermissionsRequest) GetSigners() []sdk.AccAddress {
 func (m MsgMarketManageReqAttrsRequest) ValidateBasic() error {
 	var errs []error
 
-	if _, err := sdk.AccAddressFromBech32(m.Administrator); err != nil {
-		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Administrator, err))
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
 	}
 
 	if m.MarketId == 0 {
@@ -202,7 +202,7 @@ func (m MsgMarketManageReqAttrsRequest) HasUpdates() bool {
 }
 
 func (m MsgMarketManageReqAttrsRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(m.Administrator)
+	addr := sdk.MustAccAddressFromBech32(m.Admin)
 	return []sdk.AccAddress{addr}
 }
 

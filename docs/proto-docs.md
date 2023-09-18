@@ -2345,6 +2345,14 @@ MsgGovUpdateParamsResponse is a response message for the GovUpdateParams endpoin
 MsgMarketManagePermissionsRequest is a request message for the MarketManagePermissions endpoint.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "permissions" permission requesting this change. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for.
+
+TODO[1658]: MsgMarketManagePermissionsRequest |
+
+
 
 
 
@@ -2367,7 +2375,7 @@ MsgMarketManageReqAttrsRequest is a request message for the MarketManageReqAttrs
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `administrator` | [string](#string) |  | administrator is the account with withdraw permission requesting the withdrawal. |
+| `admin` | [string](#string) |  | admin is the account with "attributes" permission requesting this change. |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
 | `create_ask_to_add` | [string](#string) | repeated | create_ask_to_add are the attributes that should now also be required to create an ask order. |
 | `create_ask_to_remove` | [string](#string) | repeated | create_ask_to_add are the attributes that should no longer be required to create an ask order. |
@@ -2395,6 +2403,14 @@ MsgMarketManageReqAttrsResponse is a response message for the MarketManageReqAtt
 MsgMarketSettleRequest is a request message for the MarketSettle endpoint.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "settle" permission requesting this settlement. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for.
+
+TODO[1658]: MsgMarketSettleRequest |
+
+
 
 
 
@@ -2413,6 +2429,14 @@ MsgMarketSettleResponse is a response message for the MarketSettle endpoint.
 
 ### MsgMarketUpdateDetailsRequest
 MsgMarketUpdateDetailsRequest is a request message for the MarketUpdateDetails endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for.
+
+TODO[1658]: MsgMarketUpdateDetailsRequest |
 
 
 
@@ -2435,6 +2459,14 @@ MsgMarketUpdateDetailsResponse is a response message for the MarketUpdateDetails
 MsgMarketUpdateEnabledRequest is a request message for the MarketUpdateEnabled endpoint.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for.
+
+TODO[1658]: MsgMarketUpdateEnabledRequest |
+
+
 
 
 
@@ -2453,6 +2485,14 @@ MsgMarketUpdateEnabledResponse is a response message for the MarketUpdateEnabled
 
 ### MsgMarketUpdateUserSettleRequest
 MsgMarketUpdateUserSettleRequest is a request message for the MarketUpdateUserSettle endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for.
+
+TODO[1658]: MsgMarketUpdateUserSettleRequest |
 
 
 
@@ -2477,7 +2517,7 @@ MsgMarketWithdrawRequest is a request message for the MarketWithdraw endpoint.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `administrator` | [string](#string) |  | administrator is the account with withdraw permission requesting the withdrawal. |
+| `admin` | [string](#string) |  | admin is the account with withdraw permission requesting the withdrawal. |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to withdraw from. |
 | `to_address` | [string](#string) |  | to_address is the address that will receive the funds. |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the funds to withdraw. |

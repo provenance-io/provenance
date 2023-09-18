@@ -75,8 +75,8 @@ func (k MsgServer) MarketSettle(goCtx context.Context, msg *exchange.MsgMarketSe
 // MarketWithdraw is a market endpoint to withdraw fees that have been collected.
 func (k MsgServer) MarketWithdraw(goCtx context.Context, msg *exchange.MsgMarketWithdrawRequest) (*exchange.MsgMarketWithdrawResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if !k.CanWithdrawMarketFunds(ctx, msg.MarketId, msg.Administrator) {
-		return nil, fmt.Errorf("account %s does not have withdraw permission for market %d", msg.Administrator, msg.MarketId)
+	if !k.CanWithdrawMarketFunds(ctx, msg.MarketId, msg.Admin) {
+		return nil, fmt.Errorf("account %s does not have withdraw permission for market %d", msg.Admin, msg.MarketId)
 	}
 	toAddr := sdk.MustAccAddressFromBech32(msg.ToAddress)
 	err := k.WithdrawMarketFunds(ctx, msg.MarketId, toAddr, msg.Amount)
@@ -113,8 +113,8 @@ func (k MsgServer) MarketManagePermissions(goCtx context.Context, msg *exchange.
 // MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it.
 func (k MsgServer) MarketManageReqAttrs(goCtx context.Context, msg *exchange.MsgMarketManageReqAttrsRequest) (*exchange.MsgMarketManageReqAttrsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if !k.CanWithdrawMarketFunds(ctx, msg.MarketId, msg.Administrator) {
-		return nil, fmt.Errorf("account %s does not have permission to manage required attributes for market %d", msg.Administrator, msg.MarketId)
+	if !k.CanWithdrawMarketFunds(ctx, msg.MarketId, msg.Admin) {
+		return nil, fmt.Errorf("account %s does not have permission to manage required attributes for market %d", msg.Admin, msg.MarketId)
 	}
 	err := k.UpdateReqAttrs(ctx, msg)
 	if err != nil {

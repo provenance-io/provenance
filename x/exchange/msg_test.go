@@ -43,14 +43,14 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		// TODO[1658]: Add MsgFillAsksRequest once it's actually been defined.
 		// TODO[1658]: Add MsgMarketSettleRequest once it's actually been defined.
 		func(signer string) sdk.Msg {
-			return &MsgMarketWithdrawRequest{Administrator: signer}
+			return &MsgMarketWithdrawRequest{Admin: signer}
 		},
 		// TODO[1658]: Add MsgMarketUpdateDetailsRequest once it's actually been defined.
 		// TODO[1658]: Add MsgMarketUpdateEnabledRequest once it's actually been defined.
 		// TODO[1658]: Add MsgMarketUpdateUserSettleRequest once it's actually been defined.
 		// TODO[1658]: Add MsgMarketManagePermissionsRequest once it's actually been defined.
 		func(signer string) sdk.Msg {
-			return &MsgMarketManageReqAttrsRequest{Administrator: signer}
+			return &MsgMarketManageReqAttrsRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
 			return &MsgGovCreateMarketRequest{Authority: signer}
@@ -289,100 +289,100 @@ func TestMsgMarketWithdrawRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "control",
 			msg: MsgMarketWithdrawRequest{
-				Administrator: goodAdminAddr,
-				MarketId:      1,
-				ToAddress:     goodToAddr,
-				Amount:        goodCoins,
+				Admin:     goodAdminAddr,
+				MarketId:  1,
+				ToAddress: goodToAddr,
+				Amount:    goodCoins,
 			},
 			expErr: nil,
 		},
 		{
 			name: "no administrator",
 			msg: MsgMarketWithdrawRequest{
-				Administrator: "",
-				MarketId:      1,
-				ToAddress:     goodToAddr,
-				Amount:        goodCoins,
+				Admin:     "",
+				MarketId:  1,
+				ToAddress: goodToAddr,
+				Amount:    goodCoins,
 			},
 			expErr: []string{`invalid administrator ""`, "empty address string is not allowed"},
 		},
 		{
 			name: "bad administrator",
 			msg: MsgMarketWithdrawRequest{
-				Administrator: "notright",
-				MarketId:      1,
-				ToAddress:     goodToAddr,
-				Amount:        goodCoins,
+				Admin:     "notright",
+				MarketId:  1,
+				ToAddress: goodToAddr,
+				Amount:    goodCoins,
 			},
 			expErr: []string{`invalid administrator "notright"`, "decoding bech32 failed"},
 		},
 		{
 			name: "market id zero",
 			msg: MsgMarketWithdrawRequest{
-				Administrator: goodAdminAddr,
-				MarketId:      0,
-				ToAddress:     goodToAddr,
-				Amount:        goodCoins,
+				Admin:     goodAdminAddr,
+				MarketId:  0,
+				ToAddress: goodToAddr,
+				Amount:    goodCoins,
 			},
 			expErr: []string{"invalid market id", "cannot be zero"},
 		},
 		{
 			name: "no to address",
 			msg: MsgMarketWithdrawRequest{
-				Administrator: goodAdminAddr,
-				MarketId:      1,
-				ToAddress:     "",
-				Amount:        goodCoins,
+				Admin:     goodAdminAddr,
+				MarketId:  1,
+				ToAddress: "",
+				Amount:    goodCoins,
 			},
 			expErr: []string{`invalid to address ""`, "empty address string is not allowed"},
 		},
 		{
 			name: "bad to address",
 			msg: MsgMarketWithdrawRequest{
-				Administrator: goodAdminAddr,
-				MarketId:      1,
-				ToAddress:     "notright",
-				Amount:        goodCoins,
+				Admin:     goodAdminAddr,
+				MarketId:  1,
+				ToAddress: "notright",
+				Amount:    goodCoins,
 			},
 			expErr: []string{`invalid to address "notright"`, "decoding bech32 failed"},
 		},
 		{
 			name: "invalid denom in amount",
 			msg: MsgMarketWithdrawRequest{
-				Administrator: goodAdminAddr,
-				MarketId:      1,
-				ToAddress:     goodToAddr,
-				Amount:        sdk.Coins{coin(3, "x")},
+				Admin:     goodAdminAddr,
+				MarketId:  1,
+				ToAddress: goodToAddr,
+				Amount:    sdk.Coins{coin(3, "x")},
 			},
 			expErr: []string{`invalid amount "3x"`, "invalid denom: x"},
 		},
 		{
 			name: "negative amount",
 			msg: MsgMarketWithdrawRequest{
-				Administrator: goodAdminAddr,
-				MarketId:      1,
-				ToAddress:     goodToAddr,
-				Amount:        sdk.Coins{coin(-1, "negcoin")},
+				Admin:     goodAdminAddr,
+				MarketId:  1,
+				ToAddress: goodToAddr,
+				Amount:    sdk.Coins{coin(-1, "negcoin")},
 			},
 			expErr: []string{`invalid amount "-1negcoin"`, "coin -1negcoin amount is not positive"},
 		},
 		{
 			name: "empty amount",
 			msg: MsgMarketWithdrawRequest{
-				Administrator: goodAdminAddr,
-				MarketId:      1,
-				ToAddress:     goodToAddr,
-				Amount:        sdk.Coins{},
+				Admin:     goodAdminAddr,
+				MarketId:  1,
+				ToAddress: goodToAddr,
+				Amount:    sdk.Coins{},
 			},
 			expErr: []string{`invalid amount ""`, "cannot be zero"},
 		},
 		{
 			name: "zero coin amount",
 			msg: MsgMarketWithdrawRequest{
-				Administrator: goodAdminAddr,
-				MarketId:      1,
-				ToAddress:     goodToAddr,
-				Amount:        sdk.Coins{coin(0, "acorn"), coin(0, "banana")},
+				Admin:     goodAdminAddr,
+				MarketId:  1,
+				ToAddress: goodToAddr,
+				Amount:    sdk.Coins{coin(0, "acorn"), coin(0, "banana")},
 			},
 			expErr: []string{`invalid amount "0acorn,0banana"`, "coin 0acorn amount is not positive"},
 		},
@@ -424,7 +424,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "no admin",
 			msg: MsgMarketManageReqAttrsRequest{
-				Administrator:  "",
+				Admin:          "",
 				MarketId:       1,
 				CreateAskToAdd: []string{"abc"},
 			},
@@ -433,7 +433,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "bad admin",
 			msg: MsgMarketManageReqAttrsRequest{
-				Administrator:  "not1valid",
+				Admin:          "not1valid",
 				MarketId:       1,
 				CreateAskToAdd: []string{"abc"},
 			},
@@ -442,7 +442,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "market id zero",
 			msg: MsgMarketManageReqAttrsRequest{
-				Administrator:  goodAdmin,
+				Admin:          goodAdmin,
 				CreateAskToAdd: []string{"abc"},
 			},
 			expErr: []string{"invalid market id: cannot be zero"},
@@ -450,15 +450,15 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "no updates",
 			msg: MsgMarketManageReqAttrsRequest{
-				Administrator: goodAdmin,
-				MarketId:      1,
+				Admin:    goodAdmin,
+				MarketId: 1,
 			},
 			expErr: []string{"no updates"},
 		},
 		{
 			name: "invalid create ask to add entry",
 			msg: MsgMarketManageReqAttrsRequest{
-				Administrator:  goodAdmin,
+				Admin:          goodAdmin,
 				MarketId:       1,
 				CreateAskToAdd: []string{"in-valid-attr"},
 			},
@@ -467,7 +467,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid create ask to remove entry",
 			msg: MsgMarketManageReqAttrsRequest{
-				Administrator:     goodAdmin,
+				Admin:             goodAdmin,
 				MarketId:          1,
 				CreateAskToRemove: []string{"in-valid-attr"},
 			},
@@ -475,7 +475,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid create bid to add entry",
 			msg: MsgMarketManageReqAttrsRequest{
-				Administrator:  goodAdmin,
+				Admin:          goodAdmin,
 				MarketId:       1,
 				CreateBidToAdd: []string{"in-valid-attr"},
 			},
@@ -484,7 +484,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid create bid to remove entry",
 			msg: MsgMarketManageReqAttrsRequest{
-				Administrator:     goodAdmin,
+				Admin:             goodAdmin,
 				MarketId:          1,
 				CreateBidToRemove: []string{"in-valid-attr"},
 			},
@@ -492,7 +492,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "add and remove same create ask entry",
 			msg: MsgMarketManageReqAttrsRequest{
-				Administrator:     goodAdmin,
+				Admin:             goodAdmin,
 				MarketId:          1,
 				CreateAskToAdd:    []string{"abc", "def", "ghi"},
 				CreateAskToRemove: []string{"jkl", "abc"},
@@ -502,7 +502,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "add and remove same create bid entry",
 			msg: MsgMarketManageReqAttrsRequest{
-				Administrator:     goodAdmin,
+				Admin:             goodAdmin,
 				MarketId:          1,
 				CreateBidToAdd:    []string{"abc", "def", "ghi"},
 				CreateBidToRemove: []string{"jkl", "abc"},
@@ -512,7 +512,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "add to create-ask the same as remove from create-bid",
 			msg: MsgMarketManageReqAttrsRequest{
-				Administrator:     goodAdmin,
+				Admin:             goodAdmin,
 				MarketId:          1,
 				CreateAskToAdd:    []string{"abc", "def", "ghi"},
 				CreateBidToRemove: []string{"jkl", "abc"},
@@ -521,7 +521,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "add to create-bid the same as remove from create-ask",
 			msg: MsgMarketManageReqAttrsRequest{
-				Administrator:     goodAdmin,
+				Admin:             goodAdmin,
 				MarketId:          1,
 				CreateBidToAdd:    []string{"abc", "def", "ghi"},
 				CreateAskToRemove: []string{"jkl", "abc"},
@@ -530,7 +530,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "add one to and remove one from each",
 			msg: MsgMarketManageReqAttrsRequest{
-				Administrator:     goodAdmin,
+				Admin:             goodAdmin,
 				MarketId:          1,
 				CreateAskToAdd:    []string{"to-add.ask"},
 				CreateAskToRemove: []string{"to-remove.ask"},
@@ -550,7 +550,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "multiple errors",
 			msg: MsgMarketManageReqAttrsRequest{
-				Administrator:     "not1valid",
+				Admin:             "not1valid",
 				MarketId:          0,
 				CreateAskToAdd:    []string{"bad-ask-attr", "dup-ask"},
 				CreateAskToRemove: []string{"dup-ask"},
