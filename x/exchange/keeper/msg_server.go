@@ -106,8 +106,15 @@ func (k MsgServer) MarketUpdateUserSettle(goCtx context.Context, msg *exchange.M
 
 // MarketManagePermissions is a market endpoint to manage a market's user permissions.
 func (k MsgServer) MarketManagePermissions(goCtx context.Context, msg *exchange.MsgMarketManagePermissionsRequest) (*exchange.MsgMarketManagePermissionsResponse, error) {
-	// TODO[1658]: Implement MarketManagePermissions
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanManagePermissions(ctx, msg.MarketId, msg.Admin) {
+		return nil, fmt.Errorf("account %s does not have permission to manage permissions for market %d", msg.Admin, msg.MarketId)
+	}
+	err := k.UpdatePermissions(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &exchange.MsgMarketManagePermissionsResponse{}, nil
 }
 
 // MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it.

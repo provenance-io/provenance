@@ -620,6 +620,12 @@ func (k Keeper) SetUserSettlementAllowed(ctx sdk.Context, marketID uint32, allow
 	setUserSettlementAllowed(k.getStore(ctx), marketID, allowed)
 }
 
+// storeHasPermission returns true if there is an entry in the store for the given market, address, and permissions.
+func storeHasPermission(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, permission exchange.Permission) bool {
+	key := MakeKeyMarketPermissions(marketID, addr, permission)
+	return store.Has(key)
+}
+
 // grantPermissions updates the store so that the given address has the provided permissions in a market.
 func grantPermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, permissions []exchange.Permission) {
 	for _, perm := range permissions {
@@ -656,20 +662,6 @@ func setAllMarketPermissions(store sdk.KVStore, marketID uint32, grants []exchan
 	}
 }
 
-// updatePermissions revokes all permissions from the provided revokeAll bech32 addresses, then revokes all permissions
-// in the toRevoke list, and lastly, grants all the permissions in toGrant.
-func updatePermissions(store sdk.KVStore, marketID uint32, revokeAll []string, toRevoke, toGrant []exchange.AccessGrant) {
-	for _, revAddr := range revokeAll {
-		revokeAllUserPermissions(store, marketID, sdk.MustAccAddressFromBech32(revAddr))
-	}
-	for _, ag := range toRevoke {
-		revokePermissions(store, marketID, sdk.MustAccAddressFromBech32(ag.Address), ag.Permissions)
-	}
-	for _, ag := range toGrant {
-		grantPermissions(store, marketID, sdk.MustAccAddressFromBech32(ag.Address), ag.Permissions)
-	}
-}
-
 // HasPermission returns true if the provided address has the permission in question for a given market.
 // Also returns true if the provided address is the authority address.
 func (k Keeper) HasPermission(ctx sdk.Context, marketID uint32, address string, permission exchange.Permission) bool {
@@ -680,9 +672,7 @@ func (k Keeper) HasPermission(ctx sdk.Context, marketID uint32, address string, 
 	if err != nil {
 		return false
 	}
-	store := k.getStore(ctx)
-	key := MakeKeyMarketPermissions(marketID, addr, permission)
-	return store.Has(key)
+	return storeHasPermission(k.getStore(ctx), marketID, addr, permission)
 }
 
 // getUserPermissions gets all permissions that have been granted to a user in a market.
@@ -722,12 +712,6 @@ func getAccessGrants(store sdk.KVStore, marketID uint32) []exchange.AccessGrant 
 func setAccessGrants(store sdk.KVStore, marketID uint32, grants []exchange.AccessGrant) {
 	revokeAllMarketPermissions(store, marketID)
 	setAllMarketPermissions(store, marketID, grants)
-}
-
-// UpdateAccessGrants revokes all permissions from the provided revokeAll bech32 addresses, then revokes all permissions
-// in the toRevoke list, and lastly, grants all the permissions in toGrant.
-func (k Keeper) UpdateAccessGrants(ctx sdk.Context, marketID uint32, revokeAll []string, toRevoke, toGrant []exchange.AccessGrant) {
-	updatePermissions(k.getStore(ctx), marketID, revokeAll, toRevoke, toGrant)
 }
 
 // reqAttrKeyMaker is a function that returns a key for required attributes.
@@ -962,12 +946,13 @@ func (k Keeper) CanCreateBid(ctx sdk.Context, marketID uint32, addr sdk.AccAddre
 }
 
 // CanWithdrawMarketFunds returns true if the provided admin bech32 address has permission to
-// withdraw funds from the given market's account.
+// withdraw funds from the given market's account. Also returns true if the provided address is the authority address.
 func (k Keeper) CanWithdrawMarketFunds(ctx sdk.Context, marketID uint32, admin string) bool {
 	return k.HasPermission(ctx, marketID, admin, exchange.Permission_withdraw)
 }
 
 // WithdrawMarketFunds transfers funds from a market account to another account.
+// The caller is responsible for making sure this withdrawal should be allowed (e.g. by calling CanWithdrawMarketFunds first).
 func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk.AccAddress, amount sdk.Coins) error {
 	marketAddr := exchange.GetMarketAddress(marketID)
 	err := k.bankKeeper.SendCoins(ctx, marketAddr, toAddr, amount)
@@ -977,8 +962,64 @@ func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk
 	return nil
 }
 
+// CanManagePermissions returns true if the provided admin bech32 address has permission to
+// manage user permissions for a given market. Also returns true if the provided address is the authority address.
+func (k Keeper) CanManagePermissions(ctx sdk.Context, marketID uint32, admin string) bool {
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_permissions)
+}
+
+// UpdatePermissions updates users permissions in the store using the provided changes.
+// The caller is responsible for making sure this update should be allowed (e.g. by calling CanManagePermissions first).
+func (k Keeper) UpdatePermissions(ctx sdk.Context, msg *exchange.MsgMarketManagePermissionsRequest) error {
+	marketID := msg.MarketId
+	store := k.getStore(ctx)
+	var errs []error
+
+	for _, addrStr := range msg.RevokeAll {
+		addr := sdk.MustAccAddressFromBech32(addrStr)
+		perms := getUserPermissions(store, marketID, addr)
+		if len(perms) > 0 {
+			if len(errs) == 0 {
+				revokeAllUserPermissions(store, marketID, addr)
+			}
+		} else {
+			errs = append(errs, fmt.Errorf("account %s does not have any permissions for market %d", addrStr, marketID))
+		}
+	}
+
+	for _, ag := range msg.ToRevoke {
+		addr := sdk.MustAccAddressFromBech32(ag.Address)
+		for _, perm := range ag.Permissions {
+			if !storeHasPermission(store, marketID, addr, perm) {
+				errs = append(errs, fmt.Errorf("account %s does not have %s for market %d", ag.Address, perm.String(), marketID))
+			}
+		}
+		if len(errs) == 0 {
+			revokePermissions(store, marketID, addr, ag.Permissions)
+		}
+	}
+
+	for _, ag := range msg.ToGrant {
+		addr := sdk.MustAccAddressFromBech32(ag.Address)
+		for _, perm := range ag.Permissions {
+			if storeHasPermission(store, marketID, addr, perm) {
+				errs = append(errs, fmt.Errorf("account %s already has %s for market %d", ag.Address, perm.String(), marketID))
+			}
+		}
+		if len(errs) == 0 {
+			grantPermissions(store, marketID, addr, ag.Permissions)
+		}
+	}
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	return nil
+}
+
 // CanManageReqAttrs returns true if the provided admin bech32 address has permission to
-// manage required attributes for a given market.
+// manage required attributes for a given market. Also returns true if the provided address is the authority address.
 func (k Keeper) CanManageReqAttrs(ctx sdk.Context, marketID uint32, admin string) bool {
 	return k.HasPermission(ctx, marketID, admin, exchange.Permission_attributes)
 }
