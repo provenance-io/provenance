@@ -88,20 +88,41 @@ func (k MsgServer) MarketWithdraw(goCtx context.Context, msg *exchange.MsgMarket
 
 // MarketUpdateDetails is a market endpoint to update its details.
 func (k MsgServer) MarketUpdateDetails(goCtx context.Context, msg *exchange.MsgMarketUpdateDetailsRequest) (*exchange.MsgMarketUpdateDetailsResponse, error) {
-	// TODO[1658]: Implement MarketUpdateDetails
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
+		return nil, fmt.Errorf("account %s does not have permission to update market %d", msg.Admin, msg.MarketId)
+	}
+	err := k.UpdateMarketDetails(ctx, msg.MarketId, &msg.MarketDetails)
+	if err != nil {
+		return nil, err
+	}
+	return &exchange.MsgMarketUpdateDetailsResponse{}, nil
 }
 
 // MarketUpdateEnabled is a market endpoint to update whether its accepting orders.
 func (k MsgServer) MarketUpdateEnabled(goCtx context.Context, msg *exchange.MsgMarketUpdateEnabledRequest) (*exchange.MsgMarketUpdateEnabledResponse, error) {
-	// TODO[1658]: Implement MarketUpdateEnabled
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
+		return nil, fmt.Errorf("account %s does not have permission to update market %d", msg.Admin, msg.MarketId)
+	}
+	err := k.UpdateMarketActive(ctx, msg.MarketId, msg.AcceptingOrders)
+	if err != nil {
+		return nil, err
+	}
+	return &exchange.MsgMarketUpdateEnabledResponse{}, nil
 }
 
 // MarketUpdateUserSettle is a market endpoint to update whether it allows user-initiated settlement.
 func (k MsgServer) MarketUpdateUserSettle(goCtx context.Context, msg *exchange.MsgMarketUpdateUserSettleRequest) (*exchange.MsgMarketUpdateUserSettleResponse, error) {
-	// TODO[1658]: Implement MarketUpdateUserSettle
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
+		return nil, fmt.Errorf("account %s does not have permission to update market %d", msg.Admin, msg.MarketId)
+	}
+	err := k.UpdateUserSettlementAllowed(ctx, msg.MarketId, msg.AllowUserSettlement)
+	if err != nil {
+		return nil, err
+	}
+	return &exchange.MsgMarketUpdateUserSettleResponse{}, nil
 }
 
 // MarketManagePermissions is a market endpoint to manage a market's user permissions.

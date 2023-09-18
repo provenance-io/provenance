@@ -568,6 +568,27 @@ func validateBuyerSettlementFee(store sdk.KVStore, marketID uint32, price sdk.Co
 	return errors.Join(errs...)
 }
 
+// UpdateMarketDetails updates a market's details. It returns an error if the market account
+// isn't found or if there aren't any changes provided.
+func (k Keeper) UpdateMarketDetails(ctx sdk.Context, marketID uint32, marketDetails *exchange.MarketDetails) error {
+	if err := marketDetails.Validate(); err != nil {
+		return err
+	}
+
+	marketAcc := k.GetMarketAccount(ctx, marketID)
+	if marketAcc == nil {
+		return fmt.Errorf("market %d account not found", marketID)
+	}
+
+	if marketAcc.MarketDetails.Equal(marketDetails) {
+		return errors.New("no changes")
+	}
+
+	marketAcc.MarketDetails = *marketDetails
+	k.accountKeeper.SetAccount(ctx, marketAcc)
+	return nil
+}
+
 // isMarketActive returns true if the provided market is accepting orders.
 func isMarketActive(store sdk.KVStore, marketID uint32) bool {
 	key := MakeKeyMarketInactive(marketID)
@@ -594,6 +615,18 @@ func (k Keeper) SetMarketActive(ctx sdk.Context, marketID uint32, active bool) {
 	setMarketActive(k.getStore(ctx), marketID, active)
 }
 
+// UpdateMarketActive updates the active flag for a market.
+// An error is returned if the setting is already what is provided.
+func (k Keeper) UpdateMarketActive(ctx sdk.Context, marketID uint32, active bool) error {
+	store := k.getStore(ctx)
+	current := isMarketActive(store, marketID)
+	if current == active {
+		return fmt.Errorf("market %d already has accepting-orders %t", marketID, active)
+	}
+	setMarketActive(store, marketID, active)
+	return nil
+}
+
 // isUserSettlementAllowed gets whether user-settlement is allowed for a market.
 func isUserSettlementAllowed(store sdk.KVStore, marketID uint32) bool {
 	key := MakeKeyMarketUserSettle(marketID)
@@ -618,6 +651,18 @@ func setUserSettlementAllowed(store sdk.KVStore, marketID uint32, allowed bool) 
 // SetUserSettlementAllowed sets whether user-settlement is allowed for a market.
 func (k Keeper) SetUserSettlementAllowed(ctx sdk.Context, marketID uint32, allowed bool) {
 	setUserSettlementAllowed(k.getStore(ctx), marketID, allowed)
+}
+
+// UpdateUserSettlementAllowed updates the allow-user-settlement flag for a market.
+// An error is returned if the setting is already what is provided.
+func (k Keeper) UpdateUserSettlementAllowed(ctx sdk.Context, marketID uint32, allow bool) error {
+	store := k.getStore(ctx)
+	current := isUserSettlementAllowed(store, marketID)
+	if current == allow {
+		return fmt.Errorf("market %d already has allow-user-settlement %t", marketID, allow)
+	}
+	setUserSettlementAllowed(store, marketID, allow)
+	return nil
 }
 
 // storeHasPermission returns true if there is an entry in the store for the given market, address, and permissions.
@@ -910,9 +955,8 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (marketID 
 	return marketID, err
 }
 
-// GetMarket reads all the market info from state and returns it.
-// Returns nil if the market account doesn't exist or it's not a market account.
-func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
+// GetMarketAccount gets a market's account from the account module.
+func (k Keeper) GetMarketAccount(ctx sdk.Context, marketID uint32) *exchange.MarketAccount {
 	marketAddr := exchange.GetMarketAddress(marketID)
 	acc := k.accountKeeper.GetAccount(ctx, marketAddr)
 	if acc == nil {
@@ -920,6 +964,16 @@ func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
 	}
 	marketAcc, ok := acc.(*exchange.MarketAccount)
 	if !ok {
+		return nil
+	}
+	return marketAcc
+}
+
+// GetMarket reads all the market info from state and returns it.
+// Returns nil if the market account doesn't exist or it's not a market account.
+func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
+	marketAcc := k.GetMarketAccount(ctx, marketID)
+	if marketAcc == nil {
 		return nil
 	}
 
