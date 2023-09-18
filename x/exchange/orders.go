@@ -17,6 +17,43 @@ const (
 	OrderTypeByteBid = byte(0x01)
 )
 
+func findDuplicateIds(orderIDs []uint64) []uint64 {
+	var rv []uint64
+	seen := make(map[uint64]bool)
+	dups := make(map[uint64]bool)
+	for _, orderID := range orderIDs {
+		if seen[orderID] && !dups[orderID] {
+			rv = append(rv, orderID)
+			dups[orderID] = true
+		}
+		seen[orderID] = true
+	}
+	return rv
+}
+
+// ContainsUint64 returns true if the uint64 to find is in the vals slice.
+func ContainsUint64(vals []uint64, toFind uint64) bool {
+	return contains(vals, toFind, func(a, b uint64) bool {
+		return a == b
+	})
+}
+
+// ValidateOrderIDs makes sure that one or more order ids are provided,
+// none of them are zero, and there aren't any duplicates.
+func ValidateOrderIDs(field string, orderIDs []uint64) error {
+	if len(orderIDs) == 0 {
+		return fmt.Errorf("no %s order ids provided", field)
+	}
+	if ContainsUint64(orderIDs, 0) {
+		return fmt.Errorf("invalid %s order ids: cannot contain order id zero", field)
+	}
+	dupOrderIDs := findDuplicateIds(orderIDs)
+	if len(dupOrderIDs) > 0 {
+		return fmt.Errorf("duplicate %s order ids provided: %v", field, dupOrderIDs)
+	}
+	return nil
+}
+
 // NewOrder creates a new empty Order with the provided order id.
 // The order details are set using one of: WithAsk, WithBid.
 func NewOrder(orderID uint64) *Order {

@@ -79,6 +79,132 @@ func TestOrderTypesAndBytes(t *testing.T) {
 	assert.NoError(t, err, "checking for duplicate values")
 }
 
+func TestContainsUint64(t *testing.T) {
+	tests := []struct {
+		name   string
+		vals   []uint64
+		toFind uint64
+		exp    bool
+	}{
+		{
+			name:   "nil vals",
+			vals:   nil,
+			toFind: 0,
+			exp:    false,
+		},
+		{
+			name:   "empty vals",
+			vals:   []uint64{},
+			toFind: 0,
+			exp:    false,
+		},
+		{
+			name:   "one val: same",
+			vals:   []uint64{1},
+			toFind: 1,
+			exp:    true,
+		},
+		{
+			name:   "one val: different",
+			vals:   []uint64{1},
+			toFind: 2,
+			exp:    false,
+		},
+		{
+			name:   "three vals: not found",
+			vals:   []uint64{1, 2, 3},
+			toFind: 0,
+			exp:    false,
+		},
+		{
+			name:   "three vals: first",
+			vals:   []uint64{1, 2, 3},
+			toFind: 1,
+			exp:    true,
+		},
+		{
+			name:   "three vals: second",
+			vals:   []uint64{1, 2, 3},
+			toFind: 2,
+			exp:    true,
+		},
+		{
+			name:   "three vals: third",
+			vals:   []uint64{1, 2, 3},
+			toFind: 3,
+			exp:    true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = ContainsUint64(tc.vals, tc.toFind)
+			}
+			require.NotPanics(t, testFunc, "ContainsUint64(%q, %q)", tc.vals, tc.toFind)
+			assert.Equal(t, tc.exp, actual, "ContainsUint64(%q, %q)", tc.vals, tc.toFind)
+		})
+	}
+}
+
+func TestValidateOrderIDs(t *testing.T) {
+	tests := []struct {
+		name     string
+		field    string
+		orderIDs []uint64
+		expErr   string
+	}{
+		{
+			name:     "control",
+			field:    "testfieldname",
+			orderIDs: []uint64{1, 18_446_744_073_709_551_615, 5, 65_536, 97},
+			expErr:   "",
+		},
+		{
+			name:     "nil slice",
+			field:    "testfieldname",
+			orderIDs: nil,
+			expErr:   "no testfieldname order ids provided",
+		},
+		{
+			name:     "empty slice",
+			field:    "testfieldname",
+			orderIDs: []uint64{},
+			expErr:   "no testfieldname order ids provided",
+		},
+		{
+			name:     "contains a zero",
+			field:    "testfieldname",
+			orderIDs: []uint64{1, 18_446_744_073_709_551_615, 0, 5, 65_536, 97},
+			expErr:   "invalid testfieldname order ids: cannot contain order id zero",
+		},
+		{
+			name:     "one duplicate entry",
+			field:    "testfieldname",
+			orderIDs: []uint64{1, 2, 3, 1, 4, 5},
+			expErr:   "duplicate testfieldname order ids provided: [1]",
+		},
+		{
+			name:     "three duplicate entries",
+			field:    "testfieldname",
+			orderIDs: []uint64{1, 2, 3, 1, 4, 5, 5, 6, 7, 3, 8, 9},
+			expErr:   "duplicate testfieldname order ids provided: [1 5 3]",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = ValidateOrderIDs(tc.field, tc.orderIDs)
+			}
+			require.NotPanics(t, testFunc, "ValidateOrderIDs(%q, %v)", tc.field, tc.orderIDs)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateOrderIDs(%q, %v)", tc.field, tc.orderIDs)
+		})
+	}
+}
+
 func TestNewOrder(t *testing.T) {
 	tests := []struct {
 		name    string

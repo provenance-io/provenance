@@ -13,6 +13,8 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
+const emptyAddrErr = "empty address string is not allowed"
+
 func TestAllMsgsGetSigners(t *testing.T) {
 	// getTypeName gets just the type name of the provided thing, e.g. "MsgGovCreateMarketRequest".
 	getTypeName := func(thing interface{}) string {
@@ -27,7 +29,6 @@ func TestAllMsgsGetSigners(t *testing.T) {
 	testAddr := sdk.AccAddress("testAddr____________")
 	badAddrStr := "badaddr"
 	badAddrErr := "decoding bech32 failed: invalid bech32 string length 7"
-	emptyAddrErr := "empty address string is not allowed"
 
 	msgMakers := []func(signer string) sdk.Msg{
 		func(signer string) sdk.Msg {
@@ -39,7 +40,9 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg {
 			return &MsgCancelOrderRequest{Signer: signer}
 		},
-		// TODO[1658]: Add MsgFillBidsRequest once it's actually been defined.
+		func(signer string) sdk.Msg {
+			return &MsgFillBidsRequest{Seller: signer}
+		},
 		// TODO[1658]: Add MsgFillAsksRequest once it's actually been defined.
 		func(signer string) sdk.Msg {
 			return &MsgMarketSettleRequest{Admin: signer}
@@ -250,7 +253,7 @@ func TestMsgCancelOrderRequest_ValidateBasic(t *testing.T) {
 				Signer:  "",
 				OrderId: 1,
 			},
-			expErr: []string{"invalid signer: ", "empty address string is not allowed"},
+			expErr: []string{"invalid signer: ", emptyAddrErr},
 		},
 		{
 			name: "invalid owner",
@@ -277,7 +280,190 @@ func TestMsgCancelOrderRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestMsgFillBidsRequest_ValidateBasic(t *testing.T)
+func TestMsgFillBidsRequest_ValidateBasic(t *testing.T) {
+	coin := func(amount int64, denom string) *sdk.Coin {
+		return &sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	seller := sdk.AccAddress("seller______________").String()
+
+	tests := []struct {
+		name   string
+		msg    MsgFillBidsRequest
+		expErr []string
+	}{
+		{
+			name: "control",
+			msg: MsgFillBidsRequest{
+				Seller:                  seller,
+				MarketId:                1,
+				TotalAssets:             sdk.Coins{*coin(3, "acorn")},
+				BidOrderIds:             []uint64{1, 2, 3},
+				SellerSettlementFlatFee: coin(2, "banana"),
+				AskOrderCreationFee:     coin(8, "cactus"),
+			},
+			expErr: nil,
+		},
+		{
+			name: "empty seller",
+			msg: MsgFillBidsRequest{
+				Seller:      "",
+				MarketId:    1,
+				TotalAssets: sdk.Coins{*coin(3, "acorn")},
+				BidOrderIds: []uint64{1},
+			},
+			expErr: []string{"invalid seller", emptyAddrErr},
+		},
+		{
+			name: "bad seller",
+			msg: MsgFillBidsRequest{
+				Seller:      "not-an-address",
+				MarketId:    1,
+				TotalAssets: sdk.Coins{*coin(3, "acorn")},
+				BidOrderIds: []uint64{1},
+			},
+			expErr: []string{"invalid seller", "decoding bech32 failed"},
+		},
+		{
+			name: "market id zero",
+			msg: MsgFillBidsRequest{
+				Seller:      seller,
+				MarketId:    0,
+				TotalAssets: sdk.Coins{*coin(3, "acorn")},
+				BidOrderIds: []uint64{1},
+			},
+			expErr: []string{"invalid market id", "cannot be zero"},
+		},
+		{
+			name: "nil total assets",
+			msg: MsgFillBidsRequest{
+				Seller:      seller,
+				MarketId:    1,
+				TotalAssets: nil,
+				BidOrderIds: []uint64{1},
+			},
+			expErr: []string{"invalid total assets", "cannot be zero"},
+		},
+		{
+			name: "empty total assets",
+			msg: MsgFillBidsRequest{
+				Seller:      seller,
+				MarketId:    1,
+				TotalAssets: sdk.Coins{},
+				BidOrderIds: []uint64{1},
+			},
+			expErr: []string{"invalid total assets", "cannot be zero"},
+		},
+		{
+			name: "invalid total assets",
+			msg: MsgFillBidsRequest{
+				Seller:      seller,
+				MarketId:    1,
+				TotalAssets: sdk.Coins{*coin(-1, "acorn")},
+				BidOrderIds: []uint64{1},
+			},
+			expErr: []string{"invalid total assets", "coin -1acorn amount is not positive"},
+		},
+		{
+			name: "nil order ids",
+			msg: MsgFillBidsRequest{
+				Seller:      seller,
+				MarketId:    1,
+				TotalAssets: sdk.Coins{*coin(1, "acorn")},
+				BidOrderIds: nil,
+			},
+			expErr: []string{"no bid order ids provided"},
+		},
+		{
+			name: "order id zero",
+			msg: MsgFillBidsRequest{
+				Seller:      seller,
+				MarketId:    1,
+				TotalAssets: sdk.Coins{*coin(1, "acorn")},
+				BidOrderIds: []uint64{0},
+			},
+			expErr: []string{"invalid bid order ids: cannot contain order id zero"},
+		},
+		{
+			name: "duplicate order ids",
+			msg: MsgFillBidsRequest{
+				Seller:      seller,
+				MarketId:    1,
+				TotalAssets: sdk.Coins{*coin(1, "acorn")},
+				BidOrderIds: []uint64{1, 2, 1},
+			},
+			expErr: []string{"duplicate bid order ids provided: [1]"},
+		},
+		{
+			name: "invalid seller settlement flat fee",
+			msg: MsgFillBidsRequest{
+				Seller:                  seller,
+				MarketId:                1,
+				TotalAssets:             sdk.Coins{*coin(1, "acorn")},
+				BidOrderIds:             []uint64{1},
+				SellerSettlementFlatFee: coin(-1, "catan"),
+			},
+			expErr: []string{"invalid seller settlement flat fee", "negative coin amount: -1"},
+		},
+		{
+			name: "seller settlement flat fee with zero amount",
+			msg: MsgFillBidsRequest{
+				Seller:                  seller,
+				MarketId:                1,
+				TotalAssets:             sdk.Coins{*coin(1, "acorn")},
+				BidOrderIds:             []uint64{1},
+				SellerSettlementFlatFee: coin(0, "catan"),
+			},
+			expErr: []string{"invalid seller settlement flat fee", "catan amount cannot be zero"},
+		},
+		{
+			name: "invalid order creation fee",
+			msg: MsgFillBidsRequest{
+				Seller:              seller,
+				MarketId:            1,
+				TotalAssets:         sdk.Coins{*coin(1, "acorn")},
+				BidOrderIds:         []uint64{1},
+				AskOrderCreationFee: coin(-1, "catan"),
+			},
+			expErr: []string{"invalid ask order creation fee", "negative coin amount: -1"},
+		},
+		{
+			name: "order creation fee with zero amount",
+			msg: MsgFillBidsRequest{
+				Seller:              seller,
+				MarketId:            1,
+				TotalAssets:         sdk.Coins{*coin(1, "acorn")},
+				BidOrderIds:         []uint64{1},
+				AskOrderCreationFee: coin(0, "catan"),
+			},
+			expErr: []string{"invalid ask order creation fee", "catan amount cannot be zero"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgFillBidsRequest{
+				Seller:                  "",
+				MarketId:                0,
+				TotalAssets:             nil,
+				BidOrderIds:             nil,
+				SellerSettlementFlatFee: coin(0, "catan"),
+				AskOrderCreationFee:     coin(-1, "catan"),
+			},
+			expErr: []string{
+				"invalid seller",
+				"invalid market id",
+				"invalid total assets",
+				"no bid order ids provided",
+				"invalid seller settlement flat fee",
+				"invalid ask order creation fee",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
 
 // TODO[1658]: func TestMsgFillAsksRequest_ValidateBasic(t *testing.T)
 
@@ -314,7 +500,7 @@ func TestMsgMarketWithdrawRequest_ValidateBasic(t *testing.T) {
 				ToAddress: goodToAddr,
 				Amount:    goodCoins,
 			},
-			expErr: []string{`invalid administrator ""`, "empty address string is not allowed"},
+			expErr: []string{`invalid administrator ""`, emptyAddrErr},
 		},
 		{
 			name: "bad administrator",
@@ -344,7 +530,7 @@ func TestMsgMarketWithdrawRequest_ValidateBasic(t *testing.T) {
 				ToAddress: "",
 				Amount:    goodCoins,
 			},
-			expErr: []string{`invalid to address ""`, "empty address string is not allowed"},
+			expErr: []string{`invalid to address ""`, emptyAddrErr},
 		},
 		{
 			name: "bad to address",
@@ -447,7 +633,7 @@ func TestMsgMarketUpdateDetailsRequest_ValidateBasic(t *testing.T) {
 				MarketId:      1,
 				MarketDetails: MarketDetails{},
 			},
-			expErr: []string{`invalid administrator ""`, "empty address string is not allowed"},
+			expErr: []string{`invalid administrator ""`, emptyAddrErr},
 		},
 		{
 			name: "invalid admin",
@@ -574,7 +760,7 @@ func TestMsgMarketUpdateEnabledRequest_ValidateBasic(t *testing.T) {
 				MarketId: 1,
 			},
 			expErr: []string{
-				`invalid administrator ""`, "empty address string is not allowed",
+				`invalid administrator ""`, emptyAddrErr,
 			},
 		},
 		{
@@ -639,7 +825,7 @@ func TestMsgMarketUpdateUserSettleRequest_ValidateBasic(t *testing.T) {
 				MarketId: 1,
 			},
 			expErr: []string{
-				`invalid administrator ""`, "empty address string is not allowed",
+				`invalid administrator ""`, emptyAddrErr,
 			},
 		},
 		{
@@ -700,7 +886,7 @@ func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 				MarketId:  1,
 				RevokeAll: []string{goodAddr1},
 			},
-			expErr: []string{`invalid administrator ""`, "empty address string is not allowed"},
+			expErr: []string{`invalid administrator ""`, emptyAddrErr},
 		},
 		{
 			name: "invalid admin",
@@ -862,7 +1048,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 				MarketId:       1,
 				CreateAskToAdd: []string{"abc"},
 			},
-			expErr: []string{"invalid administrator", "empty address string is not allowed"},
+			expErr: []string{"invalid administrator", emptyAddrErr},
 		},
 		{
 			name: "bad admin",
@@ -1064,7 +1250,7 @@ func TestMsgGovCreateMarketRequest_ValidateBasic(t *testing.T) {
 				Authority: "",
 				Market:    validMarket,
 			},
-			expErr: []string{"invalid authority", "empty address string is not allowed"},
+			expErr: []string{"invalid authority", emptyAddrErr},
 		},
 		{
 			name: "bad authority",
@@ -1131,7 +1317,7 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 				Authority:           "",
 				AddFeeCreateAskFlat: []sdk.Coin{coin(1, "nhash")},
 			},
-			expErr: []string{"invalid authority", "empty address string is not allowed"},
+			expErr: []string{"invalid authority", emptyAddrErr},
 		},
 		{
 			name: "bad authority",
@@ -1261,7 +1447,7 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 				RemoveFeeBuyerSettlementRatios:  []FeeRatio{ratio(1, "nhash", 2, "nhash")},
 			},
 			expErr: []string{
-				"invalid authority", "empty address string is not allowed",
+				"invalid authority", emptyAddrErr,
 				`invalid create-ask flat fee to add option "0nhash": amount cannot be zero`,
 				"cannot add and remove the same create-ask flat fee options 0nhash",
 				`invalid create-bid flat fee to add option "0nhash": amount cannot be zero`,
@@ -1391,7 +1577,7 @@ func TestMsgGovUpdateParamsRequest_ValidateBasic(t *testing.T) {
 		{
 			name:   "zero value",
 			msg:    MsgGovUpdateParamsRequest{},
-			expErr: []string{"invalid authority", "empty address string is not allowed"},
+			expErr: []string{"invalid authority", emptyAddrErr},
 		},
 		{
 			name: "default params",
@@ -1422,7 +1608,7 @@ func TestMsgGovUpdateParamsRequest_ValidateBasic(t *testing.T) {
 				Authority: "",
 				Params:    *DefaultParams(),
 			},
-			expErr: []string{"invalid authority", "empty address string is not allowed"},
+			expErr: []string{"invalid authority", emptyAddrErr},
 		},
 		{
 			name: "bad authority",
