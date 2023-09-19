@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // Define the type strings and bytes to use for each order type.
@@ -338,4 +339,86 @@ func (b BidOrder) Validate() error {
 	// Nothing to check on the AllowPartial boolean.
 
 	return errors.Join(errs...)
+}
+
+// IndexedInputs is a slice of bank Inputs with an index by address
+type IndexedInputs struct {
+	inputs  []banktypes.Input
+	indexes map[string]int
+}
+
+func NewIndexedInputs() *IndexedInputs {
+	return &IndexedInputs{
+		indexes: make(map[string]int),
+	}
+}
+
+// Add adds the coins to the input with the given address (creating it if needed).
+func (i *IndexedInputs) Add(addr string, coins sdk.Coins) {
+	n, known := i.indexes[addr]
+	if !known {
+		n = len(i.inputs)
+		i.indexes[addr] = n
+		i.inputs = append(i.inputs, banktypes.Input{Address: addr})
+	}
+	i.inputs[n].Coins = i.inputs[n].Coins.Add(coins...)
+}
+
+// Get returns all the known inputs.
+func (i *IndexedInputs) Get() []banktypes.Input {
+	return i.inputs
+}
+
+// IndexedOutputs is a slice of bank Outputs with an index by address
+type IndexedOutputs struct {
+	inputs  []banktypes.Output
+	indexes map[string]int
+}
+
+func NewIndexedOutputs() *IndexedOutputs {
+	return &IndexedOutputs{
+		indexes: make(map[string]int),
+	}
+}
+
+// Add adds the coins to the output with the given address (creating it if needed).
+func (i *IndexedOutputs) Add(addr string, coins sdk.Coins) {
+	n, known := i.indexes[addr]
+	if !known {
+		n = len(i.inputs)
+		i.indexes[addr] = n
+		i.inputs = append(i.inputs, banktypes.Output{Address: addr})
+	}
+	i.inputs[n].Coins = i.inputs[n].Coins.Add(coins...)
+}
+
+// Get returns all the known outputs.
+func (i *IndexedOutputs) Get() []banktypes.Output {
+	return i.inputs
+}
+
+// Fulfillment is a struct containing the bank inputs/outputs that will fulfill some orders.
+type Fulfillment struct {
+	baseOrder           *Order
+	fullyFilledOrders   []*Order
+	partiallFilledOrder *Order
+
+	assetInputs  *IndexedInputs
+	assetOutputs *IndexedOutputs
+	priceInputs  *IndexedInputs
+	priceOutputs *IndexedOutputs
+	feeInputs    *IndexedInputs
+}
+
+func NewFulfillment(order *Order) *Fulfillment {
+	rv := &Fulfillment{
+		baseOrder:    order,
+		assetInputs:  NewIndexedInputs(),
+		assetOutputs: NewIndexedOutputs(),
+		priceInputs:  NewIndexedInputs(),
+		priceOutputs: NewIndexedOutputs(),
+		feeInputs:    NewIndexedInputs(),
+	}
+	// TODO[1658]: Finish NewFulfillment.
+	return rv
 }
