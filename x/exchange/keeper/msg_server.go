@@ -66,8 +66,12 @@ func (k MsgServer) FillBids(goCtx context.Context, msg *exchange.MsgFillBidsRequ
 
 // FillAsks uses the funds in your account to fulfill one or more asks (similar to a fill-or-cancel bid).
 func (k MsgServer) FillAsks(goCtx context.Context, msg *exchange.MsgFillAsksRequest) (*exchange.MsgFillAsksResponse, error) {
-	// TODO[1658]: Implement FillAsks
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err := k.Keeper.FillAsks(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &exchange.MsgFillAsksResponse{}, nil
 }
 
 // MarketSettle is a market endpoint to trigger the settlement of orders.
