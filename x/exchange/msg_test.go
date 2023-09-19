@@ -13,7 +13,10 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
-const emptyAddrErr = "empty address string is not allowed"
+const (
+	emptyAddrErr = "empty address string is not allowed"
+	bech32Err    = "decoding bech32 failed: "
+)
 
 func TestAllMsgsGetSigners(t *testing.T) {
 	// getTypeName gets just the type name of the provided thing, e.g. "MsgGovCreateMarketRequest".
@@ -28,7 +31,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 
 	testAddr := sdk.AccAddress("testAddr____________")
 	badAddrStr := "badaddr"
-	badAddrErr := "decoding bech32 failed: invalid bech32 string length 7"
+	badAddrErr := bech32Err + "invalid bech32 string length 7"
 
 	msgMakers := []func(signer string) sdk.Msg{
 		func(signer string) sdk.Msg {
@@ -263,7 +266,7 @@ func TestMsgCancelOrderRequest_ValidateBasic(t *testing.T) {
 				Signer:  "notgonnawork",
 				OrderId: 1,
 			},
-			expErr: []string{"invalid signer: ", "decoding bech32 failed: invalid separator index -1"},
+			expErr: []string{"invalid signer: ", bech32Err + "invalid separator index -1"},
 		},
 		{
 			name: "order 0",
@@ -323,7 +326,7 @@ func TestMsgFillBidsRequest_ValidateBasic(t *testing.T) {
 				TotalAssets: sdk.Coins{*coin(3, "acorn")},
 				BidOrderIds: []uint64{1},
 			},
-			expErr: []string{"invalid seller", "decoding bech32 failed"},
+			expErr: []string{"invalid seller", bech32Err},
 		},
 		{
 			name: "market id zero",
@@ -508,7 +511,7 @@ func TestMsgFillAsksRequest_ValidateBasic(t *testing.T) {
 				TotalPrice:  *coin(3, "acorn"),
 				AskOrderIds: []uint64{1},
 			},
-			expErr: []string{"invalid buyer", "decoding bech32 failed"},
+			expErr: []string{"invalid buyer", bech32Err},
 		},
 		{
 			name: "market id zero",
@@ -632,7 +635,148 @@ func TestMsgFillAsksRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestMsgMarketSettleRequest_ValidateBasic(t *testing.T)
+func TestMsgMarketSettleRequest_ValidateBasic(t *testing.T) {
+	admin := sdk.AccAddress("admin_address_______").String()
+
+	tests := []struct {
+		name   string
+		msg    MsgMarketSettleRequest
+		expErr []string
+	}{
+		{
+			name: "control",
+			msg: MsgMarketSettleRequest{
+				Admin:         admin,
+				MarketId:      1,
+				AskOrderIds:   []uint64{1, 3, 5},
+				BidOrderIds:   []uint64{2, 4, 6},
+				ExpectPartial: true,
+			},
+			expErr: nil,
+		},
+		{
+			name: "no admin",
+			msg: MsgMarketSettleRequest{
+				Admin:       "",
+				MarketId:    1,
+				AskOrderIds: []uint64{1},
+				BidOrderIds: []uint64{2},
+			},
+			expErr: []string{`invalid administrator ""`, emptyAddrErr},
+		},
+		{
+			name: "bad admin",
+			msg: MsgMarketSettleRequest{
+				Admin:       "badbadadmin",
+				MarketId:    1,
+				AskOrderIds: []uint64{1},
+				BidOrderIds: []uint64{2},
+			},
+			expErr: []string{`invalid administrator "badbadadmin"`, bech32Err},
+		},
+		{
+			name: "market id zero",
+			msg: MsgMarketSettleRequest{
+				Admin:       admin,
+				MarketId:    0,
+				AskOrderIds: []uint64{1},
+				BidOrderIds: []uint64{2},
+			},
+			expErr: []string{"invalid market id", "cannot be zero"},
+		},
+		{
+			name: "nil ask orders",
+			msg: MsgMarketSettleRequest{
+				Admin:       admin,
+				MarketId:    1,
+				AskOrderIds: nil,
+				BidOrderIds: []uint64{2},
+			},
+			expErr: []string{"no ask order ids provided"},
+		},
+		{
+			name: "ask orders has a zero",
+			msg: MsgMarketSettleRequest{
+				Admin:       admin,
+				MarketId:    1,
+				AskOrderIds: []uint64{1, 3, 0, 5},
+				BidOrderIds: []uint64{2},
+			},
+			expErr: []string{"invalid ask order ids", "cannot contain order id zero"},
+		},
+		{
+			name: "duplicate ask orders ids",
+			msg: MsgMarketSettleRequest{
+				Admin:       admin,
+				MarketId:    1,
+				AskOrderIds: []uint64{1, 3, 1, 5, 5},
+				BidOrderIds: []uint64{2},
+			},
+			expErr: []string{"duplicate ask order ids provided: [1 5]"},
+		},
+		{
+			name: "nil bid orders",
+			msg: MsgMarketSettleRequest{
+				Admin:       admin,
+				MarketId:    1,
+				AskOrderIds: []uint64{1},
+				BidOrderIds: nil,
+			},
+			expErr: []string{"no bid order ids provided"},
+		},
+		{
+			name: "bid orders has a zero",
+			msg: MsgMarketSettleRequest{
+				Admin:       admin,
+				MarketId:    1,
+				AskOrderIds: []uint64{1},
+				BidOrderIds: []uint64{2, 0, 4, 6},
+			},
+			expErr: []string{"invalid bid order ids", "cannot contain order id zero"},
+		},
+		{
+			name: "duplicate bid orders ids",
+			msg: MsgMarketSettleRequest{
+				Admin:       admin,
+				MarketId:    1,
+				AskOrderIds: []uint64{1},
+				BidOrderIds: []uint64{2, 4, 2, 6, 6},
+			},
+			expErr: []string{"duplicate bid order ids provided: [2 6]"},
+		},
+		{
+			name: "same orders in both lists",
+			msg: MsgMarketSettleRequest{
+				Admin:       admin,
+				MarketId:    1,
+				AskOrderIds: []uint64{1, 3, 5, 6},
+				BidOrderIds: []uint64{2, 4, 6, 3},
+			},
+			expErr: []string{"order ids duplicated as both bid and ask: [3 6]"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgMarketSettleRequest{
+				Admin:       "",
+				MarketId:    0,
+				AskOrderIds: nil,
+				BidOrderIds: nil,
+			},
+			expErr: []string{
+				"invalid administrator",
+				"invalid market id",
+				"no ask order ids provided",
+				"no bid order ids provided",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
 
 func TestMsgMarketWithdrawRequest_ValidateBasic(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
@@ -675,7 +819,7 @@ func TestMsgMarketWithdrawRequest_ValidateBasic(t *testing.T) {
 				ToAddress: goodToAddr,
 				Amount:    goodCoins,
 			},
-			expErr: []string{`invalid administrator "notright"`, "decoding bech32 failed"},
+			expErr: []string{`invalid administrator "notright"`, bech32Err},
 		},
 		{
 			name: "market id zero",
@@ -705,7 +849,7 @@ func TestMsgMarketWithdrawRequest_ValidateBasic(t *testing.T) {
 				ToAddress: "notright",
 				Amount:    goodCoins,
 			},
-			expErr: []string{`invalid to address "notright"`, "decoding bech32 failed"},
+			expErr: []string{`invalid to address "notright"`, bech32Err},
 		},
 		{
 			name: "invalid denom in amount",
@@ -807,7 +951,7 @@ func TestMsgMarketUpdateDetailsRequest_ValidateBasic(t *testing.T) {
 				MarketId:      1,
 				MarketDetails: MarketDetails{},
 			},
-			expErr: []string{`invalid administrator "notvalidadmin"`, "decoding bech32 failed"},
+			expErr: []string{`invalid administrator "notvalidadmin"`, bech32Err},
 		},
 		{
 			name: "market id zero",
@@ -935,7 +1079,7 @@ func TestMsgMarketUpdateEnabledRequest_ValidateBasic(t *testing.T) {
 				MarketId: 1,
 			},
 			expErr: []string{
-				`invalid administrator "badadmin"`, "decoding bech32 failed",
+				`invalid administrator "badadmin"`, bech32Err,
 			},
 		},
 		{
@@ -1000,7 +1144,7 @@ func TestMsgMarketUpdateUserSettleRequest_ValidateBasic(t *testing.T) {
 				MarketId: 1,
 			},
 			expErr: []string{
-				`invalid administrator "badadmin"`, "decoding bech32 failed",
+				`invalid administrator "badadmin"`, bech32Err,
 			},
 		},
 		{
@@ -1060,7 +1204,7 @@ func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 				MarketId:  1,
 				RevokeAll: []string{goodAddr1},
 			},
-			expErr: []string{`invalid administrator "bad1admin"`, "decoding bech32 failed"},
+			expErr: []string{`invalid administrator "bad1admin"`, bech32Err},
 		},
 		{
 			name: "market id zero",
@@ -1087,8 +1231,8 @@ func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 				RevokeAll: []string{"bad1addr", "bad2addr"},
 			},
 			expErr: []string{
-				`invalid revoke-all address "bad1addr": decoding bech32 failed`,
-				`invalid revoke-all address "bad2addr": decoding bech32 failed`,
+				`invalid revoke-all address "bad1addr": ` + bech32Err,
+				`invalid revoke-all address "bad2addr": ` + bech32Err,
 			},
 		},
 		{
@@ -1222,7 +1366,7 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 				MarketId:       1,
 				CreateAskToAdd: []string{"abc"},
 			},
-			expErr: []string{"invalid administrator", "decoding bech32 failed"},
+			expErr: []string{"invalid administrator", bech32Err},
 		},
 		{
 			name: "market id zero",
@@ -1423,7 +1567,7 @@ func TestMsgGovCreateMarketRequest_ValidateBasic(t *testing.T) {
 				Authority: "bad",
 				Market:    validMarket,
 			},
-			expErr: []string{"invalid authority", "decoding bech32 failed"},
+			expErr: []string{"invalid authority", bech32Err},
 		},
 		{
 			name: "invalid market",
@@ -1490,7 +1634,7 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 				Authority:           "bad",
 				AddFeeCreateAskFlat: []sdk.Coin{coin(1, "nhash")},
 			},
-			expErr: []string{"invalid authority", "decoding bech32 failed"},
+			expErr: []string{"invalid authority", bech32Err},
 		},
 		{
 			name: "invalid add create-ask flat",
@@ -1781,7 +1925,7 @@ func TestMsgGovUpdateParamsRequest_ValidateBasic(t *testing.T) {
 				Authority: "bad",
 				Params:    *DefaultParams(),
 			},
-			expErr: []string{"invalid authority", "decoding bech32 failed"},
+			expErr: []string{"invalid authority", bech32Err},
 		},
 		{
 			name: "bad params",

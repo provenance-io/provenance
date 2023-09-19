@@ -17,6 +17,7 @@ const (
 	OrderTypeByteBid = byte(0x01)
 )
 
+// findDuplicateIds returns all order ids that appear two or more times in the provided slice.
 func findDuplicateIds(orderIDs []uint64) []uint64 {
 	var rv []uint64
 	seen := make(map[uint64]bool)
@@ -31,11 +32,19 @@ func findDuplicateIds(orderIDs []uint64) []uint64 {
 	return rv
 }
 
+// equalsUint64 returns true if the two uint64 values provided are equal.
+func equalsUint64(a, b uint64) bool {
+	return a == b
+}
+
 // ContainsUint64 returns true if the uint64 to find is in the vals slice.
 func ContainsUint64(vals []uint64, toFind uint64) bool {
-	return contains(vals, toFind, func(a, b uint64) bool {
-		return a == b
-	})
+	return contains(vals, toFind, equalsUint64)
+}
+
+// IntersectionUint64 returns each uint64 that is in both lists.
+func IntersectionUint64(a, b []uint64) []uint64 {
+	return intersection(a, b, equalsUint64)
 }
 
 // ValidateOrderIDs makes sure that one or more order ids are provided,

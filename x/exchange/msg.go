@@ -173,7 +173,21 @@ func (m MsgMarketSettleRequest) ValidateBasic() error {
 		errs = append(errs, fmt.Errorf("invalid market id: cannot be zero"))
 	}
 
-	// TODO[1658]: MsgMarketSettleRequest.ValidateBasic()
+	if err := ValidateOrderIDs("ask", m.AskOrderIds); err != nil {
+		errs = append(errs, err)
+	}
+
+	if err := ValidateOrderIDs("bid", m.BidOrderIds); err != nil {
+		errs = append(errs, err)
+	}
+
+	inBoth := IntersectionUint64(m.AskOrderIds, m.BidOrderIds)
+	if len(inBoth) > 0 {
+		errs = append(errs, fmt.Errorf("order ids duplicated as both bid and ask: %v", inBoth))
+	}
+
+	// Nothing to validate now for the ExpectPartial flag.
+
 	return errors.Join(errs...)
 }
 
