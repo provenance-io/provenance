@@ -570,7 +570,7 @@ func validateBuyerSettlementFee(store sdk.KVStore, marketID uint32, price sdk.Co
 
 // UpdateMarketDetails updates a market's details. It returns an error if the market account
 // isn't found or if there aren't any changes provided.
-func (k Keeper) UpdateMarketDetails(ctx sdk.Context, marketID uint32, marketDetails *exchange.MarketDetails) error {
+func (k Keeper) UpdateMarketDetails(ctx sdk.Context, marketID uint32, marketDetails *exchange.MarketDetails, updatedBy sdk.AccAddress) error {
 	if err := marketDetails.Validate(); err != nil {
 		return err
 	}
@@ -586,7 +586,8 @@ func (k Keeper) UpdateMarketDetails(ctx sdk.Context, marketID uint32, marketDeta
 
 	marketAcc.MarketDetails = *marketDetails
 	k.accountKeeper.SetAccount(ctx, marketAcc)
-	return nil
+
+	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketDetailsUpdated(marketID, updatedBy))
 }
 
 // isMarketActive returns true if the provided market is accepting orders.
@@ -617,14 +618,14 @@ func (k Keeper) SetMarketActive(ctx sdk.Context, marketID uint32, active bool) {
 
 // UpdateMarketActive updates the active flag for a market.
 // An error is returned if the setting is already what is provided.
-func (k Keeper) UpdateMarketActive(ctx sdk.Context, marketID uint32, active bool) error {
+func (k Keeper) UpdateMarketActive(ctx sdk.Context, marketID uint32, active bool, updatedBy sdk.AccAddress) error {
 	store := k.getStore(ctx)
 	current := isMarketActive(store, marketID)
 	if current == active {
 		return fmt.Errorf("market %d already has accepting-orders %t", marketID, active)
 	}
 	setMarketActive(store, marketID, active)
-	return nil
+	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketActiveUpdated(marketID, updatedBy, active))
 }
 
 // isUserSettlementAllowed gets whether user-settlement is allowed for a market.
@@ -655,14 +656,14 @@ func (k Keeper) SetUserSettlementAllowed(ctx sdk.Context, marketID uint32, allow
 
 // UpdateUserSettlementAllowed updates the allow-user-settlement flag for a market.
 // An error is returned if the setting is already what is provided.
-func (k Keeper) UpdateUserSettlementAllowed(ctx sdk.Context, marketID uint32, allow bool) error {
+func (k Keeper) UpdateUserSettlementAllowed(ctx sdk.Context, marketID uint32, allow bool, updatedBy sdk.AccAddress) error {
 	store := k.getStore(ctx)
 	current := isUserSettlementAllowed(store, marketID)
 	if current == allow {
 		return fmt.Errorf("market %d already has allow-user-settlement %t", marketID, allow)
 	}
 	setUserSettlementAllowed(store, marketID, allow)
-	return nil
+	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketUserSettleUpdated(marketID, updatedBy, allow))
 }
 
 // storeHasPermission returns true if there is an entry in the store for the given market, address, and permissions.
@@ -952,7 +953,7 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (marketID 
 	setReqAttrAsk(store, marketID, reqAttrCreateAsk)
 	setReqAttrBid(store, marketID, reqAttrCreateBid)
 
-	return marketID, err
+	return marketID, nil
 }
 
 // GetMarketAccount gets a market's account from the account module.
@@ -996,7 +997,7 @@ func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
 }
 
 // UpdateFees updates all the fees as provided in the MsgGovManageFeesRequest.
-func (k Keeper) UpdateFees(ctx sdk.Context, msg *exchange.MsgGovManageFeesRequest) {
+func (k Keeper) UpdateFees(ctx sdk.Context, msg *exchange.MsgGovManageFeesRequest) error {
 	store := k.getStore(ctx)
 	updateCreateAskFlatFees(store, msg.MarketId, msg.RemoveFeeCreateAskFlat, msg.AddFeeCreateAskFlat)
 	updateCreateBidFlatFees(store, msg.MarketId, msg.RemoveFeeCreateBidFlat, msg.AddFeeCreateBidFlat)
@@ -1004,6 +1005,7 @@ func (k Keeper) UpdateFees(ctx sdk.Context, msg *exchange.MsgGovManageFeesReques
 	updateSellerSettlementRatios(store, msg.MarketId, msg.RemoveFeeSellerSettlementRatios, msg.AddFeeSellerSettlementRatios)
 	updateBuyerSettlementFlatFees(store, msg.MarketId, msg.RemoveFeeBuyerSettlementFlat, msg.AddFeeBuyerSettlementFlat)
 	updateBuyerSettlementRatios(store, msg.MarketId, msg.RemoveFeeBuyerSettlementRatios, msg.AddFeeBuyerSettlementRatios)
+	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketFeesUpdated(msg.MarketId))
 }
 
 // hasReqAttrs returns true if either reqAttrs is empty or the provide address has all of them on their account.
@@ -1037,18 +1039,19 @@ func (k Keeper) CanCreateBid(ctx sdk.Context, marketID uint32, addr sdk.AccAddre
 
 // WithdrawMarketFunds transfers funds from a market account to another account.
 // The caller is responsible for making sure this withdrawal should be allowed (e.g. by calling CanWithdrawMarketFunds first).
-func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk.AccAddress, amount sdk.Coins) error {
+func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk.AccAddress, amount sdk.Coins, withdrawnBy sdk.AccAddress) error {
 	marketAddr := exchange.GetMarketAddress(marketID)
 	err := k.bankKeeper.SendCoins(ctx, marketAddr, toAddr, amount)
 	if err != nil {
 		return fmt.Errorf("failed to withdraw %s from market %d: %w", amount, marketID, err)
 	}
-	return nil
+	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketWithdraw(marketID, amount, toAddr, withdrawnBy))
 }
 
 // UpdatePermissions updates users permissions in the store using the provided changes.
 // The caller is responsible for making sure this update should be allowed (e.g. by calling CanManagePermissions first).
 func (k Keeper) UpdatePermissions(ctx sdk.Context, msg *exchange.MsgMarketManagePermissionsRequest) error {
+	admin := sdk.MustAccAddressFromBech32(msg.Admin)
 	marketID := msg.MarketId
 	store := k.getStore(ctx)
 	var errs []error
@@ -1093,7 +1096,7 @@ func (k Keeper) UpdatePermissions(ctx sdk.Context, msg *exchange.MsgMarketManage
 		return errors.Join(errs...)
 	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketPermissionsUpdated(marketID, admin))
 }
 
 // updateReqAttrs updates the required attributes in the store that use the provided key maker by removing then adding
@@ -1146,11 +1149,16 @@ func updateReqAttrsBid(store sdk.KVStore, marketID uint32, toRemove, toAdd []str
 // UpdateReqAttrs updates the required attributes in the store using the provided changes.
 // The caller is responsible for making sure this update should be allowed (e.g. by calling CanManageReqAttrs first).
 func (k Keeper) UpdateReqAttrs(ctx sdk.Context, msg *exchange.MsgMarketManageReqAttrsRequest) error {
+	admin := sdk.MustAccAddressFromBech32(msg.Admin)
 	marketID := msg.MarketId
 	store := k.getStore(ctx)
 	errs := []error{
 		updateReqAttrsAsk(store, marketID, msg.CreateAskToRemove, msg.CreateAskToAdd),
 		updateReqAttrsBid(store, marketID, msg.CreateBidToRemove, msg.CreateBidToAdd),
 	}
-	return errors.Join(errs...)
+	err := errors.Join(errs...)
+	if err != nil {
+		return err
+	}
+	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketReqAttrUpdated(marketID, admin))
 }

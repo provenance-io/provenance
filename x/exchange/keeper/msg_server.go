@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -29,7 +28,7 @@ func (k MsgServer) CreateAsk(goCtx context.Context, msg *exchange.MsgCreateAskRe
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	orderID, err := k.CreateAskOrder(ctx, msg.AskOrder, msg.OrderCreationFee)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgCreateAskResponse{OrderId: orderID}, nil
 }
@@ -39,7 +38,7 @@ func (k MsgServer) CreateBid(goCtx context.Context, msg *exchange.MsgCreateBidRe
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	orderID, err := k.CreateBidOrder(ctx, msg.BidOrder, msg.OrderCreationFee)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgCreateBidResponse{OrderId: orderID}, nil
 }
@@ -49,7 +48,7 @@ func (k MsgServer) CancelOrder(goCtx context.Context, msg *exchange.MsgCancelOrd
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	err := k.Keeper.CancelOrder(ctx, msg.OrderId, msg.Signer)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgCancelOrderResponse{}, nil
 }
@@ -59,7 +58,7 @@ func (k MsgServer) FillBids(goCtx context.Context, msg *exchange.MsgFillBidsRequ
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	err := k.Keeper.FillBids(ctx, msg)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgFillBidsResponse{}, nil
 }
@@ -69,7 +68,7 @@ func (k MsgServer) FillAsks(goCtx context.Context, msg *exchange.MsgFillAsksRequ
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	err := k.Keeper.FillAsks(ctx, msg)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgFillAsksResponse{}, nil
 }
@@ -80,16 +79,22 @@ func (k MsgServer) MarketSettle(goCtx context.Context, msg *exchange.MsgMarketSe
 	panic("not implemented")
 }
 
+// permError creates and returns an error indicating that an account does not have a needed permission.
+func permError(desc string, account string, marketID uint32) error {
+	return sdkerrors.ErrInvalidRequest.Wrapf("account %s does not have permission to %s market %d", account, desc, marketID)
+}
+
 // MarketWithdraw is a market endpoint to withdraw fees that have been collected.
 func (k MsgServer) MarketWithdraw(goCtx context.Context, msg *exchange.MsgMarketWithdrawRequest) (*exchange.MsgMarketWithdrawResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.CanWithdrawMarketFunds(ctx, msg.MarketId, msg.Admin) {
-		return nil, fmt.Errorf("account %s does not have withdraw permission for market %d", msg.Admin, msg.MarketId)
+		return nil, permError("withdraw from", msg.Admin, msg.MarketId)
 	}
+	admin := sdk.MustAccAddressFromBech32(msg.Admin)
 	toAddr := sdk.MustAccAddressFromBech32(msg.ToAddress)
-	err := k.WithdrawMarketFunds(ctx, msg.MarketId, toAddr, msg.Amount)
+	err := k.WithdrawMarketFunds(ctx, msg.MarketId, toAddr, msg.Amount, admin)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgMarketWithdrawResponse{}, nil
 }
@@ -98,11 +103,12 @@ func (k MsgServer) MarketWithdraw(goCtx context.Context, msg *exchange.MsgMarket
 func (k MsgServer) MarketUpdateDetails(goCtx context.Context, msg *exchange.MsgMarketUpdateDetailsRequest) (*exchange.MsgMarketUpdateDetailsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
-		return nil, fmt.Errorf("account %s does not have permission to update market %d", msg.Admin, msg.MarketId)
+		return nil, permError("update", msg.Admin, msg.MarketId)
 	}
-	err := k.UpdateMarketDetails(ctx, msg.MarketId, &msg.MarketDetails)
+	admin := sdk.MustAccAddressFromBech32(msg.Admin)
+	err := k.UpdateMarketDetails(ctx, msg.MarketId, &msg.MarketDetails, admin)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgMarketUpdateDetailsResponse{}, nil
 }
@@ -111,11 +117,12 @@ func (k MsgServer) MarketUpdateDetails(goCtx context.Context, msg *exchange.MsgM
 func (k MsgServer) MarketUpdateEnabled(goCtx context.Context, msg *exchange.MsgMarketUpdateEnabledRequest) (*exchange.MsgMarketUpdateEnabledResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
-		return nil, fmt.Errorf("account %s does not have permission to update market %d", msg.Admin, msg.MarketId)
+		return nil, permError("update", msg.Admin, msg.MarketId)
 	}
-	err := k.UpdateMarketActive(ctx, msg.MarketId, msg.AcceptingOrders)
+	admin := sdk.MustAccAddressFromBech32(msg.Admin)
+	err := k.UpdateMarketActive(ctx, msg.MarketId, msg.AcceptingOrders, admin)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgMarketUpdateEnabledResponse{}, nil
 }
@@ -124,11 +131,12 @@ func (k MsgServer) MarketUpdateEnabled(goCtx context.Context, msg *exchange.MsgM
 func (k MsgServer) MarketUpdateUserSettle(goCtx context.Context, msg *exchange.MsgMarketUpdateUserSettleRequest) (*exchange.MsgMarketUpdateUserSettleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
-		return nil, fmt.Errorf("account %s does not have permission to update market %d", msg.Admin, msg.MarketId)
+		return nil, permError("update", msg.Admin, msg.MarketId)
 	}
-	err := k.UpdateUserSettlementAllowed(ctx, msg.MarketId, msg.AllowUserSettlement)
+	admin := sdk.MustAccAddressFromBech32(msg.Admin)
+	err := k.UpdateUserSettlementAllowed(ctx, msg.MarketId, msg.AllowUserSettlement, admin)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgMarketUpdateUserSettleResponse{}, nil
 }
@@ -137,11 +145,11 @@ func (k MsgServer) MarketUpdateUserSettle(goCtx context.Context, msg *exchange.M
 func (k MsgServer) MarketManagePermissions(goCtx context.Context, msg *exchange.MsgMarketManagePermissionsRequest) (*exchange.MsgMarketManagePermissionsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.CanManagePermissions(ctx, msg.MarketId, msg.Admin) {
-		return nil, fmt.Errorf("account %s does not have permission to manage permissions for market %d", msg.Admin, msg.MarketId)
+		return nil, permError("manage permissions for", msg.Admin, msg.MarketId)
 	}
 	err := k.UpdatePermissions(ctx, msg)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgMarketManagePermissionsResponse{}, nil
 }
@@ -150,11 +158,11 @@ func (k MsgServer) MarketManagePermissions(goCtx context.Context, msg *exchange.
 func (k MsgServer) MarketManageReqAttrs(goCtx context.Context, msg *exchange.MsgMarketManageReqAttrsRequest) (*exchange.MsgMarketManageReqAttrsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.CanWithdrawMarketFunds(ctx, msg.MarketId, msg.Admin) {
-		return nil, fmt.Errorf("account %s does not have permission to manage required attributes for market %d", msg.Admin, msg.MarketId)
+		return nil, permError("manage required attributes for", msg.Admin, msg.MarketId)
 	}
 	err := k.UpdateReqAttrs(ctx, msg)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgMarketManageReqAttrsResponse{}, nil
 }
@@ -171,7 +179,11 @@ func (k MsgServer) GovCreateMarket(goCtx context.Context, msg *exchange.MsgGovCr
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	_, err := k.CreateMarket(ctx, msg.Market)
+	marketID, err := k.CreateMarket(ctx, msg.Market)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	err = ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketCreated(marketID))
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -185,7 +197,10 @@ func (k MsgServer) GovManageFees(goCtx context.Context, msg *exchange.MsgGovMana
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	k.UpdateFees(ctx, msg)
+	err := k.UpdateFees(ctx, msg)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
 
 	return &exchange.MsgGovManageFeesResponse{}, nil
 }
@@ -200,7 +215,7 @@ func (k MsgServer) GovUpdateParams(goCtx context.Context, msg *exchange.MsgGovUp
 	k.SetParams(ctx, &msg.Params)
 
 	if err := ctx.EventManager().EmitTypedEvent(exchange.NewEventParamsUpdated()); err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgGovUpdateParamsResponse{}, nil
 }

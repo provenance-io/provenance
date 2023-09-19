@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -280,7 +282,7 @@ func (k Keeper) CreateAskOrder(ctx sdk.Context, askOrder exchange.AskOrder, crea
 		return 0, fmt.Errorf("error placing hold for ask order: %w", err)
 	}
 
-	return orderID, nil
+	return orderID, ctx.EventManager().EmitTypedEvent(exchange.NewEventOrderCreated(order))
 }
 
 // CreateBidOrder creates a bid order, collects the creation fee, and places all needed holds.
@@ -327,7 +329,7 @@ func (k Keeper) CreateBidOrder(ctx sdk.Context, bidOrder exchange.BidOrder, crea
 		return 0, fmt.Errorf("error placing hold for bid order: %w", err)
 	}
 
-	return orderID, nil
+	return orderID, ctx.EventManager().EmitTypedEvent(exchange.NewEventOrderCreated(order))
 }
 
 // CancelOrder releases an order's held funds and deletes it.
@@ -345,6 +347,7 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 		return fmt.Errorf("account %s does not have permission to cancel order %d", signer, orderID)
 	}
 
+	signerAddr := sdk.MustAccAddressFromBech32(signer)
 	orderOwnerAddr := sdk.MustAccAddressFromBech32(orderOwner)
 	heldAmount := order.GetHoldAmount()
 	err = k.holdKeeper.ReleaseHold(ctx, orderOwnerAddr, heldAmount)
@@ -354,7 +357,7 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 
 	k.deleteOrder(ctx, *order)
 
-	return nil
+	return ctx.EventManager().EmitTypedEvent(exchange.NewEventOrderCancelled(orderID, signerAddr))
 }
 
 // FillBids settles one or more bid orders for a seller.
@@ -506,11 +509,13 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 		}
 	}
 
-	for _, order := range orders {
+	events := make([]proto.Message, len(orders))
+	for i, order := range orders {
 		deleteAndDeIndexOrder(store, *order)
+		events[i] = exchange.NewEventOrderFilled(order.OrderId)
 	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvents(events...)
 }
 
 // FillAsks settles one or more ask orders for a buyer.
@@ -663,11 +668,13 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 		}
 	}
 
-	for _, order := range orders {
+	events := make([]proto.Message, len(orders))
+	for i, order := range orders {
 		deleteAndDeIndexOrder(store, *order)
+		events[i] = exchange.NewEventOrderFilled(order.OrderId)
 	}
 
-	return nil
+	return ctx.EventManager().EmitTypedEvents(events...)
 }
 
 // safeCoinsEquals returns true if the two provided coins are equal.
