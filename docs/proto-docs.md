@@ -1468,7 +1468,7 @@ EventMarketWithdraw is an event emitted when a withdrawal of a market's collecte
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
-| `amount_withdrawn` | [string](#string) |  | amount_withdrawn is the coins amount string of funds withdrawn from the market account. |
+| `amount` | [string](#string) |  | amount is the coins amount string of funds withdrawn from the market account. |
 | `destination` | [string](#string) |  | destination is the account that received the funds. |
 | `withdrawn_by` | [string](#string) |  | withdrawn_by is the account that requested the withdrawal. |
 

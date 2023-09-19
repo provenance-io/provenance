@@ -34,12 +34,12 @@ func NewEventOrderPartiallyFilled(orderID uint64, assetsFilled, feesFilled sdk.C
 	}
 }
 
-func NewEventMarketWithdraw(marketID uint32, amountWithdrawn sdk.Coins, destination, withdrawnBy sdk.AccAddress) *EventMarketWithdraw {
+func NewEventMarketWithdraw(marketID uint32, amount sdk.Coins, destination, withdrawnBy sdk.AccAddress) *EventMarketWithdraw {
 	return &EventMarketWithdraw{
-		MarketId:        marketID,
-		AmountWithdrawn: amountWithdrawn.String(),
-		Destination:     destination.String(),
-		WithdrawnBy:     withdrawnBy.String(),
+		MarketId:    marketID,
+		Amount:      amount.String(),
+		Destination: destination.String(),
+		WithdrawnBy: withdrawnBy.String(),
 	}
 }
 

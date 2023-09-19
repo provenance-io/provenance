@@ -45,8 +45,8 @@ message EventOrderPartiallyFilled {
 message EventMarketWithdraw {
   // market_id is the numerical identifier of the market.
   uint32 market_id = 1;
-  // amount_withdrawn is the coins amount string of funds withdrawn from the market account.
-  string amount_withdrawn = 2;
+  // amount is the coins amount string of funds withdrawn from the market account.
+  string amount = 2;
   // destination is the account that received the funds.
   string destination = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // withdrawn_by is the account that requested the withdrawal.
