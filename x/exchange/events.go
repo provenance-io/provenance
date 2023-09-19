@@ -1,6 +1,10 @@
 package exchange
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"github.com/gogo/protobuf/proto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 func NewEventOrderCreated(order *Order) *EventOrderCreated {
 	return &EventOrderCreated{
@@ -46,6 +50,15 @@ func NewEventMarketDetailsUpdated(marketID uint32, updatedBy sdk.AccAddress) *Ev
 	}
 }
 
+// NewEventMarketActiveUpdated returns a new EventMarketEnabled if isActive == true,
+// or a new EventMarketDisabled if isActive == false.
+func NewEventMarketActiveUpdated(marketID uint32, updatedBy sdk.AccAddress, isActive bool) proto.Message {
+	if isActive {
+		return NewEventMarketEnabled(marketID, updatedBy)
+	}
+	return NewEventMarketDisabled(marketID, updatedBy)
+}
+
 func NewEventMarketEnabled(marketID uint32, updatedBy sdk.AccAddress) *EventMarketEnabled {
 	return &EventMarketEnabled{
 		MarketId:  marketID,
@@ -60,8 +73,24 @@ func NewEventMarketDisabled(marketID uint32, updatedBy sdk.AccAddress) *EventMar
 	}
 }
 
-func NewEventMarketUserSettleUpdated(marketID uint32, updatedBy sdk.AccAddress) *EventMarketUserSettleUpdated {
-	return &EventMarketUserSettleUpdated{
+// NewEventMarketUserSettleUpdated returns a new EventMarketUserSettleEnabled if isAllowed == true,
+// or a new EventMarketUserSettleDisabled if isActive == false.
+func NewEventMarketUserSettleUpdated(marketID uint32, updatedBy sdk.AccAddress, isAllowed bool) proto.Message {
+	if isAllowed {
+		return NewEventMarketUserSettleEnabled(marketID, updatedBy)
+	}
+	return NewEventMarketUserSettleDisabled(marketID, updatedBy)
+}
+
+func NewEventMarketUserSettleEnabled(marketID uint32, updatedBy sdk.AccAddress) *EventMarketUserSettleEnabled {
+	return &EventMarketUserSettleEnabled{
+		MarketId:  marketID,
+		UpdatedBy: updatedBy.String(),
+	}
+}
+
+func NewEventMarketUserSettleDisabled(marketID uint32, updatedBy sdk.AccAddress) *EventMarketUserSettleDisabled {
+	return &EventMarketUserSettleDisabled{
 		MarketId:  marketID,
 		UpdatedBy: updatedBy.String(),
 	}
@@ -78,14 +107,6 @@ func NewEventMarketReqAttrUpdated(marketID uint32, updatedBy sdk.AccAddress) *Ev
 	return &EventMarketReqAttrUpdated{
 		MarketId:  marketID,
 		UpdatedBy: updatedBy.String(),
-	}
-}
-
-func NewEventCreateMarketSubmitted(marketID uint32, proposalID uint64, submittedBy sdk.AccAddress) *EventCreateMarketSubmitted {
-	return &EventCreateMarketSubmitted{
-		MarketId:    marketID,
-		ProposalId:  proposalID,
-		SubmittedBy: submittedBy.String(),
 	}
 }
 
