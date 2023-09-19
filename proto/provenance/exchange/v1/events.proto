@@ -101,17 +101,6 @@ message EventMarketReqAttrUpdated {
   string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// EventCreateMarketSubmitted is an event emitted during CreateMarket indicating that a governance
-// proposal was submitted to create a market.
-message EventCreateMarketSubmitted {
-  // market_id is the numerical identifier of the market.
-  uint32 market_id = 1;
-  // proposal_id is the identifier of the governance proposal that was submitted to create the market.
-  uint64 proposal_id = 2;
-  // submitted_by is the account that requested the creation of the market.
-  string submitted_by = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-}
-
 // EventMarketCreated is an event emitted when a market has been created.
 message EventMarketCreated {
   // market_id is the numerical identifier of the market.

@@ -53,7 +53,6 @@
     - [Msg](#provenance.attribute.v1.Msg)
   
 - [provenance/exchange/v1/events.proto](#provenance/exchange/v1/events.proto)
-    - [EventCreateMarketSubmitted](#provenance.exchange.v1.EventCreateMarketSubmitted)
     - [EventMarketCreated](#provenance.exchange.v1.EventMarketCreated)
     - [EventMarketDetailsUpdated](#provenance.exchange.v1.EventMarketDetailsUpdated)
     - [EventMarketDisabled](#provenance.exchange.v1.EventMarketDisabled)
@@ -1314,24 +1313,6 @@ Msg defines the attribute module Msg service.
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/exchange/v1/events.proto
-
-
-
-<a name="provenance.exchange.v1.EventCreateMarketSubmitted"></a>
-
-### EventCreateMarketSubmitted
-EventCreateMarketSubmitted is an event emitted during CreateMarket indicating that a governance
-proposal was submitted to create a market.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
-| `proposal_id` | [uint64](#uint64) |  | proposal_id is the identifier of the governance proposal that was submitted to create the market. |
-| `submitted_by` | [string](#string) |  | submitted_by is the account that requested the creation of the market. |
-
-
-
 
 
 
