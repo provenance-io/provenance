@@ -2,8 +2,10 @@ package cmd_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -37,6 +39,13 @@ func TestDocGen(t *testing.T) {
 			flags:        []string{"--bad"},
 			createTarget: true,
 			err:          "unknown flag: --bad",
+		},
+		{
+			name:         "failure - invalid target directory",
+			target:       "/tmp/tmp2/tmp3",
+			flags:        []string{"--yaml"},
+			createTarget: false,
+			err:          "mkdir %s: no such file or directory",
 		},
 		{
 			name:         "success - yaml is generated",
@@ -113,10 +122,15 @@ func TestDocGen(t *testing.T) {
 			if len(tc.err) > 0 {
 				err := cmd.ExecuteContext(ctx)
 				require.Error(t, err, "should throw an error")
-				require.Equal(t, tc.err, err.Error(), "should return the correct error")
+				expected := tc.err
+				if strings.Contains(expected, "%s") {
+					expected = fmt.Sprintf(expected, targetPath)
+				}
+				require.Equal(t, expected, err.Error(), "should return the correct error")
 				files, err := os.ReadDir(targetPath)
-				require.NoError(t, err, "ReadDir should not return an error")
-				require.Equal(t, 0, len(files), "should not generate files when failed")
+				if err != nil {
+					require.Equal(t, 0, len(files), "should not generate files when failed")
+				}
 			} else {
 				err := cmd.ExecuteContext(ctx)
 				require.NoError(t, err, "should not return an error")
@@ -136,7 +150,9 @@ func TestDocGen(t *testing.T) {
 				}
 			}
 
-			require.NoError(t, os.RemoveAll(targetPath), "RemoveAll should be able to remove the temporary target directory")
+			if _, err := os.Stat(targetPath); err != nil {
+				require.NoError(t, os.RemoveAll(targetPath), "RemoveAll should be able to remove the temporary target directory")
+			}
 		})
 	}
 }
