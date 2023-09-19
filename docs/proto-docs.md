@@ -60,7 +60,8 @@
     - [EventMarketFeesUpdated](#provenance.exchange.v1.EventMarketFeesUpdated)
     - [EventMarketPermissionsUpdated](#provenance.exchange.v1.EventMarketPermissionsUpdated)
     - [EventMarketReqAttrUpdated](#provenance.exchange.v1.EventMarketReqAttrUpdated)
-    - [EventMarketUserSettleUpdated](#provenance.exchange.v1.EventMarketUserSettleUpdated)
+    - [EventMarketUserSettleDisabled](#provenance.exchange.v1.EventMarketUserSettleDisabled)
+    - [EventMarketUserSettleEnabled](#provenance.exchange.v1.EventMarketUserSettleEnabled)
     - [EventMarketWithdraw](#provenance.exchange.v1.EventMarketWithdraw)
     - [EventOrderCancelled](#provenance.exchange.v1.EventOrderCancelled)
     - [EventOrderCreated](#provenance.exchange.v1.EventOrderCreated)
@@ -1426,10 +1427,26 @@ EventMarketReqAttrUpdated is an event emitted when a market's required attribute
 
 
 
-<a name="provenance.exchange.v1.EventMarketUserSettleUpdated"></a>
+<a name="provenance.exchange.v1.EventMarketUserSettleDisabled"></a>
 
-### EventMarketUserSettleUpdated
-EventMarketUserSettleUpdated is an event emitted when a market's user_settle option is updated.
+### EventMarketUserSettleDisabled
+EventMarketUserSettleDisabled is an event emitted when a market's user_settle option is disabled.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the user_settle option. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketUserSettleEnabled"></a>
+
+### EventMarketUserSettleEnabled
+EventMarketUserSettleEnabled is an event emitted when a market's user_settle option is enabled.
 
 
 | Field | Type | Label | Description |
