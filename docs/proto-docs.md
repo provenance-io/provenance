@@ -2215,6 +2215,16 @@ MsgCreateBidResponse is a response message for the CreateBid endpoint.
 MsgFillAsksRequest is a request message for the FillAsks endpoint.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `buyer` | [string](#string) |  | buyer is the address of the account attempting to buy some assets. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market with the asks to fill. All ask orders being filled must be in this market. |
+| `total_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | total_price is the total amount being spent on some assets. It must be the sum of all ask order prices. |
+| `ask_order_ids` | [uint64](#uint64) | repeated | ask_order_ids are the ids of the ask orders that you are trying to fill. All ids must be for ask orders, and must be in the same market as the market_id. |
+| `buyer_settlement_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | buyer_settlement_fees are the fees (both flat and proportional) that the buyer will pay (in addition to the price) for this settlement. |
+| `bid_order_creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | bid_order_creation_fee is the fee that is being paid to create this order (which is immediately then settled). |
+
+
 
 
 
@@ -2241,8 +2251,8 @@ MsgFillBidsRequest is a request message for the FillBids endpoint.
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market with the bids to fill. All bid orders being filled must be in this market. |
 | `total_assets` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | total_assets are the things that the seller wishes to sell. It must be the sum of all bid order assets. |
 | `bid_order_ids` | [uint64](#uint64) | repeated | bid_order_ids are the ids of the bid orders that you are trying to fill. All ids must be for bid orders, and must be in the same market as the market_id. |
-| `seller_settlement_flat_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | seller_settlement_flat_fee is the flat fee for sellers that will be charged during settlement. |
-| `ask_order_creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | ask_order_creation_fee is the fee that is being paid to create this order. |
+| `seller_settlement_flat_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | seller_settlement_flat_fee is the flat fee for sellers that will be charged for this settlement. |
+| `ask_order_creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | ask_order_creation_fee is the fee that is being paid to create this order (which is immediately then settled). |
 
 
 
