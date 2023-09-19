@@ -383,6 +383,7 @@ func (a AccessGrant) ValidateInField(field string) error {
 	return nil
 }
 
+// Contains returns true if this access grant contains the provided permission.
 func (a AccessGrant) Contains(perm Permission) bool {
 	for _, p := range a.Permissions {
 		if p == perm {
