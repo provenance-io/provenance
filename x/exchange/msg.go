@@ -120,13 +120,46 @@ func (m MsgFillBidsRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgFillAsksRequest) ValidateBasic() error {
-	// TODO[1658]: MsgFillAsksRequest.ValidateBasic()
-	return nil
+	var errs []error
+
+	if _, err := sdk.AccAddressFromBech32(m.Buyer); err != nil {
+		errs = append(errs, fmt.Errorf("invalid buyer: %w", err))
+	}
+
+	if m.MarketId == 0 {
+		errs = append(errs, fmt.Errorf("invalid market id: cannot be zero"))
+	}
+
+	if err := m.TotalPrice.Validate(); err != nil {
+		errs = append(errs, fmt.Errorf("invalid total price: %w", err))
+	} else if m.TotalPrice.IsZero() {
+		errs = append(errs, fmt.Errorf("invalid total price: cannot be zero"))
+	}
+
+	if err := ValidateOrderIDs("ask", m.AskOrderIds); err != nil {
+		errs = append(errs, err)
+	}
+
+	if len(m.BuyerSettlementFees) > 0 {
+		if err := m.BuyerSettlementFees.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("invalid buyer settlement fees: %w", err))
+		}
+	}
+
+	if m.BidOrderCreationFee != nil {
+		if err := m.BidOrderCreationFee.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("invalid bid order creation fee: %w", err))
+		} else if m.BidOrderCreationFee.IsZero() {
+			errs = append(errs, fmt.Errorf("invalid bid order creation fee: %s amount cannot be zero", m.BidOrderCreationFee.Denom))
+		}
+	}
+
+	return errors.Join(errs...)
 }
 
 func (m MsgFillAsksRequest) GetSigners() []sdk.AccAddress {
-	// TODO[1658]: MsgFillAsksRequest.GetSigners
-	panic("not implemented")
+	addr := sdk.MustAccAddressFromBech32(m.Buyer)
+	return []sdk.AccAddress{addr}
 }
 
 func (m MsgMarketSettleRequest) ValidateBasic() error {

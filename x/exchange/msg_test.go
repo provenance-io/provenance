@@ -43,7 +43,9 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg {
 			return &MsgFillBidsRequest{Seller: signer}
 		},
-		// TODO[1658]: Add MsgFillAsksRequest once it's actually been defined.
+		func(signer string) sdk.Msg {
+			return &MsgFillAsksRequest{Buyer: signer}
+		},
 		func(signer string) sdk.Msg {
 			return &MsgMarketSettleRequest{Admin: signer}
 		},
@@ -465,7 +467,190 @@ func TestMsgFillBidsRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestMsgFillAsksRequest_ValidateBasic(t *testing.T)
+func TestMsgFillAsksRequest_ValidateBasic(t *testing.T) {
+	coin := func(amount int64, denom string) *sdk.Coin {
+		return &sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	buyer := sdk.AccAddress("buyer_______________").String()
+
+	tests := []struct {
+		name   string
+		msg    MsgFillAsksRequest
+		expErr []string
+	}{
+		{
+			name: "control",
+			msg: MsgFillAsksRequest{
+				Buyer:               buyer,
+				MarketId:            1,
+				TotalPrice:          sdk.Coins{*coin(3, "acorn")},
+				AskOrderIds:         []uint64{1, 2, 3},
+				BuyerSettlementFees: sdk.Coins{*coin(2, "banana")},
+				BidOrderCreationFee: coin(8, "cactus"),
+			},
+			expErr: nil,
+		},
+		{
+			name: "empty buyer",
+			msg: MsgFillAsksRequest{
+				Buyer:       "",
+				MarketId:    1,
+				TotalPrice:  sdk.Coins{*coin(3, "acorn")},
+				AskOrderIds: []uint64{1},
+			},
+			expErr: []string{"invalid buyer", emptyAddrErr},
+		},
+		{
+			name: "bad buyer",
+			msg: MsgFillAsksRequest{
+				Buyer:       "not-an-address",
+				MarketId:    1,
+				TotalPrice:  sdk.Coins{*coin(3, "acorn")},
+				AskOrderIds: []uint64{1},
+			},
+			expErr: []string{"invalid buyer", "decoding bech32 failed"},
+		},
+		{
+			name: "market id zero",
+			msg: MsgFillAsksRequest{
+				Buyer:       buyer,
+				MarketId:    0,
+				TotalPrice:  sdk.Coins{*coin(3, "acorn")},
+				AskOrderIds: []uint64{1},
+			},
+			expErr: []string{"invalid market id", "cannot be zero"},
+		},
+		{
+			name: "nil total price",
+			msg: MsgFillAsksRequest{
+				Buyer:       buyer,
+				MarketId:    1,
+				TotalPrice:  nil,
+				AskOrderIds: []uint64{1},
+			},
+			expErr: []string{"invalid total price", "cannot be zero"},
+		},
+		{
+			name: "empty total price",
+			msg: MsgFillAsksRequest{
+				Buyer:       buyer,
+				MarketId:    1,
+				TotalPrice:  sdk.Coins{},
+				AskOrderIds: []uint64{1},
+			},
+			expErr: []string{"invalid total price", "cannot be zero"},
+		},
+		{
+			name: "invalid total price",
+			msg: MsgFillAsksRequest{
+				Buyer:       buyer,
+				MarketId:    1,
+				TotalPrice:  sdk.Coins{*coin(-1, "acorn")},
+				AskOrderIds: []uint64{1},
+			},
+			expErr: []string{"invalid total price", "coin -1acorn amount is not positive"},
+		},
+		{
+			name: "nil order ids",
+			msg: MsgFillAsksRequest{
+				Buyer:       buyer,
+				MarketId:    1,
+				TotalPrice:  sdk.Coins{*coin(1, "acorn")},
+				AskOrderIds: nil,
+			},
+			expErr: []string{"no ask order ids provided"},
+		},
+		{
+			name: "order id zero",
+			msg: MsgFillAsksRequest{
+				Buyer:       buyer,
+				MarketId:    1,
+				TotalPrice:  sdk.Coins{*coin(1, "acorn")},
+				AskOrderIds: []uint64{0},
+			},
+			expErr: []string{"invalid ask order ids: cannot contain order id zero"},
+		},
+		{
+			name: "duplicate order ids",
+			msg: MsgFillAsksRequest{
+				Buyer:       buyer,
+				MarketId:    1,
+				TotalPrice:  sdk.Coins{*coin(1, "acorn")},
+				AskOrderIds: []uint64{1, 2, 1},
+			},
+			expErr: []string{"duplicate ask order ids provided: [1]"},
+		},
+		{
+			name: "invalid buyer settlement flat fee",
+			msg: MsgFillAsksRequest{
+				Buyer:               buyer,
+				MarketId:            1,
+				TotalPrice:          sdk.Coins{*coin(1, "acorn")},
+				AskOrderIds:         []uint64{1},
+				BuyerSettlementFees: sdk.Coins{*coin(-1, "catan")},
+			},
+			expErr: []string{"invalid buyer settlement fees", "coin -1catan amount is not positive"},
+		},
+		{
+			name: "buyer settlement flat fee with zero amount",
+			msg: MsgFillAsksRequest{
+				Buyer:               buyer,
+				MarketId:            1,
+				TotalPrice:          sdk.Coins{*coin(1, "acorn")},
+				AskOrderIds:         []uint64{1},
+				BuyerSettlementFees: sdk.Coins{*coin(0, "catan")},
+			},
+			expErr: []string{"invalid buyer settlement fees", "coin 0catan amount is not positive"},
+		},
+		{
+			name: "invalid order creation fee",
+			msg: MsgFillAsksRequest{
+				Buyer:               buyer,
+				MarketId:            1,
+				TotalPrice:          sdk.Coins{*coin(1, "acorn")},
+				AskOrderIds:         []uint64{1},
+				BidOrderCreationFee: coin(-1, "catan"),
+			},
+			expErr: []string{"invalid bid order creation fee", "negative coin amount: -1"},
+		},
+		{
+			name: "order creation fee with zero amount",
+			msg: MsgFillAsksRequest{
+				Buyer:               buyer,
+				MarketId:            1,
+				TotalPrice:          sdk.Coins{*coin(1, "acorn")},
+				AskOrderIds:         []uint64{1},
+				BidOrderCreationFee: coin(0, "catan"),
+			},
+			expErr: []string{"invalid bid order creation fee", "catan amount cannot be zero"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgFillAsksRequest{
+				Buyer:               "",
+				MarketId:            0,
+				TotalPrice:          nil,
+				AskOrderIds:         nil,
+				BuyerSettlementFees: sdk.Coins{*coin(0, "catan")},
+				BidOrderCreationFee: coin(-1, "catan"),
+			},
+			expErr: []string{
+				"invalid buyer",
+				"invalid market id",
+				"invalid total price",
+				"no ask order ids provided",
+				"invalid buyer settlement fees",
+				"invalid bid order creation fee",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
 
 // TODO[1658]: func TestMsgMarketSettleRequest_ValidateBasic(t *testing.T)
 
