@@ -235,6 +235,40 @@ func (k Keeper) IterateAssetBidOrders(ctx sdk.Context, assetDenom string, cb fun
 	})
 }
 
+// placeHoldOnOrder places a hold on an order's funds in the owner's account.
+func (k Keeper) placeHoldOnOrder(ctx sdk.Context, order *exchange.Order) error {
+	orderID := order.OrderId
+	orderType := order.GetOrderType()
+	owner := order.GetOwner()
+	ownerAddr, err := sdk.AccAddressFromBech32(owner)
+	if err != nil {
+		return fmt.Errorf("invalid %s order %d owner %q: %w", orderType, orderID, owner, err)
+	}
+	toHold := order.GetHoldAmount()
+	err = k.holdKeeper.AddHold(ctx, ownerAddr, toHold, fmt.Sprintf("x/exchange: order %d", orderID))
+	if err != nil {
+		return fmt.Errorf("error placing hold for %s order %d: %w", orderType, orderID, err)
+	}
+	return nil
+}
+
+// releaseHoldOnOrder releases a hold that was placed on an order's funds in the owner's account.
+func (k Keeper) releaseHoldOnOrder(ctx sdk.Context, order *exchange.Order) error {
+	orderID := order.OrderId
+	orderType := order.GetOrderType()
+	owner := order.GetOwner()
+	ownerAddr, err := sdk.AccAddressFromBech32(owner)
+	if err != nil {
+		return fmt.Errorf("invalid %s order %d owner %q: %w", orderType, orderID, owner, err)
+	}
+	held := order.GetHoldAmount()
+	err = k.holdKeeper.ReleaseHold(ctx, ownerAddr, held)
+	if err != nil {
+		return fmt.Errorf("error releasing hold for %s order %d: %w", orderType, orderID, err)
+	}
+	return nil
+}
+
 // CreateAskOrder creates an ask order, collects the creation fee, and places all needed holds.
 func (k Keeper) CreateAskOrder(ctx sdk.Context, askOrder exchange.AskOrder, creationFee *sdk.Coin) (uint64, error) {
 	if err := askOrder.Validate(); err != nil {
@@ -277,9 +311,8 @@ func (k Keeper) CreateAskOrder(ctx sdk.Context, askOrder exchange.AskOrder, crea
 		return 0, fmt.Errorf("error storing ask order: %w", err)
 	}
 
-	toHold := order.GetHoldAmount()
-	if err := k.holdKeeper.AddHold(ctx, seller, toHold, fmt.Sprintf("x/exchange: order %d", order.OrderId)); err != nil {
-		return 0, fmt.Errorf("error placing hold for ask order: %w", err)
+	if err := k.placeHoldOnOrder(ctx, order); err != nil {
+		return 0, err
 	}
 
 	return orderID, ctx.EventManager().EmitTypedEvent(exchange.NewEventOrderCreated(order))
@@ -324,9 +357,8 @@ func (k Keeper) CreateBidOrder(ctx sdk.Context, bidOrder exchange.BidOrder, crea
 		return 0, fmt.Errorf("error storing bid order: %w", err)
 	}
 
-	toHold := order.GetHoldAmount()
-	if err := k.holdKeeper.AddHold(ctx, buyer, toHold, fmt.Sprintf("x/exchange: order %d", order.OrderId)); err != nil {
-		return 0, fmt.Errorf("error placing hold for bid order: %w", err)
+	if err := k.placeHoldOnOrder(ctx, order); err != nil {
+		return 0, err
 	}
 
 	return orderID, ctx.EventManager().EmitTypedEvent(exchange.NewEventOrderCreated(order))
@@ -360,6 +392,86 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 	return ctx.EventManager().EmitTypedEvent(exchange.NewEventOrderCancelled(orderID, signerAddr))
 }
 
+// getBidOrders gets orders from the store, making sure they're bid orders in the given market
+// and do not have the same buyer as the provided seller. If the seller isn't yet known, just provide "" for it.
+func (k Keeper) getBidOrders(store sdk.KVStore, marketID uint32, orderIDs []uint64, seller string) ([]*exchange.Order, error) {
+	var errs []error
+	orders := make([]*exchange.Order, 0, len(orderIDs))
+
+	for _, orderID := range orderIDs {
+		order, oerr := k.getOrderFromStore(store, orderID)
+		if oerr != nil {
+			errs = append(errs, oerr)
+			continue
+		}
+		if order == nil {
+			errs = append(errs, fmt.Errorf("order %d not found", orderID))
+			continue
+		}
+		if !order.IsBidOrder() {
+			errs = append(errs, fmt.Errorf("order %d is type %s: expected bid", orderID, order.GetOrderType()))
+			continue
+		}
+
+		bidOrder := order.GetBidOrder()
+		orderMarketID := bidOrder.MarketId
+		buyer := bidOrder.Buyer
+
+		if orderMarketID != marketID {
+			errs = append(errs, fmt.Errorf("order %d market id %d does not equal requested market id %d", orderID, orderMarketID, marketID))
+			continue
+		}
+		if buyer == seller {
+			errs = append(errs, fmt.Errorf("order %d has the same buyer %s as the requested seller", orderID, buyer))
+			continue
+		}
+
+		orders = append(orders, order)
+	}
+
+	return orders, errors.Join(errs...)
+}
+
+// getAskOrders gets orders from the store, making sure they're ask orders in the given market
+// and do not have the same sller as the provided buyer. If the buyer isn't yet known, just provide "" for it.
+func (k Keeper) getAskOrders(store sdk.KVStore, marketID uint32, orderIDs []uint64, buyer string) ([]*exchange.Order, error) {
+	var errs []error
+	orders := make([]*exchange.Order, 0, len(orderIDs))
+
+	for _, orderID := range orderIDs {
+		order, oerr := k.getOrderFromStore(store, orderID)
+		if oerr != nil {
+			errs = append(errs, oerr)
+			continue
+		}
+		if order == nil {
+			errs = append(errs, fmt.Errorf("order %d not found", orderID))
+			continue
+		}
+		if !order.IsAskOrder() {
+			errs = append(errs, fmt.Errorf("order %d is type %s: expected ask", orderID, order.GetOrderType()))
+			continue
+		}
+
+		askOrder := order.GetAskOrder()
+		orderMarketID := askOrder.MarketId
+		seller := askOrder.Seller
+
+		if orderMarketID != marketID {
+			errs = append(errs, fmt.Errorf("order %d market id %d does not equal requested market id %d", orderID, orderMarketID, marketID))
+			continue
+		}
+		if seller == buyer {
+			errs = append(errs, fmt.Errorf("order %d has the same seller %s as the requested buyer", orderID, seller))
+			continue
+		}
+
+		orders = append(orders, order)
+	}
+
+	return orders, errors.Join(errs...)
+}
+
 // FillBids settles one or more bid orders for a seller.
 func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) error {
 	if err := msg.ValidateBasic(); err != nil {
@@ -378,7 +490,10 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 	if !isUserSettlementAllowed(store, marketID) {
 		return fmt.Errorf("market %d does not allow user settlement", marketID)
 	}
-	seller := sdk.MustAccAddressFromBech32(msg.Seller)
+	seller, serr := sdk.AccAddressFromBech32(msg.Seller)
+	if serr != nil {
+		return fmt.Errorf("invalid seller %q: %w", msg.Seller, serr)
+	}
 	if !k.CanCreateAsk(ctx, marketID, seller) {
 		return fmt.Errorf("account %s is not allowed to create ask orders in market %d", seller, marketID)
 	}
@@ -389,61 +504,35 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 		return err
 	}
 
+	orders, oerrs := k.getBidOrders(store, marketID, msg.BidOrderIds, msg.Seller)
+	if oerrs != nil {
+		return oerrs
+	}
+
 	var errs []error
-	orders := make([]*exchange.Order, 0, len(msg.BidOrderIds))
 	var totalAssets, totalPrice, totalSellerFee sdk.Coins
 	assetOutputs := make([]banktypes.Output, 0, len(msg.BidOrderIds))
 	priceInputs := make([]banktypes.Input, 0, len(msg.BidOrderIds))
 	addrIndex := make(map[string]int)
 	feeInputs := make([]banktypes.Input, 0, len(msg.BidOrderIds)+1)
 	feeAddrIndex := make(map[string]int)
-	for _, orderID := range msg.BidOrderIds {
-		order, oerr := k.getOrderFromStore(store, orderID)
-		if oerr != nil {
-			errs = append(errs, oerr)
-			continue
-		}
-		if order == nil {
-			errs = append(errs, fmt.Errorf("order %d not found", orderID))
-			continue
-		}
-		if !order.IsBidOrder() {
-			errs = append(errs, fmt.Errorf("order %d is type %s: expected bid", orderID, order.GetOrderType()))
-			continue
-		}
-
+	for _, order := range orders {
 		bidOrder := order.GetBidOrder()
-		orderMarketID := bidOrder.MarketId
 		buyer := bidOrder.Buyer
 		assets := bidOrder.Assets
 		price := bidOrder.Price
-		heldAmount := bidOrder.GetHoldAmount()
 		buyerSettlementFees := bidOrder.BuyerSettlementFees
 
-		if orderMarketID != marketID {
-			errs = append(errs, fmt.Errorf("order %d market id %d does not equal requested market id %d", orderID, orderMarketID, marketID))
-			continue
-		}
-		if buyer == msg.Seller {
-			errs = append(errs, fmt.Errorf("order %d has the same buyer %s as the requested seller", orderID, buyer))
-			continue
-		}
 		sellerRatioFee, rerr := calculateSellerSettlementRatioFee(store, marketID, price)
 		if rerr != nil {
-			errs = append(errs, fmt.Errorf("error calculating seller settlement ratio fee for order %d: %w", orderID, rerr))
+			errs = append(errs, fmt.Errorf("error calculating seller settlement ratio fee for order %d: %w", order.OrderId, rerr))
 			continue
 		}
-		buyerAddr, aerr := sdk.AccAddressFromBech32(buyer)
-		if aerr != nil {
-			errs = append(errs, fmt.Errorf("invalid buyer %q in order %d: %w", buyer, orderID, aerr))
-			continue
-		}
-		if err := k.holdKeeper.ReleaseHold(ctx, buyerAddr, heldAmount); err != nil {
-			errs = append(errs, fmt.Errorf("error releasing hold for order %d: %w", orderID, err))
+		if err := k.releaseHoldOnOrder(ctx, order); err != nil {
+			errs = append(errs, err)
 			continue
 		}
 
-		orders = append(orders, order)
 		totalAssets = totalAssets.Add(assets...)
 		totalPrice = totalPrice.Add(price)
 		if sellerRatioFee != nil {
@@ -536,7 +625,10 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	if !isUserSettlementAllowed(store, marketID) {
 		return fmt.Errorf("market %d does not allow user settlement", marketID)
 	}
-	buyer := sdk.MustAccAddressFromBech32(msg.Buyer)
+	buyer, serr := sdk.AccAddressFromBech32(msg.Buyer)
+	if serr != nil {
+		return fmt.Errorf("invalid buyer %q: %w", msg.Buyer, serr)
+	}
 	if !k.CanCreateBid(ctx, marketID, buyer) {
 		return fmt.Errorf("account %s is not allowed to create bid orders in market %d", buyer, marketID)
 	}
@@ -547,61 +639,35 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 		return err
 	}
 
+	orders, oerrs := k.getAskOrders(store, marketID, msg.AskOrderIds, msg.Buyer)
+	if oerrs != nil {
+		return oerrs
+	}
+
 	var errs []error
-	orders := make([]*exchange.Order, 0, len(msg.AskOrderIds))
 	var totalAssets, totalPrice sdk.Coins
 	assetInputs := make([]banktypes.Input, 0, len(msg.AskOrderIds))
 	priceOutputs := make([]banktypes.Output, 0, len(msg.AskOrderIds))
 	addrIndex := make(map[string]int)
 	feeInputs := make([]banktypes.Input, 0, len(msg.AskOrderIds)+1)
 	feeAddrIndex := make(map[string]int)
-	for _, orderID := range msg.AskOrderIds {
-		order, oerr := k.getOrderFromStore(store, orderID)
-		if oerr != nil {
-			errs = append(errs, oerr)
-			continue
-		}
-		if order == nil {
-			errs = append(errs, fmt.Errorf("order %d not found", orderID))
-			continue
-		}
-		if !order.IsAskOrder() {
-			errs = append(errs, fmt.Errorf("order %d is type %s: expected ask", orderID, order.GetOrderType()))
-			continue
-		}
-
+	for _, order := range orders {
 		askOrder := order.GetAskOrder()
-		orderMarketID := askOrder.MarketId
 		seller := askOrder.Seller
 		assets := askOrder.Assets
 		price := askOrder.Price
-		heldAmount := askOrder.GetHoldAmount()
 		sellerSettlementFlatFee := askOrder.SellerSettlementFlatFee
 
-		if orderMarketID != marketID {
-			errs = append(errs, fmt.Errorf("order %d market id %d does not equal requested market id %d", orderID, orderMarketID, marketID))
-			continue
-		}
-		if seller == msg.Buyer {
-			errs = append(errs, fmt.Errorf("order %d has the same seller %s as the requested buyer", orderID, buyer))
-			continue
-		}
 		sellerRatioFee, rerr := calculateSellerSettlementRatioFee(store, marketID, price)
 		if rerr != nil {
-			errs = append(errs, fmt.Errorf("error calculating seller settlement ratio fee for order %d: %w", orderID, rerr))
+			errs = append(errs, fmt.Errorf("error calculating seller settlement ratio fee for order %d: %w", order.OrderId, rerr))
 			continue
 		}
-		sellerAddr, aerr := sdk.AccAddressFromBech32(seller)
-		if aerr != nil {
-			errs = append(errs, fmt.Errorf("invalid seller %q in order %d: %w", buyer, orderID, aerr))
-			continue
-		}
-		if err := k.holdKeeper.ReleaseHold(ctx, sellerAddr, heldAmount); err != nil {
-			errs = append(errs, fmt.Errorf("error releasing hold for order %d: %w", orderID, err))
+		if err := k.releaseHoldOnOrder(ctx, order); err != nil {
+			errs = append(errs, err)
 			continue
 		}
 
-		orders = append(orders, order)
 		totalAssets = totalAssets.Add(assets...)
 		totalPrice = totalPrice.Add(price)
 		var totalSellerFee sdk.Coins
@@ -675,6 +741,11 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	}
 
 	return ctx.EventManager().EmitTypedEvents(events...)
+}
+
+func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidOrderIds []uint64, expectPartial bool) error {
+	// TODO[1658]: Implement SettleOrders.
+	panic("Not implemented")
 }
 
 // safeCoinsEquals returns true if the two provided coins are equal.
