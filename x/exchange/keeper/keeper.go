@@ -11,6 +11,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
@@ -125,12 +126,8 @@ func (k Keeper) NormalizeReqAttrs(ctx sdk.Context, reqAttrs []string) ([]string,
 	return rv, errors.Join(errs...)
 }
 
-// CollectFee will transfer the fee amount to the market account,
-// then the exchange's cut from the market to the fee collector.
-func (k Keeper) CollectFee(ctx sdk.Context, payer sdk.AccAddress, marketID uint32, feeAmt sdk.Coins) error {
-	if feeAmt.IsZero() {
-		return nil
-	}
+// CalculateExchangeSplit calculates the amount that the exchange will keep of the provided fee.
+func (k Keeper) CalculateExchangeSplit(ctx sdk.Context, feeAmt sdk.Coins) sdk.Coins {
 	exchangeAmt := make(sdk.Coins, 0, len(feeAmt))
 	for _, coin := range feeAmt {
 		if coin.Amount.IsZero() {
@@ -150,13 +147,65 @@ func (k Keeper) CollectFee(ctx sdk.Context, payer sdk.AccAddress, marketID uint3
 		}
 		exchangeAmt = append(exchangeAmt, sdk.Coin{Denom: coin.Denom, Amount: splitAmt})
 	}
+	return exchangeAmt
+}
+
+// CollectFee will transfer the fee amount to the market account,
+// then the exchange's cut from the market to the fee collector.
+// If you have fees to collect from multiple payers, consider using CollectFees.
+func (k Keeper) CollectFee(ctx sdk.Context, payer sdk.AccAddress, marketID uint32, feeAmt sdk.Coins) error {
+	if feeAmt.IsZero() {
+		return nil
+	}
+	exchangeAmt := k.CalculateExchangeSplit(ctx, feeAmt)
 
 	marketAddr := exchange.GetMarketAddress(marketID)
 	if err := k.bankKeeper.SendCoins(ctx, payer, marketAddr, feeAmt); err != nil {
 		return fmt.Errorf("error transferring %s from %s to market %d: %w", feeAmt, payer, marketID, err)
 	}
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, marketAddr, k.feeCollectorName, exchangeAmt); err != nil {
-		return fmt.Errorf("error collecting exchange fee %s (based off %s) from market %d: %w", exchangeAmt, feeAmt, marketID, err)
+	if !exchangeAmt.IsZero() {
+		if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, marketAddr, k.feeCollectorName, exchangeAmt); err != nil {
+			return fmt.Errorf("error collecting exchange fee %s (based off %s) from market %d: %w", exchangeAmt, feeAmt, marketID, err)
+		}
+	}
+
+	return nil
+}
+
+// CollectFees will transfer the inputs to the market account,
+// then the exchange's cut from the market to the fee collector.
+// If there is only one input, CollectFee is used.
+func (k Keeper) CollectFees(ctx sdk.Context, inputs []banktypes.Input, marketID uint32) error {
+	if len(inputs) == 0 {
+		return nil
+	}
+	if len(inputs) == 1 {
+		payer, err := sdk.AccAddressFromBech32(inputs[0].Address)
+		if err != nil {
+			return fmt.Errorf("invalid payer address %q: %w", inputs[0].Address, err)
+		}
+		return k.CollectFee(ctx, payer, marketID, inputs[0].Coins)
+	}
+
+	var feeAmt sdk.Coins
+	for _, input := range inputs {
+		feeAmt = feeAmt.Add(input.Coins...)
+	}
+	if feeAmt.IsZero() {
+		return nil
+	}
+
+	exchangeAmt := k.CalculateExchangeSplit(ctx, feeAmt)
+
+	marketAddr := exchange.GetMarketAddress(marketID)
+	outputs := []banktypes.Output{{Address: marketAddr.String(), Coins: feeAmt}}
+	if err := k.bankKeeper.InputOutputCoins(ctx, inputs, outputs); err != nil {
+		return fmt.Errorf("error collecting fees for market %d: %w", marketID, err)
+	}
+	if !exchangeAmt.IsZero() {
+		if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, marketAddr, k.feeCollectorName, exchangeAmt); err != nil {
+			return fmt.Errorf("error collecting exchange fee %s (based off %s) from market %d: %w", exchangeAmt, feeAmt, marketID, err)
+		}
 	}
 
 	return nil

@@ -56,8 +56,12 @@ func (k MsgServer) CancelOrder(goCtx context.Context, msg *exchange.MsgCancelOrd
 
 // FillBids uses the assets in your account to fulfill one or more bids (similar to a fill-or-cancel ask).
 func (k MsgServer) FillBids(goCtx context.Context, msg *exchange.MsgFillBidsRequest) (*exchange.MsgFillBidsResponse, error) {
-	// TODO[1658]: Implement FillBids
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err := k.Keeper.FillBids(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &exchange.MsgFillBidsResponse{}, nil
 }
 
 // FillAsks uses the funds in your account to fulfill one or more asks (similar to a fill-or-cancel bid).

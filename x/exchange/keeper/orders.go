@@ -1,10 +1,12 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
@@ -100,6 +102,16 @@ func createIndexEntries(order exchange.Order) []sdk.KVPair {
 	return rv
 }
 
+func (k Keeper) getOrderFromStore(store sdk.KVStore, orderID uint64) (*exchange.Order, error) {
+	key := MakeKeyOrder(orderID)
+	value := store.Get(key)
+	rv, err := k.parseOrderStoreValue(orderID, value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read order %d: %w", orderID, err)
+	}
+	return rv, nil
+}
+
 // setOrderInStore writes an order to the store (along with all its indexes).
 func (k Keeper) setOrderInStore(store sdk.KVStore, order exchange.Order) error {
 	key, value, err := k.getOrderStoreKeyValue(order)
@@ -121,9 +133,8 @@ func (k Keeper) setOrderInStore(store sdk.KVStore, order exchange.Order) error {
 	return nil
 }
 
-// deleteOrder deletes an order (along with its indexes).
-func (k Keeper) deleteOrder(ctx sdk.Context, order exchange.Order) {
-	store := k.getStore(ctx)
+// deleteAndDeIndexOrder deletes an order from the store along with its indexes.
+func deleteAndDeIndexOrder(store sdk.KVStore, order exchange.Order) {
 	key := MakeKeyOrder(order.OrderId)
 	store.Delete(key)
 	indexEntries := createIndexEntries(order)
@@ -132,16 +143,14 @@ func (k Keeper) deleteOrder(ctx sdk.Context, order exchange.Order) {
 	}
 }
 
+// deleteOrder deletes an order (along with its indexes).
+func (k Keeper) deleteOrder(ctx sdk.Context, order exchange.Order) {
+	deleteAndDeIndexOrder(k.getStore(ctx), order)
+}
+
 // GetOrder gets an order. Returns nil, nil if the order does not exist.
 func (k Keeper) GetOrder(ctx sdk.Context, orderID uint64) (*exchange.Order, error) {
-	store := k.getStore(ctx)
-	key := MakeKeyOrder(orderID)
-	value := store.Get(key)
-	rv, err := k.parseOrderStoreValue(orderID, value)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read order %d: %w", orderID, err)
-	}
-	return rv, nil
+	return k.getOrderFromStore(k.getStore(ctx), orderID)
 }
 
 // getNextOrderID gets the next available order id from the store.
@@ -229,13 +238,16 @@ func (k Keeper) CreateAskOrder(ctx sdk.Context, askOrder exchange.AskOrder, crea
 		return 0, err
 	}
 
-	seller := sdk.MustAccAddressFromBech32(askOrder.Seller)
-	marketID := askOrder.MarketId
 	store := k.getStore(ctx)
+	marketID := askOrder.MarketId
 
 	if err := validateMarketExists(store, marketID); err != nil {
 		return 0, err
 	}
+	if !isMarketActive(store, marketID) {
+		return 0, fmt.Errorf("market %d is not accepting orders", marketID)
+	}
+	seller := sdk.MustAccAddressFromBech32(askOrder.Seller)
 	if !k.CanCreateAsk(ctx, marketID, seller) {
 		return 0, fmt.Errorf("account %s is not allowed to create ask orders in market %d", seller, marketID)
 	}
@@ -276,13 +288,16 @@ func (k Keeper) CreateBidOrder(ctx sdk.Context, bidOrder exchange.BidOrder, crea
 		return 0, err
 	}
 
-	buyer := sdk.MustAccAddressFromBech32(bidOrder.Buyer)
-	marketID := bidOrder.MarketId
 	store := k.getStore(ctx)
+	marketID := bidOrder.MarketId
 
 	if err := validateMarketExists(store, marketID); err != nil {
 		return 0, err
 	}
+	if !isMarketActive(store, marketID) {
+		return 0, fmt.Errorf("market %d is not accepting orders", marketID)
+	}
+	buyer := sdk.MustAccAddressFromBech32(bidOrder.Buyer)
 	if !k.CanCreateBid(ctx, marketID, buyer) {
 		return 0, fmt.Errorf("account %s is not allowed to create bid orders in market %d", buyer, marketID)
 	}
@@ -339,4 +354,174 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 	k.deleteOrder(ctx, *order)
 
 	return nil
+}
+
+// FillBids settles one or more bid orders for a seller.
+func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) error {
+	if err := msg.ValidateBasic(); err != nil {
+		return err
+	}
+
+	marketID := msg.MarketId
+	store := k.getStore(ctx)
+
+	if err := validateMarketExists(store, marketID); err != nil {
+		return err
+	}
+	if !isMarketActive(store, marketID) {
+		return fmt.Errorf("market %d is not accepting orders", marketID)
+	}
+	if !isUserSettlementAllowed(store, marketID) {
+		return fmt.Errorf("market %d does not allow user settlement", marketID)
+	}
+	seller := sdk.MustAccAddressFromBech32(msg.Seller)
+	if !k.CanCreateAsk(ctx, marketID, seller) {
+		return fmt.Errorf("account %s is not allowed to create ask orders in market %d", seller, marketID)
+	}
+	if err := validateCreateAskFlatFee(store, marketID, msg.AskOrderCreationFee); err != nil {
+		return err
+	}
+	if err := validateSellerSettlementFlatFee(store, marketID, msg.SellerSettlementFlatFee); err != nil {
+		return err
+	}
+
+	var errs []error
+	orders := make([]*exchange.Order, 0, len(msg.BidOrderIds))
+	var totalAssets, totalPrice, totalSellerFee sdk.Coins
+	assetOutputs := make([]banktypes.Output, 0, len(msg.BidOrderIds))
+	priceInputs := make([]banktypes.Input, 0, len(msg.BidOrderIds))
+	addrIndex := make(map[string]int)
+	feeInputs := make([]banktypes.Input, 0, len(msg.BidOrderIds)+1)
+	feeAddrIndex := make(map[string]int)
+	for _, orderID := range msg.BidOrderIds {
+		order, oerr := k.getOrderFromStore(store, orderID)
+		if oerr != nil {
+			errs = append(errs, oerr)
+			continue
+		}
+		if order == nil {
+			errs = append(errs, fmt.Errorf("order %d not found", orderID))
+			continue
+		}
+		if !order.IsBidOrder() {
+			errs = append(errs, fmt.Errorf("order %d is type %s: expected bid", orderID, order.GetOrderType()))
+			continue
+		}
+
+		bidOrder := order.GetBidOrder()
+		orderMarketID := bidOrder.MarketId
+		buyer := bidOrder.Buyer
+		assets := bidOrder.Assets
+		price := bidOrder.Price
+		heldAmount := bidOrder.GetHoldAmount()
+		buyerSettlementFees := bidOrder.BuyerSettlementFees
+
+		if orderMarketID != marketID {
+			errs = append(errs, fmt.Errorf("order %d market id %d does not equal requested market id %d", orderID, orderMarketID, marketID))
+			continue
+		}
+		if buyer == msg.Seller {
+			errs = append(errs, fmt.Errorf("order %d has the same buyer %s as the requested seller", orderID, buyer))
+			continue
+		}
+		sellerRatioFee, rerr := calculateSellerSettlementRatioFee(store, marketID, price)
+		if rerr != nil {
+			errs = append(errs, fmt.Errorf("error calculating seller settlement ratio fee for order %d: %w", orderID, rerr))
+			continue
+		}
+		buyerAddr, aerr := sdk.AccAddressFromBech32(buyer)
+		if aerr != nil {
+			errs = append(errs, fmt.Errorf("invalid buyer %q in order %d: %w", buyer, orderID, aerr))
+			continue
+		}
+		if err := k.holdKeeper.ReleaseHold(ctx, buyerAddr, heldAmount); err != nil {
+			errs = append(errs, fmt.Errorf("error releasing hold for order %d: %w", orderID, err))
+			continue
+		}
+
+		orders = append(orders, order)
+		totalAssets = totalAssets.Add(assets...)
+		totalPrice = totalPrice.Add(price)
+		if sellerRatioFee != nil {
+			totalSellerFee = totalSellerFee.Add(*sellerRatioFee)
+		}
+
+		i, seen := addrIndex[buyer]
+		if !seen {
+			i = len(assetOutputs)
+			addrIndex[buyer] = i
+			assetOutputs = append(assetOutputs, banktypes.Output{Address: buyer})
+			priceInputs = append(priceInputs, banktypes.Input{Address: buyer})
+		}
+		assetOutputs[i].Coins = assetOutputs[i].Coins.Add(assets...)
+		priceInputs[i].Coins = priceInputs[i].Coins.Add(price)
+
+		if !buyerSettlementFees.IsZero() {
+			j, known := feeAddrIndex[buyer]
+			if !known {
+				j = len(feeInputs)
+				feeAddrIndex[buyer] = j
+				feeInputs = append(feeInputs, banktypes.Input{Address: buyer})
+			}
+			feeInputs[j].Coins = feeInputs[j].Coins.Add(buyerSettlementFees...)
+		}
+	}
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	if !safeCoinsEquals(totalAssets, msg.TotalAssets) {
+		return fmt.Errorf("total assets %q does not equal sum of bid order assets %q", msg.TotalAssets, totalAssets)
+	}
+
+	if msg.SellerSettlementFlatFee != nil {
+		totalSellerFee = totalSellerFee.Add(*msg.SellerSettlementFlatFee)
+	}
+	if !totalSellerFee.IsZero() {
+		feeInputs = append(feeInputs, banktypes.Input{Address: msg.Seller, Coins: totalSellerFee})
+	}
+
+	assetInputs := []banktypes.Input{{Address: msg.Seller, Coins: msg.TotalAssets}}
+	priceOutputs := []banktypes.Output{{Address: msg.Seller, Coins: totalPrice}}
+
+	if err := k.bankKeeper.InputOutputCoins(ctx, assetInputs, assetOutputs); err != nil {
+		return fmt.Errorf("error transferring assets from seller to buyers: %w", err)
+	}
+
+	if err := k.bankKeeper.InputOutputCoins(ctx, priceInputs, priceOutputs); err != nil {
+		return fmt.Errorf("error transferring price from buyers to seller: %w", err)
+	}
+
+	if err := k.CollectFees(ctx, feeInputs, marketID); err != nil {
+		return fmt.Errorf("error collecting settlement fees: %w", err)
+	}
+
+	// Collected last so that it's easier for a seller to fill bids without needing those funds first.
+	// Collected separately so it's not combined with the seller settlement fees in the events.
+	if msg.AskOrderCreationFee != nil {
+		if err := k.CollectFee(ctx, seller, marketID, sdk.Coins{*msg.AskOrderCreationFee}); err != nil {
+			return fmt.Errorf("error collecting create-ask fee %q: %w", msg.AskOrderCreationFee, err)
+		}
+	}
+
+	for _, order := range orders {
+		deleteAndDeIndexOrder(store, *order)
+	}
+
+	return nil
+}
+
+// safeCoinsEquals returns true if the two provided coins are equal.
+// Returns false instead of panicking like sdk.Coins.IsEqual.
+func safeCoinsEquals(a, b sdk.Coins) (isEqual bool) {
+	// The sdk.Coins.IsEqual function will panic if a and b have the same number of entries, but different denoms.
+	// Really, that stuff is all pretty panic happy.
+	// In here, we don't really care why it panics, but if it does, they're not equal.
+	defer func() {
+		if r := recover(); r != nil {
+			isEqual = false
+		}
+	}()
+	return a.IsEqual(b)
 }

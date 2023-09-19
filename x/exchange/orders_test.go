@@ -610,6 +610,47 @@ func TestOrder_GetAssets(t *testing.T) {
 	}
 }
 
+func TestOrder_GetPrice(t *testing.T) {
+	tests := []struct {
+		name     string
+		order    *Order
+		expected sdk.Coin
+		expPanic string
+	}{
+		{
+			name:     "AskOrder",
+			order:    NewOrder(1).WithAsk(&AskOrder{Price: sdk.NewInt64Coin("acorns", 85)}),
+			expected: sdk.NewInt64Coin("acorns", 85),
+		},
+		{
+			name:     "BidOrder",
+			order:    NewOrder(2).WithBid(&BidOrder{Price: sdk.NewInt64Coin("boogers", 3)}),
+			expected: sdk.NewInt64Coin("boogers", 3),
+		},
+		{
+			name:     "nil inside order",
+			order:    NewOrder(3),
+			expPanic: "GetAssets() missing case for <nil>",
+		},
+		{
+			name:     "unknown order type",
+			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			expPanic: "GetAssets() missing case for *exchange.unknownOrderType",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var price sdk.Coin
+			testFunc := func() {
+				price = tc.order.GetPrice()
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetPrice")
+			assert.Equal(t, tc.expected.String(), price.String(), "GetPrice result")
+		})
+	}
+}
+
 func TestOrder_GetHoldAmount(t *testing.T) {
 	tests := []struct {
 		name     string

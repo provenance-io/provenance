@@ -158,6 +158,20 @@ func (o Order) GetAssets() sdk.Coins {
 	}
 }
 
+// GetPrice gets the price in this order.
+func (o Order) GetPrice() sdk.Coin {
+	switch v := o.GetOrder().(type) {
+	case *Order_AskOrder:
+		return v.AskOrder.Price
+	case *Order_BidOrder:
+		return v.BidOrder.Price
+	default:
+		// If GetPrice() is called without the order being set yet, it's a programming error, so panic.
+		// If it's a type without a case, the case needs to be added, so panic.
+		panic(fmt.Sprintf("GetPrice() missing case for %T", v))
+	}
+}
+
 // GetHoldAmount returns the total amount that should be on hold for this order.
 func (o Order) GetHoldAmount() sdk.Coins {
 	switch v := o.GetOrder().(type) {

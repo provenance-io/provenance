@@ -306,7 +306,7 @@ func ValidateDisjointFeeRatios(field string, toAdd, toRemove []FeeRatio) error {
 // CoinEquals returns true if the two provided coin entries are equal.
 // Designed for use with intersection.
 //
-// We can't just provide sdk.Coin.isEqual to intersection because that PANICS if the denoms are different.
+// We can't just provide sdk.Coin.IsEqual to intersection because that PANICS if the denoms are different.
 // And we can't provide sdk.Coin.Equal to intersection because it takes in an interface{} (instead of sdk.Coin).
 func CoinEquals(a, b sdk.Coin) bool {
 	return a.Equal(b)
