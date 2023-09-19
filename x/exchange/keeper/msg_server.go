@@ -73,15 +73,22 @@ func (k MsgServer) FillAsks(goCtx context.Context, msg *exchange.MsgFillAsksRequ
 	return &exchange.MsgFillAsksResponse{}, nil
 }
 
-// MarketSettle is a market endpoint to trigger the settlement of orders.
-func (k MsgServer) MarketSettle(goCtx context.Context, msg *exchange.MsgMarketSettleRequest) (*exchange.MsgMarketSettleResponse, error) {
-	// TODO[1658]: Implement MarketSettle
-	panic("not implemented")
-}
-
 // permError creates and returns an error indicating that an account does not have a needed permission.
 func permError(desc string, account string, marketID uint32) error {
 	return sdkerrors.ErrInvalidRequest.Wrapf("account %s does not have permission to %s market %d", account, desc, marketID)
+}
+
+// MarketSettle is a market endpoint to trigger the settlement of orders.
+func (k MsgServer) MarketSettle(goCtx context.Context, msg *exchange.MsgMarketSettleRequest) (*exchange.MsgMarketSettleResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanSettleOrders(ctx, msg.MarketId, msg.Admin) {
+		return nil, permError("settle orders for", msg.Admin, msg.MarketId)
+	}
+	err := k.SettleOrders(ctx, msg.MarketId, msg.AskOrderIds, msg.BidOrderIds, msg.ExpectPartial)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	return &exchange.MsgMarketSettleResponse{}, nil
 }
 
 // MarketWithdraw is a market endpoint to withdraw fees that have been collected.
