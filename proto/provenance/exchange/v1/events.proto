@@ -18,7 +18,7 @@ message EventOrderCreated {
 
 // EventOrderCancelled is an event emitted when an order is cancelled.
 message EventOrderCancelled {
-  // order_id is the numerical identifier of the order created.
+  // order_id is the numerical identifier of the order cancelled.
   uint64 order_id = 1;
   // cancelled_by is the account that triggered the cancellation of the order.
   string cancelled_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -27,17 +27,17 @@ message EventOrderCancelled {
 // EventOrderFilled is an event emitted when an order has been filled in full.
 // This event is also used for orders that were previously partially filled, but have now been filled in full.
 message EventOrderFilled {
-  // order_id is the numerical identifier of the order created.
+  // order_id is the numerical identifier of the order filled.
   uint64 order_id = 1;
 }
 
 // EventOrderPartiallyFilled is an event emitted when an order filled in part and still has more left to fill.
 message EventOrderPartiallyFilled {
-  // order_id is the numerical identifier of the order created.
+  // order_id is the numerical identifier of the order partially filled.
   uint64 order_id = 1;
-  // amount_filled is the coins amount string of assets that were filled (and removed from the order).
+  // assets_filled is the coins amount string of assets that were filled and removed from the order.
   string assets_filled = 2;
-  // fees_filled is the coins amount string of fees removed from the order.
+  // fees_filled is the coins amount string of fees paid and removed from the order.
   string fees_filled = 3;
 }
 

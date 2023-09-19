@@ -1485,7 +1485,7 @@ EventOrderCancelled is an event emitted when an order is cancelled.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order created. |
+| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order cancelled. |
 | `cancelled_by` | [string](#string) |  | cancelled_by is the account that triggered the cancellation of the order. |
 
 
@@ -1518,7 +1518,7 @@ This event is also used for orders that were previously partially filled, but ha
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order created. |
+| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order filled. |
 
 
 
@@ -1533,9 +1533,9 @@ EventOrderPartiallyFilled is an event emitted when an order filled in part and s
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order created. |
-| `assets_filled` | [string](#string) |  | amount_filled is the coins amount string of assets that were filled (and removed from the order). |
-| `fees_filled` | [string](#string) |  | fees_filled is the coins amount string of fees removed from the order. |
+| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order partially filled. |
+| `assets_filled` | [string](#string) |  | assets_filled is the coins amount string of assets that were filled and removed from the order. |
+| `fees_filled` | [string](#string) |  | fees_filled is the coins amount string of fees paid and removed from the order. |
 
 
 

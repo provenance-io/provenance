@@ -80,7 +80,7 @@ func (m *EventOrderCreated) GetOrderType() string {
 
 // EventOrderCancelled is an event emitted when an order is cancelled.
 type EventOrderCancelled struct {
-	// order_id is the numerical identifier of the order created.
+	// order_id is the numerical identifier of the order cancelled.
 	OrderId uint64 `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 	// cancelled_by is the account that triggered the cancellation of the order.
 	CancelledBy string `protobuf:"bytes,2,opt,name=cancelled_by,json=cancelledBy,proto3" json:"cancelled_by,omitempty"`
@@ -136,7 +136,7 @@ func (m *EventOrderCancelled) GetCancelledBy() string {
 // EventOrderFilled is an event emitted when an order has been filled in full.
 // This event is also used for orders that were previously partially filled, but have now been filled in full.
 type EventOrderFilled struct {
-	// order_id is the numerical identifier of the order created.
+	// order_id is the numerical identifier of the order filled.
 	OrderId uint64 `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 }
 
@@ -182,11 +182,11 @@ func (m *EventOrderFilled) GetOrderId() uint64 {
 
 // EventOrderPartiallyFilled is an event emitted when an order filled in part and still has more left to fill.
 type EventOrderPartiallyFilled struct {
-	// order_id is the numerical identifier of the order created.
+	// order_id is the numerical identifier of the order partially filled.
 	OrderId uint64 `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	// amount_filled is the coins amount string of assets that were filled (and removed from the order).
+	// assets_filled is the coins amount string of assets that were filled and removed from the order.
 	AssetsFilled string `protobuf:"bytes,2,opt,name=assets_filled,json=assetsFilled,proto3" json:"assets_filled,omitempty"`
-	// fees_filled is the coins amount string of fees removed from the order.
+	// fees_filled is the coins amount string of fees paid and removed from the order.
 	FeesFilled string `protobuf:"bytes,3,opt,name=fees_filled,json=feesFilled,proto3" json:"fees_filled,omitempty"`
 }
 
