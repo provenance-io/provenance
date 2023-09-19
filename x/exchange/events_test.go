@@ -231,11 +231,10 @@ func TestNewEventMarketUserSettleEnabled(t *testing.T) {
 	marketID := uint32(123)
 	updatedBy := sdk.AccAddress("updatedBy___________")
 
-	event := NewEventMarketEnabled(marketID, updatedBy)
+	event := NewEventMarketUserSettleEnabled(marketID, updatedBy)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, updatedBy.String(), event.UpdatedBy, "UpdatedBy")
-	assertEverythingSet(t, event, "EventMarketEnabled")
-
+	assertEverythingSet(t, event, "EventMarketUserSettleEnabled")
 }
 
 func TestNewEventMarketUserSettleDisabled(t *testing.T) {
