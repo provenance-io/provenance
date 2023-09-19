@@ -630,12 +630,12 @@ func TestOrder_GetPrice(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: "GetAssets() missing case for <nil>",
+			expPanic: "GetPrice() missing case for <nil>",
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: "GetAssets() missing case for *exchange.unknownOrderType",
+			expPanic: "GetPrice() missing case for *exchange.unknownOrderType",
 		},
 	}
 
