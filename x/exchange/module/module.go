@@ -116,7 +116,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 
 // ExportGenesis returns the exported genesis state as raw bytes for the exchange module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	// TODO[1658]: Create keeper.InitGenesis
+	// TODO[1658]: Create keeper.ExportGenesis
 	panic("not implemented")
 	//gs := am.keeper.ExportGenesis(ctx)
 	//return cdc.MustMarshalJSON(gs)
