@@ -392,6 +392,20 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 	return ctx.EventManager().EmitTypedEvent(exchange.NewEventOrderCancelled(orderID, signerAddr))
 }
 
+// safeCoinsEquals returns true if the two provided coins are equal.
+// Returns false instead of panicking like sdk.Coins.IsEqual.
+func safeCoinsEquals(a, b sdk.Coins) (isEqual bool) {
+	// The sdk.Coins.IsEqual function will panic if a and b have the same number of entries, but different denoms.
+	// Really, that stuff is all pretty panic happy.
+	// In here, we don't really care why it panics, but if it does, they're not equal.
+	defer func() {
+		if r := recover(); r != nil {
+			isEqual = false
+		}
+	}()
+	return a.IsEqual(b)
+}
+
 // getBidOrders gets orders from the store, making sure they're bid orders in the given market
 // and do not have the same buyer as the provided seller. If the seller isn't yet known, just provide "" for it.
 func (k Keeper) getBidOrders(store sdk.KVStore, marketID uint32, orderIDs []uint64, seller string) ([]*exchange.Order, error) {
@@ -472,6 +486,16 @@ func (k Keeper) getAskOrders(store sdk.KVStore, marketID uint32, orderIDs []uint
 	return orders, errors.Join(errs...)
 }
 
+// sumAssetsAndPrice gets the sum of assets, and the sum of prices of the provided orders.
+func sumAssetsAndPrice(orders []*exchange.Order) (sdk.Coins, sdk.Coins) {
+	var totalAssets, totalPrice sdk.Coins
+	for _, order := range orders {
+		totalAssets = totalAssets.Add(order.GetAssets()...)
+		totalPrice = totalPrice.Add(order.GetPrice())
+	}
+	return totalAssets, totalPrice
+}
+
 // FillBids settles one or more bid orders for a seller.
 func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) error {
 	if err := msg.ValidateBasic(); err != nil {
@@ -510,7 +534,7 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 	}
 
 	var errs []error
-	var totalAssets, totalPrice, totalSellerFee sdk.Coins
+	var totalSellerFee sdk.Coins
 	assetOutputs := make([]banktypes.Output, 0, len(msg.BidOrderIds))
 	priceInputs := make([]banktypes.Input, 0, len(msg.BidOrderIds))
 	addrIndex := make(map[string]int)
@@ -525,7 +549,8 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 
 		sellerRatioFee, rerr := calculateSellerSettlementRatioFee(store, marketID, price)
 		if rerr != nil {
-			errs = append(errs, fmt.Errorf("error calculating seller settlement ratio fee for order %d: %w", order.OrderId, rerr))
+			errs = append(errs, fmt.Errorf("error calculating seller settlement ratio fee for order %d: %w",
+				order.OrderId, rerr))
 			continue
 		}
 		if err := k.releaseHoldOnOrder(ctx, order); err != nil {
@@ -533,8 +558,6 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 			continue
 		}
 
-		totalAssets = totalAssets.Add(assets...)
-		totalPrice = totalPrice.Add(price)
 		if sellerRatioFee != nil {
 			totalSellerFee = totalSellerFee.Add(*sellerRatioFee)
 		}
@@ -563,6 +586,8 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 	if len(errs) > 0 {
 		return errors.Join(errs...)
 	}
+
+	totalAssets, totalPrice := sumAssetsAndPrice(orders)
 
 	if !safeCoinsEquals(totalAssets, msg.TotalAssets) {
 		return fmt.Errorf("total assets %q does not equal sum of bid order assets %q", msg.TotalAssets, totalAssets)
@@ -645,7 +670,6 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	}
 
 	var errs []error
-	var totalAssets, totalPrice sdk.Coins
 	assetInputs := make([]banktypes.Input, 0, len(msg.AskOrderIds))
 	priceOutputs := make([]banktypes.Output, 0, len(msg.AskOrderIds))
 	addrIndex := make(map[string]int)
@@ -660,7 +684,8 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 
 		sellerRatioFee, rerr := calculateSellerSettlementRatioFee(store, marketID, price)
 		if rerr != nil {
-			errs = append(errs, fmt.Errorf("error calculating seller settlement ratio fee for order %d: %w", order.OrderId, rerr))
+			errs = append(errs, fmt.Errorf("error calculating seller settlement ratio fee for order %d: %w",
+				order.OrderId, rerr))
 			continue
 		}
 		if err := k.releaseHoldOnOrder(ctx, order); err != nil {
@@ -668,8 +693,6 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 			continue
 		}
 
-		totalAssets = totalAssets.Add(assets...)
-		totalPrice = totalPrice.Add(price)
 		var totalSellerFee sdk.Coins
 		if sellerSettlementFlatFee != nil && !sellerSettlementFlatFee.IsZero() {
 			totalSellerFee = totalSellerFee.Add(*sellerSettlementFlatFee)
@@ -702,6 +725,8 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	if len(errs) > 0 {
 		return errors.Join(errs...)
 	}
+
+	totalAssets, totalPrice := sumAssetsAndPrice(orders)
 
 	if !safeCoinsEquals(totalPrice, sdk.Coins{msg.TotalPrice}) {
 		return fmt.Errorf("total price %q does not equal sum of ask order prices %q", msg.TotalPrice, totalPrice)
@@ -743,21 +768,56 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	return ctx.EventManager().EmitTypedEvents(events...)
 }
 
+// SettleOrders attempts to settle all the provided orders.
 func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidOrderIds []uint64, expectPartial bool) error {
+	store := k.getStore(ctx)
+	if err := validateMarketExists(store, marketID); err != nil {
+		return err
+	}
+
+	askOrders, aoerr := k.getAskOrders(store, marketID, askOrderIDs, "")
+	bidOrders, boerr := k.getBidOrders(store, marketID, bidOrderIds, "")
+	if aoerr != nil || boerr != nil {
+		return errors.Join(aoerr, boerr)
+	}
+
+	totalAssetsForSale, totalAskPrice := sumAssetsAndPrice(askOrders)
+	totalAssetsToBuy, totalBidPrice := sumAssetsAndPrice(bidOrders)
+
+	var errs []error
+	if len(totalAssetsForSale) != 1 {
+		errs = append(errs, fmt.Errorf("cannot settle with multiple ask order asset denoms %q", totalAssetsForSale))
+	}
+	if len(totalAskPrice) != 1 {
+		errs = append(errs, fmt.Errorf("cannot settle with multiple ask order price denoms %q", totalAskPrice))
+	}
+	if len(totalAssetsToBuy) != 1 {
+		errs = append(errs, fmt.Errorf("cannot settle with multiple bid order asset denoms %q", totalAssetsToBuy))
+	}
+	if len(totalBidPrice) != 1 {
+		errs = append(errs, fmt.Errorf("cannot settle with multiple bid order price denoms %q", totalBidPrice))
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	if totalAssetsForSale[0].Denom != totalAssetsToBuy[0].Denom {
+		errs = append(errs, fmt.Errorf("cannot settle different ask %q and bid %q asset denoms",
+			totalAssetsForSale, totalAssetsToBuy))
+	}
+	if totalAskPrice[0].Denom != totalBidPrice[0].Denom {
+		errs = append(errs, fmt.Errorf("cannot settle different ask %q and bid %q price denoms",
+			totalAskPrice, totalBidPrice))
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	if !expectPartial && !safeCoinsEquals(totalAssetsForSale, totalAssetsToBuy) {
+		return fmt.Errorf("total assets for sale %q does not equal total assets to buy %q",
+			totalAssetsForSale, totalAssetsToBuy)
+	}
+
 	// TODO[1658]: Implement SettleOrders.
 	panic("Not implemented")
-}
-
-// safeCoinsEquals returns true if the two provided coins are equal.
-// Returns false instead of panicking like sdk.Coins.IsEqual.
-func safeCoinsEquals(a, b sdk.Coins) (isEqual bool) {
-	// The sdk.Coins.IsEqual function will panic if a and b have the same number of entries, but different denoms.
-	// Really, that stuff is all pretty panic happy.
-	// In here, we don't really care why it panics, but if it does, they're not equal.
-	defer func() {
-		if r := recover(); r != nil {
-			isEqual = false
-		}
-	}()
-	return a.IsEqual(b)
 }
