@@ -483,7 +483,7 @@ func TestMsgFillAsksRequest_ValidateBasic(t *testing.T) {
 			msg: MsgFillAsksRequest{
 				Buyer:               buyer,
 				MarketId:            1,
-				TotalPrice:          sdk.Coins{*coin(3, "acorn")},
+				TotalPrice:          *coin(3, "acorn"),
 				AskOrderIds:         []uint64{1, 2, 3},
 				BuyerSettlementFees: sdk.Coins{*coin(2, "banana")},
 				BidOrderCreationFee: coin(8, "cactus"),
@@ -495,7 +495,7 @@ func TestMsgFillAsksRequest_ValidateBasic(t *testing.T) {
 			msg: MsgFillAsksRequest{
 				Buyer:       "",
 				MarketId:    1,
-				TotalPrice:  sdk.Coins{*coin(3, "acorn")},
+				TotalPrice:  *coin(3, "acorn"),
 				AskOrderIds: []uint64{1},
 			},
 			expErr: []string{"invalid buyer", emptyAddrErr},
@@ -505,7 +505,7 @@ func TestMsgFillAsksRequest_ValidateBasic(t *testing.T) {
 			msg: MsgFillAsksRequest{
 				Buyer:       "not-an-address",
 				MarketId:    1,
-				TotalPrice:  sdk.Coins{*coin(3, "acorn")},
+				TotalPrice:  *coin(3, "acorn"),
 				AskOrderIds: []uint64{1},
 			},
 			expErr: []string{"invalid buyer", "decoding bech32 failed"},
@@ -515,47 +515,27 @@ func TestMsgFillAsksRequest_ValidateBasic(t *testing.T) {
 			msg: MsgFillAsksRequest{
 				Buyer:       buyer,
 				MarketId:    0,
-				TotalPrice:  sdk.Coins{*coin(3, "acorn")},
+				TotalPrice:  *coin(3, "acorn"),
 				AskOrderIds: []uint64{1},
 			},
 			expErr: []string{"invalid market id", "cannot be zero"},
-		},
-		{
-			name: "nil total price",
-			msg: MsgFillAsksRequest{
-				Buyer:       buyer,
-				MarketId:    1,
-				TotalPrice:  nil,
-				AskOrderIds: []uint64{1},
-			},
-			expErr: []string{"invalid total price", "cannot be zero"},
-		},
-		{
-			name: "empty total price",
-			msg: MsgFillAsksRequest{
-				Buyer:       buyer,
-				MarketId:    1,
-				TotalPrice:  sdk.Coins{},
-				AskOrderIds: []uint64{1},
-			},
-			expErr: []string{"invalid total price", "cannot be zero"},
 		},
 		{
 			name: "invalid total price",
 			msg: MsgFillAsksRequest{
 				Buyer:       buyer,
 				MarketId:    1,
-				TotalPrice:  sdk.Coins{*coin(-1, "acorn")},
+				TotalPrice:  *coin(-1, "acorn"),
 				AskOrderIds: []uint64{1},
 			},
-			expErr: []string{"invalid total price", "coin -1acorn amount is not positive"},
+			expErr: []string{"invalid total price", "negative coin amount: -1"},
 		},
 		{
 			name: "nil order ids",
 			msg: MsgFillAsksRequest{
 				Buyer:       buyer,
 				MarketId:    1,
-				TotalPrice:  sdk.Coins{*coin(1, "acorn")},
+				TotalPrice:  *coin(1, "acorn"),
 				AskOrderIds: nil,
 			},
 			expErr: []string{"no ask order ids provided"},
@@ -565,7 +545,7 @@ func TestMsgFillAsksRequest_ValidateBasic(t *testing.T) {
 			msg: MsgFillAsksRequest{
 				Buyer:       buyer,
 				MarketId:    1,
-				TotalPrice:  sdk.Coins{*coin(1, "acorn")},
+				TotalPrice:  *coin(1, "acorn"),
 				AskOrderIds: []uint64{0},
 			},
 			expErr: []string{"invalid ask order ids: cannot contain order id zero"},
@@ -575,7 +555,7 @@ func TestMsgFillAsksRequest_ValidateBasic(t *testing.T) {
 			msg: MsgFillAsksRequest{
 				Buyer:       buyer,
 				MarketId:    1,
-				TotalPrice:  sdk.Coins{*coin(1, "acorn")},
+				TotalPrice:  *coin(1, "acorn"),
 				AskOrderIds: []uint64{1, 2, 1},
 			},
 			expErr: []string{"duplicate ask order ids provided: [1]"},
@@ -585,7 +565,7 @@ func TestMsgFillAsksRequest_ValidateBasic(t *testing.T) {
 			msg: MsgFillAsksRequest{
 				Buyer:               buyer,
 				MarketId:            1,
-				TotalPrice:          sdk.Coins{*coin(1, "acorn")},
+				TotalPrice:          *coin(1, "acorn"),
 				AskOrderIds:         []uint64{1},
 				BuyerSettlementFees: sdk.Coins{*coin(-1, "catan")},
 			},
@@ -596,7 +576,7 @@ func TestMsgFillAsksRequest_ValidateBasic(t *testing.T) {
 			msg: MsgFillAsksRequest{
 				Buyer:               buyer,
 				MarketId:            1,
-				TotalPrice:          sdk.Coins{*coin(1, "acorn")},
+				TotalPrice:          *coin(1, "acorn"),
 				AskOrderIds:         []uint64{1},
 				BuyerSettlementFees: sdk.Coins{*coin(0, "catan")},
 			},
@@ -607,7 +587,7 @@ func TestMsgFillAsksRequest_ValidateBasic(t *testing.T) {
 			msg: MsgFillAsksRequest{
 				Buyer:               buyer,
 				MarketId:            1,
-				TotalPrice:          sdk.Coins{*coin(1, "acorn")},
+				TotalPrice:          *coin(1, "acorn"),
 				AskOrderIds:         []uint64{1},
 				BidOrderCreationFee: coin(-1, "catan"),
 			},
@@ -618,7 +598,7 @@ func TestMsgFillAsksRequest_ValidateBasic(t *testing.T) {
 			msg: MsgFillAsksRequest{
 				Buyer:               buyer,
 				MarketId:            1,
-				TotalPrice:          sdk.Coins{*coin(1, "acorn")},
+				TotalPrice:          *coin(1, "acorn"),
 				AskOrderIds:         []uint64{1},
 				BidOrderCreationFee: coin(0, "catan"),
 			},
@@ -629,7 +609,7 @@ func TestMsgFillAsksRequest_ValidateBasic(t *testing.T) {
 			msg: MsgFillAsksRequest{
 				Buyer:               "",
 				MarketId:            0,
-				TotalPrice:          nil,
+				TotalPrice:          sdk.Coin{},
 				AskOrderIds:         nil,
 				BuyerSettlementFees: sdk.Coins{*coin(0, "catan")},
 				BidOrderCreationFee: coin(-1, "catan"),

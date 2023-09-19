@@ -145,8 +145,7 @@ message MsgFillAsksRequest {
   uint32 market_id = 2;
   // total_price is the total amount being spent on some assets.
   // It must be the sum of all ask order prices.
-  repeated cosmos.base.v1beta1.Coin total_price = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  cosmos.base.v1beta1.Coin total_price = 3 [(gogoproto.nullable) = false];
   // ask_order_ids are the ids of the ask orders that you are trying to fill.
   // All ids must be for ask orders, and must be in the same market as the market_id.
   repeated uint64 ask_order_ids = 4;
