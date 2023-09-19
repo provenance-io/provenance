@@ -2427,9 +2427,10 @@ MsgMarketSettleRequest is a request message for the MarketSettle endpoint.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "settle" permission requesting this settlement. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for.
-
-TODO[1658]: MsgMarketSettleRequest |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `ask_order_ids` | [uint64](#uint64) | repeated | ask_order_ids are the ask orders being filled. |
+| `bid_order_ids` | [uint64](#uint64) | repeated | bid_order_ids are the bid orders being filled. |
+| `expect_partial` | [bool](#bool) |  | expect_partial is whether to expect an order to only be partially filled. Set to true to indicate that either the last ask order, or last bid order will be partially filled by this settlement. Set to false to indicate that all provided orders will be filled in full during this settlement. |
 
 
 

@@ -168,7 +168,15 @@ message MsgMarketSettleRequest {
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // market_id is the numerical identifier of the market to update required attributes for.
   uint32 market_id = 2;
-  // TODO[1658]: MsgMarketSettleRequest
+
+  // ask_order_ids are the ask orders being filled.
+  repeated uint64 ask_order_ids = 3;
+  // bid_order_ids are the bid orders being filled.
+  repeated uint64 bid_order_ids = 4;
+  // expect_partial is whether to expect an order to only be partially filled. Set to true to indicate that either
+  // the last ask order, or last bid order will be partially filled by this settlement. Set to false to indicate
+  // that all provided orders will be filled in full during this settlement.
+  bool expect_partial = 5;
 }
 
 // MsgMarketSettleResponse is a response message for the MarketSettle endpoint.
