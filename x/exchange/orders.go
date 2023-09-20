@@ -33,21 +33,6 @@ func findDuplicateIds(orderIDs []uint64) []uint64 {
 	return rv
 }
 
-// equalsUint64 returns true if the two uint64 values provided are equal.
-func equalsUint64(a, b uint64) bool {
-	return a == b
-}
-
-// ContainsUint64 returns true if the uint64 to find is in the vals slice.
-func ContainsUint64(vals []uint64, toFind uint64) bool {
-	return contains(vals, toFind, equalsUint64)
-}
-
-// IntersectionUint64 returns each uint64 that is in both lists.
-func IntersectionUint64(a, b []uint64) []uint64 {
-	return intersection(a, b, equalsUint64)
-}
-
 // ValidateOrderIDs makes sure that one or more order ids are provided,
 // none of them are zero, and there aren't any duplicates.
 func ValidateOrderIDs(field string, orderIDs []uint64) error {
@@ -384,28 +369,96 @@ func (i *IndexedAddrAmts) GetOutputs() []banktypes.Output {
 	return rv
 }
 
-// Fulfillment is a struct containing the bank inputs/outputs that will fulfill some orders.
-type Fulfillment struct {
-	baseOrder           *Order
-	fullyFilledOrders   []*Order
-	partiallFilledOrder *Order
-
-	assetInputs  *IndexedAddrAmts
-	assetOutputs *IndexedAddrAmts
-	priceInputs  *IndexedAddrAmts
-	priceOutputs *IndexedAddrAmts
-	feeInputs    *IndexedAddrAmts
+// OrderSplit contains an order, and the asset and price amounts that should come out of it.
+type OrderSplit struct {
+	Order  *Order
+	Assets sdk.Coins
+	Price  sdk.Coin
 }
 
-func NewFulfillment(order *Order) *Fulfillment {
-	rv := &Fulfillment{
-		baseOrder:    order,
-		assetInputs:  NewIndexedAddrAmts(),
-		assetOutputs: NewIndexedAddrAmts(),
-		priceInputs:  NewIndexedAddrAmts(),
-		priceOutputs: NewIndexedAddrAmts(),
-		feeInputs:    NewIndexedAddrAmts(),
+// AskOrderFulfillment represents how an ask order is fulfilled.
+type AskOrderFulfillment struct {
+	Order      *Order
+	AssetsLeft sdk.Coins
+	TotalPrice sdk.Coin
+	Splits     []*OrderSplit
+}
+
+func NewAskOrderFulfillment(order *Order) *AskOrderFulfillment {
+	if !order.IsAskOrder() {
+		panic(fmt.Errorf("cannot create AskOrderFulfillment for %s order %d",
+			order.GetOrderType(), order.OrderId))
 	}
-	// TODO[1658]: Finish NewFulfillment.
-	return rv
+	askOrder := order.GetAskOrder()
+	return &AskOrderFulfillment{
+		Order:      order,
+		AssetsLeft: askOrder.Assets,
+		TotalPrice: sdk.NewInt64Coin(askOrder.Price.Denom, 0),
+	}
+}
+
+// AddSplit applies the given bid order in the amount of assets provided to this ask order.
+func (f *AskOrderFulfillment) AddSplit(order *Order, assets sdk.Coins) error {
+	askOrderID := f.Order.OrderId
+	bidOrderID := order.OrderId
+	if !order.IsBidOrder() {
+		return fmt.Errorf("cannot fill ask order %d with %s order %d",
+			askOrderID, order.GetOrderType(), bidOrderID)
+	}
+
+	askOrder := f.Order.GetAskOrder()
+	bidOrder := order.GetBidOrder()
+
+	if askOrder.Price.Denom != bidOrder.Price.Denom {
+		return fmt.Errorf("cannot fill ask order %d having price %q with bid order %d having price %q: denom mismatch",
+			askOrderID, askOrder.Price, bidOrderID, bidOrder.Price)
+	}
+
+	if assets.IsZero() {
+		return fmt.Errorf("cannot fill ask order %d with zero assets from bid order %d", askOrderID, bidOrderID)
+	}
+	if assets.IsAnyNegative() {
+		return fmt.Errorf("cannot fill ask order %d with negative assets %q from bid order %d",
+			askOrderID, assets, bidOrderID)
+	}
+	// TODO[1658]: This should be checked against the assets left to fill in the bid order.
+	_, hasNeg := bidOrder.Assets.SafeSub(assets...)
+	if hasNeg {
+		return fmt.Errorf("cannot fill ask order %d with assets %q from bid order %d: insufficient assets %q in bid order",
+			askOrderID, assets, bidOrderID, bidOrder.Assets)
+	}
+	if len(bidOrder.Assets) > 1 && !CoinsEquals(bidOrder.Assets, assets) {
+		return fmt.Errorf("cannot fill ask order %d with assets %q from bid order %d having assets %q: "+
+			"unable to divide price for multiple asset types",
+			askOrderID, assets, bidOrderID, bidOrder.Assets)
+	}
+
+	newAssetsLeft, hasNeg := f.AssetsLeft.SafeSub(assets...)
+	if hasNeg {
+		return fmt.Errorf("cannot fill ask order %d having %q left with assets %q from bid order %d",
+			askOrderID, f.AssetsLeft, assets, bidOrderID)
+	}
+
+	split := &OrderSplit{
+		Order:  order,
+		Assets: assets,
+	}
+
+	if CoinsEquals(assets, bidOrder.Assets) {
+		split.Price = bidOrder.Price
+	} else {
+		if len(assets) != 1 || len(bidOrder.Assets) != 1 {
+			return fmt.Errorf("cannot prorate bid order %d assets %q for ask order %d with assets %q: multiple asset denoms",
+				order.OrderId, assets, f.Order.OrderId, askOrder.Assets)
+		}
+		// Note, we truncate the division here.
+		// Later, after all fulfillments have been identified, we will handle the remainders.
+		priceAmt := bidOrder.Price.Amount.Mul(askOrder.Assets[0].Amount).Quo(assets[0].Amount)
+		split.Price = sdk.NewCoin(bidOrder.Price.Denom, priceAmt)
+	}
+
+	f.Splits = append(f.Splits, split)
+	f.AssetsLeft = newAssetsLeft
+	f.TotalPrice = f.TotalPrice.Add(split.Price)
+	return nil
 }

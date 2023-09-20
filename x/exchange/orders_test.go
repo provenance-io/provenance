@@ -79,75 +79,6 @@ func TestOrderTypesAndBytes(t *testing.T) {
 	assert.NoError(t, err, "checking for duplicate values")
 }
 
-func TestContainsUint64(t *testing.T) {
-	tests := []struct {
-		name   string
-		vals   []uint64
-		toFind uint64
-		exp    bool
-	}{
-		{
-			name:   "nil vals",
-			vals:   nil,
-			toFind: 0,
-			exp:    false,
-		},
-		{
-			name:   "empty vals",
-			vals:   []uint64{},
-			toFind: 0,
-			exp:    false,
-		},
-		{
-			name:   "one val: same",
-			vals:   []uint64{1},
-			toFind: 1,
-			exp:    true,
-		},
-		{
-			name:   "one val: different",
-			vals:   []uint64{1},
-			toFind: 2,
-			exp:    false,
-		},
-		{
-			name:   "three vals: not found",
-			vals:   []uint64{1, 2, 3},
-			toFind: 0,
-			exp:    false,
-		},
-		{
-			name:   "three vals: first",
-			vals:   []uint64{1, 2, 3},
-			toFind: 1,
-			exp:    true,
-		},
-		{
-			name:   "three vals: second",
-			vals:   []uint64{1, 2, 3},
-			toFind: 2,
-			exp:    true,
-		},
-		{
-			name:   "three vals: third",
-			vals:   []uint64{1, 2, 3},
-			toFind: 3,
-			exp:    true,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var actual bool
-			testFunc := func() {
-				actual = ContainsUint64(tc.vals, tc.toFind)
-			}
-			require.NotPanics(t, testFunc, "ContainsUint64(%q, %q)", tc.vals, tc.toFind)
-			assert.Equal(t, tc.exp, actual, "ContainsUint64(%q, %q)", tc.vals, tc.toFind)
-		})
-	}
-}
-
 func TestValidateOrderIDs(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -1344,3 +1275,5 @@ func TestBidOrder_Validate(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1658]: Unit tests on the fulfillment stuff.

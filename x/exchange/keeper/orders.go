@@ -392,20 +392,6 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 	return ctx.EventManager().EmitTypedEvent(exchange.NewEventOrderCancelled(orderID, signerAddr))
 }
 
-// safeCoinsEquals returns true if the two provided coins are equal.
-// Returns false instead of panicking like sdk.Coins.IsEqual.
-func safeCoinsEquals(a, b sdk.Coins) (isEqual bool) {
-	// The sdk.Coins.IsEqual function will panic if a and b have the same number of entries, but different denoms.
-	// Really, that stuff is all pretty panic happy.
-	// In here, we don't really care why it panics, but if it does, they're not equal.
-	defer func() {
-		if r := recover(); r != nil {
-			isEqual = false
-		}
-	}()
-	return a.IsEqual(b)
-}
-
 // getBidOrders gets orders from the store, making sure they're bid orders in the given market
 // and do not have the same buyer as the provided seller. If the seller isn't yet known, just provide "" for it.
 func (k Keeper) getBidOrders(store sdk.KVStore, marketID uint32, orderIDs []uint64, seller string) ([]*exchange.Order, error) {
@@ -589,7 +575,7 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 
 	totalAssets, totalPrice := sumAssetsAndPrice(orders)
 
-	if !safeCoinsEquals(totalAssets, msg.TotalAssets) {
+	if !exchange.CoinsEquals(totalAssets, msg.TotalAssets) {
 		return fmt.Errorf("total assets %q does not equal sum of bid order assets %q", msg.TotalAssets, totalAssets)
 	}
 
@@ -728,7 +714,7 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 
 	totalAssets, totalPrice := sumAssetsAndPrice(orders)
 
-	if !safeCoinsEquals(totalPrice, sdk.Coins{msg.TotalPrice}) {
+	if !exchange.CoinsEquals(totalPrice, sdk.Coins{msg.TotalPrice}) {
 		return fmt.Errorf("total price %q does not equal sum of ask order prices %q", msg.TotalPrice, totalPrice)
 	}
 
@@ -784,6 +770,8 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 	totalAssetsForSale, totalAskPrice := sumAssetsAndPrice(askOrders)
 	totalAssetsToBuy, totalBidPrice := sumAssetsAndPrice(bidOrders)
 
+	// TODO[1659]: Allow for multiple asset denoms in some cases.
+
 	var errs []error
 	if len(totalAssetsForSale) != 1 {
 		errs = append(errs, fmt.Errorf("cannot settle with multiple ask order asset denoms %q", totalAssetsForSale))
@@ -813,7 +801,7 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 		return errors.Join(errs...)
 	}
 
-	if !expectPartial && !safeCoinsEquals(totalAssetsForSale, totalAssetsToBuy) {
+	if !expectPartial && !exchange.CoinsEquals(totalAssetsForSale, totalAssetsToBuy) {
 		return fmt.Errorf("total assets for sale %q does not equal total assets to buy %q",
 			totalAssetsForSale, totalAssetsToBuy)
 	}

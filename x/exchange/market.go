@@ -198,13 +198,6 @@ func ValidateBuyerFeeRatios(ratios []FeeRatio) error {
 	return errors.Join(errs...)
 }
 
-// ContainsString returns true if the string to find is in the vals slice.
-func ContainsString(vals []string, toFind string) bool {
-	return contains(vals, toFind, func(a, b string) bool {
-		return a == b
-	})
-}
-
 // String returns a string representation of this FeeRatio.
 func (r FeeRatio) String() string {
 	return fmt.Sprintf("%s:%s", r.Price, r.Fee)
@@ -303,20 +296,6 @@ func ValidateDisjointFeeRatios(field string, toAdd, toRemove []FeeRatio) error {
 	return nil
 }
 
-// CoinEquals returns true if the two provided coin entries are equal.
-// Designed for use with intersection.
-//
-// We can't just provide sdk.Coin.IsEqual to intersection because that PANICS if the denoms are different.
-// And we can't provide sdk.Coin.Equal to intersection because it takes in an interface{} (instead of sdk.Coin).
-func CoinEquals(a, b sdk.Coin) bool {
-	return a.Equal(b)
-}
-
-// IntersectionOfCoins returns each sdk.Coin entry that is in both lists.
-func IntersectionOfCoins(list1, list2 []sdk.Coin) []sdk.Coin {
-	return intersection(list1, list2, CoinEquals)
-}
-
 // ValidateAddRemoveFeeOptions returns an error if the toAdd list has an invalid
 // entry or if the two lists have one or more common entries.
 func ValidateAddRemoveFeeOptions(field string, toAdd, toRemove []sdk.Coin) error {
@@ -324,7 +303,7 @@ func ValidateAddRemoveFeeOptions(field string, toAdd, toRemove []sdk.Coin) error
 	if err := ValidateFeeOptions(field+" to add", toAdd); err != nil {
 		errs = append(errs, err)
 	}
-	shared := IntersectionOfCoins(toAdd, toRemove)
+	shared := IntersectionOfCoin(toAdd, toRemove)
 	if len(shared) > 0 {
 		errs = append(errs, fmt.Errorf("cannot add and remove the same %s options %s", field, sdk.Coins(shared)))
 	}
@@ -488,6 +467,7 @@ func ValidateReqAttrs(field string, attrs []string) error {
 }
 
 // IntersectionOfAttributes returns each attribute that is in both lists.
+// Casing is ignored. Returned values will have the casing that the entry has in list1.
 func IntersectionOfAttributes(list1, list2 []string) []string {
 	return intersection(list1, list2, strings.EqualFold)
 }
@@ -564,25 +544,4 @@ func IsReqAttrMatch(reqAttr, accAttr string) bool {
 		return strings.HasSuffix(accAttr, reqAttr[1:])
 	}
 	return reqAttr == accAttr
-}
-
-// contains returns true if the provided toFind is present in the provided vals.
-func contains[T any](vals []T, toFind T, equals func(T, T) bool) bool {
-	for _, v := range vals {
-		if equals(toFind, v) {
-			return true
-		}
-	}
-	return false
-}
-
-// intersection returns each entry that is in both lists.
-func intersection[T any](list1, list2 []T, equals func(T, T) bool) []T {
-	var rv []T
-	for _, a := range list1 {
-		if contains(list2, a, equals) && !contains(rv, a, equals) {
-			rv = append(rv, a)
-		}
-	}
-	return rv
 }
