@@ -5,6 +5,7 @@ All created/modified state objects specified by each message are defined within 
 [state](./02_state_transitions.md) section.
 
 <!-- TOC 2 2 -->
+- [Messages](#messages)
   - [Msg/AddMarkerRequest](#msgaddmarkerrequest)
   - [Msg/AddAccessRequest](#msgaddaccessrequest)
   - [Msg/DeleteAccessRequest](#msgdeleteaccessrequest)
@@ -25,7 +26,7 @@ All created/modified state objects specified by each message are defined within 
   - [Msg/UpdateSendDenyListRequest](#msgupdatesenddenylistrequest)
   - [Msg/UpdateForcedTransferRequest](#msgupdateforcedtransferrequest)
   - [Msg/SetAccountDataRequest](#msgsetaccountdatarequest)
-
+  - [Msg/AddNetAssetValuesRequest](#msgaddnetassetvaluesrequest)
 
 
 ## Msg/AddMarkerRequest
@@ -340,7 +341,7 @@ This service message is expected to fail if:
 
 - The authority is not the address of the governance module's account.
 - The governance proposal format (title, description, etc) is invalid
-- The requested supply exceeds the configuration parameter for `MaxTotalSupply`
+- The requested supply exceeds the configuration parameter for `MaxSupply`
 
 See also: [Governance: Supply Increase Proposal](./10_governance.md#supply-increase-proposal)
 
@@ -408,3 +409,20 @@ This service message is expected to fail if:
 - The signer is the governance module account address but the marker does not allow governance control.
 - The signer is not the governance module account and does not have deposit access on the marker.
 - The provided value is too long (as defined by the attribute module params).
+
+## Msg/AddNetAssetValuesRequest
+
+AddNetAssetValuesRequest allows for the adding/updating of net asset values for a marker.
+
++++ https://github.com/provenance-io/provenance/blob/25070572cc898c476f5bb1a816c6c1c4d07e3d38/proto/provenance/marker/v1/tx.proto#L327-L332
+
++++ https://github.com/provenance-io/provenance/blob/25070572cc898c476f5bb1a816c6c1c4d07e3d38/proto/provenance/marker/v1/tx.proto#L334-L335
+
+This endpoint can either be used directly or via governance proposal.
+
+This service message is expected to fail if:
+
+- No marker with the provided denom exists.
+- The signer is the governance module account address but the marker does not allow governance control.
+- The signer is not the governance module account and does not have any access on the marker.
+- The provided net value asset properties are invalid.

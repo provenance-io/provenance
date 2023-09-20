@@ -155,6 +155,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var markerData markertypes.GenesisState
 	markerData.Params.EnableGovernance = true
 	markerData.Params.MaxTotalSupply = 1000000
+	markerData.Params.MaxSupply = sdk.NewInt(1000000)
 	// Note: These account numbers get ignored.
 	markerData.Markers = []markertypes.MarkerAccount{
 		{
@@ -247,6 +248,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			AllowForcedTransfer:    true,
 		},
 	}
+	for _, marker := range markerData.Markers {
+		var mNav types.MarkerNetAssetValues
+		mNav.Address = marker.GetAddress().String()
+		mNav.NetAssetValues = []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 100), 100)}
+		markerData.NetAssetValues = append(markerData.NetAssetValues, mNav)
+	}
 	for i := len(markerData.Markers); i < s.markerCount; i++ {
 		denom := toWritten(i + 1)
 		markerData.Markers = append(markerData.Markers,
@@ -265,6 +272,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				AllowForcedTransfer:    false,
 			},
 		)
+		var mNav types.MarkerNetAssetValues
+		mNav.Address = markertypes.MustGetMarkerAddress(denom).String()
+		mNav.NetAssetValues = []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 100), 100)}
+		markerData.NetAssetValues = append(markerData.NetAssetValues, mNav)
 	}
 	markerDataBz, err := cfg.Codec.MarshalJSON(&markerData)
 	s.Require().NoError(err)
@@ -445,7 +456,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			[]string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"max_total_supply":"1000000","enable_governance":true,"unrestricted_denom_regex":""}`,
+			`{"max_total_supply":"1000000","enable_governance":true,"unrestricted_denom_regex":"","max_supply":"1000000"}`,
 		},
 		{
 			"get testcoin marker json",
@@ -552,6 +563,12 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			cmd:            markercli.AccountDataCmd(),
 			args:           []string{"hodlercoin"},
 			expectedOutput: "value: Do not sell this coin.",
+		},
+		{
+			name:           "marker net asset value query",
+			cmd:            markercli.NetAssetValuesCmd(),
+			args:           []string{"testcoin"},
+			expectedOutput: "net_asset_values:\n- price:\n    amount: \"100\"\n    denom: usd\n  updated_block_height: \"0\"\n  volume: \"100\"",
 		},
 	}
 	for _, tc := range testCases {
@@ -1740,61 +1757,195 @@ func (s *IntegrationTestSuite) TestGetCmdUpdateForcedTransfer() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestGetCmdAddNetAssetValues() {
+	denom := "updatenavcoin"
+	argsWStdFlags := func(args ...string) []string {
+		return append(args,
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		)
+	}
+
+	s.Run("add a new marker for this", func() {
+		cmd := markercli.GetCmdAddFinalizeActivateMarker()
+		args := argsWStdFlags(
+			"1000"+denom,
+			s.testnet.Validators[0].Address.String()+",mint,burn,deposit,withdraw,delete,admin,transfer",
+			fmt.Sprintf("--%s=%s", markercli.FlagType, "RESTRICTED"),
+			"--"+markercli.FlagSupplyFixed,
+			"--"+markercli.FlagAllowGovernanceControl,
+		)
+		clientCtx := s.testnet.Validators[0].ClientCtx
+		out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+		s.Require().NoError(err, "CmdAddFinalizeActivateMarker error")
+		outBz := out.Bytes()
+		outStr := string(outBz)
+		var resp sdk.TxResponse
+		s.Require().NoError(clientCtx.Codec.UnmarshalJSON(outBz, &resp), "error unmarshalling response JSON:\n%s", outStr)
+		s.Require().Equal(0, int(resp.Code), "response code:\n%s", outStr)
+	})
+	if s.T().Failed() {
+		s.FailNow("Stopping due to setup error")
+	}
+
+	tests := []struct {
+		name   string
+		args   []string
+		expErr string
+		incLog bool // set to true to log the output regardless of failure
+	}{
+		{
+			name:   "invalid net asset string",
+			args:   argsWStdFlags(denom, "invalid"),
+			expErr: "invalid net asset value, expected coin,volume",
+		},
+		{
+			name:   "validate basic fail",
+			args:   argsWStdFlags("x", "1usd,1"),
+			expErr: "invalid denom: x",
+		},
+		{
+			name: "successful",
+			args: argsWStdFlags(denom, "1usd,1"),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdAddNetAssetValues()
+
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			outBz := out.Bytes()
+			outStr := string(outBz)
+
+			if len(tc.expErr) > 0 {
+				s.Require().EqualError(err, tc.expErr, "GetCmdAddNetAssetValues error")
+				s.Require().Contains(outStr, tc.expErr, "GetCmdAddNetAssetValues output")
+			} else {
+				s.Require().NoError(err, "GetCmdAddNetAssetValues error")
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestParseAccessGrantFromString() {
 	testCases := []struct {
 		name              string
 		accessGrantString string
-		expectPanic       bool
-		expectedResult    []types.AccessGrant
+		expPanic          bool
+		expResult         []types.AccessGrant
 	}{
 		{
-			"successfully parses empty string",
-			"",
-			false,
-			[]types.AccessGrant{},
+			name:              "successfully parses empty string",
+			accessGrantString: "",
+			expPanic:          false,
+			expResult:         []types.AccessGrant{},
 		},
 		{
-			"fails parsing invalid string",
-			"blah",
-			true,
-			[]types.AccessGrant{},
+			name:              "fails parsing invalid string",
+			accessGrantString: "blah",
+			expPanic:          true,
+			expResult:         []types.AccessGrant{},
 		},
 		{
-			"should fail empty list of permissions",
-			",,;",
-			true,
-			[]types.AccessGrant{},
+			name:              "should fail empty list of permissions",
+			accessGrantString: ",,;",
+			expPanic:          true,
+			expResult:         []types.AccessGrant{},
 		},
 		{
-			"should fail address is not valid",
-			"NotAnAddress,mint;",
-			true,
-			[]types.AccessGrant{},
+			name:              "should fail address is not valid",
+			accessGrantString: "NotAnAddress,mint;",
+			expPanic:          true,
+			expResult:         []types.AccessGrant{},
 		},
 		{
-			"should succeed to add access type",
-			fmt.Sprintf("%s,mint;", s.accountAddresses[0].String()),
-			false,
-			[]types.AccessGrant{markertypes.AccessGrant{Address: s.accountAddresses[0].String(), Permissions: []markertypes.Access{markertypes.Access_Mint}}},
+			name:              "should succeed to add access type",
+			accessGrantString: fmt.Sprintf("%s,mint;", s.accountAddresses[0].String()),
+			expPanic:          false,
+			expResult:         []types.AccessGrant{markertypes.AccessGrant{Address: s.accountAddresses[0].String(), Permissions: []markertypes.Access{markertypes.Access_Mint}}},
 		},
 		{
-			"should succeed to add access type",
-			fmt.Sprintf("%s,mint;", s.accountAddresses[0].String()),
-			false,
-			[]types.AccessGrant{markertypes.AccessGrant{Address: s.accountAddresses[0].String(), Permissions: []markertypes.Access{markertypes.Access_Mint}}},
+			name:              "should succeed to add access type",
+			accessGrantString: fmt.Sprintf("%s,mint;", s.accountAddresses[0].String()),
+			expPanic:          false,
+			expResult:         []types.AccessGrant{markertypes.AccessGrant{Address: s.accountAddresses[0].String(), Permissions: []markertypes.Access{markertypes.Access_Mint}}},
 		},
 	}
 	for _, tc := range testCases {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			if tc.expectPanic {
+			if tc.expPanic {
 				panicFunc := func() { markercli.ParseAccessGrantFromString(tc.accessGrantString) }
 				s.Assert().Panics(panicFunc)
 
 			} else {
 				result := markercli.ParseAccessGrantFromString(tc.accessGrantString)
-				s.Assert().ElementsMatch(result, tc.expectedResult)
+				s.Assert().ElementsMatch(result, tc.expResult)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestParseNetAssertValueString() {
+	testCases := []struct {
+		name           string
+		netAssetValues string
+		expErr         string
+		expResult      []types.NetAssetValue
+	}{
+		{
+			name:           "successfully parses empty string",
+			netAssetValues: "",
+			expErr:         "",
+			expResult:      []types.NetAssetValue{},
+		},
+		{
+			name:           "invalid coin",
+			netAssetValues: "notacoin,1",
+			expErr:         "invalid coin notacoin",
+			expResult:      []types.NetAssetValue{},
+		},
+		{
+			name:           "invalid volume string",
+			netAssetValues: "1hotdog,invalidvolume",
+			expErr:         "invalid volume invalidvolume",
+			expResult:      []types.NetAssetValue{},
+		},
+		{
+			name:           "invalid amount of args",
+			netAssetValues: "1hotdog,invalidvolume,notsupposedtobehere",
+			expErr:         "invalid net asset value, expected coin,volume",
+			expResult:      []types.NetAssetValue{},
+		},
+		{
+			name:           "successfully parse single nav",
+			netAssetValues: "1hotdog,10",
+			expErr:         "",
+			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1), Volume: 10}},
+		},
+		{
+			name:           "successfully parse multi nav",
+			netAssetValues: "1hotdog,10;20jackthecat,40",
+			expErr:         "",
+			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1), Volume: 10}, {Price: sdk.NewInt64Coin("jackthecat", 20), Volume: 40}},
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			result, err := markercli.ParseNetAssetValueString(tc.netAssetValues)
+			if len(tc.expErr) > 0 {
+				s.Assert().Equal(tc.expErr, err.Error())
+				s.Assert().Empty(result)
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().ElementsMatch(result, tc.expResult)
 			}
 		})
 	}
@@ -1817,6 +1968,8 @@ func TestParseNewMarkerFlags(t *testing.T) {
 	argGov := "--" + markercli.FlagAllowGovernanceControl
 	argForce := "--" + markercli.FlagAllowForceTransfer
 	argRequiredAtt := "--" + markercli.FlagRequiredAttributes
+	argUsdCents := "--" + markercli.FlagUsdCents
+	argVolume := "--" + markercli.FlagVolume
 
 	tests := []struct {
 		name   string
@@ -2002,15 +2155,51 @@ func TestParseNewMarkerFlags(t *testing.T) {
 			},
 		},
 		{
+			name:   "usd cents present without volume",
+			cmd:    getTestCmd(),
+			args:   []string{argUsdCents + "=10"},
+			expErr: []string{"incorrect value for volume flag.  Must be positive number if usd-cents flag has been set to positive value"},
+		},
+		{
+			name: "volume present",
+			cmd:  getTestCmd(),
+			args: []string{argVolume + "=11"},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        false,
+				AllowGovControl:    false,
+				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
+				UsdCents:           0,
+				Volume:             11,
+			},
+		},
+		{
+			name: "usd-cents and volume present",
+			cmd:  getTestCmd(),
+			args: []string{argVolume + "=11", argUsdCents + "=1"},
+			exp: &markercli.NewMarkerFlagValues{
+				MarkerType:         types.MarkerType_Coin,
+				SupplyFixed:        false,
+				AllowGovControl:    false,
+				AllowForceTransfer: false,
+				RequiredAttributes: []string{},
+				UsdCents:           1,
+				Volume:             11,
+			},
+		},
+		{
 			name: "everything",
 			cmd:  getTestCmd(),
-			args: []string{argForce, argGov, argType, "RESTRICTED", argFixed, argRequiredAtt, "jack.the.cat.io,george.the.dog.io"},
+			args: []string{argForce, argGov, argType, "RESTRICTED", argFixed, argRequiredAtt, "jack.the.cat.io,george.the.dog.io", argUsdCents, "10", argVolume, "12"},
 			exp: &markercli.NewMarkerFlagValues{
 				MarkerType:         types.MarkerType_RestrictedCoin,
 				SupplyFixed:        true,
 				AllowGovControl:    true,
 				AllowForceTransfer: true,
 				RequiredAttributes: []string{"jack.the.cat.io", "george.the.dog.io"},
+				UsdCents:           10,
+				Volume:             12,
 			},
 		},
 		// Note: I can't figure out a way to make cmd.Flags().GetBool return an error.

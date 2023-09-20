@@ -41,9 +41,11 @@ func TestRandomizedGenState(t *testing.T) {
 	var markerGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &markerGenesis)
 
+	expectedMaxSupply := types.StringToBigInt("10667007354186551956894385949183117216")
+
 	require.Equal(t, true, markerGenesis.Params.EnableGovernance)
-	require.Equal(t, uint64(0x9408d2ac22c4d294), markerGenesis.Params.MaxTotalSupply)
-	require.Equal(t, `[a-zA-Z][a-zA-Z0-9\\-\\.]{7,60}`, markerGenesis.Params.UnrestrictedDenomRegex)
+	require.Equal(t, expectedMaxSupply, markerGenesis.Params.MaxSupply)
+	require.Equal(t, `[a-zA-Z][a-zA-Z0-9\\-\\.]{9,20}`, markerGenesis.Params.UnrestrictedDenomRegex)
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.

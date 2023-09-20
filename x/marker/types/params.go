@@ -6,14 +6,18 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
+	"cosmossdk.io/math"
+
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 const (
 	// DefaultEnableGovernance (true) indicates that governance proposals are allowed for managing markers
 	DefaultEnableGovernance = true
-	// DefaultMaxTotalSupply is the upper bound to enforce on supply for markers.
+	// DefaultMaxTotalSupply is deprecated.
 	DefaultMaxTotalSupply = uint64(100000000000)
+	// DefaultMaxSupply is the upper bound to enforce on supply for markers.
+	DefaultMaxSupply = "100000000000000000000"
 	// DefaultUnrestrictedDenomRegex is a regex that denoms created by normal requests must pass.
 	DefaultUnrestrictedDenomRegex = `[a-zA-Z][a-zA-Z0-9\-\.]{2,83}`
 )
@@ -21,8 +25,10 @@ const (
 var (
 	// ParamStoreKeyEnableGovernance indicates if governance proposal management of markers is enabled
 	ParamStoreKeyEnableGovernance = []byte("EnableGovernance")
-	// ParamStoreKeyMaxTotalSupply is maximum supply to allow a marker to create
+	// ParamStoreKeyMaxTotalSupply is deprecated.
 	ParamStoreKeyMaxTotalSupply = []byte("MaxTotalSupply")
+	// ParamStoreKeyMaxSupply is maximum supply to allow a marker to create
+	ParamStoreKeyMaxSupply = []byte("MaxSupply")
 	// ParamStoreKeyUnrestrictedDenomRegex is the validation regex for validating denoms supplied by users.
 	ParamStoreKeyUnrestrictedDenomRegex = []byte("UnrestrictedDenomRegex")
 )
@@ -37,11 +43,13 @@ func NewParams(
 	maxTotalSupply uint64,
 	enableGovernance bool,
 	unrestrictedDenomRegex string,
+	maxSupply math.Int,
 ) Params {
 	return Params{
 		EnableGovernance:       enableGovernance,
 		MaxTotalSupply:         maxTotalSupply,
 		UnrestrictedDenomRegex: unrestrictedDenomRegex,
+		MaxSupply:              maxSupply,
 	}
 }
 
@@ -51,6 +59,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamStoreKeyEnableGovernance, &p.EnableGovernance, validateEnableGovernance),
 		paramtypes.NewParamSetPair(ParamStoreKeyMaxTotalSupply, &p.MaxTotalSupply, validateIntParam),
 		paramtypes.NewParamSetPair(ParamStoreKeyUnrestrictedDenomRegex, &p.UnrestrictedDenomRegex, validateRegexParam),
+		paramtypes.NewParamSetPair(ParamStoreKeyMaxSupply, &p.MaxSupply, validateBigIntParam),
 	}
 }
 
@@ -60,6 +69,7 @@ func DefaultParams() Params {
 		DefaultMaxTotalSupply,
 		DefaultEnableGovernance,
 		DefaultUnrestrictedDenomRegex,
+		StringToBigInt(DefaultMaxSupply),
 	)
 }
 
@@ -92,6 +102,9 @@ func (p *Params) Equal(that interface{}) bool {
 	if p.MaxTotalSupply != that1.MaxTotalSupply {
 		return false
 	}
+	if !p.MaxSupply.Equal(that1.MaxSupply) {
+		return false
+	}
 	if p.EnableGovernance != that1.EnableGovernance {
 		return false
 	}
@@ -103,6 +116,15 @@ func (p *Params) Equal(that interface{}) bool {
 
 func validateIntParam(i interface{}) error {
 	_, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
+func validateBigIntParam(i interface{}) error {
+	_, ok := i.(math.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -128,4 +150,12 @@ func validateRegexParam(i interface{}) error {
 	}
 	_, err := regexp.Compile(fmt.Sprintf(`^%s$`, exp))
 	return err
+}
+
+func StringToBigInt(val string) math.Int {
+	res, ok := math.NewIntFromString(val)
+	if !ok {
+		panic(fmt.Errorf("unable to create math.Int from string: %s", val))
+	}
+	return res
 }

@@ -4,6 +4,7 @@ package provenance.marker.v1;
 import "gogoproto/gogo.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "provenance/marker/v1/accessgrant.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/marker/types";
@@ -15,13 +16,19 @@ message Params {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
 
-  // maximum amount of supply to allow a marker to be created with
-  uint64 max_total_supply = 1 [(gogoproto.customtype) = "uint64", (gogoproto.nullable) = false];
+  // Deprecated: Prefer to use `max_supply` instead. Maximum amount of supply to allow a marker to be created with
+  uint64 max_total_supply = 1 [(gogoproto.customtype) = "uint64", (gogoproto.nullable) = false, deprecated = true];
   // indicates if governance based controls of markers is allowed.
   bool enable_governance = 2;
   // a regular expression used to validate marker denom values from normal create requests (governance
   // requests are only subject to platform coin validation denom expression)
   string unrestricted_denom_regex = 3;
+  // maximum amount of supply to allow a marker to be created with
+  string max_supply = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "json:\"max_supply\" yaml:\"max_supply\""
+  ];
 }
 
 // MarkerAccount holds the marker configuration information in addition to a base account structure.
@@ -90,6 +97,16 @@ enum MarkerStatus {
   // MARKER_STATUS_DESTROYED - Marker supply has all been recalled, marker is considered destroyed and no further
   // actions allowed.
   MARKER_STATUS_DESTROYED = 5 [(gogoproto.enumvalue_customname) = "StatusDestroyed"];
+}
+
+// NetAssetValue defines a marker's net asset value
+message NetAssetValue {
+  // price is the complete value of the asset's volume
+  cosmos.base.v1beta1.Coin price = 1 [(gogoproto.nullable) = false];
+  // volume is the number of tokens of the marker that were purchased for the price
+  uint64 volume = 2;
+  // updated_block_height is the block height of last update
+  uint64 updated_block_height = 3;
 }
 
 // EventMarkerAdd event emitted when marker is added
@@ -193,4 +210,12 @@ message EventDenomUnit {
   string          denom    = 1;
   string          exponent = 2;
   repeated string aliases  = 3;
+}
+
+// EventSetNetAssetValue event emitted when Net Asset Value for marker is update or added
+message EventSetNetAssetValue {
+  string denom  = 1;
+  string price  = 2;
+  string volume = 3;
+  string source = 4;
 }

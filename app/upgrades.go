@@ -3,6 +3,10 @@ package app
 import (
 	"fmt"
 
+	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
+
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +20,7 @@ import (
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
+	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
@@ -106,12 +111,14 @@ var upgrades = map[string]appUpgrade{
 			app.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
 
 			removeInactiveValidatorDelegations(ctx, app)
+			setupICQ(ctx, app)
+			updateMaxSupply(ctx, app)
 
 			return vm, nil
 		},
-		Added: []string{hold.ModuleName, ibchookstypes.ModuleName},
+		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.ModuleName, hold.ModuleName},
 	},
-	"saffron": { // upgrade for v1.17.0
+	"saffron": { // upgrade for v1.17.0,
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			vm, err = runModuleMigrations(ctx, app, vm)
@@ -123,10 +130,12 @@ var upgrades = map[string]appUpgrade{
 			app.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
 
 			removeInactiveValidatorDelegations(ctx, app)
+			setupICQ(ctx, app)
+			updateMaxSupply(ctx, app)
 
 			return vm, nil
 		},
-		Added: []string{hold.ModuleName, ibchookstypes.ModuleName},
+		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.ModuleName, hold.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
 }
@@ -313,4 +322,21 @@ func fixNameIndexEntries(ctx sdk.Context, app *App) {
 // TODO: Remove with the rust handlers.
 func setAccountDataNameRecord(ctx sdk.Context, accountK attributetypes.AccountKeeper, nameK attributetypes.NameKeeper) (err error) {
 	return attributekeeper.EnsureModuleAccountAndAccountDataNameRecord(ctx, accountK, nameK)
+}
+
+// setupICQ sets the correct default values for ICQKeeper
+func setupICQ(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Updating ICQ params")
+	app.ICQKeeper.SetParams(ctx, icqtypes.NewParams(true, []string{"/provenance.oracle.v1.Query/Oracle"}))
+	ctx.Logger().Info("Done updating ICQ params")
+}
+
+// updateMaxSupply sets the value of max supply to the current value of MaxTotalSupply
+func updateMaxSupply(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Updating MaxSupply marker param")
+	params := app.MarkerKeeper.GetParams(ctx)
+	//nolint:staticcheck // Populate new param with deprecated param
+	params.MaxSupply = math.NewIntFromUint64(params.MaxTotalSupply)
+	app.MarkerKeeper.SetParams(ctx, params)
+	ctx.Logger().Info("Done updating MaxSupply marker param")
 }

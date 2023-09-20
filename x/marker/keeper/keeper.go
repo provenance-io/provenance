@@ -5,6 +5,8 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -171,10 +173,11 @@ func (k Keeper) RemoveMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 	store := ctx.KVStore(k.storeKey)
 	k.authKeeper.RemoveAccount(ctx, marker)
 
+	k.RemoveNetAssetValues(ctx, marker.GetAddress())
 	store.Delete(types.MarkerStoreKey(marker.GetAddress()))
 }
 
-// IterateMarkers  iterates all markers with the given handler function.
+// IterateMarkers iterates all markers with the given handler function.
 func (k Keeper) IterateMarkers(ctx sdk.Context, cb func(marker types.MarkerAccountI) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.MarkerStoreKeyPrefix)
@@ -202,19 +205,114 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
+// IsSendDeny returns true if sender address is denied for marker
 func (k Keeper) IsSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) bool {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(types.DenySendKey(markerAddr, senderAddr))
 }
 
+// AddSendDeny set sender address to denied for marker
 func (k Keeper) AddSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.DenySendKey(markerAddr, senderAddr), []byte{})
 }
 
+// RemoveSendDeny removes sender address from marker deny list
 func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.DenySendKey(markerAddr, senderAddr))
+}
+
+// IterateMarkers  iterates all markers with the given handler function.
+func (k Keeper) IterateSendDeny(ctx sdk.Context, handler func(key []byte) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.DenySendKeyPrefix)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		if handler(iterator.Key()) {
+			break
+		}
+	}
+}
+
+// AddSetNetAssetValues adds a set of net asset values to a marker
+func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccountI, netAssetValues []types.NetAssetValue, source string) error {
+	for _, nav := range netAssetValues {
+		if nav.Price.Denom == marker.GetDenom() {
+			return fmt.Errorf("net asset value denom cannot match marker denom %q", marker.GetDenom())
+		}
+		if nav.Price.Denom != types.UsdDenom {
+			_, err := k.GetMarkerByDenom(ctx, nav.Price.Denom)
+			if err != nil {
+				return fmt.Errorf("net asset value denom does not exist: %v", err.Error())
+			}
+		}
+
+		if err := k.SetNetAssetValue(ctx, marker, nav, source); err != nil {
+			return fmt.Errorf("cannot set net asset value : %v", err.Error())
+		}
+	}
+	return nil
+}
+
+// SetNetAssetValue adds/updates a net asset value to marker
+func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string) error {
+	netAssetValue.UpdatedBlockHeight = uint64(ctx.BlockHeight())
+	if err := netAssetValue.Validate(); err != nil {
+		return err
+	}
+
+	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Price, netAssetValue.Volume, source)
+	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err != nil {
+		return err
+	}
+
+	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
+	store := ctx.KVStore(k.storeKey)
+	if math.NewIntFromUint64(netAssetValue.Volume).GT(marker.GetSupply().Amount) {
+		return fmt.Errorf("volume(%v) cannot exceed marker %q supply(%v) ", netAssetValue.Volume, marker.GetDenom(), marker.GetSupply())
+	}
+
+	bz, err := k.cdc.Marshal(&netAssetValue)
+	if err != nil {
+		return err
+	}
+	store.Set(key, bz)
+
+	return nil
+}
+
+// IterateNetAssetValues iterates net asset values for marker
+func (k Keeper) IterateNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress, handler func(state types.NetAssetValue) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(markerAddr))
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		var markerNav types.NetAssetValue
+		err := k.cdc.Unmarshal(it.Value(), &markerNav)
+		if err != nil {
+			return err
+		} else if handler(markerNav) {
+			break
+		}
+	}
+	return nil
+}
+
+// RemoveNetAssetValues removes all net asset values for a marker
+func (k Keeper) RemoveNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress) {
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(markerAddr))
+	var keys [][]byte
+	for ; it.Valid(); it.Next() {
+		keys = append(keys, it.Key())
+	}
+	it.Close()
+
+	for _, key := range keys {
+		store.Delete(key)
+	}
 }
 
 // GetReqAttrBypassAddrs returns a deep copy of the addresses that bypass the required attributes checking.

@@ -354,10 +354,10 @@ func (k Keeper) IncreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 
 	inCirculation := sdk.NewCoin(marker.GetDenom(), k.bankKeeper.GetSupply(ctx, marker.GetDenom()).Amount)
 	total := inCirculation.Add(coin)
-	maxAllowed := sdk.NewCoin(marker.GetDenom(), sdk.NewIntFromUint64(k.GetParams(ctx).MaxTotalSupply))
+	maxAllowed := sdk.NewCoin(marker.GetDenom(), k.GetParams(ctx).MaxSupply)
 	if total.Amount.GT(maxAllowed.Amount) {
 		return fmt.Errorf(
-			"requested supply %d exceeds maximum allowed value %d", total.Amount, maxAllowed.Amount)
+			"requested supply %s exceeds maximum allowed value %s", total.Amount.String(), maxAllowed.Amount.String())
 	}
 
 	// If the marker has a fixed supply then adjust the supply to match the new total
@@ -445,6 +445,18 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 	if supplyRequest.IsLT(preexistingCoin) {
 		return fmt.Errorf("marker supply %v has been defined as less than pre-existing"+
 			" supply %v, can not finalize marker", supplyRequest, preexistingCoin)
+	}
+
+	var navs []types.NetAssetValue
+	err = k.IterateNetAssetValues(ctx, m.GetAddress(), func(nav types.NetAssetValue) (stop bool) {
+		navs = append(navs, nav)
+		return false
+	})
+	if err != nil {
+		return err
+	}
+	if len(navs) == 0 {
+		return fmt.Errorf("marker %v does not have any net asset values assigned", denom)
 	}
 
 	// transition to finalized state ... then to active once mint is complete

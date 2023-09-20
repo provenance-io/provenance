@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -52,6 +53,8 @@ const (
 	FlagAdd                    = "add"
 	FlagRemove                 = "remove"
 	FlagGovProposal            = "gov-proposal"
+	FlagUsdCents               = "usd-cents"
+	FlagVolume                 = "volume"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -85,6 +88,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdUpdateForcedTransfer(),
 		GetCmdSetAccountData(),
 		GetCmdUpdateSendDenyListRequest(),
+		GetCmdAddNetAssetValues(),
 	)
 	return txCmd
 }
@@ -240,8 +244,17 @@ with the given supply amount and denomination provided in the coin argument
 			}
 
 			msg := types.NewMsgAddMarkerRequest(
-				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.MarkerType,
-				flagVals.SupplyFixed, flagVals.AllowGovControl, flagVals.AllowForceTransfer, flagVals.RequiredAttributes,
+				coin.Denom,
+				coin.Amount,
+				callerAddr,
+				callerAddr,
+				flagVals.MarkerType,
+				flagVals.SupplyFixed,
+				flagVals.AllowGovControl,
+				flagVals.AllowForceTransfer,
+				flagVals.RequiredAttributes,
+				flagVals.UsdCents,
+				flagVals.Volume,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -959,7 +972,7 @@ with the given supply amount and denomination provided in the coin argument
 			msg := types.NewMsgAddFinalizeActivateMarkerRequest(
 				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.MarkerType,
 				flagVals.SupplyFixed, flagVals.AllowGovControl,
-				flagVals.AllowForceTransfer, flagVals.RequiredAttributes, accessGrants,
+				flagVals.AllowForceTransfer, flagVals.RequiredAttributes, accessGrants, flagVals.UsdCents, flagVals.Volume,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -1137,6 +1150,39 @@ $ %[1]s tx marker account-data hotdogcoin --%[4]s`,
 	return cmd
 }
 
+// GetCmdAddNetAssetValues returns a CLI command for adding/updating marker net asset values.
+func GetCmdAddNetAssetValues() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "add-net-asset-values <denom> " + attrcli.AccountDataFlagsUse,
+		Aliases: []string{"add-navs", "anavs"},
+		Short:   "Add/updates net asset values for a marker",
+		Example: fmt.Sprintf(`$ %[1]s tx marker add-net-asset-values hotdogcoin 1usd,1;2nhash,3`,
+			version.AppName),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			denom := strings.TrimSpace(args[0])
+			netAssetValues, err := ParseNetAssetValueString(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgAddNetAssetValuesRequest(denom, clientCtx.From, netAssetValues)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), types.NewMsgAddNetAssetValuesRequest(denom, clientCtx.From, netAssetValues))
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
 func getPeriodReset(duration int64) time.Time {
 	return time.Now().Add(getPeriod(duration))
 }
@@ -1169,6 +1215,31 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 	return grants
 }
 
+// ParseNetAssetValueString splits string (example address1,perm1,perm2...;address2, perm1...) to list of NetAssetValue's
+func ParseNetAssetValueString(netAssetValuesString string) ([]types.NetAssetValue, error) {
+	navs := strings.Split(netAssetValuesString, ";")
+	if len(navs) == 1 && len(navs[0]) == 0 {
+		return []types.NetAssetValue{}, nil
+	}
+	netAssetValues := make([]types.NetAssetValue, len(navs))
+	for i, nav := range navs {
+		parts := strings.Split(nav, ",")
+		if len(parts) != 2 {
+			return []types.NetAssetValue{}, errors.New("invalid net asset value, expected coin,volume")
+		}
+		coin, err := sdk.ParseCoinNormalized(parts[0])
+		if err != nil {
+			return []types.NetAssetValue{}, fmt.Errorf("invalid coin %s", parts[0])
+		}
+		volume, err := strconv.ParseUint(parts[1], 10, 64)
+		if err != nil {
+			return []types.NetAssetValue{}, fmt.Errorf("invalid volume %s", parts[1])
+		}
+		netAssetValues[i] = types.NewNetAssetValue(coin, volume)
+	}
+	return netAssetValues, nil
+}
+
 // AddNewMarkerFlags adds the flags needed when defining a new marker.
 // The provided values can be retrieved using ParseNewMarkerFlags.
 func AddNewMarkerFlags(cmd *cobra.Command) {
@@ -1177,6 +1248,8 @@ func AddNewMarkerFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "Indicates that governance control is allowed")
 	cmd.Flags().Bool(FlagAllowForceTransfer, false, "Indicates that force transfer is allowed")
 	cmd.Flags().StringSlice(FlagRequiredAttributes, []string{}, "comma delimited list of required attributes needed for a restricted marker to have send authority")
+	cmd.Flags().Uint64(FlagUsdCents, 0, "Indicates the net asset value of marker in usd cents, i.e. 1234 = $1.234")
+	cmd.Flags().Uint64(FlagVolume, 0, "Indicates the volume of the net asset value")
 }
 
 // NewMarkerFlagValues represents the values provided in the flags added by AddNewMarkerFlags.
@@ -1186,6 +1259,8 @@ type NewMarkerFlagValues struct {
 	AllowGovControl    bool
 	AllowForceTransfer bool
 	RequiredAttributes []string
+	UsdCents           uint64
+	Volume             uint64
 }
 
 // ParseNewMarkerFlags reads the flags added by AddNewMarkerFlags.
@@ -1223,6 +1298,20 @@ func ParseNewMarkerFlags(cmd *cobra.Command) (*NewMarkerFlagValues, error) {
 	rv.RequiredAttributes, err = cmd.Flags().GetStringSlice(FlagRequiredAttributes)
 	if err != nil {
 		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: comma delimited list of attributes Error: %w", FlagRequiredAttributes, err)
+	}
+
+	rv.UsdCents, err = cmd.Flags().GetUint64(FlagUsdCents)
+	if err != nil {
+		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagUsdCents, err)
+	}
+
+	rv.Volume, err = cmd.Flags().GetUint64(FlagVolume)
+	if err != nil {
+		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagVolume, err)
+	}
+
+	if rv.UsdCents > 0 && rv.Volume == 0 {
+		return nil, fmt.Errorf("incorrect value for %s flag.  Must be positive number if %s flag has been set to positive value", FlagVolume, FlagUsdCents)
 	}
 
 	return rv, nil

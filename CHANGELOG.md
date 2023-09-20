@@ -35,11 +35,13 @@ Types of changes (Stanzas):
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
-## Unreleased
+## [Unreleased]
 
 ### Features
 
 * Allow marker's transfer authority to prevent transfer of restricted coin with deny list on send [#1518](https://github.com/provenance-io/provenance/issues/1518).
+* Add net asset value to markers [#1328](https://github.com/provenance-io/provenance/issues/1328).
+* Add ICQHost and Oracle module to allow cross chain oracle queries [#1497](https://github.com/provenance-io/provenance/issues/1497).
 * New `GetByAddr` metadata query [#1443](https://github.com/provenance-io/provenance/issues/1443).
 * Add Trigger module queries to stargate whitelist for smart contracts [#1636](https://github.com/provenance-io/provenance/issues/1636)
 * Added the saffron upgrade handlers [PR 1648](https://github.com/provenance-io/provenance/pull/1648).
@@ -47,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   Funds with a hold on them cannot be transferred until the hold is removed.
   Management of holds is internal, but there are queries for looking up holds on accounts.
   Holds are also reflected in the `x/bank` module's `SpendableBalances` query.
+* Add new MaxSupply param to marker module and deprecate MaxTotalSupply. [#1292](https://github.com/provenance-io/provenance/issues/1292).
 
 ### Improvements
 
@@ -59,6 +62,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
   The id info is still included by default, but will be excluded if `exclude_id_info` is `true`.
 * Removed the quicksilver upgrade handlers [PR 1648](https://github.com/provenance-io/provenance/pull/1648).
 * Bump cometbft to v0.34.29 (from v0.34.28) [PR 1649](https://github.com/provenance-io/provenance/pull/1649).
+* Add genesis/init for Marker module send deny list addresses. [#1660](https://github.com/provenance-io/provenance/issues/1660)
+* Add automatic changelog entries for dependabot. [#1674](https://github.com/provenance-io/provenance/issues/1674)
 
 ### Bug Fixes
 
@@ -66,6 +71,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix for incorrect resource-id type casting on contract specification [#1647](https://github.com/provenance-io/provenance/issues/1647).
 * Allow restricted coins to be quarantined [#1626](https://github.com/provenance-io/provenance/issues/1626).
 * Prevent marker forced transfers from module accounts [#1626](https://github.com/provenance-io/provenance/issues/1626).
+* Change config load order so custom.toml can override other config. [#1262](https://github.com/provenance-io/provenance/issues/1262)
 
 ### Client Breaking
 
@@ -76,6 +82,35 @@ Ref: https://keepachangelog.com/en/1.0.0/
   The output of this command reflects the `GetByAddrResponse` instead of specific type queries.
   The command no longer has any `--include-<thing>` flags since they don't pertain to the `GetByAddr` query.
   The specific queries (e.g. `provenanced query metadata scope`) are still available with all appropriate flags.
+
+### Dependencies
+
+- Bump `google.golang.org/grpc` from 1.57.0 to 1.58.1 ([#1672](https://github.com/provenance-io/provenance/pull/1672), [#1685](https://github.com/provenance-io/provenance/pull/1685))
+- Bump `crazy-max/ghaction-import-gpg` from 5 to 6 ([#1677](https://github.com/provenance-io/provenance/pull/1677))
+- Bump `golang.org/x/text` from 0.12.0 to 0.13.0 ([#1667](https://github.com/provenance-io/provenance/pull/1667))
+- Bump `actions/checkout` from 3 to 4 ([#1668](https://github.com/provenance-io/provenance/pull/1668))
+- Bump `bufbuild/buf-breaking-action` from 1.1.2 to 1.1.3 ([#1663](https://github.com/provenance-io/provenance/pull/1663))
+- Bump `cosmossdk.io/math` from 1.0.1 to 1.1.2 ([#1656](https://github.com/provenance-io/provenance/pull/1656))
+- Bump `github.com/google/uuid` from 1.3.0 to 1.3.1 ([#1657](https://github.com/provenance-io/provenance/pull/1657))
+- Bump `golangci/golangci-lint-action` from 3.6.0 to 3.7.0 ([#1651](https://github.com/provenance-io/provenance/pull/1651))
+- Bump `bufbuild/buf-setup-action` from 1.26.0 to 1.26.1 ([#1650](https://github.com/provenance-io/provenance/pull/1650))
+- Bump `cometbft to v0.34.29 `(from v0.34.28) ([#1649](https://github.com/provenance-io/provenance/pull/1649))
+- Bump `golang.org/x/text` from 0.11.0 to 0.12.0 ([#1644](https://github.com/provenance-io/provenance/pull/1644))
+- Bump `bufbuild/buf-setup-action` from 1.25.1 to 1.26.0 ([#1645](https://github.com/provenance-io/provenance/pull/1645))
+- Bump `bufbuild/buf-setup-action` from 1.25.0 to 1.25.1 ([#1642](https://github.com/provenance-io/provenance/pull/1642))
+- Bump `google.golang.org/grpc` from 1.56.2 to 1.57.0 ([#1635](https://github.com/provenance-io/provenance/pull/1635))
+- Bump `github.com/rs/zerolog` from 1.29.1 to 1.30.0 ([#1639](https://github.com/provenance-io/provenance/pull/1639))
+- Bump `bufbuild/buf-setup-action` from 1.24.0 to 1.25.0 ([#1632](https://github.com/provenance-io/provenance/pull/1632))
+- Bump `bufbuild/buf-setup-action` from 1.23.1 to 1.24.0 ([#1631](https://github.com/provenance-io/provenance/pull/1631))
+- Bump `github.com/cosmos/ibc-go/v6` from 6.1.1 to 6.2.0 ([#1629](https://github.com/provenance-io/provenance/pull/1629))
+- Bump `cosmossdk.io/errors` from 1.0.0-beta.7 to 1.0.0 ([#1628](https://github.com/provenance-io/provenance/pull/1628))
+- Bump `google.golang.org/grpc` from 1.56.1 to 1.56.2 ([#1624](https://github.com/provenance-io/provenance/pull/1624))
+- Bump `google.golang.org/protobuf` from 1.30.0 to 1.31.0 ([#1611](https://github.com/provenance-io/provenance/pull/1611))
+- Bump `bufbuild/buf-setup-action` from 1.22.0 to 1.23.1 ([#1613](https://github.com/provenance-io/provenance/pull/1613))
+- Bump `bufbuild/buf-setup-action` from 1.21.0 to 1.22.0 ([#1610](https://github.com/provenance-io/provenance/pull/1610))
+- Bump `docker/setup-buildx-action` from 2 to 3 ([#1681](https://github.com/provenance-io/provenance/pull/1681))
+- Bump `docker/login-action` from 2 to 3 ([#1680](https://github.com/provenance-io/provenance/pull/1680))
+- Bump `docker/build-push-action` from 4 to 5 ([#1679](https://github.com/provenance-io/provenance/pull/1679))
 
 ---
 

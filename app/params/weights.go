@@ -23,9 +23,11 @@ const (
 	// Adjusted marker operations to a cumulative weight of 100
 	DefaultWeightMsgAddMarker                 int = 30
 	DefaultWeightMsgChangeStatus              int = 10
+	DefaultWeightMsgFinalize                  int = 10
 	DefaultWeightMsgAddAccess                 int = 10
 	DefaultWeightMsgAddFinalizeActivateMarker int = 10
 	DefaultWeightMsgAddMarkerProposal         int = 40
+	DefaultWeightMsgUpdateDenySendList        int = 10
 	// MsgFees
 	DefaultWeightAddMsgFeeProposalContent    int = 75
 	DefaultWeightRemoveMsgFeeProposalContent int = 25
@@ -35,4 +37,7 @@ const (
 	// Trigger
 	DefaultWeightSubmitCreateTrigger  int = 95
 	DefaultWeightSubmitDestroyTrigger int = 5
+	// Oracle
+	DefaultWeightUpdateOracle    int = 25
+	DefaultWeightSendOracleQuery int = 75
 )

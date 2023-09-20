@@ -113,6 +113,11 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
+	nav := types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(msg.UsdCents)), msg.Volume)
+	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{nav}, types.ModuleName)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
 	// Note: The status can only be Active if this is being done via gov prop.
 	if ma.Status == types.StatusActive {
 		// Active markers should have supply set.
@@ -596,6 +601,11 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		normalizedReqAttrs,
 	)
 
+	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(msg.UsdCents)), msg.Volume)}, types.ModuleName)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
 	if err := k.Keeper.AddFinalizeAndActivateMarker(ctx, ma); err != nil {
 		ctx.Logger().Error("unable to add, finalize and activate marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
@@ -807,4 +817,37 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 	)
 
 	return &types.MsgUpdateSendDenyListResponse{}, nil
+}
+
+// AddNetAssetValues adds net asset values to a marker
+func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNetAssetValuesRequest) (*types.MsgAddNetAssetValuesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	isGovProp := marker.HasGovernanceEnabled() && msg.Administrator == k.GetAuthority()
+
+	if !isGovProp {
+		hasGrants := types.GrantsForAddress(msg.GetSigners()[0], marker.GetAccessList()...).GetAccessList()
+		if len(hasGrants) == 0 {
+			return nil, fmt.Errorf("signer %v does not have permission to add net asset value for %q", msg.Administrator, marker.GetDenom())
+		}
+	}
+
+	err = k.AddSetNetAssetValues(ctx, marker, msg.NetAssetValues, msg.Administrator)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	return &types.MsgAddNetAssetValuesResponse{}, nil
 }

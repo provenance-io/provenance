@@ -184,6 +184,8 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				false,
 				[]string{"blah"},
+				0,
+				0,
 			),
 			errorMsg: "required attributes are reserved for restricted markers",
 		},
@@ -199,6 +201,8 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				false,
 				[]string{"blah"},
+				0,
+				0,
 			),
 			errorMsg: "",
 		},
@@ -214,6 +218,8 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				false,
 				[]string{},
+				0,
+				0,
 			),
 			errorMsg: "",
 		},
@@ -229,6 +235,8 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				false,
 				[]string{},
+				0,
+				0,
 			),
 			errorMsg: "",
 		},
@@ -244,6 +252,8 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				false,
 				[]string{"foo", "foo"},
+				0,
+				0,
 			),
 			errorMsg: "required attribute list contains duplicate entries",
 		},
@@ -314,6 +324,8 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{},
 				[]AccessGrant{},
+				0,
+				0,
 			),
 			errorMsg: "since this will activate the marker, must have access list defined",
 		},
@@ -330,6 +342,8 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{"blah"},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				0,
+				0,
 			),
 			errorMsg: "required attributes are reserved for restricted markers",
 		},
@@ -346,6 +360,8 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				0,
+				0,
 			),
 			errorMsg: "",
 		},
@@ -362,6 +378,8 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				false,
 				[]string{"blah"},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				0,
+				0,
 			),
 			errorMsg: "",
 		},
@@ -378,6 +396,8 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 				true,
 				[]string{},
 				[]AccessGrant{*NewAccessGrant(validAddress, []Access{Access_Mint, Access_Admin})},
+				0,
+				0,
 			),
 			errorMsg: "forced transfer is only available for restricted coins",
 		},
@@ -697,56 +717,56 @@ func TestMsgUpdateSendDenyListRequestValidateBasic(t *testing.T) {
 	removeAddr := sdk.AccAddress("removeAddr________________").String()
 
 	tests := []struct {
-		name          string
-		msg           MsgUpdateSendDenyListRequest
-		expectedError string
+		name   string
+		msg    MsgUpdateSendDenyListRequest
+		expErr string
 	}{
 		{
 			name: "should succeed",
 			msg:  MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{addAddr}, Authority: addr},
 		},
 		{
-			name:          "invalid authority address",
-			msg:           MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{addAddr}, Authority: "invalid-address"},
-			expectedError: "decoding bech32 failed: invalid separator index -1",
+			name:   "invalid authority address",
+			msg:    MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{addAddr}, Authority: "invalid-address"},
+			expErr: "decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			name:          "both add and remove list are empty",
-			msg:           MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{}, AddDeniedAddresses: []string{}, Authority: addr},
-			expectedError: "both add and remove lists cannot be empty",
+			name:   "both add and remove list are empty",
+			msg:    MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{}, AddDeniedAddresses: []string{}, Authority: addr},
+			expErr: "both add and remove lists cannot be empty",
 		},
 		{
-			name:          "invalid authority address",
-			msg:           MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{addAddr}, Authority: "invalid-address"},
-			expectedError: "decoding bech32 failed: invalid separator index -1",
+			name:   "invalid authority address",
+			msg:    MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{addAddr}, Authority: "invalid-address"},
+			expErr: "decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			name:          "invalid remove address",
-			msg:           MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{"invalid-address"}, AddDeniedAddresses: []string{}, Authority: addr},
-			expectedError: "decoding bech32 failed: invalid separator index -1",
+			name:   "invalid remove address",
+			msg:    MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{"invalid-address"}, AddDeniedAddresses: []string{}, Authority: addr},
+			expErr: "decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			name:          "invalid add address",
-			msg:           MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{"invalid-addrs"}, Authority: addr},
-			expectedError: "decoding bech32 failed: invalid separator index -1",
+			name:   "invalid add address",
+			msg:    MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{"invalid-addrs"}, Authority: addr},
+			expErr: "decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			name:          "duplicate entries in list",
-			msg:           MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{removeAddr, removeAddr}, AddDeniedAddresses: []string{}, Authority: addr},
-			expectedError: "denied address lists contain duplicate entries",
+			name:   "duplicate entries in list",
+			msg:    MsgUpdateSendDenyListRequest{Denom: denom, RemoveDeniedAddresses: []string{removeAddr, removeAddr}, AddDeniedAddresses: []string{}, Authority: addr},
+			expErr: "denied address lists contain duplicate entries",
 		},
 		{
-			name:          "invalid denom",
-			msg:           MsgUpdateSendDenyListRequest{Denom: "1", RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{addAddr}, Authority: addr},
-			expectedError: "invalid denom: 1",
+			name:   "invalid denom",
+			msg:    MsgUpdateSendDenyListRequest{Denom: "1", RemoveDeniedAddresses: []string{removeAddr}, AddDeniedAddresses: []string{addAddr}, Authority: addr},
+			expErr: "invalid denom: 1",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
-			if len(tc.expectedError) > 0 {
-				require.EqualErrorf(t, err, tc.expectedError, "ValidateBasic error")
+			if len(tc.expErr) > 0 {
+				require.EqualErrorf(t, err, tc.expErr, "ValidateBasic error")
 			} else {
 				require.NoError(t, err, "ValidateBasic error")
 			}
@@ -772,6 +792,94 @@ func TestMsgUpdateSendDenyListRequestGetSigners(t *testing.T) {
 	t.Run("bad signer", func(t *testing.T) {
 		msg := MsgUpdateSendDenyListRequest{
 			Authority: "bad_address________",
+		}
+
+		testFunc := func() {
+			_ = msg.GetSigners()
+		}
+		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
+	})
+}
+
+func TestMsgAddNetAssetValueValidateBasic(t *testing.T) {
+	addr := sdk.AccAddress("addr________________").String()
+	denom := "somedenom"
+	netAssetValue1 := NetAssetValue{Price: sdk.NewInt64Coin("jackthecat", 100), Volume: uint64(100)}
+	netAssetValue2 := NetAssetValue{Price: sdk.NewInt64Coin("hotdog", 100), Volume: uint64(100)}
+	invalidNetAssetValue := NetAssetValue{Price: sdk.NewInt64Coin("hotdog", 100), Volume: uint64(0)}
+	invalidNetAssetValue2 := NetAssetValue{Price: sdk.NewInt64Coin("hotdog", 100), Volume: uint64(1), UpdatedBlockHeight: 1}
+
+	tests := []struct {
+		name   string
+		msg    MsgAddNetAssetValuesRequest
+		expErr string
+	}{
+		{
+			name: "should succeed",
+			msg:  MsgAddNetAssetValuesRequest{Denom: denom, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2}, Administrator: addr},
+		},
+		{
+			name:   "block height is set",
+			msg:    MsgAddNetAssetValuesRequest{Denom: denom, NetAssetValues: []NetAssetValue{invalidNetAssetValue2}, Administrator: addr},
+			expErr: "marker net asset value must not have update height set",
+		},
+		{
+			name:   "validation of net asset value failure",
+			msg:    MsgAddNetAssetValuesRequest{Denom: denom, NetAssetValues: []NetAssetValue{invalidNetAssetValue}, Administrator: addr},
+			expErr: "marker net asset value volume must be positive value",
+		},
+		{
+			name:   "duplicate net asset values",
+			msg:    MsgAddNetAssetValuesRequest{Denom: denom, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2, netAssetValue2}, Administrator: addr},
+			expErr: "list of net asset values contains duplicates",
+		},
+		{
+			name:   "invalid denom",
+			msg:    MsgAddNetAssetValuesRequest{Denom: "", NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2, netAssetValue2}, Administrator: addr},
+			expErr: "invalid denom: ",
+		},
+		{
+			name:   "invalid administrator address",
+			msg:    MsgAddNetAssetValuesRequest{Denom: denom, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2}, Administrator: "invalid address"},
+			expErr: "decoding bech32 failed: invalid character in string: ' '",
+		},
+		{
+			name:   "empty net asset list",
+			msg:    MsgAddNetAssetValuesRequest{Denom: denom, NetAssetValues: []NetAssetValue{}, Administrator: addr},
+			expErr: "net asset value list cannot be empty",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.expErr) > 0 {
+				require.EqualErrorf(t, err, tc.expErr, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgAddNetAssetValuesRequestGetSigners(t *testing.T) {
+	t.Run("good signer", func(t *testing.T) {
+		msg := MsgAddNetAssetValuesRequest{
+			Administrator: sdk.AccAddress("good_address________").String(),
+		}
+		exp := []sdk.AccAddress{sdk.AccAddress("good_address________")}
+
+		var signers []sdk.AccAddress
+		testFunc := func() {
+			signers = msg.GetSigners()
+		}
+		require.NotPanics(t, testFunc, "GetSigners")
+		assert.Equal(t, exp, signers, "GetSigners")
+	})
+
+	t.Run("bad signer", func(t *testing.T) {
+		msg := MsgAddNetAssetValuesRequest{
+			Administrator: "bad_address________",
 		}
 
 		testFunc := func() {

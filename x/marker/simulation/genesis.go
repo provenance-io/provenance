@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -16,14 +18,15 @@ import (
 
 // Simulation parameter constants
 const (
-	MaxTotalSupply         = "max_total_supply"
+	MaxSupply              = "max_supply"
 	EnableGovernance       = "enable_governance"
 	UnrestrictedDenomRegex = "unresticted_denom_regex"
 )
 
-// GenMaxTotalSupply randomized Maximum amount of supply to allow for markers
-func GenMaxTotalSupply(r *rand.Rand) uint64 {
-	return r.Uint64()
+// GenMaxSupply randomized Maximum amount of supply to allow for markers
+func GenMaxSupply(r *rand.Rand) math.Int {
+	maxSupply := fmt.Sprintf("%d%d", r.Uint64(), r.Uint64())
+	return types.StringToBigInt(maxSupply)
 }
 
 // GenEnableGovernance returns a randomized EnableGovernance parameter.
@@ -40,10 +43,10 @@ func GenUnrestrictedDenomRegex(r *rand.Rand) string {
 
 // RandomizedGenState generates a random GenesisState for marker
 func RandomizedGenState(simState *module.SimulationState) {
-	var maxTotalSupply uint64
+	var maxSupply math.Int
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MaxTotalSupply, &maxTotalSupply, simState.Rand,
-		func(r *rand.Rand) { maxTotalSupply = GenMaxTotalSupply(r) },
+		simState.Cdc, MaxSupply, &maxSupply, simState.Rand,
+		func(r *rand.Rand) { maxSupply = GenMaxSupply(r) },
 	)
 
 	var enableGovernance bool
@@ -60,7 +63,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	markerGenesis := types.GenesisState{
 		Params: types.Params{
-			MaxTotalSupply:         maxTotalSupply,
+			MaxSupply:              maxSupply,
 			EnableGovernance:       enableGovernance,
 			UnrestrictedDenomRegex: unrestrictedDenomRegex,
 		},

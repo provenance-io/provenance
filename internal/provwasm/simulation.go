@@ -170,6 +170,8 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk
 			true,       // allow gov
 			false,      // don't allow forced transfer
 			[]string{}, // required attributes
+			0,
+			0,
 		)
 
 		bk.SetSendEnabled(ctx, denom, true)
