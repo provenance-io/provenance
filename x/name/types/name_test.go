@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 type NameRecordTestSuite struct {
@@ -113,73 +114,114 @@ func TestNormalizeName(t *testing.T) {
 	}
 }
 
-func TestIsValidName(t *testing.T) {
+func dashErr(segment string) string {
+	return fmt.Sprintf("segment %q has too many dashes", segment)
+}
+
+func badCharErr(badRune rune, segment string) string {
+	return fmt.Sprintf("illegal character %q in name segment %q", string(badRune), segment)
+}
+
+func TestValidName(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
-		exp   bool
+		exp   string
 	}{
-		{name: "empty string", input: "", exp: true},
-		{name: "two spaces", input: "  ", exp: false},
-		{name: "with middle space", input: " a b ", exp: false},
-		{name: "upper case", input: "ABcDE", exp: false},
-		{name: "space around first segment", input: " ghi .def.abc", exp: false},
-		{name: "space around middle segment", input: "ghi. def .abc", exp: false},
-		{name: "space around third segment", input: "ghi.def. abc ", exp: false},
-		{name: "middle segment has upper case", input: "ghi.DeF.abc", exp: false},
-		{name: "empty first segment", input: ".def.abc", exp: true},
-		{name: "first segment is a space", input: " .def.abc", exp: false},
-		{name: "empty last segment", input: "ghi.def.", exp: true},
-		{name: "last segment is a space", input: "ghi.def. ", exp: false},
-		{name: "empty middle segment", input: "ghi..abc", exp: true},
-		{name: "middle segment is a space", input: "ghi. .abc", exp: false},
-		{name: "one segment two dashes", input: "a-b-c", exp: false},
-		{name: "two segments one dash each", input: "a-1.b-2", exp: true},
-		{name: "comma in first segment", input: "a,1.b-2", exp: false},
-		{name: "comma in second segment", input: "a-1.b,2", exp: false},
-		{name: "space in middle of first segment", input: "a 1.b-2", exp: false},
-		{name: "space in middle of second segment", input: "a-1.b 2", exp: false},
-		{name: "newline in middle of second segment", input: "a-1.b\n2", exp: false},
-		{name: "middle segment has middlespace", input: "a. b c .d", exp: false},
+		{name: "empty string", input: "", exp: ""},
+		{name: "two spaces", input: "  ", exp: badCharErr(' ', "  ")},
+		{name: "with middle space", input: " a b ", exp: badCharErr(' ', " a b ")},
+		{name: "upper case", input: "ABcDE", exp: badCharErr('A', "ABcDE")},
+		{name: "space around first segment", input: " ghi .def.abc", exp: badCharErr(' ', " ghi ")},
+		{name: "space around middle segment", input: "ghi. def .abc", exp: badCharErr(' ', " def ")},
+		{name: "space around third segment", input: "ghi.def. abc ", exp: badCharErr(' ', " abc ")},
+		{name: "middle segment has upper case", input: "ghi.DeF.abc", exp: badCharErr('D', "DeF")},
+		{name: "empty first segment", input: ".def.abc", exp: ""},
+		{name: "first segment is a space", input: " .def.abc", exp: badCharErr(' ', " ")},
+		{name: "empty last segment", input: "ghi.def.", exp: ""},
+		{name: "last segment is a space", input: "ghi.def. ", exp: badCharErr(' ', " ")},
+		{name: "empty middle segment", input: "ghi..abc", exp: ""},
+		{name: "middle segment is a space", input: "ghi. .abc", exp: badCharErr(' ', " ")},
+		{name: "one segment two dashes", input: "a-b-c", exp: dashErr("a-b-c")},
+		{name: "two dashes in first segment", input: "a-b-c.d.e", exp: dashErr("a-b-c")},
+		{name: "two dashes in middle segment", input: "d.a-b-c.e", exp: dashErr("a-b-c")},
+		{name: "two dashes in last segment", input: "d.e.a-b-c", exp: dashErr("a-b-c")},
+		{name: "two segments one dash each", input: "a-1.b-2", exp: ""},
+		{name: "comma in first segment", input: "a,1.b-2", exp: badCharErr(',', "a,1")},
+		{name: "comma in second segment", input: "a-1.b,2", exp: badCharErr(',', "b,2")},
+		{name: "space in middle of first segment", input: "a 1.b-2", exp: badCharErr(' ', "a 1")},
+		{name: "space in middle of second segment", input: "a-1.b 2", exp: badCharErr(' ', "b 2")},
+		{name: "newline in middle of second segment", input: "a-1.b\n2", exp: badCharErr('\n', "b\n2")},
+		{name: "middle segment has middlespace", input: "a. b c .d", exp: badCharErr(' ', " b c ")},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			expErr := ""
+			expOK := true
+			if len(tc.exp) > 0 {
+				expErr = fmt.Sprintf("invalid name %q: %s", tc.input, tc.exp)
+				expOK = false
+			}
+			err := ValidateName(tc.input)
+			assertions.AssertErrorValue(t, err, expErr, "ValidateName(%q)", tc.input)
+
 			ok := IsValidName(tc.input)
-			assert.Equal(t, tc.exp, ok, "IsValidName(%q)", tc.input)
+			assert.Equal(t, expOK, ok, "IsValidName(%q)", tc.input)
 		})
 	}
 }
 
-func TestIsValidNameSegment(t *testing.T) {
+func TestValidNameSegment(t *testing.T) {
+	badCharErrFunc := func(badRune rune) func(segment string) string {
+		return func(segment string) string {
+			return badCharErr(badRune, segment)
+		}
+	}
+
 	tests := []struct {
 		name string
 		seg  string
-		exp  bool
+		exp  func(segment string) string
 	}{
-		{name: "empty", seg: "", exp: true},
-		{name: "uuid with dashes", seg: "01234567-8909-8765-4321-012345678901", exp: true},
-		{name: "uuid without dashes", seg: "01234567890987654321012345678901", exp: true},
-		{name: "one dash", seg: "-", exp: true},
-		{name: "two dashes", seg: "--", exp: false},
-		{name: "all english lower-case letters, a dash, and all arabic digits", seg: "abcdefghijklmnopqrstuvwxyz-0123456789", exp: true},
-		{name: "with a newline", seg: "ab\nde", exp: false},
-		{name: "with a space", seg: "ab de", exp: false},
-		{name: "with an underscore", seg: "ab_de", exp: false},
-		{name: "single quoted", seg: "'abcde'", exp: false},
-		{name: "double quoted", seg: `"abcde"`, exp: false},
+		{name: "empty", seg: "", exp: nil},
+		{name: "uuid with dashes", seg: "01234567-8909-8765-4321-012345678901", exp: nil},
+		{name: "uuid without dashes", seg: "01234567890987654321012345678901", exp: nil},
+		{name: "one dash", seg: "-", exp: nil},
+		{name: "two dashes", seg: "--", exp: dashErr},
+		{name: "all english lower-case letters, a dash, and all arabic digits", seg: "abcdefghijklmnopqrstuvwxyz-0123456789", exp: nil},
+		{name: "with a newline", seg: "ab\nde", exp: badCharErrFunc('\n')},
+		{name: "with a space", seg: "ab de", exp: badCharErrFunc(' ')},
+		{name: "with an underscore", seg: "ab_de", exp: badCharErrFunc('_')},
+		{name: "single quoted", seg: "'abcde'", exp: badCharErrFunc('\'')},
+		{name: "double quoted", seg: `"abcde"`, exp: badCharErrFunc('"')},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			expErr := ""
+			expOK := true
+			if tc.exp != nil {
+				expErr = tc.exp(tc.seg)
+				expOK = false
+			}
+			err := ValidateNameSegment(tc.seg)
+			assertions.AssertErrorValue(t, err, expErr, "ValidateNameSegment(%q)", tc.seg)
+
 			ok := IsValidNameSegment(tc.seg)
-			assert.Equal(t, tc.exp, ok, "IsValidNameSegment(%q)", tc.seg)
+			assert.Equal(t, expOK, ok, "IsValidNameSegment(%q)", tc.seg)
 		})
 	}
 }
 
-func TestIsValidNameSegmentChars(t *testing.T) {
+func TestNameSegmentChars(t *testing.T) {
+	// This test checks that all valid characters are graphic chars and are valid in a name segment,
+	// and that a lot of the invalid characters are not valid in a name segment.
+
+	// testerFunc is a function that applies assertions to a rune from a rune table.
 	type testerFunc func(t *testing.T, r rune, tableName string, lo uint32, hi uint32, stride uint32) bool
+
+	// assertRuneIsOkay asserts that the rune is graphic and valid as a name segment.
 	assertRuneIsOkay := func(t *testing.T, r rune, tableName string, lo uint32, hi uint32, stride uint32) bool {
 		isGraphic := unicode.IsGraphic(r)
 		if !assert.True(t, isGraphic, "IsGraphic(%q = %u) %s{%u, %u, %d}", r, r, tableName, lo, hi, stride) {
@@ -188,10 +230,12 @@ func TestIsValidNameSegmentChars(t *testing.T) {
 		isValid := IsValidNameSegment(string(r))
 		return assert.True(t, isValid, "IsValidNameSegment(%q = %u) %s{%u, %u, %d}", r, r, tableName, lo, hi, stride)
 	}
+	// assertRuneIsInvalid asseerts that the rune is not valid as a name segment.
 	assertRuneIsInvalid := func(t *testing.T, r rune, tableName string, lo uint32, hi uint32, stride uint32) bool {
 		isValid := IsValidNameSegment(string(r))
 		return assert.False(t, isValid, "IsValidNameSegment(%q = %u) %s{%u, %u, %d}", r, r, tableName, lo, hi, stride)
 	}
+	// containsRune returns true if the provide rune is an entry in the provided slice.
 	containsRune := func(r rune, rz []rune) bool {
 		for _, z := range rz {
 			if r == z {
@@ -266,8 +310,9 @@ func TestIsValidNameSegmentChars(t *testing.T) {
 				for rv <= row.Hi {
 					r := rune(rv)
 					if !containsRune(r, tc.skips) {
-						tc.tester(t, r, tc.tableName, uint32(row.Lo), uint32(row.Hi), uint32(row.Stride))
+						tc.tester(t, r, tc.tableName+".R16", uint32(row.Lo), uint32(row.Hi), uint32(row.Stride))
 					}
+					// If the next one would cause overflow, we're done.
 					if rv+row.Stride <= rv {
 						break
 					}
@@ -279,8 +324,9 @@ func TestIsValidNameSegmentChars(t *testing.T) {
 				for rv <= row.Hi {
 					r := rune(rv)
 					if !containsRune(r, tc.skips) {
-						tc.tester(t, r, tc.tableName, row.Lo, row.Hi, row.Stride)
+						tc.tester(t, r, tc.tableName+".R32", row.Lo, row.Hi, row.Stride)
 					}
+					// If the next one would cause overflow, we're done.
 					if rv+row.Stride <= rv {
 						break
 					}
