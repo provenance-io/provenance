@@ -1136,12 +1136,14 @@ func updateReqAttrs(store sdk.KVStore, marketID uint32, toRemove, toAdd []string
 
 // updateReqAttrsAsk updates the attributes required to create an ask order in the store by removing and adding
 // the provided entries to the existing entries.
+// It is assumed that the attributes have been normalized prior to calling this.
 func updateReqAttrsAsk(store sdk.KVStore, marketID uint32, toRemove, toAdd []string) error {
 	return updateReqAttrs(store, marketID, toRemove, toAdd, "create ask", MakeKeyMarketReqAttrAsk)
 }
 
 // updateReqAttrsBid updates the attributes required to create a bid order in the store by removing and adding
 // the provided entries to the existing entries.
+// It is assumed that the attributes have been normalized prior to calling this.
 func updateReqAttrsBid(store sdk.KVStore, marketID uint32, toRemove, toAdd []string) error {
 	return updateReqAttrs(store, marketID, toRemove, toAdd, "create bid", MakeKeyMarketReqAttrBid)
 }
@@ -1150,15 +1152,36 @@ func updateReqAttrsBid(store sdk.KVStore, marketID uint32, toRemove, toAdd []str
 // The caller is responsible for making sure this update should be allowed (e.g. by calling CanManageReqAttrs first).
 func (k Keeper) UpdateReqAttrs(ctx sdk.Context, msg *exchange.MsgMarketManageReqAttrsRequest) error {
 	admin := sdk.MustAccAddressFromBech32(msg.Admin)
+
+	var errs []error
+	// We don't care if the attributes to remove are valid so that we
+	// can remove entries that are somehow now invalid.
+	askToRemove, _ := k.NormalizeReqAttrs(ctx, msg.CreateAskToRemove)
+	askToAdd, err := k.NormalizeReqAttrs(ctx, msg.CreateAskToAdd)
+	if err != nil {
+		errs = append(errs, err)
+	}
+	bidToRemove, _ := k.NormalizeReqAttrs(ctx, msg.CreateBidToRemove)
+	bidToAdd, err := k.NormalizeReqAttrs(ctx, msg.CreateBidToAdd)
+	if err != nil {
+		errs = append(errs, err)
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
 	marketID := msg.MarketId
 	store := k.getStore(ctx)
-	errs := []error{
-		updateReqAttrsAsk(store, marketID, msg.CreateAskToRemove, msg.CreateAskToAdd),
-		updateReqAttrsBid(store, marketID, msg.CreateBidToRemove, msg.CreateBidToAdd),
+
+	if err = updateReqAttrsAsk(store, marketID, askToRemove, askToAdd); err != nil {
+		errs = append(errs, err)
 	}
-	err := errors.Join(errs...)
-	if err != nil {
-		return err
+	if err = updateReqAttrsBid(store, marketID, bidToRemove, bidToAdd); err != nil {
+		errs = append(errs, err)
 	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
 	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketReqAttrUpdated(marketID, admin))
 }

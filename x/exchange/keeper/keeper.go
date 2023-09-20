@@ -15,6 +15,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 type Keeper struct {
@@ -117,11 +118,21 @@ func (k Keeper) iterate(ctx sdk.Context, pre []byte, cb func(key, value []byte) 
 }
 
 // NormalizeReqAttrs normalizes/validates each of the provided require attributes.
+// The normalized versions of the attributes are returned regardless of whether an error is also returned.
 func (k Keeper) NormalizeReqAttrs(ctx sdk.Context, reqAttrs []string) ([]string, error) {
 	rv := make([]string, len(reqAttrs))
-	errs := make([]error, len(reqAttrs))
+	var errs []error
 	for i, attr := range reqAttrs {
-		rv[i], errs[i] = k.nameKeeper.Normalize(ctx, attr)
+		// Normalize will either return a normalized name or error.
+		// In some cases where we call NormalizeReqAttrs, we won't care about any error, though,
+		// So if there's an error, we still set the normalized value for returning.
+		val, err := k.nameKeeper.Normalize(ctx, attr)
+		if err != nil {
+			errs = append(errs, err)
+			rv[i] = nametypes.NormalizeName(attr)
+		} else {
+			rv[i] = val
+		}
 	}
 	return rv, errors.Join(errs...)
 }
