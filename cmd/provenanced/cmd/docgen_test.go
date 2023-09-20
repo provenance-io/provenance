@@ -55,11 +55,11 @@ func TestDocGen(t *testing.T) {
 			err:          "invalid argument \"xyz\" for \"--yaml\" flag: strconv.ParseBool: parsing \"xyz\": invalid syntax",
 		},
 		{
-			name:         "failure - bad rest value",
+			name:         "failure - bad rst value",
 			target:       "tmp",
 			createTarget: true,
-			flags:        []string{"--rest=xyz"},
-			err:          "invalid argument \"xyz\" for \"--rest\" flag: strconv.ParseBool: parsing \"xyz\": invalid syntax",
+			flags:        []string{"--rst=xyz"},
+			err:          "invalid argument \"xyz\" for \"--rst\" flag: strconv.ParseBool: parsing \"xyz\": invalid syntax",
 		},
 		{
 			name:         "failure - bad markdown value",
@@ -83,10 +83,10 @@ func TestDocGen(t *testing.T) {
 			extensions:   []string{".yaml"},
 		},
 		{
-			name:         "success - rest is generated",
+			name:         "success - rst is generated",
 			target:       "tmp",
 			createTarget: true,
-			flags:        []string{"--rest"},
+			flags:        []string{"--rst"},
 			extensions:   []string{".rst"},
 		},
 		{

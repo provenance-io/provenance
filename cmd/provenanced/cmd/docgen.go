@@ -15,16 +15,16 @@ var docGenCmdStart = fmt.Sprintf("%s docgen", version.AppName)
 const (
 	FlagMarkdown = "markdown"
 	FlagYaml     = "yaml"
-	FlagRest     = "rest"
+	FlagRst      = "rst"
 	FlagManpage  = "manpage"
 )
 
 func GetDocGenCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "docgen <target directory> (--markdown) (--yaml) (--rest) (--manpages) [flags]",
+		Use:   "docgen <target directory> (--markdown) (--yaml) (--rst) (--manpages) [flags]",
 		Short: "Generates cli documentation for the Provenance Blockchain.",
 		Long: `Generates cli documentation for the Provenance Blockchain.
-Various documentation formats can be generated, including markdown, YAML, REST, and man pages. 
+Various documentation formats can be generated, including markdown, YAML, RST, and man pages. 
 To ensure the command's success, you must specify at least one format.
 A successful command will not only generate files in the selected formats but also create the target directory if it doesn't already exist.`,
 		Example: fmt.Sprintf("%s '/tmp' --yaml --markdown", docGenCmdStart),
@@ -39,7 +39,7 @@ A successful command will not only generate files in the selected formats but al
 			if err != nil {
 				return err
 			}
-			rest, err := cmd.Flags().GetBool(FlagRest)
+			rst, err := cmd.Flags().GetBool(FlagRst)
 			if err != nil {
 				return err
 			}
@@ -48,7 +48,7 @@ A successful command will not only generate files in the selected formats but al
 				return err
 			}
 
-			if !markdown && !yaml && !rest && !manpage {
+			if !markdown && !yaml && !rst && !manpage {
 				return fmt.Errorf("at least one doc type must be specified")
 			}
 
@@ -72,7 +72,7 @@ A successful command will not only generate files in the selected formats but al
 					return err
 				}
 			}
-			if rest {
+			if rst {
 				err = doc.GenReSTTree(cmd.Root(), dir)
 				if err != nil {
 					return err
@@ -91,7 +91,7 @@ A successful command will not only generate files in the selected formats but al
 
 	cmd.Flags().Bool(FlagMarkdown, false, "Generate documentation in the format of markdown pages.")
 	cmd.Flags().Bool(FlagYaml, false, "Generate documentation in the format of yaml.")
-	cmd.Flags().Bool(FlagRest, false, "Generate documentation in the format of rest.")
+	cmd.Flags().Bool(FlagRst, false, "Generate documentation in the format of rst.")
 	cmd.Flags().Bool(FlagManpage, false, "Generate documentation in the format of manpages.")
 
 	return cmd
