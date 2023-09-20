@@ -26,7 +26,6 @@ type Keeper struct {
 	attrKeeper    exchange.AttributeKeeper
 	bankKeeper    exchange.BankKeeper
 	holdKeeper    exchange.HoldKeeper
-	nameKeeper    exchange.NameKeeper
 
 	// TODO[1658]: Finish the Keeper struct.
 	authority        string
@@ -35,7 +34,7 @@ type Keeper struct {
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollectorName string,
 	accountKeeper exchange.AccountKeeper, attrKeeper exchange.AttributeKeeper,
-	bankKeeper exchange.BankKeeper, holdKeeper exchange.HoldKeeper, nameKeeper exchange.NameKeeper,
+	bankKeeper exchange.BankKeeper, holdKeeper exchange.HoldKeeper,
 ) Keeper {
 	// TODO[1658]: Finish NewKeeper.
 	rv := Keeper{
@@ -45,7 +44,6 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollector
 		attrKeeper:       attrKeeper,
 		bankKeeper:       bankKeeper,
 		holdKeeper:       holdKeeper,
-		nameKeeper:       nameKeeper,
 		authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		feeCollectorName: feeCollectorName,
 	}
@@ -123,15 +121,9 @@ func (k Keeper) NormalizeReqAttrs(ctx sdk.Context, reqAttrs []string) ([]string,
 	rv := make([]string, len(reqAttrs))
 	var errs []error
 	for i, attr := range reqAttrs {
-		// Normalize will either return a normalized name or error.
-		// In some cases where we call NormalizeReqAttrs, we won't care about any error, though,
-		// So if there's an error, we still set the normalized value for returning.
-		val, err := k.nameKeeper.Normalize(ctx, attr)
-		if err != nil {
-			errs = append(errs, err)
-			rv[i] = nametypes.NormalizeName(attr)
-		} else {
-			rv[i] = val
+		rv[i] = nametypes.NormalizeName(attr)
+		if !nametypes.IsValidName(rv[i]) {
+			errs = append(errs, fmt.Errorf("invalid attribute %q", attr))
 		}
 	}
 	return rv, errors.Join(errs...)

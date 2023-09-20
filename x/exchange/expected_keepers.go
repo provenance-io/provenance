@@ -25,10 +25,6 @@ type BankKeeper interface {
 	InputOutputCoins(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error
 }
 
-type NameKeeper interface {
-	Normalize(ctx sdk.Context, name string) (string, error)
-}
-
 type HoldKeeper interface {
 	AddHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins, reason string) error
 	ReleaseHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error
