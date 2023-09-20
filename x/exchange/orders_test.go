@@ -1275,5 +1275,3 @@ func TestBidOrder_Validate(t *testing.T) {
 		})
 	}
 }
-
-// TODO[1658]: Unit tests on the fulfillment stuff.
