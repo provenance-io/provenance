@@ -8,7 +8,7 @@ import (
 
 func NewEventOrderCreated(order *Order) *EventOrderCreated {
 	return &EventOrderCreated{
-		OrderId:   order.GetOrderId(),
+		OrderId:   order.GetOrderID(),
 		OrderType: order.GetOrderType(),
 	}
 }

@@ -77,7 +77,7 @@ func (k Keeper) parseOrderStoreValue(orderID uint64, value []byte) (*exchange.Or
 // createIndexEntries creates all the key/value index entries for an order.
 func createIndexEntries(order exchange.Order) []sdk.KVPair {
 	marketID := order.GetMarketID()
-	orderID := order.GetOrderId()
+	orderID := order.GetOrderID()
 	orderTypeByte := order.GetOrderTypeByte()
 	owner := order.GetOwner()
 	addr := sdk.MustAccAddressFromBech32(owner)
@@ -119,7 +119,7 @@ func (k Keeper) getOrderFromStore(store sdk.KVStore, orderID uint64) (*exchange.
 func (k Keeper) setOrderInStore(store sdk.KVStore, order exchange.Order) error {
 	key, value, err := k.getOrderStoreKeyValue(order)
 	if err != nil {
-		return fmt.Errorf("failed to create order %d store key/value: %w", order.GetOrderId(), err)
+		return fmt.Errorf("failed to create order %d store key/value: %w", order.GetOrderID(), err)
 	}
 	isUpdate := store.Has(key)
 	store.Set(key, value)

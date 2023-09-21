@@ -51,7 +51,7 @@ func TestOrderTypesAndBytes(t *testing.T) {
 	}
 
 	ot := func(name string) string {
-		return "GetOrderType" + name
+		return "OrderType" + name
 	}
 	otb := func(name string) string {
 		return "OrderTypeByte" + name
@@ -287,8 +287,8 @@ func TestOrder_IsAskOrder(t *testing.T) {
 			testFunc := func() {
 				actual = tc.order.IsAskOrder()
 			}
-			require.NotPanics(t, testFunc, "IsAskOrder")
-			assert.Equal(t, tc.exp, actual, "IsAskOrder result")
+			require.NotPanics(t, testFunc, "IsAskOrder()")
+			assert.Equal(t, tc.exp, actual, "IsAskOrder() result")
 		})
 	}
 }
@@ -327,92 +327,105 @@ func TestOrder_IsBidOrder(t *testing.T) {
 			testFunc := func() {
 				actual = tc.order.IsBidOrder()
 			}
-			require.NotPanics(t, testFunc, "IsBidOrder")
-			assert.Equal(t, tc.exp, actual, "IsBidOrder result")
+			require.NotPanics(t, testFunc, "IsBidOrder()")
+			assert.Equal(t, tc.exp, actual, "IsBidOrder() result")
 		})
 	}
 }
 
-func TestOrder_GetOrderType(t *testing.T) {
+func TestOrder_GetOrderID(t *testing.T) {
+	tests := []struct {
+		name  string
+		order Order
+		exp   uint64
+	}{
+		{name: "zero", order: Order{OrderId: 0}, exp: 0},
+		{name: "one", order: Order{OrderId: 1}, exp: 1},
+		{name: "twelve", order: Order{OrderId: 12}, exp: 12},
+		{name: "max uint32 + 1", order: Order{OrderId: 4_294_967_296}, exp: 4_294_967_296},
+		{name: "max uint64", order: Order{OrderId: 18_446_744_073_709_551_615}, exp: 18_446_744_073_709_551_615},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual uint64
+			testFunc := func() {
+				actual = tc.order.GetOrderID()
+			}
+			require.NotPanics(t, testFunc, "GetOrderID()")
+			assert.Equal(t, tc.exp, actual, "GetOrderID() result")
+		})
+	}
+}
+
+const (
+	nilSubTypeErr     = "unknown sub-order type <nil>: does not implement SubOrderI"
+	unknownSubTypeErr = "unknown sub-order type *exchange.unknownOrderType: does not implement SubOrderI"
+)
+
+func TestOrder_GetSubOrder(t *testing.T) {
+	askOrder := &AskOrder{
+		MarketId:                1,
+		Seller:                  sdk.AccAddress("Seller______________").String(),
+		Assets:                  sdk.NewCoins(sdk.NewInt64Coin("assetcoin", 3)),
+		Price:                   sdk.NewInt64Coin("paycoin", 8),
+		SellerSettlementFlatFee: &sdk.Coin{Denom: "feecoin", Amount: sdkmath.NewInt(1)},
+		AllowPartial:            false,
+	}
+	bidOrder := &BidOrder{
+		MarketId:            1,
+		Buyer:               sdk.AccAddress("Buyer_______________").String(),
+		Assets:              sdk.NewCoins(sdk.NewInt64Coin("assetcoin", 33)),
+		Price:               sdk.NewInt64Coin("paycoin", 88),
+		BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("feecoin", 11)),
+		AllowPartial:        true,
+	}
+
 	tests := []struct {
 		name     string
 		order    *Order
-		expected string
-		expPanic string
+		expected SubOrderI
+		expErr   string
 	}{
 		{
 			name:     "AskOrder",
-			order:    NewOrder(1).WithAsk(&AskOrder{}),
-			expected: OrderTypeAsk,
+			order:    NewOrder(1).WithAsk(askOrder),
+			expected: askOrder,
 		},
 		{
 			name:     "BidOrder",
-			order:    NewOrder(2).WithBid(&BidOrder{}),
-			expected: OrderTypeBid,
+			order:    NewOrder(2).WithBid(bidOrder),
+			expected: bidOrder,
 		},
 		{
-			name:     "nil inside order",
-			order:    NewOrder(3),
-			expPanic: "GetOrderType() missing case for <nil>",
+			name:   "nil sub-order",
+			order:  NewOrder(3),
+			expErr: nilSubTypeErr,
 		},
 		{
-			name:     "unknown order type",
-			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: "GetOrderType() missing case for *exchange.unknownOrderType",
+			name:   "unknown order type",
+			order:  &Order{OrderId: 4, Order: &unknownOrderType{}},
+			expErr: unknownSubTypeErr,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var actual string
-			testFunc := func() {
-				actual = tc.order.GetOrderType()
+			var getActual SubOrderI
+			var err error
+			testGetSubOrder := func() {
+				getActual, err = tc.order.GetSubOrder()
 			}
+			require.NotPanics(t, testGetSubOrder, "GetSubOrder()")
+			assertions.AssertErrorValue(t, err, tc.expErr, "GetSubOrder() error")
+			assert.Equal(t, tc.expected, getActual, "GetSubOrder() result")
 
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderType")
-			assert.Equal(t, tc.expected, actual, "GetOrderType result")
-		})
-	}
-}
-
-func TestOrder_GetOrderTypeByte(t *testing.T) {
-	tests := []struct {
-		name     string
-		order    *Order
-		expected byte
-		expPanic string
-	}{
-		{
-			name:     "AskOrder",
-			order:    NewOrder(1).WithAsk(&AskOrder{}),
-			expected: OrderTypeByteAsk,
-		},
-		{
-			name:     "BidOrder",
-			order:    NewOrder(2).WithBid(&BidOrder{}),
-			expected: OrderTypeByteBid,
-		},
-		{
-			name:     "nil inside order",
-			order:    NewOrder(3),
-			expPanic: "GetOrderTypeByte() missing case for <nil>",
-		},
-		{
-			name:     "unknown order type",
-			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: "GetOrderTypeByte() missing case for *exchange.unknownOrderType",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var actual byte
-			testFunc := func() {
-				actual = tc.order.GetOrderTypeByte()
+			var mustActual SubOrderI
+			testMustGetSubOrder := func() {
+				mustActual = tc.order.MustGetSubOrder()
 			}
-
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderTypeByte")
-			assert.Equal(t, tc.expected, actual, "GetOrderTypeByte result")
+			assertions.RequirePanicEquals(t, testMustGetSubOrder, tc.expErr, "MustGetSubOrder()")
+			assert.Equal(t, tc.expected, mustActual, "MustGetSubOrder() result")
 		})
 	}
 }
@@ -437,12 +450,12 @@ func TestOrder_GetMarketID(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: "GetMarketID() missing case for <nil>",
+			expPanic: nilSubTypeErr,
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: "GetMarketID() missing case for *exchange.unknownOrderType",
+			expPanic: unknownSubTypeErr,
 		},
 	}
 
@@ -452,9 +465,8 @@ func TestOrder_GetMarketID(t *testing.T) {
 			testFunc := func() {
 				actual = tc.order.GetMarketID()
 			}
-
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetMarketID")
-			assert.Equal(t, tc.expected, actual, "GetMarketID result")
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetMarketID()")
+			assert.Equal(t, tc.expected, actual, "GetMarketID() result")
 		})
 	}
 }
@@ -479,12 +491,12 @@ func TestOrder_GetOwner(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: "GetOwner() missing case for <nil>",
+			expPanic: nilSubTypeErr,
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: "GetOwner() missing case for *exchange.unknownOrderType",
+			expPanic: unknownSubTypeErr,
 		},
 	}
 
@@ -494,8 +506,8 @@ func TestOrder_GetOwner(t *testing.T) {
 			testFunc := func() {
 				owner = tc.order.GetOwner()
 			}
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOwner")
-			assert.Equal(t, tc.expected, owner, "GetOwner result")
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOwner()")
+			assert.Equal(t, tc.expected, owner, "GetOwner() result")
 		})
 	}
 }
@@ -520,12 +532,12 @@ func TestOrder_GetAssets(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: "GetAssets() missing case for <nil>",
+			expPanic: nilSubTypeErr,
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: "GetAssets() missing case for *exchange.unknownOrderType",
+			expPanic: unknownSubTypeErr,
 		},
 	}
 
@@ -535,8 +547,8 @@ func TestOrder_GetAssets(t *testing.T) {
 			testFunc := func() {
 				assets = tc.order.GetAssets()
 			}
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetAssets")
-			assert.Equal(t, tc.expected.String(), assets.String(), "GetAssets result")
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetAssets()")
+			assert.Equal(t, tc.expected.String(), assets.String(), "GetAssets() result")
 		})
 	}
 }
@@ -561,12 +573,12 @@ func TestOrder_GetPrice(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: "GetPrice() missing case for <nil>",
+			expPanic: nilSubTypeErr,
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: "GetPrice() missing case for *exchange.unknownOrderType",
+			expPanic: unknownSubTypeErr,
 		},
 	}
 
@@ -576,8 +588,172 @@ func TestOrder_GetPrice(t *testing.T) {
 			testFunc := func() {
 				price = tc.order.GetPrice()
 			}
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetPrice")
-			assert.Equal(t, tc.expected.String(), price.String(), "GetPrice result")
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetPrice()")
+			assert.Equal(t, tc.expected.String(), price.String(), "GetPrice() result")
+		})
+	}
+}
+
+func TestOrder_GetSettlementFees(t *testing.T) {
+	tests := []struct {
+		name     string
+		order    *Order
+		expected sdk.Coins
+		expPanic string
+	}{
+		{
+			name:     "AskOrder",
+			order:    NewOrder(1).WithAsk(&AskOrder{SellerSettlementFlatFee: &sdk.Coin{Denom: "askcoin", Amount: sdkmath.NewInt(3)}}),
+			expected: sdk.NewCoins(sdk.NewInt64Coin("askcoin", 3)),
+		},
+		{
+			name:     "BidOrder",
+			order:    NewOrder(2).WithBid(&BidOrder{BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("bidcoin", 15))}),
+			expected: sdk.NewCoins(sdk.NewInt64Coin("bidcoin", 15)),
+		},
+		{
+			name:     "nil inside order",
+			order:    NewOrder(3),
+			expPanic: nilSubTypeErr,
+		},
+		{
+			name:     "unknown order type",
+			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			expPanic: unknownSubTypeErr,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual sdk.Coins
+			testFunc := func() {
+				actual = tc.order.GetSettlementFees()
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetSettlementFees()")
+			assert.Equal(t, tc.expected.String(), actual.String(), "GetSettlementFees() result")
+		})
+	}
+}
+
+func TestOrder_PartialFillAllowed(t *testing.T) {
+	tests := []struct {
+		name     string
+		order    *Order
+		expected bool
+		expPanic string
+	}{
+		{
+			name:     "AskOrder",
+			order:    NewOrder(1).WithAsk(&AskOrder{AllowPartial: true}),
+			expected: true,
+		},
+		{
+			name:     "BidOrder",
+			order:    NewOrder(2).WithBid(&BidOrder{AllowPartial: true}),
+			expected: true,
+		},
+		{
+			name:     "nil inside order",
+			order:    NewOrder(3),
+			expPanic: nilSubTypeErr,
+		},
+		{
+			name:     "unknown order type",
+			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			expPanic: unknownSubTypeErr,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = tc.order.PartialFillAllowed()
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "PartialFillAllowed()")
+			assert.Equal(t, tc.expected, actual, "PartialFillAllowed() result")
+		})
+	}
+}
+
+func TestOrder_GetOrderType(t *testing.T) {
+	tests := []struct {
+		name     string
+		order    *Order
+		expected string
+		expPanic string
+	}{
+		{
+			name:     "AskOrder",
+			order:    NewOrder(1).WithAsk(&AskOrder{}),
+			expected: OrderTypeAsk,
+		},
+		{
+			name:     "BidOrder",
+			order:    NewOrder(2).WithBid(&BidOrder{}),
+			expected: OrderTypeBid,
+		},
+		{
+			name:     "nil inside order",
+			order:    NewOrder(3),
+			expPanic: nilSubTypeErr,
+		},
+		{
+			name:     "unknown order type",
+			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			expPanic: unknownSubTypeErr,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual string
+			testFunc := func() {
+				actual = tc.order.GetOrderType()
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderType()")
+			assert.Equal(t, tc.expected, actual, "GetOrderType() result")
+		})
+	}
+}
+
+func TestOrder_GetOrderTypeByte(t *testing.T) {
+	tests := []struct {
+		name     string
+		order    *Order
+		expected byte
+		expPanic string
+	}{
+		{
+			name:     "AskOrder",
+			order:    NewOrder(1).WithAsk(&AskOrder{}),
+			expected: OrderTypeByteAsk,
+		},
+		{
+			name:     "BidOrder",
+			order:    NewOrder(2).WithBid(&BidOrder{}),
+			expected: OrderTypeByteBid,
+		},
+		{
+			name:     "nil inside order",
+			order:    NewOrder(3),
+			expPanic: nilSubTypeErr,
+		},
+		{
+			name:     "unknown order type",
+			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			expPanic: unknownSubTypeErr,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual byte
+			testFunc := func() {
+				actual = tc.order.GetOrderTypeByte()
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderTypeByte()")
+			assert.Equal(t, tc.expected, actual, "GetOrderTypeByte() result")
 		})
 	}
 }
@@ -612,12 +788,12 @@ func TestOrder_GetHoldAmount(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: "GetHoldAmount() missing case for <nil>",
+			expPanic: nilSubTypeErr,
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: "GetHoldAmount() missing case for *exchange.unknownOrderType",
+			expPanic: unknownSubTypeErr,
 		},
 	}
 
@@ -627,8 +803,8 @@ func TestOrder_GetHoldAmount(t *testing.T) {
 			testFunc := func() {
 				actual = tc.order.GetHoldAmount()
 			}
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetHoldAmount")
-			assert.Equal(t, tc.expected.String(), actual.String(), "GetHoldAmount result")
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetHoldAmount()")
+			assert.Equal(t, tc.expected.String(), actual.String(), "GetHoldAmount() result")
 		})
 	}
 }
@@ -648,9 +824,14 @@ func TestOrder_Validate(t *testing.T) {
 			exp:   []string{"invalid order id: must not be zero"},
 		},
 		{
-			name:  "unknown order type",
+			name:  "nil sub-order",
+			Order: NewOrder(1),
+			exp:   []string{nilSubTypeErr},
+		},
+		{
+			name:  "unknown sub-order type",
 			Order: &Order{OrderId: 1, Order: &unknownOrderType{}},
-			exp:   []string{"unknown order type *exchange.unknownOrderType"},
+			exp:   []string{unknownSubTypeErr},
 		},
 		{
 			name:  "ask order error",
@@ -667,10 +848,205 @@ func TestOrder_Validate(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.Order.Validate()
-
 			assertions.AssertErrorContents(t, err, tc.exp, "Validate() error")
 		})
 	}
+}
+
+func TestAskOrder_GetMarketID(t *testing.T) {
+	tests := []struct {
+		name  string
+		order AskOrder
+		exp   uint32
+	}{
+		{name: "zero", order: AskOrder{MarketId: 0}, exp: 0},
+		{name: "one", order: AskOrder{MarketId: 1}, exp: 1},
+		{name: "five", order: AskOrder{MarketId: 5}, exp: 5},
+		{name: "twenty-four", order: AskOrder{MarketId: 24}, exp: 24},
+		{name: "max uint16+1", order: AskOrder{MarketId: 65_536}, exp: 65_536},
+		{name: "max uint32", order: AskOrder{MarketId: 4_294_967_295}, exp: 4_294_967_295},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual uint32
+			testFunc := func() {
+				actual = tc.order.GetMarketID()
+			}
+			require.NotPanics(t, testFunc, "GetMarketID()")
+			assert.Equal(t, tc.exp, actual, "GetMarketID() result")
+		})
+	}
+}
+
+func TestAskOrder_GetOwner(t *testing.T) {
+	acc20 := sdk.AccAddress("seller______________").String()
+	acc32 := sdk.AccAddress("__seller__seller__seller__seller").String()
+
+	tests := []struct {
+		name  string
+		order AskOrder
+		exp   string
+	}{
+		{name: "empty", order: AskOrder{Seller: ""}, exp: ""},
+		{name: "not a bech32", order: AskOrder{Seller: "nopenopenope"}, exp: "nopenopenope"},
+		{name: "20-byte bech32", order: AskOrder{Seller: acc20}, exp: acc20},
+		{name: "32-byte bech32", order: AskOrder{Seller: acc32}, exp: acc32},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual string
+			testFunc := func() {
+				actual = tc.order.GetOwner()
+			}
+			require.NotPanics(t, testFunc, "GetOwner()")
+			assert.Equal(t, tc.exp, actual, "GetOwner() result")
+		})
+	}
+}
+
+func TestAskOrder_GetAssets(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+
+	tests := []struct {
+		name  string
+		order AskOrder
+		exp   sdk.Coins
+	}{
+		{name: "nil", order: AskOrder{Assets: nil}, exp: nil},
+		{name: "empty", order: AskOrder{Assets: sdk.Coins{}}, exp: sdk.Coins{}},
+		{name: "one denom", order: AskOrder{Assets: sdk.NewCoins(coin(3, "the"))}, exp: sdk.NewCoins(coin(3, "the"))},
+		{
+			name:  "three denoms",
+			order: AskOrder{Assets: sdk.NewCoins(coin(1, "one"), coin(2, "two"), coin(3, "three"))},
+			exp:   sdk.NewCoins(coin(1, "one"), coin(2, "two"), coin(3, "three")),
+		},
+		{
+			name:  "a negative coin",
+			order: AskOrder{Assets: sdk.Coins{coin(-1, "neg")}},
+			exp:   sdk.Coins{coin(-1, "neg")},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual sdk.Coins
+			testFunc := func() {
+				actual = tc.order.GetAssets()
+			}
+			require.NotPanics(t, testFunc, "GetAssets()")
+			assert.Equal(t, tc.exp.String(), actual.String(), "GetAssets() result")
+		})
+	}
+}
+
+func TestAskOrder_GetPrice(t *testing.T) {
+	largeAmt, ok := sdkmath.NewIntFromString("25000000000000000000000")
+	require.Truef(t, ok, "NewIntFromString(\"25000000000000000000000\")")
+	largeCoin := sdk.NewCoin("large", largeAmt)
+	negCoin := sdk.Coin{Denom: "neg", Amount: sdkmath.NewInt(-88)}
+
+	tests := []struct {
+		name  string
+		order AskOrder
+		exp   sdk.Coin
+	}{
+		{name: "one", order: AskOrder{Price: sdk.NewInt64Coin("one", 1)}, exp: sdk.NewInt64Coin("one", 1)},
+		{name: "zero", order: AskOrder{Price: sdk.NewInt64Coin("zero", 0)}, exp: sdk.NewInt64Coin("zero", 0)},
+		{name: "negative", order: AskOrder{Price: negCoin}, exp: negCoin},
+		{name: "large amount", order: AskOrder{Price: largeCoin}, exp: largeCoin},
+		{name: "zero-value", order: AskOrder{Price: sdk.Coin{}}, exp: sdk.Coin{}},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual sdk.Coin
+			testFunc := func() {
+				actual = tc.order.GetPrice()
+			}
+			require.NotPanics(t, testFunc, "GetPrice()")
+			assert.Equal(t, tc.exp.String(), actual.String(), "GetPrice() result")
+		})
+	}
+}
+
+func TestAskOrder_GetSettlementFees(t *testing.T) {
+	coin := func(amount int64, denom string) *sdk.Coin {
+		return &sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	largeAmt, ok := sdkmath.NewIntFromString("25000000000000000000000")
+	require.Truef(t, ok, "NewIntFromString(\"25000000000000000000000\")")
+	largeCoin := sdk.NewCoin("large", largeAmt)
+
+	tests := []struct {
+		name  string
+		order AskOrder
+		exp   sdk.Coins
+	}{
+		{name: "nil", order: AskOrder{SellerSettlementFlatFee: nil}, exp: nil},
+		{name: "zero amount", order: AskOrder{SellerSettlementFlatFee: coin(0, "zero")}, exp: sdk.Coins{*coin(0, "zero")}},
+		{name: "one amount", order: AskOrder{SellerSettlementFlatFee: coin(1, "one")}, exp: sdk.Coins{*coin(1, "one")}},
+		{name: "negative amount", order: AskOrder{SellerSettlementFlatFee: coin(-51, "neg")}, exp: sdk.Coins{*coin(-51, "neg")}},
+		{name: "large amount", order: AskOrder{SellerSettlementFlatFee: &largeCoin}, exp: sdk.Coins{largeCoin}},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual sdk.Coins
+			testFunc := func() {
+				actual = tc.order.GetSettlementFees()
+			}
+			require.NotPanics(t, testFunc, "GetSettlementFees()")
+			assert.Equal(t, tc.exp.String(), actual.String(), "GetSettlementFees() result")
+		})
+	}
+}
+
+func TestAskOrder_PartialFillAllowed(t *testing.T) {
+	tests := []struct {
+		name  string
+		order AskOrder
+		exp   bool
+	}{
+		{name: "false", order: AskOrder{AllowPartial: false}, exp: false},
+		{name: "true", order: AskOrder{AllowPartial: true}, exp: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = tc.order.PartialFillAllowed()
+			}
+			require.NotPanics(t, testFunc, "PartialFillAllowed()")
+			assert.Equal(t, tc.exp, actual, "PartialFillAllowed() result")
+		})
+	}
+}
+
+func TestAskOrder_GetOrderType(t *testing.T) {
+	expected := OrderTypeAsk
+	order := AskOrder{}
+	var actual string
+	testFunc := func() {
+		actual = order.GetOrderType()
+	}
+	require.NotPanics(t, testFunc, "GetOrderType()")
+	assert.Equal(t, expected, actual, "GetOrderType() result")
+}
+
+func TestAskOrder_GetOrderTypeByte(t *testing.T) {
+	expected := OrderTypeByteAsk
+	order := AskOrder{}
+	var actual byte
+	testFunc := func() {
+		actual = order.GetOrderTypeByte()
+	}
+	require.NotPanics(t, testFunc, "GetOrderTypeByte()")
+	assert.Equal(t, expected, actual, "GetOrderTypeByte() result")
 }
 
 func TestAskOrder_GetHoldAmount(t *testing.T) {
@@ -970,10 +1346,214 @@ func TestAskOrder_Validate(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.order.Validate()
-
 			assertions.AssertErrorContents(t, err, tc.exp, "Validate() error")
 		})
 	}
+}
+
+func TestBidOrder_GetMarketID(t *testing.T) {
+	tests := []struct {
+		name  string
+		order BidOrder
+		exp   uint32
+	}{
+		{name: "zero", order: BidOrder{MarketId: 0}, exp: 0},
+		{name: "one", order: BidOrder{MarketId: 1}, exp: 1},
+		{name: "five", order: BidOrder{MarketId: 5}, exp: 5},
+		{name: "twenty-four", order: BidOrder{MarketId: 24}, exp: 24},
+		{name: "max uint16+1", order: BidOrder{MarketId: 65_536}, exp: 65_536},
+		{name: "max uint32", order: BidOrder{MarketId: 4_294_967_295}, exp: 4_294_967_295},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual uint32
+			testFunc := func() {
+				actual = tc.order.GetMarketID()
+			}
+			require.NotPanics(t, testFunc, "GetMarketID()")
+			assert.Equal(t, tc.exp, actual, "GetMarketID() result")
+		})
+	}
+}
+
+func TestBidOrder_GetOwner(t *testing.T) {
+	acc20 := sdk.AccAddress("buyer_______________").String()
+	acc32 := sdk.AccAddress("___buyer___buyer___buyer___buyer").String()
+
+	tests := []struct {
+		name  string
+		order BidOrder
+		exp   string
+	}{
+		{name: "empty", order: BidOrder{Buyer: ""}, exp: ""},
+		{name: "not a bech32", order: BidOrder{Buyer: "nopenopenope"}, exp: "nopenopenope"},
+		{name: "20-byte bech32", order: BidOrder{Buyer: acc20}, exp: acc20},
+		{name: "32-byte bech32", order: BidOrder{Buyer: acc32}, exp: acc32},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual string
+			testFunc := func() {
+				actual = tc.order.GetOwner()
+			}
+			require.NotPanics(t, testFunc, "GetOwner()")
+			assert.Equal(t, tc.exp, actual, "GetOwner() result")
+		})
+	}
+}
+
+func TestBidOrder_GetAssets(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+
+	tests := []struct {
+		name  string
+		order BidOrder
+		exp   sdk.Coins
+	}{
+		{name: "nil", order: BidOrder{Assets: nil}, exp: nil},
+		{name: "empty", order: BidOrder{Assets: sdk.Coins{}}, exp: sdk.Coins{}},
+		{name: "one denom", order: BidOrder{Assets: sdk.NewCoins(coin(3, "the"))}, exp: sdk.NewCoins(coin(3, "the"))},
+		{
+			name:  "three denoms",
+			order: BidOrder{Assets: sdk.NewCoins(coin(1, "one"), coin(2, "two"), coin(3, "three"))},
+			exp:   sdk.NewCoins(coin(1, "one"), coin(2, "two"), coin(3, "three")),
+		},
+		{
+			name:  "a negative coin",
+			order: BidOrder{Assets: sdk.Coins{coin(-1, "neg")}},
+			exp:   sdk.Coins{coin(-1, "neg")},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual sdk.Coins
+			testFunc := func() {
+				actual = tc.order.GetAssets()
+			}
+			require.NotPanics(t, testFunc, "GetAssets()")
+			assert.Equal(t, tc.exp.String(), actual.String(), "GetAssets() result")
+		})
+	}
+}
+
+func TestBidOrder_GetPrice(t *testing.T) {
+	largeAmt, ok := sdkmath.NewIntFromString("25000000000000000000000")
+	require.Truef(t, ok, "NewIntFromString(\"25000000000000000000000\")")
+	largeCoin := sdk.NewCoin("large", largeAmt)
+	negCoin := sdk.Coin{Denom: "neg", Amount: sdkmath.NewInt(-88)}
+
+	tests := []struct {
+		name  string
+		order BidOrder
+		exp   sdk.Coin
+	}{
+		{name: "one", order: BidOrder{Price: sdk.NewInt64Coin("one", 1)}, exp: sdk.NewInt64Coin("one", 1)},
+		{name: "zero", order: BidOrder{Price: sdk.NewInt64Coin("zero", 0)}, exp: sdk.NewInt64Coin("zero", 0)},
+		{name: "negative", order: BidOrder{Price: negCoin}, exp: negCoin},
+		{name: "large amount", order: BidOrder{Price: largeCoin}, exp: largeCoin},
+		{name: "zero-value", order: BidOrder{Price: sdk.Coin{}}, exp: sdk.Coin{}},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual sdk.Coin
+			testFunc := func() {
+				actual = tc.order.GetPrice()
+			}
+			require.NotPanics(t, testFunc, "GetPrice()")
+			assert.Equal(t, tc.exp.String(), actual.String(), "GetPrice() result")
+		})
+	}
+}
+
+func TestBidOrder_GetSettlementFees(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	largeAmt, ok := sdkmath.NewIntFromString("25000000000000000000000")
+	require.Truef(t, ok, "NewIntFromString(\"25000000000000000000000\")")
+	largeCoin := sdk.NewCoin("large", largeAmt)
+
+	tests := []struct {
+		name  string
+		order BidOrder
+		exp   sdk.Coins
+	}{
+		{name: "nil", order: BidOrder{BuyerSettlementFees: nil}, exp: nil},
+		{name: "empty", order: BidOrder{BuyerSettlementFees: sdk.Coins{}}, exp: sdk.Coins{}},
+		{name: "zero amount", order: BidOrder{BuyerSettlementFees: sdk.Coins{coin(0, "zero")}}, exp: sdk.Coins{coin(0, "zero")}},
+		{name: "one amount", order: BidOrder{BuyerSettlementFees: sdk.Coins{coin(1, "one")}}, exp: sdk.Coins{coin(1, "one")}},
+		{name: "negative amount", order: BidOrder{BuyerSettlementFees: sdk.Coins{coin(-51, "neg")}}, exp: sdk.Coins{coin(-51, "neg")}},
+		{name: "large amount", order: BidOrder{BuyerSettlementFees: sdk.Coins{largeCoin}}, exp: sdk.Coins{largeCoin}},
+		{
+			name: "multiple coins",
+			order: BidOrder{
+				BuyerSettlementFees: sdk.Coins{largeCoin, coin(1, "one"), coin(0, "zero")},
+			},
+			exp: sdk.Coins{largeCoin, coin(1, "one"), coin(0, "zero")},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual sdk.Coins
+			testFunc := func() {
+				actual = tc.order.GetSettlementFees()
+			}
+			require.NotPanics(t, testFunc, "GetSettlementFees()")
+			assert.Equal(t, tc.exp.String(), actual.String(), "GetSettlementFees() result")
+		})
+	}
+}
+
+func TestBidOrder_PartialFillAllowed(t *testing.T) {
+	tests := []struct {
+		name  string
+		order BidOrder
+		exp   bool
+	}{
+		{name: "false", order: BidOrder{AllowPartial: false}, exp: false},
+		{name: "true", order: BidOrder{AllowPartial: true}, exp: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = tc.order.PartialFillAllowed()
+			}
+			require.NotPanics(t, testFunc, "PartialFillAllowed()")
+			assert.Equal(t, tc.exp, actual, "PartialFillAllowed() result")
+		})
+	}
+}
+
+func TestBidOrder_GetOrderType(t *testing.T) {
+	expected := OrderTypeBid
+	order := BidOrder{}
+	var actual string
+	testFunc := func() {
+		actual = order.GetOrderType()
+	}
+	require.NotPanics(t, testFunc, "GetOrderType()")
+	assert.Equal(t, expected, actual, "GetOrderType() result")
+
+}
+
+func TestBidOrder_GetOrderTypeByte(t *testing.T) {
+	expected := OrderTypeByteBid
+	order := BidOrder{}
+	var actual byte
+	testFunc := func() {
+		actual = order.GetOrderTypeByte()
+	}
+	require.NotPanics(t, testFunc, "GetOrderTypeByte()")
+	assert.Equal(t, expected, actual, "GetOrderTypeByte() result")
 }
 
 func TestBidOrder_GetHoldAmount(t *testing.T) {
@@ -1270,7 +1850,6 @@ func TestBidOrder_Validate(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.order.Validate()
-
 			assertions.AssertErrorContents(t, err, tc.exp, "Validate() error")
 		})
 	}

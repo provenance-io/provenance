@@ -17,6 +17,37 @@ const (
 	OrderTypeByteBid = byte(0x01)
 )
 
+// SubOrderI is an interface with getters for the fields in a sub-order (i.e. AskOrder or BidOrder).
+type SubOrderI interface {
+	GetMarketID() uint32
+	GetOwner() string
+	GetAssets() sdk.Coins
+	GetPrice() sdk.Coin
+	GetSettlementFees() sdk.Coins
+	PartialFillAllowed() bool
+	GetOrderType() string
+	GetOrderTypeByte() byte
+	GetHoldAmount() sdk.Coins
+	Validate() error
+}
+
+var (
+	_ SubOrderI = (*AskOrder)(nil)
+	_ SubOrderI = (*BidOrder)(nil)
+)
+
+// OrderI is an interface with getters for all the fields associated with an order and it's sub-order.
+type OrderI interface {
+	SubOrderI
+	GetOrderID() uint64
+	IsAskOrder() bool
+	IsBidOrder() bool
+}
+
+var (
+	_ OrderI = (*Order)(nil)
+)
+
 // findDuplicateIds returns all order ids that appear two or more times in the provided slice.
 func findDuplicateIds(orderIDs []uint64) []uint64 {
 	var rv []uint64
@@ -76,108 +107,88 @@ func (o Order) IsBidOrder() bool {
 	return o.GetBidOrder() != nil
 }
 
-// GetOrderType returns a string indicating what type this order is.
-// See: OrderTypeAsk, OrderTypeBid
-// Panics if the order details are not set or are something unexpected.
-func (o Order) GetOrderType() string {
+// GetOrderID gets the numerical identifier for this order.
+func (o Order) GetOrderID() uint64 {
+	return o.OrderId
+}
+
+// GetSubOrder gets this order's sub-order as a SubOrderI.
+func (o Order) GetSubOrder() (SubOrderI, error) {
 	switch v := o.GetOrder().(type) {
 	case *Order_AskOrder:
-		return OrderTypeAsk
+		return v.AskOrder, nil
 	case *Order_BidOrder:
-		return OrderTypeBid
+		return v.BidOrder, nil
 	default:
-		// If GetOrderType() is called without the order being set yet, it's a programming error, so panic.
-		// If it's a type without a case, the case needs to be added, so panic.
-		panic(fmt.Sprintf("GetOrderType() missing case for %T", v))
+		// If this is called without the sub-order being set yet, it's a programming error, so panic.
+		// If it's a type that doesn't implement SubOrderI, that needs to be done, so panic.
+		return nil, fmt.Errorf("unknown sub-order type %T: does not implement SubOrderI", v)
 	}
 }
 
-// GetOrderTypeByte returns the type byte for this order.
-// See: OrderTypeByteAsk, OrderTypeByteBid
-// Panics if the order details are not set or are something unexpected.
-func (o Order) GetOrderTypeByte() byte {
-	switch v := o.GetOrder().(type) {
-	case *Order_AskOrder:
-		return OrderTypeByteAsk
-	case *Order_BidOrder:
-		return OrderTypeByteBid
-	default:
-		// If GetOrderTypeByte() is called without the order being set yet, it's a programming error, so panic.
-		// If it's a type without a case, the case needs to be added, so panic.
-		panic(fmt.Sprintf("GetOrderTypeByte() missing case for %T", v))
+// MustGetSubOrder gets this order's sub-order as a SubOrderI.
+// Panics if the sub-order is not set or is something unexpected.
+func (o Order) MustGetSubOrder() SubOrderI {
+	rv, err := o.GetSubOrder()
+	if err != nil {
+		panic(err)
 	}
+	return rv
 }
 
 // GetMarketID returns the market id for this order.
-// Panics if the order details are not set or are something unexpected.
+// Panics if the sub-order is not set or is something unexpected.
 func (o Order) GetMarketID() uint32 {
-	switch v := o.GetOrder().(type) {
-	case *Order_AskOrder:
-		return v.AskOrder.MarketId
-	case *Order_BidOrder:
-		return v.BidOrder.MarketId
-	default:
-		// If GetMarketID() is called without the order being set yet, it's a programming error, so panic.
-		// If it's a type without a case, the case needs to be added, so panic.
-		panic(fmt.Sprintf("GetMarketID() missing case for %T", v))
-	}
+	return o.MustGetSubOrder().GetMarketID()
 }
 
-// GetOwner gets the address of the owner of this order.
+// GetOwner returns the owner of this order.
 // E.g. the seller for ask orders, or buyer for bid orders.
+// Panics if the sub-order is not set or is something unexpected.
 func (o Order) GetOwner() string {
-	switch v := o.GetOrder().(type) {
-	case *Order_AskOrder:
-		return v.AskOrder.Seller
-	case *Order_BidOrder:
-		return v.BidOrder.Buyer
-	default:
-		// If GetOwner() is called without the order being set yet, it's a programming error, so panic.
-		// If it's a type without a case, the case needs to be added, so panic.
-		panic(fmt.Sprintf("GetOwner() missing case for %T", v))
-	}
+	return o.MustGetSubOrder().GetOwner()
 }
 
-// GetAssets gets the assets in this order.
+// GetAssets returns the assets for this order.
+// Panics if the sub-order is not set or is something unexpected.
 func (o Order) GetAssets() sdk.Coins {
-	switch v := o.GetOrder().(type) {
-	case *Order_AskOrder:
-		return v.AskOrder.Assets
-	case *Order_BidOrder:
-		return v.BidOrder.Assets
-	default:
-		// If GetAssets() is called without the order being set yet, it's a programming error, so panic.
-		// If it's a type without a case, the case needs to be added, so panic.
-		panic(fmt.Sprintf("GetAssets() missing case for %T", v))
-	}
+	return o.MustGetSubOrder().GetAssets()
 }
 
-// GetPrice gets the price in this order.
+// GetPrice returns the price for this order.
+// Panics if the sub-order is not set or is something unexpected.
 func (o Order) GetPrice() sdk.Coin {
-	switch v := o.GetOrder().(type) {
-	case *Order_AskOrder:
-		return v.AskOrder.Price
-	case *Order_BidOrder:
-		return v.BidOrder.Price
-	default:
-		// If GetPrice() is called without the order being set yet, it's a programming error, so panic.
-		// If it's a type without a case, the case needs to be added, so panic.
-		panic(fmt.Sprintf("GetPrice() missing case for %T", v))
-	}
+	return o.MustGetSubOrder().GetPrice()
 }
 
-// GetHoldAmount returns the total amount that should be on hold for this order.
+// GetSettlementFees returns the settlement fees in this order.
+func (o Order) GetSettlementFees() sdk.Coins {
+	return o.MustGetSubOrder().GetSettlementFees()
+}
+
+// PartialFillAllowed returns true if this order allows partial fulfillment.
+func (o Order) PartialFillAllowed() bool {
+	return o.MustGetSubOrder().PartialFillAllowed()
+}
+
+// GetOrderType returns a string indicating what type this order is.
+// E.g: OrderTypeAsk or OrderTypeBid
+// Panics if the sub-order is not set or is something unexpected.
+func (o Order) GetOrderType() string {
+	return o.MustGetSubOrder().GetOrderType()
+}
+
+// GetOrderTypeByte returns the type byte for this order.
+// E.g: OrderTypeByteAsk or OrderTypeByteBid
+// Panics if the sub-order is not set or is something unexpected.
+func (o Order) GetOrderTypeByte() byte {
+	return o.MustGetSubOrder().GetOrderTypeByte()
+}
+
+// GetHoldAmount returns the amount that should be on hold for this order.
+// Panics if the sub-order is not set or is something unexpected.
 func (o Order) GetHoldAmount() sdk.Coins {
-	switch v := o.GetOrder().(type) {
-	case *Order_AskOrder:
-		return v.AskOrder.GetHoldAmount()
-	case *Order_BidOrder:
-		return v.BidOrder.GetHoldAmount()
-	default:
-		// If HoldSettlementFee() is called without the order being set yet, it's a programming error, so panic.
-		// If it's a type without a case, the case needs to be added, so panic.
-		panic(fmt.Sprintf("GetHoldAmount() missing case for %T", v))
-	}
+	return o.MustGetSubOrder().GetHoldAmount()
 }
 
 // Validate returns an error if anything in this order is invalid.
@@ -185,17 +196,57 @@ func (o Order) Validate() error {
 	if o.OrderId == 0 {
 		return errors.New("invalid order id: must not be zero")
 	}
-	switch v := o.GetOrder().(type) {
-	case *Order_AskOrder:
-		return v.AskOrder.Validate()
-	case *Order_BidOrder:
-		return v.BidOrder.Validate()
-	default:
-		return fmt.Errorf("unknown order type %T", v)
+	so, err := o.GetSubOrder()
+	if err != nil {
+		return err
 	}
+	return so.Validate()
 }
 
-// GetHoldAmount gets the amount to put on hold for this ask order.
+// GetMarketID returns the market id for this ask order.
+func (a AskOrder) GetMarketID() uint32 {
+	return a.MarketId
+}
+
+// GetOwner returns the owner of this ask order: the seller.
+func (a AskOrder) GetOwner() string {
+	return a.Seller
+}
+
+// GetAssets returns the assets for sale with this ask order.
+func (a AskOrder) GetAssets() sdk.Coins {
+	return a.Assets
+}
+
+// GetPrice returns the minimum price to accept for this ask order.
+func (a AskOrder) GetPrice() sdk.Coin {
+	return a.Price
+}
+
+// GetSettlementFees returns the seller settlement flat fees in this ask order.
+func (a AskOrder) GetSettlementFees() sdk.Coins {
+	if a.SellerSettlementFlatFee == nil {
+		return nil
+	}
+	return sdk.Coins{*a.SellerSettlementFlatFee}
+}
+
+// PartialFillAllowed returns true if this ask order allows partial fulfillment.
+func (a AskOrder) PartialFillAllowed() bool {
+	return a.AllowPartial
+}
+
+// GetOrderType returns the order type string for this ask order: "ask".
+func (a AskOrder) GetOrderType() string {
+	return OrderTypeAsk
+}
+
+// GetOrderTypeByte returns the order type byte for this bid order: 0x00.
+func (a AskOrder) GetOrderTypeByte() byte {
+	return OrderTypeByteAsk
+}
+
+// GetHoldAmount returns the amount that should be on hold for this ask order.
 func (a AskOrder) GetHoldAmount() sdk.Coins {
 	rv := a.Assets
 	if a.SellerSettlementFlatFee != nil && a.SellerSettlementFlatFee.Denom != a.Price.Denom {
@@ -264,7 +315,47 @@ func (a AskOrder) Validate() error {
 	return errors.Join(errs...)
 }
 
-// GetHoldAmount gets the amount to put on hold for this ask order.
+// GetMarketID returns the market id for this bid order.
+func (b BidOrder) GetMarketID() uint32 {
+	return b.MarketId
+}
+
+// GetOwner returns the owner of this bid order: the buyer.
+func (b BidOrder) GetOwner() string {
+	return b.Buyer
+}
+
+// GetAssets returns the assets to buy for this bid order.
+func (b BidOrder) GetAssets() sdk.Coins {
+	return b.Assets
+}
+
+// GetPrice returns the price to pay for this bid order.
+func (b BidOrder) GetPrice() sdk.Coin {
+	return b.Price
+}
+
+// GetSettlementFees returns the buyer settlement fees in this bid order.
+func (b BidOrder) GetSettlementFees() sdk.Coins {
+	return b.BuyerSettlementFees
+}
+
+// PartialFillAllowed returns true if this bid order allows partial fulfillment.
+func (b BidOrder) PartialFillAllowed() bool {
+	return b.AllowPartial
+}
+
+// GetOrderType returns the order type string for this bid order: "bid".
+func (b BidOrder) GetOrderType() string {
+	return OrderTypeBid
+}
+
+// GetOrderTypeByte returns the order type byte for this bid order: 0x01.
+func (b BidOrder) GetOrderTypeByte() byte {
+	return OrderTypeByteBid
+}
+
+// GetHoldAmount returns the amount that should be on hold for this bid order.
 func (b BidOrder) GetHoldAmount() sdk.Coins {
 	return b.BuyerSettlementFees.Add(b.Price)
 }
