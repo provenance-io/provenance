@@ -173,9 +173,12 @@ func (o Order) PartialFillAllowed() bool {
 
 // GetOrderType returns a string indicating what type this order is.
 // E.g: OrderTypeAsk or OrderTypeBid
-// Panics if the sub-order is not set or is something unexpected.
 func (o Order) GetOrderType() string {
-	return o.MustGetSubOrder().GetOrderType()
+	so, err := o.GetSubOrder()
+	if err != nil {
+		return fmt.Sprintf("%T", o.Order)
+	}
+	return so.GetOrderType()
 }
 
 // GetOrderTypeByte returns the type byte for this order.

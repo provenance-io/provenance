@@ -681,7 +681,6 @@ func TestOrder_GetOrderType(t *testing.T) {
 		name     string
 		order    *Order
 		expected string
-		expPanic string
 	}{
 		{
 			name:     "AskOrder",
@@ -696,12 +695,12 @@ func TestOrder_GetOrderType(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: nilSubTypeErr,
+			expected: "<nil>",
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: unknownSubTypeErr,
+			expected: "*exchange.unknownOrderType",
 		},
 	}
 
@@ -711,7 +710,7 @@ func TestOrder_GetOrderType(t *testing.T) {
 			testFunc := func() {
 				actual = tc.order.GetOrderType()
 			}
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetOrderType()")
+			require.NotPanics(t, testFunc, "GetOrderType()")
 			assert.Equal(t, tc.expected, actual, "GetOrderType() result")
 		})
 	}
