@@ -12,6 +12,8 @@ import "gogoproto/gogo.proto";
 
 // Order associates an order id with one of the order types.
 message Order {
+  option (gogoproto.goproto_getters) = false;
+
   // order_id is the numerical identifier for this order.
   uint64 order_id = 1;
   // order is the specifics of this order.
@@ -25,6 +27,8 @@ message Order {
 
 // AskOrder represents someone's desire to sell something at a minimum price.
 message AskOrder {
+  option (gogoproto.goproto_getters) = false;
+
   // market_id identifies the market that this order belongs to.
   uint32 market_id = 1;
   // seller is the address of the account that owns this order and has the assets to sell.
@@ -48,6 +52,8 @@ message AskOrder {
 
 // BidOrder represents someone's desire to buy something at a specific price.
 message BidOrder {
+  option (gogoproto.goproto_getters) = false;
+
   // market_id identifies the market that this order belongs to.
   uint32 market_id = 1;
   // buyer is the address of the account that owns this order and has the price to spend.
