@@ -332,7 +332,11 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 	}
 
 	if !expectPartial && !exchange.CoinsEquals(totalAssetsForSale, totalAssetsToBuy) {
-		return fmt.Errorf("total assets for sale %q does not equal total assets to buy %q",
+		return fmt.Errorf("total assets for sale %q does not equal total assets to buy %q and partial settlement not expected",
+			totalAssetsForSale, totalAssetsToBuy)
+	}
+	if expectPartial && exchange.CoinsEquals(totalAssetsForSale, totalAssetsToBuy) {
+		return fmt.Errorf("total assets for sale %q equals total assets to buy %q but partial settlement is expected",
 			totalAssetsForSale, totalAssetsToBuy)
 	}
 
