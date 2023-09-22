@@ -33,11 +33,13 @@ func TestGenesisState_Validate(t *testing.T) {
 	}
 	bidOrder := func(orderID uint64, marketID uint32, assets string, price string) Order {
 		priceCoin, err := sdk.ParseCoinNormalized(price)
-		require.NoError(t, err, "sdk.ParseCoinNormalized(%q)", price)
+		require.NoError(t, err, "price sdk.ParseCoinNormalized(%q)", price)
+		assetsCoin, err := sdk.ParseCoinNormalized(assets)
+		require.NoError(t, err, "assets sdk.ParseCoinNormalized(%q)", assets)
 		return *NewOrder(orderID).WithBid(&BidOrder{
 			MarketId: marketID,
 			Buyer:    addr1,
-			Assets:   coins(assets),
+			Assets:   assetsCoin,
 			Price:    priceCoin,
 		})
 	}

@@ -555,7 +555,7 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 			assetOutputs = append(assetOutputs, banktypes.Output{Address: buyer})
 			priceInputs = append(priceInputs, banktypes.Input{Address: buyer})
 		}
-		assetOutputs[i].Coins = assetOutputs[i].Coins.Add(assets...)
+		assetOutputs[i].Coins = assetOutputs[i].Coins.Add(assets)
 		priceInputs[i].Coins = priceInputs[i].Coins.Add(price)
 
 		if !buyerSettlementFees.IsZero() {

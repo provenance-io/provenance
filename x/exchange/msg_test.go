@@ -222,7 +222,7 @@ func TestMsgCreateBidRequest_ValidateBasic(t *testing.T) {
 				BidOrder: BidOrder{
 					MarketId: 1,
 					Buyer:    sdk.AccAddress("buyer_______________").String(),
-					Assets:   sdk.NewCoins(sdk.NewInt64Coin("banana", 99)),
+					Assets:   sdk.NewInt64Coin("banana", 99),
 					Price:    sdk.NewInt64Coin("acorn", 12),
 				},
 				OrderCreationFee: &sdk.Coin{Denom: "cactus", Amount: sdkmath.NewInt(-3)},

@@ -330,7 +330,7 @@ func (b BidOrder) GetOwner() string {
 
 // GetAssets returns the assets to buy for this bid order.
 func (b BidOrder) GetAssets() sdk.Coins {
-	return b.Assets
+	return sdk.Coins{b.Assets}
 }
 
 // GetPrice returns the price to pay for this bid order.
@@ -393,18 +393,10 @@ func (b BidOrder) Validate() error {
 	// We also don't want to allow the price denom to also be in the assets.
 	if err := b.Assets.Validate(); err != nil {
 		errs = append(errs, fmt.Errorf("invalid assets: %w", err))
-	} else {
-		switch {
-		case len(b.Assets) == 0:
-			errs = append(errs, errors.New("invalid assets: must not be empty"))
-		case len(priceDenom) > 0:
-			for _, asset := range b.Assets {
-				if priceDenom == asset.Denom {
-					errs = append(errs, fmt.Errorf("invalid assets: cannot contain price denom %s", priceDenom))
-					break
-				}
-			}
-		}
+	} else if b.Assets.IsZero() {
+		errs = append(errs, errors.New("invalid assets: cannot be zero"))
+	} else if len(priceDenom) > 0 && b.Assets.Denom == priceDenom {
+		errs = append(errs, fmt.Errorf("invalid assets: price denom %s cannot also be the assets denom", priceDenom))
 	}
 
 	if len(b.BuyerSettlementFees) > 0 {

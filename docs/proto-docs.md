@@ -1766,7 +1766,7 @@ BidOrder represents someone's desire to buy something at a specific price.
 | ----- | ---- | ----- | ----------- |
 | `market_id` | [uint32](#uint32) |  | market_id identifies the market that this order belongs to. |
 | `buyer` | [string](#string) |  | buyer is the address of the account that owns this order and has the price to spend. |
-| `assets` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | assets are the things that the buyer wishes to buy. |
+| `assets` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | assets are the things that the buyer wishes to buy. |
 | `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the amount that the buyer will pay for the assets. A hold is placed on this until the order is filled or cancelled. |
 | `buyer_settlement_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | buyer_settlement_fees are the fees (both flat and proportional) that the buyer will pay (in addition to the price) when the order is settled. A hold is placed on this until the order is filled or cancelled. |
 | `allow_partial` | [bool](#bool) |  | allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the order must be either filled in full or not filled at all. |

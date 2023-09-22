@@ -59,8 +59,7 @@ message BidOrder {
   // buyer is the address of the account that owns this order and has the price to spend.
   string buyer = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // assets are the things that the buyer wishes to buy.
-  repeated cosmos.base.v1beta1.Coin assets = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
   // price is the amount that the buyer will pay for the assets.
   // A hold is placed on this until the order is filled or cancelled.
   cosmos.base.v1beta1.Coin price = 4 [(gogoproto.nullable) = false];

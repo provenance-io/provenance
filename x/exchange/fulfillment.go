@@ -418,15 +418,12 @@ func Fulfill(of1, of2 *OrderFulfillment) error {
 	// for consistent truncation and remainders. Once we've identified all the fulfillment relationships,
 	// we'll enumerate and redistribute those remainders.
 	priceAmt := bidOrder.Price.Amount
-	if !CoinsEquals(assets, bidOrder.Assets) {
-		if len(bidOrder.Assets) != 1 {
-			return fmt.Errorf("cannot split bid order %d having multiple assets %q", bidOrderID, bidOrder.Assets)
-		}
+	if !CoinsEquals(assets, bidOrder.GetAssets()) {
 		if len(assets) != 1 {
 			return fmt.Errorf("cannot split bid order %d having assets %q by %q: overfill",
 				bidOrderID, bidOrder.Assets, assets)
 		}
-		priceAmt = bidOrder.Price.Amount.Mul(assets[0].Amount).Quo(bidOrder.Assets[0].Amount)
+		priceAmt = bidOrder.Price.Amount.Mul(assets[0].Amount).Quo(bidOrder.Assets.Amount)
 	}
 
 	askErr := askOF.Apply(bidOF, assets, priceAmt)

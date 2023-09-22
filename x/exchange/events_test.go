@@ -40,12 +40,14 @@ func TestNewEventOrderCreated(t *testing.T) {
 		name     string
 		order    *Order
 		expected *EventOrderCreated
-		expPanic interface{}
 	}{
 		{
-			name:     "nil order",
-			order:    NewOrder(3),
-			expPanic: "GetOrderType() missing case for <nil>",
+			name:  "nil order",
+			order: NewOrder(3),
+			expected: &EventOrderCreated{
+				OrderId:   3,
+				OrderType: "<nil>",
+			},
 		},
 		{
 			name:  "order with ask",
@@ -71,14 +73,9 @@ func TestNewEventOrderCreated(t *testing.T) {
 			testFunc := func() {
 				actual = NewEventOrderCreated(tc.order)
 			}
-
-			if tc.expPanic != nil {
-				require.PanicsWithValue(t, tc.expPanic, testFunc, "NewEventOrderCreated")
-			} else {
-				require.NotPanics(t, testFunc, "NewEventOrderCreated")
-				assert.Equal(t, tc.expected, actual, "NewEventOrderCreated result")
-				assertEverythingSet(t, actual, "EventOrderCreated")
-			}
+			require.NotPanics(t, testFunc, "NewEventOrderCreated")
+			assert.Equal(t, tc.expected, actual, "NewEventOrderCreated result")
+			assertEverythingSet(t, actual, "EventOrderCreated")
 		})
 	}
 }
