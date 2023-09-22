@@ -80,7 +80,7 @@ func createIndexEntries(order exchange.Order) []sdk.KVPair {
 	addr := sdk.MustAccAddressFromBech32(owner)
 	assets := order.GetAssets()
 
-	rv := []sdk.KVPair{
+	return []sdk.KVPair{
 		{
 			Key:   MakeIndexKeyMarketToOrder(marketID, orderID),
 			Value: []byte{orderTypeByte},
@@ -89,16 +89,11 @@ func createIndexEntries(order exchange.Order) []sdk.KVPair {
 			Key:   MakeIndexKeyAddressToOrder(addr, orderID),
 			Value: []byte{orderTypeByte},
 		},
-	}
-
-	for _, asset := range assets {
-		rv = append(rv, sdk.KVPair{
-			Key:   MakeIndexKeyAssetToOrder(asset.Denom, orderTypeByte, orderID),
+		{
+			Key:   MakeIndexKeyAssetToOrder(assets.Denom, orderTypeByte, orderID),
 			Value: nil,
-		})
+		},
 	}
-
-	return rv
 }
 
 // getOrderFromStore looks up an order from the store. Returns nil, nil if the order does not exist.

@@ -165,7 +165,7 @@ func TestOrder_WithAsk(t *testing.T) {
 	origAsk := &AskOrder{
 		MarketId:                12,
 		Seller:                  "some seller",
-		Assets:                  sdk.NewCoins(sdk.NewInt64Coin("water", 8)),
+		Assets:                  sdk.NewInt64Coin("water", 8),
 		Price:                   sdk.NewInt64Coin("sand", 1),
 		SellerSettlementFlatFee: &sdk.Coin{Denom: "banana", Amount: sdkmath.NewInt(3)},
 		AllowPartial:            true,
@@ -173,7 +173,7 @@ func TestOrder_WithAsk(t *testing.T) {
 	ask := &AskOrder{
 		MarketId:                origAsk.MarketId,
 		Seller:                  origAsk.Seller,
-		Assets:                  copyCoins(origAsk.Assets),
+		Assets:                  copyCoin(origAsk.Assets),
 		Price:                   copyCoin(origAsk.Price),
 		SellerSettlementFlatFee: copyCoinP(origAsk.SellerSettlementFlatFee),
 		AllowPartial:            origAsk.AllowPartial,
@@ -367,7 +367,7 @@ func TestOrder_GetSubOrder(t *testing.T) {
 	askOrder := &AskOrder{
 		MarketId:                1,
 		Seller:                  sdk.AccAddress("Seller______________").String(),
-		Assets:                  sdk.NewCoins(sdk.NewInt64Coin("assetcoin", 3)),
+		Assets:                  sdk.NewInt64Coin("assetcoin", 3),
 		Price:                   sdk.NewInt64Coin("paycoin", 8),
 		SellerSettlementFlatFee: &sdk.Coin{Denom: "feecoin", Amount: sdkmath.NewInt(1)},
 		AllowPartial:            false,
@@ -516,18 +516,18 @@ func TestOrder_GetAssets(t *testing.T) {
 	tests := []struct {
 		name     string
 		order    *Order
-		expected sdk.Coins
+		expected sdk.Coin
 		expPanic string
 	}{
 		{
 			name:     "AskOrder",
-			order:    NewOrder(1).WithAsk(&AskOrder{Assets: sdk.NewCoins(sdk.NewInt64Coin("acorns", 85))}),
-			expected: sdk.NewCoins(sdk.NewInt64Coin("acorns", 85)),
+			order:    NewOrder(1).WithAsk(&AskOrder{Assets: sdk.NewInt64Coin("acorns", 85)}),
+			expected: sdk.NewInt64Coin("acorns", 85),
 		},
 		{
 			name:     "BidOrder",
 			order:    NewOrder(2).WithBid(&BidOrder{Assets: sdk.NewInt64Coin("boogers", 3)}),
-			expected: sdk.NewCoins(sdk.NewInt64Coin("boogers", 3)),
+			expected: sdk.NewInt64Coin("boogers", 3),
 		},
 		{
 			name:     "nil inside order",
@@ -543,7 +543,7 @@ func TestOrder_GetAssets(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var assets sdk.Coins
+			var assets sdk.Coin
 			testFunc := func() {
 				assets = tc.order.GetAssets()
 			}
@@ -767,7 +767,7 @@ func TestOrder_GetHoldAmount(t *testing.T) {
 		{
 			name: "AskOrder",
 			order: NewOrder(1).WithAsk(&AskOrder{
-				Assets:                  sdk.NewCoins(sdk.NewInt64Coin("acorns", 85)),
+				Assets:                  sdk.NewInt64Coin("acorns", 85),
 				SellerSettlementFlatFee: &sdk.Coin{Denom: "bananas", Amount: sdkmath.NewInt(12)},
 			}),
 			expected: sdk.NewCoins(sdk.NewInt64Coin("acorns", 85), sdk.NewInt64Coin("bananas", 12)),
@@ -906,33 +906,26 @@ func TestAskOrder_GetOwner(t *testing.T) {
 }
 
 func TestAskOrder_GetAssets(t *testing.T) {
-	coin := func(amount int64, denom string) sdk.Coin {
-		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
-	}
+	largeAmt, ok := sdkmath.NewIntFromString("25000000000000000000000")
+	require.Truef(t, ok, "NewIntFromString(\"25000000000000000000000\")")
+	largeCoin := sdk.NewCoin("large", largeAmt)
+	negCoin := sdk.Coin{Denom: "neg", Amount: sdkmath.NewInt(-88)}
 
 	tests := []struct {
 		name  string
 		order AskOrder
-		exp   sdk.Coins
+		exp   sdk.Coin
 	}{
-		{name: "nil", order: AskOrder{Assets: nil}, exp: nil},
-		{name: "empty", order: AskOrder{Assets: sdk.Coins{}}, exp: sdk.Coins{}},
-		{name: "one denom", order: AskOrder{Assets: sdk.NewCoins(coin(3, "the"))}, exp: sdk.NewCoins(coin(3, "the"))},
-		{
-			name:  "three denoms",
-			order: AskOrder{Assets: sdk.NewCoins(coin(1, "one"), coin(2, "two"), coin(3, "three"))},
-			exp:   sdk.NewCoins(coin(1, "one"), coin(2, "two"), coin(3, "three")),
-		},
-		{
-			name:  "a negative coin",
-			order: AskOrder{Assets: sdk.Coins{coin(-1, "neg")}},
-			exp:   sdk.Coins{coin(-1, "neg")},
-		},
+		{name: "one", order: AskOrder{Assets: sdk.NewInt64Coin("one", 1)}, exp: sdk.NewInt64Coin("one", 1)},
+		{name: "zero", order: AskOrder{Assets: sdk.NewInt64Coin("zero", 0)}, exp: sdk.NewInt64Coin("zero", 0)},
+		{name: "negative", order: AskOrder{Assets: negCoin}, exp: negCoin},
+		{name: "large amount", order: AskOrder{Assets: largeCoin}, exp: largeCoin},
+		{name: "zero-value", order: AskOrder{Assets: sdk.Coin{}}, exp: sdk.Coin{}},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var actual sdk.Coins
+			var actual sdk.Coin
 			testFunc := func() {
 				actual = tc.order.GetAssets()
 			}
@@ -1055,38 +1048,32 @@ func TestAskOrder_GetHoldAmount(t *testing.T) {
 		exp   sdk.Coins
 	}{
 		{
-			name:  "empty order",
-			order: AskOrder{},
-			exp:   nil,
-		},
-		{
 			name: "just assets",
 			order: AskOrder{
-				Assets: sdk.NewCoins(sdk.NewInt64Coin("acorn", 12), sdk.NewInt64Coin("banana", 99)),
+				Assets: sdk.NewInt64Coin("acorn", 12),
 			},
-			exp: sdk.NewCoins(sdk.NewInt64Coin("acorn", 12), sdk.NewInt64Coin("banana", 99)),
+			exp: sdk.NewCoins(sdk.NewInt64Coin("acorn", 12)),
 		},
 		{
 			name: "settlement fee is different denom from price",
 			order: AskOrder{
-				Assets:                  sdk.NewCoins(sdk.NewInt64Coin("acorn", 12), sdk.NewInt64Coin("banana", 99)),
+				Assets:                  sdk.NewInt64Coin("acorn", 12),
 				Price:                   sdk.NewInt64Coin("cucumber", 8),
 				SellerSettlementFlatFee: &sdk.Coin{Denom: "durian", Amount: sdkmath.NewInt(52)},
 			},
 			exp: sdk.NewCoins(
 				sdk.NewInt64Coin("acorn", 12),
-				sdk.NewInt64Coin("banana", 99),
 				sdk.NewInt64Coin("durian", 52),
 			),
 		},
 		{
 			name: "settlement fee is same denom as price",
 			order: AskOrder{
-				Assets:                  sdk.NewCoins(sdk.NewInt64Coin("acorn", 12), sdk.NewInt64Coin("banana", 99)),
+				Assets:                  sdk.NewInt64Coin("acorn", 12),
 				Price:                   sdk.NewInt64Coin("cucumber", 8),
 				SellerSettlementFlatFee: &sdk.Coin{Denom: "cucumber", Amount: sdkmath.NewInt(52)},
 			},
-			exp: sdk.NewCoins(sdk.NewInt64Coin("acorn", 12), sdk.NewInt64Coin("banana", 99)),
+			exp: sdk.NewCoins(sdk.NewInt64Coin("acorn", 12)),
 		},
 	}
 
@@ -1106,11 +1093,6 @@ func TestAskOrder_Validate(t *testing.T) {
 	coin := func(amount int64, denom string) *sdk.Coin {
 		return &sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
-	coins := func(coins string) sdk.Coins {
-		rv, err := sdk.ParseCoinsNormalized(coins)
-		require.NoError(t, err, "sdk.ParseCoinsNormalized(%q)", coins)
-		return rv
-	}
 
 	tests := []struct {
 		name  string
@@ -1122,7 +1104,7 @@ func TestAskOrder_Validate(t *testing.T) {
 			order: AskOrder{
 				MarketId:                1,
 				Seller:                  sdk.AccAddress("control_address_____").String(),
-				Assets:                  coins("99bender"),
+				Assets:                  *coin(99, "bender"),
 				Price:                   *coin(42, "farnsworth"),
 				SellerSettlementFlatFee: coin(1, "farnsworth"),
 				AllowPartial:            false,
@@ -1134,7 +1116,7 @@ func TestAskOrder_Validate(t *testing.T) {
 			order: AskOrder{
 				MarketId:                1,
 				Seller:                  sdk.AccAddress("control_address_____").String(),
-				Assets:                  coins("99bender"),
+				Assets:                  *coin(99, "bender"),
 				Price:                   *coin(42, "farnsworth"),
 				SellerSettlementFlatFee: coin(1, "farnsworth"),
 				AllowPartial:            true,
@@ -1146,20 +1128,10 @@ func TestAskOrder_Validate(t *testing.T) {
 			order: AskOrder{
 				MarketId:                1,
 				Seller:                  sdk.AccAddress("control_address_____").String(),
-				Assets:                  coins("99bender"),
+				Assets:                  *coin(99, "bender"),
 				Price:                   *coin(42, "farnsworth"),
 				SellerSettlementFlatFee: nil,
 				AllowPartial:            false,
-			},
-			exp: nil,
-		},
-		{
-			name: "multiple assets",
-			order: AskOrder{
-				MarketId: 1,
-				Seller:   sdk.AccAddress("another_address_____").String(),
-				Assets:   coins("12amy,99bender,8fry,112leela,1zoidberg"),
-				Price:    *coin(42, "farnsworth"),
 			},
 			exp: nil,
 		},
@@ -1168,7 +1140,7 @@ func TestAskOrder_Validate(t *testing.T) {
 			order: AskOrder{
 				MarketId: 0,
 				Seller:   sdk.AccAddress("another_address_____").String(),
-				Assets:   coins("99bender"),
+				Assets:   *coin(99, "bender"),
 				Price:    *coin(42, "farnsworth"),
 			},
 			exp: []string{"invalid market id", "must not be zero"},
@@ -1178,7 +1150,7 @@ func TestAskOrder_Validate(t *testing.T) {
 			order: AskOrder{
 				MarketId: 1,
 				Seller:   "shady_address_______",
-				Assets:   coins("99bender"),
+				Assets:   *coin(99, "bender"),
 				Price:    *coin(42, "farnsworth"),
 			},
 			exp: []string{"invalid seller", "invalid separator index -1"},
@@ -1188,7 +1160,7 @@ func TestAskOrder_Validate(t *testing.T) {
 			order: AskOrder{
 				MarketId: 1,
 				Seller:   "",
-				Assets:   coins("99bender"),
+				Assets:   *coin(99, "bender"),
 				Price:    *coin(42, "farnsworth"),
 			},
 			exp: []string{"invalid seller", "empty address string is not allowed"},
@@ -1198,7 +1170,7 @@ func TestAskOrder_Validate(t *testing.T) {
 			order: AskOrder{
 				MarketId: 1,
 				Seller:   sdk.AccAddress("another_address_____").String(),
-				Assets:   coins("99bender"),
+				Assets:   *coin(99, "bender"),
 				Price:    *coin(0, "farnsworth"),
 			},
 			exp: []string{"invalid price", "cannot be zero"},
@@ -1208,7 +1180,7 @@ func TestAskOrder_Validate(t *testing.T) {
 			order: AskOrder{
 				MarketId: 1,
 				Seller:   sdk.AccAddress("another_address_____").String(),
-				Assets:   coins("99bender"),
+				Assets:   *coin(99, "bender"),
 				Price:    *coin(-24, "farnsworth"),
 			},
 			exp: []string{"invalid price", "negative coin amount: -24"},
@@ -1218,7 +1190,7 @@ func TestAskOrder_Validate(t *testing.T) {
 			order: AskOrder{
 				MarketId: 1,
 				Seller:   sdk.AccAddress("another_address_____").String(),
-				Assets:   coins("99bender"),
+				Assets:   *coin(99, "bender"),
 				Price:    *coin(42, "7"),
 			},
 			exp: []string{"invalid price", "invalid denom: 7"},
@@ -1228,7 +1200,7 @@ func TestAskOrder_Validate(t *testing.T) {
 			order: AskOrder{
 				MarketId: 1,
 				Seller:   sdk.AccAddress("seller_address______").String(),
-				Assets:   coins("99bender"),
+				Assets:   *coin(99, "bender"),
 				Price:    sdk.Coin{},
 			},
 			exp: []string{"invalid price", "invalid denom"},
@@ -1238,67 +1210,57 @@ func TestAskOrder_Validate(t *testing.T) {
 			order: AskOrder{
 				MarketId: 1,
 				Seller:   sdk.AccAddress("another_address_____").String(),
-				Assets:   sdk.Coins{*coin(99, "bender"), *coin(0, "leela"), *coin(1, "zoidberg")},
+				Assets:   *coin(0, "leela"),
 				Price:    *coin(42, "farnsworth"),
 			},
-			exp: []string{"invalid assets", "coin leela amount is not positive"},
+			exp: []string{"invalid assets", "cannot be zero"},
 		},
 		{
 			name: "negative amount in assets",
 			order: AskOrder{
 				MarketId: 1,
 				Seller:   sdk.AccAddress("another_address_____").String(),
-				Assets:   sdk.Coins{*coin(99, "bender"), *coin(-1, "leela"), *coin(1, "zoidberg")},
+				Assets:   *coin(-1, "leela"),
 				Price:    *coin(42, "farnsworth"),
 			},
-			exp: []string{"invalid assets", "coin leela amount is not positive"},
+			exp: []string{"invalid assets", "negative coin amount: -1"},
 		},
 		{
 			name: "invalid denom in assets",
 			order: AskOrder{
 				MarketId: 1,
 				Seller:   sdk.AccAddress("another_address_____").String(),
-				Assets:   sdk.Coins{*coin(99, "bender"), *coin(1, "x"), *coin(1, "zoidberg")},
+				Assets:   *coin(1, "x"),
 				Price:    *coin(42, "farnsworth"),
 			},
 			exp: []string{"invalid assets", "invalid denom: x"},
 		},
 		{
-			name: "nil assets",
+			name: "zero-value assets",
 			order: AskOrder{
 				MarketId: 1,
 				Seller:   sdk.AccAddress("another_address_____").String(),
-				Assets:   nil,
+				Assets:   sdk.Coin{},
 				Price:    *coin(42, "farnsworth"),
 			},
-			exp: []string{"invalid assets", "must not be empty"},
-		},
-		{
-			name: "empty assets",
-			order: AskOrder{
-				MarketId: 1,
-				Seller:   sdk.AccAddress("another_address_____").String(),
-				Assets:   sdk.Coins{},
-				Price:    *coin(42, "farnsworth"),
-			},
-			exp: []string{"invalid assets", "must not be empty"},
+			exp: []string{"invalid assets", "invalid denom: "},
 		},
 		{
 			name: "price denom in assets",
 			order: AskOrder{
 				MarketId: 1,
 				Seller:   sdk.AccAddress("another_address_____").String(),
-				Assets:   coins("99bender,2farnsworth,44amy"),
+				Assets:   *coin(2, "farnsworth"),
 				Price:    *coin(42, "farnsworth"),
 			},
-			exp: []string{"invalid assets", "cannot contain price denom farnsworth"},
+			exp: []string{"invalid assets", "price denom farnsworth cannot also be the assets denom"},
 		},
 		{
 			name: "invalid seller settlement flat fee denom",
 			order: AskOrder{
 				MarketId:                1,
 				Seller:                  sdk.AccAddress("another_address_____").String(),
-				Assets:                  coins("99bender"),
+				Assets:                  *coin(99, "bender"),
 				Price:                   *coin(42, "farnsworth"),
 				SellerSettlementFlatFee: coin(13, "x"),
 			},
@@ -1309,7 +1271,7 @@ func TestAskOrder_Validate(t *testing.T) {
 			order: AskOrder{
 				MarketId:                1,
 				Seller:                  sdk.AccAddress("another_address_____").String(),
-				Assets:                  coins("99bender"),
+				Assets:                  *coin(99, "bender"),
 				Price:                   *coin(42, "farnsworth"),
 				SellerSettlementFlatFee: coin(0, "nibbler"),
 			},
@@ -1320,7 +1282,7 @@ func TestAskOrder_Validate(t *testing.T) {
 			order: AskOrder{
 				MarketId:                1,
 				Seller:                  sdk.AccAddress("another_address_____").String(),
-				Assets:                  coins("99bender"),
+				Assets:                  *coin(99, "bender"),
 				Price:                   *coin(42, "farnsworth"),
 				SellerSettlementFlatFee: coin(-3, "nibbler"),
 			},
@@ -1412,18 +1374,18 @@ func TestBidOrder_GetAssets(t *testing.T) {
 	tests := []struct {
 		name  string
 		order BidOrder
-		exp   sdk.Coins
+		exp   sdk.Coin
 	}{
-		{name: "one", order: BidOrder{Assets: sdk.NewInt64Coin("one", 1)}, exp: sdk.Coins{sdk.NewInt64Coin("one", 1)}},
-		{name: "zero", order: BidOrder{Assets: sdk.NewInt64Coin("zero", 0)}, exp: sdk.Coins{sdk.NewInt64Coin("zero", 0)}},
-		{name: "negative", order: BidOrder{Assets: negCoin}, exp: sdk.Coins{negCoin}},
-		{name: "large amount", order: BidOrder{Assets: largeCoin}, exp: sdk.Coins{largeCoin}},
-		{name: "zero-value", order: BidOrder{Assets: sdk.Coin{}}, exp: sdk.Coins{sdk.Coin{}}},
+		{name: "one", order: BidOrder{Assets: sdk.NewInt64Coin("one", 1)}, exp: sdk.NewInt64Coin("one", 1)},
+		{name: "zero", order: BidOrder{Assets: sdk.NewInt64Coin("zero", 0)}, exp: sdk.NewInt64Coin("zero", 0)},
+		{name: "negative", order: BidOrder{Assets: negCoin}, exp: negCoin},
+		{name: "large amount", order: BidOrder{Assets: largeCoin}, exp: largeCoin},
+		{name: "zero-value", order: BidOrder{Assets: sdk.Coin{}}, exp: sdk.Coin{}},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var actual sdk.Coins
+			var actual sdk.Coin
 			testFunc := func() {
 				actual = tc.order.GetAssets()
 			}

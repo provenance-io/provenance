@@ -1746,7 +1746,7 @@ AskOrder represents someone's desire to sell something at a minimum price.
 | ----- | ---- | ----- | ----------- |
 | `market_id` | [uint32](#uint32) |  | market_id identifies the market that this order belongs to. |
 | `seller` | [string](#string) |  | seller is the address of the account that owns this order and has the assets to sell. |
-| `assets` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | assets are the things that the seller wishes to sell. A hold is placed on this until the order is filled or cancelled. |
+| `assets` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | assets are the things that the seller wishes to sell. A hold is placed on this until the order is filled or cancelled. |
 | `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the minimum amount that the seller is willing to accept for the assets. The seller's settlement proportional fee (and possibly the settlement flat fee) is taken out of the amount the seller receives, so it's possible that the seller will still receive less than this price. |
 | `seller_settlement_flat_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | seller_settlement_flat_fee is the flat fee for sellers that will be charged during settlement. If this denom is the same denom as the price, it will come out of the actual price received. If this denom is different, the amount must be in the seller's account and a hold is placed on it until the order is filled or cancelled. |
 | `allow_partial` | [bool](#bool) |  | allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the order must be either filled in full or not filled at all. |

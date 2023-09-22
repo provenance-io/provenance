@@ -21,7 +21,7 @@ const (
 type SubOrderI interface {
 	GetMarketID() uint32
 	GetOwner() string
-	GetAssets() sdk.Coins
+	GetAssets() sdk.Coin
 	GetPrice() sdk.Coin
 	GetSettlementFees() sdk.Coins
 	PartialFillAllowed() bool
@@ -61,6 +61,17 @@ func findDuplicateIds(orderIDs []uint64) []uint64 {
 		seen[orderID] = true
 	}
 	return rv
+}
+
+// validateCoin makes sure the provided coin is valid an not zero.
+func validateCoin(field string, coin sdk.Coin) error {
+	// The Coin.Validate() method allows the coin to be zero (but not negative).
+	if err := coin.Validate(); err != nil {
+		return fmt.Errorf("invalid %s: %w", field, err)
+	} else if coin.IsZero() {
+		return fmt.Errorf("invalid %s: cannot be zero", field)
+	}
+	return nil
 }
 
 // ValidateOrderIDs makes sure that one or more order ids are provided,
@@ -151,7 +162,7 @@ func (o Order) GetOwner() string {
 
 // GetAssets returns the assets for this order.
 // Panics if the sub-order is not set or is something unexpected.
-func (o Order) GetAssets() sdk.Coins {
+func (o Order) GetAssets() sdk.Coin {
 	return o.MustGetSubOrder().GetAssets()
 }
 
@@ -217,7 +228,7 @@ func (a AskOrder) GetOwner() string {
 }
 
 // GetAssets returns the assets for sale with this ask order.
-func (a AskOrder) GetAssets() sdk.Coins {
+func (a AskOrder) GetAssets() sdk.Coin {
 	return a.Assets
 }
 
@@ -251,7 +262,7 @@ func (a AskOrder) GetOrderTypeByte() byte {
 
 // GetHoldAmount returns the amount that should be on hold for this ask order.
 func (a AskOrder) GetHoldAmount() sdk.Coins {
-	rv := a.Assets
+	rv := sdk.Coins{a.Assets}
 	if a.SellerSettlementFlatFee != nil && a.SellerSettlementFlatFee.Denom != a.Price.Denom {
 		rv = rv.Add(*a.SellerSettlementFlatFee)
 	}
@@ -272,34 +283,17 @@ func (a AskOrder) Validate() error {
 		errs = append(errs, fmt.Errorf("invalid seller: %w", err))
 	}
 
-	// The price must not be zero and must be a valid coin.
-	// The Coin.Validate() method allows the coin to be zero (but not negative).
 	var priceDenom string
-	if err := a.Price.Validate(); err != nil {
-		errs = append(errs, fmt.Errorf("invalid price: %w", err))
-	} else if a.Price.IsZero() {
-		errs = append(errs, errors.New("invalid price: cannot be zero"))
+	if err := validateCoin("price", a.Price); err != nil {
+		errs = append(errs, err)
 	} else {
 		priceDenom = a.Price.Denom
 	}
 
-	// The Coins.Validate method does NOT allow any coin entries to be zero (or negative).
-	// It does allow there to not be any entries, though, which we don't want to allow here.
-	// We also don't want to allow the price denom to also be in the assets.
-	if err := a.Assets.Validate(); err != nil {
-		errs = append(errs, fmt.Errorf("invalid assets: %w", err))
-	} else {
-		switch {
-		case len(a.Assets) == 0:
-			errs = append(errs, errors.New("invalid assets: must not be empty"))
-		case len(priceDenom) > 0:
-			for _, asset := range a.Assets {
-				if priceDenom == asset.Denom {
-					errs = append(errs, fmt.Errorf("invalid assets: cannot contain price denom %s", priceDenom))
-					break
-				}
-			}
-		}
+	if err := validateCoin("assets", a.Assets); err != nil {
+		errs = append(errs, err)
+	} else if len(priceDenom) > 0 && a.Assets.Denom == priceDenom {
+		errs = append(errs, fmt.Errorf("invalid assets: price denom %s cannot also be the assets denom", priceDenom))
 	}
 
 	if a.SellerSettlementFlatFee != nil {
@@ -329,8 +323,8 @@ func (b BidOrder) GetOwner() string {
 }
 
 // GetAssets returns the assets to buy for this bid order.
-func (b BidOrder) GetAssets() sdk.Coins {
-	return sdk.Coins{b.Assets}
+func (b BidOrder) GetAssets() sdk.Coin {
+	return b.Assets
 }
 
 // GetPrice returns the price to pay for this bid order.
@@ -372,29 +366,20 @@ func (b BidOrder) Validate() error {
 		errs = append(errs, errors.New("invalid market id: must not be zero"))
 	}
 
-	// The seller address must be valid and not empty.
+	// The buyer address must be valid and not empty.
 	if _, err := sdk.AccAddressFromBech32(b.Buyer); err != nil {
 		errs = append(errs, fmt.Errorf("invalid buyer: %w", err))
 	}
 
-	// The price must not be zero and must be a valid coin.
-	// The Coin.Validate() method allows the coin to be zero (but not negative).
 	var priceDenom string
-	if err := b.Price.Validate(); err != nil {
-		errs = append(errs, fmt.Errorf("invalid price: %w", err))
-	} else if b.Price.IsZero() {
-		errs = append(errs, errors.New("invalid price: cannot be zero"))
+	if err := validateCoin("price", b.Price); err != nil {
+		errs = append(errs, err)
 	} else {
 		priceDenom = b.Price.Denom
 	}
 
-	// The Coins.Validate method does NOT allow any coin entries to be zero (or negative).
-	// It does allow there to not be any entries, though, which we don't want to allow here.
-	// We also don't want to allow the price denom to also be in the assets.
-	if err := b.Assets.Validate(); err != nil {
-		errs = append(errs, fmt.Errorf("invalid assets: %w", err))
-	} else if b.Assets.IsZero() {
-		errs = append(errs, errors.New("invalid assets: cannot be zero"))
+	if err := validateCoin("assets", b.Assets); err != nil {
+		errs = append(errs, err)
 	} else if len(priceDenom) > 0 && b.Assets.Denom == priceDenom {
 		errs = append(errs, fmt.Errorf("invalid assets: price denom %s cannot also be the assets denom", priceDenom))
 	}

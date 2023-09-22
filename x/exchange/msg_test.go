@@ -184,7 +184,7 @@ func TestMsgCreateAskRequest_ValidateBasic(t *testing.T) {
 				AskOrder: AskOrder{
 					MarketId: 1,
 					Seller:   sdk.AccAddress("seller______________").String(),
-					Assets:   sdk.NewCoins(sdk.NewInt64Coin("banana", 99)),
+					Assets:   sdk.NewInt64Coin("banana", 99),
 					Price:    sdk.NewInt64Coin("acorn", 12),
 				},
 				OrderCreationFee: &sdk.Coin{Denom: "cactus", Amount: sdkmath.NewInt(-3)},

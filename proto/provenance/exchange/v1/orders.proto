@@ -35,8 +35,7 @@ message AskOrder {
   string seller = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // assets are the things that the seller wishes to sell.
   // A hold is placed on this until the order is filled or cancelled.
-  repeated cosmos.base.v1beta1.Coin assets = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
   // price is the minimum amount that the seller is willing to accept for the assets. The seller's settlement
   // proportional fee (and possibly the settlement flat fee) is taken out of the amount the seller receives,
   // so it's possible that the seller will still receive less than this price.

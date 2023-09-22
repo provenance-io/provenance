@@ -13,29 +13,26 @@ import (
 
 func TestGenesisState_Validate(t *testing.T) {
 	addr1 := sdk.AccAddress("addr1_______________").String()
-	coins := func(coins string) sdk.Coins {
-		rv, err := sdk.ParseCoinsNormalized(coins)
-		require.NoError(t, err, "sdk.ParseCoinsNormalized(%q)", coins)
-		return rv
-	}
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
 	askOrder := func(orderID uint64, marketID uint32, assets string, price string) Order {
 		priceCoin, err := sdk.ParseCoinNormalized(price)
-		require.NoError(t, err, "sdk.ParseCoinNormalized(%q)", price)
+		require.NoError(t, err, "ask price sdk.ParseCoinNormalized(%q)", price)
+		assetsCoin, err := sdk.ParseCoinNormalized(assets)
+		require.NoError(t, err, "ask assets sdk.ParseCoinNormalized(%q)", assets)
 		return *NewOrder(orderID).WithAsk(&AskOrder{
 			MarketId: marketID,
 			Seller:   addr1,
-			Assets:   coins(assets),
+			Assets:   assetsCoin,
 			Price:    priceCoin,
 		})
 	}
 	bidOrder := func(orderID uint64, marketID uint32, assets string, price string) Order {
 		priceCoin, err := sdk.ParseCoinNormalized(price)
-		require.NoError(t, err, "price sdk.ParseCoinNormalized(%q)", price)
+		require.NoError(t, err, "bid price sdk.ParseCoinNormalized(%q)", price)
 		assetsCoin, err := sdk.ParseCoinNormalized(assets)
-		require.NoError(t, err, "assets sdk.ParseCoinNormalized(%q)", assets)
+		require.NoError(t, err, "bid assets sdk.ParseCoinNormalized(%q)", assets)
 		return *NewOrder(orderID).WithBid(&BidOrder{
 			MarketId: marketID,
 			Buyer:    addr1,

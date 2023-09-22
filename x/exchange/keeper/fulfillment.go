@@ -16,7 +16,7 @@ import (
 func sumAssetsAndPrice(orders []*exchange.Order) (sdk.Coins, sdk.Coins) {
 	var totalAssets, totalPrice sdk.Coins
 	for _, order := range orders {
-		totalAssets = totalAssets.Add(order.GetAssets()...)
+		totalAssets = totalAssets.Add(order.GetAssets())
 		totalPrice = totalPrice.Add(order.GetPrice())
 	}
 	return totalAssets, totalPrice
@@ -224,7 +224,7 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 			assetInputs = append(assetInputs, banktypes.Input{Address: seller})
 			priceOutputs = append(priceOutputs, banktypes.Output{Address: seller})
 		}
-		assetInputs[i].Coins = assetInputs[i].Coins.Add(assets...)
+		assetInputs[i].Coins = assetInputs[i].Coins.Add(assets)
 		priceOutputs[i].Coins = priceOutputs[i].Coins.Add(price)
 
 		if !totalSellerFee.IsZero() {
