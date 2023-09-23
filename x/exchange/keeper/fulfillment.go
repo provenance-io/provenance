@@ -329,11 +329,12 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 		return errors.Join(errs...)
 	}
 
-	if !expectPartial && !exchange.CoinsEquals(totalAssetsForSale, totalAssetsToBuy) {
+	isPartial := !exchange.CoinsEquals(totalAssetsForSale, totalAssetsToBuy)
+	if !expectPartial && isPartial {
 		return fmt.Errorf("total assets for sale %q does not equal total assets to buy %q and partial settlement not expected",
 			totalAssetsForSale, totalAssetsToBuy)
 	}
-	if expectPartial && exchange.CoinsEquals(totalAssetsForSale, totalAssetsToBuy) {
+	if expectPartial && !isPartial {
 		return fmt.Errorf("total assets for sale %q equals total assets to buy %q but partial settlement is expected",
 			totalAssetsForSale, totalAssetsToBuy)
 	}
@@ -343,12 +344,12 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 		return err
 	}
 
-	askOFs, bidOfs, err := exchange.BuildFulfillments(askOrders, bidOrders, sellerFeeRatio)
+	fulfillments, err := exchange.BuildFulfillments(askOrders, bidOrders, sellerFeeRatio)
 	if err != nil {
 		return err
 	}
 
-	transfers := exchange.BuildSettlementTransfers(askOFs, bidOfs)
+	transfers := exchange.BuildSettlementTransfers(fulfillments.AskOFs, fulfillments.BidOFs)
 
 	for _, transfer := range transfers.OrderTransfers {
 		if err = k.DoTransfer(ctx, transfer.Inputs, transfer.Outputs); err != nil {
@@ -360,6 +361,31 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 		return err
 	}
 
-	// TODO[1658]: Update the partial order and emit events.
-	panic("not finished")
+	if fulfillments.PartialOrder != nil {
+		if err = k.setOrderInStore(store, *fulfillments.PartialOrder.NewOrder); err != nil {
+			return fmt.Errorf("could not update partial %s order %d: %w",
+				fulfillments.PartialOrder.NewOrder.GetOrderType(), fulfillments.PartialOrder.NewOrder.OrderId, err)
+		}
+	}
+
+	events := make([]proto.Message, 0, len(askOrders)+len(bidOrders))
+	for _, order := range askOrders {
+		if fulfillments.PartialOrder != nil && fulfillments.PartialOrder.NewOrder.OrderId != order.OrderId {
+			events = append(events, exchange.NewEventOrderFilled(order.OrderId))
+		}
+	}
+	for _, order := range bidOrders {
+		if fulfillments.PartialOrder != nil && fulfillments.PartialOrder.NewOrder.OrderId != order.OrderId {
+			events = append(events, exchange.NewEventOrderFilled(order.OrderId))
+		}
+	}
+	if fulfillments.PartialOrder != nil {
+		events = append(events, exchange.NewEventOrderPartiallyFilled(
+			fulfillments.PartialOrder.NewOrder.OrderId,
+			fulfillments.PartialOrder.AssetsFilled,
+			fulfillments.PartialOrder.PriceFilled,
+		))
+	}
+
+	return ctx.EventManager().EmitTypedEvents(events...)
 }

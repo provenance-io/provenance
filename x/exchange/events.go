@@ -26,7 +26,7 @@ func NewEventOrderFilled(orderID uint64) *EventOrderFilled {
 	}
 }
 
-func NewEventOrderPartiallyFilled(orderID uint64, assetsFilled, feesFilled sdk.Coins) *EventOrderPartiallyFilled {
+func NewEventOrderPartiallyFilled(orderID uint64, assetsFilled, feesFilled sdk.Coin) *EventOrderPartiallyFilled {
 	return &EventOrderPartiallyFilled{
 		OrderId:      orderID,
 		AssetsFilled: assetsFilled.String(),

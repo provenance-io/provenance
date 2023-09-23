@@ -505,8 +505,63 @@ func getFulfillmentAssetsAmt(askOF, bidOF *OrderFulfillment) (sdkmath.Int, error
 	return bidAmtLeft, nil
 }
 
+type PartialFulfillment struct {
+	NewOrder     *Order
+	AssetsFilled sdk.Coin
+	PriceFilled  sdk.Coin
+}
+
+func NewPartialFulfillment(f *OrderFulfillment) *PartialFulfillment {
+	order := NewOrder(f.GetOrderID())
+	if f.IsAskOrder() {
+		askOrder := &AskOrder{
+			MarketId:     f.GetMarketID(),
+			Seller:       f.GetOwner(),
+			Assets:       f.GetAssetsLeft(),
+			Price:        f.GetPriceLeft(),
+			AllowPartial: f.PartialFillAllowed(),
+		}
+		if !f.FeesLeft.IsZero() {
+			if len(f.FeesLeft) > 1 {
+				panic(fmt.Errorf("partially filled ask order %d somehow has multiple denoms in fees left %q",
+					order.OrderId, f.FeesLeft))
+			}
+			askOrder.SellerSettlementFlatFee = &f.FeesLeft[0]
+		}
+		return &PartialFulfillment{
+			NewOrder:     order,
+			AssetsFilled: f.GetAssetsFilled(),
+			PriceFilled:  f.GetPriceFilled(),
+		}
+	}
+
+	if f.IsBidOrder() {
+		bidOrder := &BidOrder{
+			MarketId:            f.GetMarketID(),
+			Buyer:               f.GetOwner(),
+			Assets:              f.GetAssetsLeft(),
+			Price:               f.GetPriceLeft(),
+			BuyerSettlementFees: f.FeesLeft,
+			AllowPartial:        f.PartialFillAllowed(),
+		}
+		return &PartialFulfillment{
+			NewOrder:     order.WithBid(bidOrder),
+			AssetsFilled: f.GetAssetsFilled(),
+			PriceFilled:  f.GetPriceFilled(),
+		}
+	}
+
+	panic(fmt.Errorf("order %d has unknown type %q", order.OrderId, f.GetOrderType()))
+}
+
+type Fulfillments struct {
+	AskOFs       []*OrderFulfillment
+	BidOFs       []*OrderFulfillment
+	PartialOrder *PartialFulfillment
+}
+
 // BuildFulfillments creates all of the ask and bid order fulfillments.
-func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) ([]*OrderFulfillment, []*OrderFulfillment, error) {
+func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) (*Fulfillments, error) {
 	askOFs := make([]*OrderFulfillment, len(askOrders))
 	for i, askOrder := range askOrders {
 		askOFs[i] = NewOrderFulfillment(askOrder)
@@ -520,12 +575,12 @@ func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) 
 	for a < len(askOFs) && b < len(bidOFs) {
 		err := Fulfill(askOFs[a], bidOFs[b])
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		askFilled := askOFs[a].IsFullyFilled()
 		bidFilled := bidOFs[b].IsFullyFilled()
 		if !askFilled && !bidFilled {
-			return nil, nil, fmt.Errorf("neither ask order %d nor bid order %d could be filled in full",
+			return nil, fmt.Errorf("neither ask order %d nor bid order %d could be filled in full",
 				askOFs[a].GetOrderID(), bidOFs[b].GetOrderID())
 		}
 		if askFilled {
@@ -539,27 +594,37 @@ func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) 
 	// Need to finalize bid orders first due to possible extra price distribution.
 	for _, bidOF := range bidOFs {
 		if err := bidOF.Finalize(sellerFeeRatio); err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
 	for _, askOF := range askOFs {
 		if err := askOF.Finalize(sellerFeeRatio); err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
 
 	for _, bidOF := range bidOFs {
 		if err := bidOF.Validate(); err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
 	for _, askOF := range askOFs {
 		if err := askOF.Validate(); err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
 
-	return askOFs, bidOFs, nil
+	rv := &Fulfillments{
+		AskOFs: askOFs,
+		BidOFs: bidOFs,
+	}
+	if !askOFs[len(askOFs)-1].IsFullyFilled() {
+		rv.PartialOrder = NewPartialFulfillment(askOFs[len(askOFs)-1])
+	} else if !bidOFs[len(bidOFs)-1].IsFullyFilled() {
+		rv.PartialOrder = NewPartialFulfillment(bidOFs[len(bidOFs)-1])
+	}
+
+	return rv, nil
 }
 
 // Transfer contains bank inputs and outputs indicating a transfer that needs to be made.

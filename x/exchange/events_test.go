@@ -100,8 +100,8 @@ func TestNewEventOrderFilled(t *testing.T) {
 
 func TestNewEventOrderPartiallyFilled(t *testing.T) {
 	orderID := uint64(18)
-	assetsFilled := sdk.NewCoins(sdk.NewInt64Coin("first", 111), sdk.NewInt64Coin("second", 22))
-	feesFilled := sdk.NewCoins(sdk.NewInt64Coin("charge", 8), sdk.NewInt64Coin("fee", 15))
+	assetsFilled := sdk.NewInt64Coin("acoin", 111)
+	feesFilled := sdk.NewInt64Coin("fcoin", 8)
 
 	event := NewEventOrderPartiallyFilled(orderID, assetsFilled, feesFilled)
 	assert.Equal(t, orderID, event.OrderId, "OrderId")
@@ -299,8 +299,10 @@ func TestTypedEventToEvent(t *testing.T) {
 	updatedByQ := quoteBz(updatedBy.String())
 	coins1 := sdk.NewCoins(sdk.NewInt64Coin("onecoin", 1), sdk.NewInt64Coin("twocoin", 2))
 	coins1Q := quoteBz(coins1.String())
-	coins2 := sdk.NewCoins(sdk.NewInt64Coin("threecoin", 3), sdk.NewInt64Coin("fourcoin", 4))
-	coins2Q := quoteBz(coins2.String())
+	acoin := sdk.NewInt64Coin("acoin", 5)
+	acoinQ := quoteBz(acoin.String())
+	fcoin := sdk.NewInt64Coin("fcoin", 5)
+	fcoinQ := quoteBz(fcoin.String())
 
 	tests := []struct {
 		name     string
@@ -352,12 +354,12 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventOrderPartiallyFilled",
-			tev:  NewEventOrderPartiallyFilled(5, coins1, coins2),
+			tev:  NewEventOrderPartiallyFilled(5, acoin, fcoin),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderPartiallyFilled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("assets_filled"), Value: coins1Q},
-					{Key: []byte("fees_filled"), Value: coins2Q},
+					{Key: []byte("assets_filled"), Value: acoinQ},
+					{Key: []byte("fees_filled"), Value: fcoinQ},
 					{Key: []byte("order_id"), Value: quoteBz("5")},
 				},
 			},
