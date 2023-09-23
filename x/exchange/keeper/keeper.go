@@ -153,6 +153,21 @@ func (k Keeper) CalculateExchangeSplit(ctx sdk.Context, feeAmt sdk.Coins) sdk.Co
 	return exchangeAmt
 }
 
+// DoTransfer facilitates a transfer of things using the bank module.
+func (k Keeper) DoTransfer(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
+	if len(inputs) == 1 && len(outputs) == 1 {
+		// If there's only one of each, we use SendCoins for the nicer events.
+		if !exchange.CoinsEquals(inputs[0].Coins, outputs[0].Coins) {
+			return fmt.Errorf("input coins %q does not equal output coins %q",
+				inputs[0].Coins, outputs[0].Coins)
+		}
+		fromAddr := sdk.MustAccAddressFromBech32(inputs[0].Address)
+		toAddr := sdk.MustAccAddressFromBech32(outputs[0].Address)
+		return k.bankKeeper.SendCoins(ctx, fromAddr, toAddr, inputs[0].Coins)
+	}
+	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+}
+
 // CollectFee will transfer the fee amount to the market account,
 // then the exchange's cut from the market to the fee collector.
 // If you have fees to collect from multiple payers, consider using CollectFees.
@@ -183,6 +198,7 @@ func (k Keeper) CollectFees(ctx sdk.Context, inputs []banktypes.Input, marketID 
 		return nil
 	}
 	if len(inputs) == 1 {
+		// If there's only one input, just use CollectFee for the nicer events.
 		payer, err := sdk.AccAddressFromBech32(inputs[0].Address)
 		if err != nil {
 			return fmt.Errorf("invalid payer address %q: %w", inputs[0].Address, err)

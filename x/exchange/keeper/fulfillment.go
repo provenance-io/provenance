@@ -255,11 +255,11 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	assetOutputs := []banktypes.Output{{Address: msg.Buyer, Coins: totalAssets}}
 	priceInputs := []banktypes.Input{{Address: msg.Buyer, Coins: sdk.Coins{msg.TotalPrice}}}
 
-	if err := k.bankKeeper.InputOutputCoins(ctx, assetInputs, assetOutputs); err != nil {
+	if err := k.DoTransfer(ctx, assetInputs, assetOutputs); err != nil {
 		return fmt.Errorf("error transferring assets from sellers to buyer: %w", err)
 	}
 
-	if err := k.bankKeeper.InputOutputCoins(ctx, priceInputs, priceOutputs); err != nil {
+	if err := k.DoTransfer(ctx, priceInputs, priceOutputs); err != nil {
 		return fmt.Errorf("error transferring price from buyer to sellers: %w", err)
 	}
 
@@ -300,8 +300,6 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 	totalAssetsForSale, totalAskPrice := sumAssetsAndPrice(askOrders)
 	totalAssetsToBuy, totalBidPrice := sumAssetsAndPrice(bidOrders)
 
-	// TODO[1659]: Allow for multiple asset denoms in some cases.
-
 	var errs []error
 	if len(totalAssetsForSale) != 1 {
 		errs = append(errs, fmt.Errorf("cannot settle with multiple ask order asset denoms %q", totalAssetsForSale))
@@ -340,6 +338,28 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 			totalAssetsForSale, totalAssetsToBuy)
 	}
 
-	// TODO[1658]: Implement SettleOrders.
-	panic("Not implemented")
+	sellerFeeRatio, err := getSellerSettlementRatio(store, marketID, totalAskPrice[0].Denom)
+	if err != nil {
+		return err
+	}
+
+	askOFs, bidOfs, err := exchange.BuildFulfillments(askOrders, bidOrders, sellerFeeRatio)
+	if err != nil {
+		return err
+	}
+
+	transfers := exchange.BuildSettlementTransfers(askOFs, bidOfs)
+
+	for _, transfer := range transfers.OrderTransfers {
+		if err = k.DoTransfer(ctx, transfer.Inputs, transfer.Outputs); err != nil {
+			return err
+		}
+	}
+
+	if err = k.CollectFees(ctx, transfers.FeeInputs, marketID); err != nil {
+		return err
+	}
+
+	// TODO[1658]: Update the partial order and emit events.
+	panic("not finished")
 }
