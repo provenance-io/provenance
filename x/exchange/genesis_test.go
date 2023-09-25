@@ -3,6 +3,7 @@ package exchange
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
@@ -10,6 +11,24 @@ import (
 
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
+
+func TestDefaultGenesisState(t *testing.T) {
+	expected := &GenesisState{
+		Params: &Params{
+			DefaultSplit: DefaultDefaultSplit,
+			DenomSplits:  nil,
+		},
+		Markets:      nil,
+		Orders:       nil,
+		LastMarketId: 0,
+	}
+	var actual *GenesisState
+	testFunc := func() {
+		actual = DefaultGenesisState()
+	}
+	require.NotPanics(t, testFunc, "DefaultGenesisState()")
+	assert.Equal(t, expected, actual, "DefaultGenesisState() result")
+}
 
 func TestGenesisState_Validate(t *testing.T) {
 	addr1 := sdk.AccAddress("addr1_______________").String()
