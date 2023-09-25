@@ -1342,7 +1342,58 @@ func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestMsgMarketManagePermissionsRequest_HasUpdates(t *testing.T)
+func TestMsgMarketManagePermissionsRequest_HasUpdates(t *testing.T) {
+	tests := []struct {
+		name string
+		msg  MsgMarketManagePermissionsRequest
+		exp  bool
+	}{
+		{
+			name: "empty",
+			msg:  MsgMarketManagePermissionsRequest{},
+			exp:  false,
+		},
+		{
+			name: "empty except for admin",
+			msg: MsgMarketManagePermissionsRequest{
+				Admin: "admin",
+			},
+			exp: false,
+		},
+		{
+			name: "one revoke all",
+			msg: MsgMarketManagePermissionsRequest{
+				RevokeAll: []string{"revoke_all"},
+			},
+			exp: true,
+		},
+		{
+			name: "one to revoke",
+			msg: MsgMarketManagePermissionsRequest{
+				ToRevoke: []AccessGrant{{Address: "to_revoke"}},
+			},
+			exp: true,
+		},
+		{
+			name: "one to grant",
+			msg: MsgMarketManagePermissionsRequest{
+				ToGrant: []AccessGrant{{Address: "to_grant"}},
+			},
+			exp: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = tc.msg.HasUpdates()
+			}
+			require.NotPanics(t, testFunc, "%T.HasUpdates()", tc.msg)
+			assert.Equal(t, tc.exp, actual, "%T.HasUpdates()", tc.msg)
+		})
+	}
+}
 
 func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 	goodAdmin := sdk.AccAddress("goodAdmin___________").String()
@@ -1506,7 +1557,65 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestMsgMarketManageReqAttrsRequest_HasUpdates(t *testing.T)
+func TestMsgMarketManageReqAttrsRequest_HasUpdates(t *testing.T) {
+	tests := []struct {
+		name string
+		msg  MsgMarketManageReqAttrsRequest
+		exp  bool
+	}{
+		{
+			name: "empty",
+			msg:  MsgMarketManageReqAttrsRequest{},
+			exp:  false,
+		},
+		{
+			name: "empty except for admin",
+			msg: MsgMarketManageReqAttrsRequest{
+				Admin: "admin",
+			},
+			exp: false,
+		},
+		{
+			name: "one ask to add",
+			msg: MsgMarketManageReqAttrsRequest{
+				CreateAskToAdd: []string{"ask_to_add"},
+			},
+			exp: true,
+		},
+		{
+			name: "one ask to remove",
+			msg: MsgMarketManageReqAttrsRequest{
+				CreateAskToRemove: []string{"ask_to_remove"},
+			},
+			exp: true,
+		},
+		{
+			name: "one bid to add",
+			msg: MsgMarketManageReqAttrsRequest{
+				CreateBidToAdd: []string{"bid_to_add"},
+			},
+			exp: true,
+		},
+		{
+			name: "one bid to remove",
+			msg: MsgMarketManageReqAttrsRequest{
+				CreateBidToRemove: []string{"bid_to_remove"},
+			},
+			exp: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = tc.msg.HasUpdates()
+			}
+			require.NotPanics(t, testFunc, "%T.HasUpdates()", tc.msg)
+			assert.Equal(t, tc.exp, actual, "%T.HasUpdates()", tc.msg)
+		})
+	}
+}
 
 func TestMsgGovCreateMarketRequest_ValidateBasic(t *testing.T) {
 	authority := sdk.AccAddress("authority___________").String()
