@@ -349,7 +349,7 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 		return err
 	}
 
-	transfers := exchange.BuildSettlementTransfers(fulfillments.AskOFs, fulfillments.BidOFs)
+	transfers := exchange.BuildSettlementTransfers(fulfillments)
 
 	for _, transfer := range transfers.OrderTransfers {
 		if err = k.DoTransfer(ctx, transfer.Inputs, transfer.Outputs); err != nil {

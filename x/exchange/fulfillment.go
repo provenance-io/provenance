@@ -5,52 +5,10 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
-
-// IndexedAddrAmts is a set of addresses and amounts.
-type IndexedAddrAmts struct {
-	addrs   []string
-	amts    []sdk.Coins
-	indexes map[string]int
-}
-
-func NewIndexedAddrAmts() *IndexedAddrAmts {
-	return &IndexedAddrAmts{
-		indexes: make(map[string]int),
-	}
-}
-
-// Add adds the coins to the input with the given address (creating it if needed).
-func (i *IndexedAddrAmts) Add(addr string, coins ...sdk.Coin) {
-	n, known := i.indexes[addr]
-	if !known {
-		n = len(i.addrs)
-		i.indexes[addr] = n
-		i.addrs = append(i.addrs, addr)
-		i.amts = append(i.amts, sdk.NewCoins())
-	}
-	i.amts[n] = i.amts[n].Add(coins...)
-}
-
-// GetAsInputs returns all the entries as bank Inputs.
-func (i *IndexedAddrAmts) GetAsInputs() []banktypes.Input {
-	rv := make([]banktypes.Input, len(i.addrs))
-	for n, addr := range i.addrs {
-		rv[n] = banktypes.Input{Address: addr, Coins: i.amts[n]}
-	}
-	return rv
-}
-
-// GetAsOutputs returns all the entries as bank Outputs.
-func (i *IndexedAddrAmts) GetAsOutputs() []banktypes.Output {
-	rv := make([]banktypes.Output, len(i.addrs))
-	for n, addr := range i.addrs {
-		rv[n] = banktypes.Output{Address: addr, Coins: i.amts[n]}
-	}
-	return rv
-}
 
 // OrderSplit contains an order, and the asset and price amounts that should come out of it.
 type OrderSplit struct {
@@ -384,7 +342,7 @@ func (f *OrderFulfillment) Finalize(sellerFeeRatio *FeeRatio) error {
 	case isBidOrder:
 		// When adding things to f.PriceFilledAmt, we used truncation on the divisions.
 		// So, at this point, it might be a little less than the target price.
-		// If that's the case, we distribute the difference weighte by assets in order of the splits.
+		// If that's the case, we distribute the difference weighted by assets in order of the splits.
 		// When adding things to f.PriceFilledAmt, we used truncation on the divisions.
 		// So at this point, it might be a little less than the target price.
 		// If that's the case, we distribute the difference weighted by assets in order of the splits.
@@ -627,6 +585,49 @@ func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) 
 	return rv, nil
 }
 
+// indexedAddrAmts is a set of addresses and amounts.
+type indexedAddrAmts struct {
+	addrs   []string
+	amts    []sdk.Coins
+	indexes map[string]int
+}
+
+func newIndexedAddrAmts() *indexedAddrAmts {
+	return &indexedAddrAmts{
+		indexes: make(map[string]int),
+	}
+}
+
+// Add adds the coins to the input with the given address (creating it if needed).
+func (i *indexedAddrAmts) Add(addr string, coins ...sdk.Coin) {
+	n, known := i.indexes[addr]
+	if !known {
+		n = len(i.addrs)
+		i.indexes[addr] = n
+		i.addrs = append(i.addrs, addr)
+		i.amts = append(i.amts, sdk.NewCoins())
+	}
+	i.amts[n] = i.amts[n].Add(coins...)
+}
+
+// GetAsInputs returns all the entries as bank Inputs.
+func (i *indexedAddrAmts) GetAsInputs() []banktypes.Input {
+	rv := make([]banktypes.Input, len(i.addrs))
+	for n, addr := range i.addrs {
+		rv[n] = banktypes.Input{Address: addr, Coins: i.amts[n]}
+	}
+	return rv
+}
+
+// GetAsOutputs returns all the entries as bank Outputs.
+func (i *indexedAddrAmts) GetAsOutputs() []banktypes.Output {
+	rv := make([]banktypes.Output, len(i.addrs))
+	for n, addr := range i.addrs {
+		rv[n] = banktypes.Output{Address: addr, Coins: i.amts[n]}
+	}
+	return rv
+}
+
 // Transfer contains bank inputs and outputs indicating a transfer that needs to be made.
 type Transfer struct {
 	Inputs  []banktypes.Input
@@ -640,8 +641,8 @@ type SettlementTransfers struct {
 }
 
 // BuildSettlementTransfers creates all the order transfers needed for the provided fulfillments.
-func BuildSettlementTransfers(askOFs, bidOFs []*OrderFulfillment) *SettlementTransfers {
-	indexedFees := NewIndexedAddrAmts()
+func BuildSettlementTransfers(fulfillments *Fulfillments) *SettlementTransfers {
+	indexedFees := newIndexedAddrAmts()
 
 	rv := &SettlementTransfers{}
 	applyOF := func(of *OrderFulfillment) {
@@ -653,10 +654,10 @@ func BuildSettlementTransfers(askOFs, bidOFs []*OrderFulfillment) *SettlementTra
 		}
 	}
 
-	for _, askOF := range askOFs {
+	for _, askOF := range fulfillments.AskOFs {
 		applyOF(askOF)
 	}
-	for _, bidOf := range bidOFs {
+	for _, bidOf := range fulfillments.BidOFs {
 		applyOF(bidOf)
 	}
 
@@ -667,7 +668,7 @@ func BuildSettlementTransfers(askOFs, bidOFs []*OrderFulfillment) *SettlementTra
 
 // getAssetTransfer gets the inputs and outputs to facilitate the transfers of assets for this order fulfillment.
 func getAssetTransfer(f *OrderFulfillment) *Transfer {
-	indexedSplits := NewIndexedAddrAmts()
+	indexedSplits := newIndexedAddrAmts()
 	for _, split := range f.Splits {
 		indexedSplits.Add(split.Order.GetOwner(), split.Assets)
 	}
@@ -692,7 +693,7 @@ func getAssetTransfer(f *OrderFulfillment) *Transfer {
 
 // getPriceTransfer gets the inputs and outputs to facilitate the transfers for the price of this order fulfillment.
 func getPriceTransfer(f *OrderFulfillment) *Transfer {
-	indexedSplits := NewIndexedAddrAmts()
+	indexedSplits := newIndexedAddrAmts()
 	for _, split := range f.Splits {
 		indexedSplits.Add(split.Order.GetOwner(), split.Price)
 	}
