@@ -349,6 +349,13 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 		return err
 	}
 
+	if !expectPartial && fulfillments.PartialOrder != nil {
+		return fmt.Errorf("settlement resulted in unexpected partial order %d", fulfillments.PartialOrder.NewOrder.GetOrderID())
+	}
+	if expectPartial && fulfillments.PartialOrder == nil {
+		return errors.New("settlement unexpectedly resulted in all orders fully filled")
+	}
+
 	transfers := exchange.BuildSettlementTransfers(fulfillments)
 
 	for _, transfer := range transfers.OrderTransfers {

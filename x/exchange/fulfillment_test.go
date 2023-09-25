@@ -4,11 +4,15 @@ package exchange
 
 // TODO[1658]: func TestOrderFulfillment_GetAssetsFilled(t *testing.T)
 
-// TODO[1658]: func TestOrderFulfillment_GetAssetsLeft(t *testing.T)
+// TODO[1658]: func TestOrderFulfillment_GetAssetsUnfilled(t *testing.T)
+
+// TODO[1658]: func TestOrderFulfillment_GetPriceApplied(t *testing.T)
+
+// TODO[1658]: func TestOrderFulfillment_GetPriceLeft(t *testing.T)
 
 // TODO[1658]: func TestOrderFulfillment_GetPriceFilled(t *testing.T)
 
-// TODO[1658]: func TestOrderFulfillment_GetPriceLeft(t *testing.T)
+// TODO[1658]: func TestOrderFulfillment_GetPriceUnfilled(t *testing.T)
 
 // TODO[1658]: func TestOrderFulfillment_IsFullyFilled(t *testing.T)
 
@@ -38,11 +42,13 @@ package exchange
 
 // TODO[1658]: func TestOrderFulfillment_GetHoldAmount(t *testing.T)
 
-// TODO[1658]: func TestOrderFulfillment_Validate(t *testing.T)
-
 // TODO[1658]: func TestOrderFulfillment_Apply(t *testing.T)
 
+// TODO[1658]: func TestOrderFulfillment_ApplyLeftoverPrice(t *testing.T)
+
 // TODO[1658]: func TestOrderFulfillment_Finalize(t *testing.T)
+
+// TODO[1658]: func TestOrderFulfillment_Validate(t *testing.T)
 
 // TODO[1658]: func TestFulfill(t *testing.T)
 

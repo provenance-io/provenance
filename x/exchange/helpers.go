@@ -1,6 +1,9 @@
 package exchange
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // contains returns true if the provided toFind is present in the provided vals.
 func contains[T any](vals []T, toFind T, equals func(T, T) bool) bool {
@@ -70,4 +73,11 @@ func CoinEquals(a, b sdk.Coin) bool {
 // IntersectionOfCoin returns each sdk.Coin entry that is in both lists.
 func IntersectionOfCoin(list1, list2 []sdk.Coin) []sdk.Coin {
 	return intersection(list1, list2, CoinEquals)
+}
+
+func MinSDKInt(a, b sdkmath.Int) sdkmath.Int {
+	if a.LTE(b) {
+		return a
+	}
+	return b
 }

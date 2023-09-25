@@ -329,3 +329,92 @@ func TestIntersectionOfCoin(t *testing.T) {
 		})
 	}
 }
+
+func TestMinSDKInt(t *testing.T) {
+	newInt := func(val string) sdkmath.Int {
+		rv, ok := sdkmath.NewIntFromString(val)
+		require.True(t, ok, "sdkmath.NewIntFromString(%s) resulting bool", val)
+		return rv
+	}
+
+	posBig := newInt("123456789012345678901234567890")
+	negBig := posBig.Neg()
+	posBigger := posBig.Add(sdkmath.OneInt())
+
+	tests := []struct {
+		name string
+		a    sdkmath.Int
+		b    sdkmath.Int
+		exp  sdkmath.Int
+	}{
+		{name: "-big -big", a: negBig, b: negBig, exp: negBig},
+		{name: "-big -2  ", a: negBig, b: sdkmath.NewInt(-2), exp: negBig},
+		{name: "-big -1  ", a: negBig, b: sdkmath.NewInt(-1), exp: negBig},
+		{name: "-big 0   ", a: negBig, b: sdkmath.NewInt(0), exp: negBig},
+		{name: "-big 1   ", a: negBig, b: sdkmath.NewInt(1), exp: negBig},
+		{name: "-big 5   ", a: negBig, b: sdkmath.NewInt(5), exp: negBig},
+		{name: "-big big ", a: negBig, b: posBig, exp: negBig},
+
+		{name: "-2 -big", a: sdkmath.NewInt(-2), b: negBig, exp: negBig},
+		{name: "-2 -2  ", a: sdkmath.NewInt(-2), b: sdkmath.NewInt(-2), exp: sdkmath.NewInt(-2)},
+		{name: "-2 -1  ", a: sdkmath.NewInt(-2), b: sdkmath.NewInt(-1), exp: sdkmath.NewInt(-2)},
+		{name: "-2 0   ", a: sdkmath.NewInt(-2), b: sdkmath.NewInt(0), exp: sdkmath.NewInt(-2)},
+		{name: "-2 1   ", a: sdkmath.NewInt(-2), b: sdkmath.NewInt(1), exp: sdkmath.NewInt(-2)},
+		{name: "-2 5   ", a: sdkmath.NewInt(-2), b: sdkmath.NewInt(5), exp: sdkmath.NewInt(-2)},
+		{name: "-2 big ", a: sdkmath.NewInt(-2), b: posBig, exp: sdkmath.NewInt(-2)},
+
+		{name: "-1 -big", a: sdkmath.NewInt(-1), b: negBig, exp: negBig},
+		{name: "-1 -2  ", a: sdkmath.NewInt(-1), b: sdkmath.NewInt(-2), exp: sdkmath.NewInt(-2)},
+		{name: "-1 -1  ", a: sdkmath.NewInt(-1), b: sdkmath.NewInt(-1), exp: sdkmath.NewInt(-1)},
+		{name: "-1 0   ", a: sdkmath.NewInt(-1), b: sdkmath.NewInt(0), exp: sdkmath.NewInt(-1)},
+		{name: "-1 1   ", a: sdkmath.NewInt(-1), b: sdkmath.NewInt(1), exp: sdkmath.NewInt(-1)},
+		{name: "-1 5   ", a: sdkmath.NewInt(-1), b: sdkmath.NewInt(5), exp: sdkmath.NewInt(-1)},
+		{name: "-1 big ", a: sdkmath.NewInt(-1), b: posBig, exp: sdkmath.NewInt(-1)},
+
+		{name: "0 -big", a: sdkmath.NewInt(0), b: negBig, exp: negBig},
+		{name: "0 -2  ", a: sdkmath.NewInt(0), b: sdkmath.NewInt(-2), exp: sdkmath.NewInt(-2)},
+		{name: "0 -1  ", a: sdkmath.NewInt(0), b: sdkmath.NewInt(-1), exp: sdkmath.NewInt(-1)},
+		{name: "0 0   ", a: sdkmath.NewInt(0), b: sdkmath.NewInt(0), exp: sdkmath.NewInt(0)},
+		{name: "0 1   ", a: sdkmath.NewInt(0), b: sdkmath.NewInt(1), exp: sdkmath.NewInt(0)},
+		{name: "0 5   ", a: sdkmath.NewInt(0), b: sdkmath.NewInt(5), exp: sdkmath.NewInt(0)},
+		{name: "0 big ", a: sdkmath.NewInt(0), b: posBig, exp: sdkmath.NewInt(0)},
+
+		{name: "1 -big", a: sdkmath.NewInt(1), b: negBig, exp: negBig},
+		{name: "1 -2  ", a: sdkmath.NewInt(1), b: sdkmath.NewInt(-2), exp: sdkmath.NewInt(-2)},
+		{name: "1 -1  ", a: sdkmath.NewInt(1), b: sdkmath.NewInt(-1), exp: sdkmath.NewInt(-1)},
+		{name: "1 0   ", a: sdkmath.NewInt(1), b: sdkmath.NewInt(0), exp: sdkmath.NewInt(0)},
+		{name: "1 1   ", a: sdkmath.NewInt(1), b: sdkmath.NewInt(1), exp: sdkmath.NewInt(1)},
+		{name: "1 5   ", a: sdkmath.NewInt(1), b: sdkmath.NewInt(5), exp: sdkmath.NewInt(1)},
+		{name: "1 big ", a: sdkmath.NewInt(1), b: posBig, exp: sdkmath.NewInt(1)},
+
+		{name: "5 -big", a: sdkmath.NewInt(5), b: negBig, exp: negBig},
+		{name: "5 -2  ", a: sdkmath.NewInt(5), b: sdkmath.NewInt(-2), exp: sdkmath.NewInt(-2)},
+		{name: "5 -1  ", a: sdkmath.NewInt(5), b: sdkmath.NewInt(-1), exp: sdkmath.NewInt(-1)},
+		{name: "5 0   ", a: sdkmath.NewInt(5), b: sdkmath.NewInt(0), exp: sdkmath.NewInt(0)},
+		{name: "5 1   ", a: sdkmath.NewInt(5), b: sdkmath.NewInt(1), exp: sdkmath.NewInt(1)},
+		{name: "5 5   ", a: sdkmath.NewInt(5), b: sdkmath.NewInt(5), exp: sdkmath.NewInt(5)},
+		{name: "5 big ", a: sdkmath.NewInt(5), b: posBig, exp: sdkmath.NewInt(5)},
+
+		{name: "big -big", a: posBig, b: negBig, exp: negBig},
+		{name: "big -2  ", a: posBig, b: sdkmath.NewInt(-2), exp: sdkmath.NewInt(-2)},
+		{name: "big -1  ", a: posBig, b: sdkmath.NewInt(-1), exp: sdkmath.NewInt(-1)},
+		{name: "big 0   ", a: posBig, b: sdkmath.NewInt(0), exp: sdkmath.NewInt(0)},
+		{name: "big 1   ", a: posBig, b: sdkmath.NewInt(1), exp: sdkmath.NewInt(1)},
+		{name: "big 5   ", a: posBig, b: sdkmath.NewInt(5), exp: sdkmath.NewInt(5)},
+		{name: "big big ", a: posBig, b: posBig, exp: posBig},
+
+		{name: "big bigger", a: posBig, b: posBigger, exp: posBig},
+		{name: "bigger big", a: posBigger, b: posBig, exp: posBig},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual sdkmath.Int
+			testFunc := func() {
+				actual = MinSDKInt(tc.a, tc.b)
+			}
+			require.NotPanics(t, testFunc, "MinSDKInt(%s, %s)", tc.a, tc.b)
+			assert.Equal(t, tc.exp, actual, "MinSDKInt(%s, %s)", tc.a, tc.b)
+		})
+	}
+}
