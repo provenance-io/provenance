@@ -1342,6 +1342,8 @@ func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
+// TODO[1658]: func TestMsgMarketManagePermissionsRequest_HasUpdates(t *testing.T)
+
 func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 	goodAdmin := sdk.AccAddress("goodAdmin___________").String()
 
@@ -1503,6 +1505,8 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1658]: func TestMsgMarketManageReqAttrsRequest_HasUpdates(t *testing.T)
 
 func TestMsgGovCreateMarketRequest_ValidateBasic(t *testing.T) {
 	authority := sdk.AccAddress("authority___________").String()
