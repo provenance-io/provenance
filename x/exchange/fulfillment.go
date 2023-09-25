@@ -33,6 +33,7 @@ type OrderFulfillment struct {
 	// If this is an ask order, the PriceFilledAmt is related to the prices of the bid orders fulfilling this order.
 	PriceFilledAmt sdkmath.Int
 	// PriceLeftAmt is the price that has not yet been fulfilled for the order.
+	// This can be negative for ask orders that are being filled at a higher price than requested.
 	PriceLeftAmt sdkmath.Int
 	// FeesToPay is the amount of fees to pay for this order.
 	// This is not tracked as fulfillments are applied, it is only set during Finalize().
@@ -427,7 +428,7 @@ func Fulfill(of1, of2 *OrderFulfillment) error {
 			bidOF.GetOrderID(), bidOrder.Price, askOF.GetOrderID(), askOrder.Price)
 	}
 
-	assetsAmt, err := getFulfillmentAssetsAmt(askOF, bidOF)
+	assetsAmt, err := GetFulfillmentAssetsAmt(askOF, bidOF)
 	if err != nil {
 		return err
 	}
@@ -446,31 +447,46 @@ func Fulfill(of1, of2 *OrderFulfillment) error {
 	return errors.Join(askErr, bidErr)
 }
 
-// getFulfillmentAssetsAmt figures out the assets that can be fulfilled with the two provided orders.
-// It's assumed that the askOF is for an ask order, and the bidOF is for a bid order.
-func getFulfillmentAssetsAmt(askOF, bidOF *OrderFulfillment) (sdkmath.Int, error) {
-	askAmtLeft, bidAmtLeft := askOF.AssetsLeftAmt, bidOF.AssetsLeftAmt
-	if !askAmtLeft.IsPositive() || !bidAmtLeft.IsPositive() {
-		return sdkmath.ZeroInt(), fmt.Errorf("cannot fill ask order %d having assets left %q "+
-			"with bid order %d having assets left %q: zero or negative assets left",
-			askOF.GetOrderID(), askOF.GetAssetsLeft(), bidOF.GetOrderID(), bidOF.GetAssetsLeft())
+// GetFulfillmentAssetsAmt figures out the assets that can be fulfilled with the two provided orders.
+func GetFulfillmentAssetsAmt(of1, of2 *OrderFulfillment) (sdkmath.Int, error) {
+	of1AmtLeft, of2AmtLeft := of1.AssetsLeftAmt, of2.AssetsLeftAmt
+	if !of1AmtLeft.IsPositive() || !of2AmtLeft.IsPositive() {
+		return sdkmath.ZeroInt(), fmt.Errorf("cannot fill %s order %d having assets left %q "+
+			"with %s order %d having assets left %q: zero or negative assets left",
+			of1.GetOrderType(), of1.GetOrderID(), of1.GetAssetsLeft(),
+			of2.GetOrderType(), of2.GetOrderID(), of2.GetAssetsLeft())
 	}
 
 	// Return the lesser of the two.
-	if askAmtLeft.LTE(bidAmtLeft) {
-		return askAmtLeft, nil
+	if of1AmtLeft.LTE(of2AmtLeft) {
+		return of1AmtLeft, nil
 	}
-	return bidAmtLeft, nil
+	return of2AmtLeft, nil
 }
 
+// Fulfillments contains information on how orders are to be fulfilled.
+type Fulfillments struct {
+	// AskOFs are all the ask orders and how they are to be filled.
+	AskOFs []*OrderFulfillment
+	// BidOFs are all the bid orders and how they are to be filled.
+	BidOFs []*OrderFulfillment
+	// PartialOrder contains info on an order that is only being partially filled.
+	PartialOrder *PartialFulfillment
+}
+
+// PartialFulfillment contains the remains of a partially filled order, and info on what was filled.
 type PartialFulfillment struct {
-	NewOrder     *Order
+	// NewOrder is an updated version of the partially filled order with reduced amounts.
+	NewOrder *Order
+	// AssetsFilled is the amount of order assets that were filled.
 	AssetsFilled sdk.Coin
-	PriceFilled  sdk.Coin
+	// PriceFilled is the amount of the order price that was filled.
+	PriceFilled sdk.Coin
 }
 
 func NewPartialFulfillment(f *OrderFulfillment) *PartialFulfillment {
 	order := NewOrder(f.GetOrderID())
+
 	if f.IsAskOrder() {
 		askOrder := &AskOrder{
 			MarketId:     f.GetMarketID(),
@@ -488,8 +504,8 @@ func NewPartialFulfillment(f *OrderFulfillment) *PartialFulfillment {
 		}
 		return &PartialFulfillment{
 			NewOrder:     order,
-			AssetsFilled: f.GetAssetsFilled(),
-			PriceFilled:  f.GetPriceFilled(),
+			AssetsFilled: f.GetAssets().Sub(f.GetAssetsLeft()),
+			PriceFilled:  f.GetPrice().Sub(f.GetPriceLeft()),
 		}
 	}
 
@@ -504,18 +520,12 @@ func NewPartialFulfillment(f *OrderFulfillment) *PartialFulfillment {
 		}
 		return &PartialFulfillment{
 			NewOrder:     order.WithBid(bidOrder),
-			AssetsFilled: f.GetAssetsFilled(),
-			PriceFilled:  f.GetPriceFilled(),
+			AssetsFilled: f.GetAssets().Sub(f.GetAssetsLeft()),
+			PriceFilled:  f.GetPrice().Sub(f.GetPriceLeft()),
 		}
 	}
 
 	panic(fmt.Errorf("order %d has unknown type %q", order.OrderId, f.GetOrderType()))
-}
-
-type Fulfillments struct {
-	AskOFs       []*OrderFulfillment
-	BidOFs       []*OrderFulfillment
-	PartialOrder *PartialFulfillment
 }
 
 // BuildFulfillments creates all of the ask and bid order fulfillments.
@@ -587,8 +597,11 @@ func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) 
 
 // indexedAddrAmts is a set of addresses and amounts.
 type indexedAddrAmts struct {
-	addrs   []string
-	amts    []sdk.Coins
+	// addrs are a list of all addresses that have amounts.
+	addrs []string
+	// amts are a list of the coin amounts for each address (by slice index).
+	amts []sdk.Coins
+	// indexes are the index value for each address.
 	indexes map[string]int
 }
 
@@ -598,8 +611,8 @@ func newIndexedAddrAmts() *indexedAddrAmts {
 	}
 }
 
-// Add adds the coins to the input with the given address (creating it if needed).
-func (i *indexedAddrAmts) Add(addr string, coins ...sdk.Coin) {
+// add adds the coins to the given address.
+func (i *indexedAddrAmts) add(addr string, coins ...sdk.Coin) {
 	n, known := i.indexes[addr]
 	if !known {
 		n = len(i.addrs)
@@ -610,8 +623,8 @@ func (i *indexedAddrAmts) Add(addr string, coins ...sdk.Coin) {
 	i.amts[n] = i.amts[n].Add(coins...)
 }
 
-// GetAsInputs returns all the entries as bank Inputs.
-func (i *indexedAddrAmts) GetAsInputs() []banktypes.Input {
+// getAsInputs returns all the entries as bank Inputs.
+func (i *indexedAddrAmts) getAsInputs() []banktypes.Input {
 	rv := make([]banktypes.Input, len(i.addrs))
 	for n, addr := range i.addrs {
 		rv[n] = banktypes.Input{Address: addr, Coins: i.amts[n]}
@@ -619,8 +632,8 @@ func (i *indexedAddrAmts) GetAsInputs() []banktypes.Input {
 	return rv
 }
 
-// GetAsOutputs returns all the entries as bank Outputs.
-func (i *indexedAddrAmts) GetAsOutputs() []banktypes.Output {
+// getAsOutputs returns all the entries as bank Outputs.
+func (i *indexedAddrAmts) getAsOutputs() []banktypes.Output {
 	rv := make([]banktypes.Output, len(i.addrs))
 	for n, addr := range i.addrs {
 		rv[n] = banktypes.Output{Address: addr, Coins: i.amts[n]}
@@ -630,14 +643,18 @@ func (i *indexedAddrAmts) GetAsOutputs() []banktypes.Output {
 
 // Transfer contains bank inputs and outputs indicating a transfer that needs to be made.
 type Transfer struct {
-	Inputs  []banktypes.Input
+	// Inputs are the inputs that make up this transfer.
+	Inputs []banktypes.Input
+	// Outputs are the outputs that make up this transfer.
 	Outputs []banktypes.Output
 }
 
 // SettlementTransfers has everything needed to do all the transfers for a settlement.
 type SettlementTransfers struct {
+	// OrderTransfers are all of the asset and price transfers needed to facilitate a settlement.
 	OrderTransfers []*Transfer
-	FeeInputs      []banktypes.Input
+	// FeeInputs are all of the inputs needed to facilitate payment of fees to a market.
+	FeeInputs []banktypes.Input
 }
 
 // BuildSettlementTransfers creates all the order transfers needed for the provided fulfillments.
@@ -646,11 +663,11 @@ func BuildSettlementTransfers(fulfillments *Fulfillments) *SettlementTransfers {
 
 	rv := &SettlementTransfers{}
 	applyOF := func(of *OrderFulfillment) {
-		rv.OrderTransfers = append(rv.OrderTransfers, getAssetTransfer(of), getPriceTransfer(of))
+		rv.OrderTransfers = append(rv.OrderTransfers, GetAssetTransfer(of), GetPriceTransfer(of))
 		if !of.FeesToPay.IsZero() {
 			// Using NewCoins in here (instead of Coins{...}) as a last-ditch negative amount panic check.
 			fees := sdk.NewCoins(of.FeesToPay...)
-			indexedFees.Add(of.GetOwner(), fees...)
+			indexedFees.add(of.GetOwner(), fees...)
 		}
 	}
 
@@ -661,28 +678,28 @@ func BuildSettlementTransfers(fulfillments *Fulfillments) *SettlementTransfers {
 		applyOF(bidOf)
 	}
 
-	rv.FeeInputs = indexedFees.GetAsInputs()
+	rv.FeeInputs = indexedFees.getAsInputs()
 
 	return rv
 }
 
-// getAssetTransfer gets the inputs and outputs to facilitate the transfers of assets for this order fulfillment.
-func getAssetTransfer(f *OrderFulfillment) *Transfer {
+// GetAssetTransfer gets the inputs and outputs to facilitate the transfers of assets for this order fulfillment.
+func GetAssetTransfer(f *OrderFulfillment) *Transfer {
 	indexedSplits := newIndexedAddrAmts()
 	for _, split := range f.Splits {
-		indexedSplits.Add(split.Order.GetOwner(), split.Assets)
+		indexedSplits.add(split.Order.GetOwner(), split.Assets)
 	}
 
 	// Using NewCoins in here (instead of Coins{...}) as a last-ditch negative amount panic check.
 	if f.IsAskOrder() {
 		return &Transfer{
 			Inputs:  []banktypes.Input{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetAssetsFilled())}},
-			Outputs: indexedSplits.GetAsOutputs(),
+			Outputs: indexedSplits.getAsOutputs(),
 		}
 	}
 	if f.IsBidOrder() {
 		return &Transfer{
-			Inputs:  indexedSplits.GetAsInputs(),
+			Inputs:  indexedSplits.getAsInputs(),
 			Outputs: []banktypes.Output{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetAssetsFilled())}},
 		}
 	}
@@ -691,24 +708,24 @@ func getAssetTransfer(f *OrderFulfillment) *Transfer {
 	panic(fmt.Errorf("unknown order type %T", f.Order.GetOrder()))
 }
 
-// getPriceTransfer gets the inputs and outputs to facilitate the transfers for the price of this order fulfillment.
-func getPriceTransfer(f *OrderFulfillment) *Transfer {
+// GetPriceTransfer gets the inputs and outputs to facilitate the transfers for the price of this order fulfillment.
+func GetPriceTransfer(f *OrderFulfillment) *Transfer {
 	indexedSplits := newIndexedAddrAmts()
 	for _, split := range f.Splits {
-		indexedSplits.Add(split.Order.GetOwner(), split.Price)
+		indexedSplits.add(split.Order.GetOwner(), split.Price)
 	}
 
 	// Using NewCoins in here (instead of Coins{...}) as a last-ditch negative amount panic check.
 	if f.IsAskOrder() {
 		return &Transfer{
-			Inputs:  indexedSplits.GetAsInputs(),
+			Inputs:  indexedSplits.getAsInputs(),
 			Outputs: []banktypes.Output{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetPriceFilled())}},
 		}
 	}
 	if f.IsBidOrder() {
 		return &Transfer{
 			Inputs:  []banktypes.Input{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetPriceFilled())}},
-			Outputs: indexedSplits.GetAsOutputs(),
+			Outputs: indexedSplits.getAsOutputs(),
 		}
 	}
 
