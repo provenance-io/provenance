@@ -1455,6 +1455,487 @@ func TestIndexedAddrAmts_GetAsOutputs(t *testing.T) {
 
 // TODO[1658]: func TestBuildSettlementTransfers(t *testing.T)
 
-// TODO[1658]: func TestGetAssetTransfer(t *testing.T)
+func transferString(t *Transfer) string {
+	if t == nil {
+		return "nil"
+	}
+	inputs := "nil"
+	if t.Inputs != nil {
+		inputVals := make([]string, len(t.Inputs))
+		for i, input := range t.Inputs {
+			inputVals[i] = bankInputString(input)
+		}
+		inputs = strings.Join(inputVals, ", ")
+	}
+	outputs := "nil"
+	if t.Outputs != nil {
+		outputVals := make([]string, len(t.Outputs))
+		for i, output := range t.Outputs {
+			outputVals[i] = bankOutputString(output)
+		}
+		outputs = strings.Join(outputVals, ", ")
+	}
+	return fmt.Sprintf("{Inputs:%s, Outputs: %s}", inputs, outputs)
+}
 
-// TODO[1658]: func TestGetPriceTransfer(t *testing.T)
+// bankInputString is similar to %v except with easier to understand Coin entries.
+func bankInputString(i banktypes.Input) string {
+	return fmt.Sprintf("I{Address:%q,Coins:%q}", i.Address, i.Coins)
+}
+
+// bankOutputString is similar to %v except with easier to understand Coin entries.
+func bankOutputString(o banktypes.Output) string {
+	return fmt.Sprintf("O{Address:%q,Coins:%q}", o.Address, o.Coins)
+}
+
+func TestGetAssetTransfer(t *testing.T) {
+	coin := func(amt int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amt)}
+	}
+	igc := coin(2468, "ignorable") // igc => "ignorable coin"
+	askOrder := func(orderID uint64, seller string, assets sdk.Coin) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			Seller: seller,
+			Assets: assets,
+		})
+	}
+	bidOrder := func(orderID uint64, buyer string, assets sdk.Coin) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			Buyer:  buyer,
+			Assets: assets,
+		})
+	}
+	orderSplit := func(order *Order, assets sdk.Coin) *OrderSplit {
+		return &OrderSplit{
+			Order:  &OrderFulfillment{Order: order},
+			Assets: assets,
+			Price:  igc,
+		}
+	}
+	input := func(addr string, coins ...sdk.Coin) banktypes.Input {
+		return banktypes.Input{Address: addr, Coins: coins}
+	}
+	output := func(addr string, coins ...sdk.Coin) banktypes.Output {
+		return banktypes.Output{Address: addr, Coins: coins}
+	}
+
+	tests := []struct {
+		name     string
+		f        *OrderFulfillment
+		exp      *Transfer
+		expPanic string
+	}{
+		{
+			name: "ask, one split",
+			f: &OrderFulfillment{
+				Order:           askOrder(1, "seller", coin(25, "carrot")),
+				AssetsFilledAmt: sdkmath.NewInt(33),
+				Splits:          []*OrderSplit{orderSplit(bidOrder(2, "buyer", igc), coin(88, "banana"))},
+			},
+			exp: &Transfer{
+				Inputs:  []banktypes.Input{input("seller", coin(33, "carrot"))},
+				Outputs: []banktypes.Output{output("buyer", coin(88, "banana"))},
+			},
+		},
+		{
+			name: "ask, two splits diff addrs",
+			f: &OrderFulfillment{
+				Order:           askOrder(3, "SELLER", coin(26, "carrot")),
+				AssetsFilledAmt: sdkmath.NewInt(4321),
+				Splits: []*OrderSplit{
+					orderSplit(bidOrder(4, "buyer 1", igc), coin(89, "banana")),
+					orderSplit(bidOrder(5, "second buyer", igc), coin(45, "apple")),
+				},
+			},
+			exp: &Transfer{
+				Inputs: []banktypes.Input{input("SELLER", coin(4321, "carrot"))},
+				Outputs: []banktypes.Output{
+					output("buyer 1", coin(89, "banana")),
+					output("second buyer", coin(45, "apple")),
+				},
+			},
+		},
+		{
+			name: "ask, two splits same addr, two denoms",
+			f: &OrderFulfillment{
+				Order:           askOrder(6, "SeLleR", coin(27, "carrot")),
+				AssetsFilledAmt: sdkmath.NewInt(5511),
+				Splits: []*OrderSplit{
+					orderSplit(bidOrder(7, "buyer", igc), coin(90, "banana")),
+					orderSplit(bidOrder(8, "buyer", igc), coin(46, "apple")),
+				},
+			},
+			exp: &Transfer{
+				Inputs:  []banktypes.Input{input("SeLleR", coin(5511, "carrot"))},
+				Outputs: []banktypes.Output{output("buyer", coin(46, "apple"), coin(90, "banana"))},
+			},
+		},
+		{
+			name: "ask, two splits same addr, one denom",
+			f: &OrderFulfillment{
+				Order:           askOrder(9, "sellsell", coin(28, "carrot")),
+				AssetsFilledAmt: sdkmath.NewInt(42),
+				Splits: []*OrderSplit{
+					orderSplit(bidOrder(10, "buybuy", igc), coin(55, "apple")),
+					orderSplit(bidOrder(11, "buybuy", igc), coin(34, "apple")),
+				},
+			},
+			exp: &Transfer{
+				Inputs:  []banktypes.Input{input("sellsell", coin(42, "carrot"))},
+				Outputs: []banktypes.Output{output("buybuy", coin(89, "apple"))},
+			},
+		},
+		{
+			name: "ask, negative price in split",
+			f: &OrderFulfillment{
+				Order:           askOrder(12, "goodsell", coin(29, "carrot")),
+				AssetsFilledAmt: sdkmath.NewInt(91),
+				Splits:          []*OrderSplit{orderSplit(bidOrder(13, "buygood", igc), coin(-4, "banana"))},
+			},
+			expPanic: "cannot index and add invalid coin amount \"-4banana\"",
+		},
+		{
+			name: "ask, negative price applied",
+			f: &OrderFulfillment{
+				Order:           askOrder(14, "solong", coin(30, "carrot")),
+				AssetsFilledAmt: sdkmath.NewInt(-5),
+				Splits:          []*OrderSplit{orderSplit(bidOrder(15, "hello", igc), coin(66, "banana"))},
+			},
+			expPanic: "invalid coin set -5carrot: coin -5carrot amount is not positive",
+		},
+
+		{
+			name: "bid, one split",
+			f: &OrderFulfillment{
+				Order:           bidOrder(1, "buyer", coin(25, "carrot")),
+				AssetsFilledAmt: sdkmath.NewInt(33),
+				Splits:          []*OrderSplit{orderSplit(askOrder(2, "seller", igc), coin(88, "banana"))},
+			},
+			exp: &Transfer{
+				Inputs:  []banktypes.Input{input("seller", coin(88, "banana"))},
+				Outputs: []banktypes.Output{output("buyer", coin(33, "carrot"))},
+			},
+		},
+		{
+			name: "bid, two splits diff addrs",
+			f: &OrderFulfillment{
+				Order:           bidOrder(3, "BUYER", coin(26, "carrot")),
+				AssetsFilledAmt: sdkmath.NewInt(4321),
+				Splits: []*OrderSplit{
+					orderSplit(askOrder(4, "seller 1", igc), coin(89, "banana")),
+					orderSplit(askOrder(5, "second seller", igc), coin(45, "apple")),
+				},
+			},
+			exp: &Transfer{
+				Inputs: []banktypes.Input{
+					input("seller 1", coin(89, "banana")),
+					input("second seller", coin(45, "apple")),
+				},
+				Outputs: []banktypes.Output{output("BUYER", coin(4321, "carrot"))},
+			},
+		},
+		{
+			name: "bid, two splits same addr, two denoms",
+			f: &OrderFulfillment{
+				Order:           bidOrder(6, "BuYeR", coin(27, "carrot")),
+				AssetsFilledAmt: sdkmath.NewInt(5511),
+				Splits: []*OrderSplit{
+					orderSplit(askOrder(7, "seller", igc), coin(90, "banana")),
+					orderSplit(askOrder(8, "seller", igc), coin(46, "apple")),
+				},
+			},
+			exp: &Transfer{
+				Inputs:  []banktypes.Input{input("seller", coin(46, "apple"), coin(90, "banana"))},
+				Outputs: []banktypes.Output{output("BuYeR", coin(5511, "carrot"))},
+			},
+		},
+		{
+			name: "bid, two splits same addr, one denom",
+			f: &OrderFulfillment{
+				Order:           bidOrder(9, "buybuy", coin(28, "carrot")),
+				AssetsFilledAmt: sdkmath.NewInt(42),
+				Splits: []*OrderSplit{
+					orderSplit(bidOrder(10, "sellsell", igc), coin(55, "apple")),
+					orderSplit(bidOrder(11, "sellsell", igc), coin(34, "apple")),
+				},
+			},
+			exp: &Transfer{
+				Inputs:  []banktypes.Input{input("sellsell", coin(89, "apple"))},
+				Outputs: []banktypes.Output{output("buybuy", coin(42, "carrot"))},
+			},
+		},
+		{
+			name: "bid, negative price in split",
+			f: &OrderFulfillment{
+				Order:           bidOrder(12, "goodbuy", coin(29, "carrot")),
+				AssetsFilledAmt: sdkmath.NewInt(91),
+				Splits:          []*OrderSplit{orderSplit(askOrder(13, "sellgood", igc), coin(-4, "banana"))},
+			},
+			expPanic: "cannot index and add invalid coin amount \"-4banana\"",
+		},
+		{
+			name: "bid, negative price applied",
+			f: &OrderFulfillment{
+				Order:           bidOrder(14, "heythere", coin(30, "carrot")),
+				AssetsFilledAmt: sdkmath.NewInt(-5),
+				Splits:          []*OrderSplit{orderSplit(askOrder(15, "afterwhile", igc), coin(66, "banana"))},
+			},
+			expPanic: "invalid coin set -5carrot: coin -5carrot amount is not positive",
+		},
+
+		{
+			name:     "nil inside order",
+			f:        &OrderFulfillment{Order: NewOrder(20)},
+			expPanic: "unknown order type <nil>",
+		},
+		{
+			name:     "unknown inside order",
+			f:        &OrderFulfillment{Order: &Order{OrderId: 21, Order: &unknownOrderType{}}},
+			expPanic: "unknown order type *exchange.unknownOrderType",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual *Transfer
+			defer func() {
+				if t.Failed() {
+					t.Logf("  Actual: %s", transferString(actual))
+					t.Logf("Expected: %s", transferString(tc.exp))
+					t.Logf("OrderFulfillment: %s", orderFulfillmentString(tc.f))
+				}
+			}()
+			testFunc := func() {
+				actual = GetAssetTransfer(tc.f)
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetAssetTransfer")
+			assert.Equal(t, tc.exp, actual, "GetAssetTransfer")
+		})
+	}
+}
+
+func TestGetPriceTransfer(t *testing.T) {
+	coin := func(amt int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amt)}
+	}
+	igc := coin(2468, "ignorable") // igc => "ignorable coin"
+	askOrder := func(orderID uint64, seller string, price sdk.Coin) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			Seller: seller,
+			Price:  price,
+		})
+	}
+	bidOrder := func(orderID uint64, buyer string, price sdk.Coin) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			Buyer: buyer,
+			Price: price,
+		})
+	}
+	orderSplit := func(order *Order, price sdk.Coin) *OrderSplit {
+		return &OrderSplit{
+			Order:  &OrderFulfillment{Order: order},
+			Price:  price,
+			Assets: igc,
+		}
+	}
+	input := func(addr string, coins ...sdk.Coin) banktypes.Input {
+		return banktypes.Input{Address: addr, Coins: coins}
+	}
+	output := func(addr string, coins ...sdk.Coin) banktypes.Output {
+		return banktypes.Output{Address: addr, Coins: coins}
+	}
+
+	tests := []struct {
+		name     string
+		f        *OrderFulfillment
+		exp      *Transfer
+		expPanic string
+	}{
+		{
+			name: "ask, one split",
+			f: &OrderFulfillment{
+				Order:           askOrder(1, "seller", coin(25, "carrot")),
+				PriceAppliedAmt: sdkmath.NewInt(33),
+				Splits:          []*OrderSplit{orderSplit(bidOrder(2, "buyer", igc), coin(88, "banana"))},
+			},
+			exp: &Transfer{
+				Inputs:  []banktypes.Input{input("buyer", coin(88, "banana"))},
+				Outputs: []banktypes.Output{output("seller", coin(33, "carrot"))},
+			},
+		},
+		{
+			name: "ask, two splits diff addrs",
+			f: &OrderFulfillment{
+				Order:           askOrder(3, "SELLER", coin(26, "carrot")),
+				PriceAppliedAmt: sdkmath.NewInt(4321),
+				Splits: []*OrderSplit{
+					orderSplit(bidOrder(4, "buyer 1", igc), coin(89, "banana")),
+					orderSplit(bidOrder(5, "second buyer", igc), coin(45, "apple")),
+				},
+			},
+			exp: &Transfer{
+				Inputs: []banktypes.Input{
+					input("buyer 1", coin(89, "banana")),
+					input("second buyer", coin(45, "apple")),
+				},
+				Outputs: []banktypes.Output{output("SELLER", coin(4321, "carrot"))},
+			},
+		},
+		{
+			name: "ask, two splits same addr, two denoms",
+			f: &OrderFulfillment{
+				Order:           askOrder(6, "SeLleR", coin(27, "carrot")),
+				PriceAppliedAmt: sdkmath.NewInt(5511),
+				Splits: []*OrderSplit{
+					orderSplit(bidOrder(7, "buyer", igc), coin(90, "banana")),
+					orderSplit(bidOrder(8, "buyer", igc), coin(46, "apple")),
+				},
+			},
+			exp: &Transfer{
+				Inputs:  []banktypes.Input{input("buyer", coin(46, "apple"), coin(90, "banana"))},
+				Outputs: []banktypes.Output{output("SeLleR", coin(5511, "carrot"))},
+			},
+		},
+		{
+			name: "ask, two splits same addr, one denom",
+			f: &OrderFulfillment{
+				Order:           askOrder(9, "sellsell", coin(28, "carrot")),
+				PriceAppliedAmt: sdkmath.NewInt(42),
+				Splits: []*OrderSplit{
+					orderSplit(bidOrder(10, "buybuy", igc), coin(55, "apple")),
+					orderSplit(bidOrder(11, "buybuy", igc), coin(34, "apple")),
+				},
+			},
+			exp: &Transfer{
+				Inputs:  []banktypes.Input{input("buybuy", coin(89, "apple"))},
+				Outputs: []banktypes.Output{output("sellsell", coin(42, "carrot"))},
+			},
+		},
+		{
+			name: "ask, negative price in split",
+			f: &OrderFulfillment{
+				Order:           askOrder(12, "goodsell", coin(29, "carrot")),
+				PriceAppliedAmt: sdkmath.NewInt(91),
+				Splits:          []*OrderSplit{orderSplit(bidOrder(13, "buygood", igc), coin(-4, "banana"))},
+			},
+			expPanic: "cannot index and add invalid coin amount \"-4banana\"",
+		},
+		{
+			name: "ask, negative price applied",
+			f: &OrderFulfillment{
+				Order:           askOrder(14, "solong", coin(30, "carrot")),
+				PriceAppliedAmt: sdkmath.NewInt(-5),
+				Splits:          []*OrderSplit{orderSplit(bidOrder(15, "hello", igc), coin(66, "banana"))},
+			},
+			expPanic: "invalid coin set -5carrot: coin -5carrot amount is not positive",
+		},
+
+		{
+			name: "bid, one split",
+			f: &OrderFulfillment{
+				Order:           bidOrder(1, "buyer", coin(25, "carrot")),
+				PriceAppliedAmt: sdkmath.NewInt(33),
+				Splits:          []*OrderSplit{orderSplit(askOrder(2, "seller", igc), coin(88, "banana"))},
+			},
+			exp: &Transfer{
+				Inputs:  []banktypes.Input{input("buyer", coin(33, "carrot"))},
+				Outputs: []banktypes.Output{output("seller", coin(88, "banana"))},
+			},
+		},
+		{
+			name: "bid, two splits diff addrs",
+			f: &OrderFulfillment{
+				Order:           bidOrder(3, "BUYER", coin(26, "carrot")),
+				PriceAppliedAmt: sdkmath.NewInt(4321),
+				Splits: []*OrderSplit{
+					orderSplit(askOrder(4, "seller 1", igc), coin(89, "banana")),
+					orderSplit(askOrder(5, "second seller", igc), coin(45, "apple")),
+				},
+			},
+			exp: &Transfer{
+				Inputs: []banktypes.Input{input("BUYER", coin(4321, "carrot"))},
+				Outputs: []banktypes.Output{
+					output("seller 1", coin(89, "banana")),
+					output("second seller", coin(45, "apple")),
+				},
+			},
+		},
+		{
+			name: "bid, two splits same addr, two denoms",
+			f: &OrderFulfillment{
+				Order:           bidOrder(6, "BuYeR", coin(27, "carrot")),
+				PriceAppliedAmt: sdkmath.NewInt(5511),
+				Splits: []*OrderSplit{
+					orderSplit(askOrder(7, "seller", igc), coin(90, "banana")),
+					orderSplit(askOrder(8, "seller", igc), coin(46, "apple")),
+				},
+			},
+			exp: &Transfer{
+				Inputs:  []banktypes.Input{input("BuYeR", coin(5511, "carrot"))},
+				Outputs: []banktypes.Output{output("seller", coin(46, "apple"), coin(90, "banana"))},
+			},
+		},
+		{
+			name: "bid, two splits same addr, one denom",
+			f: &OrderFulfillment{
+				Order:           bidOrder(9, "buybuy", coin(28, "carrot")),
+				PriceAppliedAmt: sdkmath.NewInt(42),
+				Splits: []*OrderSplit{
+					orderSplit(bidOrder(10, "sellsell", igc), coin(55, "apple")),
+					orderSplit(bidOrder(11, "sellsell", igc), coin(34, "apple")),
+				},
+			},
+			exp: &Transfer{
+				Inputs:  []banktypes.Input{input("buybuy", coin(42, "carrot"))},
+				Outputs: []banktypes.Output{output("sellsell", coin(89, "apple"))},
+			},
+		},
+		{
+			name: "bid, negative price in split",
+			f: &OrderFulfillment{
+				Order:           bidOrder(12, "goodbuy", coin(29, "carrot")),
+				PriceAppliedAmt: sdkmath.NewInt(91),
+				Splits:          []*OrderSplit{orderSplit(askOrder(13, "sellgood", igc), coin(-4, "banana"))},
+			},
+			expPanic: "cannot index and add invalid coin amount \"-4banana\"",
+		},
+		{
+			name: "bid, negative price applied",
+			f: &OrderFulfillment{
+				Order:           bidOrder(14, "heythere", coin(30, "carrot")),
+				PriceAppliedAmt: sdkmath.NewInt(-5),
+				Splits:          []*OrderSplit{orderSplit(askOrder(15, "afterwhile", igc), coin(66, "banana"))},
+			},
+			expPanic: "invalid coin set -5carrot: coin -5carrot amount is not positive",
+		},
+
+		{
+			name:     "nil inside order",
+			f:        &OrderFulfillment{Order: NewOrder(20)},
+			expPanic: "unknown order type <nil>",
+		},
+		{
+			name:     "unknown inside order",
+			f:        &OrderFulfillment{Order: &Order{OrderId: 21, Order: &unknownOrderType{}}},
+			expPanic: "unknown order type *exchange.unknownOrderType",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual *Transfer
+			defer func() {
+				if t.Failed() {
+					t.Logf("  Actual: %s", transferString(actual))
+					t.Logf("Expected: %s", transferString(tc.exp))
+					t.Logf("OrderFulfillment: %s", orderFulfillmentString(tc.f))
+				}
+			}()
+			testFunc := func() {
+				actual = GetPriceTransfer(tc.f)
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetPriceTransfer")
+			assert.Equal(t, tc.exp, actual, "GetPriceTransfer")
+		})
+	}
+}

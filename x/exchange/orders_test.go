@@ -72,15 +72,7 @@ func orderString(order *Order) string {
 		fields = append(fields, fmt.Sprintf("BidOrder:%s", bidOrderString(order.GetBidOrder())))
 	default:
 		if order.GetOrder() != nil {
-			fields = append(fields,
-				fmt.Sprintf("orderType:%q", order.GetOrderType()),
-				fmt.Sprintf("MarketId:%d", order.GetMarketID()),
-				fmt.Sprintf("owner:%s", order.GetOwner()),
-				fmt.Sprintf("Assets:%q", order.GetAssets()),
-				fmt.Sprintf("Price:%q", order.GetPrice()),
-				fmt.Sprintf("fees:%s", coinsString(order.GetSettlementFees())),
-				fmt.Sprintf("AllowPartial:%t", order.PartialFillAllowed()),
-			)
+			fields = append(fields, fmt.Sprintf("orderType:%q", order.GetOrderType()))
 		} else {
 			fields = append(fields, "Order:nil")
 		}
