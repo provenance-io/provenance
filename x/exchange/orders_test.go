@@ -28,7 +28,7 @@ func copyCoins(coins sdk.Coins) sdk.Coins {
 
 // copyCoin returns a copy of the provided coin.
 func copyCoin(coin sdk.Coin) sdk.Coin {
-	return sdk.NewInt64Coin(coin.Denom, coin.Amount.Int64())
+	return sdk.Coin{Denom: coin.Denom, Amount: coin.Amount.AddRaw(0)}
 }
 
 // copyCoinP returns a copy of the provided *coin.

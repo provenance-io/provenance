@@ -731,7 +731,13 @@ func newIndexedAddrAmts() *indexedAddrAmts {
 }
 
 // add adds the coins to the given address.
+// Panics if a provided coin is invalid.
 func (i *indexedAddrAmts) add(addr string, coins ...sdk.Coin) {
+	for _, coin := range coins {
+		if err := coin.Validate(); err != nil {
+			panic(fmt.Errorf("cannot index and add invalid coin amount %q", coin))
+		}
+	}
 	n, known := i.indexes[addr]
 	if !known {
 		n = len(i.addrs)
@@ -743,18 +749,32 @@ func (i *indexedAddrAmts) add(addr string, coins ...sdk.Coin) {
 }
 
 // getAsInputs returns all the entries as bank Inputs.
+// Panics if this is nil, has no addrs, or has a negative coin amount.
 func (i *indexedAddrAmts) getAsInputs() []banktypes.Input {
+	if i == nil || len(i.addrs) == 0 {
+		panic(errors.New("cannot get inputs from empty set"))
+	}
 	rv := make([]banktypes.Input, len(i.addrs))
 	for n, addr := range i.addrs {
+		if !i.amts[n].IsAllPositive() {
+			panic(fmt.Errorf("invalid indexed amount %q for address %q: cannot be zero or negative", addr, i.amts[n]))
+		}
 		rv[n] = banktypes.Input{Address: addr, Coins: i.amts[n]}
 	}
 	return rv
 }
 
 // getAsOutputs returns all the entries as bank Outputs.
+// Panics if this is nil, has no addrs, or has a negative coin amount.
 func (i *indexedAddrAmts) getAsOutputs() []banktypes.Output {
+	if i == nil || len(i.addrs) == 0 {
+		panic(errors.New("cannot get inputs from empty set"))
+	}
 	rv := make([]banktypes.Output, len(i.addrs))
 	for n, addr := range i.addrs {
+		if !i.amts[n].IsAllPositive() {
+			panic(fmt.Errorf("invalid indexed amount %q for address %q: cannot be zero or negative", addr, i.amts[n]))
+		}
 		rv[n] = banktypes.Output{Address: addr, Coins: i.amts[n]}
 	}
 	return rv
