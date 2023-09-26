@@ -1220,8 +1220,8 @@ func TestIndexedAddrAmts_GetAsInputs(t *testing.T) {
 		expected []banktypes.Input
 		expPanic string
 	}{
-		{name: "nil receiver", receiver: nil, expPanic: "cannot get inputs from empty set"},
-		{name: "no addrs", receiver: newIndexedAddrAmts(), expPanic: "cannot get inputs from empty set"},
+		{name: "nil receiver", receiver: nil, expected: nil},
+		{name: "no addrs", receiver: newIndexedAddrAmts(), expected: nil},
 		{
 			name: "one addr negative amount",
 			receiver: &indexedAddrAmts{
@@ -1343,8 +1343,8 @@ func TestIndexedAddrAmts_GetAsOutputs(t *testing.T) {
 		expected []banktypes.Output
 		expPanic string
 	}{
-		{name: "nil receiver", receiver: nil, expPanic: "cannot get inputs from empty set"},
-		{name: "no addrs", receiver: newIndexedAddrAmts(), expPanic: "cannot get inputs from empty set"},
+		{name: "nil receiver", receiver: nil, expected: nil},
+		{name: "no addrs", receiver: newIndexedAddrAmts(), expected: nil},
 		{
 			name: "one addr negative amount",
 			receiver: &indexedAddrAmts{
@@ -1453,8 +1453,462 @@ func TestIndexedAddrAmts_GetAsOutputs(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestBuildSettlementTransfers(t *testing.T)
+// fulfillmentsString is similar to %v except with easier to understand Coin entries.
+func fulfillmentsString(f *Fulfillments) string {
+	if f == nil {
+		return "nil"
+	}
 
+	fields := []string{
+		fmt.Sprintf("AskOFs: %s", orderFulfillmentsString(f.AskOFs)),
+		fmt.Sprintf("BidOFs: %s", orderFulfillmentsString(f.BidOFs)),
+		fmt.Sprintf("PartialOrder: %s", partialFulfillmentString(f.PartialOrder)),
+	}
+	return fmt.Sprintf("{%s}", strings.Join(fields, ", "))
+}
+
+// orderFulfillmentsString is similar to %v except with easier to understand Coin entries.
+func orderFulfillmentsString(ofs []*OrderFulfillment) string {
+	if ofs == nil {
+		return "nil"
+	}
+
+	vals := make([]string, len(ofs))
+	for i, f := range ofs {
+		vals[i] = orderFulfillmentString(f)
+	}
+	return fmt.Sprintf("[%s]", strings.Join(vals, ", "))
+}
+
+// partialFulfillmentString is similar to %v except with easier to understand Coin entries.
+func partialFulfillmentString(p *PartialFulfillment) string {
+	if p == nil {
+		return "nil"
+	}
+
+	fields := []string{
+		fmt.Sprintf("NewOrder:%s", orderString(p.NewOrder)),
+		fmt.Sprintf("AssetsFilled:%s", coinPString(&p.AssetsFilled)),
+		fmt.Sprintf("PriceFilled:%s", coinPString(&p.PriceFilled)),
+	}
+	return fmt.Sprintf("{%s}", strings.Join(fields, ", "))
+}
+
+// transferString is similar to %v except with easier to understand Coin entries.
+func settlementTransfersString(s *SettlementTransfers) string {
+	if s == nil {
+		return "nil"
+	}
+
+	orderTransfers := "nil"
+	if s.OrderTransfers != nil {
+		transVals := make([]string, len(s.OrderTransfers))
+		for i, trans := range s.OrderTransfers {
+			transVals[i] = transferString(trans)
+		}
+		orderTransfers = fmt.Sprintf("[%s]", strings.Join(transVals, ", "))
+	}
+
+	feeInputs := "nil"
+	if s.FeeInputs != nil {
+		feeVals := make([]string, len(s.FeeInputs))
+		for i, input := range s.FeeInputs {
+			feeVals[i] = bankInputString(input)
+		}
+		feeInputs = fmt.Sprintf("[%s]", strings.Join(feeVals, ", "))
+	}
+
+	return fmt.Sprintf("{OrderTransfers:%s, FeeInputs:%s}", orderTransfers, feeInputs)
+}
+
+func TestBuildSettlementTransfers(t *testing.T) {
+	coin := func(amt int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amt)}
+	}
+	igc := coin(2468, "ignorable") // igc => "ignorable coin"
+	askOrder := func(orderID uint64, seller string, assets, price sdk.Coin) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			MarketId: 97531,
+			Seller:   seller,
+			Assets:   assets,
+			Price:    price,
+		})
+	}
+	bidOrder := func(orderID uint64, buyer string, assets, price sdk.Coin) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			MarketId: 97531,
+			Buyer:    buyer,
+			Assets:   assets,
+			Price:    price,
+		})
+	}
+	askSplit := func(orderID uint64, seller string, assets, price sdk.Coin) *OrderSplit {
+		return &OrderSplit{
+			Order:  &OrderFulfillment{Order: askOrder(orderID, seller, igc, igc)},
+			Assets: assets,
+			Price:  price,
+		}
+	}
+	bidSplit := func(orderID uint64, seller string, assets, price sdk.Coin) *OrderSplit {
+		return &OrderSplit{
+			Order:  &OrderFulfillment{Order: bidOrder(orderID, seller, igc, igc)},
+			Assets: assets,
+			Price:  price,
+		}
+	}
+	input := func(addr string, coins ...sdk.Coin) banktypes.Input {
+		return banktypes.Input{Address: addr, Coins: coins}
+	}
+	output := func(addr string, coins ...sdk.Coin) banktypes.Output {
+		return banktypes.Output{Address: addr, Coins: coins}
+	}
+
+	tests := []struct {
+		name     string
+		f        *Fulfillments
+		expected *SettlementTransfers
+		expPanic string
+	}{
+		{
+			name: "just an ask, no fees",
+			f: &Fulfillments{
+				AskOFs: []*OrderFulfillment{
+					{
+						Order:           askOrder(1, "seller", coin(2, "oasset"), coin(3, "oprice")),
+						AssetsFilledAmt: sdkmath.NewInt(4),
+						PriceAppliedAmt: sdkmath.NewInt(5),
+						Splits: []*OrderSplit{
+							bidSplit(6, "buyer", coin(7, "sasset"), coin(8, "sprice")),
+							bidSplit(9, "buyer", coin(10, "sasset"), coin(11, "sprice")),
+						},
+						FeesToPay: nil,
+					},
+				},
+			},
+			expected: &SettlementTransfers{
+				OrderTransfers: []*Transfer{
+					{
+						Inputs:  []banktypes.Input{input("seller", coin(4, "oasset"))},
+						Outputs: []banktypes.Output{output("buyer", coin(17, "sasset"))},
+					},
+					{
+						Inputs:  []banktypes.Input{input("buyer", coin(19, "sprice"))},
+						Outputs: []banktypes.Output{output("seller", coin(5, "oprice"))},
+					},
+				},
+				FeeInputs: nil,
+			},
+		},
+		{
+			name: "just an ask, with fees",
+			f: &Fulfillments{
+				AskOFs: []*OrderFulfillment{
+					{
+						Order:           askOrder(1, "seller", coin(2, "oasset"), coin(3, "oprice")),
+						AssetsFilledAmt: sdkmath.NewInt(4),
+						PriceAppliedAmt: sdkmath.NewInt(5),
+						Splits: []*OrderSplit{
+							bidSplit(6, "buyer", coin(7, "sasset"), coin(8, "sprice")),
+							bidSplit(9, "buyer", coin(10, "sasset"), coin(11, "sprice")),
+						},
+						FeesToPay: sdk.NewCoins(coin(12, "feea"), coin(13, "feeb")),
+					},
+				},
+			},
+			expected: &SettlementTransfers{
+				OrderTransfers: []*Transfer{
+					{
+						Inputs:  []banktypes.Input{input("seller", coin(4, "oasset"))},
+						Outputs: []banktypes.Output{output("buyer", coin(17, "sasset"))},
+					},
+					{
+						Inputs:  []banktypes.Input{input("buyer", coin(19, "sprice"))},
+						Outputs: []banktypes.Output{output("seller", coin(5, "oprice"))},
+					},
+				},
+				FeeInputs: []banktypes.Input{input("seller", coin(12, "feea"), coin(13, "feeb"))},
+			},
+		},
+		{
+			name: "just a bid, no fees",
+			f: &Fulfillments{
+				BidOFs: []*OrderFulfillment{
+					{
+						Order:           bidOrder(1, "buyer", coin(2, "oasset"), coin(3, "oprice")),
+						AssetsFilledAmt: sdkmath.NewInt(4),
+						PriceAppliedAmt: sdkmath.NewInt(5),
+						Splits: []*OrderSplit{
+							askSplit(6, "seller", coin(7, "sasset"), coin(8, "sprice")),
+							askSplit(9, "seller", coin(10, "sasset"), coin(11, "sprice")),
+						},
+						FeesToPay: nil,
+					},
+				},
+			},
+			expected: &SettlementTransfers{
+				OrderTransfers: []*Transfer{
+					{
+						Inputs:  []banktypes.Input{input("seller", coin(17, "sasset"))},
+						Outputs: []banktypes.Output{output("buyer", coin(4, "oasset"))},
+					},
+					{
+						Inputs:  []banktypes.Input{input("buyer", coin(5, "oprice"))},
+						Outputs: []banktypes.Output{output("seller", coin(19, "sprice"))},
+					},
+				},
+				FeeInputs: nil,
+			},
+		},
+		{
+			name: "just a bid, with fees",
+			f: &Fulfillments{
+				BidOFs: []*OrderFulfillment{
+					{
+						Order:           bidOrder(1, "buyer", coin(2, "oasset"), coin(3, "oprice")),
+						AssetsFilledAmt: sdkmath.NewInt(4),
+						PriceAppliedAmt: sdkmath.NewInt(5),
+						Splits: []*OrderSplit{
+							askSplit(6, "seller", coin(7, "sasset"), coin(8, "sprice")),
+							askSplit(9, "seller", coin(10, "sasset"), coin(11, "sprice")),
+						},
+						FeesToPay: sdk.NewCoins(coin(12, "feea"), coin(13, "feeb")),
+					},
+				},
+			},
+			expected: &SettlementTransfers{
+				OrderTransfers: []*Transfer{
+					{
+						Inputs:  []banktypes.Input{input("seller", coin(17, "sasset"))},
+						Outputs: []banktypes.Output{output("buyer", coin(4, "oasset"))},
+					},
+					{
+						Inputs:  []banktypes.Input{input("buyer", coin(5, "oprice"))},
+						Outputs: []banktypes.Output{output("seller", coin(19, "sprice"))},
+					},
+				},
+				FeeInputs: []banktypes.Input{input("buyer", coin(12, "feea"), coin(13, "feeb"))},
+			},
+		},
+		{
+			name: "two asks two bids",
+			f: &Fulfillments{
+				AskOFs: []*OrderFulfillment{
+					{
+						Order:           askOrder(1, "order seller", coin(2, "oasset"), coin(3, "oprice")),
+						AssetsFilledAmt: sdkmath.NewInt(4),
+						PriceAppliedAmt: sdkmath.NewInt(5),
+						Splits: []*OrderSplit{
+							bidSplit(6, "split buyer one", coin(7, "sasset"), coin(8, "sprice")),
+							bidSplit(9, "split buyer two", coin(10, "sasset"), coin(11, "sprice")),
+						},
+						FeesToPay: sdk.NewCoins(coin(12, "sellfee")),
+					},
+					{
+						Order:           askOrder(13, "order seller", coin(14, "oasset"), coin(15, "oprice")),
+						AssetsFilledAmt: sdkmath.NewInt(16),
+						PriceAppliedAmt: sdkmath.NewInt(17),
+						Splits: []*OrderSplit{
+							bidSplit(18, "split buyer one", coin(19, "sasset"), coin(20, "sprice")),
+						},
+						FeesToPay: sdk.NewCoins(coin(21, "sellfee")),
+					},
+				},
+				BidOFs: []*OrderFulfillment{
+					{
+						Order:           bidOrder(22, "order buyer one", coin(23, "oasset"), coin(24, "oprice")),
+						AssetsFilledAmt: sdkmath.NewInt(25),
+						PriceAppliedAmt: sdkmath.NewInt(26),
+						Splits: []*OrderSplit{
+							askSplit(27, "split seller one", coin(28, "sasset"), coin(29, "sprice")),
+							askSplit(30, "split seller one", coin(31, "sasset"), coin(32, "sprice")),
+						},
+						FeesToPay: sdk.NewCoins(coin(33, "buyfee")),
+					},
+					{
+						Order:           bidOrder(34, "order buyer two", coin(35, "oasset"), coin(36, "oprice")),
+						AssetsFilledAmt: sdkmath.NewInt(37),
+						PriceAppliedAmt: sdkmath.NewInt(38),
+						Splits: []*OrderSplit{
+							askSplit(39, "split seller one", coin(40, "sasset"), coin(41, "sprice")),
+						},
+						FeesToPay: sdk.NewCoins(coin(42, "buyfee")),
+					},
+				},
+			},
+			expected: &SettlementTransfers{
+				OrderTransfers: []*Transfer{
+					{
+						Inputs: []banktypes.Input{input("order seller", coin(4, "oasset"))},
+						Outputs: []banktypes.Output{
+							output("split buyer one", coin(7, "sasset")),
+							output("split buyer two", coin(10, "sasset")),
+						},
+					},
+					{
+						Inputs: []banktypes.Input{
+							input("split buyer one", coin(8, "sprice")),
+							input("split buyer two", coin(11, "sprice")),
+						},
+						Outputs: []banktypes.Output{output("order seller", coin(5, "oprice"))},
+					},
+					{
+						Inputs:  []banktypes.Input{input("order seller", coin(16, "oasset"))},
+						Outputs: []banktypes.Output{output("split buyer one", coin(19, "sasset"))},
+					},
+					{
+						Inputs:  []banktypes.Input{input("split buyer one", coin(20, "sprice"))},
+						Outputs: []banktypes.Output{output("order seller", coin(17, "oprice"))},
+					},
+					{
+						Inputs:  []banktypes.Input{input("split seller one", coin(59, "sasset"))},
+						Outputs: []banktypes.Output{output("order buyer one", coin(25, "oasset"))},
+					},
+					{
+						Inputs:  []banktypes.Input{input("order buyer one", coin(26, "oprice"))},
+						Outputs: []banktypes.Output{output("split seller one", coin(61, "sprice"))},
+					},
+					{
+						Inputs:  []banktypes.Input{input("split seller one", coin(40, "sasset"))},
+						Outputs: []banktypes.Output{output("order buyer two", coin(37, "oasset"))},
+					},
+					{
+						Inputs:  []banktypes.Input{input("order buyer two", coin(38, "oprice"))},
+						Outputs: []banktypes.Output{output("split seller one", coin(41, "sprice"))},
+					},
+				},
+				FeeInputs: []banktypes.Input{
+					input("order seller", coin(33, "sellfee")),
+					input("order buyer one", coin(33, "buyfee")),
+					input("order buyer two", coin(42, "buyfee")),
+				},
+			},
+		},
+		{
+			name: "negative ask asset",
+			f: &Fulfillments{
+				AskOFs: []*OrderFulfillment{
+					{
+						Order:           askOrder(1, "seller", coin(2, "oasset"), coin(3, "oprice")),
+						AssetsFilledAmt: sdkmath.NewInt(-4),
+						PriceAppliedAmt: sdkmath.NewInt(5),
+						Splits: []*OrderSplit{
+							bidSplit(6, "buyer", coin(7, "sasset"), coin(8, "sprice")),
+							bidSplit(9, "buyer", coin(10, "sasset"), coin(11, "sprice")),
+						},
+					},
+				},
+			},
+			expPanic: "invalid coin set -4oasset: coin -4oasset amount is not positive",
+		},
+		{
+			name: "negative ask price",
+			f: &Fulfillments{
+				AskOFs: []*OrderFulfillment{
+					{
+						Order:           askOrder(1, "seller", coin(2, "oasset"), coin(3, "oprice")),
+						AssetsFilledAmt: sdkmath.NewInt(4),
+						PriceAppliedAmt: sdkmath.NewInt(-5),
+						Splits: []*OrderSplit{
+							bidSplit(6, "buyer", coin(7, "sasset"), coin(8, "sprice")),
+							bidSplit(9, "buyer", coin(10, "sasset"), coin(11, "sprice")),
+						},
+					},
+				},
+			},
+			expPanic: "invalid coin set -5oprice: coin -5oprice amount is not positive",
+		},
+		{
+			name: "negative bid asset",
+			f: &Fulfillments{
+				BidOFs: []*OrderFulfillment{
+					{
+						Order:           bidOrder(1, "buyer", coin(2, "oasset"), coin(3, "oprice")),
+						AssetsFilledAmt: sdkmath.NewInt(-4),
+						PriceAppliedAmt: sdkmath.NewInt(5),
+						Splits: []*OrderSplit{
+							askSplit(6, "seller", coin(7, "sasset"), coin(8, "sprice")),
+							askSplit(9, "seller", coin(10, "sasset"), coin(11, "sprice")),
+						},
+					},
+				},
+			},
+			expPanic: "invalid coin set -4oasset: coin -4oasset amount is not positive",
+		},
+		{
+			name: "negative bid price",
+			f: &Fulfillments{
+				BidOFs: []*OrderFulfillment{
+					{
+						Order:           bidOrder(1, "buyer", coin(2, "oasset"), coin(3, "oprice")),
+						AssetsFilledAmt: sdkmath.NewInt(4),
+						PriceAppliedAmt: sdkmath.NewInt(-5),
+						Splits: []*OrderSplit{
+							askSplit(6, "seller", coin(7, "sasset"), coin(8, "sprice")),
+							askSplit(9, "seller", coin(10, "sasset"), coin(11, "sprice")),
+						},
+					},
+				},
+			},
+			expPanic: "invalid coin set -5oprice: coin -5oprice amount is not positive",
+		},
+		{
+			name: "ask with negative fees",
+			f: &Fulfillments{
+				BidOFs: []*OrderFulfillment{
+					{
+						Order:           bidOrder(1, "buyer", coin(2, "oasset"), coin(3, "oprice")),
+						AssetsFilledAmt: sdkmath.NewInt(4),
+						PriceAppliedAmt: sdkmath.NewInt(5),
+						Splits: []*OrderSplit{
+							askSplit(6, "seller", coin(7, "sasset"), coin(8, "sprice")),
+							askSplit(9, "seller", coin(10, "sasset"), coin(11, "sprice")),
+						},
+						FeesToPay: sdk.Coins{coin(-12, "feecoin")},
+					},
+				},
+			},
+			expPanic: "invalid coin set -12feecoin: coin -12feecoin amount is not positive",
+		},
+		{
+			name: "bid with negative fees",
+			f: &Fulfillments{
+				BidOFs: []*OrderFulfillment{
+					{
+						Order:           bidOrder(1, "buyer", coin(2, "oasset"), coin(3, "oprice")),
+						AssetsFilledAmt: sdkmath.NewInt(4),
+						PriceAppliedAmt: sdkmath.NewInt(5),
+						Splits: []*OrderSplit{
+							askSplit(6, "seller", coin(7, "sasset"), coin(8, "sprice")),
+							askSplit(9, "seller", coin(10, "sasset"), coin(11, "sprice")),
+						},
+						FeesToPay: sdk.Coins{coin(-12, "feecoin")},
+					},
+				},
+			},
+			expPanic: "invalid coin set -12feecoin: coin -12feecoin amount is not positive",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual *SettlementTransfers
+			defer func() {
+				if t.Failed() {
+					t.Logf("  Actual: %s", settlementTransfersString(actual))
+					t.Logf("Expected: %s", settlementTransfersString(tc.expected))
+					t.Logf("Fulfillments: %s", fulfillmentsString(tc.f))
+				}
+			}()
+			testFunc := func() {
+				actual = BuildSettlementTransfers(tc.f)
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "BuildSettlementTransfers")
+			assert.Equal(t, tc.expected, actual, "BuildSettlementTransfers result")
+		})
+	}
+}
+
+// transferString is similar to %v except with easier to understand Coin entries.
 func transferString(t *Transfer) string {
 	if t == nil {
 		return "nil"
@@ -1465,7 +1919,7 @@ func transferString(t *Transfer) string {
 		for i, input := range t.Inputs {
 			inputVals[i] = bankInputString(input)
 		}
-		inputs = strings.Join(inputVals, ", ")
+		inputs = fmt.Sprintf("[%s]", strings.Join(inputVals, ", "))
 	}
 	outputs := "nil"
 	if t.Outputs != nil {
@@ -1473,9 +1927,9 @@ func transferString(t *Transfer) string {
 		for i, output := range t.Outputs {
 			outputVals[i] = bankOutputString(output)
 		}
-		outputs = strings.Join(outputVals, ", ")
+		outputs = fmt.Sprintf("[%s]", strings.Join(outputVals, ", "))
 	}
-	return fmt.Sprintf("{Inputs:%s, Outputs: %s}", inputs, outputs)
+	return fmt.Sprintf("T{Inputs:%s, Outputs: %s}", inputs, outputs)
 }
 
 // bankInputString is similar to %v except with easier to understand Coin entries.
@@ -1709,7 +2163,7 @@ func TestGetAssetTransfer(t *testing.T) {
 				actual = GetAssetTransfer(tc.f)
 			}
 			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetAssetTransfer")
-			assert.Equal(t, tc.exp, actual, "GetAssetTransfer")
+			assert.Equal(t, tc.exp, actual, "GetAssetTransfer result")
 		})
 	}
 }
@@ -1935,7 +2389,7 @@ func TestGetPriceTransfer(t *testing.T) {
 				actual = GetPriceTransfer(tc.f)
 			}
 			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetPriceTransfer")
-			assert.Equal(t, tc.exp, actual, "GetPriceTransfer")
+			assert.Equal(t, tc.exp, actual, "GetPriceTransfer result")
 		})
 	}
 }

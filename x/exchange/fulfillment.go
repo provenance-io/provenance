@@ -562,6 +562,7 @@ type Fulfillments struct {
 	// BidOFs are all the bid orders and how they are to be filled.
 	BidOFs []*OrderFulfillment
 	// PartialOrder contains info on an order that is only being partially filled.
+	// The transfers For part of its funds are included in the order fulfillments.
 	PartialOrder *PartialFulfillment
 }
 
@@ -752,7 +753,7 @@ func (i *indexedAddrAmts) add(addr string, coins ...sdk.Coin) {
 // Panics if this is nil, has no addrs, or has a negative coin amount.
 func (i *indexedAddrAmts) getAsInputs() []banktypes.Input {
 	if i == nil || len(i.addrs) == 0 {
-		panic(errors.New("cannot get inputs from empty set"))
+		return nil
 	}
 	rv := make([]banktypes.Input, len(i.addrs))
 	for n, addr := range i.addrs {
@@ -768,7 +769,7 @@ func (i *indexedAddrAmts) getAsInputs() []banktypes.Input {
 // Panics if this is nil, has no addrs, or has a negative coin amount.
 func (i *indexedAddrAmts) getAsOutputs() []banktypes.Output {
 	if i == nil || len(i.addrs) == 0 {
-		panic(errors.New("cannot get inputs from empty set"))
+		return nil
 	}
 	rv := make([]banktypes.Output, len(i.addrs))
 	for n, addr := range i.addrs {
@@ -799,24 +800,23 @@ type SettlementTransfers struct {
 // BuildSettlementTransfers creates all the order transfers needed for the provided fulfillments.
 // Assumes that all fulfillments have passed Validate.
 // Panics if any amounts are negative.
-func BuildSettlementTransfers(fulfillments *Fulfillments) *SettlementTransfers {
-	indexedFees := newIndexedAddrAmts()
+func BuildSettlementTransfers(f *Fulfillments) *SettlementTransfers {
+	allOFs := make([]*OrderFulfillment, 0, len(f.AskOFs)+len(f.BidOFs))
+	allOFs = append(allOFs, f.AskOFs...)
+	allOFs = append(allOFs, f.BidOFs...)
 
-	rv := &SettlementTransfers{}
-	applyOF := func(of *OrderFulfillment) {
+	indexedFees := newIndexedAddrAmts()
+	rv := &SettlementTransfers{
+		OrderTransfers: make([]*Transfer, 0, len(allOFs)*2),
+	}
+
+	for _, of := range allOFs {
 		rv.OrderTransfers = append(rv.OrderTransfers, GetAssetTransfer(of), GetPriceTransfer(of))
 		if !of.FeesToPay.IsZero() {
-			// Using NewCoins in here (instead of Coins{...}) as a last-ditch negative amount panic check.
+			// Using NewCoins in here as a last-ditch negative amount panic check.
 			fees := sdk.NewCoins(of.FeesToPay...)
 			indexedFees.add(of.GetOwner(), fees...)
 		}
-	}
-
-	for _, askOF := range fulfillments.AskOFs {
-		applyOF(askOF)
-	}
-	for _, bidOf := range fulfillments.BidOFs {
-		applyOF(bidOf)
 	}
 
 	rv.FeeInputs = indexedFees.getAsInputs()
