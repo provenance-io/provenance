@@ -1,3 +1,12 @@
+# ibcratelimit
+
+## Notice
+
+**This module was forked from https://github.com/osmosis-labs/osmosis/tree/main/x/ibc-rate-limit **
+
+_Unfortunately the original version could not be directly used due to extensive osmosis references, an incompatible Cosmos SDK version, and lack of support for IBC v6.x._
+
+
 # IBC Rate Limit
 
 The IBC Rate Limit module is responsible for adding a governance-configurable rate limit to IBC transfers.
@@ -133,7 +142,7 @@ All other methods from those interfaces are passthroughs to the underlying imple
 The middleware uses the following parameters:
 
 | Key             | Type   |
-|-----------------|--------|
+| --------------- | ------ |
 | ContractAddress | string |
 
 1. **ContractAddress** -
@@ -143,8 +152,8 @@ The middleware uses the following parameters:
 
 Something to keep in mind with all of the code, is that we have to reason separately about every item in the following matrix:
 
-|     Native Token     |     Non-Native Token     |
-|----------------------|--------------------------|
+| Native Token         | Non-Native Token         |
+| -------------------- | ------------------------ |
 | Send Native Token    | Send Non-Native Token    |
 | Receive Native Token | Receive Non-Native Token |
 | Timeout Native Send  | Timeout Non-native Send  |
