@@ -11,18 +11,18 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/x/ibcratelimit/client"
-	"github.com/provenance-io/provenance/x/ibcratelimit/client/queryproto"
+	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 )
 
 type Querier struct {
 	Q client.Querier
 }
 
-var _ queryproto.QueryServer = Querier{}
+var _ types.QueryServer = Querier{}
 
 func (q Querier) Params(grpcCtx context.Context,
-	req *queryproto.ParamsRequest,
-) (*queryproto.ParamsResponse, error) {
+	req *types.ParamsRequest,
+) (*types.ParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}

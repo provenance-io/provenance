@@ -19,10 +19,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
+	ibcratelimitclient "github.com/provenance-io/provenance/x/ibcratelimit/client"
 	ibcratelimitcli "github.com/provenance-io/provenance/x/ibcratelimit/client/cli"
-	"github.com/provenance-io/provenance/x/ibcratelimit/client/queryproto"
-	"github.com/provenance-io/provenance/x/ibcratelimit/keeper"
-	"github.com/provenance-io/provenance/x/ibcratelimit/simulation"
+	"github.com/provenance-io/provenance/x/ibcratelimit/client/grpc"
 	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 )
 
@@ -34,7 +33,6 @@ var (
 
 // AppModuleBasic defines the basic application module used by the ibcratelimit module.
 type AppModuleBasic struct {
-	cdc codec.Codec
 }
 
 // Name returns the ibcratelimit module's name.
@@ -71,7 +69,7 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the ibcratelimit module.
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)) //nolint:errcheck
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
 // GetQueryCmd returns the cli query commands for the ibcratelimit module
@@ -88,16 +86,14 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 	ics4wrapper   ibcratelimit.ICS4Wrapper
-	keeper        keeper.Keeper
 	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, ics4wrapper ibcratelimit.ICS4Wrapper) AppModule {
+func NewAppModule(cdc codec.Codec, accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, ics4wrapper ibcratelimit.ICS4Wrapper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		ics4wrapper:    ics4wrapper,
@@ -106,7 +102,8 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeepe
 
 // GenerateGenesisState creates a randomized GenState of the ibcratelimit module.
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
+	// Todo When we finish simulation
+	// simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents returns content functions used to simulate governance proposals.
@@ -123,14 +120,17 @@ func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a func to decode each module's defined types from their corresponding store key
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	TODO When we finish sim tests
+	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns simulation operations (i.e msgs) with their respective weight
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
+	return []simtypes.WeightedOperation{}
+	// TODO When we get sim tests
+	/*return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc, am.keeper, am.accountKeeper, am.bankKeeper,
-	)
+	)*/
 }
 
 // Name returns the ibcratelimit module's name.
@@ -186,5 +186,5 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: ibcratelimitclient.Querier{K: am.ics4wrapper}})
 }

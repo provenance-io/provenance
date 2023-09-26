@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
-	"github.com/provenance-io/provenance/x/ibcratelimit/client/queryproto"
+	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 )
 
 // This file should evolve to being code gen'd, off of `proto/twap/v1beta/query.yml`
@@ -14,8 +14,8 @@ type Querier struct {
 }
 
 func (q Querier) Params(ctx sdk.Context,
-	req queryproto.ParamsRequest,
-) (*queryproto.ParamsResponse, error) {
+	req types.ParamsRequest,
+) (*types.ParamsResponse, error) {
 	params := q.K.GetParams(ctx)
-	return &queryproto.ParamsResponse{Params: params}, nil
+	return &types.ParamsResponse{Params: params}, nil
 }
