@@ -1,4 +1,4 @@
-package ibc_rate_limit_test
+package ibcratelimit_test
 
 import (
 	"fmt"
@@ -7,24 +7,27 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	ibctesting "github.com/cosmos/ibc-go/v4/testing"
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	ibctesting "github.com/cosmos/ibc-go/v6/testing"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
-	txfeetypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
+	"github.com/provenance-io/provenance/x/ibcratelimit/osmomath"
 
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v19/tests/osmosisibctesting"
-	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/types"
+	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/ibcratelimit/osmosisibctesting"
+	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 )
 
 type MiddlewareTestSuite struct {
-	apptesting.KeeperTestHelper
+	suite.Suite
+
+	app *simapp.App
+	ctx sdk.Context
 
 	coordinator *ibctesting.Coordinator
 
@@ -34,7 +37,8 @@ type MiddlewareTestSuite struct {
 	path   *ibctesting.Path
 }
 
-var oldConsensusMinFee = txfeetypes.ConsensusMinFee
+// TODO Check this
+//var oldConsensusMinFee = txfeetypes.ConsensusMinFee
 
 // Setup
 func TestMiddlewareTestSuite(t *testing.T) {
@@ -51,9 +55,13 @@ func NewTransferPath(chainA, chainB *osmosisibctesting.TestChain) *ibctesting.Pa
 }
 
 func (suite *MiddlewareTestSuite) SetupTest() {
+	s.app = app.Setup(s.T())
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now().UTC()})
+	s.ctx = s.ctx.WithBlockHeight(1)
+
 	suite.SkipIfWSL()
 	// TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
-	txfeetypes.ConsensusMinFee = osmomath.ZeroDec()
+	// txfeetypes.ConsensusMinFee = osmomath.ZeroDec()
 	suite.Setup()
 	ibctesting.DefaultTestingAppInit = osmosisibctesting.SetupTestingApp
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
@@ -74,7 +82,8 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 
 // TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
 func (suite *MiddlewareTestSuite) TearDownSuite() {
-	txfeetypes.ConsensusMinFee = oldConsensusMinFee
+	// TODO Check this
+	// txfeetypes.ConsensusMinFee = oldConsensusMinFee
 }
 
 // Helpers
@@ -265,7 +274,7 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 	suite.Require().NoError(err)
 }
 
-func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed osmomath.Int) {
+func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed sdk.Int) {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 

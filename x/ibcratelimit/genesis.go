@@ -1,9 +1,9 @@
-package ibc_rate_limit
+package ibcratelimit
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/types"
+	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 )
 
 // InitGenesis initializes the x/ibc-rate-limit module's state from a provided genesis

@@ -3,8 +3,8 @@ package client
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	ibcratelimit "github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit"
-	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/client/queryproto"
+	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
+	"github.com/provenance-io/provenance/x/ibcratelimit/client/queryproto"
 )
 
 // This file should evolve to being code gen'd, off of `proto/twap/v1beta/query.yml`

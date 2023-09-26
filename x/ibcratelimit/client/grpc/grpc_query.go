@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/client"
-	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/client/queryproto"
+	"github.com/provenance-io/provenance/x/ibcratelimit/client"
+	"github.com/provenance-io/provenance/x/ibcratelimit/client/queryproto"
 )
 
 type Querier struct {

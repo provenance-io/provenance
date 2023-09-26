@@ -1,17 +1,22 @@
-package ibc_rate_limit_test
+package ibcratelimit_test
 
 import (
 	"testing"
+	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/types"
+	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 )
 
 type GenesisTestSuite struct {
-	apptesting.KeeperTestHelper
+	suite.Suite
+
+	app *simapp.App
+	ctx sdk.Context
 }
 
 func TestGenesisTestSuite(t *testing.T) {
@@ -22,10 +27,16 @@ func (suite *GenesisTestSuite) SetupTest() {
 	suite.Setup()
 }
 
+func (s *GenesisTestSuite) SetupTest() {
+	s.app = app.Setup(s.T())
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now().UTC()})
+	s.ctx = s.ctx.WithBlockHeight(1)
+}
+
 func (suite *GenesisTestSuite) TestInitExportGenesis() {
 	testAddress := sdk.AccAddress([]byte("addr1_______________")).String()
 	suite.SetupTest()
-	k := suite.App.RateLimitingICS4Wrapper
+	k := suite.app.RateLimitingICS4Wrapper
 
 	initialGenesis := types.GenesisState{
 		Params: types.Params{
@@ -33,11 +44,11 @@ func (suite *GenesisTestSuite) TestInitExportGenesis() {
 		},
 	}
 
-	k.InitGenesis(suite.Ctx, initialGenesis)
+	k.InitGenesis(suite.ctx, initialGenesis)
 
-	suite.Require().Equal(testAddress, k.GetParams(suite.Ctx).ContractAddress)
+	suite.Require().Equal(testAddress, k.GetParams(suite.ctx).ContractAddress)
 
-	exportedGenesis := k.ExportGenesis(suite.Ctx)
+	exportedGenesis := k.ExportGenesis(suite.ctx)
 
 	suite.Require().Equal(initialGenesis, *exportedGenesis)
 }

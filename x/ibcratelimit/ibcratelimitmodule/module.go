@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -17,31 +18,44 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	ibcratelimit "github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit"
-	ibcratelimitclient "github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/client"
-	ibcratelimitcli "github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/client/cli"
-	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/client/grpc"
-	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/types"
+	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
+	ibcratelimitcli "github.com/provenance-io/provenance/x/ibcratelimit/client/cli"
+	"github.com/provenance-io/provenance/x/ibcratelimit/client/queryproto"
+	"github.com/provenance-io/provenance/x/ibcratelimit/keeper"
+	"github.com/provenance-io/provenance/x/ibcratelimit/simulation"
+	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule           = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleSimulation = AppModule{}
 )
 
-type AppModuleBasic struct{}
+// AppModuleBasic defines the basic application module used by the ibcratelimit module.
+type AppModuleBasic struct {
+	cdc codec.Codec
+}
 
+// Name returns the ibcratelimit module's name.
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
+// RegisterLegacyAminoCodec registers the ibcratelimit module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
+// RegisterInterfaces registers interfaces and implementations of the ibcratelimit module.
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	// TODO Do we need to register interfaces?
+}
+
+// DefaultGenesis returns default genesis state as raw bytes for the ibcratelimit
+// module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
-// ValidateGenesis performs genesis state validation for the ibc-rate-limit module.
+// ValidateGenesis performs genesis state validation for the ibcratelimit module.
 func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
@@ -50,73 +64,95 @@ func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEnc
 	return genState.Validate()
 }
 
-// ---------------------------------------
-// Interfaces.
+// RegisterRESTRoutes registers the REST routes for the ibcratelimit module.
+// Deprecated: RegisterRESTRoutes is deprecated.
 func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the ibcratelimit module.
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
-func (b AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
-}
-
+// GetQueryCmd returns the cli query commands for the ibcratelimit module
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return ibcratelimitcli.GetQueryCmd()
 }
 
-// RegisterInterfaces registers interfaces and implementations of the ibc-rate-limit module.
-func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+// GetTxCmd returns the transaction commands for the ibcratelimit module
+func (b AppModuleBasic) GetTxCmd() *cobra.Command {
+	return nil
 }
 
-// ----------------------------------------------------------------------------
-// AppModule
-// ----------------------------------------------------------------------------
-
-// AppModule implements the AppModule interface for the capability module.
+// AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-
-	ics4wrapper ibcratelimit.ICS4Wrapper
+	ics4wrapper   ibcratelimit.ICS4Wrapper
+	keeper        keeper.Keeper
+	accountKeeper authkeeper.AccountKeeper
+	bankKeeper    bankkeeper.Keeper
 }
 
-func NewAppModule(ics4wrapper ibcratelimit.ICS4Wrapper) AppModule {
+// NewAppModule creates a new AppModule object
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, ics4wrapper ibcratelimit.ICS4Wrapper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         keeper,
+		accountKeeper:  accountKeeper,
+		bankKeeper:     bankKeeper,
 		ics4wrapper:    ics4wrapper,
 	}
 }
 
-// Name returns the txfees module's name.
-func (am AppModule) Name() string {
-	return am.AppModuleBasic.Name()
+// GenerateGenesisState creates a randomized GenState of the ibcratelimit module.
+func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
 }
 
-// Route returns the txfees module's message routing key.
+// ProposalContents returns content functions used to simulate governance proposals.
+func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
+	// currently no gov proposals exist
+	return nil
+}
+
+// RandomizedParams returns randomized module parameters for param change proposals.
+func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+	// currently no module params exist
+	return nil
+}
+
+// RegisterStoreDecoder registers a func to decode each module's defined types from their corresponding store key
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+}
+
+// WeightedOperations returns simulation operations (i.e msgs) with their respective weight
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc, am.keeper, am.accountKeeper, am.bankKeeper,
+	)
+}
+
+// Name returns the ibcratelimit module's name.
+func (AppModule) Name() string {
+	return types.ModuleName
+}
+
+// RegisterInvariants does nothing, there are no invariants to enforce
+func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+
+// Deprecated: Route returns the message routing key for the ibcratelimit module.
 func (am AppModule) Route() sdk.Route {
 	return sdk.Route{}
 }
 
-// QuerierRoute returns the ibc-rate-limit module's query routing key.
-func (AppModule) QuerierRoute() string { return types.RouterKey }
+// QuerierRoute returns the route we respond to for abci queries
+func (AppModule) QuerierRoute() string { return "" }
 
-// LegacyQuerierHandler is a no-op. Needed to meet AppModule interface.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
+// LegacyQuerierHandler returns the ibcratelimit module sdk.Querier.
+func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
+	return nil
 }
-
-// RegisterServices registers a GRPC query service to respond to the
-// module-specific GRPC queries.
-func (am AppModule) RegisterServices(cfg module.Configurator) {
-	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: ibcratelimitclient.Querier{K: am.ics4wrapper}})
-}
-
-// RegisterInvariants registers the txfees module's invariants.
-func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // InitGenesis performs the txfees module's genesis initialization It returns
 // no validator updates.
@@ -135,14 +171,20 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 	return cdc.MustMarshalJSON(genState)
 }
 
-// BeginBlock executes all ABCI BeginBlock logic respective to the txfees module.
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// BeginBlock executes all ABCI BeginBlock logic respective to the ibcratelimit module.
 func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
-// EndBlock executes all ABCI EndBlock logic respective to the txfees module. It
+// EndBlock executes all ABCI EndBlock logic respective to the ibcratelimit module. It
 // returns no validator updates.
 func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
-// ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 1 }
+// RegisterServices registers a GRPC query service to respond to the
+// module-specific GRPC queries.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+}
