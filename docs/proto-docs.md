@@ -82,6 +82,18 @@
   
     - [Msg](#provenance.ibchooks.v1.Msg)
   
+- [provenance/ibcratelimit/v1/params.proto](#provenance/ibcratelimit/v1/params.proto)
+    - [Params](#provenance.ibcratelimit.v1.Params)
+  
+- [provenance/ibcratelimit/v1/genesis.proto](#provenance/ibcratelimit/v1/genesis.proto)
+    - [GenesisState](#provenance.ibcratelimit.v1.GenesisState)
+  
+- [provenance/ibcratelimit/v1/query.proto](#provenance/ibcratelimit/v1/query.proto)
+    - [ParamsRequest](#provenance.ibcratelimit.v1.ParamsRequest)
+    - [ParamsResponse](#provenance.ibcratelimit.v1.ParamsResponse)
+  
+    - [Query](#provenance.ibcratelimit.v1.Query)
+  
 - [provenance/marker/v1/accessgrant.proto](#provenance/marker/v1/accessgrant.proto)
     - [AccessGrant](#provenance.marker.v1.AccessGrant)
   
@@ -1562,6 +1574,119 @@ Msg defines the Msg service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `EmitIBCAck` | [MsgEmitIBCAck](#provenance.ibchooks.v1.MsgEmitIBCAck) | [MsgEmitIBCAckResponse](#provenance.ibchooks.v1.MsgEmitIBCAckResponse) | EmitIBCAck checks the sender can emit the ack and writes the IBC acknowledgement | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibcratelimit/v1/params.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibcratelimit/v1/params.proto
+
+
+
+<a name="provenance.ibcratelimit.v1.Params"></a>
+
+### Params
+Params defines the parameters for the ibcratelimit module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contract_address` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibcratelimit/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibcratelimit/v1/genesis.proto
+
+
+
+<a name="provenance.ibcratelimit.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the ibcratelimit module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.ibcratelimit.v1.Params) |  | params are all the parameters of the module |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibcratelimit/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibcratelimit/v1/query.proto
+
+
+
+<a name="provenance.ibcratelimit.v1.ParamsRequest"></a>
+
+### ParamsRequest
+ParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="provenance.ibcratelimit.v1.ParamsResponse"></a>
+
+### ParamsResponse
+aramsResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.ibcratelimit.v1.Params) |  | params defines the parameters of the module. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.ibcratelimit.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [ParamsRequest](#provenance.ibcratelimit.v1.ParamsRequest) | [ParamsResponse](#provenance.ibcratelimit.v1.ParamsResponse) | Params defines a gRPC query method that returns the ibcratelimit module's parameters. | GET|/provenance/ibcratelimit/v1/params|
 
  <!-- end services -->
 

@@ -1,0 +1,28 @@
+syntax = "proto3";
+package provenance.ibcratelimit.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "provenance/ibcratelimit/v1/params.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/ibcratelimit/types";
+option java_package        = "io.provenance.ibcratelimit.v1";
+option java_multiple_files = true;
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params defines a gRPC query method that returns the ibcratelimit module's
+  // parameters.
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
+    option (google.api.http).get = "/provenance/ibcratelimit/v1/params";
+  }
+}
+
+// ParamsRequest is the request type for the Query/Params RPC method.
+message ParamsRequest {}
+
+// aramsResponse is the response type for the Query/Params RPC method.
+message ParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
