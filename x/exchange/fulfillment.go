@@ -107,7 +107,7 @@ func (f OrderFulfillment) IsFullyFilled() bool {
 
 // IsCompletelyUnfulfilled returns true if nothing in this order has been filled.
 func (f OrderFulfillment) IsCompletelyUnfulfilled() bool {
-	return len(f.Splits) == 0 || f.AssetsFilledAmt.IsZero()
+	return f.AssetsFilledAmt.IsZero()
 }
 
 // GetOrderID gets this fulfillment's order's id.

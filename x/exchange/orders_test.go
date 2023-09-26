@@ -3,6 +3,7 @@ package exchange
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -38,6 +39,88 @@ func copyCoinP(coin *sdk.Coin) *sdk.Coin {
 	}
 	rv := copyCoin(*coin)
 	return &rv
+}
+
+// coinPString returns either "nil" or the quoted string version of the provided coins.
+func coinPString(coin *sdk.Coin) string {
+	if coin == nil {
+		return "nil"
+	}
+	return fmt.Sprintf("%q", coin)
+}
+
+// coinsString returns either "nil" or the quoted string version of the provided coins.
+func coinsString(coins sdk.Coins) string {
+	if coins == nil {
+		return "nil"
+	}
+	return fmt.Sprintf("%q", coins)
+}
+
+// orderString is similar to %v except with easier to understand Coin and Int entries.
+func orderString(order *Order) string {
+	if order == nil {
+		return "nil"
+	}
+	fields := make([]string, 1, 8)
+	fields[0] = fmt.Sprintf("OrderId:%d", order.OrderId)
+
+	switch {
+	case order.IsAskOrder():
+		fields = append(fields, fmt.Sprintf("AskOrder:%s", askOrderString(order.GetAskOrder())))
+	case order.IsBidOrder():
+		fields = append(fields, fmt.Sprintf("BidOrder:%s", bidOrderString(order.GetBidOrder())))
+	default:
+		if order.GetOrder() != nil {
+			fields = append(fields,
+				fmt.Sprintf("orderType:%q", order.GetOrderType()),
+				fmt.Sprintf("MarketId:%d", order.GetMarketID()),
+				fmt.Sprintf("owner:%s", order.GetOwner()),
+				fmt.Sprintf("Assets:%q", order.GetAssets()),
+				fmt.Sprintf("Price:%q", order.GetPrice()),
+				fmt.Sprintf("fees:%s", coinsString(order.GetSettlementFees())),
+				fmt.Sprintf("AllowPartial:%t", order.PartialFillAllowed()),
+			)
+		} else {
+			fields = append(fields, "Order:nil")
+		}
+	}
+
+	return fmt.Sprintf("{%s}", strings.Join(fields, ", "))
+}
+
+// askOrderString is similar to %v except with easier to understand Coin and Int entries.
+func askOrderString(askOrder *AskOrder) string {
+	if askOrder == nil {
+		return "nil"
+	}
+
+	fields := []string{
+		fmt.Sprintf("MarketId:%d", askOrder.MarketId),
+		fmt.Sprintf("Seller:%q", askOrder.Seller),
+		fmt.Sprintf("Assets:%q", askOrder.Assets),
+		fmt.Sprintf("Price:%q", askOrder.Price),
+		fmt.Sprintf("SellerSettlementFlatFee:%s", coinPString(askOrder.SellerSettlementFlatFee)),
+		fmt.Sprintf("AllowPartial:%t", askOrder.AllowPartial),
+	}
+	return fmt.Sprintf("{%s}", strings.Join(fields, ", "))
+}
+
+// bidOrderString is similar to %v except with easier to understand Coin and Int entries.
+func bidOrderString(bidOrder *BidOrder) string {
+	if bidOrder == nil {
+		return "nil"
+	}
+
+	fields := []string{
+		fmt.Sprintf("MarketId:%d", bidOrder.MarketId),
+		fmt.Sprintf("Buyer:%q", bidOrder.Buyer),
+		fmt.Sprintf("Assets:%q", bidOrder.Assets),
+		fmt.Sprintf("Price:%q", bidOrder.Price),
+		fmt.Sprintf("BuyerSettlementFees:%s", coinsString(bidOrder.BuyerSettlementFees)),
+		fmt.Sprintf("AllowPartial:%t", bidOrder.AllowPartial),
+	}
+	return fmt.Sprintf("{%s}", strings.Join(fields, ", "))
 }
 
 func TestOrderTypesAndBytes(t *testing.T) {
