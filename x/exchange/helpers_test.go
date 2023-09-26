@@ -10,7 +10,36 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO[1658]: func TestEqualsUint64(t *testing.T)
+func TestEqualsUint64(t *testing.T) {
+	tests := []struct {
+		name string
+		a    uint64
+		b    uint64
+		exp  bool
+	}{
+		{name: "0 0", a: 0, b: 0, exp: true},
+		{name: "0 1", a: 0, b: 1, exp: false},
+		{name: "1 0", a: 1, b: 0, exp: false},
+		{name: "1 1", a: 1, b: 1, exp: true},
+		{name: "1 max uint32+1", a: 1, b: 4_294_967_296, exp: false},
+		{name: "max uint32+1 1", a: 4_294_967_296, b: 1, exp: false},
+		{name: "max uint32+1 max uint32+1", a: 4_294_967_296, b: 4_294_967_296, exp: true},
+		{name: "1 max uint64", a: 1, b: 18_446_744_073_709_551_615, exp: false},
+		{name: "max uint64 1", a: 18_446_744_073_709_551_615, b: 1, exp: false},
+		{name: "max uint64 max uint64", a: 18_446_744_073_709_551_615, b: 18_446_744_073_709_551_615, exp: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = EqualsUint64(tc.a, tc.b)
+			}
+			require.NotPanics(t, testFunc, "EqualsUint64(%d, %d)", tc.a, tc.b)
+			assert.Equal(t, tc.exp, actual, "EqualsUint64(%d, %d)", tc.a, tc.b)
+		})
+	}
+}
 
 func TestContainsUint64(t *testing.T) {
 	tests := []struct {
@@ -81,7 +110,57 @@ func TestContainsUint64(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestIntersectionUint64(t *testing.T)
+func TestIntersectionUint64(t *testing.T) {
+	tests := []struct {
+		name string
+		a    []uint64
+		b    []uint64
+		exp  []uint64
+	}{
+		{name: "nil nil", a: nil, b: nil, exp: nil},
+		{name: "nil empty", a: nil, b: []uint64{}, exp: nil},
+		{name: "empty nil", a: []uint64{}, b: nil, exp: nil},
+		{name: "empty empty", a: []uint64{}, b: []uint64{}, exp: nil},
+		{name: "nil one", a: nil, b: []uint64{1}, exp: nil},
+		{name: "one nil", a: []uint64{1}, b: nil, exp: nil},
+		{name: "one one same", a: []uint64{1}, b: []uint64{1}, exp: []uint64{1}},
+		{name: "one one different", a: []uint64{1}, b: []uint64{2}, exp: nil},
+		{name: "three one first", a: []uint64{1, 2, 3}, b: []uint64{1}, exp: []uint64{1}},
+		{name: "three one second", a: []uint64{1, 2, 3}, b: []uint64{2}, exp: []uint64{2}},
+		{name: "three one third", a: []uint64{1, 2, 3}, b: []uint64{3}, exp: []uint64{3}},
+		{name: "three one none", a: []uint64{1, 2, 3}, b: []uint64{4}, exp: nil},
+
+		{name: "three two none", a: []uint64{1, 2, 3}, b: []uint64{4, 5}, exp: nil},
+		{name: "three two first rep", a: []uint64{1, 2, 3}, b: []uint64{1, 1}, exp: []uint64{1}},
+		{name: "three two only first", a: []uint64{1, 2, 3}, b: []uint64{4, 1}, exp: []uint64{1}},
+		{name: "three two second rep", a: []uint64{1, 2, 3}, b: []uint64{2, 2}, exp: []uint64{2}},
+		{name: "three two only second", a: []uint64{1, 2, 3}, b: []uint64{4, 2}, exp: []uint64{2}},
+		{name: "three two third rep", a: []uint64{1, 2, 3}, b: []uint64{3, 3}, exp: []uint64{3}},
+		{name: "three two only third", a: []uint64{1, 2, 3}, b: []uint64{4, 3}, exp: []uint64{3}},
+		{name: "three two not third", a: []uint64{1, 2, 3}, b: []uint64{2, 1}, exp: []uint64{1, 2}},
+		{name: "three two not second", a: []uint64{1, 2, 3}, b: []uint64{3, 1}, exp: []uint64{1, 3}},
+		{name: "three two not first", a: []uint64{1, 2, 3}, b: []uint64{3, 2}, exp: []uint64{2, 3}},
+
+		{name: "three rep one same", a: []uint64{5, 5, 5}, b: []uint64{5}, exp: []uint64{5}},
+		{name: "three rep one different", a: []uint64{5, 5, 5}, b: []uint64{6}, exp: nil},
+		{name: "three rep two rep same", a: []uint64{5, 5, 5}, b: []uint64{5, 5}, exp: []uint64{5}},
+		{name: "three rep two rep different", a: []uint64{5, 5, 5}, b: []uint64{6, 6}, exp: nil},
+		{name: "three three one same", a: []uint64{1, 2, 3}, b: []uint64{4, 5, 1}, exp: []uint64{1}},
+		{name: "three three two same", a: []uint64{1, 2, 3}, b: []uint64{3, 4, 2}, exp: []uint64{2, 3}},
+		{name: "three three all same diff order", a: []uint64{1, 2, 3, 2, 1}, b: []uint64{2, 1, 1, 1, 2, 3, 1}, exp: []uint64{1, 2, 3}},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual []uint64
+			testFunc := func() {
+				actual = IntersectionUint64(tc.a, tc.b)
+			}
+			require.NotPanics(t, testFunc, "IntersectionUint64")
+			assert.Equal(t, tc.exp, actual, "IntersectionUint64 result")
+		})
+	}
+}
 
 func TestContainsString(t *testing.T) {
 	tests := []struct {
@@ -194,7 +273,66 @@ func TestContainsString(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestCoinsEquals(t *testing.T)
+func TestCoinsEquals(t *testing.T) {
+	coins := func(coins string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(coins)
+		require.NoError(t, err, "sdk.ParseCoinsNormalized(%q)", coins)
+		return rv
+	}
+
+	tests := []struct {
+		name string
+		a    sdk.Coins
+		b    sdk.Coins
+		exp  bool
+	}{
+		{name: "nil nil", a: nil, b: nil, exp: true},
+		{name: "nil empty", a: nil, b: sdk.Coins{}, exp: true},
+		{name: "empty nil", a: sdk.Coins{}, b: nil, exp: true},
+		{name: "empty empty", a: nil, b: sdk.Coins{}, exp: true},
+		{name: "nil one", a: nil, b: coins("1one"), exp: false},
+		{name: "one nil", a: coins("1one"), b: nil, exp: false},
+		{name: "one one same", a: coins("1one"), b: coins("1one"), exp: true},
+		{name: "one one diff amount", a: coins("1one"), b: coins("2one"), exp: false},
+		{name: "one one diff denom", a: coins("1one"), b: coins("1two"), exp: false},
+		{name: "one one diff both", a: coins("1one"), b: coins("2two"), exp: false},
+		{name: "two one first", a: coins("1one,2two"), b: coins("1one"), exp: false},
+		{name: "two one second", a: coins("1one,2two"), b: coins("2two"), exp: false},
+		{name: "two one neither", a: coins("1one,2two"), b: coins("3three"), exp: false},
+		{name: "two two same", a: coins("1one,2two"), b: coins("1one,2two"), exp: true},
+		{name: "two two diff first denom", a: coins("1one,2two"), b: coins("1three,2two"), exp: false},
+		{name: "two two diff second denom", a: coins("1one,2two"), b: coins("1one,2three"), exp: false},
+		{
+			name: "one one same negative",
+			a:    sdk.Coins{sdk.Coin{Denom: "one", Amount: sdkmath.NewInt(-1)}},
+			b:    sdk.Coins{sdk.Coin{Denom: "one", Amount: sdkmath.NewInt(-1)}},
+			exp:  true,
+		},
+		{
+			name: "one one negative first",
+			a:    sdk.Coins{sdk.Coin{Denom: "one", Amount: sdkmath.NewInt(-1)}},
+			b:    sdk.Coins{sdk.Coin{Denom: "one", Amount: sdkmath.NewInt(1)}},
+			exp:  false,
+		},
+		{
+			name: "one one negative second",
+			a:    sdk.Coins{sdk.Coin{Denom: "one", Amount: sdkmath.NewInt(1)}},
+			b:    sdk.Coins{sdk.Coin{Denom: "one", Amount: sdkmath.NewInt(-1)}},
+			exp:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = CoinsEquals(tc.a, tc.b)
+			}
+			require.NotPanics(t, testFunc, "CoinsEquals(%q, %q)", tc.a, tc.b)
+			assert.Equal(t, tc.exp, actual, "CoinsEquals(%q, %q)", tc.a, tc.b)
+		})
+	}
+}
 
 func TestCoinEquals(t *testing.T) {
 	tests := []struct {
