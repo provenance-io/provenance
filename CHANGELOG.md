@@ -50,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   Management of holds is internal, but there are queries for looking up holds on accounts.
   Holds are also reflected in the `x/bank` module's `SpendableBalances` query.
 * Add new MaxSupply param to marker module and deprecate MaxTotalSupply. [#1292](https://github.com/provenance-io/provenance/issues/1292).
+* Add hidden docgen command to output documentation in different formats. [#1468](https://github.com/provenance-io/provenance/issues/1468).
 
 ### Improvements
 

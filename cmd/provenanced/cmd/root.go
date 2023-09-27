@@ -154,6 +154,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		AddMetaAddressCmd(),
 		snapshot.Cmd(newApp),
 		GetPreUpgradeCmd(),
+		GetDocGenCmd(),
 	)
 
 	fixDebugPubkeyRawTypeFlag(rootCmd)
