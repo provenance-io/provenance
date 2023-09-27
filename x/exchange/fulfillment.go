@@ -277,11 +277,11 @@ func (f *OrderFulfillment) Finalize(sellerFeeRatio *FeeRatio) (err error) {
 		f.FeesToPay = nil
 		for _, orderFee := range orderFees {
 			feeAssets := orderFee.Amount.Mul(f.AssetsFilledAmt)
-			feeRem := feeAssets.Mul(orderAssets.Amount)
+			feeRem := feeAssets.Mod(orderAssets.Amount)
 			if !feeRem.IsZero() {
-				return fmt.Errorf("%s order %d having settlement fees %q cannot be partially filled by %q: "+
+				return fmt.Errorf("%s order %d having assets %q cannot be partially filled by %q: "+
 					"fee %q is not evenly divisible",
-					f.GetOrderType(), f.GetOrderID(), orderFees, f.GetAssetsFilled(), orderFee)
+					f.GetOrderType(), f.GetOrderID(), orderAssets, f.GetAssetsFilled(), orderFee)
 			}
 			feeAmtToPay := feeAssets.Quo(orderAssets.Amount)
 			f.FeesToPay = f.FeesToPay.Add(sdk.NewCoin(orderFee.Denom, feeAmtToPay))
