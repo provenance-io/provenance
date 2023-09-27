@@ -498,10 +498,20 @@ func TestOrder_GetOrderID(t *testing.T) {
 	}
 }
 
-const (
-	nilSubTypeErr     = "unknown sub-order type <nil>: does not implement SubOrderI"
-	unknownSubTypeErr = "unknown sub-order type *exchange.unknownOrderType: does not implement SubOrderI"
-)
+// badSubTypeErr creates the expected error when a sub-order type is bad.
+func badSubTypeErr(orderID uint64, badType string) string {
+	return fmt.Sprintf("order %d has unknown sub-order type %s: does not implement SubOrderI", orderID, badType)
+}
+
+// nilSubTypeErr creates the expected error when a sub-order type is nil.
+func nilSubTypeErr(orderID uint64) string {
+	return badSubTypeErr(orderID, "<nil>")
+}
+
+// unknownSubTypeErr creates the expected error when a sub-order type is the unknownOrderType.
+func unknownSubTypeErr(orderID uint64) string {
+	return badSubTypeErr(orderID, "*exchange.unknownOrderType")
+}
 
 func TestOrder_GetSubOrder(t *testing.T) {
 	askOrder := &AskOrder{
@@ -540,12 +550,12 @@ func TestOrder_GetSubOrder(t *testing.T) {
 		{
 			name:   "nil sub-order",
 			order:  NewOrder(3),
-			expErr: nilSubTypeErr,
+			expErr: nilSubTypeErr(3),
 		},
 		{
 			name:   "unknown order type",
 			order:  &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expErr: unknownSubTypeErr,
+			expErr: unknownSubTypeErr(4),
 		},
 	}
 
@@ -590,12 +600,12 @@ func TestOrder_GetMarketID(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: nilSubTypeErr,
+			expPanic: nilSubTypeErr(3),
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: unknownSubTypeErr,
+			expPanic: unknownSubTypeErr(4),
 		},
 	}
 
@@ -631,12 +641,12 @@ func TestOrder_GetOwner(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: nilSubTypeErr,
+			expPanic: nilSubTypeErr(3),
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: unknownSubTypeErr,
+			expPanic: unknownSubTypeErr(4),
 		},
 	}
 
@@ -672,12 +682,12 @@ func TestOrder_GetAssets(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: nilSubTypeErr,
+			expPanic: nilSubTypeErr(3),
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: unknownSubTypeErr,
+			expPanic: unknownSubTypeErr(4),
 		},
 	}
 
@@ -713,12 +723,12 @@ func TestOrder_GetPrice(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: nilSubTypeErr,
+			expPanic: nilSubTypeErr(3),
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: unknownSubTypeErr,
+			expPanic: unknownSubTypeErr(4),
 		},
 	}
 
@@ -754,12 +764,12 @@ func TestOrder_GetSettlementFees(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: nilSubTypeErr,
+			expPanic: nilSubTypeErr(3),
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: unknownSubTypeErr,
+			expPanic: unknownSubTypeErr(4),
 		},
 	}
 
@@ -795,12 +805,12 @@ func TestOrder_PartialFillAllowed(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: nilSubTypeErr,
+			expPanic: nilSubTypeErr(3),
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: unknownSubTypeErr,
+			expPanic: unknownSubTypeErr(4),
 		},
 	}
 
@@ -876,12 +886,12 @@ func TestOrder_GetOrderTypeByte(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: nilSubTypeErr,
+			expPanic: nilSubTypeErr(3),
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: unknownSubTypeErr,
+			expPanic: unknownSubTypeErr(4),
 		},
 	}
 
@@ -927,12 +937,12 @@ func TestOrder_GetHoldAmount(t *testing.T) {
 		{
 			name:     "nil inside order",
 			order:    NewOrder(3),
-			expPanic: nilSubTypeErr,
+			expPanic: nilSubTypeErr(3),
 		},
 		{
 			name:     "unknown order type",
 			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
-			expPanic: unknownSubTypeErr,
+			expPanic: unknownSubTypeErr(4),
 		},
 	}
 
@@ -965,12 +975,12 @@ func TestOrder_Validate(t *testing.T) {
 		{
 			name:  "nil sub-order",
 			Order: NewOrder(1),
-			exp:   []string{nilSubTypeErr},
+			exp:   []string{nilSubTypeErr(1)},
 		},
 		{
 			name:  "unknown sub-order type",
 			Order: &Order{OrderId: 1, Order: &unknownOrderType{}},
-			exp:   []string{unknownSubTypeErr},
+			exp:   []string{unknownSubTypeErr(1)},
 		},
 		{
 			name:  "ask order error",

@@ -133,7 +133,7 @@ func (o Order) GetSubOrder() (SubOrderI, error) {
 	default:
 		// If this is called without the sub-order being set yet, it's a programming error, so panic.
 		// If it's a type that doesn't implement SubOrderI, that needs to be done, so panic.
-		return nil, fmt.Errorf("unknown sub-order type %T: does not implement SubOrderI", v)
+		return nil, fmt.Errorf("order %d has unknown sub-order type %T: does not implement SubOrderI", o.OrderId, v)
 	}
 }
 
