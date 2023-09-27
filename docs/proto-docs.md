@@ -1968,9 +1968,10 @@ Params defines the set of params for the account module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `max_total_supply` | [uint64](#uint64) |  | maximum amount of supply to allow a marker to be created with |
+| `max_total_supply` | [uint64](#uint64) |  | **Deprecated.** Deprecated: Prefer to use `max_supply` instead. Maximum amount of supply to allow a marker to be created with |
 | `enable_governance` | [bool](#bool) |  | indicates if governance based controls of markers is allowed. |
 | `unrestricted_denom_regex` | [string](#string) |  | a regular expression used to validate marker denom values from normal create requests (governance requests are only subject to platform coin validation denom expression) |
+| `max_supply` | [string](#string) |  | maximum amount of supply to allow a marker to be created with |
 
 
 

@@ -23,6 +23,7 @@ const (
 	// Adjusted marker operations to a cumulative weight of 100
 	DefaultWeightMsgAddMarker                 int = 30
 	DefaultWeightMsgChangeStatus              int = 10
+	DefaultWeightMsgFinalize                  int = 10
 	DefaultWeightMsgAddAccess                 int = 10
 	DefaultWeightMsgAddFinalizeActivateMarker int = 10
 	DefaultWeightMsgAddMarkerProposal         int = 40

@@ -424,6 +424,8 @@ func (s *UpgradeTestSuite) TestSaffronRC1() {
 		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
 		"INF Updating ICQ params",
 		"INF Done updating ICQ params",
+		"INF Updating MaxSupply marker param",
+		"INF Done updating MaxSupply marker param",
 	}
 
 	s.AssertUpgradeHandlerLogs("saffron-rc1", expInLog, nil)
@@ -438,6 +440,8 @@ func (s *UpgradeTestSuite) TestSaffron() {
 		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
 		"INF Updating ICQ params",
 		"INF Done updating ICQ params",
+		"INF Updating MaxSupply marker param",
+		"INF Done updating MaxSupply marker param",
 	}
 
 	s.AssertUpgradeHandlerLogs("saffron", expInLog, nil)

@@ -93,7 +93,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		//	types.TypeFinalizeRequest, fmt.Sprintf("%T", &types.MsgFinalizeRequest{}),
 		//	types.TypeCancelRequest, fmt.Sprintf("%T", &types.MsgCancelRequest{}),
 		//	types.TypeDeleteRequest, fmt.Sprintf("%T", &types.MsgDeleteRequest{}),
-		{simappparams.DefaultWeightMsgChangeStatus, sdk.MsgTypeURL(&types.MsgCancelRequest{}), sdk.MsgTypeURL(&types.MsgCancelRequest{})},
+		{simappparams.DefaultWeightMsgFinalize, sdk.MsgTypeURL(&types.MsgFinalizeRequest{}), sdk.MsgTypeURL(&types.MsgFinalizeRequest{})},
 		// Possible names: types.TypeAddAccessRequest, fmt.Sprintf("%T", &types.MsgAddAccessRequest{})
 		{simappparams.DefaultWeightMsgAddAccess, sdk.MsgTypeURL(&types.MsgAddAccessRequest{}), sdk.MsgTypeURL(&types.MsgAddAccessRequest{})},
 		{simappparams.DefaultWeightMsgAddFinalizeActivateMarker, sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{})},

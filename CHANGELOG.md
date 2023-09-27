@@ -49,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   Funds with a hold on them cannot be transferred until the hold is removed.
   Management of holds is internal, but there are queries for looking up holds on accounts.
   Holds are also reflected in the `x/bank` module's `SpendableBalances` query.
+* Add new MaxSupply param to marker module and deprecate MaxTotalSupply. [#1292](https://github.com/provenance-io/provenance/issues/1292).
 
 ### Improvements
 
@@ -70,6 +71,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix for incorrect resource-id type casting on contract specification [#1647](https://github.com/provenance-io/provenance/issues/1647).
 * Allow restricted coins to be quarantined [#1626](https://github.com/provenance-io/provenance/issues/1626).
 * Prevent marker forced transfers from module accounts [#1626](https://github.com/provenance-io/provenance/issues/1626).
+* Change config load order so custom.toml can override other config. [#1262](https://github.com/provenance-io/provenance/issues/1262)
 
 ### Client Breaking
 
@@ -97,7 +99,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `bufbuild/buf-setup-action` from 1.25.1 to 1.26.0 ([#1645](https://github.com/provenance-io/provenance/pull/1645))
 - Bump `bufbuild/buf-setup-action` from 1.25.0 to 1.25.1 ([#1642](https://github.com/provenance-io/provenance/pull/1642))
 - Bump `google.golang.org/grpc` from 1.56.2 to 1.57.0 ([#1635](https://github.com/provenance-io/provenance/pull/1635))
-- Bump `github.com/rs/zerolog` from 1.29.1 to 1.30.0 ([#1639](https://github.com/provenance-io/provenance/pull/1639))
+- Bump `github.com/rs/zerolog` from 1.29.1 to 1.31.0 ([#1639](https://github.com/provenance-io/provenance/pull/1639), [#1691](https://github.com/provenance-io/provenance/pull/1691))
 - Bump `bufbuild/buf-setup-action` from 1.24.0 to 1.25.0 ([#1632](https://github.com/provenance-io/provenance/pull/1632))
 - Bump `bufbuild/buf-setup-action` from 1.23.1 to 1.24.0 ([#1631](https://github.com/provenance-io/provenance/pull/1631))
 - Bump `github.com/cosmos/ibc-go/v6` from 6.1.1 to 6.2.0 ([#1629](https://github.com/provenance-io/provenance/pull/1629))

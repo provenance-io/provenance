@@ -1095,6 +1095,16 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 	err = app.MarkerKeeper.AddMarkerAccount(ctx, nonActiveDenom)
 	require.NoError(t, err)
 
+	// exceed max supply
+	kneesBees := types.NewEmptyMarkerAccount(
+		"knees-bees",
+		user.String(),
+		[]types.AccessGrant{})
+	kneesBees.Status = types.StatusActive
+
+	err = app.MarkerKeeper.AddMarkerAccount(ctx, kneesBees)
+	require.NoError(t, err)
+
 	// all good
 	beesKnees := types.NewEmptyMarkerAccount(
 		"bees-knees",
@@ -1167,6 +1177,17 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 			authority:     authority,
 			shouldFail:    false,
 			expectedError: "",
+		},
+		{
+			name: "supply increase exceeds max supply",
+			amount: sdk.Coin{
+				Amount: types.StringToBigInt("1000000000000000000000"),
+				Denom:  kneesBees.Denom,
+			},
+			targetAddress: authority,
+			authority:     authority,
+			shouldFail:    true,
+			expectedError: "requested supply 1000000000000000000000 exceeds maximum allowed value 100000000000000000000",
 		},
 	}
 

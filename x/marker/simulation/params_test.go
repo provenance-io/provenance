@@ -20,8 +20,8 @@ func TestParamChanges(t *testing.T) {
 		subspace    string
 	}{
 		{
-			composedKey: "marker/MaxTotalSupply",
-			key:         "MaxTotalSupply",
+			composedKey: "marker/MaxSupply",
+			key:         "MaxSupply",
 			subspace:    markertypes.ModuleName,
 		},
 		{

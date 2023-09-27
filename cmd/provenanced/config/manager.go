@@ -385,14 +385,16 @@ func unquote(str string) string {
 }
 
 // LoadConfigFromFiles loads configurations appropriately.
-func LoadConfigFromFiles(cmd *cobra.Command) error {
-	if err := loadUnmanagedConfig(cmd); err != nil {
+func LoadConfigFromFiles(cmd *cobra.Command) (err error) {
+	if IsPacked(cmd) {
+		err = loadPackedConfig(cmd)
+	} else {
+		err = loadUnpackedConfig(cmd)
+	}
+	if err != nil {
 		return err
 	}
-	if IsPacked(cmd) {
-		return loadPackedConfig(cmd)
-	}
-	return loadUnpackedConfig(cmd)
+	return loadUnmanagedConfig(cmd)
 }
 
 // loadUnmanagedConfig reads the unmanaged config file into viper. It does not apply anything to any contexts though.

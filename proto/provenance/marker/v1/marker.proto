@@ -16,13 +16,19 @@ message Params {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
 
-  // maximum amount of supply to allow a marker to be created with
-  uint64 max_total_supply = 1 [(gogoproto.customtype) = "uint64", (gogoproto.nullable) = false];
+  // Deprecated: Prefer to use `max_supply` instead. Maximum amount of supply to allow a marker to be created with
+  uint64 max_total_supply = 1 [(gogoproto.customtype) = "uint64", (gogoproto.nullable) = false, deprecated = true];
   // indicates if governance based controls of markers is allowed.
   bool enable_governance = 2;
   // a regular expression used to validate marker denom values from normal create requests (governance
   // requests are only subject to platform coin validation denom expression)
   string unrestricted_denom_regex = 3;
+  // maximum amount of supply to allow a marker to be created with
+  string max_supply = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "json:\"max_supply\" yaml:\"max_supply\""
+  ];
 }
 
 // MarkerAccount holds the marker configuration information in addition to a base account structure.

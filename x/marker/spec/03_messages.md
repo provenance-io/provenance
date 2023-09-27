@@ -5,6 +5,7 @@ All created/modified state objects specified by each message are defined within 
 [state](./02_state_transitions.md) section.
 
 <!-- TOC 2 2 -->
+- [Messages](#messages)
   - [Msg/AddMarkerRequest](#msgaddmarkerrequest)
   - [Msg/AddAccessRequest](#msgaddaccessrequest)
   - [Msg/DeleteAccessRequest](#msgdeleteaccessrequest)
@@ -340,7 +341,7 @@ This service message is expected to fail if:
 
 - The authority is not the address of the governance module's account.
 - The governance proposal format (title, description, etc) is invalid
-- The requested supply exceeds the configuration parameter for `MaxTotalSupply`
+- The requested supply exceeds the configuration parameter for `MaxSupply`
 
 See also: [Governance: Supply Increase Proposal](./10_governance.md#supply-increase-proposal)
 

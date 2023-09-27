@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	keyMaxTotalSupply         = "MaxTotalSupply"
+	keyMaxSupply              = "MaxSupply"
 	keyEnableGovernance       = "EnableGovernance"
 	keyUnrestrictedDenomRegex = "UnrestrictedDenomRegex"
 )
@@ -22,9 +22,9 @@ const (
 // on the simulation
 func ParamChanges(_ *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
-		simulation.NewSimParamChange(types.ModuleName, keyMaxTotalSupply,
+		simulation.NewSimParamChange(types.ModuleName, keyMaxSupply,
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", GenMaxTotalSupply(r))
+				return fmt.Sprintf("\"%s\"", GenMaxSupply(r).String())
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, keyEnableGovernance,

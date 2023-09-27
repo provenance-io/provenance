@@ -155,6 +155,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var markerData markertypes.GenesisState
 	markerData.Params.EnableGovernance = true
 	markerData.Params.MaxTotalSupply = 1000000
+	markerData.Params.MaxSupply = sdk.NewInt(1000000)
 	// Note: These account numbers get ignored.
 	markerData.Markers = []markertypes.MarkerAccount{
 		{
@@ -455,7 +456,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			[]string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"max_total_supply":"1000000","enable_governance":true,"unrestricted_denom_regex":""}`,
+			`{"max_total_supply":"1000000","enable_governance":true,"unrestricted_denom_regex":"","max_supply":"1000000"}`,
 		},
 		{
 			"get testcoin marker json",
