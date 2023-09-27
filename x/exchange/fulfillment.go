@@ -58,6 +58,7 @@ type OrderFulfillment struct {
 
 var _ OrderI = (*OrderFulfillment)(nil)
 
+// NewOrderFulfillment creates a new OrderFulfillment wrapping the provided order.
 func NewOrderFulfillment(order *Order) *OrderFulfillment {
 	return &OrderFulfillment{
 		Order:             order,
@@ -546,8 +547,7 @@ func Fulfill(of1, of2 *OrderFulfillment) error {
 
 // GetFulfillmentAssetsAmt figures out the assets that can be fulfilled with the two provided orders.
 func GetFulfillmentAssetsAmt(of1, of2 *OrderFulfillment) (sdkmath.Int, error) {
-	of1AmtLeft, of2AmtLeft := of1.AssetsUnfilledAmt, of2.AssetsUnfilledAmt
-	if !of1AmtLeft.IsPositive() || !of2AmtLeft.IsPositive() {
+	if !of1.AssetsUnfilledAmt.IsPositive() || !of2.AssetsUnfilledAmt.IsPositive() {
 		return sdkmath.ZeroInt(), fmt.Errorf("cannot fill %s order %d having assets left %q "+
 			"with %s order %d having assets left %q: zero or negative assets left",
 			of1.GetOrderType(), of1.GetOrderID(), of1.GetAssetsUnfilled(),
@@ -555,10 +555,10 @@ func GetFulfillmentAssetsAmt(of1, of2 *OrderFulfillment) (sdkmath.Int, error) {
 	}
 
 	// Return the lesser of the two.
-	if of1AmtLeft.LTE(of2AmtLeft) {
-		return of1AmtLeft, nil
+	if of1.AssetsUnfilledAmt.LTE(of2.AssetsUnfilledAmt) {
+		return of1.AssetsUnfilledAmt, nil
 	}
-	return of2AmtLeft, nil
+	return of2.AssetsUnfilledAmt, nil
 }
 
 // Fulfillments contains information on how orders are to be fulfilled.
@@ -582,6 +582,7 @@ type PartialFulfillment struct {
 	PriceFilled sdk.Coin
 }
 
+// NewPartialFulfillment creates a new PartialFulfillment using the provided OrderFulfillment information.
 func NewPartialFulfillment(f *OrderFulfillment) *PartialFulfillment {
 	rv := &PartialFulfillment{
 		NewOrder:     NewOrder(f.GetOrderID()),
@@ -621,6 +622,7 @@ func NewPartialFulfillment(f *OrderFulfillment) *PartialFulfillment {
 		return rv
 	}
 
+	// This is here in case another order type is created, but a case for it isn't added to this func.
 	panic(fmt.Errorf("order %d has unknown type %q", f.GetOrderID(), f.GetOrderType()))
 }
 
@@ -681,7 +683,7 @@ func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) 
 	}
 
 	// Make sure none of them are partially filled except possibly the last in each list.
-	var partialFulfillment []*OrderFulfillment
+	var partialFulfillments []*OrderFulfillment
 	lastAskI, lastBidI := len(askOFs)-1, len(bidOFs)-1
 	for i, askOF := range askOFs {
 		if !askOF.IsFullyFilled() {
@@ -689,7 +691,7 @@ func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) 
 				return nil, fmt.Errorf("ask order %d (at index %d) is not filled in full and is not the last ask order provided",
 					askOF.GetOrderID(), i)
 			}
-			partialFulfillment = append(partialFulfillment, askOF)
+			partialFulfillments = append(partialFulfillments, askOF)
 		}
 	}
 	for i, bidOF := range bidOFs {
@@ -698,15 +700,15 @@ func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) 
 				return nil, fmt.Errorf("bid order %d (at index %d) is not filled in full and is not the last bid order provided",
 					bidOF.GetOrderID(), i)
 			}
-			partialFulfillment = append(partialFulfillment, bidOF)
+			partialFulfillments = append(partialFulfillments, bidOF)
 		}
 	}
 
 	// And make sure that only one order is being partially filled.
-	if len(partialFulfillment) > 1 {
+	if len(partialFulfillments) > 1 {
 		return nil, fmt.Errorf("%s order %d and %s order %d cannot both be partially filled",
-			partialFulfillment[0].GetOrderType(), partialFulfillment[0].GetOrderID(),
-			partialFulfillment[1].GetOrderType(), partialFulfillment[1].GetOrderID())
+			partialFulfillments[0].GetOrderType(), partialFulfillments[0].GetOrderID(),
+			partialFulfillments[1].GetOrderType(), partialFulfillments[1].GetOrderID())
 	}
 
 	rv := &Fulfillments{
@@ -714,8 +716,8 @@ func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) 
 		BidOFs: bidOFs,
 	}
 
-	if len(partialFulfillment) > 0 {
-		rv.PartialOrder = NewPartialFulfillment(partialFulfillment[0])
+	if len(partialFulfillments) > 0 {
+		rv.PartialOrder = NewPartialFulfillment(partialFulfillments[0])
 	}
 
 	return rv, nil
