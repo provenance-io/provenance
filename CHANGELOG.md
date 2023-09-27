@@ -85,7 +85,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Dependencies
 
-- Bump `google.golang.org/grpc` from 1.57.0 to 1.58.1 ([#1672](https://github.com/provenance-io/provenance/pull/1672), [#1685](https://github.com/provenance-io/provenance/pull/1685))
+- Bump `google.golang.org/grpc` from 1.57.0 to 1.58.2 ([#1672](https://github.com/provenance-io/provenance/pull/1672), [#1685](https://github.com/provenance-io/provenance/pull/1685), [#1689](https://github.com/provenance-io/provenance/pull/1689))
 - Bump `crazy-max/ghaction-import-gpg` from 5 to 6 ([#1677](https://github.com/provenance-io/provenance/pull/1677))
 - Bump `golang.org/x/text` from 0.12.0 to 0.13.0 ([#1667](https://github.com/provenance-io/provenance/pull/1667))
 - Bump `actions/checkout` from 3 to 4 ([#1668](https://github.com/provenance-io/provenance/pull/1668))

@@ -33,7 +33,7 @@ require (
 	golang.org/x/exp v0.0.0-20230310171629-522b1b587ee0
 	golang.org/x/text v0.13.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230711160842-782d3b101e98
-	google.golang.org/grpc v1.58.1
+	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v2 v2.4.0
 
