@@ -324,7 +324,8 @@ func (h WasmHooks) SendPacketFn(
 	// from the data completely so the packet is sent without it.
 	// This way receiver chains that are on old versions of IBC will be able to process the packet
 
-	// callbackRaw := metadata[types.IBCCallbackKey] // This will be used later.
+	callbackRaw := metadata[types.IBCCallbackKey]
+	processData[types.IBCCallbackKey] = callbackRaw
 	delete(metadata, types.IBCCallbackKey)
 	bzMetadata, err := json.Marshal(metadata)
 	if err != nil {
@@ -342,24 +343,6 @@ func (h WasmHooks) SendPacketFn(
 	}
 
 	return dataBytes, nil
-
-	// seq, err := i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, dataBytes)
-	// if err != nil {
-	// 	return 0, err
-	// }
-
-	// Make sure the callback contract is a string and a valid bech32 addr. If it isn't, ignore this packet
-	// contract, ok := callbackRaw.(string)
-	// if !ok {
-	// 	return 0, nil
-	// }
-
-	// if _, err := sdktypes.AccAddressFromBech32(contract); err != nil {
-	// 	return 0, nil
-	// }
-
-	// h.ibcHooksKeeper.StorePacketCallback(ctx, sourceChannel, seq, contract)
-	// return seq, nil
 }
 
 func (h WasmHooks) SendPacketAfterHook(ctx sdk.Context,
@@ -376,7 +359,6 @@ func (h WasmHooks) SendPacketAfterHook(ctx sdk.Context,
 	if err != nil {
 		return
 	}
-
 	callbackRaw := processData[types.IBCCallbackKey]
 	if callbackRaw == nil {
 		return

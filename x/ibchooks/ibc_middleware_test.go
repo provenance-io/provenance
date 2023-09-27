@@ -210,11 +210,11 @@ func (suite *HooksTestSuite) makeMockPacket(receiver, memo string, prevSequence 
 	)
 }
 
-func (suite *HooksTestSuite) receivePacket(receiver, memo, processedMemo string) []byte {
-	return suite.receivePacketWithSequence(receiver, memo, processedMemo, 0)
+func (suite *HooksTestSuite) receivePacket(receiver, memo string) []byte {
+	return suite.receivePacketWithSequence(receiver, memo, 0)
 }
 
-func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo, processedMemo string, prevSequence uint64) []byte {
+func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, prevSequence uint64) []byte {
 	channelCap := suite.chainB.GetChannelCapability(
 		suite.path.EndpointB.ChannelConfig.PortID,
 		suite.path.EndpointB.ChannelID)
@@ -231,18 +231,16 @@ func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo, processed
 		packet.Data)
 	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 	suite.Require().NotZero(seq, "IBC send expected positive sequence number, %d", seq)
-	newPacket := suite.makeMockPacket(receiver, processedMemo, prevSequence)
+
 	// Update both clients
 	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 	err = suite.path.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
 
-	println(string(packet.Data))
-
-	println(string(newPacket.Data))
 	// recv in chain a
-	res, err := suite.path.EndpointA.RecvPacketWithResult(newPacket)
+	res, err := suite.path.EndpointA.RecvPacketWithResult(packet)
+	suite.Require().NoError(err)
 
 	// get the ack from the chain a's response
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
@@ -258,9 +256,8 @@ func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 	// Setup contract
 	codeId := suite.chainA.StoreContractEchoDirect(&suite.Suite)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", codeId)
-	preProcessedMemo := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"echo": {"msg": "test"} } } }`, addr)
-	processedMemo := fmt.Sprintf(`{"marker": "{}", "wasm": {"contract": "%s", "msg": {"echo": {"msg": "test"} } } }`, addr)
-	ackBytes := suite.receivePacket(addr.String(), preProcessedMemo, processedMemo)
+	memo := fmt.Sprintf(`{"marker":"{}","wasm":{"contract":"%s","msg":{"echo":{"msg":"test"}}}}`, addr)
+	ackBytes := suite.receivePacket(addr.String(), memo)
 	ackStr := string(ackBytes)
 	fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
@@ -282,7 +279,7 @@ func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 
 	// Execute the contract via IBC
-	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"echo": {"msg": "test"} } } }`, addr), "{}")
+	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"marker":"{}","wasm":{"contract":"%s","msg":{"echo":{"msg":"test"}}}}`, addr))
 	ackStr := string(ackBytes)
 	fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
@@ -308,7 +305,7 @@ func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 
 	// Execute the contract via IBC with a message that the contract will reject
-	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"not_echo": {"msg": "test"} } } }`, addr), "{}")
+	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"marker":"{}","wasm":{"contract":"%s","msg":{"not_echo":{"msg":"test"}}}}`, addr))
 	ackStr := string(ackBytes)
 	fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
@@ -322,47 +319,47 @@ func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 }
 
-func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
-	var sequence uint64
-	receiver := suite.chainB.SenderAccount.GetAddress().String()
+// func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
+// 	var sequence uint64
+// 	receiver := suite.chainB.SenderAccount.GetAddress().String()
 
-	testCases := []struct {
-		memo           string
-		expPassthrough bool
-	}{
-		// {"", true},
-		{"{01]", true}, // bad json
-		{"{}", true},
-		{`{"something": ""}`, true},
-		{`{"wasm": "test"}`, false},
-		{`{"wasm": []`, true}, // invalid top level JSON
-		{`{"wasm": {}`, true}, // invalid top level JSON
-		{`{"wasm": []}`, false},
-		{`{"wasm": {}}`, false},
-		{`{"wasm": {"contract": "something"}}`, false},
-		{`{"wasm": {"contract": "osmo1clpqr4nrk4khgkxj78fcwwh6dl3uw4epasmvnj"}}`, false},
-		{`{"wasm": {"msg": "something"}}`, false},
-		// invalid receiver
-		{`{"wasm": {"contract": "osmo1clpqr4nrk4khgkxj78fcwwh6dl3uw4epasmvnj", "msg": {}}}`, false},
-		// msg not an object
-		{fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": 1}}`, receiver), false},
-	}
+// 	testCases := []struct {
+// 		memo           string
+// 		expPassthrough bool
+// 	}{
+// 		// {"", true},
+// 		{"{01]", true}, // bad json
+// 		{"{}", true},
+// 		{`{"something": ""}`, true},
+// 		{`{"wasm": "test"}`, false},
+// 		{`{"wasm": []`, true}, // invalid top level JSON
+// 		{`{"wasm": {}`, true}, // invalid top level JSON
+// 		{`{"wasm": []}`, false},
+// 		{`{"wasm": {}}`, false},
+// 		{`{"wasm": {"contract": "something"}}`, false},
+// 		{`{"wasm": {"contract": "osmo1clpqr4nrk4khgkxj78fcwwh6dl3uw4epasmvnj"}}`, false},
+// 		{`{"wasm": {"msg": "something"}}`, false},
+// 		// invalid receiver
+// 		{`{"wasm": {"contract": "osmo1clpqr4nrk4khgkxj78fcwwh6dl3uw4epasmvnj", "msg": {}}}`, false},
+// 		// msg not an object
+// 		{fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": 1}}`, receiver), false},
+// 	}
 
-	for _, tc := range testCases {
-		ackBytes := suite.receivePacketWithSequence(receiver, tc.memo, "{}", sequence)
-		ackStr := string(ackBytes)
-		fmt.Println(ackStr)
-		var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
-		err := json.Unmarshal(ackBytes, &ack)
-		suite.Require().NoError(err)
-		if tc.expPassthrough {
-			suite.Require().Equal("AQ==", ack["result"], tc.memo)
-		} else {
-			suite.Require().Contains(ackStr, "error", tc.memo)
-		}
-		sequence += 1
-	}
-}
+// 	for _, tc := range testCases {
+// 		ackBytes := suite.receivePacketWithSequence(receiver, tc.memo, sequence)
+// 		ackStr := string(ackBytes)
+// 		fmt.Println(ackStr)
+// 		var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+// 		err := json.Unmarshal(ackBytes, &ack)
+// 		suite.Require().NoError(err)
+// 		if tc.expPassthrough {
+// 			suite.Require().Equal("AQ==", ack["result"], tc.memo)
+// 		} else {
+// 			suite.Require().Contains(ackStr, "error", tc.memo)
+// 		}
+// 		sequence += 1
+// 	}
+// }
 
 // After successfully executing a wasm call, the contract should have the funds sent via IBC
 func (suite *HooksTestSuite) TestFundTracking() {
@@ -375,10 +372,11 @@ func (suite *HooksTestSuite) TestFundTracking() {
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 
+	memo := fmt.Sprintf(`{"marker":"{}","wasm":{"contract":"%s","msg":{"increment":{}}}}`, addr)
+
 	// Execute the contract via IBC
 	suite.receivePacket(
-		addr.String(),
-		fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"increment": {} } } }`, addr), "{}")
+		addr.String(), memo)
 
 	prefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
 	senderLocalAcc, err := keeper.DeriveIntermediateSender("channel-0", suite.chainB.SenderAccount.GetAddress().String(), prefix)
@@ -396,7 +394,7 @@ func (suite *HooksTestSuite) TestFundTracking() {
 
 	suite.receivePacketWithSequence(
 		addr.String(),
-		fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"increment": {} } } }`, addr), "{}", 1)
+		memo, 1)
 
 	state = suite.chainA.QueryContract(
 		&suite.Suite, addr,

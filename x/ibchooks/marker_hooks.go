@@ -196,12 +196,8 @@ func (h MarkerHooks) SendPacketFn(
 		return nil, sdkerrors.Wrap(err, "ics20data marshall error")
 	}
 	ics20Packet.Memo = string(memo)
-	dataBytes, err := json.Marshal(ics20Packet)
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "ics20data marshall error")
-	}
 
-	return dataBytes, nil
+	return ics20Packet.GetBytes(), nil
 }
 
 // SanitizeMemo returns a keyed json object for memo

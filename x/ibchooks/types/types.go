@@ -90,7 +90,7 @@ func UnmarshalIBCAck(bz []byte) (*IBCAck, error) {
 type IbcAck struct {
 	Channel  string    `json:"channel"`
 	Sequence uint64    `json:"sequence"`
-	Ack      JsonBytes `json:"ack"`
+	Ack      JSONBytes `json:"ack"`
 	Success  bool      `json:"success"`
 }
 
@@ -151,9 +151,9 @@ func NewIbcLifecycleCompleteTimeout(sourceChannel string, sequence uint64) IbcLi
 	return IbcLifecycleComplete{IbcLifecycleComplete: ibcLifecycleCompleteAck}
 }
 
-type JsonBytes []byte
+type JSONBytes []byte
 
-func (jb JsonBytes) MarshalJSON() ([]byte, error) {
+func (jb JSONBytes) MarshalJSON() ([]byte, error) {
 	if len(jb) == 0 {
 		return []byte("{}"), nil
 	}
