@@ -13,6 +13,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -91,9 +94,9 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, ics4wrapper ibcratelimit.ICS4Wrapper) AppModule {
+func NewAppModule(accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, ics4wrapper ibcratelimit.ICS4Wrapper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{},
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		ics4wrapper:    ics4wrapper,
@@ -120,7 +123,7 @@ func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a func to decode each module's defined types from their corresponding store key
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	TODO When we finish sim tests
+	// TODO When we finish sim tests
 	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
