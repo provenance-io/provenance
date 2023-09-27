@@ -16,6 +16,63 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
+// Annoyingly, sdkmath.NewInt(0) and sdkmath.ZeroInt() are not internally equal to an Int that
+// started with a value and was reduced to zero.
+// In other words, assert.Equal(t, sdkmath.ZeroInt(), sdkmath.NewInt(1).SubRaw(1)) fails.
+// With those, Int.abs = (big.nat) <nil>.
+// With this, Int.abs = (big.nat){}.
+// So when an object has an sdkmath.Int that should have been reduced to zero, you'll need to use this.
+var ZeroAmtAfterSub = sdkmath.NewInt(1).SubRaw(1)
+
+// copyOrderSplit creates a copy of this order split.
+// Unlike the other copiers in here, the Order is not deep copied, it will be the same reference.
+func copyOrderSplit(split *OrderSplit) *OrderSplit {
+	if split == nil {
+		return nil
+	}
+
+	return &OrderSplit{
+		// just copying the reference here to prevent infinite recursion.
+		Order:  split.Order,
+		Assets: copyCoin(split.Assets),
+		Price:  copyCoin(split.Price),
+	}
+}
+
+// copyOrderSplits copies a slice of order splits.
+func copyOrderSplits(splits []*OrderSplit) []*OrderSplit {
+	if splits == nil {
+		return nil
+	}
+
+	rv := make([]*OrderSplit, len(splits))
+	for i, split := range splits {
+		rv[i] = copyOrderSplit(split)
+	}
+	return rv
+}
+
+// copyOrderFulfillment returns a deep copy of an order fulfillement.
+func copyOrderFulfillment(f *OrderFulfillment) *OrderFulfillment {
+	if f == nil {
+		return nil
+	}
+
+	return &OrderFulfillment{
+		Order:             copyOrder(f.Order),
+		Splits:            copyOrderSplits(f.Splits),
+		AssetsFilledAmt:   copySDKInt(f.AssetsFilledAmt),
+		AssetsUnfilledAmt: copySDKInt(f.AssetsUnfilledAmt),
+		PriceAppliedAmt:   copySDKInt(f.PriceAppliedAmt),
+		PriceLeftAmt:      copySDKInt(f.PriceLeftAmt),
+		IsFinalized:       f.IsFinalized,
+		FeesToPay:         copyCoins(f.FeesToPay),
+		OrderFeesLeft:     copyCoins(f.OrderFeesLeft),
+		PriceFilledAmt:    copySDKInt(f.PriceFilledAmt),
+		PriceUnfilledAmt:  copySDKInt(f.PriceFilledAmt),
+	}
+}
+
 // orderSplitString is similar to %v except with easier to understand Coin and Int entries.
 func orderSplitString(s *OrderSplit) string {
 	if s == nil {
@@ -52,15 +109,15 @@ func orderFulfillmentString(f *OrderFulfillment) string {
 	fields := []string{
 		fmt.Sprintf("Order:%s", orderString(f.Order)),
 		fmt.Sprintf("Splits:%s", orderSplitsString(f.Splits)),
-		fmt.Sprintf("AssetsFilledAmt:%q", f.AssetsFilledAmt),
-		fmt.Sprintf("AssetsUnfilledAmt:%q", f.AssetsUnfilledAmt),
-		fmt.Sprintf("PriceAppliedAmt:%q", f.PriceAppliedAmt),
-		fmt.Sprintf("PriceLeftAmt:%q", f.PriceLeftAmt),
+		fmt.Sprintf("AssetsFilledAmt:%s", f.AssetsFilledAmt),
+		fmt.Sprintf("AssetsUnfilledAmt:%s", f.AssetsUnfilledAmt),
+		fmt.Sprintf("PriceAppliedAmt:%s", f.PriceAppliedAmt),
+		fmt.Sprintf("PriceLeftAmt:%s", f.PriceLeftAmt),
 		fmt.Sprintf("IsFinalized:%t", f.IsFinalized),
 		fmt.Sprintf("FeesToPay:%s", coinsString(f.FeesToPay)),
 		fmt.Sprintf("OrderFeesLeft:%s", coinsString(f.OrderFeesLeft)),
-		fmt.Sprintf("PriceFilledAmt:%q", f.PriceFilledAmt),
-		fmt.Sprintf("PriceUnfilledAmt:%q", f.PriceUnfilledAmt),
+		fmt.Sprintf("PriceFilledAmt:%s", f.PriceFilledAmt),
+		fmt.Sprintf("PriceUnfilledAmt:%s", f.PriceUnfilledAmt),
 	}
 	return fmt.Sprintf("{%s}", strings.Join(fields, ", "))
 }
@@ -858,9 +915,393 @@ func TestOrderFulfillment_GetHoldAmount(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestOrderFulfillment_Apply(t *testing.T)
+// assertEqualOrderFulfillments asserts that the two order fulfillments are equal.
+// Returns true if equal.
+// If not equal, and neither are nil, equality on each field is also asserted in order to help identify the problem.
+func assertEqualOrderFulfillments(t *testing.T, expected, actual *OrderFulfillment, message string, args ...interface{}) bool {
+	if assert.Equalf(t, expected, actual, message, args...) {
+		return true
+	}
+	// If either is nil, that's easy to understand in the above failure, so there's nothing more to do.
+	if expected == nil || actual == nil {
+		return false
+	}
 
-// TODO[1658]: func TestOrderFulfillment_ApplyLeftoverPrice(t *testing.T)
+	msg := func(val string) string {
+		if len(message) == 0 {
+			return val
+		}
+		return val + "\n" + message
+	}
+
+	// Assert equality on each individual field so that we can more easily find the problem.
+	// If any of the Ints fail with a complaint about Int.abs = (big.nat) <nil> vs {}, use ZeroAmtAfterSub for the expected.
+	assert.Equalf(t, expected.Order, actual.Order, msg("OrderFulfillment.Order"), args...)
+	assert.Equalf(t, expected.Splits, actual.Splits, msg("OrderFulfillment.Splits"), args...)
+	assert.Equalf(t, expected.AssetsFilledAmt, actual.AssetsFilledAmt, msg("OrderFulfillment.AssetsFilledAmt"), args...)
+	assert.Equalf(t, expected.AssetsUnfilledAmt, actual.AssetsUnfilledAmt, msg("OrderFulfillment.AssetsUnfilledAmt"), args...)
+	assert.Equalf(t, expected.PriceAppliedAmt, actual.PriceAppliedAmt, msg("OrderFulfillment.PriceAppliedAmt"), args...)
+	assert.Equalf(t, expected.PriceLeftAmt, actual.PriceLeftAmt, msg("OrderFulfillment.PriceLeftAmt"), args...)
+	assert.Equalf(t, expected.IsFinalized, actual.IsFinalized, msg("OrderFulfillment.IsFinalized"), args...)
+	assert.Equalf(t, expected.FeesToPay, actual.FeesToPay, msg("OrderFulfillment.FeesToPay"), args...)
+	assert.Equalf(t, expected.OrderFeesLeft, actual.OrderFeesLeft, msg("OrderFulfillment.OrderFeesLeft"), args...)
+	assert.Equalf(t, expected.PriceFilledAmt, actual.PriceFilledAmt, msg("OrderFulfillment.PriceFilledAmt"), args...)
+	assert.Equalf(t, expected.PriceUnfilledAmt, actual.PriceUnfilledAmt, msg("OrderFulfillment.PriceUnfilledAmt"), args...)
+	return false
+}
+
+func TestOrderFulfillment_Apply(t *testing.T) {
+	assetCoin := func(amt int64) sdk.Coin {
+		return sdk.Coin{Denom: "acoin", Amount: sdkmath.NewInt(amt)}
+	}
+	priceCoin := func(amt int64) sdk.Coin {
+		return sdk.Coin{Denom: "pcoin", Amount: sdkmath.NewInt(amt)}
+	}
+	askOrder := func(orderID uint64, assetsAmt, priceAmt int64) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			MarketId: 86420,
+			Seller:   "seller",
+			Assets:   assetCoin(assetsAmt),
+			Price:    priceCoin(priceAmt),
+		})
+	}
+	bidOrder := func(orderID uint64, assetsAmt, priceAmt int64) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			MarketId: 86420,
+			Buyer:    "buyer",
+			Assets:   assetCoin(assetsAmt),
+			Price:    priceCoin(priceAmt),
+		})
+	}
+
+	tests := []struct {
+		name      string
+		receiver  *OrderFulfillment
+		order     *OrderFulfillment
+		assetsAmt sdkmath.Int
+		priceAmt  sdkmath.Int
+		expErr    string
+		expResult *OrderFulfillment
+	}{
+		{
+			name: "fills order in full",
+			receiver: &OrderFulfillment{
+				Order:             askOrder(1, 20, 55),
+				Splits:            nil,
+				AssetsFilledAmt:   sdkmath.ZeroInt(),
+				AssetsUnfilledAmt: sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.ZeroInt(),
+				PriceLeftAmt:      sdkmath.NewInt(55),
+			},
+			order:     &OrderFulfillment{Order: bidOrder(2, 40, 110)},
+			assetsAmt: sdkmath.NewInt(20),
+			priceAmt:  sdkmath.NewInt(55),
+			expResult: &OrderFulfillment{
+				Order: askOrder(1, 20, 55),
+				Splits: []*OrderSplit{
+					{
+						Order:  &OrderFulfillment{Order: bidOrder(2, 40, 110)},
+						Assets: assetCoin(20),
+						Price:  priceCoin(55),
+					},
+				},
+				AssetsFilledAmt:   sdkmath.NewInt(20),
+				AssetsUnfilledAmt: ZeroAmtAfterSub,
+				PriceAppliedAmt:   sdkmath.NewInt(55),
+				PriceLeftAmt:      ZeroAmtAfterSub,
+			},
+		},
+		{
+			name: "partially fills order",
+			receiver: &OrderFulfillment{
+				Order:             askOrder(1, 20, 55),
+				Splits:            nil,
+				AssetsFilledAmt:   sdkmath.ZeroInt(),
+				AssetsUnfilledAmt: sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.ZeroInt(),
+				PriceLeftAmt:      sdkmath.NewInt(55),
+			},
+			order:     &OrderFulfillment{Order: bidOrder(2, 40, 110)},
+			assetsAmt: sdkmath.NewInt(11),
+			priceAmt:  sdkmath.NewInt(22),
+			expResult: &OrderFulfillment{
+				Order: askOrder(1, 20, 55),
+				Splits: []*OrderSplit{
+					{
+						Order:  &OrderFulfillment{Order: bidOrder(2, 40, 110)},
+						Assets: assetCoin(11),
+						Price:  priceCoin(22),
+					},
+				},
+				AssetsFilledAmt:   sdkmath.NewInt(11),
+				AssetsUnfilledAmt: sdkmath.NewInt(9),
+				PriceAppliedAmt:   sdkmath.NewInt(22),
+				PriceLeftAmt:      sdkmath.NewInt(33),
+			},
+		},
+		{
+			name: "already partially filled, fills rest",
+			receiver: &OrderFulfillment{
+				Order: askOrder(1, 20, 55),
+				Splits: []*OrderSplit{
+					{
+						Order:  &OrderFulfillment{Order: bidOrder(3, 60, 220)},
+						Assets: assetCoin(9),
+						Price:  priceCoin(33),
+					},
+				},
+				AssetsFilledAmt:   sdkmath.NewInt(9),
+				AssetsUnfilledAmt: sdkmath.NewInt(11),
+				PriceAppliedAmt:   sdkmath.NewInt(33),
+				PriceLeftAmt:      sdkmath.NewInt(22),
+			},
+			order:     &OrderFulfillment{Order: bidOrder(2, 40, 110)},
+			assetsAmt: sdkmath.NewInt(11),
+			priceAmt:  sdkmath.NewInt(22),
+			expResult: &OrderFulfillment{
+				Order: askOrder(1, 20, 55),
+				Splits: []*OrderSplit{
+					{
+						Order:  &OrderFulfillment{Order: bidOrder(3, 60, 220)},
+						Assets: assetCoin(9),
+						Price:  priceCoin(33),
+					},
+					{
+						Order:  &OrderFulfillment{Order: bidOrder(2, 40, 110)},
+						Assets: assetCoin(11),
+						Price:  priceCoin(22),
+					},
+				},
+				AssetsFilledAmt:   sdkmath.NewInt(20),
+				AssetsUnfilledAmt: ZeroAmtAfterSub,
+				PriceAppliedAmt:   sdkmath.NewInt(55),
+				PriceLeftAmt:      ZeroAmtAfterSub,
+			},
+		},
+		{
+			name: "ask assets overfill",
+			receiver: &OrderFulfillment{
+				Order:             askOrder(1, 20, 55),
+				Splits:            nil,
+				AssetsFilledAmt:   sdkmath.ZeroInt(),
+				AssetsUnfilledAmt: sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.ZeroInt(),
+				PriceLeftAmt:      sdkmath.NewInt(55),
+			},
+			order:     &OrderFulfillment{Order: bidOrder(2, 40, 110)},
+			assetsAmt: sdkmath.NewInt(21),
+			priceAmt:  sdkmath.NewInt(55),
+			expErr:    "cannot fill ask order 1 having assets left \"20acoin\" with \"21acoin\" from bid order 2: overfill",
+		},
+		{
+			name: "bid assets overfill",
+			receiver: &OrderFulfillment{
+				Order:             bidOrder(1, 20, 55),
+				Splits:            nil,
+				AssetsFilledAmt:   sdkmath.ZeroInt(),
+				AssetsUnfilledAmt: sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.ZeroInt(),
+				PriceLeftAmt:      sdkmath.NewInt(55),
+			},
+			order:     &OrderFulfillment{Order: askOrder(2, 40, 110)},
+			assetsAmt: sdkmath.NewInt(21),
+			priceAmt:  sdkmath.NewInt(55),
+			expErr:    "cannot fill bid order 1 having assets left \"20acoin\" with \"21acoin\" from ask order 2: overfill",
+		},
+		{
+			name: "ask price overfill",
+			receiver: &OrderFulfillment{
+				Order:             askOrder(1, 20, 55),
+				Splits:            nil,
+				AssetsFilledAmt:   sdkmath.ZeroInt(),
+				AssetsUnfilledAmt: sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.ZeroInt(),
+				PriceLeftAmt:      sdkmath.NewInt(55),
+			},
+			order:     &OrderFulfillment{Order: bidOrder(2, 40, 110)},
+			assetsAmt: sdkmath.NewInt(20),
+			priceAmt:  sdkmath.NewInt(56),
+			expResult: &OrderFulfillment{
+				Order: askOrder(1, 20, 55),
+				Splits: []*OrderSplit{
+					{
+						Order:  &OrderFulfillment{Order: bidOrder(2, 40, 110)},
+						Assets: assetCoin(20),
+						Price:  priceCoin(56),
+					},
+				},
+				AssetsFilledAmt:   sdkmath.NewInt(20),
+				AssetsUnfilledAmt: ZeroAmtAfterSub,
+				PriceAppliedAmt:   sdkmath.NewInt(56),
+				PriceLeftAmt:      sdkmath.NewInt(-1),
+			},
+		},
+		{
+			name: "bid price overfill",
+			receiver: &OrderFulfillment{
+				Order:             bidOrder(1, 20, 55),
+				Splits:            nil,
+				AssetsFilledAmt:   sdkmath.ZeroInt(),
+				AssetsUnfilledAmt: sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.ZeroInt(),
+				PriceLeftAmt:      sdkmath.NewInt(55),
+			},
+			order:     &OrderFulfillment{Order: askOrder(2, 40, 110)},
+			assetsAmt: sdkmath.NewInt(20),
+			priceAmt:  sdkmath.NewInt(56),
+			expErr:    "cannot fill bid order 1 having price left \"55pcoin\" to ask order 2 at a price of \"56pcoin\": overfill",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			orig := copyOrderFulfillment(tc.receiver)
+			if tc.expResult == nil {
+				tc.expResult = copyOrderFulfillment(tc.receiver)
+			}
+
+			var err error
+			testFunc := func() {
+				err = tc.receiver.Apply(tc.order, tc.assetsAmt, tc.priceAmt)
+			}
+			require.NotPanics(t, testFunc, "Apply")
+			assertions.AssertErrorValue(t, err, tc.expErr, "Apply error")
+			if !assertEqualOrderFulfillments(t, tc.expResult, tc.receiver, "order fulfillment after .Apply") {
+				t.Logf("Original: %s", orderFulfillmentString(orig))
+				t.Logf("  Actual: %s", orderFulfillmentString(tc.receiver))
+				t.Logf("Expected: %s", orderFulfillmentString(tc.expResult))
+			}
+		})
+	}
+}
+
+func TestOrderFulfillment_ApplyLeftoverPrice(t *testing.T) {
+	type testCase struct {
+		name           string
+		receiver       *OrderFulfillment
+		askSplit       *OrderSplit
+		amt            sdkmath.Int
+		expFulfillment *OrderFulfillment
+		expAskSplit    *OrderSplit
+		expPanic       string
+	}
+
+	newTestCase := func(name string, bidSplitIndexes ...int) testCase {
+		// Picture a bid order with 150 assets at a cost of 5555 being split among 3 ask orders evenly (50 each).
+		// Each ask order has 53 to sell: 50 are coming from this bid order, and 1 and 2 each from two other bids.
+		// During initial splitting, the bid will pay each ask 5555 * 50 / 150 = 1851.
+		// 1851 * 3 = 5553, so there's 2 leftover.
+		// The other 3 are being bought for 30 each (90 total).
+
+		bidOrderID := uint64(200)
+		bidOrder := NewOrder(bidOrderID).WithBid(&BidOrder{
+			Price: sdk.NewInt64Coin("pcoin", 5555),
+		})
+
+		tc := testCase{
+			name: name,
+			receiver: &OrderFulfillment{
+				Order:           bidOrder,
+				PriceAppliedAmt: sdkmath.NewInt(5553),
+				PriceLeftAmt:    sdkmath.NewInt(2),
+			},
+			amt: sdkmath.NewInt(2),
+			expFulfillment: &OrderFulfillment{
+				Order:           bidOrder,
+				PriceAppliedAmt: sdkmath.NewInt(5555),
+				PriceLeftAmt:    ZeroAmtAfterSub,
+			},
+			askSplit: &OrderSplit{
+				Order: &OrderFulfillment{
+					Order: NewOrder(1).WithAsk(&AskOrder{
+						Price: sdk.NewInt64Coin("pcoin", 1500),
+					}),
+					PriceAppliedAmt: sdkmath.NewInt(1941), // 5555 * 50 / 150 = 1851 from main bid + 90 from the others.
+					PriceLeftAmt:    sdkmath.NewInt(-441), // = 1500 - 1941
+				},
+				Price: sdk.NewInt64Coin("pcoin", 1851),
+			},
+			expAskSplit: &OrderSplit{
+				Order: &OrderFulfillment{
+					Order: NewOrder(1).WithAsk(&AskOrder{
+						Price: sdk.NewInt64Coin("pcoin", 1500),
+					}),
+					PriceAppliedAmt: sdkmath.NewInt(1943),
+					PriceLeftAmt:    sdkmath.NewInt(-443),
+				},
+				Price: sdk.NewInt64Coin("pcoin", 1853),
+			},
+		}
+
+		bidSplits := []*OrderSplit{
+			{
+				// This is the primary bid split that we'll be looking to update.
+				Order: &OrderFulfillment{Order: NewOrder(bidOrderID).WithBid(&BidOrder{})},
+				Price: sdk.NewInt64Coin("pcoin", 1851), // == 5555 / 3 (truncated)
+			},
+			{
+				Order: &OrderFulfillment{Order: NewOrder(bidOrderID + 1).WithBid(&BidOrder{})},
+				Price: sdk.NewInt64Coin("pcoin", 30),
+			},
+			{
+				Order: &OrderFulfillment{Order: NewOrder(bidOrderID + 2).WithBid(&BidOrder{})},
+				Price: sdk.NewInt64Coin("pcoin", 60),
+			},
+			{
+				// This one is similar to [0], but with a different order id.
+				// It'll be used to test the case where the bid split isn't found.
+				Order: &OrderFulfillment{Order: NewOrder(bidOrderID + 3).WithBid(&BidOrder{})},
+				Price: sdk.NewInt64Coin("pcoin", 1851),
+			},
+		}
+
+		for _, i := range bidSplitIndexes {
+			tc.askSplit.Order.Splits = append(tc.askSplit.Order.Splits, bidSplits[i])
+			if i == 0 {
+				tc.expAskSplit.Order.Splits = append(tc.expAskSplit.Order.Splits, &OrderSplit{
+					Order: &OrderFulfillment{Order: NewOrder(bidOrderID).WithBid(&BidOrder{})},
+					Price: sdk.NewInt64Coin("pcoin", 1853), // == 5555 * 50 / 150 + 2 leftover.
+				})
+			} else {
+				tc.expAskSplit.Order.Splits = append(tc.expAskSplit.Order.Splits, copyOrderSplit(bidSplits[i]))
+			}
+			if i == 3 {
+				tc.expPanic = "could not apply leftover amount 2 from bid order 200 to ask order 1: bid split not found"
+			}
+		}
+
+		return tc
+	}
+
+	tests := []testCase{
+		newTestCase("applies to first bid split", 0, 1, 2),
+		newTestCase("applies to second bid split", 2, 0, 1),
+		newTestCase("applies to third bid split", 1, 2, 0),
+		newTestCase("bid split not found", 1, 2, 3),
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			origFulfillment := copyOrderFulfillment(tc.receiver)
+			origSplit := copyOrderSplit(tc.askSplit)
+
+			testFunc := func() {
+				tc.receiver.ApplyLeftoverPrice(tc.askSplit, tc.amt)
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "ApplyLeftoverPrice")
+			if !assertEqualOrderFulfillments(t, tc.expFulfillment, tc.receiver, "OrderFulfillment after .ApplyLeftoverPrice") {
+				t.Logf("Original OrderFulfillment: %s", orderFulfillmentString(origFulfillment))
+				t.Logf("  Actual OrderFulfillment: %s", orderFulfillmentString(tc.receiver))
+				t.Logf("Expected OrderFulfillment: %s", orderFulfillmentString(tc.expFulfillment))
+			}
+			if !assert.Equal(t, tc.expAskSplit, tc.askSplit, "askSplit after ApplyLeftoverPrice") {
+				t.Logf("Original askSplit: %s", orderSplitString(origSplit))
+				t.Logf("  Actual askSplit: %s", orderSplitString(tc.askSplit))
+				t.Logf("Expected askSplit: %s", orderSplitString(tc.expAskSplit))
+			}
+		})
+	}
+}
 
 // TODO[1658]: func TestOrderFulfillment_Finalize(t *testing.T)
 
@@ -874,6 +1315,7 @@ func TestOrderFulfillment_GetHoldAmount(t *testing.T) {
 
 // TODO[1658]: func TestBuildFulfillments(t *testing.T)
 
+// copyIndexedAddrAmts creates a deep copy of an indexedAddrAmts.
 func copyIndexedAddrAmts(orig *indexedAddrAmts) *indexedAddrAmts {
 	if orig == nil {
 		return nil

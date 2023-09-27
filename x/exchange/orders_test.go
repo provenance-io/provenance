@@ -15,6 +15,71 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
+// copyOrder creates a copy of the provided order.
+func copyOrder(order *Order) *Order {
+	if order == nil {
+		return nil
+	}
+
+	rv := &Order{
+		OrderId: order.OrderId,
+	}
+	if order.Order != nil {
+		switch v := order.Order.(type) {
+		case *Order_AskOrder:
+			rv.Order = &Order_AskOrder{AskOrder: copyAskOrder(v.AskOrder)}
+		case *Order_BidOrder:
+			rv.Order = &Order_BidOrder{BidOrder: copyBidOrder(v.BidOrder)}
+		case *unknownOrderType:
+			rv.Order = &unknownOrderType{}
+		default:
+			panic(fmt.Sprintf("unknown order type %q", order.GetOrderType()))
+		}
+	}
+
+	return rv
+}
+
+// copyAskOrder creates a copy of the provided ask order.
+func copyAskOrder(askOrder *AskOrder) *AskOrder {
+	if askOrder == nil {
+		return nil
+	}
+	return &AskOrder{
+		MarketId:                askOrder.MarketId,
+		Seller:                  askOrder.Seller,
+		Assets:                  copyCoin(askOrder.Assets),
+		Price:                   copyCoin(askOrder.Price),
+		SellerSettlementFlatFee: copyCoinP(askOrder.SellerSettlementFlatFee),
+		AllowPartial:            askOrder.AllowPartial,
+	}
+}
+
+// copyBidOrder creates a copy of the provided bid order.
+func copyBidOrder(bidOrder *BidOrder) *BidOrder {
+	if bidOrder == nil {
+		return nil
+	}
+	return &BidOrder{
+		MarketId:            bidOrder.MarketId,
+		Buyer:               bidOrder.Buyer,
+		Assets:              copyCoin(bidOrder.Assets),
+		Price:               copyCoin(bidOrder.Price),
+		BuyerSettlementFees: copyCoins(bidOrder.BuyerSettlementFees),
+		AllowPartial:        bidOrder.AllowPartial,
+	}
+}
+
+// copySDKInt creates a copy of the provided sdkmath.Int
+func copySDKInt(i sdkmath.Int) (copy sdkmath.Int) {
+	defer func() {
+		if r := recover(); r != nil {
+			copy = sdkmath.Int{}
+		}
+	}()
+	return i.AddRaw(0)
+}
+
 // copyCoins creates a copy of the provided coins slice with copies of each entry.
 func copyCoins(coins sdk.Coins) sdk.Coins {
 	if coins == nil {
@@ -29,7 +94,7 @@ func copyCoins(coins sdk.Coins) sdk.Coins {
 
 // copyCoin returns a copy of the provided coin.
 func copyCoin(coin sdk.Coin) sdk.Coin {
-	return sdk.Coin{Denom: coin.Denom, Amount: coin.Amount.AddRaw(0)}
+	return sdk.Coin{Denom: coin.Denom, Amount: copySDKInt(coin.Amount)}
 }
 
 // copyCoinP returns a copy of the provided *coin.

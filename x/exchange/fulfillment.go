@@ -184,7 +184,7 @@ func (f *OrderFulfillment) Apply(order *OrderFulfillment, assetsAmt, priceAmt sd
 	newPriceLeftAmt := f.PriceLeftAmt.Sub(priceAmt)
 	// ask orders are allow to go negative on price left, but bid orders are not.
 	if newPriceLeftAmt.IsNegative() && f.IsBidOrder() {
-		return fmt.Errorf("cannot apply %s order %d having price left %q to %s order %d at a price of %q: overfill",
+		return fmt.Errorf("cannot fill %s order %d having price left %q to %s order %d at a price of %q: overfill",
 			f.GetOrderType(), f.GetOrderID(), f.GetPriceLeft(), order.GetOrderType(), order.GetOrderID(), price)
 	}
 
@@ -200,6 +200,8 @@ func (f *OrderFulfillment) Apply(order *OrderFulfillment, assetsAmt, priceAmt sd
 	return nil
 }
 
+// ApplyLeftoverPrice increases this fulfillment and the provided split
+// using info in the split and the provided amount.
 func (f *OrderFulfillment) ApplyLeftoverPrice(askSplit *OrderSplit, amt sdkmath.Int) {
 	// Update this fulfillment to indicate that the amount has been applied.
 	f.PriceLeftAmt = f.PriceLeftAmt.Sub(amt)
@@ -217,9 +219,13 @@ func (f *OrderFulfillment) ApplyLeftoverPrice(askSplit *OrderSplit, amt sdkmath.
 	for _, bidSplit := range askSplit.Order.Splits {
 		if bidSplit.Order.GetOrderID() == orderID {
 			bidSplit.Price.Amount = bidSplit.Price.Amount.Add(amt)
-			break
+			return
 		}
 	}
+
+	// If we didn't find a bid split to update, something is horribly wrong.
+	panic(fmt.Errorf("could not apply leftover amount %s from %s order %d to %s order %d: bid split not found",
+		amt, f.GetOrderType(), orderID, askSplit.Order.GetOrderType(), askSplit.Order.GetOrderID()))
 }
 
 // Finalize does some final calculations and validation for this order fulfillment.
