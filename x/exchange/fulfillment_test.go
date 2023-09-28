@@ -1838,8 +1838,235 @@ func TestOrderFulfillment_Finalize(t *testing.T) {
 				OrderFeesLeft:    nil,
 			},
 		},
-		// TODO[1658]: bid partial no leftovers
-		// TODO[1658]: bid partial with leftovers
+		{
+			name: "bid partial no leftovers",
+			receiver: &OrderFulfillment{
+				Order: NewOrder(3).WithBid(&BidOrder{
+					Assets:              sdk.NewInt64Coin("apple", 75),
+					Price:               sdk.NewInt64Coin("pear", 150),
+					BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 300), sdk.NewInt64Coin("grape", 12)),
+				}),
+				AssetsFilledAmt:   sdkmath.NewInt(50),
+				AssetsUnfilledAmt: sdkmath.NewInt(25),
+				PriceAppliedAmt:   sdkmath.NewInt(100),
+				PriceLeftAmt:      sdkmath.NewInt(50),
+			},
+			expResult: &OrderFulfillment{
+				Order: NewOrder(3).WithBid(&BidOrder{
+					Assets:              sdk.NewInt64Coin("apple", 75),
+					Price:               sdk.NewInt64Coin("pear", 150),
+					BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 300), sdk.NewInt64Coin("grape", 12)),
+				}),
+				AssetsFilledAmt:   sdkmath.NewInt(50),
+				AssetsUnfilledAmt: sdkmath.NewInt(25),
+				PriceAppliedAmt:   sdkmath.NewInt(100),
+				PriceLeftAmt:      sdkmath.NewInt(50),
+				IsFinalized:       true,
+				PriceFilledAmt:    sdkmath.NewInt(100),
+				PriceUnfilledAmt:  sdkmath.NewInt(50),
+				FeesToPay:         sdk.NewCoins(sdk.NewInt64Coin("fig", 200), sdk.NewInt64Coin("grape", 8)),
+				OrderFeesLeft:     sdk.NewCoins(sdk.NewInt64Coin("fig", 100), sdk.NewInt64Coin("grape", 4)),
+			},
+		},
+		{
+			name: "bid partial with leftovers",
+			receiver: &OrderFulfillment{
+				Order: NewOrder(3).WithBid(&BidOrder{
+					Assets:              sdk.NewInt64Coin("apple", 75),
+					Price:               sdk.NewInt64Coin("pear", 1500), // 1020 / 51 = 20 per asset.
+					BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 300), sdk.NewInt64Coin("grape", 12)),
+				}),
+				AssetsFilledAmt:   sdkmath.NewInt(50),
+				AssetsUnfilledAmt: sdkmath.NewInt(25),
+				PriceAppliedAmt:   sdkmath.NewInt(993),
+				PriceLeftAmt:      sdkmath.NewInt(507),
+				Splits: []*OrderSplit{
+					{
+						// This one will get 1 once the loop defaults to 1.
+						// So, 7 * split assets / 50 filled must be 0.
+						Order: &OrderFulfillment{
+							Order: NewOrder(101).WithAsk(&AskOrder{
+								Assets: sdk.NewInt64Coin("apple", 5),
+								Price:  sdk.NewInt64Coin("pear", 100),
+							}),
+							Splits: []*OrderSplit{{
+								Order:  &OrderFulfillment{Order: NewOrder(3).WithBid(&BidOrder{})},
+								Assets: sdk.NewInt64Coin("apple", 5),
+								Price:  sdk.NewInt64Coin("pear", 100),
+							}},
+							AssetsFilledAmt:   sdkmath.NewInt(5),
+							AssetsUnfilledAmt: sdkmath.NewInt(0),
+							PriceAppliedAmt:   sdkmath.NewInt(100),
+							PriceLeftAmt:      sdkmath.NewInt(0),
+						},
+						Assets: sdk.NewInt64Coin("apple", 5),
+						Price:  sdk.NewInt64Coin("pear", 100),
+					},
+					{
+						// This one will not get anything more.
+						// It's in the same situation as the one above, but the leftover will run out first.
+						Order: &OrderFulfillment{
+							Order: NewOrder(102).WithAsk(&AskOrder{
+								Assets: sdk.NewInt64Coin("apple", 4),
+								Price:  sdk.NewInt64Coin("pear", 80),
+							}),
+							Splits: []*OrderSplit{{
+								Order:  &OrderFulfillment{Order: NewOrder(3).WithBid(&BidOrder{})},
+								Assets: sdk.NewInt64Coin("apple", 4),
+								Price:  sdk.NewInt64Coin("pear", 80),
+							}},
+							AssetsFilledAmt:   sdkmath.NewInt(4),
+							AssetsUnfilledAmt: sdkmath.NewInt(0),
+							PriceAppliedAmt:   sdkmath.NewInt(80),
+							PriceLeftAmt:      sdkmath.NewInt(0),
+						},
+						Assets: sdk.NewInt64Coin("apple", 4),
+						Price:  sdk.NewInt64Coin("pear", 80),
+					},
+					{
+						// This one will get 4 in the first pass of the loop.
+						// I.e. 7 * split assets / 50 = 4. Assets 29 to 39
+						Order: &OrderFulfillment{
+							Order: NewOrder(103).WithAsk(&AskOrder{
+								Assets: sdk.NewInt64Coin("apple", 35),
+								Price:  sdk.NewInt64Coin("pear", 693),
+							}),
+							Splits: []*OrderSplit{{
+								Order:  &OrderFulfillment{Order: NewOrder(3).WithBid(&BidOrder{})},
+								Assets: sdk.NewInt64Coin("apple", 35),
+								Price:  sdk.NewInt64Coin("pear", 693),
+							}},
+							AssetsFilledAmt:   sdkmath.NewInt(35),
+							AssetsUnfilledAmt: sdkmath.NewInt(0),
+							PriceAppliedAmt:   sdkmath.NewInt(693),
+							PriceLeftAmt:      sdkmath.NewInt(0),
+						},
+						Assets: sdk.NewInt64Coin("apple", 35),
+						Price:  sdk.NewInt64Coin("pear", 693),
+					},
+					{
+						// This one will get 2 due to price left.
+						// I also need this one to have 7 * assets / 50 = 0, so it doesn't get 1 more on the first pass.
+						Order: &OrderFulfillment{
+							Order: NewOrder(104).WithAsk(&AskOrder{
+								Assets: sdk.NewInt64Coin("apple", 6),
+								Price:  sdk.NewInt64Coin("pear", 122),
+							}),
+							Splits: []*OrderSplit{{
+								Order:  &OrderFulfillment{Order: NewOrder(3).WithBid(&BidOrder{})},
+								Assets: sdk.NewInt64Coin("apple", 6),
+								Price:  sdk.NewInt64Coin("pear", 120),
+							}},
+							AssetsFilledAmt:   sdkmath.NewInt(6),
+							AssetsUnfilledAmt: sdkmath.NewInt(0),
+							PriceAppliedAmt:   sdkmath.NewInt(120),
+							PriceLeftAmt:      sdkmath.NewInt(2),
+						},
+						Assets: sdk.NewInt64Coin("apple", 6),
+						Price:  sdk.NewInt64Coin("pear", 120),
+					},
+				},
+			},
+			expResult: &OrderFulfillment{
+				Order: NewOrder(3).WithBid(&BidOrder{
+					Assets:              sdk.NewInt64Coin("apple", 75),
+					Price:               sdk.NewInt64Coin("pear", 1500),
+					BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 300), sdk.NewInt64Coin("grape", 12)),
+				}),
+				AssetsFilledAmt:   sdkmath.NewInt(50),
+				AssetsUnfilledAmt: sdkmath.NewInt(25),
+				PriceAppliedAmt:   sdkmath.NewInt(1000),
+				PriceLeftAmt:      sdkmath.NewInt(500),
+				Splits: []*OrderSplit{
+					{
+						// This one should get 1 once the loop defaults to 1.
+						Order: &OrderFulfillment{
+							Order: NewOrder(101).WithAsk(&AskOrder{
+								Assets: sdk.NewInt64Coin("apple", 5),
+								Price:  sdk.NewInt64Coin("pear", 100),
+							}),
+							Splits: []*OrderSplit{{
+								Order:  &OrderFulfillment{Order: NewOrder(3).WithBid(&BidOrder{})},
+								Assets: sdk.NewInt64Coin("apple", 5),
+								Price:  sdk.NewInt64Coin("pear", 101),
+							}},
+							AssetsFilledAmt:   sdkmath.NewInt(5),
+							AssetsUnfilledAmt: sdkmath.NewInt(0),
+							PriceAppliedAmt:   sdkmath.NewInt(101),
+							PriceLeftAmt:      sdkmath.NewInt(-1),
+						},
+						Assets: sdk.NewInt64Coin("apple", 5),
+						Price:  sdk.NewInt64Coin("pear", 101),
+					},
+					{
+						// This one will not get anything more.
+						Order: &OrderFulfillment{
+							Order: NewOrder(102).WithAsk(&AskOrder{
+								Assets: sdk.NewInt64Coin("apple", 4),
+								Price:  sdk.NewInt64Coin("pear", 80),
+							}),
+							Splits: []*OrderSplit{{
+								Order:  &OrderFulfillment{Order: NewOrder(3).WithBid(&BidOrder{})},
+								Assets: sdk.NewInt64Coin("apple", 4),
+								Price:  sdk.NewInt64Coin("pear", 80),
+							}},
+							AssetsFilledAmt:   sdkmath.NewInt(4),
+							AssetsUnfilledAmt: sdkmath.NewInt(0),
+							PriceAppliedAmt:   sdkmath.NewInt(80),
+							PriceLeftAmt:      sdkmath.NewInt(0),
+						},
+						Assets: sdk.NewInt64Coin("apple", 4),
+						Price:  sdk.NewInt64Coin("pear", 80),
+					},
+					{
+						// This one should get 4 in the first pass of the loop.
+						Order: &OrderFulfillment{
+							Order: NewOrder(103).WithAsk(&AskOrder{
+								Assets: sdk.NewInt64Coin("apple", 35),
+								Price:  sdk.NewInt64Coin("pear", 693),
+							}),
+							Splits: []*OrderSplit{{
+								Order:  &OrderFulfillment{Order: NewOrder(3).WithBid(&BidOrder{})},
+								Assets: sdk.NewInt64Coin("apple", 35),
+								Price:  sdk.NewInt64Coin("pear", 697),
+							}},
+							AssetsFilledAmt:   sdkmath.NewInt(35),
+							AssetsUnfilledAmt: sdkmath.NewInt(0),
+							PriceAppliedAmt:   sdkmath.NewInt(697),
+							PriceLeftAmt:      sdkmath.NewInt(-4),
+						},
+						Assets: sdk.NewInt64Coin("apple", 35),
+						Price:  sdk.NewInt64Coin("pear", 697),
+					},
+					{
+						// this one will get 2 due to price left.
+						// I also need this one to have 7 * assets / 50 = 0, so it doesn't get 1 more on the first pass.
+						Order: &OrderFulfillment{
+							Order: NewOrder(104).WithAsk(&AskOrder{
+								Assets: sdk.NewInt64Coin("apple", 6),
+								Price:  sdk.NewInt64Coin("pear", 122),
+							}),
+							Splits: []*OrderSplit{{
+								Order:  &OrderFulfillment{Order: NewOrder(3).WithBid(&BidOrder{})},
+								Assets: sdk.NewInt64Coin("apple", 6),
+								Price:  sdk.NewInt64Coin("pear", 122),
+							}},
+							AssetsFilledAmt:   sdkmath.NewInt(6),
+							AssetsUnfilledAmt: sdkmath.NewInt(0),
+							PriceAppliedAmt:   sdkmath.NewInt(122),
+							PriceLeftAmt:      ZeroAmtAfterSub,
+						},
+						Assets: sdk.NewInt64Coin("apple", 6),
+						Price:  sdk.NewInt64Coin("pear", 122),
+					},
+				},
+				IsFinalized:      true,
+				PriceFilledAmt:   sdkmath.NewInt(1000),
+				PriceUnfilledAmt: sdkmath.NewInt(500),
+				FeesToPay:        sdk.NewCoins(sdk.NewInt64Coin("fig", 200), sdk.NewInt64Coin("grape", 8)),
+				OrderFeesLeft:    sdk.NewCoins(sdk.NewInt64Coin("fig", 100), sdk.NewInt64Coin("grape", 4)),
+			},
+		},
 	}
 
 	for _, tc := range tests {
