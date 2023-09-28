@@ -353,23 +353,14 @@ func (f *OrderFulfillment) Finalize(sellerFeeRatio *FeeRatio) (err error) {
 // Validate does some final validation and sanity checking on this order fulfillment.
 // It's assumed that Finalize has been called before calling this.
 func (f OrderFulfillment) Validate() error {
+	if _, err := f.Order.GetSubOrder(); err != nil {
+		return err
+	}
 	if !f.IsFinalized {
 		return fmt.Errorf("fulfillment for %s order %d has not been finalized", f.GetOrderType(), f.GetOrderID())
 	}
 
-	if f.PriceAppliedAmt.IsZero() {
-		return fmt.Errorf("no price applied to %s order %d", f.GetOrderType(), f.GetOrderID())
-	}
-	if len(f.Splits) == 0 {
-		return fmt.Errorf("no splits applied to %s order %d", f.GetOrderType(), f.GetOrderID())
-	}
-
 	orderAssets := f.GetAssets()
-	trackedAssetsAmt := f.AssetsFilledAmt.Add(f.AssetsUnfilledAmt)
-	if !orderAssets.Amount.Equal(trackedAssetsAmt) {
-		return fmt.Errorf("tracked assets %q does not equal %s order %d assets %q",
-			sdk.Coin{Denom: orderAssets.Denom, Amount: trackedAssetsAmt}, f.GetOrderType(), f.GetOrderID(), orderAssets)
-	}
 	if f.AssetsUnfilledAmt.IsNegative() {
 		return fmt.Errorf("%s order %d having assets %q has negative assets left %q after filling %q",
 			f.GetOrderType(), f.GetOrderID(), orderAssets, f.GetAssetsUnfilled(), f.GetAssetsFilled())
@@ -378,21 +369,25 @@ func (f OrderFulfillment) Validate() error {
 		return fmt.Errorf("cannot fill non-positive assets %q on %s order %d having assets %q",
 			f.GetAssetsFilled(), f.GetOrderType(), f.GetOrderID(), orderAssets)
 	}
+	trackedAssetsAmt := f.AssetsFilledAmt.Add(f.AssetsUnfilledAmt)
+	if !orderAssets.Amount.Equal(trackedAssetsAmt) {
+		return fmt.Errorf("tracked assets %q does not equal %s order %d assets %q",
+			sdk.Coin{Denom: orderAssets.Denom, Amount: trackedAssetsAmt}, f.GetOrderType(), f.GetOrderID(), orderAssets)
+	}
 
 	orderPrice := f.GetPrice()
-	trackedPriceAmt := f.PriceAppliedAmt.Add(f.PriceLeftAmt)
-	if !orderPrice.Amount.Equal(trackedPriceAmt) {
-		return fmt.Errorf("tracked price %q does not equal %s order %d price %q",
-			sdk.Coin{Denom: orderPrice.Denom, Amount: trackedPriceAmt}, f.GetOrderType(), f.GetOrderID(), orderPrice)
+	if f.PriceLeftAmt.Equal(orderPrice.Amount) {
+		return fmt.Errorf("price left %q equals %s order %d price %q",
+			f.GetPriceLeft(), f.GetOrderType(), f.GetOrderID(), orderPrice)
 	}
 	if !f.PriceAppliedAmt.IsPositive() {
 		return fmt.Errorf("cannot apply non-positive price %q to %s order %d having price %q",
 			f.GetPriceApplied(), f.GetOrderType(), f.GetOrderID(), orderPrice)
 	}
-	totalPriceAmt := f.PriceFilledAmt.Add(f.PriceUnfilledAmt)
-	if !orderPrice.Amount.Equal(totalPriceAmt) {
-		return fmt.Errorf("filled price %q plus unfilled price %q does not equal order price %q for %s order %d",
-			f.GetPriceFilled(), f.GetPriceUnfilled(), orderPrice, f.GetOrderType(), f.GetOrderID())
+	trackedPriceAmt := f.PriceAppliedAmt.Add(f.PriceLeftAmt)
+	if !orderPrice.Amount.Equal(trackedPriceAmt) {
+		return fmt.Errorf("tracked price %q does not equal %s order %d price %q",
+			sdk.Coin{Denom: orderPrice.Denom, Amount: trackedPriceAmt}, f.GetOrderType(), f.GetOrderID(), orderPrice)
 	}
 	if f.PriceUnfilledAmt.IsNegative() {
 		return fmt.Errorf("%s order %d having price %q has negative price %q after filling %q",
@@ -401,6 +396,15 @@ func (f OrderFulfillment) Validate() error {
 	if !f.PriceFilledAmt.IsPositive() {
 		return fmt.Errorf("cannot fill %s order %d having price %q with non-positive price %q",
 			f.GetOrderType(), f.GetOrderID(), orderPrice, f.GetPriceFilled())
+	}
+	totalPriceAmt := f.PriceFilledAmt.Add(f.PriceUnfilledAmt)
+	if !orderPrice.Amount.Equal(totalPriceAmt) {
+		return fmt.Errorf("filled price %q plus unfilled price %q does not equal order price %q for %s order %d",
+			f.GetPriceFilled(), f.GetPriceUnfilled(), orderPrice, f.GetOrderType(), f.GetOrderID())
+	}
+
+	if len(f.Splits) == 0 {
+		return fmt.Errorf("no splits applied to %s order %d", f.GetOrderType(), f.GetOrderID())
 	}
 
 	var splitsAssets, splitsPrice sdk.Coins
@@ -435,6 +439,16 @@ func (f OrderFulfillment) Validate() error {
 			splitsPrice, f.GetPriceApplied(), f.GetOrderType(), f.GetOrderID())
 	}
 
+	orderFees := f.GetSettlementFees()
+	if f.OrderFeesLeft.IsAnyNegative() {
+		return fmt.Errorf("%s order %d settlement fees left %q is negative",
+			f.GetOrderType(), f.GetOrderID(), f.OrderFeesLeft)
+	}
+	if _, hasNeg := orderFees.SafeSub(f.OrderFeesLeft...); hasNeg {
+		return fmt.Errorf("settlement fees left %q is greater than %s order %q settlement fees %q",
+			f.OrderFeesLeft, f.GetOrderType(), f.GetOrderID(), orderFees)
+	}
+
 	isFullyFilled := f.IsFullyFilled()
 	if isFullyFilled {
 		if !f.AssetsUnfilledAmt.IsZero() {
@@ -449,12 +463,6 @@ func (f OrderFulfillment) Validate() error {
 			return fmt.Errorf("fully filled %s order %q has non-zero settlement fees left %q",
 				f.GetOrderType(), f.GetOrderID(), f.OrderFeesLeft)
 		}
-	}
-
-	orderFees := f.GetSettlementFees()
-	if _, hasNeg := orderFees.SafeSub(f.OrderFeesLeft...); hasNeg {
-		return fmt.Errorf("settlement fees left %q is greater than %s order %q settlement fees %q",
-			f.OrderFeesLeft, f.GetOrderType(), f.GetOrderID(), orderFees)
 	}
 
 	switch {
@@ -488,7 +496,8 @@ func (f OrderFulfillment) Validate() error {
 				trackedFees, f.GetOrderType(), f.GetOrderID(), orderFees)
 		}
 	default:
-		return fmt.Errorf("order %d has unknown type %s", f.GetOrderID(), f.GetOrderType())
+		// The only way to trigger this would be to add a new order type but not add a case for it in this switch.
+		panic(fmt.Errorf("case missing for %T in Validate", f.GetOrderType()))
 	}
 
 	// Saving this simple check for last in the hopes that a previous error exposes why this
