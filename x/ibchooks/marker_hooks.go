@@ -82,7 +82,7 @@ func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.Pac
 			if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
 				return err
 			}
-			chainId := h.GetChainId(ctx, packet, cdc, ibcKeeper)
+			chainId := h.GetChainId(ctx, packet, ibcKeeper)
 			markerMetadata := banktypes.Metadata{
 				Base:        ibcDenom,
 				Name:        chainId + "/" + data.Denom,
@@ -105,7 +105,7 @@ func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.Pac
 	return nil
 }
 
-func (h MarkerHooks) GetChainId(ctx sdktypes.Context, packet exported.PacketI, cdc codec.BinaryCodec, ibcKeeper *ibckeeper.Keeper) string {
+func (h MarkerHooks) GetChainId(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) string {
 	chainId := "unknown"
 	channel, found := ibcKeeper.ChannelKeeper.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
