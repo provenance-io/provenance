@@ -547,7 +547,7 @@ func TestOrderFulfillment_IsAskOrder(t *testing.T) {
 		{name: "ask", f: OrderFulfillment{Order: NewOrder(444).WithAsk(&AskOrder{})}, exp: true},
 		{name: "bid", f: OrderFulfillment{Order: NewOrder(666).WithBid(&BidOrder{})}, exp: false},
 		{name: "nil", f: OrderFulfillment{Order: NewOrder(888)}, exp: false},
-		{name: "unknown", f: OrderFulfillment{Order: &Order{Order: &unknownOrderType{}}}, exp: false},
+		{name: "unknown", f: OrderFulfillment{Order: newUnknownOrder(7)}, exp: false},
 	}
 
 	for _, tc := range tests {
@@ -571,7 +571,7 @@ func TestOrderFulfillment_IsBidOrder(t *testing.T) {
 		{name: "ask", f: OrderFulfillment{Order: NewOrder(444).WithAsk(&AskOrder{})}, exp: false},
 		{name: "bid", f: OrderFulfillment{Order: NewOrder(666).WithBid(&BidOrder{})}, exp: true},
 		{name: "nil", f: OrderFulfillment{Order: NewOrder(888)}, exp: false},
-		{name: "unknown", f: OrderFulfillment{Order: &Order{Order: &unknownOrderType{}}}, exp: false},
+		{name: "unknown", f: OrderFulfillment{Order: newUnknownOrder(9)}, exp: false},
 	}
 
 	for _, tc := range tests {
@@ -836,7 +836,7 @@ func TestOrderFulfillment_GetOrderType(t *testing.T) {
 		{name: "ask", f: OrderFulfillment{Order: NewOrder(444).WithAsk(&AskOrder{})}, exp: OrderTypeAsk},
 		{name: "bid", f: OrderFulfillment{Order: NewOrder(666).WithBid(&BidOrder{})}, exp: OrderTypeBid},
 		{name: "nil", f: OrderFulfillment{Order: NewOrder(888)}, exp: "<nil>"},
-		{name: "unknown", f: OrderFulfillment{Order: &Order{Order: &unknownOrderType{}}}, exp: "*exchange.unknownOrderType"},
+		{name: "unknown", f: OrderFulfillment{Order: newUnknownOrder(8)}, exp: "*exchange.unknownOrderType"},
 	}
 
 	for _, tc := range tests {
@@ -2091,7 +2091,1171 @@ func TestOrderFulfillment_Finalize(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestOrderFulfillment_Validate(t *testing.T)
+func TestOrderFulfillment_Validate(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	coinP := func(amount int64, denom string) *sdk.Coin {
+		return &sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	coins := func(amount int64, denom string) sdk.Coins {
+		return sdk.Coins{coin(amount, denom)}
+	}
+
+	_, _ = coinP, coins // TODO[1658]: Delete this line.
+
+	tests := []struct {
+		name     string
+		receiver OrderFulfillment
+		expErr   string
+	}{
+		{
+			name:     "nil order type",
+			receiver: OrderFulfillment{Order: NewOrder(2)},
+			expErr:   nilSubTypeErr(2),
+		},
+		{
+			name:     "unknown order type",
+			receiver: OrderFulfillment{Order: newUnknownOrder(3)},
+			expErr:   unknownSubTypeErr(3),
+		},
+		{
+			name: "not finalized, ask",
+			receiver: OrderFulfillment{
+				Order:       NewOrder(4).WithAsk(&AskOrder{}),
+				IsFinalized: false,
+			},
+			expErr: "fulfillment for ask order 4 has not been finalized",
+		},
+		{
+			name: "not finalized, bid",
+			receiver: OrderFulfillment{
+				Order:       NewOrder(4).WithBid(&BidOrder{}),
+				IsFinalized: false,
+			},
+			expErr: "fulfillment for bid order 4 has not been finalized",
+		},
+
+		{
+			name: "assets unfilled negative",
+			receiver: OrderFulfillment{
+				Order: NewOrder(5).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(-12),
+				AssetsFilledAmt:   sdkmath.NewInt(97),
+			},
+			expErr: "ask order 5 having assets \"55apple\" has negative assets left \"-12apple\" after filling \"97apple\"",
+		},
+		{
+			name: "assets filled zero",
+			receiver: OrderFulfillment{
+				Order: NewOrder(6).WithBid(&BidOrder{
+					Assets: coin(55, "apple"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(55),
+				AssetsFilledAmt:   sdkmath.NewInt(0),
+			},
+			expErr: "cannot fill non-positive assets \"0apple\" on bid order 6 having assets \"55apple\"",
+		},
+		{
+			name: "assets filled negative",
+			receiver: OrderFulfillment{
+				Order: NewOrder(7).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(56),
+				AssetsFilledAmt:   sdkmath.NewInt(-1),
+			},
+			expErr: "cannot fill non-positive assets \"-1apple\" on ask order 7 having assets \"55apple\"",
+		},
+		{
+			name: "assets tracked too low",
+			receiver: OrderFulfillment{
+				Order: NewOrder(8).WithBid(&BidOrder{
+					Assets: coin(55, "apple"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(44),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+			},
+			expErr: "tracked assets \"54apple\" does not equal bid order 8 assets \"55apple\"",
+		},
+		{
+			name: "assets tracked too high",
+			receiver: OrderFulfillment{
+				Order: NewOrder(8).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(44),
+				AssetsFilledAmt:   sdkmath.NewInt(12),
+			},
+			expErr: "tracked assets \"56apple\" does not equal ask order 8 assets \"55apple\"",
+		},
+
+		{
+			name: "price left equals order price",
+			receiver: OrderFulfillment{
+				Order: NewOrder(19).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98789),
+			},
+			expErr: "price left \"98789plum\" is not less than ask order 19 price \"98789plum\"",
+		},
+		{
+			name: "price left more than order price",
+			receiver: OrderFulfillment{
+				Order: NewOrder(20).WithBid(&BidOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98790),
+			},
+			expErr: "price left \"98790plum\" is not less than bid order 20 price \"98789plum\"",
+		},
+		{
+			name: "price applied zero",
+			receiver: OrderFulfillment{
+				Order: NewOrder(21).WithBid(&BidOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98788),
+				PriceAppliedAmt:   sdkmath.NewInt(0),
+			},
+			expErr: "cannot apply non-positive price \"0plum\" to bid order 21 having price \"98789plum\"",
+		},
+		{
+			name: "price applied negative",
+			receiver: OrderFulfillment{
+				Order: NewOrder(22).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98788),
+				PriceAppliedAmt:   sdkmath.NewInt(-1),
+			},
+			expErr: "cannot apply non-positive price \"-1plum\" to ask order 22 having price \"98789plum\"",
+		},
+		{
+			name: "price tracked too low",
+			receiver: OrderFulfillment{
+				Order: NewOrder(23).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(788),
+			},
+			expErr: "tracked price \"98788plum\" does not equal ask order 23 price \"98789plum\"",
+		},
+		{
+			name: "price tracked too high",
+			receiver: OrderFulfillment{
+				Order: NewOrder(24).WithBid(&BidOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98001),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+			},
+			expErr: "tracked price \"98790plum\" does not equal bid order 24 price \"98789plum\"",
+		},
+		{
+			name: "price filled zero",
+			receiver: OrderFulfillment{
+				Order: NewOrder(25).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(98789),
+				PriceFilledAmt:    sdkmath.NewInt(0),
+			},
+			expErr: "cannot fill ask order 25 having price \"98789plum\" with non-positive price \"0plum\"",
+		},
+		{
+			name: "price filled negative",
+			receiver: OrderFulfillment{
+				Order: NewOrder(26).WithBid(&BidOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(98790),
+				PriceFilledAmt:    sdkmath.NewInt(-1),
+			},
+			expErr: "cannot fill bid order 26 having price \"98789plum\" with non-positive price \"-1plum\"",
+		},
+		{
+			name: "total price too low",
+			receiver: OrderFulfillment{
+				Order: NewOrder(27).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8788),
+			},
+			expErr: "filled price \"8788plum\" plus unfilled price \"90000plum\" does not equal order price \"98789plum\" for ask order 27",
+		},
+		{
+			name: "total price too high",
+			receiver: OrderFulfillment{
+				Order: NewOrder(28).WithBid(&BidOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90001),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+			},
+			expErr: "filled price \"8789plum\" plus unfilled price \"90001plum\" does not equal order price \"98789plum\" for bid order 28",
+		},
+		{
+			name: "price unfilled negative",
+			receiver: OrderFulfillment{
+				Order: NewOrder(29).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(-1),
+				PriceFilledAmt:    sdkmath.NewInt(98790),
+			},
+			expErr: "ask order 29 having price \"98789plum\" has negative price \"-1plum\" after filling \"98790plum\"",
+		},
+
+		{
+			name: "nil splits",
+			receiver: OrderFulfillment{
+				Order: NewOrder(100).WithBid(&BidOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits:            nil,
+			},
+			expErr: "no splits applied to bid order 100",
+		},
+		{
+			name: "empty splits",
+			receiver: OrderFulfillment{
+				Order: NewOrder(101).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits:            []*OrderSplit{},
+			},
+			expErr: "no splits applied to ask order 101",
+		},
+		{
+			name: "multiple asset denoms in splits",
+			receiver: OrderFulfillment{
+				Order: NewOrder(102).WithBid(&BidOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits: []*OrderSplit{
+					{Assets: coin(3, "apple"), Price: coin(700, "plum")},
+					{Assets: coin(5, "acai"), Price: coin(89, "plum")},
+				},
+			},
+			expErr: "multiple asset denoms \"5acai,3apple\" in splits applied to bid order 102 having assets \"55apple\"",
+		},
+		{
+			name: "wrong splits assets denom",
+			receiver: OrderFulfillment{
+				Order: NewOrder(103).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits: []*OrderSplit{
+					{Assets: coin(3, "acai"), Price: coin(700, "plum")},
+					{Assets: coin(5, "acai"), Price: coin(89, "plum")},
+				},
+			},
+			expErr: "splits asset denom \"8acai\" does not equal order assets denom \"55apple\" on ask order 103",
+		},
+		{
+			name: "splits assets total too low",
+			receiver: OrderFulfillment{
+				Order: NewOrder(104).WithBid(&BidOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits: []*OrderSplit{
+					{Assets: coin(3, "apple"), Price: coin(800, "plum")},
+					{Assets: coin(6, "apple"), Price: coin(89, "plum")},
+				},
+			},
+			expErr: "splits asset total \"9apple\" does not equal filled assets \"10apple\" on bid order 104",
+		},
+		{
+			name: "splits assets total too high",
+			receiver: OrderFulfillment{
+				Order: NewOrder(105).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits: []*OrderSplit{
+					{Assets: coin(3, "apple"), Price: coin(700, "plum")},
+					{Assets: coin(8, "apple"), Price: coin(89, "plum")},
+				},
+			},
+			expErr: "splits asset total \"11apple\" does not equal filled assets \"10apple\" on ask order 105",
+		},
+		{
+			name: "multiple price denoms in splits",
+			receiver: OrderFulfillment{
+				Order: NewOrder(106).WithBid(&BidOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits: []*OrderSplit{
+					{Assets: coin(3, "apple"), Price: coin(700, "potato")},
+					{Assets: coin(7, "apple"), Price: coin(89, "plum")},
+				},
+			},
+			expErr: "multiple price denoms \"89plum,700potato\" in splits applied to bid order 106 having price \"98789plum\"",
+		},
+		{
+			name: "wrong splits price denom",
+			receiver: OrderFulfillment{
+				Order: NewOrder(107).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits: []*OrderSplit{
+					{Assets: coin(3, "apple"), Price: coin(700, "potato")},
+					{Assets: coin(7, "apple"), Price: coin(89, "potato")},
+				},
+			},
+			expErr: "splits price denom \"789potato\" does not equal order price denom \"98789plum\" on ask order 107",
+		},
+		{
+			name: "splits price total too low",
+			receiver: OrderFulfillment{
+				Order: NewOrder(108).WithBid(&BidOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits: []*OrderSplit{
+					{Assets: coin(3, "apple"), Price: coin(700, "plum")},
+					{Assets: coin(7, "apple"), Price: coin(88, "plum")},
+				},
+			},
+			expErr: "splits price total \"788plum\" does not equal filled price \"789plum\" on bid order 108",
+		},
+		{
+			name: "splits price total too high",
+			receiver: OrderFulfillment{
+				Order: NewOrder(109).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits: []*OrderSplit{
+					{Assets: coin(3, "apple"), Price: coin(701, "plum")},
+					{Assets: coin(7, "apple"), Price: coin(89, "plum")},
+				},
+			},
+			expErr: "splits price total \"790plum\" does not equal filled price \"789plum\" on ask order 109",
+		},
+
+		{
+			name: "order fees left has negative",
+			receiver: OrderFulfillment{
+				Order: NewOrder(201).WithAsk(&AskOrder{
+					Assets:                  coin(55, "apple"),
+					Price:                   coin(98789, "plum"),
+					SellerSettlementFlatFee: coinP(5, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits: []*OrderSplit{
+					{Assets: coin(3, "apple"), Price: coin(700, "plum")},
+					{Assets: coin(7, "apple"), Price: coin(89, "plum")},
+				},
+				OrderFeesLeft: sdk.Coins{coin(2, "fig"), coin(-3, "grape"), coin(4, "honeydew")},
+			},
+			expErr: "settlement fees left \"2fig,-3grape,4honeydew\" is negative for ask order 201 having fees \"5fig\"",
+		},
+		{
+			name: "more fees left than in ask order",
+			receiver: OrderFulfillment{
+				Order: NewOrder(202).WithAsk(&AskOrder{
+					Assets:                  coin(55, "apple"),
+					Price:                   coin(98789, "plum"),
+					SellerSettlementFlatFee: coinP(5, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits: []*OrderSplit{
+					{Assets: coin(3, "apple"), Price: coin(700, "plum")},
+					{Assets: coin(7, "apple"), Price: coin(89, "plum")},
+				},
+				OrderFeesLeft: coins(6, "fig"),
+			},
+			expErr: "settlement fees left \"6fig\" is greater than ask order 202 settlement fees \"5fig\"",
+		},
+		{
+			name: "fees left in ask order without fees",
+			receiver: OrderFulfillment{
+				Order: NewOrder(203).WithAsk(&AskOrder{
+					Assets:                  coin(55, "apple"),
+					Price:                   coin(98789, "plum"),
+					SellerSettlementFlatFee: nil,
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits: []*OrderSplit{
+					{Assets: coin(3, "apple"), Price: coin(700, "plum")},
+					{Assets: coin(7, "apple"), Price: coin(89, "plum")},
+				},
+				OrderFeesLeft: coins(1, "fig"),
+			},
+			expErr: "settlement fees left \"1fig\" is greater than ask order 203 settlement fees \"\"",
+		},
+		{
+			name: "more fees left than in bid order",
+			receiver: OrderFulfillment{
+				Order: NewOrder(204).WithBid(&BidOrder{
+					Assets:              coin(55, "apple"),
+					Price:               coin(98789, "plum"),
+					BuyerSettlementFees: sdk.Coins{coin(5, "fig"), coin(6, "grape")},
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits: []*OrderSplit{
+					{Assets: coin(3, "apple"), Price: coin(700, "plum")},
+					{Assets: coin(7, "apple"), Price: coin(89, "plum")},
+				},
+				OrderFeesLeft: coins(6, "fig"),
+			},
+			expErr: "settlement fees left \"6fig\" is greater than bid order 204 settlement fees \"5fig,6grape\"",
+		},
+		{
+			name: "fees left in bid order without fees",
+			receiver: OrderFulfillment{
+				Order: NewOrder(205).WithBid(&BidOrder{
+					Assets:              coin(55, "apple"),
+					Price:               coin(98789, "plum"),
+					BuyerSettlementFees: nil,
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(45),
+				AssetsFilledAmt:   sdkmath.NewInt(10),
+				PriceLeftAmt:      sdkmath.NewInt(98000),
+				PriceAppliedAmt:   sdkmath.NewInt(789),
+				PriceUnfilledAmt:  sdkmath.NewInt(90000),
+				PriceFilledAmt:    sdkmath.NewInt(8789),
+				Splits: []*OrderSplit{
+					{Assets: coin(3, "apple"), Price: coin(700, "plum")},
+					{Assets: coin(7, "apple"), Price: coin(89, "plum")},
+				},
+				OrderFeesLeft: coins(1, "fig"),
+			},
+			expErr: "settlement fees left \"1fig\" is greater than bid order 205 settlement fees \"\"",
+		},
+
+		{
+			name: "fully filled, price unfilled positive",
+			receiver: OrderFulfillment{
+				Order: NewOrder(250).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(0),
+				AssetsFilledAmt:   sdkmath.NewInt(55),
+				PriceLeftAmt:      sdkmath.NewInt(789),
+				PriceAppliedAmt:   sdkmath.NewInt(98000),
+				PriceUnfilledAmt:  sdkmath.NewInt(788),
+				PriceFilledAmt:    sdkmath.NewInt(98001),
+				Splits:            []*OrderSplit{{Assets: coin(55, "apple"), Price: coin(98000, "plum")}},
+			},
+			expErr: "fully filled ask order 250 has non-zero unfilled price \"788plum\"",
+		},
+		{
+			name: "fully filled, order fees left positive",
+			receiver: OrderFulfillment{
+				Order: NewOrder(252).WithAsk(&AskOrder{
+					Assets:                  coin(55, "apple"),
+					Price:                   coin(98789, "plum"),
+					SellerSettlementFlatFee: coinP(5, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(0),
+				AssetsFilledAmt:   sdkmath.NewInt(55),
+				PriceLeftAmt:      sdkmath.NewInt(0),
+				PriceAppliedAmt:   sdkmath.NewInt(98789),
+				PriceUnfilledAmt:  sdkmath.NewInt(0),
+				PriceFilledAmt:    sdkmath.NewInt(98789),
+				Splits:            []*OrderSplit{{Assets: coin(55, "apple"), Price: coin(98789, "plum")}},
+				OrderFeesLeft:     coins(1, "fig"),
+			},
+			expErr: "fully filled ask order 252 has non-zero settlement fees left \"1fig\"",
+		},
+
+		{
+			name: "ask order, price applied less than filled",
+			receiver: OrderFulfillment{
+				Order: NewOrder(301).WithAsk(&AskOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(45),
+				PriceLeftAmt:      sdkmath.NewInt(8789),
+				PriceAppliedAmt:   sdkmath.NewInt(90000),
+				PriceUnfilledAmt:  sdkmath.NewInt(789),
+				PriceFilledAmt:    sdkmath.NewInt(98000),
+				Splits:            []*OrderSplit{{Assets: coin(45, "apple"), Price: coin(90000, "plum")}},
+			},
+			expErr: "ask order 301 having assets \"55apple\" and price \"98789plum\" cannot be filled by \"45apple\" at price \"90000plum\": unsufficient price",
+		},
+		{
+			name: "ask order, partial, multiple fees left denoms",
+			receiver: OrderFulfillment{
+				Order: NewOrder(302).WithAsk(&AskOrder{
+					Assets:                  coin(55, "apple"),
+					Price:                   coin(98789, "plum"),
+					SellerSettlementFlatFee: coinP(3, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(45),
+				PriceLeftAmt:      sdkmath.NewInt(789),
+				PriceAppliedAmt:   sdkmath.NewInt(98000),
+				PriceUnfilledAmt:  sdkmath.NewInt(8789),
+				PriceFilledAmt:    sdkmath.NewInt(90000),
+				Splits:            []*OrderSplit{{Assets: coin(45, "apple"), Price: coin(98000, "plum")}},
+				OrderFeesLeft:     sdk.Coins{coin(1, "fig"), coin(0, "grape")},
+			},
+			expErr: "partial fulfillment for ask order 302 having seller settlement fees \"3fig\" has multiple denoms in fees left \"1fig,0grape\"",
+		},
+		{
+			name: "ask order, tracked fees less than order fees",
+			receiver: OrderFulfillment{
+				Order: NewOrder(303).WithAsk(&AskOrder{
+					Assets:                  coin(55, "apple"),
+					Price:                   coin(98789, "plum"),
+					SellerSettlementFlatFee: coinP(123, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(45),
+				PriceLeftAmt:      sdkmath.NewInt(789),
+				PriceAppliedAmt:   sdkmath.NewInt(98000),
+				PriceUnfilledAmt:  sdkmath.NewInt(8789),
+				PriceFilledAmt:    sdkmath.NewInt(90000),
+				Splits:            []*OrderSplit{{Assets: coin(45, "apple"), Price: coin(98000, "plum")}},
+				OrderFeesLeft:     coins(22, "fig"),
+				FeesToPay:         coins(100, "fig"),
+			},
+			expErr: "tracked settlement fees \"122fig\" is less than ask order 303 settlement fees \"123fig\"",
+		},
+
+		{
+			name: "bid order, price applied less than price filled",
+			receiver: OrderFulfillment{
+				Order: NewOrder(275).WithBid(&BidOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(45),
+				PriceLeftAmt:      sdkmath.NewInt(790),
+				PriceAppliedAmt:   sdkmath.NewInt(97999),
+				PriceUnfilledAmt:  sdkmath.NewInt(789),
+				PriceFilledAmt:    sdkmath.NewInt(98000),
+				Splits:            []*OrderSplit{{Assets: coin(45, "apple"), Price: coin(97999, "plum")}},
+			},
+			expErr: "price applied \"97999plum\" does not equal price filled \"98000plum\" for bid order 275 having price \"98789plum\"",
+		},
+		{
+			name: "bid order, price applied more than price filled",
+			receiver: OrderFulfillment{
+				Order: NewOrder(276).WithBid(&BidOrder{
+					Assets: coin(55, "apple"),
+					Price:  coin(98789, "plum"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(45),
+				PriceLeftAmt:      sdkmath.NewInt(788),
+				PriceAppliedAmt:   sdkmath.NewInt(98001),
+				PriceUnfilledAmt:  sdkmath.NewInt(789),
+				PriceFilledAmt:    sdkmath.NewInt(98000),
+				Splits:            []*OrderSplit{{Assets: coin(45, "apple"), Price: coin(98001, "plum")}},
+			},
+			expErr: "price applied \"98001plum\" does not equal price filled \"98000plum\" for bid order 276 having price \"98789plum\"",
+		},
+		{
+			name: "bid order, tracked fees less than order fees",
+			receiver: OrderFulfillment{
+				Order: NewOrder(277).WithBid(&BidOrder{
+					Assets:              coin(55, "apple"),
+					Price:               coin(98789, "plum"),
+					BuyerSettlementFees: coins(123, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(1),
+				AssetsFilledAmt:   sdkmath.NewInt(54),
+				PriceLeftAmt:      sdkmath.NewInt(89),
+				PriceAppliedAmt:   sdkmath.NewInt(98700),
+				PriceUnfilledAmt:  sdkmath.NewInt(89),
+				PriceFilledAmt:    sdkmath.NewInt(98700),
+				Splits:            []*OrderSplit{{Assets: coin(54, "apple"), Price: coin(98700, "plum")}},
+				OrderFeesLeft:     coins(2, "fig"),
+				FeesToPay:         coins(120, "fig"),
+			},
+			expErr: "tracked settlement fees \"122fig\" does not equal bid order 277 settlement fees \"123fig\"",
+		},
+		{
+			name: "bid order, tracked fees more than order fees",
+			receiver: OrderFulfillment{
+				Order: NewOrder(277).WithBid(&BidOrder{
+					Assets:              coin(55, "apple"),
+					Price:               coin(98789, "plum"),
+					BuyerSettlementFees: coins(123, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(1),
+				AssetsFilledAmt:   sdkmath.NewInt(54),
+				PriceLeftAmt:      sdkmath.NewInt(89),
+				PriceAppliedAmt:   sdkmath.NewInt(98700),
+				PriceUnfilledAmt:  sdkmath.NewInt(89),
+				PriceFilledAmt:    sdkmath.NewInt(98700),
+				Splits:            []*OrderSplit{{Assets: coin(54, "apple"), Price: coin(98700, "plum")}},
+				OrderFeesLeft:     coins(4, "fig"),
+				FeesToPay:         coins(120, "fig"),
+			},
+			expErr: "tracked settlement fees \"124fig\" does not equal bid order 277 settlement fees \"123fig\"",
+		},
+
+		{
+			name: "partial ask, but not allowed",
+			receiver: OrderFulfillment{
+				Order: NewOrder(301).WithAsk(&AskOrder{
+					Assets:       coin(55, "apple"),
+					Price:        coin(98789, "plum"),
+					AllowPartial: false,
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(1),
+				AssetsFilledAmt:   sdkmath.NewInt(54),
+				PriceLeftAmt:      sdkmath.NewInt(89),
+				PriceAppliedAmt:   sdkmath.NewInt(98700),
+				PriceUnfilledAmt:  sdkmath.NewInt(89),
+				PriceFilledAmt:    sdkmath.NewInt(98700),
+				Splits:            []*OrderSplit{{Assets: coin(54, "apple"), Price: coin(98700, "plum")}},
+			},
+			expErr: "cannot fill ask order 301 having assets \"55apple\" with \"54apple\": order does not allow partial fill",
+		},
+		{
+			name: "partial bid, but not allowed",
+			receiver: OrderFulfillment{
+				Order: NewOrder(302).WithBid(&BidOrder{
+					Assets:       coin(55, "apple"),
+					Price:        coin(98789, "plum"),
+					AllowPartial: false,
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(1),
+				AssetsFilledAmt:   sdkmath.NewInt(54),
+				PriceLeftAmt:      sdkmath.NewInt(89),
+				PriceAppliedAmt:   sdkmath.NewInt(98700),
+				PriceUnfilledAmt:  sdkmath.NewInt(89),
+				PriceFilledAmt:    sdkmath.NewInt(98700),
+				Splits:            []*OrderSplit{{Assets: coin(54, "apple"), Price: coin(98700, "plum")}},
+			},
+			expErr: "cannot fill bid order 302 having assets \"55apple\" with \"54apple\": order does not allow partial fill",
+		},
+
+		{
+			name: "ask, fully filled, exact",
+			receiver: OrderFulfillment{
+				Order: NewOrder(501).WithAsk(&AskOrder{
+					Assets:       coin(50, "apple"),
+					Price:        coin(100, "plum"),
+					AllowPartial: true,
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(0),
+				AssetsFilledAmt:   sdkmath.NewInt(50),
+				PriceLeftAmt:      sdkmath.NewInt(0),
+				PriceAppliedAmt:   sdkmath.NewInt(100),
+				PriceUnfilledAmt:  sdkmath.NewInt(0),
+				PriceFilledAmt:    sdkmath.NewInt(100),
+				Splits:            []*OrderSplit{{Assets: coin(50, "apple"), Price: coin(100, "plum")}},
+			},
+			expErr: "",
+		},
+		{
+			name: "ask, fully filled, extra price",
+			receiver: OrderFulfillment{
+				Order: NewOrder(502).WithAsk(&AskOrder{
+					Assets:       coin(50, "apple"),
+					Price:        coin(100, "plum"),
+					AllowPartial: true,
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(0),
+				AssetsFilledAmt:   sdkmath.NewInt(50),
+				PriceLeftAmt:      sdkmath.NewInt(-5),
+				PriceAppliedAmt:   sdkmath.NewInt(105),
+				PriceUnfilledAmt:  sdkmath.NewInt(0),
+				PriceFilledAmt:    sdkmath.NewInt(100),
+				Splits:            []*OrderSplit{{Assets: coin(50, "apple"), Price: coin(105, "plum")}},
+			},
+			expErr: "",
+		},
+		{
+			name: "ask, partially filled, exact",
+			receiver: OrderFulfillment{
+				Order: NewOrder(503).WithAsk(&AskOrder{
+					Assets:       coin(50, "apple"),
+					Price:        coin(100, "plum"),
+					AllowPartial: true,
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(40),
+				PriceLeftAmt:      sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.NewInt(80),
+				PriceUnfilledAmt:  sdkmath.NewInt(20),
+				PriceFilledAmt:    sdkmath.NewInt(80),
+				Splits:            []*OrderSplit{{Assets: coin(40, "apple"), Price: coin(80, "plum")}},
+			},
+			expErr: "",
+		},
+		{
+			name: "ask, partially filled, extra price",
+			receiver: OrderFulfillment{
+				Order: NewOrder(504).WithAsk(&AskOrder{
+					Assets:       coin(50, "apple"),
+					Price:        coin(100, "plum"),
+					AllowPartial: true,
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(40),
+				PriceLeftAmt:      sdkmath.NewInt(10),
+				PriceAppliedAmt:   sdkmath.NewInt(90),
+				PriceUnfilledAmt:  sdkmath.NewInt(20),
+				PriceFilledAmt:    sdkmath.NewInt(80),
+				Splits:            []*OrderSplit{{Assets: coin(40, "apple"), Price: coin(90, "plum")}},
+			},
+			expErr: "",
+		},
+		{
+			name: "bid, fully filled",
+			receiver: OrderFulfillment{
+				Order: NewOrder(505).WithBid(&BidOrder{
+					Assets:       coin(50, "apple"),
+					Price:        coin(100, "plum"),
+					AllowPartial: true,
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(0),
+				AssetsFilledAmt:   sdkmath.NewInt(50),
+				PriceLeftAmt:      sdkmath.NewInt(0),
+				PriceAppliedAmt:   sdkmath.NewInt(100),
+				PriceUnfilledAmt:  sdkmath.NewInt(0),
+				PriceFilledAmt:    sdkmath.NewInt(100),
+				Splits:            []*OrderSplit{{Assets: coin(50, "apple"), Price: coin(100, "plum")}},
+			},
+			expErr: "",
+		},
+		{
+			name: "bid, partially filled",
+			receiver: OrderFulfillment{
+				Order: NewOrder(506).WithBid(&BidOrder{
+					Assets:       coin(50, "apple"),
+					Price:        coin(100, "plum"),
+					AllowPartial: true,
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(40),
+				PriceLeftAmt:      sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.NewInt(80),
+				PriceUnfilledAmt:  sdkmath.NewInt(20),
+				PriceFilledAmt:    sdkmath.NewInt(80),
+				Splits:            []*OrderSplit{{Assets: coin(40, "apple"), Price: coin(80, "plum")}},
+			},
+			expErr: "",
+		},
+		{
+			name: "ask, full, no fees, some to pay",
+			receiver: OrderFulfillment{
+				Order: NewOrder(507).WithAsk(&AskOrder{
+					Assets:                  coin(50, "apple"),
+					Price:                   coin(100, "plum"),
+					AllowPartial:            true,
+					SellerSettlementFlatFee: nil,
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(0),
+				AssetsFilledAmt:   sdkmath.NewInt(50),
+				PriceLeftAmt:      sdkmath.NewInt(0),
+				PriceAppliedAmt:   sdkmath.NewInt(100),
+				PriceUnfilledAmt:  sdkmath.NewInt(0),
+				PriceFilledAmt:    sdkmath.NewInt(100),
+				Splits:            []*OrderSplit{{Assets: coin(50, "apple"), Price: coin(100, "plum")}},
+				OrderFeesLeft:     nil,
+				FeesToPay:         coins(20, "fig"),
+			},
+			expErr: "",
+		},
+		{
+			name: "ask, full, with fees, paying exact",
+			receiver: OrderFulfillment{
+				Order: NewOrder(508).WithAsk(&AskOrder{
+					Assets:                  coin(50, "apple"),
+					Price:                   coin(100, "plum"),
+					AllowPartial:            true,
+					SellerSettlementFlatFee: coinP(200, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(0),
+				AssetsFilledAmt:   sdkmath.NewInt(50),
+				PriceLeftAmt:      sdkmath.NewInt(0),
+				PriceAppliedAmt:   sdkmath.NewInt(100),
+				PriceUnfilledAmt:  sdkmath.NewInt(0),
+				PriceFilledAmt:    sdkmath.NewInt(100),
+				Splits:            []*OrderSplit{{Assets: coin(50, "apple"), Price: coin(100, "plum")}},
+				OrderFeesLeft:     nil,
+				FeesToPay:         coins(200, "fig"),
+			},
+			expErr: "",
+		},
+		{
+			name: "ask, full, with fees, paying more",
+			receiver: OrderFulfillment{
+				Order: NewOrder(509).WithAsk(&AskOrder{
+					Assets:                  coin(50, "apple"),
+					Price:                   coin(100, "plum"),
+					AllowPartial:            true,
+					SellerSettlementFlatFee: coinP(200, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(0),
+				AssetsFilledAmt:   sdkmath.NewInt(50),
+				PriceLeftAmt:      sdkmath.NewInt(0),
+				PriceAppliedAmt:   sdkmath.NewInt(100),
+				PriceUnfilledAmt:  sdkmath.NewInt(0),
+				PriceFilledAmt:    sdkmath.NewInt(100),
+				Splits:            []*OrderSplit{{Assets: coin(50, "apple"), Price: coin(100, "plum")}},
+				OrderFeesLeft:     nil,
+				FeesToPay:         coins(205, "fig"),
+			},
+			expErr: "",
+		},
+		{
+			name: "ask, partial, no fees, some to pay",
+			receiver: OrderFulfillment{
+				Order: NewOrder(510).WithAsk(&AskOrder{
+					Assets:                  coin(50, "apple"),
+					Price:                   coin(100, "plum"),
+					AllowPartial:            true,
+					SellerSettlementFlatFee: nil,
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(40),
+				PriceLeftAmt:      sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.NewInt(80),
+				PriceUnfilledAmt:  sdkmath.NewInt(20),
+				PriceFilledAmt:    sdkmath.NewInt(80),
+				Splits:            []*OrderSplit{{Assets: coin(40, "apple"), Price: coin(80, "plum")}},
+				OrderFeesLeft:     nil,
+				FeesToPay:         coins(20, "fig"),
+			},
+			expErr: "",
+		},
+		{
+			name: "ask, partial, with fees, paying exact",
+			receiver: OrderFulfillment{
+				Order: NewOrder(511).WithAsk(&AskOrder{
+					Assets:                  coin(50, "apple"),
+					Price:                   coin(100, "plum"),
+					AllowPartial:            true,
+					SellerSettlementFlatFee: coinP(20, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(40),
+				PriceLeftAmt:      sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.NewInt(80),
+				PriceUnfilledAmt:  sdkmath.NewInt(20),
+				PriceFilledAmt:    sdkmath.NewInt(80),
+				Splits:            []*OrderSplit{{Assets: coin(40, "apple"), Price: coin(80, "plum")}},
+				OrderFeesLeft:     nil,
+				FeesToPay:         coins(20, "fig"),
+			},
+			expErr: "",
+		},
+		{
+			name: "ask, partial, with fees, paying more",
+			receiver: OrderFulfillment{
+				Order: NewOrder(512).WithAsk(&AskOrder{
+					Assets:                  coin(50, "apple"),
+					Price:                   coin(100, "plum"),
+					AllowPartial:            true,
+					SellerSettlementFlatFee: coinP(20, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(40),
+				PriceLeftAmt:      sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.NewInt(80),
+				PriceUnfilledAmt:  sdkmath.NewInt(20),
+				PriceFilledAmt:    sdkmath.NewInt(80),
+				Splits:            []*OrderSplit{{Assets: coin(40, "apple"), Price: coin(80, "plum")}},
+				OrderFeesLeft:     coins(4, "fig"),
+				FeesToPay:         coins(55, "fig"),
+			},
+			expErr: "",
+		},
+		{
+			name: "ask, partial, with fees, none being paid",
+			receiver: OrderFulfillment{
+				Order: NewOrder(513).WithAsk(&AskOrder{
+					Assets:                  coin(50, "apple"),
+					Price:                   coin(100, "plum"),
+					AllowPartial:            true,
+					SellerSettlementFlatFee: coinP(200, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(40),
+				PriceLeftAmt:      sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.NewInt(80),
+				PriceUnfilledAmt:  sdkmath.NewInt(20),
+				PriceFilledAmt:    sdkmath.NewInt(80),
+				Splits:            []*OrderSplit{{Assets: coin(40, "apple"), Price: coin(80, "plum")}},
+				OrderFeesLeft:     coins(200, "fig"),
+				FeesToPay:         nil,
+			},
+			expErr: "",
+		},
+		{
+			name: "bid, partial, with fees, none being paid",
+			receiver: OrderFulfillment{
+				Order: NewOrder(514).WithBid(&BidOrder{
+					Assets:              coin(50, "apple"),
+					Price:               coin(100, "plum"),
+					AllowPartial:        true,
+					BuyerSettlementFees: coins(20, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(40),
+				PriceLeftAmt:      sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.NewInt(80),
+				PriceUnfilledAmt:  sdkmath.NewInt(20),
+				PriceFilledAmt:    sdkmath.NewInt(80),
+				Splits:            []*OrderSplit{{Assets: coin(40, "apple"), Price: coin(80, "plum")}},
+				OrderFeesLeft:     coins(20, "fig"),
+				FeesToPay:         nil,
+			},
+			expErr: "",
+		},
+		{
+			name: "bid, partial, with fees, all being paid",
+			receiver: OrderFulfillment{
+				Order: NewOrder(515).WithBid(&BidOrder{
+					Assets:              coin(50, "apple"),
+					Price:               coin(100, "plum"),
+					AllowPartial:        true,
+					BuyerSettlementFees: coins(20, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(40),
+				PriceLeftAmt:      sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.NewInt(80),
+				PriceUnfilledAmt:  sdkmath.NewInt(20),
+				PriceFilledAmt:    sdkmath.NewInt(80),
+				Splits:            []*OrderSplit{{Assets: coin(40, "apple"), Price: coin(80, "plum")}},
+				OrderFeesLeft:     nil,
+				FeesToPay:         coins(20, "fig"),
+			},
+			expErr: "",
+		},
+		{
+			name: "bid, partial, with fees, some being paid",
+			receiver: OrderFulfillment{
+				Order: NewOrder(515).WithBid(&BidOrder{
+					Assets:              coin(50, "apple"),
+					Price:               coin(100, "plum"),
+					AllowPartial:        true,
+					BuyerSettlementFees: coins(20, "fig"),
+				}),
+				IsFinalized:       true,
+				AssetsUnfilledAmt: sdkmath.NewInt(10),
+				AssetsFilledAmt:   sdkmath.NewInt(40),
+				PriceLeftAmt:      sdkmath.NewInt(20),
+				PriceAppliedAmt:   sdkmath.NewInt(80),
+				PriceUnfilledAmt:  sdkmath.NewInt(20),
+				PriceFilledAmt:    sdkmath.NewInt(80),
+				Splits:            []*OrderSplit{{Assets: coin(40, "apple"), Price: coin(80, "plum")}},
+				OrderFeesLeft:     coins(4, "fig"),
+				FeesToPay:         coins(16, "fig"),
+			},
+			expErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = tc.receiver.Validate()
+			}
+			require.NotPanics(t, testFunc, "Validate")
+			assertions.AssertErrorValue(t, err, tc.expErr, "Validate error")
+		})
+	}
+}
 
 // TODO[1658]: func TestFulfill(t *testing.T)
 
@@ -2346,7 +3510,7 @@ func TestNewPartialFulfillment(t *testing.T) {
 		{
 			name: "unknown order type",
 			f: &OrderFulfillment{
-				Order:           &Order{OrderId: 58, Order: &unknownOrderType{}},
+				Order:           newUnknownOrder(58),
 				AssetsFilledAmt: sdkmath.NewInt(5),
 				PriceFilledAmt:  sdkmath.NewInt(6),
 			},
@@ -3647,7 +4811,7 @@ func TestGetAssetTransfer(t *testing.T) {
 		},
 		{
 			name:     "unknown inside order",
-			f:        &OrderFulfillment{Order: &Order{OrderId: 21, Order: &unknownOrderType{}}},
+			f:        &OrderFulfillment{Order: newUnknownOrder(21)},
 			expPanic: "unknown order type *exchange.unknownOrderType",
 		},
 	}
@@ -3873,7 +5037,7 @@ func TestGetPriceTransfer(t *testing.T) {
 		},
 		{
 			name:     "unknown inside order",
-			f:        &OrderFulfillment{Order: &Order{OrderId: 21, Order: &unknownOrderType{}}},
+			f:        &OrderFulfillment{Order: newUnknownOrder(21)},
 			expPanic: "unknown order type *exchange.unknownOrderType",
 		},
 	}
