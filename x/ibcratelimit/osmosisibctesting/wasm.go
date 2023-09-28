@@ -103,7 +103,7 @@ func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAd
 }
 
 func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
-	addrStr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
+	addrStr, err := sdk.Bech32ifyAddressBytes("cosmos", addr)
 	require.NoError(chain.T, err)
 	params, err := types.NewParams(addrStr)
 	require.NoError(chain.T, err)

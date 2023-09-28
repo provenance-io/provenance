@@ -73,7 +73,6 @@ func SetupSimApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 func SkipIfWSL(t *testing.T) {
 	t.Helper()
 	skip := os.Getenv("SKIP_WASM_WSL_TESTS")
-	fmt.Println("SKIP_WASM_WSL_TESTS", skip)
 	if skip == "true" {
 		t.Skip("Skipping Wasm tests")
 	}
