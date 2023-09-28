@@ -7,9 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/pflag"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/pflag"
 
 	"github.com/provenance-io/provenance/x/ibcratelimit/osmomath"
 	"github.com/provenance-io/provenance/x/ibcratelimit/osmoutils"

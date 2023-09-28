@@ -800,6 +800,7 @@ func New(
 		metadatatypes.ModuleName,
 		oracletypes.ModuleName,
 		wasm.ModuleName,
+		ibcratelimittypes.ModuleName,
 		ibchookstypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
@@ -829,6 +830,7 @@ func New(
 		nametypes.ModuleName,
 		genutiltypes.ModuleName,
 		ibchost.ModuleName,
+		ibcratelimittypes.ModuleName,
 		ibchookstypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
@@ -883,6 +885,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
 		icatypes.ModuleName,
+		ibcratelimittypes.ModuleName,
 		ibchookstypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
@@ -919,6 +922,7 @@ func New(
 		sanction.ModuleName,
 		hold.ModuleName,
 
+		ibcratelimittypes.ModuleName,
 		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
 		icqtypes.ModuleName,
@@ -1291,6 +1295,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 	paramsKeeper.Subspace(icqtypes.ModuleName)
 	paramsKeeper.Subspace(ibchookstypes.ModuleName)
+	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
 
 	return paramsKeeper
 }

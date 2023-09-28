@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/tidwall/gjson"
-
-	"github.com/stretchr/testify/require"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	"github.com/tidwall/gjson"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+
 	"github.com/provenance-io/provenance/x/ibcratelimit/types"
-	"github.com/stretchr/testify/suite"
 )
 
 /*func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
