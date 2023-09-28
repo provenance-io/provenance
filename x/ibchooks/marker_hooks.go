@@ -7,7 +7,6 @@ import (
 
 	sdkerrors "cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -38,7 +37,7 @@ func (h MarkerHooks) ProperlyConfigured() bool {
 	return h.MarkerKeeper != nil
 }
 
-func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.PacketI, cdc codec.BinaryCodec, ibcKeeper *ibckeeper.Keeper) error {
+func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) error {
 	var data transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
 		return err
@@ -82,7 +81,7 @@ func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.Pac
 			if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
 				return err
 			}
-			chainId := h.GetChainId(ctx, packet, ibcKeeper)
+			chainId := h.GetChainID(ctx, packet, ibcKeeper)
 			markerMetadata := banktypes.Metadata{
 				Base:        ibcDenom,
 				Name:        chainId + "/" + data.Denom,
@@ -105,27 +104,27 @@ func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.Pac
 	return nil
 }
 
-func (h MarkerHooks) GetChainId(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) string {
-	chainId := "unknown"
+func (h MarkerHooks) GetChainID(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) string {
+	chainID := "unknown"
 	channel, found := ibcKeeper.ChannelKeeper.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
-		return chainId
+		return chainID
 	}
 	connectionEnd, found := ibcKeeper.ConnectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return chainId
+		return chainID
 	}
 	clientState, found := ibcKeeper.ClientKeeper.GetClientState(ctx, connectionEnd.GetClientID())
 	if !found {
-		return chainId
+		return chainID
 	}
 	if clientState.ClientType() == "07-tendermint" {
 		tmClientState, ok := clientState.(*tendermintclient.ClientState)
 		if ok {
-			chainId = tmClientState.ChainId
+			chainID = tmClientState.ChainId
 		}
 	}
-	return chainId
+	return chainID
 }
 
 // ResetMarkerAccessGrants removes all current access grants from marker and adds new transfer grants for transferAuths
@@ -188,7 +187,7 @@ func (h MarkerHooks) SendPacketFn(
 		return data, nil
 	}
 
-	memoAsJson := SanitizeMemo(ics20Packet.GetMemo())
+	memoAsJSON := SanitizeMemo(ics20Packet.GetMemo())
 
 	markerAddress, err := markertypes.MarkerAddress(ics20Packet.Denom)
 	if err != nil {
@@ -198,11 +197,11 @@ func (h MarkerHooks) SendPacketFn(
 	if err != nil {
 		return nil, err
 	}
-	memoAsJson["marker"], err = CreateMarkerMemo(marker)
+	memoAsJSON["marker"], err = CreateMarkerMemo(marker)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "ics20data marshall error")
 	}
-	memo, err := json.Marshal(memoAsJson)
+	memo, err := json.Marshal(memoAsJSON)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "ics20data marshall error")
 	}
