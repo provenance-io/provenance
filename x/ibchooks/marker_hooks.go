@@ -28,7 +28,7 @@ type MarkerHooks struct {
 	MarkerKeeper *markerkeeper.Keeper
 }
 
-func NewMarkerHooks(markerkeeper *markerkeeper.Keeper, bankKeeper *markertypes.BankKeeper) MarkerHooks {
+func NewMarkerHooks(markerkeeper *markerkeeper.Keeper) MarkerHooks {
 	return MarkerHooks{
 		MarkerKeeper: markerkeeper,
 	}
@@ -140,6 +140,7 @@ func ResetMarkerAccessGrants(transferAuths []sdk.AccAddress, marker markertypes.
 			return err
 		}
 	}
+	return nil
 }
 
 // ProcessMarkerMemo extracts the list of transfer auth address from marker part of packet memo

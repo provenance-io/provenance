@@ -511,7 +511,7 @@ func New(
 	addrPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()        // We use this approach so running tests which use "cosmos" will work while we use "pb"
 	wasmHooks := ibchooks.NewWasmHooks(&hooksKeeper, nil, addrPrefix) // The contract keeper needs to be set later
 	app.Ics20WasmHooks = &wasmHooks
-	markerHooks := ibchooks.NewMarkerHooks(nil, nil)
+	markerHooks := ibchooks.NewMarkerHooks(nil)
 	app.Ics20MarkerHooks = &markerHooks
 	ibcHooks := ibchooks.NewIbcHooks(appCodec, &hooksKeeper, app.IBCKeeper, app.Ics20WasmHooks, app.Ics20MarkerHooks, nil)
 	app.IbcHooks = &ibcHooks
