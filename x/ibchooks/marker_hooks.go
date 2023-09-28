@@ -75,7 +75,9 @@ func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.Pac
 				false, // allow force transfer
 				[]string{},
 			)
-			ResetMarkerAccessGrants(transferAuthAddrs, marker)
+			if err = ResetMarkerAccessGrants(transferAuthAddrs, marker); err != nil {
+				return err
+			}
 
 			if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
 				return err
@@ -87,9 +89,13 @@ func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.Pac
 				Display:     chainId + "/" + data.Denom,
 				Description: data.Denom + " from chain " + chainId,
 			}
-			h.MarkerKeeper.SetDenomMetaData(ctx, markerMetadata, authtypes.NewModuleAddress(types.ModuleName))
+			if err = h.MarkerKeeper.SetDenomMetaData(ctx, markerMetadata, authtypes.NewModuleAddress(types.ModuleName)); err != nil {
+				return err
+			}
 		} else {
-			ResetMarkerAccessGrants(transferAuthAddrs, marker)
+			if err = ResetMarkerAccessGrants(transferAuthAddrs, marker); err != nil {
+				return err
+			}
 			h.MarkerKeeper.SetMarker(ctx, marker)
 		}
 	}
@@ -123,12 +129,16 @@ func (h MarkerHooks) GetChainId(ctx sdktypes.Context, packet exported.PacketI, c
 }
 
 // ResetMarkerAccessGrants removes all current access grants from marker and adds new transfer grants for transferAuths
-func ResetMarkerAccessGrants(transferAuths []sdk.AccAddress, marker markertypes.MarkerAccountI) {
+func ResetMarkerAccessGrants(transferAuths []sdk.AccAddress, marker markertypes.MarkerAccountI) error {
 	for _, currentAuth := range marker.GetAccessList() {
-		marker.RevokeAccess(currentAuth.GetAddress())
+		if err := marker.RevokeAccess(currentAuth.GetAddress()); err != nil {
+			return err
+		}
 	}
 	for _, transfAuth := range transferAuths {
-		marker.GrantAccess(markertypes.NewAccessGrant(transfAuth, markertypes.AccessList{markertypes.Access_Transfer}))
+		if err := marker.GrantAccess(markertypes.NewAccessGrant(transfAuth, markertypes.AccessList{markertypes.Access_Transfer})); err != nil {
+			return err
+		}
 	}
 }
 
