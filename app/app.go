@@ -138,7 +138,7 @@ import (
 	ibchooks "github.com/provenance-io/provenance/x/ibchooks"
 	ibchookskeeper "github.com/provenance-io/provenance/x/ibchooks/keeper"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
-	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/provenance-io/provenance/x/ibcratelimit/ibcratelimitmodule"
 	ibcratelimittypes "github.com/provenance-io/provenance/x/ibcratelimit/types"
 	"github.com/provenance-io/provenance/x/marker"
@@ -218,6 +218,7 @@ var (
 		ica.AppModuleBasic{},
 		icq.AppModuleBasic{},
 		ibchooks.AppModuleBasic{},
+		ibcratelimitmodule.AppModuleBasic{},
 
 		marker.AppModuleBasic{},
 		attribute.AppModuleBasic{},
