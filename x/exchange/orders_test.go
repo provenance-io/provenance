@@ -393,6 +393,11 @@ func (o *unknownOrderType) Size() int {
 	return 0
 }
 
+// newUnknownOrder returns a new order with the given id and an unknownOrderType.
+func newUnknownOrder(orderID uint64) *Order {
+	return &Order{OrderId: orderID, Order: &unknownOrderType{}}
+}
+
 func TestOrder_IsAskOrder(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -416,7 +421,7 @@ func TestOrder_IsAskOrder(t *testing.T) {
 		},
 		{
 			name:  "unknown order type",
-			order: &Order{OrderId: 4, Order: &unknownOrderType{}},
+			order: newUnknownOrder(4),
 			exp:   false,
 		},
 	}
@@ -456,7 +461,7 @@ func TestOrder_IsBidOrder(t *testing.T) {
 		},
 		{
 			name:  "unknown order type",
-			order: &Order{OrderId: 4, Order: &unknownOrderType{}},
+			order: newUnknownOrder(4),
 			exp:   false,
 		},
 	}
@@ -554,7 +559,7 @@ func TestOrder_GetSubOrder(t *testing.T) {
 		},
 		{
 			name:   "unknown order type",
-			order:  &Order{OrderId: 4, Order: &unknownOrderType{}},
+			order:  newUnknownOrder(4),
 			expErr: unknownSubTypeErr(4),
 		},
 	}
@@ -604,7 +609,7 @@ func TestOrder_GetMarketID(t *testing.T) {
 		},
 		{
 			name:     "unknown order type",
-			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			order:    newUnknownOrder(4),
 			expPanic: unknownSubTypeErr(4),
 		},
 	}
@@ -645,7 +650,7 @@ func TestOrder_GetOwner(t *testing.T) {
 		},
 		{
 			name:     "unknown order type",
-			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			order:    newUnknownOrder(4),
 			expPanic: unknownSubTypeErr(4),
 		},
 	}
@@ -686,7 +691,7 @@ func TestOrder_GetAssets(t *testing.T) {
 		},
 		{
 			name:     "unknown order type",
-			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			order:    newUnknownOrder(4),
 			expPanic: unknownSubTypeErr(4),
 		},
 	}
@@ -727,7 +732,7 @@ func TestOrder_GetPrice(t *testing.T) {
 		},
 		{
 			name:     "unknown order type",
-			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			order:    newUnknownOrder(4),
 			expPanic: unknownSubTypeErr(4),
 		},
 	}
@@ -768,7 +773,7 @@ func TestOrder_GetSettlementFees(t *testing.T) {
 		},
 		{
 			name:     "unknown order type",
-			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			order:    newUnknownOrder(4),
 			expPanic: unknownSubTypeErr(4),
 		},
 	}
@@ -809,7 +814,7 @@ func TestOrder_PartialFillAllowed(t *testing.T) {
 		},
 		{
 			name:     "unknown order type",
-			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			order:    newUnknownOrder(4),
 			expPanic: unknownSubTypeErr(4),
 		},
 	}
@@ -849,7 +854,7 @@ func TestOrder_GetOrderType(t *testing.T) {
 		},
 		{
 			name:     "unknown order type",
-			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			order:    newUnknownOrder(4),
 			expected: "*exchange.unknownOrderType",
 		},
 	}
@@ -890,7 +895,7 @@ func TestOrder_GetOrderTypeByte(t *testing.T) {
 		},
 		{
 			name:     "unknown order type",
-			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			order:    newUnknownOrder(4),
 			expPanic: unknownSubTypeErr(4),
 		},
 	}
@@ -941,7 +946,7 @@ func TestOrder_GetHoldAmount(t *testing.T) {
 		},
 		{
 			name:     "unknown order type",
-			order:    &Order{OrderId: 4, Order: &unknownOrderType{}},
+			order:    newUnknownOrder(4),
 			expPanic: unknownSubTypeErr(4),
 		},
 	}
@@ -979,8 +984,8 @@ func TestOrder_Validate(t *testing.T) {
 		},
 		{
 			name:  "unknown sub-order type",
-			Order: &Order{OrderId: 1, Order: &unknownOrderType{}},
-			exp:   []string{unknownSubTypeErr(1)},
+			Order: newUnknownOrder(3),
+			exp:   []string{unknownSubTypeErr(3)},
 		},
 		{
 			name:  "ask order error",
