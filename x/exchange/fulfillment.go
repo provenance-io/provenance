@@ -376,8 +376,8 @@ func (f OrderFulfillment) Validate() error {
 	}
 
 	orderPrice := f.GetPrice()
-	if f.PriceLeftAmt.Equal(orderPrice.Amount) {
-		return fmt.Errorf("price left %q equals %s order %d price %q",
+	if f.PriceLeftAmt.GTE(orderPrice.Amount) {
+		return fmt.Errorf("price left %q is not less than %s order %d price %q",
 			f.GetPriceLeft(), f.GetOrderType(), f.GetOrderID(), orderPrice)
 	}
 	if !f.PriceAppliedAmt.IsPositive() {
@@ -389,10 +389,6 @@ func (f OrderFulfillment) Validate() error {
 		return fmt.Errorf("tracked price %q does not equal %s order %d price %q",
 			sdk.Coin{Denom: orderPrice.Denom, Amount: trackedPriceAmt}, f.GetOrderType(), f.GetOrderID(), orderPrice)
 	}
-	if f.PriceUnfilledAmt.IsNegative() {
-		return fmt.Errorf("%s order %d having price %q has negative price %q after filling %q",
-			f.GetOrderType(), f.GetOrderID(), orderPrice, f.GetPriceUnfilled(), f.GetPriceFilled())
-	}
 	if !f.PriceFilledAmt.IsPositive() {
 		return fmt.Errorf("cannot fill %s order %d having price %q with non-positive price %q",
 			f.GetOrderType(), f.GetOrderID(), orderPrice, f.GetPriceFilled())
@@ -401,6 +397,10 @@ func (f OrderFulfillment) Validate() error {
 	if !orderPrice.Amount.Equal(totalPriceAmt) {
 		return fmt.Errorf("filled price %q plus unfilled price %q does not equal order price %q for %s order %d",
 			f.GetPriceFilled(), f.GetPriceUnfilled(), orderPrice, f.GetOrderType(), f.GetOrderID())
+	}
+	if f.PriceUnfilledAmt.IsNegative() {
+		return fmt.Errorf("%s order %d having price %q has negative price %q after filling %q",
+			f.GetOrderType(), f.GetOrderID(), orderPrice, f.GetPriceUnfilled(), f.GetPriceFilled())
 	}
 
 	if len(f.Splits) == 0 {
@@ -414,53 +414,53 @@ func (f OrderFulfillment) Validate() error {
 	}
 
 	if len(splitsAssets) != 1 {
-		return fmt.Errorf("multiple asset denoms %q in splits applied to %s order %d",
-			splitsAssets, f.GetOrderType(), f.GetOrderID())
+		return fmt.Errorf("multiple asset denoms %q in splits applied to %s order %d having assets %q",
+			splitsAssets, f.GetOrderType(), f.GetOrderID(), orderAssets)
 	}
 	if splitsAssets[0].Denom != orderAssets.Denom {
-		return fmt.Errorf("splits asset denom %q does not equal order assets %q on %s order %d",
+		return fmt.Errorf("splits asset denom %q does not equal order assets denom %q on %s order %d",
 			splitsAssets, orderAssets, f.GetOrderType(), f.GetOrderID())
 	}
 	if !splitsAssets[0].Amount.Equal(f.AssetsFilledAmt) {
 		return fmt.Errorf("splits asset total %q does not equal filled assets %q on %s order %d",
-			splitsAssets, orderAssets, f.GetOrderType(), f.GetOrderID())
+			splitsAssets, f.GetAssetsFilled(), f.GetOrderType(), f.GetOrderID())
 	}
 
 	if len(splitsPrice) != 1 {
-		return fmt.Errorf("multiple price denoms %q in splits applied to %s order %d",
-			splitsPrice, f.GetOrderType(), f.GetOrderID())
+		return fmt.Errorf("multiple price denoms %q in splits applied to %s order %d having price %q",
+			splitsPrice, f.GetOrderType(), f.GetOrderID(), orderPrice)
 	}
 	if splitsPrice[0].Denom != orderPrice.Denom {
-		return fmt.Errorf("splits price denom %q does not equal order price %q on %s order %d",
+		return fmt.Errorf("splits price denom %q does not equal order price denom %q on %s order %d",
 			splitsPrice, orderPrice, f.GetOrderType(), f.GetOrderID())
 	}
-	if !splitsPrice[0].Amount.Equal(f.PriceFilledAmt) {
-		return fmt.Errorf("splits price total %q does not equal applied price %q on %s order %d",
+	if !splitsPrice[0].Amount.Equal(f.PriceAppliedAmt) {
+		return fmt.Errorf("splits price total %q does not equal filled price %q on %s order %d",
 			splitsPrice, f.GetPriceApplied(), f.GetOrderType(), f.GetOrderID())
 	}
 
 	orderFees := f.GetSettlementFees()
 	if f.OrderFeesLeft.IsAnyNegative() {
-		return fmt.Errorf("%s order %d settlement fees left %q is negative",
-			f.GetOrderType(), f.GetOrderID(), f.OrderFeesLeft)
+		return fmt.Errorf("settlement fees left %q is negative for %s order %d having fees %q",
+			f.OrderFeesLeft, f.GetOrderType(), f.GetOrderID(), orderFees)
 	}
 	if _, hasNeg := orderFees.SafeSub(f.OrderFeesLeft...); hasNeg {
-		return fmt.Errorf("settlement fees left %q is greater than %s order %q settlement fees %q",
+		return fmt.Errorf("settlement fees left %q is greater than %s order %d settlement fees %q",
 			f.OrderFeesLeft, f.GetOrderType(), f.GetOrderID(), orderFees)
 	}
 
 	isFullyFilled := f.IsFullyFilled()
 	if isFullyFilled {
-		if !f.AssetsUnfilledAmt.IsZero() {
-			return fmt.Errorf("fully filled %s order %q has non-zero unfilled assets %q",
-				f.GetOrderType(), f.GetOrderID(), f.GetAssetsUnfilled())
-		}
+		// IsFullyFilled returns true if unfilled assets is zero or negative.
+		// We know from a previous check that unfilled is not negative.
+		// So here, we know it's zero, and don't need to check that again.
+
 		if !f.PriceUnfilledAmt.IsZero() {
-			return fmt.Errorf("fully filled %s order %q has non-zero unfilled price %q",
+			return fmt.Errorf("fully filled %s order %d has non-zero unfilled price %q",
 				f.GetOrderType(), f.GetOrderID(), f.GetPriceUnfilled())
 		}
 		if !f.OrderFeesLeft.IsZero() {
-			return fmt.Errorf("fully filled %s order %q has non-zero settlement fees left %q",
+			return fmt.Errorf("fully filled %s order %d has non-zero settlement fees left %q",
 				f.GetOrderType(), f.GetOrderID(), f.OrderFeesLeft)
 		}
 	}
@@ -468,26 +468,33 @@ func (f OrderFulfillment) Validate() error {
 	switch {
 	case f.IsAskOrder():
 		// For ask orders, the applied amount needs to be at least the filled amount.
-		if f.PriceFilledAmt.LT(f.PriceAppliedAmt) {
+		if f.PriceAppliedAmt.LT(f.PriceFilledAmt) {
 			return fmt.Errorf("%s order %d having assets %q and price %q cannot be filled by %q at price %q: unsufficient price",
 				f.GetOrderType(), f.GetOrderID(), orderAssets, orderPrice, f.GetAssetsFilled(), f.GetPriceApplied())
 		}
+
 		// If not being fully filled on an order that has some fees, make sure that there's at most 1 denom in the fees left.
 		if !isFullyFilled && len(orderFees) > 0 && len(f.OrderFeesLeft) > 1 {
 			return fmt.Errorf("partial fulfillment for %s order %d having seller settlement fees %q has multiple denoms in fees left %q",
 				f.GetOrderType(), f.GetOrderID(), orderFees, f.OrderFeesLeft)
 		}
+
+		// For ask orders, the tracked fees must be at least the order fees.
+		trackedFees := f.FeesToPay.Add(f.OrderFeesLeft...)
+		if _, hasNeg := trackedFees.SafeSub(orderFees...); hasNeg {
+			return fmt.Errorf("tracked settlement fees %q is less than %s order %d settlement fees %q",
+				trackedFees, f.GetOrderType(), f.GetOrderID(), orderFees)
+		}
 	case f.IsBidOrder():
-		// If filled in full, the PriceAppliedAmt must be equal to the order price.
-		if isFullyFilled && !f.PriceAppliedAmt.Equal(orderPrice.Amount) {
-			return fmt.Errorf("%s order %d having price %q cannot be fully filled at price %q: price mismatch",
-				f.GetOrderType(), f.GetOrderID(), orderPrice, f.GetPriceApplied())
+		if !f.PriceAppliedAmt.Equal(f.PriceFilledAmt) {
+			return fmt.Errorf("price applied %q does not equal price filled %q for %s order %d having price %q",
+				f.GetPriceApplied(), f.GetPriceFilled(), f.GetOrderType(), f.GetOrderID(), orderPrice)
 		}
-		// otherwise, the price filled must be less than the order price.
-		if !isFullyFilled && orderPrice.Amount.LT(f.PriceAppliedAmt) {
-			return fmt.Errorf("%s order %d having price %q cannot be partially filled at price %q: price mismatch",
-				f.GetOrderType(), f.GetOrderID(), orderPrice, f.GetPriceApplied())
-		}
+
+		// We now know that price applied = filled, and applied + left = order = filled + unfilled, so left = unfilled too.
+		// We also know that applied > 0 and left < order. So 0 < applied < order.
+		// If fully filled, we know that unfilled = 0, so applied = order = filled, so we don't need to check that again here.
+		// If partially filled, we know that applied < order, so we don't need to check that either.
 
 		// For bid orders, fees to pay + fees left should equal the order fees.
 		trackedFees := f.FeesToPay.Add(f.OrderFeesLeft...)
@@ -503,7 +510,7 @@ func (f OrderFulfillment) Validate() error {
 	// Saving this simple check for last in the hopes that a previous error exposes why this
 	// order might accidentally be only partially filled.
 	if !isFullyFilled && !f.PartialFillAllowed() {
-		return fmt.Errorf("cannot fill %s order %d having assets %q with assets %q: order does not allow partial fill",
+		return fmt.Errorf("cannot fill %s order %d having assets %q with %q: order does not allow partial fill",
 			f.GetOrderType(), f.GetOrderID(), orderAssets, f.GetAssetsFilled())
 	}
 
