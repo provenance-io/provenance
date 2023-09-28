@@ -1,9 +1,6 @@
 package osmosisibctesting
 
 import (
-	"encoding/json"
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -17,11 +14,6 @@ import (
 
 type TestChain struct {
 	*ibctesting.TestChain
-}
-
-func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
-	osmosisApp := app.Setup(false)
-	return osmosisApp, app.NewDefaultGenesisState()
 }
 
 // SendMsgsNoCheck is an alternative to ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller
@@ -75,14 +67,14 @@ func SignAndDeliver(
 	)
 
 	// Simulate a sending a transaction and committing a block
-	gInfo, res, err := app.Deliver(txCfg.TxEncoder(), tx)
+	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
 
 	return gInfo, res, err
 }
 
 // Move epochs to the future to avoid issues with minting
-func (chain *TestChain) MoveEpochsToTheFuture() error {
-	epochsKeeper := chain.GetOsmosisApp().EpochsKeeper
+/*func (chain *TestChain) MoveEpochsToTheFuture() error {
+	epochsKeeper := chain.GetProvenanceApp().EpochsKeeper
 	ctx := chain.GetContext()
 	for _, epoch := range epochsKeeper.AllEpochInfos(ctx) {
 		epoch.StartTime = ctx.BlockTime().Add(time.Hour * 24 * 30)
@@ -93,7 +85,7 @@ func (chain *TestChain) MoveEpochsToTheFuture() error {
 		}
 	}
 	return nil
-}
+}*/
 
 // GetProvenanceApp returns the current chain's app as an ProvenanceApp
 func (chain *TestChain) GetProvenanceApp() *app.App {

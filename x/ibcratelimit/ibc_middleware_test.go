@@ -1,7 +1,9 @@
 package ibcratelimit_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"golang.org/x/exp/slices"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
@@ -16,18 +19,23 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v6/testing"
 	"github.com/stretchr/testify/suite"
 
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/ibcratelimit/osmomath"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/ibcratelimit/osmosisibctesting"
 	"github.com/provenance-io/provenance/x/ibcratelimit/types"
+
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 )
 
 type MiddlewareTestSuite struct {
 	suite.Suite
 
-	app *simapp.App
-	ctx sdk.Context
+	App *simapp.App
+	Ctx sdk.Context
 
 	coordinator *ibctesting.Coordinator
 
@@ -54,29 +62,42 @@ func NewTransferPath(chainA, chainB *osmosisibctesting.TestChain) *ibctesting.Pa
 	return path
 }
 
-func (suite *MiddlewareTestSuite) SetupTest() {
-	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now().UTC()})
-	s.ctx = s.ctx.WithBlockHeight(1)
+func SetupSimApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
+	db := dbm.NewMemDB()
+	encCdc := app.MakeEncodingConfig()
+	provenanceApp := app.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, app.DefaultNodeHome, 5, encCdc, sdksim.EmptyAppOptions{})
+	genesis := app.NewDefaultGenesisState(encCdc.Marshaler)
+	return provenanceApp, genesis
+}
 
-	suite.SkipIfWSL()
+func SkipIfWSL(t *testing.T) {
+	t.Helper()
+	skip := os.Getenv("SKIP_WASM_WSL_TESTS")
+	fmt.Println("SKIP_WASM_WSL_TESTS", skip)
+	if skip == "true" {
+		t.Skip("Skipping Wasm tests")
+	}
+}
+
+func (suite *MiddlewareTestSuite) SetupTest() {
+	SkipIfWSL(suite.T())
 	// TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
 	// txfeetypes.ConsensusMinFee = osmomath.ZeroDec()
-	suite.Setup()
-	ibctesting.DefaultTestingAppInit = osmosisibctesting.SetupTestingApp
+	ibctesting.DefaultTestingAppInit = SetupSimApp
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	suite.chainA = &osmosisibctesting.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1)),
 	}
 	// Remove epochs to prevent  minting
-	err := suite.chainA.MoveEpochsToTheFuture()
-	suite.Require().NoError(err)
+	//err := suite.chainA.MoveEpochsToTheFuture()
+	//suite.Require().NoError(err)
 	suite.chainB = &osmosisibctesting.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2)),
 	}
 	suite.path = NewTransferPath(suite.chainA, suite.chainB)
-	err = suite.chainB.MoveEpochsToTheFuture()
-	suite.Require().NoError(err)
+	//err = suite.chainB.MoveEpochsToTheFuture()
+	//suite.Require().NoError(err)
 	suite.coordinator.Setup(suite.path)
 }
 
@@ -94,6 +115,7 @@ func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount osmomath.
 	accountFrom := suite.chainA.SenderAccount.GetAddress().String()
 	accountTo := suite.chainB.SenderAccount.GetAddress().String()
 	timeoutHeight := clienttypes.NewHeight(0, 100)
+	memo := ""
 	return transfertypes.NewMsgTransfer(
 		port,
 		channel,
@@ -102,6 +124,7 @@ func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount osmomath.
 		accountTo,
 		timeoutHeight,
 		0,
+		memo,
 	)
 }
 
@@ -112,6 +135,7 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount osmomath.
 	accountFrom := suite.chainB.SenderAccount.GetAddress().String()
 	accountTo := suite.chainA.SenderAccount.GetAddress().String()
 	timeoutHeight := clienttypes.NewHeight(0, 100)
+	memo := ""
 	return transfertypes.NewMsgTransfer(
 		port,
 		channel,
@@ -120,6 +144,7 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount osmomath.
 		accountTo,
 		timeoutHeight,
 		0,
+		memo,
 	)
 }
 
@@ -156,6 +181,7 @@ func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
 		strings.Repeat("x", 4097),
 		clienttypes.NewHeight(0, 100),
 		0,
+		"",
 	)
 	_, ack, _ := suite.FullSendBToA(msg)
 	suite.Require().Contains(ack, "error",
@@ -275,8 +301,8 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 }
 
 func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed sdk.Int) {
-	osmosisApp := suite.chainA.GetOsmosisApp()
-	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	provenanceApp := suite.chainA.GetProvenanceApp()
+	supply := provenanceApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 
 	// Move some funds from chainA to chainB so that there is something in escrow
 	// Each user has 10% of the supply, so we send most of the funds from one user to chainA
@@ -309,10 +335,10 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 		denom = denomTrace.IBCDenom()
 	}
 
-	osmosisApp := suite.chainA.GetOsmosisApp()
+	provenanceApp := suite.chainA.GetProvenanceApp()
 
 	// This is the first one. Inside the tests. It works as expected.
-	channelValue := CalculateChannelValue(suite.chainA.GetContext(), denom, osmosisApp.BankKeeper)
+	channelValue := CalculateChannelValue(suite.chainA.GetContext(), denom, provenanceApp.BankKeeper)
 
 	// The amount to be sent is send 2.5% (quota is 5%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
@@ -321,7 +347,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	fmt.Printf("Testing send rate limiting for denom=%s, channelValue=%s, quota=%s, sendAmount=%s\n", denom, channelValue, quota, sendAmount)
 
 	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")
+	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/rate_limiter.wasm")
 	quotas := suite.BuildChannelQuota("weekly", channel, denom, 604800, 5, 5)
 	fmt.Println(quotas)
 	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
@@ -337,7 +363,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	r, _ := suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))
 
 	// Calculate remaining allowance in the quota
-	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
+	attrs := ExtractAttributes(FindEvent(r.GetEvents(), "wasm"))
 
 	used, ok := osmomath.NewIntFromString(attrs["weekly_used_out"])
 	suite.Require().True(ok)
@@ -405,9 +431,9 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 		sendDenom = denomTrace.IBCDenom()
 	}
 
-	osmosisApp := suite.chainA.GetOsmosisApp()
+	provenanceApp := suite.chainA.GetProvenanceApp()
 
-	channelValue := CalculateChannelValue(suite.chainA.GetContext(), localDenom, osmosisApp.BankKeeper)
+	channelValue := CalculateChannelValue(suite.chainA.GetContext(), localDenom, provenanceApp.BankKeeper)
 
 	// The amount to be sent is 2% (quota is 4%)
 	quota := channelValue.QuoRaw(int64(100 / quotaPercentage))
@@ -416,7 +442,7 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	fmt.Printf("Testing recv rate limiting for denom=%s, channelValue=%s, quota=%s, sendAmount=%s\n", localDenom, channelValue, quota, sendAmount)
 
 	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")
+	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/rate_limiter.wasm")
 	quotas := suite.BuildChannelQuota("weekly", channel, localDenom, 604800, 4, 4)
 	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
@@ -452,7 +478,7 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNonNative() {
 // Test no rate limiting occurs when the contract is set, but not quotas are condifured for the path
 func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")
+	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/rate_limiter.wasm")
 	addr := suite.chainA.InstantiateRLContract(&suite.Suite, ``)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
@@ -466,17 +492,17 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.initializeEscrow()
 	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")
+	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/rate_limiter.wasm")
 	quotas := suite.BuildChannelQuota("weekly", "channel-0", sdk.DefaultBondDenom, 604800, 1, 1)
 	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Get the escrowed amount
-	osmosisApp := suite.chainA.GetOsmosisApp()
+	provenanceApp := suite.chainA.GetProvenanceApp()
 	// ToDo: This is what we eventually want here, but using the full supply temporarily for performance reasons. See CalculateChannelValue
 	// escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
-	// escrowed := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
-	escrowed := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	// escrowed := provenanceApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
+	escrowed := provenanceApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	quota := escrowed.Amount.QuoRaw(100) // 1% of the escrowed amount
 
 	// Use the whole quota
@@ -485,7 +511,8 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	channel := suite.path.EndpointA.ChannelID
 	accountFrom := suite.chainA.SenderAccount.GetAddress().String()
 	timeoutHeight := clienttypes.NewHeight(0, 100)
-	msg := transfertypes.NewMsgTransfer(port, channel, coins, accountFrom, "INVALID", timeoutHeight, 0)
+	memo := ""
+	msg := transfertypes.NewMsgTransfer(port, channel, coins, accountFrom, "INVALID", timeoutHeight, 0, memo)
 
 	// Sending the message manually because AssertSend updates both clients. We need to update the clients manually
 	// for this test so that the failure to receive on chain B happens after the second packet is sent from chain A.
@@ -535,16 +562,35 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 
 func (suite *MiddlewareTestSuite) TestUnsetRateLimitingContract() {
 	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/rate_limiter.wasm")
+	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/rate_limiter.wasm")
 	addr := suite.chainA.InstantiateRLContract(&suite.Suite, "")
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Unset the contract param
 	params, err := types.NewParams("")
 	suite.Require().NoError(err)
-	osmosisApp := suite.chainA.GetOsmosisApp()
-	paramSpace, ok := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
+	provenanceApp := suite.chainA.GetProvenanceApp()
+	paramSpace, ok := provenanceApp.ParamsKeeper.GetSubspace(types.ModuleName)
 	suite.Require().True(ok)
 	// N.B.: this panics if validation fails.
 	paramSpace.SetParamSet(suite.chainA.GetContext(), &params)
+}
+
+func FindEvent(events []sdk.Event, name string) sdk.Event {
+	index := slices.IndexFunc(events, func(e sdk.Event) bool { return e.Type == name })
+	if index == -1 {
+		return sdk.Event{}
+	}
+	return events[index]
+}
+
+func ExtractAttributes(event sdk.Event) map[string]string {
+	attrs := make(map[string]string)
+	if event.Attributes == nil {
+		return attrs
+	}
+	for _, a := range event.Attributes {
+		attrs[string(a.Key)] = string(a.Value)
+	}
+	return attrs
 }

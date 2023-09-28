@@ -2,13 +2,13 @@ package ibcratelimit_test
 
 import (
 	"testing"
-	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
+	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 )
 
@@ -23,20 +23,15 @@ func TestGenesisTestSuite(t *testing.T) {
 	suite.Run(t, new(GenesisTestSuite))
 }
 
-func (suite *GenesisTestSuite) SetupTest() {
-	suite.Setup()
-}
-
 func (s *GenesisTestSuite) SetupTest() {
-	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now().UTC()})
-	s.ctx = s.ctx.WithBlockHeight(1)
+	app.Setup(s.T())
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.ctx.WithBlockHeight(0)
 }
 
-func (suite *GenesisTestSuite) TestInitExportGenesis() {
+func (s *GenesisTestSuite) TestInitExportGenesis() {
 	testAddress := sdk.AccAddress([]byte("addr1_______________")).String()
-	suite.SetupTest()
-	k := suite.app.RateLimitingICS4Wrapper
+	k := s.app.RateLimitingICS4Wrapper
 
 	initialGenesis := types.GenesisState{
 		Params: types.Params{
@@ -44,11 +39,11 @@ func (suite *GenesisTestSuite) TestInitExportGenesis() {
 		},
 	}
 
-	k.InitGenesis(suite.ctx, initialGenesis)
+	k.InitGenesis(s.ctx, initialGenesis)
 
-	suite.Require().Equal(testAddress, k.GetParams(suite.ctx).ContractAddress)
+	s.Require().Equal(testAddress, k.GetParams(s.ctx).ContractAddress)
 
-	exportedGenesis := k.ExportGenesis(suite.ctx)
+	exportedGenesis := k.ExportGenesis(s.ctx)
 
-	suite.Require().Equal(initialGenesis, *exportedGenesis)
+	s.Require().Equal(initialGenesis, *exportedGenesis)
 }
