@@ -47,7 +47,7 @@ func (i ICS4Middleware) SendPacket(
 	if hook, ok := i.Hooks.(GetSendPacketFns); ok {
 		fns := hook.GetSendPacketFns()
 		for i := 0; i < len(fns); i++ {
-			data, err = fns[i](ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data, processStateData)
+			data, err = fns[i](ctx, data, processStateData)
 			if err != nil {
 				return 0, err
 			}

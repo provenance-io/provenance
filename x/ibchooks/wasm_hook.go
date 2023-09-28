@@ -300,11 +300,6 @@ func (h WasmHooks) SendPacketOverride(
 
 func (h WasmHooks) SendPacketFn(
 	ctx sdktypes.Context,
-	chanCap *capabilitytypes.Capability,
-	sourcePort string,
-	sourceChannel string,
-	timeoutHeight clienttypes.Height,
-	timeoutTimestamp uint64,
 	data []byte,
 	processData map[string]interface{},
 ) ([]byte, error) {

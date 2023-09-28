@@ -11,9 +11,7 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	"github.com/cosmos/ibc-go/v6/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
 	tendermintclient "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
@@ -174,13 +172,8 @@ func ProcessMarkerMemo(memo string) ([]sdk.AccAddress, markertypes.MarkerType, e
 
 func (h MarkerHooks) SendPacketFn(
 	ctx sdktypes.Context,
-	chanCap *capabilitytypes.Capability,
-	sourcePort string,
-	sourceChannel string,
-	timeoutHeight clienttypes.Height,
-	timeoutTimestamp uint64,
 	data []byte,
-	processData map[string]interface{},
+	_ map[string]interface{},
 ) ([]byte, error) {
 	isIcs20, ics20Packet := isIcs20Packet(data)
 	if !isIcs20 {
