@@ -9,7 +9,6 @@ import (
 
 	sdkerrors "cosmossdk.io/errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
@@ -299,7 +298,7 @@ func (h WasmHooks) SendPacketOverride(
 }
 
 func (h WasmHooks) SendPacketFn(
-	ctx sdktypes.Context,
+	_ sdktypes.Context,
 	data []byte,
 	processData map[string]interface{},
 ) ([]byte, error) {
@@ -320,7 +319,19 @@ func (h WasmHooks) SendPacketFn(
 	// This way receiver chains that are on old versions of IBC will be able to process the packet
 
 	callbackRaw := metadata[types.IBCCallbackKey]
+	if callbackRaw != nil {
+		contract, ok := callbackRaw.(string)
+		if !ok {
+			return nil, fmt.Errorf("unable to format callback %v", callbackRaw)
+		}
+
+		if _, err := sdktypes.AccAddressFromBech32(contract); err != nil {
+			return nil, fmt.Errorf("invalid bech32 contract address %v: %w", contract, err)
+		}
+	}
+
 	processData[types.IBCCallbackKey] = callbackRaw
+
 	delete(metadata, types.IBCCallbackKey)
 	bzMetadata, err := json.Marshal(metadata)
 	if err != nil {
@@ -340,13 +351,13 @@ func (h WasmHooks) SendPacketFn(
 	return dataBytes, nil
 }
 
-func (h WasmHooks) SendPacketAfterHook(ctx sdk.Context,
-	chanCap *capabilitytypes.Capability,
-	sourcePort string,
+func (h WasmHooks) SendPacketAfterHook(ctx sdktypes.Context,
+	_ *capabilitytypes.Capability,
+	_ string,
 	sourceChannel string,
-	timeoutHeight clienttypes.Height,
-	timeoutTimestamp uint64,
-	data []byte,
+	_ clienttypes.Height,
+	_ uint64,
+	_ []byte,
 	sequence uint64,
 	err error,
 	processData map[string]interface{},
@@ -361,12 +372,10 @@ func (h WasmHooks) SendPacketAfterHook(ctx sdk.Context,
 	// Make sure the callback contract is a string and a valid bech32 addr. If it isn't, ignore this packet
 	contract, ok := callbackRaw.(string)
 	if !ok {
-		sequence = 0
 		return
 	}
 
 	if _, err := sdktypes.AccAddressFromBech32(contract); err != nil {
-		sequence = 0
 		return
 	}
 

@@ -2,7 +2,6 @@ package ibchooks
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
@@ -56,12 +55,11 @@ func (h IbcHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, p
 
 	if err := h.markerHooks.ProcessMarkerMemo(ctx, packet, h.ibcKeeper); err != nil {
 		return NewEmitErrorAcknowledgement(ctx, types.ErrMarkerError, err.Error())
-
 	}
 	return h.wasmHooks.OnRecvPacketOverride(im, ctx, packet, relayer)
 }
 
-func (h IbcHooks) SendPacketAfterHook(ctx sdk.Context,
+func (h IbcHooks) SendPacketAfterHook(ctx sdktypes.Context,
 	chanCap *capabilitytypes.Capability,
 	sourcePort string,
 	sourceChannel string,

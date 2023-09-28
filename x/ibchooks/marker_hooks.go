@@ -7,7 +7,6 @@ import (
 
 	sdkerrors "cosmossdk.io/errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -50,15 +49,15 @@ func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.Pac
 		if err != nil {
 			return err
 		}
-		var transferAuthAddrs []sdk.AccAddress
+		var transferAuthAddrs []sdktypes.AccAddress
 		transferAuthAddrs, coinType, err := ProcessMarkerMemo(data.GetMemo())
 		if err != nil {
 			return err
 		}
 		if marker == nil {
-			amount, err := strconv.ParseInt(data.Amount, 10, 64)
-			if err != nil {
-				return err
+			amount, errParse := strconv.ParseInt(data.Amount, 10, 64)
+			if errParse != nil {
+				return errParse
 			}
 			marker = markertypes.NewMarkerAccount(
 				authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(ibcDenom)),
@@ -79,12 +78,12 @@ func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.Pac
 			if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
 				return err
 			}
-			chainId := h.GetChainID(ctx, packet, ibcKeeper)
+			chainID := h.GetChainID(ctx, packet, ibcKeeper)
 			markerMetadata := banktypes.Metadata{
 				Base:        ibcDenom,
-				Name:        chainId + "/" + data.Denom,
-				Display:     chainId + "/" + data.Denom,
-				Description: data.Denom + " from chain " + chainId,
+				Name:        chainID + "/" + data.Denom,
+				Display:     chainID + "/" + data.Denom,
+				Description: data.Denom + " from chain " + chainID,
 			}
 			if err = h.MarkerKeeper.SetDenomMetaData(ctx, markerMetadata, authtypes.NewModuleAddress(types.ModuleName)); err != nil {
 				return err
@@ -126,7 +125,7 @@ func (h MarkerHooks) GetChainID(ctx sdktypes.Context, packet exported.PacketI, i
 }
 
 // ResetMarkerAccessGrants removes all current access grants from marker and adds new transfer grants for transferAuths
-func ResetMarkerAccessGrants(transferAuths []sdk.AccAddress, marker markertypes.MarkerAccountI) error {
+func ResetMarkerAccessGrants(transferAuths []sdktypes.AccAddress, marker markertypes.MarkerAccountI) error {
 	for _, currentAuth := range marker.GetAccessList() {
 		if err := marker.RevokeAccess(currentAuth.GetAddress()); err != nil {
 			return err
@@ -141,14 +140,14 @@ func ResetMarkerAccessGrants(transferAuths []sdk.AccAddress, marker markertypes.
 }
 
 // ProcessMarkerMemo extracts the list of transfer auth address from marker part of packet memo
-func ProcessMarkerMemo(memo string) ([]sdk.AccAddress, markertypes.MarkerType, error) {
+func ProcessMarkerMemo(memo string) ([]sdktypes.AccAddress, markertypes.MarkerType, error) {
 	found, jsonObject := jsonStringHasKey(memo, "marker")
 	if !found {
-		return []sdk.AccAddress{}, markertypes.MarkerType_Coin, nil
+		return []sdktypes.AccAddress{}, markertypes.MarkerType_Coin, nil
 	}
 	markerPayload, ok := jsonObject["marker"].(string)
 	if !ok {
-		return []sdk.AccAddress{}, markertypes.MarkerType_Coin, nil
+		return []sdktypes.AccAddress{}, markertypes.MarkerType_Coin, nil
 	}
 	var markerMemo types.MarkerPayload
 	err := json.Unmarshal([]byte(markerPayload), &markerMemo)
@@ -156,12 +155,12 @@ func ProcessMarkerMemo(memo string) ([]sdk.AccAddress, markertypes.MarkerType, e
 		return nil, markertypes.MarkerType_Unknown, err
 	}
 	if markerMemo.TransferAuth == nil {
-		return []sdk.AccAddress{}, markertypes.MarkerType_Coin, nil
+		return []sdktypes.AccAddress{}, markertypes.MarkerType_Coin, nil
 	}
 
-	transferAuths := make([]sdk.AccAddress, len(markerMemo.TransferAuth))
+	transferAuths := make([]sdktypes.AccAddress, len(markerMemo.TransferAuth))
 	for i, addr := range markerMemo.TransferAuth {
-		accAddr, err := sdk.AccAddressFromBech32(addr)
+		accAddr, err := sdktypes.AccAddressFromBech32(addr)
 		if err != nil {
 			return nil, markertypes.MarkerType_Unknown, err
 		}
