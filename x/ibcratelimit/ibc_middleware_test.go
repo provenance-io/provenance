@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"golang.org/x/exp/slices"
 
@@ -34,7 +33,7 @@ import (
 type MiddlewareTestSuite struct {
 	suite.Suite
 
-	App *simapp.App
+	*app.App
 	Ctx sdk.Context
 
 	coordinator *ibctesting.Coordinator
@@ -149,7 +148,7 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount osmomath.
 }
 
 func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.Keeper) osmomath.Int {
-	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
+	return bankKeeper.GetSupply(ctx, denom).Amount
 
 	// ToDo: The commented-out code bellow is what we want to happen, but we're temporarily
 	//  using the whole supply for efficiency until there's a solution for
@@ -302,7 +301,7 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 
 func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed sdk.Int) {
 	provenanceApp := suite.chainA.GetProvenanceApp()
-	supply := provenanceApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	supply := provenanceApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 
 	// Move some funds from chainA to chainB so that there is something in escrow
 	// Each user has 10% of the supply, so we send most of the funds from one user to chainA
@@ -502,7 +501,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	// ToDo: This is what we eventually want here, but using the full supply temporarily for performance reasons. See CalculateChannelValue
 	// escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
 	// escrowed := provenanceApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
-	escrowed := provenanceApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	escrowed := provenanceApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	quota := escrowed.Amount.QuoRaw(100) // 1% of the escrowed amount
 
 	// Use the whole quota
@@ -593,4 +592,19 @@ func ExtractAttributes(event sdk.Event) map[string]string {
 		attrs[string(a.Key)] = string(a.Value)
 	}
 	return attrs
+}
+
+func (suite *MiddlewareTestSuite) GetAllTotalEscrowed(ctx sdk.Context) sdk.Coins {
+	var totalEscrowed sdk.Coins
+
+	portID := suite.App.TransferKeeper.GetPort(ctx)
+	transferChannels := suite.App.IBCKeeper.ChannelKeeper.GetAllChannelsWithPortPrefix(ctx, portID)
+	for _, channel := range transferChannels {
+		escrowAddress := transfertypes.GetEscrowAddress(portID, channel.ChannelId)
+		escrowBalances := suite.App.BankKeeper.GetAllBalances(ctx, escrowAddress)
+
+		totalEscrowed = totalEscrowed.Add(escrowBalances...)
+	}
+
+	return totalEscrowed
 }
