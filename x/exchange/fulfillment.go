@@ -523,7 +523,7 @@ func Fulfill(of1, of2 *OrderFulfillment) error {
 	order1Type := of1.Order.GetOrderType()
 	order2Type := of2.Order.GetOrderType()
 	if order1Type == order2Type {
-		return fmt.Errorf("cannot fulfill %s order %d with %s order %d",
+		return fmt.Errorf("cannot fulfill %s order %d with %s order %d: order type mismatch",
 			order1Type, of1.Order.OrderId, order2Type, of2.Order.OrderId)
 	}
 
@@ -537,9 +537,13 @@ func Fulfill(of1, of2 *OrderFulfillment) error {
 	}
 
 	askOrder, bidOrder := askOF.Order.GetAskOrder(), bidOF.Order.GetBidOrder()
+	if askOrder.Assets.Denom != bidOrder.Assets.Denom {
+		return fmt.Errorf("cannot fill bid order %d having assets %q with ask order %d having assets %q: denom mismatch",
+			bidOF.GetOrderID(), bidOrder.Assets, askOF.GetOrderID(), askOrder.Assets)
+	}
 	if askOrder.Price.Denom != bidOrder.Price.Denom {
-		return fmt.Errorf("cannot fill bid order %d having price %q with ask order %d having price %q: denom mismatch",
-			bidOF.GetOrderID(), bidOrder.Price, askOF.GetOrderID(), askOrder.Price)
+		return fmt.Errorf("cannot fill ask order %d having price %q with bid order %d having price %q: denom mismatch",
+			askOF.GetOrderID(), askOrder.Price, bidOF.GetOrderID(), bidOrder.Price)
 	}
 
 	assetsAmt, err := GetFulfillmentAssetsAmt(askOF, bidOF)
