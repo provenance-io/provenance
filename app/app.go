@@ -138,6 +138,9 @@ import (
 	ibchooks "github.com/provenance-io/provenance/x/ibchooks"
 	ibchookskeeper "github.com/provenance-io/provenance/x/ibchooks/keeper"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
+	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
+	"github.com/provenance-io/provenance/x/ibcratelimit/ibcratelimitmodule"
+	ibcratelimittypes "github.com/provenance-io/provenance/x/ibcratelimit/types"
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -327,9 +330,10 @@ type App struct {
 	ScopedICQKeeper      capabilitykeeper.ScopedKeeper
 	ScopedOracleKeeper   capabilitykeeper.ScopedKeeper
 
-	TransferStack    *ibchooks.IBCMiddleware
-	Ics20WasmHooks   *ibchooks.WasmHooks
-	HooksICS4Wrapper ibchooks.ICS4Middleware
+	TransferStack           *ibchooks.IBCMiddleware
+	Ics20WasmHooks          *ibchooks.WasmHooks
+	HooksICS4Wrapper        ibchooks.ICS4Middleware
+	RateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper
 
 	// the module manager
 	mm *module.Manager
@@ -514,12 +518,22 @@ func New(
 		app.Ics20WasmHooks,
 	)
 
+	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
+		app.HooksICS4Wrapper,
+		&app.AccountKeeper,
+		// wasm keeper we set later.
+		nil,
+		app.BankKeeper.(*bankkeeper.BaseKeeper),
+		app.GetSubspace(ibcratelimittypes.ModuleName),
+	)
+	app.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
+
 	// Create Transfer Keepers
 	transferKeeper := ibctransferkeeper.NewKeeper(
 		appCodec,
 		keys[ibctransfertypes.StoreKey],
 		app.GetSubspace(ibctransfertypes.ModuleName),
-		app.HooksICS4Wrapper,
+		app.RateLimitingICS4Wrapper,
 		app.IBCKeeper.ChannelKeeper,
 		&app.IBCKeeper.PortKeeper,
 		app.AccountKeeper,
@@ -528,7 +542,8 @@ func New(
 	)
 	app.TransferKeeper = &transferKeeper
 	transferModule := ibctransfer.NewIBCModule(*app.TransferKeeper)
-	hooksTransferModule := ibchooks.NewIBCMiddleware(transferModule, &app.HooksICS4Wrapper)
+	rateLimitingTransferModule := ibcratelimit.NewIBCModule(transferModule, app.RateLimitingICS4Wrapper)
+	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &app.HooksICS4Wrapper)
 	app.TransferStack = &hooksTransferModule
 
 	app.NameKeeper = namekeeper.NewKeeper(
@@ -641,6 +656,7 @@ func New(
 	app.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
 	app.Ics20WasmHooks.ContractKeeper = app.WasmKeeper // app.ContractKeeper -- this changes in the next version of wasm to a permissioned keeper
 	app.IBCHooksKeeper.ContractKeeper = app.ContractKeeper
+	app.RateLimitingICS4Wrapper.ContractKeeper = app.ContractKeeper
 
 	app.ScopedOracleKeeper = scopedOracleKeeper
 	app.OracleKeeper = *oraclekeeper.NewKeeper(
@@ -744,6 +760,7 @@ func New(
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
+		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
 		icqModule,
@@ -955,6 +972,7 @@ func New(
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
+		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
 		icaModule,

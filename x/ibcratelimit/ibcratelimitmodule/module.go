@@ -14,8 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -88,17 +86,13 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-	ics4wrapper   ibcratelimit.ICS4Wrapper
-	accountKeeper authkeeper.AccountKeeper
-	bankKeeper    bankkeeper.Keeper
+	ics4wrapper ibcratelimit.ICS4Wrapper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, ics4wrapper ibcratelimit.ICS4Wrapper) AppModule {
+func NewAppModule(ics4wrapper ibcratelimit.ICS4Wrapper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
-		accountKeeper:  accountKeeper,
-		bankKeeper:     bankKeeper,
 		ics4wrapper:    ics4wrapper,
 	}
 }
