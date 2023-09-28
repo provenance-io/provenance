@@ -95,9 +95,6 @@ func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.Pac
 			h.MarkerKeeper.SetMarker(ctx, marker)
 		}
 	}
-
-	// TODO: add metadata for marker
-
 	return nil
 }
 
