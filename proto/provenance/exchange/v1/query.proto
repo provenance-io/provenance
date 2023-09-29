@@ -112,6 +112,7 @@ message QueryGetOrderResponse {
 message QueryGetMarketOrdersRequest {
   // market_id is the id of the market to get all the orders for.
   uint32 market_id = 1;
+  // TODO[1658]: Add an order_type field to QueryGetMarketOrdersRequest
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
@@ -130,6 +131,7 @@ message QueryGetMarketOrdersResponse {
 message QueryGetOwnerOrdersRequest {
   // owner is the bech32 address string of the owner to get the orders for.
   string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // TODO[1658]: Add an order_type field to QueryGetOwnerOrdersRequest
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
@@ -148,6 +150,8 @@ message QueryGetOwnerOrdersResponse {
 message QueryGetAssetOrdersRequest {
   // asset is the denom of assets to get orders for.
   string asset = 1;
+  // order_type is optional and can limit orders to only "ask" or "bid" orders.
+  string order_type = 2;
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;

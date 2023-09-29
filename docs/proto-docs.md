@@ -1931,6 +1931,7 @@ QueryGetAssetOrdersRequest is a request message for the QueryGetAssetOrders endp
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `asset` | [string](#string) |  | asset is the denom of assets to get orders for. |
+| `order_type` | [string](#string) |  | order_type is optional and can limit orders to only "ask" or "bid" orders. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
@@ -1962,7 +1963,9 @@ QueryGetMarketOrdersRequest is a request message for the QueryGetMarketOrders en
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `market_id` | [uint32](#uint32) |  | market_id is the id of the market to get all the orders for. |
+| `market_id` | [uint32](#uint32) |  | market_id is the id of the market to get all the orders for.
+
+TODO[1658]: Add an order_type field to QueryGetMarketOrdersRequest |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
@@ -2024,7 +2027,9 @@ QueryGetOwnerOrdersRequest is a request message for the QueryGetOwnerOrders endp
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `owner` | [string](#string) |  | owner is the bech32 address string of the owner to get the orders for. |
+| `owner` | [string](#string) |  | owner is the bech32 address string of the owner to get the orders for.
+
+TODO[1658]: Add an order_type field to QueryGetOwnerOrdersRequest |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
