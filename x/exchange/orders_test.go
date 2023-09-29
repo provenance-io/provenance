@@ -276,6 +276,173 @@ func TestValidateOrderIDs(t *testing.T) {
 	}
 }
 
+func TestOrderSizes(t *testing.T) {
+	// This unit test is mostly just to see the sizes of different orders and compare
+	// that to the initial array size used in getOrderStoreKeyValue.
+	expectedLength := 199 // = the 200 set in getOrderStoreKeyValue minus one for the order type byte.
+
+	denomChars := "abcd"
+	bigCoins := make(sdk.Coins, len(denomChars))
+	for i := range bigCoins {
+		str := fmt.Sprintf("%[1]d00000000000000000000000000000%[1]d", i) // i quetta + i
+		amount, ok := sdkmath.NewIntFromString(str)
+		require.Truef(t, ok, "sdkmath.NewIntFromString(%q)", str)
+		denom := strings.Repeat(denomChars[i:i+1], 128)
+		bigCoins[i] = sdk.NewCoin(denom, amount)
+	}
+	coinP := func(denom string, amount int64) *sdk.Coin {
+		rv := sdk.NewInt64Coin(denom, amount)
+		return &rv
+	}
+
+	tests := []struct {
+		name       string
+		order      *Order
+		expTooLong bool
+	}{
+		{
+			name: "ask, normal",
+			order: NewOrder(1).WithAsk(&AskOrder{
+				MarketId:                1,
+				Seller:                  sdk.AccAddress("seller______________").String(),
+				Assets:                  sdk.NewInt64Coin("pm.sale.pool.sxyvff21dz5rrpamteeiin", 1),
+				Price:                   sdk.NewInt64Coin("usd", 1_000_000),
+				SellerSettlementFlatFee: coinP("nhash", 1_000_000_000_000),
+				AllowPartial:            true,
+			}),
+			expTooLong: false,
+		},
+		{
+			name: "ask, max market id",
+			order: NewOrder(1).WithAsk(&AskOrder{
+				MarketId:                4_294_967_295,
+				Seller:                  sdk.AccAddress("seller______________").String(),
+				Assets:                  sdk.NewInt64Coin("pm.sale.pool.sxyvff21dz5rrpamteeiin", 1),
+				Price:                   sdk.NewInt64Coin("usd", 1_000_000),
+				SellerSettlementFlatFee: coinP("nhash", 1_000_000_000_000),
+				AllowPartial:            true,
+			}),
+			expTooLong: false,
+		},
+		{
+			name: "ask, 32 byte addr",
+			order: NewOrder(1).WithAsk(&AskOrder{
+				MarketId:                1,
+				Seller:                  sdk.AccAddress("seller__________________________").String(),
+				Assets:                  sdk.NewInt64Coin("pm.sale.pool.sxyvff21dz5rrpamteeiin", 1),
+				Price:                   sdk.NewInt64Coin("usd", 1_000_000),
+				SellerSettlementFlatFee: coinP("nhash", 1_000_000_000_000),
+				AllowPartial:            true,
+			}),
+			expTooLong: false,
+		},
+		{
+			name: "ask, big",
+			order: NewOrder(1).WithAsk(&AskOrder{
+				MarketId:                4_294_967_295,
+				Seller:                  sdk.AccAddress("seller__________________________").String(),
+				Assets:                  bigCoins[0],
+				Price:                   bigCoins[1],
+				SellerSettlementFlatFee: &bigCoins[2],
+				AllowPartial:            true,
+			}),
+			expTooLong: true,
+		},
+		{
+			name: "bid, normal",
+			order: NewOrder(1).WithBid(&BidOrder{
+				MarketId:            1,
+				Buyer:               sdk.AccAddress("buyer_______________").String(),
+				Assets:              sdk.NewInt64Coin("pm.sale.pool.sxyvff21dz5rrpamteeiin", 1),
+				Price:               sdk.NewInt64Coin("usd", 1_000_000),
+				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("nhash", 1_000_000_000_000)),
+				AllowPartial:        true,
+			}),
+			expTooLong: false,
+		},
+		{
+			name: "bid, max market id",
+			order: NewOrder(1).WithBid(&BidOrder{
+				MarketId:            4_294_967_295,
+				Buyer:               sdk.AccAddress("buyer_______________").String(),
+				Assets:              sdk.NewInt64Coin("pm.sale.pool.sxyvff21dz5rrpamteeiin", 1),
+				Price:               sdk.NewInt64Coin("usd", 1_000_000),
+				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("nhash", 1_000_000_000_000)),
+				AllowPartial:        true,
+			}),
+			expTooLong: false,
+		},
+		{
+			name: "bid, 32 byte addr",
+			order: NewOrder(1).WithBid(&BidOrder{
+				MarketId:            1,
+				Buyer:               sdk.AccAddress("buyer___________________________").String(),
+				Assets:              sdk.NewInt64Coin("pm.sale.pool.sxyvff21dz5rrpamteeiin", 1),
+				Price:               sdk.NewInt64Coin("usd", 1_000_000),
+				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("nhash", 1_000_000_000_000)),
+				AllowPartial:        true,
+			}),
+			expTooLong: false,
+		},
+		{
+			name: "bid, big",
+			order: NewOrder(1).WithBid(&BidOrder{
+				MarketId:            4_294_967_295,
+				Buyer:               sdk.AccAddress("buyer___________________________").String(),
+				Assets:              bigCoins[0],
+				Price:               bigCoins[1],
+				BuyerSettlementFees: bigCoins[2:],
+				AllowPartial:        true,
+			}),
+			expTooLong: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var data []byte
+			var err error
+			switch {
+			case tc.order.IsAskOrder():
+				askOrder := tc.order.GetAskOrder()
+				fields := []string{
+					fmt.Sprintf("MarketID:     %d", askOrder.MarketId),
+					fmt.Sprintf("Seller:       %q", askOrder.Seller),
+					fmt.Sprintf("Assets:       %q", askOrder.Assets),
+					fmt.Sprintf("Price:        %q", askOrder.Price),
+					fmt.Sprintf("AllowPartial: %t", askOrder.AllowPartial),
+					fmt.Sprintf("SellerSettlementFlatFee: %s", coinPString(askOrder.SellerSettlementFlatFee)),
+				}
+				t.Logf("AskOrder:\n%s\n", strings.Join(fields, "\n"))
+				data, err = askOrder.Marshal()
+			case tc.order.IsBidOrder():
+				bidOrder := tc.order.GetBidOrder()
+				fields := []string{
+					fmt.Sprintf("MarketID:     %d", bidOrder.MarketId),
+					fmt.Sprintf("Buyer:        %q", bidOrder.Buyer),
+					fmt.Sprintf("Assets:       %q", bidOrder.Assets),
+					fmt.Sprintf("Price:        %q", bidOrder.Price),
+					fmt.Sprintf("AllowPartial: %t", bidOrder.AllowPartial),
+					fmt.Sprintf("BuyerSettlementFees: %s", coinsString(bidOrder.BuyerSettlementFees)),
+				}
+				t.Logf("BidOrder:\n%s\n", strings.Join(fields, "\n"))
+				data, err = bidOrder.Marshal()
+			default:
+				t.Fatalf("unknown order type %T", tc.order.GetOrder())
+			}
+			require.NoError(t, err, "%s.Marshal()", tc.order.GetOrderType())
+
+			length := len(data)
+			t.Logf("Data Length: %d", length)
+			if tc.expTooLong {
+				assert.Greater(t, length, expectedLength, "%s.Marshal() length", tc.order.GetOrderType())
+			} else {
+				assert.LessOrEqual(t, len(data), expectedLength, "%s.Marshal() length", tc.order.GetOrderType())
+			}
+		})
+	}
+}
+
 func TestNewOrder(t *testing.T) {
 	tests := []struct {
 		name    string

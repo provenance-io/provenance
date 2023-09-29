@@ -13,7 +13,9 @@ import (
 // getOrderStoreKeyValue creates the store key and value representing the provided order.
 func (k Keeper) getOrderStoreKeyValue(order exchange.Order) ([]byte, []byte, error) {
 	// 200 chosen to hopefully be more than what's needed for 99% of orders.
-	// TODO[1658]: Marshal some ask and bid orders to get their actual sizes and make sure 200 is okay.
+	// The largest one I could make was 753 bytes for a bid order with all coins having 128
+	// character denoms and 31 digits in the amounts, a 32 byte address, and max market id.
+	// But the more realistic ones were 130 to 160, so 200 seems like a nice size to start with.
 	key := MakeKeyOrder(order.OrderId)
 	value := make([]byte, 1, 200)
 	value[0] = order.GetOrderTypeByte()
