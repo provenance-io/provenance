@@ -19,11 +19,6 @@ service Query {
     option (google.api.http).get = "/provenance/exchange/v1/fees/order";
   }
 
-  // QuerySettlementFeeCalc calculates the fees that will be associated with the provided settlement.
-  rpc QuerySettlementFeeCalc(QuerySettlementFeeCalcRequest) returns (QuerySettlementFeeCalcResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/fees/settlement";
-  }
-
   // QueryGetOrder looks up an order by id.
   rpc QueryGetOrder(QueryGetOrderRequest) returns (QueryGetOrderResponse) {
     option (google.api.http).get = "/provenance/exchange/v1/order/{order_id}";
@@ -93,15 +88,6 @@ message QueryOrderFeeCalcResponse {
   // If the provided order was an ask order, these are purely informational and represent how much will be removed
   // from your price if it settles at that price. If it settles for more, the actual amount will probably be larger.
   repeated cosmos.base.v1beta1.Coin settlement_ratio_fee_options = 3 [(gogoproto.nullable) = false];
-}
-
-// QuerySettlementFeeCalcRequest is a request message for the QuerySettlementFeeCalc endpoint.
-message QuerySettlementFeeCalcRequest {
-  // TODO[1658]: QuerySettlementFeeCalcRequest
-}
-// QuerySettlementFeeCalcResponse is a response message for the QuerySettlementFeeCalc endpoint.
-message QuerySettlementFeeCalcResponse {
-  // TODO[1658]: QuerySettlementFeeCalcResponse
 }
 
 // QueryGetOrderRequest is a request message for the QueryGetOrder endpoint.

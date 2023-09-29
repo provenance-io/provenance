@@ -105,8 +105,6 @@
     - [QueryOrderFeeCalcResponse](#provenance.exchange.v1.QueryOrderFeeCalcResponse)
     - [QueryParamsRequest](#provenance.exchange.v1.QueryParamsRequest)
     - [QueryParamsResponse](#provenance.exchange.v1.QueryParamsResponse)
-    - [QuerySettlementFeeCalcRequest](#provenance.exchange.v1.QuerySettlementFeeCalcRequest)
-    - [QuerySettlementFeeCalcResponse](#provenance.exchange.v1.QuerySettlementFeeCalcResponse)
     - [QueryValidateCreateMarketRequest](#provenance.exchange.v1.QueryValidateCreateMarketRequest)
     - [QueryValidateCreateMarketResponse](#provenance.exchange.v1.QueryValidateCreateMarketResponse)
     - [QueryValidateManageFeesRequest](#provenance.exchange.v1.QueryValidateManageFeesRequest)
@@ -2069,26 +2067,6 @@ QueryParamsResponse is a response message for the QueryParams endpoint.
 
 
 
-<a name="provenance.exchange.v1.QuerySettlementFeeCalcRequest"></a>
-
-### QuerySettlementFeeCalcRequest
-QuerySettlementFeeCalcRequest is a request message for the QuerySettlementFeeCalc endpoint.
-
-
-
-
-
-
-<a name="provenance.exchange.v1.QuerySettlementFeeCalcResponse"></a>
-
-### QuerySettlementFeeCalcResponse
-QuerySettlementFeeCalcResponse is a response message for the QuerySettlementFeeCalc endpoint.
-
-
-
-
-
-
 <a name="provenance.exchange.v1.QueryValidateCreateMarketRequest"></a>
 
 ### QueryValidateCreateMarketRequest
@@ -2148,7 +2126,6 @@ Query is the service for exchange module's query endpoints.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `QueryOrderFeeCalc` | [QueryOrderFeeCalcRequest](#provenance.exchange.v1.QueryOrderFeeCalcRequest) | [QueryOrderFeeCalcResponse](#provenance.exchange.v1.QueryOrderFeeCalcResponse) | QueryOrderFeeCalc calculates the fees that will be associated with the provided order. | GET|/provenance/exchange/v1/fees/order|
-| `QuerySettlementFeeCalc` | [QuerySettlementFeeCalcRequest](#provenance.exchange.v1.QuerySettlementFeeCalcRequest) | [QuerySettlementFeeCalcResponse](#provenance.exchange.v1.QuerySettlementFeeCalcResponse) | QuerySettlementFeeCalc calculates the fees that will be associated with the provided settlement. | GET|/provenance/exchange/v1/fees/settlement|
 | `QueryGetOrder` | [QueryGetOrderRequest](#provenance.exchange.v1.QueryGetOrderRequest) | [QueryGetOrderResponse](#provenance.exchange.v1.QueryGetOrderResponse) | QueryGetOrder looks up an order by id. | GET|/provenance/exchange/v1/order/{order_id}|
 | `QueryGetMarketOrders` | [QueryGetMarketOrdersRequest](#provenance.exchange.v1.QueryGetMarketOrdersRequest) | [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse) | QueryGetMarketOrders looks up the orders in a market. | GET|/provenance/exchange/v1/market/{market_id}/orders|
 | `QueryGetAddressOrders` | [QueryGetAddressOrdersRequest](#provenance.exchange.v1.QueryGetAddressOrdersRequest) | [QueryGetAddressOrdersResponse](#provenance.exchange.v1.QueryGetAddressOrdersResponse) | QueryGetAddressOrders looks up the orders from the provided address. | GET|/provenance/exchange/v1/orders/{address}|

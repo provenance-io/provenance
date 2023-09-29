@@ -67,12 +67,6 @@ func (k QueryServer) QueryOrderFeeCalc(goCtx context.Context, req *exchange.Quer
 	return resp, nil
 }
 
-// QuerySettlementFeeCalc calculates the fees that will be associated with the provided settlement.
-func (k QueryServer) QuerySettlementFeeCalc(goCtx context.Context, req *exchange.QuerySettlementFeeCalcRequest) (*exchange.QuerySettlementFeeCalcResponse, error) {
-	// TODO[1658]: Implement QuerySettlementFeeCalc query
-	panic("not implemented")
-}
-
 // QueryGetOrder looks up an order by id.
 func (k QueryServer) QueryGetOrder(goCtx context.Context, req *exchange.QueryGetOrderRequest) (*exchange.QueryGetOrderResponse, error) {
 	// TODO[1658]: Implement QueryGetOrder query
