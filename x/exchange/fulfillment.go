@@ -469,7 +469,7 @@ func (f OrderFulfillment) Validate() error {
 	case f.IsAskOrder():
 		// For ask orders, the applied amount needs to be at least the filled amount.
 		if f.PriceAppliedAmt.LT(f.PriceFilledAmt) {
-			return fmt.Errorf("%s order %d having assets %q and price %q cannot be filled by %q at price %q: unsufficient price",
+			return fmt.Errorf("%s order %d having assets %q and price %q cannot be filled by %q at price %q: insufficient price",
 				f.GetOrderType(), f.GetOrderID(), orderAssets, orderPrice, f.GetAssetsFilled(), f.GetPriceApplied())
 		}
 
@@ -650,10 +650,18 @@ func NewPartialFulfillment(f *OrderFulfillment) *PartialFulfillment {
 func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) (*Fulfillments, error) {
 	askOFs := make([]*OrderFulfillment, len(askOrders))
 	for i, askOrder := range askOrders {
+		if !askOrder.IsAskOrder() {
+			return nil, fmt.Errorf("%s order %d is not an ask order but is in the askOrders list",
+				askOrder.GetOrderType(), askOrder.GetOrderID())
+		}
 		askOFs[i] = NewOrderFulfillment(askOrder)
 	}
 	bidOFs := make([]*OrderFulfillment, len(bidOrders))
 	for i, bidOrder := range bidOrders {
+		if !bidOrder.IsBidOrder() {
+			return nil, fmt.Errorf("%s order %d is not a bid order but is in the bidOrders list",
+				bidOrder.GetOrderType(), bidOrder.GetOrderID())
+		}
 		bidOFs[i] = NewOrderFulfillment(bidOrder)
 	}
 
@@ -666,8 +674,8 @@ func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) 
 		askFilled := askOFs[a].IsFullyFilled()
 		bidFilled := bidOFs[b].IsFullyFilled()
 		if !askFilled && !bidFilled {
-			return nil, fmt.Errorf("neither ask order %d nor bid order %d could be filled in full",
-				askOFs[a].GetOrderID(), bidOFs[b].GetOrderID())
+			return nil, fmt.Errorf("neither %s order %d nor %s order %d could be filled in full",
+				askOFs[a].GetOrderType(), askOFs[a].GetOrderID(), bidOFs[b].GetOrderType(), bidOFs[b].GetOrderID())
 		}
 		if askFilled {
 			a++
@@ -708,8 +716,8 @@ func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) 
 	for i, askOF := range askOFs {
 		if !askOF.IsFullyFilled() {
 			if i != lastAskI {
-				return nil, fmt.Errorf("ask order %d (at index %d) is not filled in full and is not the last ask order provided",
-					askOF.GetOrderID(), i)
+				return nil, fmt.Errorf("%s order %d (at index %d) is not filled in full and is not the last ask order provided",
+					askOF.GetOrderType(), askOF.GetOrderID(), i)
 			}
 			partialFulfillments = append(partialFulfillments, askOF)
 		}
@@ -717,8 +725,8 @@ func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) 
 	for i, bidOF := range bidOFs {
 		if !bidOF.IsFullyFilled() {
 			if i != lastBidI {
-				return nil, fmt.Errorf("bid order %d (at index %d) is not filled in full and is not the last bid order provided",
-					bidOF.GetOrderID(), i)
+				return nil, fmt.Errorf("%s order %d (at index %d) is not filled in full and is not the last bid order provided",
+					bidOF.GetOrderType(), bidOF.GetOrderID(), i)
 			}
 			partialFulfillments = append(partialFulfillments, bidOF)
 		}
