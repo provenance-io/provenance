@@ -344,35 +344,35 @@ func TestMakeKeyKnownMarketID(t *testing.T) {
 
 func TestParseKeySuffixKnownMarketID(t *testing.T) {
 	tests := []struct {
-		name     string
-		suffix   []byte
-		exp      uint32
-		expPanic string
+		name    string
+		suffix  []byte
+		exp     uint32
+		expFail bool
 	}{
 		{
-			name:     "nil suffix",
-			suffix:   nil,
-			expPanic: "runtime error: index out of range [3] with length 0",
+			name:    "nil suffix",
+			suffix:  nil,
+			expFail: true,
 		},
 		{
-			name:     "empty suffix",
-			suffix:   []byte{},
-			expPanic: "runtime error: index out of range [3] with length 0",
+			name:    "empty suffix",
+			suffix:  []byte{},
+			expFail: true,
 		},
 		{
-			name:     "1 byte suffix",
-			suffix:   []byte{1},
-			expPanic: "runtime error: index out of range [3] with length 1",
+			name:    "1 byte suffix",
+			suffix:  []byte{1},
+			expFail: true,
 		},
 		{
-			name:     "2 byte suffix",
-			suffix:   []byte{1, 2},
-			expPanic: "runtime error: index out of range [3] with length 2",
+			name:    "2 byte suffix",
+			suffix:  []byte{1, 2},
+			expFail: true,
 		},
 		{
-			name:     "3 byte suffix",
-			suffix:   []byte{1, 2, 3},
-			expPanic: "runtime error: index out of range [3] with length 3",
+			name:    "3 byte suffix",
+			suffix:  []byte{1, 2, 3},
+			expFail: true,
 		},
 		{
 			name:   "market id 16,909,060 but with extra byte",
@@ -424,10 +424,12 @@ func TestParseKeySuffixKnownMarketID(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var marketID uint32
+			var ok bool
 			testFunc := func() {
-				marketID = keeper.ParseKeySuffixKnownMarketID(tc.suffix)
+				marketID, ok = keeper.ParseKeySuffixKnownMarketID(tc.suffix)
 			}
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "ParseKeySuffixKnownMarketID")
+			require.NotPanics(t, testFunc, "ParseKeySuffixKnownMarketID")
+			assert.Equal(t, !tc.expFail, ok, "ParseKeySuffixKnownMarketID ok bool")
 			assert.Equal(t, tc.exp, marketID, "ParseKeySuffixKnownMarketID result")
 		})
 	}
@@ -2816,132 +2818,6 @@ func TestMakeKeyOrder(t *testing.T) {
 				expPrefixes: []expectedPrefix{{name: "", value: keeper.GetKeyPrefixOrder()}},
 			}
 			checkKey(t, ktc, "MakeKeyOrder(%d)", tc.orderID)
-		})
-	}
-}
-
-func TestParseKeySuffixOrder(t *testing.T) {
-	tests := []struct {
-		name     string
-		suffix   []byte
-		exp      uint64
-		expPanic string
-	}{
-		{
-			name:     "nil suffix",
-			suffix:   nil,
-			expPanic: "runtime error: index out of range [7] with length 0",
-		},
-		{
-			name:     "empty suffix",
-			suffix:   []byte{},
-			expPanic: "runtime error: index out of range [7] with length 0",
-		},
-		{
-			name:     "1 byte suffix",
-			suffix:   []byte{1},
-			expPanic: "runtime error: index out of range [7] with length 1",
-		},
-		{
-			name:     "2 byte suffix",
-			suffix:   []byte{1, 2},
-			expPanic: "runtime error: index out of range [7] with length 2",
-		},
-		{
-			name:     "3 byte suffix",
-			suffix:   []byte{1, 2, 3},
-			expPanic: "runtime error: index out of range [7] with length 3",
-		},
-		{
-			name:     "4 byte suffix",
-			suffix:   []byte{1, 2, 3, 4},
-			expPanic: "runtime error: index out of range [7] with length 4",
-		},
-		{
-			name:     "5 byte suffix",
-			suffix:   []byte{1, 2, 3, 4, 5},
-			expPanic: "runtime error: index out of range [7] with length 5",
-		},
-		{
-			name:     "6 byte suffix",
-			suffix:   []byte{1, 2, 3, 4, 5, 6},
-			expPanic: "runtime error: index out of range [7] with length 6",
-		},
-		{
-			name:     "7 byte suffix",
-			suffix:   []byte{1, 2, 3, 4, 5, 6, 7},
-			expPanic: "runtime error: index out of range [7] with length 7",
-		},
-		{
-			name:   "order id 72,623,859,790,382,856 with an extra byte",
-			suffix: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
-			exp:    72_623_859_790_382_856,
-		},
-		{
-			name:   "order id 72,623,859,790,382,856",
-			suffix: []byte{1, 2, 3, 4, 5, 6, 7, 8},
-			exp:    72_623_859_790_382_856,
-		},
-		{
-			name:   "order id 1",
-			suffix: []byte{0, 0, 0, 0, 0, 0, 0, 1},
-			exp:    1,
-		},
-		{
-			name:   "order id 256",
-			suffix: []byte{0, 0, 0, 0, 0, 0, 1, 0},
-			exp:    256,
-		},
-		{
-			name:   "order id 65,536",
-			suffix: []byte{0, 0, 0, 0, 0, 1, 0, 0},
-			exp:    65_536,
-		},
-		{
-			name:   "order id 16,777,216",
-			suffix: []byte{0, 0, 0, 0, 1, 0, 0, 0},
-			exp:    16_777_216,
-		},
-		{
-			name:   "order id 4,294,967,296",
-			suffix: []byte{0, 0, 0, 1, 0, 0, 0, 0},
-			exp:    4_294_967_296,
-		},
-		{
-			name:   "order id 1,099,511,627,776",
-			suffix: []byte{0, 0, 1, 0, 0, 0, 0, 0},
-			exp:    1_099_511_627_776,
-		},
-		{
-			name:   "order id 281,474,976,710,656",
-			suffix: []byte{0, 1, 0, 0, 0, 0, 0, 0},
-			exp:    281_474_976_710_656,
-		},
-		{
-			name:   "order id 72,057,594,037,927,936",
-			suffix: []byte{1, 0, 0, 0, 0, 0, 0, 0},
-			exp:    72_057_594_037_927_936,
-		},
-		{
-			name:   "order id 144,680,345,676,153,346",
-			suffix: []byte{2, 2, 2, 2, 2, 2, 2, 2},
-			exp:    144_680_345_676_153_346,
-		},
-		{
-			name:   "order id max uint64",
-			suffix: []byte{255, 255, 255, 255, 255, 255, 255, 255},
-			exp:    18_446_744_073_709_551_615,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var orderID uint64
-			testFunc := func() {
-				orderID = keeper.ParseKeySuffixOrder(tc.suffix)
-			}
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "ParseKeySuffixOrder(%v)", tc.suffix)
-			assert.Equal(t, tc.exp, orderID, "ParseKeySuffixOrder(%v) result", tc.suffix)
 		})
 	}
 }

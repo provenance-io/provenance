@@ -851,7 +851,8 @@ func setReqAttrBid(store sdk.KVStore, marketID uint32, reqAttrs []string) {
 func getLastAutoMarketID(store sdk.KVStore) uint32 {
 	key := MakeKeyLastMarketID()
 	value := store.Get(key)
-	return uint32FromBz(value)
+	rv, _ := uint32FromBz(value)
+	return rv
 }
 
 // setLastAutoMarketID sets the last auto-selected market id to the provided value.
@@ -895,7 +896,10 @@ func validateMarketExists(store sdk.KVStore, marketID uint32) error {
 func (k Keeper) GetAllMarketIDs(ctx sdk.Context) []uint32 {
 	var rv []uint32
 	k.iterate(ctx, GetKeyPrefixKnownMarketID(), func(key, _ []byte) bool {
-		rv = append(rv, ParseKeySuffixKnownMarketID(key))
+		marketID, ok := ParseKeySuffixKnownMarketID(key)
+		if ok {
+			rv = append(rv, marketID)
+		}
 		return false
 	})
 	return rv
@@ -905,7 +909,10 @@ func (k Keeper) GetAllMarketIDs(ctx sdk.Context) []uint32 {
 // The callback should return whether to stop, i.e. true = stop iterating, false = keep going.
 func (k Keeper) IterateMarkets(ctx sdk.Context, cb func(market *exchange.Market) bool) {
 	k.iterate(ctx, GetKeyPrefixKnownMarketID(), func(key, _ []byte) bool {
-		marketID := ParseKeySuffixKnownMarketID(key)
+		marketID, ok := ParseKeySuffixKnownMarketID(key)
+		if !ok {
+			return false
+		}
 		market := k.GetMarket(ctx, marketID)
 		if market == nil {
 			return false

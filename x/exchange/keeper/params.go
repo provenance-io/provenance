@@ -26,7 +26,7 @@ func getParamsSplit(store sdk.KVStore, denom string) (uint16, bool) {
 	key := MakeKeyParamsSplit(denom)
 	if store.Has(key) {
 		value := store.Get(key)
-		return uint16FromBz(value), true
+		return uint16FromBz(value)
 	}
 	return 0, false
 }
@@ -49,11 +49,14 @@ func (k Keeper) SetParams(ctx sdk.Context, params *exchange.Params) {
 func (k Keeper) GetParams(ctx sdk.Context) *exchange.Params {
 	var rv *exchange.Params
 	k.iterate(ctx, GetKeyPrefixParamsSplit(), func(key, value []byte) bool {
+		split, ok := uint16FromBz(value)
+		if !ok {
+			return false
+		}
 		if rv == nil {
 			rv = &exchange.Params{}
 		}
 		denom := string(key)
-		split := uint16FromBz(value)
 		if len(denom) == 0 {
 			rv.DefaultSplit = uint32(split)
 		} else {

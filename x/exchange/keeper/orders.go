@@ -79,7 +79,7 @@ func (k Keeper) parseOrderStoreKeyValue(key, value []byte) (*exchange.Order, err
 	if len(key) < 8 {
 		return nil, fmt.Errorf("invalid order store key %v: length expected to be at least 8", key)
 	}
-	orderID := uint64FromBz(key[len(key)-8:])
+	orderID, _ := uint64FromBz(key[len(key)-8:])
 	return k.parseOrderStoreValue(orderID, value)
 }
 
@@ -165,12 +165,17 @@ func (k Keeper) getNextOrderID(ctx sdk.Context) uint64 {
 	store := prefix.NewStore(k.getStore(ctx), GetKeyPrefixOrder())
 	iter := store.ReverseIterator(nil, nil)
 	defer iter.Close()
-	if iter.Valid() {
+
+	toAdd := uint64(1)
+	for ; iter.Valid(); iter.Next() {
 		orderIDBz := iter.Key()
-		orderID := uint64FromBz(orderIDBz)
-		return orderID + 1
+		orderID, ok := uint64FromBz(orderIDBz)
+		if ok {
+			return orderID + toAdd
+		}
+		toAdd++
 	}
-	return 1
+	return toAdd
 }
 
 // IterateOrders iterates over all orders. An error is returned if there was a problem

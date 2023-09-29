@@ -132,9 +132,12 @@ func uint16Bz(val uint16) []byte {
 }
 
 // uint16FromBz converts the provided bytes into a uint16.
-func uint16FromBz(bz []byte) uint16 {
-	// TODO[1658]: Check the length first and return an error here.
-	return binary.BigEndian.Uint16(bz)
+// Returned boolean indicates whether conversion was successful (true = okay).
+func uint16FromBz(bz []byte) (uint16, bool) {
+	if len(bz) >= 2 {
+		return binary.BigEndian.Uint16(bz), true
+	}
+	return 0, false
 }
 
 // uint32Bz converts the provided uint32 value to a big-endian byte slice of length 4.
@@ -145,9 +148,12 @@ func uint32Bz(val uint32) []byte {
 }
 
 // uint32FromBz converts the provided bytes into a uint32.
-func uint32FromBz(bz []byte) uint32 {
-	// TODO[1658]: Check the length first and return an error here.
-	return binary.BigEndian.Uint32(bz)
+// Returned boolean indicates whether conversion was successful (true = okay).
+func uint32FromBz(bz []byte) (uint32, bool) {
+	if len(bz) >= 4 {
+		return binary.BigEndian.Uint32(bz), true
+	}
+	return 0, false
 }
 
 // uint64Bz converts the provided uint64 value to a big-endian byte slice of length 8.
@@ -158,9 +164,11 @@ func uint64Bz(val uint64) []byte {
 }
 
 // uint64FromBz converts the provided bytes into a uint64.
-func uint64FromBz(bz []byte) uint64 {
-	// TODO[1658]: Check the length first and return an error here.
-	return binary.BigEndian.Uint64(bz)
+func uint64FromBz(bz []byte) (uint64, bool) {
+	if len(bz) >= 8 {
+		return binary.BigEndian.Uint64(bz), true
+	}
+	return 0, false
 }
 
 // parseLengthPrefixedAddr extracts the length-prefixed sdk.AccAddress from the front of the provided slice.
@@ -224,7 +232,8 @@ func MakeKeyKnownMarketID(marketID uint32) []byte {
 
 // ParseKeySuffixKnownMarketID parses the market id out of a known market id key that doesn't have the type byte.
 // Input is expected to have the format <market id bytes>.
-func ParseKeySuffixKnownMarketID(suffix []byte) uint32 {
+// Returned boolean indicates whether parsing was successful (true = okay).
+func ParseKeySuffixKnownMarketID(suffix []byte) (uint32, bool) {
 	return uint32FromBz(suffix)
 }
 
@@ -533,11 +542,6 @@ func MakeKeyOrder(orderID uint64) []byte {
 	return rv
 }
 
-// ParseKeySuffixOrder parses the order id from the <order id> bytes part of an order store key.
-func ParseKeySuffixOrder(suffix []byte) uint64 {
-	return uint64FromBz(suffix)
-}
-
 // indexPrefixMarketToOrder creates the prefix for the market to order prefix entries with some extra space for the rest.
 func indexPrefixMarketToOrder(marketID uint32, extraCap int) []byte {
 	return prepKey(KeyTypeMarketToOrderIndex, uint32Bz(marketID), extraCap)
@@ -583,9 +587,9 @@ func ParseIndexKeyMarketToOrder(key []byte) (uint32, uint64, error) {
 
 	var marketID uint32
 	if len(marketIDBz) > 0 {
-		marketID = uint32FromBz(marketIDBz)
+		marketID, _ = uint32FromBz(marketIDBz)
 	}
-	orderID := uint64FromBz(orderIDBz)
+	orderID, _ := uint64FromBz(orderIDBz)
 	return marketID, orderID, nil
 }
 
@@ -621,7 +625,7 @@ func ParseIndexKeyAddressToOrder(key []byte) (sdk.AccAddress, uint64, error) {
 		return nil, 0, fmt.Errorf("cannot parse address to order index key: only has %d bytes, expected at least 8", len(key))
 	}
 	pre, orderIDBz := key[:len(key)-8], key[len(key)-8:]
-	orderID := uint64FromBz(orderIDBz)
+	orderID, _ := uint64FromBz(orderIDBz)
 	var addr sdk.AccAddress
 	if len(pre) > 0 {
 		// Either the first byte is a length byte, or it's the key type byte.
@@ -694,7 +698,7 @@ func ParseIndexKeyAssetToOrder(key []byte) (string, byte, uint64, error) {
 	unparsed, orderIDBz := key[:len(key)-8], key[len(key)-8:]
 	var denom string
 	var typeByte byte
-	orderID := uint64FromBz(orderIDBz)
+	orderID, _ := uint64FromBz(orderIDBz)
 	if len(unparsed) > 0 {
 		typeByte = unparsed[len(unparsed)-1]
 		unparsed = unparsed[:len(unparsed)-1]
