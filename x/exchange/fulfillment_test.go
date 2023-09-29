@@ -2745,7 +2745,7 @@ func TestOrderFulfillment_Validate(t *testing.T) {
 				PriceFilledAmt:    sdkmath.NewInt(98000),
 				Splits:            []*OrderSplit{{Assets: coin(45, "apple"), Price: coin(90000, "plum")}},
 			},
-			expErr: "ask order 301 having assets \"55apple\" and price \"98789plum\" cannot be filled by \"45apple\" at price \"90000plum\": unsufficient price",
+			expErr: "ask order 301 having assets \"55apple\" and price \"98789plum\" cannot be filled by \"45apple\" at price \"90000plum\": insufficient price",
 		},
 		{
 			name: "ask order, partial, multiple fees left denoms",
@@ -4313,7 +4313,707 @@ func TestNewPartialFulfillment(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestBuildFulfillments(t *testing.T)
+func TestBuildFulfillments(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	coins := func(amount int64, denom string) sdk.Coins {
+		return sdk.Coins{coin(amount, denom)}
+	}
+
+	askOrder := func(orderID uint64, assets sdk.Coin, price sdk.Coin, allowPartial bool, fees ...sdk.Coin) *Order {
+		ao := &AskOrder{
+			Seller:       "seller",
+			Assets:       assets,
+			Price:        price,
+			AllowPartial: allowPartial,
+		}
+		if len(fees) > 1 {
+			t.Fatalf("cannot create ask order %d with more than 1 fees %q", orderID, fees)
+		}
+		if len(fees) > 0 {
+			ao.SellerSettlementFlatFee = &fees[0]
+		}
+		return NewOrder(orderID).WithAsk(ao)
+	}
+	bidOrder := func(orderID uint64, assets sdk.Coin, price sdk.Coin, allowPartial bool, fees ...sdk.Coin) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			Buyer:               "buyer",
+			Assets:              assets,
+			Price:               price,
+			AllowPartial:        allowPartial,
+			BuyerSettlementFees: fees,
+		})
+	}
+	filledOF := func(order *Order, priceAmt int64, splits []*OrderSplit, feesToPay ...sdk.Coins) *OrderFulfillment {
+		rv := &OrderFulfillment{
+			Order:             order,
+			AssetsFilledAmt:   order.GetAssets().Amount,
+			AssetsUnfilledAmt: ZeroAmtAfterSub,
+			Splits:            splits,
+			IsFinalized:       true,
+			PriceFilledAmt:    order.GetPrice().Amount,
+			PriceUnfilledAmt:  sdkmath.NewInt(0),
+		}
+		if priceAmt != 0 {
+			rv.PriceAppliedAmt = sdkmath.NewInt(priceAmt)
+		} else {
+			rv.PriceAppliedAmt = order.GetPrice().Amount
+		}
+		rv.PriceLeftAmt = rv.PriceFilledAmt.Sub(rv.PriceAppliedAmt)
+		if len(feesToPay) > 0 {
+			rv.FeesToPay = feesToPay[0]
+		}
+		return rv
+	}
+
+	tests := []struct {
+		name           string
+		askOrders      []*Order
+		bidOrders      []*Order
+		sellerFeeRatio *FeeRatio
+		expectedMaker  func(t *testing.T, askOrders, bidOrders []*Order) *Fulfillments
+		expErr         string
+	}{
+		{
+			name:           "one ask one bid, both fully filled",
+			askOrders:      []*Order{askOrder(5, coin(10, "apple"), coin(55, "prune"), false, coin(8, "fig"))},
+			bidOrders:      []*Order{bidOrder(6, coin(10, "apple"), coin(60, "prune"), false, coin(33, "fig"))},
+			sellerFeeRatio: &FeeRatio{Price: coin(5, "prune"), Fee: coin(1, "fig")},
+			expectedMaker: func(t *testing.T, askOrders, bidOrders []*Order) *Fulfillments {
+				rv := &Fulfillments{
+					AskOFs: []*OrderFulfillment{
+						filledOF(askOrders[0], 60,
+							[]*OrderSplit{{Assets: coin(10, "apple"), Price: coin(60, "prune")}}, // will be BidOFs[0].
+							coins(20, "fig"),
+						),
+					},
+					BidOFs: []*OrderFulfillment{
+						filledOF(bidOrders[0], 0,
+							[]*OrderSplit{{Assets: coin(10, "apple"), Price: coin(60, "prune")}}, // will be AskOFs[0].
+							coins(33, "fig"),
+						),
+					},
+					PartialOrder: nil,
+				}
+
+				rv.AskOFs[0].Splits[0].Order = rv.BidOFs[0]
+				rv.BidOFs[0].Splits[0].Order = rv.AskOFs[0]
+
+				return rv
+			},
+		},
+		{
+			name:           "one ask one bid, ask partially filled",
+			askOrders:      []*Order{askOrder(7, coin(15, "apple"), coin(75, "prune"), true)},
+			bidOrders:      []*Order{bidOrder(8, coin(10, "apple"), coin(60, "prune"), false)},
+			sellerFeeRatio: &FeeRatio{Price: coin(5, "prune"), Fee: coin(1, "fig")},
+			expectedMaker: func(t *testing.T, askOrders, bidOrders []*Order) *Fulfillments {
+				rv := &Fulfillments{
+					AskOFs: []*OrderFulfillment{
+						{
+							Order:             askOrders[0],
+							AssetsFilledAmt:   sdkmath.NewInt(10),
+							AssetsUnfilledAmt: sdkmath.NewInt(5),
+							PriceAppliedAmt:   sdkmath.NewInt(60),
+							PriceLeftAmt:      sdkmath.NewInt(15),
+							Splits:            []*OrderSplit{{Assets: coin(10, "apple"), Price: coin(60, "prune")}}, // will be BidOFs[0].
+							IsFinalized:       true,
+							FeesToPay:         coins(12, "fig"),
+							OrderFeesLeft:     nil,
+							PriceFilledAmt:    sdkmath.NewInt(50),
+							PriceUnfilledAmt:  sdkmath.NewInt(25),
+						},
+					},
+					BidOFs: []*OrderFulfillment{
+						filledOF(bidOrders[0], 0,
+							[]*OrderSplit{{Assets: coin(10, "apple"), Price: coin(60, "prune")}}, // will be AskOFs[0].
+						),
+					},
+					PartialOrder: &PartialFulfillment{
+						NewOrder:     askOrder(7, coin(5, "apple"), coin(25, "prune"), true),
+						AssetsFilled: coin(10, "apple"),
+						PriceFilled:  coin(50, "prune"),
+					},
+				}
+
+				rv.AskOFs[0].Splits[0].Order = rv.BidOFs[0]
+				rv.BidOFs[0].Splits[0].Order = rv.AskOFs[0]
+
+				return rv
+			},
+		},
+		{
+			name:           "one ask one bid, ask partially filled not allowed",
+			askOrders:      []*Order{askOrder(7, coin(15, "apple"), coin(75, "prune"), false)},
+			bidOrders:      []*Order{bidOrder(8, coin(10, "apple"), coin(60, "prune"), false)},
+			sellerFeeRatio: &FeeRatio{Price: coin(5, "prune"), Fee: coin(1, "fig")},
+			expErr:         "cannot fill ask order 7 having assets \"15apple\" with \"10apple\": order does not allow partial fill",
+		},
+		{
+			name:           "one ask one bid, bid partially filled",
+			askOrders:      []*Order{askOrder(9, coin(10, "apple"), coin(50, "prune"), false)},
+			bidOrders:      []*Order{bidOrder(10, coin(15, "apple"), coin(90, "prune"), true)},
+			sellerFeeRatio: &FeeRatio{Price: coin(5, "prune"), Fee: coin(1, "fig")},
+			expectedMaker: func(t *testing.T, askOrders, bidOrders []*Order) *Fulfillments {
+				rv := &Fulfillments{
+					AskOFs: []*OrderFulfillment{
+						filledOF(askOrders[0], 60,
+							[]*OrderSplit{{Assets: coin(10, "apple"), Price: coin(60, "prune")}}, // will be BidOFs[0].
+							coins(12, "fig"),
+						),
+					},
+					BidOFs: []*OrderFulfillment{
+						{
+							Order:             bidOrders[0],
+							AssetsFilledAmt:   sdkmath.NewInt(10),
+							AssetsUnfilledAmt: sdkmath.NewInt(5),
+							PriceAppliedAmt:   sdkmath.NewInt(60),
+							PriceLeftAmt:      sdkmath.NewInt(30),
+							Splits:            []*OrderSplit{{Assets: coin(10, "apple"), Price: coin(60, "prune")}}, // will be AskOFs[0].
+							IsFinalized:       true,
+							FeesToPay:         nil,
+							OrderFeesLeft:     nil,
+							PriceFilledAmt:    sdkmath.NewInt(60),
+							PriceUnfilledAmt:  sdkmath.NewInt(30),
+						},
+					},
+					PartialOrder: &PartialFulfillment{
+						NewOrder:     bidOrder(10, coin(5, "apple"), coin(30, "prune"), true),
+						AssetsFilled: coin(10, "apple"),
+						PriceFilled:  coin(60, "prune"),
+					},
+				}
+
+				rv.AskOFs[0].Splits[0].Order = rv.BidOFs[0]
+				rv.BidOFs[0].Splits[0].Order = rv.AskOFs[0]
+
+				return rv
+			},
+		},
+		{
+			name:           "one ask one bid, bid partially filled not allowed",
+			askOrders:      []*Order{askOrder(9, coin(10, "apple"), coin(50, "prune"), false)},
+			bidOrders:      []*Order{bidOrder(10, coin(15, "apple"), coin(90, "prune"), false)},
+			sellerFeeRatio: &FeeRatio{Price: coin(5, "prune"), Fee: coin(1, "fig")},
+			expErr:         "cannot fill bid order 10 having assets \"15apple\" with \"10apple\": order does not allow partial fill",
+		},
+		{
+			name:      "one ask filled by five bids",
+			askOrders: []*Order{askOrder(21, coin(12, "apple"), coin(60, "prune"), false)},
+			bidOrders: []*Order{
+				bidOrder(22, coin(1, "apple"), coin(10, "prune"), false),
+				bidOrder(22, coin(1, "apple"), coin(12, "prune"), false),
+				bidOrder(22, coin(2, "apple"), coin(1, "prune"), false),
+				bidOrder(22, coin(3, "apple"), coin(15, "prune"), false),
+				bidOrder(22, coin(5, "apple"), coin(25, "prune"), false),
+			},
+			sellerFeeRatio: &FeeRatio{Price: coin(5, "prune"), Fee: coin(1, "fig")},
+			expectedMaker: func(t *testing.T, askOrders, bidOrders []*Order) *Fulfillments {
+				rv := &Fulfillments{
+					AskOFs: []*OrderFulfillment{
+						filledOF(askOrders[0], 63,
+							[]*OrderSplit{
+								{Assets: coin(1, "apple"), Price: coin(10, "prune")}, // Will be BidOFs[0].
+								{Assets: coin(1, "apple"), Price: coin(12, "prune")}, // Will be BidOFs[1].
+								{Assets: coin(2, "apple"), Price: coin(1, "prune")},  // Will be BidOFs[2].
+								{Assets: coin(3, "apple"), Price: coin(15, "prune")}, // Will be BidOFs[3].
+								{Assets: coin(5, "apple"), Price: coin(25, "prune")}, // Will be BidOFs[4].
+							},
+							coins(13, "fig"),
+						),
+					},
+					BidOFs: []*OrderFulfillment{
+						filledOF(bidOrders[0], 0,
+							[]*OrderSplit{{Assets: coin(1, "apple"), Price: coin(10, "prune")}}, // Will be AskOFs[0].
+						),
+						filledOF(bidOrders[1], 0,
+							[]*OrderSplit{{Assets: coin(1, "apple"), Price: coin(12, "prune")}}, // Will be AskOFs[0].
+						),
+						filledOF(bidOrders[2], 0,
+							[]*OrderSplit{{Assets: coin(2, "apple"), Price: coin(1, "prune")}}, // Will be AskOFs[0].
+
+						),
+						filledOF(bidOrders[3], 0,
+							[]*OrderSplit{{Assets: coin(3, "apple"), Price: coin(15, "prune")}}, // Will be AskOFs[0].
+						),
+						filledOF(bidOrders[4], 0,
+							[]*OrderSplit{{Assets: coin(5, "apple"), Price: coin(25, "prune")}}, // Will be AskOFs[0].
+						),
+					},
+				}
+
+				rv.AskOFs[0].Splits[0].Order = rv.BidOFs[0]
+				rv.AskOFs[0].Splits[1].Order = rv.BidOFs[1]
+				rv.AskOFs[0].Splits[2].Order = rv.BidOFs[2]
+				rv.AskOFs[0].Splits[3].Order = rv.BidOFs[3]
+				rv.AskOFs[0].Splits[4].Order = rv.BidOFs[4]
+
+				rv.BidOFs[0].Splits[0].Order = rv.AskOFs[0]
+				rv.BidOFs[1].Splits[0].Order = rv.AskOFs[0]
+				rv.BidOFs[2].Splits[0].Order = rv.AskOFs[0]
+				rv.BidOFs[3].Splits[0].Order = rv.AskOFs[0]
+				rv.BidOFs[4].Splits[0].Order = rv.AskOFs[0]
+
+				return rv
+			},
+		},
+		{
+			name: "one indivisible bid filled by five asks",
+			askOrders: []*Order{
+				askOrder(31, coin(1, "apple"), coin(16, "prune"), false),
+				askOrder(33, coin(1, "apple"), coin(16, "prune"), false),
+				askOrder(35, coin(1, "apple"), coin(17, "prune"), false),
+				askOrder(37, coin(13, "apple"), coin(209, "prune"), false),
+				askOrder(39, coin(15, "apple"), coin(241, "prune"), false),
+			},
+			bidOrders:      []*Order{bidOrder(30, coin(31, "apple"), coin(500, "prune"), false)},
+			sellerFeeRatio: &FeeRatio{Price: coin(5, "prune"), Fee: coin(1, "fig")},
+			expectedMaker: func(t *testing.T, askOrders, bidOrders []*Order) *Fulfillments {
+				rv := &Fulfillments{
+					AskOFs: []*OrderFulfillment{
+						filledOF(askOrders[0], 17,
+							[]*OrderSplit{{Assets: coin(1, "apple"), Price: coin(17, "prune")}}, // Will be BidOfs[0]
+							coins(4, "fig"),
+						),
+						filledOF(askOrders[1], 0,
+							[]*OrderSplit{{Assets: coin(1, "apple"), Price: coin(16, "prune")}}, // Will be BidOfs[0]
+							coins(4, "fig"),
+						),
+						filledOF(askOrders[2], 0,
+							[]*OrderSplit{{Assets: coin(1, "apple"), Price: coin(17, "prune")}}, // Will be BidOfs[0]
+							coins(4, "fig"),
+						),
+						filledOF(askOrders[3], 0,
+							[]*OrderSplit{{Assets: coin(13, "apple"), Price: coin(209, "prune")}}, // Will be BidOfs[0]
+							coins(42, "fig"),
+						),
+						filledOF(askOrders[4], 0,
+							[]*OrderSplit{{Assets: coin(15, "apple"), Price: coin(241, "prune")}}, // Will be BidOfs[0]
+							coins(49, "fig"),
+						),
+					},
+					BidOFs: []*OrderFulfillment{
+						{
+							Order:             bidOrders[0],
+							AssetsFilledAmt:   sdkmath.NewInt(31),
+							AssetsUnfilledAmt: ZeroAmtAfterSub,
+							PriceAppliedAmt:   sdkmath.NewInt(500),
+							PriceLeftAmt:      ZeroAmtAfterSub,
+							Splits: []*OrderSplit{
+								{Assets: coin(1, "apple"), Price: coin(17, "prune")},   // Will be AskOFs[0]
+								{Assets: coin(1, "apple"), Price: coin(16, "prune")},   // Will be AskOFs[1]
+								{Assets: coin(1, "apple"), Price: coin(17, "prune")},   // Will be AskOFs[2]
+								{Assets: coin(13, "apple"), Price: coin(209, "prune")}, // Will be AskOFs[3]
+								{Assets: coin(15, "apple"), Price: coin(241, "prune")}, // Will be AskOFs[4]
+							},
+							IsFinalized:      true,
+							PriceFilledAmt:   sdkmath.NewInt(500),
+							PriceUnfilledAmt: sdkmath.NewInt(0),
+						},
+					},
+				}
+
+				rv.AskOFs[0].Splits[0].Order = rv.BidOFs[0]
+				rv.AskOFs[1].Splits[0].Order = rv.BidOFs[0]
+				rv.AskOFs[2].Splits[0].Order = rv.BidOFs[0]
+				rv.AskOFs[3].Splits[0].Order = rv.BidOFs[0]
+				rv.AskOFs[4].Splits[0].Order = rv.BidOFs[0]
+
+				rv.BidOFs[0].Splits[0].Order = rv.AskOFs[0]
+				rv.BidOFs[0].Splits[1].Order = rv.AskOFs[1]
+				rv.BidOFs[0].Splits[2].Order = rv.AskOFs[2]
+				rv.BidOFs[0].Splits[3].Order = rv.AskOFs[3]
+				rv.BidOFs[0].Splits[4].Order = rv.AskOFs[4]
+
+				return rv
+			},
+		},
+		{
+			name: "three asks three bids, each fully fills the other",
+			askOrders: []*Order{
+				askOrder(51, coin(8, "apple"), coin(55, "prune"), false, coin(18, "grape")),
+				askOrder(53, coin(12, "apple"), coin(18, "prune"), false, coin(1, "grape")),
+				askOrder(55, coin(344, "apple"), coin(12345, "prune"), false, coin(99, "grape")),
+			},
+			bidOrders: []*Order{
+				bidOrder(52, coin(8, "apple"), coin(55, "prune"), false, coin(3, "fig")),
+				bidOrder(54, coin(12, "apple"), coin(18, "prune"), false, coin(7, "fig")),
+				bidOrder(56, coin(344, "apple"), coin(12345, "prune"), false, coin(2, "fig")),
+			},
+			expectedMaker: func(t *testing.T, askOrders, bidOrders []*Order) *Fulfillments {
+				rv := &Fulfillments{
+					AskOFs: []*OrderFulfillment{
+						filledOF(askOrders[0], 0,
+							[]*OrderSplit{{Assets: coin(8, "apple"), Price: coin(55, "prune")}}, // Will be BidOFs[0]
+							coins(18, "grape"),
+						),
+						filledOF(askOrders[1], 0,
+							[]*OrderSplit{{Assets: coin(12, "apple"), Price: coin(18, "prune")}}, // Will be BidOFs[1]
+							coins(1, "grape"),
+						),
+						filledOF(askOrders[2], 0,
+							[]*OrderSplit{{Assets: coin(344, "apple"), Price: coin(12345, "prune")}}, // Will be BidOFs[2]
+							coins(99, "grape"),
+						),
+					},
+					BidOFs: []*OrderFulfillment{
+						filledOF(bidOrders[0], 0,
+							[]*OrderSplit{{Assets: coin(8, "apple"), Price: coin(55, "prune")}}, // Will be AskOFs[0]
+							coins(3, "fig"),
+						),
+						filledOF(bidOrders[1], 0,
+							[]*OrderSplit{{Assets: coin(12, "apple"), Price: coin(18, "prune")}}, // Will be AskOFs[1]
+							coins(7, "fig"),
+						),
+						filledOF(bidOrders[2], 0,
+							[]*OrderSplit{{Assets: coin(344, "apple"), Price: coin(12345, "prune")}}, // Will be AskOFs[2]
+							coins(2, "fig"),
+						),
+					},
+					PartialOrder: nil,
+				}
+
+				rv.AskOFs[0].Splits[0].Order = rv.BidOFs[0]
+				rv.AskOFs[1].Splits[0].Order = rv.BidOFs[1]
+				rv.AskOFs[2].Splits[0].Order = rv.BidOFs[2]
+
+				rv.BidOFs[0].Splits[0].Order = rv.AskOFs[0]
+				rv.BidOFs[1].Splits[0].Order = rv.AskOFs[1]
+				rv.BidOFs[2].Splits[0].Order = rv.AskOFs[2]
+
+				return rv
+			},
+		},
+		{
+			name: "three asks two bids, all fully filled",
+			askOrders: []*Order{
+				askOrder(11, coin(10, "apple"), coin(50, "prune"), false),
+				askOrder(13, coin(20, "apple"), coin(100, "prune"), false),
+				askOrder(15, coin(50, "apple"), coin(250, "prune"), false),
+			},
+			bidOrders: []*Order{
+				bidOrder(12, coin(23, "apple"), coin(115, "prune"), false),
+				bidOrder(14, coin(57, "apple"), coin(285, "prune"), false),
+			},
+			sellerFeeRatio: &FeeRatio{Price: coin(5, "prune"), Fee: coin(1, "fig")},
+			expectedMaker: func(t *testing.T, askOrders, bidOrders []*Order) *Fulfillments {
+				rv := &Fulfillments{
+					AskOFs: []*OrderFulfillment{
+						filledOF(askOrders[0], 0,
+							[]*OrderSplit{{Assets: coin(10, "apple"), Price: coin(50, "prune")}}, // Will be BidOFs[0]
+							coins(10, "fig"),
+						),
+						filledOF(askOrders[1], 0,
+							[]*OrderSplit{
+								{Assets: coin(13, "apple"), Price: coin(65, "prune")}, // Will be BidOFs[0]
+								{Assets: coin(7, "apple"), Price: coin(35, "prune")},  // Will be BidOFs[1]
+							},
+							coins(20, "fig"),
+						),
+						filledOF(askOrders[2], 0,
+							[]*OrderSplit{{Assets: coin(50, "apple"), Price: coin(250, "prune")}}, // Will be BidOFs[1]
+							coins(50, "fig"),
+						),
+					},
+					BidOFs: []*OrderFulfillment{
+						filledOF(bidOrders[0], 0,
+							[]*OrderSplit{
+								{Assets: coin(10, "apple"), Price: coin(50, "prune")}, // Will be AskOfs[0]
+								{Assets: coin(13, "apple"), Price: coin(65, "prune")}, // Will be AskOfs[1]
+							},
+						),
+						filledOF(bidOrders[1], 0,
+							[]*OrderSplit{
+								{Assets: coin(7, "apple"), Price: coin(35, "prune")},   // Will be AskOFs[1]
+								{Assets: coin(50, "apple"), Price: coin(250, "prune")}, // Will be AskOFs[2]
+							},
+						),
+					},
+				}
+
+				rv.AskOFs[0].Splits[0].Order = rv.BidOFs[0]
+				rv.AskOFs[1].Splits[0].Order = rv.BidOFs[0]
+				rv.AskOFs[1].Splits[1].Order = rv.BidOFs[1]
+				rv.AskOFs[2].Splits[0].Order = rv.BidOFs[1]
+				rv.BidOFs[0].Splits[0].Order = rv.AskOFs[0]
+				rv.BidOFs[0].Splits[1].Order = rv.AskOFs[1]
+				rv.BidOFs[1].Splits[0].Order = rv.AskOFs[1]
+				rv.BidOFs[1].Splits[1].Order = rv.AskOFs[2]
+
+				return rv
+			},
+		},
+		{
+			name: "three asks two bids, ask partially filled",
+			askOrders: []*Order{
+				askOrder(73, coin(10, "apple"), coin(50, "prune"), false),
+				askOrder(75, coin(15, "apple"), coin(75, "prune"), false),
+				askOrder(77, coin(25, "apple"), coin(125, "prune"), true),
+			},
+			bidOrders: []*Order{
+				bidOrder(74, coin(5, "apple"), coin(25, "prune"), false),
+				bidOrder(76, coin(40, "apple"), coin(200, "prune"), false),
+			},
+			expectedMaker: func(t *testing.T, askOrders, bidOrders []*Order) *Fulfillments {
+				rv := &Fulfillments{
+					AskOFs: []*OrderFulfillment{
+						filledOF(askOrders[0], 0,
+							[]*OrderSplit{
+								{Assets: coin(5, "apple"), Price: coin(25, "prune")}, // Will be BidOFs[0]
+								{Assets: coin(5, "apple"), Price: coin(25, "prune")}, // Will be BidOFs[1]
+							},
+						),
+						filledOF(askOrders[1], 0,
+							[]*OrderSplit{{Assets: coin(15, "apple"), Price: coin(75, "prune")}}, // Will be BidOFs[1]
+						),
+						{
+							Order:             askOrders[2],
+							AssetsFilledAmt:   sdkmath.NewInt(20),
+							AssetsUnfilledAmt: sdkmath.NewInt(5),
+							PriceAppliedAmt:   sdkmath.NewInt(100),
+							PriceLeftAmt:      sdkmath.NewInt(25),
+							Splits:            []*OrderSplit{{Assets: coin(20, "apple"), Price: coin(100, "prune")}}, // Will be BidOFs[1],
+							IsFinalized:       true,
+							PriceFilledAmt:    sdkmath.NewInt(100),
+							PriceUnfilledAmt:  sdkmath.NewInt(25),
+						},
+					},
+					BidOFs: []*OrderFulfillment{
+						filledOF(bidOrders[0], 0,
+							[]*OrderSplit{{Assets: coin(5, "apple"), Price: coin(25, "prune")}}, // Will be AskOFs[0],
+						),
+						filledOF(bidOrders[1], 0,
+							[]*OrderSplit{
+								{Assets: coin(5, "apple"), Price: coin(25, "prune")},   // Will be AskOFs[0],
+								{Assets: coin(15, "apple"), Price: coin(75, "prune")},  // Will be AskOFs[1],
+								{Assets: coin(20, "apple"), Price: coin(100, "prune")}, // Will be AskOFs[2],
+							},
+						),
+					},
+					PartialOrder: &PartialFulfillment{
+						NewOrder:     askOrder(77, coin(5, "apple"), coin(25, "prune"), true),
+						AssetsFilled: coin(20, "apple"),
+						PriceFilled:  coin(100, "prune"),
+					},
+				}
+
+				rv.AskOFs[0].Splits[0].Order = rv.BidOFs[0]
+				rv.AskOFs[0].Splits[1].Order = rv.BidOFs[1]
+				rv.AskOFs[1].Splits[0].Order = rv.BidOFs[1]
+				rv.AskOFs[2].Splits[0].Order = rv.BidOFs[1]
+
+				rv.BidOFs[0].Splits[0].Order = rv.AskOFs[0]
+				rv.BidOFs[1].Splits[0].Order = rv.AskOFs[0]
+				rv.BidOFs[1].Splits[1].Order = rv.AskOFs[1]
+				rv.BidOFs[1].Splits[2].Order = rv.AskOFs[2]
+
+				return rv
+			},
+		},
+		{
+			name: "three asks two bids, ask partially filled not allowed",
+			askOrders: []*Order{
+				askOrder(73, coin(10, "apple"), coin(50, "prune"), false),
+				askOrder(75, coin(15, "apple"), coin(75, "prune"), false),
+				askOrder(77, coin(25, "apple"), coin(125, "prune"), false),
+			},
+			bidOrders: []*Order{
+				bidOrder(74, coin(5, "apple"), coin(25, "prune"), false),
+				bidOrder(76, coin(40, "apple"), coin(200, "prune"), false),
+			},
+			expErr: "cannot fill ask order 77 having assets \"25apple\" with \"20apple\": order does not allow partial fill",
+		},
+		{
+			name: "three asks two bids, bid partially filled",
+			askOrders: []*Order{
+				askOrder(121, coin(55, "apple"), coin(275, "prune"), false),
+				askOrder(123, coin(12, "apple"), coin(60, "prune"), false),
+				askOrder(125, coin(13, "apple"), coin(65, "prune"), false),
+			},
+			bidOrders: []*Order{
+				bidOrder(124, coin(65, "apple"), coin(325, "prune"), false),
+				bidOrder(126, coin(20, "apple"), coin(100, "prune"), true),
+			},
+			expectedMaker: func(t *testing.T, askOrders, bidOrders []*Order) *Fulfillments {
+				rv := &Fulfillments{
+					AskOFs: []*OrderFulfillment{
+						filledOF(askOrders[0], 0,
+							[]*OrderSplit{{Assets: coin(55, "apple"), Price: coin(275, "prune")}}, // Will be BidOFs[0]
+						),
+						filledOF(askOrders[1], 0,
+							[]*OrderSplit{
+								{Assets: coin(10, "apple"), Price: coin(50, "prune")}, // Will be BidOFs[0]
+								{Assets: coin(2, "apple"), Price: coin(10, "prune")},  // Will be BidOFs[1]
+							},
+						),
+						filledOF(askOrders[2], 0,
+							[]*OrderSplit{{Assets: coin(13, "apple"), Price: coin(65, "prune")}}, // Will be BidOFs[1]
+						),
+					},
+					BidOFs: []*OrderFulfillment{
+						filledOF(bidOrders[0], 0,
+							[]*OrderSplit{
+								{Assets: coin(55, "apple"), Price: coin(275, "prune")}, // Will be AskOFs[0]
+								{Assets: coin(10, "apple"), Price: coin(50, "prune")},  // Will be AskOFs[1]
+							},
+						),
+						{
+							Order:             bidOrders[1],
+							AssetsFilledAmt:   sdkmath.NewInt(15),
+							AssetsUnfilledAmt: sdkmath.NewInt(5),
+							PriceAppliedAmt:   sdkmath.NewInt(75),
+							PriceLeftAmt:      sdkmath.NewInt(25),
+							Splits: []*OrderSplit{
+								{Assets: coin(2, "apple"), Price: coin(10, "prune")},  // Will be AskOFs[1]
+								{Assets: coin(13, "apple"), Price: coin(65, "prune")}, // Will be AskOFs[2]
+							},
+							IsFinalized:      true,
+							PriceFilledAmt:   sdkmath.NewInt(75),
+							PriceUnfilledAmt: sdkmath.NewInt(25),
+						},
+					},
+					PartialOrder: &PartialFulfillment{
+						NewOrder:     bidOrder(126, coin(5, "apple"), coin(25, "prune"), true),
+						AssetsFilled: coin(15, "apple"),
+						PriceFilled:  coin(75, "prune"),
+					},
+				}
+
+				rv.AskOFs[0].Splits[0].Order = rv.BidOFs[0]
+				rv.AskOFs[1].Splits[0].Order = rv.BidOFs[0]
+				rv.AskOFs[1].Splits[1].Order = rv.BidOFs[1]
+				rv.AskOFs[2].Splits[0].Order = rv.BidOFs[1]
+
+				rv.BidOFs[0].Splits[0].Order = rv.AskOFs[0]
+				rv.BidOFs[0].Splits[1].Order = rv.AskOFs[1]
+				rv.BidOFs[1].Splits[0].Order = rv.AskOFs[1]
+				rv.BidOFs[1].Splits[1].Order = rv.AskOFs[2]
+
+				return rv
+			},
+		},
+		{
+			name: "ask order in bid order list",
+			askOrders: []*Order{
+				askOrder(1, coin(1, "apple"), coin(1, "prune"), false),
+				bidOrder(2, coin(1, "apple"), coin(1, "prune"), false),
+				askOrder(3, coin(1, "apple"), coin(1, "prune"), false),
+			},
+			bidOrders: []*Order{bidOrder(4, coin(3, "apple"), coin(3, "prune"), false)},
+			expErr:    "bid order 2 is not an ask order but is in the askOrders list",
+		},
+		{
+			name:      "bid order in ask order list",
+			askOrders: []*Order{askOrder(4, coin(3, "apple"), coin(3, "prune"), false)},
+			bidOrders: []*Order{
+				bidOrder(1, coin(1, "apple"), coin(1, "prune"), false),
+				askOrder(2, coin(1, "apple"), coin(1, "prune"), false),
+				bidOrder(3, coin(1, "apple"), coin(1, "prune"), false),
+			},
+			expErr: "ask order 2 is not a bid order but is in the bidOrders list",
+		},
+		// neither filled in full - I'm not sure how I can trigger this.
+		{
+			name:      "ask finalize error",
+			askOrders: []*Order{askOrder(15, coin(13, "apple"), coin(17, "prune"), true)},
+			bidOrders: []*Order{bidOrder(16, coin(5, "apple"), coin(20, "prune"), true)},
+			expErr:    "ask order 15 having assets \"13apple\" cannot be partially filled by \"5apple\": price \"17prune\" is not evenly divisible",
+		},
+		{
+			name:      "bid finalize error",
+			askOrders: []*Order{askOrder(15, coin(5, "apple"), coin(5, "prune"), true)},
+			bidOrders: []*Order{bidOrder(16, coin(13, "apple"), coin(17, "prune"), true)},
+			expErr:    "bid order 16 having assets \"13apple\" cannot be partially filled by \"5apple\": price \"17prune\" is not evenly divisible",
+		},
+		{
+			name:      "validate error",
+			askOrders: []*Order{askOrder(123, coin(5, "apple"), coin(6, "prune"), true)},
+			bidOrders: []*Order{bidOrder(124, coin(5, "apple"), coin(5, "prune"), true)},
+			expErr:    "ask order 123 having assets \"5apple\" and price \"6prune\" cannot be filled by \"5apple\" at price \"5prune\": insufficient price",
+		},
+		{
+			name:      "nil askOrders",
+			askOrders: nil,
+			bidOrders: []*Order{bidOrder(124, coin(5, "apple"), coin(5, "prune"), true)},
+			expErr:    "no assets filled in bid order 124",
+		},
+		{
+			name:      "empty askOrders",
+			askOrders: []*Order{},
+			bidOrders: []*Order{bidOrder(124, coin(5, "apple"), coin(5, "prune"), true)},
+			expErr:    "no assets filled in bid order 124",
+		},
+		{
+			name:      "nil bidOrders",
+			askOrders: []*Order{askOrder(123, coin(5, "apple"), coin(6, "prune"), true)},
+			bidOrders: nil,
+			expErr:    "no assets filled in ask order 123",
+		},
+		{
+			name:      "empty bidOrders",
+			askOrders: []*Order{askOrder(123, coin(5, "apple"), coin(6, "prune"), true)},
+			bidOrders: []*Order{},
+			expErr:    "no assets filled in ask order 123",
+		},
+		{
+			name: "ask not filled at all", // this gets caught by Finalize.
+			askOrders: []*Order{
+				askOrder(123, coin(10, "apple"), coin(10, "prune"), true),
+				askOrder(125, coin(5, "apple"), coin(5, "prune"), true),
+			},
+			bidOrders: []*Order{bidOrder(124, coin(5, "apple"), coin(5, "prune"), true)},
+			expErr:    "no assets filled in ask order 125",
+		},
+		{
+			name:      "bid not filled at all", // this gets caught by Finalize.
+			askOrders: []*Order{askOrder(123, coin(5, "apple"), coin(5, "prune"), true)},
+			bidOrders: []*Order{
+				bidOrder(122, coin(10, "apple"), coin(10, "prune"), true),
+				bidOrder(124, coin(5, "apple"), coin(5, "prune"), true),
+			},
+			expErr: "no assets filled in bid order 124",
+		},
+		// both ask and bid partially filled - I'm not sure how to trigger this.
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var expected *Fulfillments
+			if tc.expectedMaker != nil {
+				expected = tc.expectedMaker(t, tc.askOrders, tc.bidOrders)
+			}
+			var actual *Fulfillments
+			var err error
+			testFunc := func() {
+				actual, err = BuildFulfillments(tc.askOrders, tc.bidOrders, tc.sellerFeeRatio)
+			}
+			require.NotPanics(t, testFunc, "BuildFulfillments")
+			assertions.AssertErrorValue(t, err, tc.expErr, "BuildFulfillments error")
+			if !assert.Equal(t, expected, actual, "BuildFulfillments result") && expected != nil && actual != nil {
+				// Try to help identify the error in the failure logs.
+				expAskOFs := orderFulfillmentsString(expected.AskOFs)
+				actAskOFs := orderFulfillmentsString(actual.AskOFs)
+				if assert.Equal(t, expAskOFs, actAskOFs, "AskOFs") {
+					// Some difference don't come through in the strings, so dig even deeper.
+					for i := range expected.AskOFs {
+						assertEqualOrderFulfillments(t, expected.AskOFs[i], actual.AskOFs[i], "AskOFs[%d]", i)
+					}
+				}
+				expBidOFs := orderFulfillmentsString(expected.BidOFs)
+				actBidOFs := orderFulfillmentsString(actual.BidOFs)
+				if assert.Equal(t, expBidOFs, actBidOFs, "BidOFs") {
+					for i := range expected.BidOFs {
+						assertEqualOrderFulfillments(t, expected.BidOFs[i], actual.BidOFs[i], "BidOFs[%d]", i)
+					}
+				}
+				expPartial := partialFulfillmentString(expected.PartialOrder)
+				actPartial := partialFulfillmentString(actual.PartialOrder)
+				assert.Equal(t, expPartial, actPartial, "PartialOrder")
+			}
+		})
+	}
+}
 
 // copyIndexedAddrAmts creates a deep copy of an indexedAddrAmts.
 func copyIndexedAddrAmts(orig *indexedAddrAmts) *indexedAddrAmts {
