@@ -4894,6 +4894,35 @@ func TestBuildFulfillments(t *testing.T) {
 			},
 		},
 		{
+			// TODO[1658]: Either update the process or delete this 2 asks 1 bid unit test.
+			name: "two asks one bid",
+			askOrders: []*Order{
+				askOrder(91, coin(10, "apple"), coin(49, "prune"), false),
+				askOrder(93, coin(10, "apple"), coin(51, "prune"), false),
+			},
+			bidOrders: []*Order{bidOrder(92, coin(20, "apple"), coin(100, "prune"), false)},
+			expectedMaker: func(t *testing.T, askOrders, bidOrders []*Order) *Fulfillments {
+				return &Fulfillments{
+					AskOFs: []*OrderFulfillment{
+						filledOF(askOrders[0], 0,
+							[]*OrderSplit{{Assets: coin(10, "apple"), Price: coin(49, "prune")}}, // Will be BidOFs[0]
+						),
+						filledOF(askOrders[1], 0,
+							[]*OrderSplit{{Assets: coin(10, "apple"), Price: coin(51, "prune")}}, // Will be BidOFs[0]
+						),
+					},
+					BidOFs: []*OrderFulfillment{
+						filledOF(askOrders[1], 0,
+							[]*OrderSplit{{Assets: coin(10, "apple"), Price: coin(49, "prune")}}, // Will be AskOFs[0]
+						),
+						filledOF(askOrders[1], 0,
+							[]*OrderSplit{{Assets: coin(10, "apple"), Price: coin(51, "prune")}}, // Will be AskOFs[1]
+						),
+					},
+				}
+			},
+		},
+		{
 			name: "ask order in bid order list",
 			askOrders: []*Order{
 				askOrder(1, coin(1, "apple"), coin(1, "prune"), false),
