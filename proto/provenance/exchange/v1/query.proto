@@ -7,6 +7,7 @@ option java_package        = "io.provenance.exchange.v1";
 option java_multiple_files = true;
 
 import "cosmos_proto/cosmos.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/api/annotations.proto";
 import "gogoproto/gogo.proto";
@@ -29,9 +30,14 @@ service Query {
     option (google.api.http).get = "/provenance/exchange/v1/market/{market_id}/orders";
   }
 
-  // QueryGetAddressOrders looks up the orders from the provided address.
-  rpc QueryGetAddressOrders(QueryGetAddressOrdersRequest) returns (QueryGetAddressOrdersResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/orders/{address}";
+  // QueryGetOwnerOrders looks up the orders from the provided owner address.
+  rpc QueryGetOwnerOrders(QueryGetOwnerOrdersRequest) returns (QueryGetOwnerOrdersResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/orders/owner/{owner}";
+  }
+
+  // QueryGetAssetOrders looks up the orders for a specific asset denom.
+  rpc QueryGetAssetOrders(QueryGetAssetOrdersRequest) returns (QueryGetAssetOrdersResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/orders/asset/{asset}";
   }
 
   // QueryGetAllOrders gets all orders in the exchange module.
@@ -92,41 +98,83 @@ message QueryOrderFeeCalcResponse {
 
 // QueryGetOrderRequest is a request message for the QueryGetOrder endpoint.
 message QueryGetOrderRequest {
+  // order_id is the id of the order to look up.
   uint64 order_id = 1;
-  // TODO[1658]: QueryGetOrderRequest
 }
+
 // QueryGetOrderResponse is a response message for the QueryGetOrder endpoint.
 message QueryGetOrderResponse {
-  // TODO[1658]: QueryGetOrderResponse
+  // order is the requested order.
+  Order order = 1;
 }
 
 // QueryGetMarketOrdersRequest is a request message for the QueryGetMarketOrders endpoint.
 message QueryGetMarketOrdersRequest {
+  // market_id is the id of the market to get all the orders for.
   uint32 market_id = 1;
-  // TODO[1658]: QueryGetMarketOrdersRequest
-}
-// QueryGetMarketOrdersResponse is a response message for the QueryGetMarketOrders endpoint.
-message QueryGetMarketOrdersResponse {
-  // TODO[1658]: QueryGetMarketOrdersResponse
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
 
-// QueryGetAddressOrdersRequest is a request message for the QueryGetAddressOrders endpoint.
-message QueryGetAddressOrdersRequest {
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // TODO[1658]: QueryGetAddressOrdersRequest
+// QueryGetMarketOrdersResponse is a response message for the QueryGetMarketOrders endpoint.
+message QueryGetMarketOrdersResponse {
+  // orders are a page of the orders in the provided market.
+  repeated Order orders = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
-// QueryGetAddressOrdersResponse is a response message for the QueryGetAddressOrders endpoint.
-message QueryGetAddressOrdersResponse {
-  // TODO[1658]: QueryGetAddressOrdersResponse
+
+// QueryGetOwnerOrdersRequest is a request message for the QueryGetOwnerOrders endpoint.
+message QueryGetOwnerOrdersRequest {
+  // owner is the bech32 address string of the owner to get the orders for.
+  string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetOwnerOrdersResponse is a response message for the QueryGetOwnerOrders endpoint.
+message QueryGetOwnerOrdersResponse {
+  // orders are a page of the orders for the provided address.
+  repeated Order orders = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryGetAssetOrdersRequest is a request message for the QueryGetAssetOrders endpoint.
+message QueryGetAssetOrdersRequest {
+  // asset is the denom of assets to get orders for.
+  string asset = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetAssetOrdersResponse is a response message for the QueryGetAssetOrders endpoint.
+message QueryGetAssetOrdersResponse {
+  // orders are a page of the orders for the provided asset.
+  repeated Order orders = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // QueryGetAllOrdersRequest is a request message for the QueryGetAllOrders endpoint.
 message QueryGetAllOrdersRequest {
-  // TODO[1658]: QueryGetAllOrdersRequest
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
+
 // QueryGetAllOrdersResponse is a response message for the QueryGetAllOrders endpoint.
 message QueryGetAllOrdersResponse {
-  // TODO[1658]: QueryGetAllOrdersResponse
+  // orders are a page of the all orders.
+  repeated Order orders = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // QueryMarketInfoRequest is a request message for the QueryMarketInfo endpoint.

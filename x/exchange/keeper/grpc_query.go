@@ -79,9 +79,15 @@ func (k QueryServer) QueryGetMarketOrders(goCtx context.Context, req *exchange.Q
 	panic("not implemented")
 }
 
-// QueryGetAddressOrders looks up the orders from the provided address.
-func (k QueryServer) QueryGetAddressOrders(goCtx context.Context, req *exchange.QueryGetAddressOrdersRequest) (*exchange.QueryGetAddressOrdersResponse, error) {
-	// TODO[1658]: Implement QueryGetAddressOrders query
+// QueryGetOwnerOrders looks up the orders from the provided owner address.
+func (k QueryServer) QueryGetOwnerOrders(goCtx context.Context, req *exchange.QueryGetOwnerOrdersRequest) (*exchange.QueryGetOwnerOrdersResponse, error) {
+	// TODO[1658]: Implement QueryGetOwnerOrders query
+	panic("not implemented")
+}
+
+// QueryGetAssetOrders looks up the orders for a specific asset denom.
+func (k QueryServer) QueryGetAssetOrders(goCtx context.Context, req *exchange.QueryGetAssetOrdersRequest) (*exchange.QueryGetAssetOrdersResponse, error) {
+	// TODO[1658]: Implement QueryGetAssetOrders query
 	panic("not implemented")
 }
 
