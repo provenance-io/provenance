@@ -108,18 +108,14 @@ func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier { ret
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState exchange.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	// TODO[1658]: Create keeper.InitGenesis
-	panic("not implemented")
-	//am.keeper.InitGenesis(ctx, &genesisState)
+	am.keeper.InitGenesis(ctx, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the exchange module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	// TODO[1658]: Create keeper.ExportGenesis
-	panic("not implemented")
-	//gs := am.keeper.ExportGenesis(ctx)
-	//return cdc.MustMarshalJSON(gs)
+	gs := am.keeper.ExportGenesis(ctx)
+	return cdc.MustMarshalJSON(gs)
 }
 
 // RegisterServices registers module services.
