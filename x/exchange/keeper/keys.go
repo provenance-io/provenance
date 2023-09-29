@@ -133,6 +133,7 @@ func uint16Bz(val uint16) []byte {
 
 // uint16FromBz converts the provided bytes into a uint16.
 func uint16FromBz(bz []byte) uint16 {
+	// TODO[1658]: Check the length first and return an error here.
 	return binary.BigEndian.Uint16(bz)
 }
 
@@ -145,6 +146,7 @@ func uint32Bz(val uint32) []byte {
 
 // uint32FromBz converts the provided bytes into a uint32.
 func uint32FromBz(bz []byte) uint32 {
+	// TODO[1658]: Check the length first and return an error here.
 	return binary.BigEndian.Uint32(bz)
 }
 
@@ -157,6 +159,7 @@ func uint64Bz(val uint64) []byte {
 
 // uint64FromBz converts the provided bytes into a uint64.
 func uint64FromBz(bz []byte) uint64 {
+	// TODO[1658]: Check the length first and return an error here.
 	return binary.BigEndian.Uint64(bz)
 }
 
