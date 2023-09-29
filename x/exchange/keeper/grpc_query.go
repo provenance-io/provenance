@@ -98,6 +98,7 @@ func (k QueryServer) QueryGetMarketOrders(goCtx context.Context, req *exchange.Q
 	store := prefix.NewStore(k.getStore(ctx), pre)
 	resp := &exchange.QueryGetMarketOrdersResponse{}
 	var pageErr error
+
 	resp.Pagination, pageErr = query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		// If we can't get the order id from the key, just pretend like it doesn't exist.
 		_, orderID, perr := ParseIndexKeyMarketToOrder(key)
@@ -116,7 +117,7 @@ func (k QueryServer) QueryGetMarketOrders(goCtx context.Context, req *exchange.Q
 	})
 
 	if pageErr != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders: %v", pageErr)
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for market %d: %v", req.MarketId, pageErr)
 	}
 
 	return resp, nil
@@ -124,8 +125,43 @@ func (k QueryServer) QueryGetMarketOrders(goCtx context.Context, req *exchange.Q
 
 // QueryGetOwnerOrders looks up the orders from the provided owner address.
 func (k QueryServer) QueryGetOwnerOrders(goCtx context.Context, req *exchange.QueryGetOwnerOrdersRequest) (*exchange.QueryGetOwnerOrdersResponse, error) {
-	// TODO[1658]: Implement QueryGetOwnerOrders query
-	panic("not implemented")
+	if req == nil || len(req.Owner) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	owner, aErr := sdk.AccAddressFromBech32(req.Owner)
+	if aErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid owner: %v", aErr)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	pre := GetIndexKeyPrefixAddressToOrder(owner)
+	store := prefix.NewStore(k.getStore(ctx), pre)
+	resp := &exchange.QueryGetOwnerOrdersResponse{}
+	var pageErr error
+
+	resp.Pagination, pageErr = query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		// If we can't get the order id from the key, just pretend like it doesn't exist.
+		_, orderID, perr := ParseIndexKeyAddressToOrder(key)
+		if perr != nil {
+			return false, nil
+		}
+		if accumulate {
+			// Only add them to the result if we can read it.
+			// This might result in fewer results than the limit, but at least one bad entry won't block others.
+			order, oerr := k.parseOrderStoreValue(orderID, value)
+			if oerr != nil {
+				resp.Orders = append(resp.Orders, order)
+			}
+		}
+		return true, nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for owner %s: %v", req.Owner, pageErr)
+	}
+
+	return resp, nil
 }
 
 // QueryGetAssetOrders looks up the orders for a specific asset denom.
