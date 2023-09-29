@@ -2015,6 +2015,13 @@ QueryMarketInfoResponse is a response message for the QueryMarketInfo endpoint.
 
 ### QueryOrderFeeCalcRequest
 QueryOrderFeeCalcRequest is a request message for the QueryOrderFeeCalc endpoint.
+Exactly one of ask_order or bid_order must be provided.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ask_order` | [AskOrder](#provenance.exchange.v1.AskOrder) |  | ask_order is the ask order to calculate the fees for. |
+| `bid_order` | [BidOrder](#provenance.exchange.v1.BidOrder) |  | bid_order is the bid order to calculate the fees for. |
 
 
 
@@ -2025,6 +2032,17 @@ QueryOrderFeeCalcRequest is a request message for the QueryOrderFeeCalc endpoint
 
 ### QueryOrderFeeCalcResponse
 QueryOrderFeeCalcResponse is a response message for the QueryOrderFeeCalc endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `creation_fee_options` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | creation_fee_options are the order creation flat fee options available for creating the provided order. If it's empty, no order creation fee is required. When creating the order, you should include exactly one of these. |
+| `settlement_flat_fee_options` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | settlement_flat_fee_options are the settlement flat fee options available for the provided order. If it's empty, no settlement flat fee is required. When creating an order, you should include exactly one of these in the settlement fees field. |
+| `settlement_ratio_fee_options` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | settlement_ratio_fee_options are the settlement ratio fee options available for the provided order. If it's empty, no settlement ratio fee is required.
+
+If the provided order was a bid order, you should include exactly one of these in the settlement fees field. If the flat and ratio options you've chose have the same denom, a single entry should be included with their sum.
+
+If the provided order was an ask order, these are purely informational and represent how much will be removed from your price if it settles at that price. If it settles for more, the actual amount will probably be larger. |
 
 
 

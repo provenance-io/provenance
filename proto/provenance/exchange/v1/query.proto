@@ -7,7 +7,10 @@ option java_package        = "io.provenance.exchange.v1";
 option java_multiple_files = true;
 
 import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "google/api/annotations.proto";
+import "gogoproto/gogo.proto";
+import "provenance/exchange/v1/orders.proto";
 
 // Query is the service for exchange module's query endpoints.
 service Query {
@@ -63,12 +66,36 @@ service Query {
 }
 
 // QueryOrderFeeCalcRequest is a request message for the QueryOrderFeeCalc endpoint.
+// Exactly one of ask_order or bid_order must be provided.
 message QueryOrderFeeCalcRequest {
-  // TODO[1658]: QueryOrderFeeCalcRequest
+  // ask_order is the ask order to calculate the fees for.
+  AskOrder ask_order = 2;
+  // bid_order is the bid order to calculate the fees for.
+  BidOrder bid_order = 3;
 }
+
 // QueryOrderFeeCalcResponse is a response message for the QueryOrderFeeCalc endpoint.
 message QueryOrderFeeCalcResponse {
-  // TODO[1658]: QueryOrderFeeCalcResponse
+  // creation_fee_options are the order creation flat fee options available for creating the provided order.
+  // If it's empty, no order creation fee is required.
+  // When creating the order, you should include exactly one of these.
+  repeated cosmos.base.v1beta1.Coin creation_fee_options = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // settlement_flat_fee_options are the settlement flat fee options available for the provided order.
+  // If it's empty, no settlement flat fee is required.
+  // When creating an order, you should include exactly one of these in the settlement fees field.
+  repeated cosmos.base.v1beta1.Coin settlement_flat_fee_options = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // settlement_ratio_fee_options are the settlement ratio fee options available for the provided order.
+  // If it's empty, no settlement ratio fee is required.
+  //
+  // If the provided order was a bid order, you should include exactly one of these in the settlement fees field.
+  // If the flat and ratio options you've chose have the same denom, a single entry should be included with their sum.
+  //
+  // If the provided order was an ask order, these are purely informational and represent how much will be removed
+  // from your price if it settles at that price. If it settles for more, the actual amount will probably be larger.
+  repeated cosmos.base.v1beta1.Coin settlement_ratio_fee_options = 5
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 // QuerySettlementFeeCalcRequest is a request message for the QuerySettlementFeeCalc endpoint.
