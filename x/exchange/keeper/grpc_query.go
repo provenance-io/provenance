@@ -69,8 +69,20 @@ func (k QueryServer) QueryOrderFeeCalc(goCtx context.Context, req *exchange.Quer
 
 // QueryGetOrder looks up an order by id.
 func (k QueryServer) QueryGetOrder(goCtx context.Context, req *exchange.QueryGetOrderRequest) (*exchange.QueryGetOrderResponse, error) {
-	// TODO[1658]: Implement QueryGetOrder query
-	panic("not implemented")
+	if req == nil || req.OrderId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	order, err := k.GetOrder(ctx, req.OrderId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	if order == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "order %d not found", req.OrderId)
+	}
+
+	return &exchange.QueryGetOrderResponse{Order: order}, nil
 }
 
 // QueryGetMarketOrders looks up the orders in a market.

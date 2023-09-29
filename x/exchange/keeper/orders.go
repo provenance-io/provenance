@@ -112,6 +112,9 @@ func createIndexEntries(order exchange.Order) []sdk.KVPair {
 func (k Keeper) getOrderFromStore(store sdk.KVStore, orderID uint64) (*exchange.Order, error) {
 	key := MakeKeyOrder(orderID)
 	value := store.Get(key)
+	if len(value) == 0 {
+		return nil, nil
+	}
 	rv, err := k.parseOrderStoreValue(orderID, value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read order %d: %w", orderID, err)
@@ -489,7 +492,7 @@ func (k Keeper) getBidOrders(store sdk.KVStore, marketID uint32, orderIDs []uint
 }
 
 // getAskOrders gets orders from the store, making sure they're ask orders in the given market
-// and do not have the same sller as the provided buyer. If the buyer isn't yet known, just provide "" for it.
+// and do not have the same seller as the provided buyer. If the buyer isn't yet known, just provide "" for it.
 func (k Keeper) getAskOrders(store sdk.KVStore, marketID uint32, orderIDs []uint64, buyer string) ([]*exchange.Order, error) {
 	var errs []error
 	orders := make([]*exchange.Order, 0, len(orderIDs))
