@@ -7,7 +7,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
@@ -87,8 +89,37 @@ func (k QueryServer) QueryGetOrder(goCtx context.Context, req *exchange.QueryGet
 
 // QueryGetMarketOrders looks up the orders in a market.
 func (k QueryServer) QueryGetMarketOrders(goCtx context.Context, req *exchange.QueryGetMarketOrdersRequest) (*exchange.QueryGetMarketOrdersResponse, error) {
-	// TODO[1658]: Implement QueryGetMarketOrders query
-	panic("not implemented")
+	if req == nil || req.MarketId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	pre := GetIndexKeyPrefixMarketToOrder(req.MarketId)
+	store := prefix.NewStore(k.getStore(ctx), pre)
+	resp := &exchange.QueryGetMarketOrdersResponse{}
+	var pageErr error
+	resp.Pagination, pageErr = query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		// If we can't get the order id from the key, just pretend like it doesn't exist.
+		_, orderID, perr := ParseIndexKeyMarketToOrder(key)
+		if perr != nil {
+			return false, nil
+		}
+		if accumulate {
+			// Only add them to the result if we can read it.
+			// This might result in fewer results than the limit, but at least one bad entry won't block others.
+			order, oerr := k.parseOrderStoreValue(orderID, value)
+			if oerr != nil {
+				resp.Orders = append(resp.Orders, order)
+			}
+		}
+		return true, nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders: %v", pageErr)
+	}
+
+	return resp, nil
 }
 
 // QueryGetOwnerOrders looks up the orders from the provided owner address.
