@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
@@ -15,7 +14,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
-	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 type Keeper struct {
@@ -48,6 +46,12 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollector
 		feeCollectorName: feeCollectorName,
 	}
 	return rv
+}
+
+// logErrorf uses fmt.Sprintf to combine the msg and args, and logs the result as an error from this module.
+// Note that this is different from the logging .Error(msg string, keyvals ...interface{}) syntax.
+func (k Keeper) logErrorf(ctx sdk.Context, msg string, args ...interface{}) {
+	ctx.Logger().Error(fmt.Sprintf(msg, args...), "module", "x/"+exchange.ModuleName)
 }
 
 // GetAuthority gets the address (as bech32) that has governance authority.
@@ -113,20 +117,6 @@ func (k Keeper) getStore(ctx sdk.Context) sdk.KVStore {
 // The callback should return false to continue iteration, or true to stop.
 func (k Keeper) iterate(ctx sdk.Context, pre []byte, cb func(key, value []byte) bool) {
 	iterate(k.getStore(ctx), pre, cb)
-}
-
-// NormalizeReqAttrs normalizes/validates each of the provided require attributes.
-// The normalized versions of the attributes are returned regardless of whether an error is also returned.
-func (k Keeper) NormalizeReqAttrs(ctx sdk.Context, reqAttrs []string) ([]string, error) {
-	rv := make([]string, len(reqAttrs))
-	var errs []error
-	for i, attr := range reqAttrs {
-		rv[i] = nametypes.NormalizeName(attr)
-		if !nametypes.IsValidName(rv[i]) {
-			errs = append(errs, fmt.Errorf("invalid attribute %q", attr))
-		}
-	}
-	return rv, errors.Join(errs...)
 }
 
 // CalculateExchangeSplit calculates the amount that the exchange will keep of the provided fee.

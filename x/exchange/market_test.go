@@ -2451,6 +2451,61 @@ func TestParsePermissions(t *testing.T) {
 	}
 }
 
+func TestNormalizeReqAttrs(t *testing.T) {
+	tests := []struct {
+		name     string
+		reqAttrs []string
+		expAttrs []string
+		expErr   string
+	}{
+		{
+			name:     "whitespace fixed",
+			reqAttrs: []string{"  ab  .  cd  .  ef    ", "cd . ef", " * . jk "},
+			expAttrs: []string{"ab.cd.ef", "cd.ef", "*.jk"},
+		},
+		{
+			name:     "casing fixed",
+			reqAttrs: []string{"AB.cD.Ef", "*.PQ"},
+			expAttrs: []string{"ab.cd.ef", "*.pq"},
+		},
+		{
+			name:     "some problems",
+			reqAttrs: []string{"ab.c d.ef", "X.*.Y", " a-B-c .d"},
+			expAttrs: []string{"ab.c d.ef", "x.*.y", "a-b-c.d"},
+			expErr: `invalid attribute "ab.c d.ef"` + "\n" +
+				`invalid attribute "X.*.Y"` + "\n" +
+				`invalid attribute " a-B-c .d"`,
+		},
+		{
+			name:     "two good one bad",
+			reqAttrs: []string{" AB .cd", "l,M.n.o,p", " *.x.Y.z"},
+			expAttrs: []string{"ab.cd", "l,m.n.o,p", "*.x.y.z"},
+			expErr:   `invalid attribute "l,M.n.o,p"`,
+		},
+		{
+			// Unlike ValidateReqAttrs, this one doesn't care about dups or duplicated errors.
+			name:     "duplicated entries",
+			reqAttrs: []string{"*.x.y.z", "*.x.y.z", "a.b.*.d", "a.b.*.d"},
+			expAttrs: []string{"*.x.y.z", "*.x.y.z", "a.b.*.d", "a.b.*.d"},
+			expErr: `invalid attribute "a.b.*.d"` + "\n" +
+				`invalid attribute "a.b.*.d"`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var attrs []string
+			var err error
+			testFunc := func() {
+				attrs, err = NormalizeReqAttrs(tc.reqAttrs)
+			}
+			require.NotPanics(t, testFunc, "NormalizeReqAttrs(%q)", tc.reqAttrs)
+			assertions.AssertErrorValue(t, err, tc.expErr, "NormalizeReqAttrs(%q) error", tc.reqAttrs)
+			assert.Equal(t, tc.expAttrs, attrs, "NormalizeReqAttrs(%q) result", tc.reqAttrs)
+		})
+	}
+}
+
 func TestValidateReqAttrs(t *testing.T) {
 	joinErrs := func(errs ...string) string {
 		return strings.Join(errs, "\n")

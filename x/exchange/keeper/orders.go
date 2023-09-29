@@ -71,6 +71,16 @@ func (k Keeper) parseOrderStoreValue(orderID uint64, value []byte) (*exchange.Or
 	}
 }
 
+// parseOrderStoreKeyValue parses the provided key and value into an exchange.Order.
+// The key's leading type byte is optional, only the last 8 bytes of it are used.
+func (k Keeper) parseOrderStoreKeyValue(key, value []byte) (*exchange.Order, error) {
+	if len(key) < 8 {
+		return nil, fmt.Errorf("invalid order store key %v: length expected to be at least 8", key)
+	}
+	orderID := uint64FromBz(key[len(key)-8:])
+	return k.parseOrderStoreValue(orderID, value)
+}
+
 // createIndexEntries creates all the key/value index entries for an order.
 func createIndexEntries(order exchange.Order) []sdk.KVPair {
 	marketID := order.GetMarketID()
@@ -159,6 +169,22 @@ func (k Keeper) getNextOrderID(ctx sdk.Context) uint64 {
 		return orderID + 1
 	}
 	return 1
+}
+
+// IterateOrders iterates over all orders. An error is returned if there was a problem
+// reading an entry along the way. Such a problem does not interrupt iteration.
+// The callback should return whether to stop. I.e. false = keep going, true = stop iterating.
+func (k Keeper) IterateOrders(ctx sdk.Context, cb func(order *exchange.Order) bool) error {
+	var errs []error
+	k.iterate(ctx, GetKeyPrefixOrder(), func(key, value []byte) bool {
+		order, err := k.parseOrderStoreKeyValue(key, value)
+		if err != nil {
+			errs = append(errs, err)
+			return false
+		}
+		return cb(order)
+	})
+	return errors.Join(errs...)
 }
 
 // IterateMarketOrders iterates over all orders for a market.

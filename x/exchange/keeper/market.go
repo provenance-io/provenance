@@ -13,15 +13,15 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
-// TODO[1658]: Recheck all the public funcs in here to make sure they're still needed.
+// TODO[1658]: Recheck all the public functions in here to make sure they're still needed.
 
-// flatFeeKeyMakers are the key and prefix maker funcs for a specific flat fee entry.
+// flatFeeKeyMakers are the key and prefix maker functions for a specific flat fee entry.
 type flatFeeKeyMakers struct {
 	key    func(marketID uint32, denom string) []byte
 	prefix func(marketID uint32) []byte
 }
 
-// ratioKeyMakers are the key and prefix maker funcs for a specific ratio fee entry.
+// ratioKeyMakers are the key and prefix maker functions for a specific ratio fee entry.
 type ratioKeyMakers struct {
 	key    func(marketID uint32, ratio exchange.FeeRatio) []byte
 	prefix func(marketID uint32) []byte
@@ -799,8 +799,8 @@ func setAccessGrants(store sdk.KVStore, marketID uint32, grants []exchange.Acces
 // reqAttrKeyMaker is a function that returns a key for required attributes.
 type reqAttrKeyMaker func(marketID uint32) []byte
 
-// getReqAttr gets the required attributes for a market using the provided key maker.
-func getReqAttr(store sdk.KVStore, marketID uint32, maker reqAttrKeyMaker) []string {
+// getReqAttrs gets the required attributes for a market using the provided key maker.
+func getReqAttrs(store sdk.KVStore, marketID uint32, maker reqAttrKeyMaker) []string {
 	key := maker(marketID)
 	value := store.Get(key)
 	return ParseReqAttrStoreValue(value)
@@ -819,7 +819,7 @@ func setReqAttr(store sdk.KVStore, marketID uint32, reqAttrs []string, maker req
 
 // getReqAttrAsk gets the attributes required to create an ask order.
 func getReqAttrAsk(store sdk.KVStore, marketID uint32) []string {
-	return getReqAttr(store, marketID, MakeKeyMarketReqAttrAsk)
+	return getReqAttrs(store, marketID, MakeKeyMarketReqAttrAsk)
 }
 
 // GetReqAttrAsk gets the attributes required to create an ask order.
@@ -834,7 +834,7 @@ func setReqAttrAsk(store sdk.KVStore, marketID uint32, reqAttrs []string) {
 
 // getReqAttrBid gets the attributes required to create a bid order.
 func getReqAttrBid(store sdk.KVStore, marketID uint32) []string {
-	return getReqAttr(store, marketID, MakeKeyMarketReqAttrBid)
+	return getReqAttrs(store, marketID, MakeKeyMarketReqAttrBid)
 }
 
 // GetReqAttrBid gets the attributes required to create a bid order.
@@ -901,45 +901,22 @@ func (k Keeper) GetAllMarketIDs(ctx sdk.Context) []uint32 {
 	return rv
 }
 
-// CreateMarket saves a new market to the store with all the info provided.
-// If the marketId is zero, the next available one will be used.
-func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (marketID uint32, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			if e, ok := r.(error); ok {
-				err = fmt.Errorf("could not set market: %w", e)
-			} else {
-				err = fmt.Errorf("could not set market: %v", r)
-			}
+// IterateMarkets iterates over all markets.
+// The callback should return whether to stop, i.e. true = stop iterating, false = keep going.
+func (k Keeper) IterateMarkets(ctx sdk.Context, cb func(market *exchange.Market) bool) {
+	k.iterate(ctx, GetKeyPrefixKnownMarketID(), func(key, _ []byte) bool {
+		marketID := ParseKeySuffixKnownMarketID(key)
+		market := k.GetMarket(ctx, marketID)
+		if market == nil {
+			return false
 		}
-	}()
+		return cb(market)
+	})
+}
 
-	if market.MarketId == 0 {
-		market.MarketId = k.NextMarketID(ctx)
-	}
-	marketID = market.MarketId
-
-	marketAddr := exchange.GetMarketAddress(marketID)
-	if k.accountKeeper.HasAccount(ctx, marketAddr) {
-		return 0, fmt.Errorf("market id %d %s already exists", marketID, marketAddr)
-	}
-
-	reqAttrCreateAsk, errAsk := k.NormalizeReqAttrs(ctx, market.ReqAttrCreateAsk)
-	reqAttrCreateBid, errBid := k.NormalizeReqAttrs(ctx, market.ReqAttrCreateAsk)
-	err = errors.Join(errAsk, errBid)
-	if err != nil {
-		return 0, err
-	}
-
-	marketAcc := &exchange.MarketAccount{
-		BaseAccount:   &authtypes.BaseAccount{Address: marketAddr.String()},
-		MarketId:      marketID,
-		MarketDetails: market.MarketDetails,
-	}
-	k.accountKeeper.NewAccount(ctx, marketAcc)
-	k.accountKeeper.SetAccount(ctx, marketAcc)
-
-	store := k.getStore(ctx)
+// storeMarket writes all the market fields to the state store (except MarketDetails which are in the account).
+func storeMarket(store sdk.KVStore, market exchange.Market) {
+	marketID := market.MarketId
 	setMarketKnown(store, marketID)
 	setCreateAskFlatFees(store, marketID, market.FeeCreateAskFlat)
 	setCreateBidFlatFees(store, marketID, market.FeeCreateBidFlat)
@@ -950,15 +927,87 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (marketID 
 	setMarketActive(store, marketID, market.AcceptingOrders)
 	setUserSettlementAllowed(store, marketID, market.AllowUserSettlement)
 	setAccessGrants(store, marketID, market.AccessGrants)
-	setReqAttrAsk(store, marketID, reqAttrCreateAsk)
-	setReqAttrBid(store, marketID, reqAttrCreateBid)
+	setReqAttrAsk(store, marketID, market.ReqAttrCreateAsk)
+	setReqAttrBid(store, marketID, market.ReqAttrCreateBid)
+}
 
-	return marketID, nil
+// CreateMarket saves a new market to the store with all the info provided.
+// If the marketId is zero, the next available one will be used.
+func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (marketID uint32, err error) {
+	defer func() {
+		// TODO[1658]: Figure out why this recover is needed and either add a comment or delete this defer.
+		if r := recover(); r != nil {
+			err = fmt.Errorf("could not create market: %v", r)
+		}
+	}()
+
+	// Note: The Market is passed in by value, so any alterations to it here will be lost upon return.
+	var errAsk, errBid error
+	market.ReqAttrCreateAsk, errAsk = exchange.NormalizeReqAttrs(market.ReqAttrCreateAsk)
+	market.ReqAttrCreateBid, errBid = exchange.NormalizeReqAttrs(market.ReqAttrCreateBid)
+	if errAsk != nil || errBid != nil {
+		return 0, errors.Join(errAsk, errBid)
+	}
+
+	if market.MarketId == 0 {
+		market.MarketId = k.NextMarketID(ctx)
+	}
+
+	marketAddr := exchange.GetMarketAddress(market.MarketId)
+	if k.accountKeeper.HasAccount(ctx, marketAddr) {
+		return 0, fmt.Errorf("market id %d account %s already exists", market.MarketId, marketAddr)
+	}
+
+	marketAcc := &exchange.MarketAccount{
+		BaseAccount:   &authtypes.BaseAccount{Address: marketAddr.String()},
+		MarketId:      market.MarketId,
+		MarketDetails: market.MarketDetails,
+	}
+	k.accountKeeper.NewAccount(ctx, marketAcc)
+	k.accountKeeper.SetAccount(ctx, marketAcc)
+
+	storeMarket(k.getStore(ctx), market)
+
+	return market.MarketId, nil
+}
+
+// initMarket is similar to CreateMarket but assumes the market has already been
+// validated and also allows for the market account to already exist.
+func (k Keeper) initMarket(ctx sdk.Context, store sdk.KVStore, market exchange.Market) {
+	if market.MarketId == 0 {
+		market.MarketId = k.NextMarketID(ctx)
+	}
+	marketID := market.MarketId
+
+	marketAddr := exchange.GetMarketAddress(marketID)
+	marketAcc := k.getMarketAccountByAddr(ctx, marketAddr)
+	if marketAcc != nil {
+		if !market.MarketDetails.Equal(marketAcc.MarketDetails) {
+			marketAcc.MarketDetails = market.MarketDetails
+			k.accountKeeper.SetAccount(ctx, marketAcc)
+		}
+	} else {
+		marketAcc = &exchange.MarketAccount{
+			BaseAccount:   &authtypes.BaseAccount{Address: marketAddr.String()},
+			MarketId:      marketID,
+			MarketDetails: market.MarketDetails,
+		}
+		k.accountKeeper.NewAccount(ctx, marketAcc)
+		k.accountKeeper.SetAccount(ctx, marketAcc)
+	}
+
+	storeMarket(store, market)
 }
 
 // GetMarketAccount gets a market's account from the account module.
 func (k Keeper) GetMarketAccount(ctx sdk.Context, marketID uint32) *exchange.MarketAccount {
 	marketAddr := exchange.GetMarketAddress(marketID)
+	return k.getMarketAccountByAddr(ctx, marketAddr)
+}
+
+// getMarketAccountByAddr gets a market's account given it's address.
+// This is for when you've already called exchange.GetMarketAddress(marketID) and need it for other things too.
+func (k Keeper) getMarketAccountByAddr(ctx sdk.Context, marketAddr sdk.AccAddress) *exchange.MarketAccount {
 	acc := k.accountKeeper.GetAccount(ctx, marketAddr)
 	if acc == nil {
 		return nil
@@ -973,14 +1022,12 @@ func (k Keeper) GetMarketAccount(ctx sdk.Context, marketID uint32) *exchange.Mar
 // GetMarket reads all the market info from state and returns it.
 // Returns nil if the market account doesn't exist or it's not a market account.
 func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
-	marketAcc := k.GetMarketAccount(ctx, marketID)
-	if marketAcc == nil {
+	store := k.getStore(ctx)
+	if err := validateMarketExists(store, marketID); err != nil {
 		return nil
 	}
 
-	store := k.getStore(ctx)
 	market := &exchange.Market{MarketId: marketID}
-	market.MarketDetails = marketAcc.MarketDetails
 	market.FeeCreateAskFlat = getCreateAskFlatFees(store, marketID)
 	market.FeeCreateBidFlat = getCreateBidFlatFees(store, marketID)
 	market.FeeSellerSettlementFlat = getSellerSettlementFlatFees(store, marketID)
@@ -992,6 +1039,10 @@ func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
 	market.AccessGrants = getAccessGrants(store, marketID)
 	market.ReqAttrCreateAsk = getReqAttrAsk(store, marketID)
 	market.ReqAttrCreateBid = getReqAttrBid(store, marketID)
+
+	if marketAcc := k.GetMarketAccount(ctx, marketID); marketAcc != nil {
+		market.MarketDetails = marketAcc.MarketDetails
+	}
 
 	return market
 }
@@ -1103,7 +1154,7 @@ func (k Keeper) UpdatePermissions(ctx sdk.Context, msg *exchange.MsgMarketManage
 // the provided attributes to the existing entries.
 func updateReqAttrs(store sdk.KVStore, marketID uint32, toRemove, toAdd []string, field string, maker reqAttrKeyMaker) error {
 	var errs []error
-	curAttrs := getReqAttr(store, marketID, maker)
+	curAttrs := getReqAttrs(store, marketID, maker)
 
 	for _, attr := range toRemove {
 		if !exchange.ContainsString(curAttrs, attr) {
@@ -1111,16 +1162,16 @@ func updateReqAttrs(store sdk.KVStore, marketID uint32, toRemove, toAdd []string
 		}
 	}
 
-	var newAttrs []string
+	var updatedAttrs []string
 	for _, attr := range curAttrs {
 		if !exchange.ContainsString(toRemove, attr) {
-			newAttrs = append(newAttrs, attr)
+			updatedAttrs = append(updatedAttrs, attr)
 		}
 	}
 
 	for _, attr := range toAdd {
 		if !exchange.ContainsString(curAttrs, attr) {
-			newAttrs = append(newAttrs, attr)
+			updatedAttrs = append(updatedAttrs, attr)
 		} else {
 			errs = append(errs, fmt.Errorf("cannot add %s required attribute %q: attribute already required", field, attr))
 		}
@@ -1130,7 +1181,7 @@ func updateReqAttrs(store sdk.KVStore, marketID uint32, toRemove, toAdd []string
 		return errors.Join(errs...)
 	}
 
-	setReqAttr(store, marketID, newAttrs, maker)
+	setReqAttr(store, marketID, updatedAttrs, maker)
 	return nil
 }
 
@@ -1156,13 +1207,13 @@ func (k Keeper) UpdateReqAttrs(ctx sdk.Context, msg *exchange.MsgMarketManageReq
 	var errs []error
 	// We don't care if the attributes to remove are valid so that we
 	// can remove entries that are somehow now invalid.
-	askToRemove, _ := k.NormalizeReqAttrs(ctx, msg.CreateAskToRemove)
-	askToAdd, err := k.NormalizeReqAttrs(ctx, msg.CreateAskToAdd)
+	askToRemove, _ := exchange.NormalizeReqAttrs(msg.CreateAskToRemove)
+	askToAdd, err := exchange.NormalizeReqAttrs(msg.CreateAskToAdd)
 	if err != nil {
 		errs = append(errs, err)
 	}
-	bidToRemove, _ := k.NormalizeReqAttrs(ctx, msg.CreateBidToRemove)
-	bidToAdd, err := k.NormalizeReqAttrs(ctx, msg.CreateBidToAdd)
+	bidToRemove, _ := exchange.NormalizeReqAttrs(msg.CreateBidToRemove)
+	bidToAdd, err := exchange.NormalizeReqAttrs(msg.CreateBidToAdd)
 	if err != nil {
 		errs = append(errs, err)
 	}

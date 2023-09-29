@@ -442,6 +442,20 @@ func ParsePermissions(permissions ...string) ([]Permission, error) {
 	return rv, errors.Join(errs...)
 }
 
+// NormalizeReqAttrs normalizes/validates each of the provided require attributes.
+// The normalized versions of the attributes are returned regardless of whether an error is also returned.
+func NormalizeReqAttrs(reqAttrs []string) ([]string, error) {
+	rv := make([]string, len(reqAttrs))
+	var errs []error
+	for i, attr := range reqAttrs {
+		rv[i] = nametypes.NormalizeName(attr)
+		if !IsValidReqAttr(rv[i]) {
+			errs = append(errs, fmt.Errorf("invalid attribute %q", attr))
+		}
+	}
+	return rv, errors.Join(errs...)
+}
+
 // ValidateReqAttrs makes sure that each provided attribute is valid and that no duplicate entries are provided.
 func ValidateReqAttrs(field string, attrs []string) error {
 	var errs []error
