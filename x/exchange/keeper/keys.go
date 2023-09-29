@@ -58,9 +58,11 @@ import (
 //     Ask Orders: 0x02 | <order_id> (8 bytes) => 0x00 | protobuf(AskOrder)
 //     Bid Orders: 0x02 | <order_id> (8 bytes) => 0x01 | protobuf(BidOrder)
 //
+// TODO[1658]: Refactor the market to order index to have the order type byte before the order id.
 // A market to order index is maintained with the following format:
 //    0x03 | <market_id> (4 bytes) | <order_id> (8 bytes) => <order type byte>
 //
+// TODO[1658]: Refactor the address to order index to have the order type byte before the order id.
 // An address to order index is maintained with the following format:
 //    0x04 | len(<address>) (1 byte) | <address> | <order_id> (8 bytes) => nil
 //
@@ -540,6 +542,22 @@ func MakeKeyOrder(orderID uint64) []byte {
 	rv := keyPrefixOrder(len(suffix))
 	rv = append(rv, suffix...)
 	return rv
+}
+
+// ParseKeyOrder will extract the order id from the provided order key.
+// The returned bool is whether parsing was successful (true = ok).
+//
+// The input can have the following formats:
+//   - <type byte> | <order id> (8 bytes)
+//   - <order id> (8 bytes)
+func ParseKeyOrder(key []byte) (uint64, bool) {
+	if len(key) < 8 || len(key) > 9 {
+		return 0, false
+	}
+	if len(key) == 9 && key[0] != OrderKeyTypeAsk && key[0] != OrderKeyTypeBid {
+		return 0, false
+	}
+	return uint64FromBz(key[len(key)-8:])
 }
 
 // indexPrefixMarketToOrder creates the prefix for the market to order prefix entries with some extra space for the rest.

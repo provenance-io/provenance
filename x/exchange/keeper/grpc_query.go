@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -166,14 +167,86 @@ func (k QueryServer) QueryGetOwnerOrders(goCtx context.Context, req *exchange.Qu
 
 // QueryGetAssetOrders looks up the orders for a specific asset denom.
 func (k QueryServer) QueryGetAssetOrders(goCtx context.Context, req *exchange.QueryGetAssetOrdersRequest) (*exchange.QueryGetAssetOrdersResponse, error) {
-	// TODO[1658]: Implement QueryGetAssetOrders query
-	panic("not implemented")
+	if req == nil || len(req.Asset) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	var pre []byte
+	switch strings.ToLower(req.OrderType) {
+	case "":
+		pre = GetIndexKeyPrefixAssetToOrder(req.Asset)
+	case exchange.OrderTypeAsk:
+		pre = GetIndexKeyPrefixAssetToOrderAsks(req.Asset)
+	case exchange.OrderTypeBid:
+		pre = GetIndexKeyPrefixAssetToOrderBids(req.Asset)
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "unknown order type %q", req.OrderType)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	store := prefix.NewStore(k.getStore(ctx), pre)
+	resp := &exchange.QueryGetAssetOrdersResponse{}
+	var pageErr error
+
+	resp.Pagination, pageErr = query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		// If we can't get the order id from the key, just pretend like it doesn't exist.
+		_, _, orderID, perr := ParseIndexKeyAssetToOrder(key)
+		if perr != nil {
+			return false, nil
+		}
+		if accumulate {
+			// Only add them to the result if we can read it.
+			// This might result in fewer results than the limit, but at least one bad entry won't block others.
+			order, oerr := k.parseOrderStoreValue(orderID, value)
+			if oerr != nil {
+				resp.Orders = append(resp.Orders, order)
+			}
+		}
+		return true, nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for asset %s: %v", req.Asset, pageErr)
+	}
+
+	return resp, nil
 }
 
 // QueryGetAllOrders gets all orders in the exchange module.
 func (k QueryServer) QueryGetAllOrders(goCtx context.Context, req *exchange.QueryGetAllOrdersRequest) (*exchange.QueryGetAllOrdersResponse, error) {
-	// TODO[1658]: Implement QueryGetAllOrders query
-	panic("not implemented")
+	var pagination *query.PageRequest
+	if req != nil {
+		pagination = req.Pagination
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	pre := GetKeyPrefixOrder()
+	store := prefix.NewStore(k.getStore(ctx), pre)
+	resp := &exchange.QueryGetAllOrdersResponse{}
+	var pageErr error
+
+	resp.Pagination, pageErr = query.FilteredPaginate(store, pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		// If we can't get the order id from the key, just pretend like it doesn't exist.
+		orderID, ok := ParseKeyOrder(key)
+		if !ok {
+			return false, nil
+		}
+		if accumulate {
+			// Only add them to the result if we can read it.
+			// This might result in fewer results than the limit, but at least one bad entry won't block others.
+			order, oerr := k.parseOrderStoreValue(orderID, value)
+			if oerr != nil {
+				resp.Orders = append(resp.Orders, order)
+			}
+		}
+		return true, nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating all orders: %v", pageErr)
+	}
+
+	return resp, nil
 }
 
 // QueryMarketInfo returns the information/details about a market.

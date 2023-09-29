@@ -2822,6 +2822,52 @@ func TestMakeKeyOrder(t *testing.T) {
 	}
 }
 
+func TestParseKeyOrder(t *testing.T) {
+	tests := []struct {
+		name       string
+		key        []byte
+		expOrderID uint64
+		expOK      bool
+	}{
+		{name: "nil key", key: nil, expOrderID: 0, expOK: false},
+		{name: "empty key", key: []byte{}, expOrderID: 0, expOK: false},
+		{name: "7 byte key", key: []byte{1, 2, 3, 4, 5, 6, 7}, expOrderID: 0, expOK: false},
+		{name: "10 byte key", key: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, expOrderID: 0, expOK: false},
+		{name: "9 byte key unknown type", key: []byte{99, 1, 2, 3, 4, 5, 6, 7, 8}, expOrderID: 0, expOK: false},
+		{
+			name:       "8 byte key",
+			key:        []byte{1, 2, 3, 4, 5, 6, 7, 8},
+			expOrderID: 72_623_859_790_382_856,
+			expOK:      true,
+		},
+		{
+			name:       "9 byte key ask",
+			key:        []byte{keeper.OrderKeyTypeAsk, 1, 2, 3, 4, 5, 6, 7, 8},
+			expOrderID: 72_623_859_790_382_856,
+			expOK:      true,
+		},
+		{
+			name:       "9 byte key bid",
+			key:        []byte{keeper.OrderKeyTypeBid, 1, 2, 3, 4, 5, 6, 7, 8},
+			expOrderID: 72_623_859_790_382_856,
+			expOK:      true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var orderID uint64
+			var ok bool
+			testFunc := func() {
+				orderID, ok = keeper.ParseKeyOrder(tc.key)
+			}
+			require.NotPanics(t, testFunc, "ParseKeyOrder")
+			assert.Equal(t, tc.expOK, ok, "ParseKeyOrder bool ok")
+			assert.Equal(t, tc.expOrderID, orderID, "ParseKeyOrder order ID")
+		})
+	}
+}
+
 func TestGetIndexKeyPrefixMarketToOrder(t *testing.T) {
 	tests := []struct {
 		name     string
