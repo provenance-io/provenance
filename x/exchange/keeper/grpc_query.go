@@ -2,6 +2,12 @@ package keeper
 
 import (
 	"context"
+	"fmt"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
@@ -19,8 +25,46 @@ var _ exchange.QueryServer = QueryServer{}
 
 // QueryOrderFeeCalc calculates the fees that will be associated with the provided order.
 func (k QueryServer) QueryOrderFeeCalc(goCtx context.Context, req *exchange.QueryOrderFeeCalcRequest) (*exchange.QueryOrderFeeCalcResponse, error) {
-	// TODO[1658]: Implement QueryOrderFeeCalc query
-	panic("not implemented")
+	if req == nil || (req.AskOrder == nil && req.BidOrder == nil) {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if req.AskOrder != nil && req.BidOrder != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	store := k.getStore(ctx)
+	resp := &exchange.QueryOrderFeeCalcResponse{}
+
+	switch {
+	case req.AskOrder != nil:
+		order := req.AskOrder
+		ratioFee, err := calculateSellerSettlementRatioFee(store, order.MarketId, order.Price)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "failed to calculate seller ratio fee option: %v", err)
+		}
+		if ratioFee != nil {
+			resp.SettlementRatioFeeOptions = append(resp.SettlementRatioFeeOptions, *ratioFee)
+		}
+		resp.SettlementFlatFeeOptions = getSellerSettlementFlatFees(store, order.MarketId)
+		resp.CreationFeeOptions = getCreateAskFlatFees(store, order.MarketId)
+	case req.BidOrder != nil:
+		order := req.BidOrder
+		ratioFees, err := calcBuyerSettlementRatioFeeOptions(store, order.MarketId, order.Price)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "failed to calculate buyer ratio fee options: %v", err)
+		}
+		if len(ratioFees) > 0 {
+			resp.SettlementRatioFeeOptions = append(resp.SettlementRatioFeeOptions, ratioFees...)
+		}
+		resp.SettlementFlatFeeOptions = getBuyerSettlementFlatFees(store, order.MarketId)
+		resp.CreationFeeOptions = getCreateBidFlatFees(store, order.MarketId)
+	default:
+		// This case should have been caught right off the bat in this query.
+		panic(fmt.Errorf("missing QueryOrderFeeCalc case"))
+	}
+
+	return resp, nil
 }
 
 // QuerySettlementFeeCalc calculates the fees that will be associated with the provided settlement.

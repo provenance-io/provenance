@@ -366,7 +366,7 @@ func calculateSellerSettlementRatioFee(store sdk.KVStore, marketID uint32, price
 	if ratio == nil {
 		return nil, nil
 	}
-	rv, err := ratio.ApplyTo(price)
+	rv, err := ratio.ApplyToLoosely(price)
 	if err != nil {
 		return nil, fmt.Errorf("invalid seller settlement fees: %w", err)
 	}
@@ -430,11 +430,11 @@ func getBuyerSettlementFeeRatiosForPriceDenom(store sdk.KVStore, marketID uint32
 	return ratios
 }
 
-// CalculateBuyerSettlementRatioFeeOptions calculates the buyer settlement ratio fee options available for the given price.
-func (k Keeper) CalculateBuyerSettlementRatioFeeOptions(ctx sdk.Context, marketID uint32, price sdk.Coin) ([]sdk.Coin, error) {
-	ratios := getBuyerSettlementFeeRatiosForPriceDenom(k.getStore(ctx), marketID, price.Denom)
+// calcBuyerSettlementRatioFeeOptions calculates the buyer settlement ratio fee options available for the given price.
+func calcBuyerSettlementRatioFeeOptions(store sdk.KVStore, marketID uint32, price sdk.Coin) ([]sdk.Coin, error) {
+	ratios := getBuyerSettlementFeeRatiosForPriceDenom(store, marketID, price.Denom)
 	if len(ratios) == 0 {
-		return nil, fmt.Errorf("no buyer settlement fee ratios found with price denom %q", price.Denom)
+		return nil, nil
 	}
 
 	var errs []error
@@ -454,6 +454,11 @@ func (k Keeper) CalculateBuyerSettlementRatioFeeOptions(ctx sdk.Context, marketI
 		return nil, errors.Join(errs...)
 	}
 	return rv, nil
+}
+
+// CalculateBuyerSettlementRatioFeeOptions calculates the buyer settlement ratio fee options available for the given price.
+func (k Keeper) CalculateBuyerSettlementRatioFeeOptions(ctx sdk.Context, marketID uint32, price sdk.Coin) ([]sdk.Coin, error) {
+	return calcBuyerSettlementRatioFeeOptions(k.getStore(ctx), marketID, price)
 }
 
 // validateBuyerSettlementFee returns an error if the provided fee is not enough to cover both the
