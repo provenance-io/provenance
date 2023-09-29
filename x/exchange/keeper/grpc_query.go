@@ -37,42 +37,42 @@ func (k QueryServer) QueryGetOrder(goCtx context.Context, req *exchange.QueryGet
 
 // QueryGetMarketOrders looks up the orders in a market.
 func (k QueryServer) QueryGetMarketOrders(goCtx context.Context, req *exchange.QueryGetMarketOrdersRequest) (*exchange.QueryGetMarketOrdersResponse, error) {
-	// TODO[1658]: Implement XXX query
+	// TODO[1658]: Implement QueryGetMarketOrders query
 	panic("not implemented")
 }
 
 // QueryGetAddressOrders looks up the orders from the provided address.
 func (k QueryServer) QueryGetAddressOrders(goCtx context.Context, req *exchange.QueryGetAddressOrdersRequest) (*exchange.QueryGetAddressOrdersResponse, error) {
-	// TODO[1658]: Implement XXX query
+	// TODO[1658]: Implement QueryGetAddressOrders query
 	panic("not implemented")
 }
 
 // QueryGetAllOrders gets all orders in the exchange module.
 func (k QueryServer) QueryGetAllOrders(goCtx context.Context, req *exchange.QueryGetAllOrdersRequest) (*exchange.QueryGetAllOrdersResponse, error) {
-	// TODO[1658]: Implement XXX query
+	// TODO[1658]: Implement QueryGetAllOrders query
 	panic("not implemented")
 }
 
 // QueryMarketInfo returns the information/details about a market.
 func (k QueryServer) QueryMarketInfo(goCtx context.Context, req *exchange.QueryMarketInfoRequest) (*exchange.QueryMarketInfoResponse, error) {
-	// TODO[1658]: Implement XXX query
+	// TODO[1658]: Implement QueryMarketInfo query
 	panic("not implemented")
 }
 
 // QueryParams returns the exchange module parameters.
 func (k QueryServer) QueryParams(goCtx context.Context, req *exchange.QueryParamsRequest) (*exchange.QueryParamsResponse, error) {
-	// TODO[1658]: Implement XXX query
+	// TODO[1658]: Implement QueryParams query
 	panic("not implemented")
 }
 
 // QueryValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
 func (k QueryServer) QueryValidateCreateMarket(goCtx context.Context, req *exchange.QueryValidateCreateMarketRequest) (*exchange.QueryValidateCreateMarketResponse, error) {
-	// TODO[1658]: Implement XXX query
+	// TODO[1658]: Implement QueryValidateCreateMarket query
 	panic("not implemented")
 }
 
 // QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
 func (k QueryServer) QueryValidateManageFees(goCtx context.Context, req *exchange.QueryValidateManageFeesRequest) (*exchange.QueryValidateManageFeesResponse, error) {
-	// TODO[1658]: Implement XXX query
+	// TODO[1658]: Implement QueryValidateManageFees query
 	panic("not implemented")
 }
