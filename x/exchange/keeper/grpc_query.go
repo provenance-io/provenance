@@ -102,7 +102,7 @@ func (k QueryServer) QueryGetMarketOrders(goCtx context.Context, req *exchange.Q
 
 	resp.Pagination, pageErr = query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		// If we can't get the order id from the key, just pretend like it doesn't exist.
-		_, orderID, perr := ParseIndexKeyMarketToOrder(key)
+		_, _, orderID, perr := ParseIndexKeyMarketToOrder(key)
 		if perr != nil {
 			return false, nil
 		}
@@ -143,7 +143,7 @@ func (k QueryServer) QueryGetOwnerOrders(goCtx context.Context, req *exchange.Qu
 
 	resp.Pagination, pageErr = query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		// If we can't get the order id from the key, just pretend like it doesn't exist.
-		_, orderID, perr := ParseIndexKeyAddressToOrder(key)
+		_, _, orderID, perr := ParseIndexKeyAddressToOrder(key)
 		if perr != nil {
 			return false, nil
 		}

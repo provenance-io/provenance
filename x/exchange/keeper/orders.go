@@ -83,8 +83,8 @@ func (k Keeper) parseOrderStoreKeyValue(key, value []byte) (*exchange.Order, err
 	return k.parseOrderStoreValue(orderID, value)
 }
 
-// createIndexEntries creates all the key/value index entries for an order.
-func createIndexEntries(order exchange.Order) []sdk.KVPair {
+// createIndexKeys creates all the key/value index entries for an order.
+func createIndexKeys(order exchange.Order) [][]byte {
 	marketID := order.GetMarketID()
 	orderID := order.GetOrderID()
 	orderTypeByte := order.GetOrderTypeByte()
@@ -92,19 +92,10 @@ func createIndexEntries(order exchange.Order) []sdk.KVPair {
 	addr := sdk.MustAccAddressFromBech32(owner)
 	assets := order.GetAssets()
 
-	return []sdk.KVPair{
-		{
-			Key:   MakeIndexKeyMarketToOrder(marketID, orderID),
-			Value: []byte{orderTypeByte},
-		},
-		{
-			Key:   MakeIndexKeyAddressToOrder(addr, orderID),
-			Value: []byte{orderTypeByte},
-		},
-		{
-			Key:   MakeIndexKeyAssetToOrder(assets.Denom, orderTypeByte, orderID),
-			Value: nil,
-		},
+	return [][]byte{
+		MakeIndexKeyMarketToOrder(marketID, orderTypeByte, orderID),
+		MakeIndexKeyAddressToOrder(addr, orderTypeByte, orderID),
+		MakeIndexKeyAssetToOrder(assets.Denom, orderTypeByte, orderID),
 	}
 }
 
@@ -131,9 +122,9 @@ func (k Keeper) setOrderInStore(store sdk.KVStore, order exchange.Order) error {
 	isUpdate := store.Has(key)
 	store.Set(key, value)
 	if !isUpdate {
-		indexEntries := createIndexEntries(order)
-		for _, entry := range indexEntries {
-			store.Set(entry.Key, entry.Value)
+		indexKeys := createIndexKeys(order)
+		for _, entry := range indexKeys {
+			store.Set(entry, nil)
 		}
 		// It is assumed that these index entries cannot change over the life of an order.
 		// The only change that is allowed to an order is the assets (due to partial fulfillment).
@@ -147,9 +138,9 @@ func (k Keeper) setOrderInStore(store sdk.KVStore, order exchange.Order) error {
 func deleteAndDeIndexOrder(store sdk.KVStore, order exchange.Order) {
 	key := MakeKeyOrder(order.OrderId)
 	store.Delete(key)
-	indexEntries := createIndexEntries(order)
-	for _, entry := range indexEntries {
-		store.Delete(entry.Key)
+	indexKeys := createIndexKeys(order)
+	for _, entry := range indexKeys {
+		store.Delete(entry)
 	}
 }
 
@@ -201,29 +192,71 @@ func (k Keeper) IterateOrders(ctx sdk.Context, cb func(order *exchange.Order) bo
 // The callback takes in the order id and order type byte and should return whether to stop iterating.
 func (k Keeper) IterateMarketOrders(ctx sdk.Context, marketID uint32, cb func(orderID uint64, orderTypeByte byte) bool) {
 	k.iterate(ctx, GetIndexKeyPrefixMarketToOrder(marketID), func(key, value []byte) bool {
-		if len(value) == 0 {
-			return false
-		}
-		_, orderID, err := ParseIndexKeyMarketToOrder(key)
+		_, orderTypeByte, orderID, err := ParseIndexKeyMarketToOrder(key)
 		if err != nil {
 			return false
 		}
-		return cb(orderID, value[0])
+		return cb(orderID, orderTypeByte)
+	})
+}
+
+// IterateMarketAskOrders iterates over all ask orders for a market.
+// The callback takes in the order id and order type byte and should return whether to stop iterating.
+func (k Keeper) IterateMarketAskOrders(ctx sdk.Context, marketID uint32, cb func(orderID uint64, orderTypeByte byte) bool) {
+	k.iterate(ctx, GetIndexKeyPrefixMarketToOrderAsks(marketID), func(key, _ []byte) bool {
+		_, _, orderID, err := ParseIndexKeyMarketToOrder(key)
+		if err != nil {
+			return false
+		}
+		return cb(orderID, OrderKeyTypeAsk)
+	})
+}
+
+// IterateMarketBidOrders iterates over all bid orders for a market.
+// The callback takes in the order id and order type byte and should return whether to stop iterating.
+func (k Keeper) IterateMarketBidOrders(ctx sdk.Context, marketID uint32, cb func(orderID uint64, orderTypeByte byte) bool) {
+	k.iterate(ctx, GetIndexKeyPrefixMarketToOrderBids(marketID), func(key, _ []byte) bool {
+		_, _, orderID, err := ParseIndexKeyMarketToOrder(key)
+		if err != nil {
+			return false
+		}
+		return cb(orderID, OrderKeyTypeBid)
 	})
 }
 
 // IterateAddressOrders iterates over all orders for an address.
 // The callback takes in the order id and order type byte and should return whether to stop iterating.
 func (k Keeper) IterateAddressOrders(ctx sdk.Context, addr sdk.AccAddress, cb func(orderID uint64, orderTypeByte byte) bool) {
-	k.iterate(ctx, GetIndexKeyPrefixAddressToOrder(addr), func(key, value []byte) bool {
-		if len(value) == 0 {
-			return false
-		}
-		_, orderID, err := ParseIndexKeyAddressToOrder(key)
+	k.iterate(ctx, GetIndexKeyPrefixAddressToOrder(addr), func(key, _ []byte) bool {
+		_, orderTypeByte, orderID, err := ParseIndexKeyAddressToOrder(key)
 		if err != nil {
 			return false
 		}
-		return cb(orderID, value[0])
+		return cb(orderID, orderTypeByte)
+	})
+}
+
+// IterateAddressAskOrders iterates over all ask orders for an address.
+// The callback takes in the order id and order type byte and should return whether to stop iterating.
+func (k Keeper) IterateAddressAskOrders(ctx sdk.Context, addr sdk.AccAddress, cb func(orderID uint64, orderTypeByte byte) bool) {
+	k.iterate(ctx, GetIndexKeyPrefixAddressToOrderAsks(addr), func(key, _ []byte) bool {
+		_, _, orderID, err := ParseIndexKeyAddressToOrder(key)
+		if err != nil {
+			return false
+		}
+		return cb(orderID, OrderKeyTypeAsk)
+	})
+}
+
+// IterateAddressBidOrders iterates over all bid orders for an address.
+// The callback takes in the order id and order type byte and should return whether to stop iterating.
+func (k Keeper) IterateAddressBidOrders(ctx sdk.Context, addr sdk.AccAddress, cb func(orderID uint64, orderTypeByte byte) bool) {
+	k.iterate(ctx, GetIndexKeyPrefixAddressToOrderBids(addr), func(key, _ []byte) bool {
+		_, _, orderID, err := ParseIndexKeyAddressToOrder(key)
+		if err != nil {
+			return false
+		}
+		return cb(orderID, OrderKeyTypeBid)
 	})
 }
 
@@ -240,26 +273,26 @@ func (k Keeper) IterateAssetOrders(ctx sdk.Context, assetDenom string, cb func(o
 }
 
 // IterateAssetAskOrders iterates over all ask orders for a given asset denom.
-// The callback takes in the order id and should return whether to stop iterating.
-func (k Keeper) IterateAssetAskOrders(ctx sdk.Context, assetDenom string, cb func(orderID uint64) bool) {
+// The callback takes in the order id and order type byte and should return whether to stop iterating.
+func (k Keeper) IterateAssetAskOrders(ctx sdk.Context, assetDenom string, cb func(orderID uint64, orderTypeByte byte) bool) {
 	k.iterate(ctx, GetIndexKeyPrefixAssetToOrderAsks(assetDenom), func(key, _ []byte) bool {
 		_, _, orderID, err := ParseIndexKeyAssetToOrder(key)
 		if err != nil {
 			return false
 		}
-		return cb(orderID)
+		return cb(orderID, OrderKeyTypeAsk)
 	})
 }
 
 // IterateAssetBidOrders iterates over all bid orders for a given asset denom.
-// The callback takes in the order id and should return whether to stop iterating.
-func (k Keeper) IterateAssetBidOrders(ctx sdk.Context, assetDenom string, cb func(orderID uint64) bool) {
+// The callback takes in the order id and order type byte and should return whether to stop iterating.
+func (k Keeper) IterateAssetBidOrders(ctx sdk.Context, assetDenom string, cb func(orderID uint64, orderTypeByte byte) bool) {
 	k.iterate(ctx, GetIndexKeyPrefixAssetToOrderBids(assetDenom), func(key, _ []byte) bool {
 		_, _, orderID, err := ParseIndexKeyAssetToOrder(key)
 		if err != nil {
 			return false
 		}
-		return cb(orderID)
+		return cb(orderID, OrderKeyTypeBid)
 	})
 }
 
