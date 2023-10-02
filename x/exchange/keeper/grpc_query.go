@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -171,53 +170,16 @@ func (k QueryServer) QueryGetAssetOrders(goCtx context.Context, req *exchange.Qu
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	var orderTypeByte byte
-	filterByType := false
-	if len(req.OrderType) > 0 {
-		orderType := strings.ToLower(req.OrderType)
-		// only look at the first 3 chars to handle stuff like "asks" or "bidOrders" too.
-		if len(orderType) > 3 {
-			orderType = orderType[:3]
-		}
-		switch orderType {
-		case exchange.OrderTypeAsk:
-			orderTypeByte = OrderKeyTypeAsk
-		case exchange.OrderTypeBid:
-			orderTypeByte = OrderKeyTypeBid
-		default:
-			return nil, status.Errorf(codes.InvalidArgument, "unknown order type %q", req.OrderType)
-		}
-		filterByType = true
-	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	pre := GetIndexKeyPrefixAssetToOrder(req.Asset)
 	store := prefix.NewStore(k.getStore(ctx), pre)
+
 	resp := &exchange.QueryGetAssetOrdersResponse{}
-	var pageErr error
+	var err error
+	resp.Pagination, resp.Orders, err = k.GetPageOfOrdersFromIndex(store, req.Pagination, req.OrderType)
 
-	resp.Pagination, pageErr = query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		if filterByType && (len(value) == 0 || value[0] != orderTypeByte) {
-			return false, nil
-		}
-		// If we can't get the order id from the key, just pretend like it doesn't exist.
-		_, orderID, perr := ParseIndexKeyAssetToOrder(key)
-		if perr != nil {
-			return false, nil
-		}
-		if accumulate {
-			// Only add them to the result if we can read it.
-			// This might result in fewer results than the limit, but at least one bad entry won't block others.
-			order, oerr := k.parseOrderStoreValue(orderID, value)
-			if oerr != nil {
-				resp.Orders = append(resp.Orders, order)
-			}
-		}
-		return true, nil
-	})
-
-	if pageErr != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for asset %s: %v", req.Asset, pageErr)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for asset %s: %v", req.Asset, err)
 	}
 
 	return resp, nil

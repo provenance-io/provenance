@@ -3,9 +3,14 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"strings"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
@@ -225,6 +230,55 @@ func (k Keeper) IterateAddressOrders(ctx sdk.Context, addr sdk.AccAddress, cb fu
 // The callback takes in the order id and order type byte and should return whether to stop iterating.
 func (k Keeper) IterateAssetOrders(ctx sdk.Context, assetDenom string, cb func(orderID uint64, orderTypeByte byte) bool) {
 	k.iterateOrderIndex(ctx, GetIndexKeyPrefixAssetToOrder(assetDenom), cb)
+}
+
+// GetPageOfOrdersFromIndex gets a page of orders using a <something> to order index.
+func (k Keeper) GetPageOfOrdersFromIndex(
+	prefixStore sdk.KVStore,
+	pageReq *query.PageRequest,
+	orderType string,
+) (*query.PageResponse, []*exchange.Order, error) {
+	var orderTypeByte byte
+	filterByType := false
+	if len(orderType) > 0 {
+		ot := strings.ToLower(orderType)
+		// only look at the first 3 chars to handle stuff like "asks" or "bidOrders" too.
+		if len(ot) > 3 {
+			ot = ot[:3]
+		}
+		switch ot {
+		case exchange.OrderTypeAsk:
+			orderTypeByte = OrderKeyTypeAsk
+		case exchange.OrderTypeBid:
+			orderTypeByte = OrderKeyTypeBid
+		default:
+			return nil, nil, status.Errorf(codes.InvalidArgument, "unknown order type %q", orderType)
+		}
+		filterByType = true
+	}
+
+	var orders []*exchange.Order
+	pageResp, pageErr := query.FilteredPaginate(prefixStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		if filterByType && (len(value) == 0 || value[0] != orderTypeByte) {
+			return false, nil
+		}
+		// If we can't get the order id from the key, just pretend like it doesn't exist.
+		orderID, ok := ParseIndexKeySuffixOrderID(key)
+		if !ok {
+			return false, nil
+		}
+		if accumulate {
+			// Only add them to the result if we can read it.
+			// This might result in fewer results than the limit, but at least one bad entry won't block others.
+			order, oerr := k.parseOrderStoreValue(orderID, value)
+			if oerr != nil {
+				orders = append(orders, order)
+			}
+		}
+		return true, nil
+	})
+
+	return pageResp, orders, pageErr
 }
 
 // placeHoldOnOrder places a hold on an order's funds in the owner's account.
