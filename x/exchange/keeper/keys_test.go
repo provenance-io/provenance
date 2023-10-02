@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -125,11 +124,6 @@ func TestKeyTypeUniqueness(t *testing.T) {
 			}
 		})
 	}
-
-	t.Run("OrderKeyTypeBytes", func(t *testing.T) {
-		expected := []byte{keeper.OrderKeyTypeAsk, keeper.OrderKeyTypeBid}
-		assert.Equalf(t, expected, keeper.OrderKeyTypeBytes, "OrderKeyTypeBytes")
-	})
 }
 
 func TestParseLengthPrefixedAddr(t *testing.T) {
@@ -2821,7 +2815,7 @@ func TestMakeKeyOrder(t *testing.T) {
 					return keeper.MakeKeyOrder(tc.orderID)
 				},
 				expected:    tc.expected,
-				expPrefixes: []expectedPrefix{{name: "GetKeyPrefixOrder", value: keeper.GetKeyPrefixOrder()}},
+				expPrefixes: []expectedPrefix{{name: "", value: keeper.GetKeyPrefixOrder()}},
 			}
 			checkKey(t, ktc, "MakeKeyOrder(%d)", tc.orderID)
 		})
@@ -2935,223 +2929,73 @@ func TestGetIndexKeyPrefixMarketToOrder(t *testing.T) {
 	}
 }
 
-func TestGetIndexKeyPrefixMarketToOrderAsks(t *testing.T) {
-	orderTypeKey := keeper.OrderKeyTypeAsk
-
-	tests := []struct {
-		name     string
-		marketID uint32
-		expected []byte
-	}{
-		{
-			name:     "market id 0",
-			marketID: 0,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 0, orderTypeKey},
-		},
-		{
-			name:     "market id 1",
-			marketID: 1,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 1, orderTypeKey},
-		},
-		{
-			name:     "market id 255",
-			marketID: 255,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 255, orderTypeKey},
-		},
-		{
-			name:     "market id 256",
-			marketID: 256,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 1, 0, orderTypeKey},
-		},
-		{
-			name:     "market id 65_536",
-			marketID: 65_536,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 1, 0, 0, orderTypeKey},
-		},
-		{
-			name:     "market id 16,777,216",
-			marketID: 16_777_216,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 1, 0, 0, 0, orderTypeKey},
-		},
-		{
-			name:     "market id 16,843,009",
-			marketID: 16_843_009,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 1, 1, 1, 1, orderTypeKey},
-		},
-		{
-			name:     "market id 4,294,967,295",
-			marketID: 4_294_967_295,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 255, 255, 255, 255, orderTypeKey},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			ktc := keyTestCase{
-				maker: func() []byte {
-					return keeper.GetIndexKeyPrefixMarketToOrderAsks(tc.marketID)
-				},
-				expected: tc.expected,
-				expPrefixes: []expectedPrefix{
-					{
-						name:  "GetIndexKeyPrefixMarketToOrder",
-						value: keeper.GetIndexKeyPrefixMarketToOrder(tc.marketID),
-					},
-				},
-			}
-			checkKey(t, ktc, "GetIndexKeyPrefixMarketToOrderAsks(%d)", tc.marketID)
-		})
-	}
-}
-
-func TestGetIndexKeyPrefixMarketToOrderBids(t *testing.T) {
-	orderTypeKey := keeper.OrderKeyTypeBid
-
-	tests := []struct {
-		name     string
-		marketID uint32
-		expected []byte
-	}{
-		{
-			name:     "market id 0",
-			marketID: 0,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 0, orderTypeKey},
-		},
-		{
-			name:     "market id 1",
-			marketID: 1,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 1, orderTypeKey},
-		},
-		{
-			name:     "market id 255",
-			marketID: 255,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 255, orderTypeKey},
-		},
-		{
-			name:     "market id 256",
-			marketID: 256,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 1, 0, orderTypeKey},
-		},
-		{
-			name:     "market id 65_536",
-			marketID: 65_536,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 1, 0, 0, orderTypeKey},
-		},
-		{
-			name:     "market id 16,777,216",
-			marketID: 16_777_216,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 1, 0, 0, 0, orderTypeKey},
-		},
-		{
-			name:     "market id 16,843,009",
-			marketID: 16_843_009,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 1, 1, 1, 1, orderTypeKey},
-		},
-		{
-			name:     "market id 4,294,967,295",
-			marketID: 4_294_967_295,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 255, 255, 255, 255, orderTypeKey},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			ktc := keyTestCase{
-				maker: func() []byte {
-					return keeper.GetIndexKeyPrefixMarketToOrderBids(tc.marketID)
-				},
-				expected: tc.expected,
-				expPrefixes: []expectedPrefix{
-					{
-						name:  "GetIndexKeyPrefixMarketToOrder",
-						value: keeper.GetIndexKeyPrefixMarketToOrder(tc.marketID),
-					},
-				},
-			}
-			checkKey(t, ktc, "GetIndexKeyPrefixMarketToOrderBids(%d)", tc.marketID)
-		})
-	}
-}
-
 func TestMakeIndexKeyMarketToOrder(t *testing.T) {
 	tests := []struct {
-		name          string
-		marketID      uint32
-		orderTypeByte byte
-		orderID       uint64
-		expected      []byte
+		name     string
+		marketID uint32
+		orderID  uint64
+		expected []byte
 	}{
 		{
-			name:          "market 0 order 0",
-			marketID:      0,
-			orderTypeByte: 8,
-			orderID:       0,
-			expected:      []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0},
+			name:     "market 0 order 0",
+			marketID: 0,
+			orderID:  0,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		},
 		{
-			name:          "market 0 order 1",
-			marketID:      0,
-			orderTypeByte: 7,
-			orderID:       1,
-			expected:      []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 1},
+			name:     "market 0 order 1",
+			marketID: 0,
+			orderID:  1,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 		},
 		{
-			name:          "market 0 order 72,340,172,838,076,673",
-			marketID:      0,
-			orderTypeByte: 255,
-			orderID:       72_340_172_838_076_673,
-			expected:      []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 0, 255, 1, 1, 1, 1, 1, 1, 1, 1},
+			name:     "market 0 order 72,340,172,838,076,673",
+			marketID: 0,
+			orderID:  72_340_172_838_076_673,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
 		},
 		{
-			name:          "market 2 order 0",
-			marketID:      2,
-			orderTypeByte: 0,
-			orderID:       0,
-			expected:      []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			name:     "market 2 order 0",
+			marketID: 2,
+			orderID:  0,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0},
 		},
 		{
-			name:          "market 2 order 1",
-			marketID:      2,
-			orderTypeByte: 1,
-			orderID:       1,
-			expected:      []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+			name:     "market 2 order 1",
+			marketID: 2,
+			orderID:  1,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1},
 		},
 		{
-			name:          "market 2 order 72,340,172,838,076,673",
-			marketID:      2,
-			orderTypeByte: 10,
-			orderID:       72_340_172_838_076_673,
-			expected:      []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 2, 10, 1, 1, 1, 1, 1, 1, 1, 1},
+			name:     "market 2 order 72,340,172,838,076,673",
+			marketID: 2,
+			orderID:  72_340_172_838_076_673,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1},
 		},
 		{
-			name:          "market 33,686,018 order 0",
-			marketID:      33_686_018,
-			orderTypeByte: 55,
-			orderID:       0,
-			expected:      []byte{keeper.KeyTypeMarketToOrderIndex, 2, 2, 2, 2, 55, 0, 0, 0, 0, 0, 0, 0, 0},
+			name:     "market 33,686,018 order 0",
+			marketID: 33_686_018,
+			orderID:  0,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0},
 		},
 		{
-			name:          "market 33,686,018 order 1",
-			marketID:      33_686_018,
-			orderTypeByte: 123,
-			orderID:       1,
-			expected:      []byte{keeper.KeyTypeMarketToOrderIndex, 2, 2, 2, 2, 123, 0, 0, 0, 0, 0, 0, 0, 1},
+			name:     "market 33,686,018 order 1",
+			marketID: 33_686_018,
+			orderID:  1,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1},
 		},
 		{
-			name:          "market 33,686,018 order 72,340,172,838,076,673",
-			marketID:      33_686_018,
-			orderTypeByte: keeper.OrderKeyTypeAsk,
-			orderID:       72_340_172_838_076_673,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 2, 2, 2, 2,
-				keeper.OrderKeyTypeAsk, 1, 1, 1, 1, 1, 1, 1, 1},
+			name:     "market 33,686,018 order 72,340,172,838,076,673",
+			marketID: 33_686_018,
+			orderID:  72_340_172_838_076_673,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1},
 		},
+
 		{
-			name:          "market max order max",
-			marketID:      4_294_967_295,
-			orderTypeByte: keeper.OrderKeyTypeBid,
-			orderID:       18_446_744_073_709_551_615,
-			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 255, 255, 255, 255,
-				keeper.OrderKeyTypeBid, 255, 255, 255, 255, 255, 255, 255, 255},
+			name:     "market max order max",
+			marketID: 4_294_967_295,
+			orderID:  18_446_744_073_709_551_615,
+			expected: []byte{keeper.KeyTypeMarketToOrderIndex, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},
 		},
 	}
 
@@ -3159,11 +3003,11 @@ func TestMakeIndexKeyMarketToOrder(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeIndexKeyMarketToOrder(tc.marketID, tc.orderTypeByte, tc.orderID)
+					return keeper.MakeIndexKeyMarketToOrder(tc.marketID, tc.orderID)
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
-					{name: "GetIndexKeyPrefixMarketToOrder", value: keeper.GetIndexKeyPrefixMarketToOrder(tc.marketID)},
+					{name: "", value: keeper.GetIndexKeyPrefixMarketToOrder(tc.marketID)},
 				},
 			}
 			checkKey(t, ktc, "MakeIndexKeyMarketToOrder(%d, %d)", tc.marketID, tc.orderID)
@@ -3172,165 +3016,96 @@ func TestMakeIndexKeyMarketToOrder(t *testing.T) {
 }
 
 func TestParseIndexKeyMarketToOrder(t *testing.T) {
-	keyAsks, keyBids := keeper.OrderKeyTypeAsk, keeper.OrderKeyTypeBid
-	badLenErr := func(actualLength int) string {
-		return fmt.Sprintf("cannot parse market to order key: length %d, expected 8, 9, 13, or 14", actualLength)
-	}
-
 	tests := []struct {
-		name             string
-		key              []byte
-		expMarketID      uint32
-		expOrderTypeByte byte
-		expOrderID       uint64
-		expErr           string
+		name        string
+		key         []byte
+		expMarketID uint32
+		expOrderID  uint64
+		expErr      string
 	}{
 		{
 			name:   "nil key",
 			key:    nil,
-			expErr: badLenErr(0),
+			expErr: "cannot parse market to order key: length 0, expected 8, 12, or 13",
 		},
 		{
 			name:   "empty key",
 			key:    []byte{},
-			expErr: badLenErr(0),
+			expErr: "cannot parse market to order key: length 0, expected 8, 12, or 13",
 		},
 		{
 			name:   "7 bytes",
 			key:    []byte{1, 2, 3, 4, 5, 6, 7},
-			expErr: badLenErr(7),
+			expErr: "cannot parse market to order key: length 7, expected 8, 12, or 13",
+		},
+		{
+			name:   "9 bytes",
+			key:    []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
+			expErr: "cannot parse market to order key: length 9, expected 8, 12, or 13",
 		},
 		{
 			name:   "10 bytes",
 			key:    []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
-			expErr: badLenErr(10),
+			expErr: "cannot parse market to order key: length 10, expected 8, 12, or 13",
 		},
 		{
-			name:   "12 bytes",
-			key:    []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12},
-			expErr: badLenErr(12),
+			name:   "11 bytes",
+			key:    []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
+			expErr: "cannot parse market to order key: length 11, expected 8, 12, or 13",
 		},
 		{
-			name:   "15 bytes",
-			key:    []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
-			expErr: badLenErr(15),
+			name:   "14 bytes",
+			key:    []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+			expErr: "cannot parse market to order key: length 14, expected 8, 12, or 13",
 		},
 		{
-			name:       "order id 0",
+			name:       "8 bytes order id 0",
 			key:        []byte{0, 0, 0, 0, 0, 0, 0, 0},
 			expOrderID: 0,
 		},
 		{
-			name:        "order id 1",
+			name:        "8 bytes order id 1",
 			key:         []byte{0, 0, 0, 0, 0, 0, 0, 1},
 			expMarketID: 0,
 			expOrderID:  1,
 		},
 		{
-			name:       "order id 72,623,859,790,382,856",
+			name:       "8 bytes order id 72,623,859,790,382,856",
 			key:        []byte{1, 2, 3, 4, 5, 6, 7, 8},
 			expOrderID: 72_623_859_790_382_856,
 		},
 		{
-			name:             "ask order id 0",
-			key:              []byte{keyAsks, 0, 0, 0, 0, 0, 0, 0, 0},
-			expOrderTypeByte: keyAsks,
-			expOrderID:       0,
+			name:        "12 bytes market id 1 order id 1",
+			key:         []byte{0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+			expMarketID: 1,
+			expOrderID:  1,
 		},
 		{
-			name:             "ask order id 1",
-			key:              []byte{keyAsks, 0, 0, 0, 0, 0, 0, 0, 1},
-			expOrderTypeByte: keyAsks,
-			expOrderID:       1,
+			name:        "12 bytes market id 16,843,009 order id 144,680,345,676,153,346",
+			key:         []byte{1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2},
+			expMarketID: 16_843_009,
+			expOrderID:  144_680_345_676_153_346,
 		},
 		{
-			name:             "ask order id 72,623,859,790,382,856",
-			key:              []byte{keyAsks, 1, 2, 3, 4, 5, 6, 7, 8},
-			expOrderTypeByte: keyAsks,
-			expOrderID:       72_623_859_790_382_856,
+			name:        "13 bytes market id 1 order id 1",
+			key:         []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+			expMarketID: 1,
+			expOrderID:  1,
 		},
 		{
-			name:             "bid order id 0",
-			key:              []byte{keyBids, 0, 0, 0, 0, 0, 0, 0, 0},
-			expOrderTypeByte: keyBids,
-			expOrderID:       0,
+			name:        "13 bytes market id 16,843,009 order id 144,680,345,676,153,346",
+			key:         []byte{keeper.KeyTypeMarketToOrderIndex, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2},
+			expMarketID: 16_843_009,
+			expOrderID:  144_680_345_676_153_346,
 		},
 		{
-			name:             "bid order id 1",
-			key:              []byte{keyBids, 0, 0, 0, 0, 0, 0, 0, 1},
-			expOrderTypeByte: keyBids,
-			expOrderID:       1,
-		},
-		{
-			name:             "bid order id 72,623,859,790,382,856",
-			key:              []byte{keyBids, 1, 2, 3, 4, 5, 6, 7, 8},
-			expOrderTypeByte: keyBids,
-			expOrderID:       72_623_859_790_382_856,
-		},
-		{
-			name:             "market id 1 ask order id 1",
-			key:              []byte{0, 0, 0, 1, keyAsks, 0, 0, 0, 0, 0, 0, 0, 1},
-			expMarketID:      1,
-			expOrderTypeByte: keyAsks,
-			expOrderID:       1,
-		},
-		{
-			name:             "market id 16,843,009 ask order id 144,680,345,676,153,346",
-			key:              []byte{1, 1, 1, 1, keyAsks, 2, 2, 2, 2, 2, 2, 2, 2},
-			expMarketID:      16_843_009,
-			expOrderTypeByte: keyAsks,
-			expOrderID:       144_680_345_676_153_346,
-		},
-		{
-			name:             "market id 1 bid order id 1",
-			key:              []byte{0, 0, 0, 1, keyBids, 0, 0, 0, 0, 0, 0, 0, 1},
-			expMarketID:      1,
-			expOrderTypeByte: keyBids,
-			expOrderID:       1,
-		},
-		{
-			name:             "market id 16,843,009 bid order id 144,680,345,676,153,346",
-			key:              []byte{1, 1, 1, 1, keyBids, 2, 2, 2, 2, 2, 2, 2, 2},
-			expMarketID:      16_843_009,
-			expOrderTypeByte: keyBids,
-			expOrderID:       144_680_345_676_153_346,
-		},
-		{
-			name:             "type, market id 1 ask order id 1",
-			key:              []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 1, keyAsks, 0, 0, 0, 0, 0, 0, 0, 1},
-			expMarketID:      1,
-			expOrderTypeByte: keyAsks,
-			expOrderID:       1,
-		},
-		{
-			name:             "type, market id 16,843,009 ask order id 144,680,345,676,153,346",
-			key:              []byte{keeper.KeyTypeMarketToOrderIndex, 1, 1, 1, 1, keyAsks, 2, 2, 2, 2, 2, 2, 2, 2},
-			expMarketID:      16_843_009,
-			expOrderTypeByte: keyAsks,
-			expOrderID:       144_680_345_676_153_346,
-		},
-		{
-			name:             "type, market id 1 bid order id 1",
-			key:              []byte{keeper.KeyTypeMarketToOrderIndex, 0, 0, 0, 1, keyBids, 0, 0, 0, 0, 0, 0, 0, 1},
-			expMarketID:      1,
-			expOrderTypeByte: keyBids,
-			expOrderID:       1,
-		},
-		{
-			name:             "type, market id 16,843,009 bid order id 144,680,345,676,153,346",
-			key:              []byte{keeper.KeyTypeMarketToOrderIndex, 1, 1, 1, 1, keyBids, 2, 2, 2, 2, 2, 2, 2, 2},
-			expMarketID:      16_843_009,
-			expOrderTypeByte: keyBids,
-			expOrderID:       144_680_345_676_153_346,
-		},
-		{
-			name:   "type byte too high",
-			key:    []byte{0x4, 0, 0, 0, 1, keyBids, 0, 0, 0, 0, 0, 0, 0, 1},
+			name:   "13 bytes first byte too high",
+			key:    []byte{0x4, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1},
 			expErr: "cannot parse market to order key: unknown type byte 0x4, expected 0x3",
 		},
 		{
-			name:   "type byte too low",
-			key:    []byte{0x2, 0, 0, 0, 1, keyAsks, 0, 0, 0, 0, 0, 0, 0, 1},
+			name:   "13 bytes first byte too low",
+			key:    []byte{0x2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1},
 			expErr: "cannot parse market to order key: unknown type byte 0x2, expected 0x3",
 		},
 	}
@@ -3338,16 +3113,14 @@ func TestParseIndexKeyMarketToOrder(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var marketID uint32
-			var orderTypeByte byte
 			var orderID uint64
 			var err error
 			testFunc := func() {
-				marketID, orderTypeByte, orderID, err = keeper.ParseIndexKeyMarketToOrder(tc.key)
+				marketID, orderID, err = keeper.ParseIndexKeyMarketToOrder(tc.key)
 			}
 			require.NotPanics(t, testFunc, "ParseIndexKeyMarketToOrder(%v)", tc.key)
 			assertions.AssertErrorValue(t, err, tc.expErr, "ParseIndexKeyMarketToOrder(%v) error", tc.key)
 			assert.Equal(t, tc.expMarketID, marketID, "ParseIndexKeyMarketToOrder(%v) market id", tc.key)
-			assert.Equal(t, tc.expOrderTypeByte, orderTypeByte, "ParseIndexKeyMarketToOrder(%v) order type byte", tc.key)
 			assert.Equal(t, tc.expOrderID, orderID, "ParseIndexKeyMarketToOrder(%v) order id", tc.key)
 		})
 	}
@@ -3406,158 +3179,13 @@ func TestGetIndexKeyPrefixAddressToOrder(t *testing.T) {
 	}
 }
 
-func TestGetIndexKeyPrefixAddressToOrderAsks(t *testing.T) {
-	orderTypeKey := keeper.OrderKeyTypeAsk
-
-	tests := []struct {
-		name     string
-		addr     sdk.AccAddress
-		expected []byte
-		expPanic string
-	}{
-		{
-			name:     "nil addr",
-			addr:     nil,
-			expPanic: "empty address not allowed",
-		},
-		{
-			name:     "empty addr",
-			addr:     sdk.AccAddress{},
-			expPanic: "empty address not allowed",
-		},
-		{
-			name:     "256 byte addr",
-			addr:     sdk.AccAddress(bytes.Repeat([]byte{'P'}, 256)),
-			expPanic: "address length should be max 255 bytes, got 256: unknown address",
-		},
-		{
-			name: "5 byte addr",
-			addr: sdk.AccAddress("abcde"),
-			expected: concatBz(
-				[]byte{keeper.KeyTypeAddressToOrderIndex, 5},
-				[]byte("abcde"),
-				[]byte{orderTypeKey},
-			),
-		},
-		{
-			name: "20 byte addr",
-			addr: sdk.AccAddress("abcdefghijklmnopqrst"),
-			expected: concatBz(
-				[]byte{keeper.KeyTypeAddressToOrderIndex, 20},
-				[]byte("abcdefghijklmnopqrst"),
-				[]byte{orderTypeKey},
-			),
-		},
-		{
-			name: "32 byte addr",
-			addr: sdk.AccAddress("abcdefghijklmnopqrstuvwxyzABCDEF"),
-			expected: concatBz(
-				[]byte{keeper.KeyTypeAddressToOrderIndex, 32},
-				[]byte("abcdefghijklmnopqrstuvwxyzABCDEF"),
-				[]byte{orderTypeKey},
-			),
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			ktc := keyTestCase{
-				maker: func() []byte {
-					return keeper.GetIndexKeyPrefixAddressToOrderAsks(tc.addr)
-				},
-				expected: tc.expected,
-				expPanic: tc.expPanic,
-			}
-			if len(tc.addr) > 0 && len(tc.addr) <= 255 {
-				ktc.expPrefixes = []expectedPrefix{
-					{name: "GetIndexKeyPrefixAddressToOrder", value: keeper.GetIndexKeyPrefixAddressToOrder(tc.addr)},
-				}
-			}
-			checkKey(t, ktc, "GetIndexKeyPrefixAddressToOrderAsks(%s)", string(tc.addr))
-		})
-	}
-}
-
-func TestGetIndexKeyPrefixAddressToOrderBids(t *testing.T) {
-	orderTypeKey := keeper.OrderKeyTypeBid
-
-	tests := []struct {
-		name     string
-		addr     sdk.AccAddress
-		expected []byte
-		expPanic string
-	}{
-		{
-			name:     "nil addr",
-			addr:     nil,
-			expPanic: "empty address not allowed",
-		},
-		{
-			name:     "empty addr",
-			addr:     sdk.AccAddress{},
-			expPanic: "empty address not allowed",
-		},
-		{
-			name:     "256 byte addr",
-			addr:     sdk.AccAddress(bytes.Repeat([]byte{'P'}, 256)),
-			expPanic: "address length should be max 255 bytes, got 256: unknown address",
-		},
-		{
-			name: "5 byte addr",
-			addr: sdk.AccAddress("abcde"),
-			expected: concatBz(
-				[]byte{keeper.KeyTypeAddressToOrderIndex, 5},
-				[]byte("abcde"),
-				[]byte{orderTypeKey},
-			),
-		},
-		{
-			name: "20 byte addr",
-			addr: sdk.AccAddress("abcdefghijklmnopqrst"),
-			expected: concatBz(
-				[]byte{keeper.KeyTypeAddressToOrderIndex, 20},
-				[]byte("abcdefghijklmnopqrst"),
-				[]byte{orderTypeKey},
-			),
-		},
-		{
-			name: "32 byte addr",
-			addr: sdk.AccAddress("abcdefghijklmnopqrstuvwxyzABCDEF"),
-			expected: concatBz(
-				[]byte{keeper.KeyTypeAddressToOrderIndex, 32},
-				[]byte("abcdefghijklmnopqrstuvwxyzABCDEF"),
-				[]byte{orderTypeKey},
-			),
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			ktc := keyTestCase{
-				maker: func() []byte {
-					return keeper.GetIndexKeyPrefixAddressToOrderBids(tc.addr)
-				},
-				expected: tc.expected,
-				expPanic: tc.expPanic,
-			}
-			if len(tc.addr) > 0 && len(tc.addr) <= 255 {
-				ktc.expPrefixes = []expectedPrefix{
-					{name: "GetIndexKeyPrefixAddressToOrder", value: keeper.GetIndexKeyPrefixAddressToOrder(tc.addr)},
-				}
-			}
-			checkKey(t, ktc, "GetIndexKeyPrefixAddressToOrderBids(%s)", string(tc.addr))
-		})
-	}
-}
-
 func TestMakeIndexKeyAddressToOrder(t *testing.T) {
 	tests := []struct {
-		name          string
-		addr          sdk.AccAddress
-		orderTypeByte byte
-		orderID       uint64
-		expected      []byte
-		expPanic      string
+		name     string
+		addr     sdk.AccAddress
+		orderID  uint64
+		expected []byte
+		expPanic string
 	}{
 		{
 			name:     "nil addr",
@@ -3575,58 +3203,53 @@ func TestMakeIndexKeyAddressToOrder(t *testing.T) {
 			expPanic: "address length should be max 255 bytes, got 256: unknown address",
 		},
 		{
-			name:          "5 byte addr order 1",
-			addr:          sdk.AccAddress("abcde"),
-			orderTypeByte: keeper.OrderKeyTypeAsk,
-			orderID:       1,
+			name:    "5 byte addr order 1",
+			addr:    sdk.AccAddress("abcde"),
+			orderID: 1,
 			expected: concatBz(
 				[]byte{keeper.KeyTypeAddressToOrderIndex, 5},
 				[]byte("abcde"),
-				[]byte{keeper.OrderKeyTypeAsk, 0, 0, 0, 0, 0, 0, 0, 1},
+				[]byte{0, 0, 0, 0, 0, 0, 0, 1},
 			),
 		},
 		{
-			name:          "20 byte addr order 1",
-			addr:          sdk.AccAddress("abcdefghijklmnopqrst"),
-			orderTypeByte: keeper.OrderKeyTypeBid,
-			orderID:       1,
+			name:    "20 byte addr order 1",
+			addr:    sdk.AccAddress("abcdefghijklmnopqrst"),
+			orderID: 1,
 			expected: concatBz(
 				[]byte{keeper.KeyTypeAddressToOrderIndex, 20},
 				[]byte("abcdefghijklmnopqrst"),
-				[]byte{keeper.OrderKeyTypeBid, 0, 0, 0, 0, 0, 0, 0, 1},
+				[]byte{0, 0, 0, 0, 0, 0, 0, 1},
 			),
 		},
 		{
-			name:          "32 byte addr order 1",
-			addr:          sdk.AccAddress("abcdefghijklmnopqrstuvwxyzABCDEF"),
-			orderTypeByte: 0,
-			orderID:       1,
+			name:    "32 byte addr order 1",
+			addr:    sdk.AccAddress("abcdefghijklmnopqrstuvwxyzABCDEF"),
+			orderID: 1,
 			expected: concatBz(
 				[]byte{keeper.KeyTypeAddressToOrderIndex, 32},
 				[]byte("abcdefghijklmnopqrstuvwxyzABCDEF"),
-				[]byte{0, 0, 0, 0, 0, 0, 0, 0, 1},
+				[]byte{0, 0, 0, 0, 0, 0, 0, 1},
 			),
 		},
 		{
-			name:          "20 byte addr order 5",
-			addr:          sdk.AccAddress("ABCDEFGHIJKLMNOPQRST"),
-			orderTypeByte: 255,
-			orderID:       5,
+			name:    "20 byte addr order 5",
+			addr:    sdk.AccAddress("ABCDEFGHIJKLMNOPQRST"),
+			orderID: 5,
 			expected: concatBz(
 				[]byte{keeper.KeyTypeAddressToOrderIndex, 20},
 				[]byte("ABCDEFGHIJKLMNOPQRST"),
-				[]byte{255, 0, 0, 0, 0, 0, 0, 0, 5},
+				[]byte{0, 0, 0, 0, 0, 0, 0, 5},
 			),
 		},
 		{
-			name:          "20 byte addr order 72,623,859,790,382,856",
-			addr:          sdk.AccAddress("ABCDEFGHIJKLMNOPQRST"),
-			orderTypeByte: 123,
-			orderID:       72_623_859_790_382_856,
+			name:    "20 byte addr order 72,623,859,790,382,856",
+			addr:    sdk.AccAddress("ABCDEFGHIJKLMNOPQRST"),
+			orderID: 72_623_859_790_382_856,
 			expected: concatBz(
 				[]byte{keeper.KeyTypeAddressToOrderIndex, 20},
 				[]byte("ABCDEFGHIJKLMNOPQRST"),
-				[]byte{123, 1, 2, 3, 4, 5, 6, 7, 8},
+				[]byte{1, 2, 3, 4, 5, 6, 7, 8},
 			),
 		},
 	}
@@ -3635,14 +3258,14 @@ func TestMakeIndexKeyAddressToOrder(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeIndexKeyAddressToOrder(tc.addr, tc.orderTypeByte, tc.orderID)
+					return keeper.MakeIndexKeyAddressToOrder(tc.addr, tc.orderID)
 				},
 				expected: tc.expected,
 				expPanic: tc.expPanic,
 			}
 			if len(tc.expPanic) == 0 {
 				ktc.expPrefixes = []expectedPrefix{
-					{name: "GetIndexKeyPrefixAddressToOrder", value: keeper.GetIndexKeyPrefixAddressToOrder(tc.addr)},
+					{name: "", value: keeper.GetIndexKeyPrefixAddressToOrder(tc.addr)},
 				}
 			}
 			checkKey(t, ktc, "MakeIndexKeyAddressToOrder(%s, %d)", string(tc.addr), tc.orderID)
@@ -3651,15 +3274,12 @@ func TestMakeIndexKeyAddressToOrder(t *testing.T) {
 }
 
 func TestParseIndexKeyAddressToOrder(t *testing.T) {
-	keyAsks, keyBids := keeper.OrderKeyTypeAsk, keeper.OrderKeyTypeBid
-
 	tests := []struct {
-		name             string
-		key              []byte
-		expAddr          sdk.AccAddress
-		expOrderTypeByte byte
-		expOrderID       uint64
-		expErr           string
+		name       string
+		key        []byte
+		expAddr    sdk.AccAddress
+		expOrderID uint64
+		expErr     string
 	}{
 		{
 			name:   "nil key",
@@ -3687,136 +3307,83 @@ func TestParseIndexKeyAddressToOrder(t *testing.T) {
 			expOrderID: 72_623_859_790_382_856,
 		},
 		{
-			name:             "ask order id 72,623,859,790,382,856",
-			key:              []byte{keyAsks, 1, 2, 3, 4, 5, 6, 7, 8},
-			expOrderTypeByte: keyAsks,
-			expOrderID:       72_623_859_790_382_856,
+			name:   "9 bytes",
+			key:    []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
+			expErr: "cannot parse address to order index key: unable to determine address from single byte 0x1",
 		},
 		{
-			name:             "bid order id 72,623,859,790,382,856",
-			key:              []byte{keyBids, 1, 2, 3, 4, 5, 6, 7, 8},
-			expOrderTypeByte: keyBids,
-			expOrderID:       72_623_859_790_382_856,
-		},
-		{
-			name:   "order type byte 99 and order 72,623,859,790,382,856",
-			key:    []byte{99, 1, 2, 3, 4, 5, 6, 7, 8},
-			expErr: "cannot parse address to order key: unknown order type byte 0x63, expected one of []byte{0x0, 0x1}",
-		},
-		{
-			name:             "1 byte address ask order id 72,623,859,790,382,856",
-			key:              []byte{1, 55, keyAsks, 1, 2, 3, 4, 5, 6, 7, 8},
-			expAddr:          sdk.AccAddress{55},
-			expOrderTypeByte: keyAsks,
-			expOrderID:       72_623_859_790_382_856,
-		},
-		{
-			name:             "1 byte address bid order id 72,623,859,790,382,856",
-			key:              []byte{1, 55, keyBids, 1, 2, 3, 4, 5, 6, 7, 8},
-			expAddr:          sdk.AccAddress{55},
-			expOrderTypeByte: keyBids,
-			expOrderID:       72_623_859_790_382_856,
-		},
-		{
-			name:   "1 byte address order type byte 99 order id 72,623,859,790,382,856",
-			key:    []byte{1, 55, 99, 1, 2, 3, 4, 5, 6, 7, 8},
-			expErr: "cannot parse address to order key: unknown order type byte 0x63, expected one of []byte{0x0, 0x1}",
+			name:       "1 byte address order id 72,623,859,790,382,856",
+			key:        []byte{1, 55, 1, 2, 3, 4, 5, 6, 7, 8},
+			expAddr:    sdk.AccAddress{55},
+			expOrderID: 72_623_859_790_382_856,
 		},
 		{
 			name:   "length byte 2 but only 1 byte after it",
-			key:    []byte{2, 55, keyAsks, 1, 2, 3, 4, 5, 6, 7, 8},
+			key:    []byte{2, 55, 1, 2, 3, 4, 5, 6, 7, 8},
 			expErr: "cannot parse address to order index key: unable to determine address from [2, 55, ...(length 2)]",
 		},
 		{
 			name:   "length byte 2 but 3 bytes after it",
-			key:    []byte{2, 55, 56, 57, keyBids, 1, 2, 3, 4, 5, 6, 7, 8},
+			key:    []byte{2, 55, 56, 57, 1, 2, 3, 4, 5, 6, 7, 8},
 			expErr: "cannot parse address to order index key: unable to determine address from [2, 55, ...(length 4)]",
 		},
 		{
-			name:             "length byte 4 ask order id 72,623,859,790,382,856",
-			key:              []byte{4, 55, 56, 57, 58, keyAsks, 1, 2, 3, 4, 5, 6, 7, 8},
-			expAddr:          sdk.AccAddress{55, 56, 57, 58},
-			expOrderTypeByte: keyAsks,
-			expOrderID:       72_623_859_790_382_856,
+			name:       "length byte 4 order id 72,623,859,790,382,856",
+			key:        []byte{4, 55, 56, 57, 58, 1, 2, 3, 4, 5, 6, 7, 8},
+			expAddr:    sdk.AccAddress{55, 56, 57, 58},
+			expOrderID: 72_623_859_790_382_856,
 		},
 		{
 			name: "length byte 20 but only 19 byte after it",
 			key: []byte{20, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
 				111, 112, 113, 114, 115, 116, 117, 118, 119,
-				keyBids, 1, 2, 3, 4, 5, 6, 7, 8},
+				1, 2, 3, 4, 5, 6, 7, 8},
 			expErr: "cannot parse address to order index key: unable to determine address from [20, 101, ...(length 20)]",
 		},
 		{
 			name: "length byte 20 but 21 byte after it",
 			key: []byte{20, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
 				111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
-				keyAsks, 1, 2, 3, 4, 5, 6, 7, 8},
+				1, 2, 3, 4, 5, 6, 7, 8},
 			expErr: "cannot parse address to order index key: unable to determine address from [20, 101, ...(length 22)]",
 		},
 		{
-			name: "20 byte address ask order id 72,623,859,790,382,856",
+			name: "20 byte address order id 72,623,859,790,382,856",
 			key: []byte{20, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
 				111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
-				keyAsks, 1, 2, 3, 4, 5, 6, 7, 8},
+				1, 2, 3, 4, 5, 6, 7, 8},
 			expAddr: sdk.AccAddress{101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
 				111, 112, 113, 114, 115, 116, 117, 118, 119, 120},
-			expOrderTypeByte: keyAsks,
-			expOrderID:       72_623_859_790_382_856,
+			expOrderID: 72_623_859_790_382_856,
 		},
 		{
-			name: "20 byte address bid order id 72,623,859,790,382,856",
-			key: []byte{20, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
-				111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
-				keyBids, 1, 2, 3, 4, 5, 6, 7, 8},
-			expAddr: sdk.AccAddress{101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
-				111, 112, 113, 114, 115, 116, 117, 118, 119, 120},
-			expOrderTypeByte: keyBids,
-			expOrderID:       72_623_859_790_382_856,
-		},
-		{
-			name:             "with type byte: 1 byte address ask order id 72,623,859,790,382,856",
-			key:              []byte{keeper.KeyTypeAddressToOrderIndex, 1, 55, keyAsks, 1, 2, 3, 4, 5, 6, 7, 8},
-			expAddr:          sdk.AccAddress{55},
-			expOrderTypeByte: keyAsks,
-			expOrderID:       72_623_859_790_382_856,
-		},
-		{
-			name:             "with type byte: 1 byte address bid order id 72,623,859,790,382,856",
-			key:              []byte{keeper.KeyTypeAddressToOrderIndex, 1, 55, keyBids, 1, 2, 3, 4, 5, 6, 7, 8},
-			expAddr:          sdk.AccAddress{55},
-			expOrderTypeByte: keyBids,
-			expOrderID:       72_623_859_790_382_856,
+			name:       "with type byte: 1 byte address order id 72,623,859,790,382,856",
+			key:        []byte{keeper.KeyTypeAddressToOrderIndex, 1, 55, 1, 2, 3, 4, 5, 6, 7, 8},
+			expAddr:    sdk.AccAddress{55},
+			expOrderID: 72_623_859_790_382_856,
 		},
 		{
 			name:   "with type byte: length byte 2 but only 1 byte after it",
-			key:    []byte{keeper.KeyTypeAddressToOrderIndex, 2, 55, keyBids, 1, 2, 3, 4, 5, 6, 7, 8},
+			key:    []byte{keeper.KeyTypeAddressToOrderIndex, 2, 55, 1, 2, 3, 4, 5, 6, 7, 8},
 			expErr: "cannot parse address to order index key: unable to determine address from [4, 2, ...(length 3)]",
 		},
 		{
 			name:   "with type byte: length byte 2 but 5 bytes after it",
-			key:    []byte{keeper.KeyTypeAddressToOrderIndex, 2, 55, 56, 57, 58, keyAsks, 1, 2, 3, 4, 5, 6, 7, 8},
+			key:    []byte{keeper.KeyTypeAddressToOrderIndex, 2, 55, 56, 57, 58, 1, 2, 3, 4, 5, 6, 7, 8},
 			expErr: "cannot parse address to order index key: unable to determine address from [4, 2, ...(length 6)]",
 		},
 		{
-			name:             "with type byte: length byte 4 ask order id 72,623,859,790,382,856",
-			key:              []byte{keeper.KeyTypeAddressToOrderIndex, 4, 55, 56, 57, 58, keyAsks, 1, 2, 3, 4, 5, 6, 7, 8},
-			expAddr:          sdk.AccAddress{55, 56, 57, 58},
-			expOrderTypeByte: keyAsks,
-			expOrderID:       72_623_859_790_382_856,
-		},
-		{
-			name:             "with type byte: length byte 4 bid order id 72,623,859,790,382,856",
-			key:              []byte{keeper.KeyTypeAddressToOrderIndex, 4, 55, 56, 57, 58, keyBids, 1, 2, 3, 4, 5, 6, 7, 8},
-			expAddr:          sdk.AccAddress{55, 56, 57, 58},
-			expOrderTypeByte: keyBids,
-			expOrderID:       72_623_859_790_382_856,
+			name:       "with type byte: length byte 4 order id 72,623,859,790,382,856",
+			key:        []byte{keeper.KeyTypeAddressToOrderIndex, 4, 55, 56, 57, 58, 1, 2, 3, 4, 5, 6, 7, 8},
+			expAddr:    sdk.AccAddress{55, 56, 57, 58},
+			expOrderID: 72_623_859_790_382_856,
 		},
 		{
 			name: "with type byte: length byte 20 but only 19 byte after it",
 			key: []byte{keeper.KeyTypeAddressToOrderIndex, 20,
 				101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
 				111, 112, 113, 114, 115, 116, 117, 118, 119,
-				keyAsks, 1, 2, 3, 4, 5, 6, 7, 8},
+				1, 2, 3, 4, 5, 6, 7, 8},
 			expErr: "cannot parse address to order index key: unable to determine address from [4, 20, ...(length 21)]",
 		},
 		{
@@ -3824,46 +3391,32 @@ func TestParseIndexKeyAddressToOrder(t *testing.T) {
 			key: []byte{keeper.KeyTypeAddressToOrderIndex, 20,
 				101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
 				111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
-				keyBids, 1, 2, 3, 4, 5, 6, 7, 8},
+				1, 2, 3, 4, 5, 6, 7, 8},
 			expErr: "cannot parse address to order index key: unable to determine address from [4, 20, ...(length 23)]",
 		},
 		{
-			name: "with type byte: 20 byte address ask order id 72,623,859,790,382,856",
+			name: "with type byte: 20 byte address order id 72,623,859,790,382,856",
 			key: []byte{keeper.KeyTypeAddressToOrderIndex, 20,
 				101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
 				111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
-				keyAsks, 1, 2, 3, 4, 5, 6, 7, 8},
+				1, 2, 3, 4, 5, 6, 7, 8},
 			expAddr: sdk.AccAddress{101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
 				111, 112, 113, 114, 115, 116, 117, 118, 119, 120},
-			expOrderTypeByte: keyAsks,
-			expOrderID:       72_623_859_790_382_856,
-		},
-		{
-			name: "with type byte: 20 byte address ask order id 72,623,859,790,382,856",
-			key: []byte{keeper.KeyTypeAddressToOrderIndex, 20,
-				101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
-				111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
-				keyBids, 1, 2, 3, 4, 5, 6, 7, 8},
-			expAddr: sdk.AccAddress{101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
-				111, 112, 113, 114, 115, 116, 117, 118, 119, 120},
-			expOrderTypeByte: keyBids,
-			expOrderID:       72_623_859_790_382_856,
+			expOrderID: 72_623_859_790_382_856,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var addr sdk.AccAddress
-			var orderTypeByte byte
 			var orderID uint64
 			var err error
 			testFunc := func() {
-				addr, orderTypeByte, orderID, err = keeper.ParseIndexKeyAddressToOrder(tc.key)
+				addr, orderID, err = keeper.ParseIndexKeyAddressToOrder(tc.key)
 			}
 			require.NotPanics(t, testFunc, "ParseIndexKeyAddressToOrder(%v)", tc.key)
 			assertions.AssertErrorValue(t, err, tc.expErr, "ParseIndexKeyAddressToOrder(%v) error", tc.key)
 			assert.Equal(t, tc.expAddr, addr, "ParseIndexKeyAddressToOrder(%v) address", tc.key)
-			assert.Equal(t, tc.expOrderTypeByte, orderTypeByte, "ParseIndexKeyAddressToOrder(%v) order type byte", tc.key)
 			assert.Equal(t, tc.expOrderID, orderID, "ParseIndexKeyAddressToOrder(%v) order id", tc.key)
 		})
 	}
@@ -4156,8 +3709,6 @@ func TestMakeIndexKeyAssetToOrder(t *testing.T) {
 }
 
 func TestParseIndexKeyAssetToOrder(t *testing.T) {
-	keyAsks, keyBids := keeper.OrderKeyTypeAsk, keeper.OrderKeyTypeBid
-
 	tests := []struct {
 		name        string
 		key         []byte
@@ -4192,100 +3743,31 @@ func TestParseIndexKeyAssetToOrder(t *testing.T) {
 			expOrderID: 578_437_695_752_307_201,
 		},
 		{
-			name:        "asks order id 578,437,695,752,307,201",
-			key:         []byte{keyAsks, 8, 7, 6, 5, 4, 3, 2, 1},
-			expTypeByte: keyAsks,
+			name:        "order type byte 99 order id 578,437,695,752,307,201",
+			key:         []byte{99, 8, 7, 6, 5, 4, 3, 2, 1},
+			expTypeByte: 99,
 			expOrderID:  578_437_695_752_307_201,
 		},
 		{
-			name:        "nhash asks order id 578,437,695,752,307,201",
-			key:         []byte{'n', 'h', 'a', 's', 'h', keyAsks, 8, 7, 6, 5, 4, 3, 2, 1},
+			name:        "nhash order type byte 99 order id 578,437,695,752,307,201",
+			key:         []byte{'n', 'h', 'a', 's', 'h', 99, 8, 7, 6, 5, 4, 3, 2, 1},
 			expDenom:    "nhash",
-			expTypeByte: keyAsks,
+			expTypeByte: 99,
 			expOrderID:  578_437_695_752_307_201,
 		},
 		{
-			name:        "hex string asks order id 578,437,695,752,307,201",
-			key:         append([]byte(hexString), keyAsks, 8, 7, 6, 5, 4, 3, 2, 1),
+			name:        "hex string order type byte 99 order id 578,437,695,752,307,201",
+			key:         append([]byte(hexString), 99, 8, 7, 6, 5, 4, 3, 2, 1),
 			expDenom:    hexString,
-			expTypeByte: keyAsks,
+			expTypeByte: 99,
 			expOrderID:  578_437_695_752_307_201,
 		},
 		{
-			name:        "with type byte nhash asks order id 578,437,695,752,307,201",
-			key:         []byte{keeper.KeyTypeAssetToOrderIndex, 'n', 'h', 'a', 's', 'h', keyAsks, 8, 7, 6, 5, 4, 3, 2, 1},
+			name:        "with type byte nhash order type byte 99 order id 578,437,695,752,307,201",
+			key:         []byte{keeper.KeyTypeAssetToOrderIndex, 'n', 'h', 'a', 's', 'h', 99, 8, 7, 6, 5, 4, 3, 2, 1},
 			expDenom:    "nhash",
-			expTypeByte: keyAsks,
+			expTypeByte: 99,
 			expOrderID:  578_437_695_752_307_201,
-		},
-		{
-			name: "with type byte hex string asks order id 578,437,695,752,307,201",
-			key: concatBz(
-				[]byte{keeper.KeyTypeAssetToOrderIndex},
-				[]byte(hexString),
-				[]byte{keyAsks, 8, 7, 6, 5, 4, 3, 2, 1},
-			),
-			expDenom:    hexString,
-			expTypeByte: keyAsks,
-			expOrderID:  578_437_695_752_307_201,
-		},
-		{
-			name:        "bids order id 578,437,695,752,307,201",
-			key:         []byte{keyBids, 8, 7, 6, 5, 4, 3, 2, 1},
-			expTypeByte: keyBids,
-			expOrderID:  578_437_695_752_307_201,
-		},
-		{
-			name:        "nhash bids order id 578,437,695,752,307,201",
-			key:         []byte{'n', 'h', 'a', 's', 'h', keyBids, 8, 7, 6, 5, 4, 3, 2, 1},
-			expDenom:    "nhash",
-			expTypeByte: keyBids,
-			expOrderID:  578_437_695_752_307_201,
-		},
-		{
-			name:        "hex string bids order id 578,437,695,752,307,201",
-			key:         append([]byte(hexString), keyBids, 8, 7, 6, 5, 4, 3, 2, 1),
-			expDenom:    hexString,
-			expTypeByte: keyBids,
-			expOrderID:  578_437_695_752_307_201,
-		},
-		{
-			name:        "with type byte nhash bids order id 578,437,695,752,307,201",
-			key:         []byte{keeper.KeyTypeAssetToOrderIndex, 'n', 'h', 'a', 's', 'h', keyBids, 8, 7, 6, 5, 4, 3, 2, 1},
-			expDenom:    "nhash",
-			expTypeByte: keyBids,
-			expOrderID:  578_437_695_752_307_201,
-		},
-		{
-			name: "with type byte hex string bids order id 578,437,695,752,307,201",
-			key: concatBz(
-				[]byte{keeper.KeyTypeAssetToOrderIndex},
-				[]byte(hexString),
-				[]byte{keyBids, 8, 7, 6, 5, 4, 3, 2, 1},
-			),
-			expDenom:    hexString,
-			expTypeByte: keyBids,
-			expOrderID:  578_437_695_752_307_201,
-		},
-		{
-			name:   "order type byte 99 order id 578,437,695,752,307,201",
-			key:    []byte{99, 8, 7, 6, 5, 4, 3, 2, 1},
-			expErr: "cannot parse asset to order key: unknown order type byte 0x63, expected one of []byte{0x0, 0x1}",
-		},
-		{
-			name:   "nhash order type byte 99 order id 578,437,695,752,307,201",
-			key:    []byte{'n', 'h', 'a', 's', 'h', 99, 8, 7, 6, 5, 4, 3, 2, 1},
-			expErr: "cannot parse asset to order key: unknown order type byte 0x63, expected one of []byte{0x0, 0x1}",
-		},
-		{
-			name:   "hex string order type byte 99 order id 578,437,695,752,307,201",
-			key:    append([]byte(hexString), 99, 8, 7, 6, 5, 4, 3, 2, 1),
-			expErr: "cannot parse asset to order key: unknown order type byte 0x63, expected one of []byte{0x0, 0x1}",
-		},
-		{
-			name:   "with type byte nhash order type byte 99 order id 578,437,695,752,307,201",
-			key:    []byte{keeper.KeyTypeAssetToOrderIndex, 'n', 'h', 'a', 's', 'h', 99, 8, 7, 6, 5, 4, 3, 2, 1},
-			expErr: "cannot parse asset to order key: unknown order type byte 0x63, expected one of []byte{0x0, 0x1}",
 		},
 		{
 			name: "with type byte hex string order type byte 99 order id 578,437,695,752,307,201",
@@ -4294,7 +3776,9 @@ func TestParseIndexKeyAssetToOrder(t *testing.T) {
 				[]byte(hexString),
 				[]byte{99, 8, 7, 6, 5, 4, 3, 2, 1},
 			),
-			expErr: "cannot parse asset to order key: unknown order type byte 0x63, expected one of []byte{0x0, 0x1}",
+			expDenom:    hexString,
+			expTypeByte: 99,
+			expOrderID:  578_437_695_752_307_201,
 		},
 	}
 

@@ -58,11 +58,13 @@ import (
 //     Ask Orders: 0x02 | <order_id> (8 bytes) => 0x00 | protobuf(AskOrder)
 //     Bid Orders: 0x02 | <order_id> (8 bytes) => 0x01 | protobuf(BidOrder)
 //
+// TODO[1658]: Refactor the market to order index to have the order type byte before the order id.
 // A market to order index is maintained with the following format:
-//    0x03 | <market_id> (4 bytes) | <order type byte> | <order_id> (8 bytes) => nil
+//    0x03 | <market_id> (4 bytes) | <order_id> (8 bytes) => <order type byte>
 //
+// TODO[1658]: Refactor the address to order index to have the order type byte before the order id.
 // An address to order index is maintained with the following format:
-//    0x04 | len(<address>) (1 byte) | <address> | <order type byte> | <order_id> (8 bytes) => nil
+//    0x04 | len(<address>) (1 byte) | <address> | <order_id> (8 bytes) => nil
 //
 // An asset type to order index is maintained with the following format:
 //    0x05 | <asset_denom> | <order_type_byte> (1 byte) | <order_id> (8 bytes) => nil
@@ -114,8 +116,6 @@ const (
 	// RecordSeparator is the RE ascii control char used to separate records in a byte slice.
 	RecordSeparator = byte(0x1E)
 )
-
-var OrderKeyTypeBytes = []byte{OrderKeyTypeAsk, OrderKeyTypeBid}
 
 // prepKey creates a single byte slice consisting of the type byte and provided byte slice with some extra capacity in the underlying array.
 // The idea is that you can append(...) to the result of this without it needed a new underlying array.
@@ -565,77 +565,42 @@ func indexPrefixMarketToOrder(marketID uint32, extraCap int) []byte {
 	return prepKey(KeyTypeMarketToOrderIndex, uint32Bz(marketID), extraCap)
 }
 
-// indexPrefixMarketToOrderOfType creates the prefix for market to order index entries for the given asset denom and order type.
-func indexPrefixMarketToOrderOfType(marketID uint32, orderTypeByte byte, extraCap int) []byte {
-	rv := indexPrefixMarketToOrder(marketID, 1+extraCap)
-	rv = append(rv, orderTypeByte)
-	return rv
-}
-
 // GetIndexKeyPrefixMarketToOrder creates the prefix for the market to order index limited ot the given market id.
 func GetIndexKeyPrefixMarketToOrder(marketID uint32) []byte {
 	return indexPrefixMarketToOrder(marketID, 0)
 }
 
-// GetIndexKeyPrefixMarketToOrderAsks creates a key prefix for the market to orders limited to the given asset and only ask orders.
-func GetIndexKeyPrefixMarketToOrderAsks(marketID uint32) []byte {
-	return indexPrefixMarketToOrderOfType(marketID, OrderKeyTypeAsk, 0)
-}
-
-// GetIndexKeyPrefixMarketToOrderBids creates a key prefix for the market to orders limited to the given asset and only bid orders.
-func GetIndexKeyPrefixMarketToOrderBids(marketID uint32) []byte {
-	return indexPrefixMarketToOrderOfType(marketID, OrderKeyTypeBid, 0)
-}
-
 // MakeIndexKeyMarketToOrder creates the key to use for the market to order index with the given ids.
-func MakeIndexKeyMarketToOrder(marketID uint32, orderTypeByte byte, orderID uint64) []byte {
-	suffix := uint64Bz(orderID)
-	rv := indexPrefixMarketToOrderOfType(marketID, orderTypeByte, len(suffix))
-	rv = append(rv, suffix...)
+func MakeIndexKeyMarketToOrder(marketID uint32, orderID uint64) []byte {
+	rv := indexPrefixMarketToOrder(marketID, 8)
+	rv = append(rv, uint64Bz(orderID)...)
 	return rv
 }
 
 // ParseIndexKeyMarketToOrder will extract the market id and order id from a market to order index key.
 // The input can have the following formats:
-//   - <type byte> | <market id> (4 bytes) | <order type byte> | <order id> (8 bytes)
-//   - <market id> (4 bytes) | <order type byte> | <order id> (8 bytes)
-//   - <order type byte> | <order id> (8 bytes)
+//   - <type byte> | <market id> (4 bytes) | <order id> (8 bytes)
+//   - <market id> (4 bytes) | <order id> (8 bytes)
 //   - <order id> (8 bytes)
 //
-// In the case where just the <order id> is provided, the returned market id will be 0 and the order type byte will also be 0.
-// In the case where just <order type byte> | <order id> is provided, the returned market id will be 0.
-func ParseIndexKeyMarketToOrder(key []byte) (uint32, byte, uint64, error) {
+// In the case where just the <order id> is provided, the returned market id will be 0.
+func ParseIndexKeyMarketToOrder(key []byte) (uint32, uint64, error) {
 	var marketIDBz, orderIDBz []byte
-	var orderTypeByteP *byte
 	switch len(key) {
 	case 8:
 		orderIDBz = key
-	case 9:
-		orderTypeByteP = &key[0]
-		orderIDBz = key[1:]
-	case 13:
+	case 12:
 		marketIDBz = key[:4]
-		orderTypeByteP = &key[4]
-		orderIDBz = key[5:]
-	case 14:
+		orderIDBz = key[4:]
+	case 13:
 		if key[0] != KeyTypeMarketToOrderIndex {
-			return 0, 0, 0, fmt.Errorf("cannot parse market to order key: unknown type byte %#x, expected %#x",
+			return 0, 0, fmt.Errorf("cannot parse market to order key: unknown type byte %#x, expected %#x",
 				key[0], KeyTypeMarketToOrderIndex)
 		}
 		marketIDBz = key[1:5]
-		orderTypeByteP = &key[5]
-		orderIDBz = key[6:]
+		orderIDBz = key[5:]
 	default:
-		return 0, 0, 0, fmt.Errorf("cannot parse market to order key: length %d, expected 8, 9, 13, or 14", len(key))
-	}
-
-	var orderTypeByte byte
-	if orderTypeByteP != nil {
-		orderTypeByte = *orderTypeByteP
-		if !bytes.Contains(OrderKeyTypeBytes, []byte{orderTypeByte}) {
-			return 0, 0, 0, fmt.Errorf("cannot parse market to order key: unknown order type byte %#x, expected one of %#v",
-				orderTypeByte, OrderKeyTypeBytes)
-		}
+		return 0, 0, fmt.Errorf("cannot parse market to order key: length %d, expected 8, 12, or 13", len(key))
 	}
 
 	var marketID uint32
@@ -643,7 +608,7 @@ func ParseIndexKeyMarketToOrder(key []byte) (uint32, byte, uint64, error) {
 		marketID, _ = uint32FromBz(marketIDBz)
 	}
 	orderID, _ := uint64FromBz(orderIDBz)
-	return marketID, orderTypeByte, orderID, nil
+	return marketID, orderID, nil
 }
 
 // indexPrefixAddressToOrder creates the prefix for the address to order index entries with some extra apace for the rest.
@@ -654,71 +619,38 @@ func indexPrefixAddressToOrder(addr sdk.AccAddress, extraCap int) []byte {
 	return prepKey(KeyTypeAddressToOrderIndex, address.MustLengthPrefix(addr), extraCap)
 }
 
-// indexPrefixAddressToOrderOfType creates the prefix for address to order index entries for the given asset denom and order type.
-func indexPrefixAddressToOrderOfType(addr sdk.AccAddress, orderTypeByte byte, extraCap int) []byte {
-	rv := indexPrefixAddressToOrder(addr, 1+extraCap)
-	rv = append(rv, orderTypeByte)
-	return rv
-}
-
 // GetIndexKeyPrefixAddressToOrder creates a key prefix for the address to order index limited to the given address.
 func GetIndexKeyPrefixAddressToOrder(addr sdk.AccAddress) []byte {
 	return indexPrefixAddressToOrder(addr, 0)
 }
 
-// GetIndexKeyPrefixAddressToOrderAsks creates a key prefix for the address to orders limited to the given asset and only ask orders.
-func GetIndexKeyPrefixAddressToOrderAsks(addr sdk.AccAddress) []byte {
-	return indexPrefixAddressToOrderOfType(addr, OrderKeyTypeAsk, 0)
-}
-
-// GetIndexKeyPrefixAddressToOrderBids creates a key prefix for the address to orders limited to the given asset and only bid orders.
-func GetIndexKeyPrefixAddressToOrderBids(addr sdk.AccAddress) []byte {
-	return indexPrefixAddressToOrderOfType(addr, OrderKeyTypeBid, 0)
-}
-
 // MakeIndexKeyAddressToOrder creates the key to use for the address to order index with the given values.
-func MakeIndexKeyAddressToOrder(addr sdk.AccAddress, orderTypeByte byte, orderID uint64) []byte {
-	suffix := uint64Bz(orderID)
-	rv := indexPrefixAddressToOrderOfType(addr, orderTypeByte, len(suffix))
-	rv = append(rv, suffix...)
+func MakeIndexKeyAddressToOrder(addr sdk.AccAddress, orderID uint64) []byte {
+	rv := indexPrefixAddressToOrder(addr, 8)
+	rv = append(rv, uint64Bz(orderID)...)
 	return rv
 }
 
 // ParseIndexKeyAddressToOrder will extract what it can from an address to order index key.
 // The input can have the following formats:
-//   - <key type byte> | <addr length byte> | <addr> | <order type byte> | <order id>
-//   - <addr length byte> | <addr> | <order type byte> | <order id>
-//   - <order type byte> | <order id>
+//   - <key type byte> | <addr length byte> | <addr> | <order id>
+//   - <addr length byte> | <addr> | <order id>
 //   - <order id>
 //
-// In the case where just the <order id> is provided, the returned address will be empty, and type byte will be 0.
-// In the case where just <order type byte> | <order id> is provided, the returned address will be empty.
-func ParseIndexKeyAddressToOrder(key []byte) (sdk.AccAddress, byte, uint64, error) {
+// In the case where just the <order id> is provided, the returned address will be empty.
+func ParseIndexKeyAddressToOrder(key []byte) (sdk.AccAddress, uint64, error) {
 	if len(key) < 8 {
-		return nil, 0, 0, fmt.Errorf("cannot parse address to order index key: only has %d bytes, expected at least 8", len(key))
+		return nil, 0, fmt.Errorf("cannot parse address to order index key: only has %d bytes, expected at least 8", len(key))
 	}
-
 	pre, orderIDBz := key[:len(key)-8], key[len(key)-8:]
 	orderID, _ := uint64FromBz(orderIDBz)
-
-	var orderTypeByte byte
-	if len(pre) > 0 {
-		orderTypeByte = pre[len(pre)-1]
-		pre = pre[:len(pre)-1]
-		if !bytes.Contains(OrderKeyTypeBytes, []byte{orderTypeByte}) {
-			return nil, 0, 0, fmt.Errorf("cannot parse address to order key: unknown order type byte %#x, expected one of %#v",
-				orderTypeByte, OrderKeyTypeBytes)
-		}
-	}
-
 	var addr sdk.AccAddress
 	if len(pre) > 0 {
 		// Either the first byte is a length byte, or it's the key type byte.
 		// First check it as a length byte, then, if that fails but it's the key type byte, check the second as the length.
 		// Either way, there needs to be at least 2 bytes: a length byte then address byte (length 0 isn't allowed).
 		if len(pre) == 1 {
-			return nil, 0, 0, fmt.Errorf("cannot parse address to order index key: unable to determine address from single byte %#x",
-				pre[0])
+			return nil, 0, fmt.Errorf("cannot parse address to order index key: unable to determine address from single byte %#x", pre[0])
 		}
 		var rest []byte
 		var err error
@@ -727,12 +659,10 @@ func ParseIndexKeyAddressToOrder(key []byte) (sdk.AccAddress, byte, uint64, erro
 			addr, rest, err = parseLengthPrefixedAddr(pre[1:])
 		}
 		if len(addr) == 0 || len(rest) != 0 || err != nil {
-			return nil, 0, 0, fmt.Errorf("cannot parse address to order index key: unable to determine address from [%d, %d, ...(length %d)]",
-				pre[0], pre[1], len(pre))
+			return nil, 0, fmt.Errorf("cannot parse address to order index key: unable to determine address from [%d, %d, ...(length %d)]", pre[0], pre[1], len(pre))
 		}
 	}
-
-	return addr, orderTypeByte, orderID, nil
+	return addr, orderID, nil
 }
 
 // indexPrefixAssetToOrder creates the prefix for the asset to order index entries with some extra space for the rest.
@@ -784,26 +714,18 @@ func ParseIndexKeyAssetToOrder(key []byte) (string, byte, uint64, error) {
 		return "", 0, 0, fmt.Errorf("cannot parse asset to order key: only has %d bytes, expected at least 8", len(key))
 	}
 	unparsed, orderIDBz := key[:len(key)-8], key[len(key)-8:]
-	orderID, _ := uint64FromBz(orderIDBz)
-
 	var denom string
-	var orderTypeByte byte
-
+	var typeByte byte
+	orderID, _ := uint64FromBz(orderIDBz)
 	if len(unparsed) > 0 {
-		orderTypeByte = unparsed[len(unparsed)-1]
+		typeByte = unparsed[len(unparsed)-1]
 		unparsed = unparsed[:len(unparsed)-1]
-		if !bytes.Contains(OrderKeyTypeBytes, []byte{orderTypeByte}) {
-			return "", 0, 0, fmt.Errorf("cannot parse asset to order key: unknown order type byte %#x, expected one of %#v",
-				orderTypeByte, OrderKeyTypeBytes)
-		}
 	}
-
 	if len(unparsed) > 0 {
 		if unparsed[0] == KeyTypeAssetToOrderIndex {
 			unparsed = unparsed[1:]
 		}
 		denom = string(unparsed)
 	}
-
-	return denom, orderTypeByte, orderID, nil
+	return denom, typeByte, orderID, nil
 }
