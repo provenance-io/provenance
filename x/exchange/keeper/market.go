@@ -873,10 +873,11 @@ func (k Keeper) NextMarketID(ctx sdk.Context) uint32 {
 	store := k.getStore(ctx)
 	marketID := getLastAutoMarketID(store) + 1
 	for {
-		marketAddr := exchange.GetMarketAddress(marketID)
-		if !k.accountKeeper.HasAccount(ctx, marketAddr) {
+		key := MakeKeyKnownMarketID(marketID)
+		if !store.Has(key) {
 			break
 		}
+		marketID++
 	}
 	setLastAutoMarketID(store, marketID)
 	return marketID
@@ -945,14 +946,7 @@ func storeMarket(store sdk.KVStore, market exchange.Market) {
 
 // CreateMarket saves a new market to the store with all the info provided.
 // If the marketId is zero, the next available one will be used.
-func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (marketID uint32, err error) {
-	defer func() {
-		// TODO[1658]: Figure out why this recover is needed and either add a comment or delete this defer.
-		if r := recover(); r != nil {
-			err = fmt.Errorf("could not create market: %v", r)
-		}
-	}()
-
+func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (uint32, error) {
 	// Note: The Market is passed in by value, so any alterations to it here will be lost upon return.
 	var errAsk, errBid error
 	market.ReqAttrCreateAsk, errAsk = exchange.NormalizeReqAttrs(market.ReqAttrCreateAsk)
@@ -1261,4 +1255,51 @@ func (k Keeper) UpdateReqAttrs(ctx sdk.Context, msg *exchange.MsgMarketManageReq
 	}
 
 	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketReqAttrUpdated(marketID, admin))
+}
+
+// ValidateMarket checks the setup of the provided market, making sure there aren't any possibly problematic settings.
+func (k Keeper) ValidateMarket(ctx sdk.Context, marketID uint32) error {
+	store := k.getStore(ctx)
+	if err := validateMarketExists(store, marketID); err != nil {
+		return err
+	}
+
+	var errs []error
+
+	sellerRatios := getSellerSettlementRatios(store, marketID)
+	buyerRatios := getBuyerSettlementRatios(store, marketID)
+	if len(sellerRatios) > 0 && len(buyerRatios) > 0 {
+		// We only need to check the price denoms if *both* types have an entry.
+		sellerPriceDenoms := make([]string, len(sellerRatios))
+		sellerPriceDenomsKnown := make(map[string]bool)
+		for i, ratio := range sellerRatios {
+			sellerPriceDenoms[i] = ratio.Price.Denom
+			sellerPriceDenomsKnown[ratio.Price.Denom] = true
+		}
+
+		buyerPriceDenoms := make([]string, 0, len(sellerRatios))
+		buyerPriceDenomsKnown := make(map[string]bool)
+		for _, ratio := range buyerRatios {
+			if !buyerPriceDenomsKnown[ratio.Price.Denom] {
+				buyerPriceDenoms = append(buyerPriceDenoms, ratio.Price.Denom)
+				buyerPriceDenomsKnown[ratio.Price.Denom] = true
+			}
+		}
+
+		for _, denom := range sellerPriceDenoms {
+			if !buyerPriceDenomsKnown[denom] {
+				errs = append(errs, fmt.Errorf("seller settlement fee ratios have price denom %q "+
+					"but there are no buyer settlement fee ratios with that price denom", denom))
+			}
+		}
+
+		for _, denom := range buyerPriceDenoms {
+			if !sellerPriceDenomsKnown[denom] {
+				errs = append(errs, fmt.Errorf("buyer settlement fee ratios have price denom %q "+
+					"but there is not a seller settlement fee ratio with that price denom", denom))
+			}
+		}
+	}
+
+	return errors.Join(errs...)
 }

@@ -456,6 +456,18 @@ func NormalizeReqAttrs(reqAttrs []string) ([]string, error) {
 	return rv, errors.Join(errs...)
 }
 
+// ValidateReqAttrsAreNormalized checks that each of the provided attrs is equal to its normalized version.
+func ValidateReqAttrsAreNormalized(field string, attrs []string) error {
+	var errs []error
+	for _, attr := range attrs {
+		norm := nametypes.NormalizeName(attr)
+		if attr != norm {
+			errs = append(errs, fmt.Errorf("%s required attribute %q is not normalized, expected %q", field, attr, norm))
+		}
+	}
+	return errors.Join(errs...)
+}
+
 // ValidateReqAttrs makes sure that each provided attribute is valid and that no duplicate entries are provided.
 func ValidateReqAttrs(field string, attrs []string) error {
 	var errs []error

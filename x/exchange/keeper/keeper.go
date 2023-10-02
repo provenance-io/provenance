@@ -54,6 +54,11 @@ func (k Keeper) logErrorf(ctx sdk.Context, msg string, args ...interface{}) {
 	ctx.Logger().Error(fmt.Sprintf(msg, args...), "module", "x/"+exchange.ModuleName)
 }
 
+// wrongAuthErr returns the error to use when a message's authority isn't what's required.
+func (k Keeper) wrongAuthErr(badAuthority string) error {
+	return govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", k.GetAuthority(), badAuthority)
+}
+
 // GetAuthority gets the address (as bech32) that has governance authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority

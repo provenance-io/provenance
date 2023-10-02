@@ -2506,6 +2506,127 @@ func TestNormalizeReqAttrs(t *testing.T) {
 	}
 }
 
+func TestValidateReqAttrsAreNormalized(t *testing.T) {
+	joinErrs := func(errs ...string) string {
+		return strings.Join(errs, "\n")
+	}
+	notNormErr := func(field, attr, norm string) string {
+		return fmt.Sprintf("%s required attribute %q is not normalized, expected %q", field, attr, norm)
+	}
+
+	tests := []struct {
+		name   string
+		field  string
+		attrs  []string
+		expErr string
+	}{
+		{name: "nil attrs", field: "FOILD", attrs: nil, expErr: ""},
+		{name: "empty attrs", field: "FOILD", attrs: []string{}, expErr: ""},
+		{
+			name:   "one attr: normalized",
+			field:  "TINFOILD",
+			attrs:  []string{"abc.def"},
+			expErr: "",
+		},
+		{
+			name:   "one attr: with whitespace",
+			field:  "AlFOILD",
+			attrs:  []string{" abc.def"},
+			expErr: notNormErr("AlFOILD", " abc.def", "abc.def"),
+		},
+		{
+			name:   "one attr: with upper",
+			field:  "AlFOILD",
+			attrs:  []string{"aBc.def"},
+			expErr: notNormErr("AlFOILD", "aBc.def", "abc.def"),
+		},
+		{
+			name:   "one attr: with wildcard, ok",
+			field:  "NOFOILD",
+			attrs:  []string{"*.abc.def"},
+			expErr: "",
+		},
+		{
+			name:   "one attr: with wildcard, bad",
+			field:  "AirFOILD",
+			attrs:  []string{"*.abc. def"},
+			expErr: notNormErr("AirFOILD", "*.abc. def", "*.abc.def"),
+		},
+		{
+			name:   "three attrs: all okay",
+			field:  "WhaFoild",
+			attrs:  []string{"abc.def", "*.ghi.jkl", "mno.pqr.stu.vwx.yz"},
+			expErr: "",
+		},
+		{
+			name:   "three attrs: bad first",
+			field:  "Uno1Foild",
+			attrs:  []string{"abc. def", "*.ghi.jkl", "mno.pqr.stu.vwx.yz"},
+			expErr: notNormErr("Uno1Foild", "abc. def", "abc.def"),
+		},
+		{
+			name:   "three attrs: bad second",
+			field:  "Uno2Foild",
+			attrs:  []string{"abc.def", "*.ghi.jkl ", "mno.pqr.stu.vwx.yz"},
+			expErr: notNormErr("Uno2Foild", "*.ghi.jkl ", "*.ghi.jkl"),
+		},
+		{
+			name:   "three attrs: bad third",
+			field:  "Uno3Foild",
+			attrs:  []string{"abc.def", "*.ghi.jkl", "mnO.pqr.stu.vwX.yz"},
+			expErr: notNormErr("Uno3Foild", "mnO.pqr.stu.vwX.yz", "mno.pqr.stu.vwx.yz"),
+		},
+		{
+			name:  "three attrs: bad first and second",
+			field: "TwoFold1",
+			attrs: []string{"abc.Def", "* .ghi.jkl", "mno.pqr.stu.vwx.yz"},
+			expErr: joinErrs(
+				notNormErr("TwoFold1", "abc.Def", "abc.def"),
+				notNormErr("TwoFold1", "* .ghi.jkl", "*.ghi.jkl"),
+			),
+		},
+		{
+			name:  "three attrs: bad first and third",
+			field: "TwoFold2",
+			attrs: []string{"abc . def", "*.ghi.jkl", "mno.pqr. stu .vwx.yz"},
+			expErr: joinErrs(
+				notNormErr("TwoFold2", "abc . def", "abc.def"),
+				notNormErr("TwoFold2", "mno.pqr. stu .vwx.yz", "mno.pqr.stu.vwx.yz"),
+			),
+		},
+		{
+			name:  "three attrs: bad second and third",
+			field: "TwoFold3",
+			attrs: []string{"abc.def", "*.ghi.JKl", "mno.pqr.sTu.vwx.yz"},
+			expErr: joinErrs(
+				notNormErr("TwoFold3", "*.ghi.JKl", "*.ghi.jkl"),
+				notNormErr("TwoFold3", "mno.pqr.sTu.vwx.yz", "mno.pqr.stu.vwx.yz"),
+			),
+		},
+		{
+			name:  "three attrs: all bad",
+			field: "CURSES!",
+			attrs: []string{" abc . def ", " * . ghi . jkl ", " mno . pqr . stu . vwx . yz "},
+			expErr: joinErrs(
+				notNormErr("CURSES!", " abc . def ", "abc.def"),
+				notNormErr("CURSES!", " * . ghi . jkl ", "*.ghi.jkl"),
+				notNormErr("CURSES!", " mno . pqr . stu . vwx . yz ", "mno.pqr.stu.vwx.yz"),
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = ValidateReqAttrsAreNormalized(tc.field, tc.attrs)
+			}
+			require.NotPanics(t, testFunc, "ValidateReqAttrsAreNormalized")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateReqAttrsAreNormalized error")
+		})
+	}
+}
+
 func TestValidateReqAttrs(t *testing.T) {
 	joinErrs := func(errs ...string) string {
 		return strings.Join(errs, "\n")

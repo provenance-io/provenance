@@ -5,8 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
@@ -172,11 +170,6 @@ func (k MsgServer) MarketManageReqAttrs(goCtx context.Context, msg *exchange.Msg
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgMarketManageReqAttrsResponse{}, nil
-}
-
-// wrongAuthErr returns the error to use when a message's authority isn't what's required.
-func (k MsgServer) wrongAuthErr(badAuthority string) error {
-	return govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", k.GetAuthority(), badAuthority)
 }
 
 // GovCreateMarket is a governance proposal endpoint for creating a market.

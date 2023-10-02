@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"google.golang.org/grpc/codes"
@@ -253,8 +254,67 @@ func (k QueryServer) QueryParams(goCtx context.Context, _ *exchange.QueryParamsR
 
 // QueryValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
 func (k QueryServer) QueryValidateCreateMarket(goCtx context.Context, req *exchange.QueryValidateCreateMarketRequest) (*exchange.QueryValidateCreateMarketResponse, error) {
-	// TODO[1658]: Implement QueryValidateCreateMarket query
-	panic("not implemented")
+	if req == nil || req.CreateMarketRequest == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	msg := req.CreateMarketRequest
+	resp := &exchange.QueryValidateCreateMarketResponse{}
+
+	if err := msg.ValidateBasic(); err != nil {
+		resp.Error = err.Error()
+		return resp, nil
+	}
+
+	if msg.Authority != k.authority {
+		resp.Error = k.wrongAuthErr(msg.Authority).Error()
+		return resp, nil
+	}
+
+	// The SDK *should* already be using a cache context for queries, but I'm doing it here too just to be on the safe side.
+	ctx, _ := sdk.UnwrapSDKContext(goCtx).CacheContext()
+	var marketID uint32
+	if newMarketID, err := k.CreateMarket(ctx, msg.Market); err != nil {
+		resp.Error = err.Error()
+		return resp, nil
+	} else {
+		marketID = newMarketID
+	}
+
+	resp.GovPropWillPass = true
+
+	var errs []error
+	if err := exchange.ValidateReqAttrsAreNormalized("create ask", msg.Market.ReqAttrCreateAsk); err != nil {
+		errs = append(errs, err)
+	}
+	if err := exchange.ValidateReqAttrsAreNormalized("create bid", msg.Market.ReqAttrCreateBid); err != nil {
+		errs = append(errs, err)
+	}
+
+	if err := k.ValidateMarket(ctx, marketID); err != nil {
+		errs = append(errs, err)
+	}
+
+	if len(errs) > 0 {
+		resp.Error = errors.Join(errs...).Error()
+	}
+
+	return resp, nil
+}
+
+// QueryValidateMarket checks for any problems with a market's setup.
+func (k QueryServer) QueryValidateMarket(goCtx context.Context, req *exchange.QueryValidateMarketRequest) (*exchange.QueryValidateMarketResponse, error) {
+	if req == nil || req.MarketId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	resp := &exchange.QueryValidateMarketResponse{}
+	if err := k.ValidateMarket(ctx, req.MarketId); err != nil {
+		resp.Error = err.Error()
+	}
+
+	return resp, nil
 }
 
 // QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
