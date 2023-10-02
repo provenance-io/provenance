@@ -171,26 +171,37 @@ func (k QueryServer) QueryGetAssetOrders(goCtx context.Context, req *exchange.Qu
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	var pre []byte
-	switch strings.ToLower(req.OrderType) {
-	case "":
-		pre = GetIndexKeyPrefixAssetToOrder(req.Asset)
-	case exchange.OrderTypeAsk:
-		pre = GetIndexKeyPrefixAssetToOrderAsks(req.Asset)
-	case exchange.OrderTypeBid:
-		pre = GetIndexKeyPrefixAssetToOrderBids(req.Asset)
-	default:
-		return nil, status.Errorf(codes.InvalidArgument, "unknown order type %q", req.OrderType)
+	var orderTypeByte byte
+	filterByType := false
+	if len(req.OrderType) > 0 {
+		orderType := strings.ToLower(req.OrderType)
+		// only look at the first 3 chars to handle stuff like "asks" or "bidOrders" too.
+		if len(orderType) > 3 {
+			orderType = orderType[:3]
+		}
+		switch orderType {
+		case exchange.OrderTypeAsk:
+			orderTypeByte = OrderKeyTypeAsk
+		case exchange.OrderTypeBid:
+			orderTypeByte = OrderKeyTypeBid
+		default:
+			return nil, status.Errorf(codes.InvalidArgument, "unknown order type %q", req.OrderType)
+		}
+		filterByType = true
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	pre := GetIndexKeyPrefixAssetToOrder(req.Asset)
 	store := prefix.NewStore(k.getStore(ctx), pre)
 	resp := &exchange.QueryGetAssetOrdersResponse{}
 	var pageErr error
 
 	resp.Pagination, pageErr = query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		if filterByType && (len(value) == 0 || value[0] != orderTypeByte) {
+			return false, nil
+		}
 		// If we can't get the order id from the key, just pretend like it doesn't exist.
-		_, _, orderID, perr := ParseIndexKeyAssetToOrder(key)
+		_, orderID, perr := ParseIndexKeyAssetToOrder(key)
 		if perr != nil {
 			return false, nil
 		}
