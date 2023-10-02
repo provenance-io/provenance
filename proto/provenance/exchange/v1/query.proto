@@ -12,6 +12,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "google/api/annotations.proto";
 import "gogoproto/gogo.proto";
 import "provenance/exchange/v1/orders.proto";
+import "provenance/exchange/v1/market.proto";
 
 // Query is the service for exchange module's query endpoints.
 service Query {
@@ -27,7 +28,10 @@ service Query {
 
   // QueryGetMarketOrders looks up the orders in a market.
   rpc QueryGetMarketOrders(QueryGetMarketOrdersRequest) returns (QueryGetMarketOrdersResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/market/{market_id}/orders";
+    option (google.api.http) = {
+      get: "/provenance/exchange/v1/orders/market/{market_id}"
+      additional_bindings: {get: "/provenance/exchange/v1/market/{market_id}/orders"}
+    };
   }
 
   // QueryGetOwnerOrders looks up the orders from the provided owner address.
@@ -45,9 +49,14 @@ service Query {
     option (google.api.http).get = "/provenance/exchange/v1/orders";
   }
 
-  // QueryMarketInfo returns the information/details about a market.
-  rpc QueryMarketInfo(QueryMarketInfoRequest) returns (QueryMarketInfoResponse) {
+  // QueryGetMarket returns all the information and details about a market.
+  rpc QueryGetMarket(QueryGetMarketRequest) returns (QueryGetMarketResponse) {
     option (google.api.http).get = "/provenance/exchange/v1/market/{market_id}";
+  }
+
+  // QueryGetAllMarkets returns brief information about each market.
+  rpc QueryGetAllMarkets(QueryGetAllMarketsRequest) returns (QueryGetAllMarketsResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/markets";
   }
 
   // QueryParams returns the exchange module parameters.
@@ -189,14 +198,33 @@ message QueryGetAllOrdersResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
-// QueryMarketInfoRequest is a request message for the QueryMarketInfo endpoint.
-message QueryMarketInfoRequest {
+// QueryGetMarketRequest is a request message for the QueryGetMarket endpoint.
+message QueryGetMarketRequest {
+  // market_id is the id of the market to look up.
   uint32 market_id = 1;
-  // TODO[1658]: QueryMarketInfoRequest
 }
-// QueryMarketInfoResponse is a response message for the QueryMarketInfo endpoint.
-message QueryMarketInfoResponse {
-  // TODO[1658]: QueryMarketInfoResponse
+
+// QueryGetMarketResponse is a response message for the QueryGetMarket endpoint.
+message QueryGetMarketResponse {
+  // address is the bech32 address string of this market's account.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market is all information and details of the market.
+  Market market = 2;
+}
+
+// QueryGetAllMarketsRequest is a request message for the QueryGetAllMarkets endpoint.
+message QueryGetAllMarketsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetAllMarketsResponse is a response message for the QueryGetAllMarkets endpoint.
+message QueryGetAllMarketsResponse {
+  // markets are a page of the briefs for all markets.
+  repeated MarketBrief markets = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
 // QueryParamsRequest is a request message for the QueryParams endpoint.

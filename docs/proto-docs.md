@@ -74,6 +74,7 @@
     - [FeeRatio](#provenance.exchange.v1.FeeRatio)
     - [Market](#provenance.exchange.v1.Market)
     - [MarketAccount](#provenance.exchange.v1.MarketAccount)
+    - [MarketBrief](#provenance.exchange.v1.MarketBrief)
     - [MarketDetails](#provenance.exchange.v1.MarketDetails)
   
     - [Permission](#provenance.exchange.v1.Permission)
@@ -91,18 +92,20 @@
     - [GenesisState](#provenance.exchange.v1.GenesisState)
   
 - [provenance/exchange/v1/query.proto](#provenance/exchange/v1/query.proto)
+    - [QueryGetAllMarketsRequest](#provenance.exchange.v1.QueryGetAllMarketsRequest)
+    - [QueryGetAllMarketsResponse](#provenance.exchange.v1.QueryGetAllMarketsResponse)
     - [QueryGetAllOrdersRequest](#provenance.exchange.v1.QueryGetAllOrdersRequest)
     - [QueryGetAllOrdersResponse](#provenance.exchange.v1.QueryGetAllOrdersResponse)
     - [QueryGetAssetOrdersRequest](#provenance.exchange.v1.QueryGetAssetOrdersRequest)
     - [QueryGetAssetOrdersResponse](#provenance.exchange.v1.QueryGetAssetOrdersResponse)
     - [QueryGetMarketOrdersRequest](#provenance.exchange.v1.QueryGetMarketOrdersRequest)
     - [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse)
+    - [QueryGetMarketRequest](#provenance.exchange.v1.QueryGetMarketRequest)
+    - [QueryGetMarketResponse](#provenance.exchange.v1.QueryGetMarketResponse)
     - [QueryGetOrderRequest](#provenance.exchange.v1.QueryGetOrderRequest)
     - [QueryGetOrderResponse](#provenance.exchange.v1.QueryGetOrderResponse)
     - [QueryGetOwnerOrdersRequest](#provenance.exchange.v1.QueryGetOwnerOrdersRequest)
     - [QueryGetOwnerOrdersResponse](#provenance.exchange.v1.QueryGetOwnerOrdersResponse)
-    - [QueryMarketInfoRequest](#provenance.exchange.v1.QueryMarketInfoRequest)
-    - [QueryMarketInfoResponse](#provenance.exchange.v1.QueryMarketInfoResponse)
     - [QueryOrderFeeCalcRequest](#provenance.exchange.v1.QueryOrderFeeCalcRequest)
     - [QueryOrderFeeCalcResponse](#provenance.exchange.v1.QueryOrderFeeCalcResponse)
     - [QueryParamsRequest](#provenance.exchange.v1.QueryParamsRequest)
@@ -1685,6 +1688,23 @@ MarketAccount is an account type for use with the accounts module to hold some b
 
 
 
+<a name="provenance.exchange.v1.MarketBrief"></a>
+
+### MarketBrief
+MarketBrief is a message containing brief, superficial information about a market.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier for this market. |
+| `market_address` | [string](#string) |  | market_address is the bech32 address string of this market's account. |
+| `market_details` | [MarketDetails](#provenance.exchange.v1.MarketDetails) |  | market_details is some information about this market. |
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MarketDetails"></a>
 
 ### MarketDetails
@@ -1891,6 +1911,37 @@ GenesisState is the data that should be loaded into the exchange module during g
 
 
 
+<a name="provenance.exchange.v1.QueryGetAllMarketsRequest"></a>
+
+### QueryGetAllMarketsRequest
+QueryGetAllMarketsRequest is a request message for the QueryGetAllMarkets endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAllMarketsResponse"></a>
+
+### QueryGetAllMarketsResponse
+QueryGetAllMarketsResponse is a response message for the QueryGetAllMarkets endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `markets` | [MarketBrief](#provenance.exchange.v1.MarketBrief) | repeated | markets are a page of the briefs for all markets. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
+
+
+
+
+
+
 <a name="provenance.exchange.v1.QueryGetAllOrdersRequest"></a>
 
 ### QueryGetAllOrdersRequest
@@ -1990,6 +2041,37 @@ QueryGetMarketOrdersResponse is a response message for the QueryGetMarketOrders 
 
 
 
+<a name="provenance.exchange.v1.QueryGetMarketRequest"></a>
+
+### QueryGetMarketRequest
+QueryGetMarketRequest is a request message for the QueryGetMarket endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the id of the market to look up. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetMarketResponse"></a>
+
+### QueryGetMarketResponse
+QueryGetMarketResponse is a response message for the QueryGetMarket endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the bech32 address string of this market's account. |
+| `market` | [Market](#provenance.exchange.v1.Market) |  | market is all information and details of the market. |
+
+
+
+
+
+
 <a name="provenance.exchange.v1.QueryGetOrderRequest"></a>
 
 ### QueryGetOrderRequest
@@ -2048,31 +2130,6 @@ QueryGetOwnerOrdersResponse is a response message for the QueryGetOwnerOrders en
 | ----- | ---- | ----- | ----------- |
 | `orders` | [Order](#provenance.exchange.v1.Order) | repeated | orders are a page of the orders for the provided address. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
-
-
-
-
-
-
-<a name="provenance.exchange.v1.QueryMarketInfoRequest"></a>
-
-### QueryMarketInfoRequest
-QueryMarketInfoRequest is a request message for the QueryMarketInfo endpoint.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `market_id` | [uint32](#uint32) |  | TODO[1658]: QueryMarketInfoRequest |
-
-
-
-
-
-
-<a name="provenance.exchange.v1.QueryMarketInfoResponse"></a>
-
-### QueryMarketInfoResponse
-QueryMarketInfoResponse is a response message for the QueryMarketInfo endpoint.
 
 
 
@@ -2197,11 +2254,12 @@ Query is the service for exchange module's query endpoints.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `QueryOrderFeeCalc` | [QueryOrderFeeCalcRequest](#provenance.exchange.v1.QueryOrderFeeCalcRequest) | [QueryOrderFeeCalcResponse](#provenance.exchange.v1.QueryOrderFeeCalcResponse) | QueryOrderFeeCalc calculates the fees that will be associated with the provided order. | GET|/provenance/exchange/v1/fees/order|
 | `QueryGetOrder` | [QueryGetOrderRequest](#provenance.exchange.v1.QueryGetOrderRequest) | [QueryGetOrderResponse](#provenance.exchange.v1.QueryGetOrderResponse) | QueryGetOrder looks up an order by id. | GET|/provenance/exchange/v1/order/{order_id}|
-| `QueryGetMarketOrders` | [QueryGetMarketOrdersRequest](#provenance.exchange.v1.QueryGetMarketOrdersRequest) | [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse) | QueryGetMarketOrders looks up the orders in a market. | GET|/provenance/exchange/v1/market/{market_id}/orders|
+| `QueryGetMarketOrders` | [QueryGetMarketOrdersRequest](#provenance.exchange.v1.QueryGetMarketOrdersRequest) | [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse) | QueryGetMarketOrders looks up the orders in a market. | GET|/provenance/exchange/v1/orders/market/{market_id}GET|/provenance/exchange/v1/market/{market_id}/orders|
 | `QueryGetOwnerOrders` | [QueryGetOwnerOrdersRequest](#provenance.exchange.v1.QueryGetOwnerOrdersRequest) | [QueryGetOwnerOrdersResponse](#provenance.exchange.v1.QueryGetOwnerOrdersResponse) | QueryGetOwnerOrders looks up the orders from the provided owner address. | GET|/provenance/exchange/v1/orders/owner/{owner}|
 | `QueryGetAssetOrders` | [QueryGetAssetOrdersRequest](#provenance.exchange.v1.QueryGetAssetOrdersRequest) | [QueryGetAssetOrdersResponse](#provenance.exchange.v1.QueryGetAssetOrdersResponse) | QueryGetAssetOrders looks up the orders for a specific asset denom. | GET|/provenance/exchange/v1/orders/asset/{asset}|
 | `QueryGetAllOrders` | [QueryGetAllOrdersRequest](#provenance.exchange.v1.QueryGetAllOrdersRequest) | [QueryGetAllOrdersResponse](#provenance.exchange.v1.QueryGetAllOrdersResponse) | QueryGetAllOrders gets all orders in the exchange module. | GET|/provenance/exchange/v1/orders|
-| `QueryMarketInfo` | [QueryMarketInfoRequest](#provenance.exchange.v1.QueryMarketInfoRequest) | [QueryMarketInfoResponse](#provenance.exchange.v1.QueryMarketInfoResponse) | QueryMarketInfo returns the information/details about a market. | GET|/provenance/exchange/v1/market/{market_id}|
+| `QueryGetMarket` | [QueryGetMarketRequest](#provenance.exchange.v1.QueryGetMarketRequest) | [QueryGetMarketResponse](#provenance.exchange.v1.QueryGetMarketResponse) | QueryGetMarket returns all the information and details about a market. | GET|/provenance/exchange/v1/market/{market_id}|
+| `QueryGetAllMarkets` | [QueryGetAllMarketsRequest](#provenance.exchange.v1.QueryGetAllMarketsRequest) | [QueryGetAllMarketsResponse](#provenance.exchange.v1.QueryGetAllMarketsResponse) | QueryGetAllMarkets returns brief information about each market. | GET|/provenance/exchange/v1/markets|
 | `QueryParams` | [QueryParamsRequest](#provenance.exchange.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.exchange.v1.QueryParamsResponse) | QueryParams returns the exchange module parameters. | GET|/provenance/exchange/v1/params|
 | `QueryValidateCreateMarket` | [QueryValidateCreateMarketRequest](#provenance.exchange.v1.QueryValidateCreateMarketRequest) | [QueryValidateCreateMarketResponse](#provenance.exchange.v1.QueryValidateCreateMarketResponse) | QueryValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have. | GET|/provenance/exchange/v1/validate/create_market|
 | `QueryValidateManageFees` | [QueryValidateManageFeesRequest](#provenance.exchange.v1.QueryValidateManageFeesRequest) | [QueryValidateManageFeesResponse](#provenance.exchange.v1.QueryValidateManageFeesResponse) | QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have. | GET|/provenance/exchange/v1/market/{market_id}/validate/manage_fees|
