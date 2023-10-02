@@ -14,6 +14,7 @@ import "gogoproto/gogo.proto";
 import "provenance/exchange/v1/market.proto";
 import "provenance/exchange/v1/orders.proto";
 import "provenance/exchange/v1/params.proto";
+import "provenance/exchange/v1/tx.proto";
 
 // Query is the service for exchange module's query endpoints.
 service Query {
@@ -68,6 +69,14 @@ service Query {
   // QueryValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
   rpc QueryValidateCreateMarket(QueryValidateCreateMarketRequest) returns (QueryValidateCreateMarketResponse) {
     option (google.api.http).get = "/provenance/exchange/v1/validate/create_market";
+  }
+
+  // QueryValidateMarket checks for any problems with a market's setup.
+  rpc QueryValidateMarket(QueryValidateMarketRequest) returns (QueryValidateMarketResponse) {
+    option (google.api.http) = {
+      get: "/provenance/exchange/v1/validate/market/{market_id}"
+      additional_bindings: {get: "/provenance/exchange/v1/market/{market_id}/validate"}
+    };
   }
 
   // QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
@@ -239,19 +248,48 @@ message QueryParamsResponse {
 
 // QueryValidateCreateMarketRequest is a request message for the QueryValidateCreateMarket endpoint.
 message QueryValidateCreateMarketRequest {
-  // TODO[1658]: QueryValidateCreateMarketRequest
+  // create_market_request is the request to run validation on.
+  MsgGovCreateMarketRequest create_market_request = 1;
 }
+
 // QueryValidateCreateMarketResponse is a response message for the QueryValidateCreateMarket endpoint.
 message QueryValidateCreateMarketResponse {
-  // TODO[1658]: QueryValidateCreateMarketResponse
+  // error is any problems or inconsistencies in the provided gov prop msg.
+  // This goes above and beyond the validation done when actually processing the governance proposal.
+  // If an error is returned, and gov_prop_will_pass is true, it means the error is more of an
+  // inconsistency that might cause certain aspects of the market to behave unexpectedly.
+  string error = 1;
+  // gov_prop_will_pass will be true if the the provided msg will be successfully processed at the end of it's voting
+  // period (assuming it passes).
+  bool gov_prop_will_pass = 2;
+}
+
+// QueryValidateMarketRequest is a request message for the QueryValidateMarket endpoint.
+message QueryValidateMarketRequest {
+  // market_id is the id of the market to check.
+  uint32 market_id = 1;
+}
+
+// QueryValidateMarketResponse is a response message for the QueryValidateMarket endpoint.
+message QueryValidateMarketResponse {
+  // error is any problems or inconsistencies in the provided market.
+  string error = 1;
 }
 
 // QueryValidateManageFeesRequest is a request message for the QueryValidateManageFees endpoint.
 message QueryValidateManageFeesRequest {
-  uint32 market_id = 1;
-  // TODO[1658]: QueryValidateManageFeesRequest
+  // manage_fees_request is the request to run validation on.
+  MsgGovManageFeesRequest manage_fees_request = 1;
 }
+
 // QueryValidateManageFeesResponse is a response message for the QueryValidateManageFees endpoint.
 message QueryValidateManageFeesResponse {
-  // TODO[1658]: QueryValidateManageFeesResponse
+  // error is any problems or inconsistencies in the provided gov prop msg.
+  // This goes above and beyond the validation done when actually processing the governance proposal.
+  // If an error is returned, and gov_prop_will_pass is true, it means the error is more of an
+  // inconsistency that might cause certain aspects of the market to behave unexpectedly.
+  string error = 1;
+  // gov_prop_will_pass will be true if the the provided msg will be successfully processed at the end of it's voting
+  // period (assuming it passes).
+  bool gov_prop_will_pass = 2;
 }
