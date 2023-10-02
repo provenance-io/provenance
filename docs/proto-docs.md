@@ -1932,6 +1932,7 @@ QueryGetAssetOrdersRequest is a request message for the QueryGetAssetOrders endp
 | ----- | ---- | ----- | ----------- |
 | `asset` | [string](#string) |  | asset is the denom of assets to get orders for. |
 | `order_type` | [string](#string) |  | order_type is optional and can limit orders to only "ask" or "bid" orders. |
+| `after_order_id` | [uint64](#uint64) |  | after_order_id is a minimum (exclusive) order id. All results will be strictly greater than this. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
@@ -1965,6 +1966,7 @@ QueryGetMarketOrdersRequest is a request message for the QueryGetMarketOrders en
 | ----- | ---- | ----- | ----------- |
 | `market_id` | [uint32](#uint32) |  | market_id is the id of the market to get all the orders for. |
 | `order_type` | [string](#string) |  | order_type is optional and can limit orders to only "ask" or "bid" orders. |
+| `after_order_id` | [uint64](#uint64) |  | after_order_id is a minimum (exclusive) order id. All results will be strictly greater than this. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
@@ -2028,6 +2030,7 @@ QueryGetOwnerOrdersRequest is a request message for the QueryGetOwnerOrders endp
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  | owner is the bech32 address string of the owner to get the orders for. |
 | `order_type` | [string](#string) |  | order_type is optional and can limit orders to only "ask" or "bid" orders. |
+| `after_order_id` | [uint64](#uint64) |  | after_order_id is a minimum (exclusive) order id. All results will be strictly greater than this. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 

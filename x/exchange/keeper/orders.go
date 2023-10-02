@@ -8,6 +8,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	db "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -237,6 +239,7 @@ func (k Keeper) GetPageOfOrdersFromIndex(
 	prefixStore sdk.KVStore,
 	pageReq *query.PageRequest,
 	orderType string,
+	afterOrderID uint64,
 ) (*query.PageResponse, []*exchange.Order, error) {
 	var orderTypeByte byte
 	filterByType := false
@@ -258,7 +261,8 @@ func (k Keeper) GetPageOfOrdersFromIndex(
 	}
 
 	var orders []*exchange.Order
-	pageResp, pageErr := query.FilteredPaginate(prefixStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	accumulator := func(key []byte, value []byte, accumulate bool) (bool, error) {
+		// If filtering by type, but the order type isn't known, or is something else, this entry doesn't count, move on.
 		if filterByType && (len(value) == 0 || value[0] != orderTypeByte) {
 			return false, nil
 		}
@@ -268,17 +272,172 @@ func (k Keeper) GetPageOfOrdersFromIndex(
 			return false, nil
 		}
 		if accumulate {
-			// Only add them to the result if we can read it.
-			// This might result in fewer results than the limit, but at least one bad entry won't block others.
-			order, oerr := k.parseOrderStoreValue(orderID, value)
-			if oerr != nil {
+			// Only add it to the result if we can read it. This might result in fewer results than the limit,
+			// but at least one bad entry won't block others by causing the whole thing to return an error.
+			order, err := k.parseOrderStoreValue(orderID, value)
+			if err == nil && order != nil {
 				orders = append(orders, order)
 			}
 		}
 		return true, nil
-	})
+	}
+	pageResp, err := FilteredPaginateAfterOrder(prefixStore, pageReq, afterOrderID, accumulator)
 
-	return pageResp, orders, pageErr
+	return pageResp, orders, err
+}
+
+// FilteredPaginateAfterOrder is similar to query.FilteredPaginate except
+// allows limiting the iterator to only entries after a certain order id.
+// afterOrderID is exclusive, i.e. if it's 2, this will go over all order ids that are 3 or greater.
+//
+// FilteredPaginate does pagination of all the results in the PrefixStore based on the
+// provided PageRequest. onResult should be used to do actual unmarshaling and filter the results.
+// If key is provided, the pagination uses the optimized querying.
+// If offset is used, the pagination uses lazy filtering i.e., searches through all the records.
+// The accumulate parameter represents if the response is valid based on the offset given.
+// It will be false for the results (filtered) < offset  and true for `offset > accumulate <= end`.
+// When accumulate is set to true the current result should be appended to the result set returned
+// to the client.
+func FilteredPaginateAfterOrder(
+	prefixStore sdk.KVStore,
+	pageRequest *query.PageRequest,
+	afterOrderID uint64,
+	onResult func(key []byte, value []byte, accumulate bool) (bool, error),
+) (*query.PageResponse, error) {
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &query.PageRequest{}
+	}
+
+	offset := pageRequest.Offset
+	key := pageRequest.Key
+	limit := pageRequest.Limit
+	countTotal := pageRequest.CountTotal
+	reverse := pageRequest.Reverse
+
+	if offset > 0 && key != nil {
+		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+	}
+
+	if limit == 0 {
+		limit = query.DefaultLimit
+
+		// count total results when the limit is zero/not supplied
+		countTotal = true
+	}
+
+	if len(key) != 0 {
+		// This line is changed from the query.FilteredPaginate version.
+		iterator := getOrderIterator(prefixStore, key, reverse, afterOrderID)
+		defer iterator.Close()
+
+		var (
+			numHits uint64
+			nextKey []byte
+		)
+
+		for ; iterator.Valid(); iterator.Next() {
+			if numHits == limit {
+				nextKey = iterator.Key()
+				break
+			}
+
+			if iterator.Error() != nil {
+				return nil, iterator.Error()
+			}
+
+			hit, err := onResult(iterator.Key(), iterator.Value(), true)
+			if err != nil {
+				return nil, err
+			}
+
+			if hit {
+				numHits++
+			}
+		}
+
+		return &query.PageResponse{
+			NextKey: nextKey,
+		}, nil
+	}
+
+	// This line is changed from the query.FilteredPaginate version.
+	iterator := getOrderIterator(prefixStore, nil, reverse, afterOrderID)
+	defer iterator.Close()
+
+	end := offset + limit
+
+	var (
+		numHits uint64
+		nextKey []byte
+	)
+
+	for ; iterator.Valid(); iterator.Next() {
+		if iterator.Error() != nil {
+			return nil, iterator.Error()
+		}
+
+		accumulate := numHits >= offset && numHits < end
+		hit, err := onResult(iterator.Key(), iterator.Value(), accumulate)
+		if err != nil {
+			return nil, err
+		}
+
+		if hit {
+			numHits++
+		}
+
+		if numHits == end+1 {
+			if nextKey == nil {
+				nextKey = iterator.Key()
+			}
+
+			if !countTotal {
+				break
+			}
+		}
+	}
+
+	res := &query.PageResponse{NextKey: nextKey}
+	if countTotal {
+		res.Total = numHits
+	}
+
+	return res, nil
+}
+
+// getOrderIterator is similar to query.getIterator but allows limiting it to only entries after a certain order id.
+func getOrderIterator(prefixStore sdk.KVStore, start []byte, reverse bool, afterOrderID uint64) db.Iterator {
+	if reverse {
+		var end []byte
+		if start != nil {
+			itr := prefixStore.Iterator(start, nil)
+			defer itr.Close()
+			if itr.Valid() {
+				itr.Next()
+				end = itr.Key()
+			}
+		}
+		// If an afterOrderID was given, use the key of it as the first key.
+		// This orderIDKey is a change from the query.getIterator version.
+		var orderIDKey []byte
+		if afterOrderID != 0 {
+			// TODO[1658]: Write a unit test that hits this in order to make sure I don't need to afterOrderID++.
+			orderIDKey = uint64Bz(afterOrderID)
+		}
+		return prefixStore.ReverseIterator(orderIDKey, end)
+	}
+
+	// If a start ("next key") was given, use that as the first key.
+	// Otherwise, if an afterOrderID was given, use the key of the next order id as the first key.
+	// This if block is a change from the query.getIterator version.
+	if len(start) == 0 && afterOrderID != 0 {
+		if afterOrderID != 18_446_744_073_709_551_615 {
+			afterOrderID++
+		}
+		start = uint64Bz(afterOrderID)
+	}
+	return prefixStore.Iterator(start, nil)
 }
 
 // placeHoldOnOrder places a hold on an order's funds in the owner's account.
