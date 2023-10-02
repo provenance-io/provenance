@@ -96,28 +96,13 @@ func (k QueryServer) QueryGetMarketOrders(goCtx context.Context, req *exchange.Q
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	pre := GetIndexKeyPrefixMarketToOrder(req.MarketId)
 	store := prefix.NewStore(k.getStore(ctx), pre)
+
 	resp := &exchange.QueryGetMarketOrdersResponse{}
-	var pageErr error
+	var err error
+	resp.Pagination, resp.Orders, err = k.GetPageOfOrdersFromIndex(store, req.Pagination, req.OrderType)
 
-	resp.Pagination, pageErr = query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		// If we can't get the order id from the key, just pretend like it doesn't exist.
-		_, orderID, perr := ParseIndexKeyMarketToOrder(key)
-		if perr != nil {
-			return false, nil
-		}
-		if accumulate {
-			// Only add them to the result if we can read it.
-			// This might result in fewer results than the limit, but at least one bad entry won't block others.
-			order, oerr := k.parseOrderStoreValue(orderID, value)
-			if oerr != nil {
-				resp.Orders = append(resp.Orders, order)
-			}
-		}
-		return true, nil
-	})
-
-	if pageErr != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for market %d: %v", req.MarketId, pageErr)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for market %d: %v", req.MarketId, err)
 	}
 
 	return resp, nil
@@ -137,28 +122,13 @@ func (k QueryServer) QueryGetOwnerOrders(goCtx context.Context, req *exchange.Qu
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	pre := GetIndexKeyPrefixAddressToOrder(owner)
 	store := prefix.NewStore(k.getStore(ctx), pre)
+
 	resp := &exchange.QueryGetOwnerOrdersResponse{}
-	var pageErr error
+	var err error
+	resp.Pagination, resp.Orders, err = k.GetPageOfOrdersFromIndex(store, req.Pagination, req.OrderType)
 
-	resp.Pagination, pageErr = query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		// If we can't get the order id from the key, just pretend like it doesn't exist.
-		_, orderID, perr := ParseIndexKeyAddressToOrder(key)
-		if perr != nil {
-			return false, nil
-		}
-		if accumulate {
-			// Only add them to the result if we can read it.
-			// This might result in fewer results than the limit, but at least one bad entry won't block others.
-			order, oerr := k.parseOrderStoreValue(orderID, value)
-			if oerr != nil {
-				resp.Orders = append(resp.Orders, order)
-			}
-		}
-		return true, nil
-	})
-
-	if pageErr != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for owner %s: %v", req.Owner, pageErr)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for owner %s: %v", req.Owner, err)
 	}
 
 	return resp, nil
