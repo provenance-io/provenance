@@ -245,9 +245,10 @@ func (k QueryServer) QueryGetAllMarkets(goCtx context.Context, req *exchange.Que
 }
 
 // QueryParams returns the exchange module parameters.
-func (k QueryServer) QueryParams(goCtx context.Context, req *exchange.QueryParamsRequest) (*exchange.QueryParamsResponse, error) {
-	// TODO[1658]: Implement QueryParams query
-	panic("not implemented")
+func (k QueryServer) QueryParams(goCtx context.Context, _ *exchange.QueryParamsRequest) (*exchange.QueryParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	resp := &exchange.QueryParamsResponse{Params: k.GetParamsOrDefaults(ctx)}
+	return resp, nil
 }
 
 // QueryValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.

@@ -2190,6 +2190,11 @@ QueryParamsRequest is a request message for the QueryParams endpoint.
 QueryParamsResponse is a response message for the QueryParams endpoint.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.exchange.v1.Params) |  | params are the exchange module parameter values. |
+
+
 
 
 
@@ -2262,7 +2267,7 @@ Query is the service for exchange module's query endpoints.
 | `QueryGetAllMarkets` | [QueryGetAllMarketsRequest](#provenance.exchange.v1.QueryGetAllMarketsRequest) | [QueryGetAllMarketsResponse](#provenance.exchange.v1.QueryGetAllMarketsResponse) | QueryGetAllMarkets returns brief information about each market. | GET|/provenance/exchange/v1/markets|
 | `QueryParams` | [QueryParamsRequest](#provenance.exchange.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.exchange.v1.QueryParamsResponse) | QueryParams returns the exchange module parameters. | GET|/provenance/exchange/v1/params|
 | `QueryValidateCreateMarket` | [QueryValidateCreateMarketRequest](#provenance.exchange.v1.QueryValidateCreateMarketRequest) | [QueryValidateCreateMarketResponse](#provenance.exchange.v1.QueryValidateCreateMarketResponse) | QueryValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have. | GET|/provenance/exchange/v1/validate/create_market|
-| `QueryValidateManageFees` | [QueryValidateManageFeesRequest](#provenance.exchange.v1.QueryValidateManageFeesRequest) | [QueryValidateManageFeesResponse](#provenance.exchange.v1.QueryValidateManageFeesResponse) | QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have. | GET|/provenance/exchange/v1/market/{market_id}/validate/manage_fees|
+| `QueryValidateManageFees` | [QueryValidateManageFeesRequest](#provenance.exchange.v1.QueryValidateManageFeesRequest) | [QueryValidateManageFeesResponse](#provenance.exchange.v1.QueryValidateManageFeesResponse) | QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have. | GET|/provenance/exchange/v1/validate/manage_fees|
 
  <!-- end services -->
 

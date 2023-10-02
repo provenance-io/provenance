@@ -67,15 +67,43 @@ func (k Keeper) GetParams(ctx sdk.Context) *exchange.Params {
 	return rv
 }
 
+// GetParamsOrDefaults gets the exchange module params from state if there are any.
+// If state doesn't have any param info, the defaults are returned.
+func (k Keeper) GetParamsOrDefaults(ctx sdk.Context) *exchange.Params {
+	if rv := k.GetParams(ctx); rv != nil {
+		return rv
+	}
+	return exchange.DefaultParams()
+}
+
 // GetExchangeSplit gets the split amount for the provided denom.
 // If the denom is "", the default is returned.
 // If there isn't a specific entry for the provided denom, the default is returned.
 func (k Keeper) GetExchangeSplit(ctx sdk.Context, denom string) uint16 {
 	store := k.getStore(ctx)
-	split, found := getParamsSplit(store, denom)
-	// If it wasn't found, and we weren't already looking for the default, look up the default now.
-	if !found && len(denom) > 0 {
-		split, _ = getParamsSplit(store, "")
+	if split, found := getParamsSplit(store, denom); found {
+		return split
 	}
-	return split
+
+	// If it wasn't found, and we weren't already looking for the default, look up the default now.
+	if len(denom) > 0 {
+		if split, found := getParamsSplit(store, ""); found {
+			return split
+		}
+	}
+
+	// If still not found, look to the hard-coded defaults.
+	defaults := exchange.DefaultParams()
+
+	// If looking for a specific denom, check the denom splits first.
+	if len(denom) > 0 && len(defaults.DenomSplits) > 0 {
+		for _, ds := range defaults.DenomSplits {
+			if ds.Denom == denom {
+				return uint16(ds.Split)
+			}
+		}
+	}
+
+	// Lastly, use the default from the defaults.
+	return uint16(defaults.DefaultSplit)
 }

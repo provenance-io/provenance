@@ -11,8 +11,9 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/api/annotations.proto";
 import "gogoproto/gogo.proto";
-import "provenance/exchange/v1/orders.proto";
 import "provenance/exchange/v1/market.proto";
+import "provenance/exchange/v1/orders.proto";
+import "provenance/exchange/v1/params.proto";
 
 // Query is the service for exchange module's query endpoints.
 service Query {
@@ -71,7 +72,7 @@ service Query {
 
   // QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
   rpc QueryValidateManageFees(QueryValidateManageFeesRequest) returns (QueryValidateManageFeesResponse) {
-    option (google.api.http).get = "/provenance/exchange/v1/market/{market_id}/validate/manage_fees";
+    option (google.api.http).get = "/provenance/exchange/v1/validate/manage_fees";
   }
 }
 
@@ -228,12 +229,12 @@ message QueryGetAllMarketsResponse {
 }
 
 // QueryParamsRequest is a request message for the QueryParams endpoint.
-message QueryParamsRequest {
-  // TODO[1658]: QueryParamsRequest
-}
+message QueryParamsRequest {}
+
 // QueryParamsResponse is a response message for the QueryParams endpoint.
 message QueryParamsResponse {
-  // TODO[1658]: QueryParamsResponse
+  // params are the exchange module parameter values.
+  Params params = 1;
 }
 
 // QueryValidateCreateMarketRequest is a request message for the QueryValidateCreateMarket endpoint.
