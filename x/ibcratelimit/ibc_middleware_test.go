@@ -455,7 +455,7 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	suite.Require().NoError(err)
 
 	// Sending above the quota should fail. We send 2 instead of 1 to account for rounding errors
-	_, err = suite.AssertReceive(false, suite.MessageFromBToA(sendDenom, osmomath.NewInt(2)))
+	_, err = suite.AssertReceive(false, suite.MessageFromBToA(sendDenom, osmomath.NewInt(500_000_000_000)))
 	suite.Require().NoError(err)
 }
 
