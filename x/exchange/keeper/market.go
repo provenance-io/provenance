@@ -1059,6 +1059,20 @@ func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
 	return market
 }
 
+// GetMarketBrief gets the MarketBrief for the given market id.
+func (k Keeper) GetMarketBrief(ctx sdk.Context, marketID uint32) *exchange.MarketBrief {
+	acc := k.GetMarketAccount(ctx, marketID)
+	if acc == nil {
+		return nil
+	}
+
+	return &exchange.MarketBrief{
+		MarketId:      marketID,
+		MarketAddress: acc.Address,
+		MarketDetails: acc.MarketDetails,
+	}
+}
+
 // UpdateFees updates all the fees as provided in the MsgGovManageFeesRequest.
 func (k Keeper) UpdateFees(ctx sdk.Context, msg *exchange.MsgGovManageFeesRequest) error {
 	store := k.getStore(ctx)

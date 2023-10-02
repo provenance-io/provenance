@@ -175,8 +175,8 @@ func (k QueryServer) QueryGetAllOrders(goCtx context.Context, req *exchange.Quer
 			return false, nil
 		}
 		if accumulate {
-			// Only add them to the result if we can read it.
-			// This might result in fewer results than the limit, but at least one bad entry won't block others.
+			// Only add it to the result if we can read it. This might result in fewer results than the limit,
+			// but at least one bad entry won't block others by causing the whole thing to return an error.
 			order, oerr := k.parseOrderStoreValue(orderID, value)
 			if oerr != nil {
 				resp.Orders = append(resp.Orders, order)
@@ -192,10 +192,56 @@ func (k QueryServer) QueryGetAllOrders(goCtx context.Context, req *exchange.Quer
 	return resp, nil
 }
 
-// QueryMarketInfo returns the information/details about a market.
-func (k QueryServer) QueryMarketInfo(goCtx context.Context, req *exchange.QueryMarketInfoRequest) (*exchange.QueryMarketInfoResponse, error) {
-	// TODO[1658]: Implement QueryMarketInfo query
-	panic("not implemented")
+// QueryGetMarket returns all the information and details about a market.
+func (k QueryServer) QueryGetMarket(goCtx context.Context, req *exchange.QueryGetMarketRequest) (*exchange.QueryGetMarketResponse, error) {
+	if req == nil || req.MarketId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	market := k.GetMarket(ctx, req.MarketId)
+	if market == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "market %d not found", req.MarketId)
+	}
+
+	return &exchange.QueryGetMarketResponse{Market: market}, nil
+}
+
+// QueryGetAllMarkets returns brief information about each market.
+func (k QueryServer) QueryGetAllMarkets(goCtx context.Context, req *exchange.QueryGetAllMarketsRequest) (*exchange.QueryGetAllMarketsResponse, error) {
+	var pagination *query.PageRequest
+	if req != nil {
+		pagination = req.Pagination
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	pre := GetKeyPrefixKnownMarketID()
+	store := prefix.NewStore(k.getStore(ctx), pre)
+
+	resp := &exchange.QueryGetAllMarketsResponse{}
+	var pageErr error
+	resp.Pagination, pageErr = query.FilteredPaginate(store, pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		// If we can't get the market id from the key, just pretend like it doesn't exist.
+		marketID, ok := ParseKeySuffixKnownMarketID(key)
+		if !ok {
+			return false, nil
+		}
+		if accumulate {
+			// Only add it to the result if we can read it. This might result in fewer results than the limit,
+			// but at least one bad entry won't block others by causing the whole thing to return an error.
+			brief := k.GetMarketBrief(ctx, marketID)
+			if brief != nil {
+				resp.Markets = append(resp.Markets, brief)
+			}
+		}
+		return true, nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating all known markets: %v", pageErr)
+	}
+
+	return resp, nil
 }
 
 // QueryParams returns the exchange module parameters.
