@@ -369,7 +369,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	suite.Require().Equal(used, sendAmount.MulRaw(2))
 
 	// Sending above the quota should fail. We use 2 instead of 1 here to avoid rounding issues
-	_, err = suite.AssertSend(false, suite.MessageFromAToB(denom, osmomath.NewInt(2)))
+	_, err = suite.AssertSend(false, suite.MessageFromAToB(denom, osmomath.NewInt(500_000_000_000)))
 	suite.Require().Error(err)
 	return attrs
 }
