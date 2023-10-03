@@ -112,7 +112,7 @@ func (k MsgServer) MarketUpdateDetails(goCtx context.Context, msg *exchange.MsgM
 		return nil, permError("update", msg.Admin, msg.MarketId)
 	}
 	admin := sdk.MustAccAddressFromBech32(msg.Admin)
-	err := k.UpdateMarketDetails(ctx, msg.MarketId, &msg.MarketDetails, admin)
+	err := k.UpdateMarketDetails(ctx, msg.MarketId, msg.MarketDetails, admin)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -163,7 +163,7 @@ func (k MsgServer) MarketManagePermissions(goCtx context.Context, msg *exchange.
 // MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it.
 func (k MsgServer) MarketManageReqAttrs(goCtx context.Context, msg *exchange.MsgMarketManageReqAttrsRequest) (*exchange.MsgMarketManageReqAttrsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if !k.CanWithdrawMarketFunds(ctx, msg.MarketId, msg.Admin) {
+	if !k.CanManageReqAttrs(ctx, msg.MarketId, msg.Admin) {
 		return nil, permError("manage required attributes for", msg.Admin, msg.MarketId)
 	}
 	err := k.UpdateReqAttrs(ctx, msg)
