@@ -332,6 +332,45 @@ func ValidateAddRemoveFeeRatiosWithExisting(field string, existing, toAdd, toRem
 	return errs
 }
 
+// ValidateRatioDenoms checks that the buyer and seller ratios have the same price denoms.
+func ValidateRatioDenoms(sellerRatios, buyerRatios []FeeRatio) []error {
+	var errs []error
+	if len(sellerRatios) > 0 && len(buyerRatios) > 0 {
+		// We only need to check the price denoms if *both* types have an entry.
+		sellerPriceDenoms := make([]string, len(sellerRatios))
+		sellerPriceDenomsKnown := make(map[string]bool)
+		for i, ratio := range sellerRatios {
+			sellerPriceDenoms[i] = ratio.Price.Denom
+			sellerPriceDenomsKnown[ratio.Price.Denom] = true
+		}
+
+		buyerPriceDenoms := make([]string, 0, len(sellerRatios))
+		buyerPriceDenomsKnown := make(map[string]bool)
+		for _, ratio := range buyerRatios {
+			if !buyerPriceDenomsKnown[ratio.Price.Denom] {
+				buyerPriceDenoms = append(buyerPriceDenoms, ratio.Price.Denom)
+				buyerPriceDenomsKnown[ratio.Price.Denom] = true
+			}
+		}
+
+		for _, denom := range sellerPriceDenoms {
+			if !buyerPriceDenomsKnown[denom] {
+				errs = append(errs, fmt.Errorf("seller settlement fee ratios have price denom %q "+
+					"but there are no buyer settlement fee ratios with that price denom", denom))
+			}
+		}
+
+		for _, denom := range buyerPriceDenoms {
+			if !sellerPriceDenomsKnown[denom] {
+				errs = append(errs, fmt.Errorf("buyer settlement fee ratios have price denom %q "+
+					"but there is not a seller settlement fee ratio with that price denom", denom))
+			}
+		}
+	}
+
+	return errs
+}
+
 // ValidateAddRemoveFeeOptions returns an error if the toAdd list has an invalid
 // entry or if the two lists have one or more common entries.
 func ValidateAddRemoveFeeOptions(field string, toAdd, toRemove []sdk.Coin) error {

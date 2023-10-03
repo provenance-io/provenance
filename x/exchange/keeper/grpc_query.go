@@ -273,25 +273,23 @@ func (k QueryServer) QueryValidateCreateMarket(goCtx context.Context, req *excha
 
 	// The SDK *should* already be using a cache context for queries, but I'm doing it here too just to be on the safe side.
 	ctx, _ := sdk.UnwrapSDKContext(goCtx).CacheContext()
-	var marketID uint32
-	if newMarketID, err := k.CreateMarket(ctx, msg.Market); err != nil {
+	marketID, err := k.CreateMarket(ctx, msg.Market)
+	if err != nil {
 		resp.Error = err.Error()
 		return resp, nil
-	} else {
-		marketID = newMarketID
 	}
 
 	resp.GovPropWillPass = true
 
 	var errs []error
-	if err := exchange.ValidateReqAttrsAreNormalized("create ask", msg.Market.ReqAttrCreateAsk); err != nil {
+	if err = exchange.ValidateReqAttrsAreNormalized("create ask", msg.Market.ReqAttrCreateAsk); err != nil {
 		errs = append(errs, err)
 	}
-	if err := exchange.ValidateReqAttrsAreNormalized("create bid", msg.Market.ReqAttrCreateBid); err != nil {
+	if err = exchange.ValidateReqAttrsAreNormalized("create bid", msg.Market.ReqAttrCreateBid); err != nil {
 		errs = append(errs, err)
 	}
 
-	if err := k.ValidateMarket(ctx, marketID); err != nil {
+	if err = k.ValidateMarket(ctx, marketID); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -336,7 +334,8 @@ func (k QueryServer) QueryValidateManageFees(goCtx context.Context, req *exchang
 		return resp, nil
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	// The SDK *should* already be using a cache context for queries, but I'm doing it here too just to be on the safe side.
+	ctx, _ := sdk.UnwrapSDKContext(goCtx).CacheContext()
 	store := k.getStore(ctx)
 	if err := validateMarketExists(store, msg.MarketId); err != nil {
 		resp.Error = err.Error()
@@ -380,6 +379,14 @@ func (k QueryServer) QueryValidateManageFees(goCtx context.Context, req *exchang
 		buyerRatios := getBuyerSettlementRatios(store, msg.MarketId)
 		errs = append(errs, exchange.ValidateAddRemoveFeeRatiosWithExisting("buyer settlement",
 			buyerRatios, msg.AddFeeBuyerSettlementRatios, msg.RemoveFeeBuyerSettlementRatios)...)
+	}
+
+	if err := k.UpdateFees(ctx, msg); err != nil {
+		// The only error this might be would be about event emission.
+		errs = append(errs, err)
+	}
+	if err := k.ValidateMarket(ctx, msg.MarketId); err != nil {
+		errs = append(errs, err)
 	}
 
 	if len(errs) > 0 {

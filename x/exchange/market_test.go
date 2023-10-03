@@ -1836,6 +1836,147 @@ func TestValidateAddRemoveFeeRatiosWithExisting(t *testing.T) {
 	}
 }
 
+func TestValidateRatioDenoms(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	ratio := func(price, fee sdk.Coin) FeeRatio {
+		return FeeRatio{Price: price, Fee: fee}
+	}
+	joinErrs := func(errs ...string) string {
+		return strings.Join(errs, "\n")
+	}
+	noBuyerDenomErr := func(denom string) string {
+		return fmt.Sprintf("seller settlement fee ratios have price denom %q but there "+
+			"are no buyer settlement fee ratios with that price denom", denom)
+	}
+	noSellerDenomErr := func(denom string) string {
+		return fmt.Sprintf("buyer settlement fee ratios have price denom %q but there "+
+			"is not a seller settlement fee ratio with that price denom", denom)
+	}
+
+	tests := []struct {
+		name   string
+		seller []FeeRatio
+		buyer  []FeeRatio
+		expErr string
+	}{
+		{name: "nil seller, nil buyer", seller: nil, buyer: nil, expErr: ""},
+		{name: "empty seller, nil buyer", seller: []FeeRatio{}, buyer: nil, expErr: ""},
+		{name: "nil seller, empty buyer", seller: nil, buyer: []FeeRatio{}, expErr: ""},
+		{name: "empty seller, empty buyer", seller: []FeeRatio{}, buyer: []FeeRatio{}, expErr: ""},
+		{
+			name:   "nil seller, 2 buyer",
+			seller: nil,
+			buyer: []FeeRatio{
+				ratio(coin(1, "apple"), coin(2, "fig")),
+				ratio(coin(3, "cucumber"), coin(4, "dill")),
+			},
+			expErr: "",
+		},
+		{
+			name:   "empty seller, 2 buyer",
+			seller: []FeeRatio{},
+			buyer: []FeeRatio{
+				ratio(coin(1, "apple"), coin(2, "fig")),
+				ratio(coin(3, "cucumber"), coin(4, "dill")),
+			},
+			expErr: "",
+		},
+		{
+			name: "2 seller, nil buyer",
+			seller: []FeeRatio{
+				ratio(coin(1, "apple"), coin(2, "fig")),
+				ratio(coin(3, "cucumber"), coin(4, "dill")),
+			},
+			buyer:  nil,
+			expErr: "",
+		},
+		{
+			name: "2 seller, empty buyer",
+			seller: []FeeRatio{
+				ratio(coin(1, "apple"), coin(2, "fig")),
+				ratio(coin(3, "cucumber"), coin(4, "dill")),
+			},
+			buyer:  []FeeRatio{},
+			expErr: "",
+		},
+		{
+			name:   "1 seller, 1 buyer: different",
+			seller: []FeeRatio{ratio(coin(1, "apple"), coin(2, "banana"))},
+			buyer:  []FeeRatio{ratio(coin(3, "cucumber"), coin(4, "dill"))},
+			expErr: joinErrs(noBuyerDenomErr("apple"), noSellerDenomErr("cucumber")),
+		},
+		{
+			name: "2 seller, 2 buyer: all different",
+			seller: []FeeRatio{
+				ratio(coin(1, "apple"), coin(2, "banana")),
+				ratio(coin(3, "cucumber"), coin(4, "dill")),
+			},
+			buyer: []FeeRatio{
+				ratio(coin(5, "eggplant"), coin(6, "fig")),
+				ratio(coin(7, "grape"), coin(8, "honeydew")),
+			},
+			expErr: joinErrs(
+				noBuyerDenomErr("apple"),
+				noBuyerDenomErr("cucumber"),
+				noSellerDenomErr("eggplant"),
+				noSellerDenomErr("grape"),
+			),
+		},
+		{
+			name:   "1 seller, 2 buyer with same: same",
+			seller: []FeeRatio{ratio(coin(1, "apple"), coin(2, "banana"))},
+			buyer: []FeeRatio{
+				ratio(coin(5, "apple"), coin(6, "fig")),
+				ratio(coin(7, "apple"), coin(8, "honeydew")),
+			},
+			expErr: "",
+		},
+		{
+			name:   "1 seller, 2 buyer with same: different",
+			seller: []FeeRatio{ratio(coin(1, "eggplant"), coin(2, "banana"))},
+			buyer: []FeeRatio{
+				ratio(coin(5, "apple"), coin(6, "fig")),
+				ratio(coin(7, "apple"), coin(8, "honeydew")),
+			},
+			expErr: joinErrs(noBuyerDenomErr("eggplant"), noSellerDenomErr("apple")),
+		},
+		{
+			name:   "1 seller, 2 buyer: 1 buyer missing",
+			seller: []FeeRatio{ratio(coin(1, "apple"), coin(2, "banana"))},
+			buyer: []FeeRatio{
+				ratio(coin(5, "cucumber"), coin(6, "fig")),
+				ratio(coin(7, "apple"), coin(8, "honeydew")),
+			},
+			expErr: noSellerDenomErr("cucumber"),
+		},
+		{
+			name: "2 seller, 1 buyer",
+			seller: []FeeRatio{
+				ratio(coin(5, "apple"), coin(6, "banana")),
+				ratio(coin(7, "cucumber"), coin(8, "dill")),
+			},
+			buyer:  []FeeRatio{ratio(coin(1, "apple"), coin(2, "grape"))},
+			expErr: noBuyerDenomErr("cucumber"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var errs []error
+			testFunc := func() {
+				errs = ValidateRatioDenoms(tc.seller, tc.buyer)
+			}
+			require.NotPanics(t, testFunc, "ValidateRatioDenoms(%q, %q)",
+				FeeRatiosString(tc.seller), FeeRatiosString(tc.buyer))
+			err := errors.Join(errs...)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateRatioDenoms(%q, %q)",
+				FeeRatiosString(tc.seller), FeeRatiosString(tc.buyer))
+		})
+	}
+}
+
 func TestValidateAddRemoveFeeOptions(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}

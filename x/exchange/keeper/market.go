@@ -1264,42 +1264,8 @@ func (k Keeper) ValidateMarket(ctx sdk.Context, marketID uint32) error {
 		return err
 	}
 
-	var errs []error
-
 	sellerRatios := getSellerSettlementRatios(store, marketID)
 	buyerRatios := getBuyerSettlementRatios(store, marketID)
-	if len(sellerRatios) > 0 && len(buyerRatios) > 0 {
-		// We only need to check the price denoms if *both* types have an entry.
-		sellerPriceDenoms := make([]string, len(sellerRatios))
-		sellerPriceDenomsKnown := make(map[string]bool)
-		for i, ratio := range sellerRatios {
-			sellerPriceDenoms[i] = ratio.Price.Denom
-			sellerPriceDenomsKnown[ratio.Price.Denom] = true
-		}
-
-		buyerPriceDenoms := make([]string, 0, len(sellerRatios))
-		buyerPriceDenomsKnown := make(map[string]bool)
-		for _, ratio := range buyerRatios {
-			if !buyerPriceDenomsKnown[ratio.Price.Denom] {
-				buyerPriceDenoms = append(buyerPriceDenoms, ratio.Price.Denom)
-				buyerPriceDenomsKnown[ratio.Price.Denom] = true
-			}
-		}
-
-		for _, denom := range sellerPriceDenoms {
-			if !buyerPriceDenomsKnown[denom] {
-				errs = append(errs, fmt.Errorf("seller settlement fee ratios have price denom %q "+
-					"but there are no buyer settlement fee ratios with that price denom", denom))
-			}
-		}
-
-		for _, denom := range buyerPriceDenoms {
-			if !sellerPriceDenomsKnown[denom] {
-				errs = append(errs, fmt.Errorf("buyer settlement fee ratios have price denom %q "+
-					"but there is not a seller settlement fee ratio with that price denom", denom))
-			}
-		}
-	}
-
+	errs := exchange.ValidateRatioDenoms(sellerRatios, buyerRatios)
 	return errors.Join(errs...)
 }
