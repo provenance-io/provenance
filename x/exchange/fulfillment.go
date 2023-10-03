@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // OrderSplit contains an order, and the asset and price amounts that should come out of it.
+// TODO[1658]: Remove this struct.
 type OrderSplit struct {
 	// Order fulfillment associated with this split.
 	Order *OrderFulfillment
@@ -20,13 +20,26 @@ type OrderSplit struct {
 	Price sdk.Coin
 }
 
+// Distribution indicates an address and an amount that will either go to, or come from that address.
+type Distribution struct {
+	// Address is an bech32 address string
+	Address string
+	// Amount is the amount that will either go to, or come from that address.
+	Amount sdkmath.Int
+}
+
 // OrderFulfillment is used to figure out how an order should be fulfilled.
 type OrderFulfillment struct {
 	// Order is the original order with all its information.
 	Order *Order
 
 	// Splits contains information on the orders being used to fulfill this order.
-	Splits []*OrderSplit
+	Splits []*OrderSplit // TODO[1658]: Remove this field.
+
+	// AssetDists contains distribution info for this order's assets.
+	AssetDists []*Distribution
+	// AssetDists contains distribution info for this order's price.
+	PriceDists []*Distribution
 
 	// AssetsFilledAmt is the total amount of assets being fulfilled for the order.
 	AssetsFilledAmt sdkmath.Int
@@ -71,34 +84,44 @@ func NewOrderFulfillment(order *Order) *OrderFulfillment {
 	}
 }
 
+// assetCoin returns a coin with the given amount and the same denom as this order's assets.
+func (f OrderFulfillment) assetCoin(amt sdkmath.Int) sdk.Coin {
+	return sdk.Coin{Denom: f.GetAssets().Denom, Amount: amt}
+}
+
+// priceCoin returns a coin with the given amount and the same denom as this order's price.
+func (f OrderFulfillment) priceCoin(amt sdkmath.Int) sdk.Coin {
+	return sdk.Coin{Denom: f.GetPrice().Denom, Amount: amt}
+}
+
 // GetAssetsFilled gets the coin value of the assets that have been filled in this fulfillment.
 func (f OrderFulfillment) GetAssetsFilled() sdk.Coin {
-	return sdk.Coin{Denom: f.GetAssets().Denom, Amount: f.AssetsFilledAmt}
+	return f.assetCoin(f.AssetsFilledAmt)
 }
 
 // GetAssetsUnfilled gets the coin value of the assets left to fill in this fulfillment.
 func (f OrderFulfillment) GetAssetsUnfilled() sdk.Coin {
-	return sdk.Coin{Denom: f.GetAssets().Denom, Amount: f.AssetsUnfilledAmt}
+	return f.assetCoin(f.AssetsUnfilledAmt)
 }
 
 // GetPriceApplied gets the coin value of the price that has been filled in this fulfillment.
 func (f OrderFulfillment) GetPriceApplied() sdk.Coin {
-	return sdk.Coin{Denom: f.GetPrice().Denom, Amount: f.PriceAppliedAmt}
+	return f.priceCoin(f.PriceAppliedAmt)
 }
 
 // GetPriceLeft gets the coin value of the price left to fill in this fulfillment.
 func (f OrderFulfillment) GetPriceLeft() sdk.Coin {
-	return sdk.Coin{Denom: f.GetPrice().Denom, Amount: f.PriceLeftAmt}
+	return f.priceCoin(f.PriceLeftAmt)
 }
 
 // GetPriceFilled gets the coin value of the price filled in this fulfillment.
 func (f OrderFulfillment) GetPriceFilled() sdk.Coin {
-	return sdk.Coin{Denom: f.GetPrice().Denom, Amount: f.PriceFilledAmt}
+	return f.priceCoin(f.PriceFilledAmt)
 }
 
 // GetPriceUnfilled gets the coin value of the price unfilled in this fulfillment.
 func (f OrderFulfillment) GetPriceUnfilled() sdk.Coin {
-	return sdk.Coin{Denom: f.GetPrice().Denom, Amount: f.PriceUnfilledAmt}
+	return f.priceCoin(f.PriceUnfilledAmt)
 }
 
 // IsFullyFilled returns true if this fulfillment's order has been fully accounted for.
@@ -169,6 +192,38 @@ func (f OrderFulfillment) GetOrderTypeByte() byte {
 // GetHoldAmount gets this fulfillment's order's hold amount.
 func (f OrderFulfillment) GetHoldAmount() sdk.Coins {
 	return f.Order.GetHoldAmount()
+}
+
+// DistributeAssets records the distribution of assets in the provided amount to/from the given order.
+func (f *OrderFulfillment) DistributeAssets(order OrderI, amount sdkmath.Int) error {
+	if f.AssetsUnfilledAmt.LT(amount) {
+		return fmt.Errorf("cannot fill %s order %d having assets left %q with %q from %s order %d: overfill",
+			f.GetOrderType(), f.GetOrderID(), f.GetAssetsUnfilled(), f.assetCoin(amount), order.GetOrderType(), order.GetOrderID())
+	}
+
+	f.AssetsUnfilledAmt = f.AssetsUnfilledAmt.Sub(amount)
+	f.AssetsFilledAmt = f.AssetsFilledAmt.Add(amount)
+	f.AssetDists = append(f.AssetDists, &Distribution{
+		Address: order.GetOwner(),
+		Amount:  amount,
+	})
+	return nil
+}
+
+// DistributePrice records the distribution of price in the provided amount to/from the given order.
+func (f *OrderFulfillment) DistributePrice(order OrderI, amount sdkmath.Int) error {
+	if f.PriceLeftAmt.LT(amount) && f.IsBidOrder() {
+		return fmt.Errorf("cannot fill %s order %d having price left %q to %s order %d at a price of %q: overfill",
+			f.GetOrderType(), f.GetOrderID(), f.GetPriceLeft(), order.GetOrderType(), order.GetOrderID(), f.priceCoin(amount))
+	}
+
+	f.PriceLeftAmt = f.PriceLeftAmt.Sub(amount)
+	f.PriceAppliedAmt = f.PriceAppliedAmt.Add(amount)
+	f.PriceDists = append(f.PriceDists, &Distribution{
+		Address: order.GetOrderType(),
+		Amount:  amount,
+	})
+	return nil
 }
 
 // Apply adjusts this order fulfillment using the provided info.
