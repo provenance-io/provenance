@@ -10,31 +10,33 @@ import (
 
 	db "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
-// TODO[1658]: Create a last-order-id store entry and use that in getNextOrderID.
+// getLastOrderID gets the id of the last order created.
+func getLastOrderID(store sdk.KVStore) uint64 {
+	key := MakeKeyLastOrderID()
+	value := store.Get(key)
+	rv, _ := uint64FromBz(value)
+	return rv
+}
 
-// getNextOrderID gets the next available order id from the store.
-func (k Keeper) getNextOrderID(ctx sdk.Context) uint64 {
-	store := prefix.NewStore(k.getStore(ctx), GetKeyPrefixOrder())
-	iter := store.ReverseIterator(nil, nil)
-	defer iter.Close()
+// setLastOrderID sets the id of the last order created.
+func setLastOrderID(store sdk.KVStore, orderID uint64) {
+	key := MakeKeyLastOrderID()
+	value := uint64Bz(orderID)
+	store.Set(key, value)
+}
 
-	toAdd := uint64(1)
-	for ; iter.Valid(); iter.Next() {
-		orderIDBz := iter.Key()
-		orderID, ok := uint64FromBz(orderIDBz)
-		if ok {
-			return orderID + toAdd
-		}
-		toAdd++
-	}
-	return toAdd
+// nextOrderID finds the next available order id, updates the last order id
+// store entry, and returns the unused id it found.
+func nextOrderID(store sdk.KVStore) uint64 {
+	orderID := getLastOrderID(store) + 1
+	setLastOrderID(store, orderID)
+	return orderID
 }
 
 // getOrderStoreKeyValue creates the store key and value representing the provided order.
@@ -590,7 +592,7 @@ func (k Keeper) CreateAskOrder(ctx sdk.Context, askOrder exchange.AskOrder, crea
 		}
 	}
 
-	orderID := k.getNextOrderID(ctx)
+	orderID := nextOrderID(store)
 	order := exchange.NewOrder(orderID).WithAsk(&askOrder)
 	if err := k.setOrderInStore(store, *order); err != nil {
 		return 0, fmt.Errorf("error storing ask order: %w", err)
@@ -630,7 +632,7 @@ func (k Keeper) CreateBidOrder(ctx sdk.Context, bidOrder exchange.BidOrder, crea
 		}
 	}
 
-	orderID := k.getNextOrderID(ctx)
+	orderID := nextOrderID(store)
 	order := exchange.NewOrder(orderID).WithBid(&bidOrder)
 	if err := k.setOrderInStore(store, *order); err != nil {
 		return 0, fmt.Errorf("error storing bid order: %w", err)

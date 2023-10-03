@@ -28,6 +28,8 @@ import (
 //
 // Known Market IDs: 0x07 | <market_id> => nil
 //
+// Last Order ID: 0x08 => uint64
+//
 // Markets:
 //   Some aspects of a market are stored using the accounts module and the MarketAccount type.
 //   Others are stored in the exchange module.
@@ -74,6 +76,8 @@ const (
 	KeyTypeLastMarketID = byte(0x06)
 	// KeyTypeKnownMarketID is the type byte for known market id entries.
 	KeyTypeKnownMarketID = byte(0x07)
+	// KeyTypeLastOrderID is the type byte for the id of the last order created.
+	KeyTypeLastOrderID = byte(0x08)
 	// KeyTypeMarket is the type byte for market entries.
 	KeyTypeMarket = byte(0x01)
 	// KeyTypeOrder is the type byte for order entries.
@@ -235,6 +239,11 @@ func MakeKeyKnownMarketID(marketID uint32) []byte {
 // Returned boolean indicates whether parsing was successful (true = okay).
 func ParseKeySuffixKnownMarketID(suffix []byte) (uint32, bool) {
 	return uint32FromBz(suffix)
+}
+
+// MakeKeyLastOrderID creates the key for the id of the last order created.
+func MakeKeyLastOrderID() []byte {
+	return []byte{KeyTypeLastOrderID}
 }
 
 // keyPrefixMarket creates the root of a market's key with extra capacity for the rest.

@@ -32,10 +32,17 @@ type expectedPrefix struct {
 	value []byte
 }
 
+// keyTestCase is used with checkKey to run some standardized checks on a test case for a store key.
 type keyTestCase struct {
-	maker       func() []byte
-	expected    []byte
-	expPanic    string
+	// maker is a function that creates the key value to check.
+	// A maker is used (instead of just providing the value to check) so that
+	// the function in question can be checked for panics.
+	maker func() []byte
+	// expected is the expected result of the maker.
+	expected []byte
+	// expPanic is the panic message expected when the maker is called.
+	expPanic string
+	// expPrefixes are all the prefixes that the result of the maker is expected to have.
 	expPrefixes []expectedPrefix
 }
 
@@ -83,6 +90,7 @@ func TestKeyTypeUniqueness(t *testing.T) {
 				{name: "KeyTypeParams", value: keeper.KeyTypeParams},
 				{name: "KeyTypeLastMarketID", value: keeper.KeyTypeLastMarketID},
 				{name: "KeyTypeKnownMarketID", value: keeper.KeyTypeKnownMarketID},
+				{name: "KeyTypeLastOrderID", value: keeper.KeyTypeLastOrderID},
 				{name: "KeyTypeMarket", value: keeper.KeyTypeMarket},
 				{name: "KeyTypeOrder", value: keeper.KeyTypeOrder},
 				{name: "KeyTypeMarketToOrderIndex", value: keeper.KeyTypeMarketToOrderIndex},
@@ -433,6 +441,16 @@ func TestParseKeySuffixKnownMarketID(t *testing.T) {
 			assert.Equal(t, tc.exp, marketID, "ParseKeySuffixKnownMarketID result")
 		})
 	}
+}
+
+func TestMakeKeyLastOrderID(t *testing.T) {
+	ktc := keyTestCase{
+		maker: func() []byte {
+			return keeper.MakeKeyLastOrderID()
+		},
+		expected: []byte{keeper.KeyTypeLastOrderID},
+	}
+	checkKey(t, ktc, "MakeKeyLastOrderID")
 }
 
 func TestGetKeyPrefixMarket(t *testing.T) {

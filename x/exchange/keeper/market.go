@@ -28,10 +28,9 @@ func setLastAutoMarketID(store sdk.KVStore, marketID uint32) {
 	store.Set(key, value)
 }
 
-// NextMarketID finds the next available market id, updates the last auto-selected
+// nextMarketID finds the next available market id, updates the last auto-selected
 // market id store entry, and returns the unused id it found.
-func (k Keeper) NextMarketID(ctx sdk.Context) uint32 {
-	store := k.getStore(ctx)
+func nextMarketID(store sdk.KVStore) uint32 {
 	marketID := getLastAutoMarketID(store) + 1
 	for {
 		key := MakeKeyKnownMarketID(marketID)
@@ -1161,7 +1160,7 @@ func storeMarket(store sdk.KVStore, market exchange.Market) {
 // validated and also allows for the market account to already exist.
 func (k Keeper) initMarket(ctx sdk.Context, store sdk.KVStore, market exchange.Market) {
 	if market.MarketId == 0 {
-		market.MarketId = k.NextMarketID(ctx)
+		market.MarketId = nextMarketID(store)
 	}
 	marketID := market.MarketId
 
@@ -1196,8 +1195,10 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (uint32, e
 		return 0, errors.Join(errAsk, errBid)
 	}
 
+	store := k.getStore(ctx)
+
 	if market.MarketId == 0 {
-		market.MarketId = k.NextMarketID(ctx)
+		market.MarketId = nextMarketID(store)
 	}
 
 	marketAddr := exchange.GetMarketAddress(market.MarketId)
@@ -1213,7 +1214,7 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (uint32, e
 	k.accountKeeper.NewAccount(ctx, marketAcc)
 	k.accountKeeper.SetAccount(ctx, marketAcc)
 
-	storeMarket(k.getStore(ctx), market)
+	storeMarket(store, market)
 
 	return market.MarketId, nil
 }
