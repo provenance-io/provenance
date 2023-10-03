@@ -35,7 +35,7 @@ func ParseFieldsFromFlagsAndArgs[reqP any](flagAdvice FlagAdvice, flags *pflag.F
 			return req, err
 		}
 		if !usedArg {
-			argIndexOffset -= 1
+			argIndexOffset--
 		}
 	}
 	return req, nil
@@ -146,13 +146,13 @@ func ParseFieldFromFlag(fVal reflect.Value, fType reflect.StructField, flagAdvic
 	return false, nil
 }
 
-func parseFieldFromDirectlySetFlag(fVal reflect.Value, fType reflect.StructField, flagAdvice FlagAdvice, flagName string, flags *pflag.FlagSet) error {
+func parseFieldFromDirectlySetFlag(fVal reflect.Value, fType reflect.StructField, _ FlagAdvice, flagName string, flags *pflag.FlagSet) error {
 	// get string. If its a string great, run through arg parser. Otherwise try setting directly
 	s, err := flags.GetString(flagName)
 	if err != nil {
 		flag := flags.Lookup(flagName)
 		if flag == nil {
-			return fmt.Errorf("Programmer set the flag name wrong. Flag %s does not exist", flagName)
+			return fmt.Errorf("programmer set the flag name wrong. Flag %s does not exist", flagName)
 		}
 		t := flag.Value.Type()
 		if t == "uint64" {
@@ -252,15 +252,16 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 		typeStr := fType.Type.String()
 		var v any
 		var err error
-		if typeStr == "types.Coin" {
+		switch typeStr {
+		case "types.Coin":
 			v, err = ParseCoin(arg, fType.Name)
-		} else if typeStr == "math.Int" {
+		case "math.Int":
 			v, err = ParseSdkInt(arg, fType.Name)
-		} else if typeStr == "time.Time" {
+		case "time.Time":
 			v, err = ParseUnixTime(arg, fType.Name)
-		} else if typeStr == "math.LegacyDec" {
+		case "math.LegacyDec":
 			v, err = ParseSdkDec(arg, fType.Name)
-		} else {
+		default:
 			return fmt.Errorf("struct field type not recognized. Got type %v", fType)
 		}
 
@@ -312,7 +313,7 @@ func ParseUnixTime(arg string, fieldName string) (time.Time, error) {
 	return startTime, nil
 }
 
-func ParseDenom(arg string, fieldName string) (string, error) {
+func ParseDenom(arg string, _ string) (string, error) {
 	return strings.TrimSpace(arg), nil
 }
 

@@ -33,11 +33,7 @@ func DefaultParams() Params {
 
 // validate params.
 func (p Params) Validate() error {
-	if err := validateContractAddress(p.ContractAddress); err != nil {
-		return err
-	}
-
-	return nil
+	return validateContractAddress(p.ContractAddress)
 }
 
 // Implements params.ParamSet.

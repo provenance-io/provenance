@@ -92,7 +92,7 @@ func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddres
 	return string(state)
 }
 
-func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAddress, key []byte) gjson.Result {
+func (chain *TestChain) QueryContractJSON(suite *suite.Suite, contract sdk.AccAddress, key []byte) gjson.Result {
 	provenanceApp := chain.GetProvenanceApp()
 	state, err := provenanceApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
 	suite.Require().NoError(err)

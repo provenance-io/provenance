@@ -40,11 +40,11 @@ type AppModuleBasic struct {
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
 // RegisterLegacyAminoCodec registers the ibcratelimit module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers interfaces and implementations of the ibcratelimit module.
-func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(_ codectypes.InterfaceRegistry) {
 	// TODO Do we need to register interfaces?
 }
 
@@ -55,7 +55,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the ibcratelimit module.
-func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -65,7 +65,7 @@ func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEnc
 
 // RegisterRESTRoutes registers the REST routes for the ibcratelimit module.
 // Deprecated: RegisterRESTRoutes is deprecated.
-func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
+func (b AppModuleBasic) RegisterRESTRoutes(_ client.Context, r *mux.Router) {
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the ibcratelimit module.
@@ -98,7 +98,7 @@ func NewAppModule(ics4wrapper ibcratelimit.ICS4Wrapper) AppModule {
 }
 
 // GenerateGenesisState creates a randomized GenState of the ibcratelimit module.
-func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
+func (am AppModule) GenerateGenesisState(_ *module.SimulationState) {
 	// Todo When we finish simulation
 	// simulation.RandomizedGenState(simState)
 }
@@ -116,13 +116,13 @@ func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a func to decode each module's defined types from their corresponding store key
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 	// TODO When we finish sim tests
 	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns simulation operations (i.e msgs) with their respective weight
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return []simtypes.WeightedOperation{}
 	// TODO When we get sim tests
 	/*return simulation.WeightedOperations(

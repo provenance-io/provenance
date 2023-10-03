@@ -53,7 +53,7 @@ func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*sdk.Result, error) {
 // SignAndDeliver signs and delivers a transaction without asserting the results. This overrides the function
 // from ibctesting
 func SignAndDeliver(
-	txCfg client.TxConfig, app *baseapp.BaseApp, header tmproto.Header, msgs []sdk.Msg,
+	txCfg client.TxConfig, app *baseapp.BaseApp, _ tmproto.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
 	tx, _ := helpers.GenTx(
