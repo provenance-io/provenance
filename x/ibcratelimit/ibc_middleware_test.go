@@ -84,6 +84,7 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 	// txfeetypes.ConsensusMinFee = osmomath.ZeroDec()
 	ibctesting.DefaultTestingAppInit = SetupSimApp
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
+
 	suite.chainA = &osmosisibctesting.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1)),
 	}
@@ -97,6 +98,13 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 	//err = suite.chainB.MoveEpochsToTheFuture()
 	//suite.Require().NoError(err)
 	suite.coordinator.Setup(suite.path)
+
+	params := suite.chainA.GetProvenanceApp().MintKeeper.GetParams(suite.chainA.GetContext())
+	params.InflationMax = sdk.NewDec(0)
+	params.InflationRateChange = sdk.NewDec(1)
+	params.InflationMin = sdk.NewDec(0)
+	suite.chainA.GetProvenanceApp().MintKeeper.SetParams(suite.chainA.GetContext(), params)
+	suite.chainB.GetProvenanceApp().MintKeeper.SetParams(suite.chainB.GetContext(), params)
 }
 
 // TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
@@ -369,7 +377,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	suite.Require().Equal(used, sendAmount.MulRaw(2))
 
 	// Sending above the quota should fail. We use 2 instead of 1 here to avoid rounding issues
-	_, err = suite.AssertSend(false, suite.MessageFromAToB(denom, osmomath.NewInt(500_000_000_000)))
+	_, err = suite.AssertSend(false, suite.MessageFromAToB(denom, osmomath.NewInt(2)))
 	suite.Require().Error(err)
 	return attrs
 }
@@ -455,7 +463,7 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	suite.Require().NoError(err)
 
 	// Sending above the quota should fail. We send 2 instead of 1 to account for rounding errors
-	_, err = suite.AssertReceive(false, suite.MessageFromBToA(sendDenom, osmomath.NewInt(500_000_000_000)))
+	_, err = suite.AssertReceive(false, suite.MessageFromBToA(sendDenom, osmomath.NewInt(2)))
 	suite.Require().NoError(err)
 }
 
