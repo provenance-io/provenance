@@ -8,7 +8,6 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/tidwall/gjson"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -90,16 +89,6 @@ func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddres
 	state, err := provenanceApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
 	suite.Require().NoError(err)
 	return string(state)
-}
-
-func (chain *TestChain) QueryContractJSON(suite *suite.Suite, contract sdk.AccAddress, key []byte) gjson.Result {
-	provenanceApp := chain.GetProvenanceApp()
-	state, err := provenanceApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
-	suite.Require().NoError(err)
-	suite.Require().True(gjson.Valid(string(state)))
-	json := gjson.Parse(string(state))
-	suite.Require().NoError(err)
-	return json
 }
 
 func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {

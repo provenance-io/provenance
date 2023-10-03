@@ -65,7 +65,7 @@ func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncoding
 
 // RegisterRESTRoutes registers the REST routes for the ibcratelimit module.
 // Deprecated: RegisterRESTRoutes is deprecated.
-func (b AppModuleBasic) RegisterRESTRoutes(_ client.Context, r *mux.Router) {
+func (b AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the ibcratelimit module.
