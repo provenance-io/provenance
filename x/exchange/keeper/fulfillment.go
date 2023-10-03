@@ -46,7 +46,7 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 		return err
 	}
 	seller := sdk.MustAccAddressFromBech32(msg.Seller)
-	if err := k.validateCanCreateAsk(ctx, marketID, seller); err != nil {
+	if err := k.validateUserCanCreateAsk(ctx, marketID, seller); err != nil {
 		return err
 	}
 	if err := validateCreateAskFees(store, marketID, msg.AskOrderCreationFee, msg.SellerSettlementFlatFee); err != nil {
@@ -173,7 +173,7 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	if serr != nil {
 		return fmt.Errorf("invalid buyer %q: %w", msg.Buyer, serr)
 	}
-	if err := k.validateCanCreateBid(ctx, marketID, buyer); err != nil {
+	if err := k.validateUserCanCreateBid(ctx, marketID, buyer); err != nil {
 		return err
 	}
 	if err := validateCreateBidFees(store, marketID, msg.BidOrderCreationFee, msg.TotalPrice, msg.BuyerSettlementFees); err != nil {
@@ -356,6 +356,20 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 		return errors.New("settlement unexpectedly resulted in all orders fully filled")
 	}
 
+	for _, order := range askOrders {
+		if err = k.releaseHoldOnOrder(ctx, order); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	for _, order := range bidOrders {
+		if err = k.releaseHoldOnOrder(ctx, order); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
 	transfers := exchange.BuildSettlementTransfers(fulfillments)
 
 	for _, transfer := range transfers.OrderTransfers {
@@ -369,9 +383,12 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 	}
 
 	if fulfillments.PartialOrder != nil {
-		if err = k.setOrderInStore(store, *fulfillments.PartialOrder.NewOrder); err != nil {
-			return fmt.Errorf("could not update partial %s order %d: %w",
-				fulfillments.PartialOrder.NewOrder.GetOrderType(), fulfillments.PartialOrder.NewOrder.OrderId, err)
+		order := fulfillments.PartialOrder.NewOrder
+		if err = k.setOrderInStore(store, *order); err != nil {
+			return fmt.Errorf("could not update partial %s order %d: %w", order.GetOrderType(), order.OrderId, err)
+		}
+		if err = k.placeHoldOnOrder(ctx, fulfillments.PartialOrder.NewOrder); err != nil {
+			return fmt.Errorf("could not replace hold on partial %s order %d: %w", order.GetOrderType(), order.OrderId, err)
 		}
 	}
 

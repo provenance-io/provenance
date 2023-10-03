@@ -17,6 +17,26 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
+// TODO[1658]: Create a last-order-id store entry and use that in getNextOrderID.
+
+// getNextOrderID gets the next available order id from the store.
+func (k Keeper) getNextOrderID(ctx sdk.Context) uint64 {
+	store := prefix.NewStore(k.getStore(ctx), GetKeyPrefixOrder())
+	iter := store.ReverseIterator(nil, nil)
+	defer iter.Close()
+
+	toAdd := uint64(1)
+	for ; iter.Valid(); iter.Next() {
+		orderIDBz := iter.Key()
+		orderID, ok := uint64FromBz(orderIDBz)
+		if ok {
+			return orderID + toAdd
+		}
+		toAdd++
+	}
+	return toAdd
+}
+
 // getOrderStoreKeyValue creates the store key and value representing the provided order.
 func (k Keeper) getOrderStoreKeyValue(order exchange.Order) ([]byte, []byte, error) {
 	// 200 chosen to hopefully be more than what's needed for 99% of orders.
@@ -160,51 +180,7 @@ func deleteAndDeIndexOrder(store sdk.KVStore, order exchange.Order) {
 	}
 }
 
-// deleteOrder deletes an order (along with its indexes).
-func (k Keeper) deleteOrder(ctx sdk.Context, order exchange.Order) {
-	deleteAndDeIndexOrder(k.getStore(ctx), order)
-}
-
-// GetOrder gets an order. Returns nil, nil if the order does not exist.
-func (k Keeper) GetOrder(ctx sdk.Context, orderID uint64) (*exchange.Order, error) {
-	return k.getOrderFromStore(k.getStore(ctx), orderID)
-}
-
-// getNextOrderID gets the next available order id from the store.
-func (k Keeper) getNextOrderID(ctx sdk.Context) uint64 {
-	store := prefix.NewStore(k.getStore(ctx), GetKeyPrefixOrder())
-	iter := store.ReverseIterator(nil, nil)
-	defer iter.Close()
-
-	toAdd := uint64(1)
-	for ; iter.Valid(); iter.Next() {
-		orderIDBz := iter.Key()
-		orderID, ok := uint64FromBz(orderIDBz)
-		if ok {
-			return orderID + toAdd
-		}
-		toAdd++
-	}
-	return toAdd
-}
-
-// IterateOrders iterates over all orders. An error is returned if there was a problem
-// reading an entry along the way. Such a problem does not interrupt iteration.
-// The callback should return whether to stop. I.e. false = keep going, true = stop iterating.
-func (k Keeper) IterateOrders(ctx sdk.Context, cb func(order *exchange.Order) bool) error {
-	var errs []error
-	k.iterate(ctx, GetKeyPrefixOrder(), func(key, value []byte) bool {
-		order, err := k.parseOrderStoreKeyValue(key, value)
-		if err != nil {
-			errs = append(errs, err)
-			return false
-		}
-		return cb(order)
-	})
-	return errors.Join(errs...)
-}
-
-// iterateOrderIndex iterates over a <something> to order index with keys that have the provided prefixBz.
+// iterateOrderIndex iterates over a <something>-to-order index with keys that have the provided prefixBz.
 // The callback takes in the order id and order type byte and should return whether to stop iterating.
 func (k Keeper) iterateOrderIndex(ctx sdk.Context, prefixBz []byte, cb func(orderID uint64, orderTypeByte byte) bool) {
 	k.iterate(ctx, prefixBz, func(key, value []byte) bool {
@@ -216,26 +192,8 @@ func (k Keeper) iterateOrderIndex(ctx sdk.Context, prefixBz []byte, cb func(orde
 	})
 }
 
-// IterateMarketOrders iterates over all orders for a market.
-// The callback takes in the order id and order type byte and should return whether to stop iterating.
-func (k Keeper) IterateMarketOrders(ctx sdk.Context, marketID uint32, cb func(orderID uint64, orderTypeByte byte) bool) {
-	k.iterateOrderIndex(ctx, GetIndexKeyPrefixMarketToOrder(marketID), cb)
-}
-
-// IterateAddressOrders iterates over all orders for an address.
-// The callback takes in the order id and order type byte and should return whether to stop iterating.
-func (k Keeper) IterateAddressOrders(ctx sdk.Context, addr sdk.AccAddress, cb func(orderID uint64, orderTypeByte byte) bool) {
-	k.iterateOrderIndex(ctx, GetIndexKeyPrefixAddressToOrder(addr), cb)
-}
-
-// IterateAssetOrders iterates over all orders for a given asset denom.
-// The callback takes in the order id and order type byte and should return whether to stop iterating.
-func (k Keeper) IterateAssetOrders(ctx sdk.Context, assetDenom string, cb func(orderID uint64, orderTypeByte byte) bool) {
-	k.iterateOrderIndex(ctx, GetIndexKeyPrefixAssetToOrder(assetDenom), cb)
-}
-
-// GetPageOfOrdersFromIndex gets a page of orders using a <something> to order index.
-func (k Keeper) GetPageOfOrdersFromIndex(
+// getPageOfOrdersFromIndex gets a page of orders using a <something>-to-order index.
+func (k Keeper) getPageOfOrdersFromIndex(
 	prefixStore sdk.KVStore,
 	pageReq *query.PageRequest,
 	orderType string,
@@ -281,12 +239,12 @@ func (k Keeper) GetPageOfOrdersFromIndex(
 		}
 		return true, nil
 	}
-	pageResp, err := FilteredPaginateAfterOrder(prefixStore, pageReq, afterOrderID, accumulator)
+	pageResp, err := filteredPaginateAfterOrder(prefixStore, pageReq, afterOrderID, accumulator)
 
 	return pageResp, orders, err
 }
 
-// FilteredPaginateAfterOrder is similar to query.FilteredPaginate except
+// filteredPaginateAfterOrder is similar to query.FilteredPaginate except
 // allows limiting the iterator to only entries after a certain order id.
 // afterOrderID is exclusive, i.e. if it's 2, this will go over all order ids that are 3 or greater.
 //
@@ -298,7 +256,7 @@ func (k Keeper) GetPageOfOrdersFromIndex(
 // It will be false for the results (filtered) < offset  and true for `offset > accumulate <= end`.
 // When accumulate is set to true the current result should be appended to the result set returned
 // to the client.
-func FilteredPaginateAfterOrder(
+func filteredPaginateAfterOrder(
 	prefixStore sdk.KVStore,
 	pageRequest *query.PageRequest,
 	afterOrderID uint64,
@@ -440,6 +398,129 @@ func getOrderIterator(prefixStore sdk.KVStore, start []byte, reverse bool, after
 	return prefixStore.Iterator(start, nil)
 }
 
+// validateMarketIsAcceptingOrders makes sure the market exists and is accepting orders.
+func validateMarketIsAcceptingOrders(store sdk.KVStore, marketID uint32) error {
+	if err := validateMarketExists(store, marketID); err != nil {
+		return err
+	}
+	if !isMarketActive(store, marketID) {
+		return fmt.Errorf("market %d is not accepting orders", marketID)
+	}
+	return nil
+}
+
+// validateUserCanCreateAsk makes sure the user can create an ask order in the given market.
+func (k Keeper) validateUserCanCreateAsk(ctx sdk.Context, marketID uint32, seller sdk.AccAddress) error {
+	if !k.CanCreateAsk(ctx, marketID, seller) {
+		return fmt.Errorf("account %s is not allowed to create ask orders in market %d", seller, marketID)
+	}
+	return nil
+}
+
+// validateUserCanCreateBid makes sure the user can create a bid order in the given market.
+func (k Keeper) validateUserCanCreateBid(ctx sdk.Context, marketID uint32, buyer sdk.AccAddress) error {
+	if !k.CanCreateBid(ctx, marketID, buyer) {
+		return fmt.Errorf("account %s is not allowed to create bid orders in market %d", buyer, marketID)
+	}
+	return nil
+}
+
+// validateCreateAskFees makes sure the fees are okay for creating an ask order.
+func validateCreateAskFees(store sdk.KVStore, marketID uint32, creationFee *sdk.Coin, settlementFlatFee *sdk.Coin) error {
+	if err := validateCreateAskFlatFee(store, marketID, creationFee); err != nil {
+		return err
+	}
+	return validateSellerSettlementFlatFee(store, marketID, settlementFlatFee)
+}
+
+// validateCreateBidFees makes sure the fees are okay for creating a bid order.
+func validateCreateBidFees(store sdk.KVStore, marketID uint32, creationFee *sdk.Coin, price sdk.Coin, settlementFees sdk.Coins) error {
+	if err := validateCreateBidFlatFee(store, marketID, creationFee); err != nil {
+		return err
+	}
+	return validateBuyerSettlementFee(store, marketID, price, settlementFees)
+}
+
+// getAskOrders gets orders from the store, making sure they're ask orders in the given market
+// and do not have the same seller as the provided buyer. If the buyer isn't yet known, just provide "" for it.
+func (k Keeper) getAskOrders(store sdk.KVStore, marketID uint32, orderIDs []uint64, buyer string) ([]*exchange.Order, error) {
+	var errs []error
+	orders := make([]*exchange.Order, 0, len(orderIDs))
+
+	for _, orderID := range orderIDs {
+		order, oerr := k.getOrderFromStore(store, orderID)
+		if oerr != nil {
+			errs = append(errs, oerr)
+			continue
+		}
+		if order == nil {
+			errs = append(errs, fmt.Errorf("order %d not found", orderID))
+			continue
+		}
+		if !order.IsAskOrder() {
+			errs = append(errs, fmt.Errorf("order %d is type %s: expected ask", orderID, order.GetOrderType()))
+			continue
+		}
+
+		askOrder := order.GetAskOrder()
+		orderMarketID := askOrder.MarketId
+		seller := askOrder.Seller
+
+		if orderMarketID != marketID {
+			errs = append(errs, fmt.Errorf("order %d market id %d does not equal requested market id %d", orderID, orderMarketID, marketID))
+			continue
+		}
+		if seller == buyer {
+			errs = append(errs, fmt.Errorf("order %d has the same seller %s as the requested buyer", orderID, seller))
+			continue
+		}
+
+		orders = append(orders, order)
+	}
+
+	return orders, errors.Join(errs...)
+}
+
+// getBidOrders gets orders from the store, making sure they're bid orders in the given market
+// and do not have the same buyer as the provided seller. If the seller isn't yet known, just provide "" for it.
+func (k Keeper) getBidOrders(store sdk.KVStore, marketID uint32, orderIDs []uint64, seller string) ([]*exchange.Order, error) {
+	var errs []error
+	orders := make([]*exchange.Order, 0, len(orderIDs))
+
+	for _, orderID := range orderIDs {
+		order, oerr := k.getOrderFromStore(store, orderID)
+		if oerr != nil {
+			errs = append(errs, oerr)
+			continue
+		}
+		if order == nil {
+			errs = append(errs, fmt.Errorf("order %d not found", orderID))
+			continue
+		}
+		if !order.IsBidOrder() {
+			errs = append(errs, fmt.Errorf("order %d is type %s: expected bid", orderID, order.GetOrderType()))
+			continue
+		}
+
+		bidOrder := order.GetBidOrder()
+		orderMarketID := bidOrder.MarketId
+		buyer := bidOrder.Buyer
+
+		if orderMarketID != marketID {
+			errs = append(errs, fmt.Errorf("order %d market id %d does not equal requested market id %d", orderID, orderMarketID, marketID))
+			continue
+		}
+		if buyer == seller {
+			errs = append(errs, fmt.Errorf("order %d has the same buyer %s as the requested seller", orderID, buyer))
+			continue
+		}
+
+		orders = append(orders, order)
+	}
+
+	return orders, errors.Join(errs...)
+}
+
 // placeHoldOnOrder places a hold on an order's funds in the owner's account.
 func (k Keeper) placeHoldOnOrder(ctx sdk.Context, order *exchange.Order) error {
 	orderID := order.OrderId
@@ -474,31 +555,9 @@ func (k Keeper) releaseHoldOnOrder(ctx sdk.Context, order *exchange.Order) error
 	return nil
 }
 
-// validateMarketIsAcceptingOrders makes sure the market exists and is accepting orders.
-func validateMarketIsAcceptingOrders(store sdk.KVStore, marketID uint32) error {
-	if err := validateMarketExists(store, marketID); err != nil {
-		return err
-	}
-	if !isMarketActive(store, marketID) {
-		return fmt.Errorf("market %d is not accepting orders", marketID)
-	}
-	return nil
-}
-
-// validateCanCreateAsk makes sure the user can create an ask order in the given market.
-func (k Keeper) validateCanCreateAsk(ctx sdk.Context, marketID uint32, seller sdk.AccAddress) error {
-	if !k.CanCreateAsk(ctx, marketID, seller) {
-		return fmt.Errorf("account %s is not allowed to create ask orders in market %d", seller, marketID)
-	}
-	return nil
-}
-
-// validateCreateAskFees makes sure the fees are okay for creating an ask order.
-func validateCreateAskFees(store sdk.KVStore, marketID uint32, creationFee *sdk.Coin, settlementFlatFee *sdk.Coin) error {
-	if err := validateCreateAskFlatFee(store, marketID, creationFee); err != nil {
-		return err
-	}
-	return validateSellerSettlementFlatFee(store, marketID, settlementFlatFee)
+// GetOrder gets an order. Returns nil, nil if the order does not exist.
+func (k Keeper) GetOrder(ctx sdk.Context, orderID uint64) (*exchange.Order, error) {
+	return k.getOrderFromStore(k.getStore(ctx), orderID)
 }
 
 // CreateAskOrder creates an ask order, collects the creation fee, and places all needed holds.
@@ -514,7 +573,7 @@ func (k Keeper) CreateAskOrder(ctx sdk.Context, askOrder exchange.AskOrder, crea
 		return 0, err
 	}
 	seller := sdk.MustAccAddressFromBech32(askOrder.Seller)
-	if err := k.validateCanCreateAsk(ctx, marketID, seller); err != nil {
+	if err := k.validateUserCanCreateAsk(ctx, marketID, seller); err != nil {
 		return 0, err
 	}
 	if err := validateCreateAskFees(store, marketID, creationFee, askOrder.SellerSettlementFlatFee); err != nil {
@@ -544,22 +603,6 @@ func (k Keeper) CreateAskOrder(ctx sdk.Context, askOrder exchange.AskOrder, crea
 	return orderID, ctx.EventManager().EmitTypedEvent(exchange.NewEventOrderCreated(order))
 }
 
-// validateCanCreateBid makes sure the user can create a bid order in the given market.
-func (k Keeper) validateCanCreateBid(ctx sdk.Context, marketID uint32, buyer sdk.AccAddress) error {
-	if !k.CanCreateBid(ctx, marketID, buyer) {
-		return fmt.Errorf("account %s is not allowed to create bid orders in market %d", buyer, marketID)
-	}
-	return nil
-}
-
-// validateCreateBidFees makes sure the fees are okay for creating a bid order.
-func validateCreateBidFees(store sdk.KVStore, marketID uint32, creationFee *sdk.Coin, price sdk.Coin, settlementFees sdk.Coins) error {
-	if err := validateCreateBidFlatFee(store, marketID, creationFee); err != nil {
-		return err
-	}
-	return validateBuyerSettlementFee(store, marketID, price, settlementFees)
-}
-
 // CreateBidOrder creates a bid order, collects the creation fee, and places all needed holds.
 func (k Keeper) CreateBidOrder(ctx sdk.Context, bidOrder exchange.BidOrder, creationFee *sdk.Coin) (uint64, error) {
 	if err := bidOrder.Validate(); err != nil {
@@ -573,7 +616,7 @@ func (k Keeper) CreateBidOrder(ctx sdk.Context, bidOrder exchange.BidOrder, crea
 		return 0, err
 	}
 	buyer := sdk.MustAccAddressFromBech32(bidOrder.Buyer)
-	if err := k.validateCanCreateBid(ctx, marketID, buyer); err != nil {
+	if err := k.validateUserCanCreateBid(ctx, marketID, buyer); err != nil {
 		return 0, err
 	}
 	if err := validateCreateBidFees(store, marketID, creationFee, bidOrder.Price, bidOrder.BuyerSettlementFees); err != nil {
@@ -623,87 +666,41 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 		return fmt.Errorf("unable to release hold on order %d funds: %w", orderID, err)
 	}
 
-	k.deleteOrder(ctx, *order)
+	deleteAndDeIndexOrder(k.getStore(ctx), *order)
 
 	return ctx.EventManager().EmitTypedEvent(exchange.NewEventOrderCancelled(orderID, signerAddr))
 }
 
-// getBidOrders gets orders from the store, making sure they're bid orders in the given market
-// and do not have the same buyer as the provided seller. If the seller isn't yet known, just provide "" for it.
-func (k Keeper) getBidOrders(store sdk.KVStore, marketID uint32, orderIDs []uint64, seller string) ([]*exchange.Order, error) {
+// IterateOrders iterates over all orders. An error is returned if there was a problem
+// reading an entry along the way. Such a problem does not interrupt iteration.
+// The callback takes in the order and should return whether to stop iterating.
+func (k Keeper) IterateOrders(ctx sdk.Context, cb func(order *exchange.Order) bool) error {
 	var errs []error
-	orders := make([]*exchange.Order, 0, len(orderIDs))
-
-	for _, orderID := range orderIDs {
-		order, oerr := k.getOrderFromStore(store, orderID)
-		if oerr != nil {
-			errs = append(errs, oerr)
-			continue
+	k.iterate(ctx, GetKeyPrefixOrder(), func(key, value []byte) bool {
+		order, err := k.parseOrderStoreKeyValue(key, value)
+		if err != nil {
+			errs = append(errs, err)
+			return false
 		}
-		if order == nil {
-			errs = append(errs, fmt.Errorf("order %d not found", orderID))
-			continue
-		}
-		if !order.IsBidOrder() {
-			errs = append(errs, fmt.Errorf("order %d is type %s: expected bid", orderID, order.GetOrderType()))
-			continue
-		}
-
-		bidOrder := order.GetBidOrder()
-		orderMarketID := bidOrder.MarketId
-		buyer := bidOrder.Buyer
-
-		if orderMarketID != marketID {
-			errs = append(errs, fmt.Errorf("order %d market id %d does not equal requested market id %d", orderID, orderMarketID, marketID))
-			continue
-		}
-		if buyer == seller {
-			errs = append(errs, fmt.Errorf("order %d has the same buyer %s as the requested seller", orderID, buyer))
-			continue
-		}
-
-		orders = append(orders, order)
-	}
-
-	return orders, errors.Join(errs...)
+		return cb(order)
+	})
+	return errors.Join(errs...)
 }
 
-// getAskOrders gets orders from the store, making sure they're ask orders in the given market
-// and do not have the same seller as the provided buyer. If the buyer isn't yet known, just provide "" for it.
-func (k Keeper) getAskOrders(store sdk.KVStore, marketID uint32, orderIDs []uint64, buyer string) ([]*exchange.Order, error) {
-	var errs []error
-	orders := make([]*exchange.Order, 0, len(orderIDs))
+// IterateMarketOrders iterates over all orders for a market.
+// The callback takes in the order id and order type byte and should return whether to stop iterating.
+func (k Keeper) IterateMarketOrders(ctx sdk.Context, marketID uint32, cb func(orderID uint64, orderTypeByte byte) bool) {
+	k.iterateOrderIndex(ctx, GetIndexKeyPrefixMarketToOrder(marketID), cb)
+}
 
-	for _, orderID := range orderIDs {
-		order, oerr := k.getOrderFromStore(store, orderID)
-		if oerr != nil {
-			errs = append(errs, oerr)
-			continue
-		}
-		if order == nil {
-			errs = append(errs, fmt.Errorf("order %d not found", orderID))
-			continue
-		}
-		if !order.IsAskOrder() {
-			errs = append(errs, fmt.Errorf("order %d is type %s: expected ask", orderID, order.GetOrderType()))
-			continue
-		}
+// IterateAddressOrders iterates over all orders for an address.
+// The callback takes in the order id and order type byte and should return whether to stop iterating.
+func (k Keeper) IterateAddressOrders(ctx sdk.Context, addr sdk.AccAddress, cb func(orderID uint64, orderTypeByte byte) bool) {
+	k.iterateOrderIndex(ctx, GetIndexKeyPrefixAddressToOrder(addr), cb)
+}
 
-		askOrder := order.GetAskOrder()
-		orderMarketID := askOrder.MarketId
-		seller := askOrder.Seller
-
-		if orderMarketID != marketID {
-			errs = append(errs, fmt.Errorf("order %d market id %d does not equal requested market id %d", orderID, orderMarketID, marketID))
-			continue
-		}
-		if seller == buyer {
-			errs = append(errs, fmt.Errorf("order %d has the same seller %s as the requested buyer", orderID, seller))
-			continue
-		}
-
-		orders = append(orders, order)
-	}
-
-	return orders, errors.Join(errs...)
+// IterateAssetOrders iterates over all orders for a given asset denom.
+// The callback takes in the order id and order type byte and should return whether to stop iterating.
+func (k Keeper) IterateAssetOrders(ctx sdk.Context, assetDenom string, cb func(orderID uint64, orderTypeByte byte) bool) {
+	k.iterateOrderIndex(ctx, GetIndexKeyPrefixAssetToOrder(assetDenom), cb)
 }

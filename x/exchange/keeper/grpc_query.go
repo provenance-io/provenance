@@ -100,7 +100,7 @@ func (k QueryServer) QueryGetMarketOrders(goCtx context.Context, req *exchange.Q
 
 	resp := &exchange.QueryGetMarketOrdersResponse{}
 	var err error
-	resp.Pagination, resp.Orders, err = k.GetPageOfOrdersFromIndex(store, req.Pagination, req.OrderType, req.AfterOrderId)
+	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(store, req.Pagination, req.OrderType, req.AfterOrderId)
 
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for market %d: %v", req.MarketId, err)
@@ -126,7 +126,7 @@ func (k QueryServer) QueryGetOwnerOrders(goCtx context.Context, req *exchange.Qu
 
 	resp := &exchange.QueryGetOwnerOrdersResponse{}
 	var err error
-	resp.Pagination, resp.Orders, err = k.GetPageOfOrdersFromIndex(store, req.Pagination, req.OrderType, req.AfterOrderId)
+	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(store, req.Pagination, req.OrderType, req.AfterOrderId)
 
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for owner %s: %v", req.Owner, err)
@@ -147,7 +147,7 @@ func (k QueryServer) QueryGetAssetOrders(goCtx context.Context, req *exchange.Qu
 
 	resp := &exchange.QueryGetAssetOrdersResponse{}
 	var err error
-	resp.Pagination, resp.Orders, err = k.GetPageOfOrdersFromIndex(store, req.Pagination, req.OrderType, req.AfterOrderId)
+	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(store, req.Pagination, req.OrderType, req.AfterOrderId)
 
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for asset %s: %v", req.Asset, err)
