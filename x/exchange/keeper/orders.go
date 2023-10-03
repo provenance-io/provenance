@@ -525,7 +525,7 @@ func (k Keeper) CreateAskOrder(ctx sdk.Context, askOrder exchange.AskOrder, crea
 	}
 
 	if creationFee != nil {
-		err := k.CollectFee(ctx, seller, marketID, sdk.Coins{*creationFee})
+		err := k.CollectFee(ctx, marketID, seller, sdk.Coins{*creationFee})
 		if err != nil {
 			return 0, fmt.Errorf("error collecting ask order creation fee: %w", err)
 		}
@@ -581,7 +581,7 @@ func (k Keeper) CreateBidOrder(ctx sdk.Context, bidOrder exchange.BidOrder, crea
 	}
 
 	if creationFee != nil {
-		err := k.CollectFee(ctx, buyer, marketID, sdk.Coins{*creationFee})
+		err := k.CollectFee(ctx, marketID, buyer, sdk.Coins{*creationFee})
 		if err != nil {
 			return 0, fmt.Errorf("error collecting bid order creation fee: %w", err)
 		}

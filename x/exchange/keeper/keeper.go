@@ -16,6 +16,7 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
+// Keeper provides the exchange module's state store interactions.
 type Keeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
@@ -25,7 +26,6 @@ type Keeper struct {
 	bankKeeper    exchange.BankKeeper
 	holdKeeper    exchange.HoldKeeper
 
-	// TODO[1658]: Finish the Keeper struct.
 	authority        string
 	feeCollectorName string
 }
@@ -34,7 +34,6 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollector
 	accountKeeper exchange.AccountKeeper, attrKeeper exchange.AttributeKeeper,
 	bankKeeper exchange.BankKeeper, holdKeeper exchange.HoldKeeper,
 ) Keeper {
-	// TODO[1658]: Finish NewKeeper.
 	rv := Keeper{
 		cdc:              cdc,
 		storeKey:         storeKey,
@@ -124,6 +123,21 @@ func (k Keeper) iterate(ctx sdk.Context, pre []byte, cb func(key, value []byte) 
 	iterate(k.getStore(ctx), pre, cb)
 }
 
+// DoTransfer facilitates a transfer of things using the bank module.
+func (k Keeper) DoTransfer(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
+	if len(inputs) == 1 && len(outputs) == 1 {
+		// If there's only one of each, we use SendCoins for the nicer events.
+		if !exchange.CoinsEquals(inputs[0].Coins, outputs[0].Coins) {
+			return fmt.Errorf("input coins %q does not equal output coins %q",
+				inputs[0].Coins, outputs[0].Coins)
+		}
+		fromAddr := sdk.MustAccAddressFromBech32(inputs[0].Address)
+		toAddr := sdk.MustAccAddressFromBech32(outputs[0].Address)
+		return k.bankKeeper.SendCoins(ctx, fromAddr, toAddr, inputs[0].Coins)
+	}
+	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+}
+
 // CalculateExchangeSplit calculates the amount that the exchange will keep of the provided fee.
 func (k Keeper) CalculateExchangeSplit(ctx sdk.Context, feeAmt sdk.Coins) sdk.Coins {
 	exchangeAmt := make(sdk.Coins, 0, len(feeAmt))
@@ -148,25 +162,10 @@ func (k Keeper) CalculateExchangeSplit(ctx sdk.Context, feeAmt sdk.Coins) sdk.Co
 	return exchangeAmt
 }
 
-// DoTransfer facilitates a transfer of things using the bank module.
-func (k Keeper) DoTransfer(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
-	if len(inputs) == 1 && len(outputs) == 1 {
-		// If there's only one of each, we use SendCoins for the nicer events.
-		if !exchange.CoinsEquals(inputs[0].Coins, outputs[0].Coins) {
-			return fmt.Errorf("input coins %q does not equal output coins %q",
-				inputs[0].Coins, outputs[0].Coins)
-		}
-		fromAddr := sdk.MustAccAddressFromBech32(inputs[0].Address)
-		toAddr := sdk.MustAccAddressFromBech32(outputs[0].Address)
-		return k.bankKeeper.SendCoins(ctx, fromAddr, toAddr, inputs[0].Coins)
-	}
-	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
-}
-
 // CollectFee will transfer the fee amount to the market account,
 // then the exchange's cut from the market to the fee collector.
 // If you have fees to collect from multiple payers, consider using CollectFees.
-func (k Keeper) CollectFee(ctx sdk.Context, payer sdk.AccAddress, marketID uint32, feeAmt sdk.Coins) error {
+func (k Keeper) CollectFee(ctx sdk.Context, marketID uint32, payer sdk.AccAddress, feeAmt sdk.Coins) error {
 	if feeAmt.IsZero() {
 		return nil
 	}
@@ -188,7 +187,7 @@ func (k Keeper) CollectFee(ctx sdk.Context, payer sdk.AccAddress, marketID uint3
 // CollectFees will transfer the inputs to the market account,
 // then the exchange's cut from the market to the fee collector.
 // If there is only one input, CollectFee is used.
-func (k Keeper) CollectFees(ctx sdk.Context, inputs []banktypes.Input, marketID uint32) error {
+func (k Keeper) CollectFees(ctx sdk.Context, marketID uint32, inputs []banktypes.Input) error {
 	if len(inputs) == 0 {
 		return nil
 	}
@@ -198,7 +197,7 @@ func (k Keeper) CollectFees(ctx sdk.Context, inputs []banktypes.Input, marketID 
 		if err != nil {
 			return fmt.Errorf("invalid payer address %q: %w", inputs[0].Address, err)
 		}
-		return k.CollectFee(ctx, payer, marketID, inputs[0].Coins)
+		return k.CollectFee(ctx, marketID, payer, inputs[0].Coins)
 	}
 
 	var feeAmt sdk.Coins

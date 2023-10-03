@@ -136,14 +136,14 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 		return fmt.Errorf("error transferring price from buyers to seller: %w", err)
 	}
 
-	if err := k.CollectFees(ctx, feeInputs, marketID); err != nil {
+	if err := k.CollectFees(ctx, marketID, feeInputs); err != nil {
 		return fmt.Errorf("error collecting settlement fees: %w", err)
 	}
 
 	// Collected last so that it's easier for a seller to fill bids without needing those funds first.
 	// Collected separately so it's not combined with the seller settlement fees in the events.
 	if msg.AskOrderCreationFee != nil {
-		if err := k.CollectFee(ctx, seller, marketID, sdk.Coins{*msg.AskOrderCreationFee}); err != nil {
+		if err := k.CollectFee(ctx, marketID, seller, sdk.Coins{*msg.AskOrderCreationFee}); err != nil {
 			return fmt.Errorf("error collecting create-ask fee %q: %w", msg.AskOrderCreationFee, err)
 		}
 	}
@@ -263,14 +263,14 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 		return fmt.Errorf("error transferring price from buyer to sellers: %w", err)
 	}
 
-	if err := k.CollectFees(ctx, feeInputs, marketID); err != nil {
+	if err := k.CollectFees(ctx, marketID, feeInputs); err != nil {
 		return fmt.Errorf("error collecting settlement fees: %w", err)
 	}
 
 	// Collected last so that it's easier for a seller to fill asks without needing those funds first.
 	// Collected separately so it's not combined with the buyer settlement fees in the events.
 	if msg.BidOrderCreationFee != nil {
-		if err := k.CollectFee(ctx, buyer, marketID, sdk.Coins{*msg.BidOrderCreationFee}); err != nil {
+		if err := k.CollectFee(ctx, marketID, buyer, sdk.Coins{*msg.BidOrderCreationFee}); err != nil {
 			return fmt.Errorf("error collecting create-ask fee %q: %w", msg.BidOrderCreationFee, err)
 		}
 	}
@@ -364,7 +364,7 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 		}
 	}
 
-	if err = k.CollectFees(ctx, transfers.FeeInputs, marketID); err != nil {
+	if err = k.CollectFees(ctx, marketID, transfers.FeeInputs); err != nil {
 		return err
 	}
 
