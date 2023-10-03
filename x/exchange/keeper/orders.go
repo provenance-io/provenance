@@ -602,7 +602,8 @@ func (k Keeper) CreateAskOrder(ctx sdk.Context, askOrder exchange.AskOrder, crea
 		return 0, err
 	}
 
-	return orderID, ctx.EventManager().EmitTypedEvent(exchange.NewEventOrderCreated(order))
+	k.emitEvent(ctx, exchange.NewEventOrderCreated(order))
+	return orderID, nil
 }
 
 // CreateBidOrder creates a bid order, collects the creation fee, and places all needed holds.
@@ -642,7 +643,8 @@ func (k Keeper) CreateBidOrder(ctx sdk.Context, bidOrder exchange.BidOrder, crea
 		return 0, err
 	}
 
-	return orderID, ctx.EventManager().EmitTypedEvent(exchange.NewEventOrderCreated(order))
+	k.emitEvent(ctx, exchange.NewEventOrderCreated(order))
+	return orderID, nil
 }
 
 // CancelOrder releases an order's held funds and deletes it.
@@ -669,8 +671,9 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 	}
 
 	deleteAndDeIndexOrder(k.getStore(ctx), *order)
+	k.emitEvent(ctx, exchange.NewEventOrderCancelled(orderID, signerAddr))
 
-	return ctx.EventManager().EmitTypedEvent(exchange.NewEventOrderCancelled(orderID, signerAddr))
+	return nil
 }
 
 // IterateOrders iterates over all orders. An error is returned if there was a problem

@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
+
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -51,6 +53,24 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollector
 // Note that this is different from the logging .Error(msg string, keyvals ...interface{}) syntax.
 func (k Keeper) logErrorf(ctx sdk.Context, msg string, args ...interface{}) {
 	ctx.Logger().Error(fmt.Sprintf(msg, args...), "module", "x/"+exchange.ModuleName)
+}
+
+// emitEvent emits the provided event and writes any error to the error log.
+// See Also emitEvents.
+func (k Keeper) emitEvent(ctx sdk.Context, event proto.Message) {
+	err := ctx.EventManager().EmitTypedEvent(event)
+	if err != nil {
+		k.logErrorf(ctx, "error emitting event %#v: %v", event, err)
+	}
+}
+
+// emitEvents emits the provided events and writes any error to the error log.
+// See Also emitEvent.
+func (k Keeper) emitEvents(ctx sdk.Context, events []proto.Message) {
+	err := ctx.EventManager().EmitTypedEvents(events...)
+	if err != nil {
+		k.logErrorf(ctx, "error emitting events %#v: %v", events, err)
+	}
 }
 
 // wrongAuthErr returns the error to use when a message's authority isn't what's required.

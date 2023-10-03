@@ -664,7 +664,7 @@ func (k Keeper) ValidateBuyerSettlementFee(ctx sdk.Context, marketID uint32, pri
 }
 
 // UpdateFees updates all the fees as provided in the MsgGovManageFeesRequest.
-func (k Keeper) UpdateFees(ctx sdk.Context, msg *exchange.MsgGovManageFeesRequest) error {
+func (k Keeper) UpdateFees(ctx sdk.Context, msg *exchange.MsgGovManageFeesRequest) {
 	store := k.getStore(ctx)
 	updateCreateAskFlatFees(store, msg.MarketId, msg.RemoveFeeCreateAskFlat, msg.AddFeeCreateAskFlat)
 	updateCreateBidFlatFees(store, msg.MarketId, msg.RemoveFeeCreateBidFlat, msg.AddFeeCreateBidFlat)
@@ -672,7 +672,8 @@ func (k Keeper) UpdateFees(ctx sdk.Context, msg *exchange.MsgGovManageFeesReques
 	updateSellerSettlementRatios(store, msg.MarketId, msg.RemoveFeeSellerSettlementRatios, msg.AddFeeSellerSettlementRatios)
 	updateBuyerSettlementFlatFees(store, msg.MarketId, msg.RemoveFeeBuyerSettlementFlat, msg.AddFeeBuyerSettlementFlat)
 	updateBuyerSettlementRatios(store, msg.MarketId, msg.RemoveFeeBuyerSettlementRatios, msg.AddFeeBuyerSettlementRatios)
-	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketFeesUpdated(msg.MarketId))
+
+	k.emitEvent(ctx, exchange.NewEventMarketFeesUpdated(msg.MarketId))
 }
 
 // isMarketActive returns true if the provided market is accepting orders.
@@ -721,7 +722,8 @@ func (k Keeper) UpdateMarketActive(ctx sdk.Context, marketID uint32, active bool
 		return fmt.Errorf("market %d already has accepting-orders %t", marketID, active)
 	}
 	setMarketActive(store, marketID, active)
-	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketActiveUpdated(marketID, updatedBy, active))
+	k.emitEvent(ctx, exchange.NewEventMarketActiveUpdated(marketID, updatedBy, active))
+	return nil
 }
 
 // IsUserSettlementAllowed gets whether user-settlement is allowed for a market.
@@ -738,7 +740,8 @@ func (k Keeper) UpdateUserSettlementAllowed(ctx sdk.Context, marketID uint32, al
 		return fmt.Errorf("market %d already has allow-user-settlement %t", marketID, allow)
 	}
 	setUserSettlementAllowed(store, marketID, allow)
-	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketUserSettleUpdated(marketID, updatedBy, allow))
+	k.emitEvent(ctx, exchange.NewEventMarketUserSettleUpdated(marketID, updatedBy, allow))
+	return nil
 }
 
 // storeHasPermission returns true if there is an entry in the store for the given market, address, and permissions.
@@ -918,7 +921,8 @@ func (k Keeper) UpdatePermissions(ctx sdk.Context, msg *exchange.MsgMarketManage
 		return errors.Join(errs...)
 	}
 
-	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketPermissionsUpdated(marketID, admin))
+	k.emitEvent(ctx, exchange.NewEventMarketPermissionsUpdated(marketID, admin))
+	return nil
 }
 
 // reqAttrKeyMaker is a function that returns a key for required attributes.
@@ -1085,7 +1089,8 @@ func (k Keeper) UpdateReqAttrs(ctx sdk.Context, msg *exchange.MsgMarketManageReq
 		return errors.Join(errs...)
 	}
 
-	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketReqAttrUpdated(marketID, admin))
+	k.emitEvent(ctx, exchange.NewEventMarketReqAttrUpdated(marketID, admin))
+	return nil
 }
 
 // getMarketAccountByAddr gets a market's account given its address.
@@ -1135,8 +1140,9 @@ func (k Keeper) UpdateMarketDetails(ctx sdk.Context, marketID uint32, marketDeta
 
 	marketAcc.MarketDetails = marketDetails
 	k.accountKeeper.SetAccount(ctx, marketAcc)
+	k.emitEvent(ctx, exchange.NewEventMarketDetailsUpdated(marketID, updatedBy))
 
-	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketDetailsUpdated(marketID, updatedBy))
+	return nil
 }
 
 // storeMarket writes all the market fields to the state store (except MarketDetails which are in the account).
@@ -1215,6 +1221,7 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (uint32, e
 	k.accountKeeper.SetAccount(ctx, marketAcc)
 
 	storeMarket(store, market)
+	k.emitEvent(ctx, exchange.NewEventMarketCreated(market.MarketId))
 
 	return market.MarketId, nil
 }
@@ -1278,7 +1285,8 @@ func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk
 	if err != nil {
 		return fmt.Errorf("failed to withdraw %s from market %d: %w", amount, marketID, err)
 	}
-	return ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketWithdraw(marketID, amount, toAddr, withdrawnBy))
+	k.emitEvent(ctx, exchange.NewEventMarketWithdraw(marketID, amount, toAddr, withdrawnBy))
+	return nil
 }
 
 // ValidateMarket checks the setup of the provided market, making sure there aren't any possibly problematic settings.

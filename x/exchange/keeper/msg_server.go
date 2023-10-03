@@ -180,14 +180,11 @@ func (k MsgServer) GovCreateMarket(goCtx context.Context, msg *exchange.MsgGovCr
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	marketID, err := k.CreateMarket(ctx, msg.Market)
+	_, err := k.CreateMarket(ctx, msg.Market)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	err = ctx.EventManager().EmitTypedEvent(exchange.NewEventMarketCreated(marketID))
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
+
 	return &exchange.MsgGovCreateMarketResponse{}, nil
 }
 
@@ -198,10 +195,7 @@ func (k MsgServer) GovManageFees(goCtx context.Context, msg *exchange.MsgGovMana
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	err := k.UpdateFees(ctx, msg)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
+	k.UpdateFees(ctx, msg)
 
 	return &exchange.MsgGovManageFeesResponse{}, nil
 }
@@ -214,9 +208,7 @@ func (k MsgServer) GovUpdateParams(goCtx context.Context, msg *exchange.MsgGovUp
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	k.SetParams(ctx, &msg.Params)
+	k.emitEvent(ctx, exchange.NewEventParamsUpdated())
 
-	if err := ctx.EventManager().EmitTypedEvent(exchange.NewEventParamsUpdated()); err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
 	return &exchange.MsgGovUpdateParamsResponse{}, nil
 }

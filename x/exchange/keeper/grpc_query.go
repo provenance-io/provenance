@@ -381,10 +381,7 @@ func (k QueryServer) QueryValidateManageFees(goCtx context.Context, req *exchang
 			buyerRatios, msg.AddFeeBuyerSettlementRatios, msg.RemoveFeeBuyerSettlementRatios)...)
 	}
 
-	if err := k.UpdateFees(ctx, msg); err != nil {
-		// The only error this might be would be about event emission.
-		errs = append(errs, err)
-	}
+	k.UpdateFees(ctx, msg)
 	if err := k.ValidateMarket(ctx, msg.MarketId); err != nil {
 		errs = append(errs, err)
 	}

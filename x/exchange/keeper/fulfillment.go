@@ -154,7 +154,8 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 		events[i] = exchange.NewEventOrderFilled(order.OrderId)
 	}
 
-	return ctx.EventManager().EmitTypedEvents(events...)
+	k.emitEvents(ctx, events)
+	return nil
 }
 
 // FillAsks settles one or more ask orders for a buyer.
@@ -281,7 +282,8 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 		events[i] = exchange.NewEventOrderFilled(order.OrderId)
 	}
 
-	return ctx.EventManager().EmitTypedEvents(events...)
+	k.emitEvents(ctx, events)
+	return nil
 }
 
 // SettleOrders attempts to settle all the provided orders.
@@ -411,5 +413,6 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 		))
 	}
 
-	return ctx.EventManager().EmitTypedEvents(events...)
+	k.emitEvents(ctx, events)
+	return nil
 }
