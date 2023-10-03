@@ -468,6 +468,190 @@ func TestIntersectionOfCoin(t *testing.T) {
 	}
 }
 
+func TestContainsCoin(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+
+	tests := []struct {
+		name   string
+		vals   []sdk.Coin
+		toFind sdk.Coin
+		exp    bool
+	}{
+		{name: "nil vals", vals: nil, toFind: coin(1, "banana"), exp: false},
+		{name: "empty vals", vals: []sdk.Coin{}, toFind: coin(1, "banana"), exp: false},
+		{
+			name:   "one val, diff denom and amount",
+			vals:   []sdk.Coin{coin(3, "banana")},
+			toFind: coin(8, "apple"),
+			exp:    false,
+		},
+		{
+			name:   "one val, same denom diff amount",
+			vals:   []sdk.Coin{coin(3, "apple")},
+			toFind: coin(8, "apple"),
+			exp:    false,
+		},
+		{
+			name:   "one val, diff denom same amount",
+			vals:   []sdk.Coin{coin(8, "banana")},
+			toFind: coin(8, "apple"),
+			exp:    false,
+		},
+		{
+			name:   "one val, same denom and amount",
+			vals:   []sdk.Coin{coin(8, "apple")},
+			toFind: coin(8, "apple"),
+			exp:    true,
+		},
+		{
+			name:   "one neg val, same",
+			vals:   []sdk.Coin{coin(-3, "apple")},
+			toFind: coin(-3, "apple"),
+			exp:    true,
+		},
+		{
+			name:   "one val without denom, same",
+			vals:   []sdk.Coin{coin(22, "")},
+			toFind: coin(22, ""),
+			exp:    true,
+		},
+		{
+			name:   "one val zero, diff denom",
+			vals:   []sdk.Coin{coin(0, "banana")},
+			toFind: coin(0, "apple"),
+			exp:    false,
+		},
+		{
+			name:   "one val zero, same denom",
+			vals:   []sdk.Coin{coin(0, "banana")},
+			toFind: coin(0, "banana"),
+			exp:    true,
+		},
+		{
+			name:   "three same vals, not to find",
+			vals:   []sdk.Coin{coin(1, "apple"), coin(1, "apple"), coin(1, "apple")},
+			toFind: coin(2, "apple"),
+			exp:    false,
+		},
+		{
+			name:   "three vals, not to find",
+			vals:   []sdk.Coin{coin(1, "apple"), coin(2, "banana"), coin(3, "cactus")},
+			toFind: coin(4, "durian"),
+			exp:    false,
+		},
+		{
+			name:   "three vals, first",
+			vals:   []sdk.Coin{coin(1, "apple"), coin(2, "banana"), coin(3, "cactus")},
+			toFind: coin(1, "apple"),
+			exp:    true,
+		},
+		{
+			name:   "three vals, second",
+			vals:   []sdk.Coin{coin(1, "apple"), coin(2, "banana"), coin(3, "cactus")},
+			toFind: coin(2, "banana"),
+			exp:    true,
+		},
+		{
+			name:   "three vals, third",
+			vals:   []sdk.Coin{coin(1, "apple"), coin(2, "banana"), coin(3, "cactus")},
+			toFind: coin(3, "cactus"),
+			exp:    true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = ContainsCoin(tc.vals, tc.toFind)
+			}
+			require.NotPanics(t, testFunc, "ContainsCoin(%q, %q)", sdk.Coins(tc.vals), tc.toFind)
+			assert.Equal(t, tc.exp, actual, "ContainsCoin(%q, %q)", sdk.Coins(tc.vals), tc.toFind)
+		})
+	}
+}
+
+func TestContainsCoinWithSameDenom(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+
+	tests := []struct {
+		name   string
+		vals   []sdk.Coin
+		toFind sdk.Coin
+		exp    bool
+	}{
+		{
+			name:   "nil vals",
+			vals:   nil,
+			toFind: coin(1, "apple"),
+			exp:    false,
+		},
+		{
+			name:   "empty vals",
+			vals:   []sdk.Coin{},
+			toFind: coin(1, "apple"),
+			exp:    false,
+		},
+		{
+			name:   "one val, same amount, diff denom",
+			vals:   []sdk.Coin{coin(1, "apple")},
+			toFind: coin(1, "banana"),
+			exp:    false,
+		},
+		{
+			name:   "one val, same",
+			vals:   []sdk.Coin{coin(1, "apple")},
+			toFind: coin(1, "apple"),
+			exp:    true,
+		},
+		{
+			name:   "one val, same denom, diff amount",
+			vals:   []sdk.Coin{coin(1, "apple")},
+			toFind: coin(2, "apple"),
+			exp:    true,
+		},
+		{
+			name:   "three vals, not to find",
+			vals:   []sdk.Coin{coin(1, "apple"), coin(2, "banana"), coin(3, "cactus")},
+			toFind: coin(4, "durian"),
+			exp:    false,
+		},
+		{
+			name:   "three vals, first",
+			vals:   []sdk.Coin{coin(1, "apple"), coin(2, "banana"), coin(3, "cactus")},
+			toFind: coin(4, "apple"),
+			exp:    true,
+		},
+		{
+			name:   "three vals, second",
+			vals:   []sdk.Coin{coin(1, "apple"), coin(2, "banana"), coin(3, "cactus")},
+			toFind: coin(4, "banana"),
+			exp:    true,
+		},
+		{
+			name:   "three vals, third",
+			vals:   []sdk.Coin{coin(1, "apple"), coin(2, "banana"), coin(3, "cactus")},
+			toFind: coin(4, "cactus"),
+			exp:    true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = ContainsCoinWithSameDenom(tc.vals, tc.toFind)
+			}
+			require.NotPanics(t, testFunc, "ContainsCoinWithSameDenom(%q, %q)", sdk.Coins(tc.vals), tc.toFind)
+			assert.Equal(t, tc.exp, actual, "ContainsCoinWithSameDenom(%q, %q)", sdk.Coins(tc.vals), tc.toFind)
+		})
+	}
+}
+
 func TestMinSDKInt(t *testing.T) {
 	newInt := func(val string) sdkmath.Int {
 		rv, ok := sdkmath.NewIntFromString(val)

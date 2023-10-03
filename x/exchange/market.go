@@ -287,6 +287,18 @@ func IntersectionOfFeeRatios(list1, list2 []FeeRatio) []FeeRatio {
 	return intersection(list1, list2, FeeRatio.Equals)
 }
 
+// ContainsFeeRatio returns true if the fee ratio to find is in the vals slice.
+func ContainsFeeRatio(vals []FeeRatio, toFind FeeRatio) bool {
+	return contains(vals, toFind, FeeRatio.Equals)
+}
+
+// ContainsSameFeeRatioDenoms returns true if any ratio in vals has the same price and fee denoms as the ratio to find.
+func ContainsSameFeeRatioDenoms(vals []FeeRatio, toFind FeeRatio) bool {
+	return contains(vals, toFind, func(a, b FeeRatio) bool {
+		return a.Price.Denom == b.Price.Denom && a.Fee.Denom == b.Fee.Denom
+	})
+}
+
 // ValidateDisjointFeeRatios returns an error if one or more entries appears in both lists.
 func ValidateDisjointFeeRatios(field string, toAdd, toRemove []FeeRatio) error {
 	shared := IntersectionOfFeeRatios(toAdd, toRemove)
@@ -294,6 +306,30 @@ func ValidateDisjointFeeRatios(field string, toAdd, toRemove []FeeRatio) error {
 		return fmt.Errorf("cannot add and remove the same %s ratios %s", field, FeeRatiosString(shared))
 	}
 	return nil
+}
+
+// ValidateAddRemoveFeeRatiosWithExisting returns errors for entries in toAdd that are
+// already in existing, and entries in toRemove that are not in existing.
+func ValidateAddRemoveFeeRatiosWithExisting(field string, existing, toAdd, toRemove []FeeRatio) []error {
+	var errs []error
+	for _, ratio := range toRemove {
+		if !ContainsFeeRatio(existing, ratio) {
+			errs = append(errs, fmt.Errorf("cannot remove %s ratio fee %q: no such ratio exists", field, ratio))
+		}
+	}
+	newRatios := make([]FeeRatio, 0, len(existing))
+	for _, ratio := range existing {
+		if !ContainsFeeRatio(toRemove, ratio) {
+			newRatios = append(newRatios, ratio)
+		}
+	}
+	for _, ratio := range toAdd {
+		if ContainsSameFeeRatioDenoms(newRatios, ratio) {
+			errs = append(errs, fmt.Errorf("cannot add %s ratio fee %q: ratio with those denoms already exists",
+				field, ratio))
+		}
+	}
+	return errs
 }
 
 // ValidateAddRemoveFeeOptions returns an error if the toAdd list has an invalid
@@ -308,6 +344,29 @@ func ValidateAddRemoveFeeOptions(field string, toAdd, toRemove []sdk.Coin) error
 		errs = append(errs, fmt.Errorf("cannot add and remove the same %s options %s", field, sdk.Coins(shared)))
 	}
 	return errors.Join(errs...)
+}
+
+// ValidateAddRemoveFeeOptionsWithExisting returns errors for entries in toAdd that are
+// already in existing, and entries in toRemove that are not in existing.
+func ValidateAddRemoveFeeOptionsWithExisting(field string, existing, toAdd, toRemove []sdk.Coin) []error {
+	var errs []error
+	for _, coin := range toRemove {
+		if !ContainsCoin(existing, coin) {
+			errs = append(errs, fmt.Errorf("cannot remove %s flat fee %q: no such fee exists", field, coin))
+		}
+	}
+	newOpts := make([]sdk.Coin, 0, len(existing))
+	for _, coin := range existing {
+		if !ContainsCoin(toRemove, coin) {
+			newOpts = append(newOpts, coin)
+		}
+	}
+	for _, coin := range toAdd {
+		if ContainsCoinWithSameDenom(newOpts, coin) {
+			errs = append(errs, fmt.Errorf("cannot add %s flat fee %q: fee with that denom already exists", field, coin))
+		}
+	}
+	return errs
 }
 
 // ValidateAccessGrantsField returns an error if any of the provided access grants are invalid.

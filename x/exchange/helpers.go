@@ -76,6 +76,19 @@ func IntersectionOfCoin(list1, list2 []sdk.Coin) []sdk.Coin {
 	return intersection(list1, list2, CoinEquals)
 }
 
+// ContainsCoin returns true if the coin to find is in the vals slice.
+func ContainsCoin(vals []sdk.Coin, toFind sdk.Coin) bool {
+	return contains(vals, toFind, CoinEquals)
+}
+
+// ContainsCoinWithSameDenom returns true if there's an entry in vals with the same denom as the denom to find.
+func ContainsCoinWithSameDenom(vals []sdk.Coin, toFind sdk.Coin) bool {
+	return contains(vals, toFind, func(a, b sdk.Coin) bool {
+		return a.Denom == b.Denom
+	})
+}
+
+// MinSDKInt returns the lesser of the two provided ints.
 func MinSDKInt(a, b sdkmath.Int) sdkmath.Int {
 	if a.LTE(b) {
 		return a

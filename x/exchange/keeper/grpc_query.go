@@ -319,6 +319,72 @@ func (k QueryServer) QueryValidateMarket(goCtx context.Context, req *exchange.Qu
 
 // QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
 func (k QueryServer) QueryValidateManageFees(goCtx context.Context, req *exchange.QueryValidateManageFeesRequest) (*exchange.QueryValidateManageFeesResponse, error) {
-	// TODO[1658]: Implement QueryValidateManageFees query
-	panic("not implemented")
+	if req == nil || req.ManageFeesRequest == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	msg := req.ManageFeesRequest
+	resp := &exchange.QueryValidateManageFeesResponse{}
+
+	if err := msg.ValidateBasic(); err != nil {
+		resp.Error = err.Error()
+		return resp, nil
+	}
+
+	if msg.Authority != k.authority {
+		resp.Error = k.wrongAuthErr(msg.Authority).Error()
+		return resp, nil
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	store := k.getStore(ctx)
+	if err := validateMarketExists(store, msg.MarketId); err != nil {
+		resp.Error = err.Error()
+		return resp, nil
+	}
+
+	resp.GovPropWillPass = true
+
+	var errs []error
+	if len(msg.AddFeeCreateAskFlat) > 0 || len(msg.RemoveFeeCreateAskFlat) > 0 {
+		createAskFlats := getCreateAskFlatFees(store, msg.MarketId)
+		errs = append(errs, exchange.ValidateAddRemoveFeeOptionsWithExisting("create-ask",
+			createAskFlats, msg.AddFeeCreateAskFlat, msg.RemoveFeeCreateAskFlat)...)
+	}
+
+	if len(msg.AddFeeCreateBidFlat) > 0 || len(msg.RemoveFeeCreateBidFlat) > 0 {
+		createBidFlats := getCreateBidFlatFees(store, msg.MarketId)
+		errs = append(errs, exchange.ValidateAddRemoveFeeOptionsWithExisting("create-bid",
+			createBidFlats, msg.AddFeeCreateBidFlat, msg.RemoveFeeCreateBidFlat)...)
+	}
+
+	if len(msg.AddFeeSellerSettlementFlat) > 0 || len(msg.RemoveFeeSellerSettlementFlat) > 0 {
+		sellerFlats := getSellerSettlementFlatFees(store, msg.MarketId)
+		errs = append(errs, exchange.ValidateAddRemoveFeeOptionsWithExisting("seller settlement",
+			sellerFlats, msg.AddFeeSellerSettlementFlat, msg.RemoveFeeSellerSettlementFlat)...)
+	}
+
+	if len(msg.AddFeeSellerSettlementRatios) > 0 || len(msg.RemoveFeeSellerSettlementRatios) > 0 {
+		sellerRatios := getSellerSettlementRatios(store, msg.MarketId)
+		errs = append(errs, exchange.ValidateAddRemoveFeeRatiosWithExisting("seller settlement",
+			sellerRatios, msg.AddFeeSellerSettlementRatios, msg.RemoveFeeSellerSettlementRatios)...)
+	}
+
+	if len(msg.AddFeeBuyerSettlementFlat) > 0 || len(msg.RemoveFeeBuyerSettlementFlat) > 0 {
+		buyerFlats := getBuyerSettlementFlatFees(store, msg.MarketId)
+		errs = append(errs, exchange.ValidateAddRemoveFeeOptionsWithExisting("buyer settlement",
+			buyerFlats, msg.AddFeeBuyerSettlementFlat, msg.RemoveFeeBuyerSettlementFlat)...)
+	}
+
+	if len(msg.AddFeeBuyerSettlementRatios) > 0 || len(msg.RemoveFeeBuyerSettlementRatios) > 0 {
+		buyerRatios := getBuyerSettlementRatios(store, msg.MarketId)
+		errs = append(errs, exchange.ValidateAddRemoveFeeRatiosWithExisting("buyer settlement",
+			buyerRatios, msg.AddFeeBuyerSettlementRatios, msg.RemoveFeeBuyerSettlementRatios)...)
+	}
+
+	if len(errs) > 0 {
+		resp.Error = errors.Join(errs...).Error()
+	}
+
+	return resp, nil
 }

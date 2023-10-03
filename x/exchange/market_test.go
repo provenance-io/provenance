@@ -1,6 +1,7 @@
 package exchange
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -1293,6 +1294,242 @@ func TestIntersectionOfFeeRatios(t *testing.T) {
 	}
 }
 
+func TestContainsFeeRatio(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	ratio := func(price, fee sdk.Coin) FeeRatio {
+		return FeeRatio{Price: price, Fee: fee}
+	}
+
+	tests := []struct {
+		name   string
+		vals   []FeeRatio
+		toFind FeeRatio
+		exp    bool
+	}{
+		{
+			name:   "nil vals",
+			vals:   nil,
+			toFind: ratio(coin(1, "pear"), coin(2, "fig")),
+			exp:    false,
+		},
+		{
+			name:   "empty vals",
+			vals:   []FeeRatio{},
+			toFind: ratio(coin(1, "pear"), coin(2, "fig")),
+			exp:    false,
+		},
+		{
+			name:   "one val, same to find",
+			vals:   []FeeRatio{ratio(coin(1, "pear"), coin(2, "fig"))},
+			toFind: ratio(coin(1, "pear"), coin(2, "fig")),
+			exp:    true,
+		},
+		{
+			name:   "one val, diff price amount",
+			vals:   []FeeRatio{ratio(coin(1, "pear"), coin(2, "fig"))},
+			toFind: ratio(coin(3, "pear"), coin(2, "fig")),
+			exp:    false,
+		},
+		{
+			name:   "one val, diff price denom",
+			vals:   []FeeRatio{ratio(coin(1, "pear"), coin(2, "fig"))},
+			toFind: ratio(coin(1, "prune"), coin(2, "fig")),
+			exp:    false,
+		},
+		{
+			name:   "one val, diff fee amount",
+			vals:   []FeeRatio{ratio(coin(1, "pear"), coin(2, "fig"))},
+			toFind: ratio(coin(1, "pear"), coin(3, "fig")),
+			exp:    false,
+		},
+		{
+			name:   "one val, diff fee denom",
+			vals:   []FeeRatio{ratio(coin(1, "pear"), coin(2, "fig"))},
+			toFind: ratio(coin(1, "pear"), coin(2, "grape")),
+			exp:    false,
+		},
+		{
+			name:   "one bad val, same",
+			vals:   []FeeRatio{ratio(coin(-5, ""), coin(-6, ""))},
+			toFind: ratio(coin(-5, ""), coin(-6, "")),
+			exp:    true,
+		},
+		{
+			name: "three vals, not to find",
+			vals: []FeeRatio{
+				ratio(coin(1, "pear"), coin(2, "fig")),
+				ratio(coin(1, "prune"), coin(3, "fig")),
+				ratio(coin(1, "plum"), coin(4, "fig")),
+			},
+			toFind: ratio(coin(1, "pineapple"), coin(5, "fig")),
+			exp:    false,
+		},
+		{
+			name: "three vals, first",
+			vals: []FeeRatio{
+				ratio(coin(1, "pear"), coin(2, "fig")),
+				ratio(coin(1, "prune"), coin(3, "fig")),
+				ratio(coin(1, "plum"), coin(4, "fig")),
+			},
+			toFind: ratio(coin(1, "pear"), coin(2, "fig")),
+			exp:    true,
+		},
+		{
+			name: "three vals, second",
+			vals: []FeeRatio{
+				ratio(coin(1, "pear"), coin(2, "fig")),
+				ratio(coin(1, "prune"), coin(3, "fig")),
+				ratio(coin(1, "plum"), coin(4, "fig")),
+			},
+			toFind: ratio(coin(1, "prune"), coin(3, "fig")),
+			exp:    true,
+		},
+		{
+			name: "three vals, third",
+			vals: []FeeRatio{
+				ratio(coin(1, "pear"), coin(2, "fig")),
+				ratio(coin(1, "prune"), coin(3, "fig")),
+				ratio(coin(1, "plum"), coin(4, "fig")),
+			},
+			toFind: ratio(coin(1, "plum"), coin(4, "fig")),
+			exp:    true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			tesFunc := func() {
+				actual = ContainsFeeRatio(tc.vals, tc.toFind)
+			}
+			require.NotPanics(t, tesFunc, "ContainsFeeRatio(%q, %q)", FeeRatiosString(tc.vals), tc.toFind)
+			assert.Equal(t, tc.exp, actual, "ContainsFeeRatio(%q, %q)", FeeRatiosString(tc.vals), tc.toFind)
+		})
+	}
+}
+
+func TestContainsSameFeeRatioDenoms(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	ratio := func(price, fee sdk.Coin) FeeRatio {
+		return FeeRatio{Price: price, Fee: fee}
+	}
+
+	tests := []struct {
+		name   string
+		vals   []FeeRatio
+		toFind FeeRatio
+		exp    bool
+	}{
+		{
+			name:   "nil vals",
+			vals:   nil,
+			toFind: ratio(coin(1, "plum"), coin(2, "fig")),
+			exp:    false,
+		},
+		{
+			name:   "empty vals",
+			vals:   []FeeRatio{},
+			toFind: ratio(coin(1, "plum"), coin(2, "fig")),
+			exp:    false,
+		},
+		{
+			name:   "one val, same",
+			vals:   []FeeRatio{ratio(coin(1, "plum"), coin(2, "fig"))},
+			toFind: ratio(coin(1, "plum"), coin(2, "fig")),
+			exp:    true,
+		},
+		{
+			name:   "one val, diff price amount",
+			vals:   []FeeRatio{ratio(coin(1, "plum"), coin(2, "fig"))},
+			toFind: ratio(coin(3, "plum"), coin(2, "fig")),
+			exp:    true,
+		},
+		{
+			name:   "one val, diff price denom",
+			vals:   []FeeRatio{ratio(coin(1, "plum"), coin(2, "fig"))},
+			toFind: ratio(coin(1, "prune"), coin(2, "fig")),
+			exp:    false,
+		},
+		{
+			name:   "one val, diff fee amount",
+			vals:   []FeeRatio{ratio(coin(1, "plum"), coin(2, "fig"))},
+			toFind: ratio(coin(1, "plum"), coin(3, "fig")),
+			exp:    true,
+		},
+		{
+			name:   "one val, diff fee denom",
+			vals:   []FeeRatio{ratio(coin(1, "plum"), coin(2, "fig"))},
+			toFind: ratio(coin(1, "plum"), coin(2, "grape")),
+			exp:    false,
+		},
+		{
+			name: "three vals, not to find",
+			vals: []FeeRatio{
+				ratio(coin(1, "prune"), coin(2, "fig")),
+				ratio(coin(3, "plum"), coin(4, "grape")),
+				ratio(coin(5, "peach"), coin(6, "honeydew")),
+			},
+			toFind: ratio(coin(7, "pineapple"), coin(8, "jackfruit")),
+			exp:    false,
+		},
+		{
+			name: "three vals, first price denom second fee denom",
+			vals: []FeeRatio{
+				ratio(coin(1, "prune"), coin(2, "fig")),
+				ratio(coin(3, "plum"), coin(4, "grape")),
+				ratio(coin(5, "peach"), coin(6, "honeydew")),
+			},
+			toFind: ratio(coin(7, "prune"), coin(8, "grape")),
+			exp:    false,
+		},
+		{
+			name: "three vals, first",
+			vals: []FeeRatio{
+				ratio(coin(1, "prune"), coin(2, "fig")),
+				ratio(coin(3, "plum"), coin(4, "grape")),
+				ratio(coin(5, "peach"), coin(6, "honeydew")),
+			},
+			toFind: ratio(coin(7, "prune"), coin(8, "fig")),
+			exp:    true,
+		},
+		{
+			name: "three vals, second",
+			vals: []FeeRatio{
+				ratio(coin(1, "prune"), coin(2, "fig")),
+				ratio(coin(3, "plum"), coin(4, "grape")),
+				ratio(coin(5, "peach"), coin(6, "honeydew")),
+			},
+			toFind: ratio(coin(7, "plum"), coin(8, "grape")),
+			exp:    true,
+		},
+		{
+			name: "three vals, third",
+			vals: []FeeRatio{
+				ratio(coin(1, "prune"), coin(2, "fig")),
+				ratio(coin(3, "plum"), coin(4, "grape")),
+				ratio(coin(5, "peach"), coin(6, "honeydew")),
+			},
+			toFind: ratio(coin(7, "peach"), coin(8, "honeydew")),
+			exp:    true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = ContainsSameFeeRatioDenoms(tc.vals, tc.toFind)
+			}
+			require.NotPanics(t, testFunc, "ContainsSameFeeRatioDenoms(%q, %q)", FeeRatiosString(tc.vals), tc.toFind)
+			assert.Equal(t, tc.exp, actual, "ContainsSameFeeRatioDenoms(%q, %q)", FeeRatiosString(tc.vals), tc.toFind)
+		})
+	}
+}
+
 func TestValidateDisjointFeeRatios(t *testing.T) {
 	feeRatio := func(priceAmount int64, priceDenom string, feeAmount int64, feeDenom string) FeeRatio {
 		return FeeRatio{
@@ -1405,6 +1642,196 @@ func TestValidateDisjointFeeRatios(t *testing.T) {
 			require.NotPanics(t, testFunc, "ValidateDisjointFeeRatios")
 
 			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateDisjointFeeRatios")
+		})
+	}
+}
+
+func TestValidateAddRemoveFeeRatiosWithExisting(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	ratio := func(price, fee sdk.Coin) FeeRatio {
+		return FeeRatio{Price: price, Fee: fee}
+	}
+	joinErrs := func(errs ...string) string {
+		return strings.Join(errs, "\n")
+	}
+	noRemErr := func(field, fee string) string {
+		return fmt.Sprintf("cannot remove %s ratio fee %q: no such ratio exists", field, fee)
+	}
+	noAddErr := func(field, fee string) string {
+		return fmt.Sprintf("cannot add %s ratio fee %q: ratio with those denoms already exists", field, fee)
+	}
+
+	tests := []struct {
+		name     string
+		field    string
+		existing []FeeRatio
+		toAdd    []FeeRatio
+		toRemove []FeeRatio
+		expErr   string
+	}{
+		{
+			name:     "nil existing",
+			field:    "DLEIF",
+			existing: nil,
+			toAdd:    []FeeRatio{ratio(coin(1, "pineapple"), coin(2, "grape"))},
+			toRemove: []FeeRatio{ratio(coin(1, "pineapple"), coin(3, "fig"))},
+			expErr:   noRemErr("DLEIF", "1pineapple:3fig"),
+		},
+		{
+			name:     "empty existing",
+			field:    "DLEIF",
+			existing: []FeeRatio{},
+			toAdd:    []FeeRatio{ratio(coin(1, "pineapple"), coin(2, "grape"))},
+			toRemove: []FeeRatio{ratio(coin(1, "pineapple"), coin(3, "fig"))},
+			expErr:   noRemErr("DLEIF", "1pineapple:3fig"),
+		},
+		{
+			name:     "nil toAdd",
+			field:    "DLEIF",
+			existing: []FeeRatio{ratio(coin(1, "pineapple"), coin(3, "fig"))},
+			toAdd:    nil,
+			toRemove: []FeeRatio{ratio(coin(1, "pineapple"), coin(3, "fig"))},
+			expErr:   "",
+		},
+		{
+			name:     "empty toAdd",
+			field:    "DLEIF",
+			existing: []FeeRatio{ratio(coin(1, "pineapple"), coin(3, "fig"))},
+			toAdd:    []FeeRatio{},
+			toRemove: []FeeRatio{ratio(coin(1, "pineapple"), coin(3, "fig"))},
+			expErr:   "",
+		},
+		{
+			name:     "nil toRemove",
+			field:    "DLEIF",
+			existing: []FeeRatio{ratio(coin(1, "pineapple"), coin(3, "fig"))},
+			toAdd:    []FeeRatio{ratio(coin(1, "pineapple"), coin(2, "grape"))},
+			toRemove: nil,
+			expErr:   "",
+		},
+		{
+			name:     "empty toRemove",
+			field:    "DLEIF",
+			existing: []FeeRatio{ratio(coin(1, "pineapple"), coin(3, "fig"))},
+			toAdd:    []FeeRatio{ratio(coin(1, "pineapple"), coin(2, "grape"))},
+			toRemove: []FeeRatio{},
+			expErr:   "",
+		},
+		{
+			name:  "to remove not in existing, diff price amounts",
+			field: "DLEIF",
+			existing: []FeeRatio{
+				ratio(coin(111, "pineapple"), coin(2, "fig")),
+				ratio(coin(333, "pineapple"), coin(4, "grape")),
+			},
+			toAdd: nil,
+			toRemove: []FeeRatio{
+				ratio(coin(112, "pineapple"), coin(2, "fig")),
+				ratio(coin(334, "pineapple"), coin(4, "grape")),
+			},
+			expErr: joinErrs(
+				noRemErr("DLEIF", "112pineapple:2fig"),
+				noRemErr("DLEIF", "334pineapple:4grape"),
+			),
+		},
+		{
+			name:  "to remove not in existing, diff price denoms",
+			field: "DleiF",
+			existing: []FeeRatio{
+				ratio(coin(111, "prune"), coin(2, "fig")),
+				ratio(coin(333, "plum"), coin(4, "grape")),
+			},
+			toAdd: nil,
+			toRemove: []FeeRatio{
+				ratio(coin(111, "plum"), coin(2, "fig")),
+				ratio(coin(333, "prune"), coin(4, "grape")),
+			},
+			expErr: joinErrs(
+				noRemErr("DleiF", "111plum:2fig"),
+				noRemErr("DleiF", "333prune:4grape"),
+			),
+		},
+		{
+			name:  "to remove not in existing, diff fee amounts",
+			field: "DleiF",
+			existing: []FeeRatio{
+				ratio(coin(111, "prune"), coin(2, "fig")),
+				ratio(coin(333, "plum"), coin(4, "grape")),
+			},
+			toAdd: nil,
+			toRemove: []FeeRatio{
+				ratio(coin(111, "prune"), coin(3, "fig")),
+				ratio(coin(333, "plum"), coin(5, "grape")),
+			},
+			expErr: joinErrs(
+				noRemErr("DleiF", "111prune:3fig"),
+				noRemErr("DleiF", "333plum:5grape"),
+			),
+		},
+		{
+			name:  "to remove not in existing, diff fee denoms",
+			field: "DleiF",
+			existing: []FeeRatio{
+				ratio(coin(111, "prune"), coin(2, "fig")),
+				ratio(coin(333, "plum"), coin(4, "grape")),
+			},
+			toAdd: nil,
+			toRemove: []FeeRatio{
+				ratio(coin(111, "prune"), coin(2, "grape")),
+				ratio(coin(333, "plum"), coin(4, "fig")),
+			},
+			expErr: joinErrs(
+				noRemErr("DleiF", "111prune:2grape"),
+				noRemErr("DleiF", "333plum:4fig"),
+			),
+		},
+		{
+			name:  "to add already exists",
+			field: "yard",
+			existing: []FeeRatio{
+				ratio(coin(111, "prune"), coin(2, "fig")),
+				ratio(coin(333, "plum"), coin(4, "grape")),
+				ratio(coin(555, "peach"), coin(6, "honeydew")),
+			},
+			toAdd: []FeeRatio{
+				ratio(coin(321, "prune"), coin(7, "fig")),
+				ratio(coin(654, "peach"), coin(8, "honeydew")),
+			},
+			toRemove: []FeeRatio{ratio(coin(333, "plum"), coin(4, "grape"))},
+			expErr: joinErrs(
+				noAddErr("yard", "321prune:7fig"),
+				noAddErr("yard", "654peach:8honeydew"),
+			),
+		},
+		{
+			name:  "remove one add another with same denoms",
+			field: "lawn",
+			existing: []FeeRatio{
+				ratio(coin(111, "prune"), coin(2, "fig")),
+				ratio(coin(333, "plum"), coin(4, "grape")),
+				ratio(coin(555, "peach"), coin(6, "honeydew")),
+			},
+			toAdd: []FeeRatio{
+				ratio(coin(321, "plum"), coin(1, "grape")),
+			},
+			toRemove: []FeeRatio{
+				ratio(coin(333, "plum"), coin(4, "grape")),
+			},
+			expErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var errs []error
+			testFunc := func() {
+				errs = ValidateAddRemoveFeeRatiosWithExisting(tc.field, tc.existing, tc.toAdd, tc.toRemove)
+			}
+			require.NotPanics(t, testFunc, "ValidateAddRemoveFeeRatiosWithExisting")
+			err := errors.Join(errs...)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateAddRemoveFeeRatiosWithExisting error")
 		})
 	}
 }
@@ -1544,6 +1971,140 @@ func TestValidateAddRemoveFeeOptions(t *testing.T) {
 			require.NotPanics(t, testFunc, "ValidateAddRemoveFeeOptions")
 
 			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateAddRemoveFeeOptions")
+		})
+	}
+}
+
+func TestValidateAddRemoveFeeOptionsWithExisting(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	joinErrs := func(errs ...string) string {
+		return strings.Join(errs, "\n")
+	}
+	noRemErr := func(field, fee string) string {
+		return fmt.Sprintf("cannot remove %s flat fee %q: no such fee exists", field, fee)
+	}
+	noAddErr := func(field, fee string) string {
+		return fmt.Sprintf("cannot add %s flat fee %q: fee with that denom already exists", field, fee)
+	}
+
+	tests := []struct {
+		name     string
+		field    string
+		existing []sdk.Coin
+		toAdd    []sdk.Coin
+		toRemove []sdk.Coin
+		expErr   string
+	}{
+		{
+			name:     "nil existing",
+			field:    "tree",
+			existing: nil,
+			toAdd:    []sdk.Coin{coin(1, "apple")},
+			toRemove: []sdk.Coin{coin(2, "banana")},
+			expErr:   noRemErr("tree", "2banana"),
+		},
+		{
+			name:     "empty existing",
+			field:    "tree",
+			existing: []sdk.Coin{},
+			toAdd:    []sdk.Coin{coin(1, "apple")},
+			toRemove: []sdk.Coin{coin(2, "banana")},
+			expErr:   noRemErr("tree", "2banana"),
+		},
+		{
+			name:     "nil toAdd",
+			field:    "fern",
+			existing: []sdk.Coin{coin(2, "banana")},
+			toAdd:    nil,
+			toRemove: []sdk.Coin{coin(2, "banana")},
+			expErr:   "",
+		},
+		{
+			name:     "empty toAdd",
+			field:    "fern",
+			existing: []sdk.Coin{coin(2, "banana")},
+			toAdd:    []sdk.Coin{},
+			toRemove: []sdk.Coin{coin(2, "banana")},
+			expErr:   "",
+		},
+		{
+			name:     "nil toRemove",
+			field:    "yucca",
+			existing: []sdk.Coin{coin(2, "apple")},
+			toAdd:    []sdk.Coin{coin(2, "banana")},
+			toRemove: nil,
+			expErr:   "",
+		},
+		{
+			name:     "empty toRemove",
+			field:    "yucca",
+			existing: []sdk.Coin{coin(2, "apple")},
+			toAdd:    []sdk.Coin{coin(2, "banana")},
+			toRemove: []sdk.Coin{},
+			expErr:   "",
+		},
+		{
+			name:     "to remove not in existing, diff amounts",
+			field:    "rose",
+			existing: []sdk.Coin{coin(1, "apple"), coin(2, "banana")},
+			toAdd:    nil,
+			toRemove: []sdk.Coin{coin(3, "apple"), coin(4, "banana")},
+			expErr: joinErrs(
+				noRemErr("rose", "3apple"),
+				noRemErr("rose", "4banana"),
+			),
+		},
+		{
+			name:     "to remove not in existing, diff denoms",
+			field:    "rose",
+			existing: []sdk.Coin{coin(1, "apple"), coin(2, "banana")},
+			toAdd:    nil,
+			toRemove: []sdk.Coin{coin(1, "cactus"), coin(2, "durian")},
+			expErr: joinErrs(
+				noRemErr("rose", "1cactus"),
+				noRemErr("rose", "2durian"),
+			),
+		},
+		{
+			name:     "to remove, in existing",
+			field:    "rose",
+			existing: []sdk.Coin{coin(1, "apple"), coin(2, "banana")},
+			toAdd:    nil,
+			toRemove: []sdk.Coin{coin(1, "apple"), coin(2, "banana")},
+			expErr:   "",
+		},
+		{
+			name:     "to add denom already exists",
+			field:    "tuLip",
+			existing: []sdk.Coin{coin(1, "apple"), coin(2, "banana")},
+			toAdd:    []sdk.Coin{coin(3, "apple"), coin(4, "banana")},
+			toRemove: nil,
+			expErr: joinErrs(
+				noAddErr("tuLip", "3apple"),
+				noAddErr("tuLip", "4banana"),
+			),
+		},
+		{
+			name:     "remove and add same denom",
+			field:    "whoops",
+			existing: []sdk.Coin{coin(1, "apple"), coin(2, "banana")},
+			toAdd:    []sdk.Coin{coin(3, "apple")},
+			toRemove: []sdk.Coin{coin(1, "apple")},
+			expErr:   "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var errs []error
+			testFunc := func() {
+				errs = ValidateAddRemoveFeeOptionsWithExisting(tc.field, tc.existing, tc.toAdd, tc.toRemove)
+			}
+			require.NotPanics(t, testFunc, "ValidateAddRemoveFeeOptionsWithExisting")
+			err := errors.Join(errs...)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateAddRemoveFeeOptionsWithExisting error")
 		})
 	}
 }
