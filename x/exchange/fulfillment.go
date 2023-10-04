@@ -1343,7 +1343,7 @@ func BuildSettlementTransfers(f *Fulfillments) *SettlementTransfers {
 	}
 
 	for _, of := range allOFs {
-		rv.OrderTransfers = append(rv.OrderTransfers, GetAssetTransfer(of), GetPriceTransfer(of))
+		rv.OrderTransfers = append(rv.OrderTransfers, GetAssetTransfer2(of), GetPriceTransfer2(of))
 		if !of.FeesToPay.IsZero() {
 			// Using NewCoins in here as a last-ditch negative amount panic check.
 			fees := sdk.NewCoins(of.FeesToPay...)
@@ -1357,9 +1357,48 @@ func BuildSettlementTransfers(f *Fulfillments) *SettlementTransfers {
 }
 
 // GetAssetTransfer gets the inputs and outputs to facilitate the transfers of assets for this order fulfillment.
+func GetAssetTransfer(f *OrderFulfillment) (*Transfer, error) {
+	if !f.AssetsFilledAmt.IsPositive() {
+		return nil, fmt.Errorf("%s order %d cannot be filled with %s assets: amount not positive",
+			f.GetOrderType(), f.GetOrderID(), f.GetAssetsFilled())
+	}
+
+	indexedDists := newIndexedAddrAmts()
+	sumDists := sdkmath.ZeroInt()
+	for _, dist := range f.AssetDists {
+		if !dist.Amount.IsPositive() {
+			return nil, fmt.Errorf("%s order %d cannot have %q assets in a transfer: amount not positive",
+				f.GetOrderType(), f.GetOrderID(), f.assetCoin(dist.Amount))
+		}
+		indexedDists.add(dist.Address, f.assetCoin(dist.Amount))
+		sumDists = sumDists.Add(dist.Amount)
+	}
+
+	if sumDists != f.AssetsFilledAmt {
+		return nil, fmt.Errorf("%s order %d assets filled %q does not equal assets distributed %q",
+			f.GetOrderType(), f.GetOrderID(), f.GetAssetsFilled(), f.assetCoin(sumDists))
+	}
+
+	if f.IsAskOrder() {
+		return &Transfer{
+			Inputs:  []banktypes.Input{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetAssetsFilled())}},
+			Outputs: indexedDists.getAsOutputs(),
+		}, nil
+	}
+	if f.IsBidOrder() {
+		return &Transfer{
+			Inputs:  indexedDists.getAsInputs(),
+			Outputs: []banktypes.Output{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetAssetsFilled())}},
+		}, nil
+	}
+
+	return nil, fmt.Errorf("unknown order type %T", f.Order.GetOrder())
+}
+
+// GetAssetTransfer2 gets the inputs and outputs to facilitate the transfers of assets for this order fulfillment.
 // Assumes that the fulfillment has passed Validate2 already.
 // Panics if any amounts are negative or if it's neither a bid nor ask order.
-func GetAssetTransfer(f *OrderFulfillment) *Transfer {
+func GetAssetTransfer2(f *OrderFulfillment) *Transfer {
 	indexedSplits := newIndexedAddrAmts()
 	for _, split := range f.Splits {
 		indexedSplits.add(split.Order.GetOwner(), split.Assets)
@@ -1383,10 +1422,10 @@ func GetAssetTransfer(f *OrderFulfillment) *Transfer {
 	panic(fmt.Errorf("unknown order type %T", f.Order.GetOrder()))
 }
 
-// GetPriceTransfer gets the inputs and outputs to facilitate the transfers for the price of this order fulfillment.
+// GetPriceTransfer2 gets the inputs and outputs to facilitate the transfers for the price of this order fulfillment.
 // Assumes that the fulfillment has passed Validate2 already.
 // Panics if any amounts are negative or if it's neither a bid nor ask order.
-func GetPriceTransfer(f *OrderFulfillment) *Transfer {
+func GetPriceTransfer2(f *OrderFulfillment) *Transfer {
 	indexedSplits := newIndexedAddrAmts()
 	for _, split := range f.Splits {
 		indexedSplits.add(split.Order.GetOwner(), split.Price)

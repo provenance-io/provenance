@@ -6147,7 +6147,9 @@ func bankOutputString(o banktypes.Output) string {
 	return fmt.Sprintf("O{Address:%q,Coins:%q}", o.Address, o.Coins)
 }
 
-func TestGetAssetTransfer(t *testing.T) {
+// TODO[1658]: func TestGetAssetTransfer(t *testing.T)
+
+func TestGetAssetTransfer2(t *testing.T) {
 	coin := func(amt int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amt)}
 	}
@@ -6365,15 +6367,17 @@ func TestGetAssetTransfer(t *testing.T) {
 				}
 			}()
 			testFunc := func() {
-				actual = GetAssetTransfer(tc.f)
+				actual = GetAssetTransfer2(tc.f)
 			}
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetAssetTransfer")
-			assert.Equal(t, tc.exp, actual, "GetAssetTransfer result")
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetAssetTransfer2")
+			assert.Equal(t, tc.exp, actual, "GetAssetTransfer2 result")
 		})
 	}
 }
 
-func TestGetPriceTransfer(t *testing.T) {
+// TODO[1658]: func TestGetPriceTransfer(t *testing.T)
+
+func TestGetPriceTransfer2(t *testing.T) {
 	coin := func(amt int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amt)}
 	}
@@ -6591,10 +6595,10 @@ func TestGetPriceTransfer(t *testing.T) {
 				}
 			}()
 			testFunc := func() {
-				actual = GetPriceTransfer(tc.f)
+				actual = GetPriceTransfer2(tc.f)
 			}
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetPriceTransfer")
-			assert.Equal(t, tc.exp, actual, "GetPriceTransfer result")
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetPriceTransfer2")
+			assert.Equal(t, tc.exp, actual, "GetPriceTransfer2 result")
 		})
 	}
 }
