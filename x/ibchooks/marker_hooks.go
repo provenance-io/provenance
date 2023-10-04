@@ -152,12 +152,12 @@ func ProcessMarkerMemo(memo string) ([]sdktypes.AccAddress, markertypes.MarkerTy
 	if err != nil {
 		return nil, markertypes.MarkerType_Unknown, err
 	}
-	if markerMemo.TransferAuth == nil {
+	if markerMemo.TransferAuths == nil {
 		return []sdktypes.AccAddress{}, markertypes.MarkerType_Coin, nil
 	}
 
-	transferAuths := make([]sdktypes.AccAddress, len(markerMemo.TransferAuth))
-	for i, addr := range markerMemo.TransferAuth {
+	transferAuths := make([]sdktypes.AccAddress, len(markerMemo.TransferAuths))
+	for i, addr := range markerMemo.TransferAuths {
 		accAddr, err := sdktypes.AccAddressFromBech32(addr)
 		if err != nil {
 			return nil, markertypes.MarkerType_Unknown, err

@@ -1,6 +1,7 @@
 package ibchooks_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/provenance-io/provenance/app"
@@ -132,6 +133,8 @@ func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
 }
 
 func (suite *MarkerHooksTestSuite) TestProcessMarkerMemo() {
+	address1 := sdk.AccAddress("address1")
+	address2 := sdk.AccAddress("address2")
 	testCases := []struct {
 		name          string
 		memo          string
@@ -139,21 +142,43 @@ func (suite *MarkerHooksTestSuite) TestProcessMarkerMemo() {
 		expMarkerType markertypes.MarkerType
 		expErr        string
 	}{
-		// {
-		// 	name:          "successfully process with non json memo",
-		// 	memo:          `{"marker":{random},"wasm":{"contract":"%1234","msg":{"echo":{"msg":"test"}}}}`,
-		// 	expAddresses:  []sdk.AccAddress{},
-		// 	expMarkerType: markertypes.MarkerType_Coin,
-		// 	expErr:        "",
-		// },
 		{
-			name:          "successfully process no marker part",
+			name:          "successfully process with non json memo",
+			memo:          `{"marker":{random},"wasm":{"contract":"%1234","msg":{"echo":{"msg":"test"}}}}`,
+			expAddresses:  []sdk.AccAddress{},
+			expMarkerType: markertypes.MarkerType_Coin,
+			expErr:        "",
+		},
+		{
+			name:          "successfully process marker ignore unknown property",
 			memo:          `{"marker":{"test":"test"},"wasm":{"contract":"%1234","msg":{"echo":{"msg":"test"}}}}`,
 			expAddresses:  []sdk.AccAddress{},
 			expMarkerType: markertypes.MarkerType_Coin,
 			expErr:        "",
 		},
+		{
+			name:          "transfer auth in correct type",
+			memo:          `{"marker":{"transfer-auths":"incorrect data type"}}`,
+			expAddresses:  []sdk.AccAddress{},
+			expMarkerType: markertypes.MarkerType_Coin,
+			expErr:        "json: cannot unmarshal string into Go struct field MarkerPayload.transfer-auths of type []string",
+		},
+		{
+			name:          "transfer auth in correct address bech32 value",
+			memo:          `{"marker":{"transfer-auths":["invalidbech32"]}}`,
+			expAddresses:  []sdk.AccAddress{},
+			expMarkerType: markertypes.MarkerType_Coin,
+			expErr:        "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "transfer auth in correct type",
+			memo:          fmt.Sprintf(`{"marker":{"transfer-auths":["%s", "%s"]}}`, address1.String(), address2.String()),
+			expAddresses:  []sdk.AccAddress{address2, address1},
+			expMarkerType: markertypes.MarkerType_RestrictedCoin,
+			expErr:        "",
+		},
 	}
+
 	for _, tc := range testCases {
 		suite.T().Run(tc.name, func(t *testing.T) {
 			actualAddrs, actualMarkerType, err := ibchooks.ProcessMarkerMemo(tc.memo)

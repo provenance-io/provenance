@@ -114,7 +114,7 @@ type MarkerMemo struct {
 }
 
 type MarkerPayload struct {
-	TransferAuth []string `json:"transfer-auth"`
+	TransferAuths []string `json:"transfer-auths"`
 }
 
 func NewMarkerPayload(transferAuthAddrs []sdk.AccAddress) MarkerPayload {
@@ -123,7 +123,7 @@ func NewMarkerPayload(transferAuthAddrs []sdk.AccAddress) MarkerPayload {
 		addresses[i] = transferAuthAddrs[i].String()
 	}
 	return MarkerPayload{
-		TransferAuth: addresses,
+		TransferAuths: addresses,
 	}
 }
 
