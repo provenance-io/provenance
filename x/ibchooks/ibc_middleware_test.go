@@ -256,7 +256,7 @@ func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 	// Setup contract
 	codeId := suite.chainA.StoreContractEchoDirect(&suite.Suite)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", codeId)
-	memo := fmt.Sprintf(`{"marker":"{}","wasm":{"contract":"%s","msg":{"echo":{"msg":"test"}}}}`, addr)
+	memo := fmt.Sprintf(`{"marker":{},"wasm":{"contract":"%s","msg":{"echo":{"msg":"test"}}}}`, addr)
 	ackBytes := suite.receivePacket(addr.String(), memo)
 	ackStr := string(ackBytes)
 	fmt.Println(ackStr)
@@ -279,7 +279,7 @@ func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 
 	// Execute the contract via IBC
-	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"marker":"{}","wasm":{"contract":"%s","msg":{"echo":{"msg":"test"}}}}`, addr))
+	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"marker":{},"wasm":{"contract":"%s","msg":{"echo":{"msg":"test"}}}}`, addr))
 	ackStr := string(ackBytes)
 	fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
@@ -305,7 +305,7 @@ func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 
 	// Execute the contract via IBC with a message that the contract will reject
-	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"marker":"{}","wasm":{"contract":"%s","msg":{"not_echo":{"msg":"test"}}}}`, addr))
+	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"marker":{},"wasm":{"contract":"%s","msg":{"not_echo":{"msg":"test"}}}}`, addr))
 	ackStr := string(ackBytes)
 	fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
@@ -372,7 +372,7 @@ func (suite *HooksTestSuite) TestFundTracking() {
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 
-	memo := fmt.Sprintf(`{"marker":"{}","wasm":{"contract":"%s","msg":{"increment":{}}}}`, addr)
+	memo := fmt.Sprintf(`{"marker":{},"wasm":{"contract":"%s","msg":{"increment":{}}}}`, addr)
 
 	// Execute the contract via IBC
 	suite.receivePacket(

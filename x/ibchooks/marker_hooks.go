@@ -34,7 +34,7 @@ func (h MarkerHooks) ProperlyConfigured() bool {
 	return h.MarkerKeeper != nil
 }
 
-func (h MarkerHooks) ProcessMarkerMemo(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) error {
+func (h MarkerHooks) AddUpdateMarker(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) error {
 	var data transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
 		return err
@@ -142,12 +142,13 @@ func ProcessMarkerMemo(memo string) ([]sdktypes.AccAddress, markertypes.MarkerTy
 	if !found {
 		return []sdktypes.AccAddress{}, markertypes.MarkerType_Coin, nil
 	}
-	markerPayload, ok := jsonObject["marker"].(string)
-	if !ok {
-		return []sdktypes.AccAddress{}, markertypes.MarkerType_Coin, nil
+	jsonBytes, err := json.Marshal(jsonObject["marker"])
+	if err != nil {
+		return nil, markertypes.MarkerType_Unknown, err
 	}
+
 	var markerMemo types.MarkerPayload
-	err := json.Unmarshal([]byte(markerPayload), &markerMemo)
+	err = json.Unmarshal(jsonBytes, &markerMemo)
 	if err != nil {
 		return nil, markertypes.MarkerType_Unknown, err
 	}
@@ -212,16 +213,10 @@ func SanitizeMemo(memo string) map[string]interface{} {
 }
 
 // CreateMarkerMemo returns a json memo for marker
-func CreateMarkerMemo(marker markertypes.MarkerAccountI) (string, error) {
+func CreateMarkerMemo(marker markertypes.MarkerAccountI) (interface{}, error) {
 	if marker == nil || marker.GetMarkerType() != markertypes.MarkerType_RestrictedCoin {
-		return "{}", nil
+		return make(map[string]interface{}), nil
 	}
 	transferAuthAddrs := marker.AddressListForPermission(markertypes.Access_Transfer)
-	markerPayload := types.NewMarkerPayload(transferAuthAddrs)
-	jsonData, err := json.Marshal(markerPayload)
-	if err != nil {
-		return "", err
-	}
-
-	return string(jsonData), nil
+	return types.NewMarkerPayload(transferAuthAddrs), nil
 }

@@ -53,7 +53,7 @@ func (h IbcHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, p
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
 
-	if err := h.markerHooks.ProcessMarkerMemo(ctx, packet, h.ibcKeeper); err != nil {
+	if err := h.markerHooks.AddUpdateMarker(ctx, packet, h.ibcKeeper); err != nil {
 		return NewEmitErrorAcknowledgement(ctx, types.ErrMarkerError, err.Error())
 	}
 	return h.wasmHooks.OnRecvPacketOverride(im, ctx, packet, relayer)

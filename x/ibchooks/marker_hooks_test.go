@@ -6,6 +6,7 @@ import (
 	"github.com/provenance-io/provenance/app"
 	testutil "github.com/provenance-io/provenance/testutil/ibc"
 	"github.com/provenance-io/provenance/x/ibchooks"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -77,7 +78,7 @@ func (suite *MarkerHooksTestSuite) makeMockPacket(denom, receiver, memo string, 
 	)
 }
 
-func (suite *MarkerHooksTestSuite) TestProcessMarkerMemo() {
+func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
 	markerHooks := ibchooks.NewMarkerHooks(&suite.chainA.GetProvenanceApp().MarkerKeeper)
 	testCases := []struct {
 		name        string
@@ -86,18 +87,32 @@ func (suite *MarkerHooksTestSuite) TestProcessMarkerMemo() {
 		expErr      string
 		expIbcDenom string
 	}{
+		// {
+		// 	name:        "successfully process with empty memo",
+		// 	denom:       "fiftyfivehamburgers",
+		// 	memo:        "",
+		// 	expErr:      "",
+		// 	expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
+		// },
+		// {
+		// 	name:        "successfully process with non json memo",
+		// 	denom:       "fiftyfivehamburgers",
+		// 	memo:        "55 burger 55 fries...",
+		// 	expErr:      "",
+		// 	expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
+		// },
 		{
-			"successfully process with empty memo",
-			"fiftyfivehamburgers",
-			"",
-			"",
-			"ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
+			name:        "successfully process with non json memo",
+			denom:       "fiftyfivehamburgers",
+			memo:        `{"marker":{random},"wasm":{"contract":"%1234","msg":{"echo":{"msg":"test"}}}}`,
+			expErr:      "",
+			expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
 		},
 	}
 	for _, tc := range testCases {
 		suite.T().Run(tc.name, func(t *testing.T) {
 			packet := suite.makeMockPacket(tc.denom, "", tc.memo, 0)
-			err := markerHooks.ProcessMarkerMemo(suite.chainA.GetContext(), packet, suite.chainA.GetProvenanceApp().IBCKeeper)
+			err := markerHooks.AddUpdateMarker(suite.chainA.GetContext(), packet, suite.chainA.GetProvenanceApp().IBCKeeper)
 			if len(tc.expErr) > 0 {
 				assert.EqualError(t, err, tc.expErr, "ProcessMarkerMemo() error")
 			} else {
@@ -111,6 +126,47 @@ func (suite *MarkerHooksTestSuite) TestProcessMarkerMemo() {
 				assert.Equal(t, "testchain2/"+tc.denom, metadata.Name, "Metadata Name should be chainid/denom")
 				assert.Equal(t, "testchain2/"+tc.denom, metadata.Display, "Metadata Display should be chainid/denom")
 				assert.Equal(t, tc.denom+" from chain testchain2", metadata.Description, "Metadata Description is incorrect")
+			}
+		})
+	}
+}
+
+func (suite *MarkerHooksTestSuite) TestProcessMarkerMemo() {
+	testCases := []struct {
+		name          string
+		memo          string
+		expAddresses  []sdk.AccAddress
+		expMarkerType markertypes.MarkerType
+		expErr        string
+	}{
+		// {
+		// 	name:          "successfully process with non json memo",
+		// 	memo:          `{"marker":{random},"wasm":{"contract":"%1234","msg":{"echo":{"msg":"test"}}}}`,
+		// 	expAddresses:  []sdk.AccAddress{},
+		// 	expMarkerType: markertypes.MarkerType_Coin,
+		// 	expErr:        "",
+		// },
+		{
+			name:          "successfully process no marker part",
+			memo:          `{"marker":{"test":"test"},"wasm":{"contract":"%1234","msg":{"echo":{"msg":"test"}}}}`,
+			expAddresses:  []sdk.AccAddress{},
+			expMarkerType: markertypes.MarkerType_Coin,
+			expErr:        "",
+		},
+	}
+	for _, tc := range testCases {
+		suite.T().Run(tc.name, func(t *testing.T) {
+			actualAddrs, actualMarkerType, err := ibchooks.ProcessMarkerMemo(tc.memo)
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr, "ProcessMarkerMemo() error")
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tc.expMarkerType, actualMarkerType, "Actual Marker type is incorrect")
+				assert.Len(t, actualAddrs, len(tc.expAddresses), "Actual and expect address list must have same amount of elements")
+				for _, addr := range tc.expAddresses {
+					assert.Contains(t, actualAddrs, addr, "Actual list does not contain required address")
+
+				}
 			}
 		})
 	}
