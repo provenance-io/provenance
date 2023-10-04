@@ -7,6 +7,7 @@ import (
 	"github.com/provenance-io/provenance/app"
 	testutil "github.com/provenance-io/provenance/testutil/ibc"
 	"github.com/provenance-io/provenance/x/ibchooks"
+	"github.com/provenance-io/provenance/x/marker/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/stretchr/testify/assert"
@@ -192,6 +193,55 @@ func (suite *MarkerHooksTestSuite) TestProcessMarkerMemo() {
 					assert.Contains(t, actualAddrs, addr, "Actual list does not contain required address")
 
 				}
+			}
+		})
+	}
+}
+
+func (suite *MarkerHooksTestSuite) TestResetMarkerAccessGrants() {
+	address1 := sdk.AccAddress("address1")
+	address2 := sdk.AccAddress("address2")
+	address3 := sdk.AccAddress("address3")
+	testCases := []struct {
+		name          string
+		transferAuths []sdk.AccAddress
+		markerAcct    markertypes.MarkerAccount
+		expErr        string
+	}{
+		{
+			name:          "successfully reset marker access grants and remove all others",
+			transferAuths: []sdk.AccAddress{address1, address2},
+			markerAcct:    *markertypes.NewEmptyMarkerAccount("jackthecat", address1.String(), []types.AccessGrant{*types.NewAccessGrant(address1, []types.Access{types.Access_Burn}), *types.NewAccessGrant(address1, []types.Access{types.Access_Admin})}),
+			expErr:        "",
+		},
+		{
+			name:          "successfully reset marker access grants and remove all others",
+			transferAuths: []sdk.AccAddress{address1, address2},
+			markerAcct:    *markertypes.NewEmptyMarkerAccount("jackthecat", address1.String(), []types.AccessGrant{}),
+			expErr:        "",
+		},
+		{
+			name:          "successfully reset marker access grants and remove other transfer grant",
+			transferAuths: []sdk.AccAddress{address1, address2},
+			markerAcct:    *markertypes.NewEmptyMarkerAccount("jackthecat", address1.String(), []types.AccessGrant{*types.NewAccessGrant(address3, []types.Access{types.Access_Transfer})}),
+			expErr:        "",
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.T().Run(tc.name, func(t *testing.T) {
+			err := ibchooks.ResetMarkerAccessGrants(tc.transferAuths, &tc.markerAcct)
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr, "ResetMarkerAccessGrants() error")
+			} else {
+				require.NoError(t, err)
+				assert.Len(t, tc.markerAcct.GetAccessList(), len(tc.transferAuths), "Resulting access list does not equal expect length")
+				for _, access := range tc.markerAcct.GetAccessList() {
+					assert.Len(t, access.GetAccessList(), 1, "Expecting permissions list to only one item")
+					assert.Equal(t, access.GetAccessList()[0], markertypes.Access_Transfer, "Expecting permissions to be transfer")
+					assert.Contains(t, tc.transferAuths, sdk.MustAccAddressFromBech32(access.Address), "Actual list does not contain required address")
+				}
+
 			}
 		})
 	}

@@ -98,6 +98,7 @@ func (h MarkerHooks) AddUpdateMarker(ctx sdktypes.Context, packet exported.Packe
 	return nil
 }
 
+// GetChainID returns the source chain id from packet for `07-tendermint` client connection or returns `unknown`
 func (h MarkerHooks) GetChainID(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) string {
 	chainID := "unknown"
 	channel, found := ibcKeeper.ChannelKeeper.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
