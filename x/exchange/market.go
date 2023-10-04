@@ -245,9 +245,8 @@ func (r FeeRatio) applyLooselyTo(price sdk.Coin) (sdkmath.Int, bool, error) {
 	if r.Price.Amount.IsZero() {
 		return sdkmath.ZeroInt(), false, fmt.Errorf("cannot apply ratio %s to price %s: division by zero", r, price)
 	}
-	rv := price.Amount.Mul(r.Fee.Amount)
-	mustRound := !rv.Mod(r.Price.Amount).IsZero()
-	rv = rv.Quo(r.Price.Amount)
+	rv, rem := QuoRemInt(price.Amount.Mul(r.Fee.Amount), r.Price.Amount)
+	mustRound := !rem.IsZero()
 	if mustRound {
 		rv = rv.Add(sdkmath.OneInt())
 	}

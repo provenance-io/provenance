@@ -1,6 +1,8 @@
 package exchange
 
 import (
+	"math/big"
+
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -94,4 +96,21 @@ func MinSDKInt(a, b sdkmath.Int) sdkmath.Int {
 		return a
 	}
 	return b
+}
+
+// QuoRemInt does a/b returning the integer result and remainder such that a = quo * b + rem
+// If y == 0, a division-by-zero run-time panic occurs.
+//
+// QuoRem implements T-division and modulus (like Go):
+//
+//	quo = x/y      with the result truncated to zero
+//	rem = x - y*q
+//
+// (See Daan Leijen, “Division and Modulus for Computer Scientists”.)
+func QuoRemInt(a, b sdkmath.Int) (quo sdkmath.Int, rem sdkmath.Int) {
+	var q, r big.Int
+	q.QuoRem(a.BigInt(), b.BigInt(), &r)
+	quo = sdkmath.NewIntFromBigInt(&q)
+	rem = sdkmath.NewIntFromBigInt(&r)
+	return
 }

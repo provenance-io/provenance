@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -217,6 +219,83 @@ func (o Order) Validate() error {
 	return so.Validate()
 }
 
+// Split splits this order by the provided assets filled.
+// If assets filled is zero, this order is returned as unfilled.
+// If assets filled equals this order's assets, this order is returned as filled.
+// Otherwise, two new orders are returned (copied from this order) with the appropriate assets, price, and fees.
+func (o Order) Split(assetsFilledAmt sdkmath.Int) (filled *Order, unfilled *Order, err error) {
+	orderAssets := o.GetAssets()
+	orderAssetsAmt := orderAssets.Amount
+	assetsFilled := sdk.Coin{Denom: orderAssets.Denom, Amount: assetsFilledAmt}
+
+	switch {
+	case assetsFilledAmt.Equal(orderAssetsAmt):
+		return &o, nil, nil
+	case assetsFilledAmt.IsZero():
+		return nil, &o, nil
+	case assetsFilledAmt.IsNegative():
+		return nil, nil, fmt.Errorf("cannot split %s order %d having asset %q at %q: amount filled is negative",
+			o.GetOrderType(), o.OrderId, orderAssets, assetsFilled)
+	case assetsFilledAmt.GT(orderAssetsAmt):
+		return nil, nil, fmt.Errorf("cannot split %s order %d having asset %q at %q: overfilled",
+			o.GetOrderType(), o.OrderId, orderAssets, assetsFilled)
+	}
+
+	orderPrice := o.GetPrice()
+	priceFilledAmt, priceRem := QuoRemInt(orderPrice.Amount.Mul(assetsFilledAmt), orderAssetsAmt)
+	if !priceRem.IsZero() {
+		return nil, nil, fmt.Errorf("%s order %d having assets %q cannot be partially filled by %q: "+
+			"price %q is not evenly divisible",
+			o.GetOrderType(), o.OrderId, orderAssets, assetsFilled, orderPrice)
+	}
+
+	orderFees := o.GetSettlementFees()
+	var feesFilled, feesUnfilled sdk.Coins
+	if !orderFees.IsZero() {
+		for _, orderFee := range orderFees {
+			feeFilled, feeRem := QuoRemInt(orderFee.Amount.Mul(assetsFilledAmt), orderAssetsAmt)
+			if !feeRem.IsZero() {
+				return nil, nil, fmt.Errorf("%s order %d having assets %q cannot be partially filled by %q: "+
+					"fee %q is not evenly divisible",
+					o.GetOrderType(), o.OrderId, orderAssets, assetsFilled, orderFee)
+			}
+			feesFilled = feesFilled.Add(sdk.NewCoin(orderFee.Denom, feeFilled))
+		}
+		feesUnfilled = orderFees.Sub(feesFilled...)
+		if feesFilled.IsZero() {
+			feesFilled = nil
+		}
+		if feesUnfilled.IsZero() {
+			feesUnfilled = nil
+		}
+	}
+
+	assetsUnfilled := sdk.NewCoin(orderAssets.Denom, orderAssetsAmt.Sub(assetsFilledAmt))
+	priceFilled := sdk.NewCoin(orderPrice.Denom, priceFilledAmt)
+	priceUnfilled := sdk.NewCoin(orderPrice.Denom, orderPrice.Amount.Sub(priceFilledAmt))
+
+	switch v := o.Order.(type) {
+	case *Order_AskOrder:
+		var feeFilled, feeUnfilled *sdk.Coin
+		if !feesFilled.IsZero() {
+			feeFilled = &feesFilled[0]
+		}
+		if !feesUnfilled.IsZero() {
+			feeUnfilled = &feesUnfilled[0]
+		}
+
+		filled = NewOrder(o.OrderId).WithAsk(v.AskOrder.CopyChange(assetsFilled, priceFilled, feeFilled))
+		unfilled = NewOrder(o.OrderId).WithAsk(v.AskOrder.CopyChange(assetsUnfilled, priceUnfilled, feeUnfilled))
+		return filled, unfilled, nil
+	case *Order_BidOrder:
+		filled = NewOrder(o.OrderId).WithBid(v.BidOrder.CopyChange(assetsFilled, priceFilled, feesFilled))
+		unfilled = NewOrder(o.OrderId).WithBid(v.BidOrder.CopyChange(assetsUnfilled, priceUnfilled, feesUnfilled))
+		return filled, unfilled, nil
+	default:
+		panic(fmt.Errorf("cannot split %s order %d: unknown order type", o.GetOrderType(), o.OrderId))
+	}
+}
+
 // GetMarketID returns the market id for this ask order.
 func (a AskOrder) GetMarketID() uint32 {
 	return a.MarketId
@@ -312,6 +391,18 @@ func (a AskOrder) Validate() error {
 	return errors.Join(errs...)
 }
 
+// CopyChange creates a copy of this ask order with the provided assets, price and fee.
+func (a AskOrder) CopyChange(newAssets, newPrice sdk.Coin, newFee *sdk.Coin) *AskOrder {
+	return &AskOrder{
+		MarketId:                a.MarketId,
+		Seller:                  a.Seller,
+		Assets:                  newAssets,
+		Price:                   newPrice,
+		SellerSettlementFlatFee: newFee,
+		AllowPartial:            a.AllowPartial,
+	}
+}
+
 // GetMarketID returns the market id for this bid order.
 func (b BidOrder) GetMarketID() uint32 {
 	return b.MarketId
@@ -394,4 +485,16 @@ func (b BidOrder) Validate() error {
 	// Nothing to check on the AllowPartial boolean.
 
 	return errors.Join(errs...)
+}
+
+// CopyChange creates a copy of this bid order with the provided assets, price and fees.
+func (b BidOrder) CopyChange(newAssets, newPrice sdk.Coin, newFees sdk.Coins) *BidOrder {
+	return &BidOrder{
+		MarketId:            b.MarketId,
+		Buyer:               b.Buyer,
+		Assets:              newAssets,
+		Price:               newPrice,
+		BuyerSettlementFees: newFees,
+		AllowPartial:        b.AllowPartial,
+	}
 }

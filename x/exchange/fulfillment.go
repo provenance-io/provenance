@@ -84,6 +84,15 @@ func NewOrderFulfillment(order *Order) *OrderFulfillment {
 	}
 }
 
+// NewOrderFulfillments creates a new OrderFulfillment for each of the provided orders.
+func NewOrderFulfillments(orders []*Order) []*OrderFulfillment {
+	rv := make([]*OrderFulfillment, len(orders))
+	for i, o := range orders {
+		rv[i] = NewOrderFulfillment(o)
+	}
+	return rv
+}
+
 // assetCoin returns a coin with the given amount and the same denom as this order's assets.
 func (f OrderFulfillment) assetCoin(amt sdkmath.Int) sdk.Coin {
 	return sdk.Coin{Denom: f.GetAssets().Denom, Amount: amt}
@@ -210,6 +219,15 @@ func (f *OrderFulfillment) DistributeAssets(order OrderI, amount sdkmath.Int) er
 	return nil
 }
 
+// DistributeAssets records the distribution of assets in the provided amount to/from the given fulfillments.
+func DistributeAssets(of1, of2 *OrderFulfillment, amount sdkmath.Int) error {
+	errs := []error{
+		of1.DistributeAssets(of2, amount),
+		of2.DistributeAssets(of1, amount),
+	}
+	return errors.Join(errs...)
+}
+
 // DistributePrice records the distribution of price in the provided amount to/from the given order.
 func (f *OrderFulfillment) DistributePrice(order OrderI, amount sdkmath.Int) error {
 	if f.PriceLeftAmt.LT(amount) && f.IsBidOrder() {
@@ -224,6 +242,389 @@ func (f *OrderFulfillment) DistributePrice(order OrderI, amount sdkmath.Int) err
 		Amount:  amount,
 	})
 	return nil
+}
+
+// DistributePrice records the distribution of price in the provided amount to/from the given fulfillments.
+func DistributePrice(of1, of2 *OrderFulfillment, amount sdkmath.Int) error {
+	errs := []error{
+		of1.DistributePrice(of2, amount),
+		of2.DistributePrice(of1, amount),
+	}
+	return errors.Join(errs...)
+}
+
+// SplitOrder splits this order on the amount of assets filled.
+// This order fulfillment is updated to have the filled order.
+func (f *OrderFulfillment) SplitOrder() (filled *Order, unfilled *Order, err error) {
+	filled, unfilled, err = f.Order.Split(f.AssetsFilledAmt)
+	f.Order = filled
+	f.AssetsUnfilledAmt = sdkmath.ZeroInt()
+	f.PriceLeftAmt = filled.GetPrice().Amount.Sub(f.PriceAppliedAmt)
+	return filled, unfilled, err
+}
+
+// SumAssetsAndPrice gets the sum of assets, and the sum of prices of the provided orders.
+func SumAssetsAndPrice(orders []*Order) (assets sdk.Coins, price sdk.Coins) {
+	for _, o := range orders {
+		assets = assets.Add(o.GetAssets())
+		price = price.Add(o.GetPrice())
+	}
+	return
+}
+
+// sumPriceLeft gets the sum of price left of the provided fulfillments.
+func sumPriceLeft(fulfillments []*OrderFulfillment) sdkmath.Int {
+	rv := sdkmath.ZeroInt()
+	for _, f := range fulfillments {
+		rv = rv.Add(f.PriceLeftAmt)
+	}
+	return rv
+}
+
+type Settlement struct {
+	Transfers          []*Transfer
+	FeeInputs          []banktypes.Input
+	PartialOrderFilled *Order
+	PartialOrderLeft   *Order
+}
+
+func BuildSettlement(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) (*Settlement, error) {
+	if err := validateCanSettle(askOrders, bidOrders); err != nil {
+		return nil, err
+	}
+
+	askOFs := NewOrderFulfillments(askOrders)
+	bidOFs := NewOrderFulfillments(bidOrders)
+
+	// Allocate the assets first.
+	if err := allocateAssets(askOFs, bidOFs); err != nil {
+		return nil, err
+	}
+
+	// Identify any partial order and update its entry in the order fulfillments.
+	partialyFilled, partialyUnfilled, err := splitPartial(askOFs, bidOFs)
+	if err != nil {
+		return nil, err
+	}
+
+	// Now, check that the ask price is not more than the bid price.
+	totalAskPriceAmt := sumPriceLeft(askOFs)
+	totalBidPriceAmt := sumPriceLeft(bidOFs)
+	if totalAskPriceAmt.GT(totalBidPriceAmt) {
+		return nil, fmt.Errorf("total ask price %q is greater than total bid price %q",
+			askOFs[0].priceCoin(totalAskPriceAmt), bidOFs[0].priceCoin(totalBidPriceAmt))
+	}
+
+	// Allocate the prices.
+	if err = allocatePrice(askOFs, bidOFs); err != nil {
+		return nil, err
+	}
+
+	// Set the fees in the fullfillments
+	if err = setFeesToPay(askOFs, bidOFs, sellerFeeRatio); err != nil {
+		return nil, err
+	}
+
+	if err = validateFulfillments(askOFs, bidOFs); err != nil {
+		return nil, err
+	}
+
+	// TODO[1658]: Build the transfers.
+
+	// TODO[1658]: Build the fee inputs.
+
+	settlements := &Settlement{
+		Transfers:          nil,
+		FeeInputs:          nil,
+		PartialOrderFilled: partialyFilled,
+		PartialOrderLeft:   partialyUnfilled,
+	}
+	return settlements, nil
+}
+
+// validateCanSettle does some superficial checking of the provided orders to make sure we can try to settle them.
+func validateCanSettle(askOrders, bidOrders []*Order) error {
+	var errs []error
+	if len(askOrders) == 0 {
+		errs = append(errs, errors.New("no ask orders provided"))
+	}
+	if len(bidOrders) == 0 {
+		errs = append(errs, errors.New("no bid orders provided"))
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	for i, askOrder := range askOrders {
+		if !askOrder.IsAskOrder() {
+			errs = append(errs, fmt.Errorf("%s order %d is not an ask order but is in the askOrders list at index %d",
+				askOrder.GetOrderType(), askOrder.GetOrderID(), i))
+		}
+	}
+	for i, bidOrder := range bidOrders {
+		if !bidOrder.IsBidOrder() {
+			errs = append(errs, fmt.Errorf("%s order %d is not a bid order but is in the bidOrders list at index %d",
+				bidOrder.GetOrderType(), bidOrder.GetOrderID(), i))
+		}
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	totalAssetsForSale, totalAskPrice := SumAssetsAndPrice(askOrders)
+	totalAssetsToBuy, totalBidPrice := SumAssetsAndPrice(bidOrders)
+
+	if len(totalAssetsForSale) != 1 {
+		errs = append(errs, fmt.Errorf("cannot settle with multiple ask order asset denoms %q", totalAssetsForSale))
+	}
+	if len(totalAskPrice) != 1 {
+		errs = append(errs, fmt.Errorf("cannot settle with multiple ask order price denoms %q", totalAskPrice))
+	}
+	if len(totalAssetsToBuy) != 1 {
+		errs = append(errs, fmt.Errorf("cannot settle with multiple bid order asset denoms %q", totalAssetsToBuy))
+	}
+	if len(totalBidPrice) != 1 {
+		errs = append(errs, fmt.Errorf("cannot settle with multiple bid order price denoms %q", totalBidPrice))
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	if totalAssetsForSale[0].Denom != totalAssetsToBuy[0].Denom {
+		errs = append(errs, fmt.Errorf("cannot settle different ask %q and bid %q asset denoms",
+			totalAssetsForSale, totalAssetsToBuy))
+	}
+	if totalAskPrice[0].Denom != totalBidPrice[0].Denom {
+		errs = append(errs, fmt.Errorf("cannot settle different ask %q and bid %q price denoms",
+			totalAskPrice, totalBidPrice))
+	}
+
+	// Note: We don't compare the asset and price amounts because we need to know what's
+	// being partially filled before we can make an assertions about the amounts.
+
+	return errors.Join(errs...)
+}
+
+// allocateAssets distributes the assets among the fulfillments.
+func allocateAssets(askOFs, bidOFs []*OrderFulfillment) error {
+	a, b := 0, 0
+	for a < len(askOFs) && b < len(bidOFs) {
+		assetsFilledAmt, err := GetFulfillmentAssetsAmt(askOFs[a], bidOFs[b])
+		if err != nil {
+			return err
+		}
+		if err = DistributeAssets(askOFs[a], askOFs[b], assetsFilledAmt); err != nil {
+			return err
+		}
+
+		askFilled := askOFs[a].AssetsUnfilledAmt.IsZero()
+		bidFilled := bidOFs[b].AssetsUnfilledAmt.IsZero()
+		if !askFilled && !bidFilled {
+			return fmt.Errorf("neither %s order %d nor %s order %d could have assets filled in full",
+				askOFs[a].GetOrderType(), askOFs[a].GetOrderID(), bidOFs[b].GetOrderType(), bidOFs[b].GetOrderID())
+		}
+		if askFilled {
+			a++
+		}
+		if bidFilled {
+			b++
+		}
+	}
+
+	return nil
+}
+
+// splitPartial checks the provided fulfillments for a partial order and splits it out, updating the applicable fulfillment.
+func splitPartial(askOFs, bidOFs []*OrderFulfillment) (partialyFilled, partialyUnfilled *Order, err error) {
+	lastAskI := len(askOFs) - 1
+	for i, askOF := range askOFs {
+		if askOF.AssetsFilledAmt.IsZero() {
+			return nil, nil, fmt.Errorf("%s order %d (at index %d) has no assets filled",
+				askOF.GetOrderType(), askOF.GetOrderID(), i)
+		}
+		if !askOF.AssetsUnfilledAmt.IsZero() {
+			if i != lastAskI {
+				return nil, nil, fmt.Errorf("%s order %d (at index %d) is not filled in full and is not the last ask order provided",
+					askOF.GetOrderType(), askOF.GetOrderID(), i)
+			}
+			partialyFilled, partialyUnfilled, err = askOF.SplitOrder()
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+
+	lastBidI := len(bidOFs) - 1
+	for i, bidOF := range bidOFs {
+		if bidOF.AssetsFilledAmt.IsZero() {
+			return nil, nil, fmt.Errorf("%s order %d (at index %d) has no assets filled",
+				bidOF.GetOrderType(), bidOF.GetOrderID(), i)
+		}
+		if !bidOF.AssetsUnfilledAmt.IsZero() {
+			if i != lastBidI {
+				return nil, nil, fmt.Errorf("%s order %d (at index %d) is not filled in full and is not the last bid order provided",
+					bidOF.GetOrderType(), bidOF.GetOrderID(), i)
+			}
+			if partialyFilled != nil {
+				return nil, nil, fmt.Errorf("%s order %d and %s order %d cannot both be partially filled",
+					partialyFilled.GetOrderType(), partialyFilled.GetOrderID(),
+					bidOF.GetOrderType(), bidOF.GetOrderID())
+			}
+			partialyFilled, partialyUnfilled, err = bidOF.SplitOrder()
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+
+	return partialyFilled, partialyUnfilled, err
+}
+
+// allocatePrice distributes the prices among the fulfillments.
+func allocatePrice(askOFs, bidOFs []*OrderFulfillment) error {
+	// Check that the total ask price is not more than the total bid price.
+	totalAskPriceAmt := sumPriceLeft(askOFs)
+	totalBidPriceAmt := sumPriceLeft(bidOFs)
+	if totalAskPriceAmt.GT(totalBidPriceAmt) {
+		return fmt.Errorf("total ask price %q is greater than total bid price %q",
+			askOFs[0].priceCoin(totalAskPriceAmt), bidOFs[0].priceCoin(totalBidPriceAmt))
+	}
+
+	// First pass at price distribution: Give all the asks their price.
+	b := 0
+	totalPriceFilledAmt := sdkmath.ZeroInt()
+	for _, askOF := range askOFs {
+		for askOF.PriceLeftAmt.IsPositive() && bidOFs[b].PriceLeftAmt.IsPositive() {
+			priceFilledAmt, err := GetFulfillmentPriceAmt(askOF, bidOFs[b])
+			if err != nil {
+				return err
+			}
+			if err = DistributePrice(askOF, bidOFs[b], priceFilledAmt); err != nil {
+				return err
+			}
+			totalPriceFilledAmt = totalPriceFilledAmt.Add(priceFilledAmt)
+			if !bidOFs[b].PriceLeftAmt.IsPositive() {
+				b++
+			}
+		}
+	}
+
+	// Above, we made sure that ask price <= bid price.
+	// So here, we can assume that total price filled = ask price.
+	// If it's also the total bid price, we're done!
+	if totalPriceFilledAmt.Equal(totalBidPriceAmt) {
+		return nil
+	}
+
+	// We also know that total price filled <= bid price, so bid price - total price left will be positive.
+	totalLeftoverPriceAmt := totalBidPriceAmt.Sub(totalPriceFilledAmt)
+	// We need an assets total so we can allocate the leftovers by assets amounts.
+	totalAssetsAmt := sdkmath.ZeroInt()
+	for _, askOF := range askOFs {
+		totalAssetsAmt = totalAssetsAmt.Add(askOF.AssetsFilledAmt)
+	}
+
+	// Now, distribute the leftovers per asset (truncated).
+	// Start over on the asks, but start where we left off on the bids (since that's the first with any price left).
+	a := 0
+	firstPass := true
+	leftoverPriceAmt := totalLeftoverPriceAmt
+	for !leftoverPriceAmt.IsZero() {
+		// Loop back to the first ask if we need to.
+		if a == len(askOFs) {
+			a = 0
+			firstPass = false
+		}
+
+		// If there's no bids left to get this from, something's logically wrong with this process.
+		if b >= len(bidOFs) {
+			panic(fmt.Errorf("total ask price %q, total bid price %q, difference %q, left to allocate %q: "+
+				"no bid orders left to allocate leftovers from",
+				askOFs[0].priceCoin(totalAskPriceAmt), bidOFs[0].priceCoin(totalBidPriceAmt),
+				askOFs[0].priceCoin(totalLeftoverPriceAmt), askOFs[0].priceCoin(leftoverPriceAmt)))
+		}
+
+		// Figure out how much additional price this order should get.
+		addPriceAmt := totalLeftoverPriceAmt.Mul(askOFs[a].AssetsFilledAmt).Quo(totalAssetsAmt)
+		if addPriceAmt.IsZero() {
+			if firstPass {
+				a++
+				continue
+			}
+			// If this isn't the first time through the asks, distribute at least one price to each ask.
+			addPriceAmt = sdkmath.OneInt()
+		}
+		// We can only add what's actually left over.
+		addPriceAmt = MinSDKInt(addPriceAmt, leftoverPriceAmt)
+
+		// If it can't all come out of the current bid, use the rest of what this bid has and move to the next bid.
+		for b < len(bidOFs) && bidOFs[b].PriceLeftAmt.LTE(addPriceAmt) {
+			bidPriceLeft := bidOFs[b].PriceLeftAmt
+			if err := DistributePrice(askOFs[a], bidOFs[b], bidPriceLeft); err != nil {
+				return err
+			}
+			addPriceAmt = addPriceAmt.Sub(bidPriceLeft)
+			totalPriceFilledAmt = totalPriceFilledAmt.Add(bidPriceLeft)
+			leftoverPriceAmt = leftoverPriceAmt.Sub(bidPriceLeft)
+			b++
+		}
+
+		// If there's still additional price left, it can all come out of the current bid.
+		if !addPriceAmt.IsZero() && b < len(bidOFs) {
+			if err := DistributePrice(askOFs[a], bidOFs[b], addPriceAmt); err != nil {
+				return err
+			}
+			totalPriceFilledAmt = totalPriceFilledAmt.Add(addPriceAmt)
+			leftoverPriceAmt = leftoverPriceAmt.Sub(addPriceAmt)
+			// If that was all of it, move on to the next.
+			if bidOFs[b].PriceLeftAmt.IsZero() {
+				b++
+			}
+		}
+
+		// Move on to the next ask.
+		a++
+	}
+
+	return nil
+}
+
+// setFeesToPay sets the FeesToPay on each fulfillment.
+func setFeesToPay(askOFs, bidOFs []*OrderFulfillment, sellerFeeRatio *FeeRatio) error {
+	var errs []error
+	for _, askOF := range askOFs {
+		askOF.FeesToPay = askOF.GetSettlementFees()
+		if sellerFeeRatio != nil {
+			fee, err := sellerFeeRatio.ApplyToLoosely(askOF.GetPriceApplied())
+			if err != nil {
+				errs = append(errs, fmt.Errorf("failed calculate ratio fee for %s order %d: %w",
+					askOF.GetOrderType(), askOF.GetOrderID(), err))
+			}
+			askOF.FeesToPay = askOF.FeesToPay.Add(fee)
+		}
+	}
+
+	for _, bidOF := range bidOFs {
+		bidOF.FeesToPay = bidOF.GetSettlementFees()
+	}
+
+	return errors.Join(errs...)
+}
+
+// validateFulfillments runs .Validate on each fulfillment, returning any problems.
+func validateFulfillments(askOFs, bidOFs []*OrderFulfillment) error {
+	var errs []error
+	for _, askOF := range askOFs {
+		if err := askOF.Validate(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	for _, bidOF := range bidOFs {
+		if err := bidOF.Validate(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
 }
 
 // Apply adjusts this order fulfillment using the provided info.
@@ -300,7 +701,7 @@ func (f *OrderFulfillment) Finalize(sellerFeeRatio *FeeRatio) (err error) {
 
 	// AssetsFilledAmt cannot be zero here because we'll be dividing by it.
 	// AssetsFilledAmt cannot be negative here because we can't have negative values from the calcs.
-	// Checking for assets filled > zero here (instead of in Validate) because we need to divide by it in here.
+	// Checking for assets filled > zero here (instead of in Validate2) because we need to divide by it in here.
 	if !f.AssetsFilledAmt.IsPositive() {
 		return fmt.Errorf("no assets filled in %s order %d", f.GetOrderType(), f.GetOrderID())
 	}
@@ -405,9 +806,41 @@ func (f *OrderFulfillment) Finalize(sellerFeeRatio *FeeRatio) (err error) {
 	return nil
 }
 
-// Validate does some final validation and sanity checking on this order fulfillment.
-// It's assumed that Finalize has been called before calling this.
+// Validate makes sure the assets filled and price applied are acceptable for this fulfillment.
 func (f OrderFulfillment) Validate() error {
+	// Make sure:
+	// * order assets = assets filled
+	// * order price <= price applied (ask orders)
+	// * order price = price applied (bid orders)
+
+	orderPrice := f.GetPrice()
+	switch {
+	case f.IsAskOrder():
+		if orderPrice.Amount.GT(f.PriceAppliedAmt) {
+			return fmt.Errorf("%s order %d price %q is less than price filled %q",
+				f.GetOrderType(), f.GetOrderID(), orderPrice, f.GetPriceApplied())
+		}
+	case f.IsBidOrder():
+		if !orderPrice.Amount.Equal(f.PriceAppliedAmt) {
+			return fmt.Errorf("%s order %d price %q is not equal to price filled %q",
+				f.GetOrderType(), f.GetOrderID(), orderPrice, f.GetPriceApplied())
+		}
+	default:
+		return fmt.Errorf("%s order %d: unknown order type", f.GetOrderType(), f.GetOrderID())
+	}
+
+	orderAssets := f.GetAssets()
+	if orderAssets.Amount != f.AssetsFilledAmt {
+		return fmt.Errorf("%s order %d assets %q does not equal filled assets %q",
+			f.GetOrderType(), f.GetOrderID(), orderAssets, f.GetAssetsFilled())
+	}
+
+	return nil
+}
+
+// Validate2 does some final validation and sanity checking on this order fulfillment.
+// It's assumed that Finalize has been called before calling this.
+func (f OrderFulfillment) Validate2() error {
 	if _, err := f.Order.GetSubOrder(); err != nil {
 		return err
 	}
@@ -559,7 +992,7 @@ func (f OrderFulfillment) Validate() error {
 		}
 	default:
 		// The only way to trigger this would be to add a new order type but not add a case for it in this switch.
-		panic(fmt.Errorf("case missing for %T in Validate", f.GetOrderType()))
+		panic(fmt.Errorf("case missing for %T in Validate2", f.GetOrderType()))
 	}
 
 	// Saving this simple check for last in the hopes that a previous error exposes why this
@@ -629,11 +1062,19 @@ func GetFulfillmentAssetsAmt(of1, of2 *OrderFulfillment) (sdkmath.Int, error) {
 			of2.GetOrderType(), of2.GetOrderID(), of2.GetAssetsUnfilled())
 	}
 
-	// Return the lesser of the two.
-	if of1.AssetsUnfilledAmt.LTE(of2.AssetsUnfilledAmt) {
-		return of1.AssetsUnfilledAmt, nil
+	return MinSDKInt(of1.AssetsUnfilledAmt, of2.AssetsUnfilledAmt), nil
+}
+
+// GetFulfillmentPriceAmt figures out the price that can be fulfilled with the two provided orders.
+func GetFulfillmentPriceAmt(of1, of2 *OrderFulfillment) (sdkmath.Int, error) {
+	if !of1.PriceLeftAmt.IsPositive() || !of2.PriceLeftAmt.IsPositive() {
+		return sdkmath.ZeroInt(), fmt.Errorf("cannot fill %s order %d having price left %q "+
+			"with %s order %d having price left %q: zero or negative price left",
+			of1.GetOrderType(), of1.GetOrderID(), of1.GetPriceLeft(),
+			of2.GetOrderType(), of2.GetOrderID(), of2.GetPriceLeft())
 	}
-	return of2.AssetsUnfilledAmt, nil
+
+	return MinSDKInt(of1.PriceLeftAmt, of2.PriceLeftAmt), nil
 }
 
 // Fulfillments contains information on how orders are to be fulfilled.
@@ -755,12 +1196,12 @@ func BuildFulfillments(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) 
 
 	// And make sure they're all valid.
 	for _, askOF := range askOFs {
-		if err := askOF.Validate(); err != nil {
+		if err := askOF.Validate2(); err != nil {
 			return nil, err
 		}
 	}
 	for _, bidOF := range bidOFs {
-		if err := bidOF.Validate(); err != nil {
+		if err := bidOF.Validate2(); err != nil {
 			return nil, err
 		}
 	}
@@ -889,7 +1330,7 @@ type SettlementTransfers struct {
 }
 
 // BuildSettlementTransfers creates all the order transfers needed for the provided fulfillments.
-// Assumes that all fulfillments have passed Validate.
+// Assumes that all fulfillments have passed Validate2.
 // Panics if any amounts are negative.
 func BuildSettlementTransfers(f *Fulfillments) *SettlementTransfers {
 	allOFs := make([]*OrderFulfillment, 0, len(f.AskOFs)+len(f.BidOFs))
@@ -916,7 +1357,7 @@ func BuildSettlementTransfers(f *Fulfillments) *SettlementTransfers {
 }
 
 // GetAssetTransfer gets the inputs and outputs to facilitate the transfers of assets for this order fulfillment.
-// Assumes that the fulfillment has passed Validate already.
+// Assumes that the fulfillment has passed Validate2 already.
 // Panics if any amounts are negative or if it's neither a bid nor ask order.
 func GetAssetTransfer(f *OrderFulfillment) *Transfer {
 	indexedSplits := newIndexedAddrAmts()
@@ -943,7 +1384,7 @@ func GetAssetTransfer(f *OrderFulfillment) *Transfer {
 }
 
 // GetPriceTransfer gets the inputs and outputs to facilitate the transfers for the price of this order fulfillment.
-// Assumes that the fulfillment has passed Validate already.
+// Assumes that the fulfillment has passed Validate2 already.
 // Panics if any amounts are negative or if it's neither a bid nor ask order.
 func GetPriceTransfer(f *OrderFulfillment) *Transfer {
 	indexedSplits := newIndexedAddrAmts()

@@ -1174,6 +1174,8 @@ func TestOrder_Validate(t *testing.T) {
 	}
 }
 
+// TODO[1658]: func TestOrder_Split(t *testing.T)
+
 func TestAskOrder_GetMarketID(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -1633,6 +1635,8 @@ func TestAskOrder_Validate(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1658]: func TestAskOrder_CopyChange(t *testing.T)
 
 func TestBidOrder_GetMarketID(t *testing.T) {
 	tests := []struct {
@@ -2110,3 +2114,5 @@ func TestBidOrder_Validate(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1658]: func TestBidOrder_CopyChange(t *testing.T)

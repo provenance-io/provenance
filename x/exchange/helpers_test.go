@@ -1,6 +1,7 @@
 package exchange
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,6 +9,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 func TestEqualsUint64(t *testing.T) {
@@ -737,6 +739,169 @@ func TestMinSDKInt(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "MinSDKInt(%s, %s)", tc.a, tc.b)
 			assert.Equal(t, tc.exp, actual, "MinSDKInt(%s, %s)", tc.a, tc.b)
+		})
+	}
+}
+
+func TestQuoRemInt(t *testing.T) {
+	amtRx, err := regexp.Compile(`[,_ ]`)
+	require.NoError(t, err, "regexp.Compile(`[,_ ]`) error")
+	newInt := func(amount string) sdkmath.Int {
+		amt := amtRx.ReplaceAllString(amount, "")
+		rv, ok := sdkmath.NewIntFromString(amt)
+		require.True(t, ok, "sdkmath.NewIntFromString(%q) ok bool", amt)
+		return rv
+	}
+
+	tests := []struct {
+		name     string
+		a        sdkmath.Int
+		b        sdkmath.Int
+		expQuo   sdkmath.Int
+		expRem   sdkmath.Int
+		expPanic string
+	}{
+		{
+			name:     "1/0",
+			a:        sdkmath.NewInt(1),
+			b:        sdkmath.NewInt(0),
+			expPanic: "division by zero",
+		},
+		{
+			name:   "0/1",
+			a:      sdkmath.NewInt(0),
+			b:      sdkmath.NewInt(1),
+			expQuo: sdkmath.NewInt(0),
+			expRem: sdkmath.NewInt(0),
+		},
+		{
+			name:   "0/-1",
+			a:      sdkmath.NewInt(0),
+			b:      sdkmath.NewInt(-1),
+			expQuo: sdkmath.NewInt(0),
+			expRem: sdkmath.NewInt(0),
+		},
+		{
+			name:   "16/2",
+			a:      sdkmath.NewInt(16),
+			b:      sdkmath.NewInt(2),
+			expQuo: sdkmath.NewInt(8),
+			expRem: sdkmath.NewInt(0),
+		},
+		{
+			name:   "-16/2",
+			a:      sdkmath.NewInt(-16),
+			b:      sdkmath.NewInt(2),
+			expQuo: sdkmath.NewInt(-8),
+			expRem: sdkmath.NewInt(0),
+		},
+		{
+			name:   "16/-2",
+			a:      sdkmath.NewInt(16),
+			b:      sdkmath.NewInt(-2),
+			expQuo: sdkmath.NewInt(-8),
+			expRem: sdkmath.NewInt(0),
+		},
+		{
+			name:   "-16/-2",
+			a:      sdkmath.NewInt(-16),
+			b:      sdkmath.NewInt(-2),
+			expQuo: sdkmath.NewInt(8),
+			expRem: sdkmath.NewInt(0),
+		},
+		{
+			name:   "17/2",
+			a:      sdkmath.NewInt(17),
+			b:      sdkmath.NewInt(2),
+			expQuo: sdkmath.NewInt(8),
+			expRem: sdkmath.NewInt(1),
+		},
+		{
+			name:   "-17/2",
+			a:      sdkmath.NewInt(-17),
+			b:      sdkmath.NewInt(2),
+			expQuo: sdkmath.NewInt(-8),
+			expRem: sdkmath.NewInt(-1),
+		},
+		{
+			name:   "17/-2",
+			a:      sdkmath.NewInt(17),
+			b:      sdkmath.NewInt(-2),
+			expQuo: sdkmath.NewInt(-8),
+			expRem: sdkmath.NewInt(1),
+		},
+		{
+			name:   "-17/-2",
+			a:      sdkmath.NewInt(-17),
+			b:      sdkmath.NewInt(-2),
+			expQuo: sdkmath.NewInt(8),
+			expRem: sdkmath.NewInt(-1),
+		},
+		{
+			name:   "54321/987",
+			a:      sdkmath.NewInt(54321),
+			b:      sdkmath.NewInt(987),
+			expQuo: sdkmath.NewInt(55),
+			expRem: sdkmath.NewInt(36),
+		},
+		{
+			name:   "-54321/987",
+			a:      sdkmath.NewInt(-54321),
+			b:      sdkmath.NewInt(987),
+			expQuo: sdkmath.NewInt(-55),
+			expRem: sdkmath.NewInt(-36),
+		},
+		{
+			name:   "54321/-987",
+			a:      sdkmath.NewInt(54321),
+			b:      sdkmath.NewInt(-987),
+			expQuo: sdkmath.NewInt(-55),
+			expRem: sdkmath.NewInt(36),
+		},
+		{
+			name:   "-54321/-987",
+			a:      sdkmath.NewInt(-54321),
+			b:      sdkmath.NewInt(-987),
+			expQuo: sdkmath.NewInt(55),
+			expRem: sdkmath.NewInt(-36),
+		},
+		{
+			name:   "(10^30+5)/(10^27)",
+			a:      newInt("1,000,000,000,000,000,000,000,000,000,005"),
+			b:      newInt("1,000,000,000,000,000,000,000,000,000"),
+			expQuo: sdkmath.NewInt(1000),
+			expRem: sdkmath.NewInt(5),
+		},
+		{
+			name:   "(2*10^30+3*10^9+7)/1,000)",
+			a:      newInt("2,000,000,000,000,000,000,003,000,000,007"),
+			b:      newInt("1,000"),
+			expQuo: newInt("2,000,000,000,000,000,000,003,000,000"),
+			expRem: sdkmath.NewInt(7),
+		},
+		{
+			name:   "(3*10^30+9*10^26)/(10^27)",
+			a:      newInt("3,000,900,000,000,000,000,000,000,000,000"),
+			b:      newInt("1,000,000,000,000,000,000,000,000,000"),
+			expQuo: sdkmath.NewInt(3000),
+			expRem: newInt("900,000,000,000,000,000,000,000,000"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var quo, rem sdkmath.Int
+			testFunc := func() {
+				quo, rem = QuoRemInt(tc.a, tc.b)
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "QuoRemInt(%s, %s)", tc.a, tc.b)
+			if len(tc.expPanic) == 0 {
+				assert.Equal(t, tc.expQuo.String(), quo.String(), "QuoRemInt(%s, %s) quo", tc.a, tc.b)
+				assert.Equal(t, tc.expRem.String(), rem.String(), "QuoRemInt(%s, %s) rem", tc.a, tc.b)
+				// check that a = quo * b + rem is true regardless of the test's expected values.
+				expA := quo.Mul(tc.b).Add(rem)
+				assert.Equal(t, expA.String(), tc.a.String(), "quo * b + rem vs a")
+			}
 		})
 	}
 }

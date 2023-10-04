@@ -215,6 +215,8 @@ func TestNewOrderFulfillment(t *testing.T) {
 	}
 }
 
+// TODO[1658]: TestNewOrderFulfillments(t *testing.T)
+
 func TestOrderFulfillment_GetAssetsFilled(t *testing.T) {
 	coin := func(amt int64) sdk.Coin {
 		return sdk.Coin{Denom: "asset", Amount: sdkmath.NewInt(amt)}
@@ -913,6 +915,34 @@ func TestOrderFulfillment_GetHoldAmount(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1658]: func TestOrderFulfillment_DistributeAssets(t *testing.T)
+
+// TODO[1658]: func TestDistributeAssets(t *testing.T)
+
+// TODO[1658]: func TestOrderFulfillment_DistributePrice(t *testing.T)
+
+// TODO[1658]: func TestDistributePrice(t *testing.T)
+
+// TODO[1658]: func TestOrderFulfillment_SplitOrder(t *testing.T)
+
+// TODO[1658]: func TestSumAssetsAndPrice(t *testing.T)
+
+// TODO[1658]: func TestSumPriceLeft(t *testing.T)
+
+// TODO[1658]: func TestBuildSettlement(t *testing.T)
+
+// TODO[1658]: func TestValidateCanSettle(t *testing.T)
+
+// TODO[1658]: func TestAllocateAssets(t *testing.T)
+
+// TODO[1658]: func TestSplitPartial(t *testing.T)
+
+// TODO[1658]: func TestAllocatePrice(t *testing.T)
+
+// TODO[1658]: func TestSetFeesToPay(t *testing.T)
+
+// TODO[1658]: func TestValidateFulfillments(t *testing.T)
 
 // assertEqualOrderFulfillments asserts that the two order fulfillments are equal.
 // Returns true if equal.
@@ -2091,7 +2121,9 @@ func TestOrderFulfillment_Finalize(t *testing.T) {
 	}
 }
 
-func TestOrderFulfillment_Validate(t *testing.T) {
+// TODO[1658]: func TestOrderFulfillment_Validate(t *testing.T)
+
+func TestOrderFulfillment_Validate2(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
@@ -3247,10 +3279,10 @@ func TestOrderFulfillment_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var err error
 			testFunc := func() {
-				err = tc.receiver.Validate()
+				err = tc.receiver.Validate2()
 			}
-			require.NotPanics(t, testFunc, "Validate")
-			assertions.AssertErrorValue(t, err, tc.expErr, "Validate error")
+			require.NotPanics(t, testFunc, "Validate2")
+			assertions.AssertErrorValue(t, err, tc.expErr, "Validate2 error")
 		})
 	}
 }
@@ -4142,6 +4174,8 @@ func TestGetFulfillmentAssetsAmt(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1658]: func TestGetFulfillmentPriceAmt(t *testing.T)
 
 func TestNewPartialFulfillment(t *testing.T) {
 	sdkNewInt64CoinP := func(denom string, amt int64) *sdk.Coin {
