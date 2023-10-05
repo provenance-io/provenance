@@ -23,6 +23,7 @@ import (
 	ibcratelimitclient "github.com/provenance-io/provenance/x/ibcratelimit/client"
 	ibcratelimitcli "github.com/provenance-io/provenance/x/ibcratelimit/client/cli"
 	"github.com/provenance-io/provenance/x/ibcratelimit/client/grpc"
+	"github.com/provenance-io/provenance/x/ibcratelimit/simulation"
 	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 )
 
@@ -98,9 +99,8 @@ func NewAppModule(ics4wrapper ibcratelimit.ICS4Wrapper) AppModule {
 }
 
 // GenerateGenesisState creates a randomized GenState of the ibcratelimit module.
-func (am AppModule) GenerateGenesisState(_ *module.SimulationState) {
-	// Todo When we finish simulation
-	// simulation.RandomizedGenState(simState)
+func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents returns content functions used to simulate governance proposals.
