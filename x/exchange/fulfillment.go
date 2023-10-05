@@ -297,7 +297,7 @@ type Settlement struct {
 }
 
 // BuildSettlement processes the provided orders, identifying how the provided orders can be settled.
-func BuildSettlement(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) (*Settlement, error) {
+func BuildSettlement(askOrders, bidOrders []*Order, sellerFeeRatioLookup func(denom string) (*FeeRatio, error)) (*Settlement, error) {
 	if err := validateCanSettle(askOrders, bidOrders); err != nil {
 		return nil, err
 	}
@@ -329,6 +329,11 @@ func BuildSettlement(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) (*
 		return nil, err
 	}
 
+	sellerFeeRatio, err := sellerFeeRatioLookup(askOFs[0].GetPrice().Denom)
+	if err != nil {
+		return nil, err
+	}
+
 	// Set the fees in the fullfillments
 	if err = setFeesToPay(askOFs, bidOFs, sellerFeeRatio); err != nil {
 		return nil, err
@@ -338,7 +343,7 @@ func BuildSettlement(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) (*
 		return nil, err
 	}
 
-	settlement.Transfers, settlement.FeeInputs, err = buildTransfers(askOFs, bidOFs)
+	err = buildTransfers(askOFs, bidOFs, settlement)
 	if err != nil {
 		return nil, err
 	}
@@ -639,8 +644,9 @@ func validateFulfillments(askOFs, bidOFs []*OrderFulfillment) error {
 	return errors.Join(errs...)
 }
 
-// buildTransfers creates the transfers and inputs for fee payments.
-func buildTransfers(askOFs, bidOFs []*OrderFulfillment) ([]*Transfer, []banktypes.Input, error) {
+// buildTransfers creates the transfers, inputs for fee payments,
+// and fee total and sets those fields in the provided Settlement.
+func buildTransfers(askOFs, bidOFs []*OrderFulfillment, settlement *Settlement) error {
 	allOFs := make([]*OrderFulfillment, 0, len(askOFs)+len(bidOFs))
 	allOFs = append(allOFs, askOFs...)
 	allOFs = append(allOFs, bidOFs...)
@@ -669,19 +675,19 @@ func buildTransfers(askOFs, bidOFs []*OrderFulfillment) ([]*Transfer, []banktype
 				errs = append(errs, fmt.Errorf("%s order %d cannot pay %q in fees: negative amount",
 					of.GetOrderType(), of.GetOrderID(), of.FeesToPay))
 			} else {
-				fees := sdk.NewCoins(of.FeesToPay...)
-				indexedFees.add(of.GetOwner(), fees...)
+				indexedFees.add(of.GetOwner(), of.FeesToPay...)
 			}
 		}
 	}
 
 	if len(errs) > 0 {
-		return nil, nil, errors.Join(errs...)
+		return errors.Join(errs...)
 	}
 
-	feeInputs := indexedFees.getAsInputs()
+	settlement.Transfers = transfers
+	settlement.FeeInputs = indexedFees.getAsInputs()
 
-	return transfers, feeInputs, nil
+	return nil
 }
 
 // getAssetTransfer gets the inputs and outputs to facilitate the transfers of assets for this order fulfillment.

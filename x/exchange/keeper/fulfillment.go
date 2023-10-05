@@ -299,72 +299,31 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 		return errors.Join(aoerr, boerr)
 	}
 
-	totalAssetsForSale, totalAskPrice := sumAssetsAndPrice(askOrders)
-	totalAssetsToBuy, totalBidPrice := sumAssetsAndPrice(bidOrders)
-
-	var errs []error
-	if len(totalAssetsForSale) != 1 {
-		errs = append(errs, fmt.Errorf("cannot settle with multiple ask order asset denoms %q", totalAssetsForSale))
-	}
-	if len(totalAskPrice) != 1 {
-		errs = append(errs, fmt.Errorf("cannot settle with multiple ask order price denoms %q", totalAskPrice))
-	}
-	if len(totalAssetsToBuy) != 1 {
-		errs = append(errs, fmt.Errorf("cannot settle with multiple bid order asset denoms %q", totalAssetsToBuy))
-	}
-	if len(totalBidPrice) != 1 {
-		errs = append(errs, fmt.Errorf("cannot settle with multiple bid order price denoms %q", totalBidPrice))
-	}
-	if len(errs) > 0 {
-		return errors.Join(errs...)
+	ratioGetter := func(denom string) (*exchange.FeeRatio, error) {
+		return getSellerSettlementRatio(store, marketID, denom)
 	}
 
-	if totalAssetsForSale[0].Denom != totalAssetsToBuy[0].Denom {
-		errs = append(errs, fmt.Errorf("cannot settle different ask %q and bid %q asset denoms",
-			totalAssetsForSale, totalAssetsToBuy))
-	}
-	if totalAskPrice[0].Denom != totalBidPrice[0].Denom {
-		errs = append(errs, fmt.Errorf("cannot settle different ask %q and bid %q price denoms",
-			totalAskPrice, totalBidPrice))
-	}
-	if len(errs) > 0 {
-		return errors.Join(errs...)
-	}
-
-	isPartial := !exchange.CoinsEquals(totalAssetsForSale, totalAssetsToBuy)
-	if !expectPartial && isPartial {
-		return fmt.Errorf("total assets for sale %q does not equal total assets to buy %q and partial settlement not expected",
-			totalAssetsForSale, totalAssetsToBuy)
-	}
-	if expectPartial && !isPartial {
-		return fmt.Errorf("total assets for sale %q equals total assets to buy %q but partial settlement is expected",
-			totalAssetsForSale, totalAssetsToBuy)
-	}
-
-	sellerFeeRatio, err := getSellerSettlementRatio(store, marketID, totalAskPrice[0].Denom)
+	settlement, err := exchange.BuildSettlement(askOrders, bidOrders, ratioGetter)
 	if err != nil {
 		return err
 	}
 
-	fulfillments, err := exchange.BuildFulfillments(askOrders, bidOrders, sellerFeeRatio)
-	if err != nil {
-		return err
+	if !expectPartial && settlement.PartialOrderFilled != nil {
+		return fmt.Errorf("settlement resulted in unexpected partial order %d", settlement.PartialOrderFilled.GetOrderID())
 	}
-
-	if !expectPartial && fulfillments.PartialOrder != nil {
-		return fmt.Errorf("settlement resulted in unexpected partial order %d", fulfillments.PartialOrder.NewOrder.GetOrderID())
-	}
-	if expectPartial && fulfillments.PartialOrder == nil {
+	if expectPartial && settlement.PartialOrderFilled == nil {
 		return errors.New("settlement unexpectedly resulted in all orders fully filled")
 	}
 
-	for _, order := range askOrders {
+	// Release the holds!!!!
+	var errs []error
+	for _, order := range settlement.FullyFilledOrders {
 		if err = k.releaseHoldOnOrder(ctx, order); err != nil {
 			errs = append(errs, err)
 		}
 	}
-	for _, order := range bidOrders {
-		if err = k.releaseHoldOnOrder(ctx, order); err != nil {
+	if settlement.PartialOrderFilled != nil {
+		if err = k.releaseHoldOnOrder(ctx, settlement.PartialOrderFilled); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -372,47 +331,39 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 		return errors.Join(errs...)
 	}
 
-	transfers := exchange.BuildSettlementTransfers(fulfillments)
-
-	for _, transfer := range transfers.OrderTransfers {
+	// Transfer all the things!!!!
+	for _, transfer := range settlement.Transfers {
 		if err = k.DoTransfer(ctx, transfer.Inputs, transfer.Outputs); err != nil {
 			return err
 		}
 	}
 
-	if err = k.CollectFees(ctx, marketID, transfers.FeeInputs); err != nil {
+	// Collect all the fees (not as exciting).
+	if err = k.CollectFees(ctx, marketID, settlement.FeeInputs); err != nil {
 		return err
 	}
 
-	if fulfillments.PartialOrder != nil {
-		order := fulfillments.PartialOrder.NewOrder
-		if err = k.setOrderInStore(store, *order); err != nil {
-			return fmt.Errorf("could not update partial %s order %d: %w", order.GetOrderType(), order.OrderId, err)
-		}
-		if err = k.placeHoldOnOrder(ctx, fulfillments.PartialOrder.NewOrder); err != nil {
-			return fmt.Errorf("could not replace hold on partial %s order %d: %w", order.GetOrderType(), order.OrderId, err)
+	// Update the partial order if there was one.
+	if settlement.PartialOrderLeft != nil {
+		if err = k.setOrderInStore(store, *settlement.PartialOrderLeft); err != nil {
+			return fmt.Errorf("could not update partial %s order %d: %w",
+				settlement.PartialOrderLeft.GetOrderType(), settlement.PartialOrderLeft.OrderId, err)
 		}
 	}
 
+	// And emit all the needed events.
 	events := make([]proto.Message, 0, len(askOrders)+len(bidOrders))
-	for _, order := range askOrders {
-		if fulfillments.PartialOrder != nil && fulfillments.PartialOrder.NewOrder.OrderId != order.OrderId {
-			events = append(events, exchange.NewEventOrderFilled(order.OrderId))
-		}
+	for _, order := range settlement.FullyFilledOrders {
+		events = append(events, exchange.NewEventOrderFilled(order.OrderId))
 	}
-	for _, order := range bidOrders {
-		if fulfillments.PartialOrder != nil && fulfillments.PartialOrder.NewOrder.OrderId != order.OrderId {
-			events = append(events, exchange.NewEventOrderFilled(order.OrderId))
-		}
-	}
-	if fulfillments.PartialOrder != nil {
+	if settlement.PartialOrderFilled != nil {
 		events = append(events, exchange.NewEventOrderPartiallyFilled(
-			fulfillments.PartialOrder.NewOrder.OrderId,
-			fulfillments.PartialOrder.AssetsFilled,
-			fulfillments.PartialOrder.PriceFilled,
+			settlement.PartialOrderFilled.OrderId,
+			settlement.PartialOrderFilled.GetAssets(),
+			settlement.PartialOrderFilled.GetPrice(),
 		))
 	}
-
 	k.emitEvents(ctx, events)
+
 	return nil
 }
