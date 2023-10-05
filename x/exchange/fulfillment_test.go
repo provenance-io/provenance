@@ -1424,13 +1424,193 @@ func TestOrderFulfillment_SplitOrder(t *testing.T) {
 }
 
 func TestSumAssetsAndPrice(t *testing.T) {
-	// TODO[1658]: func TestSumAssetsAndPrice(t *testing.T)
-	t.Skipf("not written")
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	askOrder := func(orderID uint64, assets, price sdk.Coin) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			Assets: assets,
+			Price:  price,
+		})
+	}
+	bidOrder := func(orderID uint64, assets, price sdk.Coin) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			Assets: assets,
+			Price:  price,
+		})
+	}
+
+	tests := []struct {
+		name      string
+		orders    []*Order
+		expAssets sdk.Coins
+		expPrice  sdk.Coins
+		expPanic  string
+	}{
+		{
+			name:      "nil orders",
+			orders:    nil,
+			expAssets: nil,
+			expPrice:  nil,
+		},
+		{
+			name:      "empty orders",
+			orders:    []*Order{},
+			expAssets: nil,
+			expPrice:  nil,
+		},
+		{
+			name: "nil inside order",
+			orders: []*Order{
+				askOrder(1, coin(2, "apple"), coin(3, "plum")),
+				NewOrder(4),
+				askOrder(5, coin(6, "apple"), coin(7, "plum")),
+			},
+			expPanic: "order 4 has unknown sub-order type <nil>: does not implement SubOrderI",
+		},
+		{
+			name: "unknown inside order",
+			orders: []*Order{
+				askOrder(1, coin(2, "apple"), coin(3, "plum")),
+				newUnknownOrder(4),
+				askOrder(5, coin(6, "apple"), coin(7, "plum")),
+			},
+			expPanic: "order 4 has unknown sub-order type *exchange.unknownOrderType: does not implement SubOrderI",
+		},
+		{
+			name:      "one order, ask",
+			orders:    []*Order{askOrder(1, coin(2, "apple"), coin(3, "plum"))},
+			expAssets: sdk.NewCoins(coin(2, "apple")),
+			expPrice:  sdk.NewCoins(coin(3, "plum")),
+		},
+		{
+			name:      "one order, bid",
+			orders:    []*Order{bidOrder(1, coin(2, "apple"), coin(3, "plum"))},
+			expAssets: sdk.NewCoins(coin(2, "apple")),
+			expPrice:  sdk.NewCoins(coin(3, "plum")),
+		},
+		{
+			name: "2 orders, same denoms",
+			orders: []*Order{
+				askOrder(1, coin(2, "apple"), coin(3, "plum")),
+				bidOrder(4, coin(5, "apple"), coin(6, "plum")),
+			},
+			expAssets: sdk.NewCoins(coin(7, "apple")),
+			expPrice:  sdk.NewCoins(coin(9, "plum")),
+		},
+		{
+			name: "2 orders, diff denoms",
+			orders: []*Order{
+				bidOrder(1, coin(2, "avocado"), coin(3, "peach")),
+				askOrder(4, coin(5, "apple"), coin(6, "plum")),
+			},
+			expAssets: sdk.NewCoins(coin(2, "avocado"), coin(5, "apple")),
+			expPrice:  sdk.NewCoins(coin(3, "peach"), coin(6, "plum")),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var assets, price sdk.Coins
+			testFunc := func() {
+				assets, price = sumAssetsAndPrice(tc.orders)
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "sumAssetsAndPrice")
+			assert.Equal(t, tc.expAssets.String(), assets.String(), "sumAssetsAndPrice")
+			assert.Equal(t, tc.expPrice.String(), price.String(), "sumAssetsAndPrice")
+		})
+	}
 }
 
 func TestSumPriceLeft(t *testing.T) {
-	// TODO[1658]: func TestSumPriceLeft(t *testing.T)
-	t.Skipf("not written")
+	tests := []struct {
+		name         string
+		fulfillments []*OrderFulfillment
+		expected     sdkmath.Int
+	}{
+		{
+			name:         "nil fulfillments",
+			fulfillments: nil,
+			expected:     sdkmath.NewInt(0),
+		},
+		{
+			name:         "empty fulfillments",
+			fulfillments: []*OrderFulfillment{},
+			expected:     sdkmath.NewInt(0),
+		},
+		{
+			name:         "one fulfillment, positive",
+			fulfillments: []*OrderFulfillment{{PriceLeftAmt: sdkmath.NewInt(8)}},
+			expected:     sdkmath.NewInt(8),
+		},
+		{
+			name:         "one fulfillment, zero",
+			fulfillments: []*OrderFulfillment{{PriceLeftAmt: sdkmath.NewInt(0)}},
+			expected:     sdkmath.NewInt(0),
+		},
+		{
+			name:         "one fulfillment, negative",
+			fulfillments: []*OrderFulfillment{{PriceLeftAmt: sdkmath.NewInt(-3)}},
+			expected:     sdkmath.NewInt(-3),
+		},
+		{
+			name: "three fulfillments",
+			fulfillments: []*OrderFulfillment{
+				{PriceLeftAmt: sdkmath.NewInt(10)},
+				{PriceLeftAmt: sdkmath.NewInt(200)},
+				{PriceLeftAmt: sdkmath.NewInt(3000)},
+			},
+			expected: sdkmath.NewInt(3210),
+		},
+		{
+			name: "three fulfillments, one negative",
+			fulfillments: []*OrderFulfillment{
+				{PriceLeftAmt: sdkmath.NewInt(10)},
+				{PriceLeftAmt: sdkmath.NewInt(-200)},
+				{PriceLeftAmt: sdkmath.NewInt(3000)},
+			},
+			expected: sdkmath.NewInt(2810),
+		},
+		{
+			name: "three fulfillments, all negative",
+			fulfillments: []*OrderFulfillment{
+				{PriceLeftAmt: sdkmath.NewInt(-10)},
+				{PriceLeftAmt: sdkmath.NewInt(-200)},
+				{PriceLeftAmt: sdkmath.NewInt(-3000)},
+			},
+			expected: sdkmath.NewInt(-3210),
+		},
+		{
+			name: "three fulfillments, all large",
+			fulfillments: []*OrderFulfillment{
+				{PriceLeftAmt: newInt(t, "3,000,000,000,000,000,000,000,000,000,000,300")},
+				{PriceLeftAmt: newInt(t, "40,000,000,000,000,000,000,000,000,000,000,040")},
+				{PriceLeftAmt: newInt(t, "500,000,000,000,000,000,000,000,000,000,000,005")},
+			},
+			expected: newInt(t, "543,000,000,000,000,000,000,000,000,000,000,345"),
+		},
+		{
+			name: "four fullfillments, small negative zero large",
+			fulfillments: []*OrderFulfillment{
+				{PriceLeftAmt: sdkmath.NewInt(654_789)},
+				{PriceLeftAmt: sdkmath.NewInt(-789)},
+				{PriceLeftAmt: sdkmath.NewInt(0)},
+				{PriceLeftAmt: newInt(t, "543,000,000,000,000,000,000,000,000,000,000,345")},
+			},
+			expected: newInt(t, "543,000,000,000,000,000,000,000,000,000,654,345"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual sdkmath.Int
+			testFunc := func() {
+				actual = sumPriceLeft(tc.fulfillments)
+			}
+			require.NotPanics(t, testFunc, "sumPriceLeft")
+			assert.Equal(t, tc.expected, actual, "sumPriceLeft")
+		})
+	}
 }
 
 func TestBuildSettlement(t *testing.T) {
