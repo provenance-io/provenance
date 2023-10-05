@@ -2024,8 +2024,124 @@ func TestDistributePrice(t *testing.T) {
 }
 
 func TestOrderFulfillment_SplitOrder(t *testing.T) {
-	// TODO[1658]: func TestOrderFulfillment_SplitOrder(t *testing.T)
-	t.Skipf("not written")
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	askOrder := func(orderID uint64, assetAmt, priceAmt int64, fees ...sdk.Coin) *Order {
+		askOrder := &AskOrder{
+			MarketId:     55,
+			Seller:       "samuel",
+			Assets:       coin(assetAmt, "apple"),
+			Price:        coin(priceAmt, "peach"),
+			AllowPartial: true,
+		}
+		if len(fees) > 1 {
+			t.Fatalf("a max of 1 fee can be provided to askOrder, actual: %s", sdk.Coins(fees))
+		}
+		if len(fees) > 0 {
+			askOrder.SellerSettlementFlatFee = &fees[0]
+		}
+		return NewOrder(orderID).WithAsk(askOrder)
+	}
+	bidOrder := func(orderID uint64, assetAmt, priceAmt int64, fees ...sdk.Coin) *Order {
+		bidOrder := &BidOrder{
+			MarketId:     55,
+			Buyer:        "brian",
+			Assets:       coin(assetAmt, "apple"),
+			Price:        coin(priceAmt, "peach"),
+			AllowPartial: true,
+		}
+		if len(fees) > 0 {
+			bidOrder.BuyerSettlementFees = fees
+		}
+		return NewOrder(orderID).WithBid(bidOrder)
+	}
+
+	tests := []struct {
+		name        string
+		receiver    *OrderFulfillment
+		expFilled   *Order
+		expUnfilled *Order
+		expReceiver *OrderFulfillment
+		expErr      string
+	}{
+		{
+			name: "order split error: ask",
+			receiver: &OrderFulfillment{
+				Order:           askOrder(8, 10, 100),
+				AssetsFilledAmt: sdkmath.NewInt(-1),
+			},
+			expErr: "cannot split ask order 8 having asset \"10apple\" at \"-1apple\": amount filled not positive",
+		},
+		{
+			name: "order split error: bid",
+			receiver: &OrderFulfillment{
+				Order:           bidOrder(9, 10, 100),
+				AssetsFilledAmt: sdkmath.NewInt(-1),
+			},
+			expErr: "cannot split bid order 9 having asset \"10apple\" at \"-1apple\": amount filled not positive",
+		},
+		{
+			name: "okay: ask",
+			receiver: &OrderFulfillment{
+				Order:             askOrder(17, 10, 100, coin(20, "fig")),
+				AssetsFilledAmt:   sdkmath.NewInt(9),
+				AssetsUnfilledAmt: sdkmath.NewInt(1),
+				PriceAppliedAmt:   sdkmath.NewInt(300),
+				PriceLeftAmt:      sdkmath.NewInt(-200),
+			},
+			expFilled:   askOrder(17, 9, 90, coin(18, "fig")),
+			expUnfilled: askOrder(17, 1, 10, coin(2, "fig")),
+			expReceiver: &OrderFulfillment{
+				Order:             askOrder(17, 9, 90, coin(18, "fig")),
+				AssetsFilledAmt:   sdkmath.NewInt(9),
+				AssetsUnfilledAmt: sdkmath.NewInt(0),
+				PriceAppliedAmt:   sdkmath.NewInt(300),
+				PriceLeftAmt:      sdkmath.NewInt(-210),
+			},
+		},
+		{
+			name: "okay: bid",
+			receiver: &OrderFulfillment{
+				Order:             bidOrder(19, 10, 100, coin(20, "fig")),
+				AssetsFilledAmt:   sdkmath.NewInt(9),
+				AssetsUnfilledAmt: sdkmath.NewInt(1),
+				PriceAppliedAmt:   sdkmath.NewInt(300),
+				PriceLeftAmt:      sdkmath.NewInt(-200),
+			},
+			expFilled:   bidOrder(19, 9, 90, coin(18, "fig")),
+			expUnfilled: bidOrder(19, 1, 10, coin(2, "fig")),
+			expReceiver: &OrderFulfillment{
+				Order:             bidOrder(19, 9, 90, coin(18, "fig")),
+				AssetsFilledAmt:   sdkmath.NewInt(9),
+				AssetsUnfilledAmt: sdkmath.NewInt(0),
+				PriceAppliedAmt:   sdkmath.NewInt(300),
+				PriceLeftAmt:      sdkmath.NewInt(-210),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			orig := copyOrderFulfillment(tc.receiver)
+			if tc.expReceiver == nil {
+				tc.expReceiver = copyOrderFulfillment(tc.receiver)
+			}
+
+			var filled, unfilled *Order
+			var err error
+			testFunc := func() {
+				filled, unfilled, err = tc.receiver.SplitOrder()
+			}
+			require.NotPanics(t, testFunc, "SplitOrder")
+			assertions.AssertErrorValue(t, err, tc.expErr, "SplitOrder error")
+			assert.Equalf(t, tc.expFilled, filled, "SplitOrder filled order")
+			assert.Equalf(t, tc.expUnfilled, unfilled, "SplitOrder unfilled order")
+			if !assertEqualOrderFulfillments(t, tc.expReceiver, tc.receiver, "OrderFulfillment after SplitOrder") {
+				t.Logf("Original: %s", orderFulfillmentString(orig))
+			}
+		})
+	}
 }
 
 func TestSumAssetsAndPrice(t *testing.T) {
