@@ -122,6 +122,44 @@ func orderFulfillmentString(f *OrderFulfillment) string {
 	return fmt.Sprintf("{%s}", strings.Join(fields, ", "))
 }
 
+// assertEqualOrderFulfillments asserts that the two order fulfillments are equal.
+// Returns true if equal.
+// If not equal, and neither are nil, equality on each field is also asserted in order to help identify the problem.
+func assertEqualOrderFulfillments(t *testing.T, expected, actual *OrderFulfillment, message string, args ...interface{}) bool {
+	t.Helper()
+	if assert.Equalf(t, expected, actual, message, args...) {
+		return true
+	}
+	// If either is nil, that's easy to understand in the above failure, so there's nothing more to do.
+	if expected == nil || actual == nil {
+		return false
+	}
+
+	msg := func(val string) string {
+		if len(message) == 0 {
+			return val
+		}
+		return val + "\n" + message
+	}
+
+	// Assert equality on each individual field so that we can more easily find the problem.
+	// If any of the Ints fail with a complaint about Int.abs = (big.nat) <nil> vs {}, use ZeroAmtAfterSub for the expected.
+	assert.Equalf(t, expected.Order, actual.Order, msg("OrderFulfillment.Order"), args...)
+	assert.Equalf(t, expected.Splits, actual.Splits, msg("OrderFulfillment.Splits"), args...)
+	assert.Equalf(t, expected.AssetsFilledAmt, actual.AssetsFilledAmt, msg("OrderFulfillment.AssetsFilledAmt"), args...)
+	assert.Equalf(t, expected.AssetsUnfilledAmt, actual.AssetsUnfilledAmt, msg("OrderFulfillment.AssetsUnfilledAmt"), args...)
+	assert.Equalf(t, expected.PriceAppliedAmt, actual.PriceAppliedAmt, msg("OrderFulfillment.PriceAppliedAmt"), args...)
+	assert.Equalf(t, expected.PriceLeftAmt, actual.PriceLeftAmt, msg("OrderFulfillment.PriceLeftAmt"), args...)
+	assert.Equalf(t, expected.IsFinalized, actual.IsFinalized, msg("OrderFulfillment.IsFinalized"), args...)
+	assert.Equalf(t, expected.FeesToPay, actual.FeesToPay, msg("OrderFulfillment.FeesToPay"), args...)
+	assert.Equalf(t, expected.OrderFeesLeft, actual.OrderFeesLeft, msg("OrderFulfillment.OrderFeesLeft"), args...)
+	assert.Equalf(t, expected.PriceFilledAmt, actual.PriceFilledAmt, msg("OrderFulfillment.PriceFilledAmt"), args...)
+	assert.Equalf(t, expected.PriceUnfilledAmt, actual.PriceUnfilledAmt, msg("OrderFulfillment.PriceUnfilledAmt"), args...)
+	t.Logf("  Actual: %s", orderFulfillmentString(actual))
+	t.Logf("Expected: %s", orderFulfillmentString(expected))
+	return false
+}
+
 func TestNewOrderFulfillment(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -216,18 +254,449 @@ func TestNewOrderFulfillment(t *testing.T) {
 }
 
 func TestNewOrderFulfillments(t *testing.T) {
-	// TODO[1658]: func TestNewOrderFulfillments(t *testing.T)
-	t.Fatalf("not written")
+	assetCoin := func(amount int64) sdk.Coin {
+		return sdk.NewInt64Coin("anise", amount)
+	}
+	priceCoin := func(amount int64) sdk.Coin {
+		return sdk.NewInt64Coin("paprika", amount)
+	}
+	feeCoin := func(amount int64) *sdk.Coin {
+		rv := sdk.NewInt64Coin("fennel", amount)
+		return &rv
+	}
+
+	askOrders := make([]*Order, 4) // ids 1, 2, 3, 4
+	for j := range askOrders {
+		i := int64(j) + 1
+		order := &AskOrder{
+			MarketId: uint32(90 + i),
+			Seller:   fmt.Sprintf("seller-%d", i),
+			Assets:   assetCoin(1000*i + 100*i + 10*i + i),
+			Price:    priceCoin(100*i + 10*i + i),
+		}
+		if j%2 == 0 {
+			order.SellerSettlementFlatFee = feeCoin(10*i + i)
+		}
+		if j >= 2 {
+			order.AllowPartial = true
+		}
+		askOrders[j] = NewOrder(uint64(i)).WithAsk(order)
+	}
+
+	bidOrders := make([]*Order, 4) // ids 5, 6, 7, 8
+	for j := range bidOrders {
+		i := int64(j + 5)
+		order := &BidOrder{
+			MarketId: uint32(90 + i),
+			Buyer:    fmt.Sprintf("buyer-%d", i),
+			Assets:   assetCoin(1000*i + 100*i + 10*i + i),
+			Price:    priceCoin(100*i + 10*i + i),
+		}
+		switch j {
+		case 0:
+			order.BuyerSettlementFees = sdk.Coins{*feeCoin(10*i + i)}
+		case 2:
+			order.BuyerSettlementFees = sdk.Coins{
+				*feeCoin(10*i + i),
+				sdk.NewInt64Coin("garlic", 10000*i+1000*i+100*i+10*i+i),
+			}
+		}
+		if j >= 2 {
+			order.AllowPartial = true
+		}
+		bidOrders[j] = NewOrder(uint64(i)).WithBid(order)
+	}
+
+	tests := []struct {
+		name     string
+		orders   []*Order
+		expected []*OrderFulfillment
+	}{
+		{
+			name:     "nil orders",
+			orders:   nil,
+			expected: []*OrderFulfillment{},
+		},
+		{
+			name:     "empty orders",
+			orders:   []*Order{},
+			expected: []*OrderFulfillment{},
+		},
+		{
+			name:     "1 ask order",
+			orders:   []*Order{askOrders[0]},
+			expected: []*OrderFulfillment{NewOrderFulfillment(askOrders[0])},
+		},
+		{
+			name:     "1 bid order",
+			orders:   []*Order{bidOrders[0]},
+			expected: []*OrderFulfillment{NewOrderFulfillment(bidOrders[0])},
+		},
+		{
+			name:   "4 ask orders",
+			orders: []*Order{askOrders[0], askOrders[1], askOrders[2], askOrders[3]},
+			expected: []*OrderFulfillment{
+				NewOrderFulfillment(askOrders[0]),
+				NewOrderFulfillment(askOrders[1]),
+				NewOrderFulfillment(askOrders[2]),
+				NewOrderFulfillment(askOrders[3]),
+			},
+		},
+		{
+			name:   "4 bid orders",
+			orders: []*Order{bidOrders[0], bidOrders[1], bidOrders[2], bidOrders[3]},
+			expected: []*OrderFulfillment{
+				NewOrderFulfillment(bidOrders[0]),
+				NewOrderFulfillment(bidOrders[1]),
+				NewOrderFulfillment(bidOrders[2]),
+				NewOrderFulfillment(bidOrders[3]),
+			},
+		},
+		{
+			name:   "1 bid 1 ask",
+			orders: []*Order{askOrders[1], bidOrders[2]},
+			expected: []*OrderFulfillment{
+				NewOrderFulfillment(askOrders[1]),
+				NewOrderFulfillment(bidOrders[2]),
+			},
+		},
+		{
+			name:   "1 ask 1 bid",
+			orders: []*Order{bidOrders[1], askOrders[2]},
+			expected: []*OrderFulfillment{
+				NewOrderFulfillment(bidOrders[1]),
+				NewOrderFulfillment(askOrders[2]),
+			},
+		},
+		{
+			name: "4 asks 4 bids",
+			orders: []*Order{
+				askOrders[0], askOrders[1], askOrders[2], askOrders[3],
+				bidOrders[3], bidOrders[2], bidOrders[1], bidOrders[0],
+			},
+			expected: []*OrderFulfillment{
+				NewOrderFulfillment(askOrders[0]),
+				NewOrderFulfillment(askOrders[1]),
+				NewOrderFulfillment(askOrders[2]),
+				NewOrderFulfillment(askOrders[3]),
+				NewOrderFulfillment(bidOrders[3]),
+				NewOrderFulfillment(bidOrders[2]),
+				NewOrderFulfillment(bidOrders[1]),
+				NewOrderFulfillment(bidOrders[0]),
+			},
+		},
+		{
+			name: "4 bids 4 asks",
+			orders: []*Order{
+				bidOrders[0], bidOrders[1], bidOrders[2], bidOrders[3],
+				askOrders[3], askOrders[2], askOrders[1], askOrders[0],
+			},
+			expected: []*OrderFulfillment{
+				NewOrderFulfillment(bidOrders[0]),
+				NewOrderFulfillment(bidOrders[1]),
+				NewOrderFulfillment(bidOrders[2]),
+				NewOrderFulfillment(bidOrders[3]),
+				NewOrderFulfillment(askOrders[3]),
+				NewOrderFulfillment(askOrders[2]),
+				NewOrderFulfillment(askOrders[1]),
+				NewOrderFulfillment(askOrders[0]),
+			},
+		},
+		{
+			name: "interweaved 4 asks 4 bids",
+			orders: []*Order{
+				bidOrders[3], askOrders[0], askOrders[3], bidOrders[1],
+				bidOrders[0], askOrders[1], bidOrders[2], askOrders[2],
+			},
+			expected: []*OrderFulfillment{
+				NewOrderFulfillment(bidOrders[3]),
+				NewOrderFulfillment(askOrders[0]),
+				NewOrderFulfillment(askOrders[3]),
+				NewOrderFulfillment(bidOrders[1]),
+				NewOrderFulfillment(bidOrders[0]),
+				NewOrderFulfillment(askOrders[1]),
+				NewOrderFulfillment(bidOrders[2]),
+				NewOrderFulfillment(askOrders[2]),
+			},
+		},
+		{
+			name: "duplicated entries",
+			orders: []*Order{
+				askOrders[3], bidOrders[2], askOrders[3], bidOrders[2],
+			},
+			expected: []*OrderFulfillment{
+				NewOrderFulfillment(askOrders[3]),
+				NewOrderFulfillment(bidOrders[2]),
+				NewOrderFulfillment(askOrders[3]),
+				NewOrderFulfillment(bidOrders[2]),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual []*OrderFulfillment
+			testFunc := func() {
+				actual = NewOrderFulfillments(tc.orders)
+			}
+			require.NotPanics(t, testFunc, "NewOrderFulfillments")
+			if !assert.Equal(t, tc.expected, actual, "NewOrderFulfillments result") {
+				expOrderIDs := make([]uint64, len(tc.expected))
+				for i, f := range tc.expected {
+					expOrderIDs[i] = f.GetOrderID()
+				}
+				actOrderIDs := make([]uint64, len(actual))
+				for i, f := range actual {
+					actOrderIDs[i] = f.GetOrderID()
+				}
+				if !assert.Equal(t, expOrderIDs, actOrderIDs, "NewOrderFulfillments result order ids") && len(tc.expected) == len(actual) {
+					for i := range tc.expected {
+						assertEqualOrderFulfillments(t, tc.expected[i], actual[i], "NewOrderFulfillments result[%d]", i)
+					}
+				}
+			}
+		})
+	}
 }
 
 func TestOrderFulfillment_AssetCoin(t *testing.T) {
-	// TODO[1658]: func TestOrderFulfillment_AssetCoin(t *testing.T)
-	t.Fatalf("not written")
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	bigCoin := func(amount, denom string) sdk.Coin {
+		amt := newInt(t, amount)
+		return sdk.Coin{Denom: denom, Amount: amt}
+	}
+	askOrder := func(orderID uint64, assets, price sdk.Coin) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			Assets: assets,
+			Price:  price,
+		})
+	}
+	bidOrder := func(orderID uint64, assets, price sdk.Coin) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			Assets: assets,
+			Price:  price,
+		})
+	}
+
+	tests := []struct {
+		name     string
+		receiver OrderFulfillment
+		amt      sdkmath.Int
+		expected sdk.Coin
+		expPanic string
+	}{
+		{
+			name:     "nil order",
+			receiver: OrderFulfillment{Order: nil},
+			amt:      sdkmath.NewInt(0),
+			expPanic: "runtime error: invalid memory address or nil pointer dereference",
+		},
+		{
+			name:     "nil inside order",
+			receiver: OrderFulfillment{Order: NewOrder(1)},
+			amt:      sdkmath.NewInt(0),
+			expPanic: "order 1 has unknown sub-order type <nil>: does not implement SubOrderI",
+		},
+		{
+			name:     "unknown inside order",
+			receiver: OrderFulfillment{Order: newUnknownOrder(2)},
+			amt:      sdkmath.NewInt(0),
+			expPanic: "order 2 has unknown sub-order type *exchange.unknownOrderType: does not implement SubOrderI",
+		},
+		{
+			name:     "ask order",
+			receiver: OrderFulfillment{Order: askOrder(3, coin(4, "apple"), coin(5, "plum"))},
+			amt:      sdkmath.NewInt(6),
+			expected: coin(6, "apple"),
+		},
+		{
+			name:     "ask order with negative assets",
+			receiver: OrderFulfillment{Order: askOrder(7, coin(-8, "apple"), coin(9, "plum"))},
+			amt:      sdkmath.NewInt(10),
+			expected: coin(10, "apple"),
+		},
+		{
+			name:     "ask order, negative amt",
+			receiver: OrderFulfillment{Order: askOrder(11, coin(12, "apple"), coin(13, "plum"))},
+			amt:      sdkmath.NewInt(-14),
+			expected: coin(-14, "apple"),
+		},
+		{
+			name:     "ask order with negative assets, negative amt",
+			receiver: OrderFulfillment{Order: askOrder(15, coin(-16, "apple"), coin(17, "plum"))},
+			amt:      sdkmath.NewInt(-18),
+			expected: coin(-18, "apple"),
+		},
+		{
+			name:     "ask order, big amt",
+			receiver: OrderFulfillment{Order: askOrder(19, coin(20, "apple"), coin(21, "plum"))},
+			amt:      newInt(t, "123,000,000,000,000,000,000,000,000,000,000,321"),
+			expected: bigCoin("123,000,000,000,000,000,000,000,000,000,000,321", "apple"),
+		},
+		{
+			name:     "bid order",
+			receiver: OrderFulfillment{Order: bidOrder(3, coin(4, "apple"), coin(5, "plum"))},
+			amt:      sdkmath.NewInt(6),
+			expected: coin(6, "apple"),
+		},
+		{
+			name:     "bid order with negative assets",
+			receiver: OrderFulfillment{Order: bidOrder(7, coin(-8, "apple"), coin(9, "plum"))},
+			amt:      sdkmath.NewInt(10),
+			expected: coin(10, "apple"),
+		},
+		{
+			name:     "bid order, negative amt",
+			receiver: OrderFulfillment{Order: bidOrder(11, coin(12, "apple"), coin(13, "plum"))},
+			amt:      sdkmath.NewInt(-14),
+			expected: coin(-14, "apple"),
+		},
+		{
+			name:     "bid order with negative assets, negative amt",
+			receiver: OrderFulfillment{Order: bidOrder(15, coin(-16, "apple"), coin(17, "plum"))},
+			amt:      sdkmath.NewInt(-18),
+			expected: coin(-18, "apple"),
+		},
+		{
+			name:     "bid order, big amt",
+			receiver: OrderFulfillment{Order: bidOrder(19, coin(20, "apple"), coin(21, "plum"))},
+			amt:      newInt(t, "123,000,000,000,000,000,000,000,000,000,000,321"),
+			expected: bigCoin("123,000,000,000,000,000,000,000,000,000,000,321", "apple"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual sdk.Coin
+			testFunc := func() {
+				actual = tc.receiver.assetCoin(tc.amt)
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "assetCoin(%s)", tc.amt)
+			assert.Equal(t, tc.expected.String(), actual.String(), "assetCoin(%s) result", tc.amt)
+		})
+	}
 }
 
 func TestOrderFulfillment_PriceCoin(t *testing.T) {
-	// TODO[1658]: func TestOrderFulfillment_PriceCoin(t *testing.T)
-	t.Fatalf("not written")
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	bigCoin := func(amount, denom string) sdk.Coin {
+		amt := newInt(t, amount)
+		return sdk.Coin{Denom: denom, Amount: amt}
+	}
+	askOrder := func(orderID uint64, assets, price sdk.Coin) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			Assets: assets,
+			Price:  price,
+		})
+	}
+	bidOrder := func(orderID uint64, assets, price sdk.Coin) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			Assets: assets,
+			Price:  price,
+		})
+	}
+
+	tests := []struct {
+		name     string
+		receiver OrderFulfillment
+		amt      sdkmath.Int
+		expected sdk.Coin
+		expPanic string
+	}{
+		{
+			name:     "nil order",
+			receiver: OrderFulfillment{Order: nil},
+			amt:      sdkmath.NewInt(0),
+			expPanic: "runtime error: invalid memory address or nil pointer dereference",
+		},
+		{
+			name:     "nil inside order",
+			receiver: OrderFulfillment{Order: NewOrder(1)},
+			amt:      sdkmath.NewInt(0),
+			expPanic: "order 1 has unknown sub-order type <nil>: does not implement SubOrderI",
+		},
+		{
+			name:     "unknown inside order",
+			receiver: OrderFulfillment{Order: newUnknownOrder(2)},
+			amt:      sdkmath.NewInt(0),
+			expPanic: "order 2 has unknown sub-order type *exchange.unknownOrderType: does not implement SubOrderI",
+		},
+		{
+			name:     "ask order",
+			receiver: OrderFulfillment{Order: askOrder(3, coin(4, "apple"), coin(5, "plum"))},
+			amt:      sdkmath.NewInt(6),
+			expected: coin(6, "plum"),
+		},
+		{
+			name:     "ask order with negative assets",
+			receiver: OrderFulfillment{Order: askOrder(7, coin(-8, "apple"), coin(9, "plum"))},
+			amt:      sdkmath.NewInt(10),
+			expected: coin(10, "plum"),
+		},
+		{
+			name:     "ask order, negative amt",
+			receiver: OrderFulfillment{Order: askOrder(11, coin(12, "apple"), coin(13, "plum"))},
+			amt:      sdkmath.NewInt(-14),
+			expected: coin(-14, "plum"),
+		},
+		{
+			name:     "ask order with negative assets, negative amt",
+			receiver: OrderFulfillment{Order: askOrder(15, coin(-16, "apple"), coin(17, "plum"))},
+			amt:      sdkmath.NewInt(-18),
+			expected: coin(-18, "plum"),
+		},
+		{
+			name:     "ask order, big amt",
+			receiver: OrderFulfillment{Order: askOrder(19, coin(20, "apple"), coin(21, "plum"))},
+			amt:      newInt(t, "123,000,000,000,000,000,000,000,000,000,000,321"),
+			expected: bigCoin("123,000,000,000,000,000,000,000,000,000,000,321", "plum"),
+		},
+		{
+			name:     "bid order",
+			receiver: OrderFulfillment{Order: bidOrder(3, coin(4, "apple"), coin(5, "plum"))},
+			amt:      sdkmath.NewInt(6),
+			expected: coin(6, "plum"),
+		},
+		{
+			name:     "bid order with negative assets",
+			receiver: OrderFulfillment{Order: bidOrder(7, coin(-8, "apple"), coin(9, "plum"))},
+			amt:      sdkmath.NewInt(10),
+			expected: coin(10, "plum"),
+		},
+		{
+			name:     "bid order, negative amt",
+			receiver: OrderFulfillment{Order: bidOrder(11, coin(12, "apple"), coin(13, "plum"))},
+			amt:      sdkmath.NewInt(-14),
+			expected: coin(-14, "plum"),
+		},
+		{
+			name:     "bid order with negative assets, negative amt",
+			receiver: OrderFulfillment{Order: bidOrder(15, coin(-16, "apple"), coin(17, "plum"))},
+			amt:      sdkmath.NewInt(-18),
+			expected: coin(-18, "plum"),
+		},
+		{
+			name:     "bid order, big amt",
+			receiver: OrderFulfillment{Order: bidOrder(19, coin(20, "apple"), coin(21, "plum"))},
+			amt:      newInt(t, "123,000,000,000,000,000,000,000,000,000,000,321"),
+			expected: bigCoin("123,000,000,000,000,000,000,000,000,000,000,321", "plum"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual sdk.Coin
+			testFunc := func() {
+				actual = tc.receiver.priceCoin(tc.amt)
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "priceCoin(%s)", tc.amt)
+			assert.Equal(t, tc.expected.String(), actual.String(), "priceCoin(%s) result", tc.amt)
+		})
+	}
 }
 
 func TestOrderFulfillment_GetAssetsFilled(t *testing.T) {
@@ -1012,43 +1481,6 @@ func TestGetAssetTransfer(t *testing.T) {
 func TestGetPriceTransfer(t *testing.T) {
 	// TODO[1658]: func TestGetPriceTransfer(t *testing.T)
 	t.Skipf("not written")
-}
-
-// assertEqualOrderFulfillments asserts that the two order fulfillments are equal.
-// Returns true if equal.
-// If not equal, and neither are nil, equality on each field is also asserted in order to help identify the problem.
-func assertEqualOrderFulfillments(t *testing.T, expected, actual *OrderFulfillment, message string, args ...interface{}) bool {
-	if assert.Equalf(t, expected, actual, message, args...) {
-		return true
-	}
-	// If either is nil, that's easy to understand in the above failure, so there's nothing more to do.
-	if expected == nil || actual == nil {
-		return false
-	}
-
-	msg := func(val string) string {
-		if len(message) == 0 {
-			return val
-		}
-		return val + "\n" + message
-	}
-
-	// Assert equality on each individual field so that we can more easily find the problem.
-	// If any of the Ints fail with a complaint about Int.abs = (big.nat) <nil> vs {}, use ZeroAmtAfterSub for the expected.
-	assert.Equalf(t, expected.Order, actual.Order, msg("OrderFulfillment.Order"), args...)
-	assert.Equalf(t, expected.Splits, actual.Splits, msg("OrderFulfillment.Splits"), args...)
-	assert.Equalf(t, expected.AssetsFilledAmt, actual.AssetsFilledAmt, msg("OrderFulfillment.AssetsFilledAmt"), args...)
-	assert.Equalf(t, expected.AssetsUnfilledAmt, actual.AssetsUnfilledAmt, msg("OrderFulfillment.AssetsUnfilledAmt"), args...)
-	assert.Equalf(t, expected.PriceAppliedAmt, actual.PriceAppliedAmt, msg("OrderFulfillment.PriceAppliedAmt"), args...)
-	assert.Equalf(t, expected.PriceLeftAmt, actual.PriceLeftAmt, msg("OrderFulfillment.PriceLeftAmt"), args...)
-	assert.Equalf(t, expected.IsFinalized, actual.IsFinalized, msg("OrderFulfillment.IsFinalized"), args...)
-	assert.Equalf(t, expected.FeesToPay, actual.FeesToPay, msg("OrderFulfillment.FeesToPay"), args...)
-	assert.Equalf(t, expected.OrderFeesLeft, actual.OrderFeesLeft, msg("OrderFulfillment.OrderFeesLeft"), args...)
-	assert.Equalf(t, expected.PriceFilledAmt, actual.PriceFilledAmt, msg("OrderFulfillment.PriceFilledAmt"), args...)
-	assert.Equalf(t, expected.PriceUnfilledAmt, actual.PriceUnfilledAmt, msg("OrderFulfillment.PriceUnfilledAmt"), args...)
-	t.Logf("  Actual: %s", orderFulfillmentString(actual))
-	t.Logf("Expected: %s", orderFulfillmentString(expected))
-	return false
 }
 
 func TestOrderFulfillment_Apply(t *testing.T) {

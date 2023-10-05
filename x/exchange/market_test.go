@@ -1010,8 +1010,7 @@ func TestFeeRatio_ApplyTo(t *testing.T) {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
 	bigCoin := func(amount string, denom string) sdk.Coin {
-		amt, ok := sdkmath.NewIntFromString(amount)
-		require.True(t, ok, "sdkmath.NewIntFromString(%q) ok result boolean", amount)
+		amt := newInt(t, amount)
 		return sdk.Coin{Denom: denom, Amount: amt}
 	}
 	feeRatio := func(priceAmount int64, priceDenom string, feeAmount int64, feeDenom string) FeeRatio {
@@ -1094,8 +1093,7 @@ func TestFeeRatio_ApplyToLoosely(t *testing.T) {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
 	bigCoin := func(amount string, denom string) sdk.Coin {
-		amt, ok := sdkmath.NewIntFromString(amount)
-		require.True(t, ok, "sdkmath.NewIntFromString(%q) ok result boolean", amount)
+		amt := newInt(t, amount)
 		return sdk.Coin{Denom: denom, Amount: amt}
 	}
 	feeRatio := func(priceAmount int64, priceDenom string, feeAmount int64, feeDenom string) FeeRatio {

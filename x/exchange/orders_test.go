@@ -284,9 +284,8 @@ func TestOrderSizes(t *testing.T) {
 	denomChars := "abcd"
 	bigCoins := make(sdk.Coins, len(denomChars))
 	for i := range bigCoins {
-		str := fmt.Sprintf("%[1]d00000000000000000000000000000%[1]d", i) // i quetta + i
-		amount, ok := sdkmath.NewIntFromString(str)
-		require.Truef(t, ok, "sdkmath.NewIntFromString(%q)", str)
+		str := fmt.Sprintf("%[1]d,000,000,000,000,000,000,000,000,000,00%[1]d", i) // i quetta + i
+		amount := newInt(t, str)
 		denom := strings.Repeat(denomChars[i:i+1], 128)
 		bigCoins[i] = sdk.NewCoin(denom, amount)
 	}
@@ -1230,8 +1229,7 @@ func TestAskOrder_GetOwner(t *testing.T) {
 }
 
 func TestAskOrder_GetAssets(t *testing.T) {
-	largeAmt, ok := sdkmath.NewIntFromString("25000000000000000000000")
-	require.Truef(t, ok, "NewIntFromString(\"25000000000000000000000\")")
+	largeAmt := newInt(t, "25,000,000,000,000,000,000,000")
 	largeCoin := sdk.NewCoin("large", largeAmt)
 	negCoin := sdk.Coin{Denom: "neg", Amount: sdkmath.NewInt(-88)}
 
@@ -1260,8 +1258,7 @@ func TestAskOrder_GetAssets(t *testing.T) {
 }
 
 func TestAskOrder_GetPrice(t *testing.T) {
-	largeAmt, ok := sdkmath.NewIntFromString("25000000000000000000000")
-	require.Truef(t, ok, "NewIntFromString(\"25000000000000000000000\")")
+	largeAmt := newInt(t, "25,000,000,000,000,000,000,000")
 	largeCoin := sdk.NewCoin("large", largeAmt)
 	negCoin := sdk.Coin{Denom: "neg", Amount: sdkmath.NewInt(-88)}
 
@@ -1293,8 +1290,7 @@ func TestAskOrder_GetSettlementFees(t *testing.T) {
 	coin := func(amount int64, denom string) *sdk.Coin {
 		return &sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
-	largeAmt, ok := sdkmath.NewIntFromString("25000000000000000000000")
-	require.Truef(t, ok, "NewIntFromString(\"25000000000000000000000\")")
+	largeAmt := newInt(t, "25,000,000,000,000,000,000,000")
 	largeCoin := sdk.NewCoin("large", largeAmt)
 
 	tests := []struct {
@@ -1692,8 +1688,7 @@ func TestBidOrder_GetOwner(t *testing.T) {
 }
 
 func TestBidOrder_GetAssets(t *testing.T) {
-	largeAmt, ok := sdkmath.NewIntFromString("25000000000000000000000")
-	require.Truef(t, ok, "NewIntFromString(\"25000000000000000000000\")")
+	largeAmt := newInt(t, "25,000,000,000,000,000,000,000")
 	largeCoin := sdk.NewCoin("large", largeAmt)
 	negCoin := sdk.Coin{Denom: "neg", Amount: sdkmath.NewInt(-88)}
 
@@ -1722,8 +1717,7 @@ func TestBidOrder_GetAssets(t *testing.T) {
 }
 
 func TestBidOrder_GetPrice(t *testing.T) {
-	largeAmt, ok := sdkmath.NewIntFromString("25000000000000000000000")
-	require.Truef(t, ok, "NewIntFromString(\"25000000000000000000000\")")
+	largeAmt := newInt(t, "25,000,000,000,000,000,000,000")
 	largeCoin := sdk.NewCoin("large", largeAmt)
 	negCoin := sdk.Coin{Denom: "neg", Amount: sdkmath.NewInt(-88)}
 
@@ -1755,8 +1749,7 @@ func TestBidOrder_GetSettlementFees(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
-	largeAmt, ok := sdkmath.NewIntFromString("25000000000000000000000")
-	require.Truef(t, ok, "NewIntFromString(\"25000000000000000000000\")")
+	largeAmt := newInt(t, "25,000,000,000,000,000,000,000")
 	largeCoin := sdk.NewCoin("large", largeAmt)
 
 	tests := []struct {

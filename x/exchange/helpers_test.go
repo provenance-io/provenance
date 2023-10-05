@@ -12,6 +12,16 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
+var amtRx = regexp.MustCompile(`[,_ ]`)
+
+// newInt converts the provided string into an Int, stipping out any commas, underscores or spaces first.
+func newInt(t *testing.T, amount string) sdkmath.Int {
+	amt := amtRx.ReplaceAllString(amount, "")
+	rv, ok := sdkmath.NewIntFromString(amt)
+	require.True(t, ok, "sdkmath.NewIntFromString(%q) ok bool", amt)
+	return rv
+}
+
 func TestEqualsUint64(t *testing.T) {
 	tests := []struct {
 		name string
@@ -655,13 +665,7 @@ func TestContainsCoinWithSameDenom(t *testing.T) {
 }
 
 func TestMinSDKInt(t *testing.T) {
-	newInt := func(val string) sdkmath.Int {
-		rv, ok := sdkmath.NewIntFromString(val)
-		require.True(t, ok, "sdkmath.NewIntFromString(%s) resulting bool", val)
-		return rv
-	}
-
-	posBig := newInt("123456789012345678901234567890")
+	posBig := newInt(t, "123,456,789,012,345,678,901,234,567,890")
 	negBig := posBig.Neg()
 	posBigger := posBig.Add(sdkmath.OneInt())
 
@@ -744,15 +748,6 @@ func TestMinSDKInt(t *testing.T) {
 }
 
 func TestQuoRemInt(t *testing.T) {
-	amtRx, err := regexp.Compile(`[,_ ]`)
-	require.NoError(t, err, "regexp.Compile(`[,_ ]`) error")
-	newInt := func(amount string) sdkmath.Int {
-		amt := amtRx.ReplaceAllString(amount, "")
-		rv, ok := sdkmath.NewIntFromString(amt)
-		require.True(t, ok, "sdkmath.NewIntFromString(%q) ok bool", amt)
-		return rv
-	}
-
 	tests := []struct {
 		name     string
 		a        sdkmath.Int
@@ -867,24 +862,24 @@ func TestQuoRemInt(t *testing.T) {
 		},
 		{
 			name:   "(10^30+5)/(10^27)",
-			a:      newInt("1,000,000,000,000,000,000,000,000,000,005"),
-			b:      newInt("1,000,000,000,000,000,000,000,000,000"),
+			a:      newInt(t, "1,000,000,000,000,000,000,000,000,000,005"),
+			b:      newInt(t, "1,000,000,000,000,000,000,000,000,000"),
 			expQuo: sdkmath.NewInt(1000),
 			expRem: sdkmath.NewInt(5),
 		},
 		{
 			name:   "(2*10^30+3*10^9+7)/1,000)",
-			a:      newInt("2,000,000,000,000,000,000,003,000,000,007"),
-			b:      newInt("1,000"),
-			expQuo: newInt("2,000,000,000,000,000,000,003,000,000"),
+			a:      newInt(t, "2,000,000,000,000,000,000,003,000,000,007"),
+			b:      newInt(t, "1,000"),
+			expQuo: newInt(t, "2,000,000,000,000,000,000,003,000,000"),
 			expRem: sdkmath.NewInt(7),
 		},
 		{
 			name:   "(3*10^30+9*10^26)/(10^27)",
-			a:      newInt("3,000,900,000,000,000,000,000,000,000,000"),
-			b:      newInt("1,000,000,000,000,000,000,000,000,000"),
+			a:      newInt(t, "3,000,900,000,000,000,000,000,000,000,000"),
+			b:      newInt(t, "1,000,000,000,000,000,000,000,000,000"),
 			expQuo: sdkmath.NewInt(3000),
-			expRem: newInt("900,000,000,000,000,000,000,000,000"),
+			expRem: newInt(t, "900,000,000,000,000,000,000,000,000"),
 		},
 	}
 
