@@ -168,7 +168,7 @@ func ProcessMarkerMemo(memo string) ([]sdktypes.AccAddress, markertypes.MarkerTy
 	return transferAuths, markertypes.MarkerType_RestrictedCoin, nil
 }
 
-func (h MarkerHooks) SendPacketFn(
+func (h MarkerHooks) PreSendPacketDataProcessingFn(
 	ctx sdktypes.Context,
 	data []byte,
 	_ map[string]interface{},

@@ -12,8 +12,8 @@ import (
 
 type Hooks interface{}
 
-type GetSendPacketFns interface {
-	GetSendPacketFns() []types.SendPacketFn
+type GetPreSendPacketDataProcessingFns interface {
+	GetPreSendPacketDataProcessingFns() []types.PreSendPacketDataProcessingFn
 }
 
 type OnChanOpenInitOverrideHooks interface {

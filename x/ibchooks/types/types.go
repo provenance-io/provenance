@@ -158,4 +158,4 @@ func (jb JSONBytes) MarshalJSON() ([]byte, error) {
 	return jb, nil
 }
 
-type SendPacketFn func(ctx sdk.Context, data []byte, processData map[string]interface{}) ([]byte, error)
+type PreSendPacketDataProcessingFn func(ctx sdk.Context, data []byte, processData map[string]interface{}) ([]byte, error)

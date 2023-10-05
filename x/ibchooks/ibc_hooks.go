@@ -14,22 +14,22 @@ import (
 )
 
 type IbcHooks struct {
-	cdc            codec.BinaryCodec
-	ibcKeeper      *ibckeeper.Keeper
-	ibcHooksKeeper *keeper.Keeper
-	wasmHooks      *WasmHooks
-	markerHooks    *MarkerHooks
-	SendPacketFns  []types.SendPacketFn
+	cdc                            codec.BinaryCodec
+	ibcKeeper                      *ibckeeper.Keeper
+	ibcHooksKeeper                 *keeper.Keeper
+	wasmHooks                      *WasmHooks
+	markerHooks                    *MarkerHooks
+	PreSendPacketDataProcessingFns []types.PreSendPacketDataProcessingFn
 }
 
-func NewIbcHooks(cdc codec.BinaryCodec, ibcHooksKeeper *keeper.Keeper, ibcKeeper *ibckeeper.Keeper, wasmHooks *WasmHooks, markerHooks *MarkerHooks, sendPacketFns []types.SendPacketFn) IbcHooks {
+func NewIbcHooks(cdc codec.BinaryCodec, ibcHooksKeeper *keeper.Keeper, ibcKeeper *ibckeeper.Keeper, wasmHooks *WasmHooks, markerHooks *MarkerHooks, preSendPacketDataProcessingFns []types.PreSendPacketDataProcessingFn) IbcHooks {
 	return IbcHooks{
-		cdc:            cdc,
-		ibcKeeper:      ibcKeeper,
-		ibcHooksKeeper: ibcHooksKeeper,
-		wasmHooks:      wasmHooks,
-		markerHooks:    markerHooks,
-		SendPacketFns:  sendPacketFns,
+		cdc:                            cdc,
+		ibcKeeper:                      ibcKeeper,
+		ibcHooksKeeper:                 ibcHooksKeeper,
+		wasmHooks:                      wasmHooks,
+		markerHooks:                    markerHooks,
+		PreSendPacketDataProcessingFns: preSendPacketDataProcessingFns,
 	}
 }
 
@@ -38,8 +38,8 @@ func (h IbcHooks) ProperlyConfigured() bool {
 	return h.wasmHooks.ProperlyConfigured() && h.markerHooks.ProperlyConfigured() && h.ibcHooksKeeper != nil
 }
 
-func (h IbcHooks) GetSendPacketFns() []types.SendPacketFn {
-	return h.SendPacketFns
+func (h IbcHooks) GetPreSendPacketDataProcessingFns() []types.PreSendPacketDataProcessingFn {
+	return h.PreSendPacketDataProcessingFns
 }
 
 // OnRecvPacketOverride executes wasm or marker hooks for Ics20 packets, if not ics20 packet it will continue to process packet with no override

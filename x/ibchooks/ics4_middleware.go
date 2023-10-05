@@ -44,8 +44,8 @@ func (i ICS4Middleware) SendPacket(
 	processStateData := make(map[string]interface{})
 
 	// Go Through all chained send function here that alter the data package and do other current chain operation
-	if hook, ok := i.Hooks.(GetSendPacketFns); ok {
-		fns := hook.GetSendPacketFns()
+	if hook, ok := i.Hooks.(GetPreSendPacketDataProcessingFns); ok {
+		fns := hook.GetPreSendPacketDataProcessingFns()
 		for i := 0; i < len(fns); i++ {
 			data, err = fns[i](ctx, data, processStateData)
 			if err != nil {

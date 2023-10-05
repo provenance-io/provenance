@@ -297,7 +297,7 @@ func (h WasmHooks) SendPacketOverride(
 	return seq, nil
 }
 
-func (h WasmHooks) SendPacketFn(
+func (h WasmHooks) GetPreSendPacketDataProcessingFns(
 	_ sdktypes.Context,
 	data []byte,
 	processData map[string]interface{},

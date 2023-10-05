@@ -650,7 +650,7 @@ func New(
 	app.IBCHooksKeeper.ContractKeeper = app.ContractKeeper
 	app.Ics20MarkerHooks.MarkerKeeper = &app.MarkerKeeper
 
-	app.IbcHooks.SendPacketFns = []ibchookstypes.SendPacketFn{app.Ics20MarkerHooks.SendPacketFn, app.Ics20WasmHooks.SendPacketFn}
+	app.IbcHooks.PreSendPacketDataProcessingFns = []ibchookstypes.PreSendPacketDataProcessingFn{app.Ics20MarkerHooks.PreSendPacketDataProcessingFn, app.Ics20WasmHooks.GetPreSendPacketDataProcessingFns}
 
 	app.ScopedOracleKeeper = scopedOracleKeeper
 	app.OracleKeeper = *oraclekeeper.NewKeeper(
