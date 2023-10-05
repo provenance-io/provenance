@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -263,8 +264,8 @@ func (f *OrderFulfillment) SplitOrder() (filled *Order, unfilled *Order, err err
 	return filled, unfilled, err
 }
 
-// SumAssetsAndPrice gets the sum of assets, and the sum of prices of the provided orders.
-func SumAssetsAndPrice(orders []*Order) (assets sdk.Coins, price sdk.Coins) {
+// sumAssetsAndPrice gets the sum of assets, and the sum of prices of the provided orders.
+func sumAssetsAndPrice(orders []*Order) (assets sdk.Coins, price sdk.Coins) {
 	for _, o := range orders {
 		assets = assets.Add(o.GetAssets())
 		price = price.Add(o.GetPrice())
@@ -281,13 +282,21 @@ func sumPriceLeft(fulfillments []*OrderFulfillment) sdkmath.Int {
 	return rv
 }
 
+// Settlement contains information on how a set of orders is to be settled.
 type Settlement struct {
-	Transfers          []*Transfer
-	FeeInputs          []banktypes.Input
+	// Transfers are all of the inputs and outputs needed to facilitate movement of assets and price.
+	Transfers []*Transfer
+	// FeeInputs are the inputs needed to facilitate payment of order fees.
+	FeeInputs []banktypes.Input
+	// FullyFilledOrders are all the orders that are fully filled in this settlement.
+	FullyFilledOrders []*Order
+	// PartialOrderFilled is a partially filled order with amounts indicating how much was filled.
 	PartialOrderFilled *Order
-	PartialOrderLeft   *Order
+	// PartialOrderLeft is what's left of the partially filled order.
+	PartialOrderLeft *Order
 }
 
+// BuildSettlement processes the provided orders, identifying how the provided orders can be settled.
 func BuildSettlement(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) (*Settlement, error) {
 	if err := validateCanSettle(askOrders, bidOrders); err != nil {
 		return nil, err
@@ -302,7 +311,7 @@ func BuildSettlement(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) (*
 	}
 
 	// Identify any partial order and update its entry in the order fulfillments.
-	partialyFilled, partialyUnfilled, err := splitPartial(askOFs, bidOFs)
+	settlement, err := splitPartial(askOFs, bidOFs)
 	if err != nil {
 		return nil, err
 	}
@@ -329,17 +338,12 @@ func BuildSettlement(askOrders, bidOrders []*Order, sellerFeeRatio *FeeRatio) (*
 		return nil, err
 	}
 
-	// TODO[1658]: Build the transfers.
-
-	// TODO[1658]: Build the fee inputs.
-
-	settlements := &Settlement{
-		Transfers:          nil,
-		FeeInputs:          nil,
-		PartialOrderFilled: partialyFilled,
-		PartialOrderLeft:   partialyUnfilled,
+	settlement.Transfers, settlement.FeeInputs, err = buildTransfers(askOFs, bidOFs)
+	if err != nil {
+		return nil, err
 	}
-	return settlements, nil
+
+	return settlement, nil
 }
 
 // validateCanSettle does some superficial checking of the provided orders to make sure we can try to settle them.
@@ -371,8 +375,8 @@ func validateCanSettle(askOrders, bidOrders []*Order) error {
 		return errors.Join(errs...)
 	}
 
-	totalAssetsForSale, totalAskPrice := SumAssetsAndPrice(askOrders)
-	totalAssetsToBuy, totalBidPrice := SumAssetsAndPrice(bidOrders)
+	totalAssetsForSale, totalAskPrice := sumAssetsAndPrice(askOrders)
+	totalAssetsToBuy, totalBidPrice := sumAssetsAndPrice(bidOrders)
 
 	if len(totalAssetsForSale) != 1 {
 		errs = append(errs, fmt.Errorf("cannot settle with multiple ask order asset denoms %q", totalAssetsForSale))
@@ -435,49 +439,57 @@ func allocateAssets(askOFs, bidOFs []*OrderFulfillment) error {
 }
 
 // splitPartial checks the provided fulfillments for a partial order and splits it out, updating the applicable fulfillment.
-func splitPartial(askOFs, bidOFs []*OrderFulfillment) (partialyFilled, partialyUnfilled *Order, err error) {
+func splitPartial(askOFs, bidOFs []*OrderFulfillment) (*Settlement, error) {
+	rv := &Settlement{}
+
 	lastAskI := len(askOFs) - 1
 	for i, askOF := range askOFs {
 		if askOF.AssetsFilledAmt.IsZero() {
-			return nil, nil, fmt.Errorf("%s order %d (at index %d) has no assets filled",
+			return nil, fmt.Errorf("%s order %d (at index %d) has no assets filled",
 				askOF.GetOrderType(), askOF.GetOrderID(), i)
 		}
 		if !askOF.AssetsUnfilledAmt.IsZero() {
 			if i != lastAskI {
-				return nil, nil, fmt.Errorf("%s order %d (at index %d) is not filled in full and is not the last ask order provided",
+				return nil, fmt.Errorf("%s order %d (at index %d) is not filled in full and is not the last ask order provided",
 					askOF.GetOrderType(), askOF.GetOrderID(), i)
 			}
-			partialyFilled, partialyUnfilled, err = askOF.SplitOrder()
+			var err error
+			rv.PartialOrderFilled, rv.PartialOrderLeft, err = askOF.SplitOrder()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
+		} else {
+			rv.FullyFilledOrders = append(rv.FullyFilledOrders, askOF.Order)
 		}
 	}
 
 	lastBidI := len(bidOFs) - 1
 	for i, bidOF := range bidOFs {
 		if bidOF.AssetsFilledAmt.IsZero() {
-			return nil, nil, fmt.Errorf("%s order %d (at index %d) has no assets filled",
+			return nil, fmt.Errorf("%s order %d (at index %d) has no assets filled",
 				bidOF.GetOrderType(), bidOF.GetOrderID(), i)
 		}
 		if !bidOF.AssetsUnfilledAmt.IsZero() {
 			if i != lastBidI {
-				return nil, nil, fmt.Errorf("%s order %d (at index %d) is not filled in full and is not the last bid order provided",
+				return nil, fmt.Errorf("%s order %d (at index %d) is not filled in full and is not the last bid order provided",
 					bidOF.GetOrderType(), bidOF.GetOrderID(), i)
 			}
-			if partialyFilled != nil {
-				return nil, nil, fmt.Errorf("%s order %d and %s order %d cannot both be partially filled",
-					partialyFilled.GetOrderType(), partialyFilled.GetOrderID(),
+			if rv.PartialOrderFilled != nil {
+				return nil, fmt.Errorf("%s order %d and %s order %d cannot both be partially filled",
+					rv.PartialOrderFilled.GetOrderType(), rv.PartialOrderFilled.GetOrderID(),
 					bidOF.GetOrderType(), bidOF.GetOrderID())
 			}
-			partialyFilled, partialyUnfilled, err = bidOF.SplitOrder()
+			var err error
+			rv.PartialOrderFilled, rv.PartialOrderLeft, err = bidOF.SplitOrder()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
+		} else {
+			rv.FullyFilledOrders = append(rv.FullyFilledOrders, bidOF.Order)
 		}
 	}
 
-	return partialyFilled, partialyUnfilled, err
+	return rv, nil
 }
 
 // allocatePrice distributes the prices among the fulfillments.
@@ -625,6 +637,129 @@ func validateFulfillments(askOFs, bidOFs []*OrderFulfillment) error {
 		}
 	}
 	return errors.Join(errs...)
+}
+
+// buildTransfers creates the transfers and inputs for fee payments.
+func buildTransfers(askOFs, bidOFs []*OrderFulfillment) ([]*Transfer, []banktypes.Input, error) {
+	allOFs := make([]*OrderFulfillment, 0, len(askOFs)+len(bidOFs))
+	allOFs = append(allOFs, askOFs...)
+	allOFs = append(allOFs, bidOFs...)
+
+	indexedFees := newIndexedAddrAmts()
+	transfers := make([]*Transfer, 0, len(allOFs)*2)
+
+	var errs []error
+	for _, of := range allOFs {
+		assetTrans, err := getAssetTransfer(of)
+		if err != nil {
+			errs = append(errs, err)
+		} else {
+			transfers = append(transfers, assetTrans)
+		}
+
+		priceTrans, err := getPriceTransfer(of)
+		if err != nil {
+			errs = append(errs, err)
+		} else {
+			transfers = append(transfers, priceTrans)
+		}
+
+		if !of.FeesToPay.IsZero() {
+			if of.FeesToPay.IsAnyNegative() {
+				errs = append(errs, fmt.Errorf("%s order %d cannot pay %q in fees: negative amount",
+					of.GetOrderType(), of.GetOrderID(), of.FeesToPay))
+			} else {
+				fees := sdk.NewCoins(of.FeesToPay...)
+				indexedFees.add(of.GetOwner(), fees...)
+			}
+		}
+	}
+
+	if len(errs) > 0 {
+		return nil, nil, errors.Join(errs...)
+	}
+
+	feeInputs := indexedFees.getAsInputs()
+
+	return transfers, feeInputs, nil
+}
+
+// getAssetTransfer gets the inputs and outputs to facilitate the transfers of assets for this order fulfillment.
+func getAssetTransfer(f *OrderFulfillment) (*Transfer, error) {
+	if !f.AssetsFilledAmt.IsPositive() {
+		return nil, fmt.Errorf("%s order %d cannot be filled with %s assets: amount not positive",
+			f.GetOrderType(), f.GetOrderID(), f.GetAssetsFilled())
+	}
+
+	indexedDists := newIndexedAddrAmts()
+	sumDists := sdkmath.ZeroInt()
+	for _, dist := range f.AssetDists {
+		if !dist.Amount.IsPositive() {
+			return nil, fmt.Errorf("%s order %d cannot have %q assets in a transfer: amount not positive",
+				f.GetOrderType(), f.GetOrderID(), f.assetCoin(dist.Amount))
+		}
+		indexedDists.add(dist.Address, f.assetCoin(dist.Amount))
+		sumDists = sumDists.Add(dist.Amount)
+	}
+
+	if !sumDists.Equal(f.AssetsFilledAmt) {
+		return nil, fmt.Errorf("%s order %d assets filled %q does not equal assets distributed %q",
+			f.GetOrderType(), f.GetOrderID(), f.GetAssetsFilled(), f.assetCoin(sumDists))
+	}
+
+	if f.IsAskOrder() {
+		return &Transfer{
+			Inputs:  []banktypes.Input{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetAssetsFilled())}},
+			Outputs: indexedDists.getAsOutputs(),
+		}, nil
+	}
+	if f.IsBidOrder() {
+		return &Transfer{
+			Inputs:  indexedDists.getAsInputs(),
+			Outputs: []banktypes.Output{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetAssetsFilled())}},
+		}, nil
+	}
+
+	return nil, fmt.Errorf("unknown order type %T", f.Order.GetOrder())
+}
+
+// getPriceTransfer gets the inputs and outputs to facilitate the transfers for the price of this order fulfillment.
+func getPriceTransfer(f *OrderFulfillment) (*Transfer, error) {
+	if !f.PriceAppliedAmt.IsPositive() {
+		return nil, fmt.Errorf("%s order %d cannot be filled at price %q: amount not positive",
+			f.GetOrderType(), f.GetOrderID(), f.GetPriceApplied())
+	}
+
+	indexedDists := newIndexedAddrAmts()
+	sumDists := sdkmath.ZeroInt()
+	for _, dist := range f.PriceDists {
+		if !dist.Amount.IsPositive() {
+			return nil, fmt.Errorf("%s order %d cannot have price %q in a transfer: amount not positive",
+				f.GetOrderType(), f.GetOrderID(), f.priceCoin(dist.Amount))
+		}
+		indexedDists.add(dist.Address, f.priceCoin(dist.Amount))
+		sumDists = sumDists.Add(dist.Amount)
+	}
+
+	if !sumDists.Equal(f.PriceAppliedAmt) {
+		return nil, fmt.Errorf("%s order %d price filled %q does not equal price distributed %q",
+			f.GetOrderType(), f.GetOrderID(), f.GetPriceApplied(), f.priceCoin(sumDists))
+	}
+
+	if f.IsAskOrder() {
+		return &Transfer{
+			Inputs:  indexedDists.getAsInputs(),
+			Outputs: []banktypes.Output{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetPriceApplied())}},
+		}, nil
+	}
+	if f.IsBidOrder() {
+		return &Transfer{
+			Inputs:  []banktypes.Input{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetPriceApplied())}},
+			Outputs: indexedDists.getAsOutputs(),
+		}, nil
+	}
+
+	return nil, fmt.Errorf("unknown order type %T", f.Order.GetOrder())
 }
 
 // Apply adjusts this order fulfillment using the provided info.
@@ -808,11 +943,6 @@ func (f *OrderFulfillment) Finalize(sellerFeeRatio *FeeRatio) (err error) {
 
 // Validate makes sure the assets filled and price applied are acceptable for this fulfillment.
 func (f OrderFulfillment) Validate() error {
-	// Make sure:
-	// * order assets = assets filled
-	// * order price <= price applied (ask orders)
-	// * order price = price applied (bid orders)
-
 	orderPrice := f.GetPrice()
 	switch {
 	case f.IsAskOrder():
@@ -1354,45 +1484,6 @@ func BuildSettlementTransfers(f *Fulfillments) *SettlementTransfers {
 	rv.FeeInputs = indexedFees.getAsInputs()
 
 	return rv
-}
-
-// GetAssetTransfer gets the inputs and outputs to facilitate the transfers of assets for this order fulfillment.
-func GetAssetTransfer(f *OrderFulfillment) (*Transfer, error) {
-	if !f.AssetsFilledAmt.IsPositive() {
-		return nil, fmt.Errorf("%s order %d cannot be filled with %s assets: amount not positive",
-			f.GetOrderType(), f.GetOrderID(), f.GetAssetsFilled())
-	}
-
-	indexedDists := newIndexedAddrAmts()
-	sumDists := sdkmath.ZeroInt()
-	for _, dist := range f.AssetDists {
-		if !dist.Amount.IsPositive() {
-			return nil, fmt.Errorf("%s order %d cannot have %q assets in a transfer: amount not positive",
-				f.GetOrderType(), f.GetOrderID(), f.assetCoin(dist.Amount))
-		}
-		indexedDists.add(dist.Address, f.assetCoin(dist.Amount))
-		sumDists = sumDists.Add(dist.Amount)
-	}
-
-	if sumDists != f.AssetsFilledAmt {
-		return nil, fmt.Errorf("%s order %d assets filled %q does not equal assets distributed %q",
-			f.GetOrderType(), f.GetOrderID(), f.GetAssetsFilled(), f.assetCoin(sumDists))
-	}
-
-	if f.IsAskOrder() {
-		return &Transfer{
-			Inputs:  []banktypes.Input{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetAssetsFilled())}},
-			Outputs: indexedDists.getAsOutputs(),
-		}, nil
-	}
-	if f.IsBidOrder() {
-		return &Transfer{
-			Inputs:  indexedDists.getAsInputs(),
-			Outputs: []banktypes.Output{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetAssetsFilled())}},
-		}, nil
-	}
-
-	return nil, fmt.Errorf("unknown order type %T", f.Order.GetOrder())
 }
 
 // GetAssetTransfer2 gets the inputs and outputs to facilitate the transfers of assets for this order fulfillment.
