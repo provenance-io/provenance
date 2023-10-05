@@ -4642,17 +4642,17 @@ func TestGetFulfillmentAssetsAmt(t *testing.T) {
 			},
 		}
 		if c.expAmt == 0 {
-			newTests[0].expErr = fmt.Sprintf("cannot fill ask order 1 having assets left \"%done\" "+
-				"with bid order 2 having assets left \"%dtwo\": zero or negative assets left",
+			newTests[0].expErr = fmt.Sprintf("cannot fill ask order 1 having assets left \"%done\" with bid "+
+				"order 2 having assets left \"%dtwo\": zero or negative assets left",
 				c.of1Unfilled, c.of2Unfilled)
-			newTests[1].expErr = fmt.Sprintf("cannot fill bid order 1 having assets left \"%done\" "+
-				"with ask order 2 having assets left \"%dtwo\": zero or negative assets left",
+			newTests[1].expErr = fmt.Sprintf("cannot fill bid order 1 having assets left \"%done\" with ask "+
+				"order 2 having assets left \"%dtwo\": zero or negative assets left",
 				c.of1Unfilled, c.of2Unfilled)
-			newTests[2].expErr = fmt.Sprintf("cannot fill ask order 1 having assets left \"%done\" "+
-				"with ask order 2 having assets left \"%dtwo\": zero or negative assets left",
+			newTests[2].expErr = fmt.Sprintf("cannot fill ask order 1 having assets left \"%done\" with ask "+
+				"order 2 having assets left \"%dtwo\": zero or negative assets left",
 				c.of1Unfilled, c.of2Unfilled)
-			newTests[3].expErr = fmt.Sprintf("cannot fill bid order 1 having assets left \"%done\" "+
-				"with bid order 2 having assets left \"%dtwo\": zero or negative assets left",
+			newTests[3].expErr = fmt.Sprintf("cannot fill bid order 1 having assets left \"%done\" with bid "+
+				"order 2 having assets left \"%dtwo\": zero or negative assets left",
 				c.of1Unfilled, c.of2Unfilled)
 		}
 		tests = append(tests, newTests...)
@@ -4681,8 +4681,112 @@ func TestGetFulfillmentAssetsAmt(t *testing.T) {
 }
 
 func TestGetFulfillmentPriceAmt(t *testing.T) {
-	// TODO[1658]: func TestGetFulfillmentPriceAmt(t *testing.T)
-	t.Skipf("not written")
+	newAskOF := func(orderID uint64, assetsUnfilled int64, assetDenom string) *OrderFulfillment {
+		return &OrderFulfillment{
+			Order: NewOrder(orderID).WithAsk(&AskOrder{
+				Price: sdk.NewInt64Coin(assetDenom, 999),
+			}),
+			PriceLeftAmt: sdkmath.NewInt(assetsUnfilled),
+		}
+	}
+	newBidOF := func(orderID uint64, assetsUnfilled int64, assetDenom string) *OrderFulfillment {
+		return &OrderFulfillment{
+			Order: NewOrder(orderID).WithBid(&BidOrder{
+				Price: sdk.NewInt64Coin(assetDenom, 999),
+			}),
+			PriceLeftAmt: sdkmath.NewInt(assetsUnfilled),
+		}
+	}
+
+	cases := []struct {
+		name        string
+		of1Unfilled int64
+		of2Unfilled int64
+		expAmt      int64
+	}{
+		{name: "of1 zero", of1Unfilled: 0, of2Unfilled: 3, expAmt: 0},
+		{name: "of1 negative", of1Unfilled: -4, of2Unfilled: 3, expAmt: 0},
+		{name: "of2 zero", of1Unfilled: 5, of2Unfilled: 0, expAmt: 0},
+		{name: "of2 negative", of1Unfilled: 5, of2Unfilled: -6, expAmt: 0},
+		{name: "equal", of1Unfilled: 8, of2Unfilled: 8, expAmt: 8},
+		{name: "of1 has fewer", of1Unfilled: 9, of2Unfilled: 10, expAmt: 9},
+		{name: "of2 has fewer", of1Unfilled: 12, of2Unfilled: 11, expAmt: 11},
+	}
+
+	type testCase struct {
+		name   string
+		of1    *OrderFulfillment
+		of2    *OrderFulfillment
+		expAmt sdkmath.Int
+		expErr string
+	}
+
+	tests := make([]testCase, 0, len(cases)*4)
+
+	for _, c := range cases {
+		newTests := []testCase{
+			{
+				name:   "ask bid " + c.name,
+				of1:    newAskOF(1, c.of1Unfilled, "one"),
+				of2:    newBidOF(2, c.of2Unfilled, "two"),
+				expAmt: sdkmath.NewInt(c.expAmt),
+			},
+			{
+				name:   "bid ask " + c.name,
+				of1:    newBidOF(1, c.of1Unfilled, "one"),
+				of2:    newAskOF(2, c.of2Unfilled, "two"),
+				expAmt: sdkmath.NewInt(c.expAmt),
+			},
+			{
+				name:   "ask ask " + c.name,
+				of1:    newAskOF(1, c.of1Unfilled, "one"),
+				of2:    newAskOF(2, c.of2Unfilled, "two"),
+				expAmt: sdkmath.NewInt(c.expAmt),
+			},
+			{
+				name:   "bid bid " + c.name,
+				of1:    newBidOF(1, c.of1Unfilled, "one"),
+				of2:    newBidOF(2, c.of2Unfilled, "two"),
+				expAmt: sdkmath.NewInt(c.expAmt),
+			},
+		}
+		if c.expAmt == 0 {
+			newTests[0].expErr = fmt.Sprintf("cannot fill ask order 1 having price left \"%done\" with bid "+
+				"order 2 having price left \"%dtwo\": zero or negative price left",
+				c.of1Unfilled, c.of2Unfilled)
+			newTests[1].expErr = fmt.Sprintf("cannot fill bid order 1 having price left \"%done\" with ask "+
+				"order 2 having price left \"%dtwo\": zero or negative price left",
+				c.of1Unfilled, c.of2Unfilled)
+			newTests[2].expErr = fmt.Sprintf("cannot fill ask order 1 having price left \"%done\" with ask "+
+				"order 2 having price left \"%dtwo\": zero or negative price left",
+				c.of1Unfilled, c.of2Unfilled)
+			newTests[3].expErr = fmt.Sprintf("cannot fill bid order 1 having price left \"%done\" with bid "+
+				"order 2 having price left \"%dtwo\": zero or negative price left",
+				c.of1Unfilled, c.of2Unfilled)
+		}
+		tests = append(tests, newTests...)
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if len(tc.expErr) > 0 {
+				tc.expAmt = sdkmath.ZeroInt()
+			}
+			origOF1 := copyOrderFulfillment(tc.of1)
+			origOF2 := copyOrderFulfillment(tc.of2)
+
+			var amt sdkmath.Int
+			var err error
+			testFunc := func() {
+				amt, err = GetFulfillmentPriceAmt(tc.of1, tc.of2)
+			}
+			require.NotPanics(t, testFunc, "GetFulfillmentPriceAmt")
+			assertions.AssertErrorValue(t, err, tc.expErr, "GetFulfillmentPriceAmt error")
+			assert.Equal(t, tc.expAmt, amt, "GetFulfillmentPriceAmt amount")
+			assertEqualOrderFulfillments(t, origOF1, tc.of1, "of1 after GetFulfillmentPriceAmt")
+			assertEqualOrderFulfillments(t, origOF2, tc.of2, "of2 after GetFulfillmentPriceAmt")
+		})
+	}
 }
 
 func TestNewPartialFulfillment(t *testing.T) {
