@@ -229,15 +229,17 @@ func (o Order) Split(assetsFilledAmt sdkmath.Int) (filled *Order, unfilled *Orde
 	assetsFilled := sdk.Coin{Denom: orderAssets.Denom, Amount: assetsFilledAmt}
 
 	switch {
+	case !assetsFilledAmt.IsPositive():
+		return nil, nil, fmt.Errorf("cannot split %s order %d having asset %q at %q: amount filled not positive",
+			o.GetOrderType(), o.OrderId, orderAssets, assetsFilled)
 	case assetsFilledAmt.Equal(orderAssetsAmt):
-		return &o, nil, nil
-	case assetsFilledAmt.IsZero():
-		return nil, &o, nil
-	case assetsFilledAmt.IsNegative():
-		return nil, nil, fmt.Errorf("cannot split %s order %d having asset %q at %q: amount filled is negative",
+		return nil, nil, fmt.Errorf("cannot split %s order %d having asset %q at %q: amount filled equals order assets",
 			o.GetOrderType(), o.OrderId, orderAssets, assetsFilled)
 	case assetsFilledAmt.GT(orderAssetsAmt):
 		return nil, nil, fmt.Errorf("cannot split %s order %d having asset %q at %q: overfilled",
+			o.GetOrderType(), o.OrderId, orderAssets, assetsFilled)
+	case !o.PartialFillAllowed():
+		return nil, nil, fmt.Errorf("cannot split %s order %d having assets %q at %q: order does not allow partial fulfillment",
 			o.GetOrderType(), o.OrderId, orderAssets, assetsFilled)
 	}
 
@@ -292,6 +294,7 @@ func (o Order) Split(assetsFilledAmt sdkmath.Int) (filled *Order, unfilled *Orde
 		unfilled = NewOrder(o.OrderId).WithBid(v.BidOrder.CopyChange(assetsUnfilled, priceUnfilled, feesUnfilled))
 		return filled, unfilled, nil
 	default:
+		// This is here in case a new order type is added (that implements OrderI), but a case isn't added here.
 		panic(fmt.Errorf("cannot split %s order %d: unknown order type", o.GetOrderType(), o.OrderId))
 	}
 }

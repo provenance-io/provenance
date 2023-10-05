@@ -1173,7 +1173,201 @@ func TestOrder_Validate(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestOrder_Split(t *testing.T)
+func TestOrder_Split(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	askOrder := func(orderID uint64, assetAmt, priceAmt int64, fees ...sdk.Coin) *Order {
+		askOrder := &AskOrder{
+			MarketId:     55,
+			Seller:       "samuel",
+			Assets:       coin(assetAmt, "apple"),
+			Price:        coin(priceAmt, "peach"),
+			AllowPartial: true,
+		}
+		if len(fees) > 1 {
+			t.Fatalf("a max of 1 fee can be provided to askOrder, actual: %s", sdk.Coins(fees))
+		}
+		if len(fees) > 0 {
+			askOrder.SellerSettlementFlatFee = &fees[0]
+		}
+		return NewOrder(orderID).WithAsk(askOrder)
+	}
+	bidOrder := func(orderID uint64, assetAmt, priceAmt int64, fees ...sdk.Coin) *Order {
+		bidOrder := &BidOrder{
+			MarketId:     55,
+			Buyer:        "brian",
+			Assets:       coin(assetAmt, "apple"),
+			Price:        coin(priceAmt, "peach"),
+			AllowPartial: true,
+		}
+		if len(fees) > 0 {
+			bidOrder.BuyerSettlementFees = fees
+		}
+		return NewOrder(orderID).WithBid(bidOrder)
+	}
+
+	tests := []struct {
+		name            string
+		order           *Order
+		assetsFilledAmt sdkmath.Int
+		expFilled       *Order
+		expUnfilled     *Order
+		expErr          string
+		expPanic        string
+	}{
+		{
+			name:            "nil inside order",
+			order:           NewOrder(88),
+			assetsFilledAmt: sdkmath.NewInt(0),
+			expPanic:        nilSubTypeErr(88),
+		},
+		{
+			name:            "unknown inside order",
+			order:           newUnknownOrder(89),
+			assetsFilledAmt: sdkmath.NewInt(0),
+			expPanic:        unknownSubTypeErr(89),
+		},
+		{
+			name:            "assets filled is negative: ask",
+			order:           askOrder(3, 10, 100),
+			assetsFilledAmt: sdkmath.NewInt(-1),
+			expErr:          "cannot split ask order 3 having asset \"10apple\" at \"-1apple\": amount filled not positive",
+		},
+		{
+			name:            "assets filled is negative: bid",
+			order:           bidOrder(4, 10, 100),
+			assetsFilledAmt: sdkmath.NewInt(-1),
+			expErr:          "cannot split bid order 4 having asset \"10apple\" at \"-1apple\": amount filled not positive",
+		},
+		{
+			name:            "assets filled is zero: ask",
+			order:           askOrder(9, 10, 100),
+			assetsFilledAmt: sdkmath.NewInt(0),
+			expErr:          "cannot split ask order 9 having asset \"10apple\" at \"0apple\": amount filled not positive",
+		},
+		{
+			name:            "assets filled is zero: bid",
+			order:           bidOrder(10, 10, 100),
+			assetsFilledAmt: sdkmath.NewInt(0),
+			expErr:          "cannot split bid order 10 having asset \"10apple\" at \"0apple\": amount filled not positive",
+		},
+		{
+			name:            "assets filled equals order assets: ask",
+			order:           askOrder(7, 10, 100),
+			assetsFilledAmt: sdkmath.NewInt(10),
+			expErr:          "cannot split ask order 7 having asset \"10apple\" at \"10apple\": amount filled equals order assets",
+		},
+		{
+			name:            "assets filled equals order assets: bid",
+			order:           bidOrder(8, 10, 100),
+			assetsFilledAmt: sdkmath.NewInt(10),
+			expErr:          "cannot split bid order 8 having asset \"10apple\" at \"10apple\": amount filled equals order assets",
+		},
+		{
+			name:            "assets filled is more than order assets: ask",
+			order:           askOrder(5, 10, 100),
+			assetsFilledAmt: sdkmath.NewInt(11),
+			expErr:          "cannot split ask order 5 having asset \"10apple\" at \"11apple\": overfilled",
+		},
+		{
+			name:            "assets filled is more than order assets: bid",
+			order:           bidOrder(6, 10, 100),
+			assetsFilledAmt: sdkmath.NewInt(11),
+			expErr:          "cannot split bid order 6 having asset \"10apple\" at \"11apple\": overfilled",
+		},
+		{
+			name:            "partial not allowed: ask",
+			order:           NewOrder(1).WithAsk(&AskOrder{AllowPartial: false, Assets: coin(2, "peach")}),
+			assetsFilledAmt: sdkmath.NewInt(1),
+			expErr:          "cannot split ask order 1 having assets \"2peach\" at \"1peach\": order does not allow partial fulfillment",
+		},
+		{
+			name:            "partial not allowed: bid",
+			order:           NewOrder(2).WithBid(&BidOrder{AllowPartial: false, Assets: coin(2, "peach")}),
+			assetsFilledAmt: sdkmath.NewInt(1),
+			expErr:          "cannot split bid order 2 having assets \"2peach\" at \"1peach\": order does not allow partial fulfillment",
+		},
+		{
+			name:            "price not divisible: ask",
+			order:           askOrder(11, 70, 501),
+			assetsFilledAmt: sdkmath.NewInt(7),
+			expErr: "ask order 11 having assets \"70apple\" cannot be partially filled " +
+				"by \"7apple\": price \"501peach\" is not evenly divisible",
+		},
+		{
+			name:            "price not divisible: bid",
+			order:           bidOrder(12, 70, 501),
+			assetsFilledAmt: sdkmath.NewInt(7),
+			expErr: "bid order 12 having assets \"70apple\" cannot be partially filled " +
+				"by \"7apple\": price \"501peach\" is not evenly divisible",
+		},
+		{
+			name:            "fee not divisible: ask",
+			order:           askOrder(13, 70, 500, coin(23, "fig")),
+			assetsFilledAmt: sdkmath.NewInt(7),
+			expErr: "ask order 13 having assets \"70apple\" cannot be partially filled " +
+				"by \"7apple\": fee \"23fig\" is not evenly divisible",
+		},
+		{
+			name:            "fees not divisible: bid",
+			order:           bidOrder(14, 70, 500, coin(20, "fig"), coin(34, "grape")),
+			assetsFilledAmt: sdkmath.NewInt(7),
+			expErr: "bid order 14 having assets \"70apple\" cannot be partially filled " +
+				"by \"7apple\": fee \"34grape\" is not evenly divisible",
+		},
+		{
+			name:            "no fees: ask",
+			order:           askOrder(21, 70, 500),
+			assetsFilledAmt: sdkmath.NewInt(7),
+			expFilled:       askOrder(21, 7, 50),
+			expUnfilled:     askOrder(21, 63, 450),
+		},
+		{
+			name:            "no fees: bid",
+			order:           bidOrder(22, 70, 500),
+			assetsFilledAmt: sdkmath.NewInt(7),
+			expFilled:       bidOrder(22, 7, 50),
+			expUnfilled:     bidOrder(22, 63, 450),
+		},
+		{
+			name:            "with fees: ask",
+			order:           askOrder(23, 10, 500, coin(5, "fig")),
+			assetsFilledAmt: sdkmath.NewInt(8),
+			expFilled:       askOrder(23, 8, 400, coin(4, "fig")),
+			expUnfilled:     askOrder(23, 2, 100, coin(1, "fig")),
+		},
+		{
+			name:            "with fees: bid",
+			order:           bidOrder(24, 10, 500, coin(5, "fig"), coin(15, "grape")),
+			assetsFilledAmt: sdkmath.NewInt(8),
+			expFilled:       bidOrder(24, 8, 400, coin(4, "fig"), coin(12, "grape")),
+			expUnfilled:     bidOrder(24, 2, 100, coin(1, "fig"), coin(3, "grape")),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var filled, unfilled *Order
+			var err error
+			testFunc := func() {
+				filled, unfilled, err = tc.order.Split(tc.assetsFilledAmt)
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "Split(%s)", tc.assetsFilledAmt)
+			assertions.AssertErrorValue(t, err, tc.expErr, "Split(%s) error", tc.assetsFilledAmt)
+			assert.Equal(t, tc.expFilled, filled, "Split(%s) filled order", tc.assetsFilledAmt)
+			assert.Equal(t, tc.expUnfilled, unfilled, "Split(%s) unfilled order", tc.assetsFilledAmt)
+			// If the expected filled isn't null, but unfilled is, make sure that the original was returned.
+			if tc.expFilled != nil && tc.expUnfilled == nil {
+				assert.Same(t, tc.order, filled, "Split(%s) filled order address", tc.assetsFilledAmt)
+			}
+			// If the expected unfilled isn't null, but filled is, make sure that the original was returned.
+			if tc.expUnfilled != nil && tc.expFilled == nil {
+				assert.Same(t, tc.order, unfilled, "Split(%s) unfilled order address", tc.assetsFilledAmt)
+			}
+		})
+	}
+}
 
 func TestAskOrder_GetMarketID(t *testing.T) {
 	tests := []struct {
@@ -1632,7 +1826,127 @@ func TestAskOrder_Validate(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestAskOrder_CopyChange(t *testing.T)
+func TestAskOrder_CopyChange(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	coinP := func(amount int64, denom string) *sdk.Coin {
+		rv := coin(amount, denom)
+		return &rv
+	}
+
+	tests := []struct {
+		name      string
+		order     AskOrder
+		newAssets sdk.Coin
+		newPrice  sdk.Coin
+		newFee    *sdk.Coin
+		expected  *AskOrder
+	}{
+		{
+			name: "new assets",
+			order: AskOrder{
+				MarketId:                3,
+				Seller:                  "sseelleerr",
+				Assets:                  coin(8, "apple"),
+				Price:                   coin(55, "peach"),
+				SellerSettlementFlatFee: coinP(12, "fig"),
+				AllowPartial:            true,
+			},
+			newAssets: coin(14, "avocado"),
+			newPrice:  coin(55, "peach"),
+			newFee:    coinP(12, "fig"),
+			expected: &AskOrder{
+				MarketId:                3,
+				Seller:                  "sseelleerr",
+				Assets:                  coin(14, "avocado"),
+				Price:                   coin(55, "peach"),
+				SellerSettlementFlatFee: coinP(12, "fig"),
+				AllowPartial:            true,
+			},
+		},
+		{
+			name: "new price",
+			order: AskOrder{
+				MarketId:                99,
+				Seller:                  "sseeLLeerr",
+				Assets:                  coin(8, "apple"),
+				Price:                   coin(55, "peach"),
+				SellerSettlementFlatFee: coinP(12, "fig"),
+				AllowPartial:            false,
+			},
+			newAssets: coin(8, "apple"),
+			newPrice:  coin(38, "plum"),
+			newFee:    coinP(12, "fig"),
+			expected: &AskOrder{
+				MarketId:                99,
+				Seller:                  "sseeLLeerr",
+				Assets:                  coin(8, "apple"),
+				Price:                   coin(38, "plum"),
+				SellerSettlementFlatFee: coinP(12, "fig"),
+				AllowPartial:            false,
+			},
+		},
+		{
+			name: "new fees",
+			order: AskOrder{
+				MarketId:                33,
+				Seller:                  "SseelleerR",
+				Assets:                  coin(8, "apple"),
+				Price:                   coin(55, "peach"),
+				SellerSettlementFlatFee: coinP(12, "fig"),
+				AllowPartial:            true,
+			},
+			newAssets: coin(8, "apple"),
+			newPrice:  coin(55, "peach"),
+			newFee:    coinP(88, "grape"),
+			expected: &AskOrder{
+				MarketId:                33,
+				Seller:                  "SseelleerR",
+				Assets:                  coin(8, "apple"),
+				Price:                   coin(55, "peach"),
+				SellerSettlementFlatFee: coinP(88, "grape"),
+				AllowPartial:            true,
+			},
+		},
+		{
+			name: "new everything",
+			order: AskOrder{
+				MarketId:                34,
+				Seller:                  "SSEELLEERR",
+				Assets:                  coin(8, "apple"),
+				Price:                   coin(55, "peach"),
+				SellerSettlementFlatFee: coinP(12, "fig"),
+				AllowPartial:            false,
+			},
+			newAssets: coin(14, "avocado"),
+			newPrice:  coin(38, "plum"),
+			newFee:    coinP(88, "grape"),
+			expected: &AskOrder{
+				MarketId:                34,
+				Seller:                  "SSEELLEERR",
+				Assets:                  coin(14, "avocado"),
+				Price:                   coin(38, "plum"),
+				SellerSettlementFlatFee: coinP(88, "grape"),
+				AllowPartial:            false,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual *AskOrder
+			testFunc := func() {
+				actual = tc.order.CopyChange(tc.newAssets, tc.newPrice, tc.newFee)
+			}
+			require.NotPanics(t, testFunc, "CopyChange")
+			if !assert.Equal(t, tc.expected, actual, "CopyChange result") {
+				t.Logf("  Actual: %s", askOrderString(actual))
+				t.Logf("Expected: %s", askOrderString(tc.expected))
+			}
+		})
+	}
+}
 
 func TestBidOrder_GetMarketID(t *testing.T) {
 	tests := []struct {
@@ -2108,4 +2422,120 @@ func TestBidOrder_Validate(t *testing.T) {
 	}
 }
 
-// TODO[1658]: func TestBidOrder_CopyChange(t *testing.T)
+func TestBidOrder_CopyChange(t *testing.T) {
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+
+	tests := []struct {
+		name      string
+		order     BidOrder
+		newAssets sdk.Coin
+		newPrice  sdk.Coin
+		newFees   sdk.Coins
+		expected  *BidOrder
+	}{
+		{
+			name: "new assets",
+			order: BidOrder{
+				MarketId:            3,
+				Buyer:               "bbuuyyeerr",
+				Assets:              coin(8, "apple"),
+				Price:               coin(55, "peach"),
+				BuyerSettlementFees: sdk.Coins{coin(12, "fig")},
+				AllowPartial:        true,
+			},
+			newAssets: coin(14, "avocado"),
+			newPrice:  coin(55, "peach"),
+			newFees:   sdk.Coins{coin(12, "fig")},
+			expected: &BidOrder{
+				MarketId:            3,
+				Buyer:               "bbuuyyeerr",
+				Assets:              coin(14, "avocado"),
+				Price:               coin(55, "peach"),
+				BuyerSettlementFees: sdk.Coins{coin(12, "fig")},
+				AllowPartial:        true,
+			},
+		},
+		{
+			name: "new price",
+			order: BidOrder{
+				MarketId:            99,
+				Buyer:               "bbuuyyeerr",
+				Assets:              coin(8, "apple"),
+				Price:               coin(55, "peach"),
+				BuyerSettlementFees: sdk.Coins{coin(12, "fig")},
+				AllowPartial:        false,
+			},
+			newAssets: coin(8, "apple"),
+			newPrice:  coin(38, "plum"),
+			newFees:   sdk.Coins{coin(12, "fig")},
+			expected: &BidOrder{
+				MarketId:            99,
+				Buyer:               "bbuuyyeerr",
+				Assets:              coin(8, "apple"),
+				Price:               coin(38, "plum"),
+				BuyerSettlementFees: sdk.Coins{coin(12, "fig")},
+				AllowPartial:        false,
+			},
+		},
+		{
+			name: "new fees",
+			order: BidOrder{
+				MarketId:            33,
+				Buyer:               "bbuuyyeerr",
+				Assets:              coin(8, "apple"),
+				Price:               coin(55, "peach"),
+				BuyerSettlementFees: sdk.Coins{coin(12, "fig")},
+				AllowPartial:        true,
+			},
+			newAssets: coin(8, "apple"),
+			newPrice:  coin(55, "peach"),
+			newFees:   sdk.Coins{coin(88, "grape")},
+			expected: &BidOrder{
+				MarketId:            33,
+				Buyer:               "bbuuyyeerr",
+				Assets:              coin(8, "apple"),
+				Price:               coin(55, "peach"),
+				BuyerSettlementFees: sdk.Coins{coin(88, "grape")},
+				AllowPartial:        true,
+			},
+		},
+		{
+			name: "new everything",
+			order: BidOrder{
+				MarketId:            34,
+				Buyer:               "BBUUYYEERR",
+				Assets:              coin(8, "apple"),
+				Price:               coin(55, "peach"),
+				BuyerSettlementFees: sdk.Coins{coin(12, "fig")},
+				AllowPartial:        false,
+			},
+			newAssets: coin(14, "avocado"),
+			newPrice:  coin(38, "plum"),
+			newFees:   sdk.Coins{coin(88, "grape"), coin(123, "honeydew")},
+			expected: &BidOrder{
+				MarketId:            34,
+				Buyer:               "BBUUYYEERR",
+				Assets:              coin(14, "avocado"),
+				Price:               coin(38, "plum"),
+				BuyerSettlementFees: sdk.Coins{coin(88, "grape"), coin(123, "honeydew")},
+				AllowPartial:        false,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual *BidOrder
+			testFunc := func() {
+				actual = tc.order.CopyChange(tc.newAssets, tc.newPrice, tc.newFees)
+			}
+			require.NotPanics(t, testFunc, "CopyChange")
+			if !assert.Equal(t, tc.expected, actual, "CopyChange result") {
+				t.Logf("  Actual: %s", bidOrderString(actual))
+				t.Logf("Expected: %s", bidOrderString(tc.expected))
+			}
+		})
+	}
+}

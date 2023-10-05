@@ -548,13 +548,13 @@ func TestOrderFulfillment_AssetCoin(t *testing.T) {
 			name:     "nil inside order",
 			receiver: OrderFulfillment{Order: NewOrder(1)},
 			amt:      sdkmath.NewInt(0),
-			expPanic: "order 1 has unknown sub-order type <nil>: does not implement SubOrderI",
+			expPanic: nilSubTypeErr(1),
 		},
 		{
 			name:     "unknown inside order",
 			receiver: OrderFulfillment{Order: newUnknownOrder(2)},
 			amt:      sdkmath.NewInt(0),
-			expPanic: "order 2 has unknown sub-order type *exchange.unknownOrderType: does not implement SubOrderI",
+			expPanic: unknownSubTypeErr(2),
 		},
 		{
 			name:     "ask order",
@@ -668,13 +668,13 @@ func TestOrderFulfillment_PriceCoin(t *testing.T) {
 			name:     "nil inside order",
 			receiver: OrderFulfillment{Order: NewOrder(1)},
 			amt:      sdkmath.NewInt(0),
-			expPanic: "order 1 has unknown sub-order type <nil>: does not implement SubOrderI",
+			expPanic: nilSubTypeErr(1),
 		},
 		{
 			name:     "unknown inside order",
 			receiver: OrderFulfillment{Order: newUnknownOrder(2)},
 			amt:      sdkmath.NewInt(0),
-			expPanic: "order 2 has unknown sub-order type *exchange.unknownOrderType: does not implement SubOrderI",
+			expPanic: unknownSubTypeErr(2),
 		},
 		{
 			name:     "ask order",
@@ -2071,7 +2071,7 @@ func TestSumAssetsAndPrice(t *testing.T) {
 				NewOrder(4),
 				askOrder(5, coin(6, "apple"), coin(7, "plum")),
 			},
-			expPanic: "order 4 has unknown sub-order type <nil>: does not implement SubOrderI",
+			expPanic: nilSubTypeErr(4),
 		},
 		{
 			name: "unknown inside order",
@@ -2080,7 +2080,7 @@ func TestSumAssetsAndPrice(t *testing.T) {
 				newUnknownOrder(4),
 				askOrder(5, coin(6, "apple"), coin(7, "plum")),
 			},
-			expPanic: "order 4 has unknown sub-order type *exchange.unknownOrderType: does not implement SubOrderI",
+			expPanic: unknownSubTypeErr(4),
 		},
 		{
 			name:      "one order, ask",

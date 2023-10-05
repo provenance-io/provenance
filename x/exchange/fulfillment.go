@@ -258,10 +258,14 @@ func DistributePrice(of1, of2 *OrderFulfillment, amount sdkmath.Int) error {
 // This order fulfillment is updated to have the filled order.
 func (f *OrderFulfillment) SplitOrder() (filled *Order, unfilled *Order, err error) {
 	filled, unfilled, err = f.Order.Split(f.AssetsFilledAmt)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	f.Order = filled
 	f.AssetsUnfilledAmt = sdkmath.ZeroInt()
 	f.PriceLeftAmt = filled.GetPrice().Amount.Sub(f.PriceAppliedAmt)
-	return filled, unfilled, err
+	return filled, unfilled, nil
 }
 
 // sumAssetsAndPrice gets the sum of assets, and the sum of prices of the provided orders.
