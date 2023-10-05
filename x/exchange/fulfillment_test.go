@@ -2375,13 +2375,421 @@ func TestBuildTransfers(t *testing.T) {
 }
 
 func TestGetAssetTransfer(t *testing.T) {
-	// TODO[1658]: func TestGetAssetTransfer(t *testing.T)
-	t.Skipf("not written")
+	seller, buyer := "sally", "brandon"
+	assetDenom, priceDenom := "apple", "peach"
+	newOF := func(order *Order, assetsFilledAmt int64, assetDists ...*Distribution) *OrderFulfillment {
+		rv := &OrderFulfillment{
+			Order:           order,
+			AssetsFilledAmt: sdkmath.NewInt(assetsFilledAmt),
+		}
+		if len(assetDists) > 0 {
+			rv.AssetDists = assetDists
+		}
+		return rv
+	}
+	askOrder := func(orderID uint64) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			MarketId: 5555,
+			Seller:   seller,
+			Assets:   sdk.Coin{Denom: assetDenom, Amount: sdkmath.NewInt(111)},
+			Price:    sdk.Coin{Denom: priceDenom, Amount: sdkmath.NewInt(999)},
+		})
+	}
+	bidOrder := func(orderID uint64) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			MarketId: 5555,
+			Buyer:    buyer,
+			Assets:   sdk.Coin{Denom: assetDenom, Amount: sdkmath.NewInt(111)},
+			Price:    sdk.Coin{Denom: priceDenom, Amount: sdkmath.NewInt(999)},
+		})
+	}
+	dist := func(addr string, amount int64) *Distribution {
+		return &Distribution{Address: addr, Amount: sdkmath.NewInt(amount)}
+	}
+	input := func(addr string, amount int64) banktypes.Input {
+		return banktypes.Input{
+			Address: addr,
+			Coins:   sdk.Coins{{Denom: assetDenom, Amount: sdkmath.NewInt(amount)}},
+		}
+	}
+	output := func(addr string, amount int64) banktypes.Output {
+		return banktypes.Output{
+			Address: addr,
+			Coins:   sdk.Coins{{Denom: assetDenom, Amount: sdkmath.NewInt(amount)}},
+		}
+	}
+
+	tests := []struct {
+		name        string
+		f           *OrderFulfillment
+		expTransfer *Transfer
+		expErr      string
+		expPanic    string
+	}{
+		{
+			name:     "nil inside order",
+			f:        newOF(NewOrder(975), 5, dist("five", 5)),
+			expPanic: nilSubTypeErr(975),
+		},
+		{
+			name:     "unknown inside order",
+			f:        newOF(newUnknownOrder(974), 5, dist("five", 5)),
+			expPanic: unknownSubTypeErr(974),
+		},
+		{
+			name:   "assets filled negative: ask",
+			f:      newOF(askOrder(159), -5),
+			expErr: "ask order 159 cannot be filled with \"-5apple\" assets: amount not positive",
+		},
+		{
+			name:   "assets filled negative: bid",
+			f:      newOF(bidOrder(953), -5),
+			expErr: "bid order 953 cannot be filled with \"-5apple\" assets: amount not positive",
+		},
+		{
+			name:   "assets filled zero: ask",
+			f:      newOF(askOrder(991), 0),
+			expErr: "ask order 991 cannot be filled with \"0apple\" assets: amount not positive",
+		},
+		{
+			name:   "assets filled zero: bid",
+			f:      newOF(bidOrder(992), 0),
+			expErr: "bid order 992 cannot be filled with \"0apple\" assets: amount not positive",
+		},
+		{
+			name:   "asset dists has negative amount: ask",
+			f:      newOF(askOrder(549), 10, dist("one", 1), dist("two", 2), dist("neg", -2), dist("nine", 9)),
+			expErr: "ask order 549 cannot have \"-2apple\" assets in a transfer: amount not positive",
+		},
+		{
+			name:   "asset dists has negative amount: bid",
+			f:      newOF(bidOrder(545), 10, dist("one", 1), dist("two", 2), dist("neg", -2), dist("nine", 9)),
+			expErr: "bid order 545 cannot have \"-2apple\" assets in a transfer: amount not positive",
+		},
+		{
+			name:   "asset dists has zero: ask",
+			f:      newOF(askOrder(683), 10, dist("one", 1), dist("two", 2), dist("zero", 0), dist("seven", 7)),
+			expErr: "ask order 683 cannot have \"0apple\" assets in a transfer: amount not positive",
+		},
+		{
+			name:   "asset dists has zero: bid",
+			f:      newOF(bidOrder(777), 10, dist("one", 1), dist("two", 2), dist("zero", 0), dist("seven", 7)),
+			expErr: "bid order 777 cannot have \"0apple\" assets in a transfer: amount not positive",
+		},
+		{
+			name:   "asset dists sum less than assets filled: ask",
+			f:      newOF(askOrder(8), 10, dist("one", 1), dist("two", 2), dist("three", 3), dist("three2", 3)),
+			expErr: "ask order 8 assets filled \"10apple\" does not equal assets distributed \"9apple\"",
+		},
+		{
+			name:   "asset dists sum less than assets filled: bid",
+			f:      newOF(bidOrder(3), 10, dist("one", 1), dist("two", 2), dist("three", 3), dist("three2", 3)),
+			expErr: "bid order 3 assets filled \"10apple\" does not equal assets distributed \"9apple\"",
+		},
+		{
+			name:   "asset dists sum more than assets filled: ask",
+			f:      newOF(askOrder(8), 10, dist("one", 1), dist("two", 2), dist("three", 3), dist("five", 5)),
+			expErr: "ask order 8 assets filled \"10apple\" does not equal assets distributed \"11apple\"",
+		},
+		{
+			name:   "asset dists sum more than assets filled: bid",
+			f:      newOF(bidOrder(3), 10, dist("one", 1), dist("two", 2), dist("three", 3), dist("five", 5)),
+			expErr: "bid order 3 assets filled \"10apple\" does not equal assets distributed \"11apple\"",
+		},
+		{
+			name: "one dist: ask",
+			f:    newOF(askOrder(12), 10, dist("ten", 10)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input(seller, 10)},
+				Outputs: []banktypes.Output{output("ten", 10)},
+			},
+		},
+		{
+			name: "one dist: bid",
+			f:    newOF(bidOrder(13), 10, dist("ten", 10)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input("ten", 10)},
+				Outputs: []banktypes.Output{output(buyer, 10)},
+			},
+		},
+		{
+			name: "two dists, different addresses: ask",
+			f:    newOF(askOrder(2111), 20, dist("eleven", 11), dist("nine", 9)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input(seller, 20)},
+				Outputs: []banktypes.Output{output("eleven", 11), output("nine", 9)},
+			},
+		},
+		{
+			name: "two dists, different addresses: bid",
+			f:    newOF(bidOrder(1222), 20, dist("eleven", 11), dist("nine", 9)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input("eleven", 11), input("nine", 9)},
+				Outputs: []banktypes.Output{output(buyer, 20)},
+			},
+		},
+		{
+			name: "two dists, same addresses: ask",
+			f:    newOF(askOrder(5353), 52, dist("billy", 48), dist("billy", 4)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input(seller, 52)},
+				Outputs: []banktypes.Output{output("billy", 52)},
+			},
+		},
+		{
+			name: "two dists, same addresses: bid",
+			f:    newOF(bidOrder(3535), 52, dist("sol", 48), dist("sol", 4)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input("sol", 52)},
+				Outputs: []banktypes.Output{output(buyer, 52)},
+			},
+		},
+		{
+			name: "four dists: ask",
+			f: newOF(askOrder(99221), 33,
+				dist("buddy", 10), dist("brian", 13), dist("buddy", 8), dist("bella", 2)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input(seller, 33)},
+				Outputs: []banktypes.Output{output("buddy", 18), output("brian", 13), output("bella", 2)},
+			},
+		},
+		{
+			name: "four dists: bid",
+			f: newOF(bidOrder(99221), 33,
+				dist("sydney", 10), dist("sarah", 2), dist("sydney", 8), dist("spencer", 13)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input("sydney", 18), input("sarah", 2), input("spencer", 13)},
+				Outputs: []banktypes.Output{output(buyer, 33)},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			orig := copyOrderFulfillment(tc.f)
+			var transfer *Transfer
+			var err error
+			testFunc := func() {
+				transfer, err = getAssetTransfer(tc.f)
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "getAssetTransfer")
+			assertions.AssertErrorValue(t, err, tc.expErr, "getAssetTransfer error")
+			if !assert.Equal(t, tc.expTransfer, transfer, "getAssetTransfer transfers") {
+				t.Logf("  Actual: %s", transferString(transfer))
+				t.Logf("Expected: %s", transferString(tc.expTransfer))
+			}
+			assertEqualOrderFulfillments(t, orig, tc.f, "OrderFulfillment before and after getAssetTransfer")
+		})
+	}
 }
 
 func TestGetPriceTransfer(t *testing.T) {
-	// TODO[1658]: func TestGetPriceTransfer(t *testing.T)
-	t.Skipf("not written")
+	seller, buyer := "sally", "brandon"
+	assetDenom, priceDenom := "apple", "peach"
+	newOF := func(order *Order, priceAppliedAmt int64, priceDists ...*Distribution) *OrderFulfillment {
+		rv := &OrderFulfillment{
+			Order:           order,
+			PriceAppliedAmt: sdkmath.NewInt(priceAppliedAmt),
+		}
+		if len(priceDists) > 0 {
+			rv.PriceDists = priceDists
+		}
+		return rv
+	}
+	askOrder := func(orderID uint64) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			MarketId: 5555,
+			Seller:   seller,
+			Assets:   sdk.Coin{Denom: assetDenom, Amount: sdkmath.NewInt(111)},
+			Price:    sdk.Coin{Denom: priceDenom, Amount: sdkmath.NewInt(999)},
+		})
+	}
+	bidOrder := func(orderID uint64) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			MarketId: 5555,
+			Buyer:    buyer,
+			Assets:   sdk.Coin{Denom: assetDenom, Amount: sdkmath.NewInt(111)},
+			Price:    sdk.Coin{Denom: priceDenom, Amount: sdkmath.NewInt(999)},
+		})
+	}
+	dist := func(addr string, amount int64) *Distribution {
+		return &Distribution{Address: addr, Amount: sdkmath.NewInt(amount)}
+	}
+	input := func(addr string, amount int64) banktypes.Input {
+		return banktypes.Input{
+			Address: addr,
+			Coins:   sdk.Coins{{Denom: priceDenom, Amount: sdkmath.NewInt(amount)}},
+		}
+	}
+	output := func(addr string, amount int64) banktypes.Output {
+		return banktypes.Output{
+			Address: addr,
+			Coins:   sdk.Coins{{Denom: priceDenom, Amount: sdkmath.NewInt(amount)}},
+		}
+	}
+
+	tests := []struct {
+		name        string
+		f           *OrderFulfillment
+		expTransfer *Transfer
+		expErr      string
+		expPanic    string
+	}{
+		{
+			name:     "nil inside order",
+			f:        newOF(NewOrder(975), 5, dist("five", 5)),
+			expPanic: nilSubTypeErr(975),
+		},
+		{
+			name:     "unknown inside order",
+			f:        newOF(newUnknownOrder(974), 5, dist("five", 5)),
+			expPanic: unknownSubTypeErr(974),
+		},
+		{
+			name:   "price applied negative: ask",
+			f:      newOF(askOrder(159), -5),
+			expErr: "ask order 159 cannot be filled at price \"-5peach\": amount not positive",
+		},
+		{
+			name:   "price applied negative: bid",
+			f:      newOF(bidOrder(953), -5),
+			expErr: "bid order 953 cannot be filled at price \"-5peach\": amount not positive",
+		},
+		{
+			name:   "price applied zero: ask",
+			f:      newOF(askOrder(991), 0),
+			expErr: "ask order 991 cannot be filled at price \"0peach\": amount not positive",
+		},
+		{
+			name:   "price applied zero: bid",
+			f:      newOF(bidOrder(992), 0),
+			expErr: "bid order 992 cannot be filled at price \"0peach\": amount not positive",
+		},
+		{
+			name:   "price dists has negative amount: ask",
+			f:      newOF(askOrder(549), 10, dist("one", 1), dist("two", 2), dist("neg", -2), dist("nine", 9)),
+			expErr: "ask order 549 cannot have price \"-2peach\" in a transfer: amount not positive",
+		},
+		{
+			name:   "price dists has negative amount: bid",
+			f:      newOF(bidOrder(545), 10, dist("one", 1), dist("two", 2), dist("neg", -2), dist("nine", 9)),
+			expErr: "bid order 545 cannot have price \"-2peach\" in a transfer: amount not positive",
+		},
+		{
+			name:   "price dists has zero: ask",
+			f:      newOF(askOrder(683), 10, dist("one", 1), dist("two", 2), dist("zero", 0), dist("seven", 7)),
+			expErr: "ask order 683 cannot have price \"0peach\" in a transfer: amount not positive",
+		},
+		{
+			name:   "price dists has zero: bid",
+			f:      newOF(bidOrder(777), 10, dist("one", 1), dist("two", 2), dist("zero", 0), dist("seven", 7)),
+			expErr: "bid order 777 cannot have price \"0peach\" in a transfer: amount not positive",
+		},
+		{
+			name:   "price dists sum less than price applied: ask",
+			f:      newOF(askOrder(8), 10, dist("one", 1), dist("two", 2), dist("three", 3), dist("three2", 3)),
+			expErr: "ask order 8 price filled \"10peach\" does not equal price distributed \"9peach\"",
+		},
+		{
+			name:   "price dists sum less than price applied: bid",
+			f:      newOF(bidOrder(3), 10, dist("one", 1), dist("two", 2), dist("three", 3), dist("three2", 3)),
+			expErr: "bid order 3 price filled \"10peach\" does not equal price distributed \"9peach\"",
+		},
+		{
+			name:   "price dists sum more than price applied: ask",
+			f:      newOF(askOrder(8), 10, dist("one", 1), dist("two", 2), dist("three", 3), dist("five", 5)),
+			expErr: "ask order 8 price filled \"10peach\" does not equal price distributed \"11peach\"",
+		},
+		{
+			name:   "price dists sum more than price applied: bid",
+			f:      newOF(bidOrder(3), 10, dist("one", 1), dist("two", 2), dist("three", 3), dist("five", 5)),
+			expErr: "bid order 3 price filled \"10peach\" does not equal price distributed \"11peach\"",
+		},
+		{
+			name: "one dist: ask",
+			f:    newOF(askOrder(12), 10, dist("ten", 10)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input("ten", 10)},
+				Outputs: []banktypes.Output{output(seller, 10)},
+			},
+		},
+		{
+			name: "one dist: bid",
+			f:    newOF(bidOrder(13), 10, dist("ten", 10)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input(buyer, 10)},
+				Outputs: []banktypes.Output{output("ten", 10)},
+			},
+		},
+		{
+			name: "two dists, different addresses: ask",
+			f:    newOF(askOrder(2111), 20, dist("eleven", 11), dist("nine", 9)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input("eleven", 11), input("nine", 9)},
+				Outputs: []banktypes.Output{output(seller, 20)},
+			},
+		},
+		{
+			name: "two dists, different addresses: bid",
+			f:    newOF(bidOrder(1222), 20, dist("eleven", 11), dist("nine", 9)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input(buyer, 20)},
+				Outputs: []banktypes.Output{output("eleven", 11), output("nine", 9)},
+			},
+		},
+		{
+			name: "two dists, same addresses: ask",
+			f:    newOF(askOrder(5353), 52, dist("billy", 48), dist("billy", 4)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input("billy", 52)},
+				Outputs: []banktypes.Output{output(seller, 52)},
+			},
+		},
+		{
+			name: "two dists, same addresses: bid",
+			f:    newOF(bidOrder(3535), 52, dist("sol", 48), dist("sol", 4)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input(buyer, 52)},
+				Outputs: []banktypes.Output{output("sol", 52)},
+			},
+		},
+		{
+			name: "four dists: ask",
+			f: newOF(askOrder(99221), 33,
+				dist("buddy", 10), dist("brian", 13), dist("buddy", 8), dist("bella", 2)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input("buddy", 18), input("brian", 13), input("bella", 2)},
+				Outputs: []banktypes.Output{output(seller, 33)},
+			},
+		},
+		{
+			name: "four dists: bid",
+			f: newOF(bidOrder(99221), 33,
+				dist("sydney", 10), dist("sarah", 2), dist("sydney", 8), dist("spencer", 13)),
+			expTransfer: &Transfer{
+				Inputs:  []banktypes.Input{input(buyer, 33)},
+				Outputs: []banktypes.Output{output("sydney", 18), output("sarah", 2), output("spencer", 13)},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			orig := copyOrderFulfillment(tc.f)
+			var transfer *Transfer
+			var err error
+			testFunc := func() {
+				transfer, err = getPriceTransfer(tc.f)
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "getPriceTransfer")
+			assertions.AssertErrorValue(t, err, tc.expErr, "getPriceTransfer error")
+			if !assert.Equal(t, tc.expTransfer, transfer, "getPriceTransfer transfers") {
+				t.Logf("  Actual: %s", transferString(transfer))
+				t.Logf("Expected: %s", transferString(tc.expTransfer))
+			}
+			assertEqualOrderFulfillments(t, orig, tc.f, "OrderFulfillment before and after getPriceTransfer")
+		})
+	}
 }
 
 func TestOrderFulfillment_Apply(t *testing.T) {
@@ -3525,8 +3933,158 @@ func TestOrderFulfillment_Finalize(t *testing.T) {
 }
 
 func TestOrderFulfillment_Validate(t *testing.T) {
-	// TODO[1658]: func TestOrderFulfillment_Validate(t *testing.T)
-	t.Skipf("not written")
+	askOrder := func(orderID uint64, assetsAmt, priceAmt int64) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			MarketId: 987,
+			Seller:   "steve",
+			Assets:   sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(assetsAmt)},
+			Price:    sdk.Coin{Denom: "peach", Amount: sdkmath.NewInt(priceAmt)},
+		})
+	}
+	bidOrder := func(orderID uint64, assetsAmt, priceAmt int64) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			MarketId: 987,
+			Buyer:    "bruce",
+			Assets:   sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(assetsAmt)},
+			Price:    sdk.Coin{Denom: "peach", Amount: sdkmath.NewInt(priceAmt)},
+		})
+	}
+
+	tests := []struct {
+		name   string
+		f      OrderFulfillment
+		expErr string
+	}{
+		{
+			name:   "nil inside order",
+			f:      OrderFulfillment{Order: NewOrder(8)},
+			expErr: nilSubTypeErr(8),
+		},
+		{
+			name:   "unknown inside order",
+			f:      OrderFulfillment{Order: newUnknownOrder(12)},
+			expErr: unknownSubTypeErr(12),
+		},
+		{
+			name: "order price greater than price applied: ask",
+			f: OrderFulfillment{
+				Order:           askOrder(52, 10, 401),
+				PriceAppliedAmt: sdkmath.NewInt(400),
+				AssetsFilledAmt: sdkmath.NewInt(10),
+			},
+			expErr: "ask order 52 price \"401peach\" is more than price filled \"400peach\"",
+		},
+		{
+			name: "order price equal to price applied: ask",
+			f: OrderFulfillment{
+				Order:           askOrder(53, 10, 401),
+				PriceAppliedAmt: sdkmath.NewInt(401),
+				AssetsFilledAmt: sdkmath.NewInt(10),
+			},
+			expErr: "",
+		},
+		{
+			name: "order price less than price applied: ask",
+			f: OrderFulfillment{
+				Order:           askOrder(54, 10, 401),
+				PriceAppliedAmt: sdkmath.NewInt(402),
+				AssetsFilledAmt: sdkmath.NewInt(10),
+			},
+			expErr: "",
+		},
+		{
+			name: "order price greater than price applied: bid",
+			f: OrderFulfillment{
+				Order:           bidOrder(71, 17, 432),
+				PriceAppliedAmt: sdkmath.NewInt(431),
+				AssetsFilledAmt: sdkmath.NewInt(17),
+			},
+			expErr: "bid order 71 price \"432peach\" is not equal to price filled \"431peach\"",
+		},
+		{
+			name: "order price equal to price applied: bid",
+			f: OrderFulfillment{
+				Order:           bidOrder(72, 17, 432),
+				PriceAppliedAmt: sdkmath.NewInt(432),
+				AssetsFilledAmt: sdkmath.NewInt(17),
+			},
+			expErr: "",
+		},
+		{
+			name: "order price less than price applied: bid",
+			f: OrderFulfillment{
+				Order:           bidOrder(73, 17, 432),
+				PriceAppliedAmt: sdkmath.NewInt(433),
+				AssetsFilledAmt: sdkmath.NewInt(17),
+			},
+			expErr: "bid order 73 price \"432peach\" is not equal to price filled \"433peach\"",
+		},
+		{
+			name: "order assets less than assets filled: ask",
+			f: OrderFulfillment{
+				Order:           askOrder(101, 53, 12345),
+				PriceAppliedAmt: sdkmath.NewInt(12345),
+				AssetsFilledAmt: sdkmath.NewInt(54),
+			},
+			expErr: "ask order 101 assets \"53apple\" does not equal filled assets \"54apple\"",
+		},
+		{
+			name: "order assets equal to assets filled: ask",
+			f: OrderFulfillment{
+				Order:           askOrder(202, 53, 12345),
+				PriceAppliedAmt: sdkmath.NewInt(12345),
+				AssetsFilledAmt: sdkmath.NewInt(53),
+			},
+			expErr: "",
+		},
+		{
+			name: "order assets more than assets filled: ask",
+			f: OrderFulfillment{
+				Order:           askOrder(303, 53, 12345),
+				PriceAppliedAmt: sdkmath.NewInt(12345),
+				AssetsFilledAmt: sdkmath.NewInt(52),
+			},
+			expErr: "ask order 303 assets \"53apple\" does not equal filled assets \"52apple\"",
+		},
+		{
+			name: "order assets less than assets filled: bid",
+			f: OrderFulfillment{
+				Order:           bidOrder(404, 53, 12345),
+				PriceAppliedAmt: sdkmath.NewInt(12345),
+				AssetsFilledAmt: sdkmath.NewInt(54),
+			},
+			expErr: "bid order 404 assets \"53apple\" does not equal filled assets \"54apple\"",
+		},
+		{
+			name: "order assets equal to assets filled: bid",
+			f: OrderFulfillment{
+				Order:           bidOrder(505, 53, 12345),
+				PriceAppliedAmt: sdkmath.NewInt(12345),
+				AssetsFilledAmt: sdkmath.NewInt(53),
+			},
+			expErr: "",
+		},
+		{
+			name: "order assets more than assets filled: bid",
+			f: OrderFulfillment{
+				Order:           bidOrder(606, 53, 12345),
+				PriceAppliedAmt: sdkmath.NewInt(12345),
+				AssetsFilledAmt: sdkmath.NewInt(52),
+			},
+			expErr: "bid order 606 assets \"53apple\" does not equal filled assets \"52apple\"",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = tc.f.Validate()
+			}
+			require.NotPanics(t, testFunc, "Validate")
+			assertions.AssertErrorValue(t, err, tc.expErr, "Validate error")
+		})
+	}
 }
 
 func TestOrderFulfillment_Validate2(t *testing.T) {

@@ -696,9 +696,10 @@ func buildTransfers(askOFs, bidOFs []*OrderFulfillment, settlement *Settlement) 
 
 // getAssetTransfer gets the inputs and outputs to facilitate the transfers of assets for this order fulfillment.
 func getAssetTransfer(f *OrderFulfillment) (*Transfer, error) {
-	if !f.AssetsFilledAmt.IsPositive() {
-		return nil, fmt.Errorf("%s order %d cannot be filled with %s assets: amount not positive",
-			f.GetOrderType(), f.GetOrderID(), f.GetAssetsFilled())
+	assetsFilled := f.GetAssetsFilled()
+	if !assetsFilled.Amount.IsPositive() {
+		return nil, fmt.Errorf("%s order %d cannot be filled with %q assets: amount not positive",
+			f.GetOrderType(), f.GetOrderID(), assetsFilled)
 	}
 
 	indexedDists := newIndexedAddrAmts()
@@ -712,32 +713,34 @@ func getAssetTransfer(f *OrderFulfillment) (*Transfer, error) {
 		sumDists = sumDists.Add(dist.Amount)
 	}
 
-	if !sumDists.Equal(f.AssetsFilledAmt) {
+	if !sumDists.Equal(assetsFilled.Amount) {
 		return nil, fmt.Errorf("%s order %d assets filled %q does not equal assets distributed %q",
-			f.GetOrderType(), f.GetOrderID(), f.GetAssetsFilled(), f.assetCoin(sumDists))
+			f.GetOrderType(), f.GetOrderID(), assetsFilled, f.assetCoin(sumDists))
 	}
 
 	if f.IsAskOrder() {
 		return &Transfer{
-			Inputs:  []banktypes.Input{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetAssetsFilled())}},
+			Inputs:  []banktypes.Input{{Address: f.GetOwner(), Coins: sdk.NewCoins(assetsFilled)}},
 			Outputs: indexedDists.getAsOutputs(),
 		}, nil
 	}
 	if f.IsBidOrder() {
 		return &Transfer{
 			Inputs:  indexedDists.getAsInputs(),
-			Outputs: []banktypes.Output{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetAssetsFilled())}},
+			Outputs: []banktypes.Output{{Address: f.GetOwner(), Coins: sdk.NewCoins(assetsFilled)}},
 		}, nil
 	}
 
-	return nil, fmt.Errorf("unknown order type %T", f.Order.GetOrder())
+	// This is here in case a new SubTypeI is made that isn't accounted for in here.
+	panic(fmt.Errorf("%s order %d: unknown order type", f.GetOrderType(), f.GetOrderID()))
 }
 
 // getPriceTransfer gets the inputs and outputs to facilitate the transfers for the price of this order fulfillment.
 func getPriceTransfer(f *OrderFulfillment) (*Transfer, error) {
-	if !f.PriceAppliedAmt.IsPositive() {
+	priceApplied := f.GetPriceApplied()
+	if !priceApplied.Amount.IsPositive() {
 		return nil, fmt.Errorf("%s order %d cannot be filled at price %q: amount not positive",
-			f.GetOrderType(), f.GetOrderID(), f.GetPriceApplied())
+			f.GetOrderType(), f.GetOrderID(), priceApplied)
 	}
 
 	indexedDists := newIndexedAddrAmts()
@@ -751,25 +754,26 @@ func getPriceTransfer(f *OrderFulfillment) (*Transfer, error) {
 		sumDists = sumDists.Add(dist.Amount)
 	}
 
-	if !sumDists.Equal(f.PriceAppliedAmt) {
+	if !sumDists.Equal(priceApplied.Amount) {
 		return nil, fmt.Errorf("%s order %d price filled %q does not equal price distributed %q",
-			f.GetOrderType(), f.GetOrderID(), f.GetPriceApplied(), f.priceCoin(sumDists))
+			f.GetOrderType(), f.GetOrderID(), priceApplied, f.priceCoin(sumDists))
 	}
 
 	if f.IsAskOrder() {
 		return &Transfer{
 			Inputs:  indexedDists.getAsInputs(),
-			Outputs: []banktypes.Output{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetPriceApplied())}},
+			Outputs: []banktypes.Output{{Address: f.GetOwner(), Coins: sdk.NewCoins(priceApplied)}},
 		}, nil
 	}
 	if f.IsBidOrder() {
 		return &Transfer{
-			Inputs:  []banktypes.Input{{Address: f.GetOwner(), Coins: sdk.NewCoins(f.GetPriceApplied())}},
+			Inputs:  []banktypes.Input{{Address: f.GetOwner(), Coins: sdk.NewCoins(priceApplied)}},
 			Outputs: indexedDists.getAsOutputs(),
 		}, nil
 	}
 
-	return nil, fmt.Errorf("unknown order type %T", f.Order.GetOrder())
+	// This is here in case a new SubTypeI is made that isn't accounted for in here.
+	panic(fmt.Errorf("%s order %d: unknown order type", f.GetOrderType(), f.GetOrderID()))
 }
 
 // Apply adjusts this order fulfillment using the provided info.
@@ -952,12 +956,22 @@ func (f *OrderFulfillment) Finalize(sellerFeeRatio *FeeRatio) (err error) {
 }
 
 // Validate makes sure the assets filled and price applied are acceptable for this fulfillment.
-func (f OrderFulfillment) Validate() error {
+func (f OrderFulfillment) Validate() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			if e, ok := r.(error); ok {
+				err = e
+			} else {
+				err = fmt.Errorf("%v", r)
+			}
+		}
+	}()
+
 	orderPrice := f.GetPrice()
 	switch {
 	case f.IsAskOrder():
 		if orderPrice.Amount.GT(f.PriceAppliedAmt) {
-			return fmt.Errorf("%s order %d price %q is less than price filled %q",
+			return fmt.Errorf("%s order %d price %q is more than price filled %q",
 				f.GetOrderType(), f.GetOrderID(), orderPrice, f.GetPriceApplied())
 		}
 	case f.IsBidOrder():
@@ -966,11 +980,12 @@ func (f OrderFulfillment) Validate() error {
 				f.GetOrderType(), f.GetOrderID(), orderPrice, f.GetPriceApplied())
 		}
 	default:
-		return fmt.Errorf("%s order %d: unknown order type", f.GetOrderType(), f.GetOrderID())
+		// This is here in case something new implements SubOrderI but a case isn't added here.
+		panic(fmt.Errorf("%s order %d: unknown order type", f.GetOrderType(), f.GetOrderID()))
 	}
 
 	orderAssets := f.GetAssets()
-	if orderAssets.Amount != f.AssetsFilledAmt {
+	if !orderAssets.Amount.Equal(f.AssetsFilledAmt) {
 		return fmt.Errorf("%s order %d assets %q does not equal filled assets %q",
 			f.GetOrderType(), f.GetOrderID(), orderAssets, f.GetAssetsFilled())
 	}
