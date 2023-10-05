@@ -271,7 +271,6 @@ func (suite *MarkerHooksTestSuite) TestResetMarkerAccessGrants() {
 	}
 }
 
-// SanitizeMemo
 func (suite *MarkerHooksTestSuite) TestSanitizeMemo() {
 	testCases := []struct {
 		name    string
@@ -300,6 +299,63 @@ func (suite *MarkerHooksTestSuite) TestSanitizeMemo() {
 			actualMemo, err := json.Marshal(actualMemoJSON)
 			require.NoError(t, err, "json.Mashal() failed to mashal memo")
 			assert.Equal(t, tc.expMemo, string(actualMemo), "SanitizeMemo() should have transformed memo to expected memo")
+		})
+	}
+}
+
+func (suite *MarkerHooksTestSuite) TestPreSendPacketDataProcessingFn() {
+	address1 := sdk.AccAddress("address1")
+	markerHooks := ibchooks.NewMarkerHooks(&suite.chainA.GetProvenanceApp().MarkerKeeper)
+	marker1 := *markertypes.NewEmptyMarkerAccount("jackthecat", address1.String(), []types.AccessGrant{*types.NewAccessGrant(address1, []types.Access{types.Access_Transfer}), *types.NewAccessGrant(address1, []types.Access{types.Access_Admin})})
+	marker1.MarkerType = markertypes.MarkerType_RestrictedCoin
+	require.NoError(suite.T(), suite.chainA.GetProvenanceApp().MarkerKeeper.AddMarkerAccount(suite.chainA.GetContext(), &marker1), "AddMarkerAccount() in test setup")
+	testCases := []struct {
+		name    string
+		data    []byte
+		expData []byte
+		expErr  string
+	}{
+		{
+			name:    "not a ics20 packet",
+			data:    []byte{0, 12},
+			expData: []byte{0, 12},
+		},
+		{
+			name:    "packet with plain non json memo",
+			data:    suite.makeMockPacket("hotdogs", "recieverAddr", "my memo", 0).Data,
+			expData: suite.makeMockPacket("hotdogs", "recieverAddr", `{"marker":{},"memo":"my memo"}`, 0).Data,
+		},
+		{
+			name:    "packet with marker json",
+			data:    suite.makeMockPacket("hotdogs", "recieverAddr", `{"marker":{"test":"test"},"wasm":{"contract":"%1234","msg":{"echo":{"msg":"test"}}}}`, 0).Data,
+			expData: suite.makeMockPacket("hotdogs", "recieverAddr", `{"marker":{},"wasm":{"contract":"%1234","msg":{"echo":{"msg":"test"}}}}`, 0).Data,
+		},
+		{
+			name:    "packet with marker json with non-transfer auth addresses ",
+			data:    suite.makeMockPacket("hotdogs", "recieverAddr", `{"marker":{"transfer-auths":["test"]}}`, 0).Data,
+			expData: suite.makeMockPacket("hotdogs", "recieverAddr", `{"marker":{}}`, 0).Data,
+		},
+		{
+			name:    "packet with marker json replace transfer auths with marker transfer auths",
+			data:    suite.makeMockPacket("jackthecat", "recieverAddr", `{"marker":{"transfer-auths":["test"]}}`, 0).Data,
+			expData: suite.makeMockPacket("jackthecat", "recieverAddr", fmt.Sprintf(`{"marker":{"transfer-auths":["%s"]}}`, address1.String()), 0).Data,
+		},
+		{
+			name:   "invalid denom should error",
+			data:   suite.makeMockPacket("~~", "recieverAddr", "my memo", 0).Data,
+			expErr: "invalid denom: ~~",
+		},
+	}
+	for _, tc := range testCases {
+		suite.T().Run(tc.name, func(t *testing.T) {
+			actualData, err := markerHooks.PreSendPacketDataProcessingFn(suite.chainA.GetContext(), tc.data, nil)
+			if len(tc.expErr) > 0 {
+				assert.EqualError(t, err, tc.expErr, "PreSendPacketDataProcessingFn() error")
+				assert.Nil(t, actualData, "PreSendPacketDataProcessingFn() return `data` should be nil")
+			} else {
+				require.NoError(t, err, "PreSendPacketDataProcessingFn() was expecting no error")
+				assert.Equal(t, tc.expData, actualData, "PreSendPacketDataProcessingFn() `data` not expected")
+			}
 		})
 	}
 }
