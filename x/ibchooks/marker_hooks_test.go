@@ -1,6 +1,7 @@
 package ibchooks_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -81,34 +82,52 @@ func (suite *MarkerHooksTestSuite) makeMockPacket(denom, receiver, memo string, 
 }
 
 func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
+	address1 := sdk.AccAddress("address1")
+	address2 := sdk.AccAddress("address2")
+	// address3 := sdk.AccAddress("address3")
 	markerHooks := ibchooks.NewMarkerHooks(&suite.chainA.GetProvenanceApp().MarkerKeeper)
 	testCases := []struct {
-		name        string
-		denom       string
-		memo        string
-		expErr      string
-		expIbcDenom string
+		name          string
+		denom         string
+		memo          string
+		expErr        string
+		expIbcDenom   string
+		expTransAuths []sdk.AccAddress
 	}{
-		// {
-		// 	name:        "successfully process with empty memo",
-		// 	denom:       "fiftyfivehamburgers",
-		// 	memo:        "",
-		// 	expErr:      "",
-		// 	expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
-		// },
-		// {
-		// 	name:        "successfully process with non json memo",
-		// 	denom:       "fiftyfivehamburgers",
-		// 	memo:        "55 burger 55 fries...",
-		// 	expErr:      "",
-		// 	expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
-		// },
+		{
+			name:        "successfully process with empty memo",
+			denom:       "fiftyfivehamburgers",
+			memo:        "",
+			expErr:      "",
+			expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
+		},
+		{
+			name:        "successfully process with non json memo",
+			denom:       "fiftyfivehamburgers",
+			memo:        "55 burger 55 fries...",
+			expErr:      "",
+			expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
+		},
 		{
 			name:        "successfully process with non json memo",
 			denom:       "fiftyfivehamburgers",
 			memo:        `{"marker":{random},"wasm":{"contract":"%1234","msg":{"echo":{"msg":"test"}}}}`,
 			expErr:      "",
 			expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
+		},
+		{
+			name:          "successfully process with transfer auths",
+			denom:         "fiftyfivefries",
+			memo:          fmt.Sprintf(`{"marker":{"transfer-auths":["%s", "%s"]}}`, address1.String(), address2.String()),
+			expErr:        "",
+			expIbcDenom:   "ibc/1B3A5773661E8A6B9F6BB407979B5933C2FA792DF24ED2A40B028C90277B0C22",
+			expTransAuths: []sdk.AccAddress{address1, address2},
+		},
+		{
+			name:   "fail invalid json",
+			denom:  "fiftyfivetacos",
+			memo:   fmt.Sprintf(`{"marker":{"transfer-auths":"%s"}}`, address1.String()),
+			expErr: "json: cannot unmarshal string into Go struct field MarkerPayload.transfer-auths of type []string",
 		},
 	}
 	for _, tc := range testCases {
@@ -128,6 +147,12 @@ func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
 				assert.Equal(t, "testchain2/"+tc.denom, metadata.Name, "Metadata Name should be chainid/denom")
 				assert.Equal(t, "testchain2/"+tc.denom, metadata.Display, "Metadata Display should be chainid/denom")
 				assert.Equal(t, tc.denom+" from chain testchain2", metadata.Description, "Metadata Description is incorrect")
+				assert.Len(t, marker.GetAccessList(), len(tc.expTransAuths), "Resulting access list does not equal expect length")
+				for _, access := range marker.GetAccessList() {
+					assert.Len(t, access.GetAccessList(), 1, "Expecting permissions list to only one item")
+					assert.Equal(t, access.GetAccessList()[0], markertypes.Access_Transfer, "Expecting permissions to be transfer")
+					assert.Contains(t, tc.expTransAuths, sdk.MustAccAddressFromBech32(access.Address), "Actual list does not contain required address")
+				}
 			}
 		})
 	}
@@ -241,8 +266,40 @@ func (suite *MarkerHooksTestSuite) TestResetMarkerAccessGrants() {
 					assert.Equal(t, access.GetAccessList()[0], markertypes.Access_Transfer, "Expecting permissions to be transfer")
 					assert.Contains(t, tc.transferAuths, sdk.MustAccAddressFromBech32(access.Address), "Actual list does not contain required address")
 				}
-
 			}
+		})
+	}
+}
+
+// SanitizeMemo
+func (suite *MarkerHooksTestSuite) TestSanitizeMemo() {
+	testCases := []struct {
+		name    string
+		memo    string
+		expMemo string
+	}{
+		{
+			name:    "plain text memo",
+			memo:    "plain text user memo",
+			expMemo: `{"memo":"plain text user memo"}`,
+		},
+		{
+			name:    "mal-formed json should be moved to memo",
+			memo:    `{"marker":{"transfer-auths":["123", "345"]}`,
+			expMemo: "{\"memo\":\"{\\\"marker\\\":{\\\"transfer-auths\\\":[\\\"123\\\", \\\"345\\\"]}\"}",
+		},
+		{
+			name:    "correct json should not modify memo",
+			memo:    `{"marker":{"transfer-auths":["address"]}}`,
+			expMemo: `{"marker":{"transfer-auths":["address"]}}`,
+		},
+	}
+	for _, tc := range testCases {
+		suite.T().Run(tc.name, func(t *testing.T) {
+			actualMemoJSON := ibchooks.SanitizeMemo(tc.memo)
+			actualMemo, err := json.Marshal(actualMemoJSON)
+			require.NoError(t, err, "json.Mashal() failed to mashal memo")
+			assert.Equal(t, tc.expMemo, string(actualMemo), "SanitizeMemo() should have transformed memo to expected memo")
 		})
 	}
 }
