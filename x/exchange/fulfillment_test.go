@@ -52,6 +52,31 @@ func copyOrderSplits(splits []*OrderSplit) []*OrderSplit {
 	return rv
 }
 
+// copyDistribution copies a distribution.
+func copyDistribution(dist *Distribution) *Distribution {
+	if dist == nil {
+		return nil
+	}
+
+	return &Distribution{
+		Address: dist.Address,
+		Amount:  copySDKInt(dist.Amount),
+	}
+}
+
+// copyDistributions copies a slice of distributions.
+func copyDistributions(dists []*Distribution) []*Distribution {
+	if dists == nil {
+		return nil
+	}
+
+	rv := make([]*Distribution, len(dists))
+	for i, dist := range dists {
+		rv[i] = copyDistribution(dist)
+	}
+	return rv
+}
+
 // copyOrderFulfillment returns a deep copy of an order fulfillement.
 func copyOrderFulfillment(f *OrderFulfillment) *OrderFulfillment {
 	if f == nil {
@@ -61,6 +86,8 @@ func copyOrderFulfillment(f *OrderFulfillment) *OrderFulfillment {
 	return &OrderFulfillment{
 		Order:             copyOrder(f.Order),
 		Splits:            copyOrderSplits(f.Splits),
+		AssetDists:        copyDistributions(f.AssetDists),
+		PriceDists:        copyDistributions(f.PriceDists),
 		AssetsFilledAmt:   copySDKInt(f.AssetsFilledAmt),
 		AssetsUnfilledAmt: copySDKInt(f.AssetsUnfilledAmt),
 		PriceAppliedAmt:   copySDKInt(f.PriceAppliedAmt),
@@ -100,6 +127,26 @@ func orderSplitsString(splits []*OrderSplit) string {
 	return fmt.Sprintf("[%s]", strings.Join(vals, ", "))
 }
 
+// distributionString is similar to %v except with easier to understand Int entries.
+func distributionString(dist *Distribution) string {
+	if dist == nil {
+		return "nil"
+	}
+	return fmt.Sprintf("{Address:%q, Amount:%s}", dist.Address, dist.Amount)
+}
+
+// distributionsString is similar to %v except with easier to understand Int entries.
+func distributionsString(dists []*Distribution) string {
+	if dists == nil {
+		return "nil"
+	}
+	vals := make([]string, len(dists))
+	for i, d := range dists {
+		vals[i] = distributionString(d)
+	}
+	return fmt.Sprintf("[%s]", strings.Join(vals, ", "))
+}
+
 // orderFulfillmentString is similar to %v except with easier to understand Coin and Int entries.
 func orderFulfillmentString(f *OrderFulfillment) string {
 	if f == nil {
@@ -109,6 +156,8 @@ func orderFulfillmentString(f *OrderFulfillment) string {
 	fields := []string{
 		fmt.Sprintf("Order:%s", orderString(f.Order)),
 		fmt.Sprintf("Splits:%s", orderSplitsString(f.Splits)),
+		fmt.Sprintf("AssetDists:%s", distributionsString(f.AssetDists)),
+		fmt.Sprintf("PriceDists:%s", distributionsString(f.PriceDists)),
 		fmt.Sprintf("AssetsFilledAmt:%s", f.AssetsFilledAmt),
 		fmt.Sprintf("AssetsUnfilledAmt:%s", f.AssetsUnfilledAmt),
 		fmt.Sprintf("PriceAppliedAmt:%s", f.PriceAppliedAmt),
@@ -146,6 +195,8 @@ func assertEqualOrderFulfillments(t *testing.T, expected, actual *OrderFulfillme
 	// If any of the Ints fail with a complaint about Int.abs = (big.nat) <nil> vs {}, use ZeroAmtAfterSub for the expected.
 	assert.Equalf(t, expected.Order, actual.Order, msg("OrderFulfillment.Order"), args...)
 	assert.Equalf(t, expected.Splits, actual.Splits, msg("OrderFulfillment.Splits"), args...)
+	assert.Equalf(t, expected.AssetDists, actual.AssetDists, msg("OrderFulfillment.AssetDists"), args...)
+	assert.Equalf(t, expected.PriceDists, actual.PriceDists, msg("OrderFulfillment.PriceDists"), args...)
 	assert.Equalf(t, expected.AssetsFilledAmt, actual.AssetsFilledAmt, msg("OrderFulfillment.AssetsFilledAmt"), args...)
 	assert.Equalf(t, expected.AssetsUnfilledAmt, actual.AssetsUnfilledAmt, msg("OrderFulfillment.AssetsUnfilledAmt"), args...)
 	assert.Equalf(t, expected.PriceAppliedAmt, actual.PriceAppliedAmt, msg("OrderFulfillment.PriceAppliedAmt"), args...)
@@ -1399,23 +1450,577 @@ func TestOrderFulfillment_GetHoldAmount(t *testing.T) {
 }
 
 func TestOrderFulfillment_DistributeAssets(t *testing.T) {
-	// TODO[1658]: func TestOrderFulfillment_DistributeAssets(t *testing.T)
-	t.Skipf("not written")
+	newOF := func(order *Order, assetsUnfilled, assetsFilled int64, dists ...*Distribution) *OrderFulfillment {
+		rv := &OrderFulfillment{
+			Order:             order,
+			AssetsUnfilledAmt: sdkmath.NewInt(assetsUnfilled),
+			AssetsFilledAmt:   sdkmath.NewInt(assetsFilled),
+		}
+		if assetsUnfilled == 0 {
+			rv.AssetsUnfilledAmt = ZeroAmtAfterSub
+		}
+		if len(dists) > 0 {
+			rv.AssetDists = dists
+		}
+		return rv
+
+	}
+	askOF := func(orderID uint64, assetsUnfilled, assetsFilled int64, dists ...*Distribution) *OrderFulfillment {
+		order := NewOrder(orderID).WithAsk(&AskOrder{Assets: sdk.NewInt64Coin("apple", 999)})
+		return newOF(order, assetsUnfilled, assetsFilled, dists...)
+	}
+	bidOF := func(orderID uint64, assetsUnfilled, assetsFilled int64, dists ...*Distribution) *OrderFulfillment {
+		order := NewOrder(orderID).WithBid(&BidOrder{Assets: sdk.NewInt64Coin("apple", 999)})
+		return newOF(order, assetsUnfilled, assetsFilled, dists...)
+	}
+	dist := func(addr string, amt int64) *Distribution {
+		return &Distribution{
+			Address: addr,
+			Amount:  sdkmath.NewInt(amt),
+		}
+	}
+
+	tests := []struct {
+		name     string
+		receiver *OrderFulfillment
+		order    OrderI
+		amount   sdkmath.Int
+		expRes   *OrderFulfillment
+		expErr   string
+	}{
+		{
+			name:     "assets unfilled less than amount: ask, ask",
+			receiver: askOF(1, 5, 0),
+			order:    NewOrder(2).WithAsk(&AskOrder{Seller: "seLLer"}),
+			amount:   sdkmath.NewInt(6),
+			expErr:   "cannot fill ask order 1 having assets left \"5apple\" with \"6apple\" from ask order 2: overfill",
+		},
+		{
+			name:     "assets unfilled less than amount: ask, bid",
+			receiver: askOF(3, 5, 0),
+			order:    NewOrder(4).WithBid(&BidOrder{Buyer: "buYer"}),
+			amount:   sdkmath.NewInt(6),
+			expErr:   "cannot fill ask order 3 having assets left \"5apple\" with \"6apple\" from bid order 4: overfill",
+		},
+		{
+			name:     "assets unfilled less than amount: bid, ask",
+			receiver: bidOF(5, 5, 0),
+			order:    NewOrder(6).WithAsk(&AskOrder{Seller: "seLLer"}),
+			amount:   sdkmath.NewInt(6),
+			expErr:   "cannot fill bid order 5 having assets left \"5apple\" with \"6apple\" from ask order 6: overfill",
+		},
+		{
+			name:     "assets unfilled less than amount: bid, bid",
+			receiver: bidOF(7, 5, 0),
+			order:    NewOrder(8).WithBid(&BidOrder{Buyer: "buYer"}),
+			amount:   sdkmath.NewInt(6),
+			expErr:   "cannot fill bid order 7 having assets left \"5apple\" with \"6apple\" from bid order 8: overfill",
+		},
+		{
+			name:     "assets unfilled equals amount: ask, bid",
+			receiver: askOF(1, 12345, 0),
+			order:    NewOrder(2).WithBid(&BidOrder{Buyer: "buYer"}),
+			amount:   sdkmath.NewInt(12345),
+			expRes:   askOF(1, 0, 12345, dist("buYer", 12345)),
+		},
+		{
+			name:     "assets unfilled equals amount: bid, ask",
+			receiver: bidOF(1, 12345, 0),
+			order:    NewOrder(2).WithAsk(&AskOrder{Seller: "seLLer"}),
+			amount:   sdkmath.NewInt(12345),
+			expRes:   bidOF(1, 0, 12345, dist("seLLer", 12345)),
+		},
+		{
+			name:     "assets unfilled more than amount: ask, bid",
+			receiver: askOF(1, 12345, 0),
+			order:    NewOrder(2).WithBid(&BidOrder{Buyer: "buYer"}),
+			amount:   sdkmath.NewInt(300),
+			expRes:   askOF(1, 12045, 300, dist("buYer", 300)),
+		},
+		{
+			name:     "assets unfilled more than amount: bid, ask",
+			receiver: bidOF(1, 12345, 0),
+			order:    NewOrder(2).WithAsk(&AskOrder{Seller: "seLLer"}),
+			amount:   sdkmath.NewInt(300),
+			expRes:   bidOF(1, 12045, 300, dist("seLLer", 300)),
+		},
+		{
+			name:     "already has 2 dists: ask, bid",
+			receiver: askOF(1, 12300, 45, dist("bbbbb", 40), dist("YYYYY", 5)),
+			order:    NewOrder(2).WithBid(&BidOrder{Buyer: "buYer"}),
+			amount:   sdkmath.NewInt(2000),
+			expRes:   askOF(1, 10300, 2045, dist("bbbbb", 40), dist("YYYYY", 5), dist("buYer", 2000)),
+		},
+		{
+			name:     "already has 2 dists: bid, ask",
+			receiver: bidOF(1, 12300, 45, dist("sssss", 40), dist("LLLLL", 5)),
+			order:    NewOrder(2).WithAsk(&AskOrder{Seller: "seLLer"}),
+			amount:   sdkmath.NewInt(2000),
+			expRes:   bidOF(1, 10300, 2045, dist("sssss", 40), dist("LLLLL", 5), dist("seLLer", 2000)),
+		},
+		{
+			name:     "amt more than filled, ask, bid",
+			receiver: askOF(1, 45, 12300, dist("ssss", 12300)),
+			order:    NewOrder(2).WithBid(&BidOrder{Buyer: "buYer"}),
+			amount:   sdkmath.NewInt(45),
+			expRes:   askOF(1, 0, 12345, dist("ssss", 12300), dist("buYer", 45)),
+		},
+		{
+			name:     "amt more than filled, bid, ask",
+			receiver: bidOF(1, 45, 12300, dist("ssss", 12300)),
+			order:    NewOrder(2).WithAsk(&AskOrder{Seller: "seLLer"}),
+			amount:   sdkmath.NewInt(45),
+			expRes:   bidOF(1, 0, 12345, dist("ssss", 12300), dist("seLLer", 45)),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			orig := copyOrderFulfillment(tc.receiver)
+			if tc.expRes == nil {
+				tc.expRes = copyOrderFulfillment(tc.receiver)
+			}
+			var err error
+			testFunc := func() {
+				err = tc.receiver.DistributeAssets(tc.order, tc.amount)
+			}
+			require.NotPanics(t, testFunc, "DistributeAssets")
+			assertions.AssertErrorValue(t, err, tc.expErr, "DistributeAssets error")
+			if !assertEqualOrderFulfillments(t, tc.expRes, tc.receiver, "OrderFulfillment after DistributeAssets") {
+				t.Logf("Original: %s", orderFulfillmentString(orig))
+				t.Logf("  Amount: %s", tc.amount)
+			}
+		})
+	}
 }
 
 func TestDistributeAssets(t *testing.T) {
-	// TODO[1658]: func TestDistributeAssets(t *testing.T)
-	t.Skipf("not written")
+	seller, buyer := "SelleR", "BuyeR"
+	newOF := func(order *Order, assetsUnfilled, assetsFilled int64, dists ...*Distribution) *OrderFulfillment {
+		rv := &OrderFulfillment{
+			Order:             order,
+			AssetsUnfilledAmt: sdkmath.NewInt(assetsUnfilled),
+			AssetsFilledAmt:   sdkmath.NewInt(assetsFilled),
+		}
+		if assetsUnfilled == 0 {
+			rv.AssetsUnfilledAmt = ZeroAmtAfterSub
+		}
+		if len(dists) > 0 {
+			rv.AssetDists = dists
+		}
+		return rv
+
+	}
+	askOF := func(orderID uint64, assetsUnfilled, assetsFilled int64, dists ...*Distribution) *OrderFulfillment {
+		order := NewOrder(orderID).WithAsk(&AskOrder{
+			Seller: seller,
+			Assets: sdk.NewInt64Coin("apple", 999),
+		})
+		return newOF(order, assetsUnfilled, assetsFilled, dists...)
+	}
+	bidOF := func(orderID uint64, assetsUnfilled, assetsFilled int64, dists ...*Distribution) *OrderFulfillment {
+		order := NewOrder(orderID).WithBid(&BidOrder{
+			Buyer:  buyer,
+			Assets: sdk.NewInt64Coin("apple", 999),
+		})
+		return newOF(order, assetsUnfilled, assetsFilled, dists...)
+	}
+	dist := func(addr string, amt int64) *Distribution {
+		return &Distribution{
+			Address: addr,
+			Amount:  sdkmath.NewInt(amt),
+		}
+	}
+
+	tests := []struct {
+		name   string
+		of1    *OrderFulfillment
+		of2    *OrderFulfillment
+		amount sdkmath.Int
+		expOF1 *OrderFulfillment
+		expOF2 *OrderFulfillment
+		expErr string
+	}{
+		{
+			name:   "amount more than of1 unfilled: ask bid",
+			of1:    askOF(1, 5, 0),
+			of2:    bidOF(2, 6, 0),
+			amount: sdkmath.NewInt(6),
+			expOF2: bidOF(2, 0, 6, dist(seller, 6)),
+			expErr: "cannot fill ask order 1 having assets left \"5apple\" with \"6apple\" from bid order 2: overfill",
+		},
+		{
+			name:   "amount more than of1 unfilled: bid ask",
+			of1:    bidOF(1, 5, 0),
+			of2:    askOF(2, 6, 0),
+			amount: sdkmath.NewInt(6),
+			expOF2: askOF(2, 0, 6, dist(buyer, 6)),
+			expErr: "cannot fill bid order 1 having assets left \"5apple\" with \"6apple\" from ask order 2: overfill",
+		},
+		{
+			name:   "amount more than of2 unfilled: ask, bid",
+			of1:    askOF(1, 6, 0),
+			of2:    bidOF(2, 5, 0),
+			amount: sdkmath.NewInt(6),
+			expOF1: askOF(1, 0, 6, dist(buyer, 6)),
+			expErr: "cannot fill bid order 2 having assets left \"5apple\" with \"6apple\" from ask order 1: overfill",
+		},
+		{
+			name:   "amount more than of2 unfilled: bid, ask",
+			of1:    bidOF(1, 6, 0),
+			of2:    askOF(2, 5, 0),
+			amount: sdkmath.NewInt(6),
+			expOF1: bidOF(1, 0, 6, dist(seller, 6)),
+			expErr: "cannot fill ask order 2 having assets left \"5apple\" with \"6apple\" from bid order 1: overfill",
+		},
+		{
+			name:   "amount more than both unfilled: ask, bid",
+			of1:    askOF(1, 5, 0),
+			of2:    bidOF(2, 4, 0),
+			amount: sdkmath.NewInt(6),
+			expErr: "cannot fill ask order 1 having assets left \"5apple\" with \"6apple\" from bid order 2: overfill" + "\n" +
+				"cannot fill bid order 2 having assets left \"4apple\" with \"6apple\" from ask order 1: overfill",
+		},
+		{
+			name:   "amount more than both unfilled: ask, bid",
+			of1:    bidOF(1, 5, 0),
+			of2:    askOF(2, 4, 0),
+			amount: sdkmath.NewInt(6),
+			expErr: "cannot fill bid order 1 having assets left \"5apple\" with \"6apple\" from ask order 2: overfill" + "\n" +
+				"cannot fill ask order 2 having assets left \"4apple\" with \"6apple\" from bid order 1: overfill",
+		},
+		{
+			name:   "ask bid",
+			of1:    askOF(1, 10, 55, dist("bbb", 55)),
+			of2:    bidOF(2, 10, 0),
+			amount: sdkmath.NewInt(9),
+			expOF1: askOF(1, 1, 64, dist("bbb", 55), dist(buyer, 9)),
+			expOF2: bidOF(2, 1, 9, dist(seller, 9)),
+		},
+		{
+			name:   "bid ask",
+			of1:    bidOF(1, 10, 55, dist("sss", 55)),
+			of2:    askOF(2, 10, 3, dist("bbb", 3)),
+			amount: sdkmath.NewInt(10),
+			expOF1: bidOF(1, 0, 65, dist("sss", 55), dist(seller, 10)),
+			expOF2: askOF(2, 0, 13, dist("bbb", 3), dist(buyer, 10)),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			origOF1 := copyOrderFulfillment(tc.of1)
+			origOF2 := copyOrderFulfillment(tc.of2)
+			if tc.expOF1 == nil {
+				tc.expOF1 = copyOrderFulfillment(tc.of1)
+			}
+			if tc.expOF2 == nil {
+				tc.expOF2 = copyOrderFulfillment(tc.of2)
+			}
+
+			var err error
+			testFunc := func() {
+				err = DistributeAssets(tc.of1, tc.of2, tc.amount)
+			}
+			require.NotPanics(t, testFunc, "DistributeAssets")
+			assertions.AssertErrorValue(t, err, tc.expErr, "DistributeAssets error")
+			if !assertEqualOrderFulfillments(t, tc.expOF1, tc.of1, "of1 after DistributeAssets") {
+				t.Logf("Original: %s", orderFulfillmentString(origOF1))
+				t.Logf("  Amount: %s", tc.amount)
+			}
+			if !assertEqualOrderFulfillments(t, tc.expOF2, tc.of2, "of2 after DistributeAssets") {
+				t.Logf("Original: %s", orderFulfillmentString(origOF2))
+				t.Logf("  Amount: %s", tc.amount)
+			}
+		})
+	}
 }
 
 func TestOrderFulfillment_DistributePrice(t *testing.T) {
-	// TODO[1658]: func TestOrderFulfillment_DistributePrice(t *testing.T)
-	t.Skipf("not written")
+	newOF := func(order *Order, priceLeft, priceApplied int64, dists ...*Distribution) *OrderFulfillment {
+		rv := &OrderFulfillment{
+			Order:           order,
+			PriceLeftAmt:    sdkmath.NewInt(priceLeft),
+			PriceAppliedAmt: sdkmath.NewInt(priceApplied),
+		}
+		if priceLeft == 0 {
+			rv.PriceLeftAmt = ZeroAmtAfterSub
+		}
+		if len(dists) > 0 {
+			rv.PriceDists = dists
+		}
+		return rv
+
+	}
+	askOF := func(orderID uint64, priceLeft, priceApplied int64, dists ...*Distribution) *OrderFulfillment {
+		order := NewOrder(orderID).WithAsk(&AskOrder{Price: sdk.NewInt64Coin("peach", 999)})
+		return newOF(order, priceLeft, priceApplied, dists...)
+	}
+	bidOF := func(orderID uint64, priceLeft, priceApplied int64, dists ...*Distribution) *OrderFulfillment {
+		order := NewOrder(orderID).WithBid(&BidOrder{Price: sdk.NewInt64Coin("peach", 999)})
+		return newOF(order, priceLeft, priceApplied, dists...)
+	}
+	dist := func(addr string, amt int64) *Distribution {
+		return &Distribution{
+			Address: addr,
+			Amount:  sdkmath.NewInt(amt),
+		}
+	}
+
+	tests := []struct {
+		name     string
+		receiver *OrderFulfillment
+		order    OrderI
+		amount   sdkmath.Int
+		expRes   *OrderFulfillment
+		expErr   string
+	}{
+		{
+			name:     "assets unfilled less than amount: ask, ask",
+			receiver: askOF(1, 5, 0),
+			order:    NewOrder(2).WithAsk(&AskOrder{Seller: "seLLer"}),
+			amount:   sdkmath.NewInt(6),
+			expRes:   askOF(1, -1, 6, dist("seLLer", 6)),
+		},
+		{
+			name:     "assets unfilled less than amount: ask, bid",
+			receiver: askOF(3, 5, 0),
+			order:    NewOrder(4).WithBid(&BidOrder{Buyer: "buYer"}),
+			amount:   sdkmath.NewInt(6),
+			expRes:   askOF(3, -1, 6, dist("buYer", 6)),
+		},
+		{
+			name:     "assets unfilled less than amount: bid, ask",
+			receiver: bidOF(5, 5, 0),
+			order:    NewOrder(6).WithAsk(&AskOrder{Seller: "seLLer"}),
+			amount:   sdkmath.NewInt(6),
+			expErr:   "cannot fill bid order 5 having price left \"5peach\" to ask order 6 at a price of \"6peach\": overfill",
+		},
+		{
+			name:     "assets unfilled less than amount: bid, bid",
+			receiver: bidOF(7, 5, 0),
+			order:    NewOrder(8).WithBid(&BidOrder{Buyer: "buYer"}),
+			amount:   sdkmath.NewInt(6),
+			expErr:   "cannot fill bid order 7 having price left \"5peach\" to bid order 8 at a price of \"6peach\": overfill",
+		},
+		{
+			name:     "assets unfilled equals amount: ask, bid",
+			receiver: askOF(1, 12345, 0),
+			order:    NewOrder(2).WithBid(&BidOrder{Buyer: "buYer"}),
+			amount:   sdkmath.NewInt(12345),
+			expRes:   askOF(1, 0, 12345, dist("buYer", 12345)),
+		},
+		{
+			name:     "assets unfilled equals amount: bid, ask",
+			receiver: bidOF(1, 12345, 0),
+			order:    NewOrder(2).WithAsk(&AskOrder{Seller: "seLLer"}),
+			amount:   sdkmath.NewInt(12345),
+			expRes:   bidOF(1, 0, 12345, dist("seLLer", 12345)),
+		},
+		{
+			name:     "assets unfilled more than amount: ask, bid",
+			receiver: askOF(1, 12345, 0),
+			order:    NewOrder(2).WithBid(&BidOrder{Buyer: "buYer"}),
+			amount:   sdkmath.NewInt(300),
+			expRes:   askOF(1, 12045, 300, dist("buYer", 300)),
+		},
+		{
+			name:     "assets unfilled more than amount: bid, ask",
+			receiver: bidOF(1, 12345, 0),
+			order:    NewOrder(2).WithAsk(&AskOrder{Seller: "seLLer"}),
+			amount:   sdkmath.NewInt(300),
+			expRes:   bidOF(1, 12045, 300, dist("seLLer", 300)),
+		},
+		{
+			name:     "already has 2 dists: ask, bid",
+			receiver: askOF(1, 12300, 45, dist("bbbbb", 40), dist("YYYYY", 5)),
+			order:    NewOrder(2).WithBid(&BidOrder{Buyer: "buYer"}),
+			amount:   sdkmath.NewInt(2000),
+			expRes:   askOF(1, 10300, 2045, dist("bbbbb", 40), dist("YYYYY", 5), dist("buYer", 2000)),
+		},
+		{
+			name:     "already has 2 dists: bid, ask",
+			receiver: bidOF(1, 12300, 45, dist("sssss", 40), dist("LLLLL", 5)),
+			order:    NewOrder(2).WithAsk(&AskOrder{Seller: "seLLer"}),
+			amount:   sdkmath.NewInt(2000),
+			expRes:   bidOF(1, 10300, 2045, dist("sssss", 40), dist("LLLLL", 5), dist("seLLer", 2000)),
+		},
+		{
+			name:     "amt more than filled, ask, bid",
+			receiver: askOF(1, 45, 12300, dist("ssss", 12300)),
+			order:    NewOrder(2).WithBid(&BidOrder{Buyer: "buYer"}),
+			amount:   sdkmath.NewInt(45),
+			expRes:   askOF(1, 0, 12345, dist("ssss", 12300), dist("buYer", 45)),
+		},
+		{
+			name:     "amt more than filled, bid, ask",
+			receiver: bidOF(1, 45, 12300, dist("ssss", 12300)),
+			order:    NewOrder(2).WithAsk(&AskOrder{Seller: "seLLer"}),
+			amount:   sdkmath.NewInt(45),
+			expRes:   bidOF(1, 0, 12345, dist("ssss", 12300), dist("seLLer", 45)),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			orig := copyOrderFulfillment(tc.receiver)
+			if tc.expRes == nil {
+				tc.expRes = copyOrderFulfillment(tc.receiver)
+			}
+			var err error
+			testFunc := func() {
+				err = tc.receiver.DistributePrice(tc.order, tc.amount)
+			}
+			require.NotPanics(t, testFunc, "DistributePrice")
+			assertions.AssertErrorValue(t, err, tc.expErr, "DistributePrice error")
+			if !assertEqualOrderFulfillments(t, tc.expRes, tc.receiver, "OrderFulfillment after DistributePrice") {
+				t.Logf("Original: %s", orderFulfillmentString(orig))
+				t.Logf("  Amount: %s", tc.amount)
+			}
+		})
+	}
 }
 
 func TestDistributePrice(t *testing.T) {
-	// TODO[1658]: func TestDistributePrice(t *testing.T)
-	t.Skipf("not written")
+	seller, buyer := "SelleR", "BuyeR"
+	newOF := func(order *Order, priceLeft, priceApplied int64, dists ...*Distribution) *OrderFulfillment {
+		rv := &OrderFulfillment{
+			Order:           order,
+			PriceLeftAmt:    sdkmath.NewInt(priceLeft),
+			PriceAppliedAmt: sdkmath.NewInt(priceApplied),
+		}
+		if priceLeft == 0 {
+			rv.PriceLeftAmt = ZeroAmtAfterSub
+		}
+		if len(dists) > 0 {
+			rv.PriceDists = dists
+		}
+		return rv
+
+	}
+	askOF := func(orderID uint64, priceLeft, priceApplied int64, dists ...*Distribution) *OrderFulfillment {
+		order := NewOrder(orderID).WithAsk(&AskOrder{
+			Seller: seller,
+			Price:  sdk.NewInt64Coin("peach", 999),
+		})
+		return newOF(order, priceLeft, priceApplied, dists...)
+	}
+	bidOF := func(orderID uint64, priceLeft, priceApplied int64, dists ...*Distribution) *OrderFulfillment {
+		order := NewOrder(orderID).WithBid(&BidOrder{
+			Buyer: buyer,
+			Price: sdk.NewInt64Coin("peach", 999),
+		})
+		return newOF(order, priceLeft, priceApplied, dists...)
+	}
+	dist := func(addr string, amt int64) *Distribution {
+		return &Distribution{
+			Address: addr,
+			Amount:  sdkmath.NewInt(amt),
+		}
+	}
+
+	tests := []struct {
+		name   string
+		of1    *OrderFulfillment
+		of2    *OrderFulfillment
+		amount sdkmath.Int
+		expOF1 *OrderFulfillment
+		expOF2 *OrderFulfillment
+		expErr string
+	}{
+		{
+			name:   "amount more than of1 unfilled: ask bid",
+			of1:    askOF(1, 5, 0),
+			of2:    bidOF(2, 6, 0),
+			amount: sdkmath.NewInt(6),
+			expOF1: askOF(1, -1, 6, dist(buyer, 6)),
+			expOF2: bidOF(2, 0, 6, dist(seller, 6)),
+		},
+		{
+			name:   "amount more than of1 unfilled: bid ask",
+			of1:    bidOF(1, 5, 0),
+			of2:    askOF(2, 6, 0),
+			amount: sdkmath.NewInt(6),
+			expOF2: askOF(2, 0, 6, dist(buyer, 6)),
+			expErr: "cannot fill bid order 1 having price left \"5peach\" to ask order 2 at a price of \"6peach\": overfill",
+		},
+		{
+			name:   "amount more than of2 unfilled: ask, bid",
+			of1:    askOF(1, 6, 0),
+			of2:    bidOF(2, 5, 0),
+			amount: sdkmath.NewInt(6),
+			expOF1: askOF(1, 0, 6, dist(buyer, 6)),
+			expErr: "cannot fill bid order 2 having price left \"5peach\" to ask order 1 at a price of \"6peach\": overfill",
+		},
+		{
+			name:   "amount more than of2 unfilled: bid, ask",
+			of1:    bidOF(1, 6, 0),
+			of2:    askOF(2, 5, 0),
+			amount: sdkmath.NewInt(6),
+			expOF1: bidOF(1, 0, 6, dist(seller, 6)),
+			expOF2: askOF(2, -1, 6, dist(buyer, 6)),
+		},
+		{
+			name:   "amount more than both unfilled: ask, bid",
+			of1:    askOF(1, 5, 0),
+			of2:    bidOF(2, 4, 0),
+			amount: sdkmath.NewInt(6),
+			expOF1: askOF(1, -1, 6, dist(buyer, 6)),
+			expErr: "cannot fill bid order 2 having price left \"4peach\" to ask order 1 at a price of \"6peach\": overfill",
+		},
+		{
+			name:   "amount more than both unfilled: ask, bid",
+			of1:    bidOF(1, 5, 0),
+			of2:    askOF(2, 4, 0),
+			amount: sdkmath.NewInt(6),
+			expOF2: askOF(2, -2, 6, dist(buyer, 6)),
+			expErr: "cannot fill bid order 1 having price left \"5peach\" to ask order 2 at a price of \"6peach\": overfill",
+		},
+		{
+			name:   "ask bid",
+			of1:    askOF(1, 10, 55, dist("bbb", 55)),
+			of2:    bidOF(2, 10, 0),
+			amount: sdkmath.NewInt(9),
+			expOF1: askOF(1, 1, 64, dist("bbb", 55), dist(buyer, 9)),
+			expOF2: bidOF(2, 1, 9, dist(seller, 9)),
+		},
+		{
+			name:   "bid ask",
+			of1:    bidOF(1, 10, 55, dist("sss", 55)),
+			of2:    askOF(2, 10, 3, dist("bbb", 3)),
+			amount: sdkmath.NewInt(10),
+			expOF1: bidOF(1, 0, 65, dist("sss", 55), dist(seller, 10)),
+			expOF2: askOF(2, 0, 13, dist("bbb", 3), dist(buyer, 10)),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			origOF1 := copyOrderFulfillment(tc.of1)
+			origOF2 := copyOrderFulfillment(tc.of2)
+			if tc.expOF1 == nil {
+				tc.expOF1 = copyOrderFulfillment(tc.of1)
+			}
+			if tc.expOF2 == nil {
+				tc.expOF2 = copyOrderFulfillment(tc.of2)
+			}
+
+			var err error
+			testFunc := func() {
+				err = DistributePrice(tc.of1, tc.of2, tc.amount)
+			}
+			require.NotPanics(t, testFunc, "DistributePrice")
+			assertions.AssertErrorValue(t, err, tc.expErr, "DistributePrice error")
+			if !assertEqualOrderFulfillments(t, tc.expOF1, tc.of1, "of1 after DistributePrice") {
+				t.Logf("Original: %s", orderFulfillmentString(origOF1))
+				t.Logf("  Amount: %s", tc.amount)
+			}
+			if !assertEqualOrderFulfillments(t, tc.expOF2, tc.of2, "of2 after DistributePrice") {
+				t.Logf("Original: %s", orderFulfillmentString(origOF2))
+				t.Logf("  Amount: %s", tc.amount)
+			}
+		})
+	}
 }
 
 func TestOrderFulfillment_SplitOrder(t *testing.T) {

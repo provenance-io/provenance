@@ -239,7 +239,7 @@ func (f *OrderFulfillment) DistributePrice(order OrderI, amount sdkmath.Int) err
 	f.PriceLeftAmt = f.PriceLeftAmt.Sub(amount)
 	f.PriceAppliedAmt = f.PriceAppliedAmt.Add(amount)
 	f.PriceDists = append(f.PriceDists, &Distribution{
-		Address: order.GetOrderType(),
+		Address: order.GetOwner(),
 		Amount:  amount,
 	})
 	return nil
