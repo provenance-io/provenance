@@ -127,6 +127,7 @@ func NewMarkerPayload(transferAuthAddrs []sdk.AccAddress) MarkerPayload {
 	}
 }
 
+// NewIbcLifecycleCompleteAck returns a new ibc lifecycle complete acknowledgment object for json serialization
 func NewIbcLifecycleCompleteAck(sourceChannel string, sequence uint64, ackAsJSON []byte, success bool) IbcLifecycleComplete {
 	ibcLifecycleCompleteAck := IbcLifecycleCompleteAck{
 		IbcAck: IbcAck{
@@ -139,6 +140,7 @@ func NewIbcLifecycleCompleteAck(sourceChannel string, sequence uint64, ackAsJSON
 	return IbcLifecycleComplete{IbcLifecycleComplete: ibcLifecycleCompleteAck}
 }
 
+// NewIbcLifecycleCompleteTimeout return a new ibc lifecycle complete timeout object for json serialization
 func NewIbcLifecycleCompleteTimeout(sourceChannel string, sequence uint64) IbcLifecycleComplete {
 	ibcLifecycleCompleteAck := IbcLifecycleCompleteTimeout{
 		IbcTimeout: IbcTimeout{
@@ -149,8 +151,10 @@ func NewIbcLifecycleCompleteTimeout(sourceChannel string, sequence uint64) IbcLi
 	return IbcLifecycleComplete{IbcLifecycleComplete: ibcLifecycleCompleteAck}
 }
 
+// JSONBytes is a byte array of a json string
 type JSONBytes []byte
 
+// MarshalJSON returns empty json object bytes when bytes are empty
 func (jb JSONBytes) MarshalJSON() ([]byte, error) {
 	if len(jb) == 0 {
 		return []byte("{}"), nil
@@ -158,4 +162,5 @@ func (jb JSONBytes) MarshalJSON() ([]byte, error) {
 	return jb, nil
 }
 
+// PreSendPacketDataProcessingFn is function signature used for custom data processing before ibc's PacketSend executed in middleware
 type PreSendPacketDataProcessingFn func(ctx sdk.Context, data []byte, processData map[string]interface{}) ([]byte, error)

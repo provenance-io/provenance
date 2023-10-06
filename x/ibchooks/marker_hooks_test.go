@@ -84,7 +84,6 @@ func (suite *MarkerHooksTestSuite) makeMockPacket(denom, receiver, memo string, 
 func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
 	address1 := sdk.AccAddress("address1")
 	address2 := sdk.AccAddress("address2")
-	// address3 := sdk.AccAddress("address3")
 	markerHooks := ibchooks.NewMarkerHooks(&suite.chainA.GetProvenanceApp().MarkerKeeper)
 	testCases := []struct {
 		name          string
@@ -348,7 +347,7 @@ func (suite *MarkerHooksTestSuite) TestPreSendPacketDataProcessingFn() {
 	}
 	for _, tc := range testCases {
 		suite.T().Run(tc.name, func(t *testing.T) {
-			actualData, err := markerHooks.PreSendPacketDataProcessingFn(suite.chainA.GetContext(), tc.data, nil)
+			actualData, err := markerHooks.ProcessMarkerMemoFn(suite.chainA.GetContext(), tc.data, nil)
 			if len(tc.expErr) > 0 {
 				assert.EqualError(t, err, tc.expErr, "PreSendPacketDataProcessingFn() error")
 				assert.Nil(t, actualData, "PreSendPacketDataProcessingFn() return `data` should be nil")

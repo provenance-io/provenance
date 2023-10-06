@@ -30,10 +30,12 @@ func NewMarkerHooks(markerkeeper *markerkeeper.Keeper) MarkerHooks {
 	}
 }
 
+// ProperlyConfigured returns false marker hooks are configured properly
 func (h MarkerHooks) ProperlyConfigured() bool {
 	return h.MarkerKeeper != nil
 }
 
+// AddUpdateMarker will add or update ibc Marker with transfer authorities
 func (h MarkerHooks) AddUpdateMarker(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) error {
 	var data transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
@@ -168,7 +170,8 @@ func ProcessMarkerMemo(memo string) ([]sdktypes.AccAddress, markertypes.MarkerTy
 	return transferAuths, markertypes.MarkerType_RestrictedCoin, nil
 }
 
-func (h MarkerHooks) PreSendPacketDataProcessingFn(
+// ProcessMarkerMemoFn processes a ics20 packets memo part to have `marker` setup information for receiving chain
+func (h MarkerHooks) ProcessMarkerMemoFn(
 	ctx sdktypes.Context,
 	data []byte,
 	_ map[string]interface{},

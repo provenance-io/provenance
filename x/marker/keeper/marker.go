@@ -801,6 +801,7 @@ func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metad
 	return k.SetDenomMetaData(ctx, metadata, caller)
 }
 
+// SetDenomMetaData sets denom metadata to keeper and emits event
 func (k Keeper) SetDenomMetaData(ctx sdk.Context, metadata banktypes.Metadata, caller sdk.AccAddress) error {
 	k.bankKeeper.SetDenomMetaData(ctx, metadata)
 

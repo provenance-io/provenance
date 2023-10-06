@@ -38,6 +38,7 @@ func (h IbcHooks) ProperlyConfigured() bool {
 	return h.wasmHooks.ProperlyConfigured() && h.markerHooks.ProperlyConfigured() && h.ibcHooksKeeper != nil
 }
 
+// GetPreSendPacketDataProcessingFns returns a list of ordered functions to be executed before ibc's SendPacket function in middleware
 func (h IbcHooks) GetPreSendPacketDataProcessingFns() []types.PreSendPacketDataProcessingFn {
 	return h.PreSendPacketDataProcessingFns
 }
@@ -59,6 +60,8 @@ func (h IbcHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdktypes.Context, p
 	return h.wasmHooks.OnRecvPacketOverride(im, ctx, packet, relayer)
 }
 
+// SendPacketAfterHook function is executed after ibc's SendPacket
+// Note: processData is a JSON object of state data from the PreSendPacketDataProcessingFns
 func (h IbcHooks) SendPacketAfterHook(ctx sdktypes.Context,
 	chanCap *capabilitytypes.Capability,
 	sourcePort string,
