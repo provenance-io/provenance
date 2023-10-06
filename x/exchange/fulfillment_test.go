@@ -3545,8 +3545,137 @@ func TestBuildTransfers(t *testing.T) {
 }
 
 func TestPopulateFilled(t *testing.T) {
-	// TODO[1658]: func TestPopulateFilled(t *testing.T)
-	t.Skipf("not written")
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	askOrder := func(orderID uint64, assetsAmt, priceAmt int64) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			Assets: coin(assetsAmt, "acorn"),
+			Price:  coin(priceAmt, "prune"),
+		})
+	}
+	bidOrder := func(orderID uint64, assetsAmt, priceAmt int64) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			Assets: coin(assetsAmt, "acorn"),
+			Price:  coin(priceAmt, "prune"),
+		})
+	}
+	newOF := func(order *Order, priceAppliedAmt int64, fees ...sdk.Coin) *OrderFulfillment {
+		rv := &OrderFulfillment{
+			Order:             order,
+			AssetsFilledAmt:   order.GetAssets().Amount,
+			AssetsUnfilledAmt: sdkmath.ZeroInt(),
+			PriceAppliedAmt:   sdkmath.NewInt(priceAppliedAmt),
+			PriceLeftAmt:      order.GetPrice().Amount.SubRaw(priceAppliedAmt),
+		}
+		if len(fees) > 0 {
+			rv.FeesToPay = fees
+		}
+		return rv
+	}
+	filledOrder := func(order *Order, actualPrice int64, actualFees ...sdk.Coin) *FilledOrder {
+		rv := &FilledOrder{
+			order:       order,
+			actualPrice: coin(actualPrice, order.GetPrice().Denom),
+		}
+		if len(actualFees) > 0 {
+			rv.actualFees = actualFees
+		}
+		return rv
+	}
+
+	tests := []struct {
+		name          string
+		askOFs        []*OrderFulfillment
+		bidOFs        []*OrderFulfillment
+		settlement    *Settlement
+		expSettlement *Settlement
+	}{
+		{
+			name: "no partial",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(2001, 53, 87), 92, coin(12, "fig")),
+				newOF(askOrder(2002, 17, 33), 37),
+				newOF(askOrder(2003, 22, 56), 60),
+			},
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(3001, 30, 40), 40),
+				newOF(bidOrder(3002, 27, 49), 49, coin(39, "fig")),
+				newOF(bidOrder(3003, 35, 100), 100),
+			},
+			settlement: &Settlement{},
+			expSettlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					filledOrder(askOrder(2001, 53, 87), 92, coin(12, "fig")),
+					filledOrder(askOrder(2002, 17, 33), 37),
+					filledOrder(askOrder(2003, 22, 56), 60),
+					filledOrder(bidOrder(3001, 30, 40), 40),
+					filledOrder(bidOrder(3002, 27, 49), 49, coin(39, "fig")),
+					filledOrder(bidOrder(3003, 35, 100), 100),
+				},
+			},
+		},
+		{
+			name: "partial ask",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(2001, 53, 87), 92, coin(12, "fig")),
+				newOF(askOrder(2002, 17, 33), 37),
+				newOF(askOrder(2003, 22, 56), 60),
+			},
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(3001, 30, 40), 40),
+				newOF(bidOrder(3002, 27, 49), 49, coin(39, "fig")),
+				newOF(bidOrder(3003, 35, 100), 100),
+			},
+			settlement: &Settlement{PartialOrderLeft: askOrder(2002, 15, 63)},
+			expSettlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					filledOrder(askOrder(2001, 53, 87), 92, coin(12, "fig")),
+					filledOrder(askOrder(2003, 22, 56), 60),
+					filledOrder(bidOrder(3001, 30, 40), 40),
+					filledOrder(bidOrder(3002, 27, 49), 49, coin(39, "fig")),
+					filledOrder(bidOrder(3003, 35, 100), 100),
+				},
+				PartialOrderFilled: filledOrder(askOrder(2002, 17, 33), 37),
+				PartialOrderLeft:   askOrder(2002, 15, 63),
+			},
+		},
+		{
+			name: "partial bid",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(2001, 53, 87), 92, coin(12, "fig")),
+				newOF(askOrder(2002, 17, 33), 37),
+				newOF(askOrder(2003, 22, 56), 60),
+			},
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(3001, 30, 40), 40),
+				newOF(bidOrder(3002, 27, 49), 49, coin(39, "fig")),
+				newOF(bidOrder(3003, 35, 100), 100),
+			},
+			settlement: &Settlement{PartialOrderLeft: bidOrder(3003, 15, 63)},
+			expSettlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					filledOrder(askOrder(2001, 53, 87), 92, coin(12, "fig")),
+					filledOrder(askOrder(2002, 17, 33), 37),
+					filledOrder(askOrder(2003, 22, 56), 60),
+					filledOrder(bidOrder(3001, 30, 40), 40),
+					filledOrder(bidOrder(3002, 27, 49), 49, coin(39, "fig")),
+				},
+				PartialOrderFilled: filledOrder(bidOrder(3003, 35, 100), 100),
+				PartialOrderLeft:   bidOrder(3003, 15, 63),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testFunc := func() {
+				populateFilled(tc.askOFs, tc.bidOFs, tc.settlement)
+			}
+			require.NotPanics(t, testFunc, "populateFilled")
+			assert.Equal(t, tc.expSettlement, tc.settlement, "settlement after populateFilled")
+		})
+	}
 }
 
 func TestGetAssetTransfer(t *testing.T) {
