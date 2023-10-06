@@ -255,17 +255,22 @@ func DistributePrice(of1, of2 *OrderFulfillment, amount sdkmath.Int) error {
 }
 
 // SplitOrder splits this order on the amount of assets filled.
-// This order fulfillment is updated to have the filled order.
-func (f *OrderFulfillment) SplitOrder() (filled *Order, unfilled *Order, err error) {
-	filled, unfilled, err = f.Order.Split(f.AssetsFilledAmt)
+// This order fulfillment is updated to have the filled order, and the unfilled portion is returned.
+func (f *OrderFulfillment) SplitOrder() (*Order, error) {
+	filled, unfilled, err := f.Order.Split(f.AssetsFilledAmt)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	f.Order = filled
 	f.AssetsUnfilledAmt = sdkmath.ZeroInt()
 	f.PriceLeftAmt = filled.GetPrice().Amount.Sub(f.PriceAppliedAmt)
-	return filled, unfilled, nil
+	return unfilled, nil
+}
+
+// AsFilledOrder creates a FilledOrder from this order fulfillment.
+func (f *OrderFulfillment) AsFilledOrder() *FilledOrder {
+	return NewFilledOrder(f.Order, f.GetPriceApplied(), f.FeesToPay)
 }
 
 // sumAssetsAndPrice gets the sum of assets, and the sum of prices of the provided orders.
@@ -293,9 +298,11 @@ type Settlement struct {
 	// FeeInputs are the inputs needed to facilitate payment of order fees.
 	FeeInputs []banktypes.Input
 	// FullyFilledOrders are all the orders that are fully filled in this settlement.
-	FullyFilledOrders []*Order
+	// If there is an order that's being partially filled, it will not be included in this list.
+	FullyFilledOrders []*FilledOrder
 	// PartialOrderFilled is a partially filled order with amounts indicating how much was filled.
-	PartialOrderFilled *Order
+	// This is not included in FullyFilledOrders.
+	PartialOrderFilled *FilledOrder
 	// PartialOrderLeft is what's left of the partially filled order.
 	PartialOrderLeft *Order
 }
@@ -314,9 +321,9 @@ func BuildSettlement(askOrders, bidOrders []*Order, sellerFeeRatioLookup func(de
 		return nil, err
 	}
 
+	settlement := &Settlement{}
 	// Identify any partial order and update its entry in the order fulfillments.
-	settlement, err := splitPartial(askOFs, bidOFs)
-	if err != nil {
+	if err := splitPartial(askOFs, bidOFs, settlement); err != nil {
 		return nil, err
 	}
 
@@ -329,28 +336,31 @@ func BuildSettlement(askOrders, bidOrders []*Order, sellerFeeRatioLookup func(de
 	}
 
 	// Allocate the prices.
-	if err = allocatePrice(askOFs, bidOFs); err != nil {
+	if err := allocatePrice(askOFs, bidOFs); err != nil {
 		return nil, err
 	}
 
+	// Set the fees in the fulfillments
 	sellerFeeRatio, err := sellerFeeRatioLookup(askOFs[0].GetPrice().Denom)
 	if err != nil {
 		return nil, err
 	}
-
-	// Set the fees in the fullfillments
 	if err = setFeesToPay(askOFs, bidOFs, sellerFeeRatio); err != nil {
 		return nil, err
 	}
 
+	// Make sure everything adds up.
 	if err = validateFulfillments(askOFs, bidOFs); err != nil {
 		return nil, err
 	}
 
-	err = buildTransfers(askOFs, bidOFs, settlement)
-	if err != nil {
+	// Create the transfers
+	if err = buildTransfers(askOFs, bidOFs, settlement); err != nil {
 		return nil, err
 	}
+
+	// Indicate what's been filled in full and partially.
+	populateFilled(askOFs, bidOFs, settlement)
 
 	return settlement, nil
 }
@@ -448,57 +458,41 @@ func allocateAssets(askOFs, bidOFs []*OrderFulfillment) error {
 }
 
 // splitPartial checks the provided fulfillments for a partial order and splits it out, updating the applicable fulfillment.
-func splitPartial(askOFs, bidOFs []*OrderFulfillment) (*Settlement, error) {
-	rv := &Settlement{}
+// This will possibly populate the PartialOrderLeft in the provided Settlement.
+func splitPartial(askOFs, bidOFs []*OrderFulfillment, settlement *Settlement) error {
+	if err := splitOrderFulfillments(askOFs, settlement); err != nil {
+		return err
+	}
+	return splitOrderFulfillments(bidOFs, settlement)
+}
 
-	lastAskI := len(askOFs) - 1
-	for i, askOF := range askOFs {
-		if askOF.AssetsFilledAmt.IsZero() {
-			return nil, fmt.Errorf("%s order %d (at index %d) has no assets filled",
-				askOF.GetOrderType(), askOF.GetOrderID(), i)
+// splitOrderFulfillments checks each of the OrderFulfillment for partial (or incomplete) fills.
+// If an appropriate partial fill is found, its OrderFulfillment is update and Settlement.PartialOrderLeft is set.
+func splitOrderFulfillments(fulfillments []*OrderFulfillment, settlement *Settlement) error {
+	lastI := len(fulfillments) - 1
+	for i, f := range fulfillments {
+		if f.AssetsFilledAmt.IsZero() {
+			return fmt.Errorf("%s order %d (at index %d) has no assets filled",
+				f.GetOrderType(), f.GetOrderID(), i)
 		}
-		if !askOF.AssetsUnfilledAmt.IsZero() {
-			if i != lastAskI {
-				return nil, fmt.Errorf("%s order %d (at index %d) is not filled in full and is not the last ask order provided",
-					askOF.GetOrderType(), askOF.GetOrderID(), i)
+		if !f.AssetsUnfilledAmt.IsZero() {
+			if i != lastI {
+				return fmt.Errorf("%s order %d (at index %d) is not filled in full and is not the last %s order provided",
+					f.GetOrderType(), f.GetOrderID(), i, f.GetOrderType())
+			}
+			if settlement.PartialOrderLeft != nil {
+				return fmt.Errorf("%s order %d and %s order %d cannot both be partially filled",
+					settlement.PartialOrderLeft.GetOrderType(), settlement.PartialOrderLeft.GetOrderID(),
+					f.GetOrderType(), f.GetOrderID())
 			}
 			var err error
-			rv.PartialOrderFilled, rv.PartialOrderLeft, err = askOF.SplitOrder()
+			settlement.PartialOrderLeft, err = f.SplitOrder()
 			if err != nil {
-				return nil, err
+				return err
 			}
-		} else {
-			rv.FullyFilledOrders = append(rv.FullyFilledOrders, askOF.Order)
 		}
 	}
-
-	lastBidI := len(bidOFs) - 1
-	for i, bidOF := range bidOFs {
-		if bidOF.AssetsFilledAmt.IsZero() {
-			return nil, fmt.Errorf("%s order %d (at index %d) has no assets filled",
-				bidOF.GetOrderType(), bidOF.GetOrderID(), i)
-		}
-		if !bidOF.AssetsUnfilledAmt.IsZero() {
-			if i != lastBidI {
-				return nil, fmt.Errorf("%s order %d (at index %d) is not filled in full and is not the last bid order provided",
-					bidOF.GetOrderType(), bidOF.GetOrderID(), i)
-			}
-			if rv.PartialOrderFilled != nil {
-				return nil, fmt.Errorf("%s order %d and %s order %d cannot both be partially filled",
-					rv.PartialOrderFilled.GetOrderType(), rv.PartialOrderFilled.GetOrderID(),
-					bidOF.GetOrderType(), bidOF.GetOrderID())
-			}
-			var err error
-			rv.PartialOrderFilled, rv.PartialOrderLeft, err = bidOF.SplitOrder()
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			rv.FullyFilledOrders = append(rv.FullyFilledOrders, bidOF.Order)
-		}
-	}
-
-	return rv, nil
+	return nil
 }
 
 // allocatePrice distributes the prices among the fulfillments.
@@ -650,6 +644,7 @@ func validateFulfillments(askOFs, bidOFs []*OrderFulfillment) error {
 
 // buildTransfers creates the transfers, inputs for fee payments,
 // and fee total and sets those fields in the provided Settlement.
+// This will populate the Transfers and FeeInputs fields in the provided Settlement.
 func buildTransfers(askOFs, bidOFs []*OrderFulfillment, settlement *Settlement) error {
 	var errs []error
 	indexedFees := newIndexedAddrAmts()
@@ -697,6 +692,28 @@ func buildTransfers(askOFs, bidOFs []*OrderFulfillment, settlement *Settlement) 
 	settlement.FeeInputs = indexedFees.getAsInputs()
 
 	return nil
+}
+
+// populateFilled creates all the FilledOrder entries and stores them in the provided Settlement.
+// This will populate the FullyFilledOrders and PartialOrderFilled fields in the provided Settlement.
+func populateFilled(askOFs, bidOFs []*OrderFulfillment, settlement *Settlement) {
+	settlement.FullyFilledOrders = make([]*FilledOrder, 0, len(askOFs)+len(bidOFs))
+
+	for _, f := range askOFs {
+		if settlement.PartialOrderLeft != nil && settlement.PartialOrderLeft.GetOrderID() == f.GetOrderID() {
+			settlement.PartialOrderFilled = f.AsFilledOrder()
+		} else {
+			settlement.FullyFilledOrders = append(settlement.FullyFilledOrders, f.AsFilledOrder())
+		}
+	}
+
+	for _, f := range bidOFs {
+		if settlement.PartialOrderLeft != nil && settlement.PartialOrderLeft.GetOrderID() == f.GetOrderID() {
+			settlement.PartialOrderFilled = f.AsFilledOrder()
+		} else {
+			settlement.FullyFilledOrders = append(settlement.FullyFilledOrders, f.AsFilledOrder())
+		}
+	}
 }
 
 // getAssetTransfer gets the inputs and outputs to facilitate the transfers of assets for this order fulfillment.

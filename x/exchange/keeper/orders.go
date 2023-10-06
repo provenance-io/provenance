@@ -524,8 +524,8 @@ func (k Keeper) getBidOrders(store sdk.KVStore, marketID uint32, orderIDs []uint
 }
 
 // placeHoldOnOrder places a hold on an order's funds in the owner's account.
-func (k Keeper) placeHoldOnOrder(ctx sdk.Context, order *exchange.Order) error {
-	orderID := order.OrderId
+func (k Keeper) placeHoldOnOrder(ctx sdk.Context, order exchange.OrderI) error {
+	orderID := order.GetOrderID()
 	orderType := order.GetOrderType()
 	owner := order.GetOwner()
 	ownerAddr, err := sdk.AccAddressFromBech32(owner)
@@ -541,8 +541,8 @@ func (k Keeper) placeHoldOnOrder(ctx sdk.Context, order *exchange.Order) error {
 }
 
 // releaseHoldOnOrder releases a hold that was placed on an order's funds in the owner's account.
-func (k Keeper) releaseHoldOnOrder(ctx sdk.Context, order *exchange.Order) error {
-	orderID := order.OrderId
+func (k Keeper) releaseHoldOnOrder(ctx sdk.Context, order exchange.OrderI) error {
+	orderID := order.GetOrderID()
 	orderType := order.GetOrderType()
 	owner := order.GetOwner()
 	ownerAddr, err := sdk.AccAddressFromBech32(owner)

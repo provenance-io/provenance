@@ -65,6 +65,7 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 	addrIndex := make(map[string]int)
 	feeInputs := make([]banktypes.Input, 0, len(msg.BidOrderIds)+1)
 	feeAddrIndex := make(map[string]int)
+	filledOrders := make([]*exchange.FilledOrder, 0, len(msg.BidOrderIds))
 	for _, order := range orders {
 		bidOrder := order.GetBidOrder()
 		buyer := bidOrder.Buyer
@@ -106,6 +107,8 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 			}
 			feeInputs[j].Coins = feeInputs[j].Coins.Add(buyerSettlementFees...)
 		}
+
+		filledOrders = append(filledOrders, exchange.NewFilledOrder(order, price, buyerSettlementFees))
 	}
 
 	if len(errs) > 0 {
@@ -149,9 +152,9 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 	}
 
 	events := make([]proto.Message, len(orders))
-	for i, order := range orders {
-		deleteAndDeIndexOrder(store, *order)
-		events[i] = exchange.NewEventOrderFilled(order.OrderId)
+	for i, order := range filledOrders {
+		deleteAndDeIndexOrder(store, *order.GetOriginalOrder())
+		events[i] = exchange.NewEventOrderFilled(order)
 	}
 
 	k.emitEvents(ctx, events)
@@ -192,6 +195,7 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	addrIndex := make(map[string]int)
 	feeInputs := make([]banktypes.Input, 0, len(msg.AskOrderIds)+1)
 	feeAddrIndex := make(map[string]int)
+	filledOrders := make([]*exchange.FilledOrder, 0, len(msg.AskOrderIds))
 	for _, order := range orders {
 		askOrder := order.GetAskOrder()
 		seller := askOrder.Seller
@@ -237,6 +241,8 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 			}
 			feeInputs[j].Coins = feeInputs[j].Coins.Add(totalSellerFee...)
 		}
+
+		filledOrders = append(filledOrders, exchange.NewFilledOrder(order, price, totalSellerFee))
 	}
 
 	if len(errs) > 0 {
@@ -277,9 +283,9 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	}
 
 	events := make([]proto.Message, len(orders))
-	for i, order := range orders {
-		deleteAndDeIndexOrder(store, *order)
-		events[i] = exchange.NewEventOrderFilled(order.OrderId)
+	for i, order := range filledOrders {
+		deleteAndDeIndexOrder(store, *order.GetOriginalOrder())
+		events[i] = exchange.NewEventOrderFilled(order)
 	}
 
 	k.emitEvents(ctx, events)
@@ -343,6 +349,10 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 		return err
 	}
 
+	// Delete all the fully filled orders.
+	for _, order := range settlement.FullyFilledOrders {
+		deleteAndDeIndexOrder(store, *order.GetOriginalOrder())
+	}
 	// Update the partial order if there was one.
 	if settlement.PartialOrderLeft != nil {
 		if err = k.setOrderInStore(store, *settlement.PartialOrderLeft); err != nil {
@@ -354,14 +364,10 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 	// And emit all the needed events.
 	events := make([]proto.Message, 0, len(askOrders)+len(bidOrders))
 	for _, order := range settlement.FullyFilledOrders {
-		events = append(events, exchange.NewEventOrderFilled(order.OrderId))
+		events = append(events, exchange.NewEventOrderFilled(order))
 	}
 	if settlement.PartialOrderFilled != nil {
-		events = append(events, exchange.NewEventOrderPartiallyFilled(
-			settlement.PartialOrderFilled.OrderId,
-			settlement.PartialOrderFilled.GetAssets(),
-			settlement.PartialOrderFilled.GetPrice(),
-		))
+		events = append(events, exchange.NewEventOrderPartiallyFilled(settlement.PartialOrderFilled))
 	}
 	k.emitEvents(ctx, events)
 

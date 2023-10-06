@@ -2539,3 +2539,165 @@ func TestBidOrder_CopyChange(t *testing.T) {
 		})
 	}
 }
+
+func TestNewFilledOrder(t *testing.T) {
+	expected := &FilledOrder{
+		order:       NewOrder(8),
+		actualPrice: sdk.NewInt64Coin("prune", 123),
+		actualFees:  sdk.NewCoins(sdk.NewInt64Coin("fig", 999)),
+	}
+	var actual *FilledOrder
+	testFunc := func() {
+		actual = NewFilledOrder(expected.order, expected.actualPrice, expected.actualFees)
+	}
+	require.NotPanics(t, testFunc, "NewFilledOrder")
+	assert.Equal(t, expected, actual, "NewFilledOrder result")
+}
+
+func TestFilledOrderMethods(t *testing.T) {
+	askOrder := &AskOrder{
+		MarketId:                333,
+		Seller:                  "SEllER",
+		Assets:                  sdk.NewInt64Coin("apple", 55),
+		Price:                   sdk.NewInt64Coin("peach", 111),
+		SellerSettlementFlatFee: &sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(8)},
+		AllowPartial:            true,
+	}
+	ask := NewOrder(51).WithAsk(askOrder)
+	askActualPrice := sdk.NewInt64Coin("peach", 123)
+	askActualFees := sdk.NewCoins(sdk.NewInt64Coin("fig", 13))
+	filledAsk := NewFilledOrder(ask, askActualPrice, askActualFees)
+
+	bidOrder := &BidOrder{
+		MarketId:            444,
+		Buyer:               "BUyER",
+		Assets:              sdk.NewInt64Coin("apple", 56),
+		Price:               sdk.NewInt64Coin("peach", 112),
+		BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 9)),
+		AllowPartial:        true,
+	}
+	bid := NewOrder(52).WithBid(bidOrder)
+	bidActualPrice := sdk.NewInt64Coin("peach", 124)
+	bidActualFees := sdk.NewCoins(sdk.NewInt64Coin("fig", 14))
+	filledBid := NewFilledOrder(bid, bidActualPrice, bidActualFees)
+
+	tests := []struct {
+		name   string
+		getter func(fo *FilledOrder) interface{}
+		expAsk interface{}
+		expBid interface{}
+	}{
+		{
+			name:   "GetOriginalOrder",
+			getter: func(of *FilledOrder) interface{} { return of.GetOriginalOrder() },
+			expAsk: ask,
+			expBid: bid,
+		},
+		{
+			name:   "GetOrderID",
+			getter: func(of *FilledOrder) interface{} { return of.GetOrderID() },
+			expAsk: ask.OrderId,
+			expBid: bid.OrderId,
+		},
+		{
+			name:   "IsAskOrder",
+			getter: func(of *FilledOrder) interface{} { return of.IsAskOrder() },
+			expAsk: true,
+			expBid: false,
+		},
+		{
+			name:   "IsBidOrder",
+			getter: func(of *FilledOrder) interface{} { return of.IsBidOrder() },
+			expAsk: false,
+			expBid: true,
+		},
+		{
+			name:   "GetMarketID",
+			getter: func(of *FilledOrder) interface{} { return of.GetMarketID() },
+			expAsk: askOrder.MarketId,
+			expBid: bidOrder.MarketId,
+		},
+		{
+			name:   "GetOwner",
+			getter: func(of *FilledOrder) interface{} { return of.GetOwner() },
+			expAsk: askOrder.Seller,
+			expBid: bidOrder.Buyer,
+		},
+		{
+			name:   "GetAssets",
+			getter: func(of *FilledOrder) interface{} { return of.GetAssets() },
+			expAsk: askOrder.Assets,
+			expBid: bidOrder.Assets,
+		},
+		{
+			name:   "GetPrice",
+			getter: func(of *FilledOrder) interface{} { return of.GetPrice() },
+			expAsk: askActualPrice,
+			expBid: bidActualPrice,
+		},
+		{
+			name:   "GetOriginalPrice",
+			getter: func(of *FilledOrder) interface{} { return of.GetOriginalPrice() },
+			expAsk: askOrder.Price,
+			expBid: bidOrder.Price,
+		},
+		{
+			name:   "GetSettlementFees",
+			getter: func(of *FilledOrder) interface{} { return of.GetSettlementFees() },
+			expAsk: askActualFees,
+			expBid: bidActualFees,
+		},
+		{
+			name:   "GetOriginalSettlementFees",
+			getter: func(of *FilledOrder) interface{} { return of.GetOriginalSettlementFees() },
+			expAsk: sdk.Coins{*askOrder.SellerSettlementFlatFee},
+			expBid: bidOrder.BuyerSettlementFees,
+		},
+		{
+			name:   "PartialFillAllowed",
+			getter: func(of *FilledOrder) interface{} { return of.PartialFillAllowed() },
+			expAsk: askOrder.AllowPartial,
+			expBid: bidOrder.AllowPartial,
+		},
+		{
+			name:   "GetOrderType",
+			getter: func(of *FilledOrder) interface{} { return of.GetOrderType() },
+			expAsk: OrderTypeAsk,
+			expBid: OrderTypeBid,
+		},
+		{
+			name:   "GetOrderTypeByte",
+			getter: func(of *FilledOrder) interface{} { return of.GetOrderTypeByte() },
+			expAsk: OrderTypeByteAsk,
+			expBid: OrderTypeByteBid,
+		},
+		{
+			name:   "GetHoldAmount",
+			getter: func(of *FilledOrder) interface{} { return of.GetHoldAmount() },
+			expAsk: askOrder.GetHoldAmount(),
+			expBid: bidOrder.GetHoldAmount(),
+		},
+		{
+			name:   "Validate",
+			getter: func(of *FilledOrder) interface{} { return of.Validate() },
+			expAsk: error(nil),
+			expBid: error(nil),
+		},
+	}
+
+	tester := func(of *FilledOrder, getter func(*FilledOrder) interface{}, expected interface{}) func(t *testing.T) {
+		return func(t *testing.T) {
+			var actual interface{}
+			testFunc := func() {
+				actual = getter(of)
+			}
+			require.NotPanics(t, testFunc)
+			assert.Equal(t, expected, actual)
+		}
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name+": ask", tester(filledAsk, tc.getter, tc.expAsk))
+		t.Run(tc.name+": bid", tester(filledBid, tc.getter, tc.expBid))
+	}
+}

@@ -2117,7 +2117,6 @@ func TestOrderFulfillment_SplitOrder(t *testing.T) {
 	tests := []struct {
 		name        string
 		receiver    *OrderFulfillment
-		expFilled   *Order
 		expUnfilled *Order
 		expReceiver *OrderFulfillment
 		expErr      string
@@ -2147,7 +2146,6 @@ func TestOrderFulfillment_SplitOrder(t *testing.T) {
 				PriceAppliedAmt:   sdkmath.NewInt(300),
 				PriceLeftAmt:      sdkmath.NewInt(-200),
 			},
-			expFilled:   askOrder(17, 9, 90, coin(18, "fig")),
 			expUnfilled: askOrder(17, 1, 10, coin(2, "fig")),
 			expReceiver: &OrderFulfillment{
 				Order:             askOrder(17, 9, 90, coin(18, "fig")),
@@ -2166,7 +2164,6 @@ func TestOrderFulfillment_SplitOrder(t *testing.T) {
 				PriceAppliedAmt:   sdkmath.NewInt(300),
 				PriceLeftAmt:      sdkmath.NewInt(-200),
 			},
-			expFilled:   bidOrder(19, 9, 90, coin(18, "fig")),
 			expUnfilled: bidOrder(19, 1, 10, coin(2, "fig")),
 			expReceiver: &OrderFulfillment{
 				Order:             bidOrder(19, 9, 90, coin(18, "fig")),
@@ -2185,20 +2182,24 @@ func TestOrderFulfillment_SplitOrder(t *testing.T) {
 				tc.expReceiver = copyOrderFulfillment(tc.receiver)
 			}
 
-			var filled, unfilled *Order
+			var unfilled *Order
 			var err error
 			testFunc := func() {
-				filled, unfilled, err = tc.receiver.SplitOrder()
+				unfilled, err = tc.receiver.SplitOrder()
 			}
 			require.NotPanics(t, testFunc, "SplitOrder")
 			assertions.AssertErrorValue(t, err, tc.expErr, "SplitOrder error")
-			assert.Equalf(t, tc.expFilled, filled, "SplitOrder filled order")
 			assert.Equalf(t, tc.expUnfilled, unfilled, "SplitOrder unfilled order")
 			if !assertEqualOrderFulfillments(t, tc.expReceiver, tc.receiver, "OrderFulfillment after SplitOrder") {
 				t.Logf("Original: %s", orderFulfillmentString(orig))
 			}
 		})
 	}
+}
+
+func TestOrderFulfillment_AsFilledOrder(t *testing.T) {
+	// TODO[1658]: func TestAsFilledOrder(t *testing.T)
+	t.Skipf("not written")
 }
 
 func TestSumAssetsAndPrice(t *testing.T) {
@@ -2859,25 +2860,30 @@ func TestSplitPartial(t *testing.T) {
 		name          string
 		askOFs        []*OrderFulfillment
 		bidOFs        []*OrderFulfillment
+		settlement    *Settlement
 		expAskOFs     []*OrderFulfillment
 		expBidOfs     []*OrderFulfillment
 		expSettlement *Settlement
 		expErr        string
 	}{
 		{
-			name:   "one ask: not touched",
-			askOFs: []*OrderFulfillment{newOF(askOrder(8, 10, "seller8"))},
-			expErr: "ask order 8 (at index 0) has no assets filled",
+			name:       "one ask: not touched",
+			askOFs:     []*OrderFulfillment{newOF(askOrder(8, 10, "seller8"))},
+			settlement: &Settlement{},
+			expErr:     "ask order 8 (at index 0) has no assets filled",
 		},
 		{
-			name:      "one ask: partial",
-			askOFs:    []*OrderFulfillment{newOF(askOrder(8, 10, "seller8"), dist("buyer", 7))},
-			expAskOFs: []*OrderFulfillment{newOF(askOrder(8, 7, "seller8"), dist("buyer", 7))},
-			expSettlement: &Settlement{
-				FullyFilledOrders:  nil,
-				PartialOrderFilled: askOrder(8, 7, "seller8"),
-				PartialOrderLeft:   askOrder(8, 3, "seller8"),
-			},
+			name:          "one ask: partial",
+			askOFs:        []*OrderFulfillment{newOF(askOrder(8, 10, "seller8"), dist("buyer", 7))},
+			settlement:    &Settlement{},
+			expAskOFs:     []*OrderFulfillment{newOF(askOrder(8, 7, "seller8"), dist("buyer", 7))},
+			expSettlement: &Settlement{PartialOrderLeft: askOrder(8, 3, "seller8")},
+		},
+		{
+			name:       "one ask: partial, settlement already has a partial",
+			askOFs:     []*OrderFulfillment{newOF(askOrder(8, 10, "seller8"), dist("buyer", 7))},
+			settlement: &Settlement{PartialOrderLeft: bidOrder(55, 3, "buyer")},
+			expErr:     "bid order 55 and ask order 8 cannot both be partially filled",
 		},
 		{
 			name: "one ask: partial, not allowed",
@@ -2888,7 +2894,8 @@ func TestSplitPartial(t *testing.T) {
 					Price:        sdk.Coin{Denom: "peach", Amount: sdkmath.NewInt(10)},
 					AllowPartial: false,
 				}), dist("buyer", 7))},
-			expErr: "cannot split ask order 8 having assets \"10apple\" at \"7apple\": order does not allow partial fulfillment",
+			settlement: &Settlement{},
+			expErr:     "cannot split ask order 8 having assets \"10apple\" at \"7apple\": order does not allow partial fulfillment",
 		},
 		{
 			name: "two asks: first partial",
@@ -2896,7 +2903,8 @@ func TestSplitPartial(t *testing.T) {
 				newOF(askOrder(8, 10, "seller8"), dist("buyer", 7)),
 				newOF(askOrder(9, 12, "seller8")),
 			},
-			expErr: "ask order 8 (at index 0) is not filled in full and is not the last ask order provided",
+			settlement: &Settlement{},
+			expErr:     "ask order 8 (at index 0) is not filled in full and is not the last ask order provided",
 		},
 		{
 			name: "two asks: last untouched",
@@ -2904,7 +2912,8 @@ func TestSplitPartial(t *testing.T) {
 				newOF(askOrder(8, 10, "seller8"), dist("buyer", 10)),
 				newOF(askOrder(9, 12, "seller8")),
 			},
-			expErr: "ask order 9 (at index 1) has no assets filled",
+			settlement: &Settlement{},
+			expErr:     "ask order 9 (at index 1) has no assets filled",
 		},
 		{
 			name: "two asks: last partial",
@@ -2912,31 +2921,26 @@ func TestSplitPartial(t *testing.T) {
 				newOF(askOrder(8, 10, "seller8"), dist("buyer", 10)),
 				newOF(askOrder(9, 12, "seller9"), dist("buyer", 10)),
 			},
+			settlement: &Settlement{},
 			expAskOFs: []*OrderFulfillment{
 				newOF(askOrder(8, 10, "seller8"), dist("buyer", 10)),
 				newOF(askOrder(9, 10, "seller9"), dist("buyer", 10)),
 			},
-			expSettlement: &Settlement{
-				FullyFilledOrders:  []*Order{askOrder(8, 10, "seller8")},
-				PartialOrderFilled: askOrder(9, 10, "seller9"),
-				PartialOrderLeft:   askOrder(9, 2, "seller9"),
-			},
+			expSettlement: &Settlement{PartialOrderLeft: askOrder(9, 2, "seller9")},
 		},
 
 		{
-			name:   "one bid: not touched",
-			bidOFs: []*OrderFulfillment{newOF(bidOrder(8, 10, "buyer8"))},
-			expErr: "bid order 8 (at index 0) has no assets filled",
+			name:       "one bid: not touched",
+			bidOFs:     []*OrderFulfillment{newOF(bidOrder(8, 10, "buyer8"))},
+			settlement: &Settlement{},
+			expErr:     "bid order 8 (at index 0) has no assets filled",
 		},
 		{
-			name:      "one bid: partial",
-			bidOFs:    []*OrderFulfillment{newOF(bidOrder(8, 10, "buyer8"), dist("seller", 7))},
-			expBidOfs: []*OrderFulfillment{newOF(bidOrder(8, 7, "buyer8"), dist("seller", 7))},
-			expSettlement: &Settlement{
-				FullyFilledOrders:  nil,
-				PartialOrderFilled: bidOrder(8, 7, "buyer8"),
-				PartialOrderLeft:   bidOrder(8, 3, "buyer8"),
-			},
+			name:          "one bid: partial",
+			bidOFs:        []*OrderFulfillment{newOF(bidOrder(8, 10, "buyer8"), dist("seller", 7))},
+			settlement:    &Settlement{},
+			expBidOfs:     []*OrderFulfillment{newOF(bidOrder(8, 7, "buyer8"), dist("seller", 7))},
+			expSettlement: &Settlement{PartialOrderLeft: bidOrder(8, 3, "buyer8")},
 		},
 		{
 			name: "one bid: partial, not allowed",
@@ -2947,7 +2951,8 @@ func TestSplitPartial(t *testing.T) {
 					Price:        sdk.Coin{Denom: "peach", Amount: sdkmath.NewInt(10)},
 					AllowPartial: false,
 				}), dist("seller", 7))},
-			expErr: "cannot split bid order 8 having assets \"10apple\" at \"7apple\": order does not allow partial fulfillment",
+			settlement: &Settlement{},
+			expErr:     "cannot split bid order 8 having assets \"10apple\" at \"7apple\": order does not allow partial fulfillment",
 		},
 		{
 			name: "two bids: first partial",
@@ -2955,7 +2960,8 @@ func TestSplitPartial(t *testing.T) {
 				newOF(bidOrder(8, 10, "buyer8"), dist("seller", 7)),
 				newOF(bidOrder(9, 12, "buyer9")),
 			},
-			expErr: "bid order 8 (at index 0) is not filled in full and is not the last bid order provided",
+			settlement: &Settlement{},
+			expErr:     "bid order 8 (at index 0) is not filled in full and is not the last bid order provided",
 		},
 		{
 			name: "two bids: last untouched",
@@ -2963,7 +2969,8 @@ func TestSplitPartial(t *testing.T) {
 				newOF(bidOrder(8, 10, "buyer8"), dist("seller", 10)),
 				newOF(bidOrder(9, 12, "buyer9")),
 			},
-			expErr: "bid order 9 (at index 1) has no assets filled",
+			settlement: &Settlement{},
+			expErr:     "bid order 9 (at index 1) has no assets filled",
 		},
 		{
 			name: "two bids: last partial",
@@ -2971,21 +2978,19 @@ func TestSplitPartial(t *testing.T) {
 				newOF(bidOrder(8, 10, "buyer8"), dist("seller", 10)),
 				newOF(bidOrder(9, 12, "buyer9"), dist("seller", 10)),
 			},
+			settlement: &Settlement{},
 			expBidOfs: []*OrderFulfillment{
 				newOF(bidOrder(8, 10, "buyer8"), dist("seller", 10)),
 				newOF(bidOrder(9, 10, "buyer9"), dist("seller", 10)),
 			},
-			expSettlement: &Settlement{
-				FullyFilledOrders:  []*Order{bidOrder(8, 10, "buyer8")},
-				PartialOrderFilled: bidOrder(9, 10, "buyer9"),
-				PartialOrderLeft:   bidOrder(9, 2, "buyer9"),
-			},
+			expSettlement: &Settlement{PartialOrderLeft: bidOrder(9, 2, "buyer9")},
 		},
 		{
-			name:   "one ask, one bid: both partial",
-			askOFs: []*OrderFulfillment{newOF(askOrder(8, 10, "seller8"), dist("buyer9", 7))},
-			bidOFs: []*OrderFulfillment{newOF(bidOrder(9, 10, "buyer9"), dist("seller8", 7))},
-			expErr: "ask order 8 and bid order 9 cannot both be partially filled",
+			name:       "one ask, one bid: both partial",
+			askOFs:     []*OrderFulfillment{newOF(askOrder(8, 10, "seller8"), dist("buyer9", 7))},
+			bidOFs:     []*OrderFulfillment{newOF(bidOrder(9, 10, "buyer9"), dist("seller8", 7))},
+			settlement: &Settlement{},
+			expErr:     "ask order 8 and bid order 9 cannot both be partially filled",
 		},
 		{
 			name: "three asks, three bids: no partial",
@@ -2999,6 +3004,7 @@ func TestSplitPartial(t *testing.T) {
 				newOF(bidOrder(8, 15, "buyer8"), dist("seller77", 5), dist("seller12", 10)),
 				newOF(bidOrder(112, 10, "buyer112"), dist("seller12", 10)),
 			},
+			settlement: &Settlement{},
 			expAskOFs: []*OrderFulfillment{
 				newOF(askOrder(51, 10, "seller51"), dist("buyer99", 10)),
 				newOF(askOrder(77, 15, "seller77"), dist("buyer99", 10), dist("buyer8", 5)),
@@ -3009,18 +3015,7 @@ func TestSplitPartial(t *testing.T) {
 				newOF(bidOrder(8, 15, "buyer8"), dist("seller77", 5), dist("seller12", 10)),
 				newOF(bidOrder(112, 10, "buyer112"), dist("seller12", 10)),
 			},
-			expSettlement: &Settlement{
-				FullyFilledOrders: []*Order{
-					askOrder(51, 10, "seller51"),
-					askOrder(77, 15, "seller77"),
-					askOrder(12, 20, "seller12"),
-					bidOrder(99, 20, "buyer99"),
-					bidOrder(8, 15, "buyer8"),
-					bidOrder(112, 10, "buyer112"),
-				},
-				PartialOrderFilled: nil,
-				PartialOrderLeft:   nil,
-			},
+			expSettlement: &Settlement{PartialOrderLeft: nil},
 		},
 		{
 			name: "three asks, three bids: partial ask",
@@ -3034,6 +3029,7 @@ func TestSplitPartial(t *testing.T) {
 				newOF(bidOrder(8, 15, "buyer8"), dist("seller77", 5), dist("seller12", 10)),
 				newOF(bidOrder(112, 10, "buyer112"), dist("seller12", 10)),
 			},
+			settlement: &Settlement{},
 			expAskOFs: []*OrderFulfillment{
 				newOF(askOrder(51, 10, "seller51"), dist("buyer99", 10)),
 				newOF(askOrder(77, 15, "seller77"), dist("buyer99", 10), dist("buyer8", 5)),
@@ -3044,17 +3040,7 @@ func TestSplitPartial(t *testing.T) {
 				newOF(bidOrder(8, 15, "buyer8"), dist("seller77", 5), dist("seller12", 10)),
 				newOF(bidOrder(112, 10, "buyer112"), dist("seller12", 10)),
 			},
-			expSettlement: &Settlement{
-				FullyFilledOrders: []*Order{
-					askOrder(51, 10, "seller51"),
-					askOrder(77, 15, "seller77"),
-					bidOrder(99, 20, "buyer99"),
-					bidOrder(8, 15, "buyer8"),
-					bidOrder(112, 10, "buyer112"),
-				},
-				PartialOrderFilled: askOrder(12, 20, "seller12"),
-				PartialOrderLeft:   askOrder(12, 1, "seller12"),
-			},
+			expSettlement: &Settlement{PartialOrderLeft: askOrder(12, 1, "seller12")},
 		},
 		{
 			name: "three asks, three bids: no partial",
@@ -3068,6 +3054,7 @@ func TestSplitPartial(t *testing.T) {
 				newOF(bidOrder(8, 15, "buyer8"), dist("seller77", 5), dist("seller12", 10)),
 				newOF(bidOrder(112, 11, "buyer112"), dist("seller12", 10)),
 			},
+			settlement: &Settlement{},
 			expAskOFs: []*OrderFulfillment{
 				newOF(askOrder(51, 10, "seller51"), dist("buyer99", 10)),
 				newOF(askOrder(77, 15, "seller77"), dist("buyer99", 10), dist("buyer8", 5)),
@@ -3078,17 +3065,7 @@ func TestSplitPartial(t *testing.T) {
 				newOF(bidOrder(8, 15, "buyer8"), dist("seller77", 5), dist("seller12", 10)),
 				newOF(bidOrder(112, 10, "buyer112"), dist("seller12", 10)),
 			},
-			expSettlement: &Settlement{
-				FullyFilledOrders: []*Order{
-					askOrder(51, 10, "seller51"),
-					askOrder(77, 15, "seller77"),
-					askOrder(12, 20, "seller12"),
-					bidOrder(99, 20, "buyer99"),
-					bidOrder(8, 15, "buyer8"),
-				},
-				PartialOrderFilled: bidOrder(112, 10, "buyer112"),
-				PartialOrderLeft:   bidOrder(112, 1, "buyer112"),
-			},
+			expSettlement: &Settlement{PartialOrderLeft: bidOrder(112, 1, "buyer112")},
 		},
 	}
 
@@ -3097,14 +3074,12 @@ func TestSplitPartial(t *testing.T) {
 			origAskOFs := copyOrderFulfillments(tc.askOFs)
 			origBidOFs := copyOrderFulfillments(tc.bidOFs)
 
-			var settlement *Settlement
 			var err error
 			testFunc := func() {
-				settlement, err = splitPartial(tc.askOFs, tc.bidOFs)
+				err = splitPartial(tc.askOFs, tc.bidOFs, tc.settlement)
 			}
 			require.NotPanics(t, testFunc, "splitPartial")
 			assertions.AssertErrorValue(t, err, tc.expErr, "splitPartial error")
-			assert.Equalf(t, tc.expSettlement, settlement, "splitPartial settlement")
 			if len(tc.expErr) > 0 {
 				return
 			}
@@ -3114,8 +3089,14 @@ func TestSplitPartial(t *testing.T) {
 			if !assertEqualOrderFulfillmentSlices(t, tc.expBidOfs, tc.bidOFs, "bidOFs after splitPartial") {
 				t.Logf("Original: %s", orderFulfillmentsString(origBidOFs))
 			}
+			assert.Equalf(t, tc.expSettlement, tc.settlement, "settlement after splitPartial")
 		})
 	}
+}
+
+func TestSplitOrderFulfillments(t *testing.T) {
+	// TODO[1658]: func TestSplitOrderFulfillments(t *testing.T)
+	t.Skipf("not written")
 }
 
 func TestAllocatePrice(t *testing.T) {
@@ -3135,6 +3116,11 @@ func TestValidateFulfillments(t *testing.T) {
 
 func TestBuildTransfers(t *testing.T) {
 	// TODO[1658]: func TestBuildTransfers(t *testing.T)
+	t.Skipf("not written")
+}
+
+func TestPopulateFilled(t *testing.T) {
+	// TODO[1658]: func TestPopulateFilled(t *testing.T)
 	t.Skipf("not written")
 }
 

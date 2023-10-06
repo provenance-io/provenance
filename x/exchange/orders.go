@@ -46,9 +46,7 @@ type OrderI interface {
 	IsBidOrder() bool
 }
 
-var (
-	_ OrderI = (*Order)(nil)
-)
+var _ OrderI = (*Order)(nil)
 
 // findDuplicateIds returns all order ids that appear two or more times in the provided slice.
 func findDuplicateIds(orderIDs []uint64) []uint64 {
@@ -110,6 +108,11 @@ func (o *Order) WithBid(bidOrder *BidOrder) *Order {
 	return o
 }
 
+// GetOrderID gets the numerical identifier for this order.
+func (o Order) GetOrderID() uint64 {
+	return o.OrderId
+}
+
 // IsAskOrder returns true if this order is an ask order.
 func (o Order) IsAskOrder() bool {
 	return o.GetAskOrder() != nil
@@ -118,11 +121,6 @@ func (o Order) IsAskOrder() bool {
 // IsBidOrder returns true if this order is a bid order.
 func (o Order) IsBidOrder() bool {
 	return o.GetBidOrder() != nil
-}
-
-// GetOrderID gets the numerical identifier for this order.
-func (o Order) GetOrderID() uint64 {
-	return o.OrderId
 }
 
 // GetSubOrder gets this order's sub-order as a SubOrderI.
@@ -500,4 +498,106 @@ func (b BidOrder) CopyChange(newAssets, newPrice sdk.Coin, newFees sdk.Coins) *B
 		BuyerSettlementFees: newFees,
 		AllowPartial:        b.AllowPartial,
 	}
+}
+
+// FilledOrder holds an order that has been filled (either in full or partially).
+// The price and fees will indicate the amounts actually involved in the fulfillment.
+type FilledOrder struct {
+	order       *Order
+	actualPrice sdk.Coin
+	actualFees  sdk.Coins
+}
+
+var _ OrderI = (*FilledOrder)(nil)
+
+func NewFilledOrder(order *Order, actualPrice sdk.Coin, actualFees sdk.Coins) *FilledOrder {
+	return &FilledOrder{
+		order:       order,
+		actualPrice: actualPrice,
+		actualFees:  actualFees,
+	}
+}
+
+// GetOriginalOrder gets the original order that this filled order represents.
+func (o FilledOrder) GetOriginalOrder() *Order {
+	return o.order
+}
+
+// GetOrderID gets the numerical identifier for this order.
+func (o FilledOrder) GetOrderID() uint64 {
+	return o.order.GetOrderID()
+}
+
+// IsAskOrder returns true if this order is an ask order.
+func (o FilledOrder) IsAskOrder() bool {
+	return o.order.IsAskOrder()
+}
+
+// IsBidOrder returns true if this order is a bid order.
+func (o FilledOrder) IsBidOrder() bool {
+	return o.order.IsBidOrder()
+}
+
+// GetMarketID returns the market id for this order.
+func (o FilledOrder) GetMarketID() uint32 {
+	return o.order.GetMarketID()
+}
+
+// GetOwner returns the owner of this order.
+// E.g. the seller for ask orders, or buyer for bid orders.
+func (o FilledOrder) GetOwner() string {
+	return o.order.GetOwner()
+}
+
+// GetAssets returns the assets for this order.
+func (o FilledOrder) GetAssets() sdk.Coin {
+	return o.order.GetAssets()
+}
+
+// GetPrice returns the actual price involved in this order fulfillment.
+func (o FilledOrder) GetPrice() sdk.Coin {
+	return o.actualPrice
+}
+
+// GetOriginalPrice gets the original price of this order.
+func (o FilledOrder) GetOriginalPrice() sdk.Coin {
+	return o.order.GetPrice()
+}
+
+// GetSettlementFees returns the actual settlement fees involved in this order fulfillment.
+func (o FilledOrder) GetSettlementFees() sdk.Coins {
+	return o.actualFees
+}
+
+// GetOriginalSettlementFees gets the original settlement fees of this order.
+func (o FilledOrder) GetOriginalSettlementFees() sdk.Coins {
+	return o.order.GetSettlementFees()
+}
+
+// PartialFillAllowed returns true if this order allows partial fulfillment.
+func (o FilledOrder) PartialFillAllowed() bool {
+	return o.order.PartialFillAllowed()
+}
+
+// GetOrderType returns a string indicating what type this order is.
+// E.g: OrderTypeAsk or OrderTypeBid
+func (o FilledOrder) GetOrderType() string {
+	return o.order.GetOrderType()
+}
+
+// GetOrderTypeByte returns the type byte for this order.
+// E.g: OrderTypeByteAsk or OrderTypeByteBid
+func (o FilledOrder) GetOrderTypeByte() byte {
+	return o.order.GetOrderTypeByte()
+}
+
+// GetHoldAmount returns the amount that should be on hold for this order.
+func (o FilledOrder) GetHoldAmount() sdk.Coins {
+	return o.order.GetHoldAmount()
+}
+
+// Validate returns nil (because it's assumed that the order was validated long ago).
+// This is just here to fulfill the OrderI interface.
+func (o FilledOrder) Validate() error {
+	return nil
 }
