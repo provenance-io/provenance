@@ -3530,8 +3530,140 @@ func TestAllocatePrice(t *testing.T) {
 }
 
 func TestSetFeesToPay(t *testing.T) {
-	// TODO[1658]: func TestSetFeesToPay(t *testing.T)
-	t.Skipf("not written")
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	askOF := func(orderID uint64, priceAppliedAmt int64, fees ...sdk.Coin) *OrderFulfillment {
+		askOrder := &AskOrder{Price: coin(50, "plum")}
+		if len(fees) > 1 {
+			t.Fatalf("cannot provide more than one fee to askOF(%d, %d, %q)",
+				orderID, priceAppliedAmt, fees)
+		}
+		if len(fees) > 0 {
+			askOrder.SellerSettlementFlatFee = &fees[0]
+		}
+		return &OrderFulfillment{
+			Order:           NewOrder(orderID).WithAsk(askOrder),
+			PriceAppliedAmt: sdkmath.NewInt(priceAppliedAmt),
+		}
+	}
+	bidOF := func(orderID uint64, priceAppliedAmt int64, fees ...sdk.Coin) *OrderFulfillment {
+		bidOrder := &BidOrder{Price: coin(50, "plum")}
+		if len(fees) > 0 {
+			bidOrder.BuyerSettlementFees = fees
+		}
+		return &OrderFulfillment{
+			Order:           NewOrder(orderID).WithBid(bidOrder),
+			PriceAppliedAmt: sdkmath.NewInt(priceAppliedAmt),
+		}
+	}
+	expOF := func(f *OrderFulfillment, feesToPay ...sdk.Coin) *OrderFulfillment {
+		if len(feesToPay) > 0 {
+			f.FeesToPay = sdk.NewCoins(feesToPay...)
+		}
+		return f
+	}
+
+	tests := []struct {
+		name      string
+		askOFs    []*OrderFulfillment
+		bidOFs    []*OrderFulfillment
+		ratio     *FeeRatio
+		expAskOFs []*OrderFulfillment
+		expBidOFs []*OrderFulfillment
+		expErr    string
+	}{
+		{
+			name: "cannot apply ratio",
+			askOFs: []*OrderFulfillment{
+				askOF(7777, 55, coin(20, "grape")),
+				askOF(5555, 71),
+				askOF(6666, 100),
+			},
+			bidOFs: []*OrderFulfillment{
+				bidOF(1111, 100),
+				bidOF(2222, 200, coin(20, "grape")),
+				bidOF(3333, 300),
+			},
+			ratio: &FeeRatio{Price: coin(30, "peach"), Fee: coin(1, "fig")},
+			expAskOFs: []*OrderFulfillment{
+				expOF(askOF(7777, 55, coin(20, "grape"))),
+				expOF(askOF(5555, 71)),
+				expOF(askOF(6666, 100)),
+			},
+			expBidOFs: []*OrderFulfillment{
+				expOF(bidOF(1111, 100)),
+				expOF(bidOF(2222, 200, coin(20, "grape")), coin(20, "grape")),
+				expOF(bidOF(3333, 300)),
+			},
+			expErr: joinErrs(
+				"failed calculate ratio fee for ask order 7777: cannot apply ratio 30peach:1fig to price 55plum: incorrect price denom",
+				"failed calculate ratio fee for ask order 5555: cannot apply ratio 30peach:1fig to price 71plum: incorrect price denom",
+				"failed calculate ratio fee for ask order 6666: cannot apply ratio 30peach:1fig to price 100plum: incorrect price denom",
+			),
+		},
+		{
+			name: "no ratio",
+			askOFs: []*OrderFulfillment{
+				askOF(7777, 55, coin(20, "grape")),
+				askOF(5555, 71),
+				askOF(6666, 100),
+			},
+			bidOFs: []*OrderFulfillment{
+				bidOF(1111, 100),
+				bidOF(2222, 200, coin(20, "grape")),
+				bidOF(3333, 300),
+			},
+			ratio: nil,
+			expAskOFs: []*OrderFulfillment{
+				expOF(askOF(7777, 55, coin(20, "grape")), coin(20, "grape")),
+				expOF(askOF(5555, 71)),
+				expOF(askOF(6666, 100)),
+			},
+			expBidOFs: []*OrderFulfillment{
+				expOF(bidOF(1111, 100)),
+				expOF(bidOF(2222, 200, coin(20, "grape")), coin(20, "grape")),
+				expOF(bidOF(3333, 300)),
+			},
+		},
+		{
+			name: "with ratio",
+			askOFs: []*OrderFulfillment{
+				askOF(7777, 55, coin(20, "grape")),
+				askOF(5555, 71),
+				askOF(6666, 100),
+			},
+			bidOFs: []*OrderFulfillment{
+				bidOF(1111, 100),
+				bidOF(2222, 200, coin(20, "grape")),
+				bidOF(3333, 300),
+			},
+			ratio: &FeeRatio{Price: coin(30, "plum"), Fee: coin(1, "fig")},
+			expAskOFs: []*OrderFulfillment{
+				expOF(askOF(7777, 55, coin(20, "grape")), coin(2, "fig"), coin(20, "grape")),
+				expOF(askOF(5555, 71), coin(3, "fig")),
+				expOF(askOF(6666, 100), coin(4, "fig")),
+			},
+			expBidOFs: []*OrderFulfillment{
+				expOF(bidOF(1111, 100)),
+				expOF(bidOF(2222, 200, coin(20, "grape")), coin(20, "grape")),
+				expOF(bidOF(3333, 300)),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = setFeesToPay(tc.askOFs, tc.bidOFs, tc.ratio)
+			}
+			require.NotPanics(t, testFunc, "setFeesToPay")
+			assertions.AssertErrorValue(t, err, tc.expErr, "setFeesToPay error")
+			assertEqualOrderFulfillmentSlices(t, tc.expAskOFs, tc.askOFs, "askOFs after setFeesToPay")
+			assertEqualOrderFulfillmentSlices(t, tc.expBidOFs, tc.bidOFs, "bidOFs after setFeesToPay")
+		})
+	}
 }
 
 func TestValidateFulfillments(t *testing.T) {

@@ -608,15 +608,17 @@ func allocatePrice(askOFs, bidOFs []*OrderFulfillment) error {
 func setFeesToPay(askOFs, bidOFs []*OrderFulfillment, sellerFeeRatio *FeeRatio) error {
 	var errs []error
 	for _, askOF := range askOFs {
-		askOF.FeesToPay = askOF.GetSettlementFees()
+		feesToPay := askOF.GetSettlementFees()
 		if sellerFeeRatio != nil {
 			fee, err := sellerFeeRatio.ApplyToLoosely(askOF.GetPriceApplied())
 			if err != nil {
 				errs = append(errs, fmt.Errorf("failed calculate ratio fee for %s order %d: %w",
 					askOF.GetOrderType(), askOF.GetOrderID(), err))
+				continue
 			}
-			askOF.FeesToPay = askOF.FeesToPay.Add(fee)
+			feesToPay = feesToPay.Add(fee)
 		}
+		askOF.FeesToPay = feesToPay
 	}
 
 	for _, bidOF := range bidOFs {
