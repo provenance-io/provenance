@@ -269,7 +269,7 @@ func (f *OrderFulfillment) SplitOrder() (*Order, error) {
 }
 
 // AsFilledOrder creates a FilledOrder from this order fulfillment.
-func (f *OrderFulfillment) AsFilledOrder() *FilledOrder {
+func (f OrderFulfillment) AsFilledOrder() *FilledOrder {
 	return NewFilledOrder(f.Order, f.GetPriceApplied(), f.FeesToPay)
 }
 

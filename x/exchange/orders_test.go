@@ -82,14 +82,7 @@ func copySDKInt(i sdkmath.Int) (copy sdkmath.Int) {
 
 // copyCoins creates a copy of the provided coins slice with copies of each entry.
 func copyCoins(coins sdk.Coins) sdk.Coins {
-	if coins == nil {
-		return nil
-	}
-	rv := make(sdk.Coins, len(coins))
-	for i, coin := range coins {
-		rv[i] = copyCoin(coin)
-	}
-	return rv
+	return copySlice(coins, copyCoin)
 }
 
 // copyCoin returns a copy of the provided coin.
@@ -2554,7 +2547,7 @@ func TestNewFilledOrder(t *testing.T) {
 	assert.Equal(t, expected, actual, "NewFilledOrder result")
 }
 
-func TestFilledOrderMethods(t *testing.T) {
+func TestFilledOrderGetters(t *testing.T) {
 	askOrder := &AskOrder{
 		MarketId:                333,
 		Seller:                  "SEllER",
@@ -2685,19 +2678,19 @@ func TestFilledOrderMethods(t *testing.T) {
 		},
 	}
 
-	tester := func(of *FilledOrder, getter func(*FilledOrder) interface{}, expected interface{}) func(t *testing.T) {
+	tester := func(name string, of *FilledOrder, getter func(*FilledOrder) interface{}, expected interface{}) func(t *testing.T) {
 		return func(t *testing.T) {
 			var actual interface{}
 			testFunc := func() {
 				actual = getter(of)
 			}
-			require.NotPanics(t, testFunc)
-			assert.Equal(t, expected, actual)
+			require.NotPanics(t, testFunc, "%s()")
+			assert.Equal(t, expected, actual, "%s() result", name)
 		}
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name+": ask", tester(filledAsk, tc.getter, tc.expAsk))
-		t.Run(tc.name+": bid", tester(filledBid, tc.getter, tc.expBid))
+		t.Run(tc.name+": ask", tester(tc.name, filledAsk, tc.getter, tc.expAsk))
+		t.Run(tc.name+": bid", tester(tc.name, filledBid, tc.getter, tc.expBid))
 	}
 }

@@ -24,6 +24,18 @@ import (
 // So when an object has an sdkmath.Int that should have been reduced to zero, you'll need to use this.
 var ZeroAmtAfterSub = sdkmath.NewInt(1).SubRaw(1)
 
+// copySlice copies a slice using the provided copier for each entry.
+func copySlice[T any](vals []T, copier func(T) T) []T {
+	if vals == nil {
+		return nil
+	}
+	rv := make([]T, len(vals))
+	for i, v := range vals {
+		rv[i] = copier(v)
+	}
+	return rv
+}
+
 // copyOrderSplit creates a copy of this order split.
 // Unlike the other copiers in here, the Order is not deep copied, it will be the same reference.
 func copyOrderSplit(split *OrderSplit) *OrderSplit {
@@ -66,15 +78,7 @@ func copyDistribution(dist *Distribution) *Distribution {
 
 // copyDistributions copies a slice of distributions.
 func copyDistributions(dists []*Distribution) []*Distribution {
-	if dists == nil {
-		return nil
-	}
-
-	rv := make([]*Distribution, len(dists))
-	for i, dist := range dists {
-		rv[i] = copyDistribution(dist)
-	}
-	return rv
+	return copySlice(dists, copyDistribution)
 }
 
 // copyOrderFulfillment returns a deep copy of an order fulfillment.
@@ -102,14 +106,66 @@ func copyOrderFulfillment(f *OrderFulfillment) *OrderFulfillment {
 
 // copyOrderFulfillments returns a deep copy of a slice of order fulfillments.
 func copyOrderFulfillments(fs []*OrderFulfillment) []*OrderFulfillment {
-	if fs == nil {
+	return copySlice(fs, copyOrderFulfillment)
+}
+
+// copyInput returns a deep copy of a bank input.
+func copyInput(input banktypes.Input) banktypes.Input {
+	return banktypes.Input{
+		Address: input.Address,
+		Coins:   copyCoins(input.Coins),
+	}
+}
+
+// copyInputs returns a deep copy of a slice of bank inputs.
+func copyInputs(inputs []banktypes.Input) []banktypes.Input {
+	return copySlice(inputs, copyInput)
+}
+
+// copyOutput returns a deep copy of a bank output.
+func copyOutput(output banktypes.Output) banktypes.Output {
+	return banktypes.Output{
+		Address: output.Address,
+		Coins:   copyCoins(output.Coins),
+	}
+}
+
+// copyOutputs returns a deep copy of a slice of bank outputs.
+func copyOutputs(outputs []banktypes.Output) []banktypes.Output {
+	return copySlice(outputs, copyOutput)
+}
+
+// copyTransfer returns a deep copy of a transfer.
+func copyTransfer(t *Transfer) *Transfer {
+	if t == nil {
 		return nil
 	}
-	rv := make([]*OrderFulfillment, len(fs))
-	for i, f := range fs {
-		rv[i] = copyOrderFulfillment(f)
+	return &Transfer{
+		Inputs:  copyInputs(t.Inputs),
+		Outputs: copyOutputs(t.Outputs),
 	}
-	return rv
+}
+
+// copyTransfers returns a deep copy of a slice of transfers.
+func copyTransfers(ts []*Transfer) []*Transfer {
+	return copySlice(ts, copyTransfer)
+}
+
+// copyFilledOrder returns a deep copy of a filled order.
+func copyFilledOrder(f *FilledOrder) *FilledOrder {
+	if f == nil {
+		return nil
+	}
+	return &FilledOrder{
+		order:       copyOrder(f.order),
+		actualPrice: copyCoin(f.actualPrice),
+		actualFees:  copyCoins(f.actualFees),
+	}
+}
+
+// copyFilledOrders returns a deep copy of a slice of filled order.
+func copyFilledOrders(fs []*FilledOrder) []*FilledOrder {
+	return copySlice(fs, copyFilledOrder)
 }
 
 // orderSplitString is similar to %v except with easier to understand Coin and Int entries.
@@ -2198,8 +2254,66 @@ func TestOrderFulfillment_SplitOrder(t *testing.T) {
 }
 
 func TestOrderFulfillment_AsFilledOrder(t *testing.T) {
-	// TODO[1658]: func TestAsFilledOrder(t *testing.T)
-	t.Skipf("not written")
+	askOrder := NewOrder(53).WithAsk(&AskOrder{
+		MarketId:                765,
+		Seller:                  "mefirst",
+		Assets:                  sdk.NewInt64Coin("apple", 15),
+		Price:                   sdk.NewInt64Coin("peach", 88),
+		SellerSettlementFlatFee: &sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(6)},
+		AllowPartial:            true,
+	})
+	bidOrder := NewOrder(9556).WithBid(&BidOrder{
+		MarketId:            145,
+		Buyer:               "gimmiegimmie",
+		Assets:              sdk.NewInt64Coin("acorn", 1171),
+		Price:               sdk.NewInt64Coin("prune", 5100),
+		BuyerSettlementFees: sdk.NewCoins(sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(14)}),
+		AllowPartial:        false,
+	})
+
+	tests := []struct {
+		name     string
+		receiver OrderFulfillment
+		expected *FilledOrder
+	}{
+		{
+			name: "ask order",
+			receiver: OrderFulfillment{
+				Order:           askOrder,
+				PriceAppliedAmt: sdkmath.NewInt(132),
+				FeesToPay:       sdk.NewCoins(sdk.Coin{Denom: "grape", Amount: sdkmath.NewInt(7)}),
+			},
+			expected: &FilledOrder{
+				order:       askOrder,
+				actualPrice: sdk.NewInt64Coin("peach", 132),
+				actualFees:  sdk.NewCoins(sdk.Coin{Denom: "grape", Amount: sdkmath.NewInt(7)}),
+			},
+		},
+		{
+			name: "bid order",
+			receiver: OrderFulfillment{
+				Order:           bidOrder,
+				PriceAppliedAmt: sdkmath.NewInt(5123),
+				FeesToPay:       sdk.NewCoins(sdk.Coin{Denom: "grape", Amount: sdkmath.NewInt(23)}),
+			},
+			expected: &FilledOrder{
+				order:       bidOrder,
+				actualPrice: sdk.NewInt64Coin("prune", 5123),
+				actualFees:  sdk.NewCoins(sdk.Coin{Denom: "grape", Amount: sdkmath.NewInt(23)}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual *FilledOrder
+			testFunc := func() {
+				actual = tc.receiver.AsFilledOrder()
+			}
+			require.NotPanics(t, testFunc, "AsFilledOrder()")
+			assert.Equal(t, tc.expected, actual, "AsFilledOrder() result")
+		})
+	}
 }
 
 func TestSumAssetsAndPrice(t *testing.T) {
@@ -3095,8 +3209,319 @@ func TestSplitPartial(t *testing.T) {
 }
 
 func TestSplitOrderFulfillments(t *testing.T) {
-	// TODO[1658]: func TestSplitOrderFulfillments(t *testing.T)
-	t.Skipf("not written")
+	acoin := func(amount int64) sdk.Coin {
+		return sdk.NewInt64Coin("acorn", amount)
+	}
+	pcoin := func(amount int64) sdk.Coin {
+		return sdk.NewInt64Coin("prune", amount)
+	}
+	askOrder := func(orderID uint64, assetsAmt int64, allowPartial bool) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			MarketId:     123,
+			Seller:       "sEllEr",
+			Assets:       acoin(assetsAmt),
+			Price:        pcoin(assetsAmt),
+			AllowPartial: allowPartial,
+		})
+	}
+	bidOrder := func(orderID uint64, assetsAmt int64, allowPartial bool) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			MarketId:     123,
+			Buyer:        "bUyEr",
+			Assets:       acoin(assetsAmt),
+			Price:        pcoin(assetsAmt),
+			AllowPartial: allowPartial,
+		})
+	}
+	newOF := func(order *Order, assetsFilledAmt int64) *OrderFulfillment {
+		rv := &OrderFulfillment{
+			Order:             order,
+			AssetsFilledAmt:   sdkmath.NewInt(assetsFilledAmt),
+			AssetsUnfilledAmt: order.GetAssets().Amount.SubRaw(assetsFilledAmt),
+			PriceAppliedAmt:   sdkmath.NewInt(assetsFilledAmt),
+			PriceLeftAmt:      order.GetPrice().Amount.SubRaw(assetsFilledAmt),
+		}
+		// int(x).Sub(x) results in an object that is not .Equal to ZeroInt().
+		// The Split function sets this to ZeroInt().
+		if rv.AssetsUnfilledAmt.IsZero() {
+			rv.AssetsUnfilledAmt = sdkmath.ZeroInt()
+		}
+		return rv
+	}
+
+	tests := []struct {
+		name            string
+		fulfillments    []*OrderFulfillment
+		settlement      *Settlement
+		expFulfillments []*OrderFulfillment
+		expSettlement   *Settlement
+		expErr          string
+	}{
+		{
+			name:         "one order, ask: nothing filled",
+			fulfillments: []*OrderFulfillment{newOF(askOrder(8, 53, false), 0)},
+			settlement:   &Settlement{},
+			expErr:       "ask order 8 (at index 0) has no assets filled",
+		},
+		{
+			name:         "one order, bid: nothing filled",
+			fulfillments: []*OrderFulfillment{newOF(bidOrder(8, 53, false), 0)},
+			settlement:   &Settlement{},
+			expErr:       "bid order 8 (at index 0) has no assets filled",
+		},
+		{
+			name:            "one order, ask: partially filled",
+			fulfillments:    []*OrderFulfillment{newOF(askOrder(8, 53, true), 13)},
+			settlement:      &Settlement{},
+			expFulfillments: []*OrderFulfillment{newOF(askOrder(8, 13, true), 13)},
+			expSettlement:   &Settlement{PartialOrderLeft: askOrder(8, 40, true)},
+		},
+		{
+			name:            "one order, bid: partially filled",
+			fulfillments:    []*OrderFulfillment{newOF(bidOrder(8, 53, true), 13)},
+			settlement:      &Settlement{},
+			expFulfillments: []*OrderFulfillment{newOF(bidOrder(8, 13, true), 13)},
+			expSettlement:   &Settlement{PartialOrderLeft: bidOrder(8, 40, true)},
+		},
+		{
+			name:         "one order, ask: partially filled, already have a partially filled",
+			fulfillments: []*OrderFulfillment{newOF(askOrder(8, 53, true), 13)},
+			settlement:   &Settlement{PartialOrderLeft: bidOrder(951, 357, true)},
+			expErr:       "bid order 951 and ask order 8 cannot both be partially filled",
+		},
+		{
+			name:         "one order, bid: partially filled, already have a partially filled",
+			fulfillments: []*OrderFulfillment{newOF(bidOrder(8, 53, true), 13)},
+			settlement:   &Settlement{PartialOrderLeft: askOrder(951, 357, true)},
+			expErr:       "ask order 951 and bid order 8 cannot both be partially filled",
+		},
+		{
+			name:         "one order, ask: partially filled, split not allowed",
+			fulfillments: []*OrderFulfillment{newOF(askOrder(8, 53, false), 13)},
+			settlement:   &Settlement{},
+			expErr:       "cannot split ask order 8 having assets \"53acorn\" at \"13acorn\": order does not allow partial fulfillment",
+		},
+		{
+			name:         "one order, bid: partially filled, split not allowed",
+			fulfillments: []*OrderFulfillment{newOF(bidOrder(8, 53, false), 13)},
+			settlement:   &Settlement{},
+			expErr:       "cannot split bid order 8 having assets \"53acorn\" at \"13acorn\": order does not allow partial fulfillment",
+		},
+		{
+			name:            "one order, ask: fully filled",
+			fulfillments:    []*OrderFulfillment{newOF(askOrder(8, 53, false), 53)},
+			settlement:      &Settlement{},
+			expFulfillments: []*OrderFulfillment{newOF(askOrder(8, 53, false), 53)},
+			expSettlement:   &Settlement{},
+		},
+		{
+			name:            "one order, bid: fully filled",
+			fulfillments:    []*OrderFulfillment{newOF(bidOrder(8, 53, false), 53)},
+			settlement:      &Settlement{},
+			expFulfillments: []*OrderFulfillment{newOF(bidOrder(8, 53, false), 53)},
+			expSettlement:   &Settlement{},
+		},
+		{
+			name:            "one order, ask: fully filled, already have a partially filled",
+			fulfillments:    []*OrderFulfillment{newOF(askOrder(8, 53, false), 53)},
+			settlement:      &Settlement{PartialOrderLeft: bidOrder(951, 357, true)},
+			expFulfillments: []*OrderFulfillment{newOF(askOrder(8, 53, false), 53)},
+			expSettlement:   &Settlement{PartialOrderLeft: bidOrder(951, 357, true)},
+		},
+		{
+			name:            "one order, bid: fully filled, already have a partially filled",
+			fulfillments:    []*OrderFulfillment{newOF(bidOrder(8, 53, false), 53)},
+			settlement:      &Settlement{PartialOrderLeft: askOrder(951, 357, true)},
+			expFulfillments: []*OrderFulfillment{newOF(bidOrder(8, 53, false), 53)},
+			expSettlement:   &Settlement{PartialOrderLeft: askOrder(951, 357, true)},
+		},
+		{
+			name: "three orders, ask: second partially filled",
+			fulfillments: []*OrderFulfillment{
+				newOF(askOrder(8, 53, false), 53),
+				newOF(askOrder(9, 17, true), 16),
+				newOF(askOrder(10, 200, false), 0),
+			},
+			settlement: &Settlement{},
+			expErr:     "ask order 9 (at index 1) is not filled in full and is not the last ask order provided",
+		},
+		{
+			name: "three orders, bid: second partially filled",
+			fulfillments: []*OrderFulfillment{
+				newOF(bidOrder(8, 53, false), 53),
+				newOF(bidOrder(9, 17, true), 16),
+				newOF(bidOrder(10, 200, false), 0),
+			},
+			settlement: &Settlement{},
+			expErr:     "bid order 9 (at index 1) is not filled in full and is not the last bid order provided",
+		},
+		{
+			name: "three orders, ask: last not touched",
+			fulfillments: []*OrderFulfillment{
+				newOF(askOrder(8, 53, false), 53),
+				newOF(askOrder(9, 17, false), 17),
+				newOF(askOrder(10, 200, false), 0),
+			},
+			settlement: &Settlement{},
+			expErr:     "ask order 10 (at index 2) has no assets filled",
+		},
+		{
+			name: "three orders, bid: last not touched",
+			fulfillments: []*OrderFulfillment{
+				newOF(bidOrder(8, 53, false), 53),
+				newOF(bidOrder(9, 17, false), 17),
+				newOF(bidOrder(10, 200, true), 0),
+			},
+			settlement: &Settlement{},
+			expErr:     "bid order 10 (at index 2) has no assets filled",
+		},
+		{
+			name: "three orders, ask: last partially filled",
+			fulfillments: []*OrderFulfillment{
+				newOF(askOrder(8, 53, false), 53),
+				newOF(askOrder(9, 17, false), 17),
+				newOF(askOrder(10, 200, true), 183),
+			},
+			settlement: &Settlement{},
+			expFulfillments: []*OrderFulfillment{
+				newOF(askOrder(8, 53, false), 53),
+				newOF(askOrder(9, 17, false), 17),
+				newOF(askOrder(10, 183, true), 183),
+			},
+			expSettlement: &Settlement{PartialOrderLeft: askOrder(10, 17, true)},
+		},
+		{
+			name: "three orders, bid: last partially filled",
+			fulfillments: []*OrderFulfillment{
+				newOF(bidOrder(8, 53, false), 53),
+				newOF(bidOrder(9, 17, false), 17),
+				newOF(bidOrder(10, 200, true), 183),
+			},
+			settlement: &Settlement{},
+			expFulfillments: []*OrderFulfillment{
+				newOF(bidOrder(8, 53, false), 53),
+				newOF(bidOrder(9, 17, false), 17),
+				newOF(bidOrder(10, 183, true), 183),
+			},
+			expSettlement: &Settlement{PartialOrderLeft: bidOrder(10, 17, true)},
+		},
+		{
+			name: "three orders, ask: last partially filled, split not allowed",
+			fulfillments: []*OrderFulfillment{
+				newOF(askOrder(8, 53, true), 53),
+				newOF(askOrder(9, 17, true), 17),
+				newOF(askOrder(10, 200, false), 183),
+			},
+			settlement: &Settlement{},
+			expErr:     "cannot split ask order 10 having assets \"200acorn\" at \"183acorn\": order does not allow partial fulfillment",
+		},
+		{
+			name: "three orders, bid: last partially filled, split not allowed",
+			fulfillments: []*OrderFulfillment{
+				newOF(bidOrder(8, 53, true), 53),
+				newOF(bidOrder(9, 17, true), 17),
+				newOF(bidOrder(10, 200, false), 183),
+			},
+			settlement: &Settlement{},
+			expErr:     "cannot split bid order 10 having assets \"200acorn\" at \"183acorn\": order does not allow partial fulfillment",
+		},
+		{
+			name: "three orders, ask: last partially filled, already have a partially filled",
+			fulfillments: []*OrderFulfillment{
+				newOF(askOrder(8, 53, true), 53),
+				newOF(askOrder(9, 17, true), 17),
+				newOF(askOrder(10, 200, false), 183),
+			},
+			settlement: &Settlement{PartialOrderLeft: bidOrder(857, 43, true)},
+			expErr:     "bid order 857 and ask order 10 cannot both be partially filled",
+		},
+		{
+			name: "three orders, bid: last partially filled, already have a partially filled",
+			fulfillments: []*OrderFulfillment{
+				newOF(bidOrder(8, 53, true), 53),
+				newOF(bidOrder(9, 17, true), 17),
+				newOF(bidOrder(10, 200, false), 183),
+			},
+			settlement: &Settlement{PartialOrderLeft: askOrder(857, 43, true)},
+			expErr:     "ask order 857 and bid order 10 cannot both be partially filled",
+		},
+		{
+			name: "three orders, ask: fully filled",
+			fulfillments: []*OrderFulfillment{
+				newOF(askOrder(8, 53, false), 53),
+				newOF(askOrder(9, 17, false), 17),
+				newOF(askOrder(10, 200, false), 200),
+			},
+			settlement: &Settlement{},
+			expFulfillments: []*OrderFulfillment{
+				newOF(askOrder(8, 53, false), 53),
+				newOF(askOrder(9, 17, false), 17),
+				newOF(askOrder(10, 200, false), 200),
+			},
+			expSettlement: &Settlement{},
+		},
+		{
+			name: "three orders, bid: fully filled",
+			fulfillments: []*OrderFulfillment{
+				newOF(bidOrder(8, 53, false), 53),
+				newOF(bidOrder(9, 17, false), 17),
+				newOF(bidOrder(10, 200, false), 200),
+			},
+			settlement: &Settlement{},
+			expFulfillments: []*OrderFulfillment{
+				newOF(bidOrder(8, 53, false), 53),
+				newOF(bidOrder(9, 17, false), 17),
+				newOF(bidOrder(10, 200, false), 200),
+			},
+			expSettlement: &Settlement{},
+		},
+		{
+			name: "three orders, ask: fully filled, already have a partially filled",
+			fulfillments: []*OrderFulfillment{
+				newOF(askOrder(8, 53, false), 53),
+				newOF(askOrder(9, 17, false), 17),
+				newOF(askOrder(10, 200, false), 200),
+			},
+			settlement: &Settlement{},
+			expFulfillments: []*OrderFulfillment{
+				newOF(askOrder(8, 53, false), 53),
+				newOF(askOrder(9, 17, false), 17),
+				newOF(askOrder(10, 200, false), 200),
+			},
+			expSettlement: &Settlement{},
+		},
+		{
+			name: "three orders, bid: fully filled, already have a partially filled",
+			fulfillments: []*OrderFulfillment{
+				newOF(bidOrder(8, 53, false), 53),
+				newOF(bidOrder(9, 17, false), 17),
+				newOF(bidOrder(10, 200, false), 200),
+			},
+			settlement: &Settlement{PartialOrderLeft: askOrder(857, 43, true)},
+			expFulfillments: []*OrderFulfillment{
+				newOF(bidOrder(8, 53, false), 53),
+				newOF(bidOrder(9, 17, false), 17),
+				newOF(bidOrder(10, 200, false), 200),
+			},
+			expSettlement: &Settlement{PartialOrderLeft: askOrder(857, 43, true)},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = splitOrderFulfillments(tc.fulfillments, tc.settlement)
+			}
+			require.NotPanics(t, testFunc, "splitOrderFulfillments")
+			assertions.AssertErrorValue(t, err, tc.expErr, "splitOrderFulfillments error")
+			if len(tc.expErr) > 0 {
+				return
+			}
+			assertEqualOrderFulfillmentSlices(t, tc.expFulfillments, tc.fulfillments, "fulfillments after splitOrderFulfillments")
+			assert.Equal(t, tc.expSettlement, tc.settlement, "settlement after splitOrderFulfillments")
+		})
+	}
 }
 
 func TestAllocatePrice(t *testing.T) {
