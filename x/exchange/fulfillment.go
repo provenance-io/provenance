@@ -426,7 +426,7 @@ func allocateAssets(askOFs, bidOFs []*OrderFulfillment) error {
 		if err != nil {
 			return err
 		}
-		if err = DistributeAssets(askOFs[a], askOFs[b], assetsFilledAmt); err != nil {
+		if err = DistributeAssets(askOFs[a], bidOFs[b], assetsFilledAmt); err != nil {
 			return err
 		}
 
