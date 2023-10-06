@@ -14,22 +14,22 @@ import (
 )
 
 type IbcHooks struct {
-	cdc                            codec.BinaryCodec
-	ibcKeeper                      *ibckeeper.Keeper
-	ibcHooksKeeper                 *keeper.Keeper
-	wasmHooks                      *WasmHooks
-	markerHooks                    *MarkerHooks
-	PreSendPacketDataProcessingFns []types.PreSendPacketDataProcessingFn
+	cdc                     codec.BinaryCodec
+	ibcKeeper               *ibckeeper.Keeper
+	ibcHooksKeeper          *keeper.Keeper
+	wasmHooks               *WasmHooks
+	markerHooks             *MarkerHooks
+	SendPacketPreProcessors []types.PreSendPacketDataProcessingFn
 }
 
 func NewIbcHooks(cdc codec.BinaryCodec, ibcHooksKeeper *keeper.Keeper, ibcKeeper *ibckeeper.Keeper, wasmHooks *WasmHooks, markerHooks *MarkerHooks, preSendPacketDataProcessingFns []types.PreSendPacketDataProcessingFn) IbcHooks {
 	return IbcHooks{
-		cdc:                            cdc,
-		ibcKeeper:                      ibcKeeper,
-		ibcHooksKeeper:                 ibcHooksKeeper,
-		wasmHooks:                      wasmHooks,
-		markerHooks:                    markerHooks,
-		PreSendPacketDataProcessingFns: preSendPacketDataProcessingFns,
+		cdc:                     cdc,
+		ibcKeeper:               ibcKeeper,
+		ibcHooksKeeper:          ibcHooksKeeper,
+		wasmHooks:               wasmHooks,
+		markerHooks:             markerHooks,
+		SendPacketPreProcessors: preSendPacketDataProcessingFns,
 	}
 }
 
@@ -38,9 +38,9 @@ func (h IbcHooks) ProperlyConfigured() bool {
 	return h.wasmHooks.ProperlyConfigured() && h.markerHooks.ProperlyConfigured() && h.ibcHooksKeeper != nil
 }
 
-// GetPreSendPacketDataProcessingFns returns a list of ordered functions to be executed before ibc's SendPacket function in middleware
-func (h IbcHooks) GetPreSendPacketDataProcessingFns() []types.PreSendPacketDataProcessingFn {
-	return h.PreSendPacketDataProcessingFns
+// GetSendPacketPreProcessors returns a list of ordered functions to be executed before ibc's SendPacket function in middleware
+func (h IbcHooks) GetSendPacketPreProcessors() []types.PreSendPacketDataProcessingFn {
+	return h.SendPacketPreProcessors
 }
 
 // OnRecvPacketOverride executes wasm or marker hooks for Ics20 packets, if not ics20 packet it will continue to process packet with no override
@@ -76,10 +76,12 @@ func (h IbcHooks) SendPacketAfterHook(ctx sdktypes.Context,
 	h.wasmHooks.SendPacketAfterHook(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data, sequence, err, processData)
 }
 
+// OnTimeoutPacketOverride returns impl of wasm hook for OnTimeoutPacketOverride
 func (h IbcHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, relayer sdktypes.AccAddress) error {
 	return h.wasmHooks.OnTimeoutPacketOverride(im, ctx, packet, relayer)
 }
 
+// OnAcknowledgementPacketOverride returns impl of wasm OnAcknowledgementPacketOverride
 func (h IbcHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdktypes.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdktypes.AccAddress) error {
 	return h.wasmHooks.OnAcknowledgementPacketOverride(im, ctx, packet, acknowledgement, relayer)
 }

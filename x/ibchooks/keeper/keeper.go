@@ -236,7 +236,7 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 		newAck = channeltypes.NewResultAcknowledgement(jsonAck)
 	case "ack_error":
 		packet = ack.AckError.Packet
-		newAck = NewSuccessAckRepresentingAnError(ctx, types.ErrAckFromContract, []byte(ack.AckError.ErrorResponse), ack.AckError.ErrorDescription)
+		newAck = NewSuccessAckError(ctx, types.ErrAckFromContract, []byte(ack.AckError.ErrorResponse), ack.AckError.ErrorDescription)
 	default:
 		return nil, sdkerrors.Wrap(err, "could not unmarshal into IBCAckResponse or IBCAckError")
 	}
@@ -274,10 +274,10 @@ func hashPacket(packet channeltypes.Packet) (string, error) {
 	return hex.EncodeToString(packetHash), nil
 }
 
-// NewSuccessAckRepresentingAnError creates a new success acknowledgement that represents an error.
+// NewSuccessAckError creates a new success acknowledgement that represents an error.
 // This is useful for notifying the sender that an error has occurred in a way that does not allow
 // the received tokens to be reverted (which means they shouldn't be released by the sender's ics20 escrow)
-func NewSuccessAckRepresentingAnError(ctx sdk.Context, err error, errorContent []byte, errorContexts ...string) channeltypes.Acknowledgement {
+func NewSuccessAckError(ctx sdk.Context, err error, errorContent []byte, errorContexts ...string) channeltypes.Acknowledgement {
 	logger := ctx.Logger().With("module", "ibc-acknowledgement-error")
 
 	attributes := make([]sdk.Attribute, len(errorContexts)+1)

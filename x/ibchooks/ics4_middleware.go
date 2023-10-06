@@ -42,8 +42,8 @@ func (i ICS4Middleware) SendPacket(
 	}
 
 	processingStateData := make(map[string]interface{})
-	if hook, ok := i.Hooks.(GetPreSendPacketDataProcessingFns); ok {
-		for _, packetDataProcessingFn := range hook.GetPreSendPacketDataProcessingFns() {
+	if hook, ok := i.Hooks.(SendPacketPreProcessors); ok {
+		for _, packetDataProcessingFn := range hook.GetSendPacketPreProcessors() {
 			data, err = packetDataProcessingFn(ctx, data, processingStateData)
 			if err != nil {
 				return 0, err

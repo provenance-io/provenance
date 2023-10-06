@@ -12,9 +12,9 @@ import (
 
 type Hooks interface{}
 
-// GetPreSendPacketDataProcessingFns returns a list of ordered functions to be executed before ibc's SendPacket function in middleware
-type GetPreSendPacketDataProcessingFns interface {
-	GetPreSendPacketDataProcessingFns() []types.PreSendPacketDataProcessingFn
+// SendPacketPreProcessors returns a list of ordered functions to be executed before ibc's SendPacket function in middleware
+type SendPacketPreProcessors interface {
+	GetSendPacketPreProcessors() []types.PreSendPacketDataProcessingFn
 }
 
 type OnChanOpenInitOverrideHooks interface {

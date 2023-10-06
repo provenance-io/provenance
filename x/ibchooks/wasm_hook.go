@@ -297,7 +297,7 @@ func (h WasmHooks) SendPacketOverride(
 	return seq, nil
 }
 
-func (h WasmHooks) GetPreSendPacketDataProcessingFns(
+func (h WasmHooks) GetWasmSendPacketPreProcessor(
 	_ sdktypes.Context,
 	data []byte,
 	processData map[string]interface{},
@@ -513,7 +513,6 @@ func MustExtractDenomFromPacketOnRecv(packet ibcexported.PacketI) string {
 		panic("unable to unmarshal ICS20 packet data")
 	}
 
-	var denom string
 	if transfertypes.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
 		// remove prefix added by sender chain
 		voucherPrefix := transfertypes.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
@@ -521,7 +520,7 @@ func MustExtractDenomFromPacketOnRecv(packet ibcexported.PacketI) string {
 		unprefixedDenom := data.Denom[len(voucherPrefix):]
 
 		// coin denomination used in sending from the escrow address
-		denom = unprefixedDenom
+		denom := unprefixedDenom
 
 		// The denomination used to send the coins is either the native denom or the hash of the path
 		// if the denomination is not native.
@@ -529,9 +528,9 @@ func MustExtractDenomFromPacketOnRecv(packet ibcexported.PacketI) string {
 		if denomTrace.Path != "" {
 			denom = denomTrace.IBCDenom()
 		}
-	} else {
-		prefixedDenom := transfertypes.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel()) + data.Denom
-		denom = transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom()
+		return denom
 	}
-	return denom
+
+	prefixedDenom := transfertypes.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel()) + data.Denom
+	return transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom()
 }
