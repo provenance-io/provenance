@@ -32,20 +32,22 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 """
 
 [dependencies]
-cosmwasm-std = { version =  "1.1.5", features = ["stargate", "cosmwasm_1_1"]}
-cosmwasm-schema = "1.1.5"
-cosmwasm-storage = "1.1.5"
-cw-storage-plus = "0.16.0"
-cw2 = "0.13.2"
-schemars = "0.8.8"
+provwasm-std = { version = "2.0.0" }
+cosmwasm-std = { version = "1.2.5", features = ["stargate", "cosmwasm_1_1"] }
+cosmwasm-schema = "1.2.5"
+cosmwasm-storage = "1.2.5"
+cw-storage-plus = { version = "1.0.1", features = ["iterator"] }
+cw2 = "1.0.1"
+schemars = "0.8.10"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
-prost = {version = "0.11.2", default-features = false, features = ["prost-derive"]}
-osmosis-std-derive = {version = "0.12.0"}
-osmosis-std = "0.12.0"
+prost = { version = "0.12.1", default-features = false, features = [
+  "prost-derive",
+] }
 sha2 = "0.10.6"
 hex = "0.4.3"
 
 [dev-dependencies]
-cw-multi-test = "0.13.2"
-serde-json-wasm = "0.4.1"
+cw-multi-test = "0.17.0"
+provwasm-mocks = { version = "2.0.0" }
+serde-json-wasm = "1.0.0"
