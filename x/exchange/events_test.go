@@ -91,23 +91,163 @@ func TestNewEventOrderCancelled(t *testing.T) {
 }
 
 func TestNewEventOrderFilled(t *testing.T) {
-	orderID := uint64(5)
+	coinP := func(denom string, amount int64) *sdk.Coin {
+		rv := sdk.NewInt64Coin(denom, amount)
+		return &rv
+	}
 
-	event := NewEventOrderFilled(orderID)
-	assert.Equal(t, orderID, event.OrderId, "OrderId")
-	assertEverythingSet(t, event, "EventOrderFilled")
+	tests := []struct {
+		name       string
+		order      OrderI
+		expOrderID uint64
+		expAssets  string
+		expPrice   string
+		expFees    string
+	}{
+		{
+			name: "ask",
+			order: NewOrder(4).WithAsk(&AskOrder{
+				Assets:                  sdk.NewInt64Coin("apple", 22),
+				Price:                   sdk.NewInt64Coin("plum", 18),
+				SellerSettlementFlatFee: coinP("fig", 57),
+			}),
+			expOrderID: 4,
+			expAssets:  "22apple",
+			expPrice:   "18plum",
+			expFees:    "57fig",
+		},
+		{
+			name: "filled ask",
+			order: NewFilledOrder(NewOrder(4).WithAsk(&AskOrder{
+				Assets:                  sdk.NewInt64Coin("apple", 22),
+				Price:                   sdk.NewInt64Coin("plum", 18),
+				SellerSettlementFlatFee: coinP("fig", 57),
+			}), sdk.NewInt64Coin("plum", 88), sdk.NewCoins(sdk.NewInt64Coin("fig", 61), sdk.NewInt64Coin("grape", 12))),
+			expOrderID: 4,
+			expAssets:  "22apple",
+			expPrice:   "88plum",
+			expFees:    "61fig,12grape",
+		},
+		{
+			name: "bid",
+			order: NewOrder(104).WithBid(&BidOrder{
+				Assets:              sdk.NewInt64Coin("apple", 23),
+				Price:               sdk.NewInt64Coin("plum", 19),
+				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 58)),
+			}),
+			expOrderID: 104,
+			expAssets:  "23apple",
+			expPrice:   "19plum",
+			expFees:    "58fig",
+		},
+		{
+			name: "filled bid",
+			order: NewFilledOrder(NewOrder(104).WithBid(&BidOrder{
+				Assets:              sdk.NewInt64Coin("apple", 23),
+				Price:               sdk.NewInt64Coin("plum", 19),
+				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 58)),
+			}), sdk.NewInt64Coin("plum", 89), sdk.NewCoins(sdk.NewInt64Coin("fig", 62), sdk.NewInt64Coin("grape", 13))),
+			expOrderID: 104,
+			expAssets:  "23apple",
+			expPrice:   "89plum",
+			expFees:    "62fig,13grape",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var event *EventOrderFilled
+			testFunc := func() {
+				event = NewEventOrderFilled(tc.order)
+			}
+			require.NotPanics(t, testFunc, "NewEventOrderFilled")
+			assert.Equal(t, tc.expOrderID, event.OrderId, "OrderId")
+			assert.Equal(t, tc.expAssets, event.Assets, "Assets")
+			assert.Equal(t, tc.expPrice, event.Price, "Price")
+			assert.Equal(t, tc.expFees, event.Fees, "Fees")
+			assertEverythingSet(t, event, "EventOrderFilled")
+		})
+	}
 }
 
 func TestNewEventOrderPartiallyFilled(t *testing.T) {
-	orderID := uint64(18)
-	assetsFilled := sdk.NewInt64Coin("acoin", 111)
-	feesFilled := sdk.NewInt64Coin("fcoin", 8)
+	coinP := func(denom string, amount int64) *sdk.Coin {
+		rv := sdk.NewInt64Coin(denom, amount)
+		return &rv
+	}
 
-	event := NewEventOrderPartiallyFilled(orderID, assetsFilled, feesFilled)
-	assert.Equal(t, orderID, event.OrderId, "OrderId")
-	assert.Equal(t, assetsFilled.String(), event.AssetsFilled, "AssetsFilled")
-	assert.Equal(t, feesFilled.String(), event.FeesFilled, "FeesFilled")
-	assertEverythingSet(t, event, "EventOrderPartiallyFilled")
+	tests := []struct {
+		name       string
+		order      OrderI
+		expOrderID uint64
+		expAssets  string
+		expPrice   string
+		expFees    string
+	}{
+		{
+			name: "ask",
+			order: NewOrder(4).WithAsk(&AskOrder{
+				Assets:                  sdk.NewInt64Coin("apple", 22),
+				Price:                   sdk.NewInt64Coin("plum", 18),
+				SellerSettlementFlatFee: coinP("fig", 57),
+			}),
+			expOrderID: 4,
+			expAssets:  "22apple",
+			expPrice:   "18plum",
+			expFees:    "57fig",
+		},
+		{
+			name: "filled ask",
+			order: NewFilledOrder(NewOrder(4).WithAsk(&AskOrder{
+				Assets:                  sdk.NewInt64Coin("apple", 22),
+				Price:                   sdk.NewInt64Coin("plum", 18),
+				SellerSettlementFlatFee: coinP("fig", 57),
+			}), sdk.NewInt64Coin("plum", 88), sdk.NewCoins(sdk.NewInt64Coin("fig", 61), sdk.NewInt64Coin("grape", 12))),
+			expOrderID: 4,
+			expAssets:  "22apple",
+			expPrice:   "88plum",
+			expFees:    "61fig,12grape",
+		},
+		{
+			name: "bid",
+			order: NewOrder(104).WithBid(&BidOrder{
+				Assets:              sdk.NewInt64Coin("apple", 23),
+				Price:               sdk.NewInt64Coin("plum", 19),
+				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 58)),
+			}),
+			expOrderID: 104,
+			expAssets:  "23apple",
+			expPrice:   "19plum",
+			expFees:    "58fig",
+		},
+		{
+			name: "filled bid",
+			order: NewFilledOrder(NewOrder(104).WithBid(&BidOrder{
+				Assets:              sdk.NewInt64Coin("apple", 23),
+				Price:               sdk.NewInt64Coin("plum", 19),
+				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 58)),
+			}), sdk.NewInt64Coin("plum", 89), sdk.NewCoins(sdk.NewInt64Coin("fig", 62), sdk.NewInt64Coin("grape", 13))),
+			expOrderID: 104,
+			expAssets:  "23apple",
+			expPrice:   "89plum",
+			expFees:    "62fig,13grape",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var event *EventOrderPartiallyFilled
+			testFunc := func() {
+				event = NewEventOrderPartiallyFilled(tc.order)
+			}
+			require.NotPanics(t, testFunc, "NewEventOrderFilled")
+			assert.Equal(t, tc.expOrderID, event.OrderId, "OrderId")
+			assert.Equal(t, tc.expAssets, event.Assets, "Assets")
+			assert.Equal(t, tc.expPrice, event.Price, "Price")
+			assert.Equal(t, tc.expFees, event.Fees, "Fees")
+			assertEverythingSet(t, event, "EventOrderPartiallyFilled")
+		})
+	}
 }
 
 func TestNewEventMarketWithdraw(t *testing.T) {
@@ -299,9 +439,11 @@ func TestTypedEventToEvent(t *testing.T) {
 	updatedByQ := quoteBz(updatedBy.String())
 	coins1 := sdk.NewCoins(sdk.NewInt64Coin("onecoin", 1), sdk.NewInt64Coin("twocoin", 2))
 	coins1Q := quoteBz(coins1.String())
-	acoin := sdk.NewInt64Coin("acoin", 5)
+	acoin := sdk.NewInt64Coin("acoin", 55)
 	acoinQ := quoteBz(acoin.String())
-	fcoin := sdk.NewInt64Coin("fcoin", 5)
+	pcoin := sdk.NewInt64Coin("pcoin", 66)
+	pcoinQ := quoteBz(pcoin.String())
+	fcoin := sdk.NewInt64Coin("fcoin", 33)
 	fcoinQ := quoteBz(fcoin.String())
 
 	tests := []struct {
@@ -343,24 +485,70 @@ func TestTypedEventToEvent(t *testing.T) {
 			},
 		},
 		{
-			name: "EventOrderFilled",
-			tev:  NewEventOrderFilled(4),
+			name: "EventOrderFilled ask",
+			tev: NewEventOrderFilled(NewOrder(4).WithAsk(&AskOrder{
+				Assets:                  acoin,
+				Price:                   pcoin,
+				SellerSettlementFlatFee: &fcoin,
+			})),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderFilled",
 				Attributes: []abci.EventAttribute{
+					{Key: []byte("assets"), Value: acoinQ},
+					{Key: []byte("fees"), Value: fcoinQ},
 					{Key: []byte("order_id"), Value: quoteBz("4")},
+					{Key: []byte("price"), Value: pcoinQ},
 				},
 			},
 		},
 		{
-			name: "EventOrderPartiallyFilled",
-			tev:  NewEventOrderPartiallyFilled(5, acoin, fcoin),
+			name: "EventOrderFilled bid",
+			tev: NewEventOrderFilled(NewOrder(104).WithBid(&BidOrder{
+				Assets:              acoin,
+				Price:               pcoin,
+				BuyerSettlementFees: sdk.Coins{fcoin},
+			})),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventOrderFilled",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("assets"), Value: acoinQ},
+					{Key: []byte("fees"), Value: fcoinQ},
+					{Key: []byte("order_id"), Value: quoteBz("104")},
+					{Key: []byte("price"), Value: pcoinQ},
+				},
+			},
+		},
+		{
+			name: "EventOrderPartiallyFilled ask",
+			tev: NewEventOrderPartiallyFilled(NewOrder(5).WithAsk(&AskOrder{
+				Assets:                  acoin,
+				Price:                   pcoin,
+				SellerSettlementFlatFee: &fcoin,
+			})),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderPartiallyFilled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("assets_filled"), Value: acoinQ},
-					{Key: []byte("fees_filled"), Value: fcoinQ},
+					{Key: []byte("assets"), Value: acoinQ},
+					{Key: []byte("fees"), Value: fcoinQ},
 					{Key: []byte("order_id"), Value: quoteBz("5")},
+					{Key: []byte("price"), Value: pcoinQ},
+				},
+			},
+		},
+		{
+			name: "EventOrderPartiallyFilled bid",
+			tev: NewEventOrderPartiallyFilled(NewOrder(5).WithBid(&BidOrder{
+				Assets:              acoin,
+				Price:               pcoin,
+				BuyerSettlementFees: sdk.Coins{fcoin},
+			})),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventOrderPartiallyFilled",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("assets"), Value: acoinQ},
+					{Key: []byte("fees"), Value: fcoinQ},
+					{Key: []byte("order_id"), Value: quoteBz("5")},
+					{Key: []byte("price"), Value: pcoinQ},
 				},
 			},
 		},

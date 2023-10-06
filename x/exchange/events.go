@@ -20,17 +20,21 @@ func NewEventOrderCancelled(orderID uint64, cancelledBy sdk.AccAddress) *EventOr
 	}
 }
 
-func NewEventOrderFilled(orderID uint64) *EventOrderFilled {
+func NewEventOrderFilled(order OrderI) *EventOrderFilled {
 	return &EventOrderFilled{
-		OrderId: orderID,
+		OrderId: order.GetOrderID(),
+		Assets:  order.GetAssets().String(),
+		Price:   order.GetPrice().String(),
+		Fees:    order.GetSettlementFees().String(),
 	}
 }
 
-func NewEventOrderPartiallyFilled(orderID uint64, assetsFilled, feesFilled sdk.Coin) *EventOrderPartiallyFilled {
+func NewEventOrderPartiallyFilled(order OrderI) *EventOrderPartiallyFilled {
 	return &EventOrderPartiallyFilled{
-		OrderId:      orderID,
-		AssetsFilled: assetsFilled.String(),
-		FeesFilled:   feesFilled.String(),
+		OrderId: order.GetOrderID(),
+		Assets:  order.GetAssets().String(),
+		Price:   order.GetPrice().String(),
+		Fees:    order.GetSettlementFees().String(),
 	}
 }
 

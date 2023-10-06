@@ -1556,6 +1556,9 @@ This event is also used for orders that were previously partially filled, but ha
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order filled. |
+| `assets` | [string](#string) |  | assets is the coins amount string of assets bought/sold for this order. |
+| `price` | [string](#string) |  | price is the coins amount string of the price payed/received for this order. |
+| `fees` | [string](#string) |  | fees is the coins amount string of settlement fees paid with this order. |
 
 
 
@@ -1571,8 +1574,9 @@ EventOrderPartiallyFilled is an event emitted when an order filled in part and s
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order partially filled. |
-| `assets_filled` | [string](#string) |  | assets_filled is the coins amount string of assets that were filled and removed from the order. |
-| `fees_filled` | [string](#string) |  | fees_filled is the coins amount string of fees paid and removed from the order. |
+| `assets` | [string](#string) |  | assets is the coins amount string of assets that were filled and removed from the order. |
+| `price` | [string](#string) |  | price is the coins amount string of the price payed/received for this order. For ask orders, this might be more than the amount that was removed from the order's price. |
+| `fees` | [string](#string) |  | fees is the coins amount string of settlement fees paid with this partial order. For ask orders, this might be more than the amount that was removed from the order's settlement fees. |
 
 
 
