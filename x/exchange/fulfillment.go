@@ -651,27 +651,16 @@ func validateFulfillments(askOFs, bidOFs []*OrderFulfillment) error {
 // buildTransfers creates the transfers, inputs for fee payments,
 // and fee total and sets those fields in the provided Settlement.
 func buildTransfers(askOFs, bidOFs []*OrderFulfillment, settlement *Settlement) error {
-	allOFs := make([]*OrderFulfillment, 0, len(askOFs)+len(bidOFs))
-	allOFs = append(allOFs, askOFs...)
-	allOFs = append(allOFs, bidOFs...)
-
-	indexedFees := newIndexedAddrAmts()
-	transfers := make([]*Transfer, 0, len(allOFs)*2)
-
 	var errs []error
-	for _, of := range allOFs {
-		assetTrans, err := getAssetTransfer(of)
+	indexedFees := newIndexedAddrAmts()
+	transfers := make([]*Transfer, 0, len(askOFs)+len(bidOFs))
+
+	record := func(of *OrderFulfillment, getter func(fulfillment *OrderFulfillment) (*Transfer, error)) {
+		assetTrans, err := getter(of)
 		if err != nil {
 			errs = append(errs, err)
 		} else {
 			transfers = append(transfers, assetTrans)
-		}
-
-		priceTrans, err := getPriceTransfer(of)
-		if err != nil {
-			errs = append(errs, err)
-		} else {
-			transfers = append(transfers, priceTrans)
 		}
 
 		if !of.FeesToPay.IsZero() {
@@ -682,6 +671,22 @@ func buildTransfers(askOFs, bidOFs []*OrderFulfillment, settlement *Settlement) 
 				indexedFees.add(of.GetOwner(), of.FeesToPay...)
 			}
 		}
+	}
+
+	// If we got both the asset and price transfers from all OrderFulfillments, we'd be doubling
+	// up on what's being traded. So we need to only get each from only one list.
+	// Since we need to loop through both lists to make note of the fees, though, I thought it
+	// would be good to get one from one list, and the other from the other. So I decided to get
+	// the asset transfers from the asks, and price transfers from the bids so that each transfer
+	// will have one input and multiple (or one) outputs. I'm not sure that it matters too much
+	// where we get each transfer type from, though.
+
+	for _, of := range askOFs {
+		record(of, getAssetTransfer)
+	}
+
+	for _, of := range bidOFs {
+		record(of, getPriceTransfer)
 	}
 
 	if len(errs) > 0 {
