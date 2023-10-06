@@ -77,7 +77,7 @@ func copyDistributions(dists []*Distribution) []*Distribution {
 	return rv
 }
 
-// copyOrderFulfillment returns a deep copy of an order fulfillement.
+// copyOrderFulfillment returns a deep copy of an order fulfillment.
 func copyOrderFulfillment(f *OrderFulfillment) *OrderFulfillment {
 	if f == nil {
 		return nil
@@ -98,6 +98,18 @@ func copyOrderFulfillment(f *OrderFulfillment) *OrderFulfillment {
 		PriceFilledAmt:    copySDKInt(f.PriceFilledAmt),
 		PriceUnfilledAmt:  copySDKInt(f.PriceUnfilledAmt),
 	}
+}
+
+// copyOrderFulfillments returns a deep copy of a slice of order fulfillments.
+func copyOrderFulfillments(fs []*OrderFulfillment) []*OrderFulfillment {
+	if fs == nil {
+		return nil
+	}
+	rv := make([]*OrderFulfillment, len(fs))
+	for i, f := range fs {
+		rv[i] = copyOrderFulfillment(f)
+	}
+	return rv
 }
 
 // orderSplitString is similar to %v except with easier to understand Coin and Int entries.
@@ -208,6 +220,65 @@ func assertEqualOrderFulfillments(t *testing.T, expected, actual *OrderFulfillme
 	assert.Equalf(t, expected.PriceUnfilledAmt, actual.PriceUnfilledAmt, msg("OrderFulfillment.PriceUnfilledAmt"), args...)
 	t.Logf("  Actual: %s", orderFulfillmentString(actual))
 	t.Logf("Expected: %s", orderFulfillmentString(expected))
+	return false
+}
+
+// assertEqualOrderFulfillmentSlices asserts that the two order fulfillments are equal.
+// Returns true if equal.
+// If not equal, and neither are nil, equality on each field is also asserted in order to help identify the problem.
+func assertEqualOrderFulfillmentSlices(t *testing.T, expected, actual []*OrderFulfillment, message string, args ...interface{}) bool {
+	t.Helper()
+	if assert.Equalf(t, expected, actual, message, args...) {
+		return true
+	}
+	// If either is nil, that's easy to understand in the above failure, so there's nothing more to do.
+	if expected == nil || actual == nil {
+		return false
+	}
+
+	msg := func(val string) string {
+		if len(message) == 0 {
+			return val
+		}
+		return val + "\n" + message
+	}
+
+	// Check the order ids (and lengths) since that's gonna be a huge clue to a problem
+	expIDs := make([]string, len(expected))
+	for i, exp := range expected {
+		expIDs[i] = fmt.Sprintf("%d", exp.GetOrderID())
+	}
+	actIDs := make([]string, len(actual))
+	for i, act := range actual {
+		actIDs[i] = fmt.Sprintf("%d", act.GetOrderID())
+	}
+	if !assert.Equalf(t, expIDs, actIDs, msg("OrderIDs"), args...) {
+		// Wooo, should have actionable info in the failure, so we can be done.
+		return false
+	}
+
+	// Try the comparisons as strings, one per line because that's easier with ints and coins.
+	expStrVals := make([]string, len(expected))
+	for i, exp := range expected {
+		expStrVals[i] = orderFulfillmentString(exp)
+	}
+	expStrs := strings.Join(expStrVals, "\n")
+	actStrVals := make([]string, len(actual))
+	for i, act := range actual {
+		actStrVals[i] = orderFulfillmentString(act)
+	}
+	actStrs := strings.Join(actStrVals, "\n")
+	if !assert.Equalf(t, expStrs, actStrs, msg("OrderFulfillment strings"), args...) {
+		// Wooo, should have actionable info in the failure, so we can be done.
+		return false
+	}
+
+	// Alright, do it the hard way one at a time.
+	for i := range expected {
+		assertEqualOrderFulfillments(t, expected[i], actual[i], fmt.Sprintf("[%d]%s", i, message), args...)
+	}
+	t.Logf("  Actual: %s", orderFulfillmentsString(actual))
+	t.Logf("Expected: %s", orderFulfillmentsString(expected))
 	return false
 }
 
@@ -491,21 +562,7 @@ func TestNewOrderFulfillments(t *testing.T) {
 				actual = NewOrderFulfillments(tc.orders)
 			}
 			require.NotPanics(t, testFunc, "NewOrderFulfillments")
-			if !assert.Equal(t, tc.expected, actual, "NewOrderFulfillments result") {
-				expOrderIDs := make([]uint64, len(tc.expected))
-				for i, f := range tc.expected {
-					expOrderIDs[i] = f.GetOrderID()
-				}
-				actOrderIDs := make([]uint64, len(actual))
-				for i, f := range actual {
-					actOrderIDs[i] = f.GetOrderID()
-				}
-				if !assert.Equal(t, expOrderIDs, actOrderIDs, "NewOrderFulfillments result order ids") && len(tc.expected) == len(actual) {
-					for i := range tc.expected {
-						assertEqualOrderFulfillments(t, tc.expected[i], actual[i], "NewOrderFulfillments result[%d]", i)
-					}
-				}
-			}
+			assertEqualOrderFulfillmentSlices(t, tc.expected, actual, "NewOrderFulfillments result")
 		})
 	}
 }
@@ -2568,13 +2625,497 @@ func TestValidateCanSettle(t *testing.T) {
 }
 
 func TestAllocateAssets(t *testing.T) {
-	// TODO[1658]: func TestAllocateAssets(t *testing.T)
-	t.Skipf("not written")
+	askOrder := func(orderID uint64, assetsAmt int64, seller string) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			Seller: seller,
+			Assets: sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(assetsAmt)},
+		})
+	}
+	bidOrder := func(orderID uint64, assetsAmt int64, buyer string) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			Buyer:  buyer,
+			Assets: sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(assetsAmt)},
+		})
+	}
+	newOF := func(order *Order, dists ...*Distribution) *OrderFulfillment {
+		rv := &OrderFulfillment{
+			Order:             order,
+			AssetsFilledAmt:   sdkmath.NewInt(0),
+			AssetsUnfilledAmt: order.GetAssets().Amount,
+		}
+		if len(dists) > 0 {
+			rv.AssetDists = dists
+			for _, d := range dists {
+				rv.AssetsFilledAmt = rv.AssetsFilledAmt.Add(d.Amount)
+				rv.AssetsUnfilledAmt = rv.AssetsUnfilledAmt.Sub(d.Amount)
+			}
+		}
+		return rv
+	}
+	dist := func(addr string, amount int64) *Distribution {
+		return &Distribution{Address: addr, Amount: sdkmath.NewInt(amount)}
+	}
+
+	tests := []struct {
+		name      string
+		askOFs    []*OrderFulfillment
+		bidOFs    []*OrderFulfillment
+		expAskOFs []*OrderFulfillment
+		expBidOfs []*OrderFulfillment
+		expErr    string
+	}{
+		{
+			name:      "one ask, one bid: both full",
+			askOFs:    []*OrderFulfillment{newOF(askOrder(5, 10, "seller"))},
+			bidOFs:    []*OrderFulfillment{newOF(bidOrder(6, 10, "buyer"))},
+			expAskOFs: []*OrderFulfillment{newOF(askOrder(5, 10, "seller"), dist("buyer", 10))},
+			expBidOfs: []*OrderFulfillment{newOF(bidOrder(6, 10, "buyer"), dist("seller", 10))},
+		},
+		{
+			name:      "one ask, one bid: ask partial",
+			askOFs:    []*OrderFulfillment{newOF(askOrder(5, 11, "seller"))},
+			bidOFs:    []*OrderFulfillment{newOF(bidOrder(16, 10, "buyer"))},
+			expAskOFs: []*OrderFulfillment{newOF(askOrder(5, 11, "seller"), dist("buyer", 10))},
+			expBidOfs: []*OrderFulfillment{newOF(bidOrder(16, 10, "buyer"), dist("seller", 10))},
+		},
+		{
+			name:      "one ask, one bid: bid partial",
+			askOFs:    []*OrderFulfillment{newOF(askOrder(15, 10, "seller"))},
+			bidOFs:    []*OrderFulfillment{newOF(bidOrder(6, 11, "buyer"))},
+			expAskOFs: []*OrderFulfillment{newOF(askOrder(15, 10, "seller"), dist("buyer", 10))},
+			expBidOfs: []*OrderFulfillment{newOF(bidOrder(6, 11, "buyer"), dist("seller", 10))},
+		},
+		{
+			name:   "one ask, two bids: last bid not touched",
+			askOFs: []*OrderFulfillment{newOF(askOrder(22, 10, "seller"))},
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(64, 12, "buyer64")),
+				newOF(bidOrder(78, 1, "buyer78")),
+			},
+			expAskOFs: []*OrderFulfillment{newOF(askOrder(22, 10, "seller"), dist("buyer64", 10))},
+			expBidOfs: []*OrderFulfillment{
+				newOF(bidOrder(64, 12, "buyer64"), dist("seller", 10)),
+				newOF(bidOrder(78, 1, "buyer78")),
+			},
+		},
+		{
+			name: "two asks, one bids: last ask not touched",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(888, 10, "seller888")),
+				newOF(askOrder(999, 10, "seller999")),
+			},
+			bidOFs: []*OrderFulfillment{newOF(bidOrder(6, 10, "buyer"))},
+			expAskOFs: []*OrderFulfillment{
+				newOF(askOrder(888, 10, "seller888"), dist("buyer", 10)),
+				newOF(askOrder(999, 10, "seller999")),
+			},
+			expBidOfs: []*OrderFulfillment{newOF(bidOrder(6, 10, "buyer"), dist("seller888", 10))},
+		},
+		{
+			name: "two asks, three bids: both full",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(101, 15, "seller101")),
+				newOF(askOrder(102, 25, "seller102")),
+			},
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(103, 10, "buyer103")),
+				newOF(bidOrder(104, 8, "buyer104")),
+				newOF(bidOrder(105, 22, "buyer105")),
+			},
+			expAskOFs: []*OrderFulfillment{
+				newOF(askOrder(101, 15, "seller101"), dist("buyer103", 10), dist("buyer104", 5)),
+				newOF(askOrder(102, 25, "seller102"), dist("buyer104", 3), dist("buyer105", 22)),
+			},
+			expBidOfs: []*OrderFulfillment{
+				newOF(bidOrder(103, 10, "buyer103"), dist("seller101", 10)),
+				newOF(bidOrder(104, 8, "buyer104"), dist("seller101", 5), dist("seller102", 3)),
+				newOF(bidOrder(105, 22, "buyer105"), dist("seller102", 22)),
+			},
+		},
+		{
+			name: "two asks, three bids: ask partial",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(101, 15, "seller101")),
+				newOF(askOrder(102, 26, "seller102")),
+			},
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(103, 10, "buyer103")),
+				newOF(bidOrder(104, 8, "buyer104")),
+				newOF(bidOrder(105, 22, "buyer105")),
+			},
+			expAskOFs: []*OrderFulfillment{
+				newOF(askOrder(101, 15, "seller101"), dist("buyer103", 10), dist("buyer104", 5)),
+				newOF(askOrder(102, 26, "seller102"), dist("buyer104", 3), dist("buyer105", 22)),
+			},
+			expBidOfs: []*OrderFulfillment{
+				newOF(bidOrder(103, 10, "buyer103"), dist("seller101", 10)),
+				newOF(bidOrder(104, 8, "buyer104"), dist("seller101", 5), dist("seller102", 3)),
+				newOF(bidOrder(105, 22, "buyer105"), dist("seller102", 22)),
+			},
+		},
+		{
+			name: "two asks, three bids: bid partial",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(101, 15, "seller101")),
+				newOF(askOrder(102, 25, "seller102")),
+			},
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(103, 10, "buyer103")),
+				newOF(bidOrder(104, 8, "buyer104")),
+				newOF(bidOrder(105, 23, "buyer105")),
+			},
+			expAskOFs: []*OrderFulfillment{
+				newOF(askOrder(101, 15, "seller101"), dist("buyer103", 10), dist("buyer104", 5)),
+				newOF(askOrder(102, 25, "seller102"), dist("buyer104", 3), dist("buyer105", 22)),
+			},
+			expBidOfs: []*OrderFulfillment{
+				newOF(bidOrder(103, 10, "buyer103"), dist("seller101", 10)),
+				newOF(bidOrder(104, 8, "buyer104"), dist("seller101", 5), dist("seller102", 3)),
+				newOF(bidOrder(105, 23, "buyer105"), dist("seller102", 22)),
+			},
+		},
+		{
+			name:   "negative ask assets unfilled",
+			askOFs: []*OrderFulfillment{newOF(askOrder(101, 10, "seller"), dist("buyerx", 11))},
+			bidOFs: []*OrderFulfillment{newOF(bidOrder(102, 10, "buyer"))},
+			expErr: "cannot fill ask order 101 having assets left \"-1apple\" with bid order 102 having " +
+				"assets left \"10apple\": zero or negative assets left",
+		},
+		{
+			name:   "negative bid assets unfilled",
+			askOFs: []*OrderFulfillment{newOF(askOrder(101, 10, "seller"))},
+			bidOFs: []*OrderFulfillment{newOF(bidOrder(102, 10, "buyer"), dist("sellerx", 11))},
+			expErr: "cannot fill ask order 101 having assets left \"10apple\" with bid order 102 having " +
+				"assets left \"-1apple\": zero or negative assets left",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			origAskOFs := copyOrderFulfillments(tc.askOFs)
+			origBidOFs := copyOrderFulfillments(tc.bidOFs)
+
+			var err error
+			testFunc := func() {
+				err = allocateAssets(tc.askOFs, tc.bidOFs)
+			}
+			require.NotPanics(t, testFunc, "allocateAssets")
+			assertions.AssertErrorValue(t, err, tc.expErr, "allocateAssets error")
+			if len(tc.expErr) > 0 {
+				return
+			}
+			if !assertEqualOrderFulfillmentSlices(t, tc.expAskOFs, tc.askOFs, "askOFs after allocateAssets") {
+				t.Logf("Original: %s", orderFulfillmentsString(origAskOFs))
+			}
+			if !assertEqualOrderFulfillmentSlices(t, tc.expBidOfs, tc.bidOFs, "bidOFs after allocateAssets") {
+				t.Logf("Original: %s", orderFulfillmentsString(origBidOFs))
+			}
+		})
+	}
 }
 
 func TestSplitPartial(t *testing.T) {
-	// TODO[1658]: func TestSplitPartial(t *testing.T)
-	t.Skipf("not written")
+	askOrder := func(orderID uint64, assetsAmt int64, seller string) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			Seller:       seller,
+			Assets:       sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(assetsAmt)},
+			Price:        sdk.Coin{Denom: "peach", Amount: sdkmath.NewInt(assetsAmt)},
+			AllowPartial: true,
+		})
+	}
+	bidOrder := func(orderID uint64, assetsAmt int64, buyer string) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			Buyer:        buyer,
+			Assets:       sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(assetsAmt)},
+			Price:        sdk.Coin{Denom: "peach", Amount: sdkmath.NewInt(assetsAmt)},
+			AllowPartial: true,
+		})
+	}
+	newOF := func(order *Order, dists ...*Distribution) *OrderFulfillment {
+		rv := &OrderFulfillment{
+			Order:             order,
+			AssetsFilledAmt:   sdkmath.NewInt(0),
+			AssetsUnfilledAmt: order.GetAssets().Amount,
+			PriceAppliedAmt:   sdkmath.NewInt(0),
+			PriceLeftAmt:      order.GetPrice().Amount,
+		}
+		if len(dists) > 0 {
+			rv.AssetDists = dists
+			for _, d := range dists {
+				rv.AssetsFilledAmt = rv.AssetsFilledAmt.Add(d.Amount)
+				rv.AssetsUnfilledAmt = rv.AssetsUnfilledAmt.Sub(d.Amount)
+			}
+			if rv.AssetsUnfilledAmt.IsZero() {
+				rv.AssetsUnfilledAmt = sdkmath.NewInt(0)
+			}
+		}
+		return rv
+	}
+	dist := func(addr string, amount int64) *Distribution {
+		return &Distribution{Address: addr, Amount: sdkmath.NewInt(amount)}
+	}
+
+	tests := []struct {
+		name          string
+		askOFs        []*OrderFulfillment
+		bidOFs        []*OrderFulfillment
+		expAskOFs     []*OrderFulfillment
+		expBidOfs     []*OrderFulfillment
+		expSettlement *Settlement
+		expErr        string
+	}{
+		{
+			name:   "one ask: not touched",
+			askOFs: []*OrderFulfillment{newOF(askOrder(8, 10, "seller8"))},
+			expErr: "ask order 8 (at index 0) has no assets filled",
+		},
+		{
+			name:      "one ask: partial",
+			askOFs:    []*OrderFulfillment{newOF(askOrder(8, 10, "seller8"), dist("buyer", 7))},
+			expAskOFs: []*OrderFulfillment{newOF(askOrder(8, 7, "seller8"), dist("buyer", 7))},
+			expSettlement: &Settlement{
+				FullyFilledOrders:  nil,
+				PartialOrderFilled: askOrder(8, 7, "seller8"),
+				PartialOrderLeft:   askOrder(8, 3, "seller8"),
+			},
+		},
+		{
+			name: "one ask: partial, not allowed",
+			askOFs: []*OrderFulfillment{
+				newOF(NewOrder(8).WithAsk(&AskOrder{
+					Seller:       "seller8",
+					Assets:       sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(10)},
+					Price:        sdk.Coin{Denom: "peach", Amount: sdkmath.NewInt(10)},
+					AllowPartial: false,
+				}), dist("buyer", 7))},
+			expErr: "cannot split ask order 8 having assets \"10apple\" at \"7apple\": order does not allow partial fulfillment",
+		},
+		{
+			name: "two asks: first partial",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(8, 10, "seller8"), dist("buyer", 7)),
+				newOF(askOrder(9, 12, "seller8")),
+			},
+			expErr: "ask order 8 (at index 0) is not filled in full and is not the last ask order provided",
+		},
+		{
+			name: "two asks: last untouched",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(8, 10, "seller8"), dist("buyer", 10)),
+				newOF(askOrder(9, 12, "seller8")),
+			},
+			expErr: "ask order 9 (at index 1) has no assets filled",
+		},
+		{
+			name: "two asks: last partial",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(8, 10, "seller8"), dist("buyer", 10)),
+				newOF(askOrder(9, 12, "seller9"), dist("buyer", 10)),
+			},
+			expAskOFs: []*OrderFulfillment{
+				newOF(askOrder(8, 10, "seller8"), dist("buyer", 10)),
+				newOF(askOrder(9, 10, "seller9"), dist("buyer", 10)),
+			},
+			expSettlement: &Settlement{
+				FullyFilledOrders:  []*Order{askOrder(8, 10, "seller8")},
+				PartialOrderFilled: askOrder(9, 10, "seller9"),
+				PartialOrderLeft:   askOrder(9, 2, "seller9"),
+			},
+		},
+
+		{
+			name:   "one bid: not touched",
+			bidOFs: []*OrderFulfillment{newOF(bidOrder(8, 10, "buyer8"))},
+			expErr: "bid order 8 (at index 0) has no assets filled",
+		},
+		{
+			name:      "one bid: partial",
+			bidOFs:    []*OrderFulfillment{newOF(bidOrder(8, 10, "buyer8"), dist("seller", 7))},
+			expBidOfs: []*OrderFulfillment{newOF(bidOrder(8, 7, "buyer8"), dist("seller", 7))},
+			expSettlement: &Settlement{
+				FullyFilledOrders:  nil,
+				PartialOrderFilled: bidOrder(8, 7, "buyer8"),
+				PartialOrderLeft:   bidOrder(8, 3, "buyer8"),
+			},
+		},
+		{
+			name: "one bid: partial, not allowed",
+			askOFs: []*OrderFulfillment{
+				newOF(NewOrder(8).WithBid(&BidOrder{
+					Buyer:        "buyer8",
+					Assets:       sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(10)},
+					Price:        sdk.Coin{Denom: "peach", Amount: sdkmath.NewInt(10)},
+					AllowPartial: false,
+				}), dist("seller", 7))},
+			expErr: "cannot split bid order 8 having assets \"10apple\" at \"7apple\": order does not allow partial fulfillment",
+		},
+		{
+			name: "two bids: first partial",
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(8, 10, "buyer8"), dist("seller", 7)),
+				newOF(bidOrder(9, 12, "buyer9")),
+			},
+			expErr: "bid order 8 (at index 0) is not filled in full and is not the last bid order provided",
+		},
+		{
+			name: "two bids: last untouched",
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(8, 10, "buyer8"), dist("seller", 10)),
+				newOF(bidOrder(9, 12, "buyer9")),
+			},
+			expErr: "bid order 9 (at index 1) has no assets filled",
+		},
+		{
+			name: "two bids: last partial",
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(8, 10, "buyer8"), dist("seller", 10)),
+				newOF(bidOrder(9, 12, "buyer9"), dist("seller", 10)),
+			},
+			expBidOfs: []*OrderFulfillment{
+				newOF(bidOrder(8, 10, "buyer8"), dist("seller", 10)),
+				newOF(bidOrder(9, 10, "buyer9"), dist("seller", 10)),
+			},
+			expSettlement: &Settlement{
+				FullyFilledOrders:  []*Order{bidOrder(8, 10, "buyer8")},
+				PartialOrderFilled: bidOrder(9, 10, "buyer9"),
+				PartialOrderLeft:   bidOrder(9, 2, "buyer9"),
+			},
+		},
+		{
+			name:   "one ask, one bid: both partial",
+			askOFs: []*OrderFulfillment{newOF(askOrder(8, 10, "seller8"), dist("buyer9", 7))},
+			bidOFs: []*OrderFulfillment{newOF(bidOrder(9, 10, "buyer9"), dist("seller8", 7))},
+			expErr: "ask order 8 and bid order 9 cannot both be partially filled",
+		},
+		{
+			name: "three asks, three bids: no partial",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(51, 10, "seller51"), dist("buyer99", 10)),
+				newOF(askOrder(77, 15, "seller77"), dist("buyer99", 10), dist("buyer8", 5)),
+				newOF(askOrder(12, 20, "seller12"), dist("buyer8", 10), dist("buyer112", 10)),
+			},
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(99, 20, "buyer99"), dist("seller51", 10), dist("seller77", 10)),
+				newOF(bidOrder(8, 15, "buyer8"), dist("seller77", 5), dist("seller12", 10)),
+				newOF(bidOrder(112, 10, "buyer112"), dist("seller12", 10)),
+			},
+			expAskOFs: []*OrderFulfillment{
+				newOF(askOrder(51, 10, "seller51"), dist("buyer99", 10)),
+				newOF(askOrder(77, 15, "seller77"), dist("buyer99", 10), dist("buyer8", 5)),
+				newOF(askOrder(12, 20, "seller12"), dist("buyer8", 10), dist("buyer112", 10)),
+			},
+			expBidOfs: []*OrderFulfillment{
+				newOF(bidOrder(99, 20, "buyer99"), dist("seller51", 10), dist("seller77", 10)),
+				newOF(bidOrder(8, 15, "buyer8"), dist("seller77", 5), dist("seller12", 10)),
+				newOF(bidOrder(112, 10, "buyer112"), dist("seller12", 10)),
+			},
+			expSettlement: &Settlement{
+				FullyFilledOrders: []*Order{
+					askOrder(51, 10, "seller51"),
+					askOrder(77, 15, "seller77"),
+					askOrder(12, 20, "seller12"),
+					bidOrder(99, 20, "buyer99"),
+					bidOrder(8, 15, "buyer8"),
+					bidOrder(112, 10, "buyer112"),
+				},
+				PartialOrderFilled: nil,
+				PartialOrderLeft:   nil,
+			},
+		},
+		{
+			name: "three asks, three bids: partial ask",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(51, 10, "seller51"), dist("buyer99", 10)),
+				newOF(askOrder(77, 15, "seller77"), dist("buyer99", 10), dist("buyer8", 5)),
+				newOF(askOrder(12, 21, "seller12"), dist("buyer8", 10), dist("buyer112", 10)),
+			},
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(99, 20, "buyer99"), dist("seller51", 10), dist("seller77", 10)),
+				newOF(bidOrder(8, 15, "buyer8"), dist("seller77", 5), dist("seller12", 10)),
+				newOF(bidOrder(112, 10, "buyer112"), dist("seller12", 10)),
+			},
+			expAskOFs: []*OrderFulfillment{
+				newOF(askOrder(51, 10, "seller51"), dist("buyer99", 10)),
+				newOF(askOrder(77, 15, "seller77"), dist("buyer99", 10), dist("buyer8", 5)),
+				newOF(askOrder(12, 20, "seller12"), dist("buyer8", 10), dist("buyer112", 10)),
+			},
+			expBidOfs: []*OrderFulfillment{
+				newOF(bidOrder(99, 20, "buyer99"), dist("seller51", 10), dist("seller77", 10)),
+				newOF(bidOrder(8, 15, "buyer8"), dist("seller77", 5), dist("seller12", 10)),
+				newOF(bidOrder(112, 10, "buyer112"), dist("seller12", 10)),
+			},
+			expSettlement: &Settlement{
+				FullyFilledOrders: []*Order{
+					askOrder(51, 10, "seller51"),
+					askOrder(77, 15, "seller77"),
+					bidOrder(99, 20, "buyer99"),
+					bidOrder(8, 15, "buyer8"),
+					bidOrder(112, 10, "buyer112"),
+				},
+				PartialOrderFilled: askOrder(12, 20, "seller12"),
+				PartialOrderLeft:   askOrder(12, 1, "seller12"),
+			},
+		},
+		{
+			name: "three asks, three bids: no partial",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(51, 10, "seller51"), dist("buyer99", 10)),
+				newOF(askOrder(77, 15, "seller77"), dist("buyer99", 10), dist("buyer8", 5)),
+				newOF(askOrder(12, 20, "seller12"), dist("buyer8", 10), dist("buyer112", 10)),
+			},
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(99, 20, "buyer99"), dist("seller51", 10), dist("seller77", 10)),
+				newOF(bidOrder(8, 15, "buyer8"), dist("seller77", 5), dist("seller12", 10)),
+				newOF(bidOrder(112, 11, "buyer112"), dist("seller12", 10)),
+			},
+			expAskOFs: []*OrderFulfillment{
+				newOF(askOrder(51, 10, "seller51"), dist("buyer99", 10)),
+				newOF(askOrder(77, 15, "seller77"), dist("buyer99", 10), dist("buyer8", 5)),
+				newOF(askOrder(12, 20, "seller12"), dist("buyer8", 10), dist("buyer112", 10)),
+			},
+			expBidOfs: []*OrderFulfillment{
+				newOF(bidOrder(99, 20, "buyer99"), dist("seller51", 10), dist("seller77", 10)),
+				newOF(bidOrder(8, 15, "buyer8"), dist("seller77", 5), dist("seller12", 10)),
+				newOF(bidOrder(112, 10, "buyer112"), dist("seller12", 10)),
+			},
+			expSettlement: &Settlement{
+				FullyFilledOrders: []*Order{
+					askOrder(51, 10, "seller51"),
+					askOrder(77, 15, "seller77"),
+					askOrder(12, 20, "seller12"),
+					bidOrder(99, 20, "buyer99"),
+					bidOrder(8, 15, "buyer8"),
+				},
+				PartialOrderFilled: bidOrder(112, 10, "buyer112"),
+				PartialOrderLeft:   bidOrder(112, 1, "buyer112"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			origAskOFs := copyOrderFulfillments(tc.askOFs)
+			origBidOFs := copyOrderFulfillments(tc.bidOFs)
+
+			var settlement *Settlement
+			var err error
+			testFunc := func() {
+				settlement, err = splitPartial(tc.askOFs, tc.bidOFs)
+			}
+			require.NotPanics(t, testFunc, "splitPartial")
+			assertions.AssertErrorValue(t, err, tc.expErr, "splitPartial error")
+			assert.Equalf(t, tc.expSettlement, settlement, "splitPartial settlement")
+			if len(tc.expErr) > 0 {
+				return
+			}
+			if !assertEqualOrderFulfillmentSlices(t, tc.expAskOFs, tc.askOFs, "askOFs after splitPartial") {
+				t.Logf("Original: %s", orderFulfillmentsString(origAskOFs))
+			}
+			if !assertEqualOrderFulfillmentSlices(t, tc.expBidOfs, tc.bidOFs, "bidOFs after splitPartial") {
+				t.Logf("Original: %s", orderFulfillmentsString(origBidOFs))
+			}
+		})
+	}
 }
 
 func TestAllocatePrice(t *testing.T) {
