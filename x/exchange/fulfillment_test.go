@@ -3667,8 +3667,97 @@ func TestSetFeesToPay(t *testing.T) {
 }
 
 func TestValidateFulfillments(t *testing.T) {
-	// TODO[1658]: func TestValidateFulfillments(t *testing.T)
-	t.Skipf("not written")
+	goodAskOF := func(orderID uint64) *OrderFulfillment {
+		return &OrderFulfillment{
+			Order: NewOrder(orderID).WithAsk(&AskOrder{
+				Assets: sdk.NewInt64Coin("apple", 50),
+				Price:  sdk.NewInt64Coin("peach", 123),
+			}),
+			AssetsFilledAmt: sdkmath.NewInt(50),
+			PriceAppliedAmt: sdkmath.NewInt(130),
+		}
+	}
+	badAskOF := func(orderID uint64) *OrderFulfillment {
+		rv := goodAskOF(orderID)
+		rv.AssetsFilledAmt = sdkmath.NewInt(49)
+		return rv
+	}
+	badAskErr := func(orderID uint64) string {
+		return badAskOF(orderID).Validate().Error()
+	}
+	goodBidOF := func(orderID uint64) *OrderFulfillment {
+		return &OrderFulfillment{
+			Order: NewOrder(orderID).WithBid(&BidOrder{
+				Assets: sdk.NewInt64Coin("apple", 50),
+				Price:  sdk.NewInt64Coin("peach", 123),
+			}),
+			AssetsFilledAmt: sdkmath.NewInt(50),
+			PriceAppliedAmt: sdkmath.NewInt(123),
+		}
+	}
+	badBidOF := func(orderID uint64) *OrderFulfillment {
+		rv := goodBidOF(orderID)
+		rv.AssetsFilledAmt = sdkmath.NewInt(49)
+		return rv
+	}
+	badBidErr := func(orderID uint64) string {
+		return badBidOF(orderID).Validate().Error()
+	}
+
+	tests := []struct {
+		name   string
+		askOFs []*OrderFulfillment
+		bidOFs []*OrderFulfillment
+		expErr string
+	}{
+		{
+			name:   "all good",
+			askOFs: []*OrderFulfillment{goodAskOF(10), goodAskOF(11), goodAskOF(12)},
+			bidOFs: []*OrderFulfillment{goodBidOF(20), goodBidOF(21), goodBidOF(22)},
+			expErr: "",
+		},
+		{
+			name:   "error in one ask",
+			askOFs: []*OrderFulfillment{goodAskOF(10), badAskOF(11), goodAskOF(12)},
+			bidOFs: []*OrderFulfillment{goodBidOF(20), goodBidOF(21), goodBidOF(22)},
+			expErr: badAskErr(11),
+		},
+		{
+			name:   "error in one bid",
+			askOFs: []*OrderFulfillment{goodAskOF(10), goodAskOF(11), goodAskOF(12)},
+			bidOFs: []*OrderFulfillment{goodBidOF(20), badBidOF(21), goodBidOF(22)},
+			expErr: badBidErr(21),
+		},
+		{
+			name:   "two errors in asks",
+			askOFs: []*OrderFulfillment{badAskOF(10), goodAskOF(11), badAskOF(12)},
+			bidOFs: []*OrderFulfillment{goodBidOF(20), goodBidOF(21), goodBidOF(22)},
+			expErr: joinErrs(badAskErr(10), badAskErr(12)),
+		},
+		{
+			name:   "two errors in bids",
+			askOFs: []*OrderFulfillment{goodAskOF(10), goodAskOF(11), goodAskOF(12)},
+			bidOFs: []*OrderFulfillment{badBidOF(20), goodBidOF(21), badBidOF(22)},
+			expErr: joinErrs(badBidErr(20), badBidErr(22)),
+		},
+		{
+			name:   "error in each",
+			askOFs: []*OrderFulfillment{goodAskOF(10), goodAskOF(11), badAskOF(12)},
+			bidOFs: []*OrderFulfillment{goodBidOF(20), badBidOF(21), goodBidOF(22)},
+			expErr: joinErrs(badAskErr(12), badBidErr(21)),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = validateFulfillments(tc.askOFs, tc.bidOFs)
+			}
+			require.NotPanics(t, testFunc, "validateFulfillments")
+			assertions.AssertErrorValue(t, err, tc.expErr, "validateFulfillments error")
+		})
+	}
 }
 
 func TestBuildTransfers(t *testing.T) {
