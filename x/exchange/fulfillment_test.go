@@ -2340,8 +2340,231 @@ func TestBuildSettlement(t *testing.T) {
 }
 
 func TestValidateCanSettle(t *testing.T) {
-	// TODO[1658]: func TestValidateCanSettle(t *testing.T)
-	t.Skipf("not written")
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	askOrder := func(orderID uint64, assets, price sdk.Coin) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			Assets: assets,
+			Price:  price,
+		})
+	}
+	bidOrder := func(orderID uint64, assets, price sdk.Coin) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			Assets: assets,
+			Price:  price,
+		})
+	}
+
+	tests := []struct {
+		name      string
+		askOrders []*Order
+		bidOrders []*Order
+		expErr    string
+	}{
+		{
+			name:      "nil ask orders",
+			askOrders: nil,
+			bidOrders: []*Order{bidOrder(8, coin(10, "apple"), coin(11, "peach"))},
+			expErr:    "no ask orders provided",
+		},
+		{
+			name:      "no bid orders",
+			askOrders: []*Order{askOrder(7, coin(10, "apple"), coin(11, "peach"))},
+			bidOrders: nil,
+			expErr:    "no bid orders provided",
+		},
+		{
+			name:      "no orders",
+			askOrders: nil,
+			bidOrders: nil,
+			expErr:    joinErrs("no ask orders provided", "no bid orders provided"),
+		},
+		{
+			name: "bid order in asks",
+			askOrders: []*Order{
+				askOrder(7, coin(10, "apple"), coin(11, "peach")),
+				bidOrder(8, coin(10, "apple"), coin(11, "peach")),
+				askOrder(9, coin(10, "apple"), coin(11, "peach")),
+			},
+			bidOrders: []*Order{bidOrder(22, coin(10, "apple"), coin(11, "peach"))},
+			expErr:    "bid order 8 is not an ask order but is in the askOrders list at index 1",
+		},
+		{
+			name: "nil inside order in asks",
+			askOrders: []*Order{
+				askOrder(7, coin(10, "apple"), coin(11, "peach")),
+				NewOrder(8),
+				askOrder(9, coin(10, "apple"), coin(11, "peach")),
+			},
+			bidOrders: []*Order{bidOrder(22, coin(10, "apple"), coin(11, "peach"))},
+			expErr:    "<nil> order 8 is not an ask order but is in the askOrders list at index 1",
+		},
+		{
+			name: "unknown inside order in asks",
+			askOrders: []*Order{
+				askOrder(7, coin(10, "apple"), coin(11, "peach")),
+				newUnknownOrder(8),
+				askOrder(9, coin(10, "apple"), coin(11, "peach")),
+			},
+			bidOrders: []*Order{bidOrder(22, coin(10, "apple"), coin(11, "peach"))},
+			expErr:    "*exchange.unknownOrderType order 8 is not an ask order but is in the askOrders list at index 1",
+		},
+		{
+			name:      "ask order in bids",
+			askOrders: []*Order{askOrder(7, coin(10, "apple"), coin(11, "peach"))},
+			bidOrders: []*Order{
+				bidOrder(21, coin(10, "apple"), coin(11, "peach")),
+				askOrder(22, coin(10, "apple"), coin(11, "peach")),
+				bidOrder(23, coin(10, "apple"), coin(11, "peach")),
+			},
+			expErr: "ask order 22 is not a bid order but is in the bidOrders list at index 1",
+		},
+		{
+			name:      "nil inside order in bids",
+			askOrders: []*Order{askOrder(7, coin(10, "apple"), coin(11, "peach"))},
+			bidOrders: []*Order{
+				bidOrder(21, coin(10, "apple"), coin(11, "peach")),
+				NewOrder(22),
+				bidOrder(23, coin(10, "apple"), coin(11, "peach")),
+			},
+			expErr: "<nil> order 22 is not a bid order but is in the bidOrders list at index 1",
+		},
+		{
+			name:      "unknown inside order in bids",
+			askOrders: []*Order{askOrder(7, coin(10, "apple"), coin(11, "peach"))},
+			bidOrders: []*Order{
+				bidOrder(21, coin(10, "apple"), coin(11, "peach")),
+				newUnknownOrder(22),
+				bidOrder(23, coin(10, "apple"), coin(11, "peach")),
+			},
+			expErr: "*exchange.unknownOrderType order 22 is not a bid order but is in the bidOrders list at index 1",
+		},
+		{
+			name: "orders in wrong args",
+			askOrders: []*Order{
+				askOrder(15, coin(10, "apple"), coin(11, "peach")),
+				bidOrder(16, coin(10, "apple"), coin(11, "peach")),
+				askOrder(17, coin(10, "apple"), coin(11, "peach")),
+			},
+			bidOrders: []*Order{
+				bidOrder(91, coin(10, "apple"), coin(11, "peach")),
+				askOrder(92, coin(10, "apple"), coin(11, "peach")),
+				bidOrder(93, coin(10, "apple"), coin(11, "peach")),
+			},
+			expErr: joinErrs(
+				"bid order 16 is not an ask order but is in the askOrders list at index 1",
+				"ask order 92 is not a bid order but is in the bidOrders list at index 1",
+			),
+		},
+		{
+			name: "multiple ask asset denoms",
+			askOrders: []*Order{
+				askOrder(55, coin(10, "apple"), coin(11, "peach")),
+				askOrder(56, coin(20, "avocado"), coin(22, "peach")),
+			},
+			bidOrders: []*Order{
+				bidOrder(61, coin(10, "apple"), coin(11, "peach")),
+			},
+			expErr: "cannot settle with multiple ask order asset denoms \"10apple,20avocado\"",
+		},
+		{
+			name: "multiple ask price denoms",
+			askOrders: []*Order{
+				askOrder(55, coin(10, "apple"), coin(11, "peach")),
+				askOrder(56, coin(20, "apple"), coin(22, "plum")),
+			},
+			bidOrders: []*Order{
+				bidOrder(61, coin(10, "apple"), coin(11, "peach")),
+			},
+			expErr: "cannot settle with multiple ask order price denoms \"11peach,22plum\"",
+		},
+		{
+			name:      "multiple bid asset denoms",
+			askOrders: []*Order{askOrder(88, coin(10, "apple"), coin(11, "peach"))},
+			bidOrders: []*Order{
+				bidOrder(12, coin(10, "apple"), coin(11, "peach")),
+				bidOrder(13, coin(20, "avocado"), coin(22, "peach")),
+			},
+			expErr: "cannot settle with multiple bid order asset denoms \"10apple,20avocado\"",
+		},
+		{
+			name:      "multiple bid price denoms",
+			askOrders: []*Order{askOrder(88, coin(10, "apple"), coin(11, "peach"))},
+			bidOrders: []*Order{
+				bidOrder(12, coin(10, "apple"), coin(11, "peach")),
+				bidOrder(13, coin(20, "apple"), coin(22, "plum")),
+			},
+			expErr: "cannot settle with multiple bid order price denoms \"11peach,22plum\"",
+		},
+		{
+			name: "all different denoms",
+			askOrders: []*Order{
+				askOrder(55, coin(10, "apple"), coin(11, "peach")),
+				askOrder(56, coin(20, "avocado"), coin(22, "plum")),
+			},
+			bidOrders: []*Order{
+				bidOrder(12, coin(30, "acorn"), coin(33, "prune")),
+				bidOrder(13, coin(40, "acai"), coin(44, "pear")),
+			},
+			expErr: joinErrs(
+				"cannot settle with multiple ask order asset denoms \"10apple,20avocado\"",
+				"cannot settle with multiple ask order price denoms \"11peach,22plum\"",
+				"cannot settle with multiple bid order asset denoms \"40acai,30acorn\"",
+				"cannot settle with multiple bid order price denoms \"44pear,33prune\"",
+			),
+		},
+		{
+			name: "different ask and bid asset denoms",
+			askOrders: []*Order{
+				askOrder(15, coin(10, "apple"), coin(11, "peach")),
+				askOrder(16, coin(20, "apple"), coin(22, "peach")),
+			},
+			bidOrders: []*Order{
+				bidOrder(2001, coin(30, "acorn"), coin(33, "peach")),
+				bidOrder(2002, coin(40, "acorn"), coin(44, "peach")),
+			},
+			expErr: "cannot settle different ask \"30apple\" and bid \"70acorn\" asset denoms",
+		},
+		{
+			name: "different ask and bid price denoms",
+			askOrders: []*Order{
+				askOrder(15, coin(10, "apple"), coin(11, "peach")),
+				askOrder(16, coin(20, "apple"), coin(22, "peach")),
+			},
+			bidOrders: []*Order{
+				bidOrder(2001, coin(30, "apple"), coin(33, "plum")),
+				bidOrder(2002, coin(40, "apple"), coin(44, "plum")),
+			},
+			expErr: "cannot settle different ask \"33peach\" and bid \"77plum\" price denoms",
+		},
+		{
+			name: "different ask and bid denoms",
+			askOrders: []*Order{
+				askOrder(15, coin(10, "apple"), coin(11, "peach")),
+				askOrder(16, coin(20, "apple"), coin(22, "peach")),
+			},
+			bidOrders: []*Order{
+				bidOrder(2001, coin(30, "acorn"), coin(33, "plum")),
+				bidOrder(2002, coin(40, "acorn"), coin(44, "plum")),
+			},
+			expErr: joinErrs(
+				"cannot settle different ask \"30apple\" and bid \"70acorn\" asset denoms",
+				"cannot settle different ask \"33peach\" and bid \"77plum\" price denoms",
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = validateCanSettle(tc.askOrders, tc.bidOrders)
+			}
+			require.NotPanics(t, testFunc, "validateCanSettle")
+			assertions.AssertErrorValue(t, err, tc.expErr, "validateCanSettle error")
+		})
+	}
 }
 
 func TestAllocateAssets(t *testing.T) {

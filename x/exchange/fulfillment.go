@@ -412,7 +412,7 @@ func validateCanSettle(askOrders, bidOrders []*Order) error {
 			totalAskPrice, totalBidPrice))
 	}
 
-	// Note: We don't compare the asset and price amounts because we need to know what's
+	// Note: We don't compare the total asset and price amounts because we need to know what's
 	// being partially filled before we can make an assertions about the amounts.
 
 	return errors.Join(errs...)

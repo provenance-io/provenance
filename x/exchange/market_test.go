@@ -17,6 +17,11 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
+// joinErrs joines the provided error strings into a single one to match what errors.Join does.
+func joinErrs(errs ...string) string {
+	return strings.Join(errs, "\n")
+}
+
 func TestMarket_Validate(t *testing.T) {
 	coins := func(coins string) sdk.Coins {
 		rv, err := sdk.ParseCoinsNormalized(coins)
@@ -180,9 +185,6 @@ func TestMarket_Validate(t *testing.T) {
 }
 
 func TestValidateFeeOptions(t *testing.T) {
-	joinErrs := func(errs ...string) string {
-		return strings.Join(errs, "\n")
-	}
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
@@ -394,9 +396,6 @@ func TestMarketDetails_Validate(t *testing.T) {
 func TestValidateFeeRatios(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
-	}
-	joinErrs := func(errs ...string) string {
-		return strings.Join(errs, "\n")
 	}
 
 	tests := []struct {
@@ -1651,9 +1650,6 @@ func TestValidateAddRemoveFeeRatiosWithExisting(t *testing.T) {
 	ratio := func(price, fee sdk.Coin) FeeRatio {
 		return FeeRatio{Price: price, Fee: fee}
 	}
-	joinErrs := func(errs ...string) string {
-		return strings.Join(errs, "\n")
-	}
 	noRemErr := func(field, fee string) string {
 		return fmt.Sprintf("cannot remove %s ratio fee %q: no such ratio exists", field, fee)
 	}
@@ -1841,9 +1837,6 @@ func TestValidateRatioDenoms(t *testing.T) {
 	ratio := func(price, fee sdk.Coin) FeeRatio {
 		return FeeRatio{Price: price, Fee: fee}
 	}
-	joinErrs := func(errs ...string) string {
-		return strings.Join(errs, "\n")
-	}
 	noBuyerDenomErr := func(denom string) string {
 		return fmt.Sprintf("seller settlement fee ratios have price denom %q but there "+
 			"are no buyer settlement fee ratios with that price denom", denom)
@@ -1978,9 +1971,6 @@ func TestValidateRatioDenoms(t *testing.T) {
 func TestValidateAddRemoveFeeOptions(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
-	}
-	joinErrs := func(errs ...string) string {
-		return strings.Join(errs, "\n")
 	}
 
 	tests := []struct {
@@ -2118,9 +2108,6 @@ func TestValidateAddRemoveFeeOptionsWithExisting(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
-	joinErrs := func(errs ...string) string {
-		return strings.Join(errs, "\n")
-	}
 	noRemErr := func(field, fee string) string {
 		return fmt.Sprintf("cannot remove %s flat fee %q: no such fee exists", field, fee)
 	}
@@ -2249,9 +2236,6 @@ func TestValidateAddRemoveFeeOptionsWithExisting(t *testing.T) {
 }
 
 func TestValidateAccessGrantsField(t *testing.T) {
-	joinErrs := func(errs ...string) string {
-		return strings.Join(errs, "\n")
-	}
 	addrDup := sdk.AccAddress("duplicate_address___").String()
 	addr1 := sdk.AccAddress("address_1___________").String()
 	addr2 := sdk.AccAddress("address_2___________").String()
@@ -3207,9 +3191,6 @@ func TestNormalizeReqAttrs(t *testing.T) {
 }
 
 func TestValidateReqAttrsAreNormalized(t *testing.T) {
-	joinErrs := func(errs ...string) string {
-		return strings.Join(errs, "\n")
-	}
 	notNormErr := func(field, attr, norm string) string {
 		return fmt.Sprintf("%s required attribute %q is not normalized, expected %q", field, attr, norm)
 	}
@@ -3328,10 +3309,6 @@ func TestValidateReqAttrsAreNormalized(t *testing.T) {
 }
 
 func TestValidateReqAttrs(t *testing.T) {
-	joinErrs := func(errs ...string) string {
-		return strings.Join(errs, "\n")
-	}
-
 	tests := []struct {
 		name  string
 		field string
