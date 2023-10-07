@@ -3761,8 +3761,241 @@ func TestValidateFulfillments(t *testing.T) {
 }
 
 func TestBuildTransfers(t *testing.T) {
-	// TODO[1658]: func TestBuildTransfers(t *testing.T)
-	t.Skipf("not written")
+	tests := []struct {
+		name          string
+		askOFs        []*OrderFulfillment
+		bidOFs        []*OrderFulfillment
+		expSettlement *Settlement
+		expErr        string
+	}{
+		{
+			name: "ask with negative assets filled",
+			askOFs: []*OrderFulfillment{
+				{
+					Order: NewOrder(18).WithAsk(&AskOrder{
+						Assets: sdk.NewInt64Coin("apple", 15),
+						Price:  sdk.NewInt64Coin("plum", 42),
+					}),
+					AssetsFilledAmt: sdkmath.NewInt(-1),
+					PriceAppliedAmt: sdkmath.NewInt(-1),
+				},
+			},
+			expErr: "ask order 18 cannot be filled with \"-1apple\" assets: amount not positive",
+		},
+		{
+			name: "bid with negative assets filled",
+			bidOFs: []*OrderFulfillment{
+				{
+					Order: NewOrder(12).WithBid(&BidOrder{
+						Assets: sdk.NewInt64Coin("apple", 15),
+						Price:  sdk.NewInt64Coin("plum", 42),
+					}),
+					AssetsFilledAmt: sdkmath.NewInt(-1),
+					PriceAppliedAmt: sdkmath.NewInt(-1),
+				},
+			},
+			expErr: "bid order 12 cannot be filled at price \"-1plum\": amount not positive",
+		},
+		{
+			name: "ask with negative fees to pay",
+			askOFs: []*OrderFulfillment{
+				{
+					Order: NewOrder(53).WithAsk(&AskOrder{
+						Assets: sdk.NewInt64Coin("apple", 15),
+						Price:  sdk.NewInt64Coin("plum", 42),
+					}),
+					AssetsFilledAmt: sdkmath.NewInt(15),
+					AssetDists:      []*Distribution{{Address: "buyer1", Amount: sdkmath.NewInt(15)}},
+					PriceAppliedAmt: sdkmath.NewInt(42),
+					PriceDists:      []*Distribution{{Address: "seller1", Amount: sdkmath.NewInt(42)}},
+					FeesToPay:       sdk.Coins{sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(-1)}},
+				},
+			},
+			expErr: "ask order 53 cannot pay \"-1fig\" in fees: negative amount",
+		},
+		{
+			name: "bid with negative fees to pay",
+			bidOFs: []*OrderFulfillment{
+				{
+					Order: NewOrder(35).WithBid(&BidOrder{
+						Assets: sdk.NewInt64Coin("apple", 15),
+						Price:  sdk.NewInt64Coin("plum", 42),
+					}),
+					AssetsFilledAmt: sdkmath.NewInt(15),
+					AssetDists:      []*Distribution{{Address: "seller1", Amount: sdkmath.NewInt(15)}},
+					PriceAppliedAmt: sdkmath.NewInt(42),
+					PriceDists:      []*Distribution{{Address: "seller1", Amount: sdkmath.NewInt(42)}},
+					FeesToPay:       sdk.Coins{sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(-1)}},
+				},
+			},
+			expErr: "bid order 35 cannot pay \"-1fig\" in fees: negative amount",
+		},
+		{
+			name: "two asks, three bids",
+			askOFs: []*OrderFulfillment{
+				{
+					Order: NewOrder(77).WithAsk(&AskOrder{
+						Seller: "seller77",
+						Assets: sdk.NewInt64Coin("apple", 15),
+						Price:  sdk.NewInt64Coin("plum", 42),
+					}),
+					AssetsFilledAmt: sdkmath.NewInt(15),
+					AssetDists: []*Distribution{
+						{Address: "buyer5511", Amount: sdkmath.NewInt(15)},
+					},
+					PriceAppliedAmt: sdkmath.NewInt(43),
+					PriceDists: []*Distribution{
+						{Address: "buyer5511", Amount: sdkmath.NewInt(30)},
+						{Address: "buyer78", Amount: sdkmath.NewInt(12)},
+						{Address: "buyer9001", Amount: sdkmath.NewInt(1)},
+					},
+					FeesToPay: sdk.Coins{sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(11)}},
+				},
+				{
+					Order: NewOrder(3).WithAsk(&AskOrder{
+						Seller: "seller3",
+						Assets: sdk.NewInt64Coin("apple", 43),
+						Price:  sdk.NewInt64Coin("plum", 88),
+					}),
+					AssetsFilledAmt: sdkmath.NewInt(43),
+					AssetDists: []*Distribution{
+						{Address: "buyer5511", Amount: sdkmath.NewInt(5)},
+						{Address: "buyer78", Amount: sdkmath.NewInt(7)},
+						{Address: "buyer9001", Amount: sdkmath.NewInt(31)},
+					},
+					PriceAppliedAmt: sdkmath.NewInt(90),
+					PriceDists: []*Distribution{
+						{Address: "buyer78", Amount: sdkmath.NewInt(5)},
+						{Address: "buyer9001", Amount: sdkmath.NewInt(83)},
+						{Address: "buyer9001", Amount: sdkmath.NewInt(2)},
+					},
+					FeesToPay: nil,
+				},
+			},
+			bidOFs: []*OrderFulfillment{
+				{
+					Order: NewOrder(5511).WithBid(&BidOrder{
+						Buyer:  "buyer5511",
+						Assets: sdk.NewInt64Coin("apple", 20),
+						Price:  sdk.NewInt64Coin("plum", 30),
+					}),
+					AssetsFilledAmt: sdkmath.NewInt(20),
+					AssetDists: []*Distribution{
+						{Address: "seller77", Amount: sdkmath.NewInt(15)},
+						{Address: "seller3", Amount: sdkmath.NewInt(5)},
+					},
+					PriceAppliedAmt: sdkmath.NewInt(30),
+					PriceDists: []*Distribution{
+						{Address: "seller77", Amount: sdkmath.NewInt(30)},
+					},
+					FeesToPay: sdk.Coins{sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(10)}},
+				},
+				{
+					Order: NewOrder(78).WithBid(&BidOrder{
+						Buyer:  "buyer78",
+						Assets: sdk.NewInt64Coin("apple", 7),
+						Price:  sdk.NewInt64Coin("plum", 15),
+					}),
+					AssetsFilledAmt: sdkmath.NewInt(7),
+					AssetDists: []*Distribution{
+						{Address: "seller3", Amount: sdkmath.NewInt(7)},
+					},
+					PriceAppliedAmt: sdkmath.NewInt(15),
+					PriceDists: []*Distribution{
+						{Address: "seller77", Amount: sdkmath.NewInt(12)},
+						{Address: "seller3", Amount: sdkmath.NewInt(3)},
+					},
+					FeesToPay: sdk.Coins{sdk.Coin{Denom: "grape", Amount: sdkmath.NewInt(4)}},
+				},
+				{
+					Order: NewOrder(9001).WithBid(&BidOrder{
+						Buyer:  "buyer9001",
+						Assets: sdk.NewInt64Coin("apple", 31),
+						Price:  sdk.NewInt64Coin("plum", 86),
+					}),
+					AssetsFilledAmt: sdkmath.NewInt(31),
+					AssetDists: []*Distribution{
+						{Address: "seller3", Amount: sdkmath.NewInt(31)},
+					},
+					PriceAppliedAmt: sdkmath.NewInt(86),
+					PriceDists: []*Distribution{
+						{Address: "seller3", Amount: sdkmath.NewInt(83)},
+						{Address: "seller77", Amount: sdkmath.NewInt(2)},
+						{Address: "seller3", Amount: sdkmath.NewInt(1)},
+					},
+					FeesToPay: nil,
+				},
+			},
+			expSettlement: &Settlement{
+				Transfers: []*Transfer{
+					{
+						Inputs:  []banktypes.Input{{Address: "seller77", Coins: sdk.NewCoins(sdk.NewInt64Coin("apple", 15))}},
+						Outputs: []banktypes.Output{{Address: "buyer5511", Coins: sdk.NewCoins(sdk.NewInt64Coin("apple", 15))}},
+					},
+					{
+						Inputs: []banktypes.Input{{Address: "seller3", Coins: sdk.NewCoins(sdk.NewInt64Coin("apple", 43))}},
+						Outputs: []banktypes.Output{
+							{Address: "buyer5511", Coins: sdk.NewCoins(sdk.NewInt64Coin("apple", 5))},
+							{Address: "buyer78", Coins: sdk.NewCoins(sdk.NewInt64Coin("apple", 7))},
+							{Address: "buyer9001", Coins: sdk.NewCoins(sdk.NewInt64Coin("apple", 31))},
+						},
+					},
+					{
+						Inputs:  []banktypes.Input{{Address: "buyer5511", Coins: sdk.NewCoins(sdk.NewInt64Coin("plum", 30))}},
+						Outputs: []banktypes.Output{{Address: "seller77", Coins: sdk.NewCoins(sdk.NewInt64Coin("plum", 30))}},
+					},
+					{
+						Inputs: []banktypes.Input{{Address: "buyer78", Coins: sdk.NewCoins(sdk.NewInt64Coin("plum", 15))}},
+						Outputs: []banktypes.Output{
+							{Address: "seller77", Coins: sdk.NewCoins(sdk.NewInt64Coin("plum", 12))},
+							{Address: "seller3", Coins: sdk.NewCoins(sdk.NewInt64Coin("plum", 3))},
+						},
+					},
+					{
+						Inputs: []banktypes.Input{{Address: "buyer9001", Coins: sdk.NewCoins(sdk.NewInt64Coin("plum", 86))}},
+						Outputs: []banktypes.Output{
+							{Address: "seller3", Coins: sdk.NewCoins(sdk.NewInt64Coin("plum", 84))},
+							{Address: "seller77", Coins: sdk.NewCoins(sdk.NewInt64Coin("plum", 2))},
+						},
+					},
+				},
+				FeeInputs: []banktypes.Input{
+					{Address: "seller77", Coins: sdk.NewCoins(sdk.NewInt64Coin("fig", 11))},
+					{Address: "buyer5511", Coins: sdk.NewCoins(sdk.NewInt64Coin("fig", 10))},
+					{Address: "buyer78", Coins: sdk.NewCoins(sdk.NewInt64Coin("grape", 4))},
+				},
+			},
+			expErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			settlement := &Settlement{}
+			if tc.expSettlement == nil {
+				tc.expSettlement = &Settlement{}
+			}
+			var err error
+			testFunc := func() {
+				err = buildTransfers(tc.askOFs, tc.bidOFs, settlement)
+			}
+			require.NotPanics(t, testFunc, "buildTransfers")
+			assertions.AssertErrorValue(t, err, tc.expErr, "buildTransfers error")
+			if !assert.Equal(t, tc.expSettlement, settlement, "settlement after buildTransfers") {
+				expTransStrs := make([]string, len(tc.expSettlement.Transfers))
+				for i, t := range tc.expSettlement.Transfers {
+					expTransStrs[i] = fmt.Sprintf("[%d]%s", i, transferString(t))
+				}
+				expTrans := strings.Join(expTransStrs, "\n")
+				actTransStrs := make([]string, len(tc.expSettlement.Transfers))
+				for i, t := range settlement.Transfers {
+					actTransStrs[i] = fmt.Sprintf("[%d]%s", i, transferString(t))
+				}
+				actTrans := strings.Join(actTransStrs, "\n")
+				assert.Equal(t, expTrans, actTrans, "transfers (as strings)")
+			}
+		})
+	}
 }
 
 func TestPopulateFilled(t *testing.T) {
