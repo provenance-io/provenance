@@ -327,14 +327,6 @@ func BuildSettlement(askOrders, bidOrders []*Order, sellerFeeRatioLookup func(de
 		return nil, err
 	}
 
-	// Now, check that the ask price is not more than the bid price.
-	totalAskPriceAmt := sumPriceLeft(askOFs)
-	totalBidPriceAmt := sumPriceLeft(bidOFs)
-	if totalAskPriceAmt.GT(totalBidPriceAmt) {
-		return nil, fmt.Errorf("total ask price %q is greater than total bid price %q",
-			askOFs[0].priceCoin(totalAskPriceAmt), bidOFs[0].priceCoin(totalBidPriceAmt))
-	}
-
 	// Allocate the prices.
 	if err := allocatePrice(askOFs, bidOFs); err != nil {
 		return nil, err
