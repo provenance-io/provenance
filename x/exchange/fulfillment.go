@@ -507,7 +507,7 @@ func allocatePrice(askOFs, bidOFs []*OrderFulfillment) error {
 
 	// First pass at price distribution: Give all the asks their price.
 	b := 0
-	totalPriceFilledAmt := sdkmath.ZeroInt()
+	totalFilledFirstPass := sdkmath.ZeroInt()
 	for _, askOF := range askOFs {
 		for askOF.PriceLeftAmt.IsPositive() && bidOFs[b].PriceLeftAmt.IsPositive() {
 			priceFilledAmt, err := GetFulfillmentPriceAmt(askOF, bidOFs[b])
@@ -517,7 +517,7 @@ func allocatePrice(askOFs, bidOFs []*OrderFulfillment) error {
 			if err = DistributePrice(askOF, bidOFs[b], priceFilledAmt); err != nil {
 				return err
 			}
-			totalPriceFilledAmt = totalPriceFilledAmt.Add(priceFilledAmt)
+			totalFilledFirstPass = totalFilledFirstPass.Add(priceFilledAmt)
 			if !bidOFs[b].PriceLeftAmt.IsPositive() {
 				b++
 			}
@@ -527,12 +527,12 @@ func allocatePrice(askOFs, bidOFs []*OrderFulfillment) error {
 	// Above, we made sure that ask price <= bid price.
 	// So here, we can assume that total price filled = ask price.
 	// If it's also the total bid price, we're done!
-	if totalPriceFilledAmt.Equal(totalBidPriceAmt) {
+	if totalFilledFirstPass.Equal(totalBidPriceAmt) {
 		return nil
 	}
 
 	// We also know that total price filled <= bid price, so bid price - total price left will be positive.
-	totalLeftoverPriceAmt := totalBidPriceAmt.Sub(totalPriceFilledAmt)
+	totalLeftoverPriceAmt := totalBidPriceAmt.Sub(totalFilledFirstPass)
 	// We need an assets total so we can allocate the leftovers by assets amounts.
 	totalAssetsAmt := sdkmath.ZeroInt()
 	for _, askOF := range askOFs {
@@ -541,11 +541,12 @@ func allocatePrice(askOFs, bidOFs []*OrderFulfillment) error {
 
 	// Now, distribute the leftovers per asset (truncated).
 	// Start over on the asks, but start where we left off on the bids (since that's the first with any price left).
-	a := 0
+	a := -1
 	firstPass := true
 	leftoverPriceAmt := totalLeftoverPriceAmt
 	for !leftoverPriceAmt.IsZero() {
-		// Loop back to the first ask if we need to.
+		// Move on to the next ask, looping back to the first if we need to.
+		a++
 		if a == len(askOFs) {
 			a = 0
 			firstPass = false
@@ -563,7 +564,6 @@ func allocatePrice(askOFs, bidOFs []*OrderFulfillment) error {
 		addPriceAmt := totalLeftoverPriceAmt.Mul(askOFs[a].AssetsFilledAmt).Quo(totalAssetsAmt)
 		if addPriceAmt.IsZero() {
 			if firstPass {
-				a++
 				continue
 			}
 			// If this isn't the first time through the asks, distribute at least one price to each ask.
@@ -573,13 +573,12 @@ func allocatePrice(askOFs, bidOFs []*OrderFulfillment) error {
 		addPriceAmt = MinSDKInt(addPriceAmt, leftoverPriceAmt)
 
 		// If it can't all come out of the current bid, use the rest of what this bid has and move to the next bid.
-		for b < len(bidOFs) && bidOFs[b].PriceLeftAmt.LTE(addPriceAmt) {
+		for !addPriceAmt.IsZero() && b < len(bidOFs) && bidOFs[b].PriceLeftAmt.LTE(addPriceAmt) {
 			bidPriceLeft := bidOFs[b].PriceLeftAmt
 			if err := DistributePrice(askOFs[a], bidOFs[b], bidPriceLeft); err != nil {
 				return err
 			}
 			addPriceAmt = addPriceAmt.Sub(bidPriceLeft)
-			totalPriceFilledAmt = totalPriceFilledAmt.Add(bidPriceLeft)
 			leftoverPriceAmt = leftoverPriceAmt.Sub(bidPriceLeft)
 			b++
 		}
@@ -589,16 +588,12 @@ func allocatePrice(askOFs, bidOFs []*OrderFulfillment) error {
 			if err := DistributePrice(askOFs[a], bidOFs[b], addPriceAmt); err != nil {
 				return err
 			}
-			totalPriceFilledAmt = totalPriceFilledAmt.Add(addPriceAmt)
 			leftoverPriceAmt = leftoverPriceAmt.Sub(addPriceAmt)
 			// If that was all of it, move on to the next.
 			if bidOFs[b].PriceLeftAmt.IsZero() {
 				b++
 			}
 		}
-
-		// Move on to the next ask.
-		a++
 	}
 
 	return nil

@@ -3525,6 +3525,167 @@ func TestSplitOrderFulfillments(t *testing.T) {
 }
 
 func TestAllocatePrice(t *testing.T) {
+	askOrder := func(orderID uint64, assetsAmt, priceAmt int64) *Order {
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			MarketId: 123,
+			Seller:   fmt.Sprintf("seller%d", orderID),
+			Assets:   sdk.NewInt64Coin("apple", assetsAmt),
+			Price:    sdk.NewInt64Coin("peach", priceAmt),
+		})
+	}
+	bidOrder := func(orderID uint64, assetsAmt, priceAmt int64) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			MarketId: 123,
+			Buyer:    fmt.Sprintf("buyer%d", orderID),
+			Assets:   sdk.NewInt64Coin("apple", assetsAmt),
+			Price:    sdk.NewInt64Coin("peach", priceAmt),
+		})
+	}
+	newOF := func(order *Order, dists ...*Distribution) *OrderFulfillment {
+		rv := NewOrderFulfillment(order)
+		rv.AssetsFilledAmt, rv.AssetsUnfilledAmt = rv.AssetsUnfilledAmt, rv.AssetsFilledAmt
+		if len(dists) > 0 {
+			rv.PriceDists = dists
+			for _, dist := range dists {
+				rv.PriceAppliedAmt = rv.PriceAppliedAmt.Add(dist.Amount)
+			}
+			rv.PriceLeftAmt = rv.PriceLeftAmt.Sub(rv.PriceAppliedAmt)
+		}
+		return rv
+	}
+	dist := func(address string, amount int64) *Distribution {
+		return &Distribution{Address: address, Amount: sdkmath.NewInt(amount)}
+	}
+
+	tests := []struct {
+		name      string
+		askOFs    []*OrderFulfillment
+		bidOFs    []*OrderFulfillment
+		expAskOFs []*OrderFulfillment
+		expBidOFs []*OrderFulfillment
+		expErr    string
+	}{
+		{
+			name: "total ask price greater than total bid",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(3, 10, 20)),
+				newOF(askOrder(4, 10, 20)),
+				newOF(askOrder(5, 10, 20)),
+			},
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(6, 10, 20)),
+				newOF(bidOrder(7, 10, 19)),
+				newOF(bidOrder(8, 10, 20)),
+			},
+			expErr: "total ask price \"60peach\" is greater than total bid price \"59peach\"",
+		},
+		{
+			name:      "one ask, one bid: same price",
+			askOFs:    []*OrderFulfillment{newOF(askOrder(3, 10, 60))},
+			bidOFs:    []*OrderFulfillment{newOF(bidOrder(6, 10, 60))},
+			expAskOFs: []*OrderFulfillment{newOF(askOrder(3, 10, 60), dist("buyer6", 60))},
+			expBidOFs: []*OrderFulfillment{newOF(bidOrder(6, 10, 60), dist("seller3", 60))},
+		},
+		{
+			name:      "one ask, one bid: bid more",
+			askOFs:    []*OrderFulfillment{newOF(askOrder(3, 10, 60))},
+			bidOFs:    []*OrderFulfillment{newOF(bidOrder(6, 10, 65))},
+			expAskOFs: []*OrderFulfillment{newOF(askOrder(3, 10, 60), dist("buyer6", 60), dist("buyer6", 5))},
+			expBidOFs: []*OrderFulfillment{newOF(bidOrder(6, 10, 65), dist("seller3", 60), dist("seller3", 5))},
+		},
+		{
+			name: "two asks, two bids: same total price, diff ask prices",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(3, 10, 21)),
+				newOF(askOrder(4, 10, 19)),
+			},
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(6, 10, 20)),
+				newOF(bidOrder(7, 10, 20)),
+			},
+			expAskOFs: []*OrderFulfillment{
+				newOF(askOrder(3, 10, 21), dist("buyer6", 20), dist("buyer7", 1)),
+				newOF(askOrder(4, 10, 19), dist("buyer7", 19)),
+			},
+			expBidOFs: []*OrderFulfillment{
+				newOF(bidOrder(6, 10, 20), dist("seller3", 20)),
+				newOF(bidOrder(7, 10, 20), dist("seller3", 1), dist("seller4", 19)),
+			},
+		},
+		{
+			name: "three asks, three bids: same total price",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(3, 10, 25)),
+				newOF(askOrder(4, 10, 20)),
+				newOF(askOrder(5, 10, 15)),
+			},
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(6, 10, 18)),
+				newOF(bidOrder(7, 10, 30)),
+				newOF(bidOrder(8, 10, 12)),
+			},
+			expAskOFs: []*OrderFulfillment{
+				newOF(askOrder(3, 10, 25), dist("buyer6", 18), dist("buyer7", 7)),
+				newOF(askOrder(4, 10, 20), dist("buyer7", 20)),
+				newOF(askOrder(5, 10, 15), dist("buyer7", 3), dist("buyer8", 12)),
+			},
+			expBidOFs: []*OrderFulfillment{
+				newOF(bidOrder(6, 10, 18), dist("seller3", 18)),
+				newOF(bidOrder(7, 10, 30), dist("seller3", 7), dist("seller4", 20), dist("seller5", 3)),
+				newOF(bidOrder(8, 10, 12), dist("seller5", 12)),
+			},
+		},
+		{
+			name: "three asks, three bids: bids more",
+			askOFs: []*OrderFulfillment{
+				newOF(askOrder(3, 1, 10)),
+				newOF(askOrder(4, 7, 25)),
+				newOF(askOrder(5, 22, 30)),
+			},
+			bidOFs: []*OrderFulfillment{
+				newOF(bidOrder(6, 10, 20)),
+				newOF(bidOrder(7, 10, 27)),
+				newOF(bidOrder(8, 10, 30)),
+			},
+			// assets total = 30
+			// ask price total = 65
+			// bid price total = 77
+			// leftover = 12
+			expAskOFs: []*OrderFulfillment{
+				// 12 * 1 / 30 = 0.4 => 0, then 1
+				newOF(askOrder(3, 1, 10), dist("buyer6", 10),
+					dist("buyer8", 1)),
+				// 12 * 7 / 30 = 2.8 => 2, then because there'll only be 1 left, 1
+				newOF(askOrder(4, 7, 25), dist("buyer6", 10), dist("buyer7", 15),
+					dist("buyer8", 2), dist("buyer8", 1)),
+				// 12 * 22 / 30 = 8.8 => 8, then nothing because leftovers run out before getting back to it.
+				newOF(askOrder(5, 22, 30), dist("buyer7", 12), dist("buyer8", 18),
+					dist("buyer8", 8)),
+			},
+			expBidOFs: []*OrderFulfillment{
+				newOF(bidOrder(6, 10, 20), dist("seller3", 10), dist("seller4", 10)),
+				newOF(bidOrder(7, 10, 27), dist("seller4", 15), dist("seller5", 12)),
+				newOF(bidOrder(8, 10, 30), dist("seller5", 18), dist("seller4", 2),
+					dist("seller5", 8), dist("seller3", 1), dist("seller4", 1)),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = allocatePrice(tc.askOFs, tc.bidOFs)
+			}
+			require.NotPanics(t, testFunc, "allocatePrice")
+			assertions.AssertErrorValue(t, err, tc.expErr, "allocatePrice error")
+			if len(tc.expErr) > 0 {
+				return
+			}
+			assertEqualOrderFulfillmentSlices(t, tc.expAskOFs, tc.askOFs, "askOFs after allocatePrice")
+			assertEqualOrderFulfillmentSlices(t, tc.expBidOFs, tc.bidOFs, "bidOFs after allocatePrice")
+		})
+	}
 	// TODO[1658]: func TestAllocatePrice(t *testing.T)
 	t.Skipf("not written")
 }
