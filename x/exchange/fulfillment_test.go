@@ -1,6 +1,7 @@
 package exchange
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -237,6 +238,62 @@ func orderFulfillmentString(f *OrderFulfillment) string {
 		fmt.Sprintf("PriceUnfilledAmt:%s", f.PriceUnfilledAmt),
 	}
 	return fmt.Sprintf("{%s}", strings.Join(fields, ", "))
+}
+
+// transfersStringsLines creates a string for each transfer.
+func transfersStringsLines(ts []*Transfer) []string {
+	if ts == nil {
+		return nil
+	}
+	rv := make([]string, len(ts))
+	for i, t := range ts {
+		rv[i] = transferString(t)
+	}
+	return rv
+}
+
+// transferString is similar to %v except with easier to understand Coin entries.
+func transferString(t *Transfer) string {
+	if t == nil {
+		return "nil"
+	}
+	inputs := bankInputsString(t.Inputs)
+	outputs := bankOutputsString(t.Outputs)
+	return fmt.Sprintf("T{Inputs:%s, Outputs: %s}", inputs, outputs)
+}
+
+// bankInputString is similar to %v except with easier to understand Coin entries.
+func bankInputString(i banktypes.Input) string {
+	return fmt.Sprintf("I{Address:%q,Coins:%q}", i.Address, i.Coins)
+}
+
+// bankInputsString returns a string with all the provided inputs.
+func bankInputsString(ins []banktypes.Input) string {
+	if ins == nil {
+		return "nil"
+	}
+	vals := make([]string, len(ins))
+	for i, input := range ins {
+		vals[i] = bankInputString(input)
+	}
+	return fmt.Sprintf("[%s]", strings.Join(vals, ", "))
+}
+
+// bankOutputString is similar to %v except with easier to understand Coin entries.
+func bankOutputString(o banktypes.Output) string {
+	return fmt.Sprintf("O{Address:%q,Coins:%q}", o.Address, o.Coins)
+}
+
+// bankOutputsString returns a string with all the provided outputs.
+func bankOutputsString(outs []banktypes.Output) string {
+	if outs == nil {
+		return "nil"
+	}
+	vals := make([]string, len(outs))
+	for i, output := range outs {
+		vals[i] = bankOutputString(output)
+	}
+	return fmt.Sprintf("[%s]", strings.Join(vals, ", "))
 }
 
 // assertEqualOrderFulfillments asserts that the two order fulfillments are equal.
@@ -2507,8 +2564,737 @@ func TestSumPriceLeft(t *testing.T) {
 }
 
 func TestBuildSettlement(t *testing.T) {
-	// TODO[1658]: func TestBuildSettlement(t *testing.T)
-	t.Skipf("not written")
+	assetDenom, priceDenom := "apple", "peach"
+	feeDenoms := []string{"fig", "grape"}
+	feeCoins := func(tracer string, amts []int64) sdk.Coins {
+		if len(amts) == 0 {
+			return nil
+		}
+		if len(amts) > len(feeDenoms) {
+			t.Fatalf("cannot create %s with more than %d fees %v", tracer, len(feeDenoms), amts)
+		}
+		var rv sdk.Coins
+		for i, amt := range amts {
+			rv = rv.Add(sdk.NewInt64Coin(feeDenoms[i], amt))
+		}
+		return rv
+	}
+	askOrder := func(orderID uint64, assets, price int64, allowPartial bool, fees ...int64) *Order {
+		if len(fees) > 1 {
+			t.Fatalf("cannot create ask order %d with more than 1 fees %v", orderID, fees)
+		}
+		var fee *sdk.Coin
+		if fc := feeCoins("", fees); !fc.IsZero() {
+			fee = &fc[0]
+		}
+		return NewOrder(orderID).WithAsk(&AskOrder{
+			Seller:                  fmt.Sprintf("seller%d", orderID),
+			Assets:                  sdk.NewInt64Coin(assetDenom, assets),
+			Price:                   sdk.NewInt64Coin(priceDenom, price),
+			SellerSettlementFlatFee: fee,
+			AllowPartial:            allowPartial,
+		})
+	}
+	bidOrder := func(orderID uint64, assets, price int64, allowPartial bool, fees ...int64) *Order {
+		return NewOrder(orderID).WithBid(&BidOrder{
+			Buyer:               fmt.Sprintf("buyer%d", orderID),
+			Assets:              sdk.NewInt64Coin(assetDenom, assets),
+			Price:               sdk.NewInt64Coin(priceDenom, price),
+			BuyerSettlementFees: feeCoins(fmt.Sprintf("bid order %d", orderID), fees),
+			AllowPartial:        allowPartial,
+		})
+	}
+	ratio := func(price, fee int64) func(denom string) (*FeeRatio, error) {
+		return func(denom string) (*FeeRatio, error) {
+			return &FeeRatio{Price: sdk.NewInt64Coin(priceDenom, price), Fee: sdk.NewInt64Coin(feeDenoms[0], fee)}, nil
+		}
+	}
+	filled := func(order *Order, price int64, fees ...int64) *FilledOrder {
+		return NewFilledOrder(order,
+			sdk.NewInt64Coin(priceDenom, price),
+			feeCoins(fmt.Sprintf("filled order %d", order), fees))
+	}
+	assetsInput := func(orderID uint64, amount int64) banktypes.Input {
+		return banktypes.Input{
+			Address: fmt.Sprintf("seller%d", orderID),
+			Coins:   sdk.NewCoins(sdk.NewInt64Coin(assetDenom, amount)),
+		}
+	}
+	assetsOutput := func(orderID uint64, amount int64) banktypes.Output {
+		return banktypes.Output{
+			Address: fmt.Sprintf("buyer%d", orderID),
+			Coins:   sdk.NewCoins(sdk.NewInt64Coin(assetDenom, amount)),
+		}
+	}
+	priceInput := func(orderID uint64, amount int64) banktypes.Input {
+		return banktypes.Input{
+			Address: fmt.Sprintf("buyer%d", orderID),
+			Coins:   sdk.NewCoins(sdk.NewInt64Coin(priceDenom, amount)),
+		}
+	}
+	priceOutput := func(orderID uint64, amount int64) banktypes.Output {
+		return banktypes.Output{
+			Address: fmt.Sprintf("seller%d", orderID),
+			Coins:   sdk.NewCoins(sdk.NewInt64Coin(priceDenom, amount)),
+		}
+	}
+	feeInput := func(address string, amts ...int64) banktypes.Input {
+		return banktypes.Input{Address: address, Coins: feeCoins("bank input for "+address, amts)}
+	}
+
+	tests := []struct {
+		name                 string
+		askOrders            []*Order
+		bidOrders            []*Order
+		sellerFeeRatioLookup func(denom string) (*FeeRatio, error)
+		expSettlement        *Settlement
+		expErr               string
+	}{
+		{
+			// error from validateCanSettle
+			name:      "no ask orders",
+			askOrders: []*Order{},
+			bidOrders: []*Order{bidOrder(3, 1, 10, false)},
+			expErr:    "no ask orders provided",
+		},
+		{
+			name:      "error from ratio lookup",
+			askOrders: []*Order{askOrder(3, 1, 10, false)},
+			bidOrders: []*Order{bidOrder(4, 1, 10, false)},
+			sellerFeeRatioLookup: func(denom string) (*FeeRatio, error) {
+				return nil, errors.New("this is a test error")
+			},
+			expErr: "this is a test error",
+		},
+		{
+			name:      "error from setFeesToPay",
+			askOrders: []*Order{askOrder(3, 1, 10, false)},
+			bidOrders: []*Order{bidOrder(4, 1, 10, false)},
+			sellerFeeRatioLookup: func(denom string) (*FeeRatio, error) {
+				return &FeeRatio{Price: sdk.NewInt64Coin("prune", 10), Fee: sdk.NewInt64Coin("fig", 1)}, nil
+			},
+			expErr: "failed calculate ratio fee for ask order 3: cannot apply ratio 10prune:1fig to price 10peach: incorrect price denom",
+		},
+		{
+			name:      "one ask, three bids: last bid not used",
+			askOrders: []*Order{askOrder(3, 10, 20, false)},
+			bidOrders: []*Order{
+				bidOrder(4, 7, 14, false),
+				bidOrder(5, 3, 6, false),
+				bidOrder(6, 1, 2, false),
+			},
+			expErr: "bid order 6 (at index 2) has no assets filled",
+		},
+		{
+			name: "three asks, one bids: last ask not used",
+			askOrders: []*Order{
+				askOrder(11, 7, 14, false),
+				askOrder(12, 3, 14, false),
+				askOrder(13, 1, 14, false),
+			},
+			bidOrders: []*Order{bidOrder(14, 10, 20, false)},
+			expErr:    "ask order 13 (at index 2) has no assets filled",
+		},
+		{
+			name: "two asks, two bids: same assets total, total bid price not enough",
+			askOrders: []*Order{
+				askOrder(1, 10, 25, false),
+				askOrder(2, 10, 15, false),
+			},
+			bidOrders: []*Order{
+				bidOrder(8, 10, 20, false),
+				bidOrder(9, 10, 19, false),
+			},
+			expErr: "total ask price \"40peach\" is greater than total bid price \"39peach\"",
+		},
+		{
+			name: "two asks, two bids: ask partial, total bid price not enough",
+			askOrders: []*Order{
+				askOrder(1, 10, 20, false),
+				askOrder(2, 10, 20, true),
+			},
+			bidOrders: []*Order{
+				bidOrder(8, 10, 20, false),
+				bidOrder(9, 9, 17, false),
+			},
+			expErr: "total ask price \"38peach\" is greater than total bid price \"37peach\"",
+		},
+		{
+			name: "two asks, two bids: bid partial, total bid price not enough",
+			askOrders: []*Order{
+				askOrder(1, 10, 25, false),
+				askOrder(2, 10, 15, false),
+			},
+			bidOrders: []*Order{
+				bidOrder(8, 10, 19, false),
+				bidOrder(9, 11, 22, true),
+			},
+			expErr: "total ask price \"40peach\" is greater than total bid price \"39peach\"",
+		},
+		{
+			name:                 "one ask, one bid: both fully filled",
+			askOrders:            []*Order{askOrder(52, 10, 100, false, 2)},
+			bidOrders:            []*Order{bidOrder(11, 10, 105, false, 3, 4)},
+			sellerFeeRatioLookup: ratio(4, 1),
+			expSettlement: &Settlement{
+				Transfers: []*Transfer{
+					{Inputs: []banktypes.Input{assetsInput(52, 10)}, Outputs: []banktypes.Output{assetsOutput(11, 10)}},
+					{Inputs: []banktypes.Input{priceInput(11, 105)}, Outputs: []banktypes.Output{priceOutput(52, 105)}},
+				},
+				FeeInputs: []banktypes.Input{
+					feeInput("seller52", 29),
+					feeInput("buyer11", 3, 4),
+				},
+				FullyFilledOrders: []*FilledOrder{
+					filled(askOrder(52, 10, 100, false, 2), 105, 29),
+					filled(bidOrder(11, 10, 105, false, 3, 4), 105, 3, 4),
+				},
+			},
+		},
+		{
+			name:      "one ask, one bid: ask partially filled",
+			askOrders: []*Order{askOrder(99, 10, 100, true)},
+			bidOrders: []*Order{bidOrder(15, 9, 90, false)},
+			expSettlement: &Settlement{
+				Transfers: []*Transfer{
+					{Inputs: []banktypes.Input{assetsInput(99, 9)}, Outputs: []banktypes.Output{assetsOutput(15, 9)}},
+					{Inputs: []banktypes.Input{priceInput(15, 90)}, Outputs: []banktypes.Output{priceOutput(99, 90)}},
+				},
+				FullyFilledOrders:  []*FilledOrder{filled(bidOrder(15, 9, 90, false), 90)},
+				PartialOrderFilled: filled(askOrder(99, 9, 90, true), 90),
+				PartialOrderLeft:   askOrder(99, 1, 10, true),
+			},
+		},
+		{
+			name:      "one ask, one bid: ask partially filled, not allowed",
+			askOrders: []*Order{askOrder(99, 10, 100, false)},
+			bidOrders: []*Order{bidOrder(15, 9, 90, false)},
+			expErr:    "cannot split ask order 99 having assets \"10apple\" at \"9apple\": order does not allow partial fulfillment",
+		},
+		{
+			name:      "one ask, one bid: bid partially filled",
+			askOrders: []*Order{askOrder(8, 9, 85, false, 2)},
+			bidOrders: []*Order{bidOrder(12, 10, 100, true)},
+			expSettlement: &Settlement{
+				Transfers: []*Transfer{
+					{Inputs: []banktypes.Input{assetsInput(8, 9)}, Outputs: []banktypes.Output{assetsOutput(12, 9)}},
+					{Inputs: []banktypes.Input{priceInput(12, 90)}, Outputs: []banktypes.Output{priceOutput(8, 90)}},
+				},
+				FeeInputs:          []banktypes.Input{feeInput("seller8", 2)},
+				FullyFilledOrders:  []*FilledOrder{filled(askOrder(8, 9, 85, false, 2), 90, 2)},
+				PartialOrderFilled: filled(bidOrder(12, 9, 90, true), 90),
+				PartialOrderLeft:   bidOrder(12, 1, 10, true),
+			},
+		},
+		{
+			name:      "one ask, one bid: bid partially filled, not allowed",
+			askOrders: []*Order{askOrder(8, 9, 85, false, 2)},
+			bidOrders: []*Order{bidOrder(12, 10, 100, false)},
+			expErr:    "cannot split bid order 12 having assets \"10apple\" at \"9apple\": order does not allow partial fulfillment",
+		},
+		{
+			name:      "one ask, five bids: all fully filled",
+			askOrders: []*Order{askOrder(999, 130, 260, false)},
+			bidOrders: []*Order{
+				bidOrder(11, 71, 140, false),
+				bidOrder(12, 10, 20, false, 5),
+				bidOrder(13, 4, 12, false),
+				bidOrder(14, 11, 22, false),
+				bidOrder(15, 34, 68, false, 8),
+			},
+			sellerFeeRatioLookup: ratio(65, 3),
+			expSettlement: &Settlement{
+				Transfers: []*Transfer{
+					{
+						Inputs: []banktypes.Input{assetsInput(999, 130)},
+						Outputs: []banktypes.Output{
+							assetsOutput(11, 71),
+							assetsOutput(12, 10),
+							assetsOutput(13, 4),
+							assetsOutput(14, 11),
+							assetsOutput(15, 34),
+						},
+					},
+					{Inputs: []banktypes.Input{priceInput(11, 140)}, Outputs: []banktypes.Output{priceOutput(999, 140)}},
+					{Inputs: []banktypes.Input{priceInput(12, 20)}, Outputs: []banktypes.Output{priceOutput(999, 20)}},
+					{Inputs: []banktypes.Input{priceInput(13, 12)}, Outputs: []banktypes.Output{priceOutput(999, 12)}},
+					{Inputs: []banktypes.Input{priceInput(14, 22)}, Outputs: []banktypes.Output{priceOutput(999, 22)}},
+					{Inputs: []banktypes.Input{priceInput(15, 68)}, Outputs: []banktypes.Output{priceOutput(999, 68)}},
+				},
+				FeeInputs: []banktypes.Input{
+					feeInput("seller999", 13),
+					feeInput("buyer12", 5),
+					feeInput("buyer15", 8),
+				},
+				FullyFilledOrders: []*FilledOrder{
+					filled(askOrder(999, 130, 260, false), 262, 13),
+					filled(bidOrder(11, 71, 140, false), 140),
+					filled(bidOrder(12, 10, 20, false, 5), 20, 5),
+					filled(bidOrder(13, 4, 12, false), 12),
+					filled(bidOrder(14, 11, 22, false), 22),
+					filled(bidOrder(15, 34, 68, false, 8), 68, 8),
+				},
+			},
+		},
+		{
+			name:      "one ask, five bids: ask partially filled",
+			askOrders: []*Order{askOrder(999, 131, 262, true)},
+			bidOrders: []*Order{
+				bidOrder(11, 71, 140, false),
+				bidOrder(12, 10, 20, false),
+				bidOrder(13, 4, 12, false),
+				bidOrder(14, 11, 22, false),
+				bidOrder(15, 34, 68, false),
+			},
+			expSettlement: &Settlement{
+				Transfers: []*Transfer{
+					{
+						Inputs: []banktypes.Input{assetsInput(999, 130)},
+						Outputs: []banktypes.Output{
+							assetsOutput(11, 71),
+							assetsOutput(12, 10),
+							assetsOutput(13, 4),
+							assetsOutput(14, 11),
+							assetsOutput(15, 34),
+						},
+					},
+					{Inputs: []banktypes.Input{priceInput(11, 140)}, Outputs: []banktypes.Output{priceOutput(999, 140)}},
+					{Inputs: []banktypes.Input{priceInput(12, 20)}, Outputs: []banktypes.Output{priceOutput(999, 20)}},
+					{Inputs: []banktypes.Input{priceInput(13, 12)}, Outputs: []banktypes.Output{priceOutput(999, 12)}},
+					{Inputs: []banktypes.Input{priceInput(14, 22)}, Outputs: []banktypes.Output{priceOutput(999, 22)}},
+					{Inputs: []banktypes.Input{priceInput(15, 68)}, Outputs: []banktypes.Output{priceOutput(999, 68)}},
+				},
+				FeeInputs: nil,
+				FullyFilledOrders: []*FilledOrder{
+					filled(bidOrder(11, 71, 140, false), 140),
+					filled(bidOrder(12, 10, 20, false), 20),
+					filled(bidOrder(13, 4, 12, false), 12),
+					filled(bidOrder(14, 11, 22, false), 22),
+					filled(bidOrder(15, 34, 68, false), 68),
+				},
+				PartialOrderFilled: filled(askOrder(999, 130, 260, true), 262),
+				PartialOrderLeft:   askOrder(999, 1, 2, true),
+			},
+		},
+		{
+			name:      "one ask, five bids: bid partially filled",
+			askOrders: []*Order{askOrder(999, 130, 260, false)},
+			bidOrders: []*Order{
+				bidOrder(11, 71, 140, false),
+				bidOrder(12, 10, 20, false),
+				bidOrder(13, 4, 12, false),
+				bidOrder(14, 11, 22, false),
+				bidOrder(15, 35, 70, true),
+			},
+			expSettlement: &Settlement{
+				Transfers: []*Transfer{
+					{
+						Inputs: []banktypes.Input{assetsInput(999, 130)},
+						Outputs: []banktypes.Output{
+							assetsOutput(11, 71),
+							assetsOutput(12, 10),
+							assetsOutput(13, 4),
+							assetsOutput(14, 11),
+							assetsOutput(15, 34),
+						},
+					},
+					{Inputs: []banktypes.Input{priceInput(11, 140)}, Outputs: []banktypes.Output{priceOutput(999, 140)}},
+					{Inputs: []banktypes.Input{priceInput(12, 20)}, Outputs: []banktypes.Output{priceOutput(999, 20)}},
+					{Inputs: []banktypes.Input{priceInput(13, 12)}, Outputs: []banktypes.Output{priceOutput(999, 12)}},
+					{Inputs: []banktypes.Input{priceInput(14, 22)}, Outputs: []banktypes.Output{priceOutput(999, 22)}},
+					{Inputs: []banktypes.Input{priceInput(15, 68)}, Outputs: []banktypes.Output{priceOutput(999, 68)}},
+				},
+				FeeInputs: nil,
+				FullyFilledOrders: []*FilledOrder{
+					filled(askOrder(999, 130, 260, false), 262),
+					filled(bidOrder(11, 71, 140, false), 140),
+					filled(bidOrder(12, 10, 20, false), 20),
+					filled(bidOrder(13, 4, 12, false), 12),
+					filled(bidOrder(14, 11, 22, false), 22),
+				},
+				PartialOrderFilled: filled(bidOrder(15, 34, 68, true), 68),
+				PartialOrderLeft:   bidOrder(15, 1, 2, true),
+			},
+		},
+		{
+			name: "five ask, one bids: all fully filled",
+			askOrders: []*Order{
+				askOrder(51, 37, 74, false, 1),
+				askOrder(52, 21, 42, false, 2),
+				askOrder(53, 15, 30, false, 3),
+				askOrder(54, 9, 18, false, 4),
+				askOrder(55, 55, 110, false, 5),
+			},
+			bidOrders: []*Order{bidOrder(777, 137, 280, false, 7)},
+			expSettlement: &Settlement{
+				Transfers: []*Transfer{
+					{Inputs: []banktypes.Input{assetsInput(51, 37)}, Outputs: []banktypes.Output{assetsOutput(777, 37)}},
+					{Inputs: []banktypes.Input{assetsInput(52, 21)}, Outputs: []banktypes.Output{assetsOutput(777, 21)}},
+					{Inputs: []banktypes.Input{assetsInput(53, 15)}, Outputs: []banktypes.Output{assetsOutput(777, 15)}},
+					{Inputs: []banktypes.Input{assetsInput(54, 9)}, Outputs: []banktypes.Output{assetsOutput(777, 9)}},
+					{Inputs: []banktypes.Input{assetsInput(55, 55)}, Outputs: []banktypes.Output{assetsOutput(777, 55)}},
+					{
+						Inputs: []banktypes.Input{priceInput(777, 280)},
+						Outputs: []banktypes.Output{
+							priceOutput(51, 76),
+							priceOutput(52, 43),
+							priceOutput(53, 31),
+							priceOutput(54, 18),
+							priceOutput(55, 112),
+						},
+					},
+				},
+				FeeInputs: []banktypes.Input{
+					feeInput("seller51", 1),
+					feeInput("seller52", 2),
+					feeInput("seller53", 3),
+					feeInput("seller54", 4),
+					feeInput("seller55", 5),
+					feeInput("buyer777", 7),
+				},
+				FullyFilledOrders: []*FilledOrder{
+					filled(askOrder(51, 37, 74, false, 1), 76, 1),
+					filled(askOrder(52, 21, 42, false, 2), 43, 2),
+					filled(askOrder(53, 15, 30, false, 3), 31, 3),
+					filled(askOrder(54, 9, 18, false, 4), 18, 4),
+					filled(askOrder(55, 55, 110, false, 5), 112, 5),
+					filled(bidOrder(777, 137, 280, false, 7), 280, 7),
+				},
+			},
+		},
+		{
+			name: "five ask, one bids: ask partially filled",
+			askOrders: []*Order{
+				askOrder(51, 37, 74, false),
+				askOrder(52, 21, 42, false),
+				askOrder(53, 15, 30, false),
+				askOrder(54, 9, 18, false),
+				askOrder(55, 57, 114, true),
+			},
+			bidOrders:            []*Order{bidOrder(777, 137, 280, false)},
+			sellerFeeRatioLookup: ratio(50, 1),
+			expSettlement: &Settlement{
+				Transfers: []*Transfer{
+					{Inputs: []banktypes.Input{assetsInput(51, 37)}, Outputs: []banktypes.Output{assetsOutput(777, 37)}},
+					{Inputs: []banktypes.Input{assetsInput(52, 21)}, Outputs: []banktypes.Output{assetsOutput(777, 21)}},
+					{Inputs: []banktypes.Input{assetsInput(53, 15)}, Outputs: []banktypes.Output{assetsOutput(777, 15)}},
+					{Inputs: []banktypes.Input{assetsInput(54, 9)}, Outputs: []banktypes.Output{assetsOutput(777, 9)}},
+					{Inputs: []banktypes.Input{assetsInput(55, 55)}, Outputs: []banktypes.Output{assetsOutput(777, 55)}},
+					{
+						Inputs: []banktypes.Input{priceInput(777, 280)},
+						Outputs: []banktypes.Output{
+							priceOutput(51, 76),
+							priceOutput(52, 43),
+							priceOutput(53, 31),
+							priceOutput(54, 18),
+							priceOutput(55, 112),
+						},
+					},
+				},
+				FeeInputs: []banktypes.Input{
+					feeInput("seller51", 2),
+					feeInput("seller52", 1),
+					feeInput("seller53", 1),
+					feeInput("seller54", 1),
+					feeInput("seller55", 3),
+				},
+				FullyFilledOrders: []*FilledOrder{
+					filled(askOrder(51, 37, 74, false), 76, 2),
+					filled(askOrder(52, 21, 42, false), 43, 1),
+					filled(askOrder(53, 15, 30, false), 31, 1),
+					filled(askOrder(54, 9, 18, false), 18, 1),
+					filled(bidOrder(777, 137, 280, false), 280),
+				},
+				PartialOrderFilled: filled(askOrder(55, 55, 110, true), 112, 3),
+				PartialOrderLeft:   askOrder(55, 2, 4, true),
+			},
+		},
+		{
+			name: "five ask, one bids: bid partially filled",
+			askOrders: []*Order{
+				askOrder(51, 37, 74, false),
+				askOrder(52, 21, 42, false),
+				askOrder(53, 15, 30, false),
+				askOrder(54, 9, 18, false),
+				askOrder(55, 55, 110, false),
+			},
+			bidOrders: []*Order{bidOrder(777, 274, 560, true)},
+			expSettlement: &Settlement{
+				Transfers: []*Transfer{
+					{Inputs: []banktypes.Input{assetsInput(51, 37)}, Outputs: []banktypes.Output{assetsOutput(777, 37)}},
+					{Inputs: []banktypes.Input{assetsInput(52, 21)}, Outputs: []banktypes.Output{assetsOutput(777, 21)}},
+					{Inputs: []banktypes.Input{assetsInput(53, 15)}, Outputs: []banktypes.Output{assetsOutput(777, 15)}},
+					{Inputs: []banktypes.Input{assetsInput(54, 9)}, Outputs: []banktypes.Output{assetsOutput(777, 9)}},
+					{Inputs: []banktypes.Input{assetsInput(55, 55)}, Outputs: []banktypes.Output{assetsOutput(777, 55)}},
+					{
+						Inputs: []banktypes.Input{priceInput(777, 280)},
+						Outputs: []banktypes.Output{
+							priceOutput(51, 76),
+							priceOutput(52, 43),
+							priceOutput(53, 31),
+							priceOutput(54, 18),
+							priceOutput(55, 112),
+						},
+					},
+				},
+				FullyFilledOrders: []*FilledOrder{
+					filled(askOrder(51, 37, 74, false), 76),
+					filled(askOrder(52, 21, 42, false), 43),
+					filled(askOrder(53, 15, 30, false), 31),
+					filled(askOrder(54, 9, 18, false), 18),
+					filled(askOrder(55, 55, 110, false), 112),
+				},
+				PartialOrderFilled: filled(bidOrder(777, 137, 280, true), 280),
+				PartialOrderLeft:   bidOrder(777, 137, 280, true),
+			},
+		},
+		{
+			name: "two asks, three bids: all fully filled",
+			askOrders: []*Order{
+				askOrder(11, 100, 1000, false),
+				askOrder(22, 200, 2000, false),
+			},
+			bidOrders: []*Order{
+				bidOrder(33, 75, 700, false),
+				bidOrder(44, 130, 1302, false),
+				bidOrder(55, 95, 1000, false),
+			},
+			expSettlement: &Settlement{
+				Transfers: []*Transfer{
+					{
+						Inputs: []banktypes.Input{assetsInput(11, 100)},
+						Outputs: []banktypes.Output{
+							assetsOutput(33, 75),
+							assetsOutput(44, 25),
+						},
+					},
+					{
+						Inputs: []banktypes.Input{assetsInput(22, 200)},
+						Outputs: []banktypes.Output{
+							assetsOutput(44, 105),
+							assetsOutput(55, 95),
+						},
+					},
+					{
+						Inputs:  []banktypes.Input{priceInput(33, 700)},
+						Outputs: []banktypes.Output{priceOutput(11, 700)},
+					},
+					{
+						Inputs: []banktypes.Input{priceInput(44, 1302)},
+						Outputs: []banktypes.Output{
+							priceOutput(11, 300),
+							priceOutput(22, 1002),
+						},
+					},
+					{
+						Inputs: []banktypes.Input{priceInput(55, 1000)},
+						Outputs: []banktypes.Output{
+							priceOutput(22, 999),
+							priceOutput(11, 1),
+						},
+					},
+				},
+				FullyFilledOrders: []*FilledOrder{
+					filled(askOrder(11, 100, 1000, false), 1001),
+					filled(askOrder(22, 200, 2000, false), 2001),
+					filled(bidOrder(33, 75, 700, false), 700),
+					filled(bidOrder(44, 130, 1302, false), 1302),
+					filled(bidOrder(55, 95, 1000, false), 1000),
+				},
+			},
+		},
+		{
+			name: "two asks, three bids: ask partially filled",
+			askOrders: []*Order{
+				askOrder(11, 100, 1000, false),
+				askOrder(22, 300, 3000, true),
+			},
+			bidOrders: []*Order{
+				bidOrder(33, 75, 700, false),
+				bidOrder(44, 130, 1302, false),
+				bidOrder(55, 95, 1000, false),
+			},
+			sellerFeeRatioLookup: ratio(100, 1),
+			expSettlement: &Settlement{
+				Transfers: []*Transfer{
+					{
+						Inputs: []banktypes.Input{assetsInput(11, 100)},
+						Outputs: []banktypes.Output{
+							assetsOutput(33, 75),
+							assetsOutput(44, 25),
+						},
+					},
+					{
+						Inputs: []banktypes.Input{assetsInput(22, 200)},
+						Outputs: []banktypes.Output{
+							assetsOutput(44, 105),
+							assetsOutput(55, 95),
+						},
+					},
+					{
+						Inputs:  []banktypes.Input{priceInput(33, 700)},
+						Outputs: []banktypes.Output{priceOutput(11, 700)},
+					},
+					{
+						Inputs: []banktypes.Input{priceInput(44, 1302)},
+						Outputs: []banktypes.Output{
+							priceOutput(11, 300),
+							priceOutput(22, 1002),
+						},
+					},
+					{
+						Inputs: []banktypes.Input{priceInput(55, 1000)},
+						Outputs: []banktypes.Output{
+							priceOutput(22, 999),
+							priceOutput(11, 1),
+						},
+					},
+				},
+				FeeInputs: []banktypes.Input{
+					feeInput("seller11", 11),
+					feeInput("seller22", 21),
+				},
+				FullyFilledOrders: []*FilledOrder{
+					filled(askOrder(11, 100, 1000, false), 1001, 11),
+					filled(bidOrder(33, 75, 700, false), 700),
+					filled(bidOrder(44, 130, 1302, false), 1302),
+					filled(bidOrder(55, 95, 1000, false), 1000),
+				},
+				PartialOrderFilled: filled(askOrder(22, 200, 2000, true), 2001, 21),
+				PartialOrderLeft:   askOrder(22, 100, 1000, true),
+			},
+		},
+		{
+			name: "two asks, three bids: ask partially filled, not allowed",
+			askOrders: []*Order{
+				askOrder(11, 100, 1000, true),
+				askOrder(22, 300, 3000, false),
+			},
+			bidOrders: []*Order{
+				bidOrder(33, 75, 700, true),
+				bidOrder(44, 130, 1302, true),
+				bidOrder(55, 95, 1000, true),
+			},
+			expErr: "cannot split ask order 22 having assets \"300apple\" at \"200apple\": order does not allow partial fulfillment",
+		},
+		{
+			name: "two asks, three bids: bid partially filled",
+			askOrders: []*Order{
+				askOrder(11, 100, 1000, false),
+				askOrder(22, 200, 2000, false),
+			},
+			bidOrders: []*Order{
+				bidOrder(33, 75, 700, false),
+				bidOrder(44, 130, 1352, false),
+				bidOrder(55, 100, 1000, true, 40, 20),
+			},
+			expSettlement: &Settlement{
+				Transfers: []*Transfer{
+					{
+						Inputs: []banktypes.Input{assetsInput(11, 100)},
+						Outputs: []banktypes.Output{
+							assetsOutput(33, 75),
+							assetsOutput(44, 25),
+						},
+					},
+					{
+						Inputs: []banktypes.Input{assetsInput(22, 200)},
+						Outputs: []banktypes.Output{
+							assetsOutput(44, 105),
+							assetsOutput(55, 95),
+						},
+					},
+					{
+						Inputs:  []banktypes.Input{priceInput(33, 700)},
+						Outputs: []banktypes.Output{priceOutput(11, 700)},
+					},
+					{
+						Inputs: []banktypes.Input{priceInput(44, 1352)},
+						Outputs: []banktypes.Output{
+							priceOutput(11, 300),
+							priceOutput(22, 1052),
+						},
+					},
+					{
+						Inputs: []banktypes.Input{priceInput(55, 950)},
+						Outputs: []banktypes.Output{
+							priceOutput(22, 949),
+							priceOutput(11, 1),
+						},
+					},
+				},
+				FeeInputs: []banktypes.Input{feeInput("buyer55", 38, 19)},
+				FullyFilledOrders: []*FilledOrder{
+					filled(askOrder(11, 100, 1000, false), 1001),
+					filled(askOrder(22, 200, 2000, false), 2001),
+					filled(bidOrder(33, 75, 700, false), 700),
+					filled(bidOrder(44, 130, 1352, false), 1352),
+				},
+				PartialOrderFilled: filled(bidOrder(55, 95, 950, true, 38, 19), 950, 38, 19),
+				PartialOrderLeft:   bidOrder(55, 5, 50, true, 2, 1),
+			},
+		},
+		{
+			name: "two asks, three bids: bid partially filled, not allowed",
+			askOrders: []*Order{
+				askOrder(11, 100, 1000, true),
+				askOrder(22, 200, 2000, true),
+			},
+			bidOrders: []*Order{
+				bidOrder(33, 75, 700, true),
+				bidOrder(44, 130, 1352, true),
+				bidOrder(55, 100, 1000, false, 40, 20),
+			},
+			sellerFeeRatioLookup: nil,
+			expSettlement:        nil,
+			expErr:               "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.sellerFeeRatioLookup == nil {
+				tc.sellerFeeRatioLookup = func(denom string) (*FeeRatio, error) {
+					return nil, nil
+				}
+			}
+			var settlement *Settlement
+			var err error
+			testFunc := func() {
+				settlement, err = BuildSettlement(tc.askOrders, tc.bidOrders, tc.sellerFeeRatioLookup)
+			}
+			require.NotPanics(t, testFunc, "BuildSettlement")
+			assertions.RequireErrorValue(t, err, tc.expErr, "BuildSettlement error")
+			if !assert.Equal(t, tc.expSettlement, settlement, "BuildSettlement result") {
+				// Doing each field on its own now to try to help pinpoint the differences.
+				expTrans := transfersStringsLines(tc.expSettlement.Transfers)
+				actTrans := transfersStringsLines(settlement.Transfers)
+				assert.Equal(t, expTrans, actTrans, "Transfers (as strings)")
+
+				expFeeInputs := bankInputsString(tc.expSettlement.FeeInputs)
+				actFeeInputs := bankInputsString(settlement.FeeInputs)
+				assert.Equal(t, expFeeInputs, actFeeInputs, "FeeInputs (as strings)")
+
+				expFilledIds := make([]uint64, len(tc.expSettlement.FullyFilledOrders))
+				for i, fo := range tc.expSettlement.FullyFilledOrders {
+					expFilledIds[i] = fo.GetOrderID()
+				}
+				actFilledIds := make([]uint64, len(settlement.FullyFilledOrders))
+				for i, fo := range settlement.FullyFilledOrders {
+					actFilledIds[i] = fo.GetOrderID()
+				}
+				if assert.Equal(t, expFilledIds, actFilledIds, "FullyFilledOrders ids") {
+					// If they're the same ids, compare each individually.
+					for i := range tc.expSettlement.FullyFilledOrders {
+						assert.Equal(t, tc.expSettlement.FullyFilledOrders[i], settlement.FullyFilledOrders[i], "FullyFilledOrders[%d]", i)
+					}
+				}
+
+				assert.Equal(t, tc.expSettlement.PartialOrderFilled, settlement.PartialOrderFilled, "PartialOrderFilled")
+				assert.Equal(t, tc.expSettlement.PartialOrderLeft, settlement.PartialOrderLeft, "PartialOrderLeft")
+			}
+		})
+	}
 }
 
 func TestValidateCanSettle(t *testing.T) {
@@ -3686,8 +4472,6 @@ func TestAllocatePrice(t *testing.T) {
 			assertEqualOrderFulfillmentSlices(t, tc.expBidOFs, tc.bidOFs, "bidOFs after allocatePrice")
 		})
 	}
-	// TODO[1658]: func TestAllocatePrice(t *testing.T)
-	t.Skipf("not written")
 }
 
 func TestSetFeesToPay(t *testing.T) {
@@ -10101,40 +10885,6 @@ func TestBuildSettlementTransfers(t *testing.T) {
 			assert.Equal(t, tc.expected, actual, "BuildSettlementTransfers result")
 		})
 	}
-}
-
-// transferString is similar to %v except with easier to understand Coin entries.
-func transferString(t *Transfer) string {
-	if t == nil {
-		return "nil"
-	}
-	inputs := "nil"
-	if t.Inputs != nil {
-		inputVals := make([]string, len(t.Inputs))
-		for i, input := range t.Inputs {
-			inputVals[i] = bankInputString(input)
-		}
-		inputs = fmt.Sprintf("[%s]", strings.Join(inputVals, ", "))
-	}
-	outputs := "nil"
-	if t.Outputs != nil {
-		outputVals := make([]string, len(t.Outputs))
-		for i, output := range t.Outputs {
-			outputVals[i] = bankOutputString(output)
-		}
-		outputs = fmt.Sprintf("[%s]", strings.Join(outputVals, ", "))
-	}
-	return fmt.Sprintf("T{Inputs:%s, Outputs: %s}", inputs, outputs)
-}
-
-// bankInputString is similar to %v except with easier to understand Coin entries.
-func bankInputString(i banktypes.Input) string {
-	return fmt.Sprintf("I{Address:%q,Coins:%q}", i.Address, i.Coins)
-}
-
-// bankOutputString is similar to %v except with easier to understand Coin entries.
-func bankOutputString(o banktypes.Output) string {
-	return fmt.Sprintf("O{Address:%q,Coins:%q}", o.Address, o.Coins)
 }
 
 func TestGetAssetTransfer2(t *testing.T) {
