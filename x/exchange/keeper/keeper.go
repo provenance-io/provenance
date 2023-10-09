@@ -20,6 +20,13 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
+var (
+	// OneInt is an sdkmath.Int of 1.
+	OneInt = sdkmath.NewInt(1)
+	// TenKInt is an sdkmath.Int of 10,000.
+	TenKInt = sdkmath.NewInt(10_000)
+)
+
 // Keeper provides the exchange module's state store interactions.
 type Keeper struct {
 	cdc      codec.BinaryCodec
@@ -159,8 +166,14 @@ func (k Keeper) DoTransfer(ctxIn sdk.Context, inputs []banktypes.Input, outputs 
 			return fmt.Errorf("input coins %q does not equal output coins %q",
 				inputs[0].Coins, outputs[0].Coins)
 		}
-		fromAddr := sdk.MustAccAddressFromBech32(inputs[0].Address)
-		toAddr := sdk.MustAccAddressFromBech32(outputs[0].Address)
+		fromAddr, err := sdk.AccAddressFromBech32(inputs[0].Address)
+		if err != nil {
+			return fmt.Errorf("invalid inputs[0] address %q: %w", inputs[0].Address, err)
+		}
+		toAddr, err := sdk.AccAddressFromBech32(outputs[0].Address)
+		if err != nil {
+			return fmt.Errorf("invalid outputs[0] address %q: %w", outputs[0].Address, err)
+		}
 		return k.bankKeeper.SendCoins(ctx, fromAddr, toAddr, inputs[0].Coins)
 	}
 	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
@@ -168,6 +181,9 @@ func (k Keeper) DoTransfer(ctxIn sdk.Context, inputs []banktypes.Input, outputs 
 
 // CalculateExchangeSplit calculates the amount that the exchange will keep of the provided fee.
 func (k Keeper) CalculateExchangeSplit(ctx sdk.Context, feeAmt sdk.Coins) sdk.Coins {
+	if feeAmt.IsZero() {
+		return nil
+	}
 	exchangeAmt := make(sdk.Coins, 0, len(feeAmt))
 	for _, coin := range feeAmt {
 		if coin.Amount.IsZero() {
@@ -179,13 +195,14 @@ func (k Keeper) CalculateExchangeSplit(ctx sdk.Context, feeAmt sdk.Coins) sdk.Co
 			continue
 		}
 
-		splitAmt := coin.Amount.Mul(sdkmath.NewInt(split))
-		roundUp := !splitAmt.ModRaw(10_000).IsZero()
-		splitAmt = splitAmt.QuoRaw(10_000)
-		if roundUp {
-			splitAmt = splitAmt.Add(sdkmath.OneInt())
+		splitAmt, splitRem := exchange.QuoRemInt(coin.Amount.Mul(sdkmath.NewInt(split)), TenKInt)
+		if !splitRem.IsZero() {
+			splitAmt = splitAmt.Add(OneInt)
 		}
-		exchangeAmt = append(exchangeAmt, sdk.Coin{Denom: coin.Denom, Amount: splitAmt})
+		exchangeAmt = append(exchangeAmt, sdk.NewCoin(coin.Denom, splitAmt))
+	}
+	if exchangeAmt.IsZero() {
+		return nil
 	}
 	return exchangeAmt
 }
@@ -193,19 +210,19 @@ func (k Keeper) CalculateExchangeSplit(ctx sdk.Context, feeAmt sdk.Coins) sdk.Co
 // CollectFee will transfer the fee amount to the market account,
 // then the exchange's cut from the market to the fee collector.
 // If you have fees to collect from multiple payers, consider using CollectFees.
-func (k Keeper) CollectFee(ctx sdk.Context, marketID uint32, payer sdk.AccAddress, feeAmt sdk.Coins) error {
-	if feeAmt.IsZero() {
+func (k Keeper) CollectFee(ctx sdk.Context, marketID uint32, payer sdk.AccAddress, fee sdk.Coins) error {
+	if fee.IsZero() {
 		return nil
 	}
-	exchangeAmt := k.CalculateExchangeSplit(ctx, feeAmt)
+	exchangeSplit := k.CalculateExchangeSplit(ctx, fee)
 
 	marketAddr := exchange.GetMarketAddress(marketID)
-	if err := k.bankKeeper.SendCoins(ctx, payer, marketAddr, feeAmt); err != nil {
-		return fmt.Errorf("error transferring %s from %s to market %d: %w", feeAmt, payer, marketID, err)
+	if err := k.bankKeeper.SendCoins(ctx, payer, marketAddr, fee); err != nil {
+		return fmt.Errorf("error transferring %s from %s to market %d: %w", fee, payer, marketID, err)
 	}
-	if !exchangeAmt.IsZero() {
-		if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, marketAddr, k.feeCollectorName, exchangeAmt); err != nil {
-			return fmt.Errorf("error collecting exchange fee %s (based off %s) from market %d: %w", exchangeAmt, feeAmt, marketID, err)
+	if !exchangeSplit.IsZero() {
+		if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, marketAddr, k.feeCollectorName, exchangeSplit); err != nil {
+			return fmt.Errorf("error collecting exchange fee %s (based off %s) from market %d: %w", exchangeSplit, fee, marketID, err)
 		}
 	}
 
@@ -223,7 +240,7 @@ func (k Keeper) CollectFees(ctx sdk.Context, marketID uint32, inputs []banktypes
 		// If there's only one input, just use CollectFee for the nicer events.
 		payer, err := sdk.AccAddressFromBech32(inputs[0].Address)
 		if err != nil {
-			return fmt.Errorf("invalid payer address %q: %w", inputs[0].Address, err)
+			return fmt.Errorf("invalid inputs[0] address address %q: %w", inputs[0].Address, err)
 		}
 		return k.CollectFee(ctx, marketID, payer, inputs[0].Coins)
 	}
