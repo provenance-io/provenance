@@ -28,4 +28,5 @@ type BankKeeper interface {
 type HoldKeeper interface {
 	AddHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins, reason string) error
 	ReleaseHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error
+	GetHoldCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) (sdk.Coin, error)
 }
