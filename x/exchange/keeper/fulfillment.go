@@ -8,7 +8,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
@@ -131,11 +130,11 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 	assetInputs := []banktypes.Input{{Address: msg.Seller, Coins: msg.TotalAssets}}
 	priceOutputs := []banktypes.Output{{Address: msg.Seller, Coins: totalPrice}}
 
-	if err := k.bankKeeper.InputOutputCoins(ctx, assetInputs, assetOutputs); err != nil {
+	if err := k.DoTransfer(ctx, assetInputs, assetOutputs); err != nil {
 		return fmt.Errorf("error transferring assets from seller to buyers: %w", err)
 	}
 
-	if err := k.bankKeeper.InputOutputCoins(ctx, priceInputs, priceOutputs); err != nil {
+	if err := k.DoTransfer(ctx, priceInputs, priceOutputs); err != nil {
 		return fmt.Errorf("error transferring price from buyers to seller: %w", err)
 	}
 
