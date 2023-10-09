@@ -19,7 +19,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/provenance-io/provenance/x/exchange"
+	"github.com/provenance-io/provenance/x/exchange/client/cli"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
+	"github.com/provenance-io/provenance/x/exchange/simulation"
 )
 
 var (
@@ -64,16 +66,12 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ sdkclient.TxEncodin
 
 // GetQueryCmd returns the cli query commands for the exchange module.
 func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
-	// TODO[1658]: Create cli.QueryCmd()
-	panic("not implemented")
-	//return cli.QueryCmd()
+	return cli.CmdQuery()
 }
 
 // GetTxCmd returns the transaction commands for the exchange module.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	// TODO[1658]: Create cli.TxCmd()
-	panic("not implemented")
-	//return cli.TxCmd()
+	return cli.CmdTx()
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the exchange module.
@@ -133,9 +131,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // GenerateGenesisState creates a randomized GenState of the exchange module.
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	// TODO[1658]: Create simulation.RandomizedGenState(simState)
-	panic("not implemented")
-	//simulation.RandomizedGenState(simState)
+	simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents returns all the exchange content functions used to
@@ -150,14 +146,11 @@ func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange { return 
 
 // RegisterStoreDecoder registers a decoder for exchange module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	// TODO[1658]: Create simulation.NewDecodeStore(am.cdc)
-	panic("not implemented")
-	// sdr[exchange.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[exchange.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the exchange module operations with their respective weights,
 // of which there are none.
 func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
-	// TODO[1658]: Create the WeightedOperations.
-	panic("not implemented")
+	return simulation.WeightedOperations()
 }
