@@ -67,23 +67,23 @@ func (h MarkerHooks) AddUpdateMarker(ctx sdktypes.Context, packet exported.Packe
 		h.MarkerKeeper.SetMarker(ctx, marker)
 		return nil
 	}
-	return h.createNewIbcMarker(data, marker, ibcDenom, coinType, err, transferAuthAddrs, ctx, packet, ibcKeeper)
+	return h.createNewIbcMarker(data, ibcDenom, coinType, transferAuthAddrs, ctx, packet, ibcKeeper)
 }
 
 // createNewIbcMarker creates a new marker account for ibc token
-func (h MarkerHooks) createNewIbcMarker(data transfertypes.FungibleTokenPacketData, marker markertypes.MarkerAccountI, ibcDenom string, coinType markertypes.MarkerType, err error, transferAuthAddrs []sdktypes.AccAddress, ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) error {
-	amount, errParse := strconv.ParseInt(data.Amount, 10, 64)
-	if errParse != nil {
-		return errParse
+func (h MarkerHooks) createNewIbcMarker(data transfertypes.FungibleTokenPacketData, ibcDenom string, coinType markertypes.MarkerType, transferAuthAddrs []sdktypes.AccAddress, ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) error {
+	amount, err := strconv.ParseInt(data.Amount, 10, 64)
+	if err != nil {
+		return err
 	}
-	marker = markertypes.NewMarkerAccount(
+	marker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(ibcDenom)),
 		sdktypes.NewInt64Coin(ibcDenom, amount),
 		nil,
 		nil,
 		markertypes.StatusActive,
 		coinType,
-		false, //supply fixed
+		false, // supply fixed
 		false, // allow gov
 		false, // allow force transfer
 		[]string{},
@@ -94,11 +94,11 @@ func (h MarkerHooks) createNewIbcMarker(data transfertypes.FungibleTokenPacketDa
 	if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
 		return err
 	}
-	return h.addDenomMetaData(ctx, packet, ibcKeeper, ibcDenom, data, err)
+	return h.addDenomMetaData(ctx, packet, ibcKeeper, ibcDenom, data)
 }
 
 // addDenomMetaData adds denom metadata for ibc token
-func (h MarkerHooks) addDenomMetaData(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper, ibcDenom string, data transfertypes.FungibleTokenPacketData, err error) error {
+func (h MarkerHooks) addDenomMetaData(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper, ibcDenom string, data transfertypes.FungibleTokenPacketData) error {
 	chainID := h.GetChainID(ctx, packet, ibcKeeper)
 	markerMetadata := banktypes.Metadata{
 		Base:        ibcDenom,
@@ -106,10 +106,7 @@ func (h MarkerHooks) addDenomMetaData(ctx sdktypes.Context, packet exported.Pack
 		Display:     chainID + "/" + data.Denom,
 		Description: data.Denom + " from chain " + chainID,
 	}
-	if err = h.MarkerKeeper.SetDenomMetaData(ctx, markerMetadata, authtypes.NewModuleAddress(types.ModuleName)); err != nil {
-		return err
-	}
-	return nil
+	return h.MarkerKeeper.SetDenomMetaData(ctx, markerMetadata, authtypes.NewModuleAddress(types.ModuleName))
 }
 
 // GetChainID returns the source chain id from packet for `07-tendermint` client connection or returns `unknown`
