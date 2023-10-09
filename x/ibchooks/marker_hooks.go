@@ -59,45 +59,55 @@ func (h MarkerHooks) AddUpdateMarker(ctx sdktypes.Context, packet exported.Packe
 	if err != nil {
 		return err
 	}
-	if marker == nil {
-		amount, errParse := strconv.ParseInt(data.Amount, 10, 64)
-		if errParse != nil {
-			return errParse
-		}
-		marker = markertypes.NewMarkerAccount(
-			authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(ibcDenom)),
-			sdktypes.NewInt64Coin(ibcDenom, amount),
-			nil,
-			nil,
-			markertypes.StatusActive,
-			coinType,
-			false, // supply fixed
-			false, // allow gov
-			false, // allow force transfer
-			[]string{},
-		)
-		if err = ResetMarkerAccessGrants(transferAuthAddrs, marker); err != nil {
-			return err
-		}
 
-		if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
-			return err
-		}
-		chainID := h.GetChainID(ctx, packet, ibcKeeper)
-		markerMetadata := banktypes.Metadata{
-			Base:        ibcDenom,
-			Name:        chainID + "/" + data.Denom,
-			Display:     chainID + "/" + data.Denom,
-			Description: data.Denom + " from chain " + chainID,
-		}
-		if err = h.MarkerKeeper.SetDenomMetaData(ctx, markerMetadata, authtypes.NewModuleAddress(types.ModuleName)); err != nil {
-			return err
-		}
-	} else {
+	if marker != nil {
 		if err = ResetMarkerAccessGrants(transferAuthAddrs, marker); err != nil {
 			return err
 		}
 		h.MarkerKeeper.SetMarker(ctx, marker)
+		return nil
+	}
+	return h.createNewIbcMarker(data, marker, ibcDenom, coinType, err, transferAuthAddrs, ctx, packet, ibcKeeper)
+}
+
+// createNewIbcMarker creates a new marker account for ibc token
+func (h MarkerHooks) createNewIbcMarker(data transfertypes.FungibleTokenPacketData, marker markertypes.MarkerAccountI, ibcDenom string, coinType markertypes.MarkerType, err error, transferAuthAddrs []sdktypes.AccAddress, ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) error {
+	amount, errParse := strconv.ParseInt(data.Amount, 10, 64)
+	if errParse != nil {
+		return errParse
+	}
+	marker = markertypes.NewMarkerAccount(
+		authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(ibcDenom)),
+		sdktypes.NewInt64Coin(ibcDenom, amount),
+		nil,
+		nil,
+		markertypes.StatusActive,
+		coinType,
+		false, //supply fixed
+		false, // allow gov
+		false, // allow force transfer
+		[]string{},
+	)
+	if err = ResetMarkerAccessGrants(transferAuthAddrs, marker); err != nil {
+		return err
+	}
+	if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
+		return err
+	}
+	return h.addDenomMetaData(ctx, packet, ibcKeeper, ibcDenom, data, err)
+}
+
+// addDenomMetaData adds denom metadata for ibc token
+func (h MarkerHooks) addDenomMetaData(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper, ibcDenom string, data transfertypes.FungibleTokenPacketData, err error) error {
+	chainID := h.GetChainID(ctx, packet, ibcKeeper)
+	markerMetadata := banktypes.Metadata{
+		Base:        ibcDenom,
+		Name:        chainID + "/" + data.Denom,
+		Display:     chainID + "/" + data.Denom,
+		Description: data.Denom + " from chain " + chainID,
+	}
+	if err = h.MarkerKeeper.SetDenomMetaData(ctx, markerMetadata, authtypes.NewModuleAddress(types.ModuleName)); err != nil {
+		return err
 	}
 	return nil
 }
