@@ -30,7 +30,7 @@ func NewMarkerHooks(markerkeeper *markerkeeper.Keeper) MarkerHooks {
 	}
 }
 
-// ProperlyConfigured returns false marker hooks are configured properly
+// ProperlyConfigured returns false when marker hooks are configured incorrectly
 func (h MarkerHooks) ProperlyConfigured() bool {
 	return h.MarkerKeeper != nil
 }

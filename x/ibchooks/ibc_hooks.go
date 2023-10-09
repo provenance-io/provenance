@@ -33,7 +33,7 @@ func NewIbcHooks(cdc codec.BinaryCodec, ibcHooksKeeper *keeper.Keeper, ibcKeeper
 	}
 }
 
-// ProperlyConfigured returns false if either wasm or marker hooks are configured properly
+// ProperlyConfigured returns false if either wasm or marker hooks are configured incorrectly
 func (h IbcHooks) ProperlyConfigured() bool {
 	return h.wasmHooks.ProperlyConfigured() && h.markerHooks.ProperlyConfigured() && h.ibcHooksKeeper != nil
 }

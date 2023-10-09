@@ -34,6 +34,7 @@ func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.Keep
 	}
 }
 
+// ProperlyConfigured returns false when wasm hooks are configured incorrectly
 func (h WasmHooks) ProperlyConfigured() bool {
 	return h.ContractKeeper != nil && h.ibcHooksKeeper != nil
 }
