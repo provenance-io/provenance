@@ -90,7 +90,7 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
 // RegisterInvariants registers the invariants for the exchange module.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
+func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Deprecated: Route returns the message routing key for the exchange module, empty.
 func (am AppModule) Route() sdk.Route { return sdk.Route{} }
