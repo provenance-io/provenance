@@ -25,7 +25,7 @@ func assertEverythingSet(t *testing.T, tev proto.Message, typeString string) boo
 	}
 
 	expType := "provenance.exchange.v1." + typeString
-	rv := assert.Equal(t, expType, event.Type, "%T event.Type")
+	rv := assert.Equal(t, expType, event.Type, "%T event.Type", tev)
 	for i, attrs := range event.Attributes {
 		rv = assert.NotEmpty(t, attrs.Key, "%T event.attributes[%d].Key", tev, i) && rv
 		rv = assert.NotEqual(t, `""`, attrs.Key, "%T event.attributes[%d].Key", tev, i) && rv
