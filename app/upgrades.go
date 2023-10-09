@@ -17,6 +17,7 @@ import (
 
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
@@ -116,7 +117,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
-		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.ModuleName, hold.ModuleName},
+		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.ModuleName, hold.ModuleName, exchange.ModuleName},
 	},
 	"saffron": { // upgrade for v1.17.0,
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -135,7 +136,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
-		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.ModuleName, hold.ModuleName},
+		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.ModuleName, hold.ModuleName, exchange.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
 }
