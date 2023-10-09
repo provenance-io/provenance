@@ -14,6 +14,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/quarantine"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
@@ -144,7 +145,10 @@ func (k Keeper) iterate(ctx sdk.Context, pre []byte, cb func(key, value []byte) 
 }
 
 // DoTransfer facilitates a transfer of things using the bank module.
-func (k Keeper) DoTransfer(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
+func (k Keeper) DoTransfer(ctxIn sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
+	// We bypass the quarantine module here under the assumption that someone creating
+	// an order counts as acceptance of the stuff to receive (that they defined when creating the order).
+	ctx := quarantine.WithBypass(ctxIn)
 	if len(inputs) == 1 && len(outputs) == 1 {
 		// If there's only one of each, we use SendCoins for the nicer events.
 		if !exchange.CoinsEquals(inputs[0].Coins, outputs[0].Coins) {
