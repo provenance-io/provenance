@@ -30,6 +30,7 @@ func toStrings[T any](vals []T, stringer func(T) string) []string {
 // If not, returns false and the stringer is applied to each entry and the comparison
 // is redone on the strings in the hopes that it helps identify the problem.
 func assertEqualSlice[T any](s *TestSuite, expected, actual []T, stringer func(T) string, msg string, args ...interface{}) bool {
+	s.T().Helper()
 	if s.Assert().Equalf(expected, actual, msg, args...) {
 		return true
 	}
@@ -40,18 +41,29 @@ func assertEqualSlice[T any](s *TestSuite, expected, actual []T, stringer func(T
 	return false
 }
 
+// #############################################################################
+// #############################                   #############################
+// ###########################   MockAccountKeeper   ###########################
+// #############################                   #############################
+// #############################################################################
+
+var _ exchange.AccountKeeper = (*MockAccountKeeper)(nil)
+
 // MockAccountKeeper satisfies the exchange.AccountKeeper interface but just records the calls and allows dictation of results.
 type MockAccountKeeper struct {
-	GetAccountCalls      []sdk.AccAddress
-	SetAccountCalls      []authtypes.AccountI
-	HasAccountCalls      []sdk.AccAddress
-	NewAccountCalls      []authtypes.AccountI
+	Calls                AccountCalls
 	GetAccountResultsMap map[string]authtypes.AccountI
 	HasAccountResultsMap map[string]bool
 	NewAccountResultsMap map[string]authtypes.AccountI
 }
 
-var _ exchange.AccountKeeper = (*MockAccountKeeper)(nil)
+// AccountCalls contains all the calls that the mock account keeper makes.
+type AccountCalls struct {
+	GetAccountCalls []sdk.AccAddress
+	SetAccountCalls []authtypes.AccountI
+	HasAccountCalls []sdk.AccAddress
+	NewAccountCalls []authtypes.AccountI
+}
 
 // NewMockAccountKeeper creates a new empty MockAccountKeeper.
 // Follow it up with WithGetAccountResult, WithHasAccountResult,
@@ -90,7 +102,7 @@ func (k *MockAccountKeeper) WithNewAccountResult(result authtypes.AccountI) *Moc
 }
 
 func (k *MockAccountKeeper) GetAccount(_ sdk.Context, addr sdk.AccAddress) authtypes.AccountI {
-	k.GetAccountCalls = append(k.GetAccountCalls, addr)
+	k.Calls.GetAccountCalls = append(k.Calls.GetAccountCalls, addr)
 	if rv, found := k.GetAccountResultsMap[string(addr)]; found {
 		return rv
 	}
@@ -98,11 +110,11 @@ func (k *MockAccountKeeper) GetAccount(_ sdk.Context, addr sdk.AccAddress) autht
 }
 
 func (k *MockAccountKeeper) SetAccount(_ sdk.Context, acc authtypes.AccountI) {
-	k.SetAccountCalls = append(k.SetAccountCalls, acc)
+	k.Calls.SetAccountCalls = append(k.Calls.SetAccountCalls, acc)
 }
 
 func (k *MockAccountKeeper) HasAccount(_ sdk.Context, addr sdk.AccAddress) bool {
-	k.HasAccountCalls = append(k.HasAccountCalls, addr)
+	k.Calls.HasAccountCalls = append(k.Calls.HasAccountCalls, addr)
 	if rv, found := k.HasAccountResultsMap[string(addr)]; found {
 		return rv
 	}
@@ -110,44 +122,77 @@ func (k *MockAccountKeeper) HasAccount(_ sdk.Context, addr sdk.AccAddress) bool 
 }
 
 func (k *MockAccountKeeper) NewAccount(_ sdk.Context, acc authtypes.AccountI) authtypes.AccountI {
-	k.NewAccountCalls = append(k.NewAccountCalls, acc)
+	k.Calls.NewAccountCalls = append(k.Calls.NewAccountCalls, acc)
 	if rv, found := k.NewAccountResultsMap[string(acc.GetAddress())]; found {
 		return rv
 	}
 	return acc
 }
 
-// assertEqualGetAccountCalls asserts that a mock keeper's GetAccountCalls match the provided expected calls.
-func (s *TestSuite) assertEqualGetAccountCalls(mk *MockAccountKeeper, expected []sdk.AccAddress, msg string, args ...interface{}) bool {
-	return assertEqualSlice(s, expected, mk.GetAccountCalls, s.getAddrName,
+// assertGetAccountCalls asserts that a mock keeper's GetAccountCalls match the provided expected calls.
+func (s *TestSuite) assertGetAccountCalls(mk *MockAccountKeeper, expected []sdk.AccAddress, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.GetAccountCalls, s.getAddrName,
 		msg+" GetAccount calls", args...)
 }
 
-// assertEqualSetAccountCalls asserts that a mock keeper's SetAccountCalls match the provided expected calls.
-func (s *TestSuite) assertEqualSetAccountCalls(mk *MockAccountKeeper, expected []authtypes.AccountI, msg string, args ...interface{}) bool {
-	return assertEqualSlice(s, expected, mk.SetAccountCalls, authtypes.AccountI.String,
+// assertSetAccountCalls asserts that a mock keeper's SetAccountCalls match the provided expected calls.
+func (s *TestSuite) assertSetAccountCalls(mk *MockAccountKeeper, expected []authtypes.AccountI, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.SetAccountCalls, authtypes.AccountI.String,
 		msg+" SetAccount calls", args...)
 }
 
-// assertEqualHasAccountCalls asserts that a mock keeper's HasAccountCalls match the provided expected calls.
-func (s *TestSuite) assertEqualHasAccountCalls(mk *MockAccountKeeper, expected []sdk.AccAddress, msg string, args ...interface{}) bool {
-	return assertEqualSlice(s, expected, mk.HasAccountCalls, s.getAddrName,
+// assertHasAccountCalls asserts that a mock keeper's HasAccountCalls match the provided expected calls.
+func (s *TestSuite) assertHasAccountCalls(mk *MockAccountKeeper, expected []sdk.AccAddress, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.HasAccountCalls, s.getAddrName,
 		msg+" HasAccount calls", args...)
 }
 
-// assertEqualNewAccountCalls asserts that a mock keeper's NewAccountCalls match the provided expected calls.
-func (s *TestSuite) assertEqualNewAccountCalls(mk *MockAccountKeeper, expected []authtypes.AccountI, msg string, args ...interface{}) bool {
-	return assertEqualSlice(s, expected, mk.NewAccountCalls, authtypes.AccountI.String,
+// assertNewAccountCalls asserts that a mock keeper's NewAccountCalls match the provided expected calls.
+func (s *TestSuite) assertNewAccountCalls(mk *MockAccountKeeper, expected []authtypes.AccountI, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.NewAccountCalls, authtypes.AccountI.String,
 		msg+" NewAccount calls", args...)
 }
 
-type MockAttributeKeeper struct {
-	GetAllAttributesAddrCalls      [][]byte
-	GetAllAttributesAddrResultsMap map[string]*GetAllAttributesAddrResult
+// assertAccountKeeperCalls asserts that all the calls made to a mock account keeper match the provided expected calls.
+func (s *TestSuite) assertAccountKeeperCalls(mk *MockAccountKeeper, expected AccountCalls, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	rv := s.assertGetAccountCalls(mk, expected.GetAccountCalls, msg, args...)
+	rv = s.assertSetAccountCalls(mk, expected.SetAccountCalls, msg, args...) && rv
+	rv = s.assertHasAccountCalls(mk, expected.HasAccountCalls, msg, args...) && rv
+	return s.assertNewAccountCalls(mk, expected.NewAccountCalls, msg, args...) && rv
 }
+
+// #############################################################################
+// ############################                     ############################
+// ##########################   MockAttributeKeeper   ##########################
+// ############################                     ############################
+// #############################################################################
 
 var _ exchange.AttributeKeeper = (*MockAttributeKeeper)(nil)
 
+// MockAttributeKeeper satisfies the exchange.AttributeKeeper interface but just records the calls and allows dictation of results.
+type MockAttributeKeeper struct {
+	Calls                          AttributeCalls
+	GetAllAttributesAddrResultsMap map[string]*GetAllAttributesAddrResult
+}
+
+// AttributeCalls contains all the calls that the mock attribute keeper makes.
+type AttributeCalls struct {
+	GetAllAttributesAddrCalls [][]byte
+}
+
+// GetAllAttributesAddrResult contains the result args to return for a GetAllAttributesAddr call.
+type GetAllAttributesAddrResult struct {
+	attrs []attrtypes.Attribute
+	err   error
+}
+
+// NewMockAttributeKeeper creates a new empty MockAttributeKeeper.
+// Follow it up with WithGetAllAttributesAddrResult to dictate results.
 func NewMockAttributeKeeper() *MockAttributeKeeper {
 	return &MockAttributeKeeper{
 		GetAllAttributesAddrResultsMap: make(map[string]*GetAllAttributesAddrResult),
@@ -163,26 +208,27 @@ func (k *MockAttributeKeeper) WithGetAllAttributesAddrResult(addr []byte, attrs 
 }
 
 func (k *MockAttributeKeeper) GetAllAttributesAddr(_ sdk.Context, addr []byte) ([]attrtypes.Attribute, error) {
-	k.GetAllAttributesAddrCalls = append(k.GetAllAttributesAddrCalls, addr)
+	k.Calls.GetAllAttributesAddrCalls = append(k.Calls.GetAllAttributesAddrCalls, addr)
 	if rv, found := k.GetAllAttributesAddrResultsMap[string(addr)]; found {
 		return rv.attrs, rv.err
 	}
 	return nil, nil
 }
 
-// assertEqualGetAllAttributesAddrCalls asserts that a mock keeper's GetAllAttributesAddrCalls match the provided expected calls.
-func (s *TestSuite) assertEqualGetAllAttributesAddrCalls(mk *MockAttributeKeeper, expected [][]byte, msg string, args ...interface{}) bool {
-	return assertEqualSlice(s, expected, mk.GetAllAttributesAddrCalls,
+// assertGetAllAttributesAddrCalls asserts that a mock keeper's GetAllAttributesAddrCalls match the provided expected calls.
+func (s *TestSuite) assertGetAllAttributesAddrCalls(mk *MockAttributeKeeper, expected [][]byte, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.GetAllAttributesAddrCalls,
 		func(addr []byte) string {
 			return s.getAddrName(addr)
 		},
 		msg+" NewAccount calls", args...)
 }
 
-// GetAllAttributesAddrResult contains the result args to return for a GetAllAttributesAddr call.
-type GetAllAttributesAddrResult struct {
-	attrs []attrtypes.Attribute
-	err   error
+// assertAttributeKeeperCalls asserts that all the calls made to a mock account keeper match the provided expected calls.
+func (s *TestSuite) assertAttributeKeeperCalls(mk *MockAttributeKeeper, expected AttributeCalls, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return s.assertGetAllAttributesAddrCalls(mk, expected.GetAllAttributesAddrCalls, msg, args...)
 }
 
 // NewGetAllAttributesAddrResult creates a new GetAllAttributesAddrResult from the provided stuff.
@@ -194,17 +240,51 @@ func NewGetAllAttributesAddrResult(attrs []attrtypes.Attribute, errStr string) *
 	return rv
 }
 
+// #############################################################################
+// ##############################                ###############################
+// ############################   MockBankKeeper   #############################
+// ##############################                ###############################
+// #############################################################################
+
+var _ exchange.BankKeeper = (*MockBankKeeper)(nil)
+
 // MockBankKeeper satisfies the exchange.BankKeeper interface but just records the calls and allows dictation of results.
 type MockBankKeeper struct {
-	SendCoinsCalls                           []*SendCoinsArgs
+	Calls                                    BankCalls
 	SendCoinsResultsQueue                    []string
-	SendCoinsFromAccountToModuleCalls        []*SendCoinsFromAccountToModuleArgs
 	SendCoinsFromAccountToModuleResultsQueue []string
-	InputOutputCoinsCalls                    []*InputOutputCoinsArgs
 	InputOutputCoinsResultsQueue             []string
 }
 
-var _ exchange.BankKeeper = (*MockBankKeeper)(nil)
+// BankCalls contains all the calls that the mock bank keeper makes.
+type BankCalls struct {
+	SendCoinsCalls                    []*SendCoinsArgs
+	SendCoinsFromAccountToModuleCalls []*SendCoinsFromAccountToModuleArgs
+	InputOutputCoinsCalls             []*InputOutputCoinsArgs
+}
+
+// SendCoinsArgs is a record of a call that is made to SendCoins.
+type SendCoinsArgs struct {
+	ctxHasQuarantineBypass bool
+	fromAddr               sdk.AccAddress
+	toAddr                 sdk.AccAddress
+	amt                    sdk.Coins
+}
+
+// SendCoinsFromAccountToModuleArgs is a record of a call that is made to SendCoinsFromAccountToModule.
+type SendCoinsFromAccountToModuleArgs struct {
+	ctxHasQuarantineBypass bool
+	senderAddr             sdk.AccAddress
+	recipientModule        string
+	amt                    sdk.Coins
+}
+
+// InputOutputCoinsArgs is a record of a call that is made to InputOutputCoins.
+type InputOutputCoinsArgs struct {
+	ctxHasQuarantineBypass bool
+	inputs                 []banktypes.Input
+	outputs                []banktypes.Output
+}
 
 // NewMockBankKeeper creates a new empty MockBankKeeper.
 // Follow it up with WithSendCoinsResults, WithSendCoinsFromAccountToModuleResults,
@@ -237,8 +317,8 @@ func (k *MockBankKeeper) WithInputOutputCoinsResults(errs ...string) *MockBankKe
 	return k
 }
 
-func (k MockBankKeeper) SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
-	k.SendCoinsCalls = append(k.SendCoinsCalls, NewSendCoinsArgs(ctx, fromAddr, toAddr, amt))
+func (k *MockBankKeeper) SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+	k.Calls.SendCoinsCalls = append(k.Calls.SendCoinsCalls, NewSendCoinsArgs(ctx, fromAddr, toAddr, amt))
 	var err error
 	if len(k.SendCoinsResultsQueue) > 0 {
 		if len(k.SendCoinsResultsQueue[0]) > 0 {
@@ -249,8 +329,8 @@ func (k MockBankKeeper) SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 	return err
 }
 
-func (k MockBankKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error {
-	k.SendCoinsFromAccountToModuleCalls = append(k.SendCoinsFromAccountToModuleCalls,
+func (k *MockBankKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error {
+	k.Calls.SendCoinsFromAccountToModuleCalls = append(k.Calls.SendCoinsFromAccountToModuleCalls,
 		NewSendCoinsFromAccountToModuleArgs(ctx, senderAddr, recipientModule, amt))
 	var err error
 	if len(k.SendCoinsFromAccountToModuleResultsQueue) > 0 {
@@ -262,8 +342,8 @@ func (k MockBankKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr
 	return err
 }
 
-func (k MockBankKeeper) InputOutputCoins(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
-	k.InputOutputCoinsCalls = append(k.InputOutputCoinsCalls, NewInputOutputCoinsArgs(ctx, inputs, outputs))
+func (k *MockBankKeeper) InputOutputCoins(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
+	k.Calls.InputOutputCoinsCalls = append(k.Calls.InputOutputCoinsCalls, NewInputOutputCoinsArgs(ctx, inputs, outputs))
 	var err error
 	if len(k.InputOutputCoinsResultsQueue) > 0 {
 		if len(k.InputOutputCoinsResultsQueue[0]) > 0 {
@@ -274,31 +354,34 @@ func (k MockBankKeeper) InputOutputCoins(ctx sdk.Context, inputs []banktypes.Inp
 	return err
 }
 
-// assertEqualSendCoinsCalls asserts that a mock keeper's SendCoinsCalls match the provided expected calls.
-func (s *TestSuite) assertEqualSendCoinsCalls(mk *MockBankKeeper, expected []*SendCoinsArgs, msg string, args ...interface{}) bool {
-	return assertEqualSlice(s, expected, mk.SendCoinsCalls, s.sendCoinsArgsString,
+// assertSendCoinsCalls asserts that a mock keeper's SendCoinsCalls match the provided expected calls.
+func (s *TestSuite) assertSendCoinsCalls(mk *MockBankKeeper, expected []*SendCoinsArgs, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.SendCoinsCalls, s.sendCoinsArgsString,
 		msg+" SendCoins calls", args...)
 }
 
-// assertEqualSendCoinsFromAccountToModuleCalls asserts that a mock keeper's
+// assertSendCoinsFromAccountToModuleCalls asserts that a mock keeper's
 // SendCoinsFromAccountToModuleCalls match the provided expected calls.
-func (s *TestSuite) assertEqualSendCoinsFromAccountToModuleCalls(mk *MockBankKeeper, expected []*SendCoinsFromAccountToModuleArgs, msg string, args ...interface{}) bool {
-	return assertEqualSlice(s, expected, mk.SendCoinsFromAccountToModuleCalls, s.sendCoinsFromAccountToModuleArgsString,
+func (s *TestSuite) assertSendCoinsFromAccountToModuleCalls(mk *MockBankKeeper, expected []*SendCoinsFromAccountToModuleArgs, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.SendCoinsFromAccountToModuleCalls, s.sendCoinsFromAccountToModuleArgsString,
 		msg+" SendCoinsFromAccountToModule calls", args...)
 }
 
-// assertEqualInputOutputCoinsCalls asserts that a mock keeper's InputOutputCoinsCalls match the provided expected calls.
-func (s *TestSuite) assertEqualInputOutputCoinsCalls(mk *MockBankKeeper, expected []*InputOutputCoinsArgs, msg string, args ...interface{}) bool {
-	return assertEqualSlice(s, expected, mk.InputOutputCoinsCalls, s.inputOutputCoinsArgsString,
+// assertInputOutputCoinsCalls asserts that a mock keeper's InputOutputCoinsCalls match the provided expected calls.
+func (s *TestSuite) assertInputOutputCoinsCalls(mk *MockBankKeeper, expected []*InputOutputCoinsArgs, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.InputOutputCoinsCalls, s.inputOutputCoinsArgsString,
 		msg+" InputOutputCoins calls", args...)
 }
 
-// SendCoinsArgs is a record of a call that is made to SendCoins.
-type SendCoinsArgs struct {
-	ctxHasQuarantineBypass bool
-	fromAddr               sdk.AccAddress
-	toAddr                 sdk.AccAddress
-	amt                    sdk.Coins
+// assertBankKeeperCalls asserts that all the calls made to a mock bank keeper match the provided expected calls.
+func (s *TestSuite) assertBankKeeperCalls(mk *MockBankKeeper, expected BankCalls, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	rv := s.assertSendCoinsCalls(mk, expected.SendCoinsCalls, msg, args...)
+	rv = s.assertSendCoinsFromAccountToModuleCalls(mk, expected.SendCoinsFromAccountToModuleCalls, msg, args...) && rv
+	return s.assertInputOutputCoinsCalls(mk, expected.InputOutputCoinsCalls, msg, args...) && rv
 }
 
 // NewSendCoinsArgs creates a new record of args provided to a call to SendCoins.
@@ -318,14 +401,6 @@ func (s *TestSuite) sendCoinsArgsString(a *SendCoinsArgs) string {
 		a.ctxHasQuarantineBypass, s.getAddrName(a.fromAddr), s.getAddrName(a.toAddr), a.amt)
 }
 
-// SendCoinsFromAccountToModuleArgs is a record of a call that is made to SendCoinsFromAccountToModule.
-type SendCoinsFromAccountToModuleArgs struct {
-	ctxHasQuarantineBypass bool
-	senderAddr             sdk.AccAddress
-	recipientModule        string
-	amt                    sdk.Coins
-}
-
 // NewSendCoinsFromAccountToModuleArgs creates a new record of args provided to a call to SendCoinsFromAccountToModule.
 func NewSendCoinsFromAccountToModuleArgs(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) *SendCoinsFromAccountToModuleArgs {
 	return &SendCoinsFromAccountToModuleArgs{
@@ -341,13 +416,6 @@ func NewSendCoinsFromAccountToModuleArgs(ctx sdk.Context, senderAddr sdk.AccAddr
 func (s *TestSuite) sendCoinsFromAccountToModuleArgsString(a *SendCoinsFromAccountToModuleArgs) string {
 	return fmt.Sprintf("{q-bypass:%t, from:%s, to:%s, amt:%s}",
 		a.ctxHasQuarantineBypass, s.getAddrName(a.senderAddr), a.recipientModule, a.amt)
-}
-
-// InputOutputCoinsArgs is a record of a call that is made to InputOutputCoins.
-type InputOutputCoinsArgs struct {
-	ctxHasQuarantineBypass bool
-	inputs                 []banktypes.Input
-	outputs                []banktypes.Output
 }
 
 // NewInputOutputCoinsArgs creates a new record of args provided to a call to InputOutputCoins.
@@ -387,17 +455,53 @@ func (s *TestSuite) outputsString(vals []banktypes.Output) string {
 	return fmt.Sprintf("{%s}", strings.Join(strs, ", "))
 }
 
+// #############################################################################
+// ##############################                ###############################
+// ############################   MockHoldKeeper   #############################
+// ##############################                ###############################
+// #############################################################################
+
+var _ exchange.HoldKeeper = (*MockHoldKeeper)(nil)
+
 // MockHoldKeeper satisfies the exchange.HoldKeeper interface but just records the calls and allows dictation of results.
 type MockHoldKeeper struct {
-	AddHoldCalls            []*AddHoldArgs
-	ReleaseHoldCalls        []*ReleaseHoldArgs
-	GetHoldCoinCalls        []*GetHoldCoinArgs
+	Calls                   HoldCalls
 	AddHoldResultsQueue     []string
 	ReleaseHoldResultsQueue []string
 	GetHoldCoinResultsMap   map[string]map[string]*GetHoldCoinResults
 }
 
-var _ exchange.HoldKeeper = (*MockHoldKeeper)(nil)
+// HoldCalls contains all the calls that the mock hold keeper makes.
+type HoldCalls struct {
+	AddHoldCalls     []*AddHoldArgs
+	ReleaseHoldCalls []*ReleaseHoldArgs
+	GetHoldCoinCalls []*GetHoldCoinArgs
+}
+
+// AddHoldArgs is a record of a call that is made to AddHold.
+type AddHoldArgs struct {
+	addr   sdk.AccAddress
+	funds  sdk.Coins
+	reason string
+}
+
+// ReleaseHoldArgs is a record of a call that is made to ReleaseHold.
+type ReleaseHoldArgs struct {
+	addr  sdk.AccAddress
+	funds sdk.Coins
+}
+
+// GetHoldCoinArgs is a record of a call that is made to GetHoldCoin.
+type GetHoldCoinArgs struct {
+	addr  sdk.AccAddress
+	denom string
+}
+
+// GetHoldCoinResults contains the result args to return for a GetHoldCoin call.
+type GetHoldCoinResults struct {
+	amount sdkmath.Int
+	err    error
+}
 
 // NewMockHoldKeeper creates a new empty MockHoldKeeper.
 // Follow it up with WithAddHoldResults, WithReleaseHoldResults, WithGetHoldCoinResult
@@ -456,7 +560,7 @@ func (k *MockHoldKeeper) WithGetHoldCoinErrorResult(addr sdk.AccAddress, denom s
 }
 
 func (k *MockHoldKeeper) AddHold(_ sdk.Context, addr sdk.AccAddress, funds sdk.Coins, reason string) error {
-	k.AddHoldCalls = append(k.AddHoldCalls, NewAddHoldArgs(addr, funds, reason))
+	k.Calls.AddHoldCalls = append(k.Calls.AddHoldCalls, NewAddHoldArgs(addr, funds, reason))
 	var err error
 	if len(k.AddHoldResultsQueue) > 0 {
 		if len(k.AddHoldResultsQueue[0]) > 0 {
@@ -468,7 +572,7 @@ func (k *MockHoldKeeper) AddHold(_ sdk.Context, addr sdk.AccAddress, funds sdk.C
 }
 
 func (k *MockHoldKeeper) ReleaseHold(_ sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error {
-	k.ReleaseHoldCalls = append(k.ReleaseHoldCalls, NewReleaseHoldArgs(addr, funds))
+	k.Calls.ReleaseHoldCalls = append(k.Calls.ReleaseHoldCalls, NewReleaseHoldArgs(addr, funds))
 	var err error
 	if len(k.ReleaseHoldResultsQueue) > 0 {
 		if len(k.ReleaseHoldResultsQueue[0]) > 0 {
@@ -480,7 +584,7 @@ func (k *MockHoldKeeper) ReleaseHold(_ sdk.Context, addr sdk.AccAddress, funds s
 }
 
 func (k *MockHoldKeeper) GetHoldCoin(_ sdk.Context, addr sdk.AccAddress, denom string) (sdk.Coin, error) {
-	k.GetHoldCoinCalls = append(k.GetHoldCoinCalls, NewGetHoldCoinArgs(addr, denom))
+	k.Calls.GetHoldCoinCalls = append(k.Calls.GetHoldCoinCalls, NewGetHoldCoinArgs(addr, denom))
 	if denomMap, aFound := k.GetHoldCoinResultsMap[string(addr)]; aFound {
 		if rv, dFound := denomMap[denom]; dFound {
 			return sdk.NewCoin(denom, rv.amount), rv.err
@@ -489,29 +593,33 @@ func (k *MockHoldKeeper) GetHoldCoin(_ sdk.Context, addr sdk.AccAddress, denom s
 	return sdk.NewInt64Coin(denom, 0), nil
 }
 
-// assertEqualAddHoldCalls asserts that a mock keeper's AddHoldCalls match the provided expected calls.
-func (s *TestSuite) assertEqualAddHoldCalls(mk *MockHoldKeeper, expected []*AddHoldArgs, msg string, args ...interface{}) bool {
-	return assertEqualSlice(s, expected, mk.AddHoldCalls, s.addHoldArgsString,
+// assertAddHoldCalls asserts that a mock keeper's AddHoldCalls match the provided expected calls.
+func (s *TestSuite) assertAddHoldCalls(mk *MockHoldKeeper, expected []*AddHoldArgs, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.AddHoldCalls, s.addHoldArgsString,
 		msg+" AddHoldCalls calls", args...)
 }
 
-// assertEqualReleaseHoldCalls asserts that a mock keeper's ReleaseHoldCalls match the provided expected calls.
-func (s *TestSuite) assertEqualReleaseHoldCalls(mk *MockHoldKeeper, expected []*ReleaseHoldArgs, msg string, args ...interface{}) bool {
-	return assertEqualSlice(s, expected, mk.ReleaseHoldCalls, s.releaseHoldArgsString,
+// assertReleaseHoldCalls asserts that a mock keeper's ReleaseHoldCalls match the provided expected calls.
+func (s *TestSuite) assertReleaseHoldCalls(mk *MockHoldKeeper, expected []*ReleaseHoldArgs, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.ReleaseHoldCalls, s.releaseHoldArgsString,
 		msg+" ReleaseHoldCalls calls", args...)
 }
 
-// assertEqualGetHoldCoinCalls asserts that a mock keeper's GetHoldCoinCalls match the provided expected calls.
-func (s *TestSuite) assertEqualGetHoldCoinCalls(mk *MockHoldKeeper, expected []*GetHoldCoinArgs, msg string, args ...interface{}) bool {
-	return assertEqualSlice(s, expected, mk.GetHoldCoinCalls, s.getHoldCoinArgsString,
+// assertGetHoldCoinCalls asserts that a mock keeper's GetHoldCoinCalls match the provided expected calls.
+func (s *TestSuite) assertGetHoldCoinCalls(mk *MockHoldKeeper, expected []*GetHoldCoinArgs, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.GetHoldCoinCalls, s.getHoldCoinArgsString,
 		msg+" GetHoldCoinCalls calls", args...)
 }
 
-// AddHoldArgs is a record of a call that is made to AddHold.
-type AddHoldArgs struct {
-	addr   sdk.AccAddress
-	funds  sdk.Coins
-	reason string
+// assertHoldKeeperCalls asserts that all the calls made to a mock hold keeper match the provided expected calls.
+func (s *TestSuite) assertHoldKeeperCalls(mk *MockHoldKeeper, expected HoldCalls, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	rv := s.assertAddHoldCalls(mk, expected.AddHoldCalls, msg, args...)
+	rv = s.assertReleaseHoldCalls(mk, expected.ReleaseHoldCalls, msg, args...) && rv
+	return s.assertGetHoldCoinCalls(mk, expected.GetHoldCoinCalls, msg, args...) && rv
 }
 
 // NewAddHoldArgs creates a new record of args provided to a call to AddHold.
@@ -528,12 +636,6 @@ func (s *TestSuite) addHoldArgsString(a *AddHoldArgs) string {
 	return fmt.Sprintf("{addr:%s, funds:%s, reason:%q}", s.getAddrName(a.addr), a.funds, a.reason)
 }
 
-// ReleaseHoldArgs is a record of a call that is made to ReleaseHold.
-type ReleaseHoldArgs struct {
-	addr  sdk.AccAddress
-	funds sdk.Coins
-}
-
 // NewReleaseHoldArgs creates a new record of args provided to a call to ReleaseHold.
 func NewReleaseHoldArgs(addr sdk.AccAddress, funds sdk.Coins) *ReleaseHoldArgs {
 	return &ReleaseHoldArgs{
@@ -547,12 +649,6 @@ func (s *TestSuite) releaseHoldArgsString(a *ReleaseHoldArgs) string {
 	return fmt.Sprintf("{addr:%s, funds:%s}", s.getAddrName(a.addr), a.funds)
 }
 
-// GetHoldCoinArgs is a record of a call that is made to GetHoldCoin.
-type GetHoldCoinArgs struct {
-	addr  sdk.AccAddress
-	denom string
-}
-
 // NewGetHoldCoinArgs creates a new record of args provided to a call to GetHoldCoin.
 func NewGetHoldCoinArgs(addr sdk.AccAddress, denom string) *GetHoldCoinArgs {
 	return &GetHoldCoinArgs{
@@ -564,10 +660,4 @@ func NewGetHoldCoinArgs(addr sdk.AccAddress, denom string) *GetHoldCoinArgs {
 // getHoldCoinArgsString creates a string of a GetHoldCoinArgs substituting the address names as possible.
 func (s *TestSuite) getHoldCoinArgsString(a *GetHoldCoinArgs) string {
 	return fmt.Sprintf("{addr:%s, denom:%s}", s.getAddrName(a.addr), a.denom)
-}
-
-// GetHoldCoinResults contains the result args to return for a GetHoldCoin call.
-type GetHoldCoinResults struct {
-	amount sdkmath.Int
-	err    error
 }
