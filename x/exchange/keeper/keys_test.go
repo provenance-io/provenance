@@ -2886,6 +2886,103 @@ func TestParseKeyOrder(t *testing.T) {
 	}
 }
 
+func TestParseIndexKeySuffixOrderID(t *testing.T) {
+	tests := []struct {
+		name       string
+		key        []byte
+		expOrderID uint64
+		expOK      bool
+	}{
+		{name: "nil", key: nil, expOrderID: 0, expOK: false},
+		{name: "empty", key: []byte{}, expOrderID: 0, expOK: false},
+		{name: "1 byte", key: []byte{1}, expOrderID: 0, expOK: false},
+		{name: "7 byte", key: []byte{1, 2, 3, 4, 5, 6, 7}, expOrderID: 0, expOK: false},
+		{name: "8 bytes: 0", key: []byte{0, 0, 0, 0, 0, 0, 0, 0}, expOrderID: 0, expOK: true},
+		{name: "8 bytes: 1", key: []byte{0, 0, 0, 0, 0, 0, 0, 1}, expOrderID: 1, expOK: true},
+		{
+			name:       "8 bytes: 4,294,967,296",
+			key:        []byte{0, 0, 0, 1, 0, 0, 0, 0},
+			expOrderID: 4_294_967_296,
+			expOK:      true,
+		},
+		{
+			name:       "8 bytes: 72,623,859,790,382,856",
+			key:        []byte{1, 2, 3, 4, 5, 6, 7, 8},
+			expOrderID: 72_623_859_790_382_856,
+			expOK:      true,
+		},
+		{
+			name:       "8 bytes: max uint64",
+			key:        []byte{255, 255, 255, 255, 255, 255, 255, 255},
+			expOrderID: 18_446_744_073_709_551_615,
+			expOK:      true,
+		},
+		{name: "9 bytes: 0", key: []byte{9, 0, 0, 0, 0, 0, 0, 0, 0}, expOrderID: 0, expOK: true},
+		{name: "9 bytes: 1", key: []byte{9, 0, 0, 0, 0, 0, 0, 0, 1}, expOrderID: 1, expOK: true},
+		{
+			name:       "9 bytes: 4,294,967,296",
+			key:        []byte{9, 0, 0, 0, 1, 0, 0, 0, 0},
+			expOrderID: 4_294_967_296,
+			expOK:      true,
+		},
+		{
+			name:       "9 bytes: 72,623,859,790,382,856",
+			key:        []byte{9, 1, 2, 3, 4, 5, 6, 7, 8},
+			expOrderID: 72_623_859_790_382_856,
+			expOK:      true,
+		},
+		{
+			name:       "9 bytes: max uint64",
+			key:        []byte{9, 255, 255, 255, 255, 255, 255, 255, 255},
+			expOrderID: 18_446_744_073_709_551_615,
+			expOK:      true,
+		},
+		{
+			name:       "20 bytes: 0",
+			key:        []byte{20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0},
+			expOrderID: 0,
+			expOK:      true,
+		},
+		{
+			name:       "20 bytes: 1",
+			key:        []byte{20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 0, 0, 0, 0, 0, 0, 0, 1},
+			expOrderID: 1,
+			expOK:      true,
+		},
+		{
+			name:       "20 bytes: 4,294,967,296",
+			key:        []byte{20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 0, 0, 0, 1, 0, 0, 0, 0},
+			expOrderID: 4_294_967_296,
+			expOK:      true,
+		},
+		{
+			name:       "20 bytes: 72,623,859,790,382,856",
+			key:        []byte{20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 1, 2, 3, 4, 5, 6, 7, 8},
+			expOrderID: 72_623_859_790_382_856,
+			expOK:      true,
+		},
+		{
+			name:       "20 bytes: max uint64",
+			key:        []byte{20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 255, 255, 255, 255, 255, 255, 255, 255},
+			expOrderID: 18_446_744_073_709_551_615,
+			expOK:      true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var orderID uint64
+			var ok bool
+			testFunc := func() {
+				orderID, ok = keeper.ParseIndexKeySuffixOrderID(tc.key)
+			}
+			require.NotPanics(t, testFunc, "ParseIndexKeySuffixOrderID")
+			assert.Equal(t, tc.expOrderID, orderID, "ParseIndexKeySuffixOrderID orderID")
+			assert.Equal(t, tc.expOK, ok, "ParseIndexKeySuffixOrderID ok bool")
+		})
+	}
+}
+
 func TestGetIndexKeyPrefixMarketToOrder(t *testing.T) {
 	tests := []struct {
 		name     string
