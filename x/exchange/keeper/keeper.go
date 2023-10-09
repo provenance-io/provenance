@@ -74,11 +74,6 @@ func (k Keeper) emitEvents(ctx sdk.Context, events []proto.Message) {
 	}
 }
 
-// wrongAuthErr returns the error to use when a message's authority isn't what's required.
-func (k Keeper) wrongAuthErr(badAuthority string) error {
-	return govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", k.GetAuthority(), badAuthority)
-}
-
 // GetAuthority gets the address (as bech32) that has governance authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
@@ -87,6 +82,14 @@ func (k Keeper) GetAuthority() string {
 // IsAuthority returns true if the provided address bech32 string is the authority address.
 func (k Keeper) IsAuthority(addr string) bool {
 	return addr == k.authority
+}
+
+// ValidateAuthority returns an error if the provided address is not the authority.
+func (k Keeper) ValidateAuthority(addr string) error {
+	if !k.IsAuthority(addr) {
+		return govtypes.ErrInvalidSigner.Wrapf("expected %s got %s", k.GetAuthority(), addr)
+	}
+	return nil
 }
 
 // GetFeeCollectorName gets the name of the fee collector.

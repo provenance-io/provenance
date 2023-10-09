@@ -175,8 +175,8 @@ func (k MsgServer) MarketManageReqAttrs(goCtx context.Context, msg *exchange.Msg
 
 // GovCreateMarket is a governance proposal endpoint for creating a market.
 func (k MsgServer) GovCreateMarket(goCtx context.Context, msg *exchange.MsgGovCreateMarketRequest) (*exchange.MsgGovCreateMarketResponse, error) {
-	if !k.IsAuthority(msg.Authority) {
-		return nil, k.wrongAuthErr(msg.Authority)
+	if err := k.ValidateAuthority(msg.Authority); err != nil {
+		return nil, err
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -190,8 +190,8 @@ func (k MsgServer) GovCreateMarket(goCtx context.Context, msg *exchange.MsgGovCr
 
 // GovManageFees is a governance proposal endpoint for updating a market's fees.
 func (k MsgServer) GovManageFees(goCtx context.Context, msg *exchange.MsgGovManageFeesRequest) (*exchange.MsgGovManageFeesResponse, error) {
-	if !k.IsAuthority(msg.Authority) {
-		return nil, k.wrongAuthErr(msg.Authority)
+	if err := k.ValidateAuthority(msg.Authority); err != nil {
+		return nil, err
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -202,8 +202,8 @@ func (k MsgServer) GovManageFees(goCtx context.Context, msg *exchange.MsgGovMana
 
 // GovUpdateParams is a governance proposal endpoint for updating the exchange module's params.
 func (k MsgServer) GovUpdateParams(goCtx context.Context, msg *exchange.MsgGovUpdateParamsRequest) (*exchange.MsgGovUpdateParamsResponse, error) {
-	if !k.IsAuthority(msg.Authority) {
-		return nil, k.wrongAuthErr(msg.Authority)
+	if err := k.ValidateAuthority(msg.Authority); err != nil {
+		return nil, err
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

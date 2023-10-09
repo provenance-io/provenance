@@ -266,8 +266,8 @@ func (k QueryServer) QueryValidateCreateMarket(goCtx context.Context, req *excha
 		return resp, nil
 	}
 
-	if msg.Authority != k.authority {
-		resp.Error = k.wrongAuthErr(msg.Authority).Error()
+	if err := k.ValidateAuthority(msg.Authority); err != nil {
+		resp.Error = err.Error()
 		return resp, nil
 	}
 
@@ -329,8 +329,8 @@ func (k QueryServer) QueryValidateManageFees(goCtx context.Context, req *exchang
 		return resp, nil
 	}
 
-	if msg.Authority != k.authority {
-		resp.Error = k.wrongAuthErr(msg.Authority).Error()
+	if err := k.ValidateAuthority(msg.Authority); err != nil {
+		resp.Error = err.Error()
 		return resp, nil
 	}
 
