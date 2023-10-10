@@ -94,7 +94,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `cosmossdk.io/math` from 1.0.1 to 1.1.2 ([#1656](https://github.com/provenance-io/provenance/pull/1656))
 - Bump `github.com/google/uuid` from 1.3.0 to 1.3.1 ([#1657](https://github.com/provenance-io/provenance/pull/1657))
 - Bump `golangci/golangci-lint-action` from 3.6.0 to 3.7.0 ([#1651](https://github.com/provenance-io/provenance/pull/1651))
-- Bump `bufbuild/buf-setup-action` from 1.26.0 to 1.26.1 ([#1650](https://github.com/provenance-io/provenance/pull/1650))
+- Bump `bufbuild/buf-setup-action` from 1.26.0 to 1.27.0 ([#1650](https://github.com/provenance-io/provenance/pull/1650), [#1694](https://github.com/provenance-io/provenance/pull/1694))
 - Bump `cometbft to v0.34.29 `(from v0.34.28) ([#1649](https://github.com/provenance-io/provenance/pull/1649))
 - Bump `golang.org/x/text` from 0.11.0 to 0.12.0 ([#1644](https://github.com/provenance-io/provenance/pull/1644))
 - Bump `bufbuild/buf-setup-action` from 1.25.1 to 1.26.0 ([#1645](https://github.com/provenance-io/provenance/pull/1645))
