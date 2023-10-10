@@ -25,22 +25,10 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModule           = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 )
-
-type AppModule struct {
-	AppModuleBasic
-	keeper keeper.Keeper
-}
-
-func NewAppModule(cdc codec.Codec, exchangeKeeper keeper.Keeper) AppModule {
-	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		keeper:         exchangeKeeper,
-	}
-}
 
 type AppModuleBasic struct {
 	cdc codec.Codec
@@ -88,6 +76,18 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 
 // RegisterLegacyAminoCodec registers the exchange module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
+
+type AppModule struct {
+	AppModuleBasic
+	keeper keeper.Keeper
+}
+
+func NewAppModule(cdc codec.Codec, exchangeKeeper keeper.Keeper) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         exchangeKeeper,
+	}
+}
 
 // RegisterInvariants registers the invariants for the exchange module.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
