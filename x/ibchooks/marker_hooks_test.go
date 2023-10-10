@@ -161,11 +161,12 @@ func (suite *MarkerHooksTestSuite) TestProcessMarkerMemo() {
 	address1 := sdk.AccAddress("address1")
 	address2 := sdk.AccAddress("address2")
 	testCases := []struct {
-		name          string
-		memo          string
-		expAddresses  []sdk.AccAddress
-		expMarkerType markertypes.MarkerType
-		expErr        string
+		name                  string
+		memo                  string
+		expAddresses          []sdk.AccAddress
+		expMarkerType         markertypes.MarkerType
+		expAllowForceTransfer bool
+		expErr                string
 	}{
 		{
 			name:          "successfully process with non json memo",
@@ -206,7 +207,7 @@ func (suite *MarkerHooksTestSuite) TestProcessMarkerMemo() {
 
 	for _, tc := range testCases {
 		suite.T().Run(tc.name, func(t *testing.T) {
-			actualAddrs, actualMarkerType, err := ibchooks.ProcessMarkerMemo(tc.memo)
+			actualAddrs, actualMarkerType, actualAllowForceTransfer, err := ibchooks.ProcessMarkerMemo(tc.memo)
 			if len(tc.expErr) > 0 {
 				assert.EqualError(t, err, tc.expErr, "ProcessMarkerMemo() error")
 			} else {
@@ -217,6 +218,7 @@ func (suite *MarkerHooksTestSuite) TestProcessMarkerMemo() {
 					assert.Contains(t, actualAddrs, addr, "Actual list does not contain required address")
 
 				}
+				assert.Equal(t, tc.expAllowForceTransfer, actualAllowForceTransfer, "Actual allow force transfer is incorrect")
 			}
 		})
 	}
@@ -354,7 +356,7 @@ func (suite *MarkerHooksTestSuite) TestPreSendPacketDataProcessingFn() {
 		{
 			name:    "packet with marker json replace transfer auths with marker transfer auths",
 			data:    suite.makeMockPacket("jackthecat", "recieverAddr", `{"marker":{"transfer-auths":["test"]}}`, 0).Data,
-			expData: suite.makeMockPacket("jackthecat", "recieverAddr", fmt.Sprintf(`{"marker":{"transfer-auths":["%s"]}}`, address1.String()), 0).Data,
+			expData: suite.makeMockPacket("jackthecat", "recieverAddr", fmt.Sprintf(`{"marker":{"transfer-auths":["%s"],"allow-force-transfer":false}}`, address1.String()), 0).Data,
 		},
 		{
 			name:   "invalid denom should error",

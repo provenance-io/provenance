@@ -123,17 +123,19 @@ type MarkerMemo struct {
 
 // MarkerPayload child structure for marker memo
 type MarkerPayload struct {
-	TransferAuths []string `json:"transfer-auths"`
+	TransferAuths      []string `json:"transfer-auths"`
+	AllowForceTransfer bool     `json:"allow-force-transfer"`
 }
 
-// NewMarkerPayload returns a marker payload with transfer authorities
-func NewMarkerPayload(transferAuthAddrs []sdk.AccAddress) MarkerPayload {
+// NewMarkerPayload returns a marker payload with transfer authorities and allow force transfer flag
+func NewMarkerPayload(transferAuthAddrs []sdk.AccAddress, allowForceTransfer bool) MarkerPayload {
 	addresses := make([]string, len(transferAuthAddrs))
 	for i := 0; i < len(transferAuthAddrs); i++ {
 		addresses[i] = transferAuthAddrs[i].String()
 	}
 	return MarkerPayload{
-		TransferAuths: addresses,
+		TransferAuths:      addresses,
+		AllowForceTransfer: allowForceTransfer,
 	}
 }
 

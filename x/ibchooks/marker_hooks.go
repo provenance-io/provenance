@@ -55,7 +55,7 @@ func (h MarkerHooks) AddUpdateMarker(ctx sdktypes.Context, packet exported.Packe
 		return err
 	}
 	var transferAuthAddrs []sdktypes.AccAddress
-	transferAuthAddrs, coinType, err := ProcessMarkerMemo(data.GetMemo())
+	transferAuthAddrs, coinType, allowForceTransfer, err := ProcessMarkerMemo(data.GetMemo())
 	if err != nil {
 		return err
 	}
@@ -64,14 +64,15 @@ func (h MarkerHooks) AddUpdateMarker(ctx sdktypes.Context, packet exported.Packe
 		if err = ResetMarkerAccessGrants(transferAuthAddrs, marker); err != nil {
 			return err
 		}
+		marker.SetAllowForcedTransfer(allowForceTransfer)
 		h.MarkerKeeper.SetMarker(ctx, marker)
 		return nil
 	}
-	return h.createNewIbcMarker(data, ibcDenom, coinType, transferAuthAddrs, ctx, packet, ibcKeeper)
+	return h.createNewIbcMarker(ctx, data, ibcDenom, coinType, transferAuthAddrs, allowForceTransfer, packet, ibcKeeper)
 }
 
 // createNewIbcMarker creates a new marker account for ibc token
-func (h MarkerHooks) createNewIbcMarker(data transfertypes.FungibleTokenPacketData, ibcDenom string, coinType markertypes.MarkerType, transferAuthAddrs []sdktypes.AccAddress, ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) error {
+func (h MarkerHooks) createNewIbcMarker(ctx sdktypes.Context, data transfertypes.FungibleTokenPacketData, ibcDenom string, coinType markertypes.MarkerType, transferAuthAddrs []sdktypes.AccAddress, allowForceTransfer bool, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) error {
 	amount, err := strconv.ParseInt(data.Amount, 10, 64)
 	if err != nil {
 		return err
@@ -85,7 +86,7 @@ func (h MarkerHooks) createNewIbcMarker(data transfertypes.FungibleTokenPacketDa
 		coinType,
 		false, // supply fixed
 		false, // allow gov
-		false, // allow force transfer
+		allowForceTransfer,
 		[]string{},
 	)
 	if err = ResetMarkerAccessGrants(transferAuthAddrs, marker); err != nil {
@@ -149,34 +150,34 @@ func ResetMarkerAccessGrants(transferAuths []sdktypes.AccAddress, marker markert
 }
 
 // ProcessMarkerMemo extracts the list of transfer auth address from marker part of packet memo
-func ProcessMarkerMemo(memo string) ([]sdktypes.AccAddress, markertypes.MarkerType, error) {
+func ProcessMarkerMemo(memo string) ([]sdktypes.AccAddress, markertypes.MarkerType, bool, error) {
 	found, jsonObject := jsonStringHasKey(memo, "marker")
 	if !found {
-		return []sdktypes.AccAddress{}, markertypes.MarkerType_Coin, nil
+		return []sdktypes.AccAddress{}, markertypes.MarkerType_Coin, false, nil
 	}
 	jsonBytes, err := json.Marshal(jsonObject["marker"])
 	if err != nil {
-		return nil, markertypes.MarkerType_Unknown, err
+		return nil, markertypes.MarkerType_Unknown, false, err
 	}
 
 	var markerMemo types.MarkerPayload
 	err = json.Unmarshal(jsonBytes, &markerMemo)
 	if err != nil {
-		return nil, markertypes.MarkerType_Unknown, err
+		return nil, markertypes.MarkerType_Unknown, false, err
 	}
 	if markerMemo.TransferAuths == nil {
-		return []sdktypes.AccAddress{}, markertypes.MarkerType_Coin, nil
+		return []sdktypes.AccAddress{}, markertypes.MarkerType_Coin, false, nil
 	}
 
 	transferAuths := make([]sdktypes.AccAddress, len(markerMemo.TransferAuths))
 	for i, addr := range markerMemo.TransferAuths {
 		accAddr, err := sdktypes.AccAddressFromBech32(addr)
 		if err != nil {
-			return nil, markertypes.MarkerType_Unknown, err
+			return nil, markertypes.MarkerType_Unknown, false, err
 		}
 		transferAuths[i] = accAddr
 	}
-	return transferAuths, markertypes.MarkerType_RestrictedCoin, nil
+	return transferAuths, markertypes.MarkerType_RestrictedCoin, markerMemo.AllowForceTransfer, nil
 }
 
 // SetupMarkerMemoFn processes a ics20 packets memo part to have `marker` setup information for receiving chain
@@ -231,5 +232,5 @@ func CreateMarkerMemo(marker markertypes.MarkerAccountI) (interface{}, error) {
 		return make(map[string]interface{}), nil
 	}
 	transferAuthAddrs := marker.AddressListForPermission(markertypes.Access_Transfer)
-	return types.NewMarkerPayload(transferAuthAddrs), nil
+	return types.NewMarkerPayload(transferAuthAddrs, marker.AllowsForcedTransfer()), nil
 }
