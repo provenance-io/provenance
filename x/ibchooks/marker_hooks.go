@@ -61,14 +61,21 @@ func (h MarkerHooks) AddUpdateMarker(ctx sdktypes.Context, packet exported.Packe
 	}
 
 	if marker != nil {
-		if err = ResetMarkerAccessGrants(transferAuthAddrs, marker); err != nil {
-			return err
-		}
-		marker.SetAllowForcedTransfer(allowForceTransfer)
-		h.MarkerKeeper.SetMarker(ctx, marker)
-		return nil
+		return h.updateMarkerProperties(ctx, transferAuthAddrs, marker, allowForceTransfer)
 	}
 	return h.createNewIbcMarker(ctx, data, ibcDenom, coinType, transferAuthAddrs, allowForceTransfer, packet, ibcKeeper)
+}
+
+func (h MarkerHooks) updateMarkerProperties(ctx sdktypes.Context, transferAuthAddrs []sdktypes.AccAddress, marker markertypes.MarkerAccountI, allowForceTransfer bool) error {
+	if marker.GetMarkerType() != markertypes.MarkerType_RestrictedCoin {
+		return nil
+	}
+	if err := ResetMarkerAccessGrants(transferAuthAddrs, marker); err != nil {
+		return err
+	}
+	marker.SetAllowForcedTransfer(allowForceTransfer)
+	h.MarkerKeeper.SetMarker(ctx, marker)
+	return nil
 }
 
 // createNewIbcMarker creates a new marker account for ibc token
