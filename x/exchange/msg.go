@@ -307,6 +307,9 @@ func (m MsgMarketManagePermissionsRequest) ValidateBasic() error {
 				errs = append(errs, fmt.Errorf("invalid revoke-all address %q: %w", addrStr, err))
 			}
 		}
+		if ContainsString(m.RevokeAll, m.Admin) {
+			errs = append(errs, fmt.Errorf("message administrator %s cannot revoke all of their permissions", m.Admin))
+		}
 
 		if err := ValidateAccessGrantsField("to-revoke", m.ToRevoke); err != nil {
 			errs = append(errs, err)
@@ -316,6 +319,10 @@ func (m MsgMarketManagePermissionsRequest) ValidateBasic() error {
 		for _, ag := range m.ToRevoke {
 			if ContainsString(m.RevokeAll, ag.Address) {
 				errs = append(errs, fmt.Errorf("address %s appears in both the revoke-all and to-revoke fields", ag.Address))
+			}
+			if ag.Address == m.Admin && ag.Contains(Permission_permissions) {
+				errs = append(errs, fmt.Errorf("message administrator %s cannot revoke their own ability to manage permissions",
+					ag.Address))
 			}
 			toRevokeByAddr[ag.Address] = ag
 		}
