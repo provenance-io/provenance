@@ -179,8 +179,8 @@ func ProcessMarkerMemo(memo string) ([]sdktypes.AccAddress, markertypes.MarkerTy
 	return transferAuths, markertypes.MarkerType_RestrictedCoin, nil
 }
 
-// ProcessMarkerMemoFn processes a ics20 packets memo part to have `marker` setup information for receiving chain
-func (h MarkerHooks) ProcessMarkerMemoFn(
+// SetupMarkerMemoFn processes a ics20 packets memo part to have `marker` setup information for receiving chain
+func (h MarkerHooks) SetupMarkerMemoFn(
 	ctx sdktypes.Context,
 	data []byte,
 	_ map[string]interface{},

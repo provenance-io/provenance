@@ -347,7 +347,7 @@ func (suite *MarkerHooksTestSuite) TestPreSendPacketDataProcessingFn() {
 	}
 	for _, tc := range testCases {
 		suite.T().Run(tc.name, func(t *testing.T) {
-			actualData, err := markerHooks.ProcessMarkerMemoFn(suite.chainA.GetContext(), tc.data, nil)
+			actualData, err := markerHooks.SetupMarkerMemoFn(suite.chainA.GetContext(), tc.data, nil)
 			if len(tc.expErr) > 0 {
 				assert.EqualError(t, err, tc.expErr, "PreSendPacketDataProcessingFn() error")
 				assert.Nil(t, actualData, "PreSendPacketDataProcessingFn() return `data` should be nil")
