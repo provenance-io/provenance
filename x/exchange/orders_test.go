@@ -70,51 +70,6 @@ func copyBidOrder(bidOrder *BidOrder) *BidOrder {
 	}
 }
 
-// copySDKInt creates a copy of the provided sdkmath.Int
-func copySDKInt(i sdkmath.Int) (copy sdkmath.Int) {
-	defer func() {
-		if r := recover(); r != nil {
-			copy = sdkmath.Int{}
-		}
-	}()
-	return i.AddRaw(0)
-}
-
-// copyCoins creates a copy of the provided coins slice with copies of each entry.
-func copyCoins(coins sdk.Coins) sdk.Coins {
-	return copySlice(coins, copyCoin)
-}
-
-// copyCoin returns a copy of the provided coin.
-func copyCoin(coin sdk.Coin) sdk.Coin {
-	return sdk.Coin{Denom: coin.Denom, Amount: copySDKInt(coin.Amount)}
-}
-
-// copyCoinP returns a copy of the provided *coin.
-func copyCoinP(coin *sdk.Coin) *sdk.Coin {
-	if coin == nil {
-		return nil
-	}
-	rv := copyCoin(*coin)
-	return &rv
-}
-
-// coinPString returns either "nil" or the quoted string version of the provided coins.
-func coinPString(coin *sdk.Coin) string {
-	if coin == nil {
-		return "nil"
-	}
-	return fmt.Sprintf("%q", coin)
-}
-
-// coinsString returns either "nil" or the quoted string version of the provided coins.
-func coinsString(coins sdk.Coins) string {
-	if coins == nil {
-		return "nil"
-	}
-	return fmt.Sprintf("%q", coins)
-}
-
 // orderString is similar to %v except with easier to understand Coin and Int entries.
 func orderString(order *Order) string {
 	if order == nil {
@@ -171,6 +126,40 @@ func bidOrderString(bidOrder *BidOrder) string {
 		fmt.Sprintf("AllowPartial:%t", bidOrder.AllowPartial),
 	}
 	return fmt.Sprintf("{%s}", strings.Join(fields, ", "))
+}
+
+// unknownOrderType is thing that implements isOrder_Order so it can be
+// added to an Order, but isn't a type that there is anything defined for.
+type unknownOrderType struct{}
+
+var _ isOrder_Order = (*unknownOrderType)(nil)
+
+func (o *unknownOrderType) isOrder_Order() {}
+func (o *unknownOrderType) MarshalTo([]byte) (int, error) {
+	return 0, nil
+}
+func (o *unknownOrderType) Size() int {
+	return 0
+}
+
+// newUnknownOrder returns a new order with the given id and an unknownOrderType.
+func newUnknownOrder(orderID uint64) *Order {
+	return &Order{OrderId: orderID, Order: &unknownOrderType{}}
+}
+
+// badSubTypeErr creates the expected error when a sub-order type is bad.
+func badSubTypeErr(orderID uint64, badType string) string {
+	return fmt.Sprintf("order %d has unknown sub-order type %s: does not implement SubOrderI", orderID, badType)
+}
+
+// nilSubTypeErr creates the expected error when a sub-order type is nil.
+func nilSubTypeErr(orderID uint64) string {
+	return badSubTypeErr(orderID, "<nil>")
+}
+
+// unknownSubTypeErr creates the expected error when a sub-order type is the unknownOrderType.
+func unknownSubTypeErr(orderID uint64) string {
+	return badSubTypeErr(orderID, "*exchange.unknownOrderType")
 }
 
 func TestOrderTypesAndBytes(t *testing.T) {
@@ -538,25 +527,6 @@ func TestOrder_WithBid(t *testing.T) {
 	assert.Equal(t, origBid, orderBid, "the bid in the resulting order (actual) vs what the bid was before being provided (expected)")
 }
 
-// unknownOrderType is thing that implements isOrder_Order so it can be
-// added to an Order, but isn't a type that there is anything defined for.
-type unknownOrderType struct{}
-
-var _ isOrder_Order = (*unknownOrderType)(nil)
-
-func (o *unknownOrderType) isOrder_Order() {}
-func (o *unknownOrderType) MarshalTo([]byte) (int, error) {
-	return 0, nil
-}
-func (o *unknownOrderType) Size() int {
-	return 0
-}
-
-// newUnknownOrder returns a new order with the given id and an unknownOrderType.
-func newUnknownOrder(orderID uint64) *Order {
-	return &Order{OrderId: orderID, Order: &unknownOrderType{}}
-}
-
 func TestOrder_IsAskOrder(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -660,21 +630,6 @@ func TestOrder_GetOrderID(t *testing.T) {
 			assert.Equal(t, tc.exp, actual, "GetOrderID() result")
 		})
 	}
-}
-
-// badSubTypeErr creates the expected error when a sub-order type is bad.
-func badSubTypeErr(orderID uint64, badType string) string {
-	return fmt.Sprintf("order %d has unknown sub-order type %s: does not implement SubOrderI", orderID, badType)
-}
-
-// nilSubTypeErr creates the expected error when a sub-order type is nil.
-func nilSubTypeErr(orderID uint64) string {
-	return badSubTypeErr(orderID, "<nil>")
-}
-
-// unknownSubTypeErr creates the expected error when a sub-order type is the unknownOrderType.
-func unknownSubTypeErr(orderID uint64) string {
-	return badSubTypeErr(orderID, "*exchange.unknownOrderType")
 }
 
 func TestOrder_GetSubOrder(t *testing.T) {

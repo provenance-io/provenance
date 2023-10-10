@@ -17,11 +17,6 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
-// joinErrs joines the provided error strings into a single one to match what errors.Join does.
-func joinErrs(errs ...string) string {
-	return strings.Join(errs, "\n")
-}
-
 func TestMarket_Validate(t *testing.T) {
 	coins := func(coins string) sdk.Coins {
 		rv, err := sdk.ParseCoinsNormalized(coins)
@@ -294,7 +289,6 @@ func TestValidateFeeOptions(t *testing.T) {
 }
 
 func TestMarketDetails_Validate(t *testing.T) {
-
 	nameErr := func(over int) string {
 		return fmt.Sprintf("name length %d exceeds maximum length of %d", MaxName+over, MaxName)
 	}

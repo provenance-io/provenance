@@ -25,18 +25,6 @@ import (
 // So when an object has an sdkmath.Int that should have been reduced to zero, you'll need to use this.
 var ZeroAmtAfterSub = sdkmath.NewInt(1).SubRaw(1)
 
-// copySlice copies a slice using the provided copier for each entry.
-func copySlice[T any](vals []T, copier func(T) T) []T {
-	if vals == nil {
-		return nil
-	}
-	rv := make([]T, len(vals))
-	for i, v := range vals {
-		rv[i] = copier(v)
-	}
-	return rv
-}
-
 // copyDistribution copies a distribution.
 func copyDistribution(dist *distribution) *distribution {
 	if dist == nil {

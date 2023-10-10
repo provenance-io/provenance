@@ -1,7 +1,9 @@
 package exchange
 
 import (
+	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,9 +11,11 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
+// amtRx is a regex matching characters that can be removed from an amount string.
 var amtRx = regexp.MustCompile(`[,_ ]`)
 
 // newInt converts the provided string into an Int, stipping out any commas, underscores or spaces first.
@@ -20,6 +24,68 @@ func newInt(t *testing.T, amount string) sdkmath.Int {
 	rv, ok := sdkmath.NewIntFromString(amt)
 	require.True(t, ok, "sdkmath.NewIntFromString(%q) ok bool", amt)
 	return rv
+}
+
+// copySlice copies a slice using the provided copier for each entry.
+func copySlice[T any](vals []T, copier func(T) T) []T {
+	if vals == nil {
+		return nil
+	}
+	rv := make([]T, len(vals))
+	for i, v := range vals {
+		rv[i] = copier(v)
+	}
+	return rv
+}
+
+// joinErrs joines the provided error strings into a single one to match what errors.Join does.
+func joinErrs(errs ...string) string {
+	return strings.Join(errs, "\n")
+}
+
+// copySDKInt creates a copy of the provided sdkmath.Int
+func copySDKInt(i sdkmath.Int) (copy sdkmath.Int) {
+	defer func() {
+		if r := recover(); r != nil {
+			copy = sdkmath.Int{}
+		}
+	}()
+	return i.AddRaw(0)
+}
+
+// copyCoins creates a copy of the provided coins slice with copies of each entry.
+func copyCoins(coins sdk.Coins) sdk.Coins {
+	return copySlice(coins, copyCoin)
+}
+
+// copyCoin returns a copy of the provided coin.
+func copyCoin(coin sdk.Coin) sdk.Coin {
+	return sdk.Coin{Denom: coin.Denom, Amount: copySDKInt(coin.Amount)}
+}
+
+// copyCoinP returns a copy of the provided *coin.
+func copyCoinP(coin *sdk.Coin) *sdk.Coin {
+	if coin == nil {
+		return nil
+	}
+	rv := copyCoin(*coin)
+	return &rv
+}
+
+// coinPString returns either "nil" or the quoted string version of the provided coins.
+func coinPString(coin *sdk.Coin) string {
+	if coin == nil {
+		return "nil"
+	}
+	return fmt.Sprintf("%q", coin)
+}
+
+// coinsString returns either "nil" or the quoted string version of the provided coins.
+func coinsString(coins sdk.Coins) string {
+	if coins == nil {
+		return "nil"
+	}
+	return fmt.Sprintf("%q", coins)
 }
 
 func TestEqualsUint64(t *testing.T) {
