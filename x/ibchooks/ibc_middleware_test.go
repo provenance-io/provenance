@@ -7,10 +7,13 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	"github.com/provenance-io/provenance/testutil"
+	testutil "github.com/provenance-io/provenance/testutil/ibc"
 	"github.com/provenance-io/provenance/x/ibchooks"
 	"github.com/provenance-io/provenance/x/ibchooks/keeper"
-	"github.com/provenance-io/provenance/x/ibchooks/osmoutils"
+	"github.com/provenance-io/provenance/x/marker/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/stretchr/testify/suite"
 
@@ -237,6 +240,7 @@ func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, pr
 
 	// recv in chain a
 	res, err := suite.path.EndpointA.RecvPacketWithResult(packet)
+	suite.Require().NoError(err)
 
 	// get the ack from the chain a's response
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
@@ -250,10 +254,10 @@ func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, pr
 
 func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 	// Setup contract
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
-
-	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"echo": {"msg": "test"} } } }`, addr))
+	codeID := suite.chainA.StoreContractEchoDirect(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", codeID)
+	memo := fmt.Sprintf(`{"marker":{},"wasm":{"contract":"%s","msg":{"echo":{"msg":"test"}}}}`, addr)
+	ackBytes := suite.receivePacket(addr.String(), memo)
 	ackStr := string(ackBytes)
 	fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
@@ -266,16 +270,16 @@ func (suite *HooksTestSuite) TestRecvTransferWithMetadata() {
 // After successfully executing a wasm call, the contract should have the funds sent via IBC
 func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 	// Setup contract
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
+	codeID := suite.chainA.StoreContractEchoDirect(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", codeID)
 
 	// Check that the contract has no funds
-	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	localDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 
 	// Execute the contract via IBC
-	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"echo": {"msg": "test"} } } }`, addr))
+	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"marker":{},"wasm":{"contract":"%s","msg":{"echo":{"msg":"test"}}}}`, addr))
 	ackStr := string(ackBytes)
 	fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
@@ -292,16 +296,16 @@ func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 // If the wasm call wails, the contract acknowledgement should be an error and the funds returned
 func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	// Setup contract
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/echo.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", 1)
+	codeID := suite.chainA.StoreContractEchoDirect(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, "{}", codeID)
 
 	// Check that the contract has no funds
-	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	localDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 
 	// Execute the contract via IBC with a message that the contract will reject
-	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"not_echo": {"msg": "test"} } } }`, addr))
+	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"marker":{},"wasm":{"contract":"%s","msg":{"not_echo":{"msg":"test"}}}}`, addr))
 	ackStr := string(ackBytes)
 	fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
@@ -315,63 +319,22 @@ func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 }
 
-func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
-	var sequence uint64
-	receiver := suite.chainB.SenderAccount.GetAddress().String()
-
-	testCases := []struct {
-		memo           string
-		expPassthrough bool
-	}{
-		{"", true},
-		{"{01]", true}, // bad json
-		{"{}", true},
-		{`{"something": ""}`, true},
-		{`{"wasm": "test"}`, false},
-		{`{"wasm": []`, true}, // invalid top level JSON
-		{`{"wasm": {}`, true}, // invalid top level JSON
-		{`{"wasm": []}`, false},
-		{`{"wasm": {}}`, false},
-		{`{"wasm": {"contract": "something"}}`, false},
-		{`{"wasm": {"contract": "osmo1clpqr4nrk4khgkxj78fcwwh6dl3uw4epasmvnj"}}`, false},
-		{`{"wasm": {"msg": "something"}}`, false},
-		// invalid receiver
-		{`{"wasm": {"contract": "osmo1clpqr4nrk4khgkxj78fcwwh6dl3uw4epasmvnj", "msg": {}}}`, false},
-		// msg not an object
-		{fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": 1}}`, receiver), false},
-	}
-
-	for _, tc := range testCases {
-		ackBytes := suite.receivePacketWithSequence(receiver, tc.memo, sequence)
-		ackStr := string(ackBytes)
-		fmt.Println(ackStr)
-		var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
-		err := json.Unmarshal(ackBytes, &ack)
-		suite.Require().NoError(err)
-		if tc.expPassthrough {
-			suite.Require().Equal("AQ==", ack["result"], tc.memo)
-		} else {
-			suite.Require().Contains(ackStr, "error", tc.memo)
-		}
-		sequence += 1
-	}
-}
-
 // After successfully executing a wasm call, the contract should have the funds sent via IBC
 func (suite *HooksTestSuite) TestFundTracking() {
 	// Setup contract
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/counter.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, 1)
+	codeID := suite.chainA.StoreContractCounterDirect(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, codeID)
 
 	// Check that the contract has no funds
-	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
+	localDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
 
+	memo := fmt.Sprintf(`{"marker":{},"wasm":{"contract":"%s","msg":{"increment":{}}}}`, addr)
+
 	// Execute the contract via IBC
 	suite.receivePacket(
-		addr.String(),
-		fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"increment": {} } } }`, addr))
+		addr.String(), memo)
 
 	prefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
 	senderLocalAcc, err := keeper.DeriveIntermediateSender("channel-0", suite.chainB.SenderAccount.GetAddress().String(), prefix)
@@ -389,7 +352,7 @@ func (suite *HooksTestSuite) TestFundTracking() {
 
 	suite.receivePacketWithSequence(
 		addr.String(),
-		fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"increment": {} } } }`, addr), 1)
+		memo, 1)
 
 	state = suite.chainA.QueryContract(
 		&suite.Suite, addr,
@@ -486,8 +449,8 @@ func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Re
 }
 
 func (suite *HooksTestSuite) TestAcks() {
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, "./bytecode/counter.wasm")
-	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, 1)
+	codeID := suite.chainA.StoreContractCounterDirect(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `{"count": 0}`, codeID)
 
 	// Generate swap instructions for the contract
 	callbackMemo := fmt.Sprintf(`{"ibc_callback":"%s"}`, addr)
@@ -510,9 +473,61 @@ func (suite *HooksTestSuite) TestAcks() {
 }
 
 func (suite *HooksTestSuite) TestSendWithoutMemo() {
+	chainA := suite.chainA.GetProvenanceApp()
+	chainASenderAddress := suite.chainA.SenderAccount.GetAddress()
+	chainBSenderAddress := suite.chainB.SenderAccount.GetAddress()
+
 	// Sending a packet without memo to ensure that the ibc_callback middleware doesn't interfere with a regular send
-	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "")
+	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), chainASenderAddress.String(), chainBSenderAddress.String(), "")
 	_, _, ack, err := suite.FullSend(transferMsg, AtoB)
-	suite.Require().NoError(err)
+	suite.Require().NoError(err, "FullSend()")
 	suite.Require().Contains(ack, "result")
+	prefixedDenom := transfertypes.GetDenomPrefix(suite.path.EndpointB.ChannelConfig.PortID, suite.path.EndpointB.ChannelID) + sdk.DefaultBondDenom
+	denom := transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom()
+	marker, err := suite.chainB.GetProvenanceApp().MarkerKeeper.GetMarkerByDenom(suite.chainB.GetContext(), denom)
+	suite.Require().NoError(err, "GetMarkerByDenom()")
+	suite.Require().Equal(marker.GetDenom(), denom)
+
+	transferMsg = NewMsgTransfer(sdk.NewCoin(denom, sdk.NewInt(100)), chainBSenderAddress.String(), chainASenderAddress.String(), "")
+	_, _, ack, err = suite.FullSend(transferMsg, BtoA)
+	suite.Require().NoError(err, "FullSend()")
+	suite.Require().Contains(ack, "result")
+	stakeAddr := markertypes.MustGetMarkerAddress(sdk.DefaultBondDenom)
+	marker, err = chainA.MarkerKeeper.GetMarker(suite.chainA.GetContext(), stakeAddr)
+	suite.Require().NoError(err, "GetMarker()")
+	suite.Require().Nil(marker, "Should not create marker on chain A")
+
+	hotdogs := "hotdogs"
+	rv := markertypes.NewMarkerAccount(
+		chainA.AccountKeeper.NewAccountWithAddress(suite.chainA.GetContext(), markertypes.MustGetMarkerAddress(hotdogs)).(*authtypes.BaseAccount),
+		sdk.NewInt64Coin(hotdogs, 10000),
+		suite.chainA.SenderAccount.GetAddress(),
+		[]types.AccessGrant{
+			{Address: chainASenderAddress.String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Withdraw}},
+		},
+		types.StatusProposed,
+		types.MarkerType_RestrictedCoin,
+		true,  // supply fixed
+		true,  // allow gov
+		false, // no force transfer
+		[]string{},
+	)
+
+	chainA.MarkerKeeper.AddSetNetAssetValues(suite.chainA.GetContext(), rv, []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(1000)), 1)}, markertypes.ModuleName)
+	suite.Require().NoError(err, "chainA AddSetNetAssetValues()")
+	err = chainA.MarkerKeeper.AddFinalizeAndActivateMarker(suite.chainA.GetContext(), rv)
+	suite.Require().NoError(err, "chainA AddFinalizeAndActivateMarker()")
+	err = chainA.MarkerKeeper.WithdrawCoins(suite.chainA.GetContext(), chainASenderAddress, chainASenderAddress, hotdogs, sdk.NewCoins(sdk.NewInt64Coin(hotdogs, 55)))
+	suite.Require().NoError(err, "chainA WithdrawCoins()")
+
+	transferMsg = NewMsgTransfer(sdk.NewCoin(hotdogs, sdk.NewInt(55)), chainASenderAddress.String(), chainBSenderAddress.String(), "")
+	_, _, ack, err = suite.FullSend(transferMsg, AtoB)
+	suite.Require().NoError(err, "AtoB FullSend()")
+	suite.Require().Contains(ack, "result", "FullSend() ack check")
+	prefixedDenom = transfertypes.GetDenomPrefix(suite.path.EndpointB.ChannelConfig.PortID, suite.path.EndpointB.ChannelID) + hotdogs
+	denom = transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom()
+	marker, err = suite.chainB.GetProvenanceApp().MarkerKeeper.GetMarkerByDenom(suite.chainB.GetContext(), denom)
+	suite.Require().NoError(err, "chainB GetMarkerByDenom()")
+	suite.Require().Equal(marker.GetDenom(), denom)
+	suite.Require().True(marker.HasAccess(chainASenderAddress.String(), markertypes.Access_Transfer), "ChainB Ibc marker should have transfer rights added")
 }

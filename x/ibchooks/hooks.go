@@ -6,9 +6,16 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
+
+	"github.com/provenance-io/provenance/x/ibchooks/types"
 )
 
 type Hooks interface{}
+
+// SendPacketPreProcessors returns a list of ordered functions to be executed before ibc's SendPacket function in middleware
+type SendPacketPreProcessors interface {
+	GetSendPacketPreProcessors() []types.PreSendPacketDataProcessingFn
+}
 
 type OnChanOpenInitOverrideHooks interface {
 	OnChanOpenInitOverride(im IBCMiddleware, ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string) (string, error)
@@ -140,7 +147,9 @@ type SendPacketAfterHooks interface {
 		timeoutTimestamp uint64,
 		data []byte,
 		sequence uint64,
-		err error)
+		err error,
+		processData map[string]interface{},
+	)
 }
 
 // WriteAcknowledgement Hooks

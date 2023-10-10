@@ -41,10 +41,20 @@ func (i ICS4Middleware) SendPacket(
 		hook.SendPacketBeforeHook(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
 
+	processingStateData := make(map[string]interface{})
+	if hook, ok := i.Hooks.(SendPacketPreProcessors); ok {
+		for _, packetDataProcessingFn := range hook.GetSendPacketPreProcessors() {
+			data, err = packetDataProcessingFn(ctx, data, processingStateData)
+			if err != nil {
+				return 0, err
+			}
+		}
+	}
+
 	seq, err := i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 
 	if hook, ok := i.Hooks.(SendPacketAfterHooks); ok {
-		hook.SendPacketAfterHook(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data, seq, err)
+		hook.SendPacketAfterHook(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data, seq, err, processingStateData)
 	}
 
 	return seq, err
