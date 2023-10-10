@@ -108,7 +108,7 @@ func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
 			expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
 		},
 		{
-			name:        "successfully process with non json memo",
+			name:        "successfully process with non json marker part memo",
 			denom:       "fiftyfivehamburgers",
 			memo:        `{"marker":{random},"wasm":{"contract":"%1234","msg":{"echo":{"msg":"test"}}}}`,
 			expErr:      "",
@@ -250,6 +250,18 @@ func (suite *MarkerHooksTestSuite) TestResetMarkerAccessGrants() {
 			markerAcct:    *markertypes.NewEmptyMarkerAccount("jackthecat", address1.String(), []types.AccessGrant{*types.NewAccessGrant(address3, []types.Access{types.Access_Transfer})}),
 			expErr:        "",
 		},
+		{
+			name:          "successful with empty transfer auths",
+			transferAuths: []sdk.AccAddress{},
+			markerAcct:    *markertypes.NewEmptyMarkerAccount("jackthecat", address1.String(), []types.AccessGrant{}),
+			expErr:        "",
+		},
+		{
+			name:          "successful with nil transfer auths",
+			transferAuths: nil,
+			markerAcct:    *markertypes.NewEmptyMarkerAccount("jackthecat", address1.String(), []types.AccessGrant{}),
+			expErr:        "",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -290,6 +302,11 @@ func (suite *MarkerHooksTestSuite) TestSanitizeMemo() {
 			name:    "correct json should not modify memo",
 			memo:    `{"marker":{"transfer-auths":["address"]}}`,
 			expMemo: `{"marker":{"transfer-auths":["address"]}}`,
+		},
+		{
+			name:    "empty memo",
+			memo:    "",
+			expMemo: `{}`,
 		},
 	}
 	for _, tc := range testCases {
