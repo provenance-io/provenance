@@ -2621,7 +2621,6 @@ func TestOrderFulfillment_DistributeAssets(t *testing.T) {
 			rv.AssetDists = dists
 		}
 		return rv
-
 	}
 	askOF := func(orderID uint64, assetsUnfilled, assetsFilled int64, dists ...*distribution) *orderFulfillment {
 		order := NewOrder(orderID).WithAsk(&AskOrder{Assets: sdk.NewInt64Coin("apple", 999)})
@@ -2767,7 +2766,6 @@ func TestDistributeAssets(t *testing.T) {
 			rv.AssetDists = dists
 		}
 		return rv
-
 	}
 	askOF := func(orderID uint64, assetsUnfilled, assetsFilled int64, dists ...*distribution) *orderFulfillment {
 		order := NewOrder(orderID).WithAsk(&AskOrder{
@@ -2908,7 +2906,6 @@ func TestOrderFulfillment_DistributePrice(t *testing.T) {
 			rv.PriceDists = dists
 		}
 		return rv
-
 	}
 	askOF := func(orderID uint64, priceLeft, priceApplied int64, dists ...*distribution) *orderFulfillment {
 		order := NewOrder(orderID).WithAsk(&AskOrder{Price: sdk.NewInt64Coin("peach", 999)})
@@ -3054,7 +3051,6 @@ func TestDistributePrice(t *testing.T) {
 			rv.PriceDists = dists
 		}
 		return rv
-
 	}
 	askOF := func(orderID uint64, priceLeft, priceApplied int64, dists ...*distribution) *orderFulfillment {
 		order := NewOrder(orderID).WithAsk(&AskOrder{
