@@ -105,6 +105,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					bidOrder(8, 3, "5wong", "50nibbler"),
 					bidOrder(9, 3, "5wong", "50nibbler"),
 				},
+				LastOrderId: 9,
 			},
 			expErr: nil,
 		},
@@ -177,6 +178,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					bidOrder(2, 2, "28fry", "2bender"),
 					askOrder(3, 3, "28fry", "2bender"),
 				},
+				LastOrderId: 3,
 			},
 			expErr: []string{
 				`invalid order[0]: unknown market id 1`,
@@ -193,6 +195,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					bidOrder(1, 5, "28fry", "2bender"),
 					askOrder(1, 6, "28fry", "2bender"),
 				},
+				LastOrderId: 1,
 			},
 			expErr: []string{
 				`invalid order[1]: duplicate order id 1 seen at [0]`,
@@ -213,17 +216,27 @@ func TestGenesisState_Validate(t *testing.T) {
 					bidOrder(2, 4, "28fry", "2bender"),
 					askOrder(3, 3, "28fry", "2bender"),
 				},
+				LastOrderId: 1,
 			},
 			expErr: []string{
 				"invalid params: default split 10001 cannot be greater than 10000",
 				`invalid market[1]: invalid create-bid flat fee option "-1zapp": negative coin amount: -1`,
 				`invalid order[1]: unknown market id 4`,
+				"last order id 1 is less than the largest id in the provided orders 3",
 			},
 		},
 		{
 			name:     "last market id 1",
 			genState: GenesisState{LastMarketId: 1},
 			expErr:   nil,
+		},
+		{
+			name: "last market id less than largest market id",
+			genState: GenesisState{
+				Markets:      []Market{{MarketId: 3}, {MarketId: 1}},
+				LastMarketId: 1,
+			},
+			expErr: nil,
 		},
 		{
 			name:     "last market id 256",
@@ -244,6 +257,48 @@ func TestGenesisState_Validate(t *testing.T) {
 			name:     "last market id max uint32",
 			genState: GenesisState{LastMarketId: 4_294_967_295},
 			expErr:   nil,
+		},
+		{
+			name: "last order id less than largest order id",
+			genState: GenesisState{
+				Markets: []Market{{MarketId: 1}},
+				Orders: []Order{
+					askOrder(1, 1, "28fry", "2bender"),
+					bidOrder(88, 1, "28fry", "2bender"),
+					bidOrder(2, 1, "28fry", "2bender"),
+					askOrder(3, 1, "28fry", "2bender"),
+				},
+				LastOrderId: 87,
+			},
+			expErr: []string{"last order id 87 is less than the largest id in the provided orders 88"},
+		},
+		{
+			name: "last order id equals largest order id",
+			genState: GenesisState{
+				Markets: []Market{{MarketId: 1}},
+				Orders: []Order{
+					askOrder(1, 1, "28fry", "2bender"),
+					bidOrder(88, 1, "28fry", "2bender"),
+					bidOrder(2, 1, "28fry", "2bender"),
+					askOrder(3, 1, "28fry", "2bender"),
+				},
+				LastOrderId: 88,
+			},
+			expErr: nil,
+		},
+		{
+			name: "last order id more than largest order id",
+			genState: GenesisState{
+				Markets: []Market{{MarketId: 1}},
+				Orders: []Order{
+					askOrder(1, 1, "28fry", "2bender"),
+					bidOrder(88, 1, "28fry", "2bender"),
+					bidOrder(2, 1, "28fry", "2bender"),
+					askOrder(3, 1, "28fry", "2bender"),
+				},
+				LastOrderId: 89,
+			},
+			expErr: nil,
 		},
 	}
 

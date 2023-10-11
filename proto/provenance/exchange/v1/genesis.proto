@@ -27,4 +27,7 @@ message GenesisState {
 
   // last_market_id is the value of the last auto-selected market id.
   uint32 last_market_id = 4;
+
+  // last_order_id is the value of the last order id created.
+  uint64 last_order_id = 5;
 }

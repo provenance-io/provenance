@@ -38,6 +38,7 @@ func (g GenesisState) Validate() error {
 		}
 	}
 
+	maxOrderID := uint64(0)
 	orderIDs := make(map[uint64]int)
 	for i, order := range g.Orders {
 		if order.OrderId != 0 {
@@ -58,6 +59,15 @@ func (g GenesisState) Validate() error {
 		if !knownMarket {
 			errs = append(errs, fmt.Errorf("invalid order[%d]: unknown market id %d", i, order.GetMarketID()))
 		}
+
+		if order.OrderId > maxOrderID {
+			maxOrderID = order.OrderId
+		}
+	}
+
+	if g.LastOrderId < maxOrderID {
+		errs = append(errs, fmt.Errorf("last order id %d is less than the largest id in the provided orders %d",
+			g.LastOrderId, maxOrderID))
 	}
 
 	// No validation to do on LastMarketId.

@@ -1891,6 +1891,7 @@ GenesisState is the data that should be loaded into the exchange module during g
 | `markets` | [Market](#provenance.exchange.v1.Market) | repeated | markets are all of the markets to create at genesis. |
 | `orders` | [Order](#provenance.exchange.v1.Order) | repeated | orders are all the orders to create at genesis. |
 | `last_market_id` | [uint32](#uint32) |  | last_market_id is the value of the last auto-selected market id. |
+| `last_order_id` | [uint64](#uint64) |  | last_order_id is the value of the last order id created. |
 
 
 

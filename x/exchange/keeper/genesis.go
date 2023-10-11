@@ -38,6 +38,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *exchange.GenesisState) {
 		amounts[addr] = amounts[addr].Add(order.GetHoldAmount()...)
 	}
 
+	setLastOrderID(store, genState.LastOrderId)
+
 	// Make sure all the needed funds have holds on them. These should have been placed during initialization of the hold module.
 	for _, addr := range addrs {
 		for _, reqAmt := range amounts[addr] {
@@ -54,9 +56,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *exchange.GenesisState) {
 
 // ExportGenesis creates a genesis state from the current state store.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *exchange.GenesisState {
+	store := k.getStore(ctx)
 	genState := &exchange.GenesisState{
 		Params:       k.GetParams(ctx),
-		LastMarketId: getLastAutoMarketID(k.getStore(ctx)),
+		LastMarketId: getLastAutoMarketID(store),
+		LastOrderId:  getLastOrderID(store),
 	}
 
 	k.IterateMarkets(ctx, func(market *exchange.Market) bool {
