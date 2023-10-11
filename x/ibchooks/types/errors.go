@@ -18,4 +18,5 @@ var (
 	ErrAsyncAckNotAllowed  = errorsmod.Register("wasm-hooks", 9, "contract not allowed to send async acks")
 	ErrAckPacketMismatch   = errorsmod.Register("wasm-hooks", 10, "packet does not match the expected packet")
 	ErrInvalidContractAddr = errorsmod.Register("wasm-hooks", 11, "invalid contract address")
+	ErrMarkerError         = errorsmod.Register("marker-hooks", 12, "marker error")
 )

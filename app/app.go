@@ -334,6 +334,8 @@ type App struct {
 
 	TransferStack    *ibchooks.IBCMiddleware
 	Ics20WasmHooks   *ibchooks.WasmHooks
+	Ics20MarkerHooks *ibchooks.MarkerHooks
+	IbcHooks         *ibchooks.IbcHooks
 	HooksICS4Wrapper ibchooks.ICS4Middleware
 
 	// the module manager
@@ -515,9 +517,14 @@ func New(
 	addrPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()        // We use this approach so running tests which use "cosmos" will work while we use "pb"
 	wasmHooks := ibchooks.NewWasmHooks(&hooksKeeper, nil, addrPrefix) // The contract keeper needs to be set later
 	app.Ics20WasmHooks = &wasmHooks
+	markerHooks := ibchooks.NewMarkerHooks(nil)
+	app.Ics20MarkerHooks = &markerHooks
+	ibcHooks := ibchooks.NewIbcHooks(appCodec, &hooksKeeper, app.IBCKeeper, app.Ics20WasmHooks, app.Ics20MarkerHooks, nil)
+	app.IbcHooks = &ibcHooks
+
 	app.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
 		app.IBCKeeper.ChannelKeeper,
-		app.Ics20WasmHooks,
+		app.IbcHooks,
 	)
 
 	// Create Transfer Keepers
@@ -652,6 +659,9 @@ func New(
 	app.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
 	app.Ics20WasmHooks.ContractKeeper = app.WasmKeeper // app.ContractKeeper -- this changes in the next version of wasm to a permissioned keeper
 	app.IBCHooksKeeper.ContractKeeper = app.ContractKeeper
+	app.Ics20MarkerHooks.MarkerKeeper = &app.MarkerKeeper
+
+	app.IbcHooks.SendPacketPreProcessors = []ibchookstypes.PreSendPacketDataProcessingFn{app.Ics20MarkerHooks.SetupMarkerMemoFn, app.Ics20WasmHooks.GetWasmSendPacketPreProcessor}
 
 	app.ScopedOracleKeeper = scopedOracleKeeper
 	app.OracleKeeper = *oraclekeeper.NewKeeper(
