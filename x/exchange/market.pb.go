@@ -296,8 +296,6 @@ type Market struct {
 	//
 	// An entry that starts with "*." will match any attributes that end with the rest of it.
 	// E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "b.x.a", or "c.b.a.x".
-	//
-	// An entry of exactly "*" will match any attribute, which is equivalent to leaving this list empty.
 	ReqAttrCreateAsk []string `protobuf:"bytes,12,rep,name=req_attr_create_ask,json=reqAttrCreateAsk,proto3" json:"req_attr_create_ask,omitempty"`
 	// req_attr_create_ask is a list of attributes required on an account for it to be allowed to create a bid order.
 	// An account must have all of these attributes in order to create a bid order in this market.
@@ -305,8 +303,6 @@ type Market struct {
 	//
 	// An entry that starts with "*." will match any attributes that end with the rest of it.
 	// E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "c.b.x.a", or "c.b.a.x".
-	//
-	// An entry of exactly "*" will match any attribute, which is equivalent to leaving this list empty.
 	ReqAttrCreateBid []string `protobuf:"bytes,13,rep,name=req_attr_create_bid,json=reqAttrCreateBid,proto3" json:"req_attr_create_bid,omitempty"`
 }
 

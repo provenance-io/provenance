@@ -613,11 +613,6 @@ func ValidateAddRemoveReqAttrs(field string, toAdd, toRemove []string) error {
 // IsValidReqAttr returns true if the provided string is a valid required attribute entry.
 // Assumes that the provided reqAttr has already been normalized.
 func IsValidReqAttr(reqAttr string) bool {
-	// Allow it to just be the wildcard character.
-	if reqAttr == "*" {
-		return true
-	}
-
 	// A leading wildcard segment is valid for us, but not the name module. So, remove it if it's there.
 	reqAttr = strings.TrimPrefix(reqAttr, "*.")
 
@@ -657,9 +652,6 @@ func HasReqAttrMatch(reqAttr string, accAttrs []string) bool {
 func IsReqAttrMatch(reqAttr, accAttr string) bool {
 	if len(reqAttr) == 0 || len(accAttr) == 0 {
 		return false
-	}
-	if reqAttr == "*" {
-		return true
 	}
 	if strings.HasPrefix(reqAttr, "*.") {
 		// reqAttr[1:] is used here (instead of [2:]) because we need that . to be

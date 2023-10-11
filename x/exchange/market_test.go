@@ -3630,7 +3630,7 @@ func TestIsValidReqAttr(t *testing.T) {
 		{name: "already valid and normalized", reqAttr: "x.y.z", exp: true},
 		{name: "already valid but not normalized", reqAttr: " x . y . z ", exp: false},
 		{name: "invalid character", reqAttr: "x._y.z", exp: false},
-		{name: "just the wildcard", reqAttr: "*", exp: true},
+		{name: "just the wildcard", reqAttr: "*", exp: false},
 		{name: "just the wildcard not normalized", reqAttr: " * ", exp: false},
 		{name: "just star dot", reqAttr: "*.", exp: false},
 		{name: "star dot valid", reqAttr: "*.x.y.z", exp: true},
@@ -4157,10 +4157,10 @@ func TestIsReqAttrMatch(t *testing.T) {
 			exp:     false,
 		},
 		{
-			name:    "just a star: account attribute has value",
+			name:    "just a star",
 			reqAttr: "*",
 			accAttr: "penny.dime.quarter",
-			exp:     true,
+			exp:     false,
 		},
 	}
 
