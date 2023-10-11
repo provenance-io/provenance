@@ -286,16 +286,14 @@ func assertEqualOrderFulfillmentSlices(t *testing.T, expected, actual []*orderFu
 	}
 
 	// Try the comparisons as strings, one per line because that's easier with ints and coins.
-	expStrVals := make([]string, len(expected))
+	expStrs := make([]string, len(expected))
 	for i, exp := range expected {
-		expStrVals[i] = orderFulfillmentString(exp)
+		expStrs[i] = orderFulfillmentString(exp)
 	}
-	expStrs := strings.Join(expStrVals, "\n")
-	actStrVals := make([]string, len(actual))
+	actStrs := make([]string, len(actual))
 	for i, act := range actual {
-		actStrVals[i] = orderFulfillmentString(act)
+		actStrs[i] = orderFulfillmentString(act)
 	}
-	actStrs := strings.Join(actStrVals, "\n")
 	if !assert.Equalf(t, expStrs, actStrs, msg("orderFulfillment strings"), args...) {
 		// Wooo, should have actionable info in the failure, so we can be done.
 		return false
@@ -305,8 +303,8 @@ func assertEqualOrderFulfillmentSlices(t *testing.T, expected, actual []*orderFu
 	for i := range expected {
 		assertEqualOrderFulfillments(t, expected[i], actual[i], fmt.Sprintf("[%d]%s", i, message), args...)
 	}
-	t.Logf("  Actual: %s", orderFulfillmentsString(actual))
-	t.Logf("Expected: %s", orderFulfillmentsString(expected))
+	t.Logf("  Actual:\n%s", strings.Join(expStrs, "\n"))
+	t.Logf("Expected:\n%s", strings.Join(actStrs, "\n"))
 	return false
 }
 
