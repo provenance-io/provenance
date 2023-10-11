@@ -218,9 +218,6 @@ func (o Order) Validate() error {
 }
 
 // Split splits this order by the provided assets filled.
-// If assets filled is zero, this order is returned as unfilled.
-// If assets filled equals this order's assets, this order is returned as filled.
-// Otherwise, two new orders are returned (copied from this order) with the appropriate assets, price, and fees.
 func (o Order) Split(assetsFilledAmt sdkmath.Int) (filled *Order, unfilled *Order, err error) {
 	orderAssets := o.GetAssets()
 	orderAssetsAmt := orderAssets.Amount
@@ -501,7 +498,7 @@ func (b BidOrder) CopyChange(newAssets, newPrice sdk.Coin, newFees sdk.Coins) *B
 }
 
 // FilledOrder holds an order that has been filled (either in full or partially).
-// The price and fees will indicate the amounts actually involved in the fulfillment.
+// The GetPrice() and GetSettlementFees() methods indicate the actual amounts involved in the fulfillment.
 type FilledOrder struct {
 	order       *Order
 	actualPrice sdk.Coin
