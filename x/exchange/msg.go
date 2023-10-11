@@ -315,7 +315,7 @@ func (m MsgMarketManagePermissionsRequest) ValidateBasic() error {
 			errs = append(errs, err)
 		}
 
-		toRevokeByAddr := make(map[string]AccessGrant)
+		toRevokeByAddr := make(map[string]AccessGrant, len(m.ToRevoke))
 		for _, ag := range m.ToRevoke {
 			if ContainsString(m.RevokeAll, ag.Address) {
 				errs = append(errs, fmt.Errorf("address %s appears in both the revoke-all and to-revoke fields", ag.Address))

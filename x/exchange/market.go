@@ -52,8 +52,8 @@ func (m Market) Validate() error {
 // ValidateFeeOptions returns an error if any of the provide coin values is not a valid fee option.
 func ValidateFeeOptions(field string, options []sdk.Coin) error {
 	var errs []error
-	denoms := make(map[string]bool)
-	dups := make(map[string]bool)
+	denoms := make(map[string]bool, len(options))
+	dups := make(map[string]bool, len(options))
 	for _, coin := range options {
 		if denoms[coin.Denom] {
 			if !dups[coin.Denom] {
@@ -115,7 +115,7 @@ func ValidateFeeRatios(sellerRatios, buyerRatios []FeeRatio) error {
 	}
 
 	// For the buyer ones, there can be multiple per price denom.
-	buyerPriceDenomsMap := make(map[string]bool)
+	buyerPriceDenomsMap := make(map[string]bool, len(buyerRatios))
 	buyerPriceDenoms := make([]string, 0)
 	for _, ratio := range buyerRatios {
 		if !buyerPriceDenomsMap[ratio.Price.Denom] {
@@ -145,7 +145,7 @@ func ValidateSellerFeeRatios(ratios []FeeRatio) error {
 		return nil
 	}
 
-	seen := make(map[string]bool)
+	seen := make(map[string]bool, len(ratios))
 	dups := make(map[string]bool)
 	var errs []error
 	for _, ratio := range ratios {
@@ -177,7 +177,7 @@ func ValidateBuyerFeeRatios(ratios []FeeRatio) error {
 		return nil
 	}
 
-	seen := make(map[string]bool)
+	seen := make(map[string]bool, len(ratios))
 	dups := make(map[string]bool)
 	var errs []error
 	for _, ratio := range ratios {
@@ -337,14 +337,14 @@ func ValidateRatioDenoms(sellerRatios, buyerRatios []FeeRatio) []error {
 	if len(sellerRatios) > 0 && len(buyerRatios) > 0 {
 		// We only need to check the price denoms if *both* types have an entry.
 		sellerPriceDenoms := make([]string, len(sellerRatios))
-		sellerPriceDenomsKnown := make(map[string]bool)
+		sellerPriceDenomsKnown := make(map[string]bool, len(sellerRatios))
 		for i, ratio := range sellerRatios {
 			sellerPriceDenoms[i] = ratio.Price.Denom
 			sellerPriceDenomsKnown[ratio.Price.Denom] = true
 		}
 
 		buyerPriceDenoms := make([]string, 0, len(sellerRatios))
-		buyerPriceDenomsKnown := make(map[string]bool)
+		buyerPriceDenomsKnown := make(map[string]bool, len(sellerRatios))
 		for _, ratio := range buyerRatios {
 			if !buyerPriceDenomsKnown[ratio.Price.Denom] {
 				buyerPriceDenoms = append(buyerPriceDenoms, ratio.Price.Denom)
@@ -414,7 +414,7 @@ func ValidateAccessGrantsField(field string, accessGrants []AccessGrant) error {
 		field += " "
 	}
 	errs := make([]error, len(accessGrants))
-	seen := make(map[string]bool)
+	seen := make(map[string]bool, len(accessGrants))
 	dups := make(map[string]bool)
 	for i, ag := range accessGrants {
 		if seen[ag.Address] && !dups[ag.Address] {
@@ -446,7 +446,7 @@ func (a AccessGrant) ValidateInField(field string) error {
 	if len(a.Permissions) == 0 {
 		return fmt.Errorf("invalid %saccess grant: no permissions provided for %s", field, a.Address)
 	}
-	seen := make(map[Permission]bool)
+	seen := make(map[Permission]bool, len(a.Permissions))
 	for _, perm := range a.Permissions {
 		if seen[perm] {
 			return fmt.Errorf("invalid %saccess grant: %s appears multiple times for %s", field, perm.SimpleString(), a.Address)
@@ -568,7 +568,7 @@ func ValidateReqAttrsAreNormalized(field string, attrs []string) error {
 // ValidateReqAttrs makes sure that each provided attribute is valid and that no duplicate entries are provided.
 func ValidateReqAttrs(field string, attrs []string) error {
 	var errs []error
-	seen := make(map[string]bool)
+	seen := make(map[string]bool, len(attrs))
 	bad := make(map[string]bool)
 	for _, attr := range attrs {
 		normalized := nametypes.NormalizeName(attr)

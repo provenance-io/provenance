@@ -62,9 +62,9 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 	var totalSellerFee sdk.Coins
 	assetOutputs := make([]banktypes.Output, 0, len(msg.BidOrderIds))
 	priceInputs := make([]banktypes.Input, 0, len(msg.BidOrderIds))
-	addrIndex := make(map[string]int)
+	addrIndex := make(map[string]int, len(msg.BidOrderIds))
 	feeInputs := make([]banktypes.Input, 0, len(msg.BidOrderIds)+1)
-	feeAddrIndex := make(map[string]int)
+	feeAddrIndex := make(map[string]int, len(msg.BidOrderIds))
 	filledOrders := make([]*exchange.FilledOrder, 0, len(msg.BidOrderIds))
 	for _, order := range orders {
 		bidOrder := order.GetBidOrder()
@@ -192,9 +192,9 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	var errs []error
 	assetInputs := make([]banktypes.Input, 0, len(msg.AskOrderIds))
 	priceOutputs := make([]banktypes.Output, 0, len(msg.AskOrderIds))
-	addrIndex := make(map[string]int)
+	addrIndex := make(map[string]int, len(msg.AskOrderIds))
 	feeInputs := make([]banktypes.Input, 0, len(msg.AskOrderIds)+1)
-	feeAddrIndex := make(map[string]int)
+	feeAddrIndex := make(map[string]int, len(msg.AskOrderIds))
 	filledOrders := make([]*exchange.FilledOrder, 0, len(msg.AskOrderIds))
 	for _, order := range orders {
 		askOrder := order.GetAskOrder()

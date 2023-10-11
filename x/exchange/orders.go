@@ -51,7 +51,7 @@ var _ OrderI = (*Order)(nil)
 // findDuplicateIds returns all order ids that appear two or more times in the provided slice.
 func findDuplicateIds(orderIDs []uint64) []uint64 {
 	var rv []uint64
-	seen := make(map[uint64]bool)
+	seen := make(map[uint64]bool, len(orderIDs))
 	dups := make(map[uint64]bool)
 	for _, orderID := range orderIDs {
 		if seen[orderID] && !dups[orderID] {

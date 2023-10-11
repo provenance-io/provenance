@@ -19,7 +19,7 @@ func (g GenesisState) Validate() error {
 		}
 	}
 
-	marketIDs := make(map[uint32]int)
+	marketIDs := make(map[uint32]int, len(g.Markets))
 	for i, market := range g.Markets {
 		if market.MarketId == 0 {
 			errs = append(errs, fmt.Errorf("invalid market[%d]: market id cannot be zero", i))
@@ -39,7 +39,7 @@ func (g GenesisState) Validate() error {
 	}
 
 	maxOrderID := uint64(0)
-	orderIDs := make(map[uint64]int)
+	orderIDs := make(map[uint64]int, len(g.Orders))
 	for i, order := range g.Orders {
 		if order.OrderId != 0 {
 			j, seen := orderIDs[order.OrderId]
