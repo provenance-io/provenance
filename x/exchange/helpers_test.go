@@ -38,6 +38,18 @@ func copySlice[T any](vals []T, copier func(T) T) []T {
 	return rv
 }
 
+// stringerJoin runs the stringer on each of the provided vals and joins them using the provided separator.
+func stringerJoin[T any](vals []T, stringer func(T) string, sep string) string {
+	if vals == nil {
+		return "nil"
+	}
+	strs := make([]string, len(vals))
+	for i, val := range vals {
+		strs[i] = stringer(val)
+	}
+	return "[" + strings.Join(strs, sep) + "]"
+}
+
 // joinErrs joines the provided error strings into a single one to match what errors.Join does.
 func joinErrs(errs ...string) string {
 	return strings.Join(errs, "\n")

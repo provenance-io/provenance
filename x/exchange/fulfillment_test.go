@@ -109,14 +109,7 @@ func distributionString(dist *distribution) string {
 
 // distributionsString is similar to %v except with easier to understand Int entries.
 func distributionsString(dists []*distribution) string {
-	if dists == nil {
-		return "nil"
-	}
-	vals := make([]string, len(dists))
-	for i, d := range dists {
-		vals[i] = distributionString(d)
-	}
-	return fmt.Sprintf("[%s]", strings.Join(vals, ", "))
+	return stringerJoin(dists, distributionString, ", ")
 }
 
 // orderFulfillmentString is similar to %v except with easier to understand Coin and Int entries.
@@ -140,15 +133,7 @@ func orderFulfillmentString(f *orderFulfillment) string {
 
 // orderFulfillmentsString is similar to %v except with easier to understand Coin entries.
 func orderFulfillmentsString(ofs []*orderFulfillment) string {
-	if ofs == nil {
-		return "nil"
-	}
-
-	vals := make([]string, len(ofs))
-	for i, f := range ofs {
-		vals[i] = orderFulfillmentString(f)
-	}
-	return fmt.Sprintf("[%s]", strings.Join(vals, ", "))
+	return stringerJoin(ofs, orderFulfillmentString, ", ")
 }
 
 // bankInputString is similar to %v except with easier to understand Coin entries.
@@ -158,14 +143,7 @@ func bankInputString(i banktypes.Input) string {
 
 // bankInputsString returns a string with all the provided inputs.
 func bankInputsString(ins []banktypes.Input) string {
-	if ins == nil {
-		return "nil"
-	}
-	vals := make([]string, len(ins))
-	for i, input := range ins {
-		vals[i] = bankInputString(input)
-	}
-	return fmt.Sprintf("[%s]", strings.Join(vals, ", "))
+	return stringerJoin(ins, bankInputString, ", ")
 }
 
 // bankOutputString is similar to %v except with easier to understand Coin entries.
@@ -175,14 +153,7 @@ func bankOutputString(o banktypes.Output) string {
 
 // bankOutputsString returns a string with all the provided outputs.
 func bankOutputsString(outs []banktypes.Output) string {
-	if outs == nil {
-		return "nil"
-	}
-	vals := make([]string, len(outs))
-	for i, output := range outs {
-		vals[i] = bankOutputString(output)
-	}
-	return fmt.Sprintf("[%s]", strings.Join(vals, ", "))
+	return stringerJoin(outs, bankOutputString, ", ")
 }
 
 // transferString is similar to %v except with easier to understand Coin entries.
@@ -229,7 +200,7 @@ func indexedAddrAmtsString(i *indexedAddrAmts) string {
 		for j, amt := range i.amts {
 			amtsVals[j] = fmt.Sprintf("%q", amt)
 		}
-		amts = fmt.Sprintf("[]%T{%s}", i.amts, strings.Join(amtsVals, ", "))
+		amts = fmt.Sprintf("%T{%s}", i.amts, strings.Join(amtsVals, ", "))
 	}
 
 	indexes := "nil"
