@@ -168,14 +168,7 @@ func transferString(t *Transfer) string {
 
 // transfersStringsLines creates a string for each transfer.
 func transfersStringsLines(ts []*Transfer) []string {
-	if ts == nil {
-		return nil
-	}
-	rv := make([]string, len(ts))
-	for i, t := range ts {
-		rv[i] = transferString(t)
-	}
-	return rv
+	return stringerLines(ts, transferString)
 }
 
 // String converts a indexedAddrAmtsString to a string.
@@ -272,28 +265,19 @@ func assertEqualOrderFulfillmentSlices(t *testing.T, expected, actual []*orderFu
 	}
 
 	// Check the order ids (and lengths) since that's gonna be a huge clue to a problem
-	expIDs := make([]string, len(expected))
-	for i, exp := range expected {
-		expIDs[i] = fmt.Sprintf("%d", exp.GetOrderID())
+	idStringer := func(of *orderFulfillment) string {
+		return fmt.Sprintf("%d", of.GetOrderID())
 	}
-	actIDs := make([]string, len(actual))
-	for i, act := range actual {
-		actIDs[i] = fmt.Sprintf("%d", act.GetOrderID())
-	}
+	expIDs := stringerLines(expected, idStringer)
+	actIDs := stringerLines(actual, idStringer)
 	if !assert.Equalf(t, expIDs, actIDs, msg("OrderIDs"), args...) {
 		// Wooo, should have actionable info in the failure, so we can be done.
 		return false
 	}
 
 	// Try the comparisons as strings, one per line because that's easier with ints and coins.
-	expStrs := make([]string, len(expected))
-	for i, exp := range expected {
-		expStrs[i] = orderFulfillmentString(exp)
-	}
-	actStrs := make([]string, len(actual))
-	for i, act := range actual {
-		actStrs[i] = orderFulfillmentString(act)
-	}
+	expStrs := stringerLines(expected, orderFulfillmentString)
+	actStrs := stringerLines(actual, orderFulfillmentString)
 	if !assert.Equalf(t, expStrs, actStrs, msg("orderFulfillment strings"), args...) {
 		// Wooo, should have actionable info in the failure, so we can be done.
 		return false
@@ -1010,23 +994,20 @@ func TestBuildSettlement(t *testing.T) {
 			assertions.RequireErrorValue(t, err, tc.expErr, "BuildSettlement error")
 			if !assert.Equal(t, tc.expSettlement, settlement, "BuildSettlement result") {
 				// Doing each field on its own now to try to help pinpoint the differences.
-				expTrans := transfersStringsLines(tc.expSettlement.Transfers)
-				actTrans := transfersStringsLines(settlement.Transfers)
+				expTrans := stringerLines(tc.expSettlement.Transfers, transferString)
+				actTrans := stringerLines(settlement.Transfers, transferString)
 				assert.Equal(t, expTrans, actTrans, "Transfers (as strings)")
 
 				expFeeInputs := bankInputsString(tc.expSettlement.FeeInputs)
 				actFeeInputs := bankInputsString(settlement.FeeInputs)
 				assert.Equal(t, expFeeInputs, actFeeInputs, "FeeInputs (as strings)")
 
-				expFilledIds := make([]uint64, len(tc.expSettlement.FullyFilledOrders))
-				for i, fo := range tc.expSettlement.FullyFilledOrders {
-					expFilledIds[i] = fo.GetOrderID()
+				idStringer := func(of *FilledOrder) string {
+					return fmt.Sprintf("%d", of.GetOrderID())
 				}
-				actFilledIds := make([]uint64, len(settlement.FullyFilledOrders))
-				for i, fo := range settlement.FullyFilledOrders {
-					actFilledIds[i] = fo.GetOrderID()
-				}
-				if assert.Equal(t, expFilledIds, actFilledIds, "FullyFilledOrders ids") {
+				expFilledIDs := stringerLines(tc.expSettlement.FullyFilledOrders, idStringer)
+				actFilledIDs := stringerLines(settlement.FullyFilledOrders, idStringer)
+				if assert.Equal(t, expFilledIDs, actFilledIDs, "FullyFilledOrders ids") {
 					// If they're the same ids, compare each individually.
 					for i := range tc.expSettlement.FullyFilledOrders {
 						assert.Equal(t, tc.expSettlement.FullyFilledOrders[i], settlement.FullyFilledOrders[i], "FullyFilledOrders[%d]", i)

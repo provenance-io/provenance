@@ -43,11 +43,19 @@ func stringerJoin[T any](vals []T, stringer func(T) string, sep string) string {
 	if vals == nil {
 		return "nil"
 	}
+	return "[" + strings.Join(stringerLines(vals, stringer), sep) + "]"
+}
+
+// stringerLines returns a slice where each of the vals has been converted using the given stringer.
+func stringerLines[T any](vals []T, stringer func(T) string) []string {
+	if vals == nil {
+		return nil
+	}
 	strs := make([]string, len(vals))
 	for i, val := range vals {
 		strs[i] = stringer(val)
 	}
-	return "[" + strings.Join(strs, sep) + "]"
+	return strs
 }
 
 // joinErrs joines the provided error strings into a single one to match what errors.Join does.
