@@ -329,7 +329,7 @@ func TestBuildSettlement(t *testing.T) {
 			t.Fatalf("cannot create ask order %d with more than 1 fees %v", orderID, fees)
 		}
 		var fee *sdk.Coin
-		if fc := feeCoins("", fees); !fc.IsZero() {
+		if fc := feeCoins(fmt.Sprintf("ask order %d", orderID), fees); !fc.IsZero() {
 			fee = &fc[0]
 		}
 		return NewOrder(orderID).WithAsk(&AskOrder{
