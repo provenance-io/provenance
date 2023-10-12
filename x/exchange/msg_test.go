@@ -1318,13 +1318,14 @@ func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 			},
 		},
 		{
+			// We allow this because it can be fixed via gov prop if no one is left that can manage permissions.
 			name: "admin in revoke-all",
 			msg: MsgMarketManagePermissionsRequest{
 				Admin:     goodAdminAddr,
 				MarketId:  1,
 				RevokeAll: []string{goodAddr1, goodAdminAddr, goodAddr2},
 			},
-			expErr: []string{"message administrator " + goodAdminAddr + " cannot revoke all of their permissions"},
+			expErr: nil,
 		},
 		{
 			name: "admin revoking all their permissions except permissions",
@@ -1342,6 +1343,7 @@ func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 			expErr: nil,
 		},
 		{
+			// We allow this because it can be fixed via gov prop if no one is left that can manage permissions.
 			name: "admin revoking own ability to manage permissions",
 			msg: MsgMarketManagePermissionsRequest{
 				Admin:    goodAdminAddr,
@@ -1352,7 +1354,7 @@ func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 					{Address: goodAddr2, Permissions: []Permission{Permission_permissions}},
 				},
 			},
-			expErr: []string{"message administrator " + goodAdminAddr + " cannot revoke their own ability to manage permissions"},
+			expErr: nil,
 		},
 		{
 			name: "multiple errs",
