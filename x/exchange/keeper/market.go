@@ -1196,8 +1196,9 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (uint32, e
 	var errAsk, errBid error
 	market.ReqAttrCreateAsk, errAsk = exchange.NormalizeReqAttrs(market.ReqAttrCreateAsk)
 	market.ReqAttrCreateBid, errBid = exchange.NormalizeReqAttrs(market.ReqAttrCreateBid)
-	if errAsk != nil || errBid != nil {
-		return 0, errors.Join(errAsk, errBid)
+	errDets := market.MarketDetails.Validate()
+	if errAsk != nil || errBid != nil || errDets != nil {
+		return 0, errors.Join(errAsk, errBid, errDets)
 	}
 
 	store := k.getStore(ctx)
