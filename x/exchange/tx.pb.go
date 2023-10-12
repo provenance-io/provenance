@@ -1254,11 +1254,11 @@ type MsgMarketManageReqAttrsRequest struct {
 	MarketId uint32 `protobuf:"varint,2,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
 	// create_ask_to_add are the attributes that should now also be required to create an ask order.
 	CreateAskToAdd []string `protobuf:"bytes,3,rep,name=create_ask_to_add,json=createAskToAdd,proto3" json:"create_ask_to_add,omitempty"`
-	// create_ask_to_add are the attributes that should no longer be required to create an ask order.
+	// create_ask_to_remove are the attributes that should no longer be required to create an ask order.
 	CreateAskToRemove []string `protobuf:"bytes,4,rep,name=create_ask_to_remove,json=createAskToRemove,proto3" json:"create_ask_to_remove,omitempty"`
-	// create_ask_to_add are the attributes that should now also be required to create a bid order.
+	// create_bid_to_add are the attributes that should now also be required to create a bid order.
 	CreateBidToAdd []string `protobuf:"bytes,5,rep,name=create_bid_to_add,json=createBidToAdd,proto3" json:"create_bid_to_add,omitempty"`
-	// create_ask_to_add are the attributes that should no longer be required to create a bid order.
+	// create_bid_to_remove are the attributes that should no longer be required to create a bid order.
 	CreateBidToRemove []string `protobuf:"bytes,6,rep,name=create_bid_to_remove,json=createBidToRemove,proto3" json:"create_bid_to_remove,omitempty"`
 }
 
