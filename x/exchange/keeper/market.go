@@ -884,12 +884,11 @@ func (k Keeper) UpdatePermissions(ctx sdk.Context, msg *exchange.MsgMarketManage
 	for _, addrStr := range msg.RevokeAll {
 		addr := sdk.MustAccAddressFromBech32(addrStr)
 		perms := getUserPermissions(store, marketID, addr)
-		if len(perms) > 0 {
-			if len(errs) == 0 {
-				revokeUserPermissions(store, marketID, addr)
-			}
-		} else {
+		if len(perms) == 0 {
 			errs = append(errs, fmt.Errorf("account %s does not have any permissions for market %d", addrStr, marketID))
+		}
+		if len(errs) == 0 {
+			revokeUserPermissions(store, marketID, addr)
 		}
 	}
 
