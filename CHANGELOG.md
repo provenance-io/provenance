@@ -108,6 +108,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/spf13/viper` from 1.16.0 to 1.17.0 ([#1695](https://github.com/provenance-io/provenance/pull/1695))
 - Bump `github.com/otiai10/copy` from 1.12.0 to 1.14.0 ([#1693](https://github.com/provenance-io/provenance/pull/1693))
 - Bump `stefanzweifel/git-auto-commit-action` from 4 to 5 ([#1696](https://github.com/provenance-io/provenance/pull/1696))
+- Bump `golang.org/x/net` from 0.15.0 to 0.17.0 ([#1704](https://github.com/provenance-io/provenance/pull/1704))
 - Bump `bufbuild/buf-lint-action` from 1.0.3 to 1.1.0 ([#1705](https://github.com/provenance-io/provenance/pull/1705))
 
 ---
