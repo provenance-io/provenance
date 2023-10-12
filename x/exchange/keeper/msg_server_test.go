@@ -14,6 +14,8 @@ package keeper_test
 
 // TODO[1658]: func (s *TestSuite) TestMsgServer_MarketSettle()
 
+// TODO[1658]: func (s *TestSuite) TestMsgServer_MarketSetOrderExternalID()
+
 // TODO[1658]: func (s *TestSuite) TestMsgServer_MarketWithdraw()
 
 // TODO[1658]: func (s *TestSuite) TestMsgServer_MarketUpdateDetails()

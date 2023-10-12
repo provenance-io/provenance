@@ -54,6 +54,9 @@ func TestAllMsgsGetSigners(t *testing.T) {
 			return &MsgMarketSettleRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
+			return &MsgMarketSetOrderExternalIDRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
 			return &MsgMarketWithdrawRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
@@ -768,6 +771,122 @@ func TestMsgMarketSettleRequest_ValidateBasic(t *testing.T) {
 				"invalid market id",
 				"no ask order ids provided",
 				"no bid order ids provided",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgMarketSetOrderExternalIDRequest_ValidateBasic(t *testing.T) {
+	admin := sdk.AccAddress("admin_address_______").String()
+
+	tests := []struct {
+		name   string
+		msg    MsgMarketSetOrderExternalIDRequest
+		expErr []string
+	}{
+		{
+			name: "control",
+			msg: MsgMarketSetOrderExternalIDRequest{
+				Admin:      admin,
+				MarketId:   5,
+				OrderId:    12,
+				ExternalId: "twenty-eight",
+			},
+			expErr: nil,
+		},
+		{
+			name: "no admin",
+			msg: MsgMarketSetOrderExternalIDRequest{
+				Admin:      "",
+				MarketId:   5,
+				OrderId:    12,
+				ExternalId: "twenty-eight",
+			},
+			expErr: []string{"invalid administrator \"\"", emptyAddrErr},
+		},
+		{
+			name: "bad admin",
+			msg: MsgMarketSetOrderExternalIDRequest{
+				Admin:      "badadmin",
+				MarketId:   5,
+				OrderId:    12,
+				ExternalId: "twenty-eight",
+			},
+			expErr: []string{"invalid administrator \"badadmin\"", bech32Err},
+		},
+		{
+			name: "market zero",
+			msg: MsgMarketSetOrderExternalIDRequest{
+				Admin:      admin,
+				MarketId:   0,
+				OrderId:    12,
+				ExternalId: "twenty-eight",
+			},
+			expErr: []string{"invalid market id: cannot be zero"},
+		},
+		{
+			name: "empty external id",
+			msg: MsgMarketSetOrderExternalIDRequest{
+				Admin:      admin,
+				MarketId:   5,
+				OrderId:    12,
+				ExternalId: "",
+			},
+			expErr: nil,
+		},
+		{
+			name: "external id at max length",
+			msg: MsgMarketSetOrderExternalIDRequest{
+				Admin:      admin,
+				MarketId:   5,
+				OrderId:    12,
+				ExternalId: strings.Repeat("y", MaxExternalIDLength),
+			},
+			expErr: nil,
+		},
+		{
+			name: "external id more than max length",
+			msg: MsgMarketSetOrderExternalIDRequest{
+				Admin:      admin,
+				MarketId:   5,
+				OrderId:    12,
+				ExternalId: strings.Repeat("r", MaxExternalIDLength+1),
+			},
+			expErr: []string{
+				fmt.Sprintf("invalid external id %q: max length %d",
+					strings.Repeat("r", MaxExternalIDLength+1), MaxExternalIDLength),
+			},
+		},
+		{
+			name: "order zero",
+			msg: MsgMarketSetOrderExternalIDRequest{
+				Admin:      admin,
+				MarketId:   5,
+				OrderId:    0,
+				ExternalId: "twenty-eight",
+			},
+			expErr: []string{"invalid order id: cannot be zero"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgMarketSetOrderExternalIDRequest{
+				Admin:      "",
+				MarketId:   0,
+				OrderId:    0,
+				ExternalId: strings.Repeat("V", MaxExternalIDLength+1),
+			},
+			expErr: []string{
+				"invalid administrator \"\"", emptyAddrErr,
+				"invalid market id: cannot be zero",
+				fmt.Sprintf("invalid external id %q: max length %d",
+					strings.Repeat("V", MaxExternalIDLength+1), MaxExternalIDLength),
+				"invalid order id: cannot be zero",
 			},
 		},
 	}

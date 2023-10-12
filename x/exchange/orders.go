@@ -19,6 +19,8 @@ const (
 	OrderTypeByteBid = byte(0x01)
 )
 
+const MaxExternalIDLength = 40
+
 // SubOrderI is an interface with getters for the fields in a sub-order (i.e. AskOrder or BidOrder).
 type SubOrderI interface {
 	GetMarketID() uint32
@@ -27,6 +29,7 @@ type SubOrderI interface {
 	GetPrice() sdk.Coin
 	GetSettlementFees() sdk.Coins
 	PartialFillAllowed() bool
+	GetExternalID() string
 	GetOrderType() string
 	GetOrderTypeByte() byte
 	GetHoldAmount() sdk.Coins
@@ -86,6 +89,14 @@ func ValidateOrderIDs(field string, orderIDs []uint64) error {
 	dupOrderIDs := findDuplicateIds(orderIDs)
 	if len(dupOrderIDs) > 0 {
 		return fmt.Errorf("duplicate %s order ids provided: %v", field, dupOrderIDs)
+	}
+	return nil
+}
+
+// ValidateExternalID makes sure an external id is okay.
+func ValidateExternalID(externalID string) error {
+	if len(externalID) > MaxExternalIDLength {
+		return fmt.Errorf("invalid external id %q: max length %d", externalID, MaxExternalIDLength)
 	}
 	return nil
 }
@@ -180,6 +191,11 @@ func (o Order) GetSettlementFees() sdk.Coins {
 // PartialFillAllowed returns true if this order allows partial fulfillment.
 func (o Order) PartialFillAllowed() bool {
 	return o.MustGetSubOrder().PartialFillAllowed()
+}
+
+// GetUUID returns this order's UUID.
+func (o Order) GetExternalID() string {
+	return o.MustGetSubOrder().GetExternalID()
 }
 
 // GetOrderType returns a string indicating what type this order is.
@@ -327,6 +343,11 @@ func (a AskOrder) PartialFillAllowed() bool {
 	return a.AllowPartial
 }
 
+// GetExternalID returns this ask order's external id.
+func (a AskOrder) GetExternalID() string {
+	return a.ExternalId
+}
+
 // GetOrderType returns the order type string for this ask order: "ask".
 func (a AskOrder) GetOrderType() string {
 	return OrderTypeAsk
@@ -386,6 +407,10 @@ func (a AskOrder) Validate() error {
 
 	// Nothing to check on the AllowPartial boolean.
 
+	if err := ValidateExternalID(a.ExternalId); err != nil {
+		errs = append(errs, err)
+	}
+
 	return errors.Join(errs...)
 }
 
@@ -398,6 +423,7 @@ func (a AskOrder) CopyChange(newAssets, newPrice sdk.Coin, newFee *sdk.Coin) *As
 		Price:                   newPrice,
 		SellerSettlementFlatFee: newFee,
 		AllowPartial:            a.AllowPartial,
+		ExternalId:              a.ExternalId,
 	}
 }
 
@@ -429,6 +455,11 @@ func (b BidOrder) GetSettlementFees() sdk.Coins {
 // PartialFillAllowed returns true if this bid order allows partial fulfillment.
 func (b BidOrder) PartialFillAllowed() bool {
 	return b.AllowPartial
+}
+
+// GetExternalID returns this bid order's external id.
+func (b BidOrder) GetExternalID() string {
+	return b.ExternalId
 }
 
 // GetOrderType returns the order type string for this bid order: "bid".
@@ -482,6 +513,10 @@ func (b BidOrder) Validate() error {
 
 	// Nothing to check on the AllowPartial boolean.
 
+	if err := ValidateExternalID(b.ExternalId); err != nil {
+		errs = append(errs, err)
+	}
+
 	return errors.Join(errs...)
 }
 
@@ -494,6 +529,7 @@ func (b BidOrder) CopyChange(newAssets, newPrice sdk.Coin, newFees sdk.Coins) *B
 		Price:               newPrice,
 		BuyerSettlementFees: newFees,
 		AllowPartial:        b.AllowPartial,
+		ExternalId:          b.ExternalId,
 	}
 }
 
@@ -574,6 +610,11 @@ func (o FilledOrder) GetOriginalSettlementFees() sdk.Coins {
 // PartialFillAllowed returns true if this order allows partial fulfillment.
 func (o FilledOrder) PartialFillAllowed() bool {
 	return o.order.PartialFillAllowed()
+}
+
+// GetExternalID returns this order's external id.
+func (o FilledOrder) GetExternalID() string {
+	return o.order.GetExternalID()
 }
 
 // GetOrderType returns a string indicating what type this order is.

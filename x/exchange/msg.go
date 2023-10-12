@@ -14,6 +14,7 @@ var allRequestMsgs = []sdk.Msg{
 	(*MsgFillBidsRequest)(nil),
 	(*MsgFillAsksRequest)(nil),
 	(*MsgMarketSettleRequest)(nil),
+	(*MsgMarketSetOrderExternalIDRequest)(nil),
 	(*MsgMarketWithdrawRequest)(nil),
 	(*MsgMarketUpdateDetailsRequest)(nil),
 	(*MsgMarketUpdateEnabledRequest)(nil),
@@ -192,6 +193,33 @@ func (m MsgMarketSettleRequest) ValidateBasic() error {
 }
 
 func (m MsgMarketSettleRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgMarketSetOrderExternalIDRequest) ValidateBasic() error {
+	var errs []error
+
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
+	}
+
+	if m.MarketId == 0 {
+		errs = append(errs, errors.New("invalid market id: cannot be zero"))
+	}
+
+	if err := ValidateExternalID(m.ExternalId); err != nil {
+		errs = append(errs, err)
+	}
+
+	if m.OrderId == 0 {
+		errs = append(errs, errors.New("invalid order id: cannot be zero"))
+	}
+
+	return errors.Join(errs...)
+}
+
+func (m MsgMarketSetOrderExternalIDRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(m.Admin)
 	return []sdk.AccAddress{addr}
 }

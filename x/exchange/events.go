@@ -6,35 +6,46 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewEventOrderCreated(order *Order) *EventOrderCreated {
+func NewEventOrderCreated(order OrderI) *EventOrderCreated {
 	return &EventOrderCreated{
-		OrderId:   order.GetOrderID(),
-		OrderType: order.GetOrderType(),
+		OrderId:    order.GetOrderID(),
+		OrderType:  order.GetOrderType(),
+		ExternalId: order.GetExternalID(),
 	}
 }
 
-func NewEventOrderCancelled(orderID uint64, cancelledBy sdk.AccAddress) *EventOrderCancelled {
+func NewEventOrderCancelled(order OrderI, cancelledBy sdk.AccAddress) *EventOrderCancelled {
 	return &EventOrderCancelled{
-		OrderId:     orderID,
+		OrderId:     order.GetOrderID(),
 		CancelledBy: cancelledBy.String(),
+		ExternalId:  order.GetExternalID(),
 	}
 }
 
 func NewEventOrderFilled(order OrderI) *EventOrderFilled {
 	return &EventOrderFilled{
-		OrderId: order.GetOrderID(),
-		Assets:  order.GetAssets().String(),
-		Price:   order.GetPrice().String(),
-		Fees:    order.GetSettlementFees().String(),
+		OrderId:    order.GetOrderID(),
+		Assets:     order.GetAssets().String(),
+		Price:      order.GetPrice().String(),
+		Fees:       order.GetSettlementFees().String(),
+		ExternalId: order.GetExternalID(),
 	}
 }
 
 func NewEventOrderPartiallyFilled(order OrderI) *EventOrderPartiallyFilled {
 	return &EventOrderPartiallyFilled{
-		OrderId: order.GetOrderID(),
-		Assets:  order.GetAssets().String(),
-		Price:   order.GetPrice().String(),
-		Fees:    order.GetSettlementFees().String(),
+		OrderId:    order.GetOrderID(),
+		Assets:     order.GetAssets().String(),
+		Price:      order.GetPrice().String(),
+		Fees:       order.GetSettlementFees().String(),
+		ExternalId: order.GetExternalID(),
+	}
+}
+
+func NewEventOrderExternalIDUpdated(order OrderI) *EventOrderExternalIDUpdated {
+	return &EventOrderExternalIDUpdated{
+		OrderId:    order.GetOrderID(),
+		ExternalId: order.GetExternalID(),
 	}
 }
 

@@ -112,8 +112,9 @@ func (k Keeper) parseOrderStoreKeyValue(key, value []byte) (*exchange.Order, err
 	return k.parseOrderStoreValue(orderID, value)
 }
 
-// createIndexEntries creates all the key/value index entries for an order.
-func createIndexEntries(order exchange.Order) []sdk.KVPair {
+// createConstantIndexEntries creates all the key/value index entries for an order that don't change.
+// See also: createMarketExternalIDToOrderEntry.
+func createConstantIndexEntries(order exchange.Order) []sdk.KVPair {
 	marketID := order.GetMarketID()
 	orderID := order.GetOrderID()
 	orderTypeByte := order.GetOrderTypeByte()
@@ -137,6 +138,19 @@ func createIndexEntries(order exchange.Order) []sdk.KVPair {
 	}
 }
 
+// createMarketExternalIDToOrderEntry creates the market external id to order store entry.
+// See also createConstantIndexEntries
+func createMarketExternalIDToOrderEntry(order exchange.OrderI) *sdk.KVPair {
+	externalID := order.GetExternalID()
+	if len(externalID) == 0 {
+		return nil
+	}
+	return &sdk.KVPair{
+		Key:   MakeIndexKeyMarketExternalIDToOrder(order.GetMarketID(), externalID),
+		Value: uint64Bz(order.GetOrderID()),
+	}
+}
+
 // getOrderFromStore looks up an order from the store. Returns nil, nil if the order does not exist.
 func (k Keeper) getOrderFromStore(store sdk.KVStore, orderID uint64) (*exchange.Order, error) {
 	key := MakeKeyOrder(orderID)
@@ -157,17 +171,29 @@ func (k Keeper) setOrderInStore(store sdk.KVStore, order exchange.Order) error {
 	if err != nil {
 		return fmt.Errorf("failed to create order %d store key/value: %w", order.GetOrderID(), err)
 	}
+
+	externalIDEntry := createMarketExternalIDToOrderEntry(order)
+	if externalIDEntry != nil && store.Has(externalIDEntry.Key) {
+		orderIDBz := store.Get(externalIDEntry.Value)
+		otherOrderID, ok := uint64FromBz(orderIDBz)
+		if ok && otherOrderID != order.GetOrderID() {
+			return fmt.Errorf("external id %q is already in use by order %d: cannot be used for order %d",
+				order.GetExternalID(), otherOrderID, order.GetOrderID())
+		}
+	}
+
 	isUpdate := store.Has(key)
 	store.Set(key, value)
+
 	if !isUpdate {
-		indexEntries := createIndexEntries(order)
+		indexEntries := createConstantIndexEntries(order)
 		for _, entry := range indexEntries {
 			store.Set(entry.Key, entry.Value)
 		}
-		// It is assumed that these index entries cannot change over the life of an order.
-		// The only change that is allowed to an order is the assets (due to partial fulfillment).
-		// Partial fulfillment is only allowed when there's a single asset type (denom), though.
-		// That's why no attempt is made in here to update index entries when the order already exists.
+	}
+
+	if externalIDEntry != nil {
+		store.Set(externalIDEntry.Key, externalIDEntry.Value)
 	}
 	return nil
 }
@@ -176,9 +202,13 @@ func (k Keeper) setOrderInStore(store sdk.KVStore, order exchange.Order) error {
 func deleteAndDeIndexOrder(store sdk.KVStore, order exchange.Order) {
 	key := MakeKeyOrder(order.OrderId)
 	store.Delete(key)
-	indexEntries := createIndexEntries(order)
+	indexEntries := createConstantIndexEntries(order)
 	for _, entry := range indexEntries {
 		store.Delete(entry.Key)
+	}
+	externalIDEntry := createMarketExternalIDToOrderEntry(order)
+	if externalIDEntry != nil {
+		store.Delete(externalIDEntry.Key)
 	}
 }
 
@@ -562,6 +592,26 @@ func (k Keeper) GetOrder(ctx sdk.Context, orderID uint64) (*exchange.Order, erro
 	return k.getOrderFromStore(k.getStore(ctx), orderID)
 }
 
+// GetOrderByExternalID gets an order by its market id and UUID.
+func (k Keeper) GetOrderByExternalID(ctx sdk.Context, marketID uint32, externalID string) (*exchange.Order, error) {
+	if marketID == 0 {
+		return nil, errors.New("invalid market id: cannot be zero")
+	}
+	if len(externalID) == 0 || len(externalID) > exchange.MaxExternalIDLength {
+		return nil, nil
+	}
+
+	store := k.getStore(ctx)
+	key := MakeIndexKeyMarketExternalIDToOrder(marketID, externalID)
+	orderIDBz := store.Get(key)
+	orderID, ok := uint64FromBz(orderIDBz)
+	if !ok {
+		return nil, nil
+	}
+
+	return k.getOrderFromStore(store, orderID)
+}
+
 // CreateAskOrder creates an ask order, collects the creation fee, and places all needed holds.
 func (k Keeper) CreateAskOrder(ctx sdk.Context, askOrder exchange.AskOrder, creationFee *sdk.Coin) (uint64, error) {
 	if err := askOrder.Validate(); err != nil {
@@ -671,8 +721,56 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 	}
 
 	deleteAndDeIndexOrder(k.getStore(ctx), *order)
-	k.emitEvent(ctx, exchange.NewEventOrderCancelled(orderID, signerAddr))
+	k.emitEvent(ctx, exchange.NewEventOrderCancelled(order, signerAddr))
 
+	return nil
+}
+
+// SetOrderExternalID updates an order's external id.
+func (k Keeper) SetOrderExternalID(ctx sdk.Context, marketID uint32, orderID uint64, newExternalID string) error {
+	if err := exchange.ValidateExternalID(newExternalID); err != nil {
+		return err
+	}
+
+	store := k.getStore(ctx)
+	order, err := k.getOrderFromStore(store, orderID)
+	if err != nil {
+		return err
+	}
+	if order == nil {
+		return fmt.Errorf("order %d not found", orderID)
+	}
+
+	orderMarketID := order.GetMarketID()
+	if marketID != orderMarketID {
+		return fmt.Errorf("order %d has market id %d, expected %d", orderID, orderMarketID, marketID)
+	}
+
+	orderExternalID := order.GetExternalID()
+	if orderExternalID == newExternalID {
+		return fmt.Errorf("order %d already has external id %q", orderID, orderExternalID)
+	}
+
+	switch {
+	case order.IsAskOrder():
+		order.GetAskOrder().ExternalId = newExternalID
+	case order.IsBidOrder():
+		order.GetBidOrder().ExternalId = newExternalID
+	default:
+		return fmt.Errorf("order %d has unexpected type %s", orderID, order.GetOrderType())
+	}
+
+	if len(orderExternalID) > 0 {
+		oldIDIndex := MakeIndexKeyMarketExternalIDToOrder(orderMarketID, orderExternalID)
+		store.Delete(oldIDIndex)
+	}
+
+	err = k.setOrderInStore(store, *order)
+	if err != nil {
+		return err
+	}
+
+	k.emitEvent(ctx, exchange.NewEventOrderExternalIDUpdated(order))
 	return nil
 }
 

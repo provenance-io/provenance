@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -96,6 +97,7 @@ func TestKeyTypeUniqueness(t *testing.T) {
 				{name: "KeyTypeMarketToOrderIndex", value: keeper.KeyTypeMarketToOrderIndex},
 				{name: "KeyTypeAddressToOrderIndex", value: keeper.KeyTypeAddressToOrderIndex},
 				{name: "KeyTypeAssetToOrderIndex", value: keeper.KeyTypeAssetToOrderIndex},
+				{name: "KeyTypeMarketExternalIDToOrderIndex", value: keeper.KeyTypeMarketExternalIDToOrderIndex},
 			},
 		},
 		{
@@ -3725,6 +3727,71 @@ func TestParseIndexKeyAssetToOrder(t *testing.T) {
 			assertions.AssertErrorValue(t, err, tc.expErr, "ParseIndexKeyAssetToOrder(%v) error", tc.key)
 			assert.Equal(t, tc.expDenom, denom, "ParseIndexKeyAssetToOrder(%v) denom", tc.key)
 			assert.Equal(t, tc.expOrderID, orderiD, "ParseIndexKeyAssetToOrder(%v) order id", tc.key)
+		})
+	}
+}
+
+func TestMakeIndexKeyMarketExternalIDToOrder(t *testing.T) {
+	tests := []struct {
+		name       string
+		marketID   uint32
+		externalID string
+		expected   []byte
+		expPanic   string
+	}{
+		{
+			name:       "empty external id",
+			marketID:   1,
+			externalID: "",
+			expPanic:   "cannot create market external id to order index with empty external id",
+		},
+		{
+			name:       "41 char external id",
+			marketID:   2,
+			externalID: "This id has forty-one chars. That's long!",
+			expPanic: "cannot create market external id to order index: invalid external id " +
+				"\"This id has forty-one chars. That's long!\": max length 40",
+		},
+		{
+			name:       "market 0, a zeroed uuid",
+			marketID:   0,
+			externalID: "00000000-0000-0000-0000-000000000000",
+			expected: append([]byte{keeper.KeyTypeMarketExternalIDToOrderIndex, 0, 0, 0, 0},
+				"00000000-0000-0000-0000-000000000000"...),
+		},
+		{
+			name:       "market 1, random uuid",
+			marketID:   1,
+			externalID: "814348F5-DE62-4954-81D1-65874E37C0BE",
+			expected: append([]byte{keeper.KeyTypeMarketExternalIDToOrderIndex, 0, 0, 0, 1},
+				"814348F5-DE62-4954-81D1-65874E37C0BE"...),
+		},
+		{
+			name:       "market 67,305,985, a wierd external id",
+			marketID:   67_305_985,
+			externalID: "ThisIsWierd",
+			expected:   append([]byte{keeper.KeyTypeMarketExternalIDToOrderIndex, 4, 3, 2, 1}, "ThisIsWierd"...),
+		},
+		{
+			name:       "max market id and lots of Zs",
+			marketID:   4_294_967_295,
+			externalID: strings.Repeat("Z", 40),
+			expected: append([]byte{keeper.KeyTypeMarketExternalIDToOrderIndex, 255, 255, 255, 255},
+				strings.Repeat("Z", 40)...),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeIndexKeyMarketExternalIDToOrder(tc.marketID, tc.externalID)
+				},
+				expected: tc.expected,
+				expPanic: tc.expPanic,
+			}
+
+			checkKey(t, ktc, "MakeIndexKeyMarketExternalIDToOrder(%d, %v)", tc.marketID, tc.externalID)
 		})
 	}
 }

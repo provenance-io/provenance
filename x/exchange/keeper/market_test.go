@@ -42,6 +42,8 @@ package keeper_test
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_CanSettleOrders()
 
+// TODO[1658]: func (s *TestSuite) TestKeeper_CanSetIDs()
+
 // TODO[1658]: func (s *TestSuite) TestKeeper_CanCancelOrdersForMarket()
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_CanWithdrawMarketFunds()

@@ -28,6 +28,14 @@ service Query {
     option (google.api.http).get = "/provenance/exchange/v1/order/{order_id}";
   }
 
+  // QueryGetOrderByExternalID looks up an order by market id and external id.
+  rpc QueryGetOrderByExternalID(QueryGetOrderByExternalIDRequest) returns (QueryGetOrderByExternalIDResponse) {
+    option (google.api.http) = {
+      get: "/provenance/exchange/v1/orders/market/{market_id}/{external_id}"
+      additional_bindings: {get: "/provenance/exchange/v1/market/{market_id}/order/{external_id}"}
+    };
+  }
+
   // QueryGetMarketOrders looks up the orders in a market.
   rpc QueryGetMarketOrders(QueryGetMarketOrdersRequest) returns (QueryGetMarketOrdersResponse) {
     option (google.api.http) = {
@@ -123,6 +131,20 @@ message QueryGetOrderRequest {
 
 // QueryGetOrderResponse is a response message for the QueryGetOrder endpoint.
 message QueryGetOrderResponse {
+  // order is the requested order.
+  Order order = 1;
+}
+
+// QueryGetOrderByExternalIDRequest is a request message for the QueryGetOrderByExternalID endpoint.
+message QueryGetOrderByExternalIDRequest {
+  // market_id is the id of the market that's expected to have the order.
+  uint32 market_id = 1;
+  // external_id the external id to look up.
+  string external_id = 2;
+}
+
+// QueryGetOrderByExternalIDResponse is a response message for the QueryGetOrderByExternalID endpoint.
+message QueryGetOrderByExternalIDResponse {
   // order is the requested order.
   Order order = 1;
 }

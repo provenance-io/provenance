@@ -65,6 +65,7 @@
     - [EventMarketWithdraw](#provenance.exchange.v1.EventMarketWithdraw)
     - [EventOrderCancelled](#provenance.exchange.v1.EventOrderCancelled)
     - [EventOrderCreated](#provenance.exchange.v1.EventOrderCreated)
+    - [EventOrderExternalIDUpdated](#provenance.exchange.v1.EventOrderExternalIDUpdated)
     - [EventOrderFilled](#provenance.exchange.v1.EventOrderFilled)
     - [EventOrderPartiallyFilled](#provenance.exchange.v1.EventOrderPartiallyFilled)
     - [EventParamsUpdated](#provenance.exchange.v1.EventParamsUpdated)
@@ -112,6 +113,8 @@
     - [MsgMarketManagePermissionsResponse](#provenance.exchange.v1.MsgMarketManagePermissionsResponse)
     - [MsgMarketManageReqAttrsRequest](#provenance.exchange.v1.MsgMarketManageReqAttrsRequest)
     - [MsgMarketManageReqAttrsResponse](#provenance.exchange.v1.MsgMarketManageReqAttrsResponse)
+    - [MsgMarketSetOrderExternalIDRequest](#provenance.exchange.v1.MsgMarketSetOrderExternalIDRequest)
+    - [MsgMarketSetOrderExternalIDResponse](#provenance.exchange.v1.MsgMarketSetOrderExternalIDResponse)
     - [MsgMarketSettleRequest](#provenance.exchange.v1.MsgMarketSettleRequest)
     - [MsgMarketSettleResponse](#provenance.exchange.v1.MsgMarketSettleResponse)
     - [MsgMarketUpdateDetailsRequest](#provenance.exchange.v1.MsgMarketUpdateDetailsRequest)
@@ -136,6 +139,8 @@
     - [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse)
     - [QueryGetMarketRequest](#provenance.exchange.v1.QueryGetMarketRequest)
     - [QueryGetMarketResponse](#provenance.exchange.v1.QueryGetMarketResponse)
+    - [QueryGetOrderByExternalIDRequest](#provenance.exchange.v1.QueryGetOrderByExternalIDRequest)
+    - [QueryGetOrderByExternalIDResponse](#provenance.exchange.v1.QueryGetOrderByExternalIDResponse)
     - [QueryGetOrderRequest](#provenance.exchange.v1.QueryGetOrderRequest)
     - [QueryGetOrderResponse](#provenance.exchange.v1.QueryGetOrderResponse)
     - [QueryGetOwnerOrdersRequest](#provenance.exchange.v1.QueryGetOwnerOrdersRequest)
@@ -1524,6 +1529,7 @@ EventOrderCancelled is an event emitted when an order is cancelled.
 | ----- | ---- | ----- | ----------- |
 | `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order cancelled. |
 | `cancelled_by` | [string](#string) |  | cancelled_by is the account that triggered the cancellation of the order. |
+| `external_id` | [string](#string) |  | external_id is the order's external id. |
 
 
 
@@ -1540,6 +1546,23 @@ EventOrderCreated is an event emitted when an order is created.
 | ----- | ---- | ----- | ----------- |
 | `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order created. |
 | `order_type` | [string](#string) |  | order_type is the type of order, e.g. "ask" or "bid". |
+| `external_id` | [string](#string) |  | external_id is the order's external id. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventOrderExternalIDUpdated"></a>
+
+### EventOrderExternalIDUpdated
+EventOrderExternalIDUpdated is an event emitted when an order's external id is updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order partially filled. |
+| `external_id` | [string](#string) |  | external_id is the order's new external id. |
 
 
 
@@ -1559,6 +1582,7 @@ This event is also used for orders that were previously partially filled, but ha
 | `assets` | [string](#string) |  | assets is the coins amount string of assets bought/sold for this order. |
 | `price` | [string](#string) |  | price is the coins amount string of the price payed/received for this order. |
 | `fees` | [string](#string) |  | fees is the coins amount string of settlement fees paid with this order. |
+| `external_id` | [string](#string) |  | external_id is the order's external id. |
 
 
 
@@ -1577,6 +1601,7 @@ EventOrderPartiallyFilled is an event emitted when an order filled in part and s
 | `assets` | [string](#string) |  | assets is the coins amount string of assets that were filled and removed from the order. |
 | `price` | [string](#string) |  | price is the coins amount string of the price payed/received for this order. For ask orders, this might be more than the amount that was removed from the order's price. |
 | `fees` | [string](#string) |  | fees is the coins amount string of settlement fees paid with this partial order. For ask orders, this might be more than the amount that was removed from the order's settlement fees. |
+| `external_id` | [string](#string) |  | external_id is the order's external id. |
 
 
 
@@ -1736,11 +1761,12 @@ Permission defines the different types of permission that can be given to an acc
 | ---- | ------ | ----------- |
 | PERMISSION_UNSPECIFIED | 0 | PERMISSION_UNSPECIFIED is the zero-value Permission; it is an error to use it. |
 | PERMISSION_SETTLE | 1 | PERMISSION_SETTLE is the ability to use the Settle Tx endpoint on behalf of a market. |
-| PERMISSION_CANCEL | 2 | PERMISSION_CANCEL is the ability to use the Cancel Tx endpoint on behalf of a market. |
-| PERMISSION_WITHDRAW | 3 | PERMISSION_WITHDRAW is the ability to use the MarketWithdraw Tx endpoint. |
-| PERMISSION_UPDATE | 4 | PERMISSION_UPDATE is the ability to use the MarketUpdate* Tx endpoints. |
-| PERMISSION_PERMISSIONS | 5 | PERMISSION_PERMISSIONS is the ability to use the MarketManagePermissions Tx endpoint. |
-| PERMISSION_ATTRIBUTES | 6 | PERMISSION_ATTRIBUTES is the ability to use the MarketManageReqAttrs Tx endpoint. |
+| PERMISSION_SET_IDS | 2 | PERMISSION_SET_IDS is the ability to use the SetOrderExternalID Tx endpoint on behalf of a market. |
+| PERMISSION_CANCEL | 3 | PERMISSION_CANCEL is the ability to use the Cancel Tx endpoint on behalf of a market. |
+| PERMISSION_WITHDRAW | 4 | PERMISSION_WITHDRAW is the ability to use the MarketWithdraw Tx endpoint. |
+| PERMISSION_UPDATE | 5 | PERMISSION_UPDATE is the ability to use the MarketUpdate* Tx endpoints. |
+| PERMISSION_PERMISSIONS | 6 | PERMISSION_PERMISSIONS is the ability to use the MarketManagePermissions Tx endpoint. |
+| PERMISSION_ATTRIBUTES | 7 | PERMISSION_ATTRIBUTES is the ability to use the MarketManageReqAttrs Tx endpoint. |
 
 
  <!-- end enums -->
@@ -1772,6 +1798,7 @@ AskOrder represents someone's desire to sell something at a minimum price.
 | `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the minimum amount that the seller is willing to accept for the assets. The seller's settlement proportional fee (and possibly the settlement flat fee) is taken out of the amount the seller receives, so it's possible that the seller will still receive less than this price. |
 | `seller_settlement_flat_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | seller_settlement_flat_fee is the flat fee for sellers that will be charged during settlement. If this denom is the same denom as the price, it will come out of the actual price received. If this denom is different, the amount must be in the seller's account and a hold is placed on it until the order is filled or cancelled. |
 | `allow_partial` | [bool](#bool) |  | allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the order must be either filled in full or not filled at all. |
+| `external_id` | [string](#string) |  | external_id is an optional string used to externally identify this order. Max length is 40 characters. If an order in this market with this external id already exists, this order will be rejected. |
 
 
 
@@ -1792,6 +1819,7 @@ BidOrder represents someone's desire to buy something at a specific price.
 | `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the amount that the buyer will pay for the assets. A hold is placed on this until the order is filled or cancelled. |
 | `buyer_settlement_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | buyer_settlement_fees are the fees (both flat and proportional) that the buyer will pay (in addition to the price) when the order is settled. A hold is placed on this until the order is filled or cancelled. |
 | `allow_partial` | [bool](#bool) |  | allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the order must be either filled in full or not filled at all. |
+| `external_id` | [string](#string) |  | external_id is an optional string used to externally identify this order. Max length is 40 characters. If an order in this market with this external id already exists, this order will be rejected. |
 
 
 
@@ -2211,6 +2239,34 @@ MsgMarketManageReqAttrsResponse is a response message for the MarketManageReqAtt
 
 
 
+<a name="provenance.exchange.v1.MsgMarketSetOrderExternalIDRequest"></a>
+
+### MsgMarketSetOrderExternalIDRequest
+MsgMarketSetOrderExternalIDRequest is a request message for the MarketSetOrderExternalID endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "set_ids" permission requesting this settlement. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order to update. |
+| `external_id` | [string](#string) |  | external_id is the new external id to associate with the order. Max length is 40 characters. If the external id is already associated with another order in this market, this update will fail. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketSetOrderExternalIDResponse"></a>
+
+### MsgMarketSetOrderExternalIDResponse
+MsgMarketSetOrderExternalIDResponse is a response message for the MarketSetOrderExternalID endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MsgMarketSettleRequest"></a>
 
 ### MsgMarketSettleRequest
@@ -2368,6 +2424,7 @@ Msg is the service for exchange module's tx endpoints.
 | `FillBids` | [MsgFillBidsRequest](#provenance.exchange.v1.MsgFillBidsRequest) | [MsgFillBidsResponse](#provenance.exchange.v1.MsgFillBidsResponse) | FillBids uses the assets in your account to fulfill one or more bids (similar to a fill-or-cancel ask). | |
 | `FillAsks` | [MsgFillAsksRequest](#provenance.exchange.v1.MsgFillAsksRequest) | [MsgFillAsksResponse](#provenance.exchange.v1.MsgFillAsksResponse) | FillAsks uses the funds in your account to fulfill one or more asks (similar to a fill-or-cancel bid). | |
 | `MarketSettle` | [MsgMarketSettleRequest](#provenance.exchange.v1.MsgMarketSettleRequest) | [MsgMarketSettleResponse](#provenance.exchange.v1.MsgMarketSettleResponse) | MarketSettle is a market endpoint to trigger the settlement of orders. | |
+| `MarketSetOrderExternalID` | [MsgMarketSetOrderExternalIDRequest](#provenance.exchange.v1.MsgMarketSetOrderExternalIDRequest) | [MsgMarketSetOrderExternalIDResponse](#provenance.exchange.v1.MsgMarketSetOrderExternalIDResponse) | MarketSetOrderExternalID updates an order's external id field. | |
 | `MarketWithdraw` | [MsgMarketWithdrawRequest](#provenance.exchange.v1.MsgMarketWithdrawRequest) | [MsgMarketWithdrawResponse](#provenance.exchange.v1.MsgMarketWithdrawResponse) | MarketWithdraw is a market endpoint to withdraw fees that have been collected. | |
 | `MarketUpdateDetails` | [MsgMarketUpdateDetailsRequest](#provenance.exchange.v1.MsgMarketUpdateDetailsRequest) | [MsgMarketUpdateDetailsResponse](#provenance.exchange.v1.MsgMarketUpdateDetailsResponse) | MarketUpdateDetails is a market endpoint to update its details. | |
 | `MarketUpdateEnabled` | [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest) | [MsgMarketUpdateEnabledResponse](#provenance.exchange.v1.MsgMarketUpdateEnabledResponse) | MarketUpdateEnabled is a market endpoint to update whether its accepting orders. | |
@@ -2544,6 +2601,37 @@ QueryGetMarketResponse is a response message for the QueryGetMarket endpoint.
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address is the bech32 address string of this market's account. |
 | `market` | [Market](#provenance.exchange.v1.Market) |  | market is all information and details of the market. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetOrderByExternalIDRequest"></a>
+
+### QueryGetOrderByExternalIDRequest
+QueryGetOrderByExternalIDRequest is a request message for the QueryGetOrderByExternalID endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the id of the market that's expected to have the order. |
+| `external_id` | [string](#string) |  | external_id the external id to look up. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetOrderByExternalIDResponse"></a>
+
+### QueryGetOrderByExternalIDResponse
+QueryGetOrderByExternalIDResponse is a response message for the QueryGetOrderByExternalID endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `order` | [Order](#provenance.exchange.v1.Order) |  | order is the requested order. |
 
 
 
@@ -2784,6 +2872,7 @@ Query is the service for exchange module's query endpoints.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `QueryOrderFeeCalc` | [QueryOrderFeeCalcRequest](#provenance.exchange.v1.QueryOrderFeeCalcRequest) | [QueryOrderFeeCalcResponse](#provenance.exchange.v1.QueryOrderFeeCalcResponse) | QueryOrderFeeCalc calculates the fees that will be associated with the provided order. | GET|/provenance/exchange/v1/fees/order|
 | `QueryGetOrder` | [QueryGetOrderRequest](#provenance.exchange.v1.QueryGetOrderRequest) | [QueryGetOrderResponse](#provenance.exchange.v1.QueryGetOrderResponse) | QueryGetOrder looks up an order by id. | GET|/provenance/exchange/v1/order/{order_id}|
+| `QueryGetOrderByExternalID` | [QueryGetOrderByExternalIDRequest](#provenance.exchange.v1.QueryGetOrderByExternalIDRequest) | [QueryGetOrderByExternalIDResponse](#provenance.exchange.v1.QueryGetOrderByExternalIDResponse) | QueryGetOrderByExternalID looks up an order by market id and external id. | GET|/provenance/exchange/v1/orders/market/{market_id}/{external_id}GET|/provenance/exchange/v1/market/{market_id}/order/{external_id}|
 | `QueryGetMarketOrders` | [QueryGetMarketOrdersRequest](#provenance.exchange.v1.QueryGetMarketOrdersRequest) | [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse) | QueryGetMarketOrders looks up the orders in a market. | GET|/provenance/exchange/v1/orders/market/{market_id}GET|/provenance/exchange/v1/market/{market_id}/orders|
 | `QueryGetOwnerOrders` | [QueryGetOwnerOrdersRequest](#provenance.exchange.v1.QueryGetOwnerOrdersRequest) | [QueryGetOwnerOrdersResponse](#provenance.exchange.v1.QueryGetOwnerOrdersResponse) | QueryGetOwnerOrders looks up the orders from the provided owner address. | GET|/provenance/exchange/v1/orders/owner/{owner}|
 | `QueryGetAssetOrders` | [QueryGetAssetOrdersRequest](#provenance.exchange.v1.QueryGetAssetOrdersRequest) | [QueryGetAssetOrdersResponse](#provenance.exchange.v1.QueryGetAssetOrdersResponse) | QueryGetAssetOrders looks up the orders for a specific asset denom. | GET|/provenance/exchange/v1/orders/asset/{asset}|

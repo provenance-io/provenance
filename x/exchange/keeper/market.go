@@ -833,6 +833,12 @@ func (k Keeper) CanSettleOrders(ctx sdk.Context, marketID uint32, admin string) 
 	return k.HasPermission(ctx, marketID, admin, exchange.Permission_settle)
 }
 
+// CanSetIDs returns true if the provided admin bech32 address has permission to
+// set UUIDs on orders for a market. Also returns true if the provided address is the authority address.
+func (k Keeper) CanSetIDs(ctx sdk.Context, marketID uint32, admin string) bool {
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_set_ids)
+}
+
 // CanCancelOrdersForMarket returns true if the provided admin bech32 address has permission to
 // cancel orders for a market. Also returns true if the provided address is the authority address.
 func (k Keeper) CanCancelOrdersForMarket(ctx sdk.Context, marketID uint32, admin string) bool {

@@ -34,6 +34,9 @@ service Msg {
   // MarketSettle is a market endpoint to trigger the settlement of orders.
   rpc MarketSettle(MsgMarketSettleRequest) returns (MsgMarketSettleResponse);
 
+  // MarketSetOrderExternalID updates an order's external id field.
+  rpc MarketSetOrderExternalID(MsgMarketSetOrderExternalIDRequest) returns (MsgMarketSetOrderExternalIDResponse);
+
   // MarketWithdraw is a market endpoint to withdraw fees that have been collected.
   rpc MarketWithdraw(MsgMarketWithdrawRequest) returns (MsgMarketWithdrawResponse);
 
@@ -181,6 +184,25 @@ message MsgMarketSettleRequest {
 
 // MsgMarketSettleResponse is a response message for the MarketSettle endpoint.
 message MsgMarketSettleResponse {}
+
+// MsgMarketSetOrderExternalIDRequest is a request message for the MarketSetOrderExternalID endpoint.
+message MsgMarketSetOrderExternalIDRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the account with "set_ids" permission requesting this settlement.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numerical identifier of the market to update required attributes for.
+  uint32 market_id = 2;
+
+  // order_id is the numerical identifier of the order to update.
+  uint64 order_id = 3;
+  // external_id is the new external id to associate with the order. Max length is 40 characters.
+  // If the external id is already associated with another order in this market, this update will fail.
+  string external_id = 4;
+}
+
+// MsgMarketSetOrderExternalIDResponse is a response message for the MarketSetOrderExternalID endpoint.
+message MsgMarketSetOrderExternalIDResponse {}
 
 // MsgMarketWithdrawRequest is a request message for the MarketWithdraw endpoint.
 message MsgMarketWithdrawRequest {

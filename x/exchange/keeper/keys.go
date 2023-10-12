@@ -68,6 +68,9 @@ import (
 //
 // An asset type to order index is maintained with the following format:
 //    0x05 | <asset_denom> | <order_id> (8 bytes) => <order type byte>
+//
+// A market external id to order index is maintained with the following format:
+//    0x09 | <market id> (4 bytes) | <external_id> => <order id> (8 bytes)
 
 const (
 	// KeyTypeParams is the type byte for params entries.
@@ -88,6 +91,8 @@ const (
 	KeyTypeAddressToOrderIndex = byte(0x04)
 	// KeyTypeAssetToOrderIndex is the type byte for entries in the asset to order index.
 	KeyTypeAssetToOrderIndex = byte(0x05)
+	// KeyTypeMarketExternalIDToOrderIndex is the type byte for entries in the market and uuid to order index.
+	KeyTypeMarketExternalIDToOrderIndex = byte(0x09)
 
 	// MarketKeyTypeCreateAskFlat is the market-specific type byte for the create-ask flat fees.
 	MarketKeyTypeCreateAskFlat = byte(0x00)
@@ -723,4 +728,17 @@ func ParseIndexKeyAssetToOrder(key []byte) (string, uint64, error) {
 		denom = string(unparsed)
 	}
 	return denom, orderID, nil
+}
+
+// MakeIndexKeyMarketExternalIDToOrder creates the key to use for the market and uuid to order index for the provided values.
+func MakeIndexKeyMarketExternalIDToOrder(marketID uint32, externalID string) []byte {
+	if len(externalID) == 0 {
+		panic(errors.New("cannot create market external id to order index with empty external id"))
+	}
+	if err := exchange.ValidateExternalID(externalID); err != nil {
+		panic(fmt.Errorf("cannot create market external id to order index: %w", err))
+	}
+	rv := prepKey(KeyTypeMarketExternalIDToOrderIndex, uint32Bz(marketID), len(externalID))
+	rv = append(rv, externalID...)
+	return rv
 }

@@ -52,6 +52,7 @@ func copyAskOrder(askOrder *AskOrder) *AskOrder {
 		Price:                   copyCoin(askOrder.Price),
 		SellerSettlementFlatFee: copyCoinP(askOrder.SellerSettlementFlatFee),
 		AllowPartial:            askOrder.AllowPartial,
+		ExternalId:              askOrder.ExternalId,
 	}
 }
 
@@ -67,6 +68,7 @@ func copyBidOrder(bidOrder *BidOrder) *BidOrder {
 		Price:               copyCoin(bidOrder.Price),
 		BuyerSettlementFees: copyCoins(bidOrder.BuyerSettlementFees),
 		AllowPartial:        bidOrder.AllowPartial,
+		ExternalId:          bidOrder.ExternalId,
 	}
 }
 
@@ -107,6 +109,7 @@ func askOrderString(askOrder *AskOrder) string {
 		fmt.Sprintf("Price:%q", askOrder.Price),
 		fmt.Sprintf("SellerSettlementFlatFee:%s", coinPString(askOrder.SellerSettlementFlatFee)),
 		fmt.Sprintf("AllowPartial:%t", askOrder.AllowPartial),
+		fmt.Sprintf("ExternalID:%s", askOrder.ExternalId),
 	}
 	return fmt.Sprintf("{%s}", strings.Join(fields, ", "))
 }
@@ -124,6 +127,7 @@ func bidOrderString(bidOrder *BidOrder) string {
 		fmt.Sprintf("Price:%q", bidOrder.Price),
 		fmt.Sprintf("BuyerSettlementFees:%s", coinsString(bidOrder.BuyerSettlementFees)),
 		fmt.Sprintf("AllowPartial:%t", bidOrder.AllowPartial),
+		fmt.Sprintf("ExternalID:%s", bidOrder.ExternalId),
 	}
 	return fmt.Sprintf("{%s}", strings.Join(fields, ", "))
 }
@@ -254,6 +258,42 @@ func TestValidateOrderIDs(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "ValidateOrderIDs(%q, %v)", tc.field, tc.orderIDs)
 			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateOrderIDs(%q, %v)", tc.field, tc.orderIDs)
+		})
+	}
+}
+
+func TestValidateExternalID(t *testing.T) {
+	tests := []struct {
+		name       string
+		externalID string
+		expErr     string
+	}{
+		{
+			name:       "empty",
+			externalID: "",
+			expErr:     "",
+		},
+		{
+			name:       "max length",
+			externalID: strings.Repeat("m", MaxExternalIDLength),
+			expErr:     "",
+		},
+		{
+			name:       "max length + 1",
+			externalID: strings.Repeat("n", MaxExternalIDLength+1),
+			expErr: fmt.Sprintf("invalid external id %q: max length %d",
+				strings.Repeat("n", MaxExternalIDLength+1), MaxExternalIDLength),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = ValidateExternalID(tc.externalID)
+			}
+			require.NotPanics(t, testFunc, "ValidateExternalID(%q)", tc.externalID)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateExternalID(%q)", tc.externalID)
 		})
 	}
 }
@@ -945,6 +985,47 @@ func TestOrder_PartialFillAllowed(t *testing.T) {
 	}
 }
 
+func TestOrder_GetExternalID(t *testing.T) {
+	tests := []struct {
+		name     string
+		order    *Order
+		expected string
+		expPanic string
+	}{
+		{
+			name:     "AskOrder",
+			order:    NewOrder(1).WithAsk(&AskOrder{ExternalId: "ask12345"}),
+			expected: "ask12345",
+		},
+		{
+			name:     "BidOrder",
+			order:    NewOrder(2).WithBid(&BidOrder{ExternalId: "bid987654"}),
+			expected: "bid987654",
+		},
+		{
+			name:     "nil inside order",
+			order:    NewOrder(3),
+			expPanic: nilSubTypeErr(3),
+		},
+		{
+			name:     "unknown order type",
+			order:    newUnknownOrder(4),
+			expPanic: unknownSubTypeErr(4),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual string
+			testFunc := func() {
+				actual = tc.order.GetExternalID()
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetExternalID()")
+			assert.Equal(t, tc.expected, actual, "GetExternalID() result")
+		})
+	}
+}
+
 func TestOrder_GetOrderType(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -1477,6 +1558,29 @@ func TestAskOrder_PartialFillAllowed(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "PartialFillAllowed()")
 			assert.Equal(t, tc.exp, actual, "PartialFillAllowed() result")
+		})
+	}
+}
+
+func TestAskOrder_GetExternalID(t *testing.T) {
+	tests := []struct {
+		name  string
+		order AskOrder
+		exp   string
+	}{
+		{name: "empty", order: AskOrder{ExternalId: ""}, exp: ""},
+		{name: "something", order: AskOrder{ExternalId: "something"}, exp: "something"},
+		{name: "a uuid", order: AskOrder{ExternalId: "36585FC1-C11D-42A4-B1F7-92B0D8229BC7"}, exp: "36585FC1-C11D-42A4-B1F7-92B0D8229BC7"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual string
+			testFunc := func() {
+				actual = tc.order.GetExternalID()
+			}
+			require.NotPanics(t, testFunc, "GetExternalID()")
+			assert.Equal(t, tc.exp, actual, "GetExternalID() result")
 		})
 	}
 }
@@ -2068,6 +2172,29 @@ func TestBidOrder_PartialFillAllowed(t *testing.T) {
 	}
 }
 
+func TestBidOrder_GetExternalID(t *testing.T) {
+	tests := []struct {
+		name  string
+		order BidOrder
+		exp   string
+	}{
+		{name: "empty", order: BidOrder{ExternalId: ""}, exp: ""},
+		{name: "something", order: BidOrder{ExternalId: "something"}, exp: "something"},
+		{name: "a uuid", order: BidOrder{ExternalId: "36585FC1-C11D-42A4-B1F7-92B0D8229BC7"}, exp: "36585FC1-C11D-42A4-B1F7-92B0D8229BC7"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual string
+			testFunc := func() {
+				actual = tc.order.GetExternalID()
+			}
+			require.NotPanics(t, testFunc, "GetExternalID()")
+			assert.Equal(t, tc.exp, actual, "GetExternalID() result")
+		})
+	}
+}
+
 func TestBidOrder_GetOrderType(t *testing.T) {
 	expected := OrderTypeBid
 	order := BidOrder{}
@@ -2510,6 +2637,7 @@ func TestFilledOrderGetters(t *testing.T) {
 		Price:                   sdk.NewInt64Coin("peach", 111),
 		SellerSettlementFlatFee: &sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(8)},
 		AllowPartial:            true,
+		ExternalId:              "ask order abc",
 	}
 	ask := NewOrder(51).WithAsk(askOrder)
 	askActualPrice := sdk.NewInt64Coin("peach", 123)
@@ -2523,6 +2651,7 @@ func TestFilledOrderGetters(t *testing.T) {
 		Price:               sdk.NewInt64Coin("peach", 112),
 		BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 9)),
 		AllowPartial:        true,
+		ExternalId:          "bid order def",
 	}
 	bid := NewOrder(52).WithBid(bidOrder)
 	bidActualPrice := sdk.NewInt64Coin("peach", 124)
@@ -2606,6 +2735,12 @@ func TestFilledOrderGetters(t *testing.T) {
 			getter: func(of *FilledOrder) interface{} { return of.PartialFillAllowed() },
 			expAsk: askOrder.AllowPartial,
 			expBid: bidOrder.AllowPartial,
+		},
+		{
+			name:   "GetExternalID",
+			getter: func(of *FilledOrder) interface{} { return of.GetExternalID() },
+			expAsk: askOrder.ExternalId,
+			expBid: bidOrder.ExternalId,
 		},
 		{
 			name:   "GetOrderType",

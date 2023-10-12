@@ -90,6 +90,19 @@ func (k MsgServer) MarketSettle(goCtx context.Context, msg *exchange.MsgMarketSe
 	return &exchange.MsgMarketSettleResponse{}, nil
 }
 
+// MarketSetOrderExternalID updates an order's external id field.
+func (k MsgServer) MarketSetOrderExternalID(goCtx context.Context, msg *exchange.MsgMarketSetOrderExternalIDRequest) (*exchange.MsgMarketSetOrderExternalIDResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanSetIDs(ctx, msg.MarketId, msg.Admin) {
+		return nil, permError("set uuids on orders for", msg.Admin, msg.MarketId)
+	}
+	err := k.SetOrderExternalID(ctx, msg.MarketId, msg.OrderId, msg.ExternalId)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	return &exchange.MsgMarketSetOrderExternalIDResponse{}, nil
+}
+
 // MarketWithdraw is a market endpoint to withdraw fees that have been collected.
 func (k MsgServer) MarketWithdraw(goCtx context.Context, msg *exchange.MsgMarketWithdrawRequest) (*exchange.MsgMarketWithdrawResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

@@ -26,11 +26,11 @@ func assertEverythingSet(t *testing.T, tev proto.Message, typeString string) boo
 
 	expType := "provenance.exchange.v1." + typeString
 	rv := assert.Equal(t, expType, event.Type, "%T event.Type", tev)
-	for i, attrs := range event.Attributes {
-		rv = assert.NotEmpty(t, attrs.Key, "%T event.attributes[%d].Key", tev, i) && rv
-		rv = assert.NotEqual(t, `""`, attrs.Key, "%T event.attributes[%d].Key", tev, i) && rv
-		rv = assert.NotEmpty(t, attrs.Value, "%T event.attributes[%d].Value", tev, i) && rv
-		rv = assert.NotEqual(t, `""`, attrs.Value, "%T event.attributes[%d].Value", tev, i) && rv
+	for i, attr := range event.Attributes {
+		rv = assert.NotEmpty(t, attr.Key, "%T event.attributes[%d].Key", tev, i) && rv
+		rv = assert.NotEqual(t, `""`, string(attr.Key), "%T event.attributes[%d].Key", tev, i) && rv
+		rv = assert.NotEmpty(t, attr.Value, "%T event.attributes[%d].Value", tev, i) && rv
+		rv = assert.NotEqual(t, `""`, string(attr.Value), "%T event.attributes[%d].Value", tev, i) && rv
 	}
 	return rv
 }
@@ -40,29 +40,29 @@ func TestNewEventOrderCreated(t *testing.T) {
 		name     string
 		order    *Order
 		expected *EventOrderCreated
+		expPanic string
 	}{
 		{
-			name:  "nil order",
-			order: NewOrder(3),
-			expected: &EventOrderCreated{
-				OrderId:   3,
-				OrderType: "<nil>",
-			},
+			name:     "nil order",
+			order:    NewOrder(3),
+			expPanic: "order 3 has unknown sub-order type <nil>: does not implement SubOrderI",
 		},
 		{
 			name:  "order with ask",
-			order: NewOrder(1).WithAsk(&AskOrder{}),
+			order: NewOrder(1).WithAsk(&AskOrder{ExternalId: "oneoneone"}),
 			expected: &EventOrderCreated{
-				OrderId:   1,
-				OrderType: "ask",
+				OrderId:    1,
+				OrderType:  "ask",
+				ExternalId: "oneoneone",
 			},
 		},
 		{
 			name:  "order with bid",
-			order: NewOrder(2).WithBid(&BidOrder{}),
+			order: NewOrder(2).WithBid(&BidOrder{ExternalId: "twotwotwo"}),
 			expected: &EventOrderCreated{
-				OrderId:   2,
-				OrderType: "bid",
+				OrderId:    2,
+				OrderType:  "bid",
+				ExternalId: "twotwotwo",
 			},
 		},
 	}
@@ -73,7 +73,10 @@ func TestNewEventOrderCreated(t *testing.T) {
 			testFunc := func() {
 				actual = NewEventOrderCreated(tc.order)
 			}
-			require.NotPanics(t, testFunc, "NewEventOrderCreated")
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "NewEventOrderCreated")
+			if len(tc.expPanic) > 0 {
+				return
+			}
 			assert.Equal(t, tc.expected, actual, "NewEventOrderCreated result")
 			assertEverythingSet(t, actual, "EventOrderCreated")
 		})
@@ -81,13 +84,45 @@ func TestNewEventOrderCreated(t *testing.T) {
 }
 
 func TestNewEventOrderCancelled(t *testing.T) {
-	orderID := uint64(101)
-	cancelledBy := sdk.AccAddress("cancelledBy_________")
+	tests := []struct {
+		name        string
+		order       OrderI
+		cancelledBy sdk.AccAddress
+		expected    *EventOrderCancelled
+	}{
+		{
+			name:        "ask order",
+			order:       NewOrder(11).WithAsk(&AskOrder{ExternalId: "an external identifier"}),
+			cancelledBy: sdk.AccAddress("CancelledBy_________"),
+			expected: &EventOrderCancelled{
+				OrderId:     11,
+				CancelledBy: sdk.AccAddress("CancelledBy_________").String(),
+				ExternalId:  "an external identifier",
+			},
+		},
+		{
+			name:        "bid order",
+			order:       NewOrder(55).WithAsk(&AskOrder{ExternalId: "another external identifier"}),
+			cancelledBy: sdk.AccAddress("cancelled_by________"),
+			expected: &EventOrderCancelled{
+				OrderId:     55,
+				CancelledBy: sdk.AccAddress("cancelled_by________").String(),
+				ExternalId:  "another external identifier",
+			},
+		},
+	}
 
-	event := NewEventOrderCancelled(orderID, cancelledBy)
-	assert.Equal(t, orderID, event.OrderId, "OrderId")
-	assert.Equal(t, cancelledBy.String(), event.CancelledBy, "CancelledBy")
-	assertEverythingSet(t, event, "EventOrderCancelled")
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var event *EventOrderCancelled
+			testFunc := func() {
+				event = NewEventOrderCancelled(tc.order, tc.cancelledBy)
+			}
+			require.NotPanics(t, testFunc, "NewEventOrderCancelled")
+			assert.Equal(t, tc.expected, event, "NewEventOrderCancelled result")
+			assertEverythingSet(t, event, "EventOrderCancelled")
+		})
+	}
 }
 
 func TestNewEventOrderFilled(t *testing.T) {
@@ -97,12 +132,9 @@ func TestNewEventOrderFilled(t *testing.T) {
 	}
 
 	tests := []struct {
-		name       string
-		order      OrderI
-		expOrderID uint64
-		expAssets  string
-		expPrice   string
-		expFees    string
+		name     string
+		order    OrderI
+		expected *EventOrderFilled
 	}{
 		{
 			name: "ask",
@@ -110,11 +142,15 @@ func TestNewEventOrderFilled(t *testing.T) {
 				Assets:                  sdk.NewInt64Coin("apple", 22),
 				Price:                   sdk.NewInt64Coin("plum", 18),
 				SellerSettlementFlatFee: coinP("fig", 57),
+				ExternalId:              "one",
 			}),
-			expOrderID: 4,
-			expAssets:  "22apple",
-			expPrice:   "18plum",
-			expFees:    "57fig",
+			expected: &EventOrderFilled{
+				OrderId:    4,
+				Assets:     "22apple",
+				Price:      "18plum",
+				Fees:       "57fig",
+				ExternalId: "one",
+			},
 		},
 		{
 			name: "filled ask",
@@ -122,11 +158,15 @@ func TestNewEventOrderFilled(t *testing.T) {
 				Assets:                  sdk.NewInt64Coin("apple", 22),
 				Price:                   sdk.NewInt64Coin("plum", 18),
 				SellerSettlementFlatFee: coinP("fig", 57),
+				ExternalId:              "two",
 			}), sdk.NewInt64Coin("plum", 88), sdk.NewCoins(sdk.NewInt64Coin("fig", 61), sdk.NewInt64Coin("grape", 12))),
-			expOrderID: 4,
-			expAssets:  "22apple",
-			expPrice:   "88plum",
-			expFees:    "61fig,12grape",
+			expected: &EventOrderFilled{
+				OrderId:    4,
+				Assets:     "22apple",
+				Price:      "88plum",
+				Fees:       "61fig,12grape",
+				ExternalId: "two",
+			},
 		},
 		{
 			name: "bid",
@@ -134,23 +174,31 @@ func TestNewEventOrderFilled(t *testing.T) {
 				Assets:              sdk.NewInt64Coin("apple", 23),
 				Price:               sdk.NewInt64Coin("plum", 19),
 				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 58)),
+				ExternalId:          "three",
 			}),
-			expOrderID: 104,
-			expAssets:  "23apple",
-			expPrice:   "19plum",
-			expFees:    "58fig",
+			expected: &EventOrderFilled{
+				OrderId:    104,
+				Assets:     "23apple",
+				Price:      "19plum",
+				Fees:       "58fig",
+				ExternalId: "three",
+			},
 		},
 		{
 			name: "filled bid",
-			order: NewFilledOrder(NewOrder(104).WithBid(&BidOrder{
-				Assets:              sdk.NewInt64Coin("apple", 23),
-				Price:               sdk.NewInt64Coin("plum", 19),
-				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 58)),
+			order: NewFilledOrder(NewOrder(105).WithBid(&BidOrder{
+				Assets:              sdk.NewInt64Coin("apple", 24),
+				Price:               sdk.NewInt64Coin("plum", 20),
+				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 59)),
+				ExternalId:          "four",
 			}), sdk.NewInt64Coin("plum", 89), sdk.NewCoins(sdk.NewInt64Coin("fig", 62), sdk.NewInt64Coin("grape", 13))),
-			expOrderID: 104,
-			expAssets:  "23apple",
-			expPrice:   "89plum",
-			expFees:    "62fig,13grape",
+			expected: &EventOrderFilled{
+				OrderId:    105,
+				Assets:     "24apple",
+				Price:      "89plum",
+				Fees:       "62fig,13grape",
+				ExternalId: "four",
+			},
 		},
 	}
 
@@ -161,10 +209,7 @@ func TestNewEventOrderFilled(t *testing.T) {
 				event = NewEventOrderFilled(tc.order)
 			}
 			require.NotPanics(t, testFunc, "NewEventOrderFilled")
-			assert.Equal(t, tc.expOrderID, event.OrderId, "OrderId")
-			assert.Equal(t, tc.expAssets, event.Assets, "Assets")
-			assert.Equal(t, tc.expPrice, event.Price, "Price")
-			assert.Equal(t, tc.expFees, event.Fees, "Fees")
+			assert.Equal(t, tc.expected, event, "NewEventOrderFilled result")
 			assertEverythingSet(t, event, "EventOrderFilled")
 		})
 	}
@@ -177,12 +222,9 @@ func TestNewEventOrderPartiallyFilled(t *testing.T) {
 	}
 
 	tests := []struct {
-		name       string
-		order      OrderI
-		expOrderID uint64
-		expAssets  string
-		expPrice   string
-		expFees    string
+		name     string
+		order    OrderI
+		expected *EventOrderPartiallyFilled
 	}{
 		{
 			name: "ask",
@@ -190,11 +232,15 @@ func TestNewEventOrderPartiallyFilled(t *testing.T) {
 				Assets:                  sdk.NewInt64Coin("apple", 22),
 				Price:                   sdk.NewInt64Coin("plum", 18),
 				SellerSettlementFlatFee: coinP("fig", 57),
+				ExternalId:              "five",
 			}),
-			expOrderID: 4,
-			expAssets:  "22apple",
-			expPrice:   "18plum",
-			expFees:    "57fig",
+			expected: &EventOrderPartiallyFilled{
+				OrderId:    4,
+				Assets:     "22apple",
+				Price:      "18plum",
+				Fees:       "57fig",
+				ExternalId: "five",
+			},
 		},
 		{
 			name: "filled ask",
@@ -202,11 +248,15 @@ func TestNewEventOrderPartiallyFilled(t *testing.T) {
 				Assets:                  sdk.NewInt64Coin("apple", 22),
 				Price:                   sdk.NewInt64Coin("plum", 18),
 				SellerSettlementFlatFee: coinP("fig", 57),
+				ExternalId:              "six",
 			}), sdk.NewInt64Coin("plum", 88), sdk.NewCoins(sdk.NewInt64Coin("fig", 61), sdk.NewInt64Coin("grape", 12))),
-			expOrderID: 4,
-			expAssets:  "22apple",
-			expPrice:   "88plum",
-			expFees:    "61fig,12grape",
+			expected: &EventOrderPartiallyFilled{
+				OrderId:    4,
+				Assets:     "22apple",
+				Price:      "88plum",
+				Fees:       "61fig,12grape",
+				ExternalId: "six",
+			},
 		},
 		{
 			name: "bid",
@@ -214,11 +264,15 @@ func TestNewEventOrderPartiallyFilled(t *testing.T) {
 				Assets:              sdk.NewInt64Coin("apple", 23),
 				Price:               sdk.NewInt64Coin("plum", 19),
 				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 58)),
+				ExternalId:          "seven",
 			}),
-			expOrderID: 104,
-			expAssets:  "23apple",
-			expPrice:   "19plum",
-			expFees:    "58fig",
+			expected: &EventOrderPartiallyFilled{
+				OrderId:    104,
+				Assets:     "23apple",
+				Price:      "19plum",
+				Fees:       "58fig",
+				ExternalId: "seven",
+			},
 		},
 		{
 			name: "filled bid",
@@ -226,11 +280,15 @@ func TestNewEventOrderPartiallyFilled(t *testing.T) {
 				Assets:              sdk.NewInt64Coin("apple", 23),
 				Price:               sdk.NewInt64Coin("plum", 19),
 				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 58)),
+				ExternalId:          "eight",
 			}), sdk.NewInt64Coin("plum", 89), sdk.NewCoins(sdk.NewInt64Coin("fig", 62), sdk.NewInt64Coin("grape", 13))),
-			expOrderID: 104,
-			expAssets:  "23apple",
-			expPrice:   "89plum",
-			expFees:    "62fig,13grape",
+			expected: &EventOrderPartiallyFilled{
+				OrderId:    104,
+				Assets:     "23apple",
+				Price:      "89plum",
+				Fees:       "62fig,13grape",
+				ExternalId: "eight",
+			},
 		},
 	}
 
@@ -240,12 +298,46 @@ func TestNewEventOrderPartiallyFilled(t *testing.T) {
 			testFunc := func() {
 				event = NewEventOrderPartiallyFilled(tc.order)
 			}
-			require.NotPanics(t, testFunc, "NewEventOrderFilled")
-			assert.Equal(t, tc.expOrderID, event.OrderId, "OrderId")
-			assert.Equal(t, tc.expAssets, event.Assets, "Assets")
-			assert.Equal(t, tc.expPrice, event.Price, "Price")
-			assert.Equal(t, tc.expFees, event.Fees, "Fees")
+			require.NotPanics(t, testFunc, "NewEventOrderPartiallyFilled")
+			assert.Equal(t, tc.expected, event, "NewEventOrderPartiallyFilled result")
 			assertEverythingSet(t, event, "EventOrderPartiallyFilled")
+		})
+	}
+}
+
+func TestNewEventOrderExternalIDUpdated(t *testing.T) {
+	tests := []struct {
+		name     string
+		order    OrderI
+		expected *EventOrderExternalIDUpdated
+	}{
+		{
+			name:  "ask",
+			order: NewOrder(51).WithAsk(&AskOrder{ExternalId: "orange-red"}),
+			expected: &EventOrderExternalIDUpdated{
+				OrderId:    51,
+				ExternalId: "orange-red",
+			},
+		},
+		{
+			name:  "bid",
+			order: NewOrder(777).WithAsk(&AskOrder{ExternalId: "purple-purple"}),
+			expected: &EventOrderExternalIDUpdated{
+				OrderId:    777,
+				ExternalId: "purple-purple",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var event *EventOrderExternalIDUpdated
+			testFunc := func() {
+				event = NewEventOrderExternalIDUpdated(tc.order)
+			}
+			require.NotPanics(t, testFunc, "NewEventOrderExternalIDUpdated")
+			assert.Equal(t, tc.expected, event, "NewEventOrderExternalIDUpdated result")
+			assertEverythingSet(t, event, "EventOrderExternalIDUpdated")
 		})
 	}
 }
@@ -256,7 +348,12 @@ func TestNewEventMarketWithdraw(t *testing.T) {
 	destination := sdk.AccAddress("destination_________")
 	withdrawnBy := sdk.AccAddress("withdrawnBy_________")
 
-	event := NewEventMarketWithdraw(marketID, amountWithdrawn, destination, withdrawnBy)
+	var event *EventMarketWithdraw
+	testFunc := func() {
+		event = NewEventMarketWithdraw(marketID, amountWithdrawn, destination, withdrawnBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketWithdraw(%d, %q, %q, %q)",
+		marketID, amountWithdrawn, string(destination), string(withdrawnBy))
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, amountWithdrawn.String(), event.Amount, "Amount")
 	assert.Equal(t, destination.String(), event.Destination, "Destination")
@@ -268,7 +365,11 @@ func TestNewEventMarketDetailsUpdated(t *testing.T) {
 	marketID := uint32(84)
 	updatedBy := sdk.AccAddress("updatedBy___________")
 
-	event := NewEventMarketDetailsUpdated(marketID, updatedBy)
+	var event *EventMarketDetailsUpdated
+	testFunc := func() {
+		event = NewEventMarketDetailsUpdated(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketDetailsUpdated(%d, %q)", marketID, string(updatedBy))
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, updatedBy.String(), event.UpdatedBy, "UpdatedBy")
 	assertEverythingSet(t, event, "EventMarketDetailsUpdated")
@@ -302,8 +403,13 @@ func TestNewEventMarketActiveUpdated(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := NewEventMarketActiveUpdated(tc.marketID, tc.updatedBy, tc.isActive)
-			assert.Equal(t, tc.expected, actual, "NewEventMarketActiveUpdated(%d, %q, %t) result",
+			var event proto.Message
+			testFunc := func() {
+				event = NewEventMarketActiveUpdated(tc.marketID, tc.updatedBy, tc.isActive)
+			}
+			require.NotPanics(t, testFunc, "NewEventMarketActiveUpdated(%d, %q, %t) result",
+				tc.marketID, tc.updatedBy.String(), tc.isActive)
+			assert.Equal(t, tc.expected, event, "NewEventMarketActiveUpdated(%d, %q, %t) result",
 				tc.marketID, tc.updatedBy.String(), tc.isActive)
 		})
 	}
@@ -313,7 +419,11 @@ func TestNewEventMarketEnabled(t *testing.T) {
 	marketID := uint32(919)
 	updatedBy := sdk.AccAddress("updatedBy___________")
 
-	event := NewEventMarketEnabled(marketID, updatedBy)
+	var event *EventMarketEnabled
+	testFunc := func() {
+		event = NewEventMarketEnabled(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketEnabled(%d, %q)", marketID, string(updatedBy))
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, updatedBy.String(), event.UpdatedBy, "UpdatedBy")
 	assertEverythingSet(t, event, "EventMarketEnabled")
@@ -323,7 +433,11 @@ func TestNewEventMarketDisabled(t *testing.T) {
 	marketID := uint32(5555)
 	updatedBy := sdk.AccAddress("updatedBy___________")
 
-	event := NewEventMarketDisabled(marketID, updatedBy)
+	var event *EventMarketDisabled
+	testFunc := func() {
+		event = NewEventMarketDisabled(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketDisabled(%d, %q)", marketID, string(updatedBy))
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, updatedBy.String(), event.UpdatedBy, "UpdatedBy")
 	assertEverythingSet(t, event, "EventMarketDisabled")
@@ -357,8 +471,13 @@ func TestNewEventMarketUserSettleUpdated(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := NewEventMarketUserSettleUpdated(tc.marketID, tc.updatedBy, tc.isAllowed)
-			assert.Equal(t, tc.expected, actual, "NewEventMarketUserSettleUpdated(%d, %q, %t) result",
+			var event proto.Message
+			testFunc := func() {
+				event = NewEventMarketUserSettleUpdated(tc.marketID, tc.updatedBy, tc.isAllowed)
+			}
+			require.NotPanics(t, testFunc, "NewEventMarketUserSettleUpdated(%d, %q, %t) result",
+				tc.marketID, tc.updatedBy.String(), tc.isAllowed)
+			assert.Equal(t, tc.expected, event, "NewEventMarketUserSettleUpdated(%d, %q, %t) result",
 				tc.marketID, tc.updatedBy.String(), tc.isAllowed)
 		})
 	}
@@ -368,7 +487,11 @@ func TestNewEventMarketUserSettleEnabled(t *testing.T) {
 	marketID := uint32(123)
 	updatedBy := sdk.AccAddress("updatedBy___________")
 
-	event := NewEventMarketUserSettleEnabled(marketID, updatedBy)
+	var event *EventMarketUserSettleEnabled
+	testFunc := func() {
+		event = NewEventMarketUserSettleEnabled(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketUserSettleEnabled(%d, %q)", marketID, string(updatedBy))
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, updatedBy.String(), event.UpdatedBy, "UpdatedBy")
 	assertEverythingSet(t, event, "EventMarketUserSettleEnabled")
@@ -378,7 +501,11 @@ func TestNewEventMarketUserSettleDisabled(t *testing.T) {
 	marketID := uint32(123)
 	updatedBy := sdk.AccAddress("updatedBy___________")
 
-	event := NewEventMarketUserSettleDisabled(marketID, updatedBy)
+	var event *EventMarketUserSettleDisabled
+	testFunc := func() {
+		event = NewEventMarketUserSettleDisabled(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketUserSettleDisabled(%d, %q)", marketID, string(updatedBy))
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, updatedBy.String(), event.UpdatedBy, "UpdatedBy")
 	assertEverythingSet(t, event, "EventMarketUserSettleDisabled")
@@ -388,7 +515,11 @@ func TestNewEventMarketPermissionsUpdated(t *testing.T) {
 	marketID := uint32(5432)
 	updatedBy := sdk.AccAddress("updatedBy___________")
 
-	event := NewEventMarketPermissionsUpdated(marketID, updatedBy)
+	var event *EventMarketPermissionsUpdated
+	testFunc := func() {
+		event = NewEventMarketPermissionsUpdated(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketPermissionsUpdated(%d, %q)", marketID, string(updatedBy))
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, updatedBy.String(), event.UpdatedBy, "UpdatedBy")
 	assertEverythingSet(t, event, "EventMarketPermissionsUpdated")
@@ -398,7 +529,11 @@ func TestNewEventMarketReqAttrUpdated(t *testing.T) {
 	marketID := uint32(3334)
 	updatedBy := sdk.AccAddress("updatedBy___________")
 
-	event := NewEventMarketReqAttrUpdated(marketID, updatedBy)
+	var event *EventMarketReqAttrUpdated
+	testFunc := func() {
+		event = NewEventMarketReqAttrUpdated(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketReqAttrUpdated(%d, %q)", marketID, string(updatedBy))
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, updatedBy.String(), event.UpdatedBy, "UpdatedBy")
 	assertEverythingSet(t, event, "EventMarketReqAttrUpdated")
@@ -407,7 +542,11 @@ func TestNewEventMarketReqAttrUpdated(t *testing.T) {
 func TestNewEventMarketCreated(t *testing.T) {
 	marketID := uint32(10111213)
 
-	event := NewEventMarketCreated(marketID)
+	var event *EventMarketCreated
+	testFunc := func() {
+		event = NewEventMarketCreated(marketID)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketCreated(%d)", marketID)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assertEverythingSet(t, event, "EventMarketCreated")
 }
@@ -415,13 +554,21 @@ func TestNewEventMarketCreated(t *testing.T) {
 func TestNewEventMarketFeesUpdated(t *testing.T) {
 	marketID := uint32(1415)
 
-	event := NewEventMarketFeesUpdated(marketID)
+	var event *EventMarketFeesUpdated
+	testFunc := func() {
+		event = NewEventMarketFeesUpdated(marketID)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketFeesUpdated(%d)", marketID)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assertEverythingSet(t, event, "EventMarketFeesUpdated")
 }
 
 func TestNewEventParamsUpdated(t *testing.T) {
-	event := NewEventParamsUpdated()
+	var event *EventParamsUpdated
+	testFunc := func() {
+		event = NewEventParamsUpdated()
+	}
+	require.NotPanics(t, testFunc, "NewEventParamsUpdated()")
 	assertEverythingSet(t, event, "EventParamsUpdated")
 }
 
@@ -453,10 +600,11 @@ func TestTypedEventToEvent(t *testing.T) {
 	}{
 		{
 			name: "EventOrderCreated ask",
-			tev:  NewEventOrderCreated(NewOrder(1).WithAsk(&AskOrder{})),
+			tev:  NewEventOrderCreated(NewOrder(1).WithAsk(&AskOrder{ExternalId: "stuff"})),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCreated",
 				Attributes: []abci.EventAttribute{
+					{Key: []byte("external_id"), Value: quoteBz("stuff")},
 					{Key: []byte("order_id"), Value: quoteBz("1")},
 					{Key: []byte("order_type"), Value: quoteBz("ask")},
 				},
@@ -464,22 +612,36 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventOrderCreated bid",
-			tev:  NewEventOrderCreated(NewOrder(2).WithBid(&BidOrder{})),
+			tev:  NewEventOrderCreated(NewOrder(2).WithBid(&BidOrder{ExternalId: "something else"})),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCreated",
 				Attributes: []abci.EventAttribute{
+					{Key: []byte("external_id"), Value: quoteBz("something else")},
 					{Key: []byte("order_id"), Value: quoteBz("2")},
 					{Key: []byte("order_type"), Value: quoteBz("bid")},
 				},
 			},
 		},
 		{
-			name: "EventOrderCancelled",
-			tev:  NewEventOrderCancelled(3, cancelledBy),
+			name: "EventOrderCancelled ask",
+			tev:  NewEventOrderCancelled(NewOrder(3).WithAsk(&AskOrder{ExternalId: "outside 8"}), cancelledBy),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCancelled",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("cancelled_by"), Value: cancelledByQ},
+					{Key: []byte("external_id"), Value: quoteBz("outside 8")},
+					{Key: []byte("order_id"), Value: quoteBz("3")},
+				},
+			},
+		},
+		{
+			name: "EventOrderCancelled bid",
+			tev:  NewEventOrderCancelled(NewOrder(3).WithBid(&BidOrder{ExternalId: "outside 8"}), cancelledBy),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventOrderCancelled",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("cancelled_by"), Value: cancelledByQ},
+					{Key: []byte("external_id"), Value: quoteBz("outside 8")},
 					{Key: []byte("order_id"), Value: quoteBz("3")},
 				},
 			},
@@ -490,11 +652,13 @@ func TestTypedEventToEvent(t *testing.T) {
 				Assets:                  acoin,
 				Price:                   pcoin,
 				SellerSettlementFlatFee: &fcoin,
+				ExternalId:              "eeeeiiiiiddddd",
 			})),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderFilled",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("assets"), Value: acoinQ},
+					{Key: []byte("external_id"), Value: quoteBz("eeeeiiiiiddddd")},
 					{Key: []byte("fees"), Value: fcoinQ},
 					{Key: []byte("order_id"), Value: quoteBz("4")},
 					{Key: []byte("price"), Value: pcoinQ},
@@ -507,11 +671,13 @@ func TestTypedEventToEvent(t *testing.T) {
 				Assets:              acoin,
 				Price:               pcoin,
 				BuyerSettlementFees: sdk.Coins{fcoin},
+				ExternalId:          "that one thing",
 			})),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderFilled",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("assets"), Value: acoinQ},
+					{Key: []byte("external_id"), Value: quoteBz("that one thing")},
 					{Key: []byte("fees"), Value: fcoinQ},
 					{Key: []byte("order_id"), Value: quoteBz("104")},
 					{Key: []byte("price"), Value: pcoinQ},
@@ -524,11 +690,13 @@ func TestTypedEventToEvent(t *testing.T) {
 				Assets:                  acoin,
 				Price:                   pcoin,
 				SellerSettlementFlatFee: &fcoin,
+				ExternalId:              "12345",
 			})),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderPartiallyFilled",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("assets"), Value: acoinQ},
+					{Key: []byte("external_id"), Value: quoteBz("12345")},
 					{Key: []byte("fees"), Value: fcoinQ},
 					{Key: []byte("order_id"), Value: quoteBz("5")},
 					{Key: []byte("price"), Value: pcoinQ},
@@ -541,14 +709,38 @@ func TestTypedEventToEvent(t *testing.T) {
 				Assets:              acoin,
 				Price:               pcoin,
 				BuyerSettlementFees: sdk.Coins{fcoin},
+				ExternalId:          "67890",
 			})),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderPartiallyFilled",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("assets"), Value: acoinQ},
+					{Key: []byte("external_id"), Value: quoteBz("67890")},
 					{Key: []byte("fees"), Value: fcoinQ},
 					{Key: []byte("order_id"), Value: quoteBz("5")},
 					{Key: []byte("price"), Value: pcoinQ},
+				},
+			},
+		},
+		{
+			name: "EventOrderExternalIDUpdated ask",
+			tev:  NewEventOrderExternalIDUpdated(NewOrder(8).WithAsk(&AskOrder{ExternalId: "yellow"})),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventOrderExternalIDUpdated",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("external_id"), Value: quoteBz("yellow")},
+					{Key: []byte("order_id"), Value: quoteBz("8")},
+				},
+			},
+		},
+		{
+			name: "EventOrderExternalIDUpdated bid",
+			tev:  NewEventOrderExternalIDUpdated(NewOrder(8).WithBid(&BidOrder{ExternalId: "yellow"})),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventOrderExternalIDUpdated",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("external_id"), Value: quoteBz("yellow")},
+					{Key: []byte("order_id"), Value: quoteBz("8")},
 				},
 			},
 		},

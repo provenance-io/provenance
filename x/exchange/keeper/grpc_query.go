@@ -88,6 +88,25 @@ func (k QueryServer) QueryGetOrder(goCtx context.Context, req *exchange.QueryGet
 	return &exchange.QueryGetOrderResponse{Order: order}, nil
 }
 
+// QueryGetOrderByExternalID looks up an order by market id and external id.
+func (k QueryServer) QueryGetOrderByExternalID(goCtx context.Context, req *exchange.QueryGetOrderByExternalIDRequest) (*exchange.QueryGetOrderByExternalIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	order, err := k.GetOrderByExternalID(ctx, req.MarketId, req.ExternalId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	if order == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "order not found in market %d with external id %q",
+			req.MarketId, req.ExternalId)
+	}
+
+	return &exchange.QueryGetOrderByExternalIDResponse{Order: order}, nil
+}
+
 // QueryGetMarketOrders looks up the orders in a market.
 func (k QueryServer) QueryGetMarketOrders(goCtx context.Context, req *exchange.QueryGetMarketOrdersRequest) (*exchange.QueryGetMarketOrdersResponse, error) {
 	if req == nil || req.MarketId == 0 {

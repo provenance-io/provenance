@@ -506,16 +506,15 @@ func AllPermissions() []Permission {
 // Example inputs: "settle", "CanCel", "WITHDRAW", "permission_update", "PermISSion_PErmissioNs", "PERMISSION_ATTRIBUTES"
 func ParsePermission(permission string) (Permission, error) {
 	permUC := strings.ToUpper(strings.TrimSpace(permission))
-	val, found := Permission_value["PERMISSION_"+permUC]
-	if found {
-		if val != 0 {
-			return Permission(val), nil
-		}
-	} else {
-		val, found = Permission_value[permUC]
-		if found && val != 0 {
-			return Permission(val), nil
-		}
+	if !strings.HasPrefix(permUC, "PERMISSION_") {
+		permUC = "PERMISSION_" + permUC
+	}
+	if val, found := Permission_value[permUC]; found && val != int32(Permission_unspecified) {
+		return Permission(val), nil
+	}
+	// special case to allow the underscore to be optional in "set_ids".
+	if permUC == "PERMISSION_SETIDS" {
+		return Permission_set_ids, nil
 	}
 	return Permission_unspecified, fmt.Errorf("invalid permission: %q", permission)
 }

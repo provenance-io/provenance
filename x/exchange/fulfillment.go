@@ -280,6 +280,11 @@ func (f orderFulfillment) PartialFillAllowed() bool {
 	return f.Order.PartialFillAllowed()
 }
 
+// GetExternalID gets this fulfillment's external id.
+func (f orderFulfillment) GetExternalID() string {
+	return f.Order.GetExternalID()
+}
+
 // GetOrderType gets this fulfillment's order's type string.
 func (f orderFulfillment) GetOrderType() string {
 	return f.Order.GetOrderType()

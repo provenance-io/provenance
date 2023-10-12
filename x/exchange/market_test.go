@@ -2844,6 +2844,11 @@ func TestPermission_Validate(t *testing.T) {
 			exp:  "",
 		},
 		{
+			name: "set_ids",
+			p:    Permission_set_ids,
+			exp:  "",
+		},
+		{
 			name: "cancel",
 			p:    Permission_cancel,
 			exp:  "",
@@ -2911,6 +2916,7 @@ func TestPermission_Validate(t *testing.T) {
 func TestAllPermissions(t *testing.T) {
 	expected := []Permission{
 		Permission_settle,
+		Permission_set_ids,
 		Permission_cancel,
 		Permission_withdraw,
 		Permission_update,
@@ -2937,6 +2943,25 @@ func TestParsePermission(t *testing.T) {
 		{permission: "permission_settle", expected: Permission_settle},
 		{permission: "PERMISSION_SETTLE", expected: Permission_settle},
 		{permission: "pERmiSSion_seTTle", expected: Permission_settle},
+
+		// Permission_set_ids
+		{permission: "set_ids", expected: Permission_set_ids},
+		{permission: " set_ids", expected: Permission_set_ids},
+		{permission: "set_ids ", expected: Permission_set_ids},
+		{permission: "SET_IDS", expected: Permission_set_ids},
+		{permission: "Set_Ids", expected: Permission_set_ids},
+		{permission: "setids", expected: Permission_set_ids},
+		{permission: "setids ", expected: Permission_set_ids},
+		{permission: " setids", expected: Permission_set_ids},
+		{permission: "setIds", expected: Permission_set_ids},
+		{permission: "SetIds", expected: Permission_set_ids},
+		{permission: "SETIDS", expected: Permission_set_ids},
+		{permission: "permission_set_ids", expected: Permission_set_ids},
+		{permission: "PERMISSION_SET_IDS", expected: Permission_set_ids},
+		{permission: "peRMissiOn_sEt_iDs", expected: Permission_set_ids},
+		{permission: "permission_setids", expected: Permission_set_ids},
+		{permission: "PERMISSION_SETIDS", expected: Permission_set_ids},
+		{permission: "peRMissiOn_sEtiDs", expected: Permission_set_ids},
 
 		// Permission_cancel
 		{permission: "cancel", expected: Permission_cancel},

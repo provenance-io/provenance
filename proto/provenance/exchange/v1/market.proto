@@ -126,14 +126,16 @@ enum Permission {
   PERMISSION_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "unspecified"];
   // PERMISSION_SETTLE is the ability to use the Settle Tx endpoint on behalf of a market.
   PERMISSION_SETTLE = 1 [(gogoproto.enumvalue_customname) = "settle"];
+  // PERMISSION_SET_IDS is the ability to use the SetOrderExternalID Tx endpoint on behalf of a market.
+  PERMISSION_SET_IDS = 2 [(gogoproto.enumvalue_customname) = "set_ids"];
   // PERMISSION_CANCEL is the ability to use the Cancel Tx endpoint on behalf of a market.
-  PERMISSION_CANCEL = 2 [(gogoproto.enumvalue_customname) = "cancel"];
+  PERMISSION_CANCEL = 3 [(gogoproto.enumvalue_customname) = "cancel"];
   // PERMISSION_WITHDRAW is the ability to use the MarketWithdraw Tx endpoint.
-  PERMISSION_WITHDRAW = 3 [(gogoproto.enumvalue_customname) = "withdraw"];
+  PERMISSION_WITHDRAW = 4 [(gogoproto.enumvalue_customname) = "withdraw"];
   // PERMISSION_UPDATE is the ability to use the MarketUpdate* Tx endpoints.
-  PERMISSION_UPDATE = 4 [(gogoproto.enumvalue_customname) = "update"];
+  PERMISSION_UPDATE = 5 [(gogoproto.enumvalue_customname) = "update"];
   // PERMISSION_PERMISSIONS is the ability to use the MarketManagePermissions Tx endpoint.
-  PERMISSION_PERMISSIONS = 5 [(gogoproto.enumvalue_customname) = "permissions"];
+  PERMISSION_PERMISSIONS = 6 [(gogoproto.enumvalue_customname) = "permissions"];
   // PERMISSION_ATTRIBUTES is the ability to use the MarketManageReqAttrs Tx endpoint.
-  PERMISSION_ATTRIBUTES = 6 [(gogoproto.enumvalue_customname) = "attributes"];
+  PERMISSION_ATTRIBUTES = 7 [(gogoproto.enumvalue_customname) = "attributes"];
 }

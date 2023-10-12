@@ -14,6 +14,8 @@ message EventOrderCreated {
   uint64 order_id = 1;
   // order_type is the type of order, e.g. "ask" or "bid".
   string order_type = 2;
+  // external_id is the order's external id.
+  string external_id = 3;
 }
 
 // EventOrderCancelled is an event emitted when an order is cancelled.
@@ -22,6 +24,8 @@ message EventOrderCancelled {
   uint64 order_id = 1;
   // cancelled_by is the account that triggered the cancellation of the order.
   string cancelled_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_id is the order's external id.
+  string external_id = 3;
 }
 
 // EventOrderFilled is an event emitted when an order has been filled in full.
@@ -35,6 +39,8 @@ message EventOrderFilled {
   string price = 3;
   // fees is the coins amount string of settlement fees paid with this order.
   string fees = 4;
+  // external_id is the order's external id.
+  string external_id = 5;
 }
 
 // EventOrderPartiallyFilled is an event emitted when an order filled in part and still has more left to fill.
@@ -49,6 +55,16 @@ message EventOrderPartiallyFilled {
   // fees is the coins amount string of settlement fees paid with this partial order.
   // For ask orders, this might be more than the amount that was removed from the order's settlement fees.
   string fees = 4;
+  // external_id is the order's external id.
+  string external_id = 5;
+}
+
+// EventOrderExternalIDUpdated is an event emitted when an order's external id is updated.
+message EventOrderExternalIDUpdated {
+  // order_id is the numerical identifier of the order partially filled.
+  uint64 order_id = 1;
+  // external_id is the order's new external id.
+  string external_id = 3;
 }
 
 // EventMarketWithdraw is an event emitted when a withdrawal of a market's collected fees is made.

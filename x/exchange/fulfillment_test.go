@@ -166,11 +166,6 @@ func transferString(t *Transfer) string {
 	return fmt.Sprintf("T{Inputs:%s, Outputs: %s}", inputs, outputs)
 }
 
-// transfersStringsLines creates a string for each transfer.
-func transfersStringsLines(ts []*Transfer) []string {
-	return stringerLines(ts, transferString)
-}
-
 // String converts a indexedAddrAmtsString to a string.
 // This is mostly because test failure output of sdk.Coin and sdk.Coins is impossible to understand.
 func indexedAddrAmtsString(i *indexedAddrAmts) string {
@@ -2516,6 +2511,43 @@ func TestOrderFulfillment_PartialFillAllowed(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "PartialFillAllowed()")
 			assert.Equal(t, tc.exp, actual, "PartialFillAllowed() result")
+		})
+	}
+}
+
+func TestOrderFulfillment_GetExternalID(t *testing.T) {
+	askOrder := func(externalID string) orderFulfillment {
+		return orderFulfillment{
+			Order: NewOrder(999).WithAsk(&AskOrder{ExternalId: externalID}),
+		}
+	}
+	bidOrder := func(externalID string) orderFulfillment {
+		return orderFulfillment{
+			Order: NewOrder(999).WithBid(&BidOrder{ExternalId: externalID}),
+		}
+	}
+
+	tests := []struct {
+		name string
+		f    orderFulfillment
+		exp  string
+	}{
+		{name: "ask empty", f: askOrder(""), exp: ""},
+		{name: "ask something", f: askOrder("something"), exp: "something"},
+		{name: "ask uuid", f: askOrder("5E50E61A-43E7-4C35-86BF-04040B49C1CB"), exp: "5E50E61A-43E7-4C35-86BF-04040B49C1CB"},
+		{name: "bid empty", f: bidOrder(""), exp: ""},
+		{name: "bid something", f: bidOrder("SOMETHING"), exp: "SOMETHING"},
+		{name: "bid uuid", f: bidOrder("1AD88BB9-86FA-42F1-A824-66AB27547904"), exp: "1AD88BB9-86FA-42F1-A824-66AB27547904"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual string
+			testFunc := func() {
+				actual = tc.f.GetExternalID()
+			}
+			require.NotPanics(t, testFunc, "GetExternalID()")
+			assert.Equal(t, tc.exp, actual, "GetExternalID() result")
 		})
 	}
 }
