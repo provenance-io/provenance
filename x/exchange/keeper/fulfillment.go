@@ -59,88 +59,62 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 	}
 
 	totalAssets, totalPrice := sumAssetsAndPrice(orders)
-
 	if !exchange.CoinsEquals(totalAssets, msg.TotalAssets) {
 		return fmt.Errorf("total assets %q does not equal sum of bid order assets %q", msg.TotalAssets, totalAssets)
 	}
 
-	var errs []error
 	var totalSellerFee sdk.Coins
-	assetOutputs := make([]banktypes.Output, 0, len(msg.BidOrderIds))
-	priceInputs := make([]banktypes.Input, 0, len(msg.BidOrderIds))
-	addrIndex := make(map[string]int, len(msg.BidOrderIds))
-	feeInputs := make([]banktypes.Input, 0, len(msg.BidOrderIds)+1)
-	feeAddrIndex := make(map[string]int, len(msg.BidOrderIds))
-	filledOrders := make([]*exchange.FilledOrder, 0, len(msg.BidOrderIds))
+	if msg.SellerSettlementFlatFee != nil {
+		totalSellerFee = totalSellerFee.Add(*msg.SellerSettlementFlatFee)
+	}
+
+	var errs []error
+	feeAddrIdx := exchange.NewIndexedAddrAmts()
+	assetsAddrIdx := exchange.NewIndexedAddrAmts()
+	priceAddrIdx := exchange.NewIndexedAddrAmts()
+	settlement := &exchange.Settlement{FullyFilledOrders: make([]*exchange.FilledOrder, 0, len(msg.BidOrderIds))}
 	for _, order := range orders {
 		bidOrder := order.GetBidOrder()
 		buyer := bidOrder.Buyer
 		assets := bidOrder.Assets
 		price := bidOrder.Price
-		buyerSettlementFees := bidOrder.BuyerSettlementFees
+		buyerFees := bidOrder.BuyerSettlementFees
 
-		sellerRatioFee, rerr := calculateSellerSettlementRatioFee(store, marketID, price)
+		sellerRatioFee, rerr := calculateSellerSettlementRatioFee(store, marketID, order.GetPrice())
 		if rerr != nil {
 			errs = append(errs, fmt.Errorf("error calculating seller settlement ratio fee for order %d: %w",
 				order.OrderId, rerr))
-			continue
 		}
-		if err := k.releaseHoldOnOrder(ctx, order); err != nil {
-			errs = append(errs, err)
-			continue
-		}
-
 		if sellerRatioFee != nil {
 			totalSellerFee = totalSellerFee.Add(*sellerRatioFee)
 		}
 
-		i, seen := addrIndex[buyer]
-		if !seen {
-			i = len(assetOutputs)
-			addrIndex[buyer] = i
-			assetOutputs = append(assetOutputs, banktypes.Output{Address: buyer})
-			priceInputs = append(priceInputs, banktypes.Input{Address: buyer})
-		}
-		assetOutputs[i].Coins = assetOutputs[i].Coins.Add(assets)
-		priceInputs[i].Coins = priceInputs[i].Coins.Add(price)
-
-		if !buyerSettlementFees.IsZero() {
-			j, known := feeAddrIndex[buyer]
-			if !known {
-				j = len(feeInputs)
-				feeAddrIndex[buyer] = j
-				feeInputs = append(feeInputs, banktypes.Input{Address: buyer})
-			}
-			feeInputs[j].Coins = feeInputs[j].Coins.Add(buyerSettlementFees...)
-		}
-
-		filledOrders = append(filledOrders, exchange.NewFilledOrder(order, price, buyerSettlementFees))
+		assetsAddrIdx.Add(buyer, assets)
+		priceAddrIdx.Add(buyer, price)
+		feeAddrIdx.Add(buyer, buyerFees...)
+		settlement.FullyFilledOrders = append(settlement.FullyFilledOrders, exchange.NewFilledOrder(order, price, buyerFees))
 	}
 
 	if len(errs) > 0 {
 		return errors.Join(errs...)
 	}
 
-	if msg.SellerSettlementFlatFee != nil {
-		totalSellerFee = totalSellerFee.Add(*msg.SellerSettlementFlatFee)
-	}
-	if !totalSellerFee.IsZero() {
-		feeInputs = append(feeInputs, banktypes.Input{Address: msg.Seller, Coins: totalSellerFee})
-	}
+	feeAddrIdx.Add(msg.Seller, totalSellerFee...)
 
-	assetInputs := []banktypes.Input{{Address: msg.Seller, Coins: msg.TotalAssets}}
-	priceOutputs := []banktypes.Output{{Address: msg.Seller, Coins: totalPrice}}
-
-	if err := k.DoTransfer(ctx, assetInputs, assetOutputs); err != nil {
-		return fmt.Errorf("error transferring assets from seller to buyers: %w", err)
+	settlement.Transfers = []*exchange.Transfer{
+		{
+			Inputs:  []banktypes.Input{{Address: msg.Seller, Coins: msg.TotalAssets}},
+			Outputs: assetsAddrIdx.GetAsOutputs(),
+		},
+		{
+			Inputs:  priceAddrIdx.GetAsInputs(),
+			Outputs: []banktypes.Output{{Address: msg.Seller, Coins: totalPrice}},
+		},
 	}
+	settlement.FeeInputs = feeAddrIdx.GetAsInputs()
 
-	if err := k.DoTransfer(ctx, priceInputs, priceOutputs); err != nil {
-		return fmt.Errorf("error transferring price from buyers to seller: %w", err)
-	}
-
-	if err := k.CollectFees(ctx, marketID, feeInputs); err != nil {
-		return fmt.Errorf("error collecting settlement fees: %w", err)
+	if err := k.closeSettlement(ctx, store, marketID, settlement); err != nil {
+		return err
 	}
 
 	// Collected last so that it's easier for a seller to fill bids without needing those funds first.
@@ -151,13 +125,6 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 		}
 	}
 
-	events := make([]proto.Message, len(orders))
-	for i, order := range filledOrders {
-		deleteAndDeIndexOrder(store, *order.GetOriginalOrder())
-		events[i] = exchange.NewEventOrderFilled(order)
-	}
-
-	k.emitEvents(ctx, events)
 	return nil
 }
 
@@ -173,10 +140,7 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	if err := validateAcceptingOrdersAndCanUserSettle(store, marketID); err != nil {
 		return err
 	}
-	buyer, serr := sdk.AccAddressFromBech32(msg.Buyer)
-	if serr != nil {
-		return fmt.Errorf("invalid buyer %q: %w", msg.Buyer, serr)
-	}
+	buyer := sdk.MustAccAddressFromBech32(msg.Buyer)
 	if err := k.validateUserCanCreateBid(ctx, marketID, buyer); err != nil {
 		return err
 	}
@@ -190,88 +154,58 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	}
 
 	totalAssets, totalPrice := sumAssetsAndPrice(orders)
-
 	if !exchange.CoinsEquals(totalPrice, sdk.Coins{msg.TotalPrice}) {
 		return fmt.Errorf("total price %q does not equal sum of ask order prices %q", msg.TotalPrice, totalPrice)
 	}
 
 	var errs []error
-	assetInputs := make([]banktypes.Input, 0, len(msg.AskOrderIds))
-	priceOutputs := make([]banktypes.Output, 0, len(msg.AskOrderIds))
-	addrIndex := make(map[string]int, len(msg.AskOrderIds))
-	feeInputs := make([]banktypes.Input, 0, len(msg.AskOrderIds)+1)
-	feeAddrIndex := make(map[string]int, len(msg.AskOrderIds))
-	filledOrders := make([]*exchange.FilledOrder, 0, len(msg.AskOrderIds))
+	assetsAddrIdx := exchange.NewIndexedAddrAmts()
+	priceAddrIdx := exchange.NewIndexedAddrAmts()
+	feeAddrIdx := exchange.NewIndexedAddrAmts()
+	settlement := &exchange.Settlement{FullyFilledOrders: make([]*exchange.FilledOrder, 0, len(msg.AskOrderIds))}
 	for _, order := range orders {
 		askOrder := order.GetAskOrder()
 		seller := askOrder.Seller
 		assets := askOrder.Assets
 		price := askOrder.Price
-		sellerSettlementFlatFee := askOrder.SellerSettlementFlatFee
+		sellerFees := askOrder.GetSettlementFees()
 
 		sellerRatioFee, rerr := calculateSellerSettlementRatioFee(store, marketID, price)
 		if rerr != nil {
 			errs = append(errs, fmt.Errorf("error calculating seller settlement ratio fee for order %d: %w",
 				order.OrderId, rerr))
-			continue
 		}
-		if err := k.releaseHoldOnOrder(ctx, order); err != nil {
-			errs = append(errs, err)
-			continue
+		if sellerRatioFee != nil {
+			sellerFees = sellerFees.Add(*sellerRatioFee)
 		}
 
-		var totalSellerFee sdk.Coins
-		if sellerSettlementFlatFee != nil && !sellerSettlementFlatFee.IsZero() {
-			totalSellerFee = totalSellerFee.Add(*sellerSettlementFlatFee)
-		}
-		if sellerRatioFee != nil && !sellerRatioFee.IsZero() {
-			totalSellerFee = totalSellerFee.Add(*sellerRatioFee)
-		}
-
-		i, seen := addrIndex[seller]
-		if !seen {
-			i = len(assetInputs)
-			addrIndex[seller] = i
-			assetInputs = append(assetInputs, banktypes.Input{Address: seller})
-			priceOutputs = append(priceOutputs, banktypes.Output{Address: seller})
-		}
-		assetInputs[i].Coins = assetInputs[i].Coins.Add(assets)
-		priceOutputs[i].Coins = priceOutputs[i].Coins.Add(price)
-
-		if !totalSellerFee.IsZero() {
-			j, known := feeAddrIndex[seller]
-			if !known {
-				j = len(feeInputs)
-				feeAddrIndex[seller] = j
-				feeInputs = append(feeInputs, banktypes.Input{Address: seller})
-			}
-			feeInputs[j].Coins = feeInputs[j].Coins.Add(totalSellerFee...)
-		}
-
-		filledOrders = append(filledOrders, exchange.NewFilledOrder(order, price, totalSellerFee))
+		assetsAddrIdx.Add(seller, assets)
+		priceAddrIdx.Add(seller, price)
+		feeAddrIdx.Add(seller, sellerFees...)
+		settlement.FullyFilledOrders = append(settlement.FullyFilledOrders, exchange.NewFilledOrder(order, price, sellerFees))
 	}
 
 	if len(errs) > 0 {
 		return errors.Join(errs...)
 	}
 
-	if !msg.BuyerSettlementFees.IsZero() {
-		feeInputs = append(feeInputs, banktypes.Input{Address: msg.Buyer, Coins: msg.BuyerSettlementFees})
+	// Done after the loop so that it's always last like it has to be in FillBids.
+	feeAddrIdx.Add(msg.Buyer, msg.BuyerSettlementFees...)
+
+	settlement.Transfers = []*exchange.Transfer{
+		{
+			Inputs:  assetsAddrIdx.GetAsInputs(),
+			Outputs: []banktypes.Output{{Address: msg.Buyer, Coins: totalAssets}},
+		},
+		{
+			Inputs:  []banktypes.Input{{Address: msg.Buyer, Coins: sdk.Coins{msg.TotalPrice}}},
+			Outputs: priceAddrIdx.GetAsOutputs(),
+		},
 	}
+	settlement.FeeInputs = feeAddrIdx.GetAsInputs()
 
-	assetOutputs := []banktypes.Output{{Address: msg.Buyer, Coins: totalAssets}}
-	priceInputs := []banktypes.Input{{Address: msg.Buyer, Coins: sdk.Coins{msg.TotalPrice}}}
-
-	if err := k.DoTransfer(ctx, assetInputs, assetOutputs); err != nil {
-		return fmt.Errorf("error transferring assets from sellers to buyer: %w", err)
-	}
-
-	if err := k.DoTransfer(ctx, priceInputs, priceOutputs); err != nil {
-		return fmt.Errorf("error transferring price from buyer to sellers: %w", err)
-	}
-
-	if err := k.CollectFees(ctx, marketID, feeInputs); err != nil {
-		return fmt.Errorf("error collecting settlement fees: %w", err)
+	if err := k.closeSettlement(ctx, store, marketID, settlement); err != nil {
+		return err
 	}
 
 	// Collected last so that it's easier for a seller to fill asks without needing those funds first.
@@ -282,13 +216,6 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 		}
 	}
 
-	events := make([]proto.Message, len(orders))
-	for i, order := range filledOrders {
-		deleteAndDeIndexOrder(store, *order.GetOriginalOrder())
-		events[i] = exchange.NewEventOrderFilled(order)
-	}
-
-	k.emitEvents(ctx, events)
 	return nil
 }
 
@@ -321,15 +248,21 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 		return errors.New("settlement unexpectedly resulted in all orders fully filled")
 	}
 
+	return k.closeSettlement(ctx, store, marketID, settlement)
+}
+
+// closeSettlement does all the processing needed to complete a settlement.
+// It releases all the holds, does all the transfers, collects the fees, deletes/updates the orders, and emits events.
+func (k Keeper) closeSettlement(ctx sdk.Context, store sdk.KVStore, marketID uint32, settlement *exchange.Settlement) error {
 	// Release the holds!!!!
 	var errs []error
 	for _, order := range settlement.FullyFilledOrders {
-		if err = k.releaseHoldOnOrder(ctx, order); err != nil {
+		if err := k.releaseHoldOnOrder(ctx, order); err != nil {
 			errs = append(errs, err)
 		}
 	}
 	if settlement.PartialOrderFilled != nil {
-		if err = k.releaseHoldOnOrder(ctx, settlement.PartialOrderFilled); err != nil {
+		if err := k.releaseHoldOnOrder(ctx, settlement.PartialOrderFilled); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -339,30 +272,34 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 
 	// Transfer all the things!!!!
 	for _, transfer := range settlement.Transfers {
-		if err = k.DoTransfer(ctx, transfer.Inputs, transfer.Outputs); err != nil {
-			return err
+		if err := k.DoTransfer(ctx, transfer.Inputs, transfer.Outputs); err != nil {
+			errs = append(errs, err)
 		}
 	}
 
 	// Collect all the fees (not as exciting).
-	if err = k.CollectFees(ctx, marketID, settlement.FeeInputs); err != nil {
-		return err
+	if err := k.CollectFees(ctx, marketID, settlement.FeeInputs); err != nil {
+		errs = append(errs, err)
 	}
 
-	// Delete all the fully filled orders.
-	for _, order := range settlement.FullyFilledOrders {
-		deleteAndDeIndexOrder(store, *order.GetOriginalOrder())
+	if len(errs) > 0 {
+		return errors.Join(errs...)
 	}
+
 	// Update the partial order if there was one.
 	if settlement.PartialOrderLeft != nil {
-		if err = k.setOrderInStore(store, *settlement.PartialOrderLeft); err != nil {
+		if err := k.setOrderInStore(store, *settlement.PartialOrderLeft); err != nil {
 			return fmt.Errorf("could not update partial %s order %d: %w",
 				settlement.PartialOrderLeft.GetOrderType(), settlement.PartialOrderLeft.OrderId, err)
 		}
 	}
+	// Delete all the fully filled orders.
+	for _, order := range settlement.FullyFilledOrders {
+		deleteAndDeIndexOrder(store, *order.GetOriginalOrder())
+	}
 
 	// And emit all the needed events.
-	events := make([]proto.Message, 0, len(askOrders)+len(bidOrders))
+	events := make([]proto.Message, 0, len(settlement.FullyFilledOrders)+1)
 	for _, order := range settlement.FullyFilledOrders {
 		events = append(events, exchange.NewEventOrderFilled(order))
 	}
