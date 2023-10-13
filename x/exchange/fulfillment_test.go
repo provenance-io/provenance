@@ -1047,6 +1047,45 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		expPanic string
 	}{
 		{
+			name:     "empty, add zero coins",
+			receiver: NewIndexedAddrAmts(),
+			addr:     "addr1",
+			coins:    nil,
+			expected: NewIndexedAddrAmts(),
+		},
+		{
+			name:     "empty, add one coin with a zero value",
+			receiver: NewIndexedAddrAmts(),
+			addr:     "addr1",
+			coins:    []sdk.Coin{{Denom: "zero", Amount: sdkmath.ZeroInt()}},
+			expected: NewIndexedAddrAmts(),
+		},
+		{
+			name:     "empty, add two coins with a zero value.",
+			receiver: NewIndexedAddrAmts(),
+			addr:     "addr1",
+			coins: []sdk.Coin{
+				{Denom: "zeroa", Amount: sdkmath.ZeroInt()},
+				{Denom: "zerob", Amount: sdkmath.ZeroInt()},
+			},
+			expected: NewIndexedAddrAmts(),
+		},
+		{
+			name:     "empty, add three coins, only one is not zero",
+			receiver: NewIndexedAddrAmts(),
+			addr:     "addr1",
+			coins: []sdk.Coin{
+				{Denom: "coina", Amount: sdkmath.ZeroInt()},
+				{Denom: "coinb", Amount: sdkmath.OneInt()},
+				{Denom: "coinc", Amount: sdkmath.ZeroInt()},
+			},
+			expected: &IndexedAddrAmts{
+				addrs:   []string{"addr1"},
+				amts:    []sdk.Coins{coins("1coinb")},
+				indexes: map[string]int{"addr1": 0},
+			},
+		},
+		{
 			name:     "empty, add one coin",
 			receiver: NewIndexedAddrAmts(),
 			addr:     "addr1",
@@ -1253,6 +1292,36 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 			addr:     "addr4",
 			coins:    negCoins,
 			expPanic: "cannot index and add invalid coin amount \"-1neg\"",
+		},
+		{
+			name: "three addrs, add zero to existing",
+			receiver: &IndexedAddrAmts{
+				addrs:   []string{"addr1", "addr2", "addr3"},
+				amts:    []sdk.Coins{coins("1one"), coins("2two"), coins("3three")},
+				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
+			},
+			addr:  "addr2",
+			coins: []sdk.Coin{{Denom: "zero", Amount: sdkmath.ZeroInt()}},
+			expected: &IndexedAddrAmts{
+				addrs:   []string{"addr1", "addr2", "addr3"},
+				amts:    []sdk.Coins{coins("1one"), coins("2two"), coins("3three")},
+				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
+			},
+		},
+		{
+			name: "three addrs, add zero to new",
+			receiver: &IndexedAddrAmts{
+				addrs:   []string{"addr1", "addr2", "addr3"},
+				amts:    []sdk.Coins{coins("1one"), coins("2two"), coins("3three")},
+				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
+			},
+			addr:  "addr4",
+			coins: []sdk.Coin{{Denom: "zero", Amount: sdkmath.ZeroInt()}},
+			expected: &IndexedAddrAmts{
+				addrs:   []string{"addr1", "addr2", "addr3"},
+				amts:    []sdk.Coins{coins("1one"), coins("2two"), coins("3three")},
+				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
+			},
 		},
 	}
 

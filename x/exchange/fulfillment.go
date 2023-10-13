@@ -103,6 +103,9 @@ func NewIndexedAddrAmts() *IndexedAddrAmts {
 // Add adds the coins to the given address.
 // Panics if a provided coin is invalid.
 func (i *IndexedAddrAmts) Add(addr string, coins ...sdk.Coin) {
+	if sdk.Coins(coins).IsZero() {
+		return
+	}
 	for _, coin := range coins {
 		if err := coin.Validate(); err != nil {
 			panic(fmt.Errorf("cannot index and add invalid coin amount %q", coin))
