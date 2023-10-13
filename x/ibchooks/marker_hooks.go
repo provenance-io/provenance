@@ -110,7 +110,7 @@ func (h MarkerHooks) createNewIbcMarker(ctx sdktypes.Context, data transfertypes
 // The current circulation will be 0 if the ibc coin does not exist yet.
 func (h MarkerHooks) getExistingSupply(ctx sdktypes.Context, marker *markertypes.MarkerAccount) {
 	currentSupply := h.MarkerKeeper.CurrentCirculation(ctx, marker)
-	marker.SetSupply(marker.GetSupply().Add(sdktypes.NewCoin(marker.Denom, currentSupply)))
+	_ = marker.SetSupply(marker.GetSupply().Add(sdktypes.NewCoin(marker.Denom, currentSupply)))
 }
 
 // addDenomMetaData adds denom metadata for ibc token
