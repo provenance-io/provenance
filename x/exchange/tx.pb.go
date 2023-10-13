@@ -720,7 +720,7 @@ type MsgMarketSetOrderExternalIDRequest struct {
 	MarketId uint32 `protobuf:"varint,2,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
 	// order_id is the numerical identifier of the order to update.
 	OrderId uint64 `protobuf:"varint,3,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	// external_id is the new external id to associate with the order. Max length is 40 characters.
+	// external_id is the new external id to associate with the order. Max length is 100 characters.
 	// If the external id is already associated with another order in this market, this update will fail.
 	ExternalId string `protobuf:"bytes,4,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty"`
 }

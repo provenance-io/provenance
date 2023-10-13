@@ -19,7 +19,12 @@ const (
 	OrderTypeByteBid = byte(0x01)
 )
 
-const MaxExternalIDLength = 40
+// MaxExternalIDLength is the maximum length that an external id can have.
+// A 32 byte address as a bech32 string is 59 characters + the hrp.
+// E.g. a 32 byte address with hrp "pb" will be 61 characters long.
+// Technically, a bech32 HRP can be 1 to 83 characters. This 100 was chosen as  a balance meant
+// to allow most of those while still limiting the length of keys that use these external ids.
+const MaxExternalIDLength = 100
 
 // SubOrderI is an interface with getters for the fields in a sub-order (i.e. AskOrder or BidOrder).
 type SubOrderI interface {

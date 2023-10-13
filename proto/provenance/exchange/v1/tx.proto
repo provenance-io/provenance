@@ -196,7 +196,7 @@ message MsgMarketSetOrderExternalIDRequest {
 
   // order_id is the numerical identifier of the order to update.
   uint64 order_id = 3;
-  // external_id is the new external id to associate with the order. Max length is 40 characters.
+  // external_id is the new external id to associate with the order. Max length is 100 characters.
   // If the external id is already associated with another order in this market, this update will fail.
   string external_id = 4;
 }

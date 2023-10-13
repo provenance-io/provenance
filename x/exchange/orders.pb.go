@@ -136,7 +136,7 @@ type AskOrder struct {
 	// allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the
 	// order must be either filled in full or not filled at all.
 	AllowPartial bool `protobuf:"varint,6,opt,name=allow_partial,json=allowPartial,proto3" json:"allow_partial,omitempty"`
-	// external_id is an optional string used to externally identify this order. Max length is 40 characters.
+	// external_id is an optional string used to externally identify this order. Max length is 100 characters.
 	// If an order in this market with this external id already exists, this order will be rejected.
 	ExternalId string `protobuf:"bytes,7,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty"`
 }
@@ -191,7 +191,7 @@ type BidOrder struct {
 	// allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the
 	// order must be either filled in full or not filled at all.
 	AllowPartial bool `protobuf:"varint,6,opt,name=allow_partial,json=allowPartial,proto3" json:"allow_partial,omitempty"`
-	// external_id is an optional string used to externally identify this order. Max length is 40 characters.
+	// external_id is an optional string used to externally identify this order. Max length is 100 characters.
 	// If an order in this market with this external id already exists, this order will be rejected.
 	ExternalId string `protobuf:"bytes,7,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty"`
 }

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -3746,11 +3747,11 @@ func TestMakeIndexKeyMarketExternalIDToOrder(t *testing.T) {
 			expPanic:   "cannot create market external id to order index with empty external id",
 		},
 		{
-			name:       "41 char external id",
+			name:       "external id too long",
 			marketID:   2,
-			externalID: "This id has forty-one chars. That's long!",
-			expPanic: "cannot create market external id to order index: invalid external id " +
-				"\"This id has forty-one chars. That's long!\": max length 40",
+			externalID: strings.Repeat("H", exchange.MaxExternalIDLength+1),
+			expPanic: fmt.Sprintf("cannot create market external id to order index: invalid external id %q: max length %d",
+				strings.Repeat("H", exchange.MaxExternalIDLength+1), exchange.MaxExternalIDLength),
 		},
 		{
 			name:       "market 0, a zeroed uuid",
@@ -3775,9 +3776,9 @@ func TestMakeIndexKeyMarketExternalIDToOrder(t *testing.T) {
 		{
 			name:       "max market id and lots of Zs",
 			marketID:   4_294_967_295,
-			externalID: strings.Repeat("Z", 40),
+			externalID: strings.Repeat("Z", exchange.MaxExternalIDLength),
 			expected: append([]byte{keeper.KeyTypeMarketExternalIDToOrderIndex, 255, 255, 255, 255},
-				strings.Repeat("Z", 40)...),
+				strings.Repeat("Z", exchange.MaxExternalIDLength)...),
 		},
 	}
 

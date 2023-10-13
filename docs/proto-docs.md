@@ -1803,7 +1803,7 @@ AskOrder represents someone's desire to sell something at a minimum price.
 | `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the minimum amount that the seller is willing to accept for the assets. The seller's settlement proportional fee (and possibly the settlement flat fee) is taken out of the amount the seller receives, so it's possible that the seller will still receive less than this price. |
 | `seller_settlement_flat_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | seller_settlement_flat_fee is the flat fee for sellers that will be charged during settlement. If this denom is the same denom as the price, it will come out of the actual price received. If this denom is different, the amount must be in the seller's account and a hold is placed on it until the order is filled or cancelled. |
 | `allow_partial` | [bool](#bool) |  | allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the order must be either filled in full or not filled at all. |
-| `external_id` | [string](#string) |  | external_id is an optional string used to externally identify this order. Max length is 40 characters. If an order in this market with this external id already exists, this order will be rejected. |
+| `external_id` | [string](#string) |  | external_id is an optional string used to externally identify this order. Max length is 100 characters. If an order in this market with this external id already exists, this order will be rejected. |
 
 
 
@@ -1824,7 +1824,7 @@ BidOrder represents someone's desire to buy something at a specific price.
 | `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the amount that the buyer will pay for the assets. A hold is placed on this until the order is filled or cancelled. |
 | `buyer_settlement_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | buyer_settlement_fees are the fees (both flat and proportional) that the buyer will pay (in addition to the price) when the order is settled. A hold is placed on this until the order is filled or cancelled. |
 | `allow_partial` | [bool](#bool) |  | allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the order must be either filled in full or not filled at all. |
-| `external_id` | [string](#string) |  | external_id is an optional string used to externally identify this order. Max length is 40 characters. If an order in this market with this external id already exists, this order will be rejected. |
+| `external_id` | [string](#string) |  | external_id is an optional string used to externally identify this order. Max length is 100 characters. If an order in this market with this external id already exists, this order will be rejected. |
 
 
 
@@ -2255,7 +2255,7 @@ MsgMarketSetOrderExternalIDRequest is a request message for the MarketSetOrderEx
 | `admin` | [string](#string) |  | admin is the account with "set_ids" permission requesting this settlement. |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
 | `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order to update. |
-| `external_id` | [string](#string) |  | external_id is the new external id to associate with the order. Max length is 40 characters. If the external id is already associated with another order in this market, this update will fail. |
+| `external_id` | [string](#string) |  | external_id is the new external id to associate with the order. Max length is 100 characters. If the external id is already associated with another order in this market, this update will fail. |
 
 
 

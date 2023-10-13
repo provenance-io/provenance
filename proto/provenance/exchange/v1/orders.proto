@@ -47,7 +47,7 @@ message AskOrder {
   // allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the
   // order must be either filled in full or not filled at all.
   bool allow_partial = 6;
-  // external_id is an optional string used to externally identify this order. Max length is 40 characters.
+  // external_id is an optional string used to externally identify this order. Max length is 100 characters.
   // If an order in this market with this external id already exists, this order will be rejected.
   string external_id = 7;
 }
@@ -72,7 +72,7 @@ message BidOrder {
   // allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the
   // order must be either filled in full or not filled at all.
   bool allow_partial = 6;
-  // external_id is an optional string used to externally identify this order. Max length is 40 characters.
+  // external_id is an optional string used to externally identify this order. Max length is 100 characters.
   // If an order in this market with this external id already exists, this order will be rejected.
   string external_id = 7;
 }
