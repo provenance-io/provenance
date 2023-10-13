@@ -82,6 +82,7 @@ func (suite *MarkerHooksTestSuite) makeMockPacket(denom, receiver, memo string, 
 }
 
 func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
+	suite.chainA.GetProvenanceApp().BankKeeper.MintCoins(suite.chainA.GetContext(), markertypes.CoinPoolName, sdk.NewCoins(sdk.NewInt64Coin("ibc/F7466BCD642C14163B3E67D5B4401FD2B77271C3225FDE0C57ADD61B8046253D", 100)))
 	address1 := sdk.AccAddress("address1")
 	address2 := sdk.AccAddress("address2")
 	markerHooks := ibchooks.NewMarkerHooks(&suite.chainA.GetProvenanceApp().MarkerKeeper)
@@ -92,6 +93,7 @@ func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
 		expErr        string
 		expIbcDenom   string
 		expTransAuths []sdk.AccAddress
+		expSupply     sdk.Coin
 	}{
 		{
 			name:        "successfully process with empty memo",
@@ -99,6 +101,7 @@ func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
 			memo:        "",
 			expErr:      "",
 			expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
+			expSupply:   sdk.NewInt64Coin("ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E", 1),
 		},
 		{
 			name:        "successfully process with non json memo",
@@ -106,6 +109,7 @@ func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
 			memo:        "55 burger 55 fries...",
 			expErr:      "",
 			expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
+			expSupply:   sdk.NewInt64Coin("ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E", 1),
 		},
 		{
 			name:        "successfully process with non json marker part memo",
@@ -113,6 +117,7 @@ func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
 			memo:        `{"marker":{random},"wasm":{"contract":"%1234","msg":{"echo":{"msg":"test"}}}}`,
 			expErr:      "",
 			expIbcDenom: "ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E",
+			expSupply:   sdk.NewInt64Coin("ibc/F3F4565153F3DD64470F075D6D6B1CB183F06EB55B287CCD0D3506277A03DE8E", 1),
 		},
 		{
 			name:          "successfully process with transfer auths",
@@ -121,12 +126,21 @@ func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
 			expErr:        "",
 			expIbcDenom:   "ibc/1B3A5773661E8A6B9F6BB407979B5933C2FA792DF24ED2A40B028C90277B0C22",
 			expTransAuths: []sdk.AccAddress{address1, address2},
+			expSupply:     sdk.NewInt64Coin("ibc/1B3A5773661E8A6B9F6BB407979B5933C2FA792DF24ED2A40B028C90277B0C22", 1),
 		},
 		{
 			name:   "fail invalid json",
 			denom:  "fiftyfivetacos",
 			memo:   fmt.Sprintf(`{"marker":{"transfer-auths":"%s"}}`, address1.String()),
 			expErr: "json: cannot unmarshal string into Go struct field MarkerPayload.transfer-auths of type []string",
+		},
+		{
+			name:        "successfully process with ibc denom that existed before marker correctly adjust supply",
+			denom:       "ibcdenombeforemiddleware",
+			memo:        "",
+			expErr:      "",
+			expIbcDenom: "ibc/F7466BCD642C14163B3E67D5B4401FD2B77271C3225FDE0C57ADD61B8046253D",
+			expSupply:   sdk.NewInt64Coin("ibc/F7466BCD642C14163B3E67D5B4401FD2B77271C3225FDE0C57ADD61B8046253D", 101),
 		},
 	}
 	for _, tc := range testCases {
@@ -140,6 +154,7 @@ func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
 				marker, err := suite.chainA.GetProvenanceApp().MarkerKeeper.GetMarkerByDenom(suite.chainA.GetContext(), tc.expIbcDenom)
 				require.NoError(t, err, "GetMarkerByDenom should find "+tc.expErr)
 				assert.Equal(t, tc.expIbcDenom, marker.GetDenom(), "Marker Denom should be ibc denom")
+				assert.Equal(t, tc.expSupply, marker.GetSupply(), "Marker Supply should match expected")
 				metadata, found := suite.chainA.GetProvenanceApp().BankKeeper.GetDenomMetaData(suite.chainA.GetContext(), tc.expIbcDenom)
 				require.True(t, found, "GetDenomMetaData() not found for "+tc.expErr)
 				assert.Equal(t, marker.GetDenom(), metadata.Base, "Metadata Base should equal marker denom")
