@@ -65,13 +65,13 @@ func copyOrderFulfillments(fs []*orderFulfillment) []*orderFulfillment {
 	return copySlice(fs, copyOrderFulfillment)
 }
 
-// copyIndexedAddrAmts creates a deep copy of an indexedAddrAmts.
-func copyIndexedAddrAmts(orig *indexedAddrAmts) *indexedAddrAmts {
+// copyIndexedAddrAmts creates a deep copy of an IndexedAddrAmts.
+func copyIndexedAddrAmts(orig *IndexedAddrAmts) *IndexedAddrAmts {
 	if orig == nil {
 		return nil
 	}
 
-	rv := &indexedAddrAmts{
+	rv := &IndexedAddrAmts{
 		addrs:   nil,
 		amts:    nil,
 		indexes: nil,
@@ -168,7 +168,7 @@ func transferString(t *Transfer) string {
 
 // String converts a indexedAddrAmtsString to a string.
 // This is mostly because test failure output of sdk.Coin and sdk.Coins is impossible to understand.
-func indexedAddrAmtsString(i *indexedAddrAmts) string {
+func indexedAddrAmtsString(i *IndexedAddrAmts) string {
 	if i == nil {
 		return "nil"
 	}
@@ -1017,13 +1017,13 @@ func TestBuildSettlement(t *testing.T) {
 }
 
 func TestNewIndexedAddrAmts(t *testing.T) {
-	expected := &indexedAddrAmts{
+	expected := &IndexedAddrAmts{
 		addrs:   nil,
 		amts:    nil,
 		indexes: make(map[string]int),
 	}
-	actual := newIndexedAddrAmts()
-	assert.Equal(t, expected, actual, "newIndexedAddrAmts result")
+	actual := NewIndexedAddrAmts()
+	assert.Equal(t, expected, actual, "NewIndexedAddrAmts result")
 	key := "test"
 	require.NotPanics(t, func() {
 		_ = actual.indexes[key]
@@ -1040,18 +1040,18 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		receiver *indexedAddrAmts
+		receiver *IndexedAddrAmts
 		addr     string
 		coins    []sdk.Coin
-		expected *indexedAddrAmts
+		expected *IndexedAddrAmts
 		expPanic string
 	}{
 		{
 			name:     "empty, add one coin",
-			receiver: newIndexedAddrAmts(),
+			receiver: NewIndexedAddrAmts(),
 			addr:     "addr1",
 			coins:    coins("1one"),
-			expected: &indexedAddrAmts{
+			expected: &IndexedAddrAmts{
 				addrs:   []string{"addr1"},
 				amts:    []sdk.Coins{coins("1one")},
 				indexes: map[string]int{"addr1": 0},
@@ -1059,10 +1059,10 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		},
 		{
 			name:     "empty, add two coins",
-			receiver: newIndexedAddrAmts(),
+			receiver: NewIndexedAddrAmts(),
 			addr:     "addr1",
 			coins:    coins("1one,2two"),
-			expected: &indexedAddrAmts{
+			expected: &IndexedAddrAmts{
 				addrs:   []string{"addr1"},
 				amts:    []sdk.Coins{coins("1one,2two")},
 				indexes: map[string]int{"addr1": 0},
@@ -1070,21 +1070,21 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		},
 		{
 			name:     "empty, add neg coins",
-			receiver: newIndexedAddrAmts(),
+			receiver: NewIndexedAddrAmts(),
 			addr:     "addr1",
 			coins:    negCoins,
 			expPanic: "cannot index and add invalid coin amount \"-1neg\"",
 		},
 		{
 			name: "one addr, add to existing new denom",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs:   []string{"addr1"},
 				amts:    []sdk.Coins{coins("1one")},
 				indexes: map[string]int{"addr1": 0},
 			},
 			addr:  "addr1",
 			coins: coins("2two"),
-			expected: &indexedAddrAmts{
+			expected: &IndexedAddrAmts{
 				addrs:   []string{"addr1"},
 				amts:    []sdk.Coins{coins("1one,2two")},
 				indexes: map[string]int{"addr1": 0},
@@ -1092,14 +1092,14 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		},
 		{
 			name: "one addr, add to existing same denom",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs:   []string{"addr1"},
 				amts:    []sdk.Coins{coins("1one")},
 				indexes: map[string]int{"addr1": 0},
 			},
 			addr:  "addr1",
 			coins: coins("3one"),
-			expected: &indexedAddrAmts{
+			expected: &IndexedAddrAmts{
 				addrs:   []string{"addr1"},
 				amts:    []sdk.Coins{coins("4one")},
 				indexes: map[string]int{"addr1": 0},
@@ -1107,7 +1107,7 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		},
 		{
 			name: "one addr, add negative to existing",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs:   []string{"addr1"},
 				amts:    []sdk.Coins{coins("1one")},
 				indexes: map[string]int{"addr1": 0},
@@ -1118,14 +1118,14 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		},
 		{
 			name: "one addr, add to new",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs:   []string{"addr1"},
 				amts:    []sdk.Coins{coins("1one")},
 				indexes: map[string]int{"addr1": 0},
 			},
 			addr:  "addr2",
 			coins: coins("2two"),
-			expected: &indexedAddrAmts{
+			expected: &IndexedAddrAmts{
 				addrs:   []string{"addr1", "addr2"},
 				amts:    []sdk.Coins{coins("1one"), coins("2two")},
 				indexes: map[string]int{"addr1": 0, "addr2": 1},
@@ -1133,14 +1133,14 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		},
 		{
 			name: "one addr, add to new opposite order",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs:   []string{"addr2"},
 				amts:    []sdk.Coins{coins("2two")},
 				indexes: map[string]int{"addr2": 0},
 			},
 			addr:  "addr1",
 			coins: coins("1one"),
-			expected: &indexedAddrAmts{
+			expected: &IndexedAddrAmts{
 				addrs:   []string{"addr2", "addr1"},
 				amts:    []sdk.Coins{coins("2two"), coins("1one")},
 				indexes: map[string]int{"addr2": 0, "addr1": 1},
@@ -1148,7 +1148,7 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		},
 		{
 			name: "one addr, add negative to new",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs:   []string{"addr1"},
 				amts:    []sdk.Coins{coins("1one")},
 				indexes: map[string]int{"addr1": 0},
@@ -1159,14 +1159,14 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		},
 		{
 			name: "three addrs, add to first",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs:   []string{"addr1", "addr2", "addr3"},
 				amts:    []sdk.Coins{coins("1one"), coins("2two"), coins("3three")},
 				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
 			},
 			addr:  "addr1",
 			coins: coins("10one"),
-			expected: &indexedAddrAmts{
+			expected: &IndexedAddrAmts{
 				addrs:   []string{"addr1", "addr2", "addr3"},
 				amts:    []sdk.Coins{coins("11one"), coins("2two"), coins("3three")},
 				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
@@ -1174,14 +1174,14 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		},
 		{
 			name: "three addrs, add to second",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs:   []string{"addr1", "addr2", "addr3"},
 				amts:    []sdk.Coins{coins("1one"), coins("2two"), coins("3three")},
 				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
 			},
 			addr:  "addr2",
 			coins: coins("10two"),
-			expected: &indexedAddrAmts{
+			expected: &IndexedAddrAmts{
 				addrs:   []string{"addr1", "addr2", "addr3"},
 				amts:    []sdk.Coins{coins("1one"), coins("12two"), coins("3three")},
 				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
@@ -1189,14 +1189,14 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		},
 		{
 			name: "three addrs, add to third",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs:   []string{"addr1", "addr2", "addr3"},
 				amts:    []sdk.Coins{coins("1one"), coins("2two"), coins("3three")},
 				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
 			},
 			addr:  "addr3",
 			coins: coins("10three"),
-			expected: &indexedAddrAmts{
+			expected: &IndexedAddrAmts{
 				addrs:   []string{"addr1", "addr2", "addr3"},
 				amts:    []sdk.Coins{coins("1one"), coins("2two"), coins("13three")},
 				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
@@ -1204,14 +1204,14 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		},
 		{
 			name: "three addrs, add two coins to second",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs:   []string{"addr1", "addr2", "addr3"},
 				amts:    []sdk.Coins{coins("1one"), coins("2two"), coins("3three")},
 				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
 			},
 			addr:  "addr2",
 			coins: coins("10four,20two"),
-			expected: &indexedAddrAmts{
+			expected: &IndexedAddrAmts{
 				addrs:   []string{"addr1", "addr2", "addr3"},
 				amts:    []sdk.Coins{coins("1one"), coins("10four,22two"), coins("3three")},
 				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
@@ -1219,14 +1219,14 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		},
 		{
 			name: "three addrs, add to new",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs:   []string{"addr1", "addr2", "addr3"},
 				amts:    []sdk.Coins{coins("1one"), coins("2two"), coins("3three")},
 				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
 			},
 			addr:  "good buddy",
 			coins: coins("10four"),
-			expected: &indexedAddrAmts{
+			expected: &IndexedAddrAmts{
 				addrs:   []string{"addr1", "addr2", "addr3", "good buddy"},
 				amts:    []sdk.Coins{coins("1one"), coins("2two"), coins("3three"), coins("10four")},
 				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2, "good buddy": 3},
@@ -1234,7 +1234,7 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		},
 		{
 			name: "three addrs, add negative to second",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs:   []string{"addr1", "addr2", "addr3"},
 				amts:    []sdk.Coins{coins("1one"), coins("2two"), coins("3three")},
 				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
@@ -1245,7 +1245,7 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 		},
 		{
 			name: "three addrs, add negative to new",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs:   []string{"addr1", "addr2", "addr3"},
 				amts:    []sdk.Coins{coins("1one"), coins("2two"), coins("3three")},
 				indexes: map[string]int{"addr1": 0, "addr2": 1, "addr3": 2},
@@ -1268,11 +1268,11 @@ func TestIndexedAddrAmts_Add(t *testing.T) {
 			}()
 
 			testFunc := func() {
-				tc.receiver.add(tc.addr, tc.coins...)
+				tc.receiver.Add(tc.addr, tc.coins...)
 			}
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "add(%q, %q)", tc.addr, tc.coins)
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "Add(%q, %q)", tc.addr, tc.coins)
 			if len(tc.expPanic) == 0 {
-				assert.Equal(t, tc.expected, tc.receiver, "receiver after add(%q, %q)", tc.addr, tc.coins)
+				assert.Equal(t, tc.expected, tc.receiver, "receiver after Add(%q, %q)", tc.addr, tc.coins)
 			}
 		})
 	}
@@ -1287,15 +1287,15 @@ func TestIndexedAddrAmts_GetAsInputs(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		receiver *indexedAddrAmts
+		receiver *IndexedAddrAmts
 		expected []banktypes.Input
 		expPanic string
 	}{
 		{name: "nil receiver", receiver: nil, expected: nil},
-		{name: "no addrs", receiver: newIndexedAddrAmts(), expected: nil},
+		{name: "no addrs", receiver: NewIndexedAddrAmts(), expected: nil},
 		{
 			name: "one addr negative amount",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs: []string{"addr1"},
 				amts:  []sdk.Coins{{{Denom: "neg", Amount: sdkmath.NewInt(-1)}}},
 				indexes: map[string]int{
@@ -1306,7 +1306,7 @@ func TestIndexedAddrAmts_GetAsInputs(t *testing.T) {
 		},
 		{
 			name: "one addr zero amount",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs: []string{"addr1"},
 				amts:  []sdk.Coins{{{Denom: "zero", Amount: sdkmath.NewInt(0)}}},
 				indexes: map[string]int{
@@ -1317,7 +1317,7 @@ func TestIndexedAddrAmts_GetAsInputs(t *testing.T) {
 		},
 		{
 			name: "one addr positive amount",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs: []string{"addr1"},
 				amts:  []sdk.Coins{coins("1one")},
 				indexes: map[string]int{
@@ -1330,7 +1330,7 @@ func TestIndexedAddrAmts_GetAsInputs(t *testing.T) {
 		},
 		{
 			name: "two addrs",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs: []string{"addr1", "addr2"},
 				amts:  []sdk.Coins{coins("1one"), coins("2two,3three")},
 				indexes: map[string]int{
@@ -1345,7 +1345,7 @@ func TestIndexedAddrAmts_GetAsInputs(t *testing.T) {
 		},
 		{
 			name: "three addrs",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs: []string{"addr1", "addr2", "addr3"},
 				amts:  []sdk.Coins{coins("1one"), coins("2two,3three"), coins("4four,5five,6six")},
 				indexes: map[string]int{
@@ -1362,7 +1362,7 @@ func TestIndexedAddrAmts_GetAsInputs(t *testing.T) {
 		},
 		{
 			name: "three addrs, negative in third",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs: []string{"addr1", "addr2", "addr3"},
 				amts: []sdk.Coins{
 					coins("1one"),
@@ -1389,11 +1389,11 @@ func TestIndexedAddrAmts_GetAsInputs(t *testing.T) {
 			orig := copyIndexedAddrAmts(tc.receiver)
 			var actual []banktypes.Input
 			testFunc := func() {
-				actual = tc.receiver.getAsInputs()
+				actual = tc.receiver.GetAsInputs()
 			}
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "getAsInputs()")
-			assert.Equal(t, tc.expected, actual, "getAsInputs() result")
-			if !assert.Equal(t, orig, tc.receiver, "receiver before and after getAsInputs()") {
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetAsInputs()")
+			assert.Equal(t, tc.expected, actual, "GetAsInputs() result")
+			if !assert.Equal(t, orig, tc.receiver, "receiver before and after GetAsInputs()") {
 				t.Logf("Before: %s", indexedAddrAmtsString(orig))
 				t.Logf(" After: %s", indexedAddrAmtsString(tc.receiver))
 			}
@@ -1410,15 +1410,15 @@ func TestIndexedAddrAmts_GetAsOutputs(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		receiver *indexedAddrAmts
+		receiver *IndexedAddrAmts
 		expected []banktypes.Output
 		expPanic string
 	}{
 		{name: "nil receiver", receiver: nil, expected: nil},
-		{name: "no addrs", receiver: newIndexedAddrAmts(), expected: nil},
+		{name: "no addrs", receiver: NewIndexedAddrAmts(), expected: nil},
 		{
 			name: "one addr negative amount",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs: []string{"addr1"},
 				amts:  []sdk.Coins{{{Denom: "neg", Amount: sdkmath.NewInt(-1)}}},
 				indexes: map[string]int{
@@ -1429,7 +1429,7 @@ func TestIndexedAddrAmts_GetAsOutputs(t *testing.T) {
 		},
 		{
 			name: "one addr zero amount",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs: []string{"addr1"},
 				amts:  []sdk.Coins{{{Denom: "zero", Amount: sdkmath.NewInt(0)}}},
 				indexes: map[string]int{
@@ -1440,7 +1440,7 @@ func TestIndexedAddrAmts_GetAsOutputs(t *testing.T) {
 		},
 		{
 			name: "one addr positive amount",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs: []string{"addr1"},
 				amts:  []sdk.Coins{coins("1one")},
 				indexes: map[string]int{
@@ -1453,7 +1453,7 @@ func TestIndexedAddrAmts_GetAsOutputs(t *testing.T) {
 		},
 		{
 			name: "two addrs",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs: []string{"addr1", "addr2"},
 				amts:  []sdk.Coins{coins("1one"), coins("2two,3three")},
 				indexes: map[string]int{
@@ -1468,7 +1468,7 @@ func TestIndexedAddrAmts_GetAsOutputs(t *testing.T) {
 		},
 		{
 			name: "three addrs",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs: []string{"addr1", "addr2", "addr3"},
 				amts:  []sdk.Coins{coins("1one"), coins("2two,3three"), coins("4four,5five,6six")},
 				indexes: map[string]int{
@@ -1485,7 +1485,7 @@ func TestIndexedAddrAmts_GetAsOutputs(t *testing.T) {
 		},
 		{
 			name: "three addrs, negative in third",
-			receiver: &indexedAddrAmts{
+			receiver: &IndexedAddrAmts{
 				addrs: []string{"addr1", "addr2", "addr3"},
 				amts: []sdk.Coins{
 					coins("1one"),
@@ -1512,11 +1512,11 @@ func TestIndexedAddrAmts_GetAsOutputs(t *testing.T) {
 			orig := copyIndexedAddrAmts(tc.receiver)
 			var actual []banktypes.Output
 			testFunc := func() {
-				actual = tc.receiver.getAsOutputs()
+				actual = tc.receiver.GetAsOutputs()
 			}
-			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "getAsOutputs()")
-			assert.Equal(t, tc.expected, actual, "getAsOutputs() result")
-			if !assert.Equal(t, orig, tc.receiver, "receiver before and after getAsInputs()") {
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetAsOutputs()")
+			assert.Equal(t, tc.expected, actual, "GetAsOutputs() result")
+			if !assert.Equal(t, orig, tc.receiver, "receiver before and after GetAsInputs()") {
 				t.Logf("Before: %s", indexedAddrAmtsString(orig))
 				t.Logf(" After: %s", indexedAddrAmtsString(tc.receiver))
 			}

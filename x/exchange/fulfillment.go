@@ -84,8 +84,8 @@ func BuildSettlement(askOrders, bidOrders []*Order, sellerFeeRatioLookup func(de
 	return settlement, nil
 }
 
-// indexedAddrAmts is a set of addresses and amounts.
-type indexedAddrAmts struct {
+// IndexedAddrAmts is a set of addresses and amounts.
+type IndexedAddrAmts struct {
 	// addrs are a list of all addresses that have amounts.
 	addrs []string
 	// amts are a list of the coin amounts for each address (by slice index).
@@ -94,15 +94,15 @@ type indexedAddrAmts struct {
 	indexes map[string]int
 }
 
-func newIndexedAddrAmts() *indexedAddrAmts {
-	return &indexedAddrAmts{
+func NewIndexedAddrAmts() *IndexedAddrAmts {
+	return &IndexedAddrAmts{
 		indexes: make(map[string]int),
 	}
 }
 
-// add adds the coins to the given address.
+// Add adds the coins to the given address.
 // Panics if a provided coin is invalid.
-func (i *indexedAddrAmts) add(addr string, coins ...sdk.Coin) {
+func (i *IndexedAddrAmts) Add(addr string, coins ...sdk.Coin) {
 	for _, coin := range coins {
 		if err := coin.Validate(); err != nil {
 			panic(fmt.Errorf("cannot index and add invalid coin amount %q", coin))
@@ -118,9 +118,9 @@ func (i *indexedAddrAmts) add(addr string, coins ...sdk.Coin) {
 	i.amts[n] = i.amts[n].Add(coins...)
 }
 
-// getAsInputs returns all the entries as bank Inputs.
+// GetAsInputs returns all the entries as bank Inputs.
 // Panics if this is nil, has no addrs, or has a negative coin amount.
-func (i *indexedAddrAmts) getAsInputs() []banktypes.Input {
+func (i *IndexedAddrAmts) GetAsInputs() []banktypes.Input {
 	if i == nil || len(i.addrs) == 0 {
 		return nil
 	}
@@ -134,9 +134,9 @@ func (i *indexedAddrAmts) getAsInputs() []banktypes.Input {
 	return rv
 }
 
-// getAsOutputs returns all the entries as bank Outputs.
+// GetAsOutputs returns all the entries as bank Outputs.
 // Panics if this is nil, has no addrs, or has a negative coin amount.
-func (i *indexedAddrAmts) getAsOutputs() []banktypes.Output {
+func (i *IndexedAddrAmts) GetAsOutputs() []banktypes.Output {
 	if i == nil || len(i.addrs) == 0 {
 		return nil
 	}
@@ -728,7 +728,7 @@ func (f orderFulfillment) Validate() (err error) {
 // This will populate the Transfers and FeeInputs fields in the provided Settlement.
 func buildTransfers(askOFs, bidOFs []*orderFulfillment, settlement *Settlement) error {
 	var errs []error
-	indexedFees := newIndexedAddrAmts()
+	indexedFees := NewIndexedAddrAmts()
 	transfers := make([]*Transfer, 0, len(askOFs)+len(bidOFs))
 
 	record := func(of *orderFulfillment, getter func(fulfillment *orderFulfillment) (*Transfer, error)) {
@@ -744,7 +744,7 @@ func buildTransfers(askOFs, bidOFs []*orderFulfillment, settlement *Settlement) 
 				errs = append(errs, fmt.Errorf("%s order %d cannot pay %q in fees: negative amount",
 					of.GetOrderType(), of.GetOrderID(), of.FeesToPay))
 			} else {
-				indexedFees.add(of.GetOwner(), of.FeesToPay...)
+				indexedFees.Add(of.GetOwner(), of.FeesToPay...)
 			}
 		}
 	}
@@ -770,7 +770,7 @@ func buildTransfers(askOFs, bidOFs []*orderFulfillment, settlement *Settlement) 
 	}
 
 	settlement.Transfers = transfers
-	settlement.FeeInputs = indexedFees.getAsInputs()
+	settlement.FeeInputs = indexedFees.GetAsInputs()
 
 	return nil
 }
@@ -805,14 +805,14 @@ func getAssetTransfer(f *orderFulfillment) (*Transfer, error) {
 			f.GetOrderType(), f.GetOrderID(), assetsFilled)
 	}
 
-	indexedDists := newIndexedAddrAmts()
+	indexedDists := NewIndexedAddrAmts()
 	sumDists := sdkmath.ZeroInt()
 	for _, dist := range f.AssetDists {
 		if !dist.Amount.IsPositive() {
 			return nil, fmt.Errorf("%s order %d cannot have %q assets in a transfer: amount not positive",
 				f.GetOrderType(), f.GetOrderID(), f.AssetCoin(dist.Amount))
 		}
-		indexedDists.add(dist.Address, f.AssetCoin(dist.Amount))
+		indexedDists.Add(dist.Address, f.AssetCoin(dist.Amount))
 		sumDists = sumDists.Add(dist.Amount)
 	}
 
@@ -824,12 +824,12 @@ func getAssetTransfer(f *orderFulfillment) (*Transfer, error) {
 	if f.IsAskOrder() {
 		return &Transfer{
 			Inputs:  []banktypes.Input{{Address: f.GetOwner(), Coins: sdk.NewCoins(assetsFilled)}},
-			Outputs: indexedDists.getAsOutputs(),
+			Outputs: indexedDists.GetAsOutputs(),
 		}, nil
 	}
 	if f.IsBidOrder() {
 		return &Transfer{
-			Inputs:  indexedDists.getAsInputs(),
+			Inputs:  indexedDists.GetAsInputs(),
 			Outputs: []banktypes.Output{{Address: f.GetOwner(), Coins: sdk.NewCoins(assetsFilled)}},
 		}, nil
 	}
@@ -846,14 +846,14 @@ func getPriceTransfer(f *orderFulfillment) (*Transfer, error) {
 			f.GetOrderType(), f.GetOrderID(), priceApplied)
 	}
 
-	indexedDists := newIndexedAddrAmts()
+	indexedDists := NewIndexedAddrAmts()
 	sumDists := sdkmath.ZeroInt()
 	for _, dist := range f.PriceDists {
 		if !dist.Amount.IsPositive() {
 			return nil, fmt.Errorf("%s order %d cannot have price %q in a transfer: amount not positive",
 				f.GetOrderType(), f.GetOrderID(), f.PriceCoin(dist.Amount))
 		}
-		indexedDists.add(dist.Address, f.PriceCoin(dist.Amount))
+		indexedDists.Add(dist.Address, f.PriceCoin(dist.Amount))
 		sumDists = sumDists.Add(dist.Amount)
 	}
 
@@ -864,14 +864,14 @@ func getPriceTransfer(f *orderFulfillment) (*Transfer, error) {
 
 	if f.IsAskOrder() {
 		return &Transfer{
-			Inputs:  indexedDists.getAsInputs(),
+			Inputs:  indexedDists.GetAsInputs(),
 			Outputs: []banktypes.Output{{Address: f.GetOwner(), Coins: sdk.NewCoins(priceApplied)}},
 		}, nil
 	}
 	if f.IsBidOrder() {
 		return &Transfer{
 			Inputs:  []banktypes.Input{{Address: f.GetOwner(), Coins: sdk.NewCoins(priceApplied)}},
-			Outputs: indexedDists.getAsOutputs(),
+			Outputs: indexedDists.GetAsOutputs(),
 		}, nil
 	}
 
