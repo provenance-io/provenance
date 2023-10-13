@@ -96,7 +96,8 @@ func (h MarkerHooks) createNewIbcMarker(ctx sdktypes.Context, data transfertypes
 		allowForceTransfer,
 		[]string{},
 	)
-	h.getExistingSupply(ctx, marker)
+	existingSupply := h.getExistingSupply(ctx, marker)
+	_ = marker.SetSupply(marker.GetSupply().Add(existingSupply))
 	if err = ResetMarkerAccessGrants(transferAuthAddrs, marker); err != nil {
 		return err
 	}
@@ -106,11 +107,9 @@ func (h MarkerHooks) createNewIbcMarker(ctx sdktypes.Context, data transfertypes
 	return h.addDenomMetaData(ctx, packet, ibcKeeper, ibcDenom, data)
 }
 
-// getExistingSupply updates marker account's supply, this ensures the supply is correct for ibc coins that may exist before a marker is created.
-// The current circulation will be 0 if the ibc coin does not exist yet.
-func (h MarkerHooks) getExistingSupply(ctx sdktypes.Context, marker *markertypes.MarkerAccount) {
-	currentSupply := h.MarkerKeeper.CurrentCirculation(ctx, marker)
-	_ = marker.SetSupply(marker.GetSupply().Add(sdktypes.NewCoin(marker.Denom, currentSupply)))
+// getExistingSupply returns current supply coin, if coin does not exist amount will be 0
+func (h MarkerHooks) getExistingSupply(ctx sdktypes.Context, marker *markertypes.MarkerAccount) sdktypes.Coin {
+	return sdktypes.NewCoin(marker.Denom, h.MarkerKeeper.CurrentCirculation(ctx, marker))
 }
 
 // addDenomMetaData adds denom metadata for ibc token
