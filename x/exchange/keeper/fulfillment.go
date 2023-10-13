@@ -58,6 +58,12 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 		return oerrs
 	}
 
+	totalAssets, totalPrice := sumAssetsAndPrice(orders)
+
+	if !exchange.CoinsEquals(totalAssets, msg.TotalAssets) {
+		return fmt.Errorf("total assets %q does not equal sum of bid order assets %q", msg.TotalAssets, totalAssets)
+	}
+
 	var errs []error
 	var totalSellerFee sdk.Coins
 	assetOutputs := make([]banktypes.Output, 0, len(msg.BidOrderIds))
@@ -113,12 +119,6 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 
 	if len(errs) > 0 {
 		return errors.Join(errs...)
-	}
-
-	totalAssets, totalPrice := sumAssetsAndPrice(orders)
-
-	if !exchange.CoinsEquals(totalAssets, msg.TotalAssets) {
-		return fmt.Errorf("total assets %q does not equal sum of bid order assets %q", msg.TotalAssets, totalAssets)
 	}
 
 	if msg.SellerSettlementFlatFee != nil {
@@ -189,6 +189,12 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 		return oerrs
 	}
 
+	totalAssets, totalPrice := sumAssetsAndPrice(orders)
+
+	if !exchange.CoinsEquals(totalPrice, sdk.Coins{msg.TotalPrice}) {
+		return fmt.Errorf("total price %q does not equal sum of ask order prices %q", msg.TotalPrice, totalPrice)
+	}
+
 	var errs []error
 	assetInputs := make([]banktypes.Input, 0, len(msg.AskOrderIds))
 	priceOutputs := make([]banktypes.Output, 0, len(msg.AskOrderIds))
@@ -247,12 +253,6 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 
 	if len(errs) > 0 {
 		return errors.Join(errs...)
-	}
-
-	totalAssets, totalPrice := sumAssetsAndPrice(orders)
-
-	if !exchange.CoinsEquals(totalPrice, sdk.Coins{msg.TotalPrice}) {
-		return fmt.Errorf("total price %q does not equal sum of ask order prices %q", msg.TotalPrice, totalPrice)
 	}
 
 	if !msg.BuyerSettlementFees.IsZero() {
