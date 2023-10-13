@@ -1529,6 +1529,7 @@ EventOrderCancelled is an event emitted when an order is cancelled.
 | ----- | ---- | ----- | ----------- |
 | `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order cancelled. |
 | `cancelled_by` | [string](#string) |  | cancelled_by is the account that triggered the cancellation of the order. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
 | `external_id` | [string](#string) |  | external_id is the order's external id. |
 
 
@@ -1546,6 +1547,7 @@ EventOrderCreated is an event emitted when an order is created.
 | ----- | ---- | ----- | ----------- |
 | `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order created. |
 | `order_type` | [string](#string) |  | order_type is the type of order, e.g. "ask" or "bid". |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
 | `external_id` | [string](#string) |  | external_id is the order's external id. |
 
 
@@ -1562,6 +1564,7 @@ EventOrderExternalIDUpdated is an event emitted when an order's external id is u
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order partially filled. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
 | `external_id` | [string](#string) |  | external_id is the order's new external id. |
 
 
@@ -1582,6 +1585,7 @@ This event is also used for orders that were previously partially filled, but ha
 | `assets` | [string](#string) |  | assets is the coins amount string of assets bought/sold for this order. |
 | `price` | [string](#string) |  | price is the coins amount string of the price payed/received for this order. |
 | `fees` | [string](#string) |  | fees is the coins amount string of settlement fees paid with this order. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
 | `external_id` | [string](#string) |  | external_id is the order's external id. |
 
 
@@ -1601,6 +1605,7 @@ EventOrderPartiallyFilled is an event emitted when an order filled in part and s
 | `assets` | [string](#string) |  | assets is the coins amount string of assets that were filled and removed from the order. |
 | `price` | [string](#string) |  | price is the coins amount string of the price payed/received for this order. For ask orders, this might be more than the amount that was removed from the order's price. |
 | `fees` | [string](#string) |  | fees is the coins amount string of settlement fees paid with this partial order. For ask orders, this might be more than the amount that was removed from the order's settlement fees. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
 | `external_id` | [string](#string) |  | external_id is the order's external id. |
 
 

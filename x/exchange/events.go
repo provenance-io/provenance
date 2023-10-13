@@ -10,6 +10,7 @@ func NewEventOrderCreated(order OrderI) *EventOrderCreated {
 	return &EventOrderCreated{
 		OrderId:    order.GetOrderID(),
 		OrderType:  order.GetOrderType(),
+		MarketId:   order.GetMarketID(),
 		ExternalId: order.GetExternalID(),
 	}
 }
@@ -18,6 +19,7 @@ func NewEventOrderCancelled(order OrderI, cancelledBy sdk.AccAddress) *EventOrde
 	return &EventOrderCancelled{
 		OrderId:     order.GetOrderID(),
 		CancelledBy: cancelledBy.String(),
+		MarketId:    order.GetMarketID(),
 		ExternalId:  order.GetExternalID(),
 	}
 }
@@ -28,6 +30,7 @@ func NewEventOrderFilled(order OrderI) *EventOrderFilled {
 		Assets:     order.GetAssets().String(),
 		Price:      order.GetPrice().String(),
 		Fees:       order.GetSettlementFees().String(),
+		MarketId:   order.GetMarketID(),
 		ExternalId: order.GetExternalID(),
 	}
 }
@@ -38,6 +41,7 @@ func NewEventOrderPartiallyFilled(order OrderI) *EventOrderPartiallyFilled {
 		Assets:     order.GetAssets().String(),
 		Price:      order.GetPrice().String(),
 		Fees:       order.GetSettlementFees().String(),
+		MarketId:   order.GetMarketID(),
 		ExternalId: order.GetExternalID(),
 	}
 }
@@ -45,6 +49,7 @@ func NewEventOrderPartiallyFilled(order OrderI) *EventOrderPartiallyFilled {
 func NewEventOrderExternalIDUpdated(order OrderI) *EventOrderExternalIDUpdated {
 	return &EventOrderExternalIDUpdated{
 		OrderId:    order.GetOrderID(),
+		MarketId:   order.GetMarketID(),
 		ExternalId: order.GetExternalID(),
 	}
 }

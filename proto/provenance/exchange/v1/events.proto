@@ -14,8 +14,10 @@ message EventOrderCreated {
   uint64 order_id = 1;
   // order_type is the type of order, e.g. "ask" or "bid".
   string order_type = 2;
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 3;
   // external_id is the order's external id.
-  string external_id = 3;
+  string external_id = 4;
 }
 
 // EventOrderCancelled is an event emitted when an order is cancelled.
@@ -24,8 +26,10 @@ message EventOrderCancelled {
   uint64 order_id = 1;
   // cancelled_by is the account that triggered the cancellation of the order.
   string cancelled_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 3;
   // external_id is the order's external id.
-  string external_id = 3;
+  string external_id = 4;
 }
 
 // EventOrderFilled is an event emitted when an order has been filled in full.
@@ -39,8 +43,10 @@ message EventOrderFilled {
   string price = 3;
   // fees is the coins amount string of settlement fees paid with this order.
   string fees = 4;
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 5;
   // external_id is the order's external id.
-  string external_id = 5;
+  string external_id = 6;
 }
 
 // EventOrderPartiallyFilled is an event emitted when an order filled in part and still has more left to fill.
@@ -55,14 +61,18 @@ message EventOrderPartiallyFilled {
   // fees is the coins amount string of settlement fees paid with this partial order.
   // For ask orders, this might be more than the amount that was removed from the order's settlement fees.
   string fees = 4;
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 5;
   // external_id is the order's external id.
-  string external_id = 5;
+  string external_id = 6;
 }
 
 // EventOrderExternalIDUpdated is an event emitted when an order's external id is updated.
 message EventOrderExternalIDUpdated {
   // order_id is the numerical identifier of the order partially filled.
   uint64 order_id = 1;
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 2;
   // external_id is the order's new external id.
   string external_id = 3;
 }

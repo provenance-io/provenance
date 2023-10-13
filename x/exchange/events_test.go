@@ -29,8 +29,12 @@ func assertEverythingSet(t *testing.T, tev proto.Message, typeString string) boo
 	for i, attr := range event.Attributes {
 		rv = assert.NotEmpty(t, attr.Key, "%T event.attributes[%d].Key", tev, i) && rv
 		rv = assert.NotEqual(t, `""`, string(attr.Key), "%T event.attributes[%d].Key", tev, i) && rv
+		rv = assert.NotEqual(t, `0`, string(attr.Key), "%T event.attributes[%d].Key", tev, i) && rv
+		rv = assert.NotEqual(t, `"0"`, string(attr.Key), "%T event.attributes[%d].Key", tev, i) && rv
 		rv = assert.NotEmpty(t, attr.Value, "%T event.attributes[%d].Value", tev, i) && rv
 		rv = assert.NotEqual(t, `""`, string(attr.Value), "%T event.attributes[%d].Value", tev, i) && rv
+		rv = assert.NotEqual(t, `0`, string(attr.Value), "%T event.attributes[%d].Value", tev, i) && rv
+		rv = assert.NotEqual(t, `"0"`, string(attr.Value), "%T event.attributes[%d].Value", tev, i) && rv
 	}
 	return rv
 }
@@ -49,19 +53,21 @@ func TestNewEventOrderCreated(t *testing.T) {
 		},
 		{
 			name:  "order with ask",
-			order: NewOrder(1).WithAsk(&AskOrder{ExternalId: "oneoneone"}),
+			order: NewOrder(1).WithAsk(&AskOrder{MarketId: 97, ExternalId: "oneoneone"}),
 			expected: &EventOrderCreated{
 				OrderId:    1,
 				OrderType:  "ask",
+				MarketId:   97,
 				ExternalId: "oneoneone",
 			},
 		},
 		{
 			name:  "order with bid",
-			order: NewOrder(2).WithBid(&BidOrder{ExternalId: "twotwotwo"}),
+			order: NewOrder(2).WithBid(&BidOrder{MarketId: 33, ExternalId: "twotwotwo"}),
 			expected: &EventOrderCreated{
 				OrderId:    2,
 				OrderType:  "bid",
+				MarketId:   33,
 				ExternalId: "twotwotwo",
 			},
 		},
@@ -92,21 +98,23 @@ func TestNewEventOrderCancelled(t *testing.T) {
 	}{
 		{
 			name:        "ask order",
-			order:       NewOrder(11).WithAsk(&AskOrder{ExternalId: "an external identifier"}),
+			order:       NewOrder(11).WithAsk(&AskOrder{MarketId: 71, ExternalId: "an external identifier"}),
 			cancelledBy: sdk.AccAddress("CancelledBy_________"),
 			expected: &EventOrderCancelled{
 				OrderId:     11,
 				CancelledBy: sdk.AccAddress("CancelledBy_________").String(),
+				MarketId:    71,
 				ExternalId:  "an external identifier",
 			},
 		},
 		{
 			name:        "bid order",
-			order:       NewOrder(55).WithAsk(&AskOrder{ExternalId: "another external identifier"}),
+			order:       NewOrder(55).WithAsk(&AskOrder{MarketId: 88, ExternalId: "another external identifier"}),
 			cancelledBy: sdk.AccAddress("cancelled_by________"),
 			expected: &EventOrderCancelled{
 				OrderId:     55,
 				CancelledBy: sdk.AccAddress("cancelled_by________").String(),
+				MarketId:    88,
 				ExternalId:  "another external identifier",
 			},
 		},
@@ -139,6 +147,7 @@ func TestNewEventOrderFilled(t *testing.T) {
 		{
 			name: "ask",
 			order: NewOrder(4).WithAsk(&AskOrder{
+				MarketId:                57,
 				Assets:                  sdk.NewInt64Coin("apple", 22),
 				Price:                   sdk.NewInt64Coin("plum", 18),
 				SellerSettlementFlatFee: coinP("fig", 57),
@@ -149,12 +158,14 @@ func TestNewEventOrderFilled(t *testing.T) {
 				Assets:     "22apple",
 				Price:      "18plum",
 				Fees:       "57fig",
+				MarketId:   57,
 				ExternalId: "one",
 			},
 		},
 		{
 			name: "filled ask",
 			order: NewFilledOrder(NewOrder(4).WithAsk(&AskOrder{
+				MarketId:                1234,
 				Assets:                  sdk.NewInt64Coin("apple", 22),
 				Price:                   sdk.NewInt64Coin("plum", 18),
 				SellerSettlementFlatFee: coinP("fig", 57),
@@ -165,12 +176,14 @@ func TestNewEventOrderFilled(t *testing.T) {
 				Assets:     "22apple",
 				Price:      "88plum",
 				Fees:       "61fig,12grape",
+				MarketId:   1234,
 				ExternalId: "two",
 			},
 		},
 		{
 			name: "bid",
 			order: NewOrder(104).WithBid(&BidOrder{
+				MarketId:            87878,
 				Assets:              sdk.NewInt64Coin("apple", 23),
 				Price:               sdk.NewInt64Coin("plum", 19),
 				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 58)),
@@ -181,12 +194,14 @@ func TestNewEventOrderFilled(t *testing.T) {
 				Assets:     "23apple",
 				Price:      "19plum",
 				Fees:       "58fig",
+				MarketId:   87878,
 				ExternalId: "three",
 			},
 		},
 		{
 			name: "filled bid",
 			order: NewFilledOrder(NewOrder(105).WithBid(&BidOrder{
+				MarketId:            9119,
 				Assets:              sdk.NewInt64Coin("apple", 24),
 				Price:               sdk.NewInt64Coin("plum", 20),
 				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 59)),
@@ -197,6 +212,7 @@ func TestNewEventOrderFilled(t *testing.T) {
 				Assets:     "24apple",
 				Price:      "89plum",
 				Fees:       "62fig,13grape",
+				MarketId:   9119,
 				ExternalId: "four",
 			},
 		},
@@ -229,6 +245,7 @@ func TestNewEventOrderPartiallyFilled(t *testing.T) {
 		{
 			name: "ask",
 			order: NewOrder(4).WithAsk(&AskOrder{
+				MarketId:                432,
 				Assets:                  sdk.NewInt64Coin("apple", 22),
 				Price:                   sdk.NewInt64Coin("plum", 18),
 				SellerSettlementFlatFee: coinP("fig", 57),
@@ -239,12 +256,14 @@ func TestNewEventOrderPartiallyFilled(t *testing.T) {
 				Assets:     "22apple",
 				Price:      "18plum",
 				Fees:       "57fig",
+				MarketId:   432,
 				ExternalId: "five",
 			},
 		},
 		{
 			name: "filled ask",
 			order: NewFilledOrder(NewOrder(4).WithAsk(&AskOrder{
+				MarketId:                456,
 				Assets:                  sdk.NewInt64Coin("apple", 22),
 				Price:                   sdk.NewInt64Coin("plum", 18),
 				SellerSettlementFlatFee: coinP("fig", 57),
@@ -255,12 +274,14 @@ func TestNewEventOrderPartiallyFilled(t *testing.T) {
 				Assets:     "22apple",
 				Price:      "88plum",
 				Fees:       "61fig,12grape",
+				MarketId:   456,
 				ExternalId: "six",
 			},
 		},
 		{
 			name: "bid",
 			order: NewOrder(104).WithBid(&BidOrder{
+				MarketId:            765,
 				Assets:              sdk.NewInt64Coin("apple", 23),
 				Price:               sdk.NewInt64Coin("plum", 19),
 				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 58)),
@@ -271,12 +292,14 @@ func TestNewEventOrderPartiallyFilled(t *testing.T) {
 				Assets:     "23apple",
 				Price:      "19plum",
 				Fees:       "58fig",
+				MarketId:   765,
 				ExternalId: "seven",
 			},
 		},
 		{
 			name: "filled bid",
 			order: NewFilledOrder(NewOrder(104).WithBid(&BidOrder{
+				MarketId:            818,
 				Assets:              sdk.NewInt64Coin("apple", 23),
 				Price:               sdk.NewInt64Coin("plum", 19),
 				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 58)),
@@ -287,6 +310,7 @@ func TestNewEventOrderPartiallyFilled(t *testing.T) {
 				Assets:     "23apple",
 				Price:      "89plum",
 				Fees:       "62fig,13grape",
+				MarketId:   818,
 				ExternalId: "eight",
 			},
 		},
@@ -313,17 +337,19 @@ func TestNewEventOrderExternalIDUpdated(t *testing.T) {
 	}{
 		{
 			name:  "ask",
-			order: NewOrder(51).WithAsk(&AskOrder{ExternalId: "orange-red"}),
+			order: NewOrder(51).WithAsk(&AskOrder{MarketId: 9, ExternalId: "orange-red"}),
 			expected: &EventOrderExternalIDUpdated{
 				OrderId:    51,
+				MarketId:   9,
 				ExternalId: "orange-red",
 			},
 		},
 		{
 			name:  "bid",
-			order: NewOrder(777).WithAsk(&AskOrder{ExternalId: "purple-purple"}),
+			order: NewOrder(777).WithAsk(&AskOrder{MarketId: 53, ExternalId: "purple-purple"}),
 			expected: &EventOrderExternalIDUpdated{
 				OrderId:    777,
+				MarketId:   53,
 				ExternalId: "purple-purple",
 			},
 		},
@@ -600,11 +626,12 @@ func TestTypedEventToEvent(t *testing.T) {
 	}{
 		{
 			name: "EventOrderCreated ask",
-			tev:  NewEventOrderCreated(NewOrder(1).WithAsk(&AskOrder{ExternalId: "stuff"})),
+			tev:  NewEventOrderCreated(NewOrder(1).WithAsk(&AskOrder{MarketId: 88, ExternalId: "stuff"})),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCreated",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("external_id"), Value: quoteBz("stuff")},
+					{Key: []byte("market_id"), Value: []byte("88")},
 					{Key: []byte("order_id"), Value: quoteBz("1")},
 					{Key: []byte("order_type"), Value: quoteBz("ask")},
 				},
@@ -612,11 +639,12 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventOrderCreated bid",
-			tev:  NewEventOrderCreated(NewOrder(2).WithBid(&BidOrder{ExternalId: "something else"})),
+			tev:  NewEventOrderCreated(NewOrder(2).WithBid(&BidOrder{MarketId: 77, ExternalId: "something else"})),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCreated",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("external_id"), Value: quoteBz("something else")},
+					{Key: []byte("market_id"), Value: []byte("77")},
 					{Key: []byte("order_id"), Value: quoteBz("2")},
 					{Key: []byte("order_type"), Value: quoteBz("bid")},
 				},
@@ -624,24 +652,26 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventOrderCancelled ask",
-			tev:  NewEventOrderCancelled(NewOrder(3).WithAsk(&AskOrder{ExternalId: "outside 8"}), cancelledBy),
+			tev:  NewEventOrderCancelled(NewOrder(3).WithAsk(&AskOrder{MarketId: 66, ExternalId: "outside 8"}), cancelledBy),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCancelled",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("cancelled_by"), Value: cancelledByQ},
 					{Key: []byte("external_id"), Value: quoteBz("outside 8")},
+					{Key: []byte("market_id"), Value: []byte("66")},
 					{Key: []byte("order_id"), Value: quoteBz("3")},
 				},
 			},
 		},
 		{
 			name: "EventOrderCancelled bid",
-			tev:  NewEventOrderCancelled(NewOrder(3).WithBid(&BidOrder{ExternalId: "outside 8"}), cancelledBy),
+			tev:  NewEventOrderCancelled(NewOrder(3).WithBid(&BidOrder{MarketId: 55, ExternalId: "outside 8"}), cancelledBy),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCancelled",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("cancelled_by"), Value: cancelledByQ},
 					{Key: []byte("external_id"), Value: quoteBz("outside 8")},
+					{Key: []byte("market_id"), Value: []byte("55")},
 					{Key: []byte("order_id"), Value: quoteBz("3")},
 				},
 			},
@@ -649,6 +679,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		{
 			name: "EventOrderFilled ask",
 			tev: NewEventOrderFilled(NewOrder(4).WithAsk(&AskOrder{
+				MarketId:                33,
 				Assets:                  acoin,
 				Price:                   pcoin,
 				SellerSettlementFlatFee: &fcoin,
@@ -660,6 +691,7 @@ func TestTypedEventToEvent(t *testing.T) {
 					{Key: []byte("assets"), Value: acoinQ},
 					{Key: []byte("external_id"), Value: quoteBz("eeeeiiiiiddddd")},
 					{Key: []byte("fees"), Value: fcoinQ},
+					{Key: []byte("market_id"), Value: []byte("33")},
 					{Key: []byte("order_id"), Value: quoteBz("4")},
 					{Key: []byte("price"), Value: pcoinQ},
 				},
@@ -668,6 +700,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		{
 			name: "EventOrderFilled bid",
 			tev: NewEventOrderFilled(NewOrder(104).WithBid(&BidOrder{
+				MarketId:            44,
 				Assets:              acoin,
 				Price:               pcoin,
 				BuyerSettlementFees: sdk.Coins{fcoin},
@@ -679,6 +712,7 @@ func TestTypedEventToEvent(t *testing.T) {
 					{Key: []byte("assets"), Value: acoinQ},
 					{Key: []byte("external_id"), Value: quoteBz("that one thing")},
 					{Key: []byte("fees"), Value: fcoinQ},
+					{Key: []byte("market_id"), Value: []byte("44")},
 					{Key: []byte("order_id"), Value: quoteBz("104")},
 					{Key: []byte("price"), Value: pcoinQ},
 				},
@@ -687,6 +721,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		{
 			name: "EventOrderPartiallyFilled ask",
 			tev: NewEventOrderPartiallyFilled(NewOrder(5).WithAsk(&AskOrder{
+				MarketId:                22,
 				Assets:                  acoin,
 				Price:                   pcoin,
 				SellerSettlementFlatFee: &fcoin,
@@ -698,6 +733,7 @@ func TestTypedEventToEvent(t *testing.T) {
 					{Key: []byte("assets"), Value: acoinQ},
 					{Key: []byte("external_id"), Value: quoteBz("12345")},
 					{Key: []byte("fees"), Value: fcoinQ},
+					{Key: []byte("market_id"), Value: []byte("22")},
 					{Key: []byte("order_id"), Value: quoteBz("5")},
 					{Key: []byte("price"), Value: pcoinQ},
 				},
@@ -706,6 +742,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		{
 			name: "EventOrderPartiallyFilled bid",
 			tev: NewEventOrderPartiallyFilled(NewOrder(5).WithBid(&BidOrder{
+				MarketId:            11,
 				Assets:              acoin,
 				Price:               pcoin,
 				BuyerSettlementFees: sdk.Coins{fcoin},
@@ -717,6 +754,7 @@ func TestTypedEventToEvent(t *testing.T) {
 					{Key: []byte("assets"), Value: acoinQ},
 					{Key: []byte("external_id"), Value: quoteBz("67890")},
 					{Key: []byte("fees"), Value: fcoinQ},
+					{Key: []byte("market_id"), Value: []byte("11")},
 					{Key: []byte("order_id"), Value: quoteBz("5")},
 					{Key: []byte("price"), Value: pcoinQ},
 				},
@@ -724,22 +762,24 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventOrderExternalIDUpdated ask",
-			tev:  NewEventOrderExternalIDUpdated(NewOrder(8).WithAsk(&AskOrder{ExternalId: "yellow"})),
+			tev:  NewEventOrderExternalIDUpdated(NewOrder(8).WithAsk(&AskOrder{MarketId: 99, ExternalId: "yellow"})),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderExternalIDUpdated",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("external_id"), Value: quoteBz("yellow")},
+					{Key: []byte("market_id"), Value: []byte("99")},
 					{Key: []byte("order_id"), Value: quoteBz("8")},
 				},
 			},
 		},
 		{
 			name: "EventOrderExternalIDUpdated bid",
-			tev:  NewEventOrderExternalIDUpdated(NewOrder(8).WithBid(&BidOrder{ExternalId: "yellow"})),
+			tev:  NewEventOrderExternalIDUpdated(NewOrder(8).WithBid(&BidOrder{MarketId: 111, ExternalId: "yellow"})),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderExternalIDUpdated",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("external_id"), Value: quoteBz("yellow")},
+					{Key: []byte("market_id"), Value: []byte("111")},
 					{Key: []byte("order_id"), Value: quoteBz("8")},
 				},
 			},
