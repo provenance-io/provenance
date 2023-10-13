@@ -70,7 +70,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump cometbft to v0.34.29 (from v0.34.28) [PR 1649](https://github.com/provenance-io/provenance/pull/1649).
 * Add genesis/init for Marker module send deny list addresses. [#1660](https://github.com/provenance-io/provenance/issues/1660)
 * Add automatic changelog entries for dependabot. [#1674](https://github.com/provenance-io/provenance/issues/1674)
-
+* Ensure IBC marker has matching supply [#1706](https://github.com/provenance-io/provenance/issues/1706).
 ### Bug Fixes
 
 * Fix ibcnet relayer creating multiple connections on restart [#1620](https://github.com/provenance-io/provenance/issues/1620).
@@ -112,6 +112,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/spf13/viper` from 1.16.0 to 1.17.0 ([#1695](https://github.com/provenance-io/provenance/pull/1695))
 - Bump `github.com/otiai10/copy` from 1.12.0 to 1.14.0 ([#1693](https://github.com/provenance-io/provenance/pull/1693))
 - Bump `stefanzweifel/git-auto-commit-action` from 4 to 5 ([#1696](https://github.com/provenance-io/provenance/pull/1696))
+- Bump `golang.org/x/net` from 0.15.0 to 0.17.0 ([#1704](https://github.com/provenance-io/provenance/pull/1704))
 - Bump `bufbuild/buf-lint-action` from 1.0.3 to 1.1.0 ([#1705](https://github.com/provenance-io/provenance/pull/1705))
 
 ---
