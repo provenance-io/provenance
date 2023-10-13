@@ -324,7 +324,3 @@ func (k Keeper) GetReqAttrBypassAddrs() []sdk.AccAddress {
 func (k Keeper) IsReqAttrBypassAddr(addr sdk.AccAddress) bool {
 	return k.reqAttrBypassAddrs.Has(addr)
 }
-
-func (k Keeper) HasBankSupply(ctx sdk.Context, denom string) {
-	k.bankKeeper.GetSupply(ctx, denom)
-}
