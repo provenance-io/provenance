@@ -52,7 +52,7 @@ func isMarketKnown(store sdk.KVStore, marketID uint32) bool {
 // setMarketKnown sets the known market id indicator in the store.
 func setMarketKnown(store sdk.KVStore, marketID uint32) {
 	key := MakeKeyKnownMarketID(marketID)
-	store.Set(key, nil)
+	store.Set(key, []byte{})
 }
 
 // validateMarketExists returns an error if the provided marketID does not exist.
@@ -688,7 +688,7 @@ func setMarketActive(store sdk.KVStore, marketID uint32, active bool) {
 	if active {
 		store.Delete(key)
 	} else {
-		store.Set(key, nil)
+		store.Set(key, []byte{})
 	}
 }
 
@@ -702,7 +702,7 @@ func isUserSettlementAllowed(store sdk.KVStore, marketID uint32) bool {
 func setUserSettlementAllowed(store sdk.KVStore, marketID uint32, allowed bool) {
 	key := MakeKeyMarketUserSettle(marketID)
 	if allowed {
-		store.Set(key, nil)
+		store.Set(key, []byte{})
 	} else {
 		store.Delete(key)
 	}
@@ -754,7 +754,7 @@ func storeHasPermission(store sdk.KVStore, marketID uint32, addr sdk.AccAddress,
 func grantPermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, permissions []exchange.Permission) {
 	for _, perm := range permissions {
 		key := MakeKeyMarketPermissions(marketID, addr, perm)
-		store.Set(key, nil)
+		store.Set(key, []byte{})
 	}
 }
 
