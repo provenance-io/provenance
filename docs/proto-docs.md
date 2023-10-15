@@ -552,6 +552,26 @@
   
     - [Msg](#provenance.reward.v1.Msg)
   
+- [provenance/sharding/v1/genesis.proto](#provenance/sharding/v1/genesis.proto)
+    - [GenesisState](#provenance.sharding.v1.GenesisState)
+  
+- [provenance/sharding/v1/pet.proto](#provenance/sharding/v1/pet.proto)
+    - [Pet](#provenance.sharding.v1.Pet)
+    - [PetInfo](#provenance.sharding.v1.PetInfo)
+  
+- [provenance/sharding/v1/query.proto](#provenance/sharding/v1/query.proto)
+    - [Query](#provenance.sharding.v1.Query)
+  
+- [provenance/sharding/v1/tx.proto](#provenance/sharding/v1/tx.proto)
+    - [MsgReadRequest](#provenance.sharding.v1.MsgReadRequest)
+    - [MsgReadResponse](#provenance.sharding.v1.MsgReadResponse)
+    - [MsgUpdateRequest](#provenance.sharding.v1.MsgUpdateRequest)
+    - [MsgUpdateResponse](#provenance.sharding.v1.MsgUpdateResponse)
+    - [MsgWriteRequest](#provenance.sharding.v1.MsgWriteRequest)
+    - [MsgWriteResponse](#provenance.sharding.v1.MsgWriteResponse)
+  
+    - [Msg](#provenance.sharding.v1.Msg)
+  
 - [provenance/trigger/v1/event.proto](#provenance/trigger/v1/event.proto)
     - [EventTriggerCreated](#provenance.trigger.v1.EventTriggerCreated)
     - [EventTriggerDestroyed](#provenance.trigger.v1.EventTriggerDestroyed)
@@ -8323,6 +8343,211 @@ Msg
 | `EndRewardProgram` | [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest) | [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse) | EndRewardProgram is the RPC endpoint for ending a rewards program | |
 | `ClaimRewards` | [MsgClaimRewardsRequest](#provenance.reward.v1.MsgClaimRewardsRequest) | [MsgClaimRewardsResponse](#provenance.reward.v1.MsgClaimRewardsResponse) | ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program | |
 | `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) | ClaimAllRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for the signer of the tx. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/sharding/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/sharding/v1/genesis.proto
+
+
+
+<a name="provenance.sharding.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the sharding module's genesis state.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/sharding/v1/pet.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/sharding/v1/pet.proto
+
+
+
+<a name="provenance.sharding.v1.Pet"></a>
+
+### Pet
+Object
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | An integer to uniquely identify the pet. |
+| `owner` | [string](#string) |  | The owner of the pet. |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | The price of the pet. |
+| `pet_info` | [PetInfo](#provenance.sharding.v1.PetInfo) |  | Additional info on the pet. |
+
+
+
+
+
+
+<a name="provenance.sharding.v1.PetInfo"></a>
+
+### PetInfo
+SmallObject is a smaller object to store
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | The name of the pet. |
+| `color` | [string](#string) |  | The color of the pet. |
+| `breed` | [string](#string) |  | The breed of the pet. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/sharding/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/sharding/v1/query.proto
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.sharding.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service for sharding module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/sharding/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/sharding/v1/tx.proto
+
+
+
+<a name="provenance.sharding.v1.MsgReadRequest"></a>
+
+### MsgReadRequest
+MsgReadRequest reads from the store
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | The signing authority for the request |
+
+
+
+
+
+
+<a name="provenance.sharding.v1.MsgReadResponse"></a>
+
+### MsgReadResponse
+MsgReadResponse is the response of the read request
+
+
+
+
+
+
+<a name="provenance.sharding.v1.MsgUpdateRequest"></a>
+
+### MsgUpdateRequest
+MsgUpdateRequest reads from the store
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | The signing authority for the request |
+
+
+
+
+
+
+<a name="provenance.sharding.v1.MsgUpdateResponse"></a>
+
+### MsgUpdateResponse
+MsgUpdateResponse is the response of the read request
+
+
+
+
+
+
+<a name="provenance.sharding.v1.MsgWriteRequest"></a>
+
+### MsgWriteRequest
+MsgWriteRequest reads from the store
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | The signing authority for the request |
+
+
+
+
+
+
+<a name="provenance.sharding.v1.MsgWriteResponse"></a>
+
+### MsgWriteResponse
+MsgWriteResponse is the response of the read request
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.sharding.v1.Msg"></a>
+
+### Msg
+Msg
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Read` | [MsgReadRequest](#provenance.sharding.v1.MsgReadRequest) | [MsgReadResponse](#provenance.sharding.v1.MsgReadResponse) | Read is the RPC endpoint for reading from the module. | |
+| `Write` | [MsgWriteRequest](#provenance.sharding.v1.MsgWriteRequest) | [MsgWriteResponse](#provenance.sharding.v1.MsgWriteResponse) | Write is the RPC endpoint for writing to the module. | |
+| `Update` | [MsgUpdateRequest](#provenance.sharding.v1.MsgUpdateRequest) | [MsgUpdateResponse](#provenance.sharding.v1.MsgUpdateResponse) | Update is the RPC endpoint for reading and then writing to the module. | |
 
  <!-- end services -->
 

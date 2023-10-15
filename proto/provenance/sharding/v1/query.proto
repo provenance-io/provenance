@@ -1,0 +1,9 @@
+syntax = "proto3";
+package provenance.sharding.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/sharding/types";
+option java_package        = "io.provenance.sharding.v1";
+option java_multiple_files = true;
+
+// Query defines the gRPC querier service for sharding module.
+service Query {}

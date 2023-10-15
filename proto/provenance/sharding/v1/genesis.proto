@@ -1,0 +1,14 @@
+syntax = "proto3";
+package provenance.sharding.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package          = "github.com/provenance-io/provenance/x/sharding/types";
+option java_package        = "io.provenance.sharding.v1";
+option java_multiple_files = true;
+
+// GenesisState defines the sharding module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+}
