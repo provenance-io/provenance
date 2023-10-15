@@ -99,6 +99,19 @@ func (s *TestSuite) coin(amount int64, denom string) sdk.Coin {
 	}
 }
 
+// coinsString converts a slice of coin entries into a string.
+// This is different from sdk.Coins.String because the entries aren't sorted.
+func (s *TestSuite) coinsString(coins []sdk.Coin) string {
+	if coins == nil {
+		return "nil"
+	}
+	vals := make([]string, len(coins))
+	for i, val := range coins {
+		vals[i] = val.String()
+	}
+	return strings.Join(vals, ", ")
+}
+
 // int is a shorter way to call sdkmath.NewInt.
 func (s *TestSuite) int(amount int64) sdkmath.Int {
 	return sdkmath.NewInt(amount)

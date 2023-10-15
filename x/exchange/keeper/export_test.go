@@ -49,4 +49,14 @@ var (
 	Uint16Bz = uint16Bz
 	// SetParamsSplit is a test-only exposure of setParamsSplit.
 	SetParamsSplit = setParamsSplit
+	// SetMarketKnown is a test-only exposure of setMarketKnown.
+	SetMarketKnown = setMarketKnown
+	// SetCreateAskFlatFees is a test-only exposure of setCreateAskFlatFees.
+	SetCreateAskFlatFees = setCreateAskFlatFees
+	// SetCreateBidFlatFees is a test-only exposure of setCreateBidFlatFees.
+	SetCreateBidFlatFees = setCreateBidFlatFees
+	// SetSellerSettlementFlatFees is a test-only exposure of setSellerSettlementFlatFees.
+	SetSellerSettlementFlatFees = setSellerSettlementFlatFees
+	// SetBuyerSettlementFlatFees is a test-only exposure of setBuyerSettlementFlatFees.
+	SetBuyerSettlementFlatFees = setBuyerSettlementFlatFees
 )
