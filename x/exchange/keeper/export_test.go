@@ -33,9 +33,6 @@ func (k Keeper) WithHoldKeeper(holdKeeper exchange.HoldKeeper) Keeper {
 	return k
 }
 
-// ParseLengthPrefixedAddr is a test-only exposure of parseLengthPrefixedAddr.
-var ParseLengthPrefixedAddr = parseLengthPrefixedAddr
-
 // GetStore is a test-only exposure of getStore.
 func (k Keeper) GetStore(ctx sdk.Context) sdk.KVStore {
 	return k.getStore(ctx)
@@ -46,4 +43,10 @@ var (
 	DeleteAll = deleteAll
 	// Iterate is a test-only exposure of iterate.
 	Iterate = iterate
+	// ParseLengthPrefixedAddr is a test-only exposure of parseLengthPrefixedAddr.
+	ParseLengthPrefixedAddr = parseLengthPrefixedAddr
+	// Uint16Bz is a test-only exposure of uint16Bz.
+	Uint16Bz = uint16Bz
+	// SetParamsSplit is a test-only exposure of setParamsSplit.
+	SetParamsSplit = setParamsSplit
 )
