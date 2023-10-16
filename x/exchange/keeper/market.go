@@ -443,7 +443,7 @@ func updateBuyerSettlementRatios(store sdk.KVStore, marketID uint32, toDelete, t
 }
 
 // getBuyerSettlementFeeRatiosForPriceDenom gets all the buyer settlement fee ratios in a market that have the give price denom.
-func getBuyerSettlementFeeRatiosForPriceDenom(store sdk.KVStore, marketID uint32, priceDenom string) []exchange.FeeRatio {
+func getBuyerSettlementFeeRatiosForPriceDenom(store sdk.KVStore, marketID uint32, priceDenom string) ([]exchange.FeeRatio, error) {
 	var ratios []exchange.FeeRatio
 	iterate(store, GetKeyPrefixMarketBuyerSettlementRatioForPriceDenom(marketID, priceDenom), func(key, value []byte) bool {
 		feeDenom := string(key)
@@ -456,12 +456,18 @@ func getBuyerSettlementFeeRatiosForPriceDenom(store sdk.KVStore, marketID uint32
 		}
 		return false
 	})
-	return ratios
+	if len(ratios) == 0 && hasFeeRatio(store, marketID, buyerSettlementRatioKeyMakers) {
+		return nil, fmt.Errorf("no buyer settlement fee ratios found for denom %q", priceDenom)
+	}
+	return ratios, nil
 }
 
 // calcBuyerSettlementRatioFeeOptions calculates the buyer settlement ratio fee options available for the given price.
 func calcBuyerSettlementRatioFeeOptions(store sdk.KVStore, marketID uint32, price sdk.Coin) ([]sdk.Coin, error) {
-	ratios := getBuyerSettlementFeeRatiosForPriceDenom(store, marketID, price.Denom)
+	ratios, err := getBuyerSettlementFeeRatiosForPriceDenom(store, marketID, price.Denom)
+	if err != nil {
+		return nil, err
+	}
 	if len(ratios) == 0 {
 		return nil, nil
 	}
@@ -469,9 +475,9 @@ func calcBuyerSettlementRatioFeeOptions(store sdk.KVStore, marketID uint32, pric
 	var errs []error
 	rv := make([]sdk.Coin, 0, len(ratios))
 	for _, ratio := range ratios {
-		fee, err := ratio.ApplyTo(price)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("buyer settlement fees: %w", err))
+		fee, ferr := ratio.ApplyTo(price)
+		if ferr != nil {
+			errs = append(errs, fmt.Errorf("buyer settlement fees: %w", ferr))
 		} else {
 			rv = append(rv, fee)
 		}
