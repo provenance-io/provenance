@@ -8391,7 +8391,6 @@ Object
 | ----- | ---- | ----- | ----------- |
 | `id` | [uint64](#uint64) |  | An integer to uniquely identify the pet. |
 | `owner` | [string](#string) |  | The owner of the pet. |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | The price of the pet. |
 | `pet_info` | [PetInfo](#provenance.sharding.v1.PetInfo) |  | Additional info on the pet. |
 
 
@@ -8409,7 +8408,7 @@ SmallObject is a smaller object to store
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  | The name of the pet. |
 | `color` | [string](#string) |  | The color of the pet. |
-| `breed` | [string](#string) |  | The breed of the pet. |
+| `spots` | [uint64](#uint64) |  | The number of spots on the pet. |
 
 
 
@@ -8467,13 +8466,13 @@ MsgReadRequest reads from the store
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  | The signing authority for the request. |
 | `owner_read` | [bool](#bool) |  | Reads only the owner from the store. |
-| `coins_read` | [bool](#bool) |  | Reads only the coins from the store. |
 | `name_read` | [bool](#bool) |  | Reads only the name from the store. |
 | `color_read` | [bool](#bool) |  | Reads only the color from the store. |
 | `spots_read` | [bool](#bool) |  | Reads only the spots from the store. |
 | `full_read` | [bool](#bool) |  | Reads the entire object from store |
 | `group_read` | [bool](#bool) |  | Reads the entire info object from store. |
 | `sharded_read` | [bool](#bool) |  | Attempts the new sharded read. |
+| `iterations` | [uint64](#uint64) |  | Number of times to read |
 
 
 
@@ -8525,13 +8524,13 @@ MsgWriteRequest reads from the store
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  | The signing authority for the request |
 | `owner_write` | [bool](#bool) |  | Writes only the owner to the store. |
-| `coins_write` | [bool](#bool) |  | Writes only the coins to the store. |
 | `name_write` | [bool](#bool) |  | Writes only the name to the store. |
 | `color_write` | [bool](#bool) |  | Writes only the color to the store. |
 | `spots_write` | [bool](#bool) |  | Writes only the spots to the store. |
 | `full_write` | [bool](#bool) |  | Writes the entire object to store. |
 | `group_write` | [bool](#bool) |  | Writes the entire info object to store. |
 | `sharded_write` | [bool](#bool) |  | Attempts the new sharded write. |
+| `iterations` | [uint64](#uint64) |  | Number of times to write |
 
 
 

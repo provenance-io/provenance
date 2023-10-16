@@ -13,9 +13,17 @@ var (
 )
 
 // NewMsgRead creates a new NewMsgRead
-func NewMsgRead(authority string) *MsgReadRequest {
+func NewMsgRead(authority string, owner, name, color, spots, full, group, sharded bool, iterations uint64) *MsgReadRequest {
 	return &MsgReadRequest{
-		Authority: authority,
+		Authority:   authority,
+		OwnerRead:   owner,
+		NameRead:    name,
+		ColorRead:   color,
+		SpotsRead:   spots,
+		FullRead:    full,
+		GroupRead:   group,
+		ShardedRead: sharded,
+		Iterations:  iterations,
 	}
 }
 
@@ -33,9 +41,17 @@ func (msg MsgReadRequest) ValidateBasic() error {
 }
 
 // NewMsgWrite creates a new MsgWriteRequest
-func NewMsgWrite(authority string) *MsgWriteRequest {
+func NewMsgWrite(authority string, owner, name, color, spots, full, group, sharded bool, iterations uint64) *MsgWriteRequest {
 	return &MsgWriteRequest{
-		Authority: authority,
+		Authority:    authority,
+		OwnerWrite:   owner,
+		NameWrite:    name,
+		ColorWrite:   color,
+		SpotsWrite:   spots,
+		FullWrite:    full,
+		GroupWrite:   group,
+		ShardedWrite: sharded,
+		Iterations:   iterations,
 	}
 }
 

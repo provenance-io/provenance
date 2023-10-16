@@ -17,8 +17,8 @@ message PetInfo {
   string name = 1;
   // The color of the pet.
   string color = 2;
-  // The breed of the pet.
-  string breed = 3;
+  // The number of spots on the pet.
+  uint64 spots = 3;
 }
 
 // Object
@@ -30,8 +30,6 @@ message Pet {
   uint64 id = 1;
   // The owner of the pet.
   string owner = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // The price of the pet.
-  repeated cosmos.base.v1beta1.Coin coins = 3 [(gogoproto.nullable) = false];
   // Additional info on the pet.
   PetInfo pet_info = 4 [(gogoproto.nullable) = false];
 }

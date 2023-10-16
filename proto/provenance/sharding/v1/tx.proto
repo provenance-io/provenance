@@ -24,8 +24,6 @@ message MsgReadRequest {
 
   // Reads only the owner from the store.
   bool owner_read = 2;
-  // Reads only the coins from the store.
-  bool coins_read = 3;
   // Reads only the name from the store.
   bool name_read = 4;
   // Reads only the color from the store.
@@ -41,6 +39,9 @@ message MsgReadRequest {
 
   // Attempts the new sharded read.
   bool sharded_read = 9;
+
+  // Number of times to read
+  uint64 iterations = 10;
 }
 
 // MsgReadResponse is the response of the read request
@@ -53,8 +54,6 @@ message MsgWriteRequest {
 
   // Writes only the owner to the store.
   bool owner_write = 2;
-  // Writes only the coins to the store.
-  bool coins_write = 3;
   // Writes only the name to the store.
   bool name_write = 4;
   // Writes only the color to the store.
@@ -70,6 +69,9 @@ message MsgWriteRequest {
 
   // Attempts the new sharded write.
   bool sharded_write = 9;
+
+  // Number of times to write
+  uint64 iterations = 10;
 }
 
 // MsgWriteResponse is the response of the write request
