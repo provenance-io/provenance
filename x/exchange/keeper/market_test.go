@@ -312,8 +312,8 @@ func (s *TestSuite) TestKeeper_GetSellerSettlementRatios() {
 			name: "no entries for market",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach", "1fig")})
-				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum", "1fig")})
+				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1fig")})
+				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum:1fig")})
 			},
 			marketID: 2,
 			expected: nil,
@@ -322,28 +322,28 @@ func (s *TestSuite) TestKeeper_GetSellerSettlementRatios() {
 			name: "market with one entry",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach", "1fig")})
-				setter(store, 2, []exchange.FeeRatio{s.ratio("50pear", "3fig")})
-				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum", "1fig")})
+				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1fig")})
+				setter(store, 2, []exchange.FeeRatio{s.ratio("50pear:3fig")})
+				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum:1fig")})
 			},
 			marketID: 2,
-			expected: []exchange.FeeRatio{s.ratio("50pear", "3fig")},
+			expected: []exchange.FeeRatio{s.ratio("50pear:3fig")},
 		},
 		{
 			name: "market with two coins",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach", "1fig")})
+				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1fig")})
 				setter(store, 2, []exchange.FeeRatio{
-					s.ratio("50pear", "3fig"),
-					s.ratio("100apple", "7grape"),
+					s.ratio("50pear:3fig"),
+					s.ratio("100apple:7grape"),
 				})
-				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum", "1fig")})
+				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum:1fig")})
 			},
 			marketID: 2,
 			expected: []exchange.FeeRatio{
-				s.ratio("100apple", "7grape"),
-				s.ratio("50pear", "3fig"),
+				s.ratio("100apple:7grape"),
+				s.ratio("50pear:3fig"),
 			},
 		},
 	}
@@ -450,8 +450,8 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementRatios() {
 			name: "no entries for market",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach", "1fig")})
-				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum", "1fig")})
+				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1fig")})
+				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum:1fig")})
 			},
 			marketID: 2,
 			expected: nil,
@@ -460,28 +460,28 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementRatios() {
 			name: "market with one entry",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach", "1fig")})
-				setter(store, 2, []exchange.FeeRatio{s.ratio("50pear", "3fig")})
-				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum", "1fig")})
+				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1fig")})
+				setter(store, 2, []exchange.FeeRatio{s.ratio("50pear:3fig")})
+				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum:1fig")})
 			},
 			marketID: 2,
-			expected: []exchange.FeeRatio{s.ratio("50pear", "3fig")},
+			expected: []exchange.FeeRatio{s.ratio("50pear:3fig")},
 		},
 		{
 			name: "market with two coins",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach", "1fig")})
+				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1fig")})
 				setter(store, 2, []exchange.FeeRatio{
-					s.ratio("50pear", "3fig"),
-					s.ratio("100apple", "7grape"),
+					s.ratio("50pear:3fig"),
+					s.ratio("100apple:7grape"),
 				})
-				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum", "1fig")})
+				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum:1fig")})
 			},
 			marketID: 2,
 			expected: []exchange.FeeRatio{
-				s.ratio("100apple", "7grape"),
-				s.ratio("50pear", "3fig"),
+				s.ratio("100apple:7grape"),
+				s.ratio("50pear:3fig"),
 			},
 		},
 	}
@@ -526,8 +526,8 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 			name: "no ratios for market",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach", "1peach")})
-				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1peach")})
+				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 			},
 			marketID: 2,
 			price:    s.coin("100plum"),
@@ -538,12 +538,12 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 			name: "no ratio for price denom",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach", "1peach")})
+				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1peach")})
 				setter(store, 2, []exchange.FeeRatio{
-					s.ratio("10prune", "1prune"),
-					s.ratio("50pear", "3pear"),
+					s.ratio("10prune:1prune"),
+					s.ratio("50pear:3pear"),
 				})
-				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 			},
 			marketID: 2,
 			price:    s.coin("100pears"),
@@ -553,9 +553,9 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 			name: "ratio evenly applicable",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach", "1peach")})
-				setter(store, 2, []exchange.FeeRatio{s.ratio("50pear", "3pear")})
-				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1peach")})
+				setter(store, 2, []exchange.FeeRatio{s.ratio("50pear:3pear")})
+				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 			},
 			marketID: 2,
 			price:    s.coin("350pear"),
@@ -565,9 +565,9 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 			name: "ratio not evenly applicable",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach", "1peach")})
-				setter(store, 2, []exchange.FeeRatio{s.ratio("50pear", "3pear")})
-				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1peach")})
+				setter(store, 2, []exchange.FeeRatio{s.ratio("50pear:3pear")})
+				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 			},
 			marketID: 2,
 			price:    s.coin("442pear"),
@@ -576,7 +576,7 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 		{
 			name: "error applying ratio",
 			setup: func(s *TestSuite) {
-				setter(s.getStore(), 1, []exchange.FeeRatio{s.ratio("0peach", "1peach")})
+				setter(s.getStore(), 1, []exchange.FeeRatio{s.ratio("0peach:1peach")})
 			},
 			marketID: 1,
 			price:    s.coin("100peach"),
@@ -586,9 +586,9 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 			name: "three ratios: first",
 			setup: func(s *TestSuite) {
 				setter(s.getStore(), 8, []exchange.FeeRatio{
-					s.ratio("10plum", "1plum"),
-					s.ratio("25prune", "2prune"),
-					s.ratio("50pear", "3pear"),
+					s.ratio("10plum:1plum"),
+					s.ratio("25prune:2prune"),
+					s.ratio("50pear:3pear"),
 				})
 			},
 			marketID: 8,
@@ -599,9 +599,9 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 			name: "three ratios: second",
 			setup: func(s *TestSuite) {
 				setter(s.getStore(), 777, []exchange.FeeRatio{
-					s.ratio("10plum", "1plum"),
-					s.ratio("25prune", "2prune"),
-					s.ratio("50pear", "3pear"),
+					s.ratio("10plum:1plum"),
+					s.ratio("25prune:2prune"),
+					s.ratio("50pear:3pear"),
 				})
 			},
 			marketID: 777,
@@ -612,9 +612,9 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 			name: "three ratios: third",
 			setup: func(s *TestSuite) {
 				setter(s.getStore(), 41, []exchange.FeeRatio{
-					s.ratio("10plum", "1plum"),
-					s.ratio("25prune", "2prune"),
-					s.ratio("50pear", "3pear"),
+					s.ratio("10plum:1plum"),
+					s.ratio("25prune:2prune"),
+					s.ratio("50pear:3pear"),
 				})
 			},
 			marketID: 41,
@@ -673,8 +673,8 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			name: "no ratios for market",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				setter(store, 1, []exchange.FeeRatio{s.ratio("11plum", "1fig")})
-				setter(store, 3, []exchange.FeeRatio{s.ratio("33prune", "2grape")})
+				setter(store, 1, []exchange.FeeRatio{s.ratio("11plum:1fig")})
+				setter(store, 3, []exchange.FeeRatio{s.ratio("33prune:2grape")})
 			},
 			marketID: 2,
 			price:    s.coin("100peach"),
@@ -685,13 +685,13 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			name: "no ratios for price denom: fee denom",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				setter(store, 1, []exchange.FeeRatio{s.ratio("11plum", "1fig")})
+				setter(store, 1, []exchange.FeeRatio{s.ratio("11plum:1fig")})
 				setter(store, 2, []exchange.FeeRatio{
-					s.ratio("21pineapple", "1fig"),
-					s.ratio("22pear", "3fig"),
-					s.ratio("23peach", "4fig"),
+					s.ratio("21pineapple:1fig"),
+					s.ratio("22pear:3fig"),
+					s.ratio("23peach:4fig"),
 				})
-				setter(store, 3, []exchange.FeeRatio{s.ratio("33prune", "2grape")})
+				setter(store, 3, []exchange.FeeRatio{s.ratio("33prune:2grape")})
 			},
 			marketID: 2,
 			price:    s.coin("100fig"),
@@ -701,13 +701,13 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			name: "no ratios for price denom: other market's denom",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				setter(store, 1, []exchange.FeeRatio{s.ratio("11plum", "1fig")})
+				setter(store, 1, []exchange.FeeRatio{s.ratio("11plum:1fig")})
 				setter(store, 2, []exchange.FeeRatio{
-					s.ratio("21pineapple", "1fig"),
-					s.ratio("22pear", "3fig"),
-					s.ratio("23peach", "4fig"),
+					s.ratio("21pineapple:1fig"),
+					s.ratio("22pear:3fig"),
+					s.ratio("23peach:4fig"),
 				})
-				setter(store, 3, []exchange.FeeRatio{s.ratio("33prune", "2grape")})
+				setter(store, 3, []exchange.FeeRatio{s.ratio("33prune:2grape")})
 			},
 			marketID: 2,
 			price:    s.coin("100prune"),
@@ -716,7 +716,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		{
 			name: "one ratio: evenly divisible",
 			setup: func(s *TestSuite) {
-				setter(s.getStore(), 15, []exchange.FeeRatio{s.ratio("500pineapple", "1fig")})
+				setter(s.getStore(), 15, []exchange.FeeRatio{s.ratio("500pineapple:1fig")})
 			},
 			marketID: 15,
 			price:    s.coin("7500pineapple"),
@@ -725,7 +725,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		{
 			name: "one ratio: not evenly divisible",
 			setup: func(s *TestSuite) {
-				setter(s.getStore(), 15, []exchange.FeeRatio{s.ratio("500pineapple", "1fig")})
+				setter(s.getStore(), 15, []exchange.FeeRatio{s.ratio("500pineapple:1fig")})
 			},
 			marketID: 15,
 			price:    s.coin("7503pineapple"),
@@ -738,12 +738,12 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			name: "three ratios for denom: none divisible",
 			setup: func(s *TestSuite) {
 				setter(s.getStore(), 21, []exchange.FeeRatio{
-					s.ratio("123plum", "1fig"),
-					s.ratio("234plum", "5grape"),
-					s.ratio("345plum", "7honeydew"),
-					s.ratio("100peach", "3fig"),
-					s.ratio("200peach", "11grape"),
-					s.ratio("300peach", "13honeydew"),
+					s.ratio("123plum:1fig"),
+					s.ratio("234plum:5grape"),
+					s.ratio("345plum:7honeydew"),
+					s.ratio("100peach:3fig"),
+					s.ratio("200peach:11grape"),
+					s.ratio("300peach:13honeydew"),
 				})
 			},
 			marketID: 21,
@@ -759,12 +759,12 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			name: "three ratios for denom: only first divisible",
 			setup: func(s *TestSuite) {
 				setter(s.getStore(), 21, []exchange.FeeRatio{
-					s.ratio("123plum", "1fig"),
-					s.ratio("234plum", "5grape"),
-					s.ratio("345plum", "7honeydew"),
-					s.ratio("100peach", "3fig"),
-					s.ratio("200peach", "11grape"),
-					s.ratio("300peach", "13honeydew"),
+					s.ratio("123plum:1fig"),
+					s.ratio("234plum:5grape"),
+					s.ratio("345plum:7honeydew"),
+					s.ratio("100peach:3fig"),
+					s.ratio("200peach:11grape"),
+					s.ratio("300peach:13honeydew"),
 				})
 			},
 			marketID: 21,
@@ -775,12 +775,12 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			name: "three ratios for denom: only second divisible",
 			setup: func(s *TestSuite) {
 				setter(s.getStore(), 99, []exchange.FeeRatio{
-					s.ratio("123plum", "1fig"),
-					s.ratio("234plum", "5grape"),
-					s.ratio("345plum", "7honeydew"),
-					s.ratio("100peach", "3fig"),
-					s.ratio("200peach", "11grape"),
-					s.ratio("300peach", "13honeydew"),
+					s.ratio("123plum:1fig"),
+					s.ratio("234plum:5grape"),
+					s.ratio("345plum:7honeydew"),
+					s.ratio("100peach:3fig"),
+					s.ratio("200peach:11grape"),
+					s.ratio("300peach:13honeydew"),
 				})
 			},
 			marketID: 99,
@@ -791,12 +791,12 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			name: "three ratios for denom: only third divisible",
 			setup: func(s *TestSuite) {
 				setter(s.getStore(), 3, []exchange.FeeRatio{
-					s.ratio("123plum", "1fig"),
-					s.ratio("234plum", "5grape"),
-					s.ratio("345plum", "7honeydew"),
-					s.ratio("100peach", "3fig"),
-					s.ratio("200peach", "11grape"),
-					s.ratio("300peach", "13honeydew"),
+					s.ratio("123plum:1fig"),
+					s.ratio("234plum:5grape"),
+					s.ratio("345plum:7honeydew"),
+					s.ratio("100peach:3fig"),
+					s.ratio("200peach:11grape"),
+					s.ratio("300peach:13honeydew"),
 				})
 			},
 			marketID: 3,
@@ -807,12 +807,12 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			name: "three ratios for denom: first not divisible",
 			setup: func(s *TestSuite) {
 				setter(s.getStore(), 1, []exchange.FeeRatio{
-					s.ratio("123plum", "1fig"),
-					s.ratio("234plum", "5grape"),
-					s.ratio("345plum", "7honeydew"),
-					s.ratio("100peach", "3fig"),
-					s.ratio("200peach", "11grape"),
-					s.ratio("300peach", "13honeydew"),
+					s.ratio("123plum:1fig"),
+					s.ratio("234plum:5grape"),
+					s.ratio("345plum:7honeydew"),
+					s.ratio("100peach:3fig"),
+					s.ratio("200peach:11grape"),
+					s.ratio("300peach:13honeydew"),
 				})
 			},
 			marketID: 1,
@@ -823,12 +823,12 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			name: "three ratios for denom: second not divisible",
 			setup: func(s *TestSuite) {
 				setter(s.getStore(), 1, []exchange.FeeRatio{
-					s.ratio("123plum", "1fig"),
-					s.ratio("234plum", "5grape"),
-					s.ratio("345plum", "7honeydew"),
-					s.ratio("100peach", "3fig"),
-					s.ratio("200peach", "11grape"),
-					s.ratio("300peach", "13honeydew"),
+					s.ratio("123plum:1fig"),
+					s.ratio("234plum:5grape"),
+					s.ratio("345plum:7honeydew"),
+					s.ratio("100peach:3fig"),
+					s.ratio("200peach:11grape"),
+					s.ratio("300peach:13honeydew"),
 				})
 			},
 			marketID: 1,
@@ -839,12 +839,12 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			name: "three ratios for denom: third not divisible",
 			setup: func(s *TestSuite) {
 				setter(s.getStore(), 1, []exchange.FeeRatio{
-					s.ratio("123plum", "1fig"),
-					s.ratio("234plum", "5grape"),
-					s.ratio("345plum", "7honeydew"),
-					s.ratio("100peach", "3fig"),
-					s.ratio("200peach", "11grape"),
-					s.ratio("300peach", "13honeydew"),
+					s.ratio("123plum:1fig"),
+					s.ratio("234plum:5grape"),
+					s.ratio("345plum:7honeydew"),
+					s.ratio("100peach:3fig"),
+					s.ratio("200peach:11grape"),
+					s.ratio("300peach:13honeydew"),
 				})
 			},
 			marketID: 1,
@@ -855,12 +855,12 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			name: "three ratios for denom: all divisible",
 			setup: func(s *TestSuite) {
 				setter(s.getStore(), 5, []exchange.FeeRatio{
-					s.ratio("123plum", "1fig"),
-					s.ratio("234plum", "5grape"),
-					s.ratio("345plum", "7honeydew"),
-					s.ratio("100peach", "3fig"),
-					s.ratio("200peach", "11grape"),
-					s.ratio("300peach", "13honeydew"),
+					s.ratio("123plum:1fig"),
+					s.ratio("234plum:5grape"),
+					s.ratio("345plum:7honeydew"),
+					s.ratio("100peach:3fig"),
+					s.ratio("200peach:11grape"),
+					s.ratio("300peach:13honeydew"),
 				})
 			},
 			marketID: 5,
@@ -1531,8 +1531,8 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "no ratios in market: no flat",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("1plum"),
@@ -1543,8 +1543,8 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "no ratios in market: price less than flat",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("1plum"),
@@ -1555,8 +1555,8 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "no ratios in market: price equals flat",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("2plum"),
@@ -1567,8 +1567,8 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "no ratios in market: price more than flat",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("3plum"),
@@ -1579,8 +1579,8 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "no ratios in market: fee diff denom with larger amount",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("2plum"),
@@ -1591,9 +1591,9 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "one ratio: wrong denom",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("500peach"),
@@ -1604,9 +1604,9 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "one ratio: no flat: price less than ratio",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "13plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:13plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("12plum"),
@@ -1617,9 +1617,9 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "one ratio: no flat: price equals ratio",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "11plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:11plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("11plum"),
@@ -1630,9 +1630,9 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "one ratio: no flat: price more than ratio",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "11plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:11plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("13plum"),
@@ -1643,9 +1643,9 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "one ratio: diff flat: price less than ratio",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "13plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:13plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("12plum"),
@@ -1656,9 +1656,9 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "one ratio: diff flat: price equals ratio",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "11plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:11plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("11plum"),
@@ -1669,9 +1669,9 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "one ratio: diff flat: price more than ratio",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "11plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:11plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("12plum"),
@@ -1682,9 +1682,9 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "one ratio: price more than flat, more than ratio, less than total",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "11plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:11plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("12plum"),
@@ -1695,9 +1695,9 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "one ratio: price equals total",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "7plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:7plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("12plum"),
@@ -1708,9 +1708,9 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "one ratio: price more than total",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "7plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:7plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("12plum"),
@@ -1721,9 +1721,9 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "ratio cannot be evenly applied to price, but is enough",
 			setup: func(s *TestSuite) {
 				store := s.getStore()
-				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
-				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "7plum")})
-				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:7plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum:1plum")})
 			},
 			marketID:          2,
 			price:             s.coin("123plum"),
@@ -1733,7 +1733,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		{
 			name: "error applying ratio",
 			setup: func(s *TestSuite) {
-				keeper.SetSellerSettlementRatios(s.getStore(), 1, []exchange.FeeRatio{s.ratio("0plum", "1plum")})
+				keeper.SetSellerSettlementRatios(s.getStore(), 1, []exchange.FeeRatio{s.ratio("0plum:1plum")})
 			},
 			marketID:          1,
 			price:             s.coin("100plum"),
@@ -1744,9 +1744,9 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "three ratios: wrong denom",
 			setup: func(s *TestSuite) {
 				keeper.SetSellerSettlementRatios(s.getStore(), 1, []exchange.FeeRatio{
-					s.ratio("100peach", "1peach"),
-					s.ratio("200pear", "3pear"),
-					s.ratio("300plum", "7plum"),
+					s.ratio("100peach:1peach"),
+					s.ratio("200pear:3pear"),
+					s.ratio("300plum:7plum"),
 				})
 			},
 			marketID:          1,
@@ -1758,9 +1758,9 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "three ratios: price less than total",
 			setup: func(s *TestSuite) {
 				keeper.SetSellerSettlementRatios(s.getStore(), 1, []exchange.FeeRatio{
-					s.ratio("5000peach", "1peach"),
-					s.ratio("200pear", "199pear"),
-					s.ratio("5000plum", "7plum"),
+					s.ratio("5000peach:1peach"),
+					s.ratio("200pear:199pear"),
+					s.ratio("5000plum:7plum"),
 				})
 			},
 			marketID:          1,
@@ -1772,9 +1772,9 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 			name: "three ratios: price more",
 			setup: func(s *TestSuite) {
 				keeper.SetSellerSettlementRatios(s.getStore(), 1, []exchange.FeeRatio{
-					s.ratio("100peach", "1peach"),
-					s.ratio("200pear", "3pear"),
-					s.ratio("300plum", "7plum"),
+					s.ratio("100peach:1peach"),
+					s.ratio("200pear:3pear"),
+					s.ratio("300plum:7plum"),
 				})
 			},
 			marketID:          1,

@@ -140,12 +140,11 @@ func (s *TestSuite) coinPString(coin *sdk.Coin) string {
 	return fmt.Sprintf("%q", coin)
 }
 
-// ratio creates a FeeRatio.
-func (s *TestSuite) ratio(price, fee string) exchange.FeeRatio {
-	return exchange.FeeRatio{
-		Price: s.coin(price),
-		Fee:   s.coin(fee),
-	}
+// ratio creates a FeeRatio from a "<price>:<fee>" string.
+func (s *TestSuite) ratio(ratioStr string) exchange.FeeRatio {
+	rv, err := exchange.ParseFeeRatio(ratioStr)
+	s.Require().NoError(err, "ParseFeeRatio(%q)", ratioStr)
+	return *rv
 }
 
 // int is a shorter way to call sdkmath.NewInt.
