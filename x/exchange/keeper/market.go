@@ -388,24 +388,38 @@ func validateAskPrice(store sdk.KVStore, marketID uint32, price sdk.Coin, settle
 
 	// If there is a settlement flat fee with a different denom as the price, a hold is placed on it.
 	// If there's a settlement flat fee with the same denom as the price, it's paid out of the price along
-	// with the ratio amount. Assuming the ratio is less than one, the price will always cover the ratio fee amount.
-	// But if the flat fee is coming out of the price too, it's possible that the price might be less than the total
-	// fee that will need to come out of it. We want to return an error if that's the case.
-	if settlementFlatFee != nil && price.Denom == settlementFlatFee.Denom {
-		if price.Amount.LT(settlementFlatFee.Amount) {
-			return fmt.Errorf("price %s is less than seller settlement flat fee %s", price, settlementFlatFee)
+	// with the ratio amount. Assuming the ratio is less than one, the price will always be at least the ratio fee amount.
+	// Here, we make sure that the price is more than any fee that is to come out of it.
+	// Since the ask price is a minimum, and the ratio is less than 1 (fee amount goes up slower than price amount),
+	// if it's okay with the provided price, it'll also be okay for a larger price too.
+
+	checkFlat := settlementFlatFee != nil && !settlementFlatFee.Amount.IsZero() && price.Denom == settlementFlatFee.Denom
+	if ratio == nil {
+		// There's no ratio aspect to check, just maybe look at the flat.
+		if checkFlat && price.Amount.LTE(settlementFlatFee.Amount) {
+			return fmt.Errorf("price %s is not more than seller settlement flat fee %s", price, settlementFlatFee)
 		}
-		if ratio != nil {
-			ratioFee, err := ratio.ApplyToLoosely(price)
-			if err != nil {
-				return err
-			}
-			reqPrice := settlementFlatFee.Add(ratioFee)
-			if price.IsLT(reqPrice) {
-				return fmt.Errorf("price %s is less than total required seller settlement fee of %s = %s flat + %s ratio",
-					price, reqPrice, settlementFlatFee, ratioFee)
-			}
+		return nil
+	}
+
+	ratioFee, rerr := ratio.ApplyToLoosely(price)
+	if rerr != nil {
+		return rerr
+	}
+
+	if !checkFlat {
+		// There's no flat aspect to check, just check the ratio.
+		if price.Amount.LTE(ratioFee.Amount) {
+			return fmt.Errorf("price %s is not more than seller settlement ratio fee %s", price, ratioFee)
 		}
+		return nil
+	}
+
+	// Check both together.
+	reqPriceAmt := settlementFlatFee.Amount.Add(ratioFee.Amount)
+	if price.Amount.LTE(reqPriceAmt) {
+		return fmt.Errorf("price %s is not more than total required seller settlement fee %s = %s flat + %s ratio",
+			price, sdk.NewCoin(price.Denom, reqPriceAmt), settlementFlatFee, ratioFee)
 	}
 
 	return nil
