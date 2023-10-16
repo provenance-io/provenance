@@ -83,6 +83,26 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
 
+// sliceStrings converts each val into a string using the provided stringer.
+func sliceStrings[T any](vals []T, stringer func(T) string) []string {
+	if vals == nil {
+		return nil
+	}
+	strs := make([]string, len(vals))
+	for i, v := range vals {
+		strs[i] = fmt.Sprintf("[%d]:%q", i, stringer(v))
+	}
+	return strs
+}
+
+// sliceString converts each val into a string using the provided stringer and joins them with ", ".
+func sliceString[T any](vals []T, stringer func(T) string) string {
+	if vals == nil {
+		return "<nil>"
+	}
+	return strings.Join(sliceStrings(vals, stringer), ", ")
+}
+
 // coins creates an sdk.Coins from a string, requiring it to work.
 func (s *TestSuite) coins(coins string) sdk.Coins {
 	s.T().Helper()
@@ -92,24 +112,38 @@ func (s *TestSuite) coins(coins string) sdk.Coins {
 }
 
 // coin creates a new coin without doing any validation on it.
-func (s *TestSuite) coin(amount int64, denom string) sdk.Coin {
-	return sdk.Coin{
-		Amount: s.int(amount),
-		Denom:  denom,
-	}
+func (s *TestSuite) coin(coin string) sdk.Coin {
+	rv, err := sdk.ParseCoinNormalized(coin)
+	s.Require().NoError(err, "ParseCoinNormalized(%q)", coin)
+	return rv
+}
+
+// coinP creates a reference to a new coin without doing any validation on it.
+func (s *TestSuite) coinP(coin string) *sdk.Coin {
+	rv := s.coin(coin)
+	return &rv
 }
 
 // coinsString converts a slice of coin entries into a string.
 // This is different from sdk.Coins.String because the entries aren't sorted.
 func (s *TestSuite) coinsString(coins []sdk.Coin) string {
-	if coins == nil {
-		return "nil"
+	return sliceString(coins, sdk.Coin.String)
+}
+
+// coinPString converts the provided coin to a string, or "<nil>".
+func (s *TestSuite) coinPString(coin *sdk.Coin) string {
+	if coin == nil {
+		return "<nil>"
 	}
-	vals := make([]string, len(coins))
-	for i, val := range coins {
-		vals[i] = val.String()
+	return coin.String()
+}
+
+// ratio creates a FeeRatio.
+func (s *TestSuite) ratio(price, fee string) exchange.FeeRatio {
+	return exchange.FeeRatio{
+		Price: s.coin(price),
+		Fee:   s.coin(fee),
 	}
-	return strings.Join(vals, ", ")
 }
 
 // int is a shorter way to call sdkmath.NewInt.
@@ -123,6 +157,16 @@ func (s *TestSuite) intStr(amount string) sdkmath.Int {
 	rv, ok := sdkmath.NewIntFromString(amount)
 	s.Require().True(ok, "NewIntFromString(%q) ok bool", amount)
 	return rv
+}
+
+// ratiosStrings converts the ratios into strings. It's because comparsions on sdk.Coin (or sdkmath.Int) are annoying.
+func (s *TestSuite) ratiosStrings(ratios []exchange.FeeRatio) []string {
+	return sliceStrings(ratios, exchange.FeeRatio.String)
+}
+
+// joinErrs joins the provided error strings into a single one to match what errors.Join does.
+func (s *TestSuite) joinErrs(errs ...string) string {
+	return strings.Join(errs, "\n")
 }
 
 // getAddrName returns the name of the variable in this TestSuite holding the provided address.

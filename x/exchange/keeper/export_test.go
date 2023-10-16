@@ -59,4 +59,8 @@ var (
 	SetSellerSettlementFlatFees = setSellerSettlementFlatFees
 	// SetBuyerSettlementFlatFees is a test-only exposure of setBuyerSettlementFlatFees.
 	SetBuyerSettlementFlatFees = setBuyerSettlementFlatFees
+	// SetSellerSettlementRatios is a test-only exposure of setSellerSettlementRatios.
+	SetSellerSettlementRatios = setSellerSettlementRatios
+	// SetBuyerSettlementRatios is a test-only exposure of setBuyerSettlementRatios.
+	SetBuyerSettlementRatios = setBuyerSettlementRatios
 )
