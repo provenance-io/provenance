@@ -198,6 +198,45 @@ func ValidateBuyerFeeRatios(ratios []FeeRatio) error {
 	return errors.Join(errs...)
 }
 
+// parseCoin parses a string into an sdk.Coin
+func parseCoin(coinStr string) (sdk.Coin, error) {
+	// The sdk.ParseCoinNormalized allows for decimals and just truncates if there are some.
+	// But I want an error if there's a decimal portion.
+	// It's errors also always have "invalid decimal coin expression", and I don't want "decimal" in these errors.
+	decCoin, err := sdk.ParseDecCoin(coinStr)
+	if err != nil || !decCoin.Amount.IsInteger() {
+		return sdk.Coin{}, fmt.Errorf("invalid coin expression: %q", coinStr)
+	}
+	coin, _ := decCoin.TruncateDecimal()
+	return coin, nil
+}
+
+// ParseFeeRatio parses a "<price>:<fee>" string into a FeeRatio.
+func ParseFeeRatio(ratio string) (*FeeRatio, error) {
+	parts := strings.Split(ratio, ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("cannot create FeeRatio from %q: expected exactly one colon", ratio)
+	}
+	price, err := parseCoin(parts[0])
+	if err != nil {
+		return nil, fmt.Errorf("cannot create FeeRatio from %q: price: %w", ratio, err)
+	}
+	fee, err := parseCoin(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("cannot create FeeRatio from %q: fee: %w", ratio, err)
+	}
+	return &FeeRatio{Price: price, Fee: fee}, nil
+}
+
+// MustParseFeeRatio parses a "<price>:<fee>" string into a FeeRatio, panicking if there's a problem.
+func MustParseFeeRatio(ratio string) FeeRatio {
+	rv, err := ParseFeeRatio(ratio)
+	if err != nil {
+		panic(err)
+	}
+	return *rv
+}
+
 // String returns a string representation of this FeeRatio.
 func (r FeeRatio) String() string {
 	return fmt.Sprintf("%s:%s", r.Price, r.Fee)

@@ -722,6 +722,164 @@ func TestValidateBuyerFeeRatios(t *testing.T) {
 	}
 }
 
+func TestParseFeeRatio(t *testing.T) {
+	ratioStr := func(ratio *FeeRatio) string {
+		if ratio == nil {
+			return "<nil>"
+		}
+		return fmt.Sprintf("%q", ratio.String())
+	}
+
+	tests := []struct {
+		name     string
+		ratio    string
+		expRatio *FeeRatio
+		expErr   string
+	}{
+		{
+			name:   "no colons",
+			ratio:  "8banana",
+			expErr: "expected exactly one colon",
+		},
+		{
+			name:   "two colons",
+			ratio:  "8apple:5banana:3cactus",
+			expErr: "expected exactly one colon",
+		},
+		{
+			name:   "one colon: first char",
+			ratio:  ":18banana",
+			expErr: "price: invalid coin expression: \"\"",
+		},
+		{
+			name:   "one colon: las char",
+			ratio:  "33apple:",
+			expErr: "fee: invalid coin expression: \"\"",
+		},
+		{
+			name:   "bad price coin",
+			ratio:  "1234:5banana",
+			expErr: "price: invalid coin expression: \"1234\"",
+		},
+		{
+			name:   "bad fee coin",
+			ratio:  "1234apple:banana",
+			expErr: "fee: invalid coin expression: \"banana\"",
+		},
+		{
+			name:   "neg price coin",
+			ratio:  "-55apple:3banana",
+			expErr: "price: invalid coin expression: \"-55apple\"",
+		},
+		{
+			name:     "neg fee coin",
+			ratio:    "55apple:-3banana",
+			expRatio: nil,
+			expErr:   "fee: invalid coin expression: \"-3banana\"",
+		},
+		{
+			name:  "zero price coin",
+			ratio: "0apple:21banana",
+			expRatio: &FeeRatio{
+				Price: sdk.NewInt64Coin("apple", 0),
+				Fee:   sdk.NewInt64Coin("banana", 21),
+			},
+		},
+		{
+			name:  "zero fee coin",
+			ratio: "5apple:0banana",
+			expRatio: &FeeRatio{
+				Price: sdk.NewInt64Coin("apple", 5),
+				Fee:   sdk.NewInt64Coin("banana", 0),
+			},
+		},
+		{
+			name:  "same denoms: price more",
+			ratio: "30apple:29apple",
+			expRatio: &FeeRatio{
+				Price: sdk.NewInt64Coin("apple", 30),
+				Fee:   sdk.NewInt64Coin("apple", 29),
+			},
+		},
+		{
+			name:  "same denoms: price same",
+			ratio: "30apple:30apple",
+			expRatio: &FeeRatio{
+				Price: sdk.NewInt64Coin("apple", 30),
+				Fee:   sdk.NewInt64Coin("apple", 30),
+			},
+		},
+		{
+			name:  "same denoms: price less",
+			ratio: "30apple:31apple",
+			expRatio: &FeeRatio{
+				Price: sdk.NewInt64Coin("apple", 30),
+				Fee:   sdk.NewInt64Coin("apple", 31),
+			},
+		},
+		{
+			name:  "diff denoms: price more",
+			ratio: "30apple:29banana",
+			expRatio: &FeeRatio{
+				Price: sdk.NewInt64Coin("apple", 30),
+				Fee:   sdk.NewInt64Coin("banana", 29),
+			},
+		},
+		{
+			name:  "diff denoms: price same",
+			ratio: "30apple:30banana",
+			expRatio: &FeeRatio{
+				Price: sdk.NewInt64Coin("apple", 30),
+				Fee:   sdk.NewInt64Coin("banana", 30),
+			},
+		},
+		{
+			name:  "diff denoms: price less",
+			ratio: "30apple:31banana",
+			expRatio: &FeeRatio{
+				Price: sdk.NewInt64Coin("apple", 30),
+				Fee:   sdk.NewInt64Coin("banana", 31),
+			},
+		},
+		{
+			name:   "price has decimal",
+			ratio:  "123.4apple:5banana",
+			expErr: "price: invalid coin expression: \"123.4apple\"",
+		},
+		{
+			name:   "fee has decimal",
+			ratio:  "123apple:5.6banana",
+			expErr: "fee: invalid coin expression: \"5.6banana\"",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if len(tc.expErr) > 0 {
+				tc.expErr = fmt.Sprintf("cannot create FeeRatio from %q: %s", tc.ratio, tc.expErr)
+			}
+
+			var ratio *FeeRatio
+			var err error
+			testFunc := func() {
+				ratio, err = ParseFeeRatio(tc.ratio)
+			}
+			require.NotPanics(t, testFunc, "ParseFeeRatio(%q)", tc.ratio)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseFeeRatio(%q)", tc.ratio)
+			assert.Equal(t, ratioStr(tc.expRatio), ratioStr(ratio), "ParseFeeRatio(%q)", tc.ratio)
+
+			var ratioMust FeeRatio
+			testFuncMust := func() {
+				ratioMust = MustParseFeeRatio(tc.ratio)
+			}
+			assertions.RequirePanicEquals(t, testFuncMust, tc.expErr, "MustParseFeeRatio(%q)", tc.ratio)
+			if tc.expRatio != nil {
+				assert.Equal(t, ratioStr(tc.expRatio), ratioStr(&ratioMust), "MustParseFeeRatio(%q)", tc.ratio)
+			}
+		})
+	}
+}
+
 func TestFeeRatio_String(t *testing.T) {
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
