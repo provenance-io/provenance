@@ -142,7 +142,7 @@ func validateFlatFee(store sdk.KVStore, marketID uint32, fee *sdk.Coin, name str
 	reqFee := getFlatFee(store, marketID, fee.Denom, maker)
 	if reqFee == nil {
 		opts := getAllFlatFees(store, marketID, maker)
-		return fmt.Errorf("invalid %s fee, must be one of: %s", name, sdk.NewCoins(opts...).String())
+		return fmt.Errorf("invalid %s fee %q, must be one of: %s", name, fee, sdk.NewCoins(opts...).String())
 	}
 	if fee.Amount.LT(reqFee.Amount) {
 		return fmt.Errorf("insufficient %s fee: %q is less than required amount %q", name, fee, reqFee)
@@ -227,7 +227,7 @@ func updateCreateBidFlatFees(store sdk.KVStore, marketID uint32, toDelete, toAdd
 
 // validateSellerSettlementFlatFee returns an error if the provided fee is not a sufficient seller settlement flat fee.
 func validateSellerSettlementFlatFee(store sdk.KVStore, marketID uint32, fee *sdk.Coin) error {
-	return validateFlatFee(store, marketID, fee, "seller settlement flat", createBidFlatKeyMakers)
+	return validateFlatFee(store, marketID, fee, "seller settlement flat", sellerSettlementFlatKeyMakers)
 }
 
 // getSellerSettlementFlatFees gets the seller settlement flat fee options for a market.
