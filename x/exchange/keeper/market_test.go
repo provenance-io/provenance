@@ -889,11 +889,626 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee()
+func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
+	setter := keeper.SetCreateAskFlatFees
+	name := "ask order creation"
+	nilFeeErr := func(opts string) string {
+		return fmt.Sprintf("no %s fee provided, must be one of: %s", name, opts)
+	}
+	noFeeErr := func(fee string, opts string) string {
+		return fmt.Sprintf("invalid %s fee %q, must be one of: %s", name, fee, opts)
+	}
+	lowFeeErr := func(fee string, opts string) string {
+		return fmt.Sprintf("insufficient %s fee: %q is less than required amount %q", name, fee, opts)
+	}
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee()
+	tests := []struct {
+		name     string
+		setup    func(s *TestSuite)
+		marketID uint32
+		fee      *sdk.Coin
+		expErr   string
+	}{
+		{
+			name:     "no fees in store: nil",
+			setup:    nil,
+			marketID: 1,
+			fee:      nil,
+			expErr:   "",
+		},
+		{
+			name:     "no fees in store: not nil",
+			setup:    nil,
+			marketID: 1,
+			fee:      s.coinP("8fig"),
+			expErr:   "",
+		},
+		{
+			name: "no fees for market: nil",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
+			},
+			marketID: 6,
+			fee:      nil,
+			expErr:   "",
+		},
+		{
+			name: "no fees for market: not nil",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("30fig"),
+			expErr:   "",
+		},
+		{
+			name: "one fee option: nil",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      nil,
+			expErr:   nilFeeErr("11fig"),
+		},
+		{
+			name: "one fee option: diff denom",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("5grape"),
+			expErr:   noFeeErr("5grape", "11fig"),
+		},
+		{
+			name: "one fee option: insufficient",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("10fig"),
+			expErr:   lowFeeErr("10fig", "11fig"),
+		},
+		{
+			name: "one fee option: same",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("11fig"),
+			expErr:   "",
+		},
+		{
+			name: "one fee option: more",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("12fig"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: nil",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      nil,
+			expErr:   nilFeeErr("10fig,3grape,7honeydew"),
+		},
+		{
+			name: "three fee options: wrong denom",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("80apple"),
+			expErr:   noFeeErr("80apple", "10fig,3grape,7honeydew"),
+		},
+		{
+			name: "three fee options: first, low",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("9fig"),
+			expErr:   lowFeeErr("9fig", "10fig"),
+		},
+		{
+			name: "three fee options: first, ok",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("10fig"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: second, low",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("2grape"),
+			expErr:   lowFeeErr("2grape", "3grape"),
+		},
+		{
+			name: "three fee options: second, ok",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("3grape"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: third, low",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("6honeydew"),
+			expErr:   lowFeeErr("6honeydew", "7honeydew"),
+		},
+		{
+			name: "three fee options: third, ok",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("7honeydew"),
+			expErr:   "",
+		},
+	}
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			var err error
+			testFunc := func() {
+				err = s.k.ValidateCreateAskFlatFee(s.ctx, tc.marketID, tc.fee)
+			}
+			s.Require().NotPanics(testFunc, "ValidateCreateAskFlatFee(%d, %s)", tc.marketID, s.coinPString(tc.fee))
+			s.assertErrorValue(err, tc.expErr, "ValidateCreateAskFlatFee(%d, %s) error", tc.marketID, s.coinPString(tc.fee))
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
+	setter := keeper.SetCreateBidFlatFees
+	name := "bid order creation"
+	nilFeeErr := func(opts string) string {
+		return fmt.Sprintf("no %s fee provided, must be one of: %s", name, opts)
+	}
+	noFeeErr := func(fee string, opts string) string {
+		return fmt.Sprintf("invalid %s fee %q, must be one of: %s", name, fee, opts)
+	}
+	lowFeeErr := func(fee string, opts string) string {
+		return fmt.Sprintf("insufficient %s fee: %q is less than required amount %q", name, fee, opts)
+	}
+
+	tests := []struct {
+		name     string
+		setup    func(s *TestSuite)
+		marketID uint32
+		fee      *sdk.Coin
+		expErr   string
+	}{
+		{
+			name:     "no fees in store: nil",
+			setup:    nil,
+			marketID: 1,
+			fee:      nil,
+			expErr:   "",
+		},
+		{
+			name:     "no fees in store: not nil",
+			setup:    nil,
+			marketID: 1,
+			fee:      s.coinP("8fig"),
+			expErr:   "",
+		},
+		{
+			name: "no fees for market: nil",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
+			},
+			marketID: 6,
+			fee:      nil,
+			expErr:   "",
+		},
+		{
+			name: "no fees for market: not nil",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("30fig"),
+			expErr:   "",
+		},
+		{
+			name: "one fee option: nil",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      nil,
+			expErr:   nilFeeErr("11fig"),
+		},
+		{
+			name: "one fee option: diff denom",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("5grape"),
+			expErr:   noFeeErr("5grape", "11fig"),
+		},
+		{
+			name: "one fee option: insufficient",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("10fig"),
+			expErr:   lowFeeErr("10fig", "11fig"),
+		},
+		{
+			name: "one fee option: same",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("11fig"),
+			expErr:   "",
+		},
+		{
+			name: "one fee option: more",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("12fig"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: nil",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      nil,
+			expErr:   nilFeeErr("10fig,3grape,7honeydew"),
+		},
+		{
+			name: "three fee options: wrong denom",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("80apple"),
+			expErr:   noFeeErr("80apple", "10fig,3grape,7honeydew"),
+		},
+		{
+			name: "three fee options: first, low",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("9fig"),
+			expErr:   lowFeeErr("9fig", "10fig"),
+		},
+		{
+			name: "three fee options: first, ok",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("10fig"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: second, low",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("2grape"),
+			expErr:   lowFeeErr("2grape", "3grape"),
+		},
+		{
+			name: "three fee options: second, ok",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("3grape"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: third, low",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("6honeydew"),
+			expErr:   lowFeeErr("6honeydew", "7honeydew"),
+		},
+		{
+			name: "three fee options: third, ok",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("7honeydew"),
+			expErr:   "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			var err error
+			testFunc := func() {
+				err = s.k.ValidateCreateBidFlatFee(s.ctx, tc.marketID, tc.fee)
+			}
+			s.Require().NotPanics(testFunc, "ValidateCreateBidFlatFee(%d, %s)", tc.marketID, s.coinPString(tc.fee))
+			s.assertErrorValue(err, tc.expErr, "ValidateCreateBidFlatFee(%d, %s) error", tc.marketID, s.coinPString(tc.fee))
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
+	setter := keeper.SetSellerSettlementFlatFees
+	name := "seller settlement flat"
+	nilFeeErr := func(opts string) string {
+		return fmt.Sprintf("no %s fee provided, must be one of: %s", name, opts)
+	}
+	noFeeErr := func(fee string, opts string) string {
+		return fmt.Sprintf("invalid %s fee %q, must be one of: %s", name, fee, opts)
+	}
+	lowFeeErr := func(fee string, opts string) string {
+		return fmt.Sprintf("insufficient %s fee: %q is less than required amount %q", name, fee, opts)
+	}
+
+	tests := []struct {
+		name     string
+		setup    func(s *TestSuite)
+		marketID uint32
+		fee      *sdk.Coin
+		expErr   string
+	}{
+		{
+			name:     "no fees in store: nil",
+			setup:    nil,
+			marketID: 1,
+			fee:      nil,
+			expErr:   "",
+		},
+		{
+			name:     "no fees in store: not nil",
+			setup:    nil,
+			marketID: 1,
+			fee:      s.coinP("8fig"),
+			expErr:   "",
+		},
+		{
+			name: "no fees for market: nil",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
+			},
+			marketID: 6,
+			fee:      nil,
+			expErr:   "",
+		},
+		{
+			name: "no fees for market: not nil",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("30fig"),
+			expErr:   "",
+		},
+		{
+			name: "one fee option: nil",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      nil,
+			expErr:   nilFeeErr("11fig"),
+		},
+		{
+			name: "one fee option: diff denom",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("5grape"),
+			expErr:   noFeeErr("5grape", "11fig"),
+		},
+		{
+			name: "one fee option: insufficient",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("10fig"),
+			expErr:   lowFeeErr("10fig", "11fig"),
+		},
+		{
+			name: "one fee option: same",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("11fig"),
+			expErr:   "",
+		},
+		{
+			name: "one fee option: more",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("12fig"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: nil",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      nil,
+			expErr:   nilFeeErr("10fig,3grape,7honeydew"),
+		},
+		{
+			name: "three fee options: wrong denom",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("80apple"),
+			expErr:   noFeeErr("80apple", "10fig,3grape,7honeydew"),
+		},
+		{
+			name: "three fee options: first, low",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("9fig"),
+			expErr:   lowFeeErr("9fig", "10fig"),
+		},
+		{
+			name: "three fee options: first, ok",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("10fig"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: second, low",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("2grape"),
+			expErr:   lowFeeErr("2grape", "3grape"),
+		},
+		{
+			name: "three fee options: second, ok",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("3grape"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: third, low",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("6honeydew"),
+			expErr:   lowFeeErr("6honeydew", "7honeydew"),
+		},
+		{
+			name: "three fee options: third, ok",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("7honeydew"),
+			expErr:   "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			var err error
+			testFunc := func() {
+				err = s.k.ValidateSellerSettlementFlatFee(s.ctx, tc.marketID, tc.fee)
+			}
+			s.Require().NotPanics(testFunc, "ValidateSellerSettlementFlatFee(%d, %s)", tc.marketID, s.coinPString(tc.fee))
+			s.assertErrorValue(err, tc.expErr, "ValidateSellerSettlementFlatFee(%d, %s) error", tc.marketID, s.coinPString(tc.fee))
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_ValidateAskPrice()
 

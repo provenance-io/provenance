@@ -127,15 +127,17 @@ func (s *TestSuite) coinP(coin string) *sdk.Coin {
 // coinsString converts a slice of coin entries into a string.
 // This is different from sdk.Coins.String because the entries aren't sorted.
 func (s *TestSuite) coinsString(coins []sdk.Coin) string {
-	return sliceString(coins, sdk.Coin.String)
+	return sliceString(coins, func(coin sdk.Coin) string {
+		return fmt.Sprintf("%q", coin)
+	})
 }
 
-// coinPString converts the provided coin to a string, or "<nil>".
+// coinPString converts the provided coin to a quoted string, or "<nil>".
 func (s *TestSuite) coinPString(coin *sdk.Coin) string {
 	if coin == nil {
 		return "<nil>"
 	}
-	return coin.String()
+	return fmt.Sprintf("%q", coin)
 }
 
 // ratio creates a FeeRatio.
