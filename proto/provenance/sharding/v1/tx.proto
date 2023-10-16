@@ -19,8 +19,28 @@ service Msg {
 
 // MsgReadRequest reads from the store
 message MsgReadRequest {
-  // The signing authority for the request
+  // The signing authority for the request.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // Reads only the owner from the store.
+  bool owner_read = 2;
+  // Reads only the coins from the store.
+  bool coins_read = 3;
+  // Reads only the name from the store.
+  bool name_read = 4;
+  // Reads only the color from the store.
+  bool color_read = 5;
+  // Reads only the spots from the store.
+  bool spots_read = 6;
+
+  // Reads the entire object from store
+  bool full_read = 7;
+
+  // Reads the entire info object from store.
+  bool group_read = 8;
+
+  // Attempts the new sharded read.
+  bool sharded_read = 9;
 }
 
 // MsgReadResponse is the response of the read request
@@ -30,16 +50,36 @@ message MsgReadResponse {}
 message MsgWriteRequest {
   // The signing authority for the request
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // Writes only the owner to the store.
+  bool owner_write = 2;
+  // Writes only the coins to the store.
+  bool coins_write = 3;
+  // Writes only the name to the store.
+  bool name_write = 4;
+  // Writes only the color to the store.
+  bool color_write = 5;
+  // Writes only the spots to the store.
+  bool spots_write = 6;
+
+  // Writes the entire object to store.
+  bool full_write = 7;
+
+  // Writes the entire info object to store.
+  bool group_write = 8;
+
+  // Attempts the new sharded write.
+  bool sharded_write = 9;
 }
 
-// MsgWriteResponse is the response of the read request
+// MsgWriteResponse is the response of the write request
 message MsgWriteResponse {}
 
-// MsgUpdateRequest reads from the store
+// MsgUpdateRequest reads from the store and then writes to the store
 message MsgUpdateRequest {
   // The signing authority for the request
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgUpdateResponse is the response of the read request
+// MsgUpdateResponse is the response of the update request
 message MsgUpdateResponse {}

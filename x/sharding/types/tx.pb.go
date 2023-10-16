@@ -30,8 +30,24 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgReadRequest reads from the store
 type MsgReadRequest struct {
-	// The signing authority for the request
+	// The signing authority for the request.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// Reads only the owner from the store.
+	OwnerRead bool `protobuf:"varint,2,opt,name=owner_read,json=ownerRead,proto3" json:"owner_read,omitempty"`
+	// Reads only the coins from the store.
+	CoinsRead bool `protobuf:"varint,3,opt,name=coins_read,json=coinsRead,proto3" json:"coins_read,omitempty"`
+	// Reads only the name from the store.
+	NameRead bool `protobuf:"varint,4,opt,name=name_read,json=nameRead,proto3" json:"name_read,omitempty"`
+	// Reads only the color from the store.
+	ColorRead bool `protobuf:"varint,5,opt,name=color_read,json=colorRead,proto3" json:"color_read,omitempty"`
+	// Reads only the spots from the store.
+	SpotsRead bool `protobuf:"varint,6,opt,name=spots_read,json=spotsRead,proto3" json:"spots_read,omitempty"`
+	// Reads the entire object from store
+	FullRead bool `protobuf:"varint,7,opt,name=full_read,json=fullRead,proto3" json:"full_read,omitempty"`
+	// Reads the entire info object from store.
+	GroupRead bool `protobuf:"varint,8,opt,name=group_read,json=groupRead,proto3" json:"group_read,omitempty"`
+	// Attempts the new sharded read.
+	ShardedRead bool `protobuf:"varint,9,opt,name=sharded_read,json=shardedRead,proto3" json:"sharded_read,omitempty"`
 }
 
 func (m *MsgReadRequest) Reset()         { *m = MsgReadRequest{} }
@@ -72,6 +88,62 @@ func (m *MsgReadRequest) GetAuthority() string {
 		return m.Authority
 	}
 	return ""
+}
+
+func (m *MsgReadRequest) GetOwnerRead() bool {
+	if m != nil {
+		return m.OwnerRead
+	}
+	return false
+}
+
+func (m *MsgReadRequest) GetCoinsRead() bool {
+	if m != nil {
+		return m.CoinsRead
+	}
+	return false
+}
+
+func (m *MsgReadRequest) GetNameRead() bool {
+	if m != nil {
+		return m.NameRead
+	}
+	return false
+}
+
+func (m *MsgReadRequest) GetColorRead() bool {
+	if m != nil {
+		return m.ColorRead
+	}
+	return false
+}
+
+func (m *MsgReadRequest) GetSpotsRead() bool {
+	if m != nil {
+		return m.SpotsRead
+	}
+	return false
+}
+
+func (m *MsgReadRequest) GetFullRead() bool {
+	if m != nil {
+		return m.FullRead
+	}
+	return false
+}
+
+func (m *MsgReadRequest) GetGroupRead() bool {
+	if m != nil {
+		return m.GroupRead
+	}
+	return false
+}
+
+func (m *MsgReadRequest) GetShardedRead() bool {
+	if m != nil {
+		return m.ShardedRead
+	}
+	return false
 }
 
 // MsgReadResponse is the response of the read request
@@ -115,6 +187,22 @@ var xxx_messageInfo_MsgReadResponse proto.InternalMessageInfo
 type MsgWriteRequest struct {
 	// The signing authority for the request
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// Writes only the owner to the store.
+	OwnerWrite bool `protobuf:"varint,2,opt,name=owner_write,json=ownerWrite,proto3" json:"owner_write,omitempty"`
+	// Writes only the coins to the store.
+	CoinsWrite bool `protobuf:"varint,3,opt,name=coins_write,json=coinsWrite,proto3" json:"coins_write,omitempty"`
+	// Writes only the name to the store.
+	NameWrite bool `protobuf:"varint,4,opt,name=name_write,json=nameWrite,proto3" json:"name_write,omitempty"`
+	// Writes only the color to the store.
+	ColorWrite bool `protobuf:"varint,5,opt,name=color_write,json=colorWrite,proto3" json:"color_write,omitempty"`
+	// Writes only the spots to the store.
+	SpotsWrite bool `protobuf:"varint,6,opt,name=spots_write,json=spotsWrite,proto3" json:"spots_write,omitempty"`
+	// Writes the entire object to store.
+	FullWrite bool `protobuf:"varint,7,opt,name=full_write,json=fullWrite,proto3" json:"full_write,omitempty"`
+	// Writes the entire info object to store.
+	GroupWrite bool `protobuf:"varint,8,opt,name=group_write,json=groupWrite,proto3" json:"group_write,omitempty"`
+	// Attempts the new sharded write.
+	ShardedWrite bool `protobuf:"varint,9,opt,name=sharded_write,json=shardedWrite,proto3" json:"sharded_write,omitempty"`
 }
 
 func (m *MsgWriteRequest) Reset()         { *m = MsgWriteRequest{} }
@@ -157,7 +245,63 @@ func (m *MsgWriteRequest) GetAuthority() string {
 	return ""
 }
 
-// MsgWriteResponse is the response of the read request
+func (m *MsgWriteRequest) GetOwnerWrite() bool {
+	if m != nil {
+		return m.OwnerWrite
+	}
+	return false
+}
+
+func (m *MsgWriteRequest) GetCoinsWrite() bool {
+	if m != nil {
+		return m.CoinsWrite
+	}
+	return false
+}
+
+func (m *MsgWriteRequest) GetNameWrite() bool {
+	if m != nil {
+		return m.NameWrite
+	}
+	return false
+}
+
+func (m *MsgWriteRequest) GetColorWrite() bool {
+	if m != nil {
+		return m.ColorWrite
+	}
+	return false
+}
+
+func (m *MsgWriteRequest) GetSpotsWrite() bool {
+	if m != nil {
+		return m.SpotsWrite
+	}
+	return false
+}
+
+func (m *MsgWriteRequest) GetFullWrite() bool {
+	if m != nil {
+		return m.FullWrite
+	}
+	return false
+}
+
+func (m *MsgWriteRequest) GetGroupWrite() bool {
+	if m != nil {
+		return m.GroupWrite
+	}
+	return false
+}
+
+func (m *MsgWriteRequest) GetShardedWrite() bool {
+	if m != nil {
+		return m.ShardedWrite
+	}
+	return false
+}
+
+// MsgWriteResponse is the response of the write request
 type MsgWriteResponse struct {
 }
 
@@ -194,7 +338,7 @@ func (m *MsgWriteResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWriteResponse proto.InternalMessageInfo
 
-// MsgUpdateRequest reads from the store
+// MsgUpdateRequest reads from the store and then writes to the store
 type MsgUpdateRequest struct {
 	// The signing authority for the request
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
@@ -240,7 +384,7 @@ func (m *MsgUpdateRequest) GetAuthority() string {
 	return ""
 }
 
-// MsgUpdateResponse is the response of the read request
+// MsgUpdateResponse is the response of the update request
 type MsgUpdateResponse struct {
 }
 
@@ -289,28 +433,40 @@ func init() {
 func init() { proto.RegisterFile("provenance/sharding/v1/tx.proto", fileDescriptor_d84fb13fca802454) }
 
 var fileDescriptor_d84fb13fca802454 = []byte{
-	// 328 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x2f, 0x28, 0xca, 0x2f,
-	0x4b, 0xcd, 0x4b, 0xcc, 0x4b, 0x4e, 0xd5, 0x2f, 0xce, 0x48, 0x2c, 0x4a, 0xc9, 0xcc, 0x4b, 0xd7,
-	0x2f, 0x33, 0xd4, 0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x43, 0x28, 0xd0,
-	0x83, 0x29, 0xd0, 0x2b, 0x33, 0x94, 0x92, 0x4c, 0xce, 0x2f, 0xce, 0xcd, 0x2f, 0x8e, 0x07, 0xab,
-	0xd2, 0x87, 0x70, 0x20, 0x5a, 0x94, 0x3c, 0xb8, 0xf8, 0x7c, 0x8b, 0xd3, 0x83, 0x52, 0x13, 0x53,
-	0x82, 0x52, 0x0b, 0x4b, 0x53, 0x8b, 0x4b, 0x84, 0xcc, 0xb8, 0x38, 0x13, 0x4b, 0x4b, 0x32, 0xf2,
-	0x8b, 0x32, 0x4b, 0x2a, 0x25, 0x18, 0x15, 0x18, 0x35, 0x38, 0x9d, 0x24, 0x2e, 0x6d, 0xd1, 0x15,
-	0x81, 0x6a, 0x73, 0x4c, 0x49, 0x29, 0x4a, 0x2d, 0x2e, 0x0e, 0x2e, 0x29, 0xca, 0xcc, 0x4b, 0x0f,
-	0x42, 0x28, 0x55, 0x12, 0xe4, 0xe2, 0x87, 0x9b, 0x54, 0x5c, 0x90, 0x9f, 0x57, 0x9c, 0xaa, 0xe4,
-	0x09, 0x16, 0x0a, 0x2f, 0xca, 0x2c, 0x49, 0xa5, 0xd4, 0x74, 0x21, 0x2e, 0x01, 0x84, 0x51, 0x50,
-	0xe3, 0xbd, 0xc0, 0x62, 0xa1, 0x05, 0x29, 0x89, 0x94, 0x9b, 0x2f, 0xcc, 0x25, 0x88, 0x64, 0x16,
-	0xc4, 0x02, 0xa3, 0x99, 0x4c, 0x5c, 0xcc, 0xbe, 0xc5, 0xe9, 0x42, 0xe1, 0x5c, 0x2c, 0x20, 0x7f,
-	0x09, 0xa9, 0xe9, 0x61, 0x0f, 0x60, 0x3d, 0xd4, 0x20, 0x94, 0x52, 0x27, 0xa8, 0x0e, 0x62, 0x81,
-	0x50, 0x14, 0x17, 0x2b, 0xd8, 0x4b, 0x42, 0xf8, 0x74, 0x20, 0x87, 0x9f, 0x94, 0x06, 0x61, 0x85,
-	0x50, 0xb3, 0x63, 0xb9, 0xd8, 0x20, 0xde, 0x11, 0xc2, 0xa7, 0x07, 0x25, 0xf4, 0xa4, 0x34, 0x89,
-	0x50, 0x09, 0x31, 0xde, 0x29, 0xfb, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c,
-	0x92, 0x63, 0x9c, 0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xb8,
-	0x24, 0x33, 0xf3, 0x71, 0x18, 0x13, 0xc0, 0x18, 0x65, 0x92, 0x9e, 0x59, 0x92, 0x51, 0x9a, 0xa4,
-	0x97, 0x9c, 0x9f, 0xab, 0x8f, 0x50, 0xa4, 0x9b, 0x99, 0x8f, 0xc4, 0xd3, 0xaf, 0x40, 0x24, 0xef,
-	0x92, 0xca, 0x82, 0xd4, 0xe2, 0x24, 0x36, 0x70, 0x62, 0x35, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff,
-	0x47, 0xb0, 0x76, 0xe6, 0x02, 0x03, 0x00, 0x00,
+	// 521 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x94, 0x5d, 0x6b, 0xd3, 0x5e,
+	0x1c, 0xc7, 0x9b, 0x6e, 0xed, 0xbf, 0xfd, 0xed, 0xef, 0xc3, 0xa2, 0x48, 0x57, 0x59, 0x36, 0x23,
+	0x68, 0xbd, 0x58, 0xc2, 0x54, 0xbc, 0x77, 0x97, 0xc2, 0x40, 0x2a, 0x32, 0x18, 0xc8, 0xc8, 0x9a,
+	0x63, 0x1a, 0x4c, 0x73, 0xe2, 0x39, 0x27, 0xdd, 0xf6, 0x2e, 0xbc, 0xf5, 0x7d, 0xf8, 0x02, 0xbc,
+	0xf4, 0x72, 0x7a, 0xe5, 0xa5, 0xb4, 0x6f, 0x44, 0xf2, 0xfb, 0x26, 0x4d, 0x07, 0xba, 0x09, 0xbb,
+	0xcc, 0xf7, 0xe9, 0x90, 0x0f, 0xc9, 0xa1, 0xad, 0x4c, 0xc9, 0xa9, 0x48, 0x83, 0x74, 0x24, 0x7c,
+	0x3d, 0x0e, 0x54, 0x18, 0xa7, 0x91, 0x3f, 0xdd, 0xf5, 0xcd, 0xa9, 0x97, 0x29, 0x69, 0xa4, 0x7d,
+	0xaf, 0x0e, 0x78, 0x55, 0xc0, 0x9b, 0xee, 0xf6, 0x37, 0x46, 0x52, 0x4f, 0xa4, 0x3e, 0xe2, 0x94,
+	0x8f, 0x07, 0x54, 0xdc, 0xaf, 0x4d, 0xba, 0xb9, 0xaf, 0xa3, 0xa1, 0x08, 0xc2, 0xa1, 0xf8, 0x98,
+	0x0b, 0x6d, 0xec, 0x17, 0xd4, 0x0d, 0x72, 0x33, 0x96, 0x2a, 0x36, 0x67, 0x3d, 0x6b, 0xdb, 0x1a,
+	0x74, 0xf7, 0x7a, 0x3f, 0xbe, 0xec, 0xdc, 0x2d, 0x7b, 0x2f, 0xc3, 0x50, 0x09, 0xad, 0xdf, 0x18,
+	0x15, 0xa7, 0xd1, 0xb0, 0x8e, 0xda, 0x9b, 0x44, 0xf2, 0x24, 0x15, 0xea, 0x48, 0x89, 0x20, 0xec,
+	0x35, 0xb7, 0xad, 0x41, 0x67, 0xd8, 0x65, 0xa5, 0x58, 0x2f, 0xec, 0x91, 0x8c, 0x53, 0x0d, 0x7b,
+	0x05, 0x36, 0x2b, 0x6c, 0xdf, 0xa7, 0x6e, 0x1a, 0x4c, 0x04, 0xdc, 0x55, 0x76, 0x3b, 0x85, 0x50,
+	0x77, 0x13, 0x59, 0x4e, 0xb7, 0xaa, 0x6e, 0x22, 0x17, 0xd3, 0x3a, 0x93, 0xa6, 0x9c, 0x6e, 0xc3,
+	0x66, 0xa5, 0x9a, 0x7e, 0x9f, 0x27, 0x09, 0xdc, 0xff, 0x30, 0x5d, 0x08, 0x55, 0x37, 0x52, 0x32,
+	0xcf, 0xe0, 0x76, 0xd0, 0x65, 0x85, 0xed, 0x07, 0xf4, 0x3f, 0x93, 0x14, 0x21, 0x02, 0x5d, 0x0e,
+	0xac, 0x95, 0x5a, 0x11, 0x71, 0xd7, 0xe9, 0xd6, 0x82, 0xa0, 0xce, 0x64, 0xaa, 0x85, 0xfb, 0xbd,
+	0xc9, 0xda, 0x81, 0x8a, 0x8d, 0xb8, 0x2e, 0xd6, 0x2d, 0x5a, 0x03, 0xd6, 0x93, 0x62, 0xad, 0xe4,
+	0x0a, 0xd2, 0xbc, 0x5f, 0x04, 0x00, 0x16, 0x01, 0x90, 0x05, 0x6b, 0x04, 0x36, 0x89, 0x18, 0x2d,
+	0x7c, 0xb0, 0x65, 0xd8, 0x4b, 0xfd, 0x02, 0x2e, 0xfc, 0x56, 0xd5, 0x4f, 0x64, 0x7d, 0x00, 0xf0,
+	0x22, 0x00, 0xbe, 0x20, 0xbe, 0x38, 0x80, 0x01, 0xc3, 0x07, 0x61, 0x46, 0xbe, 0xe8, 0x03, 0x31,
+	0x7c, 0x30, 0x06, 0x75, 0x04, 0x1e, 0xd2, 0x8d, 0x0a, 0x32, 0x22, 0xa0, 0x5c, 0x91, 0xe7, 0x90,
+	0x6b, 0xd3, 0xed, 0x1a, 0x69, 0xc9, 0xf9, 0x15, 0x6b, 0x6f, 0xb3, 0x30, 0xb8, 0x36, 0x67, 0xf7,
+	0x0e, 0xad, 0x2f, 0x6d, 0xe1, 0x80, 0xa7, 0x9f, 0x9b, 0xb4, 0xb2, 0xaf, 0x23, 0xfb, 0x80, 0x56,
+	0xf9, 0x73, 0x78, 0xe4, 0xfd, 0xf9, 0x17, 0xf3, 0x2e, 0xfe, 0x43, 0xfd, 0xc7, 0x57, 0xe6, 0x70,
+	0x80, 0x7d, 0x48, 0x2d, 0x30, 0xb8, 0xac, 0xb1, 0xfc, 0x1d, 0xf5, 0x07, 0x57, 0x07, 0xcb, 0xed,
+	0x77, 0xd4, 0xc6, 0xeb, 0xd8, 0x97, 0x75, 0x2e, 0xd0, 0xeb, 0x3f, 0xf9, 0x87, 0x24, 0xe6, 0xf7,
+	0x3e, 0x7c, 0x9b, 0x39, 0xd6, 0xf9, 0xcc, 0xb1, 0x7e, 0xcd, 0x1c, 0xeb, 0xd3, 0xdc, 0x69, 0x9c,
+	0xcf, 0x9d, 0xc6, 0xcf, 0xb9, 0xd3, 0xa0, 0x8d, 0x58, 0xfe, 0x65, 0xe6, 0xb5, 0x75, 0xf8, 0x3c,
+	0x8a, 0xcd, 0x38, 0x3f, 0xf6, 0x46, 0x72, 0xe2, 0xd7, 0xa1, 0x9d, 0x58, 0x2e, 0x3d, 0xf9, 0xa7,
+	0xf5, 0x05, 0x67, 0xce, 0x32, 0xa1, 0x8f, 0xdb, 0x7c, 0x5d, 0x3d, 0xfb, 0x1d, 0x00, 0x00, 0xff,
+	0xff, 0x38, 0x9b, 0xf8, 0x13, 0x04, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -491,6 +647,86 @@ func (m *MsgReadRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.ShardedRead {
+		i--
+		if m.ShardedRead {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x48
+	}
+	if m.GroupRead {
+		i--
+		if m.GroupRead {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x40
+	}
+	if m.FullRead {
+		i--
+		if m.FullRead {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.SpotsRead {
+		i--
+		if m.SpotsRead {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x30
+	}
+	if m.ColorRead {
+		i--
+		if m.ColorRead {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.NameRead {
+		i--
+		if m.NameRead {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.CoinsRead {
+		i--
+		if m.CoinsRead {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.OwnerRead {
+		i--
+		if m.OwnerRead {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x10
+	}
 	if len(m.Authority) > 0 {
 		i -= len(m.Authority)
 		copy(dAtA[i:], m.Authority)
@@ -544,6 +780,86 @@ func (m *MsgWriteRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.ShardedWrite {
+		i--
+		if m.ShardedWrite {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x48
+	}
+	if m.GroupWrite {
+		i--
+		if m.GroupWrite {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x40
+	}
+	if m.FullWrite {
+		i--
+		if m.FullWrite {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.SpotsWrite {
+		i--
+		if m.SpotsWrite {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x30
+	}
+	if m.ColorWrite {
+		i--
+		if m.ColorWrite {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.NameWrite {
+		i--
+		if m.NameWrite {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.CoinsWrite {
+		i--
+		if m.CoinsWrite {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.OwnerWrite {
+		i--
+		if m.OwnerWrite {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x10
+	}
 	if len(m.Authority) > 0 {
 		i -= len(m.Authority)
 		copy(dAtA[i:], m.Authority)
@@ -651,6 +967,30 @@ func (m *MsgReadRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
+	if m.OwnerRead {
+		n += 2
+	}
+	if m.CoinsRead {
+		n += 2
+	}
+	if m.NameRead {
+		n += 2
+	}
+	if m.ColorRead {
+		n += 2
+	}
+	if m.SpotsRead {
+		n += 2
+	}
+	if m.FullRead {
+		n += 2
+	}
+	if m.GroupRead {
+		n += 2
+	}
+	if m.ShardedRead {
+		n += 2
+	}
 	return n
 }
 
@@ -672,6 +1012,30 @@ func (m *MsgWriteRequest) Size() (n int) {
 	l = len(m.Authority)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.OwnerWrite {
+		n += 2
+	}
+	if m.CoinsWrite {
+		n += 2
+	}
+	if m.NameWrite {
+		n += 2
+	}
+	if m.ColorWrite {
+		n += 2
+	}
+	if m.SpotsWrite {
+		n += 2
+	}
+	if m.FullWrite {
+		n += 2
+	}
+	if m.GroupWrite {
+		n += 2
+	}
+	if m.ShardedWrite {
+		n += 2
 	}
 	return n
 }
@@ -774,6 +1138,166 @@ func (m *MsgReadRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.Authority = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OwnerRead", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.OwnerRead = bool(v != 0)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CoinsRead", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CoinsRead = bool(v != 0)
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NameRead", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.NameRead = bool(v != 0)
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ColorRead", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ColorRead = bool(v != 0)
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpotsRead", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.SpotsRead = bool(v != 0)
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FullRead", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.FullRead = bool(v != 0)
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GroupRead", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.GroupRead = bool(v != 0)
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ShardedRead", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ShardedRead = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -906,6 +1430,166 @@ func (m *MsgWriteRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.Authority = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OwnerWrite", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.OwnerWrite = bool(v != 0)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CoinsWrite", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CoinsWrite = bool(v != 0)
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NameWrite", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.NameWrite = bool(v != 0)
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ColorWrite", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ColorWrite = bool(v != 0)
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpotsWrite", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.SpotsWrite = bool(v != 0)
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FullWrite", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.FullWrite = bool(v != 0)
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GroupWrite", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.GroupWrite = bool(v != 0)
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ShardedWrite", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ShardedWrite = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

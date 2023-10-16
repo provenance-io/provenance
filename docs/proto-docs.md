@@ -8465,7 +8465,15 @@ MsgReadRequest reads from the store
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authority` | [string](#string) |  | The signing authority for the request |
+| `authority` | [string](#string) |  | The signing authority for the request. |
+| `owner_read` | [bool](#bool) |  | Reads only the owner from the store. |
+| `coins_read` | [bool](#bool) |  | Reads only the coins from the store. |
+| `name_read` | [bool](#bool) |  | Reads only the name from the store. |
+| `color_read` | [bool](#bool) |  | Reads only the color from the store. |
+| `spots_read` | [bool](#bool) |  | Reads only the spots from the store. |
+| `full_read` | [bool](#bool) |  | Reads the entire object from store |
+| `group_read` | [bool](#bool) |  | Reads the entire info object from store. |
+| `sharded_read` | [bool](#bool) |  | Attempts the new sharded read. |
 
 
 
@@ -8485,7 +8493,7 @@ MsgReadResponse is the response of the read request
 <a name="provenance.sharding.v1.MsgUpdateRequest"></a>
 
 ### MsgUpdateRequest
-MsgUpdateRequest reads from the store
+MsgUpdateRequest reads from the store and then writes to the store
 
 
 | Field | Type | Label | Description |
@@ -8500,7 +8508,7 @@ MsgUpdateRequest reads from the store
 <a name="provenance.sharding.v1.MsgUpdateResponse"></a>
 
 ### MsgUpdateResponse
-MsgUpdateResponse is the response of the read request
+MsgUpdateResponse is the response of the update request
 
 
 
@@ -8516,6 +8524,14 @@ MsgWriteRequest reads from the store
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  | The signing authority for the request |
+| `owner_write` | [bool](#bool) |  | Writes only the owner to the store. |
+| `coins_write` | [bool](#bool) |  | Writes only the coins to the store. |
+| `name_write` | [bool](#bool) |  | Writes only the name to the store. |
+| `color_write` | [bool](#bool) |  | Writes only the color to the store. |
+| `spots_write` | [bool](#bool) |  | Writes only the spots to the store. |
+| `full_write` | [bool](#bool) |  | Writes the entire object to store. |
+| `group_write` | [bool](#bool) |  | Writes the entire info object to store. |
+| `sharded_write` | [bool](#bool) |  | Attempts the new sharded write. |
 
 
 
@@ -8525,7 +8541,7 @@ MsgWriteRequest reads from the store
 <a name="provenance.sharding.v1.MsgWriteResponse"></a>
 
 ### MsgWriteResponse
-MsgWriteResponse is the response of the read request
+MsgWriteResponse is the response of the write request
 
 
 
