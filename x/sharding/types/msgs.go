@@ -13,8 +13,10 @@ var (
 )
 
 // NewMsgRead creates a new NewMsgRead
-func NewMsgRead() *MsgReadRequest {
-	return &MsgReadRequest{}
+func NewMsgRead(authority string) *MsgReadRequest {
+	return &MsgReadRequest{
+		Authority: authority,
+	}
 }
 
 // GetSigners indicates that the message must have been signed by the parent.
@@ -31,8 +33,10 @@ func (msg MsgReadRequest) ValidateBasic() error {
 }
 
 // NewMsgWrite creates a new MsgWriteRequest
-func NewMsgWrite() *MsgWriteRequest {
-	return &MsgWriteRequest{}
+func NewMsgWrite(authority string) *MsgWriteRequest {
+	return &MsgWriteRequest{
+		Authority: authority,
+	}
 }
 
 // GetSigners indicates that the message must have been signed by the parent.
@@ -49,8 +53,10 @@ func (msg MsgWriteRequest) ValidateBasic() error {
 }
 
 // NewMsgUpdate creates a new MsgUpdateRequest
-func NewMsgUpdate() *MsgUpdateRequest {
-	return &MsgUpdateRequest{}
+func NewMsgUpdate(authority string) *MsgUpdateRequest {
+	return &MsgUpdateRequest{
+		Authority: authority,
+	}
 }
 
 // GetSigners indicates that the message must have been signed by the parent.

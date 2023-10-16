@@ -162,6 +162,9 @@ import (
 	rewardkeeper "github.com/provenance-io/provenance/x/reward/keeper"
 	rewardmodule "github.com/provenance-io/provenance/x/reward/module"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
+	shardingkeeper "github.com/provenance-io/provenance/x/sharding/keeper"
+	shardingmodule "github.com/provenance-io/provenance/x/sharding/module"
+	shardingtypes "github.com/provenance-io/provenance/x/sharding/types"
 	triggerkeeper "github.com/provenance-io/provenance/x/trigger/keeper"
 	triggermodule "github.com/provenance-io/provenance/x/trigger/module"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
@@ -224,6 +227,7 @@ var (
 		msgfeesmodule.AppModuleBasic{},
 		rewardmodule.AppModuleBasic{},
 		triggermodule.AppModuleBasic{},
+		shardingmodule.AppModuleBasic{},
 		oraclemodule.AppModuleBasic{},
 		holdmodule.AppModuleBasic{},
 	)
@@ -246,6 +250,7 @@ var (
 		wasm.ModuleName:           {authtypes.Burner},
 		rewardtypes.ModuleName:    nil,
 		triggertypes.ModuleName:   nil,
+		shardingtypes.ModuleName:  nil,
 		oracletypes.ModuleName:    nil,
 	}
 )
@@ -304,6 +309,7 @@ type App struct {
 	QuarantineKeeper quarantinekeeper.Keeper
 	SanctionKeeper   sanctionkeeper.Keeper
 	TriggerKeeper    triggerkeeper.Keeper
+	ShardingKeeper   shardingkeeper.Keeper
 	OracleKeeper     oraclekeeper.Keeper
 
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
@@ -398,6 +404,7 @@ func New(
 		quarantine.StoreKey,
 		sanction.StoreKey,
 		triggertypes.StoreKey,
+		shardingtypes.StoreKey,
 		oracletypes.StoreKey,
 		hold.StoreKey,
 	)
@@ -573,6 +580,7 @@ func New(
 		return pioMsgFeesRouter.Handler(msg)
 	})
 	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], app.MsgServiceRouter())
+	app.ShardingKeeper = shardingkeeper.NewKeeper(appCodec, keys[shardingtypes.StoreKey])
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, keys[icahosttypes.StoreKey], app.GetSubspace(icahosttypes.SubModuleName),
 		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
@@ -749,6 +757,7 @@ func New(
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
+		shardingmodule.NewAppModule(appCodec, app.ShardingKeeper),
 		oracleModule,
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
 
@@ -778,6 +787,7 @@ func New(
 		attributetypes.ModuleName,
 		rewardtypes.ModuleName,
 		triggertypes.ModuleName,
+		shardingtypes.ModuleName,
 
 		// no-ops
 		authtypes.ModuleName,
@@ -812,6 +822,7 @@ func New(
 		group.ModuleName,
 		rewardtypes.ModuleName,
 		triggertypes.ModuleName,
+		shardingtypes.ModuleName,
 
 		// no-ops
 		vestingtypes.ModuleName,
@@ -881,6 +892,7 @@ func New(
 		wasm.ModuleName,
 		rewardtypes.ModuleName,
 		triggertypes.ModuleName,
+		shardingtypes.ModuleName,
 		oracletypes.ModuleName,
 
 		// no-ops
@@ -924,6 +936,7 @@ func New(
 		nametypes.ModuleName,
 		rewardtypes.ModuleName,
 		triggertypes.ModuleName,
+		shardingtypes.ModuleName,
 		oracletypes.ModuleName,
 
 		// Last due to v0.44 issue: https://github.com/cosmos/cosmos-sdk/issues/10591
@@ -959,6 +972,7 @@ func New(
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
+		shardingmodule.NewAppModule(appCodec, app.ShardingKeeper),
 		oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper, app.IBCKeeper.ChannelKeeper),
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
 		provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
@@ -1277,6 +1291,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(rewardtypes.ModuleName)
 	paramsKeeper.Subspace(triggertypes.ModuleName)
+	paramsKeeper.Subspace(shardingtypes.ModuleName)
 
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
