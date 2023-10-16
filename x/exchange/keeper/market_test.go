@@ -1510,7 +1510,298 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_ValidateAskPrice()
+func (s *TestSuite) TestKeeper_ValidateAskPrice() {
+	tests := []struct {
+		name              string
+		setup             func(s *TestSuite)
+		marketID          uint32
+		price             sdk.Coin
+		settlementFlatFee *sdk.Coin
+		expErr            string
+	}{
+		{
+			name:              "no ratios in store",
+			setup:             nil,
+			marketID:          1,
+			price:             s.coin("1plum"),
+			settlementFlatFee: nil,
+			expErr:            "",
+		},
+		{
+			name: "no ratios in market: no flat",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("1plum"),
+			settlementFlatFee: nil,
+			expErr:            "",
+		},
+		{
+			name: "no ratios in market: price less than flat",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("1plum"),
+			settlementFlatFee: s.coinP("2plum"),
+			expErr:            "price 1plum is not more than seller settlement flat fee 2plum",
+		},
+		{
+			name: "no ratios in market: price equals flat",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("2plum"),
+			settlementFlatFee: s.coinP("2plum"),
+			expErr:            "price 2plum is not more than seller settlement flat fee 2plum",
+		},
+		{
+			name: "no ratios in market: price more than flat",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("3plum"),
+			settlementFlatFee: s.coinP("2plum"),
+			expErr:            "",
+		},
+		{
+			name: "no ratios in market: fee diff denom with larger amount",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("2plum"),
+			settlementFlatFee: s.coinP("3fig"),
+			expErr:            "",
+		},
+		{
+			name: "one ratio: wrong denom",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("500peach"),
+			settlementFlatFee: nil,
+			expErr:            "no seller settlement fee ratio found for denom \"peach\"",
+		},
+		{
+			name: "one ratio: no flat: price less than ratio",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "13plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("12plum"),
+			settlementFlatFee: nil,
+			expErr:            "price 12plum is not more than seller settlement ratio fee 13plum",
+		},
+		{
+			name: "one ratio: no flat: price equals ratio",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "11plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("11plum"),
+			settlementFlatFee: nil,
+			expErr:            "price 11plum is not more than seller settlement ratio fee 11plum",
+		},
+		{
+			name: "one ratio: no flat: price more than ratio",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "11plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("13plum"),
+			settlementFlatFee: nil,
+			expErr:            "",
+		},
+		{
+			name: "one ratio: diff flat: price less than ratio",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "13plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("12plum"),
+			settlementFlatFee: s.coinP("20peach"),
+			expErr:            "price 12plum is not more than seller settlement ratio fee 13plum",
+		},
+		{
+			name: "one ratio: diff flat: price equals ratio",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "11plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("11plum"),
+			settlementFlatFee: s.coinP("20peach"),
+			expErr:            "price 11plum is not more than seller settlement ratio fee 11plum",
+		},
+		{
+			name: "one ratio: diff flat: price more than ratio",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "11plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("12plum"),
+			settlementFlatFee: s.coinP("20peach"),
+			expErr:            "",
+		},
+		{
+			name: "one ratio: price more than flat, more than ratio, less than total",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "11plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("12plum"),
+			settlementFlatFee: s.coinP("2plum"),
+			expErr:            "price 12plum is not more than total required seller settlement fee 13plum = 2plum flat + 11plum ratio",
+		},
+		{
+			name: "one ratio: price equals total",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "7plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("12plum"),
+			settlementFlatFee: s.coinP("5plum"),
+			expErr:            "price 12plum is not more than total required seller settlement fee 12plum = 5plum flat + 7plum ratio",
+		},
+		{
+			name: "one ratio: price more than total",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "7plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("12plum"),
+			settlementFlatFee: s.coinP("4plum"),
+			expErr:            "",
+		},
+		{
+			name: "ratio cannot be evenly applied to price, but is enough",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum", "1plum")})
+				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum", "7plum")})
+				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("15plum", "1plum")})
+			},
+			marketID:          2,
+			price:             s.coin("123plum"),
+			settlementFlatFee: nil,
+			expErr:            "",
+		},
+		{
+			name: "error applying ratio",
+			setup: func(s *TestSuite) {
+				keeper.SetSellerSettlementRatios(s.getStore(), 1, []exchange.FeeRatio{s.ratio("0plum", "1plum")})
+			},
+			marketID:          1,
+			price:             s.coin("100plum"),
+			settlementFlatFee: nil,
+			expErr:            "cannot apply ratio 0plum:1plum to price 100plum: division by zero",
+		},
+		{
+			name: "three ratios: wrong denom",
+			setup: func(s *TestSuite) {
+				keeper.SetSellerSettlementRatios(s.getStore(), 1, []exchange.FeeRatio{
+					s.ratio("100peach", "1peach"),
+					s.ratio("200pear", "3pear"),
+					s.ratio("300plum", "7plum"),
+				})
+			},
+			marketID:          1,
+			price:             s.coin("5000prune"),
+			settlementFlatFee: nil,
+			expErr:            "no seller settlement fee ratio found for denom \"prune\"",
+		},
+		{
+			name: "three ratios: price less than total",
+			setup: func(s *TestSuite) {
+				keeper.SetSellerSettlementRatios(s.getStore(), 1, []exchange.FeeRatio{
+					s.ratio("5000peach", "1peach"),
+					s.ratio("200pear", "199pear"),
+					s.ratio("5000plum", "7plum"),
+				})
+			},
+			marketID:          1,
+			price:             s.coin("20pear"),
+			settlementFlatFee: s.coinP("1pear"),
+			expErr:            "price 20pear is not more than total required seller settlement fee 21pear = 1pear flat + 20pear ratio",
+		},
+		{
+			name: "three ratios: price more",
+			setup: func(s *TestSuite) {
+				keeper.SetSellerSettlementRatios(s.getStore(), 1, []exchange.FeeRatio{
+					s.ratio("100peach", "1peach"),
+					s.ratio("200pear", "3pear"),
+					s.ratio("300plum", "7plum"),
+				})
+			},
+			marketID:          1,
+			price:             s.coin("5000pear"),
+			settlementFlatFee: nil,
+			expErr:            "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			var err error
+			testFunc := func() {
+				err = s.k.ValidateAskPrice(s.ctx, tc.marketID, tc.price, tc.settlementFlatFee)
+			}
+			s.Require().NotPanics(testFunc, "ValidateAskPrice(%d, %q, %s)",
+				tc.marketID, tc.price, s.coinPString(tc.settlementFlatFee))
+			s.assertErrorValue(err, tc.expErr, "ValidateAskPrice(%d, %q, %s)",
+				tc.marketID, tc.price, s.coinPString(tc.settlementFlatFee))
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee()
 
