@@ -1803,7 +1803,579 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee()
+func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
+	noFeeErr := "insufficient buyer settlement fee: no fee provided"
+	flatErr := func(opts string) string {
+		return "required flat fee not satisfied, valid options: " + opts
+	}
+	ratioErr := func(opts string) string {
+		return "required ratio fee not satisfied, valid ratios: " + opts
+	}
+	insufficientErr := func(fee string) string {
+		return "insufficient buyer settlement fee " + fee
+	}
+
+	tests := []struct {
+		name     string
+		setup    func(s *TestSuite)
+		marketID uint32
+		price    sdk.Coin
+		fee      sdk.Coins
+		expErr   string
+	}{
+		{
+			name:     "empty state: no fee",
+			setup:    nil,
+			marketID: 8,
+			price:    s.coin("50peach"),
+			fee:      nil,
+			expErr:   "",
+		},
+		{
+			name:     "empty state: with fee",
+			setup:    nil,
+			marketID: 8,
+			price:    s.coin("100peach"),
+			fee:      s.coins("120peach"), // This is okay because it's added to the price.
+			expErr:   "",
+		},
+		{
+			name: "no flat no ratio: no fee",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementFlatFees(store, 1, s.coins("10peach,12plum"))
+				keeper.SetBuyerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("100peach:3fig")})
+				keeper.SetBuyerSettlementFlatFees(store, 3, s.coins("14peach,8plum"))
+				keeper.SetBuyerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("100peach:1grape")})
+			},
+			marketID: 2,
+			price:    s.coin("5000peach"),
+			fee:      nil,
+			expErr:   "",
+		},
+		{
+			name: "no flat no ratio: with fee",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementFlatFees(store, 1, s.coins("10peach,12plum"))
+				keeper.SetBuyerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("100peach:3fig")})
+				keeper.SetBuyerSettlementFlatFees(store, 3, s.coins("14peach,8plum"))
+				keeper.SetBuyerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("100peach:1grape")})
+			},
+			marketID: 2,
+			price:    s.coin("5000peach"),
+			fee:      s.coins("5001peach"), // This is okay because it's added to the price.
+			expErr:   "",
+		},
+		{
+			name: "only flat: no fee",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("11peach,9plum"))
+			},
+			marketID: 2,
+			price:    s.coin("54pear"),
+			fee:      nil,
+			expErr: s.joinErrs(
+				flatErr("11peach,9plum"),
+				noFeeErr,
+			),
+		},
+		{
+			name: "only flat: wrong denom",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("11peach,9plum"))
+			},
+			marketID: 2,
+			price:    s.coin("54pear"),
+			fee:      s.coins("3pear"),
+			expErr: s.joinErrs(
+				"no flat fee options available for denom pear",
+				flatErr("11peach,9plum"),
+				insufficientErr("3pear"),
+			),
+		},
+		{
+			name: "only flat: less than req",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("11peach,9plum"))
+			},
+			marketID: 2,
+			price:    s.coin("54pear"),
+			fee:      s.coins("10peach"),
+			expErr: s.joinErrs(
+				"10peach is less than required flat fee 11peach",
+				flatErr("11peach,9plum"),
+				insufficientErr("10peach"),
+			),
+		},
+		{
+			name: "only flat: equals req",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("11peach,9plum"))
+			},
+			marketID: 2,
+			price:    s.coin("54pear"),
+			fee:      s.coins("11peach"),
+			expErr:   "",
+		},
+		{
+			name: "only flat: more than req",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("11peach,9plum"))
+			},
+			marketID: 2,
+			price:    s.coin("54pear"),
+			fee:      s.coins("10peach,10plum"),
+			expErr:   "",
+		},
+		{
+			name: "only ratio: nofee",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("54pear"),
+			fee:      nil,
+			expErr: s.joinErrs(
+				ratioErr("100peach:3fig,100peach:1grape"),
+				noFeeErr,
+			),
+		},
+		{
+			name: "only ratio: wrong price denom",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500pear"),
+			fee:      s.coins("5grape"),
+			expErr: s.joinErrs(
+				"no ratio from price denom pear to fee denom grape",
+				ratioErr("100peach:3fig,100peach:1grape"),
+				insufficientErr("5grape"),
+			),
+		},
+		{
+			name: "only ratio: wrong fee denom",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("20honeydew"),
+			expErr: s.joinErrs(
+				"no ratio from price denom peach to fee denom honeydew",
+				ratioErr("100peach:3fig,100peach:1grape"),
+				insufficientErr("20honeydew"),
+			),
+		},
+		{
+			name: "only ratio: less than req",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("14fig,4grape"),
+			expErr: s.joinErrs(
+				"14fig is less than required ratio fee 15fig (based on price 500peach and ratio 100peach:3fig)",
+				"4grape is less than required ratio fee 5grape (based on price 500peach and ratio 100peach:1grape)",
+				ratioErr("100peach:3fig,100peach:1grape"),
+				insufficientErr("14fig,4grape"),
+			),
+		},
+		{
+			name: "only ratio: equals req",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("5grape"),
+			expErr:   "",
+		},
+		{
+			name: "only ratio: more than req",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("16fig"),
+			expErr:   "",
+		},
+		{
+			name: "both: no fee",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      nil,
+			expErr: s.joinErrs(
+				flatErr("10fig,2honeydew"),
+				ratioErr("100peach:3fig,100peach:1grape"),
+				noFeeErr,
+			),
+		},
+		{
+			name: "both: no flat denom",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("5grape"),
+			expErr: s.joinErrs(
+				"no flat fee options available for denom grape",
+				flatErr("10fig,2honeydew"),
+				insufficientErr("5grape"),
+			),
+		},
+		{
+			name: "both: no ratio denom",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("2honeydew"),
+			expErr: s.joinErrs(
+				"no ratio from price denom peach to fee denom honeydew",
+				ratioErr("100peach:3fig,100peach:1grape"),
+				insufficientErr("2honeydew"),
+			),
+		},
+		{
+			name: "both: neither flat nor ratio denom",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("33apple,44banana"),
+			expErr: s.joinErrs(
+				"no flat fee options available for denom apple",
+				"no flat fee options available for denom banana",
+				flatErr("10fig,2honeydew"),
+				"no ratio from price denom peach to fee denom apple",
+				"no ratio from price denom peach to fee denom banana",
+				ratioErr("100peach:3fig,100peach:1grape"),
+				insufficientErr("33apple,44banana"),
+			),
+		},
+		{
+			name: "both: one denom: less than either",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("9fig"),
+			expErr: s.joinErrs(
+				"9fig is less than required flat fee 10fig",
+				flatErr("10fig,2honeydew"),
+				"9fig is less than required ratio fee 15fig (based on price 500peach and ratio 100peach:3fig)",
+				ratioErr("100peach:3fig,100peach:1grape"),
+				insufficientErr("9fig"),
+			),
+		},
+		{
+			name: "both: one denom: less than ratio, more than flat",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("14fig"),
+			expErr: s.joinErrs(
+				"14fig is less than required ratio fee 15fig (based on price 500peach and ratio 100peach:3fig)",
+				ratioErr("100peach:3fig,100peach:1grape"),
+				insufficientErr("14fig"),
+			),
+		},
+		{
+			name: "both: one denom: less than flat, more than ratio",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("300peach"),
+			fee:      s.coins("9fig"),
+			expErr: s.joinErrs(
+				"9fig is less than required flat fee 10fig",
+				flatErr("10fig,2honeydew"),
+				insufficientErr("9fig"),
+			),
+		},
+		{
+			name: "both: one denom: more than either, less than total req",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("24fig"),
+			expErr: s.joinErrs(
+				"24fig is less than combined fee 25fig = 10fig (flat) + 15fig (ratio based on price 500peach)",
+				insufficientErr("24fig"),
+			),
+		},
+		{
+			name: "both: one denom: fee equals total req",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("25fig"),
+			expErr:   "",
+		},
+		{
+			name: "both: one denom: fee more than total req",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("26fig"),
+			expErr:   "",
+		},
+		{
+			name: "both: diff denoms: all less than req",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,6grape"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("9fig,4grape,80honeydew"),
+			expErr: s.joinErrs(
+				"9fig is less than required flat fee 10fig",
+				"4grape is less than required flat fee 6grape",
+				"no flat fee options available for denom honeydew",
+				flatErr("10fig,6grape"),
+				"9fig is less than required ratio fee 15fig (based on price 500peach and ratio 100peach:3fig)",
+				"4grape is less than required ratio fee 5grape (based on price 500peach and ratio 100peach:1grape)",
+				"no ratio from price denom peach to fee denom honeydew",
+				ratioErr("100peach:3fig,100peach:1grape"),
+				insufficientErr("9fig,4grape,80honeydew"),
+			),
+		},
+		{
+			name: "both: diff denoms: flat okay, ratio not",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,4grape"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("10fig,4grape,80honeydew"),
+			expErr: s.joinErrs(
+				"10fig is less than required ratio fee 15fig (based on price 500peach and ratio 100peach:3fig)",
+				"4grape is less than required ratio fee 5grape (based on price 500peach and ratio 100peach:1grape)",
+				"no ratio from price denom peach to fee denom honeydew",
+				ratioErr("100peach:3fig,100peach:1grape"),
+				insufficientErr("10fig,4grape,80honeydew"),
+			),
+		},
+		{
+			name: "both: diff denoms: ratio okay, flat not",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("16fig,6grape"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("15fig,5grape,80honeydew"),
+			expErr: s.joinErrs(
+				"15fig is less than required flat fee 16fig",
+				"5grape is less than required flat fee 6grape",
+				"no flat fee options available for denom honeydew",
+				flatErr("16fig,6grape"),
+				insufficientErr("15fig,5grape,80honeydew"),
+			),
+		},
+		{
+			name: "both: diff denoms: either enough for one fee type, flat first",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("14fig,6grape"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("14fig,5grape"),
+			expErr:   "",
+		},
+		{
+			name: "both: diff denoms: either enough for one fee type, ratio first",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("16fig,4grape"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("15fig,4grape"),
+			expErr:   "",
+		},
+		{
+			name: "both: two denoms: first is more than either, less than total, second less than either",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,4grape"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("24fig,3grape"),
+			expErr: s.joinErrs(
+				"3grape is less than required flat fee 4grape",
+				"3grape is less than required ratio fee 5grape (based on price 500peach and ratio 100peach:1grape)",
+				"24fig is less than combined fee 25fig = 10fig (flat) + 15fig (ratio based on price 500peach)",
+				insufficientErr("24fig,3grape"),
+			),
+		},
+		{
+			name: "both: two denoms: first is more than either, less than total, second covers flat",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,4grape"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("24fig,4grape"),
+			expErr:   "",
+		},
+		{
+			name: "both: two denoms: first is more than either, less than total, second covers ratio",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,6grape"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("24fig,5grape"),
+			expErr:   "",
+		},
+		{
+			name: "both: two denoms: first less than either, second more than either, less than total",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,6grape"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("9fig,10grape"),
+			expErr: s.joinErrs(
+				"9fig is less than required flat fee 10fig",
+				"9fig is less than required ratio fee 15fig (based on price 500peach and ratio 100peach:3fig)",
+				"10grape is less than combined fee 11grape = 6grape (flat) + 5grape (ratio based on price 500peach)",
+				insufficientErr("9fig,10grape"),
+			),
+		},
+		{
+			name: "both: two denoms: first covers flat, second more than either, less than total",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,6grape"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("10fig,10grape"),
+			expErr:   "",
+		},
+		{
+			name: "both: two denoms: first covers ratio, second more than either, less than total",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("16fig,6grape"))
+				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
+					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
+				})
+			},
+			marketID: 2,
+			price:    s.coin("500peach"),
+			fee:      s.coins("15fig,10grape"),
+			expErr:   "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			var err error
+			testFunc := func() {
+				err = s.k.ValidateBuyerSettlementFee(s.ctx, tc.marketID, tc.price, tc.fee)
+			}
+			s.Require().NotPanics(testFunc, "ValidateBuyerSettlementFee(%d, %q, %q)", tc.marketID, tc.price, tc.fee)
+			s.assertErrorValue(err, tc.expErr, "ValidateBuyerSettlementFee(%d, %q, %q)", tc.marketID, tc.price, tc.fee)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_UpdateFees()
 
