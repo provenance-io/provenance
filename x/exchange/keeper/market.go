@@ -518,11 +518,6 @@ func validateBuyerSettlementFee(store sdk.KVStore, marketID uint32, price sdk.Co
 		return nil
 	}
 
-	if len(fee) == 0 {
-		// a fee is required, but we have none.
-		return errors.New("insufficient buyer settlement fee: no fee provided")
-	}
-
 	// Loop through each coin in the fee looking for entries that satisfy the fee requirements.
 	var flatFeeOk, ratioFeeOk bool
 	var errs []error
@@ -596,14 +591,14 @@ func validateBuyerSettlementFee(store sdk.KVStore, marketID uint32, price sdk.Co
 
 	// Programmer Sanity check.
 	// Either we returned earlier or we added at least one entry to errs.
-	if len(errs) == 0 {
+	if len(errs) == 0 && len(fee) > 0 {
 		panic("no specific errors identified")
 	}
 
 	// If a fee type was required, but not satisfied, add that to the errors for easier identification by users.
 	if flatFeeReq && !flatFeeOk {
 		flatFeeOptions := getAllFlatFees(store, marketID, flatKeyMaker)
-		errs = append(errs, fmt.Errorf("required flat fee not satisfied, valid options: %s", flatFeeOptions))
+		errs = append(errs, fmt.Errorf("required flat fee not satisfied, valid options: %s", sdk.Coins(flatFeeOptions)))
 	}
 	if ratioFeeReq && !ratioFeeOk {
 		allRatioOptions := getAllFeeRatios(store, marketID, ratioKeyMaker)
@@ -612,7 +607,11 @@ func validateBuyerSettlementFee(store sdk.KVStore, marketID uint32, price sdk.Co
 	}
 
 	// And add an error with the overall reason for this failure.
-	errs = append(errs, fmt.Errorf("insufficient buyer settlement fee %s", fee))
+	if len(fee) > 0 {
+		errs = append(errs, fmt.Errorf("insufficient buyer settlement fee %s", fee))
+	} else {
+		errs = append(errs, errors.New("insufficient buyer settlement fee: no fee provided"))
+	}
 
 	return errors.Join(errs...)
 }
