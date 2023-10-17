@@ -520,7 +520,9 @@ func validateBuyerSettlementFee(store sdk.KVStore, marketID uint32, price sdk.Co
 
 	// Loop through each coin in the fee looking for entries that satisfy the fee requirements.
 	var flatFeeOk, ratioFeeOk bool
-	var errs []error
+	var flatErrs []error
+	var ratioErrs []error
+	var combErrs []error
 	for _, feeCoin := range fee {
 		var flatFeeAmt, ratioFeeAmt *sdkmath.Int
 
@@ -528,9 +530,9 @@ func validateBuyerSettlementFee(store sdk.KVStore, marketID uint32, price sdk.Co
 			flatFee := getFlatFee(store, marketID, feeCoin.Denom, flatKeyMaker)
 			switch {
 			case flatFee == nil:
-				errs = append(errs, fmt.Errorf("no flat fee options available for denom %s", feeCoin.Denom))
+				flatErrs = append(flatErrs, fmt.Errorf("no flat fee options available for denom %s", feeCoin.Denom))
 			case feeCoin.Amount.LT(flatFee.Amount):
-				errs = append(errs, fmt.Errorf("%s is less than required flat fee %s", feeCoin, flatFee))
+				flatErrs = append(flatErrs, fmt.Errorf("%s is less than required flat fee %s", feeCoin, flatFee))
 			case !ratioFeeReq:
 				// This fee coin covers the flat fee, and there is no ratio fee needed, so we're all good.
 				return nil
@@ -545,15 +547,15 @@ func validateBuyerSettlementFee(store sdk.KVStore, marketID uint32, price sdk.Co
 		if ratioFeeReq {
 			ratio := getFeeRatio(store, marketID, price.Denom, feeCoin.Denom, ratioKeyMaker)
 			if ratio == nil {
-				errs = append(errs, fmt.Errorf("no ratio from price denom %s to fee denom %s",
+				ratioErrs = append(ratioErrs, fmt.Errorf("no ratio from price denom %s to fee denom %s",
 					price.Denom, feeCoin.Denom))
 			} else {
 				ratioFee, err := ratio.ApplyTo(price)
 				switch {
 				case err != nil:
-					errs = append(errs, err)
+					ratioErrs = append(ratioErrs, err)
 				case feeCoin.Amount.LT(ratioFee.Amount):
-					errs = append(errs, fmt.Errorf("%s is less than required ratio fee %s (based on price %s and ratio %s)",
+					ratioErrs = append(ratioErrs, fmt.Errorf("%s is less than required ratio fee %s (based on price %s and ratio %s)",
 						feeCoin, ratioFee, price, ratio))
 				case !flatFeeReq:
 					// This fee coin covers the ratio fee, and there's no flat fee needed, so we're all good.
@@ -571,8 +573,8 @@ func validateBuyerSettlementFee(store sdk.KVStore, marketID uint32, price sdk.Co
 		if flatFeeAmt != nil && ratioFeeAmt != nil {
 			reqAmt := flatFeeAmt.Add(*ratioFeeAmt)
 			if feeCoin.Amount.LT(reqAmt) {
-				errs = append(errs, fmt.Errorf("%s is less than combined fee %s%s = flat %s%s + ratio %s%s (based on price %s)",
-					feeCoin, reqAmt, fee[0].Denom, flatFeeAmt, fee[0].Denom, ratioFeeAmt, fee[0].Denom, price))
+				combErrs = append(combErrs, fmt.Errorf("%s is less than combined fee %s%s = %s%s (flat) + %s%s (ratio based on price %s)",
+					feeCoin, reqAmt, feeCoin.Denom, flatFeeAmt, feeCoin.Denom, ratioFeeAmt, feeCoin.Denom, price))
 			} else {
 				// This one coin fee is so satisfying. (How satisfying was it?)
 				// It's so satisfying, it covers both! Thank you for coming to my TED talk.
@@ -589,21 +591,26 @@ func validateBuyerSettlementFee(store sdk.KVStore, marketID uint32, price sdk.Co
 		}
 	}
 
-	// Programmer Sanity check.
-	// Either we returned earlier or we added at least one entry to errs.
-	if len(errs) == 0 && len(fee) > 0 {
-		panic("no specific errors identified")
-	}
-
-	// If a fee type was required, but not satisfied, add that to the errors for easier identification by users.
+	// If we get here, the fee is insufficient.
+	// Combine all the known errors and add some to help users fix problems.
+	var errs []error
 	if flatFeeReq && !flatFeeOk {
+		errs = append(errs, flatErrs...)
 		flatFeeOptions := getAllFlatFees(store, marketID, flatKeyMaker)
 		errs = append(errs, fmt.Errorf("required flat fee not satisfied, valid options: %s", sdk.Coins(flatFeeOptions)))
 	}
 	if ratioFeeReq && !ratioFeeOk {
+		errs = append(errs, ratioErrs...)
 		allRatioOptions := getAllFeeRatios(store, marketID, ratioKeyMaker)
 		errs = append(errs, fmt.Errorf("required ratio fee not satisfied, valid ratios: %s",
 			exchange.FeeRatiosString(allRatioOptions)))
+	}
+	if len(combErrs) > 0 {
+		// Both flatFeeOk and ratioFeeOk will be true here, but we'll include
+		// all those errors since only one of those is actually okay.
+		errs = append(errs, flatErrs...)
+		errs = append(errs, ratioErrs...)
+		errs = append(errs, combErrs...)
 	}
 
 	// And add an error with the overall reason for this failure.
