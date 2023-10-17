@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 )
@@ -2377,7 +2376,815 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_UpdateFees()
+func (s *TestSuite) TestKeeper_UpdateFees() {
+	type marketFees struct {
+		marketID    uint32
+		createAsk   string
+		createBid   string
+		sellerFlat  string
+		sellerRatio string
+		buyerFlat   string
+		buyerRatio  string
+	}
+	getMarketFees := func(s *TestSuite, marketID uint32) marketFees {
+		return marketFees{
+			marketID:    marketID,
+			createAsk:   sdk.Coins(s.k.GetCreateAskFlatFees(s.ctx, marketID)).String(),
+			createBid:   sdk.Coins(s.k.GetCreateBidFlatFees(s.ctx, marketID)).String(),
+			sellerFlat:  sdk.Coins(s.k.GetSellerSettlementFlatFees(s.ctx, marketID)).String(),
+			sellerRatio: s.ratiosString(s.k.GetSellerSettlementRatios(s.ctx, marketID)),
+			buyerFlat:   sdk.Coins(s.k.GetBuyerSettlementFlatFees(s.ctx, marketID)).String(),
+			buyerRatio:  s.ratiosString(s.k.GetBuyerSettlementRatios(s.ctx, marketID)),
+		}
+	}
+
+	tests := []struct {
+		name        string
+		setup       func(s *TestSuite)
+		msg         *exchange.MsgGovManageFeesRequest
+		expFees     marketFees
+		expNoChange []uint32
+		expPanic    string
+	}{
+		{
+			name:     "nil msg",
+			msg:      nil,
+			expPanic: "runtime error: invalid memory address or nil pointer dereference",
+		},
+
+		// Only create-ask flat fee changes.
+		{
+			name: "create ask: add one",
+			setup: func(s *TestSuite) {
+				keeper.SetCreateAskFlatFees(s.getStore(), 3, s.coins("10fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, AddFeeCreateAskFlat: s.coins("10fig")},
+			expFees:     marketFees{marketID: 5, createAsk: "10fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "create ask: remove one, exists",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetCreateAskFlatFees(store, 3, s.coins("10fig"))
+				keeper.SetCreateAskFlatFees(store, 5, s.coins("10fig,8grape"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeCreateAskFlat: s.coins("10fig")},
+			expFees:     marketFees{marketID: 5, createAsk: "8grape"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "create ask: remove one, unknown denom",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetCreateAskFlatFees(store, 3, s.coins("10grape"))
+				keeper.SetCreateAskFlatFees(store, 5, s.coins("10fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeCreateAskFlat: s.coins("10grape")},
+			expFees:     marketFees{marketID: 5, createAsk: "10fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "create ask: remove one, known denom, wrong amount",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetCreateAskFlatFees(store, 4, s.coins("10grape"))
+				keeper.SetCreateAskFlatFees(store, 2, s.coins("10fig,8grape"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 2, RemoveFeeCreateAskFlat: s.coins("8fig")},
+			expFees:     marketFees{marketID: 2, createAsk: "8grape"},
+			expNoChange: []uint32{4},
+		},
+		{
+			name: "create ask: add+remove with different denoms",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetCreateAskFlatFees(store, 18, s.coins("10grape"))
+				keeper.SetCreateAskFlatFees(store, 8, s.coins("10fig,8grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:               8,
+				RemoveFeeCreateAskFlat: s.coins("8grape"),
+				AddFeeCreateAskFlat:    s.coins("2honeydew"),
+			},
+			expFees:     marketFees{marketID: 8, createAsk: "10fig,2honeydew"},
+			expNoChange: []uint32{18},
+		},
+		{
+			name: "create ask: add+remove with same denoms",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetCreateAskFlatFees(store, 18, s.coins("10grape"))
+				keeper.SetCreateAskFlatFees(store, 1, s.coins("10fig,8grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:               1,
+				RemoveFeeCreateAskFlat: s.coins("10fig"),
+				AddFeeCreateAskFlat:    s.coins("7fig"),
+			},
+			expFees:     marketFees{marketID: 1, createAsk: "7fig,8grape"},
+			expNoChange: []uint32{18},
+		},
+		{
+			name: "create ask: complex",
+			// Remove one with wrong amount and don't replace it (10fig)
+			// Remove one with correct amount and replace it with another amount (7honeydew -> 5honeydew).
+			// Add one with a denom that already has a different amount (3cactus stomping on 7cactus)
+			// Add a brand new one (99plum).
+			// Leave one unchanged (2grape).
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetCreateAskFlatFees(store, 1, s.coins("10fig,4grape,2honeydew,5apple"))
+				keeper.SetCreateAskFlatFees(store, 2, s.coins("9fig,3grape,1honeydew,6banana"))
+				keeper.SetCreateAskFlatFees(store, 3, s.coins("12fig,2grape,7honeydew,7cactus"))
+				keeper.SetCreateAskFlatFees(store, 4, s.coins("25fig,1grape,3honeydew,8durian"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:               3,
+				RemoveFeeCreateAskFlat: s.coins("10fig,7honeydew"),
+				AddFeeCreateAskFlat:    s.coins("5honeydew,3cactus,99plum"),
+			},
+			expFees:     marketFees{marketID: 3, createAsk: "3cactus,2grape,5honeydew,99plum"},
+			expNoChange: []uint32{1, 2, 4},
+		},
+
+		// Only create-bid flat fee changes.
+		{
+			name: "create bid: add one",
+			setup: func(s *TestSuite) {
+				keeper.SetCreateBidFlatFees(s.getStore(), 3, s.coins("10fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, AddFeeCreateBidFlat: s.coins("10fig")},
+			expFees:     marketFees{marketID: 5, createBid: "10fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "create bid: remove one, exists",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetCreateBidFlatFees(store, 3, s.coins("10fig"))
+				keeper.SetCreateBidFlatFees(store, 5, s.coins("10fig,8grape"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeCreateBidFlat: s.coins("10fig")},
+			expFees:     marketFees{marketID: 5, createBid: "8grape"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "create bid: remove one, unknown denom",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetCreateBidFlatFees(store, 3, s.coins("10grape"))
+				keeper.SetCreateBidFlatFees(store, 5, s.coins("10fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeCreateBidFlat: s.coins("10grape")},
+			expFees:     marketFees{marketID: 5, createBid: "10fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "create bid: remove one, known denom, wrong amount",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetCreateBidFlatFees(store, 4, s.coins("10grape"))
+				keeper.SetCreateBidFlatFees(store, 2, s.coins("10fig,8grape"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 2, RemoveFeeCreateBidFlat: s.coins("8fig")},
+			expFees:     marketFees{marketID: 2, createBid: "8grape"},
+			expNoChange: []uint32{4},
+		},
+		{
+			name: "create bid: add+remove with different denoms",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetCreateBidFlatFees(store, 18, s.coins("10grape"))
+				keeper.SetCreateBidFlatFees(store, 8, s.coins("10fig,8grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:               8,
+				RemoveFeeCreateBidFlat: s.coins("8grape"),
+				AddFeeCreateBidFlat:    s.coins("2honeydew"),
+			},
+			expFees:     marketFees{marketID: 8, createBid: "10fig,2honeydew"},
+			expNoChange: []uint32{18},
+		},
+		{
+			name: "create bid: add+remove with same denoms",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetCreateBidFlatFees(store, 18, s.coins("10grape"))
+				keeper.SetCreateBidFlatFees(store, 1, s.coins("10fig,8grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:               1,
+				RemoveFeeCreateBidFlat: s.coins("10fig"),
+				AddFeeCreateBidFlat:    s.coins("7fig"),
+			},
+			expFees:     marketFees{marketID: 1, createBid: "7fig,8grape"},
+			expNoChange: []uint32{18},
+		},
+		{
+			name: "create bid: complex",
+			// Remove one with wrong amount and don't replace it (10fig)
+			// Remove one with correct amount and replace it with another amount (7honeydew -> 5honeydew).
+			// Add one with a denom that already has a different amount (3cactus stomping on 7cactus)
+			// Add a brand new one (99plum).
+			// Leave one unchanged (2grape).
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetCreateBidFlatFees(store, 1, s.coins("10fig,4grape,2honeydew,5apple"))
+				keeper.SetCreateBidFlatFees(store, 2, s.coins("9fig,3grape,1honeydew,6banana"))
+				keeper.SetCreateBidFlatFees(store, 3, s.coins("12fig,2grape,7honeydew,7cactus"))
+				keeper.SetCreateBidFlatFees(store, 4, s.coins("25fig,1grape,3honeydew,8durian"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:               3,
+				RemoveFeeCreateBidFlat: s.coins("10fig,7honeydew"),
+				AddFeeCreateBidFlat:    s.coins("5honeydew,3cactus,99plum"),
+			},
+			expFees:     marketFees{marketID: 3, createBid: "3cactus,2grape,5honeydew,99plum"},
+			expNoChange: []uint32{1, 2, 4},
+		},
+
+		// Only seller settlement flat fee changes.
+		{
+			name: "seller flat: add one",
+			setup: func(s *TestSuite) {
+				keeper.SetSellerSettlementFlatFees(s.getStore(), 3, s.coins("10fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, AddFeeSellerSettlementFlat: s.coins("10fig")},
+			expFees:     marketFees{marketID: 5, sellerFlat: "10fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "seller flat: remove one, exists",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementFlatFees(store, 3, s.coins("10fig"))
+				keeper.SetSellerSettlementFlatFees(store, 5, s.coins("10fig,8grape"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeSellerSettlementFlat: s.coins("10fig")},
+			expFees:     marketFees{marketID: 5, sellerFlat: "8grape"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "seller flat: remove one, unknown denom",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementFlatFees(store, 3, s.coins("10grape"))
+				keeper.SetSellerSettlementFlatFees(store, 5, s.coins("10fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeSellerSettlementFlat: s.coins("10grape")},
+			expFees:     marketFees{marketID: 5, sellerFlat: "10fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "seller flat: remove one, known denom, wrong amount",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementFlatFees(store, 4, s.coins("10grape"))
+				keeper.SetSellerSettlementFlatFees(store, 2, s.coins("10fig,8grape"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 2, RemoveFeeSellerSettlementFlat: s.coins("8fig")},
+			expFees:     marketFees{marketID: 2, sellerFlat: "8grape"},
+			expNoChange: []uint32{4},
+		},
+		{
+			name: "seller flat: add+remove with different denoms",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementFlatFees(store, 18, s.coins("10grape"))
+				keeper.SetSellerSettlementFlatFees(store, 8, s.coins("10fig,8grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                      8,
+				RemoveFeeSellerSettlementFlat: s.coins("8grape"),
+				AddFeeSellerSettlementFlat:    s.coins("2honeydew"),
+			},
+			expFees:     marketFees{marketID: 8, sellerFlat: "10fig,2honeydew"},
+			expNoChange: []uint32{18},
+		},
+		{
+			name: "seller flat: add+remove with same denoms",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementFlatFees(store, 18, s.coins("10grape"))
+				keeper.SetSellerSettlementFlatFees(store, 1, s.coins("10fig,8grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                      1,
+				RemoveFeeSellerSettlementFlat: s.coins("10fig"),
+				AddFeeSellerSettlementFlat:    s.coins("7fig"),
+			},
+			expFees:     marketFees{marketID: 1, sellerFlat: "7fig,8grape"},
+			expNoChange: []uint32{18},
+		},
+		{
+			name: "seller flat: complex",
+			// Remove one with wrong amount and don't replace it (10fig)
+			// Remove one with correct amount and replace it with another amount (7honeydew -> 5honeydew).
+			// Add one with a denom that already has a different amount (3cactus stomping on 7cactus)
+			// Add a brand new one (99plum).
+			// Leave one unchanged (2grape).
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementFlatFees(store, 1, s.coins("10fig,4grape,2honeydew,5apple"))
+				keeper.SetSellerSettlementFlatFees(store, 2, s.coins("9fig,3grape,1honeydew,6banana"))
+				keeper.SetSellerSettlementFlatFees(store, 3, s.coins("12fig,2grape,7honeydew,7cactus"))
+				keeper.SetSellerSettlementFlatFees(store, 4, s.coins("25fig,1grape,3honeydew,8durian"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                      3,
+				RemoveFeeSellerSettlementFlat: s.coins("10fig,7honeydew"),
+				AddFeeSellerSettlementFlat:    s.coins("5honeydew,3cactus,99plum"),
+			},
+			expFees:     marketFees{marketID: 3, sellerFlat: "3cactus,2grape,5honeydew,99plum"},
+			expNoChange: []uint32{1, 2, 4},
+		},
+
+		// Only buyer settlement flat fee changes.
+		{
+			name: "buyer flat: add one",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 3, s.coins("10fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, AddFeeBuyerSettlementFlat: s.coins("10fig")},
+			expFees:     marketFees{marketID: 5, buyerFlat: "10fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "buyer flat: remove one, exists",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementFlatFees(store, 3, s.coins("10fig"))
+				keeper.SetBuyerSettlementFlatFees(store, 5, s.coins("10fig,8grape"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeBuyerSettlementFlat: s.coins("10fig")},
+			expFees:     marketFees{marketID: 5, buyerFlat: "8grape"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "buyer flat: remove one, unknown denom",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementFlatFees(store, 3, s.coins("10grape"))
+				keeper.SetBuyerSettlementFlatFees(store, 5, s.coins("10fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeBuyerSettlementFlat: s.coins("10grape")},
+			expFees:     marketFees{marketID: 5, buyerFlat: "10fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "buyer flat: remove one, known denom, wrong amount",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementFlatFees(store, 4, s.coins("10grape"))
+				keeper.SetBuyerSettlementFlatFees(store, 2, s.coins("10fig,8grape"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 2, RemoveFeeBuyerSettlementFlat: s.coins("8fig")},
+			expFees:     marketFees{marketID: 2, buyerFlat: "8grape"},
+			expNoChange: []uint32{4},
+		},
+		{
+			name: "buyer flat: add+remove with different denoms",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 18, s.coins("10grape"))
+				keeper.SetBuyerSettlementFlatFees(s.getStore(), 8, s.coins("10fig,8grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                     8,
+				RemoveFeeBuyerSettlementFlat: s.coins("8grape"),
+				AddFeeBuyerSettlementFlat:    s.coins("2honeydew"),
+			},
+			expFees:     marketFees{marketID: 8, buyerFlat: "10fig,2honeydew"},
+			expNoChange: []uint32{18},
+		},
+		{
+			name: "buyer flat: add+remove with same denoms",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementFlatFees(store, 18, s.coins("10grape"))
+				keeper.SetBuyerSettlementFlatFees(store, 1, s.coins("10fig,8grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                     1,
+				RemoveFeeBuyerSettlementFlat: s.coins("10fig"),
+				AddFeeBuyerSettlementFlat:    s.coins("7fig"),
+			},
+			expFees:     marketFees{marketID: 1, buyerFlat: "7fig,8grape"},
+			expNoChange: []uint32{18},
+		},
+		{
+			name: "buyer flat: complex",
+			// Remove one with wrong amount and don't replace it (10fig)
+			// Remove one with correct amount and replace it with another amount (7honeydew -> 5honeydew).
+			// Add one with a denom that already has a different amount (3cactus stomping on 7cactus)
+			// Add a brand new one (99plum).
+			// Leave one unchanged (2grape).
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementFlatFees(store, 1, s.coins("10fig,4grape,2honeydew,5apple"))
+				keeper.SetBuyerSettlementFlatFees(store, 2, s.coins("9fig,3grape,1honeydew,6banana"))
+				keeper.SetBuyerSettlementFlatFees(store, 3, s.coins("12fig,2grape,7honeydew,7cactus"))
+				keeper.SetBuyerSettlementFlatFees(store, 4, s.coins("25fig,1grape,3honeydew,8durian"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                     3,
+				RemoveFeeBuyerSettlementFlat: s.coins("10fig,7honeydew"),
+				AddFeeBuyerSettlementFlat:    s.coins("5honeydew,3cactus,99plum"),
+			},
+			expFees:     marketFees{marketID: 3, buyerFlat: "3cactus,2grape,5honeydew,99plum"},
+			expNoChange: []uint32{1, 2, 4},
+		},
+
+		// Only seller settlement ratio fee changes.
+		{
+			name: "seller ratio: add one",
+			setup: func(s *TestSuite) {
+				keeper.SetSellerSettlementRatios(s.getStore(), 3, s.ratios("100peach:3fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, AddFeeSellerSettlementRatios: s.ratios("50plum:1grape")},
+			expFees:     marketFees{marketID: 5, sellerRatio: "50plum:1grape"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "seller ratio: remove one, exists",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 3, s.ratios("100peach:3fig"))
+				keeper.SetSellerSettlementRatios(store, 5, s.ratios("90peach:2fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeSellerSettlementRatios: s.ratios("90peach:2fig")},
+			expFees:     marketFees{marketID: 5},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "seller ratio: remove one, unknown denoms",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 3, s.ratios("100peach:3fig"))
+				keeper.SetSellerSettlementRatios(store, 5, s.ratios("90peach:2fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeSellerSettlementRatios: s.ratios("90plum:2grape")},
+			expFees:     marketFees{marketID: 5, sellerRatio: "90peach:2fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "seller ratio: remove one, known price denom",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 3, s.ratios("100peach:3fig"))
+				keeper.SetSellerSettlementRatios(store, 5, s.ratios("90peach:2fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeSellerSettlementRatios: s.ratios("90peach:2grape")},
+			expFees:     marketFees{marketID: 5, sellerRatio: "90peach:2fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "seller ratio: remove one, known fee denom",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 4, s.ratios("100peach:3fig"))
+				keeper.SetSellerSettlementRatios(store, 2, s.ratios("90peach:2fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 2, RemoveFeeSellerSettlementRatios: s.ratios("90plum:2fig")},
+			expFees:     marketFees{marketID: 2, sellerRatio: "90peach:2fig"},
+			expNoChange: []uint32{4},
+		},
+		{
+			name: "seller ratio: remove one, known denoms, wrong amounts",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 4, s.ratios("100peach:3fig"))
+				keeper.SetSellerSettlementRatios(store, 2, s.ratios("90peach:2fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 2, RemoveFeeSellerSettlementRatios: s.ratios("89peach:3fig")},
+			expFees:     marketFees{marketID: 2},
+			expNoChange: []uint32{4},
+		},
+		{
+			name: "seller ratio: add+remove with different denoms",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 7, s.ratios("100peach:3fig,100peach:1grape"))
+				keeper.SetSellerSettlementRatios(store, 77, s.ratios("100peach:3fig,100peach:1grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                        7,
+				RemoveFeeSellerSettlementRatios: s.ratios("100peach:3fig"),
+				AddFeeSellerSettlementRatios:    s.ratios("100plum:3honeydew"),
+			},
+			expFees:     marketFees{marketID: 7, sellerRatio: "100peach:1grape,100plum:3honeydew"},
+			expNoChange: []uint32{77},
+		},
+		{
+			name: "seller ratio: add+remove with different price denom",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 7, s.ratios("100peach:3fig,100peach:1grape"))
+				keeper.SetSellerSettlementRatios(store, 77, s.ratios("100peach:3fig,100peach:1grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                        77,
+				RemoveFeeSellerSettlementRatios: s.ratios("100peach:3fig"),
+				AddFeeSellerSettlementRatios:    s.ratios("100plum:3fig"),
+			},
+			expFees:     marketFees{marketID: 77, sellerRatio: "100peach:1grape,100plum:3fig"},
+			expNoChange: []uint32{7},
+		},
+		{
+			name: "seller ratio: add+remove with different fee denom",
+			setup: func(s *TestSuite) {
+				keeper.SetSellerSettlementRatios(s.getStore(), 1, s.ratios("100peach:3fig,100peach:1grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                        1,
+				RemoveFeeSellerSettlementRatios: s.ratios("100peach:3fig"),
+				AddFeeSellerSettlementRatios:    s.ratios("100peach:2honeydew"),
+			},
+			expFees: marketFees{marketID: 1, sellerRatio: "100peach:1grape,100peach:2honeydew"},
+		},
+		{
+			name: "seller ratio: add+remove with same denoms",
+			setup: func(s *TestSuite) {
+				keeper.SetSellerSettlementRatios(s.getStore(), 1, s.ratios("100peach:3fig,100peach:1grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                        1,
+				RemoveFeeSellerSettlementRatios: s.ratios("100peach:3fig"),
+				AddFeeSellerSettlementRatios:    s.ratios("90peach:2fig"),
+			},
+			expFees: marketFees{marketID: 1, sellerRatio: "90peach:2fig,100peach:1grape"},
+		},
+		{
+			name: "seller ratio: complex",
+			// Remove one with wrong amounts and don't replace it (10plum:3fig)
+			// Remove and replace one to change amounts (100peach:3fig -> 90peach:2fig)
+			// Add one with existing denoms and different amounts (110peach:2grape stomping on 100peach:1grape)
+			// Add one with same price denom (100peach:1honeydew)
+			// Add one with same fee denom (100pear:3fig)
+			// Add one all new (100papaya:5guava)
+			// Leave on untouched (100prune:2fig)
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetSellerSettlementRatios(store, 1, s.ratios("100peach:3fig,100peach:1grape"))
+				keeper.SetSellerSettlementRatios(store, 11, s.ratios("20plum:2fig,100peach:3fig,100peach:1grape,100prune:2fig"))
+				keeper.SetSellerSettlementRatios(store, 111, s.ratios("100peach:3fig,100peach:1grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                        11,
+				RemoveFeeSellerSettlementRatios: s.ratios("10plum:3fig,100peach:3fig"),
+				AddFeeSellerSettlementRatios:    s.ratios("90peach:2fig,110peach:2grape,100peach:1honeydew,100pear:3fig,100papaya:5guava"),
+			},
+			expFees: marketFees{
+				marketID:    11,
+				sellerRatio: "100papaya:5guava,90peach:2fig,110peach:2grape,100peach:1honeydew,100pear:3fig,100prune:2fig",
+			},
+			expNoChange: nil,
+			expPanic:    "",
+		},
+
+		// Only buyer settlement ratio fee changes.
+		{
+			name: "buyer ratio: add one",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementRatios(s.getStore(), 3, s.ratios("100peach:3fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, AddFeeBuyerSettlementRatios: s.ratios("50plum:1grape")},
+			expFees:     marketFees{marketID: 5, buyerRatio: "50plum:1grape"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "buyer ratio: remove one, exists",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementRatios(store, 3, s.ratios("100peach:3fig"))
+				keeper.SetBuyerSettlementRatios(store, 5, s.ratios("90peach:2fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeBuyerSettlementRatios: s.ratios("90peach:2fig")},
+			expFees:     marketFees{marketID: 5},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "buyer ratio: remove one, unknown denoms",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementRatios(store, 3, s.ratios("100peach:3fig"))
+				keeper.SetBuyerSettlementRatios(store, 5, s.ratios("90peach:2fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeBuyerSettlementRatios: s.ratios("90plum:2grape")},
+			expFees:     marketFees{marketID: 5, buyerRatio: "90peach:2fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "buyer ratio: remove one, known price denom",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementRatios(store, 3, s.ratios("100peach:3fig"))
+				keeper.SetBuyerSettlementRatios(store, 5, s.ratios("90peach:2fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeBuyerSettlementRatios: s.ratios("90peach:2grape")},
+			expFees:     marketFees{marketID: 5, buyerRatio: "90peach:2fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "buyer ratio: remove one, known fee denom",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementRatios(store, 4, s.ratios("100peach:3fig"))
+				keeper.SetBuyerSettlementRatios(store, 2, s.ratios("90peach:2fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 2, RemoveFeeBuyerSettlementRatios: s.ratios("90plum:2fig")},
+			expFees:     marketFees{marketID: 2, buyerRatio: "90peach:2fig"},
+			expNoChange: []uint32{4},
+		},
+		{
+			name: "buyer ratio: remove one, known denoms, wrong amounts",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementRatios(store, 4, s.ratios("100peach:3fig"))
+				keeper.SetBuyerSettlementRatios(store, 2, s.ratios("90peach:2fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 2, RemoveFeeBuyerSettlementRatios: s.ratios("89peach:3fig")},
+			expFees:     marketFees{marketID: 2},
+			expNoChange: []uint32{4},
+		},
+		{
+			name: "buyer ratio: add+remove with different denoms",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementRatios(store, 7, s.ratios("100peach:3fig,100peach:1grape"))
+				keeper.SetBuyerSettlementRatios(store, 77, s.ratios("100peach:3fig,100peach:1grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                       7,
+				RemoveFeeBuyerSettlementRatios: s.ratios("100peach:3fig"),
+				AddFeeBuyerSettlementRatios:    s.ratios("100plum:3honeydew"),
+			},
+			expFees:     marketFees{marketID: 7, buyerRatio: "100peach:1grape,100plum:3honeydew"},
+			expNoChange: []uint32{77},
+		},
+		{
+			name: "buyer ratio: add+remove with different price denom",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementRatios(store, 7, s.ratios("100peach:3fig,100peach:1grape"))
+				keeper.SetBuyerSettlementRatios(store, 77, s.ratios("100peach:3fig,100peach:1grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                       77,
+				RemoveFeeBuyerSettlementRatios: s.ratios("100peach:3fig"),
+				AddFeeBuyerSettlementRatios:    s.ratios("100plum:3fig"),
+			},
+			expFees:     marketFees{marketID: 77, buyerRatio: "100peach:1grape,100plum:3fig"},
+			expNoChange: []uint32{7},
+		},
+		{
+			name: "buyer ratio: add+remove with different fee denom",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementRatios(s.getStore(), 1, s.ratios("100peach:3fig,100peach:1grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                       1,
+				RemoveFeeBuyerSettlementRatios: s.ratios("100peach:3fig"),
+				AddFeeBuyerSettlementRatios:    s.ratios("100peach:2honeydew"),
+			},
+			expFees: marketFees{marketID: 1, buyerRatio: "100peach:1grape,100peach:2honeydew"},
+		},
+		{
+			name: "buyer ratio: add+remove with same denoms",
+			setup: func(s *TestSuite) {
+				keeper.SetBuyerSettlementRatios(s.getStore(), 1, s.ratios("100peach:3fig,100peach:1grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                       1,
+				RemoveFeeBuyerSettlementRatios: s.ratios("100peach:3fig"),
+				AddFeeBuyerSettlementRatios:    s.ratios("90peach:2fig"),
+			},
+			expFees: marketFees{marketID: 1, buyerRatio: "90peach:2fig,100peach:1grape"},
+		},
+		{
+			name: "buyer ratio: complex",
+			// Remove one with wrong amounts and don't replace it (10plum:3fig)
+			// Remove and replace one to change amounts (100peach:3fig -> 90peach:2fig)
+			// Add one with existing denoms and different amounts (110peach:2grape stomping on 100peach:1grape)
+			// Add one with same price denom (100peach:1honeydew)
+			// Add one with same fee denom (100pear:3fig)
+			// Add one all new (100papaya:5guava)
+			// Leave one untouched (100prune:2fig)
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetBuyerSettlementRatios(store, 1, s.ratios("100peach:3fig,100peach:1grape"))
+				keeper.SetBuyerSettlementRatios(store, 11, s.ratios("20plum:2fig,100peach:3fig,100peach:1grape,100prune:2fig"))
+				keeper.SetBuyerSettlementRatios(store, 111, s.ratios("100peach:3fig,100peach:1grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                       11,
+				RemoveFeeBuyerSettlementRatios: s.ratios("10plum:3fig,100peach:3fig"),
+				AddFeeBuyerSettlementRatios:    s.ratios("90peach:2fig,110peach:2grape,100peach:1honeydew,100pear:3fig,100papaya:5guava"),
+			},
+			expFees: marketFees{
+				marketID:   11,
+				buyerRatio: "100papaya:5guava,90peach:2fig,110peach:2grape,100peach:1honeydew,100pear:3fig,100prune:2fig",
+			},
+			expNoChange: nil,
+			expPanic:    "",
+		},
+
+		//
+		{
+			name: "a little bit of everything",
+			// For each type, add one, replace one, remove one, leave one.
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetCreateAskFlatFees(store, 1, s.coins("10grape"))
+				keeper.SetCreateBidFlatFees(store, 1, s.coins("11guava"))
+				keeper.SetSellerSettlementFlatFees(store, 1, s.coins("12grapefruit"))
+				keeper.SetBuyerSettlementFlatFees(store, 1, s.coins("13gooseberry"))
+				keeper.SetSellerSettlementRatios(store, 1, s.ratios("100papaya:3goumi"))
+				keeper.SetBuyerSettlementRatios(store, 1, s.ratios("120pineapple:1guarana"))
+
+				keeper.SetCreateAskFlatFees(store, 2, s.coins("201acai,202apple,203apricot"))
+				keeper.SetCreateBidFlatFees(store, 2, s.coins("211banana,212biriba,212blueberry"))
+				keeper.SetSellerSettlementFlatFees(store, 2, s.coins("221cactus,222cantaloupe,223cherry"))
+				keeper.SetBuyerSettlementFlatFees(store, 2, s.coins("231date,232dewberry,233durian"))
+				keeper.SetSellerSettlementRatios(store, 2, s.ratios("241tangerine:1lemon,242tangerine:2lime,243tayberry:3lime"))
+				keeper.SetBuyerSettlementRatios(store, 2, s.ratios("251mandarin:4nectarine,252mango:5nectarine,253mango:6nutmeg"))
+
+				keeper.SetCreateAskFlatFees(store, 3, s.coins("30grape"))
+				keeper.SetCreateBidFlatFees(store, 3, s.coins("31guava"))
+				keeper.SetSellerSettlementFlatFees(store, 3, s.coins("32grapefruit"))
+				keeper.SetBuyerSettlementFlatFees(store, 3, s.coins("33gooseberry"))
+				keeper.SetSellerSettlementRatios(store, 3, s.ratios("300papaya:3goumi"))
+				keeper.SetBuyerSettlementRatios(store, 3, s.ratios("320pineapple:1guarana"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                        2,
+				AddFeeCreateAskFlat:             s.coins("2002apple,204avocado"),
+				RemoveFeeCreateAskFlat:          s.coins("202apple,203apricot"),
+				AddFeeCreateBidFlat:             s.coins("214barbadine,2102blueberry"),
+				RemoveFeeCreateBidFlat:          s.coins("211banana,212blueberry"),
+				AddFeeSellerSettlementFlat:      s.coins("224cassaba,2201cactus"),
+				RemoveFeeSellerSettlementFlat:   s.coins("221cactus,222cantaloupe"),
+				AddFeeBuyerSettlementFlat:       s.coins("2302dewberry,234dragonfruit"),
+				RemoveFeeBuyerSettlementFlat:    s.coins("231date,232dewberry"),
+				AddFeeSellerSettlementRatios:    s.ratios("2402tangerine:20lime,244tamarillo:4lemon"),
+				RemoveFeeSellerSettlementRatios: s.ratios("241tangerine:1lemon,242tangerine:2lime"),
+				AddFeeBuyerSettlementRatios:     s.ratios("2502mango:50nectarine,254marula:7neem"),
+				RemoveFeeBuyerSettlementRatios:  s.ratios("252mango:5nectarine,253mango:6nutmeg"),
+			},
+			expFees: marketFees{
+				marketID:    2,
+				createAsk:   "201acai,2002apple,204avocado",
+				createBid:   "214barbadine,212biriba,2102blueberry",
+				sellerFlat:  "2201cactus,224cassaba,223cherry",
+				buyerFlat:   "2302dewberry,234dragonfruit,233durian",
+				sellerRatio: "244tamarillo:4lemon,2402tangerine:20lime,243tayberry:3lime",
+				buyerRatio:  "251mandarin:4nectarine,2502mango:50nectarine,254marula:7neem",
+			},
+			expNoChange: []uint32{1, 3},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			origMarketFees := make([]marketFees, len(tc.expNoChange))
+			for i, marketID := range tc.expNoChange {
+				origMarketFees[i] = getMarketFees(s, marketID)
+			}
+
+			var expectedEvents sdk.Events
+			if tc.msg != nil {
+				expEvent, err := sdk.TypedEventToEvent(exchange.NewEventMarketFeesUpdated(tc.msg.MarketId))
+				s.Require().NoError(err, "TypedEventToEvent(NewEventMarketFeesUpdated(%d)) error", tc.msg.MarketId)
+				expectedEvents = append(expectedEvents, expEvent)
+			}
+
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			testFunc := func() {
+				s.k.UpdateFees(ctx, tc.msg)
+			}
+			s.requirePanicEquals(testFunc, tc.expPanic, "UpdateFees")
+			if len(tc.expPanic) > 0 || tc.msg == nil {
+				return
+			}
+
+			updatedMarketFees := getMarketFees(s, tc.msg.MarketId)
+			s.Assert().Equal(tc.expFees, updatedMarketFees, "fees of updated market %d", tc.msg.MarketId)
+			for _, expected := range origMarketFees {
+				actual := getMarketFees(s, expected.marketID)
+				s.Assert().Equal(expected, actual, "fees of market %d (that should not have changed)", expected.marketID)
+			}
+
+			actualEvents := em.Events()
+			s.assertEqualEvents(expectedEvents, actualEvents, "events emitted during UpdateFees")
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_IsMarketActive()
 

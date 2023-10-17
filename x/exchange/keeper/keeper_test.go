@@ -147,6 +147,20 @@ func (s *TestSuite) ratio(ratioStr string) exchange.FeeRatio {
 	return *rv
 }
 
+// ratios creates a slice of Fee ratio from a comma delimited list of "<price>:<fee>" entries in a string.
+func (s *TestSuite) ratios(ratiosStr string) []exchange.FeeRatio {
+	if len(ratiosStr) == 0 {
+		return nil
+	}
+
+	ratios := strings.Split(ratiosStr, ",")
+	rv := make([]exchange.FeeRatio, len(ratios))
+	for i, r := range ratios {
+		rv[i] = s.ratio(r)
+	}
+	return rv
+}
+
 // int is a shorter way to call sdkmath.NewInt.
 func (s *TestSuite) int(amount int64) sdkmath.Int {
 	return sdkmath.NewInt(amount)
@@ -163,6 +177,18 @@ func (s *TestSuite) intStr(amount string) sdkmath.Int {
 // ratiosStrings converts the ratios into strings. It's because comparsions on sdk.Coin (or sdkmath.Int) are annoying.
 func (s *TestSuite) ratiosStrings(ratios []exchange.FeeRatio) []string {
 	return sliceStrings(ratios, exchange.FeeRatio.String)
+}
+
+// ratiosString converts a slice of ratio entries into a string.
+func (s *TestSuite) ratiosString(ratios []exchange.FeeRatio) string {
+	if len(ratios) == 0 {
+		return ""
+	}
+	strs := make([]string, len(ratios))
+	for i, r := range ratios {
+		strs[i] = r.String()
+	}
+	return strings.Join(strs, ",")
 }
 
 // joinErrs joins the provided error strings into a single one to match what errors.Join does.
@@ -244,6 +270,16 @@ func (s *TestSuite) assertErrorValue(theError error, expected string, msgAndArgs
 // assertErrorContents is a wrapper for assertions.AssertErrorContents for this TestSuite.
 func (s *TestSuite) assertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
 	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
+}
+
+// assertEqualEvents is a wrapper for assertions.AssertEqualEvents for this TestSuite.
+func (s *TestSuite) assertEqualEvents(expected, actual sdk.Events, msgAndArgs ...interface{}) bool {
+	return assertions.AssertEqualEvents(s.T(), expected, actual, msgAndArgs...)
+}
+
+// requirePanicEquals is a wrapper for assertions.RequirePanicEquals for this TestSuite.
+func (s *TestSuite) requirePanicEquals(f assertions.PanicTestFunc, expected string, msgAndArgs ...interface{}) {
+	assertions.RequirePanicEquals(s.T(), f, expected, msgAndArgs...)
 }
 
 func (s *TestSuite) TestKeeper_GetAuthority() {
