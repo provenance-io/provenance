@@ -16,6 +16,7 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
@@ -81,6 +82,21 @@ func init() {
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Attribute", &attributetypes.QueryAttributeResponse{})
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Attributes", &attributetypes.QueryAttributesResponse{})
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Scan", &attributetypes.QueryScanResponse{})
+
+	// exchange
+	setWhitelistedQuery("/provenance.exchange.v1.Query/OrderFeeCalc", &exchange.QueryOrderFeeCalcResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetOrder", &exchange.QueryGetOrderResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetOrderByExternalID", &exchange.QueryGetOrderByExternalIDResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetMarketOrders", &exchange.QueryGetMarketOrdersResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetOwnerOrders", &exchange.QueryGetOwnerOrdersResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAssetOrders", &exchange.QueryGetAssetOrdersResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllOrders", &exchange.QueryGetAllOrdersResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetMarket", &exchange.QueryGetMarketResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllMarkets", &exchange.QueryGetAllMarketsResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/Params", &exchange.QueryParamsResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/ValidateCreateMarket", &exchange.QueryValidateCreateMarketResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/ValidateMarket", &exchange.QueryValidateMarketResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/ValidateManageFees", &exchange.QueryValidateManageFeesResponse{})
 
 	// hold
 	setWhitelistedQuery("/provenance.hold.v1.Query/GetHolds", &hold.GetHoldsResponse{})
