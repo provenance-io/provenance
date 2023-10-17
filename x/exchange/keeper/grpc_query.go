@@ -26,8 +26,8 @@ func NewQueryServer(k Keeper) exchange.QueryServer {
 
 var _ exchange.QueryServer = QueryServer{}
 
-// QueryOrderFeeCalc calculates the fees that will be associated with the provided order.
-func (k QueryServer) QueryOrderFeeCalc(goCtx context.Context, req *exchange.QueryOrderFeeCalcRequest) (*exchange.QueryOrderFeeCalcResponse, error) {
+// OrderFeeCalc calculates the fees that will be associated with the provided order.
+func (k QueryServer) OrderFeeCalc(goCtx context.Context, req *exchange.QueryOrderFeeCalcRequest) (*exchange.QueryOrderFeeCalcResponse, error) {
 	if req == nil || (req.AskOrder == nil && req.BidOrder == nil) {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -64,20 +64,20 @@ func (k QueryServer) QueryOrderFeeCalc(goCtx context.Context, req *exchange.Quer
 		resp.CreationFeeOptions = getCreateBidFlatFees(store, order.MarketId)
 	default:
 		// This case should have been caught right off the bat in this query.
-		panic(fmt.Errorf("missing QueryOrderFeeCalc case"))
+		panic(fmt.Errorf("missing OrderFeeCalc case"))
 	}
 
 	return resp, nil
 }
 
-// QueryGetOrder looks up an order by id.
-func (k QueryServer) QueryGetOrder(goCtx context.Context, req *exchange.QueryGetOrderRequest) (*exchange.QueryGetOrderResponse, error) {
+// GetOrder looks up an order by id.
+func (k QueryServer) GetOrder(goCtx context.Context, req *exchange.QueryGetOrderRequest) (*exchange.QueryGetOrderResponse, error) {
 	if req == nil || req.OrderId == 0 {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	order, err := k.GetOrder(ctx, req.OrderId)
+	order, err := k.Keeper.GetOrder(ctx, req.OrderId)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -88,14 +88,14 @@ func (k QueryServer) QueryGetOrder(goCtx context.Context, req *exchange.QueryGet
 	return &exchange.QueryGetOrderResponse{Order: order}, nil
 }
 
-// QueryGetOrderByExternalID looks up an order by market id and external id.
-func (k QueryServer) QueryGetOrderByExternalID(goCtx context.Context, req *exchange.QueryGetOrderByExternalIDRequest) (*exchange.QueryGetOrderByExternalIDResponse, error) {
+// GetOrderByExternalID looks up an order by market id and external id.
+func (k QueryServer) GetOrderByExternalID(goCtx context.Context, req *exchange.QueryGetOrderByExternalIDRequest) (*exchange.QueryGetOrderByExternalIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	order, err := k.GetOrderByExternalID(ctx, req.MarketId, req.ExternalId)
+	order, err := k.Keeper.GetOrderByExternalID(ctx, req.MarketId, req.ExternalId)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -107,8 +107,8 @@ func (k QueryServer) QueryGetOrderByExternalID(goCtx context.Context, req *excha
 	return &exchange.QueryGetOrderByExternalIDResponse{Order: order}, nil
 }
 
-// QueryGetMarketOrders looks up the orders in a market.
-func (k QueryServer) QueryGetMarketOrders(goCtx context.Context, req *exchange.QueryGetMarketOrdersRequest) (*exchange.QueryGetMarketOrdersResponse, error) {
+// GetMarketOrders looks up the orders in a market.
+func (k QueryServer) GetMarketOrders(goCtx context.Context, req *exchange.QueryGetMarketOrdersRequest) (*exchange.QueryGetMarketOrdersResponse, error) {
 	if req == nil || req.MarketId == 0 {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -128,8 +128,8 @@ func (k QueryServer) QueryGetMarketOrders(goCtx context.Context, req *exchange.Q
 	return resp, nil
 }
 
-// QueryGetOwnerOrders looks up the orders from the provided owner address.
-func (k QueryServer) QueryGetOwnerOrders(goCtx context.Context, req *exchange.QueryGetOwnerOrdersRequest) (*exchange.QueryGetOwnerOrdersResponse, error) {
+// GetOwnerOrders looks up the orders from the provided owner address.
+func (k QueryServer) GetOwnerOrders(goCtx context.Context, req *exchange.QueryGetOwnerOrdersRequest) (*exchange.QueryGetOwnerOrdersResponse, error) {
 	if req == nil || len(req.Owner) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -154,8 +154,8 @@ func (k QueryServer) QueryGetOwnerOrders(goCtx context.Context, req *exchange.Qu
 	return resp, nil
 }
 
-// QueryGetAssetOrders looks up the orders for a specific asset denom.
-func (k QueryServer) QueryGetAssetOrders(goCtx context.Context, req *exchange.QueryGetAssetOrdersRequest) (*exchange.QueryGetAssetOrdersResponse, error) {
+// GetAssetOrders looks up the orders for a specific asset denom.
+func (k QueryServer) GetAssetOrders(goCtx context.Context, req *exchange.QueryGetAssetOrdersRequest) (*exchange.QueryGetAssetOrdersResponse, error) {
 	if req == nil || len(req.Asset) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -175,8 +175,8 @@ func (k QueryServer) QueryGetAssetOrders(goCtx context.Context, req *exchange.Qu
 	return resp, nil
 }
 
-// QueryGetAllOrders gets all orders in the exchange module.
-func (k QueryServer) QueryGetAllOrders(goCtx context.Context, req *exchange.QueryGetAllOrdersRequest) (*exchange.QueryGetAllOrdersResponse, error) {
+// GetAllOrders gets all orders in the exchange module.
+func (k QueryServer) GetAllOrders(goCtx context.Context, req *exchange.QueryGetAllOrdersRequest) (*exchange.QueryGetAllOrdersResponse, error) {
 	var pagination *query.PageRequest
 	if req != nil {
 		pagination = req.Pagination
@@ -212,14 +212,14 @@ func (k QueryServer) QueryGetAllOrders(goCtx context.Context, req *exchange.Quer
 	return resp, nil
 }
 
-// QueryGetMarket returns all the information and details about a market.
-func (k QueryServer) QueryGetMarket(goCtx context.Context, req *exchange.QueryGetMarketRequest) (*exchange.QueryGetMarketResponse, error) {
+// GetMarket returns all the information and details about a market.
+func (k QueryServer) GetMarket(goCtx context.Context, req *exchange.QueryGetMarketRequest) (*exchange.QueryGetMarketResponse, error) {
 	if req == nil || req.MarketId == 0 {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	market := k.GetMarket(ctx, req.MarketId)
+	market := k.Keeper.GetMarket(ctx, req.MarketId)
 	if market == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "market %d not found", req.MarketId)
 	}
@@ -227,8 +227,8 @@ func (k QueryServer) QueryGetMarket(goCtx context.Context, req *exchange.QueryGe
 	return &exchange.QueryGetMarketResponse{Market: market}, nil
 }
 
-// QueryGetAllMarkets returns brief information about each market.
-func (k QueryServer) QueryGetAllMarkets(goCtx context.Context, req *exchange.QueryGetAllMarketsRequest) (*exchange.QueryGetAllMarketsResponse, error) {
+// GetAllMarkets returns brief information about each market.
+func (k QueryServer) GetAllMarkets(goCtx context.Context, req *exchange.QueryGetAllMarketsRequest) (*exchange.QueryGetAllMarketsResponse, error) {
 	var pagination *query.PageRequest
 	if req != nil {
 		pagination = req.Pagination
@@ -264,15 +264,15 @@ func (k QueryServer) QueryGetAllMarkets(goCtx context.Context, req *exchange.Que
 	return resp, nil
 }
 
-// QueryParams returns the exchange module parameters.
-func (k QueryServer) QueryParams(goCtx context.Context, _ *exchange.QueryParamsRequest) (*exchange.QueryParamsResponse, error) {
+// Params returns the exchange module parameters.
+func (k QueryServer) Params(goCtx context.Context, _ *exchange.QueryParamsRequest) (*exchange.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	resp := &exchange.QueryParamsResponse{Params: k.GetParamsOrDefaults(ctx)}
 	return resp, nil
 }
 
-// QueryValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
-func (k QueryServer) QueryValidateCreateMarket(goCtx context.Context, req *exchange.QueryValidateCreateMarketRequest) (*exchange.QueryValidateCreateMarketResponse, error) {
+// ValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
+func (k QueryServer) ValidateCreateMarket(goCtx context.Context, req *exchange.QueryValidateCreateMarketRequest) (*exchange.QueryValidateCreateMarketResponse, error) {
 	if req == nil || req.CreateMarketRequest == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -292,7 +292,7 @@ func (k QueryServer) QueryValidateCreateMarket(goCtx context.Context, req *excha
 
 	// The SDK *should* already be using a cache context for queries, but I'm doing it here too just to be on the safe side.
 	ctx, _ := sdk.UnwrapSDKContext(goCtx).CacheContext()
-	marketID, err := k.CreateMarket(ctx, msg.Market)
+	marketID, err := k.Keeper.CreateMarket(ctx, msg.Market)
 	if err != nil {
 		resp.Error = err.Error()
 		return resp, nil
@@ -308,7 +308,7 @@ func (k QueryServer) QueryValidateCreateMarket(goCtx context.Context, req *excha
 		errs = append(errs, err)
 	}
 
-	if err = k.ValidateMarket(ctx, marketID); err != nil {
+	if err = k.Keeper.ValidateMarket(ctx, marketID); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -319,23 +319,23 @@ func (k QueryServer) QueryValidateCreateMarket(goCtx context.Context, req *excha
 	return resp, nil
 }
 
-// QueryValidateMarket checks for any problems with a market's setup.
-func (k QueryServer) QueryValidateMarket(goCtx context.Context, req *exchange.QueryValidateMarketRequest) (*exchange.QueryValidateMarketResponse, error) {
+// ValidateMarket checks for any problems with a market's setup.
+func (k QueryServer) ValidateMarket(goCtx context.Context, req *exchange.QueryValidateMarketRequest) (*exchange.QueryValidateMarketResponse, error) {
 	if req == nil || req.MarketId == 0 {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	resp := &exchange.QueryValidateMarketResponse{}
-	if err := k.ValidateMarket(ctx, req.MarketId); err != nil {
+	if err := k.Keeper.ValidateMarket(ctx, req.MarketId); err != nil {
 		resp.Error = err.Error()
 	}
 
 	return resp, nil
 }
 
-// QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
-func (k QueryServer) QueryValidateManageFees(goCtx context.Context, req *exchange.QueryValidateManageFeesRequest) (*exchange.QueryValidateManageFeesResponse, error) {
+// ValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
+func (k QueryServer) ValidateManageFees(goCtx context.Context, req *exchange.QueryValidateManageFeesRequest) (*exchange.QueryValidateManageFeesResponse, error) {
 	if req == nil || req.ManageFeesRequest == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -401,7 +401,7 @@ func (k QueryServer) QueryValidateManageFees(goCtx context.Context, req *exchang
 	}
 
 	k.UpdateFees(ctx, msg)
-	if err := k.ValidateMarket(ctx, msg.MarketId); err != nil {
+	if err := k.Keeper.ValidateMarket(ctx, msg.MarketId); err != nil {
 		errs = append(errs, err)
 	}
 

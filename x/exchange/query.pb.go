@@ -32,7 +32,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryOrderFeeCalcRequest is a request message for the QueryOrderFeeCalc endpoint.
+// QueryOrderFeeCalcRequest is a request message for the OrderFeeCalc query.
 // Exactly one of ask_order or bid_order must be provided.
 type QueryOrderFeeCalcRequest struct {
 	// ask_order is the ask order to calculate the fees for.
@@ -88,7 +88,7 @@ func (m *QueryOrderFeeCalcRequest) GetBidOrder() *BidOrder {
 	return nil
 }
 
-// QueryOrderFeeCalcResponse is a response message for the QueryOrderFeeCalc endpoint.
+// QueryOrderFeeCalcResponse is a response message for the OrderFeeCalc query.
 type QueryOrderFeeCalcResponse struct {
 	// creation_fee_options are the order creation flat fee options available for creating the provided order.
 	// If it's empty, no order creation fee is required.
@@ -163,7 +163,7 @@ func (m *QueryOrderFeeCalcResponse) GetSettlementRatioFeeOptions() []types.Coin 
 	return nil
 }
 
-// QueryGetOrderRequest is a request message for the QueryGetOrder endpoint.
+// QueryGetOrderRequest is a request message for the GetOrder query.
 type QueryGetOrderRequest struct {
 	// order_id is the id of the order to look up.
 	OrderId uint64 `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
@@ -209,7 +209,7 @@ func (m *QueryGetOrderRequest) GetOrderId() uint64 {
 	return 0
 }
 
-// QueryGetOrderResponse is a response message for the QueryGetOrder endpoint.
+// QueryGetOrderResponse is a response message for the GetOrder query.
 type QueryGetOrderResponse struct {
 	// order is the requested order.
 	Order *Order `protobuf:"bytes,1,opt,name=order,proto3" json:"order,omitempty"`
@@ -255,7 +255,7 @@ func (m *QueryGetOrderResponse) GetOrder() *Order {
 	return nil
 }
 
-// QueryGetOrderByExternalIDRequest is a request message for the QueryGetOrderByExternalID endpoint.
+// QueryGetOrderByExternalIDRequest is a request message for the GetOrderByExternalID query.
 type QueryGetOrderByExternalIDRequest struct {
 	// market_id is the id of the market that's expected to have the order.
 	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
@@ -310,7 +310,7 @@ func (m *QueryGetOrderByExternalIDRequest) GetExternalId() string {
 	return ""
 }
 
-// QueryGetOrderByExternalIDResponse is a response message for the QueryGetOrderByExternalID endpoint.
+// QueryGetOrderByExternalIDResponse is a response message for the GetOrderByExternalID query.
 type QueryGetOrderByExternalIDResponse struct {
 	// order is the requested order.
 	Order *Order `protobuf:"bytes,1,opt,name=order,proto3" json:"order,omitempty"`
@@ -356,7 +356,7 @@ func (m *QueryGetOrderByExternalIDResponse) GetOrder() *Order {
 	return nil
 }
 
-// QueryGetMarketOrdersRequest is a request message for the QueryGetMarketOrders endpoint.
+// QueryGetMarketOrdersRequest is a request message for the GetMarketOrders query.
 type QueryGetMarketOrdersRequest struct {
 	// market_id is the id of the market to get all the orders for.
 	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
@@ -429,7 +429,7 @@ func (m *QueryGetMarketOrdersRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryGetMarketOrdersResponse is a response message for the QueryGetMarketOrders endpoint.
+// QueryGetMarketOrdersResponse is a response message for the GetMarketOrders query.
 type QueryGetMarketOrdersResponse struct {
 	// orders are a page of the orders in the provided market.
 	Orders []*Order `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"`
@@ -484,7 +484,7 @@ func (m *QueryGetMarketOrdersResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryGetOwnerOrdersRequest is a request message for the QueryGetOwnerOrders endpoint.
+// QueryGetOwnerOrdersRequest is a request message for the GetOwnerOrders query.
 type QueryGetOwnerOrdersRequest struct {
 	// owner is the bech32 address string of the owner to get the orders for.
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
@@ -557,7 +557,7 @@ func (m *QueryGetOwnerOrdersRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryGetOwnerOrdersResponse is a response message for the QueryGetOwnerOrders endpoint.
+// QueryGetOwnerOrdersResponse is a response message for the GetOwnerOrders query.
 type QueryGetOwnerOrdersResponse struct {
 	// orders are a page of the orders for the provided address.
 	Orders []*Order `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"`
@@ -612,7 +612,7 @@ func (m *QueryGetOwnerOrdersResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryGetAssetOrdersRequest is a request message for the QueryGetAssetOrders endpoint.
+// QueryGetAssetOrdersRequest is a request message for the GetAssetOrders query.
 type QueryGetAssetOrdersRequest struct {
 	// asset is the denom of assets to get orders for.
 	Asset string `protobuf:"bytes,1,opt,name=asset,proto3" json:"asset,omitempty"`
@@ -685,7 +685,7 @@ func (m *QueryGetAssetOrdersRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryGetAssetOrdersResponse is a response message for the QueryGetAssetOrders endpoint.
+// QueryGetAssetOrdersResponse is a response message for the GetAssetOrders query.
 type QueryGetAssetOrdersResponse struct {
 	// orders are a page of the orders for the provided asset.
 	Orders []*Order `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"`
@@ -740,7 +740,7 @@ func (m *QueryGetAssetOrdersResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryGetAllOrdersRequest is a request message for the QueryGetAllOrders endpoint.
+// QueryGetAllOrdersRequest is a request message for the GetAllOrders query.
 type QueryGetAllOrdersRequest struct {
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -786,7 +786,7 @@ func (m *QueryGetAllOrdersRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryGetAllOrdersResponse is a response message for the QueryGetAllOrders endpoint.
+// QueryGetAllOrdersResponse is a response message for the GetAllOrders query.
 type QueryGetAllOrdersResponse struct {
 	// orders are a page of the all orders.
 	Orders []*Order `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"`
@@ -841,7 +841,7 @@ func (m *QueryGetAllOrdersResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryGetMarketRequest is a request message for the QueryGetMarket endpoint.
+// QueryGetMarketRequest is a request message for the GetMarket query.
 type QueryGetMarketRequest struct {
 	// market_id is the id of the market to look up.
 	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
@@ -887,7 +887,7 @@ func (m *QueryGetMarketRequest) GetMarketId() uint32 {
 	return 0
 }
 
-// QueryGetMarketResponse is a response message for the QueryGetMarket endpoint.
+// QueryGetMarketResponse is a response message for the GetMarket query.
 type QueryGetMarketResponse struct {
 	// address is the bech32 address string of this market's account.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
@@ -942,7 +942,7 @@ func (m *QueryGetMarketResponse) GetMarket() *Market {
 	return nil
 }
 
-// QueryGetAllMarketsRequest is a request message for the QueryGetAllMarkets endpoint.
+// QueryGetAllMarketsRequest is a request message for the GetAllMarkets query.
 type QueryGetAllMarketsRequest struct {
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -988,7 +988,7 @@ func (m *QueryGetAllMarketsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryGetAllMarketsResponse is a response message for the QueryGetAllMarkets endpoint.
+// QueryGetAllMarketsResponse is a response message for the GetAllMarkets query.
 type QueryGetAllMarketsResponse struct {
 	// markets are a page of the briefs for all markets.
 	Markets []*MarketBrief `protobuf:"bytes,1,rep,name=markets,proto3" json:"markets,omitempty"`
@@ -1043,7 +1043,7 @@ func (m *QueryGetAllMarketsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryParamsRequest is a request message for the QueryParams endpoint.
+// QueryParamsRequest is a request message for the Params query.
 type QueryParamsRequest struct {
 }
 
@@ -1080,7 +1080,7 @@ func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
-// QueryParamsResponse is a response message for the QueryParams endpoint.
+// QueryParamsResponse is a response message for the Params query.
 type QueryParamsResponse struct {
 	// params are the exchange module parameter values.
 	Params *Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
@@ -1126,7 +1126,7 @@ func (m *QueryParamsResponse) GetParams() *Params {
 	return nil
 }
 
-// QueryValidateCreateMarketRequest is a request message for the QueryValidateCreateMarket endpoint.
+// QueryValidateCreateMarketRequest is a request message for the ValidateCreateMarket query.
 type QueryValidateCreateMarketRequest struct {
 	// create_market_request is the request to run validation on.
 	CreateMarketRequest *MsgGovCreateMarketRequest `protobuf:"bytes,1,opt,name=create_market_request,json=createMarketRequest,proto3" json:"create_market_request,omitempty"`
@@ -1172,7 +1172,7 @@ func (m *QueryValidateCreateMarketRequest) GetCreateMarketRequest() *MsgGovCreat
 	return nil
 }
 
-// QueryValidateCreateMarketResponse is a response message for the QueryValidateCreateMarket endpoint.
+// QueryValidateCreateMarketResponse is a response message for the ValidateCreateMarket query.
 type QueryValidateCreateMarketResponse struct {
 	// error is any problems or inconsistencies in the provided gov prop msg.
 	// This goes above and beyond the validation done when actually processing the governance proposal.
@@ -1231,7 +1231,7 @@ func (m *QueryValidateCreateMarketResponse) GetGovPropWillPass() bool {
 	return false
 }
 
-// QueryValidateMarketRequest is a request message for the QueryValidateMarket endpoint.
+// QueryValidateMarketRequest is a request message for the ValidateMarket query.
 type QueryValidateMarketRequest struct {
 	// market_id is the id of the market to check.
 	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
@@ -1277,7 +1277,7 @@ func (m *QueryValidateMarketRequest) GetMarketId() uint32 {
 	return 0
 }
 
-// QueryValidateMarketResponse is a response message for the QueryValidateMarket endpoint.
+// QueryValidateMarketResponse is a response message for the ValidateMarket query.
 type QueryValidateMarketResponse struct {
 	// error is any problems or inconsistencies in the provided market.
 	Error string `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
@@ -1323,7 +1323,7 @@ func (m *QueryValidateMarketResponse) GetError() string {
 	return ""
 }
 
-// QueryValidateManageFeesRequest is a request message for the QueryValidateManageFees endpoint.
+// QueryValidateManageFeesRequest is a request message for the ValidateManageFees query.
 type QueryValidateManageFeesRequest struct {
 	// manage_fees_request is the request to run validation on.
 	ManageFeesRequest *MsgGovManageFeesRequest `protobuf:"bytes,1,opt,name=manage_fees_request,json=manageFeesRequest,proto3" json:"manage_fees_request,omitempty"`
@@ -1369,7 +1369,7 @@ func (m *QueryValidateManageFeesRequest) GetManageFeesRequest() *MsgGovManageFee
 	return nil
 }
 
-// QueryValidateManageFeesResponse is a response message for the QueryValidateManageFees endpoint.
+// QueryValidateManageFeesResponse is a response message for the ValidateManageFees query.
 type QueryValidateManageFeesResponse struct {
 	// error is any problems or inconsistencies in the provided gov prop msg.
 	// This goes above and beyond the validation done when actually processing the governance proposal.
@@ -1462,100 +1462,99 @@ func init() {
 }
 
 var fileDescriptor_00949b75b1c10bfe = []byte{
-	// 1480 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0x4d, 0x6f, 0x13, 0xc7,
-	0x1b, 0xcf, 0x24, 0x24, 0x24, 0x93, 0x3f, 0xfc, 0xc5, 0xc4, 0x50, 0xc7, 0x80, 0x13, 0x16, 0x04,
-	0x51, 0x20, 0xbb, 0xd8, 0x86, 0xb4, 0x1c, 0x68, 0x4b, 0x68, 0x83, 0x22, 0x15, 0x11, 0xb6, 0x55,
-	0x5b, 0x71, 0xa8, 0x19, 0xdb, 0x93, 0x65, 0xc5, 0x7a, 0x67, 0xd9, 0x59, 0x4c, 0xa2, 0x28, 0x87,
-	0xbe, 0x5c, 0xda, 0x43, 0x55, 0xa9, 0x97, 0x4a, 0x15, 0xa8, 0x52, 0xf9, 0x00, 0x3d, 0x70, 0x6f,
-	0x6f, 0xe5, 0x88, 0x5a, 0x55, 0x6a, 0x2f, 0x55, 0x05, 0xfd, 0x02, 0xed, 0x27, 0xa8, 0x76, 0x66,
-	0xd6, 0xde, 0xb5, 0xf7, 0xcd, 0x6d, 0x0e, 0x39, 0xc5, 0x3b, 0xfb, 0xbc, 0xfc, 0x9e, 0xdf, 0x33,
-	0xfb, 0xcc, 0x6f, 0x02, 0x15, 0xc7, 0xa5, 0x1d, 0x62, 0x63, 0xbb, 0x49, 0x34, 0xb2, 0xd9, 0xbc,
-	0x83, 0x6d, 0x83, 0x68, 0x9d, 0x8a, 0x76, 0xef, 0x3e, 0x71, 0xb7, 0x54, 0xc7, 0xa5, 0x1e, 0x45,
-	0x47, 0x7a, 0x36, 0x6a, 0x60, 0xa3, 0x76, 0x2a, 0xa5, 0xd9, 0x26, 0x65, 0x6d, 0xca, 0xea, 0xdc,
-	0x4a, 0x13, 0x0f, 0xc2, 0xa5, 0xb4, 0x28, 0x9e, 0xb4, 0x06, 0x66, 0x44, 0xc4, 0xd2, 0x3a, 0x95,
-	0x06, 0xf1, 0x70, 0x45, 0x73, 0xb0, 0x61, 0xda, 0xd8, 0x33, 0xa9, 0x2d, 0x6d, 0xcb, 0x61, 0xdb,
-	0xc0, 0xaa, 0x49, 0xcd, 0xe0, 0xfd, 0x31, 0x83, 0x52, 0xc3, 0x22, 0x1a, 0x76, 0x4c, 0x0d, 0xdb,
-	0x36, 0xf5, 0xb8, 0x73, 0x90, 0xa9, 0x60, 0x50, 0x83, 0x0a, 0x04, 0xfe, 0x2f, 0xb9, 0x7a, 0x32,
-	0xa1, 0xac, 0x36, 0x76, 0xef, 0x12, 0x2f, 0xc3, 0x88, 0xba, 0x2d, 0xe2, 0xb2, 0x0c, 0x23, 0x07,
-	0xbb, 0xb8, 0x1d, 0x18, 0xcd, 0x25, 0x18, 0x79, 0x9b, 0xc2, 0x40, 0xf9, 0x0a, 0xc0, 0xe2, 0x4d,
-	0x9f, 0x86, 0x1b, 0x7e, 0xec, 0x55, 0x42, 0xae, 0x62, 0xab, 0xa9, 0x93, 0x7b, 0xf7, 0x09, 0xf3,
-	0xd0, 0x65, 0x38, 0x85, 0xd9, 0xdd, 0x3a, 0x4f, 0x5b, 0x1c, 0x9d, 0x07, 0x0b, 0xd3, 0xd5, 0x79,
-	0x35, 0x9e, 0x73, 0xf5, 0x0a, 0xbb, 0xcb, 0x43, 0xe8, 0x93, 0x58, 0xfe, 0xf2, 0xdd, 0x1b, 0x66,
-	0x4b, 0xba, 0x8f, 0xa5, 0xbb, 0xaf, 0x98, 0x2d, 0xe9, 0xde, 0x90, 0xbf, 0x94, 0xef, 0x46, 0xe1,
-	0x6c, 0x0c, 0x34, 0xe6, 0x50, 0x9b, 0x11, 0x74, 0x13, 0x16, 0x9a, 0x2e, 0xe1, 0x8c, 0xd7, 0x37,
-	0x08, 0xa9, 0x53, 0x87, 0x93, 0x5f, 0x04, 0xf3, 0x63, 0x0b, 0xd3, 0xd5, 0x59, 0x55, 0x76, 0xdd,
-	0xef, 0x9d, 0x2a, 0x7b, 0xa7, 0x5e, 0xa5, 0xa6, 0xbd, 0xb2, 0xef, 0xe9, 0xef, 0x73, 0x23, 0x3a,
-	0x0a, 0x9c, 0x57, 0x09, 0xb9, 0x21, 0x5c, 0xd1, 0x07, 0xf0, 0x28, 0x23, 0x9e, 0x67, 0x91, 0x36,
-	0xb1, 0xbd, 0xfa, 0x86, 0x85, 0xbd, 0x48, 0xe4, 0xd1, 0x7c, 0x91, 0x8b, 0xbd, 0x18, 0xab, 0x16,
-	0xf6, 0x42, 0xf1, 0x6f, 0xc3, 0x63, 0xa1, 0xf8, 0xae, 0x9f, 0x3e, 0x92, 0x60, 0x2c, 0x5f, 0x82,
-	0xd9, 0x5e, 0x10, 0xdd, 0x8f, 0xd1, 0xcb, 0xa0, 0x54, 0x60, 0x81, 0x33, 0x76, 0x8d, 0x78, 0x82,
-	0x4d, 0xd9, 0xc8, 0x59, 0x38, 0xc9, 0xbb, 0x50, 0x37, 0x5b, 0x45, 0x30, 0x0f, 0x16, 0xf6, 0xe9,
-	0xfb, 0xf9, 0xf3, 0x5a, 0x4b, 0x79, 0x0b, 0x1e, 0xee, 0x73, 0x91, 0x04, 0xd7, 0xe0, 0xb8, 0xe8,
-	0x1c, 0xe0, 0x9d, 0x3b, 0x9e, 0xd4, 0x39, 0xe1, 0x25, 0x6c, 0x95, 0xdb, 0x70, 0x3e, 0x12, 0x6d,
-	0x65, 0xeb, 0xcd, 0x4d, 0x8f, 0xb8, 0x36, 0xb6, 0xd6, 0xde, 0x08, 0xc0, 0x1c, 0x85, 0x53, 0x62,
-	0xb7, 0x07, 0x68, 0x0e, 0xe8, 0x93, 0x62, 0x61, 0xad, 0x85, 0xe6, 0xe0, 0x34, 0x91, 0x1e, 0xfe,
-	0x6b, 0x7f, 0xd3, 0x4d, 0xe9, 0x30, 0x58, 0x5a, 0x6b, 0x29, 0xef, 0xc3, 0x13, 0x29, 0x19, 0xfe,
-	0x0b, 0xf6, 0x1f, 0x01, 0x3c, 0x1a, 0x84, 0xbe, 0xce, 0xf1, 0xf0, 0xd7, 0x2c, 0x17, 0xee, 0xe3,
-	0x10, 0x0a, 0x86, 0xbd, 0x2d, 0x87, 0x48, 0xd8, 0x53, 0x7c, 0xe5, 0x9d, 0x2d, 0x87, 0xa0, 0x53,
-	0xf0, 0x20, 0xde, 0xf0, 0x88, 0x5b, 0xef, 0xb6, 0x61, 0x8c, 0xb7, 0xe1, 0x7f, 0x7c, 0xf5, 0x86,
-	0xe8, 0x05, 0x5a, 0x85, 0xb0, 0x37, 0x84, 0x8a, 0x4d, 0x8e, 0xfd, 0x74, 0x64, 0x3b, 0x88, 0xe9,
-	0x17, 0x6c, 0x8a, 0x75, 0x6c, 0x10, 0x89, 0x4e, 0x0f, 0x79, 0x2a, 0x8f, 0x00, 0x3c, 0x16, 0x5f,
-	0x89, 0xe4, 0xe7, 0x22, 0x9c, 0x10, 0xb3, 0x44, 0x7e, 0x2e, 0x19, 0x04, 0x49, 0x63, 0x74, 0x2d,
-	0x06, 0xdf, 0x99, 0x4c, 0x7c, 0x22, 0x67, 0x04, 0xe0, 0x6f, 0x00, 0x96, 0xba, 0x5d, 0x7c, 0x60,
-	0x4b, 0x06, 0xba, 0x4c, 0xab, 0x70, 0x9c, 0xfa, 0xab, 0x9c, 0xe5, 0xa9, 0x95, 0xe2, 0x4f, 0x4f,
-	0x96, 0x0a, 0x32, 0xcb, 0x95, 0x56, 0xcb, 0x25, 0x8c, 0xbd, 0xed, 0xb9, 0xa6, 0x6d, 0xe8, 0xc2,
-	0x6c, 0x6f, 0x91, 0xff, 0x30, 0xb4, 0x8d, 0x22, 0xb5, 0xed, 0x11, 0xee, 0xbf, 0x0f, 0x71, 0x7f,
-	0x85, 0xb1, 0xfe, 0x5d, 0x5e, 0x80, 0xe3, 0xd8, 0x5f, 0x15, 0xdc, 0xeb, 0xe2, 0x61, 0xef, 0x32,
-	0x1c, 0xa9, 0x60, 0x8f, 0x30, 0xdc, 0x90, 0x47, 0xaa, 0x0f, 0xcf, 0xb2, 0xa2, 0xf4, 0xee, 0x16,
-	0x07, 0x5f, 0x03, 0x79, 0x38, 0x46, 0x93, 0xec, 0x11, 0x06, 0x2e, 0xf4, 0x0e, 0x15, 0x31, 0x7f,
-	0xf2, 0xcc, 0x50, 0xe5, 0x13, 0x00, 0x8f, 0xf4, 0xbb, 0xc9, 0x82, 0xaa, 0x70, 0x3f, 0x16, 0x5f,
-	0x7e, 0xe6, 0x4c, 0x08, 0x0c, 0xd1, 0x32, 0x9c, 0x10, 0xa1, 0xa5, 0x74, 0x29, 0x27, 0x91, 0x20,
-	0x73, 0x49, 0x6b, 0xa5, 0x19, 0x61, 0x56, 0xbc, 0xdc, 0xf5, 0xfe, 0x3d, 0x0e, 0x7f, 0x85, 0xa1,
-	0x2c, 0xb2, 0xde, 0xcb, 0x70, 0xbf, 0x40, 0x13, 0x74, 0xf0, 0x64, 0x3a, 0xf8, 0x15, 0xd7, 0x24,
-	0x1b, 0x7a, 0xe0, 0xb3, 0x7b, 0x8d, 0x2c, 0x40, 0xc4, 0x51, 0xae, 0x73, 0x51, 0x29, 0x0b, 0x51,
-	0xae, 0xc3, 0x99, 0xc8, 0xaa, 0x04, 0xbd, 0x0c, 0x27, 0x84, 0xf8, 0x94, 0xc7, 0x6e, 0x22, 0xe1,
-	0xd2, 0x4f, 0x5a, 0x2b, 0x9f, 0x02, 0xa9, 0x1a, 0xde, 0xc5, 0x96, 0xd9, 0xc2, 0x1e, 0xb9, 0xea,
-	0x6b, 0x33, 0x12, 0xdd, 0x39, 0x04, 0x1e, 0xe6, 0x92, 0x8d, 0xd4, 0xe5, 0x06, 0x72, 0xc5, 0x0b,
-	0x99, 0xab, 0x92, 0xc8, 0x0f, 0x33, 0xae, 0xd1, 0x4e, 0x4c, 0x44, 0x7d, 0xa6, 0x39, 0xb8, 0xa8,
-	0x6c, 0x48, 0x79, 0x11, 0x0f, 0x45, 0x16, 0x5a, 0x80, 0xe3, 0xc4, 0x75, 0xa9, 0x1b, 0xcc, 0x48,
-	0xfe, 0x80, 0xce, 0x42, 0x64, 0xd0, 0x8e, 0x7f, 0xe9, 0x70, 0xea, 0x0f, 0x4c, 0xcb, 0xaa, 0x3b,
-	0x98, 0x31, 0xbe, 0xf7, 0x26, 0xf5, 0xff, 0x1b, 0xb4, 0xb3, 0xee, 0x52, 0xe7, 0x3d, 0xd3, 0xb2,
-	0xd6, 0x31, 0x63, 0xca, 0x25, 0xd9, 0xfe, 0x20, 0xcf, 0x10, 0x9f, 0x49, 0x4d, 0x4e, 0xbf, 0x7e,
-	0xd7, 0x34, 0x70, 0xca, 0x87, 0x00, 0x96, 0xfb, 0xbc, 0x6c, 0x6c, 0x90, 0x55, 0x42, 0xba, 0x5b,
-	0xbb, 0x0e, 0x67, 0xda, 0x7c, 0xd1, 0x17, 0xa5, 0xac, 0x8f, 0x5f, 0x2d, 0x9d, 0xdf, 0x81, 0x68,
-	0xfa, 0xa1, 0x76, 0xff, 0x92, 0xd2, 0x82, 0x73, 0x89, 0x10, 0x76, 0x8d, 0xd9, 0xea, 0x2f, 0x33,
-	0x70, 0x9c, 0xa7, 0x41, 0x8f, 0x01, 0x3c, 0x34, 0x70, 0x81, 0x40, 0xe7, 0x93, 0x2a, 0x49, 0xba,
-	0x06, 0x95, 0x2a, 0x43, 0x78, 0x88, 0x3a, 0x94, 0xc5, 0x8f, 0x7e, 0xfe, 0xf3, 0xcb, 0xd1, 0x53,
-	0x48, 0xd1, 0x12, 0x2e, 0x60, 0x3e, 0xc5, 0xe2, 0x3e, 0x87, 0x1e, 0x01, 0x78, 0x20, 0x22, 0x69,
-	0xd1, 0xb9, 0xd4, 0x84, 0x7d, 0xe2, 0xbe, 0xb4, 0x94, 0xd3, 0x5a, 0x42, 0x3b, 0xcf, 0xa1, 0x2d,
-	0xa2, 0x05, 0x2d, 0xed, 0x96, 0xa9, 0x6d, 0x07, 0x47, 0xf9, 0x0e, 0x7a, 0x38, 0xda, 0x9b, 0x88,
-	0x03, 0x9a, 0x1b, 0xbd, 0x92, 0x2b, 0x7d, 0xcc, 0x45, 0xa0, 0x74, 0xe9, 0x5f, 0x78, 0xca, 0x22,
-	0x3e, 0x03, 0xbc, 0x8a, 0x8f, 0x01, 0x7a, 0x2d, 0xb5, 0x0c, 0x26, 0x2f, 0xd6, 0xda, 0x76, 0xf7,
-	0x7b, 0xda, 0xd1, 0xb6, 0x43, 0x37, 0x8c, 0x9d, 0x5b, 0xaf, 0xa3, 0x57, 0xb5, 0xd4, 0x4b, 0x79,
-	0xc4, 0x57, 0x92, 0x13, 0x8e, 0x80, 0xfe, 0x02, 0xbd, 0x6b, 0x57, 0x58, 0x6e, 0xa3, 0x5a, 0x56,
-	0x81, 0x31, 0xd7, 0x8c, 0xd2, 0x85, 0xe1, 0x9c, 0x24, 0x21, 0x36, 0xe7, 0xe3, 0x0e, 0xaa, 0x0c,
-	0x4d, 0xc7, 0xad, 0x5a, 0xb2, 0x53, 0x12, 0x01, 0x0c, 0x3d, 0x01, 0xf2, 0x0c, 0x88, 0xaa, 0x5c,
-	0x54, 0xcd, 0xec, 0xe9, 0x80, 0xdc, 0x2f, 0xd5, 0x86, 0xf2, 0x91, 0x05, 0x5f, 0xe0, 0x05, 0xab,
-	0xe8, 0x5c, 0x46, 0xc1, 0xfc, 0x86, 0xa0, 0x6d, 0xf3, 0x3f, 0x3b, 0x11, 0xd8, 0x21, 0xe9, 0x98,
-	0x0d, 0x7b, 0x50, 0x29, 0x67, 0xc3, 0x8e, 0xd1, 0xa6, 0xb9, 0x61, 0x73, 0xd9, 0xad, 0x6d, 0xf3,
-	0x3f, 0x3b, 0xe8, 0x9b, 0x60, 0x92, 0x85, 0xd5, 0x5e, 0xc6, 0x24, 0x8b, 0x51, 0x9f, 0x19, 0x93,
-	0x2c, 0x4e, 0x4a, 0x2a, 0xa7, 0x39, 0xe0, 0x79, 0x54, 0x4e, 0x07, 0x8c, 0xbe, 0x05, 0xf0, 0x60,
-	0x74, 0x87, 0xa2, 0xa5, 0x7c, 0x3b, 0x39, 0x00, 0xa7, 0xe6, 0x35, 0x97, 0xc8, 0xaa, 0x1c, 0xd9,
-	0x39, 0xb4, 0x98, 0x7f, 0xf7, 0xfa, 0x47, 0x02, 0x1a, 0x94, 0x5d, 0x28, 0x0f, 0x2f, 0x51, 0x21,
-	0x58, 0xaa, 0x0e, 0xe3, 0x22, 0x11, 0x9f, 0xe1, 0x88, 0x4f, 0xa0, 0xb9, 0x74, 0xc4, 0x0c, 0x7d,
-	0x0e, 0xe0, 0x74, 0x48, 0x61, 0xa1, 0xc5, 0xd4, 0x64, 0x11, 0x71, 0x56, 0x3a, 0x9b, 0xcb, 0x36,
-	0x6f, 0x77, 0x85, 0x44, 0x43, 0x4f, 0x83, 0xeb, 0x46, 0x9c, 0x2e, 0xca, 0x38, 0x02, 0x52, 0x54,
-	0x5d, 0xc6, 0x11, 0x90, 0x26, 0xc2, 0x94, 0x65, 0x0e, 0xfd, 0x3c, 0x52, 0x93, 0xa0, 0x77, 0xa4,
-	0xb7, 0x16, 0xd1, 0x8d, 0xe8, 0xef, 0x60, 0x04, 0x44, 0xf5, 0x53, 0xc6, 0x08, 0x88, 0xd5, 0x69,
-	0x19, 0x23, 0x20, 0x5e, 0xa0, 0x29, 0x2e, 0x07, 0x6e, 0xa1, 0x5a, 0x26, 0xf0, 0x98, 0x61, 0x7d,
-	0x31, 0xd9, 0x2d, 0x66, 0x58, 0x07, 0x91, 0xd0, 0x0f, 0x00, 0xbe, 0x94, 0xa0, 0xbd, 0xd0, 0x72,
-	0xce, 0x22, 0xfa, 0xe4, 0x5c, 0xe9, 0xe5, 0xa1, 0xfd, 0xf2, 0xce, 0xc0, 0x10, 0x01, 0x5d, 0x3d,
-	0xba, 0x42, 0x9e, 0x3e, 0x2f, 0x83, 0x67, 0xcf, 0xcb, 0xe0, 0x8f, 0xe7, 0x65, 0xf0, 0xc5, 0x8b,
-	0xf2, 0xc8, 0xb3, 0x17, 0xe5, 0x91, 0x5f, 0x5f, 0x94, 0x47, 0xe0, 0xac, 0x49, 0x13, 0xa0, 0xac,
-	0x83, 0x5b, 0xaa, 0x61, 0x7a, 0x77, 0xee, 0x37, 0xd4, 0x26, 0x6d, 0x87, 0xd2, 0x2d, 0x99, 0x34,
-	0x9c, 0x7c, 0xb3, 0x9b, 0xbe, 0x31, 0xc1, 0xff, 0x2f, 0x5e, 0xfb, 0x27, 0x00, 0x00, 0xff, 0xff,
-	0x3b, 0xd0, 0x8c, 0xac, 0x80, 0x18, 0x00, 0x00,
+	// 1472 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xcd, 0x73, 0x14, 0x45,
+	0x14, 0x4f, 0x27, 0x24, 0x24, 0x8f, 0xaf, 0xb2, 0xb3, 0x50, 0x9b, 0x05, 0x36, 0x61, 0xa0, 0x20,
+	0x15, 0xc8, 0x0c, 0xbb, 0x0b, 0x51, 0x0e, 0xa8, 0x04, 0x0d, 0x95, 0x2a, 0x29, 0xc2, 0x68, 0xa9,
+	0xc5, 0xc1, 0xa5, 0x77, 0xb7, 0x33, 0x4c, 0x31, 0x3b, 0xbd, 0xcc, 0x0c, 0x4b, 0x52, 0xa9, 0x1c,
+	0xfc, 0xb8, 0xe0, 0xc9, 0x2a, 0x3d, 0x60, 0x51, 0xe2, 0xc5, 0xbb, 0x1e, 0xbc, 0x79, 0xf0, 0xe0,
+	0x41, 0x8e, 0x94, 0x5e, 0xf4, 0x62, 0x59, 0xe0, 0x51, 0xff, 0x07, 0x6b, 0xba, 0x7b, 0x36, 0x33,
+	0x9b, 0xf9, 0x5a, 0xcd, 0x21, 0xa7, 0xec, 0xf4, 0xbc, 0x8f, 0xdf, 0xfb, 0xbd, 0xee, 0x37, 0xbf,
+	0x0e, 0x28, 0x1d, 0x87, 0x75, 0xa9, 0x4d, 0xec, 0x26, 0xd5, 0xe8, 0x5a, 0xf3, 0x0e, 0xb1, 0x0d,
+	0xaa, 0x75, 0x2b, 0xda, 0xbd, 0xfb, 0xd4, 0x59, 0x57, 0x3b, 0x0e, 0xf3, 0x18, 0x3e, 0xb2, 0x65,
+	0xa3, 0x06, 0x36, 0x6a, 0xb7, 0x52, 0x9a, 0x6a, 0x32, 0xb7, 0xcd, 0xdc, 0x3a, 0xb7, 0xd2, 0xc4,
+	0x83, 0x70, 0x29, 0xcd, 0x89, 0x27, 0xad, 0x41, 0x5c, 0x2a, 0x62, 0x69, 0xdd, 0x4a, 0x83, 0x7a,
+	0xa4, 0xa2, 0x75, 0x88, 0x61, 0xda, 0xc4, 0x33, 0x99, 0x2d, 0x6d, 0xcb, 0x61, 0xdb, 0xc0, 0xaa,
+	0xc9, 0xcc, 0xe0, 0xfd, 0x31, 0x83, 0x31, 0xc3, 0xa2, 0x1a, 0xe9, 0x98, 0x1a, 0xb1, 0x6d, 0xe6,
+	0x71, 0xe7, 0x20, 0x53, 0xc1, 0x60, 0x06, 0x13, 0x08, 0xfc, 0x5f, 0x72, 0xf5, 0x64, 0x42, 0x59,
+	0x6d, 0xe2, 0xdc, 0xa5, 0x5e, 0x86, 0x11, 0x73, 0x5a, 0xd4, 0x71, 0x33, 0x8c, 0x3a, 0xc4, 0x21,
+	0xed, 0xc0, 0x68, 0x3a, 0xc1, 0xc8, 0x5b, 0x13, 0x06, 0xca, 0x23, 0x04, 0xc5, 0x9b, 0x3e, 0x0d,
+	0x37, 0xfc, 0xd8, 0x4b, 0x94, 0x5e, 0x25, 0x56, 0x53, 0xa7, 0xf7, 0xee, 0x53, 0xd7, 0xc3, 0x97,
+	0x61, 0x82, 0xb8, 0x77, 0xeb, 0x3c, 0x6d, 0x71, 0x78, 0x06, 0xcd, 0xee, 0xab, 0xce, 0xa8, 0xf1,
+	0x9c, 0xab, 0x57, 0xdc, 0xbb, 0x3c, 0x84, 0x3e, 0x4e, 0xe4, 0x2f, 0xdf, 0xbd, 0x61, 0xb6, 0xa4,
+	0xfb, 0x48, 0xba, 0xfb, 0xa2, 0xd9, 0x92, 0xee, 0x0d, 0xf9, 0x4b, 0xf9, 0x6e, 0x18, 0xa6, 0x62,
+	0xa0, 0xb9, 0x1d, 0x66, 0xbb, 0x14, 0xdf, 0x84, 0x42, 0xd3, 0xa1, 0x9c, 0xf1, 0xfa, 0x2a, 0xa5,
+	0x75, 0xd6, 0xe1, 0xe4, 0x17, 0xd1, 0xcc, 0xc8, 0xec, 0xbe, 0xea, 0x94, 0x2a, 0xbb, 0xee, 0xf7,
+	0x4e, 0x95, 0xbd, 0x53, 0xaf, 0x32, 0xd3, 0x5e, 0xdc, 0xf3, 0xf4, 0x8f, 0xe9, 0x21, 0x1d, 0x07,
+	0xce, 0x4b, 0x94, 0xde, 0x10, 0xae, 0xf8, 0x03, 0x38, 0xea, 0x52, 0xcf, 0xb3, 0x68, 0x9b, 0xda,
+	0x5e, 0x7d, 0xd5, 0x22, 0x5e, 0x24, 0xf2, 0x70, 0xbe, 0xc8, 0xc5, 0xad, 0x18, 0x4b, 0x16, 0xf1,
+	0x42, 0xf1, 0x6f, 0xc3, 0xb1, 0x50, 0x7c, 0xc7, 0x4f, 0x1f, 0x49, 0x30, 0x92, 0x2f, 0xc1, 0xd4,
+	0x56, 0x10, 0xdd, 0x8f, 0xb1, 0x95, 0x41, 0xa9, 0x40, 0x81, 0x33, 0x76, 0x8d, 0x7a, 0x82, 0x4d,
+	0xd9, 0xc8, 0x29, 0x18, 0xe7, 0x5d, 0xa8, 0x9b, 0xad, 0x22, 0x9a, 0x41, 0xb3, 0x7b, 0xf4, 0xbd,
+	0xfc, 0x79, 0xb9, 0xa5, 0xbc, 0x05, 0x87, 0xfb, 0x5c, 0x24, 0xc1, 0x35, 0x18, 0x15, 0x9d, 0x43,
+	0xbc, 0x73, 0xc7, 0x93, 0x3a, 0x27, 0xbc, 0x84, 0xad, 0x72, 0x1b, 0x66, 0x22, 0xd1, 0x16, 0xd7,
+	0xdf, 0x5c, 0xf3, 0xa8, 0x63, 0x13, 0x6b, 0xf9, 0x8d, 0x00, 0xcc, 0x51, 0x98, 0x10, 0xbb, 0x3d,
+	0x40, 0x73, 0x40, 0x1f, 0x17, 0x0b, 0xcb, 0x2d, 0x3c, 0x0d, 0xfb, 0xa8, 0xf4, 0xf0, 0x5f, 0xfb,
+	0x9b, 0x6e, 0x42, 0x87, 0x60, 0x69, 0xb9, 0xa5, 0xbc, 0x0f, 0x27, 0x52, 0x32, 0xfc, 0x1f, 0xec,
+	0x3f, 0x23, 0x38, 0x1a, 0x84, 0xbe, 0xce, 0xf1, 0xf0, 0xd7, 0x6e, 0x2e, 0xdc, 0xc7, 0x01, 0x04,
+	0xc3, 0xde, 0x7a, 0x87, 0x4a, 0xd8, 0x13, 0x7c, 0xe5, 0x9d, 0xf5, 0x0e, 0xc5, 0xa7, 0xe0, 0x20,
+	0x59, 0xf5, 0xa8, 0x53, 0xef, 0xb5, 0x61, 0x84, 0xb7, 0x61, 0x3f, 0x5f, 0xbd, 0x21, 0x7a, 0x81,
+	0x97, 0x00, 0xb6, 0x86, 0x50, 0xb1, 0xc9, 0xb1, 0x9f, 0x8e, 0x6c, 0x07, 0x31, 0xfd, 0x82, 0x4d,
+	0xb1, 0x42, 0x0c, 0x2a, 0xd1, 0xe9, 0x21, 0x4f, 0xe5, 0x09, 0x82, 0x63, 0xf1, 0x95, 0x48, 0x7e,
+	0x2e, 0xc2, 0x98, 0x98, 0x25, 0xf2, 0xb8, 0x64, 0x10, 0x24, 0x8d, 0xf1, 0xb5, 0x18, 0x7c, 0x67,
+	0x32, 0xf1, 0x89, 0x9c, 0x11, 0x80, 0xbf, 0x23, 0x28, 0xf5, 0xba, 0xf8, 0xc0, 0x96, 0x0c, 0xf4,
+	0x98, 0x56, 0x61, 0x94, 0xf9, 0xab, 0x9c, 0xe5, 0x89, 0xc5, 0xe2, 0x2f, 0xdf, 0xcf, 0x17, 0x64,
+	0x96, 0x2b, 0xad, 0x96, 0x43, 0x5d, 0xf7, 0x6d, 0xcf, 0x31, 0x6d, 0x43, 0x17, 0x66, 0xbb, 0x8b,
+	0xfc, 0xaf, 0x42, 0xdb, 0x28, 0x52, 0xdb, 0x2e, 0xe1, 0xfe, 0xc7, 0x10, 0xf7, 0x57, 0x5c, 0xb7,
+	0x7f, 0x97, 0x17, 0x60, 0x94, 0xf8, 0xab, 0x82, 0x7b, 0x5d, 0x3c, 0xec, 0x5e, 0x86, 0x23, 0x15,
+	0xec, 0x12, 0x86, 0x1b, 0xf2, 0x93, 0xea, 0xc3, 0xb3, 0xac, 0x28, 0xbd, 0x3b, 0xc5, 0xc1, 0x63,
+	0x24, 0x3f, 0x8e, 0xd1, 0x24, 0xbb, 0x84, 0x81, 0x0b, 0x5b, 0x1f, 0x15, 0x31, 0x7f, 0xf2, 0xcc,
+	0x50, 0xe5, 0x13, 0x04, 0x47, 0xfa, 0xdd, 0x64, 0x41, 0x55, 0xd8, 0x4b, 0xc4, 0xc9, 0xcf, 0x9c,
+	0x09, 0x81, 0x21, 0x5e, 0x80, 0x31, 0x11, 0x5a, 0x4a, 0x97, 0x72, 0x12, 0x09, 0x32, 0x97, 0xb4,
+	0x56, 0x9a, 0x11, 0x66, 0xc5, 0xcb, 0x1d, 0xef, 0xdf, 0x37, 0xe1, 0x53, 0x18, 0xca, 0x22, 0xeb,
+	0xbd, 0x0c, 0x7b, 0x05, 0x9a, 0xa0, 0x83, 0x27, 0xd3, 0xc1, 0x2f, 0x3a, 0x26, 0x5d, 0xd5, 0x03,
+	0x9f, 0x9d, 0x6b, 0x64, 0x01, 0x30, 0x47, 0xb9, 0xc2, 0x45, 0xa5, 0x2c, 0x44, 0xb9, 0x0e, 0x93,
+	0x91, 0x55, 0x09, 0x7a, 0x01, 0xc6, 0x84, 0xf8, 0x94, 0x9f, 0xdd, 0x44, 0xc2, 0xa5, 0x9f, 0xb4,
+	0x56, 0x1e, 0x22, 0xa9, 0x1a, 0xde, 0x25, 0x96, 0xd9, 0x22, 0x1e, 0xbd, 0xea, 0x6b, 0x33, 0x1a,
+	0xdd, 0x39, 0x14, 0x0e, 0x73, 0xc9, 0x46, 0xeb, 0x72, 0x03, 0x39, 0xe2, 0x85, 0xcc, 0x55, 0x49,
+	0xe4, 0xc7, 0x35, 0xae, 0xb1, 0x6e, 0x4c, 0x44, 0x7d, 0xb2, 0xb9, 0x7d, 0x51, 0x59, 0x95, 0xf2,
+	0x22, 0x1e, 0x8a, 0x2c, 0xb4, 0x00, 0xa3, 0xd4, 0x71, 0x98, 0x13, 0xcc, 0x48, 0xfe, 0x80, 0xcf,
+	0x02, 0x36, 0x58, 0xd7, 0xbf, 0x74, 0x74, 0xea, 0x0f, 0x4c, 0xcb, 0xaa, 0x77, 0x88, 0xeb, 0xf2,
+	0xbd, 0x37, 0xae, 0x1f, 0x32, 0x58, 0x77, 0xc5, 0x61, 0x9d, 0xf7, 0x4c, 0xcb, 0x5a, 0x21, 0xae,
+	0xab, 0x5c, 0x92, 0xed, 0x0f, 0xf2, 0x0c, 0x70, 0x4c, 0x6a, 0x72, 0xfa, 0xf5, 0xbb, 0xa6, 0x81,
+	0x53, 0x3e, 0x44, 0x50, 0xee, 0xf3, 0xb2, 0x89, 0x41, 0x97, 0x28, 0xed, 0x6d, 0xed, 0x3a, 0x4c,
+	0xb6, 0xf9, 0xa2, 0x2f, 0x4a, 0xdd, 0x3e, 0x7e, 0xb5, 0x74, 0x7e, 0xb7, 0x45, 0xd3, 0x5f, 0x6a,
+	0xf7, 0x2f, 0x29, 0x2d, 0x98, 0x4e, 0x84, 0xb0, 0x63, 0xcc, 0x56, 0xbf, 0x98, 0x84, 0x51, 0x9e,
+	0x06, 0x7f, 0x8d, 0x60, 0x7f, 0xf8, 0xee, 0x80, 0xcf, 0x27, 0x15, 0x91, 0x74, 0x03, 0x2a, 0x55,
+	0x06, 0xf0, 0x10, 0x25, 0x28, 0x73, 0x1f, 0xfd, 0xfa, 0xd7, 0xe7, 0xc3, 0xa7, 0xb0, 0xa2, 0x25,
+	0xdc, 0xbd, 0x7c, 0x76, 0xc5, 0x55, 0x0e, 0x7f, 0x89, 0x60, 0x3c, 0x10, 0xb2, 0xf8, 0x5c, 0x6a,
+	0xae, 0x3e, 0x49, 0x5f, 0x9a, 0xcf, 0x69, 0x2d, 0x51, 0x9d, 0xe7, 0xa8, 0xe6, 0xf0, 0xac, 0x96,
+	0x76, 0xb7, 0xd4, 0x36, 0x82, 0x0f, 0xf8, 0x26, 0x7e, 0x34, 0x0c, 0x85, 0x38, 0x91, 0x8d, 0x5f,
+	0xc9, 0x95, 0x39, 0x46, 0xf9, 0x97, 0x2e, 0xfd, 0x07, 0x4f, 0x89, 0xff, 0x53, 0xc4, 0x0b, 0xf8,
+	0x18, 0xe1, 0xd7, 0x52, 0x2b, 0x70, 0xe5, 0x4d, 0x5a, 0xdb, 0xe8, 0x1d, 0xa0, 0x4d, 0x6d, 0x23,
+	0x74, 0xa5, 0xd8, 0xbc, 0xf5, 0x3a, 0x7e, 0x55, 0x4b, 0xbd, 0x85, 0x47, 0x7c, 0x25, 0x2f, 0xe1,
+	0x08, 0xf8, 0x6f, 0x04, 0x87, 0xfa, 0xa4, 0x35, 0xae, 0x65, 0xd5, 0x16, 0x73, 0xa5, 0x28, 0x5d,
+	0x18, 0xcc, 0x49, 0x72, 0x61, 0x73, 0x2a, 0xee, 0xe0, 0xca, 0xc0, 0x4c, 0xdc, 0xaa, 0x25, 0x3b,
+	0x25, 0xd5, 0xee, 0xe2, 0x6f, 0x11, 0x1c, 0x8c, 0x8a, 0x59, 0x5c, 0xcd, 0xec, 0xe4, 0x36, 0x55,
+	0x5f, 0xaa, 0x0d, 0xe4, 0x23, 0x6b, 0xbd, 0xc0, 0x6b, 0x55, 0xf1, 0xb9, 0x8c, 0x5a, 0xf9, 0x45,
+	0x40, 0xdb, 0xe0, 0x7f, 0x36, 0x03, 0xc4, 0x21, 0x71, 0x98, 0x8d, 0x78, 0xbb, 0x16, 0xce, 0x46,
+	0x1c, 0xa3, 0x3e, 0x73, 0x23, 0xe6, 0xc2, 0x5a, 0xdb, 0xe0, 0x7f, 0x36, 0xf1, 0x63, 0x04, 0xfb,
+	0xc3, 0x52, 0x2e, 0x63, 0x56, 0xc5, 0x48, 0xcb, 0x8c, 0x59, 0x15, 0xa7, 0x13, 0x95, 0xd3, 0x1c,
+	0xeb, 0x0c, 0x2e, 0xa7, 0x63, 0xc5, 0x4f, 0x10, 0x4c, 0xf4, 0x76, 0x23, 0x9e, 0xcf, 0xb7, 0x6b,
+	0x03, 0x5c, 0x6a, 0x5e, 0x73, 0x09, 0xaa, 0xca, 0x41, 0x9d, 0xc3, 0x73, 0xf9, 0x77, 0xaa, 0x3f,
+	0xea, 0x0f, 0x44, 0x94, 0x14, 0xce, 0xc3, 0x46, 0x54, 0xdb, 0x95, 0xaa, 0x83, 0xb8, 0x48, 0xb0,
+	0x67, 0x38, 0xd8, 0x13, 0x78, 0x3a, 0x1d, 0xac, 0x8b, 0x1f, 0x22, 0x18, 0x13, 0xba, 0x07, 0xcf,
+	0xa5, 0xe6, 0x89, 0x48, 0xad, 0xd2, 0xd9, 0x5c, 0xb6, 0x79, 0xdb, 0x29, 0x04, 0x17, 0xfe, 0x09,
+	0x41, 0x21, 0x4e, 0xe0, 0x64, 0x8c, 0xf6, 0x14, 0x79, 0x96, 0x31, 0xda, 0xd3, 0xd4, 0x94, 0xb2,
+	0xc0, 0x51, 0x9f, 0xc7, 0x6a, 0x12, 0xea, 0xae, 0xf4, 0xd6, 0x22, 0x02, 0x10, 0xff, 0x83, 0xe0,
+	0x60, 0x54, 0x03, 0x65, 0x1c, 0xf2, 0x58, 0xad, 0x95, 0x71, 0xc8, 0xe3, 0x45, 0x96, 0xe2, 0x70,
+	0xcc, 0x16, 0xae, 0x65, 0x62, 0x8e, 0x19, 0xc2, 0x17, 0x93, 0xdd, 0x62, 0x86, 0x70, 0x10, 0x09,
+	0xff, 0x80, 0x00, 0x6f, 0x97, 0x4e, 0x78, 0x21, 0x27, 0xfe, 0x3e, 0x35, 0x56, 0x7a, 0x79, 0x60,
+	0xbf, 0xbc, 0x03, 0x2e, 0x54, 0x7b, 0x4f, 0x4e, 0x2e, 0xd2, 0xa7, 0xcf, 0xcb, 0xe8, 0xd9, 0xf3,
+	0x32, 0xfa, 0xf3, 0x79, 0x19, 0x7d, 0xf6, 0xa2, 0x3c, 0xf4, 0xec, 0x45, 0x79, 0xe8, 0xb7, 0x17,
+	0xe5, 0x21, 0x98, 0x32, 0x59, 0x02, 0x94, 0x15, 0x74, 0x4b, 0x35, 0x4c, 0xef, 0xce, 0xfd, 0x86,
+	0xda, 0x64, 0xed, 0x50, 0xba, 0x79, 0x93, 0x85, 0x93, 0xaf, 0xf5, 0xd2, 0x37, 0xc6, 0xf8, 0xbf,
+	0xb5, 0x6b, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0xee, 0xee, 0x11, 0x25, 0x3f, 0x18, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1570,32 +1569,32 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// QueryOrderFeeCalc calculates the fees that will be associated with the provided order.
-	QueryOrderFeeCalc(ctx context.Context, in *QueryOrderFeeCalcRequest, opts ...grpc.CallOption) (*QueryOrderFeeCalcResponse, error)
-	// QueryGetOrder looks up an order by id.
-	QueryGetOrder(ctx context.Context, in *QueryGetOrderRequest, opts ...grpc.CallOption) (*QueryGetOrderResponse, error)
-	// QueryGetOrderByExternalID looks up an order by market id and external id.
-	QueryGetOrderByExternalID(ctx context.Context, in *QueryGetOrderByExternalIDRequest, opts ...grpc.CallOption) (*QueryGetOrderByExternalIDResponse, error)
-	// QueryGetMarketOrders looks up the orders in a market.
-	QueryGetMarketOrders(ctx context.Context, in *QueryGetMarketOrdersRequest, opts ...grpc.CallOption) (*QueryGetMarketOrdersResponse, error)
-	// QueryGetOwnerOrders looks up the orders from the provided owner address.
-	QueryGetOwnerOrders(ctx context.Context, in *QueryGetOwnerOrdersRequest, opts ...grpc.CallOption) (*QueryGetOwnerOrdersResponse, error)
-	// QueryGetAssetOrders looks up the orders for a specific asset denom.
-	QueryGetAssetOrders(ctx context.Context, in *QueryGetAssetOrdersRequest, opts ...grpc.CallOption) (*QueryGetAssetOrdersResponse, error)
-	// QueryGetAllOrders gets all orders in the exchange module.
-	QueryGetAllOrders(ctx context.Context, in *QueryGetAllOrdersRequest, opts ...grpc.CallOption) (*QueryGetAllOrdersResponse, error)
-	// QueryGetMarket returns all the information and details about a market.
-	QueryGetMarket(ctx context.Context, in *QueryGetMarketRequest, opts ...grpc.CallOption) (*QueryGetMarketResponse, error)
-	// QueryGetAllMarkets returns brief information about each market.
-	QueryGetAllMarkets(ctx context.Context, in *QueryGetAllMarketsRequest, opts ...grpc.CallOption) (*QueryGetAllMarketsResponse, error)
-	// QueryParams returns the exchange module parameters.
-	QueryParams(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// QueryValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
-	QueryValidateCreateMarket(ctx context.Context, in *QueryValidateCreateMarketRequest, opts ...grpc.CallOption) (*QueryValidateCreateMarketResponse, error)
-	// QueryValidateMarket checks for any problems with a market's setup.
-	QueryValidateMarket(ctx context.Context, in *QueryValidateMarketRequest, opts ...grpc.CallOption) (*QueryValidateMarketResponse, error)
-	// QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
-	QueryValidateManageFees(ctx context.Context, in *QueryValidateManageFeesRequest, opts ...grpc.CallOption) (*QueryValidateManageFeesResponse, error)
+	// OrderFeeCalc calculates the fees that will be associated with the provided order.
+	OrderFeeCalc(ctx context.Context, in *QueryOrderFeeCalcRequest, opts ...grpc.CallOption) (*QueryOrderFeeCalcResponse, error)
+	// GetOrder looks up an order by id.
+	GetOrder(ctx context.Context, in *QueryGetOrderRequest, opts ...grpc.CallOption) (*QueryGetOrderResponse, error)
+	// GetOrderByExternalID looks up an order by market id and external id.
+	GetOrderByExternalID(ctx context.Context, in *QueryGetOrderByExternalIDRequest, opts ...grpc.CallOption) (*QueryGetOrderByExternalIDResponse, error)
+	// GetMarketOrders looks up the orders in a market.
+	GetMarketOrders(ctx context.Context, in *QueryGetMarketOrdersRequest, opts ...grpc.CallOption) (*QueryGetMarketOrdersResponse, error)
+	// GetOwnerOrders looks up the orders from the provided owner address.
+	GetOwnerOrders(ctx context.Context, in *QueryGetOwnerOrdersRequest, opts ...grpc.CallOption) (*QueryGetOwnerOrdersResponse, error)
+	// GetAssetOrders looks up the orders for a specific asset denom.
+	GetAssetOrders(ctx context.Context, in *QueryGetAssetOrdersRequest, opts ...grpc.CallOption) (*QueryGetAssetOrdersResponse, error)
+	// GetAllOrders gets all orders in the exchange module.
+	GetAllOrders(ctx context.Context, in *QueryGetAllOrdersRequest, opts ...grpc.CallOption) (*QueryGetAllOrdersResponse, error)
+	// GetMarket returns all the information and details about a market.
+	GetMarket(ctx context.Context, in *QueryGetMarketRequest, opts ...grpc.CallOption) (*QueryGetMarketResponse, error)
+	// GetAllMarkets returns brief information about each market.
+	GetAllMarkets(ctx context.Context, in *QueryGetAllMarketsRequest, opts ...grpc.CallOption) (*QueryGetAllMarketsResponse, error)
+	// Params returns the exchange module parameters.
+	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// ValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
+	ValidateCreateMarket(ctx context.Context, in *QueryValidateCreateMarketRequest, opts ...grpc.CallOption) (*QueryValidateCreateMarketResponse, error)
+	// ValidateMarket checks for any problems with a market's setup.
+	ValidateMarket(ctx context.Context, in *QueryValidateMarketRequest, opts ...grpc.CallOption) (*QueryValidateMarketResponse, error)
+	// ValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
+	ValidateManageFees(ctx context.Context, in *QueryValidateManageFeesRequest, opts ...grpc.CallOption) (*QueryValidateManageFeesResponse, error)
 }
 
 type queryClient struct {
@@ -1606,117 +1605,117 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) QueryOrderFeeCalc(ctx context.Context, in *QueryOrderFeeCalcRequest, opts ...grpc.CallOption) (*QueryOrderFeeCalcResponse, error) {
+func (c *queryClient) OrderFeeCalc(ctx context.Context, in *QueryOrderFeeCalcRequest, opts ...grpc.CallOption) (*QueryOrderFeeCalcResponse, error) {
 	out := new(QueryOrderFeeCalcResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryOrderFeeCalc", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/OrderFeeCalc", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) QueryGetOrder(ctx context.Context, in *QueryGetOrderRequest, opts ...grpc.CallOption) (*QueryGetOrderResponse, error) {
+func (c *queryClient) GetOrder(ctx context.Context, in *QueryGetOrderRequest, opts ...grpc.CallOption) (*QueryGetOrderResponse, error) {
 	out := new(QueryGetOrderResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryGetOrder", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/GetOrder", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) QueryGetOrderByExternalID(ctx context.Context, in *QueryGetOrderByExternalIDRequest, opts ...grpc.CallOption) (*QueryGetOrderByExternalIDResponse, error) {
+func (c *queryClient) GetOrderByExternalID(ctx context.Context, in *QueryGetOrderByExternalIDRequest, opts ...grpc.CallOption) (*QueryGetOrderByExternalIDResponse, error) {
 	out := new(QueryGetOrderByExternalIDResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryGetOrderByExternalID", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/GetOrderByExternalID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) QueryGetMarketOrders(ctx context.Context, in *QueryGetMarketOrdersRequest, opts ...grpc.CallOption) (*QueryGetMarketOrdersResponse, error) {
+func (c *queryClient) GetMarketOrders(ctx context.Context, in *QueryGetMarketOrdersRequest, opts ...grpc.CallOption) (*QueryGetMarketOrdersResponse, error) {
 	out := new(QueryGetMarketOrdersResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryGetMarketOrders", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/GetMarketOrders", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) QueryGetOwnerOrders(ctx context.Context, in *QueryGetOwnerOrdersRequest, opts ...grpc.CallOption) (*QueryGetOwnerOrdersResponse, error) {
+func (c *queryClient) GetOwnerOrders(ctx context.Context, in *QueryGetOwnerOrdersRequest, opts ...grpc.CallOption) (*QueryGetOwnerOrdersResponse, error) {
 	out := new(QueryGetOwnerOrdersResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryGetOwnerOrders", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/GetOwnerOrders", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) QueryGetAssetOrders(ctx context.Context, in *QueryGetAssetOrdersRequest, opts ...grpc.CallOption) (*QueryGetAssetOrdersResponse, error) {
+func (c *queryClient) GetAssetOrders(ctx context.Context, in *QueryGetAssetOrdersRequest, opts ...grpc.CallOption) (*QueryGetAssetOrdersResponse, error) {
 	out := new(QueryGetAssetOrdersResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryGetAssetOrders", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/GetAssetOrders", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) QueryGetAllOrders(ctx context.Context, in *QueryGetAllOrdersRequest, opts ...grpc.CallOption) (*QueryGetAllOrdersResponse, error) {
+func (c *queryClient) GetAllOrders(ctx context.Context, in *QueryGetAllOrdersRequest, opts ...grpc.CallOption) (*QueryGetAllOrdersResponse, error) {
 	out := new(QueryGetAllOrdersResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryGetAllOrders", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/GetAllOrders", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) QueryGetMarket(ctx context.Context, in *QueryGetMarketRequest, opts ...grpc.CallOption) (*QueryGetMarketResponse, error) {
+func (c *queryClient) GetMarket(ctx context.Context, in *QueryGetMarketRequest, opts ...grpc.CallOption) (*QueryGetMarketResponse, error) {
 	out := new(QueryGetMarketResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryGetMarket", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/GetMarket", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) QueryGetAllMarkets(ctx context.Context, in *QueryGetAllMarketsRequest, opts ...grpc.CallOption) (*QueryGetAllMarketsResponse, error) {
+func (c *queryClient) GetAllMarkets(ctx context.Context, in *QueryGetAllMarketsRequest, opts ...grpc.CallOption) (*QueryGetAllMarketsResponse, error) {
 	out := new(QueryGetAllMarketsResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryGetAllMarkets", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/GetAllMarkets", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) QueryParams(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
+func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
 	out := new(QueryParamsResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryParams", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/Params", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) QueryValidateCreateMarket(ctx context.Context, in *QueryValidateCreateMarketRequest, opts ...grpc.CallOption) (*QueryValidateCreateMarketResponse, error) {
+func (c *queryClient) ValidateCreateMarket(ctx context.Context, in *QueryValidateCreateMarketRequest, opts ...grpc.CallOption) (*QueryValidateCreateMarketResponse, error) {
 	out := new(QueryValidateCreateMarketResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryValidateCreateMarket", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/ValidateCreateMarket", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) QueryValidateMarket(ctx context.Context, in *QueryValidateMarketRequest, opts ...grpc.CallOption) (*QueryValidateMarketResponse, error) {
+func (c *queryClient) ValidateMarket(ctx context.Context, in *QueryValidateMarketRequest, opts ...grpc.CallOption) (*QueryValidateMarketResponse, error) {
 	out := new(QueryValidateMarketResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryValidateMarket", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/ValidateMarket", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) QueryValidateManageFees(ctx context.Context, in *QueryValidateManageFeesRequest, opts ...grpc.CallOption) (*QueryValidateManageFeesResponse, error) {
+func (c *queryClient) ValidateManageFees(ctx context.Context, in *QueryValidateManageFeesRequest, opts ...grpc.CallOption) (*QueryValidateManageFeesResponse, error) {
 	out := new(QueryValidateManageFeesResponse)
-	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/QueryValidateManageFees", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/ValidateManageFees", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1725,312 +1724,312 @@ func (c *queryClient) QueryValidateManageFees(ctx context.Context, in *QueryVali
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// QueryOrderFeeCalc calculates the fees that will be associated with the provided order.
-	QueryOrderFeeCalc(context.Context, *QueryOrderFeeCalcRequest) (*QueryOrderFeeCalcResponse, error)
-	// QueryGetOrder looks up an order by id.
-	QueryGetOrder(context.Context, *QueryGetOrderRequest) (*QueryGetOrderResponse, error)
-	// QueryGetOrderByExternalID looks up an order by market id and external id.
-	QueryGetOrderByExternalID(context.Context, *QueryGetOrderByExternalIDRequest) (*QueryGetOrderByExternalIDResponse, error)
-	// QueryGetMarketOrders looks up the orders in a market.
-	QueryGetMarketOrders(context.Context, *QueryGetMarketOrdersRequest) (*QueryGetMarketOrdersResponse, error)
-	// QueryGetOwnerOrders looks up the orders from the provided owner address.
-	QueryGetOwnerOrders(context.Context, *QueryGetOwnerOrdersRequest) (*QueryGetOwnerOrdersResponse, error)
-	// QueryGetAssetOrders looks up the orders for a specific asset denom.
-	QueryGetAssetOrders(context.Context, *QueryGetAssetOrdersRequest) (*QueryGetAssetOrdersResponse, error)
-	// QueryGetAllOrders gets all orders in the exchange module.
-	QueryGetAllOrders(context.Context, *QueryGetAllOrdersRequest) (*QueryGetAllOrdersResponse, error)
-	// QueryGetMarket returns all the information and details about a market.
-	QueryGetMarket(context.Context, *QueryGetMarketRequest) (*QueryGetMarketResponse, error)
-	// QueryGetAllMarkets returns brief information about each market.
-	QueryGetAllMarkets(context.Context, *QueryGetAllMarketsRequest) (*QueryGetAllMarketsResponse, error)
-	// QueryParams returns the exchange module parameters.
-	QueryParams(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// QueryValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
-	QueryValidateCreateMarket(context.Context, *QueryValidateCreateMarketRequest) (*QueryValidateCreateMarketResponse, error)
-	// QueryValidateMarket checks for any problems with a market's setup.
-	QueryValidateMarket(context.Context, *QueryValidateMarketRequest) (*QueryValidateMarketResponse, error)
-	// QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
-	QueryValidateManageFees(context.Context, *QueryValidateManageFeesRequest) (*QueryValidateManageFeesResponse, error)
+	// OrderFeeCalc calculates the fees that will be associated with the provided order.
+	OrderFeeCalc(context.Context, *QueryOrderFeeCalcRequest) (*QueryOrderFeeCalcResponse, error)
+	// GetOrder looks up an order by id.
+	GetOrder(context.Context, *QueryGetOrderRequest) (*QueryGetOrderResponse, error)
+	// GetOrderByExternalID looks up an order by market id and external id.
+	GetOrderByExternalID(context.Context, *QueryGetOrderByExternalIDRequest) (*QueryGetOrderByExternalIDResponse, error)
+	// GetMarketOrders looks up the orders in a market.
+	GetMarketOrders(context.Context, *QueryGetMarketOrdersRequest) (*QueryGetMarketOrdersResponse, error)
+	// GetOwnerOrders looks up the orders from the provided owner address.
+	GetOwnerOrders(context.Context, *QueryGetOwnerOrdersRequest) (*QueryGetOwnerOrdersResponse, error)
+	// GetAssetOrders looks up the orders for a specific asset denom.
+	GetAssetOrders(context.Context, *QueryGetAssetOrdersRequest) (*QueryGetAssetOrdersResponse, error)
+	// GetAllOrders gets all orders in the exchange module.
+	GetAllOrders(context.Context, *QueryGetAllOrdersRequest) (*QueryGetAllOrdersResponse, error)
+	// GetMarket returns all the information and details about a market.
+	GetMarket(context.Context, *QueryGetMarketRequest) (*QueryGetMarketResponse, error)
+	// GetAllMarkets returns brief information about each market.
+	GetAllMarkets(context.Context, *QueryGetAllMarketsRequest) (*QueryGetAllMarketsResponse, error)
+	// Params returns the exchange module parameters.
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// ValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
+	ValidateCreateMarket(context.Context, *QueryValidateCreateMarketRequest) (*QueryValidateCreateMarketResponse, error)
+	// ValidateMarket checks for any problems with a market's setup.
+	ValidateMarket(context.Context, *QueryValidateMarketRequest) (*QueryValidateMarketResponse, error)
+	// ValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
+	ValidateManageFees(context.Context, *QueryValidateManageFeesRequest) (*QueryValidateManageFeesResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) QueryOrderFeeCalc(ctx context.Context, req *QueryOrderFeeCalcRequest) (*QueryOrderFeeCalcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryOrderFeeCalc not implemented")
+func (*UnimplementedQueryServer) OrderFeeCalc(ctx context.Context, req *QueryOrderFeeCalcRequest) (*QueryOrderFeeCalcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OrderFeeCalc not implemented")
 }
-func (*UnimplementedQueryServer) QueryGetOrder(ctx context.Context, req *QueryGetOrderRequest) (*QueryGetOrderResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryGetOrder not implemented")
+func (*UnimplementedQueryServer) GetOrder(ctx context.Context, req *QueryGetOrderRequest) (*QueryGetOrderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOrder not implemented")
 }
-func (*UnimplementedQueryServer) QueryGetOrderByExternalID(ctx context.Context, req *QueryGetOrderByExternalIDRequest) (*QueryGetOrderByExternalIDResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryGetOrderByExternalID not implemented")
+func (*UnimplementedQueryServer) GetOrderByExternalID(ctx context.Context, req *QueryGetOrderByExternalIDRequest) (*QueryGetOrderByExternalIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOrderByExternalID not implemented")
 }
-func (*UnimplementedQueryServer) QueryGetMarketOrders(ctx context.Context, req *QueryGetMarketOrdersRequest) (*QueryGetMarketOrdersResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryGetMarketOrders not implemented")
+func (*UnimplementedQueryServer) GetMarketOrders(ctx context.Context, req *QueryGetMarketOrdersRequest) (*QueryGetMarketOrdersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMarketOrders not implemented")
 }
-func (*UnimplementedQueryServer) QueryGetOwnerOrders(ctx context.Context, req *QueryGetOwnerOrdersRequest) (*QueryGetOwnerOrdersResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryGetOwnerOrders not implemented")
+func (*UnimplementedQueryServer) GetOwnerOrders(ctx context.Context, req *QueryGetOwnerOrdersRequest) (*QueryGetOwnerOrdersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOwnerOrders not implemented")
 }
-func (*UnimplementedQueryServer) QueryGetAssetOrders(ctx context.Context, req *QueryGetAssetOrdersRequest) (*QueryGetAssetOrdersResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryGetAssetOrders not implemented")
+func (*UnimplementedQueryServer) GetAssetOrders(ctx context.Context, req *QueryGetAssetOrdersRequest) (*QueryGetAssetOrdersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAssetOrders not implemented")
 }
-func (*UnimplementedQueryServer) QueryGetAllOrders(ctx context.Context, req *QueryGetAllOrdersRequest) (*QueryGetAllOrdersResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryGetAllOrders not implemented")
+func (*UnimplementedQueryServer) GetAllOrders(ctx context.Context, req *QueryGetAllOrdersRequest) (*QueryGetAllOrdersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllOrders not implemented")
 }
-func (*UnimplementedQueryServer) QueryGetMarket(ctx context.Context, req *QueryGetMarketRequest) (*QueryGetMarketResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryGetMarket not implemented")
+func (*UnimplementedQueryServer) GetMarket(ctx context.Context, req *QueryGetMarketRequest) (*QueryGetMarketResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMarket not implemented")
 }
-func (*UnimplementedQueryServer) QueryGetAllMarkets(ctx context.Context, req *QueryGetAllMarketsRequest) (*QueryGetAllMarketsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryGetAllMarkets not implemented")
+func (*UnimplementedQueryServer) GetAllMarkets(ctx context.Context, req *QueryGetAllMarketsRequest) (*QueryGetAllMarketsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllMarkets not implemented")
 }
-func (*UnimplementedQueryServer) QueryParams(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryParams not implemented")
+func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
-func (*UnimplementedQueryServer) QueryValidateCreateMarket(ctx context.Context, req *QueryValidateCreateMarketRequest) (*QueryValidateCreateMarketResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryValidateCreateMarket not implemented")
+func (*UnimplementedQueryServer) ValidateCreateMarket(ctx context.Context, req *QueryValidateCreateMarketRequest) (*QueryValidateCreateMarketResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateCreateMarket not implemented")
 }
-func (*UnimplementedQueryServer) QueryValidateMarket(ctx context.Context, req *QueryValidateMarketRequest) (*QueryValidateMarketResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryValidateMarket not implemented")
+func (*UnimplementedQueryServer) ValidateMarket(ctx context.Context, req *QueryValidateMarketRequest) (*QueryValidateMarketResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateMarket not implemented")
 }
-func (*UnimplementedQueryServer) QueryValidateManageFees(ctx context.Context, req *QueryValidateManageFeesRequest) (*QueryValidateManageFeesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryValidateManageFees not implemented")
+func (*UnimplementedQueryServer) ValidateManageFees(ctx context.Context, req *QueryValidateManageFeesRequest) (*QueryValidateManageFeesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateManageFees not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_QueryOrderFeeCalc_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_OrderFeeCalc_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryOrderFeeCalcRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryOrderFeeCalc(ctx, in)
+		return srv.(QueryServer).OrderFeeCalc(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Query/QueryOrderFeeCalc",
+		FullMethod: "/provenance.exchange.v1.Query/OrderFeeCalc",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryOrderFeeCalc(ctx, req.(*QueryOrderFeeCalcRequest))
+		return srv.(QueryServer).OrderFeeCalc(ctx, req.(*QueryOrderFeeCalcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryGetOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_GetOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetOrderRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryGetOrder(ctx, in)
+		return srv.(QueryServer).GetOrder(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Query/QueryGetOrder",
+		FullMethod: "/provenance.exchange.v1.Query/GetOrder",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryGetOrder(ctx, req.(*QueryGetOrderRequest))
+		return srv.(QueryServer).GetOrder(ctx, req.(*QueryGetOrderRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryGetOrderByExternalID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_GetOrderByExternalID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetOrderByExternalIDRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryGetOrderByExternalID(ctx, in)
+		return srv.(QueryServer).GetOrderByExternalID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Query/QueryGetOrderByExternalID",
+		FullMethod: "/provenance.exchange.v1.Query/GetOrderByExternalID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryGetOrderByExternalID(ctx, req.(*QueryGetOrderByExternalIDRequest))
+		return srv.(QueryServer).GetOrderByExternalID(ctx, req.(*QueryGetOrderByExternalIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryGetMarketOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_GetMarketOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetMarketOrdersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryGetMarketOrders(ctx, in)
+		return srv.(QueryServer).GetMarketOrders(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Query/QueryGetMarketOrders",
+		FullMethod: "/provenance.exchange.v1.Query/GetMarketOrders",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryGetMarketOrders(ctx, req.(*QueryGetMarketOrdersRequest))
+		return srv.(QueryServer).GetMarketOrders(ctx, req.(*QueryGetMarketOrdersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryGetOwnerOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_GetOwnerOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetOwnerOrdersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryGetOwnerOrders(ctx, in)
+		return srv.(QueryServer).GetOwnerOrders(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Query/QueryGetOwnerOrders",
+		FullMethod: "/provenance.exchange.v1.Query/GetOwnerOrders",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryGetOwnerOrders(ctx, req.(*QueryGetOwnerOrdersRequest))
+		return srv.(QueryServer).GetOwnerOrders(ctx, req.(*QueryGetOwnerOrdersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryGetAssetOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_GetAssetOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetAssetOrdersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryGetAssetOrders(ctx, in)
+		return srv.(QueryServer).GetAssetOrders(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Query/QueryGetAssetOrders",
+		FullMethod: "/provenance.exchange.v1.Query/GetAssetOrders",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryGetAssetOrders(ctx, req.(*QueryGetAssetOrdersRequest))
+		return srv.(QueryServer).GetAssetOrders(ctx, req.(*QueryGetAssetOrdersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryGetAllOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_GetAllOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetAllOrdersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryGetAllOrders(ctx, in)
+		return srv.(QueryServer).GetAllOrders(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Query/QueryGetAllOrders",
+		FullMethod: "/provenance.exchange.v1.Query/GetAllOrders",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryGetAllOrders(ctx, req.(*QueryGetAllOrdersRequest))
+		return srv.(QueryServer).GetAllOrders(ctx, req.(*QueryGetAllOrdersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryGetMarket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_GetMarket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetMarketRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryGetMarket(ctx, in)
+		return srv.(QueryServer).GetMarket(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Query/QueryGetMarket",
+		FullMethod: "/provenance.exchange.v1.Query/GetMarket",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryGetMarket(ctx, req.(*QueryGetMarketRequest))
+		return srv.(QueryServer).GetMarket(ctx, req.(*QueryGetMarketRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryGetAllMarkets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_GetAllMarkets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetAllMarketsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryGetAllMarkets(ctx, in)
+		return srv.(QueryServer).GetAllMarkets(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Query/QueryGetAllMarkets",
+		FullMethod: "/provenance.exchange.v1.Query/GetAllMarkets",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryGetAllMarkets(ctx, req.(*QueryGetAllMarketsRequest))
+		return srv.(QueryServer).GetAllMarkets(ctx, req.(*QueryGetAllMarketsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryParamsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryParams(ctx, in)
+		return srv.(QueryServer).Params(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Query/QueryParams",
+		FullMethod: "/provenance.exchange.v1.Query/Params",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryParams(ctx, req.(*QueryParamsRequest))
+		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryValidateCreateMarket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_ValidateCreateMarket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryValidateCreateMarketRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryValidateCreateMarket(ctx, in)
+		return srv.(QueryServer).ValidateCreateMarket(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Query/QueryValidateCreateMarket",
+		FullMethod: "/provenance.exchange.v1.Query/ValidateCreateMarket",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryValidateCreateMarket(ctx, req.(*QueryValidateCreateMarketRequest))
+		return srv.(QueryServer).ValidateCreateMarket(ctx, req.(*QueryValidateCreateMarketRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryValidateMarket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_ValidateMarket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryValidateMarketRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryValidateMarket(ctx, in)
+		return srv.(QueryServer).ValidateMarket(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Query/QueryValidateMarket",
+		FullMethod: "/provenance.exchange.v1.Query/ValidateMarket",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryValidateMarket(ctx, req.(*QueryValidateMarketRequest))
+		return srv.(QueryServer).ValidateMarket(ctx, req.(*QueryValidateMarketRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_QueryValidateManageFees_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_ValidateManageFees_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryValidateManageFeesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).QueryValidateManageFees(ctx, in)
+		return srv.(QueryServer).ValidateManageFees(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provenance.exchange.v1.Query/QueryValidateManageFees",
+		FullMethod: "/provenance.exchange.v1.Query/ValidateManageFees",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).QueryValidateManageFees(ctx, req.(*QueryValidateManageFeesRequest))
+		return srv.(QueryServer).ValidateManageFees(ctx, req.(*QueryValidateManageFeesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2040,56 +2039,56 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "QueryOrderFeeCalc",
-			Handler:    _Query_QueryOrderFeeCalc_Handler,
+			MethodName: "OrderFeeCalc",
+			Handler:    _Query_OrderFeeCalc_Handler,
 		},
 		{
-			MethodName: "QueryGetOrder",
-			Handler:    _Query_QueryGetOrder_Handler,
+			MethodName: "GetOrder",
+			Handler:    _Query_GetOrder_Handler,
 		},
 		{
-			MethodName: "QueryGetOrderByExternalID",
-			Handler:    _Query_QueryGetOrderByExternalID_Handler,
+			MethodName: "GetOrderByExternalID",
+			Handler:    _Query_GetOrderByExternalID_Handler,
 		},
 		{
-			MethodName: "QueryGetMarketOrders",
-			Handler:    _Query_QueryGetMarketOrders_Handler,
+			MethodName: "GetMarketOrders",
+			Handler:    _Query_GetMarketOrders_Handler,
 		},
 		{
-			MethodName: "QueryGetOwnerOrders",
-			Handler:    _Query_QueryGetOwnerOrders_Handler,
+			MethodName: "GetOwnerOrders",
+			Handler:    _Query_GetOwnerOrders_Handler,
 		},
 		{
-			MethodName: "QueryGetAssetOrders",
-			Handler:    _Query_QueryGetAssetOrders_Handler,
+			MethodName: "GetAssetOrders",
+			Handler:    _Query_GetAssetOrders_Handler,
 		},
 		{
-			MethodName: "QueryGetAllOrders",
-			Handler:    _Query_QueryGetAllOrders_Handler,
+			MethodName: "GetAllOrders",
+			Handler:    _Query_GetAllOrders_Handler,
 		},
 		{
-			MethodName: "QueryGetMarket",
-			Handler:    _Query_QueryGetMarket_Handler,
+			MethodName: "GetMarket",
+			Handler:    _Query_GetMarket_Handler,
 		},
 		{
-			MethodName: "QueryGetAllMarkets",
-			Handler:    _Query_QueryGetAllMarkets_Handler,
+			MethodName: "GetAllMarkets",
+			Handler:    _Query_GetAllMarkets_Handler,
 		},
 		{
-			MethodName: "QueryParams",
-			Handler:    _Query_QueryParams_Handler,
+			MethodName: "Params",
+			Handler:    _Query_Params_Handler,
 		},
 		{
-			MethodName: "QueryValidateCreateMarket",
-			Handler:    _Query_QueryValidateCreateMarket_Handler,
+			MethodName: "ValidateCreateMarket",
+			Handler:    _Query_ValidateCreateMarket_Handler,
 		},
 		{
-			MethodName: "QueryValidateMarket",
-			Handler:    _Query_QueryValidateMarket_Handler,
+			MethodName: "ValidateMarket",
+			Handler:    _Query_ValidateMarket_Handler,
 		},
 		{
-			MethodName: "QueryValidateManageFees",
-			Handler:    _Query_QueryValidateManageFees_Handler,
+			MethodName: "ValidateManageFees",
+			Handler:    _Query_ValidateManageFees_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

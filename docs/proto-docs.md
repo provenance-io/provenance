@@ -2454,7 +2454,7 @@ Msg is the service for exchange module's tx endpoints.
 <a name="provenance.exchange.v1.QueryGetAllMarketsRequest"></a>
 
 ### QueryGetAllMarketsRequest
-QueryGetAllMarketsRequest is a request message for the QueryGetAllMarkets endpoint.
+QueryGetAllMarketsRequest is a request message for the GetAllMarkets query.
 
 
 | Field | Type | Label | Description |
@@ -2469,7 +2469,7 @@ QueryGetAllMarketsRequest is a request message for the QueryGetAllMarkets endpoi
 <a name="provenance.exchange.v1.QueryGetAllMarketsResponse"></a>
 
 ### QueryGetAllMarketsResponse
-QueryGetAllMarketsResponse is a response message for the QueryGetAllMarkets endpoint.
+QueryGetAllMarketsResponse is a response message for the GetAllMarkets query.
 
 
 | Field | Type | Label | Description |
@@ -2485,7 +2485,7 @@ QueryGetAllMarketsResponse is a response message for the QueryGetAllMarkets endp
 <a name="provenance.exchange.v1.QueryGetAllOrdersRequest"></a>
 
 ### QueryGetAllOrdersRequest
-QueryGetAllOrdersRequest is a request message for the QueryGetAllOrders endpoint.
+QueryGetAllOrdersRequest is a request message for the GetAllOrders query.
 
 
 | Field | Type | Label | Description |
@@ -2500,7 +2500,7 @@ QueryGetAllOrdersRequest is a request message for the QueryGetAllOrders endpoint
 <a name="provenance.exchange.v1.QueryGetAllOrdersResponse"></a>
 
 ### QueryGetAllOrdersResponse
-QueryGetAllOrdersResponse is a response message for the QueryGetAllOrders endpoint.
+QueryGetAllOrdersResponse is a response message for the GetAllOrders query.
 
 
 | Field | Type | Label | Description |
@@ -2516,7 +2516,7 @@ QueryGetAllOrdersResponse is a response message for the QueryGetAllOrders endpoi
 <a name="provenance.exchange.v1.QueryGetAssetOrdersRequest"></a>
 
 ### QueryGetAssetOrdersRequest
-QueryGetAssetOrdersRequest is a request message for the QueryGetAssetOrders endpoint.
+QueryGetAssetOrdersRequest is a request message for the GetAssetOrders query.
 
 
 | Field | Type | Label | Description |
@@ -2534,7 +2534,7 @@ QueryGetAssetOrdersRequest is a request message for the QueryGetAssetOrders endp
 <a name="provenance.exchange.v1.QueryGetAssetOrdersResponse"></a>
 
 ### QueryGetAssetOrdersResponse
-QueryGetAssetOrdersResponse is a response message for the QueryGetAssetOrders endpoint.
+QueryGetAssetOrdersResponse is a response message for the GetAssetOrders query.
 
 
 | Field | Type | Label | Description |
@@ -2550,7 +2550,7 @@ QueryGetAssetOrdersResponse is a response message for the QueryGetAssetOrders en
 <a name="provenance.exchange.v1.QueryGetMarketOrdersRequest"></a>
 
 ### QueryGetMarketOrdersRequest
-QueryGetMarketOrdersRequest is a request message for the QueryGetMarketOrders endpoint.
+QueryGetMarketOrdersRequest is a request message for the GetMarketOrders query.
 
 
 | Field | Type | Label | Description |
@@ -2568,7 +2568,7 @@ QueryGetMarketOrdersRequest is a request message for the QueryGetMarketOrders en
 <a name="provenance.exchange.v1.QueryGetMarketOrdersResponse"></a>
 
 ### QueryGetMarketOrdersResponse
-QueryGetMarketOrdersResponse is a response message for the QueryGetMarketOrders endpoint.
+QueryGetMarketOrdersResponse is a response message for the GetMarketOrders query.
 
 
 | Field | Type | Label | Description |
@@ -2584,7 +2584,7 @@ QueryGetMarketOrdersResponse is a response message for the QueryGetMarketOrders 
 <a name="provenance.exchange.v1.QueryGetMarketRequest"></a>
 
 ### QueryGetMarketRequest
-QueryGetMarketRequest is a request message for the QueryGetMarket endpoint.
+QueryGetMarketRequest is a request message for the GetMarket query.
 
 
 | Field | Type | Label | Description |
@@ -2599,7 +2599,7 @@ QueryGetMarketRequest is a request message for the QueryGetMarket endpoint.
 <a name="provenance.exchange.v1.QueryGetMarketResponse"></a>
 
 ### QueryGetMarketResponse
-QueryGetMarketResponse is a response message for the QueryGetMarket endpoint.
+QueryGetMarketResponse is a response message for the GetMarket query.
 
 
 | Field | Type | Label | Description |
@@ -2615,7 +2615,7 @@ QueryGetMarketResponse is a response message for the QueryGetMarket endpoint.
 <a name="provenance.exchange.v1.QueryGetOrderByExternalIDRequest"></a>
 
 ### QueryGetOrderByExternalIDRequest
-QueryGetOrderByExternalIDRequest is a request message for the QueryGetOrderByExternalID endpoint.
+QueryGetOrderByExternalIDRequest is a request message for the GetOrderByExternalID query.
 
 
 | Field | Type | Label | Description |
@@ -2631,7 +2631,7 @@ QueryGetOrderByExternalIDRequest is a request message for the QueryGetOrderByExt
 <a name="provenance.exchange.v1.QueryGetOrderByExternalIDResponse"></a>
 
 ### QueryGetOrderByExternalIDResponse
-QueryGetOrderByExternalIDResponse is a response message for the QueryGetOrderByExternalID endpoint.
+QueryGetOrderByExternalIDResponse is a response message for the GetOrderByExternalID query.
 
 
 | Field | Type | Label | Description |
@@ -2646,7 +2646,7 @@ QueryGetOrderByExternalIDResponse is a response message for the QueryGetOrderByE
 <a name="provenance.exchange.v1.QueryGetOrderRequest"></a>
 
 ### QueryGetOrderRequest
-QueryGetOrderRequest is a request message for the QueryGetOrder endpoint.
+QueryGetOrderRequest is a request message for the GetOrder query.
 
 
 | Field | Type | Label | Description |
@@ -2661,7 +2661,7 @@ QueryGetOrderRequest is a request message for the QueryGetOrder endpoint.
 <a name="provenance.exchange.v1.QueryGetOrderResponse"></a>
 
 ### QueryGetOrderResponse
-QueryGetOrderResponse is a response message for the QueryGetOrder endpoint.
+QueryGetOrderResponse is a response message for the GetOrder query.
 
 
 | Field | Type | Label | Description |
@@ -2676,7 +2676,7 @@ QueryGetOrderResponse is a response message for the QueryGetOrder endpoint.
 <a name="provenance.exchange.v1.QueryGetOwnerOrdersRequest"></a>
 
 ### QueryGetOwnerOrdersRequest
-QueryGetOwnerOrdersRequest is a request message for the QueryGetOwnerOrders endpoint.
+QueryGetOwnerOrdersRequest is a request message for the GetOwnerOrders query.
 
 
 | Field | Type | Label | Description |
@@ -2694,7 +2694,7 @@ QueryGetOwnerOrdersRequest is a request message for the QueryGetOwnerOrders endp
 <a name="provenance.exchange.v1.QueryGetOwnerOrdersResponse"></a>
 
 ### QueryGetOwnerOrdersResponse
-QueryGetOwnerOrdersResponse is a response message for the QueryGetOwnerOrders endpoint.
+QueryGetOwnerOrdersResponse is a response message for the GetOwnerOrders query.
 
 
 | Field | Type | Label | Description |
@@ -2710,7 +2710,7 @@ QueryGetOwnerOrdersResponse is a response message for the QueryGetOwnerOrders en
 <a name="provenance.exchange.v1.QueryOrderFeeCalcRequest"></a>
 
 ### QueryOrderFeeCalcRequest
-QueryOrderFeeCalcRequest is a request message for the QueryOrderFeeCalc endpoint.
+QueryOrderFeeCalcRequest is a request message for the OrderFeeCalc query.
 Exactly one of ask_order or bid_order must be provided.
 
 
@@ -2727,7 +2727,7 @@ Exactly one of ask_order or bid_order must be provided.
 <a name="provenance.exchange.v1.QueryOrderFeeCalcResponse"></a>
 
 ### QueryOrderFeeCalcResponse
-QueryOrderFeeCalcResponse is a response message for the QueryOrderFeeCalc endpoint.
+QueryOrderFeeCalcResponse is a response message for the OrderFeeCalc query.
 
 
 | Field | Type | Label | Description |
@@ -2748,7 +2748,7 @@ If the provided order was an ask order, these are purely informational and repre
 <a name="provenance.exchange.v1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
-QueryParamsRequest is a request message for the QueryParams endpoint.
+QueryParamsRequest is a request message for the Params query.
 
 
 
@@ -2758,7 +2758,7 @@ QueryParamsRequest is a request message for the QueryParams endpoint.
 <a name="provenance.exchange.v1.QueryParamsResponse"></a>
 
 ### QueryParamsResponse
-QueryParamsResponse is a response message for the QueryParams endpoint.
+QueryParamsResponse is a response message for the Params query.
 
 
 | Field | Type | Label | Description |
@@ -2773,7 +2773,7 @@ QueryParamsResponse is a response message for the QueryParams endpoint.
 <a name="provenance.exchange.v1.QueryValidateCreateMarketRequest"></a>
 
 ### QueryValidateCreateMarketRequest
-QueryValidateCreateMarketRequest is a request message for the QueryValidateCreateMarket endpoint.
+QueryValidateCreateMarketRequest is a request message for the ValidateCreateMarket query.
 
 
 | Field | Type | Label | Description |
@@ -2788,7 +2788,7 @@ QueryValidateCreateMarketRequest is a request message for the QueryValidateCreat
 <a name="provenance.exchange.v1.QueryValidateCreateMarketResponse"></a>
 
 ### QueryValidateCreateMarketResponse
-QueryValidateCreateMarketResponse is a response message for the QueryValidateCreateMarket endpoint.
+QueryValidateCreateMarketResponse is a response message for the ValidateCreateMarket query.
 
 
 | Field | Type | Label | Description |
@@ -2804,7 +2804,7 @@ QueryValidateCreateMarketResponse is a response message for the QueryValidateCre
 <a name="provenance.exchange.v1.QueryValidateManageFeesRequest"></a>
 
 ### QueryValidateManageFeesRequest
-QueryValidateManageFeesRequest is a request message for the QueryValidateManageFees endpoint.
+QueryValidateManageFeesRequest is a request message for the ValidateManageFees query.
 
 
 | Field | Type | Label | Description |
@@ -2819,7 +2819,7 @@ QueryValidateManageFeesRequest is a request message for the QueryValidateManageF
 <a name="provenance.exchange.v1.QueryValidateManageFeesResponse"></a>
 
 ### QueryValidateManageFeesResponse
-QueryValidateManageFeesResponse is a response message for the QueryValidateManageFees endpoint.
+QueryValidateManageFeesResponse is a response message for the ValidateManageFees query.
 
 
 | Field | Type | Label | Description |
@@ -2835,7 +2835,7 @@ QueryValidateManageFeesResponse is a response message for the QueryValidateManag
 <a name="provenance.exchange.v1.QueryValidateMarketRequest"></a>
 
 ### QueryValidateMarketRequest
-QueryValidateMarketRequest is a request message for the QueryValidateMarket endpoint.
+QueryValidateMarketRequest is a request message for the ValidateMarket query.
 
 
 | Field | Type | Label | Description |
@@ -2850,7 +2850,7 @@ QueryValidateMarketRequest is a request message for the QueryValidateMarket endp
 <a name="provenance.exchange.v1.QueryValidateMarketResponse"></a>
 
 ### QueryValidateMarketResponse
-QueryValidateMarketResponse is a response message for the QueryValidateMarket endpoint.
+QueryValidateMarketResponse is a response message for the ValidateMarket query.
 
 
 | Field | Type | Label | Description |
@@ -2875,19 +2875,19 @@ Query is the service for exchange module's query endpoints.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `QueryOrderFeeCalc` | [QueryOrderFeeCalcRequest](#provenance.exchange.v1.QueryOrderFeeCalcRequest) | [QueryOrderFeeCalcResponse](#provenance.exchange.v1.QueryOrderFeeCalcResponse) | QueryOrderFeeCalc calculates the fees that will be associated with the provided order. | GET|/provenance/exchange/v1/fees/order|
-| `QueryGetOrder` | [QueryGetOrderRequest](#provenance.exchange.v1.QueryGetOrderRequest) | [QueryGetOrderResponse](#provenance.exchange.v1.QueryGetOrderResponse) | QueryGetOrder looks up an order by id. | GET|/provenance/exchange/v1/order/{order_id}|
-| `QueryGetOrderByExternalID` | [QueryGetOrderByExternalIDRequest](#provenance.exchange.v1.QueryGetOrderByExternalIDRequest) | [QueryGetOrderByExternalIDResponse](#provenance.exchange.v1.QueryGetOrderByExternalIDResponse) | QueryGetOrderByExternalID looks up an order by market id and external id. | GET|/provenance/exchange/v1/orders/market/{market_id}/{external_id}GET|/provenance/exchange/v1/market/{market_id}/order/{external_id}|
-| `QueryGetMarketOrders` | [QueryGetMarketOrdersRequest](#provenance.exchange.v1.QueryGetMarketOrdersRequest) | [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse) | QueryGetMarketOrders looks up the orders in a market. | GET|/provenance/exchange/v1/orders/market/{market_id}GET|/provenance/exchange/v1/market/{market_id}/orders|
-| `QueryGetOwnerOrders` | [QueryGetOwnerOrdersRequest](#provenance.exchange.v1.QueryGetOwnerOrdersRequest) | [QueryGetOwnerOrdersResponse](#provenance.exchange.v1.QueryGetOwnerOrdersResponse) | QueryGetOwnerOrders looks up the orders from the provided owner address. | GET|/provenance/exchange/v1/orders/owner/{owner}|
-| `QueryGetAssetOrders` | [QueryGetAssetOrdersRequest](#provenance.exchange.v1.QueryGetAssetOrdersRequest) | [QueryGetAssetOrdersResponse](#provenance.exchange.v1.QueryGetAssetOrdersResponse) | QueryGetAssetOrders looks up the orders for a specific asset denom. | GET|/provenance/exchange/v1/orders/asset/{asset}|
-| `QueryGetAllOrders` | [QueryGetAllOrdersRequest](#provenance.exchange.v1.QueryGetAllOrdersRequest) | [QueryGetAllOrdersResponse](#provenance.exchange.v1.QueryGetAllOrdersResponse) | QueryGetAllOrders gets all orders in the exchange module. | GET|/provenance/exchange/v1/orders|
-| `QueryGetMarket` | [QueryGetMarketRequest](#provenance.exchange.v1.QueryGetMarketRequest) | [QueryGetMarketResponse](#provenance.exchange.v1.QueryGetMarketResponse) | QueryGetMarket returns all the information and details about a market. | GET|/provenance/exchange/v1/market/{market_id}|
-| `QueryGetAllMarkets` | [QueryGetAllMarketsRequest](#provenance.exchange.v1.QueryGetAllMarketsRequest) | [QueryGetAllMarketsResponse](#provenance.exchange.v1.QueryGetAllMarketsResponse) | QueryGetAllMarkets returns brief information about each market. | GET|/provenance/exchange/v1/markets|
-| `QueryParams` | [QueryParamsRequest](#provenance.exchange.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.exchange.v1.QueryParamsResponse) | QueryParams returns the exchange module parameters. | GET|/provenance/exchange/v1/params|
-| `QueryValidateCreateMarket` | [QueryValidateCreateMarketRequest](#provenance.exchange.v1.QueryValidateCreateMarketRequest) | [QueryValidateCreateMarketResponse](#provenance.exchange.v1.QueryValidateCreateMarketResponse) | QueryValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have. | GET|/provenance/exchange/v1/validate/create_market|
-| `QueryValidateMarket` | [QueryValidateMarketRequest](#provenance.exchange.v1.QueryValidateMarketRequest) | [QueryValidateMarketResponse](#provenance.exchange.v1.QueryValidateMarketResponse) | QueryValidateMarket checks for any problems with a market's setup. | GET|/provenance/exchange/v1/validate/market/{market_id}GET|/provenance/exchange/v1/market/{market_id}/validate|
-| `QueryValidateManageFees` | [QueryValidateManageFeesRequest](#provenance.exchange.v1.QueryValidateManageFeesRequest) | [QueryValidateManageFeesResponse](#provenance.exchange.v1.QueryValidateManageFeesResponse) | QueryValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have. | GET|/provenance/exchange/v1/validate/manage_fees|
+| `OrderFeeCalc` | [QueryOrderFeeCalcRequest](#provenance.exchange.v1.QueryOrderFeeCalcRequest) | [QueryOrderFeeCalcResponse](#provenance.exchange.v1.QueryOrderFeeCalcResponse) | OrderFeeCalc calculates the fees that will be associated with the provided order. | GET|/provenance/exchange/v1/fees/order|
+| `GetOrder` | [QueryGetOrderRequest](#provenance.exchange.v1.QueryGetOrderRequest) | [QueryGetOrderResponse](#provenance.exchange.v1.QueryGetOrderResponse) | GetOrder looks up an order by id. | GET|/provenance/exchange/v1/order/{order_id}|
+| `GetOrderByExternalID` | [QueryGetOrderByExternalIDRequest](#provenance.exchange.v1.QueryGetOrderByExternalIDRequest) | [QueryGetOrderByExternalIDResponse](#provenance.exchange.v1.QueryGetOrderByExternalIDResponse) | GetOrderByExternalID looks up an order by market id and external id. | GET|/provenance/exchange/v1/orders/market/{market_id}/{external_id}GET|/provenance/exchange/v1/market/{market_id}/order/{external_id}|
+| `GetMarketOrders` | [QueryGetMarketOrdersRequest](#provenance.exchange.v1.QueryGetMarketOrdersRequest) | [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse) | GetMarketOrders looks up the orders in a market. | GET|/provenance/exchange/v1/orders/market/{market_id}GET|/provenance/exchange/v1/market/{market_id}/orders|
+| `GetOwnerOrders` | [QueryGetOwnerOrdersRequest](#provenance.exchange.v1.QueryGetOwnerOrdersRequest) | [QueryGetOwnerOrdersResponse](#provenance.exchange.v1.QueryGetOwnerOrdersResponse) | GetOwnerOrders looks up the orders from the provided owner address. | GET|/provenance/exchange/v1/orders/owner/{owner}|
+| `GetAssetOrders` | [QueryGetAssetOrdersRequest](#provenance.exchange.v1.QueryGetAssetOrdersRequest) | [QueryGetAssetOrdersResponse](#provenance.exchange.v1.QueryGetAssetOrdersResponse) | GetAssetOrders looks up the orders for a specific asset denom. | GET|/provenance/exchange/v1/orders/asset/{asset}|
+| `GetAllOrders` | [QueryGetAllOrdersRequest](#provenance.exchange.v1.QueryGetAllOrdersRequest) | [QueryGetAllOrdersResponse](#provenance.exchange.v1.QueryGetAllOrdersResponse) | GetAllOrders gets all orders in the exchange module. | GET|/provenance/exchange/v1/orders|
+| `GetMarket` | [QueryGetMarketRequest](#provenance.exchange.v1.QueryGetMarketRequest) | [QueryGetMarketResponse](#provenance.exchange.v1.QueryGetMarketResponse) | GetMarket returns all the information and details about a market. | GET|/provenance/exchange/v1/market/{market_id}|
+| `GetAllMarkets` | [QueryGetAllMarketsRequest](#provenance.exchange.v1.QueryGetAllMarketsRequest) | [QueryGetAllMarketsResponse](#provenance.exchange.v1.QueryGetAllMarketsResponse) | GetAllMarkets returns brief information about each market. | GET|/provenance/exchange/v1/markets|
+| `Params` | [QueryParamsRequest](#provenance.exchange.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.exchange.v1.QueryParamsResponse) | Params returns the exchange module parameters. | GET|/provenance/exchange/v1/params|
+| `ValidateCreateMarket` | [QueryValidateCreateMarketRequest](#provenance.exchange.v1.QueryValidateCreateMarketRequest) | [QueryValidateCreateMarketResponse](#provenance.exchange.v1.QueryValidateCreateMarketResponse) | ValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have. | GET|/provenance/exchange/v1/validate/create_market|
+| `ValidateMarket` | [QueryValidateMarketRequest](#provenance.exchange.v1.QueryValidateMarketRequest) | [QueryValidateMarketResponse](#provenance.exchange.v1.QueryValidateMarketResponse) | ValidateMarket checks for any problems with a market's setup. | GET|/provenance/exchange/v1/validate/market/{market_id}GET|/provenance/exchange/v1/market/{market_id}/validate|
+| `ValidateManageFees` | [QueryValidateManageFeesRequest](#provenance.exchange.v1.QueryValidateManageFeesRequest) | [QueryValidateManageFeesResponse](#provenance.exchange.v1.QueryValidateManageFeesResponse) | ValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have. | GET|/provenance/exchange/v1/validate/manage_fees|
 
  <!-- end services -->
 
