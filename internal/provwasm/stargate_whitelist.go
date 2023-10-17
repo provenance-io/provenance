@@ -16,6 +16,7 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/provenance-io/provenance/x/hold"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
@@ -80,6 +81,10 @@ func init() {
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Attribute", &attributetypes.QueryAttributeResponse{})
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Attributes", &attributetypes.QueryAttributesResponse{})
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Scan", &attributetypes.QueryScanResponse{})
+
+	// hold
+	setWhitelistedQuery("/provenance.hold.v1.Query/GetHolds", &hold.GetHoldsResponse{})
+	setWhitelistedQuery("/provenance.hold.v1.Query/GetAllHolds", &hold.GetAllHoldsResponse{})
 
 	// marker
 	setWhitelistedQuery("/provenance.marker.v1.Query/Params", &markertypes.QueryParamsResponse{})
