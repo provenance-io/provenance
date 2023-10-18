@@ -352,10 +352,14 @@ func addMarkerNavs(ctx sdk.Context, app *App) {
 
 	app.MarkerKeeper.IterateMarkers(ctx, func(record markertypes.MarkerAccountI) bool {
 		var hasNav bool
-		app.MarkerKeeper.IterateNetAssetValues(ctx, record.GetAddress(), func(nav markertypes.NetAssetValue) bool {
+		err := app.MarkerKeeper.IterateNetAssetValues(ctx, record.GetAddress(), func(nav markertypes.NetAssetValue) bool {
 			hasNav = true
 			return true
 		})
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("unable iterate net asset values for marker %v: %v", record, err))
+			return false
+		}
 		if !hasNav {
 			nav := markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), 1)
 			if err := app.MarkerKeeper.AddSetNetAssetValues(ctx, record, []markertypes.NetAssetValue{nav}, "upgrade_handler"); err != nil {
