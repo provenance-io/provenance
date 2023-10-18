@@ -22,8 +22,11 @@ COPY Makefile sims.mk ./
 
 
 # Build and install provenanced
-ENV VERSION=$VERSION
-RUN make VERSION=${VERSION} WITH_CLEVELDB=true install
+ENV VERSION=${VERSION}
+RUN UNAME_M=$(uname -m) && \
+    echo "UNAME_M: ${UNAME_M}" && \
+    if [ ${UNAME_M} != "x86_64" ]; then export ARCH=aarch64; fi && \
+    make VERSION=${VERSION} WITH_CLEVELDB=true install
 
 ###
 FROM debian:bullseye-slim as run
