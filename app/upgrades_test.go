@@ -24,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -844,4 +845,23 @@ func (s *UpgradeTestSuite) TestSetAccountDataNameRecord() {
 	}
 	s.Require().NoError(err, "setAccountDataNameRecord")
 	s.AssertLogContents(logOutput, expInLog, nil, true, "setAccountDataNameRecord")
+}
+
+func (s *UpgradeTestSuite) TestAddMarkerNavs() {
+	address1 := sdk.AccAddress("address1")
+	testcoin := markertypes.NewEmptyMarkerAccount("testcoin",
+		address1.String(),
+		[]markertypes.AccessGrant{})
+	testcoin.Supply = sdk.OneInt()
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, testcoin), "AddMarkerAccount() error")
+	addMarkerNavs(s.ctx, s.app)
+	netAssetValues := []markertypes.NetAssetValue{}
+	err := s.app.MarkerKeeper.IterateNetAssetValues(s.ctx, testcoin.GetAddress(), func(state markertypes.NetAssetValue) (stop bool) {
+		netAssetValues = append(netAssetValues, state)
+		return false
+	})
+	s.Require().NoError(err, "IterateNetAssetValues err")
+	s.Assert().Len(netAssetValues, 1, "Should be 1 nav set for testcoin")
+	s.Assert().Equal(sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), netAssetValues[0].Price, "Net asset value price should equal default upgraded price")
+	s.Assert().Equal(uint64(1), netAssetValues[0].Volume, "Net asset value volume should equal 1")
 }
