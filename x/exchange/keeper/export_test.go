@@ -63,4 +63,6 @@ var (
 	SetSellerSettlementRatios = setSellerSettlementRatios
 	// SetBuyerSettlementRatios is a test-only exposure of setBuyerSettlementRatios.
 	SetBuyerSettlementRatios = setBuyerSettlementRatios
+	// SetMarketActive is a test-only exposure of setMarketActive.
+	SetMarketActive = setMarketActive
 )

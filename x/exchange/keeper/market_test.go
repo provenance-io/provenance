@@ -3186,7 +3186,122 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_IsMarketActive()
+func (s *TestSuite) TestKeeper_IsMarketKnown() {
+	tests := []struct {
+		name     string
+		setup    func(s *TestSuite)
+		marketID uint32
+		expected bool
+	}{
+		{
+			name:     "empty state",
+			setup:    nil,
+			marketID: 1,
+			expected: false,
+		},
+		{
+			name: "unknown market id",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetMarketKnown(store, 1)
+				keeper.SetMarketKnown(store, 3)
+			},
+			marketID: 2,
+			expected: false,
+		},
+		{
+			name: "market known",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetMarketKnown(store, 1)
+				keeper.SetMarketKnown(store, 2)
+				keeper.SetMarketKnown(store, 3)
+			},
+			marketID: 2,
+			expected: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			var actual bool
+			testFunc := func() {
+				actual = s.k.IsMarketKnown(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "IsMarketKnown(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "IsMarketKnown(%d) result", tc.marketID)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_IsMarketActive() {
+	tests := []struct {
+		name     string
+		setup    func(s *TestSuite)
+		marketID uint32
+		expected bool
+	}{
+		{
+			name:     "empty state",
+			setup:    nil,
+			marketID: 1,
+			expected: true,
+		},
+		{
+			name: "unknown market id",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetMarketActive(store, 1, true)
+				keeper.SetMarketActive(store, 3, true)
+			},
+			marketID: 2,
+			expected: true,
+		},
+		{
+			name: "market not active",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetMarketActive(store, 1, true)
+				keeper.SetMarketActive(store, 2, false)
+				keeper.SetMarketActive(store, 3, true)
+			},
+			marketID: 2,
+			expected: false,
+		},
+		{
+			name: "market active",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetMarketActive(store, 1, true)
+				keeper.SetMarketActive(store, 2, true)
+				keeper.SetMarketActive(store, 3, true)
+			},
+			marketID: 2,
+			expected: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			var actual bool
+			testFunc := func() {
+				actual = s.k.IsMarketActive(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "IsMarketActive(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "IsMarketActive(%d) result", tc.marketID)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_UpdateMarketActive()
 
