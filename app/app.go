@@ -132,10 +132,13 @@ import (
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	attributewasm "github.com/provenance-io/provenance/x/attribute/wasm"
+	"github.com/provenance-io/provenance/x/exchange"
+	exchangekeeper "github.com/provenance-io/provenance/x/exchange/keeper"
+	exchangemodule "github.com/provenance-io/provenance/x/exchange/module"
 	"github.com/provenance-io/provenance/x/hold"
 	holdkeeper "github.com/provenance-io/provenance/x/hold/keeper"
 	holdmodule "github.com/provenance-io/provenance/x/hold/module"
-	ibchooks "github.com/provenance-io/provenance/x/ibchooks"
+	"github.com/provenance-io/provenance/x/ibchooks"
 	ibchookskeeper "github.com/provenance-io/provenance/x/ibchooks/keeper"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	"github.com/provenance-io/provenance/x/marker"
@@ -226,6 +229,7 @@ var (
 		triggermodule.AppModuleBasic{},
 		oraclemodule.AppModuleBasic{},
 		holdmodule.AppModuleBasic{},
+		exchangemodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -317,6 +321,7 @@ type App struct {
 	AttributeKeeper attributekeeper.Keeper
 	NameKeeper      namekeeper.Keeper
 	HoldKeeper      holdkeeper.Keeper
+	ExchangeKeeper  exchangekeeper.Keeper
 	WasmKeeper      *wasm.Keeper
 	ContractKeeper  *wasmkeeper.PermissionedKeeper
 
@@ -400,6 +405,7 @@ func New(
 		triggertypes.StoreKey,
 		oracletypes.StoreKey,
 		hold.StoreKey,
+		exchange.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -567,6 +573,11 @@ func New(
 
 	app.HoldKeeper = holdkeeper.NewKeeper(
 		appCodec, keys[hold.StoreKey], app.BankKeeper,
+	)
+
+	app.ExchangeKeeper = exchangekeeper.NewKeeper(
+		appCodec, keys[exchange.StoreKey], authtypes.FeeCollectorName,
+		app.AccountKeeper, app.AttributeKeeper, app.BankKeeper, app.HoldKeeper,
 	)
 
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
@@ -751,6 +762,7 @@ func New(
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		oracleModule,
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
+		exchangemodule.NewAppModule(appCodec, app.ExchangeKeeper),
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
@@ -801,6 +813,7 @@ func New(
 		quarantine.ModuleName,
 		sanction.ModuleName,
 		hold.ModuleName,
+		exchange.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -840,6 +853,7 @@ func New(
 		quarantine.ModuleName,
 		sanction.ModuleName,
 		hold.ModuleName,
+		exchange.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -871,6 +885,7 @@ func New(
 		metadatatypes.ModuleName,
 		msgfeestypes.ModuleName,
 		hold.ModuleName,
+		exchange.ModuleName, // must be after the hold module.
 
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -911,6 +926,7 @@ func New(
 		quarantine.ModuleName,
 		sanction.ModuleName,
 		hold.ModuleName,
+		exchange.ModuleName,
 
 		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
@@ -961,6 +977,7 @@ func New(
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper, app.IBCKeeper.ChannelKeeper),
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
+		exchangemodule.NewAppModule(appCodec, app.ExchangeKeeper),
 		provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 
 		// IBC

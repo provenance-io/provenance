@@ -36409,8 +36409,8 @@ paths:
                     type: string
                     format: uint64
                     title: >-
-                      maximum amount of supply to allow a marker to be created
-                      with
+                      Deprecated: Prefer to use `max_supply` instead. Maximum
+                      amount of supply to allow a marker to be created with
                   enable_governance:
                     type: boolean
                     format: boolean
@@ -36425,6 +36425,11 @@ paths:
 
                       requests are only subject to platform coin validation
                       denom expression)
+                  max_supply:
+                    type: string
+                    title: >-
+                      maximum amount of supply to allow a marker to be created
+                      with
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -83319,7 +83324,9 @@ definitions:
       max_total_supply:
         type: string
         format: uint64
-        title: maximum amount of supply to allow a marker to be created with
+        title: >-
+          Deprecated: Prefer to use `max_supply` instead. Maximum amount of
+          supply to allow a marker to be created with
       enable_governance:
         type: boolean
         format: boolean
@@ -83332,6 +83339,9 @@ definitions:
 
           requests are only subject to platform coin validation denom
           expression)
+      max_supply:
+        type: string
+        title: maximum amount of supply to allow a marker to be created with
     description: Params defines the set of params for the account module.
   provenance.marker.v1.QueryAccessResponse:
     type: object
@@ -83950,7 +83960,9 @@ definitions:
           max_total_supply:
             type: string
             format: uint64
-            title: maximum amount of supply to allow a marker to be created with
+            title: >-
+              Deprecated: Prefer to use `max_supply` instead. Maximum amount of
+              supply to allow a marker to be created with
           enable_governance:
             type: boolean
             format: boolean
@@ -83963,6 +83975,9 @@ definitions:
 
               requests are only subject to platform coin validation denom
               expression)
+          max_supply:
+            type: string
+            title: maximum amount of supply to allow a marker to be created with
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   provenance.marker.v1.QuerySupplyResponse:
     type: object
