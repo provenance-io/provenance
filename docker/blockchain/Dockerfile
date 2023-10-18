@@ -25,7 +25,7 @@ COPY Makefile sims.mk ./
 ENV VERSION=${VERSION}
 RUN UNAME_M=$(uname -m) && \
     echo "UNAME_M: ${UNAME_M}" && \
-    if [ ${UNAME_M} != "x86_64" ]; then export ARCH=aarch64; fi && \
+    export ARCH=${UNAME_M} && \
     make VERSION=${VERSION} WITH_CLEVELDB=true install
 
 ###
