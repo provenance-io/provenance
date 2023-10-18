@@ -24,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -429,6 +430,7 @@ func (s *UpgradeTestSuite) TestSaffronRC1() {
 		"INF Done updating MaxSupply marker param",
 		"INF Adding marker net asset values",
 		"INF Done adding marker net asset values",
+		"INF Ensuring exchange module params are set.",
 	}
 
 	s.AssertUpgradeHandlerLogs("saffron-rc1", expInLog, nil)
@@ -447,6 +449,7 @@ func (s *UpgradeTestSuite) TestSaffron() {
 		"INF Done updating MaxSupply marker param",
 		"INF Adding marker net asset values",
 		"INF Done adding marker net asset values",
+		"INF Ensuring exchange module params are set.",
 	}
 
 	s.AssertUpgradeHandlerLogs("saffron", expInLog, nil)
@@ -891,7 +894,6 @@ func (s *UpgradeTestSuite) TestAddMarkerNavs() {
 			expNav:     nil,
 		},
 	}
-
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			netAssetValues := []markertypes.NetAssetValue{}
@@ -907,6 +909,80 @@ func (s *UpgradeTestSuite) TestAddMarkerNavs() {
 			} else {
 				s.Assert().Len(netAssetValues, 0, "Marker not expected to have nav")
 			}
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestSetExchangeParams() {
+	startMsg := "INF Ensuring exchange module params are set."
+	noopMsg := "INF Exchange module params are already defined."
+	updateMsg := "INF Setting exchange module params to defaults."
+	doneMsg := "INF Done ensuring exchange module params are set."
+
+	tests := []struct {
+		name           string
+		existingParams *exchange.Params
+		expectedParams *exchange.Params
+		expInLog       []string
+	}{
+		{
+			name:           "no params set yet",
+			existingParams: nil,
+			expectedParams: exchange.DefaultParams(),
+			expInLog:       []string{startMsg, updateMsg, doneMsg},
+		},
+		{
+			name:           "params set with no splits and default zero",
+			existingParams: &exchange.Params{DefaultSplit: 0},
+			expectedParams: &exchange.Params{DefaultSplit: 0},
+			expInLog:       []string{startMsg, noopMsg, doneMsg},
+		},
+		{
+			name:           "params set with no splits and different default",
+			existingParams: &exchange.Params{DefaultSplit: exchange.DefaultDefaultSplit + 100},
+			expectedParams: &exchange.Params{DefaultSplit: exchange.DefaultDefaultSplit + 100},
+			expInLog:       []string{startMsg, noopMsg, doneMsg},
+		},
+		{
+			name: "params set with some splits",
+			existingParams: &exchange.Params{
+				DefaultSplit: exchange.DefaultDefaultSplit + 100,
+				DenomSplits: []exchange.DenomSplit{
+					{Denom: "peach", Split: 3000},
+					{Denom: "plum", Split: 100},
+				},
+			},
+			expectedParams: &exchange.Params{
+				DefaultSplit: exchange.DefaultDefaultSplit + 100,
+				DenomSplits: []exchange.DenomSplit{
+					{Denom: "peach", Split: 3000},
+					{Denom: "plum", Split: 100},
+				},
+			},
+			expInLog: []string{startMsg, noopMsg, doneMsg},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.app.ExchangeKeeper.SetParams(s.ctx, tc.existingParams)
+
+			// Reset the log buffer and call the fun. Relog the output if it panics.
+			s.logBuffer.Reset()
+			testFunc := func() {
+				setExchangeParams(s.ctx, s.app)
+			}
+			didNotPanic := s.Assert().NotPanics(testFunc, "setExchangeParams")
+			logOutput := s.GetLogOutput("setExchangeParams")
+			if !didNotPanic {
+				return
+			}
+
+			// Make sure the log has the expected lines.
+			s.AssertLogContents(logOutput, tc.expInLog, nil, true, "setExchangeParams")
+
+			// Make sure the params are as expected now.
+			params := s.app.ExchangeKeeper.GetParams(s.ctx)
+			s.Assert().Equal(tc.expectedParams, params, "params after setExchangeParams")
 		})
 	}
 }
