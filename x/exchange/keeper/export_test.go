@@ -67,4 +67,6 @@ var (
 	SetMarketActive = setMarketActive
 	// SetUserSettlementAllowed is a test-only exposure of setUserSettlementAllowed.
 	SetUserSettlementAllowed = setUserSettlementAllowed
+	// GrantPermissions is a test-only exposure of grantPermissions.
+	GrantPermissions = grantPermissions
 )

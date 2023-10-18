@@ -3608,21 +3608,377 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_HasPermission()
+func (s *TestSuite) TestKeeper_HasPermission() {
+	goodAcc := sdk.AccAddress("goodAddr____________")
+	goodAddr := goodAcc.String()
+	authority := s.k.GetAuthority()
+	tests := []struct {
+		name       string
+		setup      func(s *TestSuite)
+		marketID   uint32
+		address    string
+		permission exchange.Permission
+		expected   bool
+	}{
+		{
+			name:       "empty state, empty address",
+			marketID:   1,
+			address:    "",
+			permission: 1,
+			expected:   false,
+		},
+		{
+			name:       "empty state, bad address",
+			marketID:   1,
+			address:    "bad address",
+			permission: 1,
+			expected:   false,
+		},
+		{
+			name:       "empty state, not authority",
+			marketID:   1,
+			address:    goodAddr,
+			permission: 1,
+			expected:   false,
+		},
+		{
+			name:       "empty state, is authority",
+			marketID:   1,
+			address:    authority,
+			permission: 1,
+			expected:   true,
+		},
+		{
+			name: "no market perms, empty address",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
+			},
+			marketID:   2,
+			address:    "",
+			permission: 1,
+			expected:   false,
+		},
+		{
+			name: "no market perms, bad address",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
+			},
+			marketID:   2,
+			address:    "bad address",
+			permission: 1,
+			expected:   false,
+		},
+		{
+			name: "no market perms, not authority",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
+			},
+			marketID:   2,
+			address:    goodAddr,
+			permission: 1,
+			expected:   false,
+		},
+		{
+			name: "no market perms, is authority",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
+			},
+			marketID:   2,
+			address:    authority,
+			permission: 1,
+			expected:   true,
+		},
+		{
+			name: "market with perms, empty address",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 2, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
+			},
+			marketID:   2,
+			address:    "",
+			permission: 1,
+			expected:   false,
+		},
+		{
+			name: "market with perms, bad address",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 2, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
+			},
+			marketID:   2,
+			address:    "bad addr",
+			permission: 1,
+			expected:   false,
+		},
+		{
+			name: "market with perms, unknown address",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 2, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
+			},
+			marketID:   2,
+			address:    sdk.AccAddress("other_address_______").String(),
+			permission: 1,
+			expected:   false,
+		},
+		{
+			name: "market with perms, authority",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 2, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
+			},
+			marketID:   2,
+			address:    authority,
+			permission: 1,
+			expected:   true,
+		},
+		{
+			name: "address has other perms on this market",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 2, goodAcc, []exchange.Permission{
+					exchange.Permission_settle, exchange.Permission_cancel})
+				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
+			},
+			marketID:   2,
+			address:    goodAddr,
+			permission: exchange.Permission_set_ids,
+			expected:   false,
+		},
+		{
+			name: "address only has just perm on this market",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 2, goodAcc, []exchange.Permission{exchange.Permission_withdraw})
+				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
+			},
+			marketID:   2,
+			address:    goodAddr,
+			permission: exchange.Permission_withdraw,
+			expected:   true,
+		},
+		{
+			name: "address has all perms on market",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 2, goodAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
+			},
+			marketID:   2,
+			address:    goodAddr,
+			permission: exchange.Permission_permissions,
+			expected:   true,
+		},
+	}
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_CanSettleOrders()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_CanSetIDs()
+			var actual bool
+			testFunc := func() {
+				actual = s.k.HasPermission(s.ctx, tc.marketID, tc.address, tc.permission)
+			}
+			s.Require().NotPanics(testFunc, "HasPermission(%d, %q, %s)", tc.marketID, tc.address, tc.permission)
+			s.Assert().Equal(tc.expected, actual, "HasPermission(%d, %q, %s) result", tc.marketID, tc.address, tc.permission)
+		})
+	}
+}
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_CanCancelOrdersForMarket()
+// permChecker is the function signature of a permission checking function, e.g. CanSettleOrders.
+type permChecker func(ctx sdk.Context, marketID uint32, address string) bool
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_CanWithdrawMarketFunds()
+// runPermTest runs a set of tests on a permission checking function, e.g. CanSettleOrders.
+func (s *TestSuite) runPermTest(perm exchange.Permission, checker permChecker, name string) {
+	allPermsAcc := sdk.AccAddress("allPerms____________")
+	allPermsAddr := allPermsAcc.String()
+	justPermAcc := sdk.AccAddress("justPerm____________")
+	justPermAddr := justPermAcc.String()
+	otherPermsAcc := sdk.AccAddress("otherPerms__________")
+	otherPermsAddr := otherPermsAcc.String()
+	noPermsAcc := sdk.AccAddress("noPerms_____________")
+	noPermsAddr := noPermsAcc.String()
+	authorityAddr := s.k.GetAuthority()
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_CanUpdateMarket()
+	allPerms := exchange.AllPermissions()
+	otherPerms := make([]exchange.Permission, 0, len(allPermsAcc)-1)
+	for _, p := range exchange.AllPermissions() {
+		if p != perm {
+			otherPerms = append(otherPerms, p)
+		}
+	}
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_CanManagePermissions()
+	defaultSetup := func(s *TestSuite) {
+		store := s.getStore()
+		keeper.GrantPermissions(store, 10, allPermsAcc, allPerms)
+		keeper.GrantPermissions(store, 10, justPermAcc, allPerms)
+		keeper.GrantPermissions(store, 10, otherPermsAcc, allPerms)
+		keeper.GrantPermissions(store, 10, noPermsAcc, allPerms)
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_CanManageReqAttrs()
+		keeper.GrantPermissions(store, 11, allPermsAcc, allPerms)
+		keeper.GrantPermissions(store, 11, justPermAcc, []exchange.Permission{perm})
+		keeper.GrantPermissions(store, 11, otherPermsAcc, otherPerms)
+
+		keeper.GrantPermissions(store, 12, allPermsAcc, allPerms)
+		keeper.GrantPermissions(store, 12, justPermAcc, allPerms)
+		keeper.GrantPermissions(store, 12, otherPermsAcc, allPerms)
+		keeper.GrantPermissions(store, 12, noPermsAcc, allPerms)
+	}
+
+	tests := []struct {
+		name     string
+		setup    func(s *TestSuite)
+		marketID uint32
+		admin    string
+		expected bool
+	}{
+		{
+			name:     "empty state: empty addr",
+			marketID: 1,
+			admin:    "",
+			expected: false,
+		},
+		{
+			name:     "empty state: authority",
+			marketID: 1,
+			admin:    authorityAddr,
+			expected: true,
+		},
+		{
+			name:     "empty state: addr with all perms",
+			marketID: 1,
+			admin:    allPermsAddr,
+			expected: false,
+		},
+		{
+			name:     "empty state: addr with just perm",
+			marketID: 1,
+			admin:    justPermAddr,
+			expected: false,
+		},
+		{
+			name:     "empty state: addr with all other perms",
+			marketID: 1,
+			admin:    otherPermsAddr,
+			expected: false,
+		},
+		{
+			name:     "empty state: addr without any perms",
+			marketID: 1,
+			admin:    noPermsAddr,
+			expected: false,
+		},
+
+		{
+			name:     "existing market: empty addr",
+			setup:    defaultSetup,
+			marketID: 11,
+			admin:    "",
+			expected: false,
+		},
+		{
+			name:     "existing market: authority",
+			setup:    defaultSetup,
+			marketID: 11,
+			admin:    authorityAddr,
+			expected: true,
+		},
+		{
+			name:     "existing market: addr with all perms",
+			setup:    defaultSetup,
+			marketID: 11,
+			admin:    allPermsAddr,
+			expected: true,
+		},
+		{
+			name:     "existing market: addr with just perm",
+			setup:    defaultSetup,
+			marketID: 11,
+			admin:    justPermAddr,
+			expected: true,
+		},
+		{
+			name:     "existing market: addr with all other perms",
+			setup:    defaultSetup,
+			marketID: 11,
+			admin:    otherPermsAddr,
+			expected: false,
+		},
+		{
+			name:     "existing market: addr without any perms",
+			setup:    defaultSetup,
+			marketID: 11,
+			admin:    noPermsAddr,
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			var actual bool
+			testFunc := func() {
+				actual = checker(s.ctx, tc.marketID, tc.admin)
+			}
+			s.Require().NotPanics(testFunc, "%s(%d, %q)", name, tc.marketID, tc.admin)
+			s.Assert().Equal(tc.expected, actual, "%s(%d, %q) result", name, tc.marketID, tc.admin)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_CanSettleOrders() {
+	s.runPermTest(exchange.Permission_settle, s.k.CanSettleOrders, "CanSettleOrders")
+}
+
+func (s *TestSuite) TestKeeper_CanSetIDs() {
+	s.runPermTest(exchange.Permission_set_ids, s.k.CanSetIDs, "CanSetIDs")
+}
+
+func (s *TestSuite) TestKeeper_CanCancelOrdersForMarket() {
+	s.runPermTest(exchange.Permission_cancel, s.k.CanCancelOrdersForMarket, "CanCancelOrdersForMarket")
+}
+
+func (s *TestSuite) TestKeeper_CanWithdrawMarketFunds() {
+	s.runPermTest(exchange.Permission_withdraw, s.k.CanWithdrawMarketFunds, "CanWithdrawMarketFunds")
+}
+
+func (s *TestSuite) TestKeeper_CanUpdateMarket() {
+	s.runPermTest(exchange.Permission_update, s.k.CanUpdateMarket, "CanUpdateMarket")
+}
+
+func (s *TestSuite) TestKeeper_CanManagePermissions() {
+	s.runPermTest(exchange.Permission_permissions, s.k.CanManagePermissions, "CanManagePermissions")
+}
+
+func (s *TestSuite) TestKeeper_CanManageReqAttrs() {
+	s.runPermTest(exchange.Permission_attributes, s.k.CanManageReqAttrs, "CanManageReqAttrs")
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_GetUserPermissions()
 
