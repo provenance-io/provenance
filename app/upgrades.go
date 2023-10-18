@@ -17,6 +17,7 @@ import (
 
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
@@ -113,10 +114,11 @@ var upgrades = map[string]appUpgrade{
 			removeInactiveValidatorDelegations(ctx, app)
 			setupICQ(ctx, app)
 			updateMaxSupply(ctx, app)
+			setExchangeParams(ctx, app)
 
 			return vm, nil
 		},
-		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.ModuleName, hold.ModuleName},
+		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.ModuleName, hold.ModuleName, exchange.ModuleName},
 	},
 	"saffron": { // upgrade for v1.17.0,
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -132,10 +134,11 @@ var upgrades = map[string]appUpgrade{
 			removeInactiveValidatorDelegations(ctx, app)
 			setupICQ(ctx, app)
 			updateMaxSupply(ctx, app)
+			setExchangeParams(ctx, app)
 
 			return vm, nil
 		},
-		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.ModuleName, hold.ModuleName},
+		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.ModuleName, hold.ModuleName, exchange.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
 }
@@ -324,14 +327,16 @@ func setAccountDataNameRecord(ctx sdk.Context, accountK attributetypes.AccountKe
 	return attributekeeper.EnsureModuleAccountAndAccountDataNameRecord(ctx, accountK, nameK)
 }
 
-// setupICQ sets the correct default values for ICQKeeper
+// setupICQ sets the correct default values for ICQKeeper.
+// TODO: Remove with the saffron handlers.
 func setupICQ(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating ICQ params")
 	app.ICQKeeper.SetParams(ctx, icqtypes.NewParams(true, []string{"/provenance.oracle.v1.Query/Oracle"}))
 	ctx.Logger().Info("Done updating ICQ params")
 }
 
-// updateMaxSupply sets the value of max supply to the current value of MaxTotalSupply
+// updateMaxSupply sets the value of max supply to the current value of MaxTotalSupply.
+// TODO: Remove with the saffron handlers.
 func updateMaxSupply(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating MaxSupply marker param")
 	params := app.MarkerKeeper.GetParams(ctx)
@@ -339,4 +344,19 @@ func updateMaxSupply(ctx sdk.Context, app *App) {
 	params.MaxSupply = math.NewIntFromUint64(params.MaxTotalSupply)
 	app.MarkerKeeper.SetParams(ctx, params)
 	ctx.Logger().Info("Done updating MaxSupply marker param")
+}
+
+// setExchangeParams sets exchange module's params to the defaults.
+// TODO: Remove with the saffron handlers.
+func setExchangeParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Ensuring exchange module params are set.")
+	params := app.ExchangeKeeper.GetParams(ctx)
+	if params != nil {
+		ctx.Logger().Info("Exchange module params are already defined.")
+	} else {
+		params = exchange.DefaultParams()
+		ctx.Logger().Info("Setting exchange module params to defaults.")
+		app.ExchangeKeeper.SetParams(ctx, params)
+	}
+	ctx.Logger().Info("Done ensuring exchange module params are set.")
 }

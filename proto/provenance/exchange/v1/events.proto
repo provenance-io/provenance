@@ -1,0 +1,161 @@
+syntax = "proto3";
+package provenance.exchange.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/exchange";
+
+option java_package        = "io.provenance.exchange.v1";
+option java_multiple_files = true;
+
+import "cosmos_proto/cosmos.proto";
+
+// EventOrderCreated is an event emitted when an order is created.
+message EventOrderCreated {
+  // order_id is the numerical identifier of the order created.
+  uint64 order_id = 1;
+  // order_type is the type of order, e.g. "ask" or "bid".
+  string order_type = 2;
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 3;
+  // external_id is the order's external id.
+  string external_id = 4;
+}
+
+// EventOrderCancelled is an event emitted when an order is cancelled.
+message EventOrderCancelled {
+  // order_id is the numerical identifier of the order cancelled.
+  uint64 order_id = 1;
+  // cancelled_by is the account that triggered the cancellation of the order.
+  string cancelled_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 3;
+  // external_id is the order's external id.
+  string external_id = 4;
+}
+
+// EventOrderFilled is an event emitted when an order has been filled in full.
+// This event is also used for orders that were previously partially filled, but have now been filled in full.
+message EventOrderFilled {
+  // order_id is the numerical identifier of the order filled.
+  uint64 order_id = 1;
+  // assets is the coins amount string of assets bought/sold for this order.
+  string assets = 2;
+  // price is the coins amount string of the price payed/received for this order.
+  string price = 3;
+  // fees is the coins amount string of settlement fees paid with this order.
+  string fees = 4;
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 5;
+  // external_id is the order's external id.
+  string external_id = 6;
+}
+
+// EventOrderPartiallyFilled is an event emitted when an order filled in part and still has more left to fill.
+message EventOrderPartiallyFilled {
+  // order_id is the numerical identifier of the order partially filled.
+  uint64 order_id = 1;
+  // assets is the coins amount string of assets that were filled and removed from the order.
+  string assets = 2;
+  // price is the coins amount string of the price payed/received for this order.
+  // For ask orders, this might be more than the amount that was removed from the order's price.
+  string price = 3;
+  // fees is the coins amount string of settlement fees paid with this partial order.
+  // For ask orders, this might be more than the amount that was removed from the order's settlement fees.
+  string fees = 4;
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 5;
+  // external_id is the order's external id.
+  string external_id = 6;
+}
+
+// EventOrderExternalIDUpdated is an event emitted when an order's external id is updated.
+message EventOrderExternalIDUpdated {
+  // order_id is the numerical identifier of the order partially filled.
+  uint64 order_id = 1;
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 2;
+  // external_id is the order's new external id.
+  string external_id = 3;
+}
+
+// EventMarketWithdraw is an event emitted when a withdrawal of a market's collected fees is made.
+message EventMarketWithdraw {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // amount is the coins amount string of funds withdrawn from the market account.
+  string amount = 2;
+  // destination is the account that received the funds.
+  string destination = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // withdrawn_by is the account that requested the withdrawal.
+  string withdrawn_by = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketDetailsUpdated is an event emitted when a market's details are updated.
+message EventMarketDetailsUpdated {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // updated_by is the account that updated the details.
+  string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketEnabled is an event emitted when a market is enabled.
+message EventMarketEnabled {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // updated_by is the account that enabled the market.
+  string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketDisabled is an event emitted when a market is disabled.
+message EventMarketDisabled {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // updated_by is the account that disabled the market.
+  string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketUserSettleEnabled is an event emitted when a market's user_settle option is enabled.
+message EventMarketUserSettleEnabled {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // updated_by is the account that updated the user_settle option.
+  string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketUserSettleDisabled is an event emitted when a market's user_settle option is disabled.
+message EventMarketUserSettleDisabled {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // updated_by is the account that updated the user_settle option.
+  string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketPermissionsUpdated is an event emitted when a market's permissions are updated.
+message EventMarketPermissionsUpdated {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // updated_by is the account that updated the permissions.
+  string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketReqAttrUpdated is an event emitted when a market's required attributes are updated.
+message EventMarketReqAttrUpdated {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // updated_by is the account that updated the required attributes.
+  string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketCreated is an event emitted when a market has been created.
+message EventMarketCreated {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+}
+
+// EventMarketFeesUpdated is an event emitted when a market's fees have been updated.
+message EventMarketFeesUpdated {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+}
+
+// EventParamsUpdated is an event emitted when the exchange module's params have been updated.
+message EventParamsUpdated {}
