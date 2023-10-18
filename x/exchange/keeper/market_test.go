@@ -3303,7 +3303,126 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_UpdateMarketActive()
+func (s *TestSuite) TestKeeper_UpdateMarketActive() {
+	tests := []struct {
+		name      string
+		setup     func(s *TestSuite)
+		marketID  uint32
+		active    bool
+		updatedBy sdk.AccAddress
+		expErr    string
+	}{
+		{
+			name:      "empty state to active",
+			marketID:  1,
+			active:    true,
+			updatedBy: sdk.AccAddress("updatedBy___________"),
+			expErr:    "market 1 already has accepting-orders true",
+		},
+		{
+			name:      "empty state to inactive",
+			marketID:  1,
+			active:    false,
+			updatedBy: sdk.AccAddress("updatedBy___________"),
+			expErr:    "",
+		},
+		{
+			name: "active to active",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetMarketActive(store, 1, true)
+				keeper.SetMarketActive(store, 2, false)
+				keeper.SetMarketActive(store, 3, true)
+				keeper.SetMarketActive(store, 4, true)
+				keeper.SetMarketActive(store, 5, false)
+			},
+			marketID:  3,
+			active:    true,
+			updatedBy: sdk.AccAddress("updatedBy___________"),
+			expErr:    "market 3 already has accepting-orders true",
+		},
+		{
+			name: "active to inactive",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetMarketActive(store, 1, true)
+				keeper.SetMarketActive(store, 2, false)
+				keeper.SetMarketActive(store, 3, true)
+				keeper.SetMarketActive(store, 4, true)
+				keeper.SetMarketActive(store, 5, false)
+			},
+			marketID:  3,
+			active:    false,
+			updatedBy: sdk.AccAddress("updated_by__________"),
+			expErr:    "",
+		},
+		{
+			name: "inactive to active",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetMarketActive(store, 11, true)
+				keeper.SetMarketActive(store, 12, false)
+				keeper.SetMarketActive(store, 13, false)
+				keeper.SetMarketActive(store, 14, true)
+				keeper.SetMarketActive(store, 15, false)
+			},
+			marketID:  13,
+			active:    true,
+			updatedBy: sdk.AccAddress("updated___by________"),
+			expErr:    "",
+		},
+		{
+			name: "inactive to inactive",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetMarketActive(store, 11, true)
+				keeper.SetMarketActive(store, 12, false)
+				keeper.SetMarketActive(store, 13, false)
+				keeper.SetMarketActive(store, 14, true)
+				keeper.SetMarketActive(store, 15, false)
+			},
+			marketID:  13,
+			active:    false,
+			updatedBy: sdk.AccAddress("__updated_____by____"),
+			expErr:    "market 13 already has accepting-orders false",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			expEvents := sdk.Events{}
+			if len(tc.expErr) == 0 {
+				expEvent, err := sdk.TypedEventToEvent(exchange.NewEventMarketActiveUpdated(tc.marketID, tc.updatedBy, tc.active))
+				s.Require().NoError(err, "TypedEventToEvent(NewEventMarketActiveUpdated(%d, %s, %t)",
+					tc.marketID, string(tc.updatedBy), tc.active)
+				expEvents = append(expEvents, expEvent)
+			}
+
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = s.k.UpdateMarketActive(ctx, tc.marketID, tc.active, tc.updatedBy)
+			}
+			s.Require().NotPanics(testFunc, "UpdateMarketActive(%d, %t, %s)", tc.marketID, tc.active, string(tc.updatedBy))
+			s.assertErrorValue(err, tc.expErr, "UpdateMarketActive(%d, %t, %s)", tc.marketID, tc.active, string(tc.updatedBy))
+
+			events := em.Events()
+			s.assertEqualEvents(expEvents, events, "events after UpdateMarketActive")
+
+			if len(tc.expErr) == 0 {
+				isActive := s.k.IsMarketActive(s.ctx, tc.marketID)
+				s.Assert().Equal(tc.active, isActive, "IsMarketActive(%d) after UpdateMarketActive(%d, %t, ...)",
+					tc.marketID, tc.marketID, tc.active)
+			}
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_IsUserSettlementAllowed()
 
