@@ -122,7 +122,7 @@ var upgrades = map[string]appUpgrade{
 				"tp1cxuqqyjjf5x66jvlmtvj3juppn370ev7rr5cja3ml65nzhxgvpkszfuvtw.investment": markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 10), 33600000),
 				"pm.sale.pool.7v2gsuvnudyfvuig50r3k3":                                      markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 19026640), 1),
 			}
-			addMarkerNavs(ctx, app, denomToNav)
+			addMarkerNavs(ctx, app, denomToNav, markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), 1))
 
 			setExchangeParams(ctx, app)
 
@@ -148,7 +148,7 @@ var upgrades = map[string]appUpgrade{
 			denomToNav := map[string]markertypes.NetAssetValue{
 				// TODO: Add custom mainnet values here
 			}
-			addMarkerNavs(ctx, app, denomToNav)
+			addMarkerNavs(ctx, app, denomToNav, markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), 1))
 			setExchangeParams(ctx, app)
 
 			return vm, nil
@@ -362,7 +362,7 @@ func updateMaxSupply(ctx sdk.Context, app *App) {
 }
 
 // addMarkerNavs adds navs to existing markers, if denom is not in map it will default to $0.15 cents
-func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.NetAssetValue) {
+func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.NetAssetValue, defaultNav markertypes.NetAssetValue) {
 	ctx.Logger().Info("Adding marker net asset values")
 	for denom, nav := range denomToNav {
 		marker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, denom)
@@ -385,9 +385,8 @@ func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.
 			return false
 		}
 		if !hasNav {
-			nav := markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), 1)
-			if err := app.MarkerKeeper.AddSetNetAssetValues(ctx, record, []markertypes.NetAssetValue{nav}, "upgrade_handler"); err != nil {
-				ctx.Logger().Error(fmt.Sprintf("unable to set net asset value %v: %v", nav, err))
+			if err := app.MarkerKeeper.AddSetNetAssetValues(ctx, record, []markertypes.NetAssetValue{defaultNav}, "upgrade_handler"); err != nil {
+				ctx.Logger().Error(fmt.Sprintf("unable to set net asset value %v: %v", defaultNav, err))
 			}
 		}
 		return false
