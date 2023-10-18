@@ -13,7 +13,7 @@ build:
 
 .PHONY: test
 test:
-	@RUST_BACKTRACE=1 cargo unit-test
+	@RUST_BACKTRACE=1 cargo test
 
 .PHONY: lint
 lint:
