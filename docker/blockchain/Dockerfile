@@ -23,14 +23,12 @@ COPY Makefile sims.mk ./
 
 # Build and install provenanced
 ENV VERSION=${VERSION}
-RUN UNAME_M=$(uname -m) && \
-    echo "UNAME_M: ${UNAME_M}" && \
-    export ARCH=${UNAME_M} && \
-    make VERSION=${VERSION} WITH_CLEVELDB=true install
+RUN make VERSION=${VERSION} WITH_CLEVELDB=true install
 
 ###
 FROM debian:bullseye-slim as run
-ARG ARCH=x86_64
+RUN UNAME_M=$(uname -m)
+ARG ARCH=${UNAME_M}
 ENV LD_LIBRARY_PATH="/usr/local/lib"
 RUN apt-get update && \
     apt-get upgrade -y && \
