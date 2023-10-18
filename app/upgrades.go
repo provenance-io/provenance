@@ -359,7 +359,7 @@ func addMarkerNavs(ctx sdk.Context, app *App) {
 		if !hasNav {
 			nav := markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), 1)
 			if err := app.MarkerKeeper.AddSetNetAssetValues(ctx, record, []markertypes.NetAssetValue{nav}, "upgrade_handler"); err != nil {
-				panic(fmt.Sprintf("unable to set net asset value %v: %v", nav, err))
+				ctx.Logger().Error(fmt.Sprintf("unable to set net asset value %v: %v", nav, err))
 			}
 		}
 		return false

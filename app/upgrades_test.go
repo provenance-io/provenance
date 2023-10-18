@@ -854,14 +854,59 @@ func (s *UpgradeTestSuite) TestAddMarkerNavs() {
 		[]markertypes.AccessGrant{})
 	testcoin.Supply = sdk.OneInt()
 	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, testcoin), "AddMarkerAccount() error")
+
+	nosupplycoin := markertypes.NewEmptyMarkerAccount("nosupplycoin",
+		address1.String(),
+		[]markertypes.AccessGrant{})
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, nosupplycoin), "AddMarkerAccount() error")
+
+	hasnavcoin := markertypes.NewEmptyMarkerAccount("hasnavcoin",
+		address1.String(),
+		[]markertypes.AccessGrant{})
+	hasnavcoin.Supply = sdk.NewInt(100)
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, hasnavcoin), "AddMarkerAccount() error")
+	presentnav := markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, int64(55)), uint64(100))
+	s.Require().NoError(s.app.MarkerKeeper.AddSetNetAssetValues(s.ctx, hasnavcoin, []markertypes.NetAssetValue{presentnav}, "test"))
+
 	addMarkerNavs(s.ctx, s.app)
-	netAssetValues := []markertypes.NetAssetValue{}
-	err := s.app.MarkerKeeper.IterateNetAssetValues(s.ctx, testcoin.GetAddress(), func(state markertypes.NetAssetValue) (stop bool) {
-		netAssetValues = append(netAssetValues, state)
-		return false
-	})
-	s.Require().NoError(err, "IterateNetAssetValues err")
-	s.Assert().Len(netAssetValues, 1, "Should be 1 nav set for testcoin")
-	s.Assert().Equal(sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), netAssetValues[0].Price, "Net asset value price should equal default upgraded price")
-	s.Assert().Equal(uint64(1), netAssetValues[0].Volume, "Net asset value volume should equal 1")
+
+	tests := []struct {
+		name       string
+		markerAddr sdk.AccAddress
+		expNav     *markertypes.NetAssetValue
+	}{
+		{
+			name:       "upgrade adds new default nav",
+			markerAddr: testcoin.GetAddress(),
+			expNav:     &markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), Volume: uint64(1)},
+		},
+		{
+			name:       "already has nav",
+			markerAddr: hasnavcoin.GetAddress(),
+			expNav:     &markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, int64(55)), Volume: uint64(100)},
+		},
+		{
+			name:       "nav add fails for coin",
+			markerAddr: nosupplycoin.GetAddress(),
+			expNav:     nil,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			netAssetValues := []markertypes.NetAssetValue{}
+			err := s.app.MarkerKeeper.IterateNetAssetValues(s.ctx, tc.markerAddr, func(state markertypes.NetAssetValue) (stop bool) {
+				netAssetValues = append(netAssetValues, state)
+				return false
+			})
+			s.Require().NoError(err, "IterateNetAssetValues err")
+			if tc.expNav != nil {
+				s.Assert().Len(netAssetValues, 1, "Should be 1 nav set for testcoin")
+				s.Assert().Equal(tc.expNav.Price, netAssetValues[0].Price, "Net asset value price should equal default upgraded price")
+				s.Assert().Equal(tc.expNav.Volume, netAssetValues[0].Volume, "Net asset value volume should equal 1")
+			} else {
+				s.Assert().Len(netAssetValues, 0, "Marker not expected to have nav")
+			}
+		})
+	}
 }
