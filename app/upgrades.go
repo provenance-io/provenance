@@ -19,6 +19,7 @@ import (
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
@@ -113,6 +114,7 @@ var upgrades = map[string]appUpgrade{
 			removeInactiveValidatorDelegations(ctx, app)
 			setupICQ(ctx, app)
 			updateMaxSupply(ctx, app)
+			addMarkerNavs(ctx, app)
 
 			return vm, nil
 		},
@@ -132,6 +134,7 @@ var upgrades = map[string]appUpgrade{
 			removeInactiveValidatorDelegations(ctx, app)
 			setupICQ(ctx, app)
 			updateMaxSupply(ctx, app)
+			addMarkerNavs(ctx, app)
 
 			return vm, nil
 		},
@@ -339,4 +342,26 @@ func updateMaxSupply(ctx sdk.Context, app *App) {
 	params.MaxSupply = math.NewIntFromUint64(params.MaxTotalSupply)
 	app.MarkerKeeper.SetParams(ctx, params)
 	ctx.Logger().Info("Done updating MaxSupply marker param")
+}
+
+// addMarkerNavs adds navs to existing markers
+func addMarkerNavs(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Adding marker net asset values")
+	//TODO: Add list of actual net asset values to set (need to get from Figure)
+
+	app.MarkerKeeper.IterateMarkers(ctx, func(record markertypes.MarkerAccountI) bool {
+		var hasNav bool
+		app.MarkerKeeper.IterateNetAssetValues(ctx, record.GetAddress(), func(nav markertypes.NetAssetValue) bool {
+			hasNav = true
+			return true
+		})
+		if !hasNav {
+			nav := markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), 1)
+			if err := app.MarkerKeeper.AddSetNetAssetValues(ctx, record, []markertypes.NetAssetValue{nav}, "upgrade_handler"); err != nil {
+				panic(fmt.Sprintf("unable to set net asset value %v: %v", nav, err))
+			}
+		}
+		return false
+	})
+	ctx.Logger().Info("Done adding marker net asset values")
 }
