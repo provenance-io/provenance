@@ -702,7 +702,7 @@ func (k Keeper) UpdateFees(ctx sdk.Context, msg *exchange.MsgGovManageFeesReques
 	k.emitEvent(ctx, exchange.NewEventMarketFeesUpdated(msg.MarketId))
 }
 
-// isMarketActive returns true if the provided market is accepting orders.
+// isMarketActive returns true if the provided market's inactive flag does not exist.
 func isMarketActive(store sdk.KVStore, marketID uint32) bool {
 	key := MakeKeyMarketInactive(marketID)
 	return !store.Has(key)
@@ -734,7 +734,14 @@ func setUserSettlementAllowed(store sdk.KVStore, marketID uint32, allowed bool) 
 	}
 }
 
-// IsMarketActive returns true if the provided market is accepting orders.
+// IsMarketKnown returns true if the provided market id is a known market's id.
+func (k Keeper) IsMarketKnown(ctx sdk.Context, marketID uint32) bool {
+	return isMarketKnown(k.getStore(ctx), marketID)
+}
+
+// IsMarketActive returns true if the provided market is not marked inactive.
+// I.e. returns true if either the market doesn't exist, or if the market exists and is active.
+// See also: IsMarketKnown
 func (k Keeper) IsMarketActive(ctx sdk.Context, marketID uint32) bool {
 	return isMarketActive(k.getStore(ctx), marketID)
 }
