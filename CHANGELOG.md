@@ -71,7 +71,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add genesis/init for Marker module send deny list addresses. [#1660](https://github.com/provenance-io/provenance/issues/1660)
 * Add automatic changelog entries for dependabot. [#1674](https://github.com/provenance-io/provenance/issues/1674)
 * Ensure IBC marker has matching supply [#1706](https://github.com/provenance-io/provenance/issues/1706).
-  
+
 ### Bug Fixes
 
 * Fix ibcnet relayer creating multiple connections on restart [#1620](https://github.com/provenance-io/provenance/issues/1620).
@@ -79,6 +79,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Allow restricted coins to be quarantined [#1626](https://github.com/provenance-io/provenance/issues/1626).
 * Prevent marker forced transfers from module accounts [#1626](https://github.com/provenance-io/provenance/issues/1626).
 * Change config load order so custom.toml can override other config. [#1262](https://github.com/provenance-io/provenance/issues/1262)
+* Fix the saffron and saffron-rc1 upgrade handlers to add correct ibchooks store key [PR 1715](https://github.com/provenance-io/provenance/pull/1715).
 
 ### Client Breaking
 
