@@ -3424,9 +3424,189 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_IsUserSettlementAllowed()
+func (s *TestSuite) TestKeeper_IsUserSettlementAllowed() {
+	tests := []struct {
+		name     string
+		setup    func(s *TestSuite)
+		marketID uint32
+		expected bool
+	}{
+		{
+			name:     "empty state",
+			marketID: 1,
+			expected: false,
+		},
+		{
+			name: "unknown market id",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetUserSettlementAllowed(store, 1, true)
+				keeper.SetUserSettlementAllowed(store, 3, true)
+			},
+			marketID: 2,
+			expected: false,
+		},
+		{
+			name: "not allowed",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetUserSettlementAllowed(store, 1, true)
+				keeper.SetUserSettlementAllowed(store, 2, false)
+				keeper.SetUserSettlementAllowed(store, 3, true)
+			},
+			marketID: 2,
+			expected: false,
+		},
+		{
+			name: "allowed",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetUserSettlementAllowed(store, 1, true)
+				keeper.SetUserSettlementAllowed(store, 2, true)
+				keeper.SetUserSettlementAllowed(store, 3, true)
+			},
+			marketID: 2,
+			expected: true,
+		},
+	}
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			var actual bool
+			testFunc := func() {
+				actual = s.k.IsUserSettlementAllowed(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "IsUserSettlementAllowed(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "IsUserSettlementAllowed(%d) result", tc.marketID)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
+	tests := []struct {
+		name      string
+		setup     func(s *TestSuite)
+		marketID  uint32
+		allow     bool
+		updatedBy sdk.AccAddress
+		expErr    string
+	}{
+		{
+			name:      "empty state to allowed",
+			marketID:  1,
+			allow:     true,
+			updatedBy: sdk.AccAddress("updatedBy___________"),
+			expErr:    "",
+		},
+		{
+			name:      "empty state to not allowed",
+			marketID:  1,
+			allow:     false,
+			updatedBy: sdk.AccAddress("updatedBy___________"),
+			expErr:    "market 1 already has allow-user-settlement false",
+		},
+		{
+			name: "allowed to allowed",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetUserSettlementAllowed(store, 1, true)
+				keeper.SetUserSettlementAllowed(store, 2, false)
+				keeper.SetUserSettlementAllowed(store, 3, true)
+				keeper.SetUserSettlementAllowed(store, 4, true)
+				keeper.SetUserSettlementAllowed(store, 5, false)
+			},
+			marketID:  3,
+			allow:     true,
+			updatedBy: sdk.AccAddress("updatedBy___________"),
+			expErr:    "market 3 already has allow-user-settlement true",
+		},
+		{
+			name: "allowed to not allowed",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetUserSettlementAllowed(store, 1, true)
+				keeper.SetUserSettlementAllowed(store, 2, false)
+				keeper.SetUserSettlementAllowed(store, 3, true)
+				keeper.SetUserSettlementAllowed(store, 4, true)
+				keeper.SetUserSettlementAllowed(store, 5, false)
+			},
+			marketID:  3,
+			allow:     false,
+			updatedBy: sdk.AccAddress("updated_by__________"),
+			expErr:    "",
+		},
+		{
+			name: "not allowed to allowed",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetUserSettlementAllowed(store, 11, true)
+				keeper.SetUserSettlementAllowed(store, 12, false)
+				keeper.SetUserSettlementAllowed(store, 13, false)
+				keeper.SetUserSettlementAllowed(store, 14, true)
+				keeper.SetUserSettlementAllowed(store, 15, false)
+			},
+			marketID:  13,
+			allow:     true,
+			updatedBy: sdk.AccAddress("updated___by________"),
+			expErr:    "",
+		},
+		{
+			name: "not allowed to not allowed",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetUserSettlementAllowed(store, 11, true)
+				keeper.SetUserSettlementAllowed(store, 12, false)
+				keeper.SetUserSettlementAllowed(store, 13, false)
+				keeper.SetUserSettlementAllowed(store, 14, true)
+				keeper.SetUserSettlementAllowed(store, 15, false)
+			},
+			marketID:  13,
+			allow:     false,
+			updatedBy: sdk.AccAddress("__updated_____by____"),
+			expErr:    "market 13 already has allow-user-settlement false",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			expEvents := sdk.Events{}
+			if len(tc.expErr) == 0 {
+				expEvent, err := sdk.TypedEventToEvent(exchange.NewEventMarketUserSettleUpdated(tc.marketID, tc.updatedBy, tc.allow))
+				s.Require().NoError(err, "TypedEventToEvent(NewEventMarketUserSettleUpdated(%d, %s, %t)",
+					tc.marketID, string(tc.updatedBy), tc.allow)
+				expEvents = append(expEvents, expEvent)
+			}
+
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = s.k.UpdateUserSettlementAllowed(ctx, tc.marketID, tc.allow, tc.updatedBy)
+			}
+			s.Require().NotPanics(testFunc, "UpdateUserSettlementAllowed(%d, %t, %s)", tc.marketID, tc.allow, string(tc.updatedBy))
+			s.assertErrorValue(err, tc.expErr, "UpdateUserSettlementAllowed(%d, %t, %s)", tc.marketID, tc.allow, string(tc.updatedBy))
+
+			events := em.Events()
+			s.assertEqualEvents(expEvents, events, "events after UpdateUserSettlementAllowed")
+
+			if len(tc.expErr) == 0 {
+				isActive := s.k.IsUserSettlementAllowed(s.ctx, tc.marketID)
+				s.Assert().Equal(tc.allow, isActive, "IsUserSettlementAllowed(%d) after UpdateUserSettlementAllowed(%d, %t, ...)",
+					tc.marketID, tc.marketID, tc.allow)
+			}
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_HasPermission()
 
