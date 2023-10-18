@@ -878,8 +878,8 @@ func (s *UpgradeTestSuite) TestAddMarkerNavs() {
 	s.Require().NoError(s.app.MarkerKeeper.AddSetNetAssetValues(s.ctx, hasnavcoin, []markertypes.NetAssetValue{presentnav}, "test"))
 
 	addMarkerNavs(s.ctx, s.app, map[string]markertypes.NetAssetValue{
-		"testcoininlist": markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, int64(12345)), Volume: uint64(1)},
-	})
+		"testcoininlist": {Price: sdk.NewInt64Coin(markertypes.UsdDenom, int64(12345)), Volume: uint64(1)},
+	}, markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), Volume: uint64(1)})
 
 	tests := []struct {
 		name       string
