@@ -426,6 +426,8 @@ func (s *UpgradeTestSuite) TestSaffronRC1() {
 		"INF Done updating ICQ params",
 		"INF Updating MaxSupply marker param",
 		"INF Done updating MaxSupply marker param",
+		"INF Adding marker net asset values",
+		"INF Done adding marker net asset values",
 	}
 
 	s.AssertUpgradeHandlerLogs("saffron-rc1", expInLog, nil)
@@ -442,6 +444,8 @@ func (s *UpgradeTestSuite) TestSaffron() {
 		"INF Done updating ICQ params",
 		"INF Updating MaxSupply marker param",
 		"INF Done updating MaxSupply marker param",
+		"INF Adding marker net asset values",
+		"INF Done adding marker net asset values",
 	}
 
 	s.AssertUpgradeHandlerLogs("saffron", expInLog, nil)

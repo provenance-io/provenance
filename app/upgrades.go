@@ -344,10 +344,11 @@ func updateMaxSupply(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Done updating MaxSupply marker param")
 }
 
-// addMarkerNavs adds navs to existing markers
+// addMarkerNavs adds navs to existing markers with default value of 15 cents
+// TODO: Need to get a list of current markers and their values to set as a manual script
 func addMarkerNavs(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Adding marker net asset values")
-	//TODO: Add list of actual net asset values to set (need to get from Figure)
+	//TODO: Add list of actual net asset values to set here
 
 	app.MarkerKeeper.IterateMarkers(ctx, func(record markertypes.MarkerAccountI) bool {
 		var hasNav bool
