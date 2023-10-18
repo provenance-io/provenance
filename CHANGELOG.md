@@ -71,6 +71,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add genesis/init for Marker module send deny list addresses. [#1660](https://github.com/provenance-io/provenance/issues/1660)
 * Add automatic changelog entries for dependabot. [#1674](https://github.com/provenance-io/provenance/issues/1674)
 * Ensure IBC marker has matching supply [#1706](https://github.com/provenance-io/provenance/issues/1706).
+  
 ### Bug Fixes
 
 * Fix ibcnet relayer creating multiple connections on restart [#1620](https://github.com/provenance-io/provenance/issues/1620).
@@ -123,7 +124,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add support to add/remove required attributes for a restricted marker. [#1512](https://github.com/provenance-io/provenance/issues/1512)
 * Add trigger module for delayed execution. [#1462](https://github.com/provenance-io/provenance/issues/1462)
-* Add support to update the `allow_forced_transfer` field of a restricted marker [#1545](https://github.com/provenance-io/provenance/issues/1545).
+* Add support to update the `allow_forced_transfer` field of a restricted marker [#1546](https://github.com/provenance-io/provenance/issues/1546).
 * Add expiration date value to `attribute` [#1435](https://github.com/provenance-io/provenance/issues/1435).
 * Add endpoints to update the value owner address of scopes [#1329](https://github.com/provenance-io/provenance/issues/1329).
 * Add pre-upgrade command that updates config files to newest format and sets `consensus.timeout_commit` to `1500ms` [PR 1594](https://github.com/provenance-io/provenance/pull/1594), [PR 1600](https://github.com/provenance-io/provenance/pull/1600).
