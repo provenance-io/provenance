@@ -1,0 +1,317 @@
+syntax = "proto3";
+package provenance.exchange.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/exchange";
+
+option java_package        = "io.provenance.exchange.v1";
+option java_multiple_files = true;
+
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/api/annotations.proto";
+import "gogoproto/gogo.proto";
+import "provenance/exchange/v1/market.proto";
+import "provenance/exchange/v1/orders.proto";
+import "provenance/exchange/v1/params.proto";
+import "provenance/exchange/v1/tx.proto";
+
+// Query is the service for exchange module's query endpoints.
+service Query {
+  // OrderFeeCalc calculates the fees that will be associated with the provided order.
+  rpc OrderFeeCalc(QueryOrderFeeCalcRequest) returns (QueryOrderFeeCalcResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/fees/order";
+  }
+
+  // GetOrder looks up an order by id.
+  rpc GetOrder(QueryGetOrderRequest) returns (QueryGetOrderResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/order/{order_id}";
+  }
+
+  // GetOrderByExternalID looks up an order by market id and external id.
+  rpc GetOrderByExternalID(QueryGetOrderByExternalIDRequest) returns (QueryGetOrderByExternalIDResponse) {
+    option (google.api.http) = {
+      get: "/provenance/exchange/v1/orders/market/{market_id}/{external_id}"
+      additional_bindings: {get: "/provenance/exchange/v1/market/{market_id}/order/{external_id}"}
+    };
+  }
+
+  // GetMarketOrders looks up the orders in a market.
+  rpc GetMarketOrders(QueryGetMarketOrdersRequest) returns (QueryGetMarketOrdersResponse) {
+    option (google.api.http) = {
+      get: "/provenance/exchange/v1/orders/market/{market_id}"
+      additional_bindings: {get: "/provenance/exchange/v1/market/{market_id}/orders"}
+    };
+  }
+
+  // GetOwnerOrders looks up the orders from the provided owner address.
+  rpc GetOwnerOrders(QueryGetOwnerOrdersRequest) returns (QueryGetOwnerOrdersResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/orders/owner/{owner}";
+  }
+
+  // GetAssetOrders looks up the orders for a specific asset denom.
+  rpc GetAssetOrders(QueryGetAssetOrdersRequest) returns (QueryGetAssetOrdersResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/orders/asset/{asset}";
+  }
+
+  // GetAllOrders gets all orders in the exchange module.
+  rpc GetAllOrders(QueryGetAllOrdersRequest) returns (QueryGetAllOrdersResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/orders";
+  }
+
+  // GetMarket returns all the information and details about a market.
+  rpc GetMarket(QueryGetMarketRequest) returns (QueryGetMarketResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/market/{market_id}";
+  }
+
+  // GetAllMarkets returns brief information about each market.
+  rpc GetAllMarkets(QueryGetAllMarketsRequest) returns (QueryGetAllMarketsResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/markets";
+  }
+
+  // Params returns the exchange module parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/params";
+  }
+
+  // ValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
+  rpc ValidateCreateMarket(QueryValidateCreateMarketRequest) returns (QueryValidateCreateMarketResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/validate/create_market";
+  }
+
+  // ValidateMarket checks for any problems with a market's setup.
+  rpc ValidateMarket(QueryValidateMarketRequest) returns (QueryValidateMarketResponse) {
+    option (google.api.http) = {
+      get: "/provenance/exchange/v1/validate/market/{market_id}"
+      additional_bindings: {get: "/provenance/exchange/v1/market/{market_id}/validate"}
+    };
+  }
+
+  // ValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
+  rpc ValidateManageFees(QueryValidateManageFeesRequest) returns (QueryValidateManageFeesResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/validate/manage_fees";
+  }
+}
+
+// QueryOrderFeeCalcRequest is a request message for the OrderFeeCalc query.
+// Exactly one of ask_order or bid_order must be provided.
+message QueryOrderFeeCalcRequest {
+  // ask_order is the ask order to calculate the fees for.
+  AskOrder ask_order = 2;
+  // bid_order is the bid order to calculate the fees for.
+  BidOrder bid_order = 3;
+}
+
+// QueryOrderFeeCalcResponse is a response message for the OrderFeeCalc query.
+message QueryOrderFeeCalcResponse {
+  // creation_fee_options are the order creation flat fee options available for creating the provided order.
+  // If it's empty, no order creation fee is required.
+  // When creating the order, you should include exactly one of these.
+  repeated cosmos.base.v1beta1.Coin creation_fee_options = 1 [(gogoproto.nullable) = false];
+  // settlement_flat_fee_options are the settlement flat fee options available for the provided order.
+  // If it's empty, no settlement flat fee is required.
+  // When creating an order, you should include exactly one of these in the settlement fees field.
+  repeated cosmos.base.v1beta1.Coin settlement_flat_fee_options = 2 [(gogoproto.nullable) = false];
+  // settlement_ratio_fee_options are the settlement ratio fee options available for the provided order.
+  // If it's empty, no settlement ratio fee is required.
+  //
+  // If the provided order was a bid order, you should include exactly one of these in the settlement fees field.
+  // If the flat and ratio options you've chose have the same denom, a single entry should be included with their sum.
+  //
+  // If the provided order was an ask order, these are purely informational and represent how much will be removed
+  // from your price if it settles at that price. If it settles for more, the actual amount will probably be larger.
+  repeated cosmos.base.v1beta1.Coin settlement_ratio_fee_options = 3 [(gogoproto.nullable) = false];
+}
+
+// QueryGetOrderRequest is a request message for the GetOrder query.
+message QueryGetOrderRequest {
+  // order_id is the id of the order to look up.
+  uint64 order_id = 1;
+}
+
+// QueryGetOrderResponse is a response message for the GetOrder query.
+message QueryGetOrderResponse {
+  // order is the requested order.
+  Order order = 1;
+}
+
+// QueryGetOrderByExternalIDRequest is a request message for the GetOrderByExternalID query.
+message QueryGetOrderByExternalIDRequest {
+  // market_id is the id of the market that's expected to have the order.
+  uint32 market_id = 1;
+  // external_id the external id to look up.
+  string external_id = 2;
+}
+
+// QueryGetOrderByExternalIDResponse is a response message for the GetOrderByExternalID query.
+message QueryGetOrderByExternalIDResponse {
+  // order is the requested order.
+  Order order = 1;
+}
+
+// QueryGetMarketOrdersRequest is a request message for the GetMarketOrders query.
+message QueryGetMarketOrdersRequest {
+  // market_id is the id of the market to get all the orders for.
+  uint32 market_id = 1;
+  // order_type is optional and can limit orders to only "ask" or "bid" orders.
+  string order_type = 2;
+  // after_order_id is a minimum (exclusive) order id. All results will be strictly greater than this.
+  uint64 after_order_id = 3;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetMarketOrdersResponse is a response message for the GetMarketOrders query.
+message QueryGetMarketOrdersResponse {
+  // orders are a page of the orders in the provided market.
+  repeated Order orders = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryGetOwnerOrdersRequest is a request message for the GetOwnerOrders query.
+message QueryGetOwnerOrdersRequest {
+  // owner is the bech32 address string of the owner to get the orders for.
+  string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // order_type is optional and can limit orders to only "ask" or "bid" orders.
+  string order_type = 2;
+  // after_order_id is a minimum (exclusive) order id. All results will be strictly greater than this.
+  uint64 after_order_id = 3;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetOwnerOrdersResponse is a response message for the GetOwnerOrders query.
+message QueryGetOwnerOrdersResponse {
+  // orders are a page of the orders for the provided address.
+  repeated Order orders = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryGetAssetOrdersRequest is a request message for the GetAssetOrders query.
+message QueryGetAssetOrdersRequest {
+  // asset is the denom of assets to get orders for.
+  string asset = 1;
+  // order_type is optional and can limit orders to only "ask" or "bid" orders.
+  string order_type = 2;
+  // after_order_id is a minimum (exclusive) order id. All results will be strictly greater than this.
+  uint64 after_order_id = 3;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetAssetOrdersResponse is a response message for the GetAssetOrders query.
+message QueryGetAssetOrdersResponse {
+  // orders are a page of the orders for the provided asset.
+  repeated Order orders = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryGetAllOrdersRequest is a request message for the GetAllOrders query.
+message QueryGetAllOrdersRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetAllOrdersResponse is a response message for the GetAllOrders query.
+message QueryGetAllOrdersResponse {
+  // orders are a page of the all orders.
+  repeated Order orders = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryGetMarketRequest is a request message for the GetMarket query.
+message QueryGetMarketRequest {
+  // market_id is the id of the market to look up.
+  uint32 market_id = 1;
+}
+
+// QueryGetMarketResponse is a response message for the GetMarket query.
+message QueryGetMarketResponse {
+  // address is the bech32 address string of this market's account.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market is all information and details of the market.
+  Market market = 2;
+}
+
+// QueryGetAllMarketsRequest is a request message for the GetAllMarkets query.
+message QueryGetAllMarketsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetAllMarketsResponse is a response message for the GetAllMarkets query.
+message QueryGetAllMarketsResponse {
+  // markets are a page of the briefs for all markets.
+  repeated MarketBrief markets = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryParamsRequest is a request message for the Params query.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is a response message for the Params query.
+message QueryParamsResponse {
+  // params are the exchange module parameter values.
+  Params params = 1;
+}
+
+// QueryValidateCreateMarketRequest is a request message for the ValidateCreateMarket query.
+message QueryValidateCreateMarketRequest {
+  // create_market_request is the request to run validation on.
+  MsgGovCreateMarketRequest create_market_request = 1;
+}
+
+// QueryValidateCreateMarketResponse is a response message for the ValidateCreateMarket query.
+message QueryValidateCreateMarketResponse {
+  // error is any problems or inconsistencies in the provided gov prop msg.
+  // This goes above and beyond the validation done when actually processing the governance proposal.
+  // If an error is returned, and gov_prop_will_pass is true, it means the error is more of an
+  // inconsistency that might cause certain aspects of the market to behave unexpectedly.
+  string error = 1;
+  // gov_prop_will_pass will be true if the the provided msg will be successfully processed at the end of it's voting
+  // period (assuming it passes).
+  bool gov_prop_will_pass = 2;
+}
+
+// QueryValidateMarketRequest is a request message for the ValidateMarket query.
+message QueryValidateMarketRequest {
+  // market_id is the id of the market to check.
+  uint32 market_id = 1;
+}
+
+// QueryValidateMarketResponse is a response message for the ValidateMarket query.
+message QueryValidateMarketResponse {
+  // error is any problems or inconsistencies in the provided market.
+  string error = 1;
+}
+
+// QueryValidateManageFeesRequest is a request message for the ValidateManageFees query.
+message QueryValidateManageFeesRequest {
+  // manage_fees_request is the request to run validation on.
+  MsgGovManageFeesRequest manage_fees_request = 1;
+}
+
+// QueryValidateManageFeesResponse is a response message for the ValidateManageFees query.
+message QueryValidateManageFeesResponse {
+  // error is any problems or inconsistencies in the provided gov prop msg.
+  // This goes above and beyond the validation done when actually processing the governance proposal.
+  // If an error is returned, and gov_prop_will_pass is true, it means the error is more of an
+  // inconsistency that might cause certain aspects of the market to behave unexpectedly.
+  string error = 1;
+  // gov_prop_will_pass will be true if the the provided msg will be successfully processed at the end of it's voting
+  // period (assuming it passes).
+  bool gov_prop_will_pass = 2;
+}
