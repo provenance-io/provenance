@@ -858,6 +858,12 @@ func (s *UpgradeTestSuite) TestAddMarkerNavs() {
 	testcoin.Supply = sdk.OneInt()
 	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, testcoin), "AddMarkerAccount() error")
 
+	testcoinInList := markertypes.NewEmptyMarkerAccount("testcoininlist",
+		address1.String(),
+		[]markertypes.AccessGrant{})
+	testcoinInList.Supply = sdk.OneInt()
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, testcoinInList), "AddMarkerAccount() error")
+
 	nosupplycoin := markertypes.NewEmptyMarkerAccount("nosupplycoin",
 		address1.String(),
 		[]markertypes.AccessGrant{})
@@ -871,7 +877,9 @@ func (s *UpgradeTestSuite) TestAddMarkerNavs() {
 	presentnav := markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, int64(55)), uint64(100))
 	s.Require().NoError(s.app.MarkerKeeper.AddSetNetAssetValues(s.ctx, hasnavcoin, []markertypes.NetAssetValue{presentnav}, "test"))
 
-	addMarkerNavs(s.ctx, s.app)
+	addMarkerNavs(s.ctx, s.app, map[string]markertypes.NetAssetValue{
+		"testcoininlist": markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, int64(12345)), Volume: uint64(1)},
+	})
 
 	tests := []struct {
 		name       string
@@ -892,6 +900,11 @@ func (s *UpgradeTestSuite) TestAddMarkerNavs() {
 			name:       "nav add fails for coin",
 			markerAddr: nosupplycoin.GetAddress(),
 			expNav:     nil,
+		},
+		{
+			name:       "nav set from custom config",
+			markerAddr: testcoinInList.GetAddress(),
+			expNav:     &markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, int64(12345)), Volume: uint64(1)},
 		},
 	}
 	for _, tc := range tests {

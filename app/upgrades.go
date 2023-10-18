@@ -115,7 +115,15 @@ var upgrades = map[string]appUpgrade{
 			removeInactiveValidatorDelegations(ctx, app)
 			setupICQ(ctx, app)
 			updateMaxSupply(ctx, app)
-			addMarkerNavs(ctx, app)
+
+			denomToNav := map[string]markertypes.NetAssetValue{
+				"usd.deposit": markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 1000), 1),
+				"tp13gc5xe8375msm7y6jhf752e5hcrjypmcpf9wldsjprhnpzlkhqaqawxujf.investment": markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 10), 1),
+				"tp1cxuqqyjjf5x66jvlmtvj3juppn370ev7rr5cja3ml65nzhxgvpkszfuvtw.investment": markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 10), 33600000),
+				"pm.sale.pool.7v2gsuvnudyfvuig50r3k3":                                      markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 19026640), 1),
+			}
+			addMarkerNavs(ctx, app, denomToNav)
+
 			setExchangeParams(ctx, app)
 
 			return vm, nil
@@ -136,7 +144,11 @@ var upgrades = map[string]appUpgrade{
 			removeInactiveValidatorDelegations(ctx, app)
 			setupICQ(ctx, app)
 			updateMaxSupply(ctx, app)
-			addMarkerNavs(ctx, app)
+
+			denomToNav := map[string]markertypes.NetAssetValue{
+				// TODO: Add custom mainnet values here
+			}
+			addMarkerNavs(ctx, app, denomToNav)
 			setExchangeParams(ctx, app)
 
 			return vm, nil
@@ -349,12 +361,19 @@ func updateMaxSupply(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Done updating MaxSupply marker param")
 }
 
-// addMarkerNavs adds navs to existing markers with default value of 15 cents
-// TODO: Need to get a list of current markers and their values to set as a manual script
-func addMarkerNavs(ctx sdk.Context, app *App) {
+// addMarkerNavs adds navs to existing markers, if denom is not in map it will default to $0.15 cents
+func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.NetAssetValue) {
 	ctx.Logger().Info("Adding marker net asset values")
-	//TODO: Add list of actual net asset values to set here
-
+	for denom, nav := range denomToNav {
+		marker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, denom)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("unable to get marker %v: %v", denom, err))
+			continue
+		}
+		if err := app.MarkerKeeper.AddSetNetAssetValues(ctx, marker, []markertypes.NetAssetValue{nav}, "upgrade_handler"); err != nil {
+			ctx.Logger().Error(fmt.Sprintf("unable to set net asset value %v: %v", nav, err))
+		}
+	}
 	app.MarkerKeeper.IterateMarkers(ctx, func(record markertypes.MarkerAccountI) bool {
 		var hasNav bool
 		err := app.MarkerKeeper.IterateNetAssetValues(ctx, record.GetAddress(), func(nav markertypes.NetAssetValue) bool {
