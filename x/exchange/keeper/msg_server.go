@@ -109,9 +109,8 @@ func (k MsgServer) MarketWithdraw(goCtx context.Context, msg *exchange.MsgMarket
 	if !k.CanWithdrawMarketFunds(ctx, msg.MarketId, msg.Admin) {
 		return nil, permError("withdraw from", msg.Admin, msg.MarketId)
 	}
-	admin := sdk.MustAccAddressFromBech32(msg.Admin)
 	toAddr := sdk.MustAccAddressFromBech32(msg.ToAddress)
-	err := k.WithdrawMarketFunds(ctx, msg.MarketId, toAddr, msg.Amount, admin)
+	err := k.WithdrawMarketFunds(ctx, msg.MarketId, toAddr, msg.Amount, msg.Admin)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}

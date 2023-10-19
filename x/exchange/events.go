@@ -54,12 +54,12 @@ func NewEventOrderExternalIDUpdated(order OrderI) *EventOrderExternalIDUpdated {
 	}
 }
 
-func NewEventMarketWithdraw(marketID uint32, amount sdk.Coins, destination, withdrawnBy sdk.AccAddress) *EventMarketWithdraw {
+func NewEventMarketWithdraw(marketID uint32, amount sdk.Coins, destination sdk.AccAddress, withdrawnBy string) *EventMarketWithdraw {
 	return &EventMarketWithdraw{
 		MarketId:    marketID,
 		Amount:      amount.String(),
 		Destination: destination.String(),
-		WithdrawnBy: withdrawnBy.String(),
+		WithdrawnBy: withdrawnBy,
 	}
 }
 

@@ -372,7 +372,7 @@ func TestNewEventMarketWithdraw(t *testing.T) {
 	marketID := uint32(55)
 	amountWithdrawn := sdk.NewCoins(sdk.NewInt64Coin("mine", 188382), sdk.NewInt64Coin("yours", 3))
 	destination := sdk.AccAddress("destination_________")
-	withdrawnBy := sdk.AccAddress("withdrawnBy_________")
+	withdrawnBy := sdk.AccAddress("withdrawnBy_________").String()
 
 	var event *EventMarketWithdraw
 	testFunc := func() {
@@ -383,7 +383,7 @@ func TestNewEventMarketWithdraw(t *testing.T) {
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, amountWithdrawn.String(), event.Amount, "Amount")
 	assert.Equal(t, destination.String(), event.Destination, "Destination")
-	assert.Equal(t, withdrawnBy.String(), event.WithdrawnBy, "WithdrawnBy")
+	assert.Equal(t, withdrawnBy, event.WithdrawnBy, "WithdrawnBy")
 	assertEverythingSet(t, event, "EventMarketWithdraw")
 }
 
@@ -786,7 +786,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventMarketWithdraw",
-			tev:  NewEventMarketWithdraw(6, coins1, destination, withdrawnBy),
+			tev:  NewEventMarketWithdraw(6, coins1, destination, withdrawnBy.String()),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketWithdraw",
 				Attributes: []abci.EventAttribute{
