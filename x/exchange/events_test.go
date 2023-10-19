@@ -539,15 +539,15 @@ func TestNewEventMarketUserSettleDisabled(t *testing.T) {
 
 func TestNewEventMarketPermissionsUpdated(t *testing.T) {
 	marketID := uint32(5432)
-	updatedBy := sdk.AccAddress("updatedBy___________")
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
 
 	var event *EventMarketPermissionsUpdated
 	testFunc := func() {
 		event = NewEventMarketPermissionsUpdated(marketID, updatedBy)
 	}
-	require.NotPanics(t, testFunc, "NewEventMarketPermissionsUpdated(%d, %q)", marketID, string(updatedBy))
+	require.NotPanics(t, testFunc, "NewEventMarketPermissionsUpdated(%d, %q)", marketID, updatedBy)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
-	assert.Equal(t, updatedBy.String(), event.UpdatedBy, "UpdatedBy")
+	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
 	assertEverythingSet(t, event, "EventMarketPermissionsUpdated")
 }
 
@@ -854,7 +854,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventMarketPermissionsUpdated",
-			tev:  NewEventMarketPermissionsUpdated(12, updatedBy),
+			tev:  NewEventMarketPermissionsUpdated(12, updatedBy.String()),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketPermissionsUpdated",
 				Attributes: []abci.EventAttribute{

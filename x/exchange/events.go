@@ -116,10 +116,10 @@ func NewEventMarketUserSettleDisabled(marketID uint32, updatedBy sdk.AccAddress)
 	}
 }
 
-func NewEventMarketPermissionsUpdated(marketID uint32, updatedBy sdk.AccAddress) *EventMarketPermissionsUpdated {
+func NewEventMarketPermissionsUpdated(marketID uint32, updatedBy string) *EventMarketPermissionsUpdated {
 	return &EventMarketPermissionsUpdated{
 		MarketId:  marketID,
-		UpdatedBy: updatedBy.String(),
+		UpdatedBy: updatedBy,
 	}
 }
 

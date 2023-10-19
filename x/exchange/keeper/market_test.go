@@ -4237,11 +4237,6 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 			expPanic: "runtime error: invalid memory address or nil pointer dereference",
 		},
 		{
-			name:     "invalid admin",
-			msg:      &exchange.MsgMarketManagePermissionsRequest{Admin: "invalid"},
-			expPanic: "decoding bech32 failed: invalid bech32 string length 7",
-		},
-		{
 			name: "invalid revoke-all addr",
 			msg: &exchange.MsgMarketManagePermissionsRequest{
 				Admin:     adminAddr,
@@ -4515,9 +4510,7 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 
 			expEvents := sdk.Events{}
 			if len(tc.expPanic) == 0 && len(tc.expErr) == 0 {
-				admin, err := sdk.AccAddressFromBech32(tc.msg.Admin)
-				s.Require().NoError(err, "AccAddressFromBech32(%q)", tc.msg.Admin)
-				event, err := sdk.TypedEventToEvent(exchange.NewEventMarketPermissionsUpdated(tc.msg.MarketId, admin))
+				event, err := sdk.TypedEventToEvent(exchange.NewEventMarketPermissionsUpdated(tc.msg.MarketId, tc.msg.Admin))
 				s.Require().NoError(err, "TypedEventToEvent(NewEventMarketPermissionsUpdated(%d, %q)",
 					tc.msg.MarketId, tc.msg.Admin)
 				expEvents = append(expEvents, event)

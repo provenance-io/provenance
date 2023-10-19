@@ -915,7 +915,6 @@ func (k Keeper) GetAccessGrants(ctx sdk.Context, marketID uint32) []exchange.Acc
 // UpdatePermissions updates users permissions in the store using the provided changes.
 // The caller is responsible for making sure this update should be allowed (e.g. by calling CanManagePermissions first).
 func (k Keeper) UpdatePermissions(ctx sdk.Context, msg *exchange.MsgMarketManagePermissionsRequest) error {
-	admin := sdk.MustAccAddressFromBech32(msg.Admin)
 	marketID := msg.MarketId
 	store := k.getStore(ctx)
 	var errs []error
@@ -959,7 +958,7 @@ func (k Keeper) UpdatePermissions(ctx sdk.Context, msg *exchange.MsgMarketManage
 		return errors.Join(errs...)
 	}
 
-	k.emitEvent(ctx, exchange.NewEventMarketPermissionsUpdated(marketID, admin))
+	k.emitEvent(ctx, exchange.NewEventMarketPermissionsUpdated(marketID, msg.Admin))
 	return nil
 }
 
