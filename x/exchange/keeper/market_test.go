@@ -4216,7 +4216,338 @@ func (s *TestSuite) TestKeeper_GetAccessGrants() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_UpdatePermissions()
+func (s *TestSuite) TestKeeper_UpdatePermissions() {
+	adminAddr := sdk.AccAddress("admin_address_woooo_").String()
+	oneAcc := sdk.AccAddress("addr_one____________")
+	oneAddr := oneAcc.String()
+	twoAcc := sdk.AccAddress("addr_two____________")
+	twoAddr := twoAcc.String()
+
+	tests := []struct {
+		name      string
+		setup     func(s *TestSuite)
+		msg       *exchange.MsgMarketManagePermissionsRequest
+		expErr    string
+		expPanic  string
+		expGrants []exchange.AccessGrant
+	}{
+		{
+			name:     "nil msg",
+			msg:      nil,
+			expPanic: "runtime error: invalid memory address or nil pointer dereference",
+		},
+		{
+			name:     "invalid admin",
+			msg:      &exchange.MsgMarketManagePermissionsRequest{Admin: "invalid"},
+			expPanic: "decoding bech32 failed: invalid bech32 string length 7",
+		},
+		{
+			name: "invalid revoke-all addr",
+			msg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:     adminAddr,
+				RevokeAll: []string{"invalid"},
+			},
+			expPanic: "decoding bech32 failed: invalid bech32 string length 7",
+		},
+		{
+			name: "invalid to-revoke addr",
+			msg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:    adminAddr,
+				ToRevoke: []exchange.AccessGrant{{Address: "invalid"}},
+			},
+			expPanic: "decoding bech32 failed: invalid bech32 string length 7",
+		},
+		{
+			name: "invalid to-grant addr",
+			msg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:   adminAddr,
+				ToGrant: []exchange.AccessGrant{{Address: "invalid"}},
+			},
+			expPanic: "decoding bech32 failed: invalid bech32 string length 7",
+		},
+		{
+			name: "revoke-all addr without any perms",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 1, twoAcc, exchange.AllPermissions())
+			},
+			msg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:     adminAddr,
+				MarketId:  1,
+				RevokeAll: []string{oneAddr},
+			},
+			expErr: "account " + oneAddr + " does not have any permissions for market 1",
+		},
+		{
+			name: "to-revoke perm not granted",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 1, oneAcc, []exchange.Permission{exchange.Permission_update})
+				keeper.GrantPermissions(store, 1, twoAcc, exchange.AllPermissions())
+			},
+			msg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:    adminAddr,
+				MarketId: 1,
+				ToRevoke: []exchange.AccessGrant{
+					{Address: oneAddr, Permissions: []exchange.Permission{exchange.Permission_settle}},
+				},
+			},
+			expErr: "account " + oneAddr + " does not have PERMISSION_SETTLE for market 1",
+		},
+		{
+			name: "to-add perm already granted",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 2, oneAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 2, twoAcc, []exchange.Permission{exchange.Permission_update})
+			},
+			msg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:    adminAddr,
+				MarketId: 2,
+				ToGrant: []exchange.AccessGrant{
+					{Address: twoAddr, Permissions: []exchange.Permission{exchange.Permission_update}},
+				},
+			},
+			expErr: "account " + twoAddr + " already has PERMISSION_UPDATE for market 2",
+		},
+		{
+			name: "multiple errors",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 3, sdk.AccAddress("bbbbbbbbbbbbbbbbbbbbb"), []exchange.Permission{
+					exchange.Permission_attributes})
+				keeper.GrantPermissions(store, 3, sdk.AccAddress("dddddddddddddddddddd"), []exchange.Permission{
+					exchange.Permission_cancel, exchange.Permission_attributes})
+				keeper.GrantPermissions(store, 3, sdk.AccAddress("ffffffffffffffffffff"), []exchange.Permission{
+					exchange.Permission_permissions, exchange.Permission_withdraw})
+				keeper.GrantPermissions(store, 3, sdk.AccAddress("gggggggggggggggggggg"), []exchange.Permission{
+					exchange.Permission_withdraw, exchange.Permission_attributes})
+				keeper.GrantPermissions(store, 3, sdk.AccAddress("hhhhhhhhhhhhhhhhhhhh"), []exchange.Permission{
+					exchange.Permission_withdraw, exchange.Permission_set_ids})
+			},
+			msg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:    adminAddr,
+				MarketId: 3,
+				RevokeAll: []string{
+					sdk.AccAddress("aaaaaaaaaaaaaaaaaaaaa").String(),
+					sdk.AccAddress("bbbbbbbbbbbbbbbbbbbbb").String(),
+					sdk.AccAddress("ccccccccccccccccccccc").String(),
+				},
+				ToRevoke: []exchange.AccessGrant{
+					{
+						Address:     sdk.AccAddress("dddddddddddddddddddd").String(),
+						Permissions: []exchange.Permission{exchange.Permission_update, exchange.Permission_cancel},
+					},
+					{
+						Address:     sdk.AccAddress("eeeeeeeeeeeeeeeeeeee").String(),
+						Permissions: []exchange.Permission{exchange.Permission_set_ids, exchange.Permission_withdraw},
+					},
+					{
+						Address:     sdk.AccAddress("ffffffffffffffffffff").String(),
+						Permissions: []exchange.Permission{exchange.Permission_permissions, exchange.Permission_settle},
+					},
+				},
+				ToGrant: []exchange.AccessGrant{
+					{
+						Address:     sdk.AccAddress("gggggggggggggggggggg").String(),
+						Permissions: []exchange.Permission{exchange.Permission_withdraw, exchange.Permission_attributes},
+					},
+					{
+						Address:     sdk.AccAddress("hhhhhhhhhhhhhhhhhhhh").String(),
+						Permissions: []exchange.Permission{exchange.Permission_cancel, exchange.Permission_set_ids},
+					},
+					{
+						Address:     sdk.AccAddress("iiiiiiiiiiiiiiiiiiii").String(),
+						Permissions: []exchange.Permission{exchange.Permission_update, exchange.Permission_settle},
+					},
+				},
+			},
+			expErr: s.joinErrs(
+				"account "+sdk.AccAddress("aaaaaaaaaaaaaaaaaaaaa").String()+" does not have any permissions for market 3",
+				"account "+sdk.AccAddress("ccccccccccccccccccccc").String()+" does not have any permissions for market 3",
+				"account "+sdk.AccAddress("dddddddddddddddddddd").String()+" does not have PERMISSION_UPDATE for market 3",
+				"account "+sdk.AccAddress("eeeeeeeeeeeeeeeeeeee").String()+" does not have PERMISSION_SET_IDS for market 3",
+				"account "+sdk.AccAddress("eeeeeeeeeeeeeeeeeeee").String()+" does not have PERMISSION_WITHDRAW for market 3",
+				"account "+sdk.AccAddress("ffffffffffffffffffff").String()+" does not have PERMISSION_SETTLE for market 3",
+				"account "+sdk.AccAddress("gggggggggggggggggggg").String()+" already has PERMISSION_WITHDRAW for market 3",
+				"account "+sdk.AccAddress("gggggggggggggggggggg").String()+" already has PERMISSION_ATTRIBUTES for market 3",
+				"account "+sdk.AccAddress("hhhhhhhhhhhhhhhhhhhh").String()+" already has PERMISSION_SET_IDS for market 3",
+			),
+		},
+		{
+			name: "just a revoke all",
+			setup: func(s *TestSuite) {
+				keeper.GrantPermissions(s.getStore(), 5, oneAcc, []exchange.Permission{3})
+				keeper.GrantPermissions(s.getStore(), 5, twoAcc, []exchange.Permission{4, 2})
+				keeper.GrantPermissions(s.getStore(), 6, oneAcc, []exchange.Permission{3})
+				keeper.GrantPermissions(s.getStore(), 6, twoAcc, []exchange.Permission{4, 2})
+				keeper.GrantPermissions(s.getStore(), 7, oneAcc, []exchange.Permission{3})
+				keeper.GrantPermissions(s.getStore(), 7, twoAcc, []exchange.Permission{4, 2})
+			},
+			msg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:     adminAddr,
+				MarketId:  6,
+				RevokeAll: []string{twoAddr},
+			},
+			expGrants: []exchange.AccessGrant{
+				{Address: oneAddr, Permissions: []exchange.Permission{3}},
+			},
+		},
+		{
+			name: "just a to-revoke",
+			setup: func(s *TestSuite) {
+				keeper.GrantPermissions(s.getStore(), 5, oneAcc, []exchange.Permission{3})
+				keeper.GrantPermissions(s.getStore(), 5, twoAcc, []exchange.Permission{4, 2})
+				keeper.GrantPermissions(s.getStore(), 6, oneAcc, []exchange.Permission{3})
+				keeper.GrantPermissions(s.getStore(), 6, twoAcc, []exchange.Permission{4, 2})
+				keeper.GrantPermissions(s.getStore(), 7, oneAcc, []exchange.Permission{3})
+				keeper.GrantPermissions(s.getStore(), 7, twoAcc, []exchange.Permission{4, 2})
+			},
+			msg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:    adminAddr,
+				MarketId: 6,
+				ToRevoke: []exchange.AccessGrant{
+					{Address: twoAddr, Permissions: []exchange.Permission{2}},
+				},
+			},
+			expGrants: []exchange.AccessGrant{
+				{Address: oneAddr, Permissions: []exchange.Permission{3}},
+				{Address: twoAddr, Permissions: []exchange.Permission{4}},
+			},
+		},
+		{
+			name: "just a to-grant",
+			setup: func(s *TestSuite) {
+				keeper.GrantPermissions(s.getStore(), 5, oneAcc, []exchange.Permission{3})
+				keeper.GrantPermissions(s.getStore(), 5, twoAcc, []exchange.Permission{4, 2})
+				keeper.GrantPermissions(s.getStore(), 6, oneAcc, []exchange.Permission{3})
+				keeper.GrantPermissions(s.getStore(), 6, twoAcc, []exchange.Permission{4, 2})
+				keeper.GrantPermissions(s.getStore(), 7, oneAcc, []exchange.Permission{3})
+				keeper.GrantPermissions(s.getStore(), 7, twoAcc, []exchange.Permission{4, 2})
+			},
+			msg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:    adminAddr,
+				MarketId: 6,
+				ToGrant:  []exchange.AccessGrant{{Address: twoAddr, Permissions: []exchange.Permission{1}}},
+			},
+			expGrants: []exchange.AccessGrant{
+				{Address: oneAddr, Permissions: []exchange.Permission{3}},
+				{Address: twoAddr, Permissions: []exchange.Permission{1, 2, 4}},
+			},
+		},
+		{
+			name: "revoke all grant one",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 1, oneAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 2, oneAcc, exchange.AllPermissions())
+				keeper.GrantPermissions(store, 3, oneAcc, exchange.AllPermissions())
+			},
+			msg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:     adminAddr,
+				MarketId:  2,
+				RevokeAll: []string{oneAddr},
+				ToGrant:   []exchange.AccessGrant{{Address: oneAddr, Permissions: []exchange.Permission{5}}},
+			},
+			expGrants: []exchange.AccessGrant{{Address: oneAddr, Permissions: []exchange.Permission{5}}},
+		},
+		{
+			name: "revoke one grant different",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				perms := []exchange.Permission{1, 4, 6}
+				keeper.GrantPermissions(store, 1, oneAcc, perms)
+				keeper.GrantPermissions(store, 2, oneAcc, perms)
+				keeper.GrantPermissions(store, 3, oneAcc, perms)
+			},
+			msg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:    adminAddr,
+				MarketId: 2,
+				ToRevoke: []exchange.AccessGrant{{Address: oneAddr, Permissions: []exchange.Permission{4}}},
+				ToGrant:  []exchange.AccessGrant{{Address: oneAddr, Permissions: []exchange.Permission{5}}},
+			},
+			expGrants: []exchange.AccessGrant{{Address: oneAddr, Permissions: []exchange.Permission{1, 5, 6}}},
+		},
+		{
+			name: "complex",
+			// revoke two from addr with two
+			// revoke all from addr with one, regrant all
+			// revoke one from addr with all
+			// grant two to new addr
+			// revoke one from addr with two, replace with another
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.GrantPermissions(store, 33, sdk.AccAddress("aaaaaaaaaaaaaaaaaaaa"), []exchange.Permission{2, 6})
+				keeper.GrantPermissions(store, 33, sdk.AccAddress("bbbbbbbbbbbbbbbbbbbb"), []exchange.Permission{1})
+				keeper.GrantPermissions(store, 33, sdk.AccAddress("cccccccccccccccccccc"), exchange.AllPermissions())
+				keeper.GrantPermissions(store, 33, sdk.AccAddress("eeeeeeeeeeeeeeeeeeee"), []exchange.Permission{7, 3})
+			},
+			msg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:     adminAddr,
+				MarketId:  33,
+				RevokeAll: []string{sdk.AccAddress("bbbbbbbbbbbbbbbbbbbb").String()},
+				ToRevoke: []exchange.AccessGrant{
+					{Address: sdk.AccAddress("aaaaaaaaaaaaaaaaaaaa").String(), Permissions: []exchange.Permission{2, 6}},
+					{Address: sdk.AccAddress("cccccccccccccccccccc").String(), Permissions: []exchange.Permission{3}},
+					{Address: sdk.AccAddress("eeeeeeeeeeeeeeeeeeee").String(), Permissions: []exchange.Permission{3}},
+				},
+				ToGrant: []exchange.AccessGrant{
+					{Address: sdk.AccAddress("bbbbbbbbbbbbbbbbbbbb").String(), Permissions: exchange.AllPermissions()},
+					{Address: sdk.AccAddress("dddddddddddddddddddd").String(), Permissions: []exchange.Permission{5, 4}},
+					{Address: sdk.AccAddress("eeeeeeeeeeeeeeeeeeee").String(), Permissions: []exchange.Permission{6}},
+				},
+			},
+			expGrants: []exchange.AccessGrant{
+				{Address: sdk.AccAddress("bbbbbbbbbbbbbbbbbbbb").String(), Permissions: exchange.AllPermissions()},
+				{Address: sdk.AccAddress("cccccccccccccccccccc").String(), Permissions: []exchange.Permission{1, 2, 4, 5, 6, 7}},
+				{Address: sdk.AccAddress("dddddddddddddddddddd").String(), Permissions: []exchange.Permission{4, 5}},
+				{Address: sdk.AccAddress("eeeeeeeeeeeeeeeeeeee").String(), Permissions: []exchange.Permission{6, 7}},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			expEvents := sdk.Events{}
+			if len(tc.expPanic) == 0 && len(tc.expErr) == 0 {
+				admin, err := sdk.AccAddressFromBech32(tc.msg.Admin)
+				s.Require().NoError(err, "AccAddressFromBech32(%q)", tc.msg.Admin)
+				event, err := sdk.TypedEventToEvent(exchange.NewEventMarketPermissionsUpdated(tc.msg.MarketId, admin))
+				s.Require().NoError(err, "TypedEventToEvent(NewEventMarketPermissionsUpdated(%d, %q)",
+					tc.msg.MarketId, tc.msg.Admin)
+				expEvents = append(expEvents, event)
+			}
+
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = s.k.UpdatePermissions(ctx, tc.msg)
+			}
+			s.requirePanicEquals(testFunc, tc.expPanic, "UpdatePermissions")
+			if len(tc.expPanic) > 0 {
+				return
+			}
+
+			s.assertErrorValue(err, tc.expErr, "UpdatePermissions error")
+
+			actEvents := em.Events()
+			s.assertEqualEvents(expEvents, actEvents, "events emitted during UpdatePermissions")
+
+			if len(tc.expErr) > 0 {
+				return
+			}
+
+			actGrants := s.k.GetAccessGrants(ctx, tc.msg.MarketId)
+			s.Assert().Equal(tc.expGrants, actGrants, "access grants for market %d after UpdatePermissions", tc.msg.MarketId)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_GetReqAttrsAsk()
 
