@@ -37,7 +37,8 @@ RUN apt-get update && \
 COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/internal/api/libwasmvm.*.so /tmp
 COPY --from=build /go/bin/provenanced /usr/bin/provenanced
 
-RUN cp /tmp/libwasmvm.$(uname -m).so /usr/local/lib/. 
+RUN cp /tmp/libwasmvm.$(uname -m).so /usr/local/lib/. && \
+    rm /tmp/libwasmvm.*.so
 
 ENV PIO_HOME=/home/provenance
 WORKDIR /home/provenance
