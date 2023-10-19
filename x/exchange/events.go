@@ -72,24 +72,24 @@ func NewEventMarketDetailsUpdated(marketID uint32, updatedBy string) *EventMarke
 
 // NewEventMarketActiveUpdated returns a new EventMarketEnabled if isActive == true,
 // or a new EventMarketDisabled if isActive == false.
-func NewEventMarketActiveUpdated(marketID uint32, updatedBy sdk.AccAddress, isActive bool) proto.Message {
+func NewEventMarketActiveUpdated(marketID uint32, updatedBy string, isActive bool) proto.Message {
 	if isActive {
 		return NewEventMarketEnabled(marketID, updatedBy)
 	}
 	return NewEventMarketDisabled(marketID, updatedBy)
 }
 
-func NewEventMarketEnabled(marketID uint32, updatedBy sdk.AccAddress) *EventMarketEnabled {
+func NewEventMarketEnabled(marketID uint32, updatedBy string) *EventMarketEnabled {
 	return &EventMarketEnabled{
 		MarketId:  marketID,
-		UpdatedBy: updatedBy.String(),
+		UpdatedBy: updatedBy,
 	}
 }
 
-func NewEventMarketDisabled(marketID uint32, updatedBy sdk.AccAddress) *EventMarketDisabled {
+func NewEventMarketDisabled(marketID uint32, updatedBy string) *EventMarketDisabled {
 	return &EventMarketDisabled{
 		MarketId:  marketID,
-		UpdatedBy: updatedBy.String(),
+		UpdatedBy: updatedBy,
 	}
 }
 

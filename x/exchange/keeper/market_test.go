@@ -3310,21 +3310,21 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 		setup     func(s *TestSuite)
 		marketID  uint32
 		active    bool
-		updatedBy sdk.AccAddress
+		updatedBy string
 		expErr    string
 	}{
 		{
 			name:      "empty state to active",
 			marketID:  1,
 			active:    true,
-			updatedBy: sdk.AccAddress("updatedBy___________"),
+			updatedBy: "updatedBy___________",
 			expErr:    "market 1 already has accepting-orders true",
 		},
 		{
 			name:      "empty state to inactive",
 			marketID:  1,
 			active:    false,
-			updatedBy: sdk.AccAddress("updatedBy___________"),
+			updatedBy: "updatedBy___________",
 			expErr:    "",
 		},
 		{
@@ -3339,7 +3339,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			},
 			marketID:  3,
 			active:    true,
-			updatedBy: sdk.AccAddress("updatedBy___________"),
+			updatedBy: "updatedBy___________",
 			expErr:    "market 3 already has accepting-orders true",
 		},
 		{
@@ -3354,7 +3354,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			},
 			marketID:  3,
 			active:    false,
-			updatedBy: sdk.AccAddress("updated_by__________"),
+			updatedBy: "updated_by__________",
 			expErr:    "",
 		},
 		{
@@ -3369,7 +3369,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			},
 			marketID:  13,
 			active:    true,
-			updatedBy: sdk.AccAddress("updated___by________"),
+			updatedBy: "updated___by________",
 			expErr:    "",
 		},
 		{
@@ -3384,7 +3384,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			},
 			marketID:  13,
 			active:    false,
-			updatedBy: sdk.AccAddress("__updated_____by____"),
+			updatedBy: "__updated_____by____",
 			expErr:    "market 13 already has accepting-orders false",
 		},
 	}

@@ -748,7 +748,7 @@ func (k Keeper) IsMarketActive(ctx sdk.Context, marketID uint32) bool {
 
 // UpdateMarketActive updates the active flag for a market.
 // An error is returned if the setting is already what is provided.
-func (k Keeper) UpdateMarketActive(ctx sdk.Context, marketID uint32, active bool, updatedBy sdk.AccAddress) error {
+func (k Keeper) UpdateMarketActive(ctx sdk.Context, marketID uint32, active bool, updatedBy string) error {
 	store := k.getStore(ctx)
 	current := isMarketActive(store, marketID)
 	if current == active {

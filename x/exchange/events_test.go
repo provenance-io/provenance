@@ -402,12 +402,12 @@ func TestNewEventMarketDetailsUpdated(t *testing.T) {
 }
 
 func TestNewEventMarketActiveUpdated(t *testing.T) {
-	someAddr := sdk.AccAddress("some_address________")
+	someAddr := sdk.AccAddress("some_address________").String()
 
 	tests := []struct {
 		name      string
 		marketID  uint32
-		updatedBy sdk.AccAddress
+		updatedBy string
 		isActive  bool
 		expected  proto.Message
 	}{
@@ -434,38 +434,38 @@ func TestNewEventMarketActiveUpdated(t *testing.T) {
 				event = NewEventMarketActiveUpdated(tc.marketID, tc.updatedBy, tc.isActive)
 			}
 			require.NotPanics(t, testFunc, "NewEventMarketActiveUpdated(%d, %q, %t) result",
-				tc.marketID, tc.updatedBy.String(), tc.isActive)
+				tc.marketID, tc.updatedBy, tc.isActive)
 			assert.Equal(t, tc.expected, event, "NewEventMarketActiveUpdated(%d, %q, %t) result",
-				tc.marketID, tc.updatedBy.String(), tc.isActive)
+				tc.marketID, tc.updatedBy, tc.isActive)
 		})
 	}
 }
 
 func TestNewEventMarketEnabled(t *testing.T) {
 	marketID := uint32(919)
-	updatedBy := sdk.AccAddress("updatedBy___________")
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
 
 	var event *EventMarketEnabled
 	testFunc := func() {
 		event = NewEventMarketEnabled(marketID, updatedBy)
 	}
-	require.NotPanics(t, testFunc, "NewEventMarketEnabled(%d, %q)", marketID, string(updatedBy))
+	require.NotPanics(t, testFunc, "NewEventMarketEnabled(%d, %q)", marketID, updatedBy)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
-	assert.Equal(t, updatedBy.String(), event.UpdatedBy, "UpdatedBy")
+	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
 	assertEverythingSet(t, event, "EventMarketEnabled")
 }
 
 func TestNewEventMarketDisabled(t *testing.T) {
 	marketID := uint32(5555)
-	updatedBy := sdk.AccAddress("updatedBy___________")
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
 
 	var event *EventMarketDisabled
 	testFunc := func() {
 		event = NewEventMarketDisabled(marketID, updatedBy)
 	}
-	require.NotPanics(t, testFunc, "NewEventMarketDisabled(%d, %q)", marketID, string(updatedBy))
+	require.NotPanics(t, testFunc, "NewEventMarketDisabled(%d, %q)", marketID, updatedBy)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
-	assert.Equal(t, updatedBy.String(), event.UpdatedBy, "UpdatedBy")
+	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
 	assertEverythingSet(t, event, "EventMarketDisabled")
 }
 
@@ -810,7 +810,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventMarketEnabled",
-			tev:  NewEventMarketEnabled(8, updatedBy),
+			tev:  NewEventMarketEnabled(8, updatedBy.String()),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketEnabled",
 				Attributes: []abci.EventAttribute{
@@ -821,7 +821,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventMarketDisabled",
-			tev:  NewEventMarketDisabled(9, updatedBy),
+			tev:  NewEventMarketDisabled(9, updatedBy.String()),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketDisabled",
 				Attributes: []abci.EventAttribute{
