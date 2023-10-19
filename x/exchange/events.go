@@ -15,10 +15,10 @@ func NewEventOrderCreated(order OrderI) *EventOrderCreated {
 	}
 }
 
-func NewEventOrderCancelled(order OrderI, cancelledBy sdk.AccAddress) *EventOrderCancelled {
+func NewEventOrderCancelled(order OrderI, cancelledBy string) *EventOrderCancelled {
 	return &EventOrderCancelled{
 		OrderId:     order.GetOrderID(),
-		CancelledBy: cancelledBy.String(),
+		CancelledBy: cancelledBy,
 		MarketId:    order.GetMarketID(),
 		ExternalId:  order.GetExternalID(),
 	}

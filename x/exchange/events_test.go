@@ -93,16 +93,16 @@ func TestNewEventOrderCancelled(t *testing.T) {
 	tests := []struct {
 		name        string
 		order       OrderI
-		cancelledBy sdk.AccAddress
+		cancelledBy string
 		expected    *EventOrderCancelled
 	}{
 		{
 			name:        "ask order",
 			order:       NewOrder(11).WithAsk(&AskOrder{MarketId: 71, ExternalId: "an external identifier"}),
-			cancelledBy: sdk.AccAddress("CancelledBy_________"),
+			cancelledBy: "CancelledBy_________",
 			expected: &EventOrderCancelled{
 				OrderId:     11,
-				CancelledBy: sdk.AccAddress("CancelledBy_________").String(),
+				CancelledBy: "CancelledBy_________",
 				MarketId:    71,
 				ExternalId:  "an external identifier",
 			},
@@ -110,10 +110,10 @@ func TestNewEventOrderCancelled(t *testing.T) {
 		{
 			name:        "bid order",
 			order:       NewOrder(55).WithAsk(&AskOrder{MarketId: 88, ExternalId: "another external identifier"}),
-			cancelledBy: sdk.AccAddress("cancelled_by________"),
+			cancelledBy: "cancelled_by________",
 			expected: &EventOrderCancelled{
 				OrderId:     55,
-				CancelledBy: sdk.AccAddress("cancelled_by________").String(),
+				CancelledBy: "cancelled_by________",
 				MarketId:    88,
 				ExternalId:  "another external identifier",
 			},
@@ -652,7 +652,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventOrderCancelled ask",
-			tev:  NewEventOrderCancelled(NewOrder(3).WithAsk(&AskOrder{MarketId: 66, ExternalId: "outside 8"}), cancelledBy),
+			tev:  NewEventOrderCancelled(NewOrder(3).WithAsk(&AskOrder{MarketId: 66, ExternalId: "outside 8"}), cancelledBy.String()),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCancelled",
 				Attributes: []abci.EventAttribute{
@@ -665,7 +665,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventOrderCancelled bid",
-			tev:  NewEventOrderCancelled(NewOrder(3).WithBid(&BidOrder{MarketId: 55, ExternalId: "outside 8"}), cancelledBy),
+			tev:  NewEventOrderCancelled(NewOrder(3).WithBid(&BidOrder{MarketId: 55, ExternalId: "outside 8"}), cancelledBy.String()),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCancelled",
 				Attributes: []abci.EventAttribute{

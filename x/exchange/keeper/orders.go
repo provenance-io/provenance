@@ -712,7 +712,6 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 		return fmt.Errorf("account %s does not have permission to cancel order %d", signer, orderID)
 	}
 
-	signerAddr := sdk.MustAccAddressFromBech32(signer)
 	orderOwnerAddr := sdk.MustAccAddressFromBech32(orderOwner)
 	heldAmount := order.GetHoldAmount()
 	err = k.holdKeeper.ReleaseHold(ctx, orderOwnerAddr, heldAmount)
@@ -721,7 +720,7 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 	}
 
 	deleteAndDeIndexOrder(k.getStore(ctx), *order)
-	k.emitEvent(ctx, exchange.NewEventOrderCancelled(order, signerAddr))
+	k.emitEvent(ctx, exchange.NewEventOrderCancelled(order, signer))
 
 	return nil
 }
