@@ -123,10 +123,10 @@ func NewEventMarketPermissionsUpdated(marketID uint32, updatedBy string) *EventM
 	}
 }
 
-func NewEventMarketReqAttrUpdated(marketID uint32, updatedBy sdk.AccAddress) *EventMarketReqAttrUpdated {
+func NewEventMarketReqAttrUpdated(marketID uint32, updatedBy string) *EventMarketReqAttrUpdated {
 	return &EventMarketReqAttrUpdated{
 		MarketId:  marketID,
-		UpdatedBy: updatedBy.String(),
+		UpdatedBy: updatedBy,
 	}
 }
 

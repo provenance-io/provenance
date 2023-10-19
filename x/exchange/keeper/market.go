@@ -1094,8 +1094,6 @@ func (k Keeper) CanCreateBid(ctx sdk.Context, marketID uint32, addr sdk.AccAddre
 // UpdateReqAttrs updates the required attributes in the store using the provided changes.
 // The caller is responsible for making sure this update should be allowed (e.g. by calling CanManageReqAttrs first).
 func (k Keeper) UpdateReqAttrs(ctx sdk.Context, msg *exchange.MsgMarketManageReqAttrsRequest) error {
-	admin := sdk.MustAccAddressFromBech32(msg.Admin)
-
 	var errs []error
 	// We don't care if the attributes to remove are valid so that we
 	// can remove entries that are somehow now invalid.
@@ -1126,7 +1124,7 @@ func (k Keeper) UpdateReqAttrs(ctx sdk.Context, msg *exchange.MsgMarketManageReq
 		return errors.Join(errs...)
 	}
 
-	k.emitEvent(ctx, exchange.NewEventMarketReqAttrUpdated(marketID, admin))
+	k.emitEvent(ctx, exchange.NewEventMarketReqAttrUpdated(marketID, msg.Admin))
 	return nil
 }
 
