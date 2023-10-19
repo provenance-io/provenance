@@ -51,10 +51,10 @@ var _ exchange.AccountKeeper = (*MockAccountKeeper)(nil)
 
 // MockAccountKeeper satisfies the exchange.AccountKeeper interface but just records the calls and allows dictation of results.
 type MockAccountKeeper struct {
-	Calls                AccountCalls
-	GetAccountResultsMap map[string]authtypes.AccountI
-	HasAccountResultsMap map[string]bool
-	NewAccountResultsMap map[string]authtypes.AccountI
+	Calls                 AccountCalls
+	GetAccountResultsMap  map[string]authtypes.AccountI
+	HasAccountResultsMap  map[string]bool
+	NewAccountModifierMap map[string]AccountModifier
 }
 
 // AccountCalls contains all the calls that the mock account keeper makes.
@@ -65,14 +65,24 @@ type AccountCalls struct {
 	NewAccount []authtypes.AccountI
 }
 
+// AccountModifier is a function that can alter an account.
+type AccountModifier func(authtypes.AccountI) authtypes.AccountI
+
+// NoopAccMod is a no-op AccountModifier.
+func NoopAccMod(a authtypes.AccountI) authtypes.AccountI {
+	return a
+}
+
+var _ AccountModifier = NoopAccMod
+
 // NewMockAccountKeeper creates a new empty MockAccountKeeper.
 // Follow it up with WithGetAccountResult, WithHasAccountResult,
 // and/or WithNewAccountResult to dictate results.
 func NewMockAccountKeeper() *MockAccountKeeper {
 	return &MockAccountKeeper{
-		GetAccountResultsMap: make(map[string]authtypes.AccountI),
-		HasAccountResultsMap: make(map[string]bool),
-		NewAccountResultsMap: make(map[string]authtypes.AccountI),
+		GetAccountResultsMap:  make(map[string]authtypes.AccountI),
+		HasAccountResultsMap:  make(map[string]bool),
+		NewAccountModifierMap: make(map[string]AccountModifier),
 	}
 }
 
@@ -96,8 +106,8 @@ func (k *MockAccountKeeper) WithHasAccountResult(addr sdk.AccAddress, result boo
 // When NewAccount is called, if the address provided has an entry here, that is returned,
 // otherwise, the provided AccountI is returned.
 // This method both updates the receiver and returns it.
-func (k *MockAccountKeeper) WithNewAccountResult(result authtypes.AccountI) *MockAccountKeeper {
-	k.NewAccountResultsMap[string(result.GetAddress())] = result
+func (k *MockAccountKeeper) WithNewAccountModifier(addr sdk.AccAddress, modifier AccountModifier) *MockAccountKeeper {
+	k.NewAccountModifierMap[string(addr)] = modifier
 	return k
 }
 
@@ -123,8 +133,8 @@ func (k *MockAccountKeeper) HasAccount(_ sdk.Context, addr sdk.AccAddress) bool 
 
 func (k *MockAccountKeeper) NewAccount(_ sdk.Context, acc authtypes.AccountI) authtypes.AccountI {
 	k.Calls.NewAccount = append(k.Calls.NewAccount, acc)
-	if rv, found := k.NewAccountResultsMap[string(acc.GetAddress())]; found {
-		return rv
+	if modifier, found := k.NewAccountModifierMap[string(acc.GetAddress())]; found {
+		return modifier(acc)
 	}
 	return acc
 }
