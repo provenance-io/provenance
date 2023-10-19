@@ -5148,7 +5148,393 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_UpdateReqAttrs()
+func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
+	tests := []struct {
+		name     string
+		setup    func(s *TestSuite)
+		msg      *exchange.MsgMarketManageReqAttrsRequest
+		expAsk   []string
+		expBid   []string
+		expErr   string
+		expPanic string
+	}{
+		// panics and errors.
+		{
+			name:     "nil msg",
+			setup:    nil,
+			msg:      nil,
+			expPanic: "runtime error: invalid memory address or nil pointer dereference",
+		},
+		{
+			name: "invalid attrs",
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "admin_addr_str",
+				MarketId:          1,
+				CreateAskToAdd:    []string{"three-dashes-not-allowed", "this.one.is.okay", "bad,punctuation"},
+				CreateAskToRemove: []string{"internal spaces are bad"}, // no error from this.
+				CreateBidToAdd:    []string{"twodashes-notallowed-either", "this.one.is.also.okay", "really*bad,punctuation"},
+				CreateBidToRemove: []string{"what&are*you(doing)?"}, // no error from this.
+			},
+			expErr: s.joinErrs(
+				"invalid attribute \"three-dashes-not-allowed\"",
+				"invalid attribute \"bad,punctuation\"",
+				"invalid attribute \"twodashes-notallowed-either\"",
+				"invalid attribute \"really*bad,punctuation\"",
+			),
+		},
+		{
+			name: "remove create-ask that is not required",
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "admin_addr_str",
+				MarketId:          1,
+				CreateAskToRemove: []string{"not.req"},
+			},
+			expErr: "cannot remove create-ask required attribute \"not.req\": attribute not currently required",
+		},
+		{
+			name: "remove create-bid that is not required",
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "admin_addr_str",
+				MarketId:          1,
+				CreateBidToRemove: []string{"not.req"},
+			},
+			expErr: "cannot remove create-bid required attribute \"not.req\": attribute not currently required",
+		},
+		{
+			name: "add create-ask that is already required",
+			setup: func(s *TestSuite) {
+				keeper.SetReqAttrsAsk(s.getStore(), 7, []string{"already.req"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:          "admin_addr_str",
+				MarketId:       7,
+				CreateAskToAdd: []string{"already.req"},
+			},
+			expErr: "cannot add create-ask required attribute \"already.req\": attribute already required",
+		},
+		{
+			name: "add create-ask that is already required",
+			setup: func(s *TestSuite) {
+				keeper.SetReqAttrsBid(s.getStore(), 4, []string{"already.req"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:          "admin_addr_str",
+				MarketId:       4,
+				CreateBidToAdd: []string{"already.req"},
+			},
+			expErr: "cannot add create-bid required attribute \"already.req\": attribute already required",
+		},
+		{
+			name: "multiple errors",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 3, []string{"one.ask", "two.ask", "three.ask", "four.ask"})
+				keeper.SetReqAttrsBid(store, 3, []string{"one.bid", "two.bid", "three.bid", "four.bid"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "addr_str_of_admin",
+				MarketId:          3,
+				CreateAskToAdd:    []string{"two.ask", "three .ask", "five.ask"},
+				CreateAskToRemove: []string{" four .ask", "five.ask", "six . ask"},
+				CreateBidToAdd:    []string{"two.bid ", " three.bid", "five.   bid"},
+				CreateBidToRemove: []string{"four. bid ", "five . bid", "six.bid"},
+			},
+			expErr: s.joinErrs(
+				"cannot remove create-ask required attribute \"five.ask\": attribute not currently required",
+				"cannot remove create-ask required attribute \"six.ask\": attribute not currently required",
+				"cannot add create-ask required attribute \"two.ask\": attribute already required",
+				"cannot add create-ask required attribute \"three.ask\": attribute already required",
+				"cannot remove create-bid required attribute \"five.bid\": attribute not currently required",
+				"cannot remove create-bid required attribute \"six.bid\": attribute not currently required",
+				"cannot add create-bid required attribute \"two.bid\": attribute already required",
+				"cannot add create-bid required attribute \"three.bid\": attribute already required",
+			),
+		},
+
+		// just create-ask manipulation.
+		{
+			name: "remove one create-ask from one",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "admin_addr_str",
+				MarketId:          9,
+				CreateAskToRemove: []string{"ask.can.create.bananas"},
+			},
+			expAsk: nil,
+			expBid: []string{"bid.can.create.bananas"},
+		},
+		{
+			name: "remove one create-ask from two",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas", "also.ask.okay"})
+				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "admin_addr_str",
+				MarketId:          9,
+				CreateAskToRemove: []string{"also.ask.okay"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+		},
+		{
+			name: "remove one create-ask with wildcard",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 9, []string{
+					"ask.can.create.bananas", "one.ask.can.create.bananas",
+					"*.ask.can.create.bananas", "two.ask.can.create.bananas",
+				})
+				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "admin_addr_str",
+				MarketId:          9,
+				CreateAskToRemove: []string{"*.ask.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas", "one.ask.can.create.bananas", "two.ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+		},
+		{
+			name: "remove last two create-ask",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 55, []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 55, []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "admin_addr_str",
+				MarketId:          55,
+				CreateAskToRemove: []string{"two.ask.can.create.bananas", "one.ask.can.create.bananas"},
+			},
+			expAsk: nil,
+			expBid: []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"},
+		},
+		{
+			name: "add one create-ask to empty",
+			setup: func(s *TestSuite) {
+				keeper.SetReqAttrsBid(s.getStore(), 1, []string{"bid.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:          "admin_addr_str",
+				MarketId:       1,
+				CreateAskToAdd: []string{"ask.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+		},
+		{
+			name: "add one create-ask to existing",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 1, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 1, []string{"bid.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:          "admin_addr_str",
+				MarketId:       1,
+				CreateAskToAdd: []string{"*.ask.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas", "*.ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+		},
+		{
+			name: "remove one, add diff create-ask",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 4, []string{"four.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 4, []string{"four.bid.can.create.bananas"})
+				keeper.SetReqAttrsAsk(store, 5, []string{"five.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 5, []string{"five.bid.can.create.bananas"})
+				keeper.SetReqAttrsAsk(store, 6, []string{"six.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 6, []string{"six.bid.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "admin_addr_str",
+				MarketId:          5,
+				CreateAskToAdd:    []string{"*.ask.can.create.bananas"},
+				CreateAskToRemove: []string{"five.ask.can.create.bananas"},
+			},
+			expAsk: []string{"*.ask.can.create.bananas"},
+			expBid: []string{"five.bid.can.create.bananas"},
+		},
+
+		// just create-bid manipulation.
+		{
+			name: "remove one create-bid from one",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "admin_addr_str",
+				MarketId:          9,
+				CreateBidToRemove: []string{"bid.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: nil,
+		},
+		{
+			name: "remove one create-bid from two",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas", "also.bid.okay"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "admin_addr_str",
+				MarketId:          9,
+				CreateBidToRemove: []string{"also.bid.okay"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+		},
+		{
+			name: "remove one create-bid with wildcard",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 9, []string{
+					"bid.can.create.bananas", "one.bid.can.create.bananas",
+					"*.bid.can.create.bananas", "two.bid.can.create.bananas",
+				})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "admin_addr_str",
+				MarketId:          9,
+				CreateBidToRemove: []string{"*.bid.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas", "one.bid.can.create.bananas", "two.bid.can.create.bananas"},
+		},
+		{
+			name: "remove last two create-bid",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 55, []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 55, []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "admin_addr_str",
+				MarketId:          55,
+				CreateBidToRemove: []string{"two.bid.can.create.bananas", "one.bid.can.create.bananas"},
+			},
+			expAsk: []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"},
+			expBid: nil,
+		},
+		{
+			name: "add one create-bid to empty",
+			setup: func(s *TestSuite) {
+				keeper.SetReqAttrsAsk(s.getStore(), 1, []string{"ask.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:          "admin_addr_str",
+				MarketId:       1,
+				CreateBidToAdd: []string{"bid.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+		},
+		{
+			name: "add one create-bid to existing",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 1, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 1, []string{"bid.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:          "admin_addr_str",
+				MarketId:       1,
+				CreateBidToAdd: []string{"*.bid.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas", "*.bid.can.create.bananas"},
+		},
+		{
+			name: "remove one, add diff create-bid",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 4, []string{"four.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 4, []string{"four.bid.can.create.bananas"})
+				keeper.SetReqAttrsAsk(store, 5, []string{"five.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 5, []string{"five.bid.can.create.bananas"})
+				keeper.SetReqAttrsAsk(store, 6, []string{"six.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 6, []string{"six.bid.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "admin_addr_str",
+				MarketId:          5,
+				CreateBidToAdd:    []string{"*.bid.can.create.bananas"},
+				CreateBidToRemove: []string{"five.bid.can.create.bananas"},
+			},
+			expAsk: []string{"five.ask.can.create.bananas"},
+			expBid: []string{"*.bid.can.create.bananas"},
+		},
+
+		// manipulation of both.
+		{
+			name: "add and remove two of each",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 2, []string{"one.ask", "two.ask", "three.ask"})
+				keeper.SetReqAttrsBid(store, 2, []string{"one.bid", "two.bid", "three.bid"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             "admin_addr_string",
+				MarketId:          2,
+				CreateAskToAdd:    []string{"*.other", "four.ask"},
+				CreateAskToRemove: []string{"one.ask", "three.ask"},
+				CreateBidToAdd:    []string{"*.other", "five.bid"},
+				CreateBidToRemove: []string{"three.bid", "two.bid"},
+			},
+			expAsk: []string{"two.ask", "*.other", "four.ask"},
+			expBid: []string{"one.bid", "*.other", "five.bid"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			expEvents := sdk.Events{}
+			if len(tc.expPanic) == 0 && len(tc.expErr) == 0 {
+				event, err := sdk.TypedEventToEvent(exchange.NewEventMarketReqAttrUpdated(tc.msg.MarketId, tc.msg.Admin))
+				s.Require().NoError(err, "TypedEventToEvent(NewEventMarketReqAttrUpdated(%d, %q))", tc.msg.MarketId, tc.msg.Admin)
+				expEvents = append(expEvents, event)
+			}
+
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = s.k.UpdateReqAttrs(ctx, tc.msg)
+			}
+			s.requirePanicEquals(testFunc, tc.expPanic, "UpdateReqAttrs")
+			s.assertErrorValue(err, tc.expErr, "UpdateReqAttrs error")
+
+			actEvents := em.Events()
+			s.assertEqualEvents(expEvents, actEvents, "events emitted during UpdateReqAttrs")
+
+			if len(tc.expPanic) > 0 || len(tc.expErr) > 0 {
+				return
+			}
+
+			reqAttrAsk := s.k.GetReqAttrsAsk(s.ctx, tc.msg.MarketId)
+			reqAttrBid := s.k.GetReqAttrsBid(s.ctx, tc.msg.MarketId)
+			s.Assert().Equal(tc.expAsk, reqAttrAsk, "create-ask req attrs after UpdateReqAttrs")
+			s.Assert().Equal(tc.expBid, reqAttrBid, "create-bid req attrs after UpdateReqAttrs")
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_GetMarketAccount()
 

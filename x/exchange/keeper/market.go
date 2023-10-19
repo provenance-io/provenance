@@ -1032,7 +1032,7 @@ func setReqAttrsAsk(store sdk.KVStore, marketID uint32, reqAttrs []string) {
 // the provided entries to the existing entries.
 // It is assumed that the attributes have been normalized prior to calling this.
 func updateReqAttrsAsk(store sdk.KVStore, marketID uint32, toRemove, toAdd []string) error {
-	return updateReqAttrs(store, marketID, toRemove, toAdd, "create ask", MakeKeyMarketReqAttrAsk)
+	return updateReqAttrs(store, marketID, toRemove, toAdd, "create-ask", MakeKeyMarketReqAttrAsk)
 }
 
 // getReqAttrsBid gets the attributes required to create a bid order.
@@ -1049,7 +1049,7 @@ func setReqAttrsBid(store sdk.KVStore, marketID uint32, reqAttrs []string) {
 // the provided entries to the existing entries.
 // It is assumed that the attributes have been normalized prior to calling this.
 func updateReqAttrsBid(store sdk.KVStore, marketID uint32, toRemove, toAdd []string) error {
-	return updateReqAttrs(store, marketID, toRemove, toAdd, "create bid", MakeKeyMarketReqAttrBid)
+	return updateReqAttrs(store, marketID, toRemove, toAdd, "create-bid", MakeKeyMarketReqAttrBid)
 }
 
 // acctHasReqAttrs returns true if either reqAttrs is empty or the provide address has all of them on their account.
