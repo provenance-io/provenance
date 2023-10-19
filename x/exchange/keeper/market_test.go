@@ -4549,13 +4549,611 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_GetReqAttrsAsk()
+func (s *TestSuite) TestKeeper_GetReqAttrsAsk() {
+	setter := keeper.SetReqAttrsAsk
+	tests := []struct {
+		name     string
+		setup    func(s *TestSuite)
+		marketID uint32
+		expected []string
+	}{
+		{
+			name:     "empty state",
+			setup:    nil,
+			marketID: 1,
+			expected: nil,
+		},
+		{
+			name: "market without any",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
+				setter(store, 3, []string{"yy.zz", "*.xx.yy.zz", "banana"})
+			},
+			marketID: 2,
+			expected: nil,
+		},
+		{
+			name: "market with one",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
+				setter(store, 2, []string{"raspberry"})
+				setter(store, 3, []string{"yy.zz", "*.xx.yy.zz", "banana"})
+			},
+			marketID: 2,
+			expected: []string{"raspberry"},
+		},
+		{
+			name: "market with two",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
+				setter(store, 2, []string{"raspberry"})
+				setter(store, 3, []string{"knee", "elbow"})
+				setter(store, 4, []string{"yy.zz", "*.xx.yy.zz", "banana"})
+			},
+			marketID: 3,
+			expected: []string{"knee", "elbow"},
+		},
+		{
+			name: "market with three",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 2, []string{"raspberry"})
+				setter(store, 33, []string{"knee", "elbow"})
+				setter(store, 444, []string{"head", "shoulders", "toes"})
+			},
+			marketID: 444,
+			expected: []string{"head", "shoulders", "toes"},
+		},
+	}
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_GetReqAttrsBid()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_CanCreateAsk()
+			var actual []string
+			testFunc := func() {
+				actual = s.k.GetReqAttrsAsk(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "GetReqAttrsAsk(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "GetReqAttrsAsk(%d)", tc.marketID)
+		})
+	}
+}
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_CanCreateBid()
+func (s *TestSuite) TestKeeper_GetReqAttrsBid() {
+	setter := keeper.SetReqAttrsBid
+	tests := []struct {
+		name     string
+		setup    func(s *TestSuite)
+		marketID uint32
+		expected []string
+	}{
+		{
+			name:     "empty state",
+			setup:    nil,
+			marketID: 1,
+			expected: nil,
+		},
+		{
+			name: "market without any",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
+				setter(store, 3, []string{"yy.zz", "*.xx.yy.zz", "banana"})
+			},
+			marketID: 2,
+			expected: nil,
+		},
+		{
+			name: "market with one",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
+				setter(store, 2, []string{"raspberry"})
+				setter(store, 3, []string{"yy.zz", "*.xx.yy.zz", "banana"})
+			},
+			marketID: 2,
+			expected: []string{"raspberry"},
+		},
+		{
+			name: "market with two",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
+				setter(store, 2, []string{"raspberry"})
+				setter(store, 3, []string{"knee", "elbow"})
+				setter(store, 4, []string{"yy.zz", "*.xx.yy.zz", "banana"})
+			},
+			marketID: 3,
+			expected: []string{"knee", "elbow"},
+		},
+		{
+			name: "market with three",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 2, []string{"raspberry"})
+				setter(store, 33, []string{"knee", "elbow"})
+				setter(store, 444, []string{"head", "shoulders", "toes"})
+			},
+			marketID: 444,
+			expected: []string{"head", "shoulders", "toes"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			var actual []string
+			testFunc := func() {
+				actual = s.k.GetReqAttrsBid(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "GetReqAttrsBid(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "GetReqAttrsBid(%d)", tc.marketID)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_CanCreateAsk() {
+	setter := keeper.SetReqAttrsAsk
+	addr1 := sdk.AccAddress("addr_one____________")
+	addr2 := sdk.AccAddress("addr_two____________")
+	addr3 := sdk.AccAddress("addr_three__________")
+
+	tests := []struct {
+		name           string
+		setup          func(s *TestSuite)
+		attrKeeper     *MockAttributeKeeper
+		marketID       uint32
+		addr           sdk.AccAddress
+		expected       bool
+		expGetAttrCall bool
+	}{
+		{
+			name:     "empty state",
+			marketID: 1,
+			addr:     sdk.AccAddress("empty_state_addr____"),
+			expected: true,
+		},
+		{
+			name: "no req attrs, addr without any attributes",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 7, []string{"bb.aa"})
+				setter(store, 9, []string{"yy.zz", "*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, nil, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"jk.lm.nl", "yy.zz"}, ""),
+			marketID: 8,
+			addr:     addr2,
+			expected: true,
+		},
+		{
+			name: "no req attrs, addr with some attributes",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 7, []string{"bb.aa"})
+				setter(store, 9, []string{"yy.zz", "*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"left", "right"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"jk.lm.nl", "yy.zz"}, ""),
+			marketID: 8,
+			addr:     addr2,
+			expected: true,
+		},
+		{
+			name: "error getting attributes",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 4, []string{"bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, nil, "injected test error"),
+			marketID:       4,
+			addr:           addr1,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr, acc has",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 88, []string{"bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "bb.aa", "lm.no"}, ""),
+			marketID:       88,
+			addr:           addr2,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr, acc does not have",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 88, []string{"bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "cc.bb.aa", "lm.no"}, ""),
+			marketID:       88,
+			addr:           addr2,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr with wildcard, acc has",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 42, []string{"*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "cc.bb.aa", "jk.lm.no"}, ""),
+			marketID:       42,
+			addr:           addr2,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr with wildcard, acc has two that match",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 42, []string{"*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "ab.cd.lm.no", "cc.bb.aa", "jk.lm.no"}, ""),
+			marketID:       42,
+			addr:           addr2,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr with wildcard, acc does not have",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 42, []string{"*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "cc.bb.aa", "lm.no"}, ""),
+			marketID:       42,
+			addr:           addr2,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has neither",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"one.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr2,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has just first",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"one.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr3,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has just second",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"two.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr3,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has both, same order",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"two.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr1,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has both, opposite order",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"two.bb.aa", "one.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"two.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr1,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			if tc.attrKeeper == nil {
+				tc.attrKeeper = NewMockAttributeKeeper()
+			}
+			kpr := s.k.WithAttributeKeeper(tc.attrKeeper)
+
+			var expGetAttrCalls [][]byte
+			if tc.expGetAttrCall {
+				expGetAttrCalls = append(expGetAttrCalls, tc.addr)
+			}
+
+			var actual bool
+			testFunc := func() {
+				actual = kpr.CanCreateAsk(s.ctx, tc.marketID, tc.addr)
+			}
+			s.Require().NotPanics(testFunc, "CanCreateAsk(%d, %q)", tc.marketID, string(tc.addr))
+			s.Assert().Equal(tc.expected, actual, "CanCreateAsk(%d, %q) result", tc.marketID, string(tc.addr))
+
+			actGetAttrCalls := tc.attrKeeper.Calls.GetAllAttributesAddrCalls
+			s.Assert().Equal(expGetAttrCalls, actGetAttrCalls,
+				"calls made to GetAllAttributesAddr during CanCreateAsk(%d, %q)", tc.marketID, string(tc.addr))
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_CanCreateBid() {
+	setter := keeper.SetReqAttrsBid
+	addr1 := sdk.AccAddress("addr_one____________")
+	addr2 := sdk.AccAddress("addr_two____________")
+	addr3 := sdk.AccAddress("addr_three__________")
+
+	tests := []struct {
+		name           string
+		setup          func(s *TestSuite)
+		attrKeeper     *MockAttributeKeeper
+		marketID       uint32
+		addr           sdk.AccAddress
+		expected       bool
+		expGetAttrCall bool
+	}{
+		{
+			name:     "empty state",
+			marketID: 1,
+			addr:     sdk.AccAddress("empty_state_addr____"),
+			expected: true,
+		},
+		{
+			name: "no req attrs, addr without any attributes",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 7, []string{"bb.aa"})
+				setter(store, 9, []string{"yy.zz", "*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, nil, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"jk.lm.nl", "yy.zz"}, ""),
+			marketID: 8,
+			addr:     addr2,
+			expected: true,
+		},
+		{
+			name: "no req attrs, addr with some attributes",
+			setup: func(s *TestSuite) {
+				store := s.getStore()
+				setter(store, 7, []string{"bb.aa"})
+				setter(store, 9, []string{"yy.zz", "*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"left", "right"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"jk.lm.nl", "yy.zz"}, ""),
+			marketID: 8,
+			addr:     addr2,
+			expected: true,
+		},
+		{
+			name: "error getting attributes",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 4, []string{"bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, nil, "injected test error"),
+			marketID:       4,
+			addr:           addr1,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr, acc has",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 88, []string{"bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "bb.aa", "lm.no"}, ""),
+			marketID:       88,
+			addr:           addr2,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr, acc does not have",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 88, []string{"bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "cc.bb.aa", "lm.no"}, ""),
+			marketID:       88,
+			addr:           addr2,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr with wildcard, acc has",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 42, []string{"*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "cc.bb.aa", "jk.lm.no"}, ""),
+			marketID:       42,
+			addr:           addr2,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr with wildcard, acc has two that match",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 42, []string{"*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "ab.cd.lm.no", "cc.bb.aa", "jk.lm.no"}, ""),
+			marketID:       42,
+			addr:           addr2,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr with wildcard, acc does not have",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 42, []string{"*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "cc.bb.aa", "lm.no"}, ""),
+			marketID:       42,
+			addr:           addr2,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has neither",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"one.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr2,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has just first",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"one.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr3,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has just second",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"two.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr3,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has both, same order",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"two.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr1,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has both, opposite order",
+			setup: func(s *TestSuite) {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"two.bb.aa", "one.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"two.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr1,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			if tc.attrKeeper == nil {
+				tc.attrKeeper = NewMockAttributeKeeper()
+			}
+			kpr := s.k.WithAttributeKeeper(tc.attrKeeper)
+
+			var expGetAttrCalls [][]byte
+			if tc.expGetAttrCall {
+				expGetAttrCalls = append(expGetAttrCalls, tc.addr)
+			}
+
+			var actual bool
+			testFunc := func() {
+				actual = kpr.CanCreateBid(s.ctx, tc.marketID, tc.addr)
+			}
+			s.Require().NotPanics(testFunc, "CanCreateBid(%d, %q)", tc.marketID, string(tc.addr))
+			s.Assert().Equal(tc.expected, actual, "CanCreateBid(%d, %q) result", tc.marketID, string(tc.addr))
+
+			actGetAttrCalls := tc.attrKeeper.Calls.GetAllAttributesAddrCalls
+			s.Assert().Equal(expGetAttrCalls, actGetAttrCalls,
+				"calls made to GetAllAttributesAddr during CanCreateBid(%d, %q)", tc.marketID, string(tc.addr))
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_UpdateReqAttrs()
 

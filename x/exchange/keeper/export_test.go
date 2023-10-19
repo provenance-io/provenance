@@ -69,4 +69,8 @@ var (
 	SetUserSettlementAllowed = setUserSettlementAllowed
 	// GrantPermissions is a test-only exposure of grantPermissions.
 	GrantPermissions = grantPermissions
+	// SetReqAttrsAsk is a test-only exposure of setReqAttrsAsk.
+	SetReqAttrsAsk = setReqAttrsAsk
+	// SetReqAttrsBid is a test-only exposure of setReqAttrsBid.
+	SetReqAttrsBid = setReqAttrsBid
 )

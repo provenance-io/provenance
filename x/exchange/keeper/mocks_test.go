@@ -202,7 +202,19 @@ func NewMockAttributeKeeper() *MockAttributeKeeper {
 // WithGetAllAttributesAddrResult sets up the provided address to return the given attrs
 // and error from calls to GetAllAttributesAddr. An empty string means no error.
 // This method both updates the receiver and returns it.
-func (k *MockAttributeKeeper) WithGetAllAttributesAddrResult(addr []byte, attrs []attrtypes.Attribute, errStr string) *MockAttributeKeeper {
+func (k *MockAttributeKeeper) WithGetAllAttributesAddrResult(addr []byte, attrNames []string, errStr string) *MockAttributeKeeper {
+	var attrs []attrtypes.Attribute
+	if attrNames != nil {
+		attrs = make([]attrtypes.Attribute, len(attrNames))
+		for i, name := range attrNames {
+			attrs[i] = attrtypes.Attribute{
+				Name:          name,
+				Value:         []byte("this is the " + name + " value"),
+				AttributeType: attrtypes.AttributeType_String,
+				Address:       sdk.AccAddress(addr).String(),
+			}
+		}
+	}
 	k.GetAllAttributesAddrResultsMap[string(addr)] = NewGetAllAttributesAddrResult(attrs, errStr)
 	return k
 }
