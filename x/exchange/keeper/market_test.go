@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -5704,7 +5705,136 @@ func (s *TestSuite) TestKeeper_GetMarketDetails() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_UpdateMarketDetails()
+func (s *TestSuite) TestKeeper_UpdateMarketDetails() {
+	baseAcc := func(marketID uint32) *authtypes.BaseAccount {
+		return &authtypes.BaseAccount{
+			Address:       exchange.GetMarketAddress(marketID).String(),
+			PubKey:        nil,
+			AccountNumber: uint64(marketID),
+			Sequence:      uint64(marketID) * 2,
+		}
+	}
+	standardDeets := func(marketID uint32) exchange.MarketDetails {
+		return exchange.MarketDetails{
+			Name:        fmt.Sprintf("market %d name", marketID),
+			Description: fmt.Sprintf("This is a description of market %d. It's not very helpful.", marketID),
+			WebsiteUrl:  fmt.Sprintf("https://example.com/market/%d", marketID),
+			IconUri:     fmt.Sprintf("https://icon.example.com/market/%d/small", marketID),
+		}
+	}
+	marketAcc := func(marketID uint32, marketDeets exchange.MarketDetails) *exchange.MarketAccount {
+		return &exchange.MarketAccount{
+			BaseAccount:   baseAcc(marketID),
+			MarketId:      marketID,
+			MarketDetails: marketDeets,
+		}
+	}
+
+	tests := []struct {
+		name          string
+		accKeeper     *MockAccountKeeper
+		marketID      uint32
+		marketDetails exchange.MarketDetails
+		updatedBy     string
+		expErr        string
+		expGetAccCall bool
+		expSetAccCall authtypes.AccountI
+	}{
+		{
+			name:          "invalid market details",
+			marketID:      1,
+			marketDetails: exchange.MarketDetails{Name: strings.Repeat("v", exchange.MaxName+1)},
+			updatedBy:     "whatever",
+			expErr:        fmt.Sprintf("name length %d exceeds maximum length of %d", exchange.MaxName+1, exchange.MaxName),
+		},
+		{
+			name:          "no market account",
+			marketID:      1,
+			marketDetails: exchange.MarketDetails{Name: "what"},
+			updatedBy:     "whatever",
+			expErr:        "market 1 account not found",
+			expGetAccCall: true,
+		},
+		{
+			name:          "not a market account",
+			accKeeper:     NewMockAccountKeeper().WithGetAccountResult(exchange.GetMarketAddress(3), baseAcc(3)),
+			marketID:      3,
+			marketDetails: exchange.MarketDetails{Name: "ignored"},
+			updatedBy:     "whatever",
+			expErr:        "market 3 account not found",
+			expGetAccCall: true,
+		},
+		{
+			name:          "no changes",
+			accKeeper:     NewMockAccountKeeper().WithGetAccountResult(exchange.GetMarketAddress(3), marketAcc(3, standardDeets(3))),
+			marketID:      3,
+			marketDetails: standardDeets(3),
+			updatedBy:     "whatever",
+			expErr:        "no changes",
+			expGetAccCall: true,
+		},
+		{
+			name:          "deleting all fields",
+			accKeeper:     NewMockAccountKeeper().WithGetAccountResult(exchange.GetMarketAddress(3), marketAcc(3, standardDeets(3))),
+			marketID:      3,
+			marketDetails: exchange.MarketDetails{},
+			updatedBy:     "i_did_this",
+			expGetAccCall: true,
+			expSetAccCall: marketAcc(3, exchange.MarketDetails{}),
+		},
+		{
+			name:          "setting all fields",
+			accKeeper:     NewMockAccountKeeper().WithGetAccountResult(exchange.GetMarketAddress(5), marketAcc(5, exchange.MarketDetails{})),
+			marketID:      5,
+			marketDetails: standardDeets(5),
+			updatedBy:     "changeling",
+			expGetAccCall: true,
+			expSetAccCall: marketAcc(5, standardDeets(5)),
+		},
+		{
+			name:          "changing all fields",
+			accKeeper:     NewMockAccountKeeper().WithGetAccountResult(exchange.GetMarketAddress(1), marketAcc(1, standardDeets(1))),
+			marketID:      1,
+			marketDetails: standardDeets(12345),
+			updatedBy:     "evil_laugh",
+			expGetAccCall: true,
+			expSetAccCall: marketAcc(1, standardDeets(12345)),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			expEvents := sdk.Events{}
+			var expCalls AccountCalls
+			if tc.expGetAccCall {
+				expCalls.GetAccount = append(expCalls.GetAccount, exchange.GetMarketAddress(tc.marketID))
+			}
+			if tc.expSetAccCall != nil {
+				expCalls.SetAccount = append(expCalls.SetAccount, tc.expSetAccCall)
+				event, err := sdk.TypedEventToEvent(exchange.NewEventMarketDetailsUpdated(tc.marketID, tc.updatedBy))
+				s.Require().NoError(err, "TypedEventToEvent(NewEventMarketDetailsUpdated(%d, %q))", tc.marketID, tc.updatedBy)
+				expEvents = append(expEvents, event)
+			}
+
+			if tc.accKeeper == nil {
+				tc.accKeeper = NewMockAccountKeeper()
+			}
+			kpr := s.k.WithAccountKeeper(tc.accKeeper)
+
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = kpr.UpdateMarketDetails(ctx, tc.marketID, tc.marketDetails, tc.updatedBy)
+			}
+			s.Require().NotPanics(testFunc, "UpdateMarketDetails(%d, ...)", tc.marketDetails)
+			s.assertErrorValue(err, tc.expErr, "UpdateMarketDetails(%d, ...) error", tc.marketDetails)
+			s.assertAccountKeeperCalls(tc.accKeeper, expCalls, "UpdateMarketDetails(%d, ...)", tc.marketDetails)
+			actEvents := em.Events()
+			s.assertEqualEvents(expEvents, actEvents, "events after UpdateMarketDetails(%d, ...)", tc.marketDetails)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_CreateMarket()
 
