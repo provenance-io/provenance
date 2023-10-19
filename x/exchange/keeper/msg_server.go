@@ -124,8 +124,7 @@ func (k MsgServer) MarketUpdateDetails(goCtx context.Context, msg *exchange.MsgM
 	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
 		return nil, permError("update", msg.Admin, msg.MarketId)
 	}
-	admin := sdk.MustAccAddressFromBech32(msg.Admin)
-	err := k.UpdateMarketDetails(ctx, msg.MarketId, msg.MarketDetails, admin)
+	err := k.UpdateMarketDetails(ctx, msg.MarketId, msg.MarketDetails, msg.Admin)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}

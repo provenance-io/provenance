@@ -389,15 +389,15 @@ func TestNewEventMarketWithdraw(t *testing.T) {
 
 func TestNewEventMarketDetailsUpdated(t *testing.T) {
 	marketID := uint32(84)
-	updatedBy := sdk.AccAddress("updatedBy___________")
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
 
 	var event *EventMarketDetailsUpdated
 	testFunc := func() {
 		event = NewEventMarketDetailsUpdated(marketID, updatedBy)
 	}
-	require.NotPanics(t, testFunc, "NewEventMarketDetailsUpdated(%d, %q)", marketID, string(updatedBy))
+	require.NotPanics(t, testFunc, "NewEventMarketDetailsUpdated(%d, %q)", marketID, updatedBy)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
-	assert.Equal(t, updatedBy.String(), event.UpdatedBy, "UpdatedBy")
+	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
 	assertEverythingSet(t, event, "EventMarketDetailsUpdated")
 }
 
@@ -799,7 +799,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventMarketDetailsUpdated",
-			tev:  NewEventMarketDetailsUpdated(7, updatedBy),
+			tev:  NewEventMarketDetailsUpdated(7, updatedBy.String()),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketDetailsUpdated",
 				Attributes: []abci.EventAttribute{

@@ -63,10 +63,10 @@ func NewEventMarketWithdraw(marketID uint32, amount sdk.Coins, destination, with
 	}
 }
 
-func NewEventMarketDetailsUpdated(marketID uint32, updatedBy sdk.AccAddress) *EventMarketDetailsUpdated {
+func NewEventMarketDetailsUpdated(marketID uint32, updatedBy string) *EventMarketDetailsUpdated {
 	return &EventMarketDetailsUpdated{
 		MarketId:  marketID,
-		UpdatedBy: updatedBy.String(),
+		UpdatedBy: updatedBy,
 	}
 }
 

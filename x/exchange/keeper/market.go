@@ -1159,7 +1159,7 @@ func (k Keeper) GetMarketDetails(ctx sdk.Context, marketID uint32) *exchange.Mar
 
 // UpdateMarketDetails updates a market's details. It returns an error if the market account
 // isn't found or if there aren't any changes provided.
-func (k Keeper) UpdateMarketDetails(ctx sdk.Context, marketID uint32, marketDetails exchange.MarketDetails, updatedBy sdk.AccAddress) error {
+func (k Keeper) UpdateMarketDetails(ctx sdk.Context, marketID uint32, marketDetails exchange.MarketDetails, updatedBy string) error {
 	if err := marketDetails.Validate(); err != nil {
 		return err
 	}
