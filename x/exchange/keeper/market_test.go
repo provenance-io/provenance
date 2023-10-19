@@ -3980,9 +3980,241 @@ func (s *TestSuite) TestKeeper_CanManageReqAttrs() {
 	s.runPermTest(exchange.Permission_attributes, s.k.CanManageReqAttrs, "CanManageReqAttrs")
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_GetUserPermissions()
+func (s *TestSuite) TestKeeper_GetUserPermissions() {
+	addrNone := sdk.AccAddress("address_none________")
+	addrOne := sdk.AccAddress("address_one_________")
+	addrTwo := sdk.AccAddress("address_two_________")
+	addrAll := sdk.AccAddress("address_all_________")
+	addrEven := sdk.AccAddress("address_even________")
+	addrOdd := sdk.AccAddress("address_odd_________")
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_GetAccessGrants()
+	onePerm := []exchange.Permission{exchange.Permission_settle}
+	twoPerms := []exchange.Permission{exchange.Permission_cancel, exchange.Permission_attributes}
+	allPerms := exchange.AllPermissions()
+	evenPerms := make([]exchange.Permission, 0, 1+len(allPerms)/2)
+	oddPerms := make([]exchange.Permission, 0, 1+len(allPerms)/2)
+	for _, p := range allPerms {
+		if p%2 == 0 {
+			evenPerms = append(evenPerms, p)
+		} else {
+			oddPerms = append(oddPerms, p)
+		}
+	}
+
+	defaultSetup := func(s *TestSuite) {
+		store := s.getStore()
+		keeper.GrantPermissions(store, 1, addrNone, allPerms)
+		keeper.GrantPermissions(store, 1, addrOne, allPerms)
+		keeper.GrantPermissions(store, 1, addrTwo, allPerms)
+		keeper.GrantPermissions(store, 1, addrAll, allPerms)
+		keeper.GrantPermissions(store, 1, addrEven, allPerms)
+		keeper.GrantPermissions(store, 1, addrOdd, allPerms)
+
+		keeper.GrantPermissions(store, 2, addrNone, nil)
+		keeper.GrantPermissions(store, 2, addrOne, onePerm)
+		keeper.GrantPermissions(store, 2, addrTwo, twoPerms)
+		keeper.GrantPermissions(store, 2, addrAll, allPerms)
+		keeper.GrantPermissions(store, 2, addrEven, evenPerms)
+		keeper.GrantPermissions(store, 2, addrOdd, oddPerms)
+
+		keeper.GrantPermissions(store, 3, addrNone, allPerms)
+		keeper.GrantPermissions(store, 3, addrOne, allPerms)
+		keeper.GrantPermissions(store, 3, addrTwo, allPerms)
+		keeper.GrantPermissions(store, 3, addrAll, allPerms)
+		keeper.GrantPermissions(store, 3, addrEven, allPerms)
+		keeper.GrantPermissions(store, 3, addrOdd, allPerms)
+	}
+
+	tests := []struct {
+		name     string
+		setup    func(s *TestSuite)
+		marketID uint32
+		addr     sdk.AccAddress
+		expected []exchange.Permission
+		expPanic string
+	}{
+		{
+			name:     "nil addr",
+			marketID: 1,
+			addr:     nil,
+			expPanic: "empty address not allowed",
+		},
+		{
+			name:     "empty addr",
+			marketID: 1,
+			addr:     sdk.AccAddress{},
+			expPanic: "empty address not allowed",
+		},
+		{
+			name:     "empty state",
+			marketID: 1,
+			addr:     sdk.AccAddress("some_address________"),
+			expected: nil,
+		},
+		{
+			name:     "no perms in market",
+			setup:    defaultSetup,
+			marketID: 2,
+			addr:     addrNone,
+			expected: nil,
+		},
+		{
+			name:     "one perm in market",
+			setup:    defaultSetup,
+			marketID: 2,
+			addr:     addrOne,
+			expected: onePerm,
+		},
+		{
+			name:     "two perms in market",
+			setup:    defaultSetup,
+			marketID: 2,
+			addr:     addrTwo,
+			expected: twoPerms,
+		},
+		{
+			name:     "odd perms",
+			setup:    defaultSetup,
+			marketID: 2,
+			addr:     addrOdd,
+			expected: oddPerms,
+		},
+		{
+			name:     "even perms",
+			setup:    defaultSetup,
+			marketID: 2,
+			addr:     addrEven,
+			expected: evenPerms,
+		},
+		{
+			name:     "all perms",
+			setup:    defaultSetup,
+			marketID: 2,
+			addr:     addrAll,
+			expected: allPerms,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			var actual []exchange.Permission
+			testFunc := func() {
+				actual = s.k.GetUserPermissions(s.ctx, tc.marketID, tc.addr)
+			}
+			s.requirePanicEquals(testFunc, tc.expPanic, "GetUserPermissions(%d, %q)", tc.marketID, string(tc.addr))
+			s.Assert().Equal(tc.expected, actual, "GetUserPermissions(%d, %q) result", tc.marketID, string(tc.addr))
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_GetAccessGrants() {
+	addrNone := sdk.AccAddress("address_none________")
+	addrOne := sdk.AccAddress("address_one_________")
+	addrTwo := sdk.AccAddress("address_two_________")
+	addrAll := sdk.AccAddress("address_all_________")
+	addrEven := sdk.AccAddress("address_even________")
+	addrOdd := sdk.AccAddress("address_odd_________")
+
+	onePerm := []exchange.Permission{exchange.Permission_settle}
+	oneOtherPerm := []exchange.Permission{exchange.Permission_set_ids}
+	twoPerms := []exchange.Permission{exchange.Permission_cancel, exchange.Permission_attributes}
+	allPerms := exchange.AllPermissions()
+	evenPerms := make([]exchange.Permission, 0, 1+len(allPerms)/2)
+	oddPerms := make([]exchange.Permission, 0, 1+len(allPerms)/2)
+	for _, p := range allPerms {
+		if p%2 == 0 {
+			evenPerms = append(evenPerms, p)
+		} else {
+			oddPerms = append(oddPerms, p)
+		}
+	}
+
+	defaultSetup := func(s *TestSuite) {
+		store := s.getStore()
+		keeper.GrantPermissions(store, 1, addrNone, allPerms)
+		keeper.GrantPermissions(store, 1, addrOne, allPerms)
+		keeper.GrantPermissions(store, 1, addrTwo, allPerms)
+		keeper.GrantPermissions(store, 1, addrAll, allPerms)
+		keeper.GrantPermissions(store, 1, addrEven, allPerms)
+		keeper.GrantPermissions(store, 1, addrOdd, allPerms)
+
+		keeper.GrantPermissions(store, 2, addrOne, oneOtherPerm)
+
+		keeper.GrantPermissions(store, 3, addrNone, nil)
+		keeper.GrantPermissions(store, 3, addrOne, onePerm)
+		keeper.GrantPermissions(store, 3, addrTwo, twoPerms)
+		keeper.GrantPermissions(store, 3, addrAll, allPerms)
+		keeper.GrantPermissions(store, 3, addrEven, evenPerms)
+		keeper.GrantPermissions(store, 3, addrOdd, oddPerms)
+
+		keeper.GrantPermissions(store, 4, addrNone, allPerms)
+		keeper.GrantPermissions(store, 4, addrOne, allPerms)
+		keeper.GrantPermissions(store, 4, addrTwo, allPerms)
+		keeper.GrantPermissions(store, 4, addrAll, allPerms)
+		keeper.GrantPermissions(store, 4, addrEven, allPerms)
+		keeper.GrantPermissions(store, 4, addrOdd, allPerms)
+	}
+
+	tests := []struct {
+		name     string
+		setup    func(s *TestSuite)
+		marketID uint32
+		expected []exchange.AccessGrant
+	}{
+		{
+			name:     "empty state",
+			marketID: 1,
+			expected: nil,
+		},
+		{
+			name:     "market without any permissions",
+			setup:    defaultSetup,
+			marketID: 5,
+			expected: nil,
+		},
+		{
+			name:     "market with just one permission",
+			setup:    defaultSetup,
+			marketID: 2,
+			expected: []exchange.AccessGrant{
+				{Address: addrOne.String(), Permissions: oneOtherPerm},
+			},
+		},
+		{
+			name:     "market with several permissions",
+			setup:    defaultSetup,
+			marketID: 3,
+			expected: []exchange.AccessGrant{
+				{Address: addrAll.String(), Permissions: allPerms},
+				{Address: addrEven.String(), Permissions: evenPerms},
+				{Address: addrOdd.String(), Permissions: oddPerms},
+				{Address: addrOne.String(), Permissions: onePerm},
+				{Address: addrTwo.String(), Permissions: twoPerms},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			var actual []exchange.AccessGrant
+			testFunc := func() {
+				actual = s.k.GetAccessGrants(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "GetAccessGrants(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "GetAccessGrants(%d) result", tc.marketID)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_UpdatePermissions()
 
