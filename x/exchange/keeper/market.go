@@ -1228,7 +1228,7 @@ func (k Keeper) initMarket(ctx sdk.Context, store sdk.KVStore, market exchange.M
 // CreateMarket saves a new market to the store with all the info provided.
 // If the marketId is zero, the next available one will be used.
 func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (uint32, error) {
-	// Note: The Market is passed in by value, so any alterations to it here will be lost upon return.
+	// Note: The Market is passed in by value, so any alterations directly to it here will be lost upon return.
 	var errAsk, errBid error
 	market.ReqAttrCreateAsk, errAsk = exchange.NormalizeReqAttrs(market.ReqAttrCreateAsk)
 	market.ReqAttrCreateBid, errBid = exchange.NormalizeReqAttrs(market.ReqAttrCreateBid)

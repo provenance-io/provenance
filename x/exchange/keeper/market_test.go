@@ -5836,7 +5836,250 @@ func (s *TestSuite) TestKeeper_UpdateMarketDetails() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_CreateMarket()
+func (s *TestSuite) TestKeeper_CreateMarket() {
+	copyCoin := func(orig sdk.Coin) sdk.Coin {
+		return sdk.NewCoin(orig.Denom, orig.Amount.AddRaw(0))
+	}
+	copyCoins := func(orig []sdk.Coin) []sdk.Coin {
+		return copySlice(orig, copyCoin)
+	}
+	copyRatios := func(orig []exchange.FeeRatio) []exchange.FeeRatio {
+		return copySlice(orig, func(ratio exchange.FeeRatio) exchange.FeeRatio {
+			return exchange.FeeRatio{
+				Price: copyCoin(ratio.Price),
+				Fee:   copyCoin(ratio.Fee),
+			}
+		})
+	}
+	copyGrants := func(orig []exchange.AccessGrant) []exchange.AccessGrant {
+		return copySlice(orig, func(grant exchange.AccessGrant) exchange.AccessGrant {
+			return exchange.AccessGrant{
+				Address: grant.Address,
+				Permissions: copySlice(grant.Permissions, func(p exchange.Permission) exchange.Permission {
+					return p
+				}),
+			}
+		})
+	}
+	copyStrs := func(orig []string) []string {
+		return copySlice(orig, func(s string) string {
+			return s
+		})
+	}
+	copyMarket := func(orig exchange.Market) exchange.Market {
+		return exchange.Market{
+			MarketId: orig.MarketId,
+			MarketDetails: exchange.MarketDetails{
+				Name:        orig.MarketDetails.Name,
+				Description: orig.MarketDetails.Description,
+				WebsiteUrl:  orig.MarketDetails.WebsiteUrl,
+				IconUri:     orig.MarketDetails.IconUri,
+			},
+			FeeCreateAskFlat:          copyCoins(orig.FeeCreateAskFlat),
+			FeeCreateBidFlat:          copyCoins(orig.FeeCreateBidFlat),
+			FeeSellerSettlementFlat:   copyCoins(orig.FeeSellerSettlementFlat),
+			FeeSellerSettlementRatios: copyRatios(orig.FeeSellerSettlementRatios),
+			FeeBuyerSettlementFlat:    copyCoins(orig.FeeBuyerSettlementFlat),
+			FeeBuyerSettlementRatios:  copyRatios(orig.FeeBuyerSettlementRatios),
+			AcceptingOrders:           orig.AcceptingOrders,
+			AllowUserSettlement:       orig.AllowUserSettlement,
+			AccessGrants:              copyGrants(orig.AccessGrants),
+			ReqAttrCreateAsk:          copyStrs(orig.ReqAttrCreateAsk),
+			ReqAttrCreateBid:          copyStrs(orig.ReqAttrCreateBid),
+		}
+	}
+	setAccNum := func(id uint64) AccountModifier {
+		return func(acc authtypes.AccountI) authtypes.AccountI {
+			err := acc.SetAccountNumber(id)
+			s.Require().NoError(err, "SetAccountNumber(%d)", id)
+			return acc
+		}
+	}
+
+	tests := []struct {
+		name           string
+		setup          func(s *TestSuite)
+		accKeeper      *MockAccountKeeper
+		newAccModifier AccountModifier
+		market         exchange.Market
+		expMarketID    uint32
+		expErr         string
+		expHasAccCall  bool
+		expLastAutoID  uint32
+	}{
+		{
+			name: "market has errors",
+			market: exchange.Market{
+				ReqAttrCreateAsk: []string{"not$money"},
+				ReqAttrCreateBid: []string{"no spaces"},
+				MarketDetails: exchange.MarketDetails{
+					Description: strings.Repeat("w", 1+exchange.MaxDescription),
+				},
+			},
+			expErr: s.joinErrs(
+				"invalid attribute \"not$money\"",
+				"invalid attribute \"no spaces\"",
+				"description length 2001 exceeds maximum length of 2000",
+			),
+		},
+		{
+			name:          "market address already exists",
+			accKeeper:     NewMockAccountKeeper().WithHasAccountResult(exchange.GetMarketAddress(1), true),
+			market:        exchange.Market{MarketId: 1},
+			expErr:        "market id 1 account " + exchange.GetMarketAddress(1).String() + " already exists",
+			expHasAccCall: true,
+		},
+		{
+			name:           "no market id, empty state",
+			setup:          nil,
+			newAccModifier: setAccNum(88),
+			market:         exchange.Market{MarketDetails: exchange.MarketDetails{Name: "Empty Market"}},
+			expMarketID:    1,
+			expHasAccCall:  true,
+			expLastAutoID:  1,
+		},
+		{
+			name: "no market id, last one was 55",
+			setup: func(s *TestSuite) {
+				keeper.SetLastAutoMarketID(s.getStore(), 55)
+			},
+			newAccModifier: setAccNum(123),
+			market:         exchange.Market{MarketDetails: exchange.MarketDetails{Name: "NAME", Description: "DESCRIPTION"}},
+			expMarketID:    56,
+			expHasAccCall:  true,
+			expLastAutoID:  56,
+		},
+		{
+			name: "market id 78, last one was 22",
+			setup: func(s *TestSuite) {
+				keeper.SetLastAutoMarketID(s.getStore(), 22)
+			},
+			newAccModifier: setAccNum(5),
+			market:         exchange.Market{MarketId: 78},
+			expMarketID:    78,
+			expHasAccCall:  true,
+			expLastAutoID:  22,
+		},
+		{
+			name: "market id 5, last one was 18",
+			setup: func(s *TestSuite) {
+				keeper.SetLastAutoMarketID(s.getStore(), 18)
+			},
+			newAccModifier: setAccNum(99),
+			market:         exchange.Market{MarketId: 5},
+			expMarketID:    5,
+			expHasAccCall:  true,
+			expLastAutoID:  18,
+		},
+		{
+			name:           "fully filled market",
+			newAccModifier: setAccNum(324),
+			market: exchange.Market{
+				MarketId: 3,
+				MarketDetails: exchange.MarketDetails{
+					Name:        "Market Three",
+					Description: "The third market.",
+					WebsiteUrl:  "https://example.com/market/3/info",
+					IconUri:     "https://icon.example.com/market/3/small",
+				},
+				FeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("incaberry", 88)},
+				FeeCreateBidFlat:        []sdk.Coin{sdk.NewInt64Coin("fig", 77)},
+				FeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("grape", 66)},
+				FeeSellerSettlementRatios: []exchange.FeeRatio{
+					{Price: sdk.NewInt64Coin("plum", 100), Fee: sdk.NewInt64Coin("jackfruit", 3)},
+				},
+				FeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("honeydew", 55)},
+				FeeBuyerSettlementRatios: []exchange.FeeRatio{
+					{Price: sdk.NewInt64Coin("peach", 500), Fee: sdk.NewInt64Coin("kiwi", 33)},
+				},
+				AcceptingOrders:     true,
+				AllowUserSettlement: true,
+				AccessGrants: []exchange.AccessGrant{
+					{
+						Address:     sdk.AccAddress("just_some_address___").String(),
+						Permissions: exchange.AllPermissions(),
+					},
+				},
+				ReqAttrCreateAsk: []string{"*.ask.whatever"},
+				ReqAttrCreateBid: []string{"*.bid.whatever"},
+			},
+			expMarketID:   3,
+			expHasAccCall: true,
+			expLastAutoID: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			if tc.accKeeper == nil {
+				tc.accKeeper = NewMockAccountKeeper()
+			}
+			kpr := s.k.WithAccountKeeper(tc.accKeeper)
+
+			origMarket := copyMarket(tc.market)
+			expEvents := sdk.Events{}
+			var expCalls AccountCalls
+			var expMarketAcc authtypes.AccountI
+			if tc.expHasAccCall {
+				id := tc.expMarketID
+				if id == 0 {
+					id = tc.market.MarketId
+				}
+				expCalls.HasAccount = append(expCalls.HasAccount, exchange.GetMarketAddress(id))
+			}
+			if tc.newAccModifier != nil {
+				marketAddr := exchange.GetMarketAddress(tc.expMarketID)
+				tc.accKeeper.WithNewAccountModifier(marketAddr, tc.newAccModifier)
+
+				expMarketAcc = tc.newAccModifier(&exchange.MarketAccount{
+					BaseAccount:   &authtypes.BaseAccount{Address: marketAddr.String()},
+					MarketId:      tc.expMarketID,
+					MarketDetails: tc.market.MarketDetails,
+				})
+				// Even though the account number isn't set when the account is provided to NewAccount,
+				// It's all passed by reference. So the arg recorded in the NewAccount call gets updated too.
+				expCalls.NewAccount = append(expCalls.NewAccount, expMarketAcc)
+				expCalls.SetAccount = append(expCalls.SetAccount, expMarketAcc)
+
+				event, err := sdk.TypedEventToEvent(exchange.NewEventMarketCreated(tc.expMarketID))
+				s.Require().NoError(err, "TypedEventToEvent(NewEventMarketCreated(%d))", tc.expMarketID)
+				expEvents = append(expEvents, event)
+			}
+
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			var marketID uint32
+			var err error
+			testFunc := func() {
+				marketID, err = kpr.CreateMarket(ctx, tc.market)
+			}
+			s.Require().NotPanics(testFunc, "CreateMarket")
+			s.assertErrorValue(err, tc.expErr, "CreateMarket error")
+			s.Assert().Equal(tc.expMarketID, marketID, "CreateMarket market id")
+			s.assertAccountKeeperCalls(tc.accKeeper, expCalls, "CreateMarket")
+			actEvents := em.Events()
+			s.assertEqualEvents(expEvents, actEvents, "events emitted during CreateMarket")
+			s.Assert().Equal(origMarket, tc.market, "market arg after CreateMarket")
+
+			if len(tc.expErr) > 0 || s.T().Failed() {
+				return
+			}
+			tc.accKeeper.WithGetAccountResult(exchange.GetMarketAddress(tc.expMarketID), expMarketAcc)
+			expMarket := tc.market
+			expMarket.MarketId = marketID
+			market := kpr.GetMarket(s.ctx, marketID)
+			s.Assert().Equal(&expMarket, market, "market read from state after CreateMarket")
+
+			lastMarketID := keeper.GetLastAutoMarketID(s.getStore())
+			s.Assert().Equal(tc.expLastAutoID, lastMarketID, "last auto-market id after CreateMarket")
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_GetMarket()
 

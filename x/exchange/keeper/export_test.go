@@ -49,6 +49,10 @@ var (
 	Uint16Bz = uint16Bz
 	// SetParamsSplit is a test-only exposure of setParamsSplit.
 	SetParamsSplit = setParamsSplit
+	// GetLastAutoMarketID is a test-only exposure of getLastAutoMarketID.
+	GetLastAutoMarketID = getLastAutoMarketID
+	// SetLastAutoMarketID is a test-only exposure of setLastAutoMarketID.
+	SetLastAutoMarketID = setLastAutoMarketID
 	// SetMarketKnown is a test-only exposure of setMarketKnown.
 	SetMarketKnown = setMarketKnown
 	// SetCreateAskFlatFees is a test-only exposure of setCreateAskFlatFees.

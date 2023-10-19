@@ -103,6 +103,18 @@ func sliceString[T any](vals []T, stringer func(T) string) string {
 	return strings.Join(sliceStrings(vals, stringer), ", ")
 }
 
+// copySlice returns a copy of a slice using the provided copier for each value.
+func copySlice[T any](vals []T, copier func(T) T) []T {
+	if vals == nil {
+		return nil
+	}
+	rv := make([]T, len(vals))
+	for i, v := range vals {
+		rv[i] = copier(v)
+	}
+	return rv
+}
+
 // coins creates an sdk.Coins from a string, requiring it to work.
 func (s *TestSuite) coins(coins string) sdk.Coins {
 	s.T().Helper()
