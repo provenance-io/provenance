@@ -4899,15 +4899,15 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 				tc.setup(s)
 			}
 
+			var expCalls AttributeCalls
+			if tc.expGetAttrCall {
+				expCalls.GetAllAttributesAddr = append(expCalls.GetAllAttributesAddr, tc.addr)
+			}
+
 			if tc.attrKeeper == nil {
 				tc.attrKeeper = NewMockAttributeKeeper()
 			}
 			kpr := s.k.WithAttributeKeeper(tc.attrKeeper)
-
-			var expGetAttrCalls [][]byte
-			if tc.expGetAttrCall {
-				expGetAttrCalls = append(expGetAttrCalls, tc.addr)
-			}
 
 			var actual bool
 			testFunc := func() {
@@ -4915,10 +4915,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 			}
 			s.Require().NotPanics(testFunc, "CanCreateAsk(%d, %q)", tc.marketID, string(tc.addr))
 			s.Assert().Equal(tc.expected, actual, "CanCreateAsk(%d, %q) result", tc.marketID, string(tc.addr))
-
-			actGetAttrCalls := tc.attrKeeper.Calls.GetAllAttributesAddrCalls
-			s.Assert().Equal(expGetAttrCalls, actGetAttrCalls,
-				"calls made to GetAllAttributesAddr during CanCreateAsk(%d, %q)", tc.marketID, string(tc.addr))
+			s.assertAttributeKeeperCalls(tc.attrKeeper, expCalls, "CanCreateAsk(%d, %q)", tc.marketID, string(tc.addr))
 		})
 	}
 }
@@ -5125,15 +5122,15 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 				tc.setup(s)
 			}
 
+			var expCalls AttributeCalls
+			if tc.expGetAttrCall {
+				expCalls.GetAllAttributesAddr = append(expCalls.GetAllAttributesAddr, tc.addr)
+			}
+
 			if tc.attrKeeper == nil {
 				tc.attrKeeper = NewMockAttributeKeeper()
 			}
 			kpr := s.k.WithAttributeKeeper(tc.attrKeeper)
-
-			var expGetAttrCalls [][]byte
-			if tc.expGetAttrCall {
-				expGetAttrCalls = append(expGetAttrCalls, tc.addr)
-			}
 
 			var actual bool
 			testFunc := func() {
@@ -5141,10 +5138,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 			}
 			s.Require().NotPanics(testFunc, "CanCreateBid(%d, %q)", tc.marketID, string(tc.addr))
 			s.Assert().Equal(tc.expected, actual, "CanCreateBid(%d, %q) result", tc.marketID, string(tc.addr))
-
-			actGetAttrCalls := tc.attrKeeper.Calls.GetAllAttributesAddrCalls
-			s.Assert().Equal(expGetAttrCalls, actGetAttrCalls,
-				"calls made to GetAllAttributesAddr during CanCreateBid(%d, %q)", tc.marketID, string(tc.addr))
+			s.assertAttributeKeeperCalls(tc.attrKeeper, expCalls, "CanCreateBid(%d, %q)", tc.marketID, string(tc.addr))
 		})
 	}
 }
@@ -5604,7 +5598,7 @@ func (s *TestSuite) TestKeeper_GetMarketAccount() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			expGetAccCalls := []sdk.AccAddress{exchange.GetMarketAddress(tc.marketID)}
+			expCalls := AccountCalls{GetAccount: []sdk.AccAddress{exchange.GetMarketAddress(tc.marketID)}}
 
 			if tc.accKeeper == nil {
 				tc.accKeeper = NewMockAccountKeeper()
@@ -5617,9 +5611,7 @@ func (s *TestSuite) TestKeeper_GetMarketAccount() {
 			}
 			s.Require().NotPanics(testFunc, "GetMarketAccount(%d)", tc.marketID)
 			s.Assert().Equal(tc.expected, actual, "GetMarketAccount(%d) result", tc.marketID)
-
-			actGetAccCalls := tc.accKeeper.Calls.GetAccountCalls
-			s.Assert().Equal(expGetAccCalls, actGetAccCalls, "calls made to GetAccount during GetMarketAccount(%d)", tc.marketID)
+			s.assertAccountKeeperCalls(tc.accKeeper, expCalls, "GetMarketAccount(%d)", tc.marketID)
 		})
 	}
 }
@@ -5694,7 +5686,7 @@ func (s *TestSuite) TestKeeper_GetMarketDetails() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			expGetAccCalls := []sdk.AccAddress{exchange.GetMarketAddress(tc.marketID)}
+			expCalls := AccountCalls{GetAccount: []sdk.AccAddress{exchange.GetMarketAddress(tc.marketID)}}
 
 			if tc.accKeeper == nil {
 				tc.accKeeper = NewMockAccountKeeper()
@@ -5707,9 +5699,7 @@ func (s *TestSuite) TestKeeper_GetMarketDetails() {
 			}
 			s.Require().NotPanics(testFunc, "GetMarketDetails(%d)", tc.marketID)
 			s.Assert().Equal(tc.expected, actual, "GetMarketDetails(%d) result", tc.marketID)
-
-			actGetAccCalls := tc.accKeeper.Calls.GetAccountCalls
-			s.Assert().Equal(expGetAccCalls, actGetAccCalls, "calls made to GetAccount during GetMarketDetails(%d) result", tc.marketID)
+			s.assertAccountKeeperCalls(tc.accKeeper, expCalls, "GetMarketDetails(%d)", tc.marketID)
 		})
 	}
 }

@@ -466,12 +466,12 @@ func (s *TestSuite) TestKeeper_DoTransfer() {
 				tc.bk = NewMockBankKeeper()
 			}
 			expCalls := BankCalls{
-				SendCoinsCalls:                    tc.expSends,
-				SendCoinsFromAccountToModuleCalls: nil,
-				InputOutputCoinsCalls:             nil,
+				SendCoins:                    tc.expSends,
+				SendCoinsFromAccountToModule: nil,
+				InputOutputCoins:             nil,
 			}
 			if tc.expIO {
-				expCalls.InputOutputCoinsCalls = append(expCalls.InputOutputCoinsCalls, &InputOutputCoinsArgs{
+				expCalls.InputOutputCoins = append(expCalls.InputOutputCoins, &InputOutputCoinsArgs{
 					ctxHasQuarantineBypass: true,
 					inputs:                 tc.inputs,
 					outputs:                tc.outputs,
@@ -629,7 +629,7 @@ func (s *TestSuite) TestKeeper_CollectFee() {
 			feeAmt:   s.coins("750apple"),
 			expErr:   "error transferring 750apple from " + s.addr1.String() + " to market 1: test error F from SendCoins",
 			expCalls: BankCalls{
-				SendCoinsCalls: []*SendCoinsArgs{
+				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: false, fromAddr: s.addr1, toAddr: s.marketAddr1, amt: s.coins("750apple")},
 				},
 			},
@@ -642,10 +642,10 @@ func (s *TestSuite) TestKeeper_CollectFee() {
 			feeAmt:   s.coins("750apple"),
 			expErr:   "error collecting exchange fee 19apple (based off 750apple) from market 2: test error U from SendCoinsFromAccountToModule",
 			expCalls: BankCalls{
-				SendCoinsCalls: []*SendCoinsArgs{
+				SendCoins: []*SendCoinsArgs{
 					{fromAddr: s.addr4, toAddr: s.marketAddr2, amt: s.coins("750apple")},
 				},
-				SendCoinsFromAccountToModuleCalls: []*SendCoinsFromAccountToModuleArgs{
+				SendCoinsFromAccountToModule: []*SendCoinsFromAccountToModuleArgs{
 					{senderAddr: s.marketAddr2, recipientModule: s.feeCollector, amt: s.coins("19apple")},
 				},
 			},
@@ -658,7 +658,7 @@ func (s *TestSuite) TestKeeper_CollectFee() {
 			feeAmt:   s.coins("1000000apple,5000000fig"),
 			expErr:   "",
 			expCalls: BankCalls{
-				SendCoinsCalls: []*SendCoinsArgs{
+				SendCoins: []*SendCoinsArgs{
 					{fromAddr: s.addr2, toAddr: s.marketAddr3, amt: s.coins("1000000apple,5000000fig")},
 				},
 			},
@@ -669,10 +669,10 @@ func (s *TestSuite) TestKeeper_CollectFee() {
 			payer:    s.addr3,
 			feeAmt:   s.coins("1005apple,5000fig,999999zucchini"),
 			expCalls: BankCalls{
-				SendCoinsCalls: []*SendCoinsArgs{
+				SendCoins: []*SendCoinsArgs{
 					{fromAddr: s.addr3, toAddr: s.marketAddr1, amt: s.coins("1005apple,5000fig,999999zucchini")},
 				},
-				SendCoinsFromAccountToModuleCalls: []*SendCoinsFromAccountToModuleArgs{
+				SendCoinsFromAccountToModule: []*SendCoinsFromAccountToModuleArgs{
 					{senderAddr: s.marketAddr1, recipientModule: s.feeCollector, amt: s.coins("26apple,500fig")},
 				},
 			},
@@ -747,10 +747,10 @@ func (s *TestSuite) TestKeeper_CollectFees() {
 			inputs:   []banktypes.Input{{Address: s.addr1.String(), Coins: s.coins("1000apple")}},
 			expErr:   "",
 			expCalls: BankCalls{
-				SendCoinsCalls: []*SendCoinsArgs{
+				SendCoins: []*SendCoinsArgs{
 					{fromAddr: s.addr1, toAddr: s.marketAddr2, amt: s.coins("1000apple")},
 				},
-				SendCoinsFromAccountToModuleCalls: []*SendCoinsFromAccountToModuleArgs{
+				SendCoinsFromAccountToModule: []*SendCoinsFromAccountToModuleArgs{
 					{senderAddr: s.marketAddr2, recipientModule: s.feeCollector, amt: s.coins("25apple")},
 				},
 			},
@@ -777,7 +777,7 @@ func (s *TestSuite) TestKeeper_CollectFees() {
 			},
 			expErr: "error collecting fees for market 1: test error Z from InputOutputCoins",
 			expCalls: BankCalls{
-				InputOutputCoinsCalls: []*InputOutputCoinsArgs{
+				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
 						inputs: []banktypes.Input{
 							{Address: s.addr1.String(), Coins: s.coins("10apple,1fig,1zucchini")},
@@ -802,7 +802,7 @@ func (s *TestSuite) TestKeeper_CollectFees() {
 			},
 			expErr: "error collecting exchange fee 25apple,301fig (based off 1000apple,3001fig,5010zucchini) from market 1: test error L from SendCoinsFromAccountToModule",
 			expCalls: BankCalls{
-				InputOutputCoinsCalls: []*InputOutputCoinsArgs{
+				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
 						inputs: []banktypes.Input{
 							{Address: s.addr1.String(), Coins: s.coins("1000apple,1fig,10zucchini")},
@@ -814,7 +814,7 @@ func (s *TestSuite) TestKeeper_CollectFees() {
 						},
 					},
 				},
-				SendCoinsFromAccountToModuleCalls: []*SendCoinsFromAccountToModuleArgs{
+				SendCoinsFromAccountToModule: []*SendCoinsFromAccountToModuleArgs{
 					{senderAddr: s.marketAddr1, recipientModule: s.feeCollector, amt: s.coins("25apple,301fig")},
 				},
 			},
@@ -829,7 +829,7 @@ func (s *TestSuite) TestKeeper_CollectFees() {
 				{Address: s.addr5.String(), Coins: s.coins("5000zucchini")},
 			},
 			expCalls: BankCalls{
-				InputOutputCoinsCalls: []*InputOutputCoinsArgs{
+				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
 						inputs: []banktypes.Input{
 							{Address: s.addr1.String(), Coins: s.coins("1000apple,1fig,10zucchini")},
@@ -852,7 +852,7 @@ func (s *TestSuite) TestKeeper_CollectFees() {
 				{Address: s.addr5.String(), Coins: s.coins("5000zucchini")},
 			},
 			expCalls: BankCalls{
-				InputOutputCoinsCalls: []*InputOutputCoinsArgs{
+				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
 						inputs: []banktypes.Input{
 							{Address: s.addr1.String(), Coins: s.coins("1000apple,1fig,10zucchini")},
@@ -864,7 +864,7 @@ func (s *TestSuite) TestKeeper_CollectFees() {
 						},
 					},
 				},
-				SendCoinsFromAccountToModuleCalls: []*SendCoinsFromAccountToModuleArgs{
+				SendCoinsFromAccountToModule: []*SendCoinsFromAccountToModuleArgs{
 					{senderAddr: s.marketAddr3, recipientModule: s.feeCollector, amt: s.coins("25apple,301fig")},
 				},
 			},
