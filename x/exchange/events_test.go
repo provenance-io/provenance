@@ -602,14 +602,14 @@ func TestTypedEventToEvent(t *testing.T) {
 	quoteBz := func(str string) []byte {
 		return []byte(fmt.Sprintf("%q", str))
 	}
-	cancelledBy := sdk.AccAddress("cancelledBy_________")
-	cancelledByQ := quoteBz(cancelledBy.String())
+	cancelledBy := "cancelledBy_________"
+	cancelledByQ := quoteBz(cancelledBy)
 	destination := sdk.AccAddress("destination_________")
 	destinationQ := quoteBz(destination.String())
 	withdrawnBy := sdk.AccAddress("withdrawnBy_________")
 	withdrawnByQ := quoteBz(withdrawnBy.String())
-	updatedBy := sdk.AccAddress("updatedBy___________")
-	updatedByQ := quoteBz(updatedBy.String())
+	updatedBy := "updatedBy___________"
+	updatedByQ := quoteBz(updatedBy)
 	coins1 := sdk.NewCoins(sdk.NewInt64Coin("onecoin", 1), sdk.NewInt64Coin("twocoin", 2))
 	coins1Q := quoteBz(coins1.String())
 	acoin := sdk.NewInt64Coin("acoin", 55)
@@ -652,7 +652,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventOrderCancelled ask",
-			tev:  NewEventOrderCancelled(NewOrder(3).WithAsk(&AskOrder{MarketId: 66, ExternalId: "outside 8"}), cancelledBy.String()),
+			tev:  NewEventOrderCancelled(NewOrder(3).WithAsk(&AskOrder{MarketId: 66, ExternalId: "outside 8"}), cancelledBy),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCancelled",
 				Attributes: []abci.EventAttribute{
@@ -665,7 +665,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventOrderCancelled bid",
-			tev:  NewEventOrderCancelled(NewOrder(3).WithBid(&BidOrder{MarketId: 55, ExternalId: "outside 8"}), cancelledBy.String()),
+			tev:  NewEventOrderCancelled(NewOrder(3).WithBid(&BidOrder{MarketId: 55, ExternalId: "outside 8"}), cancelledBy),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCancelled",
 				Attributes: []abci.EventAttribute{
@@ -799,7 +799,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventMarketDetailsUpdated",
-			tev:  NewEventMarketDetailsUpdated(7, updatedBy.String()),
+			tev:  NewEventMarketDetailsUpdated(7, updatedBy),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketDetailsUpdated",
 				Attributes: []abci.EventAttribute{
@@ -810,7 +810,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventMarketEnabled",
-			tev:  NewEventMarketEnabled(8, updatedBy.String()),
+			tev:  NewEventMarketEnabled(8, updatedBy),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketEnabled",
 				Attributes: []abci.EventAttribute{
@@ -821,7 +821,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventMarketDisabled",
-			tev:  NewEventMarketDisabled(9, updatedBy.String()),
+			tev:  NewEventMarketDisabled(9, updatedBy),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketDisabled",
 				Attributes: []abci.EventAttribute{
@@ -832,7 +832,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventMarketUserSettleEnabled",
-			tev:  NewEventMarketUserSettleEnabled(10, updatedBy.String()),
+			tev:  NewEventMarketUserSettleEnabled(10, updatedBy),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketUserSettleEnabled",
 				Attributes: []abci.EventAttribute{
@@ -843,7 +843,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventMarketUserSettleDisabled",
-			tev:  NewEventMarketUserSettleDisabled(11, updatedBy.String()),
+			tev:  NewEventMarketUserSettleDisabled(11, updatedBy),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketUserSettleDisabled",
 				Attributes: []abci.EventAttribute{
@@ -854,7 +854,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventMarketPermissionsUpdated",
-			tev:  NewEventMarketPermissionsUpdated(12, updatedBy.String()),
+			tev:  NewEventMarketPermissionsUpdated(12, updatedBy),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketPermissionsUpdated",
 				Attributes: []abci.EventAttribute{
@@ -865,7 +865,7 @@ func TestTypedEventToEvent(t *testing.T) {
 		},
 		{
 			name: "EventMarketReqAttrUpdated",
-			tev:  NewEventMarketReqAttrUpdated(13, updatedBy.String()),
+			tev:  NewEventMarketReqAttrUpdated(13, updatedBy),
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketReqAttrUpdated",
 				Attributes: []abci.EventAttribute{
