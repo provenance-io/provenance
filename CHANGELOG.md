@@ -71,6 +71,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add genesis/init for Marker module send deny list addresses. [#1660](https://github.com/provenance-io/provenance/issues/1660)
 * Add automatic changelog entries for dependabot. [#1674](https://github.com/provenance-io/provenance/issues/1674)
 * Ensure IBC marker has matching supply [#1706](https://github.com/provenance-io/provenance/issues/1706).
+
 ### Bug Fixes
 
 * Fix ibcnet relayer creating multiple connections on restart [#1620](https://github.com/provenance-io/provenance/issues/1620).
@@ -78,6 +79,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Allow restricted coins to be quarantined [#1626](https://github.com/provenance-io/provenance/issues/1626).
 * Prevent marker forced transfers from module accounts [#1626](https://github.com/provenance-io/provenance/issues/1626).
 * Change config load order so custom.toml can override other config. [#1262](https://github.com/provenance-io/provenance/issues/1262)
+* Fix the saffron and saffron-rc1 upgrade handlers to add correct ibchooks store key [PR 1715](https://github.com/provenance-io/provenance/pull/1715).
 
 ### Client Breaking
 
@@ -91,7 +93,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Dependencies
 
-- Bump `google.golang.org/grpc` from 1.56.1 to 1.58.2 ([#1624](https://github.com/provenance-io/provenance/pull/1624), [#1635](https://github.com/provenance-io/provenance/pull/1635), [#1672](https://github.com/provenance-io/provenance/pull/1672), [#1685](https://github.com/provenance-io/provenance/pull/1685), [#1689](https://github.com/provenance-io/provenance/pull/1689))
+- Bump `google.golang.org/grpc` from 1.56.1 to 1.59.0 ([#1624](https://github.com/provenance-io/provenance/pull/1624), [#1635](https://github.com/provenance-io/provenance/pull/1635), [#1672](https://github.com/provenance-io/provenance/pull/1672), [#1685](https://github.com/provenance-io/provenance/pull/1685), [#1689](https://github.com/provenance-io/provenance/pull/1689), [#1710](https://github.com/provenance-io/provenance/pull/1710))
 - Bump `crazy-max/ghaction-import-gpg` from 5 to 6 ([#1677](https://github.com/provenance-io/provenance/pull/1677))
 - Bump `golang.org/x/text` from 0.12.0 to 0.13.0 ([#1667](https://github.com/provenance-io/provenance/pull/1667))
 - Bump `actions/checkout` from 3 to 4 ([#1668](https://github.com/provenance-io/provenance/pull/1668))
@@ -123,7 +125,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add support to add/remove required attributes for a restricted marker. [#1512](https://github.com/provenance-io/provenance/issues/1512)
 * Add trigger module for delayed execution. [#1462](https://github.com/provenance-io/provenance/issues/1462)
-* Add support to update the `allow_forced_transfer` field of a restricted marker [#1545](https://github.com/provenance-io/provenance/issues/1545).
+* Add support to update the `allow_forced_transfer` field of a restricted marker [#1546](https://github.com/provenance-io/provenance/issues/1546).
 * Add expiration date value to `attribute` [#1435](https://github.com/provenance-io/provenance/issues/1435).
 * Add endpoints to update the value owner address of scopes [#1329](https://github.com/provenance-io/provenance/issues/1329).
 * Add pre-upgrade command that updates config files to newest format and sets `consensus.timeout_commit` to `1500ms` [PR 1594](https://github.com/provenance-io/provenance/pull/1594), [PR 1600](https://github.com/provenance-io/provenance/pull/1600).
