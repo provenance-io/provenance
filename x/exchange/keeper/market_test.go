@@ -5624,7 +5624,95 @@ func (s *TestSuite) TestKeeper_GetMarketAccount() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_GetMarketDetails()
+func (s *TestSuite) TestKeeper_GetMarketDetails() {
+	baseAcc := func(marketID uint32) *authtypes.BaseAccount {
+		return &authtypes.BaseAccount{
+			Address:       exchange.GetMarketAddress(marketID).String(),
+			PubKey:        nil,
+			AccountNumber: uint64(marketID),
+			Sequence:      uint64(marketID) * 2,
+		}
+	}
+	marketDeets := func(marketID uint32) *exchange.MarketDetails {
+		return &exchange.MarketDetails{
+			Name:        fmt.Sprintf("market %d name", marketID),
+			Description: fmt.Sprintf("This is a description of market %d. It's not very helpful.", marketID),
+			WebsiteUrl:  fmt.Sprintf("https://example.com/market/%d", marketID),
+			IconUri:     fmt.Sprintf("https://icon.example.com/market/%d/small", marketID),
+		}
+	}
+	marketAcc := func(marketID uint32) *exchange.MarketAccount {
+		return &exchange.MarketAccount{
+			BaseAccount:   baseAcc(marketID),
+			MarketId:      marketID,
+			MarketDetails: *marketDeets(marketID),
+		}
+	}
+
+	tests := []struct {
+		name      string
+		accKeeper *MockAccountKeeper
+		marketID  uint32
+		expected  *exchange.MarketDetails
+	}{
+		{
+			name: "no account for market",
+			accKeeper: NewMockAccountKeeper().
+				WithGetAccountResult(exchange.GetMarketAddress(1), marketAcc(1)).
+				WithGetAccountResult(exchange.GetMarketAddress(3), marketAcc(3)),
+			marketID: 2,
+			expected: nil,
+		},
+		{
+			name: "not a market account",
+			accKeeper: NewMockAccountKeeper().
+				WithGetAccountResult(exchange.GetMarketAddress(1), marketAcc(1)).
+				WithGetAccountResult(exchange.GetMarketAddress(2), baseAcc(2)).
+				WithGetAccountResult(exchange.GetMarketAddress(3), marketAcc(3)),
+			marketID: 2,
+			expected: nil,
+		},
+		{
+			name:      "market account 1",
+			accKeeper: NewMockAccountKeeper().WithGetAccountResult(exchange.GetMarketAddress(1), marketAcc(1)),
+			marketID:  1,
+			expected:  marketDeets(1),
+		},
+		{
+			name:      "market account 65,536",
+			accKeeper: NewMockAccountKeeper().WithGetAccountResult(exchange.GetMarketAddress(65_536), marketAcc(65_536)),
+			marketID:  65_536,
+			expected:  marketDeets(65_536),
+		},
+		{
+			name:      "market account max uint32",
+			accKeeper: NewMockAccountKeeper().WithGetAccountResult(exchange.GetMarketAddress(4_294_967_295), marketAcc(4_294_967_295)),
+			marketID:  4_294_967_295,
+			expected:  marketDeets(4_294_967_295),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			expGetAccCalls := []sdk.AccAddress{exchange.GetMarketAddress(tc.marketID)}
+
+			if tc.accKeeper == nil {
+				tc.accKeeper = NewMockAccountKeeper()
+			}
+			kpr := s.k.WithAccountKeeper(tc.accKeeper)
+
+			var actual *exchange.MarketDetails
+			testFunc := func() {
+				actual = kpr.GetMarketDetails(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "GetMarketDetails(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "GetMarketDetails(%d) result", tc.marketID)
+
+			actGetAccCalls := tc.accKeeper.Calls.GetAccountCalls
+			s.Assert().Equal(expGetAccCalls, actGetAccCalls, "calls made to GetAccount during GetMarketDetails(%d) result", tc.marketID)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_UpdateMarketDetails()
 
