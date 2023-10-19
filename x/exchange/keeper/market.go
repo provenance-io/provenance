@@ -824,15 +824,15 @@ func revokeAllMarketPermissions(store sdk.KVStore, marketID uint32) {
 // getAccessGrants gets all the access grants for a market.
 func getAccessGrants(store sdk.KVStore, marketID uint32) []exchange.AccessGrant {
 	var rv []exchange.AccessGrant
-	var lastAG exchange.AccessGrant
 	iterate(store, GetKeyPrefixMarketPermissions(marketID), func(key, _ []byte) bool {
 		addr, perm, err := ParseKeySuffixMarketPermissions(key)
 		if err == nil {
-			if addr.String() != lastAG.Address {
-				lastAG = exchange.AccessGrant{Address: addr.String()}
-				rv = append(rv, lastAG)
+			last := len(rv) - 1
+			if last < 0 || addr.String() != rv[last].Address {
+				rv = append(rv, exchange.AccessGrant{Address: addr.String()})
+				last++
 			}
-			lastAG.Permissions = append(lastAG.Permissions, perm)
+			rv[last].Permissions = append(rv[last].Permissions, perm)
 		}
 		return false
 	})
