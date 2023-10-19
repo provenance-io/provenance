@@ -3494,21 +3494,21 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 		setup     func(s *TestSuite)
 		marketID  uint32
 		allow     bool
-		updatedBy sdk.AccAddress
+		updatedBy string
 		expErr    string
 	}{
 		{
 			name:      "empty state to allowed",
 			marketID:  1,
 			allow:     true,
-			updatedBy: sdk.AccAddress("updatedBy___________"),
+			updatedBy: "updatedBy___________",
 			expErr:    "",
 		},
 		{
 			name:      "empty state to not allowed",
 			marketID:  1,
 			allow:     false,
-			updatedBy: sdk.AccAddress("updatedBy___________"),
+			updatedBy: "updatedBy___________",
 			expErr:    "market 1 already has allow-user-settlement false",
 		},
 		{
@@ -3523,7 +3523,7 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 			},
 			marketID:  3,
 			allow:     true,
-			updatedBy: sdk.AccAddress("updatedBy___________"),
+			updatedBy: "updatedBy___________",
 			expErr:    "market 3 already has allow-user-settlement true",
 		},
 		{
@@ -3538,7 +3538,7 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 			},
 			marketID:  3,
 			allow:     false,
-			updatedBy: sdk.AccAddress("updated_by__________"),
+			updatedBy: "updated_by__________",
 			expErr:    "",
 		},
 		{
@@ -3553,7 +3553,7 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 			},
 			marketID:  13,
 			allow:     true,
-			updatedBy: sdk.AccAddress("updated___by________"),
+			updatedBy: "updated___by________",
 			expErr:    "",
 		},
 		{
@@ -3568,7 +3568,7 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 			},
 			marketID:  13,
 			allow:     false,
-			updatedBy: sdk.AccAddress("__updated_____by____"),
+			updatedBy: "__updated_____by____",
 			expErr:    "market 13 already has allow-user-settlement false",
 		},
 	}

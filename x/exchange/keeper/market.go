@@ -766,7 +766,7 @@ func (k Keeper) IsUserSettlementAllowed(ctx sdk.Context, marketID uint32) bool {
 
 // UpdateUserSettlementAllowed updates the allow-user-settlement flag for a market.
 // An error is returned if the setting is already what is provided.
-func (k Keeper) UpdateUserSettlementAllowed(ctx sdk.Context, marketID uint32, allow bool, updatedBy sdk.AccAddress) error {
+func (k Keeper) UpdateUserSettlementAllowed(ctx sdk.Context, marketID uint32, allow bool, updatedBy string) error {
 	store := k.getStore(ctx)
 	current := isUserSettlementAllowed(store, marketID)
 	if current == allow {

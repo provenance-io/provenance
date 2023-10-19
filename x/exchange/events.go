@@ -95,24 +95,24 @@ func NewEventMarketDisabled(marketID uint32, updatedBy string) *EventMarketDisab
 
 // NewEventMarketUserSettleUpdated returns a new EventMarketUserSettleEnabled if isAllowed == true,
 // or a new EventMarketUserSettleDisabled if isActive == false.
-func NewEventMarketUserSettleUpdated(marketID uint32, updatedBy sdk.AccAddress, isAllowed bool) proto.Message {
+func NewEventMarketUserSettleUpdated(marketID uint32, updatedBy string, isAllowed bool) proto.Message {
 	if isAllowed {
 		return NewEventMarketUserSettleEnabled(marketID, updatedBy)
 	}
 	return NewEventMarketUserSettleDisabled(marketID, updatedBy)
 }
 
-func NewEventMarketUserSettleEnabled(marketID uint32, updatedBy sdk.AccAddress) *EventMarketUserSettleEnabled {
+func NewEventMarketUserSettleEnabled(marketID uint32, updatedBy string) *EventMarketUserSettleEnabled {
 	return &EventMarketUserSettleEnabled{
 		MarketId:  marketID,
-		UpdatedBy: updatedBy.String(),
+		UpdatedBy: updatedBy,
 	}
 }
 
-func NewEventMarketUserSettleDisabled(marketID uint32, updatedBy sdk.AccAddress) *EventMarketUserSettleDisabled {
+func NewEventMarketUserSettleDisabled(marketID uint32, updatedBy string) *EventMarketUserSettleDisabled {
 	return &EventMarketUserSettleDisabled{
 		MarketId:  marketID,
-		UpdatedBy: updatedBy.String(),
+		UpdatedBy: updatedBy,
 	}
 }
 
