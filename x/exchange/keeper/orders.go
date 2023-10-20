@@ -174,7 +174,7 @@ func (k Keeper) setOrderInStore(store sdk.KVStore, order exchange.Order) error {
 
 	externalIDEntry := createMarketExternalIDToOrderEntry(order)
 	if externalIDEntry != nil && store.Has(externalIDEntry.Key) {
-		orderIDBz := store.Get(externalIDEntry.Value)
+		orderIDBz := store.Get(externalIDEntry.Key)
 		otherOrderID, ok := uint64FromBz(orderIDBz)
 		if ok && otherOrderID != order.GetOrderID() {
 			return fmt.Errorf("external id %q is already in use by order %d: cannot be used for order %d",
