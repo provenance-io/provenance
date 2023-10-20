@@ -6609,4 +6609,157 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_ValidateMarket()
+func (s *TestSuite) TestKeeper_ValidateMarket() {
+	noBuyerErr := func(denom string) string {
+		return "seller settlement fee ratios have price denom \"" + denom + "\" but there are no " +
+			"buyer settlement fee ratios with that price denom"
+	}
+	noSellerErr := func(denom string) string {
+		return "buyer settlement fee ratios have price denom \"" + denom + "\" but there is not a " +
+			"seller settlement fee ratio with that price denom"
+	}
+
+	tests := []struct {
+		name     string
+		setup    func(s *TestSuite)
+		marketID uint32
+		expErr   string
+	}{
+		{
+			name:     "market doesn't exist",
+			marketID: 1,
+			expErr:   "market 1 does not exist",
+		},
+		{
+			name: "seller price denom not in buyer",
+			setup: func(s *TestSuite) {
+				keeper.StoreMarket(s.getStore(), exchange.Market{
+					MarketId: 1,
+					FeeSellerSettlementRatios: []exchange.FeeRatio{
+						{Price: s.coin("500pear"), Fee: s.coin("3pear")},
+						{Price: s.coin("500prune"), Fee: s.coin("2prune")},
+					},
+					FeeBuyerSettlementRatios: []exchange.FeeRatio{{Price: s.coin("500prune"), Fee: s.coin("2fig")}},
+				})
+			},
+			marketID: 1,
+			expErr:   noBuyerErr("pear"),
+		},
+		{
+			name: "buyer price denom not in seller",
+			setup: func(s *TestSuite) {
+				keeper.StoreMarket(s.getStore(), exchange.Market{
+					MarketId:                  1,
+					FeeSellerSettlementRatios: []exchange.FeeRatio{{Price: s.coin("500pear"), Fee: s.coin("3pear")}},
+					FeeBuyerSettlementRatios: []exchange.FeeRatio{
+						{Price: s.coin("500pear"), Fee: s.coin("1grape")},
+						{Price: s.coin("500prune"), Fee: s.coin("2fig")},
+					},
+				})
+			},
+			marketID: 1,
+			expErr:   noSellerErr("prune"),
+		},
+		{
+			name: "multiple errors",
+			setup: func(s *TestSuite) {
+				keeper.StoreMarket(s.getStore(), exchange.Market{
+					MarketId: 1,
+					FeeSellerSettlementRatios: []exchange.FeeRatio{
+						{Price: s.coin("600papaya"), Fee: s.coin("1papaya")},
+						{Price: s.coin("800peach"), Fee: s.coin("7peach")},
+						{Price: s.coin("500pear"), Fee: s.coin("3pear")},
+					},
+					FeeBuyerSettlementRatios: []exchange.FeeRatio{
+						{Price: s.coin("800papaya"), Fee: s.coin("3honeydew")},
+						{Price: s.coin("500plum"), Fee: s.coin("3fig")},
+						{Price: s.coin("600prune"), Fee: s.coin("9grape")},
+					},
+				})
+			},
+			marketID: 1,
+			expErr: s.joinErrs(
+				noBuyerErr("peach"), noBuyerErr("pear"),
+				noSellerErr("plum"), noSellerErr("prune"),
+			),
+		},
+		{
+			name: "no ratios",
+			setup: func(s *TestSuite) {
+				keeper.StoreMarket(s.getStore(), exchange.Market{MarketId: 2})
+			},
+			marketID: 2,
+			expErr:   "",
+		},
+		{
+			name: "no buyer ratios",
+			setup: func(s *TestSuite) {
+				keeper.StoreMarket(s.getStore(), exchange.Market{
+					MarketId:                  2,
+					FeeSellerSettlementRatios: []exchange.FeeRatio{{Price: s.coin("500pear"), Fee: s.coin("3pear")}},
+				})
+			},
+			marketID: 2,
+			expErr:   "",
+		},
+		{
+			name: "no seller ratios",
+			setup: func(s *TestSuite) {
+				keeper.StoreMarket(s.getStore(), exchange.Market{
+					MarketId:                 2,
+					FeeBuyerSettlementRatios: []exchange.FeeRatio{{Price: s.coin("500pear"), Fee: s.coin("3pear")}},
+				})
+			},
+			marketID: 2,
+			expErr:   "",
+		},
+		{
+			name: "one ratio each, same price denoms",
+			setup: func(s *TestSuite) {
+				keeper.StoreMarket(s.getStore(), exchange.Market{
+					MarketId:                  2,
+					FeeSellerSettlementRatios: []exchange.FeeRatio{{Price: s.coin("500pear"), Fee: s.coin("3pear")}},
+					FeeBuyerSettlementRatios:  []exchange.FeeRatio{{Price: s.coin("500pear"), Fee: s.coin("2fig")}},
+				})
+			},
+			marketID: 2,
+			expErr:   "",
+		},
+		{
+			name: "two seller denoms, four buyer ratios with those denoms",
+			setup: func(s *TestSuite) {
+				keeper.StoreMarket(s.getStore(), exchange.Market{
+					MarketId: 55,
+					FeeSellerSettlementRatios: []exchange.FeeRatio{
+						{Price: s.coin("300plum"), Fee: s.coin("1plum")},
+						{Price: s.coin("800peach"), Fee: s.coin("77peach")},
+					},
+					FeeBuyerSettlementRatios: []exchange.FeeRatio{
+						{Price: s.coin("500plum"), Fee: s.coin("3plum")},
+						{Price: s.coin("600plum"), Fee: s.coin("2fig")},
+						{Price: s.coin("800peach"), Fee: s.coin("78peach")},
+						{Price: s.coin("900peach"), Fee: s.coin("6fig")},
+					},
+				})
+			},
+			marketID: 55,
+			expErr:   "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup(s)
+			}
+
+			var err error
+			testFunc := func() {
+				err = s.k.ValidateMarket(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "ValidateMarket(%d)", tc.marketID)
+			s.assertErrorValue(err, tc.expErr, "ValidateMarket(%d) error", tc.marketID)
+		})
+	}
+}
