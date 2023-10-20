@@ -6521,6 +6521,92 @@ func (s *TestSuite) TestKeeper_GetMarketBrief() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_WithdrawMarketFunds()
+func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
+	tests := []struct {
+		name        string
+		bankKeeper  *MockBankKeeper
+		marketID    uint32
+		toAddr      sdk.AccAddress
+		amount      sdk.Coins
+		withdrawnBy string
+		expErr      string
+	}{
+		{
+			name:        "market 1: error from SendCoins",
+			bankKeeper:  NewMockBankKeeper().WithSendCoinsResults("woopsie-daisy: an error story"),
+			marketID:    1,
+			toAddr:      s.addr1,
+			amount:      sdk.NewCoins(sdk.NewInt64Coin("oops", 55)),
+			withdrawnBy: "noone",
+			expErr:      "failed to withdraw 55oops from market 1: woopsie-daisy: an error story",
+		},
+		{
+			name:        "market 8: error from SendCoins",
+			bankKeeper:  NewMockBankKeeper().WithSendCoinsResults("ouch-ouch-ouch: a sequel error story"),
+			marketID:    8,
+			toAddr:      s.addr1,
+			amount:      sdk.NewCoins(sdk.NewInt64Coin("awwww", 77), sdk.NewInt64Coin("hurts", 3)),
+			withdrawnBy: "stillnoone",
+			expErr:      "failed to withdraw 77awwww,3hurts from market 8: ouch-ouch-ouch: a sequel error story",
+		},
+		{
+			name:        "market 1: okay",
+			marketID:    1,
+			toAddr:      s.addr3,
+			amount:      sdk.NewCoins(sdk.NewInt64Coin("yay", 4444)),
+			withdrawnBy: "thatoneguy",
+		},
+		{
+			name:        "market 8: okay",
+			marketID:    8,
+			toAddr:      s.addr5,
+			amount:      sdk.NewCoins(sdk.NewInt64Coin("kaching", 500_000_001)),
+			withdrawnBy: "itwasallme",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			expCalls := BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{
+						fromAddr: exchange.GetMarketAddress(tc.marketID),
+						toAddr:   tc.toAddr,
+						amt:      tc.amount,
+					},
+				},
+			}
+
+			expEvents := sdk.Events{}
+			if len(tc.expErr) == 0 {
+				event, err := sdk.TypedEventToEvent(exchange.NewEventMarketWithdraw(tc.marketID, tc.amount, tc.toAddr, tc.withdrawnBy))
+				s.Require().NoError(err, "TypedEventToEvent(NewEventMarketWithdraw(%d, %s, %q, %q)",
+					tc.marketID, tc.amount, s.getAddrName(tc.toAddr), tc.withdrawnBy)
+				expEvents = append(expEvents, event)
+			}
+
+			if tc.bankKeeper == nil {
+				tc.bankKeeper = NewMockBankKeeper()
+			}
+			kpr := s.k.WithBankKeeper(tc.bankKeeper)
+
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = kpr.WithdrawMarketFunds(ctx, tc.marketID, tc.toAddr, tc.amount, tc.withdrawnBy)
+			}
+			s.Require().NotPanics(testFunc, "WithdrawMarketFunds(%d, %s, %q, %q)",
+				tc.marketID, s.getAddrName(tc.toAddr), tc.amount, tc.withdrawnBy)
+			s.assertErrorValue(err, tc.expErr, "WithdrawMarketFunds(%d, %s, %q, %q) error",
+				tc.marketID, s.getAddrName(tc.toAddr), tc.amount, tc.withdrawnBy)
+			s.assertBankKeeperCalls(tc.bankKeeper, expCalls, "WithdrawMarketFunds(%d, %s, %q, %q)",
+				tc.marketID, s.getAddrName(tc.toAddr), tc.amount, tc.withdrawnBy)
+			actEvents := em.Events()
+			s.assertEqualEvents(expEvents, actEvents, "WithdrawMarketFunds(%d, %s, %q, %q) events",
+				tc.marketID, s.getAddrName(tc.toAddr), tc.amount, tc.withdrawnBy)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_ValidateMarket()
