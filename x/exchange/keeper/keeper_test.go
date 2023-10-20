@@ -259,9 +259,9 @@ func (s *TestSuite) stateEntryString(key, value []byte) string {
 	return fmt.Sprintf("%q=%q", key, value)
 }
 
-// dumpHoldState creates a string for each entry in the hold state store.
+// dumpExchangeState creates a string for each entry in the hold state store.
 // Each entry has the format `"<key>"="<value>"`.
-func (s *TestSuite) dumpHoldState() []string {
+func (s *TestSuite) dumpExchangeState() []string {
 	var rv []string
 	keeper.Iterate(s.getStore(), nil, func(key, value []byte) bool {
 		rv = append(rv, s.stateEntryString(key, value))

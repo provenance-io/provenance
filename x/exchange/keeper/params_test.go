@@ -88,7 +88,7 @@ func (s *TestSuite) TestKeeper_SetParams() {
 				s.k.SetParams(s.ctx, tc.params)
 			}
 			s.Require().NotPanics(testFunc, "SetParams")
-			state := s.dumpHoldState()
+			state := s.dumpExchangeState()
 			s.Assert().Equal(tc.expState, state, "state after SetParams")
 		})
 	}

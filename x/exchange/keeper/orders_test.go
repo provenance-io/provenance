@@ -1438,7 +1438,293 @@ func (s *TestSuite) TestKeeper_CreateBidOrder() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_CancelOrder()
+func (s *TestSuite) TestKeeper_CancelOrder() {
+	agCanCancel := func(addr sdk.AccAddress) exchange.AccessGrant {
+		return exchange.AccessGrant{Address: addr.String(), Permissions: []exchange.Permission{exchange.Permission_cancel}}
+	}
+	agCannotCancel := func(addr sdk.AccAddress) exchange.AccessGrant {
+		rv := exchange.AccessGrant{Address: addr.String()}
+		for _, perm := range exchange.AllPermissions() {
+			if perm != exchange.Permission_cancel {
+				rv.Permissions = append(rv.Permissions, perm)
+			}
+		}
+		return rv
+	}
+
+	tests := []struct {
+		name         string
+		holdKeeper   *MockHoldKeeper
+		setup        func() *exchange.Order // should return the order expected to be cancelled.
+		orderID      uint64
+		signer       string
+		expErr       string
+		expHoldCalls HoldCalls
+	}{
+		{
+			name: "error getting order",
+			setup: func() *exchange.Order {
+				order := exchange.NewOrder(3).WithBid(&exchange.BidOrder{
+					MarketId: 1,
+					Buyer:    s.addr3.String(),
+					Assets:   s.coin("50apricot"),
+					Price:    s.coin("333prune"),
+				})
+				key, value, err := s.k.GetOrderStoreKeyValue(*order)
+				s.Require().NoError(err, "GetOrderStoreKeyValue")
+				value[0] = 9
+				s.getStore().Set(key, value)
+				return nil
+			},
+			orderID: 3,
+			signer:  s.addr3.String(),
+			expErr:  "failed to read order 3: unknown type byte 0x9",
+		},
+		{
+			name:    "order does not exist",
+			orderID: 55,
+			signer:  s.addr1.String(),
+			expErr:  "order 55 does not exist",
+		},
+		{
+			name: "signer not allowed",
+			setup: func() *exchange.Order {
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(8).WithBid(&exchange.BidOrder{
+					MarketId: 1,
+					Buyer:    s.addr3.String(),
+					Assets:   s.coin("50apricot"),
+					Price:    s.coin("333prune"),
+				}))
+				return nil
+			},
+			orderID: 8,
+			signer:  s.addr2.String(),
+			expErr:  "account " + s.addr2.String() + " does not have permission to cancel order 8",
+		},
+		{
+			name:       "error releasing hold",
+			holdKeeper: NewMockHoldKeeper().WithReleaseHoldResults("there's not enough here"),
+			setup: func() *exchange.Order {
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(7).WithBid(&exchange.BidOrder{
+					MarketId: 1,
+					Buyer:    s.addr3.String(),
+					Assets:   s.coin("50apricot"),
+					Price:    s.coin("333prune"),
+				}))
+				return nil
+			},
+			orderID:      7,
+			signer:       s.addr3.String(),
+			expErr:       "unable to release hold on order 7 funds: there's not enough here",
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr3, funds: s.coins("333prune")}}},
+		},
+		{
+			name: "signer can cancel in other market but not this one",
+			setup: func() *exchange.Order {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:        1,
+					AcceptingOrders: true,
+					AccessGrants:    []exchange.AccessGrant{agCanCancel(s.addr5)},
+				})
+				s.requireCreateMarket(exchange.Market{
+					MarketId:        2,
+					AcceptingOrders: true,
+					AccessGrants:    []exchange.AccessGrant{agCannotCancel(s.addr5)},
+				})
+				s.requireCreateMarket(exchange.Market{
+					MarketId:        3,
+					AcceptingOrders: true,
+					AccessGrants:    []exchange.AccessGrant{agCanCancel(s.addr5)},
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(2).WithBid(&exchange.BidOrder{
+					MarketId: 2,
+					Buyer:    s.addr3.String(),
+					Assets:   s.coin("50apricot"),
+					Price:    s.coin("333prune"),
+				}))
+				return nil
+			},
+			orderID: 2,
+			signer:  s.addr5.String(),
+			expErr:  "account " + s.addr5.String() + " does not have permission to cancel order 2",
+		},
+		{
+			name: "signer is ask order seller",
+			setup: func() *exchange.Order {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(51).WithBid(&exchange.BidOrder{
+					MarketId:   1,
+					Buyer:      s.addr1.String(),
+					Assets:     s.coin("50apricot"),
+					Price:      s.coin("55plum"),
+					ExternalId: "order 51",
+				}))
+				orderToCancel := exchange.NewOrder(52).WithAsk(&exchange.AskOrder{
+					MarketId:                1,
+					Seller:                  s.addr1.String(),
+					Assets:                  s.coin("50apricot"),
+					Price:                   s.coin("55plum"),
+					SellerSettlementFlatFee: s.coinP("8fig"),
+					ExternalId:              "bananas",
+				})
+				s.requireSetOrderInStore(store, orderToCancel)
+				s.requireSetOrderInStore(store, exchange.NewOrder(53).WithBid(&exchange.BidOrder{
+					MarketId:   1,
+					Buyer:      s.addr1.String(),
+					Assets:     s.coin("6apple"),
+					Price:      s.coin("55plum"),
+					ExternalId: "order 53",
+				}))
+				return orderToCancel
+			},
+			orderID:      52,
+			signer:       s.addr1.String(),
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("50apricot,8fig")}}},
+		},
+		{
+			name: "signer is bid order buyer",
+			setup: func() *exchange.Order {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(56).WithAsk(&exchange.AskOrder{
+					MarketId:   3,
+					Seller:     s.addr4.String(),
+					Assets:     s.coin("12apple"),
+					Price:      s.coin("55plum"),
+					ExternalId: "order 56",
+				}))
+				orderToCancel := exchange.NewOrder(57).WithBid(&exchange.BidOrder{
+					MarketId:            3,
+					Buyer:               s.addr4.String(),
+					Assets:              s.coin("50apricot"),
+					Price:               s.coin("55plum"),
+					BuyerSettlementFees: s.coins("8fig"),
+					ExternalId:          "whatever",
+				})
+				s.requireSetOrderInStore(store, orderToCancel)
+				s.requireSetOrderInStore(store, exchange.NewOrder(58).WithAsk(&exchange.AskOrder{
+					MarketId:   3,
+					Seller:     s.addr4.String(),
+					Assets:     s.coin("13apple"),
+					Price:      s.coin("80plum"),
+					ExternalId: "order 58",
+				}))
+				return orderToCancel
+			},
+			orderID:      57,
+			signer:       s.addr4.String(),
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr4, funds: s.coins("8fig,55plum")}}},
+		},
+		{
+			name: "signer is authority",
+			setup: func() *exchange.Order {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(99).WithBid(&exchange.BidOrder{
+					MarketId:   1,
+					Buyer:      s.addr2.String(),
+					Assets:     s.coin("12apple"),
+					Price:      s.coin("55plum"),
+					ExternalId: "order 99",
+				}))
+				orderToCancel := exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
+					MarketId:                2,
+					Seller:                  s.addr3.String(),
+					Assets:                  s.coin("12apricot"),
+					Price:                   s.coin("73pear"),
+					SellerSettlementFlatFee: s.coinP("1pear"),
+					ExternalId:              "whatever",
+				})
+				s.requireSetOrderInStore(store, orderToCancel)
+				s.requireSetOrderInStore(store, exchange.NewOrder(101).WithAsk(&exchange.AskOrder{
+					MarketId:   3,
+					Seller:     s.addr5.String(),
+					Assets:     s.coin("13apple"),
+					Price:      s.coin("80plum"),
+					ExternalId: "order 101",
+				}))
+				return orderToCancel
+			},
+			orderID:      100,
+			signer:       s.k.GetAuthority(),
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr3, funds: s.coins("12apricot")}}},
+		},
+		{
+			name: "signer can cancel in market",
+			setup: func() *exchange.Order {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:        1,
+					AcceptingOrders: true,
+					AccessGrants:    []exchange.AccessGrant{agCanCancel(s.addr1)},
+				})
+				orderToCancel := exchange.NewOrder(999).WithBid(&exchange.BidOrder{
+					MarketId:   1,
+					Buyer:      s.addr2.String(),
+					Assets:     s.coin("12apple"),
+					Price:      s.coin("55plum"),
+					ExternalId: "order 999",
+				})
+				s.requireSetOrderInStore(s.getStore(), orderToCancel)
+				return orderToCancel
+			},
+			orderID:      999,
+			signer:       s.addr1.String(),
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("55plum")}}},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			var cancelledOrder *exchange.Order
+			if tc.setup != nil {
+				cancelledOrder = tc.setup()
+			}
+
+			expEvents := sdk.Events{}
+			var expDelKVs []sdk.KVPair
+			if cancelledOrder != nil {
+				event, err := sdk.TypedEventToEvent(exchange.NewEventOrderCancelled(cancelledOrder, tc.signer))
+				s.Require().NoError(err, "TypedEventToEvent")
+				expEvents = append(expEvents, event)
+
+				expDelKVs = keeper.CreateConstantIndexEntries(*cancelledOrder)
+				extIDKV := keeper.CreateMarketExternalIDToOrderEntry(cancelledOrder)
+				if extIDKV != nil {
+					expDelKVs = append(expDelKVs, *extIDKV)
+				}
+			}
+
+			if tc.holdKeeper == nil {
+				tc.holdKeeper = NewMockHoldKeeper()
+			}
+			kpr := s.k.WithHoldKeeper(tc.holdKeeper)
+
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = kpr.CancelOrder(ctx, tc.orderID, tc.signer)
+			}
+			s.Require().NotPanics(testFunc, "CancelOrder(%d, %q)", tc.orderID, tc.signer)
+			s.assertErrorValue(err, tc.expErr, "CancelOrder(%d, %q) error", tc.orderID, tc.signer)
+			actEvents := em.Events()
+			s.assertEqualEvents(expEvents, actEvents, "CancelOrder(%d, %q) events", tc.orderID, tc.signer)
+			s.assertHoldKeeperCalls(tc.holdKeeper, tc.expHoldCalls, "CancelOrder(%d, %q)", tc.orderID, tc.signer)
+
+			if err != nil || len(tc.expErr) > 0 {
+				return
+			}
+
+			order, err := s.k.GetOrder(s.ctx, tc.orderID)
+			s.Assert().NoError(err, "GetOrder(%d) error after cancel")
+			s.Assert().Nil(order, "GetOrder(%d) order after cancel")
+			store := s.getStore()
+			for i, kv := range expDelKVs {
+				has := store.Has(kv.Key)
+				s.Assert().False(has, "[%d]: store.Has(%q) (index entry) after cancel", i, kv.Key)
+			}
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_SetOrderExternalID()
 

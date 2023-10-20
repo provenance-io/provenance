@@ -91,8 +91,13 @@ var (
 	SetReqAttrsBid = setReqAttrsBid
 	// StoreMarket is a test-only exposure of storeMarket.
 	StoreMarket = storeMarket
+
 	// GetLastOrderID is a test-only exposure of getLastOrderID.
 	GetLastOrderID = getLastOrderID
 	// SetLastOrderID is a test-only exposure of setLastOrderID.
 	SetLastOrderID = setLastOrderID
+	// CreateConstantIndexEntries is a test-only exposure of createConstantIndexEntries.
+	CreateConstantIndexEntries = createConstantIndexEntries
+	// CreateMarketExternalIDToOrderEntry is a test-only exposure of createMarketExternalIDToOrderEntry.
+	CreateMarketExternalIDToOrderEntry = createMarketExternalIDToOrderEntry
 )
