@@ -726,6 +726,7 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 }
 
 // SetOrderExternalID updates an order's external id.
+// The caller is responsible for making sure this update should be allowed (e.g. by calling CanSetIDs first).
 func (k Keeper) SetOrderExternalID(ctx sdk.Context, marketID uint32, orderID uint64, newExternalID string) error {
 	if err := exchange.ValidateExternalID(newExternalID); err != nil {
 		return err

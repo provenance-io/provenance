@@ -1726,7 +1726,325 @@ func (s *TestSuite) TestKeeper_CancelOrder() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_SetOrderExternalID()
+func (s *TestSuite) TestKeeper_SetOrderExternalID() {
+	tests := []struct {
+		name          string
+		setup         func() string // should return the original externalID
+		marketID      uint32
+		orderID       uint64
+		newExternalID string
+		expErr        string
+	}{
+		{
+			name:          "new external id too long",
+			marketID:      1,
+			orderID:       1,
+			newExternalID: strings.Repeat("I", exchange.MaxExternalIDLength+1),
+			expErr: fmt.Sprintf("invalid external id %q: max length %d",
+				strings.Repeat("I", exchange.MaxExternalIDLength+1), exchange.MaxExternalIDLength),
+		},
+		{
+			name: "error getting order",
+			setup: func() string {
+				key, value, err := s.k.GetOrderStoreKeyValue(*exchange.NewOrder(5).WithAsk(&exchange.AskOrder{
+					MarketId: 1,
+					Seller:   s.addr1.String(),
+					Assets:   s.coin("1apple"),
+					Price:    s.coin("1pear"),
+				}))
+				s.Require().NoError(err, "GetOrderStoreKeyValue")
+				value[0] = 9
+				s.getStore().Set(key, value)
+				return ""
+			},
+			marketID:      1,
+			orderID:       5,
+			newExternalID: "something",
+			expErr:        "failed to read order 5: unknown type byte 0x9",
+		},
+		{
+			name:          "unknown order",
+			marketID:      1,
+			orderID:       1,
+			newExternalID: "",
+			expErr:        "order 1 not found",
+		},
+		{
+			name: "wrong market id",
+			setup: func() string {
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(3).WithBid(&exchange.BidOrder{
+					MarketId: 1,
+					Buyer:    s.addr5.String(),
+					Assets:   s.coin("7acai"),
+					Price:    s.coin("1papaya"),
+				}))
+				return ""
+			},
+			marketID:      2,
+			orderID:       3,
+			newExternalID: "what",
+			expErr:        "order 3 has market id 1, expected 2",
+		},
+		{
+			name: "unchanged external id",
+			setup: func() string {
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(3).WithBid(&exchange.BidOrder{
+					MarketId:   1,
+					Buyer:      s.addr5.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: "thisisfruity",
+				}))
+				return ""
+			},
+			marketID:      1,
+			orderID:       3,
+			newExternalID: "thisisfruity",
+			expErr:        "order 3 already has external id \"thisisfruity\"",
+		},
+		{
+			name: "nothing to nothing",
+			setup: func() string {
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(3).WithBid(&exchange.BidOrder{
+					MarketId:   1,
+					Buyer:      s.addr5.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: "",
+				}))
+				return ""
+			},
+			marketID:      1,
+			orderID:       3,
+			newExternalID: "",
+			expErr:        "order 3 already has external id \"\"",
+		},
+		{
+			name: "new external id already exists in market",
+			setup: func() string {
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(3).WithBid(&exchange.BidOrder{
+					MarketId:   2,
+					Buyer:      s.addr5.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: "duplicate",
+				}))
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(4).WithBid(&exchange.BidOrder{
+					MarketId:   2,
+					Buyer:      s.addr5.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: "",
+				}))
+				return ""
+			},
+			marketID:      2,
+			orderID:       4,
+			newExternalID: "duplicate",
+			expErr:        "external id \"duplicate\" is already in use by order 3: cannot be used for order 4",
+		},
+		{
+			name: "nothing to something: ask",
+			setup: func() string {
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(57).WithAsk(&exchange.AskOrder{
+					MarketId:   1,
+					Seller:     s.addr3.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: "",
+				}))
+				return ""
+			},
+			marketID:      1,
+			orderID:       57,
+			newExternalID: "something",
+		},
+		{
+			name: "nothing to something: bid",
+			setup: func() string {
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(57).WithBid(&exchange.BidOrder{
+					MarketId:   1,
+					Buyer:      s.addr2.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: "",
+				}))
+				return ""
+			},
+			marketID:      1,
+			orderID:       57,
+			newExternalID: "something",
+		},
+		{
+			name: "something to nothing: ask",
+			setup: func() string {
+				// make sure it's okay to have multiple without an external id.
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(57).WithAsk(&exchange.AskOrder{
+					MarketId:   1,
+					Seller:     s.addr4.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: "",
+				}))
+				oldVal := "changeme"
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(58).WithAsk(&exchange.AskOrder{
+					MarketId:   1,
+					Seller:     s.addr2.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: oldVal,
+				}))
+				return oldVal
+			},
+			marketID:      1,
+			orderID:       58,
+			newExternalID: "",
+		},
+		{
+			name: "something to nothing: bid",
+			setup: func() string {
+				// make sure it's okay to have multiple without an external id.
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(57).WithBid(&exchange.BidOrder{
+					MarketId:   1,
+					Buyer:      s.addr2.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: "",
+				}))
+				oldVal := "changeme"
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(58).WithBid(&exchange.BidOrder{
+					MarketId:   1,
+					Buyer:      s.addr2.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: oldVal,
+				}))
+				return oldVal
+			},
+			marketID:      1,
+			orderID:       58,
+			newExternalID: "",
+		},
+		{
+			name: "something to something else: ask",
+			setup: func() string {
+				oldVal := "alterthis"
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(6).WithAsk(&exchange.AskOrder{
+					MarketId:   1,
+					Seller:     s.addr3.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: oldVal,
+				}))
+				return oldVal
+			},
+			marketID:      1,
+			orderID:       6,
+			newExternalID: "consideritaltered",
+		},
+		{
+			name: "something to something else: bid",
+			setup: func() string {
+				oldVal := "alterthis"
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(6).WithBid(&exchange.BidOrder{
+					MarketId:   1,
+					Buyer:      s.addr2.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: oldVal,
+				}))
+				return oldVal
+			},
+			marketID:      1,
+			orderID:       6,
+			newExternalID: "consideritaltered",
+		},
+		{
+			name: "new external id exists but in different market",
+			setup: func() string {
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(5).WithBid(&exchange.BidOrder{
+					MarketId:   1,
+					Buyer:      s.addr2.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: "sharedval",
+				}))
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(6).WithBid(&exchange.BidOrder{
+					MarketId:   2,
+					Buyer:      s.addr2.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: "",
+				}))
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(7).WithBid(&exchange.BidOrder{
+					MarketId:   3,
+					Buyer:      s.addr2.String(),
+					Assets:     s.coin("7acai"),
+					Price:      s.coin("1papaya"),
+					ExternalId: "sharedval",
+				}))
+				return ""
+			},
+			marketID:      2,
+			orderID:       6,
+			newExternalID: "sharedval",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			var origExternalID string
+			if tc.setup != nil {
+				origExternalID = tc.setup()
+			}
+
+			expEvents := sdk.Events{}
+			var expOrder *exchange.Order
+			if len(tc.expErr) == 0 {
+				event, err := sdk.TypedEventToEvent(&exchange.EventOrderExternalIDUpdated{
+					OrderId:    tc.orderID,
+					MarketId:   tc.marketID,
+					ExternalId: tc.newExternalID,
+				})
+				s.Require().NoError(err, "TypedEventToEvent(EventOrderExternalIDUpdated(%d, %d, %q)",
+					tc.orderID, tc.marketID, tc.newExternalID)
+				expEvents = append(expEvents, event)
+				expOrder, err = s.k.GetOrder(s.ctx, tc.orderID)
+				s.Require().NoError(err, "GetOrder(%d) before anything", tc.orderID)
+				switch {
+				case expOrder.IsAskOrder():
+					askOrder := expOrder.GetAskOrder()
+					askOrder.ExternalId = tc.newExternalID
+					expOrder = exchange.NewOrder(expOrder.OrderId).WithAsk(askOrder)
+				case expOrder.IsBidOrder():
+					bidOrder := expOrder.GetBidOrder()
+					bidOrder.ExternalId = tc.newExternalID
+					expOrder = exchange.NewOrder(expOrder.OrderId).WithBid(bidOrder)
+				}
+			}
+
+			var err error
+			testFunc := func() {
+				err = s.k.SetOrderExternalID(s.ctx, tc.marketID, tc.orderID, tc.newExternalID)
+			}
+			s.Require().NotPanics(testFunc, "SetOrderExternalID(%d, %d, %q)", tc.marketID, tc.orderID, tc.newExternalID)
+			s.assertErrorValue(err, tc.expErr, "SetOrderExternalID(%d, %d, %q) error", tc.marketID, tc.orderID, tc.newExternalID)
+
+			if err != nil || len(tc.expErr) != 0 {
+				return
+			}
+
+			order, err := s.k.GetOrder(s.ctx, tc.orderID)
+			if s.Assert().NoError(err, "GetOrder(%d) error", tc.orderID) {
+				s.Assert().Equal(expOrder, order, "GetOrder(%d) result (after SetOrderExternalID)", tc.orderID)
+			}
+			oldOrder, err := s.k.GetOrderByExternalID(s.ctx, tc.marketID, origExternalID)
+			s.Assert().NoError(err, "error from GetOrderByExternalID(%d, %q) (original ExternalID)", tc.marketID, origExternalID)
+			s.Assert().Nil(oldOrder, "result from GetOrderByExternalID(%d, %q) (original ExternalID)", tc.marketID, origExternalID)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_IterateOrders()
 
