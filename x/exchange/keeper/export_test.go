@@ -77,4 +77,6 @@ var (
 	SetReqAttrsAsk = setReqAttrsAsk
 	// SetReqAttrsBid is a test-only exposure of setReqAttrsBid.
 	SetReqAttrsBid = setReqAttrsBid
+	// StoreMarket is a test-only exposure of storeMarket.
+	StoreMarket = storeMarket
 )

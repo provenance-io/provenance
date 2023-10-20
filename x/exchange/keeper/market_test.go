@@ -6081,9 +6081,371 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_GetMarket()
+func (s *TestSuite) TestKeeper_GetMarket() {
+	tests := []struct {
+		name      string
+		accKeeper *MockAccountKeeper
+		setup     func(s *TestSuite) *exchange.Market // Should return the expected market.
+		marketID  uint32
+	}{
+		{
+			name:     "unknown market",
+			marketID: 5,
+		},
+		{
+			name: "empty market",
+			accKeeper: NewMockAccountKeeper().WithGetAccountResult(exchange.GetMarketAddress(55), &exchange.MarketAccount{
+				BaseAccount: &authtypes.BaseAccount{
+					Address:       exchange.GetMarketAddress(55).String(),
+					PubKey:        nil,
+					AccountNumber: 71,
+					Sequence:      0,
+				},
+				MarketId:      55,
+				MarketDetails: exchange.MarketDetails{},
+			}),
+			setup: func(s *TestSuite) *exchange.Market {
+				market := exchange.Market{
+					MarketId:        55,
+					AcceptingOrders: true,
+				}
+				keeper.StoreMarket(s.getStore(), market)
+				return &market
+			},
+			marketID: 55,
+		},
+		{
+			name: "market without an account",
+			setup: func(s *TestSuite) *exchange.Market {
+				market := exchange.Market{
+					MarketId:        71,
+					AcceptingOrders: true,
+					AccessGrants: []exchange.AccessGrant{
+						{
+							Address:     s.addr4.String(),
+							Permissions: exchange.AllPermissions(),
+						},
+					},
+				}
+				keeper.StoreMarket(s.getStore(), market)
+				return &market
+			},
+			marketID: 71,
+		},
+		{
+			name: "market with everything",
+			accKeeper: NewMockAccountKeeper().WithGetAccountResult(exchange.GetMarketAddress(420), &exchange.MarketAccount{
+				BaseAccount: &authtypes.BaseAccount{
+					Address:       exchange.GetMarketAddress(420).String(),
+					PubKey:        nil,
+					AccountNumber: 71,
+					Sequence:      0,
+				},
+				MarketId: 420,
+				MarketDetails: exchange.MarketDetails{
+					Name:        "Market 420 name",
+					Description: "Market 420 description",
+					WebsiteUrl:  "Market 420 url",
+					IconUri:     "Market 420 icon uri",
+				},
+			}),
+			setup: func(s *TestSuite) *exchange.Market {
+				otherMarket1 := exchange.Market{
+					MarketId:            419,
+					AllowUserSettlement: true,
+				}
+				otherMarket2 := exchange.Market{
+					MarketId:         421,
+					FeeCreateAskFlat: []sdk.Coin{sdk.NewInt64Coin("whatever", 421)},
+				}
+				expMarket := exchange.Market{
+					MarketId: 420,
+					MarketDetails: exchange.MarketDetails{
+						Name:        "Market 420 name",
+						Description: "Market 420 description",
+						WebsiteUrl:  "Market 420 url",
+						IconUri:     "Market 420 icon uri",
+					},
+					FeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("acorn", 6), sdk.NewInt64Coin("apple", 5)},
+					FeeCreateBidFlat:        []sdk.Coin{sdk.NewInt64Coin("banana", 3), sdk.NewInt64Coin("blueberry", 3)},
+					FeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("farkleberry", 30), sdk.NewInt64Coin("fig", 20)},
+					FeeSellerSettlementRatios: []exchange.FeeRatio{
+						{Price: sdk.NewInt64Coin("pear", 350), Fee: sdk.NewInt64Coin("grape", 7)},
+						{Price: sdk.NewInt64Coin("pear", 500), Fee: sdk.NewInt64Coin("grapefruit", 1)},
+					},
+					FeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("honeycrisp", 12), sdk.NewInt64Coin("honeydew", 2)},
+					FeeBuyerSettlementRatios: []exchange.FeeRatio{
+						{Price: sdk.NewInt64Coin("plum", 377), Fee: sdk.NewInt64Coin("guava", 3)},
+						{Price: sdk.NewInt64Coin("prune", 888), Fee: sdk.NewInt64Coin("guava", 5)},
+					},
+					AcceptingOrders:     false,
+					AllowUserSettlement: true,
+					AccessGrants: []exchange.AccessGrant{
+						{
+							Address: s.addr1.String(),
+							Permissions: []exchange.Permission{
+								exchange.Permission_settle, exchange.Permission_set_ids, exchange.Permission_cancel,
+							},
+						},
+						{
+							Address: s.addr2.String(),
+							Permissions: []exchange.Permission{
+								exchange.Permission_update, exchange.Permission_permissions, exchange.Permission_attributes,
+							},
+						},
+						{
+							Address:     s.addr3.String(),
+							Permissions: exchange.AllPermissions(),
+						},
+						{
+							Address:     s.addr4.String(),
+							Permissions: []exchange.Permission{exchange.Permission_withdraw},
+						},
+					},
+					ReqAttrCreateAsk: []string{"create-ask.my.market", "*.kyc.someone"},
+					ReqAttrCreateBid: []string{"create-bid.my.market", "*.kyc.someone"},
+				}
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_IterateMarkets()
+				store := s.getStore()
+				keeper.StoreMarket(store, otherMarket1)
+				keeper.StoreMarket(store, expMarket)
+				keeper.StoreMarket(store, otherMarket2)
+
+				return &expMarket
+			},
+			marketID: 420,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			var expMarket *exchange.Market
+			if tc.setup != nil {
+				expMarket = tc.setup(s)
+			}
+
+			var expCalls AccountCalls
+			if expMarket != nil {
+				expCalls.GetAccount = append(expCalls.GetAccount, exchange.GetMarketAddress(tc.marketID))
+			}
+
+			if tc.accKeeper == nil {
+				tc.accKeeper = NewMockAccountKeeper()
+			}
+			kpr := s.k.WithAccountKeeper(tc.accKeeper)
+
+			var actMarket *exchange.Market
+			testFunc := func() {
+				actMarket = kpr.GetMarket(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "GetMarket(%d)", tc.marketID)
+			s.Assert().Equal(expMarket, actMarket, "GetMarket(%d) result", tc.marketID)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_IterateMarkets() {
+	var markets []*exchange.Market
+	stopAfter := func(count int) func(market *exchange.Market) bool {
+		return func(market *exchange.Market) bool {
+			markets = append(markets, market)
+			return len(markets) >= count
+		}
+	}
+	getAll := func(market *exchange.Market) bool {
+		markets = append(markets, market)
+		return false
+	}
+
+	standardDetails := func(marketID uint32) exchange.MarketDetails {
+		return exchange.MarketDetails{
+			Name:        fmt.Sprintf("Market %d", marketID),
+			Description: fmt.Sprintf("Description fo market %d. It's not very informational.", marketID),
+			WebsiteUrl:  fmt.Sprintf("http://example.com/market/%d/info", marketID),
+			IconUri:     fmt.Sprintf("http://example.com/market/%d/icon/huge", marketID),
+		}
+	}
+	standardMarket := func(marketID uint32) *exchange.Market {
+		return &exchange.Market{
+			MarketId:                marketID,
+			MarketDetails:           standardDetails(marketID),
+			FeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("askflat", int64(marketID))},
+			FeeCreateBidFlat:        []sdk.Coin{sdk.NewInt64Coin("bidflat", int64(marketID))},
+			FeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("sellerflat", int64(marketID))},
+			FeeSellerSettlementRatios: []exchange.FeeRatio{
+				{Price: sdk.NewInt64Coin("sellerprice", 500+int64(marketID)), Fee: sdk.NewInt64Coin("sellerfee", int64(marketID))},
+			},
+			FeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("buyerflat", int64(marketID))},
+			FeeBuyerSettlementRatios: []exchange.FeeRatio{
+				{Price: sdk.NewInt64Coin("buyerprice", 1500+int64(marketID)), Fee: sdk.NewInt64Coin("buyerfee", 100+int64(marketID))},
+			},
+			AcceptingOrders:     true,
+			AllowUserSettlement: false,
+			AccessGrants:        []exchange.AccessGrant{{Address: s.addr5.String(), Permissions: exchange.AllPermissions()}},
+			ReqAttrCreateAsk:    []string{fmt.Sprintf("%d.ask.create", marketID)},
+			ReqAttrCreateBid:    []string{fmt.Sprintf("%d.bid.create", marketID)},
+		}
+	}
+	mustCreateMarket := func(s *TestSuite, kpr keeper.Keeper, market exchange.Market) {
+		_, err := kpr.CreateMarket(s.ctx, market)
+		s.Require().NoError(err, "CreateMarket(%d)", market.MarketId)
+	}
+
+	tests := []struct {
+		name       string
+		setup      func(s *TestSuite) keeper.Keeper
+		cb         func(market *exchange.Market) bool
+		expMarkets []*exchange.Market
+	}{
+		{
+			name:       "empty state",
+			cb:         getAll,
+			expMarkets: nil,
+		},
+		{
+			name: "just market 1",
+			setup: func(s *TestSuite) keeper.Keeper {
+				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
+				mustCreateMarket(s, kpr, *standardMarket(1))
+				return kpr
+			},
+			cb:         getAll,
+			expMarkets: []*exchange.Market{standardMarket(1)},
+		},
+		{
+			name: "just market 20",
+			setup: func(s *TestSuite) keeper.Keeper {
+				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
+				mustCreateMarket(s, kpr, *standardMarket(20))
+				return kpr
+			},
+			cb:         getAll,
+			expMarkets: []*exchange.Market{standardMarket(20)},
+		},
+		{
+			name: "markets 1 through 5: get all",
+			setup: func(s *TestSuite) keeper.Keeper {
+				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
+				mustCreateMarket(s, kpr, *standardMarket(1))
+				mustCreateMarket(s, kpr, *standardMarket(4))
+				mustCreateMarket(s, kpr, *standardMarket(2))
+				mustCreateMarket(s, kpr, *standardMarket(5))
+				mustCreateMarket(s, kpr, *standardMarket(3))
+				return kpr
+			},
+			cb: getAll,
+			expMarkets: []*exchange.Market{
+				standardMarket(1),
+				standardMarket(2),
+				standardMarket(3),
+				standardMarket(4),
+				standardMarket(5),
+			},
+		},
+		{
+			name: "markets 1 through 5: get first",
+			setup: func(s *TestSuite) keeper.Keeper {
+				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
+				mustCreateMarket(s, kpr, *standardMarket(1))
+				mustCreateMarket(s, kpr, *standardMarket(4))
+				mustCreateMarket(s, kpr, *standardMarket(2))
+				mustCreateMarket(s, kpr, *standardMarket(5))
+				mustCreateMarket(s, kpr, *standardMarket(3))
+				return kpr
+			},
+			cb:         stopAfter(1),
+			expMarkets: []*exchange.Market{standardMarket(1)},
+		},
+		{
+			name: "markets 1 through 5: get three",
+			setup: func(s *TestSuite) keeper.Keeper {
+				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
+				mustCreateMarket(s, kpr, *standardMarket(1))
+				mustCreateMarket(s, kpr, *standardMarket(4))
+				mustCreateMarket(s, kpr, *standardMarket(2))
+				mustCreateMarket(s, kpr, *standardMarket(5))
+				mustCreateMarket(s, kpr, *standardMarket(3))
+				return kpr
+			},
+			cb: stopAfter(3),
+			expMarkets: []*exchange.Market{
+				standardMarket(1),
+				standardMarket(2),
+				standardMarket(3),
+			},
+		},
+		{
+			name: "five randomly numbered markets: get all",
+			setup: func(s *TestSuite) keeper.Keeper {
+				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
+				mustCreateMarket(s, kpr, *standardMarket(63))
+				mustCreateMarket(s, kpr, *standardMarket(23))
+				mustCreateMarket(s, kpr, *standardMarket(36))
+				mustCreateMarket(s, kpr, *standardMarket(6))
+				mustCreateMarket(s, kpr, *standardMarket(14))
+				return kpr
+			},
+			cb: getAll,
+			expMarkets: []*exchange.Market{
+				standardMarket(6),
+				standardMarket(14),
+				standardMarket(23),
+				standardMarket(36),
+				standardMarket(63),
+			},
+		},
+		{
+			name: "five randomly numbered markets: get first",
+			setup: func(s *TestSuite) keeper.Keeper {
+				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
+				mustCreateMarket(s, kpr, *standardMarket(63))
+				mustCreateMarket(s, kpr, *standardMarket(23))
+				mustCreateMarket(s, kpr, *standardMarket(36))
+				mustCreateMarket(s, kpr, *standardMarket(6))
+				mustCreateMarket(s, kpr, *standardMarket(14))
+				return kpr
+			},
+			cb:         stopAfter(1),
+			expMarkets: []*exchange.Market{standardMarket(6)},
+		},
+		{
+			name: "five randomly numbered markets: get three",
+			setup: func(s *TestSuite) keeper.Keeper {
+				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
+				mustCreateMarket(s, kpr, *standardMarket(63))
+				mustCreateMarket(s, kpr, *standardMarket(23))
+				mustCreateMarket(s, kpr, *standardMarket(36))
+				mustCreateMarket(s, kpr, *standardMarket(6))
+				mustCreateMarket(s, kpr, *standardMarket(14))
+				return kpr
+			},
+			cb: stopAfter(3),
+			expMarkets: []*exchange.Market{
+				standardMarket(6),
+				standardMarket(14),
+				standardMarket(23),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			kpr := s.k
+			if tc.setup != nil {
+				kpr = tc.setup(s)
+			}
+
+			markets = nil
+			testFunc := func() {
+				kpr.IterateMarkets(s.ctx, tc.cb)
+			}
+			s.Require().NotPanics(testFunc, "IterateMarkets")
+			s.Assert().Equal(tc.expMarkets, markets, "markets iterated")
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_GetMarketBrief()
 

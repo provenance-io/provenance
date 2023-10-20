@@ -121,6 +121,7 @@ func (k *MockAccountKeeper) GetAccount(_ sdk.Context, addr sdk.AccAddress) autht
 
 func (k *MockAccountKeeper) SetAccount(_ sdk.Context, acc authtypes.AccountI) {
 	k.Calls.SetAccount = append(k.Calls.SetAccount, acc)
+	k.WithGetAccountResult(acc.GetAddress(), acc)
 }
 
 func (k *MockAccountKeeper) HasAccount(_ sdk.Context, addr sdk.AccAddress) bool {
