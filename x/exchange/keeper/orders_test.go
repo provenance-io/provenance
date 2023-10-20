@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"bytes"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -233,7 +234,220 @@ func (s *TestSuite) TestKeeper_GetOrder() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_GetOrderByExternalID()
+func (s *TestSuite) TestKeeper_GetOrderByExternalID() {
+	tests := []struct {
+		name       string
+		setup      func()
+		marketID   uint32
+		externalID string
+		expOrder   *exchange.Order
+		expErr     string
+	}{
+		{
+			name:       "market 0",
+			marketID:   0,
+			externalID: "something",
+			expErr:     "invalid market id: cannot be zero",
+		},
+		{
+			name:       "empty externalID",
+			marketID:   1,
+			externalID: "",
+			expOrder:   nil,
+			expErr:     "",
+		},
+		{
+			name:       "externalID too long",
+			setup:      nil,
+			marketID:   1,
+			externalID: strings.Repeat("u", exchange.MaxExternalIDLength+1),
+			expOrder:   nil,
+			expErr:     "",
+		},
+		{
+			name: "unknown externalID",
+			setup: func() {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(7).WithAsk(&exchange.AskOrder{
+					MarketId:   1,
+					Seller:     sdk.AccAddress("seller______________").String(),
+					Assets:     s.coin("4apple"),
+					Price:      s.coin("2plum"),
+					ExternalId: "seven",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(8).WithBid(&exchange.BidOrder{
+					MarketId:   1,
+					Buyer:      sdk.AccAddress("buyer_______________").String(),
+					Assets:     s.coin("5apple"),
+					Price:      s.coin("3plum"),
+					ExternalId: "eight",
+				}))
+			},
+			marketID:   1,
+			externalID: "nine",
+			expOrder:   nil,
+			expErr:     "",
+		},
+		{
+			name: "two orders in market: first",
+			setup: func() {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(7).WithAsk(&exchange.AskOrder{
+					MarketId:   3,
+					Seller:     sdk.AccAddress("seller______________").String(),
+					Assets:     s.coin("4apple"),
+					Price:      s.coin("2plum"),
+					ExternalId: "seven",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(8).WithBid(&exchange.BidOrder{
+					MarketId:   3,
+					Buyer:      sdk.AccAddress("buyer_______________").String(),
+					Assets:     s.coin("5apple"),
+					Price:      s.coin("3plum"),
+					ExternalId: "eight",
+				}))
+			},
+			marketID:   3,
+			externalID: "seven",
+			expOrder: exchange.NewOrder(7).WithAsk(&exchange.AskOrder{
+				MarketId:   3,
+				Seller:     sdk.AccAddress("seller______________").String(),
+				Assets:     s.coin("4apple"),
+				Price:      s.coin("2plum"),
+				ExternalId: "seven",
+			}),
+		},
+		{
+			name: "two orders in market: second",
+			setup: func() {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(7).WithAsk(&exchange.AskOrder{
+					MarketId:   3,
+					Seller:     sdk.AccAddress("seller______________").String(),
+					Assets:     s.coin("4apple"),
+					Price:      s.coin("2plum"),
+					ExternalId: "seven",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(8).WithBid(&exchange.BidOrder{
+					MarketId:   3,
+					Buyer:      sdk.AccAddress("buyer_______________").String(),
+					Assets:     s.coin("5apple"),
+					Price:      s.coin("3plum"),
+					ExternalId: "eight",
+				}))
+			},
+			marketID:   3,
+			externalID: "eight",
+			expOrder: exchange.NewOrder(8).WithBid(&exchange.BidOrder{
+				MarketId:   3,
+				Buyer:      sdk.AccAddress("buyer_______________").String(),
+				Assets:     s.coin("5apple"),
+				Price:      s.coin("3plum"),
+				ExternalId: "eight",
+			}),
+		},
+		{
+			name: "externalID in two markets: first",
+			setup: func() {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(7).WithAsk(&exchange.AskOrder{
+					MarketId:   55,
+					Seller:     sdk.AccAddress("seller______________").String(),
+					Assets:     s.coin("4apple"),
+					Price:      s.coin("2plum"),
+					ExternalId: "specialorder",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(8).WithBid(&exchange.BidOrder{
+					MarketId:   5,
+					Buyer:      sdk.AccAddress("buyer_______________").String(),
+					Assets:     s.coin("5apple"),
+					Price:      s.coin("3plum"),
+					ExternalId: "specialorder",
+				}))
+			},
+			marketID:   55,
+			externalID: "specialorder",
+			expOrder: exchange.NewOrder(7).WithAsk(&exchange.AskOrder{
+				MarketId:   55,
+				Seller:     sdk.AccAddress("seller______________").String(),
+				Assets:     s.coin("4apple"),
+				Price:      s.coin("2plum"),
+				ExternalId: "specialorder",
+			}),
+		},
+		{
+			name: "externalID in two markets: second",
+			setup: func() {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(7).WithAsk(&exchange.AskOrder{
+					MarketId:   55,
+					Seller:     sdk.AccAddress("seller______________").String(),
+					Assets:     s.coin("4apple"),
+					Price:      s.coin("2plum"),
+					ExternalId: "specialorder",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(8).WithBid(&exchange.BidOrder{
+					MarketId:   5,
+					Buyer:      sdk.AccAddress("buyer_______________").String(),
+					Assets:     s.coin("5apple"),
+					Price:      s.coin("3plum"),
+					ExternalId: "specialorder",
+				}))
+			},
+			marketID:   5,
+			externalID: "specialorder",
+			expOrder: exchange.NewOrder(8).WithBid(&exchange.BidOrder{
+				MarketId:   5,
+				Buyer:      sdk.AccAddress("buyer_______________").String(),
+				Assets:     s.coin("5apple"),
+				Price:      s.coin("3plum"),
+				ExternalId: "specialorder",
+			}),
+		},
+		{
+			name: "externalID in two markets: neither",
+			setup: func() {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(7).WithAsk(&exchange.AskOrder{
+					MarketId:   55,
+					Seller:     sdk.AccAddress("seller______________").String(),
+					Assets:     s.coin("4apple"),
+					Price:      s.coin("2plum"),
+					ExternalId: "specialorder",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(8).WithBid(&exchange.BidOrder{
+					MarketId:   5,
+					Buyer:      sdk.AccAddress("buyer_______________").String(),
+					Assets:     s.coin("5apple"),
+					Price:      s.coin("3plum"),
+					ExternalId: "specialorder",
+				}))
+			},
+			marketID:   15,
+			externalID: "specialorder",
+			expOrder:   nil,
+			expErr:     "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var order *exchange.Order
+			var err error
+			testFunc := func() {
+				order, err = s.k.GetOrderByExternalID(s.ctx, tc.marketID, tc.externalID)
+			}
+			s.Require().NotPanics(testFunc, "GetOrderByExternalID(%d, %q)", tc.marketID, tc.externalID)
+			s.assertErrorValue(err, tc.expErr, "GetOrderByExternalID(%d, %q) error", tc.marketID, tc.externalID)
+			s.Assert().Equal(tc.expOrder, order, "GetOrderByExternalID(%d, %q) order", tc.marketID, tc.externalID)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_CreateAskOrder()
 
