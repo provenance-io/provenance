@@ -274,6 +274,12 @@ func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 	}, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
 }
 
+func (s *TestSuite) requireSetOrderInStore(store sdk.KVStore, order *exchange.Order) {
+	s.Require().NotNil(order, "order provided to requireSetOrderInStore")
+	err := s.k.SetOrderInStore(store, *order)
+	s.Require().NoError(err, "SetOrderInStore(%d)", order.OrderId)
+}
+
 // assertErrorValue is a wrapper for assertions.AssertErrorValue for this TestSuite.
 func (s *TestSuite) assertErrorValue(theError error, expected string, msgAndArgs ...interface{}) bool {
 	return assertions.AssertErrorValue(s.T(), theError, expected, msgAndArgs...)

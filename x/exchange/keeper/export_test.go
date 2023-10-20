@@ -38,6 +38,16 @@ func (k Keeper) GetStore(ctx sdk.Context) sdk.KVStore {
 	return k.getStore(ctx)
 }
 
+// SetOrderInStore is a test-only exposure of setOrderInStore.
+func (k Keeper) SetOrderInStore(store sdk.KVStore, order exchange.Order) error {
+	return k.setOrderInStore(store, order)
+}
+
+// GetOrderStoreKeyValue is a test-only exposure of getOrderStoreKeyValue.
+func (k Keeper) GetOrderStoreKeyValue(order exchange.Order) ([]byte, []byte, error) {
+	return k.getOrderStoreKeyValue(order)
+}
+
 var (
 	// DeleteAll is a test-only exposure of deleteAll.
 	DeleteAll = deleteAll
@@ -47,8 +57,10 @@ var (
 	ParseLengthPrefixedAddr = parseLengthPrefixedAddr
 	// Uint16Bz is a test-only exposure of uint16Bz.
 	Uint16Bz = uint16Bz
+
 	// SetParamsSplit is a test-only exposure of setParamsSplit.
 	SetParamsSplit = setParamsSplit
+
 	// GetLastAutoMarketID is a test-only exposure of getLastAutoMarketID.
 	GetLastAutoMarketID = getLastAutoMarketID
 	// SetLastAutoMarketID is a test-only exposure of setLastAutoMarketID.
