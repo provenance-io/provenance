@@ -6024,7 +6024,6 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 			origMarket := copyMarket(tc.market)
 			expEvents := sdk.Events{}
 			var expCalls AccountCalls
-			var expMarketAcc authtypes.AccountI
 			if tc.expHasAccCall {
 				id := tc.expMarketID
 				if id == 0 {
@@ -6036,7 +6035,7 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 				marketAddr := exchange.GetMarketAddress(tc.expMarketID)
 				tc.accKeeper.WithNewAccountModifier(marketAddr, tc.newAccModifier)
 
-				expMarketAcc = tc.newAccModifier(&exchange.MarketAccount{
+				expMarketAcc := tc.newAccModifier(&exchange.MarketAccount{
 					BaseAccount:   &authtypes.BaseAccount{Address: marketAddr.String()},
 					MarketId:      tc.expMarketID,
 					MarketDetails: tc.market.MarketDetails,
@@ -6069,7 +6068,7 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 			if len(tc.expErr) > 0 || s.T().Failed() {
 				return
 			}
-			tc.accKeeper.WithGetAccountResult(exchange.GetMarketAddress(tc.expMarketID), expMarketAcc)
+
 			expMarket := tc.market
 			expMarket.MarketId = marketID
 			market := kpr.GetMarket(s.ctx, marketID)
