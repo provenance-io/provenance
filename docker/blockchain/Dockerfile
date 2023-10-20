@@ -21,7 +21,7 @@ COPY Makefile sims.mk ./
 
 
 # Build and install provenanced
-ENV VERSION=${VERSION}
+ENV VERSION=$VERSION
 RUN make VERSION=${VERSION} WITH_CLEVELDB=true install
 
 ###
@@ -37,7 +37,12 @@ RUN apt-get update && \
 COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/internal/api/libwasmvm.*.so /tmp
 COPY --from=build /go/bin/provenanced /usr/bin/provenanced
 
-RUN cp /tmp/libwasmvm.$(uname -m).so /usr/local/lib/. && \
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then \
+        echo "Unsupported architecture (required: x86_64 or aarch64): $ARCH"; \
+        exit 1; \
+    fi && \
+    cp /tmp/libwasmvm.$ARCH.so /usr/local/lib/. && \
     rm /tmp/libwasmvm.*.so
 
 ENV PIO_HOME=/home/provenance
