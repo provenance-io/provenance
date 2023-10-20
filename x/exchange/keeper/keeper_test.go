@@ -49,6 +49,8 @@ type TestSuite struct {
 	marketAddr3 sdk.AccAddress
 
 	feeCollector string
+
+	accKeeper *MockAccountKeeper
 }
 
 func (s *TestSuite) SetupTest() {
@@ -249,6 +251,7 @@ func (s *TestSuite) getStore() sdk.KVStore {
 // clearExchangeState deletes everything from the exchange state store.
 func (s *TestSuite) clearExchangeState() {
 	keeper.DeleteAll(s.getStore(), nil)
+	s.accKeeper = nil
 }
 
 // stateEntryString converts the provided key and value into a "<key>"="<value>" string.
@@ -274,10 +277,23 @@ func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 	}, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
 }
 
+// requireSetOrderInStore calls SetOrderInStore making sure it doesn't panic or return an error.
 func (s *TestSuite) requireSetOrderInStore(store sdk.KVStore, order *exchange.Order) {
-	s.Require().NotNil(order, "order provided to requireSetOrderInStore")
-	err := s.k.SetOrderInStore(store, *order)
-	s.Require().NoError(err, "SetOrderInStore(%d)", order.OrderId)
+	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+		return s.k.SetOrderInStore(store, *order)
+	}, "SetOrderInStore(%d)", order.OrderId)
+}
+
+// requireCreateMarket calls CreateMarket making sure it doesn't panic or return an error.
+// It also uses the TestSuite.accKeeper for the market account.
+func (s *TestSuite) requireCreateMarket(market exchange.Market) {
+	if s.accKeeper == nil {
+		s.accKeeper = NewMockAccountKeeper()
+	}
+	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+		_, err := s.k.WithAccountKeeper(s.accKeeper).CreateMarket(s.ctx, market)
+		return err
+	}, "CreateMarket(%d)", market.MarketId)
 }
 
 // assertErrorValue is a wrapper for assertions.AssertErrorValue for this TestSuite.
