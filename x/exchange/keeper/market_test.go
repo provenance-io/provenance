@@ -6446,7 +6446,80 @@ func (s *TestSuite) TestKeeper_IterateMarkets() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_GetMarketBrief()
+func (s *TestSuite) TestKeeper_GetMarketBrief() {
+	tests := []struct {
+		name      string
+		accKeeper *MockAccountKeeper
+		marketID  uint32
+		expected  *exchange.MarketBrief
+	}{
+		{
+			name:     "no account",
+			marketID: 1,
+			expected: nil,
+		},
+		{
+			name: "empty details",
+			accKeeper: NewMockAccountKeeper().WithGetAccountResult(s.marketAddr2, &exchange.MarketAccount{
+				BaseAccount: &authtypes.BaseAccount{
+					Address:       s.marketAddr2.String(),
+					AccountNumber: 777,
+				},
+				MarketId:      2,
+				MarketDetails: exchange.MarketDetails{},
+			}),
+			marketID: 2,
+			expected: &exchange.MarketBrief{
+				MarketId:      2,
+				MarketAddress: s.marketAddr2.String(),
+				MarketDetails: exchange.MarketDetails{},
+			},
+		},
+		{
+			name: "full details",
+			accKeeper: NewMockAccountKeeper().WithGetAccountResult(s.marketAddr3, &exchange.MarketAccount{
+				BaseAccount: &authtypes.BaseAccount{
+					Address:       s.marketAddr3.String(),
+					AccountNumber: 777,
+				},
+				MarketId: 3,
+				MarketDetails: exchange.MarketDetails{
+					Name:        "Market Three",
+					Description: "Market Three's description is a bit lacking here.",
+					WebsiteUrl:  "website three",
+					IconUri:     "icon three",
+				},
+			}),
+			marketID: 3,
+			expected: &exchange.MarketBrief{
+				MarketId:      3,
+				MarketAddress: s.marketAddr3.String(),
+				MarketDetails: exchange.MarketDetails{
+					Name:        "Market Three",
+					Description: "Market Three's description is a bit lacking here.",
+					WebsiteUrl:  "website three",
+					IconUri:     "icon three",
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.accKeeper == nil {
+				tc.accKeeper = NewMockAccountKeeper()
+			}
+			kpr := s.k.WithAccountKeeper(tc.accKeeper)
+
+			var actual *exchange.MarketBrief
+			testFunc := func() {
+				actual = kpr.GetMarketBrief(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "GetMarketBrief(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "GetMarketBrief(%d) result", tc.marketID)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_WithdrawMarketFunds()
 
