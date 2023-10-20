@@ -2046,7 +2046,235 @@ func (s *TestSuite) TestKeeper_SetOrderExternalID() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_IterateOrders()
+func (s *TestSuite) TestKeeper_IterateOrders() {
+	var orders []*exchange.Order
+	getAll := func(order *exchange.Order) bool {
+		orders = append(orders, order)
+		return false
+	}
+	stopAfter := func(count int) func(order *exchange.Order) bool {
+		return func(order *exchange.Order) bool {
+			orders = append(orders, order)
+			return len(orders) >= count
+		}
+	}
+	addr := func(prefix string, orderID uint64) sdk.AccAddress {
+		return sdk.AccAddress(fmt.Sprintf("%s_%d__________________", prefix, orderID)[:20])
+	}
+	askOrder := func(orderID uint64) *exchange.Order {
+		return exchange.NewOrder(orderID).WithAsk(&exchange.AskOrder{
+			MarketId:     uint32(orderID / 10),
+			Seller:       addr("seller", orderID).String(),
+			Assets:       sdk.NewInt64Coin("apple", int64(orderID)),
+			Price:        sdk.NewInt64Coin("papaya", int64(orderID)),
+			AllowPartial: orderID%2 == 0,
+			ExternalId:   fmt.Sprintf("external%d", orderID),
+		})
+	}
+	bidOrder := func(orderID uint64) *exchange.Order {
+		return exchange.NewOrder(orderID).WithBid(&exchange.BidOrder{
+			MarketId:     uint32(orderID / 10),
+			Buyer:        addr("buyer", orderID).String(),
+			Assets:       sdk.NewInt64Coin("apple", int64(orderID)),
+			Price:        sdk.NewInt64Coin("papaya", int64(orderID)),
+			AllowPartial: orderID%2 == 0,
+			ExternalId:   fmt.Sprintf("external%d", orderID),
+		})
+	}
+
+	tests := []struct {
+		name      string
+		setup     func()
+		cb        func(order *exchange.Order) bool
+		expErr    string
+		expOrders []*exchange.Order
+	}{
+		{
+			name:      "empty state",
+			expOrders: nil,
+		},
+		{
+			name: "one order: ask",
+			setup: func() {
+				s.requireSetOrderInStore(s.getStore(), askOrder(8))
+			},
+			expOrders: []*exchange.Order{askOrder(8)},
+		},
+		{
+			name: "one order: bid",
+			setup: func() {
+				s.requireSetOrderInStore(s.getStore(), bidOrder(8))
+			},
+			expOrders: []*exchange.Order{bidOrder(8)},
+		},
+		{
+			name: "one order: bad key",
+			setup: func() {
+				key, value, err := s.k.GetOrderStoreKeyValue(*askOrder(4))
+				s.Require().NoError(err, "GetOrderStoreKeyValue")
+				key[len(key)-2] = key[len(key)-1]
+				s.getStore().Set(key[:len(key)-1], value)
+			},
+			expErr: "invalid order store key [0 0 0 0 0 0 4]: length expected to be at least 8",
+		},
+		{
+			name: "one order: bad value",
+			setup: func() {
+				key, value, err := s.k.GetOrderStoreKeyValue(*askOrder(3))
+				s.Require().NoError(err, "GetOrderStoreKeyValue")
+				value[0] = 8
+				s.getStore().Set(key, value)
+			},
+			expErr: "failed to read order 3: unknown type byte 0x8",
+		},
+		{
+			name: "five orders, 1 through 5: get all",
+			setup: func() {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, askOrder(1))
+				s.requireSetOrderInStore(store, bidOrder(2))
+				s.requireSetOrderInStore(store, bidOrder(3))
+				s.requireSetOrderInStore(store, askOrder(4))
+				s.requireSetOrderInStore(store, askOrder(5))
+			},
+			expOrders: []*exchange.Order{
+				askOrder(1), bidOrder(2), bidOrder(3), askOrder(4), askOrder(5),
+			},
+		},
+		{
+			name: "five orders, 1 through 5: get one",
+			setup: func() {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, bidOrder(1))
+				s.requireSetOrderInStore(store, bidOrder(2))
+				s.requireSetOrderInStore(store, askOrder(3))
+				s.requireSetOrderInStore(store, bidOrder(4))
+				s.requireSetOrderInStore(store, askOrder(5))
+			},
+			cb:        stopAfter(1),
+			expErr:    "",
+			expOrders: []*exchange.Order{bidOrder(1)},
+		},
+		{
+			name: "five orders, 1 through 5: get three",
+			setup: func() {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, bidOrder(1))
+				s.requireSetOrderInStore(store, askOrder(2))
+				s.requireSetOrderInStore(store, askOrder(3))
+				s.requireSetOrderInStore(store, bidOrder(4))
+				s.requireSetOrderInStore(store, askOrder(5))
+			},
+			cb:        stopAfter(3),
+			expOrders: []*exchange.Order{bidOrder(1), askOrder(2), askOrder(3)},
+		},
+		{
+			name: "five orders, random: get all",
+			setup: func() {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, bidOrder(57))
+				s.requireSetOrderInStore(store, bidOrder(78))
+				s.requireSetOrderInStore(store, askOrder(83))
+				s.requireSetOrderInStore(store, bidOrder(47))
+				s.requireSetOrderInStore(store, askOrder(28))
+			},
+			expOrders: []*exchange.Order{
+				askOrder(28), bidOrder(47), bidOrder(57), bidOrder(78), askOrder(83),
+			},
+		},
+		{
+			name: "five orders, random: get one",
+			setup: func() {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, bidOrder(57))
+				s.requireSetOrderInStore(store, bidOrder(78))
+				s.requireSetOrderInStore(store, askOrder(83))
+				s.requireSetOrderInStore(store, bidOrder(47))
+				s.requireSetOrderInStore(store, askOrder(28))
+			},
+			cb:        stopAfter(1),
+			expOrders: []*exchange.Order{askOrder(28)},
+		},
+		{
+			name: "five orders, random: get three",
+			setup: func() {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, bidOrder(57))
+				s.requireSetOrderInStore(store, bidOrder(78))
+				s.requireSetOrderInStore(store, askOrder(83))
+				s.requireSetOrderInStore(store, bidOrder(47))
+				s.requireSetOrderInStore(store, askOrder(28))
+			},
+			cb: stopAfter(3),
+			expOrders: []*exchange.Order{
+				askOrder(28), bidOrder(47), bidOrder(57),
+			},
+		},
+		{
+			name: "three orders: second bad",
+			setup: func() {
+				store := s.getStore()
+				s.requireSetOrderInStore(store, bidOrder(6))
+				key, value, err := s.k.GetOrderStoreKeyValue(*bidOrder(74))
+				s.Require().NoError(err, "GetOrderStoreKeyValue")
+				value[0] = 8
+				store.Set(key, value)
+				s.requireSetOrderInStore(store, askOrder(91))
+			},
+			expErr:    "failed to read order 74: unknown type byte 0x8",
+			expOrders: []*exchange.Order{bidOrder(6), askOrder(91)},
+		},
+		{
+			name: "three orders: all bad",
+			setup: func() {
+				store := s.getStore()
+
+				key6, value6, err := s.k.GetOrderStoreKeyValue(*askOrder(6))
+				s.Require().NoError(err, "GetOrderStoreKeyValue 6")
+				value6[0] = 6
+				store.Set(key6, value6)
+
+				key74, value74, err := s.k.GetOrderStoreKeyValue(*bidOrder(74))
+				s.Require().NoError(err, "GetOrderStoreKeyValue 74")
+				value74[0] = 74
+				store.Set(key74, value74)
+
+				key91, value91, err := s.k.GetOrderStoreKeyValue(*bidOrder(91))
+				s.Require().NoError(err, "GetOrderStoreKeyValue 91")
+				value91[0] = 91
+				store.Set(key91, value91)
+			},
+			cb: stopAfter(1), // should never get there.
+			expErr: s.joinErrs(
+				"failed to read order 6: unknown type byte 0x6",
+				"failed to read order 74: unknown type byte 0x4a",
+				"failed to read order 91: unknown type byte 0x5b",
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			if tc.cb == nil {
+				tc.cb = getAll
+			}
+
+			orders = nil
+			var err error
+			testFunc := func() {
+				err = s.k.IterateOrders(s.ctx, tc.cb)
+			}
+			s.Require().NotPanics(testFunc, "IterateOrders")
+			s.assertErrorValue(err, tc.expErr, "IterateOrders error")
+			s.Assert().Equal(tc.expOrders, orders, "orders iterated")
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestKeeper_IterateMarketOrders()
 
