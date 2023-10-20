@@ -109,7 +109,11 @@ func (k Keeper) parseOrderStoreKeyValue(key, value []byte) (*exchange.Order, err
 		return nil, fmt.Errorf("invalid order store key %v: length expected to be at least 8", key)
 	}
 	orderID, _ := uint64FromBz(key[len(key)-8:])
-	return k.parseOrderStoreValue(orderID, value)
+	order, err := k.parseOrderStoreValue(orderID, value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read order %d: %w", orderID, err)
+	}
+	return order, nil
 }
 
 // createConstantIndexEntries creates all the key/value index entries for an order that don't change.
