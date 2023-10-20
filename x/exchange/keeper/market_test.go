@@ -27,7 +27,7 @@ func (s *TestSuite) TestKeeper_IterateKnownMarketIDs() {
 
 	tests := []struct {
 		name         string
-		setup        func(s *TestSuite)
+		setup        func()
 		cb           func(marketID uint32) bool
 		expMarketIDs []uint32
 	}{
@@ -39,7 +39,7 @@ func (s *TestSuite) TestKeeper_IterateKnownMarketIDs() {
 		},
 		{
 			name: "one known market id",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetMarketKnown(s.getStore(), 88)
 			},
 			cb:           getAll(),
@@ -47,7 +47,7 @@ func (s *TestSuite) TestKeeper_IterateKnownMarketIDs() {
 		},
 		{
 			name: "three market ids: get all",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetMarketKnown(store, 88)
 				keeper.SetMarketKnown(store, 3)
@@ -58,7 +58,7 @@ func (s *TestSuite) TestKeeper_IterateKnownMarketIDs() {
 		},
 		{
 			name: "three market ids: get one",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetMarketKnown(store, 88)
 				keeper.SetMarketKnown(store, 3)
@@ -69,7 +69,7 @@ func (s *TestSuite) TestKeeper_IterateKnownMarketIDs() {
 		},
 		{
 			name: "three market ids: get two",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetMarketKnown(store, 88)
 				keeper.SetMarketKnown(store, 3)
@@ -84,7 +84,7 @@ func (s *TestSuite) TestKeeper_IterateKnownMarketIDs() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			marketIDs = nil
@@ -101,7 +101,7 @@ func (s *TestSuite) TestKeeper_GetCreateAskFlatFees() {
 	setter := keeper.SetCreateAskFlatFees
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		expected []sdk.Coin
 	}{
@@ -113,7 +113,7 @@ func (s *TestSuite) TestKeeper_GetCreateAskFlatFees() {
 		},
 		{
 			name: "no entries for market",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []sdk.Coin{s.coin("8acorn")})
 				setter(store, 3, []sdk.Coin{s.coin("3apple")})
@@ -123,7 +123,7 @@ func (s *TestSuite) TestKeeper_GetCreateAskFlatFees() {
 		},
 		{
 			name: "market with one entry",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []sdk.Coin{s.coin("8acorn")})
 				setter(store, 2, []sdk.Coin{s.coin("5avocado")})
@@ -134,7 +134,7 @@ func (s *TestSuite) TestKeeper_GetCreateAskFlatFees() {
 		},
 		{
 			name: "market with two coins",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []sdk.Coin{s.coin("1acorn")})
 				setter(store, 2, []sdk.Coin{s.coin("8plum"), s.coin("2apple")})
@@ -149,7 +149,7 @@ func (s *TestSuite) TestKeeper_GetCreateAskFlatFees() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual []sdk.Coin
@@ -167,7 +167,7 @@ func (s *TestSuite) TestKeeper_GetCreateBidFlatFees() {
 	setter := keeper.SetCreateBidFlatFees
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		expected []sdk.Coin
 	}{
@@ -179,7 +179,7 @@ func (s *TestSuite) TestKeeper_GetCreateBidFlatFees() {
 		},
 		{
 			name: "no entries for market",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []sdk.Coin{s.coin("8acorn")})
 				setter(store, 3, []sdk.Coin{s.coin("3apple")})
@@ -189,7 +189,7 @@ func (s *TestSuite) TestKeeper_GetCreateBidFlatFees() {
 		},
 		{
 			name: "market with one entry",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []sdk.Coin{s.coin("8acorn")})
 				setter(store, 2, []sdk.Coin{s.coin("5avocado")})
@@ -200,7 +200,7 @@ func (s *TestSuite) TestKeeper_GetCreateBidFlatFees() {
 		},
 		{
 			name: "market with two coins",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []sdk.Coin{s.coin("1acorn")})
 				setter(store, 2, []sdk.Coin{s.coin("8plum"), s.coin("2apple")})
@@ -215,7 +215,7 @@ func (s *TestSuite) TestKeeper_GetCreateBidFlatFees() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual []sdk.Coin
@@ -233,7 +233,7 @@ func (s *TestSuite) TestKeeper_GetSellerSettlementFlatFees() {
 	setter := keeper.SetSellerSettlementFlatFees
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		expected []sdk.Coin
 	}{
@@ -245,7 +245,7 @@ func (s *TestSuite) TestKeeper_GetSellerSettlementFlatFees() {
 		},
 		{
 			name: "no entries for market",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []sdk.Coin{s.coin("8acorn")})
 				setter(store, 3, []sdk.Coin{s.coin("3apple")})
@@ -255,7 +255,7 @@ func (s *TestSuite) TestKeeper_GetSellerSettlementFlatFees() {
 		},
 		{
 			name: "market with one entry",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []sdk.Coin{s.coin("8acorn")})
 				setter(store, 2, []sdk.Coin{s.coin("5avocado")})
@@ -266,7 +266,7 @@ func (s *TestSuite) TestKeeper_GetSellerSettlementFlatFees() {
 		},
 		{
 			name: "market with two coins",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []sdk.Coin{s.coin("1acorn")})
 				setter(store, 2, []sdk.Coin{s.coin("8plum"), s.coin("2apple")})
@@ -281,7 +281,7 @@ func (s *TestSuite) TestKeeper_GetSellerSettlementFlatFees() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual []sdk.Coin
@@ -299,7 +299,7 @@ func (s *TestSuite) TestKeeper_GetSellerSettlementRatios() {
 	setter := keeper.SetSellerSettlementRatios
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		expected []exchange.FeeRatio
 	}{
@@ -311,7 +311,7 @@ func (s *TestSuite) TestKeeper_GetSellerSettlementRatios() {
 		},
 		{
 			name: "no entries for market",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1fig")})
 				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum:1fig")})
@@ -321,7 +321,7 @@ func (s *TestSuite) TestKeeper_GetSellerSettlementRatios() {
 		},
 		{
 			name: "market with one entry",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1fig")})
 				setter(store, 2, []exchange.FeeRatio{s.ratio("50pear:3fig")})
@@ -332,7 +332,7 @@ func (s *TestSuite) TestKeeper_GetSellerSettlementRatios() {
 		},
 		{
 			name: "market with two coins",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1fig")})
 				setter(store, 2, []exchange.FeeRatio{
@@ -353,7 +353,7 @@ func (s *TestSuite) TestKeeper_GetSellerSettlementRatios() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual []exchange.FeeRatio
@@ -371,7 +371,7 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementFlatFees() {
 	setter := keeper.SetBuyerSettlementFlatFees
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		expected []sdk.Coin
 	}{
@@ -383,7 +383,7 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementFlatFees() {
 		},
 		{
 			name: "no entries for market",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []sdk.Coin{s.coin("8acorn")})
 				setter(store, 3, []sdk.Coin{s.coin("3apple")})
@@ -393,7 +393,7 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementFlatFees() {
 		},
 		{
 			name: "market with one entry",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []sdk.Coin{s.coin("8acorn")})
 				setter(store, 2, []sdk.Coin{s.coin("5avocado")})
@@ -404,7 +404,7 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementFlatFees() {
 		},
 		{
 			name: "market with two coins",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []sdk.Coin{s.coin("1acorn")})
 				setter(store, 2, []sdk.Coin{s.coin("8plum"), s.coin("2apple")})
@@ -419,7 +419,7 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementFlatFees() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual []sdk.Coin
@@ -437,7 +437,7 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementRatios() {
 	setter := keeper.SetBuyerSettlementRatios
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		expected []exchange.FeeRatio
 	}{
@@ -449,7 +449,7 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementRatios() {
 		},
 		{
 			name: "no entries for market",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1fig")})
 				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum:1fig")})
@@ -459,7 +459,7 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementRatios() {
 		},
 		{
 			name: "market with one entry",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1fig")})
 				setter(store, 2, []exchange.FeeRatio{s.ratio("50pear:3fig")})
@@ -470,7 +470,7 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementRatios() {
 		},
 		{
 			name: "market with two coins",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1fig")})
 				setter(store, 2, []exchange.FeeRatio{
@@ -491,7 +491,7 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementRatios() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual []exchange.FeeRatio
@@ -509,7 +509,7 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 	setter := keeper.SetSellerSettlementRatios
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		price    sdk.Coin
 		expFee   *sdk.Coin
@@ -525,7 +525,7 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 		},
 		{
 			name: "no ratios for market",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1peach")})
 				setter(store, 3, []exchange.FeeRatio{s.ratio("10plum:1plum")})
@@ -537,7 +537,7 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 		},
 		{
 			name: "no ratio for price denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1peach")})
 				setter(store, 2, []exchange.FeeRatio{
@@ -552,7 +552,7 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 		},
 		{
 			name: "ratio evenly applicable",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1peach")})
 				setter(store, 2, []exchange.FeeRatio{s.ratio("50pear:3pear")})
@@ -564,7 +564,7 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 		},
 		{
 			name: "ratio not evenly applicable",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []exchange.FeeRatio{s.ratio("8peach:1peach")})
 				setter(store, 2, []exchange.FeeRatio{s.ratio("50pear:3pear")})
@@ -576,7 +576,7 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 		},
 		{
 			name: "error applying ratio",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 1, []exchange.FeeRatio{s.ratio("0peach:1peach")})
 			},
 			marketID: 1,
@@ -585,7 +585,7 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 		},
 		{
 			name: "three ratios: first",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []exchange.FeeRatio{
 					s.ratio("10plum:1plum"),
 					s.ratio("25prune:2prune"),
@@ -598,7 +598,7 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 		},
 		{
 			name: "three ratios: second",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 777, []exchange.FeeRatio{
 					s.ratio("10plum:1plum"),
 					s.ratio("25prune:2prune"),
@@ -611,7 +611,7 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 		},
 		{
 			name: "three ratios: third",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 41, []exchange.FeeRatio{
 					s.ratio("10plum:1plum"),
 					s.ratio("25prune:2prune"),
@@ -628,7 +628,7 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var fee *sdk.Coin
@@ -656,7 +656,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		price    sdk.Coin
 		expOpts  []sdk.Coin
@@ -672,7 +672,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		},
 		{
 			name: "no ratios for market",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []exchange.FeeRatio{s.ratio("11plum:1fig")})
 				setter(store, 3, []exchange.FeeRatio{s.ratio("33prune:2grape")})
@@ -684,7 +684,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		},
 		{
 			name: "no ratios for price denom: fee denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []exchange.FeeRatio{s.ratio("11plum:1fig")})
 				setter(store, 2, []exchange.FeeRatio{
@@ -700,7 +700,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		},
 		{
 			name: "no ratios for price denom: other market's denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []exchange.FeeRatio{s.ratio("11plum:1fig")})
 				setter(store, 2, []exchange.FeeRatio{
@@ -716,7 +716,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		},
 		{
 			name: "one ratio: evenly divisible",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 15, []exchange.FeeRatio{s.ratio("500pineapple:1fig")})
 			},
 			marketID: 15,
@@ -725,7 +725,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		},
 		{
 			name: "one ratio: not evenly divisible",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 15, []exchange.FeeRatio{s.ratio("500pineapple:1fig")})
 			},
 			marketID: 15,
@@ -737,7 +737,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		},
 		{
 			name: "three ratios for denom: none divisible",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 21, []exchange.FeeRatio{
 					s.ratio("123plum:1fig"),
 					s.ratio("234plum:5grape"),
@@ -758,7 +758,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		},
 		{
 			name: "three ratios for denom: only first divisible",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 21, []exchange.FeeRatio{
 					s.ratio("123plum:1fig"),
 					s.ratio("234plum:5grape"),
@@ -774,7 +774,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		},
 		{
 			name: "three ratios for denom: only second divisible",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 99, []exchange.FeeRatio{
 					s.ratio("123plum:1fig"),
 					s.ratio("234plum:5grape"),
@@ -790,7 +790,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		},
 		{
 			name: "three ratios for denom: only third divisible",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 3, []exchange.FeeRatio{
 					s.ratio("123plum:1fig"),
 					s.ratio("234plum:5grape"),
@@ -806,7 +806,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		},
 		{
 			name: "three ratios for denom: first not divisible",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 1, []exchange.FeeRatio{
 					s.ratio("123plum:1fig"),
 					s.ratio("234plum:5grape"),
@@ -822,7 +822,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		},
 		{
 			name: "three ratios for denom: second not divisible",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 1, []exchange.FeeRatio{
 					s.ratio("123plum:1fig"),
 					s.ratio("234plum:5grape"),
@@ -838,7 +838,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		},
 		{
 			name: "three ratios for denom: third not divisible",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 1, []exchange.FeeRatio{
 					s.ratio("123plum:1fig"),
 					s.ratio("234plum:5grape"),
@@ -854,7 +854,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		},
 		{
 			name: "three ratios for denom: all divisible",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 5, []exchange.FeeRatio{
 					s.ratio("123plum:1fig"),
 					s.ratio("234plum:5grape"),
@@ -874,7 +874,7 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var opts []sdk.Coin
@@ -905,7 +905,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		fee      *sdk.Coin
 		expErr   string
@@ -926,7 +926,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "no fees for market: nil",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
@@ -937,7 +937,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "no fees for market: not nil",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
@@ -948,7 +948,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "one fee option: nil",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -960,7 +960,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "one fee option: diff denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -972,7 +972,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "one fee option: insufficient",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -984,7 +984,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "one fee option: same",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -996,7 +996,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "one fee option: more",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -1008,7 +1008,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "three fee options: nil",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1017,7 +1017,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "three fee options: wrong denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1026,7 +1026,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "three fee options: first, low",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1035,7 +1035,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "three fee options: first, ok",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1044,7 +1044,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "three fee options: second, low",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1053,7 +1053,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "three fee options: second, ok",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1062,7 +1062,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "three fee options: third, low",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1071,7 +1071,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		},
 		{
 			name: "three fee options: third, ok",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1084,7 +1084,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateAskFlatFee() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var err error
@@ -1112,7 +1112,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		fee      *sdk.Coin
 		expErr   string
@@ -1133,7 +1133,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "no fees for market: nil",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
@@ -1144,7 +1144,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "no fees for market: not nil",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
@@ -1155,7 +1155,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "one fee option: nil",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -1167,7 +1167,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "one fee option: diff denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -1179,7 +1179,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "one fee option: insufficient",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -1191,7 +1191,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "one fee option: same",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -1203,7 +1203,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "one fee option: more",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -1215,7 +1215,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "three fee options: nil",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1224,7 +1224,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "three fee options: wrong denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1233,7 +1233,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "three fee options: first, low",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1242,7 +1242,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "three fee options: first, ok",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1251,7 +1251,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "three fee options: second, low",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1260,7 +1260,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "three fee options: second, ok",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1269,7 +1269,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "three fee options: third, low",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1278,7 +1278,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		},
 		{
 			name: "three fee options: third, ok",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1291,7 +1291,7 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var err error
@@ -1319,7 +1319,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		fee      *sdk.Coin
 		expErr   string
@@ -1340,7 +1340,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "no fees for market: nil",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
@@ -1351,7 +1351,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "no fees for market: not nil",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
@@ -1362,7 +1362,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "one fee option: nil",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -1374,7 +1374,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "one fee option: diff denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -1386,7 +1386,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "one fee option: insufficient",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -1398,7 +1398,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "one fee option: same",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -1410,7 +1410,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "one fee option: more",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
 				setter(store, 6, []sdk.Coin{s.coin("11fig")})
@@ -1422,7 +1422,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "three fee options: nil",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1431,7 +1431,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "three fee options: wrong denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1440,7 +1440,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "three fee options: first, low",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1449,7 +1449,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "three fee options: first, ok",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1458,7 +1458,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "three fee options: second, low",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1467,7 +1467,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "three fee options: second, ok",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1476,7 +1476,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "three fee options: third, low",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1485,7 +1485,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		},
 		{
 			name: "three fee options: third, ok",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
 			},
 			marketID: 8,
@@ -1498,7 +1498,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var err error
@@ -1514,7 +1514,7 @@ func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 	tests := []struct {
 		name              string
-		setup             func(s *TestSuite)
+		setup             func()
 		marketID          uint32
 		price             sdk.Coin
 		settlementFlatFee *sdk.Coin
@@ -1530,7 +1530,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "no ratios in market: no flat",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum:1plum")})
@@ -1542,7 +1542,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "no ratios in market: price less than flat",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum:1plum")})
@@ -1554,7 +1554,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "no ratios in market: price equals flat",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum:1plum")})
@@ -1566,7 +1566,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "no ratios in market: price more than flat",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum:1plum")})
@@ -1578,7 +1578,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "no ratios in market: fee diff denom with larger amount",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 3, []exchange.FeeRatio{s.ratio("11plum:1plum")})
@@ -1590,7 +1590,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "one ratio: wrong denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:1plum")})
@@ -1603,7 +1603,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "one ratio: no flat: price less than ratio",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:13plum")})
@@ -1616,7 +1616,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "one ratio: no flat: price equals ratio",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:11plum")})
@@ -1629,7 +1629,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "one ratio: no flat: price more than ratio",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:11plum")})
@@ -1642,7 +1642,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "one ratio: diff flat: price less than ratio",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:13plum")})
@@ -1655,7 +1655,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "one ratio: diff flat: price equals ratio",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:11plum")})
@@ -1668,7 +1668,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "one ratio: diff flat: price more than ratio",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:11plum")})
@@ -1681,7 +1681,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "one ratio: price more than flat, more than ratio, less than total",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:11plum")})
@@ -1694,7 +1694,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "one ratio: price equals total",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:7plum")})
@@ -1707,7 +1707,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "one ratio: price more than total",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:7plum")})
@@ -1720,7 +1720,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "ratio cannot be evenly applied to price, but is enough",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("10plum:1plum")})
 				keeper.SetSellerSettlementRatios(store, 2, []exchange.FeeRatio{s.ratio("12plum:7plum")})
@@ -1733,7 +1733,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "error applying ratio",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetSellerSettlementRatios(s.getStore(), 1, []exchange.FeeRatio{s.ratio("0plum:1plum")})
 			},
 			marketID:          1,
@@ -1743,7 +1743,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "three ratios: wrong denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetSellerSettlementRatios(s.getStore(), 1, []exchange.FeeRatio{
 					s.ratio("100peach:1peach"),
 					s.ratio("200pear:3pear"),
@@ -1757,7 +1757,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "three ratios: price less than total",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetSellerSettlementRatios(s.getStore(), 1, []exchange.FeeRatio{
 					s.ratio("5000peach:1peach"),
 					s.ratio("200pear:199pear"),
@@ -1771,7 +1771,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		},
 		{
 			name: "three ratios: price more",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetSellerSettlementRatios(s.getStore(), 1, []exchange.FeeRatio{
 					s.ratio("100peach:1peach"),
 					s.ratio("200pear:3pear"),
@@ -1789,7 +1789,7 @@ func (s *TestSuite) TestKeeper_ValidateAskPrice() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var err error
@@ -1818,7 +1818,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		price    sdk.Coin
 		fee      sdk.Coins
@@ -1842,7 +1842,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "no flat no ratio: no fee",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementFlatFees(store, 1, s.coins("10peach,12plum"))
 				keeper.SetBuyerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("100peach:3fig")})
@@ -1856,7 +1856,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "no flat no ratio: with fee",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementFlatFees(store, 1, s.coins("10peach,12plum"))
 				keeper.SetBuyerSettlementRatios(store, 1, []exchange.FeeRatio{s.ratio("100peach:3fig")})
@@ -1870,7 +1870,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "only flat: no fee",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("11peach,9plum"))
 			},
 			marketID: 2,
@@ -1883,7 +1883,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "only flat: wrong denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("11peach,9plum"))
 			},
 			marketID: 2,
@@ -1897,7 +1897,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "only flat: less than req",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("11peach,9plum"))
 			},
 			marketID: 2,
@@ -1911,7 +1911,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "only flat: equals req",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("11peach,9plum"))
 			},
 			marketID: 2,
@@ -1921,7 +1921,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "only flat: more than req",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("11peach,9plum"))
 			},
 			marketID: 2,
@@ -1931,7 +1931,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "only ratio: nofee",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
 				})
@@ -1946,7 +1946,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "only ratio: wrong price denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
 				})
@@ -1962,7 +1962,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "only ratio: wrong fee denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
 				})
@@ -1978,7 +1978,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "only ratio: less than req",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
 				})
@@ -1995,7 +1995,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "only ratio: equals req",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
 				})
@@ -2007,7 +2007,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "only ratio: more than req",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
 				})
@@ -2019,7 +2019,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: no fee",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2036,7 +2036,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: no flat denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2053,7 +2053,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: no ratio denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2070,7 +2070,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: neither flat nor ratio denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2091,7 +2091,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: one denom: less than either",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2110,7 +2110,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: one denom: less than ratio, more than flat",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2127,7 +2127,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: one denom: less than flat, more than ratio",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2144,7 +2144,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: one denom: more than either, less than total req",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2160,7 +2160,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: one denom: fee equals total req",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2173,7 +2173,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: one denom: fee more than total req",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,2honeydew"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2186,7 +2186,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: diff denoms: all less than req",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,6grape"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2209,7 +2209,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: diff denoms: flat okay, ratio not",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,4grape"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2228,7 +2228,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: diff denoms: ratio okay, flat not",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("16fig,6grape"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2247,7 +2247,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: diff denoms: either enough for one fee type, flat first",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("14fig,6grape"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2260,7 +2260,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: diff denoms: either enough for one fee type, ratio first",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("16fig,4grape"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2273,7 +2273,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: two denoms: first is more than either, less than total, second less than either",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,4grape"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2291,7 +2291,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: two denoms: first is more than either, less than total, second covers flat",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,4grape"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2304,7 +2304,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: two denoms: first is more than either, less than total, second covers ratio",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,6grape"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2317,7 +2317,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: two denoms: first less than either, second more than either, less than total",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,6grape"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2335,7 +2335,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: two denoms: first covers flat, second more than either, less than total",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("10fig,6grape"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2348,7 +2348,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		},
 		{
 			name: "both: two denoms: first covers ratio, second more than either, less than total",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 2, s.coins("16fig,6grape"))
 				keeper.SetBuyerSettlementRatios(s.getStore(), 2, []exchange.FeeRatio{
 					s.ratio("100peach:3fig"), s.ratio("100peach:1grape"),
@@ -2365,7 +2365,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var err error
@@ -2388,7 +2388,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		buyerFlat   string
 		buyerRatio  string
 	}
-	getMarketFees := func(s *TestSuite, marketID uint32) marketFees {
+	getMarketFees := func(marketID uint32) marketFees {
 		return marketFees{
 			marketID:    marketID,
 			createAsk:   sdk.Coins(s.k.GetCreateAskFlatFees(s.ctx, marketID)).String(),
@@ -2402,7 +2402,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 
 	tests := []struct {
 		name        string
-		setup       func(s *TestSuite)
+		setup       func()
 		msg         *exchange.MsgGovManageFeesRequest
 		expFees     marketFees
 		expNoChange []uint32
@@ -2417,7 +2417,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		// Only create-ask flat fee changes.
 		{
 			name: "create ask: add one",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetCreateAskFlatFees(s.getStore(), 3, s.coins("10fig"))
 			},
 			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, AddFeeCreateAskFlat: s.coins("10fig")},
@@ -2426,7 +2426,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "create ask: remove one, exists",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetCreateAskFlatFees(store, 3, s.coins("10fig"))
 				keeper.SetCreateAskFlatFees(store, 5, s.coins("10fig,8grape"))
@@ -2437,7 +2437,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "create ask: remove one, unknown denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetCreateAskFlatFees(store, 3, s.coins("10grape"))
 				keeper.SetCreateAskFlatFees(store, 5, s.coins("10fig"))
@@ -2448,7 +2448,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "create ask: remove one, known denom, wrong amount",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetCreateAskFlatFees(store, 4, s.coins("10grape"))
 				keeper.SetCreateAskFlatFees(store, 2, s.coins("10fig,8grape"))
@@ -2459,7 +2459,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "create ask: add+remove with different denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetCreateAskFlatFees(store, 18, s.coins("10grape"))
 				keeper.SetCreateAskFlatFees(store, 8, s.coins("10fig,8grape"))
@@ -2474,7 +2474,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "create ask: add+remove with same denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetCreateAskFlatFees(store, 18, s.coins("10grape"))
 				keeper.SetCreateAskFlatFees(store, 1, s.coins("10fig,8grape"))
@@ -2494,7 +2494,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 			// Add one with a denom that already has a different amount (3cactus stomping on 7cactus)
 			// Add a brand new one (99plum).
 			// Leave one unchanged (2grape).
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetCreateAskFlatFees(store, 1, s.coins("10fig,4grape,2honeydew,5apple"))
 				keeper.SetCreateAskFlatFees(store, 2, s.coins("9fig,3grape,1honeydew,6banana"))
@@ -2513,7 +2513,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		// Only create-bid flat fee changes.
 		{
 			name: "create bid: add one",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetCreateBidFlatFees(s.getStore(), 3, s.coins("10fig"))
 			},
 			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, AddFeeCreateBidFlat: s.coins("10fig")},
@@ -2522,7 +2522,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "create bid: remove one, exists",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetCreateBidFlatFees(store, 3, s.coins("10fig"))
 				keeper.SetCreateBidFlatFees(store, 5, s.coins("10fig,8grape"))
@@ -2533,7 +2533,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "create bid: remove one, unknown denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetCreateBidFlatFees(store, 3, s.coins("10grape"))
 				keeper.SetCreateBidFlatFees(store, 5, s.coins("10fig"))
@@ -2544,7 +2544,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "create bid: remove one, known denom, wrong amount",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetCreateBidFlatFees(store, 4, s.coins("10grape"))
 				keeper.SetCreateBidFlatFees(store, 2, s.coins("10fig,8grape"))
@@ -2555,7 +2555,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "create bid: add+remove with different denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetCreateBidFlatFees(store, 18, s.coins("10grape"))
 				keeper.SetCreateBidFlatFees(store, 8, s.coins("10fig,8grape"))
@@ -2570,7 +2570,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "create bid: add+remove with same denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetCreateBidFlatFees(store, 18, s.coins("10grape"))
 				keeper.SetCreateBidFlatFees(store, 1, s.coins("10fig,8grape"))
@@ -2590,7 +2590,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 			// Add one with a denom that already has a different amount (3cactus stomping on 7cactus)
 			// Add a brand new one (99plum).
 			// Leave one unchanged (2grape).
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetCreateBidFlatFees(store, 1, s.coins("10fig,4grape,2honeydew,5apple"))
 				keeper.SetCreateBidFlatFees(store, 2, s.coins("9fig,3grape,1honeydew,6banana"))
@@ -2609,7 +2609,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		// Only seller settlement flat fee changes.
 		{
 			name: "seller flat: add one",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetSellerSettlementFlatFees(s.getStore(), 3, s.coins("10fig"))
 			},
 			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, AddFeeSellerSettlementFlat: s.coins("10fig")},
@@ -2618,7 +2618,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "seller flat: remove one, exists",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementFlatFees(store, 3, s.coins("10fig"))
 				keeper.SetSellerSettlementFlatFees(store, 5, s.coins("10fig,8grape"))
@@ -2629,7 +2629,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "seller flat: remove one, unknown denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementFlatFees(store, 3, s.coins("10grape"))
 				keeper.SetSellerSettlementFlatFees(store, 5, s.coins("10fig"))
@@ -2640,7 +2640,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "seller flat: remove one, known denom, wrong amount",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementFlatFees(store, 4, s.coins("10grape"))
 				keeper.SetSellerSettlementFlatFees(store, 2, s.coins("10fig,8grape"))
@@ -2651,7 +2651,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "seller flat: add+remove with different denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementFlatFees(store, 18, s.coins("10grape"))
 				keeper.SetSellerSettlementFlatFees(store, 8, s.coins("10fig,8grape"))
@@ -2666,7 +2666,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "seller flat: add+remove with same denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementFlatFees(store, 18, s.coins("10grape"))
 				keeper.SetSellerSettlementFlatFees(store, 1, s.coins("10fig,8grape"))
@@ -2686,7 +2686,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 			// Add one with a denom that already has a different amount (3cactus stomping on 7cactus)
 			// Add a brand new one (99plum).
 			// Leave one unchanged (2grape).
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementFlatFees(store, 1, s.coins("10fig,4grape,2honeydew,5apple"))
 				keeper.SetSellerSettlementFlatFees(store, 2, s.coins("9fig,3grape,1honeydew,6banana"))
@@ -2705,7 +2705,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		// Only buyer settlement flat fee changes.
 		{
 			name: "buyer flat: add one",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 3, s.coins("10fig"))
 			},
 			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, AddFeeBuyerSettlementFlat: s.coins("10fig")},
@@ -2714,7 +2714,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "buyer flat: remove one, exists",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementFlatFees(store, 3, s.coins("10fig"))
 				keeper.SetBuyerSettlementFlatFees(store, 5, s.coins("10fig,8grape"))
@@ -2725,7 +2725,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "buyer flat: remove one, unknown denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementFlatFees(store, 3, s.coins("10grape"))
 				keeper.SetBuyerSettlementFlatFees(store, 5, s.coins("10fig"))
@@ -2736,7 +2736,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "buyer flat: remove one, known denom, wrong amount",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementFlatFees(store, 4, s.coins("10grape"))
 				keeper.SetBuyerSettlementFlatFees(store, 2, s.coins("10fig,8grape"))
@@ -2747,7 +2747,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "buyer flat: add+remove with different denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 18, s.coins("10grape"))
 				keeper.SetBuyerSettlementFlatFees(s.getStore(), 8, s.coins("10fig,8grape"))
 			},
@@ -2761,7 +2761,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "buyer flat: add+remove with same denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementFlatFees(store, 18, s.coins("10grape"))
 				keeper.SetBuyerSettlementFlatFees(store, 1, s.coins("10fig,8grape"))
@@ -2781,7 +2781,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 			// Add one with a denom that already has a different amount (3cactus stomping on 7cactus)
 			// Add a brand new one (99plum).
 			// Leave one unchanged (2grape).
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementFlatFees(store, 1, s.coins("10fig,4grape,2honeydew,5apple"))
 				keeper.SetBuyerSettlementFlatFees(store, 2, s.coins("9fig,3grape,1honeydew,6banana"))
@@ -2800,7 +2800,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		// Only seller settlement ratio fee changes.
 		{
 			name: "seller ratio: add one",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetSellerSettlementRatios(s.getStore(), 3, s.ratios("100peach:3fig"))
 			},
 			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, AddFeeSellerSettlementRatios: s.ratios("50plum:1grape")},
@@ -2809,7 +2809,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "seller ratio: remove one, exists",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 3, s.ratios("100peach:3fig"))
 				keeper.SetSellerSettlementRatios(store, 5, s.ratios("90peach:2fig"))
@@ -2820,7 +2820,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "seller ratio: remove one, unknown denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 3, s.ratios("100peach:3fig"))
 				keeper.SetSellerSettlementRatios(store, 5, s.ratios("90peach:2fig"))
@@ -2831,7 +2831,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "seller ratio: remove one, known price denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 3, s.ratios("100peach:3fig"))
 				keeper.SetSellerSettlementRatios(store, 5, s.ratios("90peach:2fig"))
@@ -2842,7 +2842,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "seller ratio: remove one, known fee denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 4, s.ratios("100peach:3fig"))
 				keeper.SetSellerSettlementRatios(store, 2, s.ratios("90peach:2fig"))
@@ -2853,7 +2853,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "seller ratio: remove one, known denoms, wrong amounts",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 4, s.ratios("100peach:3fig"))
 				keeper.SetSellerSettlementRatios(store, 2, s.ratios("90peach:2fig"))
@@ -2864,7 +2864,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "seller ratio: add+remove with different denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 7, s.ratios("100peach:3fig,100peach:1grape"))
 				keeper.SetSellerSettlementRatios(store, 77, s.ratios("100peach:3fig,100peach:1grape"))
@@ -2879,7 +2879,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "seller ratio: add+remove with different price denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 7, s.ratios("100peach:3fig,100peach:1grape"))
 				keeper.SetSellerSettlementRatios(store, 77, s.ratios("100peach:3fig,100peach:1grape"))
@@ -2894,7 +2894,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "seller ratio: add+remove with different fee denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetSellerSettlementRatios(s.getStore(), 1, s.ratios("100peach:3fig,100peach:1grape"))
 			},
 			msg: &exchange.MsgGovManageFeesRequest{
@@ -2906,7 +2906,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "seller ratio: add+remove with same denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetSellerSettlementRatios(s.getStore(), 1, s.ratios("100peach:3fig,100peach:1grape"))
 			},
 			msg: &exchange.MsgGovManageFeesRequest{
@@ -2925,7 +2925,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 			// Add one with same fee denom (100pear:3fig)
 			// Add one all new (100papaya:5guava)
 			// Leave on untouched (100prune:2fig)
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetSellerSettlementRatios(store, 1, s.ratios("100peach:3fig,100peach:1grape"))
 				keeper.SetSellerSettlementRatios(store, 11, s.ratios("20plum:2fig,100peach:3fig,100peach:1grape,100prune:2fig"))
@@ -2947,7 +2947,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		// Only buyer settlement ratio fee changes.
 		{
 			name: "buyer ratio: add one",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementRatios(s.getStore(), 3, s.ratios("100peach:3fig"))
 			},
 			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, AddFeeBuyerSettlementRatios: s.ratios("50plum:1grape")},
@@ -2956,7 +2956,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "buyer ratio: remove one, exists",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementRatios(store, 3, s.ratios("100peach:3fig"))
 				keeper.SetBuyerSettlementRatios(store, 5, s.ratios("90peach:2fig"))
@@ -2967,7 +2967,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "buyer ratio: remove one, unknown denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementRatios(store, 3, s.ratios("100peach:3fig"))
 				keeper.SetBuyerSettlementRatios(store, 5, s.ratios("90peach:2fig"))
@@ -2978,7 +2978,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "buyer ratio: remove one, known price denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementRatios(store, 3, s.ratios("100peach:3fig"))
 				keeper.SetBuyerSettlementRatios(store, 5, s.ratios("90peach:2fig"))
@@ -2989,7 +2989,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "buyer ratio: remove one, known fee denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementRatios(store, 4, s.ratios("100peach:3fig"))
 				keeper.SetBuyerSettlementRatios(store, 2, s.ratios("90peach:2fig"))
@@ -3000,7 +3000,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "buyer ratio: remove one, known denoms, wrong amounts",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementRatios(store, 4, s.ratios("100peach:3fig"))
 				keeper.SetBuyerSettlementRatios(store, 2, s.ratios("90peach:2fig"))
@@ -3011,7 +3011,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "buyer ratio: add+remove with different denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementRatios(store, 7, s.ratios("100peach:3fig,100peach:1grape"))
 				keeper.SetBuyerSettlementRatios(store, 77, s.ratios("100peach:3fig,100peach:1grape"))
@@ -3026,7 +3026,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "buyer ratio: add+remove with different price denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementRatios(store, 7, s.ratios("100peach:3fig,100peach:1grape"))
 				keeper.SetBuyerSettlementRatios(store, 77, s.ratios("100peach:3fig,100peach:1grape"))
@@ -3041,7 +3041,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "buyer ratio: add+remove with different fee denom",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementRatios(s.getStore(), 1, s.ratios("100peach:3fig,100peach:1grape"))
 			},
 			msg: &exchange.MsgGovManageFeesRequest{
@@ -3053,7 +3053,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		},
 		{
 			name: "buyer ratio: add+remove with same denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetBuyerSettlementRatios(s.getStore(), 1, s.ratios("100peach:3fig,100peach:1grape"))
 			},
 			msg: &exchange.MsgGovManageFeesRequest{
@@ -3072,7 +3072,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 			// Add one with same fee denom (100pear:3fig)
 			// Add one all new (100papaya:5guava)
 			// Leave one untouched (100prune:2fig)
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetBuyerSettlementRatios(store, 1, s.ratios("100peach:3fig,100peach:1grape"))
 				keeper.SetBuyerSettlementRatios(store, 11, s.ratios("20plum:2fig,100peach:3fig,100peach:1grape,100prune:2fig"))
@@ -3095,7 +3095,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		{
 			name: "a little bit of everything",
 			// For each type, add one, replace one, remove one, leave one.
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetCreateAskFlatFees(store, 1, s.coins("10grape"))
 				keeper.SetCreateBidFlatFees(store, 1, s.coins("11guava"))
@@ -3150,12 +3150,12 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			origMarketFees := make([]marketFees, len(tc.expNoChange))
 			for i, marketID := range tc.expNoChange {
-				origMarketFees[i] = getMarketFees(s, marketID)
+				origMarketFees[i] = getMarketFees(marketID)
 			}
 
 			var expectedEvents sdk.Events
@@ -3175,10 +3175,10 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 				return
 			}
 
-			updatedMarketFees := getMarketFees(s, tc.msg.MarketId)
+			updatedMarketFees := getMarketFees(tc.msg.MarketId)
 			s.Assert().Equal(tc.expFees, updatedMarketFees, "fees of updated market %d", tc.msg.MarketId)
 			for _, expected := range origMarketFees {
-				actual := getMarketFees(s, expected.marketID)
+				actual := getMarketFees(expected.marketID)
 				s.Assert().Equal(expected, actual, "fees of market %d (that should not have changed)", expected.marketID)
 			}
 
@@ -3191,7 +3191,7 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 func (s *TestSuite) TestKeeper_IsMarketKnown() {
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		expected bool
 	}{
@@ -3203,7 +3203,7 @@ func (s *TestSuite) TestKeeper_IsMarketKnown() {
 		},
 		{
 			name: "unknown market id",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetMarketKnown(store, 1)
 				keeper.SetMarketKnown(store, 3)
@@ -3213,7 +3213,7 @@ func (s *TestSuite) TestKeeper_IsMarketKnown() {
 		},
 		{
 			name: "market known",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetMarketKnown(store, 1)
 				keeper.SetMarketKnown(store, 2)
@@ -3228,7 +3228,7 @@ func (s *TestSuite) TestKeeper_IsMarketKnown() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual bool
@@ -3244,7 +3244,7 @@ func (s *TestSuite) TestKeeper_IsMarketKnown() {
 func (s *TestSuite) TestKeeper_IsMarketActive() {
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		expected bool
 	}{
@@ -3256,7 +3256,7 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 		},
 		{
 			name: "unknown market id",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetMarketActive(store, 1, true)
 				keeper.SetMarketActive(store, 3, true)
@@ -3266,7 +3266,7 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 		},
 		{
 			name: "market not active",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetMarketActive(store, 1, true)
 				keeper.SetMarketActive(store, 2, false)
@@ -3277,7 +3277,7 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 		},
 		{
 			name: "market active",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetMarketActive(store, 1, true)
 				keeper.SetMarketActive(store, 2, true)
@@ -3292,7 +3292,7 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual bool
@@ -3308,7 +3308,7 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 	tests := []struct {
 		name      string
-		setup     func(s *TestSuite)
+		setup     func()
 		marketID  uint32
 		active    bool
 		updatedBy string
@@ -3330,7 +3330,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 		},
 		{
 			name: "active to active",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetMarketActive(store, 1, true)
 				keeper.SetMarketActive(store, 2, false)
@@ -3345,7 +3345,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 		},
 		{
 			name: "active to inactive",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetMarketActive(store, 1, true)
 				keeper.SetMarketActive(store, 2, false)
@@ -3360,7 +3360,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 		},
 		{
 			name: "inactive to active",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetMarketActive(store, 11, true)
 				keeper.SetMarketActive(store, 12, false)
@@ -3375,7 +3375,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 		},
 		{
 			name: "inactive to inactive",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetMarketActive(store, 11, true)
 				keeper.SetMarketActive(store, 12, false)
@@ -3394,7 +3394,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			expEvents := sdk.Events{}
@@ -3429,7 +3429,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 func (s *TestSuite) TestKeeper_IsUserSettlementAllowed() {
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		expected bool
 	}{
@@ -3440,7 +3440,7 @@ func (s *TestSuite) TestKeeper_IsUserSettlementAllowed() {
 		},
 		{
 			name: "unknown market id",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetUserSettlementAllowed(store, 1, true)
 				keeper.SetUserSettlementAllowed(store, 3, true)
@@ -3450,7 +3450,7 @@ func (s *TestSuite) TestKeeper_IsUserSettlementAllowed() {
 		},
 		{
 			name: "not allowed",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetUserSettlementAllowed(store, 1, true)
 				keeper.SetUserSettlementAllowed(store, 2, false)
@@ -3461,7 +3461,7 @@ func (s *TestSuite) TestKeeper_IsUserSettlementAllowed() {
 		},
 		{
 			name: "allowed",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetUserSettlementAllowed(store, 1, true)
 				keeper.SetUserSettlementAllowed(store, 2, true)
@@ -3476,7 +3476,7 @@ func (s *TestSuite) TestKeeper_IsUserSettlementAllowed() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual bool
@@ -3492,7 +3492,7 @@ func (s *TestSuite) TestKeeper_IsUserSettlementAllowed() {
 func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 	tests := []struct {
 		name      string
-		setup     func(s *TestSuite)
+		setup     func()
 		marketID  uint32
 		allow     bool
 		updatedBy string
@@ -3514,7 +3514,7 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 		},
 		{
 			name: "allowed to allowed",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetUserSettlementAllowed(store, 1, true)
 				keeper.SetUserSettlementAllowed(store, 2, false)
@@ -3529,7 +3529,7 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 		},
 		{
 			name: "allowed to not allowed",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetUserSettlementAllowed(store, 1, true)
 				keeper.SetUserSettlementAllowed(store, 2, false)
@@ -3544,7 +3544,7 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 		},
 		{
 			name: "not allowed to allowed",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetUserSettlementAllowed(store, 11, true)
 				keeper.SetUserSettlementAllowed(store, 12, false)
@@ -3559,7 +3559,7 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 		},
 		{
 			name: "not allowed to not allowed",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetUserSettlementAllowed(store, 11, true)
 				keeper.SetUserSettlementAllowed(store, 12, false)
@@ -3578,7 +3578,7 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			expEvents := sdk.Events{}
@@ -3616,7 +3616,7 @@ func (s *TestSuite) TestKeeper_HasPermission() {
 	authority := s.k.GetAuthority()
 	tests := []struct {
 		name       string
-		setup      func(s *TestSuite)
+		setup      func()
 		marketID   uint32
 		address    string
 		permission exchange.Permission
@@ -3652,7 +3652,7 @@ func (s *TestSuite) TestKeeper_HasPermission() {
 		},
 		{
 			name: "no market perms, empty address",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
 				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
@@ -3664,7 +3664,7 @@ func (s *TestSuite) TestKeeper_HasPermission() {
 		},
 		{
 			name: "no market perms, bad address",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
 				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
@@ -3676,7 +3676,7 @@ func (s *TestSuite) TestKeeper_HasPermission() {
 		},
 		{
 			name: "no market perms, not authority",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
 				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
@@ -3688,7 +3688,7 @@ func (s *TestSuite) TestKeeper_HasPermission() {
 		},
 		{
 			name: "no market perms, is authority",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
 				keeper.GrantPermissions(store, 3, goodAcc, exchange.AllPermissions())
@@ -3700,7 +3700,7 @@ func (s *TestSuite) TestKeeper_HasPermission() {
 		},
 		{
 			name: "market with perms, empty address",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
 				keeper.GrantPermissions(store, 2, goodAcc, exchange.AllPermissions())
@@ -3713,7 +3713,7 @@ func (s *TestSuite) TestKeeper_HasPermission() {
 		},
 		{
 			name: "market with perms, bad address",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
 				keeper.GrantPermissions(store, 2, goodAcc, exchange.AllPermissions())
@@ -3726,7 +3726,7 @@ func (s *TestSuite) TestKeeper_HasPermission() {
 		},
 		{
 			name: "market with perms, unknown address",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
 				keeper.GrantPermissions(store, 2, goodAcc, exchange.AllPermissions())
@@ -3739,7 +3739,7 @@ func (s *TestSuite) TestKeeper_HasPermission() {
 		},
 		{
 			name: "market with perms, authority",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
 				keeper.GrantPermissions(store, 2, goodAcc, exchange.AllPermissions())
@@ -3752,7 +3752,7 @@ func (s *TestSuite) TestKeeper_HasPermission() {
 		},
 		{
 			name: "address has other perms on this market",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
 				keeper.GrantPermissions(store, 2, goodAcc, []exchange.Permission{
@@ -3766,7 +3766,7 @@ func (s *TestSuite) TestKeeper_HasPermission() {
 		},
 		{
 			name: "address only has just perm on this market",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
 				keeper.GrantPermissions(store, 2, goodAcc, []exchange.Permission{exchange.Permission_withdraw})
@@ -3779,7 +3779,7 @@ func (s *TestSuite) TestKeeper_HasPermission() {
 		},
 		{
 			name: "address has all perms on market",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 1, goodAcc, exchange.AllPermissions())
 				keeper.GrantPermissions(store, 2, goodAcc, exchange.AllPermissions())
@@ -3796,7 +3796,7 @@ func (s *TestSuite) TestKeeper_HasPermission() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual bool
@@ -3832,7 +3832,7 @@ func (s *TestSuite) runPermTest(perm exchange.Permission, checker permChecker, n
 		}
 	}
 
-	defaultSetup := func(s *TestSuite) {
+	defaultSetup := func() {
 		store := s.getStore()
 		keeper.GrantPermissions(store, 10, allPermsAcc, allPerms)
 		keeper.GrantPermissions(store, 10, justPermAcc, allPerms)
@@ -3851,7 +3851,7 @@ func (s *TestSuite) runPermTest(perm exchange.Permission, checker permChecker, n
 
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		admin    string
 		expected bool
@@ -3941,7 +3941,7 @@ func (s *TestSuite) runPermTest(perm exchange.Permission, checker permChecker, n
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual bool
@@ -4003,7 +4003,7 @@ func (s *TestSuite) TestKeeper_GetUserPermissions() {
 		}
 	}
 
-	defaultSetup := func(s *TestSuite) {
+	defaultSetup := func() {
 		store := s.getStore()
 		keeper.GrantPermissions(store, 1, addrNone, allPerms)
 		keeper.GrantPermissions(store, 1, addrOne, allPerms)
@@ -4029,7 +4029,7 @@ func (s *TestSuite) TestKeeper_GetUserPermissions() {
 
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		addr     sdk.AccAddress
 		expected []exchange.Permission
@@ -4101,7 +4101,7 @@ func (s *TestSuite) TestKeeper_GetUserPermissions() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual []exchange.Permission
@@ -4136,7 +4136,7 @@ func (s *TestSuite) TestKeeper_GetAccessGrants() {
 		}
 	}
 
-	defaultSetup := func(s *TestSuite) {
+	defaultSetup := func() {
 		store := s.getStore()
 		keeper.GrantPermissions(store, 1, addrNone, allPerms)
 		keeper.GrantPermissions(store, 1, addrOne, allPerms)
@@ -4164,7 +4164,7 @@ func (s *TestSuite) TestKeeper_GetAccessGrants() {
 
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		expected []exchange.AccessGrant
 	}{
@@ -4205,7 +4205,7 @@ func (s *TestSuite) TestKeeper_GetAccessGrants() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual []exchange.AccessGrant
@@ -4227,7 +4227,7 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 
 	tests := []struct {
 		name      string
-		setup     func(s *TestSuite)
+		setup     func()
 		msg       *exchange.MsgMarketManagePermissionsRequest
 		expErr    string
 		expPanic  string
@@ -4264,7 +4264,7 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 		},
 		{
 			name: "revoke-all addr without any perms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 1, twoAcc, exchange.AllPermissions())
 			},
@@ -4277,7 +4277,7 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 		},
 		{
 			name: "to-revoke perm not granted",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 1, oneAcc, []exchange.Permission{exchange.Permission_update})
 				keeper.GrantPermissions(store, 1, twoAcc, exchange.AllPermissions())
@@ -4293,7 +4293,7 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 		},
 		{
 			name: "to-add perm already granted",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 2, oneAcc, exchange.AllPermissions())
 				keeper.GrantPermissions(store, 2, twoAcc, []exchange.Permission{exchange.Permission_update})
@@ -4309,7 +4309,7 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 		},
 		{
 			name: "multiple errors",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 3, sdk.AccAddress("bbbbbbbbbbbbbbbbbbbbb"), []exchange.Permission{
 					exchange.Permission_attributes})
@@ -4373,7 +4373,7 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 		},
 		{
 			name: "just a revoke all",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.GrantPermissions(s.getStore(), 5, oneAcc, []exchange.Permission{3})
 				keeper.GrantPermissions(s.getStore(), 5, twoAcc, []exchange.Permission{4, 2})
 				keeper.GrantPermissions(s.getStore(), 6, oneAcc, []exchange.Permission{3})
@@ -4392,7 +4392,7 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 		},
 		{
 			name: "just a to-revoke",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.GrantPermissions(s.getStore(), 5, oneAcc, []exchange.Permission{3})
 				keeper.GrantPermissions(s.getStore(), 5, twoAcc, []exchange.Permission{4, 2})
 				keeper.GrantPermissions(s.getStore(), 6, oneAcc, []exchange.Permission{3})
@@ -4414,7 +4414,7 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 		},
 		{
 			name: "just a to-grant",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.GrantPermissions(s.getStore(), 5, oneAcc, []exchange.Permission{3})
 				keeper.GrantPermissions(s.getStore(), 5, twoAcc, []exchange.Permission{4, 2})
 				keeper.GrantPermissions(s.getStore(), 6, oneAcc, []exchange.Permission{3})
@@ -4434,7 +4434,7 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 		},
 		{
 			name: "revoke all grant one",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 1, oneAcc, exchange.AllPermissions())
 				keeper.GrantPermissions(store, 2, oneAcc, exchange.AllPermissions())
@@ -4450,7 +4450,7 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 		},
 		{
 			name: "revoke one grant different",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				perms := []exchange.Permission{1, 4, 6}
 				keeper.GrantPermissions(store, 1, oneAcc, perms)
@@ -4472,7 +4472,7 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 			// revoke one from addr with all
 			// grant two to new addr
 			// revoke one from addr with two, replace with another
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.GrantPermissions(store, 33, sdk.AccAddress("aaaaaaaaaaaaaaaaaaaa"), []exchange.Permission{2, 6})
 				keeper.GrantPermissions(store, 33, sdk.AccAddress("bbbbbbbbbbbbbbbbbbbb"), []exchange.Permission{1})
@@ -4507,7 +4507,7 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			expEvents := sdk.Events{}
@@ -4548,7 +4548,7 @@ func (s *TestSuite) TestKeeper_GetReqAttrsAsk() {
 	setter := keeper.SetReqAttrsAsk
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		expected []string
 	}{
@@ -4560,7 +4560,7 @@ func (s *TestSuite) TestKeeper_GetReqAttrsAsk() {
 		},
 		{
 			name: "market without any",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
 				setter(store, 3, []string{"yy.zz", "*.xx.yy.zz", "banana"})
@@ -4570,7 +4570,7 @@ func (s *TestSuite) TestKeeper_GetReqAttrsAsk() {
 		},
 		{
 			name: "market with one",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
 				setter(store, 2, []string{"raspberry"})
@@ -4581,7 +4581,7 @@ func (s *TestSuite) TestKeeper_GetReqAttrsAsk() {
 		},
 		{
 			name: "market with two",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
 				setter(store, 2, []string{"raspberry"})
@@ -4593,7 +4593,7 @@ func (s *TestSuite) TestKeeper_GetReqAttrsAsk() {
 		},
 		{
 			name: "market with three",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 2, []string{"raspberry"})
 				setter(store, 33, []string{"knee", "elbow"})
@@ -4608,7 +4608,7 @@ func (s *TestSuite) TestKeeper_GetReqAttrsAsk() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual []string
@@ -4625,7 +4625,7 @@ func (s *TestSuite) TestKeeper_GetReqAttrsBid() {
 	setter := keeper.SetReqAttrsBid
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		expected []string
 	}{
@@ -4637,7 +4637,7 @@ func (s *TestSuite) TestKeeper_GetReqAttrsBid() {
 		},
 		{
 			name: "market without any",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
 				setter(store, 3, []string{"yy.zz", "*.xx.yy.zz", "banana"})
@@ -4647,7 +4647,7 @@ func (s *TestSuite) TestKeeper_GetReqAttrsBid() {
 		},
 		{
 			name: "market with one",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
 				setter(store, 2, []string{"raspberry"})
@@ -4658,7 +4658,7 @@ func (s *TestSuite) TestKeeper_GetReqAttrsBid() {
 		},
 		{
 			name: "market with two",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
 				setter(store, 2, []string{"raspberry"})
@@ -4670,7 +4670,7 @@ func (s *TestSuite) TestKeeper_GetReqAttrsBid() {
 		},
 		{
 			name: "market with three",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 2, []string{"raspberry"})
 				setter(store, 33, []string{"knee", "elbow"})
@@ -4685,7 +4685,7 @@ func (s *TestSuite) TestKeeper_GetReqAttrsBid() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var actual []string
@@ -4706,7 +4706,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 
 	tests := []struct {
 		name           string
-		setup          func(s *TestSuite)
+		setup          func()
 		attrKeeper     *MockAttributeKeeper
 		marketID       uint32
 		addr           sdk.AccAddress
@@ -4721,7 +4721,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 		},
 		{
 			name: "no req attrs, addr without any attributes",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 7, []string{"bb.aa"})
 				setter(store, 9, []string{"yy.zz", "*.lm.no"})
@@ -4736,7 +4736,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 		},
 		{
 			name: "no req attrs, addr with some attributes",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 7, []string{"bb.aa"})
 				setter(store, 9, []string{"yy.zz", "*.lm.no"})
@@ -4751,7 +4751,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 		},
 		{
 			name: "error getting attributes",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 4, []string{"bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -4763,7 +4763,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 		},
 		{
 			name: "one req attr, acc has",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 88, []string{"bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -4775,7 +4775,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 		},
 		{
 			name: "one req attr, acc does not have",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 88, []string{"bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -4787,7 +4787,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 		},
 		{
 			name: "one req attr with wildcard, acc has",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 42, []string{"*.lm.no"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -4799,7 +4799,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 		},
 		{
 			name: "one req attr with wildcard, acc has two that match",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 42, []string{"*.lm.no"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -4811,7 +4811,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 		},
 		{
 			name: "one req attr with wildcard, acc does not have",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 42, []string{"*.lm.no"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -4823,7 +4823,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 		},
 		{
 			name: "two req attr, acc has neither",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -4837,7 +4837,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 		},
 		{
 			name: "two req attr, acc has just first",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -4851,7 +4851,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 		},
 		{
 			name: "two req attr, acc has just second",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -4865,7 +4865,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 		},
 		{
 			name: "two req attr, acc has both, same order",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -4879,7 +4879,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 		},
 		{
 			name: "two req attr, acc has both, opposite order",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -4897,7 +4897,7 @@ func (s *TestSuite) TestKeeper_CanCreateAsk() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var expCalls AttributeCalls
@@ -4929,7 +4929,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 
 	tests := []struct {
 		name           string
-		setup          func(s *TestSuite)
+		setup          func()
 		attrKeeper     *MockAttributeKeeper
 		marketID       uint32
 		addr           sdk.AccAddress
@@ -4944,7 +4944,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 		},
 		{
 			name: "no req attrs, addr without any attributes",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 7, []string{"bb.aa"})
 				setter(store, 9, []string{"yy.zz", "*.lm.no"})
@@ -4959,7 +4959,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 		},
 		{
 			name: "no req attrs, addr with some attributes",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				setter(store, 7, []string{"bb.aa"})
 				setter(store, 9, []string{"yy.zz", "*.lm.no"})
@@ -4974,7 +4974,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 		},
 		{
 			name: "error getting attributes",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 4, []string{"bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -4986,7 +4986,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 		},
 		{
 			name: "one req attr, acc has",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 88, []string{"bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -4998,7 +4998,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 		},
 		{
 			name: "one req attr, acc does not have",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 88, []string{"bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -5010,7 +5010,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 		},
 		{
 			name: "one req attr with wildcard, acc has",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 42, []string{"*.lm.no"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -5022,7 +5022,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 		},
 		{
 			name: "one req attr with wildcard, acc has two that match",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 42, []string{"*.lm.no"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -5034,7 +5034,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 		},
 		{
 			name: "one req attr with wildcard, acc does not have",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 42, []string{"*.lm.no"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -5046,7 +5046,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 		},
 		{
 			name: "two req attr, acc has neither",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -5060,7 +5060,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 		},
 		{
 			name: "two req attr, acc has just first",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -5074,7 +5074,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 		},
 		{
 			name: "two req attr, acc has just second",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -5088,7 +5088,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 		},
 		{
 			name: "two req attr, acc has both, same order",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -5102,7 +5102,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 		},
 		{
 			name: "two req attr, acc has both, opposite order",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
 			},
 			attrKeeper: NewMockAttributeKeeper().
@@ -5120,7 +5120,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var expCalls AttributeCalls
@@ -5147,7 +5147,7 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		msg      *exchange.MsgMarketManageReqAttrsRequest
 		expAsk   []string
 		expBid   []string
@@ -5198,7 +5198,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "add create-ask that is already required",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetReqAttrsAsk(s.getStore(), 7, []string{"already.req"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
@@ -5210,7 +5210,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "add create-ask that is already required",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetReqAttrsBid(s.getStore(), 4, []string{"already.req"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
@@ -5222,7 +5222,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "multiple errors",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 3, []string{"one.ask", "two.ask", "three.ask", "four.ask"})
 				keeper.SetReqAttrsBid(store, 3, []string{"one.bid", "two.bid", "three.bid", "four.bid"})
@@ -5250,7 +5250,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		// just create-ask manipulation.
 		{
 			name: "remove one create-ask from one",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
@@ -5265,7 +5265,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "remove one create-ask from two",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas", "also.ask.okay"})
 				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
@@ -5280,7 +5280,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "remove one create-ask with wildcard",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 9, []string{
 					"ask.can.create.bananas", "one.ask.can.create.bananas",
@@ -5298,7 +5298,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "remove last two create-ask",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 55, []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 55, []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"})
@@ -5313,7 +5313,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "add one create-ask to empty",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetReqAttrsBid(s.getStore(), 1, []string{"bid.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
@@ -5326,7 +5326,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "add one create-ask to existing",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 1, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 1, []string{"bid.can.create.bananas"})
@@ -5341,7 +5341,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "remove one, add diff create-ask",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 4, []string{"four.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 4, []string{"four.bid.can.create.bananas"})
@@ -5363,7 +5363,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		// just create-bid manipulation.
 		{
 			name: "remove one create-bid from one",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
@@ -5378,7 +5378,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "remove one create-bid from two",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas", "also.bid.okay"})
@@ -5393,7 +5393,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "remove one create-bid with wildcard",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 9, []string{
@@ -5411,7 +5411,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "remove last two create-bid",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 55, []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 55, []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"})
@@ -5426,7 +5426,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "add one create-bid to empty",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetReqAttrsAsk(s.getStore(), 1, []string{"ask.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
@@ -5439,7 +5439,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "add one create-bid to existing",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 1, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 1, []string{"bid.can.create.bananas"})
@@ -5454,7 +5454,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		},
 		{
 			name: "remove one, add diff create-bid",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 4, []string{"four.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 4, []string{"four.bid.can.create.bananas"})
@@ -5476,7 +5476,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		// manipulation of both.
 		{
 			name: "add and remove two of each",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 2, []string{"one.ask", "two.ask", "three.ask"})
 				keeper.SetReqAttrsBid(store, 2, []string{"one.bid", "two.bid", "three.bid"})
@@ -5498,7 +5498,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			expEvents := sdk.Events{}
@@ -5898,7 +5898,7 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 
 	tests := []struct {
 		name           string
-		setup          func(s *TestSuite)
+		setup          func()
 		accKeeper      *MockAccountKeeper
 		newAccModifier AccountModifier
 		market         exchange.Market
@@ -5940,7 +5940,7 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 		},
 		{
 			name: "no market id, last one was 55",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetLastAutoMarketID(s.getStore(), 55)
 			},
 			newAccModifier: setAccNum(123),
@@ -5951,7 +5951,7 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 		},
 		{
 			name: "market id 78, last one was 22",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetLastAutoMarketID(s.getStore(), 22)
 			},
 			newAccModifier: setAccNum(5),
@@ -5962,7 +5962,7 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 		},
 		{
 			name: "market id 5, last one was 18",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.SetLastAutoMarketID(s.getStore(), 18)
 			},
 			newAccModifier: setAccNum(99),
@@ -6013,7 +6013,7 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			if tc.accKeeper == nil {
@@ -6084,7 +6084,7 @@ func (s *TestSuite) TestKeeper_GetMarket() {
 	tests := []struct {
 		name      string
 		accKeeper *MockAccountKeeper
-		setup     func(s *TestSuite) *exchange.Market // Should return the expected market.
+		setup     func() *exchange.Market // Should return the expected market.
 		marketID  uint32
 	}{
 		{
@@ -6103,7 +6103,7 @@ func (s *TestSuite) TestKeeper_GetMarket() {
 				MarketId:      55,
 				MarketDetails: exchange.MarketDetails{},
 			}),
-			setup: func(s *TestSuite) *exchange.Market {
+			setup: func() *exchange.Market {
 				market := exchange.Market{
 					MarketId:        55,
 					AcceptingOrders: true,
@@ -6115,7 +6115,7 @@ func (s *TestSuite) TestKeeper_GetMarket() {
 		},
 		{
 			name: "market without an account",
-			setup: func(s *TestSuite) *exchange.Market {
+			setup: func() *exchange.Market {
 				market := exchange.Market{
 					MarketId:        71,
 					AcceptingOrders: true,
@@ -6148,7 +6148,7 @@ func (s *TestSuite) TestKeeper_GetMarket() {
 					IconUri:     "Market 420 icon uri",
 				},
 			}),
-			setup: func(s *TestSuite) *exchange.Market {
+			setup: func() *exchange.Market {
 				otherMarket1 := exchange.Market{
 					MarketId:            419,
 					AllowUserSettlement: true,
@@ -6221,7 +6221,7 @@ func (s *TestSuite) TestKeeper_GetMarket() {
 			s.clearExchangeState()
 			var expMarket *exchange.Market
 			if tc.setup != nil {
-				expMarket = tc.setup(s)
+				expMarket = tc.setup()
 			}
 
 			var expCalls AccountCalls
@@ -6286,14 +6286,14 @@ func (s *TestSuite) TestKeeper_IterateMarkets() {
 			ReqAttrCreateBid:    []string{fmt.Sprintf("%d.bid.create", marketID)},
 		}
 	}
-	mustCreateMarket := func(s *TestSuite, kpr keeper.Keeper, market exchange.Market) {
+	mustCreateMarket := func(kpr keeper.Keeper, market exchange.Market) {
 		_, err := kpr.CreateMarket(s.ctx, market)
 		s.Require().NoError(err, "CreateMarket(%d)", market.MarketId)
 	}
 
 	tests := []struct {
 		name       string
-		setup      func(s *TestSuite) keeper.Keeper
+		setup      func() keeper.Keeper
 		cb         func(market *exchange.Market) bool
 		expMarkets []*exchange.Market
 	}{
@@ -6304,9 +6304,9 @@ func (s *TestSuite) TestKeeper_IterateMarkets() {
 		},
 		{
 			name: "just market 1",
-			setup: func(s *TestSuite) keeper.Keeper {
+			setup: func() keeper.Keeper {
 				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
-				mustCreateMarket(s, kpr, *standardMarket(1))
+				mustCreateMarket(kpr, *standardMarket(1))
 				return kpr
 			},
 			cb:         getAll,
@@ -6314,9 +6314,9 @@ func (s *TestSuite) TestKeeper_IterateMarkets() {
 		},
 		{
 			name: "just market 20",
-			setup: func(s *TestSuite) keeper.Keeper {
+			setup: func() keeper.Keeper {
 				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
-				mustCreateMarket(s, kpr, *standardMarket(20))
+				mustCreateMarket(kpr, *standardMarket(20))
 				return kpr
 			},
 			cb:         getAll,
@@ -6324,13 +6324,13 @@ func (s *TestSuite) TestKeeper_IterateMarkets() {
 		},
 		{
 			name: "markets 1 through 5: get all",
-			setup: func(s *TestSuite) keeper.Keeper {
+			setup: func() keeper.Keeper {
 				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
-				mustCreateMarket(s, kpr, *standardMarket(1))
-				mustCreateMarket(s, kpr, *standardMarket(4))
-				mustCreateMarket(s, kpr, *standardMarket(2))
-				mustCreateMarket(s, kpr, *standardMarket(5))
-				mustCreateMarket(s, kpr, *standardMarket(3))
+				mustCreateMarket(kpr, *standardMarket(1))
+				mustCreateMarket(kpr, *standardMarket(4))
+				mustCreateMarket(kpr, *standardMarket(2))
+				mustCreateMarket(kpr, *standardMarket(5))
+				mustCreateMarket(kpr, *standardMarket(3))
 				return kpr
 			},
 			cb: getAll,
@@ -6344,13 +6344,13 @@ func (s *TestSuite) TestKeeper_IterateMarkets() {
 		},
 		{
 			name: "markets 1 through 5: get first",
-			setup: func(s *TestSuite) keeper.Keeper {
+			setup: func() keeper.Keeper {
 				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
-				mustCreateMarket(s, kpr, *standardMarket(1))
-				mustCreateMarket(s, kpr, *standardMarket(4))
-				mustCreateMarket(s, kpr, *standardMarket(2))
-				mustCreateMarket(s, kpr, *standardMarket(5))
-				mustCreateMarket(s, kpr, *standardMarket(3))
+				mustCreateMarket(kpr, *standardMarket(1))
+				mustCreateMarket(kpr, *standardMarket(4))
+				mustCreateMarket(kpr, *standardMarket(2))
+				mustCreateMarket(kpr, *standardMarket(5))
+				mustCreateMarket(kpr, *standardMarket(3))
 				return kpr
 			},
 			cb:         stopAfter(1),
@@ -6358,13 +6358,13 @@ func (s *TestSuite) TestKeeper_IterateMarkets() {
 		},
 		{
 			name: "markets 1 through 5: get three",
-			setup: func(s *TestSuite) keeper.Keeper {
+			setup: func() keeper.Keeper {
 				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
-				mustCreateMarket(s, kpr, *standardMarket(1))
-				mustCreateMarket(s, kpr, *standardMarket(4))
-				mustCreateMarket(s, kpr, *standardMarket(2))
-				mustCreateMarket(s, kpr, *standardMarket(5))
-				mustCreateMarket(s, kpr, *standardMarket(3))
+				mustCreateMarket(kpr, *standardMarket(1))
+				mustCreateMarket(kpr, *standardMarket(4))
+				mustCreateMarket(kpr, *standardMarket(2))
+				mustCreateMarket(kpr, *standardMarket(5))
+				mustCreateMarket(kpr, *standardMarket(3))
 				return kpr
 			},
 			cb: stopAfter(3),
@@ -6376,13 +6376,13 @@ func (s *TestSuite) TestKeeper_IterateMarkets() {
 		},
 		{
 			name: "five randomly numbered markets: get all",
-			setup: func(s *TestSuite) keeper.Keeper {
+			setup: func() keeper.Keeper {
 				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
-				mustCreateMarket(s, kpr, *standardMarket(63))
-				mustCreateMarket(s, kpr, *standardMarket(23))
-				mustCreateMarket(s, kpr, *standardMarket(36))
-				mustCreateMarket(s, kpr, *standardMarket(6))
-				mustCreateMarket(s, kpr, *standardMarket(14))
+				mustCreateMarket(kpr, *standardMarket(63))
+				mustCreateMarket(kpr, *standardMarket(23))
+				mustCreateMarket(kpr, *standardMarket(36))
+				mustCreateMarket(kpr, *standardMarket(6))
+				mustCreateMarket(kpr, *standardMarket(14))
 				return kpr
 			},
 			cb: getAll,
@@ -6396,13 +6396,13 @@ func (s *TestSuite) TestKeeper_IterateMarkets() {
 		},
 		{
 			name: "five randomly numbered markets: get first",
-			setup: func(s *TestSuite) keeper.Keeper {
+			setup: func() keeper.Keeper {
 				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
-				mustCreateMarket(s, kpr, *standardMarket(63))
-				mustCreateMarket(s, kpr, *standardMarket(23))
-				mustCreateMarket(s, kpr, *standardMarket(36))
-				mustCreateMarket(s, kpr, *standardMarket(6))
-				mustCreateMarket(s, kpr, *standardMarket(14))
+				mustCreateMarket(kpr, *standardMarket(63))
+				mustCreateMarket(kpr, *standardMarket(23))
+				mustCreateMarket(kpr, *standardMarket(36))
+				mustCreateMarket(kpr, *standardMarket(6))
+				mustCreateMarket(kpr, *standardMarket(14))
 				return kpr
 			},
 			cb:         stopAfter(1),
@@ -6410,13 +6410,13 @@ func (s *TestSuite) TestKeeper_IterateMarkets() {
 		},
 		{
 			name: "five randomly numbered markets: get three",
-			setup: func(s *TestSuite) keeper.Keeper {
+			setup: func() keeper.Keeper {
 				kpr := s.k.WithAccountKeeper(NewMockAccountKeeper())
-				mustCreateMarket(s, kpr, *standardMarket(63))
-				mustCreateMarket(s, kpr, *standardMarket(23))
-				mustCreateMarket(s, kpr, *standardMarket(36))
-				mustCreateMarket(s, kpr, *standardMarket(6))
-				mustCreateMarket(s, kpr, *standardMarket(14))
+				mustCreateMarket(kpr, *standardMarket(63))
+				mustCreateMarket(kpr, *standardMarket(23))
+				mustCreateMarket(kpr, *standardMarket(36))
+				mustCreateMarket(kpr, *standardMarket(6))
+				mustCreateMarket(kpr, *standardMarket(14))
 				return kpr
 			},
 			cb: stopAfter(3),
@@ -6433,7 +6433,7 @@ func (s *TestSuite) TestKeeper_IterateMarkets() {
 			s.clearExchangeState()
 			kpr := s.k
 			if tc.setup != nil {
-				kpr = tc.setup(s)
+				kpr = tc.setup()
 			}
 
 			markets = nil
@@ -6621,7 +6621,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 
 	tests := []struct {
 		name     string
-		setup    func(s *TestSuite)
+		setup    func()
 		marketID uint32
 		expErr   string
 	}{
@@ -6632,7 +6632,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		},
 		{
 			name: "seller price denom not in buyer",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.StoreMarket(s.getStore(), exchange.Market{
 					MarketId: 1,
 					FeeSellerSettlementRatios: []exchange.FeeRatio{
@@ -6647,7 +6647,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		},
 		{
 			name: "buyer price denom not in seller",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.StoreMarket(s.getStore(), exchange.Market{
 					MarketId:                  1,
 					FeeSellerSettlementRatios: []exchange.FeeRatio{{Price: s.coin("500pear"), Fee: s.coin("3pear")}},
@@ -6662,7 +6662,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		},
 		{
 			name: "multiple errors",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.StoreMarket(s.getStore(), exchange.Market{
 					MarketId: 1,
 					FeeSellerSettlementRatios: []exchange.FeeRatio{
@@ -6685,7 +6685,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		},
 		{
 			name: "no ratios",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.StoreMarket(s.getStore(), exchange.Market{MarketId: 2})
 			},
 			marketID: 2,
@@ -6693,7 +6693,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		},
 		{
 			name: "no buyer ratios",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.StoreMarket(s.getStore(), exchange.Market{
 					MarketId:                  2,
 					FeeSellerSettlementRatios: []exchange.FeeRatio{{Price: s.coin("500pear"), Fee: s.coin("3pear")}},
@@ -6704,7 +6704,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		},
 		{
 			name: "no seller ratios",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.StoreMarket(s.getStore(), exchange.Market{
 					MarketId:                 2,
 					FeeBuyerSettlementRatios: []exchange.FeeRatio{{Price: s.coin("500pear"), Fee: s.coin("3pear")}},
@@ -6715,7 +6715,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		},
 		{
 			name: "one ratio each, same price denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.StoreMarket(s.getStore(), exchange.Market{
 					MarketId:                  2,
 					FeeSellerSettlementRatios: []exchange.FeeRatio{{Price: s.coin("500pear"), Fee: s.coin("3pear")}},
@@ -6727,7 +6727,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		},
 		{
 			name: "two seller denoms, four buyer ratios with those denoms",
-			setup: func(s *TestSuite) {
+			setup: func() {
 				keeper.StoreMarket(s.getStore(), exchange.Market{
 					MarketId: 55,
 					FeeSellerSettlementRatios: []exchange.FeeRatio{
@@ -6751,7 +6751,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
 			if tc.setup != nil {
-				tc.setup(s)
+				tc.setup()
 			}
 
 			var err error
