@@ -2276,8 +2276,704 @@ func (s *TestSuite) TestKeeper_IterateOrders() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_IterateMarketOrders()
+func (s *TestSuite) TestKeeper_IterateMarketOrders() {
+	type cbArgs struct {
+		orderID       uint64
+		orderTypeByte byte
+	}
+	newCBArgs := func(orderID uint64, orderTypeByte byte) cbArgs {
+		return cbArgs{orderID: orderID, orderTypeByte: orderTypeByte}
+	}
+	var seen []cbArgs
+	getAll := func(orderID uint64, orderTypeByte byte) bool {
+		seen = append(seen, newCBArgs(orderID, orderTypeByte))
+		return false
+	}
+	stopAfter := func(count int) func(orderID uint64, orderTypeByte byte) bool {
+		return func(orderID uint64, orderTypeByte byte) bool {
+			seen = append(seen, newCBArgs(orderID, orderTypeByte))
+			return len(seen) >= count
+		}
+	}
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_IterateAddressOrders()
+	tests := []struct {
+		name     string
+		setup    func()
+		marketID uint32
+		cb       func(orderID uint64, orderTypeByte byte) bool
+		expSeen  []cbArgs
+	}{
+		{
+			name:     "empty state",
+			marketID: 3,
+			expSeen:  nil,
+		},
+		{
+			name: "no orders in market",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyMarketToOrder(1, 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(1, 2), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(1, 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(3, 5), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(3, 6), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(3, 7), []byte{keeper.OrderKeyTypeAsk})
+			},
+			marketID: 2,
+			expSeen:  nil,
+		},
+		{
+			name: "one entry: ask",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyMarketToOrder(1, 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(1, 2), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(1, 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(2, 4), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(3, 5), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(3, 6), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(3, 7), []byte{keeper.OrderKeyTypeAsk})
+			},
+			marketID: 2,
+			expSeen:  []cbArgs{newCBArgs(4, keeper.OrderKeyTypeAsk)},
+		},
+		{
+			name: "one entry: bid",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyMarketToOrder(1, 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(1, 2), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(1, 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(2, 4), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(3, 5), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(3, 6), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(3, 7), []byte{keeper.OrderKeyTypeAsk})
+			},
+			marketID: 2,
+			expSeen:  []cbArgs{newCBArgs(4, keeper.OrderKeyTypeBid)},
+		},
+		{
+			name: "one entry no value",
+			setup: func() {
+				s.getStore().Set(keeper.MakeIndexKeyMarketToOrder(2, 4), []byte{})
+			},
+			marketID: 2,
+			expSeen:  nil,
+		},
+		{
+			name: "one entry bad key",
+			setup: func() {
+				s.getStore().Set(keeper.MakeIndexKeyMarketToOrder(2, 4)[1:], []byte{keeper.OrderKeyTypeAsk})
+			},
+			marketID: 2,
+			expSeen:  nil,
+		},
+		{
+			name: "five entries, 1 through 5: get all",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 1), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 2), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 3), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 4), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 5), []byte{keeper.OrderKeyTypeBid})
+			},
+			marketID: 4,
+			expSeen: []cbArgs{
+				newCBArgs(1, keeper.OrderKeyTypeBid),
+				newCBArgs(2, keeper.OrderKeyTypeBid),
+				newCBArgs(3, keeper.OrderKeyTypeBid),
+				newCBArgs(4, keeper.OrderKeyTypeAsk),
+				newCBArgs(5, keeper.OrderKeyTypeBid),
+			},
+		},
+		{
+			name: "five entries, 1 through 5: get one",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 1), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 2), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 4), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 5), []byte{keeper.OrderKeyTypeAsk})
+			},
+			marketID: 4,
+			cb:       stopAfter(1),
+			expSeen:  []cbArgs{newCBArgs(1, keeper.OrderKeyTypeBid)},
+		},
+		{
+			name: "five entries, 1 through 5: get three",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 2), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 4), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 5), []byte{keeper.OrderKeyTypeBid})
+			},
+			marketID: 4,
+			cb:       stopAfter(3),
+			expSeen: []cbArgs{
+				newCBArgs(1, keeper.OrderKeyTypeAsk),
+				newCBArgs(2, keeper.OrderKeyTypeBid),
+				newCBArgs(3, keeper.OrderKeyTypeAsk),
+			},
+		},
+		{
+			name: "five entries, random: get all",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 44), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 96), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 75), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 3), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 56), []byte{keeper.OrderKeyTypeAsk})
+			},
+			marketID: 7,
+			expSeen: []cbArgs{
+				newCBArgs(3, keeper.OrderKeyTypeBid),
+				newCBArgs(44, keeper.OrderKeyTypeAsk),
+				newCBArgs(56, keeper.OrderKeyTypeAsk),
+				newCBArgs(75, keeper.OrderKeyTypeBid),
+				newCBArgs(96, keeper.OrderKeyTypeBid),
+			},
+		},
+		{
+			name: "five entries, random: get one",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 44), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 96), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 75), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 56), []byte{keeper.OrderKeyTypeAsk})
+			},
+			marketID: 7,
+			cb:       stopAfter(1),
+			expSeen:  []cbArgs{newCBArgs(3, keeper.OrderKeyTypeAsk)},
+		},
+		{
+			name: "five entries, random: get three",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 44), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 96), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 75), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 3), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 56), []byte{keeper.OrderKeyTypeBid})
+			},
+			marketID: 7,
+			cb:       stopAfter(3),
+			expSeen: []cbArgs{
+				newCBArgs(3, keeper.OrderKeyTypeBid),
+				newCBArgs(44, keeper.OrderKeyTypeBid),
+				newCBArgs(56, keeper.OrderKeyTypeBid),
+			},
+		},
+		{
+			name: "five entries: two are bad",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyMarketToOrder(27, 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(27, 2), []byte{})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(27, 3)[1:], []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(27, 4), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyMarketToOrder(27, 5), []byte{keeper.OrderKeyTypeAsk})
+			},
+			marketID: 27,
+			expSeen: []cbArgs{
+				newCBArgs(1, keeper.OrderKeyTypeAsk),
+				newCBArgs(4, keeper.OrderKeyTypeBid),
+				newCBArgs(5, keeper.OrderKeyTypeAsk),
+			},
+		},
+	}
 
-// TODO[1658]: func (s *TestSuite) TestKeeper_IterateAssetOrders()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			if tc.cb == nil {
+				tc.cb = getAll
+			}
+
+			seen = nil
+			testFunc := func() {
+				s.k.IterateMarketOrders(s.ctx, tc.marketID, tc.cb)
+			}
+			s.Require().NotPanics(testFunc, "IterateMarketOrders(%d)", tc.marketID)
+			s.Assert().Equal(tc.expSeen, seen, "args provided to callback")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_IterateAddressOrders() {
+	type cbArgs struct {
+		orderID       uint64
+		orderTypeByte byte
+	}
+	newCBArgs := func(orderID uint64, orderTypeByte byte) cbArgs {
+		return cbArgs{orderID: orderID, orderTypeByte: orderTypeByte}
+	}
+	var seen []cbArgs
+	getAll := func(orderID uint64, orderTypeByte byte) bool {
+		seen = append(seen, newCBArgs(orderID, orderTypeByte))
+		return false
+	}
+	stopAfter := func(count int) func(orderID uint64, orderTypeByte byte) bool {
+		return func(orderID uint64, orderTypeByte byte) bool {
+			seen = append(seen, newCBArgs(orderID, orderTypeByte))
+			return len(seen) >= count
+		}
+	}
+
+	tests := []struct {
+		name    string
+		setup   func()
+		addr    sdk.AccAddress
+		cb      func(orderID uint64, orderTypeByte byte) bool
+		expSeen []cbArgs
+	}{
+		{
+			name:    "empty state",
+			addr:    s.addr1,
+			expSeen: nil,
+		},
+		{
+			name: "no orders for addr",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr1, 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr1, 2), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr1, 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 5), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 6), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 7), []byte{keeper.OrderKeyTypeAsk})
+			},
+			addr:    s.addr2,
+			expSeen: nil,
+		},
+		{
+			name: "one entry: ask",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr1, 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr1, 2), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr1, 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr2, 4), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 5), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 6), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 7), []byte{keeper.OrderKeyTypeAsk})
+			},
+			addr:    s.addr2,
+			expSeen: []cbArgs{newCBArgs(4, keeper.OrderKeyTypeAsk)},
+		},
+		{
+			name: "one entry: bid",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr1, 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr1, 2), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr1, 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr2, 4), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 5), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 6), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 7), []byte{keeper.OrderKeyTypeAsk})
+			},
+			addr:    s.addr2,
+			expSeen: []cbArgs{newCBArgs(4, keeper.OrderKeyTypeBid)},
+		},
+		{
+			name: "one entry no value",
+			setup: func() {
+				s.getStore().Set(keeper.MakeIndexKeyAddressToOrder(s.addr1, 4), []byte{})
+			},
+			addr:    s.addr1,
+			expSeen: nil,
+		},
+		{
+			name: "one entry bad key",
+			setup: func() {
+				s.getStore().Set(keeper.MakeIndexKeyAddressToOrder(s.addr1, 4)[1:], []byte{keeper.OrderKeyTypeAsk})
+			},
+			addr:    s.addr1,
+			expSeen: nil,
+		},
+		{
+			name: "five entries, 1 through 5: get all",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr4, 1), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr4, 2), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr4, 3), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr4, 4), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr4, 5), []byte{keeper.OrderKeyTypeBid})
+			},
+			addr: s.addr4,
+			expSeen: []cbArgs{
+				newCBArgs(1, keeper.OrderKeyTypeBid),
+				newCBArgs(2, keeper.OrderKeyTypeBid),
+				newCBArgs(3, keeper.OrderKeyTypeBid),
+				newCBArgs(4, keeper.OrderKeyTypeAsk),
+				newCBArgs(5, keeper.OrderKeyTypeBid),
+			},
+		},
+		{
+			name: "five entries, 1 through 5: get one",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr4, 1), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr4, 2), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr4, 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr4, 4), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr4, 5), []byte{keeper.OrderKeyTypeAsk})
+			},
+			addr:    s.addr4,
+			cb:      stopAfter(1),
+			expSeen: []cbArgs{newCBArgs(1, keeper.OrderKeyTypeBid)},
+		},
+		{
+			name: "five entries, 1 through 5: get three",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr2, 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr2, 2), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr2, 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr2, 4), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr2, 5), []byte{keeper.OrderKeyTypeBid})
+			},
+			addr: s.addr2,
+			cb:   stopAfter(3),
+			expSeen: []cbArgs{
+				newCBArgs(1, keeper.OrderKeyTypeAsk),
+				newCBArgs(2, keeper.OrderKeyTypeBid),
+				newCBArgs(3, keeper.OrderKeyTypeAsk),
+			},
+		},
+		{
+			name: "five entries, random: get all",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr5, 44), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr5, 96), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr5, 75), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr5, 3), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr5, 56), []byte{keeper.OrderKeyTypeAsk})
+			},
+			addr: s.addr5,
+			expSeen: []cbArgs{
+				newCBArgs(3, keeper.OrderKeyTypeBid),
+				newCBArgs(44, keeper.OrderKeyTypeAsk),
+				newCBArgs(56, keeper.OrderKeyTypeAsk),
+				newCBArgs(75, keeper.OrderKeyTypeBid),
+				newCBArgs(96, keeper.OrderKeyTypeBid),
+			},
+		},
+		{
+			name: "five entries, random: get one",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 44), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 96), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 75), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 56), []byte{keeper.OrderKeyTypeAsk})
+			},
+			addr:    s.addr3,
+			cb:      stopAfter(1),
+			expSeen: []cbArgs{newCBArgs(3, keeper.OrderKeyTypeAsk)},
+		},
+		{
+			name: "five entries, random: get three",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 44), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 96), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 75), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 3), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 56), []byte{keeper.OrderKeyTypeBid})
+			},
+			addr: s.addr3,
+			cb:   stopAfter(3),
+			expSeen: []cbArgs{
+				newCBArgs(3, keeper.OrderKeyTypeBid),
+				newCBArgs(44, keeper.OrderKeyTypeBid),
+				newCBArgs(56, keeper.OrderKeyTypeBid),
+			},
+		},
+		{
+			name: "five entries: two are bad",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 2), []byte{})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 3)[1:], []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 4), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 5), []byte{keeper.OrderKeyTypeAsk})
+			},
+			addr: s.addr3,
+			expSeen: []cbArgs{
+				newCBArgs(1, keeper.OrderKeyTypeAsk),
+				newCBArgs(4, keeper.OrderKeyTypeBid),
+				newCBArgs(5, keeper.OrderKeyTypeAsk),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			if tc.cb == nil {
+				tc.cb = getAll
+			}
+
+			seen = nil
+			testFunc := func() {
+				s.k.IterateAddressOrders(s.ctx, tc.addr, tc.cb)
+			}
+			s.Require().NotPanics(testFunc, "IterateAddressOrders(%s)", s.getAddrName(tc.addr))
+			s.Assert().Equal(tc.expSeen, seen, "args provided to callback")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_IterateAssetOrders() {
+	type cbArgs struct {
+		orderID       uint64
+		orderTypeByte byte
+	}
+	newCBArgs := func(orderID uint64, orderTypeByte byte) cbArgs {
+		return cbArgs{orderID: orderID, orderTypeByte: orderTypeByte}
+	}
+	var seen []cbArgs
+	getAll := func(orderID uint64, orderTypeByte byte) bool {
+		seen = append(seen, newCBArgs(orderID, orderTypeByte))
+		return false
+	}
+	stopAfter := func(count int) func(orderID uint64, orderTypeByte byte) bool {
+		return func(orderID uint64, orderTypeByte byte) bool {
+			seen = append(seen, newCBArgs(orderID, orderTypeByte))
+			return len(seen) >= count
+		}
+	}
+
+	tests := []struct {
+		name       string
+		setup      func()
+		assetDenom string
+		cb         func(orderID uint64, orderTypeByte byte) bool
+		expSeen    []cbArgs
+	}{
+		{
+			name:       "empty state",
+			assetDenom: "apple",
+			expSeen:    nil,
+		},
+		{
+			name: "no orders for addr",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAssetToOrder("apple", 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("apple", 2), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("apple", 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("cactus", 5), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("cactus", 6), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("cactus", 7), []byte{keeper.OrderKeyTypeAsk})
+			},
+			assetDenom: "banana",
+			expSeen:    nil,
+		},
+		{
+			name: "one entry: ask",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAssetToOrder("apple", 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("apple", 2), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("apple", 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("banana", 4), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("cactus", 5), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("cactus", 6), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("cactus", 7), []byte{keeper.OrderKeyTypeAsk})
+			},
+			assetDenom: "banana",
+			expSeen:    []cbArgs{newCBArgs(4, keeper.OrderKeyTypeAsk)},
+		},
+		{
+			name: "one entry: bid",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAssetToOrder("apple", 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("apple", 2), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("apple", 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("banana", 4), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("cactus", 5), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("cactus", 6), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("cactus", 7), []byte{keeper.OrderKeyTypeAsk})
+			},
+			assetDenom: "banana",
+			expSeen:    []cbArgs{newCBArgs(4, keeper.OrderKeyTypeBid)},
+		},
+		{
+			name: "one entry no value",
+			setup: func() {
+				s.getStore().Set(keeper.MakeIndexKeyAssetToOrder("banana", 4), []byte{})
+			},
+			assetDenom: "banana",
+			expSeen:    nil,
+		},
+		{
+			name: "one entry bad key",
+			setup: func() {
+				s.getStore().Set(keeper.MakeIndexKeyAssetToOrder("banana", 4)[1:], []byte{keeper.OrderKeyTypeAsk})
+			},
+			assetDenom: "banana",
+			expSeen:    nil,
+		},
+		{
+			name: "five entries, 1 through 5: get all",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 1), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 2), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 3), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 4), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 5), []byte{keeper.OrderKeyTypeBid})
+			},
+			assetDenom: "acorn",
+			expSeen: []cbArgs{
+				newCBArgs(1, keeper.OrderKeyTypeBid),
+				newCBArgs(2, keeper.OrderKeyTypeBid),
+				newCBArgs(3, keeper.OrderKeyTypeBid),
+				newCBArgs(4, keeper.OrderKeyTypeAsk),
+				newCBArgs(5, keeper.OrderKeyTypeBid),
+			},
+		},
+		{
+			name: "five entries, 1 through 5: get one",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 1), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 2), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 4), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 5), []byte{keeper.OrderKeyTypeAsk})
+			},
+			assetDenom: "acorn",
+			cb:         stopAfter(1),
+			expSeen:    []cbArgs{newCBArgs(1, keeper.OrderKeyTypeBid)},
+		},
+		{
+			name: "five entries, 1 through 5: get three",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 2), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 4), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 5), []byte{keeper.OrderKeyTypeBid})
+			},
+			assetDenom: "acorn",
+			cb:         stopAfter(3),
+			expSeen: []cbArgs{
+				newCBArgs(1, keeper.OrderKeyTypeAsk),
+				newCBArgs(2, keeper.OrderKeyTypeBid),
+				newCBArgs(3, keeper.OrderKeyTypeAsk),
+			},
+		},
+		{
+			name: "five entries, random: get all",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAssetToOrder("raspberry", 44), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("raspberry", 96), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("raspberry", 75), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("raspberry", 3), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("raspberry", 56), []byte{keeper.OrderKeyTypeAsk})
+			},
+			assetDenom: "raspberry",
+			expSeen: []cbArgs{
+				newCBArgs(3, keeper.OrderKeyTypeBid),
+				newCBArgs(44, keeper.OrderKeyTypeAsk),
+				newCBArgs(56, keeper.OrderKeyTypeAsk),
+				newCBArgs(75, keeper.OrderKeyTypeBid),
+				newCBArgs(96, keeper.OrderKeyTypeBid),
+			},
+		},
+		{
+			name: "five entries, random: get one",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAssetToOrder("raspberry", 44), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("raspberry", 96), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("raspberry", 75), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("raspberry", 3), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("raspberry", 56), []byte{keeper.OrderKeyTypeAsk})
+			},
+			assetDenom: "raspberry",
+			cb:         stopAfter(1),
+			expSeen:    []cbArgs{newCBArgs(3, keeper.OrderKeyTypeAsk)},
+		},
+		{
+			name: "five entries, random: get three",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 44), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 96), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 75), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 3), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 56), []byte{keeper.OrderKeyTypeBid})
+			},
+			assetDenom: "huckleberry",
+			cb:         stopAfter(3),
+			expSeen: []cbArgs{
+				newCBArgs(3, keeper.OrderKeyTypeBid),
+				newCBArgs(44, keeper.OrderKeyTypeBid),
+				newCBArgs(56, keeper.OrderKeyTypeBid),
+			},
+		},
+		{
+			name: "five entries: two are bad",
+			setup: func() {
+				store := s.getStore()
+				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 1), []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 2), []byte{})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 3)[1:], []byte{keeper.OrderKeyTypeAsk})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 4), []byte{keeper.OrderKeyTypeBid})
+				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 5), []byte{keeper.OrderKeyTypeAsk})
+			},
+			assetDenom: "huckleberry",
+			expSeen: []cbArgs{
+				newCBArgs(1, keeper.OrderKeyTypeAsk),
+				newCBArgs(4, keeper.OrderKeyTypeBid),
+				newCBArgs(5, keeper.OrderKeyTypeAsk),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			if tc.cb == nil {
+				tc.cb = getAll
+			}
+
+			seen = nil
+			testFunc := func() {
+				s.k.IterateAssetOrders(s.ctx, tc.assetDenom, tc.cb)
+			}
+			s.Require().NotPanics(testFunc, "IterateAssetOrders(%q)", tc.assetDenom)
+			s.Assert().Equal(tc.expSeen, seen, "args provided to callback")
+		})
+	}
+}
