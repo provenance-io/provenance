@@ -245,7 +245,7 @@ func (s *TestSuite) assertGetAllAttributesAddrCalls(mk *MockAttributeKeeper, exp
 		func(addr []byte) string {
 			return s.getAddrName(addr)
 		},
-		msg+" NewAccount calls", args...)
+		msg+" GetAllAttributesAddr calls", args...)
 }
 
 // assertAttributeKeeperCalls asserts that all the calls made to a mock account keeper match the provided expected calls.
