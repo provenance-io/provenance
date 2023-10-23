@@ -1,24 +1,30 @@
 package keeper_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type TestSuite struct {
@@ -51,10 +57,28 @@ type TestSuite struct {
 	feeCollector string
 
 	accKeeper *MockAccountKeeper
+
+	logBuffer bytes.Buffer
 }
 
 func (s *TestSuite) SetupTest() {
+	bufferedLoggerMaker := func() log.Logger {
+		lw := zerolog.ConsoleWriter{
+			Out:          &s.logBuffer,
+			NoColor:      true,
+			PartsExclude: []string{"time"}, // Without this, each line starts with "<nil> "
+		}
+		// Error log lines will start with "ERR ".
+		// Info log lines will start with "INF ".
+		// Debug log lines are omitted, but would start with "DBG ".
+		logger := zerolog.New(lw).Level(zerolog.InfoLevel)
+		return server.ZeroLogWrapper{Logger: logger}
+	}
+	// swap in the buffered logger maker so it's used in app.Setup, but then put it back (since that's a global thing).
+	defer app.SetLoggerMaker(app.SetLoggerMaker(bufferedLoggerMaker))
+
 	s.app = app.Setup(s.T())
+	s.logBuffer.Reset()
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.stdlibCtx = sdk.WrapSDKContext(s.ctx)
 	s.k = s.app.ExchangeKeeper
@@ -115,6 +139,18 @@ func copySlice[T any](vals []T, copier func(T) T) []T {
 		rv[i] = copier(v)
 	}
 	return rv
+}
+
+// noOpCopier is a passthrough "copier" function that just returns the exact same thing that was provided.
+func noOpCopier[T any](val T) T {
+	return val
+}
+
+// getLogOutput gets the log buffer contents. This (probably) also clears the log buffer.
+func (s *TestSuite) getLogOutput(msg string, args ...interface{}) string {
+	logOutput := s.logBuffer.String()
+	s.T().Logf(msg+" log output:\n%s", append(args, logOutput)...)
+	return logOutput
 }
 
 // coins creates an sdk.Coins from a string, requiring it to work.
@@ -208,6 +244,56 @@ func (s *TestSuite) ratiosString(ratios []exchange.FeeRatio) string {
 // joinErrs joins the provided error strings into a single one to match what errors.Join does.
 func (s *TestSuite) joinErrs(errs ...string) string {
 	return strings.Join(errs, "\n")
+}
+
+// copyCoin creates a copy of a coin (as best as possible).
+func (s *TestSuite) copyCoin(orig sdk.Coin) sdk.Coin {
+	return sdk.NewCoin(orig.Denom, orig.Amount.AddRaw(0))
+}
+
+// copyCoinP copies a coin that's a reference.
+func (s *TestSuite) copyCoinP(orig *sdk.Coin) *sdk.Coin {
+	if orig == nil {
+		return nil
+	}
+	rv := s.copyCoin(*orig)
+	return &rv
+}
+
+// copyCoins creates a copy of coins (as best as possible).
+func (s *TestSuite) copyCoins(orig []sdk.Coin) []sdk.Coin {
+	return copySlice(orig, s.copyCoin)
+}
+
+// copyratio creates a copy of a FeeRatio.
+func (s *TestSuite) copyratio(orig exchange.FeeRatio) exchange.FeeRatio {
+	return exchange.FeeRatio{
+		Price: s.copyCoin(orig.Price),
+		Fee:   s.copyCoin(orig.Fee),
+	}
+}
+
+// copyRatios creates a copy of a slice of FeeRatios.
+func (s *TestSuite) copyRatios(orig []exchange.FeeRatio) []exchange.FeeRatio {
+	return copySlice(orig, s.copyratio)
+}
+
+// copyAccessGrant creates a copy of an AccessGrant.
+func (s *TestSuite) copyAccessGrant(orig exchange.AccessGrant) exchange.AccessGrant {
+	return exchange.AccessGrant{
+		Address:     orig.Address,
+		Permissions: copySlice(orig.Permissions, noOpCopier[exchange.Permission]),
+	}
+}
+
+// copyStrings creates a copy of a slice of strings.
+func (s *TestSuite) copyStrings(orig []string) []string {
+	return copySlice(orig, noOpCopier[string])
+}
+
+// copyAccessGrants creates a copy of a slice of AccessGrants.
+func (s *TestSuite) copyAccessGrants(orig []exchange.AccessGrant) []exchange.AccessGrant {
+	return copySlice(orig, s.copyAccessGrant)
 }
 
 // getAddrName returns the name of the variable in this TestSuite holding the provided address.

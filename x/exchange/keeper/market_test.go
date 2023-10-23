@@ -10,6 +10,29 @@ import (
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 )
 
+func (s *TestSuite) copyMarket(orig exchange.Market) exchange.Market {
+	return exchange.Market{
+		MarketId: orig.MarketId,
+		MarketDetails: exchange.MarketDetails{
+			Name:        orig.MarketDetails.Name,
+			Description: orig.MarketDetails.Description,
+			WebsiteUrl:  orig.MarketDetails.WebsiteUrl,
+			IconUri:     orig.MarketDetails.IconUri,
+		},
+		FeeCreateAskFlat:          s.copyCoins(orig.FeeCreateAskFlat),
+		FeeCreateBidFlat:          s.copyCoins(orig.FeeCreateBidFlat),
+		FeeSellerSettlementFlat:   s.copyCoins(orig.FeeSellerSettlementFlat),
+		FeeSellerSettlementRatios: s.copyRatios(orig.FeeSellerSettlementRatios),
+		FeeBuyerSettlementFlat:    s.copyCoins(orig.FeeBuyerSettlementFlat),
+		FeeBuyerSettlementRatios:  s.copyRatios(orig.FeeBuyerSettlementRatios),
+		AcceptingOrders:           orig.AcceptingOrders,
+		AllowUserSettlement:       orig.AllowUserSettlement,
+		AccessGrants:              s.copyAccessGrants(orig.AccessGrants),
+		ReqAttrCreateAsk:          s.copyStrings(orig.ReqAttrCreateAsk),
+		ReqAttrCreateBid:          s.copyStrings(orig.ReqAttrCreateBid),
+	}
+}
+
 func (s *TestSuite) TestKeeper_IterateKnownMarketIDs() {
 	var marketIDs []uint32
 	stopAfter := func(n int) func(marketID uint32) bool {
@@ -5837,57 +5860,6 @@ func (s *TestSuite) TestKeeper_UpdateMarketDetails() {
 }
 
 func (s *TestSuite) TestKeeper_CreateMarket() {
-	copyCoin := func(orig sdk.Coin) sdk.Coin {
-		return sdk.NewCoin(orig.Denom, orig.Amount.AddRaw(0))
-	}
-	copyCoins := func(orig []sdk.Coin) []sdk.Coin {
-		return copySlice(orig, copyCoin)
-	}
-	copyRatios := func(orig []exchange.FeeRatio) []exchange.FeeRatio {
-		return copySlice(orig, func(ratio exchange.FeeRatio) exchange.FeeRatio {
-			return exchange.FeeRatio{
-				Price: copyCoin(ratio.Price),
-				Fee:   copyCoin(ratio.Fee),
-			}
-		})
-	}
-	copyGrants := func(orig []exchange.AccessGrant) []exchange.AccessGrant {
-		return copySlice(orig, func(grant exchange.AccessGrant) exchange.AccessGrant {
-			return exchange.AccessGrant{
-				Address: grant.Address,
-				Permissions: copySlice(grant.Permissions, func(p exchange.Permission) exchange.Permission {
-					return p
-				}),
-			}
-		})
-	}
-	copyStrs := func(orig []string) []string {
-		return copySlice(orig, func(s string) string {
-			return s
-		})
-	}
-	copyMarket := func(orig exchange.Market) exchange.Market {
-		return exchange.Market{
-			MarketId: orig.MarketId,
-			MarketDetails: exchange.MarketDetails{
-				Name:        orig.MarketDetails.Name,
-				Description: orig.MarketDetails.Description,
-				WebsiteUrl:  orig.MarketDetails.WebsiteUrl,
-				IconUri:     orig.MarketDetails.IconUri,
-			},
-			FeeCreateAskFlat:          copyCoins(orig.FeeCreateAskFlat),
-			FeeCreateBidFlat:          copyCoins(orig.FeeCreateBidFlat),
-			FeeSellerSettlementFlat:   copyCoins(orig.FeeSellerSettlementFlat),
-			FeeSellerSettlementRatios: copyRatios(orig.FeeSellerSettlementRatios),
-			FeeBuyerSettlementFlat:    copyCoins(orig.FeeBuyerSettlementFlat),
-			FeeBuyerSettlementRatios:  copyRatios(orig.FeeBuyerSettlementRatios),
-			AcceptingOrders:           orig.AcceptingOrders,
-			AllowUserSettlement:       orig.AllowUserSettlement,
-			AccessGrants:              copyGrants(orig.AccessGrants),
-			ReqAttrCreateAsk:          copyStrs(orig.ReqAttrCreateAsk),
-			ReqAttrCreateBid:          copyStrs(orig.ReqAttrCreateBid),
-		}
-	}
 	setAccNum := func(id uint64) AccountModifier {
 		return func(acc authtypes.AccountI) authtypes.AccountI {
 			err := acc.SetAccountNumber(id)
@@ -6021,7 +5993,7 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 			}
 			kpr := s.k.WithAccountKeeper(tc.accKeeper)
 
-			origMarket := copyMarket(tc.market)
+			origMarket := s.copyMarket(tc.market)
 			expEvents := sdk.Events{}
 			var expCalls AccountCalls
 			if tc.expHasAccCall {
