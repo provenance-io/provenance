@@ -889,7 +889,7 @@ func (s *TestSuite) TestKeeper_CreateAskOrder() {
 			}
 
 			var expOrder *exchange.Order
-			expEvents := sdk.Events{}
+			var expEvents sdk.Events
 			if len(tc.expErr) == 0 {
 				expOrder = exchange.NewOrder(tc.expOrderID).WithAsk(&tc.askOrder)
 				event, err := sdk.TypedEventToEvent(exchange.NewEventOrderCreated(expOrder))
@@ -1391,7 +1391,7 @@ func (s *TestSuite) TestKeeper_CreateBidOrder() {
 			}
 
 			var expOrder *exchange.Order
-			expEvents := sdk.Events{}
+			var expEvents sdk.Events
 			if len(tc.expErr) == 0 {
 				expOrder = exchange.NewOrder(tc.expOrderID).WithBid(&tc.bidOrder)
 				event, err := sdk.TypedEventToEvent(exchange.NewEventOrderCreated(expOrder))
@@ -1679,7 +1679,7 @@ func (s *TestSuite) TestKeeper_CancelOrder() {
 				cancelledOrder = tc.setup()
 			}
 
-			expEvents := sdk.Events{}
+			var expEvents sdk.Events
 			var expDelKVs []sdk.KVPair
 			if cancelledOrder != nil {
 				event, err := sdk.TypedEventToEvent(exchange.NewEventOrderCancelled(cancelledOrder, tc.signer))
@@ -1999,7 +1999,7 @@ func (s *TestSuite) TestKeeper_SetOrderExternalID() {
 				origExternalID = tc.setup()
 			}
 
-			expEvents := sdk.Events{}
+			var expEvents sdk.Events
 			var expOrder *exchange.Order
 			if len(tc.expErr) == 0 {
 				event, err := sdk.TypedEventToEvent(&exchange.EventOrderExternalIDUpdated{
@@ -2024,12 +2024,16 @@ func (s *TestSuite) TestKeeper_SetOrderExternalID() {
 				}
 			}
 
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
 			var err error
 			testFunc := func() {
-				err = s.k.SetOrderExternalID(s.ctx, tc.marketID, tc.orderID, tc.newExternalID)
+				err = s.k.SetOrderExternalID(ctx, tc.marketID, tc.orderID, tc.newExternalID)
 			}
 			s.Require().NotPanics(testFunc, "SetOrderExternalID(%d, %d, %q)", tc.marketID, tc.orderID, tc.newExternalID)
 			s.assertErrorValue(err, tc.expErr, "SetOrderExternalID(%d, %d, %q) error", tc.marketID, tc.orderID, tc.newExternalID)
+			actEvents := em.Events()
+			s.assertEqualEvents(expEvents, actEvents, "SetOrderExternalID(%d, %d, %q) events", tc.marketID, tc.orderID, tc.newExternalID)
 
 			if err != nil || len(tc.expErr) != 0 {
 				return

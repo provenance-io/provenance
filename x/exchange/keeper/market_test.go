@@ -3420,7 +3420,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 				tc.setup()
 			}
 
-			expEvents := sdk.Events{}
+			var expEvents sdk.Events
 			if len(tc.expErr) == 0 {
 				expEvent, err := sdk.TypedEventToEvent(exchange.NewEventMarketActiveUpdated(tc.marketID, tc.updatedBy, tc.active))
 				s.Require().NoError(err, "TypedEventToEvent(NewEventMarketActiveUpdated(%d, %s, %t)",
@@ -3604,7 +3604,7 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 				tc.setup()
 			}
 
-			expEvents := sdk.Events{}
+			var expEvents sdk.Events
 			if len(tc.expErr) == 0 {
 				expEvent, err := sdk.TypedEventToEvent(exchange.NewEventMarketUserSettleUpdated(tc.marketID, tc.updatedBy, tc.allow))
 				s.Require().NoError(err, "TypedEventToEvent(NewEventMarketUserSettleUpdated(%d, %s, %t)",
@@ -4533,7 +4533,7 @@ func (s *TestSuite) TestKeeper_UpdatePermissions() {
 				tc.setup()
 			}
 
-			expEvents := sdk.Events{}
+			var expEvents sdk.Events
 			if len(tc.expPanic) == 0 && len(tc.expErr) == 0 {
 				event, err := sdk.TypedEventToEvent(exchange.NewEventMarketPermissionsUpdated(tc.msg.MarketId, tc.msg.Admin))
 				s.Require().NoError(err, "TypedEventToEvent(NewEventMarketPermissionsUpdated(%d, %q)",
@@ -5524,7 +5524,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				tc.setup()
 			}
 
-			expEvents := sdk.Events{}
+			var expEvents sdk.Events
 			if len(tc.expPanic) == 0 && len(tc.expErr) == 0 {
 				event, err := sdk.TypedEventToEvent(exchange.NewEventMarketReqAttrUpdated(tc.msg.MarketId, tc.msg.Admin))
 				s.Require().NoError(err, "TypedEventToEvent(NewEventMarketReqAttrUpdated(%d, %q))", tc.msg.MarketId, tc.msg.Admin)
@@ -5827,7 +5827,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketDetails() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			expEvents := sdk.Events{}
+			var expEvents sdk.Events
 			var expCalls AccountCalls
 			if tc.expGetAccCall {
 				expCalls.GetAccount = append(expCalls.GetAccount, exchange.GetMarketAddress(tc.marketID))
@@ -5994,7 +5994,7 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 			kpr := s.k.WithAccountKeeper(tc.accKeeper)
 
 			origMarket := s.copyMarket(tc.market)
-			expEvents := sdk.Events{}
+			var expEvents sdk.Events
 			var expCalls AccountCalls
 			if tc.expHasAccCall {
 				id := tc.expMarketID
@@ -6549,7 +6549,7 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 				},
 			}
 
-			expEvents := sdk.Events{}
+			var expEvents sdk.Events
 			if len(tc.expErr) == 0 {
 				event, err := sdk.TypedEventToEvent(exchange.NewEventMarketWithdraw(tc.marketID, tc.amount, tc.toAddr, tc.withdrawnBy))
 				s.Require().NoError(err, "TypedEventToEvent(NewEventMarketWithdraw(%d, %s, %q, %q)",

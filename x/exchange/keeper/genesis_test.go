@@ -643,7 +643,7 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 			s.requirePanicEquals(testInit, tc.expInitPanic, "InitGenesis")
 			s.Assert().Equal(origGenState, tc.genState, "GenState before (expected) and after (actual) InitGenesis")
 			events := em.Events()
-			s.assertEqualEvents(sdk.Events{}, events, "events emitted during InitGenesis")
+			s.assertEqualEvents(nil, events, "events emitted during InitGenesis")
 			s.assertAccountKeeperCalls(tc.accKeeper, tc.expAccCalls, "InitGenesis")
 			s.assertHoldKeeperCalls(tc.holdKeeper, tc.expHoldCalls, "InitGenesis")
 			if len(tc.expInitPanic) > 0 {
