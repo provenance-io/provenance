@@ -421,9 +421,338 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestQueryServer_GetOrder()
+func (s *TestSuite) TestQueryServer_GetOrder() {
+	queryName := "GetOrder"
+	runner := func(req *exchange.QueryGetOrderRequest) queryRunner {
+		return func(goCtx context.Context) (interface{}, error) {
+			return keeper.NewQueryServer(s.k).GetOrder(goCtx, req)
+		}
+	}
 
-// TODO[1658]: func (s *TestSuite) TestQueryServer_GetOrderByExternalID()
+	tests := []struct {
+		name     string
+		setup    querySetupFunc
+		req      *exchange.QueryGetOrderRequest
+		expResp  *exchange.QueryGetOrderResponse
+		expInErr []string
+	}{
+		{
+			name:     "nil req",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "order 0",
+			req:      &exchange.QueryGetOrderRequest{OrderId: 0},
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name: "error getting order",
+			setup: func(ctx sdk.Context) {
+				key, value, err := s.k.GetOrderStoreKeyValue(*exchange.NewOrder(4).WithAsk(&exchange.AskOrder{
+					MarketId: 1,
+					Seller:   s.addr1.String(),
+					Assets:   s.coin("55apple"),
+					Price:    s.coin("99prune"),
+				}))
+				s.Require().NoError(err, "GetOrderStoreKeyValue 4")
+				value[0] = 9
+				s.k.GetStore(ctx).Set(key, value)
+			},
+			req:      &exchange.QueryGetOrderRequest{OrderId: 4},
+			expInErr: []string{invalidArgErr, "failed to read order 4: unknown type byte 0x9"},
+		},
+		{
+			name:     "order not found",
+			req:      &exchange.QueryGetOrderRequest{OrderId: 4},
+			expInErr: []string{invalidArgErr, "order 4 not found"},
+		},
+		{
+			name: "order 1: ask",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
+					MarketId:                1,
+					Seller:                  s.addr1.String(),
+					Assets:                  s.coin("20apple"),
+					Price:                   s.coin("3pineapple"),
+					SellerSettlementFlatFee: s.coinP("15fig"),
+					AllowPartial:            true,
+					ExternalId:              "ask-order-1-id",
+				}))
+			},
+			req: &exchange.QueryGetOrderRequest{OrderId: 1},
+			expResp: &exchange.QueryGetOrderResponse{Order: exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
+				MarketId:                1,
+				Seller:                  s.addr1.String(),
+				Assets:                  s.coin("20apple"),
+				Price:                   s.coin("3pineapple"),
+				SellerSettlementFlatFee: s.coinP("15fig"),
+				AllowPartial:            true,
+				ExternalId:              "ask-order-1-id",
+			})},
+		},
+		{
+			name: "order 1: bid",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithBid(&exchange.BidOrder{
+					MarketId:            1,
+					Buyer:               s.addr1.String(),
+					Assets:              s.coin("20apple"),
+					Price:               s.coin("3pineapple"),
+					BuyerSettlementFees: s.coins("15fig,10grape"),
+					AllowPartial:        true,
+					ExternalId:          "ask-order-1-id",
+				}))
+			},
+			req: &exchange.QueryGetOrderRequest{OrderId: 1},
+			expResp: &exchange.QueryGetOrderResponse{Order: exchange.NewOrder(1).WithBid(&exchange.BidOrder{
+				MarketId:            1,
+				Buyer:               s.addr1.String(),
+				Assets:              s.coin("20apple"),
+				Price:               s.coin("3pineapple"),
+				BuyerSettlementFees: s.coins("15fig,10grape"),
+				AllowPartial:        true,
+				ExternalId:          "ask-order-1-id",
+			})},
+		},
+		{
+			name: "order 5555",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(5554).WithBid(&exchange.BidOrder{
+					MarketId: 1, Buyer: s.addr1.String(),
+					Assets: s.coin("20apple"), Price: s.coin("3pineapple"),
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(5555).WithAsk(&exchange.AskOrder{
+					MarketId: 1, Seller: s.addr2.String(),
+					Assets: s.coin("77acorn"), Price: s.coin("453prune"),
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(5556).WithBid(&exchange.BidOrder{
+					MarketId: 1, Buyer: s.addr3.String(),
+					Assets: s.coin("55acai"), Price: s.coin("77peach"),
+				}))
+			},
+			req: &exchange.QueryGetOrderRequest{OrderId: 5555},
+			expResp: &exchange.QueryGetOrderResponse{Order: exchange.NewOrder(5555).WithAsk(&exchange.AskOrder{
+				MarketId: 1, Seller: s.addr2.String(),
+				Assets: s.coin("77acorn"), Price: s.coin("453prune"),
+			})},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
+			s.Assert().Equal(tc.expResp, respRaw, queryName+" result")
+		})
+	}
+}
+
+func (s *TestSuite) TestQueryServer_GetOrderByExternalID() {
+	queryName := "GetOrderByExternalID"
+	runner := func(req *exchange.QueryGetOrderByExternalIDRequest) queryRunner {
+		return func(goCtx context.Context) (interface{}, error) {
+			return keeper.NewQueryServer(s.k).GetOrderByExternalID(goCtx, req)
+		}
+	}
+
+	tests := []struct {
+		name     string
+		setup    querySetupFunc
+		req      *exchange.QueryGetOrderByExternalIDRequest
+		expResp  *exchange.QueryGetOrderByExternalIDResponse
+		expInErr []string
+	}{
+		{
+			name:     "nil request",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "market 0",
+			req:      &exchange.QueryGetOrderByExternalIDRequest{MarketId: 0, ExternalId: "something"},
+			expInErr: []string{invalidArgErr, "invalid request"},
+		},
+		{
+			name:     "no external id",
+			req:      &exchange.QueryGetOrderByExternalIDRequest{MarketId: 1, ExternalId: ""},
+			expInErr: []string{invalidArgErr, "invalid request"},
+		},
+		{
+			name: "error getting order",
+			setup: func(ctx sdk.Context) {
+				order5 := exchange.NewOrder(5).WithBid(&exchange.BidOrder{
+					MarketId:            1,
+					Buyer:               s.addr3.String(),
+					Assets:              s.coin("1apple"),
+					Price:               s.coin("1plum"),
+					BuyerSettlementFees: nil,
+					AllowPartial:        false,
+					ExternalId:          "babbaderr",
+				})
+				store := s.k.GetStore(ctx)
+				// Save it normally to get the indexes with it, then overwite the value with a bad one.
+				s.requireSetOrderInStore(store, order5)
+				key5, value5, err := s.k.GetOrderStoreKeyValue(*order5)
+				s.Require().NoError(err, "GetOrderStoreKeyValue 5")
+				value5[0] = 9
+				store.Set(key5, value5)
+			},
+			req:      &exchange.QueryGetOrderByExternalIDRequest{MarketId: 1, ExternalId: "babbaderr"},
+			expInErr: []string{invalidArgErr, "failed to read order 5: unknown type byte 0x9"},
+		},
+		{
+			name: "no such order",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
+					MarketId: 1, Seller: s.addr2.String(),
+					Assets: s.coin("1apple"), Price: s.coin("1plum"),
+					ExternalId: "nosuchorder",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(3).WithAsk(&exchange.AskOrder{
+					MarketId: 3, Seller: s.addr2.String(),
+					Assets: s.coin("1apple"), Price: s.coin("1plum"),
+					ExternalId: "nosuchorder",
+				}))
+			},
+			req:      &exchange.QueryGetOrderByExternalIDRequest{MarketId: 2, ExternalId: "nosuchorder"},
+			expInErr: []string{invalidArgErr, "order not found in market 2 with external id \"nosuchorder\""},
+		},
+		{
+			name: "only one order with the id: ask",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(77).WithAsk(&exchange.AskOrder{
+					MarketId: 3, Seller: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
+					ExternalId: "myspecialid",
+				}))
+			},
+			req: &exchange.QueryGetOrderByExternalIDRequest{MarketId: 3, ExternalId: "myspecialid"},
+			expResp: &exchange.QueryGetOrderByExternalIDResponse{Order: exchange.NewOrder(77).WithAsk(&exchange.AskOrder{
+				MarketId: 3, Seller: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
+				ExternalId: "myspecialid",
+			})},
+		},
+		{
+			name: "only one order with the id: bid",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(54).WithBid(&exchange.BidOrder{
+					MarketId: 999, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
+					ExternalId: "mycoolid",
+				}))
+			},
+			req: &exchange.QueryGetOrderByExternalIDRequest{MarketId: 999, ExternalId: "mycoolid"},
+			expResp: &exchange.QueryGetOrderByExternalIDResponse{Order: exchange.NewOrder(54).WithBid(&exchange.BidOrder{
+				MarketId: 999, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
+				ExternalId: "mycoolid",
+			})},
+		},
+		{
+			name: "three markets with same id: first",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(54).WithBid(&exchange.BidOrder{
+					MarketId: 88, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
+					ExternalId: "commonid",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(55).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr2.String(), Assets: s.coin("2apple"), Price: s.coin("2plum"),
+					ExternalId: "commonid",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(56).WithBid(&exchange.BidOrder{
+					MarketId: 9001, Buyer: s.addr2.String(), Assets: s.coin("3apple"), Price: s.coin("3plum"),
+					ExternalId: "commonid",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(57).WithBid(&exchange.BidOrder{
+					MarketId: 88, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
+					ExternalId: "otherid1",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(58).WithBid(&exchange.BidOrder{
+					MarketId: 88, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
+					ExternalId: "otherid2",
+				}))
+			},
+			req: &exchange.QueryGetOrderByExternalIDRequest{MarketId: 88, ExternalId: "commonid"},
+			expResp: &exchange.QueryGetOrderByExternalIDResponse{Order: exchange.NewOrder(54).WithBid(&exchange.BidOrder{
+				MarketId: 88, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
+				ExternalId: "commonid",
+			})},
+		},
+		{
+			name: "three markets with same id: second",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(54).WithBid(&exchange.BidOrder{
+					MarketId: 88, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
+					ExternalId: "commonid",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(55).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr2.String(), Assets: s.coin("2apple"), Price: s.coin("2plum"),
+					ExternalId: "commonid",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(56).WithBid(&exchange.BidOrder{
+					MarketId: 9001, Buyer: s.addr2.String(), Assets: s.coin("3apple"), Price: s.coin("3plum"),
+					ExternalId: "commonid",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(57).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
+					ExternalId: "otherid1",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(58).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
+					ExternalId: "otherid2",
+				}))
+			},
+			req: &exchange.QueryGetOrderByExternalIDRequest{MarketId: 2, ExternalId: "commonid"},
+			expResp: &exchange.QueryGetOrderByExternalIDResponse{Order: exchange.NewOrder(55).WithBid(&exchange.BidOrder{
+				MarketId: 2, Buyer: s.addr2.String(), Assets: s.coin("2apple"), Price: s.coin("2plum"),
+				ExternalId: "commonid",
+			})},
+		},
+		{
+			name: "three markets with same id: second",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(54).WithBid(&exchange.BidOrder{
+					MarketId: 88, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
+					ExternalId: "commonid",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(55).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr2.String(), Assets: s.coin("2apple"), Price: s.coin("2plum"),
+					ExternalId: "commonid",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(56).WithBid(&exchange.BidOrder{
+					MarketId: 9001, Buyer: s.addr2.String(), Assets: s.coin("3apple"), Price: s.coin("3plum"),
+					ExternalId: "commonid",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(57).WithBid(&exchange.BidOrder{
+					MarketId: 9001, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
+					ExternalId: "otherid1",
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(58).WithBid(&exchange.BidOrder{
+					MarketId: 9001, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
+					ExternalId: "otherid2",
+				}))
+			},
+			req: &exchange.QueryGetOrderByExternalIDRequest{MarketId: 9001, ExternalId: "commonid"},
+			expResp: &exchange.QueryGetOrderByExternalIDResponse{Order: exchange.NewOrder(56).WithBid(&exchange.BidOrder{
+				MarketId: 9001, Buyer: s.addr2.String(), Assets: s.coin("3apple"), Price: s.coin("3plum"),
+				ExternalId: "commonid",
+			})},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
+			s.Assert().Equal(tc.expResp, respRaw, queryName+" result")
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestQueryServer_GetMarketOrders()
 
