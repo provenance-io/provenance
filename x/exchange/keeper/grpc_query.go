@@ -42,6 +42,9 @@ func (k QueryServer) OrderFeeCalc(goCtx context.Context, req *exchange.QueryOrde
 	switch {
 	case req.AskOrder != nil:
 		order := req.AskOrder
+		if err := validateMarketExists(store, order.MarketId); err != nil {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
 		ratioFee, err := calculateSellerSettlementRatioFee(store, order.MarketId, order.Price)
 		if err != nil {
 			return nil, status.Errorf(codes.InvalidArgument, "failed to calculate seller ratio fee option: %v", err)
@@ -53,6 +56,9 @@ func (k QueryServer) OrderFeeCalc(goCtx context.Context, req *exchange.QueryOrde
 		resp.CreationFeeOptions = getCreateAskFlatFees(store, order.MarketId)
 	case req.BidOrder != nil:
 		order := req.BidOrder
+		if err := validateMarketExists(store, order.MarketId); err != nil {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
 		ratioFees, err := calcBuyerSettlementRatioFeeOptions(store, order.MarketId, order.Price)
 		if err != nil {
 			return nil, status.Errorf(codes.InvalidArgument, "failed to calculate buyer ratio fee options: %v", err)
