@@ -99,6 +99,9 @@ func (k QueryServer) GetOrderByExternalID(goCtx context.Context, req *exchange.Q
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
+	if req.MarketId == 0 || len(req.ExternalId) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	order, err := k.Keeper.GetOrderByExternalID(ctx, req.MarketId, req.ExternalId)
