@@ -41,7 +41,7 @@ jobs:
 
       # This step is required for committing the changes to your branch. 
       # See https://github.com/stefanzweifel/git-auto-commit-action#commits-of-this-action-do-not-trigger-new-workflow-runs 
-      - uses: stefanzweifel/git-auto-commit-action@v4
+      - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_user_name: "Provenance-io Bot"
           commit_user_email: "129784868+provenanceio-bot@users.noreply.github.com"
