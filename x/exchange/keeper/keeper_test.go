@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -13,7 +12,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -30,9 +28,8 @@ import (
 type TestSuite struct {
 	suite.Suite
 
-	app       *app.App
-	ctx       sdk.Context
-	stdlibCtx context.Context
+	app *app.App
+	ctx sdk.Context
 
 	k          keeper.Keeper
 	acctKeeper exchange.AccountKeeper
@@ -80,7 +77,6 @@ func (s *TestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.logBuffer.Reset()
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
-	s.stdlibCtx = sdk.WrapSDKContext(s.ctx)
 	s.k = s.app.ExchangeKeeper
 	s.acctKeeper = s.app.AccountKeeper
 	s.attrKeeper = s.app.AttributeKeeper
@@ -208,19 +204,6 @@ func (s *TestSuite) ratios(ratiosStr string) []exchange.FeeRatio {
 	for i, r := range ratios {
 		rv[i] = s.ratio(r)
 	}
-	return rv
-}
-
-// int is a shorter way to call sdkmath.NewInt.
-func (s *TestSuite) int(amount int64) sdkmath.Int {
-	return sdkmath.NewInt(amount)
-}
-
-// intStr creates an sdkmath.Int from a string, requiring it to work.
-func (s *TestSuite) intStr(amount string) sdkmath.Int {
-	s.T().Helper()
-	rv, ok := sdkmath.NewIntFromString(amount)
-	s.Require().True(ok, "NewIntFromString(%q) ok bool", amount)
 	return rv
 }
 
@@ -387,9 +370,9 @@ func (s *TestSuite) assertErrorValue(theError error, expected string, msgAndArgs
 	return assertions.AssertErrorValue(s.T(), theError, expected, msgAndArgs...)
 }
 
-// assertErrorContents is a wrapper for assertions.AssertErrorContents for this TestSuite.
-func (s *TestSuite) assertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
-	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
+// assertErrorContentsf is a wrapper for assertions.AssertErrorContentsf for this TestSuite.
+func (s *TestSuite) assertErrorContentsf(theError error, contains []string, msg string, args ...interface{}) bool {
+	return assertions.AssertErrorContentsf(s.T(), theError, contains, msg, args...)
 }
 
 // assertEqualEvents is a wrapper for assertions.AssertEqualEvents for this TestSuite.
