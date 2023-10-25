@@ -4,43 +4,25 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// Parameter store keys.
-var (
-	KeyContractAddress = []byte("contract")
-
-	_ paramtypes.ParamSet = &Params{}
-)
-
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
-}
-
-func NewParams(contractAddress string) (Params, error) {
+// NewParams creates a new Params object.
+func NewParams(contractAddress string) Params {
 	return Params{
 		ContractAddress: contractAddress,
-	}, nil
+	}
 }
 
-// default gamm module parameters.
+// DefaultParams creates default ibcratelimit module parameters.
 func DefaultParams() Params {
 	return Params{
 		ContractAddress: "",
 	}
 }
 
-// validate params.
+// Validate verifies all params are correct
 func (p Params) Validate() error {
 	return validateContractAddress(p.ContractAddress)
-}
-
-// Implements params.ParamSet.
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyContractAddress, &p.ContractAddress, validateContractAddress),
-	}
 }
 
 func validateContractAddress(i interface{}) error {
