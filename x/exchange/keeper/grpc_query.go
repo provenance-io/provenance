@@ -230,7 +230,12 @@ func (k QueryServer) GetMarket(goCtx context.Context, req *exchange.QueryGetMark
 		return nil, status.Errorf(codes.InvalidArgument, "market %d not found", req.MarketId)
 	}
 
-	return &exchange.QueryGetMarketResponse{Market: market}, nil
+	resp := &exchange.QueryGetMarketResponse{
+		Address: exchange.GetMarketAddress(req.MarketId).String(),
+		Market:  market,
+	}
+
+	return resp, nil
 }
 
 // GetAllMarkets returns brief information about each market.
