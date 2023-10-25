@@ -57,6 +57,8 @@ var (
 	ParseLengthPrefixedAddr = parseLengthPrefixedAddr
 	// Uint16Bz is a test-only exposure of uint16Bz.
 	Uint16Bz = uint16Bz
+	// Uint32Bz is a test-only exposure of uint32Bz.
+	Uint32Bz = uint32Bz
 	// Uint64Bz is a test-only exposure of uint64Bz.
 	Uint64Bz = uint64Bz
 

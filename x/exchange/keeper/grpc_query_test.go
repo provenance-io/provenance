@@ -59,6 +59,19 @@ func (s *TestSuite) getOrderIDs(orders []*exchange.Order) string {
 	return strings.Join(rv, ", ")
 }
 
+// getOrderIDs gets a comma+space separated string of all the order ids in the given orders, E.g. "1, 8, 55"
+func (s *TestSuite) getMarketIDs(markets []*exchange.MarketBrief) string {
+	rv := make([]string, len(markets))
+	for i, exp := range markets {
+		if exp == nil {
+			rv[i] = "<nil>"
+		} else {
+			rv[i] = fmt.Sprintf("%d", exp.MarketId)
+		}
+	}
+	return strings.Join(rv, ", ")
+}
+
 // assertEqualOrders asserts that the to slices of orders are equal.
 // If not, some further assertions are made to try to help clarify the differences.
 func (s *TestSuite) assertEqualOrders(expected, actual []*exchange.Order, msg string, args ...interface{}) bool {
@@ -3337,7 +3350,208 @@ func (s *TestSuite) TestQueryServer_GetMarket() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestQueryServer_GetAllMarkets()
+func (s *TestSuite) TestQueryServer_GetAllMarkets() {
+	queryName := "GetAllMarkets"
+	runner := func(req *exchange.QueryGetAllMarketsRequest) queryRunner {
+		return func(goCtx context.Context) (interface{}, error) {
+			return keeper.NewQueryServer(s.k).GetAllMarkets(goCtx, req)
+		}
+	}
+	makeKey := func(market *exchange.Market) []byte {
+		return keeper.Uint32Bz(market.MarketId)
+	}
+
+	newMarket := func(marketID uint32) *exchange.Market {
+		return &exchange.Market{
+			MarketId: marketID,
+			MarketDetails: exchange.MarketDetails{
+				Name:        fmt.Sprintf("Market %d", marketID),
+				Description: fmt.Sprintf("This is the description of market %d.", marketID),
+				WebsiteUrl:  fmt.Sprintf("https://example.com/market/%d/info", marketID),
+				IconUri:     fmt.Sprintf("https://example.com/market/%d/icon", marketID),
+			},
+		}
+	}
+	fiveMarkets := []*exchange.Market{
+		newMarket(6),
+		newMarket(34),
+		newMarket(53),
+		newMarket(81),
+		newMarket(98),
+	}
+	fiveMarketsSetup := func() {
+		s.requireCreateMarketUnmocked(*fiveMarkets[1])
+		s.requireCreateMarketUnmocked(*fiveMarkets[0])
+		s.requireCreateMarketUnmocked(*fiveMarkets[3])
+		s.requireCreateMarketUnmocked(*fiveMarkets[2])
+		s.requireCreateMarketUnmocked(*fiveMarkets[4])
+	}
+
+	newBrief := func(marketID uint32) *exchange.MarketBrief {
+		market := newMarket(marketID)
+		return &exchange.MarketBrief{
+			MarketId:      market.MarketId,
+			MarketAddress: exchange.GetMarketAddress(market.MarketId).String(),
+			MarketDetails: market.MarketDetails,
+		}
+	}
+	fiveBriefs := make([]*exchange.MarketBrief, len(fiveMarkets))
+	for i, market := range fiveMarkets {
+		fiveBriefs[i] = newBrief(market.MarketId)
+	}
+
+	tests := []struct {
+		name     string
+		setup    querySetupFunc
+		req      *exchange.QueryGetAllMarketsRequest
+		expResp  *exchange.QueryGetAllMarketsResponse
+		expInErr []string
+	}{
+		{
+			name: "both key and offset provided",
+			req: &exchange.QueryGetAllMarketsRequest{
+				Pagination: &query.PageRequest{Key: makeKey(fiveMarkets[1]), Offset: 3},
+			},
+			expInErr: []string{invalidArgErr, "error iterating all known markets",
+				"invalid request, either offset or key is expected, got both"},
+		},
+		{
+			name: "bad market key",
+			setup: func() {
+				s.requireCreateMarketUnmocked(*newMarket(1))
+				key := keeper.MakeKeyKnownMarketID(2)
+				key[len(key)-2] = key[len(key)-1]
+				s.getStore().Set(key[:len(key)-1], []byte{})
+				s.requireCreateMarketUnmocked(*newMarket(3))
+			},
+			expResp: &exchange.QueryGetAllMarketsResponse{
+				Markets:    []*exchange.MarketBrief{newBrief(1), newBrief(3)},
+				Pagination: &query.PageResponse{Total: 2},
+			},
+		},
+		{
+			name: "market account does not exist",
+			setup: func() {
+				s.requireCreateMarketUnmocked(*newMarket(1))
+				keeper.StoreMarket(s.getStore(), *newMarket(2))
+				s.requireCreateMarketUnmocked(*newMarket(3))
+			},
+			expResp: &exchange.QueryGetAllMarketsResponse{
+				Markets:    []*exchange.MarketBrief{newBrief(1), newBrief(3)},
+				Pagination: &query.PageResponse{Total: 3},
+			},
+		},
+		{
+			name:    "no markets in state",
+			expResp: &exchange.QueryGetAllMarketsResponse{Pagination: &query.PageResponse{Total: 0}},
+		},
+		{
+			name:  "five markets: nil req",
+			setup: fiveMarketsSetup,
+			req:   nil,
+			expResp: &exchange.QueryGetAllMarketsResponse{
+				Markets:    fiveBriefs,
+				Pagination: &query.PageResponse{Total: 5},
+			},
+		},
+		{
+			name:  "five markets: empty req",
+			setup: fiveMarketsSetup,
+			req:   &exchange.QueryGetAllMarketsRequest{},
+			expResp: &exchange.QueryGetAllMarketsResponse{
+				Markets:    fiveBriefs,
+				Pagination: &query.PageResponse{Total: 5},
+			},
+		},
+		{
+			name:  "five markets: empty pagination",
+			setup: fiveMarketsSetup,
+			req:   &exchange.QueryGetAllMarketsRequest{Pagination: &query.PageRequest{}},
+			expResp: &exchange.QueryGetAllMarketsResponse{
+				Markets:    fiveBriefs,
+				Pagination: &query.PageResponse{Total: 5},
+			},
+		},
+		{
+			name:  "five markets: reversed",
+			setup: fiveMarketsSetup,
+			req:   &exchange.QueryGetAllMarketsRequest{Pagination: &query.PageRequest{Reverse: true}},
+			expResp: &exchange.QueryGetAllMarketsResponse{
+				Markets:    reverseSlice(fiveBriefs),
+				Pagination: &query.PageResponse{Total: 5},
+			},
+		},
+		{
+			name:  "five markets: limit 3",
+			setup: fiveMarketsSetup,
+			req:   &exchange.QueryGetAllMarketsRequest{Pagination: &query.PageRequest{Limit: 3}},
+			expResp: &exchange.QueryGetAllMarketsResponse{
+				Markets:    fiveBriefs[0:3],
+				Pagination: &query.PageResponse{NextKey: makeKey(fiveMarkets[3])},
+			},
+		},
+		{
+			name:  "five markets: limit 3, reversed",
+			setup: fiveMarketsSetup,
+			req:   &exchange.QueryGetAllMarketsRequest{Pagination: &query.PageRequest{Limit: 3, Reverse: true}},
+			expResp: &exchange.QueryGetAllMarketsResponse{
+				Markets:    reverseSlice(fiveBriefs[2:]),
+				Pagination: &query.PageResponse{NextKey: makeKey(fiveMarkets[1])},
+			},
+		},
+		{
+			name:  "five markets: just second using key",
+			setup: fiveMarketsSetup,
+			req:   &exchange.QueryGetAllMarketsRequest{Pagination: &query.PageRequest{Limit: 1, Key: makeKey(fiveMarkets[1])}},
+			expResp: &exchange.QueryGetAllMarketsResponse{
+				Markets:    fiveBriefs[1:2],
+				Pagination: &query.PageResponse{NextKey: makeKey(fiveMarkets[2])},
+			},
+		},
+		{
+			name:  "five markets: just third and fourth using offset",
+			setup: fiveMarketsSetup,
+			req:   &exchange.QueryGetAllMarketsRequest{Pagination: &query.PageRequest{Limit: 2, Offset: 2}},
+			expResp: &exchange.QueryGetAllMarketsResponse{
+				Markets:    fiveBriefs[2:4],
+				Pagination: &query.PageResponse{NextKey: makeKey(fiveMarkets[4])},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
+			if s.Assert().Equal(tc.expResp, respRaw, queryName+" result") {
+				return
+			}
+			resp, ok := respRaw.(*exchange.QueryGetAllMarketsResponse)
+			s.Require().True(ok, queryName+" response is of type %T and could not be cast to %T", respRaw, tc.expResp)
+			if tc.expResp == nil || resp == nil {
+				return
+			}
+			if !s.Assert().Equal(tc.expResp.Pagination, resp.Pagination, queryName+" result Pagination") && tc.expResp.Pagination != nil && resp.Pagination != nil {
+				s.Assert().Equal(tc.expResp.Pagination.NextKey, resp.Pagination.NextKey, queryName+" result Pagination.NextKey")
+				s.Assert().Equal(int(tc.expResp.Pagination.Total), int(resp.Pagination.Total), queryName+" result Pagination.Total")
+			}
+			expIDs := s.getMarketIDs(tc.expResp.Markets)
+			actIDs := s.getMarketIDs(resp.Markets)
+			s.Require().Equal(expIDs, actIDs, queryName+" result market ids")
+			for i := range tc.expResp.Markets {
+				s.Assert().Equal(tc.expResp.Markets[i].MarketAddress, resp.Markets[i].MarketAddress,
+					queryName+" [%d] MarketAddress", i)
+				s.Assert().Equal(tc.expResp.Markets[i].MarketDetails.Name, resp.Markets[i].MarketDetails.Name,
+					queryName+" [%d] MarketDetails.Name", i)
+				s.Assert().Equal(tc.expResp.Markets[i].MarketDetails.Description, resp.Markets[i].MarketDetails.Description,
+					queryName+" [%d] MarketDetails.Description", i)
+				s.Assert().Equal(tc.expResp.Markets[i].MarketDetails.WebsiteUrl, resp.Markets[i].MarketDetails.WebsiteUrl,
+					queryName+" [%d] MarketDetails.WebsiteUrl", i)
+				s.Assert().Equal(tc.expResp.Markets[i].MarketDetails.IconUri, resp.Markets[i].MarketDetails.IconUri,
+					queryName+" [%d] MarketDetails.IconUri", i)
+			}
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestQueryServer_Params()
 
