@@ -143,6 +143,7 @@ import (
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/provenance-io/provenance/x/ibcratelimit/ibcratelimitmodule"
+	ibcratelimitkeeper "github.com/provenance-io/provenance/x/ibcratelimit/keeper"
 	ibcratelimittypes "github.com/provenance-io/provenance/x/ibcratelimit/types"
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
@@ -314,11 +315,12 @@ type App struct {
 	TriggerKeeper    triggerkeeper.Keeper
 	OracleKeeper     oraclekeeper.Keeper
 
-	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	IBCHooksKeeper *ibchookskeeper.Keeper
-	ICAHostKeeper  *icahostkeeper.Keeper
-	TransferKeeper *ibctransferkeeper.Keeper
-	ICQKeeper      icqkeeper.Keeper
+	IBCKeeper          *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
+	IBCHooksKeeper     *ibchookskeeper.Keeper
+	ICAHostKeeper      *icahostkeeper.Keeper
+	TransferKeeper     *ibctransferkeeper.Keeper
+	ICQKeeper          icqkeeper.Keeper
+	RateLimitingKeeper *ibcratelimitkeeper.Keeper
 
 	MarkerKeeper    markerkeeper.Keeper
 	MetadataKeeper  metadatakeeper.Keeper
@@ -397,6 +399,7 @@ func New(
 		icahosttypes.StoreKey,
 		icqtypes.StoreKey,
 		ibchookstypes.StoreKey,
+		ibcratelimittypes.StoreKey,
 
 		metadatatypes.StoreKey,
 		markertypes.StoreKey,
@@ -531,6 +534,9 @@ func New(
 		app.IBCKeeper.ChannelKeeper,
 		app.IbcHooks,
 	)
+
+	rateLimtingKeeper := ibcratelimitkeeper.NewKeeper(appCodec, keys[ibcratelimittypes.StoreKey])
+	app.RateLimitingKeeper = &rateLimtingKeeper
 
 	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
 		app.HooksICS4Wrapper,
@@ -783,7 +789,7 @@ func New(
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
-		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
+		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper, *app.RateLimitingICS4Wrapper),
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
 		icqModule,
@@ -1004,7 +1010,7 @@ func New(
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
-		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
+		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper, *app.RateLimitingICS4Wrapper),
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
 		icaModule,
@@ -1323,6 +1329,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 	paramsKeeper.Subspace(icqtypes.ModuleName)
 	paramsKeeper.Subspace(ibchookstypes.ModuleName)
+	// TODO Remove this because it is no longer needed
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
 
 	return paramsKeeper

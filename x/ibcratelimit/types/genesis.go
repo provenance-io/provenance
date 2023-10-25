@@ -12,3 +12,10 @@ func DefaultGenesis() *GenesisState {
 func (gs GenesisState) Validate() error {
 	return gs.Params.Validate()
 }
+
+// NewGenesisState returns a new instance of GenesisState object
+func NewGenesisState(params Params) *GenesisState {
+	return &GenesisState{
+		Params: params,
+	}
+}

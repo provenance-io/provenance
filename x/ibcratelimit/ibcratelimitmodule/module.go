@@ -20,9 +20,8 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
-	ibcratelimitclient "github.com/provenance-io/provenance/x/ibcratelimit/client"
 	ibcratelimitcli "github.com/provenance-io/provenance/x/ibcratelimit/client/cli"
-	"github.com/provenance-io/provenance/x/ibcratelimit/client/grpc"
+	"github.com/provenance-io/provenance/x/ibcratelimit/keeper"
 	"github.com/provenance-io/provenance/x/ibcratelimit/simulation"
 	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 )
@@ -35,6 +34,7 @@ var (
 
 // AppModuleBasic defines the basic application module used by the ibcratelimit module.
 type AppModuleBasic struct {
+	cdc codec.Codec
 }
 
 // Name returns the ibcratelimit module's name.
@@ -71,7 +71,9 @@ func (b AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the ibcratelimit module.
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
 }
 
 // GetQueryCmd returns the cli query commands for the ibcratelimit module
@@ -87,13 +89,15 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
+	keeper      keeper.Keeper
 	ics4wrapper ibcratelimit.ICS4Wrapper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(ics4wrapper ibcratelimit.ICS4Wrapper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ics4wrapper ibcratelimit.ICS4Wrapper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         keeper,
 		ics4wrapper:    ics4wrapper,
 	}
 }
@@ -157,14 +161,14 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	var genState types.GenesisState
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
-	am.ics4wrapper.InitGenesis(ctx, genState)
+	am.keeper.InitGenesis(ctx, &genState)
 
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the txfees module's exported genesis state as raw JSON bytes.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	genState := am.ics4wrapper.ExportGenesis(ctx)
+	genState := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(genState)
 }
 
@@ -183,5 +187,5 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: ibcratelimitclient.Querier{K: am.ics4wrapper}})
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }

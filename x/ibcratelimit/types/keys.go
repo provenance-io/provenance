@@ -1,12 +1,12 @@
 package types
 
-import "strings"
-
 const (
-	ModuleName = "rate-limited-ibc" // IBC at the end to avoid conflicts with the ibc prefix
-
+	ModuleName = "ratelimitedibc" // IBC at the end to avoid conflicts with the ibc prefix
+	StoreKey   = ModuleName
+	RouterKey  = ModuleName
 )
 
-// RouterKey is the message route. Can only contain
-// alphanumeric characters.
-var RouterKey = strings.ReplaceAll(ModuleName, "-", "")
+var (
+	// ParamsKey is the key to obtain the module's params.
+	ParamsKey = []byte{0x01}
+)
