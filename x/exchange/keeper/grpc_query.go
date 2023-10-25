@@ -204,7 +204,7 @@ func (k QueryServer) GetAllOrders(goCtx context.Context, req *exchange.QueryGetA
 			// Only add it to the result if we can read it. This might result in fewer results than the limit,
 			// but at least one bad entry won't block others by causing the whole thing to return an error.
 			order, oerr := k.parseOrderStoreValue(orderID, value)
-			if oerr != nil {
+			if oerr == nil {
 				resp.Orders = append(resp.Orders, order)
 			}
 		}
