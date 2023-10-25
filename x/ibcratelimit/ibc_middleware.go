@@ -6,8 +6,11 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
@@ -15,24 +18,47 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v6/modules/core/exported"
 
+	"github.com/provenance-io/provenance/x/ibcratelimit/keeper"
 	"github.com/provenance-io/provenance/x/ibcratelimit/osmosis/osmoutils"
 	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 )
 
-type IBCModule struct {
+var (
+	_ porttypes.Middleware = &IBCMiddleware{}
+)
+
+type IBCMiddleware struct {
 	app            porttypes.IBCModule
-	ics4Middleware *ICS4Wrapper
+	keeper         *keeper.Keeper
+	channel        porttypes.ICS4Wrapper
+	accountKeeper  *authkeeper.AccountKeeper
+	bankKeeper     *bankkeeper.BaseKeeper
+	ContractKeeper *wasmkeeper.PermissionedKeeper
 }
 
-func NewIBCModule(app porttypes.IBCModule, ics4 *ICS4Wrapper) IBCModule {
-	return IBCModule{
+func NewIBCMiddleware(app porttypes.IBCModule,
+	channel porttypes.ICS4Wrapper,
+	keeper *keeper.Keeper,
+	accountKeeper *authkeeper.AccountKeeper,
+	contractKeeper *wasmkeeper.PermissionedKeeper,
+	bankKeeper *bankkeeper.BaseKeeper) IBCMiddleware {
+	return IBCMiddleware{
 		app:            app,
-		ics4Middleware: ics4,
+		keeper:         keeper,
+		channel:        channel,
+		accountKeeper:  accountKeeper,
+		bankKeeper:     bankKeeper,
+		ContractKeeper: contractKeeper,
 	}
 }
 
+func (im *IBCMiddleware) WithIBCModule(app porttypes.IBCModule) *IBCMiddleware {
+	im.app = app
+	return im
+}
+
 // OnChanOpenInit implements the IBCModule interface
-func (im *IBCModule) OnChanOpenInit(ctx sdk.Context,
+func (im IBCMiddleware) OnChanOpenInit(ctx sdk.Context,
 	order channeltypes.Order,
 	connectionHops []string,
 	portID string,
@@ -54,7 +80,7 @@ func (im *IBCModule) OnChanOpenInit(ctx sdk.Context,
 }
 
 // OnChanOpenTry implements the IBCModule interface
-func (im *IBCModule) OnChanOpenTry(
+func (im *IBCMiddleware) OnChanOpenTry(
 	ctx sdk.Context,
 	order channeltypes.Order,
 	connectionHops []string,
@@ -68,7 +94,7 @@ func (im *IBCModule) OnChanOpenTry(
 }
 
 // OnChanOpenAck implements the IBCModule interface
-func (im *IBCModule) OnChanOpenAck(
+func (im *IBCMiddleware) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
 	channelID string,
@@ -80,7 +106,7 @@ func (im *IBCModule) OnChanOpenAck(
 }
 
 // OnChanOpenConfirm implements the IBCModule interface
-func (im *IBCModule) OnChanOpenConfirm(
+func (im *IBCMiddleware) OnChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
@@ -90,7 +116,7 @@ func (im *IBCModule) OnChanOpenConfirm(
 }
 
 // OnChanCloseInit implements the IBCModule interface
-func (im *IBCModule) OnChanCloseInit(
+func (im *IBCMiddleware) OnChanCloseInit(
 	ctx sdk.Context,
 	portID,
 	channelID string,
@@ -100,7 +126,7 @@ func (im *IBCModule) OnChanCloseInit(
 }
 
 // OnChanCloseConfirm implements the IBCModule interface
-func (im *IBCModule) OnChanCloseConfirm(
+func (im *IBCMiddleware) OnChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
@@ -121,7 +147,7 @@ func ValidateReceiverAddress(packet exported.PacketI) error {
 }
 
 // OnRecvPacket implements the IBCModule interface
-func (im *IBCModule) OnRecvPacket(
+func (im *IBCMiddleware) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
@@ -130,13 +156,13 @@ func (im *IBCModule) OnRecvPacket(
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadMessage, err.Error())
 	}
 
-	contract := im.ics4Middleware.GetContractAddress(ctx)
+	contract := im.keeper.GetContractAddress(ctx)
 	if contract == "" {
 		// The contract has not been configured. Continue as usual
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
 
-	err := CheckAndUpdateRateLimits(ctx, im.ics4Middleware.ContractKeeper, "recv_packet", contract, packet)
+	err := CheckAndUpdateRateLimits(ctx, im.ContractKeeper, "recv_packet", contract, packet)
 	if err != nil {
 		if strings.Contains(err.Error(), "rate limit exceeded") {
 			return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrRateLimitExceeded)
@@ -150,7 +176,7 @@ func (im *IBCModule) OnRecvPacket(
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface
-func (im *IBCModule) OnAcknowledgementPacket(
+func (im *IBCMiddleware) OnAcknowledgementPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	acknowledgement []byte,
@@ -180,7 +206,7 @@ func (im *IBCModule) OnAcknowledgementPacket(
 }
 
 // OnTimeoutPacket implements the IBCModule interface
-func (im *IBCModule) OnTimeoutPacket(
+func (im *IBCMiddleware) OnTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
@@ -200,11 +226,11 @@ func (im *IBCModule) OnTimeoutPacket(
 }
 
 // RevertSentPacket Notifies the contract that a sent packet wasn't properly received
-func (im *IBCModule) RevertSentPacket(
+func (im *IBCMiddleware) RevertSentPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 ) error {
-	contract := im.ics4Middleware.GetContractAddress(ctx)
+	contract := im.keeper.GetContractAddress(ctx)
 	if contract == "" {
 		// The contract has not been configured. Continue as usual
 		return nil
@@ -212,14 +238,18 @@ func (im *IBCModule) RevertSentPacket(
 
 	return UndoSendRateLimit(
 		ctx,
-		im.ics4Middleware.ContractKeeper,
+		im.ContractKeeper,
 		contract,
 		packet,
 	)
 }
 
-// SendPacket implements the ICS4 Wrapper interface
-func (im *IBCModule) SendPacket(
+// SendPacket implements the ICS4 interface and is called when sending packets.
+// This method retrieves the contract from the middleware's parameters and checks if the limits have been exceeded for
+// the current transfer, in which case it returns an error preventing the IBC send from taking place.
+// If the contract param is not configured, or the contract doesn't have a configuration for the (channel+denom) being
+// used, transfers are not prevented and handled by the wrapped IBC app
+func (im *IBCMiddleware) SendPacket(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	sourcePort string,
@@ -228,19 +258,45 @@ func (im *IBCModule) SendPacket(
 	timeoutTimestamp uint64,
 	data []byte,
 ) (sequence uint64, err error) {
-	return im.ics4Middleware.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+	contract := im.keeper.GetContractAddress(ctx)
+	if contract == "" {
+		// The contract has not been configured. Continue as usual
+		return im.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+	}
+
+	// We need the full packet so the contract can process it. If it can't be cast to a channeltypes.Packet, this
+	// should fail. The only reason that would happen is if another middleware is modifying the packet, though. In
+	// that case we can modify the middleware order or change this cast so we have all the data we need.
+	// TODO Verify we don't need destination port or channel
+	packet := channeltypes.NewPacket(
+		data,
+		sequence,
+		sourcePort,
+		sourceChannel,
+		"",
+		"",
+		timeoutHeight,
+		timeoutTimestamp,
+	)
+
+	err = CheckAndUpdateRateLimits(ctx, im.ContractKeeper, "send_packet", contract, packet)
+	if err != nil {
+		return 0, errorsmod.Wrap(err, "rate limit SendPacket failed to authorize transfer")
+	}
+
+	return im.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 }
 
 // WriteAcknowledgement implements the ICS4 Wrapper interface
-func (im *IBCModule) WriteAcknowledgement(
+func (im *IBCMiddleware) WriteAcknowledgement(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 	ack exported.Acknowledgement,
 ) error {
-	return im.ics4Middleware.WriteAcknowledgement(ctx, chanCap, packet, ack)
+	return im.channel.WriteAcknowledgement(ctx, chanCap, packet, ack)
 }
 
-func (im *IBCModule) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
-	return im.ics4Middleware.GetAppVersion(ctx, portID, channelID)
+func (im *IBCMiddleware) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
+	return im.channel.GetAppVersion(ctx, portID, channelID)
 }

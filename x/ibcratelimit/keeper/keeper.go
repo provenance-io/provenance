@@ -43,3 +43,8 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	bz := k.cdc.MustMarshal(&params)
 	store.Set(types.ParamsKey, bz)
 }
+
+func (k Keeper) GetContractAddress(ctx sdk.Context) (contract string) {
+	params, _ := k.GetParams(ctx)
+	return params.ContractAddress
+}

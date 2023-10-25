@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
 	ibcratelimitcli "github.com/provenance-io/provenance/x/ibcratelimit/client/cli"
 	"github.com/provenance-io/provenance/x/ibcratelimit/keeper"
 	"github.com/provenance-io/provenance/x/ibcratelimit/simulation"
@@ -89,16 +88,14 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-	keeper      keeper.Keeper
-	ics4wrapper ibcratelimit.ICS4Wrapper
+	keeper keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ics4wrapper ibcratelimit.ICS4Wrapper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
-		ics4wrapper:    ics4wrapper,
 	}
 }
 

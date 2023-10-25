@@ -73,21 +73,6 @@ func SignAndDeliver(
 	return gInfo, res, err
 }
 
-// Move epochs to the future to avoid issues with minting
-/*func (chain *TestChain) MoveEpochsToTheFuture() error {
-	epochsKeeper := chain.GetProvenanceApp().EpochsKeeper
-	ctx := chain.GetContext()
-	for _, epoch := range epochsKeeper.AllEpochInfos(ctx) {
-		epoch.StartTime = ctx.BlockTime().Add(time.Hour * 24 * 30)
-		epochsKeeper.DeleteEpochInfo(chain.GetContext(), epoch.Identifier)
-		err := epochsKeeper.AddEpochInfo(ctx, epoch)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}*/
-
 // GetProvenanceApp returns the current chain's app as an ProvenanceApp
 func (chain *TestChain) GetProvenanceApp() *app.App {
 	v, _ := chain.App.(*app.App)

@@ -1,4 +1,4 @@
-package ibcratelimit_test
+package keeper_test
 
 import (
 	"testing"
@@ -31,7 +31,7 @@ func (s *GenesisTestSuite) SetupTest() {
 
 func (s *GenesisTestSuite) TestInitExportGenesis() {
 	testAddress := sdk.AccAddress([]byte("addr1_______________")).String()
-	k := s.app.RateLimitingICS4Wrapper
+	k := s.app.RateLimitingKeeper
 
 	initialGenesis := types.GenesisState{
 		Params: types.Params{
@@ -39,9 +39,9 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 		},
 	}
 
-	k.InitGenesis(s.ctx, initialGenesis)
+	k.InitGenesis(s.ctx, &initialGenesis)
 
-	s.Require().Equal(testAddress, k.GetParams(s.ctx).ContractAddress)
+	s.Require().Equal(testAddress, k.GetContractAddress(s.ctx))
 
 	exportedGenesis := k.ExportGenesis(s.ctx)
 
