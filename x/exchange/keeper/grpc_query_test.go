@@ -986,6 +986,15 @@ func (s *TestSuite) TestQueryServer_GetMarketOrders() {
 				Pagination: &query.PageResponse{Total: 3},
 			},
 		},
+		{
+			name: "both offset and key provided",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId:   1,
+				Pagination: &query.PageRequest{Offset: 2, Key: makeKey(marketOrders[1][2])},
+			},
+			expInErr: []string{invalidArgErr, "error iterating orders for market 1",
+				"invalid request, either offset or key is expected, got both"},
+		},
 
 		// Forward, no order type.
 		{
@@ -1712,6 +1721,15 @@ func (s *TestSuite) TestQueryServer_GetOwnerOrders() {
 				Pagination: &query.PageResponse{Total: 3},
 			},
 		},
+		{
+			name: "both offset and key provided",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner:      addr1,
+				Pagination: &query.PageRequest{Offset: 2, Key: makeKey(ownerOrders[addr1][2])},
+			},
+			expInErr: []string{invalidArgErr, "error iterating orders for owner " + addr1,
+				"invalid request, either offset or key is expected, got both"},
+		},
 
 		// Forward, no order type.
 		{
@@ -2432,6 +2450,15 @@ func (s *TestSuite) TestQueryServer_GetAssetOrders() {
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
+		},
+		{
+			name: "both offset and key provided",
+			req: &exchange.QueryGetAssetOrdersRequest{
+				Asset:      denom1,
+				Pagination: &query.PageRequest{Offset: 2, Key: makeKey(denomOrders[denom1][2])},
+			},
+			expInErr: []string{invalidArgErr, "error iterating orders for asset " + denom1,
+				"invalid request, either offset or key is expected, got both"},
 		},
 
 		// Forward, no order type.
