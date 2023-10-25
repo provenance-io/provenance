@@ -3848,4 +3848,277 @@ func (s *TestSuite) TestQueryServer_ValidateMarket() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestQueryServer_ValidateManageFees()
+func (s *TestSuite) TestQueryServer_ValidateManageFees() {
+	queryName := "ValidateManageFees"
+	runner := func(req *exchange.QueryValidateManageFeesRequest) queryRunner {
+		return func(goCtx context.Context) (interface{}, error) {
+			return keeper.NewQueryServer(s.k).ValidateManageFees(goCtx, req)
+		}
+	}
+
+	tests := []struct {
+		name     string
+		setup    querySetupFunc
+		req      *exchange.QueryValidateManageFeesRequest
+		expResp  *exchange.QueryValidateManageFeesResponse
+		expInErr []string
+	}{
+		{
+			name:     "nil req",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "empty req",
+			req:      &exchange.QueryValidateManageFeesRequest{},
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name: "invalid msg",
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: "", MarketId: 1,
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				Error: s.joinErrs(
+					"invalid authority: empty address string is not allowed",
+					"no updates",
+				),
+			},
+		},
+		{
+			name: "wrong authority",
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.addr1.String(), MarketId: 1,
+				AddFeeCreateAskFlat: s.coins("100plum"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				Error: "expected \"" + s.k.GetAuthority() + "\" got \"" + s.addr1.String() + "\": " +
+					"expected gov account as only signer for proposal message",
+			},
+		},
+		{
+			name: "market does not exist",
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 1,
+				AddFeeCreateAskFlat: s.coins("100plum"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				Error: "market 1 does not exist",
+			},
+		},
+		{
+			name: "add/rem create-ask errors",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:         7,
+					FeeCreateAskFlat: s.coins("100peach"),
+				})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 7,
+				RemoveFeeCreateAskFlat: s.coins("100plum"),
+				AddFeeCreateAskFlat:    s.coins("90peach"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error: s.joinErrs(
+					"cannot remove create-ask flat fee \"100plum\": no such fee exists",
+					"cannot add create-ask flat fee \"90peach\": fee with that denom already exists",
+				),
+			},
+		},
+		{
+			name: "add/rem create-bid errors",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:         7,
+					FeeCreateBidFlat: s.coins("100apple"),
+				})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 7,
+				RemoveFeeCreateBidFlat: s.coins("100acorn"),
+				AddFeeCreateBidFlat:    s.coins("90apple"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error: s.joinErrs(
+					"cannot remove create-bid flat fee \"100acorn\": no such fee exists",
+					"cannot add create-bid flat fee \"90apple\": fee with that denom already exists",
+				),
+			},
+		},
+		{
+			name: "add/rem seller flat errors",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                7,
+					FeeSellerSettlementFlat: s.coins("100cherry"),
+				})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 7,
+				RemoveFeeSellerSettlementFlat: s.coins("100cactus"),
+				AddFeeSellerSettlementFlat:    s.coins("90cherry"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error: s.joinErrs(
+					"cannot remove seller settlement flat fee \"100cactus\": no such fee exists",
+					"cannot add seller settlement flat fee \"90cherry\": fee with that denom already exists",
+				),
+			},
+		},
+		{
+			name: "add/rem seller ratio errors",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                  7,
+					FeeSellerSettlementRatios: s.ratios("100pear:1pear"),
+				})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 7,
+				RemoveFeeSellerSettlementRatios: s.ratios("100prune:1prune"),
+				AddFeeSellerSettlementRatios:    s.ratios("90pear:1pear"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error: s.joinErrs(
+					"cannot remove seller settlement ratio fee \"100prune:1prune\": no such ratio exists",
+					"cannot add seller settlement ratio fee \"90pear:1pear\": ratio with those denoms already exists",
+				),
+			},
+		},
+		{
+			name: "add/rem buyer flat errors",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:               7,
+					FeeBuyerSettlementFlat: s.coins("100date"),
+				})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 7,
+				RemoveFeeBuyerSettlementFlat: s.coins("100durian"),
+				AddFeeBuyerSettlementFlat:    s.coins("90date"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error: s.joinErrs(
+					"cannot remove buyer settlement flat fee \"100durian\": no such fee exists",
+					"cannot add buyer settlement flat fee \"90date\": fee with that denom already exists",
+				),
+			},
+		},
+		{
+			name: "add/rem buyer ratio errors",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                 7,
+					FeeBuyerSettlementRatios: s.ratios("100banana:1banana"),
+				})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 7,
+				RemoveFeeBuyerSettlementRatios: s.ratios("100blueberry:1blueberry"),
+				AddFeeBuyerSettlementRatios:    s.ratios("90banana:1banana"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error: s.joinErrs(
+					"cannot remove buyer settlement ratio fee \"100blueberry:1blueberry\": no such ratio exists",
+					"cannot add buyer settlement ratio fee \"90banana:1banana\": ratio with those denoms already exists",
+				),
+			},
+		},
+		{
+			name: "all the problems",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                  7,
+					FeeCreateAskFlat:          s.coins("100peach"),
+					FeeCreateBidFlat:          s.coins("100apple"),
+					FeeSellerSettlementFlat:   s.coins("100cherry"),
+					FeeSellerSettlementRatios: s.ratios("100pear:1pear"),
+					FeeBuyerSettlementFlat:    s.coins("100date"),
+					FeeBuyerSettlementRatios:  s.ratios("100banana:1banana"),
+				})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 7,
+				RemoveFeeCreateAskFlat:          s.coins("100plum"),
+				AddFeeCreateAskFlat:             s.coins("90peach"),
+				RemoveFeeCreateBidFlat:          s.coins("100acorn"),
+				AddFeeCreateBidFlat:             s.coins("90apple"),
+				RemoveFeeSellerSettlementFlat:   s.coins("100cactus"),
+				AddFeeSellerSettlementFlat:      s.coins("90cherry"),
+				RemoveFeeSellerSettlementRatios: s.ratios("100prune:1prune"),
+				AddFeeSellerSettlementRatios:    s.ratios("90pear:1pear"),
+				RemoveFeeBuyerSettlementFlat:    s.coins("100durian"),
+				AddFeeBuyerSettlementFlat:       s.coins("90date"),
+				RemoveFeeBuyerSettlementRatios:  s.ratios("100blueberry:1blueberry"),
+				AddFeeBuyerSettlementRatios:     s.ratios("90banana:1banana"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error: s.joinErrs(
+					"cannot remove create-ask flat fee \"100plum\": no such fee exists",
+					"cannot add create-ask flat fee \"90peach\": fee with that denom already exists",
+					"cannot remove create-bid flat fee \"100acorn\": no such fee exists",
+					"cannot add create-bid flat fee \"90apple\": fee with that denom already exists",
+					"cannot remove seller settlement flat fee \"100cactus\": no such fee exists",
+					"cannot add seller settlement flat fee \"90cherry\": fee with that denom already exists",
+					"cannot remove seller settlement ratio fee \"100prune:1prune\": no such ratio exists",
+					"cannot add seller settlement ratio fee \"90pear:1pear\": ratio with those denoms already exists",
+					"cannot remove buyer settlement flat fee \"100durian\": no such fee exists",
+					"cannot add buyer settlement flat fee \"90date\": fee with that denom already exists",
+					"cannot remove buyer settlement ratio fee \"100blueberry:1blueberry\": no such ratio exists",
+					"cannot add buyer settlement ratio fee \"90banana:1banana\": ratio with those denoms already exists",
+					"seller settlement fee ratios have price denom \"pear\" but there are no "+
+						"buyer settlement fee ratios with that price denom",
+					"buyer settlement fee ratios have price denom \"banana\" but there is not a "+
+						"seller settlement fee ratio with that price denom",
+				),
+			},
+		},
+		{
+			name: "all good",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                  7,
+					FeeCreateAskFlat:          s.coins("100peach"),
+					FeeCreateBidFlat:          s.coins("100apple"),
+					FeeSellerSettlementFlat:   s.coins("100cherry"),
+					FeeSellerSettlementRatios: s.ratios("100pear:1pear"),
+					FeeBuyerSettlementFlat:    s.coins("100date"),
+					FeeBuyerSettlementRatios:  s.ratios("100banana:1banana"),
+				})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 7,
+				RemoveFeeCreateAskFlat:          s.coins("100peach"),
+				AddFeeCreateAskFlat:             s.coins("90peach"),
+				RemoveFeeCreateBidFlat:          s.coins("100apple"),
+				AddFeeCreateBidFlat:             s.coins("90apple"),
+				RemoveFeeSellerSettlementFlat:   s.coins("100cherry"),
+				AddFeeSellerSettlementFlat:      s.coins("90cherry"),
+				RemoveFeeSellerSettlementRatios: s.ratios("100pear:1pear"),
+				AddFeeSellerSettlementRatios:    s.ratios("90pear:1pear,100banana:1banana"),
+				RemoveFeeBuyerSettlementFlat:    s.coins("100date"),
+				AddFeeBuyerSettlementFlat:       s.coins("90date"),
+				RemoveFeeBuyerSettlementRatios:  s.ratios("100banana:1banana"),
+				AddFeeBuyerSettlementRatios:     s.ratios("90banana:1banana,100pear:1pear"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{GovPropWillPass: true, Error: ""},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
+			s.Assert().Equal(tc.expResp, respRaw, queryName+" result")
+		})
+	}
+
+}
