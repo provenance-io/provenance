@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	db "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -230,7 +228,8 @@ func (k Keeper) iterateOrderIndex(ctx sdk.Context, prefixBz []byte, cb func(orde
 
 // getPageOfOrdersFromIndex gets a page of orders using a <something>-to-order index.
 func (k Keeper) getPageOfOrdersFromIndex(
-	prefixStore sdk.KVStore,
+	ctx sdk.Context,
+	prefixBz []byte,
 	pageReq *query.PageRequest,
 	orderType string,
 	afterOrderID uint64,
@@ -249,11 +248,12 @@ func (k Keeper) getPageOfOrdersFromIndex(
 		case exchange.OrderTypeBid:
 			orderTypeByte = OrderKeyTypeBid
 		default:
-			return nil, nil, status.Errorf(codes.InvalidArgument, "unknown order type %q", orderType)
+			return nil, nil, fmt.Errorf("unknown order type %q", orderType)
 		}
 		filterByType = true
 	}
 
+	rootStore := k.getStore(ctx)
 	var orders []*exchange.Order
 	accumulator := func(key []byte, value []byte, accumulate bool) (bool, error) {
 		// If filtering by type, but the order type isn't known, or is something else, this entry doesn't count, move on.
@@ -268,13 +268,14 @@ func (k Keeper) getPageOfOrdersFromIndex(
 		if accumulate {
 			// Only add it to the result if we can read it. This might result in fewer results than the limit,
 			// but at least one bad entry won't block others by causing the whole thing to return an error.
-			order, err := k.parseOrderStoreValue(orderID, value)
+			order, err := k.getOrderFromStore(rootStore, orderID)
 			if err == nil && order != nil {
 				orders = append(orders, order)
 			}
 		}
 		return true, nil
 	}
+	prefixStore := prefix.NewStore(rootStore, prefixBz)
 	pageResp, err := filteredPaginateAfterOrder(prefixStore, pageReq, afterOrderID, accumulator)
 
 	return pageResp, orders, err

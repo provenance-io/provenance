@@ -124,11 +124,10 @@ func (k QueryServer) GetMarketOrders(goCtx context.Context, req *exchange.QueryG
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	pre := GetIndexKeyPrefixMarketToOrder(req.MarketId)
-	store := prefix.NewStore(k.getStore(ctx), pre)
 
 	resp := &exchange.QueryGetMarketOrdersResponse{}
 	var err error
-	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(store, req.Pagination, req.OrderType, req.AfterOrderId)
+	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(ctx, pre, req.Pagination, req.OrderType, req.AfterOrderId)
 
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for market %d: %v", req.MarketId, err)
@@ -150,11 +149,10 @@ func (k QueryServer) GetOwnerOrders(goCtx context.Context, req *exchange.QueryGe
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	pre := GetIndexKeyPrefixAddressToOrder(owner)
-	store := prefix.NewStore(k.getStore(ctx), pre)
 
 	resp := &exchange.QueryGetOwnerOrdersResponse{}
 	var err error
-	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(store, req.Pagination, req.OrderType, req.AfterOrderId)
+	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(ctx, pre, req.Pagination, req.OrderType, req.AfterOrderId)
 
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for owner %s: %v", req.Owner, err)
@@ -171,11 +169,10 @@ func (k QueryServer) GetAssetOrders(goCtx context.Context, req *exchange.QueryGe
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	pre := GetIndexKeyPrefixAssetToOrder(req.Asset)
-	store := prefix.NewStore(k.getStore(ctx), pre)
 
 	resp := &exchange.QueryGetAssetOrdersResponse{}
 	var err error
-	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(store, req.Pagination, req.OrderType, req.AfterOrderId)
+	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(ctx, pre, req.Pagination, req.OrderType, req.AfterOrderId)
 
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for asset %s: %v", req.Asset, err)
