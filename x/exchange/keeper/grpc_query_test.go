@@ -3004,7 +3004,208 @@ func (s *TestSuite) TestQueryServer_GetAssetOrders() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestQueryServer_GetAllOrders()
+func (s *TestSuite) TestQueryServer_GetAllOrders() {
+	queryName := "GetAllOrders"
+	runner := func(req *exchange.QueryGetAllOrdersRequest) queryRunner {
+		return func(goCtx context.Context) (interface{}, error) {
+			return keeper.NewQueryServer(s.k).GetAllOrders(goCtx, req)
+		}
+	}
+	makeKey := func(order *exchange.Order) []byte {
+		return keeper.Uint64Bz(order.OrderId)
+	}
+
+	fiveOrders := []*exchange.Order{
+		exchange.NewOrder(14).WithAsk(&exchange.AskOrder{
+			MarketId: 8, Seller: s.addr1.String(), Assets: s.coin("14apple"), Price: s.coin("14prune"),
+			SellerSettlementFlatFee: s.coinP("14fig"), AllowPartial: false, ExternalId: "external-id-5",
+		}),
+		exchange.NewOrder(38).WithBid(&exchange.BidOrder{
+			MarketId: 6, Buyer: s.addr1.String(), Assets: s.coin("38apple"), Price: s.coin("38prune"),
+			BuyerSettlementFees: s.coins("38fig"), AllowPartial: true, ExternalId: "external-id-4",
+		}),
+		exchange.NewOrder(39).WithBid(&exchange.BidOrder{
+			MarketId: 5, Buyer: s.addr1.String(), Assets: s.coin("39apple"), Price: s.coin("39prune"),
+			BuyerSettlementFees: s.coins("39fig"), AllowPartial: false, ExternalId: "external-id-1",
+		}),
+		exchange.NewOrder(71).WithAsk(&exchange.AskOrder{
+			MarketId: 5, Seller: s.addr3.String(), Assets: s.coin("71apple"), Price: s.coin("71prune"),
+			SellerSettlementFlatFee: s.coinP("71fig"), AllowPartial: true, ExternalId: "external-id-3",
+		}),
+		exchange.NewOrder(73).WithBid(&exchange.BidOrder{
+			MarketId: 5, Buyer: s.addr2.String(), Assets: s.coin("73apple"), Price: s.coin("73prune"),
+			BuyerSettlementFees: s.coins("73fig"), AllowPartial: false, ExternalId: "external-id-2",
+		}),
+	}
+	fiveOrderSetup := func(ctx sdk.Context) {
+		store := s.k.GetStore(ctx)
+		s.requireSetOrderInStore(store, fiveOrders[2])
+		s.requireSetOrderInStore(store, fiveOrders[4])
+		s.requireSetOrderInStore(store, fiveOrders[3])
+		s.requireSetOrderInStore(store, fiveOrders[1])
+		s.requireSetOrderInStore(store, fiveOrders[0])
+	}
+
+	tests := []struct {
+		name     string
+		setup    querySetupFunc
+		req      *exchange.QueryGetAllOrdersRequest
+		expResp  *exchange.QueryGetAllOrdersResponse
+		expInErr []string
+	}{
+		{
+			name: "bad key in store",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithBid(&exchange.BidOrder{
+					MarketId: 1, Buyer: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1prune"),
+					BuyerSettlementFees: s.coins("1fig"), AllowPartial: false, ExternalId: "external-id-1",
+				}))
+
+				key2, value2, err := s.k.GetOrderStoreKeyValue(*exchange.NewOrder(2).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr2.String(), Assets: s.coin("2apple"), Price: s.coin("2prune"),
+					BuyerSettlementFees: s.coins("2fig"), AllowPartial: false, ExternalId: "external-id-2",
+				}))
+				s.Require().NoError(err, "GetOrderStoreKeyValue 2")
+				key2[len(key2)-2] = key2[len(key2)-1]
+				store.Set(key2[:len(key2)-1], value2)
+
+				s.requireSetOrderInStore(store, exchange.NewOrder(3).WithAsk(&exchange.AskOrder{
+					MarketId: 3, Seller: s.addr3.String(), Assets: s.coin("3apple"), Price: s.coin("3prune"),
+					SellerSettlementFlatFee: s.coinP("3fig"), AllowPartial: false, ExternalId: "external-id-3",
+				}))
+			},
+			expResp: &exchange.QueryGetAllOrdersResponse{
+				Orders: []*exchange.Order{
+					exchange.NewOrder(1).WithBid(&exchange.BidOrder{
+						MarketId: 1, Buyer: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1prune"),
+						BuyerSettlementFees: s.coins("1fig"), AllowPartial: false, ExternalId: "external-id-1",
+					}),
+					exchange.NewOrder(3).WithAsk(&exchange.AskOrder{
+						MarketId: 3, Seller: s.addr3.String(), Assets: s.coin("3apple"), Price: s.coin("3prune"),
+						SellerSettlementFlatFee: s.coinP("3fig"), AllowPartial: false, ExternalId: "external-id-3",
+					}),
+				},
+				Pagination: &query.PageResponse{Total: 2},
+			},
+		},
+		{
+			name: "bad order in store",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithBid(&exchange.BidOrder{
+					MarketId: 1, Buyer: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1prune"),
+					BuyerSettlementFees: s.coins("1fig"), AllowPartial: false, ExternalId: "external-id-1",
+				}))
+
+				key2, value2, err := s.k.GetOrderStoreKeyValue(*exchange.NewOrder(2).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr2.String(), Assets: s.coin("2apple"), Price: s.coin("2prune"),
+					BuyerSettlementFees: s.coins("2fig"), AllowPartial: false, ExternalId: "external-id-2",
+				}))
+				s.Require().NoError(err, "GetOrderStoreKeyValue 2")
+				value2[0] = 9
+				store.Set(key2, value2)
+
+				s.requireSetOrderInStore(store, exchange.NewOrder(3).WithAsk(&exchange.AskOrder{
+					MarketId: 3, Seller: s.addr3.String(), Assets: s.coin("3apple"), Price: s.coin("3prune"),
+					SellerSettlementFlatFee: s.coinP("3fig"), AllowPartial: false, ExternalId: "external-id-3",
+				}))
+			},
+			expResp: &exchange.QueryGetAllOrdersResponse{
+				Orders: []*exchange.Order{
+					exchange.NewOrder(1).WithBid(&exchange.BidOrder{
+						MarketId: 1, Buyer: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1prune"),
+						BuyerSettlementFees: s.coins("1fig"), AllowPartial: false, ExternalId: "external-id-1",
+					}),
+					exchange.NewOrder(3).WithAsk(&exchange.AskOrder{
+						MarketId: 3, Seller: s.addr3.String(), Assets: s.coin("3apple"), Price: s.coin("3prune"),
+						SellerSettlementFlatFee: s.coinP("3fig"), AllowPartial: false, ExternalId: "external-id-3",
+					}),
+				},
+				Pagination: &query.PageResponse{Total: 3},
+			},
+		},
+		{
+			name: "both offset and key provided",
+			req:  &exchange.QueryGetAllOrdersRequest{Pagination: &query.PageRequest{Offset: 2, Key: makeKey(fiveOrders[0])}},
+			expInErr: []string{invalidArgErr, "error iterating all orders",
+				"invalid request, either offset or key is expected, got both"},
+		},
+		{
+			name:    "no orders in state",
+			expResp: &exchange.QueryGetAllOrdersResponse{Pagination: &query.PageResponse{}},
+		},
+		{
+			name:    "5 orders: get all: nil req",
+			setup:   fiveOrderSetup,
+			req:     nil,
+			expResp: &exchange.QueryGetAllOrdersResponse{Orders: fiveOrders, Pagination: &query.PageResponse{Total: 5}},
+		},
+		{
+			name:    "5 orders: get all: empty req",
+			setup:   fiveOrderSetup,
+			req:     &exchange.QueryGetAllOrdersRequest{},
+			expResp: &exchange.QueryGetAllOrdersResponse{Orders: fiveOrders, Pagination: &query.PageResponse{Total: 5}},
+		},
+		{
+			name:    "5 orders: get all: empty pagination",
+			setup:   fiveOrderSetup,
+			req:     &exchange.QueryGetAllOrdersRequest{Pagination: &query.PageRequest{}},
+			expResp: &exchange.QueryGetAllOrdersResponse{Orders: fiveOrders, Pagination: &query.PageResponse{Total: 5}},
+		},
+		{
+			name:  "5 orders: limit 2",
+			setup: fiveOrderSetup,
+			req:   &exchange.QueryGetAllOrdersRequest{Pagination: &query.PageRequest{Limit: 2}},
+			expResp: &exchange.QueryGetAllOrdersResponse{
+				Orders:     fiveOrders[0:2],
+				Pagination: &query.PageResponse{NextKey: makeKey(fiveOrders[2])},
+			},
+		},
+		{
+			name:  "5 orders: get second using key",
+			setup: fiveOrderSetup,
+			req:   &exchange.QueryGetAllOrdersRequest{Pagination: &query.PageRequest{Limit: 1, Key: makeKey(fiveOrders[1])}},
+			expResp: &exchange.QueryGetAllOrdersResponse{
+				Orders:     fiveOrders[1:2],
+				Pagination: &query.PageResponse{NextKey: makeKey(fiveOrders[2])},
+			},
+		},
+		{
+			name:  "5 orders: get third and fourth using offset",
+			setup: fiveOrderSetup,
+			req:   &exchange.QueryGetAllOrdersRequest{Pagination: &query.PageRequest{Limit: 2, Offset: 2}},
+			expResp: &exchange.QueryGetAllOrdersResponse{
+				Orders:     fiveOrders[2:4],
+				Pagination: &query.PageResponse{NextKey: makeKey(fiveOrders[4])},
+			},
+		},
+		{
+			name:  "5 orders: get all: reversed",
+			setup: fiveOrderSetup,
+			req:   &exchange.QueryGetAllOrdersRequest{Pagination: &query.PageRequest{Reverse: true}},
+			expResp: &exchange.QueryGetAllOrdersResponse{
+				Orders:     reverseSlice(fiveOrders),
+				Pagination: &query.PageResponse{Total: 5}},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
+			if s.Assert().Equal(tc.expResp, respRaw, queryName+" result") {
+				return
+			}
+			resp, ok := respRaw.(*exchange.QueryGetAllOrdersResponse)
+			s.Require().True(ok, queryName+" response is of type %T and could not be cast to %T", respRaw, tc.expResp)
+			if tc.expResp == nil || resp == nil {
+				return
+			}
+			s.assertEqualOrders(tc.expResp.Orders, resp.Orders, "%s Orders", queryName)
+			s.assertEqualPageResponse(tc.expResp.Pagination, resp.Pagination, "%s Pagination", queryName)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestQueryServer_GetMarket()
 
