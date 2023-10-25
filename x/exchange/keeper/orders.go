@@ -331,22 +331,23 @@ func filteredPaginateAfterOrder(
 			nextKey []byte
 		)
 
+		// This loop is modified from the query.FilteredPaginate version to set
+		// NextKey to the next hit instead of the next entry. This matches the offset behavior.
 		for ; iterator.Valid(); iterator.Next() {
-			if numHits == limit {
-				nextKey = iterator.Key()
-				break
-			}
-
 			if iterator.Error() != nil {
 				return nil, iterator.Error()
 			}
 
-			hit, err := onResult(iterator.Key(), iterator.Value(), true)
+			hit, err := onResult(iterator.Key(), iterator.Value(), numHits < limit)
 			if err != nil {
 				return nil, err
 			}
 
 			if hit {
+				if numHits == limit {
+					nextKey = iterator.Key()
+					break
+				}
 				numHits++
 			}
 		}
