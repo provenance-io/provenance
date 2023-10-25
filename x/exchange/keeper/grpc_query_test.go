@@ -3662,7 +3662,122 @@ func (s *TestSuite) TestQueryServer_Params() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestQueryServer_ValidateCreateMarket()
+func (s *TestSuite) TestQueryServer_ValidateCreateMarket() {
+	queryName := "ValidateCreateMarket"
+	runner := func(req *exchange.QueryValidateCreateMarketRequest) queryRunner {
+		return func(goCtx context.Context) (interface{}, error) {
+			return keeper.NewQueryServer(s.k).ValidateCreateMarket(goCtx, req)
+		}
+	}
+
+	tests := []struct {
+		name     string
+		setup    querySetupFunc
+		req      *exchange.QueryValidateCreateMarketRequest
+		expResp  *exchange.QueryValidateCreateMarketResponse
+		expInErr []string
+	}{
+		{
+			name:     "nil req",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "empty req",
+			req:      &exchange.QueryValidateCreateMarketRequest{},
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name: "invalid market",
+			req: &exchange.QueryValidateCreateMarketRequest{CreateMarketRequest: &exchange.MsgGovCreateMarketRequest{
+				Authority: s.k.GetAuthority(),
+				Market: exchange.Market{
+					MarketDetails: exchange.MarketDetails{Name: strings.Repeat("s", exchange.MaxName+1)},
+				},
+			}},
+			expResp: &exchange.QueryValidateCreateMarketResponse{
+				Error: fmt.Sprintf("name length %d exceeds maximum length of %d",
+					exchange.MaxName+1, exchange.MaxName),
+			},
+		},
+		{
+			name: "no authority",
+			req: &exchange.QueryValidateCreateMarketRequest{CreateMarketRequest: &exchange.MsgGovCreateMarketRequest{
+				Authority: "",
+			}},
+			expResp: &exchange.QueryValidateCreateMarketResponse{
+				Error: "invalid authority: empty address string is not allowed",
+			},
+		},
+		{
+			name: "bad authority",
+			req: &exchange.QueryValidateCreateMarketRequest{CreateMarketRequest: &exchange.MsgGovCreateMarketRequest{
+				Authority: "bad",
+			}},
+			expResp: &exchange.QueryValidateCreateMarketResponse{
+				Error: "invalid authority: decoding bech32 failed: invalid bech32 string length 3",
+			},
+		},
+		{
+			name: "wrong authority",
+			req: &exchange.QueryValidateCreateMarketRequest{CreateMarketRequest: &exchange.MsgGovCreateMarketRequest{
+				Authority: s.addr1.String(),
+			}},
+			expResp: &exchange.QueryValidateCreateMarketResponse{
+				Error: "expected \"" + s.k.GetAuthority() + "\" got \"" + s.addr1.String() + "\": " +
+					"expected gov account as only signer for proposal message",
+			},
+		},
+		{
+			name: "market already exists",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 1})
+			},
+			req: &exchange.QueryValidateCreateMarketRequest{CreateMarketRequest: &exchange.MsgGovCreateMarketRequest{
+				Authority: s.k.GetAuthority(),
+				Market:    exchange.Market{MarketId: 1},
+			}},
+			expResp: &exchange.QueryValidateCreateMarketResponse{
+				Error: "market id 1 account " + exchange.GetMarketAddress(1).String() + " already exists",
+			},
+		},
+		{
+			name: "problems with market definition",
+			req: &exchange.QueryValidateCreateMarketRequest{CreateMarketRequest: &exchange.MsgGovCreateMarketRequest{
+				Authority: s.k.GetAuthority(),
+				Market: exchange.Market{
+					ReqAttrCreateAsk: []string{" ask .bb.cc"},
+					ReqAttrCreateBid: []string{" bid .bb.cc"},
+				},
+			}},
+			expResp: &exchange.QueryValidateCreateMarketResponse{
+				GovPropWillPass: true,
+				Error: s.joinErrs(
+					"create ask required attribute \" ask .bb.cc\" is not normalized, expected \"ask.bb.cc\"",
+					"create bid required attribute \" bid .bb.cc\" is not normalized, expected \"bid.bb.cc\"",
+				),
+			},
+		},
+		{
+			name: "all good",
+			req: &exchange.QueryValidateCreateMarketRequest{CreateMarketRequest: &exchange.MsgGovCreateMarketRequest{
+				Authority: s.k.GetAuthority(),
+				Market: exchange.Market{
+					ReqAttrCreateAsk: []string{"ask.bb.cc"},
+					ReqAttrCreateBid: []string{"bid.bb.cc"},
+				},
+			}},
+			expResp: &exchange.QueryValidateCreateMarketResponse{GovPropWillPass: true, Error: ""},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
+			s.Assert().Equal(tc.expResp, respRaw, queryName+" result")
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestQueryServer_ValidateMarket()
 
