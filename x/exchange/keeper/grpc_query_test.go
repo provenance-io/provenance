@@ -2,8 +2,11 @@ package keeper_test
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 )
@@ -35,6 +38,61 @@ func (s *TestSuite) doQueryTest(setup querySetupFunc, runner queryRunner, expInE
 	s.Require().NotPanicsf(testFunc, msg, args...)
 	s.assertErrorContentsf(err, expInErr, msg+" error", args...)
 	return rv
+}
+
+// getOrderIDs gets a comma+space separated string of all the order ids in the given orders, E.g. "1, 8, 55"
+func (s *TestSuite) getOrderIDs(orders []*exchange.Order) string {
+	rv := make([]string, len(orders))
+	for i, exp := range orders {
+		if exp == nil {
+			rv[i] = "<nil>"
+		} else {
+			rv[i] = fmt.Sprintf("%d", exp.OrderId)
+		}
+	}
+	return strings.Join(rv, ", ")
+}
+
+// assertEqualOrders asserts that the to slices of orders are equal.
+// If not, some further assertions are made to try to help clarify the differences.
+func (s *TestSuite) assertEqualOrders(expected, actual []*exchange.Order, msg string, args ...interface{}) bool {
+	if s.Assert().Equalf(expected, actual, msg, args...) {
+		return true
+	}
+	// If the order ids are different, that should be enough info in the failure message.
+	expIDs := s.getOrderIDs(expected)
+	actIDs := s.getOrderIDs(actual)
+	if !s.Assert().Equalf(expIDs, actIDs, msg+" order ids", args...) {
+		return false
+	}
+	// Same order ids, so compare each individually.
+	for i := range expected {
+		s.Assertions.Equalf(expected[i], actual[i], msg+fmt.Sprintf("[%d]", i), args...)
+	}
+	return false
+}
+
+// assertEqualPageResponse asserts that two PageResponses are equal.
+// If not, some further assertions are made to try to help clarify the differences.
+func (s *TestSuite) assertEqualPageResponse(expected, actual *query.PageResponse, msg string, args ...interface{}) bool {
+	if s.Assert().Equalf(expected, actual, msg, args...) {
+		return true
+	}
+	if expected == nil || actual == nil {
+		return false
+	}
+	if !s.Assert().Equalf(expected.NextKey, actual.NextKey, msg+" NextKey", args...) {
+		expOrderID, expOK := keeper.ParseIndexKeySuffixOrderID(expected.NextKey)
+		if expOK {
+			s.T().Logf("Expected as order id: %d", expOrderID)
+		}
+		actOrderID, actOK := keeper.ParseIndexKeySuffixOrderID(actual.NextKey)
+		if actOK {
+			s.T().Logf("  Actual as order id: %d", actOrderID)
+		}
+	}
+	s.Assert().Equalf(int(expected.Total), int(actual.Total), msg+" Total", args...)
+	return false
 }
 
 func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
@@ -754,7 +812,723 @@ func (s *TestSuite) TestQueryServer_GetOrderByExternalID() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestQueryServer_GetMarketOrders()
+func (s *TestSuite) TestQueryServer_GetMarketOrders() {
+	queryName := "GetMarketOrders"
+	runner := func(req *exchange.QueryGetMarketOrdersRequest) queryRunner {
+		return func(goCtx context.Context) (interface{}, error) {
+			return keeper.NewQueryServer(s.k).GetMarketOrders(goCtx, req)
+		}
+	}
+	makeKey := func(order *exchange.Order) []byte {
+		return keeper.Uint64Bz(order.OrderId)
+	}
+
+	marketCount, ordersPerMarket := 3, 20
+	marketOrders := make(map[uint32][]*exchange.Order, marketCount)
+	marketAskOrders := make(map[uint32][]*exchange.Order, marketCount)
+	marketBidOrders := make(map[uint32][]*exchange.Order, marketCount)
+	for m := uint32(1); m <= uint32(marketCount); m++ {
+		marketOrders[m] = make([]*exchange.Order, 0, ordersPerMarket)
+		marketAskOrders[m] = make([]*exchange.Order, 0, ordersPerMarket/2)
+		marketBidOrders[m] = make([]*exchange.Order, 0, ordersPerMarket/2)
+	}
+	mainStore := s.getStore()
+	for i := 1; i <= marketCount*ordersPerMarket; i++ {
+		orderID := uint64(i)
+		marketID := uint32((i-1)%marketCount) + 1
+		order := exchange.NewOrder(orderID)
+		if orderID%2 == 0 {
+			order.WithAsk(&exchange.AskOrder{
+				MarketId:     marketID,
+				Seller:       sdk.AccAddress(fmt.Sprintf("seller_%d____________", orderID)[:20]).String(),
+				Assets:       sdk.NewInt64Coin("apple", int64(i)),
+				Price:        sdk.NewInt64Coin("plum", int64(i)),
+				AllowPartial: orderID%4 < 2,
+				ExternalId:   fmt.Sprintf("external-id-%d", i),
+			})
+			marketAskOrders[marketID] = append(marketAskOrders[marketID], order)
+		} else {
+			order.WithBid(&exchange.BidOrder{
+				MarketId:     marketID,
+				Buyer:        sdk.AccAddress(fmt.Sprintf("buyer_%d_____________", orderID)[:20]).String(),
+				Assets:       sdk.NewInt64Coin("apple", int64(i)),
+				Price:        sdk.NewInt64Coin("plum", int64(i)),
+				AllowPartial: orderID%4 < 2,
+				ExternalId:   fmt.Sprintf("external-id-%d", i),
+			})
+			marketBidOrders[marketID] = append(marketBidOrders[marketID], order)
+		}
+		marketOrders[marketID] = append(marketOrders[marketID], order)
+		s.requireSetOrderInStore(mainStore, order)
+	}
+
+	// OrderIDs in each market:
+	//   0  1  2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19
+	//1: 1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 40, 43, 46, 49, 52, 55, 58
+	//2: 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59
+	//3: 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60
+
+	tests := []struct {
+		name     string
+		setup    querySetupFunc
+		req      *exchange.QueryGetMarketOrdersRequest
+		expResp  *exchange.QueryGetMarketOrdersResponse
+		expInErr []string
+	}{
+		// Tests on errors and non-normal conditions.
+		{
+			name:     "nil req",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "market 0",
+			req:      &exchange.QueryGetMarketOrdersRequest{MarketId: 0},
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "unknown order type",
+			req:      &exchange.QueryGetMarketOrdersRequest{MarketId: 4, OrderType: "burger and fries"},
+			expInErr: []string{invalidArgErr, "error iterating orders for market 4: unknown order type \"burger and fries\""},
+		},
+		{
+			name:    "no orders",
+			req:     &exchange.QueryGetMarketOrdersRequest{MarketId: 8},
+			expResp: &exchange.QueryGetMarketOrdersResponse{Orders: nil, Pagination: &query.PageResponse{}},
+		},
+		{
+			name: "bad index entry",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr1.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
+				}))
+				key99, value99, err := s.k.GetOrderStoreKeyValue(*exchange.NewOrder(99).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr2.String(), Assets: s.coin("99apple"), Price: s.coin("99prune"),
+				}))
+				s.Require().NoError(err, "GetOrderStoreKeyValue 99")
+				store.Set(key99, value99)
+				idxKey := keeper.MakeIndexKeyMarketToOrder(8, 99)
+				idxKey[len(idxKey)-2] = idxKey[len(idxKey)-1]
+				store.Set(idxKey[:len(idxKey)-1], []byte{keeper.OrderKeyTypeAsk})
+				s.requireSetOrderInStore(store, exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr3.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
+				}))
+			},
+			req: &exchange.QueryGetMarketOrdersRequest{MarketId: 8},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders: []*exchange.Order{
+					exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
+						MarketId: 8, Seller: s.addr1.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
+					}),
+					exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
+						MarketId: 8, Seller: s.addr3.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
+					}),
+				},
+				Pagination: &query.PageResponse{Total: 2},
+			},
+		},
+		{
+			name: "index entry to order that does not exist",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr1.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
+				}))
+				key := keeper.MakeIndexKeyMarketToOrder(8, 99)
+				store.Set(key, []byte{keeper.OrderKeyTypeAsk})
+				s.requireSetOrderInStore(store, exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr3.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
+				}))
+			},
+			req: &exchange.QueryGetMarketOrdersRequest{MarketId: 8},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders: []*exchange.Order{
+					exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
+						MarketId: 8, Seller: s.addr1.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
+					}),
+					exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
+						MarketId: 8, Seller: s.addr3.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
+					}),
+				},
+				Pagination: &query.PageResponse{Total: 3},
+			},
+		},
+		{
+			name: "error reading an order",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr1.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
+				}))
+				key99, value99, err := s.k.GetOrderStoreKeyValue(*exchange.NewOrder(99).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr2.String(), Assets: s.coin("99apple"), Price: s.coin("99prune"),
+				}))
+				s.Require().NoError(err, "GetOrderStoreKeyValue 99")
+				value99[0] = 8
+				store.Set(key99, value99)
+				idxKey := keeper.MakeIndexKeyMarketToOrder(8, 99)
+				store.Set(idxKey, []byte{8})
+				s.requireSetOrderInStore(store, exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr3.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
+				}))
+			},
+			req: &exchange.QueryGetMarketOrdersRequest{MarketId: 8},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders: []*exchange.Order{
+					exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
+						MarketId: 8, Seller: s.addr1.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
+					}),
+					exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
+						MarketId: 8, Seller: s.addr3.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
+					}),
+				},
+				Pagination: &query.PageResponse{Total: 3},
+			},
+		},
+
+		// Forward, no order type.
+		{
+			name: "forward, no order type, no after order, get all",
+			req:  &exchange.QueryGetMarketOrdersRequest{MarketId: 1},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketOrders[1],
+				Pagination: &query.PageResponse{Total: 20},
+			},
+		},
+		{
+			name: "forward, no order type, no after order, limit with key",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId:   2,
+				Pagination: &query.PageRequest{Limit: 3, Key: makeKey(marketOrders[2][2])},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketOrders[2][2:5],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketOrders[2][5])},
+			},
+		},
+		{
+			name: "forward, no order type, no after order, limit with offset, no count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId:   3,
+				Pagination: &query.PageRequest{Limit: 5, Offset: 8, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketOrders[3][8:13],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketOrders[3][13])},
+			},
+		},
+		{
+			name: "forward, no order type, no after order, limit with offset and count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId:   1,
+				Pagination: &query.PageRequest{Limit: 5, Offset: 6, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketOrders[1][6:11],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketOrders[1][11]), Total: 20},
+			},
+		},
+		{
+			name: "forward, no order type, after order 30, get all",
+			req:  &exchange.QueryGetMarketOrdersRequest{MarketId: 2, AfterOrderId: 30},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketOrders[2][10:],
+				Pagination: &query.PageResponse{Total: 10},
+			},
+		},
+		{
+			name: "forward, no order type, after order 30, limit with key",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 2, Key: makeKey(marketOrders[1][15])},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketOrders[1][15:17],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketOrders[1][17])},
+			},
+		},
+		{
+			name: "forward, no order type, after order 30, limit with offset, no count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 3, Offset: 2, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketOrders[1][12:15],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketOrders[1][15])},
+			},
+		},
+		{
+			name: "forward, no order type, after order 30, limit with offset and count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 3, AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 1, Offset: 7, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketOrders[3][17:18],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketOrders[3][18]), Total: 10},
+			},
+		},
+
+		// Forward, only ask orders
+		{
+			name: "forward, ask orders, no after order, get all",
+			req:  &exchange.QueryGetMarketOrdersRequest{MarketId: 3, OrderType: "ask"},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketAskOrders[3],
+				Pagination: &query.PageResponse{Total: 10},
+			},
+		},
+		{
+			name: "forward, ask orders, no after order, limit with key",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, OrderType: "asks",
+				Pagination: &query.PageRequest{Limit: 3, Key: makeKey(marketAskOrders[1][4])},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketAskOrders[1][4:7],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketAskOrders[1][7])},
+			},
+		},
+		{
+			name: "forward, ask orders, no after order, limit with offset, no count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 2, OrderType: "ASK",
+				Pagination: &query.PageRequest{Limit: 3, Offset: 8, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketAskOrders[2][8:],
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name: "forward, ask orders, no after order, limit with offset and count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 2, OrderType: "ASKS",
+				Pagination: &query.PageRequest{Limit: 3, Offset: 6, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketAskOrders[2][6:9],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketAskOrders[2][9]), Total: 10},
+			},
+		},
+		{
+			name: "forward, ask orders, after order 30, get all",
+			req:  &exchange.QueryGetMarketOrdersRequest{MarketId: 3, OrderType: "AskOrders", AfterOrderId: 30},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketAskOrders[3][5:],
+				Pagination: &query.PageResponse{Total: 5},
+			},
+		},
+		{
+			name: "forward, ask orders, after order 30, limit with key",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 2, OrderType: "ask orders", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 1, Key: makeKey(marketAskOrders[2][7])},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketAskOrders[2][7:8],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketAskOrders[2][8])},
+			},
+		},
+		{
+			name: "forward, ask orders, after order 30, limit with offset, no count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, OrderType: "askOrder", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 2, Offset: 2, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketAskOrders[1][7:9],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketAskOrders[1][9])},
+			},
+		},
+		{
+			name: "forward, ask orders, after order 30, limit with offset and count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, OrderType: "aSKs", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 2, Offset: 1, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketAskOrders[1][6:8],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketAskOrders[1][8]), Total: 5},
+			},
+		},
+
+		// Forward, only bid orders
+		{
+			name: "forward, bid orders, no after order, get all",
+			req:  &exchange.QueryGetMarketOrdersRequest{MarketId: 3, OrderType: "bid"},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketBidOrders[3],
+				Pagination: &query.PageResponse{Total: 10},
+			},
+		},
+		{
+			name: "forward, bid orders, no after order, limit with key",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, OrderType: "bids",
+				Pagination: &query.PageRequest{Limit: 3, Key: makeKey(marketBidOrders[1][4])},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketBidOrders[1][4:7],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketBidOrders[1][7])},
+			},
+		},
+		{
+			name: "forward, bid orders, no after order, limit with offset, no count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 2, OrderType: "BID",
+				Pagination: &query.PageRequest{Limit: 3, Offset: 8, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketBidOrders[2][8:],
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name: "forward, bid orders, no after order, limit with offset and count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 2, OrderType: "BIDS",
+				Pagination: &query.PageRequest{Limit: 3, Offset: 6, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketBidOrders[2][6:9],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketBidOrders[2][9]), Total: 10},
+			},
+		},
+		{
+			name: "forward, bid orders, after order 30, get all",
+			req:  &exchange.QueryGetMarketOrdersRequest{MarketId: 3, OrderType: "BidOrders", AfterOrderId: 30},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketBidOrders[3][5:],
+				Pagination: &query.PageResponse{Total: 5},
+			},
+		},
+		{
+			name: "forward, bid orders, after order 30, limit with key",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 2, OrderType: "bid orders", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 1, Key: makeKey(marketBidOrders[2][7])},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketBidOrders[2][7:8],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketBidOrders[2][8])},
+			},
+		},
+		{
+			name: "forward, bid orders, after order 30, limit with offset, no count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, OrderType: "bidOrder", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 2, Offset: 2, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketBidOrders[1][7:9],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketBidOrders[1][9])},
+			},
+		},
+		{
+			name: "forward, bid orders, after order 30, limit with offset and count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, OrderType: "bIDs", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 2, Offset: 1, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     marketBidOrders[1][6:8],
+				Pagination: &query.PageResponse{NextKey: makeKey(marketBidOrders[1][8]), Total: 5},
+			},
+		},
+
+		// Reverse, no order type.
+		{
+			name: "reverse, no order type, no after order, get all",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId:   1,
+				Pagination: &query.PageRequest{Reverse: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketOrders[1]),
+				Pagination: &query.PageResponse{Total: 20},
+			},
+		},
+		{
+			name: "reverse, no order type, no after order, limit with key",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId:   2,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Key: makeKey(marketOrders[2][12])},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketOrders[2][10:13]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketOrders[2][9])},
+			},
+		},
+		{
+			name: "reverse, no order type, no after order, limit with offset, no count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId:   3,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 5, Offset: 8, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketOrders[3][7:12]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketOrders[3][6])},
+			},
+		},
+		{
+			name: "reverse, no order type, no after order, limit with offset and count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId:   1,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 5, Offset: 6, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketOrders[1][9:14]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketOrders[1][8]), Total: 20},
+			},
+		},
+		{
+			name: "reverse, no order type, after order 30, get all",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 2, AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketOrders[2][10:]),
+				Pagination: &query.PageResponse{Total: 10},
+			},
+		},
+		{
+			name: "reverse, no order type, after order 30, limit with key",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 2, Key: makeKey(marketOrders[1][15])},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketOrders[1][14:16]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketOrders[1][13])},
+			},
+		},
+		{
+			name: "reverse, no order type, after order 30, limit with offset, no count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Offset: 2, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketOrders[1][15:18]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketOrders[1][14])},
+			},
+		},
+		{
+			name: "reverse, no order type, after order 30, limit with offset and count",
+			// A key point of this test is that order 30 is in market 3. The AfterOrderID order
+			// should NOT be included in results, though, so there should still only be 10 results here.
+			// This validates that the "afterOrderID + 1" is correct in the getOrderIterator reverse block.
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 3, AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 1, Offset: 7, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketOrders[3][12:13]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketOrders[3][11]), Total: 10},
+			},
+		},
+
+		// Reverse, only ask orders
+		{
+			name: "reverse, ask orders, no after order, get all",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 3, OrderType: "ask",
+				Pagination: &query.PageRequest{Reverse: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketAskOrders[3]),
+				Pagination: &query.PageResponse{Total: 10},
+			},
+		},
+		{
+			name: "reverse, ask orders, no after order, limit with key",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, OrderType: "asks",
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Key: makeKey(marketAskOrders[1][4])},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketAskOrders[1][2:5]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketAskOrders[1][1])},
+			},
+		},
+		{
+			name: "reverse, ask orders, no after order, limit with offset, no count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 2, OrderType: "ASK",
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Offset: 8, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketAskOrders[2][:2]),
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name: "reverse, ask orders, no after order, limit with offset and count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 2, OrderType: "ASKS",
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Offset: 1, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketAskOrders[2][6:9]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketAskOrders[2][5]), Total: 10},
+			},
+		},
+		{
+			name: "reverse, ask orders, after order 30, get all",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 3, OrderType: "AskOrders", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketAskOrders[3][5:]),
+				Pagination: &query.PageResponse{Total: 5},
+			},
+		},
+		{
+			name: "reverse, ask orders, after order 30, limit with key",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 2, OrderType: "ask orders", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 1, Key: makeKey(marketAskOrders[2][7])},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketAskOrders[2][7:8]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketAskOrders[2][6])},
+			},
+		},
+		{
+			name: "reverse, ask orders, after order 30, limit with offset, no count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, OrderType: "askOrder", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 2, Offset: 2, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketAskOrders[1][6:8]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketAskOrders[1][5])},
+			},
+		},
+		{
+			name: "reverse, ask orders, after order 30, limit with offset and count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, OrderType: "aSKs", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Offset: 1, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketAskOrders[1][6:9]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketAskOrders[1][5]), Total: 5},
+			},
+		},
+
+		// Reverse, only bid orders
+		{
+			name: "reverse, bid orders, no after order, get all",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 3, OrderType: "bid",
+				Pagination: &query.PageRequest{Reverse: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketBidOrders[3]),
+				Pagination: &query.PageResponse{Total: 10},
+			},
+		},
+		{
+			name: "reverse, bid orders, no after order, limit with key",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, OrderType: "bids",
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Key: makeKey(marketBidOrders[1][4])},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketBidOrders[1][2:5]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketBidOrders[1][1])},
+			},
+		},
+		{
+			name: "reverse, bid orders, no after order, limit with offset, no count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 2, OrderType: "BID",
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Offset: 8, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketBidOrders[2][:2]),
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name: "reverse, bid orders, no after order, limit with offset and count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 2, OrderType: "BIDS",
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Offset: 1, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketBidOrders[2][6:9]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketBidOrders[2][5]), Total: 10},
+			},
+		},
+		{
+			name: "reverse, bid orders, after order 30, get all",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 3, OrderType: "BidOrders", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketBidOrders[3][5:]),
+				Pagination: &query.PageResponse{Total: 5},
+			},
+		},
+		{
+			name: "reverse, bid orders, after order 30, limit with key",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 2, OrderType: "bid orders", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 1, Key: makeKey(marketBidOrders[2][7])},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketBidOrders[2][7:8]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketBidOrders[2][6])},
+			},
+		},
+		{
+			name: "reverse, bid orders, after order 30, limit with offset, no count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, OrderType: "bidOrder", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 2, Offset: 2, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketBidOrders[1][6:8]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketBidOrders[1][5])},
+			},
+		},
+		{
+			name: "reverse, bid orders, after order 30, limit with offset and count",
+			req: &exchange.QueryGetMarketOrdersRequest{
+				MarketId: 1, OrderType: "bIDs", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Offset: 1, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetMarketOrdersResponse{
+				Orders:     reverseSlice(marketBidOrders[1][6:9]),
+				Pagination: &query.PageResponse{NextKey: makeKey(marketBidOrders[1][5]), Total: 5},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
+			if s.Assert().Equal(tc.expResp, respRaw, queryName+" result") {
+				return
+			}
+			resp, ok := respRaw.(*exchange.QueryGetMarketOrdersResponse)
+			s.Require().True(ok, queryName+" response is of type %T and could not be cast to %T", respRaw, tc.expResp)
+			if tc.expResp == nil || resp == nil {
+				return
+			}
+			s.assertEqualOrders(tc.expResp.Orders, resp.Orders, "%s Orders", queryName)
+			s.assertEqualPageResponse(tc.expResp.Pagination, resp.Pagination, "%s Pagination", queryName)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestQueryServer_GetOwnerOrders()
 

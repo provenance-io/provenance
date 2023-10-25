@@ -142,6 +142,18 @@ func noOpCopier[T any](val T) T {
 	return val
 }
 
+// reverseSlice returns a new slice with the entries reversed.
+func reverseSlice[T any](vals []T) []T {
+	if vals == nil {
+		return nil
+	}
+	rv := make([]T, len(vals))
+	for i, val := range vals {
+		rv[len(vals)-i-1] = val
+	}
+	return rv
+}
+
 // getLogOutput gets the log buffer contents. This (probably) also clears the log buffer.
 func (s *TestSuite) getLogOutput(msg string, args ...interface{}) string {
 	logOutput := s.logBuffer.String()

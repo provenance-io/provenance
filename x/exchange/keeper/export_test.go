@@ -57,6 +57,8 @@ var (
 	ParseLengthPrefixedAddr = parseLengthPrefixedAddr
 	// Uint16Bz is a test-only exposure of uint16Bz.
 	Uint16Bz = uint16Bz
+	// Uint64Bz is a test-only exposure of uint64Bz.
+	Uint64Bz = uint64Bz
 
 	// SetParamsSplit is a test-only exposure of setParamsSplit.
 	SetParamsSplit = setParamsSplit
