@@ -7,6 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 )
@@ -99,6 +101,14 @@ func (s *TestSuite) assertEqualPageResponse(expected, actual *query.PageResponse
 	return false
 }
 
+// requireCreateMarketUnmocked calls CreateMarket making sure it doesn't panic or return an error.
+func (s *TestSuite) requireCreateMarketUnmocked(market exchange.Market) {
+	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+		_, err := s.k.CreateMarket(s.ctx, market)
+		return err
+	}, "CreateMarket(%d)", market.MarketId)
+}
+
 func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 	queryName := "OrderFeeCalc"
 	runner := func(req *exchange.QueryOrderFeeCalcRequest) queryRunner {
@@ -145,7 +155,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "ask: no fees",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 1})
 			},
 			req: &exchange.QueryOrderFeeCalcRequest{AskOrder: &exchange.AskOrder{
 				Assets: s.coin("1apple"), Price: s.coin("2000plum"), MarketId: 1,
@@ -155,7 +165,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "ask: only creation: one option",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:         1,
 					FeeCreateAskFlat: s.coins("3fig"),
 				})
@@ -170,7 +180,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "ask: only creation: three options",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:         8,
 					FeeCreateAskFlat: s.coins("3fig,52grape,1honeydew"),
 				})
@@ -185,7 +195,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "ask: only settlement flat: one option",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:                8,
 					FeeSellerSettlementFlat: s.coins("8grape"),
 				})
@@ -200,7 +210,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "ask: only settlement flat: three option",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:                8,
 					FeeSellerSettlementFlat: s.coins("23fig,6grape,15pineapple"),
 				})
@@ -215,7 +225,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "ask: price denom without ratio",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:                  4,
 					FeeSellerSettlementRatios: s.ratios("500plum:3plum"),
 				})
@@ -229,7 +239,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "ask: only settlement ratio",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:                  8,
 					FeeSellerSettlementRatios: s.ratios("500plum:3plum"),
 				})
@@ -244,7 +254,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "ask: both settlement",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:                  8,
 					FeeSellerSettlementFlat:   s.coins("23fig,6grape,15pineapple"),
 					FeeSellerSettlementRatios: s.ratios("500plum:3plum"),
@@ -261,7 +271,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "ask: all fees",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:                  1,
 					FeeCreateAskFlat:          s.coins("3fig,52grape,1honeydew"),
 					FeeSellerSettlementFlat:   s.coins("23fig,6grape,15pineapple"),
@@ -289,7 +299,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "bid: no fees",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 1})
 			},
 			req: &exchange.QueryOrderFeeCalcRequest{BidOrder: &exchange.BidOrder{
 				Assets: s.coin("1apple"), Price: s.coin("2000plum"), MarketId: 1,
@@ -299,7 +309,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "bid: only creation: one option",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:         33,
 					FeeCreateBidFlat: s.coins("7honeydew"),
 				})
@@ -314,7 +324,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "bid: only creation: three options",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:         33,
 					FeeCreateBidFlat: s.coins("57fig,6honeydew,223jackfruit"),
 				})
@@ -329,7 +339,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "bid: only settlement flat: one option",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:               3,
 					FeeBuyerSettlementFlat: s.coins("12pineapple"),
 				})
@@ -344,7 +354,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "bid: only settlement flat: three options",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:               3,
 					FeeBuyerSettlementFlat: s.coins("7peach,12pineapple,66plum"),
 				})
@@ -359,7 +369,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "bid: price denom without ratio",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:                 1,
 					FeeBuyerSettlementRatios: s.ratios("1000peach:3fig"),
 				})
@@ -373,7 +383,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "bid: no applicable ratios for price amount",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:                 7,
 					FeeBuyerSettlementRatios: s.ratios("1000plum:3fig,750plum:66grape,500plum:1honeydew"),
 				})
@@ -391,7 +401,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "bid: only settlement ratio: one option",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:                 1,
 					FeeBuyerSettlementRatios: s.ratios("1000plum:3fig"),
 				})
@@ -406,7 +416,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "bid: only settlement ratio: three options",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1,
 					FeeBuyerSettlementRatios: []exchange.FeeRatio{
 						s.ratio("1000plum:3fig"),
@@ -427,7 +437,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "bid: both settlement",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:                 2,
 					FeeBuyerSettlementFlat:   s.coins("12fig,15grape"),
 					FeeBuyerSettlementRatios: s.ratios("1000plum:3fig,1000plum:4grape"),
@@ -444,7 +454,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		{
 			name: "bid: all fees",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:                 3,
 					FeeCreateBidFlat:         s.coins("77fig,88grape"),
 					FeeBuyerSettlementFlat:   s.coins("12fig,15grape"),
@@ -3211,7 +3221,121 @@ func (s *TestSuite) TestQueryServer_GetAllOrders() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestQueryServer_GetMarket()
+func (s *TestSuite) TestQueryServer_GetMarket() {
+	queryName := "GetMarket"
+	runner := func(req *exchange.QueryGetMarketRequest) queryRunner {
+		return func(goCtx context.Context) (interface{}, error) {
+			return keeper.NewQueryServer(s.k).GetMarket(goCtx, req)
+		}
+	}
+
+	tests := []struct {
+		name     string
+		setup    querySetupFunc
+		req      *exchange.QueryGetMarketRequest
+		expResp  *exchange.QueryGetMarketResponse
+		expInErr []string
+	}{
+		{
+			name:     "nil request",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "market 0",
+			req:      &exchange.QueryGetMarketRequest{MarketId: 0},
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "empty state",
+			req:      &exchange.QueryGetMarketRequest{MarketId: 1},
+			expInErr: []string{invalidArgErr, "market 1 not found"},
+		},
+		{
+			name: "market does not exist",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 1})
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 2})
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 4})
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 5})
+			},
+			req:      &exchange.QueryGetMarketRequest{MarketId: 3},
+			expInErr: []string{invalidArgErr, "market 3 not found"},
+		},
+		{
+			name: "market exists",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 1})
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 2})
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3,
+					MarketDetails: exchange.MarketDetails{
+						Name:        "Market Three",
+						Description: "This is the third market. Not the first or second. And fourth is just too far.",
+						WebsiteUrl:  "not actually a websute url for market 3",
+						IconUri:     "https://www.example.com/market/3/icon",
+					},
+					FeeCreateAskFlat:          s.coins("10fig,100grape"),
+					FeeCreateBidFlat:          s.coins("20fig,200grape"),
+					FeeSellerSettlementFlat:   s.coins("10pineapple,50prune"),
+					FeeSellerSettlementRatios: s.ratios("1000pineapple:1pineapple,100prune:1prune"),
+					FeeBuyerSettlementFlat:    s.coins("12pineapple60prune"),
+					FeeBuyerSettlementRatios:  s.ratios("1000pineapple:3pineapple,100prune:3prune"),
+					AcceptingOrders:           true,
+					AllowUserSettlement:       true,
+					AccessGrants: []exchange.AccessGrant{
+						{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
+						{Address: s.addr2.String(), Permissions: []exchange.Permission{1, 2}},
+						{Address: s.addr3.String(), Permissions: []exchange.Permission{3, 4}},
+						{Address: s.addr4.String(), Permissions: []exchange.Permission{5, 6}},
+						{Address: s.addr5.String(), Permissions: []exchange.Permission{2, 4, 6, 7}},
+					},
+					ReqAttrCreateAsk: []string{"ask.good.kyc", "*.my.custom"},
+					ReqAttrCreateBid: []string{"bid.good.kyc", "*.my.custom"},
+				})
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 4})
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 5})
+			},
+			req: &exchange.QueryGetMarketRequest{MarketId: 3},
+			expResp: &exchange.QueryGetMarketResponse{
+				Address: exchange.GetMarketAddress(3).String(),
+				Market: &exchange.Market{
+					MarketId: 3,
+					MarketDetails: exchange.MarketDetails{
+						Name:        "Market Three",
+						Description: "This is the third market. Not the first or second. And fourth is just too far.",
+						WebsiteUrl:  "not actually a websute url for market 3",
+						IconUri:     "https://www.example.com/market/3/icon",
+					},
+					FeeCreateAskFlat:          s.coins("10fig,100grape"),
+					FeeCreateBidFlat:          s.coins("20fig,200grape"),
+					FeeSellerSettlementFlat:   s.coins("10pineapple,50prune"),
+					FeeSellerSettlementRatios: s.ratios("1000pineapple:1pineapple,100prune:1prune"),
+					FeeBuyerSettlementFlat:    s.coins("12pineapple60prune"),
+					FeeBuyerSettlementRatios:  s.ratios("1000pineapple:3pineapple,100prune:3prune"),
+					AcceptingOrders:           true,
+					AllowUserSettlement:       true,
+					AccessGrants: []exchange.AccessGrant{
+						{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
+						{Address: s.addr2.String(), Permissions: []exchange.Permission{1, 2}},
+						{Address: s.addr3.String(), Permissions: []exchange.Permission{3, 4}},
+						{Address: s.addr4.String(), Permissions: []exchange.Permission{5, 6}},
+						{Address: s.addr5.String(), Permissions: []exchange.Permission{2, 4, 6, 7}},
+					},
+					ReqAttrCreateAsk: []string{"ask.good.kyc", "*.my.custom"},
+					ReqAttrCreateBid: []string{"bid.good.kyc", "*.my.custom"},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
+			s.Assert().Equal(tc.expResp, respRaw, queryName+" result")
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestQueryServer_GetAllMarkets()
 
