@@ -3779,6 +3779,73 @@ func (s *TestSuite) TestQueryServer_ValidateCreateMarket() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestQueryServer_ValidateMarket()
+func (s *TestSuite) TestQueryServer_ValidateMarket() {
+	queryName := "ValidateMarket"
+	runner := func(req *exchange.QueryValidateMarketRequest) queryRunner {
+		return func(goCtx context.Context) (interface{}, error) {
+			return keeper.NewQueryServer(s.k).ValidateMarket(goCtx, req)
+		}
+	}
+
+	tests := []struct {
+		name     string
+		setup    querySetupFunc
+		req      *exchange.QueryValidateMarketRequest
+		expResp  *exchange.QueryValidateMarketResponse
+		expInErr []string
+	}{
+		{
+			name:     "nil req",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "market 0",
+			req:      &exchange.QueryValidateMarketRequest{MarketId: 0},
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:    "market does not exist",
+			req:     &exchange.QueryValidateMarketRequest{MarketId: 66},
+			expResp: &exchange.QueryValidateMarketResponse{Error: "market 66 does not exist"},
+		},
+		{
+			name: "bad ratios",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                  2,
+					FeeSellerSettlementRatios: s.ratios("100peach:1peach,100plum:3plum"),
+					FeeBuyerSettlementRatios:  s.ratios("100plum:1plum,100prune:7prune"),
+				})
+			},
+			req: &exchange.QueryValidateMarketRequest{MarketId: 2},
+			expResp: &exchange.QueryValidateMarketResponse{Error: s.joinErrs(
+				"seller settlement fee ratios have price denom \"peach\" but there are no "+
+					"buyer settlement fee ratios with that price denom",
+				"buyer settlement fee ratios have price denom \"prune\" but there is not a "+
+					"seller settlement fee ratio with that price denom",
+			)},
+		},
+		{
+			name: "all good",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                  2,
+					FeeSellerSettlementRatios: s.ratios("100peach:1peach,100plum:3plum,100prune:7prune"),
+					FeeBuyerSettlementRatios:  s.ratios("100peach:3peach,100plum:7plum,100prune:1prune"),
+				})
+			},
+			req:     &exchange.QueryValidateMarketRequest{MarketId: 2},
+			expResp: &exchange.QueryValidateMarketResponse{Error: ""},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
+			s.Assert().Equal(tc.expResp, respRaw, queryName+" result")
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestQueryServer_ValidateManageFees()
