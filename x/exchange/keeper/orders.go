@@ -418,8 +418,7 @@ func getOrderIterator(prefixStore sdk.KVStore, start []byte, reverse bool, after
 		// This orderIDKey is a change from the query.getIterator version.
 		var orderIDKey []byte
 		if afterOrderID != 0 {
-			// TODO[1658]: Write a unit test that hits this in order to make sure I don't need to afterOrderID++.
-			orderIDKey = uint64Bz(afterOrderID)
+			orderIDKey = uint64Bz(afterOrderID + 1)
 		}
 		return prefixStore.ReverseIterator(orderIDKey, end)
 	}
