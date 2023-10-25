@@ -14,7 +14,7 @@ import (
 const invalidArgErr = "rpc error: code = InvalidArgument"
 
 // querySetupFunc is a function that will set up a test case.
-type querySetupFunc func(ctx sdk.Context)
+type querySetupFunc func()
 
 // queryRunner is a function that will call a query endpoint, returning its response and error.
 type queryRunner func(goCtx context.Context) (interface{}, error)
@@ -25,11 +25,15 @@ type queryRunner func(goCtx context.Context) (interface{}, error)
 // The query's response is returned.
 func (s *TestSuite) doQueryTest(setup querySetupFunc, runner queryRunner, expInErr []string, msg string, args ...interface{}) interface{} {
 	s.T().Helper()
-	ctx, _ := s.ctx.CacheContext()
+	origCtx := s.ctx
+	defer func() {
+		s.ctx = origCtx
+	}()
+	s.ctx, _ = s.ctx.CacheContext()
 	if setup != nil {
-		setup(ctx)
+		setup()
 	}
-	goCtx := sdk.WrapSDKContext(ctx)
+	goCtx := sdk.WrapSDKContext(s.ctx)
 	var rv interface{}
 	var err error
 	testFunc := func() {
@@ -140,7 +144,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "ask: no fees",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{MarketId: 1})
 			},
 			req: &exchange.QueryOrderFeeCalcRequest{AskOrder: &exchange.AskOrder{
@@ -150,7 +154,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "ask: only creation: one option",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:         1,
 					FeeCreateAskFlat: s.coins("3fig"),
@@ -165,7 +169,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "ask: only creation: three options",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:         8,
 					FeeCreateAskFlat: s.coins("3fig,52grape,1honeydew"),
@@ -180,7 +184,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "ask: only settlement flat: one option",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:                8,
 					FeeSellerSettlementFlat: s.coins("8grape"),
@@ -195,7 +199,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "ask: only settlement flat: three option",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:                8,
 					FeeSellerSettlementFlat: s.coins("23fig,6grape,15pineapple"),
@@ -210,7 +214,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "ask: price denom without ratio",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:                  4,
 					FeeSellerSettlementRatios: s.ratios("500plum:3plum"),
@@ -224,7 +228,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "ask: only settlement ratio",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:                  8,
 					FeeSellerSettlementRatios: s.ratios("500plum:3plum"),
@@ -239,7 +243,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "ask: both settlement",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:                  8,
 					FeeSellerSettlementFlat:   s.coins("23fig,6grape,15pineapple"),
@@ -256,7 +260,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "ask: all fees",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:                  1,
 					FeeCreateAskFlat:          s.coins("3fig,52grape,1honeydew"),
@@ -284,7 +288,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "bid: no fees",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{MarketId: 1})
 			},
 			req: &exchange.QueryOrderFeeCalcRequest{BidOrder: &exchange.BidOrder{
@@ -294,7 +298,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "bid: only creation: one option",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:         33,
 					FeeCreateBidFlat: s.coins("7honeydew"),
@@ -309,7 +313,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "bid: only creation: three options",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:         33,
 					FeeCreateBidFlat: s.coins("57fig,6honeydew,223jackfruit"),
@@ -324,7 +328,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "bid: only settlement flat: one option",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:               3,
 					FeeBuyerSettlementFlat: s.coins("12pineapple"),
@@ -339,7 +343,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "bid: only settlement flat: three options",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:               3,
 					FeeBuyerSettlementFlat: s.coins("7peach,12pineapple,66plum"),
@@ -354,7 +358,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "bid: price denom without ratio",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:                 1,
 					FeeBuyerSettlementRatios: s.ratios("1000peach:3fig"),
@@ -368,7 +372,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "bid: no applicable ratios for price amount",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:                 7,
 					FeeBuyerSettlementRatios: s.ratios("1000plum:3fig,750plum:66grape,500plum:1honeydew"),
@@ -386,7 +390,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "bid: only settlement ratio: one option",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:                 1,
 					FeeBuyerSettlementRatios: s.ratios("1000plum:3fig"),
@@ -401,7 +405,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "bid: only settlement ratio: three options",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId: 1,
 					FeeBuyerSettlementRatios: []exchange.FeeRatio{
@@ -422,7 +426,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "bid: both settlement",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:                 2,
 					FeeBuyerSettlementFlat:   s.coins("12fig,15grape"),
@@ -439,7 +443,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 		},
 		{
 			name: "bid: all fees",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:                 3,
 					FeeCreateBidFlat:         s.coins("77fig,88grape"),
@@ -506,7 +510,7 @@ func (s *TestSuite) TestQueryServer_GetOrder() {
 		},
 		{
 			name: "error getting order",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				key, value, err := s.k.GetOrderStoreKeyValue(*exchange.NewOrder(4).WithAsk(&exchange.AskOrder{
 					MarketId: 1,
 					Seller:   s.addr1.String(),
@@ -515,7 +519,7 @@ func (s *TestSuite) TestQueryServer_GetOrder() {
 				}))
 				s.Require().NoError(err, "GetOrderStoreKeyValue 4")
 				value[0] = 9
-				s.k.GetStore(ctx).Set(key, value)
+				s.getStore().Set(key, value)
 			},
 			req:      &exchange.QueryGetOrderRequest{OrderId: 4},
 			expInErr: []string{invalidArgErr, "failed to read order 4: unknown type byte 0x9"},
@@ -527,8 +531,8 @@ func (s *TestSuite) TestQueryServer_GetOrder() {
 		},
 		{
 			name: "order 1: ask",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
 					MarketId:                1,
 					Seller:                  s.addr1.String(),
@@ -552,8 +556,8 @@ func (s *TestSuite) TestQueryServer_GetOrder() {
 		},
 		{
 			name: "order 1: bid",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithBid(&exchange.BidOrder{
 					MarketId:            1,
 					Buyer:               s.addr1.String(),
@@ -577,8 +581,8 @@ func (s *TestSuite) TestQueryServer_GetOrder() {
 		},
 		{
 			name: "order 5555",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(5554).WithBid(&exchange.BidOrder{
 					MarketId: 1, Buyer: s.addr1.String(),
 					Assets: s.coin("20apple"), Price: s.coin("3pineapple"),
@@ -640,7 +644,7 @@ func (s *TestSuite) TestQueryServer_GetOrderByExternalID() {
 		},
 		{
 			name: "error getting order",
-			setup: func(ctx sdk.Context) {
+			setup: func() {
 				order5 := exchange.NewOrder(5).WithBid(&exchange.BidOrder{
 					MarketId:            1,
 					Buyer:               s.addr3.String(),
@@ -650,7 +654,7 @@ func (s *TestSuite) TestQueryServer_GetOrderByExternalID() {
 					AllowPartial:        false,
 					ExternalId:          "babbaderr",
 				})
-				store := s.k.GetStore(ctx)
+				store := s.getStore()
 				// Save it normally to get the indexes with it, then overwite the value with a bad one.
 				s.requireSetOrderInStore(store, order5)
 				key5, value5, err := s.k.GetOrderStoreKeyValue(*order5)
@@ -663,8 +667,8 @@ func (s *TestSuite) TestQueryServer_GetOrderByExternalID() {
 		},
 		{
 			name: "no such order",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
 					MarketId: 1, Seller: s.addr2.String(),
 					Assets: s.coin("1apple"), Price: s.coin("1plum"),
@@ -681,8 +685,8 @@ func (s *TestSuite) TestQueryServer_GetOrderByExternalID() {
 		},
 		{
 			name: "only one order with the id: ask",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(77).WithAsk(&exchange.AskOrder{
 					MarketId: 3, Seller: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
 					ExternalId: "myspecialid",
@@ -696,8 +700,8 @@ func (s *TestSuite) TestQueryServer_GetOrderByExternalID() {
 		},
 		{
 			name: "only one order with the id: bid",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(54).WithBid(&exchange.BidOrder{
 					MarketId: 999, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
 					ExternalId: "mycoolid",
@@ -711,8 +715,8 @@ func (s *TestSuite) TestQueryServer_GetOrderByExternalID() {
 		},
 		{
 			name: "three markets with same id: first",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(54).WithBid(&exchange.BidOrder{
 					MarketId: 88, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
 					ExternalId: "commonid",
@@ -742,8 +746,8 @@ func (s *TestSuite) TestQueryServer_GetOrderByExternalID() {
 		},
 		{
 			name: "three markets with same id: second",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(54).WithBid(&exchange.BidOrder{
 					MarketId: 88, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
 					ExternalId: "commonid",
@@ -773,8 +777,8 @@ func (s *TestSuite) TestQueryServer_GetOrderByExternalID() {
 		},
 		{
 			name: "three markets with same id: second",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(54).WithBid(&exchange.BidOrder{
 					MarketId: 88, Buyer: s.addr2.String(), Assets: s.coin("1apple"), Price: s.coin("1plum"),
 					ExternalId: "commonid",
@@ -898,8 +902,8 @@ func (s *TestSuite) TestQueryServer_GetMarketOrders() {
 		},
 		{
 			name: "bad index entry",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
 					MarketId: 8, Seller: s.addr1.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
 				}))
@@ -930,8 +934,8 @@ func (s *TestSuite) TestQueryServer_GetMarketOrders() {
 		},
 		{
 			name: "index entry to order that does not exist",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
 					MarketId: 8, Seller: s.addr1.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
 				}))
@@ -956,8 +960,8 @@ func (s *TestSuite) TestQueryServer_GetMarketOrders() {
 		},
 		{
 			name: "error reading an order",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
 					MarketId: 8, Seller: s.addr1.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
 				}))
@@ -1633,8 +1637,8 @@ func (s *TestSuite) TestQueryServer_GetOwnerOrders() {
 		},
 		{
 			name: "bad index entry",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
 					MarketId: 8, Seller: s.addr4.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
 				}))
@@ -1665,8 +1669,8 @@ func (s *TestSuite) TestQueryServer_GetOwnerOrders() {
 		},
 		{
 			name: "index entry to order that does not exist",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
 					MarketId: 8, Seller: s.addr4.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
 				}))
@@ -1691,8 +1695,8 @@ func (s *TestSuite) TestQueryServer_GetOwnerOrders() {
 		},
 		{
 			name: "error reading an order",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
 					MarketId: 8, Seller: s.addr5.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
 				}))
@@ -2363,8 +2367,8 @@ func (s *TestSuite) TestQueryServer_GetAssetOrders() {
 		},
 		{
 			name: "bad index entry",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
 					MarketId: 7, Seller: s.addr1.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
 				}))
@@ -2395,8 +2399,8 @@ func (s *TestSuite) TestQueryServer_GetAssetOrders() {
 		},
 		{
 			name: "index entry to order that does not exist",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
 					MarketId: 7, Seller: s.addr1.String(), Assets: s.coin("98acorn"), Price: s.coin("98prune"),
 				}))
@@ -2421,8 +2425,8 @@ func (s *TestSuite) TestQueryServer_GetAssetOrders() {
 		},
 		{
 			name: "error reading an order",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
 					MarketId: 7, Seller: s.addr1.String(), Assets: s.coin("98acorn"), Price: s.coin("98prune"),
 				}))
@@ -3037,8 +3041,8 @@ func (s *TestSuite) TestQueryServer_GetAllOrders() {
 			BuyerSettlementFees: s.coins("73fig"), AllowPartial: false, ExternalId: "external-id-2",
 		}),
 	}
-	fiveOrderSetup := func(ctx sdk.Context) {
-		store := s.k.GetStore(ctx)
+	fiveOrderSetup := func() {
+		store := s.getStore()
 		s.requireSetOrderInStore(store, fiveOrders[2])
 		s.requireSetOrderInStore(store, fiveOrders[4])
 		s.requireSetOrderInStore(store, fiveOrders[3])
@@ -3055,8 +3059,8 @@ func (s *TestSuite) TestQueryServer_GetAllOrders() {
 	}{
 		{
 			name: "bad key in store",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithBid(&exchange.BidOrder{
 					MarketId: 1, Buyer: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1prune"),
 					BuyerSettlementFees: s.coins("1fig"), AllowPartial: false, ExternalId: "external-id-1",
@@ -3091,8 +3095,8 @@ func (s *TestSuite) TestQueryServer_GetAllOrders() {
 		},
 		{
 			name: "bad order in store",
-			setup: func(ctx sdk.Context) {
-				store := s.k.GetStore(ctx)
+			setup: func() {
+				store := s.getStore()
 				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithBid(&exchange.BidOrder{
 					MarketId: 1, Buyer: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1prune"),
 					BuyerSettlementFees: s.coins("1fig"), AllowPartial: false, ExternalId: "external-id-1",
