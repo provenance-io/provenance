@@ -1530,7 +1530,731 @@ func (s *TestSuite) TestQueryServer_GetMarketOrders() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestQueryServer_GetOwnerOrders()
+func (s *TestSuite) TestQueryServer_GetOwnerOrders() {
+	queryName := "GetOwnerOrders"
+	runner := func(req *exchange.QueryGetOwnerOrdersRequest) queryRunner {
+		return func(goCtx context.Context) (interface{}, error) {
+			return keeper.NewQueryServer(s.k).GetOwnerOrders(goCtx, req)
+		}
+	}
+	makeKey := func(order *exchange.Order) []byte {
+		return keeper.Uint64Bz(order.OrderId)
+	}
+
+	addr1, addr2, addr3 := s.addr1.String(), s.addr2.String(), s.addr3.String()
+	owners := []string{addr1, addr2, addr3}
+	ownerCount := len(owners)
+	ordersPerOwner := 20
+	ownerOrders := make(map[string][]*exchange.Order, ownerCount)
+	ownerAskOrders := make(map[string][]*exchange.Order, ownerCount)
+	ownerBidOrders := make(map[string][]*exchange.Order, ownerCount)
+	for _, owner := range owners {
+		ownerOrders[owner] = make([]*exchange.Order, 0, ordersPerOwner)
+		ownerAskOrders[owner] = make([]*exchange.Order, 0, ordersPerOwner/2)
+		ownerBidOrders[owner] = make([]*exchange.Order, 0, ordersPerOwner/2)
+	}
+	mainStore := s.getStore()
+	for i := 1; i <= ownerCount*ordersPerOwner; i++ {
+		orderID := uint64(i)
+		owner := owners[i%ownerCount]
+		order := exchange.NewOrder(orderID)
+		if orderID%2 == 0 {
+			order.WithAsk(&exchange.AskOrder{
+				MarketId:     1,
+				Seller:       owner,
+				Assets:       sdk.NewInt64Coin("apple", int64(i)),
+				Price:        sdk.NewInt64Coin("plum", int64(i)),
+				AllowPartial: orderID%4 < 2,
+				ExternalId:   fmt.Sprintf("external-id-%d", i),
+			})
+			ownerAskOrders[owner] = append(ownerAskOrders[owner], order)
+		} else {
+			order.WithBid(&exchange.BidOrder{
+				MarketId:     1,
+				Buyer:        owner,
+				Assets:       sdk.NewInt64Coin("apple", int64(i)),
+				Price:        sdk.NewInt64Coin("plum", int64(i)),
+				AllowPartial: orderID%4 < 2,
+				ExternalId:   fmt.Sprintf("external-id-%d", i),
+			})
+			ownerBidOrders[owner] = append(ownerBidOrders[owner], order)
+		}
+		ownerOrders[owner] = append(ownerOrders[owner], order)
+		s.requireSetOrderInStore(mainStore, order)
+	}
+
+	// OrderIDs for each owner:
+	//       0  1  2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19
+	//addr1: 1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 40, 43, 46, 49, 52, 55, 58
+	//addr2: 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59
+	//addr3: 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60
+
+	tests := []struct {
+		name     string
+		setup    querySetupFunc
+		req      *exchange.QueryGetOwnerOrdersRequest
+		expResp  *exchange.QueryGetOwnerOrdersResponse
+		expInErr []string
+	}{
+		// Tests on errors and non-normal conditions.
+		{
+			name:     "nil req",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "empty owner",
+			req:      &exchange.QueryGetOwnerOrdersRequest{Owner: ""},
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "invalid owner",
+			req:      &exchange.QueryGetOwnerOrdersRequest{Owner: "notgonnawork"},
+			expInErr: []string{invalidArgErr, "invalid owner \"notgonnawork\"", "decoding bech32 failed"},
+		},
+		{
+			name:     "unknown order type",
+			req:      &exchange.QueryGetOwnerOrdersRequest{Owner: addr1, OrderType: "burger and fries"},
+			expInErr: []string{invalidArgErr, "error iterating orders for owner " + addr1 + ": unknown order type \"burger and fries\""},
+		},
+		{
+			name:    "no orders",
+			req:     &exchange.QueryGetOwnerOrdersRequest{Owner: s.addr4.String()},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{Orders: nil, Pagination: &query.PageResponse{}},
+		},
+		{
+			name: "bad index entry",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr4.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
+				}))
+				key99, value99, err := s.k.GetOrderStoreKeyValue(*exchange.NewOrder(99).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr4.String(), Assets: s.coin("99apple"), Price: s.coin("99prune"),
+				}))
+				s.Require().NoError(err, "GetOrderStoreKeyValue 99")
+				store.Set(key99, value99)
+				idxKey := keeper.MakeIndexKeyAddressToOrder(s.addr4, 99)
+				idxKey[len(idxKey)-2] = idxKey[len(idxKey)-1]
+				store.Set(idxKey[:len(idxKey)-1], []byte{keeper.OrderKeyTypeAsk})
+				s.requireSetOrderInStore(store, exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr4.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
+				}))
+			},
+			req: &exchange.QueryGetOwnerOrdersRequest{Owner: s.addr4.String()},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders: []*exchange.Order{
+					exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
+						MarketId: 8, Seller: s.addr4.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
+					}),
+					exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
+						MarketId: 8, Seller: s.addr4.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
+					}),
+				},
+				Pagination: &query.PageResponse{Total: 2},
+			},
+		},
+		{
+			name: "index entry to order that does not exist",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr4.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
+				}))
+				key := keeper.MakeIndexKeyAddressToOrder(s.addr4, 99)
+				store.Set(key, []byte{keeper.OrderKeyTypeAsk})
+				s.requireSetOrderInStore(store, exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr4.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
+				}))
+			},
+			req: &exchange.QueryGetOwnerOrdersRequest{Owner: s.addr4.String()},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders: []*exchange.Order{
+					exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
+						MarketId: 8, Seller: s.addr4.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
+					}),
+					exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
+						MarketId: 8, Seller: s.addr4.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
+					}),
+				},
+				Pagination: &query.PageResponse{Total: 3},
+			},
+		},
+		{
+			name: "error reading an order",
+			setup: func(ctx sdk.Context) {
+				store := s.k.GetStore(ctx)
+				s.requireSetOrderInStore(store, exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr5.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
+				}))
+				key99, value99, err := s.k.GetOrderStoreKeyValue(*exchange.NewOrder(99).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr5.String(), Assets: s.coin("99apple"), Price: s.coin("99prune"),
+				}))
+				s.Require().NoError(err, "GetOrderStoreKeyValue 99")
+				value99[0] = 8
+				store.Set(key99, value99)
+				idxKey := keeper.MakeIndexKeyAddressToOrder(s.addr5, 99)
+				store.Set(idxKey, []byte{8})
+				s.requireSetOrderInStore(store, exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
+					MarketId: 8, Seller: s.addr5.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
+				}))
+			},
+			req: &exchange.QueryGetOwnerOrdersRequest{Owner: s.addr5.String()},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders: []*exchange.Order{
+					exchange.NewOrder(98).WithAsk(&exchange.AskOrder{
+						MarketId: 8, Seller: s.addr5.String(), Assets: s.coin("98apple"), Price: s.coin("98prune"),
+					}),
+					exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
+						MarketId: 8, Seller: s.addr5.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
+					}),
+				},
+				Pagination: &query.PageResponse{Total: 3},
+			},
+		},
+
+		// Forward, no order type.
+		{
+			name: "forward, no order type, no after order, get all",
+			req:  &exchange.QueryGetOwnerOrdersRequest{Owner: addr1},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerOrders[addr1],
+				Pagination: &query.PageResponse{Total: 20},
+			},
+		},
+		{
+			name: "forward, no order type, no after order, limit with key",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner:      addr2,
+				Pagination: &query.PageRequest{Limit: 3, Key: makeKey(ownerOrders[addr2][2])},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerOrders[addr2][2:5],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerOrders[addr2][5])},
+			},
+		},
+		{
+			name: "forward, no order type, no after order, limit with offset, no count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner:      addr3,
+				Pagination: &query.PageRequest{Limit: 5, Offset: 8, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerOrders[addr3][8:13],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerOrders[addr3][13])},
+			},
+		},
+		{
+			name: "forward, no order type, no after order, limit with offset and count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner:      addr1,
+				Pagination: &query.PageRequest{Limit: 5, Offset: 6, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerOrders[addr1][6:11],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerOrders[addr1][11]), Total: 20},
+			},
+		},
+		{
+			name: "forward, no order type, after order 30, get all",
+			req:  &exchange.QueryGetOwnerOrdersRequest{Owner: addr2, AfterOrderId: 30},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerOrders[addr2][10:],
+				Pagination: &query.PageResponse{Total: 10},
+			},
+		},
+		{
+			name: "forward, no order type, after order 30, limit with key",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 2, Key: makeKey(ownerOrders[addr1][15])},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerOrders[addr1][15:17],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerOrders[addr1][17])},
+			},
+		},
+		{
+			name: "forward, no order type, after order 30, limit with offset, no count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 3, Offset: 2, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerOrders[addr1][12:15],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerOrders[addr1][15])},
+			},
+		},
+		{
+			name: "forward, no order type, after order 30, limit with offset and count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr3, AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 1, Offset: 7, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerOrders[addr3][17:18],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerOrders[addr3][18]), Total: 10},
+			},
+		},
+
+		// Forward, only ask orders
+		{
+			name: "forward, ask orders, no after order, get all",
+			req:  &exchange.QueryGetOwnerOrdersRequest{Owner: addr3, OrderType: "ask"},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerAskOrders[addr3],
+				Pagination: &query.PageResponse{Total: 10},
+			},
+		},
+		{
+			name: "forward, ask orders, no after order, limit with key",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, OrderType: "asks",
+				Pagination: &query.PageRequest{Limit: 3, Key: makeKey(ownerAskOrders[addr1][4])},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerAskOrders[addr1][4:7],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerAskOrders[addr1][7])},
+			},
+		},
+		{
+			name: "forward, ask orders, no after order, limit with offset, no count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr2, OrderType: "ASK",
+				Pagination: &query.PageRequest{Limit: 3, Offset: 8, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerAskOrders[addr2][8:],
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name: "forward, ask orders, no after order, limit with offset and count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr2, OrderType: "ASKS",
+				Pagination: &query.PageRequest{Limit: 3, Offset: 6, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerAskOrders[addr2][6:9],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerAskOrders[addr2][9]), Total: 10},
+			},
+		},
+		{
+			name: "forward, ask orders, after order 30, get all",
+			req:  &exchange.QueryGetOwnerOrdersRequest{Owner: addr3, OrderType: "AskOrders", AfterOrderId: 30},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerAskOrders[addr3][5:],
+				Pagination: &query.PageResponse{Total: 5},
+			},
+		},
+		{
+			name: "forward, ask orders, after order 30, limit with key",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr2, OrderType: "ask orders", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 1, Key: makeKey(ownerAskOrders[addr2][7])},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerAskOrders[addr2][7:8],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerAskOrders[addr2][8])},
+			},
+		},
+		{
+			name: "forward, ask orders, after order 30, limit with offset, no count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, OrderType: "askOrder", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 2, Offset: 2, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerAskOrders[addr1][7:9],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerAskOrders[addr1][9])},
+			},
+		},
+		{
+			name: "forward, ask orders, after order 30, limit with offset and count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, OrderType: "aSKs", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 2, Offset: 1, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerAskOrders[addr1][6:8],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerAskOrders[addr1][8]), Total: 5},
+			},
+		},
+
+		// Forward, only bid orders
+		{
+			name: "forward, bid orders, no after order, get all",
+			req:  &exchange.QueryGetOwnerOrdersRequest{Owner: addr3, OrderType: "bid"},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerBidOrders[addr3],
+				Pagination: &query.PageResponse{Total: 10},
+			},
+		},
+		{
+			name: "forward, bid orders, no after order, limit with key",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, OrderType: "bids",
+				Pagination: &query.PageRequest{Limit: 3, Key: makeKey(ownerBidOrders[addr1][4])},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerBidOrders[addr1][4:7],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerBidOrders[addr1][7])},
+			},
+		},
+		{
+			name: "forward, bid orders, no after order, limit with offset, no count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr2, OrderType: "BID",
+				Pagination: &query.PageRequest{Limit: 3, Offset: 8, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerBidOrders[addr2][8:],
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name: "forward, bid orders, no after order, limit with offset and count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr2, OrderType: "BIDS",
+				Pagination: &query.PageRequest{Limit: 3, Offset: 6, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerBidOrders[addr2][6:9],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerBidOrders[addr2][9]), Total: 10},
+			},
+		},
+		{
+			name: "forward, bid orders, after order 30, get all",
+			req:  &exchange.QueryGetOwnerOrdersRequest{Owner: addr3, OrderType: "BidOrders", AfterOrderId: 30},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerBidOrders[addr3][5:],
+				Pagination: &query.PageResponse{Total: 5},
+			},
+		},
+		{
+			name: "forward, bid orders, after order 30, limit with key",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr2, OrderType: "bid orders", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 1, Key: makeKey(ownerBidOrders[addr2][7])},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerBidOrders[addr2][7:8],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerBidOrders[addr2][8])},
+			},
+		},
+		{
+			name: "forward, bid orders, after order 30, limit with offset, no count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, OrderType: "bidOrder", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 2, Offset: 2, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerBidOrders[addr1][7:9],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerBidOrders[addr1][9])},
+			},
+		},
+		{
+			name: "forward, bid orders, after order 30, limit with offset and count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, OrderType: "bIDs", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Limit: 2, Offset: 1, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     ownerBidOrders[addr1][6:8],
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerBidOrders[addr1][8]), Total: 5},
+			},
+		},
+
+		// Reverse, no order type.
+		{
+			name: "reverse, no order type, no after order, get all",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner:      addr1,
+				Pagination: &query.PageRequest{Reverse: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerOrders[addr1]),
+				Pagination: &query.PageResponse{Total: 20},
+			},
+		},
+		{
+			name: "reverse, no order type, no after order, limit with key",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner:      addr2,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Key: makeKey(ownerOrders[addr2][12])},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerOrders[addr2][10:13]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerOrders[addr2][9])},
+			},
+		},
+		{
+			name: "reverse, no order type, no after order, limit with offset, no count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner:      addr3,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 5, Offset: 8, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerOrders[addr3][7:12]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerOrders[addr3][6])},
+			},
+		},
+		{
+			name: "reverse, no order type, no after order, limit with offset and count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner:      addr1,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 5, Offset: 6, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerOrders[addr1][9:14]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerOrders[addr1][8]), Total: 20},
+			},
+		},
+		{
+			name: "reverse, no order type, after order 30, get all",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr2, AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerOrders[addr2][10:]),
+				Pagination: &query.PageResponse{Total: 10},
+			},
+		},
+		{
+			name: "reverse, no order type, after order 30, limit with key",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 2, Key: makeKey(ownerOrders[addr1][15])},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerOrders[addr1][14:16]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerOrders[addr1][13])},
+			},
+		},
+		{
+			name: "reverse, no order type, after order 30, limit with offset, no count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Offset: 2, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerOrders[addr1][15:18]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerOrders[addr1][14])},
+			},
+		},
+		{
+			name: "reverse, no order type, after order 30, limit with offset and count",
+			// A key point of this test is that order 30 is in market 3. The AfterOrderID order
+			// should NOT be included in results, though, so there should still only be 10 results here.
+			// This validates that the "afterOrderID + 1" is correct in the getOrderIterator reverse block.
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr3, AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 1, Offset: 7, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerOrders[addr3][12:13]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerOrders[addr3][11]), Total: 10},
+			},
+		},
+
+		// Reverse, only ask orders
+		{
+			name: "reverse, ask orders, no after order, get all",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr3, OrderType: "ask",
+				Pagination: &query.PageRequest{Reverse: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerAskOrders[addr3]),
+				Pagination: &query.PageResponse{Total: 10},
+			},
+		},
+		{
+			name: "reverse, ask orders, no after order, limit with key",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, OrderType: "asks",
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Key: makeKey(ownerAskOrders[addr1][4])},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerAskOrders[addr1][2:5]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerAskOrders[addr1][1])},
+			},
+		},
+		{
+			name: "reverse, ask orders, no after order, limit with offset, no count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr2, OrderType: "ASK",
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Offset: 8, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerAskOrders[addr2][:2]),
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name: "reverse, ask orders, no after order, limit with offset and count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr2, OrderType: "ASKS",
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Offset: 1, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerAskOrders[addr2][6:9]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerAskOrders[addr2][5]), Total: 10},
+			},
+		},
+		{
+			name: "reverse, ask orders, after order 30, get all",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr3, OrderType: "AskOrders", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerAskOrders[addr3][5:]),
+				Pagination: &query.PageResponse{Total: 5},
+			},
+		},
+		{
+			name: "reverse, ask orders, after order 30, limit with key",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr2, OrderType: "ask orders", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 1, Key: makeKey(ownerAskOrders[addr2][7])},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerAskOrders[addr2][7:8]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerAskOrders[addr2][6])},
+			},
+		},
+		{
+			name: "reverse, ask orders, after order 30, limit with offset, no count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, OrderType: "askOrder", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 2, Offset: 2, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerAskOrders[addr1][6:8]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerAskOrders[addr1][5])},
+			},
+		},
+		{
+			name: "reverse, ask orders, after order 30, limit with offset and count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, OrderType: "aSKs", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Offset: 1, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerAskOrders[addr1][6:9]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerAskOrders[addr1][5]), Total: 5},
+			},
+		},
+
+		// Reverse, only bid orders
+		{
+			name: "reverse, bid orders, no after order, get all",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr3, OrderType: "bid",
+				Pagination: &query.PageRequest{Reverse: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerBidOrders[addr3]),
+				Pagination: &query.PageResponse{Total: 10},
+			},
+		},
+		{
+			name: "reverse, bid orders, no after order, limit with key",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, OrderType: "bids",
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Key: makeKey(ownerBidOrders[addr1][4])},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerBidOrders[addr1][2:5]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerBidOrders[addr1][1])},
+			},
+		},
+		{
+			name: "reverse, bid orders, no after order, limit with offset, no count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr2, OrderType: "BID",
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Offset: 8, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerBidOrders[addr2][:2]),
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name: "reverse, bid orders, no after order, limit with offset and count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr2, OrderType: "BIDS",
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Offset: 1, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerBidOrders[addr2][6:9]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerBidOrders[addr2][5]), Total: 10},
+			},
+		},
+		{
+			name: "reverse, bid orders, after order 30, get all",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr3, OrderType: "BidOrders", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerBidOrders[addr3][5:]),
+				Pagination: &query.PageResponse{Total: 5},
+			},
+		},
+		{
+			name: "reverse, bid orders, after order 30, limit with key",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr2, OrderType: "bid orders", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 1, Key: makeKey(ownerBidOrders[addr2][7])},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerBidOrders[addr2][7:8]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerBidOrders[addr2][6])},
+			},
+		},
+		{
+			name: "reverse, bid orders, after order 30, limit with offset, no count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, OrderType: "bidOrder", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 2, Offset: 2, CountTotal: false},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerBidOrders[addr1][6:8]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerBidOrders[addr1][5])},
+			},
+		},
+		{
+			name: "reverse, bid orders, after order 30, limit with offset and count",
+			req: &exchange.QueryGetOwnerOrdersRequest{
+				Owner: addr1, OrderType: "bIDs", AfterOrderId: 30,
+				Pagination: &query.PageRequest{Reverse: true, Limit: 3, Offset: 1, CountTotal: true},
+			},
+			expResp: &exchange.QueryGetOwnerOrdersResponse{
+				Orders:     reverseSlice(ownerBidOrders[addr1][6:9]),
+				Pagination: &query.PageResponse{NextKey: makeKey(ownerBidOrders[addr1][5]), Total: 5},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
+			if s.Assert().Equal(tc.expResp, respRaw, queryName+" result") {
+				return
+			}
+			resp, ok := respRaw.(*exchange.QueryGetOwnerOrdersResponse)
+			s.Require().True(ok, queryName+" response is of type %T and could not be cast to %T", respRaw, tc.expResp)
+			if tc.expResp == nil || resp == nil {
+				return
+			}
+			s.assertEqualOrders(tc.expResp.Orders, resp.Orders, "%s Orders", queryName)
+			s.assertEqualPageResponse(tc.expResp.Pagination, resp.Pagination, "%s Pagination", queryName)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestQueryServer_GetAssetOrders()
 
