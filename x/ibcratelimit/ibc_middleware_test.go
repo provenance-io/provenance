@@ -573,13 +573,10 @@ func (suite *MiddlewareTestSuite) TestUnsetRateLimitingContract() {
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Unset the contract param
-	params, err := types.NewParams("")
-	suite.Require().NoError(err)
-	provenanceApp := suite.chainA.GetProvenanceApp()
-	paramSpace, ok := provenanceApp.ParamsKeeper.GetSubspace(types.ModuleName)
-	suite.Require().True(ok)
-	// N.B.: this panics if validation fails.
-	paramSpace.SetParamSet(suite.chainA.GetContext(), &params)
+	suite.chainA.RegisterRateLimitingContract([]byte(""))
+	contractAddress := suite.chainA.GetProvenanceApp().RateLimitingKeeper.GetContractAddress(suite.chainA.GetContext())
+	suite.Require().Equal("", contractAddress, "should unregister contract")
+
 }
 
 func FindEvent(events []sdk.Event, name string) sdk.Event {

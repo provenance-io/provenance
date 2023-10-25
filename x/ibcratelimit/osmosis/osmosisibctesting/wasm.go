@@ -94,10 +94,8 @@ func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddres
 func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
 	addrStr, err := sdk.Bech32ifyAddressBytes("cosmos", addr)
 	require.NoError(chain.T, err)
-	params, err := types.NewParams(addrStr)
-	require.NoError(chain.T, err)
 	provenanceApp := chain.GetProvenanceApp()
-	paramSpace, ok := provenanceApp.ParamsKeeper.GetSubspace(types.ModuleName)
-	require.True(chain.T, ok)
-	paramSpace.SetParamSet(chain.GetContext(), &params)
+	provenanceApp.RateLimitingKeeper.SetParams(chain.GetContext(), types.Params{
+		ContractAddress: addrStr,
+	})
 }
