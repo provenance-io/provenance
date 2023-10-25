@@ -1,4 +1,4 @@
-package ibcratelimitmodule
+package module
 
 import (
 	"context"
