@@ -15,7 +15,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v6/modules/core/exported"
 
-	"github.com/provenance-io/provenance/x/ibcratelimit/osmoutils"
+	"github.com/provenance-io/provenance/x/ibcratelimit/osmosis/osmoutils"
 	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 )
 

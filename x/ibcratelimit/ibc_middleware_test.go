@@ -20,10 +20,10 @@ import (
 
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	"github.com/provenance-io/provenance/x/ibcratelimit/osmomath"
+	"github.com/provenance-io/provenance/x/ibcratelimit/osmosis/osmomath"
 
 	"github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/ibcratelimit/osmosisibctesting"
+	"github.com/provenance-io/provenance/x/ibcratelimit/osmosis/osmosisibctesting"
 	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 
 	"github.com/tendermint/tendermint/libs/log"
