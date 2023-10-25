@@ -3553,7 +3553,114 @@ func (s *TestSuite) TestQueryServer_GetAllMarkets() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestQueryServer_Params()
+func (s *TestSuite) TestQueryServer_Params() {
+	queryName := "GetMarket"
+	runner := func(req *exchange.QueryParamsRequest) queryRunner {
+		return func(goCtx context.Context) (interface{}, error) {
+			return keeper.NewQueryServer(s.k).Params(goCtx, req)
+		}
+	}
+
+	tests := []struct {
+		name     string
+		setup    querySetupFunc
+		req      *exchange.QueryParamsRequest
+		expResp  *exchange.QueryParamsResponse
+		expInErr []string
+	}{
+		{
+			name: "no params in state, nil req",
+			setup: func() {
+				s.k.SetParams(s.ctx, nil)
+			},
+			req:     nil,
+			expResp: &exchange.QueryParamsResponse{Params: exchange.DefaultParams()},
+		},
+		{
+			name: "no params in state, empty req",
+			setup: func() {
+				s.k.SetParams(s.ctx, nil)
+			},
+			req:     &exchange.QueryParamsRequest{},
+			expResp: &exchange.QueryParamsResponse{Params: exchange.DefaultParams()},
+		},
+		{
+			name: "default params in state, nil req",
+			setup: func() {
+				s.k.SetParams(s.ctx, exchange.DefaultParams())
+			},
+			req:     nil,
+			expResp: &exchange.QueryParamsResponse{Params: exchange.DefaultParams()},
+		},
+		{
+			name: "default params in state, empty req",
+			setup: func() {
+				s.k.SetParams(s.ctx, exchange.DefaultParams())
+			},
+			req:     nil,
+			expResp: &exchange.QueryParamsResponse{Params: exchange.DefaultParams()},
+		},
+		{
+			name: "just the default split changed",
+			setup: func() {
+				s.k.SetParams(s.ctx, &exchange.Params{DefaultSplit: 987})
+			},
+			expResp: &exchange.QueryParamsResponse{Params: &exchange.Params{DefaultSplit: 987}},
+		},
+		{
+			name: "with denom splits, nil req",
+			setup: func() {
+				s.k.SetParams(s.ctx, &exchange.Params{
+					DefaultSplit: 0,
+					DenomSplits: []exchange.DenomSplit{
+						{Denom: "apple", Split: 500},
+						{Denom: "banana", Split: 333}, // mmmmmmmm
+						{Denom: "cactus", Split: 777},
+					},
+				})
+			},
+			expResp: &exchange.QueryParamsResponse{Params: &exchange.Params{
+				DefaultSplit: 0,
+				DenomSplits: []exchange.DenomSplit{
+					{Denom: "apple", Split: 500},
+					{Denom: "banana", Split: 333},
+					{Denom: "cactus", Split: 777},
+				},
+			}},
+		},
+		{
+			name: "with denom splits, empty req",
+			setup: func() {
+				s.k.SetParams(s.ctx, &exchange.Params{
+					DefaultSplit: 1000,
+					DenomSplits: []exchange.DenomSplit{
+						{Denom: "acorn", Split: 600},
+						{Denom: "blueberry", Split: 55},
+						{Denom: "cherry", Split: 1234},
+						{Denom: "date", Split: 1000},
+					},
+				})
+			},
+			req: &exchange.QueryParamsRequest{},
+			expResp: &exchange.QueryParamsResponse{Params: &exchange.Params{
+				DefaultSplit: 1000,
+				DenomSplits: []exchange.DenomSplit{
+					{Denom: "acorn", Split: 600},
+					{Denom: "blueberry", Split: 55},
+					{Denom: "cherry", Split: 1234},
+					{Denom: "date", Split: 1000},
+				},
+			}},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
+			s.Assert().Equal(tc.expResp, respRaw, queryName+" result")
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestQueryServer_ValidateCreateMarket()
 
