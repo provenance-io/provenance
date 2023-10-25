@@ -144,7 +144,7 @@ func (k QueryServer) GetOwnerOrders(goCtx context.Context, req *exchange.QueryGe
 
 	owner, aErr := sdk.AccAddressFromBech32(req.Owner)
 	if aErr != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid owner: %v", aErr)
+		return nil, status.Errorf(codes.InvalidArgument, "invalid owner %q: %v", req.Owner, aErr)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
