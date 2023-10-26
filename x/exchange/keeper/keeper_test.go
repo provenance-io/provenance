@@ -51,7 +51,8 @@ type TestSuite struct {
 	marketAddr2 sdk.AccAddress
 	marketAddr3 sdk.AccAddress
 
-	feeCollector string
+	feeCollector     string
+	feeCollectorAddr sdk.AccAddress
 
 	accKeeper *MockAccountKeeper
 
@@ -99,6 +100,7 @@ func (s *TestSuite) SetupTest() {
 	s.marketAddr3 = exchange.GetMarketAddress(3)
 
 	s.feeCollector = s.k.GetFeeCollectorName()
+	s.feeCollectorAddr = authtypes.NewModuleAddress(s.feeCollector)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -356,6 +358,14 @@ func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
 		return testutil.FundAccount(s.app.BankKeeper, s.ctx, addr, s.coins(coins))
 	}, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
+}
+
+// requireAddHold calls s.app.HoldKeeper.AddHold, making sure it doesn't panic or return an error.
+func (s *TestSuite) requireAddHold(addr sdk.AccAddress, holdCoins, reason string) {
+	coins := s.coins(holdCoins)
+	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+		return s.app.HoldKeeper.AddHold(s.ctx, addr, coins, reason)
+	}, "AddHold(%s, %q, %q)", s.getAddrName(addr), holdCoins, reason)
 }
 
 // requireSetOrderInStore calls SetOrderInStore making sure it doesn't panic or return an error.
