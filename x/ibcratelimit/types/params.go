@@ -15,9 +15,7 @@ func NewParams(contractAddress string) Params {
 
 // DefaultParams creates default ibcratelimit module parameters.
 func DefaultParams() Params {
-	return Params{
-		ContractAddress: "",
-	}
+	return NewParams("")
 }
 
 // Validate verifies all params are correct
@@ -25,6 +23,7 @@ func (p Params) Validate() error {
 	return validateContractAddress(p.ContractAddress)
 }
 
+// validateContractAddress Checks if the supplied address is a valid contract address.
 func validateContractAddress(i interface{}) error {
 	v, ok := i.(string)
 	if !ok {

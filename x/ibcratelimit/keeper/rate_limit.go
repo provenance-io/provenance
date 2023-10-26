@@ -6,13 +6,12 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	"github.com/cosmos/ibc-go/v6/modules/core/exported"
 
 	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 )
 
+// CheckAndUpdateRateLimits Updates the rate limiter and checks if rate limit has been exceeded.
 func (k Keeper) CheckAndUpdateRateLimits(ctx sdk.Context, msgType string, packet exported.PacketI) error {
 	contract := k.GetContractAddress(ctx)
 
@@ -21,16 +20,12 @@ func (k Keeper) CheckAndUpdateRateLimits(ctx sdk.Context, msgType string, packet
 		return errorsmod.Wrap(types.ErrContractError, err.Error())
 	}
 
-	sendPacketMsg, err := k.BuildWasmExecMsg(
-		msgType,
-		packet,
-	)
+	sendPacketMsg, err := k.buildWasmExecMsg(msgType, packet)
 	if err != nil {
 		return errorsmod.Wrap(types.ErrContractError, err.Error())
 	}
 
 	_, err = k.ContractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
-
 	if err != nil {
 		return errorsmod.Wrap(types.ErrRateLimitExceeded, err.Error())
 	}
@@ -38,13 +33,14 @@ func (k Keeper) CheckAndUpdateRateLimits(ctx sdk.Context, msgType string, packet
 	return nil
 }
 
+// UndoSendRateLimit Undos the changes made to the rate limiter.
 func (k Keeper) UndoSendRateLimit(ctx sdk.Context, contract string, packet exported.PacketI) error {
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
 		return err
 	}
 
-	unwrapped, err := k.unwrapPacket(packet)
+	unwrapped, err := types.UnwrapPacket(packet)
 	if err != nil {
 		return err
 	}
@@ -63,30 +59,9 @@ func (k Keeper) UndoSendRateLimit(ctx sdk.Context, contract string, packet expor
 	return nil
 }
 
-func (k Keeper) unwrapPacket(packet exported.PacketI) (types.UnwrappedPacket, error) {
-	var packetData transfertypes.FungibleTokenPacketData
-	err := json.Unmarshal(packet.GetData(), &packetData)
-	if err != nil {
-		return types.UnwrappedPacket{}, err
-	}
-	height, ok := packet.GetTimeoutHeight().(clienttypes.Height)
-	if !ok {
-		return types.UnwrappedPacket{}, types.ErrBadMessage
-	}
-	return types.UnwrappedPacket{
-		Sequence:           packet.GetSequence(),
-		SourcePort:         packet.GetSourcePort(),
-		SourceChannel:      packet.GetSourceChannel(),
-		DestinationPort:    packet.GetDestPort(),
-		DestinationChannel: packet.GetDestChannel(),
-		Data:               packetData,
-		TimeoutHeight:      height,
-		TimeoutTimestamp:   packet.GetTimeoutTimestamp(),
-	}, nil
-}
-
-func (k Keeper) BuildWasmExecMsg(msgType string, packet exported.PacketI) ([]byte, error) {
-	unwrapped, err := k.unwrapPacket(packet)
+// buildWasmExecMsg Constructs a Wasm Execute Message from a packet and type.
+func (k Keeper) buildWasmExecMsg(msgType string, packet exported.PacketI) ([]byte, error) {
+	unwrapped, err := types.UnwrapPacket(packet)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -114,21 +89,15 @@ func (k Keeper) BuildWasmExecMsg(msgType string, packet exported.PacketI) ([]byt
 	return asJSON, nil
 }
 
-// RevertSentPacket Notifies the contract that a sent packet wasn't properly received
+// RevertSentPacket Notifies the contract that a sent packet wasn't properly received.
 func (k Keeper) RevertSentPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 ) error {
 	if !k.ContractConfigured(ctx) {
-		// The contract has not been configured. Continue as usual
 		return nil
 	}
 
 	contract := k.GetContractAddress(ctx)
-
-	return k.UndoSendRateLimit(
-		ctx,
-		contract,
-		packet,
-	)
+	return k.UndoSendRateLimit(ctx, contract, packet)
 }

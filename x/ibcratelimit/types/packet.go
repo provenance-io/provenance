@@ -46,6 +46,7 @@ type UnwrappedPacket struct {
 	TimeoutTimestamp   uint64                                `json:"timeout_timestamp,omitempty"`
 }
 
+// ValidateReceiverAddress Checks if the receiver is valid for the transfer data.
 func ValidateReceiverAddress(packet exported.PacketI) error {
 	var packetData transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &packetData); err != nil {
@@ -55,4 +56,27 @@ func ValidateReceiverAddress(packet exported.PacketI) error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "IBC Receiver address too long. Max supported length is %d", 4096)
 	}
 	return nil
+}
+
+// UnwrapPacket Converts a PacketI into an UnwrappedPacket structure.
+func UnwrapPacket(packet exported.PacketI) (UnwrappedPacket, error) {
+	var packetData transfertypes.FungibleTokenPacketData
+	err := json.Unmarshal(packet.GetData(), &packetData)
+	if err != nil {
+		return UnwrappedPacket{}, err
+	}
+	height, ok := packet.GetTimeoutHeight().(clienttypes.Height)
+	if !ok {
+		return UnwrappedPacket{}, ErrBadMessage
+	}
+	return UnwrappedPacket{
+		Sequence:           packet.GetSequence(),
+		SourcePort:         packet.GetSourcePort(),
+		SourceChannel:      packet.GetSourceChannel(),
+		DestinationPort:    packet.GetDestPort(),
+		DestinationChannel: packet.GetDestChannel(),
+		Data:               packetData,
+		TimeoutHeight:      height,
+		TimeoutTimestamp:   packet.GetTimeoutTimestamp(),
+	}, nil
 }

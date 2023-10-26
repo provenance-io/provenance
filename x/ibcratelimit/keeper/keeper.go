@@ -15,6 +15,7 @@ type Keeper struct {
 	ContractKeeper *wasmkeeper.PermissionedKeeper
 }
 
+// NewKeeper Creates a new Keeper for the module.
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	key storetypes.StoreKey,
@@ -27,10 +28,12 @@ func NewKeeper(
 	}
 }
 
+// Logger Creates a new logger for the module.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
+// GetParams Gets the params for the module.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params, err error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.ParamsKey
@@ -42,17 +45,20 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params, err error) {
 	return params, err
 }
 
+// SetParams Sets the params for the module.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&params)
 	store.Set(types.ParamsKey, bz)
 }
 
+// GetContractAddress Gets the current value of the module's contract address.
 func (k Keeper) GetContractAddress(ctx sdk.Context) (contract string) {
 	params, _ := k.GetParams(ctx)
 	return params.ContractAddress
 }
 
+// ContractConfigured Checks if the contract has been configured for the module.
 func (k Keeper) ContractConfigured(ctx sdk.Context) bool {
 	params, err := k.GetParams(ctx)
 	if err != nil {
