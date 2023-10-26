@@ -127,7 +127,7 @@ func (im *IBCMiddleware) OnRecvPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
-	if err := im.keeper.ValidateReceiverAddress(packet); err != nil {
+	if err := types.ValidateReceiverAddress(packet); err != nil {
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadMessage, err.Error())
 	}
 

@@ -1,8 +1,13 @@
 package types
 
 import (
+	"encoding/json"
+
+	errorsmod "cosmossdk.io/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	"github.com/cosmos/ibc-go/v6/modules/core/exported"
 )
 
 const (
@@ -39,4 +44,15 @@ type UnwrappedPacket struct {
 	Data               transfertypes.FungibleTokenPacketData `json:"data"`
 	TimeoutHeight      clienttypes.Height                    `json:"timeout_height"`
 	TimeoutTimestamp   uint64                                `json:"timeout_timestamp,omitempty"`
+}
+
+func ValidateReceiverAddress(packet exported.PacketI) error {
+	var packetData transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(packet.GetData(), &packetData); err != nil {
+		return err
+	}
+	if len(packetData.Receiver) >= 4096 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "IBC Receiver address too long. Max supported length is %d", 4096)
+	}
+	return nil
 }
