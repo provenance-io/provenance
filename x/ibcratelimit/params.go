@@ -1,8 +1,6 @@
 package ibcratelimit
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -24,24 +22,14 @@ func (p Params) Validate() error {
 }
 
 // validateContractAddress Checks if the supplied address is a valid contract address.
-func validateContractAddress(i interface{}) error {
-	v, ok := i.(string)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
+func validateContractAddress(addr string) error {
 	// Empty strings are valid for unsetting the param
-	if v == "" {
+	if addr == "" {
 		return nil
 	}
 
 	// Checks that the contract address is valid
-	bech32, err := sdk.AccAddressFromBech32(v)
-	if err != nil {
-		return err
-	}
-
-	err = sdk.VerifyAddressFormat(bech32)
+	_, err := sdk.AccAddressFromBech32(addr)
 	if err != nil {
 		return err
 	}
