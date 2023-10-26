@@ -28,6 +28,7 @@ type IBCMiddleware struct {
 	channel porttypes.ICS4Wrapper
 }
 
+// NewIBCMiddleware Creates a new IBCMiddleware.
 func NewIBCMiddleware(app porttypes.IBCModule,
 	channel porttypes.ICS4Wrapper,
 	keeper *keeper.Keeper) IBCMiddleware {
@@ -38,6 +39,7 @@ func NewIBCMiddleware(app porttypes.IBCModule,
 	}
 }
 
+// WithIBCModule Creates a copy of the Middleware with the base application set.
 func (im *IBCMiddleware) WithIBCModule(app porttypes.IBCModule) *IBCMiddleware {
 	im.app = app
 	return im
@@ -160,15 +162,14 @@ func (im *IBCMiddleware) OnAcknowledgementPacket(
 	if osmoutils.IsAckError(acknowledgement) {
 		err := im.keeper.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the ack
 		if err != nil {
-			ctx.EventManager().EmitEvent(
-				sdk.NewEvent(
-					types.EventBadRevert,
-					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-					sdk.NewAttribute(types.AttributeKeyFailureType, "acknowledgment"),
-					sdk.NewAttribute(types.AttributeKeyPacket, string(packet.GetData())),
-					sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
-				),
-			)
+			eventErr := ctx.EventManager().EmitTypedEvent(&types.EventAckRevertFailure{
+				Module: types.ModuleName,
+				Packet: string(packet.GetData()),
+				Ack:    string(acknowledgement),
+			})
+			if eventErr != nil {
+				return eventErr
+			}
 		}
 	}
 
@@ -183,14 +184,13 @@ func (im *IBCMiddleware) OnTimeoutPacket(
 ) error {
 	err := im.keeper.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the timeout
 	if err != nil {
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventBadRevert,
-				sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-				sdk.NewAttribute(types.AttributeKeyFailureType, "timeout"),
-				sdk.NewAttribute(types.AttributeKeyPacket, string(packet.GetData())),
-			),
-		)
+		eventErr := ctx.EventManager().EmitTypedEvent(&types.EventTimeoutRevertFailure{
+			Module: types.ModuleName,
+			Packet: string(packet.GetData()),
+		})
+		if eventErr != nil {
+			return eventErr
+		}
 	}
 	return im.app.OnTimeoutPacket(ctx, packet, relayer)
 }
@@ -246,6 +246,7 @@ func (im *IBCMiddleware) WriteAcknowledgement(
 	return im.channel.WriteAcknowledgement(ctx, chanCap, packet, ack)
 }
 
+// GetAppVersion Obtains the version of the ICS4 Wrapper.
 func (im *IBCMiddleware) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
 	return im.channel.GetAppVersion(ctx, portID, channelID)
 }

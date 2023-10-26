@@ -188,6 +188,10 @@
   
     - [Msg](#provenance.ibchooks.v1.Msg)
   
+- [provenance/ibcratelimit/v1/event.proto](#provenance/ibcratelimit/v1/event.proto)
+    - [EventAckRevertFailure](#provenance.ibcratelimit.v1.EventAckRevertFailure)
+    - [EventTimeoutRevertFailure](#provenance.ibcratelimit.v1.EventTimeoutRevertFailure)
+  
 - [provenance/ibcratelimit/v1/params.proto](#provenance/ibcratelimit/v1/params.proto)
     - [Params](#provenance.ibcratelimit.v1.Params)
   
@@ -3226,6 +3230,55 @@ Msg defines the Msg service.
 
 
 
+<a name="provenance/ibcratelimit/v1/event.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibcratelimit/v1/event.proto
+
+
+
+<a name="provenance.ibcratelimit.v1.EventAckRevertFailure"></a>
+
+### EventAckRevertFailure
+EventAckRevertFailure is emitted when an Ack revert fails
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `module` | [string](#string) |  | module is the name of the module that emitted it. |
+| `packet` | [string](#string) |  | packet is the packet received on acknowledgement. |
+| `ack` | [string](#string) |  | ack is the packet's inner acknowledgement message. |
+
+
+
+
+
+
+<a name="provenance.ibcratelimit.v1.EventTimeoutRevertFailure"></a>
+
+### EventTimeoutRevertFailure
+EventTimeoutRevertFailure is emitted when a Timeout revert fails
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `module` | [string](#string) |  | module is the name of the module that emitted it. |
+| `packet` | [string](#string) |  | packet is the packet received on timeout. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="provenance/ibcratelimit/v1/params.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -3241,7 +3294,7 @@ Params defines the parameters for the ibcratelimit module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `contract_address` | [string](#string) |  |  |
+| `contract_address` | [string](#string) |  | contract_address is the address of the rate limiter contract. |
 
 
 
@@ -3272,7 +3325,7 @@ GenesisState defines the ibcratelimit module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#provenance.ibcratelimit.v1.Params) |  | params are all the parameters of the module |
+| `params` | [Params](#provenance.ibcratelimit.v1.Params) |  | params are all the parameters of the module. |
 
 
 

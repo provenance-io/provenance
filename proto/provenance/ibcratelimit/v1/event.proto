@@ -1,0 +1,25 @@
+syntax = "proto3";
+package provenance.ibcratelimit.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/ibcratelimit/types";
+
+option java_package        = "io.provenance.ibcratelimit.v1";
+option java_multiple_files = true;
+
+// EventAckRevertFailure is emitted when an Ack revert fails
+message EventAckRevertFailure {
+  // module is the name of the module that emitted it.
+  string module = 1;
+  // packet is the packet received on acknowledgement.
+  string packet = 2;
+  // ack is the packet's inner acknowledgement message.
+  string ack = 3;
+}
+
+// EventTimeoutRevertFailure is emitted when a Timeout revert fails
+message EventTimeoutRevertFailure {
+  // module is the name of the module that emitted it.
+  string module = 1;
+  // packet is the packet received on timeout.
+  string packet = 2;
+}

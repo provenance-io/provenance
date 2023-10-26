@@ -10,6 +10,6 @@ option java_multiple_files = true;
 
 // GenesisState defines the ibcratelimit module's genesis state.
 message GenesisState {
-  // params are all the parameters of the module
+  // params are all the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
 }
