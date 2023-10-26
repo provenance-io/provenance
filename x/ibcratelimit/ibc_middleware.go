@@ -2,7 +2,6 @@ package ibcratelimit
 
 import (
 	"encoding/json"
-	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -139,12 +138,7 @@ func (im *IBCMiddleware) OnRecvPacket(
 
 	err := im.keeper.CheckAndUpdateRateLimits(ctx, "recv_packet", packet)
 	if err != nil {
-		// TODO Can probably move this inside CheckAndUpdateRateLimits
-		if strings.Contains(err.Error(), "rate limit exceeded") {
-			return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrRateLimitExceeded)
-		}
-		fullError := errorsmod.Wrap(types.ErrContractError, err.Error())
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, fullError)
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, err)
 	}
 
 	// if this returns an Acknowledgement that isn't successful, all state changes are discarded
