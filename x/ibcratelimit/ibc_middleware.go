@@ -6,13 +6,9 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
@@ -28,27 +24,18 @@ var (
 )
 
 type IBCMiddleware struct {
-	app            porttypes.IBCModule
-	keeper         *keeper.Keeper
-	channel        porttypes.ICS4Wrapper
-	accountKeeper  *authkeeper.AccountKeeper
-	bankKeeper     *bankkeeper.BaseKeeper
-	ContractKeeper *wasmkeeper.PermissionedKeeper
+	app     porttypes.IBCModule
+	keeper  *keeper.Keeper
+	channel porttypes.ICS4Wrapper
 }
 
 func NewIBCMiddleware(app porttypes.IBCModule,
 	channel porttypes.ICS4Wrapper,
-	keeper *keeper.Keeper,
-	accountKeeper *authkeeper.AccountKeeper,
-	contractKeeper *wasmkeeper.PermissionedKeeper,
-	bankKeeper *bankkeeper.BaseKeeper) IBCMiddleware {
+	keeper *keeper.Keeper) IBCMiddleware {
 	return IBCMiddleware{
-		app:            app,
-		keeper:         keeper,
-		channel:        channel,
-		accountKeeper:  accountKeeper,
-		bankKeeper:     bankKeeper,
-		ContractKeeper: contractKeeper,
+		app:     app,
+		keeper:  keeper,
+		channel: channel,
 	}
 }
 
@@ -135,35 +122,24 @@ func (im *IBCMiddleware) OnChanCloseConfirm(
 	return im.app.OnChanCloseConfirm(ctx, portID, channelID)
 }
 
-func ValidateReceiverAddress(packet exported.PacketI) error {
-	var packetData transfertypes.FungibleTokenPacketData
-	if err := json.Unmarshal(packet.GetData(), &packetData); err != nil {
-		return err
-	}
-	if len(packetData.Receiver) >= 4096 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "IBC Receiver address too long. Max supported length is %d", 4096)
-	}
-	return nil
-}
-
 // OnRecvPacket implements the IBCModule interface
 func (im *IBCMiddleware) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
-	if err := ValidateReceiverAddress(packet); err != nil {
+	if err := im.keeper.ValidateReceiverAddress(packet); err != nil {
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadMessage, err.Error())
 	}
 
-	contract := im.keeper.GetContractAddress(ctx)
-	if contract == "" {
+	if !im.keeper.ContractConfigured(ctx) {
 		// The contract has not been configured. Continue as usual
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
 
-	err := CheckAndUpdateRateLimits(ctx, im.ContractKeeper, "recv_packet", contract, packet)
+	err := im.keeper.CheckAndUpdateRateLimits(ctx, "recv_packet", packet)
 	if err != nil {
+		// TODO Can probably move this inside CheckAndUpdateRateLimits
 		if strings.Contains(err.Error(), "rate limit exceeded") {
 			return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrRateLimitExceeded)
 		}
@@ -188,7 +164,7 @@ func (im *IBCMiddleware) OnAcknowledgementPacket(
 	}
 
 	if osmoutils.IsAckError(acknowledgement) {
-		err := im.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the ack
+		err := im.keeper.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the ack
 		if err != nil {
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(
@@ -211,7 +187,7 @@ func (im *IBCMiddleware) OnTimeoutPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
-	err := im.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the timeout
+	err := im.keeper.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the timeout
 	if err != nil {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
@@ -223,25 +199,6 @@ func (im *IBCMiddleware) OnTimeoutPacket(
 		)
 	}
 	return im.app.OnTimeoutPacket(ctx, packet, relayer)
-}
-
-// RevertSentPacket Notifies the contract that a sent packet wasn't properly received
-func (im *IBCMiddleware) RevertSentPacket(
-	ctx sdk.Context,
-	packet exported.PacketI,
-) error {
-	contract := im.keeper.GetContractAddress(ctx)
-	if contract == "" {
-		// The contract has not been configured. Continue as usual
-		return nil
-	}
-
-	return UndoSendRateLimit(
-		ctx,
-		im.ContractKeeper,
-		contract,
-		packet,
-	)
 }
 
 // SendPacket implements the ICS4 interface and is called when sending packets.
@@ -258,8 +215,7 @@ func (im *IBCMiddleware) SendPacket(
 	timeoutTimestamp uint64,
 	data []byte,
 ) (sequence uint64, err error) {
-	contract := im.keeper.GetContractAddress(ctx)
-	if contract == "" {
+	if !im.keeper.ContractConfigured(ctx) {
 		// The contract has not been configured. Continue as usual
 		return im.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
@@ -267,7 +223,6 @@ func (im *IBCMiddleware) SendPacket(
 	// We need the full packet so the contract can process it. If it can't be cast to a channeltypes.Packet, this
 	// should fail. The only reason that would happen is if another middleware is modifying the packet, though. In
 	// that case we can modify the middleware order or change this cast so we have all the data we need.
-	// TODO Verify we don't need destination port or channel
 	packet := channeltypes.NewPacket(
 		data,
 		sequence,
@@ -279,7 +234,7 @@ func (im *IBCMiddleware) SendPacket(
 		timeoutTimestamp,
 	)
 
-	err = CheckAndUpdateRateLimits(ctx, im.ContractKeeper, "send_packet", contract, packet)
+	err = im.keeper.CheckAndUpdateRateLimits(ctx, "send_packet", packet)
 	if err != nil {
 		return 0, errorsmod.Wrap(err, "rate limit SendPacket failed to authorize transfer")
 	}

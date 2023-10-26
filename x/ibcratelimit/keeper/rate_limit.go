@@ -1,13 +1,12 @@
-package ibcratelimit
+package keeper
 
 import (
 	"encoding/json"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	"github.com/cosmos/ibc-go/v6/modules/core/exported"
@@ -20,15 +19,15 @@ var (
 	msgRecv = "recv_packet"
 )
 
-func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
-	msgType, contract string, packet exported.PacketI,
-) error {
+func (k Keeper) CheckAndUpdateRateLimits(ctx sdk.Context, msgType string, packet exported.PacketI) error {
+	contract := k.GetContractAddress(ctx)
+
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
 		return err
 	}
 
-	sendPacketMsg, err := BuildWasmExecMsg(
+	sendPacketMsg, err := k.BuildWasmExecMsg(
 		msgType,
 		packet,
 	)
@@ -36,7 +35,7 @@ func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.Permis
 		return err
 	}
 
-	_, err = contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
+	_, err = k.ContractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
 
 	if err != nil {
 		return errorsmod.Wrap(types.ErrRateLimitExceeded, err.Error())
@@ -53,16 +52,13 @@ type UndoPacketMsg struct {
 	Packet UnwrappedPacket `json:"packet"`
 }
 
-func UndoSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
-	contract string,
-	packet exported.PacketI,
-) error {
+func (k Keeper) UndoSendRateLimit(ctx sdk.Context, contract string, packet exported.PacketI) error {
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
 		return err
 	}
 
-	unwrapped, err := unwrapPacket(packet)
+	unwrapped, err := k.unwrapPacket(packet)
 	if err != nil {
 		return err
 	}
@@ -73,7 +69,7 @@ func UndoSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedK
 		return err
 	}
 
-	_, err = contractKeeper.Sudo(ctx, contractAddr, asJSON)
+	_, err = k.ContractKeeper.Sudo(ctx, contractAddr, asJSON)
 	if err != nil {
 		return errorsmod.Wrap(types.ErrContractError, err.Error())
 	}
@@ -104,7 +100,7 @@ type UnwrappedPacket struct {
 	TimeoutTimestamp   uint64                                `json:"timeout_timestamp,omitempty"`
 }
 
-func unwrapPacket(packet exported.PacketI) (UnwrappedPacket, error) {
+func (k Keeper) unwrapPacket(packet exported.PacketI) (UnwrappedPacket, error) {
 	var packetData transfertypes.FungibleTokenPacketData
 	err := json.Unmarshal(packet.GetData(), &packetData)
 	if err != nil {
@@ -126,8 +122,8 @@ func unwrapPacket(packet exported.PacketI) (UnwrappedPacket, error) {
 	}, nil
 }
 
-func BuildWasmExecMsg(msgType string, packet exported.PacketI) ([]byte, error) {
-	unwrapped, err := unwrapPacket(packet)
+func (k Keeper) BuildWasmExecMsg(msgType string, packet exported.PacketI) ([]byte, error) {
+	unwrapped, err := k.unwrapPacket(packet)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -153,4 +149,33 @@ func BuildWasmExecMsg(msgType string, packet exported.PacketI) ([]byte, error) {
 	}
 
 	return asJSON, nil
+}
+
+// RevertSentPacket Notifies the contract that a sent packet wasn't properly received
+func (k Keeper) RevertSentPacket(
+	ctx sdk.Context,
+	packet exported.PacketI,
+) error {
+	contract := k.GetContractAddress(ctx)
+	if contract == "" {
+		// The contract has not been configured. Continue as usual
+		return nil
+	}
+
+	return k.UndoSendRateLimit(
+		ctx,
+		contract,
+		packet,
+	)
+}
+
+func (k Keeper) ValidateReceiverAddress(packet exported.PacketI) error {
+	var packetData transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(packet.GetData(), &packetData); err != nil {
+		return err
+	}
+	if len(packetData.Receiver) >= 4096 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "IBC Receiver address too long. Max supported length is %d", 4096)
+	}
+	return nil
 }

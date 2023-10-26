@@ -534,11 +534,11 @@ func New(
 		app.IbcHooks,
 	)
 
-	rateLimtingKeeper := ibcratelimitkeeper.NewKeeper(appCodec, keys[ibcratelimittypes.StoreKey])
+	rateLimtingKeeper := ibcratelimitkeeper.NewKeeper(appCodec, keys[ibcratelimittypes.StoreKey], nil)
 	app.RateLimitingKeeper = &rateLimtingKeeper
 
 	// Create Transfer Keepers
-	rateLimitingTransferModule := ibcratelimit.NewIBCMiddleware(nil, app.HooksICS4Wrapper, app.RateLimitingKeeper, &app.AccountKeeper, nil, app.BankKeeper.(*bankkeeper.BaseKeeper))
+	rateLimitingTransferModule := ibcratelimit.NewIBCMiddleware(nil, app.HooksICS4Wrapper, app.RateLimitingKeeper)
 	transferKeeper := ibctransferkeeper.NewKeeper(
 		appCodec,
 		keys[ibctransfertypes.StoreKey],
@@ -672,9 +672,7 @@ func New(
 	app.Ics20WasmHooks.ContractKeeper = app.WasmKeeper // app.ContractKeeper -- this changes in the next version of wasm to a permissioned keeper
 	app.IBCHooksKeeper.ContractKeeper = app.ContractKeeper
 	app.Ics20MarkerHooks.MarkerKeeper = &app.MarkerKeeper
-	// TODO change this to be inside the keeper
-	rateLimitingTransferModule.ContractKeeper = app.ContractKeeper
-	//app.RateLimitingKeeper.ContractKeeper = app.ContractKeeper
+	app.RateLimitingKeeper.ContractKeeper = app.ContractKeeper
 
 	app.IbcHooks.SendPacketPreProcessors = []ibchookstypes.PreSendPacketDataProcessingFn{app.Ics20MarkerHooks.SetupMarkerMemoFn, app.Ics20WasmHooks.GetWasmSendPacketPreProcessor}
 
