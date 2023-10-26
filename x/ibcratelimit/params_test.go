@@ -11,7 +11,6 @@ func TestValidateContractAddress(t *testing.T) {
 		addr     interface{}
 		expected bool
 	}{
-		// ToDo: Why do tests expect the bech32 prefix to be cosmos?
 		"valid_addr": {
 			addr:     "cosmos1qm0hhug8kszhcp9f3ryuecz5yw8s3e5v0n2ckd",
 			expected: true,
@@ -46,7 +45,6 @@ func TestValidateParams(t *testing.T) {
 		addr     interface{}
 		expected bool
 	}{
-		// ToDo: Why do tests expect the bech32 prefix to be cosmos?
 		"valid_addr": {
 			addr:     "cosmos1qm0hhug8kszhcp9f3ryuecz5yw8s3e5v0n2ckd",
 			expected: true,
@@ -76,4 +74,32 @@ func TestValidateParams(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNewParams(t *testing.T) {
+	tests := []struct {
+		name string
+		addr string
+	}{
+		{
+			name: "success - empty contract address can be used",
+			addr: "",
+		},
+		{
+			name: "success - address is correctly set.",
+			addr: "cosmos1qm0hhug8kszhcp9f3ryuecz5yw8s3e5v0n2ckd",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			params := NewParams(tc.addr)
+			require.Equal(t, tc.addr, params.ContractAddress)
+		})
+	}
+}
+
+func TestDefaultParams(t *testing.T) {
+	params := DefaultParams()
+	require.Equal(t, "", params.ContractAddress)
 }
