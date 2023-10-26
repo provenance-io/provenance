@@ -25,7 +25,7 @@ func (k Keeper) CheckAndUpdateRateLimits(ctx sdk.Context, msgType string, packet
 		return errorsmod.Wrap(types.ErrContractError, err.Error())
 	}
 
-	_, err = k.ContractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
+	_, err = k.PermissionedKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
 	if err != nil {
 		return errorsmod.Wrap(types.ErrRateLimitExceeded, err.Error())
 	}
@@ -51,7 +51,7 @@ func (k Keeper) UndoSendRateLimit(ctx sdk.Context, contract string, packet expor
 		return err
 	}
 
-	_, err = k.ContractKeeper.Sudo(ctx, contractAddr, asJSON)
+	_, err = k.PermissionedKeeper.Sudo(ctx, contractAddr, asJSON)
 	if err != nil {
 		return errorsmod.Wrap(types.ErrContractError, err.Error())
 	}

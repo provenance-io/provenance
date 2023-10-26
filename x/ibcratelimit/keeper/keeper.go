@@ -1,30 +1,30 @@
 package keeper
 
 import (
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
 
 type Keeper struct {
-	storeKey       storetypes.StoreKey
-	cdc            codec.BinaryCodec
-	ContractKeeper *wasmkeeper.PermissionedKeeper
+	storeKey           storetypes.StoreKey
+	cdc                codec.BinaryCodec
+	PermissionedKeeper ibcratelimit.PermissionedKeeper
 }
 
 // NewKeeper Creates a new Keeper for the module.
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	key storetypes.StoreKey,
-	contractKeeper *wasmkeeper.PermissionedKeeper,
+	permissionedKeeper ibcratelimit.PermissionedKeeper,
 ) Keeper {
 	return Keeper{
-		storeKey:       key,
-		cdc:            cdc,
-		ContractKeeper: contractKeeper,
+		storeKey:           key,
+		cdc:                cdc,
+		PermissionedKeeper: permissionedKeeper,
 	}
 }
 

@@ -3361,7 +3361,7 @@ ParamsRequest is the request type for the Query/Params RPC method.
 <a name="provenance.ibcratelimit.v1.ParamsResponse"></a>
 
 ### ParamsResponse
-aramsResponse is the response type for the Query/Params RPC method.
+ParamsResponse is the response type for the Query/Params RPC method.
 
 
 | Field | Type | Label | Description |

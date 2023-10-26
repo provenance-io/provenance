@@ -141,7 +141,6 @@ import (
 	"github.com/provenance-io/provenance/x/ibchooks"
 	ibchookskeeper "github.com/provenance-io/provenance/x/ibchooks/keeper"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
-	"github.com/provenance-io/provenance/x/ibcratelimit"
 	ibcratelimitkeeper "github.com/provenance-io/provenance/x/ibcratelimit/keeper"
 	ibcratelimitmodule "github.com/provenance-io/provenance/x/ibcratelimit/module"
 	ibcratelimittypes "github.com/provenance-io/provenance/x/ibcratelimit/types"
@@ -538,7 +537,7 @@ func New(
 	app.RateLimitingKeeper = &rateLimtingKeeper
 
 	// Create Transfer Keepers
-	rateLimitingTransferModule := ibcratelimit.NewIBCMiddleware(nil, app.HooksICS4Wrapper, app.RateLimitingKeeper)
+	rateLimitingTransferModule := ibcratelimitmodule.NewIBCMiddleware(nil, app.HooksICS4Wrapper, app.RateLimitingKeeper)
 	transferKeeper := ibctransferkeeper.NewKeeper(
 		appCodec,
 		keys[ibctransfertypes.StoreKey],
@@ -672,7 +671,7 @@ func New(
 	app.Ics20WasmHooks.ContractKeeper = app.WasmKeeper // app.ContractKeeper -- this changes in the next version of wasm to a permissioned keeper
 	app.IBCHooksKeeper.ContractKeeper = app.ContractKeeper
 	app.Ics20MarkerHooks.MarkerKeeper = &app.MarkerKeeper
-	app.RateLimitingKeeper.ContractKeeper = app.ContractKeeper
+	app.RateLimitingKeeper.PermissionedKeeper = app.ContractKeeper
 
 	app.IbcHooks.SendPacketPreProcessors = []ibchookstypes.PreSendPacketDataProcessingFn{app.Ics20MarkerHooks.SetupMarkerMemoFn, app.Ics20WasmHooks.GetWasmSendPacketPreProcessor}
 

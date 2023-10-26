@@ -1,4 +1,4 @@
-package ibcratelimit
+package module
 
 import (
 	"encoding/json"
