@@ -15,7 +15,7 @@ import (
 
 const invalidArgErr = "rpc error: code = InvalidArgument"
 
-// querySetupFunc is a function that will set up a test case.
+// querySetupFunc is a function that will set up a query test case.
 type querySetupFunc func()
 
 // queryRunner is a function that will call a query endpoint, returning its response and error.
