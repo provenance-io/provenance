@@ -23,8 +23,8 @@ import (
 	"github.com/provenance-io/provenance/x/ibcratelimit/osmosis/osmomath"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/provenance-io/provenance/x/ibcratelimit/osmosis/osmosisibctesting"
-	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -196,7 +196,7 @@ func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
 	_, ack, _ := suite.FullSendBToA(msg)
 	suite.Require().Contains(ack, "error",
 		"acknowledgment is not an error")
-	suite.Require().Contains(ack, fmt.Sprintf("ABCI code: %d", types.ErrBadMessage.ABCICode()),
+	suite.Require().Contains(ack, fmt.Sprintf("ABCI code: %d", ibcratelimit.ErrBadMessage.ABCICode()),
 		"acknowledgment error is not of the right type")
 }
 
@@ -271,7 +271,7 @@ func (suite *MiddlewareTestSuite) AssertReceive(success bool, msg sdk.Msg) (stri
 	} else {
 		suite.Require().Contains(ack, "error",
 			"acknowledgment is not an error")
-		suite.Require().Contains(ack, fmt.Sprintf("ABCI code: %d", types.ErrRateLimitExceeded.ABCICode()),
+		suite.Require().Contains(ack, fmt.Sprintf("ABCI code: %d", ibcratelimit.ErrRateLimitExceeded.ABCICode()),
 			"acknowledgment error is not of the right type")
 	}
 	return ack, err
@@ -283,7 +283,7 @@ func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*sdk.Re
 		suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 	} else {
 		suite.Require().Error(err, "IBC send succeeded. Expected failure")
-		suite.ErrorContains(err, types.ErrRateLimitExceeded.Error(), "Bad error type")
+		suite.ErrorContains(err, ibcratelimit.ErrRateLimitExceeded.Error(), "Bad error type")
 	}
 	return r, err
 }

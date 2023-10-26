@@ -1,4 +1,4 @@
-package types
+package ibcratelimit
 
 import (
 	errorsmod "cosmossdk.io/errors"

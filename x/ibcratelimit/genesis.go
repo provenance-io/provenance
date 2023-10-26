@@ -1,4 +1,4 @@
-package types
+package ibcratelimit
 
 // DefaultGenesis creates a default GenesisState object.
 func DefaultGenesis() *GenesisState {

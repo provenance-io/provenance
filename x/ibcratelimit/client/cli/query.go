@@ -9,13 +9,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 
-	"github.com/provenance-io/provenance/x/ibcratelimit/types"
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
-		Use:                        types.ModuleName,
+		Use:                        ibcratelimit.ModuleName,
 		Short:                      "Querying commands for the ibcratelimit module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
@@ -42,8 +42,8 @@ func GetParamsCmd() *cobra.Command {
 				return err
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Params(context.Background(), &types.ParamsRequest{})
+			queryClient := ibcratelimit.NewQueryClient(clientCtx)
+			res, err := queryClient.Params(context.Background(), &ibcratelimit.ParamsRequest{})
 			if err != nil {
 				return err
 			}

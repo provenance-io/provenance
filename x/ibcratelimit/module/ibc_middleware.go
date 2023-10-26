@@ -13,9 +13,9 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v6/modules/core/exported"
 
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/provenance-io/provenance/x/ibcratelimit/keeper"
 	"github.com/provenance-io/provenance/x/ibcratelimit/osmosis/osmoutils"
-	"github.com/provenance-io/provenance/x/ibcratelimit/types"
 )
 
 var (
@@ -129,8 +129,8 @@ func (im *IBCMiddleware) OnRecvPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
-	if err := types.ValidateReceiverAddress(packet); err != nil {
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadMessage, err.Error())
+	if err := ibcratelimit.ValidateReceiverAddress(packet); err != nil {
+		return osmoutils.NewEmitErrorAcknowledgement(ctx, ibcratelimit.ErrBadMessage, err.Error())
 	}
 
 	if !im.keeper.ContractConfigured(ctx) {
@@ -162,8 +162,8 @@ func (im *IBCMiddleware) OnAcknowledgementPacket(
 	if osmoutils.IsAckError(acknowledgement) {
 		err := im.keeper.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the ack
 		if err != nil {
-			eventErr := ctx.EventManager().EmitTypedEvent(&types.EventAckRevertFailure{
-				Module: types.ModuleName,
+			eventErr := ctx.EventManager().EmitTypedEvent(&ibcratelimit.EventAckRevertFailure{
+				Module: ibcratelimit.ModuleName,
 				Packet: string(packet.GetData()),
 				Ack:    string(acknowledgement),
 			})
@@ -184,8 +184,8 @@ func (im *IBCMiddleware) OnTimeoutPacket(
 ) error {
 	err := im.keeper.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the timeout
 	if err != nil {
-		eventErr := ctx.EventManager().EmitTypedEvent(&types.EventTimeoutRevertFailure{
-			Module: types.ModuleName,
+		eventErr := ctx.EventManager().EmitTypedEvent(&ibcratelimit.EventTimeoutRevertFailure{
+			Module: ibcratelimit.ModuleName,
 			Packet: string(packet.GetData()),
 		})
 		if eventErr != nil {

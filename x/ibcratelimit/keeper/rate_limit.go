@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/ibc-go/v6/modules/core/exported"
 
-	"github.com/provenance-io/provenance/x/ibcratelimit/types"
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
 // CheckAndUpdateRateLimits Updates the rate limiter and checks if rate limit has been exceeded.
@@ -17,17 +17,17 @@ func (k Keeper) CheckAndUpdateRateLimits(ctx sdk.Context, msgType string, packet
 
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
-		return errorsmod.Wrap(types.ErrContractError, err.Error())
+		return errorsmod.Wrap(ibcratelimit.ErrContractError, err.Error())
 	}
 
 	sendPacketMsg, err := k.buildWasmExecMsg(msgType, packet)
 	if err != nil {
-		return errorsmod.Wrap(types.ErrContractError, err.Error())
+		return errorsmod.Wrap(ibcratelimit.ErrContractError, err.Error())
 	}
 
 	_, err = k.PermissionedKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
 	if err != nil {
-		return errorsmod.Wrap(types.ErrRateLimitExceeded, err.Error())
+		return errorsmod.Wrap(ibcratelimit.ErrRateLimitExceeded, err.Error())
 	}
 
 	return nil
@@ -40,12 +40,12 @@ func (k Keeper) UndoSendRateLimit(ctx sdk.Context, contract string, packet expor
 		return err
 	}
 
-	unwrapped, err := types.UnwrapPacket(packet)
+	unwrapped, err := ibcratelimit.UnwrapPacket(packet)
 	if err != nil {
 		return err
 	}
 
-	msg := types.UndoSendMsg{UndoSend: types.UndoPacketMsg{Packet: unwrapped}}
+	msg := ibcratelimit.UndoSendMsg{UndoSend: ibcratelimit.UndoPacketMsg{Packet: unwrapped}}
 	asJSON, err := json.Marshal(msg)
 	if err != nil {
 		return err
@@ -53,7 +53,7 @@ func (k Keeper) UndoSendRateLimit(ctx sdk.Context, contract string, packet expor
 
 	_, err = k.PermissionedKeeper.Sudo(ctx, contractAddr, asJSON)
 	if err != nil {
-		return errorsmod.Wrap(types.ErrContractError, err.Error())
+		return errorsmod.Wrap(ibcratelimit.ErrContractError, err.Error())
 	}
 
 	return nil
@@ -61,25 +61,25 @@ func (k Keeper) UndoSendRateLimit(ctx sdk.Context, contract string, packet expor
 
 // buildWasmExecMsg Constructs a Wasm Execute Message from a packet and type.
 func (k Keeper) buildWasmExecMsg(msgType string, packet exported.PacketI) ([]byte, error) {
-	unwrapped, err := types.UnwrapPacket(packet)
+	unwrapped, err := ibcratelimit.UnwrapPacket(packet)
 	if err != nil {
 		return []byte{}, err
 	}
 
 	var asJSON []byte
 	switch {
-	case msgType == types.MsgSendPacket:
-		msg := types.SendPacketMsg{SendPacket: types.PacketMsg{
+	case msgType == ibcratelimit.MsgSendPacket:
+		msg := ibcratelimit.SendPacketMsg{SendPacket: ibcratelimit.PacketMsg{
 			Packet: unwrapped,
 		}}
 		asJSON, err = json.Marshal(msg)
-	case msgType == types.MsgRecvPacket:
-		msg := types.RecvPacketMsg{RecvPacket: types.PacketMsg{
+	case msgType == ibcratelimit.MsgRecvPacket:
+		msg := ibcratelimit.RecvPacketMsg{RecvPacket: ibcratelimit.PacketMsg{
 			Packet: unwrapped,
 		}}
 		asJSON, err = json.Marshal(msg)
 	default:
-		return []byte{}, types.ErrBadMessage
+		return []byte{}, ibcratelimit.ErrBadMessage
 	}
 
 	if err != nil {

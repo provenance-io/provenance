@@ -141,9 +141,9 @@ import (
 	"github.com/provenance-io/provenance/x/ibchooks"
 	ibchookskeeper "github.com/provenance-io/provenance/x/ibchooks/keeper"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
+	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
 	ibcratelimitkeeper "github.com/provenance-io/provenance/x/ibcratelimit/keeper"
 	ibcratelimitmodule "github.com/provenance-io/provenance/x/ibcratelimit/module"
-	ibcratelimittypes "github.com/provenance-io/provenance/x/ibcratelimit/types"
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -397,7 +397,7 @@ func New(
 		icahosttypes.StoreKey,
 		icqtypes.StoreKey,
 		ibchookstypes.StoreKey,
-		ibcratelimittypes.StoreKey,
+		ibcratelimit.StoreKey,
 
 		metadatatypes.StoreKey,
 		markertypes.StoreKey,
@@ -533,7 +533,7 @@ func New(
 		app.IbcHooks,
 	)
 
-	rateLimtingKeeper := ibcratelimitkeeper.NewKeeper(appCodec, keys[ibcratelimittypes.StoreKey], nil)
+	rateLimtingKeeper := ibcratelimitkeeper.NewKeeper(appCodec, keys[ibcratelimit.StoreKey], nil)
 	app.RateLimitingKeeper = &rateLimtingKeeper
 
 	// Create Transfer Keepers
@@ -818,7 +818,7 @@ func New(
 		metadatatypes.ModuleName,
 		oracletypes.ModuleName,
 		wasm.ModuleName,
-		ibcratelimittypes.ModuleName,
+		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
@@ -849,7 +849,7 @@ func New(
 		nametypes.ModuleName,
 		genutiltypes.ModuleName,
 		ibchost.ModuleName,
-		ibcratelimittypes.ModuleName,
+		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
@@ -906,7 +906,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
 		icatypes.ModuleName,
-		ibcratelimittypes.ModuleName,
+		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
@@ -944,7 +944,7 @@ func New(
 		hold.ModuleName,
 		exchange.ModuleName,
 
-		ibcratelimittypes.ModuleName,
+		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
 		icqtypes.ModuleName,

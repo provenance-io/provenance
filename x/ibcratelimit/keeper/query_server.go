@@ -4,13 +4,13 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/x/ibcratelimit/types"
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ ibcratelimit.QueryServer = Keeper{}
 
 // Params returns the params used by the module
-func (k Keeper) Params(ctx context.Context, _ *types.ParamsRequest) (*types.ParamsResponse, error) {
+func (k Keeper) Params(ctx context.Context, _ *ibcratelimit.ParamsRequest) (*ibcratelimit.ParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	params, err := k.GetParams(sdkCtx)
@@ -18,5 +18,5 @@ func (k Keeper) Params(ctx context.Context, _ *types.ParamsRequest) (*types.Para
 		return nil, err
 	}
 
-	return &types.ParamsResponse{Params: params}, nil
+	return &ibcratelimit.ParamsResponse{Params: params}, nil
 }

@@ -13,7 +13,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
-	"github.com/provenance-io/provenance/x/ibcratelimit/types"
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
 /*func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
@@ -95,7 +95,7 @@ func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
 	addrStr, err := sdk.Bech32ifyAddressBytes("cosmos", addr)
 	require.NoError(chain.T, err)
 	provenanceApp := chain.GetProvenanceApp()
-	provenanceApp.RateLimitingKeeper.SetParams(chain.GetContext(), types.Params{
+	provenanceApp.RateLimitingKeeper.SetParams(chain.GetContext(), ibcratelimit.Params{
 		ContractAddress: addrStr,
 	})
 }

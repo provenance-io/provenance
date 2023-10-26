@@ -1,4 +1,4 @@
-package types
+package ibcratelimit
 
 const (
 	ModuleName = "ratelimitedibc" // IBC at the end to avoid conflicts with the ibc prefix

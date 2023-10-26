@@ -9,7 +9,7 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/ibcratelimit/types"
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
 type GenesisTestSuite struct {
@@ -33,8 +33,8 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	testAddress := sdk.AccAddress([]byte("addr1_______________")).String()
 	k := s.app.RateLimitingKeeper
 
-	initialGenesis := types.GenesisState{
-		Params: types.Params{
+	initialGenesis := ibcratelimit.GenesisState{
+		Params: ibcratelimit.Params{
 			ContractAddress: testAddress,
 		},
 	}

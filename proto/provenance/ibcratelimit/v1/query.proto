@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "provenance/ibcratelimit/v1/params.proto";
 
-option go_package          = "github.com/provenance-io/provenance/x/ibcratelimit/types";
+option go_package          = "github.com/provenance-io/provenance/x/ibcratelimit";
 option java_package        = "io.provenance.ibcratelimit.v1";
 option java_multiple_files = true;
 
