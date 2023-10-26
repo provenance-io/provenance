@@ -9,7 +9,6 @@ import (
 
 const (
 	// DefaultDefaultSplit is the default value used for the DefaultSplit parameter.
-	// TODO[1658]: Discuss what this should be with someone who would know.
 	DefaultDefaultSplit = uint32(500)
 
 	// MaxSplit is the maximum split value. 10,000 basis points = 100%.
