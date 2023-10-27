@@ -94,7 +94,7 @@ func (k MsgServer) MarketSettle(goCtx context.Context, msg *exchange.MsgMarketSe
 func (k MsgServer) MarketSetOrderExternalID(goCtx context.Context, msg *exchange.MsgMarketSetOrderExternalIDRequest) (*exchange.MsgMarketSetOrderExternalIDResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.CanSetIDs(ctx, msg.MarketId, msg.Admin) {
-		return nil, permError("set uuids on orders for", msg.Admin, msg.MarketId)
+		return nil, permError("set external ids on orders for", msg.Admin, msg.MarketId)
 	}
 	err := k.SetOrderExternalID(ctx, msg.MarketId, msg.OrderId, msg.ExternalId)
 	if err != nil {
