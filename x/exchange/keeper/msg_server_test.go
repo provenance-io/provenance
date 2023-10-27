@@ -2326,7 +2326,114 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestMsgServer_MarketSetOrderExternalID()
+func (s *TestSuite) TestMsgServer_MarketSetOrderExternalID() {
+	type followupArgs struct{}
+	testDef := msgServerTestDef[exchange.MsgMarketSetOrderExternalIDRequest, exchange.MsgMarketSetOrderExternalIDResponse, followupArgs]{
+		endpointName: "MarketSetOrderExternalID",
+		endpoint:     keeper.NewMsgServer(s.k).MarketSetOrderExternalID,
+		expResp:      &exchange.MsgMarketSetOrderExternalIDResponse{},
+		followup: func(msg *exchange.MsgMarketSetOrderExternalIDRequest, fArgs followupArgs) {
+			order, err := s.k.GetOrder(s.ctx, msg.OrderId)
+			s.Assert().NoError(err, "GetOrder(%d) error", msg.OrderId)
+			if s.Assert().NotNil(order, "GetOrder(%d) order", msg.OrderId) {
+				s.Assert().Equal(msg.ExternalId, order.GetExternalID(), "GetOrder(%d) order ExternalID", msg.OrderId)
+			}
+		},
+	}
+	agSetIDs := func(addr sdk.AccAddress) exchange.AccessGrant {
+		return exchange.AccessGrant{
+			Address:     addr.String(),
+			Permissions: []exchange.Permission{exchange.Permission_set_ids},
+		}
+	}
+
+	tests := []msgServerTestCase[exchange.MsgMarketSetOrderExternalIDRequest, followupArgs]{
+		{
+			name: "admin does not have permission",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId: 1,
+					AccessGrants: []exchange.AccessGrant{
+						{
+							Address: s.addr5.String(),
+							Permissions: []exchange.Permission{
+								exchange.Permission_settle, exchange.Permission_cancel, exchange.Permission_withdraw,
+								exchange.Permission_update, exchange.Permission_permissions, exchange.Permission_attributes,
+							},
+						},
+					},
+				})
+			},
+			msg: exchange.MsgMarketSetOrderExternalIDRequest{
+				Admin: s.addr5.String(), MarketId: 1, OrderId: 1, ExternalId: "bananas",
+			},
+			expInErr: []string{invReqErr,
+				"account " + s.addr5.String() + " does not have permission to set external ids on orders for market 1"},
+		},
+		{
+			name: "order does not exist",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId: 1, AccessGrants: []exchange.AccessGrant{agSetIDs(s.addr5)},
+				})
+			},
+			msg: exchange.MsgMarketSetOrderExternalIDRequest{
+				Admin: s.addr5.String(), MarketId: 1, OrderId: 1, ExternalId: "bananas",
+			},
+			expInErr: []string{invReqErr, "order 1 not found"},
+		},
+		{
+			name: "okay: nothing to something",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId: 1, AccessGrants: []exchange.AccessGrant{agSetIDs(s.addr5)},
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(7).WithAsk(&exchange.AskOrder{
+					MarketId: 1, Seller: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1pear"),
+					ExternalId: "",
+				}))
+			},
+			msg: exchange.MsgMarketSetOrderExternalIDRequest{
+				Admin: s.addr5.String(), MarketId: 1, OrderId: 7, ExternalId: "bananas",
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventOrderExternalIDUpdated{
+					OrderId:    7,
+					MarketId:   1,
+					ExternalId: "bananas",
+				}),
+			},
+		},
+		{
+			name: "okay: something to something else",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId: 1, AccessGrants: []exchange.AccessGrant{agSetIDs(s.addr5)},
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(7).WithBid(&exchange.BidOrder{
+					MarketId: 1, Buyer: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1pear"),
+					ExternalId: "something",
+				}))
+			},
+			msg: exchange.MsgMarketSetOrderExternalIDRequest{
+				Admin: s.addr5.String(), MarketId: 1, OrderId: 7, ExternalId: "bananas",
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventOrderExternalIDUpdated{
+					OrderId:    7,
+					MarketId:   1,
+					ExternalId: "bananas",
+				}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestMsgServer_MarketWithdraw()
 
