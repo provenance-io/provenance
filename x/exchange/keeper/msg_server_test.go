@@ -286,7 +286,7 @@ func (s *TestSuite) TestMsgServer_CreateAsk() {
 					FeeSellerSettlementFlat: s.coins("5fig"),
 				})
 				s.requireFundAccount(s.addr1, "100apple,20fig")
-				s.requireAddHold(s.addr1, "6fig", "testing")
+				s.requireAddHold(s.addr1, "6fig", 0)
 			},
 			msg: exchange.MsgCreateAskRequest{
 				AskOrder: exchange.AskOrder{
@@ -545,7 +545,7 @@ func (s *TestSuite) TestMsgServer_CreateBid() {
 					FeeSellerSettlementFlat: s.coins("5fig"),
 				})
 				s.requireFundAccount(s.addr1, "100peach,20fig")
-				s.requireAddHold(s.addr1, "6fig", "testing")
+				s.requireAddHold(s.addr1, "6fig", 0)
 			},
 			msg: exchange.MsgCreateBidRequest{
 				BidOrder: exchange.BidOrder{
@@ -640,7 +640,251 @@ func (s *TestSuite) TestMsgServer_CreateBid() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestMsgServer_CancelOrder()
+func (s *TestSuite) TestMsgServer_CancelOrder() {
+	type followupArgs struct {
+		addr        sdk.AccAddress
+		expBal      sdk.Coins
+		expHoldAmt  sdk.Coins
+		expSpendBal sdk.Coins
+	}
+	testDef := msgServerTestDef[exchange.MsgCancelOrderRequest, exchange.MsgCancelOrderResponse, followupArgs]{
+		endpointName: "CancelOrder",
+		endpoint:     keeper.NewMsgServer(s.k).CancelOrder,
+		expResp:      &exchange.MsgCancelOrderResponse{},
+		followup: func(msg *exchange.MsgCancelOrderRequest, fargs followupArgs) {
+			order, err := s.k.GetOrder(s.ctx, msg.OrderId)
+			s.Assert().NoError(err, "GetOrder(%d) error", msg.OrderId)
+			s.Assert().Nil(order, "GetOrder(%d) order", msg.OrderId)
+
+			for _, expBal := range fargs.expBal {
+				actBal := s.app.BankKeeper.GetBalance(s.ctx, fargs.addr, expBal.Denom)
+				s.Assert().Equalf(expBal.String(), actBal.String(), "actual balance of %s", expBal.Denom)
+			}
+
+			holdAmt, err := s.app.HoldKeeper.GetHoldCoins(s.ctx, fargs.addr)
+			if s.Assert().NoError(err, "GetHoldCoins(%s) error", s.getAddrName(fargs.addr)) {
+				s.Assert().Equalf(fargs.expHoldAmt.String(), holdAmt.String(), "amount on hold for %s", s.getAddrName(fargs.addr))
+			}
+
+			actSpendBal := s.app.BankKeeper.SpendableCoins(s.ctx, fargs.addr)
+			for _, expBal := range fargs.expSpendBal {
+				actBal := actSpendBal.AmountOf(expBal.Denom)
+				s.Assert().Equalf(expBal.Amount.String(), actBal.String(), "spendable balance of %s", expBal.Denom)
+			}
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgCancelOrderRequest, followupArgs]{
+		{
+			name:     "order 0",
+			setup:    nil,
+			msg:      exchange.MsgCancelOrderRequest{Signer: s.addr1.String(), OrderId: 0},
+			expInErr: []string{invReqErr, "order 0 does not exist"},
+		},
+		{
+			name: "order does not exist",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 3})
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(5).WithAsk(&exchange.AskOrder{
+					MarketId: 3, Seller: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1pear"),
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(7).WithBid(&exchange.BidOrder{
+					MarketId: 3, Buyer: s.addr3.String(), Assets: s.coin("1apple"), Price: s.coin("1pear"),
+				}))
+			},
+			msg:      exchange.MsgCancelOrderRequest{Signer: s.addr2.String(), OrderId: 6},
+			expInErr: []string{invReqErr, "order 6 does not exist"},
+		},
+		{
+			name: "wrong signer",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 2})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(83).WithAsk(&exchange.AskOrder{
+					MarketId: 2, Seller: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1pear"),
+				}))
+			},
+			msg:      exchange.MsgCancelOrderRequest{Signer: s.addr2.String(), OrderId: 83},
+			expInErr: []string{invReqErr, "account " + s.addr2.String() + " does not have permission to cancel order 83"},
+		},
+		{
+			name: "market signer: ask",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 2,
+					AccessGrants: []exchange.AccessGrant{
+						{Address: s.addr5.String(), Permissions: []exchange.Permission{exchange.Permission_cancel}},
+					},
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(44).WithAsk(&exchange.AskOrder{
+					MarketId: 2, Seller: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1pear"),
+				}))
+				s.requireFundAccount(s.addr1, "10apple")
+				s.requireAddHold(s.addr1, "2apple", 44)
+			},
+			msg: exchange.MsgCancelOrderRequest{Signer: s.addr5.String(), OrderId: 44},
+			fArgs: followupArgs{
+				addr:        s.addr1,
+				expBal:      s.coins("10apple"),
+				expHoldAmt:  s.coins("1apple"),
+				expSpendBal: s.coins("9apple"),
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr1, "1apple"),
+				s.untypeEvent(&exchange.EventOrderCancelled{
+					OrderId: 44, CancelledBy: s.addr5.String(), MarketId: 2, ExternalId: "",
+				}),
+			},
+		},
+		{
+			name: "market signer: bid",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 2,
+					AccessGrants: []exchange.AccessGrant{
+						{Address: s.addr5.String(), Permissions: []exchange.Permission{exchange.Permission_cancel}},
+					},
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(44).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1pear"),
+				}))
+				s.requireFundAccount(s.addr1, "10pear")
+				s.requireAddHold(s.addr1, "2pear", 44)
+			},
+			msg: exchange.MsgCancelOrderRequest{Signer: s.addr5.String(), OrderId: 44},
+			fArgs: followupArgs{
+				addr:        s.addr1,
+				expBal:      s.coins("10pear"),
+				expHoldAmt:  s.coins("1pear"),
+				expSpendBal: s.coins("9pear"),
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr1, "1pear"),
+				s.untypeEvent(&exchange.EventOrderCancelled{
+					OrderId: 44, CancelledBy: s.addr5.String(), MarketId: 2, ExternalId: "",
+				}),
+			},
+		},
+		{
+			name: "ask with diff fee denom from price",
+			setup: func() {
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(5555).WithAsk(&exchange.AskOrder{
+					MarketId:                1,
+					Seller:                  s.addr1.String(),
+					Assets:                  s.coin("10apple"),
+					Price:                   s.coin("5pear"),
+					SellerSettlementFlatFee: s.coinP("1fig"),
+					ExternalId:              "ext-id-5555",
+				}))
+				s.requireFundAccount(s.addr1, "15apple,5fig")
+				s.requireAddHold(s.addr1, "10apple,1fig", 5555)
+			},
+			msg: exchange.MsgCancelOrderRequest{Signer: s.addr1.String(), OrderId: 5555},
+			fArgs: followupArgs{
+				addr:        s.addr1,
+				expBal:      s.coins("15apple,5fig"),
+				expHoldAmt:  nil,
+				expSpendBal: s.coins("15apple,5fig"),
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr1, "10apple,1fig"),
+				s.untypeEvent(&exchange.EventOrderCancelled{
+					OrderId: 5555, CancelledBy: s.addr1.String(), MarketId: 1, ExternalId: "ext-id-5555",
+				}),
+			},
+		},
+		{
+			name: "ask with same fee denom as price",
+			setup: func() {
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(98765).WithAsk(&exchange.AskOrder{
+					MarketId:                3,
+					Seller:                  s.addr2.String(),
+					Assets:                  s.coin("10apple"),
+					Price:                   s.coin("5pear"),
+					SellerSettlementFlatFee: s.coinP("1pear"),
+					ExternalId:              "whatever",
+				}))
+				s.requireFundAccount(s.addr2, "15apple,5fig")
+				s.requireAddHold(s.addr2, "10apple,1fig", 98765)
+			},
+			msg: exchange.MsgCancelOrderRequest{Signer: s.addr2.String(), OrderId: 98765},
+			fArgs: followupArgs{
+				addr:        s.addr2,
+				expBal:      s.coins("15apple,5fig"),
+				expHoldAmt:  s.coins("1fig"),
+				expSpendBal: s.coins("15apple,4fig"),
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr2, "10apple"),
+				s.untypeEvent(&exchange.EventOrderCancelled{
+					OrderId: 98765, CancelledBy: s.addr2.String(), MarketId: 3, ExternalId: "whatever",
+				}),
+			},
+		},
+		{
+			name: "bid with diff fee denom from price",
+			setup: func() {
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(5555).WithBid(&exchange.BidOrder{
+					MarketId:            1,
+					Buyer:               s.addr1.String(),
+					Assets:              s.coin("10apple"),
+					Price:               s.coin("5pear"),
+					BuyerSettlementFees: s.coins("1fig"),
+					ExternalId:          "ext-id-5555",
+				}))
+				s.requireFundAccount(s.addr1, "15pear,5fig")
+				s.requireAddHold(s.addr1, "5pear,1fig", 5555)
+			},
+			msg: exchange.MsgCancelOrderRequest{Signer: s.addr1.String(), OrderId: 5555},
+			fArgs: followupArgs{
+				addr:        s.addr1,
+				expBal:      s.coins("15pear,5fig"),
+				expHoldAmt:  nil,
+				expSpendBal: s.coins("15pear,5fig"),
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr1, "1fig,5pear"),
+				s.untypeEvent(&exchange.EventOrderCancelled{
+					OrderId: 5555, CancelledBy: s.addr1.String(), MarketId: 1, ExternalId: "ext-id-5555",
+				}),
+			},
+		},
+		{
+			name: "bid with same fee denom as price",
+			setup: func() {
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(98765).WithBid(&exchange.BidOrder{
+					MarketId:            3,
+					Buyer:               s.addr2.String(),
+					Assets:              s.coin("10apple"),
+					Price:               s.coin("5pear"),
+					BuyerSettlementFees: s.coins("1pear"),
+					ExternalId:          "whatever",
+				}))
+				s.requireFundAccount(s.addr2, "15pear,5fig")
+				s.requireAddHold(s.addr2, "1fig,6pear", 98765)
+			},
+			msg: exchange.MsgCancelOrderRequest{Signer: s.addr2.String(), OrderId: 98765},
+			fArgs: followupArgs{
+				addr:        s.addr2,
+				expBal:      s.coins("15pear,5fig"),
+				expHoldAmt:  s.coins("1fig"),
+				expSpendBal: s.coins("15pear,4fig"),
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr2, "6pear"),
+				s.untypeEvent(&exchange.EventOrderCancelled{
+					OrderId: 98765, CancelledBy: s.addr2.String(), MarketId: 3, ExternalId: "whatever",
+				}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestMsgServer_FillBids()
 

@@ -361,8 +361,9 @@ func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 }
 
 // requireAddHold calls s.app.HoldKeeper.AddHold, making sure it doesn't panic or return an error.
-func (s *TestSuite) requireAddHold(addr sdk.AccAddress, holdCoins, reason string) {
+func (s *TestSuite) requireAddHold(addr sdk.AccAddress, holdCoins string, orderID uint64) {
 	coins := s.coins(holdCoins)
+	reason := fmt.Sprintf("test hold on order %d", orderID)
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
 		return s.app.HoldKeeper.AddHold(s.ctx, addr, coins, reason)
 	}, "AddHold(%s, %q, %q)", s.getAddrName(addr), holdCoins, reason)
