@@ -15,7 +15,6 @@ import (
 
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/provenance-io/provenance/x/ibcratelimit/keeper"
-	"github.com/provenance-io/provenance/x/ibcratelimit/osmosis/osmoutils"
 )
 
 var (
@@ -130,7 +129,7 @@ func (im *IBCMiddleware) OnRecvPacket(
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
 	if err := ibcratelimit.ValidateReceiverAddress(packet); err != nil {
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, ibcratelimit.ErrBadMessage, err.Error())
+		return ibcratelimit.NewEmitErrorAcknowledgement(ctx, ibcratelimit.ErrBadMessage, err.Error())
 	}
 
 	if !im.keeper.ContractConfigured(ctx) {
@@ -140,7 +139,7 @@ func (im *IBCMiddleware) OnRecvPacket(
 
 	err := im.keeper.CheckAndUpdateRateLimits(ctx, "recv_packet", packet)
 	if err != nil {
-		return osmoutils.NewEmitErrorAcknowledgement(ctx, err)
+		return ibcratelimit.NewEmitErrorAcknowledgement(ctx, err)
 	}
 
 	// if this returns an Acknowledgement that isn't successful, all state changes are discarded
@@ -159,7 +158,7 @@ func (im *IBCMiddleware) OnAcknowledgementPacket(
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
 	}
 
-	if osmoutils.IsAckError(acknowledgement) {
+	if ibcratelimit.IsAckError(acknowledgement) {
 		err := im.keeper.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the ack
 		if err != nil {
 			eventErr := ctx.EventManager().EmitTypedEvent(&ibcratelimit.EventAckRevertFailure{
