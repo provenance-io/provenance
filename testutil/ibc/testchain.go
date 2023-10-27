@@ -17,6 +17,7 @@ import (
 
 	provenanceapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/contracts"
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
 type TestChain struct {
@@ -42,6 +43,13 @@ func (chain *TestChain) StoreContractEchoDirect(suite *suite.Suite) uint64 {
 	return codeID
 }
 
+func (chain *TestChain) StoreContractRateLimiterDirect(suite *suite.Suite) uint64 {
+	codeID, err := contracts.StoreContractCode(chain.GetProvenanceApp(), chain.GetContext(), contracts.RateLimiterWasm())
+	suite.Require().NoError(err, "rate limiter contract direct code load failed", err)
+	println("loaded rate limiter contract with code id: ", codeID)
+	return codeID
+}
+
 func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, codeID uint64) sdk.AccAddress {
 	addr, err := contracts.InstantiateContract(chain.GetProvenanceApp(), chain.GetContext(), msg, codeID)
 	suite.Require().NoError(err, "contract instantiation failed", err)
@@ -54,6 +62,15 @@ func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddres
 	suite.Require().NoError(err, "contract query failed", err)
 	println("got query result of ", state)
 	return state
+}
+
+func (chain *TestChain) RegisterRateLimiterContract(suite *suite.Suite, addr []byte) {
+	addrStr, err := sdk.Bech32ifyAddressBytes("cosmos", addr)
+	suite.Require().NoError(err)
+	provenanceApp := chain.GetProvenanceApp()
+	provenanceApp.RateLimitingKeeper.SetParams(chain.GetContext(), ibcratelimit.Params{
+		ContractAddress: addrStr,
+	})
 }
 
 // SendMsgsNoCheck is an alternative to ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller

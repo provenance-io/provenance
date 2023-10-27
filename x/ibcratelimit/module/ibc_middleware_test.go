@@ -20,11 +20,12 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/provenance-io/provenance/internal/pioconfig"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/pioconfig"
+	testutil "github.com/provenance-io/provenance/testutil/ibc"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
-	"github.com/provenance-io/provenance/x/ibcratelimit/osmosis/osmosisibctesting"
 
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -39,8 +40,8 @@ type MiddlewareTestSuite struct {
 	coordinator *ibctesting.Coordinator
 
 	// testing chains used for convenience and readability
-	chainA *osmosisibctesting.TestChain
-	chainB *osmosisibctesting.TestChain
+	chainA *testutil.TestChain
+	chainB *testutil.TestChain
 	path   *ibctesting.Path
 }
 
@@ -56,7 +57,7 @@ func TestMiddlewareTestSuite(t *testing.T) {
 	suite.Run(t, new(MiddlewareTestSuite))
 }
 
-func NewTransferPath(chainA, chainB *osmosisibctesting.TestChain) *ibctesting.Path {
+func NewTransferPath(chainA, chainB *testutil.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
 	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
@@ -89,13 +90,13 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 	ibctesting.DefaultTestingAppInit = SetupSimApp
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 
-	suite.chainA = &osmosisibctesting.TestChain{
+	suite.chainA = &testutil.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1)),
 	}
 	// Remove epochs to prevent  minting
 	//err := suite.chainA.MoveEpochsToTheFuture()
 	//suite.Require().NoError(err)
-	suite.chainB = &osmosisibctesting.TestChain{
+	suite.chainB = &testutil.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2)),
 	}
 	suite.path = NewTransferPath(suite.chainA, suite.chainB)
@@ -357,11 +358,12 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	fmt.Printf("Testing send rate limiting for denom=%s, channelValue=%s, quota=%s, sendAmount=%s\n", denom, channelValue, quota, sendAmount)
 
 	// Setup contract
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, ByteCodePath)
+	suite.chainA.StoreContractRateLimiterDirect(&suite.Suite)
 	quotas := suite.BuildChannelQuota("weekly", channel, denom, 604800, 5, 5)
 	fmt.Println(quotas)
-	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
-	suite.chainA.RegisterRateLimitingContract(addr)
+	initMsg := CreateRateLimiterInitMessage(suite.chainA, quotas)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, initMsg, 1)
+	suite.chainA.RegisterRateLimiterContract(&suite.Suite, addr)
 
 	// send 2.5% (quota is 5%)
 	fmt.Printf("Sending %s from A to B. Represented in chain A as wrapped? %v\n", denom, !native)
@@ -452,10 +454,11 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	fmt.Printf("Testing recv rate limiting for denom=%s, channelValue=%s, quota=%s, sendAmount=%s\n", localDenom, channelValue, quota, sendAmount)
 
 	// Setup contract
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, ByteCodePath)
+	suite.chainA.StoreContractRateLimiterDirect(&suite.Suite)
 	quotas := suite.BuildChannelQuota("weekly", channel, localDenom, 604800, 4, 4)
-	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
-	suite.chainA.RegisterRateLimitingContract(addr)
+	initMsg := CreateRateLimiterInitMessage(suite.chainA, quotas)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, initMsg, 1)
+	suite.chainA.RegisterRateLimiterContract(&suite.Suite, addr)
 
 	// receive 2.5% (quota is 5%)
 	fmt.Printf("Sending %s from B to A. Represented in chain A as wrapped? %v\n", sendDenom, native)
@@ -488,9 +491,10 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimitingNonNative() {
 // Test no rate limiting occurs when the contract is set, but not quotas are condifured for the path
 func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 	// Setup contract
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, ByteCodePath)
-	addr := suite.chainA.InstantiateRLContract(&suite.Suite, ``)
-	suite.chainA.RegisterRateLimitingContract(addr)
+	suite.chainA.StoreContractRateLimiterDirect(&suite.Suite)
+	initMsg := CreateRateLimiterInitMessage(suite.chainA, "")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, initMsg, 1)
+	suite.chainA.RegisterRateLimiterContract(&suite.Suite, addr)
 
 	// send 1 token.
 	// If the contract doesn't have a quota for the current channel, all transfers are allowed
@@ -502,10 +506,11 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.initializeEscrow()
 	// Setup contract
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, ByteCodePath)
+	suite.chainA.StoreContractRateLimiterDirect(&suite.Suite)
 	quotas := suite.BuildChannelQuota("weekly", "channel-0", sdk.DefaultBondDenom, 604800, 1, 1)
-	addr := suite.chainA.InstantiateRLContract(&suite.Suite, quotas)
-	suite.chainA.RegisterRateLimitingContract(addr)
+	initMsg := CreateRateLimiterInitMessage(suite.chainA, quotas)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, initMsg, 1)
+	suite.chainA.RegisterRateLimiterContract(&suite.Suite, addr)
 
 	// Get the escrowed amount
 	provenanceApp := suite.chainA.GetProvenanceApp()
@@ -572,12 +577,13 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 
 func (suite *MiddlewareTestSuite) TestUnsetRateLimitingContract() {
 	// Setup contract
-	suite.chainA.StoreContractCodeDirect(&suite.Suite, ByteCodePath)
-	addr := suite.chainA.InstantiateRLContract(&suite.Suite, "")
-	suite.chainA.RegisterRateLimitingContract(addr)
+	suite.chainA.StoreContractRateLimiterDirect(&suite.Suite)
+	msg := CreateRateLimiterInitMessage(suite.chainA, "")
+	addr := suite.chainA.InstantiateContract(&suite.Suite, msg, 1)
+	suite.chainA.RegisterRateLimiterContract(&suite.Suite, addr)
 
 	// Unset the contract param
-	suite.chainA.RegisterRateLimitingContract([]byte(""))
+	suite.chainA.RegisterRateLimiterContract(&suite.Suite, []byte(""))
 	contractAddress := suite.chainA.GetProvenanceApp().RateLimitingKeeper.GetContractAddress(suite.chainA.GetContext())
 	suite.Require().Equal("", contractAddress, "should unregister contract")
 
@@ -615,4 +621,18 @@ func (suite *MiddlewareTestSuite) GetAllTotalEscrowed(ctx sdk.Context) sdk.Coins
 	}
 
 	return totalEscrowed
+}
+
+func CreateRateLimiterInitMessage(chain *testutil.TestChain, quotas string) string {
+	provenanceApp := chain.GetProvenanceApp()
+	transferModule := provenanceApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
+	govModule := provenanceApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+
+	initMsg := fmt.Sprintf(`{
+           "gov_module":  "%s",
+           "ibc_module":"%s",
+           "paths": [%s]
+        }`,
+		govModule, transferModule, quotas)
+	return initMsg
 }

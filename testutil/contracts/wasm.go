@@ -18,6 +18,9 @@ var counterWasm []byte
 //go:embed echo/artifacts/echo.wasm
 var echoWasm []byte
 
+//go:embed rate-limiter/artifacts/rate_limiter.wasm
+var rateLimiterWasm []byte
+
 // EchoWasm returns the echo contract wasm byte data
 func EchoWasm() []byte {
 	return echoWasm
@@ -26,6 +29,11 @@ func EchoWasm() []byte {
 // CounterWasm returns the counter contract wasm byte data
 func CounterWasm() []byte {
 	return counterWasm
+}
+
+// CounterWasm returns the counter contract wasm byte data
+func RateLimiterWasm() []byte {
+	return rateLimiterWasm
 }
 
 func StoreContractCode(app *provenanceapp.App, ctx sdk.Context, wasmCode []byte) (uint64, error) {
