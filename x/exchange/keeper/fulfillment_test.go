@@ -294,7 +294,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				TotalAssets: s.coins("6apple"),
 				BidOrderIds: []uint64{1},
 			},
-			expErr: "error calculating seller settlement ratio fee for order 1: no seller " +
+			expErr: "error calculating seller settlement ratio fee: no seller " +
 				"settlement fee ratio found for denom \"plum\"",
 		},
 		{
