@@ -8,12 +8,20 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 	"github.com/provenance-io/provenance/x/hold"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
+
+// All of the msg_server endpoints are merely wrappers on other keeper functions, which
+// are (hopefully) extensively tested. So, in here, it's some superficial testing, but
+// without the mocks so that actual interaction with the other modules can be checked.
 
 // invReqErr is the error added by sdkerrors.ErrInvalidRequest.
 const invReqErr = "invalid request"
@@ -133,14 +141,15 @@ func (s *TestSuite) eventCoinReceived(receiver sdk.AccAddress, amount string) sd
 
 // eventTransfer creates a new "transfer" event.
 func (s *TestSuite) eventTransfer(recipient, sender sdk.AccAddress, amount string) sdk.Event {
-	return sdk.Event{
-		Type: "transfer",
-		Attributes: []abci.EventAttribute{
-			s.newAttrNoQ("recipient", recipient.String()),
-			s.newAttrNoQ("sender", sender.String()),
-			s.newAttrNoQ("amount", amount),
-		},
+	rv := sdk.Event{Type: "transfer"}
+	if len(recipient) > 0 {
+		rv.Attributes = append(rv.Attributes, s.newAttrNoQ("recipient", recipient.String()))
 	}
+	if len(sender) > 0 {
+		rv.Attributes = append(rv.Attributes, s.newAttrNoQ("sender", sender.String()))
+	}
+	rv.Attributes = append(rv.Attributes, s.newAttrNoQ("amount", amount))
+	return rv
 }
 
 // eventMessage creates a new "message" event.
@@ -163,31 +172,132 @@ func (s *TestSuite) eventHoldReleased(addr sdk.AccAddress, amount string) sdk.Ev
 	return s.untypeEvent(&hold.EventHoldReleased{Address: addr.String(), Amount: amount})
 }
 
+// requireSetNameRecord creates a name record, requiring it to not error.
+func (s *TestSuite) requireSetNameRecord(name string, owner sdk.AccAddress) {
+	err := s.app.NameKeeper.SetNameRecord(s.ctx, name, owner, true)
+	s.Require().NoError(err, "NameKeeper.SetNameRecord(%q, %s, true)", name, s.getAddrName(owner))
+}
+
+// requireSetAttr creates an attribute with the given name on the given addr, requiring it to not error.
+func (s *TestSuite) requireSetAttr(addr sdk.AccAddress, name string, owner sdk.AccAddress) {
+	attr := attrtypes.Attribute{
+		Name:          name,
+		Value:         []byte("value of " + name),
+		AttributeType: attrtypes.AttributeType_String,
+		Address:       addr.String(),
+	}
+	err := s.app.AttributeKeeper.SetAttribute(s.ctx, attr, owner)
+	s.Require().NoError(err, "SetAttribute(%s, %s)", name, s.getAddrName(owner))
+}
+
+// requireQuarantineOptIn opts an address into quarantine, requiring it to not error.
+func (s *TestSuite) requireQuarantineOptIn(addr sdk.AccAddress) {
+	err := s.app.QuarantineKeeper.SetOptIn(s.ctx, addr)
+	s.Require().NoError(err, "QuarantineKeeper.SetOptIn(%s)", s.getAddrName(addr))
+}
+
+// requireSanctionAddress sanctions an address, requiring it to not error.
+func (s *TestSuite) requireSanctionAddress(addr sdk.AccAddress) {
+	err := s.app.SanctionKeeper.SanctionAddresses(s.ctx, addr)
+	s.Require().NoError(err, "SanctionAddresses(%s)", s.getAddrName(addr))
+}
+
+// requireAddFinalizeAndActivateMarker creates a marker, requiring it to not error.
+func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager sdk.AccAddress, reqAttrs ...string) {
+	markerAddr, err := markertypes.MarkerAddress(coin.Denom)
+	s.Require().NoError(err, "MarkerAddress(%q)", coin.Denom)
+	marker := &markertypes.MarkerAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: markerAddr.String()},
+		Manager:     manager.String(),
+		AccessControl: []markertypes.AccessGrant{
+			{
+				Address: manager.String(),
+				Permissions: markertypes.AccessList{
+					markertypes.Access_Mint, markertypes.Access_Burn,
+					markertypes.Access_Deposit, markertypes.Access_Withdraw, markertypes.Access_Delete,
+					markertypes.Access_Admin, markertypes.Access_Transfer,
+				},
+			},
+		},
+		Status:                 markertypes.StatusProposed,
+		Denom:                  coin.Denom,
+		Supply:                 coin.Amount,
+		MarkerType:             markertypes.MarkerType_RestrictedCoin,
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		AllowForcedTransfer:    true,
+		RequiredAttributes:     reqAttrs,
+	}
+	nav := markertypes.NewNetAssetValue(s.coin("5navcoin"), 1)
+	err = s.app.MarkerKeeper.SetNetAssetValue(s.ctx, marker, nav, "testing")
+	s.Require().NoError(err, "SetNetAssetValue(%d)", coin.Denom)
+	err = s.app.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker)
+	s.Require().NoError(err, "AddFinalizeAndActivateMarker(%s)", coin.Denom)
+}
+
+// expBalances is the definition of an account's expected balance, hold, and spendable.
+// Only the denoms provided are checked in each type.
+type expBalances struct {
+	addr     sdk.AccAddress
+	expBal   []sdk.Coin
+	expHold  []sdk.Coin
+	expSpend []sdk.Coin
+}
+
+// checkBalances looks up the actual balances and asserts that they're the same as provided.
+func (s *TestSuite) checkBalances(eb expBalances) bool {
+	addrName := s.getAddrName(eb.addr)
+	rv := true
+
+	for _, expBal := range eb.expBal {
+		actBal := s.app.BankKeeper.GetBalance(s.ctx, eb.addr, expBal.Denom)
+		rv = s.Assert().Equalf(expBal.String(), actBal.String(), "actual balance of %s for %s", expBal.Denom, addrName) && rv
+	}
+
+	for _, expHold := range eb.expHold {
+		actHold, err := s.app.HoldKeeper.GetHoldCoin(s.ctx, eb.addr, expHold.Denom)
+		if s.Assert().NoError(err, "GetHoldCoin(%s, %q)", addrName, expHold.Denom) {
+			rv = s.Assert().Equalf(expHold.String(), actHold.String(), "amount on hold of %s for %s", expHold.Denom, addrName) && rv
+		} else {
+			rv = false
+		}
+	}
+
+	actSpendBal := s.app.BankKeeper.SpendableCoins(s.ctx, eb.addr)
+	for _, expSpend := range eb.expSpend {
+		actSpend := sdk.Coin{Denom: expSpend.Denom, Amount: actSpendBal.AmountOf(expSpend.Denom)}
+		rv = s.Assert().Equalf(expSpend.String(), actSpend.String(), "spendable balance of %s for %s", expSpend.Denom, addrName) && rv
+	}
+
+	return rv
+}
+
+// zeroCoin creates a coin in the given denom with a zero amount.
+// Handy for putting in an expBalances to check that a denom is zero.
+func (s *TestSuite) zeroCoin(denom string) sdk.Coin {
+	return sdk.Coin{Denom: denom, Amount: sdkmath.ZeroInt()}
+}
+
+// zeroCoins creates a coin for each denom, each with a zero amount.
+// Handy for putting in an expBalances to check that several denoms are zero.
+func (s *TestSuite) zeroCoins(denoms ...string) []sdk.Coin {
+	rv := make([]sdk.Coin, len(denoms))
+	for i, denom := range denoms {
+		rv[i] = s.zeroCoin(denom)
+	}
+	return rv
+}
+
 func (s *TestSuite) TestMsgServer_CreateAsk() {
 	type followupArgs struct {
-		expOrderID  uint64
-		addr        sdk.AccAddress
-		expBal      sdk.Coins
-		expHoldAmt  sdk.Coins
-		expSpendBal sdk.Coins
+		expOrderID uint64
+		expBal     expBalances
 	}
 	testDef := msgServerTestDef[exchange.MsgCreateAskRequest, exchange.MsgCreateAskResponse, followupArgs]{
 		endpointName: "CreateAsk",
 		endpoint:     keeper.NewMsgServer(s.k).CreateAsk,
 		followup: func(_ *exchange.MsgCreateAskRequest, fargs followupArgs) {
-			for _, expBal := range fargs.expBal {
-				actBal := s.app.BankKeeper.GetBalance(s.ctx, fargs.addr, expBal.Denom)
-				s.Assert().Equalf(expBal.String(), actBal.String(), "actual balance of %s", expBal.Denom)
-			}
-			holdAmt, err := s.app.HoldKeeper.GetHoldCoins(s.ctx, fargs.addr)
-			if s.Assert().NoError(err, "GetHoldCoins(%s) error", s.getAddrName(fargs.addr)) {
-				s.Assert().Equalf(fargs.expHoldAmt.String(), holdAmt.String(), "amount on hold for %s", s.getAddrName(fargs.addr))
-			}
-			actSpendBal := s.app.BankKeeper.SpendableCoins(s.ctx, fargs.addr)
-			for _, expBal := range fargs.expSpendBal {
-				actBal := actSpendBal.AmountOf(expBal.Denom)
-				s.Assert().Equalf(expBal.Amount.String(), actBal.String(), "spendable balance of %s", expBal.Denom)
-			}
+			s.checkBalances(fargs.expBal)
 		},
 	}
 
@@ -315,11 +425,13 @@ func (s *TestSuite) TestMsgServer_CreateAsk() {
 				},
 			},
 			fArgs: followupArgs{
-				expOrderID:  84,
-				addr:        s.addr2,
-				expBal:      s.coins("100apple,100fig,100pear"),
-				expHoldAmt:  s.coins("60apple"),
-				expSpendBal: s.coins("40apple,100fig,100pear"),
+				expOrderID: 84,
+				expBal: expBalances{
+					addr:     s.addr2,
+					expBal:   s.coins("100apple,100fig,100pear"),
+					expHold:  []sdk.Coin{s.coin("60apple"), s.zeroCoin("fig"), s.zeroCoin("pear")},
+					expSpend: s.coins("40apple,100fig,100pear"),
+				},
 			},
 			expEvents: sdk.Events{
 				s.eventHoldAdded(s.addr2, "60apple", 84),
@@ -349,11 +461,13 @@ func (s *TestSuite) TestMsgServer_CreateAsk() {
 				OrderCreationFee: s.coinP("8pear"),
 			},
 			fArgs: followupArgs{
-				expOrderID:  7,
-				addr:        s.addr2,
-				expBal:      s.coins("100apple,100fig,92pear"),
-				expHoldAmt:  s.coins("75apple"),
-				expSpendBal: s.coins("25apple,100fig,92pear"),
+				expOrderID: 7,
+				expBal: expBalances{
+					addr:     s.addr2,
+					expBal:   s.coins("100apple,100fig,92pear"),
+					expHold:  []sdk.Coin{s.coin("75apple"), s.zeroCoin("fig"), s.zeroCoin("pear")},
+					expSpend: s.coins("25apple,100fig,92pear"),
+				},
 			},
 			expEvents: sdk.Events{
 				s.eventCoinSpent(s.addr2, "8pear"),
@@ -390,11 +504,13 @@ func (s *TestSuite) TestMsgServer_CreateAsk() {
 				OrderCreationFee: s.coinP("8fig"),
 			},
 			fArgs: followupArgs{
-				expOrderID:  12345,
-				addr:        s.addr2,
-				expBal:      s.coins("100apple,92fig,100pear"),
-				expHoldAmt:  s.coins("75apple,12fig"),
-				expSpendBal: s.coins("25apple,80fig,100pear"),
+				expOrderID: 12345,
+				expBal: expBalances{
+					addr:     s.addr2,
+					expBal:   s.coins("100apple,92fig,100pear"),
+					expHold:  []sdk.Coin{s.coin("75apple"), s.coin("12fig"), s.zeroCoin("pear")},
+					expSpend: s.coins("25apple,80fig,100pear"),
+				},
 			},
 			expEvents: sdk.Events{
 				s.eventCoinSpent(s.addr2, "8fig"),
@@ -424,29 +540,14 @@ func (s *TestSuite) TestMsgServer_CreateAsk() {
 
 func (s *TestSuite) TestMsgServer_CreateBid() {
 	type followupArgs struct {
-		expOrderID  uint64
-		addr        sdk.AccAddress
-		expBal      sdk.Coins
-		expHoldAmt  sdk.Coins
-		expSpendBal sdk.Coins
+		expOrderID uint64
+		expBal     expBalances
 	}
 	testDef := msgServerTestDef[exchange.MsgCreateBidRequest, exchange.MsgCreateBidResponse, followupArgs]{
 		endpointName: "CreateBid",
 		endpoint:     keeper.NewMsgServer(s.k).CreateBid,
 		followup: func(_ *exchange.MsgCreateBidRequest, fargs followupArgs) {
-			for _, expBal := range fargs.expBal {
-				actBal := s.app.BankKeeper.GetBalance(s.ctx, fargs.addr, expBal.Denom)
-				s.Assert().Equalf(expBal.String(), actBal.String(), "actual balance of %s", expBal.Denom)
-			}
-			holdAmt, err := s.app.HoldKeeper.GetHoldCoins(s.ctx, fargs.addr)
-			if s.Assert().NoError(err, "GetHoldCoins(%s) error", s.getAddrName(fargs.addr)) {
-				s.Assert().Equalf(fargs.expHoldAmt.String(), holdAmt.String(), "amount on hold for %s", s.getAddrName(fargs.addr))
-			}
-			actSpendBal := s.app.BankKeeper.SpendableCoins(s.ctx, fargs.addr)
-			for _, expBal := range fargs.expSpendBal {
-				actBal := actSpendBal.AmountOf(expBal.Denom)
-				s.Assert().Equalf(expBal.Amount.String(), actBal.String(), "spendable balance of %s", expBal.Denom)
-			}
+			s.checkBalances(fargs.expBal)
 		},
 	}
 
@@ -574,11 +675,13 @@ func (s *TestSuite) TestMsgServer_CreateBid() {
 				},
 			},
 			fArgs: followupArgs{
-				expOrderID:  84,
-				addr:        s.addr2,
-				expBal:      s.coins("100apple,100fig,100pear"),
-				expHoldAmt:  s.coins("45pear"),
-				expSpendBal: s.coins("100apple,100fig,55pear"),
+				expOrderID: 84,
+				expBal: expBalances{
+					addr:     s.addr2,
+					expBal:   s.coins("100apple,100fig,100pear"),
+					expHold:  []sdk.Coin{s.zeroCoin("apple"), s.zeroCoin("fig"), s.coin("45pear")},
+					expSpend: s.coins("100apple,100fig,55pear"),
+				},
 			},
 			expEvents: sdk.Events{
 				s.eventHoldAdded(s.addr2, "45pear", 84),
@@ -608,11 +711,13 @@ func (s *TestSuite) TestMsgServer_CreateBid() {
 				OrderCreationFee: s.coinP("8pear"),
 			},
 			fArgs: followupArgs{
-				expOrderID:  7,
-				addr:        s.addr2,
-				expBal:      s.coins("100apple,100fig,92pear"),
-				expHoldAmt:  s.coins("87pear"),
-				expSpendBal: s.coins("100apple,100fig,5pear"),
+				expOrderID: 7,
+				expBal: expBalances{
+					addr:     s.addr2,
+					expBal:   s.coins("100apple,100fig,92pear"),
+					expHold:  []sdk.Coin{s.zeroCoin("apple"), s.zeroCoin("fig"), s.coin("87pear")},
+					expSpend: s.coins("100apple,100fig,5pear"),
+				},
 			},
 			expEvents: sdk.Events{
 				s.eventCoinSpent(s.addr2, "8pear"),
@@ -641,40 +746,19 @@ func (s *TestSuite) TestMsgServer_CreateBid() {
 }
 
 func (s *TestSuite) TestMsgServer_CancelOrder() {
-	type followupArgs struct {
-		addr        sdk.AccAddress
-		expBal      sdk.Coins
-		expHoldAmt  sdk.Coins
-		expSpendBal sdk.Coins
-	}
-	testDef := msgServerTestDef[exchange.MsgCancelOrderRequest, exchange.MsgCancelOrderResponse, followupArgs]{
+	testDef := msgServerTestDef[exchange.MsgCancelOrderRequest, exchange.MsgCancelOrderResponse, expBalances]{
 		endpointName: "CancelOrder",
 		endpoint:     keeper.NewMsgServer(s.k).CancelOrder,
 		expResp:      &exchange.MsgCancelOrderResponse{},
-		followup: func(msg *exchange.MsgCancelOrderRequest, fargs followupArgs) {
+		followup: func(msg *exchange.MsgCancelOrderRequest, eb expBalances) {
 			order, err := s.k.GetOrder(s.ctx, msg.OrderId)
 			s.Assert().NoError(err, "GetOrder(%d) error", msg.OrderId)
 			s.Assert().Nil(order, "GetOrder(%d) order", msg.OrderId)
-
-			for _, expBal := range fargs.expBal {
-				actBal := s.app.BankKeeper.GetBalance(s.ctx, fargs.addr, expBal.Denom)
-				s.Assert().Equalf(expBal.String(), actBal.String(), "actual balance of %s", expBal.Denom)
-			}
-
-			holdAmt, err := s.app.HoldKeeper.GetHoldCoins(s.ctx, fargs.addr)
-			if s.Assert().NoError(err, "GetHoldCoins(%s) error", s.getAddrName(fargs.addr)) {
-				s.Assert().Equalf(fargs.expHoldAmt.String(), holdAmt.String(), "amount on hold for %s", s.getAddrName(fargs.addr))
-			}
-
-			actSpendBal := s.app.BankKeeper.SpendableCoins(s.ctx, fargs.addr)
-			for _, expBal := range fargs.expSpendBal {
-				actBal := actSpendBal.AmountOf(expBal.Denom)
-				s.Assert().Equalf(expBal.Amount.String(), actBal.String(), "spendable balance of %s", expBal.Denom)
-			}
+			s.checkBalances(eb)
 		},
 	}
 
-	tests := []msgServerTestCase[exchange.MsgCancelOrderRequest, followupArgs]{
+	tests := []msgServerTestCase[exchange.MsgCancelOrderRequest, expBalances]{
 		{
 			name:     "order 0",
 			setup:    nil,
@@ -723,11 +807,11 @@ func (s *TestSuite) TestMsgServer_CancelOrder() {
 				s.requireAddHold(s.addr1, "2apple", 44)
 			},
 			msg: exchange.MsgCancelOrderRequest{Signer: s.addr5.String(), OrderId: 44},
-			fArgs: followupArgs{
-				addr:        s.addr1,
-				expBal:      s.coins("10apple"),
-				expHoldAmt:  s.coins("1apple"),
-				expSpendBal: s.coins("9apple"),
+			fArgs: expBalances{
+				addr:     s.addr1,
+				expBal:   s.coins("10apple"),
+				expHold:  s.coins("1apple"),
+				expSpend: s.coins("9apple"),
 			},
 			expEvents: sdk.Events{
 				s.eventHoldReleased(s.addr1, "1apple"),
@@ -749,14 +833,14 @@ func (s *TestSuite) TestMsgServer_CancelOrder() {
 					MarketId: 2, Buyer: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1pear"),
 				}))
 				s.requireFundAccount(s.addr1, "10pear")
-				s.requireAddHold(s.addr1, "2pear", 44)
+				s.requireAddHold(s.addr1, "1pear", 44)
 			},
 			msg: exchange.MsgCancelOrderRequest{Signer: s.addr5.String(), OrderId: 44},
-			fArgs: followupArgs{
-				addr:        s.addr1,
-				expBal:      s.coins("10pear"),
-				expHoldAmt:  s.coins("1pear"),
-				expSpendBal: s.coins("9pear"),
+			fArgs: expBalances{
+				addr:     s.addr1,
+				expBal:   s.coins("10pear"),
+				expHold:  []sdk.Coin{s.zeroCoin("pear")},
+				expSpend: s.coins("10pear"),
 			},
 			expEvents: sdk.Events{
 				s.eventHoldReleased(s.addr1, "1pear"),
@@ -780,11 +864,11 @@ func (s *TestSuite) TestMsgServer_CancelOrder() {
 				s.requireAddHold(s.addr1, "10apple,1fig", 5555)
 			},
 			msg: exchange.MsgCancelOrderRequest{Signer: s.addr1.String(), OrderId: 5555},
-			fArgs: followupArgs{
-				addr:        s.addr1,
-				expBal:      s.coins("15apple,5fig"),
-				expHoldAmt:  nil,
-				expSpendBal: s.coins("15apple,5fig"),
+			fArgs: expBalances{
+				addr:     s.addr1,
+				expBal:   s.coins("15apple,5fig"),
+				expHold:  s.zeroCoins("apple", "fig"),
+				expSpend: s.coins("15apple,5fig"),
 			},
 			expEvents: sdk.Events{
 				s.eventHoldReleased(s.addr1, "10apple,1fig"),
@@ -808,11 +892,11 @@ func (s *TestSuite) TestMsgServer_CancelOrder() {
 				s.requireAddHold(s.addr2, "10apple,1fig", 98765)
 			},
 			msg: exchange.MsgCancelOrderRequest{Signer: s.addr2.String(), OrderId: 98765},
-			fArgs: followupArgs{
-				addr:        s.addr2,
-				expBal:      s.coins("15apple,5fig"),
-				expHoldAmt:  s.coins("1fig"),
-				expSpendBal: s.coins("15apple,4fig"),
+			fArgs: expBalances{
+				addr:     s.addr2,
+				expBal:   s.coins("15apple,5fig"),
+				expHold:  []sdk.Coin{s.zeroCoin("apple"), s.coin("1fig")},
+				expSpend: s.coins("15apple,4fig"),
 			},
 			expEvents: sdk.Events{
 				s.eventHoldReleased(s.addr2, "10apple"),
@@ -836,11 +920,11 @@ func (s *TestSuite) TestMsgServer_CancelOrder() {
 				s.requireAddHold(s.addr1, "5pear,1fig", 5555)
 			},
 			msg: exchange.MsgCancelOrderRequest{Signer: s.addr1.String(), OrderId: 5555},
-			fArgs: followupArgs{
-				addr:        s.addr1,
-				expBal:      s.coins("15pear,5fig"),
-				expHoldAmt:  nil,
-				expSpendBal: s.coins("15pear,5fig"),
+			fArgs: expBalances{
+				addr:     s.addr1,
+				expBal:   s.coins("15pear,5fig"),
+				expHold:  s.zeroCoins("pear", "fig"),
+				expSpend: s.coins("15pear,5fig"),
 			},
 			expEvents: sdk.Events{
 				s.eventHoldReleased(s.addr1, "1fig,5pear"),
@@ -861,14 +945,14 @@ func (s *TestSuite) TestMsgServer_CancelOrder() {
 					ExternalId:          "whatever",
 				}))
 				s.requireFundAccount(s.addr2, "15pear,5fig")
-				s.requireAddHold(s.addr2, "1fig,6pear", 98765)
+				s.requireAddHold(s.addr2, "6pear", 98765)
 			},
 			msg: exchange.MsgCancelOrderRequest{Signer: s.addr2.String(), OrderId: 98765},
-			fArgs: followupArgs{
-				addr:        s.addr2,
-				expBal:      s.coins("15pear,5fig"),
-				expHoldAmt:  s.coins("1fig"),
-				expSpendBal: s.coins("15pear,4fig"),
+			fArgs: expBalances{
+				addr:     s.addr2,
+				expBal:   s.coins("15pear,5fig"),
+				expHold:  s.zeroCoins("pear", "fig"),
+				expSpend: s.coins("15pear,5fig"),
 			},
 			expEvents: sdk.Events{
 				s.eventHoldReleased(s.addr2, "6pear"),
@@ -886,7 +970,370 @@ func (s *TestSuite) TestMsgServer_CancelOrder() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestMsgServer_FillBids()
+func (s *TestSuite) TestMsgServer_FillBids() {
+	testDef := msgServerTestDef[exchange.MsgFillBidsRequest, exchange.MsgFillBidsResponse, []expBalances]{
+		endpointName: "FillBids",
+		endpoint:     keeper.NewMsgServer(s.k).FillBids,
+		expResp:      &exchange.MsgFillBidsResponse{},
+		followup: func(msg *exchange.MsgFillBidsRequest, ebs []expBalances) {
+			for _, orderID := range msg.BidOrderIds {
+				order, err := s.k.GetOrder(s.ctx, orderID)
+				s.Assert().NoError(err, "GetOrder(%d) error", orderID)
+				s.Assert().Nil(order, "GetOrder(%d) order", orderID)
+			}
+
+			for _, eb := range ebs {
+				s.checkBalances(eb)
+			}
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgFillBidsRequest, []expBalances]{
+		{
+			name: "user can't create ask",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1, AcceptingOrders: true, AllowUserSettlement: true,
+					ReqAttrCreateAsk: []string{"not.gonna.have.it"},
+				})
+				s.requireSetNameRecord("almost.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr1, "almost.gonna.have.it", s.addr5)
+			},
+			msg: exchange.MsgFillBidsRequest{
+				Seller:      s.addr1.String(),
+				MarketId:    1,
+				TotalAssets: s.coins("1apple"),
+				BidOrderIds: []uint64{1},
+			},
+			expInErr: []string{invReqErr, "account " + s.addr1.String() + " is not allowed to create ask orders in market 1"},
+		},
+		{
+			name: "one bid, both quarantined",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AcceptingOrders: true, AllowUserSettlement: true,
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(54).WithBid(&exchange.BidOrder{
+					MarketId: 3, Buyer: s.addr1.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+				}))
+				s.requireFundAccount(s.addr1, "50pear")
+				s.requireAddHold(s.addr1, "50pear", 54)
+				s.requireFundAccount(s.addr2, "10apple")
+				s.requireQuarantineOptIn(s.addr1)
+				s.requireQuarantineOptIn(s.addr2)
+			},
+			msg: exchange.MsgFillBidsRequest{
+				Seller:      s.addr2.String(),
+				MarketId:    3,
+				TotalAssets: s.coins("10apple"),
+				BidOrderIds: []uint64{54},
+			},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr1,
+					expBal:   []sdk.Coin{s.coin("10apple"), s.zeroCoin("pear")},
+					expHold:  s.zeroCoins("apple", "pear"),
+					expSpend: []sdk.Coin{s.coin("10apple"), s.zeroCoin("pear")},
+				},
+				{
+					addr:     s.addr2,
+					expBal:   []sdk.Coin{s.zeroCoin("apple"), s.coin("50pear")},
+					expHold:  s.zeroCoins("apple", "pear"),
+					expSpend: []sdk.Coin{s.zeroCoin("apple"), s.coin("50pear")},
+				},
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr1, "50pear"),
+				s.eventCoinSpent(s.addr2, "10apple"),
+				s.eventCoinReceived(s.addr1, "10apple"),
+				s.eventTransfer(s.addr1, s.addr2, "10apple"),
+				s.eventMessage(s.addr2),
+				s.eventCoinSpent(s.addr1, "50pear"),
+				s.eventCoinReceived(s.addr2, "50pear"),
+				s.eventTransfer(s.addr2, s.addr1, "50pear"),
+				s.eventMessage(s.addr1),
+				s.untypeEvent(&exchange.EventOrderFilled{
+					OrderId: 54, Assets: "10apple", Price: "50pear", MarketId: 3,
+				}),
+			},
+		},
+		{
+			name: "one bid, buyer sanctioned",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 2, AcceptingOrders: true, AllowUserSettlement: true,
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(77).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr1.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+				}))
+				s.requireFundAccount(s.addr1, "50pear")
+				s.requireAddHold(s.addr1, "50pear", 77)
+				s.requireFundAccount(s.addr4, "10apple")
+				s.requireSanctionAddress(s.addr1)
+			},
+			msg: exchange.MsgFillBidsRequest{
+				Seller:      s.addr4.String(),
+				MarketId:    2,
+				TotalAssets: s.coins("10apple"),
+				BidOrderIds: []uint64{77},
+			},
+			expInErr: []string{invReqErr, "cannot send from " + s.addr1.String(), "account is sanctioned"},
+		},
+		{
+			name: "one bid, seller sanctioned",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 2, AcceptingOrders: true, AllowUserSettlement: true,
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(77).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr1.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+				}))
+				s.requireFundAccount(s.addr1, "50pear")
+				s.requireAddHold(s.addr1, "50pear", 77)
+				s.requireFundAccount(s.addr4, "10apple")
+				s.requireSanctionAddress(s.addr4)
+			},
+			msg: exchange.MsgFillBidsRequest{
+				Seller:      s.addr4.String(),
+				MarketId:    2,
+				TotalAssets: s.coins("10apple"),
+				BidOrderIds: []uint64{77},
+			},
+			expInErr: []string{invReqErr, "cannot send from " + s.addr4.String(), "account is sanctioned"},
+		},
+		{
+			name: "one bid, buyer does not have asset marker's req attrs",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(s.coin("10apple"), s.addr5, "not.gonna.have.it")
+				s.requireSetNameRecord("not.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr1, "not.gonna.have.it", s.addr5)
+				s.requireFundAccount(s.addr2, "50pear")
+				s.requireFundAccount(s.addr1, "10apple")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 2, AcceptingOrders: true, AllowUserSettlement: true,
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(4).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+				}))
+				s.requireAddHold(s.addr2, "50pear", 4)
+			},
+			msg: exchange.MsgFillBidsRequest{
+				Seller:      s.addr1.String(),
+				MarketId:    2,
+				TotalAssets: s.coins("10apple"),
+				BidOrderIds: []uint64{4},
+			},
+			expInErr: []string{invReqErr,
+				"address " + s.addr2.String() + " does not contain the \"apple\" required attribute: \"not.gonna.have.it\"",
+			},
+		},
+		{
+			name: "one bid, seller does not have price marker's req attrs",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(s.coin("50pear"), s.addr5, "not.gonna.have.it")
+				s.requireSetNameRecord("not.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr2, "not.gonna.have.it", s.addr5)
+				s.requireFundAccount(s.addr2, "50pear")
+				s.requireFundAccount(s.addr1, "10apple")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 2, AcceptingOrders: true, AllowUserSettlement: true,
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(4).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+				}))
+				s.requireAddHold(s.addr2, "50pear", 4)
+			},
+			msg: exchange.MsgFillBidsRequest{
+				Seller:      s.addr1.String(),
+				MarketId:    2,
+				TotalAssets: s.coins("10apple"),
+				BidOrderIds: []uint64{4},
+			},
+			expInErr: []string{invReqErr,
+				"address " + s.addr1.String() + " does not contain the \"pear\" required attribute: \"not.gonna.have.it\"",
+			},
+		},
+		{
+			name: "market does not have req attr for fee denom",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(s.coin("200fig"), s.addr5, "not.gonna.have.it")
+				s.requireSetNameRecord("not.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr1, "not.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr2, "not.gonna.have.it", s.addr5)
+				s.requireFundAccount(s.addr2, "50pear,100fig")
+				s.requireFundAccount(s.addr1, "10apple,100fig")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1, AcceptingOrders: true, AllowUserSettlement: true,
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(12345).WithBid(&exchange.BidOrder{
+					MarketId: 1, Buyer: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+					BuyerSettlementFees: s.coins("100fig"),
+				}))
+				s.requireAddHold(s.addr2, "50pear,100fig", 12345)
+			},
+			msg: exchange.MsgFillBidsRequest{
+				Seller:                  s.addr1.String(),
+				MarketId:                1,
+				TotalAssets:             s.coins("10apple"),
+				BidOrderIds:             []uint64{12345},
+				SellerSettlementFlatFee: s.coinP("100fig"),
+			},
+			expInErr: []string{invReqErr,
+				"address " + s.marketAddr1.String() + " does not contain the \"fig\" required attribute: \"not.gonna.have.it\"",
+			},
+		},
+		{
+			name: "okay: two bids, all req attrs and fees",
+			setup: func() {
+				s.requireSetNameRecord("buyer.gonna.have.it", s.addr5)
+				s.requireSetNameRecord("seller.gonna.have.it", s.addr5)
+				s.requireSetNameRecord("market.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr1, "seller.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr2, "buyer.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr3, "buyer.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.marketAddr1, "market.gonna.have.it", s.addr5)
+				s.requireFundAccount(s.addr1, "13apple,100fig")
+				s.requireFundAccount(s.addr2, "50pear,100fig")
+				s.requireFundAccount(s.addr3, "20pear,100fig")
+				s.requireAddFinalizeAndActivateMarker(s.coin("13apple"), s.addr5, "*.gonna.have.it")
+				s.requireAddFinalizeAndActivateMarker(s.coin("70pear"), s.addr5, "*.gonna.have.it")
+				s.requireAddFinalizeAndActivateMarker(s.coin("300fig"), s.addr5, "*.gonna.have.it")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1, AcceptingOrders: true, AllowUserSettlement: true,
+					FeeCreateAskFlat:          s.coins("10fig"),
+					FeeCreateBidFlat:          s.coins("200fig"),
+					FeeSellerSettlementFlat:   s.coins("5pear"),
+					FeeSellerSettlementRatios: s.ratios("35pear:2pear"),
+					FeeBuyerSettlementFlat:    s.coins("30fig"),
+					FeeBuyerSettlementRatios:  s.ratios("10pear:1fig"),
+					ReqAttrCreateAsk:          []string{"*.gonna.have.it"},
+					ReqAttrCreateBid:          []string{"not.gonna.have.it"},
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(12345).WithBid(&exchange.BidOrder{
+					MarketId: 1, Buyer: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+					BuyerSettlementFees: s.coins("35fig"), ExternalId: "first order",
+				}))
+				s.requireAddHold(s.addr2, "50pear,35fig", 12345)
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(98765).WithBid(&exchange.BidOrder{
+					MarketId: 1, Buyer: s.addr3.String(), Assets: s.coin("3apple"), Price: s.coin("20pear"),
+					BuyerSettlementFees: s.coins("32fig"), ExternalId: "second order",
+				}))
+				s.requireAddHold(s.addr3, "20pear,32fig", 98765)
+			},
+			msg: exchange.MsgFillBidsRequest{
+				Seller:                  s.addr1.String(),
+				MarketId:                1,
+				TotalAssets:             s.coins("13apple"),
+				BidOrderIds:             []uint64{12345, 98765},
+				SellerSettlementFlatFee: s.coinP("5pear"),
+				AskOrderCreationFee:     s.coinP("10fig"),
+			},
+			fArgs: []expBalances{
+				{
+					addr:    s.addr1,
+					expBal:  []sdk.Coin{s.zeroCoin("apple"), s.coin("61pear"), s.coin("90fig")},
+					expHold: s.zeroCoins("apple", "pear", "fig"),
+				},
+				{
+					addr:    s.addr2,
+					expBal:  []sdk.Coin{s.coin("10apple"), s.zeroCoin("pear"), s.coin("65fig")},
+					expHold: s.zeroCoins("apple", "pear", "fig"),
+				},
+				{
+					addr:    s.addr3,
+					expBal:  []sdk.Coin{s.coin("3apple"), s.zeroCoin("pear"), s.coin("68fig")},
+					expHold: s.zeroCoins("apple", "pear", "fig"),
+				},
+				{
+					addr:    s.marketAddr1,
+					expBal:  []sdk.Coin{s.zeroCoin("apple"), s.coin("8pear"), s.coin("72fig")},
+					expHold: s.zeroCoins("apple", "pear", "fig"),
+				},
+				{
+					addr:   s.feeCollectorAddr,
+					expBal: []sdk.Coin{s.zeroCoin("apple"), s.coin("1pear"), s.coin("5fig")},
+				},
+			},
+			expEvents: sdk.Events{
+				// Hold release events.
+				s.eventHoldReleased(s.addr2, "35fig,50pear"),
+				s.eventHoldReleased(s.addr3, "32fig,20pear"),
+
+				// Asset transfer events.
+				s.eventCoinSpent(s.addr1, "13apple"),
+				s.eventMessage(s.addr1),
+				s.eventCoinReceived(s.addr2, "10apple"),
+				s.eventTransfer(s.addr2, nil, "10apple"),
+				s.eventCoinReceived(s.addr3, "3apple"),
+				s.eventTransfer(s.addr3, nil, "3apple"),
+
+				// Price transfer events.
+				s.eventCoinSpent(s.addr2, "50pear"),
+				s.eventMessage(s.addr2),
+				s.eventCoinSpent(s.addr3, "20pear"),
+				s.eventMessage(s.addr3),
+				s.eventCoinReceived(s.addr1, "70pear"),
+				s.eventTransfer(s.addr1, nil, "70pear"),
+
+				// Settlement fee transfer events.
+				s.eventCoinSpent(s.addr2, "35fig"),
+				s.eventMessage(s.addr2),
+				s.eventCoinSpent(s.addr3, "32fig"),
+				s.eventMessage(s.addr3),
+				s.eventCoinSpent(s.addr1, "9pear"),
+				s.eventMessage(s.addr1),
+				s.eventCoinReceived(s.marketAddr1, "67fig,9pear"),
+				s.eventTransfer(s.marketAddr1, nil, "67fig,9pear"),
+
+				// Transfer of exchange portion of settlement fee.
+				s.eventCoinSpent(s.marketAddr1, "4fig,1pear"),
+				s.eventCoinReceived(s.feeCollectorAddr, "4fig,1pear"),
+				s.eventTransfer(s.feeCollectorAddr, s.marketAddr1, "4fig,1pear"),
+				s.eventMessage(s.marketAddr1),
+
+				// Order filled events.
+				s.untypeEvent(&exchange.EventOrderFilled{
+					OrderId:    12345,
+					Assets:     "10apple",
+					Price:      "50pear",
+					Fees:       "35fig",
+					MarketId:   1,
+					ExternalId: "first order",
+				}),
+				s.untypeEvent(&exchange.EventOrderFilled{
+					OrderId:    98765,
+					Assets:     "3apple",
+					Price:      "20pear",
+					Fees:       "32fig",
+					MarketId:   1,
+					ExternalId: "second order",
+				}),
+
+				// Order creation fee events.
+				s.eventCoinSpent(s.addr1, "10fig"),
+				s.eventCoinReceived(s.marketAddr1, "10fig"),
+				s.eventTransfer(s.marketAddr1, s.addr1, "10fig"),
+				s.eventMessage(s.addr1),
+
+				// Transfer of exchange portion of order creation fees.
+				s.eventCoinSpent(s.marketAddr1, "1fig"),
+				s.eventCoinReceived(s.feeCollectorAddr, "1fig"),
+				s.eventTransfer(s.feeCollectorAddr, s.marketAddr1, "1fig"),
+				s.eventMessage(s.marketAddr1),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestMsgServer_FillAsks()
 

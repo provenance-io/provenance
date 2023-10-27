@@ -312,6 +312,8 @@ func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
 		return "marketAddr2"
 	case string(s.marketAddr3):
 		return "marketAddr3"
+	case string(s.feeCollectorAddr):
+		return "feeCollectorAddr"
 	default:
 		return addr.String()
 	}
