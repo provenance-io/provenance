@@ -99,7 +99,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `actions/checkout` from 3 to 4 ([#1668](https://github.com/provenance-io/provenance/pull/1668))
 - Bump `bufbuild/buf-breaking-action` from 1.1.2 to 1.1.3 ([#1663](https://github.com/provenance-io/provenance/pull/1663))
 - Bump `cosmossdk.io/math` from 1.0.1 to 1.1.2 ([#1656](https://github.com/provenance-io/provenance/pull/1656))
-- Bump `github.com/google/uuid` from 1.3.0 to 1.3.1 ([#1657](https://github.com/provenance-io/provenance/pull/1657))
+- Bump `github.com/google/uuid` from 1.3.0 to 1.4.0 ([#1657](https://github.com/provenance-io/provenance/pull/1657), [#1723](https://github.com/provenance-io/provenance/pull/1723))
 - Bump `golangci/golangci-lint-action` from 3.6.0 to 3.7.0 ([#1651](https://github.com/provenance-io/provenance/pull/1651))
 - Bump `bufbuild/buf-setup-action` from 1.21.0 to 1.27.1 ([#1610](https://github.com/provenance-io/provenance/pull/1610), [#1613](https://github.com/provenance-io/provenance/pull/1613), [#1631](https://github.com/provenance-io/provenance/pull/1631), [#1632](https://github.com/provenance-io/provenance/pull/1632), [#1642](https://github.com/provenance-io/provenance/pull/1642), [#1645](https://github.com/provenance-io/provenance/pull/1645), [#1650](https://github.com/provenance-io/provenance/pull/1650), [#1694](https://github.com/provenance-io/provenance/pull/1694), [#1711](https://github.com/provenance-io/provenance/pull/1711))
 - Bump `cometbft to v0.34.29 `(from v0.34.28) ([#1649](https://github.com/provenance-io/provenance/pull/1649))
