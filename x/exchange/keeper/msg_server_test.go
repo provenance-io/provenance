@@ -992,12 +992,13 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 		{
 			name: "user can't create ask",
 			setup: func() {
+				s.requireSetNameRecord("almost.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr1, "almost.gonna.have.it", s.addr5)
+
 				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1, AcceptingOrders: true, AllowUserSettlement: true,
 					ReqAttrCreateAsk: []string{"not.gonna.have.it"},
 				})
-				s.requireSetNameRecord("almost.gonna.have.it", s.addr5)
-				s.requireSetAttr(s.addr1, "almost.gonna.have.it", s.addr5)
 			},
 			msg: exchange.MsgFillBidsRequest{
 				Seller:      s.addr1.String(),
@@ -1010,15 +1011,17 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 		{
 			name: "one bid, both quarantined",
 			setup: func() {
+				s.requireFundAccount(s.addr1, "50pear")
+				s.requireFundAccount(s.addr2, "10apple")
+
 				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 3, AcceptingOrders: true, AllowUserSettlement: true,
 				})
 				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(54).WithBid(&exchange.BidOrder{
 					MarketId: 3, Buyer: s.addr1.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
 				}))
-				s.requireFundAccount(s.addr1, "50pear")
 				s.requireAddHold(s.addr1, "50pear", 54)
-				s.requireFundAccount(s.addr2, "10apple")
+
 				s.requireQuarantineOptIn(s.addr1)
 				s.requireQuarantineOptIn(s.addr2)
 			},
@@ -1060,15 +1063,17 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 		{
 			name: "one bid, buyer sanctioned",
 			setup: func() {
+				s.requireFundAccount(s.addr1, "50pear")
+				s.requireFundAccount(s.addr4, "10apple")
+
 				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 2, AcceptingOrders: true, AllowUserSettlement: true,
 				})
 				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(77).WithBid(&exchange.BidOrder{
 					MarketId: 2, Buyer: s.addr1.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
 				}))
-				s.requireFundAccount(s.addr1, "50pear")
 				s.requireAddHold(s.addr1, "50pear", 77)
-				s.requireFundAccount(s.addr4, "10apple")
+
 				s.requireSanctionAddress(s.addr1)
 			},
 			msg: exchange.MsgFillBidsRequest{
@@ -1082,15 +1087,18 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 		{
 			name: "one bid, seller sanctioned",
 			setup: func() {
+				s.requireFundAccount(s.addr1, "50pear")
+				s.requireFundAccount(s.addr4, "10apple")
+
 				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 2, AcceptingOrders: true, AllowUserSettlement: true,
 				})
 				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(77).WithBid(&exchange.BidOrder{
 					MarketId: 2, Buyer: s.addr1.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
 				}))
-				s.requireFundAccount(s.addr1, "50pear")
+
 				s.requireAddHold(s.addr1, "50pear", 77)
-				s.requireFundAccount(s.addr4, "10apple")
+
 				s.requireSanctionAddress(s.addr4)
 			},
 			msg: exchange.MsgFillBidsRequest{
@@ -1188,6 +1196,9 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 		{
 			name: "okay: two bids, all req attrs and fees",
 			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(s.coin("13apple"), s.addr5, "*.gonna.have.it")
+				s.requireAddFinalizeAndActivateMarker(s.coin("70pear"), s.addr5, "*.gonna.have.it")
+				s.requireAddFinalizeAndActivateMarker(s.coin("300fig"), s.addr5, "*.gonna.have.it")
 				s.requireSetNameRecord("buyer.gonna.have.it", s.addr5)
 				s.requireSetNameRecord("seller.gonna.have.it", s.addr5)
 				s.requireSetNameRecord("market.gonna.have.it", s.addr5)
@@ -1198,9 +1209,6 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 				s.requireFundAccount(s.addr1, "13apple,100fig")
 				s.requireFundAccount(s.addr2, "50pear,100fig")
 				s.requireFundAccount(s.addr3, "20pear,100fig")
-				s.requireAddFinalizeAndActivateMarker(s.coin("13apple"), s.addr5, "*.gonna.have.it")
-				s.requireAddFinalizeAndActivateMarker(s.coin("70pear"), s.addr5, "*.gonna.have.it")
-				s.requireAddFinalizeAndActivateMarker(s.coin("300fig"), s.addr5, "*.gonna.have.it")
 
 				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1, AcceptingOrders: true, AllowUserSettlement: true,
@@ -1335,7 +1343,377 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestMsgServer_FillAsks()
+func (s *TestSuite) TestMsgServer_FillAsks() {
+	testDef := msgServerTestDef[exchange.MsgFillAsksRequest, exchange.MsgFillAsksResponse, []expBalances]{
+		endpointName: "FillAsks",
+		endpoint:     keeper.NewMsgServer(s.k).FillAsks,
+		expResp:      &exchange.MsgFillAsksResponse{},
+		followup: func(msg *exchange.MsgFillAsksRequest, ebs []expBalances) {
+			for _, orderID := range msg.AskOrderIds {
+				order, err := s.k.GetOrder(s.ctx, orderID)
+				s.Assert().NoError(err, "GetOrder(%d) error", orderID)
+				s.Assert().Nil(order, "GetOrder(%d) order", orderID)
+			}
+
+			for _, eb := range ebs {
+				s.checkBalances(eb)
+			}
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgFillAsksRequest, []expBalances]{
+		{
+			name: "user can't create bid",
+			setup: func() {
+				s.requireSetNameRecord("almost.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr1, "almost.gonna.have.it", s.addr5)
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1, AcceptingOrders: true, AllowUserSettlement: true,
+					ReqAttrCreateBid: []string{"not.gonna.have.it"},
+				})
+			},
+			msg: exchange.MsgFillAsksRequest{
+				Buyer:       s.addr1.String(),
+				MarketId:    1,
+				TotalPrice:  s.coin("1pear"),
+				AskOrderIds: []uint64{1},
+			},
+			expInErr: []string{invReqErr, "account " + s.addr1.String() + " is not allowed to create bid orders in market 1"},
+		},
+		{
+			name: "one ask, both quarantined",
+			setup: func() {
+				s.requireFundAccount(s.addr1, "50pear")
+				s.requireFundAccount(s.addr2, "10apple")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AcceptingOrders: true, AllowUserSettlement: true,
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(54).WithAsk(&exchange.AskOrder{
+					MarketId: 3, Seller: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+				}))
+				s.requireAddHold(s.addr2, "10apple", 54)
+
+				s.requireQuarantineOptIn(s.addr1)
+				s.requireQuarantineOptIn(s.addr2)
+			},
+			msg: exchange.MsgFillAsksRequest{
+				Buyer:       s.addr1.String(),
+				MarketId:    3,
+				TotalPrice:  s.coin("50pear"),
+				AskOrderIds: []uint64{54},
+			},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr1,
+					expBal:   []sdk.Coin{s.coin("10apple"), s.zeroCoin("pear")},
+					expHold:  s.zeroCoins("apple", "pear"),
+					expSpend: []sdk.Coin{s.coin("10apple"), s.zeroCoin("pear")},
+				},
+				{
+					addr:     s.addr2,
+					expBal:   []sdk.Coin{s.zeroCoin("apple"), s.coin("50pear")},
+					expHold:  s.zeroCoins("apple", "pear"),
+					expSpend: []sdk.Coin{s.zeroCoin("apple"), s.coin("50pear")},
+				},
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr2, "10apple"),
+				s.eventCoinSpent(s.addr2, "10apple"),
+				s.eventCoinReceived(s.addr1, "10apple"),
+				s.eventTransfer(s.addr1, s.addr2, "10apple"),
+				s.eventMessage(s.addr2),
+				s.eventCoinSpent(s.addr1, "50pear"),
+				s.eventCoinReceived(s.addr2, "50pear"),
+				s.eventTransfer(s.addr2, s.addr1, "50pear"),
+				s.eventMessage(s.addr1),
+				s.untypeEvent(&exchange.EventOrderFilled{
+					OrderId: 54, Assets: "10apple", Price: "50pear", MarketId: 3,
+				}),
+			},
+		},
+		{
+			name: "one ask, buyer sanctioned",
+			setup: func() {
+				s.requireFundAccount(s.addr1, "50pear")
+				s.requireFundAccount(s.addr4, "10apple")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 2, AcceptingOrders: true, AllowUserSettlement: true,
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(77).WithAsk(&exchange.AskOrder{
+					MarketId: 2, Seller: s.addr4.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+				}))
+				s.requireAddHold(s.addr4, "10apple", 77)
+
+				s.requireSanctionAddress(s.addr1)
+			},
+			msg: exchange.MsgFillAsksRequest{
+				Buyer:       s.addr1.String(),
+				MarketId:    2,
+				TotalPrice:  s.coin("50pear"),
+				AskOrderIds: []uint64{77},
+			},
+			expInErr: []string{invReqErr, "cannot send from " + s.addr1.String(), "account is sanctioned"},
+		},
+		{
+			name: "one ask, seller sanctioned",
+			setup: func() {
+				s.requireFundAccount(s.addr1, "50pear")
+				s.requireFundAccount(s.addr4, "10apple")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 2, AcceptingOrders: true, AllowUserSettlement: true,
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(77).WithAsk(&exchange.AskOrder{
+					MarketId: 2, Seller: s.addr4.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+				}))
+				s.requireAddHold(s.addr4, "10apple", 77)
+
+				s.requireSanctionAddress(s.addr4)
+			},
+			msg: exchange.MsgFillAsksRequest{
+				Buyer:       s.addr1.String(),
+				MarketId:    2,
+				TotalPrice:  s.coin("50pear"),
+				AskOrderIds: []uint64{77},
+			},
+			expInErr: []string{invReqErr, "cannot send from " + s.addr4.String(), "account is sanctioned"},
+		},
+		{
+			name: "one ask, buyer does not have asset marker's req attrs",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(s.coin("10apple"), s.addr5, "not.gonna.have.it")
+				s.requireSetNameRecord("not.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr1, "not.gonna.have.it", s.addr5)
+				s.requireFundAccount(s.addr2, "50pear")
+				s.requireFundAccount(s.addr1, "10apple")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 2, AcceptingOrders: true, AllowUserSettlement: true,
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(4).WithAsk(&exchange.AskOrder{
+					MarketId: 2, Seller: s.addr1.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+				}))
+				s.requireAddHold(s.addr1, "10apple", 4)
+			},
+			msg: exchange.MsgFillAsksRequest{
+				Buyer:       s.addr2.String(),
+				MarketId:    2,
+				TotalPrice:  s.coin("50pear"),
+				AskOrderIds: []uint64{4},
+			},
+			expInErr: []string{invReqErr,
+				"address " + s.addr2.String() + " does not contain the \"apple\" required attribute: \"not.gonna.have.it\"",
+			},
+		},
+		{
+			name: "one ask, seller does not have price marker's req attrs",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(s.coin("50pear"), s.addr5, "not.gonna.have.it")
+				s.requireSetNameRecord("not.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr2, "not.gonna.have.it", s.addr5)
+				s.requireFundAccount(s.addr2, "50pear")
+				s.requireFundAccount(s.addr1, "10apple")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 2, AcceptingOrders: true, AllowUserSettlement: true,
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(4).WithAsk(&exchange.AskOrder{
+					MarketId: 2, Seller: s.addr1.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+				}))
+				s.requireAddHold(s.addr1, "10apple", 4)
+			},
+			msg: exchange.MsgFillAsksRequest{
+				Buyer:       s.addr2.String(),
+				MarketId:    2,
+				TotalPrice:  s.coin("50pear"),
+				AskOrderIds: []uint64{4},
+			},
+			expInErr: []string{invReqErr,
+				"address " + s.addr1.String() + " does not contain the \"pear\" required attribute: \"not.gonna.have.it\"",
+			},
+		},
+		{
+			name: "market does not have req attr for fee denom",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(s.coin("200fig"), s.addr5, "not.gonna.have.it")
+				s.requireSetNameRecord("not.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr1, "not.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr2, "not.gonna.have.it", s.addr5)
+				s.requireFundAccount(s.addr2, "50pear,100fig")
+				s.requireFundAccount(s.addr1, "10apple,100fig")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1, AcceptingOrders: true, AllowUserSettlement: true,
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(12345).WithAsk(&exchange.AskOrder{
+					MarketId: 1, Seller: s.addr1.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+					SellerSettlementFlatFee: s.coinP("100fig"),
+				}))
+				s.requireAddHold(s.addr1, "10apple,100fig", 12345)
+			},
+			msg: exchange.MsgFillAsksRequest{
+				Buyer:               s.addr2.String(),
+				MarketId:            1,
+				TotalPrice:          s.coin("50pear"),
+				AskOrderIds:         []uint64{12345},
+				BuyerSettlementFees: s.coins("100fig"),
+			},
+			expInErr: []string{invReqErr,
+				"address " + s.marketAddr1.String() + " does not contain the \"fig\" required attribute: \"not.gonna.have.it\"",
+			},
+		},
+		{
+			name: "okay: two asks, all req attrs and fees",
+			setup: func() {
+				s.requireSetNameRecord("buyer.gonna.have.it", s.addr5)
+				s.requireSetNameRecord("seller.gonna.have.it", s.addr5)
+				s.requireSetNameRecord("market.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr1, "buyer.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr2, "seller.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr3, "seller.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.marketAddr1, "market.gonna.have.it", s.addr5)
+				s.requireFundAccount(s.addr1, "70pear,100fig")
+				s.requireFundAccount(s.addr2, "10apple,100fig")
+				s.requireFundAccount(s.addr3, "3apple,100fig")
+				s.requireAddFinalizeAndActivateMarker(s.coin("13apple"), s.addr5, "*.gonna.have.it")
+				s.requireAddFinalizeAndActivateMarker(s.coin("70pear"), s.addr5, "*.gonna.have.it")
+				s.requireAddFinalizeAndActivateMarker(s.coin("300fig"), s.addr5, "*.gonna.have.it")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1, AcceptingOrders: true, AllowUserSettlement: true,
+					FeeCreateAskFlat:          s.coins("200fig"),
+					FeeCreateBidFlat:          s.coins("10fig"),
+					FeeSellerSettlementFlat:   s.coins("5pear,12fig"),
+					FeeSellerSettlementRatios: s.ratios("35pear:2pear"),
+					FeeBuyerSettlementFlat:    s.coins("30fig"),
+					FeeBuyerSettlementRatios:  s.ratios("10pear:1fig"),
+					ReqAttrCreateAsk:          []string{"not.gonna.have.it"},
+					ReqAttrCreateBid:          []string{"*.gonna.have.it"},
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(12345).WithAsk(&exchange.AskOrder{
+					MarketId: 1, Seller: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+					SellerSettlementFlatFee: s.coinP("5pear"), ExternalId: "first order",
+				}))
+				s.requireAddHold(s.addr2, "10apple", 12345)
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(98765).WithAsk(&exchange.AskOrder{
+					MarketId: 1, Seller: s.addr3.String(), Assets: s.coin("3apple"), Price: s.coin("20pear"),
+					SellerSettlementFlatFee: s.coinP("12fig"), ExternalId: "second order",
+				}))
+				s.requireAddHold(s.addr3, "3apple,12fig", 98765)
+			},
+			msg: exchange.MsgFillAsksRequest{
+				Buyer:               s.addr1.String(),
+				MarketId:            1,
+				TotalPrice:          s.coin("70pear"),
+				AskOrderIds:         []uint64{12345, 98765},
+				BuyerSettlementFees: s.coins("37fig"),
+				BidOrderCreationFee: s.coinP("10fig"),
+			},
+			fArgs: []expBalances{
+				{
+					addr:    s.addr1,
+					expBal:  []sdk.Coin{s.coin("13apple"), s.zeroCoin("pear"), s.coin("53fig")},
+					expHold: s.zeroCoins("apple", "pear", "fig"),
+				},
+				{
+					addr:    s.addr2,
+					expBal:  []sdk.Coin{s.zeroCoin("apple"), s.coin("42pear"), s.coin("100fig")},
+					expHold: s.zeroCoins("apple", "pear", "fig"),
+				},
+				{
+					addr:    s.addr3,
+					expBal:  []sdk.Coin{s.zeroCoin("apple"), s.coin("18pear"), s.coin("88fig")},
+					expHold: s.zeroCoins("apple", "pear", "fig"),
+				},
+				{
+					addr:    s.marketAddr1,
+					expBal:  []sdk.Coin{s.zeroCoin("apple"), s.coin("9pear"), s.coin("55fig")},
+					expHold: s.zeroCoins("apple", "pear", "fig"),
+				},
+				{
+					addr:   s.feeCollectorAddr,
+					expBal: []sdk.Coin{s.zeroCoin("apple"), s.coin("1pear"), s.coin("4fig")},
+				},
+			},
+			expEvents: sdk.Events{
+				// Hold release events.
+				s.eventHoldReleased(s.addr2, "10apple"),
+				s.eventHoldReleased(s.addr3, "3apple,12fig"),
+
+				// Asset transfer events.
+				s.eventCoinSpent(s.addr2, "10apple"),
+				s.eventMessage(s.addr2),
+				s.eventCoinSpent(s.addr3, "3apple"),
+				s.eventMessage(s.addr3),
+				s.eventCoinReceived(s.addr1, "13apple"),
+				s.eventTransfer(s.addr1, nil, "13apple"),
+
+				// Price transfer events.
+				s.eventCoinSpent(s.addr1, "70pear"),
+				s.eventMessage(s.addr1),
+				s.eventCoinReceived(s.addr2, "50pear"),
+				s.eventTransfer(s.addr2, nil, "50pear"),
+				s.eventCoinReceived(s.addr3, "20pear"),
+				s.eventTransfer(s.addr3, nil, "20pear"),
+
+				// Settlement fee transfer events.
+				s.eventCoinSpent(s.addr2, "8pear"),
+				s.eventMessage(s.addr2),
+				s.eventCoinSpent(s.addr3, "12fig,2pear"),
+				s.eventMessage(s.addr3),
+				s.eventCoinSpent(s.addr1, "37fig"),
+				s.eventMessage(s.addr1),
+				s.eventCoinReceived(s.marketAddr1, "49fig,10pear"),
+				s.eventTransfer(s.marketAddr1, nil, "49fig,10pear"),
+
+				// Transfer of exchange portion of settlement fee.
+				s.eventCoinSpent(s.marketAddr1, "3fig,1pear"),
+				s.eventCoinReceived(s.feeCollectorAddr, "3fig,1pear"),
+				s.eventTransfer(s.feeCollectorAddr, s.marketAddr1, "3fig,1pear"),
+				s.eventMessage(s.marketAddr1),
+
+				// Order filled events.
+				s.untypeEvent(&exchange.EventOrderFilled{
+					OrderId:    12345,
+					Assets:     "10apple",
+					Price:      "50pear",
+					Fees:       "8pear",
+					MarketId:   1,
+					ExternalId: "first order",
+				}),
+				s.untypeEvent(&exchange.EventOrderFilled{
+					OrderId:    98765,
+					Assets:     "3apple",
+					Price:      "20pear",
+					Fees:       "12fig,2pear",
+					MarketId:   1,
+					ExternalId: "second order",
+				}),
+
+				// Order creation fee events.
+				s.eventCoinSpent(s.addr1, "10fig"),
+				s.eventCoinReceived(s.marketAddr1, "10fig"),
+				s.eventTransfer(s.marketAddr1, s.addr1, "10fig"),
+				s.eventMessage(s.addr1),
+
+				// Transfer of exchange portion of order creation fees.
+				s.eventCoinSpent(s.marketAddr1, "1fig"),
+				s.eventCoinReceived(s.feeCollectorAddr, "1fig"),
+				s.eventTransfer(s.feeCollectorAddr, s.marketAddr1, "1fig"),
+				s.eventMessage(s.marketAddr1),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestMsgServer_MarketSettle()
 
