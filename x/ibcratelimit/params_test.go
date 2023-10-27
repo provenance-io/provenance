@@ -1,8 +1,9 @@
-package ibcratelimit
+package ibcratelimit_test
 
 import (
 	"testing"
 
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,7 +27,7 @@ func TestValidateParams(t *testing.T) {
 			addr, ok := tc.addr.(string)
 			require.True(t, ok, "unexpected type of address")
 
-			params := Params{
+			params := ibcratelimit.Params{
 				ContractAddress: addr,
 			}
 
@@ -59,13 +60,13 @@ func TestNewParams(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			params := NewParams(tc.addr)
+			params := ibcratelimit.NewParams(tc.addr)
 			require.Equal(t, tc.addr, params.ContractAddress)
 		})
 	}
 }
 
 func TestDefaultParams(t *testing.T) {
-	params := DefaultParams()
+	params := ibcratelimit.DefaultParams()
 	require.Equal(t, "", params.ContractAddress)
 }

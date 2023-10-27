@@ -1,14 +1,15 @@
-package ibcratelimit
+package ibcratelimit_test
 
 import (
 	"testing"
 
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDefaultGenesis(t *testing.T) {
-	expected := NewGenesisState(NewParams(""))
-	genesis := DefaultGenesis()
+	expected := ibcratelimit.NewGenesisState(ibcratelimit.NewParams(""))
+	genesis := ibcratelimit.DefaultGenesis()
 	require.Equal(t, expected, genesis)
 }
 
@@ -36,7 +37,7 @@ func TestGenesisValidate(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 
-			genesis := NewGenesisState(NewParams(tc.addr))
+			genesis := ibcratelimit.NewGenesisState(ibcratelimit.NewParams(tc.addr))
 			err := genesis.Validate()
 
 			if len(tc.err) > 0 {
@@ -52,21 +53,21 @@ func TestNewGenesisState(t *testing.T) {
 	tests := []struct {
 		name     string
 		addr     string
-		expected GenesisState
+		expected ibcratelimit.GenesisState
 	}{
 		{
 			name:     "success - empty contract address can be used",
-			expected: GenesisState{Params: NewParams("")},
+			expected: ibcratelimit.GenesisState{Params: ibcratelimit.NewParams("")},
 		},
 		{
 			name:     "success - params are correctly set.",
-			expected: GenesisState{Params: NewParams("cosmos1qm0hhug8kszhcp9f3ryuecz5yw8s3e5v0n2ckd")},
+			expected: ibcratelimit.GenesisState{Params: ibcratelimit.NewParams("cosmos1qm0hhug8kszhcp9f3ryuecz5yw8s3e5v0n2ckd")},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			genesis := *NewGenesisState(NewParams(tc.expected.Params.ContractAddress))
+			genesis := *ibcratelimit.NewGenesisState(ibcratelimit.NewParams(tc.expected.Params.ContractAddress))
 			require.Equal(t, tc.expected, genesis)
 		})
 	}

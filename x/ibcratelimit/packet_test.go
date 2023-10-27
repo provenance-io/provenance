@@ -1,4 +1,4 @@
-package ibcratelimit
+package ibcratelimit_test
 
 import (
 	"testing"

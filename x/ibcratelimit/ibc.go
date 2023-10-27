@@ -21,6 +21,10 @@ func NewEmitErrorAcknowledgement(ctx sdk.Context, err error, errorContexts ...st
 // EmitIBCErrorEvents Emit and Log errors
 func EmitIBCErrorEvents(ctx sdk.Context, err error, errorContexts []string) {
 	logger := ctx.Logger().With("module", IbcAcknowledgementErrorType)
+	if err == nil {
+		logger.Error("no error skipping emit")
+		return
+	}
 
 	attributes := make([]sdk.Attribute, len(errorContexts)+1)
 	attributes[0] = sdk.NewAttribute("error", err.Error())
