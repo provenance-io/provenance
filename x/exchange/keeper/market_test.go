@@ -3275,7 +3275,7 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 			name:     "empty state",
 			setup:    nil,
 			marketID: 1,
-			expected: true,
+			expected: false,
 		},
 		{
 			name: "unknown market id",
@@ -3283,9 +3283,11 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 				store := s.getStore()
 				keeper.SetMarketActive(store, 1, true)
 				keeper.SetMarketActive(store, 3, true)
+				keeper.SetMarketKnown(store, 1)
+				keeper.SetMarketKnown(store, 3)
 			},
 			marketID: 2,
-			expected: true,
+			expected: false,
 		},
 		{
 			name: "market not active",
@@ -3294,20 +3296,40 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 				keeper.SetMarketActive(store, 1, true)
 				keeper.SetMarketActive(store, 2, false)
 				keeper.SetMarketActive(store, 3, true)
+				keeper.SetMarketKnown(store, 1)
+				keeper.SetMarketKnown(store, 2)
+				keeper.SetMarketKnown(store, 3)
 			},
 			marketID: 2,
 			expected: false,
 		},
 		{
-			name: "market active",
+			name: "market active and known",
 			setup: func() {
 				store := s.getStore()
 				keeper.SetMarketActive(store, 1, true)
 				keeper.SetMarketActive(store, 2, true)
 				keeper.SetMarketActive(store, 3, true)
+				keeper.SetMarketKnown(store, 1)
+				keeper.SetMarketKnown(store, 2)
+				keeper.SetMarketKnown(store, 3)
 			},
 			marketID: 2,
 			expected: true,
+		},
+		{
+			name: "market inactive but known",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetMarketActive(store, 1, true)
+				keeper.SetMarketActive(store, 2, false)
+				keeper.SetMarketActive(store, 3, true)
+				keeper.SetMarketKnown(store, 1)
+				keeper.SetMarketKnown(store, 2)
+				keeper.SetMarketKnown(store, 3)
+			},
+			marketID: 2,
+			expected: false,
 		},
 	}
 
@@ -3360,6 +3382,11 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 				keeper.SetMarketActive(store, 3, true)
 				keeper.SetMarketActive(store, 4, true)
 				keeper.SetMarketActive(store, 5, false)
+				keeper.SetMarketKnown(store, 1)
+				keeper.SetMarketKnown(store, 2)
+				keeper.SetMarketKnown(store, 3)
+				keeper.SetMarketKnown(store, 4)
+				keeper.SetMarketKnown(store, 5)
 			},
 			marketID:  3,
 			active:    true,
@@ -3375,6 +3402,11 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 				keeper.SetMarketActive(store, 3, true)
 				keeper.SetMarketActive(store, 4, true)
 				keeper.SetMarketActive(store, 5, false)
+				keeper.SetMarketKnown(store, 1)
+				keeper.SetMarketKnown(store, 2)
+				keeper.SetMarketKnown(store, 3)
+				keeper.SetMarketKnown(store, 4)
+				keeper.SetMarketKnown(store, 5)
 			},
 			marketID:  3,
 			active:    false,
@@ -3390,6 +3422,11 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 				keeper.SetMarketActive(store, 13, false)
 				keeper.SetMarketActive(store, 14, true)
 				keeper.SetMarketActive(store, 15, false)
+				keeper.SetMarketKnown(store, 11)
+				keeper.SetMarketKnown(store, 12)
+				keeper.SetMarketKnown(store, 13)
+				keeper.SetMarketKnown(store, 14)
+				keeper.SetMarketKnown(store, 15)
 			},
 			marketID:  13,
 			active:    true,
@@ -3405,6 +3442,11 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 				keeper.SetMarketActive(store, 13, false)
 				keeper.SetMarketActive(store, 14, true)
 				keeper.SetMarketActive(store, 15, false)
+				keeper.SetMarketKnown(store, 11)
+				keeper.SetMarketKnown(store, 12)
+				keeper.SetMarketKnown(store, 13)
+				keeper.SetMarketKnown(store, 14)
+				keeper.SetMarketKnown(store, 15)
 			},
 			marketID:  13,
 			active:    false,
