@@ -8,7 +8,7 @@ import (
 
 func TestDefaultGenesis(t *testing.T) {
 	expected := NewGenesisState(NewParams(""))
-	genesis := *DefaultGenesis()
+	genesis := DefaultGenesis()
 	require.Equal(t, expected, genesis)
 }
 
