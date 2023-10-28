@@ -3116,8 +3116,288 @@ func (s *TestSuite) TestMsgServer_MarketManageReqAttrs() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestMsgServer_GovCreateMarket()
+func (s *TestSuite) TestMsgServer_GovCreateMarket() {
+	type followArgs uint32
+	testDef := msgServerTestDef[exchange.MsgGovCreateMarketRequest, exchange.MsgGovCreateMarketResponse, followArgs]{
+		endpointName: "GovCreateMarket",
+		endpoint:     keeper.NewMsgServer(s.k).GovCreateMarket,
+		expResp:      &exchange.MsgGovCreateMarketResponse{},
+		followup: func(msg *exchange.MsgGovCreateMarketRequest, faMarketID followArgs) {
+			marketID := uint32(faMarketID)
+			expMarket := msg.Market
+			expMarket.MarketId = marketID
+			actMarket := s.k.GetMarket(s.ctx, marketID)
+			s.Assert().Equal(expMarket, *actMarket, "GetMarket(%d)", marketID)
+		},
+	}
 
-// TODO[1658]: func (s *TestSuite) TestMsgServer_GovManageFees()
+	tests := []msgServerTestCase[exchange.MsgGovCreateMarketRequest, followArgs]{
+		{
+			name: "wrong authority",
+			msg: exchange.MsgGovCreateMarketRequest{
+				Authority: s.addr5.String(),
+				Market:    exchange.Market{MarketDetails: exchange.MarketDetails{Name: "Market 5"}},
+			},
+			expInErr: []string{
+				"expected \"" + s.k.GetAuthority() + "\" got \"" + s.addr5.String() + "\"",
+				"expected gov account as only signer for proposal message"},
+		},
+		{
+			name: "error creating market",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1, AccessGrants: []exchange.AccessGrant{
+						{Address: s.addr5.String(), Permissions: exchange.AllPermissions()},
+					},
+				})
+			},
+			msg: exchange.MsgGovCreateMarketRequest{
+				Authority: s.k.GetAuthority(),
+				Market: exchange.Market{
+					MarketId: 1, MarketDetails: exchange.MarketDetails{Name: "Muwahahahaha"},
+				},
+			},
+			expInErr: []string{invReqErr, "market id 1 account " + exchange.GetMarketAddress(1).String() + " already exists"},
+		},
+		{
+			name: "okay: market 0",
+			setup: func() {
+				keeper.SetLastAutoMarketID(s.getStore(), 54)
+			},
+			msg: exchange.MsgGovCreateMarketRequest{
+				Authority: s.k.GetAuthority(),
+				Market: exchange.Market{
+					MarketId: 0,
+					MarketDetails: exchange.MarketDetails{
+						Name:        "Next Market Please",
+						Description: "A description!!",
+						WebsiteUrl:  "WeBsItEuRl",
+						IconUri:     "iCoNuRi",
+					},
+					FeeCreateBidFlat:          s.coins("10fig"),
+					FeeSellerSettlementRatios: s.ratios("100apple:1apple"),
+					FeeBuyerSettlementFlat:    s.coins("33fig"),
+					AcceptingOrders:           true,
+					AllowUserSettlement:       true,
+					AccessGrants: []exchange.AccessGrant{
+						{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
+						{Address: s.addr5.String(), Permissions: exchange.AllPermissions()},
+					},
+					ReqAttrCreateAsk: []string{"*.some.thing"},
+				},
+			},
+			fArgs: 55,
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketCreated{MarketId: 55}),
+			},
+		},
+		{
+			name: "okay: market 420",
+			setup: func() {
+				keeper.SetLastAutoMarketID(s.getStore(), 68)
+			},
+			msg: exchange.MsgGovCreateMarketRequest{
+				Authority: s.k.GetAuthority(),
+				Market: exchange.Market{
+					MarketId: 420,
+					MarketDetails: exchange.MarketDetails{
+						Name:        "Second Day",
+						Description: "It's Tuesday!",
+						WebsiteUrl:  "websiteurl",
+						IconUri:     "ICONURI",
+					},
+					FeeCreateAskFlat:         s.coins("10fig"),
+					FeeBuyerSettlementRatios: s.ratios("100apple:1apple"),
+					FeeSellerSettlementFlat:  s.coins("33fig"),
+					AccessGrants: []exchange.AccessGrant{
+						{Address: s.addr4.String(), Permissions: exchange.AllPermissions()},
+						{Address: s.addr5.String(), Permissions: []exchange.Permission{exchange.Permission_settle}},
+					},
+					ReqAttrCreateBid: []string{"*.other.thing"},
+				},
+			},
+			fArgs: 420,
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketCreated{MarketId: 420}),
+			},
+		},
+	}
 
-// TODO[1658]: func (s *TestSuite) TestMsgServer_GovUpdateParams()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_GovManageFees() {
+	type followArgs exchange.Market
+	testDef := msgServerTestDef[exchange.MsgGovManageFeesRequest, exchange.MsgGovManageFeesResponse, followArgs]{
+		endpointName: "GovManageFees",
+		endpoint:     keeper.NewMsgServer(s.k).GovManageFees,
+		expResp:      &exchange.MsgGovManageFeesResponse{},
+		followup: func(msg *exchange.MsgGovManageFeesRequest, expMarket followArgs) {
+			actMarket := s.k.GetMarket(s.ctx, msg.MarketId)
+			s.Assert().Equal(exchange.Market(expMarket), *actMarket, "GetMarket(%d)", msg.MarketId)
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgGovManageFeesRequest, followArgs]{
+		{
+			name: "wrong authority",
+			msg: exchange.MsgGovManageFeesRequest{
+				Authority:           s.addr5.String(),
+				AddFeeCreateAskFlat: s.coins("10fig"),
+			},
+			expInErr: []string{
+				"expected \"" + s.k.GetAuthority() + "\" got \"" + s.addr5.String() + "\"",
+				"expected gov account as only signer for proposal message"},
+		},
+		{
+			name: "okay",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                  2,
+					MarketDetails:             exchange.MarketDetails{Name: "Market Too"},
+					FeeCreateAskFlat:          s.coins("9apple,5tomato"),
+					FeeCreateBidFlat:          s.coins("9avocado,6tomato"),
+					FeeSellerSettlementFlat:   s.coins("10apple,2tomato"),
+					FeeSellerSettlementRatios: s.ratios("100apple:33apple,100tomato:7tomato"),
+					FeeBuyerSettlementFlat:    s.coins("9aubergine,1tomato"),
+					FeeBuyerSettlementRatios:  s.ratios("100cherry:1cherry,100tomato:7tomato"),
+				})
+			},
+			msg: exchange.MsgGovManageFeesRequest{
+				Authority:                       s.k.GetAuthority(),
+				MarketId:                        2,
+				RemoveFeeCreateAskFlat:          s.coins("9apple"),
+				AddFeeCreateAskFlat:             s.coins("10apple"),
+				RemoveFeeCreateBidFlat:          s.coins("9avocado"),
+				AddFeeCreateBidFlat:             s.coins("10avocado"),
+				RemoveFeeSellerSettlementFlat:   s.coins("10apple"),
+				AddFeeSellerSettlementFlat:      s.coins("10acai"),
+				RemoveFeeSellerSettlementRatios: s.ratios("100apple:33apple"),
+				AddFeeSellerSettlementRatios:    s.ratios("100acai:3acai"),
+				RemoveFeeBuyerSettlementFlat:    s.coins("9aubergine"),
+				AddFeeBuyerSettlementFlat:       s.coins("10aubergine"),
+				RemoveFeeBuyerSettlementRatios:  s.ratios("100cherry:1cherry"),
+				AddFeeBuyerSettlementRatios:     s.ratios("80cherry:3cherry"),
+			},
+			fArgs: followArgs{
+				MarketId:                  2,
+				MarketDetails:             exchange.MarketDetails{Name: "Market Too"},
+				FeeCreateAskFlat:          s.coins("10apple,5tomato"),
+				FeeCreateBidFlat:          s.coins("10avocado,6tomato"),
+				FeeSellerSettlementFlat:   s.coins("10acai,2tomato"),
+				FeeSellerSettlementRatios: s.ratios("100acai:3acai,100tomato:7tomato"),
+				FeeBuyerSettlementFlat:    s.coins("10aubergine,1tomato"),
+				FeeBuyerSettlementRatios:  s.ratios("80cherry:3cherry,100tomato:7tomato"),
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketFeesUpdated{MarketId: 2}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_GovUpdateParams() {
+	type followArgs struct{}
+	testDef := msgServerTestDef[exchange.MsgGovUpdateParamsRequest, exchange.MsgGovUpdateParamsResponse, followArgs]{
+		endpointName: "GovUpdateParams",
+		endpoint:     keeper.NewMsgServer(s.k).GovUpdateParams,
+		expResp:      &exchange.MsgGovUpdateParamsResponse{},
+		followup: func(msg *exchange.MsgGovUpdateParamsRequest, _ followArgs) {
+			actParams := s.k.GetParams(s.ctx)
+			s.Assert().Equal(&msg.Params, actParams, "GetParams")
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgGovUpdateParamsRequest, followArgs]{
+		{
+			name: "wrong authority",
+			msg: exchange.MsgGovUpdateParamsRequest{
+				Authority: s.addr5.String(),
+				Params:    exchange.Params{},
+			},
+			expInErr: []string{
+				"expected \"" + s.k.GetAuthority() + "\" got \"" + s.addr5.String() + "\"",
+				"expected gov account as only signer for proposal message"},
+		},
+		{
+			name: "okay: was not previously set",
+			setup: func() {
+				s.k.SetParams(s.ctx, nil)
+			},
+			msg: exchange.MsgGovUpdateParamsRequest{
+				Authority: s.k.GetAuthority(),
+				Params: exchange.Params{
+					DefaultSplit: 333,
+					DenomSplits:  []exchange.DenomSplit{{Denom: "banana", Split: 99}},
+				},
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventParamsUpdated{}),
+			},
+		},
+		{
+			name: "okay: no change",
+			setup: func() {
+				s.k.SetParams(s.ctx, exchange.DefaultParams())
+			},
+			msg: exchange.MsgGovUpdateParamsRequest{
+				Authority: s.k.GetAuthority(),
+				Params:    *exchange.DefaultParams(),
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventParamsUpdated{}),
+			},
+		},
+		{
+			name: "okay: was previously defaults",
+			setup: func() {
+				s.k.SetParams(s.ctx, exchange.DefaultParams())
+			},
+			msg: exchange.MsgGovUpdateParamsRequest{
+				Authority: s.k.GetAuthority(),
+				Params: exchange.Params{
+					DefaultSplit: 333,
+					DenomSplits:  []exchange.DenomSplit{{Denom: "banana", Split: 99}},
+				},
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventParamsUpdated{}),
+			},
+		},
+		{
+			name: "okay: was previously set",
+			setup: func() {
+				s.k.SetParams(s.ctx, &exchange.Params{
+					DefaultSplit: 987,
+					DenomSplits:  []exchange.DenomSplit{{Denom: "cherry", Split: 4}},
+				})
+			},
+			msg: exchange.MsgGovUpdateParamsRequest{
+				Authority: s.k.GetAuthority(),
+				Params: exchange.Params{
+					DefaultSplit: 345,
+					DenomSplits:  []exchange.DenomSplit{{Denom: "banana", Split: 99}},
+				},
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventParamsUpdated{}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
