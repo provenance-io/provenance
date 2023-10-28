@@ -2614,7 +2614,7 @@ func (s *TestSuite) TestMsgServer_MarketUpdateDetails() {
 				"account " + s.addr5.String() + " does not have permission to update market 2"},
 		},
 		{
-			name: "error update details",
+			name: "error updating details",
 			setup: func() {
 				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 2, AccessGrants: []exchange.AccessGrant{agUpdate(s.addr5)},
@@ -2665,9 +2665,237 @@ func (s *TestSuite) TestMsgServer_MarketUpdateDetails() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestMsgServer_MarketUpdateEnabled()
+func (s *TestSuite) TestMsgServer_MarketUpdateEnabled() {
+	type followArgs struct{}
+	testDef := msgServerTestDef[exchange.MsgMarketUpdateEnabledRequest, exchange.MsgMarketUpdateEnabledResponse, followArgs]{
+		endpointName: "MarketUpdateEnabled",
+		endpoint:     keeper.NewMsgServer(s.k).MarketUpdateEnabled,
+		expResp:      &exchange.MsgMarketUpdateEnabledResponse{},
+		followup: func(msg *exchange.MsgMarketUpdateEnabledRequest, fArgs followArgs) {
+			isEnabled := s.k.IsMarketActive(s.ctx, msg.MarketId)
+			s.Assert().Equal(msg.AcceptingOrders, isEnabled, "IsMarketActive(%d)", msg.MarketId)
+		},
+	}
+	agUpdate := func(addr sdk.AccAddress) exchange.AccessGrant {
+		return exchange.AccessGrant{
+			Address:     addr.String(),
+			Permissions: []exchange.Permission{exchange.Permission_update},
+		}
+	}
 
-// TODO[1658]: func (s *TestSuite) TestMsgServer_MarketUpdateUserSettle()
+	tests := []msgServerTestCase[exchange.MsgMarketUpdateEnabledRequest, followArgs]{
+		{
+			name: "admin does not have permission to update market",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3,
+					AccessGrants: []exchange.AccessGrant{
+						{
+							Address: s.addr5.String(),
+							Permissions: []exchange.Permission{
+								exchange.Permission_settle, exchange.Permission_set_ids, exchange.Permission_cancel,
+								exchange.Permission_withdraw, exchange.Permission_permissions, exchange.Permission_attributes,
+							},
+						},
+					},
+				})
+			},
+			msg: exchange.MsgMarketUpdateEnabledRequest{
+				Admin:           s.addr5.String(),
+				MarketId:        3,
+				AcceptingOrders: true,
+			},
+			expInErr: []string{invReqErr,
+				"account " + s.addr5.String() + " does not have permission to update market 3"},
+		},
+		{
+			name: "false to false",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AccessGrants: []exchange.AccessGrant{agUpdate(s.addr5)},
+					AcceptingOrders: false,
+				})
+			},
+			msg: exchange.MsgMarketUpdateEnabledRequest{
+				Admin:           s.addr5.String(),
+				MarketId:        3,
+				AcceptingOrders: false,
+			},
+			expInErr: []string{invReqErr, "market 3 already has accepting-orders false"},
+		},
+		{
+			name: "true to true",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AccessGrants: []exchange.AccessGrant{agUpdate(s.addr5)},
+					AcceptingOrders: true,
+				})
+			},
+			msg: exchange.MsgMarketUpdateEnabledRequest{
+				Admin:           s.addr5.String(),
+				MarketId:        3,
+				AcceptingOrders: true,
+			},
+			expInErr: []string{invReqErr, "market 3 already has accepting-orders true"},
+		},
+		{
+			name: "false to true",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AccessGrants: []exchange.AccessGrant{agUpdate(s.addr5)},
+					AcceptingOrders: false,
+				})
+			},
+			msg: exchange.MsgMarketUpdateEnabledRequest{
+				Admin:           s.addr5.String(),
+				MarketId:        3,
+				AcceptingOrders: true,
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketEnabled{MarketId: 3, UpdatedBy: s.addr5.String()}),
+			},
+		},
+		{
+			name: "true to false",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AccessGrants: []exchange.AccessGrant{agUpdate(s.addr5)},
+					AcceptingOrders: true,
+				})
+			},
+			msg: exchange.MsgMarketUpdateEnabledRequest{
+				Admin:           s.addr5.String(),
+				MarketId:        3,
+				AcceptingOrders: false,
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketDisabled{MarketId: 3, UpdatedBy: s.addr5.String()}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_MarketUpdateUserSettle() {
+	type followArgs struct{}
+	testDef := msgServerTestDef[exchange.MsgMarketUpdateUserSettleRequest, exchange.MsgMarketUpdateUserSettleResponse, followArgs]{
+		endpointName: "MarketUpdateUserSettle",
+		endpoint:     keeper.NewMsgServer(s.k).MarketUpdateUserSettle,
+		expResp:      &exchange.MsgMarketUpdateUserSettleResponse{},
+		followup: func(msg *exchange.MsgMarketUpdateUserSettleRequest, fArgs followArgs) {
+			allowed := s.k.IsUserSettlementAllowed(s.ctx, msg.MarketId)
+			s.Assert().Equal(msg.AllowUserSettlement, allowed, "IsUserSettlementAllowed(%d)", msg.MarketId)
+		},
+	}
+	agUpdate := func(addr sdk.AccAddress) exchange.AccessGrant {
+		return exchange.AccessGrant{
+			Address:     addr.String(),
+			Permissions: []exchange.Permission{exchange.Permission_update},
+		}
+	}
+
+	tests := []msgServerTestCase[exchange.MsgMarketUpdateUserSettleRequest, followArgs]{
+		{
+			name: "admin does not have permission to update market",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3,
+					AccessGrants: []exchange.AccessGrant{
+						{
+							Address: s.addr5.String(),
+							Permissions: []exchange.Permission{
+								exchange.Permission_settle, exchange.Permission_set_ids, exchange.Permission_cancel,
+								exchange.Permission_withdraw, exchange.Permission_permissions, exchange.Permission_attributes,
+							},
+						},
+					},
+				})
+			},
+			msg: exchange.MsgMarketUpdateUserSettleRequest{
+				Admin:               s.addr5.String(),
+				MarketId:            3,
+				AllowUserSettlement: true,
+			},
+			expInErr: []string{invReqErr,
+				"account " + s.addr5.String() + " does not have permission to update market 3"},
+		},
+		{
+			name: "false to false",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AccessGrants: []exchange.AccessGrant{agUpdate(s.addr5)},
+					AllowUserSettlement: false,
+				})
+			},
+			msg: exchange.MsgMarketUpdateUserSettleRequest{
+				Admin:               s.addr5.String(),
+				MarketId:            3,
+				AllowUserSettlement: false,
+			},
+			expInErr: []string{invReqErr, "market 3 already has allow-user-settlement false"},
+		},
+		{
+			name: "true to true",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AccessGrants: []exchange.AccessGrant{agUpdate(s.addr5)},
+					AllowUserSettlement: true,
+				})
+			},
+			msg: exchange.MsgMarketUpdateUserSettleRequest{
+				Admin:               s.addr5.String(),
+				MarketId:            3,
+				AllowUserSettlement: true,
+			},
+			expInErr: []string{invReqErr, "market 3 already has allow-user-settlement true"},
+		},
+		{
+			name: "false to true",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AccessGrants: []exchange.AccessGrant{agUpdate(s.addr5)},
+					AllowUserSettlement: false,
+				})
+			},
+			msg: exchange.MsgMarketUpdateUserSettleRequest{
+				Admin:               s.addr5.String(),
+				MarketId:            3,
+				AllowUserSettlement: true,
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketUserSettleEnabled{MarketId: 3, UpdatedBy: s.addr5.String()}),
+			},
+		},
+		{
+			name: "true to false",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AccessGrants: []exchange.AccessGrant{agUpdate(s.addr5)},
+					AllowUserSettlement: true,
+				})
+			},
+			msg: exchange.MsgMarketUpdateUserSettleRequest{
+				Admin:               s.addr5.String(),
+				MarketId:            3,
+				AllowUserSettlement: false,
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketUserSettleDisabled{MarketId: 3, UpdatedBy: s.addr5.String()}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestMsgServer_MarketManagePermissions()
 
