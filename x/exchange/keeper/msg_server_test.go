@@ -2897,9 +2897,224 @@ func (s *TestSuite) TestMsgServer_MarketUpdateUserSettle() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestMsgServer_MarketManagePermissions()
+func (s *TestSuite) TestMsgServer_MarketManagePermissions() {
+	type followArgs []exchange.AccessGrant
+	testDef := msgServerTestDef[exchange.MsgMarketManagePermissionsRequest, exchange.MsgMarketManagePermissionsResponse, followArgs]{
+		endpointName: "MarketManagePermissions",
+		endpoint:     keeper.NewMsgServer(s.k).MarketManagePermissions,
+		expResp:      &exchange.MsgMarketManagePermissionsResponse{},
+		followup: func(msg *exchange.MsgMarketManagePermissionsRequest, expAGs followArgs) {
+			for _, expAG := range expAGs {
+				addr, err := sdk.AccAddressFromBech32(expAG.Address)
+				if s.Assert().NoError(err, "AccAddressFromBech32(%q)", expAG.Address) {
+					actPerms := s.k.GetUserPermissions(s.ctx, msg.MarketId, addr)
+					s.Assert().Equal(expAG.Permissions, actPerms, "market %d permissions for %s", msg.MarketId, s.getAddrName(addr))
+				}
 
-// TODO[1658]: func (s *TestSuite) TestMsgServer_MarketManageReqAttrs()
+			}
+		},
+	}
+	agPerms := func(addr sdk.AccAddress) exchange.AccessGrant {
+		return exchange.AccessGrant{
+			Address:     addr.String(),
+			Permissions: []exchange.Permission{exchange.Permission_permissions},
+		}
+	}
+
+	tests := []msgServerTestCase[exchange.MsgMarketManagePermissionsRequest, followArgs]{
+		{
+			name: "admin does not have permission to manage permissions",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1,
+					AccessGrants: []exchange.AccessGrant{
+						{
+							Address: s.addr5.String(),
+							Permissions: []exchange.Permission{
+								exchange.Permission_settle, exchange.Permission_set_ids, exchange.Permission_cancel,
+								exchange.Permission_withdraw, exchange.Permission_update, exchange.Permission_attributes,
+							},
+						},
+					},
+				})
+			},
+			msg: exchange.MsgMarketManagePermissionsRequest{
+				Admin:     s.addr5.String(),
+				MarketId:  1,
+				RevokeAll: []string{s.addr1.String()},
+			},
+			expInErr: []string{invReqErr,
+				"account " + s.addr5.String() + " does not have permission to manage permissions for market 1"},
+		},
+		{
+			name: "error updating permissions",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1, AccessGrants: []exchange.AccessGrant{agPerms(s.addr5)},
+				})
+			},
+			msg: exchange.MsgMarketManagePermissionsRequest{
+				Admin:     s.addr5.String(),
+				MarketId:  1,
+				RevokeAll: []string{s.addr1.String()},
+			},
+			expInErr: []string{invReqErr, "account " + s.addr1.String() + " does not have any permissions for market 1"},
+		},
+		{
+			name: "okay",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1,
+					AccessGrants: []exchange.AccessGrant{
+						{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
+						{
+							Address: s.addr2.String(),
+							Permissions: []exchange.Permission{
+								exchange.Permission_settle, exchange.Permission_set_ids, exchange.Permission_cancel,
+								exchange.Permission_withdraw, exchange.Permission_update, exchange.Permission_permissions,
+								exchange.Permission_attributes,
+							},
+						},
+						{Address: s.addr3.String(), Permissions: []exchange.Permission{exchange.Permission_withdraw}},
+						agPerms(s.addr5),
+					},
+				})
+			},
+			msg: exchange.MsgMarketManagePermissionsRequest{
+				Admin:     s.addr5.String(),
+				MarketId:  1,
+				RevokeAll: []string{s.addr1.String()},
+				ToRevoke: []exchange.AccessGrant{
+					{
+						Address: s.addr2.String(),
+						Permissions: []exchange.Permission{
+							exchange.Permission_settle, exchange.Permission_set_ids,
+							exchange.Permission_withdraw, exchange.Permission_update, exchange.Permission_permissions,
+							exchange.Permission_attributes,
+						},
+					},
+					{Address: s.addr3.String(), Permissions: []exchange.Permission{exchange.Permission_withdraw}},
+				},
+				ToGrant: []exchange.AccessGrant{
+					{Address: s.addr4.String(), Permissions: []exchange.Permission{exchange.Permission_withdraw}},
+				},
+			},
+			fArgs: []exchange.AccessGrant{
+				{Address: s.addr1.String(), Permissions: nil},
+				{Address: s.addr2.String(), Permissions: []exchange.Permission{exchange.Permission_cancel}},
+				{Address: s.addr3.String(), Permissions: nil},
+				{Address: s.addr4.String(), Permissions: []exchange.Permission{exchange.Permission_withdraw}},
+				agPerms(s.addr5),
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketPermissionsUpdated{MarketId: 1, UpdatedBy: s.addr5.String()}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_MarketManageReqAttrs() {
+	type followArgs struct {
+		expAsk []string
+		expBid []string
+	}
+	testDef := msgServerTestDef[exchange.MsgMarketManageReqAttrsRequest, exchange.MsgMarketManageReqAttrsResponse, followArgs]{
+		endpointName: "MarketManageReqAttrs",
+		endpoint:     keeper.NewMsgServer(s.k).MarketManageReqAttrs,
+		expResp:      &exchange.MsgMarketManageReqAttrsResponse{},
+		followup: func(msg *exchange.MsgMarketManageReqAttrsRequest, fArgs followArgs) {
+			actAsk := s.k.GetReqAttrsAsk(s.ctx, msg.MarketId)
+			actBid := s.k.GetReqAttrsBid(s.ctx, msg.MarketId)
+			s.Assert().Equal(fArgs.expAsk, actAsk, "market %d req attrs ask", msg.MarketId)
+			s.Assert().Equal(fArgs.expBid, actBid, "market %d req attrs bid", msg.MarketId)
+		},
+	}
+	agAttrs := func(addr sdk.AccAddress) exchange.AccessGrant {
+		return exchange.AccessGrant{
+			Address:     addr.String(),
+			Permissions: []exchange.Permission{exchange.Permission_attributes},
+		}
+	}
+
+	tests := []msgServerTestCase[exchange.MsgMarketManageReqAttrsRequest, followArgs]{
+		{
+			name: "admin does not have permission to manage req attrs",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1,
+					AccessGrants: []exchange.AccessGrant{
+						{
+							Address: s.addr5.String(),
+							Permissions: []exchange.Permission{
+								exchange.Permission_settle, exchange.Permission_set_ids, exchange.Permission_cancel,
+								exchange.Permission_withdraw, exchange.Permission_update, exchange.Permission_permissions,
+							},
+						},
+					},
+				})
+			},
+			msg: exchange.MsgMarketManageReqAttrsRequest{
+				Admin: s.addr5.String(), MarketId: 1, CreateAskToAdd: []string{"nope"},
+			},
+			expInErr: []string{invReqErr,
+				"account " + s.addr5.String() + " does not have permission to manage required attributes for market 1"},
+		},
+		{
+			name: "error updating attrs",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1, AccessGrants: []exchange.AccessGrant{
+						agAttrs(s.addr5),
+					},
+				})
+			},
+			msg: exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             s.addr5.String(),
+				MarketId:          1,
+				CreateAskToRemove: []string{"nope"},
+			},
+			expInErr: []string{invReqErr,
+				"cannot remove create-ask required attribute \"nope\": attribute not currently required"},
+		},
+		{
+			name: "okay",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1, AccessGrants: []exchange.AccessGrant{agAttrs(s.addr5)},
+					ReqAttrCreateAsk: []string{"ask.base", "*.other"},
+					ReqAttrCreateBid: []string{"bid.base", "*.fresh"},
+				})
+			},
+			msg: exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             s.addr5.String(),
+				MarketId:          1,
+				CreateAskToAdd:    []string{"ask.deeper.base"},
+				CreateAskToRemove: []string{"ask.base"},
+				CreateBidToAdd:    []string{"bid.deeper.base"},
+				CreateBidToRemove: []string{"bid.base"},
+			},
+			fArgs: followArgs{
+				expAsk: []string{"*.other", "ask.deeper.base"},
+				expBid: []string{"*.fresh", "bid.deeper.base"},
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketReqAttrUpdated{MarketId: 1, UpdatedBy: s.addr5.String()}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestMsgServer_GovCreateMarket()
 
