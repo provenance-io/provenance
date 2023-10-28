@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+* nothing
+
+---
+
+## [v1.17.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc1) - 2023-10-18
+
 ### Features
 
 * Create the `x/exchange` module which facilitates the buying and selling of assets [#1658](https://github.com/provenance-io/provenance/issues/1658).
@@ -116,6 +122,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `stefanzweifel/git-auto-commit-action` from 4 to 5 ([#1696](https://github.com/provenance-io/provenance/pull/1696))
 - Bump `golang.org/x/net` from 0.15.0 to 0.17.0 ([#1704](https://github.com/provenance-io/provenance/pull/1704))
 - Bump `bufbuild/buf-lint-action` from 1.0.3 to 1.1.0 ([#1705](https://github.com/provenance-io/provenance/pull/1705))
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.16.0...v1.17.0-rc1
 
 ---
 
