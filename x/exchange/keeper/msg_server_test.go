@@ -2435,7 +2435,138 @@ func (s *TestSuite) TestMsgServer_MarketSetOrderExternalID() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestMsgServer_MarketWithdraw()
+func (s *TestSuite) TestMsgServer_MarketWithdraw() {
+	type followArgs []expBalances
+	testDef := msgServerTestDef[exchange.MsgMarketWithdrawRequest, exchange.MsgMarketWithdrawResponse, followArgs]{
+		endpointName: "MarketWithdraw",
+		endpoint:     keeper.NewMsgServer(s.k).MarketWithdraw,
+		expResp:      &exchange.MsgMarketWithdrawResponse{},
+		followup: func(msg *exchange.MsgMarketWithdrawRequest, fArgs followArgs) {
+			for _, eb := range fArgs {
+				s.checkBalances(eb)
+			}
+		},
+	}
+	agWithdraw := func(addr sdk.AccAddress) exchange.AccessGrant {
+		return exchange.AccessGrant{
+			Address:     addr.String(),
+			Permissions: []exchange.Permission{exchange.Permission_withdraw},
+		}
+	}
+
+	tests := []msgServerTestCase[exchange.MsgMarketWithdrawRequest, followArgs]{
+		{
+			name: "admin does not have permission to withdraw",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId: 1,
+					AccessGrants: []exchange.AccessGrant{
+						{
+							Address: s.addr5.String(),
+							Permissions: []exchange.Permission{
+								exchange.Permission_settle, exchange.Permission_set_ids, exchange.Permission_cancel,
+								exchange.Permission_update, exchange.Permission_permissions, exchange.Permission_attributes,
+							},
+						},
+					},
+				})
+			},
+			msg: exchange.MsgMarketWithdrawRequest{
+				Admin: s.addr5.String(), MarketId: 1, ToAddress: s.addr1.String(), Amount: s.coins("100fig"),
+			},
+			expInErr: []string{invReqErr,
+				"account " + s.addr5.String() + " does not have permission to withdraw from market 1"},
+		},
+		{
+			name: "insufficient funds in market",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:     1,
+					AccessGrants: []exchange.AccessGrant{agWithdraw(s.addr5)},
+				})
+				s.requireFundAccount(s.marketAddr1, "100apple,99pear,100fig")
+			},
+			msg: exchange.MsgMarketWithdrawRequest{
+				Admin: s.addr5.String(), MarketId: 1, ToAddress: s.addr1.String(), Amount: s.coins("3apple,100pear,50fig"),
+			},
+			expInErr: []string{invReqErr, "spendable balance 99pear is smaller than 100pear", "insufficient funds"},
+		},
+		{
+			name: "destination does not have req attrs",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(s.coin("105apple"), s.addr5, "*.apple.what.what")
+				s.requireAddFinalizeAndActivateMarker(s.coin("105pear"), s.addr5, "*.pear.what.what")
+				s.requireSetNameRecord("nut.apple.what.what", s.addr5)
+				s.requireSetNameRecord("nut.pear.what.what", s.addr5)
+				s.requireSetAttr(s.marketAddr1, "nut.apple.what.what", s.addr5)
+				s.requireSetAttr(s.marketAddr1, "nut.pear.what.what", s.addr5)
+				s.requireSetAttr(s.addr1, "nut.apple.what.what", s.addr5)
+
+				s.requireCreateMarket(exchange.Market{
+					MarketId:     1,
+					AccessGrants: []exchange.AccessGrant{agWithdraw(s.addr5)},
+				})
+				s.requireFundAccount(s.marketAddr1, "100apple,100pear,100fig")
+			},
+			msg: exchange.MsgMarketWithdrawRequest{
+				Admin: s.addr5.String(), MarketId: 1, ToAddress: s.addr1.String(), Amount: s.coins("3apple,100pear,50fig"),
+			},
+			expInErr: []string{invReqErr, "failed to withdraw 3apple,50fig,100pear from market 1",
+				"address " + s.addr1.String() + " does not contain the \"pear\" required attribute: \"*.pear.what.what\""},
+		},
+		{
+			name: "okay",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(s.coin("100apple"), s.addr5, "*.apple.what.what")
+				s.requireAddFinalizeAndActivateMarker(s.coin("100pear"), s.addr5, "*.pear.what.what")
+				s.requireSetNameRecord("nut.apple.what.what", s.addr5)
+				s.requireSetNameRecord("nut.pear.what.what", s.addr5)
+				s.requireSetAttr(s.marketAddr1, "nut.apple.what.what", s.addr5)
+				s.requireSetAttr(s.marketAddr1, "nut.pear.what.what", s.addr5)
+				s.requireSetAttr(s.addr1, "nut.apple.what.what", s.addr5)
+				s.requireSetAttr(s.addr1, "nut.pear.what.what", s.addr5)
+
+				s.requireCreateMarket(exchange.Market{
+					MarketId:     1,
+					AccessGrants: []exchange.AccessGrant{agWithdraw(s.addr5)},
+				})
+				s.requireFundAccount(s.marketAddr1, "100apple,100pear,100fig")
+				s.requireFundAccount(s.addr1, "5apple,5pear")
+			},
+			msg: exchange.MsgMarketWithdrawRequest{
+				Admin: s.addr5.String(), MarketId: 1, ToAddress: s.addr1.String(), Amount: s.coins("3apple,100pear,50fig"),
+			},
+			fArgs: []expBalances{
+				{
+					addr:   s.marketAddr1,
+					expBal: []sdk.Coin{s.coin("97apple"), s.zeroCoin("pear"), s.coin("50fig")},
+				},
+				{
+					addr:   s.addr1,
+					expBal: s.coins("8apple,105pear,50fig"),
+				},
+			},
+			expEvents: sdk.Events{
+				s.eventCoinSpent(s.marketAddr1, "3apple,50fig,100pear"),
+				s.eventCoinReceived(s.addr1, "3apple,50fig,100pear"),
+				s.eventTransfer(s.addr1, s.marketAddr1, "3apple,50fig,100pear"),
+				s.eventMessage(s.marketAddr1),
+				s.untypeEvent(&exchange.EventMarketWithdraw{
+					MarketId:    1,
+					Amount:      "3apple,50fig,100pear",
+					Destination: s.addr1.String(),
+					WithdrawnBy: s.addr5.String(),
+				}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestMsgServer_MarketUpdateDetails()
 
