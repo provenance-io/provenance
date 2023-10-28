@@ -1751,7 +1751,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 		{
 			name: "admin does not have settle permission",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1,
 					AccessGrants: []exchange.AccessGrant{
 						{
@@ -1782,7 +1782,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.requireFundAccount(s.addr3, "11apple")
 				s.requireFundAccount(s.addr4, "85pear")
 
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1, AccessGrants: []exchange.AccessGrant{agSettle(s.addr5)},
 				})
 
@@ -1830,7 +1830,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.requireFundAccount(s.addr3, "11apple")
 				s.requireFundAccount(s.addr4, "85pear")
 
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1, AccessGrants: []exchange.AccessGrant{agSettle(s.addr5)},
 				})
 
@@ -1877,7 +1877,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.requireFundAccount(s.addr3, "11apple")
 				s.requireFundAccount(s.addr4, "85pear")
 
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1, AccessGrants: []exchange.AccessGrant{agSettle(s.addr5)},
 				})
 
@@ -1916,7 +1916,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.requireFundAccount(s.addr3, "11apple")
 				s.requireFundAccount(s.addr4, "85pear")
 
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1, AccessGrants: []exchange.AccessGrant{agSettle(s.addr5)},
 				})
 
@@ -2028,7 +2028,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.requireFundAccount(s.addr1, "10apple")
 				s.requireFundAccount(s.addr2, "75pear")
 
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 3, AccessGrants: []exchange.AccessGrant{agSettle(s.addr5)},
 				})
 
@@ -2101,7 +2101,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.requireFundAccount(s.addr1, "7apple")
 				s.requireFundAccount(s.addr2, "100pear")
 
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 3, AccessGrants: []exchange.AccessGrant{agSettle(s.addr5)},
 				})
 
@@ -2186,7 +2186,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.requireFundAccount(s.addr3, "20apple,100pear,100fig")
 				s.requireFundAccount(s.addr4, "20apple,100pear,100fig")
 
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 2, AccessGrants: []exchange.AccessGrant{agSettle(s.addr5)},
 					FeeSellerSettlementRatios: s.ratios("10pear:1pear"),
 				})
@@ -2351,7 +2351,7 @@ func (s *TestSuite) TestMsgServer_MarketSetOrderExternalID() {
 		{
 			name: "admin does not have permission",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1,
 					AccessGrants: []exchange.AccessGrant{
 						{
@@ -2373,7 +2373,7 @@ func (s *TestSuite) TestMsgServer_MarketSetOrderExternalID() {
 		{
 			name: "order does not exist",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1, AccessGrants: []exchange.AccessGrant{agSetIDs(s.addr5)},
 				})
 			},
@@ -2385,7 +2385,7 @@ func (s *TestSuite) TestMsgServer_MarketSetOrderExternalID() {
 		{
 			name: "okay: nothing to something",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1, AccessGrants: []exchange.AccessGrant{agSetIDs(s.addr5)},
 				})
 				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(7).WithAsk(&exchange.AskOrder{
@@ -2407,7 +2407,7 @@ func (s *TestSuite) TestMsgServer_MarketSetOrderExternalID() {
 		{
 			name: "okay: something to something else",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1, AccessGrants: []exchange.AccessGrant{agSetIDs(s.addr5)},
 				})
 				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(7).WithBid(&exchange.BidOrder{
@@ -2458,7 +2458,7 @@ func (s *TestSuite) TestMsgServer_MarketWithdraw() {
 		{
 			name: "admin does not have permission to withdraw",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1,
 					AccessGrants: []exchange.AccessGrant{
 						{
@@ -2480,7 +2480,7 @@ func (s *TestSuite) TestMsgServer_MarketWithdraw() {
 		{
 			name: "insufficient funds in market",
 			setup: func() {
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:     1,
 					AccessGrants: []exchange.AccessGrant{agWithdraw(s.addr5)},
 				})
@@ -2502,7 +2502,7 @@ func (s *TestSuite) TestMsgServer_MarketWithdraw() {
 				s.requireSetAttr(s.marketAddr1, "nut.pear.what.what", s.addr5)
 				s.requireSetAttr(s.addr1, "nut.apple.what.what", s.addr5)
 
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:     1,
 					AccessGrants: []exchange.AccessGrant{agWithdraw(s.addr5)},
 				})
@@ -2526,7 +2526,7 @@ func (s *TestSuite) TestMsgServer_MarketWithdraw() {
 				s.requireSetAttr(s.addr1, "nut.apple.what.what", s.addr5)
 				s.requireSetAttr(s.addr1, "nut.pear.what.what", s.addr5)
 
-				s.requireCreateMarket(exchange.Market{
+				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:     1,
 					AccessGrants: []exchange.AccessGrant{agWithdraw(s.addr5)},
 				})
@@ -2568,7 +2568,102 @@ func (s *TestSuite) TestMsgServer_MarketWithdraw() {
 	}
 }
 
-// TODO[1658]: func (s *TestSuite) TestMsgServer_MarketUpdateDetails()
+func (s *TestSuite) TestMsgServer_MarketUpdateDetails() {
+	type followArgs struct{}
+	testDef := msgServerTestDef[exchange.MsgMarketUpdateDetailsRequest, exchange.MsgMarketUpdateDetailsResponse, followArgs]{
+		endpointName: "MarketUpdateDetails",
+		endpoint:     keeper.NewMsgServer(s.k).MarketUpdateDetails,
+		expResp:      &exchange.MsgMarketUpdateDetailsResponse{},
+		followup: func(msg *exchange.MsgMarketUpdateDetailsRequest, fArgs followArgs) {
+			market := s.k.GetMarket(s.ctx, msg.MarketId)
+			if s.Assert().NotNil(market, "GetMarket(%d)", msg.MarketId) {
+				s.Assert().Equal(msg.MarketDetails, market.MarketDetails, "market %d details", msg.MarketId)
+			}
+		},
+	}
+	agUpdate := func(addr sdk.AccAddress) exchange.AccessGrant {
+		return exchange.AccessGrant{
+			Address:     addr.String(),
+			Permissions: []exchange.Permission{exchange.Permission_update},
+		}
+	}
+
+	tests := []msgServerTestCase[exchange.MsgMarketUpdateDetailsRequest, followArgs]{
+		{
+			name: "admin does not have permission to update market",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 2,
+					AccessGrants: []exchange.AccessGrant{
+						{
+							Address: s.addr5.String(),
+							Permissions: []exchange.Permission{
+								exchange.Permission_settle, exchange.Permission_set_ids, exchange.Permission_cancel,
+								exchange.Permission_withdraw, exchange.Permission_permissions, exchange.Permission_attributes,
+							},
+						},
+					},
+				})
+			},
+			msg: exchange.MsgMarketUpdateDetailsRequest{
+				Admin:         s.addr5.String(),
+				MarketId:      2,
+				MarketDetails: exchange.MarketDetails{Name: "new name"},
+			},
+			expInErr: []string{invReqErr,
+				"account " + s.addr5.String() + " does not have permission to update market 2"},
+		},
+		{
+			name: "error update details",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 2, AccessGrants: []exchange.AccessGrant{agUpdate(s.addr5)},
+				})
+				ma := s.k.GetMarketAccount(s.ctx, 2)
+				s.app.AccountKeeper.SetAccount(s.ctx, ma.BaseAccount)
+			},
+			msg: exchange.MsgMarketUpdateDetailsRequest{
+				Admin:         s.addr5.String(),
+				MarketId:      2,
+				MarketDetails: exchange.MarketDetails{Name: "new name"},
+			},
+			expInErr: []string{invReqErr, "market 2 account not found"},
+		},
+		{
+			name: "all good",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 2, AccessGrants: []exchange.AccessGrant{agUpdate(s.addr5)},
+					MarketDetails: exchange.MarketDetails{
+						Name:        "Market 2 Old Name",
+						Description: "The old description of market 2.",
+						WebsiteUrl:  "http://example.com/old/market/2",
+						IconUri:     "http://oops.example.com/old/market/2",
+					},
+				})
+			},
+			msg: exchange.MsgMarketUpdateDetailsRequest{
+				Admin:    s.addr5.String(),
+				MarketId: 2,
+				MarketDetails: exchange.MarketDetails{
+					Name:        "Market Two",
+					Description: "This is the new, better, stronger description of Market Two!",
+					WebsiteUrl:  "http://example.com/new/market/2",
+					IconUri:     "http://example.com/new/market/2/icon",
+				},
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketDetailsUpdated{MarketId: 2, UpdatedBy: s.addr5.String()}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
 
 // TODO[1658]: func (s *TestSuite) TestMsgServer_MarketUpdateEnabled()
 
