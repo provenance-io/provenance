@@ -37,7 +37,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Features
+
+* Add the (empty) `saffron-rc2` upgrade [#1699](https://github.com/provenance-io/provenance/issues/1699).
+
+### Improvements
+
+* Wrote unit tests on the keeper methods [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* During `FillBids`, the seller settlement fee is now calculated on the total price instead of each order individually [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* In the `OrderFeeCalc` query, ensure the market exists [#1699](https://github.com/provenance-io/provenance/issues/1699).
+
+### Bug Fixes
+
+* During `InitGenesis`, ensure LastOrderId is at least the largest order id [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* Properly populate the permissions lists when reading access grants from state [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* Fixed the paginated order queries to properly look up orders [#1699](https://github.com/provenance-io/provenance/issues/1699).
 
 ---
 
