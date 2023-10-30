@@ -2414,19 +2414,18 @@ func (s *TestSuite) TestMsgServer_MarketSetOrderExternalID() {
 }
 
 func (s *TestSuite) TestMsgServer_MarketWithdraw() {
-	type followArgs []expBalances
-	testDef := msgServerTestDef[exchange.MsgMarketWithdrawRequest, exchange.MsgMarketWithdrawResponse, followArgs]{
+	testDef := msgServerTestDef[exchange.MsgMarketWithdrawRequest, exchange.MsgMarketWithdrawResponse, []expBalances]{
 		endpointName: "MarketWithdraw",
 		endpoint:     keeper.NewMsgServer(s.k).MarketWithdraw,
 		expResp:      &exchange.MsgMarketWithdrawResponse{},
-		followup: func(_ *exchange.MsgMarketWithdrawRequest, fArgs followArgs) {
+		followup: func(_ *exchange.MsgMarketWithdrawRequest, fArgs []expBalances) {
 			for _, eb := range fArgs {
 				s.checkBalances(eb)
 			}
 		},
 	}
 
-	tests := []msgServerTestCase[exchange.MsgMarketWithdrawRequest, followArgs]{
+	tests := []msgServerTestCase[exchange.MsgMarketWithdrawRequest, []expBalances]{
 		{
 			name: "admin does not have permission to withdraw",
 			setup: func() {
@@ -2533,12 +2532,11 @@ func (s *TestSuite) TestMsgServer_MarketWithdraw() {
 }
 
 func (s *TestSuite) TestMsgServer_MarketUpdateDetails() {
-	type followArgs struct{}
-	testDef := msgServerTestDef[exchange.MsgMarketUpdateDetailsRequest, exchange.MsgMarketUpdateDetailsResponse, followArgs]{
+	testDef := msgServerTestDef[exchange.MsgMarketUpdateDetailsRequest, exchange.MsgMarketUpdateDetailsResponse, struct{}]{
 		endpointName: "MarketUpdateDetails",
 		endpoint:     keeper.NewMsgServer(s.k).MarketUpdateDetails,
 		expResp:      &exchange.MsgMarketUpdateDetailsResponse{},
-		followup: func(msg *exchange.MsgMarketUpdateDetailsRequest, _ followArgs) {
+		followup: func(msg *exchange.MsgMarketUpdateDetailsRequest, _ struct{}) {
 			market := s.k.GetMarket(s.ctx, msg.MarketId)
 			if s.Assert().NotNil(market, "GetMarket(%d)", msg.MarketId) {
 				s.Assert().Equal(msg.MarketDetails, market.MarketDetails, "market %d details", msg.MarketId)
@@ -2546,7 +2544,7 @@ func (s *TestSuite) TestMsgServer_MarketUpdateDetails() {
 		},
 	}
 
-	tests := []msgServerTestCase[exchange.MsgMarketUpdateDetailsRequest, followArgs]{
+	tests := []msgServerTestCase[exchange.MsgMarketUpdateDetailsRequest, struct{}]{
 		{
 			name: "admin does not have permission to update market",
 			setup: func() {
@@ -2616,18 +2614,17 @@ func (s *TestSuite) TestMsgServer_MarketUpdateDetails() {
 }
 
 func (s *TestSuite) TestMsgServer_MarketUpdateEnabled() {
-	type followArgs struct{}
-	testDef := msgServerTestDef[exchange.MsgMarketUpdateEnabledRequest, exchange.MsgMarketUpdateEnabledResponse, followArgs]{
+	testDef := msgServerTestDef[exchange.MsgMarketUpdateEnabledRequest, exchange.MsgMarketUpdateEnabledResponse, struct{}]{
 		endpointName: "MarketUpdateEnabled",
 		endpoint:     keeper.NewMsgServer(s.k).MarketUpdateEnabled,
 		expResp:      &exchange.MsgMarketUpdateEnabledResponse{},
-		followup: func(msg *exchange.MsgMarketUpdateEnabledRequest, _ followArgs) {
+		followup: func(msg *exchange.MsgMarketUpdateEnabledRequest, _ struct{}) {
 			isEnabled := s.k.IsMarketActive(s.ctx, msg.MarketId)
 			s.Assert().Equal(msg.AcceptingOrders, isEnabled, "IsMarketActive(%d)", msg.MarketId)
 		},
 	}
 
-	tests := []msgServerTestCase[exchange.MsgMarketUpdateEnabledRequest, followArgs]{
+	tests := []msgServerTestCase[exchange.MsgMarketUpdateEnabledRequest, struct{}]{
 		{
 			name: "admin does not have permission to update market",
 			setup: func() {
@@ -2718,18 +2715,17 @@ func (s *TestSuite) TestMsgServer_MarketUpdateEnabled() {
 }
 
 func (s *TestSuite) TestMsgServer_MarketUpdateUserSettle() {
-	type followArgs struct{}
-	testDef := msgServerTestDef[exchange.MsgMarketUpdateUserSettleRequest, exchange.MsgMarketUpdateUserSettleResponse, followArgs]{
+	testDef := msgServerTestDef[exchange.MsgMarketUpdateUserSettleRequest, exchange.MsgMarketUpdateUserSettleResponse, struct{}]{
 		endpointName: "MarketUpdateUserSettle",
 		endpoint:     keeper.NewMsgServer(s.k).MarketUpdateUserSettle,
 		expResp:      &exchange.MsgMarketUpdateUserSettleResponse{},
-		followup: func(msg *exchange.MsgMarketUpdateUserSettleRequest, _ followArgs) {
+		followup: func(msg *exchange.MsgMarketUpdateUserSettleRequest, _ struct{}) {
 			allowed := s.k.IsUserSettlementAllowed(s.ctx, msg.MarketId)
 			s.Assert().Equal(msg.AllowUserSettlement, allowed, "IsUserSettlementAllowed(%d)", msg.MarketId)
 		},
 	}
 
-	tests := []msgServerTestCase[exchange.MsgMarketUpdateUserSettleRequest, followArgs]{
+	tests := []msgServerTestCase[exchange.MsgMarketUpdateUserSettleRequest, struct{}]{
 		{
 			name: "admin does not have permission to update market",
 			setup: func() {
@@ -2820,12 +2816,11 @@ func (s *TestSuite) TestMsgServer_MarketUpdateUserSettle() {
 }
 
 func (s *TestSuite) TestMsgServer_MarketManagePermissions() {
-	type followArgs []exchange.AccessGrant
-	testDef := msgServerTestDef[exchange.MsgMarketManagePermissionsRequest, exchange.MsgMarketManagePermissionsResponse, followArgs]{
+	testDef := msgServerTestDef[exchange.MsgMarketManagePermissionsRequest, exchange.MsgMarketManagePermissionsResponse, []exchange.AccessGrant]{
 		endpointName: "MarketManagePermissions",
 		endpoint:     keeper.NewMsgServer(s.k).MarketManagePermissions,
 		expResp:      &exchange.MsgMarketManagePermissionsResponse{},
-		followup: func(msg *exchange.MsgMarketManagePermissionsRequest, expAGs followArgs) {
+		followup: func(msg *exchange.MsgMarketManagePermissionsRequest, expAGs []exchange.AccessGrant) {
 			for _, expAG := range expAGs {
 				addr, err := sdk.AccAddressFromBech32(expAG.Address)
 				if s.Assert().NoError(err, "AccAddressFromBech32(%q)", expAG.Address) {
@@ -2837,7 +2832,7 @@ func (s *TestSuite) TestMsgServer_MarketManagePermissions() {
 		},
 	}
 
-	tests := []msgServerTestCase[exchange.MsgMarketManagePermissionsRequest, followArgs]{
+	tests := []msgServerTestCase[exchange.MsgMarketManagePermissionsRequest, []exchange.AccessGrant]{
 		{
 			name: "admin does not have permission to manage permissions",
 			setup: func() {
@@ -2914,15 +2909,15 @@ func (s *TestSuite) TestMsgServer_MarketManagePermissions() {
 }
 
 func (s *TestSuite) TestMsgServer_MarketManageReqAttrs() {
-	type followArgs struct {
+	type followupArgs struct {
 		expAsk []string
 		expBid []string
 	}
-	testDef := msgServerTestDef[exchange.MsgMarketManageReqAttrsRequest, exchange.MsgMarketManageReqAttrsResponse, followArgs]{
+	testDef := msgServerTestDef[exchange.MsgMarketManageReqAttrsRequest, exchange.MsgMarketManageReqAttrsResponse, followupArgs]{
 		endpointName: "MarketManageReqAttrs",
 		endpoint:     keeper.NewMsgServer(s.k).MarketManageReqAttrs,
 		expResp:      &exchange.MsgMarketManageReqAttrsResponse{},
-		followup: func(msg *exchange.MsgMarketManageReqAttrsRequest, fArgs followArgs) {
+		followup: func(msg *exchange.MsgMarketManageReqAttrsRequest, fArgs followupArgs) {
 			actAsk := s.k.GetReqAttrsAsk(s.ctx, msg.MarketId)
 			actBid := s.k.GetReqAttrsBid(s.ctx, msg.MarketId)
 			s.Assert().Equal(fArgs.expAsk, actAsk, "market %d req attrs ask", msg.MarketId)
@@ -2930,7 +2925,7 @@ func (s *TestSuite) TestMsgServer_MarketManageReqAttrs() {
 		},
 	}
 
-	tests := []msgServerTestCase[exchange.MsgMarketManageReqAttrsRequest, followArgs]{
+	tests := []msgServerTestCase[exchange.MsgMarketManageReqAttrsRequest, followupArgs]{
 		{
 			name: "admin does not have permission to manage req attrs",
 			setup: func() {
@@ -2979,7 +2974,7 @@ func (s *TestSuite) TestMsgServer_MarketManageReqAttrs() {
 				CreateBidToAdd:    []string{"bid.deeper.base"},
 				CreateBidToRemove: []string{"bid.base"},
 			},
-			fArgs: followArgs{
+			fArgs: followupArgs{
 				expAsk: []string{"*.other", "ask.deeper.base"},
 				expBid: []string{"*.fresh", "bid.deeper.base"},
 			},
@@ -2997,13 +2992,11 @@ func (s *TestSuite) TestMsgServer_MarketManageReqAttrs() {
 }
 
 func (s *TestSuite) TestMsgServer_GovCreateMarket() {
-	type followArgs uint32
-	testDef := msgServerTestDef[exchange.MsgGovCreateMarketRequest, exchange.MsgGovCreateMarketResponse, followArgs]{
+	testDef := msgServerTestDef[exchange.MsgGovCreateMarketRequest, exchange.MsgGovCreateMarketResponse, uint32]{
 		endpointName: "GovCreateMarket",
 		endpoint:     keeper.NewMsgServer(s.k).GovCreateMarket,
 		expResp:      &exchange.MsgGovCreateMarketResponse{},
-		followup: func(msg *exchange.MsgGovCreateMarketRequest, faMarketID followArgs) {
-			marketID := uint32(faMarketID)
+		followup: func(msg *exchange.MsgGovCreateMarketRequest, marketID uint32) {
 			expMarket := msg.Market
 			expMarket.MarketId = marketID
 			actMarket := s.k.GetMarket(s.ctx, marketID)
@@ -3011,7 +3004,7 @@ func (s *TestSuite) TestMsgServer_GovCreateMarket() {
 		},
 	}
 
-	tests := []msgServerTestCase[exchange.MsgGovCreateMarketRequest, followArgs]{
+	tests := []msgServerTestCase[exchange.MsgGovCreateMarketRequest, uint32]{
 		{
 			name: "wrong authority",
 			msg: exchange.MsgGovCreateMarketRequest{
@@ -3109,18 +3102,17 @@ func (s *TestSuite) TestMsgServer_GovCreateMarket() {
 }
 
 func (s *TestSuite) TestMsgServer_GovManageFees() {
-	type followArgs exchange.Market
-	testDef := msgServerTestDef[exchange.MsgGovManageFeesRequest, exchange.MsgGovManageFeesResponse, followArgs]{
+	testDef := msgServerTestDef[exchange.MsgGovManageFeesRequest, exchange.MsgGovManageFeesResponse, exchange.Market]{
 		endpointName: "GovManageFees",
 		endpoint:     keeper.NewMsgServer(s.k).GovManageFees,
 		expResp:      &exchange.MsgGovManageFeesResponse{},
-		followup: func(msg *exchange.MsgGovManageFeesRequest, expMarket followArgs) {
+		followup: func(msg *exchange.MsgGovManageFeesRequest, expMarket exchange.Market) {
 			actMarket := s.k.GetMarket(s.ctx, msg.MarketId)
 			s.Assert().Equal(exchange.Market(expMarket), *actMarket, "GetMarket(%d)", msg.MarketId)
 		},
 	}
 
-	tests := []msgServerTestCase[exchange.MsgGovManageFeesRequest, followArgs]{
+	tests := []msgServerTestCase[exchange.MsgGovManageFeesRequest, exchange.Market]{
 		{
 			name: "wrong authority",
 			msg: exchange.MsgGovManageFeesRequest{
@@ -3161,7 +3153,7 @@ func (s *TestSuite) TestMsgServer_GovManageFees() {
 				RemoveFeeBuyerSettlementRatios:  s.ratios("100cherry:1cherry"),
 				AddFeeBuyerSettlementRatios:     s.ratios("80cherry:3cherry"),
 			},
-			fArgs: followArgs{
+			fArgs: exchange.Market{
 				MarketId:                  2,
 				MarketDetails:             exchange.MarketDetails{Name: "Market Too"},
 				FeeCreateAskFlat:          s.coins("10apple,5tomato"),
@@ -3185,18 +3177,17 @@ func (s *TestSuite) TestMsgServer_GovManageFees() {
 }
 
 func (s *TestSuite) TestMsgServer_GovUpdateParams() {
-	type followArgs struct{}
-	testDef := msgServerTestDef[exchange.MsgGovUpdateParamsRequest, exchange.MsgGovUpdateParamsResponse, followArgs]{
+	testDef := msgServerTestDef[exchange.MsgGovUpdateParamsRequest, exchange.MsgGovUpdateParamsResponse, struct{}]{
 		endpointName: "GovUpdateParams",
 		endpoint:     keeper.NewMsgServer(s.k).GovUpdateParams,
 		expResp:      &exchange.MsgGovUpdateParamsResponse{},
-		followup: func(msg *exchange.MsgGovUpdateParamsRequest, _ followArgs) {
+		followup: func(msg *exchange.MsgGovUpdateParamsRequest, _ struct{}) {
 			actParams := s.k.GetParams(s.ctx)
 			s.Assert().Equal(&msg.Params, actParams, "GetParams")
 		},
 	}
 
-	tests := []msgServerTestCase[exchange.MsgGovUpdateParamsRequest, followArgs]{
+	tests := []msgServerTestCase[exchange.MsgGovUpdateParamsRequest, struct{}]{
 		{
 			name: "wrong authority",
 			msg: exchange.MsgGovUpdateParamsRequest{
