@@ -93,7 +93,9 @@ func (s *TestSuite) TestKeeper_IterateKnownMarketIDs() {
 				s.k.IterateKnownMarketIDs(s.ctx, tc.cb)
 			}
 			s.Require().NotPanics(testFunc, "IterateKnownMarketIDs")
-			s.Assert().Equal(tc.expMarketIDs, marketIDs, "IterateKnownMarketIDs market ids")
+			assertEqualSlice(s, tc.expMarketIDs, marketIDs, func(marketID uint32) string {
+				return fmt.Sprintf("%d", marketID)
+			}, "IterateKnownMarketIDs market ids")
 		})
 	}
 }
@@ -6037,7 +6039,7 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 			}
 			s.Require().NotPanics(testFunc, "CreateMarket")
 			s.assertErrorValue(err, tc.expErr, "CreateMarket error")
-			s.Assert().Equal(tc.expMarketID, marketID, "CreateMarket market id")
+			s.Assert().Equal(int(tc.expMarketID), int(marketID), "CreateMarket market id")
 			s.assertAccountKeeperCalls(tc.accKeeper, expCalls, "CreateMarket")
 			actEvents := em.Events()
 			s.assertEqualEvents(expEvents, actEvents, "events emitted during CreateMarket")
@@ -6053,7 +6055,7 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 			s.Assert().Equal(&expMarket, market, "market read from state after CreateMarket")
 
 			lastMarketID := keeper.GetLastAutoMarketID(s.getStore())
-			s.Assert().Equal(tc.expLastAutoID, lastMarketID, "last auto-market id after CreateMarket")
+			s.Assert().Equal(int(tc.expLastAutoID), int(lastMarketID), "last auto-market id after CreateMarket")
 		})
 	}
 }
