@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdkmath "cosmossdk.io/math"
@@ -98,13 +96,6 @@ func runMsgServerTestCase[R any, S any, F any](s *TestSuite, td msgServerTestDef
 	s.assertEqualEvents(tc.expEvents, actEvents, "%s events", td.endpointName)
 
 	td.followup(&tc.msg, tc.fArgs)
-}
-
-// untypeEvent returns sdk.TypedEventToEvent(tev) requiring it to not error.
-func (s *TestSuite) untypeEvent(tev proto.Message) sdk.Event {
-	rv, err := sdk.TypedEventToEvent(tev)
-	s.Require().NoError(err, "TypedEventToEvent(%T)", tev)
-	return rv
 }
 
 // newAttr creates a new EventAttribute with the provided key and the quoted value.

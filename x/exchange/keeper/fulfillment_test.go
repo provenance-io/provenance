@@ -615,12 +615,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				tc.holdKeeper = NewMockHoldKeeper()
 			}
 
-			expEvents := make(sdk.Events, len(tc.expEvents))
-			for i, expEvent := range tc.expEvents {
-				event, err := sdk.TypedEventToEvent(expEvent)
-				s.Require().NoError(err, "[%d]TypedEventToEvent")
-				expEvents[i] = event
-			}
+			expEvents := untypeEvents(s, tc.expEvents)
 
 			em := sdk.NewEventManager()
 			ctx := s.ctx.WithEventManager(em)
@@ -1267,12 +1262,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				tc.holdKeeper = NewMockHoldKeeper()
 			}
 
-			expEvents := make(sdk.Events, len(tc.expEvents))
-			for i, expEvent := range tc.expEvents {
-				event, err := sdk.TypedEventToEvent(expEvent)
-				s.Require().NoError(err, "[%d]TypedEventToEvent")
-				expEvents[i] = event
-			}
+			expEvents := untypeEvents(s, tc.expEvents)
 
 			em := sdk.NewEventManager()
 			ctx := s.ctx.WithEventManager(em)
@@ -1836,12 +1826,7 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 				tc.holdKeeper = NewMockHoldKeeper()
 			}
 
-			expEvents := make(sdk.Events, len(tc.expEvents))
-			for i, expEvent := range tc.expEvents {
-				event, err := sdk.TypedEventToEvent(expEvent)
-				s.Require().NoError(err, "[%d]TypedEventToEvent(%T)", expEvent)
-				expEvents[i] = event
-			}
+			expEvents := untypeEvents(s, tc.expEvents)
 
 			em := sdk.NewEventManager()
 			ctx := s.ctx.WithEventManager(em)

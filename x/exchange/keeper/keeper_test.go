@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
@@ -408,6 +409,24 @@ func (s *TestSuite) assertEqualEvents(expected, actual sdk.Events, msgAndArgs ..
 // requirePanicEquals is a wrapper for assertions.RequirePanicEquals for this TestSuite.
 func (s *TestSuite) requirePanicEquals(f assertions.PanicTestFunc, expected string, msgAndArgs ...interface{}) {
 	assertions.RequirePanicEquals(s.T(), f, expected, msgAndArgs...)
+}
+
+// untypeEvent returns sdk.TypedEventToEvent(tev) requiring it to not error.
+func (s *TestSuite) untypeEvent(tev proto.Message) sdk.Event {
+	rv, err := sdk.TypedEventToEvent(tev)
+	s.Require().NoError(err, "TypedEventToEvent(%T)", tev)
+	return rv
+}
+
+// untypeEvents applies sdk.TypedEventToEvent(tev) to each of the provided things, requiring it to not error.
+func untypeEvents[P proto.Message](s *TestSuite, tevs []P) sdk.Events {
+	rv := make(sdk.Events, len(tevs))
+	for i, tev := range tevs {
+		event, err := sdk.TypedEventToEvent(tev)
+		s.Require().NoError(err, "[%d]TypedEventToEvent(%T)", i, tev)
+		rv[i] = event
+	}
+	return rv
 }
 
 func (s *TestSuite) TestKeeper_GetAuthority() {

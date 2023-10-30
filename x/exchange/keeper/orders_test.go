@@ -892,9 +892,8 @@ func (s *TestSuite) TestKeeper_CreateAskOrder() {
 			var expEvents sdk.Events
 			if len(tc.expErr) == 0 {
 				expOrder = exchange.NewOrder(tc.expOrderID).WithAsk(&tc.askOrder)
-				event, err := sdk.TypedEventToEvent(exchange.NewEventOrderCreated(expOrder))
-				s.Require().NoError(err, "TypedEventToEvent")
-				expEvents = append(expEvents, event)
+				event := exchange.NewEventOrderCreated(expOrder)
+				expEvents = append(expEvents, s.untypeEvent(event))
 			}
 
 			if tc.attrKeeper == nil {
@@ -1394,9 +1393,8 @@ func (s *TestSuite) TestKeeper_CreateBidOrder() {
 			var expEvents sdk.Events
 			if len(tc.expErr) == 0 {
 				expOrder = exchange.NewOrder(tc.expOrderID).WithBid(&tc.bidOrder)
-				event, err := sdk.TypedEventToEvent(exchange.NewEventOrderCreated(expOrder))
-				s.Require().NoError(err, "TypedEventToEvent")
-				expEvents = append(expEvents, event)
+				event := exchange.NewEventOrderCreated(expOrder)
+				expEvents = append(expEvents, s.untypeEvent(event))
 			}
 
 			if tc.attrKeeper == nil {
@@ -1682,9 +1680,8 @@ func (s *TestSuite) TestKeeper_CancelOrder() {
 			var expEvents sdk.Events
 			var expDelKVs []sdk.KVPair
 			if cancelledOrder != nil {
-				event, err := sdk.TypedEventToEvent(exchange.NewEventOrderCancelled(cancelledOrder, tc.signer))
-				s.Require().NoError(err, "TypedEventToEvent")
-				expEvents = append(expEvents, event)
+				event := exchange.NewEventOrderCancelled(cancelledOrder, tc.signer)
+				expEvents = append(expEvents, s.untypeEvent(event))
 
 				expDelKVs = keeper.CreateConstantIndexEntries(*cancelledOrder)
 				extIDKV := keeper.CreateMarketExternalIDToOrderEntry(cancelledOrder)
@@ -2002,14 +1999,14 @@ func (s *TestSuite) TestKeeper_SetOrderExternalID() {
 			var expEvents sdk.Events
 			var expOrder *exchange.Order
 			if len(tc.expErr) == 0 {
-				event, err := sdk.TypedEventToEvent(&exchange.EventOrderExternalIDUpdated{
+				event := &exchange.EventOrderExternalIDUpdated{
 					OrderId:    tc.orderID,
 					MarketId:   tc.marketID,
 					ExternalId: tc.newExternalID,
-				})
-				s.Require().NoError(err, "TypedEventToEvent(EventOrderExternalIDUpdated(%d, %d, %q)",
-					tc.orderID, tc.marketID, tc.newExternalID)
-				expEvents = append(expEvents, event)
+				}
+				expEvents = append(expEvents, s.untypeEvent(event))
+
+				var err error
 				expOrder, err = s.k.GetOrder(s.ctx, tc.orderID)
 				s.Require().NoError(err, "GetOrder(%d) before anything", tc.orderID)
 				switch {
