@@ -14,14 +14,24 @@ import (
 
 const invalidArgErr = "rpc error: code = InvalidArgument"
 
-// querySetupFunc is a function that will set up a query test case.
-type querySetupFunc func()
-
-// queryRunner is a function that will call a query endpoint, returning its response and error.
-type queryRunner func(goCtx context.Context) (interface{}, error)
+// logKeyAsID will log the provided key as either an order id or market id if it's suspected of being one of those.
+func (s *TestSuite) logKeyAsID(name string, key []byte) {
+	switch len(key) {
+	case 8:
+		id, ok := keeper.ParseIndexKeySuffixOrderID(key)
+		if ok {
+			s.T().Logf("%s as order id: %d", name, id)
+		}
+	case 4:
+		id, ok := keeper.ParseKeySuffixKnownMarketID(key)
+		if ok {
+			s.T().Logf("%s as market id: %d", name, id)
+		}
+	}
+}
 
 // assertEqualPageResponse asserts that two PageResponses are equal.
-// If not, some further assertions are made to try to help clarify the differences.
+// If not, some further assertions are made to try to help clarify the differences in the failure messages.
 func (s *TestSuite) assertEqualPageResponse(expected, actual *query.PageResponse, msg string, args ...interface{}) bool {
 	s.T().Helper()
 	if s.Assert().Equalf(expected, actual, msg, args...) {
@@ -31,59 +41,87 @@ func (s *TestSuite) assertEqualPageResponse(expected, actual *query.PageResponse
 		return false
 	}
 	if !s.Assert().Equalf(expected.NextKey, actual.NextKey, msg+" NextKey", args...) {
-		expOrderID, expOK := keeper.ParseIndexKeySuffixOrderID(expected.NextKey)
-		if expOK {
-			s.T().Logf("Expected as order id: %d", expOrderID)
-		}
-		actOrderID, actOK := keeper.ParseIndexKeySuffixOrderID(actual.NextKey)
-		if actOK {
-			s.T().Logf("  Actual as order id: %d", actOrderID)
-		}
+		s.logKeyAsID("Expected", expected.NextKey)
+		s.logKeyAsID("  Actual", actual.NextKey)
 	}
 	s.Assert().Equalf(int(expected.Total), int(actual.Total), msg+" Total", args...)
 	return false
 }
 
-// doQueryTest runs the provided setup and runner, requiring the runner to not panic and asserting its error's content
-// to contain the provided strings (or be nil if none are provided).
-// A cache context is used for this, so the setup function won't affect other test cases.
-// The query's response is returned.
-func (s *TestSuite) doQueryTest(setup querySetupFunc, runner queryRunner, expInErr []string, msg string, args ...interface{}) interface{} {
-	s.T().Helper()
+// queryTestDef is the definition of a QueryServer endpoint to be tested.
+// R is the request message type. S is the response message type.
+type queryTestDef[R any, S any] struct {
+	// queryName is the name of the query being tested.
+	queryName string
+	// query is the query function to invoke.
+	query func(goCtx context.Context, req *R) (*S, error)
+	// followup is a function that runs any desired followup assertions to help pinpoint
+	// differences between the expected and actual. It's only called if they're not equal and neither are nil.
+	followup func(expected, actual *S)
+}
+
+// queryTestCase is a test case for a QueryServer endpoint.
+// R is the request message type. S is the response message type.
+type queryTestCase[R any, S any] struct {
+	// name is the name of the test case.
+	name string
+	// setup is a function that does any needed app/state setup.
+	// A cached context is used for tests, so this setup will not carry over between test cases.
+	setup func()
+	// req is the request message to provide to the query.
+	req *R
+	// expResp is the expected response from the query
+	expResp *S
+	// expInErr is the strings that are expected to be in the error returned by the endpoint.
+	// If empty, that error is expected to be nil.
+	expInErr []string
+}
+
+// runQueryTestCase runs a unit test on a QueryServer endpoint.
+// A cached context is used so each test case won't affect the others.
+// R is the request message type. S is the response message type.
+func runQueryTestCase[R any, S any](s *TestSuite, td queryTestDef[R, S], tc queryTestCase[R, S]) {
 	origCtx := s.ctx
 	defer func() {
 		s.ctx = origCtx
 	}()
 	s.ctx, _ = s.ctx.CacheContext()
-	if setup != nil {
-		setup()
+
+	if tc.setup != nil {
+		tc.setup()
 	}
+
 	goCtx := sdk.WrapSDKContext(s.ctx)
-	var rv interface{}
+	var resp *S
 	var err error
 	testFunc := func() {
-		rv, err = runner(goCtx)
+		resp, err = td.query(goCtx, tc.req)
 	}
-	s.Require().NotPanicsf(testFunc, msg, args...)
-	s.assertErrorContentsf(err, expInErr, msg+" error", args...)
-	return rv
+	s.Require().NotPanics(testFunc, td.queryName)
+	s.assertErrorContentsf(err, tc.expInErr, "%s error", td.queryName)
+	if s.Assert().Equal(tc.expResp, resp, "%s response", td.queryName) {
+		return
+	}
+	if td.followup != nil && tc.expResp != nil && resp != nil {
+		td.followup(tc.expResp, resp)
+	}
 }
 
 func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
-	queryName := "OrderFeeCalc"
-	runner := func(req *exchange.QueryOrderFeeCalcRequest) queryRunner {
-		return func(goCtx context.Context) (interface{}, error) {
-			return keeper.NewQueryServer(s.k).OrderFeeCalc(goCtx, req)
-		}
+	testDef := queryTestDef[exchange.QueryOrderFeeCalcRequest, exchange.QueryOrderFeeCalcResponse]{
+		queryName: "OrderFeeCalc",
+		query:     keeper.NewQueryServer(s.k).OrderFeeCalc,
+		followup: func(expected, actual *exchange.QueryOrderFeeCalcResponse) {
+			s.Assert().Equal(s.coinsString(expected.CreationFeeOptions), s.coinsString(actual.CreationFeeOptions),
+				"CreationFeeOptions (as strings)")
+			s.Assert().Equal(s.coinsString(expected.SettlementFlatFeeOptions), s.coinsString(actual.SettlementFlatFeeOptions),
+				"SettlementFlatFeeOptions (as strings)")
+			s.Assert().Equal(s.coinsString(expected.SettlementRatioFeeOptions), s.coinsString(actual.SettlementRatioFeeOptions),
+				"SettlementRatioFeeOptions (as strings)")
+		},
 	}
 
-	tests := []struct {
-		name     string
-		setup    querySetupFunc
-		req      *exchange.QueryOrderFeeCalcRequest
-		expResp  *exchange.QueryOrderFeeCalcResponse
-		expInErr []string
-	}{
+	tests := []queryTestCase[exchange.QueryOrderFeeCalcRequest, exchange.QueryOrderFeeCalcResponse]{
 		// Bad request tests.
 		{
 			name:     "nil req",
@@ -434,40 +472,18 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
-			if s.Assert().Equal(tc.expResp, respRaw, queryName+" result") {
-				return
-			}
-			resp, ok := respRaw.(*exchange.QueryOrderFeeCalcResponse)
-			s.Require().True(ok, queryName+" response is of type %T and could not be cast to %T", respRaw, tc.expResp)
-			if tc.expResp == nil || resp == nil {
-				return
-			}
-			s.Assert().Equal(s.coinsString(tc.expResp.CreationFeeOptions), s.coinsString(resp.CreationFeeOptions),
-				queryName+" CreationFeeOptions (as strings)")
-			s.Assert().Equal(s.coinsString(tc.expResp.SettlementFlatFeeOptions), s.coinsString(resp.SettlementFlatFeeOptions),
-				queryName+" SettlementFlatFeeOptions (as strings)")
-			s.Assert().Equal(s.coinsString(tc.expResp.SettlementRatioFeeOptions), s.coinsString(resp.SettlementRatioFeeOptions),
-				queryName+" SettlementRatioFeeOptions (as strings)")
+			runQueryTestCase(s, testDef, tc)
 		})
 	}
 }
 
 func (s *TestSuite) TestQueryServer_GetOrder() {
-	queryName := "GetOrder"
-	runner := func(req *exchange.QueryGetOrderRequest) queryRunner {
-		return func(goCtx context.Context) (interface{}, error) {
-			return keeper.NewQueryServer(s.k).GetOrder(goCtx, req)
-		}
+	testDef := queryTestDef[exchange.QueryGetOrderRequest, exchange.QueryGetOrderResponse]{
+		queryName: "GetOrder",
+		query:     keeper.NewQueryServer(s.k).GetOrder,
 	}
 
-	tests := []struct {
-		name     string
-		setup    querySetupFunc
-		req      *exchange.QueryGetOrderRequest
-		expResp  *exchange.QueryGetOrderResponse
-		expInErr []string
-	}{
+	tests := []queryTestCase[exchange.QueryGetOrderRequest, exchange.QueryGetOrderResponse]{
 		{
 			name:     "nil req",
 			req:      nil,
@@ -576,27 +592,18 @@ func (s *TestSuite) TestQueryServer_GetOrder() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
-			s.Assert().Equal(tc.expResp, respRaw, queryName+" result")
+			runQueryTestCase(s, testDef, tc)
 		})
 	}
 }
 
 func (s *TestSuite) TestQueryServer_GetOrderByExternalID() {
-	queryName := "GetOrderByExternalID"
-	runner := func(req *exchange.QueryGetOrderByExternalIDRequest) queryRunner {
-		return func(goCtx context.Context) (interface{}, error) {
-			return keeper.NewQueryServer(s.k).GetOrderByExternalID(goCtx, req)
-		}
+	testDef := queryTestDef[exchange.QueryGetOrderByExternalIDRequest, exchange.QueryGetOrderByExternalIDResponse]{
+		queryName: "GetOrderByExternalID",
+		query:     keeper.NewQueryServer(s.k).GetOrderByExternalID,
 	}
 
-	tests := []struct {
-		name     string
-		setup    querySetupFunc
-		req      *exchange.QueryGetOrderByExternalIDRequest
-		expResp  *exchange.QueryGetOrderByExternalIDResponse
-		expInErr []string
-	}{
+	tests := []queryTestCase[exchange.QueryGetOrderByExternalIDRequest, exchange.QueryGetOrderByExternalIDResponse]{
 		{
 			name:     "nil request",
 			req:      nil,
@@ -780,18 +787,19 @@ func (s *TestSuite) TestQueryServer_GetOrderByExternalID() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
-			s.Assert().Equal(tc.expResp, respRaw, queryName+" result")
+			runQueryTestCase(s, testDef, tc)
 		})
 	}
 }
 
 func (s *TestSuite) TestQueryServer_GetMarketOrders() {
-	queryName := "GetMarketOrders"
-	runner := func(req *exchange.QueryGetMarketOrdersRequest) queryRunner {
-		return func(goCtx context.Context) (interface{}, error) {
-			return keeper.NewQueryServer(s.k).GetMarketOrders(goCtx, req)
-		}
+	testDef := queryTestDef[exchange.QueryGetMarketOrdersRequest, exchange.QueryGetMarketOrdersResponse]{
+		queryName: "GetMarketOrders",
+		query:     keeper.NewQueryServer(s.k).GetMarketOrders,
+		followup: func(expected, actual *exchange.QueryGetMarketOrdersResponse) {
+			s.assertEqualOrders(expected.Orders, actual.Orders, "Orders")
+			s.assertEqualPageResponse(expected.Pagination, actual.Pagination, "Pagination")
+		},
 	}
 	makeKey := func(order *exchange.Order) []byte {
 		return keeper.Uint64Bz(order.OrderId)
@@ -842,13 +850,7 @@ func (s *TestSuite) TestQueryServer_GetMarketOrders() {
 	//2: 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59
 	//3: 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60
 
-	tests := []struct {
-		name     string
-		setup    querySetupFunc
-		req      *exchange.QueryGetMarketOrdersRequest
-		expResp  *exchange.QueryGetMarketOrdersResponse
-		expInErr []string
-	}{
+	tests := []queryTestCase[exchange.QueryGetMarketOrdersRequest, exchange.QueryGetMarketOrdersResponse]{
 		// Tests on errors and non-normal conditions.
 		{
 			name:     "nil req",
@@ -1496,27 +1498,19 @@ func (s *TestSuite) TestQueryServer_GetMarketOrders() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
-			if s.Assert().Equal(tc.expResp, respRaw, queryName+" result") {
-				return
-			}
-			resp, ok := respRaw.(*exchange.QueryGetMarketOrdersResponse)
-			s.Require().True(ok, queryName+" response is of type %T and could not be cast to %T", respRaw, tc.expResp)
-			if tc.expResp == nil || resp == nil {
-				return
-			}
-			s.assertEqualOrders(tc.expResp.Orders, resp.Orders, "%s Orders", queryName)
-			s.assertEqualPageResponse(tc.expResp.Pagination, resp.Pagination, "%s Pagination", queryName)
+			runQueryTestCase(s, testDef, tc)
 		})
 	}
 }
 
 func (s *TestSuite) TestQueryServer_GetOwnerOrders() {
-	queryName := "GetOwnerOrders"
-	runner := func(req *exchange.QueryGetOwnerOrdersRequest) queryRunner {
-		return func(goCtx context.Context) (interface{}, error) {
-			return keeper.NewQueryServer(s.k).GetOwnerOrders(goCtx, req)
-		}
+	testDef := queryTestDef[exchange.QueryGetOwnerOrdersRequest, exchange.QueryGetOwnerOrdersResponse]{
+		queryName: "GetOwnerOrders",
+		query:     keeper.NewQueryServer(s.k).GetOwnerOrders,
+		followup: func(expected, actual *exchange.QueryGetOwnerOrdersResponse) {
+			s.assertEqualOrders(expected.Orders, actual.Orders, "Orders")
+			s.assertEqualPageResponse(expected.Pagination, actual.Pagination, "Pagination")
+		},
 	}
 	makeKey := func(order *exchange.Order) []byte {
 		return keeper.Uint64Bz(order.OrderId)
@@ -1570,13 +1564,7 @@ func (s *TestSuite) TestQueryServer_GetOwnerOrders() {
 	//addr2: 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59
 	//addr3: 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60
 
-	tests := []struct {
-		name     string
-		setup    querySetupFunc
-		req      *exchange.QueryGetOwnerOrdersRequest
-		expResp  *exchange.QueryGetOwnerOrdersResponse
-		expInErr []string
-	}{
+	tests := []queryTestCase[exchange.QueryGetOwnerOrdersRequest, exchange.QueryGetOwnerOrdersResponse]{
 		// Tests on errors and non-normal conditions.
 		{
 			name:     "nil req",
@@ -2229,27 +2217,19 @@ func (s *TestSuite) TestQueryServer_GetOwnerOrders() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
-			if s.Assert().Equal(tc.expResp, respRaw, queryName+" result") {
-				return
-			}
-			resp, ok := respRaw.(*exchange.QueryGetOwnerOrdersResponse)
-			s.Require().True(ok, queryName+" response is of type %T and could not be cast to %T", respRaw, tc.expResp)
-			if tc.expResp == nil || resp == nil {
-				return
-			}
-			s.assertEqualOrders(tc.expResp.Orders, resp.Orders, "%s Orders", queryName)
-			s.assertEqualPageResponse(tc.expResp.Pagination, resp.Pagination, "%s Pagination", queryName)
+			runQueryTestCase(s, testDef, tc)
 		})
 	}
 }
 
 func (s *TestSuite) TestQueryServer_GetAssetOrders() {
-	queryName := "GetAssetOrders"
-	runner := func(req *exchange.QueryGetAssetOrdersRequest) queryRunner {
-		return func(goCtx context.Context) (interface{}, error) {
-			return keeper.NewQueryServer(s.k).GetAssetOrders(goCtx, req)
-		}
+	testDef := queryTestDef[exchange.QueryGetAssetOrdersRequest, exchange.QueryGetAssetOrdersResponse]{
+		queryName: "GetAssetOrders",
+		query:     keeper.NewQueryServer(s.k).GetAssetOrders,
+		followup: func(expected, actual *exchange.QueryGetAssetOrdersResponse) {
+			s.assertEqualOrders(expected.Orders, actual.Orders, "Orders")
+			s.assertEqualPageResponse(expected.Pagination, actual.Pagination, "Pagination")
+		},
 	}
 	makeKey := func(order *exchange.Order) []byte {
 		return keeper.Uint64Bz(order.OrderId)
@@ -2303,13 +2283,7 @@ func (s *TestSuite) TestQueryServer_GetAssetOrders() {
 	//denom2: 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59
 	//denom3: 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60
 
-	tests := []struct {
-		name     string
-		setup    querySetupFunc
-		req      *exchange.QueryGetAssetOrdersRequest
-		expResp  *exchange.QueryGetAssetOrdersResponse
-		expInErr []string
-	}{
+	tests := []queryTestCase[exchange.QueryGetAssetOrdersRequest, exchange.QueryGetAssetOrdersResponse]{
 		// Tests on errors and non-normal conditions.
 		{
 			name:     "nil req",
@@ -2957,27 +2931,19 @@ func (s *TestSuite) TestQueryServer_GetAssetOrders() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
-			if s.Assert().Equal(tc.expResp, respRaw, queryName+" result") {
-				return
-			}
-			resp, ok := respRaw.(*exchange.QueryGetAssetOrdersResponse)
-			s.Require().True(ok, queryName+" response is of type %T and could not be cast to %T", respRaw, tc.expResp)
-			if tc.expResp == nil || resp == nil {
-				return
-			}
-			s.assertEqualOrders(tc.expResp.Orders, resp.Orders, "%s Orders", queryName)
-			s.assertEqualPageResponse(tc.expResp.Pagination, resp.Pagination, "%s Pagination", queryName)
+			runQueryTestCase(s, testDef, tc)
 		})
 	}
 }
 
 func (s *TestSuite) TestQueryServer_GetAllOrders() {
-	queryName := "GetAllOrders"
-	runner := func(req *exchange.QueryGetAllOrdersRequest) queryRunner {
-		return func(goCtx context.Context) (interface{}, error) {
-			return keeper.NewQueryServer(s.k).GetAllOrders(goCtx, req)
-		}
+	testDef := queryTestDef[exchange.QueryGetAllOrdersRequest, exchange.QueryGetAllOrdersResponse]{
+		queryName: "GetAllOrders",
+		query:     keeper.NewQueryServer(s.k).GetAllOrders,
+		followup: func(expected, actual *exchange.QueryGetAllOrdersResponse) {
+			s.assertEqualOrders(expected.Orders, actual.Orders, "Orders")
+			s.assertEqualPageResponse(expected.Pagination, actual.Pagination, "Pagination")
+		},
 	}
 	makeKey := func(order *exchange.Order) []byte {
 		return keeper.Uint64Bz(order.OrderId)
@@ -3014,13 +2980,7 @@ func (s *TestSuite) TestQueryServer_GetAllOrders() {
 		s.requireSetOrderInStore(store, fiveOrders[0])
 	}
 
-	tests := []struct {
-		name     string
-		setup    querySetupFunc
-		req      *exchange.QueryGetAllOrdersRequest
-		expResp  *exchange.QueryGetAllOrdersResponse
-		expInErr []string
-	}{
+	tests := []queryTestCase[exchange.QueryGetAllOrdersRequest, exchange.QueryGetAllOrdersResponse]{
 		{
 			name: "bad key in store",
 			setup: func() {
@@ -3159,36 +3119,18 @@ func (s *TestSuite) TestQueryServer_GetAllOrders() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
-			if s.Assert().Equal(tc.expResp, respRaw, queryName+" result") {
-				return
-			}
-			resp, ok := respRaw.(*exchange.QueryGetAllOrdersResponse)
-			s.Require().True(ok, queryName+" response is of type %T and could not be cast to %T", respRaw, tc.expResp)
-			if tc.expResp == nil || resp == nil {
-				return
-			}
-			s.assertEqualOrders(tc.expResp.Orders, resp.Orders, "%s Orders", queryName)
-			s.assertEqualPageResponse(tc.expResp.Pagination, resp.Pagination, "%s Pagination", queryName)
+			runQueryTestCase(s, testDef, tc)
 		})
 	}
 }
 
 func (s *TestSuite) TestQueryServer_GetMarket() {
-	queryName := "GetMarket"
-	runner := func(req *exchange.QueryGetMarketRequest) queryRunner {
-		return func(goCtx context.Context) (interface{}, error) {
-			return keeper.NewQueryServer(s.k).GetMarket(goCtx, req)
-		}
+	testDef := queryTestDef[exchange.QueryGetMarketRequest, exchange.QueryGetMarketResponse]{
+		queryName: "GetMarket",
+		query:     keeper.NewQueryServer(s.k).GetMarket,
 	}
 
-	tests := []struct {
-		name     string
-		setup    querySetupFunc
-		req      *exchange.QueryGetMarketRequest
-		expResp  *exchange.QueryGetMarketResponse
-		expInErr []string
-	}{
+	tests := []queryTestCase[exchange.QueryGetMarketRequest, exchange.QueryGetMarketResponse]{
 		{
 			name:     "nil request",
 			req:      nil,
@@ -3284,18 +3226,25 @@ func (s *TestSuite) TestQueryServer_GetMarket() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
-			s.Assert().Equal(tc.expResp, respRaw, queryName+" result")
+			runQueryTestCase(s, testDef, tc)
 		})
 	}
 }
 
 func (s *TestSuite) TestQueryServer_GetAllMarkets() {
-	queryName := "GetAllMarkets"
-	runner := func(req *exchange.QueryGetAllMarketsRequest) queryRunner {
-		return func(goCtx context.Context) (interface{}, error) {
-			return keeper.NewQueryServer(s.k).GetAllMarkets(goCtx, req)
+	briefIDStringer := func(brief *exchange.MarketBrief) string {
+		if brief == nil {
+			return "<nil>"
 		}
+		return fmt.Sprintf("%d", brief.MarketId)
+	}
+	testDef := queryTestDef[exchange.QueryGetAllMarketsRequest, exchange.QueryGetAllMarketsResponse]{
+		queryName: "GetAllMarkets",
+		query:     keeper.NewQueryServer(s.k).GetAllMarkets,
+		followup: func(expected, actual *exchange.QueryGetAllMarketsResponse) {
+			assertEqualSlice(s, expected.Markets, actual.Markets, briefIDStringer, "Markets")
+			s.assertEqualPageResponse(expected.Pagination, actual.Pagination, "Pagination")
+		},
 	}
 	makeKey := func(market *exchange.Market) []byte {
 		return keeper.Uint32Bz(market.MarketId)
@@ -3340,13 +3289,7 @@ func (s *TestSuite) TestQueryServer_GetAllMarkets() {
 		fiveBriefs[i] = newBrief(market.MarketId)
 	}
 
-	tests := []struct {
-		name     string
-		setup    querySetupFunc
-		req      *exchange.QueryGetAllMarketsRequest
-		expResp  *exchange.QueryGetAllMarketsResponse
-		expInErr []string
-	}{
+	tests := []queryTestCase[exchange.QueryGetAllMarketsRequest, exchange.QueryGetAllMarketsResponse]{
 		{
 			name: "both key and offset provided",
 			req: &exchange.QueryGetAllMarketsRequest{
@@ -3457,48 +3400,20 @@ func (s *TestSuite) TestQueryServer_GetAllMarkets() {
 		},
 	}
 
-	briefIDStringer := func(brief *exchange.MarketBrief) string {
-		if brief == nil {
-			return "<nil>"
-		}
-		return fmt.Sprintf("%d", brief.MarketId)
-	}
-
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
-			if s.Assert().Equal(tc.expResp, respRaw, queryName+" result") {
-				return
-			}
-			resp, ok := respRaw.(*exchange.QueryGetAllMarketsResponse)
-			s.Require().True(ok, queryName+" response is of type %T and could not be cast to %T", respRaw, tc.expResp)
-			if tc.expResp == nil || resp == nil {
-				return
-			}
-			if !s.Assert().Equal(tc.expResp.Pagination, resp.Pagination, queryName+" result Pagination") && tc.expResp.Pagination != nil && resp.Pagination != nil {
-				s.Assert().Equal(tc.expResp.Pagination.NextKey, resp.Pagination.NextKey, queryName+" result Pagination.NextKey")
-				s.Assert().Equal(int(tc.expResp.Pagination.Total), int(resp.Pagination.Total), queryName+" result Pagination.Total")
-			}
-			assertEqualSlice(s, tc.expResp.Markets, resp.Markets, briefIDStringer, queryName+" result markets")
+			runQueryTestCase(s, testDef, tc)
 		})
 	}
 }
 
 func (s *TestSuite) TestQueryServer_Params() {
-	queryName := "GetMarket"
-	runner := func(req *exchange.QueryParamsRequest) queryRunner {
-		return func(goCtx context.Context) (interface{}, error) {
-			return keeper.NewQueryServer(s.k).Params(goCtx, req)
-		}
+	testDef := queryTestDef[exchange.QueryParamsRequest, exchange.QueryParamsResponse]{
+		queryName: "Params",
+		query:     keeper.NewQueryServer(s.k).Params,
 	}
 
-	tests := []struct {
-		name     string
-		setup    querySetupFunc
-		req      *exchange.QueryParamsRequest
-		expResp  *exchange.QueryParamsResponse
-		expInErr []string
-	}{
+	tests := []queryTestCase[exchange.QueryParamsRequest, exchange.QueryParamsResponse]{
 		{
 			name: "no params in state, nil req",
 			setup: func() {
@@ -3587,27 +3502,18 @@ func (s *TestSuite) TestQueryServer_Params() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
-			s.Assert().Equal(tc.expResp, respRaw, queryName+" result")
+			runQueryTestCase(s, testDef, tc)
 		})
 	}
 }
 
 func (s *TestSuite) TestQueryServer_ValidateCreateMarket() {
-	queryName := "ValidateCreateMarket"
-	runner := func(req *exchange.QueryValidateCreateMarketRequest) queryRunner {
-		return func(goCtx context.Context) (interface{}, error) {
-			return keeper.NewQueryServer(s.k).ValidateCreateMarket(goCtx, req)
-		}
+	testDef := queryTestDef[exchange.QueryValidateCreateMarketRequest, exchange.QueryValidateCreateMarketResponse]{
+		queryName: "ValidateCreateMarket",
+		query:     keeper.NewQueryServer(s.k).ValidateCreateMarket,
 	}
 
-	tests := []struct {
-		name     string
-		setup    querySetupFunc
-		req      *exchange.QueryValidateCreateMarketRequest
-		expResp  *exchange.QueryValidateCreateMarketResponse
-		expInErr []string
-	}{
+	tests := []queryTestCase[exchange.QueryValidateCreateMarketRequest, exchange.QueryValidateCreateMarketResponse]{
 		{
 			name:     "nil req",
 			req:      nil,
@@ -3704,27 +3610,18 @@ func (s *TestSuite) TestQueryServer_ValidateCreateMarket() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
-			s.Assert().Equal(tc.expResp, respRaw, queryName+" result")
+			runQueryTestCase(s, testDef, tc)
 		})
 	}
 }
 
 func (s *TestSuite) TestQueryServer_ValidateMarket() {
-	queryName := "ValidateMarket"
-	runner := func(req *exchange.QueryValidateMarketRequest) queryRunner {
-		return func(goCtx context.Context) (interface{}, error) {
-			return keeper.NewQueryServer(s.k).ValidateMarket(goCtx, req)
-		}
+	testDef := queryTestDef[exchange.QueryValidateMarketRequest, exchange.QueryValidateMarketResponse]{
+		queryName: "ValidateMarket",
+		query:     keeper.NewQueryServer(s.k).ValidateMarket,
 	}
 
-	tests := []struct {
-		name     string
-		setup    querySetupFunc
-		req      *exchange.QueryValidateMarketRequest
-		expResp  *exchange.QueryValidateMarketResponse
-		expInErr []string
-	}{
+	tests := []queryTestCase[exchange.QueryValidateMarketRequest, exchange.QueryValidateMarketResponse]{
 		{
 			name:     "nil req",
 			req:      nil,
@@ -3773,27 +3670,18 @@ func (s *TestSuite) TestQueryServer_ValidateMarket() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
-			s.Assert().Equal(tc.expResp, respRaw, queryName+" result")
+			runQueryTestCase(s, testDef, tc)
 		})
 	}
 }
 
 func (s *TestSuite) TestQueryServer_ValidateManageFees() {
-	queryName := "ValidateManageFees"
-	runner := func(req *exchange.QueryValidateManageFeesRequest) queryRunner {
-		return func(goCtx context.Context) (interface{}, error) {
-			return keeper.NewQueryServer(s.k).ValidateManageFees(goCtx, req)
-		}
+	testDef := queryTestDef[exchange.QueryValidateManageFeesRequest, exchange.QueryValidateManageFeesResponse]{
+		queryName: "ValidateManageFees",
+		query:     keeper.NewQueryServer(s.k).ValidateManageFees,
 	}
 
-	tests := []struct {
-		name     string
-		setup    querySetupFunc
-		req      *exchange.QueryValidateManageFeesRequest
-		expResp  *exchange.QueryValidateManageFeesResponse
-		expInErr []string
-	}{
+	tests := []queryTestCase[exchange.QueryValidateManageFeesRequest, exchange.QueryValidateManageFeesResponse]{
 		{
 			name:     "nil req",
 			req:      nil,
@@ -4047,9 +3935,7 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
-			s.Assert().Equal(tc.expResp, respRaw, queryName+" result")
+			runQueryTestCase(s, testDef, tc)
 		})
 	}
-
 }
