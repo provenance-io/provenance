@@ -1,9 +1,11 @@
 package ibcratelimit
 
 const (
-	ModuleName = "ratelimitedibc" // IBC at the end to avoid conflicts with the ibc prefix
-	StoreKey   = ModuleName
-	RouterKey  = ModuleName
+	// ModuleName defines the module name
+	ModuleName = "ratelimitedibc"
+
+	// StoreKey defines the primary module store key
+	StoreKey = ModuleName
 )
 
 var (

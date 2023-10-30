@@ -12,30 +12,38 @@ import (
 )
 
 const (
+	// MsgSendPacket is the operation used for tracking a sent packet.
 	MsgSendPacket = "send_packet"
+	// MsgRecvPacket is the operation used for tracking a received packet.
 	MsgRecvPacket = "recv_packet"
 )
 
+// UndoSendMsg is an ibcratelimit contract message meant to undo tracked sends.
 type UndoSendMsg struct {
 	UndoSend UndoPacketMsg `json:"undo_send"`
 }
 
+// UndoPacketMsg is an operation done by the UndoSendMsg.
 type UndoPacketMsg struct {
 	Packet UnwrappedPacket `json:"packet"`
 }
 
+// SendPacketMsg is an ibcratelimit contract message meant to track sends.
 type SendPacketMsg struct {
 	SendPacket PacketMsg `json:"send_packet"`
 }
 
+// RecvPacketMsg is an ibcratelimit contract message meant to track receives.
 type RecvPacketMsg struct {
 	RecvPacket PacketMsg `json:"recv_packet"`
 }
 
+// PacketMsg contains
 type PacketMsg struct {
 	Packet UnwrappedPacket `json:"packet"`
 }
 
+// UnwrappedPacket is a FungibleTokenPacket.
 type UnwrappedPacket struct {
 	Sequence           uint64                                `json:"sequence"`
 	SourcePort         string                                `json:"source_port"`

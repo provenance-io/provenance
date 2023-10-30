@@ -22,6 +22,7 @@ var (
 	_ porttypes.Middleware = &IBCMiddleware{}
 )
 
+// IBCMiddleware is the middleware used by the module.
 type IBCMiddleware struct {
 	app     porttypes.IBCModule
 	keeper  *keeper.Keeper
