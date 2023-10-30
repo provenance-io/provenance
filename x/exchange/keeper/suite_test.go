@@ -30,15 +30,7 @@ type TestSuite struct {
 	app *app.App
 	ctx sdk.Context
 
-	k          keeper.Keeper
-	acctKeeper exchange.AccountKeeper
-	attrKeeper exchange.AttributeKeeper
-	bankKeeper exchange.BankKeeper
-	holdKeeper exchange.HoldKeeper
-
-	bondDenom  string
-	initBal    sdk.Coins
-	initAmount int64
+	k keeper.Keeper
 
 	addr1 sdk.AccAddress
 	addr2 sdk.AccAddress
@@ -78,16 +70,8 @@ func (s *TestSuite) SetupTest() {
 	s.logBuffer.Reset()
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.k = s.app.ExchangeKeeper
-	s.acctKeeper = s.app.AccountKeeper
-	s.attrKeeper = s.app.AttributeKeeper
-	s.bankKeeper = s.app.BankKeeper
-	s.holdKeeper = s.app.HoldKeeper
 
-	s.bondDenom = s.app.StakingKeeper.BondDenom(s.ctx)
-	s.initAmount = 1_000_000_000
-	s.initBal = sdk.NewCoins(sdk.NewCoin(s.bondDenom, sdk.NewInt(s.initAmount)))
-
-	addrs := app.AddTestAddrsIncremental(s.app, s.ctx, 5, sdk.NewInt(s.initAmount))
+	addrs := app.AddTestAddrsIncremental(s.app, s.ctx, 5, sdk.NewInt(1_000_000_000))
 	s.addr1 = addrs[0]
 	s.addr2 = addrs[1]
 	s.addr3 = addrs[2]
