@@ -60,6 +60,9 @@ func ValidateReceiverAddress(packet exported.PacketI) error {
 
 // UnwrapPacket Converts a PacketI into an UnwrappedPacket structure.
 func UnwrapPacket(packet exported.PacketI) (UnwrappedPacket, error) {
+	if packet == nil {
+		return UnwrappedPacket{}, ErrBadMessage
+	}
 	var packetData transfertypes.FungibleTokenPacketData
 	err := json.Unmarshal(packet.GetData(), &packetData)
 	if err != nil {
