@@ -155,12 +155,55 @@ func (s *TestSuite) TestUndoSendRateLimit() {
 
 func (s *TestSuite) TestRevertSentPacket() {
 	tests := []struct {
-		name string
-	}{}
+		name       string
+		contract   string
+		packet     exported.PacketI
+		mockKeeper *MockPermissionedKeeper
+		err        string
+	}{
+		{
+			name:       "success - reverts a sent packet",
+			contract:   "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			packet:     NewMockPacket(NewMockSerializedPacketData(), true),
+			mockKeeper: NewMockPermissionedKeeper(true),
+		},
+		{
+			name:       "failure - can handle unconfigured contract",
+			contract:   "",
+			packet:     NewMockPacket(NewMockSerializedPacketData(), true),
+			mockKeeper: NewMockPermissionedKeeper(true),
+		},
+		{
+			name:       "failure - can handle nil packet",
+			contract:   "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			packet:     nil,
+			mockKeeper: NewMockPermissionedKeeper(true),
+			err:        "bad message",
+		},
+		{
+			name:     "failure - throws error on bad packet",
+			contract: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
+			packet:   NewMockPacket(NewMockSerializedPacketData(), false),
+			err:      "bad message",
+		},
+	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			permissionedKeeper := s.app.RateLimitingKeeper.PermissionedKeeper
+			s.app.RateLimitingKeeper.SetParams(s.ctx, ibcratelimit.NewParams(tc.contract))
+			if tc.mockKeeper != nil {
+				s.app.RateLimitingKeeper.PermissionedKeeper = tc.mockKeeper
+			}
 
+			err := s.app.RateLimitingKeeper.RevertSentPacket(s.ctx, tc.packet)
+			if len(tc.err) > 0 {
+				s.Assert().EqualError(err, tc.err, "should return the correct error")
+			} else {
+				s.Assert().NoError(err)
+			}
+
+			s.app.RateLimitingKeeper.PermissionedKeeper = permissionedKeeper
 		})
 	}
 }
