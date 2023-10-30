@@ -1,4 +1,4 @@
-package ibcratelimit_test
+package ibc_test
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/internal/ibc"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/stretchr/testify/assert"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -55,7 +56,7 @@ func TestNewEmitErrorAcknowledgement(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := testApp.BaseApp.NewContext(false, tmproto.Header{})
-			ack := ibcratelimit.NewEmitErrorAcknowledgement(ctx, tc.err, tc.errCtx...)
+			ack := ibc.NewEmitErrorAcknowledgement(ctx, tc.err, tc.errCtx...)
 			events := ctx.EventManager().Events()
 			assert.Equal(t, tc.hasEvents, len(events) > 0, "should correctly decide when to emit events")
 			assert.Equal(t, tc.ack, ack, "should return the correct ack")
@@ -75,7 +76,7 @@ func TestEmitIBCErrorEvents(t *testing.T) {
 			err:    ibcratelimit.ErrRateLimitExceeded,
 			errCtx: []string{"err ctx 1", "error ctx 2"},
 			events: []sdk.Event{
-				sdk.NewEvent(ibcratelimit.IbcAcknowledgementErrorType,
+				sdk.NewEvent(ibc.IbcAcknowledgementErrorType,
 					sdk.NewAttribute("error", "rate limit exceeded"),
 					sdk.NewAttribute("error-context", "err ctx 1"),
 					sdk.NewAttribute("error-context", "error ctx 2"),
@@ -87,7 +88,7 @@ func TestEmitIBCErrorEvents(t *testing.T) {
 			err:    ibcratelimit.ErrRateLimitExceeded,
 			errCtx: []string{},
 			events: []sdk.Event{
-				sdk.NewEvent(ibcratelimit.IbcAcknowledgementErrorType,
+				sdk.NewEvent(ibc.IbcAcknowledgementErrorType,
 					sdk.NewAttribute("error", "rate limit exceeded"),
 				),
 			},
@@ -97,7 +98,7 @@ func TestEmitIBCErrorEvents(t *testing.T) {
 			err:    ibcratelimit.ErrRateLimitExceeded,
 			errCtx: nil,
 			events: []sdk.Event{
-				sdk.NewEvent(ibcratelimit.IbcAcknowledgementErrorType,
+				sdk.NewEvent(ibc.IbcAcknowledgementErrorType,
 					sdk.NewAttribute("error", "rate limit exceeded"),
 				),
 			},
@@ -115,7 +116,7 @@ func TestEmitIBCErrorEvents(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := testApp.BaseApp.NewContext(false, tmproto.Header{})
-			ibcratelimit.EmitIBCErrorEvents(ctx, tc.err, tc.errCtx)
+			ibc.EmitIBCErrorEvents(ctx, tc.err, tc.errCtx)
 			events := ctx.EventManager().Events()
 			assert.Equal(t, tc.events, events, "should emit the correct events")
 		})
@@ -144,7 +145,7 @@ func TestIsAckError(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ack, err := json.Marshal(tc.ack.Response)
 			assert.NoError(t, err, "should not fail when marshaling ack")
-			isAck := ibcratelimit.IsAckError(ack)
+			isAck := ibc.IsAckError(ack)
 			assert.Equal(t, tc.expected, isAck, "should return the correct value")
 		})
 	}
