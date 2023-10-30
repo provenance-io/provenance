@@ -1426,19 +1426,6 @@ func (s *TestSuite) TestKeeper_CreateBidOrder() {
 }
 
 func (s *TestSuite) TestKeeper_CancelOrder() {
-	agCanCancel := func(addr sdk.AccAddress) exchange.AccessGrant {
-		return exchange.AccessGrant{Address: addr.String(), Permissions: []exchange.Permission{exchange.Permission_cancel}}
-	}
-	agCannotCancel := func(addr sdk.AccAddress) exchange.AccessGrant {
-		rv := exchange.AccessGrant{Address: addr.String()}
-		for _, perm := range exchange.AllPermissions() {
-			if perm != exchange.Permission_cancel {
-				rv.Permissions = append(rv.Permissions, perm)
-			}
-		}
-		return rv
-	}
-
 	tests := []struct {
 		name         string
 		holdKeeper   *MockHoldKeeper
@@ -1511,17 +1498,17 @@ func (s *TestSuite) TestKeeper_CancelOrder() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:        1,
 					AcceptingOrders: true,
-					AccessGrants:    []exchange.AccessGrant{agCanCancel(s.addr5)},
+					AccessGrants:    []exchange.AccessGrant{s.agCanOnly(s.addr5, exchange.Permission_cancel)},
 				})
 				s.requireCreateMarket(exchange.Market{
 					MarketId:        2,
 					AcceptingOrders: true,
-					AccessGrants:    []exchange.AccessGrant{agCannotCancel(s.addr5)},
+					AccessGrants:    []exchange.AccessGrant{s.agCanAllBut(s.addr5, exchange.Permission_cancel)},
 				})
 				s.requireCreateMarket(exchange.Market{
 					MarketId:        3,
 					AcceptingOrders: true,
-					AccessGrants:    []exchange.AccessGrant{agCanCancel(s.addr5)},
+					AccessGrants:    []exchange.AccessGrant{s.agCanOnly(s.addr5, exchange.Permission_cancel)},
 				})
 				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(2).WithBid(&exchange.BidOrder{
 					MarketId: 2,
@@ -1640,7 +1627,7 @@ func (s *TestSuite) TestKeeper_CancelOrder() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:        1,
 					AcceptingOrders: true,
-					AccessGrants:    []exchange.AccessGrant{agCanCancel(s.addr1)},
+					AccessGrants:    []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
 				})
 				orderToCancel := exchange.NewOrder(999).WithBid(&exchange.BidOrder{
 					MarketId:   1,

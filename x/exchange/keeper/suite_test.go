@@ -485,6 +485,35 @@ func (s *TestSuite) getOrderIDStr(order *exchange.Order) string {
 	return fmt.Sprintf("%d", order.OrderId)
 }
 
+// agCanOnly creates an AccessGrant for the given address with only the provided permission.
+func (s *TestSuite) agCanOnly(addr sdk.AccAddress, perm exchange.Permission) exchange.AccessGrant {
+	return exchange.AccessGrant{
+		Address:     addr.String(),
+		Permissions: []exchange.Permission{perm},
+	}
+}
+
+// agCanAllBut creates an AccessGrant for the given address with all permissions except the provided one.
+func (s *TestSuite) agCanAllBut(addr sdk.AccAddress, perm exchange.Permission) exchange.AccessGrant {
+	rv := exchange.AccessGrant{
+		Address: addr.String(),
+	}
+	for _, p := range exchange.AllPermissions() {
+		if p != perm {
+			rv.Permissions = append(rv.Permissions, p)
+		}
+	}
+	return rv
+}
+
+// agCanEverything creates an AccessGrant for the given address with all permissions available.
+func (s *TestSuite) agCanEverything(addr sdk.AccAddress) exchange.AccessGrant {
+	return exchange.AccessGrant{
+		Address:     addr.String(),
+		Permissions: exchange.AllPermissions(),
+	}
+}
+
 // getAddrName returns the name of the variable in this TestSuite holding the provided address.
 func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
 	switch string(addr) {
