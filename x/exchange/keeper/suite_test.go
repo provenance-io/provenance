@@ -90,7 +90,7 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
 
-// sliceStrings converts each val into a string using the provided stringer.
+// sliceStrings converts each val into a string using the provided stringer, prefixing the slice index to each.
 func sliceStrings[T any](vals []T, stringer func(T) string) []string {
 	if vals == nil {
 		return nil
@@ -102,7 +102,7 @@ func sliceStrings[T any](vals []T, stringer func(T) string) []string {
 	return strs
 }
 
-// sliceString converts each val into a string using the provided stringer and joins them with ", ".
+// sliceString converts each val into a string using the provided stringer with the index prefixed to it, and joins them with ", ".
 func sliceString[T any](vals []T, stringer func(T) string) string {
 	if vals == nil {
 		return "<nil>"
@@ -146,7 +146,7 @@ func (s *TestSuite) getLogOutput(msg string, args ...interface{}) string {
 	return logOutput
 }
 
-// coins creates an sdk.Coins from a string, requiring it to work.
+// coins creates a new sdk.Coins from a string, requiring it to work.
 func (s *TestSuite) coins(coins string) sdk.Coins {
 	s.T().Helper()
 	rv, err := sdk.ParseCoinsNormalized(coins)
@@ -154,21 +154,21 @@ func (s *TestSuite) coins(coins string) sdk.Coins {
 	return rv
 }
 
-// coin creates a new coin without doing any validation on it.
+// coin creates a new coin from a string, requiring it to work.
 func (s *TestSuite) coin(coin string) sdk.Coin {
 	rv, err := sdk.ParseCoinNormalized(coin)
 	s.Require().NoError(err, "ParseCoinNormalized(%q)", coin)
 	return rv
 }
 
-// coinP creates a reference to a new coin without doing any validation on it.
+// coinP creates a reference to a new coin from a string, requiring it to work.
 func (s *TestSuite) coinP(coin string) *sdk.Coin {
 	rv := s.coin(coin)
 	return &rv
 }
 
 // coinsString converts a slice of coin entries into a string.
-// This is different from sdk.Coins.String because the entries aren't sorted.
+// This is different from sdk.Coins.String because the entries aren't sorted in here.
 func (s *TestSuite) coinsString(coins []sdk.Coin) string {
 	return sliceString(coins, func(coin sdk.Coin) string {
 		return fmt.Sprintf("%q", coin)
@@ -344,7 +344,7 @@ func (s *TestSuite) copyBidOrder(orig *exchange.BidOrder) *exchange.BidOrder {
 	}
 }
 
-// untypeEvent returns sdk.TypedEventToEvent(tev) requiring it to not error.
+// untypeEvent applies sdk.TypedEventToEvent(tev) requiring it to not error.
 func (s *TestSuite) untypeEvent(tev proto.Message) sdk.Event {
 	rv, err := sdk.TypedEventToEvent(tev)
 	s.Require().NoError(err, "TypedEventToEvent(%T)", tev)
@@ -569,6 +569,7 @@ func (s *TestSuite) requireCreateMarketUnmocked(market exchange.Market) {
 // assertEqualSlice asserts that expected = actual and returns true if so.
 // If not, returns false and the stringer is applied to each entry and the comparison
 // is redone on the strings in the hopes that it helps identify the problem.
+// If the strings are also equal, each individual entry is compared.
 func assertEqualSlice[T any](s *TestSuite, expected, actual []T, stringer func(T) string, msg string, args ...interface{}) bool {
 	s.T().Helper()
 	if s.Assert().Equalf(expected, actual, msg, args...) {
@@ -590,6 +591,7 @@ func assertEqualSlice[T any](s *TestSuite, expected, actual []T, stringer func(T
 // assertEqualOrderID asserts that two uint64 values are equal, and if not, includes their decimal form in the log.
 // This is nice because .Equal failures output uints in hex, which can make it difficult to identify what's going on.
 func (s *TestSuite) assertEqualOrderID(expected, actual uint64, msgAndArgs ...interface{}) bool {
+	s.T().Helper()
 	if s.Assert().Equal(expected, actual, msgAndArgs...) {
 		return true
 	}
@@ -598,7 +600,7 @@ func (s *TestSuite) assertEqualOrderID(expected, actual uint64, msgAndArgs ...in
 	return false
 }
 
-// assertEqualOrders asserts that the to slices of orders are equal.
+// assertEqualOrders asserts that the slices of orders are equal.
 // If not, some further assertions are made to try to help try to clarify the differences.
 func (s *TestSuite) assertEqualOrders(expected, actual []*exchange.Order, msg string, args ...interface{}) bool {
 	s.T().Helper()
