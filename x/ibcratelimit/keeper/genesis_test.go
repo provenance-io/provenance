@@ -10,14 +10,10 @@ func (s *TestSuite) TestInitExportGenesis() {
 	testAddress := sdk.AccAddress([]byte("addr1_______________")).String()
 	k := s.app.RateLimitingKeeper
 
-	initialGenesis := ibcratelimit.GenesisState{
-		Params: ibcratelimit.Params{
-			ContractAddress: testAddress,
-		},
-	}
+	initialGenesis := ibcratelimit.NewGenesisState(ibcratelimit.NewParams(testAddress))
 
-	k.InitGenesis(s.ctx, &initialGenesis)
-	s.Require().Equal(testAddress, k.GetContractAddress(s.ctx))
+	k.InitGenesis(s.ctx, initialGenesis)
+	s.Assert().Equal(testAddress, k.GetContractAddress(s.ctx))
 	exportedGenesis := k.ExportGenesis(s.ctx)
-	s.Require().Equal(initialGenesis, *exportedGenesis)
+	s.Assert().Equal(initialGenesis, exportedGenesis)
 }
