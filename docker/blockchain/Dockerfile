@@ -23,8 +23,12 @@ COPY Makefile sims.mk ./
 # Build and install provenanced
 ENV VERSION=$VERSION
 RUN ARCH=$(uname -m) && \
-    echo "Building provnenace for Arch: $ARCH"; \
-    make VERSION=${VERSION} WITH_CLEVELDB=true install
+    if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then \
+        echo "Unsupported architecture (required: x86_64 or aarch64): $ARCH"; \
+        exit 1; \
+    fi && \
+    echo "Building and installing provenance for Arch: $ARCH"; \
+    make VERSION=${VERSION} install
 
 ###
 FROM debian:bullseye-slim as run
