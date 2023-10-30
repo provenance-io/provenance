@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/provenance-io/provenance/x/ibcratelimit"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateParams(t *testing.T) {
@@ -25,7 +25,7 @@ func TestValidateParams(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			addr, ok := tc.addr.(string)
-			require.True(t, ok, "unexpected type of address")
+			assert.True(t, ok, "unexpected type of address")
 
 			params := ibcratelimit.Params{
 				ContractAddress: addr,
@@ -33,11 +33,10 @@ func TestValidateParams(t *testing.T) {
 
 			err := params.Validate()
 
-			// Assertions.
 			if !tc.expected {
-				require.Error(t, err)
+				assert.Error(t, err)
 			} else {
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			}
 		})
 	}
@@ -61,12 +60,12 @@ func TestNewParams(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			params := ibcratelimit.NewParams(tc.addr)
-			require.Equal(t, tc.addr, params.ContractAddress)
+			assert.Equal(t, tc.addr, params.ContractAddress)
 		})
 	}
 }
 
 func TestDefaultParams(t *testing.T) {
 	params := ibcratelimit.DefaultParams()
-	require.Equal(t, "", params.ContractAddress)
+	assert.Equal(t, "", params.ContractAddress)
 }

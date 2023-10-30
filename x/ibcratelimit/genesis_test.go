@@ -4,13 +4,13 @@ import (
 	"testing"
 
 	"github.com/provenance-io/provenance/x/ibcratelimit"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDefaultGenesis(t *testing.T) {
 	expected := ibcratelimit.NewGenesisState(ibcratelimit.NewParams(""))
 	genesis := ibcratelimit.DefaultGenesis()
-	require.Equal(t, expected, genesis)
+	assert.Equal(t, expected, genesis)
 }
 
 func TestGenesisValidate(t *testing.T) {
@@ -41,9 +41,9 @@ func TestGenesisValidate(t *testing.T) {
 			err := genesis.Validate()
 
 			if len(tc.err) > 0 {
-				require.EqualError(t, err, tc.err, "should have the correct error")
+				assert.EqualError(t, err, tc.err, "should have the correct error")
 			} else {
-				require.NoError(t, err, "should not throw an error")
+				assert.NoError(t, err, "should not throw an error")
 			}
 		})
 	}
@@ -68,7 +68,7 @@ func TestNewGenesisState(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			genesis := *ibcratelimit.NewGenesisState(ibcratelimit.NewParams(tc.expected.Params.ContractAddress))
-			require.Equal(t, tc.expected, genesis)
+			assert.Equal(t, tc.expected, genesis)
 		})
 	}
 }
