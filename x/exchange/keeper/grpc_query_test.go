@@ -3852,6 +3852,82 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 			},
 		},
 		{
+			name: "seller ratio problems after add",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                  4,
+					FeeSellerSettlementRatios: s.ratios("100banana:1banana"),
+					FeeBuyerSettlementRatios:  s.ratios("100banana:3banana"),
+				})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 4,
+				AddFeeSellerSettlementRatios: s.ratios("90apple:1apple"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error: "seller settlement fee ratios have price denom \"apple\" but there are no " +
+					"buyer settlement fee ratios with that price denom",
+			},
+		},
+		{
+			name: "seller ratio problems after remove",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                  4,
+					FeeSellerSettlementRatios: s.ratios("100banana:1banana,90apple:1apple"),
+					FeeBuyerSettlementRatios:  s.ratios("100banana:3banana,90apple:7apple"),
+				})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 4,
+				RemoveFeeSellerSettlementRatios: s.ratios("90apple:1apple"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error: "buyer settlement fee ratios have price denom \"apple\" but there is not a " +
+					"seller settlement fee ratio with that price denom",
+			},
+		},
+		{
+			name: "buyer ratio problems after add",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                  4,
+					FeeSellerSettlementRatios: s.ratios("100banana:1banana"),
+					FeeBuyerSettlementRatios:  s.ratios("100banana:3banana"),
+				})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 4,
+				AddFeeBuyerSettlementRatios: s.ratios("90apple:7apple"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error: "buyer settlement fee ratios have price denom \"apple\" but there is not a " +
+					"seller settlement fee ratio with that price denom",
+			},
+		},
+		{
+			name: "buyer ratio problems after remove",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                  4,
+					FeeSellerSettlementRatios: s.ratios("100banana:1banana,90apple:1apple"),
+					FeeBuyerSettlementRatios:  s.ratios("100banana:3banana,90apple:7apple"),
+				})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 4,
+				RemoveFeeBuyerSettlementRatios: s.ratios("90apple:7apple"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error: "seller settlement fee ratios have price denom \"apple\" but there are no " +
+					"buyer settlement fee ratios with that price denom",
+			},
+		},
+		{
 			name: "all the problems",
 			setup: func() {
 				s.requireCreateMarketUnmocked(exchange.Market{

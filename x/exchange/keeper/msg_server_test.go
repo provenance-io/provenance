@@ -26,8 +26,8 @@ import (
 // invReqErr is the error added by sdkerrors.ErrInvalidRequest.
 const invReqErr = "invalid request"
 
-// msgServerTestDef is the definition of a msg service endoint to be tested.
-// R is the request Msg type. S is the response Msg type.
+// msgServerTestDef is the definition of a MsgServer endpoint to be tested.
+// R is the request Msg type. S is the response message type.
 // F is a type that holds arguments to provide to the followup function.
 type msgServerTestDef[R any, S any, F any] struct {
 	// endpointName is the name of the endpoint being tested.
@@ -42,7 +42,7 @@ type msgServerTestDef[R any, S any, F any] struct {
 	followup func(msg *R, fArgs F)
 }
 
-// msgServerTestCase is a test case for a msg server endpoint
+// msgServerTestCase is a test case for a MsgServer endpoint
 // R is the request Msg type.
 // F is a type that holds arguments to provide to the followup function.
 type msgServerTestCase[R any, F any] struct {
