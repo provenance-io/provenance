@@ -2102,8 +2102,7 @@ func (s *TestSuite) TestKeeper_IterateOrders() {
 			setup: func() {
 				key, value, err := s.k.GetOrderStoreKeyValue(*askOrder(4))
 				s.Require().NoError(err, "GetOrderStoreKeyValue")
-				key[len(key)-2] = key[len(key)-1]
-				s.getStore().Set(key[:len(key)-1], value)
+				s.getStore().Set(s.badKey(key), value)
 			},
 			expErr: "invalid order store key [0 0 0 0 0 0 4]: length expected to be at least 8",
 		},
@@ -2365,7 +2364,7 @@ func (s *TestSuite) TestKeeper_IterateMarketOrders() {
 		{
 			name: "one entry bad key",
 			setup: func() {
-				s.getStore().Set(keeper.MakeIndexKeyMarketToOrder(2, 4)[1:], []byte{keeper.OrderKeyTypeAsk})
+				s.getStore().Set(s.badKey(keeper.MakeIndexKeyMarketToOrder(2, 4)), []byte{keeper.OrderKeyTypeAsk})
 			},
 			marketID: 2,
 			expSeen:  nil,
@@ -2478,7 +2477,7 @@ func (s *TestSuite) TestKeeper_IterateMarketOrders() {
 				store := s.getStore()
 				store.Set(keeper.MakeIndexKeyMarketToOrder(27, 1), []byte{keeper.OrderKeyTypeAsk})
 				store.Set(keeper.MakeIndexKeyMarketToOrder(27, 2), []byte{})
-				store.Set(keeper.MakeIndexKeyMarketToOrder(27, 3)[1:], []byte{keeper.OrderKeyTypeAsk})
+				store.Set(s.badKey(keeper.MakeIndexKeyMarketToOrder(27, 3)), []byte{keeper.OrderKeyTypeAsk})
 				store.Set(keeper.MakeIndexKeyMarketToOrder(27, 4), []byte{keeper.OrderKeyTypeBid})
 				store.Set(keeper.MakeIndexKeyMarketToOrder(27, 5), []byte{keeper.OrderKeyTypeAsk})
 			},
@@ -2592,7 +2591,7 @@ func (s *TestSuite) TestKeeper_IterateAddressOrders() {
 		{
 			name: "one entry bad key",
 			setup: func() {
-				s.getStore().Set(keeper.MakeIndexKeyAddressToOrder(s.addr1, 4)[1:], []byte{keeper.OrderKeyTypeAsk})
+				s.getStore().Set(s.badKey(keeper.MakeIndexKeyAddressToOrder(s.addr1, 4)), []byte{keeper.OrderKeyTypeAsk})
 			},
 			addr:    s.addr1,
 			expSeen: nil,
@@ -2705,7 +2704,7 @@ func (s *TestSuite) TestKeeper_IterateAddressOrders() {
 				store := s.getStore()
 				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 1), []byte{keeper.OrderKeyTypeAsk})
 				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 2), []byte{})
-				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 3)[1:], []byte{keeper.OrderKeyTypeAsk})
+				store.Set(s.badKey(keeper.MakeIndexKeyAddressToOrder(s.addr3, 3)), []byte{keeper.OrderKeyTypeAsk})
 				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 4), []byte{keeper.OrderKeyTypeBid})
 				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 5), []byte{keeper.OrderKeyTypeAsk})
 			},
@@ -2819,7 +2818,7 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 		{
 			name: "one entry bad key",
 			setup: func() {
-				s.getStore().Set(keeper.MakeIndexKeyAssetToOrder("banana", 4)[1:], []byte{keeper.OrderKeyTypeAsk})
+				s.getStore().Set(s.badKey(keeper.MakeIndexKeyAssetToOrder("banana", 4)), []byte{keeper.OrderKeyTypeBid})
 			},
 			assetDenom: "banana",
 			expSeen:    nil,
@@ -2932,7 +2931,7 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 				store := s.getStore()
 				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 1), []byte{keeper.OrderKeyTypeAsk})
 				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 2), []byte{})
-				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 3)[1:], []byte{keeper.OrderKeyTypeAsk})
+				store.Set(s.badKey(keeper.MakeIndexKeyAssetToOrder("huckleberry", 3)), []byte{keeper.OrderKeyTypeAsk})
 				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 4), []byte{keeper.OrderKeyTypeBid})
 				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 5), []byte{keeper.OrderKeyTypeAsk})
 			},

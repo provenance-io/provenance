@@ -146,6 +146,15 @@ func (s *TestSuite) getLogOutput(msg string, args ...interface{}) string {
 	return logOutput
 }
 
+// badKey creates a copy of the provided key, moves the last byte to the 2nd to last,
+// then chops off the last byte (so the result is one byte shorter).
+func (s *TestSuite) badKey(key []byte) []byte {
+	rv := make([]byte, len(key)-1)
+	copy(rv, key)
+	rv[len(rv)-1] = key[len(key)-1]
+	return rv
+}
+
 // coins creates a new sdk.Coins from a string, requiring it to work.
 func (s *TestSuite) coins(coins string) sdk.Coins {
 	s.T().Helper()

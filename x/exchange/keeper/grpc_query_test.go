@@ -882,9 +882,7 @@ func (s *TestSuite) TestQueryServer_GetMarketOrders() {
 				}))
 				s.Require().NoError(err, "GetOrderStoreKeyValue 99")
 				store.Set(key99, value99)
-				idxKey := keeper.MakeIndexKeyMarketToOrder(8, 99)
-				idxKey[len(idxKey)-2] = idxKey[len(idxKey)-1]
-				store.Set(idxKey[:len(idxKey)-1], []byte{keeper.OrderKeyTypeAsk})
+				store.Set(s.badKey(keeper.MakeIndexKeyMarketToOrder(8, 99)), []byte{keeper.OrderKeyTypeAsk})
 				s.requireSetOrderInStore(store, exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
 					MarketId: 8, Seller: s.addr3.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
 				}))
@@ -1617,9 +1615,7 @@ func (s *TestSuite) TestQueryServer_GetOwnerOrders() {
 				}))
 				s.Require().NoError(err, "GetOrderStoreKeyValue 99")
 				store.Set(key99, value99)
-				idxKey := keeper.MakeIndexKeyAddressToOrder(s.addr4, 99)
-				idxKey[len(idxKey)-2] = idxKey[len(idxKey)-1]
-				store.Set(idxKey[:len(idxKey)-1], []byte{keeper.OrderKeyTypeAsk})
+				store.Set(s.badKey(keeper.MakeIndexKeyAddressToOrder(s.addr4, 99)), []byte{keeper.OrderKeyTypeAsk})
 				s.requireSetOrderInStore(store, exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
 					MarketId: 8, Seller: s.addr4.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
 				}))
@@ -2347,9 +2343,7 @@ func (s *TestSuite) TestQueryServer_GetAssetOrders() {
 				}))
 				s.Require().NoError(err, "GetOrderStoreKeyValue 99")
 				store.Set(key99, value99)
-				idxKey := keeper.MakeIndexKeyMarketToOrder(8, 99)
-				idxKey[len(idxKey)-2] = idxKey[len(idxKey)-1]
-				store.Set(idxKey[:len(idxKey)-1], []byte{keeper.OrderKeyTypeAsk})
+				store.Set(s.badKey(keeper.MakeIndexKeyMarketToOrder(8, 99)), []byte{keeper.OrderKeyTypeAsk})
 				s.requireSetOrderInStore(store, exchange.NewOrder(100).WithAsk(&exchange.AskOrder{
 					MarketId: 9, Seller: s.addr3.String(), Assets: s.coin("100apple"), Price: s.coin("100prune"),
 				}))
@@ -3041,8 +3035,7 @@ func (s *TestSuite) TestQueryServer_GetAllOrders() {
 					BuyerSettlementFees: s.coins("2fig"), AllowPartial: false, ExternalId: "external-id-2",
 				}))
 				s.Require().NoError(err, "GetOrderStoreKeyValue 2")
-				key2[len(key2)-2] = key2[len(key2)-1]
-				store.Set(key2[:len(key2)-1], value2)
+				store.Set(s.badKey(key2), value2)
 
 				s.requireSetOrderInStore(store, exchange.NewOrder(3).WithAsk(&exchange.AskOrder{
 					MarketId: 3, Seller: s.addr3.String(), Assets: s.coin("3apple"), Price: s.coin("3prune"),
@@ -3366,9 +3359,7 @@ func (s *TestSuite) TestQueryServer_GetAllMarkets() {
 			name: "bad market key",
 			setup: func() {
 				s.requireCreateMarketUnmocked(*newMarket(1))
-				key := keeper.MakeKeyKnownMarketID(2)
-				key[len(key)-2] = key[len(key)-1]
-				s.getStore().Set(key[:len(key)-1], []byte{})
+				s.getStore().Set(s.badKey(keeper.MakeKeyKnownMarketID(2)), []byte{})
 				s.requireCreateMarketUnmocked(*newMarket(3))
 			},
 			expResp: &exchange.QueryGetAllMarketsResponse{
