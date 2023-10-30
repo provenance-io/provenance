@@ -22,7 +22,9 @@ COPY Makefile sims.mk ./
 
 # Build and install provenanced
 ENV VERSION=$VERSION
-RUN make VERSION=${VERSION} WITH_CLEVELDB=true install
+RUN ARCH=$(uname -m) && \
+    echo "Building provnenace for Arch: $ARCH"; \
+    make VERSION=${VERSION} WITH_CLEVELDB=true install
 
 ###
 FROM debian:bullseye-slim as run
