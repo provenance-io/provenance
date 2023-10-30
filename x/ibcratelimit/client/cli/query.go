@@ -30,7 +30,7 @@ func GetQueryCmd() *cobra.Command {
 	return queryCmd
 }
 
-// GetParamsCmd returns the command handler for name parameter querying.
+// GetParamsCmd returns the command handler for ibcratelimit parameter querying.
 func GetParamsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "params",

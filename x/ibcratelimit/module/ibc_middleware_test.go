@@ -50,15 +50,6 @@ func TestMiddlewareTestSuite(t *testing.T) {
 	suite.Run(t, new(MiddlewareTestSuite))
 }
 
-func NewTransferPath(chainA, chainB *testutil.TestChain) *ibctesting.Path {
-	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
-	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
-	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
-	path.EndpointA.ChannelConfig.Version = transfertypes.Version
-	path.EndpointB.ChannelConfig.Version = transfertypes.Version
-	return path
-}
-
 func SetupSimApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
 	db := dbm.NewMemDB()
@@ -66,14 +57,6 @@ func SetupSimApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	provenanceApp := app.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, app.DefaultNodeHome, 5, encCdc, sdksim.EmptyAppOptions{})
 	genesis := app.NewDefaultGenesisState(encCdc.Marshaler)
 	return provenanceApp, genesis
-}
-
-func SkipIfWSL(t *testing.T) {
-	t.Helper()
-	skip := os.Getenv("SKIP_WASM_WSL_TESTS")
-	if skip == "true" {
-		t.Skip("Skipping Wasm tests")
-	}
 }
 
 func (suite *MiddlewareTestSuite) SetupTest() {
@@ -98,7 +81,7 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 	suite.chainB.GetProvenanceApp().MintKeeper.SetParams(suite.chainB.GetContext(), params)
 }
 
-// Helpers
+// MessageFromAToB sends a message from chain A to chain B.
 func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount sdkmath.Int) sdk.Msg {
 	coin := sdk.NewCoin(denom, amount)
 	port := suite.path.EndpointA.ChannelConfig.PortID
@@ -119,6 +102,7 @@ func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount sdkmath.I
 	)
 }
 
+// MessageFromAToB sends a message from chain B to chain A.
 func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount sdkmath.Int) sdk.Msg {
 	coin := sdk.NewCoin(denom, amount)
 	port := suite.path.EndpointB.ChannelConfig.PortID
@@ -137,29 +121,6 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount sdkmath.I
 		0,
 		memo,
 	)
-}
-
-func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.Keeper) sdkmath.Int {
-	return bankKeeper.GetSupply(ctx, denom).Amount
-
-	// ToDo: The commented-out code bellow is what we want to happen, but we're temporarily
-	//  using the whole supply for efficiency until there's a solution for
-	//  https://github.com/cosmos/ibc-go/issues/2664
-
-	// For non-native (ibc) tokens, return the supply if the token in osmosis
-	//if strings.HasPrefix(denom, "ibc/") {
-	//	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
-	//}
-	//
-	// For native tokens, obtain the balance held in escrow for all potential channels
-	//channels := channelKeeper.GetAllChannels(ctx)
-	//balance := osmomath.NewInt(0)
-	//for _, channel := range channels {
-	//	escrowAddress := transfertypes.GetEscrowAddress("transfer", channel.ChannelId)
-	//	balance = balance.Add(bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount)
-	//
-	//}
-	//return balance
 }
 
 // Tests that a receiver address longer than 4096 is not accepted
@@ -181,6 +142,7 @@ func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
 		"acknowledgment error is not of the right type")
 }
 
+// FullSendBToA does the entire logic from sending a message from chain B to chain A.
 func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, string, error) {
 	sendResult, err := suite.chainB.SendMsgsNoCheck(msg)
 	suite.Assert().NoError(err)
@@ -205,6 +167,7 @@ func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, string
 	return sendResult, string(ack), err
 }
 
+// FullSendAToB does the entire logic from sending a message from chain A to chain B.
 func (suite *MiddlewareTestSuite) FullSendAToB(msg sdk.Msg) (*sdk.Result, string, error) {
 	sendResult, err := suite.chainA.SendMsgsNoCheck(msg)
 	if err != nil {
@@ -243,6 +206,7 @@ func (suite *MiddlewareTestSuite) FullSendAToB(msg sdk.Msg) (*sdk.Result, string
 	return sendResult, string(ack), nil
 }
 
+// AssertSend checks that a receive on A from B was successful.
 func (suite *MiddlewareTestSuite) AssertReceive(success bool, msg sdk.Msg) (string, error) {
 	_, ack, err := suite.FullSendBToA(msg)
 	if success {
@@ -258,6 +222,7 @@ func (suite *MiddlewareTestSuite) AssertReceive(success bool, msg sdk.Msg) (stri
 	return ack, err
 }
 
+// AssertSend checks that a send from A to B was successful.
 func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*sdk.Result, error) {
 	r, _, err := suite.FullSendAToB(msg)
 	if success {
@@ -269,6 +234,7 @@ func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*sdk.Re
 	return r, err
 }
 
+// BuildChannelQuota creates a quota message.
 func (suite *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string, duration, send_percentage, recv_percentage uint32) string {
 	return fmt.Sprintf(`
           {"channel_id": "%s", "denom": "%s", "quotas": [{"name":"%s", "duration": %d, "send_recv":[%d, %d]}] }
@@ -291,6 +257,7 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 	suite.Assert().NoError(err)
 }
 
+// initializeEscrow sets up the escrow on the chain.
 func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed sdk.Int) {
 	provenanceApp := suite.chainA.GetProvenanceApp()
 	supply := provenanceApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
@@ -494,7 +461,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 
 	// Get the escrowed amount
 	provenanceApp := suite.chainA.GetProvenanceApp()
-	// ToDo: This is what we eventually want here, but using the full supply temporarily for performance reasons. See CalculateChannelValue
+	// ToDo: This is what we eventually want here, but using the full supply temporarily for performance reasons. See calculateChannelValue
 	// escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
 	// escrowed := provenanceApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
 	escrowed := provenanceApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
@@ -569,6 +536,7 @@ func (suite *MiddlewareTestSuite) TestUnsetRateLimitingContract() {
 
 }
 
+// FindEvent finds an event with a matching name.
 func FindEvent(events []sdk.Event, name string) sdk.Event {
 	index := slices.IndexFunc(events, func(e sdk.Event) bool { return e.Type == name })
 	if index == -1 {
@@ -577,6 +545,7 @@ func FindEvent(events []sdk.Event, name string) sdk.Event {
 	return events[index]
 }
 
+// ExtractAttributes returns the event's attributes in a map.
 func ExtractAttributes(event sdk.Event) map[string]string {
 	attrs := make(map[string]string)
 	if event.Attributes == nil {
@@ -588,21 +557,7 @@ func ExtractAttributes(event sdk.Event) map[string]string {
 	return attrs
 }
 
-func (suite *MiddlewareTestSuite) GetAllTotalEscrowed(ctx sdk.Context) sdk.Coins {
-	var totalEscrowed sdk.Coins
-
-	portID := suite.App.TransferKeeper.GetPort(ctx)
-	transferChannels := suite.App.IBCKeeper.ChannelKeeper.GetAllChannelsWithPortPrefix(ctx, portID)
-	for _, channel := range transferChannels {
-		escrowAddress := transfertypes.GetEscrowAddress(portID, channel.ChannelId)
-		escrowBalances := suite.App.BankKeeper.GetAllBalances(ctx, escrowAddress)
-
-		totalEscrowed = totalEscrowed.Add(escrowBalances...)
-	}
-
-	return totalEscrowed
-}
-
+// CreateRateLimiterInitMessage creates a contract init message for the rate limiter using the supplied quotas.
 func CreateRateLimiterInitMessage(chain *testutil.TestChain, quotas string) string {
 	provenanceApp := chain.GetProvenanceApp()
 	transferModule := provenanceApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
@@ -615,4 +570,47 @@ func CreateRateLimiterInitMessage(chain *testutil.TestChain, quotas string) stri
         }`,
 		govModule, transferModule, quotas)
 	return initMsg
+}
+
+// CalculateChannelValue returns the total number of denom on a channel.
+func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.Keeper) sdkmath.Int {
+	return bankKeeper.GetSupply(ctx, denom).Amount
+
+	// ToDo: The commented-out code bellow is what we want to happen, but we're temporarily
+	//  using the whole supply for efficiency until there's a solution for
+	//  https://github.com/cosmos/ibc-go/issues/2664
+
+	// For non-native (ibc) tokens, return the supply if the token in osmosis
+	//if strings.HasPrefix(denom, "ibc/") {
+	//	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
+	//}
+	//
+	// For native tokens, obtain the balance held in escrow for all potential channels
+	//channels := channelKeeper.GetAllChannels(ctx)
+	//balance := osmomath.NewInt(0)
+	//for _, channel := range channels {
+	//	escrowAddress := transfertypes.GetEscrowAddress("transfer", channel.ChannelId)
+	//	balance = balance.Add(bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount)
+	//
+	//}
+	//return balance
+}
+
+// NewTransferPath creates a new ibc transfer path for testing.
+func NewTransferPath(chainA, chainB *testutil.TestChain) *ibctesting.Path {
+	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
+	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
+	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
+	path.EndpointA.ChannelConfig.Version = transfertypes.Version
+	path.EndpointB.ChannelConfig.Version = transfertypes.Version
+	return path
+}
+
+// SkipIfWSL skips the test if it being ran on WSL.
+func SkipIfWSL(t *testing.T) {
+	t.Helper()
+	skip := os.Getenv("SKIP_WASM_WSL_TESTS")
+	if skip == "true" {
+		t.Skip("Skipping Wasm tests")
+	}
 }

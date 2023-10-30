@@ -10,6 +10,7 @@ import (
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
+// Keeper for the ibcratelimit module
 type Keeper struct {
 	storeKey           storetypes.StoreKey
 	cdc                codec.BinaryCodec
