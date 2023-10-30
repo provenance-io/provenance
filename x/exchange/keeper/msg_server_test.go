@@ -2342,7 +2342,7 @@ func (s *TestSuite) TestMsgServer_MarketSetOrderExternalID() {
 		endpointName: "MarketSetOrderExternalID",
 		endpoint:     keeper.NewMsgServer(s.k).MarketSetOrderExternalID,
 		expResp:      &exchange.MsgMarketSetOrderExternalIDResponse{},
-		followup: func(msg *exchange.MsgMarketSetOrderExternalIDRequest, fArgs followupArgs) {
+		followup: func(msg *exchange.MsgMarketSetOrderExternalIDRequest, _ followupArgs) {
 			order, err := s.k.GetOrder(s.ctx, msg.OrderId)
 			s.Assert().NoError(err, "GetOrder(%d) error", msg.OrderId)
 			if s.Assert().NotNil(order, "GetOrder(%d) order", msg.OrderId) {
@@ -2451,7 +2451,7 @@ func (s *TestSuite) TestMsgServer_MarketWithdraw() {
 		endpointName: "MarketWithdraw",
 		endpoint:     keeper.NewMsgServer(s.k).MarketWithdraw,
 		expResp:      &exchange.MsgMarketWithdrawResponse{},
-		followup: func(msg *exchange.MsgMarketWithdrawRequest, fArgs followArgs) {
+		followup: func(_ *exchange.MsgMarketWithdrawRequest, fArgs followArgs) {
 			for _, eb := range fArgs {
 				s.checkBalances(eb)
 			}
@@ -2584,7 +2584,7 @@ func (s *TestSuite) TestMsgServer_MarketUpdateDetails() {
 		endpointName: "MarketUpdateDetails",
 		endpoint:     keeper.NewMsgServer(s.k).MarketUpdateDetails,
 		expResp:      &exchange.MsgMarketUpdateDetailsResponse{},
-		followup: func(msg *exchange.MsgMarketUpdateDetailsRequest, fArgs followArgs) {
+		followup: func(msg *exchange.MsgMarketUpdateDetailsRequest, _ followArgs) {
 			market := s.k.GetMarket(s.ctx, msg.MarketId)
 			if s.Assert().NotNil(market, "GetMarket(%d)", msg.MarketId) {
 				s.Assert().Equal(msg.MarketDetails, market.MarketDetails, "market %d details", msg.MarketId)
@@ -2681,7 +2681,7 @@ func (s *TestSuite) TestMsgServer_MarketUpdateEnabled() {
 		endpointName: "MarketUpdateEnabled",
 		endpoint:     keeper.NewMsgServer(s.k).MarketUpdateEnabled,
 		expResp:      &exchange.MsgMarketUpdateEnabledResponse{},
-		followup: func(msg *exchange.MsgMarketUpdateEnabledRequest, fArgs followArgs) {
+		followup: func(msg *exchange.MsgMarketUpdateEnabledRequest, _ followArgs) {
 			isEnabled := s.k.IsMarketActive(s.ctx, msg.MarketId)
 			s.Assert().Equal(msg.AcceptingOrders, isEnabled, "IsMarketActive(%d)", msg.MarketId)
 		},
@@ -2797,7 +2797,7 @@ func (s *TestSuite) TestMsgServer_MarketUpdateUserSettle() {
 		endpointName: "MarketUpdateUserSettle",
 		endpoint:     keeper.NewMsgServer(s.k).MarketUpdateUserSettle,
 		expResp:      &exchange.MsgMarketUpdateUserSettleResponse{},
-		followup: func(msg *exchange.MsgMarketUpdateUserSettleRequest, fArgs followArgs) {
+		followup: func(msg *exchange.MsgMarketUpdateUserSettleRequest, _ followArgs) {
 			allowed := s.k.IsUserSettlementAllowed(s.ctx, msg.MarketId)
 			s.Assert().Equal(msg.AllowUserSettlement, allowed, "IsUserSettlementAllowed(%d)", msg.MarketId)
 		},
