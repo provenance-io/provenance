@@ -11,17 +11,6 @@ import (
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 )
 
-// assertEqualOrderID asserts that two uint64 values are equal, and if not, includes their decimal form in the log.
-// This is nice because .Equal failures output uints in hex, which can make it difficult to identify what's going on.
-func (s *TestSuite) assertEqualOrderID(expected, actual uint64, msgAndArgs ...interface{}) bool {
-	if s.Assert().Equal(expected, actual, msgAndArgs...) {
-		return true
-	}
-	s.T().Logf("Expected order id: %d", expected)
-	s.T().Logf("  Actual order id: %d", actual)
-	return false
-}
-
 func (s *TestSuite) TestKeeper_GetOrder() {
 	tests := []struct {
 		name     string
@@ -930,7 +919,7 @@ func (s *TestSuite) TestKeeper_CreateAskOrder() {
 			s.Require().NoError(err, "GetOrder(%d) error (the one just created)", orderID)
 			s.Assert().Equal(expOrder, order, "GetOrder(%d) (the one just created)", orderID)
 			lastOrderID := keeper.GetLastOrderID(s.getStore())
-			s.Assert().Equal(tc.expOrderID, lastOrderID, "last order id")
+			s.assertEqualOrderID(tc.expOrderID, lastOrderID, "last order id")
 		})
 	}
 }
@@ -1431,7 +1420,7 @@ func (s *TestSuite) TestKeeper_CreateBidOrder() {
 			s.Require().NoError(err, "error from GetOrder(%d) (the one just created)", orderID)
 			s.Assert().Equal(expOrder, order, "GetOrder(%d) (the one just created)", orderID)
 			lastOrderID := keeper.GetLastOrderID(s.getStore())
-			s.Assert().Equal(tc.expOrderID, lastOrderID, "last order id")
+			s.assertEqualOrderID(tc.expOrderID, lastOrderID, "last order id")
 		})
 	}
 }
@@ -2272,27 +2261,39 @@ func (s *TestSuite) TestKeeper_IterateOrders() {
 			}
 			s.Require().NotPanics(testFunc, "IterateOrders")
 			s.assertErrorValue(err, tc.expErr, "IterateOrders error")
-			s.Assert().Equal(tc.expOrders, orders, "orders iterated")
+			s.assertEqualOrders(tc.expOrders, orders, "orders iterated")
 		})
 	}
 }
 
+// orderIterCBArgs are the args provided to an order index iterator.
+type orderIterCBArgs struct {
+	orderID       uint64
+	orderTypeByte byte
+}
+
+// orderIDString gets this order id as a string.
+func (a orderIterCBArgs) orderIDString() string {
+	return fmt.Sprintf("%d", a.orderID)
+}
+
+// newOrderIterCBArgs creates a new orderIterCBArgs.
+func newOrderIterCBArgs(orderID uint64, orderTypeByte byte) orderIterCBArgs {
+	return orderIterCBArgs{
+		orderID:       orderID,
+		orderTypeByte: orderTypeByte,
+	}
+}
+
 func (s *TestSuite) TestKeeper_IterateMarketOrders() {
-	type cbArgs struct {
-		orderID       uint64
-		orderTypeByte byte
-	}
-	newCBArgs := func(orderID uint64, orderTypeByte byte) cbArgs {
-		return cbArgs{orderID: orderID, orderTypeByte: orderTypeByte}
-	}
-	var seen []cbArgs
+	var seen []orderIterCBArgs
 	getAll := func(orderID uint64, orderTypeByte byte) bool {
-		seen = append(seen, newCBArgs(orderID, orderTypeByte))
+		seen = append(seen, newOrderIterCBArgs(orderID, orderTypeByte))
 		return false
 	}
 	stopAfter := func(count int) func(orderID uint64, orderTypeByte byte) bool {
 		return func(orderID uint64, orderTypeByte byte) bool {
-			seen = append(seen, newCBArgs(orderID, orderTypeByte))
+			seen = append(seen, newOrderIterCBArgs(orderID, orderTypeByte))
 			return len(seen) >= count
 		}
 	}
@@ -2302,7 +2303,7 @@ func (s *TestSuite) TestKeeper_IterateMarketOrders() {
 		setup    func()
 		marketID uint32
 		cb       func(orderID uint64, orderTypeByte byte) bool
-		expSeen  []cbArgs
+		expSeen  []orderIterCBArgs
 	}{
 		{
 			name:     "empty state",
@@ -2336,7 +2337,7 @@ func (s *TestSuite) TestKeeper_IterateMarketOrders() {
 				store.Set(keeper.MakeIndexKeyMarketToOrder(3, 7), []byte{keeper.OrderKeyTypeAsk})
 			},
 			marketID: 2,
-			expSeen:  []cbArgs{newCBArgs(4, keeper.OrderKeyTypeAsk)},
+			expSeen:  []orderIterCBArgs{newOrderIterCBArgs(4, keeper.OrderKeyTypeAsk)},
 		},
 		{
 			name: "one entry: bid",
@@ -2351,7 +2352,7 @@ func (s *TestSuite) TestKeeper_IterateMarketOrders() {
 				store.Set(keeper.MakeIndexKeyMarketToOrder(3, 7), []byte{keeper.OrderKeyTypeAsk})
 			},
 			marketID: 2,
-			expSeen:  []cbArgs{newCBArgs(4, keeper.OrderKeyTypeBid)},
+			expSeen:  []orderIterCBArgs{newOrderIterCBArgs(4, keeper.OrderKeyTypeBid)},
 		},
 		{
 			name: "one entry no value",
@@ -2380,12 +2381,12 @@ func (s *TestSuite) TestKeeper_IterateMarketOrders() {
 				store.Set(keeper.MakeIndexKeyMarketToOrder(4, 5), []byte{keeper.OrderKeyTypeBid})
 			},
 			marketID: 4,
-			expSeen: []cbArgs{
-				newCBArgs(1, keeper.OrderKeyTypeBid),
-				newCBArgs(2, keeper.OrderKeyTypeBid),
-				newCBArgs(3, keeper.OrderKeyTypeBid),
-				newCBArgs(4, keeper.OrderKeyTypeAsk),
-				newCBArgs(5, keeper.OrderKeyTypeBid),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(1, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(2, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(3, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(4, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(5, keeper.OrderKeyTypeBid),
 			},
 		},
 		{
@@ -2400,7 +2401,7 @@ func (s *TestSuite) TestKeeper_IterateMarketOrders() {
 			},
 			marketID: 4,
 			cb:       stopAfter(1),
-			expSeen:  []cbArgs{newCBArgs(1, keeper.OrderKeyTypeBid)},
+			expSeen:  []orderIterCBArgs{newOrderIterCBArgs(1, keeper.OrderKeyTypeBid)},
 		},
 		{
 			name: "five entries, 1 through 5: get three",
@@ -2414,10 +2415,10 @@ func (s *TestSuite) TestKeeper_IterateMarketOrders() {
 			},
 			marketID: 4,
 			cb:       stopAfter(3),
-			expSeen: []cbArgs{
-				newCBArgs(1, keeper.OrderKeyTypeAsk),
-				newCBArgs(2, keeper.OrderKeyTypeBid),
-				newCBArgs(3, keeper.OrderKeyTypeAsk),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(1, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(2, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(3, keeper.OrderKeyTypeAsk),
 			},
 		},
 		{
@@ -2431,12 +2432,12 @@ func (s *TestSuite) TestKeeper_IterateMarketOrders() {
 				store.Set(keeper.MakeIndexKeyMarketToOrder(7, 56), []byte{keeper.OrderKeyTypeAsk})
 			},
 			marketID: 7,
-			expSeen: []cbArgs{
-				newCBArgs(3, keeper.OrderKeyTypeBid),
-				newCBArgs(44, keeper.OrderKeyTypeAsk),
-				newCBArgs(56, keeper.OrderKeyTypeAsk),
-				newCBArgs(75, keeper.OrderKeyTypeBid),
-				newCBArgs(96, keeper.OrderKeyTypeBid),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(3, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(44, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(56, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(75, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(96, keeper.OrderKeyTypeBid),
 			},
 		},
 		{
@@ -2451,7 +2452,7 @@ func (s *TestSuite) TestKeeper_IterateMarketOrders() {
 			},
 			marketID: 7,
 			cb:       stopAfter(1),
-			expSeen:  []cbArgs{newCBArgs(3, keeper.OrderKeyTypeAsk)},
+			expSeen:  []orderIterCBArgs{newOrderIterCBArgs(3, keeper.OrderKeyTypeAsk)},
 		},
 		{
 			name: "five entries, random: get three",
@@ -2465,10 +2466,10 @@ func (s *TestSuite) TestKeeper_IterateMarketOrders() {
 			},
 			marketID: 7,
 			cb:       stopAfter(3),
-			expSeen: []cbArgs{
-				newCBArgs(3, keeper.OrderKeyTypeBid),
-				newCBArgs(44, keeper.OrderKeyTypeBid),
-				newCBArgs(56, keeper.OrderKeyTypeBid),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(3, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(44, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(56, keeper.OrderKeyTypeBid),
 			},
 		},
 		{
@@ -2482,10 +2483,10 @@ func (s *TestSuite) TestKeeper_IterateMarketOrders() {
 				store.Set(keeper.MakeIndexKeyMarketToOrder(27, 5), []byte{keeper.OrderKeyTypeAsk})
 			},
 			marketID: 27,
-			expSeen: []cbArgs{
-				newCBArgs(1, keeper.OrderKeyTypeAsk),
-				newCBArgs(4, keeper.OrderKeyTypeBid),
-				newCBArgs(5, keeper.OrderKeyTypeAsk),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(1, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(4, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(5, keeper.OrderKeyTypeAsk),
 			},
 		},
 	}
@@ -2506,27 +2507,20 @@ func (s *TestSuite) TestKeeper_IterateMarketOrders() {
 				s.k.IterateMarketOrders(s.ctx, tc.marketID, tc.cb)
 			}
 			s.Require().NotPanics(testFunc, "IterateMarketOrders(%d)", tc.marketID)
-			s.Assert().Equal(tc.expSeen, seen, "args provided to callback")
+			assertEqualSlice(s, tc.expSeen, seen, orderIterCBArgs.orderIDString, "args provided to callback")
 		})
 	}
 }
 
 func (s *TestSuite) TestKeeper_IterateAddressOrders() {
-	type cbArgs struct {
-		orderID       uint64
-		orderTypeByte byte
-	}
-	newCBArgs := func(orderID uint64, orderTypeByte byte) cbArgs {
-		return cbArgs{orderID: orderID, orderTypeByte: orderTypeByte}
-	}
-	var seen []cbArgs
+	var seen []orderIterCBArgs
 	getAll := func(orderID uint64, orderTypeByte byte) bool {
-		seen = append(seen, newCBArgs(orderID, orderTypeByte))
+		seen = append(seen, newOrderIterCBArgs(orderID, orderTypeByte))
 		return false
 	}
 	stopAfter := func(count int) func(orderID uint64, orderTypeByte byte) bool {
 		return func(orderID uint64, orderTypeByte byte) bool {
-			seen = append(seen, newCBArgs(orderID, orderTypeByte))
+			seen = append(seen, newOrderIterCBArgs(orderID, orderTypeByte))
 			return len(seen) >= count
 		}
 	}
@@ -2536,7 +2530,7 @@ func (s *TestSuite) TestKeeper_IterateAddressOrders() {
 		setup   func()
 		addr    sdk.AccAddress
 		cb      func(orderID uint64, orderTypeByte byte) bool
-		expSeen []cbArgs
+		expSeen []orderIterCBArgs
 	}{
 		{
 			name:    "empty state",
@@ -2570,7 +2564,7 @@ func (s *TestSuite) TestKeeper_IterateAddressOrders() {
 				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 7), []byte{keeper.OrderKeyTypeAsk})
 			},
 			addr:    s.addr2,
-			expSeen: []cbArgs{newCBArgs(4, keeper.OrderKeyTypeAsk)},
+			expSeen: []orderIterCBArgs{newOrderIterCBArgs(4, keeper.OrderKeyTypeAsk)},
 		},
 		{
 			name: "one entry: bid",
@@ -2585,7 +2579,7 @@ func (s *TestSuite) TestKeeper_IterateAddressOrders() {
 				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 7), []byte{keeper.OrderKeyTypeAsk})
 			},
 			addr:    s.addr2,
-			expSeen: []cbArgs{newCBArgs(4, keeper.OrderKeyTypeBid)},
+			expSeen: []orderIterCBArgs{newOrderIterCBArgs(4, keeper.OrderKeyTypeBid)},
 		},
 		{
 			name: "one entry no value",
@@ -2614,12 +2608,12 @@ func (s *TestSuite) TestKeeper_IterateAddressOrders() {
 				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr4, 5), []byte{keeper.OrderKeyTypeBid})
 			},
 			addr: s.addr4,
-			expSeen: []cbArgs{
-				newCBArgs(1, keeper.OrderKeyTypeBid),
-				newCBArgs(2, keeper.OrderKeyTypeBid),
-				newCBArgs(3, keeper.OrderKeyTypeBid),
-				newCBArgs(4, keeper.OrderKeyTypeAsk),
-				newCBArgs(5, keeper.OrderKeyTypeBid),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(1, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(2, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(3, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(4, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(5, keeper.OrderKeyTypeBid),
 			},
 		},
 		{
@@ -2634,7 +2628,7 @@ func (s *TestSuite) TestKeeper_IterateAddressOrders() {
 			},
 			addr:    s.addr4,
 			cb:      stopAfter(1),
-			expSeen: []cbArgs{newCBArgs(1, keeper.OrderKeyTypeBid)},
+			expSeen: []orderIterCBArgs{newOrderIterCBArgs(1, keeper.OrderKeyTypeBid)},
 		},
 		{
 			name: "five entries, 1 through 5: get three",
@@ -2648,10 +2642,10 @@ func (s *TestSuite) TestKeeper_IterateAddressOrders() {
 			},
 			addr: s.addr2,
 			cb:   stopAfter(3),
-			expSeen: []cbArgs{
-				newCBArgs(1, keeper.OrderKeyTypeAsk),
-				newCBArgs(2, keeper.OrderKeyTypeBid),
-				newCBArgs(3, keeper.OrderKeyTypeAsk),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(1, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(2, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(3, keeper.OrderKeyTypeAsk),
 			},
 		},
 		{
@@ -2665,12 +2659,12 @@ func (s *TestSuite) TestKeeper_IterateAddressOrders() {
 				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr5, 56), []byte{keeper.OrderKeyTypeAsk})
 			},
 			addr: s.addr5,
-			expSeen: []cbArgs{
-				newCBArgs(3, keeper.OrderKeyTypeBid),
-				newCBArgs(44, keeper.OrderKeyTypeAsk),
-				newCBArgs(56, keeper.OrderKeyTypeAsk),
-				newCBArgs(75, keeper.OrderKeyTypeBid),
-				newCBArgs(96, keeper.OrderKeyTypeBid),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(3, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(44, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(56, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(75, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(96, keeper.OrderKeyTypeBid),
 			},
 		},
 		{
@@ -2685,7 +2679,7 @@ func (s *TestSuite) TestKeeper_IterateAddressOrders() {
 			},
 			addr:    s.addr3,
 			cb:      stopAfter(1),
-			expSeen: []cbArgs{newCBArgs(3, keeper.OrderKeyTypeAsk)},
+			expSeen: []orderIterCBArgs{newOrderIterCBArgs(3, keeper.OrderKeyTypeAsk)},
 		},
 		{
 			name: "five entries, random: get three",
@@ -2699,10 +2693,10 @@ func (s *TestSuite) TestKeeper_IterateAddressOrders() {
 			},
 			addr: s.addr3,
 			cb:   stopAfter(3),
-			expSeen: []cbArgs{
-				newCBArgs(3, keeper.OrderKeyTypeBid),
-				newCBArgs(44, keeper.OrderKeyTypeBid),
-				newCBArgs(56, keeper.OrderKeyTypeBid),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(3, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(44, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(56, keeper.OrderKeyTypeBid),
 			},
 		},
 		{
@@ -2716,10 +2710,10 @@ func (s *TestSuite) TestKeeper_IterateAddressOrders() {
 				store.Set(keeper.MakeIndexKeyAddressToOrder(s.addr3, 5), []byte{keeper.OrderKeyTypeAsk})
 			},
 			addr: s.addr3,
-			expSeen: []cbArgs{
-				newCBArgs(1, keeper.OrderKeyTypeAsk),
-				newCBArgs(4, keeper.OrderKeyTypeBid),
-				newCBArgs(5, keeper.OrderKeyTypeAsk),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(1, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(4, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(5, keeper.OrderKeyTypeAsk),
 			},
 		},
 	}
@@ -2740,27 +2734,20 @@ func (s *TestSuite) TestKeeper_IterateAddressOrders() {
 				s.k.IterateAddressOrders(s.ctx, tc.addr, tc.cb)
 			}
 			s.Require().NotPanics(testFunc, "IterateAddressOrders(%s)", s.getAddrName(tc.addr))
-			s.Assert().Equal(tc.expSeen, seen, "args provided to callback")
+			assertEqualSlice(s, tc.expSeen, seen, orderIterCBArgs.orderIDString, "args provided to callback")
 		})
 	}
 }
 
 func (s *TestSuite) TestKeeper_IterateAssetOrders() {
-	type cbArgs struct {
-		orderID       uint64
-		orderTypeByte byte
-	}
-	newCBArgs := func(orderID uint64, orderTypeByte byte) cbArgs {
-		return cbArgs{orderID: orderID, orderTypeByte: orderTypeByte}
-	}
-	var seen []cbArgs
+	var seen []orderIterCBArgs
 	getAll := func(orderID uint64, orderTypeByte byte) bool {
-		seen = append(seen, newCBArgs(orderID, orderTypeByte))
+		seen = append(seen, newOrderIterCBArgs(orderID, orderTypeByte))
 		return false
 	}
 	stopAfter := func(count int) func(orderID uint64, orderTypeByte byte) bool {
 		return func(orderID uint64, orderTypeByte byte) bool {
-			seen = append(seen, newCBArgs(orderID, orderTypeByte))
+			seen = append(seen, newOrderIterCBArgs(orderID, orderTypeByte))
 			return len(seen) >= count
 		}
 	}
@@ -2770,7 +2757,7 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 		setup      func()
 		assetDenom string
 		cb         func(orderID uint64, orderTypeByte byte) bool
-		expSeen    []cbArgs
+		expSeen    []orderIterCBArgs
 	}{
 		{
 			name:       "empty state",
@@ -2804,7 +2791,7 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 				store.Set(keeper.MakeIndexKeyAssetToOrder("cactus", 7), []byte{keeper.OrderKeyTypeAsk})
 			},
 			assetDenom: "banana",
-			expSeen:    []cbArgs{newCBArgs(4, keeper.OrderKeyTypeAsk)},
+			expSeen:    []orderIterCBArgs{newOrderIterCBArgs(4, keeper.OrderKeyTypeAsk)},
 		},
 		{
 			name: "one entry: bid",
@@ -2819,7 +2806,7 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 				store.Set(keeper.MakeIndexKeyAssetToOrder("cactus", 7), []byte{keeper.OrderKeyTypeAsk})
 			},
 			assetDenom: "banana",
-			expSeen:    []cbArgs{newCBArgs(4, keeper.OrderKeyTypeBid)},
+			expSeen:    []orderIterCBArgs{newOrderIterCBArgs(4, keeper.OrderKeyTypeBid)},
 		},
 		{
 			name: "one entry no value",
@@ -2848,12 +2835,12 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 				store.Set(keeper.MakeIndexKeyAssetToOrder("acorn", 5), []byte{keeper.OrderKeyTypeBid})
 			},
 			assetDenom: "acorn",
-			expSeen: []cbArgs{
-				newCBArgs(1, keeper.OrderKeyTypeBid),
-				newCBArgs(2, keeper.OrderKeyTypeBid),
-				newCBArgs(3, keeper.OrderKeyTypeBid),
-				newCBArgs(4, keeper.OrderKeyTypeAsk),
-				newCBArgs(5, keeper.OrderKeyTypeBid),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(1, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(2, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(3, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(4, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(5, keeper.OrderKeyTypeBid),
 			},
 		},
 		{
@@ -2868,7 +2855,7 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 			},
 			assetDenom: "acorn",
 			cb:         stopAfter(1),
-			expSeen:    []cbArgs{newCBArgs(1, keeper.OrderKeyTypeBid)},
+			expSeen:    []orderIterCBArgs{newOrderIterCBArgs(1, keeper.OrderKeyTypeBid)},
 		},
 		{
 			name: "five entries, 1 through 5: get three",
@@ -2882,10 +2869,10 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 			},
 			assetDenom: "acorn",
 			cb:         stopAfter(3),
-			expSeen: []cbArgs{
-				newCBArgs(1, keeper.OrderKeyTypeAsk),
-				newCBArgs(2, keeper.OrderKeyTypeBid),
-				newCBArgs(3, keeper.OrderKeyTypeAsk),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(1, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(2, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(3, keeper.OrderKeyTypeAsk),
 			},
 		},
 		{
@@ -2899,12 +2886,12 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 				store.Set(keeper.MakeIndexKeyAssetToOrder("raspberry", 56), []byte{keeper.OrderKeyTypeAsk})
 			},
 			assetDenom: "raspberry",
-			expSeen: []cbArgs{
-				newCBArgs(3, keeper.OrderKeyTypeBid),
-				newCBArgs(44, keeper.OrderKeyTypeAsk),
-				newCBArgs(56, keeper.OrderKeyTypeAsk),
-				newCBArgs(75, keeper.OrderKeyTypeBid),
-				newCBArgs(96, keeper.OrderKeyTypeBid),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(3, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(44, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(56, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(75, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(96, keeper.OrderKeyTypeBid),
 			},
 		},
 		{
@@ -2919,7 +2906,7 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 			},
 			assetDenom: "raspberry",
 			cb:         stopAfter(1),
-			expSeen:    []cbArgs{newCBArgs(3, keeper.OrderKeyTypeAsk)},
+			expSeen:    []orderIterCBArgs{newOrderIterCBArgs(3, keeper.OrderKeyTypeAsk)},
 		},
 		{
 			name: "five entries, random: get three",
@@ -2933,10 +2920,10 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 			},
 			assetDenom: "huckleberry",
 			cb:         stopAfter(3),
-			expSeen: []cbArgs{
-				newCBArgs(3, keeper.OrderKeyTypeBid),
-				newCBArgs(44, keeper.OrderKeyTypeBid),
-				newCBArgs(56, keeper.OrderKeyTypeBid),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(3, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(44, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(56, keeper.OrderKeyTypeBid),
 			},
 		},
 		{
@@ -2950,10 +2937,10 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 				store.Set(keeper.MakeIndexKeyAssetToOrder("huckleberry", 5), []byte{keeper.OrderKeyTypeAsk})
 			},
 			assetDenom: "huckleberry",
-			expSeen: []cbArgs{
-				newCBArgs(1, keeper.OrderKeyTypeAsk),
-				newCBArgs(4, keeper.OrderKeyTypeBid),
-				newCBArgs(5, keeper.OrderKeyTypeAsk),
+			expSeen: []orderIterCBArgs{
+				newOrderIterCBArgs(1, keeper.OrderKeyTypeAsk),
+				newOrderIterCBArgs(4, keeper.OrderKeyTypeBid),
+				newOrderIterCBArgs(5, keeper.OrderKeyTypeAsk),
 			},
 		},
 	}
@@ -2975,6 +2962,7 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 			}
 			s.Require().NotPanics(testFunc, "IterateAssetOrders(%q)", tc.assetDenom)
 			s.Assert().Equal(tc.expSeen, seen, "args provided to callback")
+			assertEqualSlice(s, tc.expSeen, seen, orderIterCBArgs.orderIDString, "args provided to callback")
 		})
 	}
 }

@@ -9,7 +9,9 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
+	"github.com/provenance-io/provenance/testutil/assertions"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
@@ -25,6 +27,8 @@ import (
 const invReqErr = "invalid request"
 
 // msgServerTestDef is the definition of a msg service endoint to be tested.
+// R is the request Msg type. S is the response Msg type.
+// F is a type that holds arguments to provide to the followup function.
 type msgServerTestDef[R any, S any, F any] struct {
 	// endpointName is the name of the endpoint being tested.
 	endpointName string
@@ -39,6 +43,8 @@ type msgServerTestDef[R any, S any, F any] struct {
 }
 
 // msgServerTestCase is a test case for a msg server endpoint
+// R is the request Msg type.
+// F is a type that holds arguments to provide to the followup function.
 type msgServerTestCase[R any, F any] struct {
 	// name is the name of the test case.
 	name string
@@ -59,6 +65,8 @@ type msgServerTestCase[R any, F any] struct {
 
 // runMsgServerTestCase runs a unit test on a MsgServer endpoint.
 // A cached context is used so each test case won't affect the others.
+// R is the request Msg type. S is the response Msg type.
+// F is a type that holds arguments to provide to the td.followup function.
 func runMsgServerTestCase[R any, S any, F any](s *TestSuite, td msgServerTestDef[R, S, F], tc msgServerTestCase[R, F]) {
 	s.T().Helper()
 	origCtx := s.ctx
@@ -98,69 +106,80 @@ func runMsgServerTestCase[R any, S any, F any](s *TestSuite, td msgServerTestDef
 	td.followup(&tc.msg, tc.fArgs)
 }
 
-// newAttr creates a new EventAttribute with the provided key and the quoted value.
+// newAttr creates a new EventAttribute with the provided key and value.
 func (s *TestSuite) newAttr(key, value string) abci.EventAttribute {
-	return abci.EventAttribute{Key: []byte(key), Value: []byte(fmt.Sprintf("%q", value))}
-}
-
-// newAttrNoQ creates a new EventAttribute with the provided key and value (without quoting the value).
-func (s *TestSuite) newAttrNoQ(key, value string) abci.EventAttribute {
 	return abci.EventAttribute{Key: []byte(key), Value: []byte(value)}
 }
 
-// eventCoinSpent creates a new "coin_spent" event.
+// eventCoinSpent creates a new "coin_spent" event (emitted by the bank module).
 func (s *TestSuite) eventCoinSpent(spender sdk.AccAddress, amount string) sdk.Event {
 	return sdk.Event{
 		Type: "coin_spent",
 		Attributes: []abci.EventAttribute{
-			s.newAttrNoQ("spender", spender.String()),
-			s.newAttrNoQ("amount", amount),
+			s.newAttr("spender", spender.String()),
+			s.newAttr("amount", amount),
 		},
 	}
 }
 
-// eventCoinReceived creates a new "coin_received" event.
+// eventCoinReceived creates a new "coin_received" event (emitted by the bank module).
 func (s *TestSuite) eventCoinReceived(receiver sdk.AccAddress, amount string) sdk.Event {
 	return sdk.Event{
 		Type: "coin_received",
 		Attributes: []abci.EventAttribute{
-			s.newAttrNoQ("receiver", receiver.String()),
-			s.newAttrNoQ("amount", amount),
+			s.newAttr("receiver", receiver.String()),
+			s.newAttr("amount", amount),
 		},
 	}
 }
 
-// eventTransfer creates a new "transfer" event.
+// eventTransfer creates a new "transfer" event (emitted by the bank module).
 func (s *TestSuite) eventTransfer(recipient, sender sdk.AccAddress, amount string) sdk.Event {
 	rv := sdk.Event{Type: "transfer"}
 	if len(recipient) > 0 {
-		rv.Attributes = append(rv.Attributes, s.newAttrNoQ("recipient", recipient.String()))
+		rv.Attributes = append(rv.Attributes, s.newAttr("recipient", recipient.String()))
 	}
 	if len(sender) > 0 {
-		rv.Attributes = append(rv.Attributes, s.newAttrNoQ("sender", sender.String()))
+		rv.Attributes = append(rv.Attributes, s.newAttr("sender", sender.String()))
 	}
-	rv.Attributes = append(rv.Attributes, s.newAttrNoQ("amount", amount))
+	rv.Attributes = append(rv.Attributes, s.newAttr("amount", amount))
 	return rv
 }
 
-// eventMessage creates a new "message" event.
-func (s *TestSuite) eventMessage(sender sdk.AccAddress) sdk.Event {
+// eventMessageSender creates a new "message" event with a "sender" attr (emitted by the bank module).
+func (s *TestSuite) eventMessageSender(sender sdk.AccAddress) sdk.Event {
 	return sdk.Event{
 		Type:       "message",
-		Attributes: []abci.EventAttribute{s.newAttrNoQ("sender", sender.String())},
+		Attributes: []abci.EventAttribute{s.newAttr("sender", sender.String())},
 	}
 }
 
-// eventHoldAdded creates a new event emitted when a hold is added.
+// eventHoldAdded creates a new event emitted when a hold is added (emitted by the hold module).
 func (s *TestSuite) eventHoldAdded(addr sdk.AccAddress, amount string, orderID uint64) sdk.Event {
 	return s.untypeEvent(&hold.EventHoldAdded{
 		Address: addr.String(), Amount: amount, Reason: fmt.Sprintf("x/exchange: order %d", orderID),
 	})
 }
 
-// eventHoldAdded creates a new event emitted when a hold is released.
+// eventHoldAdded creates a new event emitted when a hold is released (emitted by the hold module).
 func (s *TestSuite) eventHoldReleased(addr sdk.AccAddress, amount string) sdk.Event {
 	return s.untypeEvent(&hold.EventHoldReleased{Address: addr.String(), Amount: amount})
+}
+
+// requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or return an error.
+func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
+	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+		return testutil.FundAccount(s.app.BankKeeper, s.ctx, addr, s.coins(coins))
+	}, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
+}
+
+// requireAddHold calls s.app.HoldKeeper.AddHold, making sure it doesn't panic or return an error.
+func (s *TestSuite) requireAddHold(addr sdk.AccAddress, holdCoins string, orderID uint64) {
+	coins := s.coins(holdCoins)
+	reason := fmt.Sprintf("test hold on order %d", orderID)
+	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+		return s.app.HoldKeeper.AddHold(s.ctx, addr, coins, reason)
+	}, "AddHold(%s, %q, %q)", s.getAddrName(addr), holdCoins, reason)
 }
 
 // requireSetNameRecord creates a name record, requiring it to not error.
@@ -464,11 +483,11 @@ func (s *TestSuite) TestMsgServer_CreateAsk() {
 				s.eventCoinSpent(s.addr2, "8pear"),
 				s.eventCoinReceived(s.marketAddr2, "8pear"),
 				s.eventTransfer(s.marketAddr2, s.addr2, "8pear"),
-				s.eventMessage(s.addr2),
+				s.eventMessageSender(s.addr2),
 				s.eventCoinSpent(s.marketAddr2, "1pear"),
 				s.eventCoinReceived(s.feeCollectorAddr, "1pear"),
 				s.eventTransfer(s.feeCollectorAddr, s.marketAddr2, "1pear"),
-				s.eventMessage(s.marketAddr2),
+				s.eventMessageSender(s.marketAddr2),
 				s.eventHoldAdded(s.addr2, "75apple", 7),
 				s.untypeEvent(&exchange.EventOrderCreated{
 					OrderId: 7, OrderType: "ask", MarketId: 2, ExternalId: "just-an-id",
@@ -507,11 +526,11 @@ func (s *TestSuite) TestMsgServer_CreateAsk() {
 				s.eventCoinSpent(s.addr2, "8fig"),
 				s.eventCoinReceived(s.marketAddr3, "8fig"),
 				s.eventTransfer(s.marketAddr3, s.addr2, "8fig"),
-				s.eventMessage(s.addr2),
+				s.eventMessageSender(s.addr2),
 				s.eventCoinSpent(s.marketAddr3, "1fig"),
 				s.eventCoinReceived(s.feeCollectorAddr, "1fig"),
 				s.eventTransfer(s.feeCollectorAddr, s.marketAddr3, "1fig"),
-				s.eventMessage(s.marketAddr3),
+				s.eventMessageSender(s.marketAddr3),
 				s.eventHoldAdded(s.addr2, "75apple,12fig", 12345),
 				s.untypeEvent(&exchange.EventOrderCreated{
 					OrderId: 12345, OrderType: "ask", MarketId: 3, ExternalId: "",
@@ -714,11 +733,11 @@ func (s *TestSuite) TestMsgServer_CreateBid() {
 				s.eventCoinSpent(s.addr2, "8pear"),
 				s.eventCoinReceived(s.marketAddr2, "8pear"),
 				s.eventTransfer(s.marketAddr2, s.addr2, "8pear"),
-				s.eventMessage(s.addr2),
+				s.eventMessageSender(s.addr2),
 				s.eventCoinSpent(s.marketAddr2, "1pear"),
 				s.eventCoinReceived(s.feeCollectorAddr, "1pear"),
 				s.eventTransfer(s.feeCollectorAddr, s.marketAddr2, "1pear"),
-				s.eventMessage(s.marketAddr2),
+				s.eventMessageSender(s.marketAddr2),
 				s.eventHoldAdded(s.addr2, "87pear", 7),
 				s.untypeEvent(&exchange.EventOrderCreated{
 					OrderId: 7, OrderType: "bid", MarketId: 2, ExternalId: "some-random-id",
@@ -1041,11 +1060,11 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 				s.eventCoinSpent(s.addr2, "10apple"),
 				s.eventCoinReceived(s.addr1, "10apple"),
 				s.eventTransfer(s.addr1, s.addr2, "10apple"),
-				s.eventMessage(s.addr2),
+				s.eventMessageSender(s.addr2),
 				s.eventCoinSpent(s.addr1, "50pear"),
 				s.eventCoinReceived(s.addr2, "50pear"),
 				s.eventTransfer(s.addr2, s.addr1, "50pear"),
-				s.eventMessage(s.addr1),
+				s.eventMessageSender(s.addr1),
 				s.untypeEvent(&exchange.EventOrderFilled{
 					OrderId: 54, Assets: "10apple", Price: "50pear", MarketId: 3,
 				}),
@@ -1264,7 +1283,7 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 
 				// Asset transfer events.
 				s.eventCoinSpent(s.addr1, "13apple"),
-				s.eventMessage(s.addr1),
+				s.eventMessageSender(s.addr1),
 				s.eventCoinReceived(s.addr2, "10apple"),
 				s.eventTransfer(s.addr2, nil, "10apple"),
 				s.eventCoinReceived(s.addr3, "3apple"),
@@ -1272,19 +1291,19 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 
 				// Price transfer events.
 				s.eventCoinSpent(s.addr2, "50pear"),
-				s.eventMessage(s.addr2),
+				s.eventMessageSender(s.addr2),
 				s.eventCoinSpent(s.addr3, "20pear"),
-				s.eventMessage(s.addr3),
+				s.eventMessageSender(s.addr3),
 				s.eventCoinReceived(s.addr1, "70pear"),
 				s.eventTransfer(s.addr1, nil, "70pear"),
 
 				// Settlement fee transfer events.
 				s.eventCoinSpent(s.addr2, "35fig"),
-				s.eventMessage(s.addr2),
+				s.eventMessageSender(s.addr2),
 				s.eventCoinSpent(s.addr3, "32fig"),
-				s.eventMessage(s.addr3),
+				s.eventMessageSender(s.addr3),
 				s.eventCoinSpent(s.addr1, "9pear"),
-				s.eventMessage(s.addr1),
+				s.eventMessageSender(s.addr1),
 				s.eventCoinReceived(s.marketAddr1, "67fig,9pear"),
 				s.eventTransfer(s.marketAddr1, nil, "67fig,9pear"),
 
@@ -1292,7 +1311,7 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 				s.eventCoinSpent(s.marketAddr1, "4fig,1pear"),
 				s.eventCoinReceived(s.feeCollectorAddr, "4fig,1pear"),
 				s.eventTransfer(s.feeCollectorAddr, s.marketAddr1, "4fig,1pear"),
-				s.eventMessage(s.marketAddr1),
+				s.eventMessageSender(s.marketAddr1),
 
 				// Order filled events.
 				s.untypeEvent(&exchange.EventOrderFilled{
@@ -1316,13 +1335,13 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 				s.eventCoinSpent(s.addr1, "10fig"),
 				s.eventCoinReceived(s.marketAddr1, "10fig"),
 				s.eventTransfer(s.marketAddr1, s.addr1, "10fig"),
-				s.eventMessage(s.addr1),
+				s.eventMessageSender(s.addr1),
 
 				// Transfer of exchange portion of order creation fees.
 				s.eventCoinSpent(s.marketAddr1, "1fig"),
 				s.eventCoinReceived(s.feeCollectorAddr, "1fig"),
 				s.eventTransfer(s.feeCollectorAddr, s.marketAddr1, "1fig"),
-				s.eventMessage(s.marketAddr1),
+				s.eventMessageSender(s.marketAddr1),
 			},
 		},
 	}
@@ -1414,11 +1433,11 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 				s.eventCoinSpent(s.addr2, "10apple"),
 				s.eventCoinReceived(s.addr1, "10apple"),
 				s.eventTransfer(s.addr1, s.addr2, "10apple"),
-				s.eventMessage(s.addr2),
+				s.eventMessageSender(s.addr2),
 				s.eventCoinSpent(s.addr1, "50pear"),
 				s.eventCoinReceived(s.addr2, "50pear"),
 				s.eventTransfer(s.addr2, s.addr1, "50pear"),
-				s.eventMessage(s.addr1),
+				s.eventMessageSender(s.addr1),
 				s.untypeEvent(&exchange.EventOrderFilled{
 					OrderId: 54, Assets: "10apple", Price: "50pear", MarketId: 3,
 				}),
@@ -1636,15 +1655,15 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 
 				// Asset transfer events.
 				s.eventCoinSpent(s.addr2, "10apple"),
-				s.eventMessage(s.addr2),
+				s.eventMessageSender(s.addr2),
 				s.eventCoinSpent(s.addr3, "3apple"),
-				s.eventMessage(s.addr3),
+				s.eventMessageSender(s.addr3),
 				s.eventCoinReceived(s.addr1, "13apple"),
 				s.eventTransfer(s.addr1, nil, "13apple"),
 
 				// Price transfer events.
 				s.eventCoinSpent(s.addr1, "70pear"),
-				s.eventMessage(s.addr1),
+				s.eventMessageSender(s.addr1),
 				s.eventCoinReceived(s.addr2, "50pear"),
 				s.eventTransfer(s.addr2, nil, "50pear"),
 				s.eventCoinReceived(s.addr3, "20pear"),
@@ -1652,11 +1671,11 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 
 				// Settlement fee transfer events.
 				s.eventCoinSpent(s.addr2, "8pear"),
-				s.eventMessage(s.addr2),
+				s.eventMessageSender(s.addr2),
 				s.eventCoinSpent(s.addr3, "12fig,2pear"),
-				s.eventMessage(s.addr3),
+				s.eventMessageSender(s.addr3),
 				s.eventCoinSpent(s.addr1, "37fig"),
-				s.eventMessage(s.addr1),
+				s.eventMessageSender(s.addr1),
 				s.eventCoinReceived(s.marketAddr1, "49fig,10pear"),
 				s.eventTransfer(s.marketAddr1, nil, "49fig,10pear"),
 
@@ -1664,7 +1683,7 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 				s.eventCoinSpent(s.marketAddr1, "3fig,1pear"),
 				s.eventCoinReceived(s.feeCollectorAddr, "3fig,1pear"),
 				s.eventTransfer(s.feeCollectorAddr, s.marketAddr1, "3fig,1pear"),
-				s.eventMessage(s.marketAddr1),
+				s.eventMessageSender(s.marketAddr1),
 
 				// Order filled events.
 				s.untypeEvent(&exchange.EventOrderFilled{
@@ -1688,13 +1707,13 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 				s.eventCoinSpent(s.addr1, "10fig"),
 				s.eventCoinReceived(s.marketAddr1, "10fig"),
 				s.eventTransfer(s.marketAddr1, s.addr1, "10fig"),
-				s.eventMessage(s.addr1),
+				s.eventMessageSender(s.addr1),
 
 				// Transfer of exchange portion of order creation fees.
 				s.eventCoinSpent(s.marketAddr1, "1fig"),
 				s.eventCoinReceived(s.feeCollectorAddr, "1fig"),
 				s.eventTransfer(s.feeCollectorAddr, s.marketAddr1, "1fig"),
-				s.eventMessage(s.marketAddr1),
+				s.eventMessageSender(s.marketAddr1),
 			},
 		},
 	}
@@ -1976,9 +1995,9 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.eventCoinSpent(s.addr1, "7apple"),
 				s.eventCoinReceived(s.addr4, "7apple"),
 				s.eventTransfer(s.addr4, s.addr1, "7apple"),
-				s.eventMessage(s.addr1),
+				s.eventMessageSender(s.addr1),
 				s.eventCoinSpent(s.addr3, "11apple"),
-				s.eventMessage(s.addr3),
+				s.eventMessageSender(s.addr3),
 				s.eventCoinReceived(s.addr4, "1apple"),
 				s.eventTransfer(s.addr4, nil, "1apple"),
 				s.eventCoinReceived(s.addr2, "10apple"),
@@ -1986,13 +2005,13 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 
 				// Price transfers
 				s.eventCoinSpent(s.addr4, "85pear"),
-				s.eventMessage(s.addr4),
+				s.eventMessageSender(s.addr4),
 				s.eventCoinReceived(s.addr1, "75pear"),
 				s.eventTransfer(s.addr1, nil, "75pear"),
 				s.eventCoinReceived(s.addr3, "10pear"),
 				s.eventTransfer(s.addr3, nil, "10pear"),
 				s.eventCoinSpent(s.addr2, "100pear"),
-				s.eventMessage(s.addr2),
+				s.eventMessageSender(s.addr2),
 				s.eventCoinReceived(s.addr3, "98pear"),
 				s.eventTransfer(s.addr3, nil, "98pear"),
 				s.eventCoinReceived(s.addr1, "2pear"),
@@ -2068,13 +2087,13 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.eventCoinSpent(s.addr1, "7apple"),
 				s.eventCoinReceived(s.addr2, "7apple"),
 				s.eventTransfer(s.addr2, s.addr1, "7apple"),
-				s.eventMessage(s.addr1),
+				s.eventMessageSender(s.addr1),
 
 				// Price transfer
 				s.eventCoinSpent(s.addr2, "75pear"),
 				s.eventCoinReceived(s.addr1, "75pear"),
 				s.eventTransfer(s.addr1, s.addr2, "75pear"),
-				s.eventMessage(s.addr2),
+				s.eventMessageSender(s.addr2),
 
 				// Orders filled
 				s.untypeEvent(&exchange.EventOrderFilled{
@@ -2141,13 +2160,13 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.eventCoinSpent(s.addr1, "7apple"),
 				s.eventCoinReceived(s.addr2, "7apple"),
 				s.eventTransfer(s.addr2, s.addr1, "7apple"),
-				s.eventMessage(s.addr1),
+				s.eventMessageSender(s.addr1),
 
 				// Price transfer
 				s.eventCoinSpent(s.addr2, "70pear"),
 				s.eventCoinReceived(s.addr1, "70pear"),
 				s.eventTransfer(s.addr1, s.addr2, "70pear"),
-				s.eventMessage(s.addr2),
+				s.eventMessageSender(s.addr2),
 
 				// Orders filled
 				s.untypeEvent(&exchange.EventOrderFilled{
@@ -2253,9 +2272,9 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.eventCoinSpent(s.addr1, "7apple"),
 				s.eventCoinReceived(s.addr2, "7apple"),
 				s.eventTransfer(s.addr2, s.addr1, "7apple"),
-				s.eventMessage(s.addr1),
+				s.eventMessageSender(s.addr1),
 				s.eventCoinSpent(s.addr3, "11apple"),
-				s.eventMessage(s.addr3),
+				s.eventMessageSender(s.addr3),
 				s.eventCoinReceived(s.addr2, "3apple"),
 				s.eventTransfer(s.addr2, nil, "3apple"),
 				s.eventCoinReceived(s.addr4, "8apple"),
@@ -2263,13 +2282,13 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 
 				// Price transfers
 				s.eventCoinSpent(s.addr2, "100pear"),
-				s.eventMessage(s.addr2),
+				s.eventMessageSender(s.addr2),
 				s.eventCoinReceived(s.addr1, "75pear"),
 				s.eventTransfer(s.addr1, nil, "75pear"),
 				s.eventCoinReceived(s.addr3, "25pear"),
 				s.eventTransfer(s.addr3, nil, "25pear"),
 				s.eventCoinSpent(s.addr4, "85pear"),
-				s.eventMessage(s.addr4),
+				s.eventMessageSender(s.addr4),
 				s.eventCoinReceived(s.addr3, "83pear"),
 				s.eventTransfer(s.addr3, nil, "83pear"),
 				s.eventCoinReceived(s.addr1, "2pear"),
@@ -2277,13 +2296,13 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 
 				// Fee transfers to market
 				s.eventCoinSpent(s.addr1, "10fig,8pear"),
-				s.eventMessage(s.addr1),
+				s.eventMessageSender(s.addr1),
 				s.eventCoinSpent(s.addr3, "16pear"),
-				s.eventMessage(s.addr3),
+				s.eventMessageSender(s.addr3),
 				s.eventCoinSpent(s.addr2, "20fig"),
-				s.eventMessage(s.addr2),
+				s.eventMessageSender(s.addr2),
 				s.eventCoinSpent(s.addr4, "10pear"),
-				s.eventMessage(s.addr4),
+				s.eventMessageSender(s.addr4),
 				s.eventCoinReceived(s.marketAddr2, "30fig,34pear"),
 				s.eventTransfer(s.marketAddr2, nil, "30fig,34pear"),
 
@@ -2291,7 +2310,7 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.eventCoinSpent(s.marketAddr2, "2fig,2pear"),
 				s.eventCoinReceived(s.feeCollectorAddr, "2fig,2pear"),
 				s.eventTransfer(s.feeCollectorAddr, s.marketAddr2, "2fig,2pear"),
-				s.eventMessage(s.marketAddr2),
+				s.eventMessageSender(s.marketAddr2),
 
 				// Orders filled
 				s.untypeEvent(&exchange.EventOrderFilled{
@@ -2541,7 +2560,7 @@ func (s *TestSuite) TestMsgServer_MarketWithdraw() {
 				s.eventCoinSpent(s.marketAddr1, "3apple,50fig,100pear"),
 				s.eventCoinReceived(s.addr1, "3apple,50fig,100pear"),
 				s.eventTransfer(s.addr1, s.marketAddr1, "3apple,50fig,100pear"),
-				s.eventMessage(s.marketAddr1),
+				s.eventMessageSender(s.marketAddr1),
 				s.untypeEvent(&exchange.EventMarketWithdraw{
 					MarketId:    1,
 					Amount:      "3apple,50fig,100pear",

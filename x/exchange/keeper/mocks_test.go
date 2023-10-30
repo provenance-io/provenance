@@ -3,43 +3,16 @@ package keeper_test
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/quarantine"
+
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 )
-
-// toStrings converts a slice to indexed strings using the provided stringer func.
-func toStrings[T any](vals []T, stringer func(T) string) []string {
-	if vals == nil {
-		return nil
-	}
-	rv := make([]string, len(vals))
-	for i, val := range vals {
-		rv[i] = fmt.Sprintf("[%d]:%s", i, stringer(val))
-	}
-	return rv
-}
-
-// assertEqualSlice asserts that expected = actual and returns true if so.
-// If not, returns false and the stringer is applied to each entry and the comparison
-// is redone on the strings in the hopes that it helps identify the problem.
-func assertEqualSlice[T any](s *TestSuite, expected, actual []T, stringer func(T) string, msg string, args ...interface{}) bool {
-	s.T().Helper()
-	if s.Assert().Equalf(expected, actual, msg, args...) {
-		return true
-	}
-	// compare each as strings in the hopes that makes it easier to identify the problem.
-	expStrs := toStrings(expected, stringer)
-	actStrs := toStrings(actual, stringer)
-	s.Assert().Equalf(expStrs, actStrs, "strings: "+msg, args...)
-	return false
-}
 
 // #############################################################################
 // #############################                   #############################
@@ -403,8 +376,8 @@ func (s *TestSuite) assertInputOutputCoinsCalls(mk *MockBankKeeper, expected []*
 func (s *TestSuite) assertBankKeeperCalls(mk *MockBankKeeper, expected BankCalls, msg string, args ...interface{}) bool {
 	s.T().Helper()
 	rv := s.assertSendCoinsCalls(mk, expected.SendCoins, msg, args...)
-	rv = s.assertSendCoinsFromAccountToModuleCalls(mk, expected.SendCoinsFromAccountToModule, msg, args...) && rv
-	return s.assertInputOutputCoinsCalls(mk, expected.InputOutputCoins, msg, args...) && rv
+	rv = s.assertInputOutputCoinsCalls(mk, expected.InputOutputCoins, msg, args...) && rv
+	return s.assertSendCoinsFromAccountToModuleCalls(mk, expected.SendCoinsFromAccountToModule, msg, args...) && rv
 }
 
 // NewSendCoinsArgs creates a new record of args provided to a call to SendCoins.
@@ -463,8 +436,7 @@ func (s *TestSuite) inputString(a banktypes.Input) string {
 
 // inputsString creates a string of a slice of banktypes.Input substituting the address names as possible.
 func (s *TestSuite) inputsString(vals []banktypes.Input) string {
-	strs := toStrings(vals, s.inputString)
-	return fmt.Sprintf("{%s}", strings.Join(strs, ", "))
+	return fmt.Sprintf("{%s}", sliceString(vals, s.inputString))
 }
 
 // outputString creates a string of a banktypes.Output substituting the address names as possible.
@@ -474,8 +446,7 @@ func (s *TestSuite) outputString(a banktypes.Output) string {
 
 // outputsString creates a string of a slice of banktypes.Output substituting the address names as possible.
 func (s *TestSuite) outputsString(vals []banktypes.Output) string {
-	strs := toStrings(vals, s.outputString)
-	return fmt.Sprintf("{%s}", strings.Join(strs, ", "))
+	return fmt.Sprintf("{%s}", sliceString(vals, s.outputString))
 }
 
 // #############################################################################

@@ -6,32 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 )
-
-func (s *TestSuite) copyMarket(orig exchange.Market) exchange.Market {
-	return exchange.Market{
-		MarketId: orig.MarketId,
-		MarketDetails: exchange.MarketDetails{
-			Name:        orig.MarketDetails.Name,
-			Description: orig.MarketDetails.Description,
-			WebsiteUrl:  orig.MarketDetails.WebsiteUrl,
-			IconUri:     orig.MarketDetails.IconUri,
-		},
-		FeeCreateAskFlat:          s.copyCoins(orig.FeeCreateAskFlat),
-		FeeCreateBidFlat:          s.copyCoins(orig.FeeCreateBidFlat),
-		FeeSellerSettlementFlat:   s.copyCoins(orig.FeeSellerSettlementFlat),
-		FeeSellerSettlementRatios: s.copyRatios(orig.FeeSellerSettlementRatios),
-		FeeBuyerSettlementFlat:    s.copyCoins(orig.FeeBuyerSettlementFlat),
-		FeeBuyerSettlementRatios:  s.copyRatios(orig.FeeBuyerSettlementRatios),
-		AcceptingOrders:           orig.AcceptingOrders,
-		AllowUserSettlement:       orig.AllowUserSettlement,
-		AccessGrants:              s.copyAccessGrants(orig.AccessGrants),
-		ReqAttrCreateAsk:          s.copyStrings(orig.ReqAttrCreateAsk),
-		ReqAttrCreateBid:          s.copyStrings(orig.ReqAttrCreateBid),
-	}
-}
 
 func (s *TestSuite) TestKeeper_IterateKnownMarketIDs() {
 	var marketIDs []uint32
@@ -2417,9 +2395,9 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 			createAsk:   sdk.Coins(s.k.GetCreateAskFlatFees(s.ctx, marketID)).String(),
 			createBid:   sdk.Coins(s.k.GetCreateBidFlatFees(s.ctx, marketID)).String(),
 			sellerFlat:  sdk.Coins(s.k.GetSellerSettlementFlatFees(s.ctx, marketID)).String(),
-			sellerRatio: s.ratiosString(s.k.GetSellerSettlementRatios(s.ctx, marketID)),
+			sellerRatio: exchange.FeeRatiosString(s.k.GetSellerSettlementRatios(s.ctx, marketID)),
 			buyerFlat:   sdk.Coins(s.k.GetBuyerSettlementFlatFees(s.ctx, marketID)).String(),
-			buyerRatio:  s.ratiosString(s.k.GetBuyerSettlementRatios(s.ctx, marketID)),
+			buyerRatio:  exchange.FeeRatiosString(s.k.GetBuyerSettlementRatios(s.ctx, marketID)),
 		}
 	}
 
@@ -3875,14 +3853,10 @@ type permChecker func(ctx sdk.Context, marketID uint32, address string) bool
 // runPermTest runs a set of tests on a permission checking function, e.g. CanSettleOrders.
 func (s *TestSuite) runPermTest(perm exchange.Permission, checker permChecker, name string) {
 	allPermsAcc := sdk.AccAddress("allPerms____________")
-	allPermsAddr := allPermsAcc.String()
 	justPermAcc := sdk.AccAddress("justPerm____________")
-	justPermAddr := justPermAcc.String()
 	otherPermsAcc := sdk.AccAddress("otherPerms__________")
-	otherPermsAddr := otherPermsAcc.String()
 	noPermsAcc := sdk.AccAddress("noPerms_____________")
-	noPermsAddr := noPermsAcc.String()
-	authorityAddr := s.k.GetAuthority()
+	authority := s.k.GetAuthority()
 
 	allPerms := exchange.AllPermissions()
 	otherPerms := make([]exchange.Permission, 0, len(allPermsAcc)-1)
@@ -3925,31 +3899,31 @@ func (s *TestSuite) runPermTest(perm exchange.Permission, checker permChecker, n
 		{
 			name:     "empty state: authority",
 			marketID: 1,
-			admin:    authorityAddr,
+			admin:    authority,
 			expected: true,
 		},
 		{
 			name:     "empty state: addr with all perms",
 			marketID: 1,
-			admin:    allPermsAddr,
+			admin:    allPermsAcc.String(),
 			expected: false,
 		},
 		{
 			name:     "empty state: addr with just perm",
 			marketID: 1,
-			admin:    justPermAddr,
+			admin:    justPermAcc.String(),
 			expected: false,
 		},
 		{
 			name:     "empty state: addr with all other perms",
 			marketID: 1,
-			admin:    otherPermsAddr,
+			admin:    otherPermsAcc.String(),
 			expected: false,
 		},
 		{
 			name:     "empty state: addr without any perms",
 			marketID: 1,
-			admin:    noPermsAddr,
+			admin:    noPermsAcc.String(),
 			expected: false,
 		},
 
@@ -3964,35 +3938,35 @@ func (s *TestSuite) runPermTest(perm exchange.Permission, checker permChecker, n
 			name:     "existing market: authority",
 			setup:    defaultSetup,
 			marketID: 11,
-			admin:    authorityAddr,
+			admin:    authority,
 			expected: true,
 		},
 		{
 			name:     "existing market: addr with all perms",
 			setup:    defaultSetup,
 			marketID: 11,
-			admin:    allPermsAddr,
+			admin:    allPermsAcc.String(),
 			expected: true,
 		},
 		{
 			name:     "existing market: addr with just perm",
 			setup:    defaultSetup,
 			marketID: 11,
-			admin:    justPermAddr,
+			admin:    justPermAcc.String(),
 			expected: true,
 		},
 		{
 			name:     "existing market: addr with all other perms",
 			setup:    defaultSetup,
 			marketID: 11,
-			admin:    otherPermsAddr,
+			admin:    otherPermsAcc.String(),
 			expected: false,
 		},
 		{
 			name:     "existing market: addr without any perms",
 			setup:    defaultSetup,
 			marketID: 11,
-			admin:    noPermsAddr,
+			admin:    noPermsAcc.String(),
 			expected: false,
 		},
 	}

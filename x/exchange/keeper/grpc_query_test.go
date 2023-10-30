@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 )
@@ -20,6 +19,30 @@ type querySetupFunc func()
 
 // queryRunner is a function that will call a query endpoint, returning its response and error.
 type queryRunner func(goCtx context.Context) (interface{}, error)
+
+// assertEqualPageResponse asserts that two PageResponses are equal.
+// If not, some further assertions are made to try to help clarify the differences.
+func (s *TestSuite) assertEqualPageResponse(expected, actual *query.PageResponse, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	if s.Assert().Equalf(expected, actual, msg, args...) {
+		return true
+	}
+	if expected == nil || actual == nil {
+		return false
+	}
+	if !s.Assert().Equalf(expected.NextKey, actual.NextKey, msg+" NextKey", args...) {
+		expOrderID, expOK := keeper.ParseIndexKeySuffixOrderID(expected.NextKey)
+		if expOK {
+			s.T().Logf("Expected as order id: %d", expOrderID)
+		}
+		actOrderID, actOK := keeper.ParseIndexKeySuffixOrderID(actual.NextKey)
+		if actOK {
+			s.T().Logf("  Actual as order id: %d", actOrderID)
+		}
+	}
+	s.Assert().Equalf(int(expected.Total), int(actual.Total), msg+" Total", args...)
+	return false
+}
 
 // doQueryTest runs the provided setup and runner, requiring the runner to not panic and asserting its error's content
 // to contain the provided strings (or be nil if none are provided).
@@ -44,82 +67,6 @@ func (s *TestSuite) doQueryTest(setup querySetupFunc, runner queryRunner, expInE
 	s.Require().NotPanicsf(testFunc, msg, args...)
 	s.assertErrorContentsf(err, expInErr, msg+" error", args...)
 	return rv
-}
-
-// getOrderIDs gets a comma+space separated string of all the order ids in the given orders, E.g. "1, 8, 55"
-func (s *TestSuite) getOrderIDs(orders []*exchange.Order) string {
-	rv := make([]string, len(orders))
-	for i, exp := range orders {
-		if exp == nil {
-			rv[i] = "<nil>"
-		} else {
-			rv[i] = fmt.Sprintf("%d", exp.OrderId)
-		}
-	}
-	return strings.Join(rv, ", ")
-}
-
-// getOrderIDs gets a comma+space separated string of all the order ids in the given orders, E.g. "1, 8, 55"
-func (s *TestSuite) getMarketIDs(markets []*exchange.MarketBrief) string {
-	rv := make([]string, len(markets))
-	for i, exp := range markets {
-		if exp == nil {
-			rv[i] = "<nil>"
-		} else {
-			rv[i] = fmt.Sprintf("%d", exp.MarketId)
-		}
-	}
-	return strings.Join(rv, ", ")
-}
-
-// assertEqualOrders asserts that the to slices of orders are equal.
-// If not, some further assertions are made to try to help clarify the differences.
-func (s *TestSuite) assertEqualOrders(expected, actual []*exchange.Order, msg string, args ...interface{}) bool {
-	if s.Assert().Equalf(expected, actual, msg, args...) {
-		return true
-	}
-	// If the order ids are different, that should be enough info in the failure message.
-	expIDs := s.getOrderIDs(expected)
-	actIDs := s.getOrderIDs(actual)
-	if !s.Assert().Equalf(expIDs, actIDs, msg+" order ids", args...) {
-		return false
-	}
-	// Same order ids, so compare each individually.
-	for i := range expected {
-		s.Assertions.Equalf(expected[i], actual[i], msg+fmt.Sprintf("[%d]", i), args...)
-	}
-	return false
-}
-
-// assertEqualPageResponse asserts that two PageResponses are equal.
-// If not, some further assertions are made to try to help clarify the differences.
-func (s *TestSuite) assertEqualPageResponse(expected, actual *query.PageResponse, msg string, args ...interface{}) bool {
-	if s.Assert().Equalf(expected, actual, msg, args...) {
-		return true
-	}
-	if expected == nil || actual == nil {
-		return false
-	}
-	if !s.Assert().Equalf(expected.NextKey, actual.NextKey, msg+" NextKey", args...) {
-		expOrderID, expOK := keeper.ParseIndexKeySuffixOrderID(expected.NextKey)
-		if expOK {
-			s.T().Logf("Expected as order id: %d", expOrderID)
-		}
-		actOrderID, actOK := keeper.ParseIndexKeySuffixOrderID(actual.NextKey)
-		if actOK {
-			s.T().Logf("  Actual as order id: %d", actOrderID)
-		}
-	}
-	s.Assert().Equalf(int(expected.Total), int(actual.Total), msg+" Total", args...)
-	return false
-}
-
-// requireCreateMarketUnmocked calls CreateMarket making sure it doesn't panic or return an error.
-func (s *TestSuite) requireCreateMarketUnmocked(market exchange.Market) {
-	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
-		_, err := s.k.CreateMarket(s.ctx, market)
-		return err
-	}, "CreateMarket(%d)", market.MarketId)
 }
 
 func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
@@ -3519,6 +3466,13 @@ func (s *TestSuite) TestQueryServer_GetAllMarkets() {
 		},
 	}
 
+	briefIDStringer := func(brief *exchange.MarketBrief) string {
+		if brief == nil {
+			return "<nil>"
+		}
+		return fmt.Sprintf("%d", brief.MarketId)
+	}
+
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			respRaw := s.doQueryTest(tc.setup, runner(tc.req), tc.expInErr, queryName)
@@ -3534,21 +3488,7 @@ func (s *TestSuite) TestQueryServer_GetAllMarkets() {
 				s.Assert().Equal(tc.expResp.Pagination.NextKey, resp.Pagination.NextKey, queryName+" result Pagination.NextKey")
 				s.Assert().Equal(int(tc.expResp.Pagination.Total), int(resp.Pagination.Total), queryName+" result Pagination.Total")
 			}
-			expIDs := s.getMarketIDs(tc.expResp.Markets)
-			actIDs := s.getMarketIDs(resp.Markets)
-			s.Require().Equal(expIDs, actIDs, queryName+" result market ids")
-			for i := range tc.expResp.Markets {
-				s.Assert().Equal(tc.expResp.Markets[i].MarketAddress, resp.Markets[i].MarketAddress,
-					queryName+" [%d] MarketAddress", i)
-				s.Assert().Equal(tc.expResp.Markets[i].MarketDetails.Name, resp.Markets[i].MarketDetails.Name,
-					queryName+" [%d] MarketDetails.Name", i)
-				s.Assert().Equal(tc.expResp.Markets[i].MarketDetails.Description, resp.Markets[i].MarketDetails.Description,
-					queryName+" [%d] MarketDetails.Description", i)
-				s.Assert().Equal(tc.expResp.Markets[i].MarketDetails.WebsiteUrl, resp.Markets[i].MarketDetails.WebsiteUrl,
-					queryName+" [%d] MarketDetails.WebsiteUrl", i)
-				s.Assert().Equal(tc.expResp.Markets[i].MarketDetails.IconUri, resp.Markets[i].MarketDetails.IconUri,
-					queryName+" [%d] MarketDetails.IconUri", i)
-			}
+			assertEqualSlice(s, tc.expResp.Markets, resp.Markets, briefIDStringer, queryName+" result markets")
 		})
 	}
 }
