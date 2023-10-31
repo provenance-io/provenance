@@ -19,6 +19,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Selected randomly generated ibchooks parameters:\n%s\n", bz)
+	fmt.Printf("Selected randomly generated ibcratelimit parameters:\n%s\n", bz)
 	simState.GenState[ibcratelimit.ModuleName] = simState.Cdc.MustMarshalJSON(genesis)
 }
