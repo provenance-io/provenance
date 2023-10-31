@@ -60,8 +60,8 @@ func (k Keeper) GetContractAddress(ctx sdk.Context) (contract string) {
 	return params.ContractAddress
 }
 
-// ContractConfigured Checks if the contract has been configured for the module.
-func (k Keeper) ContractConfigured(ctx sdk.Context) bool {
+// IsContractConfigured Checks if the contract has been configured for the module.
+func (k Keeper) IsContractConfigured(ctx sdk.Context) bool {
 	params, err := k.GetParams(ctx)
 	if err != nil {
 		return false

@@ -84,7 +84,7 @@ func (s *TestSuite) TestGetContractAddress() {
 	}
 }
 
-func (s *TestSuite) TestContractConfigured() {
+func (s *TestSuite) TestIsContractConfigured() {
 	tests := []struct {
 		name     string
 		contract string
@@ -105,7 +105,7 @@ func (s *TestSuite) TestContractConfigured() {
 		s.Run(tc.name, func() {
 			params := ibcratelimit.NewParams(tc.contract)
 			s.app.RateLimitingKeeper.SetParams(s.ctx, params)
-			configured := s.app.RateLimitingKeeper.ContractConfigured(s.ctx)
+			configured := s.app.RateLimitingKeeper.IsContractConfigured(s.ctx)
 			s.Assert().Equal(tc.expected, configured, "should have expected configured output")
 		})
 	}

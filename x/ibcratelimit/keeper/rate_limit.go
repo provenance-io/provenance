@@ -94,7 +94,7 @@ func (k Keeper) RevertSentPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 ) error {
-	if !k.ContractConfigured(ctx) {
+	if !k.IsContractConfigured(ctx) {
 		return nil
 	}
 

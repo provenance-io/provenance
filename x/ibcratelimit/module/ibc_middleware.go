@@ -134,7 +134,7 @@ func (im *IBCMiddleware) OnRecvPacket(
 		return ibc.NewEmitErrorAcknowledgement(ctx, ibcratelimit.ErrBadMessage, err.Error())
 	}
 
-	if !im.keeper.ContractConfigured(ctx) {
+	if !im.keeper.IsContractConfigured(ctx) {
 		// The contract has not been configured. Continue as usual
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
@@ -210,7 +210,7 @@ func (im *IBCMiddleware) SendPacket(
 	timeoutTimestamp uint64,
 	data []byte,
 ) (sequence uint64, err error) {
-	if !im.keeper.ContractConfigured(ctx) {
+	if !im.keeper.IsContractConfigured(ctx) {
 		// The contract has not been configured. Continue as usual
 		return im.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
