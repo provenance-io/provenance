@@ -457,9 +457,7 @@ It is expected to fail if:
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L377-L386
 
-#### Params
-
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/params.proto#L11-L19
+See also: [Params](06_params.md#params).
 
 #### MsgGovUpdateParamsResponse
 

@@ -194,7 +194,7 @@ The exchange module params can be looked up using the `Params` query.
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/query.proto#L265-L269
 
-See also: [Params](03_messages.md#params).
+See also: [Params](06_params.md#params).
 
 
 ## ValidateCreateMarket
