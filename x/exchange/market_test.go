@@ -4214,6 +4214,12 @@ func TestIsReqAttrMatch(t *testing.T) {
 			exp:     false,
 		},
 		{
+			name:    "with wildcard: just base",
+			reqAttr: "*.penny.dime.quarter",
+			accAttr: "penny.dime.quarter",
+			exp:     false,
+		},
+		{
 			name:    "with wildcard: missing 1st char from 1st name",
 			reqAttr: "*.penny.dime.quarter",
 			accAttr: "enny.dime.quarter",
