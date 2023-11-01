@@ -21,8 +21,8 @@ The exchange module defines the portion of market fees that will be paid to the 
     - [Settlement Ratio Fees](#settlement-ratio-fees)
     - [Exchange Fees](#exchange-fees)
 
-
 ---
+
 ## Markets
 
 A market is a combination of on-chain setup and off-chain processes.

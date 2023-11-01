@@ -34,8 +34,8 @@ Big-endian ordering is used for all conversions between numbers and byte arrays.
     - [Asset Denom to Order](#asset-denom-to-order)
     - [Market External ID to Order](#market-external-id-to-order)
 
-
 --
+
 ## Params
 
 All params entries start with the type byte `0x00`
