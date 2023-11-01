@@ -41,7 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
-## [v1.17.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc1) - 2023-10-18
+## [v1.17.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc2) - 2023-11-02
 
 ### Features
 
@@ -58,6 +58,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * During `InitGenesis`, ensure LastOrderId is at least the largest order id [#1699](https://github.com/provenance-io/provenance/issues/1699).
 * Properly populate the permissions lists when reading access grants from state [#1699](https://github.com/provenance-io/provenance/issues/1699).
 * Fixed the paginated order queries to properly look up orders [#1699](https://github.com/provenance-io/provenance/issues/1699).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.17.0-rc1...v1.17.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.16.0...v1.17.0-rc2
 
 ---
 
