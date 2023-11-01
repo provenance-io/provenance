@@ -702,7 +702,8 @@ func (k Keeper) UpdateFees(ctx sdk.Context, msg *exchange.MsgGovManageFeesReques
 	k.emitEvent(ctx, exchange.NewEventMarketFeesUpdated(msg.MarketId))
 }
 
-// isMarketActive returns true if the provided market is accepting orders.
+// isMarketActive returns true if the provided market's inactive flag does not exist.
+// See also isMarketKnown.
 func isMarketActive(store sdk.KVStore, marketID uint32) bool {
 	key := MakeKeyMarketInactive(marketID)
 	return !store.Has(key)
@@ -734,14 +735,23 @@ func setUserSettlementAllowed(store sdk.KVStore, marketID uint32, allowed bool) 
 	}
 }
 
-// IsMarketActive returns true if the provided market is accepting orders.
+// IsMarketKnown returns true if the provided market id is a known market's id.
+func (k Keeper) IsMarketKnown(ctx sdk.Context, marketID uint32) bool {
+	return isMarketKnown(k.getStore(ctx), marketID)
+}
+
+// IsMarketActive returns true if the provided market is active.
 func (k Keeper) IsMarketActive(ctx sdk.Context, marketID uint32) bool {
-	return isMarketActive(k.getStore(ctx), marketID)
+	store := k.getStore(ctx)
+	if !isMarketActive(store, marketID) {
+		return false
+	}
+	return isMarketKnown(store, marketID)
 }
 
 // UpdateMarketActive updates the active flag for a market.
 // An error is returned if the setting is already what is provided.
-func (k Keeper) UpdateMarketActive(ctx sdk.Context, marketID uint32, active bool, updatedBy sdk.AccAddress) error {
+func (k Keeper) UpdateMarketActive(ctx sdk.Context, marketID uint32, active bool, updatedBy string) error {
 	store := k.getStore(ctx)
 	current := isMarketActive(store, marketID)
 	if current == active {
@@ -759,7 +769,7 @@ func (k Keeper) IsUserSettlementAllowed(ctx sdk.Context, marketID uint32) bool {
 
 // UpdateUserSettlementAllowed updates the allow-user-settlement flag for a market.
 // An error is returned if the setting is already what is provided.
-func (k Keeper) UpdateUserSettlementAllowed(ctx sdk.Context, marketID uint32, allow bool, updatedBy sdk.AccAddress) error {
+func (k Keeper) UpdateUserSettlementAllowed(ctx sdk.Context, marketID uint32, allow bool, updatedBy string) error {
 	store := k.getStore(ctx)
 	current := isUserSettlementAllowed(store, marketID)
 	if current == allow {
@@ -817,15 +827,15 @@ func revokeAllMarketPermissions(store sdk.KVStore, marketID uint32) {
 // getAccessGrants gets all the access grants for a market.
 func getAccessGrants(store sdk.KVStore, marketID uint32) []exchange.AccessGrant {
 	var rv []exchange.AccessGrant
-	var lastAG exchange.AccessGrant
 	iterate(store, GetKeyPrefixMarketPermissions(marketID), func(key, _ []byte) bool {
 		addr, perm, err := ParseKeySuffixMarketPermissions(key)
 		if err == nil {
-			if addr.String() != lastAG.Address {
-				lastAG = exchange.AccessGrant{Address: addr.String()}
-				rv = append(rv, lastAG)
+			last := len(rv) - 1
+			if last < 0 || addr.String() != rv[last].Address {
+				rv = append(rv, exchange.AccessGrant{Address: addr.String()})
+				last++
 			}
-			lastAG.Permissions = append(lastAG.Permissions, perm)
+			rv[last].Permissions = append(rv[last].Permissions, perm)
 		}
 		return false
 	})
@@ -908,7 +918,6 @@ func (k Keeper) GetAccessGrants(ctx sdk.Context, marketID uint32) []exchange.Acc
 // UpdatePermissions updates users permissions in the store using the provided changes.
 // The caller is responsible for making sure this update should be allowed (e.g. by calling CanManagePermissions first).
 func (k Keeper) UpdatePermissions(ctx sdk.Context, msg *exchange.MsgMarketManagePermissionsRequest) error {
-	admin := sdk.MustAccAddressFromBech32(msg.Admin)
 	marketID := msg.MarketId
 	store := k.getStore(ctx)
 	var errs []error
@@ -952,7 +961,7 @@ func (k Keeper) UpdatePermissions(ctx sdk.Context, msg *exchange.MsgMarketManage
 		return errors.Join(errs...)
 	}
 
-	k.emitEvent(ctx, exchange.NewEventMarketPermissionsUpdated(marketID, admin))
+	k.emitEvent(ctx, exchange.NewEventMarketPermissionsUpdated(marketID, msg.Admin))
 	return nil
 }
 
@@ -1026,7 +1035,7 @@ func setReqAttrsAsk(store sdk.KVStore, marketID uint32, reqAttrs []string) {
 // the provided entries to the existing entries.
 // It is assumed that the attributes have been normalized prior to calling this.
 func updateReqAttrsAsk(store sdk.KVStore, marketID uint32, toRemove, toAdd []string) error {
-	return updateReqAttrs(store, marketID, toRemove, toAdd, "create ask", MakeKeyMarketReqAttrAsk)
+	return updateReqAttrs(store, marketID, toRemove, toAdd, "create-ask", MakeKeyMarketReqAttrAsk)
 }
 
 // getReqAttrsBid gets the attributes required to create a bid order.
@@ -1043,7 +1052,7 @@ func setReqAttrsBid(store sdk.KVStore, marketID uint32, reqAttrs []string) {
 // the provided entries to the existing entries.
 // It is assumed that the attributes have been normalized prior to calling this.
 func updateReqAttrsBid(store sdk.KVStore, marketID uint32, toRemove, toAdd []string) error {
-	return updateReqAttrs(store, marketID, toRemove, toAdd, "create bid", MakeKeyMarketReqAttrBid)
+	return updateReqAttrs(store, marketID, toRemove, toAdd, "create-bid", MakeKeyMarketReqAttrBid)
 }
 
 // acctHasReqAttrs returns true if either reqAttrs is empty or the provide address has all of them on their account.
@@ -1088,8 +1097,6 @@ func (k Keeper) CanCreateBid(ctx sdk.Context, marketID uint32, addr sdk.AccAddre
 // UpdateReqAttrs updates the required attributes in the store using the provided changes.
 // The caller is responsible for making sure this update should be allowed (e.g. by calling CanManageReqAttrs first).
 func (k Keeper) UpdateReqAttrs(ctx sdk.Context, msg *exchange.MsgMarketManageReqAttrsRequest) error {
-	admin := sdk.MustAccAddressFromBech32(msg.Admin)
-
 	var errs []error
 	// We don't care if the attributes to remove are valid so that we
 	// can remove entries that are somehow now invalid.
@@ -1120,7 +1127,7 @@ func (k Keeper) UpdateReqAttrs(ctx sdk.Context, msg *exchange.MsgMarketManageReq
 		return errors.Join(errs...)
 	}
 
-	k.emitEvent(ctx, exchange.NewEventMarketReqAttrUpdated(marketID, admin))
+	k.emitEvent(ctx, exchange.NewEventMarketReqAttrUpdated(marketID, msg.Admin))
 	return nil
 }
 
@@ -1155,7 +1162,7 @@ func (k Keeper) GetMarketDetails(ctx sdk.Context, marketID uint32) *exchange.Mar
 
 // UpdateMarketDetails updates a market's details. It returns an error if the market account
 // isn't found or if there aren't any changes provided.
-func (k Keeper) UpdateMarketDetails(ctx sdk.Context, marketID uint32, marketDetails exchange.MarketDetails, updatedBy sdk.AccAddress) error {
+func (k Keeper) UpdateMarketDetails(ctx sdk.Context, marketID uint32, marketDetails exchange.MarketDetails, updatedBy string) error {
 	if err := marketDetails.Validate(); err != nil {
 		return err
 	}
@@ -1224,7 +1231,7 @@ func (k Keeper) initMarket(ctx sdk.Context, store sdk.KVStore, market exchange.M
 // CreateMarket saves a new market to the store with all the info provided.
 // If the marketId is zero, the next available one will be used.
 func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (uint32, error) {
-	// Note: The Market is passed in by value, so any alterations to it here will be lost upon return.
+	// Note: The Market is passed in by value, so any alterations directly to it here will be lost upon return.
 	var errAsk, errBid error
 	market.ReqAttrCreateAsk, errAsk = exchange.NormalizeReqAttrs(market.ReqAttrCreateAsk)
 	market.ReqAttrCreateBid, errBid = exchange.NormalizeReqAttrs(market.ReqAttrCreateBid)
@@ -1311,7 +1318,7 @@ func (k Keeper) GetMarketBrief(ctx sdk.Context, marketID uint32) *exchange.Marke
 
 // WithdrawMarketFunds transfers funds from a market account to another account.
 // The caller is responsible for making sure this withdrawal should be allowed (e.g. by calling CanWithdrawMarketFunds first).
-func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk.AccAddress, amount sdk.Coins, withdrawnBy sdk.AccAddress) error {
+func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk.AccAddress, amount sdk.Coins, withdrawnBy string) error {
 	marketAddr := exchange.GetMarketAddress(marketID)
 	err := k.bankKeeper.SendCoins(ctx, marketAddr, toAddr, amount)
 	if err != nil {
