@@ -39,6 +39,26 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* Add the (empty) `saffron-rc2` upgrade [#1699](https://github.com/provenance-io/provenance/issues/1699).
+
+### Improvements
+
+* Wrote unit tests on the keeper methods [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* During `FillBids`, the seller settlement fee is now calculated on the total price instead of each order individually [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* In the `OrderFeeCalc` query, ensure the market exists [#1699](https://github.com/provenance-io/provenance/issues/1699).
+
+### Bug Fixes
+
+* During `InitGenesis`, ensure LastOrderId is at least the largest order id [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* Properly populate the permissions lists when reading access grants from state [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* Fixed the paginated order queries to properly look up orders [#1699](https://github.com/provenance-io/provenance/issues/1699).
+
+---
+
+## [v1.17.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc1) - 2023-10-18
+
+### Features
+
 * Create the `x/exchange` module which facilitates the buying and selling of assets [#1658](https://github.com/provenance-io/provenance/issues/1658).
   Assets and funds remain in their owner's account (with a hold on them) until the order is settled (or cancelled).
   Market's are created to manage order matching and define fees.
@@ -117,6 +137,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `stefanzweifel/git-auto-commit-action` from 4 to 5 ([#1696](https://github.com/provenance-io/provenance/pull/1696))
 - Bump `golang.org/x/net` from 0.15.0 to 0.17.0 ([#1704](https://github.com/provenance-io/provenance/pull/1704))
 - Bump `bufbuild/buf-lint-action` from 1.0.3 to 1.1.0 ([#1705](https://github.com/provenance-io/provenance/pull/1705))
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.16.0...v1.17.0-rc1
 
 ---
 
