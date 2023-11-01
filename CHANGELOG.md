@@ -55,6 +55,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+### Dependencies
+- Bump `github.com/google/uuid` from 1.3.1 to 1.4.0 ([#1723](https://github.com/provenance-io/provenance/pull/1723))
+
 ## [v1.17.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc1) - 2023-10-18
 
 ### Features
