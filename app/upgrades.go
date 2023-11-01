@@ -20,6 +20,7 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
@@ -139,6 +140,28 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
+	},
+	"t-upgrade": { // upgrade for v1.18.0,
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+			return vm, nil
+		},
+		Added: []string{ibcratelimit.ModuleName},
+	},
+	"t-upgrade-rc1": { // upgrade for v1.18.0,
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+			return vm, nil
+		},
+		Added: []string{ibcratelimit.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
 }
