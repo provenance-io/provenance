@@ -390,13 +390,13 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 				chainID := app.Ics20MarkerHooks.GetChainID(ctx, parts[0], parts[1], app.IBCKeeper)
 				markerMetadata := banktypes.Metadata{
 					Base:        record.GetDenom(),
-					Name:        chainID + "/" + record.GetDenom(),
-					Display:     chainID + "/" + record.GetDenom(),
-					Description: record.GetDenom() + " from chain " + chainID,
+					Name:        chainID + "/" + denomTrace.BaseDenom,
+					Display:     chainID + "/" + denomTrace.BaseDenom,
+					Description: denomTrace.BaseDenom + " from chain " + chainID,
 				}
 				err := app.MarkerKeeper.SetDenomMetaData(ctx, markerMetadata, authtypes.NewModuleAddress(types.ModuleName))
 				if err != nil {
-					panic(fmt.Sprintf("unable to set denom metadata for %v on chain-id %v: %v", record.GetDenom(), chainID, err))
+					panic(fmt.Sprintf("unable to set denom metadata for %v with base denom %v and chain-id %v: %v", record.GetDenom(), denomTrace.BaseDenom, chainID, err))
 				}
 			}
 		}
