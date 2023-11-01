@@ -42,6 +42,9 @@ func (k QueryServer) OrderFeeCalc(goCtx context.Context, req *exchange.QueryOrde
 	switch {
 	case req.AskOrder != nil:
 		order := req.AskOrder
+		if err := validateMarketExists(store, order.MarketId); err != nil {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
 		ratioFee, err := calculateSellerSettlementRatioFee(store, order.MarketId, order.Price)
 		if err != nil {
 			return nil, status.Errorf(codes.InvalidArgument, "failed to calculate seller ratio fee option: %v", err)
@@ -53,6 +56,9 @@ func (k QueryServer) OrderFeeCalc(goCtx context.Context, req *exchange.QueryOrde
 		resp.CreationFeeOptions = getCreateAskFlatFees(store, order.MarketId)
 	case req.BidOrder != nil:
 		order := req.BidOrder
+		if err := validateMarketExists(store, order.MarketId); err != nil {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
 		ratioFees, err := calcBuyerSettlementRatioFeeOptions(store, order.MarketId, order.Price)
 		if err != nil {
 			return nil, status.Errorf(codes.InvalidArgument, "failed to calculate buyer ratio fee options: %v", err)
@@ -93,6 +99,9 @@ func (k QueryServer) GetOrderByExternalID(goCtx context.Context, req *exchange.Q
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
+	if req.MarketId == 0 || len(req.ExternalId) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	order, err := k.Keeper.GetOrderByExternalID(ctx, req.MarketId, req.ExternalId)
@@ -115,11 +124,10 @@ func (k QueryServer) GetMarketOrders(goCtx context.Context, req *exchange.QueryG
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	pre := GetIndexKeyPrefixMarketToOrder(req.MarketId)
-	store := prefix.NewStore(k.getStore(ctx), pre)
 
 	resp := &exchange.QueryGetMarketOrdersResponse{}
 	var err error
-	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(store, req.Pagination, req.OrderType, req.AfterOrderId)
+	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(ctx, pre, req.Pagination, req.OrderType, req.AfterOrderId)
 
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for market %d: %v", req.MarketId, err)
@@ -136,16 +144,15 @@ func (k QueryServer) GetOwnerOrders(goCtx context.Context, req *exchange.QueryGe
 
 	owner, aErr := sdk.AccAddressFromBech32(req.Owner)
 	if aErr != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid owner: %v", aErr)
+		return nil, status.Errorf(codes.InvalidArgument, "invalid owner %q: %v", req.Owner, aErr)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	pre := GetIndexKeyPrefixAddressToOrder(owner)
-	store := prefix.NewStore(k.getStore(ctx), pre)
 
 	resp := &exchange.QueryGetOwnerOrdersResponse{}
 	var err error
-	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(store, req.Pagination, req.OrderType, req.AfterOrderId)
+	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(ctx, pre, req.Pagination, req.OrderType, req.AfterOrderId)
 
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for owner %s: %v", req.Owner, err)
@@ -162,11 +169,10 @@ func (k QueryServer) GetAssetOrders(goCtx context.Context, req *exchange.QueryGe
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	pre := GetIndexKeyPrefixAssetToOrder(req.Asset)
-	store := prefix.NewStore(k.getStore(ctx), pre)
 
 	resp := &exchange.QueryGetAssetOrdersResponse{}
 	var err error
-	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(store, req.Pagination, req.OrderType, req.AfterOrderId)
+	resp.Pagination, resp.Orders, err = k.getPageOfOrdersFromIndex(ctx, pre, req.Pagination, req.OrderType, req.AfterOrderId)
 
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "error iterating orders for asset %s: %v", req.Asset, err)
@@ -198,7 +204,7 @@ func (k QueryServer) GetAllOrders(goCtx context.Context, req *exchange.QueryGetA
 			// Only add it to the result if we can read it. This might result in fewer results than the limit,
 			// but at least one bad entry won't block others by causing the whole thing to return an error.
 			order, oerr := k.parseOrderStoreValue(orderID, value)
-			if oerr != nil {
+			if oerr == nil {
 				resp.Orders = append(resp.Orders, order)
 			}
 		}
@@ -224,7 +230,12 @@ func (k QueryServer) GetMarket(goCtx context.Context, req *exchange.QueryGetMark
 		return nil, status.Errorf(codes.InvalidArgument, "market %d not found", req.MarketId)
 	}
 
-	return &exchange.QueryGetMarketResponse{Market: market}, nil
+	resp := &exchange.QueryGetMarketResponse{
+		Address: exchange.GetMarketAddress(req.MarketId).String(),
+		Market:  market,
+	}
+
+	return resp, nil
 }
 
 // GetAllMarkets returns brief information about each market.

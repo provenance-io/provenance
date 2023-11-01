@@ -26,6 +26,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *exchange.GenesisState) {
 	var addrs []string
 	amounts := make(map[string]sdk.Coins)
 
+	var maxOrderID uint64
 	for i, order := range genState.Orders {
 		if err := k.setOrderInStore(store, order); err != nil {
 			panic(fmt.Errorf("failed to store Orders[%d]: %w", i, err))
@@ -36,8 +37,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *exchange.GenesisState) {
 			amounts[addr] = nil
 		}
 		amounts[addr] = amounts[addr].Add(order.GetHoldAmount()...)
+		if order.OrderId > maxOrderID {
+			maxOrderID = order.OrderId
+		}
 	}
 
+	if genState.LastOrderId < maxOrderID {
+		panic(fmt.Errorf("last order id %d is less than largest order id %d", genState.LastOrderId, maxOrderID))
+	}
 	setLastOrderID(store, genState.LastOrderId)
 
 	// Make sure all the needed funds have holds on them. These should have been placed during initialization of the hold module.
@@ -45,7 +52,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *exchange.GenesisState) {
 		for _, reqAmt := range amounts[addr] {
 			holdAmt, err := k.holdKeeper.GetHoldCoin(ctx, sdk.MustAccAddressFromBech32(addr), reqAmt.Denom)
 			if err != nil {
-				panic(fmt.Errorf("failed to look up amount of %q on hold for %s", reqAmt.Denom, addr))
+				panic(fmt.Errorf("failed to look up amount of %q on hold for %s: %w", reqAmt.Denom, addr, err))
 			}
 			if holdAmt.Amount.LT(reqAmt.Amount) {
 				panic(fmt.Errorf("account %s should have at least %q on hold (due to exchange orders), but only has %q", addr, reqAmt, holdAmt))

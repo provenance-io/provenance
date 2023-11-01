@@ -5,15 +5,11 @@
 
 # Provenance Blockchain
 
-[Provenance] is a distributed, proof of stake blockchain designed for the financial services industry.
+[Provenance Blockchain][provenance] is an eco-friendly proof-of-stake (PoS) blockchain purpose built to modernize financial services, and the Provenance app is the core application for running a node in the network.
 
-For more information about [Provenance Inc](https://provenance.io) visit https://provenance.io
+Provenance Blockchain is open-source with purpose-built capabilities leveraging the [CometBFT](https://docs.cometbft.com) (formerly Tendermint) consensus engine and [Cosmos SDK][cosmos]. Combined, this complete financial services infrastructure makes it safer, easier, cheaper, and faster to build and manage financial products and services.
 
-
-The Provenance app is the core blockchain application for running a node on the Provenance Network.  The node
-software is based on the open source [Tendermint](https://tendermint.com) consensus engine combined with the 
-[Cosmos SDK](https://cosmos.network) and custom modules to support apis for financial services. [Figure](https://figure.com)
-is the first and primary user of the Provenance Blockchain.
+For more information on the many TradFi institutions and Fintechs leveraging the Provenance Blockchain ecosystem, and to learn more about the Provenance Blockchain Foundation, visit [https://provenance.io][provenance].
 
 ## Status
 
@@ -23,7 +19,6 @@ is the first and primary user of the Provenance Blockchain.
 [![Code Coverage][cover-badge]][cover-report]
 [![LOC][loc-badge]][loc-report]
 ![Lint Status][lint-badge]
-
 
 [license-badge]: https://img.shields.io/github/license/provenance-io/provenance.svg
 [license-url]: https://github.com/provenance-io/provenance/blob/main/LICENSE
@@ -36,14 +31,12 @@ is the first and primary user of the Provenance Blockchain.
 [loc-badge]: https://tokei.rs/b1/github/provenance-io/provenance
 [loc-report]: https://github.com/provenance-io/provenance
 [lint-badge]: https://github.com/provenance-io/provenance/workflows/Lint/badge.svg
-[provenance]: https://provenance.io/#overview
-
-The Provenance networks are based on work from the private [Figure Technologies](https://figure.com) blockchain launched in 2018.
+[provenance]: https://provenance.io/
+[cosmos]: https://cosmos.network/
 
 ## Quick Start
 
-The Provenance Blockchain is based on Cosmos, the [sdk introduction](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/intro/00-overview.md)
-is a useful starting point.
+As the [Provenance Blockchain][provenance] and its core modules are based on the [Cosmos SDK][cosmos], [this introduction](https://docs.cosmos.network/main/learn/intro/overview) into Cosmos is a useful starting point.
 
 Developers can use a local checkout and the make targets `make run` and `make localnet-start` to run a local development network.
 
