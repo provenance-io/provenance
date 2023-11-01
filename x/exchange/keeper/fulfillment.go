@@ -80,19 +80,20 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 		price := bidOrder.Price
 		buyerFees := bidOrder.BuyerSettlementFees
 
-		sellerRatioFee, rerr := calculateSellerSettlementRatioFee(store, marketID, order.GetPrice())
-		if rerr != nil {
-			errs = append(errs, fmt.Errorf("error calculating seller settlement ratio fee for order %d: %w",
-				order.OrderId, rerr))
-		}
-		if sellerRatioFee != nil {
-			totalSellerFee = totalSellerFee.Add(*sellerRatioFee)
-		}
-
 		assetsAddrIdx.Add(buyer, assets)
 		priceAddrIdx.Add(buyer, price)
 		feeAddrIdx.Add(buyer, buyerFees...)
 		settlement.FullyFilledOrders = append(settlement.FullyFilledOrders, exchange.NewFilledOrder(order, price, buyerFees))
+	}
+
+	for _, price := range totalPrice {
+		sellerRatioFee, rerr := calculateSellerSettlementRatioFee(store, marketID, price)
+		if rerr != nil {
+			errs = append(errs, fmt.Errorf("error calculating seller settlement ratio fee: %w", rerr))
+		}
+		if sellerRatioFee != nil {
+			totalSellerFee = totalSellerFee.Add(*sellerRatioFee)
+		}
 	}
 
 	if len(errs) > 0 {
