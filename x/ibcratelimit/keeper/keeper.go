@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"github.com/gogo/protobuf/proto"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
