@@ -44,8 +44,8 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers interfaces and implementations of the ibcratelimit module.
-func (AppModuleBasic) RegisterInterfaces(_ codectypes.InterfaceRegistry) {
-	// TODO Do we need to register interfaces?
+func (AppModuleBasic) RegisterInterfaces(cdc codectypes.InterfaceRegistry) {
+	ibcratelimit.RegisterInterfaces(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the ibcratelimit
@@ -177,4 +177,5 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	ibcratelimit.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	ibcratelimit.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
 }

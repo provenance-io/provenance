@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
+	"github.com/provenance-io/provenance/x/ibcratelimit/keeper"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -19,6 +20,7 @@ type TestSuite struct {
 	ctx sdk.Context
 
 	queryClient ibcratelimit.QueryClient
+	msgServer   ibcratelimit.MsgServer
 }
 
 func (s *TestSuite) SetupTest() {
@@ -26,6 +28,7 @@ func (s *TestSuite) SetupTest() {
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 	s.ctx = s.ctx.WithBlockHeight(0)
 
+	s.msgServer = keeper.NewMsgServer(*s.app.RateLimitingKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	ibcratelimit.RegisterQueryServer(queryHelper, s.app.RateLimitingKeeper)
 	s.queryClient = ibcratelimit.NewQueryClient(queryHelper)
