@@ -279,9 +279,7 @@ It is expected to fail if:
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L226-L237
 
-#### MarketDetails
-
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/market.proto#L28-L40
+See also: [MarketDetails](#marketdetails).
 
 #### MsgMarketUpdateDetailsResponse
 
@@ -347,6 +345,8 @@ It is expected to fail if:
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L276-L291
 
+See also: [AccessGrant](#accessgrant) and [Permission](#permission).
+
 #### MsgMarketManagePermissionsResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L293-L295
@@ -404,6 +404,22 @@ It is expected to fail if:
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/market.proto#L52-L103
 
+#### MarketDetails
+
++++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/market.proto#L28-L40
+
+#### FeeRatio
+
++++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/market.proto#L105-L113
+
+#### AccessGrant
+
++++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/market.proto#L115-L121
+
+#### Permission
+
++++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/market.proto#L123-L141
+
 #### MsgGovCreateMarketResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L331-L332
@@ -423,6 +439,8 @@ It is expected to fail if:
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L334-L372
 
+See also: [FeeRatio](#feeratio).
+
 #### MsgGovManageFeesResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L374-L375
@@ -438,6 +456,10 @@ It is expected to fail if:
 #### MsgGovUpdateParamsRequest
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L377-L386
+
+#### Params
+
++++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/params.proto#L11-L19
 
 #### MsgGovUpdateParamsResponse
 
