@@ -1,11 +1,14 @@
 package keeper
 
 import (
+	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
@@ -15,6 +18,7 @@ type Keeper struct {
 	storeKey           storetypes.StoreKey
 	cdc                codec.BinaryCodec
 	PermissionedKeeper ibcratelimit.PermissionedKeeper
+	authority          string
 }
 
 // NewKeeper Creates a new Keeper for the module.
@@ -27,6 +31,7 @@ func NewKeeper(
 		storeKey:           key,
 		cdc:                cdc,
 		PermissionedKeeper: permissionedKeeper,
+		authority:          authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
 }
 
@@ -67,4 +72,20 @@ func (k Keeper) IsContractConfigured(ctx sdk.Context) bool {
 		return false
 	}
 	return params.ContractAddress != ""
+}
+
+// ValidateAuthority returns an error if the provided address is not the authority.
+func (k Keeper) ValidateAuthority(addr string) error {
+	if k.authority != addr {
+		return govtypes.ErrInvalidSigner.Wrapf("expected %q got %q", k.authority, addr)
+	}
+	return nil
+}
+
+// emitEvent emits the provided event and writes any error to the error log.
+func (k Keeper) emitEvent(ctx sdk.Context, event proto.Message) {
+	err := ctx.EventManager().EmitTypedEvent(event)
+	if err != nil {
+		k.Logger(ctx).Error("error emitting event %#v: %v", event, err)
+	}
 }

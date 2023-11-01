@@ -190,6 +190,7 @@
   
 - [provenance/ibcratelimit/v1/event.proto](#provenance/ibcratelimit/v1/event.proto)
     - [EventAckRevertFailure](#provenance.ibcratelimit.v1.EventAckRevertFailure)
+    - [EventParamsUpdated](#provenance.ibcratelimit.v1.EventParamsUpdated)
     - [EventTimeoutRevertFailure](#provenance.ibcratelimit.v1.EventTimeoutRevertFailure)
   
 - [provenance/ibcratelimit/v1/params.proto](#provenance/ibcratelimit/v1/params.proto)
@@ -203,6 +204,12 @@
     - [ParamsResponse](#provenance.ibcratelimit.v1.ParamsResponse)
   
     - [Query](#provenance.ibcratelimit.v1.Query)
+  
+- [provenance/ibcratelimit/v1/tx.proto](#provenance/ibcratelimit/v1/tx.proto)
+    - [MsgGovUpdateParamsRequest](#provenance.ibcratelimit.v1.MsgGovUpdateParamsRequest)
+    - [MsgGovUpdateParamsResponse](#provenance.ibcratelimit.v1.MsgGovUpdateParamsResponse)
+  
+    - [Msg](#provenance.ibcratelimit.v1.Msg)
   
 - [provenance/marker/v1/accessgrant.proto](#provenance/marker/v1/accessgrant.proto)
     - [AccessGrant](#provenance.marker.v1.AccessGrant)
@@ -3254,6 +3261,16 @@ EventAckRevertFailure is emitted when an Ack revert fails
 
 
 
+<a name="provenance.ibcratelimit.v1.EventParamsUpdated"></a>
+
+### EventParamsUpdated
+EventParamsUpdated is an event emitted when the ibcratelimit module's params have been updated.
+
+
+
+
+
+
 <a name="provenance.ibcratelimit.v1.EventTimeoutRevertFailure"></a>
 
 ### EventTimeoutRevertFailure
@@ -3387,6 +3404,58 @@ Query defines the gRPC querier service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [ParamsRequest](#provenance.ibcratelimit.v1.ParamsRequest) | [ParamsResponse](#provenance.ibcratelimit.v1.ParamsResponse) | Params defines a gRPC query method that returns the ibcratelimit module's parameters. | GET|/provenance/ibcratelimit/v1/params|
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibcratelimit/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibcratelimit/v1/tx.proto
+
+
+
+<a name="provenance.ibcratelimit.v1.MsgGovUpdateParamsRequest"></a>
+
+### MsgGovUpdateParamsRequest
+MsgGovUpdateParamsRequest is a request message for the GovUpdateParams endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `params` | [Params](#provenance.ibcratelimit.v1.Params) |  | params are the new param values to set |
+
+
+
+
+
+
+<a name="provenance.ibcratelimit.v1.MsgGovUpdateParamsResponse"></a>
+
+### MsgGovUpdateParamsResponse
+MsgGovUpdateParamsResponse is a response message for the GovUpdateParams endpoint.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.ibcratelimit.v1.Msg"></a>
+
+### Msg
+Msg is the service for ibcratelimit module's tx endpoints.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `GovUpdateParams` | [MsgGovUpdateParamsRequest](#provenance.ibcratelimit.v1.MsgGovUpdateParamsRequest) | [MsgGovUpdateParamsResponse](#provenance.ibcratelimit.v1.MsgGovUpdateParamsResponse) | GovUpdateParams is a governance proposal endpoint for updating the exchange module's params. | |
 
  <!-- end services -->
 

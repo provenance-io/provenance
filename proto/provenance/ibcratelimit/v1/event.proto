@@ -23,3 +23,6 @@ message EventTimeoutRevertFailure {
   // packet is the packet received on timeout.
   string packet = 2;
 }
+
+// EventParamsUpdated is an event emitted when the ibcratelimit module's params have been updated.
+message EventParamsUpdated {}
