@@ -114,7 +114,7 @@ func (h MarkerHooks) getExistingSupply(ctx sdktypes.Context, marker *markertypes
 
 // addDenomMetaData adds denom metadata for ibc token
 func (h MarkerHooks) addDenomMetaData(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper, ibcDenom string, data transfertypes.FungibleTokenPacketData) error {
-	chainID := h.GetChainID(ctx, packet, ibcKeeper)
+	chainID := h.GetChainID(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), ibcKeeper)
 	markerMetadata := banktypes.Metadata{
 		Base:        ibcDenom,
 		Name:        chainID + "/" + data.Denom,
@@ -125,9 +125,9 @@ func (h MarkerHooks) addDenomMetaData(ctx sdktypes.Context, packet exported.Pack
 }
 
 // GetChainID returns the source chain id from packet for a `07-tendermint` client connection or returns `unknown`
-func (h MarkerHooks) GetChainID(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper) string {
+func (h MarkerHooks) GetChainID(ctx sdktypes.Context, sourcePort, sourceChannel string, ibcKeeper *ibckeeper.Keeper) string {
 	chainID := "unknown"
-	channel, found := ibcKeeper.ChannelKeeper.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+	channel, found := ibcKeeper.ChannelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
 		return chainID
 	}
