@@ -120,6 +120,7 @@ var upgrades = map[string]appUpgrade{
 		},
 		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
 	},
+	"saffron-rc2": {}, // upgrade for v1.17.0-rc2
 	"saffron": { // upgrade for v1.17.0,
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
