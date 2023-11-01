@@ -82,7 +82,7 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 
 // GetTxCmd returns the transaction commands for the ibcratelimit module
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
+	return ibcratelimitcli.NewTxCmd()
 }
 
 // AppModule implements the sdk.AppModule interface

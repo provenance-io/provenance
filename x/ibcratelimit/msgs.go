@@ -11,6 +11,13 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgGovUpdateParamsRequest)(nil),
 }
 
+func NewMsgGovUpdateParamsRequest(authority, ratelimiter string) *MsgGovUpdateParamsRequest {
+	return &MsgGovUpdateParamsRequest{
+		Authority: authority,
+		Params:    NewParams(ratelimiter),
+	}
+}
+
 func (m MsgGovUpdateParamsRequest) ValidateBasic() error {
 	errs := make([]error, 0, 2)
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
