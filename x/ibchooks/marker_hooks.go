@@ -141,7 +141,7 @@ func (h MarkerHooks) GetChainID(ctx sdktypes.Context, packet exported.PacketI, i
 	}
 	tmClientState, ok := clientState.(*tendermintclient.ClientState)
 	if ok {
-		chainID = tmClientState.ChainId
+		return tmClientState.ChainId
 	}
 	return chainID
 }
