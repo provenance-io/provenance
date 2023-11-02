@@ -27,16 +27,17 @@ The exchange module has `Msg` endpoints for users, markets, and governance propo
 
 ## User Endpoints
 
-There are several endpoints available for anyone, but some markets might have restrictions on their use.
+There are several endpoints available for all users, but some markets might have restrictions on their use.
 
 
 ### CreateAsk
 
-An ask order indicates the desire to sell some assets at a minimum price.
+An ask order indicates the desire to sell some `assets` at a minimum `price`.
 They are created using the `CreateAsk` endpoint.
 
 Markets can define a set of attributes that an account must have in order to create ask orders in them.
-So, this endpoint might not be available, depending on the market the order is being created in.
+So, this endpoint might not be available, depending on the `seller` and the `market_id`.
+Markets can also disable order creation altogether, making this endpoint unavailable for that `market_id`.
 
 It is expected to fail if:
 * The `market_id` does not exist.
@@ -64,11 +65,12 @@ It is expected to fail if:
 
 ### CreateBid
 
-A bid order indicates the desire to buy some assets at a specific price.
+A bid order indicates the desire to buy some `assets` at a specific `price`.
 They are created using the `CreateBid` endpoint.
 
 Markets can define a set of attributes that an account must have in order to create bid orders in them.
-So, this endpoint might not be available, depending on the market the order is being created in.
+So, this endpoint might not be available, depending on the `buyer` and the `market_id`.
+Markets can also disable order creation altogether, making this endpoint unavailable for that `market_id`.
 
 It is expected to fail if:
 * The `market_id` does not exist.
@@ -76,8 +78,8 @@ It is expected to fail if:
 * The market requires attributes in order to create bid orders and the `buyer` is missing one or more.
 * The `price` funds are not in the `buyer`'s account.
 * The `price` is in a denom not supported by the market.
-* The `buyer_settlement_fees` is not in the `buyer`'s account.
-* The `buyer_settlement_fees` is insufficient (as dictated by the market).
+* The `buyer_settlement_fees` are not in the `buyer`'s account.
+* The `buyer_settlement_fees` are insufficient (as dictated by the market).
 * The `external_id` value is not empty and is already in use in the market.
 * The `order_creation_fee` is not in the `seller`'s account.
 
@@ -99,15 +101,15 @@ It is expected to fail if:
 Orders can be cancelled using the `CancelOrder` endpoint.
 When an order is cancelled, the hold on its funds is released and the order is deleted.
 
-Users can cancel their own orders at any time. 
-Market actors with the `PERMISSION_CANCEL` permission can also cancel orders in their market at any time.
+Users can cancel their own orders at any time.
+Market actors with the `PERMISSION_CANCEL` permission can also cancel orders in that market at any time.
 
 Order creation fees are **not** refunded when an order is cancelled.
 
 It is expected to fail if:
 * The order does not exist.
-* The `signer` is not one of: 
-  * The order's owner (e.g. `buyer` or `seller`). 
+* The `signer` is not one of:
+  * The order's owner (e.g. `buyer` or `seller`).
   * An account with `PERMISSION_CANCEL` in the order's market.
   * The governance module account (`authority`).
 
@@ -122,14 +124,15 @@ It is expected to fail if:
 
 ### FillBids
 
-If a market allows user-settlement, users can use the `FillBids` endpoint to settle one or more bids with their own assets.
+If a market allows user-settlement, users can use the `FillBids` endpoint to settle one or more bids with their own `assets`.
 This is similar to an "Immediate or cancel" `AskOrder` with the sum of the provided bids' assets and prices.
-Fees are paid the same as if the `AskOrder` were actually created and settled normally with the provided bids.
-The seller must be allowed to create an `AskOrder` in the given market.
+Fees are paid the same as if an `AskOrder` were actually created and settled normally with the provided bids.
+The `seller` must be allowed to create an `AskOrder` in the given market.
 
 It is expected to fail if:
 * The market does not exist.
 * The market is not allowing orders to be created.
+* The market does not allow user-settlement.
 * The market requires attributes in order to create ask orders and the `seller` is missing one or more.
 * One or more `bid_order_ids` are not bid orders (or do not exist).
 * One or more `bid_order_ids` are in a market other than the provided `market_id`.
@@ -154,12 +157,13 @@ It is expected to fail if:
 
 If a market allows user-settlement, users can use the `FillAsks` endpoint to settle one or more asks with their own price funds.
 This is similar to an "Immediate or cancel" `BidOrder` with the sum of the provided asks' assets and prices.
-Fees are paid the same as if the `BidOrder` were actually created and settled normally with the provided asks.
-The buyer must be allowed to create a `BidOrder` in the given market.
+Fees are paid the same as if a `BidOrder` were actually created and settled normally with the provided asks.
+The `buyer` must be allowed to create a `BidOrder` in the given market.
 
 It is expected to fail if:
 * The market does not exist.
 * The market is not allowing orders to be created.
+* The market does not allow user-settlement.
 * The market requires attributes in order to create bid orders and the `buyer` is missing one or more.
 * One or more `ask_order_ids` are not ask orders (or do not exist).
 * One or more `ask_order_ids` are in a market other than the provided `market_id`.
@@ -183,13 +187,13 @@ It is expected to fail if:
 ## Market Endpoints
 
 Several endpoints are only available to accounts designated by the market.
-These are also all available for use in governance proposals.
+These are all also available for use in governance proposals using the governance module account (aka `authority`) as the `admin`.
 
 
 ### MarketSettle
 
 Orders are settled using the `MarketSettle` endpoint.
-The `admin` must have the `PERMISSION_SETTLE` permission in the market.
+The `admin` must have the `PERMISSION_SETTLE` permission in the market (or be the `authority`).
 
 The market is responsible for identifying order matches.
 Once identified, this endpoint is used to settle and clear the matched orders.
@@ -199,11 +203,14 @@ All orders in a settlement must have the same asset denom and the same price den
 It is expected to fail if:
 * The market does not exist.
 * The `admin` does not have `PERMISSION_SETTLE` in the market, and is not the `authority`.
-* One or more `ask_order_ids` are not ask orders, or do not exist, or are in a market other than the provided `market_id`. 
+* One or more `ask_order_ids` are not ask orders, or do not exist, or are in a market other than the provided `market_id`.
 * One or more `bid_order_ids` are not bid orders, or do not exist, or are in a market other than the provided `market_id`.
+* There is more than one denom in the `assets` of all the provided orders.
+* There is more than one denom in the `price` of all the provided orders.
+* The market requires a seller settlement ratio fee, but there is no ratio defined for the `price` denom.
 * Two or more orders are being partially filled.
 * One or more orders cannot be filled at all with the `assets` or `price` funds available in the settlement.
-* One order is being partially filled, but `expect_partial` is `false`.
+* An order is being partially filled, but `expect_partial` is `false`.
 * All orders are being filled in full, but `expect_partial` is `true`.
 * One or more of the `buyer`s and `seller`s are sanctioned, or are not allowed to possess the funds they are to receive.
 
@@ -220,7 +227,7 @@ It is expected to fail if:
 
 Some markets might want to attach their own identifiers to orders.
 This is done using the `MarketSetOrderExternalID` endpoint.
-The `admin` must have the `PERMISSION_SET_IDS` permission in the market.
+The `admin` must have the `PERMISSION_SET_IDS` permission in the market (or be the `authority`).
 
 Orders with external ids can be looked up using the [GetOrderByExternalID](05_queries.md#getorderbyexternalid) query.
 
@@ -230,7 +237,7 @@ It is expected to fail if:
 * The market does not exist.
 * The `admin` does not have `PERMISSION_SET_IDS` in the market, and is not the `authority`.
 * The order does not exist, or is in a different market than the provided `market_id`.
-* The provided `external_id` equals the orders current `external_id`.
+* The provided `external_id` equals the order's current `external_id`.
 * The provided `external_id` is already associated with another order in the same market.
 
 #### MsgMarketSetOrderExternalIDRequest
@@ -246,7 +253,7 @@ It is expected to fail if:
 
 When fees are collected by a market, they are given to the market's account.
 Those funds can then be withdrawn/transferred using the `MarketWithdraw` endpoint.
-The `admin` must have the `PERMISSION_WITHDRAW` permission in the market.
+The `admin` must have the `PERMISSION_WITHDRAW` permission in the market (or be the `authority`).
 
 It is expected to fail if:
 * The market does not exist.
@@ -266,15 +273,12 @@ It is expected to fail if:
 ### MarketUpdateDetails
 
 A market's details can be updated using the `MarketUpdateDetails` endpoint.
-The `admin` must have the `PERMISSION_UPDATE` permission in the market.
+The `admin` must have the `PERMISSION_UPDATE` permission in the market (or be the `authority`).
 
 It is expected to fail if:
 * The market does not exist.
 * The `admin` does not have `PERMISSION_UPDATE` in the market, and is not the `authority`.
-* The `name` is longer than 250 characters.
-* The `description` is longer than 2000 characters.
-* The `website_url` is longer than 200 characters.
-* The `icon_uri` is longer than 2000 characters.
+* One or more of the [MarketDetails](#marketdetails) fields is too large.
 
 #### MsgMarketUpdateDetailsRequest
 
@@ -290,14 +294,14 @@ See also: [MarketDetails](#marketdetails).
 ### MarketUpdateEnabled
 
 A market can enable or disable order creation using the `MarketUpdateEnabled` endpoint.
-The `admin` must have the `PERMISSION_UPDATE` permission in the market.
+The `admin` must have the `PERMISSION_UPDATE` permission in the market (or be the `authority`).
 
 With `accepting_orders` = `false`, no one can create any new orders in the market, but existing orders can still be settled or cancelled.
 
 It is expected to fail if:
 * The market does not exist.
 * The `admin` does not have `PERMISSION_UPDATE` in the market, and is not the `authority`.
-* The provided `accepting_orders` equals the market's current setting.
+* The provided `accepting_orders` value equals the market's current setting.
 
 #### MsgMarketUpdateEnabledRequest
 
@@ -311,15 +315,15 @@ It is expected to fail if:
 ### MarketUpdateUserSettle
 
 Using the `MarketUpdateUserSettle` endpoint, markets can control whether user-settlement is allowed.
-The `admin` must have the `PERMISSION_UPDATE` permission in the market.
+The `admin` must have the `PERMISSION_UPDATE` permission in the market (or be the `authority`).
 
-With `allow_user_settlement` = `true`, users can use the [FillBids](#fillbids) and [FillAsks](#fillasks) endpoints in the market.
-With `allow_user_settlement` = `false`, orders can only be settled using the [MarketSettle](#marketsettle) endpoint.
+The [FillBids](#fillbids) and [FillAsks](#fillasks) endpoints are only available for markets where `allow_user_settlement` = `true`.
+The [MarketSettle](#marketsettle) endpoint is usable regardless of this setting.
 
 It is expected to fail if:
 * The market does not exist.
 * The `admin` does not have `PERMISSION_UPDATE` in the market, and is not the `authority`.
-* The provided `allow_user_settlement` equals the market's current setting.
+* The provided `allow_user_settlement` value equals the market's current setting.
 
 #### MsgMarketUpdateUserSettleRequest
 
@@ -333,7 +337,7 @@ It is expected to fail if:
 ### MarketManagePermissions
 
 Permissions in a market are managed using the `MarketManagePermissions` endpoint.
-The `admin` must have the `PERMISSION_PERMISSIONS` permission in the market.
+The `admin` must have the `PERMISSION_PERMISSIONS` permission in the market (or be the `authority`).
 
 It is expected to fail if:
 * The market does not exist.
@@ -356,7 +360,9 @@ See also: [AccessGrant](#accessgrant) and [Permission](#permission).
 ### MarketManageReqAttrs
 
 The attributes required to create orders in a market can be managed using the `MarketManageReqAttrs` endpoint.
-The `admin` must have the `PERMISSION_ATTRIBUTES` permission in the market.
+The `admin` must have the `PERMISSION_ATTRIBUTES` permission in the market (or be the `authority`).
+
+See also: [Required Attributes](#required-attributes).
 
 It is expected to fail if:
 * The market does not exist.
@@ -391,10 +397,7 @@ It is recommended that the message be checked using the [ValidateCreateMarket](0
 It is expected to fail if:
 * The provided `authority` is not the governance module's account.
 * The provided `market_id` is not zero, and is already in use by another market.
-* The `market_details.name` is longer than 250 characters.
-* The `market_details.description` is longer than 2000 characters.
-* The `market_details.website_url` is longer than 200 characters.
-* The `market_details.icon_uri` is longer than 2000 characters.
+* One or more of the [MarketDetails](#marketdetails) fields is too large.
 * One or more required attributes are invalid.
 
 #### MsgGovCreateMarketRequest
@@ -408,6 +411,11 @@ It is expected to fail if:
 #### MarketDetails
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/market.proto#L28-L40
+
+* The `name` is limited to 250 characters max.
+* The `description` is limited to 2000 characters max.
+* The `website_url` is limited to 200 characters max.
+* The `icon_uri` is limited to 2000 characters max.
 
 #### FeeRatio
 
