@@ -408,7 +408,7 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 				Base:        record.GetDenom(),
 				Name:        chainID + "/" + denomTrace.BaseDenom,
 				Display:     chainID + "/" + denomTrace.BaseDenom,
-				Description: denomTrace.BaseDenom + " from chain " + chainID,
+				Description: denomTrace.BaseDenom + " from " + chainID,
 			}
 			err := app.MarkerKeeper.SetDenomMetaData(ctx, markerMetadata, authtypes.NewModuleAddress(types.ModuleName))
 			if err != nil {
