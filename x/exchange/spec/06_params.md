@@ -6,7 +6,7 @@ The `default_split` is used when a specific `DenomSplit` does not exist for a gi
 
 * A split of `0` is 0% and would mean that the exchange receives none of the fees (of the applicable denom), and the market keeps all of it.
 * A split of `500` is 5%, and would mean that the exchange receives 5% of the fees (of the applicable denom) collected by any market, and the market keeps 95%.
-* A split of `10,000` is 100% and would mean that the exchange receives all of the fees (of the applicable denom) instead of the market.
+* A split of `10,000` is 100% and would mean that the exchange receives all of the fees (of the applicable denom) and the market gets nothing.
 
 The default `Params` have a `default_split` of `500` and no `DenomSplit`s.
 
