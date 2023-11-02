@@ -20,10 +20,10 @@ Big-endian ordering is used for all conversions between numbers and byte arrays.
     - [Market Permissions](#market-permissions)
     - [Market Create-Ask Required Attributes](#market-create-ask-required-attributes)
     - [Market Create-Bid Required Attributes](#market-create-bid-required-attributes)
-    - [Last Market ID](#last-market-id)
-    - [Known Market ID](#known-market-id)
     - [Market Account](#market-account)
     - [Market Details](#market-details)
+    - [Known Market ID](#known-market-id)
+    - [Last Market ID](#last-market-id)
   - [Orders](#orders)
     - [Ask Orders](#ask-orders)
     - [Bid Orders](#bid-orders)
@@ -168,26 +168,6 @@ See also: [AccessGrant](03_messages.md#accessgrant) and [Permission](03_messages
 * Value: `<list of strings separated by 0x1E>`
 
 
-### Last Market ID
-
-This indicates the last market-id that was auto-selected for use.
-
-When a `MsgGovCreateMarketRequest` is processed that has a `MarketID` of `0` (zero), the next available market id is auto selected.
-Starting with the number after what's in this state entry, each market id is sequentially checked until an available one is found.
-The new market gets that id, then this entry is then updated to indicate what that was.
-
-* Key: `0x06`
-* Value: `<market id (4 bytes)>`
-
-
-### Known Market ID
-
-These entries are used to indicate that a given market exists.
-
-* Key: `0x07 | <market id (4 bytes)>`
-* Value: `<nil (0 bytes)>`
-
-
 ### Market Account
 
 Each market has an associated `MarketAccount` with an address derived from the `market_id`.
@@ -199,6 +179,26 @@ Each `MarketAccount` is stored using the `Accounts` module.
 ### Market Details
 
 The [MarketDetails](03_messages.md#marketdetails) are stored as part of the `MarketAccount` (in the `x/auth` module).
+
+
+### Known Market ID
+
+These entries are used to indicate that a given market exists.
+
+* Key: `0x07 | <market id (4 bytes)>`
+* Value: `<nil (0 bytes)>`
+
+
+### Last Market ID
+
+This indicates the last market-id that was auto-selected for use.
+
+When a `MsgGovCreateMarketRequest` is processed that has a `MarketID` of `0` (zero), the next available market id is auto selected.
+Starting with the number after what's in this state entry, each market id is sequentially checked until an available one is found.
+The new market gets that id, then this entry is then updated to indicate what that was.
+
+* Key: `0x06`
+* Value: `<market id (4 bytes)>`
 
 
 --
