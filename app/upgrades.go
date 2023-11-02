@@ -125,7 +125,7 @@ var upgrades = map[string]appUpgrade{
 		},
 		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
 	},
-	"saffron-rc2": {
+	"saffron-rc2": { // upgrade for v1.17.0-rc2
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			vm, err = runModuleMigrations(ctx, app, vm)
@@ -137,7 +137,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
-	}, // upgrade for v1.17.0-rc2
+	},
 	"saffron": { // upgrade for v1.17.0,
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
@@ -153,6 +153,7 @@ var upgrades = map[string]appUpgrade{
 			setupICQ(ctx, app)
 			updateMaxSupply(ctx, app)
 			setExchangeParams(ctx, app)
+			updateIbcMarkerDenomMetadata(ctx, app)
 
 			return vm, nil
 		},
@@ -382,11 +383,13 @@ func setExchangeParams(ctx sdk.Context, app *App) {
 // updateIbcMarkerDenomMetadata iterates markers and creates denom metadata for ibc markers
 // TODO: Remove with the saffron handlers.
 func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Updating ibc marker denom metadata")
 	app.MarkerKeeper.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
 		if strings.HasSuffix(record.GetDenom(), "ibc/") {
 			denomTrace := transfertypes.ParseDenomTrace(record.GetDenom())
 			parts := strings.Split(denomTrace.Path, "/")
 			if len(parts) == 2 && parts[0] == "transfer" {
+				ctx.Logger().Info(fmt.Sprintf("Adding metadata to %s", record.GetDenom()))
 				chainID := app.Ics20MarkerHooks.GetChainID(ctx, parts[0], parts[1], app.IBCKeeper)
 				markerMetadata := banktypes.Metadata{
 					Base:        record.GetDenom(),
@@ -402,4 +405,5 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 		}
 		return false
 	})
+	ctx.Logger().Info("Done updating ibc marker denom metadata")
 }
