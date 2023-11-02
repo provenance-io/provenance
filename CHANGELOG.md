@@ -56,6 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Dependencies
 
 - Bump `bufbuild/buf-setup-action` from 1.27.1 to 1.27.2 ([#1724](https://github.com/provenance-io/provenance/pull/1724))
+- Bump `github.com/google/uuid` from 1.3.1 to 1.4.0 ([#1723](https://github.com/provenance-io/provenance/pull/1723))
 
 ---
 
