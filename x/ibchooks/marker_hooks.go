@@ -119,7 +119,7 @@ func (h MarkerHooks) addDenomMetaData(ctx sdktypes.Context, packet exported.Pack
 		Base:        ibcDenom,
 		Name:        chainID + "/" + data.Denom,
 		Display:     chainID + "/" + data.Denom,
-		Description: data.Denom + " from chain " + chainID,
+		Description: data.Denom + " from " + chainID,
 	}
 	return h.MarkerKeeper.SetDenomMetaData(ctx, markerMetadata, authtypes.NewModuleAddress(types.ModuleName))
 }

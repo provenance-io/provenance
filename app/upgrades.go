@@ -12,7 +12,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -410,10 +409,7 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 				Display:     chainID + "/" + denomTrace.BaseDenom,
 				Description: denomTrace.BaseDenom + " from " + chainID,
 			}
-			err := app.MarkerKeeper.SetDenomMetaData(ctx, markerMetadata, authtypes.NewModuleAddress(types.ModuleName))
-			if err != nil {
-				ctx.Logger().Error(fmt.Sprintf("unable to set denom metadata for %v with base denom %v and chain-id %v: %v", record.GetDenom(), denomTrace.BaseDenom, chainID, err))
-			}
+			app.BankKeeper.SetDenomMetaData(ctx, markerMetadata)
 		}
 
 		return false
