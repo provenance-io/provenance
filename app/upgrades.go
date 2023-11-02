@@ -385,32 +385,37 @@ func setExchangeParams(ctx sdk.Context, app *App) {
 func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating ibc marker denom metadata")
 	app.MarkerKeeper.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
-		if strings.HasPrefix(record.GetDenom(), "ibc/") {
-			hash, err := transfertypes.ParseHexHash(strings.TrimPrefix(record.GetDenom(), "ibc/"))
-			if err != nil {
-				panic(fmt.Sprintf("invalid denom trace hash: %s, error: %s", hash.String(), err))
-			}
-			denomTrace, found := app.TransferKeeper.GetDenomTrace(ctx, hash)
-			if !found {
-				panic(fmt.Sprintf("trace not found: %s, error: %s", hash.String(), err))
-			}
+		if !strings.HasPrefix(record.GetDenom(), "ibc/") {
+			return false
+		}
 
-			parts := strings.Split(denomTrace.Path, "/")
-			if len(parts) == 2 && parts[0] == "transfer" {
-				ctx.Logger().Info(fmt.Sprintf("Adding metadata to %s", record.GetDenom()))
-				chainID := app.Ics20MarkerHooks.GetChainID(ctx, parts[0], parts[1], app.IBCKeeper)
-				markerMetadata := banktypes.Metadata{
-					Base:        record.GetDenom(),
-					Name:        chainID + "/" + denomTrace.BaseDenom,
-					Display:     chainID + "/" + denomTrace.BaseDenom,
-					Description: denomTrace.BaseDenom + " from chain " + chainID,
-				}
-				err := app.MarkerKeeper.SetDenomMetaData(ctx, markerMetadata, authtypes.NewModuleAddress(types.ModuleName))
-				if err != nil {
-					panic(fmt.Sprintf("unable to set denom metadata for %v with base denom %v and chain-id %v: %v", record.GetDenom(), denomTrace.BaseDenom, chainID, err))
-				}
+		hash, err := transfertypes.ParseHexHash(strings.TrimPrefix(record.GetDenom(), "ibc/"))
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("invalid denom trace hash: %s, error: %s", hash.String(), err))
+			return false
+		}
+		denomTrace, found := app.TransferKeeper.GetDenomTrace(ctx, hash)
+		if !found {
+			ctx.Logger().Error(fmt.Sprintf("trace not found: %s, error: %s", hash.String(), err))
+			return false
+		}
+
+		parts := strings.Split(denomTrace.Path, "/")
+		if len(parts) == 2 && parts[0] == "transfer" {
+			ctx.Logger().Info(fmt.Sprintf("Adding metadata to %s", record.GetDenom()))
+			chainID := app.Ics20MarkerHooks.GetChainID(ctx, parts[0], parts[1], app.IBCKeeper)
+			markerMetadata := banktypes.Metadata{
+				Base:        record.GetDenom(),
+				Name:        chainID + "/" + denomTrace.BaseDenom,
+				Display:     chainID + "/" + denomTrace.BaseDenom,
+				Description: denomTrace.BaseDenom + " from chain " + chainID,
+			}
+			err := app.MarkerKeeper.SetDenomMetaData(ctx, markerMetadata, authtypes.NewModuleAddress(types.ModuleName))
+			if err != nil {
+				ctx.Logger().Error(fmt.Sprintf("unable to set denom metadata for %v with base denom %v and chain-id %v: %v", record.GetDenom(), denomTrace.BaseDenom, chainID, err))
 			}
 		}
+
 		return false
 	})
 	ctx.Logger().Info("Done updating ibc marker denom metadata")
