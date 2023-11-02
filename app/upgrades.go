@@ -385,8 +385,16 @@ func setExchangeParams(ctx sdk.Context, app *App) {
 func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating ibc marker denom metadata")
 	app.MarkerKeeper.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
-		if strings.HasSuffix(record.GetDenom(), "ibc/") {
-			denomTrace := transfertypes.ParseDenomTrace(record.GetDenom())
+		if strings.HasPrefix(record.GetDenom(), "ibc/") {
+			hash, err := transfertypes.ParseHexHash(strings.TrimPrefix(record.GetDenom(), "ibc/"))
+			if err != nil {
+				panic(fmt.Sprintf("invalid denom trace hash: %s, error: %s", hash.String(), err))
+			}
+			denomTrace, found := app.TransferKeeper.GetDenomTrace(ctx, hash)
+			if !found {
+				panic(fmt.Sprintf("trace not found: %s, error: %s", hash.String(), err))
+			}
+
 			parts := strings.Split(denomTrace.Path, "/")
 			if len(parts) == 2 && parts[0] == "transfer" {
 				ctx.Logger().Info(fmt.Sprintf("Adding metadata to %s", record.GetDenom()))
