@@ -14,6 +14,8 @@ Params are set using the [GovUpdateParams](03_messages.md#govupdateparams) gover
 
 The current params can be looked up using the [Params](05_queries.md#params) query.
 
+See also: [Exchange Fees](01_concepts.md#exchange-fees).
+
 ## Params
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/params.proto#L11-L19

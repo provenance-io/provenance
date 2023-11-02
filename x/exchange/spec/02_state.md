@@ -35,12 +35,14 @@ Big-endian ordering is used for all conversions between numbers and byte arrays.
     - [Market External ID to Order](#market-external-id-to-order)
 
 --
-
 ## Params
 
 All params entries start with the type byte `0x00`
 
 Each split is stored as a `uint16` (2 bytes) in big-endian order.
+
+See also: [Params](06_params.md#params).
+
 
 ### Default Split
 
@@ -49,12 +51,16 @@ The default split defines the split amount (in basis points) the exchange receiv
 * Key:`0x00 | "split" (5 bytes)`
 * Value: `uint16`
 
+
 ### Specific Denom Split
 
 A specific denom split is a split amount (in basis points) the exchange receives of fees for fees paid in a specific denom.
 
 * Key: `0x00 | "split" (5 bytes) | <denom (string)>`
 * Value: `uint16`
+
+See also: [DenomSplit](06_params.md#denomsplit).
+
 
 --
 ## Markets
@@ -64,6 +70,8 @@ Each aspect of a market is stored separately for specific lookup.
 Each `<market id>` is a `uint32` (4 bytes) in big-endian order.
 
 Most aspects of a market have keys that start with the type byte `0x01`, followed by the `<market id>` then another type byte.
+
+See also: [Market](03_messages.md#market).
 
 
 ### Market Create-Ask Flat Fee
@@ -97,6 +105,8 @@ One entry per configured price->fee denom pair.
 * Key: `0x01 | <market id (4 bytes)> | 0x03 | <price denom (string)> | 0x1E | <fee denom (string)>`
 * Value: `<price amount (string)> | 0x1E | <fee amount (string)>`
 
+See also: [FeeRatio](03_messages.md#feeratio).
+
 
 ### Market Buyer Settlement Flat Fee
 
@@ -112,6 +122,8 @@ One entry per configured price->fee denom pair.
 
 * Key: `0x01 | <market id (4 bytes)> | 0x05 | <price denom (string)> | 0x1E | <fee denom (string)>`
 * Value: `<price amount (string)> | 0x1E | <fee amount (string)>`
+
+See also: [FeeRatio](03_messages.md#feeratio).
 
 
 ### Market Inactive Indicator
@@ -140,6 +152,8 @@ When an address has a given permission in a market, the following entry will exi
 * Value: `<nil (0 bytes)>`
 
 The `<permission type byte>` is a single byte as `uint8` with the same values as the enum entries, e.g. `PERMISSION_CANCEL` is `0x03`.
+
+See also: [AccessGrant](03_messages.md#accessgrant) and [Permission](03_messages.md#permission).
 
 
 ### Market Create-Ask Required Attributes
@@ -179,10 +193,12 @@ These entries are used to indicate that a given market exists.
 Each market has an associated `MarketAccount` with an address derived from the `market_id`.
 Each `MarketAccount` is stored using the `Accounts` module.
 
++++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/market.proto#L14-L26
+
 
 ### Market Details
 
-The `MarketDetails` are stored as part of the `MarketAccount` (in the `Accounts` module).
+The [MarketDetails](03_messages.md#marketdetails) are stored as part of the `MarketAccount` (in the `x/auth` module).
 
 
 --
@@ -196,8 +212,8 @@ Orders are stored using the following format:
 * Value `<order type byte> | protobuf(order type)`
 
 The `<order type byte>` has these possible values:
-* `0x00` => `AskOrder`
-* `0x01` => `BidOrder`
+* `0x00` => Ask Order
+* `0x01` => Bid Order
 
 
 ### Ask Orders
@@ -205,11 +221,15 @@ The `<order type byte>` has these possible values:
 * Key: `0x02 | <order id (8 bytes)>`
 * Value: `0x00 | protobuf(AskOrder)`
 
+See also: [AskOrder](03_messages.md#askorder).
+
 
 ### Bid Orders
 
 * Key: `0x02 | <order id (8 bytes)>`
 * Value: `0x01 | protobuf(BidOrder)`
+
+See also: [BidOrder](03_messages.md#bidorder).
 
 
 ### Last Order ID
@@ -228,12 +248,14 @@ Several index entries are maintained to help facilitate look-ups.
 
 The `<order type byte>` values are the same as those described in [Orders](#orders).
 
+
 ### Market to Order
 
 This index can be used to find orders in a given market.
 
 * Key: `0x03 | <market id (4 bytes)> | <order id (8 bytes)>`
 * Value: `<order type byte (1 byte)>`
+
 
 ### Owner Address to Order
 
@@ -242,12 +264,14 @@ This index can be used to find orders with a given buyer or seller.
 * Key: `0x04 | <addr len (1 byte)> | <addr> | <order id (8 bytes)>`
 * Value: `<order type byte (1 byte)>`
 
+
 ### Asset Denom to Order
 
 This index can be used to find orders involving a given `assets` denom.
 
 * Key: `0x05 | <asset denom> | <order id (8 bytes)>`
 * Value: `<order type byte (1 byte)>`
+
 
 ### Market External ID to Order
 

@@ -22,7 +22,6 @@
     - [GovUpdateParams](#govupdateparams)
 
 ---
-
 ## User Endpoints
 
 There are several endpoints available for anyone, but some markets might have restrictions on their use.
@@ -178,7 +177,7 @@ It is expected to fail if:
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L163-L164
 
 
-
+---
 ## Market Endpoints
 
 Several endpoints are only available to accounts designated by the market.
@@ -221,7 +220,7 @@ Some markets might want to attach their own identifiers to orders.
 This is done using the `MarketSetOrderExternalID` endpoint.
 The `admin` must have the `PERMISSION_SET_IDS` permission in the market.
 
-Orders with external ids can be looked up using the `GetOrderByExternalID` query.
+Orders with external ids can be looked up using the [GetOrderByExternalID](05_queries.md#getorderbyexternalid) query.
 
 External ids must be unique in a market, but multiple markets can use the same external id.
 
@@ -312,8 +311,8 @@ It is expected to fail if:
 Using the `MarketUpdateUserSettle` endpoint, markets can control whether user-settlement is allowed.
 The `admin` must have the `PERMISSION_UPDATE` permission in the market.
 
-With `allow_user_settlement` = `true`, users can use the `FillBids` and `FillAsks` endpoints in the market.
-With `allow_user_settlement` = `false`, orders can only be settled using the `MarketSettle` endpoint.
+With `allow_user_settlement` = `true`, users can use the [FillBids](#fillbids) and [FillAsks](#fillasks) endpoints in the market.
+With `allow_user_settlement` = `false`, orders can only be settled using the [MarketSettle](#marketsettle) endpoint.
 
 It is expected to fail if:
 * The market does not exist.
@@ -372,6 +371,7 @@ It is expected to fail if:
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L315-L316
 
 
+---
 ## Governance Proposals
 
 There are several governance-proposal-only endpoints.
@@ -385,7 +385,7 @@ If the provided `market_id` is `0` (zero), the next available market id will be 
 If it is not zero, the provided `market_id` will be used (unless it's already in use by another market).
 If it's already in use, the proposal will fail.
 
-It is recommended that the message be checked using the `ValidateCreateMarket` query first, to reduce the risk of failure or problems.
+It is recommended that the message be checked using the [ValidateCreateMarket](05_queries.md#validatecreatemarket) query first, to reduce the risk of failure or problems.
 
 It is expected to fail if:
 * The provided `authority` is not the governance module's account.
@@ -425,12 +425,11 @@ It is expected to fail if:
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L331-L332
 
 
-
 ### GovManageFees
 
 A market's fees can only be altered via governance proposal with a `MsgGovManageFeesRequest`.
 
-It is recommended that the message be checked using the `ValidateManageFees` query first, to ensure the updated fees do not present any problems.
+It is recommended that the message be checked using the [ValidateManageFees](05_queries.md#validatemanagefees) query first, to ensure the updated fees do not present any problems.
 
 It is expected to fail if:
 * The provided `authority` is not the governance module's account.

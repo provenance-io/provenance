@@ -20,7 +20,7 @@
 ## OrderFeeCalc
 
 The `OrderFeeCalc` query is used to find out the various fee required options for some order details.
-The idea is that you can provide your `AskOrder` or `BidOrder` in this query in order to identify what fees you'll need to pay.
+The idea is that you can provide your [AskOrder](03_messages.md#askorder) or [BidOrder](03_messages.md#bidorder) in this query in order to identify what fees you'll need to pay.
 
 Either an `ask_order` or a `bid_order` must be provided, but not both.
 
@@ -199,7 +199,7 @@ See also: [Params](06_params.md#params).
 
 ## ValidateCreateMarket
 
-It's possible for a `MsgGovCreateMarketRequest` to result in a market setup that is problematic.
+It's possible for a [MsgGovCreateMarketRequest](03_messages.md#msggovcreatemarketrequest) to result in a market setup that is problematic.
 To verify that one is not problematic, this `ValidateCreateMarket` can be used.
 
 If the result has:
@@ -235,7 +235,7 @@ Any problems detected will be returned in the `error` field.
 
 ## ValidateManageFees
 
-It's possible for a `MsgGovManageFeesRequest` to result in a problematic setup for a market.
+It's possible for a [MsgGovManageFeesRequest](03_messages.md#msggovmanagefeesrequest) to result in a problematic setup for a market.
 To verify that one does not result in such a state, use this ` ValidateManageFees`.
 
 If the result has:

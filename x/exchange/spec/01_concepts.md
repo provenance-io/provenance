@@ -22,13 +22,12 @@ The exchange module defines the portion of market fees that will be paid to the 
     - [Exchange Fees](#exchange-fees)
 
 ---
-
 ## Markets
 
 A market is a combination of on-chain setup and off-chain processes.
-They are created by a governance proposal using the `MsgGovCreateMarketRequest` message.
+They are created by a governance proposal using the [MsgGovCreateMarketRequest](03_messages.md#msggovcreatemarketrequest) message.
 Most aspects of the market are then manageable using permissioned endpoints.
-Fees can only be managed with a governance proposal using the `MsgGovManageFeesRequest` message.
+Fees can only be managed with a governance proposal using the [MsgGovManageFeesRequest](03_messages.md#msggovmanagefeesrequest) message.
 
 Each market has a set of optional details designed for human-use, e.g. name, description, website url.
 
@@ -46,37 +45,40 @@ Required attributes can have a wildcard at the start to indicate that any attrib
 For example, a required attribute of `*.kyc.pb` would match an account attribute of `buyer.kyc.pb` or `seller.kyc.pb`, but not `buyer.xkyc.pb` (wrong base) or `kyc.pb` (no extra level).
 
 Markets can control whether user-settlement is allowed.
-When user-settlement is allowed, the `FillBids` and `FillAsks` endpoints become available.
+When user-settlement is allowed, the [FillBids](03_messages.md#fillbids) and [FillAsks](03_messages.md#fillasks) endpoints become available.
 
 A market can also control whether orders can be created for it.
 When order creation is not allowed, any existing orders can still be settled or cancelled, but no new ones can be made (in that market).
 
-The fees collected by a market are kept in the market's account, and can be accessed using the `MarketWithdraw` endpoint.
+The fees collected by a market are kept in the market's account, and can be accessed using the [MarketWithdraw](03_messages.md#marketwithdraw) endpoint.
+
+See also: [Market](03_messages.md#market).
 
 
 ### Market Permissions
 
-The different available permissions are defined by the `Permission` proto enum message (in `market.proto)`.
+The different available permissions are defined by the [Permission](03_messages.md#permission) proto enum message.
 
-Each market manages its own set of `AccessGrants`, which confer a permissions to specific addresses.
+Each market manages its own set of [AccessGrants](03_messages.md#accessgrant), which confer a permissions to specific addresses.
 
 * `PERMISSION_UNSPECIFIED`: it is an error to try to use this permission for anything.
-* `PERMISSION_SETTLE`: accounts with this permission can use the `MarketSettle` endpoint for a market.
-* `PERMISSION_SET_IDS`: accounts with this permission can use the `MarketSetOrderExternalID` endpoint for a market.
-* `PERMISSION_CANCEL`: accounts with this permission can use the `CancelOrder` endpoint to cancel orders in a market.
-* `PERMISSION_WITHDRAW`: accounts with this permission can use the `MarketWithdraw` endpoint for a market.
-* `PERMISSION_UPDATE`: accounts with this permission can use the `MarketUpdateDetails`, `MarketUpdateEnabled`, and `MarketUpdateUserSettle` endpoints for a market.
-* `PERMISSION_PERMISSIONS`: accounts with this permission can use the `MarketManagePermissions` endpoint for a market.
-* `PERMISSION_ATTRIBUTES`: accounts with this permission can use the `MarketManageReqAttrs` endpoint for a market.
+* `PERMISSION_SETTLE`: accounts with this permission can use the [MarketSettle](03_messages.md#marketsettle) endpoint for a market.
+* `PERMISSION_SET_IDS`: accounts with this permission can use the [MarketSetOrderExternalID](03_messages.md#marketsetorderexternalid) endpoint for a market.
+* `PERMISSION_CANCEL`: accounts with this permission can use the [CancelOrder](03_messages.md#cancelorder) endpoint to cancel orders in a market.
+* `PERMISSION_WITHDRAW`: accounts with this permission can use the [MarketWithdraw](03_messages.md#marketwithdraw) endpoint for a market.
+* `PERMISSION_UPDATE`: accounts with this permission can use the [MarketUpdateDetails](03_messages.md#marketupdatedetails), [MarketUpdateEnabled](03_messages.md#marketupdateenabled), and [MarketUpdateUserSettle](03_messages.md#marketupdateusersettle) endpoints for a market.
+* `PERMISSION_PERMISSIONS`: accounts with this permission can use the [MarketManagePermissions](03_messages.md#marketmanagepermissions) endpoint for a market.
+* `PERMISSION_ATTRIBUTES`: accounts with this permission can use the [MarketManageReqAttrs](03_messages.md#marketmanagereqattrs) endpoint for a market.
 
 
 ### Settlement
 
 Each market is responsible for the settlement of its orders.
 To do this, it must first identify a matching set of asks and bids.
-The `MarketSettle` endpoint is then used to settle and clear orders.
+The [MarketSettle](03_messages.md#marketsettle) endpoint is then used to settle and clear orders.
+If the market allows, users can also settlements orders themselves using the [FillBids](03_messages.md#fillbids) or [FillAsks](03_messages.md#fillasks) endpoints.
 
-During settlement, at most one order can be partially filled, and it must be the last order in its list (in `MsgMarketSettleRequest`).
+During settlement, at most one order can be partially filled, and it must be the last order in its list (in [MsgMarketSettleRequest](03_messages.md#msgmarketsettlerequest)).
 That order must allow partial settlement (defined at order creation) and be evenly divisible (see [Partial Orders](#partial-orders)).
 The market must also set the `expect_partial` field to `true` in the request.
 If all of the orders are being filled in full, the `expect_partial` field must be `false`.
@@ -144,6 +146,8 @@ During settlement, the `2cow` are transferred from the seller to the buyer, then
 Then, `2chicken` are transferred from the seller to the market.
 So the seller ends up with `14chicken` for their `2cow`.
 
+See also: [AskOrder](03_messages.md#askorder).
+
 
 ### Bid Orders
 
@@ -155,6 +159,8 @@ Then, the buyer settlement fees are transferred from the buyer to the market.
 
 The `buyer_settlement_fees` are verified at the time of order creation, but only paid during settlement.
 They are paid in addition to the `price` the buyer is paying.
+
+See also: [BidOrder](03_messages.md#bidorder).
 
 
 ### Partial Orders
@@ -175,14 +181,14 @@ When an order is partially filled, its amounts are updated to reflect what hasn'
 
 An order that allows partial fulfillment can be partially filled multiple times (as long as the numbers allow for it).
 
-Settlement will fail if an order is being partially filled, that either a) doesn't allow it, or b) cannot be evenly split at the needed `assets` amount.
+Settlement will fail if an order is being partially filled, that either doesn't allow it, or cannot be evenly split at the needed `assets` amount.
 
 
 ### External IDs
 
 Orders can be identified using an off-chain identifier.
 These can be provided during order creation (in the `external_id` field).
-They can also be set by the market after the order has been created using the `MarketSetOrderExternalID` endpoint.
+They can also be set by the market after the order has been created using the [MarketSetOrderExternalID](03_messages.md#marketsetorderexternalid) endpoint.
 
 Each external id is unique inside a market.
 That is, two orders in the same market cannot have the same external id,
@@ -193,7 +199,7 @@ An attempt (by a market) to change an order's external id to one already in use,
 
 The external ids are optional, so it's possible that multiple orders in a market have an empty string for the external id.
 
-Orders with external ids can be looked up using the `GetOrderByExternalID` query (as well as the other order queries).
+Orders with external ids can be looked up using the [GetOrderByExternalID](05_queries.md#getorderbyexternalid) query (as well as the other order queries).
 
 
 ---
@@ -247,7 +253,7 @@ The bid order's `buyer_settlement_fees` must be enough to cover one of the `fee_
 
 ### Settlement Ratio Fees
 
-A `FeeRatio` is a pair of `Coin`s defining a `price` to `fee` ratio.
+A [FeeRatio](03_messages.md#feeratio) is a pair of `Coin`s defining a `price` to `fee` ratio.
 
 Each order type has its own settlement ratio fee configurations:
 
@@ -300,7 +306,7 @@ The ratio and flat fees can be in any denoms allowed by the market, and do not h
 ### Exchange Fees
 
 A portion of the fees collected by a market, are given to the exchange.
-The amount is defined using basis points in the exchange module's `Params` and can be configured differently for specific denoms.
+The amount is defined using basis points in the exchange module's [Params](06_params.md#params) and can be configured differently for specific denoms.
 
 When the market collects fees, the applicable basis points are looked up and applied to the amount being collected.
 That amount is then transferred from the market's account to the chain's fee collector (similar to gas fees).
@@ -315,10 +321,10 @@ The specific `rooster` split of `100` is used for those: `710 * 100 / 10,000` = 
 So the market will first receive `1500hen,710rooster` from the buyer(s)/seller(s), then `75hen,8rooster` is transferred from the market to the fee collector.
 The market is then left with `1425hen:702rooster`.
 
-During `MarketSettle`, the math and rounding is applied to the total fee being collected (as opposed to applying it to each order's fee first, then summing that).
+During [MarketSettle](03_messages.md#marketsettle), the math and rounding is applied to the total fee being collected (as opposed to applying it to each order's fee first, then summing that).
 
 During order creation, the exchange's portion of the order creation fee is calculated and collected from the creation fee provided in the `Msg`.
 
-During `FillAsks` or `FillBids`, the settlement fees are summed and collected separately from the order creation fee.
+During [FillBids](03_messages.md#fillbids) or [FillAsks](03_messages.md#fillasks), the settlement fees are summed and collected separately from the order creation fee.
 That means the math and rounding is done twice, once for the total settlement fees and again for the order creation fee.
 This is done so that the fees are collected the same as if an order were created and later settled by the market.

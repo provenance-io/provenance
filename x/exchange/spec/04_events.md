@@ -34,7 +34,6 @@ Event Type: `provenance.exchange.v1.EventOrderCreated`
 | external_id   | The external id of the order just created.                |
 
 
-
 ## EventOrderCancelled
 
 When an order is cancelled (either by the owner or the market), an `EventOrderCancelled` is emitted.
@@ -49,12 +48,11 @@ Event Type: `provenance.exchange.v1.EventOrderCancelled`
 | external_id   | The external id of the order that was just cancelled.       |
 
 
-
 ## EventOrderFilled
 
 When an order is filled in full, an `EventOrderFilled` is emitted.
 
-This event indicates that an order has been completed and deleted.
+This event indicates that an order has been settled, cleared, and deleted.
 
 Event Type: `provenance.exchange.v1.EventOrderFilled`
 
@@ -72,6 +70,7 @@ E.g. when an ask order is settled for a higher price than set in the order, the 
 Similarly, the `fees` reflect the actual settlement fees paid (both flat and ratio) by the order's owner.
 
 If an order was previously partially filled, but now, the rest is being filled, this event is emitted.
+
 
 ## EventOrderPartiallyFilled
 
@@ -93,6 +92,7 @@ Event Type: `provenance.exchange.v1.EventOrderPartiallyFilled`
 The `assets`, `price`, and `fees`, reflect the funds that were actually transferred.
 
 If an order was previously partially filled, but now, the rest is being filled, an `EventOrderFilled` is emitted.
+
 
 ## EventOrderExternalIDUpdated
 
