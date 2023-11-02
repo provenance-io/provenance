@@ -21,7 +21,7 @@ There are several queries for getting information about things in the exchange m
 
 ## OrderFeeCalc
 
-The `OrderFeeCalc` query is used to find out the various fee required options for some order details.
+The `OrderFeeCalc` query is used to find out the various required fee options for a given order.
 The idea is that you can provide your [AskOrder](03_messages.md#askorder) or [BidOrder](03_messages.md#bidorder) in this query in order to identify what fees you'll need to pay.
 
 Either an `ask_order` or a `bid_order` must be provided, but not both.
@@ -205,9 +205,9 @@ It's possible for a [MsgGovCreateMarketRequest](03_messages.md#msggovcreatemarke
 To verify that one is not problematic, this `ValidateCreateMarket` can be used.
 
 If the result has:
-* `gov_prop_will_pass` = `true` and an empty `error` field, then there are no problems with the provided `Msg`.
-* `gov_prop_will_pass` = `true` and a non-empty `error` field, then the `Msg` would successfully run, but would result in the problems identified in the `error` field.
 * `gov_prop_will_pass` = `false`, then either submitting the proposal will fail, or the `Msg` will result in an error ("failed") after the proposal is passed. The `error` field will have details.
+* `gov_prop_will_pass` = `true` and a non-empty `error` field, then the `Msg` would successfully run, but would result in the problems identified in the `error` field.
+* `gov_prop_will_pass` = `true` and an empty `error` field, then there are no problems with the provided `Msg`.
 
 ### QueryValidateCreateMarketRequest
 
@@ -238,12 +238,12 @@ Any problems detected will be returned in the `error` field.
 ## ValidateManageFees
 
 It's possible for a [MsgGovManageFeesRequest](03_messages.md#msggovmanagefeesrequest) to result in a problematic setup for a market.
-To verify that one does not result in such a state, use this ` ValidateManageFees`.
+To verify that one does not result in such a state, use this `ValidateManageFees` query.
 
 If the result has:
-* `gov_prop_will_pass` = `true` and an empty `error` field, then there are no problems with the provided `Msg`.
-* `gov_prop_will_pass` = `true` and a non-empty `error` field, then the `Msg` would successfully run, but would result in the problems identified in the `error` field.
 * `gov_prop_will_pass` = `false`, then either submitting the proposal will fail, or the `Msg` will result in an error ("failed") after the proposal is passed. The `error` field will have details.
+* `gov_prop_will_pass` = `true` and a non-empty `error` field, then the `Msg` would successfully run, but would result in the problems identified in the `error` field.
+* `gov_prop_will_pass` = `true` and an empty `error` field, then there are no problems with the provided `Msg`.
 
 ### QueryValidateManageFeesRequest
 
