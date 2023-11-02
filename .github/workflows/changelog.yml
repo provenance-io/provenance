@@ -19,8 +19,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # Depending on your needs, you can use a token that will re-trigger workflows
-          # See https://github.com/stefanzweifel/git-auto-commit-action#commits-of-this-action-do-not-trigger-new-workflow-runs
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
+          token: ${{ secrets.BOT_CPR_PAT }}
 
       # All commits must be signed, import key and sign commit of updated change log.
       - name: Import GPG key
@@ -39,8 +39,8 @@ jobs:
           activationLabel: 'dependencies'
           changelogPath: './CHANGELOG.md'
 
-      # This step is required for committing the changes to your branch. 
-      # See https://github.com/stefanzweifel/git-auto-commit-action#commits-of-this-action-do-not-trigger-new-workflow-runs 
+      # This step is required for committing the changes to your branch.
+      # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_user_name: "Provenance-io Bot"
