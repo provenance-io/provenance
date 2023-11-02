@@ -38,19 +38,21 @@ Big-endian ordering is used for all conversions between numbers and byte arrays.
 
 ## Params
 
-All params entries start with the type byte `0x00`
+All params entries start with the type byte `0x00` followed by a string identifying the entry type.
 
-Each split is stored as a `uint16` (2 bytes) in big-endian order.
+Each `<split>` is stored as a `uint16` (2 bytes) in big-endian order.
+
+The byte `0x1E` is used in a few places as a record separator.
 
 See also: [Params](06_params.md#params).
 
 
 ### Default Split
 
-The default split defines the split amount (in basis points) the exchange receives of fees when there is not an applicable specific denom split. 
+The default split defines the split amount (in basis points) the exchange receives of fees when there is not an applicable specific denom split.
 
 * Key:`0x00 | "split" (5 bytes)`
-* Value: `uint16`
+* Value: `<split (2 bytes)>`
 
 
 ### Specific Denom Split
@@ -58,7 +60,7 @@ The default split defines the split amount (in basis points) the exchange receiv
 A specific denom split is a split amount (in basis points) the exchange receives of fees for fees paid in a specific denom.
 
 * Key: `0x00 | "split" (5 bytes) | <denom (string)>`
-* Value: `uint16`
+* Value: `<split (2 bytes)>`
 
 See also: [DenomSplit](06_params.md#denomsplit).
 
@@ -100,7 +102,7 @@ One entry per configured denom.
 
 ### Market Seller Settlement Ratio Fee
 
-One entry per configured price->fee denom pair.
+One entry per configured price:fee denom pair.
 
 * Key: `0x01 | <market id (4 bytes)> | 0x03 | <price denom (string)> | 0x1E | <fee denom (string)>`
 * Value: `<price amount (string)> | 0x1E | <fee amount (string)>`
@@ -118,7 +120,7 @@ One entry per configured denom.
 
 ### Market Buyer Settlement Ratio Fee
 
-One entry per configured price->fee denom pair.
+One entry per configured price:fee denom pair.
 
 * Key: `0x01 | <market id (4 bytes)> | 0x05 | <price denom (string)> | 0x1E | <fee denom (string)>`
 * Value: `<price amount (string)> | 0x1E | <fee amount (string)>`
@@ -193,12 +195,14 @@ These entries are used to indicate that a given market exists.
 
 This indicates the last market-id that was auto-selected for use.
 
-When a `MsgGovCreateMarketRequest` is processed that has a `MarketID` of `0` (zero), the next available market id is auto selected.
+When a `MsgGovCreateMarketRequest` is processed that has a `market_id` of `0` (zero), the next available market id is auto selected.
 Starting with the number after what's in this state entry, each market id is sequentially checked until an available one is found.
 The new market gets that id, then this entry is then updated to indicate what that was.
 
 * Key: `0x06`
 * Value: `<market id (4 bytes)>`
+
+When a `MsgGovCreateMarketRequest` is processed that has a non-zero `market_id`, this entry is not considered or altered.
 
 
 ## Orders
