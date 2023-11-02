@@ -53,6 +53,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Properly populate the permissions lists when reading access grants from state [#1699](https://github.com/provenance-io/provenance/issues/1699).
 * Fixed the paginated order queries to properly look up orders [#1699](https://github.com/provenance-io/provenance/issues/1699).
 
+### Dependencies
+
+- Bump `bufbuild/buf-setup-action` from 1.27.1 to 1.27.2 ([#1724](https://github.com/provenance-io/provenance/pull/1724))
+
 ---
 
 ## [v1.17.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc1) - 2023-10-18
