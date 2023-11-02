@@ -4,11 +4,12 @@ The `x/exchange` module facilitates the trading of on-chain assets.
 
 Markets provide fee structures and are responsible for identifying and triggering settlements.
 Orders are created by users to indicate a desire to trade on-chain funds in a market.
-The exchange module defines the portion of market fees that will be paid to the chain and get distributed like gas fees.
+The exchange module defines a portion of market fees to be paid to the chain (distributed like gas fees).
 
 ---
 <!-- TOC -->
   - [Markets](#markets)
+    - [Required Attributes](#required-attributes)
     - [Market Permissions](#market-permissions)
     - [Settlement](#settlement)
   - [Orders](#orders)
@@ -36,17 +37,12 @@ A market is responsible (off-chain) for identifying order matches and triggering
 
 A market receives fees for order creation and order settlement. It also defines what fees are required and what is acceptable as payments.
 
-A market can delegate various [permissions](#market-permissions) to other accounts, allowing those accounts to use specific endpoints for a given market.
+A market can delegate various [permissions](#market-permissions) to other accounts, allowing those accounts to use specific endpoints on behalf of the market.
 
-Markets can also restrict who can create orders with them by defining account attributes that are required to create orders.
-If one or more attributes are required to create an order of a certain type, the order creator (buyer or seller) must have all of them on their account.
-Attributes are defined using the [x/name](/x/name/spec/README.md) module, and are managed on accounts using the [x/attributes](/x/attribute/spec/README.md) module.
-
-Required attributes can have a wildcard at the start to indicate that any attribute with the designated base and one (or more) level(s) is applicable.
-For example, a required attribute of `*.kyc.pb` would match an account attribute of `buyer.kyc.pb` or `seller.kyc.pb`, but not `buyer.xkyc.pb` (wrong base) or `kyc.pb` (no extra level).
+Markets can restrict who can create orders with them by defining account attributes that are required to create orders. See [Required Attributes](#required-attributes).
 
 Markets can control whether user-settlement is allowed.
-When user-settlement is allowed, the [FillBids](03_messages.md#fillbids) and [FillAsks](03_messages.md#fillasks) endpoints become available.
+When user-settlement is allowed, the [FillBids](03_messages.md#fillbids) and [FillAsks](03_messages.md#fillasks) endpoints can be used for orders in the market.
 
 A market can also control whether orders can be created for it.
 When order creation is not allowed, any existing orders can still be settled or cancelled, but no new ones can be made (in that market).
@@ -55,12 +51,22 @@ The fees collected by a market are kept in the market's account, and can be acce
 
 See also: [Market](03_messages.md#market).
 
+### Required Attributes
+
+There is a separate list of attributes required to create each order type.
+If one or more attributes are required to create an order of a certain type, the order creator (buyer or seller) must have all of them on their account.
+
+Required attributes can have a wildcard at the start to indicate that any attribute with the designated base and one (or more) level(s) is applicable.
+The only place a wildcard `*` is allowed is at the start of the string and must be immediately followed by a period.
+For example, a required attribute of `*.kyc.pb` would match an account attribute of `buyer.kyc.pb` or `special.seller.kyc.pb`, but not `buyer.xkyc.pb` (wrong base) or `kyc.pb` (no extra level).
+
+Attributes are defined using the [x/name](/x/name/spec/README.md) module, and are managed on accounts using the [x/attributes](/x/attribute/spec/README.md) module.
 
 ### Market Permissions
 
 The different available permissions are defined by the [Permission](03_messages.md#permission) proto enum message.
 
-Each market manages its own set of [AccessGrants](03_messages.md#accessgrant), which confer a permissions to specific addresses.
+Each market manages its own set of [AccessGrants](03_messages.md#accessgrant), which confer specific permissions to specific addresses.
 
 * `PERMISSION_UNSPECIFIED`: it is an error to try to use this permission for anything.
 * `PERMISSION_SETTLE`: accounts with this permission can use the [MarketSettle](03_messages.md#marketsettle) endpoint for a market.
@@ -77,7 +83,7 @@ Each market manages its own set of [AccessGrants](03_messages.md#accessgrant), w
 Each market is responsible for the settlement of its orders.
 To do this, it must first identify a matching set of asks and bids.
 The [MarketSettle](03_messages.md#marketsettle) endpoint is then used to settle and clear orders.
-If the market allows, users can also settlements orders themselves using the [FillBids](03_messages.md#fillbids) or [FillAsks](03_messages.md#fillasks) endpoints.
+If the market allows, users can also settlement orders with their own funds using the [FillBids](03_messages.md#fillbids) or [FillAsks](03_messages.md#fillasks) endpoints.
 
 During settlement, at most one order can be partially filled, and it must be the last order in its list (in [MsgMarketSettleRequest](03_messages.md#msgmarketsettlerequest)).
 That order must allow partial settlement (defined at order creation) and be evenly divisible (see [Partial Orders](#partial-orders)).
@@ -98,16 +104,16 @@ With complex settlements, it's possible that an ask order's `assets` go to a dif
 
 Transfers of the `assets` and `price` bypass the quarantine module since order creation can be viewed as acceptance of those funds.
 
-Transfers do not bypass any `x/marker` or `x/sanction` module restrictions, though.
+Transfers do not bypass any other send-restrictions (e.g. `x/marker` or `x/sanction` module restrictions).
 E.g. If an order's funds are in a sanctioned account, settlement of that order will fail since those funds cannot be removed from that account.
 Or, if a marker has required attributes, but the recipient does not have those attributes, settlement will fail.
 
 
 ## Orders
 
-Orders are created by users that want to trade assets. 
+Orders are created by users that want to trade assets in a market.
 
-When an order is created, a hold is placed on the applicable funds. 
+When an order is created, a hold is placed on the applicable funds.
 Those funds will remain in the user's account until the order is settled or cancelled.
 The holds ensure that the required funds are available at settlement without the need of an intermediary holding/clearing account.
 During settlement, the funds get transferred directly between the buyers and sellers, and fees are paid from the buyers and sellers directly to the market.
@@ -116,9 +122,10 @@ Orders can be cancelled by either the user or the market.
 
 Once an order is created, it cannot be modified except in these specific ways:
 
-1. When an order is partially filled, the amounts in it will be updated accordingly.
+1. When an order is partially filled, the amounts in it will be reduced accordingly.
 2. An order's external id can be changed by the market.
 3. Cancelling an order will release the held funds and delete the order.
+4. Settling an order in full will delete the order.
 
 
 ### Ask Orders
@@ -131,7 +138,7 @@ It's possible for an ask order to be filled at a larger `price` than initially d
 The `seller_settlement_flat_fee` is verified at the time of order creation, but only paid during settlement.
 
 When an ask order is settled, the `assets` are transferred directly to the buyer(s) and the `price` is transferred directly from the buyer(s).
-Then the seller settlement fees are transferred from the seller to the market. 
+Then the seller settlement fees are transferred from the seller to the market.
 
 During settlement, the seller settlement fee ratio with the appropriate `price` denom is applied to the price the seller is receiving.
 That result is then added to the ask order's `seller_settlement_flat_fee` to get the total settlement fee to be paid for the ask order.
@@ -142,7 +149,7 @@ Because the fees can come out of the `price` funds, it's possible (probable) tha
 
 For example, a user creates an ask order to sell `2cow` (the `assets`) and wants at least `15chicken` (the `price`).
 The market finds a way to settle that order where the seller will get `16chicken`, but the seller's settlement fee will end up being `2chicken`.
-During settlement, the `2cow` are transferred from the seller to the buyer, then `16chicken` are transferred from the buyer to the seller.
+During settlement, the `2cow` are transferred from the seller to the buyer, and `16chicken` are transferred from the buyer to the seller.
 Then, `2chicken` are transferred from the seller to the market.
 So the seller ends up with `14chicken` for their `2cow`.
 
@@ -167,9 +174,9 @@ See also: [BidOrder](03_messages.md#bidorder).
 
 Both Ask orders and Bid orders can optionally allow partial fulfillment by setting the `allow_partial` field to `true` when creating the order.
 
-When an order is partially filled, the order's same `assets:price` and `assets:settlement fees` ratios are maintained.
+When an order is partially filled, the order's same `assets:price` and `assets:settlement-fees` ratios are maintained.
 
-This means that:
+Since only whole numbers are allowed, this means that:
 
 * `<order price> * <assets filled> / <order assets>` must be a whole number.
 * `<settlement fees> * <assets filled> / <order assets>` must also be a whole number.
@@ -181,7 +188,7 @@ When an order is partially filled, its amounts are updated to reflect what hasn'
 
 An order that allows partial fulfillment can be partially filled multiple times (as long as the numbers allow for it).
 
-Settlement will fail if an order is being partially filled, that either doesn't allow it, or cannot be evenly split at the needed `assets` amount.
+Settlement will fail if an order is being partially filled that either doesn't allow it, or cannot be evenly split at the needed `assets` amount.
 
 
 ### External IDs
@@ -191,22 +198,22 @@ These can be provided during order creation (in the `external_id` field).
 They can also be set by the market after the order has been created using the [MarketSetOrderExternalID](03_messages.md#marketsetorderexternalid) endpoint.
 
 Each external id is unique inside a market.
-That is, two orders in the same market cannot have the same external id,
-but two orders in different markets **can** have the same external id.
-
+I.e. two orders in the same market cannot have the same external id, but two orders in different markets **can** have the same external id.
 An attempt (by a user) to create an order with a duplicate external id, will fail.
 An attempt (by a market) to change an order's external id to one already in use, will fail.
 
 The external ids are optional, so it's possible that multiple orders in a market have an empty string for the external id.
-
 Orders with external ids can be looked up using the [GetOrderByExternalID](05_queries.md#getorderbyexternalid) query (as well as the other order queries).
+
+External ids are limited to 100 characters.
 
 
 ## Fees
 
 Markets dictate the minimum required fees. It's possible to pay more than the required fees, but not less.
 
-The exchange dictates a portion of those fees that are collected by the blockchain (from the markets) and distributed similar to gas fees.
+A portion of the fees that a market collects are sent to the blockchain and distributed similar to gas fees.
+This portion is dictated by the exchange module in its [params](06_params.md).
 
 There are three types of fees:
 
@@ -214,14 +221,14 @@ There are three types of fees:
 * Settlement flat fees: A fee paid during settlement that is the same for each order.
 * Settlement ratio fees: A fee paid during settlement that is based off of the order's price.
 
-For each fee type, there is a configuration for each order type. 
-E.g. the ask-order creation fee is configured separately from the bid-order creation fee. 
+For each fee type, there is a configuration for each order type.
+E.g. the ask-order creation fee is configured separately from the bid-order creation fee.
 
 Each fee type is only paid in a single denom, but a market can define multiple options for each.
-E.g. if flat fee options for a specific fee are `5chicken,1cow`, users can provide **either** `5chicken` or `1cow` to fulfill that required fee.  
+E.g. if flat fee options for a specific fee are `5chicken,1cow`, users can provide **either** `5chicken` or `1cow` to fulfill that required fee.
 
 If a market does not have any options defined for a given fee type, that fee is not required.
-E.g. if the `fee_create_ask_flat` field is empty, there is no fee required to create an ask order. 
+E.g. if the `fee_create_ask_flat` field is empty, there is no fee required to create an ask order.
 
 All fees except the seller settlement ratio fees must be provided with order creation, and are validated at order creation.
 
@@ -285,7 +292,7 @@ E.g. A market has `1000chicken:3chicken` in `fee_seller_settlement_ratios`.
 * An order is settling for `3000chicken`: `3000 * 3 / 1000` = `9`, which doesn't need rounding, so stays at `9chicken`.
 
 The actual amount isn't known until settlement, but a minimum can be calculated by applying the applicable ratio to an ask order's `price`.
-The seller settlement ratio fee will be at least that amount, but it will go up at most the amount that the price goes up.
+The seller settlement ratio fee will be at least that amount, but since it gets larger slower than the price, `<ask order price> - <ratio fee based on ask order price> - <flat fee>` is the least amount the seller will end up with.
 
 
 #### Buyer Settlement Ratio Fee
@@ -315,7 +322,7 @@ If that is not a whole number, it is rounded up to the next whole number.
 
 For example, Say the exchange has a default split of `500` (basis points), and a specific split of `100` for `rooster`.
 When a market collects a fee of `1500hen,710rooster`:
-There is no specific split for `hen`, so the default `500` is used for them. `1500 * 500 / 10,000` = `75hen` (a whole number, so no rounding is needed). 
+There is no specific split for `hen`, so the default `500` is used for them. `1500 * 500 / 10,000` = `75hen` (a whole number, so no rounding is needed).
 The specific `rooster` split of `100` is used for those: `710 * 100 / 10,000` = `7.1` which gets rounded up to `8rooster`.
 So the market will first receive `1500hen,710rooster` from the buyer(s)/seller(s), then `75hen,8rooster` is transferred from the market to the fee collector.
 The market is then left with `1425hen:702rooster`.
