@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Wrote unit tests on the keeper methods [#1699](https://github.com/provenance-io/provenance/issues/1699).
 * During `FillBids`, the seller settlement fee is now calculated on the total price instead of each order individually [#1699](https://github.com/provenance-io/provenance/issues/1699).
 * In the `OrderFeeCalc` query, ensure the market exists [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* Add publishing of docker arm64 container builds [#1634](https://github.com/provenance-io/provenance/issues/1634)
 
 ### Bug Fixes
 
@@ -95,7 +96,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump cometbft to v0.34.29 (from v0.34.28) [PR 1649](https://github.com/provenance-io/provenance/pull/1649).
 * Add genesis/init for Marker module send deny list addresses. [#1660](https://github.com/provenance-io/provenance/issues/1660)
 * Add automatic changelog entries for dependabot. [#1674](https://github.com/provenance-io/provenance/issues/1674)
-* Add publishing of docker arm64 container builds [#1634](https://github.com/provenance-io/provenance/issues/1634)
 * Ensure IBC marker has matching supply [#1706](https://github.com/provenance-io/provenance/issues/1706).
 
 ### Bug Fixes
