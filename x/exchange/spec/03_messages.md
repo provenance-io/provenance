@@ -1,5 +1,8 @@
 # Exchange Messages
 
+The exchange module has `Msg` endpoints for users, markets, and governance proposals.
+
+---
 <!-- TOC -->
   - [User Endpoints](#user-endpoints)
     - [CreateAsk](#createask)
@@ -21,7 +24,7 @@
     - [GovManageFees](#govmanagefees)
     - [GovUpdateParams](#govupdateparams)
 
----
+
 ## User Endpoints
 
 There are several endpoints available for anyone, but some markets might have restrictions on their use.
@@ -177,7 +180,6 @@ It is expected to fail if:
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L163-L164
 
 
----
 ## Market Endpoints
 
 Several endpoints are only available to accounts designated by the market.
@@ -371,7 +373,6 @@ It is expected to fail if:
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L315-L316
 
 
----
 ## Governance Proposals
 
 There are several governance-proposal-only endpoints.

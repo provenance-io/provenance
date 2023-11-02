@@ -1,5 +1,8 @@
 # Exchange Events
 
+The exchange module emits several events for various actions.
+
+---
 <!-- TOC -->
   - [EventOrderCreated](#eventordercreated)
   - [EventOrderCancelled](#eventordercancelled)
@@ -18,7 +21,6 @@
   - [EventMarketFeesUpdated](#eventmarketfeesupdated)
   - [EventParamsUpdated](#eventparamsupdated)
 
----
 
 ## EventOrderCreated
 

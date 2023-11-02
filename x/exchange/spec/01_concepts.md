@@ -6,6 +6,7 @@ Markets provide fee structures and are responsible for identifying and triggerin
 Orders are created by users to indicate a desire to trade on-chain funds in a market.
 The exchange module defines the portion of market fees that will be paid to the chain and get distributed like gas fees.
 
+---
 <!-- TOC -->
   - [Markets](#markets)
     - [Market Permissions](#market-permissions)
@@ -21,7 +22,7 @@ The exchange module defines the portion of market fees that will be paid to the 
     - [Settlement Ratio Fees](#settlement-ratio-fees)
     - [Exchange Fees](#exchange-fees)
 
----
+
 ## Markets
 
 A market is a combination of on-chain setup and off-chain processes.
@@ -102,7 +103,6 @@ E.g. If an order's funds are in a sanctioned account, settlement of that order w
 Or, if a marker has required attributes, but the recipient does not have those attributes, settlement will fail.
 
 
----
 ## Orders
 
 Orders are created by users that want to trade assets. 
@@ -202,7 +202,6 @@ The external ids are optional, so it's possible that multiple orders in a market
 Orders with external ids can be looked up using the [GetOrderByExternalID](05_queries.md#getorderbyexternalid) query (as well as the other order queries).
 
 
----
 ## Fees
 
 Markets dictate the minimum required fees. It's possible to pay more than the required fees, but not less.

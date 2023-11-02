@@ -1,5 +1,8 @@
 # Exchange Queries
 
+There are several queries for getting information about things in the exchange module.
+
+---
 <!-- TOC 2 2 -->
   - [OrderFeeCalc](#orderfeecalc)
   - [GetOrder](#getorder)
@@ -15,7 +18,6 @@
   - [ValidateMarket](#validatemarket)
   - [ValidateManageFees](#validatemanagefees)
 
----
 
 ## OrderFeeCalc
 

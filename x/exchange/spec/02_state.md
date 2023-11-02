@@ -4,6 +4,7 @@ The Exchange module manages several things in state.
 
 Big-endian ordering is used for all conversions between numbers and byte arrays.
 
+---
 <!-- TOC -->
   - [Params](#params)
     - [Default Split](#default-split)
@@ -34,7 +35,7 @@ Big-endian ordering is used for all conversions between numbers and byte arrays.
     - [Asset Denom to Order](#asset-denom-to-order)
     - [Market External ID to Order](#market-external-id-to-order)
 
---
+
 ## Params
 
 All params entries start with the type byte `0x00`
@@ -62,7 +63,6 @@ A specific denom split is a split amount (in basis points) the exchange receives
 See also: [DenomSplit](06_params.md#denomsplit).
 
 
---
 ## Markets
 
 Each aspect of a market is stored separately for specific lookup.
@@ -201,7 +201,6 @@ The new market gets that id, then this entry is then updated to indicate what th
 * Value: `<market id (4 bytes)>`
 
 
---
 ## Orders
 
 Each `<order id>` is a `uint64` (8 bytes) in big-endian order.
@@ -241,7 +240,6 @@ Then this entry is updated to reflect the new order.
 * Value: `<order id (8 bytes)>`
 
 
---
 ## Indexes
 
 Several index entries are maintained to help facilitate look-ups.
