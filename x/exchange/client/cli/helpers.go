@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -19,6 +18,8 @@ const (
 	FlagExternalID    = "external-id"
 	FlagCreationFee   = "creation-fee"
 	FlagOrder         = "order"
+	FlagBids          = "bids"
+	FlagAsks          = "asks"
 )
 
 var ExampleAddr = "pb1v4uxzmtsd3j47h6lta047h6lta047h6llzxa5d" // = sdk.AccAddress("example_____________")
@@ -76,6 +77,19 @@ func readReqCoinFlag(flagSet *pflag.FlagSet, name string) (sdk.Coin, error) {
 	return *rv, nil
 }
 
+// readOrderIdsFlag reads a UintSlice flag and converts it into a []uint64.
+func readOrderIdsFlag(flagSet *pflag.FlagSet, name string) ([]uint64, error) {
+	ids, err := flagSet.GetUintSlice(name)
+	if err != nil {
+		return nil, err
+	}
+	rv := make([]uint64, len(ids))
+	for i, id := range ids {
+		rv[i] = uint64(id)
+	}
+	return rv, nil
+}
+
 // AddFlagMarket adds the --market <uint32> flag to a command.
 // If required is true, it marks the flag as required for the command.
 func AddFlagMarket(cmd *cobra.Command, required bool) {
@@ -101,6 +115,17 @@ func ReadFlagAssets(flagSet *pflag.FlagSet) (sdk.Coin, error) {
 	return readReqCoinFlag(flagSet, FlagAssets)
 }
 
+// AddFlagTotalAssets adds the --assets <string> flag to a command and marks it required.
+func AddFlagTotalAssets(cmd *cobra.Command) {
+	cmd.Flags().String(FlagAssets, "", "The total assets you are filling, e.g. 10nhash")
+	markFlagRequired(cmd, FlagAssets)
+}
+
+// ReadFlagTotalAssets reads the --assets flag as sdk.Coins.
+func ReadFlagTotalAssets(flagSet *pflag.FlagSet) (sdk.Coins, error) {
+	return readCoinsFlag(flagSet, FlagAssets)
+}
+
 // AddFlagPrice adds the --price <string> flag to a command and marks it required.
 func AddFlagPrice(cmd *cobra.Command) {
 	cmd.Flags().String(FlagPrice, "", "The price for this order, e.g. 10nhash")
@@ -112,14 +137,25 @@ func ReadFlagPrice(flagSet *pflag.FlagSet) (sdk.Coin, error) {
 	return readReqCoinFlag(flagSet, FlagPrice)
 }
 
+// AddFlagTotalPrice adds the --price <string> flag to a command and marks it required.
+func AddFlagTotalPrice(cmd *cobra.Command) {
+	cmd.Flags().String(FlagPrice, "", "The total price you are paying, e.g. 10nhash")
+	markFlagRequired(cmd, FlagPrice)
+}
+
 // AddFlagSettlementFee adds the optional --settlement-fee <string> flag to a command.
 func AddFlagSettlementFee(cmd *cobra.Command) {
 	cmd.Flags().String(FlagSettlementFee, "", "The settlement fee Coin string for this order, e.g. 10nhash")
 }
 
-// ReadFlagSettlementFee reads the --price flag as an sdk.Coin.
-func ReadFlagSettlementFee(flagSet *pflag.FlagSet) (sdk.Coins, error) {
+// ReadFlagSettlementFeeCoins reads the --settlement-fee flag as sdk.Coins.
+func ReadFlagSettlementFeeCoins(flagSet *pflag.FlagSet) (sdk.Coins, error) {
 	return readCoinsFlag(flagSet, FlagSettlementFee)
+}
+
+// ReadFlagSettlementFeeCoin reads the --settlement-fee flag as sdk.Coin.
+func ReadFlagSettlementFeeCoin(flagSet *pflag.FlagSet) (*sdk.Coin, error) {
+	return readCoinFlag(flagSet, FlagSettlementFee)
 }
 
 // AddFlagAllowPartial adds the optional --allow-partial flag to a command.
@@ -152,42 +188,6 @@ func ReadFlagCreationFee(flagSet *pflag.FlagSet) (*sdk.Coin, error) {
 	return readCoinFlag(flagSet, FlagCreationFee)
 }
 
-// AddCreateOrderFlags adds all the flags used in the order creation commands.
-func AddCreateOrderFlags(cmd *cobra.Command) {
-	AddFlagMarket(cmd, true)
-	AddFlagAssets(cmd)
-	AddFlagPrice(cmd)
-	AddFlagSettlementFee(cmd)
-	AddFlagAllowPartial(cmd)
-	AddFlagExternalID(cmd)
-	AddFlagCreationFee(cmd)
-}
-
-// CreateOrderFlags represents all the flags used in the order creation commands.
-type CreateOrderFlags struct {
-	MarketID      uint32
-	Assets        sdk.Coin
-	Price         sdk.Coin
-	SettlementFee sdk.Coins
-	AllowPartial  bool
-	ExternalID    string
-	CreationFee   *sdk.Coin
-}
-
-// ReadCreateOrderFlags reads all the order creation commands from the given FlagSet.
-func ReadCreateOrderFlags(flagSet *pflag.FlagSet) (*CreateOrderFlags, error) {
-	errs := make([]error, 7)
-	rv := &CreateOrderFlags{}
-	rv.MarketID, errs[0] = ReadFlagMarket(flagSet)
-	rv.Assets, errs[1] = ReadFlagAssets(flagSet)
-	rv.Price, errs[2] = ReadFlagPrice(flagSet)
-	rv.SettlementFee, errs[3] = ReadFlagSettlementFee(flagSet)
-	rv.AllowPartial, errs[4] = ReadFlagAllowPartial(flagSet)
-	rv.ExternalID, errs[5] = ReadFlagExternalID(flagSet)
-	rv.CreationFee, errs[6] = ReadFlagCreationFee(flagSet)
-	return rv, errors.Join(errs...)
-}
-
 // AddFlagOrder adds the optional --order <uint64> flag to a command.
 func AddFlagOrder(cmd *cobra.Command) {
 	cmd.Flags().Uint32(FlagOrder, 0, "The market id, e.g. 3")
@@ -196,4 +196,26 @@ func AddFlagOrder(cmd *cobra.Command) {
 // ReadFlagOrder reads the --order flag.
 func ReadFlagOrder(flagSet *pflag.FlagSet) (uint64, error) {
 	return flagSet.GetUint64(FlagOrder)
+}
+
+// AddFlagBids adds the --bids <uint 1> [<uint 2> ...] flag to a command and marks it required.
+func AddFlagBids(cmd *cobra.Command) {
+	cmd.Flags().UintSlice(FlagBids, nil, "The bid order ids")
+	markFlagRequired(cmd, FlagBids)
+}
+
+// ReadFlagBids reads the --bids flag.
+func ReadFlagBids(flagSet *pflag.FlagSet) ([]uint64, error) {
+	return readOrderIdsFlag(flagSet, FlagBids)
+}
+
+// AddFlagAsks adds the --asks <uint 1> [<uint 2> ...] flag to a command and marks it required.
+func AddFlagAsks(cmd *cobra.Command) {
+	cmd.Flags().UintSlice(FlagAsks, nil, "The ask order ids")
+	markFlagRequired(cmd, FlagAsks)
+}
+
+// ReadFlagAsks reads the --asks flag.
+func ReadFlagAsks(flagSet *pflag.FlagSet) ([]uint64, error) {
+	return readOrderIdsFlag(flagSet, FlagAsks)
 }

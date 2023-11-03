@@ -56,7 +56,8 @@ func CmdTxCreateAsk() *cobra.Command {
 		Use: fmt.Sprintf("create-ask --%s <seller> --%s <market id> --%s <assets> --%s <price> "+
 			"[--%s <seller settlement flat fee>] [--%s] [--%s <external id>] [--%s <creation fee>]",
 			flags.FlagFrom, FlagMarket, FlagAssets, FlagPrice,
-			FlagSettlementFee, FlagAllowPartial, FlagExternalID, FlagCreationFee),
+			FlagSettlementFee, FlagAllowPartial, FlagExternalID, FlagCreationFee,
+		),
 		Aliases: []string{"ask", "create-ask-order"},
 		Short:   "Create an ask order",
 		Long: fmt.Sprintf(`Create an ask order.
@@ -82,8 +83,8 @@ The following flags are optional:
 			FlagExternalID+" <external id>",
 			FlagCreationFee+" <creation fee>",
 		),
-		Example: fmt.Sprintf(`%s create-ask --%s %s --%s %s --%s %s --%s %s --%s --%s %s`,
-			txCmdStart,
+		Example: fmt.Sprintf(`%s --%s %s --%s %s --%s %s --%s %s --%s --%s %s`,
+			txCmdStart+" create-ask",
 			flags.FlagFrom, ExampleAddr,
 			FlagAssets, "10atom",
 			FlagPrice, "1000000000nhash",
@@ -98,37 +99,37 @@ The following flags are optional:
 				return err
 			}
 
-			flagSet := cmd.Flags()
-			flagVals, err := ReadCreateOrderFlags(flagSet)
-			if err != nil {
-				return err
-			}
-
-			if len(flagVals.SettlementFee) > 1 {
-				return fmt.Errorf("only one --%s coin type can be provided", FlagSettlementFee)
-			}
-
 			msg := &exchange.MsgCreateAskRequest{
 				AskOrder: exchange.AskOrder{
-					Seller:                  clientCtx.FromAddress.String(),
-					MarketId:                flagVals.MarketID,
-					Assets:                  flagVals.Assets,
-					Price:                   flagVals.Price,
-					SellerSettlementFlatFee: nil,
-					AllowPartial:            flagVals.AllowPartial,
-					ExternalId:              flagVals.ExternalID,
+					Seller: clientCtx.FromAddress.String(),
 				},
-				OrderCreationFee: flagVals.CreationFee,
 			}
-			if len(flagVals.SettlementFee) > 0 {
-				msg.AskOrder.SellerSettlementFlatFee = &flagVals.SettlementFee[0]
+
+			flagSet := cmd.Flags()
+			errs := make([]error, 7)
+			msg.AskOrder.MarketId, errs[0] = ReadFlagMarket(flagSet)
+			msg.AskOrder.Assets, errs[1] = ReadFlagAssets(flagSet)
+			msg.AskOrder.Price, errs[2] = ReadFlagPrice(flagSet)
+			msg.AskOrder.SellerSettlementFlatFee, errs[3] = ReadFlagSettlementFeeCoin(flagSet)
+			msg.AskOrder.AllowPartial, errs[4] = ReadFlagAllowPartial(flagSet)
+			msg.AskOrder.ExternalId, errs[5] = ReadFlagExternalID(flagSet)
+			msg.OrderCreationFee, errs[6] = ReadFlagCreationFee(flagSet)
+			err = errors.Join(errs...)
+			if err != nil {
+				return err
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
 		},
 	}
 
-	AddCreateOrderFlags(cmd)
+	AddFlagMarket(cmd, true)
+	AddFlagAssets(cmd)
+	AddFlagPrice(cmd)
+	AddFlagSettlementFee(cmd)
+	AddFlagAllowPartial(cmd)
+	AddFlagExternalID(cmd)
+	AddFlagCreationFee(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -139,7 +140,8 @@ func CmdTxCreateBid() *cobra.Command {
 		Use: fmt.Sprintf("create-bid --%s <buyer> --%s <market id> --%s <assets> --%s <price> "+
 			"[--%s <buyer settlement fees>] [--%s] [--%s <external id>] [--%s <creation fee>]",
 			flags.FlagFrom, FlagMarket, FlagAssets, FlagPrice,
-			FlagSettlementFee, FlagAllowPartial, FlagExternalID, FlagCreationFee),
+			FlagSettlementFee, FlagAllowPartial, FlagExternalID, FlagCreationFee,
+		),
 		Aliases: []string{"bid", "create-bid-order"},
 		Short:   "Create a bid order",
 		Long: fmt.Sprintf(`Create a bid order.
@@ -165,8 +167,8 @@ The following flags are optional:
 			FlagExternalID+" <external id>",
 			FlagCreationFee+" <creation fee>",
 		),
-		Example: fmt.Sprintf(`%s create-bid --%s %s --%s %s --%s %s --%s %s --%s --%s %s`,
-			txCmdStart,
+		Example: fmt.Sprintf(`%s --%s %s --%s %s --%s %s --%s %s --%s --%s %s`,
+			txCmdStart+" create-bid",
 			flags.FlagFrom, ExampleAddr,
 			FlagAssets, "10atom",
 			FlagPrice, "1000000000nhash",
@@ -181,30 +183,37 @@ The following flags are optional:
 				return err
 			}
 
-			flagSet := cmd.Flags()
-			flagVals, err := ReadCreateOrderFlags(flagSet)
-			if err != nil {
-				return err
-			}
-
 			msg := &exchange.MsgCreateBidRequest{
 				BidOrder: exchange.BidOrder{
-					Buyer:               clientCtx.FromAddress.String(),
-					MarketId:            flagVals.MarketID,
-					Assets:              flagVals.Assets,
-					Price:               flagVals.Price,
-					BuyerSettlementFees: flagVals.SettlementFee,
-					AllowPartial:        flagVals.AllowPartial,
-					ExternalId:          flagVals.ExternalID,
+					Buyer: clientCtx.FromAddress.String(),
 				},
-				OrderCreationFee: flagVals.CreationFee,
+			}
+
+			flagSet := cmd.Flags()
+			errs := make([]error, 7)
+			msg.BidOrder.MarketId, errs[0] = ReadFlagMarket(flagSet)
+			msg.BidOrder.Assets, errs[1] = ReadFlagAssets(flagSet)
+			msg.BidOrder.Price, errs[2] = ReadFlagPrice(flagSet)
+			msg.BidOrder.BuyerSettlementFees, errs[3] = ReadFlagSettlementFeeCoins(flagSet)
+			msg.BidOrder.AllowPartial, errs[4] = ReadFlagAllowPartial(flagSet)
+			msg.BidOrder.ExternalId, errs[5] = ReadFlagExternalID(flagSet)
+			msg.OrderCreationFee, errs[6] = ReadFlagCreationFee(flagSet)
+			err = errors.Join(errs...)
+			if err != nil {
+				return err
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
 		},
 	}
 
-	AddCreateOrderFlags(cmd)
+	AddFlagMarket(cmd, true)
+	AddFlagAssets(cmd)
+	AddFlagPrice(cmd)
+	AddFlagSettlementFee(cmd)
+	AddFlagAllowPartial(cmd)
+	AddFlagExternalID(cmd)
+	AddFlagCreationFee(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -219,10 +228,11 @@ func CmdTxCancelOrder() *cobra.Command {
 
 The <order id> must be provided either as the first argument or using the --order flag, but not both.
 `,
-		Example: fmt.Sprintf(`%[1]s cancel-order 5 --%[2]s %[3]s
-%[1]s cancel-order --%[2]s %[3]s --%[4]s 5
+		Example: fmt.Sprintf(`%[1]s 5 --%[2]s %[3]s
+%[1]s --%[2]s %[3]s --%[4]s 5
 `,
-			txCmdStart, flags.FlagFrom, ExampleAddr, FlagOrder),
+			txCmdStart+" cancel-order", flags.FlagFrom, ExampleAddr, FlagOrder,
+		),
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -266,40 +276,144 @@ The <order id> must be provided either as the first argument or using the --orde
 	return cmd
 }
 
-// CmdTxFillBids TODO
+// CmdTxFillBids creates the fill-bids sub-command for the exchange tx command.
 func CmdTxFillBids() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
+		Use: fmt.Sprintf("fill-bids --%s <seller> --%s <market id> --%s <total assets> --%s <bid order ids> "+
+			"[--%s <seller settlement flat fee>] [--%s <ask order creation fee>]",
+			flags.FlagFrom, FlagMarket, FlagAssets, FlagBids, FlagSettlementFee, FlagCreationFee,
+		),
+		Short: "Fill one or more bid orders",
+		Long: fmt.Sprintf(`Fill one or more bid orders.
+
+The following flags are required:
+  --%-22s (either the account address or keyring name)
+  --%-22s e.g. 3
+  --%-22s e.g. 10nhash
+  --%-22s comma-separate each id; this flag can also be provided multiple times
+
+The following flags are optional:
+  --%-44s e.g. 10nhash
+  --%-44s e.g. 10nhash
+`,
+			flags.FlagFrom+" <seller>",
+			FlagMarket+" <market id>",
+			FlagAssets+" <total assets>", // = 21 characters.
+			FlagBids+" <bid order ids>",
+			FlagSettlementFee+" <seller settlement flat fee>", // = 43 characters.
+			FlagCreationFee+" <ask order creation fee>",
+		),
+		Example: fmt.Sprintf(`%[1]s --%[2]s %[3]s --%[4]s %[5]s --%[6]s %[7]s --%[8]s %[9]s
+%[1]s --%[2]s %[3]s --%[4]s %[5]s --%[6]s %[7]s --%[8]s %[10]s --%[8]s %[11]s
+`,
+			txCmdStart+" fill-bids",
+			flags.FlagFrom, ExampleAddr,
+			FlagMarket, "3",
+			FlagAssets, "10atom",
+			FlagBids, "1,2,3", "1", "2,3",
+		),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdTxFillBids
-			return nil
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := &exchange.MsgFillBidsRequest{
+				Seller: clientCtx.FromAddress.String(),
+			}
+			errs := make([]error, 5)
+			flagSet := cmd.Flags()
+			msg.MarketId, errs[0] = ReadFlagMarket(flagSet)
+			msg.TotalAssets, errs[1] = ReadFlagTotalAssets(flagSet)
+			msg.BidOrderIds, errs[2] = ReadFlagBids(flagSet)
+			msg.SellerSettlementFlatFee, errs[3] = ReadFlagSettlementFeeCoin(flagSet)
+			msg.AskOrderCreationFee, errs[4] = ReadFlagCreationFee(flagSet)
+			err = errors.Join(errs...)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
 		},
 	}
 
+	AddFlagMarket(cmd, true)
+	AddFlagTotalAssets(cmd)
+	AddFlagBids(cmd)
+	AddFlagSettlementFee(cmd)
+	AddFlagCreationFee(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
-// CmdTxFillAsks TODO
+// CmdTxFillAsks creates the fill-asks sub-command for the exchange tx command.
 func CmdTxFillAsks() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
+		Use: fmt.Sprintf("fill-asks --%s <buyer> --%s <market id> --%s <total price> --%s <ask order ids> "+
+			"[--%s <buyer settlement fees>] [--%s <bid order creation fee>]",
+			flags.FlagFrom, FlagMarket, FlagPrice, FlagAsks, FlagSettlementFee, FlagCreationFee,
+		),
+		Short: "Fill one or more ask orders",
+		Long: fmt.Sprintf(`Fill one or more ask orders.
+
+The following flags are required:
+  --%-21s (either the account address or keyring name)
+  --%-21s e.g. 3
+  --%-21s e.g. 10nhash
+  --%-21s comma-separate each id; this flag can also be provided multiple times
+
+The following flags are optional:
+  --%-39s e.g. 10nhash
+  --%-39s e.g. 10nhash
+`,
+			flags.FlagFrom+" <buyer>",
+			FlagMarket+" <market id>",
+			FlagPrice+" <total price>",
+			FlagAsks+" <ask order ids>",                  // = 20 characters.
+			FlagSettlementFee+" <buyer settlement fees>", // = 38 characters.
+			FlagCreationFee+" <bid order creation fee>",
+		),
+		Example: fmt.Sprintf(`%[1]s --%[2]s %[3]s --%[4]s %[5]s --%[6]s %[7]s --%[8]s %[9]s
+%[1]s --%[2]s %[3]s --%[4]s %[5]s --%[6]s %[7]s --%[8]s %[10]s --%[8]s %[11]s
+`,
+			txCmdStart+" fill-asks",
+			flags.FlagFrom, ExampleAddr,
+			FlagMarket, "3",
+			FlagAssets, "10atom",
+			FlagBids, "1,2,3", "1", "2,3",
+		),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdTxFillAsks
-			return nil
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := &exchange.MsgFillAsksRequest{
+				Buyer: clientCtx.FromAddress.String(),
+			}
+			errs := make([]error, 5)
+			flagSet := cmd.Flags()
+			msg.MarketId, errs[0] = ReadFlagMarket(flagSet)
+			msg.TotalPrice, errs[1] = ReadFlagPrice(flagSet)
+			msg.AskOrderIds, errs[2] = ReadFlagAsks(flagSet)
+			msg.BuyerSettlementFees, errs[3] = ReadFlagSettlementFeeCoins(flagSet)
+			msg.BidOrderCreationFee, errs[4] = ReadFlagCreationFee(flagSet)
+			err = errors.Join(errs...)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
 		},
 	}
 
+	AddFlagMarket(cmd, true)
+	AddFlagTotalPrice(cmd)
+	AddFlagAsks(cmd)
+	AddFlagSettlementFee(cmd)
+	AddFlagCreationFee(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
