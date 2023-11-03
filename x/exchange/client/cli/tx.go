@@ -1,8 +1,334 @@
 package cli
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/version"
+
+	"github.com/provenance-io/provenance/x/exchange"
+)
+
+var txCmdStart = fmt.Sprintf("%s tx %s", version.AppName, exchange.ModuleName)
 
 func CmdTx() *cobra.Command {
-	// TODO[1658]: Write CmdTx()
-	return nil
+	cmd := &cobra.Command{
+		Use:                        exchange.ModuleName,
+		Aliases:                    []string{"ex"},
+		Short:                      "Transaction commands for the exchange module",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       client.ValidateCmd,
+	}
+
+	cmd.AddCommand(
+		CmdTxCreateAsk(),
+		CmdTxCreateBid(),
+		CmdTxCancelOrder(),
+		CmdTxFillBids(),
+		CmdTxFillAsks(),
+		CmdTxMarketSettle(),
+		CmdTxMarketSetOrderExternalID(),
+		CmdTxMarketWithdraw(),
+		CmdTxMarketUpdateDetails(),
+		CmdTxMarketUpdateEnabled(),
+		CmdTxMarketUpdateUserSettle(),
+		CmdTxMarketManagePermissions(),
+		CmdTxMarketManageReqAttrs(),
+		CmdTxGovCreateMarket(),
+		CmdTxGovManageFees(),
+		CmdTxGovUpdateParams(),
+	)
+
+	return cmd
+}
+
+// CmdTxCreateAsk TODO
+func CmdTxCreateAsk() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxCreateAsk
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxCreateBid TODO
+func CmdTxCreateBid() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxCreateBid
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxCancelOrder TODO
+func CmdTxCancelOrder() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxCancelOrder
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxFillBids TODO
+func CmdTxFillBids() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxFillBids
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxFillAsks TODO
+func CmdTxFillAsks() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxFillAsks
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxMarketSettle TODO
+func CmdTxMarketSettle() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxMarketSettle
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxMarketSetOrderExternalID TODO
+func CmdTxMarketSetOrderExternalID() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxMarketSetOrderExternalID
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxMarketWithdraw TODO
+func CmdTxMarketWithdraw() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxMarketWithdraw
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxMarketUpdateDetails TODO
+func CmdTxMarketUpdateDetails() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxMarketUpdateDetails
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxMarketUpdateEnabled TODO
+func CmdTxMarketUpdateEnabled() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxMarketUpdateEnabled
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxMarketUpdateUserSettle TODO
+func CmdTxMarketUpdateUserSettle() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxMarketUpdateUserSettle
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxMarketManagePermissions TODO
+func CmdTxMarketManagePermissions() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxMarketManagePermissions
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxMarketManageReqAttrs TODO
+func CmdTxMarketManageReqAttrs() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxMarketManageReqAttrs
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxGovCreateMarket TODO
+func CmdTxGovCreateMarket() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxGovCreateMarket
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxGovManageFees TODO
+func CmdTxGovManageFees() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxGovManageFees
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// CmdTxGovUpdateParams TODO
+func CmdTxGovUpdateParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "TODO",
+		Aliases: []string{"TODO"},
+		Short:   "TODO",
+		Long:    `TODO`,
+		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
+		Args:    cobra.ExactArgs(0), // TODO
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO[1701]: CmdTxGovUpdateParams
+			return nil
+		},
+	}
+
+	return cmd
 }
