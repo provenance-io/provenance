@@ -94,7 +94,7 @@ func (k MsgServer) MarketSettle(goCtx context.Context, msg *exchange.MsgMarketSe
 func (k MsgServer) MarketSetOrderExternalID(goCtx context.Context, msg *exchange.MsgMarketSetOrderExternalIDRequest) (*exchange.MsgMarketSetOrderExternalIDResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.CanSetIDs(ctx, msg.MarketId, msg.Admin) {
-		return nil, permError("set uuids on orders for", msg.Admin, msg.MarketId)
+		return nil, permError("set external ids on orders for", msg.Admin, msg.MarketId)
 	}
 	err := k.SetOrderExternalID(ctx, msg.MarketId, msg.OrderId, msg.ExternalId)
 	if err != nil {
@@ -109,9 +109,8 @@ func (k MsgServer) MarketWithdraw(goCtx context.Context, msg *exchange.MsgMarket
 	if !k.CanWithdrawMarketFunds(ctx, msg.MarketId, msg.Admin) {
 		return nil, permError("withdraw from", msg.Admin, msg.MarketId)
 	}
-	admin := sdk.MustAccAddressFromBech32(msg.Admin)
 	toAddr := sdk.MustAccAddressFromBech32(msg.ToAddress)
-	err := k.WithdrawMarketFunds(ctx, msg.MarketId, toAddr, msg.Amount, admin)
+	err := k.WithdrawMarketFunds(ctx, msg.MarketId, toAddr, msg.Amount, msg.Admin)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -124,8 +123,7 @@ func (k MsgServer) MarketUpdateDetails(goCtx context.Context, msg *exchange.MsgM
 	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
 		return nil, permError("update", msg.Admin, msg.MarketId)
 	}
-	admin := sdk.MustAccAddressFromBech32(msg.Admin)
-	err := k.UpdateMarketDetails(ctx, msg.MarketId, msg.MarketDetails, admin)
+	err := k.UpdateMarketDetails(ctx, msg.MarketId, msg.MarketDetails, msg.Admin)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -138,8 +136,7 @@ func (k MsgServer) MarketUpdateEnabled(goCtx context.Context, msg *exchange.MsgM
 	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
 		return nil, permError("update", msg.Admin, msg.MarketId)
 	}
-	admin := sdk.MustAccAddressFromBech32(msg.Admin)
-	err := k.UpdateMarketActive(ctx, msg.MarketId, msg.AcceptingOrders, admin)
+	err := k.UpdateMarketActive(ctx, msg.MarketId, msg.AcceptingOrders, msg.Admin)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -152,8 +149,7 @@ func (k MsgServer) MarketUpdateUserSettle(goCtx context.Context, msg *exchange.M
 	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
 		return nil, permError("update", msg.Admin, msg.MarketId)
 	}
-	admin := sdk.MustAccAddressFromBech32(msg.Admin)
-	err := k.UpdateUserSettlementAllowed(ctx, msg.MarketId, msg.AllowUserSettlement, admin)
+	err := k.UpdateUserSettlementAllowed(ctx, msg.MarketId, msg.AllowUserSettlement, msg.Admin)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}

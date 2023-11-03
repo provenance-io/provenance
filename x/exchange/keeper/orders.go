@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	db "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -109,7 +107,11 @@ func (k Keeper) parseOrderStoreKeyValue(key, value []byte) (*exchange.Order, err
 		return nil, fmt.Errorf("invalid order store key %v: length expected to be at least 8", key)
 	}
 	orderID, _ := uint64FromBz(key[len(key)-8:])
-	return k.parseOrderStoreValue(orderID, value)
+	order, err := k.parseOrderStoreValue(orderID, value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read order %d: %w", orderID, err)
+	}
+	return order, nil
 }
 
 // createConstantIndexEntries creates all the key/value index entries for an order that don't change.
@@ -174,7 +176,7 @@ func (k Keeper) setOrderInStore(store sdk.KVStore, order exchange.Order) error {
 
 	externalIDEntry := createMarketExternalIDToOrderEntry(order)
 	if externalIDEntry != nil && store.Has(externalIDEntry.Key) {
-		orderIDBz := store.Get(externalIDEntry.Value)
+		orderIDBz := store.Get(externalIDEntry.Key)
 		otherOrderID, ok := uint64FromBz(orderIDBz)
 		if ok && otherOrderID != order.GetOrderID() {
 			return fmt.Errorf("external id %q is already in use by order %d: cannot be used for order %d",
@@ -226,7 +228,8 @@ func (k Keeper) iterateOrderIndex(ctx sdk.Context, prefixBz []byte, cb func(orde
 
 // getPageOfOrdersFromIndex gets a page of orders using a <something>-to-order index.
 func (k Keeper) getPageOfOrdersFromIndex(
-	prefixStore sdk.KVStore,
+	ctx sdk.Context,
+	prefixBz []byte,
 	pageReq *query.PageRequest,
 	orderType string,
 	afterOrderID uint64,
@@ -245,11 +248,12 @@ func (k Keeper) getPageOfOrdersFromIndex(
 		case exchange.OrderTypeBid:
 			orderTypeByte = OrderKeyTypeBid
 		default:
-			return nil, nil, status.Errorf(codes.InvalidArgument, "unknown order type %q", orderType)
+			return nil, nil, fmt.Errorf("unknown order type %q", orderType)
 		}
 		filterByType = true
 	}
 
+	rootStore := k.getStore(ctx)
 	var orders []*exchange.Order
 	accumulator := func(key []byte, value []byte, accumulate bool) (bool, error) {
 		// If filtering by type, but the order type isn't known, or is something else, this entry doesn't count, move on.
@@ -264,13 +268,14 @@ func (k Keeper) getPageOfOrdersFromIndex(
 		if accumulate {
 			// Only add it to the result if we can read it. This might result in fewer results than the limit,
 			// but at least one bad entry won't block others by causing the whole thing to return an error.
-			order, err := k.parseOrderStoreValue(orderID, value)
+			order, err := k.getOrderFromStore(rootStore, orderID)
 			if err == nil && order != nil {
 				orders = append(orders, order)
 			}
 		}
 		return true, nil
 	}
+	prefixStore := prefix.NewStore(rootStore, prefixBz)
 	pageResp, err := filteredPaginateAfterOrder(prefixStore, pageReq, afterOrderID, accumulator)
 
 	return pageResp, orders, err
@@ -326,22 +331,23 @@ func filteredPaginateAfterOrder(
 			nextKey []byte
 		)
 
+		// This loop is modified from the query.FilteredPaginate version to set
+		// NextKey to the next hit instead of the next entry. This matches the offset behavior.
 		for ; iterator.Valid(); iterator.Next() {
-			if numHits == limit {
-				nextKey = iterator.Key()
-				break
-			}
-
 			if iterator.Error() != nil {
 				return nil, iterator.Error()
 			}
 
-			hit, err := onResult(iterator.Key(), iterator.Value(), true)
+			hit, err := onResult(iterator.Key(), iterator.Value(), numHits < limit)
 			if err != nil {
 				return nil, err
 			}
 
 			if hit {
+				if numHits == limit {
+					nextKey = iterator.Key()
+					break
+				}
 				numHits++
 			}
 		}
@@ -412,8 +418,7 @@ func getOrderIterator(prefixStore sdk.KVStore, start []byte, reverse bool, after
 		// This orderIDKey is a change from the query.getIterator version.
 		var orderIDKey []byte
 		if afterOrderID != 0 {
-			// TODO[1658]: Write a unit test that hits this in order to make sure I don't need to afterOrderID++.
-			orderIDKey = uint64Bz(afterOrderID)
+			orderIDKey = uint64Bz(afterOrderID + 1)
 		}
 		return prefixStore.ReverseIterator(orderIDKey, end)
 	}
@@ -712,7 +717,6 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 		return fmt.Errorf("account %s does not have permission to cancel order %d", signer, orderID)
 	}
 
-	signerAddr := sdk.MustAccAddressFromBech32(signer)
 	orderOwnerAddr := sdk.MustAccAddressFromBech32(orderOwner)
 	heldAmount := order.GetHoldAmount()
 	err = k.holdKeeper.ReleaseHold(ctx, orderOwnerAddr, heldAmount)
@@ -721,12 +725,13 @@ func (k Keeper) CancelOrder(ctx sdk.Context, orderID uint64, signer string) erro
 	}
 
 	deleteAndDeIndexOrder(k.getStore(ctx), *order)
-	k.emitEvent(ctx, exchange.NewEventOrderCancelled(order, signerAddr))
+	k.emitEvent(ctx, exchange.NewEventOrderCancelled(order, signer))
 
 	return nil
 }
 
 // SetOrderExternalID updates an order's external id.
+// The caller is responsible for making sure this update should be allowed (e.g. by calling CanSetIDs first).
 func (k Keeper) SetOrderExternalID(ctx sdk.Context, marketID uint32, orderID uint64, newExternalID string) error {
 	if err := exchange.ValidateExternalID(newExternalID); err != nil {
 		return err
