@@ -37,12 +37,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
-
----
-
-## [v1.17.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc2) - 2023-11-03
-
 ### Features
 
 * Add the `saffron-rc2` upgrade and update `saffron` to create denom metadata for IBC markers [#1728](https://github.com/provenance-io/provenance/issues/1728).

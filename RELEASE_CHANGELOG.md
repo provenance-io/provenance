@@ -1,29 +1,3 @@
-## [v1.17.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc2) - 2023-11-03
-
-### Features
-
-* Add the `saffron-rc2` upgrade and update `saffron` to create denom metadata for IBC markers [#1728](https://github.com/provenance-io/provenance/issues/1728).
-
-### Improvements
-
-* Wrote unit tests on the keeper methods [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* During `FillBids`, the seller settlement fee is now calculated on the total price instead of each order individually [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* In the `OrderFeeCalc` query, ensure the market exists [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* Add publishing of docker arm64 container builds [#1634](https://github.com/provenance-io/provenance/issues/1634)
-
-### Bug Fixes
-
-* During `InitGenesis`, ensure LastOrderId is at least the largest order id [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* Properly populate the permissions lists when reading access grants from state [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* Fixed the paginated order queries to properly look up orders [#1699](https://github.com/provenance-io/provenance/issues/1699).
-
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.17.0-rc1...v1.17.0-rc2
-* https://github.com/provenance-io/provenance/compare/v1.16.0...v1.17.0-rc2
-
----
-
 ## [v1.17.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc1) - 2023-10-18
 
 ### Features
