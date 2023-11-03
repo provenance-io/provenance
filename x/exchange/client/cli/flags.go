@@ -99,7 +99,7 @@ func readOrderIdsFlag(flagSet *pflag.FlagSet, name string) ([]uint64, error) {
 }
 
 // readAddrOrDefault gets the requested flag or, if it wasn't provided, gets the --from address.
-func readAddrOrDefault(flagSet *pflag.FlagSet, name string, clientCtx client.Context) (string, error) {
+func readAddrOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet, name string) (string, error) {
 	rv, err := flagSet.GetString(name)
 	if err != nil || len(rv) > 0 {
 		return rv, err
@@ -124,7 +124,7 @@ func AddFlagAdmin(cmd *cobra.Command) {
 // If not, but the --authority flag was provided, the gov module account address is returned.
 // If no -admin or --authority flag was provided, returns the --from address.
 // Returns an error if none of those flags were provided or there was an error reading one.
-func ReadFlagAdminOrDefault(flagSet *pflag.FlagSet, clientCtx client.Context) (string, error) {
+func ReadFlagAdminOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet) (string, error) {
 	rv, err := flagSet.GetString(FlagAdmin)
 	if err != nil {
 		return "", err
@@ -205,8 +205,8 @@ func AddFlagBuyer(cmd *cobra.Command) {
 
 // ReadFlagBuyerOrDefault reads the --buyer flag if provided, or returns the --from address.
 // Returns an error if neither of those flags were provided, or there was an error reading one.
-func ReadFlagBuyerOrDefault(flagSet *pflag.FlagSet, clientCtx client.Context) (string, error) {
-	return readAddrOrDefault(flagSet, FlagBuyer, clientCtx)
+func ReadFlagBuyerOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet) (string, error) {
+	return readAddrOrDefault(clientCtx, flagSet, FlagBuyer)
 }
 
 // AddFlagCreationFee adds the optional --creation-fee <string> flag to a command.
@@ -289,8 +289,8 @@ func AddFlagSeller(cmd *cobra.Command) {
 
 // ReadFlagSellerOrDefault reads the --seller flag if provided, or returns the --from address.
 // Returns an error if neither of those flags were provided, or there was an error reading one.
-func ReadFlagSellerOrDefault(flagSet *pflag.FlagSet, clientCtx client.Context) (string, error) {
-	return readAddrOrDefault(flagSet, FlagSeller, clientCtx)
+func ReadFlagSellerOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet) (string, error) {
+	return readAddrOrDefault(clientCtx, flagSet, FlagSeller)
 }
 
 // AddFlagSettlementFee adds the optional --settlement-fee <string> flag to a command.
@@ -315,6 +315,6 @@ func AddFlagSigner(cmd *cobra.Command) {
 
 // ReadFlagSignerOrDefault reads the --signer flag if provided, or returns the --from address.
 // Returns an error if neither of those flags were provided or there was an error reading one.
-func ReadFlagSignerOrDefault(flagSet *pflag.FlagSet, clientCtx client.Context) (string, error) {
-	return readAddrOrDefault(flagSet, FlagSigner, clientCtx)
+func ReadFlagSignerOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet) (string, error) {
+	return readAddrOrDefault(clientCtx, flagSet, FlagSigner)
 }
