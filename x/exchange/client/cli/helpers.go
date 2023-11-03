@@ -11,13 +11,14 @@ import (
 )
 
 const (
-	FlagMarketID      = "market-id"
+	FlagMarket        = "market"
 	FlagAssets        = "assets"
 	FlagPrice         = "price"
 	FlagSettlementFee = "settlement-fee"
 	FlagAllowPartial  = "allow-partial"
 	FlagExternalID    = "external-id"
 	FlagCreationFee   = "creation-fee"
+	FlagOrder         = "order"
 )
 
 var ExampleAddr = "pb1v4uxzmtsd3j47h6lta047h6lta047h6llzxa5d" // = sdk.AccAddress("example_____________")
@@ -75,18 +76,18 @@ func readReqCoinFlag(flagSet *pflag.FlagSet, name string) (sdk.Coin, error) {
 	return *rv, nil
 }
 
-// AddFlagMarketID adds the --market-id <uint32> flag to a command.
+// AddFlagMarket adds the --market <uint32> flag to a command.
 // If required is true, it marks the flag as required for the command.
-func AddFlagMarketID(cmd *cobra.Command, required bool) {
-	cmd.Flags().Uint32(FlagMarketID, 0, "The market id, e.g. 3")
+func AddFlagMarket(cmd *cobra.Command, required bool) {
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id, e.g. 3")
 	if required {
-		markFlagRequired(cmd, FlagMarketID)
+		markFlagRequired(cmd, FlagMarket)
 	}
 }
 
-// ReadFlagMarketID reads the --market-id flag.
-func ReadFlagMarketID(flagSet *pflag.FlagSet) (uint32, error) {
-	return flagSet.GetUint32(FlagMarketID)
+// ReadFlagMarket reads the --market flag.
+func ReadFlagMarket(flagSet *pflag.FlagSet) (uint32, error) {
+	return flagSet.GetUint32(FlagMarket)
 }
 
 // AddFlagAssets adds the --assets <string> flag to a command and marks it required.
@@ -153,7 +154,7 @@ func ReadFlagCreationFee(flagSet *pflag.FlagSet) (*sdk.Coin, error) {
 
 // AddCreateOrderFlags adds all the flags used in the order creation commands.
 func AddCreateOrderFlags(cmd *cobra.Command) {
-	AddFlagMarketID(cmd, true)
+	AddFlagMarket(cmd, true)
 	AddFlagAssets(cmd)
 	AddFlagPrice(cmd)
 	AddFlagSettlementFee(cmd)
@@ -177,7 +178,7 @@ type CreateOrderFlags struct {
 func ReadCreateOrderFlags(flagSet *pflag.FlagSet) (*CreateOrderFlags, error) {
 	errs := make([]error, 7)
 	rv := &CreateOrderFlags{}
-	rv.MarketID, errs[0] = ReadFlagMarketID(flagSet)
+	rv.MarketID, errs[0] = ReadFlagMarket(flagSet)
 	rv.Assets, errs[1] = ReadFlagAssets(flagSet)
 	rv.Price, errs[2] = ReadFlagPrice(flagSet)
 	rv.SettlementFee, errs[3] = ReadFlagSettlementFee(flagSet)
@@ -185,4 +186,14 @@ func ReadCreateOrderFlags(flagSet *pflag.FlagSet) (*CreateOrderFlags, error) {
 	rv.ExternalID, errs[5] = ReadFlagExternalID(flagSet)
 	rv.CreationFee, errs[6] = ReadFlagCreationFee(flagSet)
 	return rv, errors.Join(errs...)
+}
+
+// AddFlagOrder adds the optional --order <uint64> flag to a command.
+func AddFlagOrder(cmd *cobra.Command) {
+	cmd.Flags().Uint32(FlagOrder, 0, "The market id, e.g. 3")
+}
+
+// ReadFlagOrder reads the --order flag.
+func ReadFlagOrder(flagSet *pflag.FlagSet) (uint64, error) {
+	return flagSet.GetUint64(FlagOrder)
 }
