@@ -81,7 +81,7 @@ It is expected to fail if:
 * The `buyer_settlement_fees` are not in the `buyer`'s account.
 * The `buyer_settlement_fees` are insufficient (as dictated by the market).
 * The `external_id` value is not empty and is already in use in the market.
-* The `order_creation_fee` is not in the `seller`'s account.
+* The `order_creation_fee` is not in the `buyer`'s account.
 
 #### MsgCreateBidRequest
 
