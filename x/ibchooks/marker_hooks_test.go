@@ -160,7 +160,7 @@ func (suite *MarkerHooksTestSuite) TestAddUpdateMarker() {
 				assert.Equal(t, marker.GetDenom(), metadata.Base, "Metadata Base should equal marker denom")
 				assert.Equal(t, "testchain2/"+tc.denom, metadata.Name, "Metadata Name should be chainid/denom")
 				assert.Equal(t, "testchain2/"+tc.denom, metadata.Display, "Metadata Display should be chainid/denom")
-				assert.Equal(t, tc.denom+" from chain testchain2", metadata.Description, "Metadata Description is incorrect")
+				assert.Equal(t, tc.denom+" from testchain2", metadata.Description, "Metadata Description is incorrect")
 				assert.Len(t, marker.GetAccessList(), len(tc.expTransAuths), "Resulting access list does not equal expect length")
 				for _, access := range marker.GetAccessList() {
 					assert.Len(t, access.GetAccessList(), 1, "Expecting permissions list to only one item")
