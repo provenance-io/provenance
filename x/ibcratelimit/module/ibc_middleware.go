@@ -163,14 +163,11 @@ func (im *IBCMiddleware) OnAcknowledgementPacket(
 	if ibc.IsAckError(acknowledgement) {
 		err := im.keeper.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the ack
 		if err != nil {
-			eventErr := ctx.EventManager().EmitTypedEvent(ibcratelimit.NewEventAckRevertFailure(
+			ctx.EventManager().EmitTypedEvent(ibcratelimit.NewEventAckRevertFailure(
 				ibcratelimit.ModuleName,
 				string(packet.GetData()),
 				string(acknowledgement),
 			))
-			if eventErr != nil {
-				return eventErr
-			}
 		}
 	}
 
@@ -185,13 +182,10 @@ func (im *IBCMiddleware) OnTimeoutPacket(
 ) error {
 	err := im.keeper.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the timeout
 	if err != nil {
-		eventErr := ctx.EventManager().EmitTypedEvent(ibcratelimit.NewEventTimeoutRevertFailure(
+		ctx.EventManager().EmitTypedEvent(ibcratelimit.NewEventTimeoutRevertFailure(
 			ibcratelimit.ModuleName,
 			string(packet.GetData()),
 		))
-		if eventErr != nil {
-			return eventErr
-		}
 	}
 	return im.app.OnTimeoutPacket(ctx, packet, relayer)
 }
