@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/provenance-io/provenance/x/exchange"
@@ -57,6 +58,7 @@ func CmdQueryOrderFeeCalc() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -75,6 +77,7 @@ func CmdQueryGetOrder() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -93,6 +96,7 @@ func CmdQueryGetOrderByExternalID() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -111,6 +115,8 @@ func CmdQueryGetMarketOrders() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "orders")
 	return cmd
 }
 
@@ -129,6 +135,8 @@ func CmdQueryGetOwnerOrders() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "orders")
 	return cmd
 }
 
@@ -147,6 +155,8 @@ func CmdQueryGetAssetOrders() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "orders")
 	return cmd
 }
 
@@ -165,6 +175,8 @@ func CmdQueryGetAllOrders() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "orders")
 	return cmd
 }
 
@@ -183,6 +195,7 @@ func CmdQueryGetMarket() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -201,6 +214,8 @@ func CmdQueryGetAllMarkets() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "markets")
 	return cmd
 }
 
@@ -219,6 +234,7 @@ func CmdQueryParams() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -237,6 +253,7 @@ func CmdQueryValidateCreateMarket() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -255,6 +272,7 @@ func CmdQueryValidateMarket() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -273,5 +291,6 @@ func CmdQueryValidateManageFees() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
