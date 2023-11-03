@@ -57,6 +57,11 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, code
 	return addr
 }
 
+func (chain *TestChain) PinContract(suite *suite.Suite, codeID uint64) {
+	err := contracts.PinContract(chain.GetProvenanceApp(), chain.GetContext(), codeID)
+	suite.Require().NoError(err, "contract pin failed", err)
+}
+
 func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddress, key []byte) string {
 	state, err := contracts.QueryContract(chain.GetProvenanceApp(), chain.GetContext(), contract, key)
 	suite.Require().NoError(err, "contract query failed", err)

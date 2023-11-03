@@ -56,3 +56,8 @@ func QueryContract(app *provenanceapp.App, ctx sdk.Context, contract sdk.AccAddr
 	state, err := app.WasmKeeper.QuerySmart(ctx, contract, key)
 	return string(state), err
 }
+
+func PinContract(app *provenanceapp.App, ctx sdk.Context, codeID uint64) error {
+	err := app.ContractKeeper.PinCode(ctx, codeID)
+	return err
+}
