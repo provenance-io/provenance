@@ -6,15 +6,23 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const (
+	FlagSeller        = "seller"
+	FlagBuyer         = "buyer"
+	FlagSigner        = "signer"
+	FlagAdmin         = "admin"
+	FlagAuthority     = "authority"
 	FlagMarket        = "market"
 	FlagAssets        = "assets"
 	FlagPrice         = "price"
 	FlagSettlementFee = "settlement-fee"
-	FlagAllowPartial  = "allow-partial"
+	FlagPartial       = "partial"
 	FlagExternalID    = "external-id"
 	FlagCreationFee   = "creation-fee"
 	FlagOrder         = "order"
@@ -90,13 +98,109 @@ func readOrderIdsFlag(flagSet *pflag.FlagSet, name string) ([]uint64, error) {
 	return rv, nil
 }
 
-// AddFlagMarket adds the --market <uint32> flag to a command.
-// If required is true, it marks the flag as required for the command.
-func AddFlagMarket(cmd *cobra.Command, required bool) {
-	cmd.Flags().Uint32(FlagMarket, 0, "The market id, e.g. 3")
-	if required {
-		markFlagRequired(cmd, FlagMarket)
+// readAddrOrDefault gets the requested flag or, if it wasn't provided, gets the --from address.
+func readAddrOrDefault(flagSet *pflag.FlagSet, name string, clientCtx client.Context) (string, error) {
+	rv, err := flagSet.GetString(name)
+	if err != nil || len(rv) > 0 {
+		return rv, err
 	}
+
+	rv = clientCtx.FromAddress.String()
+	if len(rv) > 0 {
+		return rv, nil
+	}
+
+	return "", fmt.Errorf("no %s provided", name)
+}
+
+// AddFlagSeller adds the optional --seller flag to a command.
+func AddFlagSeller(cmd *cobra.Command) {
+	cmd.Flags().String(FlagSeller, "", "The seller (defaults to --from account)")
+}
+
+// ReadFlagSellerOrDefault reads the --seller flag if provided, or returns the --from address.
+// Returns an error if neither of those flags were provided, or there was an error reading one.
+func ReadFlagSellerOrDefault(flagSet *pflag.FlagSet, clientCtx client.Context) (string, error) {
+	return readAddrOrDefault(flagSet, FlagSeller, clientCtx)
+}
+
+// AddFlagBuyer adds the optional --buyer flag to a command.
+func AddFlagBuyer(cmd *cobra.Command) {
+	cmd.Flags().String(FlagBuyer, "", "The buyer (defaults to --from account)")
+}
+
+// ReadFlagBuyerOrDefault reads the --buyer flag if provided, or returns the --from address.
+// Returns an error if neither of those flags were provided, or there was an error reading one.
+func ReadFlagBuyerOrDefault(flagSet *pflag.FlagSet, clientCtx client.Context) (string, error) {
+	return readAddrOrDefault(flagSet, FlagBuyer, clientCtx)
+}
+
+// AddFlagSigner adds the optional --signer flag to a command.
+func AddFlagSigner(cmd *cobra.Command) {
+	cmd.Flags().String(FlagSigner, "", "The signer (defaults to --from account)")
+}
+
+// ReadFlagSignerOrDefault reads the --signer flag if provided, or returns the --from address.
+// Returns an error if neither of those flags were provided or there was an error reading one.
+func ReadFlagSignerOrDefault(flagSet *pflag.FlagSet, clientCtx client.Context) (string, error) {
+	return readAddrOrDefault(flagSet, FlagSigner, clientCtx)
+}
+
+// AddFlagAuthorityBool adds the --authority flag as a bool for indicating the gov module account should be the admin.
+func AddFlagAuthorityBool(cmd *cobra.Command) {
+	cmd.Flags().Bool(FlagAuthority, false, "Use the governance module account for the admin")
+}
+
+// ReadFlagAuthorityBool reads the --authority flag as a bool.
+func ReadFlagAuthorityBool(flagSet *pflag.FlagSet) (bool, error) {
+	return flagSet.GetBool(FlagAuthority)
+}
+
+// AddFlagAdmin adds the optional --admin flag to a command.
+// Also adds the --authority bool flag to the command.
+func AddFlagAdmin(cmd *cobra.Command) {
+	cmd.Flags().String(FlagAdmin, "", "The admin (defaults to --from account)")
+	AddFlagAuthorityBool(cmd)
+}
+
+// ReadFlagAdminOrDefault reads the --admin flag if provided.
+// If not, but the --authority flag was provided, the gov module account address is returned.
+// If no -admin or --authority flag was provided, returns the --from address.
+// Returns an error if none of those flags were provided or there was an error reading one.
+func ReadFlagAdminOrDefault(flagSet *pflag.FlagSet, clientCtx client.Context) (string, error) {
+	rv, err := flagSet.GetString(FlagAdmin)
+	if err != nil {
+		return "", err
+	}
+
+	useAuth, err := flagSet.GetBool(FlagAuthority)
+	if err != nil {
+		return "", err
+	}
+
+	if len(rv) > 0 {
+		if useAuth {
+			return "", fmt.Errorf("cannot provide both --%s <admin> and --%s", FlagAdmin, FlagAuthority)
+		}
+		return rv, nil
+	}
+
+	if useAuth {
+		return authtypes.NewModuleAddress(govtypes.ModuleName).String(), nil
+	}
+
+	rv = clientCtx.FromAddress.String()
+	if len(rv) > 0 {
+		return rv, nil
+	}
+
+	return "", fmt.Errorf("no %s provided", FlagAdmin)
+}
+
+// AddFlagMarket adds the required --market <uint32> flag to a command.
+func AddFlagMarket(cmd *cobra.Command) {
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id, e.g. 3")
+	markFlagRequired(cmd, FlagMarket)
 }
 
 // ReadFlagMarket reads the --market flag.
@@ -104,18 +208,18 @@ func ReadFlagMarket(flagSet *pflag.FlagSet) (uint32, error) {
 	return flagSet.GetUint32(FlagMarket)
 }
 
-// AddFlagAssets adds the --assets <string> flag to a command and marks it required.
+// AddFlagAssets adds the required --assets <string> flag to a command for providing an order's assets.
 func AddFlagAssets(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAssets, "", "The assets for this order, e.g. 10nhash")
 	markFlagRequired(cmd, FlagAssets)
 }
 
-// ReadFlagAssets reads the --assets flag as an sdk.Coin.
+// ReadFlagAssets reads the --assets flag as sdk.Coin.
 func ReadFlagAssets(flagSet *pflag.FlagSet) (sdk.Coin, error) {
 	return readReqCoinFlag(flagSet, FlagAssets)
 }
 
-// AddFlagTotalAssets adds the --assets <string> flag to a command and marks it required.
+// AddFlagTotalAssets adds the required --assets <string> flag to a command for providing total assets.
 func AddFlagTotalAssets(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAssets, "", "The total assets you are filling, e.g. 10nhash")
 	markFlagRequired(cmd, FlagAssets)
@@ -126,21 +230,21 @@ func ReadFlagTotalAssets(flagSet *pflag.FlagSet) (sdk.Coins, error) {
 	return readCoinsFlag(flagSet, FlagAssets)
 }
 
-// AddFlagPrice adds the --price <string> flag to a command and marks it required.
+// AddFlagPrice adds the required --price <string> flag to a command for providing an order's price.
 func AddFlagPrice(cmd *cobra.Command) {
 	cmd.Flags().String(FlagPrice, "", "The price for this order, e.g. 10nhash")
 	markFlagRequired(cmd, FlagPrice)
 }
 
-// ReadFlagPrice reads the --price flag as an sdk.Coin.
-func ReadFlagPrice(flagSet *pflag.FlagSet) (sdk.Coin, error) {
-	return readReqCoinFlag(flagSet, FlagPrice)
-}
-
-// AddFlagTotalPrice adds the --price <string> flag to a command and marks it required.
+// AddFlagTotalPrice adds the required --price <string> flag to a command for providing a total price.
 func AddFlagTotalPrice(cmd *cobra.Command) {
 	cmd.Flags().String(FlagPrice, "", "The total price you are paying, e.g. 10nhash")
 	markFlagRequired(cmd, FlagPrice)
+}
+
+// ReadFlagPrice reads the --price flag as sdk.Coin.
+func ReadFlagPrice(flagSet *pflag.FlagSet) (sdk.Coin, error) {
+	return readReqCoinFlag(flagSet, FlagPrice)
 }
 
 // AddFlagSettlementFee adds the optional --settlement-fee <string> flag to a command.
@@ -158,14 +262,19 @@ func ReadFlagSettlementFeeCoin(flagSet *pflag.FlagSet) (*sdk.Coin, error) {
 	return readCoinFlag(flagSet, FlagSettlementFee)
 }
 
-// AddFlagAllowPartial adds the optional --allow-partial flag to a command.
+// AddFlagAllowPartial adds the optional --partial flag to a command to indicate partial fulfillment is allowed.
 func AddFlagAllowPartial(cmd *cobra.Command) {
-	cmd.Flags().Bool(FlagAllowPartial, false, "Allow this order to be partially filled")
+	cmd.Flags().Bool(FlagPartial, false, "Allow this order to be partially filled")
 }
 
-// ReadFlagAllowPartial reads the --allow-partial flag.
-func ReadFlagAllowPartial(flagSet *pflag.FlagSet) (bool, error) {
-	return flagSet.GetBool(FlagAllowPartial)
+// AddFlagExpectPartial adds the optional --partial flag to a command to indicate partial fulfillment is expected.
+func AddFlagExpectPartial(cmd *cobra.Command) {
+	cmd.Flags().Bool(FlagPartial, false, "Expect partial settlement")
+}
+
+// ReadFlagPartial reads the --partial flag.
+func ReadFlagPartial(flagSet *pflag.FlagSet) (bool, error) {
+	return flagSet.GetBool(FlagPartial)
 }
 
 // AddFlagExternalID adds the optional --external-id <string> flag to a command.
@@ -183,7 +292,7 @@ func AddFlagCreationFee(cmd *cobra.Command) {
 	cmd.Flags().String(FlagCreationFee, "", "The order creation fee, e.g. 10nhash")
 }
 
-// ReadFlagCreationFee reads the --creation-fee flag as an sdk.Coin.
+// ReadFlagCreationFee reads the --creation-fee flag as sdk.Coin.
 func ReadFlagCreationFee(flagSet *pflag.FlagSet) (*sdk.Coin, error) {
 	return readCoinFlag(flagSet, FlagCreationFee)
 }
@@ -198,7 +307,7 @@ func ReadFlagOrder(flagSet *pflag.FlagSet) (uint64, error) {
 	return flagSet.GetUint64(FlagOrder)
 }
 
-// AddFlagBids adds the --bids <uint 1> [<uint 2> ...] flag to a command and marks it required.
+// AddFlagBids adds the required --bids <uints> flag to a command.
 func AddFlagBids(cmd *cobra.Command) {
 	cmd.Flags().UintSlice(FlagBids, nil, "The bid order ids")
 	markFlagRequired(cmd, FlagBids)
@@ -209,7 +318,7 @@ func ReadFlagBids(flagSet *pflag.FlagSet) ([]uint64, error) {
 	return readOrderIdsFlag(flagSet, FlagBids)
 }
 
-// AddFlagAsks adds the --asks <uint 1> [<uint 2> ...] flag to a command and marks it required.
+// AddFlagAsks adds the required --asks <uints> flag to a command.
 func AddFlagAsks(cmd *cobra.Command) {
 	cmd.Flags().UintSlice(FlagAsks, nil, "The ask order ids")
 	markFlagRequired(cmd, FlagAsks)
