@@ -218,6 +218,28 @@ func MakeMsgMarketSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []s
 	return msg, errors.Join(errs...)
 }
 
+// AddFlagsMsgMarketSetOrderExternalID adds all the flags needed for the market-set-external-id command.
+func AddFlagsMsgMarketSetOrderExternalID(cmd *cobra.Command) {
+	AddFlagAdmin(cmd)
+	AddFlagMarket(cmd)
+	AddFlagOrder(cmd)
+	AddFlagExternalID(cmd)
+}
+
+// MakeMsgMarketSetOrderExternalID reads all the market-set-external-id flags and creates the desired Msg.
+func MakeMsgMarketSetOrderExternalID(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+	msg := &exchange.MsgMarketSetOrderExternalIDRequest{}
+
+	errs := make([]error, 4)
+	msg.Admin, errs[0] = ReadFlagAdminOrDefault(clientCtx, flagSet)
+	msg.MarketId, errs[1] = ReadFlagMarket(flagSet)
+	msg.OrderId, errs[2] = ReadFlagOrder(flagSet)
+	msg.ExternalId, errs[4] = ReadFlagExternalID(flagSet)
+	err := errors.Join(errs...)
+
+	return msg, err
+}
+
 // AddFlagsMsgMarketWithdraw adds all the flags needed for the market-withdraw command.
 func AddFlagsMsgMarketWithdraw(cmd *cobra.Command) {
 	AddFlagAdmin(cmd)

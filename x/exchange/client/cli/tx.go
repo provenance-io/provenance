@@ -340,21 +340,48 @@ The --%s flag is optional.
 	return cmd
 }
 
-// CmdTxMarketSetOrderExternalID TODO
+// CmdTxMarketSetOrderExternalID creates the market-set-external-id sub-command for the exchange tx command.
 func CmdTxMarketSetOrderExternalID() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdTxMarketSetOrderExternalID
-			return nil
-		},
+		Use: fmt.Sprintf("market-set-external-id {--%s|--%s} <admin> --%s <market id> --%s <order id> --%s <new external id>",
+			flags.FlagFrom, FlagAdmin, FlagMarket, FlagOrder, FlagExternalID,
+		),
+		Aliases: []string{"market-set-order-external-id", "set-external-id", "external-id",
+			"mseid", "msei", "msoeid", "msoei", "seid", "sei"},
+		Short: "Set an order's external id",
+		Long: fmt.Sprintf(`Set an order's external id.
+
+If --%s <admin> is provided, that is used as the admin.
+If no --%s is provided, but the --%s flag was, the governance module account is used as the admin.
+Otherwise the --%s account address is used as the admin.
+An admin is required.
+
+The following flags are required:
+  --%-30s e.g. 3
+  --%-30s e.g. 8
+
+The %s flag is optional.
+`,
+			FlagAdmin,
+			FlagAdmin, flags.FlagFrom,
+			FlagAuthority,
+
+			FlagMarket+" <market id>",
+			FlagOrder+" <order id>",
+			FlagExternalID+" <new external id>", // = 29 characters
+		),
+		Example: fmt.Sprintf(`%s --%s %s --%s %s --%s %s --%s %s`,
+			txCmdStart+" set-order-id",
+			FlagMarket, "3",
+			FlagOrder, "8",
+			FlagExternalID, "D333E919-B1FB-438B-96D0-9797B8DE418A",
+			flags.FlagFrom, ExampleAddr1,
+		),
+		Args: cobra.NoArgs,
+		RunE: genericTxRunE(MakeMsgMarketSetOrderExternalID),
 	}
 
+	AddFlagsMsgMarketSetOrderExternalID(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
