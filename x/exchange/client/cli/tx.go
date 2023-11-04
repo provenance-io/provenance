@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
@@ -429,21 +430,57 @@ The following flags are required:
 	return cmd
 }
 
-// CmdTxMarketUpdateDetails TODO
+// CmdTxMarketUpdateDetails creates the market-details sub-command for the exchange tx command.
 func CmdTxMarketUpdateDetails() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdTxMarketUpdateDetails
-			return nil
-		},
+		Use: fmt.Sprintf("market-details {--%s|--%s} <admin> --%s <market id> "+
+			"[--%s <name>] [--%s <description>] [--%s <website url>] [--%s <icon uri>]",
+			flags.FlagFrom, FlagAdmin, FlagMarket,
+			FlagName, FlagDescription, FlagURL, FlagIcon,
+		),
+		Aliases: []string{"market-update-details", "update-details", "details"},
+		Short:   "Update a market's details",
+		Long: fmt.Sprintf(`Update a market's details.
+
+All fields of a market's details will be updated.
+If you omit an optional flag, it will be updated to an empty string.
+
+If --%s <admin> is provided, that is used as the admin.
+If no --%s is provided, but the --%s flag was, the governance module account is used as the admin.
+Otherwise the --%s account address is used as the admin.
+An admin is required.
+
+The --%s flag is required.
+
+The following flags are optional and default to an empty string:
+  --%-26s (max %d characters)
+  --%-26s (max %d characters)
+  --%-26s (max %d characters)
+  --%-26s (max %d characters)
+`,
+			FlagAdmin,
+			FlagAdmin, flags.FlagFrom,
+			FlagAuthority,
+
+			FlagMarket, // = 18 characters
+
+			FlagName+" <name>", exchange.MaxName,
+			FlagDescription+" <description>", exchange.MaxDescription, // = 25 characters
+			FlagURL+" <website url>", exchange.MaxWebsiteURL,
+			FlagIcon+" <icon uri>", exchange.MaxIconURI,
+		),
+		Example: fmt.Sprintf(`%[1]s --%s %s --%s %s --%s %s --%s %s`,
+			txCmdStart+" market-details",
+			FlagAdmin, ExampleAddr1,
+			FlagMarket, "3",
+			FlagName, "'My Better Market'",
+			cli.FlagWebsite, "`https://example.com'",
+		),
+		Args: cobra.NoArgs,
+		RunE: genericTxRunE(MakeMsgMarketUpdateDetails),
 	}
 
+	AddFlagsMsgMarketUpdateDetails(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

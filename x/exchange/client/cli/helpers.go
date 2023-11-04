@@ -28,6 +28,9 @@ var (
 	_ msgMaker = MakeMsgFillBids
 	_ msgMaker = MakeMsgFillAsks
 	_ msgMaker = MakeMsgMarketSettle
+	_ msgMaker = MakeMsgMarketSetOrderExternalID
+	_ msgMaker = MakeMsgMarketWithdraw
+	_ msgMaker = MakeMsgMarketUpdateDetails
 )
 
 // genericTxRunE returns a cobra.Command.RunE function that gets the client.Context, and FlagSet,
@@ -142,7 +145,7 @@ func MakeMsgCancelOrder(clientCtx client.Context, flagSet *pflag.FlagSet, args [
 		return nil, errors.New("no <order id> provided")
 	}
 
-	return msg, errors.Join(errs...)
+	return msg, nil
 }
 
 // AddFlagsMsgFillBids adds all the flags needed for MakeMsgFillBids.
@@ -235,9 +238,8 @@ func MakeMsgMarketSetOrderExternalID(clientCtx client.Context, flagSet *pflag.Fl
 	msg.MarketId, errs[1] = ReadFlagMarket(flagSet)
 	msg.OrderId, errs[2] = ReadFlagOrder(flagSet)
 	msg.ExternalId, errs[4] = ReadFlagExternalID(flagSet)
-	err := errors.Join(errs...)
 
-	return msg, err
+	return msg, errors.Join(errs...)
 }
 
 // AddFlagsMsgMarketWithdraw adds all the flags needed for MakeMsgMarketWithdraw.
@@ -257,6 +259,46 @@ func MakeMsgMarketWithdraw(clientCtx client.Context, flagSet *pflag.FlagSet, _ [
 	msg.MarketId, errs[1] = ReadFlagMarket(flagSet)
 	msg.ToAddress, errs[2] = ReadFlagTo(flagSet)
 	msg.Amount, errs[3] = ReadFlagAmount(flagSet)
+
+	return msg, errors.Join(errs...)
+}
+
+// AddFlagsMarketDetails adds all the flags needed for MakeMarketDetails.
+func AddFlagsMarketDetails(cmd *cobra.Command) {
+	AddFlagName(cmd)
+	AddFlagDescription(cmd)
+	AddFlagURL(cmd)
+	AddFlagIcon(cmd)
+}
+
+// MakeMarketDetails reads all the AddFlagsMarketDetails flags and creates the desired MarketDetails.
+func MakeMarketDetails(flagSet *pflag.FlagSet) (exchange.MarketDetails, error) {
+	rv := exchange.MarketDetails{}
+
+	errs := make([]error, 4)
+	rv.Name, errs[0] = ReadFlagName(flagSet)
+	rv.Description, errs[1] = ReadFlagDescription(flagSet)
+	rv.WebsiteUrl, errs[2] = ReadFlagURL(flagSet)
+	rv.IconUri, errs[3] = ReadFlagIcon(flagSet)
+
+	return rv, errors.Join(errs...)
+}
+
+// AddFlagsMsgMarketUpdateDetails adds all the flags needed for MakeMsgMarketUpdateDetails.
+func AddFlagsMsgMarketUpdateDetails(cmd *cobra.Command) {
+	AddFlagAdmin(cmd)
+	AddFlagMarket(cmd)
+	AddFlagsMarketDetails(cmd)
+}
+
+// MakeMsgMarketUpdateDetails reads all the AddFlagsMsgMarketUpdateDetails flags and creates the desired Msg.
+func MakeMsgMarketUpdateDetails(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+	msg := &exchange.MsgMarketUpdateDetailsRequest{}
+
+	errs := make([]error, 3)
+	msg.Admin, errs[0] = ReadFlagAdminOrDefault(clientCtx, flagSet)
+	msg.MarketId, errs[1] = ReadFlagMarket(flagSet)
+	msg.MarketDetails, errs[2] = MakeMarketDetails(flagSet)
 
 	return msg, errors.Join(errs...)
 }

@@ -21,8 +21,11 @@ const (
 	FlagBids          = "bids"
 	FlagBuyer         = "buyer"
 	FlagCreationFee   = "creation-fee"
+	FlagDescription   = "description"
 	FlagExternalID    = "external-id"
+	FlagIcon          = "icon"
 	FlagMarket        = "market"
+	FlagName          = "name"
 	FlagOrder         = "order"
 	FlagPartial       = "partial"
 	FlagPrice         = "price"
@@ -30,6 +33,7 @@ const (
 	FlagSettlementFee = "settlement-fee"
 	FlagSigner        = "signer"
 	FlagTo            = "to"
+	FlagURL           = "url"
 )
 
 // markFlagRequired this marks a flag as required and panics if there's a problem.
@@ -235,9 +239,29 @@ func AddFlagExternalID(cmd *cobra.Command) {
 	cmd.Flags().String(FlagExternalID, "", "The external id for this order")
 }
 
+// AddFlagDescription adds the optional --description <string> flag to a command.
+func AddFlagDescription(cmd *cobra.Command) {
+	cmd.Flags().String(FlagDescription, "", "A description of the market.")
+}
+
+// ReadFlagDescription reads the --description flag.
+func ReadFlagDescription(flagSet *pflag.FlagSet) (string, error) {
+	return flagSet.GetString(FlagDescription)
+}
+
 // ReadFlagExternalID reads the --external-id flag.
 func ReadFlagExternalID(flagSet *pflag.FlagSet) (string, error) {
 	return flagSet.GetString(FlagExternalID)
+}
+
+// AddFlagIcon adds the optional --icon <string> flag to a command.
+func AddFlagIcon(cmd *cobra.Command) {
+	cmd.Flags().String(FlagIcon, "", "The market's icon URI")
+}
+
+// ReadFlagIcon reads the --icon flag.
+func ReadFlagIcon(flagSet *pflag.FlagSet) (string, error) {
+	return flagSet.GetString(FlagIcon)
 }
 
 // AddFlagMarket adds the required --market <uint32> flag to a command.
@@ -249,6 +273,16 @@ func AddFlagMarket(cmd *cobra.Command) {
 // ReadFlagMarket reads the --market flag.
 func ReadFlagMarket(flagSet *pflag.FlagSet) (uint32, error) {
 	return flagSet.GetUint32(FlagMarket)
+}
+
+// AddFlagName adds the optional --name <string> flag to a command.
+func AddFlagName(cmd *cobra.Command) {
+	cmd.Flags().String(FlagName, "", "A short name for the market.")
+}
+
+// ReadFlagName reads the --name flag.
+func ReadFlagName(flagSet *pflag.FlagSet) (string, error) {
+	return flagSet.GetString(FlagName)
 }
 
 // AddFlagOrder adds the optional --order <uint64> flag to a command.
@@ -339,4 +373,14 @@ func AddFlagTo(cmd *cobra.Command) {
 // ReadFlagTo reads the --to flag.
 func ReadFlagTo(flagSet *pflag.FlagSet) (string, error) {
 	return flagSet.GetString(FlagTo)
+}
+
+// AddFlagURL adds the optional --url <string> flag to a command.
+func AddFlagURL(cmd *cobra.Command) {
+	cmd.Flags().String(FlagURL, "", "The market's website URL")
+}
+
+// ReadFlagURL reads the --url flag.
+func ReadFlagURL(flagSet *pflag.FlagSet) (string, error) {
+	return flagSet.GetString(FlagURL)
 }
