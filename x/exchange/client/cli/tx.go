@@ -88,7 +88,7 @@ The following flags are optional:
 		),
 		Example: fmt.Sprintf(`%s --%s %s --%s %s --%s %s --%s %s --%s --%s %s`,
 			txCmdStart+" create-ask",
-			flags.FlagFrom, ExampleAddr,
+			flags.FlagFrom, ExampleAddr1,
 			FlagAssets, "10atom",
 			FlagPrice, "1000000000nhash",
 			FlagMarket, "3",
@@ -96,10 +96,10 @@ The following flags are optional:
 			FlagCreationFee, "500nhash",
 		),
 		Args: cobra.NoArgs,
-		RunE: genericTxRunE(MakeMsgCreateAskRequest),
+		RunE: genericTxRunE(MakeMsgCreateAsk),
 	}
 
-	AddCreateAskFlags(cmd)
+	AddFlagsMsgCreateAsk(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -145,7 +145,7 @@ The following flags are optional:
 		),
 		Example: fmt.Sprintf(`%s --%s %s --%s %s --%s %s --%s %s --%s --%s %s`,
 			txCmdStart+" create-bid",
-			flags.FlagFrom, ExampleAddr,
+			flags.FlagFrom, ExampleAddr1,
 			FlagAssets, "10atom",
 			FlagPrice, "1000000000nhash",
 			FlagMarket, "3",
@@ -153,10 +153,10 @@ The following flags are optional:
 			FlagCreationFee, "500nhash",
 		),
 		Args: cobra.NoArgs,
-		RunE: genericTxRunE(MakeMsgCreateBidRequest),
+		RunE: genericTxRunE(MakeMsgCreateBid),
 	}
 
-	AddCreateBidFlags(cmd)
+	AddFlagsMsgCreateBid(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -182,14 +182,14 @@ A buyer is required.
 %[1]s --%s %s --%s 5
 `,
 			txCmdStart+" cancel-order",
-			flags.FlagFrom, ExampleAddr,
-			FlagSigner, ExampleAddr, FlagOrder,
+			flags.FlagFrom, ExampleAddr1,
+			FlagSigner, ExampleAddr1, FlagOrder,
 		),
 		Args: cobra.MaximumNArgs(1),
-		RunE: genericTxRunE(MakeMsgCancelOrderRequest),
+		RunE: genericTxRunE(MakeMsgCancelOrder),
 	}
 
-	AddCancelOrderFlags(cmd)
+	AddFlagsMsgCancelOrder(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -231,16 +231,16 @@ The following flags are optional:
 %[1]s --%[2]s %[3]s --%[4]s %[5]s --%[6]s %[7]s --%[8]s %[10]s --%[8]s %[11]s
 `,
 			txCmdStart+" fill-bids",
-			flags.FlagFrom, ExampleAddr,
+			flags.FlagFrom, ExampleAddr1,
 			FlagMarket, "3",
 			FlagAssets, "10atom",
 			FlagBids, "1,2,3", "1", "2,3",
 		),
 		Args: cobra.NoArgs,
-		RunE: genericTxRunE(MakeMsgFillBidsRequest),
+		RunE: genericTxRunE(MakeMsgFillBids),
 	}
 
-	AddFillBidsFlags(cmd)
+	AddFlagsMsgFillBids(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -282,16 +282,16 @@ The following flags are optional:
 %[1]s --%[2]s %[3]s --%[4]s %[5]s --%[6]s %[7]s --%[8]s %[10]s --%[8]s %[11]s
 `,
 			txCmdStart+" fill-asks",
-			flags.FlagFrom, ExampleAddr,
+			flags.FlagFrom, ExampleAddr1,
 			FlagMarket, "3",
 			FlagAssets, "10atom",
 			FlagBids, "1,2,3", "1", "2,3",
 		),
 		Args: cobra.NoArgs,
-		RunE: genericTxRunE(MakeMsgFillAsksRequest),
+		RunE: genericTxRunE(MakeMsgFillAsks),
 	}
 
-	AddFillAsksFlags(cmd)
+	AddFlagsMsgFillAsks(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -329,13 +329,13 @@ The --%s flag is optional.
 		),
 		Example: fmt.Sprintf(`%s --%s 3 --%s 1,3,6 --%s 2,4,5 --%s %s`,
 			txCmdStart+" market-settle",
-			FlagMarket, FlagAsks, FlagBids, flags.FlagFrom, ExampleAddr,
+			FlagMarket, FlagAsks, FlagBids, flags.FlagFrom, ExampleAddr1,
 		),
 		Args: cobra.NoArgs,
-		RunE: genericTxRunE(MakeMsgMarketSettleRequest),
+		RunE: genericTxRunE(MakeMsgMarketSettle),
 	}
 
-	AddMarketSettleFlags(cmd)
+	AddFlagsMsgMarketSettle(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -359,21 +359,45 @@ func CmdTxMarketSetOrderExternalID() *cobra.Command {
 	return cmd
 }
 
-// CmdTxMarketWithdraw TODO
+// CmdTxMarketWithdraw creates the market-withdraw sub-command for the exchange tx command.
 func CmdTxMarketWithdraw() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdTxMarketWithdraw
-			return nil
-		},
+		Use: fmt.Sprintf("market-withdraw {--%s|--%s} <admin> --%s <market id> --%s <to address> --%s <amount>",
+			flags.FlagFrom, FlagAdmin, FlagMarket, FlagTo, FlagAmount),
+		Aliases: []string{"withdraw"},
+		Short:   "Withdraw funds from a market account",
+		Long: fmt.Sprintf(`Withdraw funds from a market account.
+
+If --%s <admin> is provided, that is used as the admin.
+If no --%s is provided, but the --%s flag was, the governance module account is used as the admin.
+Otherwise the --%s account address is used as the admin.
+An admin is required.
+
+The following flags are required:
+  --%-19s e.g. 3
+  --%-19s e.g. %s
+  --%-19s e.g. 10nhash
+`,
+			FlagAdmin,
+			FlagAdmin, flags.FlagFrom,
+			FlagAuthority,
+
+			FlagMarket+" <market id>", // = 18 characters
+			FlagTo+" <to address>", ExampleAddr1,
+			FlagAmount+" <amount>",
+		),
+		Example: fmt.Sprintf(`%s --%s %s --%s %s --%s %s --%s %s`,
+			txCmdStart+" market-withdraw",
+			FlagMarket, "3",
+			FlagAmount, "10nhash",
+			FlagTo, ExampleAddr1,
+			FlagAdmin, ExampleAddr2,
+		),
+		Args: cobra.NoArgs,
+		RunE: genericTxRunE(MakeMsgMarketWithdraw),
 	}
 
+	AddFlagsMsgMarketWithdraw(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

@@ -14,6 +14,7 @@ import (
 
 const (
 	FlagAdmin         = "admin"
+	FlagAmount        = "amount"
 	FlagAsks          = "asks"
 	FlagAssets        = "assets"
 	FlagAuthority     = "authority"
@@ -28,9 +29,8 @@ const (
 	FlagSeller        = "seller"
 	FlagSettlementFee = "settlement-fee"
 	FlagSigner        = "signer"
+	FlagTo            = "to"
 )
-
-var ExampleAddr = "pb1v4uxzmtsd3j47h6lta047h6lta047h6llzxa5d" // = sdk.AccAddress("example_____________")
 
 // markFlagRequired this marks a flag as required and panics if there's a problem.
 func markFlagRequired(cmd *cobra.Command, name string) {
@@ -152,6 +152,17 @@ func ReadFlagAdminOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet) (s
 	}
 
 	return "", fmt.Errorf("no %s provided", FlagAdmin)
+}
+
+// AddFlagAmount adds the required --amount <string> flag to a command.
+func AddFlagAmount(cmd *cobra.Command) {
+	cmd.Flags().String(FlagAmount, "", "The amount to withdraw")
+	markFlagRequired(cmd, FlagAmount)
+}
+
+// ReadFlagAmount reads the --amount flag.
+func ReadFlagAmount(flagSet *pflag.FlagSet) (sdk.Coins, error) {
+	return readCoinsFlag(flagSet, FlagAmount)
 }
 
 // AddFlagAsks adds the required --asks <uints> flag to a command.
@@ -317,4 +328,15 @@ func AddFlagSigner(cmd *cobra.Command) {
 // Returns an error if neither of those flags were provided or there was an error reading one.
 func ReadFlagSignerOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet) (string, error) {
 	return readAddrOrDefault(clientCtx, flagSet, FlagSigner)
+}
+
+// AddFlagTo adds the required --to <string> flag to a command.
+func AddFlagTo(cmd *cobra.Command) {
+	cmd.Flags().String(FlagTo, "", "The address that will receive the funds")
+	markFlagRequired(cmd, FlagTo)
+}
+
+// ReadFlagTo reads the --to flag.
+func ReadFlagTo(flagSet *pflag.FlagSet) (string, error) {
+	return flagSet.GetString(FlagTo)
 }

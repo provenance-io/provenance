@@ -15,16 +15,19 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
+var ExampleAddr1 = "cosmos1g4uxzmtsd3j5zerywgc47h6lta047h6l8qdfjj" // = sdk.AccAddress("ExampleAddr1________")
+var ExampleAddr2 = "cosmos1g4uxzmtsd3j5zerywge97h6lta047h6ld84mf8" // = sdk.AccAddress("ExampleAddr2________")
+
 // A msgMaker is a function that makes a Msg from a client.Context, FlagSet, and set of args.
 type msgMaker func(clientCtx client.Context, flagSet *pflag.FlagSet, args []string) (sdk.Msg, error)
 
 var (
-	_ msgMaker = MakeMsgCreateAskRequest
-	_ msgMaker = MakeMsgCreateBidRequest
-	_ msgMaker = MakeMsgCancelOrderRequest
-	_ msgMaker = MakeMsgFillBidsRequest
-	_ msgMaker = MakeMsgFillAsksRequest
-	_ msgMaker = MakeMsgMarketSettleRequest
+	_ msgMaker = MakeMsgCreateAsk
+	_ msgMaker = MakeMsgCreateBid
+	_ msgMaker = MakeMsgCancelOrder
+	_ msgMaker = MakeMsgFillBids
+	_ msgMaker = MakeMsgFillAsks
+	_ msgMaker = MakeMsgMarketSettle
 )
 
 // genericTxRunE returns a cobra.Command.RunE function that gets the client.Context, and FlagSet,
@@ -46,8 +49,8 @@ func genericTxRunE(maker msgMaker) func(cmd *cobra.Command, args []string) error
 	}
 }
 
-// AddCreateAskFlags adds all the flags needed for the create-ask command.
-func AddCreateAskFlags(cmd *cobra.Command) {
+// AddFlagsMsgCreateAsk adds all the flags needed for the create-ask command.
+func AddFlagsMsgCreateAsk(cmd *cobra.Command) {
 	AddFlagSeller(cmd)
 	AddFlagMarket(cmd)
 	AddFlagAssets(cmd)
@@ -58,8 +61,8 @@ func AddCreateAskFlags(cmd *cobra.Command) {
 	AddFlagCreationFee(cmd)
 }
 
-// MakeMsgCreateAskRequest reads all the create-ask flags and creates the desired Msg.
-func MakeMsgCreateAskRequest(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+// MakeMsgCreateAsk reads all the create-ask flags and creates the desired Msg.
+func MakeMsgCreateAsk(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
 	msg := &exchange.MsgCreateAskRequest{}
 
 	errs := make([]error, 8)
@@ -75,8 +78,8 @@ func MakeMsgCreateAskRequest(clientCtx client.Context, flagSet *pflag.FlagSet, _
 	return msg, errors.Join(errs...)
 }
 
-// AddCreateBidFlags adds all the flags needed for the create-bid command.
-func AddCreateBidFlags(cmd *cobra.Command) {
+// AddFlagsMsgCreateBid adds all the flags needed for the create-bid command.
+func AddFlagsMsgCreateBid(cmd *cobra.Command) {
 	AddFlagBuyer(cmd)
 	AddFlagMarket(cmd)
 	AddFlagAssets(cmd)
@@ -87,8 +90,8 @@ func AddCreateBidFlags(cmd *cobra.Command) {
 	AddFlagCreationFee(cmd)
 }
 
-// MakeMsgCreateBidRequest reads all the create-bid flags and creates the desired Msg.
-func MakeMsgCreateBidRequest(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+// MakeMsgCreateBid reads all the create-bid flags and creates the desired Msg.
+func MakeMsgCreateBid(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
 	msg := &exchange.MsgCreateBidRequest{}
 
 	errs := make([]error, 8)
@@ -104,14 +107,14 @@ func MakeMsgCreateBidRequest(clientCtx client.Context, flagSet *pflag.FlagSet, _
 	return msg, errors.Join(errs...)
 }
 
-// AddCancelOrderFlags adds all the flags needed for the cancel-order command.
-func AddCancelOrderFlags(cmd *cobra.Command) {
+// AddFlagsMsgCancelOrder adds all the flags needed for the cancel-order command.
+func AddFlagsMsgCancelOrder(cmd *cobra.Command) {
 	AddFlagSigner(cmd)
 	AddFlagOrder(cmd)
 }
 
-// MakeMsgCancelOrderRequest reads all the cancel-order flags and the provided args and creates the desired Msg.
-func MakeMsgCancelOrderRequest(clientCtx client.Context, flagSet *pflag.FlagSet, args []string) (sdk.Msg, error) {
+// MakeMsgCancelOrder reads all the cancel-order flags and the provided args and creates the desired Msg.
+func MakeMsgCancelOrder(clientCtx client.Context, flagSet *pflag.FlagSet, args []string) (sdk.Msg, error) {
 	msg := &exchange.MsgCancelOrderRequest{}
 
 	errs := make([]error, 2)
@@ -142,8 +145,8 @@ func MakeMsgCancelOrderRequest(clientCtx client.Context, flagSet *pflag.FlagSet,
 	return msg, errors.Join(errs...)
 }
 
-// AddFillBidsFlags adds all the flags needed for the fill-bids command.
-func AddFillBidsFlags(cmd *cobra.Command) {
+// AddFlagsMsgFillBids adds all the flags needed for the fill-bids command.
+func AddFlagsMsgFillBids(cmd *cobra.Command) {
 	AddFlagSeller(cmd)
 	AddFlagMarket(cmd)
 	AddFlagTotalAssets(cmd)
@@ -152,8 +155,8 @@ func AddFillBidsFlags(cmd *cobra.Command) {
 	AddFlagCreationFee(cmd)
 }
 
-// MakeMsgFillBidsRequest reads all the fill-bids flags and creates the desired Msg.
-func MakeMsgFillBidsRequest(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+// MakeMsgFillBids reads all the fill-bids flags and creates the desired Msg.
+func MakeMsgFillBids(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
 	msg := &exchange.MsgFillBidsRequest{}
 
 	errs := make([]error, 6)
@@ -167,8 +170,8 @@ func MakeMsgFillBidsRequest(clientCtx client.Context, flagSet *pflag.FlagSet, _ 
 	return msg, errors.Join(errs...)
 }
 
-// AddFillAsksFlags adds all the flags needed for the fill-asks command.
-func AddFillAsksFlags(cmd *cobra.Command) {
+// AddFlagsMsgFillAsks adds all the flags needed for the fill-asks command.
+func AddFlagsMsgFillAsks(cmd *cobra.Command) {
 	AddFlagBuyer(cmd)
 	AddFlagMarket(cmd)
 	AddFlagTotalPrice(cmd)
@@ -177,8 +180,8 @@ func AddFillAsksFlags(cmd *cobra.Command) {
 	AddFlagCreationFee(cmd)
 }
 
-// MakeMsgFillAsksRequest reads all the fill-asks flags and creates the desired Msg.
-func MakeMsgFillAsksRequest(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+// MakeMsgFillAsks reads all the fill-asks flags and creates the desired Msg.
+func MakeMsgFillAsks(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
 	msg := &exchange.MsgFillAsksRequest{}
 
 	errs := make([]error, 6)
@@ -192,8 +195,8 @@ func MakeMsgFillAsksRequest(clientCtx client.Context, flagSet *pflag.FlagSet, _ 
 	return msg, errors.Join(errs...)
 }
 
-// AddMarketSettleFlags adds all the flags needed for the market-settle command.
-func AddMarketSettleFlags(cmd *cobra.Command) {
+// AddFlagsMsgMarketSettle adds all the flags needed for the market-settle command.
+func AddFlagsMsgMarketSettle(cmd *cobra.Command) {
 	AddFlagAdmin(cmd)
 	AddFlagMarket(cmd)
 	AddFlagAsks(cmd)
@@ -201,8 +204,8 @@ func AddMarketSettleFlags(cmd *cobra.Command) {
 	AddFlagExpectPartial(cmd)
 }
 
-// MakeMsgMarketSettleRequest reads all the fill-asks flags and creates the desired Msg.
-func MakeMsgMarketSettleRequest(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+// MakeMsgMarketSettle reads all the fill-asks flags and creates the desired Msg.
+func MakeMsgMarketSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
 	msg := &exchange.MsgMarketSettleRequest{}
 
 	errs := make([]error, 5)
@@ -211,6 +214,27 @@ func MakeMsgMarketSettleRequest(clientCtx client.Context, flagSet *pflag.FlagSet
 	msg.AskOrderIds, errs[2] = ReadFlagAsks(flagSet)
 	msg.BidOrderIds, errs[3] = ReadFlagBids(flagSet)
 	msg.ExpectPartial, errs[4] = ReadFlagPartial(flagSet)
+
+	return msg, errors.Join(errs...)
+}
+
+// AddFlagsMsgMarketWithdraw adds all the flags needed for the market-withdraw command.
+func AddFlagsMsgMarketWithdraw(cmd *cobra.Command) {
+	AddFlagAdmin(cmd)
+	AddFlagMarket(cmd)
+	AddFlagTo(cmd)
+	AddFlagAmount(cmd)
+}
+
+// MakeMsgMarketWithdraw reads all the market-withdraw flags and creates the desired Msg.
+func MakeMsgMarketWithdraw(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+	msg := &exchange.MsgMarketWithdrawRequest{}
+
+	errs := make([]error, 4)
+	msg.Admin, errs[0] = ReadFlagAdminOrDefault(clientCtx, flagSet)
+	msg.MarketId, errs[1] = ReadFlagMarket(flagSet)
+	msg.ToAddress, errs[2] = ReadFlagTo(flagSet)
+	msg.Amount, errs[3] = ReadFlagAmount(flagSet)
 
 	return msg, errors.Join(errs...)
 }
