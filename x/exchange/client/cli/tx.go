@@ -1,15 +1,12 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/provenance-io/provenance/x/exchange"
@@ -99,42 +96,10 @@ The following flags are optional:
 			FlagCreationFee, "500nhash",
 		),
 		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			flagSet := cmd.Flags()
-
-			msg := &exchange.MsgCreateAskRequest{}
-
-			errs := make([]error, 8)
-			msg.AskOrder.Seller, errs[0] = ReadFlagSellerOrDefault(clientCtx, flagSet)
-			msg.AskOrder.MarketId, errs[1] = ReadFlagMarket(flagSet)
-			msg.AskOrder.Assets, errs[2] = ReadFlagAssets(flagSet)
-			msg.AskOrder.Price, errs[3] = ReadFlagPrice(flagSet)
-			msg.AskOrder.SellerSettlementFlatFee, errs[4] = ReadFlagSettlementFeeCoin(flagSet)
-			msg.AskOrder.AllowPartial, errs[5] = ReadFlagPartial(flagSet)
-			msg.AskOrder.ExternalId, errs[6] = ReadFlagExternalID(flagSet)
-			msg.OrderCreationFee, errs[7] = ReadFlagCreationFee(flagSet)
-			err = errors.Join(errs...)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
-		},
+		RunE: genericTxRunE(MakeMsgCreateAskRequest),
 	}
 
-	AddFlagSeller(cmd)
-	AddFlagMarket(cmd)
-	AddFlagAssets(cmd)
-	AddFlagPrice(cmd)
-	AddFlagSettlementFee(cmd)
-	AddFlagAllowPartial(cmd)
-	AddFlagExternalID(cmd)
-	AddFlagCreationFee(cmd)
+	AddCreateAskFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -188,41 +153,10 @@ The following flags are optional:
 			FlagCreationFee, "500nhash",
 		),
 		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			flagSet := cmd.Flags()
-			msg := &exchange.MsgCreateBidRequest{}
-
-			errs := make([]error, 8)
-			msg.BidOrder.Buyer, errs[0] = ReadFlagBuyerOrDefault(clientCtx, flagSet)
-			msg.BidOrder.MarketId, errs[1] = ReadFlagMarket(flagSet)
-			msg.BidOrder.Assets, errs[2] = ReadFlagAssets(flagSet)
-			msg.BidOrder.Price, errs[3] = ReadFlagPrice(flagSet)
-			msg.BidOrder.BuyerSettlementFees, errs[4] = ReadFlagSettlementFeeCoins(flagSet)
-			msg.BidOrder.AllowPartial, errs[5] = ReadFlagPartial(flagSet)
-			msg.BidOrder.ExternalId, errs[6] = ReadFlagExternalID(flagSet)
-			msg.OrderCreationFee, errs[7] = ReadFlagCreationFee(flagSet)
-			err = errors.Join(errs...)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
-		},
+		RunE: genericTxRunE(MakeMsgCreateBidRequest),
 	}
 
-	AddFlagBuyer(cmd)
-	AddFlagMarket(cmd)
-	AddFlagAssets(cmd)
-	AddFlagPrice(cmd)
-	AddFlagSettlementFee(cmd)
-	AddFlagAllowPartial(cmd)
-	AddFlagExternalID(cmd)
-	AddFlagCreationFee(cmd)
+	AddCreateBidFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -252,46 +186,10 @@ A buyer is required.
 			FlagSigner, ExampleAddr, FlagOrder,
 		),
 		Args: cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			flagSet := cmd.Flags()
-			msg := &exchange.MsgCancelOrderRequest{}
-
-			errs := make([]error, 2)
-			msg.Signer, errs[0] = ReadFlagSignerOrDefault(clientCtx, flagSet)
-			msg.OrderId, errs[1] = ReadFlagOrder(flagSet)
-			err = errors.Join(errs...)
-			if err != nil {
-				return err
-			}
-
-			if len(args) > 0 && len(args[0]) > 0 {
-				var orderID uint64
-				orderID, err = strconv.ParseUint(args[0], 10, 64)
-				if err != nil {
-					return fmt.Errorf("could not convert <order id> arg %q to uint64: %w", args[0], err)
-				}
-				if msg.OrderId != 0 && orderID != 0 && msg.OrderId != orderID {
-					return fmt.Errorf("cannot provide an <order id> as both an arg (%d) and flag (--%s %d)",
-						orderID, FlagOrder, msg.OrderId)
-				}
-				msg.OrderId = orderID
-			}
-
-			if msg.OrderId == 0 {
-				return errors.New("no <order id> provided")
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
-		},
+		RunE: genericTxRunE(MakeMsgCancelOrderRequest),
 	}
 
-	AddFlagSigner(cmd)
-	AddFlagOrder(cmd)
+	AddCancelOrderFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -339,37 +237,10 @@ The following flags are optional:
 			FlagBids, "1,2,3", "1", "2,3",
 		),
 		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			flagSet := cmd.Flags()
-			msg := &exchange.MsgFillBidsRequest{}
-
-			errs := make([]error, 6)
-			msg.Seller, errs[0] = ReadFlagSellerOrDefault(clientCtx, flagSet)
-			msg.MarketId, errs[1] = ReadFlagMarket(flagSet)
-			msg.TotalAssets, errs[2] = ReadFlagTotalAssets(flagSet)
-			msg.BidOrderIds, errs[3] = ReadFlagBids(flagSet)
-			msg.SellerSettlementFlatFee, errs[4] = ReadFlagSettlementFeeCoin(flagSet)
-			msg.AskOrderCreationFee, errs[5] = ReadFlagCreationFee(flagSet)
-			err = errors.Join(errs...)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
-		},
+		RunE: genericTxRunE(MakeMsgFillBidsRequest),
 	}
 
-	AddFlagSeller(cmd)
-	AddFlagMarket(cmd)
-	AddFlagTotalAssets(cmd)
-	AddFlagBids(cmd)
-	AddFlagSettlementFee(cmd)
-	AddFlagCreationFee(cmd)
+	AddFillBidsFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -417,37 +288,10 @@ The following flags are optional:
 			FlagBids, "1,2,3", "1", "2,3",
 		),
 		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			flagSet := cmd.Flags()
-			msg := &exchange.MsgFillAsksRequest{}
-
-			errs := make([]error, 6)
-			msg.Buyer, errs[0] = ReadFlagBuyerOrDefault(clientCtx, flagSet)
-			msg.MarketId, errs[1] = ReadFlagMarket(flagSet)
-			msg.TotalPrice, errs[2] = ReadFlagPrice(flagSet)
-			msg.AskOrderIds, errs[3] = ReadFlagAsks(flagSet)
-			msg.BuyerSettlementFees, errs[4] = ReadFlagSettlementFeeCoins(flagSet)
-			msg.BidOrderCreationFee, errs[5] = ReadFlagCreationFee(flagSet)
-			err = errors.Join(errs...)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
-		},
+		RunE: genericTxRunE(MakeMsgFillAsksRequest),
 	}
 
-	AddFlagBuyer(cmd)
-	AddFlagMarket(cmd)
-	AddFlagTotalPrice(cmd)
-	AddFlagAsks(cmd)
-	AddFlagSettlementFee(cmd)
-	AddFlagCreationFee(cmd)
+	AddFillAsksFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -488,35 +332,10 @@ The --%s flag is optional.
 			FlagMarket, FlagAsks, FlagBids, flags.FlagFrom, ExampleAddr,
 		),
 		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			flagSet := cmd.Flags()
-			msg := &exchange.MsgMarketSettleRequest{}
-
-			errs := make([]error, 5)
-			msg.Admin, errs[0] = ReadFlagAdminOrDefault(clientCtx, flagSet)
-			msg.MarketId, errs[1] = ReadFlagMarket(flagSet)
-			msg.AskOrderIds, errs[2] = ReadFlagAsks(flagSet)
-			msg.BidOrderIds, errs[3] = ReadFlagBids(flagSet)
-			msg.ExpectPartial, errs[4] = ReadFlagPartial(flagSet)
-			err = errors.Join(errs...)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
-		},
+		RunE: genericTxRunE(MakeMsgMarketSettleRequest),
 	}
 
-	AddFlagAdmin(cmd)
-	AddFlagMarket(cmd)
-	AddFlagAsks(cmd)
-	AddFlagBids(cmd)
-	AddFlagExpectPartial(cmd)
+	AddMarketSettleFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
