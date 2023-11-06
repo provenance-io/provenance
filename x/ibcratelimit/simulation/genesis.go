@@ -47,15 +47,3 @@ func RandomizedGenState(simState *module.SimulationState) {
 func randIntBetween(r *rand.Rand, min, max int) int {
 	return r.Intn(max-min+1) + min
 }
-
-func RandomAccs(r *rand.Rand, accs []simtypes.Account, count uint64) ([]simtypes.Account, error) {
-	if uint64(len(accs)) < count {
-		return nil, fmt.Errorf("cannot choose %d accounts because there are only %d", count, len(accs))
-	}
-	raccs := make([]simtypes.Account, 0, len(accs))
-	raccs = append(raccs, accs...)
-	r.Shuffle(len(raccs), func(i, j int) {
-		raccs[i], raccs[j] = raccs[j], raccs[i]
-	})
-	return raccs[:count], nil
-}
