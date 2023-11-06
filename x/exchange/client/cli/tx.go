@@ -485,40 +485,84 @@ The following flags are optional and default to an empty string:
 	return cmd
 }
 
-// CmdTxMarketUpdateEnabled TODO
+// CmdTxMarketUpdateEnabled creates the market-enabled sub-command for the exchange tx command.
 func CmdTxMarketUpdateEnabled() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdTxMarketUpdateEnabled
-			return nil
-		},
+		Use: fmt.Sprintf("market-enabled {--%s|--%s} <admin> --%s <market id> {--%s|--%s}",
+			flags.FlagFrom, FlagAdmin, FlagMarket, FlagEnable, FlagDisable,
+		),
+		Aliases: []string{"market-update-enabled", "update-enabled"},
+		Short:   "Change whether a market is accepting orders",
+		Long: fmt.Sprintf(`Change whether a market is accepting orders.
+
+If --%s <admin> is provided, that is used as the admin.
+If no --%s is provided, but the --%s flag was, the governance module account is used as the admin.
+Otherwise the --%s account address is used as the admin.
+An admin is required.
+
+The --%s <market id> flag is required.
+One of --%s or --%s must be provided, but not both.
+`,
+			FlagAdmin,
+			FlagAdmin, flags.FlagFrom,
+			FlagAuthority,
+
+			FlagMarket,
+			FlagEnable, FlagDisable,
+		),
+		Example: fmt.Sprintf(`%[1]s --%[2]s %[3]s --%[4]s %[5]s --%[6]s
+%[1]s --%[2]s %[3]s --%[4]s %[5]s --%[7]s`,
+			txCmdStart+" market-enabled",
+			flags.FlagFrom, ExampleAddr1,
+			FlagMarket, "3",
+			FlagEnable, FlagDisable,
+		),
+		Args: cobra.NoArgs,
+		RunE: genericTxRunE(MakeMsgMarketUpdateEnabled),
 	}
 
+	AddFlagsMsgMarketUpdateEnabled(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
-// CmdTxMarketUpdateUserSettle TODO
+// CmdTxMarketUpdateUserSettle creates the market-user-settle sub-command for the exchange tx command.
 func CmdTxMarketUpdateUserSettle() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdTxMarketUpdateUserSettle
-			return nil
-		},
+		Use: fmt.Sprintf("market-user-settle {--%s|--%s} <admin> --%s <market id> {--%s|--%s}",
+			flags.FlagFrom, FlagAdmin, FlagMarket, FlagEnable, FlagDisable,
+		),
+		Aliases: []string{"market-update-user-settle", "update-user-settle"},
+		Short:   "Change whether a market allows settlements initiated by users",
+		Long: fmt.Sprintf(`Change whether a market allows settlements initiated by users.
+
+If --%s <admin> is provided, that is used as the admin.
+If no --%s is provided, but the --%s flag was, the governance module account is used as the admin.
+Otherwise the --%s account address is used as the admin.
+An admin is required.
+
+The --%s <market id> flag is required.
+One of --%s or --%s must be provided, but not both.
+`,
+			FlagAdmin,
+			FlagAdmin, flags.FlagFrom,
+			FlagAuthority,
+
+			FlagMarket,
+			FlagEnable, FlagDisable,
+		),
+		Example: fmt.Sprintf(`%[1]s --%[2]s %[3]s --%[4]s %[5]s --%[6]s
+%[1]s --%[2]s %[3]s --%[4]s %[5]s --%[7]s`,
+			txCmdStart+" market-user-settle",
+			flags.FlagFrom, ExampleAddr1,
+			FlagMarket, "3",
+			FlagEnable, FlagDisable,
+		),
+		Args: cobra.NoArgs,
+		RunE: genericTxRunE(MakeMsgMarketUpdateUserSettle),
 	}
 
+	AddFlagsMsgMarketUpdateUserSettle(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

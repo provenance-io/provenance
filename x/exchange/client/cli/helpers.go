@@ -302,3 +302,53 @@ func MakeMsgMarketUpdateDetails(clientCtx client.Context, flagSet *pflag.FlagSet
 
 	return msg, errors.Join(errs...)
 }
+
+// AddFlagsMsgMarketUpdateEnabled adds all the flags needed for MakeMsgMarketUpdateEnabled.
+func AddFlagsMsgMarketUpdateEnabled(cmd *cobra.Command) {
+	AddFlagAdmin(cmd)
+	AddFlagMarket(cmd)
+	AddFlagEnable(cmd, "accepting_orders")
+	AddFlagDisable(cmd, "accepting_orders")
+}
+
+// MakeMsgMarketUpdateEnabled reads all the AddFlagsMsgMarketUpdateEnabled flags and creates the desired Msg.
+func MakeMsgMarketUpdateEnabled(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+	msg := &exchange.MsgMarketUpdateEnabledRequest{}
+
+	errs := make([]error, 5)
+	msg.Admin, errs[0] = ReadFlagAdminOrDefault(clientCtx, flagSet)
+	msg.MarketId, errs[1] = ReadFlagMarket(flagSet)
+	var disable bool
+	msg.AcceptingOrders, errs[2] = ReadFlagEnable(flagSet)
+	disable, errs[3] = ReadFlagDisable(flagSet)
+	if errs[2] == nil && errs[3] == nil && msg.AcceptingOrders == disable {
+		errs[4] = fmt.Errorf("exactly one of --%s or --%s must be provided", FlagEnable, FlagDisable)
+	}
+
+	return msg, errors.Join(errs...)
+}
+
+// AddFlagsMsgMarketUpdateUserSettle adds all the flags needed for MakeMsgMarketUpdateUserSettle.
+func AddFlagsMsgMarketUpdateUserSettle(cmd *cobra.Command) {
+	AddFlagAdmin(cmd)
+	AddFlagMarket(cmd)
+	AddFlagEnable(cmd, "allow_user_settlement")
+	AddFlagDisable(cmd, "allow_user_settlement")
+}
+
+// MakeMsgMarketUpdateUserSettle reads all the AddFlagsMsgMarketUpdateUserSettle flags and creates the desired Msg.
+func MakeMsgMarketUpdateUserSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+	msg := &exchange.MsgMarketUpdateUserSettleRequest{}
+
+	errs := make([]error, 5)
+	msg.Admin, errs[0] = ReadFlagAdminOrDefault(clientCtx, flagSet)
+	msg.MarketId, errs[1] = ReadFlagMarket(flagSet)
+	var disable bool
+	msg.AllowUserSettlement, errs[2] = ReadFlagEnable(flagSet)
+	disable, errs[3] = ReadFlagDisable(flagSet)
+	if errs[2] == nil && errs[3] == nil && msg.AllowUserSettlement == disable {
+		errs[4] = fmt.Errorf("exactly one of --%s or --%s must be provided", FlagEnable, FlagDisable)
+	}
+
+	return msg, errors.Join(errs...)
+}

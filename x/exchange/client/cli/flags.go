@@ -22,6 +22,8 @@ const (
 	FlagBuyer         = "buyer"
 	FlagCreationFee   = "creation-fee"
 	FlagDescription   = "description"
+	FlagDisable       = "disable"
+	FlagEnable        = "enable"
 	FlagExternalID    = "external-id"
 	FlagIcon          = "icon"
 	FlagMarket        = "market"
@@ -241,12 +243,32 @@ func AddFlagExternalID(cmd *cobra.Command) {
 
 // AddFlagDescription adds the optional --description <string> flag to a command.
 func AddFlagDescription(cmd *cobra.Command) {
-	cmd.Flags().String(FlagDescription, "", "A description of the market.")
+	cmd.Flags().String(FlagDescription, "", "A description of the market")
 }
 
 // ReadFlagDescription reads the --description flag.
 func ReadFlagDescription(flagSet *pflag.FlagSet) (string, error) {
 	return flagSet.GetString(FlagDescription)
+}
+
+// AddFlagDisable adds the optional --disable flag to a command.
+func AddFlagDisable(cmd *cobra.Command, name string) {
+	cmd.Flags().Bool(FlagDisable, false, fmt.Sprintf("Set the market's %s field to false", name))
+}
+
+// ReadFlagDisable reads the --disable flag.
+func ReadFlagDisable(flagSet *pflag.FlagSet) (bool, error) {
+	return flagSet.GetBool(FlagDisable)
+}
+
+// AddFlagEnable adds the optional --enable flag to a command.
+func AddFlagEnable(cmd *cobra.Command, name string) {
+	cmd.Flags().Bool(FlagEnable, false, fmt.Sprintf("Set the market's %s field to true", name))
+}
+
+// ReadFlagEnable reads the --enable flag.
+func ReadFlagEnable(flagSet *pflag.FlagSet) (bool, error) {
+	return flagSet.GetBool(FlagEnable)
 }
 
 // ReadFlagExternalID reads the --external-id flag.
@@ -277,7 +299,7 @@ func ReadFlagMarket(flagSet *pflag.FlagSet) (uint32, error) {
 
 // AddFlagName adds the optional --name <string> flag to a command.
 func AddFlagName(cmd *cobra.Command) {
-	cmd.Flags().String(FlagName, "", "A short name for the market.")
+	cmd.Flags().String(FlagName, "", "A short name for the market")
 }
 
 // ReadFlagName reads the --name flag.
