@@ -1,7 +1,10 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -10,6 +13,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	"github.com/provenance-io/provenance/x/exchange"
 )
 
 const (
@@ -25,12 +30,15 @@ const (
 	FlagDisable       = "disable"
 	FlagEnable        = "enable"
 	FlagExternalID    = "external-id"
+	FlagGrant         = "grant"
 	FlagIcon          = "icon"
 	FlagMarket        = "market"
 	FlagName          = "name"
 	FlagOrder         = "order"
 	FlagPartial       = "partial"
 	FlagPrice         = "price"
+	FlagRevokeAll     = "revoke-all"
+	FlagRevoke        = "revoke"
 	FlagSeller        = "seller"
 	FlagSettlementFee = "settlement-fee"
 	FlagSigner        = "signer"
@@ -117,6 +125,61 @@ func readAddrOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet, name st
 	}
 
 	return "", fmt.Errorf("no %s provided", name)
+}
+
+// readAccessGrants reads a StringSlice flag and converts it to a slice of AccessGrants.
+func readAccessGrants(flagSet *pflag.FlagSet, name string) ([]exchange.AccessGrant, error) {
+	vals, err := flagSet.GetStringSlice(name)
+	if err != nil || len(vals) == 0 {
+		return nil, err
+	}
+
+	return ParseAccessGrants(vals...)
+}
+
+// permSepRx is a regexp that matches characters that can be used to separate permissions.
+var permSepRx = regexp.MustCompile(`[ +-.]`)
+
+// ParseAccessGrant parses an AccessGrant from a string with the format "<address>:<perm 1>[+<perm 2>...]".
+func ParseAccessGrant(val string) (*exchange.AccessGrant, error) {
+	parts := strings.Split(val, ":")
+	if len(parts) <= 1 {
+		return nil, fmt.Errorf("could not parse %q as an AccessGrant: expected format <address>:<permissions>", val)
+	}
+
+	var permissions []exchange.Permission
+	if strings.ToLower(strings.TrimSpace(parts[1])) == "all" {
+		permissions = exchange.AllPermissions()
+	} else {
+		permVals := permSepRx.Split(parts[1], 0)
+		var err error
+		permissions, err = exchange.ParsePermissions(permVals...)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse %q permissions from %q: %w", parts[0], parts[1], err)
+		}
+	}
+
+	rv := &exchange.AccessGrant{
+		Address:     parts[0],
+		Permissions: permissions,
+	}
+	return rv, nil
+}
+
+// ParseAccessGrants parses an AccessGrant from each of the provided vals.
+func ParseAccessGrants(vals ...string) ([]exchange.AccessGrant, error) {
+	var errs []error
+	rv := make([]exchange.AccessGrant, len(vals))
+	for i, val := range vals {
+		ag, err := ParseAccessGrant(val)
+		if err != nil {
+			errs = append(errs, err)
+		}
+		if ag != nil {
+			rv[i] = *ag
+		}
+	}
+	return rv, errors.Join(errs...)
 }
 
 // AddFlagAdmin adds the optional --admin flag to a command.
@@ -276,6 +339,16 @@ func ReadFlagExternalID(flagSet *pflag.FlagSet) (string, error) {
 	return flagSet.GetString(FlagExternalID)
 }
 
+// AddFlagGrant adds the optional --grant <access grants> flag to a command.
+func AddFlagGrant(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagGrant, nil, "AccessGrants to add to the market")
+}
+
+// ReadFlagGrant reads the --grant flag.
+func ReadFlagGrant(flagSet *pflag.FlagSet) ([]exchange.AccessGrant, error) {
+	return readAccessGrants(flagSet, FlagGrant)
+}
+
 // AddFlagIcon adds the optional --icon <string> flag to a command.
 func AddFlagIcon(cmd *cobra.Command) {
 	cmd.Flags().String(FlagIcon, "", "The market's icon URI")
@@ -347,6 +420,26 @@ func AddFlagTotalPrice(cmd *cobra.Command) {
 // ReadFlagPrice reads the --price flag as sdk.Coin.
 func ReadFlagPrice(flagSet *pflag.FlagSet) (sdk.Coin, error) {
 	return readReqCoinFlag(flagSet, FlagPrice)
+}
+
+// AddFlagRevokeAll adds the optional --revoke-all <addresses> flag to a command.
+func AddFlagRevokeAll(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagRevokeAll, nil, "Addresses to revoke all permissions from")
+}
+
+// ReadFlagRevokeAll reads the --revoke-all flag.
+func ReadFlagRevokeAll(flagSet *pflag.FlagSet) ([]string, error) {
+	return flagSet.GetStringSlice(FlagRevokeAll)
+}
+
+// AddFlagRevoke adds the optional --revoke <access grants> flag to a command.
+func AddFlagRevoke(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagRevoke, nil, "AccessGrants to remove from the market")
+}
+
+// ReadFlagRevoke reads the --revoke flag.
+func ReadFlagRevoke(flagSet *pflag.FlagSet) ([]exchange.AccessGrant, error) {
+	return readAccessGrants(flagSet, FlagRevoke)
 }
 
 // AddFlagSeller adds the optional --seller flag to a command.

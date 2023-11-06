@@ -567,21 +567,66 @@ One of --%s or --%s must be provided, but not both.
 	return cmd
 }
 
-// CmdTxMarketManagePermissions TODO
+// CmdTxMarketManagePermissions creates the market-permissions sub-command for the exchange tx command.
 func CmdTxMarketManagePermissions() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdTxMarketManagePermissions
-			return nil
-		},
+		Use: fmt.Sprintf("market-permissions {--%s|--%s} <admin> --%s <market id> "+
+			"[--%s <addresses>] [--%s <access grants>] [--%s <access grants>]",
+			flags.FlagFrom, FlagAdmin, FlagMarket,
+			FlagRevokeAll, FlagRevoke, FlagGrant,
+		),
+		Aliases: []string{"market-manage-permissions", "permissions", "market-perms", "market-manage-perms", "perms"},
+		Short:   "Update the account permissions for a market",
+		Long: fmt.Sprintf(`Update the account permissions for a market
+
+If --%s <admin> is provided, that is used as the admin.
+If no --%s is provided, but the --%s flag was, the governance module account is used as the admin.
+Otherwise the --%s account address is used as the admin.
+An admin is required.
+
+The --%s <market id> flag is required.
+
+The following flags are optional (but at least one must be provided):
+  --%-23s Separate each address with commas. This flag can also be provided multiple times.
+  --%-23s Separate each <access grant> with commas. This flag can also be provided multiple times.
+  --%-23s Separate each <access grant> with commas. This flag can also be provided multiple times.
+
+An <access grant> has the format "<address>:<permissions>"
+In <permissions>, separate each entry with a + (plus), - (dash), or . (period).
+An <access grant> of "<address>:all" will have all of the permissions.
+
+Example <access grant>: %s:settle+update
+
+Valid permissions entries: %s
+The full Permission enum names are also valid.
+`,
+			FlagAdmin,
+			FlagAdmin, flags.FlagFrom,
+			FlagAuthority,
+
+			FlagMarket,
+
+			FlagRevokeAll+" <addresses>",
+			FlagRevoke+" <access grants>", // = 22 characters
+			FlagGrant+" <access grants>",
+
+			ExampleAddr1,
+			SimplePerms(),
+		),
+		Example: fmt.Sprintf(`%[1]s --%s %s --%s 3 --%s %s
+%[1]s --%s %s --%s 3 --%s %s:settle+set-ids %s %s:settle+set-ids
+%[1]s --%s --%s 3 --%s %s:all --generate-only
+`,
+			txCmdStart+" market-permissions",
+			flags.FlagFrom, ExampleAddr1, FlagMarket, FlagRevokeAll, ExampleAddr2,
+			FlagAdmin, ExampleAddr1, FlagMarket, FlagRevoke, ExampleAddr3, FlagGrant, ExampleAddr4,
+			FlagAuthority, FlagMarket, FlagGrant, ExampleAddr5,
+		),
+		Args: cobra.NoArgs,
+		RunE: genericTxRunE(MakeMsgMarketManagePermissions),
 	}
 
+	AddFlagsMsgMarketManagePermissions(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

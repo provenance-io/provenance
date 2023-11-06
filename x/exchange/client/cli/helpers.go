@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -15,8 +16,11 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
-var ExampleAddr1 = "cosmos1g4uxzmtsd3j5zerywgc47h6lta047h6l8qdfjj" // = sdk.AccAddress("ExampleAddr1________")
-var ExampleAddr2 = "cosmos1g4uxzmtsd3j5zerywge97h6lta047h6ld84mf8" // = sdk.AccAddress("ExampleAddr2________")
+var ExampleAddr1 = "pb1g4uxzmtsd3j5zerywgc47h6lta047h6lwwxvlw" // = sdk.AccAddress("ExampleAddr1________")
+var ExampleAddr2 = "pb1tazhsctdwpkx2styv3eryh6lta047h6l63dw8r" // = sdk.AccAddress("_ExampleAddr2_______")
+var ExampleAddr3 = "pb195k527rpd4cxce2pv3j8yv6lta047h6l3kaj79" // = sdk.AccAddress("--ExampleAddr3______")
+var ExampleAddr4 = "pb10el8u3tcv9khqmr9g9jxgu35ta047h6l9hc7xs" // = sdk.AccAddress("~~~ExampleAddr4_____")
+var ExampleAddr5 = "pb1857n60290psk6urvv4qkgerjx4047h6l5vynnz" // = sdk.AccAddress("====ExampleAddr5____")
 
 // A msgMaker is a function that makes a Msg from a client.Context, FlagSet, and set of args.
 type msgMaker func(clientCtx client.Context, flagSet *pflag.FlagSet, args []string) (sdk.Msg, error)
@@ -31,6 +35,9 @@ var (
 	_ msgMaker = MakeMsgMarketSetOrderExternalID
 	_ msgMaker = MakeMsgMarketWithdraw
 	_ msgMaker = MakeMsgMarketUpdateDetails
+	_ msgMaker = MakeMsgMarketUpdateEnabled
+	_ msgMaker = MakeMsgMarketUpdateUserSettle
+	_ msgMaker = MakeMsgMarketManagePermissions
 )
 
 // genericTxRunE returns a cobra.Command.RunE function that gets the client.Context, and FlagSet,
@@ -349,6 +356,39 @@ func MakeMsgMarketUpdateUserSettle(clientCtx client.Context, flagSet *pflag.Flag
 	if errs[2] == nil && errs[3] == nil && msg.AllowUserSettlement == disable {
 		errs[4] = fmt.Errorf("exactly one of --%s or --%s must be provided", FlagEnable, FlagDisable)
 	}
+
+	return msg, errors.Join(errs...)
+}
+
+// SimplePerms returns a string containing all the Permission.SimpleString() values.
+func SimplePerms() string {
+	allPerms := exchange.AllPermissions()
+	simple := make([]string, len(allPerms))
+	for i, perm := range allPerms {
+		simple[i] = perm.SimpleString()
+	}
+	return strings.Join(simple, "  ")
+}
+
+// AddFlagsMsgMarketManagePermissions adds all the flags needed for MakeMsgMarketManagePermissions.
+func AddFlagsMsgMarketManagePermissions(cmd *cobra.Command) {
+	AddFlagAdmin(cmd)
+	AddFlagMarket(cmd)
+	AddFlagRevokeAll(cmd)
+	AddFlagRevoke(cmd)
+	AddFlagGrant(cmd)
+}
+
+// MakeMsgMarketManagePermissions reads all the AddFlagsMsgMarketManagePermissions flags and creates the desired Msg.
+func MakeMsgMarketManagePermissions(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+	msg := &exchange.MsgMarketManagePermissionsRequest{}
+
+	errs := make([]error, 5)
+	msg.Admin, errs[0] = ReadFlagAdminOrDefault(clientCtx, flagSet)
+	msg.MarketId, errs[1] = ReadFlagMarket(flagSet)
+	msg.RevokeAll, errs[2] = ReadFlagRevokeAll(flagSet)
+	msg.ToRevoke, errs[3] = ReadFlagRevoke(flagSet)
+	msg.ToGrant, errs[4] = ReadFlagGrant(flagSet)
 
 	return msg, errors.Join(errs...)
 }
