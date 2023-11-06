@@ -392,3 +392,28 @@ func MakeMsgMarketManagePermissions(clientCtx client.Context, flagSet *pflag.Fla
 
 	return msg, errors.Join(errs...)
 }
+
+// AddFlagsMsgMarketManageReqAttrs adds all the flags needed for MakeMsgMarketManageReqAttrs.
+func AddFlagsMsgMarketManageReqAttrs(cmd *cobra.Command) {
+	AddFlagAdmin(cmd)
+	AddFlagMarket(cmd)
+	AddFlagAskAdd(cmd)
+	AddFlagAskRemove(cmd)
+	AddFlagBidAdd(cmd)
+	AddFlagBidRemove(cmd)
+}
+
+// MakeMsgMarketManageReqAttrs reads all the AddFlagsMsgMarketManageReqAttrs flags and creates the desired Msg.
+func MakeMsgMarketManageReqAttrs(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+	msg := &exchange.MsgMarketManageReqAttrsRequest{}
+
+	errs := make([]error, 6)
+	msg.Admin, errs[0] = ReadFlagAdminOrDefault(clientCtx, flagSet)
+	msg.MarketId, errs[1] = ReadFlagMarket(flagSet)
+	msg.CreateAskToAdd, errs[2] = ReadFlagAskAdd(flagSet)
+	msg.CreateAskToRemove, errs[3] = ReadFlagAskRemove(flagSet)
+	msg.CreateBidToAdd, errs[4] = ReadFlagBidAdd(flagSet)
+	msg.CreateBidToRemove, errs[5] = ReadFlagBidRemove(flagSet)
+
+	return msg, errors.Join(errs...)
+}

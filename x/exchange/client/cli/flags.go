@@ -20,9 +20,13 @@ import (
 const (
 	FlagAdmin         = "admin"
 	FlagAmount        = "amount"
+	FlagAskAdd        = "ask-add"
+	FlagAskRemove     = "ask-remove"
 	FlagAsks          = "asks"
 	FlagAssets        = "assets"
 	FlagAuthority     = "authority"
+	FlagBidAdd        = "bid-add"
+	FlagBidRemove     = "bid-remove"
 	FlagBids          = "bids"
 	FlagBuyer         = "buyer"
 	FlagCreationFee   = "creation-fee"
@@ -234,6 +238,26 @@ func ReadFlagAmount(flagSet *pflag.FlagSet) (sdk.Coins, error) {
 	return readCoinsFlag(flagSet, FlagAmount)
 }
 
+// AddFlagAskAdd adds the optional --ask-add <strings> flag to a command.
+func AddFlagAskAdd(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagAskAdd, nil, "The create-ask required attributes to add")
+}
+
+// ReadFlagAskAdd reads the --ask-add flag.
+func ReadFlagAskAdd(flagSet *pflag.FlagSet) ([]string, error) {
+	return flagSet.GetStringSlice(FlagAskAdd)
+}
+
+// AddFlagAskRemove adds the optional --ask-remove <strings> flag to a command.
+func AddFlagAskRemove(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagAskRemove, nil, "The create-ask required attributes to remove")
+}
+
+// ReadFlagAskRemove reads the --ask-remove flag.
+func ReadFlagAskRemove(flagSet *pflag.FlagSet) ([]string, error) {
+	return flagSet.GetStringSlice(FlagAskRemove)
+}
+
 // AddFlagAsks adds the required --asks <uints> flag to a command.
 func AddFlagAsks(cmd *cobra.Command) {
 	cmd.Flags().UintSlice(FlagAsks, nil, "The ask order ids")
@@ -265,6 +289,26 @@ func AddFlagTotalAssets(cmd *cobra.Command) {
 // ReadFlagTotalAssets reads the --assets flag as sdk.Coins.
 func ReadFlagTotalAssets(flagSet *pflag.FlagSet) (sdk.Coins, error) {
 	return readCoinsFlag(flagSet, FlagAssets)
+}
+
+// AddFlagBidAdd adds the optional --bid-add <strings> flag to a command.
+func AddFlagBidAdd(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagBidAdd, nil, "The create-bid required attributes to add")
+}
+
+// ReadFlagBidAdd reads the --bid-add flag.
+func ReadFlagBidAdd(flagSet *pflag.FlagSet) ([]string, error) {
+	return flagSet.GetStringSlice(FlagBidAdd)
+}
+
+// AddFlagBidRemove adds the optional --bid-remove <strings> flag to a command.
+func AddFlagBidRemove(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagBidRemove, nil, "The create-bid required attributes to remove")
+}
+
+// ReadFlagBidRemove reads the --bid-remove flag.
+func ReadFlagBidRemove(flagSet *pflag.FlagSet) ([]string, error) {
+	return flagSet.GetStringSlice(FlagBidRemove)
 }
 
 // AddFlagBids adds the required --bids <uints> flag to a command.
