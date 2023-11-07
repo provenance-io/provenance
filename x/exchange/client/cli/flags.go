@@ -106,7 +106,7 @@ func AddFlagsEnableDisable(cmd *cobra.Command, name string) {
 	cmd.Flags().Bool(FlagEnable, false, fmt.Sprintf("Set the market's %s field to true", name))
 	cmd.Flags().Bool(FlagDisable, false, fmt.Sprintf("Set the market's %s field to false", name))
 	cmd.MarkFlagsMutuallyExclusive(FlagEnable, FlagDisable)
-	// TODO[1701]: cmd.MarkFlagsOneRequired(FlagEnable, FlagDisable)
+	cmd.MarkFlagsOneRequired(FlagEnable, FlagDisable)
 }
 
 // ReadFlagsEnableDisable reads the --enable and --disable flags.
