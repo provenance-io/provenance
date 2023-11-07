@@ -2,9 +2,9 @@
 
 ## Overview
 
-The exchange module is used to facilitate the buying and selling of on-chain assets.
-
-<!-- TODO[1658]: Write the Exchange spec docs. -->
+The exchange module is used to facilitate the trading of on-chain assets.
+Funds being traded remain (on hold) in the buyers' and sellers' accounts.
+Settlement is done directly between the two parties without the funds touching a 3rd party's account.
 
 ## Contents
 
