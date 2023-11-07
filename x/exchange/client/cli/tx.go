@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 
 	"github.com/provenance-io/provenance/x/exchange"
@@ -684,22 +685,68 @@ The following flags are optional (but at least one must be provided):
 	return cmd
 }
 
-// CmdTxGovCreateMarket TODO
+// CmdTxGovCreateMarket creates the create-market sub-command for the exchange tx command.
 func CmdTxGovCreateMarket() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdTxGovCreateMarket
-			return nil
-		},
+		Use:     "create-market",
+		Aliases: []string{"gov-create-market"},
+		Short:   "Submit a governance proposal to create a market",
+		Long: fmt.Sprintf(`Submit a governance proposal to create a market.
+
+The following flags define the Market fields and are all optional:
+  --%-35s %s
+  --%-35s %s
+  --%-35s %s
+  --%-35s %s
+  --%-35s %s
+  --%-35s %s
+  --%-35s %s
+  --%-35s %s
+  --%-35s %s
+  --%-35s %s
+  --%-35s %s
+  --%-35s %s
+  --%-35s %s
+  --%-35s %s
+  --%-35s %s
+  --%-35s %s
+
+If a flag is repeatable, multiple entries can be separated by commas and/or the flag can be provided multiple times.
+
+An <access grant> has the format "<address>:<permissions>"
+In <permissions>, separate each entry with a + (plus), - (dash), or . (period).
+An <access grant> of "<address>:all" will have all of the permissions.
+Example <access grant>: %s:settle+update
+
+Valid permissions entries: %s
+The full Permission enum names are also valid.
+`,
+			FlagMarket+" <market id>", "",
+			FlagName+" <name>", fmt.Sprintf("Max %d characters", exchange.MaxName),
+			FlagDescription+" <description>", fmt.Sprintf("Max %d characters", exchange.MaxDescription),
+			FlagURL+" <website url>", fmt.Sprintf("Max %d characters", exchange.MaxWebsiteURL),
+			FlagIcon+" <icon uri>", fmt.Sprintf("Max %d characters", exchange.MaxIconURI),
+			FlagCreateAsk+" <flat fee options>", "Repeatable Coin strings, e.g. 10nhash",
+			FlagCreateBid+" <flat fee options>", "Repeatable Coin strings, e.g. 10nhash",
+			FlagSellerFlat+" <flat fee options>", "Repeatable Coin strings, e.g. 10nhash",
+			FlagSellerRatios+" <fee ratios>", "Repeatable FeeRatio strings, e.g. 100nhash:1nhash",
+			FlagBuyerFlat+" <flat fee options>", "Repeatable Coin strings, e.g. 10nhash",
+			FlagBuyerRatios+" <fee ratios>", "Repeatable FeeRatio strings, e.g. 100nhash:1nhash",
+			FlagAcceptingOrders, "",
+			FlagAllowUserSettle, "",
+			FlagAccessGrants+" <access grants>", fmt.Sprintf("Repeatable <access grant> strings, e.g. %s:settle", ExampleAddr1),
+			FlagReqAttrAsk+" <required attributes>", "Repeatable", // = 34 characters
+			FlagReqAttrBid+" <required attributes>", "Repeatable",
+
+			ExampleAddr1, SimplePerms(),
+		),
+		Args: cobra.NoArgs,
+		RunE: govTxRunE(MakeMsgGovCreateMarket),
 	}
 
+	govcli.AddGovPropFlagsToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgGovCreateMarket(cmd)
 	return cmd
 }
 

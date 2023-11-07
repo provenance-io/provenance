@@ -11,61 +11,66 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
 const (
-	FlagAdmin         = "admin"
-	FlagAmount        = "amount"
-	FlagAskAdd        = "ask-add"
-	FlagAskRemove     = "ask-remove"
-	FlagAsks          = "asks"
-	FlagAssets        = "assets"
-	FlagAuthority     = "authority"
-	FlagBidAdd        = "bid-add"
-	FlagBidRemove     = "bid-remove"
-	FlagBids          = "bids"
-	FlagBuyer         = "buyer"
-	FlagCreationFee   = "creation-fee"
-	FlagDescription   = "description"
-	FlagDisable       = "disable"
-	FlagEnable        = "enable"
-	FlagExternalID    = "external-id"
-	FlagGrant         = "grant"
-	FlagIcon          = "icon"
-	FlagMarket        = "market"
-	FlagName          = "name"
-	FlagOrder         = "order"
-	FlagPartial       = "partial"
-	FlagPrice         = "price"
-	FlagRevokeAll     = "revoke-all"
-	FlagRevoke        = "revoke"
-	FlagSeller        = "seller"
-	FlagSettlementFee = "settlement-fee"
-	FlagSigner        = "signer"
-	FlagTo            = "to"
-	FlagURL           = "url"
+	FlagAcceptingOrders = "accepting-orders"
+	FlagAccessGrants    = "access-grants"
+	FlagAdmin           = "admin"
+	FlagAllowUserSettle = "allow-user-settle"
+	FlagAmount          = "amount"
+	FlagAskAdd          = "ask-add"
+	FlagAskRemove       = "ask-remove"
+	FlagAsks            = "asks"
+	FlagAssets          = "assets"
+	FlagAuthority       = "authority"
+	FlagBidAdd          = "bid-add"
+	FlagBidRemove       = "bid-remove"
+	FlagBids            = "bids"
+	FlagBuyer           = "buyer"
+	FlagBuyerFlat       = "buyer-flat"
+	FlagBuyerRatios     = "buyer-ratios"
+	FlagCreateAsk       = "create-ask"
+	FlagCreateBid       = "create-bid"
+	FlagCreationFee     = "creation-fee"
+	FlagDescription     = "description"
+	FlagDisable         = "disable"
+	FlagEnable          = "enable"
+	FlagExternalID      = "external-id"
+	FlagGrant           = "grant"
+	FlagIcon            = "icon"
+	FlagMarket          = "market"
+	FlagName            = "name"
+	FlagOrder           = "order"
+	FlagPartial         = "partial"
+	FlagPrice           = "price"
+	FlagReqAttrAsk      = "req-attr-ask"
+	FlagReqAttrBid      = "req-attr-Bid"
+	FlagRevokeAll       = "revoke-all"
+	FlagRevoke          = "revoke"
+	FlagSeller          = "seller"
+	FlagSellerFlat      = "seller-flat"
+	FlagSellerRatios    = "seller-ratios"
+	FlagSettlementFee   = "settlement-fee"
+	FlagSigner          = "signer"
+	FlagTo              = "to"
+	FlagURL             = "url"
 )
 
-// markFlagRequired this marks a flag as required and panics if there's a problem.
-func markFlagRequired(cmd *cobra.Command, name string) {
+// MarkFlagRequired this marks a flag as required and panics if there's a problem.
+func MarkFlagRequired(cmd *cobra.Command, name string) {
 	if err := cmd.MarkFlagRequired(name); err != nil {
-		panic(fmt.Errorf("error marking %s flag required on %s: %w", name, cmd.Name(), err))
+		panic(fmt.Errorf("error marking --%s flag required on %s: %w", name, cmd.Name(), err))
 	}
 }
 
-// readCoinsFlag reads a string flag and converts it into sdk.Coins.
+// ReadCoinsFlag reads a string flag and converts it into sdk.Coins.
 // If the flag wasn't provided, this returns nil, nil.
-func readCoinsFlag(flagSet *pflag.FlagSet, name string) (sdk.Coins, error) {
+func ReadCoinsFlag(flagSet *pflag.FlagSet, name string) (sdk.Coins, error) {
 	value, err := flagSet.GetString(name)
-	if err != nil {
+	if len(value) == 0 || err != nil {
 		return nil, err
-	}
-	if value == "" {
-		return nil, nil
 	}
 	rv, err := sdk.ParseCoinsNormalized(value)
 	if err != nil {
@@ -74,26 +79,23 @@ func readCoinsFlag(flagSet *pflag.FlagSet, name string) (sdk.Coins, error) {
 	return rv, nil
 }
 
-// readCoinFlag reads a string flag and converts it into *sdk.Coin.
+// ReadCoinFlag reads a string flag and converts it into *sdk.Coin.
 // If the flag wasn't provided, this returns nil, nil.
-func readCoinFlag(flagSet *pflag.FlagSet, name string) (*sdk.Coin, error) {
+func ReadCoinFlag(flagSet *pflag.FlagSet, name string) (*sdk.Coin, error) {
 	value, err := flagSet.GetString(name)
-	if err != nil {
+	if len(value) == 0 || err != nil {
 		return nil, err
 	}
-	if value == "" {
-		return nil, nil
-	}
-	rv, err := sdk.ParseCoinNormalized(value)
+	rv, err := exchange.ParseCoin(value)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing --%s value %q as a coin: %w", name, value, err)
 	}
 	return &rv, nil
 }
 
-// readReqCoinFlag reads a string flag and converts it into a sdk.Coin and requires it to have a value.
-func readReqCoinFlag(flagSet *pflag.FlagSet, name string) (sdk.Coin, error) {
-	rv, err := readCoinFlag(flagSet, name)
+// ReadReqCoinFlag reads a string flag and converts it into a sdk.Coin and requires it to have a value.
+func ReadReqCoinFlag(flagSet *pflag.FlagSet, name string) (sdk.Coin, error) {
+	rv, err := ReadCoinFlag(flagSet, name)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -103,8 +105,8 @@ func readReqCoinFlag(flagSet *pflag.FlagSet, name string) (sdk.Coin, error) {
 	return *rv, nil
 }
 
-// readOrderIdsFlag reads a UintSlice flag and converts it into a []uint64.
-func readOrderIdsFlag(flagSet *pflag.FlagSet, name string) ([]uint64, error) {
+// ReadOrderIdsFlag reads a UintSlice flag and converts it into a []uint64.
+func ReadOrderIdsFlag(flagSet *pflag.FlagSet, name string) ([]uint64, error) {
 	ids, err := flagSet.GetUintSlice(name)
 	if err != nil {
 		return nil, err
@@ -116,10 +118,10 @@ func readOrderIdsFlag(flagSet *pflag.FlagSet, name string) ([]uint64, error) {
 	return rv, nil
 }
 
-// readAddrOrDefault gets the requested flag or, if it wasn't provided, gets the --from address.
-func readAddrOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet, name string) (string, error) {
+// ReadAddrOrDefault gets the requested flag or, if it wasn't provided, gets the --from address.
+func ReadAddrOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet, name string) (string, error) {
 	rv, err := flagSet.GetString(name)
-	if err != nil || len(rv) > 0 {
+	if len(rv) > 0 || err != nil {
 		return rv, err
 	}
 
@@ -131,14 +133,31 @@ func readAddrOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet, name st
 	return "", fmt.Errorf("no %s provided", name)
 }
 
-// readAccessGrants reads a StringSlice flag and converts it to a slice of AccessGrants.
-func readAccessGrants(flagSet *pflag.FlagSet, name string) ([]exchange.AccessGrant, error) {
+// ReadAccessGrants reads a StringSlice flag and converts it to a slice of AccessGrants.
+func ReadAccessGrants(flagSet *pflag.FlagSet, name string) ([]exchange.AccessGrant, error) {
 	vals, err := flagSet.GetStringSlice(name)
-	if err != nil || len(vals) == 0 {
+	if len(vals) == 0 || err != nil {
 		return nil, err
 	}
+	return ParseAccessGrants(vals)
+}
 
-	return ParseAccessGrants(vals...)
+// ReadFlatFee reads a StringSlice flag and converts it into a slice of sdk.Coin.
+func ReadFlatFee(flagSet *pflag.FlagSet, name string) ([]sdk.Coin, error) {
+	vals, err := flagSet.GetStringSlice(name)
+	if len(vals) == 0 || err != nil {
+		return nil, err
+	}
+	return ParseFlatFeeOptions(vals)
+}
+
+// ReadFeeRatios reads a StringSlice flag and converts it into a slice of exchange.FeeRatio.
+func ReadFeeRatios(flagSet *pflag.FlagSet, name string) ([]exchange.FeeRatio, error) {
+	vals, err := flagSet.GetStringSlice(name)
+	if len(vals) == 0 || err != nil {
+		return nil, err
+	}
+	return ParseFeeRatios(vals)
 }
 
 // permSepRx is a regexp that matches characters that can be used to separate permissions.
@@ -147,43 +166,98 @@ var permSepRx = regexp.MustCompile(`[ +-.]`)
 // ParseAccessGrant parses an AccessGrant from a string with the format "<address>:<perm 1>[+<perm 2>...]".
 func ParseAccessGrant(val string) (*exchange.AccessGrant, error) {
 	parts := strings.Split(val, ":")
-	if len(parts) <= 1 {
-		return nil, fmt.Errorf("could not parse %q as an AccessGrant: expected format <address>:<permissions>", val)
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("could not parse %q as an <access grant>: expected format <address>:<permissions>", val)
 	}
 
-	var permissions []exchange.Permission
-	if strings.ToLower(strings.TrimSpace(parts[1])) == "all" {
-		permissions = exchange.AllPermissions()
-	} else {
-		permVals := permSepRx.Split(parts[1], 0)
-		var err error
-		permissions, err = exchange.ParsePermissions(permVals...)
-		if err != nil {
-			return nil, fmt.Errorf("could not parse %q permissions from %q: %w", parts[0], parts[1], err)
-		}
+	addr := strings.TrimSpace(parts[0])
+	perms := strings.ToLower(strings.TrimSpace(parts[1]))
+	if len(addr) == 0 || len(perms) == 0 {
+		return nil, fmt.Errorf("invalid <access grant>: both an <address> and <permissions> are required")
 	}
 
-	rv := &exchange.AccessGrant{
-		Address:     parts[0],
-		Permissions: permissions,
+	rv := &exchange.AccessGrant{Address: addr}
+
+	if perms == "all" {
+		rv.Permissions = exchange.AllPermissions()
+		return rv, nil
 	}
+
+	permVals := permSepRx.Split(perms, -1)
+	var err error
+	rv.Permissions, err = exchange.ParsePermissions(permVals...)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse permissions for %q from %q: %w", rv.Address, parts[1], err)
+	}
+
 	return rv, nil
 }
 
 // ParseAccessGrants parses an AccessGrant from each of the provided vals.
-func ParseAccessGrants(vals ...string) ([]exchange.AccessGrant, error) {
+func ParseAccessGrants(vals []string) ([]exchange.AccessGrant, error) {
 	var errs []error
-	rv := make([]exchange.AccessGrant, len(vals))
-	for i, val := range vals {
+	rv := make([]exchange.AccessGrant, 0, len(vals))
+	for _, val := range vals {
 		ag, err := ParseAccessGrant(val)
 		if err != nil {
 			errs = append(errs, err)
 		}
 		if ag != nil {
-			rv[i] = *ag
+			rv = append(rv, *ag)
 		}
 	}
 	return rv, errors.Join(errs...)
+}
+
+// ParseFlatFeeOptions parses an sdk.Coin from each of the provided vals.
+func ParseFlatFeeOptions(vals []string) ([]sdk.Coin, error) {
+	var errs []error
+	rv := make([]sdk.Coin, 0, len(vals))
+	for _, val := range vals {
+		coin, err := exchange.ParseCoin(val)
+		if err != nil {
+			errs = append(errs, err)
+		} else {
+			rv = append(rv, coin)
+		}
+	}
+	return rv, errors.Join(errs...)
+}
+
+// ParseFeeRatios parses a FeeRatio from each of the provided vals.
+func ParseFeeRatios(vals []string) ([]exchange.FeeRatio, error) {
+	var errs []error
+	rv := make([]exchange.FeeRatio, 0, len(vals))
+	for _, val := range vals {
+		ratio, err := exchange.ParseFeeRatio(val)
+		if err != nil {
+			errs = append(errs, err)
+		}
+		if ratio != nil {
+			rv = append(rv, *ratio)
+		}
+	}
+	return rv, errors.Join(errs...)
+}
+
+// AddFlagAcceptingOrders adds the optional --accepting-orders flag to a command.
+func AddFlagAcceptingOrders(cmd *cobra.Command) {
+	cmd.Flags().Bool(FlagAcceptingOrders, false, "The market should allow orders to be created")
+}
+
+// ReadFlagAcceptingOrders reads the --accepting-orders flag.
+func ReadFlagAcceptingOrders(flagSet *pflag.FlagSet) (bool, error) {
+	return flagSet.GetBool(FlagAcceptingOrders)
+}
+
+// AddFlagAccessGrants adds the optional --access-grants <strings> flag to a command.
+func AddFlagAccessGrants(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagAccessGrants, nil, "The access grants that the market should have")
+}
+
+// ReadFlagAccessGrants reads the --access-grants flag.
+func ReadFlagAccessGrants(flagSet *pflag.FlagSet) ([]exchange.AccessGrant, error) {
+	return ReadAccessGrants(flagSet, FlagAccessGrants)
 }
 
 // AddFlagAdmin adds the optional --admin flag to a command.
@@ -216,7 +290,7 @@ func ReadFlagAdminOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet) (s
 	}
 
 	if useAuth {
-		return authtypes.NewModuleAddress(govtypes.ModuleName).String(), nil
+		return AuthorityAddr.String(), nil
 	}
 
 	rv = clientCtx.FromAddress.String()
@@ -227,15 +301,25 @@ func ReadFlagAdminOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet) (s
 	return "", fmt.Errorf("no %s provided", FlagAdmin)
 }
 
+// AddFlagAllowUserSettle adds the optional --allow-user-settle flag to a command.
+func AddFlagAllowUserSettle(cmd *cobra.Command) {
+	cmd.Flags().Bool(FlagAllowUserSettle, false, "The market should allow user-initiated settlement")
+}
+
+// ReadFlagAllowUserSettle reads the --allow-user-settle flag.
+func ReadFlagAllowUserSettle(flagSet *pflag.FlagSet) (bool, error) {
+	return flagSet.GetBool(FlagAllowUserSettle)
+}
+
 // AddFlagAmount adds the required --amount <string> flag to a command.
 func AddFlagAmount(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAmount, "", "The amount to withdraw")
-	markFlagRequired(cmd, FlagAmount)
+	MarkFlagRequired(cmd, FlagAmount)
 }
 
 // ReadFlagAmount reads the --amount flag.
 func ReadFlagAmount(flagSet *pflag.FlagSet) (sdk.Coins, error) {
-	return readCoinsFlag(flagSet, FlagAmount)
+	return ReadCoinsFlag(flagSet, FlagAmount)
 }
 
 // AddFlagAskAdd adds the optional --ask-add <strings> flag to a command.
@@ -261,34 +345,48 @@ func ReadFlagAskRemove(flagSet *pflag.FlagSet) ([]string, error) {
 // AddFlagAsks adds the required --asks <uints> flag to a command.
 func AddFlagAsks(cmd *cobra.Command) {
 	cmd.Flags().UintSlice(FlagAsks, nil, "The ask order ids")
-	markFlagRequired(cmd, FlagAsks)
+	MarkFlagRequired(cmd, FlagAsks)
 }
 
 // ReadFlagAsks reads the --asks flag.
 func ReadFlagAsks(flagSet *pflag.FlagSet) ([]uint64, error) {
-	return readOrderIdsFlag(flagSet, FlagAsks)
+	return ReadOrderIdsFlag(flagSet, FlagAsks)
 }
 
 // AddFlagAssets adds the required --assets <string> flag to a command for providing an order's assets.
 func AddFlagAssets(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAssets, "", "The assets for this order, e.g. 10nhash")
-	markFlagRequired(cmd, FlagAssets)
+	MarkFlagRequired(cmd, FlagAssets)
 }
 
 // ReadFlagAssets reads the --assets flag as sdk.Coin.
 func ReadFlagAssets(flagSet *pflag.FlagSet) (sdk.Coin, error) {
-	return readReqCoinFlag(flagSet, FlagAssets)
+	return ReadReqCoinFlag(flagSet, FlagAssets)
 }
 
 // AddFlagTotalAssets adds the required --assets <string> flag to a command for providing total assets.
 func AddFlagTotalAssets(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAssets, "", "The total assets you are filling, e.g. 10nhash")
-	markFlagRequired(cmd, FlagAssets)
+	MarkFlagRequired(cmd, FlagAssets)
 }
 
 // ReadFlagTotalAssets reads the --assets flag as sdk.Coins.
 func ReadFlagTotalAssets(flagSet *pflag.FlagSet) (sdk.Coins, error) {
-	return readCoinsFlag(flagSet, FlagAssets)
+	return ReadCoinsFlag(flagSet, FlagAssets)
+}
+
+// AddFlagAuthorityString adds the optional --authority <string> flag.
+func AddFlagAuthorityString(cmd *cobra.Command) {
+	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
+}
+
+// ReadFlagAuthorityString reads the --authority flag, or if not provided, returns the standard authority address.
+func ReadFlagAuthorityString(flagSet *pflag.FlagSet) (string, error) {
+	rv, err := flagSet.GetString(FlagAuthority)
+	if len(rv) > 0 || err != nil {
+		return rv, err
+	}
+	return AuthorityAddr.String(), nil
 }
 
 // AddFlagBidAdd adds the optional --bid-add <strings> flag to a command.
@@ -314,12 +412,12 @@ func ReadFlagBidRemove(flagSet *pflag.FlagSet) ([]string, error) {
 // AddFlagBids adds the required --bids <uints> flag to a command.
 func AddFlagBids(cmd *cobra.Command) {
 	cmd.Flags().UintSlice(FlagBids, nil, "The bid order ids")
-	markFlagRequired(cmd, FlagBids)
+	MarkFlagRequired(cmd, FlagBids)
 }
 
 // ReadFlagBids reads the --bids flag.
 func ReadFlagBids(flagSet *pflag.FlagSet) ([]uint64, error) {
-	return readOrderIdsFlag(flagSet, FlagBids)
+	return ReadOrderIdsFlag(flagSet, FlagBids)
 }
 
 // AddFlagBuyer adds the optional --buyer flag to a command.
@@ -330,7 +428,47 @@ func AddFlagBuyer(cmd *cobra.Command) {
 // ReadFlagBuyerOrDefault reads the --buyer flag if provided, or returns the --from address.
 // Returns an error if neither of those flags were provided, or there was an error reading one.
 func ReadFlagBuyerOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet) (string, error) {
-	return readAddrOrDefault(clientCtx, flagSet, FlagBuyer)
+	return ReadAddrOrDefault(clientCtx, flagSet, FlagBuyer)
+}
+
+// AddFlagBuyerFlat adds the optional --buyer-flat <strings> flag to a command.
+func AddFlagBuyerFlat(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagBuyerFlat, nil, "The buyer settlement flat fee options, e.g. 10nhash")
+}
+
+// ReadFlagBuyerFlat reads the --buyer-flat flag.
+func ReadFlagBuyerFlat(flagSet *pflag.FlagSet) ([]sdk.Coin, error) {
+	return ReadFlatFee(flagSet, FlagBuyerFlat)
+}
+
+// AddFlagBuyerRatios adds the optional --buyer-ratios <strings> flag to a command.
+func AddFlagBuyerRatios(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagBuyerRatios, nil, "The buyer settlement fee ratios, e.g. 100nhash:1nhash")
+}
+
+// ReadFlagBuyerRatios reads the --buyer-ratios flag.
+func ReadFlagBuyerRatios(flagSet *pflag.FlagSet) ([]exchange.FeeRatio, error) {
+	return ReadFeeRatios(flagSet, FlagBuyerRatios)
+}
+
+// AddFlagCreateAsk adds the optional --create-ask <strings> flag to a command.
+func AddFlagCreateAsk(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagCreateAsk, nil, "The create-ask fee options, e.g. 10nhash")
+}
+
+// ReadFlagCreateAsk reads the --create-ask flag.
+func ReadFlagCreateAsk(flagSet *pflag.FlagSet) ([]sdk.Coin, error) {
+	return ReadFlatFee(flagSet, FlagCreateAsk)
+}
+
+// AddFlagCreateBid adds the optional --create-bid <strings> flag to a command.
+func AddFlagCreateBid(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagCreateBid, nil, "The create-bid fee options, e.g. 10nhash")
+}
+
+// ReadFlagCreateBid reads the --create-bid flag.
+func ReadFlagCreateBid(flagSet *pflag.FlagSet) ([]sdk.Coin, error) {
+	return ReadFlatFee(flagSet, FlagCreateBid)
 }
 
 // AddFlagCreationFee adds the optional --creation-fee <string> flag to a command.
@@ -340,7 +478,7 @@ func AddFlagCreationFee(cmd *cobra.Command) {
 
 // ReadFlagCreationFee reads the --creation-fee flag as sdk.Coin.
 func ReadFlagCreationFee(flagSet *pflag.FlagSet) (*sdk.Coin, error) {
-	return readCoinFlag(flagSet, FlagCreationFee)
+	return ReadCoinFlag(flagSet, FlagCreationFee)
 }
 
 // AddFlagExternalID adds the optional --external-id <string> flag to a command.
@@ -390,7 +528,7 @@ func AddFlagGrant(cmd *cobra.Command) {
 
 // ReadFlagGrant reads the --grant flag.
 func ReadFlagGrant(flagSet *pflag.FlagSet) ([]exchange.AccessGrant, error) {
-	return readAccessGrants(flagSet, FlagGrant)
+	return ReadAccessGrants(flagSet, FlagGrant)
 }
 
 // AddFlagIcon adds the optional --icon <string> flag to a command.
@@ -406,7 +544,7 @@ func ReadFlagIcon(flagSet *pflag.FlagSet) (string, error) {
 // AddFlagMarket adds the required --market <uint32> flag to a command.
 func AddFlagMarket(cmd *cobra.Command) {
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id, e.g. 3")
-	markFlagRequired(cmd, FlagMarket)
+	MarkFlagRequired(cmd, FlagMarket)
 }
 
 // ReadFlagMarket reads the --market flag.
@@ -452,18 +590,38 @@ func ReadFlagPartial(flagSet *pflag.FlagSet) (bool, error) {
 // AddFlagPrice adds the required --price <string> flag to a command for providing an order's price.
 func AddFlagPrice(cmd *cobra.Command) {
 	cmd.Flags().String(FlagPrice, "", "The price for this order, e.g. 10nhash")
-	markFlagRequired(cmd, FlagPrice)
+	MarkFlagRequired(cmd, FlagPrice)
 }
 
 // AddFlagTotalPrice adds the required --price <string> flag to a command for providing a total price.
 func AddFlagTotalPrice(cmd *cobra.Command) {
 	cmd.Flags().String(FlagPrice, "", "The total price you are paying, e.g. 10nhash")
-	markFlagRequired(cmd, FlagPrice)
+	MarkFlagRequired(cmd, FlagPrice)
 }
 
 // ReadFlagPrice reads the --price flag as sdk.Coin.
 func ReadFlagPrice(flagSet *pflag.FlagSet) (sdk.Coin, error) {
-	return readReqCoinFlag(flagSet, FlagPrice)
+	return ReadReqCoinFlag(flagSet, FlagPrice)
+}
+
+// AddFlagReqAttrAsk adds the optional --req-attr-ask <strings> flag to a command.
+func AddFlagReqAttrAsk(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagReqAttrAsk, nil, "Attributes required to create ask orders")
+}
+
+// ReadFlagReqAttrAsk reads the --req-attr-ask flag.
+func ReadFlagReqAttrAsk(flagSet *pflag.FlagSet) ([]string, error) {
+	return flagSet.GetStringSlice(FlagReqAttrAsk)
+}
+
+// AddFlagReqAttrBid adds the optional --req-attr-bid <strings> flag to a command.
+func AddFlagReqAttrBid(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagReqAttrBid, nil, "Attributes required to create bid orders")
+}
+
+// ReadFlagReqAttrBid reads the --req-attr-bid flag.
+func ReadFlagReqAttrBid(flagSet *pflag.FlagSet) ([]string, error) {
+	return flagSet.GetStringSlice(FlagReqAttrBid)
 }
 
 // AddFlagRevokeAll adds the optional --revoke-all <addresses> flag to a command.
@@ -483,7 +641,7 @@ func AddFlagRevoke(cmd *cobra.Command) {
 
 // ReadFlagRevoke reads the --revoke flag.
 func ReadFlagRevoke(flagSet *pflag.FlagSet) ([]exchange.AccessGrant, error) {
-	return readAccessGrants(flagSet, FlagRevoke)
+	return ReadAccessGrants(flagSet, FlagRevoke)
 }
 
 // AddFlagSeller adds the optional --seller flag to a command.
@@ -494,7 +652,27 @@ func AddFlagSeller(cmd *cobra.Command) {
 // ReadFlagSellerOrDefault reads the --seller flag if provided, or returns the --from address.
 // Returns an error if neither of those flags were provided, or there was an error reading one.
 func ReadFlagSellerOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet) (string, error) {
-	return readAddrOrDefault(clientCtx, flagSet, FlagSeller)
+	return ReadAddrOrDefault(clientCtx, flagSet, FlagSeller)
+}
+
+// AddFlagSellerFlat adds the optional --seller-flat <strings> flag to a command.
+func AddFlagSellerFlat(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagSellerFlat, nil, "The seller settlement flat fee options, e.g. 10nhash")
+}
+
+// ReadFlagSellerFlat reads the --seller-flat flag.
+func ReadFlagSellerFlat(flagSet *pflag.FlagSet) ([]sdk.Coin, error) {
+	return ReadFlatFee(flagSet, FlagSellerFlat)
+}
+
+// AddFlagSellerRatios adds the optional --seller-ratios <strings> flag to a command.
+func AddFlagSellerRatios(cmd *cobra.Command) {
+	cmd.Flags().StringSlice(FlagSellerRatios, nil, "The seller settlement fee ratios, e.g. 100nhash:1nhash")
+}
+
+// ReadFlagSellerRatios reads the --seller-ratios flag.
+func ReadFlagSellerRatios(flagSet *pflag.FlagSet) ([]exchange.FeeRatio, error) {
+	return ReadFeeRatios(flagSet, FlagSellerRatios)
 }
 
 // AddFlagSettlementFee adds the optional --settlement-fee <string> flag to a command.
@@ -504,12 +682,12 @@ func AddFlagSettlementFee(cmd *cobra.Command) {
 
 // ReadFlagSettlementFeeCoins reads the --settlement-fee flag as sdk.Coins.
 func ReadFlagSettlementFeeCoins(flagSet *pflag.FlagSet) (sdk.Coins, error) {
-	return readCoinsFlag(flagSet, FlagSettlementFee)
+	return ReadCoinsFlag(flagSet, FlagSettlementFee)
 }
 
 // ReadFlagSettlementFeeCoin reads the --settlement-fee flag as sdk.Coin.
 func ReadFlagSettlementFeeCoin(flagSet *pflag.FlagSet) (*sdk.Coin, error) {
-	return readCoinFlag(flagSet, FlagSettlementFee)
+	return ReadCoinFlag(flagSet, FlagSettlementFee)
 }
 
 // AddFlagSigner adds the optional --signer flag to a command.
@@ -520,13 +698,13 @@ func AddFlagSigner(cmd *cobra.Command) {
 // ReadFlagSignerOrDefault reads the --signer flag if provided, or returns the --from address.
 // Returns an error if neither of those flags were provided or there was an error reading one.
 func ReadFlagSignerOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet) (string, error) {
-	return readAddrOrDefault(clientCtx, flagSet, FlagSigner)
+	return ReadAddrOrDefault(clientCtx, flagSet, FlagSigner)
 }
 
 // AddFlagTo adds the required --to <string> flag to a command.
 func AddFlagTo(cmd *cobra.Command) {
 	cmd.Flags().String(FlagTo, "", "The address that will receive the funds")
-	markFlagRequired(cmd, FlagTo)
+	MarkFlagRequired(cmd, FlagTo)
 }
 
 // ReadFlagTo reads the --to flag.

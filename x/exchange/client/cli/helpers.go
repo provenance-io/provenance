@@ -12,15 +12,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
-var ExampleAddr1 = "pb1g4uxzmtsd3j5zerywgc47h6lta047h6lwwxvlw" // = sdk.AccAddress("ExampleAddr1________")
-var ExampleAddr2 = "pb1tazhsctdwpkx2styv3eryh6lta047h6l63dw8r" // = sdk.AccAddress("_ExampleAddr2_______")
-var ExampleAddr3 = "pb195k527rpd4cxce2pv3j8yv6lta047h6l3kaj79" // = sdk.AccAddress("--ExampleAddr3______")
-var ExampleAddr4 = "pb10el8u3tcv9khqmr9g9jxgu35ta047h6l9hc7xs" // = sdk.AccAddress("~~~ExampleAddr4_____")
-var ExampleAddr5 = "pb1857n60290psk6urvv4qkgerjx4047h6l5vynnz" // = sdk.AccAddress("====ExampleAddr5____")
+var (
+	AuthorityAddr = authtypes.NewModuleAddress(govtypes.ModuleName)
+
+	ExampleAddr1 = "pb1g4uxzmtsd3j5zerywgc47h6lta047h6lwwxvlw" // = sdk.AccAddress("ExampleAddr1________")
+	ExampleAddr2 = "pb1tazhsctdwpkx2styv3eryh6lta047h6l63dw8r" // = sdk.AccAddress("_ExampleAddr2_______")
+	ExampleAddr3 = "pb195k527rpd4cxce2pv3j8yv6lta047h6l3kaj79" // = sdk.AccAddress("--ExampleAddr3______")
+	ExampleAddr4 = "pb10el8u3tcv9khqmr9g9jxgu35ta047h6l9hc7xs" // = sdk.AccAddress("~~~ExampleAddr4_____")
+	ExampleAddr5 = "pb1857n60290psk6urvv4qkgerjx4047h6l5vynnz" // = sdk.AccAddress("====ExampleAddr5____")
+)
 
 // A msgMaker is a function that makes a Msg from a client.Context, FlagSet, and set of args.
 type msgMaker func(clientCtx client.Context, flagSet *pflag.FlagSet, args []string) (sdk.Msg, error)
@@ -38,10 +45,12 @@ var (
 	_ msgMaker = MakeMsgMarketUpdateEnabled
 	_ msgMaker = MakeMsgMarketUpdateUserSettle
 	_ msgMaker = MakeMsgMarketManagePermissions
+	_ msgMaker = MakeMsgMarketManageReqAttrs
+	_ msgMaker = MakeMsgGovCreateMarket
 )
 
 // genericTxRunE returns a cobra.Command.RunE function that gets the client.Context, and FlagSet,
-// then uses the provided maker to make the msg that it then generates or broadcasts.
+// then uses the provided maker to make the Msg that it then generates or broadcasts as a Tx.
 func genericTxRunE(maker msgMaker) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx, err := client.GetClientTxContext(cmd)
@@ -56,6 +65,26 @@ func genericTxRunE(maker msgMaker) func(cmd *cobra.Command, args []string) error
 		}
 
 		return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
+	}
+}
+
+// govTxRunE returns a cobra.Command.RunE function that gets the client.Context, and FlagSet,
+// then uses the provided maker to make the Msg. The Msg is then either generated or put in a
+// governance proposal which is then broadcast as a Tx.
+func govTxRunE(maker msgMaker) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		clientCtx, err := client.GetClientTxContext(cmd)
+		if err != nil {
+			return err
+		}
+
+		flagSet := cmd.Flags()
+		msg, err := maker(clientCtx, flagSet, args)
+		if err != nil {
+			return err
+		}
+
+		return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 	}
 }
 
@@ -270,7 +299,7 @@ func MakeMsgMarketWithdraw(clientCtx client.Context, flagSet *pflag.FlagSet, _ [
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMarketDetails adds all the flags needed for MakeMarketDetails.
+// AddFlagsMarketDetails adds all the flags needed for ReadFlagsMarketDetails.
 func AddFlagsMarketDetails(cmd *cobra.Command) {
 	AddFlagName(cmd)
 	AddFlagDescription(cmd)
@@ -278,8 +307,8 @@ func AddFlagsMarketDetails(cmd *cobra.Command) {
 	AddFlagIcon(cmd)
 }
 
-// MakeMarketDetails reads all the AddFlagsMarketDetails flags and creates the desired MarketDetails.
-func MakeMarketDetails(flagSet *pflag.FlagSet) (exchange.MarketDetails, error) {
+// ReadFlagsMarketDetails reads all the AddFlagsMarketDetails flags and creates the desired MarketDetails.
+func ReadFlagsMarketDetails(flagSet *pflag.FlagSet) (exchange.MarketDetails, error) {
 	rv := exchange.MarketDetails{}
 
 	errs := make([]error, 4)
@@ -305,7 +334,7 @@ func MakeMsgMarketUpdateDetails(clientCtx client.Context, flagSet *pflag.FlagSet
 	errs := make([]error, 3)
 	msg.Admin, errs[0] = ReadFlagAdminOrDefault(clientCtx, flagSet)
 	msg.MarketId, errs[1] = ReadFlagMarket(flagSet)
-	msg.MarketDetails, errs[2] = MakeMarketDetails(flagSet)
+	msg.MarketDetails, errs[2] = ReadFlagsMarketDetails(flagSet)
 
 	return msg, errors.Join(errs...)
 }
@@ -414,6 +443,47 @@ func MakeMsgMarketManageReqAttrs(clientCtx client.Context, flagSet *pflag.FlagSe
 	msg.CreateAskToRemove, errs[3] = ReadFlagAskRemove(flagSet)
 	msg.CreateBidToAdd, errs[4] = ReadFlagBidAdd(flagSet)
 	msg.CreateBidToRemove, errs[5] = ReadFlagBidRemove(flagSet)
+
+	return msg, errors.Join(errs...)
+}
+
+// AddFlagsMsgGovCreateMarket adds all the flags needed for MakeMsgGovCreateMarket.
+func AddFlagsMsgGovCreateMarket(cmd *cobra.Command) {
+	AddFlagAuthorityString(cmd)
+	AddFlagMarket(cmd)
+	AddFlagsMarketDetails(cmd)
+	AddFlagCreateAsk(cmd)
+	AddFlagCreateBid(cmd)
+	AddFlagSellerFlat(cmd)
+	AddFlagSellerRatios(cmd)
+	AddFlagBuyerFlat(cmd)
+	AddFlagBuyerRatios(cmd)
+	AddFlagAcceptingOrders(cmd)
+	AddFlagAllowUserSettle(cmd)
+	AddFlagAccessGrants(cmd)
+	AddFlagReqAttrAsk(cmd)
+	AddFlagReqAttrBid(cmd)
+}
+
+// MakeMsgGovCreateMarket reads all the AddFlagsMsgGovCreateMarket flags and creates the desired Msg.
+func MakeMsgGovCreateMarket(_ client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+	msg := &exchange.MsgGovCreateMarketRequest{}
+
+	errs := make([]error, 14)
+	msg.Authority, errs[0] = ReadFlagAuthorityString(flagSet)
+	msg.Market.MarketId, errs[1] = ReadFlagMarket(flagSet)
+	msg.Market.MarketDetails, errs[2] = ReadFlagsMarketDetails(flagSet)
+	msg.Market.FeeCreateAskFlat, errs[3] = ReadFlagCreateAsk(flagSet)
+	msg.Market.FeeCreateBidFlat, errs[4] = ReadFlagCreateBid(flagSet)
+	msg.Market.FeeSellerSettlementFlat, errs[5] = ReadFlagSellerFlat(flagSet)
+	msg.Market.FeeSellerSettlementRatios, errs[6] = ReadFlagSellerRatios(flagSet)
+	msg.Market.FeeBuyerSettlementFlat, errs[7] = ReadFlagBuyerFlat(flagSet)
+	msg.Market.FeeBuyerSettlementRatios, errs[8] = ReadFlagBuyerRatios(flagSet)
+	msg.Market.AcceptingOrders, errs[9] = ReadFlagAcceptingOrders(flagSet)
+	msg.Market.AllowUserSettlement, errs[10] = ReadFlagAllowUserSettle(flagSet)
+	msg.Market.AccessGrants, errs[11] = ReadFlagAccessGrants(flagSet)
+	msg.Market.ReqAttrCreateAsk, errs[12] = ReadFlagReqAttrAsk(flagSet)
+	msg.Market.ReqAttrCreateBid, errs[13] = ReadFlagReqAttrBid(flagSet)
 
 	return msg, errors.Join(errs...)
 }
