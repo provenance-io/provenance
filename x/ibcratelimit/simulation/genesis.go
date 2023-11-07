@@ -42,8 +42,3 @@ func RandomizedGenState(simState *module.SimulationState) {
 	}
 	fmt.Printf("Selected randomly generated ratelimitedibc parameters:\n%s\n", bz)
 }
-
-// randIntBetween generates a random number between min and max inclusive.
-func randIntBetween(r *rand.Rand, min, max int) int {
-	return r.Intn(max-min+1) + min
-}
