@@ -57,6 +57,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 - Bump `bufbuild/buf-setup-action` from 1.27.1 to 1.27.2 ([#1724](https://github.com/provenance-io/provenance/pull/1724))
 - Bump `github.com/google/uuid` from 1.3.1 to 1.4.0 ([#1723](https://github.com/provenance-io/provenance/pull/1723))
+- Bump `github.com/gorilla/mux` from 1.8.0 to 1.8.1 ([#1734](https://github.com/provenance-io/provenance/pull/1734))
 - Bump `golang.org/x/text` from 0.13.0 to 0.14.0 ([#1735](https://github.com/provenance-io/provenance/pull/1735))
 
 ---
