@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
@@ -59,11 +59,14 @@ const (
 	FlagURL             = "url"
 )
 
-// AddFlagAdmin adds the optional --admin and --authority flags to a command and makes them mutually exclusive.
-func AddFlagAdmin(cmd *cobra.Command) {
+// AddFlagsAdmin adds the --admin and --authority flags to a command and makes them mutually exclusive.
+// It also makes one of --admin, --authority, and --from required.
+func AddFlagsAdmin(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAdmin, "", "The admin (defaults to --from account)")
 	cmd.Flags().Bool(FlagAuthority, false, "Use the governance module account for the admin")
+
 	cmd.MarkFlagsMutuallyExclusive(FlagAdmin, FlagAuthority)
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagAdmin, FlagAuthority)
 }
 
 // ReadFlagsAdminOrFrom reads the --admin flag if provided.
@@ -144,15 +147,15 @@ var (
 func AddFlagsMsgCreateAsk(cmd *cobra.Command) {
 	cmd.Flags().String(FlagSeller, "", "The seller (defaults to --from account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
-	MarkFlagRequired(cmd, FlagMarket)
 	cmd.Flags().String(FlagAssets, "", "The assets for this order, e.g. 10nhash")
-	MarkFlagRequired(cmd, FlagAssets)
 	cmd.Flags().String(FlagPrice, "", "The price for this order, e.g. 10nhash")
-	MarkFlagRequired(cmd, FlagPrice)
 	cmd.Flags().String(FlagSettlementFee, "", "The settlement fee Coin string for this order, e.g. 10nhash")
 	cmd.Flags().Bool(FlagPartial, false, "Allow this order to be partially filled")
 	cmd.Flags().String(FlagExternalID, "", "The external id for this order")
 	cmd.Flags().String(FlagCreationFee, "", "The ask order creation fee, e.g. 10nhash")
+
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagSeller)
+	MarkFlagsRequired(cmd, FlagMarket, FlagAssets, FlagPrice)
 }
 
 // MakeMsgCreateAsk reads all the AddFlagsMsgCreateAsk flags and creates the desired Msg.
@@ -176,15 +179,15 @@ func MakeMsgCreateAsk(clientCtx client.Context, flagSet *pflag.FlagSet, _ []stri
 func AddFlagsMsgCreateBid(cmd *cobra.Command) {
 	cmd.Flags().String(FlagBuyer, "", "The buyer (defaults to --from account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
-	MarkFlagRequired(cmd, FlagMarket)
 	cmd.Flags().String(FlagAssets, "", "The assets for this order, e.g. 10nhash")
-	MarkFlagRequired(cmd, FlagAssets)
 	cmd.Flags().String(FlagPrice, "", "The price for this order, e.g. 10nhash")
-	MarkFlagRequired(cmd, FlagPrice)
 	cmd.Flags().String(FlagSettlementFee, "", "The settlement fee Coin string for this order, e.g. 10nhash")
 	cmd.Flags().Bool(FlagPartial, false, "Allow this order to be partially filled")
 	cmd.Flags().String(FlagExternalID, "", "The external id for this order")
 	cmd.Flags().String(FlagCreationFee, "", "The bid order creation fee, e.g. 10nhash")
+
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagBuyer)
+	MarkFlagsRequired(cmd, FlagMarket, FlagAssets, FlagPrice)
 }
 
 // MakeMsgCreateBid reads all the AddFlagsMsgCreateBid flags and creates the desired Msg.
@@ -208,7 +211,9 @@ func MakeMsgCreateBid(clientCtx client.Context, flagSet *pflag.FlagSet, _ []stri
 func AddFlagsMsgCancelOrder(cmd *cobra.Command) {
 	cmd.Flags().String(FlagSigner, "", "The signer (defaults to --from account)")
 	cmd.Flags().Uint64(FlagOrder, 0, "The order id")
-	MarkFlagRequired(cmd, FlagOrder)
+
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagSigner)
+	MarkFlagsRequired(cmd, FlagOrder)
 }
 
 // MakeMsgCancelOrder reads all the AddFlagsMsgCancelOrder flags and the provided args and creates the desired Msg.
@@ -247,13 +252,13 @@ func MakeMsgCancelOrder(clientCtx client.Context, flagSet *pflag.FlagSet, args [
 func AddFlagsMsgFillBids(cmd *cobra.Command) {
 	cmd.Flags().String(FlagSeller, "", "The seller (defaults to --from account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
-	MarkFlagRequired(cmd, FlagMarket)
 	cmd.Flags().String(FlagAssets, "", "The total assets you are filling, e.g. 10nhash")
-	MarkFlagRequired(cmd, FlagAssets)
-	cmd.Flags().UintSlice(FlagBids, nil, "The bid order ids")
-	MarkFlagRequired(cmd, FlagBids)
+	cmd.Flags().UintSlice(FlagBids, nil, "The bid order ids (repeatable)")
 	cmd.Flags().String(FlagSettlementFee, "", "The settlement fee Coin string for this order, e.g. 10nhash")
 	cmd.Flags().String(FlagCreationFee, "", "The ask order creation fee, e.g. 10nhash")
+
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagSeller)
+	MarkFlagsRequired(cmd, FlagMarket, FlagAssets, FlagBids)
 }
 
 // MakeMsgFillBids reads all the AddFlagsMsgFillBids flags and creates the desired Msg.
@@ -275,13 +280,13 @@ func MakeMsgFillBids(clientCtx client.Context, flagSet *pflag.FlagSet, _ []strin
 func AddFlagsMsgFillAsks(cmd *cobra.Command) {
 	cmd.Flags().String(FlagBuyer, "", "The buyer (defaults to --from account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
-	MarkFlagRequired(cmd, FlagMarket)
 	cmd.Flags().String(FlagPrice, "", "The total price you are paying, e.g. 10nhash")
-	MarkFlagRequired(cmd, FlagPrice)
-	cmd.Flags().UintSlice(FlagAsks, nil, "The ask order ids")
-	MarkFlagRequired(cmd, FlagAsks)
+	cmd.Flags().UintSlice(FlagAsks, nil, "The ask order ids (repeatable)")
 	cmd.Flags().String(FlagSettlementFee, "", "The settlement fee Coin string for this order, e.g. 10nhash")
 	cmd.Flags().String(FlagCreationFee, "", "The bid order creation fee, e.g. 10nhash")
+
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagBuyer)
+	MarkFlagsRequired(cmd, FlagMarket, FlagPrice, FlagAsks)
 }
 
 // MakeMsgFillAsks reads all the AddFlagsMsgFillAsks flags and creates the desired Msg.
@@ -301,14 +306,13 @@ func MakeMsgFillAsks(clientCtx client.Context, flagSet *pflag.FlagSet, _ []strin
 
 // AddFlagsMsgMarketSettle adds all the flags needed for MakeMsgMarketSettle.
 func AddFlagsMsgMarketSettle(cmd *cobra.Command) {
-	AddFlagAdmin(cmd)
+	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
-	MarkFlagRequired(cmd, FlagMarket)
-	cmd.Flags().UintSlice(FlagAsks, nil, "The ask order ids")
-	MarkFlagRequired(cmd, FlagAsks)
-	cmd.Flags().UintSlice(FlagBids, nil, "The bid order ids")
-	MarkFlagRequired(cmd, FlagBids)
+	cmd.Flags().UintSlice(FlagAsks, nil, "The ask order ids (repeatable)")
+	cmd.Flags().UintSlice(FlagBids, nil, "The bid order ids (repeatable)")
 	cmd.Flags().Bool(FlagPartial, false, "Expect partial settlement")
+
+	MarkFlagsRequired(cmd, FlagMarket, FlagAsks, FlagBids)
 }
 
 // MakeMsgMarketSettle reads all the AddFlagsMsgMarketSettle flags and creates the desired Msg.
@@ -327,12 +331,12 @@ func MakeMsgMarketSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []s
 
 // AddFlagsMsgMarketSetOrderExternalID adds all the flags needed for MakeMsgMarketSetOrderExternalID.
 func AddFlagsMsgMarketSetOrderExternalID(cmd *cobra.Command) {
-	AddFlagAdmin(cmd)
+	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
-	MarkFlagRequired(cmd, FlagMarket)
 	cmd.Flags().Uint64(FlagOrder, 0, "The order id")
-	MarkFlagRequired(cmd, FlagOrder)
 	cmd.Flags().String(FlagExternalID, "", "The new external id for this order")
+
+	MarkFlagsRequired(cmd, FlagMarket, FlagOrder)
 }
 
 // MakeMsgMarketSetOrderExternalID reads all the AddFlagsMsgMarketSetOrderExternalID flags and creates the desired Msg.
@@ -350,13 +354,12 @@ func MakeMsgMarketSetOrderExternalID(clientCtx client.Context, flagSet *pflag.Fl
 
 // AddFlagsMsgMarketWithdraw adds all the flags needed for MakeMsgMarketWithdraw.
 func AddFlagsMsgMarketWithdraw(cmd *cobra.Command) {
-	AddFlagAdmin(cmd)
+	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
-	MarkFlagRequired(cmd, FlagMarket)
 	cmd.Flags().String(FlagTo, "", "The address that will receive the funds")
-	MarkFlagRequired(cmd, FlagTo)
 	cmd.Flags().String(FlagAmount, "", "The amount to withdraw")
-	MarkFlagRequired(cmd, FlagAmount)
+
+	MarkFlagsRequired(cmd, FlagMarket, FlagTo, FlagAmount)
 }
 
 // MakeMsgMarketWithdraw reads all the AddFlagsMsgMarketWithdraw flags and creates the desired Msg.
@@ -395,10 +398,11 @@ func ReadFlagsMarketDetails(flagSet *pflag.FlagSet) (exchange.MarketDetails, err
 
 // AddFlagsMsgMarketUpdateDetails adds all the flags needed for MakeMsgMarketUpdateDetails.
 func AddFlagsMsgMarketUpdateDetails(cmd *cobra.Command) {
-	AddFlagAdmin(cmd)
+	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
-	MarkFlagRequired(cmd, FlagMarket)
 	AddFlagsMarketDetails(cmd)
+
+	MarkFlagsRequired(cmd, FlagMarket)
 }
 
 // MakeMsgMarketUpdateDetails reads all the AddFlagsMsgMarketUpdateDetails flags and creates the desired Msg.
@@ -415,10 +419,11 @@ func MakeMsgMarketUpdateDetails(clientCtx client.Context, flagSet *pflag.FlagSet
 
 // AddFlagsMsgMarketUpdateEnabled adds all the flags needed for MakeMsgMarketUpdateEnabled.
 func AddFlagsMsgMarketUpdateEnabled(cmd *cobra.Command) {
-	AddFlagAdmin(cmd)
+	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
-	MarkFlagRequired(cmd, FlagMarket)
 	AddFlagsEnableDisable(cmd, "accepting_orders")
+
+	MarkFlagsRequired(cmd, FlagMarket)
 }
 
 // MakeMsgMarketUpdateEnabled reads all the AddFlagsMsgMarketUpdateEnabled flags and creates the desired Msg.
@@ -435,10 +440,11 @@ func MakeMsgMarketUpdateEnabled(clientCtx client.Context, flagSet *pflag.FlagSet
 
 // AddFlagsMsgMarketUpdateUserSettle adds all the flags needed for MakeMsgMarketUpdateUserSettle.
 func AddFlagsMsgMarketUpdateUserSettle(cmd *cobra.Command) {
-	AddFlagAdmin(cmd)
+	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
-	MarkFlagRequired(cmd, FlagMarket)
 	AddFlagsEnableDisable(cmd, "allow_user_settlement")
+
+	MarkFlagsRequired(cmd, FlagMarket)
 }
 
 // MakeMsgMarketUpdateUserSettle reads all the AddFlagsMsgMarketUpdateUserSettle flags and creates the desired Msg.
@@ -453,24 +459,16 @@ func MakeMsgMarketUpdateUserSettle(clientCtx client.Context, flagSet *pflag.Flag
 	return msg, errors.Join(errs...)
 }
 
-// SimplePerms returns a string containing all the Permission.SimpleString() values.
-func SimplePerms() string {
-	allPerms := exchange.AllPermissions()
-	simple := make([]string, len(allPerms))
-	for i, perm := range allPerms {
-		simple[i] = perm.SimpleString()
-	}
-	return strings.Join(simple, "  ")
-}
-
 // AddFlagsMsgMarketManagePermissions adds all the flags needed for MakeMsgMarketManagePermissions.
 func AddFlagsMsgMarketManagePermissions(cmd *cobra.Command) {
-	AddFlagAdmin(cmd)
+	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
-	MarkFlagRequired(cmd, FlagMarket)
-	cmd.Flags().StringSlice(FlagRevokeAll, nil, "Addresses to revoke all permissions from")
-	cmd.Flags().StringSlice(FlagRevoke, nil, "AccessGrants to remove from the market")
-	cmd.Flags().StringSlice(FlagGrant, nil, "AccessGrants to add to the market")
+	cmd.Flags().StringSlice(FlagRevokeAll, nil, "Addresses to revoke all permissions from (repeatable)")
+	cmd.Flags().StringSlice(FlagRevoke, nil, "AccessGrants to remove from the market (repeatable)")
+	cmd.Flags().StringSlice(FlagGrant, nil, "AccessGrants to add to the market (repeatable)")
+
+	cmd.MarkFlagsOneRequired(FlagRevokeAll, FlagRevoke, FlagGrant)
+	MarkFlagsRequired(cmd, FlagMarket)
 }
 
 // MakeMsgMarketManagePermissions reads all the AddFlagsMsgMarketManagePermissions flags and creates the desired Msg.
@@ -489,13 +487,15 @@ func MakeMsgMarketManagePermissions(clientCtx client.Context, flagSet *pflag.Fla
 
 // AddFlagsMsgMarketManageReqAttrs adds all the flags needed for MakeMsgMarketManageReqAttrs.
 func AddFlagsMsgMarketManageReqAttrs(cmd *cobra.Command) {
-	AddFlagAdmin(cmd)
+	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
-	MarkFlagRequired(cmd, FlagMarket)
-	cmd.Flags().StringSlice(FlagAskAdd, nil, "The create-ask required attributes to add")
-	cmd.Flags().StringSlice(FlagAskRemove, nil, "The create-ask required attributes to remove")
-	cmd.Flags().StringSlice(FlagBidAdd, nil, "The create-bid required attributes to add")
-	cmd.Flags().StringSlice(FlagBidRemove, nil, "The create-bid required attributes to remove")
+	cmd.Flags().StringSlice(FlagAskAdd, nil, "The create-ask required attributes to add (repeatable)")
+	cmd.Flags().StringSlice(FlagAskRemove, nil, "The create-ask required attributes to remove (repeatable)")
+	cmd.Flags().StringSlice(FlagBidAdd, nil, "The create-bid required attributes to add (repeatable)")
+	cmd.Flags().StringSlice(FlagBidRemove, nil, "The create-bid required attributes to remove (repeatable)")
+
+	cmd.MarkFlagsOneRequired(FlagAskAdd, FlagAskRemove, FlagBidAdd, FlagBidRemove)
+	MarkFlagsRequired(cmd, FlagMarket)
 }
 
 // MakeMsgMarketManageReqAttrs reads all the AddFlagsMsgMarketManageReqAttrs flags and creates the desired Msg.
@@ -517,19 +517,25 @@ func MakeMsgMarketManageReqAttrs(clientCtx client.Context, flagSet *pflag.FlagSe
 func AddFlagsMsgGovCreateMarket(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
-	MarkFlagRequired(cmd, FlagMarket)
 	AddFlagsMarketDetails(cmd)
-	cmd.Flags().StringSlice(FlagCreateAsk, nil, "The create-ask fee options, e.g. 10nhash")
-	cmd.Flags().StringSlice(FlagCreateBid, nil, "The create-bid fee options, e.g. 10nhash")
-	cmd.Flags().StringSlice(FlagSellerFlat, nil, "The seller settlement flat fee options, e.g. 10nhash")
-	cmd.Flags().StringSlice(FlagSellerRatios, nil, "The seller settlement fee ratios, e.g. 100nhash:1nhash")
-	cmd.Flags().StringSlice(FlagBuyerFlat, nil, "The buyer settlement flat fee options, e.g. 10nhash")
-	cmd.Flags().StringSlice(FlagBuyerRatios, nil, "The buyer settlement fee ratios, e.g. 100nhash:1nhash")
+	cmd.Flags().StringSlice(FlagCreateAsk, nil, "The create-ask fee options, e.g. 10nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagCreateBid, nil, "The create-bid fee options, e.g. 10nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagSellerFlat, nil, "The seller settlement flat fee options, e.g. 10nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagSellerRatios, nil, "The seller settlement fee ratios, e.g. 100nhash:1nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagBuyerFlat, nil, "The buyer settlement flat fee options, e.g. 10nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagBuyerRatios, nil, "The buyer settlement fee ratios, e.g. 100nhash:1nhash (repeatable)")
 	cmd.Flags().Bool(FlagAcceptingOrders, false, "The market should allow orders to be created")
 	cmd.Flags().Bool(FlagAllowUserSettle, false, "The market should allow user-initiated settlement")
-	cmd.Flags().StringSlice(FlagAccessGrants, nil, "The access grants that the market should have")
-	cmd.Flags().StringSlice(FlagReqAttrAsk, nil, "Attributes required to create ask orders")
-	cmd.Flags().StringSlice(FlagReqAttrBid, nil, "Attributes required to create bid orders")
+	cmd.Flags().StringSlice(FlagAccessGrants, nil, "The access grants that the market should have (repeatable)")
+	cmd.Flags().StringSlice(FlagReqAttrAsk, nil, "Attributes required to create ask orders (repeatable)")
+	cmd.Flags().StringSlice(FlagReqAttrBid, nil, "Attributes required to create bid orders (repeatable)")
+
+	cmd.MarkFlagsOneRequired(
+		FlagMarket, FlagCreateAsk, FlagCreateBid,
+		FlagSellerFlat, FlagSellerRatios, FlagBuyerFlat, FlagBuyerRatios,
+		FlagAcceptingOrders, FlagAllowUserSettle, FlagAccessGrants,
+		FlagReqAttrAsk, FlagReqAttrBid,
+	)
 }
 
 // MakeMsgGovCreateMarket reads all the AddFlagsMsgGovCreateMarket flags and creates the desired Msg.

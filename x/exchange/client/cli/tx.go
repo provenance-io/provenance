@@ -101,8 +101,8 @@ The following flags are optional:
 		RunE: genericTxRunE(MakeMsgCreateAsk),
 	}
 
-	AddFlagsMsgCreateAsk(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgCreateAsk(cmd)
 	return cmd
 }
 
@@ -158,8 +158,8 @@ The following flags are optional:
 		RunE: genericTxRunE(MakeMsgCreateBid),
 	}
 
-	AddFlagsMsgCreateBid(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgCreateBid(cmd)
 	return cmd
 }
 
@@ -191,8 +191,8 @@ A buyer is required.
 		RunE: genericTxRunE(MakeMsgCancelOrder),
 	}
 
-	AddFlagsMsgCancelOrder(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgCancelOrder(cmd)
 	return cmd
 }
 
@@ -242,8 +242,8 @@ The following flags are optional:
 		RunE: genericTxRunE(MakeMsgFillBids),
 	}
 
-	AddFlagsMsgFillBids(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgFillBids(cmd)
 	return cmd
 }
 
@@ -293,8 +293,8 @@ The following flags are optional:
 		RunE: genericTxRunE(MakeMsgFillAsks),
 	}
 
-	AddFlagsMsgFillAsks(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgFillAsks(cmd)
 	return cmd
 }
 
@@ -337,8 +337,8 @@ The --%s flag is optional.
 		RunE: genericTxRunE(MakeMsgMarketSettle),
 	}
 
-	AddFlagsMsgMarketSettle(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgMarketSettle(cmd)
 	return cmd
 }
 
@@ -383,8 +383,8 @@ The %s flag is optional.
 		RunE: genericTxRunE(MakeMsgMarketSetOrderExternalID),
 	}
 
-	AddFlagsMsgMarketSetOrderExternalID(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgMarketSetOrderExternalID(cmd)
 	return cmd
 }
 
@@ -426,8 +426,8 @@ The following flags are required:
 		RunE: genericTxRunE(MakeMsgMarketWithdraw),
 	}
 
-	AddFlagsMsgMarketWithdraw(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgMarketWithdraw(cmd)
 	return cmd
 }
 
@@ -481,8 +481,8 @@ The following flags are optional and default to an empty string:
 		RunE: genericTxRunE(MakeMsgMarketUpdateDetails),
 	}
 
-	AddFlagsMsgMarketUpdateDetails(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgMarketUpdateDetails(cmd)
 	return cmd
 }
 
@@ -522,8 +522,8 @@ One of --%s or --%s must be provided, but not both.
 		RunE: genericTxRunE(MakeMsgMarketUpdateEnabled),
 	}
 
-	AddFlagsMsgMarketUpdateEnabled(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgMarketUpdateEnabled(cmd)
 	return cmd
 }
 
@@ -563,8 +563,8 @@ One of --%s or --%s must be provided, but not both.
 		RunE: genericTxRunE(MakeMsgMarketUpdateUserSettle),
 	}
 
-	AddFlagsMsgMarketUpdateUserSettle(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgMarketUpdateUserSettle(cmd)
 	return cmd
 }
 
@@ -627,8 +627,8 @@ The full Permission enum names are also valid.
 		RunE: genericTxRunE(MakeMsgMarketManagePermissions),
 	}
 
-	AddFlagsMsgMarketManagePermissions(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgMarketManagePermissions(cmd)
 	return cmd
 }
 
@@ -680,8 +680,8 @@ The following flags are optional (but at least one must be provided):
 		RunE: genericTxRunE(MakeMsgMarketManageReqAttrs),
 	}
 
-	AddFlagsMsgMarketManageReqAttrs(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgMarketManageReqAttrs(cmd)
 	return cmd
 }
 
@@ -744,8 +744,8 @@ The full Permission enum names are also valid.
 		RunE: govTxRunE(MakeMsgGovCreateMarket),
 	}
 
-	govcli.AddGovPropFlagsToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
 	AddFlagsMsgGovCreateMarket(cmd)
 	return cmd
 }

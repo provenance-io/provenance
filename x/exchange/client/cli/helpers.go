@@ -71,10 +71,12 @@ func govTxRunE(maker msgMaker) func(cmd *cobra.Command, args []string) error {
 	}
 }
 
-// MarkFlagRequired this marks a flag as required and panics if there's a problem.
-func MarkFlagRequired(cmd *cobra.Command, name string) {
-	if err := cmd.MarkFlagRequired(name); err != nil {
-		panic(fmt.Errorf("error marking --%s flag required on %s: %w", name, cmd.Name(), err))
+// MarkFlagsRequired marks the provided flags as required and panics if there's a problem.
+func MarkFlagsRequired(cmd *cobra.Command, names ...string) {
+	for _, name := range names {
+		if err := cmd.MarkFlagRequired(name); err != nil {
+			panic(fmt.Errorf("error marking --%s flag required on %s: %w", name, cmd.Name(), err))
+		}
 	}
 }
 
@@ -251,4 +253,14 @@ func ParseFeeRatios(vals []string) ([]exchange.FeeRatio, error) {
 		}
 	}
 	return rv, errors.Join(errs...)
+}
+
+// SimplePerms returns a string containing all the Permission.SimpleString() values.
+func SimplePerms() string {
+	allPerms := exchange.AllPermissions()
+	simple := make([]string, len(allPerms))
+	for i, perm := range allPerms {
+		simple[i] = perm.SimpleString()
+	}
+	return strings.Join(simple, "  ")
 }
