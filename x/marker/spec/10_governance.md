@@ -5,7 +5,6 @@ marker to be defined where no single account is allowed to make modifications an
 issue change requests through passing a governance proposal.
 
 <!-- TOC 2 2 -->
-- [Governance Proposal Control](#governance-proposal-control)
   - [Add Marker Proposal](#add-marker-proposal)
   - [Supply Increase Proposal](#supply-increase-proposal)
   - [Supply Decrease Proposal](#supply-decrease-proposal)
