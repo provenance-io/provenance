@@ -6218,3 +6218,240 @@ func TestGetPriceTransfer(t *testing.T) {
 		})
 	}
 }
+
+func TestGetNAVs(t *testing.T) {
+	coin := func(coinStr string) sdk.Coin {
+		rv, err := parseCoin(coinStr)
+		require.NoError(t, err, "parseCoin(%q)", coinStr)
+		return rv
+	}
+	askOrder := func(orderID uint64, assets, price string) *FilledOrder {
+		order := NewOrder(orderID).WithAsk(&AskOrder{Assets: coin(assets), Price: coin(price)})
+		return NewFilledOrder(order, order.GetPrice(), nil)
+	}
+	bidOrder := func(orderID uint64, assets, price string) *FilledOrder {
+		order := NewOrder(orderID).WithBid(&BidOrder{Assets: coin(assets), Price: coin(price)})
+		return NewFilledOrder(order, order.GetPrice(), nil)
+	}
+	navStringer := func(nav *NetAssetValue) string {
+		if nav == nil {
+			return "<nil>"
+		}
+		return fmt.Sprintf("%s:%s", nav.Assets, nav.Price)
+	}
+
+	tests := []struct {
+		name       string
+		settlement *Settlement
+		expNAVs    []*NetAssetValue
+	}{
+		{
+			name:       "no orders",
+			settlement: &Settlement{},
+			expNAVs:    nil,
+		},
+		{
+			name: "no filled bids, no partial",
+			settlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					askOrder(1, "10apple", "20plum"),
+					askOrder(2, "15apple", "30plum"),
+					askOrder(3, "20apple", "35plum"),
+				},
+			},
+			expNAVs: nil,
+		},
+		{
+			name: "no filled bids, partial ask",
+			settlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					askOrder(1, "10apple", "20plum"),
+					askOrder(2, "15apple", "30plum"),
+					askOrder(3, "20apple", "35plum"),
+				},
+				PartialOrderFilled: askOrder(4, "8apple", "12plum"),
+			},
+			expNAVs: nil,
+		},
+		{
+			name: "no filled bids, partial bid",
+			settlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					askOrder(1, "10apple", "20plum"),
+					askOrder(2, "15apple", "30plum"),
+					askOrder(3, "20apple", "35plum"),
+				},
+				PartialOrderFilled: bidOrder(4, "8apple", "12plum"),
+			},
+			expNAVs: []*NetAssetValue{{Assets: coin("8apple"), Price: coin("12plum")}},
+		},
+		{
+			name: "one filled bid, no partial",
+			settlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					askOrder(1, "10apple", "20plum"),
+					askOrder(2, "15apple", "30plum"),
+					bidOrder(3, "8apple", "12plum"),
+					askOrder(4, "20apple", "35plum"),
+				},
+			},
+			expNAVs: []*NetAssetValue{{Assets: coin("8apple"), Price: coin("12plum")}},
+		},
+		{
+			name: "one filled bid, partial ask",
+			settlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					askOrder(1, "10apple", "20plum"),
+					askOrder(2, "15apple", "30plum"),
+					bidOrder(3, "8apple", "12plum"),
+					askOrder(4, "20apple", "35plum"),
+				},
+				PartialOrderFilled: askOrder(5, "55apple", "114plum"),
+			},
+			expNAVs: []*NetAssetValue{{Assets: coin("8apple"), Price: coin("12plum")}},
+		},
+		{
+			name: "one filled bid plus partial bid, same denoms",
+			settlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					askOrder(1, "10apple", "20plum"),
+					askOrder(2, "15apple", "30plum"),
+					bidOrder(3, "8apple", "12plum"),
+					askOrder(4, "20apple", "35plum"),
+				},
+				PartialOrderFilled: bidOrder(5, "55apple", "114plum"),
+			},
+			expNAVs: []*NetAssetValue{{Assets: coin("63apple"), Price: coin("126plum")}},
+		},
+		{
+			name: "one filled bid plus partial bid, diff asset denoms",
+			settlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					askOrder(1, "10apple", "20plum"),
+					askOrder(2, "15apple", "30plum"),
+					bidOrder(3, "8apple", "12plum"),
+					askOrder(4, "20apple", "35plum"),
+				},
+				PartialOrderFilled: bidOrder(5, "55acorn", "114plum"),
+			},
+			expNAVs: []*NetAssetValue{
+				{Assets: coin("8apple"), Price: coin("12plum")},
+				{Assets: coin("55acorn"), Price: coin("114plum")},
+			},
+		},
+		{
+			name: "one filled bid plus partial bid, diff price denoms",
+			settlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					askOrder(1, "10apple", "20plum"),
+					askOrder(2, "15apple", "30plum"),
+					bidOrder(3, "8apple", "12plum"),
+					askOrder(4, "20apple", "35plum"),
+				},
+				PartialOrderFilled: bidOrder(5, "55apple", "114pear"),
+			},
+			expNAVs: []*NetAssetValue{
+				{Assets: coin("8apple"), Price: coin("12plum")},
+				{Assets: coin("55apple"), Price: coin("114pear")},
+			},
+		},
+		{
+			name: "one filled bid plus partial bid, diff both denoms",
+			settlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					askOrder(1, "10apple", "20plum"),
+					askOrder(2, "15apple", "30plum"),
+					bidOrder(3, "8apple", "12plum"),
+					askOrder(4, "20apple", "35plum"),
+				},
+				PartialOrderFilled: bidOrder(5, "55acorn", "114pear"),
+			},
+			expNAVs: []*NetAssetValue{
+				{Assets: coin("8apple"), Price: coin("12plum")},
+				{Assets: coin("55acorn"), Price: coin("114pear")},
+			},
+		},
+		{
+			name: "four bids, same denoms",
+			settlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					bidOrder(1, "10apple", "20plum"),
+					bidOrder(2, "8apple", "12plum"),
+					askOrder(3, "15apple", "30plum"),
+					bidOrder(4, "20apple", "35plum"),
+					askOrder(5, "27apple", "56plum"),
+				},
+				PartialOrderFilled: bidOrder(6, "55apple", "114plum"),
+			},
+			expNAVs: []*NetAssetValue{{Assets: coin("93apple"), Price: coin("181plum")}},
+		},
+		{
+			name: "four bids, two asset denoms",
+			settlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					bidOrder(1, "10apple", "20plum"),
+					bidOrder(2, "8acorn", "12plum"),
+					askOrder(3, "15apple", "30plum"),
+					bidOrder(4, "20apple", "35plum"),
+					askOrder(5, "27apple", "56plum"),
+					bidOrder(6, "55acorn", "114plum"),
+				},
+			},
+			expNAVs: []*NetAssetValue{
+				{Assets: coin("30apple"), Price: coin("55plum")},
+				{Assets: coin("63acorn"), Price: coin("126plum")},
+			},
+		},
+		{
+			name: "four bids, two price denoms",
+			settlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					bidOrder(1, "10apple", "20pear"),
+					bidOrder(2, "8apple", "12pear"),
+					askOrder(3, "15apple", "30plum"),
+					bidOrder(4, "20apple", "35plum"),
+					askOrder(5, "27apple", "56plum"),
+					bidOrder(6, "55apple", "114plum"),
+				},
+			},
+			expNAVs: []*NetAssetValue{
+				{Assets: coin("18apple"), Price: coin("32pear")},
+				{Assets: coin("75apple"), Price: coin("149plum")},
+			},
+		},
+		{
+			name: "four bids, same denoms",
+			settlement: &Settlement{
+				FullyFilledOrders: []*FilledOrder{
+					bidOrder(1, "10apple", "20pear"),
+					bidOrder(2, "8apple", "12plum"),
+					askOrder(3, "15apple", "30plum"),
+					bidOrder(4, "20apple", "35plum"),
+					askOrder(5, "27apple", "56plum"),
+				},
+				PartialOrderFilled: bidOrder(6, "55acorn", "114pear"),
+			},
+			expNAVs: []*NetAssetValue{
+				{Assets: coin("10apple"), Price: coin("20pear")},
+				{Assets: coin("28apple"), Price: coin("47plum")},
+				{Assets: coin("55acorn"), Price: coin("114pear")},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var navs []*NetAssetValue
+			testFunc := func() {
+				navs = GetNAVs(tc.settlement)
+			}
+			require.NotPanics(t, testFunc, "GetNAVs")
+			if !assert.Equal(t, tc.expNAVs, navs, "GetNavs result") {
+				// Do the comparison as strings to hopefully make it easier to see what's different.
+				expNavs := stringerLines(tc.expNAVs, navStringer)
+				actNavs := stringerLines(navs, navStringer)
+				assert.Equal(t, expNavs, actNavs, "GetNavs result as strings")
+			}
+		})
+	}
+}
