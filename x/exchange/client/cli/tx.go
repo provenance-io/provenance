@@ -274,21 +274,17 @@ func CmdTxGovManageFees() *cobra.Command {
 	return cmd
 }
 
-// CmdTxGovUpdateParams TODO
+// CmdTxGovUpdateParams creates the gov-update-params sub-command for the exchange tx command.
 func CmdTxGovUpdateParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdTxGovUpdateParams
-			return nil
-		},
+		Use:     "gov-update-params",
+		Aliases: []string{"gov-params", "update-params", "params"},
+		Short:   "Submit a governance proposal to update the exchange module params",
+		Args:    cobra.NoArgs,
+		RunE:    govTxRunE(MakeMsgGovUpdateParams),
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgGovUpdateParams(cmd)
 	return cmd
 }

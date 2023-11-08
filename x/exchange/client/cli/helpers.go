@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -176,6 +177,15 @@ func ReadFeeRatios(flagSet *pflag.FlagSet, name string) ([]exchange.FeeRatio, er
 	return ParseFeeRatios(vals)
 }
 
+// ReadFlagSplits reads a StringSlice flag and converts it into a slice of exchange.DenomSplit.
+func ReadFlagSplits(flagSet *pflag.FlagSet, name string) ([]exchange.DenomSplit, error) {
+	vals, err := flagSet.GetStringSlice(FlagSplit)
+	if len(vals) == 0 || err != nil {
+		return nil, err
+	}
+	return ParseSplits(vals)
+}
+
 // permSepRx is a regexp that matches characters that can be used to separate permissions.
 var permSepRx = regexp.MustCompile(`[ +-.]`)
 
@@ -212,17 +222,17 @@ func ParseAccessGrant(val string) (*exchange.AccessGrant, error) {
 // ParseAccessGrants parses an AccessGrant from each of the provided vals.
 func ParseAccessGrants(vals []string) ([]exchange.AccessGrant, error) {
 	var errs []error
-	rv := make([]exchange.AccessGrant, 0, len(vals))
+	grants := make([]exchange.AccessGrant, 0, len(vals))
 	for _, val := range vals {
 		ag, err := ParseAccessGrant(val)
 		if err != nil {
 			errs = append(errs, err)
 		}
 		if ag != nil {
-			rv = append(rv, *ag)
+			grants = append(grants, *ag)
 		}
 	}
-	return rv, errors.Join(errs...)
+	return grants, errors.Join(errs...)
 }
 
 // ParseFlatFeeOptions parses an sdk.Coin from each of the provided vals.
@@ -243,17 +253,54 @@ func ParseFlatFeeOptions(vals []string) ([]sdk.Coin, error) {
 // ParseFeeRatios parses a FeeRatio from each of the provided vals.
 func ParseFeeRatios(vals []string) ([]exchange.FeeRatio, error) {
 	var errs []error
-	rv := make([]exchange.FeeRatio, 0, len(vals))
+	ratios := make([]exchange.FeeRatio, 0, len(vals))
 	for _, val := range vals {
 		ratio, err := exchange.ParseFeeRatio(val)
 		if err != nil {
 			errs = append(errs, err)
 		}
 		if ratio != nil {
-			rv = append(rv, *ratio)
+			ratios = append(ratios, *ratio)
 		}
 	}
-	return rv, errors.Join(errs...)
+	return ratios, errors.Join(errs...)
+}
+
+// ParseSplit parses a DenomSplit from a string with teh format "<denom>:<amount>".
+func ParseSplit(val string) (*exchange.DenomSplit, error) {
+	parts := strings.Split(val, ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid denom split %q: expected format <denom>:<amount>")
+	}
+
+	denom := strings.TrimSpace(parts[0])
+	amountStr := strings.TrimSpace(parts[1])
+	if len(denom) == 0 || len(amountStr) == 0 {
+		return nil, fmt.Errorf("invalid denom split %q: both a <denom> and <amount> are required", val)
+	}
+
+	amount, err := strconv.ParseUint(amountStr, 10, 32)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse %s amount %q into uint32: %w", denom, amountStr, err)
+	}
+
+	return &exchange.DenomSplit{Denom: denom, Split: uint32(amount)}, nil
+}
+
+// ParseSplits parses a DenomSplit from each of the provided vals.
+func ParseSplits(vals []string) ([]exchange.DenomSplit, error) {
+	var errs []error
+	splits := make([]exchange.DenomSplit, 0, len(vals))
+	for _, val := range vals {
+		split, err := ParseSplit(val)
+		if err != nil {
+			errs = append(errs, err)
+		}
+		if split != nil {
+			splits = append(splits, *split)
+		}
+	}
+	return splits, errors.Join(errs...)
 }
 
 // AddUseArgs adds the given args to the cmd's Use.

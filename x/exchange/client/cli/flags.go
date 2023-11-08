@@ -40,6 +40,7 @@ const (
 	FlagCreateBid          = "create-bid"
 	FlagCreationFee        = "creation-fee"
 	FlagDescription        = "description"
+	FlagDefault            = "default"
 	FlagDisable            = "disable"
 	FlagEnable             = "enable"
 	FlagExternalID         = "external-id"
@@ -63,6 +64,7 @@ const (
 	FlagSellerRatiosRemove = "seller-ratios-remove"
 	FlagSettlementFee      = "settlement-fee"
 	FlagSigner             = "signer"
+	FlagSplit              = "split"
 	FlagTo                 = "to"
 	FlagURL                = "url"
 )
@@ -149,6 +151,8 @@ var (
 	_ msgMaker = MakeMsgMarketManagePermissions
 	_ msgMaker = MakeMsgMarketManageReqAttrs
 	_ msgMaker = MakeMsgGovCreateMarket
+	_ msgMaker = MakeMsgGovManageFees
+	_ msgMaker = MakeMsgGovUpdateParams
 )
 
 // AddFlagsMsgCreateAsk adds all the flags needed for MakeMsgCreateAsk.
@@ -734,7 +738,7 @@ func MakeMsgGovCreateMarket(_ client.Context, flagSet *pflag.FlagSet, _ []string
 // AddFlagsMsgGovManageFees adds all the flags needed for MakeMsgGovManageFees.
 func AddFlagsMsgGovManageFees(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
-	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().StringSlice(FlagAskAdd, nil, "Create-ask flat fee options to add, e.g. 10nhash (repeatable)")
 	cmd.Flags().StringSlice(FlagAskRemove, nil, "Create-ask flat fee options to remove, e.g. 10nhash (repeatable)")
 	cmd.Flags().StringSlice(FlagBidAdd, nil, "Create-bid flat fee options to add, e.g. 10nhash (repeatable)")
@@ -799,6 +803,41 @@ func MakeMsgGovManageFees(_ client.Context, flagSet *pflag.FlagSet, _ []string) 
 	msg.RemoveFeeBuyerSettlementFlat, errs[11] = ReadFlatFee(flagSet, FlagBuyerFlatRemove)
 	msg.AddFeeBuyerSettlementRatios, errs[12] = ReadFeeRatios(flagSet, FlagBuyerRatiosAdd)
 	msg.RemoveFeeBuyerSettlementRatios, errs[13] = ReadFeeRatios(flagSet, FlagBuyerRatiosRemove)
+
+	return msg, errors.Join(errs...)
+}
+
+// AddFlagsMsgGovUpdateParams adds all the flags needed for MakeMsgGovUpdateParams.
+func AddFlagsMsgGovUpdateParams(cmd *cobra.Command) {
+	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
+	cmd.Flags().Uint32(FlagDefault, 0, "The default split (required)")
+	cmd.Flags().StringSlice(FlagSplit, nil, "The denom-splits (repeatable)")
+
+	MarkFlagsRequired(cmd, FlagDefault)
+
+	AddUseArgs(cmd,
+		ReqFlagUse(FlagDefault, "amount"),
+		OptFlagUse(FlagSplit, "splits"),
+		OptFlagUse(FlagAuthority, "authority"),
+	)
+	AddUseDetails(cmd,
+		AuthorityDesc,
+		RepeatableDesc,
+		`A <split> has the format "<denom>:<amount>".
+An <amount> is in basis points and is limited to 0 to 10,000 (both inclusive).
+
+Example <split>: nhash:500`,
+	)
+}
+
+// MakeMsgGovUpdateParams reads all the AddFlagsMsgGovUpdateParams flags and creates the desired Msg.
+func MakeMsgGovUpdateParams(_ client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+	msg := &exchange.MsgGovUpdateParamsRequest{}
+
+	errs := make([]error, 3)
+	msg.Authority, errs[0] = ReadFlagAuthorityOrDefault(flagSet)
+	msg.Params.DefaultSplit, errs[1] = flagSet.GetUint32(FlagDefault)
+	msg.Params.DenomSplits, errs[2] = ReadFlagSplits(flagSet, FlagSplit)
 
 	return msg, errors.Join(errs...)
 }
