@@ -30,6 +30,6 @@ message EventTriggerExecuted {
   string trigger_id = 1;
   // owner is the creator of the trigger.
   string owner = 2;
-  // error contains the failure message for an unsuccessful action.
-  string error = 3;
+  // success indicates if all executed actions were successful.
+  bool success = 3;
 }

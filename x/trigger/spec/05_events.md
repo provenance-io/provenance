@@ -42,8 +42,8 @@ Fires when a trigger's event is detected in the EndBlocker.
 
 Fires when a trigger's actions are executed in the BeginBlocker.
 
-| Type            | Attribute Key | Attribute Value                                                          |
-| --------------- | ------------- | ------------------------------------------------------------------------ |
-| TriggerExecuted | trigger_id    | The ID of the trigger being executed                                     |
-| TriggerExecuted | owner         | The sdk.Address of the trigger's owner                                   |
-| TriggerExecuted | error         | The error message received when failing to execute the trigger's actions |
+| Type            | Attribute Key | Attribute Value                                               |
+| --------------- | ------------- | ------------------------------------------------------------- |
+| TriggerExecuted | trigger_id    | The ID of the trigger being executed                          |
+| TriggerExecuted | owner         | The sdk.Address of the trigger's owner                        |
+| TriggerExecuted | success       | A boolean indicating if all the actions successfully executed |

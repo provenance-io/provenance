@@ -31,11 +31,11 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 		return event
 	}
 
-	executed := func(triggerID uint64, owner, err string) sdk.Event {
+	executed := func(triggerID uint64, owner string, success bool) sdk.Event {
 		event, _ := sdk.TypedEventToEvent(&types.EventTriggerExecuted{
 			TriggerId: fmt.Sprintf("%d", triggerID),
 			Owner:     owner,
-			Error:     err,
+			Success:   success,
 		})
 		return event
 	}
@@ -71,7 +71,7 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 			},
 			gas:      []uint64{2000000},
 			expected: []types.Trigger(nil),
-			events:   []sdk.Event{destroyed(existing1.Id), executed(trigger1.Id, trigger1.Owner, "")},
+			events:   []sdk.Event{destroyed(existing1.Id), executed(trigger1.Id, trigger1.Owner, true)},
 			blockGas: 2000000,
 		},
 		{
@@ -101,7 +101,7 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 			},
 			gas:      []uint64{2000000},
 			expected: []types.Trigger(nil),
-			events:   []sdk.Event{executed(emptyTrigger.Id, emptyTrigger.Owner, "")},
+			events:   []sdk.Event{executed(emptyTrigger.Id, emptyTrigger.Owner, true)},
 			blockGas: 2000000,
 		},
 		{
@@ -116,7 +116,7 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 			},
 			gas:      []uint64{2000000},
 			expected: []types.Trigger(nil),
-			events:   []sdk.Event{destroyed(existing1.Id), destroyed(existing2.Id), executed(multiActionTrigger.Id, multiActionTrigger.Owner, "")},
+			events:   []sdk.Event{destroyed(existing1.Id), destroyed(existing2.Id), executed(multiActionTrigger.Id, multiActionTrigger.Owner, true)},
 			blockGas: 2000000,
 		},
 		{
@@ -136,7 +136,7 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 			},
 			gas:      []uint64{1000000, 1000000},
 			expected: []types.Trigger(nil),
-			events:   []sdk.Event{destroyed(existing1.Id), executed(trigger1.Id, trigger1.Owner, ""), destroyed(existing2.Id), executed(trigger2.Id, trigger2.Owner, "")},
+			events:   []sdk.Event{destroyed(existing1.Id), executed(trigger1.Id, trigger1.Owner, true), destroyed(existing2.Id), executed(trigger2.Id, trigger2.Owner, true)},
 			blockGas: 2000000,
 		},
 		{
@@ -156,7 +156,7 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 			},
 			gas:      []uint64{2000000, 1000000},
 			expected: []types.Trigger{existing2},
-			events:   []sdk.Event{destroyed(existing1.Id), executed(trigger1.Id, trigger1.Owner, "")},
+			events:   []sdk.Event{destroyed(existing1.Id), executed(trigger1.Id, trigger1.Owner, true)},
 			blockGas: 2000000,
 		},
 		{
@@ -198,11 +198,11 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 			expected: []types.Trigger{existing2},
 			events: []sdk.Event{
 				destroyed(existing1.Id),
-				executed(trigger1.Id, trigger1.Owner, ""),
-				executed(trigger3.Id, trigger3.Owner, "error processing message /provenance.trigger.v1.MsgDestroyTriggerRequest at position 0: trigger not found"),
-				executed(trigger4.Id, trigger4.Owner, "error processing message /provenance.trigger.v1.MsgDestroyTriggerRequest at position 0: trigger not found"),
-				executed(trigger5.Id, trigger5.Owner, "error processing message /provenance.trigger.v1.MsgDestroyTriggerRequest at position 0: trigger not found"),
-				executed(trigger6.Id, trigger6.Owner, "error processing message /provenance.trigger.v1.MsgDestroyTriggerRequest at position 0: trigger not found"),
+				executed(trigger1.Id, trigger1.Owner, true),
+				executed(trigger3.Id, trigger3.Owner, false),
+				executed(trigger4.Id, trigger4.Owner, false),
+				executed(trigger5.Id, trigger5.Owner, false),
+				executed(trigger6.Id, trigger6.Owner, false),
 			},
 			blockGas: 500000,
 		},
@@ -219,7 +219,7 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 			gas:      []uint64{1},
 			expected: []types.Trigger{existing1},
 			events: []sdk.Event{
-				executed(trigger1.Id, trigger1.Owner, "error processing message /provenance.trigger.v1.MsgDestroyTriggerRequest at position 0: gas 1000 exceeded limit 1 for message \"/provenance.trigger.v1.MsgDestroyTriggerRequest\"")},
+				executed(trigger1.Id, trigger1.Owner, false)},
 			blockGas: 1,
 		},
 		{
@@ -235,7 +235,7 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 			gas:      []uint64{6000},
 			expected: []types.Trigger{existing1, existing2},
 			events: []sdk.Event{
-				executed(multiActionTrigger.Id, multiActionTrigger.Owner, "error processing message /provenance.trigger.v1.MsgDestroyTriggerRequest at position 0: gas 6621 exceeded limit 6000 for message \"/provenance.trigger.v1.MsgDestroyTriggerRequest\""),
+				executed(multiActionTrigger.Id, multiActionTrigger.Owner, false),
 			},
 			blockGas: 6000,
 		},
@@ -257,9 +257,9 @@ func (s *KeeperTestSuite) TestProcessTriggers() {
 			gas:      []uint64{1, 1000000},
 			expected: []types.Trigger{existing1},
 			events: []sdk.Event{
-				executed(trigger1.Id, trigger1.Owner, "error processing message /provenance.trigger.v1.MsgDestroyTriggerRequest at position 0: gas 1000 exceeded limit 1 for message \"/provenance.trigger.v1.MsgDestroyTriggerRequest\""),
+				executed(trigger1.Id, trigger1.Owner, false),
 				destroyed(existing2.Id),
-				executed(trigger2.Id, trigger2.Owner, ""),
+				executed(trigger2.Id, trigger2.Owner, true),
 			},
 			blockGas: 1000001,
 		},

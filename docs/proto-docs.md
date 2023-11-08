@@ -10039,7 +10039,7 @@ EventTriggerExecuted is an event for when a trigger is executed.
 | ----- | ---- | ----- | ----------- |
 | `trigger_id` | [string](#string) |  | trigger_id is a unique identifier of the trigger. |
 | `owner` | [string](#string) |  | owner is the creator of the trigger. |
-| `error` | [string](#string) |  | error contains the failure message for an unsuccessful action. |
+| `success` | [bool](#bool) |  | success indicates if all executed actions were successful. |
 
 
 

@@ -38,7 +38,7 @@ func (k Keeper) ProcessTriggers(ctx sdk.Context) {
 
 		actions := item.GetTrigger().Actions
 		err := k.runActions(ctx, gasLimit, actions)
-		k.emitTriggerExecuted(ctx, item.GetTrigger(), err)
+		k.emitTriggerExecuted(ctx, item.GetTrigger(), err == nil)
 	}
 }
 
@@ -123,16 +123,11 @@ func (k Keeper) safeHandle(ctx sdk.Context, msg sdk.Msg, handler baseapp.MsgServ
 }
 
 // emitTriggerExecuted Emits an EventTriggerExecuted for the provided trigger.
-func (k Keeper) emitTriggerExecuted(ctx sdk.Context, trigger types.Trigger, resultErr error) {
-	var errString string
-	if resultErr != nil {
-		errString = resultErr.Error()
-	}
-
+func (k Keeper) emitTriggerExecuted(ctx sdk.Context, trigger types.Trigger, success bool) {
 	eventErr := ctx.EventManager().EmitTypedEvent(&types.EventTriggerExecuted{
 		TriggerId: fmt.Sprintf("%d", trigger.GetId()),
 		Owner:     trigger.Owner,
-		Error:     errString,
+		Success:   success,
 	})
 	if eventErr != nil {
 		ctx.Logger().Error("unable to emit EventTriggerExecuted", "err", eventErr)
