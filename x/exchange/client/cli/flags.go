@@ -8,6 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,11 +23,13 @@ const (
 	FlagAdmin              = "admin"
 	FlagAllowUserSettle    = "allow-user-settle"
 	FlagAmount             = "amount"
+	FlagAsk                = "ask"
 	FlagAskAdd             = "ask-add"
 	FlagAskRemove          = "ask-remove"
 	FlagAsks               = "asks"
 	FlagAssets             = "assets"
 	FlagAuthority          = "authority"
+	FlagBid                = "bid"
 	FlagBidAdd             = "bid-add"
 	FlagBidRemove          = "bid-remove"
 	FlagBids               = "bids"
@@ -840,4 +844,86 @@ func MakeMsgGovUpdateParams(_ client.Context, flagSet *pflag.FlagSet, _ []string
 	msg.Params.DenomSplits, errs[2] = ReadFlagSplitsFlag(flagSet, FlagSplit)
 
 	return msg, errors.Join(errs...)
+}
+
+var (
+	_ queryReqMaker[exchange.QueryOrderFeeCalcRequest] = MakeQueryOrderFeeCalc
+)
+
+// AddFlagsQueryOrderFeeCalc adds all the flags needed for MakeQueryOrderFeeCalc.
+func AddFlagsQueryOrderFeeCalc(cmd *cobra.Command) {
+	cmd.Flags().Bool(FlagAsk, false, "Run calculation on an ask order")
+	cmd.Flags().Bool(FlagBid, false, "Run calculation on a bid order")
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
+	cmd.Flags().String(FlagSeller, "", "The seller (for an ask order)")
+	cmd.Flags().String(FlagBuyer, "", "The buyer (for a bid order)")
+	cmd.Flags().String(FlagAssets, "", "The order assets")
+	cmd.Flags().String(FlagPrice, "", "The order price")
+	cmd.Flags().String(FlagSettlementFee, "", "The settlement fees")
+	cmd.Flags().String(FlagPartial, "", "Allow the order to be partially filled")
+	cmd.Flags().String(FlagExternalID, "", "The external id")
+
+	cmd.MarkFlagsMutuallyExclusive(FlagAsk, FlagBid)
+	cmd.MarkFlagsOneRequired(FlagAsk, FlagBid)
+	cmd.MarkFlagsMutuallyExclusive(FlagBuyer, FlagSeller)
+	cmd.MarkFlagsMutuallyExclusive(FlagAsk, FlagBuyer)
+	cmd.MarkFlagsMutuallyExclusive(FlagBid, FlagSeller)
+	MarkFlagsRequired(cmd, FlagMarket, FlagPrice)
+
+	AddUseArgs(cmd,
+		fmt.Sprintf("{--%s|--%s}", FlagAsk, FlagBid),
+		ReqFlagUse(FlagMarket, "market id"),
+		ReqFlagUse(FlagPrice, "price"),
+	)
+	AddQueryExample(cmd, "--"+FlagAsk, "--"+FlagMarket, "3", "--"+FlagPrice, "10nhash")
+	AddQueryExample(cmd, "--"+FlagBid, "--"+FlagMarket, "3", "--"+FlagPrice, "10nhash")
+}
+
+// MakeQueryOrderFeeCalc reads all the AddFlagsQueryOrderFeeCalc flags and creates the desired Msg.
+func MakeQueryOrderFeeCalc(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryOrderFeeCalcRequest, error) {
+	bidOrder := &exchange.BidOrder{}
+
+	errs := make([]error, 10, 11)
+	var isAsk, isBid bool
+	isAsk, errs[0] = flagSet.GetBool(FlagAsk)
+	isBid, errs[1] = flagSet.GetBool(FlagBid)
+	bidOrder.MarketId, errs[2] = flagSet.GetUint32(FlagMarket)
+	var seller string
+	seller, errs[3] = flagSet.GetString(FlagBuyer)
+	bidOrder.Buyer, errs[4] = flagSet.GetString(FlagSeller)
+	var assets *sdk.Coin
+	assets, errs[5] = ReadCoinFlag(flagSet, FlagAssets)
+	if assets == nil {
+		assets = &sdk.Coin{Denom: "filler", Amount: sdkmath.NewInt(0)}
+	}
+	bidOrder.Assets = *assets
+	bidOrder.Price, errs[6] = ReadReqCoinFlag(flagSet, FlagPrice)
+	bidOrder.BuyerSettlementFees, errs[7] = ReadCoinsFlag(flagSet, FlagSettlementFee)
+	bidOrder.AllowPartial, errs[8] = flagSet.GetBool(FlagPartial)
+	bidOrder.ExternalId, errs[9] = flagSet.GetString(FlagExternalID)
+
+	req := &exchange.QueryOrderFeeCalcRequest{}
+
+	if isAsk {
+		req.AskOrder = &exchange.AskOrder{
+			MarketId:     bidOrder.MarketId,
+			Seller:       seller,
+			Assets:       bidOrder.Assets,
+			Price:        bidOrder.Price,
+			AllowPartial: bidOrder.AllowPartial,
+			ExternalId:   bidOrder.ExternalId,
+		}
+		if len(bidOrder.BuyerSettlementFees) > 0 {
+			req.AskOrder.SellerSettlementFlatFee = &bidOrder.BuyerSettlementFees[0]
+		}
+		if len(bidOrder.BuyerSettlementFees) > 1 {
+			errs = append(errs, errors.New("only one settlement fee coin is allowed for ask orders"))
+		}
+	}
+
+	if isBid {
+		req.BidOrder = bidOrder
+	}
+
+	return req, errors.Join(errs...)
 }

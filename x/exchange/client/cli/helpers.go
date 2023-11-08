@@ -1,14 +1,17 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -70,6 +73,43 @@ func govTxRunE(maker msgMaker) func(cmd *cobra.Command, args []string) error {
 
 		cmd.SilenceUsage = true
 		return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+	}
+}
+
+// queryReqMaker is a function that creates a query request message.
+// R is the type of request message.
+type queryReqMaker[R any] func(flagSet *pflag.FlagSet, args []string) (*R, error)
+
+// queryEndpoint is a function that runs a query.
+// R is the type of request message.
+// S is the type of response message.
+type queryEndpoint[R any, S proto.Message] func(queryClient exchange.QueryClient, ctx context.Context, req *R, opts ...grpc.CallOption) (S, error)
+
+// genericQueryRunE returns a cobra.Command.RunE function that gets the query context and FlagSet,
+// then uses the provided maker to make the query request message. A query client is created and
+// that message is then given to the provided endpoint func to get the response which is then printed.
+// R is the type of request message.
+// S is the type of response message.
+func genericQueryRunE[R any, S proto.Message](reqMaker queryReqMaker[R], endpoint queryEndpoint[R, S]) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		clientCtx, err := client.GetClientQueryContext(cmd)
+		if err != nil {
+			return err
+		}
+
+		req, err := reqMaker(cmd.Flags(), args)
+		if err != nil {
+			return err
+		}
+
+		cmd.SilenceUsage = true
+		queryClient := exchange.NewQueryClient(clientCtx)
+		res, err := endpoint(queryClient, cmd.Context(), req)
+		if err != nil {
+			return err
+		}
+
+		return clientCtx.PrintProto(res)
 	}
 }
 
@@ -312,6 +352,14 @@ func AddUseArgs(cmd *cobra.Command, args ...string) {
 func AddUseDetails(cmd *cobra.Command, sections ...string) {
 	cmd.Use = cmd.Use + "\n\n" + strings.Join(sections, "\n\n")
 	cmd.DisableFlagsInUseLine = true
+}
+
+// AddQueryExample appends an example to a query command's examples.
+func AddQueryExample(cmd *cobra.Command, args ...string) {
+	if len(cmd.Example) > 0 {
+		cmd.Example += "\n"
+	}
+	cmd.Example += queryCmdStart + " " + cmd.Name() + " " + strings.Join(args, " ")
 }
 
 // SimplePerms returns a string containing all the Permission.SimpleString() values.

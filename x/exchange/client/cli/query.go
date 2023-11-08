@@ -43,22 +43,18 @@ func CmdQuery() *cobra.Command {
 	return cmd
 }
 
-// CmdQueryOrderFeeCalc TODO
+// CmdQueryOrderFeeCalc creates the order-fee-calc sub-command for the exchange query command.
 func CmdQueryOrderFeeCalc() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, queryCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdQueryOrderFeeCalc
-			return nil
-		},
+		Use:     "order-fee-calc",
+		Aliases: []string{"fee-calc", "order-calc"},
+		Short:   "Calculate the fees for an order",
+		Args:    cobra.NoArgs,
+		RunE:    genericQueryRunE(MakeQueryOrderFeeCalc, exchange.QueryClient.OrderFeeCalc),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	AddFlagsQueryOrderFeeCalc(cmd)
 	return cmd
 }
 
