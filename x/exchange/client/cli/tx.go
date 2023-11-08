@@ -49,7 +49,6 @@ func CmdTxCreateAsk() *cobra.Command {
 		Use:     "create-ask",
 		Aliases: []string{"ask", "create-ask-order", "ask-order"},
 		Short:   "Create an ask order",
-		Args:    cobra.NoArgs,
 		RunE:    genericTxRunE(MakeMsgCreateAsk),
 	}
 
@@ -64,7 +63,6 @@ func CmdTxCreateBid() *cobra.Command {
 		Use:     "create-bid",
 		Aliases: []string{"bid", "create-bid-order", "bid-order"},
 		Short:   "Create a bid order",
-		Args:    cobra.NoArgs,
 		RunE:    genericTxRunE(MakeMsgCreateBid),
 	}
 
@@ -79,7 +77,6 @@ func CmdTxCancelOrder() *cobra.Command {
 		Use:     "cancel-order",
 		Aliases: []string{"cancel"},
 		Short:   "Cancel an order",
-		Args:    cobra.MaximumNArgs(1),
 		RunE:    genericTxRunE(MakeMsgCancelOrder),
 	}
 
@@ -93,7 +90,6 @@ func CmdTxFillBids() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fill-bids",
 		Short: "Fill one or more bid orders",
-		Args:  cobra.NoArgs,
 		RunE:  genericTxRunE(MakeMsgFillBids),
 	}
 
@@ -107,7 +103,6 @@ func CmdTxFillAsks() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fill-asks",
 		Short: "Fill one or more ask orders",
-		Args:  cobra.NoArgs,
 		RunE:  genericTxRunE(MakeMsgFillAsks),
 	}
 
@@ -122,7 +117,6 @@ func CmdTxMarketSettle() *cobra.Command {
 		Use:     "market-settle",
 		Aliases: []string{"settle"},
 		Short:   "Settle some orders",
-		Args:    cobra.NoArgs,
 		RunE:    genericTxRunE(MakeMsgMarketSettle),
 	}
 
@@ -137,7 +131,6 @@ func CmdTxMarketSetOrderExternalID() *cobra.Command {
 		Use:     "market-set-external-id",
 		Aliases: []string{"market-set-order-external-id", "set-external-id", "external-id"},
 		Short:   "Set an order's external id",
-		Args:    cobra.NoArgs,
 		RunE:    genericTxRunE(MakeMsgMarketSetOrderExternalID),
 	}
 
@@ -152,7 +145,6 @@ func CmdTxMarketWithdraw() *cobra.Command {
 		Use:     "market-withdraw",
 		Aliases: []string{"withdraw"},
 		Short:   "Withdraw funds from a market account",
-		Args:    cobra.NoArgs,
 		RunE:    genericTxRunE(MakeMsgMarketWithdraw),
 	}
 
@@ -167,7 +159,6 @@ func CmdTxMarketUpdateDetails() *cobra.Command {
 		Use:     "market-details",
 		Aliases: []string{"market-update-details", "update-details", "details"},
 		Short:   "Update a market's details",
-		Args:    cobra.NoArgs,
 		RunE:    genericTxRunE(MakeMsgMarketUpdateDetails),
 	}
 
@@ -182,7 +173,6 @@ func CmdTxMarketUpdateEnabled() *cobra.Command {
 		Use:     "market-enabled",
 		Aliases: []string{"market-update-enabled", "update-enabled"},
 		Short:   "Change whether a market is accepting orders",
-		Args:    cobra.NoArgs,
 		RunE:    genericTxRunE(MakeMsgMarketUpdateEnabled),
 	}
 
@@ -197,7 +187,6 @@ func CmdTxMarketUpdateUserSettle() *cobra.Command {
 		Use:     "market-user-settle",
 		Aliases: []string{"market-update-user-settle", "update-user-settle"},
 		Short:   "Change whether a market allows settlements initiated by users",
-		Args:    cobra.NoArgs,
 		RunE:    genericTxRunE(MakeMsgMarketUpdateUserSettle),
 	}
 
@@ -212,7 +201,6 @@ func CmdTxMarketManagePermissions() *cobra.Command {
 		Use:     "market-permissions",
 		Aliases: []string{"market-manage-permissions", "permissions", "market-perms", "market-manage-perms", "perms"},
 		Short:   "Update the account permissions for a market",
-		Args:    cobra.NoArgs,
 		RunE:    genericTxRunE(MakeMsgMarketManagePermissions),
 	}
 
@@ -229,7 +217,6 @@ func CmdTxMarketManageReqAttrs() *cobra.Command {
 			"market-manage-required-attributes", "manage-required-attributes", "required-attributes",
 		},
 		Short: "Manage the attributes required to create orders in a market",
-		Args:  cobra.NoArgs,
 		RunE:  genericTxRunE(MakeMsgMarketManageReqAttrs),
 	}
 
@@ -244,7 +231,6 @@ func CmdTxGovCreateMarket() *cobra.Command {
 		Use:     "gov-create-market",
 		Aliases: []string{"create-market"},
 		Short:   "Submit a governance proposal to create a market",
-		Args:    cobra.NoArgs,
 		RunE:    govTxRunE(MakeMsgGovCreateMarket),
 	}
 
@@ -260,7 +246,6 @@ func CmdTxGovManageFees() *cobra.Command {
 		Use:     "gov-manage-fees",
 		Aliases: []string{"manage-fees", "gov-update-fees", "update-fees"},
 		Short:   "Submit a governance proposal to change a market's fees",
-		Args:    cobra.NoArgs,
 		RunE:    govTxRunE(MakeMsgGovManageFees),
 	}
 
@@ -275,7 +260,6 @@ func CmdTxGovUpdateParams() *cobra.Command {
 		Use:     "gov-update-params",
 		Aliases: []string{"gov-params", "update-params", "params"},
 		Short:   "Submit a governance proposal to update the exchange module params",
-		Args:    cobra.NoArgs,
 		RunE:    govTxRunE(MakeMsgGovUpdateParams),
 	}
 
