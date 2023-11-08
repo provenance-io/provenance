@@ -259,22 +259,18 @@ func CmdTxGovCreateMarket() *cobra.Command {
 	return cmd
 }
 
-// CmdTxGovManageFees TODO
+// CmdTxGovManageFees creates the gov-manage-fees sub-command for the exchange tx command.
 func CmdTxGovManageFees() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, txCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdTxGovManageFees
-			return nil
-		},
+		Use:     "gov-manage-fees",
+		Aliases: []string{"manage-fees", "gov-update-fees", "update-fees"},
+		Short:   "Submit a governance proposal to change a market's fees",
+		Args:    cobra.NoArgs,
+		RunE:    govTxRunE(MakeMsgGovManageFees),
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	AddFlagsMsgGovManageFees(cmd)
 	return cmd
 }
 

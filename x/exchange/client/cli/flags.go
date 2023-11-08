@@ -16,47 +16,55 @@ import (
 )
 
 const (
-	FlagAcceptingOrders = "accepting-orders"
-	FlagAccessGrants    = "access-grants"
-	FlagAdmin           = "admin"
-	FlagAllowUserSettle = "allow-user-settle"
-	FlagAmount          = "amount"
-	FlagAskAdd          = "ask-add"
-	FlagAskRemove       = "ask-remove"
-	FlagAsks            = "asks"
-	FlagAssets          = "assets"
-	FlagAuthority       = "authority"
-	FlagBidAdd          = "bid-add"
-	FlagBidRemove       = "bid-remove"
-	FlagBids            = "bids"
-	FlagBuyer           = "buyer"
-	FlagBuyerFlat       = "buyer-flat"
-	FlagBuyerRatios     = "buyer-ratios"
-	FlagCreateAsk       = "create-ask"
-	FlagCreateBid       = "create-bid"
-	FlagCreationFee     = "creation-fee"
-	FlagDescription     = "description"
-	FlagDisable         = "disable"
-	FlagEnable          = "enable"
-	FlagExternalID      = "external-id"
-	FlagGrant           = "grant"
-	FlagIcon            = "icon"
-	FlagMarket          = "market"
-	FlagName            = "name"
-	FlagOrder           = "order"
-	FlagPartial         = "partial"
-	FlagPrice           = "price"
-	FlagReqAttrAsk      = "req-attr-ask"
-	FlagReqAttrBid      = "req-attr-Bid"
-	FlagRevokeAll       = "revoke-all"
-	FlagRevoke          = "revoke"
-	FlagSeller          = "seller"
-	FlagSellerFlat      = "seller-flat"
-	FlagSellerRatios    = "seller-ratios"
-	FlagSettlementFee   = "settlement-fee"
-	FlagSigner          = "signer"
-	FlagTo              = "to"
-	FlagURL             = "url"
+	FlagAcceptingOrders    = "accepting-orders"
+	FlagAccessGrants       = "access-grants"
+	FlagAdmin              = "admin"
+	FlagAllowUserSettle    = "allow-user-settle"
+	FlagAmount             = "amount"
+	FlagAskAdd             = "ask-add"
+	FlagAskRemove          = "ask-remove"
+	FlagAsks               = "asks"
+	FlagAssets             = "assets"
+	FlagAuthority          = "authority"
+	FlagBidAdd             = "bid-add"
+	FlagBidRemove          = "bid-remove"
+	FlagBids               = "bids"
+	FlagBuyer              = "buyer"
+	FlagBuyerFlat          = "buyer-flat"
+	FlagBuyerFlatAdd       = "buyer-flat-add"
+	FlagBuyerFlatRemove    = "buyer-flat-remove"
+	FlagBuyerRatios        = "buyer-ratios"
+	FlagBuyerRatiosAdd     = "buyer-ratios-add"
+	FlagBuyerRatiosRemove  = "buyer-ratios-remove"
+	FlagCreateAsk          = "create-ask"
+	FlagCreateBid          = "create-bid"
+	FlagCreationFee        = "creation-fee"
+	FlagDescription        = "description"
+	FlagDisable            = "disable"
+	FlagEnable             = "enable"
+	FlagExternalID         = "external-id"
+	FlagGrant              = "grant"
+	FlagIcon               = "icon"
+	FlagMarket             = "market"
+	FlagName               = "name"
+	FlagOrder              = "order"
+	FlagPartial            = "partial"
+	FlagPrice              = "price"
+	FlagReqAttrAsk         = "req-attr-ask"
+	FlagReqAttrBid         = "req-attr-Bid"
+	FlagRevokeAll          = "revoke-all"
+	FlagRevoke             = "revoke"
+	FlagSeller             = "seller"
+	FlagSellerFlat         = "seller-flat"
+	FlagSellerFlatAdd      = "seller-flat-add"
+	FlagSellerFlatRemove   = "seller-flat-remove"
+	FlagSellerRatios       = "seller-ratios"
+	FlagSellerRatiosAdd    = "seller-ratios-add"
+	FlagSellerRatiosRemove = "seller-ratios-remove"
+	FlagSettlementFee      = "settlement-fee"
+	FlagSigner             = "signer"
+	FlagTo                 = "to"
+	FlagURL                = "url"
 )
 
 // AddFlagsAdmin adds the --admin and --authority flags to a command and makes them mutually exclusive.
@@ -719,6 +727,78 @@ func MakeMsgGovCreateMarket(_ client.Context, flagSet *pflag.FlagSet, _ []string
 	msg.Market.AccessGrants, errs[11] = ReadAccessGrants(flagSet, FlagAccessGrants)
 	msg.Market.ReqAttrCreateAsk, errs[12] = flagSet.GetStringSlice(FlagReqAttrAsk)
 	msg.Market.ReqAttrCreateBid, errs[13] = flagSet.GetStringSlice(FlagReqAttrBid)
+
+	return msg, errors.Join(errs...)
+}
+
+// AddFlagsMsgGovManageFees adds all the flags needed for MakeMsgGovManageFees.
+func AddFlagsMsgGovManageFees(cmd *cobra.Command) {
+	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
+	cmd.Flags().StringSlice(FlagAskAdd, nil, "Create-ask flat fee options to add, e.g. 10nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagAskRemove, nil, "Create-ask flat fee options to remove, e.g. 10nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagBidAdd, nil, "Create-bid flat fee options to add, e.g. 10nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagBidRemove, nil, "Create-bid flat fee options to remove, e.g. 10nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagSellerFlatAdd, nil, "Seller settlement flat fee options to add, e.g. 10nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagSellerFlatRemove, nil, "Seller settlement flat fee options to remove, e.g. 10nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagSellerRatiosAdd, nil, "Seller settlement fee ratios to add, e.g. 100nhash:1nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagSellerRatiosRemove, nil, "Seller settlement fee ratios to remove, e.g. 100nhash:1nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagBuyerFlatAdd, nil, "Buyer settlement flat fee options to add, e.g. 10nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagBuyerFlatRemove, nil, "Buyer settlement flat fee options to remove, e.g. 10nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagBuyerRatiosAdd, nil, "Seller settlement fee ratios to add, e.g. 100nhash:1nhash (repeatable)")
+	cmd.Flags().StringSlice(FlagBuyerRatiosRemove, nil, "Seller settlement fee ratios to remove, e.g. 100nhash:1nhash (repeatable)")
+
+	MarkFlagsRequired(cmd, FlagMarket)
+	cmd.MarkFlagsOneRequired(
+		FlagAskAdd, FlagAskRemove, FlagBidAdd, FlagBidRemove,
+		FlagSellerFlatAdd, FlagSellerFlatRemove, FlagSellerRatiosAdd, FlagSellerRatiosRemove,
+		FlagBuyerFlatAdd, FlagBuyerFlatRemove, FlagBuyerRatiosAdd, FlagBuyerRatiosRemove,
+	)
+
+	AddUseArgs(cmd,
+		ReqFlagUse(FlagMarket, "market id"),
+		OptFlagUse(FlagAuthority, "authority"),
+		UseFlagsBreak,
+		OptFlagUse(FlagAskAdd, "coins"),
+		OptFlagUse(FlagAskRemove, "coins"),
+		UseFlagsBreak,
+		OptFlagUse(FlagBidAdd, "coins"),
+		OptFlagUse(FlagBidRemove, "coins"),
+		UseFlagsBreak,
+		OptFlagUse(FlagSellerFlatAdd, "coins"),
+		OptFlagUse(FlagSellerFlatRemove, "coins"),
+		UseFlagsBreak,
+		OptFlagUse(FlagSellerRatiosAdd, "fee ratios"),
+		OptFlagUse(FlagSellerRatiosRemove, "fee ratios"),
+		UseFlagsBreak,
+		OptFlagUse(FlagBuyerFlatAdd, "coins"),
+		OptFlagUse(FlagBuyerFlatRemove, "coins"),
+		UseFlagsBreak,
+		OptFlagUse(FlagBuyerRatiosAdd, "fee ratios"),
+		OptFlagUse(FlagBuyerRatiosRemove, "fee ratios"),
+	)
+	AddUseDetails(cmd, AuthorityDesc, RepeatableDesc, FeeRatioDesc)
+}
+
+// MakeMsgGovManageFees reads all the AddFlagsMsgGovManageFees flags and creates the desired Msg.
+func MakeMsgGovManageFees(_ client.Context, flagSet *pflag.FlagSet, _ []string) (sdk.Msg, error) {
+	msg := &exchange.MsgGovManageFeesRequest{}
+
+	errs := make([]error, 14)
+	msg.Authority, errs[0] = ReadFlagAuthorityOrDefault(flagSet)
+	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
+	msg.AddFeeCreateAskFlat, errs[2] = ReadFlatFee(flagSet, FlagAskAdd)
+	msg.RemoveFeeCreateAskFlat, errs[3] = ReadFlatFee(flagSet, FlagAskRemove)
+	msg.AddFeeCreateBidFlat, errs[4] = ReadFlatFee(flagSet, FlagBidAdd)
+	msg.RemoveFeeCreateBidFlat, errs[5] = ReadFlatFee(flagSet, FlagBidRemove)
+	msg.AddFeeSellerSettlementFlat, errs[6] = ReadFlatFee(flagSet, FlagSellerFlatAdd)
+	msg.RemoveFeeSellerSettlementFlat, errs[7] = ReadFlatFee(flagSet, FlagSellerFlatRemove)
+	msg.AddFeeSellerSettlementRatios, errs[8] = ReadFeeRatios(flagSet, FlagSellerRatiosAdd)
+	msg.RemoveFeeSellerSettlementRatios, errs[9] = ReadFeeRatios(flagSet, FlagSellerRatiosRemove)
+	msg.AddFeeBuyerSettlementFlat, errs[10] = ReadFlatFee(flagSet, FlagBuyerFlatAdd)
+	msg.RemoveFeeBuyerSettlementFlat, errs[11] = ReadFlatFee(flagSet, FlagBuyerFlatRemove)
+	msg.AddFeeBuyerSettlementRatios, errs[12] = ReadFeeRatios(flagSet, FlagBuyerRatiosAdd)
+	msg.RemoveFeeBuyerSettlementRatios, errs[13] = ReadFeeRatios(flagSet, FlagBuyerRatiosRemove)
 
 	return msg, errors.Join(errs...)
 }
