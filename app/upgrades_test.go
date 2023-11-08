@@ -445,6 +445,15 @@ func (s *UpgradeTestSuite) TestSaffronRC2() {
 	s.AssertUpgradeHandlerLogs("saffron-rc2", expInLog, nil)
 }
 
+func (s *UpgradeTestSuite) TestSaffronRC3() {
+	expInLog := []string{
+		"INF Updating ibc marker denom metadata",
+		"INF Done updating ibc marker denom metadata",
+	}
+
+	s.AssertUpgradeHandlerLogs("saffron-rc3", expInLog, nil)
+}
+
 func (s *UpgradeTestSuite) TestSaffron() {
 	// Each part is (hopefully) tested thoroughly on its own.
 	// So for this test, just make sure there's log entries for each part being done.
