@@ -58,41 +58,33 @@ func CmdQueryOrderFeeCalc() *cobra.Command {
 	return cmd
 }
 
-// CmdQueryGetOrder TODO
+// CmdQueryGetOrder creates the get-order sub-command for the exchange query command.
 func CmdQueryGetOrder() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, queryCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdQueryGetOrder
-			return nil
-		},
+		Use:     "get-order",
+		Aliases: []string{"order"},
+		Short:   "Get an order by id",
+		Args:    cobra.MaximumNArgs(1),
+		RunE:    genericQueryRunE(MakeQueryGetOrder, exchange.QueryClient.GetOrder),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	AddFlagsQueryGetOrder(cmd)
 	return cmd
 }
 
-// CmdQueryGetOrderByExternalID TODO
+// CmdQueryGetOrderByExternalID creates the get-order-by-external-id sub-command for the exchange query command.
 func CmdQueryGetOrderByExternalID() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, queryCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdQueryGetOrderByExternalID
-			return nil
-		},
+		Use:     "get-order-by-external-id",
+		Aliases: []string{"order-by-external-id", "by-external-id", "external-id"},
+		Short:   "Get an order by market id and external id",
+		Args:    cobra.NoArgs,
+		RunE:    genericQueryRunE(MakeQueryGetOrderByExternalID, exchange.QueryClient.GetOrderByExternalID),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	AddFlagsQueryGetOrderByExternalID(cmd)
 	return cmd
 }
 

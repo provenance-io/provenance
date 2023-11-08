@@ -140,6 +140,34 @@ func ReadFlagsEnableDisable(flagSet *pflag.FlagSet) (bool, error) {
 	return false, fmt.Errorf("exactly one of --%s or --%s must be provided", FlagEnable, FlagDisable)
 }
 
+// ReadOrderID gets a required order id from either the --order flag or the provided arg.
+func ReadOrderID(flagSet *pflag.FlagSet, arg string) (uint64, error) {
+	orderID, err := flagSet.GetUint64(FlagOrder)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(arg) > 0 {
+		if orderID != 0 {
+			return 0, fmt.Errorf("cannot provide an <order id> as both an arg (%s) and flag (--%s %d)", arg, FlagOrder, orderID)
+		}
+
+		orderID, err = strconv.ParseUint(arg, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("could not convert <order id> arg %q to uint64: %w", arg, err)
+		}
+		if orderID == 0 {
+			return 0, errors.New("the <order id> cannot be zero")
+		}
+	}
+
+	if orderID == 0 {
+		return 0, errors.New("no <order id> provided")
+	}
+
+	return orderID, nil
+}
+
 var (
 	_ msgMaker = MakeMsgCreateAsk
 	_ msgMaker = MakeMsgCreateBid
@@ -268,36 +296,18 @@ func AddFlagsMsgCancelOrder(cmd *cobra.Command) {
 
 // MakeMsgCancelOrder reads all the AddFlagsMsgCancelOrder flags and the provided args and creates the desired Msg.
 func MakeMsgCancelOrder(clientCtx client.Context, flagSet *pflag.FlagSet, args []string) (sdk.Msg, error) {
+	orderIDArg := ""
+	if len(args) > 0 {
+		orderIDArg = args[0]
+	}
+
 	msg := &exchange.MsgCancelOrderRequest{}
 
 	errs := make([]error, 2)
 	msg.Signer, errs[0] = ReadAddrFlagOrFrom(clientCtx, flagSet, FlagSigner)
-	msg.OrderId, errs[1] = flagSet.GetUint64(FlagOrder)
-	err := errors.Join(errs...)
-	if err != nil {
-		return nil, err
-	}
+	msg.OrderId, errs[1] = ReadOrderID(flagSet, orderIDArg)
 
-	if len(args) > 0 && len(args[0]) > 0 {
-		if msg.OrderId != 0 {
-			return nil, fmt.Errorf("cannot provide an <order id> as both an arg (%s) and flag (--%s %d)",
-				args[0], FlagOrder, msg.OrderId)
-		}
-
-		msg.OrderId, err = strconv.ParseUint(args[0], 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("could not convert <order id> arg %q to uint64: %w", args[0], err)
-		}
-		if msg.OrderId == 0 {
-			return nil, errors.New("the <order id> cannot be zero")
-		}
-	}
-
-	if msg.OrderId == 0 {
-		return nil, errors.New("no <order id> provided")
-	}
-
-	return msg, nil
+	return msg, errors.Join(errs...)
 }
 
 // AddFlagsMsgFillBids adds all the flags needed for MakeMsgFillBids.
@@ -847,7 +857,9 @@ func MakeMsgGovUpdateParams(_ client.Context, flagSet *pflag.FlagSet, _ []string
 }
 
 var (
-	_ queryReqMaker[exchange.QueryOrderFeeCalcRequest] = MakeQueryOrderFeeCalc
+	_ queryReqMaker[exchange.QueryOrderFeeCalcRequest]         = MakeQueryOrderFeeCalc
+	_ queryReqMaker[exchange.QueryGetOrderRequest]             = MakeQueryGetOrder
+	_ queryReqMaker[exchange.QueryGetOrderByExternalIDRequest] = MakeQueryGetOrderByExternalID
 )
 
 // AddFlagsQueryOrderFeeCalc adds all the flags needed for MakeQueryOrderFeeCalc.
@@ -924,6 +936,57 @@ func MakeQueryOrderFeeCalc(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryO
 	if isBid {
 		req.BidOrder = bidOrder
 	}
+
+	return req, errors.Join(errs...)
+}
+
+// AddFlagsQueryGetOrder adds all the flags needed for MakeQueryGetOrder.
+func AddFlagsQueryGetOrder(cmd *cobra.Command) {
+	cmd.Flags().Uint64(FlagOrder, 0, "The order id")
+
+	AddUseArgs(cmd,
+		fmt.Sprintf("{<order id>|--%s <order id>}", FlagOrder),
+	)
+	AddQueryExample(cmd, "8")
+	AddQueryExample(cmd, "--"+FlagOrder, "8")
+}
+
+// MakeQueryGetOrder reads all the AddFlagsQueryGetOrder flags and creates the desired Msg.
+func MakeQueryGetOrder(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetOrderRequest, error) {
+	orderIDArg := ""
+	if len(args) > 0 {
+		orderIDArg = args[0]
+	}
+
+	req := &exchange.QueryGetOrderRequest{}
+
+	var err error
+	req.OrderId, err = ReadOrderID(flagSet, orderIDArg)
+
+	return req, err
+}
+
+// AddFlagsQueryGetOrderByExternalID adds all the flags needed for MakeQueryGetOrderByExternalID.
+func AddFlagsQueryGetOrderByExternalID(cmd *cobra.Command) {
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
+	cmd.Flags().String(FlagExternalID, "", "The external id")
+
+	MarkFlagsRequired(cmd, FlagMarket, FlagExternalID)
+
+	AddUseArgs(cmd,
+		ReqFlagUse(FlagMarket, "market id"),
+		ReqFlagUse(FlagExternalID, "external id"),
+	)
+	AddQueryExample(cmd, "--"+FlagMarket, "3", "--"+FlagExternalID, "12BD2C9C-9641-4370-A503-802CD7079CAA")
+}
+
+// MakeQueryGetOrderByExternalID reads all the AddFlagsQueryGetOrderByExternalID flags and creates the desired Msg.
+func MakeQueryGetOrderByExternalID(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetOrderByExternalIDRequest, error) {
+	req := &exchange.QueryGetOrderByExternalIDRequest{}
+
+	errs := make([]error, 2)
+	req.MarketId, errs[0] = flagSet.GetUint32(FlagMarket)
+	req.ExternalId, errs[1] = flagSet.GetString(FlagExternalID)
 
 	return req, errors.Join(errs...)
 }
