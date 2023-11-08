@@ -1231,3 +1231,51 @@ func MakeQueryGetAllOrders(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryG
 
 	return req, err
 }
+
+// AddFlagsQueryGetMarket adds all the flags needed for MakeQueryGetMarket.
+func AddFlagsQueryGetMarket(cmd *cobra.Command) {
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
+
+	AddUseArgs(cmd,
+		fmt.Sprintf("{<market id>|--%s <market id>}", FlagMarket),
+	)
+	AddUseDetails(cmd, "A <market id> is required as either an arg or flag, but not both.")
+	AddQueryExample(cmd, "3")
+	AddQueryExample(cmd, "--"+FlagMarket, "1")
+
+	cmd.Args = cobra.MaximumNArgs(1)
+}
+
+// MakeQueryGetMarket reads all the AddFlagsQueryGetMarket flags and creates the desired request.
+func MakeQueryGetMarket(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetMarketRequest, error) {
+	req := &exchange.QueryGetMarketRequest{
+		MarketId: 0,
+	}
+
+	var err error
+	req.MarketId, err = ReadMarketIDFlagOrArg(flagSet, args)
+
+	return req, err
+}
+
+// AddFlagsQueryGetAllMarkets adds all the flags needed for MakeQueryGetAllMarkets.
+func AddFlagsQueryGetAllMarkets(cmd *cobra.Command) {
+	flags.AddPaginationFlagsToCmd(cmd, "markets")
+
+	AddUseArgs(cmd, "[pagination flags]")
+	AddUseDetails(cmd)
+	AddQueryExample(cmd, "--"+flags.FlagLimit, "10")
+	AddQueryExample(cmd, "--"+flags.FlagReverse)
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeQueryGetAllMarkets reads all the AddFlagsQueryGetAllMarkets flags and creates the desired request.
+func MakeQueryGetAllMarkets(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetAllMarketsRequest, error) {
+	req := &exchange.QueryGetAllMarketsRequest{}
+
+	var err error
+	req.Pagination, err = client.ReadPageRequestWithPageKeyDecoded(flagSet)
+
+	return req, err
+}

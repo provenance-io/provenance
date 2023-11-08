@@ -141,42 +141,31 @@ func CmdQueryGetAllOrders() *cobra.Command {
 	return cmd
 }
 
-// CmdQueryGetMarket TODO
+// CmdQueryGetMarket creates the market sub-command for the exchange query command.
 func CmdQueryGetMarket() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, queryCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdQueryGetMarket
-			return nil
-		},
+		Use:     "market",
+		Aliases: []string{"get-market"},
+		Short:   "Get market setup and information",
+		RunE:    genericQueryRunE(MakeQueryGetMarket, exchange.QueryClient.GetMarket),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	AddFlagsQueryGetMarket(cmd)
 	return cmd
 }
 
-// CmdQueryGetAllMarkets TODO
+// CmdQueryGetAllMarkets creates the all-markets sub-command for the exchange query command.
 func CmdQueryGetAllMarkets() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, queryCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdQueryGetAllMarkets
-			return nil
-		},
+		Use:     "all-markets",
+		Aliases: []string{"get-all-markets"},
+		Short:   "Get all markets",
+		RunE:    genericQueryRunE(MakeQueryGetAllMarkets, exchange.QueryClient.GetAllMarkets),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "markets")
+	AddFlagsQueryGetAllMarkets(cmd)
 	return cmd
 }
 
