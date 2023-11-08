@@ -250,6 +250,7 @@ func CmdTxGovManageFees() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
 	AddFlagsMsgGovManageFees(cmd)
 	return cmd
 }
@@ -264,6 +265,7 @@ func CmdTxGovUpdateParams() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
 	AddFlagsMsgGovUpdateParams(cmd)
 	return cmd
 }
