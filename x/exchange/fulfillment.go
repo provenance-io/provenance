@@ -881,3 +881,44 @@ func getPriceTransfer(f *orderFulfillment) (*Transfer, error) {
 	// This is here in case a new SubTypeI is made that isn't accounted for in here.
 	panic(fmt.Errorf("%s order %d: unknown order type", f.GetOrderType(), f.GetOrderID()))
 }
+
+// NetAssetValue is a total of assets and the price they sold for.
+type NetAssetValue struct {
+	// Assets is the funds being bought/sold
+	Assets sdk.Coin
+	// Price is the price paid for those assets.
+	Price sdk.Coin
+}
+
+// GetNAVs looks at all of what is being filled in the settlement and gets the net-asset-values involved.
+func GetNAVs(settlement *Settlement) []*NetAssetValue {
+	orders := make([]OrderI, 0, len(settlement.FullyFilledOrders))
+	for _, order := range settlement.FullyFilledOrders {
+		if order.IsBidOrder() {
+			orders = append(orders, order)
+		}
+	}
+	if settlement.PartialOrderFilled != nil && settlement.PartialOrderFilled.IsBidOrder() {
+		orders = append(orders, settlement.PartialOrderFilled)
+	}
+
+	var rv []*NetAssetValue
+	for _, order := range orders {
+		assets := order.GetAssets()
+		price := order.GetPrice()
+		found := false
+		for _, nav := range rv {
+			if nav.Assets.Denom == assets.Denom && nav.Price.Denom == price.Denom {
+				found = true
+				nav.Assets.Amount = nav.Assets.Amount.Add(assets.Amount)
+				nav.Price.Amount = nav.Price.Amount.Add(price.Amount)
+				break
+			}
+		}
+		if !found {
+			rv = append(rv, &NetAssetValue{Assets: assets, Price: price})
+		}
+	}
+
+	return rv
+}

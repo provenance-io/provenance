@@ -10,6 +10,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // sumAssetsAndPrice gets the sum of assets, and the sum of prices of the provided orders.
@@ -299,7 +300,7 @@ func (k Keeper) closeSettlement(ctx sdk.Context, store sdk.KVStore, marketID uin
 		deleteAndDeIndexOrder(store, *order.GetOriginalOrder())
 	}
 
-	// And emit all the needed events.
+	// Emit all the needed events.
 	events := make([]proto.Message, 0, len(settlement.FullyFilledOrders)+1)
 	for _, order := range settlement.FullyFilledOrders {
 		events = append(events, exchange.NewEventOrderFilled(order))
@@ -309,5 +310,79 @@ func (k Keeper) closeSettlement(ctx sdk.Context, store sdk.KVStore, marketID uin
 	}
 	k.emitEvents(ctx, events)
 
+	// Record the NAVs
+	navs := exchange.GetNAVs(settlement)
+	k.recordNAVs(ctx, marketID, navs)
+
 	return nil
+}
+
+// recordNAVs attempts to record the provided NAVs in the marker module.
+// If a problem is encountered for one (or more), the error is logged and the rest are still processed.
+// Events should still be emitted even for the ones that have a problem.
+func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []*exchange.NetAssetValue) {
+	source := fmt.Sprintf("x/exchange market %d", marketID)
+
+	// convert them to what the marker module needs.
+	markerNAVs := make(map[string][]markertypes.NetAssetValue)
+	var denomOrder []string
+	for _, nav := range navs {
+		if !nav.Assets.Amount.IsUint64() {
+			k.logErrorf(ctx, "could not record net-asset-value of %q at a price of %q: asset volume greater than max uint64",
+				nav.Assets, nav.Price)
+			k.emitEvent(ctx, &markertypes.EventSetNetAssetValue{
+				Denom:  nav.Assets.Denom,
+				Price:  nav.Price.String(),
+				Volume: nav.Assets.Amount.String(),
+				Source: source,
+			})
+			continue
+		}
+
+		if _, known := markerNAVs[nav.Assets.Denom]; !known {
+			denomOrder = append(denomOrder, nav.Assets.Denom)
+		}
+
+		markerNAV := markertypes.NetAssetValue{
+			Price:  nav.Price,
+			Volume: nav.Assets.Amount.Uint64(),
+		}
+		markerNAVs[nav.Assets.Denom] = append(markerNAVs[nav.Assets.Denom], markerNAV)
+	}
+
+	// Get the markers and record the NAVs.
+	for _, denom := range denomOrder {
+		markerAddr, err := markertypes.MarkerAddress(denom)
+		if err != nil {
+			k.logErrorf(ctx, "error creating marker address for asset denom %q: %v", denom, err)
+			k.emitNAVEvents(ctx, denom, markerNAVs[denom], source)
+			continue
+		}
+		marker, err := k.markerKeeper.GetMarker(ctx, markerAddr)
+		if err != nil {
+			k.logErrorf(ctx, "error getting asset marker %q: %v", denom, err)
+			k.emitNAVEvents(ctx, denom, markerNAVs[denom], source)
+			continue
+		}
+		if marker == nil {
+			k.logInfof(ctx, "no marker found for asset denom %q", denom)
+			k.emitNAVEvents(ctx, denom, markerNAVs[denom], source)
+			continue
+		}
+
+		err = k.markerKeeper.AddSetNetAssetValues(ctx, marker, markerNAVs[denom], source)
+		if err != nil {
+			k.logErrorf(ctx, "error setting net-asset-values for marker %q: %v", denom, err)
+		}
+	}
+}
+
+// emitNAVEvents emits the marker module's EventSetNetAssetValue events for the given navs.
+// The AddSetNetAssetValues func does this too, so this should only be used when that isn't being called.
+func (k Keeper) emitNAVEvents(ctx sdk.Context, denom string, navs []markertypes.NetAssetValue, source string) {
+	events := make([]proto.Message, len(navs))
+	for i, nav := range navs {
+		events[i] = markertypes.NewEventSetNetAssetValue(denom, nav.Price, nav.Volume, source)
+	}
+	k.emitEvents(ctx, events)
 }
