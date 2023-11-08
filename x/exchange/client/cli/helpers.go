@@ -135,8 +135,8 @@ func ReadOrderIdsFlag(flagSet *pflag.FlagSet, name string) ([]uint64, error) {
 	return rv, nil
 }
 
-// ReadAddrOrDefault gets the requested flag or, if it wasn't provided, gets the --from address.
-func ReadAddrOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet, name string) (string, error) {
+// ReadAddrFlagOrFrom gets the requested flag or, if it wasn't provided, gets the --from address.
+func ReadAddrFlagOrFrom(clientCtx client.Context, flagSet *pflag.FlagSet, name string) (string, error) {
 	rv, err := flagSet.GetString(name)
 	if len(rv) > 0 || err != nil {
 		return rv, err
@@ -150,40 +150,13 @@ func ReadAddrOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet, name st
 	return "", fmt.Errorf("no %s provided", name)
 }
 
-// ReadAccessGrants reads a StringSlice flag and converts it to a slice of AccessGrants.
-func ReadAccessGrants(flagSet *pflag.FlagSet, name string) ([]exchange.AccessGrant, error) {
+// ReadAccessGrantsFlag reads a StringSlice flag and converts it to a slice of AccessGrants.
+func ReadAccessGrantsFlag(flagSet *pflag.FlagSet, name string) ([]exchange.AccessGrant, error) {
 	vals, err := flagSet.GetStringSlice(name)
 	if len(vals) == 0 || err != nil {
 		return nil, err
 	}
 	return ParseAccessGrants(vals)
-}
-
-// ReadFlatFee reads a StringSlice flag and converts it into a slice of sdk.Coin.
-func ReadFlatFee(flagSet *pflag.FlagSet, name string) ([]sdk.Coin, error) {
-	vals, err := flagSet.GetStringSlice(name)
-	if len(vals) == 0 || err != nil {
-		return nil, err
-	}
-	return ParseFlatFeeOptions(vals)
-}
-
-// ReadFeeRatios reads a StringSlice flag and converts it into a slice of exchange.FeeRatio.
-func ReadFeeRatios(flagSet *pflag.FlagSet, name string) ([]exchange.FeeRatio, error) {
-	vals, err := flagSet.GetStringSlice(name)
-	if len(vals) == 0 || err != nil {
-		return nil, err
-	}
-	return ParseFeeRatios(vals)
-}
-
-// ReadFlagSplits reads a StringSlice flag and converts it into a slice of exchange.DenomSplit.
-func ReadFlagSplits(flagSet *pflag.FlagSet, name string) ([]exchange.DenomSplit, error) {
-	vals, err := flagSet.GetStringSlice(FlagSplit)
-	if len(vals) == 0 || err != nil {
-		return nil, err
-	}
-	return ParseSplits(vals)
 }
 
 // permSepRx is a regexp that matches characters that can be used to separate permissions.
@@ -235,6 +208,15 @@ func ParseAccessGrants(vals []string) ([]exchange.AccessGrant, error) {
 	return grants, errors.Join(errs...)
 }
 
+// ReadFlatFeeFlag reads a StringSlice flag and converts it into a slice of sdk.Coin.
+func ReadFlatFeeFlag(flagSet *pflag.FlagSet, name string) ([]sdk.Coin, error) {
+	vals, err := flagSet.GetStringSlice(name)
+	if len(vals) == 0 || err != nil {
+		return nil, err
+	}
+	return ParseFlatFeeOptions(vals)
+}
+
 // ParseFlatFeeOptions parses an sdk.Coin from each of the provided vals.
 func ParseFlatFeeOptions(vals []string) ([]sdk.Coin, error) {
 	var errs []error
@@ -248,6 +230,15 @@ func ParseFlatFeeOptions(vals []string) ([]sdk.Coin, error) {
 		}
 	}
 	return rv, errors.Join(errs...)
+}
+
+// ReadFeeRatiosFlag reads a StringSlice flag and converts it into a slice of exchange.FeeRatio.
+func ReadFeeRatiosFlag(flagSet *pflag.FlagSet, name string) ([]exchange.FeeRatio, error) {
+	vals, err := flagSet.GetStringSlice(name)
+	if len(vals) == 0 || err != nil {
+		return nil, err
+	}
+	return ParseFeeRatios(vals)
 }
 
 // ParseFeeRatios parses a FeeRatio from each of the provided vals.
@@ -266,7 +257,16 @@ func ParseFeeRatios(vals []string) ([]exchange.FeeRatio, error) {
 	return ratios, errors.Join(errs...)
 }
 
-// ParseSplit parses a DenomSplit from a string with teh format "<denom>:<amount>".
+// ReadFlagSplitsFlag reads a StringSlice flag and converts it into a slice of exchange.DenomSplit.
+func ReadFlagSplitsFlag(flagSet *pflag.FlagSet, name string) ([]exchange.DenomSplit, error) {
+	vals, err := flagSet.GetStringSlice(FlagSplit)
+	if len(vals) == 0 || err != nil {
+		return nil, err
+	}
+	return ParseSplits(vals)
+}
+
+// ParseSplit parses a DenomSplit from a string with the format "<denom>:<amount>".
 func ParseSplit(val string) (*exchange.DenomSplit, error) {
 	parts := strings.Split(val, ":")
 	if len(parts) != 2 {

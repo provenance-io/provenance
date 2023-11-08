@@ -1,19 +1,14 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/version"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
-
-var txCmdStart = fmt.Sprintf("%s tx %s", version.AppName, exchange.ModuleName)
 
 // CmdTx creates the tx command (and sub-commands) for the exchange module.
 func CmdTx() *cobra.Command {

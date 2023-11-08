@@ -105,8 +105,8 @@ func ReadFlagsAdminOrFrom(clientCtx client.Context, flagSet *pflag.FlagSet) (str
 	return "", fmt.Errorf("no %s provided", FlagAdmin)
 }
 
-// ReadFlagAuthorityOrDefault reads the --authority flag, or if not provided, returns the standard authority address.
-func ReadFlagAuthorityOrDefault(flagSet *pflag.FlagSet) (string, error) {
+// ReadFlagAuthority reads the --authority flag, or if not provided, returns the standard authority address.
+func ReadFlagAuthority(flagSet *pflag.FlagSet) (string, error) {
 	rv, err := flagSet.GetString(FlagAuthority)
 	if len(rv) > 0 || err != nil {
 		return rv, err
@@ -188,7 +188,7 @@ func MakeMsgCreateAsk(clientCtx client.Context, flagSet *pflag.FlagSet, _ []stri
 	msg := &exchange.MsgCreateAskRequest{}
 
 	errs := make([]error, 8)
-	msg.AskOrder.Seller, errs[0] = ReadAddrOrDefault(clientCtx, flagSet, FlagSeller)
+	msg.AskOrder.Seller, errs[0] = ReadAddrFlagOrFrom(clientCtx, flagSet, FlagSeller)
 	msg.AskOrder.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
 	msg.AskOrder.Assets, errs[2] = ReadReqCoinFlag(flagSet, FlagAssets)
 	msg.AskOrder.Price, errs[3] = ReadReqCoinFlag(flagSet, FlagPrice)
@@ -233,7 +233,7 @@ func MakeMsgCreateBid(clientCtx client.Context, flagSet *pflag.FlagSet, _ []stri
 	msg := &exchange.MsgCreateBidRequest{}
 
 	errs := make([]error, 8)
-	msg.BidOrder.Buyer, errs[0] = ReadAddrOrDefault(clientCtx, flagSet, FlagBuyer)
+	msg.BidOrder.Buyer, errs[0] = ReadAddrFlagOrFrom(clientCtx, flagSet, FlagBuyer)
 	msg.BidOrder.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
 	msg.BidOrder.Assets, errs[2] = ReadReqCoinFlag(flagSet, FlagAssets)
 	msg.BidOrder.Price, errs[3] = ReadReqCoinFlag(flagSet, FlagPrice)
@@ -267,7 +267,7 @@ func MakeMsgCancelOrder(clientCtx client.Context, flagSet *pflag.FlagSet, args [
 	msg := &exchange.MsgCancelOrderRequest{}
 
 	errs := make([]error, 2)
-	msg.Signer, errs[0] = ReadAddrOrDefault(clientCtx, flagSet, FlagSigner)
+	msg.Signer, errs[0] = ReadAddrFlagOrFrom(clientCtx, flagSet, FlagSigner)
 	msg.OrderId, errs[1] = flagSet.GetUint64(FlagOrder)
 	err := errors.Join(errs...)
 	if err != nil {
@@ -325,7 +325,7 @@ func MakeMsgFillBids(clientCtx client.Context, flagSet *pflag.FlagSet, _ []strin
 	msg := &exchange.MsgFillBidsRequest{}
 
 	errs := make([]error, 6)
-	msg.Seller, errs[0] = ReadAddrOrDefault(clientCtx, flagSet, FlagSeller)
+	msg.Seller, errs[0] = ReadAddrFlagOrFrom(clientCtx, flagSet, FlagSeller)
 	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
 	msg.TotalAssets, errs[2] = ReadCoinsFlag(flagSet, FlagAssets)
 	msg.BidOrderIds, errs[3] = ReadOrderIdsFlag(flagSet, FlagBids)
@@ -364,7 +364,7 @@ func MakeMsgFillAsks(clientCtx client.Context, flagSet *pflag.FlagSet, _ []strin
 	msg := &exchange.MsgFillAsksRequest{}
 
 	errs := make([]error, 6)
-	msg.Buyer, errs[0] = ReadAddrOrDefault(clientCtx, flagSet, FlagBuyer)
+	msg.Buyer, errs[0] = ReadAddrFlagOrFrom(clientCtx, flagSet, FlagBuyer)
 	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
 	msg.TotalPrice, errs[2] = ReadReqCoinFlag(flagSet, FlagPrice)
 	msg.AskOrderIds, errs[3] = ReadOrderIdsFlag(flagSet, FlagAsks)
@@ -613,8 +613,8 @@ func MakeMsgMarketManagePermissions(clientCtx client.Context, flagSet *pflag.Fla
 	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
 	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
 	msg.RevokeAll, errs[2] = flagSet.GetStringSlice(FlagRevokeAll)
-	msg.ToRevoke, errs[3] = ReadAccessGrants(flagSet, FlagRevoke)
-	msg.ToGrant, errs[4] = ReadAccessGrants(flagSet, FlagGrant)
+	msg.ToRevoke, errs[3] = ReadAccessGrantsFlag(flagSet, FlagRevoke)
+	msg.ToGrant, errs[4] = ReadAccessGrantsFlag(flagSet, FlagGrant)
 
 	return msg, errors.Join(errs...)
 }
@@ -717,18 +717,18 @@ func MakeMsgGovCreateMarket(_ client.Context, flagSet *pflag.FlagSet, _ []string
 	msg := &exchange.MsgGovCreateMarketRequest{}
 
 	errs := make([]error, 14)
-	msg.Authority, errs[0] = ReadFlagAuthorityOrDefault(flagSet)
+	msg.Authority, errs[0] = ReadFlagAuthority(flagSet)
 	msg.Market.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
 	msg.Market.MarketDetails, errs[2] = ReadFlagsMarketDetails(flagSet)
-	msg.Market.FeeCreateAskFlat, errs[3] = ReadFlatFee(flagSet, FlagCreateAsk)
-	msg.Market.FeeCreateBidFlat, errs[4] = ReadFlatFee(flagSet, FlagCreateBid)
-	msg.Market.FeeSellerSettlementFlat, errs[5] = ReadFlatFee(flagSet, FlagSellerFlat)
-	msg.Market.FeeSellerSettlementRatios, errs[6] = ReadFeeRatios(flagSet, FlagSellerRatios)
-	msg.Market.FeeBuyerSettlementFlat, errs[7] = ReadFlatFee(flagSet, FlagBuyerFlat)
-	msg.Market.FeeBuyerSettlementRatios, errs[8] = ReadFeeRatios(flagSet, FlagBuyerRatios)
+	msg.Market.FeeCreateAskFlat, errs[3] = ReadFlatFeeFlag(flagSet, FlagCreateAsk)
+	msg.Market.FeeCreateBidFlat, errs[4] = ReadFlatFeeFlag(flagSet, FlagCreateBid)
+	msg.Market.FeeSellerSettlementFlat, errs[5] = ReadFlatFeeFlag(flagSet, FlagSellerFlat)
+	msg.Market.FeeSellerSettlementRatios, errs[6] = ReadFeeRatiosFlag(flagSet, FlagSellerRatios)
+	msg.Market.FeeBuyerSettlementFlat, errs[7] = ReadFlatFeeFlag(flagSet, FlagBuyerFlat)
+	msg.Market.FeeBuyerSettlementRatios, errs[8] = ReadFeeRatiosFlag(flagSet, FlagBuyerRatios)
 	msg.Market.AcceptingOrders, errs[9] = flagSet.GetBool(FlagAcceptingOrders)
 	msg.Market.AllowUserSettlement, errs[10] = flagSet.GetBool(FlagAllowUserSettle)
-	msg.Market.AccessGrants, errs[11] = ReadAccessGrants(flagSet, FlagAccessGrants)
+	msg.Market.AccessGrants, errs[11] = ReadAccessGrantsFlag(flagSet, FlagAccessGrants)
 	msg.Market.ReqAttrCreateAsk, errs[12] = flagSet.GetStringSlice(FlagReqAttrAsk)
 	msg.Market.ReqAttrCreateBid, errs[13] = flagSet.GetStringSlice(FlagReqAttrBid)
 
@@ -789,20 +789,20 @@ func MakeMsgGovManageFees(_ client.Context, flagSet *pflag.FlagSet, _ []string) 
 	msg := &exchange.MsgGovManageFeesRequest{}
 
 	errs := make([]error, 14)
-	msg.Authority, errs[0] = ReadFlagAuthorityOrDefault(flagSet)
+	msg.Authority, errs[0] = ReadFlagAuthority(flagSet)
 	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
-	msg.AddFeeCreateAskFlat, errs[2] = ReadFlatFee(flagSet, FlagAskAdd)
-	msg.RemoveFeeCreateAskFlat, errs[3] = ReadFlatFee(flagSet, FlagAskRemove)
-	msg.AddFeeCreateBidFlat, errs[4] = ReadFlatFee(flagSet, FlagBidAdd)
-	msg.RemoveFeeCreateBidFlat, errs[5] = ReadFlatFee(flagSet, FlagBidRemove)
-	msg.AddFeeSellerSettlementFlat, errs[6] = ReadFlatFee(flagSet, FlagSellerFlatAdd)
-	msg.RemoveFeeSellerSettlementFlat, errs[7] = ReadFlatFee(flagSet, FlagSellerFlatRemove)
-	msg.AddFeeSellerSettlementRatios, errs[8] = ReadFeeRatios(flagSet, FlagSellerRatiosAdd)
-	msg.RemoveFeeSellerSettlementRatios, errs[9] = ReadFeeRatios(flagSet, FlagSellerRatiosRemove)
-	msg.AddFeeBuyerSettlementFlat, errs[10] = ReadFlatFee(flagSet, FlagBuyerFlatAdd)
-	msg.RemoveFeeBuyerSettlementFlat, errs[11] = ReadFlatFee(flagSet, FlagBuyerFlatRemove)
-	msg.AddFeeBuyerSettlementRatios, errs[12] = ReadFeeRatios(flagSet, FlagBuyerRatiosAdd)
-	msg.RemoveFeeBuyerSettlementRatios, errs[13] = ReadFeeRatios(flagSet, FlagBuyerRatiosRemove)
+	msg.AddFeeCreateAskFlat, errs[2] = ReadFlatFeeFlag(flagSet, FlagAskAdd)
+	msg.RemoveFeeCreateAskFlat, errs[3] = ReadFlatFeeFlag(flagSet, FlagAskRemove)
+	msg.AddFeeCreateBidFlat, errs[4] = ReadFlatFeeFlag(flagSet, FlagBidAdd)
+	msg.RemoveFeeCreateBidFlat, errs[5] = ReadFlatFeeFlag(flagSet, FlagBidRemove)
+	msg.AddFeeSellerSettlementFlat, errs[6] = ReadFlatFeeFlag(flagSet, FlagSellerFlatAdd)
+	msg.RemoveFeeSellerSettlementFlat, errs[7] = ReadFlatFeeFlag(flagSet, FlagSellerFlatRemove)
+	msg.AddFeeSellerSettlementRatios, errs[8] = ReadFeeRatiosFlag(flagSet, FlagSellerRatiosAdd)
+	msg.RemoveFeeSellerSettlementRatios, errs[9] = ReadFeeRatiosFlag(flagSet, FlagSellerRatiosRemove)
+	msg.AddFeeBuyerSettlementFlat, errs[10] = ReadFlatFeeFlag(flagSet, FlagBuyerFlatAdd)
+	msg.RemoveFeeBuyerSettlementFlat, errs[11] = ReadFlatFeeFlag(flagSet, FlagBuyerFlatRemove)
+	msg.AddFeeBuyerSettlementRatios, errs[12] = ReadFeeRatiosFlag(flagSet, FlagBuyerRatiosAdd)
+	msg.RemoveFeeBuyerSettlementRatios, errs[13] = ReadFeeRatiosFlag(flagSet, FlagBuyerRatiosRemove)
 
 	return msg, errors.Join(errs...)
 }
@@ -835,9 +835,9 @@ func MakeMsgGovUpdateParams(_ client.Context, flagSet *pflag.FlagSet, _ []string
 	msg := &exchange.MsgGovUpdateParamsRequest{}
 
 	errs := make([]error, 3)
-	msg.Authority, errs[0] = ReadFlagAuthorityOrDefault(flagSet)
+	msg.Authority, errs[0] = ReadFlagAuthority(flagSet)
 	msg.Params.DefaultSplit, errs[1] = flagSet.GetUint32(FlagDefault)
-	msg.Params.DenomSplits, errs[2] = ReadFlagSplits(flagSet, FlagSplit)
+	msg.Params.DenomSplits, errs[2] = ReadFlagSplitsFlag(flagSet, FlagSplit)
 
 	return msg, errors.Join(errs...)
 }
