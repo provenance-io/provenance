@@ -45,6 +45,7 @@ const (
 	FlagCreationFee        = "creation-fee"
 	FlagDescription        = "description"
 	FlagDefault            = "default"
+	FlagDenom              = "denom"
 	FlagDisable            = "disable"
 	FlagEnable             = "enable"
 	FlagExternalID         = "external-id"
@@ -53,6 +54,7 @@ const (
 	FlagMarket             = "market"
 	FlagName               = "name"
 	FlagOrder              = "order"
+	FlagOwner              = "owner"
 	FlagPartial            = "partial"
 	FlagPrice              = "price"
 	FlagReqAttrAsk         = "req-attr-ask"
@@ -140,21 +142,42 @@ func ReadFlagsEnableDisable(flagSet *pflag.FlagSet) (bool, error) {
 	return false, fmt.Errorf("exactly one of --%s or --%s must be provided", FlagEnable, FlagDisable)
 }
 
-// ReadOrderID gets a required order id from either the --order flag or the provided arg.
-func ReadOrderID(flagSet *pflag.FlagSet, arg string) (uint64, error) {
+// ReadFlagsAsksBidsOpt reads the --asks and --bids flags, returning either "ask", "bid" or "".
+func ReadFlagsAsksBidsOpt(flagSet *pflag.FlagSet) (string, error) {
+	isAsk, err := flagSet.GetBool(FlagAsks)
+	if err != nil {
+		return "", err
+	}
+	if isAsk {
+		return "ask", nil
+	}
+
+	isBid, err := flagSet.GetBool(FlagBids)
+	if err != nil {
+		return "", err
+	}
+	if isBid {
+		return "bid", nil
+	}
+
+	return "", nil
+}
+
+// ReadOrderIDFlagOrArg gets a required order id from either the --order flag or the first provided arg.
+func ReadOrderIDFlagOrArg(flagSet *pflag.FlagSet, args []string) (uint64, error) {
 	orderID, err := flagSet.GetUint64(FlagOrder)
 	if err != nil {
 		return 0, err
 	}
 
-	if len(arg) > 0 {
+	if len(args) > 0 && len(args[0]) > 0 {
 		if orderID != 0 {
-			return 0, fmt.Errorf("cannot provide an <order id> as both an arg (%s) and flag (--%s %d)", arg, FlagOrder, orderID)
+			return 0, fmt.Errorf("cannot provide <order id> as both an arg (%s) and flag (--%s %d)", args[0], FlagOrder, orderID)
 		}
 
-		orderID, err = strconv.ParseUint(arg, 10, 64)
+		orderID, err = strconv.ParseUint(args[0], 10, 64)
 		if err != nil {
-			return 0, fmt.Errorf("could not convert <order id> arg %q to uint64: %w", arg, err)
+			return 0, fmt.Errorf("could not convert <order id> arg %q to uint64: %w", args[0], err)
 		}
 		if orderID == 0 {
 			return 0, errors.New("the <order id> cannot be zero")
@@ -166,6 +189,58 @@ func ReadOrderID(flagSet *pflag.FlagSet, arg string) (uint64, error) {
 	}
 
 	return orderID, nil
+}
+
+// ReadMarketIDFlagOrArg gets a required market id from either the --market flag or the first provided arg.
+func ReadMarketIDFlagOrArg(flagSet *pflag.FlagSet, args []string) (uint32, error) {
+	marketID, err := flagSet.GetUint32(FlagMarket)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(args) > 0 && len(args[0]) > 0 {
+		if marketID != 0 {
+			return 0, fmt.Errorf("cannot provide <market id> as both an arg (%s) and flag (--%s %d)", args[0], FlagMarket, marketID)
+		}
+
+		var marketID64 uint64
+		marketID64, err = strconv.ParseUint(args[0], 10, 32)
+		if err != nil {
+			return 0, fmt.Errorf("could not convert <market id> arg %q to uint32: %w", args[0], err)
+		}
+		if marketID64 == 0 {
+			return 0, errors.New("the <market id> cannot be zero")
+		}
+		marketID = uint32(marketID64)
+	}
+
+	if marketID == 0 {
+		return 0, errors.New("no <market id> provided")
+	}
+
+	return marketID, nil
+}
+
+// ReadStringFlagOrArg gets a required string from either a flag or the first provided arg.
+func ReadStringFlagOrArg(flagSet *pflag.FlagSet, args []string, flagName, varName string) (string, error) {
+	rv, err := flagSet.GetString(flagName)
+	if err != nil {
+		return "", err
+	}
+
+	if len(args) > 0 && len(args[0]) > 0 {
+		if len(rv) > 0 {
+			return "", fmt.Errorf("cannot provide <%s> as both an arg (%s) and flag (--%s %s)", varName, args[0], flagName, rv)
+		}
+
+		return args[0], nil
+	}
+
+	if len(rv) == 0 {
+		return "", fmt.Errorf("no <%s> provided", varName)
+	}
+
+	return rv, nil
 }
 
 var (
@@ -296,16 +371,11 @@ func AddFlagsMsgCancelOrder(cmd *cobra.Command) {
 
 // MakeMsgCancelOrder reads all the AddFlagsMsgCancelOrder flags and the provided args and creates the desired Msg.
 func MakeMsgCancelOrder(clientCtx client.Context, flagSet *pflag.FlagSet, args []string) (sdk.Msg, error) {
-	orderIDArg := ""
-	if len(args) > 0 {
-		orderIDArg = args[0]
-	}
-
 	msg := &exchange.MsgCancelOrderRequest{}
 
 	errs := make([]error, 2)
 	msg.Signer, errs[0] = ReadAddrFlagOrFrom(clientCtx, flagSet, FlagSigner)
-	msg.OrderId, errs[1] = ReadOrderID(flagSet, orderIDArg)
+	msg.OrderId, errs[1] = ReadOrderIDFlagOrArg(flagSet, args)
 
 	return msg, errors.Join(errs...)
 }
@@ -856,21 +926,15 @@ func MakeMsgGovUpdateParams(_ client.Context, flagSet *pflag.FlagSet, _ []string
 	return msg, errors.Join(errs...)
 }
 
-var (
-	_ queryReqMaker[exchange.QueryOrderFeeCalcRequest]         = MakeQueryOrderFeeCalc
-	_ queryReqMaker[exchange.QueryGetOrderRequest]             = MakeQueryGetOrder
-	_ queryReqMaker[exchange.QueryGetOrderByExternalIDRequest] = MakeQueryGetOrderByExternalID
-)
-
 // AddFlagsQueryOrderFeeCalc adds all the flags needed for MakeQueryOrderFeeCalc.
 func AddFlagsQueryOrderFeeCalc(cmd *cobra.Command) {
 	cmd.Flags().Bool(FlagAsk, false, "Run calculation on an ask order")
 	cmd.Flags().Bool(FlagBid, false, "Run calculation on a bid order")
-	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().String(FlagSeller, "", "The seller (for an ask order)")
 	cmd.Flags().String(FlagBuyer, "", "The buyer (for a bid order)")
 	cmd.Flags().String(FlagAssets, "", "The order assets")
-	cmd.Flags().String(FlagPrice, "", "The order price")
+	cmd.Flags().String(FlagPrice, "", "The order price (required)")
 	cmd.Flags().String(FlagSettlementFee, "", "The settlement fees")
 	cmd.Flags().String(FlagPartial, "", "Allow the order to be partially filled")
 	cmd.Flags().String(FlagExternalID, "", "The external id")
@@ -883,15 +947,19 @@ func AddFlagsQueryOrderFeeCalc(cmd *cobra.Command) {
 	MarkFlagsRequired(cmd, FlagMarket, FlagPrice)
 
 	AddUseArgs(cmd,
-		fmt.Sprintf("{--%s|--%s}", FlagAsk, FlagBid),
+		ReqAskBidUse,
 		ReqFlagUse(FlagMarket, "market id"),
 		ReqFlagUse(FlagPrice, "price"),
 	)
+	AddUseDetails(cmd, ReqAskBidDesc)
 	AddQueryExample(cmd, "--"+FlagAsk, "--"+FlagMarket, "3", "--"+FlagPrice, "10nhash")
 	AddQueryExample(cmd, "--"+FlagBid, "--"+FlagMarket, "3", "--"+FlagPrice, "10nhash")
+
+	cmd.Args = cobra.NoArgs
 }
 
-// MakeQueryOrderFeeCalc reads all the AddFlagsQueryOrderFeeCalc flags and creates the desired Msg.
+// MakeQueryOrderFeeCalc reads all the AddFlagsQueryOrderFeeCalc flags and creates the desired request.
+// Satisfies the queryReqMaker type.
 func MakeQueryOrderFeeCalc(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryOrderFeeCalcRequest, error) {
 	bidOrder := &exchange.BidOrder{}
 
@@ -947,29 +1015,28 @@ func AddFlagsQueryGetOrder(cmd *cobra.Command) {
 	AddUseArgs(cmd,
 		fmt.Sprintf("{<order id>|--%s <order id>}", FlagOrder),
 	)
+	AddUseDetails(cmd, "An <order id> is required as either an arg or flag, but not both.")
 	AddQueryExample(cmd, "8")
 	AddQueryExample(cmd, "--"+FlagOrder, "8")
+
+	cmd.Args = cobra.MaximumNArgs(1)
 }
 
-// MakeQueryGetOrder reads all the AddFlagsQueryGetOrder flags and creates the desired Msg.
+// MakeQueryGetOrder reads all the AddFlagsQueryGetOrder flags and creates the desired request.
+// Satisfies the queryReqMaker type.
 func MakeQueryGetOrder(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetOrderRequest, error) {
-	orderIDArg := ""
-	if len(args) > 0 {
-		orderIDArg = args[0]
-	}
-
 	req := &exchange.QueryGetOrderRequest{}
 
 	var err error
-	req.OrderId, err = ReadOrderID(flagSet, orderIDArg)
+	req.OrderId, err = ReadOrderIDFlagOrArg(flagSet, args)
 
 	return req, err
 }
 
 // AddFlagsQueryGetOrderByExternalID adds all the flags needed for MakeQueryGetOrderByExternalID.
 func AddFlagsQueryGetOrderByExternalID(cmd *cobra.Command) {
-	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
-	cmd.Flags().String(FlagExternalID, "", "The external id")
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
+	cmd.Flags().String(FlagExternalID, "", "The external id (required)")
 
 	MarkFlagsRequired(cmd, FlagMarket, FlagExternalID)
 
@@ -977,16 +1044,139 @@ func AddFlagsQueryGetOrderByExternalID(cmd *cobra.Command) {
 		ReqFlagUse(FlagMarket, "market id"),
 		ReqFlagUse(FlagExternalID, "external id"),
 	)
+	AddUseDetails(cmd)
 	AddQueryExample(cmd, "--"+FlagMarket, "3", "--"+FlagExternalID, "12BD2C9C-9641-4370-A503-802CD7079CAA")
+
+	cmd.Args = cobra.NoArgs
 }
 
-// MakeQueryGetOrderByExternalID reads all the AddFlagsQueryGetOrderByExternalID flags and creates the desired Msg.
+// MakeQueryGetOrderByExternalID reads all the AddFlagsQueryGetOrderByExternalID flags and creates the desired request.
+// Satisfies the queryReqMaker type.
 func MakeQueryGetOrderByExternalID(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetOrderByExternalIDRequest, error) {
 	req := &exchange.QueryGetOrderByExternalIDRequest{}
 
 	errs := make([]error, 2)
 	req.MarketId, errs[0] = flagSet.GetUint32(FlagMarket)
 	req.ExternalId, errs[1] = flagSet.GetString(FlagExternalID)
+
+	return req, errors.Join(errs...)
+}
+
+// AddFlagsQueryGetMarketOrders adds all the flags needed for MakeQueryGetMarketOrders.
+func AddFlagsQueryGetMarketOrders(cmd *cobra.Command) {
+	flags.AddPaginationFlagsToCmd(cmd, "orders")
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
+	cmd.Flags().Bool(FlagAsks, false, "Limit results to only ask orders")
+	cmd.Flags().Bool(FlagBids, false, "Limit results to only bid orders")
+	cmd.Flags().Uint64(FlagOrder, 0, "Limit results to only orders with ids larger than this")
+
+	cmd.MarkFlagsMutuallyExclusive(FlagAsks, FlagBids)
+
+	AddUseArgs(cmd,
+		fmt.Sprintf("{<market id>|--%s <market id>}", FlagMarket),
+		OptAsksBidsUse,
+		OptFlagUse(FlagOrder, "after order id"),
+		"[pagination flags]",
+	)
+	AddUseDetails(cmd,
+		"A <market id> is required as either an arg or flag, but not both.",
+		OptAsksBidsDesc,
+	)
+	AddQueryExample(cmd, "3", "--"+FlagAsks)
+	AddQueryExample(cmd, "--"+FlagMarket, "1", "--"+FlagOrder, "15", "--"+flags.FlagLimit, "10")
+
+	cmd.Args = cobra.MaximumNArgs(1)
+}
+
+// MakeQueryGetMarketOrders reads all the AddFlagsQueryGetMarketOrders flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryGetMarketOrders(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetMarketOrdersRequest, error) {
+	req := &exchange.QueryGetMarketOrdersRequest{}
+
+	errs := make([]error, 4)
+	req.MarketId, errs[0] = ReadMarketIDFlagOrArg(flagSet, args)
+	req.OrderType, errs[1] = ReadFlagsAsksBidsOpt(flagSet)
+	req.AfterOrderId, errs[2] = flagSet.GetUint64(FlagOrder)
+	req.Pagination, errs[3] = client.ReadPageRequestWithPageKeyDecoded(flagSet)
+
+	return req, errors.Join(errs...)
+}
+
+// AddFlagsQueryGetOwnerOrders adds all the flags needed for MakeQueryGetOwnerOrders.
+func AddFlagsQueryGetOwnerOrders(cmd *cobra.Command) {
+	flags.AddPaginationFlagsToCmd(cmd, "orders")
+	cmd.Flags().String(FlagOwner, "", "The owner")
+	cmd.Flags().Bool(FlagAsks, false, "Limit results to only ask orders")
+	cmd.Flags().Bool(FlagBids, false, "Limit results to only bid orders")
+	cmd.Flags().Uint64(FlagOrder, 0, "Limit results to only orders with ids larger than this")
+
+	cmd.MarkFlagsMutuallyExclusive(FlagAsks, FlagBids)
+
+	AddUseArgs(cmd,
+		fmt.Sprintf("{<owner>|--%s <owner>}", FlagOwner),
+		OptAsksBidsUse,
+		OptFlagUse(FlagOrder, "after order id"),
+		"[pagination flags]",
+	)
+	AddUseDetails(cmd,
+		"An <owner> is required as either an arg or flag, but not both.",
+		OptAsksBidsDesc,
+	)
+	AddQueryExample(cmd, ExampleAddr, "--"+FlagBids)
+	AddQueryExample(cmd, "--"+FlagOwner, ExampleAddr, "--"+FlagAsks, "--"+FlagOrder, "15", "--"+flags.FlagLimit, "10")
+
+	cmd.Args = cobra.MaximumNArgs(1)
+}
+
+// MakeQueryGetOwnerOrders reads all the AddFlagsQueryGetOwnerOrders flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryGetOwnerOrders(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetOwnerOrdersRequest, error) {
+	req := &exchange.QueryGetOwnerOrdersRequest{}
+
+	errs := make([]error, 5)
+	req.Owner, errs[0] = ReadStringFlagOrArg(flagSet, args, FlagOwner, "owner")
+	req.OrderType, errs[1] = ReadFlagsAsksBidsOpt(flagSet)
+	req.AfterOrderId, errs[2] = flagSet.GetUint64(FlagOrder)
+	req.Pagination, errs[3] = client.ReadPageRequestWithPageKeyDecoded(flagSet)
+
+	return req, errors.Join(errs...)
+}
+
+// AddFlagsQueryGetAssetOrders adds all the flags needed for MakeQueryGetAssetOrders.
+func AddFlagsQueryGetAssetOrders(cmd *cobra.Command) {
+	flags.AddPaginationFlagsToCmd(cmd, "orders")
+	cmd.Flags().String(FlagDenom, "", "The asset denom")
+	cmd.Flags().Bool(FlagAsks, false, "Limit results to only ask orders")
+	cmd.Flags().Bool(FlagBids, false, "Limit results to only bid orders")
+	cmd.Flags().Uint64(FlagOrder, 0, "Limit results to only orders with ids larger than this")
+
+	cmd.MarkFlagsMutuallyExclusive(FlagAsks, FlagBids)
+
+	AddUseArgs(cmd,
+		fmt.Sprintf("{<asset>|--%s <asset>}", FlagDenom),
+		OptAsksBidsUse,
+		OptFlagUse(FlagOrder, "after order id"),
+		"[pagination flags]",
+	)
+	AddUseDetails(cmd,
+		"An <asset> is required as either an arg or flag, but not both.",
+		OptAsksBidsDesc,
+	)
+	AddQueryExample(cmd, "nhash", "--"+FlagAsks)
+	AddQueryExample(cmd, "--"+FlagDenom, "nhash", "--"+FlagOrder, "15", "--"+flags.FlagLimit, "10")
+
+	cmd.Args = cobra.MaximumNArgs(1)
+}
+
+// MakeQueryGetAssetOrders reads all the AddFlagsQueryGetAssetOrders flags and creates the desired request.
+func MakeQueryGetAssetOrders(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetAssetOrdersRequest, error) {
+	req := &exchange.QueryGetAssetOrdersRequest{}
+
+	errs := make([]error, 4)
+	req.Asset, errs[0] = ReadStringFlagOrArg(flagSet, args, FlagDenom, "asset")
+	req.OrderType, errs[1] = ReadFlagsAsksBidsOpt(flagSet)
+	req.AfterOrderId, errs[2] = flagSet.GetUint64(FlagOrder)
+	req.Pagination, errs[3] = client.ReadPageRequestWithPageKeyDecoded(flagSet)
 
 	return req, errors.Join(errs...)
 }

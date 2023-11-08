@@ -49,7 +49,6 @@ func CmdQueryOrderFeeCalc() *cobra.Command {
 		Use:     "order-fee-calc",
 		Aliases: []string{"fee-calc", "order-calc"},
 		Short:   "Calculate the fees for an order",
-		Args:    cobra.NoArgs,
 		RunE:    genericQueryRunE(MakeQueryOrderFeeCalc, exchange.QueryClient.OrderFeeCalc),
 	}
 
@@ -58,13 +57,12 @@ func CmdQueryOrderFeeCalc() *cobra.Command {
 	return cmd
 }
 
-// CmdQueryGetOrder creates the get-order sub-command for the exchange query command.
+// CmdQueryGetOrder creates the order sub-command for the exchange query command.
 func CmdQueryGetOrder() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "get-order",
-		Aliases: []string{"order"},
+		Use:     "order",
+		Aliases: []string{"get-order"},
 		Short:   "Get an order by id",
-		Args:    cobra.MaximumNArgs(1),
 		RunE:    genericQueryRunE(MakeQueryGetOrder, exchange.QueryClient.GetOrder),
 	}
 
@@ -73,13 +71,12 @@ func CmdQueryGetOrder() *cobra.Command {
 	return cmd
 }
 
-// CmdQueryGetOrderByExternalID creates the get-order-by-external-id sub-command for the exchange query command.
+// CmdQueryGetOrderByExternalID creates the order-by-external-id sub-command for the exchange query command.
 func CmdQueryGetOrderByExternalID() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "get-order-by-external-id",
-		Aliases: []string{"order-by-external-id", "by-external-id", "external-id"},
+		Use:     "order-by-external-id",
+		Aliases: []string{"get-order-by-external-id", "by-external-id", "external-id"},
 		Short:   "Get an order by market id and external id",
-		Args:    cobra.NoArgs,
 		RunE:    genericQueryRunE(MakeQueryGetOrderByExternalID, exchange.QueryClient.GetOrderByExternalID),
 	}
 
@@ -88,63 +85,45 @@ func CmdQueryGetOrderByExternalID() *cobra.Command {
 	return cmd
 }
 
-// CmdQueryGetMarketOrders TODO
+// CmdQueryGetMarketOrders creates the market-orders sub-command for the exchange query command.
 func CmdQueryGetMarketOrders() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, queryCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdQueryGetMarketOrders
-			return nil
-		},
+		Use:     "market-orders",
+		Aliases: []string{"get-market-orders"},
+		Short:   "Look up orders for a market",
+		RunE:    genericQueryRunE(MakeQueryGetMarketOrders, exchange.QueryClient.GetMarketOrders),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "orders")
+	AddFlagsQueryGetMarketOrders(cmd)
 	return cmd
 }
 
-// CmdQueryGetOwnerOrders TODO
+// CmdQueryGetOwnerOrders creates the owner-orders sub-command for the exchange query command.
 func CmdQueryGetOwnerOrders() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, queryCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdQueryGetOwnerOrders
-			return nil
-		},
+		Use:     "owner-orders",
+		Aliases: []string{"get-owner-orders"},
+		Short:   "Look up orders with a specific owner",
+		RunE:    genericQueryRunE(MakeQueryGetOwnerOrders, exchange.QueryClient.GetOwnerOrders),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "orders")
+	AddFlagsQueryGetOwnerOrders(cmd)
 	return cmd
 }
 
-// CmdQueryGetAssetOrders TODO
+// CmdQueryGetAssetOrders creates the asset-orders sub-command for the exchange query command.
 func CmdQueryGetAssetOrders() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, queryCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdQueryGetAssetOrders
-			return nil
-		},
+		Use:     "asset-orders",
+		Aliases: []string{"get-asset-orders", "denom-orders", "get-denom-orders"},
+		Short:   "Look up orders with a specific asset denom",
+		RunE:    genericQueryRunE(MakeQueryGetAssetOrders, exchange.QueryClient.GetAssetOrders),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "orders")
+	AddFlagsQueryGetAssetOrders(cmd)
 	return cmd
 }
 

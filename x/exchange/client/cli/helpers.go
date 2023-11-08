@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -350,7 +351,9 @@ func AddUseArgs(cmd *cobra.Command, args ...string) {
 
 // AddUseDetails appends each provided section to the Use field with an empty line between them.
 func AddUseDetails(cmd *cobra.Command, sections ...string) {
-	cmd.Use = cmd.Use + "\n\n" + strings.Join(sections, "\n\n")
+	if len(sections) > 0 {
+		cmd.Use = cmd.Use + "\n\n" + strings.Join(sections, "\n\n")
+	}
 	cmd.DisableFlagsInUseLine = true
 }
 
@@ -359,7 +362,7 @@ func AddQueryExample(cmd *cobra.Command, args ...string) {
 	if len(cmd.Example) > 0 {
 		cmd.Example += "\n"
 	}
-	cmd.Example += queryCmdStart + " " + cmd.Name() + " " + strings.Join(args, " ")
+	cmd.Example += fmt.Sprintf("%s query %s %s", version.AppName, exchange.ModuleName, cmd.Name()) + " " + strings.Join(args, " ")
 }
 
 // SimplePerms returns a string containing all the Permission.SimpleString() values.
@@ -442,5 +445,18 @@ Both <price coin> and <fee coin> have the format "<amount><denom>".
 
 Example <fee ratio>: 100nhash:1nhash`
 
+	// AuthorityDesc is a description of the authority flag.
 	AuthorityDesc = fmt.Sprintf("If --%s is not provided, the governance module account is used as the authority.", FlagAuthority)
+
+	// ReqAskBidUse is a use string of the --ask and --bid flags when one is required.
+	ReqAskBidUse = fmt.Sprintf("{--%s|--%s}", FlagAsk, FlagBid)
+
+	// ReqAskBidDesc is a description of the --ask and --bid flags when one is required.
+	ReqAskBidDesc = fmt.Sprintf("One of --%s or --%s must be provided, but not both.", FlagAsk, FlagBid)
+
+	// OptAsksBidsUse is a use string of the optional mutually exclusive --asks and --bids flags.
+	OptAsksBidsUse = fmt.Sprintf("[--%s|--%s]", FlagAsks, FlagBids)
+
+	// OptAsksBidsDesc is a description of the --asks and --bids flags when they're optional.
+	OptAsksBidsDesc = fmt.Sprintf("At most one of --%s or --%s can be provided.", FlagAsks, FlagBids)
 )
