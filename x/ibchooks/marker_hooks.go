@@ -104,7 +104,7 @@ func (h MarkerHooks) createNewIbcMarker(ctx sdktypes.Context, data transfertypes
 	if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
 		return err
 	}
-	return h.addDenomMetaData(ctx, packet, ibcKeeper, ibcDenom, data)
+	return h.addDenomMetaData(ctx, ibcKeeper, ibcDenom, data.Denom)
 }
 
 // getExistingSupply returns current supply coin, if coin does not exist amount will be 0
@@ -114,7 +114,7 @@ func (h MarkerHooks) getExistingSupply(ctx sdktypes.Context, marker *markertypes
 
 // addDenomMetaData adds denom metadata for ibc token
 func (h MarkerHooks) addDenomMetaData(ctx sdktypes.Context, packet exported.PacketI, ibcKeeper *ibckeeper.Keeper, ibcDenom string, data transfertypes.FungibleTokenPacketData) error {
-	chainID := h.GetChainID(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), ibcKeeper)
+	chainID := h.GetChainID(ctx, packet.GetDestPort(), packet.GetDestChannel(), ibcKeeper)
 	markerMetadata := banktypes.Metadata{
 		Base:        ibcDenom,
 		Name:        chainID + "/" + data.Denom,
