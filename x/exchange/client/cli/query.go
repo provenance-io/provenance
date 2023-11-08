@@ -127,23 +127,17 @@ func CmdQueryGetAssetOrders() *cobra.Command {
 	return cmd
 }
 
-// CmdQueryGetAllOrders TODO
+// CmdQueryGetAllOrders creates the all-orders sub-command for the exchange query command.
 func CmdQueryGetAllOrders() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, queryCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdQueryGetAllOrders
-			return nil
-		},
+		Use:     "all-orders",
+		Aliases: []string{"get-all-orders"},
+		Short:   "Get all orders",
+		RunE:    genericQueryRunE(MakeQueryGetAllOrders, exchange.QueryClient.GetAllOrders),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "orders")
+	AddFlagsQueryGetAllOrders(cmd)
 	return cmd
 }
 

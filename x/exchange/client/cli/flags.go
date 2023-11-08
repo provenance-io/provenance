@@ -1209,3 +1209,25 @@ func MakeQueryGetAssetOrders(flagSet *pflag.FlagSet, args []string) (*exchange.Q
 
 	return req, errors.Join(errs...)
 }
+
+// AddFlagsQueryGetAllOrders adds all the flags needed for MakeQueryGetAllOrders.
+func AddFlagsQueryGetAllOrders(cmd *cobra.Command) {
+	flags.AddPaginationFlagsToCmd(cmd, "orders")
+
+	AddUseArgs(cmd, "[pagination flags]")
+	AddUseDetails(cmd)
+	AddQueryExample(cmd, "--"+flags.FlagLimit, "10")
+	AddQueryExample(cmd, "--"+flags.FlagReverse)
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeQueryGetAllOrders reads all the AddFlagsQueryGetAllOrders flags and creates the desired request.
+func MakeQueryGetAllOrders(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetAllOrdersRequest, error) {
+	req := &exchange.QueryGetAllOrdersRequest{}
+
+	var err error
+	req.Pagination, err = client.ReadPageRequestWithPageKeyDecoded(flagSet)
+
+	return req, err
+}
