@@ -104,7 +104,7 @@ func (h MarkerHooks) createNewIbcMarker(ctx sdktypes.Context, data transfertypes
 	if err = h.MarkerKeeper.AddMarkerAccount(ctx, marker); err != nil {
 		return err
 	}
-	return h.addDenomMetaData(ctx, ibcKeeper, ibcDenom, data.Denom)
+	return h.addDenomMetaData(ctx, packet, ibcKeeper, ibcDenom, data)
 }
 
 // getExistingSupply returns current supply coin, if coin does not exist amount will be 0
@@ -125,9 +125,9 @@ func (h MarkerHooks) addDenomMetaData(ctx sdktypes.Context, packet exported.Pack
 }
 
 // GetChainID returns the source chain id from packet for a `07-tendermint` client connection or returns `unknown`
-func (h MarkerHooks) GetChainID(ctx sdktypes.Context, sourcePort, sourceChannel string, ibcKeeper *ibckeeper.Keeper) string {
+func (h MarkerHooks) GetChainID(ctx sdktypes.Context, ibcPort, ibcChannel string, ibcKeeper *ibckeeper.Keeper) string {
 	chainID := "unknown"
-	channel, found := ibcKeeper.ChannelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
+	channel, found := ibcKeeper.ChannelKeeper.GetChannel(ctx, ibcPort, ibcChannel)
 	if !found {
 		return chainID
 	}
