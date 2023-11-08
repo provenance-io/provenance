@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Add the (empty) `saffron-rc2` upgrade [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* Add the ibcratelimit module [#1498](https://github.com/provenance-io/provenance/issues/1498).
 
 ### Improvements
 
