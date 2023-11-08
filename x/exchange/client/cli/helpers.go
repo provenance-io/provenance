@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -20,13 +21,11 @@ import (
 )
 
 var (
+	// AuthorityAddr is the governance module's account address.
 	AuthorityAddr = authtypes.NewModuleAddress(govtypes.ModuleName)
 
-	ExampleAddr1 = "pb1g4uxzmtsd3j5zerywgc47h6lta047h6lwwxvlw" // = sdk.AccAddress("ExampleAddr1________")
-	ExampleAddr2 = "pb1tazhsctdwpkx2styv3eryh6lta047h6l63dw8r" // = sdk.AccAddress("_ExampleAddr2_______")
-	ExampleAddr3 = "pb195k527rpd4cxce2pv3j8yv6lta047h6l3kaj79" // = sdk.AccAddress("--ExampleAddr3______")
-	ExampleAddr4 = "pb10el8u3tcv9khqmr9g9jxgu35ta047h6l9hc7xs" // = sdk.AccAddress("~~~ExampleAddr4_____")
-	ExampleAddr5 = "pb1857n60290psk6urvv4qkgerjx4047h6l5vynnz" // = sdk.AccAddress("====ExampleAddr5____")
+	// ExampleAddr is an example bech32 address to use in command descriptions and stuff.
+	ExampleAddr = "pb1g4uxzmtsd3j5zerywf047h6lta047h6lycmzwe" // = sdk.AccAddress("ExampleAddr_________")
 )
 
 // A msgMaker is a function that makes a Msg from a client.Context, FlagSet, and set of args.
@@ -47,6 +46,7 @@ func genericTxRunE(maker msgMaker) func(cmd *cobra.Command, args []string) error
 			return err
 		}
 
+		cmd.SilenceUsage = true
 		return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
 	}
 }
@@ -67,6 +67,7 @@ func govTxRunE(maker msgMaker) func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
+		cmd.SilenceUsage = true
 		return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 	}
 }
@@ -255,6 +256,17 @@ func ParseFeeRatios(vals []string) ([]exchange.FeeRatio, error) {
 	return rv, errors.Join(errs...)
 }
 
+// AddUseArgs adds the given args to the cmd's Use.
+func AddUseArgs(cmd *cobra.Command, args ...string) {
+	cmd.Use = cmd.Use + " " + strings.Join(args, " ")
+}
+
+// AddUseDetails appends each provided section to the Use field with an empty line between them.
+func AddUseDetails(cmd *cobra.Command, sections ...string) {
+	cmd.Use = cmd.Use + "\n\n" + strings.Join(sections, "\n\n")
+	cmd.DisableFlagsInUseLine = true
+}
+
 // SimplePerms returns a string containing all the Permission.SimpleString() values.
 func SimplePerms() string {
 	allPerms := exchange.AllPermissions()
@@ -264,3 +276,76 @@ func SimplePerms() string {
 	}
 	return strings.Join(simple, "  ")
 }
+
+// ReqSignerDesc returns a description of how the --<name> flag is used and sort of required.
+func ReqSignerDesc(name string) string {
+	return fmt.Sprintf(`If --%[1]s <%[1]s> is provided, that is used as the %[1]s.
+If no --%[1]s is provided, the --%[2]s account address is used as the %[1]s.
+A %[1]s is required.`,
+		name, flags.FlagFrom,
+	)
+}
+
+// ReqSignerUse is the Use string for a signer flag.
+func ReqSignerUse(name string) string {
+	return fmt.Sprintf("{--%s|--%s} <%s>", flags.FlagFrom, name, name)
+}
+
+// ReqFlagUse returns the string "--name <opt>" if an opt is provided, or just "--name" if not.
+func ReqFlagUse(name string, opt string) string {
+	if len(opt) > 0 {
+		return fmt.Sprintf("--%s <%s>", name, opt)
+	}
+	return "--" + name
+}
+
+// OptFlagUse wraps a ReqFlagUse in [], e.g. "[--name <opt>]"
+func OptFlagUse(name string, opt string) string {
+	return "[" + ReqFlagUse(name, opt) + "]"
+}
+
+var (
+	// UseFlagsBreak is a string to use to start a new line of flags in the Use.
+	UseFlagsBreak = "\n     "
+
+	// RepeatableDesc is a description of how repeatable flags/values can be provided.
+	RepeatableDesc = "If a flag is repeatable, multiple entries can be separated by commas\nand/or the flag can be provided multiple times."
+
+	// ReqAdminUse is the Use string of the --admin flag.
+	ReqAdminUse = fmt.Sprintf("{--%s|--%s} <admin>", flags.FlagFrom, FlagAdmin)
+
+	// ReqAdminDesc is a description of how the --admin, --authority, and --from flags work and are sort of required.
+	ReqAdminDesc = fmt.Sprintf(`If --%[1]s <admin> is provided, that is used as the admin.
+If no --%[1]s is provided, but the --%[2]s flag was, the governance module account is used as the admin.
+Otherwise the --%[3]s account address is used as the admin.
+An admin is required.`,
+		FlagAdmin, FlagAuthority, flags.FlagFrom,
+	)
+
+	// ReqEnableDisableUse is a use string for the --enable and --disable flags.
+	ReqEnableDisableUse = fmt.Sprintf("{--%s|--%s}", FlagEnable, FlagDisable)
+
+	// ReqEnableDisableDesc is a description of the --enable and --disable flags.
+	ReqEnableDisableDesc = fmt.Sprintf("One of --%s or --%s must be provided, but not both.", FlagEnable, FlagDisable)
+
+	// AccessGrantsDesc is a description of the <asset grant> format.
+	AccessGrantsDesc = fmt.Sprintf(`An <access grant> has the format "<address>:<permissions>"
+In <permissions>, separate each permission with a + (plus), - (dash), or . (period).
+An <access grant> of "<address>:all" will have all of the permissions.
+
+Example <access grant>: %s:settle+update
+
+Valid permissions entries: %s
+The full Permission enum names are also valid.`,
+		ExampleAddr,
+		SimplePerms(),
+	)
+
+	// FeeRatioDesc is a description of the <fee ratio> format.
+	FeeRatioDesc = `A <fee ratio> has the format "<price coin>:<fee coin>".
+Both <price coin> and <fee coin> have the format "<amount><denom>".
+
+Example <fee ratio>: 100nhash:1nhash`
+
+	AuthorityDesc = fmt.Sprintf("If --%s is not provided, the governance module account is used as the authority.", FlagAuthority)
+)
