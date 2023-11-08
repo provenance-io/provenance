@@ -15,7 +15,7 @@ func (k Keeper) DetectBlockEvents(ctx sdk.Context) {
 	triggers = append(triggers, k.detectTimeEvents(ctx)...)
 
 	for _, trigger := range triggers {
-		k.emitDetection(ctx, trigger)
+		k.emitTriggerDetected(ctx, trigger)
 		k.UnregisterTrigger(ctx, trigger)
 		k.QueueTrigger(ctx, trigger)
 	}
@@ -88,9 +88,12 @@ func (k Keeper) getMatchingTriggersUntil(ctx sdk.Context, prefix string, match f
 	return
 }
 
-// getMatchingTriggersUntil Gets the triggers with a specified prefix that are ready to be activated and fulfill the given condition until a specific ending condition is reached.
-func (k Keeper) emitDetection(ctx sdk.Context, trigger types.Trigger) {
-	event, _ := trigger.GetTriggerEventI()
-	fmt.Printf("Detected: %s\n", event)
-	return
+// emitTriggerDetected Emits an EventTriggerDetection for the provided trigger.
+func (k Keeper) emitTriggerDetected(ctx sdk.Context, trigger types.Trigger) {
+	err := ctx.EventManager().EmitTypedEvent(&types.EventTriggerDetected{
+		TriggerId: fmt.Sprintf("%d", trigger.GetId()),
+	})
+	if err != nil {
+		ctx.Logger().Error("unable to emit EventTriggerDetected", "err", err)
+	}
 }

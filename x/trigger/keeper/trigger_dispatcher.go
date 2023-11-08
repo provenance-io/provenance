@@ -4,10 +4,12 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+
+	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
 const (
@@ -35,12 +37,13 @@ func (k Keeper) ProcessTriggers(ctx sdk.Context) {
 		k.RemoveGasLimit(ctx, triggerID)
 
 		actions := item.GetTrigger().Actions
-		k.runActions(ctx, gasLimit, actions)
+		err := k.runActions(ctx, gasLimit, actions)
+		k.emitTriggerExecuted(ctx, item.GetTrigger(), err)
 	}
 }
 
 // RunActions Runs all the actions and constrains them by gasLimit.
-func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*types.Any) {
+func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*codectypes.Any) error {
 	cacheCtx, flush := ctx.CacheContext()
 	gasMeter := sdk.NewGasMeter(gasLimit)
 	cacheCtx = cacheCtx.WithGasMeter(gasMeter)
@@ -53,7 +56,7 @@ func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*types.An
 			"actions", actions,
 			"error", err,
 		)
-		return
+		return err
 	}
 	results, err := k.handleMsgs(cacheCtx, msgs)
 	if err != nil {
@@ -61,13 +64,15 @@ func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*types.An
 			"HandleMsgs",
 			"error", err,
 		)
-		return
+		return err
 	}
 
 	flush()
 	for _, res := range results {
 		ctx.EventManager().EmitEvents(res.GetEvents())
 	}
+
+	return nil
 }
 
 // handleMsgs Handles each message and verifies gas limit has not been exceeded.
@@ -115,4 +120,21 @@ func (k Keeper) safeHandle(ctx sdk.Context, msg sdk.Msg, handler baseapp.MsgServ
 		}
 	}()
 	return handler(ctx, msg)
+}
+
+// emitTriggerExecuted Emits an EventTriggerExecuted for the provided trigger.
+func (k Keeper) emitTriggerExecuted(ctx sdk.Context, trigger types.Trigger, resultErr error) {
+	var errString string
+	if resultErr != nil {
+		errString = resultErr.Error()
+	}
+
+	eventErr := ctx.EventManager().EmitTypedEvent(&types.EventTriggerExecuted{
+		TriggerId: fmt.Sprintf("%d", trigger.GetId()),
+		Owner:     trigger.Owner,
+		Error:     errString,
+	})
+	if eventErr != nil {
+		ctx.Logger().Error("unable to emit EventTriggerExecuted", "err", eventErr)
+	}
 }
