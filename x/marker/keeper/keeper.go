@@ -263,13 +263,6 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 		return err
 	}
 
-	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Price, netAssetValue.Volume, source)
-	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err != nil {
-		return err
-	}
-
-	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
-	store := ctx.KVStore(k.storeKey)
 	if math.NewIntFromUint64(netAssetValue.Volume).GT(marker.GetSupply().Amount) {
 		return fmt.Errorf("volume(%v) cannot exceed marker %q supply(%v) ", netAssetValue.Volume, marker.GetDenom(), marker.GetSupply())
 	}
@@ -278,9 +271,11 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 	if err != nil {
 		return err
 	}
-	store.Set(key, bz)
+	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
+	ctx.KVStore(k.storeKey).Set(key, bz)
 
-	return nil
+	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Price, netAssetValue.Volume, source)
+	return ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent)
 }
 
 // IterateNetAssetValues iterates net asset values for marker
