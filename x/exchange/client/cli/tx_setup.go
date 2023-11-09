@@ -9,15 +9,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
 // SetupCmdTxCreateAsk adds all the flags needed for MakeMsgCreateAsk.
 func SetupCmdTxCreateAsk(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-
 	cmd.Flags().String(FlagSeller, "", "The seller (defaults to --from account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().String(FlagAssets, "", "The assets for this order, e.g. 10nhash (required)")
@@ -66,8 +63,6 @@ func MakeMsgCreateAsk(clientCtx client.Context, flagSet *pflag.FlagSet, _ []stri
 
 // SetupCmdTxCreateBid adds all the flags needed for MakeMsgCreateBid.
 func SetupCmdTxCreateBid(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-
 	cmd.Flags().String(FlagBuyer, "", "The buyer (defaults to --from account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().String(FlagAssets, "", "The assets for this order, e.g. 10nhash (required)")
@@ -116,8 +111,6 @@ func MakeMsgCreateBid(clientCtx client.Context, flagSet *pflag.FlagSet, _ []stri
 
 // SetupCmdTxCancelOrder adds all the flags needed for the MakeMsgCancelOrder.
 func SetupCmdTxCancelOrder(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-
 	cmd.Flags().String(FlagSigner, "", "The signer (defaults to --from account)")
 	cmd.Flags().Uint64(FlagOrder, 0, "The order id")
 
@@ -149,8 +142,6 @@ func MakeMsgCancelOrder(clientCtx client.Context, flagSet *pflag.FlagSet, args [
 
 // SetupCmdTxFillBids adds all the flags needed for MakeMsgFillBids.
 func SetupCmdTxFillBids(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-
 	cmd.Flags().String(FlagSeller, "", "The seller (defaults to --from account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().String(FlagAssets, "", "The total assets you are filling, e.g. 10nhash (required)")
@@ -193,8 +184,6 @@ func MakeMsgFillBids(clientCtx client.Context, flagSet *pflag.FlagSet, _ []strin
 
 // SetupCmdTxFillAsks adds all the flags needed for MakeMsgFillAsks.
 func SetupCmdTxFillAsks(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-
 	cmd.Flags().String(FlagBuyer, "", "The buyer (defaults to --from account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().String(FlagPrice, "", "The total price you are paying, e.g. 10nhash (required)")
@@ -237,8 +226,6 @@ func MakeMsgFillAsks(clientCtx client.Context, flagSet *pflag.FlagSet, _ []strin
 
 // SetupCmdTxMarketSettle adds all the flags needed for MakeMsgMarketSettle.
 func SetupCmdTxMarketSettle(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().UintSlice(FlagAsks, nil, "The ask order ids (repeatable, required)")
@@ -276,8 +263,6 @@ func MakeMsgMarketSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []s
 
 // SetupCmdTxMarketSetOrderExternalID adds all the flags needed for MakeMsgMarketSetOrderExternalID.
 func SetupCmdTxMarketSetOrderExternalID(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().Uint64(FlagOrder, 0, "The order id (required)")
@@ -312,8 +297,6 @@ func MakeMsgMarketSetOrderExternalID(clientCtx client.Context, flagSet *pflag.Fl
 
 // SetupCmdTxMarketWithdraw adds all the flags needed for MakeMsgMarketWithdraw.
 func SetupCmdTxMarketWithdraw(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().String(FlagTo, "", "The address that will receive the funds (required)")
@@ -369,8 +352,6 @@ func ReadFlagsMarketDetails(flagSet *pflag.FlagSet) (exchange.MarketDetails, err
 
 // SetupCmdTxMarketUpdateDetails adds all the flags needed for MakeMsgMarketUpdateDetails.
 func SetupCmdTxMarketUpdateDetails(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	AddFlagsMarketDetails(cmd)
@@ -410,8 +391,6 @@ func MakeMsgMarketUpdateDetails(clientCtx client.Context, flagSet *pflag.FlagSet
 
 // SetupCmdTxMarketUpdateEnabled adds all the flags needed for MakeMsgMarketUpdateEnabled.
 func SetupCmdTxMarketUpdateEnabled(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	AddFlagsEnableDisable(cmd, "accepting_orders")
@@ -443,8 +422,6 @@ func MakeMsgMarketUpdateEnabled(clientCtx client.Context, flagSet *pflag.FlagSet
 
 // SetupCmdTxMarketUpdateUserSettle adds all the flags needed for MakeMsgMarketUpdateUserSettle.
 func SetupCmdTxMarketUpdateUserSettle(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	AddFlagsEnableDisable(cmd, "allow_user_settlement")
@@ -476,8 +453,6 @@ func MakeMsgMarketUpdateUserSettle(clientCtx client.Context, flagSet *pflag.Flag
 
 // SetupCmdTxMarketManagePermissions adds all the flags needed for MakeMsgMarketManagePermissions.
 func SetupCmdTxMarketManagePermissions(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().StringSlice(FlagRevokeAll, nil, "Addresses to revoke all permissions from (repeatable)")
@@ -517,8 +492,6 @@ func MakeMsgMarketManagePermissions(clientCtx client.Context, flagSet *pflag.Fla
 
 // SetupCmdTxMarketManageReqAttrs adds all the flags needed for MakeMsgMarketManageReqAttrs.
 func SetupCmdTxMarketManageReqAttrs(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().StringSlice(FlagAskAdd, nil, "The create-ask required attributes to add (repeatable)")
@@ -562,9 +535,6 @@ func MakeMsgMarketManageReqAttrs(clientCtx client.Context, flagSet *pflag.FlagSe
 
 // SetupCmdTxGovCreateMarket adds all the flags needed for MakeMsgGovCreateMarket.
 func SetupCmdTxGovCreateMarket(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-	govcli.AddGovPropFlagsToCmd(cmd)
-
 	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
 	AddFlagsMarketDetails(cmd)
@@ -644,9 +614,6 @@ func MakeMsgGovCreateMarket(_ client.Context, flagSet *pflag.FlagSet, _ []string
 
 // SetupCmdTxGovManageFees adds all the flags needed for MakeMsgGovManageFees.
 func SetupCmdTxGovManageFees(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-	govcli.AddGovPropFlagsToCmd(cmd)
-
 	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().StringSlice(FlagAskAdd, nil, "Create-ask flat fee options to add, e.g. 10nhash (repeatable)")
@@ -722,9 +689,6 @@ func MakeMsgGovManageFees(_ client.Context, flagSet *pflag.FlagSet, _ []string) 
 
 // SetupCmdTxGovUpdateParams adds all the flags needed for MakeMsgGovUpdateParams.
 func SetupCmdTxGovUpdateParams(cmd *cobra.Command) {
-	flags.AddTxFlagsToCmd(cmd)
-	govcli.AddGovPropFlagsToCmd(cmd)
-
 	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
 	cmd.Flags().Uint32(FlagDefault, 0, "The default split (required)")
 	cmd.Flags().StringSlice(FlagSplit, nil, "The denom-splits (repeatable)")

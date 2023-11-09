@@ -18,8 +18,6 @@ import (
 
 // SetupCmdQueryOrderFeeCalc adds all the flags needed for MakeQueryOrderFeeCalc.
 func SetupCmdQueryOrderFeeCalc(cmd *cobra.Command) {
-	flags.AddQueryFlagsToCmd(cmd)
-
 	cmd.Flags().Bool(FlagAsk, false, "Run calculation on an ask order")
 	cmd.Flags().Bool(FlagBid, false, "Run calculation on a bid order")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
@@ -102,8 +100,6 @@ func MakeQueryOrderFeeCalc(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryO
 
 // SetupCmdQueryGetOrder adds all the flags needed for MakeQueryGetOrder.
 func SetupCmdQueryGetOrder(cmd *cobra.Command) {
-	flags.AddQueryFlagsToCmd(cmd)
-
 	cmd.Flags().Uint64(FlagOrder, 0, "The order id")
 
 	AddUseArgs(cmd,
@@ -129,8 +125,6 @@ func MakeQueryGetOrder(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGe
 
 // SetupCmdQueryGetOrderByExternalID adds all the flags needed for MakeQueryGetOrderByExternalID.
 func SetupCmdQueryGetOrderByExternalID(cmd *cobra.Command) {
-	flags.AddQueryFlagsToCmd(cmd)
-
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().String(FlagExternalID, "", "The external id (required)")
 
@@ -160,7 +154,6 @@ func MakeQueryGetOrderByExternalID(flagSet *pflag.FlagSet, _ []string) (*exchang
 
 // SetupCmdQueryGetMarketOrders adds all the flags needed for MakeQueryGetMarketOrders.
 func SetupCmdQueryGetMarketOrders(cmd *cobra.Command) {
-	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "orders")
 
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
@@ -202,7 +195,6 @@ func MakeQueryGetMarketOrders(flagSet *pflag.FlagSet, args []string) (*exchange.
 
 // SetupCmdQueryGetOwnerOrders adds all the flags needed for MakeQueryGetOwnerOrders.
 func SetupCmdQueryGetOwnerOrders(cmd *cobra.Command) {
-	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "orders")
 
 	cmd.Flags().String(FlagOwner, "", "The owner")
@@ -244,7 +236,6 @@ func MakeQueryGetOwnerOrders(flagSet *pflag.FlagSet, args []string) (*exchange.Q
 
 // SetupCmdQueryGetAssetOrders adds all the flags needed for MakeQueryGetAssetOrders.
 func SetupCmdQueryGetAssetOrders(cmd *cobra.Command) {
-	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "orders")
 
 	cmd.Flags().String(FlagDenom, "", "The asset denom")
@@ -285,7 +276,6 @@ func MakeQueryGetAssetOrders(flagSet *pflag.FlagSet, args []string) (*exchange.Q
 
 // SetupCmdQueryGetAllOrders adds all the flags needed for MakeQueryGetAllOrders.
 func SetupCmdQueryGetAllOrders(cmd *cobra.Command) {
-	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "orders")
 
 	AddUseArgs(cmd, "[pagination flags]")
@@ -308,8 +298,6 @@ func MakeQueryGetAllOrders(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryG
 
 // SetupCmdQueryGetMarket adds all the flags needed for MakeQueryGetMarket.
 func SetupCmdQueryGetMarket(cmd *cobra.Command) {
-	flags.AddQueryFlagsToCmd(cmd)
-
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
 
 	AddUseArgs(cmd,
@@ -336,7 +324,6 @@ func MakeQueryGetMarket(flagSet *pflag.FlagSet, args []string) (*exchange.QueryG
 
 // SetupCmdQueryGetAllMarkets adds all the flags needed for MakeQueryGetAllMarkets.
 func SetupCmdQueryGetAllMarkets(cmd *cobra.Command) {
-	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "markets")
 
 	AddUseArgs(cmd, "[pagination flags]")

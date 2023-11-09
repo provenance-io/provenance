@@ -52,6 +52,7 @@ func CmdQueryOrderFeeCalc() *cobra.Command {
 		RunE:    genericQueryRunE(MakeQueryOrderFeeCalc, exchange.QueryClient.OrderFeeCalc),
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	SetupCmdQueryOrderFeeCalc(cmd)
 	return cmd
 }
@@ -65,6 +66,7 @@ func CmdQueryGetOrder() *cobra.Command {
 		RunE:    genericQueryRunE(MakeQueryGetOrder, exchange.QueryClient.GetOrder),
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	SetupCmdQueryGetOrder(cmd)
 	return cmd
 }
@@ -78,6 +80,7 @@ func CmdQueryGetOrderByExternalID() *cobra.Command {
 		RunE:    genericQueryRunE(MakeQueryGetOrderByExternalID, exchange.QueryClient.GetOrderByExternalID),
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	SetupCmdQueryGetOrderByExternalID(cmd)
 	return cmd
 }
@@ -91,6 +94,7 @@ func CmdQueryGetMarketOrders() *cobra.Command {
 		RunE:    genericQueryRunE(MakeQueryGetMarketOrders, exchange.QueryClient.GetMarketOrders),
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	SetupCmdQueryGetMarketOrders(cmd)
 	return cmd
 }
@@ -104,6 +108,7 @@ func CmdQueryGetOwnerOrders() *cobra.Command {
 		RunE:    genericQueryRunE(MakeQueryGetOwnerOrders, exchange.QueryClient.GetOwnerOrders),
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	SetupCmdQueryGetOwnerOrders(cmd)
 	return cmd
 }
@@ -117,6 +122,7 @@ func CmdQueryGetAssetOrders() *cobra.Command {
 		RunE:    genericQueryRunE(MakeQueryGetAssetOrders, exchange.QueryClient.GetAssetOrders),
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	SetupCmdQueryGetAssetOrders(cmd)
 	return cmd
 }
@@ -130,6 +136,7 @@ func CmdQueryGetAllOrders() *cobra.Command {
 		RunE:    genericQueryRunE(MakeQueryGetAllOrders, exchange.QueryClient.GetAllOrders),
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	SetupCmdQueryGetAllOrders(cmd)
 	return cmd
 }
@@ -143,6 +150,7 @@ func CmdQueryGetMarket() *cobra.Command {
 		RunE:    genericQueryRunE(MakeQueryGetMarket, exchange.QueryClient.GetMarket),
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	SetupCmdQueryGetMarket(cmd)
 	return cmd
 }
@@ -156,6 +164,7 @@ func CmdQueryGetAllMarkets() *cobra.Command {
 		RunE:    genericQueryRunE(MakeQueryGetAllMarkets, exchange.QueryClient.GetAllMarkets),
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
 	SetupCmdQueryGetAllMarkets(cmd)
 	return cmd
 }
