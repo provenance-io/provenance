@@ -902,18 +902,13 @@ func (s *UpgradeTestSuite) TestAddMarkerNavs() {
 
 	addMarkerNavs(s.ctx, s.app, map[string]markertypes.NetAssetValue{
 		"testcoininlist": {Price: sdk.NewInt64Coin(markertypes.UsdDenom, int64(12345)), Volume: uint64(1)},
-	}, markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), Volume: uint64(1)})
+	})
 
 	tests := []struct {
 		name       string
 		markerAddr sdk.AccAddress
 		expNav     *markertypes.NetAssetValue
 	}{
-		{
-			name:       "upgrade adds new default nav",
-			markerAddr: testcoin.GetAddress(),
-			expNav:     &markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), Volume: uint64(1)},
-		},
 		{
 			name:       "already has nav",
 			markerAddr: hasnavcoin.GetAddress(),

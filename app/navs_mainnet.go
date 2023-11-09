@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/cosmos/cosmos-sdk/types"
+
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 

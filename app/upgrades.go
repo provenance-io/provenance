@@ -23,7 +23,6 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
-	"github.com/provenance-io/provenance/x/marker/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
@@ -119,15 +118,6 @@ var upgrades = map[string]appUpgrade{
 			removeInactiveValidatorDelegations(ctx, app)
 			setupICQ(ctx, app)
 			updateMaxSupply(ctx, app)
-
-			denomToNav := map[string]markertypes.NetAssetValue{
-				"usd.deposit": markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 1000), 1),
-				"tp13gc5xe8375msm7y6jhf752e5hcrjypmcpf9wldsjprhnpzlkhqaqawxujf.investment": markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 10), 1),
-				"tp1cxuqqyjjf5x66jvlmtvj3juppn370ev7rr5cja3ml65nzhxgvpkszfuvtw.investment": markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 10), 33600000),
-				"pm.sale.pool.7v2gsuvnudyfvuig50r3k3":                                      markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 19026640), 1),
-			}
-			addMarkerNavs(ctx, app, denomToNav, markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), 1))
-
 			setExchangeParams(ctx, app)
 
 			return vm, nil
@@ -175,10 +165,8 @@ var upgrades = map[string]appUpgrade{
 			setupICQ(ctx, app)
 			updateMaxSupply(ctx, app)
 
-			denomToNav := map[string]markertypes.NetAssetValue{
-				// TODO: Add custom mainnet values here
-			}
-			addMarkerNavs(ctx, app, denomToNav, markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), 1))
+			addMarkerNavs(ctx, app, GetDenomToNav())
+
 			setExchangeParams(ctx, app)
 			updateIbcMarkerDenomMetadata(ctx, app)
 
@@ -393,7 +381,7 @@ func updateMaxSupply(ctx sdk.Context, app *App) {
 }
 
 // addMarkerNavs adds navs to existing markers, if denom is not in map it will default to $0.15 cents
-func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.NetAssetValue, defaultNav markertypes.NetAssetValue) {
+func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.NetAssetValue) {
 	ctx.Logger().Info("Adding marker net asset values")
 	for denom, nav := range denomToNav {
 		marker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, denom)
@@ -405,23 +393,6 @@ func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.
 			ctx.Logger().Error(fmt.Sprintf("unable to set net asset value %v: %v", nav, err))
 		}
 	}
-	app.MarkerKeeper.IterateMarkers(ctx, func(record markertypes.MarkerAccountI) bool {
-		var hasNav bool
-		err := app.MarkerKeeper.IterateNetAssetValues(ctx, record.GetAddress(), func(nav markertypes.NetAssetValue) bool {
-			hasNav = true
-			return true
-		})
-		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("unable iterate net asset values for marker %v: %v", record, err))
-			return false
-		}
-		if !hasNav {
-			if err := app.MarkerKeeper.AddSetNetAssetValues(ctx, record, []markertypes.NetAssetValue{defaultNav}, "upgrade_handler"); err != nil {
-				ctx.Logger().Error(fmt.Sprintf("unable to set net asset value %v: %v", defaultNav, err))
-			}
-		}
-		return false
-	})
 	ctx.Logger().Info("Done adding marker net asset values")
 }
 
@@ -444,7 +415,7 @@ func setExchangeParams(ctx sdk.Context, app *App) {
 // TODO: Remove with the saffron handlers.
 func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating ibc marker denom metadata")
-	app.MarkerKeeper.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
+	app.MarkerKeeper.IterateMarkers(ctx, func(record markertypes.MarkerAccountI) bool {
 		if !strings.HasPrefix(record.GetDenom(), "ibc/") {
 			return false
 		}
