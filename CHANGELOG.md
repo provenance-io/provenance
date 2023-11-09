@@ -41,6 +41,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * When the exchange module settles orders, update the marker net-asset-values ([#1736](https://github.com/provenance-io/provenance/pull/1736).
 
+### Bug Fixes
+
+* Fixed denom metadata source chain-id retrieval for new ibc markers [#1726](https://github.com/provenance-io/provenance/issues/1726).
+
 ### Dependencies
 
 - Bump `bufbuild/buf-setup-action` from 1.27.1 to 1.27.2 ([#1724](https://github.com/provenance-io/provenance/pull/1724))

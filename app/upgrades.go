@@ -137,6 +137,19 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
+	"saffron-rc3": { // upgrade for v1.17.0-rc3
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			updateIbcMarkerDenomMetadata(ctx, app)
+
+			return vm, nil
+		},
+	},
 	"saffron": { // upgrade for v1.17.0,
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
