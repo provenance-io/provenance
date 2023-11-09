@@ -245,12 +245,12 @@ func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccount
 		if nav.Price.Denom != types.UsdDenom {
 			_, err := k.GetMarkerByDenom(ctx, nav.Price.Denom)
 			if err != nil {
-				return fmt.Errorf("net asset value denom does not exist: %w", err)
+				return fmt.Errorf("net asset value denom does not exist: %v", err.Error())
 			}
 		}
 
 		if err := k.SetNetAssetValue(ctx, marker, nav, source); err != nil {
-			return fmt.Errorf("cannot set net asset value : %w", err)
+			return fmt.Errorf("cannot set net asset value : %v", err.Error())
 		}
 	}
 	return nil
@@ -263,12 +263,13 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 		return err
 	}
 
-	// Recording the event early so that if there's a problem later, the info is still around somewhere.
 	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Price, netAssetValue.Volume, source)
 	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err != nil {
 		return err
 	}
 
+	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
+	store := ctx.KVStore(k.storeKey)
 	if math.NewIntFromUint64(netAssetValue.Volume).GT(marker.GetSupply().Amount) {
 		return fmt.Errorf("volume(%v) cannot exceed marker %q supply(%v) ", netAssetValue.Volume, marker.GetDenom(), marker.GetSupply())
 	}
@@ -277,8 +278,7 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 	if err != nil {
 		return err
 	}
-	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
-	ctx.KVStore(k.storeKey).Set(key, bz)
+	store.Set(key, bz)
 
 	return nil
 }
