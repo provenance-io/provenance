@@ -8,6 +8,7 @@
     - [Forced Transfers](#forced-transfers)
     - [Required Attributes](#required-attributes)
   - [Marker Address Cache](#marker-address-cache)
+    - [Marker Net Asset Value](#marker-net-asset-value)
   - [Params](#params)
 
 

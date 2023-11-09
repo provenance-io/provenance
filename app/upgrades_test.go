@@ -436,6 +436,27 @@ func (s *UpgradeTestSuite) TestSaffronRC1() {
 	s.AssertUpgradeHandlerLogs("saffron-rc1", expInLog, nil)
 }
 
+func (s *UpgradeTestSuite) TestSaffronRC2() {
+	// Each part is (hopefully) tested thoroughly on its own.
+	// So for this test, just make sure there's log entries for each part being done.
+
+	expInLog := []string{
+		"INF Updating ibc marker denom metadata",
+		"INF Done updating ibc marker denom metadata",
+	}
+
+	s.AssertUpgradeHandlerLogs("saffron-rc2", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestSaffronRC3() {
+	expInLog := []string{
+		"INF Updating ibc marker denom metadata",
+		"INF Done updating ibc marker denom metadata",
+	}
+
+	s.AssertUpgradeHandlerLogs("saffron-rc3", expInLog, nil)
+}
+
 func (s *UpgradeTestSuite) TestSaffron() {
 	// Each part is (hopefully) tested thoroughly on its own.
 	// So for this test, just make sure there's log entries for each part being done.
@@ -450,6 +471,8 @@ func (s *UpgradeTestSuite) TestSaffron() {
 		"INF Adding marker net asset values",
 		"INF Done adding marker net asset values",
 		"INF Ensuring exchange module params are set.",
+		"INF Updating ibc marker denom metadata",
+		"INF Done updating ibc marker denom metadata",
 	}
 
 	s.AssertUpgradeHandlerLogs("saffron", expInLog, nil)

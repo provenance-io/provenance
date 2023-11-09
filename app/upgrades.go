@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"strings"
 
 	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
 
@@ -11,15 +12,18 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
+	"github.com/provenance-io/provenance/x/marker/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
@@ -128,7 +132,33 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
-		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.ModuleName, hold.ModuleName, exchange.ModuleName},
+		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
+	},
+	"saffron-rc2": { // upgrade for v1.17.0-rc2
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			updateIbcMarkerDenomMetadata(ctx, app)
+
+			return vm, nil
+		},
+	},
+	"saffron-rc3": { // upgrade for v1.17.0-rc3
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			updateIbcMarkerDenomMetadata(ctx, app)
+
+			return vm, nil
+		},
 	},
 	"saffron": { // upgrade for v1.17.0,
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -150,10 +180,11 @@ var upgrades = map[string]appUpgrade{
 			}
 			addMarkerNavs(ctx, app, denomToNav, markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, int64(150)), 1))
 			setExchangeParams(ctx, app)
+			updateIbcMarkerDenomMetadata(ctx, app)
 
 			return vm, nil
 		},
-		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.ModuleName, hold.ModuleName, exchange.ModuleName},
+		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
 }
@@ -407,4 +438,42 @@ func setExchangeParams(ctx sdk.Context, app *App) {
 		app.ExchangeKeeper.SetParams(ctx, params)
 	}
 	ctx.Logger().Info("Done ensuring exchange module params are set.")
+}
+
+// updateIbcMarkerDenomMetadata iterates markers and creates denom metadata for ibc markers
+// TODO: Remove with the saffron handlers.
+func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Updating ibc marker denom metadata")
+	app.MarkerKeeper.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
+		if !strings.HasPrefix(record.GetDenom(), "ibc/") {
+			return false
+		}
+
+		hash, err := transfertypes.ParseHexHash(strings.TrimPrefix(record.GetDenom(), "ibc/"))
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("invalid denom trace hash: %s, error: %s", hash.String(), err))
+			return false
+		}
+		denomTrace, found := app.TransferKeeper.GetDenomTrace(ctx, hash)
+		if !found {
+			ctx.Logger().Error(fmt.Sprintf("trace not found: %s, error: %s", hash.String(), err))
+			return false
+		}
+
+		parts := strings.Split(denomTrace.Path, "/")
+		if len(parts) == 2 && parts[0] == "transfer" {
+			ctx.Logger().Info(fmt.Sprintf("Adding metadata to %s", record.GetDenom()))
+			chainID := app.Ics20MarkerHooks.GetChainID(ctx, parts[0], parts[1], app.IBCKeeper)
+			markerMetadata := banktypes.Metadata{
+				Base:        record.GetDenom(),
+				Name:        chainID + "/" + denomTrace.BaseDenom,
+				Display:     chainID + "/" + denomTrace.BaseDenom,
+				Description: denomTrace.BaseDenom + " from " + chainID,
+			}
+			app.BankKeeper.SetDenomMetaData(ctx, markerMetadata)
+		}
+
+		return false
+	})
+	ctx.Logger().Info("Done updating ibc marker denom metadata")
 }

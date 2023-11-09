@@ -39,6 +39,35 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* Add the (empty) `saffron-rc2` upgrade [#1699](https://github.com/provenance-io/provenance/issues/1699).
+
+### Improvements
+
+* Wrote unit tests on the keeper methods [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* During `FillBids`, the seller settlement fee is now calculated on the total price instead of each order individually [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* In the `OrderFeeCalc` query, ensure the market exists [#1699](https://github.com/provenance-io/provenance/issues/1699).
+
+### Bug Fixes
+
+* During `InitGenesis`, ensure LastOrderId is at least the largest order id [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* Properly populate the permissions lists when reading access grants from state [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* Fixed the paginated order queries to properly look up orders [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* Fixed denom metadata source chain-id retrieval for new ibc markers [#1726](https://github.com/provenance-io/provenance/issues/1726).
+
+### Dependencies
+
+- Bump `bufbuild/buf-setup-action` from 1.27.1 to 1.27.2 ([#1724](https://github.com/provenance-io/provenance/pull/1724))
+- Bump `github.com/google/uuid` from 1.3.1 to 1.4.0 ([#1723](https://github.com/provenance-io/provenance/pull/1723))
+- Bump `github.com/gorilla/mux` from 1.8.0 to 1.8.1 ([#1734](https://github.com/provenance-io/provenance/pull/1734))
+- Bump `golang.org/x/text` from 0.13.0 to 0.14.0 ([#1735](https://github.com/provenance-io/provenance/pull/1735))
+- Bump `github.com/spf13/cobra` from 1.7.0 to 1.8.0 ([#1733](https://github.com/provenance-io/provenance/pull/1733))
+
+---
+
+## [v1.17.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc1) - 2023-10-18
+
+### Features
+
 * Create the `x/exchange` module which facilitates the buying and selling of assets [#1658](https://github.com/provenance-io/provenance/issues/1658).
   Assets and funds remain in their owner's account (with a hold on them) until the order is settled (or cancelled).
   Market's are created to manage order matching and define fees.
@@ -71,8 +100,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add genesis/init for Marker module send deny list addresses. [#1660](https://github.com/provenance-io/provenance/issues/1660)
 * Add automatic changelog entries for dependabot. [#1674](https://github.com/provenance-io/provenance/issues/1674)
 * Add upgrade handler to set net asset values to markers [PR 1712](https://github.com/provenance-io/provenance/pull/1712).
+* Add publishing of docker arm64 container builds [#1634](https://github.com/provenance-io/provenance/issues/1634)
 * Ensure IBC marker has matching supply [#1706](https://github.com/provenance-io/provenance/issues/1706).
-  
+
 ### Bug Fixes
 
 * Fix ibcnet relayer creating multiple connections on restart [#1620](https://github.com/provenance-io/provenance/issues/1620).
@@ -80,6 +110,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Allow restricted coins to be quarantined [#1626](https://github.com/provenance-io/provenance/issues/1626).
 * Prevent marker forced transfers from module accounts [#1626](https://github.com/provenance-io/provenance/issues/1626).
 * Change config load order so custom.toml can override other config. [#1262](https://github.com/provenance-io/provenance/issues/1262)
+* Fix the saffron and saffron-rc1 upgrade handlers to add correct ibchooks store key [PR 1715](https://github.com/provenance-io/provenance/pull/1715).
 
 ### Client Breaking
 
@@ -116,6 +147,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `stefanzweifel/git-auto-commit-action` from 4 to 5 ([#1696](https://github.com/provenance-io/provenance/pull/1696))
 - Bump `golang.org/x/net` from 0.15.0 to 0.17.0 ([#1704](https://github.com/provenance-io/provenance/pull/1704))
 - Bump `bufbuild/buf-lint-action` from 1.0.3 to 1.1.0 ([#1705](https://github.com/provenance-io/provenance/pull/1705))
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.16.0...v1.17.0-rc1
 
 ---
 
