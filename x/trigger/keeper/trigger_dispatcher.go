@@ -86,11 +86,11 @@ func (k Keeper) handleMsgs(ctx sdk.Context, msgs []sdk.Msg) ([]sdk.Result, error
 		if err != nil {
 			return nil, fmt.Errorf("error processing message %s at position %d: %w", sdk.MsgTypeURL(msg), i, err)
 		}
-		k.Logger(ctx).Debug(fmt.Sprintf("Executed %s at position %d and received result: %s", sdk.MsgTypeURL(msg), i, r))
 		// Handler should always return non-nil sdk.Result.
 		if r == nil {
 			return nil, fmt.Errorf("got nil sdk.Result for message %s at position %d", sdk.MsgTypeURL(msg), i)
 		}
+		k.Logger(ctx).Debug(fmt.Sprintf("Successfully executed %s at position %d", sdk.MsgTypeURL(msg), i))
 
 		results[i] = *r
 	}
