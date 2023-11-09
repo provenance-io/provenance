@@ -69,7 +69,7 @@ func (k Keeper) logErrorf(ctx sdk.Context, msg string, args ...interface{}) {
 // logInfof uses fmt.Sprintf to combine the msg and args, and logs the result as info from this module.
 // Note that this is different from the logging .Info(msg string, keyvals ...interface{}) syntax.
 func (k Keeper) logInfof(ctx sdk.Context, msg string, args ...interface{}) {
-	ctx.Logger().Error(fmt.Sprintf(msg, args...), "module", "x/"+exchange.ModuleName)
+	ctx.Logger().Info(fmt.Sprintf(msg, args...), "module", "x/"+exchange.ModuleName)
 }
 
 // emitEvent emits the provided event and writes any error to the error log.
