@@ -9,11 +9,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
-// AddFlagsMsgCreateAsk adds all the flags needed for MakeMsgCreateAsk.
-func AddFlagsMsgCreateAsk(cmd *cobra.Command) {
+// SetupCmdTxCreateAsk adds all the flags needed for MakeMsgCreateAsk.
+func SetupCmdTxCreateAsk(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+
 	cmd.Flags().String(FlagSeller, "", "The seller (defaults to --from account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().String(FlagAssets, "", "The assets for this order, e.g. 10nhash (required)")
@@ -42,7 +46,7 @@ func AddFlagsMsgCreateAsk(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgCreateAsk reads all the AddFlagsMsgCreateAsk flags and creates the desired Msg.
+// MakeMsgCreateAsk reads all the SetupCmdTxCreateAsk flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgCreateAsk(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgCreateAskRequest, error) {
 	msg := &exchange.MsgCreateAskRequest{}
@@ -60,8 +64,10 @@ func MakeMsgCreateAsk(clientCtx client.Context, flagSet *pflag.FlagSet, _ []stri
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMsgCreateBid adds all the flags needed for MakeMsgCreateBid.
-func AddFlagsMsgCreateBid(cmd *cobra.Command) {
+// SetupCmdTxCreateBid adds all the flags needed for MakeMsgCreateBid.
+func SetupCmdTxCreateBid(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+
 	cmd.Flags().String(FlagBuyer, "", "The buyer (defaults to --from account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().String(FlagAssets, "", "The assets for this order, e.g. 10nhash (required)")
@@ -90,7 +96,7 @@ func AddFlagsMsgCreateBid(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgCreateBid reads all the AddFlagsMsgCreateBid flags and creates the desired Msg.
+// MakeMsgCreateBid reads all the SetupCmdTxCreateBid flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgCreateBid(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgCreateBidRequest, error) {
 	msg := &exchange.MsgCreateBidRequest{}
@@ -108,8 +114,10 @@ func MakeMsgCreateBid(clientCtx client.Context, flagSet *pflag.FlagSet, _ []stri
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMsgCancelOrder adds all the flags needed for the MakeMsgCancelOrder.
-func AddFlagsMsgCancelOrder(cmd *cobra.Command) {
+// SetupCmdTxCancelOrder adds all the flags needed for the MakeMsgCancelOrder.
+func SetupCmdTxCancelOrder(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+
 	cmd.Flags().String(FlagSigner, "", "The signer (defaults to --from account)")
 	cmd.Flags().Uint64(FlagOrder, 0, "The order id")
 
@@ -127,7 +135,7 @@ func AddFlagsMsgCancelOrder(cmd *cobra.Command) {
 	cmd.Args = cobra.MaximumNArgs(1)
 }
 
-// MakeMsgCancelOrder reads all the AddFlagsMsgCancelOrder flags and the provided args and creates the desired Msg.
+// MakeMsgCancelOrder reads all the SetupCmdTxCancelOrder flags and the provided args and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgCancelOrder(clientCtx client.Context, flagSet *pflag.FlagSet, args []string) (*exchange.MsgCancelOrderRequest, error) {
 	msg := &exchange.MsgCancelOrderRequest{}
@@ -139,8 +147,10 @@ func MakeMsgCancelOrder(clientCtx client.Context, flagSet *pflag.FlagSet, args [
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMsgFillBids adds all the flags needed for MakeMsgFillBids.
-func AddFlagsMsgFillBids(cmd *cobra.Command) {
+// SetupCmdTxFillBids adds all the flags needed for MakeMsgFillBids.
+func SetupCmdTxFillBids(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+
 	cmd.Flags().String(FlagSeller, "", "The seller (defaults to --from account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().String(FlagAssets, "", "The total assets you are filling, e.g. 10nhash (required)")
@@ -165,7 +175,7 @@ func AddFlagsMsgFillBids(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgFillBids reads all the AddFlagsMsgFillBids flags and creates the desired Msg.
+// MakeMsgFillBids reads all the SetupCmdTxFillBids flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgFillBids(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgFillBidsRequest, error) {
 	msg := &exchange.MsgFillBidsRequest{}
@@ -181,8 +191,10 @@ func MakeMsgFillBids(clientCtx client.Context, flagSet *pflag.FlagSet, _ []strin
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMsgFillAsks adds all the flags needed for MakeMsgFillAsks.
-func AddFlagsMsgFillAsks(cmd *cobra.Command) {
+// SetupCmdTxFillAsks adds all the flags needed for MakeMsgFillAsks.
+func SetupCmdTxFillAsks(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+
 	cmd.Flags().String(FlagBuyer, "", "The buyer (defaults to --from account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().String(FlagPrice, "", "The total price you are paying, e.g. 10nhash (required)")
@@ -207,7 +219,7 @@ func AddFlagsMsgFillAsks(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgFillAsks reads all the AddFlagsMsgFillAsks flags and creates the desired Msg.
+// MakeMsgFillAsks reads all the SetupCmdTxFillAsks flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgFillAsks(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgFillAsksRequest, error) {
 	msg := &exchange.MsgFillAsksRequest{}
@@ -223,8 +235,10 @@ func MakeMsgFillAsks(clientCtx client.Context, flagSet *pflag.FlagSet, _ []strin
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMsgMarketSettle adds all the flags needed for MakeMsgMarketSettle.
-func AddFlagsMsgMarketSettle(cmd *cobra.Command) {
+// SetupCmdTxMarketSettle adds all the flags needed for MakeMsgMarketSettle.
+func SetupCmdTxMarketSettle(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().UintSlice(FlagAsks, nil, "The ask order ids (repeatable, required)")
@@ -245,7 +259,7 @@ func AddFlagsMsgMarketSettle(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgMarketSettle reads all the AddFlagsMsgMarketSettle flags and creates the desired Msg.
+// MakeMsgMarketSettle reads all the SetupCmdTxMarketSettle flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgMarketSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketSettleRequest, error) {
 	msg := &exchange.MsgMarketSettleRequest{}
@@ -260,8 +274,10 @@ func MakeMsgMarketSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []s
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMsgMarketSetOrderExternalID adds all the flags needed for MakeMsgMarketSetOrderExternalID.
-func AddFlagsMsgMarketSetOrderExternalID(cmd *cobra.Command) {
+// SetupCmdTxMarketSetOrderExternalID adds all the flags needed for MakeMsgMarketSetOrderExternalID.
+func SetupCmdTxMarketSetOrderExternalID(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().Uint64(FlagOrder, 0, "The order id (required)")
@@ -280,7 +296,7 @@ func AddFlagsMsgMarketSetOrderExternalID(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgMarketSetOrderExternalID reads all the AddFlagsMsgMarketSetOrderExternalID flags and creates the desired Msg.
+// MakeMsgMarketSetOrderExternalID reads all the SetupCmdTxMarketSetOrderExternalID flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgMarketSetOrderExternalID(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketSetOrderExternalIDRequest, error) {
 	msg := &exchange.MsgMarketSetOrderExternalIDRequest{}
@@ -294,8 +310,10 @@ func MakeMsgMarketSetOrderExternalID(clientCtx client.Context, flagSet *pflag.Fl
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMsgMarketWithdraw adds all the flags needed for MakeMsgMarketWithdraw.
-func AddFlagsMsgMarketWithdraw(cmd *cobra.Command) {
+// SetupCmdTxMarketWithdraw adds all the flags needed for MakeMsgMarketWithdraw.
+func SetupCmdTxMarketWithdraw(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().String(FlagTo, "", "The address that will receive the funds (required)")
@@ -314,7 +332,7 @@ func AddFlagsMsgMarketWithdraw(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgMarketWithdraw reads all the AddFlagsMsgMarketWithdraw flags and creates the desired Msg.
+// MakeMsgMarketWithdraw reads all the SetupCmdTxMarketWithdraw flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgMarketWithdraw(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketWithdrawRequest, error) {
 	msg := &exchange.MsgMarketWithdrawRequest{}
@@ -349,8 +367,10 @@ func ReadFlagsMarketDetails(flagSet *pflag.FlagSet) (exchange.MarketDetails, err
 	return rv, errors.Join(errs...)
 }
 
-// AddFlagsMsgMarketUpdateDetails adds all the flags needed for MakeMsgMarketUpdateDetails.
-func AddFlagsMsgMarketUpdateDetails(cmd *cobra.Command) {
+// SetupCmdTxMarketUpdateDetails adds all the flags needed for MakeMsgMarketUpdateDetails.
+func SetupCmdTxMarketUpdateDetails(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	AddFlagsMarketDetails(cmd)
@@ -375,7 +395,7 @@ If you omit an optional flag, that field will be updated to an empty string.`,
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgMarketUpdateDetails reads all the AddFlagsMsgMarketUpdateDetails flags and creates the desired Msg.
+// MakeMsgMarketUpdateDetails reads all the SetupCmdTxMarketUpdateDetails flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgMarketUpdateDetails(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketUpdateDetailsRequest, error) {
 	msg := &exchange.MsgMarketUpdateDetailsRequest{}
@@ -388,8 +408,10 @@ func MakeMsgMarketUpdateDetails(clientCtx client.Context, flagSet *pflag.FlagSet
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMsgMarketUpdateEnabled adds all the flags needed for MakeMsgMarketUpdateEnabled.
-func AddFlagsMsgMarketUpdateEnabled(cmd *cobra.Command) {
+// SetupCmdTxMarketUpdateEnabled adds all the flags needed for MakeMsgMarketUpdateEnabled.
+func SetupCmdTxMarketUpdateEnabled(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	AddFlagsEnableDisable(cmd, "accepting_orders")
@@ -406,7 +428,7 @@ func AddFlagsMsgMarketUpdateEnabled(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgMarketUpdateEnabled reads all the AddFlagsMsgMarketUpdateEnabled flags and creates the desired Msg.
+// MakeMsgMarketUpdateEnabled reads all the SetupCmdTxMarketUpdateEnabled flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgMarketUpdateEnabled(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketUpdateEnabledRequest, error) {
 	msg := &exchange.MsgMarketUpdateEnabledRequest{}
@@ -419,8 +441,10 @@ func MakeMsgMarketUpdateEnabled(clientCtx client.Context, flagSet *pflag.FlagSet
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMsgMarketUpdateUserSettle adds all the flags needed for MakeMsgMarketUpdateUserSettle.
-func AddFlagsMsgMarketUpdateUserSettle(cmd *cobra.Command) {
+// SetupCmdTxMarketUpdateUserSettle adds all the flags needed for MakeMsgMarketUpdateUserSettle.
+func SetupCmdTxMarketUpdateUserSettle(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	AddFlagsEnableDisable(cmd, "allow_user_settlement")
@@ -437,7 +461,7 @@ func AddFlagsMsgMarketUpdateUserSettle(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgMarketUpdateUserSettle reads all the AddFlagsMsgMarketUpdateUserSettle flags and creates the desired Msg.
+// MakeMsgMarketUpdateUserSettle reads all the SetupCmdTxMarketUpdateUserSettle flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgMarketUpdateUserSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketUpdateUserSettleRequest, error) {
 	msg := &exchange.MsgMarketUpdateUserSettleRequest{}
@@ -450,8 +474,10 @@ func MakeMsgMarketUpdateUserSettle(clientCtx client.Context, flagSet *pflag.Flag
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMsgMarketManagePermissions adds all the flags needed for MakeMsgMarketManagePermissions.
-func AddFlagsMsgMarketManagePermissions(cmd *cobra.Command) {
+// SetupCmdTxMarketManagePermissions adds all the flags needed for MakeMsgMarketManagePermissions.
+func SetupCmdTxMarketManagePermissions(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().StringSlice(FlagRevokeAll, nil, "Addresses to revoke all permissions from (repeatable)")
@@ -474,7 +500,7 @@ func AddFlagsMsgMarketManagePermissions(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgMarketManagePermissions reads all the AddFlagsMsgMarketManagePermissions flags and creates the desired Msg.
+// MakeMsgMarketManagePermissions reads all the SetupCmdTxMarketManagePermissions flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgMarketManagePermissions(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketManagePermissionsRequest, error) {
 	msg := &exchange.MsgMarketManagePermissionsRequest{}
@@ -489,8 +515,10 @@ func MakeMsgMarketManagePermissions(clientCtx client.Context, flagSet *pflag.Fla
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMsgMarketManageReqAttrs adds all the flags needed for MakeMsgMarketManageReqAttrs.
-func AddFlagsMsgMarketManageReqAttrs(cmd *cobra.Command) {
+// SetupCmdTxMarketManageReqAttrs adds all the flags needed for MakeMsgMarketManageReqAttrs.
+func SetupCmdTxMarketManageReqAttrs(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().StringSlice(FlagAskAdd, nil, "The create-ask required attributes to add (repeatable)")
@@ -516,7 +544,7 @@ func AddFlagsMsgMarketManageReqAttrs(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgMarketManageReqAttrs reads all the AddFlagsMsgMarketManageReqAttrs flags and creates the desired Msg.
+// MakeMsgMarketManageReqAttrs reads all the SetupCmdTxMarketManageReqAttrs flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgMarketManageReqAttrs(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketManageReqAttrsRequest, error) {
 	msg := &exchange.MsgMarketManageReqAttrsRequest{}
@@ -532,8 +560,11 @@ func MakeMsgMarketManageReqAttrs(clientCtx client.Context, flagSet *pflag.FlagSe
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMsgGovCreateMarket adds all the flags needed for MakeMsgGovCreateMarket.
-func AddFlagsMsgGovCreateMarket(cmd *cobra.Command) {
+// SetupCmdTxGovCreateMarket adds all the flags needed for MakeMsgGovCreateMarket.
+func SetupCmdTxGovCreateMarket(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+
 	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
 	AddFlagsMarketDetails(cmd)
@@ -587,7 +618,7 @@ func AddFlagsMsgGovCreateMarket(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgGovCreateMarket reads all the AddFlagsMsgGovCreateMarket flags and creates the desired Msg.
+// MakeMsgGovCreateMarket reads all the SetupCmdTxGovCreateMarket flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgGovCreateMarket(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgGovCreateMarketRequest, error) {
 	msg := &exchange.MsgGovCreateMarketRequest{}
@@ -611,8 +642,11 @@ func MakeMsgGovCreateMarket(_ client.Context, flagSet *pflag.FlagSet, _ []string
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMsgGovManageFees adds all the flags needed for MakeMsgGovManageFees.
-func AddFlagsMsgGovManageFees(cmd *cobra.Command) {
+// SetupCmdTxGovManageFees adds all the flags needed for MakeMsgGovManageFees.
+func SetupCmdTxGovManageFees(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+
 	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().StringSlice(FlagAskAdd, nil, "Create-ask flat fee options to add, e.g. 10nhash (repeatable)")
@@ -662,7 +696,7 @@ func AddFlagsMsgGovManageFees(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgGovManageFees reads all the AddFlagsMsgGovManageFees flags and creates the desired Msg.
+// MakeMsgGovManageFees reads all the SetupCmdTxGovManageFees flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgGovManageFees(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgGovManageFeesRequest, error) {
 	msg := &exchange.MsgGovManageFeesRequest{}
@@ -686,8 +720,11 @@ func MakeMsgGovManageFees(_ client.Context, flagSet *pflag.FlagSet, _ []string) 
 	return msg, errors.Join(errs...)
 }
 
-// AddFlagsMsgGovUpdateParams adds all the flags needed for MakeMsgGovUpdateParams.
-func AddFlagsMsgGovUpdateParams(cmd *cobra.Command) {
+// SetupCmdTxGovUpdateParams adds all the flags needed for MakeMsgGovUpdateParams.
+func SetupCmdTxGovUpdateParams(cmd *cobra.Command) {
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+
 	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
 	cmd.Flags().Uint32(FlagDefault, 0, "The default split (required)")
 	cmd.Flags().StringSlice(FlagSplit, nil, "The denom-splits (repeatable)")
@@ -711,7 +748,7 @@ Example <split>: nhash:500`,
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgGovUpdateParams reads all the AddFlagsMsgGovUpdateParams flags and creates the desired Msg.
+// MakeMsgGovUpdateParams reads all the SetupCmdTxGovUpdateParams flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgGovUpdateParams(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgGovUpdateParamsRequest, error) {
 	msg := &exchange.MsgGovUpdateParamsRequest{}

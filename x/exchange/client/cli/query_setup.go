@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/pflag"
 
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,8 +16,10 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
-// AddFlagsQueryOrderFeeCalc adds all the flags needed for MakeQueryOrderFeeCalc.
-func AddFlagsQueryOrderFeeCalc(cmd *cobra.Command) {
+// SetupCmdQueryOrderFeeCalc adds all the flags needed for MakeQueryOrderFeeCalc.
+func SetupCmdQueryOrderFeeCalc(cmd *cobra.Command) {
+	flags.AddQueryFlagsToCmd(cmd)
+
 	cmd.Flags().Bool(FlagAsk, false, "Run calculation on an ask order")
 	cmd.Flags().Bool(FlagBid, false, "Run calculation on a bid order")
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
@@ -47,7 +50,7 @@ func AddFlagsQueryOrderFeeCalc(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeQueryOrderFeeCalc reads all the AddFlagsQueryOrderFeeCalc flags and creates the desired request.
+// MakeQueryOrderFeeCalc reads all the SetupCmdQueryOrderFeeCalc flags and creates the desired request.
 // Satisfies the queryReqMaker type.
 func MakeQueryOrderFeeCalc(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryOrderFeeCalcRequest, error) {
 	bidOrder := &exchange.BidOrder{}
@@ -97,8 +100,10 @@ func MakeQueryOrderFeeCalc(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryO
 	return req, errors.Join(errs...)
 }
 
-// AddFlagsQueryGetOrder adds all the flags needed for MakeQueryGetOrder.
-func AddFlagsQueryGetOrder(cmd *cobra.Command) {
+// SetupCmdQueryGetOrder adds all the flags needed for MakeQueryGetOrder.
+func SetupCmdQueryGetOrder(cmd *cobra.Command) {
+	flags.AddQueryFlagsToCmd(cmd)
+
 	cmd.Flags().Uint64(FlagOrder, 0, "The order id")
 
 	AddUseArgs(cmd,
@@ -111,7 +116,7 @@ func AddFlagsQueryGetOrder(cmd *cobra.Command) {
 	cmd.Args = cobra.MaximumNArgs(1)
 }
 
-// MakeQueryGetOrder reads all the AddFlagsQueryGetOrder flags and creates the desired request.
+// MakeQueryGetOrder reads all the SetupCmdQueryGetOrder flags and creates the desired request.
 // Satisfies the queryReqMaker type.
 func MakeQueryGetOrder(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetOrderRequest, error) {
 	req := &exchange.QueryGetOrderRequest{}
@@ -122,8 +127,10 @@ func MakeQueryGetOrder(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGe
 	return req, err
 }
 
-// AddFlagsQueryGetOrderByExternalID adds all the flags needed for MakeQueryGetOrderByExternalID.
-func AddFlagsQueryGetOrderByExternalID(cmd *cobra.Command) {
+// SetupCmdQueryGetOrderByExternalID adds all the flags needed for MakeQueryGetOrderByExternalID.
+func SetupCmdQueryGetOrderByExternalID(cmd *cobra.Command) {
+	flags.AddQueryFlagsToCmd(cmd)
+
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().String(FlagExternalID, "", "The external id (required)")
 
@@ -139,7 +146,7 @@ func AddFlagsQueryGetOrderByExternalID(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeQueryGetOrderByExternalID reads all the AddFlagsQueryGetOrderByExternalID flags and creates the desired request.
+// MakeQueryGetOrderByExternalID reads all the SetupCmdQueryGetOrderByExternalID flags and creates the desired request.
 // Satisfies the queryReqMaker type.
 func MakeQueryGetOrderByExternalID(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetOrderByExternalIDRequest, error) {
 	req := &exchange.QueryGetOrderByExternalIDRequest{}
@@ -151,9 +158,11 @@ func MakeQueryGetOrderByExternalID(flagSet *pflag.FlagSet, _ []string) (*exchang
 	return req, errors.Join(errs...)
 }
 
-// AddFlagsQueryGetMarketOrders adds all the flags needed for MakeQueryGetMarketOrders.
-func AddFlagsQueryGetMarketOrders(cmd *cobra.Command) {
+// SetupCmdQueryGetMarketOrders adds all the flags needed for MakeQueryGetMarketOrders.
+func SetupCmdQueryGetMarketOrders(cmd *cobra.Command) {
+	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "orders")
+
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().Bool(FlagAsks, false, "Limit results to only ask orders")
 	cmd.Flags().Bool(FlagBids, false, "Limit results to only bid orders")
@@ -177,7 +186,7 @@ func AddFlagsQueryGetMarketOrders(cmd *cobra.Command) {
 	cmd.Args = cobra.MaximumNArgs(1)
 }
 
-// MakeQueryGetMarketOrders reads all the AddFlagsQueryGetMarketOrders flags and creates the desired request.
+// MakeQueryGetMarketOrders reads all the SetupCmdQueryGetMarketOrders flags and creates the desired request.
 // Satisfies the queryReqMaker type.
 func MakeQueryGetMarketOrders(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetMarketOrdersRequest, error) {
 	req := &exchange.QueryGetMarketOrdersRequest{}
@@ -191,9 +200,11 @@ func MakeQueryGetMarketOrders(flagSet *pflag.FlagSet, args []string) (*exchange.
 	return req, errors.Join(errs...)
 }
 
-// AddFlagsQueryGetOwnerOrders adds all the flags needed for MakeQueryGetOwnerOrders.
-func AddFlagsQueryGetOwnerOrders(cmd *cobra.Command) {
+// SetupCmdQueryGetOwnerOrders adds all the flags needed for MakeQueryGetOwnerOrders.
+func SetupCmdQueryGetOwnerOrders(cmd *cobra.Command) {
+	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "orders")
+
 	cmd.Flags().String(FlagOwner, "", "The owner")
 	cmd.Flags().Bool(FlagAsks, false, "Limit results to only ask orders")
 	cmd.Flags().Bool(FlagBids, false, "Limit results to only bid orders")
@@ -217,7 +228,7 @@ func AddFlagsQueryGetOwnerOrders(cmd *cobra.Command) {
 	cmd.Args = cobra.MaximumNArgs(1)
 }
 
-// MakeQueryGetOwnerOrders reads all the AddFlagsQueryGetOwnerOrders flags and creates the desired request.
+// MakeQueryGetOwnerOrders reads all the SetupCmdQueryGetOwnerOrders flags and creates the desired request.
 // Satisfies the queryReqMaker type.
 func MakeQueryGetOwnerOrders(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetOwnerOrdersRequest, error) {
 	req := &exchange.QueryGetOwnerOrdersRequest{}
@@ -231,9 +242,11 @@ func MakeQueryGetOwnerOrders(flagSet *pflag.FlagSet, args []string) (*exchange.Q
 	return req, errors.Join(errs...)
 }
 
-// AddFlagsQueryGetAssetOrders adds all the flags needed for MakeQueryGetAssetOrders.
-func AddFlagsQueryGetAssetOrders(cmd *cobra.Command) {
+// SetupCmdQueryGetAssetOrders adds all the flags needed for MakeQueryGetAssetOrders.
+func SetupCmdQueryGetAssetOrders(cmd *cobra.Command) {
+	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "orders")
+
 	cmd.Flags().String(FlagDenom, "", "The asset denom")
 	cmd.Flags().Bool(FlagAsks, false, "Limit results to only ask orders")
 	cmd.Flags().Bool(FlagBids, false, "Limit results to only bid orders")
@@ -257,7 +270,7 @@ func AddFlagsQueryGetAssetOrders(cmd *cobra.Command) {
 	cmd.Args = cobra.MaximumNArgs(1)
 }
 
-// MakeQueryGetAssetOrders reads all the AddFlagsQueryGetAssetOrders flags and creates the desired request.
+// MakeQueryGetAssetOrders reads all the SetupCmdQueryGetAssetOrders flags and creates the desired request.
 func MakeQueryGetAssetOrders(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetAssetOrdersRequest, error) {
 	req := &exchange.QueryGetAssetOrdersRequest{}
 
@@ -270,8 +283,9 @@ func MakeQueryGetAssetOrders(flagSet *pflag.FlagSet, args []string) (*exchange.Q
 	return req, errors.Join(errs...)
 }
 
-// AddFlagsQueryGetAllOrders adds all the flags needed for MakeQueryGetAllOrders.
-func AddFlagsQueryGetAllOrders(cmd *cobra.Command) {
+// SetupCmdQueryGetAllOrders adds all the flags needed for MakeQueryGetAllOrders.
+func SetupCmdQueryGetAllOrders(cmd *cobra.Command) {
+	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "orders")
 
 	AddUseArgs(cmd, "[pagination flags]")
@@ -282,7 +296,7 @@ func AddFlagsQueryGetAllOrders(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeQueryGetAllOrders reads all the AddFlagsQueryGetAllOrders flags and creates the desired request.
+// MakeQueryGetAllOrders reads all the SetupCmdQueryGetAllOrders flags and creates the desired request.
 func MakeQueryGetAllOrders(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetAllOrdersRequest, error) {
 	req := &exchange.QueryGetAllOrdersRequest{}
 
@@ -292,8 +306,10 @@ func MakeQueryGetAllOrders(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryG
 	return req, err
 }
 
-// AddFlagsQueryGetMarket adds all the flags needed for MakeQueryGetMarket.
-func AddFlagsQueryGetMarket(cmd *cobra.Command) {
+// SetupCmdQueryGetMarket adds all the flags needed for MakeQueryGetMarket.
+func SetupCmdQueryGetMarket(cmd *cobra.Command) {
+	flags.AddQueryFlagsToCmd(cmd)
+
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
 
 	AddUseArgs(cmd,
@@ -306,7 +322,7 @@ func AddFlagsQueryGetMarket(cmd *cobra.Command) {
 	cmd.Args = cobra.MaximumNArgs(1)
 }
 
-// MakeQueryGetMarket reads all the AddFlagsQueryGetMarket flags and creates the desired request.
+// MakeQueryGetMarket reads all the SetupCmdQueryGetMarket flags and creates the desired request.
 func MakeQueryGetMarket(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetMarketRequest, error) {
 	req := &exchange.QueryGetMarketRequest{
 		MarketId: 0,
@@ -318,8 +334,9 @@ func MakeQueryGetMarket(flagSet *pflag.FlagSet, args []string) (*exchange.QueryG
 	return req, err
 }
 
-// AddFlagsQueryGetAllMarkets adds all the flags needed for MakeQueryGetAllMarkets.
-func AddFlagsQueryGetAllMarkets(cmd *cobra.Command) {
+// SetupCmdQueryGetAllMarkets adds all the flags needed for MakeQueryGetAllMarkets.
+func SetupCmdQueryGetAllMarkets(cmd *cobra.Command) {
+	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "markets")
 
 	AddUseArgs(cmd, "[pagination flags]")
@@ -330,7 +347,7 @@ func AddFlagsQueryGetAllMarkets(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeQueryGetAllMarkets reads all the AddFlagsQueryGetAllMarkets flags and creates the desired request.
+// MakeQueryGetAllMarkets reads all the SetupCmdQueryGetAllMarkets flags and creates the desired request.
 func MakeQueryGetAllMarkets(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetAllMarketsRequest, error) {
 	req := &exchange.QueryGetAllMarketsRequest{}
 

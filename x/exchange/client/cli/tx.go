@@ -4,8 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
@@ -52,8 +50,7 @@ func CmdTxCreateAsk() *cobra.Command {
 		RunE:    genericTxRunE(MakeMsgCreateAsk),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	AddFlagsMsgCreateAsk(cmd)
+	SetupCmdTxCreateAsk(cmd)
 	return cmd
 }
 
@@ -66,8 +63,7 @@ func CmdTxCreateBid() *cobra.Command {
 		RunE:    genericTxRunE(MakeMsgCreateBid),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	AddFlagsMsgCreateBid(cmd)
+	SetupCmdTxCreateBid(cmd)
 	return cmd
 }
 
@@ -80,8 +76,7 @@ func CmdTxCancelOrder() *cobra.Command {
 		RunE:    genericTxRunE(MakeMsgCancelOrder),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	AddFlagsMsgCancelOrder(cmd)
+	SetupCmdTxCancelOrder(cmd)
 	return cmd
 }
 
@@ -93,8 +88,7 @@ func CmdTxFillBids() *cobra.Command {
 		RunE:  genericTxRunE(MakeMsgFillBids),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	AddFlagsMsgFillBids(cmd)
+	SetupCmdTxFillBids(cmd)
 	return cmd
 }
 
@@ -106,8 +100,7 @@ func CmdTxFillAsks() *cobra.Command {
 		RunE:  genericTxRunE(MakeMsgFillAsks),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	AddFlagsMsgFillAsks(cmd)
+	SetupCmdTxFillAsks(cmd)
 	return cmd
 }
 
@@ -120,8 +113,7 @@ func CmdTxMarketSettle() *cobra.Command {
 		RunE:    genericTxRunE(MakeMsgMarketSettle),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	AddFlagsMsgMarketSettle(cmd)
+	SetupCmdTxMarketSettle(cmd)
 	return cmd
 }
 
@@ -134,8 +126,7 @@ func CmdTxMarketSetOrderExternalID() *cobra.Command {
 		RunE:    genericTxRunE(MakeMsgMarketSetOrderExternalID),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	AddFlagsMsgMarketSetOrderExternalID(cmd)
+	SetupCmdTxMarketSetOrderExternalID(cmd)
 	return cmd
 }
 
@@ -148,8 +139,7 @@ func CmdTxMarketWithdraw() *cobra.Command {
 		RunE:    genericTxRunE(MakeMsgMarketWithdraw),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	AddFlagsMsgMarketWithdraw(cmd)
+	SetupCmdTxMarketWithdraw(cmd)
 	return cmd
 }
 
@@ -162,8 +152,7 @@ func CmdTxMarketUpdateDetails() *cobra.Command {
 		RunE:    genericTxRunE(MakeMsgMarketUpdateDetails),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	AddFlagsMsgMarketUpdateDetails(cmd)
+	SetupCmdTxMarketUpdateDetails(cmd)
 	return cmd
 }
 
@@ -176,8 +165,7 @@ func CmdTxMarketUpdateEnabled() *cobra.Command {
 		RunE:    genericTxRunE(MakeMsgMarketUpdateEnabled),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	AddFlagsMsgMarketUpdateEnabled(cmd)
+	SetupCmdTxMarketUpdateEnabled(cmd)
 	return cmd
 }
 
@@ -190,8 +178,7 @@ func CmdTxMarketUpdateUserSettle() *cobra.Command {
 		RunE:    genericTxRunE(MakeMsgMarketUpdateUserSettle),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	AddFlagsMsgMarketUpdateUserSettle(cmd)
+	SetupCmdTxMarketUpdateUserSettle(cmd)
 	return cmd
 }
 
@@ -204,8 +191,7 @@ func CmdTxMarketManagePermissions() *cobra.Command {
 		RunE:    genericTxRunE(MakeMsgMarketManagePermissions),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	AddFlagsMsgMarketManagePermissions(cmd)
+	SetupCmdTxMarketManagePermissions(cmd)
 	return cmd
 }
 
@@ -220,8 +206,7 @@ func CmdTxMarketManageReqAttrs() *cobra.Command {
 		RunE:  genericTxRunE(MakeMsgMarketManageReqAttrs),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	AddFlagsMsgMarketManageReqAttrs(cmd)
+	SetupCmdTxMarketManageReqAttrs(cmd)
 	return cmd
 }
 
@@ -234,9 +219,7 @@ func CmdTxGovCreateMarket() *cobra.Command {
 		RunE:    govTxRunE(MakeMsgGovCreateMarket),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	govcli.AddGovPropFlagsToCmd(cmd)
-	AddFlagsMsgGovCreateMarket(cmd)
+	SetupCmdTxGovCreateMarket(cmd)
 	return cmd
 }
 
@@ -249,9 +232,7 @@ func CmdTxGovManageFees() *cobra.Command {
 		RunE:    govTxRunE(MakeMsgGovManageFees),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	govcli.AddGovPropFlagsToCmd(cmd)
-	AddFlagsMsgGovManageFees(cmd)
+	SetupCmdTxGovManageFees(cmd)
 	return cmd
 }
 
@@ -264,8 +245,6 @@ func CmdTxGovUpdateParams() *cobra.Command {
 		RunE:    govTxRunE(MakeMsgGovUpdateParams),
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-	govcli.AddGovPropFlagsToCmd(cmd)
-	AddFlagsMsgGovUpdateParams(cmd)
+	SetupCmdTxGovUpdateParams(cmd)
 	return cmd
 }
