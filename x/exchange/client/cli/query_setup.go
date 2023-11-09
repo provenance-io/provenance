@@ -343,3 +343,16 @@ func MakeQueryGetAllMarkets(flagSet *pflag.FlagSet, _ []string) (*exchange.Query
 
 	return req, err
 }
+
+// SetupCmdQueryParams adds all the flags needed for MakeQueryParams.
+func SetupCmdQueryParams(cmd *cobra.Command) {
+	AddUseDetails(cmd)
+	AddQueryExample(cmd)
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeQueryParams reads all the SetupCmdQueryParams flags and creates the desired request.
+func MakeQueryParams(_ *pflag.FlagSet, _ []string) (*exchange.QueryParamsRequest, error) {
+	return &exchange.QueryParamsRequest{}, nil
+}
