@@ -262,6 +262,7 @@ func SetupCmdQueryGetAssetOrders(cmd *cobra.Command) {
 }
 
 // MakeQueryGetAssetOrders reads all the SetupCmdQueryGetAssetOrders flags and creates the desired request.
+// Satisfies the queryReqMaker type.
 func MakeQueryGetAssetOrders(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetAssetOrdersRequest, error) {
 	req := &exchange.QueryGetAssetOrdersRequest{}
 
@@ -287,6 +288,7 @@ func SetupCmdQueryGetAllOrders(cmd *cobra.Command) {
 }
 
 // MakeQueryGetAllOrders reads all the SetupCmdQueryGetAllOrders flags and creates the desired request.
+// Satisfies the queryReqMaker type.
 func MakeQueryGetAllOrders(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetAllOrdersRequest, error) {
 	req := &exchange.QueryGetAllOrdersRequest{}
 
@@ -311,10 +313,9 @@ func SetupCmdQueryGetMarket(cmd *cobra.Command) {
 }
 
 // MakeQueryGetMarket reads all the SetupCmdQueryGetMarket flags and creates the desired request.
+// Satisfies the queryReqMaker type.
 func MakeQueryGetMarket(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetMarketRequest, error) {
-	req := &exchange.QueryGetMarketRequest{
-		MarketId: 0,
-	}
+	req := &exchange.QueryGetMarketRequest{}
 
 	var err error
 	req.MarketId, err = ReadFlagMarketOrArg(flagSet, args)
@@ -335,6 +336,7 @@ func SetupCmdQueryGetAllMarkets(cmd *cobra.Command) {
 }
 
 // MakeQueryGetAllMarkets reads all the SetupCmdQueryGetAllMarkets flags and creates the desired request.
+// Satisfies the queryReqMaker type.
 func MakeQueryGetAllMarkets(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetAllMarketsRequest, error) {
 	req := &exchange.QueryGetAllMarketsRequest{}
 
@@ -353,6 +355,64 @@ func SetupCmdQueryParams(cmd *cobra.Command) {
 }
 
 // MakeQueryParams reads all the SetupCmdQueryParams flags and creates the desired request.
+// Satisfies the queryReqMaker type.
 func MakeQueryParams(_ *pflag.FlagSet, _ []string) (*exchange.QueryParamsRequest, error) {
 	return &exchange.QueryParamsRequest{}, nil
+}
+
+// SetupCmdQueryValidateCreateMarket adds all the flags needed for MakeQueryValidateCreateMarket.
+func SetupCmdQueryValidateCreateMarket(cmd *cobra.Command) {
+	SetupCmdTxGovCreateMarket(cmd)
+}
+
+// MakeQueryValidateCreateMarket reads all the SetupCmdQueryValidateCreateMarket flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryValidateCreateMarket(flags *pflag.FlagSet, args []string) (*exchange.QueryValidateCreateMarketRequest, error) {
+	req := &exchange.QueryValidateCreateMarketRequest{}
+
+	var err error
+	req.CreateMarketRequest, err = MakeMsgGovCreateMarket(client.Context{}, flags, args)
+
+	return req, err
+}
+
+// SetupCmdQueryValidateMarket adds all the flags needed for MakeQueryValidateMarket.
+func SetupCmdQueryValidateMarket(cmd *cobra.Command) {
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
+
+	AddUseArgs(cmd,
+		fmt.Sprintf("{<market id>|--%s <market id>}", FlagMarket),
+	)
+	AddUseDetails(cmd, "A <market id> is required as either an arg or flag, but not both.")
+	AddQueryExample(cmd, "3")
+	AddQueryExample(cmd, "--"+FlagMarket, "1")
+
+	cmd.Args = cobra.MaximumNArgs(1)
+}
+
+// MakeQueryValidateMarket reads all the SetupCmdQueryValidateMarket flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryValidateMarket(flagSet *pflag.FlagSet, args []string) (*exchange.QueryValidateMarketRequest, error) {
+	req := &exchange.QueryValidateMarketRequest{}
+
+	var err error
+	req.MarketId, err = ReadFlagMarketOrArg(flagSet, args)
+
+	return req, err
+}
+
+// SetupCmdQueryValidateManageFees adds all the flags needed for MakeQueryValidateManageFees.
+func SetupCmdQueryValidateManageFees(cmd *cobra.Command) {
+	SetupCmdTxGovManageFees(cmd)
+}
+
+// MakeQueryValidateManageFees reads all the SetupCmdQueryValidateManageFees flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryValidateManageFees(flags *pflag.FlagSet, args []string) (*exchange.QueryValidateManageFeesRequest, error) {
+	req := &exchange.QueryValidateManageFeesRequest{}
+
+	var err error
+	req.ManageFeesRequest, err = MakeMsgGovManageFees(client.Context{}, flags, args)
+
+	return req, err
 }

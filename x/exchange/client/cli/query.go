@@ -1,18 +1,12 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/version"
-
 	"github.com/provenance-io/provenance/x/exchange"
 )
-
-var queryCmdStart = fmt.Sprintf("%s query %s", version.AppName, exchange.ModuleName)
 
 func CmdQuery() *cobra.Command {
 	cmd := &cobra.Command{
@@ -182,59 +176,44 @@ func CmdQueryParams() *cobra.Command {
 	return cmd
 }
 
-// CmdQueryValidateCreateMarket TODO
+// CmdQueryValidateCreateMarket creates the validate-create-market sub-command for the exchange query command.
 func CmdQueryValidateCreateMarket() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, queryCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdQueryValidateCreateMarket
-			return nil
-		},
+		Use:     "validate-create-market",
+		Aliases: []string{"val-create-market", "create-market-validate", "create-market-val"},
+		Short:   "Validate a create market request",
+		RunE:    genericQueryRunE(MakeQueryValidateCreateMarket, exchange.QueryClient.ValidateCreateMarket),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	SetupCmdQueryValidateCreateMarket(cmd)
 	return cmd
 }
 
-// CmdQueryValidateMarket TODO
+// CmdQueryValidateMarket creates the validate-market sub-command for the exchange query command.
 func CmdQueryValidateMarket() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, queryCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdQueryValidateMarket
-			return nil
-		},
+		Use:     "validate-market",
+		Aliases: []string{"val-market", "market-validate", "market-val"},
+		Short:   "Validate an existing market's setup",
+		RunE:    genericQueryRunE(MakeQueryValidateMarket, exchange.QueryClient.ValidateMarket),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	SetupCmdQueryValidateMarket(cmd)
 	return cmd
 }
 
-// CmdQueryValidateManageFees TODO
+// CmdQueryValidateManageFees creates the validate-manage-fees sub-command for the exchange query command.
 func CmdQueryValidateManageFees() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "TODO",
-		Aliases: []string{"TODO"},
-		Short:   "TODO",
-		Long:    `TODO`,
-		Example: fmt.Sprintf(`%[1]s TODO`, queryCmdStart),
-		Args:    cobra.ExactArgs(0), // TODO
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO[1701]: CmdQueryValidateManageFees
-			return nil
-		},
+		Use:     "validate-manage-fees",
+		Aliases: []string{"val-manage-fees", "manage-fees-validate", "manage-fees-val"},
+		Short:   "Validate a manage fees request",
+		RunE:    genericQueryRunE(MakeQueryValidateManageFees, exchange.QueryClient.ValidateManageFees),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	SetupCmdQueryValidateManageFees(cmd)
 	return cmd
 }
