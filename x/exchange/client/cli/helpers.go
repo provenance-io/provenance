@@ -138,7 +138,10 @@ func AddQueryExample(cmd *cobra.Command, args ...string) {
 	if len(cmd.Example) > 0 {
 		cmd.Example += "\n"
 	}
-	cmd.Example += fmt.Sprintf("%s query %s %s", version.AppName, exchange.ModuleName, cmd.Name()) + " " + strings.Join(args, " ")
+	cmd.Example += fmt.Sprintf("%s query %s %s", version.AppName, exchange.ModuleName, cmd.Name())
+	if len(args) > 0 {
+		cmd.Example += " " + strings.Join(args, " ")
+	}
 }
 
 // SimplePerms returns a string containing all the Permission.SimpleString() values.
