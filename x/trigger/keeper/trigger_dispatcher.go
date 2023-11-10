@@ -26,8 +26,10 @@ func (k Keeper) ProcessTriggers(ctx sdk.Context) {
 		item := k.QueuePeek(ctx)
 		triggerID := item.GetTrigger().Id
 		gasLimit := k.GetGasLimit(ctx, triggerID)
+		k.Logger(ctx).Debug(fmt.Sprintf("Processing trigger %d with gas limit %d", triggerID, gasLimit))
 
 		if gasLimit+gasConsumed > MaximumQueueGas {
+			k.Logger(ctx).Debug(fmt.Sprintf("Exceeded MaximumQueueGas %d/%d skipping...", gasLimit+gasConsumed, MaximumQueueGas))
 			return
 		}
 		actionsProcessed++
@@ -84,6 +86,7 @@ func (k Keeper) handleMsgs(ctx sdk.Context, msgs []sdk.Msg) ([]sdk.Result, error
 		if handler == nil {
 			return nil, fmt.Errorf("no message handler found for message %s at position %d", sdk.MsgTypeURL(msg), i)
 		}
+		k.Logger(ctx).Debug(fmt.Sprintf("Executing %s at position %d", sdk.MsgTypeURL(msg), i))
 		r, err := k.safeHandle(ctx, msg, handler)
 		if err != nil {
 			return nil, fmt.Errorf("error processing message %s at position %d: %w", sdk.MsgTypeURL(msg), i, err)
@@ -92,6 +95,7 @@ func (k Keeper) handleMsgs(ctx sdk.Context, msgs []sdk.Msg) ([]sdk.Result, error
 		if r == nil {
 			return nil, fmt.Errorf("got nil sdk.Result for message %s at position %d", sdk.MsgTypeURL(msg), i)
 		}
+		k.Logger(ctx).Debug(fmt.Sprintf("Successfully executed %s at position %d", sdk.MsgTypeURL(msg), i))
 
 		results[i] = *r
 	}
