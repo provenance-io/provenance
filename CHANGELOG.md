@@ -53,6 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * During `FillBids`, the seller settlement fee is now calculated on the total price instead of each order individually [#1699](https://github.com/provenance-io/provenance/issues/1699).
 * In the `OrderFeeCalc` query, ensure the market exists [#1699](https://github.com/provenance-io/provenance/issues/1699).
 * Add publishing of docker arm64 container builds [#1634](https://github.com/provenance-io/provenance/issues/1634)
+* Add upgrade handler to set net asset values to markers [PR 1712](https://github.com/provenance-io/provenance/pull/1712).
 
 ### Bug Fixes
 

@@ -23,7 +23,7 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
-	"github.com/provenance-io/provenance/x/marker/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
@@ -164,6 +164,9 @@ var upgrades = map[string]appUpgrade{
 			removeInactiveValidatorDelegations(ctx, app)
 			setupICQ(ctx, app)
 			updateMaxSupply(ctx, app)
+
+			addMarkerNavs(ctx, app, GetPioMainnet1DenomToNav())
+
 			setExchangeParams(ctx, app)
 			updateIbcMarkerDenomMetadata(ctx, app)
 
@@ -377,6 +380,22 @@ func updateMaxSupply(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Done updating MaxSupply marker param")
 }
 
+// addMarkerNavs adds navs to existing markers
+func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.NetAssetValue) {
+	ctx.Logger().Info("Adding marker net asset values")
+	for denom, nav := range denomToNav {
+		marker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, denom)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("unable to get marker %v: %v", denom, err))
+			continue
+		}
+		if err := app.MarkerKeeper.AddSetNetAssetValues(ctx, marker, []markertypes.NetAssetValue{nav}, "upgrade_handler"); err != nil {
+			ctx.Logger().Error(fmt.Sprintf("unable to set net asset value %v: %v", nav, err))
+		}
+	}
+	ctx.Logger().Info("Done adding marker net asset values")
+}
+
 // setExchangeParams sets exchange module's params to the defaults.
 // TODO: Remove with the saffron handlers.
 func setExchangeParams(ctx sdk.Context, app *App) {
@@ -396,7 +415,7 @@ func setExchangeParams(ctx sdk.Context, app *App) {
 // TODO: Remove with the saffron handlers.
 func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating ibc marker denom metadata")
-	app.MarkerKeeper.IterateMarkers(ctx, func(record types.MarkerAccountI) bool {
+	app.MarkerKeeper.IterateMarkers(ctx, func(record markertypes.MarkerAccountI) bool {
 		if !strings.HasPrefix(record.GetDenom(), "ibc/") {
 			return false
 		}
