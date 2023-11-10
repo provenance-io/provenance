@@ -56,6 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add upgrade handler to set net asset values to markers [PR 1712](https://github.com/provenance-io/provenance/pull/1712).
 * Add additional logging to trigger module [#1718](https://github.com/provenance-io/provenance/issues/1718).
 * When the exchange module settles orders, update the marker net-asset-values ([#1736](https://github.com/provenance-io/provenance/pull/1736).
+* Add the EventTriggerDetected and EventTriggerExecuted events [#1717](https://github.com/provenance-io/provenance/issues/1717).
 
 ### Bug Fixes
 

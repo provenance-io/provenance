@@ -661,6 +661,8 @@
 - [provenance/trigger/v1/event.proto](#provenance/trigger/v1/event.proto)
     - [EventTriggerCreated](#provenance.trigger.v1.EventTriggerCreated)
     - [EventTriggerDestroyed](#provenance.trigger.v1.EventTriggerDestroyed)
+    - [EventTriggerDetected](#provenance.trigger.v1.EventTriggerDetected)
+    - [EventTriggerExecuted](#provenance.trigger.v1.EventTriggerExecuted)
   
 - [provenance/trigger/v1/trigger.proto](#provenance/trigger/v1/trigger.proto)
     - [Attribute](#provenance.trigger.v1.Attribute)
@@ -9990,7 +9992,7 @@ EventTriggerCreated is an event for when a trigger is created
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `trigger_id` | [string](#string) |  | trigger_id is a unique identifier of the trigger |
+| `trigger_id` | [string](#string) |  | trigger_id is a unique identifier of the trigger. |
 
 
 
@@ -10005,7 +10007,39 @@ EventTriggerDestroyed is an event for when a trigger is destroyed
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `trigger_id` | [string](#string) |  | trigger_id is a unique identifier of the trigger |
+| `trigger_id` | [string](#string) |  | trigger_id is a unique identifier of the trigger. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.EventTriggerDetected"></a>
+
+### EventTriggerDetected
+EventTriggerDetected is an event for when a trigger's event is detected
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [string](#string) |  | trigger_id is a unique identifier of the trigger. |
+
+
+
+
+
+
+<a name="provenance.trigger.v1.EventTriggerExecuted"></a>
+
+### EventTriggerExecuted
+EventTriggerExecuted is an event for when a trigger is executed.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `trigger_id` | [string](#string) |  | trigger_id is a unique identifier of the trigger. |
+| `owner` | [string](#string) |  | owner is the creator of the trigger. |
+| `success` | [bool](#bool) |  | success indicates if all executed actions were successful. |
 
 
 
