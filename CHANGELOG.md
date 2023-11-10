@@ -41,6 +41,27 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+## [v1.17.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc3) - 2023-11-10
+
+### Improvements
+
+* Add upgrade handler to set net asset values to markers [PR 1712](https://github.com/provenance-io/provenance/pull/1712).
+* Add additional logging to trigger module [#1718](https://github.com/provenance-io/provenance/issues/1718).
+* When the exchange module settles orders, update the marker net-asset-values ([#1736](https://github.com/provenance-io/provenance/pull/1736).
+* Add the EventTriggerDetected and EventTriggerExecuted events [#1717](https://github.com/provenance-io/provenance/issues/1717).
+* Add spec docs for the exchange module [#1700](https://github.com/provenance-io/provenance/issues/1700).
+
+### Bug Fixes
+
+* Fixed denom metadata source chain-id retrieval for new ibc markers [#1726](https://github.com/provenance-io/provenance/issues/1726).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.17.0-rc2...v1.17.0-rc3
+* https://github.com/provenance-io/provenance/compare/v1.16.0...v1.17.0-rc3
+
+---
+
 ## [v1.17.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc2) - 2023-11-03
 
 ### Features
@@ -53,17 +74,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * During `FillBids`, the seller settlement fee is now calculated on the total price instead of each order individually [#1699](https://github.com/provenance-io/provenance/issues/1699).
 * In the `OrderFeeCalc` query, ensure the market exists [#1699](https://github.com/provenance-io/provenance/issues/1699).
 * Add publishing of docker arm64 container builds [#1634](https://github.com/provenance-io/provenance/issues/1634)
-* Add upgrade handler to set net asset values to markers [PR 1712](https://github.com/provenance-io/provenance/pull/1712).
-* Add additional logging to trigger module [#1718](https://github.com/provenance-io/provenance/issues/1718).
-* When the exchange module settles orders, update the marker net-asset-values ([#1736](https://github.com/provenance-io/provenance/pull/1736).
-* Add the EventTriggerDetected and EventTriggerExecuted events [#1717](https://github.com/provenance-io/provenance/issues/1717).
 
 ### Bug Fixes
 
 * During `InitGenesis`, ensure LastOrderId is at least the largest order id [#1699](https://github.com/provenance-io/provenance/issues/1699).
 * Properly populate the permissions lists when reading access grants from state [#1699](https://github.com/provenance-io/provenance/issues/1699).
 * Fixed the paginated order queries to properly look up orders [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* Fixed denom metadata source chain-id retrieval for new ibc markers [#1726](https://github.com/provenance-io/provenance/issues/1726).
 
 ### Full Commit History
 
