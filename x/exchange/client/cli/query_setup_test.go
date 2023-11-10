@@ -24,19 +24,29 @@ import (
 
 var exampleStart = version.AppName + " query exchange dummy"
 
-// queryMakerTestDef is the definition of a query maker to be tested func.
+// queryMakerTestDef is the definition of a query maker func to be tested.
+// R is the type that is returned by the maker.
 type queryMakerTestDef[R any] struct {
+	// makerName is the name of the maker func being tested.
 	makerName string
-	setup     func(cmd *cobra.Command)
-	maker     func(flagSet *pflag.FlagSet, args []string) (*R, error)
+	// maker is the query request maker func being tested.
+	maker func(flagSet *pflag.FlagSet, args []string) (*R, error)
+	// setup is the command setup func that sets up a command so it has what's needed by the maker.
+	setup func(cmd *cobra.Command)
 }
 
 // queryMakerTestCase is a test case for a query maker func.
+// R is the type that is returned by the maker.
 type queryMakerTestCase[R any] struct {
-	name   string
-	flags  []string
-	args   []string
+	// name is a name for this test case.
+	name string
+	// flags are the flags the process by the command to get the flagSet to provide to the maker.
+	flags []string
+	// args are the strings to supply as args to the maker.
+	args []string
+	// expReq is the expected result of the maker.
 	expReq *R
+	// expErr is the expected error string. An empty string indicates the error should be nil.
 	expErr string
 }
 
@@ -99,8 +109,8 @@ func TestSetupCmdQueryOrderFeeCalc(t *testing.T) {
 func TestMakeQueryOrderFeeCalc(t *testing.T) {
 	td := queryMakerTestDef[exchange.QueryOrderFeeCalcRequest]{
 		makerName: "MakeQueryOrderFeeCalc",
-		setup:     cli.SetupCmdQueryOrderFeeCalc,
 		maker:     cli.MakeQueryOrderFeeCalc,
+		setup:     cli.SetupCmdQueryOrderFeeCalc,
 	}
 
 	fillerCoin := sdk.Coin{Denom: "filler", Amount: sdkmath.NewInt(0)}
@@ -232,8 +242,8 @@ func TestSetupCmdQueryGetOrder(t *testing.T) {
 func TestMakeQueryGetOrder(t *testing.T) {
 	td := queryMakerTestDef[exchange.QueryGetOrderRequest]{
 		makerName: "MakeQueryGetOrder",
-		setup:     cli.SetupCmdQueryGetOrder,
 		maker:     cli.MakeQueryGetOrder,
+		setup:     cli.SetupCmdQueryGetOrder,
 	}
 
 	tests := []queryMakerTestCase[exchange.QueryGetOrderRequest]{
@@ -291,8 +301,8 @@ func TestSetupCmdQueryGetOrderByExternalID(t *testing.T) {
 func TestMakeQueryGetOrderByExternalID(t *testing.T) {
 	td := queryMakerTestDef[exchange.QueryGetOrderByExternalIDRequest]{
 		makerName: "MakeQueryGetOrderByExternalID",
-		setup:     cli.SetupCmdQueryGetOrderByExternalID,
 		maker:     cli.MakeQueryGetOrderByExternalID,
+		setup:     cli.SetupCmdQueryGetOrderByExternalID,
 	}
 
 	tests := []queryMakerTestCase[exchange.QueryGetOrderByExternalIDRequest]{
@@ -342,8 +352,8 @@ func TestSetupCmdQueryGetMarketOrders(t *testing.T) {
 func TestMakeQueryGetMarketOrders(t *testing.T) {
 	td := queryMakerTestDef[exchange.QueryGetMarketOrdersRequest]{
 		makerName: "MakeQueryGetMarketOrders",
-		setup:     cli.SetupCmdQueryGetMarketOrders,
 		maker:     cli.MakeQueryGetMarketOrders,
+		setup:     cli.SetupCmdQueryGetMarketOrders,
 	}
 
 	defaultPageReq := &query.PageRequest{
@@ -457,8 +467,8 @@ func TestSetupCmdQueryGetOwnerOrders(t *testing.T) {
 func TestMakeQueryGetOwnerOrders(t *testing.T) {
 	td := queryMakerTestDef[exchange.QueryGetOwnerOrdersRequest]{
 		makerName: "MakeQueryGetOwnerOrders",
-		setup:     cli.SetupCmdQueryGetOwnerOrders,
 		maker:     cli.MakeQueryGetOwnerOrders,
+		setup:     cli.SetupCmdQueryGetOwnerOrders,
 	}
 
 	defaultPageReq := &query.PageRequest{
@@ -572,8 +582,8 @@ func TestSetupCmdQueryGetAssetOrders(t *testing.T) {
 func TestMakeQueryGetAssetOrders(t *testing.T) {
 	td := queryMakerTestDef[exchange.QueryGetAssetOrdersRequest]{
 		makerName: "MakeQueryGetAssetOrders",
-		setup:     cli.SetupCmdQueryGetAssetOrders,
 		maker:     cli.MakeQueryGetAssetOrders,
+		setup:     cli.SetupCmdQueryGetAssetOrders,
 	}
 
 	defaultPageReq := &query.PageRequest{
@@ -677,8 +687,8 @@ func TestSetupCmdQueryGetAllOrders(t *testing.T) {
 func TestMakeQueryGetAllOrders(t *testing.T) {
 	td := queryMakerTestDef[exchange.QueryGetAllOrdersRequest]{
 		makerName: "MakeQueryGetAllOrders",
-		setup:     cli.SetupCmdQueryGetAllOrders,
 		maker:     cli.MakeQueryGetAllOrders,
+		setup:     cli.SetupCmdQueryGetAllOrders,
 	}
 
 	tests := []queryMakerTestCase[exchange.QueryGetAllOrdersRequest]{
@@ -730,8 +740,8 @@ func TestSetupCmdQueryGetMarket(t *testing.T) {
 func TestMakeQueryGetMarket(t *testing.T) {
 	td := queryMakerTestDef[exchange.QueryGetMarketRequest]{
 		makerName: "MakeQueryGetMarket",
-		setup:     cli.SetupCmdQueryGetMarket,
 		maker:     cli.MakeQueryGetMarket,
+		setup:     cli.SetupCmdQueryGetMarket,
 	}
 
 	tests := []queryMakerTestCase[exchange.QueryGetMarketRequest]{
@@ -785,8 +795,8 @@ func TestSetupCmdQueryGetAllMarkets(t *testing.T) {
 func TestMakeQueryGetAllMarkets(t *testing.T) {
 	td := queryMakerTestDef[exchange.QueryGetAllMarketsRequest]{
 		makerName: "MakeQueryGetAllMarkets",
-		setup:     cli.SetupCmdQueryGetAllMarkets,
 		maker:     cli.MakeQueryGetAllMarkets,
+		setup:     cli.SetupCmdQueryGetAllMarkets,
 	}
 
 	tests := []queryMakerTestCase[exchange.QueryGetAllMarketsRequest]{
@@ -830,8 +840,8 @@ func TestSetupCmdQueryParams(t *testing.T) {
 func TestMakeQueryParams(t *testing.T) {
 	td := queryMakerTestDef[exchange.QueryParamsRequest]{
 		makerName: "MakeQueryParams",
-		setup:     cli.SetupCmdQueryParams,
 		maker:     cli.MakeQueryParams,
+		setup:     cli.SetupCmdQueryParams,
 	}
 
 	tests := []queryMakerTestCase[exchange.QueryParamsRequest]{
@@ -897,8 +907,8 @@ func TestSetupCmdQueryValidateCreateMarket(t *testing.T) {
 func TestMakeQueryValidateCreateMarket(t *testing.T) {
 	td := queryMakerTestDef[exchange.QueryValidateCreateMarketRequest]{
 		makerName: "MakeQueryValidateCreateMarket",
-		setup:     cli.SetupCmdQueryValidateCreateMarket,
 		maker:     cli.MakeQueryValidateCreateMarket,
+		setup:     cli.SetupCmdQueryValidateCreateMarket,
 	}
 
 	tests := []queryMakerTestCase[exchange.QueryValidateCreateMarketRequest]{
@@ -1012,8 +1022,8 @@ func TestSetupCmdQueryValidateMarket(t *testing.T) {
 func TestMakeQueryValidateMarket(t *testing.T) {
 	td := queryMakerTestDef[exchange.QueryValidateMarketRequest]{
 		makerName: "MakeQueryValidateMarket",
-		setup:     cli.SetupCmdQueryValidateMarket,
 		maker:     cli.MakeQueryValidateMarket,
+		setup:     cli.SetupCmdQueryValidateMarket,
 	}
 
 	tests := []queryMakerTestCase[exchange.QueryValidateMarketRequest]{
@@ -1095,8 +1105,8 @@ func TestSetupCmdQueryValidateManageFees(t *testing.T) {
 func TestMakeQueryValidateManageFees(t *testing.T) {
 	td := queryMakerTestDef[exchange.QueryValidateManageFeesRequest]{
 		makerName: "MakeQueryValidateManageFees",
-		setup:     cli.SetupCmdQueryValidateManageFees,
 		maker:     cli.MakeQueryValidateManageFees,
+		setup:     cli.SetupCmdQueryValidateManageFees,
 	}
 
 	tests := []queryMakerTestCase[exchange.QueryValidateManageFeesRequest]{

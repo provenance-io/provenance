@@ -1,13 +1,78 @@
 package cli_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/exchange"
+
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/exchange/client/cli"
 )
+
+// "cosmos1geex7m2pv3j8yetnwd047h6lta047h6ls98cgw" = sdk.AccAddress("FromAddress_________").String()
+// "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn" = cli.AuthorityAddr.String()
+
+// txMakerTestDef is the definition of a tx maker func to be tested.
+// R is the type of the sdk.Msg returned by the maker.
+type txMakerTestDef[R sdk.Msg] struct {
+	// makerName is the name of the maker func being tested.
+	makerName string
+	// maker is the tx request maker func being tested.
+	maker func(clientCtx client.Context, flagSet *pflag.FlagSet, args []string) (R, error)
+	// setup is the command setup func that sets up a command so it has what's needed by the maker.
+	setup func(cmd *cobra.Command)
+}
+
+// txMakerTestCase is a test case for a tx maker func.
+// R is the type of the sdk.Msg returned by the maker.
+type txMakerTestCase[R sdk.Msg] struct {
+	// name is a name for this test case.
+	name string
+	// clientCtx is the client context to provided to the maker.
+	clientCtx client.Context
+	// flags are the flags the process by the command to get the flagSet to provide to the maker.
+	flags []string
+	// args are the strings to supply as args to the maker.
+	args []string
+	// expMsg is the expected Msg result.
+	expMsg R
+	// expErr is the expected error string. An empty string indicates the error should be nil.
+	expErr string
+}
+
+// runTxMakerTestCase runs a test case for a tx maker func.
+func runTxMakerTestCase[R sdk.Msg](t *testing.T, td txMakerTestDef[R], tc txMakerTestCase[R]) {
+	cmd := &cobra.Command{
+		Use: "dummy",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.New("this dummy command should not have been executed")
+		},
+	}
+	cmd.Flags().String(flags.FlagFrom, "", "The from address")
+	td.setup(cmd)
+
+	err := cmd.Flags().Parse(tc.flags)
+	require.NoError(t, err, "cmd.Flags().Parse(%q)", tc.flags)
+
+	var msg R
+	testFunc := func() {
+		msg, err = td.maker(tc.clientCtx, cmd.Flags(), tc.args)
+	}
+	require.NotPanics(t, testFunc, td.makerName)
+	assertions.AssertErrorValue(t, err, tc.expErr, "%s error", td.makerName)
+	assert.Equal(t, tc.expMsg, msg, "%s msg", td.makerName)
+}
 
 func TestSetupCmdTxCreateAsk(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -34,7 +99,56 @@ func TestSetupCmdTxCreateAsk(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeMsgCreateAsk(t *testing.T)
+func TestMakeMsgCreateAsk(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgCreateAskRequest]{
+		makerName: "MakeMsgCreateAsk",
+		maker:     cli.MakeMsgCreateAsk,
+		setup:     cli.SetupCmdTxCreateAsk,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgCreateAskRequest]{
+		{
+			name:      "a couple errors",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--assets", "nope", "--creation-fee", "123"},
+			expMsg: &exchange.MsgCreateAskRequest{
+				AskOrder: exchange.AskOrder{Seller: sdk.AccAddress("FromAddress_________").String()},
+			},
+			expErr: joinErrs(
+				"error parsing --assets as a coin: invalid coin expression: \"nope\"",
+				"missing required --price flag",
+				"error parsing --creation-fee as a coin: invalid coin expression: \"123\"",
+			),
+		},
+		{
+			name: "all fields",
+			flags: []string{
+				"--seller", "someaddr", "--market", "4",
+				"--assets", "10apple", "--price", "55plum",
+				"--settlement-fee", "5fig", "--partial",
+				"--external-id", "uuid", "--creation-fee", "6grape",
+			},
+			expMsg: &exchange.MsgCreateAskRequest{
+				AskOrder: exchange.AskOrder{
+					MarketId:                4,
+					Seller:                  "someaddr",
+					Assets:                  sdk.NewInt64Coin("apple", 10),
+					Price:                   sdk.NewInt64Coin("plum", 55),
+					SellerSettlementFlatFee: &sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(5)},
+					AllowPartial:            true,
+					ExternalId:              "uuid",
+				},
+				OrderCreationFee: &sdk.Coin{Denom: "grape", Amount: sdkmath.NewInt(6)},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxCreateBid(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -61,7 +175,56 @@ func TestSetupCmdTxCreateBid(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeMsgCreateBid(t *testing.T)
+func TestMakeMsgCreateBid(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgCreateBidRequest]{
+		makerName: "MakeMsgCreateBid",
+		maker:     cli.MakeMsgCreateBid,
+		setup:     cli.SetupCmdTxCreateBid,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgCreateBidRequest]{
+		{
+			name:      "a couple errors",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--assets", "nope", "--creation-fee", "123"},
+			expMsg: &exchange.MsgCreateBidRequest{
+				BidOrder: exchange.BidOrder{Buyer: sdk.AccAddress("FromAddress_________").String()},
+			},
+			expErr: joinErrs(
+				"error parsing --assets as a coin: invalid coin expression: \"nope\"",
+				"missing required --price flag",
+				"error parsing --creation-fee as a coin: invalid coin expression: \"123\"",
+			),
+		},
+		{
+			name: "all fields",
+			flags: []string{
+				"--buyer", "someaddr", "--market", "4",
+				"--assets", "10apple", "--price", "55plum",
+				"--settlement-fee", "5fig", "--partial",
+				"--external-id", "uuid", "--creation-fee", "6grape",
+			},
+			expMsg: &exchange.MsgCreateBidRequest{
+				BidOrder: exchange.BidOrder{
+					MarketId:            4,
+					Buyer:               "someaddr",
+					Assets:              sdk.NewInt64Coin("apple", 10),
+					Price:               sdk.NewInt64Coin("plum", 55),
+					BuyerSettlementFees: sdk.Coins{sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(5)}},
+					AllowPartial:        true,
+					ExternalId:          "uuid",
+				},
+				OrderCreationFee: &sdk.Coin{Denom: "grape", Amount: sdkmath.NewInt(6)},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxCancelOrder(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -84,7 +247,47 @@ func TestSetupCmdTxCancelOrder(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeMsgCancelOrder(t *testing.T)
+func TestMakeMsgCancelOrder(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgCancelOrderRequest]{
+		makerName: "MakeMsgCancelOrder",
+		maker:     cli.MakeMsgCancelOrder,
+		setup:     cli.SetupCmdTxCancelOrder,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgCancelOrderRequest]{
+		{
+			name:   "nothing",
+			expMsg: &exchange.MsgCancelOrderRequest{},
+			expErr: joinErrs(
+				"no signer provided",
+				"no <order id> provided",
+			),
+		},
+		{
+			name:      "from and arg",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			args:      []string{"87"},
+			expMsg: &exchange.MsgCancelOrderRequest{
+				Signer:  sdk.AccAddress("FromAddress_________").String(),
+				OrderId: 87,
+			},
+		},
+		{
+			name:  "signer and flag",
+			flags: []string{"--order", "52", "--signer", "someone"},
+			expMsg: &exchange.MsgCancelOrderRequest{
+				Signer:  "someone",
+				OrderId: 52,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxFillBids(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -112,7 +315,51 @@ func TestSetupCmdTxFillBids(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeMsgFillBids(t *testing.T)
+func TestMakeMsgFillBids(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgFillBidsRequest]{
+		makerName: "MakeMsgFillBids",
+		maker:     cli.MakeMsgFillBids,
+		setup:     cli.SetupCmdTxFillBids,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgFillBidsRequest]{
+		{
+			name:      "some errors",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--assets", "18", "--creation-fee", "apple"},
+			expMsg: &exchange.MsgFillBidsRequest{
+				Seller: sdk.AccAddress("FromAddress_________").String(),
+			},
+			expErr: joinErrs(
+				"error parsing --assets value \"18\" as coins: invalid decimal coin expression: 18",
+				"error parsing --creation-fee as a coin: invalid coin expression: \"apple\"",
+			),
+		},
+		{
+			name: "all the flags",
+			flags: []string{
+				"--market", "10", "--seller", "mike",
+				"--assets", "18acorn,5apple", "--bids", "83,52,99",
+				"--settlement-fee", "15fig", "--creation-fee", "9grape",
+				"--bids", "5",
+			},
+			expMsg: &exchange.MsgFillBidsRequest{
+				Seller:                  "mike",
+				MarketId:                10,
+				TotalAssets:             sdk.NewCoins(sdk.NewInt64Coin("acorn", 18), sdk.NewInt64Coin("apple", 5)),
+				BidOrderIds:             []uint64{83, 52, 99, 5},
+				SellerSettlementFlatFee: &sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(15)},
+				AskOrderCreationFee:     &sdk.Coin{Denom: "grape", Amount: sdkmath.NewInt(9)},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxFillAsks(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -140,7 +387,51 @@ func TestSetupCmdTxFillAsks(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeMsgFillAsks(t *testing.T)
+func TestMakeMsgFillAsks(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgFillAsksRequest]{
+		makerName: "MakeMsgFillAsks",
+		maker:     cli.MakeMsgFillAsks,
+		setup:     cli.SetupCmdTxFillAsks,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgFillAsksRequest]{
+		{
+			name:      "some errors",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--price", "18", "--creation-fee", "apple"},
+			expMsg: &exchange.MsgFillAsksRequest{
+				Buyer: sdk.AccAddress("FromAddress_________").String(),
+			},
+			expErr: joinErrs(
+				"error parsing --price as a coin: invalid coin expression: \"18\"",
+				"error parsing --creation-fee as a coin: invalid coin expression: \"apple\"",
+			),
+		},
+		{
+			name: "all the flags",
+			flags: []string{
+				"--market", "10", "--buyer", "george",
+				"--price", "23apple", "--asks", "41,12,77",
+				"--settlement-fee", "15fig", "--creation-fee", "9grape",
+				"--asks", "20", "--asks", "987,444,6",
+			},
+			expMsg: &exchange.MsgFillAsksRequest{
+				Buyer:               "george",
+				MarketId:            10,
+				TotalPrice:          sdk.NewInt64Coin("apple", 23),
+				AskOrderIds:         []uint64{41, 12, 77, 20, 987, 444, 6},
+				BuyerSettlementFees: sdk.NewCoins(sdk.NewInt64Coin("fig", 15)),
+				BidOrderCreationFee: &sdk.Coin{Denom: "grape", Amount: sdkmath.NewInt(9)},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxMarketSettle(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -163,7 +454,66 @@ func TestSetupCmdTxMarketSettle(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeMsgMarketSettle(t *testing.T)
+func TestMakeMsgMarketSettle(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketSettleRequest]{
+		makerName: "MakeMsgMarketSettle",
+		maker:     cli.MakeMsgMarketSettle,
+		setup:     cli.SetupCmdTxMarketSettle,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgMarketSettleRequest]{
+		{
+			name:  "no admin",
+			flags: []string{"--asks", "7", "--bids", "8", "--partial"},
+			expMsg: &exchange.MsgMarketSettleRequest{
+				AskOrderIds:   []uint64{7},
+				BidOrderIds:   []uint64{8},
+				ExpectPartial: true,
+			},
+			expErr: "no admin provided",
+		},
+		{
+			name:      "from",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags: []string{
+				"--asks", "15,16,17", "--market", "52", "--bids", "51,52,53",
+				"--asks", "8", "--bids", "9"},
+			expMsg: &exchange.MsgMarketSettleRequest{
+				Admin:       sdk.AccAddress("FromAddress_________").String(),
+				MarketId:    52,
+				AskOrderIds: []uint64{15, 16, 17, 8},
+				BidOrderIds: []uint64{51, 52, 53, 9},
+			},
+		},
+		{
+			name:  "authority",
+			flags: []string{"--market", "52", "--asks", "91", "--bids", "12,13", "--authority", "--partial"},
+			expMsg: &exchange.MsgMarketSettleRequest{
+				Admin:         cli.AuthorityAddr.String(),
+				MarketId:      52,
+				AskOrderIds:   []uint64{91},
+				BidOrderIds:   []uint64{12, 13},
+				ExpectPartial: true,
+			},
+		},
+		{
+			name:  "admin",
+			flags: []string{"--market", "14", "--admin", "bob", "--asks", "1,2,3", "--bids", "5"},
+			expMsg: &exchange.MsgMarketSettleRequest{
+				Admin:       "bob",
+				MarketId:    14,
+				AskOrderIds: []uint64{1, 2, 3},
+				BidOrderIds: []uint64{5},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxMarketSetOrderExternalID(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -195,7 +545,49 @@ func TestSetupCmdTxMarketSetOrderExternalID(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeMsgMarketSetOrderExternalID(t *testing.T)
+func TestMakeMsgMarketSetOrderExternalID(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketSetOrderExternalIDRequest]{
+		makerName: "MakeMsgMarketSetOrderExternalID",
+		maker:     cli.MakeMsgMarketSetOrderExternalID,
+		setup:     cli.SetupCmdTxMarketSetOrderExternalID,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgMarketSetOrderExternalIDRequest]{
+		{
+			name:  "no admin",
+			flags: []string{"--market", "8", "--order", "7", "--external-id", "markus"},
+			expMsg: &exchange.MsgMarketSetOrderExternalIDRequest{
+				MarketId: 8, OrderId: 7, ExternalId: "markus",
+			},
+			expErr: "no admin provided",
+		},
+		{
+			name:      "no external id",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--market", "4000", "--order", "9001"},
+			expMsg: &exchange.MsgMarketSetOrderExternalIDRequest{
+				Admin:    sdk.AccAddress("FromAddress_________").String(),
+				MarketId: 4000, OrderId: 9001, ExternalId: "",
+			},
+		},
+		{
+			name: "all the flags",
+			flags: []string{
+				"--market", "5", "--order", "100000000000001",
+				"--external-id", "one", "--admin", "michelle",
+			},
+			expMsg: &exchange.MsgMarketSetOrderExternalIDRequest{
+				Admin: "michelle", MarketId: 5, OrderId: 100000000000001, ExternalId: "one",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxMarketWithdraw(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -227,11 +619,126 @@ func TestSetupCmdTxMarketWithdraw(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeMsgMarketWithdraw(t *testing.T)
+func TestMakeMsgMarketWithdraw(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketWithdrawRequest]{
+		makerName: "MakeMsgMarketWithdraw",
+		maker:     cli.MakeMsgMarketWithdraw,
+		setup:     cli.SetupCmdTxMarketWithdraw,
+	}
 
-// TODO[1701]: func TestAddFlagsMarketDetails(t *testing.T)
+	tests := []txMakerTestCase[*exchange.MsgMarketWithdrawRequest]{
+		{
+			name:  "some errors",
+			flags: []string{"--market", "5", "--to", "annie", "--amount", "bill"},
+			expMsg: &exchange.MsgMarketWithdrawRequest{
+				Admin: "", MarketId: 5, ToAddress: "annie", Amount: nil,
+			},
+			expErr: joinErrs(
+				"no admin provided",
+				"error parsing --amount value \"bill\" as coins: invalid decimal coin expression: bill",
+			),
+		},
+		{
+			name:      "all fields",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--market", "2", "--to", "samantha", "--amount", "52plum,18pear"},
+			expMsg: &exchange.MsgMarketWithdrawRequest{
+				Admin:    sdk.AccAddress("FromAddress_________").String(),
+				MarketId: 2, ToAddress: "samantha",
+				Amount: sdk.NewCoins(sdk.NewInt64Coin("plum", 52), sdk.NewInt64Coin("pear", 18)),
+			},
+		},
+	}
 
-// TODO[1701]: func TestReadFlagsMarketDetails(t *testing.T)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestAddFlagsMarketDetails(t *testing.T) {
+	runSetupTestCase(t, setupTestCase{
+		name:          "AddFlagsMarketDetails",
+		setup:         cli.AddFlagsMarketDetails,
+		expFlags:      []string{cli.FlagName, cli.FlagDescription, cli.FlagURL, cli.FlagIcon},
+		skipArgsCheck: true,
+	})
+}
+
+func TestReadFlagsMarketDetails(t *testing.T) {
+	tests := []struct {
+		name       string
+		skipSetup  bool
+		flags      []string
+		expDetails exchange.MarketDetails
+		expErr     string
+	}{
+		{
+			name:      "no setup",
+			skipSetup: true,
+			expErr: joinErrs(
+				"flag accessed but not defined: name",
+				"flag accessed but not defined: description",
+				"flag accessed but not defined: url",
+				"flag accessed but not defined: icon",
+			),
+		},
+		{
+			name:       "just name",
+			flags:      []string{"--name", "Richard"},
+			expDetails: exchange.MarketDetails{Name: "Richard"},
+		},
+		{
+			name:  "name and url",
+			flags: []string{"--url", "https://example.com", "--name", "Sally"},
+			expDetails: exchange.MarketDetails{
+				Name:       "Sally",
+				WebsiteUrl: "https://example.com",
+			},
+		},
+		{
+			name: "all fields",
+			flags: []string{
+				"--name", "Market Eight Dude",
+				"--description", "The Little Lebowski",
+				"--url", "https://bowling.god",
+				"--icon", "https://bowling.god/icon",
+			},
+			expDetails: exchange.MarketDetails{
+				Name:        "Market Eight Dude",
+				Description: "The Little Lebowski",
+				WebsiteUrl:  "https://bowling.god",
+				IconUri:     "https://bowling.god/icon",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := &cobra.Command{
+				Use: "dummy",
+				RunE: func(cmd *cobra.Command, args []string) error {
+					return errors.New("this dummy command should not have been executed")
+				},
+			}
+			if !tc.skipSetup {
+				cli.AddFlagsMarketDetails(cmd)
+			}
+
+			err := cmd.Flags().Parse(tc.flags)
+			require.NoError(t, err, "cmd.Flags().Parse(%q)", tc.flags)
+
+			var details exchange.MarketDetails
+			testFunc := func() {
+				details, err = cli.ReadFlagsMarketDetails(cmd.Flags())
+			}
+			require.NotPanics(t, testFunc, "ReadFlagsMarketDetails")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagsMarketDetails")
+			assert.Equal(t, tc.expDetails, details, "ReadFlagsMarketDetails")
+		})
+	}
+}
 
 func TestSetupCmdTxMarketUpdateDetails(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -265,7 +772,63 @@ If you omit an optional flag, that field will be updated to an empty string.`,
 	})
 }
 
-// TODO[1701]: func TestMakeMsgMarketUpdateDetails(t *testing.T)
+func TestMakeMsgMarketUpdateDetails(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketUpdateDetailsRequest]{
+		makerName: "MakeMsgMarketUpdateDetails",
+		maker:     cli.MakeMsgMarketUpdateDetails,
+		setup:     cli.SetupCmdTxMarketUpdateDetails,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgMarketUpdateDetailsRequest]{
+		{
+			name:  "no admin",
+			flags: []string{"--market", "8", "--name", "Lynne"},
+			expMsg: &exchange.MsgMarketUpdateDetailsRequest{
+				MarketId:      8,
+				MarketDetails: exchange.MarketDetails{Name: "Lynne"},
+			},
+			expErr: "no admin provided",
+		},
+		{
+			name:      "just name and description",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--market", "9002", "--name", "River", "--description", "The person, not the water."},
+			expMsg: &exchange.MsgMarketUpdateDetailsRequest{
+				Admin:    sdk.AccAddress("FromAddress_________").String(),
+				MarketId: 9002,
+				MarketDetails: exchange.MarketDetails{
+					Name:        "River",
+					Description: "The person, not the water.",
+				},
+			},
+		},
+		{
+			name: "all fields",
+			flags: []string{
+				"--market", "14", "--authority", "--name", "Ashley",
+				"--icon", "https://example.com/ashley/icon",
+				"--url", "https://example.com/ashley",
+				"--description", "The best market out there.",
+			},
+			expMsg: &exchange.MsgMarketUpdateDetailsRequest{
+				Admin:    cli.AuthorityAddr.String(),
+				MarketId: 14,
+				MarketDetails: exchange.MarketDetails{
+					Name:        "Ashley",
+					Description: "The best market out there.",
+					WebsiteUrl:  "https://example.com/ashley",
+					IconUri:     "https://example.com/ashley/icon",
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxMarketUpdateEnabled(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -303,7 +866,51 @@ func TestSetupCmdTxMarketUpdateEnabled(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeMsgMarketUpdateEnabled(t *testing.T)
+func TestMakeMsgMarketUpdateEnabled(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketUpdateEnabledRequest]{
+		makerName: "MakeMsgMarketUpdateEnabled",
+		maker:     cli.MakeMsgMarketUpdateEnabled,
+		setup:     cli.SetupCmdTxMarketUpdateEnabled,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgMarketUpdateEnabledRequest]{
+		{
+			name:   "some errors",
+			flags:  []string{"--market", "56"},
+			expMsg: &exchange.MsgMarketUpdateEnabledRequest{MarketId: 56},
+			expErr: joinErrs(
+				"no admin provided",
+				"exactly one of --enable or --disable must be provided",
+			),
+		},
+		{
+			name:      "enable",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--enable", "--market", "4"},
+			expMsg: &exchange.MsgMarketUpdateEnabledRequest{
+				Admin:           sdk.AccAddress("FromAddress_________").String(),
+				MarketId:        4,
+				AcceptingOrders: true,
+			},
+		},
+		{
+			name:      "disable",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--admin", "Blake", "--market", "94", "--disable"},
+			expMsg: &exchange.MsgMarketUpdateEnabledRequest{
+				Admin:           "Blake",
+				MarketId:        94,
+				AcceptingOrders: false,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxMarketUpdateUserSettle(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -341,7 +948,51 @@ func TestSetupCmdTxMarketUpdateUserSettle(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeMsgMarketUpdateUserSettle(t *testing.T)
+func TestMakeMsgMarketUpdateUserSettle(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketUpdateUserSettleRequest]{
+		makerName: "MakeMsgMarketUpdateUserSettle",
+		maker:     cli.MakeMsgMarketUpdateUserSettle,
+		setup:     cli.SetupCmdTxMarketUpdateUserSettle,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgMarketUpdateUserSettleRequest]{
+		{
+			name:   "some errors",
+			flags:  []string{"--market", "56"},
+			expMsg: &exchange.MsgMarketUpdateUserSettleRequest{MarketId: 56},
+			expErr: joinErrs(
+				"no admin provided",
+				"exactly one of --enable or --disable must be provided",
+			),
+		},
+		{
+			name:      "enable",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--enable", "--market", "4"},
+			expMsg: &exchange.MsgMarketUpdateUserSettleRequest{
+				Admin:               sdk.AccAddress("FromAddress_________").String(),
+				MarketId:            4,
+				AllowUserSettlement: true,
+			},
+		},
+		{
+			name:      "disable",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--admin", "Blake", "--market", "94", "--disable"},
+			expMsg: &exchange.MsgMarketUpdateUserSettleRequest{
+				Admin:               "Blake",
+				MarketId:            94,
+				AllowUserSettlement: false,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxMarketManagePermissions(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -375,7 +1026,79 @@ func TestSetupCmdTxMarketManagePermissions(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeMsgMarketManagePermissions(t *testing.T)
+func TestMakeMsgMarketManagePermissions(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketManagePermissionsRequest]{
+		makerName: "MakeMsgMarketManagePermissions",
+		maker:     cli.MakeMsgMarketManagePermissions,
+		setup:     cli.SetupCmdTxMarketManagePermissions,
+	}
+
+	accessGrant := func(addr string, perms ...exchange.Permission) exchange.AccessGrant {
+		return exchange.AccessGrant{Address: addr, Permissions: perms}
+	}
+	tests := []txMakerTestCase[*exchange.MsgMarketManagePermissionsRequest]{
+		{
+			name:  "some errors",
+			flags: []string{"--revoke", "addr8:oops", "--revoke", "Ryan", "--market", "1", "--grant", ":settle"},
+			expMsg: &exchange.MsgMarketManagePermissionsRequest{
+				MarketId:  1,
+				RevokeAll: []string{},
+				ToRevoke:  []exchange.AccessGrant{},
+				ToGrant:   []exchange.AccessGrant{},
+			},
+			expErr: joinErrs(
+				"no admin provided\ncould not parse permissions for \"addr8\" from \"oops\": invalid permission: \"oops\"",
+				"could not parse \"Ryan\" as an <access grant>: expected format <address>:<permissions>",
+				"invalid <access grant> \":settle\": both an <address> and <permissions> are required",
+			),
+		},
+		{
+			name:      "just a revoke",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags: []string{
+				"--market", "6", "--revoke", "alan:settle+update"},
+			expMsg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:     sdk.AccAddress("FromAddress_________").String(),
+				MarketId:  6,
+				RevokeAll: []string{},
+				ToRevoke: []exchange.AccessGrant{
+					accessGrant("alan", exchange.Permission_settle, exchange.Permission_update),
+				},
+				ToGrant: nil,
+			},
+		},
+		{
+			name: "all fields",
+			flags: []string{
+				"--market", "123", "--admin", "Frankie", "--revoke-all", "Freddie,Fritz,Forrest",
+				"--revoke", "Dylan:settle,Devin:update", "--revoke-all", "Finn",
+				"--grant", "Sam:permissions+update", "--revoke", "Dave:setids",
+				"--grant", "Skylar:all,Fritz:all",
+			},
+			expMsg: &exchange.MsgMarketManagePermissionsRequest{
+				Admin:     "Frankie",
+				MarketId:  123,
+				RevokeAll: []string{"Freddie", "Fritz", "Forrest", "Finn"},
+				ToRevoke: []exchange.AccessGrant{
+					accessGrant("Dylan", exchange.Permission_settle),
+					accessGrant("Devin", exchange.Permission_update),
+					accessGrant("Dave", exchange.Permission_set_ids),
+				},
+				ToGrant: []exchange.AccessGrant{
+					accessGrant("Sam", exchange.Permission_permissions, exchange.Permission_update),
+					accessGrant("Skylar", exchange.AllPermissions()...),
+					accessGrant("Fritz", exchange.AllPermissions()...),
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxMarketManageReqAttrs(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -411,7 +1134,51 @@ func TestSetupCmdTxMarketManageReqAttrs(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeMsgMarketManageReqAttrs(t *testing.T)
+func TestMakeMsgMarketManageReqAttrs(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketManageReqAttrsRequest]{
+		makerName: "MakeMsgMarketManageReqAttrs",
+		maker:     cli.MakeMsgMarketManageReqAttrs,
+		setup:     cli.SetupCmdTxMarketManageReqAttrs,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgMarketManageReqAttrsRequest]{
+		{
+			name:  "no admin",
+			flags: []string{"--market", "41", "--bid-add", "*.kyc"},
+			expMsg: &exchange.MsgMarketManageReqAttrsRequest{
+				MarketId:          41,
+				CreateAskToAdd:    []string{},
+				CreateAskToRemove: []string{},
+				CreateBidToAdd:    []string{"*.kyc"},
+				CreateBidToRemove: []string{},
+			},
+			expErr: "no admin provided",
+		},
+		{
+			name:      "all fields",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags: []string{
+				"--market", "44444",
+				"--ask-add", "def.abc,*.xyz", "--ask-remove", "uvw.xyz",
+				"--bid-add", "ghi.abc,*.xyz", "--bid-remove", "rst.xyz",
+			},
+			expMsg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:             sdk.AccAddress("FromAddress_________").String(),
+				MarketId:          44444,
+				CreateAskToAdd:    []string{"def.abc", "*.xyz"},
+				CreateAskToRemove: []string{"uvw.xyz"},
+				CreateBidToAdd:    []string{"ghi.abc", "*.xyz"},
+				CreateBidToRemove: []string{"rst.xyz"},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxGovCreateMarket(t *testing.T) {
 	tc := setupTestCase{
@@ -459,7 +1226,101 @@ func TestSetupCmdTxGovCreateMarket(t *testing.T) {
 	runSetupTestCase(t, tc)
 }
 
-// TODO[1701]: func TestMakeMsgGovCreateMarket(t *testing.T)
+func TestMakeMsgGovCreateMarket(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgGovCreateMarketRequest]{
+		makerName: "MakeMsgGovCreateMarket",
+		maker:     cli.MakeMsgGovCreateMarket,
+		setup:     cli.SetupCmdTxGovCreateMarket,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgGovCreateMarketRequest]{
+		{
+			name: "several errors",
+			flags: []string{
+				"--create-ask", "nope", "--seller-ratios", "8apple",
+				"--access-grants", "addr8:set", "--accepting-orders",
+			},
+			expMsg: &exchange.MsgGovCreateMarketRequest{
+				Authority: cli.AuthorityAddr.String(),
+				Market: exchange.Market{
+					FeeCreateAskFlat:          []sdk.Coin{},
+					FeeSellerSettlementRatios: []exchange.FeeRatio{},
+					AcceptingOrders:           true,
+					AccessGrants:              []exchange.AccessGrant{},
+					ReqAttrCreateAsk:          []string{},
+					ReqAttrCreateBid:          []string{},
+				},
+			},
+			expErr: joinErrs(
+				"invalid coin expression: \"nope\"",
+				"cannot create FeeRatio from \"8apple\": expected exactly one colon",
+				"could not parse permissions for \"addr8\" from \"set\": invalid permission: \"set\"",
+			),
+		},
+		{
+			name:      "all fields",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags: []string{
+				"--market", "18",
+				"--create-ask", "10fig", "--create-bid", "5grape",
+				"--seller-flat", "12fig", "--seller-ratios", "100prune:1prune",
+				"--buyer-flat", "17fig", "--buyer-ratios", "88plum:3plum",
+				"--accepting-orders", "--allow-user-settle",
+				"--access-grants", "addr1:settle+cancel", "--access-grants", "addr2:update+permissions",
+				"--req-attr-ask", "seller.kyc", "--req-attr-bid", "buyer.kyc",
+				"--name", "Special market", "--description", "This market is special.",
+				"--url", "https://example.com", "--icon", "https://example.com/icon",
+				"--access-grants", "addr3:all",
+			},
+			expMsg: &exchange.MsgGovCreateMarketRequest{
+				Authority: cli.AuthorityAddr.String(),
+				Market: exchange.Market{
+					MarketId: 18,
+					MarketDetails: exchange.MarketDetails{
+						Name:        "Special market",
+						Description: "This market is special.",
+						WebsiteUrl:  "https://example.com",
+						IconUri:     "https://example.com/icon",
+					},
+					FeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("fig", 10)},
+					FeeCreateBidFlat:        []sdk.Coin{sdk.NewInt64Coin("grape", 5)},
+					FeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("fig", 12)},
+					FeeSellerSettlementRatios: []exchange.FeeRatio{
+						{Price: sdk.NewInt64Coin("prune", 100), Fee: sdk.NewInt64Coin("prune", 1)},
+					},
+					FeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("fig", 17)},
+					FeeBuyerSettlementRatios: []exchange.FeeRatio{
+						{Price: sdk.NewInt64Coin("plum", 88), Fee: sdk.NewInt64Coin("plum", 3)},
+					},
+					AcceptingOrders:     true,
+					AllowUserSettlement: true,
+					AccessGrants: []exchange.AccessGrant{
+						{
+							Address:     "addr1",
+							Permissions: []exchange.Permission{exchange.Permission_settle, exchange.Permission_cancel},
+						},
+						{
+							Address:     "addr2",
+							Permissions: []exchange.Permission{exchange.Permission_update, exchange.Permission_permissions},
+						},
+						{
+							Address:     "addr3",
+							Permissions: exchange.AllPermissions(),
+						},
+					},
+					ReqAttrCreateAsk: []string{"seller.kyc"},
+					ReqAttrCreateBid: []string{"buyer.kyc"},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxGovManageFees(t *testing.T) {
 	tc := setupTestCase{
@@ -505,7 +1366,74 @@ func TestSetupCmdTxGovManageFees(t *testing.T) {
 	runSetupTestCase(t, tc)
 }
 
-// TODO[1701]: func TestMakeMsgGovManageFees(t *testing.T)
+func TestMakeMsgGovManageFees(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgGovManageFeesRequest]{
+		makerName: "MakeMsgGovManageFees",
+		maker:     cli.MakeMsgGovManageFees,
+		setup:     cli.SetupCmdTxGovManageFees,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgGovManageFeesRequest]{
+		{
+			name: "multiple errors",
+			flags: []string{
+				"--ask-add", "15", "--buyer-flat-remove", "noamt",
+			},
+			expMsg: &exchange.MsgGovManageFeesRequest{
+				Authority:                    cli.AuthorityAddr.String(),
+				AddFeeCreateAskFlat:          []sdk.Coin{},
+				RemoveFeeBuyerSettlementFlat: []sdk.Coin{},
+			},
+			expErr: joinErrs(
+				"invalid coin expression: \"15\"",
+				"invalid coin expression: \"noamt\"",
+			),
+		},
+		{
+			name:      "all fields",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags: []string{
+				"--market", "55",
+				"--ask-add", "18fig", "--ask-remove", "15fig", "--ask-add", "5grape",
+				"--bid-add", "17fig", "--bid-remove", "14fig",
+				"--seller-flat-add", "55prune", "--seller-flat-remove", "54prune",
+				"--seller-ratios-add", "101prune:7prune", "--seller-ratios-remove", "101prune:3prune",
+				"--buyer-flat-add", "59prune", "--buyer-flat-remove", "57prune",
+				"--buyer-ratios-add", "107prune:1prune", "--buyer-ratios-remove", "43prune:2prune",
+			},
+			expMsg: &exchange.MsgGovManageFeesRequest{
+				Authority:                     cli.AuthorityAddr.String(),
+				MarketId:                      55,
+				AddFeeCreateAskFlat:           []sdk.Coin{sdk.NewInt64Coin("fig", 18), sdk.NewInt64Coin("grape", 5)},
+				RemoveFeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("fig", 15)},
+				AddFeeCreateBidFlat:           []sdk.Coin{sdk.NewInt64Coin("fig", 17)},
+				RemoveFeeCreateBidFlat:        []sdk.Coin{sdk.NewInt64Coin("fig", 14)},
+				AddFeeSellerSettlementFlat:    []sdk.Coin{sdk.NewInt64Coin("prune", 55)},
+				RemoveFeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("prune", 54)},
+				AddFeeSellerSettlementRatios: []exchange.FeeRatio{
+					{Price: sdk.NewInt64Coin("prune", 101), Fee: sdk.NewInt64Coin("prune", 7)},
+				},
+				RemoveFeeSellerSettlementRatios: []exchange.FeeRatio{
+					{Price: sdk.NewInt64Coin("prune", 101), Fee: sdk.NewInt64Coin("prune", 3)},
+				},
+				AddFeeBuyerSettlementFlat:    []sdk.Coin{sdk.NewInt64Coin("prune", 59)},
+				RemoveFeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("prune", 57)},
+				AddFeeBuyerSettlementRatios: []exchange.FeeRatio{
+					{Price: sdk.NewInt64Coin("prune", 107), Fee: sdk.NewInt64Coin("prune", 1)},
+				},
+				RemoveFeeBuyerSettlementRatios: []exchange.FeeRatio{
+					{Price: sdk.NewInt64Coin("prune", 43), Fee: sdk.NewInt64Coin("prune", 2)},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxGovUpdateParams(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -528,4 +1456,58 @@ Example <split>: nhash:500`,
 	})
 }
 
-// TODO[1701]: func TestMakeMsgGovUpdateParams(t *testing.T)
+func TestMakeMsgGovUpdateParams(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgGovUpdateParamsRequest]{
+		makerName: "MakeMsgGovUpdateParams",
+		maker:     cli.MakeMsgGovUpdateParams,
+		setup:     cli.SetupCmdTxGovUpdateParams,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgGovUpdateParamsRequest]{
+		{
+			name:  "some errors",
+			flags: []string{"--split", "jack,14"},
+			expMsg: &exchange.MsgGovUpdateParamsRequest{
+				Authority: cli.AuthorityAddr.String(),
+				Params:    exchange.Params{DenomSplits: []exchange.DenomSplit{}},
+			},
+			expErr: joinErrs(
+				"invalid denom split \"jack\": expected format <denom>:<amount>",
+				"invalid denom split \"14\": expected format <denom>:<amount>",
+			),
+		},
+		{
+			name:      "no splits",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--default", "501"},
+			expMsg: &exchange.MsgGovUpdateParamsRequest{
+				Authority: cli.AuthorityAddr.String(),
+				Params:    exchange.Params{DefaultSplit: 501},
+			},
+		},
+		{
+			name:      "all fields",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags: []string{
+				"--split", "banana:99", "--default", "105",
+				"--authority", "Jeff", "--split", "apple:333,plum:555"},
+			expMsg: &exchange.MsgGovUpdateParamsRequest{
+				Authority: "Jeff",
+				Params: exchange.Params{
+					DefaultSplit: 105,
+					DenomSplits: []exchange.DenomSplit{
+						{Denom: "banana", Split: 99},
+						{Denom: "apple", Split: 333},
+						{Denom: "plum", Split: 555},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}

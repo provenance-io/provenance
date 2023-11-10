@@ -108,7 +108,7 @@ func ReadFlagsAdminOrFrom(clientCtx client.Context, flagSet *pflag.FlagSet) (str
 		return rv, nil
 	}
 
-	return "", fmt.Errorf("no %s provided", FlagAdmin)
+	return "", errors.New("no admin provided")
 }
 
 // ReadFlagAuthority reads the --authority flag, or if not provided, returns the standard authority address.

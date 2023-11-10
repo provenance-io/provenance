@@ -258,14 +258,40 @@ func truncate(str string, length int) string {
 	return str[:length-3] + "..."
 }
 
+const (
+	// mutExc is the annotation type for "mutually exclusive".
+	// It equals the cobra.Command.mutuallyExclusive variable.
+	mutExc = "cobra_annotation_mutually_exclusive"
+	// oneReq is the annotation type for "one required".
+	// It equals the cobra.Command.oneRequired variable.
+	oneReq = "cobra_annotation_one_required"
+	// mutExc is the annotation type for "required".
+	required = cobra.BashCompOneRequiredFlag
+)
+
 // setupTestCase contains the stuff that runSetupTestCase should check.
 type setupTestCase struct {
-	name           string
-	setup          func(cmd *cobra.Command)
-	expFlags       []string
+	// name is the name of the setup func being tested.
+	name string
+	// setup is the function being tested.
+	setup func(cmd *cobra.Command)
+	// expFlags is the list of flags expected to be added to the command after setup.
+	// The flags.FlagFrom flag is added to the command prior to calling the setup func;
+	// it should be included in this list if you want to check its annotations.
+	expFlags []string
+	// expAnnotations is the annotations expected for each of the expFlags.
+	// The map is "flag name" -> "annotation type" -> values
+	// The following variables have the annotation type strings: mutExc, oneReq, required.
+	// Annotions are only checked on the flags listed in expFlags.
 	expAnnotations map[string]map[string][]string
-	expInUse       []string
-	expExamples    []string
+	// expInUse is a set of strings that are expected to be in the command's Use string.
+	// Each entry that does not start with a "[" is also checked to not be in the Use wrapped in [].
+	expInUse []string
+	// expExamples is a set of examples to ensure are on the command.
+	// There must be a full line in the command's Example that matches each entry.
+	expExamples []string
+	// skipArgsCheck true causes the runner to skip the check ensuring that the command's Args func has been set.
+	skipArgsCheck bool
 }
 
 // runSetupTestCase runs the provided setup func and checks that everything is set up as expected.
@@ -313,7 +339,9 @@ func runSetupTestCase(t *testing.T, tc setupTestCase) {
 		})
 	}
 
-	t.Run("args", func(t *testing.T) {
-		assert.NotNil(t, cmd.Args, "command args after %s", tc.name)
-	})
+	if !tc.skipArgsCheck {
+		t.Run("args", func(t *testing.T) {
+			assert.NotNil(t, cmd.Args, "command args after %s", tc.name)
+		})
+	}
 }

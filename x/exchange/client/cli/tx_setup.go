@@ -290,7 +290,7 @@ func MakeMsgMarketSetOrderExternalID(clientCtx client.Context, flagSet *pflag.Fl
 	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
 	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
 	msg.OrderId, errs[2] = flagSet.GetUint64(FlagOrder)
-	msg.ExternalId, errs[4] = flagSet.GetString(FlagExternalID)
+	msg.ExternalId, errs[3] = flagSet.GetString(FlagExternalID)
 
 	return msg, errors.Join(errs...)
 }

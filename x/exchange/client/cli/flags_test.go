@@ -25,10 +25,6 @@ const (
 	flagString      = "string"
 	flagStringSlice = "string-slice"
 	flagUintSlice   = "uint-slice"
-
-	mutExc   = "cobra_annotation_mutually_exclusive" // = cobra.Command mutuallyExclusive variable
-	oneReq   = "cobra_annotation_one_required"       // = cobra.Command oneRequired variable
-	required = cobra.BashCompOneRequiredFlag
 )
 
 func TestAddFlagsAdmin(t *testing.T) {
