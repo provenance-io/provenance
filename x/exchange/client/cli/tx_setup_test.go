@@ -21,9 +21,9 @@ func TestSetupCmdTxCreateAsk(t *testing.T) {
 		expAnnotations: map[string]map[string][]string{
 			flags.FlagFrom: {oneReq: {flags.FlagFrom + " " + cli.FlagSeller}},
 			cli.FlagSeller: {oneReq: {flags.FlagFrom + " " + cli.FlagSeller}},
-			cli.FlagMarket: {req: {"true"}},
-			cli.FlagAssets: {req: {"true"}},
-			cli.FlagPrice:  {req: {"true"}},
+			cli.FlagMarket: {required: {"true"}},
+			cli.FlagAssets: {required: {"true"}},
+			cli.FlagPrice:  {required: {"true"}},
 		},
 		expInUse: []string{
 			"--seller", "--market <market id>", "--assets <assets>", "--price <price>",
@@ -48,9 +48,9 @@ func TestSetupCmdTxCreateBid(t *testing.T) {
 		expAnnotations: map[string]map[string][]string{
 			flags.FlagFrom: {oneReq: {flags.FlagFrom + " " + cli.FlagBuyer}},
 			cli.FlagBuyer:  {oneReq: {flags.FlagFrom + " " + cli.FlagBuyer}},
-			cli.FlagMarket: {req: {"true"}},
-			cli.FlagAssets: {req: {"true"}},
-			cli.FlagPrice:  {req: {"true"}},
+			cli.FlagMarket: {required: {"true"}},
+			cli.FlagAssets: {required: {"true"}},
+			cli.FlagPrice:  {required: {"true"}},
 		},
 		expInUse: []string{
 			"--buyer", "--market <market id>", "--assets <assets>", "--price <price>",
@@ -98,9 +98,9 @@ func TestSetupCmdTxFillBids(t *testing.T) {
 		expAnnotations: map[string]map[string][]string{
 			flags.FlagFrom: {oneReq: {flags.FlagFrom + " " + cli.FlagSeller}},
 			cli.FlagSeller: {oneReq: {flags.FlagFrom + " " + cli.FlagSeller}},
-			cli.FlagMarket: {req: {"true"}},
-			cli.FlagAssets: {req: {"true"}},
-			cli.FlagBids:   {req: {"true"}},
+			cli.FlagMarket: {required: {"true"}},
+			cli.FlagAssets: {required: {"true"}},
+			cli.FlagBids:   {required: {"true"}},
 		},
 		expInUse: []string{
 			"{--from|--seller} <seller>", "--market <market id>", "--assets <total assets>",
@@ -126,9 +126,9 @@ func TestSetupCmdTxFillAsks(t *testing.T) {
 		expAnnotations: map[string]map[string][]string{
 			flags.FlagFrom: {oneReq: {flags.FlagFrom + " " + cli.FlagBuyer}},
 			cli.FlagBuyer:  {oneReq: {flags.FlagFrom + " " + cli.FlagBuyer}},
-			cli.FlagMarket: {req: {"true"}},
-			cli.FlagPrice:  {req: {"true"}},
-			cli.FlagAsks:   {req: {"true"}},
+			cli.FlagMarket: {required: {"true"}},
+			cli.FlagPrice:  {required: {"true"}},
+			cli.FlagAsks:   {required: {"true"}},
 		},
 		expInUse: []string{
 			"{--from|--buyer} <buyer>", "--market <market id>", "--price <total price>",
@@ -150,9 +150,9 @@ func TestSetupCmdTxMarketSettle(t *testing.T) {
 			cli.FlagMarket, cli.FlagAsks, cli.FlagBids, cli.FlagPartial,
 		},
 		expAnnotations: map[string]map[string][]string{
-			cli.FlagMarket: {req: {"true"}},
-			cli.FlagAsks:   {req: {"true"}},
-			cli.FlagBids:   {req: {"true"}},
+			cli.FlagMarket: {required: {"true"}},
+			cli.FlagAsks:   {required: {"true"}},
+			cli.FlagBids:   {required: {"true"}},
 		},
 		expInUse: []string{
 			cli.ReqAdminUse, "--market <market id>",
@@ -184,8 +184,8 @@ func TestSetupCmdTxMarketSetOrderExternalID(t *testing.T) {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
 				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
-			cli.FlagMarket: {req: {"true"}},
-			cli.FlagOrder:  {req: {"true"}},
+			cli.FlagMarket: {required: {"true"}},
+			cli.FlagOrder:  {required: {"true"}},
 		},
 		expInUse: []string{
 			cli.ReqAdminUse, "--market <market id>", "--order <order id>",
@@ -216,9 +216,9 @@ func TestSetupCmdTxMarketWithdraw(t *testing.T) {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
 				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
-			cli.FlagMarket: {req: {"true"}},
-			cli.FlagTo:     {req: {"true"}},
-			cli.FlagAmount: {req: {"true"}},
+			cli.FlagMarket: {required: {"true"}},
+			cli.FlagTo:     {required: {"true"}},
+			cli.FlagAmount: {required: {"true"}},
 		},
 		expInUse: []string{
 			cli.ReqAdminUse, "--market <market id>", "--to <to address>", "--amount <amount>",
@@ -253,7 +253,7 @@ func TestSetupCmdTxMarketUpdateDetails(t *testing.T) {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
 				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
-			cli.FlagMarket: {req: {"true"}},
+			cli.FlagMarket: {required: {"true"}},
 		},
 		expInUse: []string{
 			cli.ReqAdminUse, "--market <market id>",
@@ -286,7 +286,7 @@ func TestSetupCmdTxMarketUpdateEnabled(t *testing.T) {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
 				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
-			cli.FlagMarket: {req: {"true"}},
+			cli.FlagMarket: {required: {"true"}},
 			cli.FlagEnable: {
 				mutExc: {cli.FlagEnable + " " + cli.FlagDisable},
 				oneReq: {cli.FlagEnable + " " + cli.FlagDisable},
@@ -324,7 +324,7 @@ func TestSetupCmdTxMarketUpdateUserSettle(t *testing.T) {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
 				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
-			cli.FlagMarket: {req: {"true"}},
+			cli.FlagMarket: {required: {"true"}},
 			cli.FlagEnable: {
 				mutExc: {cli.FlagEnable + " " + cli.FlagDisable},
 				oneReq: {cli.FlagEnable + " " + cli.FlagDisable},
@@ -362,7 +362,7 @@ func TestSetupCmdTxMarketManagePermissions(t *testing.T) {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
 				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
-			cli.FlagMarket:    {req: {"true"}},
+			cli.FlagMarket:    {required: {"true"}},
 			cli.FlagRevokeAll: {oneReq: {cli.FlagRevokeAll + " " + cli.FlagRevoke + " " + cli.FlagGrant}},
 			cli.FlagRevoke:    {oneReq: {cli.FlagRevokeAll + " " + cli.FlagRevoke + " " + cli.FlagGrant}},
 			cli.FlagGrant:     {oneReq: {cli.FlagRevokeAll + " " + cli.FlagRevoke + " " + cli.FlagGrant}},
@@ -396,7 +396,7 @@ func TestSetupCmdTxMarketManageReqAttrs(t *testing.T) {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
 				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
-			cli.FlagMarket:    {req: {"true"}},
+			cli.FlagMarket:    {required: {"true"}},
 			cli.FlagAskAdd:    {oneReq: {cli.FlagAskAdd + " " + cli.FlagAskRemove + " " + cli.FlagBidAdd + " " + cli.FlagBidRemove}},
 			cli.FlagAskRemove: {oneReq: {cli.FlagAskAdd + " " + cli.FlagAskRemove + " " + cli.FlagBidAdd + " " + cli.FlagBidRemove}},
 			cli.FlagBidAdd:    {oneReq: {cli.FlagAskAdd + " " + cli.FlagAskRemove + " " + cli.FlagBidAdd + " " + cli.FlagBidRemove}},
@@ -472,7 +472,7 @@ func TestSetupCmdTxGovManageFees(t *testing.T) {
 			cli.FlagBuyerFlatAdd, cli.FlagBuyerFlatRemove, cli.FlagBuyerRatiosAdd, cli.FlagBuyerRatiosRemove,
 		},
 		expAnnotations: map[string]map[string][]string{
-			cli.FlagMarket: {req: {"true"}},
+			cli.FlagMarket: {required: {"true"}},
 		},
 		expInUse: []string{
 			"--market <market id>", "[--authority <authority>]",
@@ -515,7 +515,7 @@ func TestSetupCmdTxGovUpdateParams(t *testing.T) {
 			cli.FlagAuthority, cli.FlagDefault, cli.FlagSplit,
 		},
 		expAnnotations: map[string]map[string][]string{
-			cli.FlagDefault: {req: {"true"}},
+			cli.FlagDefault: {required: {"true"}},
 		},
 		expInUse: []string{
 			"--default <amount>", "[--split <splits>]", "[--authority <authority>]",

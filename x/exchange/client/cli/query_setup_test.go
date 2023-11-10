@@ -1,16 +1,66 @@
 package cli_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 
+	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/client/cli"
 )
 
 var exampleStart = version.AppName + " query exchange dummy"
+
+// queryMakerTestDef is the definition of a query maker to be tested func.
+type queryMakerTestDef[R any] struct {
+	makerName string
+	setup     func(cmd *cobra.Command)
+	maker     func(flagSet *pflag.FlagSet, args []string) (*R, error)
+}
+
+// queryMakerTestCase is a test case for a query maker func.
+type queryMakerTestCase[R any] struct {
+	name   string
+	flags  []string
+	args   []string
+	expReq *R
+	expErr string
+}
+
+// runQueryMakerTest runs a test case for a query maker func.
+func runQueryMakerTest[R any](t *testing.T, td queryMakerTestDef[R], tc queryMakerTestCase[R]) {
+	cmd := &cobra.Command{
+		Use: "dummy",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.New("this dummy command should not have been executed")
+		},
+	}
+	td.setup(cmd)
+
+	err := cmd.Flags().Parse(tc.flags)
+	require.NoError(t, err, "cmd.Flags().Parse(%q)", tc.flags)
+
+	var req *R
+	testFunc := func() {
+		req, err = td.maker(cmd.Flags(), tc.args)
+	}
+	require.NotPanics(t, testFunc, td.makerName)
+	assertions.AssertErrorValue(t, err, tc.expErr, "%s error", td.makerName)
+	assert.Equal(t, tc.expReq, req, "%s request", td.makerName)
+}
 
 func TestSetupCmdQueryOrderFeeCalc(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -32,8 +82,8 @@ func TestSetupCmdQueryOrderFeeCalc(t *testing.T) {
 			},
 			cli.FlagBuyer:  {mutExc: {cli.FlagBuyer + " " + cli.FlagSeller, cli.FlagAsk + " " + cli.FlagBuyer}},
 			cli.FlagSeller: {mutExc: {cli.FlagBuyer + " " + cli.FlagSeller, cli.FlagBid + " " + cli.FlagSeller}},
-			cli.FlagMarket: {req: {"true"}},
-			cli.FlagPrice:  {req: {"true"}},
+			cli.FlagMarket: {required: {"true"}},
+			cli.FlagPrice:  {required: {"true"}},
 		},
 		expInUse: []string{
 			cli.ReqAskBidUse, "--market <market id>", "--price <price>",
@@ -46,7 +96,122 @@ func TestSetupCmdQueryOrderFeeCalc(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeQueryOrderFeeCalc(t *testing.T)
+func TestMakeQueryOrderFeeCalc(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryOrderFeeCalcRequest]{
+		makerName: "MakeQueryOrderFeeCalc",
+		setup:     cli.SetupCmdQueryOrderFeeCalc,
+		maker:     cli.MakeQueryOrderFeeCalc,
+	}
+
+	fillerCoin := sdk.Coin{Denom: "filler", Amount: sdkmath.NewInt(0)}
+
+	tests := []queryMakerTestCase[exchange.QueryOrderFeeCalcRequest]{
+		{
+			name:  "no price and bad settlement fees",
+			flags: []string{"--market", "3", "--bid", "--settlement-fee", "oops"},
+			expReq: &exchange.QueryOrderFeeCalcRequest{
+				BidOrder: &exchange.BidOrder{
+					MarketId: 3,
+					Assets:   fillerCoin,
+				},
+			},
+			expErr: joinErrs(
+				"missing required --price flag",
+				"error parsing --settlement-fee value \"oops\" as coins: invalid decimal coin expression: oops",
+			),
+		},
+		{
+			name:  "ask with two settlement fees",
+			flags: []string{"--market", "2", "--ask", "--settlement-fee", "10apple,3banana", "--price", "18pear"},
+			expReq: &exchange.QueryOrderFeeCalcRequest{
+				AskOrder: &exchange.AskOrder{
+					MarketId:                2,
+					Assets:                  fillerCoin,
+					Price:                   sdk.NewInt64Coin("pear", 18),
+					SellerSettlementFlatFee: &sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(10)},
+				},
+			},
+			expErr: "only one settlement fee coin is allowed for ask orders",
+		},
+		{
+			name:   "bad coins",
+			flags:  []string{"--market", "11", "--price", "-3badcoin", "--assets", "noamt", "--settlement-fee", "88x"},
+			expReq: &exchange.QueryOrderFeeCalcRequest{},
+			expErr: joinErrs(
+				"error parsing --assets as a coin: invalid coin expression: \"noamt\"",
+				"error parsing --price as a coin: invalid coin expression: \"-3badcoin\"",
+				"error parsing --settlement-fee value \"88x\" as coins: invalid decimal coin expression: 88x"),
+		},
+		{
+			name:  "minimal ask",
+			flags: []string{"--ask", "--market", "51", "--price", "66prune"},
+			expReq: &exchange.QueryOrderFeeCalcRequest{
+				AskOrder: &exchange.AskOrder{
+					MarketId: 51,
+					Assets:   fillerCoin,
+					Price:    sdk.NewInt64Coin("prune", 66),
+				},
+			},
+		},
+		{
+			name: "full ask",
+			flags: []string{
+				"--ask", "--seller", "someaddr",
+				"--assets", "15apple", "--price", "60plum", "--market", "8",
+				"--partial", "--external-id", "outsideid",
+				"--settlement-fee", "5fig",
+			},
+			expReq: &exchange.QueryOrderFeeCalcRequest{
+				AskOrder: &exchange.AskOrder{
+					MarketId:                8,
+					Seller:                  "someaddr",
+					Assets:                  sdk.NewInt64Coin("apple", 15),
+					Price:                   sdk.NewInt64Coin("plum", 60),
+					SellerSettlementFlatFee: &sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(5)},
+					AllowPartial:            true,
+					ExternalId:              "outsideid",
+				},
+			},
+		},
+		{
+			name:  "minimal bid",
+			flags: []string{"--bid", "--market", "51", "--price", "66prune"},
+			expReq: &exchange.QueryOrderFeeCalcRequest{
+				BidOrder: &exchange.BidOrder{
+					MarketId: 51,
+					Assets:   fillerCoin,
+					Price:    sdk.NewInt64Coin("prune", 66),
+				},
+			},
+		},
+		{
+			name: "full bid",
+			flags: []string{
+				"--bid", "--buyer", "someaddr",
+				"--assets", "15apple", "--price", "60plum", "--market", "8",
+				"--partial", "--external-id", "outsideid",
+				"--settlement-fee", "5fig",
+			},
+			expReq: &exchange.QueryOrderFeeCalcRequest{
+				BidOrder: &exchange.BidOrder{
+					MarketId:            8,
+					Buyer:               "someaddr",
+					Assets:              sdk.NewInt64Coin("apple", 15),
+					Price:               sdk.NewInt64Coin("plum", 60),
+					BuyerSettlementFees: sdk.Coins{sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(5)}},
+					AllowPartial:        true,
+					ExternalId:          "outsideid",
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdQueryGetOrder(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -64,7 +229,44 @@ func TestSetupCmdQueryGetOrder(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeQueryGetOrder(t *testing.T)
+func TestMakeQueryGetOrder(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryGetOrderRequest]{
+		makerName: "MakeQueryGetOrder",
+		setup:     cli.SetupCmdQueryGetOrder,
+		maker:     cli.MakeQueryGetOrder,
+	}
+
+	tests := []queryMakerTestCase[exchange.QueryGetOrderRequest]{
+		{
+			name:   "no order id",
+			expReq: &exchange.QueryGetOrderRequest{},
+			expErr: "no <order id> provided",
+		},
+		{
+			name:   "just order flag",
+			flags:  []string{"--order", "15"},
+			expReq: &exchange.QueryGetOrderRequest{OrderId: 15},
+		},
+		{
+			name:   "just order id arg",
+			args:   []string{"83"},
+			expReq: &exchange.QueryGetOrderRequest{OrderId: 83},
+		},
+		{
+			name:   "both order flag and arg",
+			flags:  []string{"--order", "15"},
+			args:   []string{"83"},
+			expReq: &exchange.QueryGetOrderRequest{},
+			expErr: "cannot provide <order id> as both an arg (\"83\") and flag (--order 15)",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdQueryGetOrderByExternalID(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -74,8 +276,8 @@ func TestSetupCmdQueryGetOrderByExternalID(t *testing.T) {
 			cli.FlagMarket, cli.FlagExternalID,
 		},
 		expAnnotations: map[string]map[string][]string{
-			cli.FlagMarket:     {req: {"true"}},
-			cli.FlagExternalID: {req: {"true"}},
+			cli.FlagMarket:     {required: {"true"}},
+			cli.FlagExternalID: {required: {"true"}},
 		},
 		expInUse: []string{
 			"--market <market id>", "--external-id <external id>",
@@ -86,7 +288,30 @@ func TestSetupCmdQueryGetOrderByExternalID(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeQueryGetOrderByExternalID(t *testing.T)
+func TestMakeQueryGetOrderByExternalID(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryGetOrderByExternalIDRequest]{
+		makerName: "MakeQueryGetOrderByExternalID",
+		setup:     cli.SetupCmdQueryGetOrderByExternalID,
+		maker:     cli.MakeQueryGetOrderByExternalID,
+	}
+
+	tests := []queryMakerTestCase[exchange.QueryGetOrderByExternalIDRequest]{
+		{
+			name:  "normal use",
+			flags: []string{"--external-id", "myid", "--market", "15"},
+			expReq: &exchange.QueryGetOrderByExternalIDRequest{
+				MarketId:   15,
+				ExternalId: "myid",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdQueryGetMarketOrders(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -114,7 +339,94 @@ func TestSetupCmdQueryGetMarketOrders(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeQueryGetMarketOrders(t *testing.T)
+func TestMakeQueryGetMarketOrders(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryGetMarketOrdersRequest]{
+		makerName: "MakeQueryGetMarketOrders",
+		setup:     cli.SetupCmdQueryGetMarketOrders,
+		maker:     cli.MakeQueryGetMarketOrders,
+	}
+
+	defaultPageReq := &query.PageRequest{
+		Key:   []byte{},
+		Limit: 100,
+	}
+	tests := []queryMakerTestCase[exchange.QueryGetMarketOrdersRequest]{
+		{
+			name: "no market id",
+			expReq: &exchange.QueryGetMarketOrdersRequest{
+				Pagination: defaultPageReq,
+			},
+			expErr: "no <market id> provided",
+		},
+		{
+			name:  "just market id flag",
+			flags: []string{"--market", "1"},
+			expReq: &exchange.QueryGetMarketOrdersRequest{
+				MarketId:   1,
+				Pagination: defaultPageReq,
+			},
+		},
+		{
+			name: "just market id arg",
+			args: []string{"1"},
+			expReq: &exchange.QueryGetMarketOrdersRequest{
+				MarketId:   1,
+				Pagination: defaultPageReq,
+			},
+		},
+		{
+			name:  "both market id flag and arg",
+			flags: []string{"--market", "1"},
+			args:  []string{"1"},
+			expReq: &exchange.QueryGetMarketOrdersRequest{
+				Pagination: defaultPageReq,
+			},
+			expErr: "cannot provide <market id> as both an arg (\"1\") and flag (--market 1)",
+		},
+		{
+			name: "all opts asks",
+			flags: []string{
+				"--asks", "--order", "12", "--limit", "63",
+				"--offset", "42", "--count-total",
+			},
+			args: []string{"7"},
+			expReq: &exchange.QueryGetMarketOrdersRequest{
+				MarketId:     7,
+				OrderType:    "ask",
+				AfterOrderId: 12,
+				Pagination: &query.PageRequest{
+					Key:        []byte{},
+					Offset:     42,
+					Limit:      63,
+					CountTotal: true,
+				},
+			},
+		},
+		{
+			name: "all opts bids",
+			flags: []string{
+				"--order", "88", "--limit", "25", "--page-key", "AAAAAAAAAKA=",
+				"--market", "444", "--reverse", "--bids",
+			},
+			expReq: &exchange.QueryGetMarketOrdersRequest{
+				MarketId:     444,
+				OrderType:    "bid",
+				AfterOrderId: 88,
+				Pagination: &query.PageRequest{
+					Key:     []byte{0, 0, 0, 0, 0, 0, 0, 160},
+					Limit:   25,
+					Reverse: true,
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdQueryGetOwnerOrders(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -142,7 +454,94 @@ func TestSetupCmdQueryGetOwnerOrders(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeQueryGetOwnerOrders(t *testing.T)
+func TestMakeQueryGetOwnerOrders(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryGetOwnerOrdersRequest]{
+		makerName: "MakeQueryGetOwnerOrders",
+		setup:     cli.SetupCmdQueryGetOwnerOrders,
+		maker:     cli.MakeQueryGetOwnerOrders,
+	}
+
+	defaultPageReq := &query.PageRequest{
+		Key:   []byte{},
+		Limit: 100,
+	}
+	tests := []queryMakerTestCase[exchange.QueryGetOwnerOrdersRequest]{
+		{
+			name: "no owner",
+			expReq: &exchange.QueryGetOwnerOrdersRequest{
+				Pagination: defaultPageReq,
+			},
+			expErr: "no <owner> provided",
+		},
+		{
+			name:  "just owner flag",
+			flags: []string{"--owner", "someaddr"},
+			expReq: &exchange.QueryGetOwnerOrdersRequest{
+				Owner:      "someaddr",
+				Pagination: defaultPageReq,
+			},
+		},
+		{
+			name: "just owner arg",
+			args: []string{"otheraddr"},
+			expReq: &exchange.QueryGetOwnerOrdersRequest{
+				Owner:      "otheraddr",
+				Pagination: defaultPageReq,
+			},
+		},
+		{
+			name:  "both owner flag and arg",
+			flags: []string{"--owner", "someaddr"},
+			args:  []string{"otheraddr"},
+			expReq: &exchange.QueryGetOwnerOrdersRequest{
+				Pagination: defaultPageReq,
+			},
+			expErr: "cannot provide <owner> as both an arg (\"otheraddr\") and flag (--owner \"someaddr\")",
+		},
+		{
+			name: "all opts asks",
+			flags: []string{
+				"--asks", "--order", "12", "--limit", "63",
+				"--offset", "42", "--count-total",
+			},
+			args: []string{"otheraddr"},
+			expReq: &exchange.QueryGetOwnerOrdersRequest{
+				Owner:        "otheraddr",
+				OrderType:    "ask",
+				AfterOrderId: 12,
+				Pagination: &query.PageRequest{
+					Key:        []byte{},
+					Offset:     42,
+					Limit:      63,
+					CountTotal: true,
+				},
+			},
+		},
+		{
+			name: "all opts bids",
+			flags: []string{
+				"--order", "88", "--limit", "25", "--page-key", "AAAAAAAAAKA=",
+				"--owner", "myself", "--reverse", "--bids",
+			},
+			expReq: &exchange.QueryGetOwnerOrdersRequest{
+				Owner:        "myself",
+				OrderType:    "bid",
+				AfterOrderId: 88,
+				Pagination: &query.PageRequest{
+					Key:     []byte{0, 0, 0, 0, 0, 0, 0, 160},
+					Limit:   25,
+					Reverse: true,
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdQueryGetAssetOrders(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -170,7 +569,94 @@ func TestSetupCmdQueryGetAssetOrders(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeQueryGetAssetOrders(t *testing.T)
+func TestMakeQueryGetAssetOrders(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryGetAssetOrdersRequest]{
+		makerName: "MakeQueryGetAssetOrders",
+		setup:     cli.SetupCmdQueryGetAssetOrders,
+		maker:     cli.MakeQueryGetAssetOrders,
+	}
+
+	defaultPageReq := &query.PageRequest{
+		Key:   []byte{},
+		Limit: 100,
+	}
+	tests := []queryMakerTestCase[exchange.QueryGetAssetOrdersRequest]{
+		{
+			name: "no denom",
+			expReq: &exchange.QueryGetAssetOrdersRequest{
+				Pagination: defaultPageReq,
+			},
+			expErr: "no <asset> provided",
+		},
+		{
+			name:  "just denom flag",
+			flags: []string{"--denom", "mycoin"},
+			expReq: &exchange.QueryGetAssetOrdersRequest{
+				Asset:      "mycoin",
+				Pagination: defaultPageReq,
+			},
+		},
+		{
+			name: "just denom arg",
+			args: []string{"yourcoin"},
+			expReq: &exchange.QueryGetAssetOrdersRequest{
+				Asset:      "yourcoin",
+				Pagination: defaultPageReq,
+			},
+		},
+		{
+			name:  "both denom flag and arg",
+			flags: []string{"--denom", "mycoin"},
+			args:  []string{"yourcoin"},
+			expReq: &exchange.QueryGetAssetOrdersRequest{
+				Pagination: defaultPageReq,
+			},
+			expErr: "cannot provide <asset> as both an arg (\"yourcoin\") and flag (--denom \"mycoin\")",
+		},
+		{
+			name: "all opts asks",
+			flags: []string{
+				"--asks", "--order", "12", "--limit", "63",
+				"--offset", "42", "--count-total",
+			},
+			args: []string{"yourcoin"},
+			expReq: &exchange.QueryGetAssetOrdersRequest{
+				Asset:        "yourcoin",
+				OrderType:    "ask",
+				AfterOrderId: 12,
+				Pagination: &query.PageRequest{
+					Key:        []byte{},
+					Offset:     42,
+					Limit:      63,
+					CountTotal: true,
+				},
+			},
+		},
+		{
+			name: "all opts bids",
+			flags: []string{
+				"--order", "88", "--limit", "25", "--page-key", "AAAAAAAAAKA=",
+				"--denom", "mycoin", "--reverse", "--bids",
+			},
+			expReq: &exchange.QueryGetAssetOrdersRequest{
+				Asset:        "mycoin",
+				OrderType:    "bid",
+				AfterOrderId: 88,
+				Pagination: &query.PageRequest{
+					Key:     []byte{0, 0, 0, 0, 0, 0, 0, 160},
+					Limit:   25,
+					Reverse: true,
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdQueryGetAllOrders(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -188,7 +674,42 @@ func TestSetupCmdQueryGetAllOrders(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeQueryGetAllOrders(t *testing.T)
+func TestMakeQueryGetAllOrders(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryGetAllOrdersRequest]{
+		makerName: "MakeQueryGetAllOrders",
+		setup:     cli.SetupCmdQueryGetAllOrders,
+		maker:     cli.MakeQueryGetAllOrders,
+	}
+
+	tests := []queryMakerTestCase[exchange.QueryGetAllOrdersRequest]{
+		{
+			name: "no flags",
+			expReq: &exchange.QueryGetAllOrdersRequest{
+				Pagination: &query.PageRequest{
+					Key:   []byte{},
+					Limit: 100,
+				},
+			},
+		},
+		{
+			name:  "some pagination flags",
+			flags: []string{"--limit", "5", "--reverse", "--page-key", "AAAAAAAAAKA="},
+			expReq: &exchange.QueryGetAllOrdersRequest{
+				Pagination: &query.PageRequest{
+					Key:     []byte{0, 0, 0, 0, 0, 0, 0, 160},
+					Limit:   5,
+					Reverse: true,
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdQueryGetMarket(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -206,7 +727,44 @@ func TestSetupCmdQueryGetMarket(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeQueryGetMarket(t *testing.T)
+func TestMakeQueryGetMarket(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryGetMarketRequest]{
+		makerName: "MakeQueryGetMarket",
+		setup:     cli.SetupCmdQueryGetMarket,
+		maker:     cli.MakeQueryGetMarket,
+	}
+
+	tests := []queryMakerTestCase[exchange.QueryGetMarketRequest]{
+		{
+			name:   "no market",
+			expReq: &exchange.QueryGetMarketRequest{},
+			expErr: "no <market id> provided",
+		},
+		{
+			name:   "just flag",
+			flags:  []string{"--market", "2"},
+			expReq: &exchange.QueryGetMarketRequest{MarketId: 2},
+		},
+		{
+			name:   "just arg",
+			args:   []string{"1000"},
+			expReq: &exchange.QueryGetMarketRequest{MarketId: 1000},
+		},
+		{
+			name:   "both arg and flag",
+			flags:  []string{"--market", "2"},
+			args:   []string{"1000"},
+			expReq: &exchange.QueryGetMarketRequest{},
+			expErr: "cannot provide <market id> as both an arg (\"1000\") and flag (--market 2)",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdQueryGetAllMarkets(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -224,7 +782,42 @@ func TestSetupCmdQueryGetAllMarkets(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeQueryGetAllMarkets(t *testing.T)
+func TestMakeQueryGetAllMarkets(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryGetAllMarketsRequest]{
+		makerName: "MakeQueryGetAllMarkets",
+		setup:     cli.SetupCmdQueryGetAllMarkets,
+		maker:     cli.MakeQueryGetAllMarkets,
+	}
+
+	tests := []queryMakerTestCase[exchange.QueryGetAllMarketsRequest]{
+		{
+			name: "no flags",
+			expReq: &exchange.QueryGetAllMarketsRequest{
+				Pagination: &query.PageRequest{
+					Key:   []byte{},
+					Limit: 100,
+				},
+			},
+		},
+		{
+			name:  "some pagination flags",
+			flags: []string{"--limit", "5", "--reverse", "--page-key", "AAAAAAAAAKA="},
+			expReq: &exchange.QueryGetAllMarketsRequest{
+				Pagination: &query.PageRequest{
+					Key:     []byte{0, 0, 0, 0, 0, 0, 0, 160},
+					Limit:   5,
+					Reverse: true,
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdQueryParams(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -234,7 +827,26 @@ func TestSetupCmdQueryParams(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeQueryParams(t *testing.T)
+func TestMakeQueryParams(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryParamsRequest]{
+		makerName: "MakeQueryParams",
+		setup:     cli.SetupCmdQueryParams,
+		maker:     cli.MakeQueryParams,
+	}
+
+	tests := []queryMakerTestCase[exchange.QueryParamsRequest]{
+		{
+			name:   "normal",
+			expReq: &exchange.QueryParamsRequest{},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdQueryValidateCreateMarket(t *testing.T) {
 	tc := setupTestCase{
@@ -282,7 +894,104 @@ func TestSetupCmdQueryValidateCreateMarket(t *testing.T) {
 	runSetupTestCase(t, tc)
 }
 
-// TODO[1701]: func TestMakeQueryValidateCreateMarket(t *testing.T)
+func TestMakeQueryValidateCreateMarket(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryValidateCreateMarketRequest]{
+		makerName: "MakeQueryValidateCreateMarket",
+		setup:     cli.SetupCmdQueryValidateCreateMarket,
+		maker:     cli.MakeQueryValidateCreateMarket,
+	}
+
+	tests := []queryMakerTestCase[exchange.QueryValidateCreateMarketRequest]{
+		{
+			name: "several errors",
+			flags: []string{
+				"--create-ask", "nope", "--seller-ratios", "8apple",
+				"--access-grants", "addr8:set", "--accepting-orders",
+			},
+			expReq: &exchange.QueryValidateCreateMarketRequest{
+				CreateMarketRequest: &exchange.MsgGovCreateMarketRequest{
+					Authority: cli.AuthorityAddr.String(),
+					Market: exchange.Market{
+						FeeCreateAskFlat:          []sdk.Coin{},
+						FeeSellerSettlementRatios: []exchange.FeeRatio{},
+						AcceptingOrders:           true,
+						AccessGrants:              []exchange.AccessGrant{},
+						ReqAttrCreateAsk:          []string{},
+						ReqAttrCreateBid:          []string{},
+					},
+				},
+			},
+			expErr: joinErrs(
+				"invalid coin expression: \"nope\"",
+				"cannot create FeeRatio from \"8apple\": expected exactly one colon",
+				"could not parse permissions for \"addr8\" from \"set\": invalid permission: \"set\"",
+			),
+		},
+		{
+			name: "all fields",
+			flags: []string{
+				"--authority", "otherauth", "--market", "18",
+				"--create-ask", "10fig", "--create-bid", "5grape",
+				"--seller-flat", "12fig", "--seller-ratios", "100prune:1prune",
+				"--buyer-flat", "17fig", "--buyer-ratios", "88plum:3plum",
+				"--accepting-orders", "--allow-user-settle",
+				"--access-grants", "addr1:settle+cancel", "--access-grants", "addr2:update+permissions",
+				"--req-attr-ask", "seller.kyc", "--req-attr-bid", "buyer.kyc",
+				"--name", "Special market", "--description", "This market is special.",
+				"--url", "https://example.com", "--icon", "https://example.com/icon",
+				"--access-grants", "addr3:all",
+			},
+			expReq: &exchange.QueryValidateCreateMarketRequest{
+				CreateMarketRequest: &exchange.MsgGovCreateMarketRequest{
+					Authority: "otherauth",
+					Market: exchange.Market{
+						MarketId: 18,
+						MarketDetails: exchange.MarketDetails{
+							Name:        "Special market",
+							Description: "This market is special.",
+							WebsiteUrl:  "https://example.com",
+							IconUri:     "https://example.com/icon",
+						},
+						FeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("fig", 10)},
+						FeeCreateBidFlat:        []sdk.Coin{sdk.NewInt64Coin("grape", 5)},
+						FeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("fig", 12)},
+						FeeSellerSettlementRatios: []exchange.FeeRatio{
+							{Price: sdk.NewInt64Coin("prune", 100), Fee: sdk.NewInt64Coin("prune", 1)},
+						},
+						FeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("fig", 17)},
+						FeeBuyerSettlementRatios: []exchange.FeeRatio{
+							{Price: sdk.NewInt64Coin("plum", 88), Fee: sdk.NewInt64Coin("plum", 3)},
+						},
+						AcceptingOrders:     true,
+						AllowUserSettlement: true,
+						AccessGrants: []exchange.AccessGrant{
+							{
+								Address:     "addr1",
+								Permissions: []exchange.Permission{exchange.Permission_settle, exchange.Permission_cancel},
+							},
+							{
+								Address:     "addr2",
+								Permissions: []exchange.Permission{exchange.Permission_update, exchange.Permission_permissions},
+							},
+							{
+								Address:     "addr3",
+								Permissions: exchange.AllPermissions(),
+							},
+						},
+						ReqAttrCreateAsk: []string{"seller.kyc"},
+						ReqAttrCreateBid: []string{"buyer.kyc"},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdQueryValidateMarket(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
@@ -300,7 +1009,44 @@ func TestSetupCmdQueryValidateMarket(t *testing.T) {
 	})
 }
 
-// TODO[1701]: func TestMakeQueryValidateMarket(t *testing.T)
+func TestMakeQueryValidateMarket(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryValidateMarketRequest]{
+		makerName: "MakeQueryValidateMarket",
+		setup:     cli.SetupCmdQueryValidateMarket,
+		maker:     cli.MakeQueryValidateMarket,
+	}
+
+	tests := []queryMakerTestCase[exchange.QueryValidateMarketRequest]{
+		{
+			name:   "no market",
+			expReq: &exchange.QueryValidateMarketRequest{},
+			expErr: "no <market id> provided",
+		},
+		{
+			name:   "just flag",
+			flags:  []string{"--market", "2"},
+			expReq: &exchange.QueryValidateMarketRequest{MarketId: 2},
+		},
+		{
+			name:   "just arg",
+			args:   []string{"1000"},
+			expReq: &exchange.QueryValidateMarketRequest{MarketId: 1000},
+		},
+		{
+			name:   "both arg and flag",
+			flags:  []string{"--market", "2"},
+			args:   []string{"1000"},
+			expReq: &exchange.QueryValidateMarketRequest{},
+			expErr: "cannot provide <market id> as both an arg (\"1000\") and flag (--market 2)",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdQueryValidateManageFees(t *testing.T) {
 	tc := setupTestCase{
@@ -313,7 +1059,7 @@ func TestSetupCmdQueryValidateManageFees(t *testing.T) {
 			cli.FlagBuyerFlatAdd, cli.FlagBuyerFlatRemove, cli.FlagBuyerRatiosAdd, cli.FlagBuyerRatiosRemove,
 		},
 		expAnnotations: map[string]map[string][]string{
-			cli.FlagMarket: {req: {"true"}},
+			cli.FlagMarket: {required: {"true"}},
 		},
 		expInUse: []string{
 			"--market <market id>", "[--authority <authority>]",
@@ -346,4 +1092,74 @@ func TestSetupCmdQueryValidateManageFees(t *testing.T) {
 	runSetupTestCase(t, tc)
 }
 
-// TODO[1701]: func TestMakeQueryValidateManageFees(t *testing.T)
+func TestMakeQueryValidateManageFees(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryValidateManageFeesRequest]{
+		makerName: "MakeQueryValidateManageFees",
+		setup:     cli.SetupCmdQueryValidateManageFees,
+		maker:     cli.MakeQueryValidateManageFees,
+	}
+
+	tests := []queryMakerTestCase[exchange.QueryValidateManageFeesRequest]{
+		{
+			name: "multiple errors",
+			flags: []string{
+				"--ask-add", "15", "--buyer-flat-remove", "noamt",
+			},
+			expReq: &exchange.QueryValidateManageFeesRequest{
+				ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+					Authority:                    cli.AuthorityAddr.String(),
+					AddFeeCreateAskFlat:          []sdk.Coin{},
+					RemoveFeeBuyerSettlementFlat: []sdk.Coin{},
+				},
+			},
+			expErr: joinErrs(
+				"invalid coin expression: \"15\"",
+				"invalid coin expression: \"noamt\"",
+			),
+		},
+		{
+			name: "all fields",
+			flags: []string{
+				"--authority", "respect", "--market", "55",
+				"--ask-add", "18fig", "--ask-remove", "15fig", "--ask-add", "5grape",
+				"--bid-add", "17fig", "--bid-remove", "14fig",
+				"--seller-flat-add", "55prune", "--seller-flat-remove", "54prune",
+				"--seller-ratios-add", "101prune:7prune", "--seller-ratios-remove", "101prune:3prune",
+				"--buyer-flat-add", "59prune", "--buyer-flat-remove", "57prune",
+				"--buyer-ratios-add", "107prune:1prune", "--buyer-ratios-remove", "43prune:2prune",
+			},
+			expReq: &exchange.QueryValidateManageFeesRequest{
+				ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+					Authority:                     "respect",
+					MarketId:                      55,
+					AddFeeCreateAskFlat:           []sdk.Coin{sdk.NewInt64Coin("fig", 18), sdk.NewInt64Coin("grape", 5)},
+					RemoveFeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("fig", 15)},
+					AddFeeCreateBidFlat:           []sdk.Coin{sdk.NewInt64Coin("fig", 17)},
+					RemoveFeeCreateBidFlat:        []sdk.Coin{sdk.NewInt64Coin("fig", 14)},
+					AddFeeSellerSettlementFlat:    []sdk.Coin{sdk.NewInt64Coin("prune", 55)},
+					RemoveFeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("prune", 54)},
+					AddFeeSellerSettlementRatios: []exchange.FeeRatio{
+						{Price: sdk.NewInt64Coin("prune", 101), Fee: sdk.NewInt64Coin("prune", 7)},
+					},
+					RemoveFeeSellerSettlementRatios: []exchange.FeeRatio{
+						{Price: sdk.NewInt64Coin("prune", 101), Fee: sdk.NewInt64Coin("prune", 3)},
+					},
+					AddFeeBuyerSettlementFlat:    []sdk.Coin{sdk.NewInt64Coin("prune", 59)},
+					RemoveFeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("prune", 57)},
+					AddFeeBuyerSettlementRatios: []exchange.FeeRatio{
+						{Price: sdk.NewInt64Coin("prune", 107), Fee: sdk.NewInt64Coin("prune", 1)},
+					},
+					RemoveFeeBuyerSettlementRatios: []exchange.FeeRatio{
+						{Price: sdk.NewInt64Coin("prune", 43), Fee: sdk.NewInt64Coin("prune", 2)},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}

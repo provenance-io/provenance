@@ -26,7 +26,7 @@ func SetupCmdQueryOrderFeeCalc(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAssets, "", "The order assets")
 	cmd.Flags().String(FlagPrice, "", "The order price (required)")
 	cmd.Flags().String(FlagSettlementFee, "", "The settlement fees")
-	cmd.Flags().String(FlagPartial, "", "Allow the order to be partially filled")
+	cmd.Flags().Bool(FlagPartial, false, "Allow the order to be partially filled")
 	cmd.Flags().String(FlagExternalID, "", "The external id")
 
 	cmd.MarkFlagsMutuallyExclusive(FlagAsk, FlagBid)
@@ -59,8 +59,8 @@ func MakeQueryOrderFeeCalc(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryO
 	isBid, errs[1] = flagSet.GetBool(FlagBid)
 	bidOrder.MarketId, errs[2] = flagSet.GetUint32(FlagMarket)
 	var seller string
-	seller, errs[3] = flagSet.GetString(FlagBuyer)
-	bidOrder.Buyer, errs[4] = flagSet.GetString(FlagSeller)
+	seller, errs[3] = flagSet.GetString(FlagSeller)
+	bidOrder.Buyer, errs[4] = flagSet.GetString(FlagBuyer)
 	var assets *sdk.Coin
 	assets, errs[5] = ReadCoinFlag(flagSet, FlagAssets)
 	if assets == nil {
