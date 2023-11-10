@@ -428,8 +428,6 @@ func (s *UpgradeTestSuite) TestSaffronRC1() {
 		"INF Done updating ICQ params",
 		"INF Updating MaxSupply marker param",
 		"INF Done updating MaxSupply marker param",
-		"INF Adding marker net asset values",
-		"INF Done adding marker net asset values",
 		"INF Ensuring exchange module params are set.",
 	}
 
