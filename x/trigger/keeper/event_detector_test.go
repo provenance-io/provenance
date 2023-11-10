@@ -6,6 +6,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
@@ -267,7 +268,7 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 			s.app.TriggerKeeper.DetectBlockEvents(s.ctx)
 
 			events := s.ctx.EventManager().Events()
-			s.Equal(tc.events, events, "should have correct events from detected events in DetectBlockEvents")
+			assertions.AssertEqualEvents(s.T(), tc.events, events, "should have correct events from detected events in DetectBlockEvents")
 
 			// Verify
 			triggers, err := s.app.TriggerKeeper.GetAllTriggers(s.ctx)
