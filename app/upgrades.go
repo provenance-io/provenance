@@ -165,7 +165,7 @@ var upgrades = map[string]appUpgrade{
 			setupICQ(ctx, app)
 			updateMaxSupply(ctx, app)
 
-			addMarkerNavs(ctx, app, GetDenomToNav())
+			addMarkerNavs(ctx, app, GetPioMainnet1DenomToNav())
 
 			setExchangeParams(ctx, app)
 			updateIbcMarkerDenomMetadata(ctx, app)
