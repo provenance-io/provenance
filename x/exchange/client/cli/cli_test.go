@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -24,7 +25,9 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/exchange"
+	"github.com/provenance-io/provenance/x/exchange/client/cli"
 )
 
 type CmdTestSuite struct {
@@ -207,6 +210,123 @@ func (s *CmdTestSuite) GetClientCtx() client.Context {
 	return s.testnet.Validators[0].ClientCtx.
 		WithKeyringDir(s.keyringDir).
 		WithKeyring(s.keyring)
+}
+
+// txCmdTestCase is a test case for a TX command.
+type txCmdTestCase struct {
+	// name is a name for this test case.
+	name string
+	// cmdGen is a generator for the command to execute. If not set, CmdTx is used.
+	cmdGen func() *cobra.Command
+	// args are the arguments to provide to the command.
+	args []string
+	// expInErr are strings to expect in an error message (and the output).
+	expInErr []string
+	// expectedCode is the code expected from the Tx.
+	expectedCode uint32
+	// followup is any further checks to do.
+	followup func(cmdOutput string)
+}
+
+// RunTxCmdTestCase runs a txCmdTestCase by executing the command and checking the result.
+func (s *CmdTestSuite) RunTxCmdTestCase(tc txCmdTestCase) {
+	var cmd *cobra.Command
+	if tc.cmdGen != nil {
+		cmd = tc.cmdGen()
+	} else {
+		cmd = cli.CmdTx()
+	}
+
+	cmdName := cmd.Name()
+	var outBz []byte
+	defer func() {
+		if s.T().Failed() {
+			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, tc.args, string(outBz))
+		}
+	}()
+
+	clientCtx := s.GetClientCtx()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+	outBz = out.Bytes()
+
+	s.AssertErrorContents(err, tc.expInErr, "ExecTestCLICmd error")
+	for _, exp := range tc.expInErr {
+		s.Assert().Contains(string(outBz), exp, "command output should contain:\n%q", exp)
+	}
+
+	if len(tc.expInErr) == 0 && err == nil {
+		var resp sdk.TxResponse
+		err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+		if s.Assert().NoError(err, "UnmarshalJSON(command output) error") {
+			if s.Assert().Equalf(int(tc.expectedCode), int(resp.Code), "response code") {
+				s.T().Logf("TxResponse:\n%v", resp)
+			}
+		}
+	}
+
+	if tc.followup != nil {
+		tc.followup(string(outBz))
+	}
+}
+
+// queryCmdTestCase is a test case of a query command.
+type queryCmdTestCase struct {
+	// name is a name for this test case.
+	name string
+	// cmdGen is a generator for the command to execute. If not set, CmdQuery is used.
+	cmdGen func() *cobra.Command
+	// args are the arguments to provide to the command.
+	args []string
+	// expInErr are strings to expect in an error message (and output).
+	expInErr []string
+	// expInOut are strings to expect in the output.
+	expInOut []string
+	// expOut is the expected full output. Leave empty to skip this check.
+	expOut string
+}
+
+// RunQueryCmdTestCase runs a queryCmdTestCase by executing the command and checking the result.
+func (s *CmdTestSuite) RunQueryCmdTestCase(tc queryCmdTestCase) {
+	var cmd *cobra.Command
+	if tc.cmdGen != nil {
+		cmd = tc.cmdGen()
+	} else {
+		cmd = cli.CmdTx()
+	}
+
+	cmdName := cmd.Name()
+	var outStr string
+	defer func() {
+		if s.T().Failed() {
+			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, tc.args, outStr)
+		}
+	}()
+
+	clientCtx := s.GetClientCtx()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+	outStr = out.String()
+
+	s.AssertErrorContents(err, tc.expInErr, "ExecTestCLICmd error")
+	for _, exp := range tc.expInErr {
+		if !s.Assert().Contains(outStr, exp, "command output (error)") {
+			s.T().Logf("Not found: %q", exp)
+		}
+	}
+
+	for _, exp := range tc.expInOut {
+		if !s.Assert().Contains(outStr, exp, "command output:\n%q", exp) {
+			s.T().Logf("Not found: %q", exp)
+		}
+	}
+
+	if len(tc.expOut) > 0 {
+		s.Assert().Equal(tc.expOut, outStr, "command output string")
+	}
+}
+
+// AssertErrorContents is a wrapper for assertions.AssertErrorContents using this suite's T().
+func (s *CmdTestSuite) AssertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
+	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
 }
 
 // joinErrs joins the provided error strings matching to how errors.Join does.
