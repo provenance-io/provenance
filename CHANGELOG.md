@@ -100,6 +100,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump cometbft to v0.34.29 (from v0.34.28) [PR 1649](https://github.com/provenance-io/provenance/pull/1649).
 * Add genesis/init for Marker module send deny list addresses. [#1660](https://github.com/provenance-io/provenance/issues/1660)
 * Add automatic changelog entries for dependabot. [#1674](https://github.com/provenance-io/provenance/issues/1674)
+* Add upgrade handler to set net asset values to markers [PR 1712](https://github.com/provenance-io/provenance/pull/1712).
 * Add publishing of docker arm64 container builds [#1634](https://github.com/provenance-io/provenance/issues/1634)
 * Ensure IBC marker has matching supply [#1706](https://github.com/provenance-io/provenance/issues/1706).
 

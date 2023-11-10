@@ -2,10 +2,14 @@ package app
 
 import (
 	"github.com/cosmos/cosmos-sdk/types"
+
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
-func GetDenomToNav() map[string]markertypes.NetAssetValue {
+// GetPioMainnet1DenomToNav are net asset values for the pio-mainnet-1 taken at blockheight 13631650
+// Source: https://figure.tech/service-pricing-engine/external/api/v1/pricing/marker/new?time=2023-11-07T17:59:59.999722Z
+// NOTE: These should not be ran against any other network but pio-mainnet-1
+func GetPioMainnet1DenomToNav() map[string]markertypes.NetAssetValue {
 	return map[string]markertypes.NetAssetValue{
 		"pm.participation.agreement.1bcslgccejhm9v3higsx7c":     markertypes.NewNetAssetValue(types.NewInt64Coin(markertypes.UsdDenom, 1037949704), 1),
 		"pm.participation.agreement.1cag7ztnmm4rdbbtwdrodb":     markertypes.NewNetAssetValue(types.NewInt64Coin(markertypes.UsdDenom, 788900239), 1),
