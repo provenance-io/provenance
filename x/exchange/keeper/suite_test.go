@@ -22,6 +22,7 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 type TestSuite struct {
@@ -48,9 +49,15 @@ type TestSuite struct {
 	accKeeper *MockAccountKeeper
 
 	logBuffer bytes.Buffer
+
+	addrLookupMap map[string]string
 }
 
 func (s *TestSuite) SetupTest() {
+	if s.addrLookupMap == nil {
+		s.addrLookupMap = make(map[string]string)
+	}
+
 	bufferedLoggerMaker := func() log.Logger {
 		lw := zerolog.ConsoleWriter{
 			Out:          &s.logBuffer,
@@ -77,13 +84,22 @@ func (s *TestSuite) SetupTest() {
 	s.addr3 = addrs[2]
 	s.addr4 = addrs[3]
 	s.addr5 = addrs[4]
+	s.addAddrLookup(s.addr1, "addr1")
+	s.addAddrLookup(s.addr2, "addr2")
+	s.addAddrLookup(s.addr3, "addr3")
+	s.addAddrLookup(s.addr4, "addr4")
+	s.addAddrLookup(s.addr5, "addr5")
 
 	s.marketAddr1 = exchange.GetMarketAddress(1)
 	s.marketAddr2 = exchange.GetMarketAddress(2)
 	s.marketAddr3 = exchange.GetMarketAddress(3)
+	s.addAddrLookup(s.marketAddr1, "marketAddr1")
+	s.addAddrLookup(s.marketAddr2, "marketAddr2")
+	s.addAddrLookup(s.marketAddr3, "marketAddr3")
 
 	s.feeCollector = s.k.GetFeeCollectorName()
 	s.feeCollectorAddr = authtypes.NewModuleAddress(s.feeCollector)
+	s.addAddrLookup(s.feeCollectorAddr, "feeCollectorAddr")
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -144,6 +160,21 @@ func (s *TestSuite) getLogOutput(msg string, args ...interface{}) string {
 	logOutput := s.logBuffer.String()
 	s.T().Logf(msg+" log output:\n%s", append(args, logOutput)...)
 	return logOutput
+}
+
+// splitOutputLog splits the given output log into its lines.
+func (s *TestSuite) splitOutputLog(outputLog string) []string {
+	if len(outputLog) == 0 {
+		return nil
+	}
+	rv := strings.Split(outputLog, "\n")
+	for len(rv) > 0 && len(rv[len(rv)-1]) == 0 {
+		rv = rv[:len(rv)-1]
+	}
+	if len(rv) == 0 {
+		return nil
+	}
+	return rv
 }
 
 // badKey creates a copy of the provided key, moves the last byte to the 2nd to last,
@@ -514,30 +545,20 @@ func (s *TestSuite) agCanEverything(addr sdk.AccAddress) exchange.AccessGrant {
 	}
 }
 
+// addAddrLookup adds an entry to the addrLookupMap (for use in getAddrName).
+func (s *TestSuite) addAddrLookup(addr sdk.AccAddress, name string) {
+	s.addrLookupMap[string(addr)] = name
+}
+
 // getAddrName returns the name of the variable in this TestSuite holding the provided address.
 func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
-	switch string(addr) {
-	case string(s.addr1):
-		return "addr1"
-	case string(s.addr2):
-		return "addr2"
-	case string(s.addr3):
-		return "addr3"
-	case string(s.addr4):
-		return "addr4"
-	case string(s.addr5):
-		return "addr5"
-	case string(s.marketAddr1):
-		return "marketAddr1"
-	case string(s.marketAddr2):
-		return "marketAddr2"
-	case string(s.marketAddr3):
-		return "marketAddr3"
-	case string(s.feeCollectorAddr):
-		return "feeCollectorAddr"
-	default:
-		return addr.String()
+	if s.addrLookupMap != nil {
+		rv, found := s.addrLookupMap[string(addr)]
+		if found {
+			return rv
+		}
 	}
+	return addr.String()
 }
 
 // getAddrStrName returns the name of the variable in this TestSuite holding the provided address.
@@ -667,4 +688,37 @@ func (s *TestSuite) assertEqualEvents(expected, actual sdk.Events, msgAndArgs ..
 func (s *TestSuite) requirePanicEquals(f assertions.PanicTestFunc, expected string, msgAndArgs ...interface{}) {
 	s.T().Helper()
 	assertions.RequirePanicEquals(s.T(), f, expected, msgAndArgs...)
+}
+
+// markerAddr gets the address of a marker account for the given denom.
+func (s *TestSuite) markerAddr(denom string) sdk.AccAddress {
+	markerAddr, err := markertypes.MarkerAddress(denom)
+	s.Require().NoError(err, "MarkerAddress(%q)", denom)
+	s.addAddrLookup(markerAddr, denom+"MarkerAddr")
+	return markerAddr
+}
+
+// markerAccount returns a new marker account with the given supply.
+func (s *TestSuite) markerAccount(supplyCoinStr string) markertypes.MarkerAccountI {
+	supply := s.coin(supplyCoinStr)
+	return &markertypes.MarkerAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: s.markerAddr(supply.Denom).String()},
+		Status:      markertypes.StatusActive,
+		Denom:       supply.Denom,
+		Supply:      supply.Amount,
+		MarkerType:  markertypes.MarkerType_RestrictedCoin,
+		SupplyFixed: true,
+	}
+}
+
+// navSetEvent returns a new EventSetNetAssetValue converted to sdk.Event.
+func (s *TestSuite) navSetEvent(assetsStr, priceStr string, marketID uint32) sdk.Event {
+	assets := s.coin(assetsStr)
+	event := &markertypes.EventSetNetAssetValue{
+		Denom:  assets.Denom,
+		Price:  priceStr,
+		Volume: assets.Amount.String(),
+		Source: fmt.Sprintf("x/exchange market %d", marketID),
+	}
+	return s.untypeEvent(event)
 }
