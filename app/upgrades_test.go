@@ -25,6 +25,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -445,6 +446,15 @@ func (s *UpgradeTestSuite) TestSaffronRC2() {
 	s.AssertUpgradeHandlerLogs("saffron-rc2", expInLog, nil)
 }
 
+func (s *UpgradeTestSuite) TestSaffronRC3() {
+	expInLog := []string{
+		"INF Updating ibc marker denom metadata",
+		"INF Done updating ibc marker denom metadata",
+	}
+
+	s.AssertUpgradeHandlerLogs("saffron-rc3", expInLog, nil)
+}
+
 func (s *UpgradeTestSuite) TestSaffron() {
 	// Each part is (hopefully) tested thoroughly on its own.
 	// So for this test, just make sure there's log entries for each part being done.
@@ -456,6 +466,8 @@ func (s *UpgradeTestSuite) TestSaffron() {
 		"INF Done updating ICQ params",
 		"INF Updating MaxSupply marker param",
 		"INF Done updating MaxSupply marker param",
+		"INF Adding marker net asset values",
+		"INF Done adding marker net asset values",
 		"INF Ensuring exchange module params are set.",
 		"INF Updating ibc marker denom metadata",
 		"INF Done updating ibc marker denom metadata",
@@ -859,6 +871,77 @@ func (s *UpgradeTestSuite) TestSetAccountDataNameRecord() {
 	s.AssertLogContents(logOutput, expInLog, nil, true, "setAccountDataNameRecord")
 }
 
+func (s *UpgradeTestSuite) TestAddMarkerNavs() {
+	address1 := sdk.AccAddress("address1")
+	testcoin := markertypes.NewEmptyMarkerAccount("testcoin",
+		address1.String(),
+		[]markertypes.AccessGrant{})
+	testcoin.Supply = sdk.OneInt()
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, testcoin), "AddMarkerAccount() error")
+
+	testcoinInList := markertypes.NewEmptyMarkerAccount("testcoininlist",
+		address1.String(),
+		[]markertypes.AccessGrant{})
+	testcoinInList.Supply = sdk.OneInt()
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, testcoinInList), "AddMarkerAccount() error")
+
+	nosupplycoin := markertypes.NewEmptyMarkerAccount("nosupplycoin",
+		address1.String(),
+		[]markertypes.AccessGrant{})
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, nosupplycoin), "AddMarkerAccount() error")
+
+	hasnavcoin := markertypes.NewEmptyMarkerAccount("hasnavcoin",
+		address1.String(),
+		[]markertypes.AccessGrant{})
+	hasnavcoin.Supply = sdk.NewInt(100)
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, hasnavcoin), "AddMarkerAccount() error")
+	presentnav := markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, int64(55)), uint64(100))
+	s.Require().NoError(s.app.MarkerKeeper.AddSetNetAssetValues(s.ctx, hasnavcoin, []markertypes.NetAssetValue{presentnav}, "test"))
+
+	addMarkerNavs(s.ctx, s.app, map[string]markertypes.NetAssetValue{
+		"testcoininlist": {Price: sdk.NewInt64Coin(markertypes.UsdDenom, int64(12345)), Volume: uint64(1)},
+	})
+
+	tests := []struct {
+		name       string
+		markerAddr sdk.AccAddress
+		expNav     *markertypes.NetAssetValue
+	}{
+		{
+			name:       "already has nav",
+			markerAddr: hasnavcoin.GetAddress(),
+			expNav:     &markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, int64(55)), Volume: uint64(100)},
+		},
+		{
+			name:       "nav add fails for coin",
+			markerAddr: nosupplycoin.GetAddress(),
+			expNav:     nil,
+		},
+		{
+			name:       "nav set from custom config",
+			markerAddr: testcoinInList.GetAddress(),
+			expNav:     &markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, int64(12345)), Volume: uint64(1)},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			netAssetValues := []markertypes.NetAssetValue{}
+			err := s.app.MarkerKeeper.IterateNetAssetValues(s.ctx, tc.markerAddr, func(state markertypes.NetAssetValue) (stop bool) {
+				netAssetValues = append(netAssetValues, state)
+				return false
+			})
+			s.Require().NoError(err, "IterateNetAssetValues err")
+			if tc.expNav != nil {
+				s.Assert().Len(netAssetValues, 1, "Should be 1 nav set for testcoin")
+				s.Assert().Equal(tc.expNav.Price, netAssetValues[0].Price, "Net asset value price should equal default upgraded price")
+				s.Assert().Equal(tc.expNav.Volume, netAssetValues[0].Volume, "Net asset value volume should equal 1")
+			} else {
+				s.Assert().Len(netAssetValues, 0, "Marker not expected to have nav")
+			}
+		})
+	}
+}
+
 func (s *UpgradeTestSuite) TestSetExchangeParams() {
 	startMsg := "INF Ensuring exchange module params are set."
 	noopMsg := "INF Exchange module params are already defined."
@@ -908,7 +991,6 @@ func (s *UpgradeTestSuite) TestSetExchangeParams() {
 			expInLog: []string{startMsg, noopMsg, doneMsg},
 		},
 	}
-
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			s.app.ExchangeKeeper.SetParams(s.ctx, tc.existingParams)

@@ -33,6 +33,12 @@ func (k Keeper) WithHoldKeeper(holdKeeper exchange.HoldKeeper) Keeper {
 	return k
 }
 
+// WithMarkerKeeper is a test-only method that returns a new Keeper that uses the provided MarkerKeeper.
+func (k Keeper) WithMarkerKeeper(markerKeeper exchange.MarkerKeeper) Keeper {
+	k.markerKeeper = markerKeeper
+	return k
+}
+
 // GetStore is a test-only exposure of getStore.
 func (k Keeper) GetStore(ctx sdk.Context) sdk.KVStore {
 	return k.getStore(ctx)

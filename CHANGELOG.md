@@ -37,21 +37,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Features
-
-* Add the (empty) `saffron-rc2` upgrade [#1699](https://github.com/provenance-io/provenance/issues/1699).
-
 ### Improvements
 
-* Wrote unit tests on the keeper methods [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* During `FillBids`, the seller settlement fee is now calculated on the total price instead of each order individually [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* In the `OrderFeeCalc` query, ensure the market exists [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* When the exchange module settles orders, update the marker net-asset-values ([#1736](https://github.com/provenance-io/provenance/pull/1736).
 
 ### Bug Fixes
 
-* During `InitGenesis`, ensure LastOrderId is at least the largest order id [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* Properly populate the permissions lists when reading access grants from state [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* Fixed the paginated order queries to properly look up orders [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* Fixed denom metadata source chain-id retrieval for new ibc markers [#1726](https://github.com/provenance-io/provenance/issues/1726).
 
 ### Dependencies
 
@@ -61,6 +53,33 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `golang.org/x/text` from 0.13.0 to 0.14.0 ([#1735](https://github.com/provenance-io/provenance/pull/1735))
 - Bump `github.com/spf13/cobra` from 1.7.0 to 1.8.0 ([#1733](https://github.com/provenance-io/provenance/pull/1733))
 - Bump `cosmossdk.io/math` from 1.1.2 to 1.2.0 ([#1739](https://github.com/provenance-io/provenance/pull/1739))
+
+---
+
+## [v1.17.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc2) - 2023-11-03
+
+### Features
+
+* Add the `saffron-rc2` upgrade and update `saffron` to create denom metadata for IBC markers [#1728](https://github.com/provenance-io/provenance/issues/1728).
+
+### Improvements
+
+* Wrote unit tests on the keeper methods [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* During `FillBids`, the seller settlement fee is now calculated on the total price instead of each order individually [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* In the `OrderFeeCalc` query, ensure the market exists [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* Add publishing of docker arm64 container builds [#1634](https://github.com/provenance-io/provenance/issues/1634)
+* Add additional logging to trigger module [#1718](https://github.com/provenance-io/provenance/issues/1718).
+
+### Bug Fixes
+
+* During `InitGenesis`, ensure LastOrderId is at least the largest order id [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* Properly populate the permissions lists when reading access grants from state [#1699](https://github.com/provenance-io/provenance/issues/1699).
+* Fixed the paginated order queries to properly look up orders [#1699](https://github.com/provenance-io/provenance/issues/1699).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.17.0-rc1...v1.17.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.16.0...v1.17.0-rc2
 
 ---
 
@@ -99,6 +118,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump cometbft to v0.34.29 (from v0.34.28) [PR 1649](https://github.com/provenance-io/provenance/pull/1649).
 * Add genesis/init for Marker module send deny list addresses. [#1660](https://github.com/provenance-io/provenance/issues/1660)
 * Add automatic changelog entries for dependabot. [#1674](https://github.com/provenance-io/provenance/issues/1674)
+* Add upgrade handler to set net asset values to markers [PR 1712](https://github.com/provenance-io/provenance/pull/1712).
 * Add publishing of docker arm64 container builds [#1634](https://github.com/provenance-io/provenance/issues/1634)
 * Ensure IBC marker has matching supply [#1706](https://github.com/provenance-io/provenance/issues/1706).
 
