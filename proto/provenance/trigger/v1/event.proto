@@ -8,12 +8,28 @@ option java_multiple_files = true;
 
 // EventTriggerCreated is an event for when a trigger is created
 message EventTriggerCreated {
-  // trigger_id is a unique identifier of the trigger
+  // trigger_id is a unique identifier of the trigger.
   string trigger_id = 1;
 }
 
 // EventTriggerDestroyed is an event for when a trigger is destroyed
 message EventTriggerDestroyed {
-  // trigger_id is a unique identifier of the trigger
+  // trigger_id is a unique identifier of the trigger.
   string trigger_id = 1;
+}
+
+// EventTriggerDetected is an event for when a trigger's event is detected
+message EventTriggerDetected {
+  // trigger_id is a unique identifier of the trigger.
+  string trigger_id = 1;
+}
+
+// EventTriggerExecuted is an event for when a trigger is executed.
+message EventTriggerExecuted {
+  // trigger_id is a unique identifier of the trigger.
+  string trigger_id = 1;
+  // owner is the creator of the trigger.
+  string owner = 2;
+  // success indicates if all executed actions were successful.
+  bool success = 3;
 }
