@@ -6,6 +6,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 type AccountKeeper interface {
@@ -29,4 +30,9 @@ type HoldKeeper interface {
 	AddHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins, reason string) error
 	ReleaseHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error
 	GetHoldCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) (sdk.Coin, error)
+}
+
+type MarkerKeeper interface {
+	GetMarker(ctx sdk.Context, address sdk.AccAddress) (markertypes.MarkerAccountI, error)
+	AddSetNetAssetValues(ctx sdk.Context, marker markertypes.MarkerAccountI, netAssetValues []markertypes.NetAssetValue, source string) error
 }
