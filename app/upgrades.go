@@ -380,7 +380,7 @@ func updateMaxSupply(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Done updating MaxSupply marker param")
 }
 
-// addMarkerNavs adds navs to existing markers, if denom is not in map it will default to $0.15 cents
+// addMarkerNavs adds navs to existing markers
 func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.NetAssetValue) {
 	ctx.Logger().Info("Adding marker net asset values")
 	for denom, nav := range denomToNav {
