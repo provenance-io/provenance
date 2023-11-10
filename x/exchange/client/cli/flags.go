@@ -58,7 +58,7 @@ const (
 	FlagPartial            = "partial"
 	FlagPrice              = "price"
 	FlagReqAttrAsk         = "req-attr-ask"
-	FlagReqAttrBid         = "req-attr-Bid"
+	FlagReqAttrBid         = "req-attr-bid"
 	FlagRevokeAll          = "revoke-all"
 	FlagRevoke             = "revoke"
 	FlagSeller             = "seller"

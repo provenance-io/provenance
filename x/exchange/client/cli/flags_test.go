@@ -26,14 +26,15 @@ const (
 	flagStringSlice = "string-slice"
 	flagUintSlice   = "uint-slice"
 
-	annotationMutuallyExclusive = "cobra_annotation_mutually_exclusive" // = cobra.Command mutuallyExclusive variable
-	annotationOneRequired       = "cobra_annotation_one_required"       // = cobra.Command oneRequired variable
+	mutExc = "cobra_annotation_mutually_exclusive" // = cobra.Command mutuallyExclusive variable
+	oneReq = "cobra_annotation_one_required"       // = cobra.Command oneRequired variable
+	req    = cobra.BashCompOneRequiredFlag
 )
 
 func TestAddFlagsAdmin(t *testing.T) {
 	expAnnotations := map[string][]string{
-		annotationMutuallyExclusive: []string{cli.FlagAdmin + " " + cli.FlagAuthority},
-		annotationOneRequired:       []string{flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+		mutExc: []string{cli.FlagAdmin + " " + cli.FlagAuthority},
+		oneReq: []string{flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 	}
 
 	cmd := &cobra.Command{
@@ -66,9 +67,7 @@ func TestAddFlagsAdmin(t *testing.T) {
 
 	flagFrom := cmd.Flags().Lookup(flags.FlagFrom)
 	if assert.NotNil(t, flagFrom, "The --%s flag", flags.FlagFrom) {
-		fromExpAnnotations := map[string][]string{
-			annotationOneRequired: expAnnotations[annotationOneRequired],
-		}
+		fromExpAnnotations := map[string][]string{oneReq: expAnnotations[oneReq]}
 		actAnnotations := flagFrom.Annotations
 		assert.Equal(t, fromExpAnnotations, actAnnotations, "The --%s flag annotations", flags.FlagFrom)
 	}
@@ -265,8 +264,8 @@ func TestReadAddrFlagOrFrom(t *testing.T) {
 
 func TestAddFlagsEnableDisable(t *testing.T) {
 	expAnnotations := map[string][]string{
-		annotationMutuallyExclusive: []string{cli.FlagEnable + " " + cli.FlagDisable},
-		annotationOneRequired:       []string{cli.FlagEnable + " " + cli.FlagDisable},
+		mutExc: []string{cli.FlagEnable + " " + cli.FlagDisable},
+		oneReq: []string{cli.FlagEnable + " " + cli.FlagDisable},
 	}
 
 	cmd := &cobra.Command{

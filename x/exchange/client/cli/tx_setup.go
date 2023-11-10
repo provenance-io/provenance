@@ -551,7 +551,8 @@ func SetupCmdTxGovCreateMarket(cmd *cobra.Command) {
 	cmd.Flags().StringSlice(FlagReqAttrBid, nil, "Attributes required to create bid orders (repeatable)")
 
 	cmd.MarkFlagsOneRequired(
-		FlagMarket, FlagCreateAsk, FlagCreateBid,
+		FlagMarket, FlagName, FlagDescription, FlagURL, FlagIcon,
+		FlagCreateAsk, FlagCreateBid,
 		FlagSellerFlat, FlagSellerRatios, FlagBuyerFlat, FlagBuyerRatios,
 		FlagAcceptingOrders, FlagAllowUserSettle, FlagAccessGrants,
 		FlagReqAttrAsk, FlagReqAttrBid,

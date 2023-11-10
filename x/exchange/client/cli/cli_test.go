@@ -1,15 +1,19 @@
 package cli_test
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
@@ -244,4 +248,72 @@ func splitStringer(split exchange.DenomSplit) string {
 // orderIDStringer converts an order id to a string.
 func orderIDStringer(orderID uint64) string {
 	return fmt.Sprintf("%d", orderID)
+}
+
+// truncate truncates the provided string returning at most length characters.
+func truncate(str string, length int) string {
+	if len(str) < length-3 {
+		return str
+	}
+	return str[:length-3] + "..."
+}
+
+// setupTestCase contains the stuff that runSetupTestCase should check.
+type setupTestCase struct {
+	name           string
+	setup          func(cmd *cobra.Command)
+	expFlags       []string
+	expAnnotations map[string]map[string][]string
+	expInUse       []string
+	expExamples    []string
+}
+
+// runSetupTestCase runs the provided setup func and checks that everything is set up as expected.
+func runSetupTestCase(t *testing.T, tc setupTestCase) {
+	if tc.expAnnotations == nil {
+		tc.expAnnotations = make(map[string]map[string][]string)
+	}
+	cmd := &cobra.Command{
+		Use: "dummy",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.New("the dummy command should not have been executed")
+		},
+	}
+	cmd.Flags().String(flags.FlagFrom, "", "The from flag")
+
+	testFunc := func() {
+		tc.setup(cmd)
+	}
+	require.NotPanics(t, testFunc, tc.name)
+
+	for i, flagName := range tc.expFlags {
+		t.Run(fmt.Sprintf("flag[%d]: --%s", i, flagName), func(t *testing.T) {
+			flag := cmd.Flags().Lookup(flagName)
+			if assert.NotNil(t, flag, "--%s", flagName) {
+				expAnnotations, _ := tc.expAnnotations[flagName]
+				actAnnotations := flag.Annotations
+				assert.Equal(t, expAnnotations, actAnnotations, "--%s annotations", flagName)
+			}
+		})
+	}
+
+	for i, exp := range tc.expInUse {
+		t.Run(fmt.Sprintf("use[%d]: %s", i, truncate(exp, 20)), func(t *testing.T) {
+			assert.Contains(t, cmd.Use, exp, "command use after %s", tc.name)
+			if exp[0] != '[' {
+				assert.NotContains(t, cmd.Use, "["+exp+"]", "command use after %s", tc.name)
+			}
+		})
+	}
+
+	examples := strings.Split(cmd.Example, "\n")
+	for i, exp := range tc.expExamples {
+		t.Run(fmt.Sprintf("examples[%d]", i), func(t *testing.T) {
+			assert.Contains(t, examples, exp, "command examples after %s", tc.name)
+		})
+	}
+
+	t.Run("args", func(t *testing.T) {
+		assert.NotNil(t, cmd.Args, "command args after %s", tc.name)
+	})
 }
