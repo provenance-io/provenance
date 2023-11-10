@@ -36,6 +36,7 @@ type Keeper struct {
 	attrKeeper    exchange.AttributeKeeper
 	bankKeeper    exchange.BankKeeper
 	holdKeeper    exchange.HoldKeeper
+	markerKeeper  exchange.MarkerKeeper
 
 	authority        string
 	feeCollectorName string
@@ -43,7 +44,7 @@ type Keeper struct {
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollectorName string,
 	accountKeeper exchange.AccountKeeper, attrKeeper exchange.AttributeKeeper,
-	bankKeeper exchange.BankKeeper, holdKeeper exchange.HoldKeeper,
+	bankKeeper exchange.BankKeeper, holdKeeper exchange.HoldKeeper, markerKeeper exchange.MarkerKeeper,
 ) Keeper {
 	rv := Keeper{
 		cdc:              cdc,
@@ -52,6 +53,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollector
 		attrKeeper:       attrKeeper,
 		bankKeeper:       bankKeeper,
 		holdKeeper:       holdKeeper,
+		markerKeeper:     markerKeeper,
 		authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		feeCollectorName: feeCollectorName,
 	}
@@ -62,6 +64,12 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollector
 // Note that this is different from the logging .Error(msg string, keyvals ...interface{}) syntax.
 func (k Keeper) logErrorf(ctx sdk.Context, msg string, args ...interface{}) {
 	ctx.Logger().Error(fmt.Sprintf(msg, args...), "module", "x/"+exchange.ModuleName)
+}
+
+// logInfof uses fmt.Sprintf to combine the msg and args, and logs the result as info from this module.
+// Note that this is different from the logging .Info(msg string, keyvals ...interface{}) syntax.
+func (k Keeper) logInfof(ctx sdk.Context, msg string, args ...interface{}) {
+	ctx.Logger().Info(fmt.Sprintf(msg, args...), "module", "x/"+exchange.ModuleName)
 }
 
 // emitEvent emits the provided event and writes any error to the error log.

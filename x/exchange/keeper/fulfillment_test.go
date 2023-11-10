@@ -5,23 +5,30 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	"github.com/provenance-io/provenance/x/exchange"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 func (s *TestSuite) TestKeeper_FillBids() {
+	appleMarker := s.markerAccount("100000000000apple")
+	acornMarker := s.markerAccount("100000000000acorn")
+
 	tests := []struct {
-		name         string
-		attrKeeper   *MockAttributeKeeper
-		bankKeeper   *MockBankKeeper
-		holdKeeper   *MockHoldKeeper
-		setup        func()
-		msg          exchange.MsgFillBidsRequest
-		expErr       string
-		expEvents    []*exchange.EventOrderFilled
-		expAttrCalls AttributeCalls
-		expHoldCalls HoldCalls
-		expBankCalls BankCalls
+		name           string
+		attrKeeper     *MockAttributeKeeper
+		bankKeeper     *MockBankKeeper
+		holdKeeper     *MockHoldKeeper
+		markerKeeper   *MockMarkerKeeper
+		setup          func()
+		msg            exchange.MsgFillBidsRequest
+		expErr         string
+		expEvents      []*exchange.EventOrderFilled
+		adlEvents      sdk.Events
+		expAttrCalls   AttributeCalls
+		expHoldCalls   HoldCalls
+		expBankCalls   BankCalls
+		expMarkerCalls MarkerCalls
+		expLog         []string
 	}{
 		// Tests on error conditions.
 		{
@@ -419,8 +426,9 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			},
 		},
 		{
-			name:       "error collecting creation fee",
-			bankKeeper: NewMockBankKeeper().WithSendCoinsResults("", "", "another error for testing"),
+			name:         "error collecting creation fee",
+			bankKeeper:   NewMockBankKeeper().WithSendCoinsResults("", "", "another error for testing"),
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker),
 			setup: func() {
 				s.k.SetParams(s.ctx, &exchange.Params{})
 				s.requireCreateMarket(exchange.Market{MarketId: 2, AcceptingOrders: true, AllowUserSettlement: true})
@@ -448,11 +456,22 @@ func (s *TestSuite) TestKeeper_FillBids() {
 					{ctxHasQuarantineBypass: false, fromAddr: s.addr4, toAddr: s.marketAddr2, amt: s.coins("2fig")},
 				},
 			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("6plum"), Volume: 1}},
+						source:         "x/exchange market 2",
+					},
+				},
+			},
 		},
 
 		// Tests on successes.
 		{
-			name: "one order: no fees",
+			name:         "one order: no fees",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker),
 			setup: func() {
 				s.requireCreateMarket(exchange.Market{MarketId: 6, AcceptingOrders: true, AllowUserSettlement: true})
 				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(13).WithBid(&exchange.BidOrder{
@@ -475,9 +494,151 @@ func (s *TestSuite) TestKeeper_FillBids() {
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
 				},
 			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("60plum"), Volume: 12}},
+						source:         "x/exchange market 6",
+					},
+				},
+			},
 		},
 		{
-			name: "one order: all the fees",
+			name:         "one order: no fees, error getting marker",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerErr(appleMarker.GetAddress(), "just a dummy error"),
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 6, AcceptingOrders: true, AllowUserSettlement: true})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(13).WithBid(&exchange.BidOrder{
+					Assets: s.coin("12apple"), Price: s.coin("60plum"), MarketId: 6, Buyer: s.addr2.String(),
+				}))
+			},
+			msg: exchange.MsgFillBidsRequest{
+				Seller:      s.addr5.String(),
+				MarketId:    6,
+				TotalAssets: s.coins("12apple"),
+				BidOrderIds: []uint64{13},
+			},
+			expEvents: []*exchange.EventOrderFilled{
+				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
+			},
+			adlEvents:    sdk.Events{s.navSetEvent("12apple", "60plum", 6)},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+				},
+			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+			},
+			expLog: []string{"ERR error getting asset marker \"apple\": just a dummy error module=x/exchange"},
+		},
+		{
+			name: "one order: no fees, no asset marker",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 6, AcceptingOrders: true, AllowUserSettlement: true})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(13).WithBid(&exchange.BidOrder{
+					Assets: s.coin("12apple"), Price: s.coin("60plum"), MarketId: 6, Buyer: s.addr2.String(),
+				}))
+			},
+			msg: exchange.MsgFillBidsRequest{
+				Seller:      s.addr5.String(),
+				MarketId:    6,
+				TotalAssets: s.coins("12apple"),
+				BidOrderIds: []uint64{13},
+			},
+			expEvents: []*exchange.EventOrderFilled{
+				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
+			},
+			adlEvents:    sdk.Events{s.navSetEvent("12apple", "60plum", 6)},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+				},
+			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+			},
+			expLog: []string{"INF no marker found for asset denom \"apple\" module=x/exchange"},
+		},
+		{
+			name:         "one order: no fees, very large amount",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker),
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 6, AcceptingOrders: true, AllowUserSettlement: true})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(13).WithBid(&exchange.BidOrder{
+					Assets: s.coin("184467440737095516150apple"), Price: s.coin("60plum"), MarketId: 6, Buyer: s.addr2.String(),
+				}))
+			},
+			msg: exchange.MsgFillBidsRequest{
+				Seller:      s.addr5.String(),
+				MarketId:    6,
+				TotalAssets: s.coins("184467440737095516150apple"),
+				BidOrderIds: []uint64{13},
+			},
+			expEvents: []*exchange.EventOrderFilled{
+				{OrderId: 13, Assets: "184467440737095516150apple", Price: "60plum", MarketId: 6},
+			},
+			adlEvents:    sdk.Events{s.navSetEvent("184467440737095516150apple", "60plum", 6)},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("184467440737095516150apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+				},
+			},
+			expLog: []string{
+				"ERR could not record net-asset-value of \"184467440737095516150apple\" at a " +
+					"price of \"60plum\": asset volume greater than max uint64 module=x/exchange",
+			},
+		},
+		{
+			name: "one order: no fees, error setting nav",
+			markerKeeper: NewMockMarkerKeeper().
+				WithGetMarkerAccount(appleMarker).
+				WithAddSetNetAssetValuesResults("oh no, it is an error"),
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 6, AcceptingOrders: true, AllowUserSettlement: true})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(13).WithBid(&exchange.BidOrder{
+					Assets: s.coin("12apple"), Price: s.coin("60plum"), MarketId: 6, Buyer: s.addr2.String(),
+				}))
+			},
+			msg: exchange.MsgFillBidsRequest{
+				Seller:      s.addr5.String(),
+				MarketId:    6,
+				TotalAssets: s.coins("12apple"),
+				BidOrderIds: []uint64{13},
+			},
+			expEvents: []*exchange.EventOrderFilled{
+				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
+			},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+				},
+			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("60plum"), Volume: 12}},
+						source:         "x/exchange market 6",
+					},
+				},
+			},
+			expLog: []string{"ERR error setting net-asset-values for marker \"apple\": oh no, it is an error module=x/exchange"},
+		},
+		{
+			name:         "one order: all the fees",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker),
 			setup: func() {
 				s.k.SetParams(s.ctx, &exchange.Params{
 					DefaultSplit: 1000,
@@ -525,9 +686,20 @@ func (s *TestSuite) TestKeeper_FillBids() {
 					{senderAddr: s.marketAddr3, recipientModule: s.feeCollector, amt: s.coins("3fig")},
 				},
 			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("60plum"), Volume: 12}},
+						source:         "x/exchange market 3",
+					},
+				},
+			},
 		},
 		{
-			name: "three orders",
+			name:         "three orders",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker).WithGetMarkerAccount(acornMarker),
 			setup: func() {
 				s.k.SetParams(s.ctx, &exchange.Params{DefaultSplit: 1000})
 				s.requireCreateMarket(exchange.Market{
@@ -592,6 +764,24 @@ func (s *TestSuite) TestKeeper_FillBids() {
 					{senderAddr: s.marketAddr3, recipientModule: s.feeCollector, amt: s.coins("3fig,1plum,1prune")},
 				},
 			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{acornMarker.GetAddress(), appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         acornMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("50prune"), Volume: 5}},
+						source:         "x/exchange market 3",
+					},
+					{
+						marker: appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{
+							{Price: s.coin("33prune"), Volume: 6},
+							{Price: s.coin("60plum"), Volume: 12},
+						},
+						source: "x/exchange market 3",
+					},
+				},
+			},
 		},
 	}
 
@@ -614,15 +804,23 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			if tc.holdKeeper == nil {
 				tc.holdKeeper = NewMockHoldKeeper()
 			}
+			if tc.markerKeeper == nil {
+				tc.markerKeeper = NewMockMarkerKeeper()
+			}
 
 			expEvents := untypeEvents(s, tc.expEvents)
+			if len(tc.adlEvents) > 0 {
+				expEvents = append(expEvents, tc.adlEvents...)
+			}
 
 			em := sdk.NewEventManager()
 			ctx := s.ctx.WithEventManager(em)
 			kpr := s.k.WithAttributeKeeper(tc.attrKeeper).
 				WithAccountKeeper(s.accKeeper).
 				WithBankKeeper(tc.bankKeeper).
-				WithHoldKeeper(tc.holdKeeper)
+				WithHoldKeeper(tc.holdKeeper).
+				WithMarkerKeeper(tc.markerKeeper)
+			s.logBuffer.Reset()
 			var err error
 			testFunc := func() {
 				err = kpr.FillBids(ctx, &tc.msg)
@@ -634,6 +832,11 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			s.assertAttributeKeeperCalls(tc.attrKeeper, tc.expAttrCalls, "FillBids")
 			s.assertHoldKeeperCalls(tc.holdKeeper, tc.expHoldCalls, "FillBids")
 			s.assertBankKeeperCalls(tc.bankKeeper, tc.expBankCalls, "FillBids")
+			s.assertMarkerKeeperCalls(tc.markerKeeper, tc.expMarkerCalls, "FillAsks")
+
+			outputLog := s.getLogOutput("FillBids")
+			actLog := s.splitOutputLog(outputLog)
+			s.Assert().Equal(tc.expLog, actLog, "Lines logged during FillBids")
 
 			if len(actEvents) == 0 {
 				return
@@ -650,18 +853,25 @@ func (s *TestSuite) TestKeeper_FillBids() {
 }
 
 func (s *TestSuite) TestKeeper_FillAsks() {
+	appleMarker := s.markerAccount("100000apple")
+	acornMarker := s.markerAccount("100000acorn")
+
 	tests := []struct {
-		name         string
-		attrKeeper   *MockAttributeKeeper
-		bankKeeper   *MockBankKeeper
-		holdKeeper   *MockHoldKeeper
-		setup        func()
-		msg          exchange.MsgFillAsksRequest
-		expErr       string
-		expEvents    []*exchange.EventOrderFilled
-		expAttrCalls AttributeCalls
-		expHoldCalls HoldCalls
-		expBankCalls BankCalls
+		name           string
+		attrKeeper     *MockAttributeKeeper
+		bankKeeper     *MockBankKeeper
+		holdKeeper     *MockHoldKeeper
+		markerKeeper   *MockMarkerKeeper
+		setup          func()
+		msg            exchange.MsgFillAsksRequest
+		expErr         string
+		expEvents      []*exchange.EventOrderFilled
+		adlEvents      sdk.Events
+		expAttrCalls   AttributeCalls
+		expHoldCalls   HoldCalls
+		expBankCalls   BankCalls
+		expMarkerCalls MarkerCalls
+		expLog         []string
 	}{
 		// Tests on error conditions.
 		{
@@ -1064,8 +1274,9 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			},
 		},
 		{
-			name:       "error collecting creation fee",
-			bankKeeper: NewMockBankKeeper().WithSendCoinsResults("", "", "another error for testing"),
+			name:         "error collecting creation fee",
+			bankKeeper:   NewMockBankKeeper().WithSendCoinsResults("", "", "another error for testing"),
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker),
 			setup: func() {
 				s.k.SetParams(s.ctx, &exchange.Params{})
 				s.requireCreateMarket(exchange.Market{MarketId: 2, AcceptingOrders: true, AllowUserSettlement: true})
@@ -1093,11 +1304,22 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 					{ctxHasQuarantineBypass: false, fromAddr: s.addr4, toAddr: s.marketAddr2, amt: s.coins("2fig")},
 				},
 			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("6plum"), Volume: 1}},
+						source:         "x/exchange market 2",
+					},
+				},
+			},
 		},
 
 		// Tests on successes.
 		{
-			name: "one order: no fees",
+			name:         "one order: no fees",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker),
 			setup: func() {
 				s.requireCreateMarket(exchange.Market{MarketId: 6, AcceptingOrders: true, AllowUserSettlement: true})
 				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(13).WithAsk(&exchange.AskOrder{
@@ -1120,9 +1342,150 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
 				},
 			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("60plum"), Volume: 12}},
+						source:         "x/exchange market 6",
+					},
+				},
+			},
 		},
 		{
-			name: "one order: all the fees",
+			name:         "one order: no fees, error getting marker",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerErr(appleMarker.GetAddress(), "uncomfortable marker error"),
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 6, AcceptingOrders: true, AllowUserSettlement: true})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(13).WithAsk(&exchange.AskOrder{
+					Assets: s.coin("12apple"), Price: s.coin("60plum"), MarketId: 6, Seller: s.addr2.String(),
+				}))
+			},
+			msg: exchange.MsgFillAsksRequest{
+				Buyer:       s.addr5.String(),
+				MarketId:    6,
+				TotalPrice:  s.coin("60plum"),
+				AskOrderIds: []uint64{13},
+			},
+			expEvents: []*exchange.EventOrderFilled{
+				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
+			},
+			adlEvents:    sdk.Events{s.navSetEvent("12apple", "60plum", 6)},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple")}}},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+				},
+			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+			},
+			expLog: []string{"ERR error getting asset marker \"apple\": uncomfortable marker error module=x/exchange"},
+		},
+		{
+			name: "one order: no fees, no asset marker",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 6, AcceptingOrders: true, AllowUserSettlement: true})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(13).WithAsk(&exchange.AskOrder{
+					Assets: s.coin("12apple"), Price: s.coin("60plum"), MarketId: 6, Seller: s.addr2.String(),
+				}))
+			},
+			msg: exchange.MsgFillAsksRequest{
+				Buyer:       s.addr5.String(),
+				MarketId:    6,
+				TotalPrice:  s.coin("60plum"),
+				AskOrderIds: []uint64{13},
+			},
+			expEvents: []*exchange.EventOrderFilled{
+				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
+			},
+			adlEvents:    sdk.Events{s.navSetEvent("12apple", "60plum", 6)},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple")}}},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+				},
+			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+			},
+			expLog: []string{"INF no marker found for asset denom \"apple\" module=x/exchange"},
+		},
+		{
+			name: "one order: no fees, very large amount",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 6, AcceptingOrders: true, AllowUserSettlement: true})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(13).WithAsk(&exchange.AskOrder{
+					Assets: s.coin("184467440737095516150apple"), Price: s.coin("60plum"), MarketId: 6, Seller: s.addr2.String(),
+				}))
+			},
+			msg: exchange.MsgFillAsksRequest{
+				Buyer:       s.addr5.String(),
+				MarketId:    6,
+				TotalPrice:  s.coin("60plum"),
+				AskOrderIds: []uint64{13},
+			},
+			expEvents: []*exchange.EventOrderFilled{
+				{OrderId: 13, Assets: "184467440737095516150apple", Price: "60plum", MarketId: 6},
+			},
+			adlEvents:    sdk.Events{s.navSetEvent("184467440737095516150apple", "60plum", 6)},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("184467440737095516150apple")}}},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("184467440737095516150apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+				},
+			},
+			expLog: []string{
+				"ERR could not record net-asset-value of \"184467440737095516150apple\" at a " +
+					"price of \"60plum\": asset volume greater than max uint64 module=x/exchange",
+			},
+		},
+		{
+			name: "one order: no fees, error setting nav",
+			markerKeeper: NewMockMarkerKeeper().
+				WithGetMarkerAccount(appleMarker).
+				WithAddSetNetAssetValuesResults("nav error, an error from nav"),
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 6, AcceptingOrders: true, AllowUserSettlement: true})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(13).WithAsk(&exchange.AskOrder{
+					Assets: s.coin("12apple"), Price: s.coin("60plum"), MarketId: 6, Seller: s.addr2.String(),
+				}))
+			},
+			msg: exchange.MsgFillAsksRequest{
+				Buyer:       s.addr5.String(),
+				MarketId:    6,
+				TotalPrice:  s.coin("60plum"),
+				AskOrderIds: []uint64{13},
+			},
+			expEvents: []*exchange.EventOrderFilled{
+				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
+			},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple")}}},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+				},
+			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("60plum"), Volume: 12}},
+						source:         "x/exchange market 6",
+					},
+				},
+			},
+			expLog: []string{"ERR error setting net-asset-values for marker \"apple\": nav error, an error from nav module=x/exchange"},
+		},
+		{
+			name:         "one order: all the fees",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker),
 			setup: func() {
 				s.k.SetParams(s.ctx, &exchange.Params{
 					DefaultSplit: 1000,
@@ -1170,9 +1533,20 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 					{senderAddr: s.marketAddr3, recipientModule: s.feeCollector, amt: s.coins("3fig")},
 				},
 			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("60plum"), Volume: 12}},
+						source:         "x/exchange market 3",
+					},
+				},
+			},
 		},
 		{
-			name: "three orders",
+			name:         "three orders",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker).WithGetMarkerAccount(acornMarker),
 			setup: func() {
 				s.k.SetParams(s.ctx, &exchange.Params{DefaultSplit: 1000})
 				s.requireCreateMarket(exchange.Market{
@@ -1239,6 +1613,21 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 					{senderAddr: s.marketAddr3, recipientModule: s.feeCollector, amt: s.coins("3fig,1prune")},
 				},
 			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{acornMarker.GetAddress(), appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         acornMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("50prune"), Volume: 5}},
+						source:         "x/exchange market 3",
+					},
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("93prune"), Volume: 18}},
+						source:         "x/exchange market 3",
+					},
+				},
+			},
 		},
 	}
 
@@ -1261,15 +1650,23 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			if tc.holdKeeper == nil {
 				tc.holdKeeper = NewMockHoldKeeper()
 			}
+			if tc.markerKeeper == nil {
+				tc.markerKeeper = NewMockMarkerKeeper()
+			}
 
 			expEvents := untypeEvents(s, tc.expEvents)
+			if len(tc.adlEvents) > 0 {
+				expEvents = append(expEvents, tc.adlEvents...)
+			}
 
 			em := sdk.NewEventManager()
 			ctx := s.ctx.WithEventManager(em)
 			kpr := s.k.WithAttributeKeeper(tc.attrKeeper).
 				WithAccountKeeper(s.accKeeper).
 				WithBankKeeper(tc.bankKeeper).
-				WithHoldKeeper(tc.holdKeeper)
+				WithHoldKeeper(tc.holdKeeper).
+				WithMarkerKeeper(tc.markerKeeper)
+			s.logBuffer.Reset()
 			var err error
 			testFunc := func() {
 				err = kpr.FillAsks(ctx, &tc.msg)
@@ -1281,6 +1678,11 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			s.assertAttributeKeeperCalls(tc.attrKeeper, tc.expAttrCalls, "FillAsks")
 			s.assertHoldKeeperCalls(tc.holdKeeper, tc.expHoldCalls, "FillAsks")
 			s.assertBankKeeperCalls(tc.bankKeeper, tc.expBankCalls, "FillAsks")
+			s.assertMarkerKeeperCalls(tc.markerKeeper, tc.expMarkerCalls, "FillAsks")
+
+			outputLog := s.getLogOutput("FillAsks")
+			actLog := s.splitOutputLog(outputLog)
+			s.Assert().Equal(tc.expLog, actLog, "Lines logged during FillAsks")
 
 			if len(actEvents) == 0 {
 				return
@@ -1297,10 +1699,13 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 }
 
 func (s *TestSuite) TestKeeper_SettleOrders() {
+	appleMarker := s.markerAccount("1000000000apple")
+
 	tests := []struct {
 		name           string
 		bankKeeper     *MockBankKeeper
 		holdKeeper     *MockHoldKeeper
+		markerKeeper   *MockMarkerKeeper
 		setup          func()
 		marketID       uint32
 		askOrderIDs    []uint64
@@ -1308,9 +1713,12 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 		expectPartial  bool
 		expErr         string
 		expEvents      []proto.Message
+		adlEvents      sdk.Events
 		expPartialLeft *exchange.Order
 		expHoldCalls   HoldCalls
 		expBankCalls   BankCalls
+		expMarkerCalls MarkerCalls
+		expLog         []string
 	}{
 		// Tests on error conditions.
 		{
@@ -1549,7 +1957,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 
 		// Tests on successes.
 		{
-			name: "one ask one bid: both full, no fees",
+			name:         "one ask one bid: both full, no fees",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker),
 			setup: func() {
 				s.requireCreateMarket(exchange.Market{MarketId: 1})
 				store := s.getStore()
@@ -1580,9 +1989,180 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
 				},
 			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("5peach"), Volume: 1}},
+						source:         "x/exchange market 1",
+					},
+				},
+			},
 		},
 		{
-			name: "one ask one bid: both full, all the fees",
+			name:         "one ask one bid: both full, no fees, error getting marker",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerErr(appleMarker.GetAddress(), "sample apple error"),
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
+					Assets: s.coin("1apple"), Price: s.coin("5peach"), MarketId: 1, Seller: s.addr3.String(),
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(5).WithBid(&exchange.BidOrder{
+					Assets: s.coin("1apple"), Price: s.coin("5peach"), MarketId: 1, Buyer: s.addr4.String(),
+				}))
+			},
+			marketID:      1,
+			askOrderIDs:   []uint64{1},
+			bidOrderIDs:   []uint64{5},
+			expectPartial: false,
+			expEvents: []proto.Message{
+				&exchange.EventOrderFilled{OrderId: 1, Assets: "1apple", Price: "5peach", MarketId: 1},
+				&exchange.EventOrderFilled{OrderId: 5, Assets: "1apple", Price: "5peach", MarketId: 1},
+			},
+			adlEvents: sdk.Events{s.navSetEvent("1apple", "5peach", 1)},
+			expHoldCalls: HoldCalls{
+				ReleaseHold: []*ReleaseHoldArgs{
+					{addr: s.addr3, funds: s.coins("1apple")},
+					{addr: s.addr4, funds: s.coins("5peach")},
+				},
+			},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+				},
+			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+			},
+			expLog: []string{"ERR error getting asset marker \"apple\": sample apple error module=x/exchange"},
+		},
+		{
+			name: "one ask one bid: both full, no fees, no asset marker",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
+					Assets: s.coin("1apple"), Price: s.coin("5peach"), MarketId: 1, Seller: s.addr3.String(),
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(5).WithBid(&exchange.BidOrder{
+					Assets: s.coin("1apple"), Price: s.coin("5peach"), MarketId: 1, Buyer: s.addr4.String(),
+				}))
+			},
+			marketID:      1,
+			askOrderIDs:   []uint64{1},
+			bidOrderIDs:   []uint64{5},
+			expectPartial: false,
+			expEvents: []proto.Message{
+				&exchange.EventOrderFilled{OrderId: 1, Assets: "1apple", Price: "5peach", MarketId: 1},
+				&exchange.EventOrderFilled{OrderId: 5, Assets: "1apple", Price: "5peach", MarketId: 1},
+			},
+			adlEvents: sdk.Events{s.navSetEvent("1apple", "5peach", 1)},
+			expHoldCalls: HoldCalls{
+				ReleaseHold: []*ReleaseHoldArgs{
+					{addr: s.addr3, funds: s.coins("1apple")},
+					{addr: s.addr4, funds: s.coins("5peach")},
+				},
+			},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+				},
+			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+			},
+			expLog: []string{"INF no marker found for asset denom \"apple\" module=x/exchange"},
+		},
+		{
+			name:         "one ask one bid: both full, no fees, very large amount",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker),
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
+					Assets: s.coin("184467440737095516150apple"), Price: s.coin("5peach"), MarketId: 1, Seller: s.addr3.String(),
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(5).WithBid(&exchange.BidOrder{
+					Assets: s.coin("184467440737095516150apple"), Price: s.coin("5peach"), MarketId: 1, Buyer: s.addr4.String(),
+				}))
+			},
+			marketID:      1,
+			askOrderIDs:   []uint64{1},
+			bidOrderIDs:   []uint64{5},
+			expectPartial: false,
+			expEvents: []proto.Message{
+				&exchange.EventOrderFilled{OrderId: 1, Assets: "184467440737095516150apple", Price: "5peach", MarketId: 1},
+				&exchange.EventOrderFilled{OrderId: 5, Assets: "184467440737095516150apple", Price: "5peach", MarketId: 1},
+			},
+			expHoldCalls: HoldCalls{
+				ReleaseHold: []*ReleaseHoldArgs{
+					{addr: s.addr3, funds: s.coins("184467440737095516150apple")},
+					{addr: s.addr4, funds: s.coins("5peach")},
+				},
+			},
+			adlEvents: sdk.Events{s.navSetEvent("184467440737095516150apple", "5peach", 1)},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("184467440737095516150apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+				},
+			},
+			expLog: []string{"ERR could not record net-asset-value of \"184467440737095516150apple\" at a price of \"5peach\": asset volume greater than max uint64 module=x/exchange"},
+		},
+		{
+			name: "one ask one bid: both full, no fees, error setting nav",
+			markerKeeper: NewMockMarkerKeeper().
+				WithGetMarkerAccount(appleMarker).
+				WithAddSetNetAssetValuesResults("this error is fake"),
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
+					Assets: s.coin("1apple"), Price: s.coin("5peach"), MarketId: 1, Seller: s.addr3.String(),
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(5).WithBid(&exchange.BidOrder{
+					Assets: s.coin("1apple"), Price: s.coin("5peach"), MarketId: 1, Buyer: s.addr4.String(),
+				}))
+			},
+			marketID:      1,
+			askOrderIDs:   []uint64{1},
+			bidOrderIDs:   []uint64{5},
+			expectPartial: false,
+			expEvents: []proto.Message{
+				&exchange.EventOrderFilled{OrderId: 1, Assets: "1apple", Price: "5peach", MarketId: 1},
+				&exchange.EventOrderFilled{OrderId: 5, Assets: "1apple", Price: "5peach", MarketId: 1},
+			},
+			expHoldCalls: HoldCalls{
+				ReleaseHold: []*ReleaseHoldArgs{
+					{addr: s.addr3, funds: s.coins("1apple")},
+					{addr: s.addr4, funds: s.coins("5peach")},
+				},
+			},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+				},
+			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("5peach"), Volume: 1}},
+						source:         "x/exchange market 1",
+					},
+				},
+			},
+			expLog: []string{"ERR error setting net-asset-values for marker \"apple\": this error is fake module=x/exchange"},
+		},
+		{
+			name:         "one ask one bid: both full, all the fees",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker),
 			setup: func() {
 				s.k.SetParams(s.ctx, &exchange.Params{DefaultSplit: 1000})
 				s.requireCreateMarket(exchange.Market{
@@ -1631,9 +2211,20 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 					{senderAddr: s.marketAddr1, recipientModule: s.feeCollector, amt: s.coins("2peach")},
 				},
 			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("50peach"), Volume: 10}},
+						source:         "x/exchange market 1",
+					},
+				},
+			},
 		},
 		{
-			name: "one ask one bid: partial ask",
+			name:         "one ask one bid: partial ask",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker),
 			setup: func() {
 				s.k.SetParams(s.ctx, &exchange.Params{})
 				s.requireCreateMarket(exchange.Market{MarketId: 1})
@@ -1682,9 +2273,20 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 					{fromAddr: s.addr5, toAddr: s.marketAddr1, amt: s.coins("14fig")},
 				},
 			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("40peach"), Volume: 7}},
+						source:         "x/exchange market 1",
+					},
+				},
+			},
 		},
 		{
-			name: "one ask one bid: partial bid",
+			name:         "one ask one bid: partial bid",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker),
 			setup: func() {
 				s.k.SetParams(s.ctx, &exchange.Params{})
 				s.requireCreateMarket(exchange.Market{MarketId: 1})
@@ -1733,9 +2335,20 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 					{fromAddr: s.addr3, toAddr: s.marketAddr1, amt: s.coins("14fig")},
 				},
 			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("35peach"), Volume: 7}},
+						source:         "x/exchange market 1",
+					},
+				},
+			},
 		},
 		{
-			name: "two asks, three bids",
+			name:         "two asks, three bids",
+			markerKeeper: NewMockMarkerKeeper().WithGetMarkerAccount(appleMarker),
 			setup: func() {
 				s.k.SetParams(s.ctx, &exchange.Params{})
 				s.requireCreateMarket(exchange.Market{MarketId: 2})
@@ -1806,6 +2419,16 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 					},
 				},
 			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker:         appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{{Price: s.coin("150peach"), Volume: 100}},
+						source:         "x/exchange market 2",
+					},
+				},
+			},
 		},
 	}
 
@@ -1825,12 +2448,22 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			if tc.holdKeeper == nil {
 				tc.holdKeeper = NewMockHoldKeeper()
 			}
+			if tc.markerKeeper == nil {
+				tc.markerKeeper = NewMockMarkerKeeper()
+			}
 
 			expEvents := untypeEvents(s, tc.expEvents)
+			if len(tc.adlEvents) > 0 {
+				expEvents = append(expEvents, tc.adlEvents...)
+			}
 
 			em := sdk.NewEventManager()
 			ctx := s.ctx.WithEventManager(em)
-			kpr := s.k.WithAccountKeeper(s.accKeeper).WithBankKeeper(tc.bankKeeper).WithHoldKeeper(tc.holdKeeper)
+			kpr := s.k.WithAccountKeeper(s.accKeeper).
+				WithBankKeeper(tc.bankKeeper).
+				WithHoldKeeper(tc.holdKeeper).
+				WithMarkerKeeper(tc.markerKeeper)
+			s.logBuffer.Reset()
 			var err error
 			testFunc := func() {
 				err = kpr.SettleOrders(ctx, tc.marketID, tc.askOrderIDs, tc.bidOrderIDs, tc.expectPartial)
@@ -1841,6 +2474,11 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			s.assertEqualEvents(expEvents, actEvents, "SettleOrders events")
 			s.assertHoldKeeperCalls(tc.holdKeeper, tc.expHoldCalls, "SettleOrders")
 			s.assertBankKeeperCalls(tc.bankKeeper, tc.expBankCalls, "SettleOrders")
+			s.assertMarkerKeeperCalls(tc.markerKeeper, tc.expMarkerCalls, "SettleOrders")
+
+			outputLog := s.getLogOutput("SettleOrders")
+			actLog := s.splitOutputLog(outputLog)
+			s.Assert().Equal(tc.expLog, actLog, "Lines logged during SettleOrders")
 
 			if len(actEvents) == 0 {
 				return

@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add publishing of docker arm64 container builds [#1634](https://github.com/provenance-io/provenance/issues/1634)
 * Add upgrade handler to set net asset values to markers [PR 1712](https://github.com/provenance-io/provenance/pull/1712).
 * Add additional logging to trigger module [#1718](https://github.com/provenance-io/provenance/issues/1718).
+* When the exchange module settles orders, update the marker net-asset-values ([#1736](https://github.com/provenance-io/provenance/pull/1736).
 
 ### Bug Fixes
 
