@@ -200,9 +200,10 @@ func ValidateBuyerFeeRatios(ratios []FeeRatio) error {
 
 // ParseCoin parses a string into an sdk.Coin
 func ParseCoin(coinStr string) (sdk.Coin, error) {
-	// The sdk.ParseCoinNormalized allows for decimals and just truncates if there are some.
+	// The sdk.ParseCoinNormalized func allows for decimals and just truncates if there are some.
 	// But I want an error if there's a decimal portion.
 	// Its errors also always have "invalid decimal coin expression", and I don't want "decimal" in these errors.
+	// I also like having the offending coin string quoted.
 	decCoin, err := sdk.ParseDecCoin(coinStr)
 	if err != nil || !decCoin.Amount.IsInteger() {
 		return sdk.Coin{}, fmt.Errorf("invalid coin expression: %q", coinStr)

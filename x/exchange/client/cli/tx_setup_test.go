@@ -331,7 +331,7 @@ func TestMakeMsgFillBids(t *testing.T) {
 				Seller: sdk.AccAddress("FromAddress_________").String(),
 			},
 			expErr: joinErrs(
-				"error parsing --assets value \"18\" as coins: invalid decimal coin expression: 18",
+				"error parsing --assets as coins: invalid coin expression: \"18\"",
 				"error parsing --creation-fee as a coin: invalid coin expression: \"apple\"",
 			),
 		},
@@ -635,7 +635,7 @@ func TestMakeMsgMarketWithdraw(t *testing.T) {
 			},
 			expErr: joinErrs(
 				"no admin provided",
-				"error parsing --amount value \"bill\" as coins: invalid decimal coin expression: bill",
+				"error parsing --amount as coins: invalid coin expression: \"bill\"",
 			),
 		},
 		{

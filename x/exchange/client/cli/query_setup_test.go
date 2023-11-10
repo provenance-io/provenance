@@ -127,7 +127,7 @@ func TestMakeQueryOrderFeeCalc(t *testing.T) {
 			},
 			expErr: joinErrs(
 				"missing required --price flag",
-				"error parsing --settlement-fee value \"oops\" as coins: invalid decimal coin expression: oops",
+				"error parsing --settlement-fee as coins: invalid coin expression: \"oops\"",
 			),
 		},
 		{
@@ -150,7 +150,7 @@ func TestMakeQueryOrderFeeCalc(t *testing.T) {
 			expErr: joinErrs(
 				"error parsing --assets as a coin: invalid coin expression: \"noamt\"",
 				"error parsing --price as a coin: invalid coin expression: \"-3badcoin\"",
-				"error parsing --settlement-fee value \"88x\" as coins: invalid decimal coin expression: 88x"),
+				"error parsing --settlement-fee as coins: invalid coin expression: \"88x\""),
 		},
 		{
 			name:  "minimal ask",

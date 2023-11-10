@@ -644,7 +644,7 @@ func TestReadCoinsFlag(t *testing.T) {
 			testName: "invalid coins",
 			flags:    []string{"--" + flagString, "2yupcoin,nopecoin"},
 			name:     flagString,
-			expErr:   "error parsing --" + flagString + " value \"2yupcoin,nopecoin\" as coins: invalid decimal coin expression: nopecoin",
+			expErr:   "error parsing --" + flagString + " as coins: invalid coin expression: \"nopecoin\"",
 		},
 		{
 			testName: "one coin",
@@ -677,6 +677,69 @@ func TestReadCoinsFlag(t *testing.T) {
 			require.NotPanics(t, testFunc, "ReadCoinsFlag(%q)", tc.name)
 			assertions.AssertErrorValue(t, err, tc.expErr, "ReadCoinsFlag(%q) error", tc.name)
 			assert.Equal(t, tc.expCoins.String(), coins.String(), "ReadCoinsFlag(%q) coins", tc.name)
+		})
+	}
+}
+
+func TestParseCoins(t *testing.T) {
+	tests := []struct {
+		name     string
+		coinsStr string
+		expCoins sdk.Coins
+		expErr   string
+	}{
+		{
+			name:     "empty string",
+			coinsStr: "",
+			expCoins: nil,
+			expErr:   "",
+		},
+		{
+			name:     "one entry, bad",
+			coinsStr: "bad",
+			expErr:   "invalid coin expression: \"bad\"",
+		},
+		{
+			name:     "one entry, good",
+			coinsStr: "55good",
+			expCoins: sdk.NewCoins(sdk.NewInt64Coin("good", 55)),
+		},
+		{
+			name:     "three entries, first bad",
+			coinsStr: "1234,555second,63third",
+			expErr:   "invalid coin expression: \"1234\"",
+		},
+		{
+			name:     "three entries, second bad",
+			coinsStr: "1234first,second,55third",
+			expErr:   "invalid coin expression: \"second\"",
+		},
+		{
+			name:     "three entries, third bad",
+			coinsStr: "1234first,555second,63x",
+			expErr:   "invalid coin expression: \"63x\"",
+		},
+		{
+			name:     "three entries, all good",
+			coinsStr: "1234one,555two,63three",
+			expCoins: sdk.NewCoins(
+				sdk.NewInt64Coin("one", 1234),
+				sdk.NewInt64Coin("three", 63),
+				sdk.NewInt64Coin("two", 555),
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var coins sdk.Coins
+			var err error
+			testFunc := func() {
+				coins, err = cli.ParseCoins(tc.coinsStr)
+			}
+			require.NotPanics(t, testFunc, "ParseCoins(%q)", tc.coinsStr)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseCoins(%q) error", tc.coinsStr)
+			assert.Equal(t, tc.expCoins.String(), coins.String(), "ParseCoins(%q) coins", tc.coinsStr)
 		})
 	}
 }

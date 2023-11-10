@@ -237,9 +237,29 @@ func ReadCoinsFlag(flagSet *pflag.FlagSet, name string) (sdk.Coins, error) {
 	if len(value) == 0 || err != nil {
 		return nil, err
 	}
-	rv, err := sdk.ParseCoinsNormalized(value)
+	rv, err := ParseCoins(value)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing --%s value %q as coins: %w", name, value, err)
+		return nil, fmt.Errorf("error parsing --%s as coins: %w", name, err)
+	}
+	return rv, nil
+}
+
+// ParseCoins parses a string into a sdk.Coins.
+func ParseCoins(coinsStr string) (sdk.Coins, error) {
+	// The sdk.ParseCoinsNormalized func allows for decimals and just truncates if there are some.
+	// But I want an error if there's a decimal portion.
+	// Its errors also always have "invalid decimal coin expression", and I don't want "decimal" in these errors.
+	// I also like having the offending coin string quoted.
+	if len(coinsStr) == 0 {
+		return nil, nil
+	}
+	var rv sdk.Coins
+	for _, coinStr := range strings.Split(coinsStr, ",") {
+		c, err := exchange.ParseCoin(coinStr)
+		if err != nil {
+			return nil, err
+		}
+		rv = rv.Add(c)
 	}
 	return rv, nil
 }
