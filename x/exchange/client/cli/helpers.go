@@ -204,7 +204,7 @@ An admin is required.`,
 
 	// AccessGrantsDesc is a description of the <asset grant> format.
 	AccessGrantsDesc = fmt.Sprintf(`An <access grant> has the format "<address>:<permissions>"
-In <permissions>, separate each permission with a + (plus), - (dash), or . (period).
+In <permissions>, separate each permission with a + (plus), or . (period).
 An <access grant> of "<address>:all" will have all of the permissions.
 
 Example <access grant>: %s:settle+update

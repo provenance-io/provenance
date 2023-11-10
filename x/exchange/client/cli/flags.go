@@ -187,15 +187,12 @@ func ReadFlagOrderOrArg(flagSet *pflag.FlagSet, args []string) (uint64, error) {
 
 	if len(args) > 0 && len(args[0]) > 0 {
 		if orderID != 0 {
-			return 0, fmt.Errorf("cannot provide <order id> as both an arg (%s) and flag (--%s %d)", args[0], FlagOrder, orderID)
+			return 0, fmt.Errorf("cannot provide <order id> as both an arg (%q) and flag (--%s %d)", args[0], FlagOrder, orderID)
 		}
 
 		orderID, err = strconv.ParseUint(args[0], 10, 64)
 		if err != nil {
-			return 0, fmt.Errorf("could not convert <order id> arg %q to uint64: %w", args[0], err)
-		}
-		if orderID == 0 {
-			return 0, errors.New("the <order id> cannot be zero")
+			return 0, fmt.Errorf("could not convert <order id> arg: %w", err)
 		}
 	}
 
@@ -215,16 +212,13 @@ func ReadFlagMarketOrArg(flagSet *pflag.FlagSet, args []string) (uint32, error) 
 
 	if len(args) > 0 && len(args[0]) > 0 {
 		if marketID != 0 {
-			return 0, fmt.Errorf("cannot provide <market id> as both an arg (%s) and flag (--%s %d)", args[0], FlagMarket, marketID)
+			return 0, fmt.Errorf("cannot provide <market id> as both an arg (%q) and flag (--%s %d)", args[0], FlagMarket, marketID)
 		}
 
 		var marketID64 uint64
 		marketID64, err = strconv.ParseUint(args[0], 10, 32)
 		if err != nil {
-			return 0, fmt.Errorf("could not convert <market id> arg %q to uint32: %w", args[0], err)
-		}
-		if marketID64 == 0 {
-			return 0, errors.New("the <market id> cannot be zero")
+			return 0, fmt.Errorf("could not convert <market id> arg: %w", err)
 		}
 		marketID = uint32(marketID64)
 	}
@@ -259,7 +253,7 @@ func ReadCoinFlag(flagSet *pflag.FlagSet, name string) (*sdk.Coin, error) {
 	}
 	rv, err := exchange.ParseCoin(value)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing --%s value %q as a coin: %w", name, value, err)
+		return nil, fmt.Errorf("error parsing --%s as a coin: %w", name, err)
 	}
 	return &rv, nil
 }
@@ -279,7 +273,7 @@ func ReadReqCoinFlag(flagSet *pflag.FlagSet, name string) (sdk.Coin, error) {
 // ReadOrderIDsFlag reads a UintSlice flag and converts it into a []uint64.
 func ReadOrderIDsFlag(flagSet *pflag.FlagSet, name string) ([]uint64, error) {
 	ids, err := flagSet.GetUintSlice(name)
-	if err != nil {
+	if len(ids) == 0 || err != nil {
 		return nil, err
 	}
 	rv := make([]uint64, len(ids))
@@ -299,7 +293,7 @@ func ReadAccessGrantsFlag(flagSet *pflag.FlagSet, name string) ([]exchange.Acces
 }
 
 // permSepRx is a regexp that matches characters that can be used to separate permissions.
-var permSepRx = regexp.MustCompile(`[ +-.]`)
+var permSepRx = regexp.MustCompile(`[ +.]`)
 
 // ParseAccessGrant parses an AccessGrant from a string with the format "<address>:<perm 1>[+<perm 2>...]".
 func ParseAccessGrant(val string) (*exchange.AccessGrant, error) {
@@ -311,7 +305,7 @@ func ParseAccessGrant(val string) (*exchange.AccessGrant, error) {
 	addr := strings.TrimSpace(parts[0])
 	perms := strings.ToLower(strings.TrimSpace(parts[1]))
 	if len(addr) == 0 || len(perms) == 0 {
-		return nil, fmt.Errorf("invalid <access grant>: both an <address> and <permissions> are required")
+		return nil, fmt.Errorf("invalid <access grant> %q: both an <address> and <permissions> are required", val)
 	}
 
 	rv := &exchange.AccessGrant{Address: addr}
@@ -420,7 +414,7 @@ func ParseSplit(val string) (*exchange.DenomSplit, error) {
 
 	amount, err := strconv.ParseUint(amountStr, 10, 32)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse %s amount %q into uint32: %w", denom, amountStr, err)
+		return nil, fmt.Errorf("could not parse %q amount: %w", val, err)
 	}
 
 	return &exchange.DenomSplit{Denom: denom, Split: uint32(amount)}, nil
@@ -451,7 +445,7 @@ func ReadStringFlagOrArg(flagSet *pflag.FlagSet, args []string, flagName, varNam
 
 	if len(args) > 0 && len(args[0]) > 0 {
 		if len(rv) > 0 {
-			return "", fmt.Errorf("cannot provide <%s> as both an arg (%s) and flag (--%s %s)", varName, args[0], flagName, rv)
+			return "", fmt.Errorf("cannot provide <%s> as both an arg (%q) and flag (--%s %q)", varName, args[0], flagName, rv)
 		}
 
 		return args[0], nil

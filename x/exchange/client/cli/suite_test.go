@@ -2,9 +2,11 @@ package cli_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -201,4 +203,45 @@ func (s *CmdTestSuite) GetClientCtx() client.Context {
 	return s.testnet.Validators[0].ClientCtx.
 		WithKeyringDir(s.keyringDir).
 		WithKeyring(s.keyring)
+}
+
+// joinErrs joins the provided error strings matching to how errors.Join does.
+func joinErrs(errs ...string) string {
+	return strings.Join(errs, "\n")
+}
+
+// toStringSlice applies the stringer to each value and returns a slice with the results.
+func toStringSlice[T any](vals []T, stringer func(T) string) []string {
+	if vals == nil {
+		return nil
+	}
+	rv := make([]string, len(vals))
+	for i, val := range vals {
+		rv[i] = stringer(val)
+	}
+	return rv
+}
+
+// assertEqualSlices asserts that the two slices are equal; returns true if so.
+// If not, the stringer is applied to each entry and the comparison is redone
+// using the strings for a more helpful failure message.
+func assertEqualSlices[T any](t *testing.T, expected []T, actual []T, stringer func(T) string, message string, args ...interface{}) bool {
+	t.Helper()
+	if assert.Equalf(t, expected, actual, message, args...) {
+		return true
+	}
+	expStrs := toStringSlice(expected, stringer)
+	actStrs := toStringSlice(actual, stringer)
+	assert.Equalf(t, expStrs, actStrs, message+" as strings", args...)
+	return false
+}
+
+// splitStringer makes a string from the provided DenomSplit.
+func splitStringer(split exchange.DenomSplit) string {
+	return fmt.Sprintf("%s:%d", split.Denom, split.Split)
+}
+
+// orderIDStringer converts an order id to a string.
+func orderIDStringer(orderID uint64) string {
+	return fmt.Sprintf("%d", orderID)
 }
