@@ -216,10 +216,6 @@ func (s *CmdTestSuite) TearDownSuite() {
 	testutil.CleanUp(s.testnet, s.T())
 }
 
-func (s *CmdTestSuite) TestSuiteSetup() {
-	s.Assert().NotNil(s.testnet, "s.testnet")
-}
-
 // generateAccountsWithKeyring creates a keyring and adds a number of keys to it.
 // The s.keyringDir, s.keyring, and s.accountAddrs are all set in here.
 // The getClientCtx function returns a context that knows about this keyring.
@@ -246,23 +242,26 @@ func (s *CmdTestSuite) createInitialOrder(orderID uint64) *exchange.Order {
 	addr := s.accountAddrs[int(orderID)%len(s.accountAddrs)]
 	assets := sdk.NewInt64Coin("apple", int64(orderID*100))
 	price := sdk.NewInt64Coin("peach", int64(orderID*orderID*10))
+	partial := orderID%2 == 0
 	order := exchange.NewOrder(orderID)
 	switch orderID % 6 {
 	case 0, 1, 4:
 		order.WithAsk(&exchange.AskOrder{
-			MarketId:   420,
-			Seller:     addr.String(),
-			Assets:     assets,
-			Price:      price,
-			ExternalId: fmt.Sprintf("my-id-%d", orderID),
+			MarketId:     420,
+			Seller:       addr.String(),
+			Assets:       assets,
+			Price:        price,
+			ExternalId:   fmt.Sprintf("my-id-%d", orderID),
+			AllowPartial: partial,
 		})
 	case 2, 3, 5:
 		order.WithBid(&exchange.BidOrder{
-			MarketId:   420,
-			Buyer:      addr.String(),
-			Assets:     assets,
-			Price:      price,
-			ExternalId: fmt.Sprintf("my-id-%d", orderID),
+			MarketId:     420,
+			Buyer:        addr.String(),
+			Assets:       assets,
+			Price:        price,
+			ExternalId:   fmt.Sprintf("my-id-%d", orderID),
+			AllowPartial: partial,
 		})
 	}
 	return order
@@ -363,7 +362,7 @@ func (s *CmdTestSuite) runQueryCmdTestCase(tc queryCmdTestCase) {
 	if tc.cmdGen != nil {
 		cmd = tc.cmdGen()
 	} else {
-		cmd = cli.CmdTx()
+		cmd = cli.CmdQuery()
 	}
 
 	cmdName := cmd.Name()
