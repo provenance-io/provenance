@@ -1,6 +1,10 @@
 package cli_test
 
-import "fmt"
+import (
+	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 func (s *CmdTestSuite) TestCmdQueryOrderFeeCalc() {
 	tests := []queryCmdTestCase{
@@ -111,7 +115,7 @@ func (s *CmdTestSuite) TestCmdQueryGetOrder() {
     allow_partial: true
     assets:
       amount: "4200"
-      denom: apple
+      denom: acorn
     external_id: my-id-42
     market_id: 420
     price:
@@ -148,15 +152,175 @@ func (s *CmdTestSuite) TestCmdQueryGetOrder() {
 	}
 }
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdQueryGetOrderByExternalID()
+func (s *CmdTestSuite) TestCmdQueryGetOrderByExternalID() {
+	tests := []queryCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"order-by-external-id", "--external-id", "my-id-15"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "order does not exist",
+			args: []string{"get-order-by-external-id", "--market", "3", "--external-id", "my-id-15"},
+			expInErr: []string{
+				"order not found in market 3 with external id \"my-id-15\"", "invalid request", "InvalidArgument",
+			},
+		},
+		{
+			name: "order exists",
+			args: []string{"external-id", "--external-id", "my-id-15", "--market", "420", "--output", "json"},
+			expInOut: []string{
+				`"order_id":"15"`,
+				`"bid_order":`,
+				`"market_id":420`,
+				fmt.Sprintf(`"buyer":"%s"`, s.accountAddrs[5]),
+				`"assets":{"denom":"acorn","amount":"1500"}`,
+				`"price":{"denom":"peach","amount":"2250"}`,
+				`"buyer_settlement_fees":[]`,
+				`"allow_partial":false`,
+				`"external_id":"my-id-15"`,
+			},
+		},
+	}
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdQueryGetMarketOrders()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdQueryGetOwnerOrders()
+func (s *CmdTestSuite) TestCmdQueryGetMarketOrders() {
+	tests := []queryCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"market-orders", "420", "--asks", "--bids"},
+			expInErr: []string{"if any flags in the group [asks bids] are set none of the others can be; [asks bids] were all set"},
+		},
+		{
+			name: "no orders",
+			args: []string{"get-market-orders", "420", "--order", "1234567899"},
+			expOut: `orders: []
+pagination:
+  next_key: null
+  total: "0"
+`,
+		},
+		{
+			name: "several orders",
+			args: []string{"market-orders", "--asks", "--market", "420", "--order", "30", "--output", "json", "--count-total"},
+			expInOut: []string{
+				`"market_id":420`,
+				`"order_id":"31"`, `"order_id":"34"`, `"order_id":"36"`,
+				`"order_id":"37"`, `"order_id":"40"`, `"order_id":"42"`,
+				`"order_id":"43"`, `"order_id":"46"`, `"order_id":"48"`,
+				`"order_id":"49"`, `"order_id":"52"`, `"order_id":"54"`,
+				`"order_id":"55"`, `"order_id":"58"`, `"order_id":"60"`,
+				`"total":"15"`,
+			},
+		},
+	}
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdQueryGetAssetOrders()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdQueryGetAllOrders()
+func (s *CmdTestSuite) TestCmdQueryGetOwnerOrders() {
+	tests := []queryCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"owner-orders", "--limit", "10"},
+			expInErr: []string{"no <owner> provided"},
+		},
+		{
+			name:   "no orders",
+			args:   []string{"get-owner-orders", sdk.AccAddress("not_gonna_have_it___").String(), "--output", "json"},
+			expOut: `{"orders":[],"pagination":{"next_key":null,"total":"0"}}` + "\n",
+		},
+		{
+			name: "several orders",
+			args: []string{"owner-orders", "--owner", s.accountAddrs[9].String()},
+			expInOut: []string{
+				`market_id: 420`,
+				`order_id: "9"`, `order_id: "19"`, `order_id: "29"`,
+				`order_id: "39"`, `order_id: "49"`, `order_id: "59"`,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdQueryGetAssetOrders() {
+	tests := []queryCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"asset-orders", "--asks"},
+			expInErr: []string{"no <asset> provided"},
+		},
+		{
+			name:     "no orders",
+			args:     []string{"asset-orders", "peach"},
+			expInOut: nil,
+			expOut: `orders: []
+pagination:
+  next_key: null
+  total: "0"
+`,
+		},
+		{
+			name: "several orders",
+			args: []string{"asset-orders", "--denom", "apple", "--limit", "5", "--order", "10", "--output", "json"},
+			expInOut: []string{
+				`"market_id":420`, `"order_id":"11"`, `"order_id":"12"`,
+				`"order_id":"13"`, `"order_id":"17"`, `"order_id":"18"`,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdQueryGetAllOrders() {
+	tests := []queryCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"all-orders", "extraarg"},
+			expInErr: []string{"unknown command \"extraarg\" for \"exchange all-orders\""},
+		},
+		{
+			name: "no orders",
+			// this page key is the base64 encoded max uint64 -1, aka "the next to last possible order id."
+			// Hopefully these unit tests get up that far.
+			args:   []string{"get-all-orders", "--page-key", "//////////4=", "--output", "json"},
+			expOut: `{"orders":[],"pagination":{"next_key":null,"total":"0"}}` + "\n",
+		},
+		{
+			name: "some orders",
+			args: []string{"all-orders", "--limit", "3", "--offset", "20"},
+			expInOut: []string{
+				`order_id: "21"`, `order_id: "22"`, `order_id: "23"`,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
 
 // TODO[1701]: func (s *CmdTestSuite) TestCmdQueryGetMarket()
 

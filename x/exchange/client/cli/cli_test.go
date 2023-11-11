@@ -191,6 +191,7 @@ func (s *CmdTestSuite) SetupSuite() {
 	// this what's available to each at the start of the unit tests.
 	balance := sdk.NewCoins(
 		sdk.NewInt64Coin(s.cfg.BondDenom, 1_000_000_000),
+		sdk.NewInt64Coin("acorn", 1_000_000_000),
 		sdk.NewInt64Coin("apple", 1_000_000_000),
 		sdk.NewInt64Coin("peach", 1_000_000_000),
 	)
@@ -240,7 +241,11 @@ func (s *CmdTestSuite) generateAccountsWithKeyring(number int) {
 // createInitialOrder creates an order using the order id for various aspects.
 func (s *CmdTestSuite) createInitialOrder(orderID uint64) *exchange.Order {
 	addr := s.accountAddrs[int(orderID)%len(s.accountAddrs)]
-	assets := sdk.NewInt64Coin("apple", int64(orderID*100))
+	assetDenom := "apple"
+	if orderID%7 <= 2 {
+		assetDenom = "acorn"
+	}
+	assets := sdk.NewInt64Coin(assetDenom, int64(orderID*100))
 	price := sdk.NewInt64Coin("peach", int64(orderID*orderID*10))
 	partial := orderID%2 == 0
 	order := exchange.NewOrder(orderID)
