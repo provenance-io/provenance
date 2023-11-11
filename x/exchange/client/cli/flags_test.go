@@ -29,8 +29,8 @@ const (
 
 func TestAddFlagsAdmin(t *testing.T) {
 	expAnnotations := map[string][]string{
-		mutExc: []string{cli.FlagAdmin + " " + cli.FlagAuthority},
-		oneReq: []string{flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+		mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
+		oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 	}
 
 	cmd := &cobra.Command{
@@ -260,8 +260,8 @@ func TestReadAddrFlagOrFrom(t *testing.T) {
 
 func TestAddFlagsEnableDisable(t *testing.T) {
 	expAnnotations := map[string][]string{
-		mutExc: []string{cli.FlagEnable + " " + cli.FlagDisable},
-		oneReq: []string{cli.FlagEnable + " " + cli.FlagDisable},
+		mutExc: {cli.FlagEnable + " " + cli.FlagDisable},
+		oneReq: {cli.FlagEnable + " " + cli.FlagDisable},
 	}
 
 	cmd := &cobra.Command{
