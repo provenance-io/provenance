@@ -12,8 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -21,6 +24,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -28,6 +33,7 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/client/cli"
+	"github.com/provenance-io/provenance/x/hold"
 )
 
 type CmdTestSuite struct {
@@ -89,21 +95,6 @@ func (s *CmdTestSuite) SetupSuite() {
 	s.cfg.GenesisState[authtypes.ModuleName], err = s.cfg.Codec.MarshalJSON(&authGen)
 	s.Require().NoError(err, "MarshalJSON auth gen state")
 
-	// Add balances to bank gen state.
-	balance := sdk.NewCoins(
-		sdk.NewInt64Coin(s.cfg.BondDenom, 1_000_000_000),
-		sdk.NewInt64Coin("apple", 1_000_000_000),
-		sdk.NewInt64Coin("peach", 1_000_000_000),
-	)
-	var bankGen banktypes.GenesisState
-	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[banktypes.ModuleName], &bankGen)
-	s.Require().NoError(err, "UnmarshalJSON bank gen state")
-	for _, addr := range s.accountAddrs {
-		bankGen.Balances = append(bankGen.Balances, banktypes.Balance{Address: addr.String(), Coins: balance})
-	}
-	s.cfg.GenesisState[banktypes.ModuleName], err = s.cfg.Codec.MarshalJSON(&bankGen)
-	s.Require().NoError(err, "MarshalJSON bank gen state")
-
 	// Add some markets to the exchange gen state.
 	var exchangeGen exchange.GenesisState
 	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[exchange.ModuleName], &exchangeGen)
@@ -146,6 +137,8 @@ func (s *CmdTestSuite) SetupSuite() {
 			},
 		},
 		exchange.Market{
+			// The orders in this market are for the orders queries.
+			// Don't use it in other unit tests (e.g. order creation or settlement).
 			MarketId: 420,
 			MarketDetails: exchange.MarketDetails{
 				Name:        "THE Market",
@@ -169,8 +162,47 @@ func (s *CmdTestSuite) SetupSuite() {
 			},
 		},
 	)
+	toHold := make(map[string]sdk.Coins)
+	exchangeGen.Orders = make([]exchange.Order, 60)
+	for i := range exchangeGen.Orders {
+		order := s.createInitialOrder(uint64(i + 1))
+		exchangeGen.Orders[i] = *order
+		toHold[order.GetOwner()] = toHold[order.GetOwner()].Add(order.GetHoldAmount()...)
+	}
+	exchangeGen.LastOrderId = uint64(100)
 	s.cfg.GenesisState[exchange.ModuleName], err = s.cfg.Codec.MarshalJSON(&exchangeGen)
 	s.Require().NoError(err, "MarshalJSON exchange gen state")
+
+	// Create all the needed holds.
+	var holdGen hold.GenesisState
+	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[hold.ModuleName], &holdGen)
+	s.Require().NoError(err, "UnmarshalJSON hold gen state")
+	for _, addr := range s.accountAddrs {
+		holdGen.Holds = append(holdGen.Holds, &hold.AccountHold{
+			Address: addr.String(),
+			Amount:  toHold[addr.String()],
+		})
+	}
+	s.cfg.GenesisState[hold.ModuleName], err = s.cfg.Codec.MarshalJSON(&holdGen)
+	s.Require().NoError(err, "MarshalJSON hold gen state")
+
+	// Add balances to bank gen state.
+	// Any initial holds for an account are added to this so that
+	// this what's available to each at the start of the unit tests.
+	balance := sdk.NewCoins(
+		sdk.NewInt64Coin(s.cfg.BondDenom, 1_000_000_000),
+		sdk.NewInt64Coin("apple", 1_000_000_000),
+		sdk.NewInt64Coin("peach", 1_000_000_000),
+	)
+	var bankGen banktypes.GenesisState
+	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[banktypes.ModuleName], &bankGen)
+	s.Require().NoError(err, "UnmarshalJSON bank gen state")
+	for _, addr := range s.accountAddrs {
+		bal := balance.Add(toHold[addr.String()]...)
+		bankGen.Balances = append(bankGen.Balances, banktypes.Balance{Address: addr.String(), Coins: bal})
+	}
+	s.cfg.GenesisState[banktypes.ModuleName], err = s.cfg.Codec.MarshalJSON(&bankGen)
+	s.Require().NoError(err, "MarshalJSON bank gen state")
 
 	// And fire it all up!!
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
@@ -184,9 +216,13 @@ func (s *CmdTestSuite) TearDownSuite() {
 	testutil.CleanUp(s.testnet, s.T())
 }
 
+func (s *CmdTestSuite) TestSuiteSetup() {
+	s.Assert().NotNil(s.testnet, "s.testnet")
+}
+
 // generateAccountsWithKeyring creates a keyring and adds a number of keys to it.
 // The s.keyringDir, s.keyring, and s.accountAddrs are all set in here.
-// The GetClientCtx function returns a context that knows about this keyring.
+// The getClientCtx function returns a context that knows about this keyring.
 func (s *CmdTestSuite) generateAccountsWithKeyring(number int) {
 	path := hd.CreateHDPath(118, 0, 0).String()
 	s.keyringDir = s.T().TempDir()
@@ -205,8 +241,35 @@ func (s *CmdTestSuite) generateAccountsWithKeyring(number int) {
 	}
 }
 
-// GetClientCtx get a client context that knows about the suite's keyring.
-func (s *CmdTestSuite) GetClientCtx() client.Context {
+// createInitialOrder creates an order using the order id for various aspects.
+func (s *CmdTestSuite) createInitialOrder(orderID uint64) *exchange.Order {
+	addr := s.accountAddrs[int(orderID)%len(s.accountAddrs)]
+	assets := sdk.NewInt64Coin("apple", int64(orderID*100))
+	price := sdk.NewInt64Coin("peach", int64(orderID*orderID*10))
+	order := exchange.NewOrder(orderID)
+	switch orderID % 6 {
+	case 0, 1, 4:
+		order.WithAsk(&exchange.AskOrder{
+			MarketId:   420,
+			Seller:     addr.String(),
+			Assets:     assets,
+			Price:      price,
+			ExternalId: fmt.Sprintf("my-id-%d", orderID),
+		})
+	case 2, 3, 5:
+		order.WithBid(&exchange.BidOrder{
+			MarketId:   420,
+			Buyer:      addr.String(),
+			Assets:     assets,
+			Price:      price,
+			ExternalId: fmt.Sprintf("my-id-%d", orderID),
+		})
+	}
+	return order
+}
+
+// getClientCtx get a client context that knows about the suite's keyring.
+func (s *CmdTestSuite) getClientCtx() client.Context {
 	return s.testnet.Validators[0].ClientCtx.
 		WithKeyringDir(s.keyringDir).
 		WithKeyring(s.keyring)
@@ -225,11 +288,12 @@ type txCmdTestCase struct {
 	// expectedCode is the code expected from the Tx.
 	expectedCode uint32
 	// followup is any further checks to do.
-	followup func(cmdOutput string)
+	followup func(txResponse *sdk.TxResponse)
 }
 
 // RunTxCmdTestCase runs a txCmdTestCase by executing the command and checking the result.
-func (s *CmdTestSuite) RunTxCmdTestCase(tc txCmdTestCase) {
+func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
+	s.T().Helper()
 	var cmd *cobra.Command
 	if tc.cmdGen != nil {
 		cmd = tc.cmdGen()
@@ -245,19 +309,21 @@ func (s *CmdTestSuite) RunTxCmdTestCase(tc txCmdTestCase) {
 		}
 	}()
 
-	clientCtx := s.GetClientCtx()
+	clientCtx := s.getClientCtx()
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 	outBz = out.Bytes()
 
-	s.AssertErrorContents(err, tc.expInErr, "ExecTestCLICmd error")
+	s.assertErrorContents(err, tc.expInErr, "ExecTestCLICmd error")
 	for _, exp := range tc.expInErr {
 		s.Assert().Contains(string(outBz), exp, "command output should contain:\n%q", exp)
 	}
 
+	var txResponse *sdk.TxResponse
 	if len(tc.expInErr) == 0 && err == nil {
 		var resp sdk.TxResponse
 		err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
 		if s.Assert().NoError(err, "UnmarshalJSON(command output) error") {
+			txResponse = &resp
 			if s.Assert().Equalf(int(tc.expectedCode), int(resp.Code), "response code") {
 				s.T().Logf("TxResponse:\n%v", resp)
 			}
@@ -265,7 +331,12 @@ func (s *CmdTestSuite) RunTxCmdTestCase(tc txCmdTestCase) {
 	}
 
 	if tc.followup != nil {
-		tc.followup(string(outBz))
+		err = s.testnet.WaitForNextBlock()
+		if s.Assert().NoError(err, "waiting for next block before followup") {
+			if s.Assert().NotNil(txResponse, "the TxResponse from the command output") {
+				tc.followup(txResponse)
+			}
+		}
 	}
 }
 
@@ -286,7 +357,8 @@ type queryCmdTestCase struct {
 }
 
 // RunQueryCmdTestCase runs a queryCmdTestCase by executing the command and checking the result.
-func (s *CmdTestSuite) RunQueryCmdTestCase(tc queryCmdTestCase) {
+func (s *CmdTestSuite) runQueryCmdTestCase(tc queryCmdTestCase) {
+	s.T().Helper()
 	var cmd *cobra.Command
 	if tc.cmdGen != nil {
 		cmd = tc.cmdGen()
@@ -302,11 +374,11 @@ func (s *CmdTestSuite) RunQueryCmdTestCase(tc queryCmdTestCase) {
 		}
 	}()
 
-	clientCtx := s.GetClientCtx()
+	clientCtx := s.getClientCtx()
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 	outStr = out.String()
 
-	s.AssertErrorContents(err, tc.expInErr, "ExecTestCLICmd error")
+	s.assertErrorContents(err, tc.expInErr, "ExecTestCLICmd error")
 	for _, exp := range tc.expInErr {
 		if !s.Assert().Contains(outStr, exp, "command output (error)") {
 			s.T().Logf("Not found: %q", exp)
@@ -324,8 +396,172 @@ func (s *CmdTestSuite) RunQueryCmdTestCase(tc queryCmdTestCase) {
 	}
 }
 
-// AssertErrorContents is a wrapper for assertions.AssertErrorContents using this suite's T().
-func (s *CmdTestSuite) AssertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
+// getEventAttribute finds the value of an attribute in an event.
+// Returns an error if the value is empty, the attribute doesn't exist, or the event doesn't exist.
+func (s *CmdTestSuite) getEventAttribute(events []abci.Event, eventType, attribute string) (string, error) {
+	for _, event := range events {
+		if event.Type == eventType {
+			for _, attr := range event.Attributes {
+				if string(attr.Key) == attribute {
+					val := strings.Trim(string(attr.Value), `"`)
+					if len(val) > 0 {
+						return val, nil
+					}
+					return "", fmt.Errorf("the %s.%s value is empty", eventType, attribute)
+				}
+			}
+			return "", fmt.Errorf("no %s attribute found in %s", attribute, eventType)
+		}
+	}
+	return "", fmt.Errorf("no %s found", eventType)
+}
+
+// findNewOrderID gets the order id from the EventOrderCreated event.
+func (s *CmdTestSuite) findNewOrderID(resp *sdk.TxResponse) (string, error) {
+	return s.getEventAttribute(resp.Events, "provenance.exchange.v1.EventOrderCreated", "order_id")
+}
+
+// assertOrder uses the GetOrder query to look up an order and make sure it equals the one provided.
+// If the provided order is nil, ensures the query returns an order not found error.
+func (s *CmdTestSuite) assertGetOrder(orderID string, order *exchange.Order) bool {
+	s.T().Helper()
+	if !s.Assert().NotEmptyf(orderID, "order id") {
+		return false
+	}
+
+	var expInErr []string
+	if order == nil {
+		expInErr = append(expInErr, fmt.Sprintf("order %s not found", orderID))
+	}
+
+	clientCtx := s.getClientCtx()
+	getOrderCmd := cli.CmdQueryGetOrder()
+	getOrderOutBW, err := clitestutil.ExecTestCLICmd(clientCtx, getOrderCmd, []string{orderID, "--output", "json"})
+	getOrderOutBz := getOrderOutBW.Bytes()
+	s.T().Logf("Query GetOrder %s output:\n%s", orderID, string(getOrderOutBz))
+	if !s.assertErrorContents(err, expInErr, "CmdQueryGetOrder %s error", orderID) {
+		return false
+	}
+
+	if order == nil {
+		return true
+	}
+
+	var resp exchange.QueryGetOrderResponse
+	err = clientCtx.Codec.UnmarshalJSON(getOrderOutBz, &resp)
+	if !s.Assert().NoError(err, "UnmarshalJSON on GetOrder %s response", orderID) {
+		return false
+	}
+	return s.Assert().Equal(order, resp.Order, "order %s", orderID)
+}
+
+// getOrderFollowup returns a followup function that identifies the new order id, looks it up,
+// and makes sure it is as expected.
+func (s *CmdTestSuite) getOrderFollowup(order *exchange.Order) func(resp *sdk.TxResponse) {
+	return func(resp *sdk.TxResponse) {
+		orderID, err := s.findNewOrderID(resp)
+		if s.Assert().NoError(err, "finding new order id") {
+			s.assertGetOrder(orderID, order)
+		}
+	}
+}
+
+// assertOrder uses the GetOrder query to look up an order and make sure it equals the one provided.
+// If the provided order is nil, ensures the query returns an order not found error.
+func (s *CmdTestSuite) assertGetOrderByExternalID(marketID, externalID string, order *exchange.Order) bool {
+	s.T().Helper()
+	if !s.Assert().NotEmpty(externalID, "external id") {
+		return false
+	}
+
+	var expInErr []string
+	if order == nil {
+		expInErr = append(expInErr, fmt.Sprintf("order not found in market %s with external id %q", marketID, externalID))
+	}
+
+	clientCtx := s.getClientCtx()
+	getOrderCmd := cli.CmdQueryGetOrderByExternalID()
+	args := []string{"--market", marketID, "--external-id", externalID, "--output", "json"}
+	getOrderOutBW, err := clitestutil.ExecTestCLICmd(clientCtx, getOrderCmd, args)
+	getOrderOutBz := getOrderOutBW.Bytes()
+	s.T().Logf("Query GetOrder %s %q output:\n%s", marketID, externalID, string(getOrderOutBz))
+	if !s.assertErrorContents(err, expInErr, "CmdQueryGetOrderByExternalID %s %q error", marketID, externalID) {
+		return false
+	}
+
+	if order == nil {
+		return true
+	}
+
+	var resp exchange.QueryGetOrderByExternalIDResponse
+	err = clientCtx.Codec.UnmarshalJSON(getOrderOutBz, &resp)
+	if !s.Assert().NoError(err, "UnmarshalJSON on CmdQueryGetOrderByExternalID %s %q response", marketID, externalID) {
+		return false
+	}
+	return s.Assert().Equal(order, resp.Order, "order in %s with %q", marketID, externalID)
+}
+
+// getOrderByExternalIDFollowup returns a followup function that looks up an order by external id.
+func (s *CmdTestSuite) getOrderByExternalIDFollowup(marketID, externalID string, order *exchange.Order) func(resp *sdk.TxResponse) {
+	return func(_ *sdk.TxResponse) {
+		s.assertGetOrderByExternalID(marketID, externalID, order)
+	}
+}
+
+// findNewProposalID gets the proposal id from the submit_proposal event.
+func (s *CmdTestSuite) findNewProposalID(resp *sdk.TxResponse) (string, error) {
+	return s.getEventAttribute(resp.Events, "submit_proposal", "proposal_id")
+}
+
+// AssertGovPropMsg queries for the given proposal and makes sure it's got just the provided Msg.
+func (s *CmdTestSuite) assertGovPropMsg(propID string, msg sdk.Msg) bool {
+	s.T().Helper()
+	if msg == nil {
+		return true
+	}
+
+	if !s.Assert().NotEmpty(propID, "proposal id") {
+		return false
+	}
+	expPropMsgAny, err := codectypes.NewAnyWithValue(msg)
+	if !s.Assert().NoError(err, "NewAnyWithValue(%T)", msg) {
+		return false
+	}
+
+	clientCtx := s.getClientCtx()
+	getPropCmd := govcli.GetCmdQueryProposal()
+	propOutBW, err := clitestutil.ExecTestCLICmd(clientCtx, getPropCmd, []string{propID, "--output", "json"})
+	propOutBz := propOutBW.Bytes()
+	s.T().Logf("Query proposal %s output:\n%s", propID, string(propOutBz))
+	if !s.Assert().NoError(err, "GetCmdQueryProposal %s error", propID) {
+		return false
+	}
+
+	var prop govv1.Proposal
+	err = clientCtx.Codec.UnmarshalJSON(propOutBz, &prop)
+	if !s.Assert().NoError(err, "UnmarshalJSON on proposal %s response", propID) {
+		return false
+	}
+	if !s.Assert().Len(prop.Messages, 1, "number of messages in proposal %s", propID) {
+		return false
+	}
+	return s.Assert().Equal(expPropMsgAny, prop.Messages[0], "the message in proposal %s", propID)
+}
+
+// govPropFollowup returns a followup function that identifies the new proposal id, looks it up,
+// and makes sure it's got the provided msg.
+func (s *CmdTestSuite) govPropFollowup(msg sdk.Msg) func(resp *sdk.TxResponse) {
+	return func(resp *sdk.TxResponse) {
+		propID, err := s.findNewProposalID(resp)
+		if s.Assert().NoError(err, "finding new proposal id") {
+			s.assertGovPropMsg(propID, msg)
+		}
+	}
+}
+
+// assertErrorContents is a wrapper for assertions.AssertErrorContents using this suite's T().
+func (s *CmdTestSuite) assertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
+	s.T().Helper()
 	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
 }
 
