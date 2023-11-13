@@ -1,5 +1,13 @@
 ## [v1.17.0](https://github.com/provenance-io/provenance/releases/tag/v1.17.0) - 2023-11-13
 
+Provenance Blockchain `v1.17.0` includes several new features, improvements, and bug fixes.
+
+A new Exchange module has been added that facilitates the buying and selling of assets. The new Hold module is utilized so that the funds being traded remain in their owner's accounts until the orders are settled and cleared. During settlement, the funds are transferred directly between the buyers and sellers.
+
+Markers can now keep track of their Net-Asset Values (NAVs). Markers can also now define a set of addresses that are not allowed to send the marker's funds.
+
+The ICQHost and Oracle module facilitate cross-chain oracle queries.
+
 ### Features
 
 * Create the `x/exchange` module which facilitates the buying and selling of assets [#1658](https://github.com/provenance-io/provenance/issues/1658), [#1699](https://github.com/provenance-io/provenance/issues/1699), [#1700](https://github.com/provenance-io/provenance/issues/1700).
