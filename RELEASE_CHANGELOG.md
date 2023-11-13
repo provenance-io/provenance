@@ -1,12 +1,20 @@
 ## [v1.17.0](https://github.com/provenance-io/provenance/releases/tag/v1.17.0) - 2023-11-13
 
-Provenance Blockchain `v1.17.0` includes several new features, improvements, and bug fixes.
+_Release v1.17.0 brings expanded support for token exchange with the new Exchange and Hold modules._
 
-A new Exchange module has been added that facilitates the buying and selling of assets. The new Hold module is utilized so that the funds being traded remain in their owner's accounts until the orders are settled and cleared. During settlement, the funds are transferred directly between the buyers and sellers.
+### Overview
 
-Markers can now keep track of their Net-Asset Values (NAVs). Markers can also now define a set of addresses that are not allowed to send the marker's funds.
+With the release of 1.17.0 the Provenance Blockchain protocol is enhanced with 'in place hold' capabilities that remove the requirement for a 3rd party escrow solution. Additional improvements for cross zone markers and on chain TVL are also included.
 
-The ICQHost and Oracle module facilitate cross-chain oracle queries.
+### Hold/Exchange
+
+The hold capability is implemented through a private module api that integrates with the bank module to reduce spendable balances on accounts.  Building on top of these holds is the new Exchange module which offers low level primitives for buy and sell order books that leverage these holds.  Developers of exchange contracts or applications are encouraged to migrate from smart contracts that holds assets internally to these new exchange apis that provide more efficient execution and reduce counter-party risk for their users.
+
+### IBC/Markers
+
+A new set of capabilities for restricted markers sent over IBC has been added that synchronizes transfer authority and marker configuration on a destination network using metadata attached to ICS-20 IBC transfers.  This is the first step of several planned enhancements for multi-zone tokens on the Provenance Network of blockchains.
+
+Additionally a new attribute has been added to markers that allows a creator to notionally define the associated value of each token in USD.  This allows for a better on-chain experience for monitoring TVL compared to the existing approach that uses an off-chain service to provide this metadata.  The new exchange module will further attach transaction settlement prices to markers in an effort to keep this information current and relevant with each settlement.
 
 ### Features
 
