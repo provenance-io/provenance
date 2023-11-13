@@ -1,55 +1,24 @@
-## [v1.17.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc3) - 2023-11-10
+## [v1.17.0](https://github.com/provenance-io/provenance/releases/tag/v1.17.0) - 2023-11-13
 
-### Improvements
+_Release v1.17.0 brings expanded support for token exchange with the new Exchange and Hold modules._
 
-* Add upgrade handler to set net asset values to markers [PR 1712](https://github.com/provenance-io/provenance/pull/1712).
-* Add additional logging to trigger module [#1718](https://github.com/provenance-io/provenance/issues/1718).
-* When the exchange module settles orders, update the marker net-asset-values ([#1736](https://github.com/provenance-io/provenance/pull/1736).
-* Add the EventTriggerDetected and EventTriggerExecuted events [#1717](https://github.com/provenance-io/provenance/issues/1717).
-* Add spec docs for the exchange module [#1700](https://github.com/provenance-io/provenance/issues/1700).
+### Overview
 
-### Bug Fixes
+With the release of 1.17.0 the Provenance Blockchain protocol is enhanced with 'in place hold' capabilities that remove the requirement for a 3rd party escrow solution. Additional improvements for cross zone markers and on chain TVL are also included.
 
-* Fixed denom metadata source chain-id retrieval for new ibc markers [#1726](https://github.com/provenance-io/provenance/issues/1726).
+### Hold/Exchange
 
-### Full Commit History
+The hold capability is implemented through a private module api that integrates with the bank module to reduce spendable balances on accounts.  Building on top of these holds is the new Exchange module which offers low level primitives for buy and sell order books that leverage these holds.  Developers of exchange contracts or applications are encouraged to migrate from smart contracts that holds assets internally to these new exchange apis that provide more efficient execution and reduce counter-party risk for their users.
 
-* https://github.com/provenance-io/provenance/compare/v1.17.0-rc2...v1.17.0-rc3
-* https://github.com/provenance-io/provenance/compare/v1.16.0...v1.17.0-rc3
+### IBC/Markers
 
----
+A new set of capabilities for restricted markers sent over IBC has been added that synchronizes transfer authority and marker configuration on a destination network using metadata attached to ICS-20 IBC transfers.  This is the first step of several planned enhancements for multi-zone tokens on the Provenance Network of blockchains.
 
-## [v1.17.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc2) - 2023-11-03
+Additionally a new attribute has been added to markers that allows a creator to notionally define the associated value of each token in USD.  This allows for a better on-chain experience for monitoring TVL compared to the existing approach that uses an off-chain service to provide this metadata.  The new exchange module will further attach transaction settlement prices to markers in an effort to keep this information current and relevant with each settlement.
 
 ### Features
 
-* Add the `saffron-rc2` upgrade and update `saffron` to create denom metadata for IBC markers [#1728](https://github.com/provenance-io/provenance/issues/1728).
-
-### Improvements
-
-* Wrote unit tests on the keeper methods [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* During `FillBids`, the seller settlement fee is now calculated on the total price instead of each order individually [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* In the `OrderFeeCalc` query, ensure the market exists [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* Add publishing of docker arm64 container builds [#1634](https://github.com/provenance-io/provenance/issues/1634)
-
-### Bug Fixes
-
-* During `InitGenesis`, ensure LastOrderId is at least the largest order id [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* Properly populate the permissions lists when reading access grants from state [#1699](https://github.com/provenance-io/provenance/issues/1699).
-* Fixed the paginated order queries to properly look up orders [#1699](https://github.com/provenance-io/provenance/issues/1699).
-
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.17.0-rc1...v1.17.0-rc2
-* https://github.com/provenance-io/provenance/compare/v1.16.0...v1.17.0-rc2
-
----
-
-## [v1.17.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.17.0-rc1) - 2023-10-18
-
-### Features
-
-* Create the `x/exchange` module which facilitates the buying and selling of assets [#1658](https://github.com/provenance-io/provenance/issues/1658).
+* Create the `x/exchange` module which facilitates the buying and selling of assets [#1658](https://github.com/provenance-io/provenance/issues/1658), [#1699](https://github.com/provenance-io/provenance/issues/1699), [#1700](https://github.com/provenance-io/provenance/issues/1700).
   Assets and funds remain in their owner's account (with a hold on them) until the order is settled (or cancelled).
   Market's are created to manage order matching and define fees.
   The chain will receive a portion of the fees a market collects.
@@ -57,30 +26,41 @@
 * Add net asset value to markers [#1328](https://github.com/provenance-io/provenance/issues/1328).
 * Add ICQHost and Oracle module to allow cross chain oracle queries [#1497](https://github.com/provenance-io/provenance/issues/1497).
 * New `GetByAddr` metadata query [#1443](https://github.com/provenance-io/provenance/issues/1443).
-* Add Trigger module queries to stargate whitelist for smart contracts [#1636](https://github.com/provenance-io/provenance/issues/1636)
+* Add Trigger module queries to stargate whitelist for smart contracts [#1636](https://github.com/provenance-io/provenance/issues/1636).
 * Added the saffron upgrade handlers [PR 1648](https://github.com/provenance-io/provenance/pull/1648).
+  * Add the ICQ, Oracle, IBC Hooks, Hold, and Exchange modules.
+  * Run module migrations.
+  * Set IBC Hooks params [PR 1659](https://github.com/provenance-io/provenance/pull/1659).
+  * Remove inactive validators.
+  * Migrate marker max supplies to BigInt [#1292](https://github.com/provenance-io/provenance/issues/1292).
+  * Add initial marker NAVs [PR 1712](https://github.com/provenance-io/provenance/pull/1712).
+  * Create denom metadata for IBC markers [#1728](https://github.com/provenance-io/provenance/issues/1728).
 * Create the `x/hold` module which facilitates locking funds in an owners account [#1607](https://github.com/provenance-io/provenance/issues/1607).
   Funds with a hold on them cannot be transferred until the hold is removed.
   Management of holds is internal, but there are queries for looking up holds on accounts.
   Holds are also reflected in the `x/bank` module's `SpendableBalances` query.
-* Add new MaxSupply param to marker module and deprecate MaxTotalSupply. [#1292](https://github.com/provenance-io/provenance/issues/1292).
-* Add hidden docgen command to output documentation in different formats. [#1468](https://github.com/provenance-io/provenance/issues/1468).
+* Add new MaxSupply param to marker module and deprecate MaxTotalSupply [#1292](https://github.com/provenance-io/provenance/issues/1292).
+* Add hidden docgen command to output documentation in different formats [#1468](https://github.com/provenance-io/provenance/issues/1468).
 * Add ics20 marker creation for receiving marker via ibc sends [#1127](https://github.com/provenance-io/provenance/issues/1127).
 
 ### Improvements
 
-* Add IBC-Hooks module for Axelar GMP support [PR 1659](https://github.com/provenance-io/provenance/pull/1659)
-* Update ibcnet ports so they don't conflict with host machine. [#1622](https://github.com/provenance-io/provenance/issues/1622)
-* Replace custom ibc-go v6.1.1 fork with official module.  [#1616](https://github.com/provenance-io/provenance/issues/1616)
-* Migrate `msgfees` gov proposals to v1. [#1328](https://github.com/provenance-io/provenance/issues/1328)
+* Add IBC-Hooks module for Axelar GMP support [PR 1659](https://github.com/provenance-io/provenance/pull/1659).
+* Update ibcnet ports so they don't conflict with host machine [#1622](https://github.com/provenance-io/provenance/issues/1622).
+* Replace custom ibc-go v6.1.1 fork with official module [#1616](https://github.com/provenance-io/provenance/issues/1616).
+* Migrate `msgfees` gov proposals to v1 [#1328](https://github.com/provenance-io/provenance/issues/1328).
 * Updated metadata queries to optionally include the request and id info [#1443](https://github.com/provenance-io/provenance/issues/1443).
   The request is now omitted by default, but will be included if `include_request` is `true`.
   The id info is still included by default, but will be excluded if `exclude_id_info` is `true`.
 * Removed the quicksilver upgrade handlers [PR 1648](https://github.com/provenance-io/provenance/pull/1648).
 * Bump cometbft to v0.34.29 (from v0.34.28) [PR 1649](https://github.com/provenance-io/provenance/pull/1649).
-* Add genesis/init for Marker module send deny list addresses. [#1660](https://github.com/provenance-io/provenance/issues/1660)
-* Add automatic changelog entries for dependabot. [#1674](https://github.com/provenance-io/provenance/issues/1674)
+* Add genesis/init for Marker module send deny list addresses [#1660](https://github.com/provenance-io/provenance/issues/1660).
+* Add automatic changelog entries for dependabot [#1674](https://github.com/provenance-io/provenance/issues/1674).
 * Ensure IBC marker has matching supply [#1706](https://github.com/provenance-io/provenance/issues/1706).
+* Add publishing of docker arm64 container builds [#1634](https://github.com/provenance-io/provenance/issues/1634).
+* Add additional logging to trigger module [#1718](https://github.com/provenance-io/provenance/issues/1718).
+* When the exchange module settles orders, update the marker net-asset-values [#1736](https://github.com/provenance-io/provenance/pull/1736).
+* Add the EventTriggerDetected and EventTriggerExecuted events [#1717](https://github.com/provenance-io/provenance/issues/1717).
 
 ### Bug Fixes
 
@@ -88,8 +68,8 @@
 * Fix for incorrect resource-id type casting on contract specification [#1647](https://github.com/provenance-io/provenance/issues/1647).
 * Allow restricted coins to be quarantined [#1626](https://github.com/provenance-io/provenance/issues/1626).
 * Prevent marker forced transfers from module accounts [#1626](https://github.com/provenance-io/provenance/issues/1626).
-* Change config load order so custom.toml can override other config. [#1262](https://github.com/provenance-io/provenance/issues/1262)
-* Fix the saffron and saffron-rc1 upgrade handlers to add correct ibchooks store key [PR 1715](https://github.com/provenance-io/provenance/pull/1715).
+* Change config load order so custom.toml can override other config [#1262](https://github.com/provenance-io/provenance/issues/1262).
+* Fixed denom metadata source chain-id retrieval for new ibc markers [#1726](https://github.com/provenance-io/provenance/issues/1726).
 
 ### Client Breaking
 
@@ -129,4 +109,4 @@
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.16.0...v1.17.0-rc1
+* https://github.com/provenance-io/provenance/compare/v1.16.0...v1.17.0
