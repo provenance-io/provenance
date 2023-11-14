@@ -7,12 +7,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/provenance-io/provenance/x/oracle/keeper"
 	"github.com/provenance-io/provenance/x/oracle/types"
-	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 

@@ -1,7 +1,7 @@
 package oracle
 
 import (
-	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
 
 	cerrs "cosmossdk.io/errors"
 

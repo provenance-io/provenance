@@ -13,13 +13,13 @@ import (
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v6"
+	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v6/keeper"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
-	icq "github.com/strangelove-ventures/async-icq/v6"
-	icqkeeper "github.com/strangelove-ventures/async-icq/v6/keeper"
-	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -596,7 +596,7 @@ func New(
 	app.ICQKeeper = icqkeeper.NewKeeper(
 		appCodec, keys[icqtypes.StoreKey], app.GetSubspace(icqtypes.ModuleName),
 		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
-		scopedICQKeeper, app.BaseApp,
+		scopedICQKeeper, app.BaseApp.GRPCQueryRouter(),
 	)
 	icqModule := icq.NewAppModule(app.ICQKeeper)
 	icqIBCModule := icq.NewIBCModule(app.ICQKeeper)

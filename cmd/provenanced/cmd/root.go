@@ -101,6 +101,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 			return nil
 		},
 	}
+	genAutoCompleteCmd(rootCmd)
 	initRootCmd(rootCmd, encodingConfig)
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        "",
@@ -109,6 +110,38 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	})
 
 	return rootCmd, encodingConfig
+}
+
+func genAutoCompleteCmd(rootCmd *cobra.Command) {
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "enable-cli-autocomplete [bash|zsh|fish|powershell]",
+		Short: "Generates cli completion scripts",
+		Long: `To configure your shell to load completions for each session, add to your profile:
+
+# bash example
+echo '. <(provenanced enable-cli-autocomplete bash)' >> ~/.bash_profile
+source ~/.bash_profile
+
+# zsh example
+echo '. <(provenanced enable-cli-autocomplete zsh)' >> ~/.zshrc
+source ~/.zshrc
+`,
+		DisableFlagsInUseLine: true,
+		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
+		Args:                  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			switch args[0] {
+			case "bash":
+				_ = cmd.Root().GenBashCompletion(os.Stdout)
+			case "zsh":
+				_ = cmd.Root().GenZshCompletion(os.Stdout)
+			case "fish":
+				_ = cmd.Root().GenFishCompletion(os.Stdout, true)
+			case "powershell":
+				_ = cmd.Root().GenPowerShellCompletionWithDesc(os.Stdout)
+			}
+		},
+	})
 }
 
 // Execute executes the root command.
