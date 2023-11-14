@@ -8,7 +8,7 @@ import (
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
-func (s *KeeperTestSuite) TestProcessActions() {
+func (s *KeeperTestSuite) TestProcessTriggers() {
 	owner := s.accountAddresses[0].String()
 	trigger1 := s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner})
 	trigger2 := s.CreateTrigger(2, owner, &types.BlockHeightEvent{BlockHeight: 130}, &types.MsgDestroyTriggerRequest{Id: 101, Authority: owner})
@@ -24,12 +24,21 @@ func (s *KeeperTestSuite) TestProcessActions() {
 	existing1 := s.CreateTrigger(100, owner, &types.BlockHeightEvent{BlockHeight: 120}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner})
 	existing2 := s.CreateTrigger(101, owner, &types.BlockHeightEvent{BlockHeight: 120}, &types.MsgDestroyTriggerRequest{Id: 101, Authority: owner})
 
-	event1, _ := sdk.TypedEventToEvent(&types.EventTriggerDestroyed{
-		TriggerId: fmt.Sprintf("%d", existing1.GetId()),
-	})
-	event2, _ := sdk.TypedEventToEvent(&types.EventTriggerDestroyed{
-		TriggerId: fmt.Sprintf("%d", existing2.GetId()),
-	})
+	destroyed := func(triggerID uint64) sdk.Event {
+		event, _ := sdk.TypedEventToEvent(&types.EventTriggerDestroyed{
+			TriggerId: fmt.Sprintf("%d", triggerID),
+		})
+		return event
+	}
+
+	executed := func(triggerID uint64, owner string, success bool) sdk.Event {
+		event, _ := sdk.TypedEventToEvent(&types.EventTriggerExecuted{
+			TriggerId: fmt.Sprintf("%d", triggerID),
+			Owner:     owner,
+			Success:   success,
+		})
+		return event
+	}
 
 	tests := []struct {
 		name     string
@@ -62,7 +71,7 @@ func (s *KeeperTestSuite) TestProcessActions() {
 			},
 			gas:      []uint64{2000000},
 			expected: []types.Trigger(nil),
-			events:   []sdk.Event{event1},
+			events:   []sdk.Event{destroyed(existing1.Id), executed(trigger1.Id, trigger1.Owner, true)},
 			blockGas: 2000000,
 		},
 		{
@@ -92,7 +101,7 @@ func (s *KeeperTestSuite) TestProcessActions() {
 			},
 			gas:      []uint64{2000000},
 			expected: []types.Trigger(nil),
-			events:   []sdk.Event{},
+			events:   []sdk.Event{executed(emptyTrigger.Id, emptyTrigger.Owner, true)},
 			blockGas: 2000000,
 		},
 		{
@@ -107,7 +116,7 @@ func (s *KeeperTestSuite) TestProcessActions() {
 			},
 			gas:      []uint64{2000000},
 			expected: []types.Trigger(nil),
-			events:   []sdk.Event{event1, event2},
+			events:   []sdk.Event{destroyed(existing1.Id), destroyed(existing2.Id), executed(multiActionTrigger.Id, multiActionTrigger.Owner, true)},
 			blockGas: 2000000,
 		},
 		{
@@ -127,7 +136,7 @@ func (s *KeeperTestSuite) TestProcessActions() {
 			},
 			gas:      []uint64{1000000, 1000000},
 			expected: []types.Trigger(nil),
-			events:   []sdk.Event{event1, event2},
+			events:   []sdk.Event{destroyed(existing1.Id), executed(trigger1.Id, trigger1.Owner, true), destroyed(existing2.Id), executed(trigger2.Id, trigger2.Owner, true)},
 			blockGas: 2000000,
 		},
 		{
@@ -147,7 +156,7 @@ func (s *KeeperTestSuite) TestProcessActions() {
 			},
 			gas:      []uint64{2000000, 1000000},
 			expected: []types.Trigger{existing2},
-			events:   []sdk.Event{event1},
+			events:   []sdk.Event{destroyed(existing1.Id), executed(trigger1.Id, trigger1.Owner, true)},
 			blockGas: 2000000,
 		},
 		{
@@ -187,7 +196,14 @@ func (s *KeeperTestSuite) TestProcessActions() {
 			},
 			gas:      []uint64{100000, 100000, 100000, 100000, 100000, 100000},
 			expected: []types.Trigger{existing2},
-			events:   []sdk.Event{event1},
+			events: []sdk.Event{
+				destroyed(existing1.Id),
+				executed(trigger1.Id, trigger1.Owner, true),
+				executed(trigger3.Id, trigger3.Owner, false),
+				executed(trigger4.Id, trigger4.Owner, false),
+				executed(trigger5.Id, trigger5.Owner, false),
+				executed(trigger6.Id, trigger6.Owner, false),
+			},
 			blockGas: 500000,
 		},
 		{
@@ -202,7 +218,8 @@ func (s *KeeperTestSuite) TestProcessActions() {
 			},
 			gas:      []uint64{1},
 			expected: []types.Trigger{existing1},
-			events:   []sdk.Event{},
+			events: []sdk.Event{
+				executed(trigger1.Id, trigger1.Owner, false)},
 			blockGas: 1,
 		},
 		{
@@ -217,7 +234,9 @@ func (s *KeeperTestSuite) TestProcessActions() {
 			},
 			gas:      []uint64{6000},
 			expected: []types.Trigger{existing1, existing2},
-			events:   []sdk.Event{},
+			events: []sdk.Event{
+				executed(multiActionTrigger.Id, multiActionTrigger.Owner, false),
+			},
 			blockGas: 6000,
 		},
 		{
@@ -237,7 +256,11 @@ func (s *KeeperTestSuite) TestProcessActions() {
 			},
 			gas:      []uint64{1, 1000000},
 			expected: []types.Trigger{existing1},
-			events:   []sdk.Event{event2},
+			events: []sdk.Event{
+				executed(trigger1.Id, trigger1.Owner, false),
+				destroyed(existing2.Id),
+				executed(trigger2.Id, trigger2.Owner, true),
+			},
 			blockGas: 1000001,
 		},
 	}
