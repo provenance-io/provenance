@@ -3,6 +3,7 @@ package cli_test
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -297,19 +298,32 @@ type txCmdTestCase struct {
 	name string
 	// cmdGen is a generator for the command to execute. If not set, CmdTx is used.
 	cmdGen func() *cobra.Command
+	// preRun is a function that is run first.
+	// It should return any arguments to append to the args and a function that will
+	// run any fallow-up checks to do after the command is run.
+	preRun func() ([]string, func(txResponse *sdk.TxResponse))
 	// args are the arguments to provide to the command.
 	args []string
-	// expInErr are strings to expect in an error message (and the output).
+	// expInErr are strings to expect in an error from the cmd.
+	// Errors that come from the endpoint will not be here; use expInRawLog for those.
 	expInErr []string
+	// expInRawLog are strings to expect in the TxResponse.RawLog.
+	expInRawLog []string
 	// expectedCode is the code expected from the Tx.
 	expectedCode uint32
-	// followup is any further checks to do.
-	followup func(txResponse *sdk.TxResponse)
 }
 
 // RunTxCmdTestCase runs a txCmdTestCase by executing the command and checking the result.
 func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 	s.T().Helper()
+	var extraArgs []string
+	var followup func(txResponse *sdk.TxResponse)
+	if tc.preRun != nil {
+		s.Run("pre-run: "+tc.name, func() {
+			extraArgs, followup = tc.preRun()
+		})
+	}
+
 	var cmd *cobra.Command
 	if tc.cmdGen != nil {
 		cmd = tc.cmdGen()
@@ -317,42 +331,65 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 		cmd = cli.CmdTx()
 	}
 
-	cmdName := cmd.Name()
-	var outBz []byte
-	defer func() {
-		if s.T().Failed() {
-			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, tc.args, string(outBz))
-		}
-	}()
-
-	clientCtx := s.getClientCtx()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-	outBz = out.Bytes()
-
-	s.assertErrorContents(err, tc.expInErr, "ExecTestCLICmd error")
-	for _, exp := range tc.expInErr {
-		s.Assert().Contains(string(outBz), exp, "command output should contain:\n%q", exp)
-	}
+	args := append(tc.args, extraArgs...)
+	args = append(args,
+		"--"+flags.FlagFees, s.bondCoins(10).String(),
+		"--"+flags.FlagBroadcastMode, flags.BroadcastBlock,
+		"--"+flags.FlagSkipConfirmation,
+	)
 
 	var txResponse *sdk.TxResponse
-	if len(tc.expInErr) == 0 && err == nil {
-		var resp sdk.TxResponse
-		err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
-		if s.Assert().NoError(err, "UnmarshalJSON(command output) error") {
-			txResponse = &resp
-			if s.Assert().Equalf(int(tc.expectedCode), int(resp.Code), "response code") {
-				s.T().Logf("TxResponse:\n%v", resp)
+	var cmdFailed bool
+	testRunner := func() {
+		cmdName := cmd.Name()
+		var outBz []byte
+		defer func() {
+			if s.T().Failed() {
+				s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
+				cmdFailed = true
+			}
+		}()
+
+		clientCtx := s.getClientCtx()
+		out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+		outBz = out.Bytes()
+
+		s.assertErrorContents(err, tc.expInErr, "ExecTestCLICmd error")
+		for _, exp := range tc.expInErr {
+			s.Assert().Contains(string(outBz), exp, "command output should contain:\n%q", exp)
+		}
+
+		if len(tc.expInErr) == 0 && err == nil {
+			var resp sdk.TxResponse
+			err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+			if s.Assert().NoError(err, "UnmarshalJSON(command output) error") {
+				txResponse = &resp
+				s.Assert().Equal(int(tc.expectedCode), int(resp.Code), "response code")
+				for _, exp := range tc.expInRawLog {
+					s.Assert().Contains(resp.RawLog, exp, "TxResponse.RawLog should countain:\n%q", exp)
+				}
 			}
 		}
 	}
 
-	if tc.followup != nil {
-		err = s.testnet.WaitForNextBlock()
-		if s.Assert().NoError(err, "waiting for next block before followup") {
-			if s.Assert().NotNil(txResponse, "the TxResponse from the command output") {
-				tc.followup(txResponse)
+	if tc.preRun != nil {
+		s.Run("execute: "+tc.name, testRunner)
+	} else {
+		testRunner()
+	}
+
+	if followup != nil {
+		s.Run("followup: "+tc.name, func() {
+			if cmdFailed {
+				s.T().Skip("Skipping followup due to failure with command.")
 			}
-		}
+			err := s.testnet.WaitForNextBlock()
+			if s.Assert().NoError(err, "waiting for next block before followup") {
+				if s.Assert().NotNil(txResponse, "the TxResponse from the command output") {
+					followup(txResponse)
+				}
+			}
+		})
 	}
 }
 
@@ -477,6 +514,7 @@ func (s *CmdTestSuite) getOrderFollowup(order *exchange.Order) func(resp *sdk.Tx
 	return func(resp *sdk.TxResponse) {
 		orderID, err := s.findNewOrderID(resp)
 		if s.Assert().NoError(err, "finding new order id") {
+			order.OrderId = s.asOrderID(orderID)
 			s.assertGetOrder(orderID, order)
 		}
 	}
@@ -581,6 +619,11 @@ func (s *CmdTestSuite) assertErrorContents(theError error, contains []string, ms
 	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
 }
 
+// bondCoins returns a Coins with just an entry with the bond denom and the provided amount.
+func (s *CmdTestSuite) bondCoins(amt int64) sdk.Coins {
+	return sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, amt))
+}
+
 // joinErrs joins the provided error strings matching to how errors.Join does.
 func joinErrs(errs ...string) string {
 	return strings.Join(errs, "\n")
@@ -620,6 +663,12 @@ func splitStringer(split exchange.DenomSplit) string {
 // orderIDStringer converts an order id to a string.
 func orderIDStringer(orderID uint64) string {
 	return fmt.Sprintf("%d", orderID)
+}
+
+func (s *CmdTestSuite) asOrderID(str string) uint64 {
+	rv, err := strconv.ParseUint(str, 10, 64)
+	s.Require().NoError(err, "ParseUint(%q, 10, 64)", str)
+	return rv
 }
 
 // truncate truncates the provided string returning at most length characters.
