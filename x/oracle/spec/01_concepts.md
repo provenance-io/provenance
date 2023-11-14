@@ -7,10 +7,8 @@ order: 1
 The oracle module is very minimal, but users should understand what the `Oracle` is and how it interacts with `ICQ`.
 
 <!-- TOC 2 -->
-- [Concepts](#concepts)
   - [Oracle](#oracle)
   - [Interchain Queries (ICQ)](#interchain-queries-icq)
-    - [Note](#note)
 
 
 ---
