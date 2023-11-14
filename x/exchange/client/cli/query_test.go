@@ -428,7 +428,34 @@ func (s *CmdTestSuite) TestCmdQueryGetAllMarkets() {
 	}
 }
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdQueryParams()
+func (s *CmdTestSuite) TestCmdQueryParams() {
+	tests := []queryCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"params", "--unexpectedflag"},
+			expInErr: []string{"unknown flag: --unexpectedflag"},
+		},
+		{
+			name: "as text",
+			args: []string{"params", "--output", "text"},
+			expOut: `params:
+  default_split: 500
+  denom_splits: []
+`,
+		},
+		{
+			name:   "as json",
+			args:   []string{"params", "--output", "json"},
+			expOut: `{"params":{"default_split":500,"denom_splits":[]}}` + "\n",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
 
 // TODO[1701]: func (s *CmdTestSuite) TestCmdQueryValidateCreateMarket()
 
