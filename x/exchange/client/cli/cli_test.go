@@ -161,6 +161,18 @@ func (s *CmdTestSuite) SetupSuite() {
 				{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
 			},
 		},
+		exchange.Market{
+			// This market has an invalid setup. Don't mess with it.
+			MarketId:      421,
+			MarketDetails: exchange.MarketDetails{Name: "Broken"},
+			FeeSellerSettlementRatios: []exchange.FeeRatio{
+				{Price: sdk.NewInt64Coin("peach", 55), Fee: sdk.NewInt64Coin("peach", 1)},
+			},
+			FeeBuyerSettlementRatios: []exchange.FeeRatio{
+				{Price: sdk.NewInt64Coin("peach", 56), Fee: sdk.NewInt64Coin("peach", 1)},
+				{Price: sdk.NewInt64Coin("plum", 57), Fee: sdk.NewInt64Coin("plum", 1)},
+			},
+		},
 	)
 	toHold := make(map[string]sdk.Coins)
 	exchangeGen.Orders = make([]exchange.Order, 60)

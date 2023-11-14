@@ -410,7 +410,7 @@ func (s *CmdTestSuite) TestCmdQueryGetAllMarkets() {
 		{
 			name:     "get all",
 			args:     []string{"all-markets"},
-			expInOut: []string{`market_id: 3`, `market_id: 5`, `market_id: 420`},
+			expInOut: []string{`market_id: 3`, `market_id: 5`, `market_id: 420`, `market_id: 421`},
 		},
 		{
 			name: "no markets",
@@ -457,8 +457,94 @@ func (s *CmdTestSuite) TestCmdQueryParams() {
 	}
 }
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdQueryValidateCreateMarket()
+func (s *CmdTestSuite) TestCmdQueryValidateCreateMarket() {
+	tests := []queryCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"validate-create-market", "--create-ask", "orange"},
+			expInErr: []string{"invalid coin expression: \"orange\""},
+		},
+		{
+			name:   "problem with proposal",
+			args:   []string{"val-create-market", "--market", "420", "--name", "Other Name", "--output", "json"},
+			expOut: `{"error":"market id 420 account cosmos1dmk5hcws5xfue8rd6pl5lu6uh8jyt9fpqs0kf6 already exists","gov_prop_will_pass":false}` + "\n",
+		},
+		{
+			name: "okay",
+			args: []string{"validate-create-market",
+				"--name", "New Market", "--create-ask", "50nhash", "--create-bid", "50nhash",
+				"--accepting-orders",
+			},
+			expOut: `error: ""
+gov_prop_will_pass: true
+`,
+		},
+	}
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdQueryValidateMarket()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdQueryValidateManageFees()
+func (s *CmdTestSuite) TestCmdQueryValidateMarket() {
+	tests := []queryCmdTestCase{
+		{
+			name:     "no market id",
+			args:     []string{"validate-market"},
+			expInErr: []string{"no <market id> provided"},
+		},
+		{
+			name:   "invalid market",
+			args:   []string{"val-market", "--output", "json", "--market", "421"},
+			expOut: `{"error":"buyer settlement fee ratios have price denom \"plum\" but there is not a seller settlement fee ratio with that price denom"}` + "\n",
+		},
+		{
+			name: "valid market",
+			args: []string{"market-validate", "420"},
+			expOut: `error: ""
+`,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdQueryValidateManageFees() {
+	tests := []queryCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"validate-manage-fees", "--seller-flat-add", "orange", "--market", "419"},
+			expInErr: []string{"invalid coin expression: \"orange\""},
+		},
+		{
+			name: "problem with proposal",
+			args: []string{"val-manage-fees", "--market", "420",
+				"--seller-ratios-add", "123plum:5plum",
+				"--buyer-ratios-add", "123pear:5pear",
+			},
+			expOut: `error: |-
+  seller settlement fee ratios have price denom "plum" but there are no buyer settlement fee ratios with that price denom
+  buyer settlement fee ratios have price denom "pear" but there is not a seller settlement fee ratio with that price denom
+gov_prop_will_pass: true
+`,
+		},
+		{
+			name: "fixes existing problem",
+			args: []string{"val-manage-fees", "--market", "421",
+				"--seller-ratios-add", "123plum:5plum", "--output", "json"},
+			expOut: `{"error":"","gov_prop_will_pass":true}` + "\n",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
