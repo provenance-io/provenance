@@ -17,7 +17,6 @@ import (
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
@@ -88,26 +87,6 @@ func GetCmdSendQuery() *cobra.Command {
 		Short:   "Send a query to an oracle on a remote chain via IBC",
 		Args:    cobra.ExactArgs(2),
 		Aliases: []string{"sq"},
-		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			if len(args) != 0 {
-				return nil, cobra.ShellCompDirectiveNoFileComp
-			}
-			clientCtx, _ := client.GetClientQueryContext(cmd)
-			queryClient := channeltypes.NewQueryClient(clientCtx)
-
-			pageReq, _ := client.ReadPageRequest(cmd.Flags())
-
-			req := &channeltypes.QueryChannelsRequest{
-				Pagination: pageReq,
-			}
-
-			res, _ := queryClient.Channels(cmd.Context(), req)
-			channels := make([]string, len(res.Channels))
-			for _, channel := range res.Channels {
-				channels = append(channels, channel.ChannelId)
-			}
-			return channels, cobra.ShellCompDirectiveNoFileComp
-		},
 		Example: fmt.Sprintf(`%[1]s tx oracle send-query channel-1 '{"query_version":{}}'`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx, err := client.GetClientTxContext(cmd)
