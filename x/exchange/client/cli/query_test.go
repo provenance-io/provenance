@@ -110,7 +110,7 @@ func (s *CmdTestSuite) TestCmdQueryGetOrder() {
 		{
 			name: "ask order",
 			args: []string{"order", "--order", "42"},
-			expOut: fmt.Sprintf(`order:
+			expOut: `order:
   ask_order:
     allow_partial: true
     assets:
@@ -121,12 +121,10 @@ func (s *CmdTestSuite) TestCmdQueryGetOrder() {
     price:
       amount: "17640"
       denom: peach
-    seller: %s
+    seller: ` + s.accountAddrs[2].String() + `
     seller_settlement_flat_fee: null
   order_id: "42"
 `,
-				s.accountAddrs[2],
-			),
 		},
 		{
 			name: "bid order",
@@ -134,13 +132,13 @@ func (s *CmdTestSuite) TestCmdQueryGetOrder() {
 			expInOut: []string{
 				`"order_id":"41"`,
 				`"bid_order":`,
-				`"market_id":420`,
+				`"market_id":420,`,
 				fmt.Sprintf(`"buyer":"%s"`, s.accountAddrs[1]),
 				`"assets":{"denom":"apple","amount":"4100"}`,
 				`"price":{"denom":"peach","amount":"16810"}`,
 				`"buyer_settlement_fees":[]`,
 				`"allow_partial":false`,
-				`"external_id":"my-id-41`,
+				`"external_id":"my-id-41"`,
 			},
 		},
 	}
@@ -172,7 +170,7 @@ func (s *CmdTestSuite) TestCmdQueryGetOrderByExternalID() {
 			expInOut: []string{
 				`"order_id":"15"`,
 				`"bid_order":`,
-				`"market_id":420`,
+				`"market_id":420,`,
 				fmt.Sprintf(`"buyer":"%s"`, s.accountAddrs[5]),
 				`"assets":{"denom":"acorn","amount":"1500"}`,
 				`"price":{"denom":"peach","amount":"2250"}`,
@@ -210,7 +208,7 @@ pagination:
 			name: "several orders",
 			args: []string{"market-orders", "--asks", "--market", "420", "--order", "30", "--output", "json", "--count-total"},
 			expInOut: []string{
-				`"market_id":420`,
+				`"market_id":420,`,
 				`"order_id":"31"`, `"order_id":"34"`, `"order_id":"36"`,
 				`"order_id":"37"`, `"order_id":"40"`, `"order_id":"42"`,
 				`"order_id":"43"`, `"order_id":"46"`, `"order_id":"48"`,
@@ -279,7 +277,7 @@ pagination:
 			name: "several orders",
 			args: []string{"asset-orders", "--denom", "apple", "--limit", "5", "--order", "10", "--output", "json"},
 			expInOut: []string{
-				`"market_id":420`, `"order_id":"11"`, `"order_id":"12"`,
+				`"market_id":420,`, `"order_id":"11"`, `"order_id":"12"`,
 				`"order_id":"13"`, `"order_id":"17"`, `"order_id":"18"`,
 			},
 		},
@@ -322,9 +320,113 @@ func (s *CmdTestSuite) TestCmdQueryGetAllOrders() {
 	}
 }
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdQueryGetMarket()
+func (s *CmdTestSuite) TestCmdQueryGetMarket() {
+	tests := []queryCmdTestCase{
+		{
+			name:     "no market id",
+			args:     []string{"market"},
+			expInErr: []string{"no <market id> provided"},
+		},
+		{
+			name:     "market does not exist",
+			args:     []string{"get-market", "419"},
+			expInErr: []string{"market 419 not found", "invalid request", "InvalidArgument"},
+		},
+		{
+			name: "market exists",
+			args: []string{"market", "420"},
+			expOut: `address: cosmos1dmk5hcws5xfue8rd6pl5lu6uh8jyt9fpqs0kf6
+market:
+  accepting_orders: true
+  access_grants:
+  - address: ` + s.addr1.String() + `
+    permissions:
+    - PERMISSION_SETTLE
+    - PERMISSION_SET_IDS
+    - PERMISSION_CANCEL
+    - PERMISSION_WITHDRAW
+    - PERMISSION_UPDATE
+    - PERMISSION_PERMISSIONS
+    - PERMISSION_ATTRIBUTES
+  allow_user_settlement: true
+  fee_buyer_settlement_flat:
+  - amount: "105"
+    denom: peach
+  fee_buyer_settlement_ratios:
+  - fee:
+      amount: "1"
+      denom: peach
+    price:
+      amount: "50"
+      denom: peach
+  - fee:
+      amount: "3"
+      denom: stake
+    price:
+      amount: "50"
+      denom: peach
+  fee_create_ask_flat:
+  - amount: "20"
+    denom: peach
+  fee_create_bid_flat:
+  - amount: "25"
+    denom: peach
+  fee_seller_settlement_flat:
+  - amount: "100"
+    denom: peach
+  fee_seller_settlement_ratios:
+  - fee:
+      amount: "1"
+      denom: peach
+    price:
+      amount: "75"
+      denom: peach
+  market_details:
+    description: It's coming; you know it. It has all the fees.
+    icon_uri: ""
+    name: THE Market
+    website_url: ""
+  market_id: 420
+  req_attr_create_ask: []
+  req_attr_create_bid: []
+`,
+		},
+	}
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdQueryGetAllMarkets()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdQueryGetAllMarkets() {
+	tests := []queryCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"get-all-markets", "--unexpectedflag"},
+			expInErr: []string{"unknown flag: --unexpectedflag"},
+		},
+		{
+			name:     "get all",
+			args:     []string{"all-markets"},
+			expInOut: []string{`market_id: 3`, `market_id: 5`, `market_id: 420`},
+		},
+		{
+			name: "no markets",
+			// this page key is the base64 encoded max uint32 -1, aka "the next to last possible market id."
+			// Hopefully these unit tests get up that far.
+			args:   []string{"get-all-markets", "--page-key", "/////g==", "--output", "json"},
+			expOut: `{"markets":[],"pagination":{"next_key":null,"total":"0"}}` + "\n",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
 
 // TODO[1701]: func (s *CmdTestSuite) TestCmdQueryParams()
 
