@@ -178,7 +178,7 @@ func (s *CmdTestSuite) SetupSuite() {
 	toHold := make(map[string]sdk.Coins)
 	exchangeGen.Orders = make([]exchange.Order, 60)
 	for i := range exchangeGen.Orders {
-		order := s.createInitialOrder(uint64(i + 1))
+		order := s.makeInitialOrder(uint64(i + 1))
 		exchangeGen.Orders[i] = *order
 		toHold[order.GetOwner()] = toHold[order.GetOwner()].Add(order.GetHoldAmount()...)
 	}
@@ -251,8 +251,8 @@ func (s *CmdTestSuite) generateAccountsWithKeyring(number int) {
 	}
 }
 
-// createInitialOrder creates an order using the order id for various aspects.
-func (s *CmdTestSuite) createInitialOrder(orderID uint64) *exchange.Order {
+// makeInitialOrder makes an order using the order id for various aspects.
+func (s *CmdTestSuite) makeInitialOrder(orderID uint64) *exchange.Order {
 	addr := s.accountAddrs[int(orderID)%len(s.accountAddrs)]
 	assetDenom := "apple"
 	if orderID%7 <= 2 {
@@ -292,6 +292,12 @@ func (s *CmdTestSuite) getClientCtx() client.Context {
 		WithKeyring(s.keyring)
 }
 
+// reqNextBlock waits for the next block and requires it to not error.
+func (s *CmdTestSuite) reqNextBlock(msg string, args ...interface{}) {
+	err := s.testnet.WaitForNextBlock()
+	s.Require().NoErrorf(err, "WaitForNextBlock: "+msg, args...)
+}
+
 // txCmdTestCase is a test case for a TX command.
 type txCmdTestCase struct {
 	// name is a name for this test case.
@@ -318,9 +324,11 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 	s.T().Helper()
 	var extraArgs []string
 	var followup func(txResponse *sdk.TxResponse)
+	var preRunFailed bool
 	if tc.preRun != nil {
 		s.Run("pre-run: "+tc.name, func() {
 			extraArgs, followup = tc.preRun()
+			preRunFailed = s.T().Failed()
 		})
 	}
 
@@ -341,6 +349,10 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 	var txResponse *sdk.TxResponse
 	var cmdFailed bool
 	testRunner := func() {
+		if preRunFailed {
+			s.T().Skip("Skipping execution due to pre-run failure.")
+		}
+
 		cmdName := cmd.Name()
 		var outBz []byte
 		defer func() {
@@ -380,14 +392,15 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 
 	if followup != nil {
 		s.Run("followup: "+tc.name, func() {
+			if preRunFailed {
+				s.T().Skip("Skipping followup due to pre-run failure.")
+			}
 			if cmdFailed {
 				s.T().Skip("Skipping followup due to failure with command.")
 			}
-			err := s.testnet.WaitForNextBlock()
-			if s.Assert().NoError(err, "waiting for next block before followup") {
-				if s.Assert().NotNil(txResponse, "the TxResponse from the command output") {
-					followup(txResponse)
-				}
+			s.reqNextBlock("before followup")
+			if s.Assert().NotNil(txResponse, "the TxResponse from the command output") {
+				followup(txResponse)
 			}
 		})
 	}
@@ -622,6 +635,55 @@ func (s *CmdTestSuite) assertErrorContents(theError error, contains []string, ms
 // bondCoins returns a Coins with just an entry with the bond denom and the provided amount.
 func (s *CmdTestSuite) bondCoins(amt int64) sdk.Coins {
 	return sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, amt))
+}
+
+// createOrder issues a command to create the provided order and returns its order id.
+func (s *CmdTestSuite) createOrder(order *exchange.Order) uint64 {
+	cmd := cli.CmdTx()
+	args := []string{
+		order.GetOrderType(),
+		"--market", fmt.Sprintf("%d", order.GetMarketID()),
+		"--from", order.GetOwner(),
+		"--assets", order.GetAssets().String(),
+		"--price", order.GetPrice().String(),
+	}
+	settleFee := order.GetSettlementFees()
+	if !settleFee.IsZero() {
+		args = append(args, "--settlement-fee", settleFee.String())
+	}
+	if order.PartialFillAllowed() {
+		args = append(args, "--partial")
+	}
+	eid := order.GetExternalID()
+	if len(eid) > 0 {
+		args = append(args, "--external-id", eid)
+	}
+	args = append(args,
+		"--"+flags.FlagFees, s.bondCoins(10).String(),
+		"--"+flags.FlagBroadcastMode, flags.BroadcastBlock,
+		"--"+flags.FlagSkipConfirmation,
+	)
+
+	cmdName := cmd.Name()
+	var outBz []byte
+	defer func() {
+		if s.T().Failed() {
+			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
+		}
+	}()
+
+	clientCtx := s.getClientCtx()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	outBz = out.Bytes()
+
+	s.Require().NoError(err, "ExecTestCLICmd error")
+
+	var resp sdk.TxResponse
+	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+	s.Require().NoError(err, "UnmarshalJSON(command output) error")
+	orderIDStr, err := s.findNewOrderID(&resp)
+	s.Require().NoError(err, "findNewOrderID")
+	return s.asOrderID(orderIDStr)
 }
 
 // joinErrs joins the provided error strings matching to how errors.Join does.

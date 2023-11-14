@@ -114,7 +114,47 @@ func (s *CmdTestSuite) TestCmdTxCreateBid() {
 	}
 }
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdTxCancelOrder()
+func (s *CmdTestSuite) TestCmdTxCancelOrder() {
+	tests := []txCmdTestCase{
+		{
+			name:     "no order id",
+			args:     []string{"cancel-order", "--from", s.addr2.String()},
+			expInErr: []string{"no <order id> provided"},
+		},
+		{
+			name: "order does not exist",
+			args: []string{"cancel", "18446744073709551615", "--from", s.addr2.String()},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"order 18446744073709551615 does not exist"},
+			expectedCode: 18,
+		},
+		{
+			name: "order exists",
+			preRun: func() ([]string, func(txResponse *sdk.TxResponse)) {
+				orderID := s.createOrder(exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
+					MarketId: 5,
+					Seller:   s.addr2.String(),
+					Assets:   sdk.NewInt64Coin("apple", 100),
+					Price:    sdk.NewInt64Coin("peach", 150),
+				}))
+				orderIDStr := orderIDStringer(orderID)
+				followup := func(_ *sdk.TxResponse) {
+					s.assertGetOrder(orderIDStr, nil)
+				}
+				s.reqNextBlock("end of pre-run")
+				return []string{"--order", orderIDStr}, followup
+			},
+			args:         []string{"cancel", "--from", s.addr2.String()},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
 
 // TODO[1701]: func (s *CmdTestSuite) TestCmdTxFillBids()
 
