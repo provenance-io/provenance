@@ -24,6 +24,7 @@ import (
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -56,6 +57,8 @@ type CmdTestSuite struct {
 	addr7 sdk.AccAddress
 	addr8 sdk.AccAddress
 	addr9 sdk.AccAddress
+
+	addrNameLookup map[string]string
 }
 
 func TestCmdTestSuite(t *testing.T) {
@@ -81,6 +84,18 @@ func (s *CmdTestSuite) SetupSuite() {
 	s.addr7 = s.accountAddrs[7]
 	s.addr8 = s.accountAddrs[8]
 	s.addr9 = s.accountAddrs[9]
+	s.addrNameLookup = map[string]string{
+		s.addr0.String(): "addr0",
+		s.addr1.String(): "addr1",
+		s.addr2.String(): "addr2",
+		s.addr3.String(): "addr3",
+		s.addr4.String(): "addr4",
+		s.addr5.String(): "addr5",
+		s.addr6.String(): "addr6",
+		s.addr7.String(): "addr7",
+		s.addr8.String(): "addr8",
+		s.addr9.String(): "addr9",
+	}
 
 	// Add accounts to auth gen state.
 	var authGen authtypes.GenesisState
@@ -292,10 +307,12 @@ func (s *CmdTestSuite) getClientCtx() client.Context {
 		WithKeyring(s.keyring)
 }
 
-// reqNextBlock waits for the next block and requires it to not error.
-func (s *CmdTestSuite) reqNextBlock(msg string, args ...interface{}) {
-	err := s.testnet.WaitForNextBlock()
-	s.Require().NoErrorf(err, "WaitForNextBlock: "+msg, args...)
+// getAddrName tries to get the variable name (in this suite) of the provided address.
+func (s *CmdTestSuite) getAddrName(addr string) string {
+	if rv, found := s.addrNameLookup[addr]; found {
+		return rv
+	}
+	return addr
 }
 
 // txCmdTestCase is a test case for a TX command.
@@ -341,6 +358,7 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 
 	args := append(tc.args, extraArgs...)
 	args = append(args,
+		"--"+flags.FlagGas, "250000",
 		"--"+flags.FlagFees, s.bondCoins(10).String(),
 		"--"+flags.FlagBroadcastMode, flags.BroadcastBlock,
 		"--"+flags.FlagSkipConfirmation,
@@ -398,7 +416,6 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 			if cmdFailed {
 				s.T().Skip("Skipping followup due to failure with command.")
 			}
-			s.reqNextBlock("before followup")
 			if s.Assert().NotNil(txResponse, "the TxResponse from the command output") {
 				followup(txResponse)
 			}
@@ -638,7 +655,7 @@ func (s *CmdTestSuite) bondCoins(amt int64) sdk.Coins {
 }
 
 // createOrder issues a command to create the provided order and returns its order id.
-func (s *CmdTestSuite) createOrder(order *exchange.Order) uint64 {
+func (s *CmdTestSuite) createOrder(order *exchange.Order, creationFee *sdk.Coin) uint64 {
 	cmd := cli.CmdTx()
 	args := []string{
 		order.GetOrderType(),
@@ -657,6 +674,9 @@ func (s *CmdTestSuite) createOrder(order *exchange.Order) uint64 {
 	eid := order.GetExternalID()
 	if len(eid) > 0 {
 		args = append(args, "--external-id", eid)
+	}
+	if creationFee != nil {
+		args = append(args, "--creation-fee", creationFee.String())
 	}
 	args = append(args,
 		"--"+flags.FlagFees, s.bondCoins(10).String(),
@@ -684,6 +704,66 @@ func (s *CmdTestSuite) createOrder(order *exchange.Order) uint64 {
 	orderIDStr, err := s.findNewOrderID(&resp)
 	s.Require().NoError(err, "findNewOrderID")
 	return s.asOrderID(orderIDStr)
+}
+
+// queryBankBalances executes a bank query to get an account's balances.
+func (s *CmdTestSuite) queryBankBalances(addr string) sdk.Coins {
+	clientCtx := s.getClientCtx()
+	cmd := bankcli.GetBalancesCmd()
+	args := []string{addr, "--output", "json"}
+	outBW, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err, "ExecTestCLICmd %s %q", cmd.Name(), args)
+	outBz := outBW.Bytes()
+
+	var resp banktypes.QueryAllBalancesResponse
+	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+	s.Require().NoError(err, "UnmarshalJSON(%q, %T)", string(outBz), &resp)
+	return resp.Balances
+}
+
+// adjustBalance creates a new Balance with the order owner's Address and a Coins that's
+// the result of the order and fees applied to the provided current balance.
+func (s *CmdTestSuite) adjustBalance(curBal sdk.Coins, order *exchange.Order, creationFees ...sdk.Coin) banktypes.Balance {
+	rv := banktypes.Balance{
+		Address: order.GetOwner(),
+	}
+
+	price := order.GetPrice()
+	assets := order.GetAssets()
+	var hasNeg bool
+	if order.IsAskOrder() {
+		rv.Coins, hasNeg = curBal.Add(price).SafeSub(assets)
+		s.Require().False(hasNeg, "hasNeg: %s + %s - %s", curBal, price, assets)
+	}
+	if order.IsBidOrder() {
+		rv.Coins, hasNeg = curBal.Add(assets).SafeSub(price)
+		s.Require().False(hasNeg, "hasNeg: %s + %s - %s", curBal, assets, price)
+	}
+
+	settleFees := order.GetSettlementFees()
+	if !settleFees.IsZero() {
+		orig := rv.Coins
+		rv.Coins, hasNeg = rv.Coins.SafeSub(settleFees...)
+		s.Require().False(hasNeg, "hasNeg (settlement fees): %s - %s", orig, settleFees)
+	}
+
+	for _, fee := range creationFees {
+		orig := rv.Coins
+		rv.Coins, hasNeg = rv.Coins.SafeSub(fee)
+		s.Require().False(hasNeg, "hasNeg (creation fee): %s - %s", orig, fee)
+	}
+
+	return rv
+}
+
+// assertBalancesFollowup returns a follow-up function that asserts that the balances are now as expected.
+func (s *CmdTestSuite) assertBalancesFollowup(expBals []banktypes.Balance) func(*sdk.TxResponse) {
+	return func(_ *sdk.TxResponse) {
+		for _, expBal := range expBals {
+			actBal := s.queryBankBalances(expBal.Address)
+			s.Assert().Equal(expBal.Coins.String(), actBal.String(), "%s balances", s.getAddrName(expBal.Address))
+		}
+	}
 }
 
 // joinErrs joins the provided error strings matching to how errors.Join does.
@@ -727,6 +807,7 @@ func orderIDStringer(orderID uint64) string {
 	return fmt.Sprintf("%d", orderID)
 }
 
+// asOrderID converts the provided string into an order id.
 func (s *CmdTestSuite) asOrderID(str string) uint64 {
 	rv, err := strconv.ParseUint(str, 10, 64)
 	s.Require().NoError(err, "ParseUint(%q, 10, 64)", str)
