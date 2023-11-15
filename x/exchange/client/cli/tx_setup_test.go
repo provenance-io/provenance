@@ -25,6 +25,7 @@ import (
 // "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn" = cli.AuthorityAddr.String()
 
 // txMakerTestDef is the definition of a tx maker func to be tested.
+//
 // R is the type of the sdk.Msg returned by the maker.
 type txMakerTestDef[R sdk.Msg] struct {
 	// makerName is the name of the maker func being tested.
@@ -36,13 +37,14 @@ type txMakerTestDef[R sdk.Msg] struct {
 }
 
 // txMakerTestCase is a test case for a tx maker func.
+//
 // R is the type of the sdk.Msg returned by the maker.
 type txMakerTestCase[R sdk.Msg] struct {
 	// name is a name for this test case.
 	name string
 	// clientCtx is the client context to provided to the maker.
 	clientCtx client.Context
-	// flags are the flags the process by the command to get the flagSet to provide to the maker.
+	// flags are the strings the give to FlagSet before it's provided to the maker.
 	flags []string
 	// args are the strings to supply as args to the maker.
 	args []string
@@ -53,6 +55,8 @@ type txMakerTestCase[R sdk.Msg] struct {
 }
 
 // runTxMakerTestCase runs a test case for a tx maker func.
+//
+// R is the type of the sdk.Msg returned by the maker.
 func runTxMakerTestCase[R sdk.Msg](t *testing.T, td txMakerTestDef[R], tc txMakerTestCase[R]) {
 	cmd := &cobra.Command{
 		Use: "dummy",

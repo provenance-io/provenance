@@ -447,7 +447,7 @@ func (s *CmdTestSuite) TestCmdQueryParams() {
 		},
 		{
 			name:   "as json",
-			args:   []string{"params", "--output", "json"},
+			args:   []string{"get-params", "--output", "json"},
 			expOut: `{"params":{"default_split":500,"denom_splits":[]}}` + "\n",
 		},
 	}

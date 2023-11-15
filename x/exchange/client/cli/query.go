@@ -167,9 +167,10 @@ func CmdQueryGetAllMarkets() *cobra.Command {
 // CmdQueryParams creates the params sub-command for the exchange query command.
 func CmdQueryParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "params",
-		Short: "Get the exchange module params",
-		RunE:  genericQueryRunE(MakeQueryParams, exchange.QueryClient.Params),
+		Use:     "params",
+		Aliases: []string{"get-params"},
+		Short:   "Get the exchange module params",
+		RunE:    genericQueryRunE(MakeQueryParams, exchange.QueryClient.Params),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)

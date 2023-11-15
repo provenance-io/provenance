@@ -25,6 +25,7 @@ import (
 var exampleStart = version.AppName + " query exchange dummy"
 
 // queryMakerTestDef is the definition of a query maker func to be tested.
+//
 // R is the type that is returned by the maker.
 type queryMakerTestDef[R any] struct {
 	// makerName is the name of the maker func being tested.
@@ -36,11 +37,12 @@ type queryMakerTestDef[R any] struct {
 }
 
 // queryMakerTestCase is a test case for a query maker func.
+//
 // R is the type that is returned by the maker.
 type queryMakerTestCase[R any] struct {
 	// name is a name for this test case.
 	name string
-	// flags are the flags the process by the command to get the flagSet to provide to the maker.
+	// flags are the strings the give to FlagSet before it's provided to the maker.
 	flags []string
 	// args are the strings to supply as args to the maker.
 	args []string
@@ -51,6 +53,8 @@ type queryMakerTestCase[R any] struct {
 }
 
 // runQueryMakerTest runs a test case for a query maker func.
+//
+// R is the type that is returned by the maker.
 func runQueryMakerTest[R any](t *testing.T, td queryMakerTestDef[R], tc queryMakerTestCase[R]) {
 	cmd := &cobra.Command{
 		Use: "dummy",
