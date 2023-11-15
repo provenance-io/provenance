@@ -4,10 +4,13 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
+
+var invReqCode = sdkerrors.ErrInvalidRequest.ABCICode()
 
 func (s *CmdTestSuite) TestCmdTxCreateAsk() {
 	tests := []txCmdTestCase{
@@ -28,7 +31,7 @@ func (s *CmdTestSuite) TestCmdTxCreateAsk() {
 			},
 			expInRawLog: []string{"failed to execute message", "invalid request",
 				"insufficient ask order creation fee: \"9peach\" is less than required amount \"10peach\""},
-			expectedCode: 18,
+			expectedCode: invReqCode,
 		},
 		{
 			name: "okay",
@@ -81,7 +84,7 @@ func (s *CmdTestSuite) TestCmdTxCreateBid() {
 			},
 			expInRawLog: []string{"failed to execute message", "invalid request",
 				"insufficient bid order creation fee: \"9peach\" is less than required amount \"10peach\""},
-			expectedCode: 18,
+			expectedCode: invReqCode,
 		},
 		{
 			name: "okay",
@@ -127,7 +130,7 @@ func (s *CmdTestSuite) TestCmdTxCancelOrder() {
 			args: []string{"cancel", "18446744073709551615", "--from", s.addr2.String()},
 			expInRawLog: []string{"failed to execute message", "invalid request",
 				"order 18446744073709551615 does not exist"},
-			expectedCode: 18,
+			expectedCode: invReqCode,
 		},
 		{
 			name: "order exists",
@@ -176,7 +179,7 @@ func (s *CmdTestSuite) TestCmdTxFillBids() {
 			},
 			args:         []string{"fill-bids", "--from", s.addr3.String(), "--market", "5", "--assets", "100apple"},
 			expInRawLog:  []string{"failed to execute message", "invalid request", "is type ask: expected bid"},
-			expectedCode: 18,
+			expectedCode: invReqCode,
 		},
 		{
 			name: "two bids",
@@ -249,7 +252,7 @@ func (s *CmdTestSuite) TestCmdTxFillAsks() {
 			},
 			args:         []string{"fill-asks", "--from", s.addr3.String(), "--market", "3", "--price", "150peach"},
 			expInRawLog:  []string{"failed to execute message", "invalid request", "is type bid: expected ask"},
-			expectedCode: 18,
+			expectedCode: invReqCode,
 		},
 		{
 			name: "two asks",
@@ -313,7 +316,7 @@ func (s *CmdTestSuite) TestCmdTxMarketSettle() {
 			expInRawLog: []string{"failed to execute message", "invalid request",
 				"account " + s.addr9.String() + " does not have permission to settle orders for market 419",
 			},
-			expectedCode: 18,
+			expectedCode: invReqCode,
 		},
 		{
 			name: "two asks two bids",
@@ -408,7 +411,7 @@ func (s *CmdTestSuite) TestCmdTxMarketSetOrderExternalID() {
 			expInRawLog: []string{"failed to execute message", "invalid request",
 				"account " + s.addr7.String() + " does not have permission to set external ids on orders for market 5",
 			},
-			expectedCode: 18,
+			expectedCode: invReqCode,
 		},
 		{
 			name: "external id updated",
@@ -439,13 +442,205 @@ func (s *CmdTestSuite) TestCmdTxMarketSetOrderExternalID() {
 	}
 }
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdTxMarketWithdraw()
+func (s *CmdTestSuite) TestCmdTxMarketWithdraw() {
+	tests := []txCmdTestCase{
+		{
+			name: "no market id",
+			args: []string{"market-withdraw", "--from", s.addr1.String(),
+				"--to", s.addr1.String(), "--amount", "10peach"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "not enough in market account",
+			preRun: func() ([]string, func(txResponse *sdk.TxResponse)) {
+				market3Addr := exchange.GetMarketAddress(3)
+				expBals := []banktypes.Balance{
+					{Address: market3Addr.String(), Coins: s.queryBankBalances(market3Addr.String())},
+					{Address: s.addr2.String(), Coins: s.queryBankBalances(s.addr2.String())},
+				}
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdTxMarketUpdateDetails()
+				return nil, s.assertBalancesFollowup(expBals)
+			},
+			args: []string{"market-withdraw", "--from", s.addr1.String(),
+				"--market", "3", "--to", s.addr2.String(), "--amount", "50avocado"},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"failed to withdraw 50avocado from market 3",
+				"spendable balance 0avocado is smaller than 50avocado",
+				"insufficient funds",
+			},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "success",
+			preRun: func() ([]string, func(txResponse *sdk.TxResponse)) {
+				amount := sdk.NewInt64Coin("acorn", 50)
+				market3Addr := exchange.GetMarketAddress(3)
+				s.execBankSend(s.addr8.String(), market3Addr.String(), amount.String())
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdTxMarketUpdateEnabled()
+				preBalsMarket3 := s.queryBankBalances(market3Addr.String())
+				preBalsAddr8 := s.queryBankBalances(s.addr8.String())
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdTxMarketUpdateUserSettle()
+				expBals := []banktypes.Balance{
+					{Address: market3Addr.String(), Coins: preBalsMarket3.Sub(amount)},
+					{Address: s.addr8.String(), Coins: preBalsAddr8.Add(amount)},
+				}
+
+				return []string{"--amount", amount.String()}, s.assertBalancesFollowup(expBals)
+			},
+			args:         []string{"withdraw", "--market", "3", "--from", s.addr1.String(), "--to", s.addr8.String()},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxMarketUpdateDetails() {
+	tests := []txCmdTestCase{
+		{
+			name:     "no market",
+			args:     []string{"market-details", "--from", s.addr1.String(), "--name", "Notgonnawork"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "market does not exist",
+			args: []string{"market-update-details", "--market", "419",
+				"--from", s.addr1.String(), "--name", "No Such Market"},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"account " + s.addr1.String() + " does not have permission to update market 419",
+			},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "success",
+			preRun: func() ([]string, func(txResponse *sdk.TxResponse)) {
+				market3 := s.getMarket("3")
+				if len(market3.MarketDetails.IconUri) == 0 {
+					market3.MarketDetails.IconUri = "https://example.com/3/icon"
+				}
+				market3.MarketDetails.IconUri += "?7A9AF177=true"
+
+				args := []string{}
+				if len(market3.MarketDetails.Name) > 0 {
+					args = append(args, "--name", market3.MarketDetails.Name)
+				}
+				if len(market3.MarketDetails.Description) > 0 {
+					args = append(args, "--description", market3.MarketDetails.Description)
+				}
+				if len(market3.MarketDetails.WebsiteUrl) > 0 {
+					args = append(args, "--url", market3.MarketDetails.WebsiteUrl)
+				}
+				if len(market3.MarketDetails.IconUri) > 0 {
+					args = append(args, "--icon", market3.MarketDetails.IconUri)
+				}
+
+				return args, s.getMarketFollowup("3", market3)
+			},
+			args:         []string{"market-update-details", "--from", s.addr1.String(), "--market", "3"},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxMarketUpdateEnabled() {
+	tests := []txCmdTestCase{
+		{
+			name:     "no market",
+			args:     []string{"market-enabled", "--from", s.addr1.String(), "--enable"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "market does not exist",
+			args: []string{"market-update-enabled", "--market", "419",
+				"--from", s.addr4.String(), "--enable"},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"account " + s.addr4.String() + " does not have permission to update market 419",
+			},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "disable market",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				market420 := s.getMarket("420")
+				market420.AcceptingOrders = false
+				return nil, s.getMarketFollowup("420", market420)
+			},
+			args:         []string{"update-enabled", "--disable", "--market", "420", "--from", s.addr1.String()},
+			expectedCode: 0,
+		},
+		{
+			name: "enable market",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				market420 := s.getMarket("420")
+				market420.AcceptingOrders = true
+				return nil, s.getMarketFollowup("420", market420)
+			},
+			args:         []string{"update-enabled", "--enable", "--market", "420", "--from", s.addr1.String()},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxMarketUpdateUserSettle() {
+	tests := []txCmdTestCase{
+		{
+			name:     "no market",
+			args:     []string{"market-user-settle", "--from", s.addr1.String(), "--enable"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "market does not exist",
+			args: []string{"market-update-user-settle", "--market", "419",
+				"--from", s.addr4.String(), "--enable"},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"account " + s.addr4.String() + " does not have permission to update market 419",
+			},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "disable user settle",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				market420 := s.getMarket("420")
+				market420.AllowUserSettlement = false
+				return nil, s.getMarketFollowup("420", market420)
+			},
+			args:         []string{"update-user-settle", "--disable", "--market", "420", "--from", s.addr1.String()},
+			expectedCode: 0,
+		},
+		{
+			name: "enable user settle",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				market420 := s.getMarket("420")
+				market420.AllowUserSettlement = true
+				return nil, s.getMarketFollowup("420", market420)
+			},
+			args:         []string{"update-user-settle", "--enable", "--market", "420", "--from", s.addr1.String()},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
 
 // TODO[1701]: func (s *CmdTestSuite) TestCmdTxMarketManagePermissions()
 

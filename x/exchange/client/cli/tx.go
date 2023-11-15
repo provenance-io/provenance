@@ -157,7 +157,7 @@ func CmdTxMarketWithdraw() *cobra.Command {
 func CmdTxMarketUpdateDetails() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "market-details",
-		Aliases: []string{"market-update-details", "update-details", "details"},
+		Aliases: []string{"market-update-details"},
 		Short:   "Update a market's details",
 		RunE:    genericTxRunE(MakeMsgMarketUpdateDetails),
 	}

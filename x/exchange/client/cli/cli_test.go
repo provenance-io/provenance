@@ -319,12 +319,10 @@ func (s *CmdTestSuite) getAddrName(addr string) string {
 type txCmdTestCase struct {
 	// name is a name for this test case.
 	name string
-	// cmdGen is a generator for the command to execute. If not set, CmdTx is used.
-	cmdGen func() *cobra.Command
 	// preRun is a function that is run first.
 	// It should return any arguments to append to the args and a function that will
 	// run any fallow-up checks to do after the command is run.
-	preRun func() ([]string, func(txResponse *sdk.TxResponse))
+	preRun func() ([]string, func(*sdk.TxResponse))
 	// args are the arguments to provide to the command.
 	args []string
 	// expInErr are strings to expect in an error from the cmd.
@@ -340,21 +338,17 @@ type txCmdTestCase struct {
 func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 	s.T().Helper()
 	var extraArgs []string
-	var followup func(txResponse *sdk.TxResponse)
+	var followup func(*sdk.TxResponse)
 	var preRunFailed bool
 	if tc.preRun != nil {
 		s.Run("pre-run: "+tc.name, func() {
+			preRunFailed = true
 			extraArgs, followup = tc.preRun()
 			preRunFailed = s.T().Failed()
 		})
 	}
 
-	var cmd *cobra.Command
-	if tc.cmdGen != nil {
-		cmd = tc.cmdGen()
-	} else {
-		cmd = cli.CmdTx()
-	}
+	cmd := cli.CmdTx()
 
 	args := append(tc.args, extraArgs...)
 	args = append(args,
@@ -427,8 +421,6 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 type queryCmdTestCase struct {
 	// name is a name for this test case.
 	name string
-	// cmdGen is a generator for the command to execute. If not set, CmdQuery is used.
-	cmdGen func() *cobra.Command
 	// args are the arguments to provide to the command.
 	args []string
 	// expInErr are strings to expect in an error message (and output).
@@ -442,12 +434,7 @@ type queryCmdTestCase struct {
 // RunQueryCmdTestCase runs a queryCmdTestCase by executing the command and checking the result.
 func (s *CmdTestSuite) runQueryCmdTestCase(tc queryCmdTestCase) {
 	s.T().Helper()
-	var cmd *cobra.Command
-	if tc.cmdGen != nil {
-		cmd = tc.cmdGen()
-	} else {
-		cmd = cli.CmdQuery()
-	}
+	cmd := cli.CmdQuery()
 
 	cmdName := cmd.Name()
 	var outStr string
@@ -506,9 +493,9 @@ func (s *CmdTestSuite) findNewOrderID(resp *sdk.TxResponse) (string, error) {
 
 // assertOrder uses the GetOrder query to look up an order and make sure it equals the one provided.
 // If the provided order is nil, ensures the query returns an order not found error.
-func (s *CmdTestSuite) assertGetOrder(orderID string, order *exchange.Order) bool {
+func (s *CmdTestSuite) assertGetOrder(orderID string, order *exchange.Order) (okay bool) {
 	s.T().Helper()
-	if !s.Assert().NotEmptyf(orderID, "order id") {
+	if !s.Assert().NotEmpty(orderID, "order id") {
 		return false
 	}
 
@@ -517,12 +504,19 @@ func (s *CmdTestSuite) assertGetOrder(orderID string, order *exchange.Order) boo
 		expInErr = append(expInErr, fmt.Sprintf("order %s not found", orderID))
 	}
 
+	var getOrderOutBz []byte
+	getOrderArgs := []string{orderID, "--output", "json"}
+	defer func() {
+		if !okay {
+			s.T().Logf("Query GetOrder %s output:\n%s", getOrderArgs, string(getOrderOutBz))
+		}
+	}()
+
 	clientCtx := s.getClientCtx()
 	getOrderCmd := cli.CmdQueryGetOrder()
-	getOrderOutBW, err := clitestutil.ExecTestCLICmd(clientCtx, getOrderCmd, []string{orderID, "--output", "json"})
-	getOrderOutBz := getOrderOutBW.Bytes()
-	s.T().Logf("Query GetOrder %s output:\n%s", orderID, string(getOrderOutBz))
-	if !s.assertErrorContents(err, expInErr, "CmdQueryGetOrder %s error", orderID) {
+	getOrderOutBW, err := clitestutil.ExecTestCLICmd(clientCtx, getOrderCmd, getOrderArgs)
+	getOrderOutBz = getOrderOutBW.Bytes()
+	if !s.assertErrorContents(err, expInErr, "ExecTestCLICmd GetOrder %s error", orderID) {
 		return false
 	}
 
@@ -557,6 +551,45 @@ func (s *CmdTestSuite) createOrderFollowup(order *exchange.Order) func(*sdk.TxRe
 			order.OrderId = s.asOrderID(orderID)
 			s.assertGetOrder(orderID, order)
 		}
+	}
+}
+
+// getMarket executes a query to get the given market.
+func (s *CmdTestSuite) getMarket(marketID string) *exchange.Market {
+	s.T().Helper()
+	if !s.Assert().NotEmpty(marketID, "market id") {
+		return nil
+	}
+
+	okay := false
+	var outBz []byte
+	args := []string{marketID, "--output", "json"}
+	defer func() {
+		if !okay {
+			s.T().Logf("Query GetMarket\nArgs: %q\nOutput:\n%s", args, string(outBz))
+		}
+	}()
+
+	clientCtx := s.getClientCtx()
+	cmd := cli.CmdQueryGetMarket()
+	outBW, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	outBz = outBW.Bytes()
+
+	s.Require().NoError(err, "ExecTestCLICmd error")
+
+	var resp exchange.QueryGetMarketResponse
+	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+	s.Require().NoError(err, "UnmarshalJSON on GetMarket %s response", marketID)
+	s.Require().NotNil(resp.Market, "GetMarket %s response .Market", marketID)
+	okay = true
+	return resp.Market
+}
+
+// getMarketFollowup returns a follow-up function that asserts that the existing market is as expected.
+func (s *CmdTestSuite) getMarketFollowup(marketID string, expected *exchange.Market) func(*sdk.TxResponse) {
+	return func(_ *sdk.TxResponse) {
+		actual := s.getMarket(marketID)
+		s.Assert().Equal(expected, actual, "market %s", marketID)
 	}
 }
 
@@ -602,7 +635,7 @@ func (s *CmdTestSuite) assertGovPropMsg(propID string, msg sdk.Msg) bool {
 
 // govPropFollowup returns a followup function that identifies the new proposal id, looks it up,
 // and makes sure it's got the provided msg.
-func (s *CmdTestSuite) govPropFollowup(msg sdk.Msg) func(resp *sdk.TxResponse) {
+func (s *CmdTestSuite) govPropFollowup(msg sdk.Msg) func(*sdk.TxResponse) {
 	return func(resp *sdk.TxResponse) {
 		propID, err := s.findNewProposalID(resp)
 		if s.Assert().NoError(err, "finding new proposal id") {
@@ -690,12 +723,28 @@ func (s *CmdTestSuite) queryBankBalances(addr string) sdk.Coins {
 }
 
 // execBankSend executes a bank send command.
-func (s *CmdTestSuite) execBankSend(fromAddr, toAddr string, amt sdk.Coins) {
+func (s *CmdTestSuite) execBankSend(fromAddr, toAddr, amount string) {
 	clientCtx := s.getClientCtx()
 	cmd := bankcli.NewSendTxCmd()
-	args := []string{fromAddr, toAddr, amt.String()}
-	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	s.Require().NoError(err, "ExecTestCLICmd %s %q", cmd.Name(), args)
+	cmdName := cmd.Name()
+	args := []string{
+		fromAddr, toAddr, amount,
+		"--" + flags.FlagFees, s.bondCoins(10).String(),
+		"--" + flags.FlagBroadcastMode, flags.BroadcastBlock,
+		"--" + flags.FlagSkipConfirmation,
+	}
+	failed := true
+	var outStr string
+	defer func() {
+		if failed {
+			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, outStr)
+		}
+	}()
+
+	outBW, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	outStr = outBW.String()
+	s.Require().NoError(err, "ExecTestCLICmd %s %q", cmdName, args)
+	failed = false
 }
 
 // adjustBalance creates a new Balance with the order owner's Address and a Coins that's
