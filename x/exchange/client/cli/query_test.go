@@ -387,8 +387,10 @@ market:
     name: THE Market
     website_url: ""
   market_id: 420
-  req_attr_create_ask: []
-  req_attr_create_bid: []
+  req_attr_create_ask:
+  - seller.kyc
+  req_attr_create_bid:
+  - buyer.kyc
 `,
 		},
 	}

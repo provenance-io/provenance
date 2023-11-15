@@ -132,6 +132,8 @@ func (s *CmdTestSuite) SetupSuite() {
 			AllowUserSettlement: true,
 			AccessGrants: []exchange.AccessGrant{
 				{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
+				{Address: s.addr2.String(), Permissions: exchange.AllPermissions()},
+				{Address: s.addr3.String(), Permissions: []exchange.Permission{exchange.Permission_cancel, exchange.Permission_attributes}},
 			},
 		},
 		exchange.Market{
@@ -152,6 +154,7 @@ func (s *CmdTestSuite) SetupSuite() {
 				{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
 			},
 		},
+		// Do not make a market 419, lots of tests expect it to not exist.
 		exchange.Market{
 			// The orders in this market are for the orders queries.
 			// Don't use it in other unit tests (e.g. order creation or settlement).
@@ -176,6 +179,8 @@ func (s *CmdTestSuite) SetupSuite() {
 			AccessGrants: []exchange.AccessGrant{
 				{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
 			},
+			ReqAttrCreateAsk: []string{"seller.kyc"},
+			ReqAttrCreateBid: []string{"buyer.kyc"},
 		},
 		exchange.Market{
 			// This market has an invalid setup. Don't mess with it.

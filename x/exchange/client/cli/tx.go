@@ -199,7 +199,7 @@ func CmdTxMarketUpdateUserSettle() *cobra.Command {
 func CmdTxMarketManagePermissions() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "market-permissions",
-		Aliases: []string{"market-manage-permissions", "permissions", "market-perms", "market-manage-perms", "perms"},
+		Aliases: []string{"market-manage-permissions", "permissions"},
 		Short:   "Update the account permissions for a market",
 		RunE:    genericTxRunE(MakeMsgMarketManagePermissions),
 	}
@@ -213,7 +213,7 @@ func CmdTxMarketManagePermissions() *cobra.Command {
 func CmdTxMarketManageReqAttrs() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "market-req-attrs",
-		Aliases: []string{"market-manage-req-attrs", "manage-req-attrs", "req-attrs", "market-required-attributes",
+		Aliases: []string{"market-manage-req-attrs", "manage-market-req-attrs", "manage-req-attrs", "req-attrs", "market-required-attributes",
 			"market-manage-required-attributes", "manage-required-attributes", "required-attributes",
 		},
 		Short: "Manage the attributes required to create orders in a market",

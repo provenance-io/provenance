@@ -1,6 +1,11 @@
 package cli_test
 
 import (
+	"bytes"
+	"sort"
+
+	"golang.org/x/exp/maps"
+
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -642,9 +647,148 @@ func (s *CmdTestSuite) TestCmdTxMarketUpdateUserSettle() {
 	}
 }
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdTxMarketManagePermissions()
+func (s *CmdTestSuite) TestCmdTxMarketManagePermissions() {
+	tests := []txCmdTestCase{
+		{
+			name:     "no market",
+			args:     []string{"market-permissions", "--from", s.addr1.String(), "--revoke-all", s.addr8.String()},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "market does not exist",
+			args: []string{"market-manage-permissions", "--market", "419",
+				"--from", s.addr4.String(), "--revoke-all", s.addr2.String()},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"account " + s.addr4.String() + " does not have permission to manage permissions for market 419",
+			},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "permissions updated",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				expPerms := map[int][]exchange.Permission{
+					1: exchange.AllPermissions(),
+					4: {exchange.Permission_permissions},
+				}
+				for _, perm := range exchange.AllPermissions() {
+					if perm != exchange.Permission_cancel {
+						expPerms[2] = append(expPerms[2], perm)
+					}
+				}
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdTxMarketManageReqAttrs()
+				addrOrder := maps.Keys(expPerms)
+				sort.Slice(addrOrder, func(i, j int) bool {
+					return bytes.Compare(s.accountAddrs[addrOrder[i]], s.accountAddrs[addrOrder[j]]) < 0
+				})
+
+				market3 := s.getMarket("3")
+				market3.AccessGrants = []exchange.AccessGrant{}
+				for _, addrI := range addrOrder {
+					market3.AccessGrants = append(market3.AccessGrants, exchange.AccessGrant{
+						Address:     s.accountAddrs[addrI].String(),
+						Permissions: expPerms[addrI],
+					})
+				}
+
+				return nil, s.getMarketFollowup("3", market3)
+			},
+			args: []string{
+				"permissions", "--market", "3", "--from", s.addr1.String(),
+				"--revoke-all", s.addr3.String(), "--revoke", s.addr2.String() + ":cancel",
+				"--grant", s.addr4.String() + ":permissions",
+			},
+			expectedCode: 0,
+		},
+		{
+			name: "permissions put back",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				expPerms := map[int][]exchange.Permission{
+					1: exchange.AllPermissions(),
+					2: exchange.AllPermissions(),
+					3: {exchange.Permission_cancel, exchange.Permission_attributes},
+				}
+
+				addrOrder := maps.Keys(expPerms)
+				sort.Slice(addrOrder, func(i, j int) bool {
+					return bytes.Compare(s.accountAddrs[addrOrder[i]], s.accountAddrs[addrOrder[j]]) < 0
+				})
+
+				market3 := s.getMarket("3")
+				market3.AccessGrants = []exchange.AccessGrant{}
+				for _, addrI := range addrOrder {
+					market3.AccessGrants = append(market3.AccessGrants, exchange.AccessGrant{
+						Address:     s.accountAddrs[addrI].String(),
+						Permissions: expPerms[addrI],
+					})
+				}
+
+				return nil, s.getMarketFollowup("3", market3)
+			},
+			args: []string{
+				"permissions", "--market", "3", "--from", s.addr4.String(),
+				"--revoke-all", s.addr2.String() + "," + s.addr4.String(),
+				"--grant", s.addr2.String() + ":all",
+				"--grant", s.addr3.String() + ":cancel+attributes",
+			},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxMarketManageReqAttrs() {
+	tests := []txCmdTestCase{
+		{
+			name:     "no market",
+			args:     []string{"market-req-attrs", "--from", s.addr1.String(), "--ask-add", "*.nope"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "market does not exist",
+			args: []string{"market-manage-req-attrs", "--market", "419",
+				"--from", s.addr4.String(), "--bid-add", "*.also.nope"},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"account " + s.addr4.String() + " does not have permission to manage required attributes for market 419",
+			},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "req attrs updated",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				market420 := s.getMarket("420")
+				market420.ReqAttrCreateAsk = []string{"seller.kyc", "*.my.attr"}
+				market420.ReqAttrCreateBid = []string{}
+				return nil, s.getMarketFollowup("420", market420)
+			},
+			args: []string{"manage-req-attrs", "--from", s.addr1.String(), "--market", "420",
+				"--ask-add", "*.my.attr", "--bid-remove", "buyer.kyc"},
+			expectedCode: 0,
+		},
+		{
+			name: "req attrs put back",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				market420 := s.getMarket("420")
+				market420.ReqAttrCreateAsk = []string{"seller.kyc"}
+				market420.ReqAttrCreateBid = []string{"buyer.kyc"}
+				return nil, s.getMarketFollowup("420", market420)
+			},
+			args: []string{"manage-market-req-attrs", "--from", s.addr1.String(), "--market", "420",
+				"--ask-remove", "*.my.attr", "--bid-add", "buyer.kyc"},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
 
 // TODO[1701]: func (s *CmdTestSuite) TestCmdTxGovCreateMarket()
 
