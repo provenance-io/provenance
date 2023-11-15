@@ -287,6 +287,7 @@ func (s *CmdTestSuite) makeInitialOrder(orderID uint64) *exchange.Order {
 	assets := sdk.NewInt64Coin(assetDenom, int64(orderID*100))
 	price := sdk.NewInt64Coin("peach", int64(orderID*orderID*10))
 	partial := orderID%2 == 0
+	externalID := fmt.Sprintf("my-id-%d", orderID)
 	order := exchange.NewOrder(orderID)
 	switch orderID % 6 {
 	case 0, 1, 4:
@@ -295,7 +296,7 @@ func (s *CmdTestSuite) makeInitialOrder(orderID uint64) *exchange.Order {
 			Seller:       addr.String(),
 			Assets:       assets,
 			Price:        price,
-			ExternalId:   fmt.Sprintf("my-id-%d", orderID),
+			ExternalId:   externalID,
 			AllowPartial: partial,
 		})
 	case 2, 3, 5:
@@ -304,7 +305,7 @@ func (s *CmdTestSuite) makeInitialOrder(orderID uint64) *exchange.Order {
 			Buyer:        addr.String(),
 			Assets:       assets,
 			Price:        price,
-			ExternalId:   fmt.Sprintf("my-id-%d", orderID),
+			ExternalId:   externalID,
 			AllowPartial: partial,
 		})
 	}
@@ -666,6 +667,51 @@ func (s *CmdTestSuite) bondCoins(amt int64) sdk.Coins {
 	return sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, amt))
 }
 
+// adjustBalance creates a new Balance with the order owner's Address and a Coins that's
+// the result of the order and fees applied to the provided current balance.
+func (s *CmdTestSuite) adjustBalance(curBal sdk.Coins, order *exchange.Order, creationFees ...sdk.Coin) banktypes.Balance {
+	rv := banktypes.Balance{
+		Address: order.GetOwner(),
+	}
+
+	price := order.GetPrice()
+	assets := order.GetAssets()
+	var hasNeg bool
+	if order.IsAskOrder() {
+		rv.Coins, hasNeg = curBal.Add(price).SafeSub(assets)
+		s.Require().False(hasNeg, "hasNeg: %s + %s - %s", curBal, price, assets)
+	}
+	if order.IsBidOrder() {
+		rv.Coins, hasNeg = curBal.Add(assets).SafeSub(price)
+		s.Require().False(hasNeg, "hasNeg: %s + %s - %s", curBal, assets, price)
+	}
+
+	settleFees := order.GetSettlementFees()
+	if !settleFees.IsZero() {
+		orig := rv.Coins
+		rv.Coins, hasNeg = rv.Coins.SafeSub(settleFees...)
+		s.Require().False(hasNeg, "hasNeg (settlement fees): %s - %s", orig, settleFees)
+	}
+
+	for _, fee := range creationFees {
+		orig := rv.Coins
+		rv.Coins, hasNeg = rv.Coins.SafeSub(fee)
+		s.Require().False(hasNeg, "hasNeg (creation fee): %s - %s", orig, fee)
+	}
+
+	return rv
+}
+
+// assertBalancesFollowup returns a follow-up function that asserts that the balances are now as expected.
+func (s *CmdTestSuite) assertBalancesFollowup(expBals []banktypes.Balance) func(*sdk.TxResponse) {
+	return func(_ *sdk.TxResponse) {
+		for _, expBal := range expBals {
+			actBal := s.queryBankBalances(expBal.Address)
+			s.Assert().Equal(expBal.Coins.String(), actBal.String(), "%s balances", s.getAddrName(expBal.Address))
+		}
+	}
+}
+
 // createOrder issues a command to create the provided order and returns its order id.
 func (s *CmdTestSuite) createOrder(order *exchange.Order, creationFee *sdk.Coin) uint64 {
 	cmd := cli.CmdTx()
@@ -756,51 +802,6 @@ func (s *CmdTestSuite) execBankSend(fromAddr, toAddr, amount string) {
 	outStr = outBW.String()
 	s.Require().NoError(err, "ExecTestCLICmd %s %q", cmdName, args)
 	failed = false
-}
-
-// adjustBalance creates a new Balance with the order owner's Address and a Coins that's
-// the result of the order and fees applied to the provided current balance.
-func (s *CmdTestSuite) adjustBalance(curBal sdk.Coins, order *exchange.Order, creationFees ...sdk.Coin) banktypes.Balance {
-	rv := banktypes.Balance{
-		Address: order.GetOwner(),
-	}
-
-	price := order.GetPrice()
-	assets := order.GetAssets()
-	var hasNeg bool
-	if order.IsAskOrder() {
-		rv.Coins, hasNeg = curBal.Add(price).SafeSub(assets)
-		s.Require().False(hasNeg, "hasNeg: %s + %s - %s", curBal, price, assets)
-	}
-	if order.IsBidOrder() {
-		rv.Coins, hasNeg = curBal.Add(assets).SafeSub(price)
-		s.Require().False(hasNeg, "hasNeg: %s + %s - %s", curBal, assets, price)
-	}
-
-	settleFees := order.GetSettlementFees()
-	if !settleFees.IsZero() {
-		orig := rv.Coins
-		rv.Coins, hasNeg = rv.Coins.SafeSub(settleFees...)
-		s.Require().False(hasNeg, "hasNeg (settlement fees): %s - %s", orig, settleFees)
-	}
-
-	for _, fee := range creationFees {
-		orig := rv.Coins
-		rv.Coins, hasNeg = rv.Coins.SafeSub(fee)
-		s.Require().False(hasNeg, "hasNeg (creation fee): %s - %s", orig, fee)
-	}
-
-	return rv
-}
-
-// assertBalancesFollowup returns a follow-up function that asserts that the balances are now as expected.
-func (s *CmdTestSuite) assertBalancesFollowup(expBals []banktypes.Balance) func(*sdk.TxResponse) {
-	return func(_ *sdk.TxResponse) {
-		for _, expBal := range expBals {
-			actBal := s.queryBankBalances(expBal.Address)
-			s.Assert().Equal(expBal.Coins.String(), actBal.String(), "%s balances", s.getAddrName(expBal.Address))
-		}
-	}
 }
 
 // joinErrs joins the provided error strings matching to how errors.Join does.
