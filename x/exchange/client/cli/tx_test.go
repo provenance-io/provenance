@@ -14,6 +14,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
+	"github.com/provenance-io/provenance/x/exchange/client/cli"
 )
 
 var (
@@ -815,7 +816,7 @@ func (s *CmdTestSuite) TestCmdTxGovCreateMarket() {
 			name: "prop created",
 			preRun: func() ([]string, func(*sdk.TxResponse)) {
 				expMsg := &exchange.MsgGovCreateMarketRequest{
-					Authority: s.authorityAddr.String(),
+					Authority: cli.AuthorityAddr.String(),
 					Market: exchange.Market{
 						MarketId: 0,
 						MarketDetails: exchange.MarketDetails{
@@ -870,7 +871,7 @@ func (s *CmdTestSuite) TestCmdTxGovManageFees() {
 			name: "prop created",
 			preRun: func() ([]string, func(*sdk.TxResponse)) {
 				expMsg := &exchange.MsgGovManageFeesRequest{
-					Authority:                     s.authorityAddr.String(),
+					Authority:                     cli.AuthorityAddr.String(),
 					MarketId:                      419,
 					AddFeeCreateAskFlat:           []sdk.Coin{sdk.NewInt64Coin("banana", 99)},
 					RemoveFeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("acorn", 12)},
@@ -914,7 +915,7 @@ func (s *CmdTestSuite) TestCmdTxGovUpdateParams() {
 			name: "prop created",
 			preRun: func() ([]string, func(*sdk.TxResponse)) {
 				expMsg := &exchange.MsgGovUpdateParamsRequest{
-					Authority: s.authorityAddr.String(),
+					Authority: cli.AuthorityAddr.String(),
 					Params: exchange.Params{
 						DefaultSplit: 777,
 						DenomSplits: []exchange.DenomSplit{

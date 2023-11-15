@@ -24,6 +24,7 @@ import (
 
 var (
 	// AuthorityAddr is the governance module's account address.
+	// It's not converted to a string here because the global HRP probably isn't set when this is being defined.
 	AuthorityAddr = authtypes.NewModuleAddress(govtypes.ModuleName)
 
 	// ExampleAddr is an example bech32 address to use in command descriptions and stuff.
@@ -31,10 +32,14 @@ var (
 )
 
 // A msgMaker is a function that makes a Msg from a client.Context, FlagSet, and set of args.
+//
+// R is the type of the Msg.
 type msgMaker[R sdk.Msg] func(clientCtx client.Context, flagSet *pflag.FlagSet, args []string) (R, error)
 
 // genericTxRunE returns a cobra.Command.RunE function that gets the client.Context and FlagSet,
 // then uses the provided maker to make the Msg that it then generates or broadcasts as a Tx.
+//
+// R is the type of the Msg.
 func genericTxRunE[R sdk.Msg](maker msgMaker[R]) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx, err := client.GetClientTxContext(cmd)
@@ -56,6 +61,8 @@ func genericTxRunE[R sdk.Msg](maker msgMaker[R]) func(cmd *cobra.Command, args [
 // govTxRunE returns a cobra.Command.RunE function that gets the client.Context and FlagSet,
 // then uses the provided maker to make the Msg. The Msg is then put into a governance
 // proposal and either generated or broadcast as a Tx.
+//
+// R is the type of the Msg.
 func govTxRunE[R sdk.Msg](maker msgMaker[R]) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx, err := client.GetClientTxContext(cmd)
@@ -75,10 +82,12 @@ func govTxRunE[R sdk.Msg](maker msgMaker[R]) func(cmd *cobra.Command, args []str
 }
 
 // queryReqMaker is a function that creates a query request message.
+//
 // R is the type of request message.
 type queryReqMaker[R any] func(flagSet *pflag.FlagSet, args []string) (*R, error)
 
-// queryEndpoint is a function that runs a query.
+// queryEndpoint is a grpc_query endpoint function.
+//
 // R is the type of request message.
 // S is the type of response message.
 type queryEndpoint[R any, S proto.Message] func(queryClient exchange.QueryClient, ctx context.Context, req *R, opts ...grpc.CallOption) (S, error)
@@ -86,6 +95,7 @@ type queryEndpoint[R any, S proto.Message] func(queryClient exchange.QueryClient
 // genericQueryRunE returns a cobra.Command.RunE function that gets the query context and FlagSet,
 // then uses the provided maker to make the query request message. A query client is created and
 // that message is then given to the provided endpoint func to get the response which is then printed.
+//
 // R is the type of request message.
 // S is the type of response message.
 func genericQueryRunE[R any, S proto.Message](reqMaker queryReqMaker[R], endpoint queryEndpoint[R, S]) func(cmd *cobra.Command, args []string) error {
@@ -120,7 +130,7 @@ func MarkFlagsRequired(cmd *cobra.Command, names ...string) {
 	}
 }
 
-// AddUseArgs adds the given args to the cmd's Use.
+// AddUseArgs adds the given strings to the cmd's Use, separated by a space.
 func AddUseArgs(cmd *cobra.Command, args ...string) {
 	cmd.Use = cmd.Use + " " + strings.Join(args, " ")
 }
@@ -192,10 +202,10 @@ var (
 	ReqAdminUse = fmt.Sprintf("{--%s|--%s} <admin>", flags.FlagFrom, FlagAdmin)
 
 	// ReqAdminDesc is a description of how the --admin, --authority, and --from flags work and are sort of required.
-	ReqAdminDesc = fmt.Sprintf(`If --%[1]s <admin> is provided, that is used as the admin.
-If no --%[1]s is provided, but the --%[2]s flag was, the governance module account is used as the admin.
-Otherwise the --%[3]s account address is used as the admin.
-An admin is required.`,
+	ReqAdminDesc = fmt.Sprintf(`If --%[1]s <admin> is provided, that is used as the <admin>.
+If no --%[1]s is provided, but the --%[2]s flag was, the governance module account is used as the <admin>.
+Otherwise the --%[3]s account address is used as the <admin>.
+An <admin> is required.`,
 		FlagAdmin, FlagAuthority, flags.FlagFrom,
 	)
 
@@ -225,7 +235,7 @@ Both <price coin> and <fee coin> have the format "<amount><denom>".
 Example <fee ratio>: 100nhash:1nhash`
 
 	// AuthorityDesc is a description of the authority flag.
-	AuthorityDesc = fmt.Sprintf("If --%s is not provided, the governance module account is used as the authority.", FlagAuthority)
+	AuthorityDesc = fmt.Sprintf("If --%s is not provided, the governance module account is used as the <authority>.", FlagAuthority)
 
 	// ReqAskBidUse is a use string of the --ask and --bid flags when one is required.
 	ReqAskBidUse = fmt.Sprintf("{--%s|--%s}", FlagAsk, FlagBid)

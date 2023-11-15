@@ -27,7 +27,6 @@ import (
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -59,8 +58,6 @@ type CmdTestSuite struct {
 	addr8 sdk.AccAddress
 	addr9 sdk.AccAddress
 
-	authorityAddr sdk.AccAddress
-
 	addrNameLookup map[string]string
 }
 
@@ -88,20 +85,18 @@ func (s *CmdTestSuite) SetupSuite() {
 	s.addr8 = s.accountAddrs[8]
 	s.addr9 = s.accountAddrs[9]
 	s.addrNameLookup = map[string]string{
-		s.addr0.String(): "addr0",
-		s.addr1.String(): "addr1",
-		s.addr2.String(): "addr2",
-		s.addr3.String(): "addr3",
-		s.addr4.String(): "addr4",
-		s.addr5.String(): "addr5",
-		s.addr6.String(): "addr6",
-		s.addr7.String(): "addr7",
-		s.addr8.String(): "addr8",
-		s.addr9.String(): "addr9",
+		s.addr0.String():           "addr0",
+		s.addr1.String():           "addr1",
+		s.addr2.String():           "addr2",
+		s.addr3.String():           "addr3",
+		s.addr4.String():           "addr4",
+		s.addr5.String():           "addr5",
+		s.addr6.String():           "addr6",
+		s.addr7.String():           "addr7",
+		s.addr8.String():           "addr8",
+		s.addr9.String():           "addr9",
+		cli.AuthorityAddr.String(): "authorityAddr",
 	}
-
-	s.authorityAddr = authtypes.NewModuleAddress(govtypes.ModuleName)
-	s.addrNameLookup[s.authorityAddr.String()] = "authorityAddr"
 
 	// Add accounts to auth gen state.
 	var authGen authtypes.GenesisState
@@ -810,6 +805,8 @@ func joinErrs(errs ...string) string {
 }
 
 // toStringSlice applies the stringer to each value and returns a slice with the results.
+//
+// T is the type of things being converted to strings.
 func toStringSlice[T any](vals []T, stringer func(T) string) []string {
 	if vals == nil {
 		return nil
@@ -824,6 +821,8 @@ func toStringSlice[T any](vals []T, stringer func(T) string) []string {
 // assertEqualSlices asserts that the two slices are equal; returns true if so.
 // If not, the stringer is applied to each entry and the comparison is redone
 // using the strings for a more helpful failure message.
+//
+// T is the type of things being compared (and possibly converted to strings).
 func assertEqualSlices[T any](t *testing.T, expected []T, actual []T, stringer func(T) string, message string, args ...interface{}) bool {
 	t.Helper()
 	if assert.Equalf(t, expected, actual, message, args...) {
