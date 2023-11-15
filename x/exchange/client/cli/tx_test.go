@@ -42,7 +42,7 @@ func (s *CmdTestSuite) TestCmdTxCreateAsk() {
 					AllowPartial:            true,
 					ExternalId:              "my-new-ask-order-E2DF6AFE",
 				})
-				return nil, s.getOrderFollowup(expOrder)
+				return nil, s.createOrderFollowup(expOrder)
 			},
 			args: []string{"ask", "--market", "3", "--partial",
 				"--assets", "1000apple", "--price", "2000peach",
@@ -95,7 +95,7 @@ func (s *CmdTestSuite) TestCmdTxCreateBid() {
 					AllowPartial:        true,
 					ExternalId:          "my-new-bid-order-83A99979",
 				})
-				return nil, s.getOrderFollowup(expOrder)
+				return nil, s.createOrderFollowup(expOrder)
 			},
 			args: []string{"bid", "--market", "5", "--partial",
 				"--assets", "1000apple", "--price", "2000peach",
@@ -140,10 +140,8 @@ func (s *CmdTestSuite) TestCmdTxCancelOrder() {
 				})
 				orderID := s.createOrder(newOrder, nil)
 				orderIDStr := orderIDStringer(orderID)
-				followup := func(_ *sdk.TxResponse) {
-					s.assertGetOrder(orderIDStr, nil)
-				}
-				return []string{"--order", orderIDStr}, followup
+
+				return []string{"--order", orderIDStr}, s.getOrderFollowup(orderIDStr, nil)
 			},
 			args:         []string{"cancel", "--from", s.addr2.String()},
 			expectedCode: 0,
@@ -382,7 +380,64 @@ func (s *CmdTestSuite) TestCmdTxMarketSettle() {
 	}
 }
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdTxMarketSetOrderExternalID()
+func (s *CmdTestSuite) TestCmdTxMarketSetOrderExternalID() {
+	tests := []txCmdTestCase{
+		{
+			name: "no market id",
+			args: []string{"market-set-external-id", "--from", s.addr1.String(),
+				"--order", "10", "--external-id", "FD6A9038-E15F-4309-ADA6-1AAC3B09DD3E"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "does not have permission",
+			preRun: func() ([]string, func(txResponse *sdk.TxResponse)) {
+				newOrder := exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
+					MarketId:   5,
+					Seller:     s.addr7.String(),
+					Assets:     sdk.NewInt64Coin("apple", 100),
+					Price:      sdk.NewInt64Coin("peach", 100),
+					ExternalId: "0A66B2C8-40EF-457A-95B8-5B1D41D020F9",
+				})
+				orderID := s.createOrder(newOrder, nil)
+				orderIDStr := orderIDStringer(orderID)
+
+				return []string{"--order", orderIDStr}, s.getOrderFollowup(orderIDStr, newOrder)
+			},
+			args: []string{"set-external-id", "--market", "5", "--from", s.addr7.String(),
+				"--external-id", "984C9430-7E5E-461A-8468-1F067E26CBE9"},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"account " + s.addr7.String() + " does not have permission to set external ids on orders for market 5",
+			},
+			expectedCode: 18,
+		},
+		{
+			name: "external id updated",
+			preRun: func() ([]string, func(txResponse *sdk.TxResponse)) {
+				newOrder := exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
+					MarketId:   5,
+					Seller:     s.addr7.String(),
+					Assets:     sdk.NewInt64Coin("apple", 100),
+					Price:      sdk.NewInt64Coin("peach", 100),
+					ExternalId: "C0CC7021-A28B-4312-92C9-78DFADC68799",
+				})
+				orderID := s.createOrder(newOrder, nil)
+				orderIDStr := orderIDStringer(orderID)
+				newOrder.GetAskOrder().ExternalId = "FF1C3210-D015-4EF8-A397-139E98602365"
+
+				return []string{"--order", orderIDStr}, s.getOrderFollowup(orderIDStr, newOrder)
+			},
+			args: []string{"market-set-order-external-id", "--from", s.addr1.String(), "--market", "5",
+				"--external-id", "FF1C3210-D015-4EF8-A397-139E98602365"},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
 
 // TODO[1701]: func (s *CmdTestSuite) TestCmdTxMarketWithdraw()
 

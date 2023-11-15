@@ -538,57 +538,25 @@ func (s *CmdTestSuite) assertGetOrder(orderID string, order *exchange.Order) boo
 	return s.Assert().Equal(order, resp.Order, "order %s", orderID)
 }
 
-// getOrderFollowup returns a followup function that identifies the new order id, looks it up,
+// getOrderFollowup returns a follow-up function that looks up an order and makes sure it's the one provided.
+func (s *CmdTestSuite) getOrderFollowup(orderID string, order *exchange.Order) func(*sdk.TxResponse) {
+	return func(*sdk.TxResponse) {
+		if order != nil {
+			order.OrderId = s.asOrderID(orderID)
+		}
+		s.assertGetOrder(orderID, order)
+	}
+}
+
+// createOrderFollowup returns a followup function that identifies the new order id, looks it up,
 // and makes sure it is as expected.
-func (s *CmdTestSuite) getOrderFollowup(order *exchange.Order) func(resp *sdk.TxResponse) {
+func (s *CmdTestSuite) createOrderFollowup(order *exchange.Order) func(*sdk.TxResponse) {
 	return func(resp *sdk.TxResponse) {
 		orderID, err := s.findNewOrderID(resp)
 		if s.Assert().NoError(err, "finding new order id") {
 			order.OrderId = s.asOrderID(orderID)
 			s.assertGetOrder(orderID, order)
 		}
-	}
-}
-
-// assertOrder uses the GetOrder query to look up an order and make sure it equals the one provided.
-// If the provided order is nil, ensures the query returns an order not found error.
-func (s *CmdTestSuite) assertGetOrderByExternalID(marketID, externalID string, order *exchange.Order) bool {
-	s.T().Helper()
-	if !s.Assert().NotEmpty(externalID, "external id") {
-		return false
-	}
-
-	var expInErr []string
-	if order == nil {
-		expInErr = append(expInErr, fmt.Sprintf("order not found in market %s with external id %q", marketID, externalID))
-	}
-
-	clientCtx := s.getClientCtx()
-	getOrderCmd := cli.CmdQueryGetOrderByExternalID()
-	args := []string{"--market", marketID, "--external-id", externalID, "--output", "json"}
-	getOrderOutBW, err := clitestutil.ExecTestCLICmd(clientCtx, getOrderCmd, args)
-	getOrderOutBz := getOrderOutBW.Bytes()
-	s.T().Logf("Query GetOrder %s %q output:\n%s", marketID, externalID, string(getOrderOutBz))
-	if !s.assertErrorContents(err, expInErr, "CmdQueryGetOrderByExternalID %s %q error", marketID, externalID) {
-		return false
-	}
-
-	if order == nil {
-		return true
-	}
-
-	var resp exchange.QueryGetOrderByExternalIDResponse
-	err = clientCtx.Codec.UnmarshalJSON(getOrderOutBz, &resp)
-	if !s.Assert().NoError(err, "UnmarshalJSON on CmdQueryGetOrderByExternalID %s %q response", marketID, externalID) {
-		return false
-	}
-	return s.Assert().Equal(order, resp.Order, "order in %s with %q", marketID, externalID)
-}
-
-// getOrderByExternalIDFollowup returns a followup function that looks up an order by external id.
-func (s *CmdTestSuite) getOrderByExternalIDFollowup(marketID, externalID string, order *exchange.Order) func(resp *sdk.TxResponse) {
-	return func(_ *sdk.TxResponse) {
-		s.assertGetOrderByExternalID(marketID, externalID, order)
 	}
 }
 
@@ -719,6 +687,15 @@ func (s *CmdTestSuite) queryBankBalances(addr string) sdk.Coins {
 	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
 	s.Require().NoError(err, "UnmarshalJSON(%q, %T)", string(outBz), &resp)
 	return resp.Balances
+}
+
+// execBankSend executes a bank send command.
+func (s *CmdTestSuite) execBankSend(fromAddr, toAddr string, amt sdk.Coins) {
+	clientCtx := s.getClientCtx()
+	cmd := bankcli.NewSendTxCmd()
+	args := []string{fromAddr, toAddr, amt.String()}
+	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err, "ExecTestCLICmd %s %q", cmd.Name(), args)
 }
 
 // adjustBalance creates a new Balance with the order owner's Address and a Coins that's
