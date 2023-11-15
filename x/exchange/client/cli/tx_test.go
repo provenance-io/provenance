@@ -11,11 +11,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
-var invReqCode = sdkerrors.ErrInvalidRequest.ABCICode()
+var (
+	// invReqCode is the TxResponse code for an ErrInvalidRequest.
+	invReqCode = sdkerrors.ErrInvalidRequest.ABCICode()
+	// invSigCode is the TxResponse code for an ErrInvalidSigner.
+	invSigCode = govtypes.ErrInvalidSigner.ABCICode()
+)
 
 func (s *CmdTestSuite) TestCmdTxCreateAsk() {
 	tests := []txCmdTestCase{
@@ -790,8 +796,145 @@ func (s *CmdTestSuite) TestCmdTxMarketManageReqAttrs() {
 	}
 }
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdTxGovCreateMarket()
+func (s *CmdTestSuite) TestCmdTxGovCreateMarket() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"gov-create-market", "--from", s.addr1.String(), "--create-ask", "bananas"},
+			expInErr: []string{"invalid coin expression: \"bananas\""},
+		},
+		{
+			name: "wrong authority",
+			args: []string{"create-market", "--from", s.addr2.String(), "--authority", s.addr2.String(), "--name", "Whatever"},
+			expInRawLog: []string{"failed to execute message",
+				s.addr2.String(), "expected gov account as only signer for proposal message",
+			},
+			expectedCode: invSigCode,
+		},
+		{
+			name: "prop created",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				expMsg := &exchange.MsgGovCreateMarketRequest{
+					Authority: s.authorityAddr.String(),
+					Market: exchange.Market{
+						MarketId: 0,
+						MarketDetails: exchange.MarketDetails{
+							Name:        "My New Market",
+							Description: "Market 01E6",
+						},
+						FeeCreateAskFlat:    sdk.NewCoins(sdk.NewInt64Coin("acorn", 100)),
+						FeeCreateBidFlat:    sdk.NewCoins(sdk.NewInt64Coin("acorn", 110)),
+						AcceptingOrders:     true,
+						AllowUserSettlement: false,
+						AccessGrants: []exchange.AccessGrant{
+							{Address: s.addr4.String(), Permissions: exchange.AllPermissions()},
+						},
+					},
+				}
+				return nil, s.govPropFollowup(expMsg)
+			},
+			args: []string{"create-market", "--from", s.addr4.String(),
+				"--name", "My New Market",
+				"--description", "Market 01E6",
+				"--create-ask", "100acorn", "--create-bid", "110acorn",
+				"--accepting-orders", "--access-grants", s.addr4.String() + ":all",
+			},
+			expectedCode: 0,
+		},
+	}
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdTxGovManageFees()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
 
-// TODO[1701]: func (s *CmdTestSuite) TestCmdTxGovUpdateParams()
+func (s *CmdTestSuite) TestCmdTxGovManageFees() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"gov-manage-fees", "--from", s.addr1.String(), "--ask-add", "bananas", "--market", "12"},
+			expInErr: []string{"invalid coin expression: \"bananas\""},
+		},
+		{
+			name: "wrong authority",
+			args: []string{"manage-fees", "--from", s.addr2.String(), "--authority", s.addr2.String(),
+				"--ask-add", "99banana", "--market", "12"},
+			expInRawLog: []string{"failed to execute message",
+				s.addr2.String(), "expected gov account as only signer for proposal message",
+			},
+			expectedCode: invSigCode,
+		},
+		{
+			name: "prop created",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				expMsg := &exchange.MsgGovManageFeesRequest{
+					Authority:                     s.authorityAddr.String(),
+					MarketId:                      419,
+					AddFeeCreateAskFlat:           []sdk.Coin{sdk.NewInt64Coin("banana", 99)},
+					RemoveFeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("acorn", 12)},
+					AddFeeBuyerSettlementRatios: []exchange.FeeRatio{
+						{Price: sdk.NewInt64Coin("plum", 100), Fee: sdk.NewInt64Coin("plum", 1)},
+					},
+				}
+				return nil, s.govPropFollowup(expMsg)
+			},
+			args: []string{"update-fees", "--from", s.addr4.String(), "--market", "419",
+				"--ask-add", "99banana", "--seller-flat-remove", "12acorn",
+				"--buyer-ratios-add", "100plum:1plum",
+			},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxGovUpdateParams() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"gov-update-params", "--from", s.addr1.String(), "--default", "500", "--split", "eight"},
+			expInErr: []string{"invalid denom split \"eight\": expected format <denom>:<amount>"},
+		},
+		{
+			name: "wrong authority",
+			args: []string{"gov-params", "--from", s.addr2.String(), "--authority", s.addr2.String(), "--default", "500"},
+			expInRawLog: []string{"failed to execute message",
+				s.addr2.String(), "expected gov account as only signer for proposal message",
+			},
+			expectedCode: invSigCode,
+		},
+		{
+			name: "prop created",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				expMsg := &exchange.MsgGovUpdateParamsRequest{
+					Authority: s.authorityAddr.String(),
+					Params: exchange.Params{
+						DefaultSplit: 777,
+						DenomSplits: []exchange.DenomSplit{
+							{Denom: "apple", Split: 500},
+							{Denom: "acorn", Split: 555},
+						},
+					},
+				}
+				return nil, s.govPropFollowup(expMsg)
+			},
+			args: []string{"params", "--from", s.addr4.String(),
+				"--default", "777", "--split", "apple:500", "--split", "acorn:555",
+			},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}

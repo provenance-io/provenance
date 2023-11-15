@@ -27,6 +27,7 @@ import (
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -57,6 +58,8 @@ type CmdTestSuite struct {
 	addr7 sdk.AccAddress
 	addr8 sdk.AccAddress
 	addr9 sdk.AccAddress
+
+	authorityAddr sdk.AccAddress
 
 	addrNameLookup map[string]string
 }
@@ -96,6 +99,9 @@ func (s *CmdTestSuite) SetupSuite() {
 		s.addr8.String(): "addr8",
 		s.addr9.String(): "addr9",
 	}
+
+	s.authorityAddr = authtypes.NewModuleAddress(govtypes.ModuleName)
+	s.addrNameLookup[s.authorityAddr.String()] = "authorityAddr"
 
 	// Add accounts to auth gen state.
 	var authGen authtypes.GenesisState
