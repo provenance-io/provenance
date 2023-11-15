@@ -260,7 +260,7 @@ func TestMakeMsgCancelOrder(t *testing.T) {
 			name:   "nothing",
 			expMsg: &exchange.MsgCancelOrderRequest{},
 			expErr: joinErrs(
-				"no signer provided",
+				"no <signer> provided",
 				"no <order id> provided",
 			),
 		},
@@ -471,7 +471,7 @@ func TestMakeMsgMarketSettle(t *testing.T) {
 				BidOrderIds:   []uint64{8},
 				ExpectPartial: true,
 			},
-			expErr: "no admin provided",
+			expErr: "no <admin> provided",
 		},
 		{
 			name:      "from",
@@ -560,7 +560,7 @@ func TestMakeMsgMarketSetOrderExternalID(t *testing.T) {
 			expMsg: &exchange.MsgMarketSetOrderExternalIDRequest{
 				MarketId: 8, OrderId: 7, ExternalId: "markus",
 			},
-			expErr: "no admin provided",
+			expErr: "no <admin> provided",
 		},
 		{
 			name:      "no external id",
@@ -635,7 +635,7 @@ func TestMakeMsgMarketWithdraw(t *testing.T) {
 				Admin: "", MarketId: 5, ToAddress: "annie", Amount: nil,
 			},
 			expErr: joinErrs(
-				"no admin provided",
+				"no <admin> provided",
 				"error parsing --amount as coins: invalid coin expression: \"bill\"",
 			),
 		},
@@ -788,7 +788,7 @@ func TestMakeMsgMarketUpdateDetails(t *testing.T) {
 				MarketId:      8,
 				MarketDetails: exchange.MarketDetails{Name: "Lynne"},
 			},
-			expErr: "no admin provided",
+			expErr: "no <admin> provided",
 		},
 		{
 			name:      "just name and description",
@@ -880,7 +880,7 @@ func TestMakeMsgMarketUpdateEnabled(t *testing.T) {
 			flags:  []string{"--market", "56"},
 			expMsg: &exchange.MsgMarketUpdateEnabledRequest{MarketId: 56},
 			expErr: joinErrs(
-				"no admin provided",
+				"no <admin> provided",
 				"exactly one of --enable or --disable must be provided",
 			),
 		},
@@ -962,7 +962,7 @@ func TestMakeMsgMarketUpdateUserSettle(t *testing.T) {
 			flags:  []string{"--market", "56"},
 			expMsg: &exchange.MsgMarketUpdateUserSettleRequest{MarketId: 56},
 			expErr: joinErrs(
-				"no admin provided",
+				"no <admin> provided",
 				"exactly one of --enable or --disable must be provided",
 			),
 		},
@@ -1048,7 +1048,8 @@ func TestMakeMsgMarketManagePermissions(t *testing.T) {
 				ToGrant:   []exchange.AccessGrant{},
 			},
 			expErr: joinErrs(
-				"no admin provided\ncould not parse permissions for \"addr8\" from \"oops\": invalid permission: \"oops\"",
+				"no <admin> provided",
+				"could not parse permissions for \"addr8\" from \"oops\": invalid permission: \"oops\"",
 				"could not parse \"Ryan\" as an <access grant>: expected format <address>:<permissions>",
 				"invalid <access grant> \":settle\": both an <address> and <permissions> are required",
 			),
@@ -1153,7 +1154,7 @@ func TestMakeMsgMarketManageReqAttrs(t *testing.T) {
 				CreateBidToAdd:    []string{"*.kyc"},
 				CreateBidToRemove: []string{},
 			},
-			expErr: "no admin provided",
+			expErr: "no <admin> provided",
 		},
 		{
 			name:      "all fields",

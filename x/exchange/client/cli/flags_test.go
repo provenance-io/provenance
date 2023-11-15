@@ -123,7 +123,7 @@ func TestReadFlagsAdminOrFrom(t *testing.T) {
 		},
 		{
 			name:   "nothing given",
-			expErr: "no admin provided",
+			expErr: "no <admin> provided",
 		},
 	}
 
@@ -235,7 +235,7 @@ func TestReadAddrFlagOrFrom(t *testing.T) {
 		{
 			testName: "not provided",
 			name:     flagString,
-			expErr:   "no string provided",
+			expErr:   "no <string> provided",
 		},
 	}
 

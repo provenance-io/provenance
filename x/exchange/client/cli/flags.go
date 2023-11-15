@@ -77,6 +77,7 @@ const (
 
 // AddFlagsAdmin adds the --admin and --authority flags to a command and makes them mutually exclusive.
 // It also makes one of --admin, --authority, and --from required.
+// See also: ReadFlagsAdminOrFrom.
 func AddFlagsAdmin(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAdmin, "", "The admin (defaults to --from account)")
 	cmd.Flags().Bool(FlagAuthority, false, "Use the governance module account for the admin")
@@ -89,6 +90,7 @@ func AddFlagsAdmin(cmd *cobra.Command) {
 // If not, but the --authority flag was provided, the gov module account address is returned.
 // If no -admin or --authority flag was provided, returns the --from address.
 // Returns an error if none of those flags were provided or there was an error reading one.
+// See also: AddFlagsAdmin.
 func ReadFlagsAdminOrFrom(clientCtx client.Context, flagSet *pflag.FlagSet) (string, error) {
 	rv, err := flagSet.GetString(FlagAdmin)
 	if len(rv) > 0 || err != nil {
@@ -108,7 +110,7 @@ func ReadFlagsAdminOrFrom(clientCtx client.Context, flagSet *pflag.FlagSet) (str
 		return rv, nil
 	}
 
-	return "", errors.New("no admin provided")
+	return "", errors.New("no <admin> provided")
 }
 
 // ReadFlagAuthority reads the --authority flag, or if not provided, returns the standard authority address.
@@ -132,10 +134,11 @@ func ReadAddrFlagOrFrom(clientCtx client.Context, flagSet *pflag.FlagSet, name s
 		return rv, nil
 	}
 
-	return "", fmt.Errorf("no %s provided", name)
+	return "", fmt.Errorf("no <%s> provided", name)
 }
 
 // AddFlagsEnableDisable adds the --enable and --disable flags and marks them mutually exclusive and one is required.
+// See also: ReadFlagsEnableDisable.
 func AddFlagsEnableDisable(cmd *cobra.Command, name string) {
 	cmd.Flags().Bool(FlagEnable, false, fmt.Sprintf("Set the market's %s field to true", name))
 	cmd.Flags().Bool(FlagDisable, false, fmt.Sprintf("Set the market's %s field to false", name))
@@ -145,6 +148,7 @@ func AddFlagsEnableDisable(cmd *cobra.Command, name string) {
 
 // ReadFlagsEnableDisable reads the --enable and --disable flags.
 // If --enable is given, returns true, if --disable is given, returns false.
+// See also: AddFlagsEnableDisable.
 func ReadFlagsEnableDisable(flagSet *pflag.FlagSet) (bool, error) {
 	enable, err := flagSet.GetBool(FlagEnable)
 	if enable || err != nil {
@@ -244,7 +248,7 @@ func ReadCoinsFlag(flagSet *pflag.FlagSet, name string) (sdk.Coins, error) {
 	return rv, nil
 }
 
-// ParseCoins parses a string into a sdk.Coins.
+// ParseCoins parses a string into sdk.Coins.
 func ParseCoins(coinsStr string) (sdk.Coins, error) {
 	// The sdk.ParseCoinsNormalized func allows for decimals and just truncates if there are some.
 	// But I want an error if there's a decimal portion.
@@ -266,6 +270,7 @@ func ParseCoins(coinsStr string) (sdk.Coins, error) {
 
 // ReadCoinFlag reads a string flag and converts it into *sdk.Coin.
 // If the flag wasn't provided, this returns nil, nil.
+// Use ReadReqCoinFlag if the flag is required.
 func ReadCoinFlag(flagSet *pflag.FlagSet, name string) (*sdk.Coin, error) {
 	value, err := flagSet.GetString(name)
 	if len(value) == 0 || err != nil {
@@ -279,6 +284,7 @@ func ReadCoinFlag(flagSet *pflag.FlagSet, name string) (*sdk.Coin, error) {
 }
 
 // ReadReqCoinFlag reads a string flag and converts it into a sdk.Coin and requires it to have a value.
+// Use ReadCoinFlag if the flag is optional.
 func ReadReqCoinFlag(flagSet *pflag.FlagSet, name string) (sdk.Coin, error) {
 	rv, err := ReadCoinFlag(flagSet, name)
 	if err != nil {
@@ -370,7 +376,7 @@ func ReadFlatFeeFlag(flagSet *pflag.FlagSet, name string) ([]sdk.Coin, error) {
 	return ParseFlatFeeOptions(vals)
 }
 
-// ParseFlatFeeOptions parses an sdk.Coin from each of the provided vals.
+// ParseFlatFeeOptions parses each of the provided vals to sdk.Coin.
 func ParseFlatFeeOptions(vals []string) ([]sdk.Coin, error) {
 	var errs []error
 	rv := make([]sdk.Coin, 0, len(vals))
